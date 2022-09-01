@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="24"
+   height="24"
+   viewBox="0 0 24 24"
+   version="1.1"
+   id="svg5"
+   inkscape:version="1.2.1 (9c6d41e4, 2022-07-14)"
+   sodipodi:docname="power.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview7"
+     pagecolor="#000000"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:document-units="px"
+     showgrid="false"
+     inkscape:zoom="27.139255"
+     inkscape:cx="12.74906"
+     inkscape:cy="11.809462"
+     inkscape:window-width="1669"
+     inkscape:window-height="1003"
+     inkscape:window-x="0"
+     inkscape:window-y="25"
+     inkscape:window-maximized="0"
+     inkscape:current-layer="layer1" />
+  <defs
+     id="defs2" />
+  <g
+     inkscape:label="Capa 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <g
+       id="g1894"
+       transform="translate(0,1.9533382)">
+      <path
+         style="fill:none;fill-opacity:0;stroke:#ffffff;stroke-width:2.09883;stroke-linejoin:round;stroke-miterlimit:80;stroke-dasharray:none;stroke-opacity:1"
+         d="M 7.4800012,4.0048505 C 4.9124695,5.1303002 2.9333305,6.7889649 2.9333305,11.359533 c 0.05349,4.78717 3.2629049,8.481076 8.7724005,8.547334 5.616475,-0.132532 9.200322,-3.246663 9.360793,-8.149785 0.01783,-3.6939046 -1.408576,-6.244853 -4.546671,-7.7025377"
+         id="path1888"
+         sodipodi:nodetypes="ccccc" />
+      <path
+         style="fill:none;fill-opacity:0;stroke:#ffffff;stroke-width:2.42849;stroke-linejoin:round;stroke-miterlimit:80;stroke-dasharray:none;stroke-opacity:1"
+         d="M 12,-0.86295829 V 12.70345"
+         id="path1890"
+         sodipodi:nodetypes="cc" />
+    </g>
+  </g>
+</svg>

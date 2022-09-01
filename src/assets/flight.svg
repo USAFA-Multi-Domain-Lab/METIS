@@ -1,0 +1,13 @@
+<svg width="120" height="120" xmlns="http://www.w3.org/2000/svg">
+ <g id="Layer_1">
+  <title>Layer 1</title>
+  <path fill="#fff" d="m-662.77444,-28.78769l0.76394,0l0.23606,-0.76393l0.23606,0.76393l0.76394,0l-0.61804,0.47213l0.23608,0.76393l-0.61804,-0.47214l-0.61804,0.47214l0.23608,-0.76393l-0.61804,-0.47213z" id="svg_2" stroke="#000"/>
+  <line stroke="#666666" fill="none" x1="82.59967" y1="23.44495" x2="89.76341" y2="23.64015" id="svg_55" stroke-linejoin="undefined" stroke-linecap="undefined" transform="rotate(87.5186 46.4869 137.283)"/>
+  <path stroke="#919191" id="svg_7" d="m51.77614,56.37873l-8.92756,-55.44867l29.31695,52.16585l-20.38939,3.28281z" fill="#cccccc"/>
+  <path stroke="#919191" id="svg_8" d="m52.19117,62.68622l-7.54834,55.79014l27.64577,-53.07098l-20.09743,-2.71916z" fill="#cccccc"/>
+  <rect stroke="#b2b2b2" rx="12" id="svg_4" height="14.72712" width="76.88784" y="52.26785" x="23.4795" fill="#ffffff"/>
+  <path stroke="#b2b2b2" id="svg_6" d="m19.63266,60.34695l0,20.66169l18.77868,-20.66169l-18.77868,0z" fill="#ffffff"/>
+  <path stroke="#b2b2b2" id="svg_5" d="m19.88775,58.90606l0,-20.74356l18.53351,20.74356l-18.53351,0z" fill="#ffffff"/>
+ </g>
+
+</svg>

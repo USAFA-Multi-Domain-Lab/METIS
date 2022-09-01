@@ -1,0 +1,94 @@
+@import '../../config.scss';
+
+.AuthPage {
+  .Login {
+    $border: 2px solid $color-accent;
+    padding: 80px 0 100px;
+
+    .ErrorMessage {
+      margin: 0 auto;
+      width: 425px;
+      height: 40px;
+      padding: 0 0 40px;
+      color: $color-error;
+      font-size: 15.5px;
+    }
+
+    .Header {
+      $color-accent: rgba($color-accent, 0.4);
+      -webkit-user-select: none;
+      user-select: none;
+      margin: 0 auto;
+      width: 300px;
+      height: 125px;
+      background-position: 85% 0;
+      background-size: 110px 110px;
+      background-repeat: no-repeat;
+
+      .Heading {
+        font-family: monospace;
+        font-size: 35px;
+      }
+    }
+
+    .Form {
+      margin: 0 auto 0;
+      width: 300px;
+
+      .Heading {
+        grid-column: 1 / 3;
+        margin: 0;
+        font-size: 19px;
+      }
+
+      .AlternateOption {
+        cursor: pointer;
+        -webkit-user-select: none;
+        user-select: none;
+        margin: 16.5px 0 50px;
+        grid-column: 1 / 3;
+        color: $color-accent;
+        font-size: 14px;
+      }
+
+      .Field {
+        display: block;
+        box-sizing: border-box;
+        margin: 0 0 25px;
+        border: none;
+        border-bottom: $border;
+        border-color: $color-accent;
+        width: 275px;
+        padding: 10px 20px 11px;
+        outline: none;
+        background-color: transparent;
+        font-size: 14px;
+
+        &::placeholder {
+          opacity: 0.775;
+        }
+      }
+
+      .Submit {
+        $border: 2px solid $color-accent;
+        display: block;
+        -webkit-user-select: none;
+        user-select: none;
+        cursor: pointer;
+        margin: 35px 0 0;
+        border: none;
+        border-bottom: $border;
+        width: -moz-fit-content;
+        width: fit-content;
+        padding: 8px 15px;
+        background-color: transparent;
+        font-size: 15.5px;
+
+        &:disabled {
+          cursor: default;
+          opacity: 0.35;
+        }
+      }
+    }
+  }
+}

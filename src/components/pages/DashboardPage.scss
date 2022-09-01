@@ -1,0 +1,148 @@
+@import '../../config.scss';
+
+$background-bar: linear-gradient(
+    to right,
+    transparent 0%,
+    transparent 50%,
+    $background-main 50%,
+    $background-main 100%
+  ),
+  linear-gradient(
+    to bottom,
+    transparent 0%,
+    transparent calc(50% - 1.5px),
+    $color-main calc(50% - 1.5px),
+    $color-main calc(50% + 1.5px),
+    transparent calc(50% + 1.5px),
+    transparent 100%
+  );
+
+@keyframes mini-bar-circuit {
+  from {
+    transform: rotate(-90deg);
+    background: $background-bar;
+  }
+  to {
+    transform: rotate(270deg);
+    background: $background-bar;
+  }
+}
+
+.DashboardPage {
+  margin: 0 auto;
+  width: 700px;
+  padding: 35px 0 0;
+
+  .Navigation {
+    display: grid;
+    grid-template-columns: auto 130px;
+    margin: 0 auto 35px;
+    height: 60px;
+    vertical-align: bottom;
+
+    .Heading {
+      display: inline-block;
+      padding: 0 0;
+      line-height: 3rem;
+      font-size: 30px;
+    }
+
+    .Link {
+      -webkit-user-select: none;
+      user-select: none;
+      cursor: pointer;
+      display: inline-block;
+      transition: opacity 175ms;
+      padding: 0 20px;
+      line-height: 3rem;
+      vertical-align: bottom;
+
+      &:hover {
+        border-bottom: 2px solid $color-accent;
+      }
+
+      &.Disabled {
+        pointer-events: none;
+        opacity: 0.25;
+      }
+    }
+  }
+
+  .States {
+    display: block;
+
+    .State {
+      cursor: pointer;
+      display: inline-block;
+      margin: 0 50px 50px 0;
+      width: 125px;
+      height: 125px;
+      border: 5px solid $color-main;
+      border-radius: 28px;
+      text-align: center;
+
+      &.Selected {
+        border-color: $color-accent;
+      }
+
+      &.Loading {
+        cursor: progress;
+      }
+
+      &:nth-child(4n) {
+        margin-right: 0;
+      }
+
+      .Id {
+        margin: 22.5px 0 0;
+        text-align: center;
+        font-size: 22px;
+      }
+
+      .Power {
+        display: inline-block;
+        margin: 6px auto 0;
+        width: 48px;
+        height: 48px;
+
+        &.PowerAirline {
+          &.On {
+            background-image: url('/assets/airline.svg'),
+              radial-gradient(
+                circle at center,
+                rgba($color-main, 0.3),
+                transparent 75%,
+                transparent 100%
+              );
+          }
+
+          &.Off {
+            opacity: 0.3;
+            background-image: url('/assets/airline.svg');
+          }
+        }
+
+        &.PowerRadar {
+          &.On {
+            background-image: url('/assets/radar.svg'),
+              radial-gradient(
+                circle at center,
+                rgba($color-main, 0.3),
+                transparent 75%,
+                transparent 100%
+              );
+          }
+
+          &.Off {
+            opacity: 0.3;
+            background-image: url('/assets/radar.svg');
+          }
+        }
+
+        background-size: 28px 28px, 48px 48px;
+        background-position: center;
+        background-repeat: no-repeat;
+      }
+    }
+  }
+}

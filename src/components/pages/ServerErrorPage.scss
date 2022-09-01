@@ -1,0 +1,38 @@
+@import '../../config.scss';
+
+.ServerErrorPage {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 10;
+  transition: opacity 600ms;
+  box-sizing: border-box;
+  width: 100vw;
+  height: 100vh;
+  padding: calc(50vh - 125px) 0 0;
+  background-color: $background-main;
+  text-align: center;
+
+  .ErrorMessage {
+    margin-top: 40px;
+    font-size: 17px;
+  }
+
+  .Refresh {
+    -webkit-user-select: none;
+    user-select: none;
+    cursor: pointer;
+    display: inline-block;
+    margin-top: 30px;
+    padding: 0 0 15px;
+    text-decoration: none;
+
+    &:hover {
+      border-bottom: 2px solid $color-accent;
+    }
+
+    &:visited {
+      color: $color-main;
+    }
+  }
+}
