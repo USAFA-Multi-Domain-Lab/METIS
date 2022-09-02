@@ -48,17 +48,18 @@ $background-bar: linear-gradient(
     }
 
     .Link {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-flow: row wrap;
       -webkit-user-select: none;
       user-select: none;
       cursor: pointer;
-      display: inline-block;
       transition: opacity 175ms;
-      padding: 0 20px;
-      line-height: 3rem;
-      vertical-align: bottom;
 
       &:hover {
-        border-bottom: 2px solid $color-accent;
+        border: 2px solid $color-accent;
+        text-align: center;
       }
 
       &.Disabled {

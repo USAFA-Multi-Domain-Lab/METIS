@@ -15,19 +15,21 @@
     }
 
     .Header {
-      $color-accent: rgba($color-accent, 0.4);
+      // $color-accent: rgba($color-accent, 0.4);
       -webkit-user-select: none;
       user-select: none;
       margin: 0 auto;
       width: 300px;
-      height: 125px;
+      height: 70px;
       background-position: 85% 0;
       background-size: 110px 110px;
       background-repeat: no-repeat;
+      text-align: center;
 
       .Heading {
         font-family: monospace;
         font-size: 35px;
+        color: $color-accent;
       }
     }
 
@@ -59,7 +61,7 @@
         border-bottom: $border;
         border-color: $color-accent;
         width: 275px;
-        padding: 10px 20px 11px;
+        padding: 10px 10px 11px;
         outline: none;
         background-color: transparent;
         font-size: 14px;
@@ -77,16 +79,24 @@
         cursor: pointer;
         margin: 35px 0 0;
         border: none;
-        border-bottom: $border;
+        border: $border;
         width: -moz-fit-content;
         width: fit-content;
         padding: 8px 15px;
         background-color: transparent;
         font-size: 15.5px;
 
+        &:hover {
+          background-color: $color-accent;
+        }
+
         &:disabled {
           cursor: default;
           opacity: 0.35;
+        }
+
+        &:disabled:hover {
+          background-color: $background-main;
         }
       }
     }
