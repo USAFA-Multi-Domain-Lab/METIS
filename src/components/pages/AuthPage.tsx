@@ -111,7 +111,7 @@ export default function AuthPage(): JSX.Element | null {
         <div className='Login'>
           <div className='ErrorMessage'>{errorMessage}</div>
           <div className='Header'>
-            <div className='Heading'>RC Air State Switch</div>
+            <div className='Heading'>MDL</div>
           </div>
           <form
             className='Form'
@@ -121,13 +121,13 @@ export default function AuthPage(): JSX.Element | null {
             <input
               className='UserID Field'
               type='text'
-              placeholder='Username...'
+              placeholder='Username'
               ref={userIDField}
             />
             <input
               className='Password Field'
               type='password'
-              placeholder='Password...'
+              placeholder='Password'
               ref={passwordField}
             />
             <input

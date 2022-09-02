@@ -54,9 +54,9 @@ export default function DashboardPage(): JSX.Element | null {
           // -- navigation --
         }
         <div className='Navigation'>
-          <div className='Heading'>RC Air State Switch</div>
+          <div className='Heading'>MDL</div>
           <div className='Logout Link' onClick={logout}>
-            Sign out.
+            Sign out
           </div>
         </div>
         {
