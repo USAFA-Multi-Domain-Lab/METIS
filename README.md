@@ -9,9 +9,13 @@ This serves as a dashboard for instructors to switch between various airline sta
 - have `node` (NodeJS) and `npm` (Node Package Manager) installed (`npm` installs with `node` typically).
 - install `ts-node` through npm globally (`npm install -g ts-node`), as this project is written in TypeScript.
 - run `npm install` in project directory to install dependencies.
+- run `npm run serve-dev` to run the production application.
+- run `npm run serve-react` to run the React application.
+
+### optional installation
+
 - run `npm run build-react` to build React app into the static files
   that are actually served.
-- run `npm run serve-prod` to run the production application.
 
 ## optional-setup
 

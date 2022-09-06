@@ -5,7 +5,7 @@ const OutputBox = () => {
   return (
     <div className='OutputBox'>
       <div className='BorderBox'>
-        <div className='Text'>Text</div>
+        <ul className='TextArea'></ul>
       </div>
     </div>
   )

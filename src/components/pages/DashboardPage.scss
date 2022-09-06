@@ -35,8 +35,8 @@ $background-bar: linear-gradient(
   .Navigation {
     display: grid;
     grid-template-columns: auto 130px;
-    margin: 0 auto 35px;
-    height: 60px;
+    margin: 0 auto 55px;
+    height: 30px;
     vertical-align: bottom;
 
     .Heading {
@@ -58,12 +58,8 @@ $background-bar: linear-gradient(
 
       &:hover {
         border: 2px solid $color-accent;
+        border-radius: 5px;
         text-align: center;
-      }
-
-      &.Disabled {
-        pointer-events: none;
-        opacity: 0.25;
       }
     }
   }
