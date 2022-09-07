@@ -1,0 +1,466 @@
+.form-child {
+  display: grid;
+  grid-template-columns: 400px auto;
+
+  &.all-mapped {
+    .form-section {
+      &.unmapped {
+        display: none;
+      }
+
+      &.map {
+        grid-column-start: 1;
+        grid-column-end: 3;
+        margin: 0 0 0 67.5px;
+        width: unset;
+      }
+    }
+  }
+
+  .header-main.header {
+    grid-column-start: 1;
+    grid-column-end: 3;
+    padding: 25px 0 35px;
+
+    .heading {
+      font-size: 30px;
+
+      .title {
+        font-size: 19px;
+      }
+    }
+  }
+
+  .form-section {
+    overflow: hidden;
+    border-radius: 0;
+
+    &.unmapped,
+    &.map {
+      box-sizing: border-box;
+      height: calc(100vh - 300px);
+    }
+
+    &.unmapped {
+      margin: 0 0 0 50px;
+      width: 350px;
+      padding: 30px;
+      padding-right: 15px;
+    }
+
+    /* -- MAP -- */
+
+    &.map {
+      margin: 0 0 0 50px;
+      padding: 0;
+      width: calc(100vw - 500px);
+      background: linear-gradient(
+          to right,
+          rgba($color-background-tertiary-dark, 0.6) 0,
+          rgba($color-background-tertiary-dark, 0.6) 1%,
+          transparent 1%,
+          transparent 100%
+        ),
+        linear-gradient(
+          to bottom,
+          rgba($color-background-tertiary-dark, 0.6) 0,
+          rgba($color-background-tertiary-dark, 0.6) 4%,
+          $color-background-darker 4%,
+          $color-background-darker 100%
+        );
+
+      &.active-navigation {
+        .ActionPanel {
+          pointer-events: none;
+        }
+
+        .List {
+          .items {
+            .item {
+              pointer-events: none;
+            }
+          }
+        }
+      }
+
+      &.link-mode {
+        .navigation {
+          background-color: rgba($color-background, 0.5);
+        }
+
+        .ActionPanel {
+          .glue {
+            background-color: $color-background;
+
+            .Action {
+              background-color: $color-background-dark;
+            }
+          }
+        }
+
+        .List {
+          &.mapped-objective-list {
+            .items {
+              .item {
+                cursor: copy;
+              }
+            }
+          }
+        }
+      }
+
+      &.unlink-mode {
+        .navigation {
+          background-color: rgba($color-background-secondary-dark, 0.5);
+        }
+        .ActionPanel {
+          .glue {
+            background-color: $color-background-secondary-dark;
+
+            .Action {
+              background-color: $color-background-secondary-darker;
+            }
+          }
+        }
+
+        .List {
+          &.mapped-objective-list {
+            .items {
+              .item {
+                cursor: not-allowed;
+              }
+            }
+          }
+        }
+      }
+
+      &.end-mode {
+        .navigation {
+          background-color: rgba($color-background-tertiary-dark, 0.5);
+        }
+
+        .ActionPanel {
+          .glue {
+            background-color: $color-background-tertiary-dark;
+
+            .Action {
+              background-color: $color-background-tertiary-darker;
+            }
+          }
+        }
+
+        .List {
+          &.mapped-objective-list {
+            .items {
+              .item {
+                cursor: pointer;
+              }
+            }
+          }
+        }
+      }
+
+      &.score-mode {
+        .navigation {
+          background-color: rgba(rgb(239, 247, 255), 0.3);
+        }
+
+        .ActionPanel {
+          .glue {
+            background-color: #696f72;
+
+            .Action {
+              background-color: #343638;
+            }
+          }
+        }
+
+        .List {
+          &.mapped-objective-list {
+            .list-header {
+              background-color: #dbe1e4;
+            }
+
+            .items {
+              .item {
+                cursor: pointer;
+              }
+            }
+          }
+        }
+      }
+
+      /* -- MAP | ACTION PANEL -- */
+
+      .ActionPanel {
+        .glue {
+          transition: 250ms background-color;
+          @include border-flare($opacity: 0.65, $radius: 0);
+          background-color: rgba($color-background-darker, 1);
+
+          .Action {
+            border-radius: 0;
+          }
+        }
+      }
+
+      /* -- MAP | PROMPT -- */
+
+      .prompt {
+        $width: 350px;
+        pointer-events: none;
+        position: fixed;
+        z-index: $z-index-objective-map-prompt;
+        box-sizing: border-box;
+        // margin-left: calc(-0.5 * #{$width});
+        @include border-flare($opacity: 0.65);
+        width: $width;
+        padding: 7px 19px 10px 20px;
+        background-color: rgba($color-background-darkest, 0.95);
+      }
+
+      /* -- MAP | FIELD ENTRY -- */
+
+      .field-entry {
+        cursor: default;
+        position: relative;
+        z-index: $z-index-objective-map-field-entry;
+        box-sizing: border-box;
+        transition: opacity 200ms;
+        border: 2px solid transparent;
+        width: 100%;
+        height: 100%;
+        padding: 50px 0 0;
+        background-color: rgba($color-background-secondary-light, 0.65);
+
+        .wrapper {
+          margin: auto;
+          @include border-flare($opacity: 1);
+          width: 550px;
+          background-color: rgba($color-background-secondary-darker, 1);
+
+          .FormDetail {
+            padding-bottom: 25px;
+          }
+
+          .button {
+            margin: 15px 17.5px 40px;
+            border: 2px solid $color-border-lighter;
+          }
+
+          .enter-prompt {
+            margin: 0 0 40px;
+          }
+
+          //   .Action.cancel {
+          //     opacity: 0.65;
+          //     transform: scale(1.2, 1);
+          //     margin: 0 0 30px;
+          //     border: none !important;
+          //     background: none;
+          //     background-color: transparent !important;
+          //     font-size: 70px;
+          //     font-weight: 100;
+          //     font-family: 'Calibri Light';
+          //   }
+        }
+
+        &.invisible {
+          opacity: 0;
+          pointer-events: none;
+        }
+      }
+
+      /* -- MAP | POINTERS -- */
+
+      .pointers {
+        position: absolute;
+        z-index: $z-index-objective-map-pointers;
+        border: 2px solid transparent;
+        stroke: rgba($color-border-lightest, 0.65);
+        marker {
+          polygon,
+          circle {
+            fill: rgba($color-background-tertiary-lightest, 1);
+            stroke: none;
+          }
+        }
+      }
+
+      /* -- MAP | NAVIGATION -- */
+
+      .navigation {
+        cursor: move;
+        position: relative;
+        z-index: $z-index-objective-map-navigation;
+        transition: 250ms background-color;
+        border: 2px solid transparent;
+        width: 100%;
+        height: 100%;
+      }
+
+      /* -- MAP | LIST -- */
+
+      .List {
+        .top {
+          margin: 0 auto -125px;
+          height: 125px;
+
+          .list-header {
+            position: relative;
+            pointer-events: none;
+            z-index: $z-index-objective-map-header;
+            margin: 30px auto 0;
+          }
+        }
+
+        .filtering {
+          display: none;
+        }
+
+        .items {
+          overflow: visible;
+          padding: 0;
+
+          .item {
+            position: relative;
+            z-index: $z-index-objective-map-item;
+            margin: 0 auto;
+            border: none;
+            background-color: adjust-color(
+              $color-background-primary-lightest,
+              $lightness: 5%
+            );
+            font-weight: 700;
+            letter-spacing: normal;
+
+            .wrapper {
+              position: relative;
+              white-space: nowrap;
+
+              .score {
+                display: inline-block;
+                background-color: $color-background-secondary-darkest;
+                vertical-align: bottom;
+              }
+
+              .title {
+                display: inline-block;
+                vertical-align: bottom;
+                color: $color-font-dark;
+                text-overflow: ellipsis;
+              }
+            }
+
+            .properties {
+              display: none;
+            }
+
+            &.scoreless {
+              .wrapper {
+                .score {
+                  display: none;
+                }
+              }
+            }
+
+            &.final,
+            &.bonus {
+              // background-color: adjust-color(
+              //   $color-background-primary-lightest,
+              //   $lightness: 7.5%
+              // );
+            }
+          }
+        }
+
+        .actions {
+          display: none;
+        }
+      }
+
+      &.pending-drop {
+        background-color: $color-background;
+
+        .List {
+          pointer-events: none;
+        }
+      }
+    }
+  }
+}
+
+.List {
+  margin: 0;
+  height: 100%;
+  width: unset;
+  padding: 0;
+  border: none;
+  background: none;
+
+  .top {
+    width: 260px;
+
+    .list-header {
+      margin-top: 0;
+      margin-left: 0;
+      margin-right: 0;
+      border-radius: 0;
+      width: 100%;
+      padding: 10px;
+
+      .list-heading {
+        border-radius: 0;
+        padding: 14px 26px;
+      }
+    }
+
+    .next-page,
+    .previous-page {
+      display: none;
+    }
+  }
+
+  .filtering {
+    margin: -10px 0 0;
+    width: 260px;
+
+    .search-box {
+      width: 260px;
+
+      .search-field {
+        opacity: 0.35;
+        border-radius: 0;
+      }
+    }
+  }
+
+  .items {
+    overflow-x: hidden;
+    overflow-y: auto;
+    height: calc(100% - 130px);
+    padding-right: 15px;
+
+    .item {
+      box-sizing: border-box;
+      transition: 250ms opacity;
+      margin: 10px 0;
+      border-radius: 0;
+      width: 260px;
+      height: 35px;
+      min-height: unset;
+      background-color: rgba($color-background-lightest, 1);
+      font-size: 13.5px;
+      line-height: 13.5px;
+
+      &.disabled {
+        pointer-events: none;
+        opacity: 0.5;
+      }
+    }
+
+    .page-number {
+      display: none;
+    }
+  }
+}
