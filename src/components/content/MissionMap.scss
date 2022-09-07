@@ -22,15 +22,15 @@
   button {
     margin: 15px 0;
     padding: 10px;
-    width: 25%;
-    height: 50px;
-    background-color: $color-accent;
-    color: $background-main;
+    width: 40%;
+    height: 75px;
+    color: $color-negative;
     border: 2px solid $background-main;
     border-radius: 10px;
     font-size: 18px;
     font-family: 'monospace', sans-serif;
     overflow: auto;
+    font-weight: 600;
 
     &.Disabled {
       pointer-events: none;
@@ -40,5 +40,17 @@
     &:hover {
       cursor: pointer;
     }
+  }
+
+  .communication {
+    background-color: $communication;
+  }
+
+  .infrastructure {
+    background-color: $infrastructure;
+  }
+
+  .satellite-services {
+    background-color: $satellite-services;
   }
 }

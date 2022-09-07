@@ -1,21 +1,52 @@
-import { isDisabled } from '@testing-library/user-event/dist/utils'
-import { text } from 'node:stream/consumers'
 import React from 'react'
 import './MissionMap.scss'
 
 const MissionMap = () => {
   // Function that generates an output message based on the mission that
   // is chosen
-  const OutputMessage = (e: any, num: number) => {
+  const OutputMessage = (e: any, user: string) => {
     let mission = e.target
-    if (mission?.innerText === `Mission ${num}`) {
+    if (mission?.innerText === `COMMUNICATION`) {
       const TextArea = document.querySelector('.TextArea')
       let text = document.createElement('div')
-      let textContents = `<li class='Text'> 
-      >> This is the output message for Mission ${num}.
+      let textContents = `<li class='Text'>
+      <span class='line-cursor'>${user}@USAFA: </span> 
+      <span class='communication'>Communication</span> 
+      has been executed.
       </li>`
       text.innerHTML = textContents
       TextArea?.append(text)
+      // This keeps the terminal at the bottom with the history above it
+      const BorderBox = document.querySelector('.BorderBox')
+      BorderBox?.scrollTo(0, 10000000000000000)
+      return
+    } else if (mission?.innerText === `INFRASTRUCTURE`) {
+      const TextArea = document.querySelector('.TextArea')
+      let text = document.createElement('div')
+      let textContents = `<li class='Text'>
+      <span class='line-cursor'>${user}@USAFA: </span> 
+      <span class='infrastructure'>Infrastructure</span> 
+      has been executed.
+      </li>`
+      text.innerHTML = textContents
+      TextArea?.append(text)
+      // This keeps the terminal at the bottom with the history above it
+      const BorderBox = document.querySelector('.BorderBox')
+      BorderBox?.scrollTo(0, 10000000000000000)
+      return
+    } else if (mission?.innerText === `SATELLITE SERVICES`) {
+      const TextArea = document.querySelector('.TextArea')
+      let text = document.createElement('div')
+      let textContents = `<li class='Text'>
+      <span class='line-cursor'>${user}@USAFA: </span> 
+      <span class='satellite-services'>Satellite Services</span> 
+      has been executed.
+      </li>`
+      text.innerHTML = textContents
+      TextArea?.append(text)
+      // This keeps the terminal at the bottom with the history above it
+      const BorderBox = document.querySelector('.BorderBox')
+      BorderBox?.scrollTo(0, 10000000000000000)
       return
     }
   }
@@ -25,74 +56,28 @@ const MissionMap = () => {
     <div className='MissionMap'>
       <div className='Nodes'>
         <button
+          className='communication'
           onClick={(e) => {
-            OutputMessage(e, 1)
+            OutputMessage(e, 'Jacob')
           }}
         >
-          Mission 1
+          COMMUNICATION
         </button>
         <button
+          className='infrastructure'
           onClick={(e) => {
-            OutputMessage(e, 2)
+            OutputMessage(e, 'Jacob')
           }}
         >
-          Mission 2
+          INFRASTRUCTURE
         </button>
         <button
+          className='satellite-services'
           onClick={(e) => {
-            OutputMessage(e, 3)
+            OutputMessage(e, 'Jacob')
           }}
         >
-          Mission 3
-        </button>
-        <button
-          onClick={(e) => {
-            OutputMessage(e, 4)
-          }}
-        >
-          Mission 4
-        </button>
-        <button
-          onClick={(e) => {
-            OutputMessage(e, 5)
-          }}
-        >
-          Mission 5
-        </button>
-        <button
-          onClick={(e) => {
-            OutputMessage(e, 6)
-          }}
-        >
-          Mission 6
-        </button>
-        <button
-          onClick={(e) => {
-            OutputMessage(e, 7)
-          }}
-        >
-          Mission 7
-        </button>
-        <button
-          onClick={(e) => {
-            OutputMessage(e, 8)
-          }}
-        >
-          Mission 8
-        </button>
-        <button
-          onClick={(e) => {
-            OutputMessage(e, 9)
-          }}
-        >
-          Mission 9
-        </button>
-        <button
-          onClick={(e) => {
-            OutputMessage(e, 10)
-          }}
-        >
-          Mission 10
+          SATELLITE SERVICES
         </button>
       </div>
     </div>
