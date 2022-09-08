@@ -52,6 +52,9 @@ function App(): JSX.Element | null {
     'errorMessage',
   )
 
+  const [consoleOutputs, setConsoleOutputs] =
+    useStore<string[]>('consoleOutputs')
+
   // -- COMPONENT STATE --
 
   const [loadingMinTimeout, setLoadingMinTimeout] = useState<any>(undefined)
@@ -117,6 +120,7 @@ interface IGlobalState {
   loadingMessage: string | null
   lastLoadingMessage: string
   errorMessage: string | null
+  consoleOutputs: Array<{ date: number; value: string }>
 }
 
 // This is the initial state of the application.
@@ -127,6 +131,7 @@ const initialGlobalState: IGlobalState = {
   lastLoadingMessage: '',
   loadingMinTimeReached: false,
   errorMessage: null,
+  consoleOutputs: [],
 }
 
 export default withStore(App, initialGlobalState)
