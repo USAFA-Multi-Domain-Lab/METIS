@@ -1,20 +1,13 @@
-import React from 'react'
+import React, { Component } from 'react'
 import './MissionMap.scss'
-import ConsoleOutput from './ConsoleOutput'
-import { Component, useState } from 'react'
 import { useStore } from 'react-context-hook'
+import { createTestMission } from '../../modules/missions'
 
 const MissionMap = () => {
   const [consoleOutputs, setConsoleOutputs] =
     useStore<Array<{ date: number; value: string }>>('consoleOutputs')
 
   const user = 'Jacob'
-
-  const Scroll = () => {
-    // This keeps the terminal at the bottom with the history above it
-    const BorderBox = document.querySelector('.BorderBox')
-    BorderBox?.scrollTo(0, 10000000000000000)
-  }
 
   const Communication = () => {
     setConsoleOutputs([
@@ -50,6 +43,12 @@ const MissionMap = () => {
         has been executed.`,
       },
     ])
+  }
+
+  const Scroll = () => {
+    // This keeps the terminal at the bottom with the history above it
+    const BorderBox = document.querySelector('.BorderBox')
+    BorderBox?.scrollTo(0, 10000000000000000)
   }
 
   // Renders HTML elements
