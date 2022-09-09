@@ -21,30 +21,6 @@ const MissionMap = () => {
     ])
   }
 
-  const Infrastructure = () => {
-    setConsoleOutputs([
-      ...consoleOutputs,
-      {
-        date: Date.now(),
-        value: `<span class='line-cursor'>${user}@USAFA: </span>
-        <span class='infrastructure'>Infrastructure</span>
-        has been executed.`,
-      },
-    ])
-  }
-
-  const SatelliteServices = () => {
-    setConsoleOutputs([
-      ...consoleOutputs,
-      {
-        date: Date.now(),
-        value: `<span class='line-cursor'>${user}@USAFA: </span>
-        <span class='satellite-services'>Satellite Services</span>
-        has been executed.`,
-      },
-    ])
-  }
-
   const Scroll = () => {
     // This keeps the terminal at the bottom with the history above it
     const BorderBox = document.querySelector('.BorderBox')
@@ -57,12 +33,6 @@ const MissionMap = () => {
       <div className='Nodes'>
         <button className='communication' onClick={Communication}>
           COMMUNICATION
-        </button>
-        <button className='infrastructure' onClick={Infrastructure}>
-          INFRASTRUCTURE
-        </button>
-        <button className='satellite-services' onClick={SatelliteServices}>
-          SATELLITE SERVICES
         </button>
       </div>
     </div>
