@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react'
 import { useStore } from 'react-context-hook'
-import { EAjaxStatus } from '../../modules/ajax'
 import usersModule, { IUser } from '../../modules/users'
+import OutputBox from '../content/OutputPanel'
 import './DashboardPage.scss'
+import MissionMap from '../content/MissionMap'
 
 const syncRate = 1 /* seconds */ * 1000
 
@@ -62,7 +63,8 @@ export default function DashboardPage(): JSX.Element | null {
         {
           // -- content --
           <div className='Content'>
-            <div className='States'></div>
+            <MissionMap />
+            <OutputBox />
           </div>
         }
       </div>
