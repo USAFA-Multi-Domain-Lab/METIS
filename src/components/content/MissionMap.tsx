@@ -745,7 +745,7 @@ export default class MissionMap extends React.Component<
   }
 }
 
-// ! JACOBS OUTDATED BUT AWESOME CODE... CAUSE HE'S A F'IN CHAD
+// ! JACOB'S OUTDATED BUT AWESOME CODE... CAUSE HE'S A F'IN CHAD
 // import React, { Component } from 'react'
 // import './MissionMap.scss'
 // import { useStore } from 'react-context-hook'
