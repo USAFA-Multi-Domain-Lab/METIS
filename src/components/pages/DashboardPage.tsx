@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from 'react'
 import { useStore } from 'react-context-hook'
+import { createTestMission, MissionNode } from '../../modules/missions'
+import { EAjaxStatus } from '../../modules/toolbox/ajax'
 import usersModule, { IUser } from '../../modules/users'
+import MissionMap from '../content/MissionMap'
 import OutputBox from '../content/OutputPanel'
 import './DashboardPage.scss'
-import MissionMap from '../content/MissionMap'
 
 const syncRate = 1 /* seconds */ * 1000
 
@@ -63,7 +65,13 @@ export default function DashboardPage(): JSX.Element | null {
         {
           // -- content --
           <div className='Content'>
-            <MissionMap />
+            <MissionMap
+              mission={createTestMission()}
+              missionAjaxStatus={EAjaxStatus.Loaded}
+              handleNodeSelection={() => {}}
+              applyNodeClassName={(node: MissionNode) => ''}
+              renderNodeTooltipDescription={(node: MissionNode) => ''}
+            />
             <OutputBox />
           </div>
         }

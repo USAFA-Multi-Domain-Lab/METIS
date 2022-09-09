@@ -20,6 +20,8 @@ export interface IMissionNodeJson {
   postExecutionFailureText: string
   actionData: string
   successChance: number
+  mapX: number
+  mapY: number
 }
 
 // This represents an individual node
@@ -32,6 +34,8 @@ export class MissionNode {
   postExecutionFailureText: string
   actionData: string
   successChance: number
+  mapX: number
+  mapY: number
 
   constructor(
     name: string,
@@ -40,6 +44,8 @@ export class MissionNode {
     postExecutionFailureText: string,
     actionData: string,
     successChance: number,
+    mapX: number,
+    mapY: number,
   ) {
     this.name = name
     this.preExecutionText = preExecutionText
@@ -47,6 +53,8 @@ export class MissionNode {
     this.postExecutionFailureText = postExecutionFailureText
     this.actionData = actionData
     this.successChance = successChance
+    this.mapX = mapX
+    this.mapY = mapY
   }
 }
 
@@ -96,6 +104,11 @@ export class Mission {
       // objects in the nodeData map.
       for (let key of nodeDataKeys) {
         let nodeDatum: IMissionNodeJson = (nodeDataJson as any)[key]
+
+        if (!isInteger(nodeDatum.mapX) || !isInteger(nodeDatum.mapY)) {
+          throw new Error()
+        }
+
         let node: MissionNode = new MissionNode(
           nodeDatum.name,
           nodeDatum.preExecutionText,
@@ -103,6 +116,8 @@ export class Mission {
           nodeDatum.postExecutionFailureText,
           nodeDatum.actionData,
           nodeDatum.successChance,
+          nodeDatum.mapX,
+          nodeDatum.mapY,
         )
         nodeData.set(key, node)
       }
@@ -146,6 +161,8 @@ export function createTestMission(): Mission {
         postExecutionFailureText: 'Apples has failed to execute.',
         actionData: 'exec command',
         successChance: 0.3,
+        mapX: 0,
+        mapY: -2,
       },
       Bananas: {
         name: 'Bananas',
@@ -154,6 +171,8 @@ export function createTestMission(): Mission {
         postExecutionFailureText: 'Bananas has failed to execute.',
         actionData: 'exec command',
         successChance: 0.3,
+        mapX: -1,
+        mapY: 0,
       },
       Oranges: {
         name: 'Oranges',
@@ -162,6 +181,8 @@ export function createTestMission(): Mission {
         postExecutionFailureText: 'Oranges has failed to execute.',
         actionData: 'exec command',
         successChance: 0.3,
+        mapX: 1,
+        mapY: 0,
       },
       Kiwi: {
         name: 'Kiwi',
@@ -170,6 +191,8 @@ export function createTestMission(): Mission {
         postExecutionFailureText: 'Kiwi has failed to execute.',
         actionData: 'exec command',
         successChance: 0.3,
+        mapX: -1,
+        mapY: 2,
       },
       Tomatoes: {
         name: 'Tomatoes',
@@ -178,6 +201,8 @@ export function createTestMission(): Mission {
         postExecutionFailureText: 'Tomatoes has failed to execute.',
         actionData: 'exec command',
         successChance: 0.3,
+        mapX: 1,
+        mapY: 2,
       },
     },
   }

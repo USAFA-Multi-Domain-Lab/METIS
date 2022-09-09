@@ -67,6 +67,8 @@ export function ensureDefaultDataExists(): void {
               postExecutionFailureText: 'Apples has failed to execute.',
               actionData: 'exec command',
               successChance: 0.3,
+              mapX: 0,
+              mapY: -2,
             },
             Bananas: {
               name: 'Bananas',
@@ -75,6 +77,8 @@ export function ensureDefaultDataExists(): void {
               postExecutionFailureText: 'Bananas has failed to execute.',
               actionData: 'exec command',
               successChance: 0.3,
+              mapX: -1,
+              mapY: 0,
             },
             Oranges: {
               name: 'Oranges',
@@ -83,6 +87,8 @@ export function ensureDefaultDataExists(): void {
               postExecutionFailureText: 'Oranges has failed to execute.',
               actionData: 'exec command',
               successChance: 0.3,
+              mapX: 1,
+              mapY: 0,
             },
             Kiwi: {
               name: 'Kiwi',
@@ -91,6 +97,8 @@ export function ensureDefaultDataExists(): void {
               postExecutionFailureText: 'Kiwi has failed to execute.',
               actionData: 'exec command',
               successChance: 0.3,
+              mapX: -1,
+              mapY: 2,
             },
             Tomatoes: {
               name: 'Tomatoes',
@@ -99,6 +107,8 @@ export function ensureDefaultDataExists(): void {
               postExecutionFailureText: 'Tomatoes has failed to execute.',
               actionData: 'exec command',
               successChance: 0.3,
+              mapX: 1,
+              mapY: 2,
             },
           },
         }
