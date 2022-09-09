@@ -1,3 +1,4 @@
+// Base colors
 $background-main: #292f36;
 $color-main: #ffffff;
 $color-faded: rgb(195, 154, 154);
@@ -8,3 +9,24 @@ $background-color-negative: #dfdfff;
 $color-accent: #5fc9be;
 $color-error: $color-main;
 $color-error-faded: $color-main;
+// MDL application color scheme
+$terminal: #5fc9be;
+$communication: #2ab21f;
+$infrastructure: #f8ff00;
+$satellite-services: #679ac4;
+$success: green;
+$fail: red;
+$attack: #ff6900;
+$defend: #974b35;
+$node-alt1: #ff5b5b;
+$node-alt2: #a31010;
+$node-alt3: #00dfff;
+
+// z-index
+$z-index-objective-map-pointers: 8;
+$z-index-objective-map-navigation: 10;
+$z-index-objective-map-item: 15;
+$z-index-objective-map-header: 20;
+$z-index-objective-map-prompt: 20;
+$z-index-objective-map-field-entry: 75;
+$z-index-objective-map-more-info: 25;
