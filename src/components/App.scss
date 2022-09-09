@@ -11,4 +11,26 @@
     left: -200vw;
     top: -220vh;
   }
+
+  .tooltips {
+    pointer-events: none;
+    position: absolute;
+    max-width: 240px;
+    border: 2.5px solid $color-main;
+    border-radius: 10px;
+    padding: 7px 14px;
+    background-color: rgba($background-alt1, 0.925);
+    .Markdown {
+      font-family: monospace;
+      text-align: left;
+      h1,
+      h2,
+      h3,
+      h4,
+      h5,
+      h6 {
+        text-align: left;
+      }
+    }
+  }
 }

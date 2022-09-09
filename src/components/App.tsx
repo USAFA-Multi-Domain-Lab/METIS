@@ -3,9 +3,11 @@ import DashboardPage from './pages/DashboardPage'
 import AuthPage from './pages/AuthPage'
 import { useStore, withStore } from 'react-context-hook'
 import usersModule, { IUser } from '../modules/users'
-import { useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import ServerErrorPage from './pages/ServerErrorPage'
 import LoadingPage from './pages/LoadingPage'
+import GlobalState from './GlobalState'
+import Markdown, { MarkdownTheme } from './content/Markdown'
 
 const loadingMinTime = 500
 
@@ -51,9 +53,8 @@ function App(): JSX.Element | null {
   const [errorMessage, setErrorMessage] = useStore<string | null>(
     'errorMessage',
   )
-
-  const [consoleOutputs, setConsoleOutputs] =
-    useStore<string[]>('consoleOutputs')
+  const [tooltipDescription] = useStore<string>('tooltipDescription')
+  const [tooltips] = useStore<React.RefObject<HTMLDivElement>>('tooltips')
 
   // -- COMPONENT STATE --
 
@@ -105,33 +106,15 @@ function App(): JSX.Element | null {
       <StandardPage Page={DashboardPage} />
       <ServerErrorPage />
       <LoadingPage />
+
+      <div className='tooltips' ref={tooltips}>
+        <Markdown
+          markdown={tooltipDescription}
+          theme={MarkdownTheme.ThemeSecondary}
+        />
+      </div>
     </div>
   )
 }
 
-// -- GLOBAL APPLICATION STATE --
-
-// This is the interface defining the global
-// state for the application.
-interface IGlobalState {
-  currentUser: IUser | null
-  appMountHandled: boolean
-  loadingMinTimeReached: boolean
-  loadingMessage: string | null
-  lastLoadingMessage: string
-  errorMessage: string | null
-  consoleOutputs: Array<{ date: number; value: string }>
-}
-
-// This is the initial state of the application.
-const initialGlobalState: IGlobalState = {
-  currentUser: null,
-  appMountHandled: false,
-  loadingMessage: 'Initializing application...',
-  lastLoadingMessage: '',
-  loadingMinTimeReached: false,
-  errorMessage: null,
-  consoleOutputs: [],
-}
-
-export default withStore(App, initialGlobalState)
+export default GlobalState.createAppWithGlobalState(App)
