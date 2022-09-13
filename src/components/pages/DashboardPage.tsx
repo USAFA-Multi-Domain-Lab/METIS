@@ -71,8 +71,9 @@ export default function DashboardPage(): JSX.Element | null {
               mission={createTestMission()}
               missionAjaxStatus={EAjaxStatus.Loaded}
               handleNodeSelection={(node: MissionNode) => {
-                let username: string = currentUser.userID
-                if (username !== null) {
+                if (currentUser !== null) {
+                  let username: string = currentUser.userID
+
                   setConsoleOutputs([
                     ...consoleOutputs,
                     {
