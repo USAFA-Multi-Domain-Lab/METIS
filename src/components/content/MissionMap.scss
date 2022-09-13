@@ -79,10 +79,8 @@
   /* -- MAP | NAVIGATION -- */
 
   .navigation {
-    display: flex;
-    justify-content: center;
-    align-items: center;
     cursor: move;
+    position: relative;
     z-index: $z-index-objective-map-navigation;
     transition: 250ms background-color;
     border: 2px solid transparent;

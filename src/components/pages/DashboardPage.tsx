@@ -3,6 +3,7 @@ import { useStore } from 'react-context-hook'
 import { createTestMission, MissionNode } from '../../modules/missions'
 import { EAjaxStatus } from '../../modules/toolbox/ajax'
 import usersModule, { IUser } from '../../modules/users'
+import Markdown from '../content/Markdown'
 import MissionMap from '../content/MissionMap'
 import OutputBox from '../content/OutputPanel'
 import './DashboardPage.scss'
@@ -79,7 +80,7 @@ export default function DashboardPage(): JSX.Element | null {
                     {
                       date: Date.now(),
                       value: `<span class='line-cursor'>${username}@USAFA: </span>
-                              <span class='${node.name}'>${node.actionData}</span>
+                              <span class='${node.name}'> % ${node.preExecutionText}</span>
                               has been executed.`,
                     },
                   ])
