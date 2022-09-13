@@ -15,25 +15,34 @@ const loadingMinTime = 500
 // This function normalizes how pages are rendered.
 // in the application.
 function StandardPage(props: {
-  Page: () => JSX.Element | null
+  Page: (props: { show: boolean }) => JSX.Element | null
+  targetPagePath: string
+  requireLogin?: boolean // default true
 }): JSX.Element | null {
-  const [appMountHandled] = useStore('appMountHandled')
-  const [errorMessage] = useStore('errorMessage')
-  const [loadingMessage] = useStore('loadingMessage')
-  const [loadingMinTimeReached] = useStore('loadingMinTimeReached')
+  const [currentUser] = useStore<IUser | null>('currentUser')
+  const [currentPagePath] = useStore<string>('currentPagePath')
+  const [appMountHandled] = useStore<boolean>('appMountHandled')
+  const [errorMessage] = useStore<string | null>('errorMessage')
+  const [loadingMessage] = useStore<string | null>('loadingMessage')
+  const [loadingMinTimeReached] = useStore<boolean>('loadingMinTimeReached')
 
   let Page = props.Page
+  let targetPagePath: string = props.targetPagePath
+  let requireLogin: boolean =
+    props.requireLogin === undefined ? true : props.requireLogin
 
-  if (
-    appMountHandled &&
-    loadingMessage === null &&
-    loadingMinTimeReached &&
-    errorMessage === null
-  ) {
-    return <Page />
-  } else {
-    return null
-  }
+  return (
+    <Page
+      show={
+        (currentUser !== null || !requireLogin) &&
+        currentPagePath === targetPagePath &&
+        appMountHandled &&
+        loadingMessage === null &&
+        loadingMinTimeReached &&
+        errorMessage === null
+      }
+    />
+  )
 }
 
 // This is the renderer for the entire application.
@@ -41,7 +50,8 @@ function App(): JSX.Element | null {
   /* -- GLOBAL STATE -- */
 
   const [currentUser, setCurrentUser] = useStore<IUser | null>('currentUser')
-  const [currentPage, setCurrentPage] = useStore<string>('currentPage')
+  const [currentPagePath, setCurrentPagePath] =
+    useStore<string>('currentPagePath')
   const [appMountHandled, setAppMountHandled] =
     useStore<boolean>('appMountHandled')
   const [loadingMessage, setLoadMessage] = useStore<string | null>(
@@ -117,6 +127,9 @@ function App(): JSX.Element | null {
       usersModule.retrieveCurrentUser(
         (currentUser: IUser | null) => {
           setCurrentUser(currentUser)
+          setCurrentPagePath(
+            currentUser === null ? 'AuthPage' : 'DashboardPage',
+          )
           setAppMountHandled(true)
           setLoadMessage(null)
         },
@@ -162,20 +175,13 @@ function App(): JSX.Element | null {
           theme={MarkdownTheme.ThemeSecondary}
         />
       </div>
-      {currentUser === null ? (
-        <StandardPage Page={AuthPage} />
-      ) : (
-        (() => {
-          switch (currentPage) {
-            case 'DashboardPage':
-              return <StandardPage Page={DashboardPage} />
-            case 'MissionFormPage':
-              return <StandardPage Page={MissionFormPage} />
-            default:
-              return null
-          }
-        })()
-      )}
+      <StandardPage
+        Page={AuthPage}
+        targetPagePath='AuthPage'
+        requireLogin={false}
+      />
+      <StandardPage Page={DashboardPage} targetPagePath='DashboardPage' />
+      <StandardPage Page={MissionFormPage} targetPagePath='MissionFormPage' />
       <ServerErrorPage />
       <LoadingPage />
     </div>
