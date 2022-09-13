@@ -1,7 +1,6 @@
 //npm imports
 import express from 'express'
 import missionModel from '../../../database/models/model-mission'
-import { StatusError } from '../../../modules/error'
 
 //fields
 const router = express.Router()

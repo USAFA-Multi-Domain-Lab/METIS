@@ -19,6 +19,7 @@ interface IStateSetters {
 // throught the application.
 export default class GlobalState {
   currentUser: IUser | null
+  currentPage: string
   appMountHandled: boolean
   stateSetters: IStateSetters
   loadingMinTimeReached: boolean
@@ -31,6 +32,7 @@ export default class GlobalState {
 
   constructor(stateSetters: IStateSetters) {
     this.currentUser = null
+    this.currentPage = 'DashboardPage'
     this.appMountHandled = false
     this.stateSetters = stateSetters
     this.loadingMessage = 'Initializing application...'

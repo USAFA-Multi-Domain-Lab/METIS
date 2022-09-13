@@ -28,13 +28,14 @@ $background-bar: linear-gradient(
   }
 }
 
-.DashboardPage {
+.MissionFormPage {
   margin: 0 auto;
   padding: 35px 75px 0;
+  background-color: green;
 
   .Navigation {
     display: grid;
-    grid-template-columns: auto 130px 130px;
+    grid-template-columns: auto 130px;
     margin: 0 auto 55px;
     height: 30px;
     vertical-align: bottom;

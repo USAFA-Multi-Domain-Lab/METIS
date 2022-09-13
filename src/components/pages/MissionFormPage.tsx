@@ -5,17 +5,16 @@ import { EAjaxStatus } from '../../modules/toolbox/ajax'
 import usersModule, { IUser } from '../../modules/users'
 import MissionMap from '../content/MissionMap'
 import OutputBox from '../content/OutputPanel'
-import './DashboardPage.scss'
+import './MissionFormPage.scss'
 
 const syncRate = 1 /* seconds */ * 1000
 
 // This will render a dashboard with a radar
 // on it, indicating air traffic passing by.
-export default function DashboardPage(): JSX.Element | null {
+export default function MissionFormPage(): JSX.Element | null {
   /* -- GLOBAL STATE -- */
 
   const [currentUser, setCurrentUser] = useStore<IUser | null>('currentUser')
-  const [currentPage, setCurrentPage] = useStore<string>('currentPage')
   const [loadingMessage, setLoadingMessage] = useStore<string | null>(
     'loadingMessage',
   )
@@ -47,15 +46,9 @@ export default function DashboardPage(): JSX.Element | null {
     )
   }
 
-  // This will switch to the edit mission
-  // form.
-  const editMission = () => {
-    setCurrentPage('MissionFormPage')
-  }
-
   /* -- RENDER -- */
 
-  let className: string = 'DashboardPage'
+  let className: string = 'MissionFormPage'
 
   return (
     <div className={className}>
@@ -64,9 +57,6 @@ export default function DashboardPage(): JSX.Element | null {
       }
       <div className='Navigation'>
         <div className='Heading'>MDL</div>
-        <div className='EditMission Link' onClick={editMission}>
-          Edit mission
-        </div>
         <div className='Logout Link' onClick={logout}>
           Sign out
         </div>

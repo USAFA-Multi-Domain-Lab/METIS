@@ -1,4 +1,5 @@
 @import '../config.scss';
+
 .App {
   padding: 0 0 0;
   min-width: 100vw;
@@ -15,6 +16,7 @@
   .tooltips {
     pointer-events: none;
     position: absolute;
+    z-index: $z-index-tooltips;
     max-width: 240px;
     border: 2.5px solid $color-main;
     border-radius: 10px;

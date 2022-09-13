@@ -8,6 +8,7 @@ import ServerErrorPage from './pages/ServerErrorPage'
 import LoadingPage from './pages/LoadingPage'
 import GlobalState, { tooltipsOffsetX, tooltipsOffsetY } from './GlobalState'
 import Markdown, { MarkdownTheme } from './content/Markdown'
+import MissionFormPage from './pages/MissionFormPage'
 
 const loadingMinTime = 500
 
@@ -40,6 +41,7 @@ function App(): JSX.Element | null {
   /* -- GLOBAL STATE -- */
 
   const [currentUser, setCurrentUser] = useStore<IUser | null>('currentUser')
+  const [currentPage, setCurrentPage] = useStore<string>('currentPage')
   const [appMountHandled, setAppMountHandled] =
     useStore<boolean>('appMountHandled')
   const [loadingMessage, setLoadMessage] = useStore<string | null>(
@@ -160,8 +162,20 @@ function App(): JSX.Element | null {
           theme={MarkdownTheme.ThemeSecondary}
         />
       </div>
-      <StandardPage Page={AuthPage} />
-      <StandardPage Page={DashboardPage} />
+      {currentUser === null ? (
+        <StandardPage Page={AuthPage} />
+      ) : (
+        (() => {
+          switch (currentPage) {
+            case 'DashboardPage':
+              return <StandardPage Page={DashboardPage} />
+            case 'MissionFormPage':
+              return <StandardPage Page={MissionFormPage} />
+            default:
+              return null
+          }
+        })()
+      )}
       <ServerErrorPage />
       <LoadingPage />
     </div>
