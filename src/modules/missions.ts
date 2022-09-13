@@ -155,7 +155,7 @@ export function createTestMission(): Mission {
     },
     nodeData: {
       Apples: {
-        name: 'Apples',
+        name: 'Garnish',
         preExecutionText: 'Apples has not been executed.',
         postExecutionSuccessText: 'Apples has been executed.',
         postExecutionFailureText: 'Apples has failed to execute.',
@@ -165,7 +165,7 @@ export function createTestMission(): Mission {
         mapY: -2,
       },
       Bananas: {
-        name: 'Bananas',
+        name: 'Green Beans',
         preExecutionText: 'Bananas has not been executed.',
         postExecutionSuccessText: 'Bananas has been executed.',
         postExecutionFailureText: 'Bananas has failed to execute.',
@@ -175,7 +175,7 @@ export function createTestMission(): Mission {
         mapY: 0,
       },
       Oranges: {
-        name: 'Oranges',
+        name: 'Tea',
         preExecutionText: 'Oranges has not been executed.',
         postExecutionSuccessText: 'Oranges has been executed.',
         postExecutionFailureText: 'Oranges has failed to execute.',
@@ -185,7 +185,7 @@ export function createTestMission(): Mission {
         mapY: 0,
       },
       Kiwi: {
-        name: 'Kiwi',
+        name: 'Meat',
         preExecutionText: 'Kiwi has not been executed.',
         postExecutionSuccessText: 'Kiwi has been executed.',
         postExecutionFailureText: 'Kiwi has failed to execute.',
@@ -195,7 +195,7 @@ export function createTestMission(): Mission {
         mapY: 2,
       },
       Tomatoes: {
-        name: 'Tomatoes',
+        name: 'Potatoes',
         preExecutionText: 'Tomatoes has not been executed.',
         postExecutionSuccessText: 'Tomatoes has been executed.',
         postExecutionFailureText: 'Tomatoes has failed to execute.',

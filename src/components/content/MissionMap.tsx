@@ -705,9 +705,10 @@ export default class MissionMap extends React.Component<
             }
             return styling
           }}
-          headingText={'map'}
+          headingText={'Food Hierarchy'}
           alwaysUseBlanks={false}
         />
+
         {
           // -- POINTERS -- //
         }
