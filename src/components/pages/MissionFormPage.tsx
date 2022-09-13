@@ -79,7 +79,6 @@ export default function MissionFormPage(props: {
               applyNodeClassName={(node: MissionNode) => ''}
               renderNodeTooltipDescription={(node: MissionNode) => ''}
             />
-            <OutputBox />
           </div>
         }
       </div>

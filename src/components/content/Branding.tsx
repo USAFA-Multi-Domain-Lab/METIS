@@ -1,5 +1,6 @@
 import { useStore } from 'react-context-hook'
 import './Branding.scss'
+import Tooltip from './Tooltip'
 
 // This will brand the app with the
 // logo.
@@ -14,6 +15,7 @@ const Branding = (): JSX.Element => {
   return (
     <div className='Branding' onClick={goHome}>
       MDL
+      <Tooltip description='Go home.' />
     </div>
   )
 }
