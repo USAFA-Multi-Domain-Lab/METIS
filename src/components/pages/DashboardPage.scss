@@ -31,6 +31,7 @@ $background-bar: linear-gradient(
 .DashboardPage {
   margin: 0 auto;
   padding: 35px 75px 0;
+  overflow-y: hidden;
 
   .Navigation {
     display: grid;
@@ -59,9 +60,13 @@ $background-bar: linear-gradient(
 
   .Content {
     display: flex;
-    justify-content: center;
+    justify-content: flex-start;
     align-items: center;
     flex-flow: row wrap;
     width: 100%;
+  }
+
+  @media only screen and (max-width: 768px) {
+    padding: 10px;
   }
 }

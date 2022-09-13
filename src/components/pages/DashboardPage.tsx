@@ -24,6 +24,8 @@ export default function DashboardPage(props: {
   const [errorMessage, setErrorMessage] = useStore<string | null>(
     'errorMessage',
   )
+  const [consoleOutputs, setConsoleOutputs] =
+    useStore<Array<{ date: number; value: string }>>('consoleOutputs')
 
   /* -- COMPONENT STATE -- */
 
@@ -82,7 +84,22 @@ export default function DashboardPage(props: {
             <MissionMap
               mission={createTestMission()}
               missionAjaxStatus={EAjaxStatus.Loaded}
-              handleNodeSelection={() => {}}
+              handleNodeSelection={(node: MissionNode) => {
+                let username: string = currentUser.userID
+                if (username !== null) {
+                  setConsoleOutputs([
+                    ...consoleOutputs,
+                    {
+                      date: Date.now(),
+                      value: `<span class='line-cursor'>${username}@USAFA: </span>
+                              <span class='${node.name}'>${node.actionData}</span>
+                              has been executed.`,
+                    },
+                  ])
+                }
+                const BorderBox = document.querySelector('.BorderBox')
+                BorderBox?.scrollTo(0, 10000000000000000)
+              }}
               applyNodeClassName={(node: MissionNode) => ''}
               renderNodeTooltipDescription={(node: MissionNode) => ''}
             />
