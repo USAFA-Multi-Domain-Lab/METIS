@@ -123,10 +123,7 @@ function TooltipLogic(props: { tooltip: Tooltip }): JSX.Element | null {
   const [hideTooltip] = useStore<() => void>('hideTooltip')
 
   let tooltip: Tooltip = props.tooltip
-<<<<<<< HEAD
-=======
 
->>>>>>> jacob.thomas
   return (
     <div className='TooltipLogic'>
       {((): null => {
