@@ -2,6 +2,7 @@
 
 import './MoreInformation.scss'
 import React from 'react'
+import Tooltip from './Tooltip'
 // import Tooltip from './Tooltip'
 
 /* -- interface -- */
@@ -29,7 +30,7 @@ export default class MoreInformation extends React.Component<Props, State> {
         <div className='circle'>
           <div className='question-mark'>?</div>
         </div>
-        {/* <Tooltip description={tooltipDescription} /> */}
+        <Tooltip description={tooltipDescription} />
       </div>
     )
   }

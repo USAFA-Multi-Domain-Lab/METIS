@@ -3,6 +3,7 @@
 import './List.scss'
 import React from 'react'
 import { EAjaxStatus } from '../../modules/toolbox/ajax'
+import Tooltip from './Tooltip'
 
 /* -- enumerations -- */
 
@@ -508,7 +509,7 @@ export default class List<TList extends object> extends React.Component<
             }}
           />
           <div className='search-hint'>{filterHint}</div>
-          {/* {hideSearchTooltip ? null : <Tooltip description={'Search list.'} />} */}
+          {hideSearchTooltip ? null : <Tooltip description={'Search list.'} />}
         </div>
         {/* {this.renderSortByMethods()} */}
       </div>
@@ -786,9 +787,9 @@ export default class List<TList extends object> extends React.Component<
                 {propertyElements.length > 0 ? (
                   <div className='properties'>{propertyElements}</div>
                 ) : null}
-                {/* {tooltipDescription ? (
+                {tooltipDescription ? (
                   <Tooltip description={tooltipDescription} />
-                ) : null} */}
+                ) : null}
               </div>,
             )
           }
@@ -933,7 +934,7 @@ export default class List<TList extends object> extends React.Component<
         <div className='top'>
           <div className={previousPageClassName} onClick={this.turnBackPage}>
             {'<'}
-            {/* {isPreviousPage ? <Tooltip description={'Previous page.'} /> : null} */}
+            {isPreviousPage ? <Tooltip description={'Previous page.'} /> : null}
           </div>
           <div className='list-header'>
             <h2 className='list-heading'>
@@ -945,7 +946,7 @@ export default class List<TList extends object> extends React.Component<
           </div>
           <div className={nextPageClassName} onClick={this.turnPage}>
             {'>'}
-            {/* {isNextPage ? <Tooltip description={'Next page.'} /> : null} */}
+            {isNextPage ? <Tooltip description={'Next page.'} /> : null}
           </div>
         </div>
         {this.renderFiltering()}

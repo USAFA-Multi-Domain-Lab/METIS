@@ -16,6 +16,7 @@ export default function DashboardPage(): JSX.Element | null {
   /* -- GLOBAL STATE -- */
 
   const [currentUser, setCurrentUser] = useStore<IUser | null>('currentUser')
+  const [currentPage, setCurrentPage] = useStore<string>('currentPage')
   const [loadingMessage, setLoadingMessage] = useStore<string | null>(
     'loadingMessage',
   )
@@ -49,21 +50,28 @@ export default function DashboardPage(): JSX.Element | null {
     )
   }
 
+  // This will switch to the edit mission
+  // form.
+  const editMission = () => {
+    setCurrentPage('MissionFormPage')
+  }
+
   /* -- RENDER -- */
 
   let className: string = 'DashboardPage'
 
-  if (currentUser !== null) {
-    return (
-      <div className={className}>
-        {
-          // -- navigation --
-        }
-        <div className='Navigation'>
-          <div className='Heading'>MDL</div>
-          <div className='Logout Link' onClick={logout}>
-            Sign out
-          </div>
+  return (
+    <div className={className}>
+      {
+        // -- navigation --
+      }
+      <div className='Navigation'>
+        <div className='Heading'>MDL</div>
+        <div className='EditMission Link' onClick={editMission}>
+          Edit mission
+        </div>
+        <div className='Logout Link' onClick={logout}>
+          Sign out
         </div>
         {
           // -- content --
@@ -95,8 +103,6 @@ export default function DashboardPage(): JSX.Element | null {
           </div>
         }
       </div>
-    )
-  } else {
-    return null
-  }
+    </div>
+  )
 }

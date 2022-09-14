@@ -13,6 +13,7 @@ export default function AuthPage(): JSX.Element | null {
   /* -- GLOBAL STATE -- */
 
   const [currentUser, setCurrentUser] = useStore('currentUser')
+  const [currentPage, setCurrentPage] = useStore('currentPage')
   const [loadingMessage, setLoadMessage] = useStore('loadingMessage')
 
   /* -- COMPONENT REFS -- */
@@ -74,10 +75,7 @@ export default function AuthPage(): JSX.Element | null {
             setIsSubmitting(false)
             setLoadMessage(null)
             setCurrentUser(currentUser)
-
-            // if (currentUser !== null) {
-            //   setLoadMessage('Retrieving state data...')
-            // }
+            setCurrentPage('DashboardPage')
           },
           (error: AxiosError) => {
             if (error.response?.status === 400) {
@@ -105,42 +103,34 @@ export default function AuthPage(): JSX.Element | null {
 
   let submitIsDisabled: boolean = !canSubmit() || isSubmitting
 
-  if (currentUser === null) {
-    return (
-      <div className='AuthPage'>
-        <div className='Login'>
-          <div className='ErrorMessage'>{errorMessage}</div>
-          <div className='Header'>
-            <div className='Heading'>MDL</div>
-          </div>
-          <form
-            className='Form'
-            onChange={handleChange}
-            onSubmit={handleSubmit}
-          >
-            <input
-              className='UserID Field'
-              type='text'
-              placeholder='Username'
-              ref={userIDField}
-            />
-            <input
-              className='Password Field'
-              type='password'
-              placeholder='Password'
-              ref={passwordField}
-            />
-            <input
-              className='Submit'
-              type='submit'
-              value='Login'
-              disabled={submitIsDisabled}
-            />
-          </form>
+  return (
+    <div className='AuthPage'>
+      <div className='Login'>
+        <div className='ErrorMessage'>{errorMessage}</div>
+        <div className='Header'>
+          <div className='Heading'>MDL</div>
         </div>
+        <form className='Form' onChange={handleChange} onSubmit={handleSubmit}>
+          <input
+            className='UserID Field'
+            type='text'
+            placeholder='Username'
+            ref={userIDField}
+          />
+          <input
+            className='Password Field'
+            type='password'
+            placeholder='Password'
+            ref={passwordField}
+          />
+          <input
+            className='Submit'
+            type='submit'
+            value='Login'
+            disabled={submitIsDisabled}
+          />
+        </form>
       </div>
-    )
-  } else {
-    return null
-  }
+    </div>
+  )
 }
