@@ -140,9 +140,16 @@ export default class MissionMap extends React.Component<
 
   // inherited
   componentDidMount(): void {
+    let map: HTMLDivElement | null = this.map.current
+
     window.addEventListener('wheel', this.preventMapZoomInterference, {
       passive: false,
     })
+
+    if (map !== null) {
+      new ResizeObserver(this.forceUpdate).observe(map)
+    }
+
     this.updateRelationships()
   }
 
@@ -162,6 +169,9 @@ export default class MissionMap extends React.Component<
       this.updateRelationships()
     }
   }
+
+  // inherited
+  forceUpdate = () => super.forceUpdate()
 
   // returns whether this node is linked with any
   // other node in the state
@@ -705,9 +715,10 @@ export default class MissionMap extends React.Component<
             }
             return styling
           }}
-          headingText={'map'}
+          headingText={'Food Hierarchy'}
           alwaysUseBlanks={false}
         />
+
         {
           // -- POINTERS -- //
         }
@@ -745,7 +756,7 @@ export default class MissionMap extends React.Component<
   }
 }
 
-// ! JACOBS OUTDATED BUT AWESOME CODE... CAUSE HE'S A F'IN CHAD
+// ! JACOB'S OUTDATED BUT AWESOME CODE... CAUSE HE'S A F'IN CHAD
 // import React, { Component } from 'react'
 // import './MissionMap.scss'
 // import { useStore } from 'react-context-hook'

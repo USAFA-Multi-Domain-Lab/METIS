@@ -1,4 +1,5 @@
 @import '../config.scss';
+
 .App {
   padding: 0 0 0;
   min-width: 100vw;
@@ -10,5 +11,70 @@
     position: absolute;
     left: -200vw;
     top: -220vh;
+  }
+
+  .tooltips {
+    pointer-events: none;
+    position: absolute;
+    z-index: $z-index-tooltips;
+    max-width: 240px;
+    border: 2.5px solid $color-main;
+    border-radius: 10px;
+    padding: 7px 14px;
+    background-color: rgba($background-alt1, 0.925);
+
+    .Markdown {
+      text-align: left;
+      font-family: monospace;
+      font-size: 13.5px;
+      line-height: 19px;
+      letter-spacing: normal;
+
+      h1,
+      h2,
+      h3,
+      h4,
+      h5,
+      h6 {
+        margin-top: 0px;
+        margin-bottom: 4px;
+        text-align: left;
+      }
+
+      h1 {
+        $font-size: 17.5px;
+        font-size: 17.5px;
+      }
+      h2 {
+        $font-size: 17px;
+        font-size: 17px;
+      }
+      h3 {
+        $font-size: 16.5px;
+        font-size: 16.5px;
+      }
+      h4 {
+        $font-size: 16px;
+        font-size: 16px;
+      }
+      h5 {
+        $font-size: 15.5px;
+        font-size: 15.5px;
+      }
+      h6 {
+        $font-size: 15px;
+        font-size: 15px;
+      }
+
+      li {
+        margin-left: 24px;
+        line-height: 18px;
+      }
+
+      p {
+        margin: 0;
+        padding: 0;
+      }
+    }
   }
 }

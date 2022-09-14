@@ -8,7 +8,7 @@ const OutputBox = () => {
     useStore<Array<{ date: number; value: string }>>('consoleOutputs')
 
   return (
-    <div className='OutputBox'>
+    <div className='OutputPanel'>
       <div className='BorderBox'>
         <ul className='TextArea'>
           {consoleOutputs.map(

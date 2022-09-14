@@ -31,20 +31,14 @@ $background-bar: linear-gradient(
 .DashboardPage {
   margin: 0 auto;
   padding: 35px 75px 0;
+  overflow-y: hidden;
 
   .Navigation {
     display: grid;
-    grid-template-columns: auto 130px;
+    grid-template-columns: auto 150px 130px;
     margin: 0 auto 55px;
     height: 30px;
     vertical-align: bottom;
-
-    .Heading {
-      display: inline-block;
-      padding: 0 0;
-      line-height: 3rem;
-      font-size: 30px;
-    }
 
     .Link {
       display: flex;
@@ -66,9 +60,18 @@ $background-bar: linear-gradient(
 
   .Content {
     display: flex;
-    justify-content: center;
+    justify-content: flex-start;
     align-items: center;
     flex-flow: row wrap;
     width: 100%;
+
+    .MissionMap {
+      margin-right: 10px;
+      width: 49%;
+    }
+  }
+
+  @media only screen and (max-width: 768px) {
+    padding: 10px;
   }
 }

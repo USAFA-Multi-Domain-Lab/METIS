@@ -53,24 +53,6 @@
         font-size: 14px;
       }
 
-      .Field {
-        display: block;
-        box-sizing: border-box;
-        margin: 0 0 25px;
-        border: none;
-        border-bottom: $border;
-        border-color: $color-accent;
-        width: 275px;
-        padding: 10px 10px 11px;
-        outline: none;
-        background-color: transparent;
-        font-size: 14px;
-
-        &::placeholder {
-          opacity: 0.775;
-        }
-      }
-
       .Submit {
         $border: 2px solid $color-accent;
         display: block;

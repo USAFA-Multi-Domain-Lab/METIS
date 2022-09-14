@@ -5,14 +5,14 @@ import './AuthPage.scss'
 import usersModule, { IUser } from '../../modules/users'
 import { AxiosError } from 'axios'
 import { useStore } from 'react-context-hook'
-import e from 'express'
 
 // This will render a page where a user can
 // login to view the radar.
-export default function AuthPage(): JSX.Element | null {
+export default function AuthPage(props: { show: boolean }): JSX.Element | null {
   /* -- GLOBAL STATE -- */
 
   const [currentUser, setCurrentUser] = useStore('currentUser')
+  const [currentPagePath, setCurrentPagePath] = useStore('currentPagePath')
   const [loadingMessage, setLoadMessage] = useStore('loadingMessage')
 
   /* -- COMPONENT REFS -- */
@@ -66,28 +66,35 @@ export default function AuthPage(): JSX.Element | null {
       if (userID.length > 0 && password.length > 0) {
         setIsSubmitting(true)
         setLoadMessage('Logging in...')
+        setErrorMessage(null)
+
+        // Called when an error happens from
+        // login that needs to be displayed
+        // to the user.
+        const handleLoginError = (errorMessage: string): void => {
+          setIsSubmitting(false)
+          setErrorMessage(errorMessage)
+          setLoadMessage(null)
+        }
 
         usersModule.login(
           userID,
           password,
-          (currentUser: IUser | null) => {
-            setIsSubmitting(false)
-            setLoadMessage(null)
-            setCurrentUser(currentUser)
-
-            // if (currentUser !== null) {
-            //   setLoadMessage('Retrieving state data...')
-            // }
+          (correct: boolean, currentUser: IUser | null) => {
+            if (correct && currentUser !== null) {
+              setIsSubmitting(false)
+              setLoadMessage(null)
+              setCurrentUser(currentUser)
+              setCurrentPagePath('DashboardPage')
+            } else {
+              handleLoginError('Incorrect username or password.')
+            }
           },
           (error: AxiosError) => {
             if (error.response?.status === 400) {
-              setIsSubmitting(false)
-              setLoadMessage(null)
-              setErrorMessage('400 Bad request.')
+              handleLoginError('400 Bad request.')
             } else {
-              setIsSubmitting(false)
-              setLoadMessage(null)
-              setErrorMessage(
+              handleLoginError(
                 'Something went wrong on our end. Please try again later.',
               )
             }
@@ -103,9 +110,10 @@ export default function AuthPage(): JSX.Element | null {
 
   /* -- RENDER -- */
 
+  let show: boolean = props.show
   let submitIsDisabled: boolean = !canSubmit() || isSubmitting
 
-  if (currentUser === null) {
+  if (show && currentUser === null) {
     return (
       <div className='AuthPage'>
         <div className='Login'>

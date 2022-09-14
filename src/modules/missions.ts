@@ -1,3 +1,4 @@
+import { v4 as generateHash } from 'uuid'
 import { isInteger } from './numbers'
 
 // This is the raw mission data returned
@@ -28,6 +29,7 @@ export interface IMissionNodeJson {
 // for a student to execute within a
 // mission.
 export class MissionNode {
+  _instanceId: string
   name: string
   preExecutionText: string
   postExecutionSuccessText: string
@@ -36,6 +38,10 @@ export class MissionNode {
   successChance: number
   mapX: number
   mapY: number
+
+  get instanceID(): string {
+    return this._instanceId
+  }
 
   constructor(
     name: string,
@@ -47,6 +53,7 @@ export class MissionNode {
     mapX: number,
     mapY: number,
   ) {
+    this._instanceId = generateHash()
     this.name = name
     this.preExecutionText = preExecutionText
     this.postExecutionSuccessText = postExecutionSuccessText
@@ -140,7 +147,7 @@ export function createTestMission(): Mission {
     name: 'Incredible Mission',
     versionNumber: 1,
     nodeStructure: {
-      Apples: {
+      Communication: {
         Bananas: {
           Kiwi: {
             END: 'END',
@@ -154,51 +161,51 @@ export function createTestMission(): Mission {
       },
     },
     nodeData: {
-      Apples: {
-        name: 'Apples',
-        preExecutionText: 'Apples has not been executed.',
-        postExecutionSuccessText: 'Apples has been executed.',
-        postExecutionFailureText: 'Apples has failed to execute.',
+      Communication: {
+        name: 'Communications',
+        preExecutionText: 'Communications has not been executed.',
+        postExecutionSuccessText: 'Communications has been executed.',
+        postExecutionFailureText: 'Communications has failed to execute.',
         actionData: 'exec command',
         successChance: 0.3,
         mapX: 0,
         mapY: -2,
       },
       Bananas: {
-        name: 'Bananas',
-        preExecutionText: 'Bananas has not been executed.',
-        postExecutionSuccessText: 'Bananas has been executed.',
-        postExecutionFailureText: 'Bananas has failed to execute.',
+        name: 'Cellular Network',
+        preExecutionText: 'Cellular Network has not been executed.',
+        postExecutionSuccessText: 'Cellular Network has been executed.',
+        postExecutionFailureText: 'Cellular Network has failed to execute.',
         actionData: 'exec command',
         successChance: 0.3,
         mapX: -1,
         mapY: 0,
       },
       Oranges: {
-        name: 'Oranges',
-        preExecutionText: 'Oranges has not been executed.',
-        postExecutionSuccessText: 'Oranges has been executed.',
-        postExecutionFailureText: 'Oranges has failed to execute.',
+        name: 'Internet Provider',
+        preExecutionText: 'Internet Provider has not been executed.',
+        postExecutionSuccessText: 'Internet Provider has been executed.',
+        postExecutionFailureText: 'Internet Provider has failed to execute.',
         actionData: 'exec command',
         successChance: 0.3,
         mapX: 1,
         mapY: 0,
       },
       Kiwi: {
-        name: 'Kiwi',
-        preExecutionText: 'Kiwi has not been executed.',
-        postExecutionSuccessText: 'Kiwi has been executed.',
-        postExecutionFailureText: 'Kiwi has failed to execute.',
+        name: 'Cellular Tower',
+        preExecutionText: 'Cellular Tower has not been executed.',
+        postExecutionSuccessText: 'Cellular Tower has been executed.',
+        postExecutionFailureText: 'Cellular Tower has failed to execute.',
         actionData: 'exec command',
         successChance: 0.3,
         mapX: -1,
         mapY: 2,
       },
       Tomatoes: {
-        name: 'Tomatoes',
-        preExecutionText: 'Tomatoes has not been executed.',
-        postExecutionSuccessText: 'Tomatoes has been executed.',
-        postExecutionFailureText: 'Tomatoes has failed to execute.',
+        name: 'Service Provider',
+        preExecutionText: 'Service Provider has not been executed.',
+        postExecutionSuccessText: 'Service Provider has been executed.',
+        postExecutionFailureText: 'Service Provider has failed to execute.',
         actionData: 'exec command',
         successChance: 0.3,
         mapX: 1,
