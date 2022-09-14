@@ -71,7 +71,16 @@ function App(): JSX.Element | null {
 
   /* -- COMPONENT STATE -- */
 
+  const [forcedUpdateCounter, setForcedUpdateCounter] = useState<number>(0)
   const [loadingMinTimeout, setLoadingMinTimeout] = useState<any>(undefined)
+
+  /* -- COMPONENT FUNCTIONS -- */
+
+  // This will force the component to
+  // rerender.
+  const forceUpdate = (): void => {
+    setForcedUpdateCounter(forcedUpdateCounter + 1)
+  }
 
   /* -- COMPONENT HANDLERS -- */
 

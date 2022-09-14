@@ -1,3 +1,4 @@
+import { v4 as generateHash } from 'uuid'
 import { isInteger } from './numbers'
 
 // This is the raw mission data returned
@@ -28,6 +29,7 @@ export interface IMissionNodeJson {
 // for a student to execute within a
 // mission.
 export class MissionNode {
+  _instanceId: string
   name: string
   preExecutionText: string
   postExecutionSuccessText: string
@@ -36,6 +38,10 @@ export class MissionNode {
   successChance: number
   mapX: number
   mapY: number
+
+  get instanceID(): string {
+    return this._instanceId
+  }
 
   constructor(
     name: string,
@@ -47,6 +53,7 @@ export class MissionNode {
     mapX: number,
     mapY: number,
   ) {
+    this._instanceId = generateHash()
     this.name = name
     this.preExecutionText = preExecutionText
     this.postExecutionSuccessText = postExecutionSuccessText

@@ -64,6 +64,11 @@ $background-bar: linear-gradient(
     align-items: center;
     flex-flow: row wrap;
     width: 100%;
+
+    .MissionMap {
+      margin-right: 10px;
+      width: 49%;
+    }
   }
 
   @media only screen and (max-width: 768px) {

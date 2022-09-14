@@ -32,6 +32,18 @@ $background-bar: linear-gradient(
   margin: 0 auto;
   padding: 35px 75px 0;
 
+  &.SidePanelIsExpanded {
+    .Content {
+      grid-template-columns: auto 325px;
+    }
+  }
+
+  &:not(.SidePanelIsExpanded) {
+    .Content {
+      grid-template-columns: auto;
+    }
+  }
+
   .Navigation {
     display: grid;
     grid-template-columns: auto 130px;
@@ -65,10 +77,90 @@ $background-bar: linear-gradient(
   }
 
   .Content {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    flex-flow: row wrap;
+    display: grid;
+    margin: 0 auto;
+
+    .MissionMap {
+      width: unset;
+      background-color: $background-alt2;
+    }
+
+    .SidePanel {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      flex-flow: row wrap;
+
+      .BorderBox {
+        margin-left: 10px;
+
+        @media only screen and (max-width: 768px) {
+          margin: 0 0 0 5px;
+        }
+
+        @media only screen and (max-width: 275px) {
+          width: 30%;
+        }
+      }
+    }
+  }
+}
+
+.SidePanel {
+  .BorderBox {
+    overflow: auto;
+    box-sizing: border-box;
+    border: 2px solid $color-main;
     width: 100%;
+    height: $height;
+    padding-bottom: 40px;
+    background-color: $background-alt2;
+  }
+}
+
+.Detail {
+  margin: 27px auto 0;
+  width: 225px;
+
+  .Label {
+    margin: 11px 0 0;
+    width: 100%;
+    font-size: 12.5px;
+  }
+
+  @mixin fieldDimensions() {
+    box-sizing: border-box;
+    margin: 8px 0 0;
+    border-top: 2px solid $color-main;
+    border-bottom: 2px solid $color-main;
+    width: 100%;
+    padding: 11px 10px 11px;
+  }
+
+  .Field {
+    @include fieldDimensions();
+    background-color: $background-alt2;
+    color: $color-accent-light;
+    font-size: 14px;
+  }
+
+  &.DetailNumber {
+    .Unit {
+      pointer-events: none;
+      @include fieldDimensions();
+      margin-bottom: -51px;
+      padding-right: 15px;
+      border-color: transparent;
+      text-align: right;
+      font-size: 14px;
+      font-weight: bold;
+    }
+  }
+
+  &.DetailBox {
+    .Field {
+      overflow-y: hidden;
+      resize: none;
+    }
   }
 }
