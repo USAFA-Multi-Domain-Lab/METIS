@@ -147,21 +147,39 @@ export function createTestMission(): Mission {
     name: 'Incredible Mission',
     versionNumber: 1,
     nodeStructure: {
-      Communication: {
-        Bananas: {
-          Kiwi: {
+      communication: {
+        cellularNetwork: {
+          cellularTower: {
             END: 'END',
           },
         },
-        Oranges: {
-          Tomatoes: {
+        internetProvider: {
+          serviceProvider: {
             END: 'END',
+          },
+        },
+        instantMessaging: {
+          centralServer1: {
+            END: 'END',
+          },
+        },
+        fileSharingService: {
+          centralServer2: {
+            END: 'END',
+          },
+        },
+      },
+      airDefense: {
+        iadsNetwork: {
+          individualLaunchSites: {
+            launcherSystem: {},
+            radarSystem: {},
           },
         },
       },
     },
     nodeData: {
-      Communication: {
+      communication: {
         name: 'Communications',
         preExecutionText: 'Communications has not been executed.',
         postExecutionSuccessText: 'Communications has been executed.',
@@ -171,17 +189,17 @@ export function createTestMission(): Mission {
         mapX: 0,
         mapY: -2,
       },
-      Bananas: {
+      cellularNetwork: {
         name: 'Cellular Network',
         preExecutionText: 'Cellular Network has not been executed.',
         postExecutionSuccessText: 'Cellular Network has been executed.',
         postExecutionFailureText: 'Cellular Network has failed to execute.',
         actionData: 'exec command',
         successChance: 0.3,
-        mapX: -1,
+        mapX: -2,
         mapY: 0,
       },
-      Oranges: {
+      internetProvider: {
         name: 'Internet Provider',
         preExecutionText: 'Internet Provider has not been executed.',
         postExecutionSuccessText: 'Internet Provider has been executed.',
@@ -191,17 +209,37 @@ export function createTestMission(): Mission {
         mapX: 1,
         mapY: 0,
       },
-      Kiwi: {
+      instantMessaging: {
+        name: 'Instant Messaging',
+        preExecutionText: 'Instant Messaging has not been executed.',
+        postExecutionSuccessText: 'Instant Messaging has been executed.',
+        postExecutionFailureText: 'Instant Messaging has failed to execute.',
+        actionData: 'exec command',
+        successChance: 0.3,
+        mapX: -1,
+        mapY: 0,
+      },
+      fileSharingService: {
+        name: 'File Sharing Service',
+        preExecutionText: 'File Sharing Service has not been executed.',
+        postExecutionSuccessText: 'File Sharing Service has been executed.',
+        postExecutionFailureText: 'File Sharing Service has failed to execute.',
+        actionData: 'exec command',
+        successChance: 0.3,
+        mapX: 2,
+        mapY: 0,
+      },
+      cellularTower: {
         name: 'Cellular Tower',
         preExecutionText: 'Cellular Tower has not been executed.',
         postExecutionSuccessText: 'Cellular Tower has been executed.',
         postExecutionFailureText: 'Cellular Tower has failed to execute.',
         actionData: 'exec command',
         successChance: 0.3,
-        mapX: -1,
+        mapX: -2,
         mapY: 2,
       },
-      Tomatoes: {
+      serviceProvider: {
         name: 'Service Provider',
         preExecutionText: 'Service Provider has not been executed.',
         postExecutionSuccessText: 'Service Provider has been executed.',
@@ -210,6 +248,79 @@ export function createTestMission(): Mission {
         successChance: 0.3,
         mapX: 1,
         mapY: 2,
+      },
+
+      centralServer1: {
+        name: 'Central Server',
+        preExecutionText: 'Central Server has not been executed.',
+        postExecutionSuccessText: 'Central Server has been executed.',
+        postExecutionFailureText: 'Central Server has failed to execute.',
+        actionData: 'exec command',
+        successChance: 0.3,
+        mapX: -1,
+        mapY: 2,
+      },
+
+      centralServer2: {
+        name: 'Central Server',
+        preExecutionText: 'Central Server has not been executed.',
+        postExecutionSuccessText: 'Central Server has been executed.',
+        postExecutionFailureText: 'Central Server has failed to execute.',
+        actionData: 'exec command',
+        successChance: 0.3,
+        mapX: 2,
+        mapY: 2,
+      },
+      airDefense: {
+        name: 'Air Defense',
+        preExecutionText: 'Air Defense has not been executed.',
+        postExecutionSuccessText: 'Air Defense has been executed.',
+        postExecutionFailureText: 'Air Defense has failed to execute.',
+        actionData: 'exec command',
+        successChance: 0.3,
+        mapX: 0,
+        mapY: 4,
+      },
+      iadsNetwork: {
+        name: 'IADS Network',
+        preExecutionText: 'IADS Network has not been executed.',
+        postExecutionSuccessText: 'IADS Network has been executed.',
+        postExecutionFailureText: 'IADS Network has failed to execute.',
+        actionData: 'exec command',
+        successChance: 0.3,
+        mapX: 0,
+        mapY: 6,
+      },
+      individualLaunchSites: {
+        name: 'Individual Launch Sites',
+        preExecutionText: 'Individual Launch Sites has not been executed.',
+        postExecutionSuccessText: 'Individual Launch Sites has been executed.',
+        postExecutionFailureText:
+          'Individual Launch Sites has failed to execute.',
+        actionData: 'exec command',
+        successChance: 0.3,
+        mapX: 0,
+        mapY: 8,
+      },
+      launcherSystem: {
+        name: 'Launcher System',
+        preExecutionText: 'Launcher System has not been executed.',
+        postExecutionSuccessText: 'Launcher System has been executed.',
+        postExecutionFailureText: 'Launcher System has failed to execute.',
+        actionData: 'exec command',
+        successChance: 0.3,
+        mapX: 1,
+        mapY: 10,
+      },
+      radarSystem: {
+        name: 'Radar System',
+        preExecutionText: 'Radar System has not been executed.',
+        postExecutionSuccessText: 'Radar System has been executed.',
+        postExecutionFailureText: 'Radar System has failed to execute.',
+        actionData: 'exec command',
+        successChance: 0.3,
+        mapX: -1,
+        mapY: 10,
       },
     },
   }

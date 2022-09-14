@@ -715,7 +715,7 @@ export default class MissionMap extends React.Component<
             }
             return styling
           }}
-          headingText={'Food Hierarchy'}
+          headingText={'Mission Map'}
           alwaysUseBlanks={false}
         />
 
@@ -755,47 +755,3 @@ export default class MissionMap extends React.Component<
     )
   }
 }
-
-// ! JACOB'S OUTDATED BUT AWESOME CODE... CAUSE HE'S A F'IN CHAD
-// import React, { Component } from 'react'
-// import './MissionMap.scss'
-// import { useStore } from 'react-context-hook'
-// import { createTestMission } from '../../modules/missions'
-//
-// const MissionMap = () => {
-//   const [consoleOutputs, setConsoleOutputs] =
-//     useStore<Array<{ date: number; value: string }>>('consoleOutputs')
-//
-//   const user = 'Jacob'
-//
-//   const Communication = () => {
-//     setConsoleOutputs([
-//       ...consoleOutputs,
-//       {
-//         date: Date.now(),
-//         value: `<span class='line-cursor'>${user}@USAFA: </span>
-//         <span class='communication'>Communication</span>
-//         has been executed.`,
-//       },
-//     ])
-//   }
-//
-//   const Scroll = () => {
-//     // This keeps the terminal at the bottom with the history above it
-//     const BorderBox = document.querySelector('.BorderBox')
-//     BorderBox?.scrollTo(0, 10000000000000000)
-//   }
-//
-//   // Renders HTML elements
-//   return (
-//     <div className='MissionMap'>
-//       <div className='Nodes'>
-//         <button className='communication' onClick={Communication}>
-//           COMMUNICATION
-//         </button>
-//       </div>
-//     </div>
-//   )
-// }
-//
-// export default MissionMap
