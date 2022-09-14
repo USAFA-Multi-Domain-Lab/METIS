@@ -73,36 +73,35 @@ export default function DashboardPage(): JSX.Element | null {
         <div className='Logout Link' onClick={logout}>
           Sign out
         </div>
-        {
-          // -- content --
-          <div className='Content'>
-            <MissionMap
-              mission={createTestMission()}
-              missionAjaxStatus={EAjaxStatus.Loaded}
-              handleNodeSelection={(node: MissionNode) => {
-                if (currentUser !== null) {
-                  let username: string = currentUser.userID
-
-                  setConsoleOutputs([
-                    ...consoleOutputs,
-                    {
-                      date: Date.now(),
-                      value: `<span class='line-cursor'>${username}@USAFA: </span>
-                              <span class='${node.name}'> % ${node.preExecutionText}</span>
-                              has been executed.`,
-                    },
-                  ])
-                }
-                const BorderBox = document.querySelector('.BorderBox')
-                BorderBox?.scrollTo(0, 10000000000000000)
-              }}
-              applyNodeClassName={(node: MissionNode) => ''}
-              renderNodeTooltipDescription={(node: MissionNode) => ''}
-            />
-            <OutputBox />
-          </div>
-        }
       </div>
+      {
+        // -- content --
+        <div className='Content'>
+          <MissionMap
+            mission={createTestMission()}
+            missionAjaxStatus={EAjaxStatus.Loaded}
+            handleNodeSelection={(node: MissionNode) => {
+              if (currentUser !== null) {
+                let username: string = currentUser.userID
+
+                setConsoleOutputs([
+                  ...consoleOutputs,
+                  {
+                    date: Date.now(),
+                    value: `<span class='line-cursor'>${username}@USAFA: </span>
+                              <span class='${node.name}'> % ${node.preExecutionText}</span>`,
+                  },
+                ])
+              }
+              const BorderBox = document.querySelector('.BorderBox')
+              BorderBox?.scrollTo(0, 10000000000000000)
+            }}
+            applyNodeClassName={(node: MissionNode) => ''}
+            renderNodeTooltipDescription={(node: MissionNode) => ''}
+          />
+          <OutputBox />
+        </div>
+      }
     </div>
   )
 }

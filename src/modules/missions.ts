@@ -162,6 +162,14 @@ export function createTestMission(): Mission {
           },
         },
       },
+      airDefense: {
+        iadsNetwork: {
+          individualLaunchSites: {
+            launcherSystem: {},
+            radarSystem: {},
+          },
+        },
+      },
     },
     nodeData: {
       communication: {
@@ -255,6 +263,57 @@ export function createTestMission(): Mission {
         successChance: 0.3,
         mapX: 2,
         mapY: 2,
+      },
+      airDefense: {
+        name: 'Air Defense',
+        preExecutionText: 'Air Defense has not been executed.',
+        postExecutionSuccessText: 'Air Defense has been executed.',
+        postExecutionFailureText: 'Air Defense has failed to execute.',
+        actionData: 'exec command',
+        successChance: 0.3,
+        mapX: 0,
+        mapY: 4,
+      },
+      iadsNetwork: {
+        name: 'IADS Network',
+        preExecutionText: 'IADS Network has not been executed.',
+        postExecutionSuccessText: 'IADS Network has been executed.',
+        postExecutionFailureText: 'IADS Network has failed to execute.',
+        actionData: 'exec command',
+        successChance: 0.3,
+        mapX: 0,
+        mapY: 6,
+      },
+      individualLaunchSites: {
+        name: 'Individual Launch Sites',
+        preExecutionText: 'Individual Launch Sites has not been executed.',
+        postExecutionSuccessText: 'Individual Launch Sites has been executed.',
+        postExecutionFailureText:
+          'Individual Launch Sites has failed to execute.',
+        actionData: 'exec command',
+        successChance: 0.3,
+        mapX: 0,
+        mapY: 8,
+      },
+      launcherSystem: {
+        name: 'Launcher System',
+        preExecutionText: 'Launcher System has not been executed.',
+        postExecutionSuccessText: 'Launcher System has been executed.',
+        postExecutionFailureText: 'Launcher System has failed to execute.',
+        actionData: 'exec command',
+        successChance: 0.3,
+        mapX: 1,
+        mapY: 10,
+      },
+      radarSystem: {
+        name: 'Radar System',
+        preExecutionText: 'Radar System has not been executed.',
+        postExecutionSuccessText: 'Radar System has been executed.',
+        postExecutionFailureText: 'Radar System has failed to execute.',
+        actionData: 'exec command',
+        successChance: 0.3,
+        mapX: -1,
+        mapY: 10,
       },
     },
   }
