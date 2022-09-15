@@ -94,13 +94,13 @@ export default function DashboardPage(props: {
                     {
                       date: Date.now(),
                       value: `<span class='line-cursor'>${username}@USAFA: </span>
-                              <span class='${node.name}'>${node.actionData}</span>
-                              has been executed.`,
+                              <span class='${node.name}'>${node.preExecutionText}</span>`,
                     },
                   ])
                 }
-                const BorderBox = document.querySelector('.BorderBox')
-                BorderBox?.scrollTo(0, 10000000000000000)
+                // use ref below
+                // const BorderBox = document.querySelector('.BorderBox')
+                // BorderBox?.scrollTo(0, 10000000000000000)
               }}
               applyNodeClassName={(node: MissionNode) => ''}
               renderNodeTooltipDescription={(node: MissionNode) => ''}
