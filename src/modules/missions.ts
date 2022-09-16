@@ -203,7 +203,7 @@ export function createTestMission(): Mission {
       },
     },
     nodeData: {
-      communication: {
+      communications: {
         name: 'Communications',
         preExecutionText: 'Communications has not been executed.',
         postExecutionSuccessText: 'Communications has been executed.',
