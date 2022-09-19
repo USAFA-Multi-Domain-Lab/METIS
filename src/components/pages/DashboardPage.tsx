@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { useStore } from 'react-context-hook'
-import { createTestMission, MissionNode } from '../../modules/missions'
+import { createTestMission, Mission, MissionNode } from '../../modules/missions'
 import { EAjaxStatus } from '../../modules/toolbox/ajax'
 import usersModule, { IUser } from '../../modules/users'
 import Markdown from '../content/Markdown'
@@ -8,6 +8,7 @@ import Branding from '../content/Branding'
 import MissionMap from '../content/MissionMap'
 import OutputBox from '../content/OutputPanel'
 import './DashboardPage.scss'
+import gameLogic from '../../modules/game-logic'
 
 // This will render a dashboard with a radar
 // on it, indicating air traffic passing by.
@@ -29,6 +30,10 @@ export default function DashboardPage(props: {
     useStore<Array<{ date: number; value: string }>>('consoleOutputs')
 
   /* -- COMPONENT STATE -- */
+
+  const [missionState, setMissionState] = useState<Mission>(
+    gameLogic.createInitialMissionState(),
+  )
 
   /* -- COMPONENT EFFECTS -- */
 
@@ -83,9 +88,18 @@ export default function DashboardPage(props: {
           // -- content --
           <div className='Content'>
             <MissionMap
-              mission={createTestMission()}
+              mission={missionState}
               missionAjaxStatus={EAjaxStatus.Loaded}
-              handleNodeSelection={(node: MissionNode) => {
+              handleNodeSelection={(selectedNode: MissionNode) => {
+                let currentMissionState: Mission = missionState
+                let updatedMissionState: Mission =
+                  gameLogic.handleNodeSelection(
+                    currentMissionState,
+                    selectedNode,
+                  )
+
+                setMissionState(updatedMissionState)
+
                 if (currentUser !== null) {
                   let username: string = currentUser.userID
 
@@ -94,7 +108,7 @@ export default function DashboardPage(props: {
                     {
                       date: Date.now(),
                       value: `<span class='line-cursor'>${username}@USAFA: </span>
-                              <span class='${node.name}'>${node.preExecutionText}</span>`,
+                              <span class='${selectedNode.name}'>${selectedNode.preExecutionText}</span>`,
                     },
                   ])
                 }

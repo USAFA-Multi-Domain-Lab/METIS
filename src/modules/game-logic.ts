@@ -1,6 +1,6 @@
 import missions, { createTestMission, Mission, MissionNode } from './missions'
 
-export function gameLogic(): Mission {
+export function createInitialMissionState(): Mission {
   const mission = createTestMission()
 
   const initialMissionState: Mission = {
@@ -24,4 +24,11 @@ export function gameLogic(): Mission {
   return initialMissionState
 }
 
-export default gameLogic
+export const handleNodeSelection = (
+  missionState: Mission,
+  node: MissionNode,
+): Mission => {
+  return missionState
+}
+
+export default { createInitialMissionState, handleNodeSelection }
