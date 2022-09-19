@@ -12,19 +12,13 @@ export function gameLogic(): Mission {
 
   for (let nodeKey in mission.nodeStructure) {
     ;(initialMissionState.nodeStructure as any)[nodeKey] = {}
-  }
-
-  for (let data of mission.nodeData) {
-    // console.log(data[0])
-
-    if (data[0] === 'communications') {
-      ;(initialMissionState.nodeData as any).set(data[0], data[1])
-    } else if (data[0] === 'airDefense') {
-      ;(initialMissionState.nodeData as any).set(data[0], data[1])
-    } else if (data[0] === 'infrastructure') {
-      ;(initialMissionState.nodeData as any).set(data[0], data[1])
-    } else if (data[0] === 'satelliteServices') {
-      ;(initialMissionState.nodeData as any).set(data[0], data[1])
+    let data = mission.nodeData.get(nodeKey)
+    if (data !== undefined) {
+      initialMissionState.nodeData.set(nodeKey, data)
+    } else {
+      throw new Error(
+        'key is undefined. Check to see if key exists in the database.',
+      )
     }
   }
   return initialMissionState

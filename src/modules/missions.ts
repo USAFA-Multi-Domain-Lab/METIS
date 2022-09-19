@@ -147,63 +147,63 @@ export function createTestMission(): Mission {
     name: 'Incredible Mission',
     versionNumber: 1,
     nodeStructure: {
-      communication: {
-        cellularNetwork: {
-          cellularTower: {
+      'Communications': {
+        'cellularNetwork': {
+          'Cellular Tower': {
             END: 'END',
           },
         },
-        internetProvider: {
-          serviceProvider: {
+        'Internet Provider': {
+          'Service Provider': {
             END: 'END',
           },
         },
-        instantMessaging: {
-          centralServer1: {
+        'Instant Messaging': {
+          'Central Server 1': {
             END: 'END',
           },
         },
-        fileSharingService: {
-          centralServer2: {
+        'File Sharing Service': {
+          'Central Server 2': {
             END: 'END',
           },
         },
       },
-      airDefense: {
-        iadsNetwork: {
-          individualLaunchSites: {
-            launcherSystem: {
+      'Air Defense': {
+        'IADS Network': {
+          'Individual Launch Sites': {
+            'Launcher System': {
               END: 'END',
             },
-            radarSystem: { END: 'END' },
+            'Radar System': { END: 'END' },
           },
         },
       },
-      infrastructure: {
-        railroadSystem: {
-          trackMonitoring: { END: 'END' },
-          trackSwitchSystem: { END: 'END' },
+      'Infrastructure': {
+        'Railroad System': {
+          'Track Monitoring': { END: 'END' },
+          'Track Switch System': { END: 'END' },
         },
-        electricalSystem: {
-          regionalService: { END: 'END' },
+        'Electrical System': {
+          'Regional Service': { END: 'END' },
         },
-        waterSystem: {
-          valveSystem: { END: 'END' },
+        'Water System': {
+          'Valve System': { END: 'END' },
         },
-        roadSystem: {
-          trafficLightSystem: { END: 'END' },
-          cctvSystem: { END: 'END' },
+        'Road System': {
+          'Traffic Light System': { END: 'END' },
+          'CCTV System': { END: 'END' },
         },
       },
-      satelliteServices: {
-        globalPositioning: { END: 'END' },
-        dataTransfer: { END: 'END' },
-        imageryCollection: { END: 'END' },
-        sensorObservation: { END: 'END' },
+      'Satellite Services': {
+        'Global Positioning': { END: 'END' },
+        'Data Transfer': { END: 'END' },
+        'Imagery Collection': { END: 'END' },
+        'Sensor Observation': { END: 'END' },
       },
     },
     nodeData: {
-      communications: {
+      'Communications': {
         name: 'Communications',
         preExecutionText: 'Communications has not been executed.',
         postExecutionSuccessText: 'Communications has been executed.',
@@ -214,7 +214,7 @@ export function createTestMission(): Mission {
         mapX: 0,
         mapY: -2,
       },
-      cellularNetwork: {
+      'Cellular Network': {
         name: 'Cellular Network',
         preExecutionText: 'Cellular Network has not been executed.',
         postExecutionSuccessText: 'Cellular Network has been executed.',
@@ -225,7 +225,7 @@ export function createTestMission(): Mission {
         mapX: -2,
         mapY: 0,
       },
-      internetProvider: {
+      'Internet Provider': {
         name: 'Internet Provider',
         preExecutionText: 'Internet Provider has not been executed.',
         postExecutionSuccessText: 'Internet Provider has been executed.',
@@ -236,7 +236,7 @@ export function createTestMission(): Mission {
         mapX: 1,
         mapY: 0,
       },
-      instantMessaging: {
+      'Instant Messaging': {
         name: 'Instant Messaging',
         preExecutionText: 'Instant Messaging has not been executed.',
         postExecutionSuccessText: 'Instant Messaging has been executed.',
@@ -247,7 +247,7 @@ export function createTestMission(): Mission {
         mapX: -1,
         mapY: 0,
       },
-      fileSharingService: {
+      'File Sharing Service': {
         name: 'File Sharing Service',
         preExecutionText: 'File Sharing Service has not been executed.',
         postExecutionSuccessText: 'File Sharing Service has been executed.',
@@ -258,7 +258,7 @@ export function createTestMission(): Mission {
         mapX: 2,
         mapY: 0,
       },
-      cellularTower: {
+      'Cellular Tower': {
         name: 'Cellular Tower',
         preExecutionText: 'Cellular Tower has not been executed.',
         postExecutionSuccessText: 'Cellular Tower has been executed.',
@@ -269,7 +269,7 @@ export function createTestMission(): Mission {
         mapX: -2,
         mapY: 2,
       },
-      serviceProvider: {
+      'Service Provider': {
         name: 'Service Provider',
         preExecutionText: 'Service Provider has not been executed.',
         postExecutionSuccessText: 'Service Provider has been executed.',
@@ -281,11 +281,11 @@ export function createTestMission(): Mission {
         mapY: 2,
       },
 
-      centralServer1: {
-        name: 'Central Server',
-        preExecutionText: 'Central Server has not been executed.',
-        postExecutionSuccessText: 'Central Server has been executed.',
-        postExecutionFailureText: 'Central Server has failed to execute.',
+      'Central Server 1': {
+        name: 'Central Server 1',
+        preExecutionText: 'Central Server 1 has not been executed.',
+        postExecutionSuccessText: 'Central Server 1 has been executed.',
+        postExecutionFailureText: 'Central Server 1 has failed to execute.',
         actionData: 'exec command',
         display: 'yes',
         successChance: 0.3,
@@ -293,18 +293,18 @@ export function createTestMission(): Mission {
         mapY: 2,
       },
 
-      centralServer2: {
-        name: 'Central Server',
-        preExecutionText: 'Central Server has not been executed.',
-        postExecutionSuccessText: 'Central Server has been executed.',
-        postExecutionFailureText: 'Central Server has failed to execute.',
+      'Central Server 2': {
+        name: 'Central Server 2',
+        preExecutionText: 'Central Server 2 has not been executed.',
+        postExecutionSuccessText: 'Central Server 2 has been executed.',
+        postExecutionFailureText: 'Central Server 2 has failed to execute.',
         actionData: 'exec command',
         display: 'yes',
         successChance: 0.3,
         mapX: 2,
         mapY: 2,
       },
-      airDefense: {
+      'Air Defense': {
         name: 'Air Defense',
         preExecutionText: 'Air Defense has not been executed.',
         postExecutionSuccessText: 'Air Defense has been executed.',
@@ -313,9 +313,9 @@ export function createTestMission(): Mission {
         display: 'yes',
         successChance: 0.3,
         mapX: 0,
-        mapY: 4,
+        mapY: -1,
       },
-      iadsNetwork: {
+      'IADS Network': {
         name: 'IADS Network',
         preExecutionText: 'IADS Network has not been executed.',
         postExecutionSuccessText: 'IADS Network has been executed.',
@@ -326,7 +326,7 @@ export function createTestMission(): Mission {
         mapX: 0,
         mapY: 6,
       },
-      individualLaunchSites: {
+      'Individual Launch Sites': {
         name: 'Individual Launch Sites',
         preExecutionText: 'Individual Launch Sites has not been executed.',
         postExecutionSuccessText: 'Individual Launch Sites has been executed.',
@@ -338,7 +338,7 @@ export function createTestMission(): Mission {
         mapX: 0,
         mapY: 8,
       },
-      launcherSystem: {
+      'Launcher System': {
         name: 'Launcher System',
         preExecutionText: 'Launcher System has not been executed.',
         postExecutionSuccessText: 'Launcher System has been executed.',
@@ -349,7 +349,7 @@ export function createTestMission(): Mission {
         mapX: 1,
         mapY: 10,
       },
-      radarSystem: {
+      'Radar System': {
         name: 'Radar System',
         preExecutionText: 'Radar System has not been executed.',
         postExecutionSuccessText: 'Radar System has been executed.',
@@ -360,7 +360,7 @@ export function createTestMission(): Mission {
         mapX: -1,
         mapY: 10,
       },
-      infrastructure: {
+      'Infrastructure': {
         name: 'Infrastructure',
         preExecutionText: 'Infrastructure has not been executed.',
         postExecutionSuccessText: 'Infrastructure has been executed.',
@@ -369,9 +369,9 @@ export function createTestMission(): Mission {
         display: 'yes',
         successChance: 0.3,
         mapX: 0,
-        mapY: 12,
+        mapY: 0,
       },
-      railroadSystem: {
+      'Railroad System': {
         name: 'Railroad System',
         preExecutionText: 'Railroad System has not been executed.',
         postExecutionSuccessText: 'Railroad System has been executed.',
@@ -382,7 +382,7 @@ export function createTestMission(): Mission {
         mapX: -2,
         mapY: 14,
       },
-      electricalSystem: {
+      'Electrical System': {
         name: 'Electrical System',
         preExecutionText: 'Electrical System has not been executed.',
         postExecutionSuccessText: 'Electrical System has been executed.',
@@ -393,7 +393,7 @@ export function createTestMission(): Mission {
         mapX: -1,
         mapY: 14,
       },
-      waterSystem: {
+      'Water System': {
         name: 'Water System',
         preExecutionText: 'Water System has not been executed.',
         postExecutionSuccessText: 'Water System has been executed.',
@@ -404,7 +404,7 @@ export function createTestMission(): Mission {
         mapX: 1,
         mapY: 14,
       },
-      roadSystem: {
+      'Road System': {
         name: 'Road System',
         preExecutionText: 'Road System has not been executed.',
         postExecutionSuccessText: 'Road System has been executed.',
@@ -415,7 +415,7 @@ export function createTestMission(): Mission {
         mapX: 2,
         mapY: 14,
       },
-      trackMonitoring: {
+      'Track Monitoring': {
         name: 'Track Monitoring',
         preExecutionText: 'Track Monitoring has not been executed.',
         postExecutionSuccessText: 'Track Monitoring has been executed.',
@@ -426,7 +426,7 @@ export function createTestMission(): Mission {
         mapX: -3,
         mapY: 16,
       },
-      trackSwitchSystem: {
+      'Track Switch System': {
         name: 'Track Switch System',
         preExecutionText: 'Track Switch System has not been executed.',
         postExecutionSuccessText: 'Track Switch System has been executed.',
@@ -437,7 +437,7 @@ export function createTestMission(): Mission {
         mapX: -2,
         mapY: 16,
       },
-      regionalService: {
+      'Regional Service': {
         name: 'Regional Service',
         preExecutionText: 'Regional Service has not been executed.',
         postExecutionSuccessText: 'Regional Service has been executed.',
@@ -448,7 +448,7 @@ export function createTestMission(): Mission {
         mapX: -1,
         mapY: 16,
       },
-      valveSystem: {
+      'Valve System': {
         name: 'Valve System',
         preExecutionText: 'Valve System has not been executed.',
         postExecutionSuccessText: 'Valve System has been executed.',
@@ -459,7 +459,7 @@ export function createTestMission(): Mission {
         mapX: 1,
         mapY: 16,
       },
-      trafficLightSystem: {
+      'Traffic Light System': {
         name: 'Traffic Light System',
         preExecutionText: 'Traffic Light System has not been executed.',
         postExecutionSuccessText: 'Traffic Light System has been executed.',
@@ -470,7 +470,7 @@ export function createTestMission(): Mission {
         mapX: 2,
         mapY: 16,
       },
-      cctvSystem: {
+      'CCTV System': {
         name: 'CCTV System',
         preExecutionText: 'CCTV System has not been executed.',
         postExecutionSuccessText: 'CCTV System has been executed.',
@@ -481,7 +481,7 @@ export function createTestMission(): Mission {
         mapX: 3,
         mapY: 16,
       },
-      satelliteServices: {
+      'Satellite Services': {
         name: 'Satellite Services',
         preExecutionText: 'Satellite Services has not been executed.',
         postExecutionSuccessText: 'Satellite Services has been executed.',
@@ -490,9 +490,9 @@ export function createTestMission(): Mission {
         display: 'yes',
         successChance: 0.3,
         mapX: 0,
-        mapY: 18,
+        mapY: 1,
       },
-      globalPositioning: {
+      'Global Positioning': {
         name: 'Global Positioning',
         preExecutionText: 'Global Positioning has not been executed.',
         postExecutionSuccessText: 'Global Positioning has been executed.',
@@ -503,7 +503,7 @@ export function createTestMission(): Mission {
         mapX: -2,
         mapY: 20,
       },
-      dataTransfer: {
+      'Data Transfer': {
         name: 'Data Transfer',
         preExecutionText: 'Data Transfer has not been executed.',
         postExecutionSuccessText: 'Data Transfer has been executed.',
@@ -514,7 +514,7 @@ export function createTestMission(): Mission {
         mapX: -1,
         mapY: 20,
       },
-      imageryCollection: {
+      'Imagery Collection': {
         name: 'Imagery Collection',
         preExecutionText: 'Imagery Collection has not been executed.',
         postExecutionSuccessText: 'Imagery Collection has been executed.',
@@ -525,7 +525,7 @@ export function createTestMission(): Mission {
         mapX: 1,
         mapY: 20,
       },
-      sensorObservation: {
+      'Sensor Observation': {
         name: 'Sensor Observation',
         preExecutionText: 'Sensor Observation has not been executed.',
         postExecutionSuccessText: 'Sensor Observation has been executed.',
