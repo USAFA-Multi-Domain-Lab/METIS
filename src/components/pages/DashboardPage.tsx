@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { useStore } from 'react-context-hook'
-import { createTestMission, Mission, MissionNode } from '../../modules/missions'
+import { Mission, MissionNode } from '../../modules/missions'
 import { EAjaxStatus } from '../../modules/toolbox/ajax'
 import usersModule, { IUser } from '../../modules/users'
 import Markdown from '../content/Markdown'

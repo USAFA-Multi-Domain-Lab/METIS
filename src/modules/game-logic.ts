@@ -1,18 +1,18 @@
 import missions, { createTestMission, Mission, MissionNode } from './missions'
 
-export function createInitialMissionState(): Mission {
-  const mission = createTestMission()
+const referenceMission = createTestMission()
 
+export function createInitialMissionState(): Mission {
   const initialMissionState: Mission = {
-    name: mission.name,
-    versionNumber: mission.versionNumber,
+    name: referenceMission.name,
+    versionNumber: referenceMission.versionNumber,
     nodeStructure: {},
     nodeData: new Map<string, MissionNode>(),
   }
 
-  for (let nodeKey in mission.nodeStructure) {
+  for (let nodeKey in referenceMission.nodeStructure) {
     ;(initialMissionState.nodeStructure as any)[nodeKey] = {}
-    let data = mission.nodeData.get(nodeKey)
+    let data = referenceMission.nodeData.get(nodeKey)
     if (data !== undefined) {
       initialMissionState.nodeData.set(nodeKey, data)
     } else {
@@ -28,6 +28,26 @@ export const handleNodeSelection = (
   missionState: Mission,
   node: MissionNode,
 ): Mission => {
+  // Renders the next set of sub-nodes as the user clicks on
+  //  one of the initial nodes
+  for (let data of referenceMission.nodeData) {
+    // Loops through the second tier of node objects in the
+    // node structure and nestles them inside the initial nodes
+    for (let nodeKey in referenceMission.nodeStructure) {
+      let secondaryNodes = (referenceMission.nodeStructure as any)[nodeKey]
+      if (node.name === nodeKey) {
+        for (let eachNode in secondaryNodes) {
+          if (eachNode === data[0]) {
+            ;(secondaryNodes as any)[eachNode] = {}
+            ;(missionState.nodeStructure as any)[nodeKey] = secondaryNodes
+          }
+        }
+      }
+      // Renders the node data
+      // missionState.nodeData = referenceMission.nodeData
+    }
+  }
+  console.log(missionState)
   return missionState
 }
 

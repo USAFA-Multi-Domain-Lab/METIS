@@ -148,7 +148,7 @@ export function createTestMission(): Mission {
     versionNumber: 1,
     nodeStructure: {
       'Communications': {
-        'cellularNetwork': {
+        'Cellular Network': {
           'Cellular Tower': {
             END: 'END',
           },
