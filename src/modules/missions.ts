@@ -16,6 +16,7 @@ export interface IMissionJson {
 // of MissionNode in the Mission class.
 export interface IMissionNodeJson {
   name: string
+  color: string
   preExecutionText: string
   postExecutionSuccessText: string
   postExecutionFailureText: string
@@ -31,6 +32,7 @@ export interface IMissionNodeJson {
 export class MissionNode {
   _instanceId: string
   name: string
+  color: string
   preExecutionText: string
   postExecutionSuccessText: string
   postExecutionFailureText: string
@@ -45,6 +47,7 @@ export class MissionNode {
 
   constructor(
     name: string,
+    color: string,
     preExecutionText: string,
     postExecutionSuccessText: string,
     postExecutionFailureText: string,
@@ -55,6 +58,7 @@ export class MissionNode {
   ) {
     this._instanceId = generateHash()
     this.name = name
+    this.color = color
     this.preExecutionText = preExecutionText
     this.postExecutionSuccessText = postExecutionSuccessText
     this.postExecutionFailureText = postExecutionFailureText
@@ -118,6 +122,7 @@ export class Mission {
 
         let node: MissionNode = new MissionNode(
           nodeDatum.name,
+          nodeDatum.color,
           nodeDatum.preExecutionText,
           nodeDatum.postExecutionSuccessText,
           nodeDatum.postExecutionFailureText,
@@ -205,6 +210,7 @@ export function createTestMission(): Mission {
     nodeData: {
       'Communications': {
         name: 'Communications',
+        color: 'green',
         preExecutionText: 'Communications has not been executed.',
         postExecutionSuccessText: 'Communications has been executed.',
         postExecutionFailureText: 'Communications has failed to execute.',
@@ -216,6 +222,7 @@ export function createTestMission(): Mission {
       },
       'Cellular Network': {
         name: 'Cellular Network',
+        color: 'green',
         preExecutionText: 'Cellular Network has not been executed.',
         postExecutionSuccessText: 'Cellular Network has been executed.',
         postExecutionFailureText: 'Cellular Network has failed to execute.',
@@ -227,6 +234,7 @@ export function createTestMission(): Mission {
       },
       'Internet Provider': {
         name: 'Internet Provider',
+        color: 'green',
         preExecutionText: 'Internet Provider has not been executed.',
         postExecutionSuccessText: 'Internet Provider has been executed.',
         postExecutionFailureText: 'Internet Provider has failed to execute.',
@@ -238,6 +246,7 @@ export function createTestMission(): Mission {
       },
       'Instant Messaging': {
         name: 'Instant Messaging',
+        color: 'green',
         preExecutionText: 'Instant Messaging has not been executed.',
         postExecutionSuccessText: 'Instant Messaging has been executed.',
         postExecutionFailureText: 'Instant Messaging has failed to execute.',
@@ -249,6 +258,7 @@ export function createTestMission(): Mission {
       },
       'File Sharing Service': {
         name: 'File Sharing Service',
+        color: 'green',
         preExecutionText: 'File Sharing Service has not been executed.',
         postExecutionSuccessText: 'File Sharing Service has been executed.',
         postExecutionFailureText: 'File Sharing Service has failed to execute.',
@@ -260,6 +270,7 @@ export function createTestMission(): Mission {
       },
       'Cellular Tower': {
         name: 'Cellular Tower',
+        color: 'green',
         preExecutionText: 'Cellular Tower has not been executed.',
         postExecutionSuccessText: 'Cellular Tower has been executed.',
         postExecutionFailureText: 'Cellular Tower has failed to execute.',
@@ -271,6 +282,7 @@ export function createTestMission(): Mission {
       },
       'Service Provider': {
         name: 'Service Provider',
+        color: 'green',
         preExecutionText: 'Service Provider has not been executed.',
         postExecutionSuccessText: 'Service Provider has been executed.',
         postExecutionFailureText: 'Service Provider has failed to execute.',
@@ -283,6 +295,7 @@ export function createTestMission(): Mission {
 
       'Central Server 1': {
         name: 'Central Server 1',
+        color: 'green',
         preExecutionText: 'Central Server 1 has not been executed.',
         postExecutionSuccessText: 'Central Server 1 has been executed.',
         postExecutionFailureText: 'Central Server 1 has failed to execute.',
@@ -295,6 +308,7 @@ export function createTestMission(): Mission {
 
       'Central Server 2': {
         name: 'Central Server 2',
+        color: 'green',
         preExecutionText: 'Central Server 2 has not been executed.',
         postExecutionSuccessText: 'Central Server 2 has been executed.',
         postExecutionFailureText: 'Central Server 2 has failed to execute.',
@@ -306,6 +320,7 @@ export function createTestMission(): Mission {
       },
       'Air Defense': {
         name: 'Air Defense',
+        color: 'pink',
         preExecutionText: 'Air Defense has not been executed.',
         postExecutionSuccessText: 'Air Defense has been executed.',
         postExecutionFailureText: 'Air Defense has failed to execute.',
@@ -317,6 +332,7 @@ export function createTestMission(): Mission {
       },
       'IADS Network': {
         name: 'IADS Network',
+        color: 'pink',
         preExecutionText: 'IADS Network has not been executed.',
         postExecutionSuccessText: 'IADS Network has been executed.',
         postExecutionFailureText: 'IADS Network has failed to execute.',
@@ -328,6 +344,7 @@ export function createTestMission(): Mission {
       },
       'Individual Launch Sites': {
         name: 'Individual Launch Sites',
+        color: 'pink',
         preExecutionText: 'Individual Launch Sites has not been executed.',
         postExecutionSuccessText: 'Individual Launch Sites has been executed.',
         postExecutionFailureText:
@@ -340,6 +357,7 @@ export function createTestMission(): Mission {
       },
       'Launcher System': {
         name: 'Launcher System',
+        color: 'pink',
         preExecutionText: 'Launcher System has not been executed.',
         postExecutionSuccessText: 'Launcher System has been executed.',
         postExecutionFailureText: 'Launcher System has failed to execute.',
@@ -351,6 +369,7 @@ export function createTestMission(): Mission {
       },
       'Radar System': {
         name: 'Radar System',
+        color: 'pink',
         preExecutionText: 'Radar System has not been executed.',
         postExecutionSuccessText: 'Radar System has been executed.',
         postExecutionFailureText: 'Radar System has failed to execute.',
@@ -362,6 +381,7 @@ export function createTestMission(): Mission {
       },
       'Infrastructure': {
         name: 'Infrastructure',
+        color: 'yellow',
         preExecutionText: 'Infrastructure has not been executed.',
         postExecutionSuccessText: 'Infrastructure has been executed.',
         postExecutionFailureText: 'Infrastructure has failed to execute.',
@@ -373,6 +393,7 @@ export function createTestMission(): Mission {
       },
       'Railroad System': {
         name: 'Railroad System',
+        color: 'yellow',
         preExecutionText: 'Railroad System has not been executed.',
         postExecutionSuccessText: 'Railroad System has been executed.',
         postExecutionFailureText: 'Railroad System has failed to execute.',
@@ -384,6 +405,7 @@ export function createTestMission(): Mission {
       },
       'Electrical System': {
         name: 'Electrical System',
+        color: 'yellow',
         preExecutionText: 'Electrical System has not been executed.',
         postExecutionSuccessText: 'Electrical System has been executed.',
         postExecutionFailureText: 'Electrical System has failed to execute.',
@@ -395,6 +417,7 @@ export function createTestMission(): Mission {
       },
       'Water System': {
         name: 'Water System',
+        color: 'yellow',
         preExecutionText: 'Water System has not been executed.',
         postExecutionSuccessText: 'Water System has been executed.',
         postExecutionFailureText: 'Water System has failed to execute.',
@@ -406,6 +429,7 @@ export function createTestMission(): Mission {
       },
       'Road System': {
         name: 'Road System',
+        color: 'yellow',
         preExecutionText: 'Road System has not been executed.',
         postExecutionSuccessText: 'Road System has been executed.',
         postExecutionFailureText: 'Road System has failed to execute.',
@@ -417,6 +441,7 @@ export function createTestMission(): Mission {
       },
       'Track Monitoring': {
         name: 'Track Monitoring',
+        color: 'yellow',
         preExecutionText: 'Track Monitoring has not been executed.',
         postExecutionSuccessText: 'Track Monitoring has been executed.',
         postExecutionFailureText: 'Track Monitoring has failed to execute.',
@@ -428,6 +453,7 @@ export function createTestMission(): Mission {
       },
       'Track Switch System': {
         name: 'Track Switch System',
+        color: 'yellow',
         preExecutionText: 'Track Switch System has not been executed.',
         postExecutionSuccessText: 'Track Switch System has been executed.',
         postExecutionFailureText: 'Track Switch System has failed to execute.',
@@ -439,6 +465,7 @@ export function createTestMission(): Mission {
       },
       'Regional Service': {
         name: 'Regional Service',
+        color: 'yellow',
         preExecutionText: 'Regional Service has not been executed.',
         postExecutionSuccessText: 'Regional Service has been executed.',
         postExecutionFailureText: 'Regional Service has failed to execute.',
@@ -450,6 +477,7 @@ export function createTestMission(): Mission {
       },
       'Valve System': {
         name: 'Valve System',
+        color: 'yellow',
         preExecutionText: 'Valve System has not been executed.',
         postExecutionSuccessText: 'Valve System has been executed.',
         postExecutionFailureText: 'Valve System has failed to execute.',
@@ -461,6 +489,7 @@ export function createTestMission(): Mission {
       },
       'Traffic Light System': {
         name: 'Traffic Light System',
+        color: 'yellow',
         preExecutionText: 'Traffic Light System has not been executed.',
         postExecutionSuccessText: 'Traffic Light System has been executed.',
         postExecutionFailureText: 'Traffic Light System has failed to execute.',
@@ -472,6 +501,7 @@ export function createTestMission(): Mission {
       },
       'CCTV System': {
         name: 'CCTV System',
+        color: 'yellow',
         preExecutionText: 'CCTV System has not been executed.',
         postExecutionSuccessText: 'CCTV System has been executed.',
         postExecutionFailureText: 'CCTV System has failed to execute.',
@@ -483,6 +513,7 @@ export function createTestMission(): Mission {
       },
       'Satellite Services': {
         name: 'Satellite Services',
+        color: 'blue',
         preExecutionText: 'Satellite Services has not been executed.',
         postExecutionSuccessText: 'Satellite Services has been executed.',
         postExecutionFailureText: 'Satellite Services has failed to execute.',
@@ -494,6 +525,7 @@ export function createTestMission(): Mission {
       },
       'Global Positioning': {
         name: 'Global Positioning',
+        color: 'blue',
         preExecutionText: 'Global Positioning has not been executed.',
         postExecutionSuccessText: 'Global Positioning has been executed.',
         postExecutionFailureText: 'Global Positioning has failed to execute.',
@@ -505,6 +537,7 @@ export function createTestMission(): Mission {
       },
       'Data Transfer': {
         name: 'Data Transfer',
+        color: 'blue',
         preExecutionText: 'Data Transfer has not been executed.',
         postExecutionSuccessText: 'Data Transfer has been executed.',
         postExecutionFailureText: 'Data Transfer has failed to execute.',
@@ -516,6 +549,7 @@ export function createTestMission(): Mission {
       },
       'Imagery Collection': {
         name: 'Imagery Collection',
+        color: 'blue',
         preExecutionText: 'Imagery Collection has not been executed.',
         postExecutionSuccessText: 'Imagery Collection has been executed.',
         postExecutionFailureText: 'Imagery Collection has failed to execute.',
@@ -527,6 +561,7 @@ export function createTestMission(): Mission {
       },
       'Sensor Observation': {
         name: 'Sensor Observation',
+        color: 'blue',
         preExecutionText: 'Sensor Observation has not been executed.',
         postExecutionSuccessText: 'Sensor Observation has been executed.',
         postExecutionFailureText: 'Sensor Observation has failed to execute.',

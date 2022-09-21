@@ -1,5 +1,6 @@
 import React from 'react'
 import './ConsoleOutput.scss'
+import Markdown, { MarkdownTheme } from './Markdown'
 
 const ConsoleOutput = (props: { value: string }) => {
   return (
@@ -8,6 +9,7 @@ const ConsoleOutput = (props: { value: string }) => {
         className='Text'
         dangerouslySetInnerHTML={{ __html: props.value }}
       ></li>
+      {/* <Markdown {} /> */}
     </div>
   )
 }

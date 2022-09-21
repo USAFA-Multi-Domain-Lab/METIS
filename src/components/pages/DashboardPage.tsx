@@ -3,7 +3,6 @@ import { useStore } from 'react-context-hook'
 import { Mission, MissionNode } from '../../modules/missions'
 import { EAjaxStatus } from '../../modules/toolbox/ajax'
 import usersModule, { IUser } from '../../modules/users'
-import Markdown from '../content/Markdown'
 import Branding from '../content/Branding'
 import MissionMap from '../content/MissionMap'
 import OutputBox from '../content/OutputPanel'
@@ -100,6 +99,8 @@ export default function DashboardPage(props: {
 
                 setMissionState(updatedMissionState)
 
+                console.log(selectedNode)
+
                 if (currentUser !== null) {
                   let username: string = currentUser.userID
 
@@ -108,15 +109,46 @@ export default function DashboardPage(props: {
                     {
                       date: Date.now(),
                       value: `<span class='line-cursor'>${username}@USAFA: </span>
-                              <span class='${selectedNode.name}'>${selectedNode.preExecutionText}</span>`,
+                              <span class = ${selectedNode.color}>${selectedNode.preExecutionText}</span>`,
                     },
                   ])
                 }
-                // use ref below
-                // const BorderBox = document.querySelector('.BorderBox')
-                // BorderBox?.scrollTo(0, 10000000000000000)
               }}
-              applyNodeClassName={(node: MissionNode) => ''}
+              // use ref below
+              // const BorderBox = document.querySelector('.BorderBox')
+              // BorderBox?.scrollTo(0, 10000000000000000)
+              // terminalScroll={() => {}}
+              applyNodeClassName={(node: MissionNode) => {
+                switch (node.color) {
+                  case 'green':
+                    return 'green'
+                    break
+                  case 'pink':
+                    return 'pink'
+                    break
+                  case 'yellow':
+                    return 'yellow'
+                    break
+                  case 'blue':
+                    return 'blue'
+                    break
+                  case 'purple':
+                    return 'purple'
+                    break
+                  case 'red':
+                    return 'red'
+                    break
+                  case 'khaki':
+                    return 'khaki'
+                    break
+                  case 'orange':
+                    return 'orange'
+                    break
+                  default:
+                    return '#ffffff'
+                    break
+                }
+              }}
               renderNodeTooltipDescription={(node: MissionNode) => ''}
             />
             <OutputBox />
