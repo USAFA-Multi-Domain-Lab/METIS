@@ -5,7 +5,7 @@ import { EAjaxStatus } from '../../modules/toolbox/ajax'
 import usersModule, { IUser } from '../../modules/users'
 import Branding from '../content/Branding'
 import MissionMap from '../content/MissionMap'
-import OutputBox from '../content/OutputPanel'
+import OutputPanel from '../content/OutputPanel'
 import './DashboardPage.scss'
 import gameLogic from '../../modules/game-logic'
 
@@ -99,8 +99,6 @@ export default function DashboardPage(props: {
 
                 setMissionState(updatedMissionState)
 
-                console.log(selectedNode)
-
                 if (currentUser !== null) {
                   let username: string = currentUser.userID
 
@@ -114,10 +112,6 @@ export default function DashboardPage(props: {
                   ])
                 }
               }}
-              // use ref below
-              // const BorderBox = document.querySelector('.BorderBox')
-              // BorderBox?.scrollTo(0, 10000000000000000)
-              // terminalScroll={() => {}}
               applyNodeClassName={(node: MissionNode) => {
                 switch (node.color) {
                   case 'green':
@@ -151,7 +145,7 @@ export default function DashboardPage(props: {
               }}
               renderNodeTooltipDescription={(node: MissionNode) => ''}
             />
-            <OutputBox />
+            <OutputPanel />
           </div>
         }
       </div>

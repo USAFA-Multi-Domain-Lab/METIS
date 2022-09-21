@@ -9,7 +9,7 @@ import './Markdown.scss'
 // -- interfaces --
 
 export interface IMarkdown_P {
-  markdown: string
+  markdown: any
   theme: MarkdownTheme
   lineDivider: string
 }

@@ -66,6 +66,7 @@ export const handleNodeSelection = (
   // }
   // }
   // console.log(missionState)
+
   return missionState
 }
 

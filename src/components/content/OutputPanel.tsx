@@ -3,7 +3,7 @@ import './OutputPanel.scss'
 import { useStore } from 'react-context-hook'
 import ConsoleOutput from './ConsoleOutput'
 
-const OutputBox = () => {
+const OutputPanel = () => {
   const [consoleOutputs, setConsoleOutputs] =
     useStore<Array<{ date: number; value: string }>>('consoleOutputs')
 
@@ -27,4 +27,4 @@ const OutputBox = () => {
   )
 }
 
-export default OutputBox
+export default OutputPanel
