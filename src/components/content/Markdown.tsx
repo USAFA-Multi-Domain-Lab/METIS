@@ -9,7 +9,7 @@ import './Markdown.scss'
 // -- interfaces --
 
 export interface IMarkdown_P {
-  markdown: any
+  markdown: string
   theme: MarkdownTheme
   lineDivider: string
 }
@@ -61,10 +61,13 @@ export default class Markdown extends React.Component<
     let cursor: number = maxSpaceCount
     while (cursor > 1) {
       let spaces: string = ' '.repeat(cursor)
-      markdown = markdown.replaceAll(
-        spaces,
-        `<span>${'&nbsp;'.repeat(cursor)}</span>`,
-      )
+      {
+        // ! REMOVE THIS CODE TO REMOVE GAP
+        // markdown = markdown.replaceAll(
+        //   spaces,
+        //   `<span>${'&nbsp;'.repeat(cursor)}</span>`,
+        // )
+      }
       cursor--
     }
     markdown = markdown.replaceAll('\n ', '\n<span>&nbsp;</span>')

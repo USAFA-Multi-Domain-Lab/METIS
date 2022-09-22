@@ -1,29 +1,29 @@
 import React, { useEffect, useRef } from 'react'
+import { createTestMission, Mission } from '../../modules/missions'
 import './ConsoleOutput.scss'
 import Markdown, { MarkdownTheme } from './Markdown'
 
 const ConsoleOutput = (props: { value: string }) => {
-  const scrollRef: any = useRef()
+  const scrollRef = useRef<HTMLLIElement>(null)
 
   useEffect(() => {
-    scrollRef.current.scrollIntoView({ behavior: 'smooth' })
+    let scrollRefElement: HTMLLIElement | null = scrollRef.current
+
+    if (scrollRefElement !== null) {
+      scrollRefElement.scrollIntoView({ behavior: 'smooth' })
+    }
   }, [])
 
   return (
     <div className='ConsoleOutput'>
-      {/* <li
+      <li
         className='Text'
         ref={scrollRef}
         dangerouslySetInnerHTML={{ __html: props.value }}
-      ></li> */}
-
-      <div className='Text' ref={scrollRef}>
-        <Markdown
-          markdown={props.value}
-          theme={MarkdownTheme.ThemePrimary}
-          lineDivider='\n'
-        />
-      </div>
+      ></li>
+      {/* <div className='Text' ref={scrollRef}>
+        <Markdown markdown={props.value} theme={MarkdownTheme.ThemePrimary} />
+      </div> */}
     </div>
   )
 }
