@@ -7,6 +7,8 @@ import strings from '../../modules/toolbox/strings'
 import { EAjaxStatus } from '../../modules/toolbox/ajax'
 import MoreInformation from './MoreInformation'
 import { Mission, MissionNode } from '../../modules/missions'
+import { Action, EActionPurpose } from './Action'
+import { ActionPanel } from './ActionPanel'
 
 /* -- interfaces -- */
 
@@ -207,7 +209,7 @@ export default class MissionMap extends React.Component<
     // no more nodes to check.
     while (uncheckedNodes.length > 0) {
       let updatedUncheckedNodes: any[] = []
-      // Loops through each uncheck node.
+      // Loops through each unchecked node.
       for (let [prerequisite, unlockedStructure] of uncheckedNodes) {
         // Gets subnodes from the unchecked node
         // in question.
@@ -493,6 +495,69 @@ export default class MissionMap extends React.Component<
     return pointers
   }
 
+  // renders the action panel for the map,
+  // allowing the user to perform certain
+  // actions on the map.
+  renderMapActionPanel(styling: React.CSSProperties): JSX.Element | null {
+    let mapScale: number = this.state.mapScale
+    let handleMapEditRequest: (() => void) | null =
+      this.props.handleMapEditRequest
+    let actionsUniqueClassName: string = 'map-actions'
+
+    let availableActions = {
+      zoomIn: new Action({
+        ...Action.defaultProps,
+        purpose: EActionPurpose.ZoomIn,
+        handleClick: this.handleZoomInRequest,
+        tooltipDescription:
+          'Zoom in. \n*[Shift + Scroll] on the map will also zoom in and out.*',
+      }),
+      zoomOut: new Action({
+        ...Action.defaultProps,
+        purpose: EActionPurpose.ZoomOut,
+        handleClick: this.handleZoomOutRequest,
+        tooltipDescription:
+          'Zoom out. \n*[Shift + Scroll] on the map will also zoom in and out.*',
+      }),
+      edit: new Action({
+        ...Action.defaultProps,
+        purpose: EActionPurpose.Edit,
+        handleClick: handleMapEditRequest ? handleMapEditRequest : () => {},
+        tooltipDescription:
+          'Map the order of objectives throughout the mission.',
+      }),
+    }
+    let activeActions: Action[] = []
+
+    activeActions.push(availableActions.zoomIn)
+    activeActions.push(availableActions.zoomOut)
+
+    if (handleMapEditRequest !== null) {
+      activeActions.push(availableActions.edit)
+    }
+
+    if (mapScale === maxMapScale) {
+      actionsUniqueClassName += ' map-is-zoomed-in'
+    }
+
+    if (mapScale === minMapScale) {
+      actionsUniqueClassName += ' map-is-zoomed-out'
+    }
+
+    if (activeActions.length > 0) {
+      return (
+        <ActionPanel
+          actions={activeActions}
+          linkBack={null}
+          styling={styling}
+          uniqueClassName={actionsUniqueClassName}
+        />
+      )
+    } else {
+      return null
+    }
+  }
+
   // renders the help element for the map,
   // providing instructions to the user
   // on how to use the map
@@ -568,7 +633,7 @@ export default class MissionMap extends React.Component<
       mapPointerStyling.height = `${mapBounds.height}px`
       mapPointerViewBox = `0 0 ${mapBounds.width} ${mapBounds.height}`
       // mapActionPanelStyling.left = `${mapBounds.x}px`
-      mapActionPanelStyling.top = `${mapBounds.height - 65}px`
+      mapActionPanelStyling.top = `${mapBounds.height - 62}px`
       mapPromptStyling.top = `${mapBounds.top + 25}px`
       mapPromptStyling.right = `calc(100vw - ${mapBounds.right - 25}px)`
     }
@@ -615,6 +680,10 @@ export default class MissionMap extends React.Component<
           // -- HELP -- //
         }
         {this.renderHelp(mapHelpStyling)}
+        {
+          // -- MAP ACTION PANEL --
+        }
+        {this.renderMapActionPanel(mapActionPanelStyling)}
         {
           // -- MAPPED NODES --
         }

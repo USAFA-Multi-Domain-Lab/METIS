@@ -1,0 +1,44 @@
+@import '../../config.scss';
+
+.Action {
+  $border-radius: 15px;
+  display: inline-block;
+  -webkit-user-select: none;
+  user-select: none;
+  cursor: pointer;
+  transition: 500ms transform, 500ms background-size, 500ms background-position;
+  margin: 0 5px;
+  border: 3px solid $color-main;
+  border-radius: $border-radius;
+  width: 40px;
+  height: 38px;
+  padding-left: 0.75px;
+  background-color: $background-alt1;
+  font-size: 28px;
+  line-height: 36px;
+  font-weight: 700;
+  vertical-align: top;
+
+  &.edit {
+    background: url('/assets/images/icons/edit.svg'), $background-alt1;
+    background-position: 11.5px 10.5px;
+    background-size: 17px 17px;
+    background-repeat: no-repeat;
+  }
+
+  &.zoom-in {
+    cursor: zoom-in;
+    background: url('/assets/images/icons/zoom-in.svg'), $background-alt1;
+    background-position: 10px 8.5px;
+    background-size: 21px 21px;
+    background-repeat: no-repeat;
+  }
+
+  &.zoom-out {
+    cursor: zoom-out;
+    background: url('/assets/images/icons/zoom-out.svg'), $background-alt1;
+    background-position: 10px 8.5px;
+    background-size: 21px 21px;
+    background-repeat: no-repeat;
+  }
+}

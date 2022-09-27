@@ -3,10 +3,126 @@ import { useStore } from 'react-context-hook'
 import { createTestMission, Mission, MissionNode } from '../../modules/missions'
 import { EAjaxStatus } from '../../modules/toolbox/ajax'
 import inputs from '../../modules/toolbox/inputs'
+import { AnyObject, SingleTypeObject } from '../../modules/toolbox/objects'
 import usersModule, { IUser } from '../../modules/users'
 import Branding from '../content/Branding'
 import MissionMap from '../content/MissionMap'
+import Tooltip from '../content/Tooltip'
 import './MissionFormPage.scss'
+
+// This is a reference to a node
+// used in the NodeStructuring
+// component to expand and collapse
+// the structure.
+class NodeStructureReference {
+  name: string
+  parentNode: NodeStructureReference | null
+  subnodes: Array<NodeStructureReference>
+  _isExpanded: boolean
+
+  get isExpanded(): boolean {
+    return this._isExpanded
+  }
+
+  get expands(): boolean {
+    return this.subnodes.length > 0
+  }
+
+  constructor(
+    name: string,
+    parentNode: NodeStructureReference | null,
+    subnodes: Array<NodeStructureReference>,
+  ) {
+    this.name = name
+    this.parentNode = parentNode
+    this.subnodes = subnodes
+    this._isExpanded = false
+  }
+
+  // This will mark this reference
+  // as expanded if possible.
+  expand(): void {
+    if (this.expands) {
+      this._isExpanded = true
+    } else {
+      throw new Error(`Cannot expand ${this.name} as it has no subnodes:`)
+    }
+  }
+
+  // This will mark this reference
+  // as collapsed if possible.
+  collapse(): void {
+    if (this.expands) {
+      this._isExpanded = false
+    } else {
+      throw new Error(`Cannot collapse ${this.name} as it has no subnodes:`)
+    }
+  }
+
+  // This will toggle between expanded
+  // and collapse if possible.
+  toggle(): void {
+    if (this.isExpanded) {
+      this.collapse()
+    } else {
+      this.expand()
+    }
+  }
+
+  // This will move this reference to
+  // a new parent node.
+  move(destination: NodeStructureReference): void {
+    let parentNode: NodeStructureReference | null = this.parentNode
+
+    if (parentNode !== null) {
+      let siblings: NodeStructureReference[] = parentNode.subnodes
+
+      for (let index: number = 0; index < siblings.length; index++) {
+        let sibling = siblings[index]
+
+        if (this.name === sibling.name) {
+          siblings.splice(index, 1)
+        }
+      }
+
+      destination.subnodes.push(this)
+      this.parentNode = destination
+    }
+  }
+
+  // This will convert mission
+  // nodeStructure data into a
+  // NodeStructureReference.
+  static constructNodeStructureReference(
+    name: string,
+    nodeStructure: AnyObject,
+  ): NodeStructureReference {
+    let subnodes: Array<NodeStructureReference> = []
+    let subnodeKeyValuePairs: Array<[string, AnyObject | string]> = Object.keys(
+      nodeStructure,
+    ).map((key: string) => [key, nodeStructure[key]])
+
+    for (let subnodeKeyValuePair of subnodeKeyValuePairs) {
+      let key: string = subnodeKeyValuePair[0]
+      let value: AnyObject | string = subnodeKeyValuePair[1]
+
+      if (typeof value !== 'string') {
+        subnodes.push(
+          NodeStructureReference.constructNodeStructureReference(key, value),
+        )
+      }
+    }
+
+    let nodeStructureReference: NodeStructureReference =
+      new NodeStructureReference(name, null, subnodes)
+
+    for (let subnode of subnodes) {
+      subnode.parentNode = nodeStructureReference
+    }
+
+    return nodeStructureReference
+  }
+}
 
 // This will render a dashboard with a radar
 // on it, indicating air traffic passing by.
@@ -31,6 +147,8 @@ export default function MissionFormPage(props: {
   const [forcedUpdateCounter, setForcedUpdateCounter] = useState<number>(0)
   const [mission, selectMission] = useState<Mission | null>(null)
   const [selectedNode, selectNode] = useState<MissionNode | null>(null)
+  const [nodeStructuringIsActive, activateNodeStructuring] =
+    useState<boolean>(false)
 
   /* -- COMPONENT EFFECTS -- */
 
@@ -73,7 +191,7 @@ export default function MissionFormPage(props: {
   let show: boolean = props.show
   let className: string = 'MissionFormPage'
 
-  if (selectedNode !== null) {
+  if (selectedNode !== null || nodeStructuringIsActive) {
     className += ' SidePanelIsExpanded'
   }
 
@@ -102,11 +220,29 @@ export default function MissionFormPage(props: {
               } else {
                 selectNode(null)
               }
+              activateNodeStructuring(false)
             }}
+            handleMapEditRequest={
+              !nodeStructuringIsActive
+                ? () => {
+                    activateNodeStructuring(true)
+                    selectNode(null)
+                  }
+                : null
+            }
             applyNodeClassName={(node: MissionNode) => ''}
             renderNodeTooltipDescription={(node: MissionNode) => ''}
           />
-          <NodeEntry node={selectedNode} handleChange={forceUpdate} />
+          <NodeEntry
+            node={selectedNode}
+            handleChange={forceUpdate}
+            handleCloseRequest={() => selectNode(null)}
+          />
+          <NodeStructuring
+            active={nodeStructuringIsActive}
+            mission={mission}
+            handleCloseRequest={() => activateNodeStructuring(false)}
+          />
         </div>
       </div>
     )
@@ -120,14 +256,20 @@ export default function MissionFormPage(props: {
 function NodeEntry(props: {
   node: MissionNode | null
   handleChange: () => void
+  handleCloseRequest: () => void
 }): JSX.Element | null {
   let node: MissionNode | null = props.node
   let handleChange = props.handleChange
+  let handleCloseRequest = props.handleCloseRequest
 
   if (node !== null) {
     return (
       <div className='NodeEntry SidePanel'>
         <div className='BorderBox'>
+          <div className='Close' onClick={handleCloseRequest}>
+            x
+            <Tooltip description='Close panel.' />
+          </div>
           <Detail
             label='Name'
             initialValue={node.name}
@@ -203,6 +345,158 @@ function NodeEntry(props: {
             }}
             key={`${node.instanceID}_successChance`}
           />
+        </div>
+      </div>
+    )
+  } else {
+    return null
+  }
+}
+
+// This will render a form where
+// the node structure for the mission
+// can be defined.
+function NodeStructuring(props: {
+  active: boolean
+  mission: Mission
+  handleCloseRequest: () => void
+}): JSX.Element | null {
+  let active: boolean = props.active
+  let mission: Mission = props.mission
+  let handleCloseRequest = props.handleCloseRequest
+
+  const [mountHandled, setMountHandled] = useState<boolean>(false)
+  const [forcedUpdateCounter, setForcedUpdateCounter] = useState<number>(0)
+  const [nodeStructure, setNodeStructure] = useState<NodeStructureReference>(
+    new NodeStructureReference('DEFAULT', null, []),
+  )
+  const [nodeGrabbed, grabNode] = useState<NodeStructureReference | null>(null)
+  const [nodePendingDrop, pendDrop] = useState<NodeStructureReference | null>(
+    null,
+  )
+
+  // This forces a rerender.
+  const forceUpdate = (): void => {
+    setForcedUpdateCounter(forcedUpdateCounter + 1)
+  }
+
+  // This will render a node in the
+  // structuring for the given node
+  // name.
+  const Node = (props: {
+    structureReference: NodeStructureReference
+  }): JSX.Element | null => {
+    let structureReference: NodeStructureReference = props.structureReference
+    let handleClick = () => {
+      structureReference.toggle()
+      forceUpdate()
+    }
+    let className: string = 'Node'
+
+    className += structureReference.expands ? ' Expands' : ' Ends'
+    className += structureReference.isExpanded ? ' IsExpanded' : ' IsCollapsed'
+
+    if (structureReference.name === nodePendingDrop?.name) {
+      className += ' DropPending'
+    }
+
+    return (
+      <div className={className}>
+        <div
+          className='ParentNode'
+          onClick={handleClick}
+          draggable={true}
+          onDragOver={(event: React.DragEvent) => {
+            event.preventDefault()
+          }}
+          onDragCapture={() => {
+            grabNode(structureReference)
+          }}
+          onDragEnter={() => {
+            if (structureReference.name !== nodePendingDrop?.name) {
+              pendDrop(structureReference)
+            }
+          }}
+          onDragLeave={() => {
+            if (nodePendingDrop !== null) {
+              pendDrop(null)
+            }
+          }}
+          onDrop={(event: React.DragEvent) => {
+            console.log('1')
+            if (nodePendingDrop !== null) {
+              console.log('2')
+              let destinationNode = nodePendingDrop
+
+              if (nodeGrabbed !== null) {
+                console.log('3')
+                nodeGrabbed.move(destinationNode)
+              }
+
+              pendDrop(null)
+              grabNode(null)
+            }
+          }}
+        >
+          <svg className='Indicator'>
+            <polygon
+              points='0,0 7,0 3.5,7'
+              style={{ transformOrigin: '3.5px 3.5px' }}
+              className='Triangle'
+              fill='#fff'
+            />
+          </svg>
+          <div className='Name'>{structureReference.name}</div>
+        </div>
+        {structureReference.isExpanded ? (
+          <div className='Subnodes'>
+            {structureReference.subnodes.map(
+              (subnode: NodeStructureReference) => (
+                <Node structureReference={subnode} key={subnode.name} />
+              ),
+            )}
+          </div>
+        ) : null}
+      </div>
+    )
+  }
+
+  // This will render the nodes in the
+  // node structuring.
+  const renderNodes = (): JSX.Element | null => {
+    let nodeElements: Array<JSX.Element | null> = nodeStructure.subnodes.map(
+      (subnode: NodeStructureReference) => (
+        <Node structureReference={subnode} key={subnode.name} />
+      ),
+    )
+    let className: string = 'Nodes'
+
+    return <div className={className}>{nodeElements}</div>
+  }
+
+  // Equivalent of componentDidMount.
+  useEffect(() => {
+    if (!mountHandled) {
+      let nodeStructure: NodeStructureReference =
+        NodeStructureReference.constructNodeStructureReference(
+          'ROOT',
+          mission.nodeStructure,
+        )
+
+      setNodeStructure(nodeStructure)
+      setMountHandled(true)
+    }
+  }, [mountHandled])
+
+  if (active) {
+    return (
+      <div className='NodeStructuring SidePanel'>
+        <div className='BorderBox'>
+          <div className='Close' onClick={handleCloseRequest}>
+            x
+            <Tooltip description='Close panel.' />
+          </div>
+          {renderNodes()}
         </div>
       </div>
     )
