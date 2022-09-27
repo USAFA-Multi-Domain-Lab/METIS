@@ -423,13 +423,10 @@ function NodeStructuring(props: {
             }
           }}
           onDrop={(event: React.DragEvent) => {
-            console.log('1')
             if (nodePendingDrop !== null) {
-              console.log('2')
               let destinationNode = nodePendingDrop
 
               if (nodeGrabbed !== null) {
-                console.log('3')
                 nodeGrabbed.move(destinationNode)
               }
 
