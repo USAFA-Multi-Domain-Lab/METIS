@@ -1,5 +1,8 @@
 import { v4 as generateHash } from 'uuid'
+import NodeStructureReference from './node-reference'
 import { isInteger } from './numbers'
+import { cloneDeep } from 'lodash'
+import { AnyObject } from 'mongoose'
 
 // This is the raw mission data returned
 // from the server used to create instances
@@ -141,6 +144,80 @@ export class Mission {
       console.error('Invalid JSON passed to create Mission object.')
       throw error
     }
+  }
+
+  static renderMission = (
+    originalMission: Mission,
+    nodeStructureReference: NodeStructureReference,
+    nodeStructure: AnyObject,
+    missionRender: Mission | null = null,
+  ): Mission => {
+    if (missionRender === null) {
+      missionRender = new Mission(
+        originalMission.name,
+        originalMission.versionNumber,
+        cloneDeep(originalMission.nodeStructure),
+        new Map<string, MissionNode>(),
+      )
+      nodeStructure = missionRender.nodeStructure
+    } else {
+      let nodeName: string = nodeStructureReference.name
+      let nodeDatum: MissionNode | undefined =
+        originalMission.nodeData.get(nodeName)
+
+      if (nodeDatum !== undefined) {
+        missionRender.nodeData.set(nodeName, nodeDatum)
+      } else {
+        console.error(
+          new Error(
+            `Cannot render mission since the nodeDatum with the name ${nodeName} could not be found in the original mission:`,
+          ),
+        )
+        return new Mission(
+          originalMission.name,
+          originalMission.versionNumber,
+          {},
+          new Map<string, MissionNode>(),
+        )
+      }
+    }
+
+    let subnodes = nodeStructureReference.subnodes
+
+    if (!nodeStructureReference.isExpanded) {
+      for (let key of Object.keys(nodeStructure)) {
+        delete nodeStructure[key]
+      }
+      return missionRender
+    }
+
+    for (let subnode of subnodes) {
+      if (!(subnode.name in nodeStructure)) {
+        console.error(
+          new Error(
+            `Cannot render mission since the nodeReference subnode ${subnode.name} cannot be found in nodeStructure:`,
+          ),
+        )
+        return new Mission(
+          originalMission.name,
+          originalMission.versionNumber,
+          {},
+          new Map<string, MissionNode>(),
+        )
+      }
+
+      let substructure: AnyObject = nodeStructure[subnode.name]
+
+      Mission.renderMission(
+        originalMission,
+        subnode,
+        substructure,
+        missionRender,
+      )
+    }
+
+    // missionRender.nodeStructure = {}
+    return missionRender
   }
 }
 
@@ -328,7 +405,7 @@ export function createTestMission(): Mission {
         display: 'yes',
         successChance: 0.3,
         mapX: 0,
-        mapY: -1,
+        mapY: 4,
       },
       'IADS Network': {
         name: 'IADS Network',
@@ -389,7 +466,7 @@ export function createTestMission(): Mission {
         display: 'yes',
         successChance: 0.3,
         mapX: 0,
-        mapY: 0,
+        mapY: 12,
       },
       'Railroad System': {
         name: 'Railroad System',
@@ -521,7 +598,7 @@ export function createTestMission(): Mission {
         display: 'yes',
         successChance: 0.3,
         mapX: 0,
-        mapY: 1,
+        mapY: 18,
       },
       'Global Positioning': {
         name: 'Global Positioning',

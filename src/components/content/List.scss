@@ -316,6 +316,10 @@
       &.orange {
         background-color: $node-orange;
       }
+
+      &.default {
+        background-color: $background-alt1;
+      }
     }
 
     .page-number {

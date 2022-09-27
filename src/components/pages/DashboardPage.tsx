@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { useStore } from 'react-context-hook'
-import { Mission, MissionNode } from '../../modules/missions'
+import { createTestMission, Mission, MissionNode } from '../../modules/missions'
 import { EAjaxStatus } from '../../modules/toolbox/ajax'
 import usersModule, { IUser } from '../../modules/users'
 import Branding from '../content/Branding'
@@ -8,6 +8,10 @@ import MissionMap from '../content/MissionMap'
 import OutputPanel from '../content/OutputPanel'
 import './DashboardPage.scss'
 import gameLogic from '../../modules/game-logic'
+import NodeStructureReference from '../../modules/node-reference'
+import { AnyObject } from 'mongoose'
+
+const mission = createTestMission()
 
 // This will render a dashboard with a radar
 // on it, indicating air traffic passing by.
@@ -30,15 +34,28 @@ export default function DashboardPage(props: {
 
   /* -- COMPONENT STATE -- */
 
-  const [missionState, setMissionState] = useState<Mission>(
-    gameLogic.createInitialMissionState(),
-  )
+  let initialMissionState =
+    NodeStructureReference.constructNodeStructureReference(
+      mission.name,
+      mission.nodeStructure,
+    )
+
+  initialMissionState.expand()
+
+  const [missionState, setMissionState] =
+    useState<NodeStructureReference>(initialMissionState)
+  const [forcedUpdateCounter, setForcedUpdateCounter] = useState<number>(0)
 
   /* -- COMPONENT EFFECTS -- */
 
   /* -- COMPONENTS -- */
 
   /* -- COMPONENT FUNCTIONS -- */
+
+  // This forces a rerender of the component.
+  const forceUpdate = (): void => {
+    setForcedUpdateCounter(forcedUpdateCounter + 1)
+  }
 
   // This will logout the current user.
   const logout = () => {
@@ -66,7 +83,14 @@ export default function DashboardPage(props: {
   /* -- RENDER -- */
 
   let show: boolean = props.show
+
   let className: string = 'DashboardPage'
+
+  let missionRender = Mission.renderMission(
+    mission,
+    missionState,
+    mission.nodeStructure,
+  )
 
   if (show) {
     return (
@@ -87,17 +111,11 @@ export default function DashboardPage(props: {
           // -- content --
           <div className='Content'>
             <MissionMap
-              mission={missionState}
+              mission={missionRender}
               missionAjaxStatus={EAjaxStatus.Loaded}
               handleNodeSelection={(selectedNode: MissionNode) => {
-                let currentMissionState: Mission = missionState
-                let updatedMissionState: Mission =
-                  gameLogic.handleNodeSelection(
-                    currentMissionState,
-                    selectedNode,
-                  )
-
-                setMissionState(updatedMissionState)
+                gameLogic.handleNodeSelection(selectedNode, missionState)
+                forceUpdate()
 
                 if (currentUser !== null) {
                   let username: string = currentUser.userID
@@ -139,7 +157,7 @@ export default function DashboardPage(props: {
                     return 'orange'
                     break
                   default:
-                    return '#ffffff'
+                    return 'default'
                     break
                 }
               }}
