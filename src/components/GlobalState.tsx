@@ -29,6 +29,7 @@ export default class GlobalState {
   tooltips: React.RefObject<HTMLDivElement>
   tooltipDescription: string
   consoleOutputs: Array<{ date: number; value: string }>
+  executeNodePrompts: Array<{ date: number; value: string }>
 
   constructor(stateSetters: IStateSetters) {
     this.currentUser = null
@@ -42,6 +43,7 @@ export default class GlobalState {
     this.tooltips = React.createRef()
     this.tooltipDescription = ''
     this.consoleOutputs = []
+    this.executeNodePrompts = []
   }
 
   // This will position the currently

@@ -7,6 +7,8 @@ import strings from '../../modules/toolbox/strings'
 import { EAjaxStatus } from '../../modules/toolbox/ajax'
 import MoreInformation from './MoreInformation'
 import { Mission, MissionNode } from '../../modules/missions'
+import { handleNodeSelection } from '../../modules/game-logic'
+import { useStore } from 'react-context-hook'
 
 /* -- interfaces -- */
 

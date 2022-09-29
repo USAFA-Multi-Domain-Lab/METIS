@@ -1,7 +1,7 @@
 import { v4 as generateHash } from 'uuid'
 import NodeStructureReference from './node-reference'
 import { isInteger } from './numbers'
-import { cloneDeep } from 'lodash'
+import { cloneDeep, random } from 'lodash'
 import { AnyObject } from 'mongoose'
 
 // This is the raw mission data returned
@@ -41,11 +41,16 @@ export class MissionNode {
   postExecutionFailureText: string
   actionData: string
   successChance: number
+  _willSucceed: boolean
   mapX: number
   mapY: number
 
   get instanceID(): string {
     return this._instanceId
+  }
+
+  get willSucceed(): boolean {
+    return this._willSucceed
   }
 
   constructor(
@@ -67,8 +72,13 @@ export class MissionNode {
     this.postExecutionFailureText = postExecutionFailureText
     this.actionData = actionData
     this.successChance = successChance
+    this._willSucceed = MissionNode.checkSuccess(successChance)
     this.mapX = mapX
     this.mapY = mapY
+  }
+
+  static checkSuccess = (successChance: number): boolean => {
+    return Math.random() >= successChance
   }
 }
 
@@ -215,8 +225,6 @@ export class Mission {
         missionRender,
       )
     }
-
-    // missionRender.nodeStructure = {}
     return missionRender
   }
 }
@@ -306,8 +314,8 @@ export function createTestMission(): Mission {
         actionData: 'exec command',
         display: 'yes',
         successChance: 0.3,
-        mapX: -2,
-        mapY: 0,
+        mapX: 2,
+        mapY: -2,
       },
       'Internet Provider': {
         name: 'Internet Provider',
@@ -318,8 +326,8 @@ export function createTestMission(): Mission {
         actionData: 'exec command',
         display: 'yes',
         successChance: 0.3,
-        mapX: 1,
-        mapY: 0,
+        mapX: 2,
+        mapY: -1,
       },
       'Instant Messaging': {
         name: 'Instant Messaging',
@@ -330,7 +338,7 @@ export function createTestMission(): Mission {
         actionData: 'exec command',
         display: 'yes',
         successChance: 0.3,
-        mapX: -1,
+        mapX: 2,
         mapY: 0,
       },
       'File Sharing Service': {
@@ -343,7 +351,7 @@ export function createTestMission(): Mission {
         display: 'yes',
         successChance: 0.3,
         mapX: 2,
-        mapY: 0,
+        mapY: 1,
       },
       'Cellular Tower': {
         name: 'Cellular Tower',
@@ -354,8 +362,8 @@ export function createTestMission(): Mission {
         actionData: 'exec command',
         display: 'yes',
         successChance: 0.3,
-        mapX: -2,
-        mapY: 2,
+        mapX: 4,
+        mapY: -2,
       },
       'Service Provider': {
         name: 'Service Provider',
@@ -366,8 +374,8 @@ export function createTestMission(): Mission {
         actionData: 'exec command',
         display: 'yes',
         successChance: 0.3,
-        mapX: 1,
-        mapY: 2,
+        mapX: 4,
+        mapY: -1,
       },
 
       'Central Server 1': {
@@ -379,8 +387,8 @@ export function createTestMission(): Mission {
         actionData: 'exec command',
         display: 'yes',
         successChance: 0.3,
-        mapX: -1,
-        mapY: 2,
+        mapX: 4,
+        mapY: 0,
       },
 
       'Central Server 2': {
@@ -392,8 +400,8 @@ export function createTestMission(): Mission {
         actionData: 'exec command',
         display: 'yes',
         successChance: 0.3,
-        mapX: 2,
-        mapY: 2,
+        mapX: 4,
+        mapY: 1,
       },
       'Air Defense': {
         name: 'Air Defense',
@@ -405,7 +413,7 @@ export function createTestMission(): Mission {
         display: 'yes',
         successChance: 0.3,
         mapX: 0,
-        mapY: 4,
+        mapY: 2,
       },
       'IADS Network': {
         name: 'IADS Network',
@@ -416,8 +424,8 @@ export function createTestMission(): Mission {
         actionData: 'exec command',
         display: 'yes',
         successChance: 0.3,
-        mapX: 0,
-        mapY: 6,
+        mapX: 2,
+        mapY: 2,
       },
       'Individual Launch Sites': {
         name: 'Individual Launch Sites',
@@ -429,8 +437,8 @@ export function createTestMission(): Mission {
         actionData: 'exec command',
         display: 'yes',
         successChance: 0.3,
-        mapX: 0,
-        mapY: 8,
+        mapX: 4,
+        mapY: 2,
       },
       'Launcher System': {
         name: 'Launcher System',
@@ -441,8 +449,8 @@ export function createTestMission(): Mission {
         actionData: 'exec command',
         display: 'yes',
         successChance: 0.3,
-        mapX: 1,
-        mapY: 10,
+        mapX: 6,
+        mapY: 2,
       },
       'Radar System': {
         name: 'Radar System',
@@ -453,8 +461,8 @@ export function createTestMission(): Mission {
         actionData: 'exec command',
         display: 'yes',
         successChance: 0.3,
-        mapX: -1,
-        mapY: 10,
+        mapX: 6,
+        mapY: 3,
       },
       'Infrastructure': {
         name: 'Infrastructure',
@@ -466,7 +474,7 @@ export function createTestMission(): Mission {
         display: 'yes',
         successChance: 0.3,
         mapX: 0,
-        mapY: 12,
+        mapY: 4,
       },
       'Railroad System': {
         name: 'Railroad System',
@@ -477,8 +485,8 @@ export function createTestMission(): Mission {
         actionData: 'exec command',
         display: 'yes',
         successChance: 0.3,
-        mapX: -2,
-        mapY: 14,
+        mapX: 2,
+        mapY: 4,
       },
       'Electrical System': {
         name: 'Electrical System',
@@ -489,8 +497,8 @@ export function createTestMission(): Mission {
         actionData: 'exec command',
         display: 'yes',
         successChance: 0.3,
-        mapX: -1,
-        mapY: 14,
+        mapX: 2,
+        mapY: 5,
       },
       'Water System': {
         name: 'Water System',
@@ -501,8 +509,8 @@ export function createTestMission(): Mission {
         actionData: 'exec command',
         display: 'yes',
         successChance: 0.3,
-        mapX: 1,
-        mapY: 14,
+        mapX: 2,
+        mapY: 6,
       },
       'Road System': {
         name: 'Road System',
@@ -514,7 +522,7 @@ export function createTestMission(): Mission {
         display: 'yes',
         successChance: 0.3,
         mapX: 2,
-        mapY: 14,
+        mapY: 7,
       },
       'Track Monitoring': {
         name: 'Track Monitoring',
@@ -525,8 +533,8 @@ export function createTestMission(): Mission {
         actionData: 'exec command',
         display: 'yes',
         successChance: 0.3,
-        mapX: -3,
-        mapY: 16,
+        mapX: 4,
+        mapY: 3,
       },
       'Track Switch System': {
         name: 'Track Switch System',
@@ -537,8 +545,8 @@ export function createTestMission(): Mission {
         actionData: 'exec command',
         display: 'yes',
         successChance: 0.3,
-        mapX: -2,
-        mapY: 16,
+        mapX: 4,
+        mapY: 4,
       },
       'Regional Service': {
         name: 'Regional Service',
@@ -549,8 +557,8 @@ export function createTestMission(): Mission {
         actionData: 'exec command',
         display: 'yes',
         successChance: 0.3,
-        mapX: -1,
-        mapY: 16,
+        mapX: 4,
+        mapY: 5,
       },
       'Valve System': {
         name: 'Valve System',
@@ -561,8 +569,8 @@ export function createTestMission(): Mission {
         actionData: 'exec command',
         display: 'yes',
         successChance: 0.3,
-        mapX: 1,
-        mapY: 16,
+        mapX: 4,
+        mapY: 6,
       },
       'Traffic Light System': {
         name: 'Traffic Light System',
@@ -573,8 +581,8 @@ export function createTestMission(): Mission {
         actionData: 'exec command',
         display: 'yes',
         successChance: 0.3,
-        mapX: 2,
-        mapY: 16,
+        mapX: 4,
+        mapY: 7,
       },
       'CCTV System': {
         name: 'CCTV System',
@@ -585,8 +593,8 @@ export function createTestMission(): Mission {
         actionData: 'exec command',
         display: 'yes',
         successChance: 0.3,
-        mapX: 3,
-        mapY: 16,
+        mapX: 4,
+        mapY: 8,
       },
       'Satellite Services': {
         name: 'Satellite Services',
@@ -598,7 +606,7 @@ export function createTestMission(): Mission {
         display: 'yes',
         successChance: 0.3,
         mapX: 0,
-        mapY: 18,
+        mapY: 9,
       },
       'Global Positioning': {
         name: 'Global Positioning',
@@ -609,8 +617,8 @@ export function createTestMission(): Mission {
         actionData: 'exec command',
         display: 'yes',
         successChance: 0.3,
-        mapX: -2,
-        mapY: 20,
+        mapX: 2,
+        mapY: 9,
       },
       'Data Transfer': {
         name: 'Data Transfer',
@@ -621,8 +629,8 @@ export function createTestMission(): Mission {
         actionData: 'exec command',
         display: 'yes',
         successChance: 0.3,
-        mapX: -1,
-        mapY: 20,
+        mapX: 2,
+        mapY: 10,
       },
       'Imagery Collection': {
         name: 'Imagery Collection',
@@ -633,8 +641,8 @@ export function createTestMission(): Mission {
         actionData: 'exec command',
         display: 'yes',
         successChance: 0.3,
-        mapX: 1,
-        mapY: 20,
+        mapX: 2,
+        mapY: 11,
       },
       'Sensor Observation': {
         name: 'Sensor Observation',
@@ -646,7 +654,7 @@ export function createTestMission(): Mission {
         display: 'yes',
         successChance: 0.3,
         mapX: 2,
-        mapY: 20,
+        mapY: 12,
       },
     },
   }

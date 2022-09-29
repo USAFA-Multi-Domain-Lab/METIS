@@ -10,6 +10,7 @@ import './DashboardPage.scss'
 import gameLogic from '../../modules/game-logic'
 import NodeStructureReference from '../../modules/node-reference'
 import { AnyObject } from 'mongoose'
+import NewExecuteWindow from '../content/NewExecuteWindow'
 
 const mission = createTestMission()
 
@@ -31,6 +32,8 @@ export default function DashboardPage(props: {
   )
   const [consoleOutputs, setConsoleOutputs] =
     useStore<Array<{ date: number; value: string }>>('consoleOutputs')
+  const [executeNodePrompts, setExecuteNodePrompts] =
+    useStore<Array<{ date: number; value: string }>>('executeNodePrompts')
 
   /* -- COMPONENT STATE -- */
 
@@ -110,6 +113,7 @@ export default function DashboardPage(props: {
         {
           // -- content --
           <div className='Content'>
+            <NewExecuteWindow />
             <MissionMap
               mission={missionRender}
               missionAjaxStatus={EAjaxStatus.Loaded}
@@ -127,6 +131,10 @@ export default function DashboardPage(props: {
                       value: `<span class='line-cursor'>${username}@USAFA: </span>
                               <span class = ${selectedNode.color}>${selectedNode.preExecutionText}</span>`,
                     },
+                  ])
+
+                  setExecuteNodePrompts([
+                    { date: Date.now(), value: `${selectedNode.name}` },
                   ])
                 }
               }}

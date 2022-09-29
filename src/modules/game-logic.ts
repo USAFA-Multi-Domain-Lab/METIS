@@ -41,5 +41,17 @@ export const handleNodeSelection = (
     selectedReference.expand()
   }
 }
+// Making a note here that in order to get the execute prompt display to
+// disappear after the students type in their command the executeNodePrompts
+// array length has to equal 0.
 
-export default { createInitialMissionState, handleNodeSelection }
+// Based on this, the logic needs to somehow work where if the student types
+// in "exec" then the executeNodePrompts empties and then another function
+//  fires a way to check the mission success and then determines if the
+// selected node succeeds or fails which will determine if the next set of
+// subnodes unlock or not.
+
+export default {
+  createInitialMissionState,
+  handleNodeSelection,
+}

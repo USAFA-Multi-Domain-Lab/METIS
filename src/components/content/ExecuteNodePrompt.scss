@@ -1,0 +1,17 @@
+@import '../../config.scss';
+
+.ExecuteNodePrompt {
+  margin: 10px 20px;
+
+  .PromptDisplayText {
+    margin: 10px 0;
+  }
+  .PromptInput {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    width: 80%;
+    margin: 10px 0;
+    color: black;
+  }
+}

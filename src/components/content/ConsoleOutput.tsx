@@ -1,5 +1,4 @@
 import React, { useEffect, useRef } from 'react'
-import { createTestMission, Mission } from '../../modules/missions'
 import './ConsoleOutput.scss'
 import Markdown, { MarkdownTheme } from './Markdown'
 
