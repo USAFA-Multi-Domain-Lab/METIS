@@ -8,20 +8,8 @@ const NewExecuteWindow = () => {
   const [executeNodePrompts, setExecuteNodePrompts] =
     useStore<Array<{ date: number; value: string }>>('executeNodePrompts')
 
-  const displayRef = useRef<HTMLDivElement>(null)
-  useEffect(() => {
-    let displayRefElement: HTMLDivElement | null = displayRef.current
-    if (displayRefElement !== null) {
-      if (executeNodePrompts.length === 0) {
-        displayRefElement.style.display = 'none'
-      } else {
-        displayRefElement.style.display = 'flex'
-      }
-    }
-  }, [executeNodePrompts])
-
   return (
-    <div className='NewExecuteWindow' ref={displayRef}>
+    <div className='NewExecuteWindow'>
       <div className='ExecutionPane'>
         {executeNodePrompts.map(
           (executeNodePrompt: { date: number; value: string }) => {

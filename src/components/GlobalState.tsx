@@ -30,6 +30,8 @@ export default class GlobalState {
   tooltipDescription: string
   consoleOutputs: Array<{ date: number; value: string }>
   executeNodePrompts: Array<{ date: number; value: string }>
+  outputPanelIsDisplayed: Array<Boolean>
+  executePromptIsDisplayed: Array<Boolean>
 
   constructor(stateSetters: IStateSetters) {
     this.currentUser = null
@@ -44,6 +46,8 @@ export default class GlobalState {
     this.tooltipDescription = ''
     this.consoleOutputs = []
     this.executeNodePrompts = []
+    this.outputPanelIsDisplayed = []
+    this.executePromptIsDisplayed = []
   }
 
   // This will position the currently

@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect, useRef } from 'react'
 import './OutputPanel.scss'
 import { useStore } from 'react-context-hook'
 import ConsoleOutput from './ConsoleOutput'

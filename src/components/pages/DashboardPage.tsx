@@ -13,6 +13,13 @@ import { AnyObject } from 'mongoose'
 import NewExecuteWindow from '../content/NewExecuteWindow'
 
 const mission = createTestMission()
+const initialMissionState =
+  NodeStructureReference.constructNodeStructureReference(
+    mission.name,
+    mission.nodeStructure,
+  )
+
+initialMissionState.expand()
 
 // This will render a dashboard with a radar
 // on it, indicating air traffic passing by.
@@ -34,16 +41,14 @@ export default function DashboardPage(props: {
     useStore<Array<{ date: number; value: string }>>('consoleOutputs')
   const [executeNodePrompts, setExecuteNodePrompts] =
     useStore<Array<{ date: number; value: string }>>('executeNodePrompts')
+  let [outputPanelIsDisplayed, setOutputPanelIsDisplayed] = useStore<
+    Array<Boolean>
+  >('outputPanelIsDisplayed')
+  let [executePromptIsDisplayed, setExecutePromptIsDisplayed] = useStore<
+    Array<Boolean>
+  >('executePromptIsDisplayed')
 
   /* -- COMPONENT STATE -- */
-
-  let initialMissionState =
-    NodeStructureReference.constructNodeStructureReference(
-      mission.name,
-      mission.nodeStructure,
-    )
-
-  initialMissionState.expand()
 
   const [missionState, setMissionState] =
     useState<NodeStructureReference>(initialMissionState)
@@ -95,6 +100,18 @@ export default function DashboardPage(props: {
     mission.nodeStructure,
   )
 
+  if (
+    outputPanelIsDisplayed[0] === true &&
+    executePromptIsDisplayed[0] === false
+  ) {
+    className = 'DashboardPageWithOutputPanel'
+  } else if (
+    outputPanelIsDisplayed[0] === true &&
+    executePromptIsDisplayed[0] === true
+  ) {
+    className = 'DashboardPageWithOutputPanelAndExecutePrompt'
+  }
+
   if (show) {
     return (
       <div className={className}>
@@ -114,6 +131,7 @@ export default function DashboardPage(props: {
           // -- content --
           <div className='Content'>
             <NewExecuteWindow />
+
             <MissionMap
               mission={missionRender}
               missionAjaxStatus={EAjaxStatus.Loaded}
@@ -136,6 +154,9 @@ export default function DashboardPage(props: {
                   setExecuteNodePrompts([
                     { date: Date.now(), value: `${selectedNode.name}` },
                   ])
+
+                  setExecutePromptIsDisplayed([true])
+                  setOutputPanelIsDisplayed([true])
                 }
               }}
               applyNodeClassName={(node: MissionNode) => {

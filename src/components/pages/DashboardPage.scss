@@ -66,7 +66,109 @@ $background-bar: linear-gradient(
 
     .MissionMap {
       margin: 0 10px;
+      width: 100%;
+    }
+
+    .ExecutionPane {
+      display: none;
+    }
+
+    .OutputPanel {
+      display: none;
+    }
+  }
+
+  @media only screen and (max-width: 768px) {
+    padding: 10px;
+  }
+}
+
+.DashboardPageWithOutputPanel {
+  margin: 0 auto;
+  padding: 35px 75px 0;
+
+  .Navigation {
+    display: grid;
+    grid-template-columns: auto 150px 130px;
+    margin: 0 auto 55px;
+    height: 30px;
+    vertical-align: bottom;
+
+    .Link {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-flow: row wrap;
+      -webkit-user-select: none;
+      user-select: none;
+      cursor: pointer;
+      transition: opacity 175ms;
+
+      &:hover {
+        border: 2px solid $color-accent;
+        border-radius: 5px;
+        text-align: center;
+      }
+    }
+  }
+
+  .Content {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    flex-flow: row wrap;
+    width: 100%;
+
+    .MissionMap {
+      margin: 0 10px;
       width: 63%;
+    }
+  }
+
+  @media only screen and (max-width: 768px) {
+    padding: 10px;
+  }
+}
+
+.DashboardPageWithOutputPanelAndExecutePrompt {
+  margin: 0 auto;
+  padding: 35px 75px 0;
+
+  .Navigation {
+    display: grid;
+    grid-template-columns: auto 150px 130px;
+    margin: 0 auto 55px;
+    height: 30px;
+    vertical-align: bottom;
+
+    .Link {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-flow: row wrap;
+      -webkit-user-select: none;
+      user-select: none;
+      cursor: pointer;
+      transition: opacity 175ms;
+
+      &:hover {
+        border: 2px solid $color-accent;
+        border-radius: 5px;
+        text-align: center;
+      }
+    }
+  }
+
+  .Content {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    flex-flow: row wrap;
+    width: 100%;
+
+    .MissionMap {
+      margin: 0 10px;
+      width: 42%;
     }
   }
 
