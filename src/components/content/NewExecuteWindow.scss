@@ -1,21 +1,19 @@
 @import '../../config.scss';
 
 .NewExecuteWindow {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 20%;
+  position: absolute;
+  top: 300px;
+  left: 20%;
+  z-index: 100000000;
+  width: 30%;
   margin-right: 10px;
-  overflow-y: scroll;
 
   .ExecutionPane {
-    display: flex;
-    justify-content: flex-start;
-    align-items: flex-start;
-    flex-flow: column;
     border: 2px solid $color-main;
     background-color: $background-main;
     width: 100%;
-    height: $height;
+    height: auto;
+    padding: 0;
+    margin: 0;
   }
 }

@@ -136,27 +136,55 @@ export default function DashboardPage(props: {
               mission={missionRender}
               missionAjaxStatus={EAjaxStatus.Loaded}
               handleNodeSelection={(selectedNode: MissionNode) => {
-                gameLogic.handleNodeSelection(selectedNode, missionState)
-                forceUpdate()
-
                 if (currentUser !== null) {
                   let username: string = currentUser.userID
+                  forceUpdate()
 
-                  setConsoleOutputs([
-                    ...consoleOutputs,
-                    {
-                      date: Date.now(),
-                      value: `<span class='line-cursor'>${username}@USAFA: </span>
+                  let timeStamp: number = 5 * (new Date() as any)
+                  consoleOutputs.push({
+                    date: timeStamp,
+                    value: `<span class='line-cursor'>${username}@USAFA: </span>
                               <span class = ${selectedNode.color}>${selectedNode.preExecutionText}</span>`,
-                    },
-                  ])
+                  })
 
-                  setExecuteNodePrompts([
-                    { date: Date.now(), value: `${selectedNode.name}` },
-                  ])
+                  if (selectedNode._willSucceed === true) {
+                    gameLogic.handleNodeSelection(selectedNode, missionState)
+                    forceUpdate()
 
-                  setExecutePromptIsDisplayed([true])
-                  setOutputPanelIsDisplayed([true])
+                    setConsoleOutputs([
+                      ...consoleOutputs,
+                      {
+                        date: Date.now(),
+                        value: `<span class='line-cursor'>${username}@USAFA: </span>
+                              <span class = ${selectedNode.color}>${selectedNode.postExecutionSuccessText}</span>`,
+                      },
+                    ])
+
+                    setExecuteNodePrompts([
+                      { date: Date.now(), value: `${selectedNode.name}` },
+                    ])
+
+                    setExecutePromptIsDisplayed([true])
+                    setOutputPanelIsDisplayed([true])
+                  } else {
+                    // gameLogic.handleNodeSelection(selectedNode, missionState)
+                    forceUpdate()
+                    setConsoleOutputs([
+                      ...consoleOutputs,
+                      {
+                        date: Date.now(),
+                        value: `<span class='line-cursor'>${username}@USAFA: </span>
+                              <span class = ${selectedNode.color}>${selectedNode.postExecutionFailureText}</span>`,
+                      },
+                    ])
+
+                    setExecuteNodePrompts([
+                      { date: Date.now(), value: `${selectedNode.name}` },
+                    ])
+
+                    setExecutePromptIsDisplayed([true])
+                    setOutputPanelIsDisplayed([true])
+                  }
                 }
               }}
               applyNodeClassName={(node: MissionNode) => {

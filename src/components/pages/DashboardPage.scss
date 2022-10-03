@@ -28,9 +28,10 @@ $background-bar: linear-gradient(
   }
 }
 
+// Displays Mission Map only
 .DashboardPage {
   margin: 0 auto;
-  padding: 35px 75px 0;
+  padding: 35px 30px 0;
 
   .Navigation {
     display: grid;
@@ -59,7 +60,7 @@ $background-bar: linear-gradient(
 
   .Content {
     display: flex;
-    justify-content: flex-start;
+    justify-content: center;
     align-items: center;
     flex-flow: row wrap;
     width: 100%;
@@ -69,7 +70,8 @@ $background-bar: linear-gradient(
       width: 100%;
     }
 
-    .ExecutionPane {
+    .ExecutionPane,
+    .NewExecuteWindow {
       display: none;
     }
 
@@ -83,9 +85,10 @@ $background-bar: linear-gradient(
   }
 }
 
+// Displays the Mission Map and Output Panel only
 .DashboardPageWithOutputPanel {
   margin: 0 auto;
-  padding: 35px 75px 0;
+  padding: 35px 30px 0;
 
   .Navigation {
     display: grid;
@@ -114,25 +117,31 @@ $background-bar: linear-gradient(
 
   .Content {
     display: flex;
-    justify-content: flex-start;
+    justify-content: center;
     align-items: center;
     flex-flow: row wrap;
     width: 100%;
 
     .MissionMap {
       margin: 0 10px;
-      width: 63%;
+      width: 60%;
+    }
+
+    .ExecutionPane,
+    .NewExecuteWindow {
+      display: none;
     }
   }
 
-  @media only screen and (max-width: 768px) {
-    padding: 10px;
+  @media only screen and (max-width: 1000px) {
+    padding: 20px;
   }
 }
 
+// Displays the Mission Map, Output Panel, and Execution Prompt
 .DashboardPageWithOutputPanelAndExecutePrompt {
   margin: 0 auto;
-  padding: 35px 75px 0;
+  padding: 35px 30px 0;
 
   .Navigation {
     display: grid;
@@ -161,18 +170,18 @@ $background-bar: linear-gradient(
 
   .Content {
     display: flex;
-    justify-content: flex-start;
+    justify-content: center;
     align-items: center;
     flex-flow: row wrap;
     width: 100%;
 
     .MissionMap {
       margin: 0 10px;
-      width: 42%;
+      width: 60%;
     }
   }
 
-  @media only screen and (max-width: 768px) {
-    padding: 10px;
+  @media only screen and (max-width: 1000px) {
+    padding: 20px;
   }
 }

@@ -10,7 +10,7 @@ const NewExecuteWindow = () => {
 
   return (
     <div className='NewExecuteWindow'>
-      <div className='ExecutionPane'>
+      <ul className='ExecutionPane'>
         {executeNodePrompts.map(
           (executeNodePrompt: { date: number; value: string }) => {
             return (
@@ -21,7 +21,7 @@ const NewExecuteWindow = () => {
             )
           },
         )}
-      </div>
+      </ul>
     </div>
   )
 }

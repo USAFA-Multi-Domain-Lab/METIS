@@ -1,17 +1,46 @@
 @import '../../config.scss';
 
 .ExecuteNodePrompt {
-  margin: 10px 20px;
+  padding: 10px 20px;
+  overflow: auto;
+  height: auto;
 
   .PromptDisplayText {
-    margin: 10px 0;
+    font-size: 0.95em;
+    margin: 0 0 10px;
+    overflow: auto;
+    list-style-type: none;
+    height: fit-content;
   }
-  .PromptInput {
+
+  .x {
+    position: relative;
+
+    left: 99%;
+    list-style-type: none;
+    width: 10%;
+
+    &.x:hover {
+      cursor: pointer;
+      color: black;
+    }
+  }
+
+  .ExecutionButton {
     display: flex;
     justify-content: flex-start;
     align-items: center;
-    width: 80%;
     margin: 10px 0;
-    color: black;
+    color: $color-accent-light;
+    background-color: $background-alt2;
+    padding: 5px;
+    border: 2px solid $color-main;
+    border-radius: 4px;
+    height: auto;
+
+    &.ExecutionButton:hover {
+      cursor: pointer;
+      background-color: black;
+    }
   }
 }
