@@ -10,7 +10,7 @@ import './DashboardPage.scss'
 import gameLogic from '../../modules/game-logic'
 import NodeStructureReference from '../../modules/node-reference'
 import { AnyObject } from 'mongoose'
-import NewExecuteWindow from '../content/NewExecuteWindow'
+import ExecuteNodePrompt from '../content/ExecuteNodePrompt'
 
 const mission = createTestMission()
 const initialMissionState =
@@ -39,31 +39,23 @@ export default function DashboardPage(props: {
   )
   const [consoleOutputs, setConsoleOutputs] =
     useStore<Array<{ date: number; value: string }>>('consoleOutputs')
-  const [executeNodePrompts, setExecuteNodePrompts] =
-    useStore<Array<{ date: number; value: string }>>('executeNodePrompts')
-  let [outputPanelIsDisplayed, setOutputPanelIsDisplayed] = useStore<
-    Array<Boolean>
-  >('outputPanelIsDisplayed')
-  let [executePromptIsDisplayed, setExecutePromptIsDisplayed] = useStore<
-    Array<Boolean>
-  >('executePromptIsDisplayed')
+  let [outputPanelIsDisplayed, setOutputPanelIsDisplayed] = useStore<boolean>(
+    'outputPanelIsDisplayed',
+  )
+  let [executePromptIsDisplayed, setExecutePromptIsDisplayed] =
+    useStore<boolean>('executePromptIsDisplayed')
 
   /* -- COMPONENT STATE -- */
 
   const [missionState, setMissionState] =
     useState<NodeStructureReference>(initialMissionState)
-  const [forcedUpdateCounter, setForcedUpdateCounter] = useState<number>(0)
+  let [lastSelectedNode, setLastSelectedNode] = useState<MissionNode | null>()
 
   /* -- COMPONENT EFFECTS -- */
 
   /* -- COMPONENTS -- */
 
   /* -- COMPONENT FUNCTIONS -- */
-
-  // This forces a rerender of the component.
-  const forceUpdate = (): void => {
-    setForcedUpdateCounter(forcedUpdateCounter + 1)
-  }
 
   // This will logout the current user.
   const logout = () => {
@@ -100,14 +92,11 @@ export default function DashboardPage(props: {
     mission.nodeStructure,
   )
 
-  if (
-    outputPanelIsDisplayed[0] === true &&
-    executePromptIsDisplayed[0] === false
-  ) {
+  if (outputPanelIsDisplayed === true && executePromptIsDisplayed === false) {
     className = 'DashboardPageWithOutputPanel'
   } else if (
-    outputPanelIsDisplayed[0] === true &&
-    executePromptIsDisplayed[0] === true
+    outputPanelIsDisplayed === true &&
+    executePromptIsDisplayed === true
   ) {
     className = 'DashboardPageWithOutputPanelAndExecutePrompt'
   }
@@ -130,15 +119,17 @@ export default function DashboardPage(props: {
         {
           // -- content --
           <div className='Content'>
-            <NewExecuteWindow />
-
             <MissionMap
               mission={missionRender}
               missionAjaxStatus={EAjaxStatus.Loaded}
               handleNodeSelection={(selectedNode: MissionNode) => {
                 if (currentUser !== null) {
                   let username: string = currentUser.userID
-                  forceUpdate()
+
+                  if (selectedNode !== undefined) {
+                    lastSelectedNode = selectedNode
+                    setLastSelectedNode(lastSelectedNode)
+                  }
 
                   let timeStamp: number = 5 * (new Date() as any)
                   consoleOutputs.push({
@@ -147,44 +138,8 @@ export default function DashboardPage(props: {
                               <span class = ${selectedNode.color}>${selectedNode.preExecutionText}</span>`,
                   })
 
-                  if (selectedNode._willSucceed === true) {
-                    gameLogic.handleNodeSelection(selectedNode, missionState)
-                    forceUpdate()
-
-                    setConsoleOutputs([
-                      ...consoleOutputs,
-                      {
-                        date: Date.now(),
-                        value: `<span class='line-cursor'>${username}@USAFA: </span>
-                              <span class = ${selectedNode.color}>${selectedNode.postExecutionSuccessText}</span>`,
-                      },
-                    ])
-
-                    setExecuteNodePrompts([
-                      { date: Date.now(), value: `${selectedNode.name}` },
-                    ])
-
-                    setExecutePromptIsDisplayed([true])
-                    setOutputPanelIsDisplayed([true])
-                  } else {
-                    // gameLogic.handleNodeSelection(selectedNode, missionState)
-                    forceUpdate()
-                    setConsoleOutputs([
-                      ...consoleOutputs,
-                      {
-                        date: Date.now(),
-                        value: `<span class='line-cursor'>${username}@USAFA: </span>
-                              <span class = ${selectedNode.color}>${selectedNode.postExecutionFailureText}</span>`,
-                      },
-                    ])
-
-                    setExecuteNodePrompts([
-                      { date: Date.now(), value: `${selectedNode.name}` },
-                    ])
-
-                    setExecutePromptIsDisplayed([true])
-                    setOutputPanelIsDisplayed([true])
-                  }
+                  setExecutePromptIsDisplayed(true)
+                  setOutputPanelIsDisplayed(true)
                 }
               }}
               applyNodeClassName={(node: MissionNode) => {
@@ -219,6 +174,11 @@ export default function DashboardPage(props: {
                 }
               }}
               renderNodeTooltipDescription={(node: MissionNode) => ''}
+            />
+            <ExecuteNodePrompt
+              name={lastSelectedNode?.name as string}
+              selectedNode={lastSelectedNode}
+              missionState={missionState}
             />
             <OutputPanel />
           </div>

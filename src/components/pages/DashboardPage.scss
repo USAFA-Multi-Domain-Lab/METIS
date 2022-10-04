@@ -70,8 +70,7 @@ $background-bar: linear-gradient(
       width: 100%;
     }
 
-    .ExecutionPane,
-    .NewExecuteWindow {
+    .ExecuteNodePrompt {
       display: none;
     }
 
@@ -127,8 +126,7 @@ $background-bar: linear-gradient(
       width: 60%;
     }
 
-    .ExecutionPane,
-    .NewExecuteWindow {
+    .ExecuteNodePrompt {
       display: none;
     }
   }

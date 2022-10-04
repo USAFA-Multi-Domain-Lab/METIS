@@ -42,9 +42,6 @@ export const handleNodeSelection = (
   }
 }
 
-// Need to find a way to keep the postExecutionText and the next set of
-// subnodes from displaying until the Execution button is pressed
-
 export default {
   createInitialMissionState,
   handleNodeSelection,
