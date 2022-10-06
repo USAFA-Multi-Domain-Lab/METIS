@@ -1,32 +1,32 @@
 @import '../../config.scss';
 
-.ExecuteNodePrompt {
+.NodeActions {
   position: absolute;
   top: 300px;
   left: 20%;
   z-index: 100000000;
   width: 30%;
+  height: 14%;
   margin-right: 10px;
   border: 2px solid $color-main;
   background-color: $background-main;
-  height: auto;
   padding: 0;
   margin: 0;
   padding: 10px 20px;
-  overflow: auto;
-  height: auto;
+  overflow-y: auto;
+  overflow-x: hidden;
 
   .PromptDisplayText {
     font-size: 0.95em;
     margin: 0 0 10px;
-    overflow: auto;
+    overflow-y: auto;
+    overflow-x: hidden;
     list-style-type: none;
     height: fit-content;
   }
 
   .x {
     position: relative;
-
     left: 99%;
     list-style-type: none;
     width: 10%;
@@ -37,21 +37,34 @@
     }
   }
 
-  .ExecutionButton {
+  .ButtonOptions {
     display: flex;
     justify-content: flex-start;
     align-items: center;
-    margin: 10px 0;
-    color: $color-accent-light;
+    flex-flow: row wrap;
+  }
+
+  .AttackButton,
+  .DefendButton {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    margin: 10px 10px 10px 0;
+    color: $defend;
     background-color: $background-alt2;
     padding: 5px;
     border: 2px solid $color-main;
     border-radius: 4px;
     height: auto;
 
-    &.ExecutionButton:hover {
+    &.AttackButton:hover,
+    &.DefendButton:hover {
       cursor: pointer;
       background-color: black;
     }
+  }
+
+  .AttackButton {
+    color: $attack;
   }
 }

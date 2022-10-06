@@ -66,11 +66,11 @@ $background-bar: linear-gradient(
     width: 100%;
 
     .MissionMap {
-      margin: 0 10px;
+      margin-right: 10px;
       width: 100%;
     }
 
-    .ExecuteNodePrompt {
+    .NodeActions {
       display: none;
     }
 
@@ -122,11 +122,11 @@ $background-bar: linear-gradient(
     width: 100%;
 
     .MissionMap {
-      margin: 0 10px;
+      margin-right: 10px;
       width: 60%;
     }
 
-    .ExecuteNodePrompt {
+    .NodeActions {
       display: none;
     }
   }
@@ -174,7 +174,7 @@ $background-bar: linear-gradient(
     width: 100%;
 
     .MissionMap {
-      margin: 0 10px;
+      margin-right: 10px;
       width: 60%;
     }
   }

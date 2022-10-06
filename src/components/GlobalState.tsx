@@ -31,7 +31,7 @@ export default class GlobalState {
   tooltipDescription: string
   consoleOutputs: Array<{ date: number; value: string }>
   outputPanelIsDisplayed: boolean
-  executePromptIsDisplayed: boolean
+  nodeActionWindowIsDisplayed: boolean
   lastSelectedNode: MissionNode | null
 
   constructor(stateSetters: IStateSetters) {
@@ -47,7 +47,7 @@ export default class GlobalState {
     this.tooltipDescription = ''
     this.consoleOutputs = []
     this.outputPanelIsDisplayed = false
-    this.executePromptIsDisplayed = false
+    this.nodeActionWindowIsDisplayed = false
     this.lastSelectedNode = null
   }
 

@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { useStore } from 'react-context-hook'
 import { createTestMission, Mission, MissionNode } from '../../modules/missions'
+import NodeStructureReference from '../../modules/node-reference'
 import { EAjaxStatus } from '../../modules/toolbox/ajax'
 import inputs from '../../modules/toolbox/inputs'
 import usersModule, { IUser } from '../../modules/users'

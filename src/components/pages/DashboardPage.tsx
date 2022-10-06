@@ -10,7 +10,8 @@ import './DashboardPage.scss'
 import gameLogic from '../../modules/game-logic'
 import NodeStructureReference from '../../modules/node-reference'
 import { AnyObject } from 'mongoose'
-import ExecuteNodePrompt from '../content/ExecuteNodePrompt'
+import ExecuteNodes from '../content/ExecuteNodes'
+import NodeActions from '../content/NodeActions'
 
 const mission = createTestMission()
 const initialMissionState =
@@ -42,13 +43,14 @@ export default function DashboardPage(props: {
   let [outputPanelIsDisplayed, setOutputPanelIsDisplayed] = useStore<boolean>(
     'outputPanelIsDisplayed',
   )
-  let [executePromptIsDisplayed, setExecutePromptIsDisplayed] =
-    useStore<boolean>('executePromptIsDisplayed')
+  let [nodeActionWindowIsDisplayed, setNodeActionWindowIsDisplayed] =
+    useStore<boolean>('nodeActionWindowIsDisplayed')
 
   /* -- COMPONENT STATE -- */
 
   const [missionState, setMissionState] =
     useState<NodeStructureReference>(initialMissionState)
+  const [forcedUpdateCounter, setForcedUpdateCounter] = useState<number>(0)
   let [lastSelectedNode, setLastSelectedNode] = useState<MissionNode | null>()
 
   /* -- COMPONENT EFFECTS -- */
@@ -56,6 +58,11 @@ export default function DashboardPage(props: {
   /* -- COMPONENTS -- */
 
   /* -- COMPONENT FUNCTIONS -- */
+
+  // This forces a rerender of the component.
+  const forceUpdate = (): void => {
+    setForcedUpdateCounter(forcedUpdateCounter + 1)
+  }
 
   // This will logout the current user.
   const logout = () => {
@@ -92,11 +99,14 @@ export default function DashboardPage(props: {
     mission.nodeStructure,
   )
 
-  if (outputPanelIsDisplayed === true && executePromptIsDisplayed === false) {
+  if (
+    outputPanelIsDisplayed === true &&
+    nodeActionWindowIsDisplayed === false
+  ) {
     className = 'DashboardPageWithOutputPanel'
   } else if (
     outputPanelIsDisplayed === true &&
-    executePromptIsDisplayed === true
+    nodeActionWindowIsDisplayed === true
   ) {
     className = 'DashboardPageWithOutputPanelAndExecutePrompt'
   }
@@ -138,7 +148,15 @@ export default function DashboardPage(props: {
                               <span class = ${selectedNode.color}>${selectedNode.preExecutionText}</span>`,
                   })
 
-                  setExecutePromptIsDisplayed(true)
+                  let initialNodes = missionState.subnodes
+                  for (let subnode of initialNodes) {
+                    if (selectedNode.name === subnode.name) {
+                      gameLogic.handleNodeSelection(selectedNode, missionState)
+                      setOutputPanelIsDisplayed(true)
+                      return
+                    }
+                  }
+                  setNodeActionWindowIsDisplayed(true)
                   setOutputPanelIsDisplayed(true)
                 }
               }}
@@ -175,12 +193,16 @@ export default function DashboardPage(props: {
               }}
               renderNodeTooltipDescription={(node: MissionNode) => ''}
             />
-            <ExecuteNodePrompt
-              name={lastSelectedNode?.name as string}
+            <NodeActions
+              name={lastSelectedNode?.name}
               selectedNode={lastSelectedNode}
               missionState={missionState}
             />
             <OutputPanel />
+            <ExecuteNodes
+              selectedNode={lastSelectedNode}
+              missionState={missionState}
+            />
           </div>
         }
       </div>

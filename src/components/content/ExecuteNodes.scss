@@ -1,0 +1,24 @@
+@import '../../config.scss';
+
+.ExecuteNodes {
+  // ! Delete when you're ready to work on it
+  display: none;
+
+  .ExecutionButton {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 10px 5px;
+    color: $color-accent-light;
+    background-color: $background-alt2;
+    padding: 5px;
+    border: 2px solid $color-main;
+    border-radius: 4px;
+    height: auto;
+
+    &.ExecutionButton:hover {
+      cursor: pointer;
+      background-color: black;
+    }
+  }
+}

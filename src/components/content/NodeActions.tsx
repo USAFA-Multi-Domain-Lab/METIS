@@ -1,13 +1,13 @@
 import React, { useState } from 'react'
-import './ExecuteNodePrompt.scss'
+import './NodeActions.scss'
 import { useStore } from 'react-context-hook'
 import { Mission, MissionNode } from '../../modules/missions'
 import usersModule, { IUser } from '../../modules/users'
 import gameLogic from '../../modules/game-logic'
 import NodeStructureReference from '../../modules/node-reference'
 
-const ExecuteNodePrompt = (props: {
-  name: string | null
+const NodeActions = (props: {
+  name: string | undefined
   selectedNode: MissionNode | null | undefined
   missionState: NodeStructureReference
 }) => {
@@ -15,8 +15,8 @@ const ExecuteNodePrompt = (props: {
   const [currentUser, setCurrentUser] = useStore<IUser | null>('currentUser')
   const [consoleOutputs, setConsoleOutputs] =
     useStore<Array<{ date: number; value: string }>>('consoleOutputs')
-  let [executePromptIsDisplayed, setExecutePromptIsDisplayed] =
-    useStore<boolean>('executePromptIsDisplayed')
+  const [nodeActionWindowIsDisplayed, setNodeActionWindowIsDisplayed] =
+    useStore<boolean>('nodeActionWindowIsDisplayed')
 
   /* -- COMPONENT STATE -- */
   const [forcedUpdateCounter, setForcedUpdateCounter] = useState<number>(0)
@@ -30,13 +30,45 @@ const ExecuteNodePrompt = (props: {
 
   // Closes the execution prompt window
   const cancelExecution = (): void => {
-    setExecutePromptIsDisplayed(false)
+    setNodeActionWindowIsDisplayed(false)
   }
 
-  // Checks to see if the selected node succeeds or fails and then displays
-  // the appropriate text in the terminal to the right
-  const execution = (): void => {
-    setExecutePromptIsDisplayed(false)
+  const attack = () => {
+    setNodeActionWindowIsDisplayed(false)
+
+    if (currentUser !== null) {
+      let username: string = currentUser.userID
+
+      if (props.selectedNode !== undefined && props.selectedNode !== null) {
+        if (props.selectedNode._willSucceed === true) {
+          gameLogic.handleNodeSelection(props.selectedNode, props.missionState)
+          forceUpdate()
+
+          setConsoleOutputs([
+            ...consoleOutputs,
+            {
+              date: Date.now(),
+              value: `<span class='line-cursor'>${username}@USAFA: </span>
+                       <span class = ${props.selectedNode.color}>${props.selectedNode.postExecutionSuccessText}</span>`,
+            },
+          ])
+        } else {
+          forceUpdate()
+          setConsoleOutputs([
+            ...consoleOutputs,
+            {
+              date: Date.now(),
+              value: `<span class='line-cursor'>${username}@USAFA: </span>
+                      <span class = ${props.selectedNode.color}>${props.selectedNode.postExecutionFailureText}</span>`,
+            },
+          ])
+        }
+      }
+    }
+  }
+
+  const defend = () => {
+    setNodeActionWindowIsDisplayed(false)
 
     if (currentUser !== null) {
       let username: string = currentUser.userID
@@ -70,19 +102,24 @@ const ExecuteNodePrompt = (props: {
   }
 
   return (
-    <div className='ExecuteNodePrompt'>
+    <div className='NodeActions'>
       <li className='x' onClick={cancelExecution}>
         x
       </li>
+
       <li className='PromptDisplayText'>
         Do you want to execute {props.name}?
       </li>
-
-      <button className='ExecutionButton' onClick={execution}>
-        Execute
-      </button>
+      <div className='ButtonOptions'>
+        <button className='AttackButton' onClick={attack}>
+          Attack
+        </button>
+        <button className='DefendButton' onClick={defend}>
+          Defend
+        </button>
+      </div>
     </div>
   )
 }
 
-export default ExecuteNodePrompt
+export default NodeActions

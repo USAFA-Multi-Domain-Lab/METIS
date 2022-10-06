@@ -10,6 +10,7 @@ import { Mission, MissionNode } from '../../modules/missions'
 import { handleNodeSelection } from '../../modules/game-logic'
 import { useStore } from 'react-context-hook'
 import { map } from 'lodash'
+import NodeStructureReference from '../../modules/node-reference'
 
 /* -- interfaces -- */
 
