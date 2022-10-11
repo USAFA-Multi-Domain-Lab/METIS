@@ -1,13 +1,11 @@
 import React, { useState } from 'react'
 import './NodeActions.scss'
 import { useStore } from 'react-context-hook'
-import { Mission, MissionNode } from '../../modules/missions'
-import usersModule, { IUser } from '../../modules/users'
-import gameLogic from '../../modules/game-logic'
+import { MissionNode } from '../../modules/missions'
+import { IUser } from '../../modules/users'
 import NodeStructureReference from '../../modules/node-reference'
 
 const NodeActions = (props: {
-  name: string | undefined
   selectedNode: MissionNode | null | undefined
   missionState: NodeStructureReference
 }) => {
@@ -23,17 +21,15 @@ const NodeActions = (props: {
     nodeActionSelectionPromptIsDisplayed,
     setNodeActionSelectionPromptIsDisplayed,
   ] = useStore<boolean>('nodeActionSelectionPromptIsDisplayed')
+  const [nodeActionItemDisplay, setNodeActionItemDisplay] = useStore<
+    Array<{ value: string }>
+  >('nodeActionItemDisplay')
 
   /* -- COMPONENT STATE -- */
-  const [forcedUpdateCounter, setForcedUpdateCounter] = useState<number>(0)
   const [displayNodeActionList, setDisplayNodeActionList] =
     useState<boolean>(false)
 
   /* -- COMPONENT FUNCTIONS -- */
-  // This forces a rerender of the component.
-  const forceUpdate = (): void => {
-    setForcedUpdateCounter(forcedUpdateCounter + 1)
-  }
 
   // Closes the execution prompt window
   const closeWindow = (): void => {
@@ -51,6 +47,7 @@ const NodeActions = (props: {
   const nodeActionSelection = (): void => {
     setNodeActionSelectionPromptIsDisplayed(false)
     setExecuteNodePathPromptIsDisplayed(true)
+    setDisplayNodeActionList(false)
   }
 
   /* -- RENDER -- */
@@ -70,34 +67,28 @@ const NodeActions = (props: {
       </p>
 
       <p className='PromptDisplayText'>
-        What you would like to do to {props.name}?
+        What you would like to do to {props.selectedNode?.name}?
       </p>
 
       {/* Need a function to be able to generate however many buttons they want
          with whatever text they want */}
 
       <div className='NodeActionDefault' onClick={revealOptions}>
-        Choose an action{' '}
+        Choose an action
+        <div className='ArrowDown'>^</div>
       </div>
       <div className={className}>
-        <div className='NodeAction' onClick={nodeActionSelection}>
-          Deny
-        </div>
-        <div className='NodeAction' onClick={nodeActionSelection}>
-          Degrade
-        </div>
-        <div className='NodeAction' onClick={nodeActionSelection}>
-          Disrupt
-        </div>
-        <div className='NodeAction' onClick={nodeActionSelection}>
-          Destroy
-        </div>
-        <div className='NodeAction' onClick={nodeActionSelection}>
-          Manipulate
-        </div>
-        <div className='NodeAction' onClick={nodeActionSelection}>
-          Extract
-        </div>
+        {nodeActionItemDisplay.map((nodeActionItem: { value: string }) => {
+          return (
+            <div
+              className='NodeAction'
+              key={nodeActionItem.value}
+              onClick={nodeActionSelection}
+            >
+              {nodeActionItem.value}
+            </div>
+          )
+        })}
       </div>
     </div>
   )

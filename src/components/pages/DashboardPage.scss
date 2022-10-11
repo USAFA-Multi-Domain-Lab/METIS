@@ -40,6 +40,11 @@ $background-bar: linear-gradient(
     height: 30px;
     vertical-align: bottom;
 
+    .Branding {
+      width: fit-content;
+      padding-right: 20px;
+    }
+
     .Link {
       display: flex;
       justify-content: center;
@@ -100,6 +105,11 @@ $background-bar: linear-gradient(
     height: 30px;
     vertical-align: bottom;
 
+    .Branding {
+      width: fit-content;
+      padding-right: 20px;
+    }
+
     .Link {
       display: flex;
       justify-content: center;
@@ -156,6 +166,11 @@ $background-bar: linear-gradient(
     height: 30px;
     vertical-align: bottom;
 
+    .Branding {
+      width: fit-content;
+      padding-right: 20px;
+    }
+
     .Link {
       display: flex;
       justify-content: center;
@@ -207,6 +222,11 @@ $background-bar: linear-gradient(
     margin: 0 auto 55px;
     height: 30px;
     vertical-align: bottom;
+
+    .Branding {
+      width: fit-content;
+      padding-right: 20px;
+    }
 
     .Link {
       display: flex;

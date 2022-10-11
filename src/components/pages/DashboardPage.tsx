@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react'
 import { useStore } from 'react-context-hook'
 import { createTestMission, Mission, MissionNode } from '../../modules/missions'
 import { EAjaxStatus } from '../../modules/toolbox/ajax'
@@ -9,7 +9,6 @@ import OutputPanel from '../content/OutputPanel'
 import './DashboardPage.scss'
 import gameLogic from '../../modules/game-logic'
 import NodeStructureReference from '../../modules/node-reference'
-import { AnyObject } from 'mongoose'
 import ExecuteNodePath from '../content/ExecuteNodePath'
 import NodeActions from '../content/NodeActions'
 
@@ -49,6 +48,9 @@ export default function DashboardPage(props: {
     nodeActionSelectionPromptIsDisplayed,
     setNodeActionSelectionPromptIsDisplayed,
   ] = useStore<boolean>('nodeActionSelectionPromptIsDisplayed')
+  let [nodeActionItemDisplay, setNodeActionItemDisplay] = useStore<
+    Array<{ value: string }>
+  >('nodeActionItemDisplay')
 
   /* -- COMPONENT STATE -- */
 
@@ -163,17 +165,18 @@ export default function DashboardPage(props: {
                     setOutputPanelIsDisplayed(true)
                   }
 
-                  let endSubnode: NodeStructureReference | undefined =
-                    NodeStructureReference.findReference(
-                      missionState,
-                      selectedNode,
-                    )
-                  if (endSubnode?.expandable !== false) {
+                  if (selectedNode.executable === false) {
                     gameLogic.handleNodeSelection(selectedNode, missionState)
                     selectedNode.color = ''
                     return
+                  } else {
+                    for (let nodeActionItem of selectedNode.nodeActionItems) {
+                      nodeActionItemDisplay.push({
+                        value: nodeActionItem,
+                      })
+                    }
+                    setNodeActionSelectionPromptIsDisplayed(true)
                   }
-                  setNodeActionSelectionPromptIsDisplayed(true)
                 }
               }}
               applyNodeClassName={(node: MissionNode) => {
@@ -221,12 +224,10 @@ export default function DashboardPage(props: {
             />
             <OutputPanel />
             <NodeActions
-              name={lastSelectedNode?.name}
               selectedNode={lastSelectedNode}
               missionState={missionState}
             />
             <ExecuteNodePath
-              name={lastSelectedNode?.name}
               selectedNode={lastSelectedNode}
               missionState={missionState}
             />

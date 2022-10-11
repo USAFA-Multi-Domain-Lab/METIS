@@ -6,7 +6,7 @@
   left: 20%;
   z-index: 100000000;
   width: 30%;
-  height: 14%;
+  height: auto;
   margin-right: 10px;
   border: 2px solid $color-main;
   background-color: $background-main;
@@ -40,18 +40,15 @@
   }
 
   .NodeActionDefault {
-    display: flex;
-    justify-content: center;
-    align-items: flex-start;
-    flex-flow: column;
+    display: grid;
+    grid-template-columns: auto 50px;
     width: 75%;
     margin: 20px 0 1px 0;
     color: $color-accent-light;
     background-color: $background-alt2;
     padding: 5px;
     border: 2px solid $color-main;
-
-    height: auto;
+    line-height: 20px;
 
     &.NodeActionDefault:hover {
       cursor: pointer;
@@ -59,15 +56,28 @@
     }
   }
 
+  .ArrowDown {
+    position: relative;
+    bottom: 7px;
+    color: $color-accent-light;
+    font-size: 2em;
+    transform-origin: 50%;
+    transform: rotate(180deg);
+    -webkit-transform: rotate(180deg);
+  }
+
   .NodeActionList {
     display: flex;
-    justify-content: center;
-    align-items: flex-start;
+    align-items: center;
     flex-flow: column;
     width: 75%;
-    padding: 0;
+    padding: 5px;
     margin: 0;
     border: 2px solid $color-main;
+    background-color: $background-alt2;
+    max-height: 245px;
+    overflow-y: auto;
+    overflow-x: hidden;
   }
 
   .NodeAction {
@@ -75,10 +85,8 @@
     justify-content: flex-start;
     align-items: center;
     width: 97%;
-    padding: 5px 0 5px 5px;
+    padding: 5px;
     color: $color-accent-light;
-    background-color: $background-alt2;
-
     list-style-type: none;
     text-decoration: none;
 

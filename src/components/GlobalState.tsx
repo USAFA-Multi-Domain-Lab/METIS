@@ -34,6 +34,7 @@ export default class GlobalState {
   executeNodePathPromptIsDisplayed: boolean
   nodeActionSelectionPromptIsDisplayed: boolean
   lastSelectedNode: MissionNode | null
+  nodeActionItemDisplay: Array<{ value: string }>
 
   constructor(stateSetters: IStateSetters) {
     this.currentUser = null
@@ -51,6 +52,7 @@ export default class GlobalState {
     this.executeNodePathPromptIsDisplayed = false
     this.nodeActionSelectionPromptIsDisplayed = false
     this.lastSelectedNode = null
+    this.nodeActionItemDisplay = []
   }
 
   // This will position the currently

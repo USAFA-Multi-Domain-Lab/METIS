@@ -1,13 +1,12 @@
 import React, { useState } from 'react'
 import './ExecuteNodePath.scss'
 import { useStore } from 'react-context-hook'
-import { Mission, MissionNode } from '../../modules/missions'
-import usersModule, { IUser } from '../../modules/users'
+import { MissionNode } from '../../modules/missions'
+import { IUser } from '../../modules/users'
 import gameLogic from '../../modules/game-logic'
 import NodeStructureReference from '../../modules/node-reference'
 
 const ExecuteNodePath = (props: {
-  name: string | undefined
   selectedNode: MissionNode | null | undefined
   missionState: NodeStructureReference
 }) => {
@@ -74,7 +73,9 @@ const ExecuteNodePath = (props: {
         x
       </p>
 
-      <p className='PromptDisplayText'>Do you want to execute {props.name}?</p>
+      <p className='PromptDisplayText'>
+        Do you want to execute {props.selectedNode?.name}?
+      </p>
       <button className='ExecutionButton' onClick={execute}>
         Execute
       </button>

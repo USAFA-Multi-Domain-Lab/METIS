@@ -51,6 +51,11 @@ $background-bar: linear-gradient(
     height: 30px;
     vertical-align: bottom;
 
+    .Branding {
+      width: fit-content;
+      padding-right: 20px;
+    }
+
     .Heading {
       display: inline-block;
       padding: 0 0;
