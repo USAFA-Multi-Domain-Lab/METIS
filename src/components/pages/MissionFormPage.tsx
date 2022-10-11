@@ -102,7 +102,7 @@ export default function MissionFormPage(props: {
             mission={mission}
             missionAjaxStatus={EAjaxStatus.Loaded}
             handleNodeSelection={(node: MissionNode) => {
-              if (selectedNode?.instanceID !== node.instanceID) {
+              if (selectedNode?.nodeID !== node.nodeID) {
                 selectNode(node)
               } else {
                 selectNode(null)
@@ -167,7 +167,7 @@ function NodeEntry(props: {
                 handleChange()
               }
             }}
-            key={`${node.instanceID}_name`}
+            key={`${node.nodeID}_name`}
           />
           <DetailBox
             label='Pre-Execution Text'
@@ -179,7 +179,7 @@ function NodeEntry(props: {
                 handleChange()
               }
             }}
-            key={`${node.instanceID}_preExecutionText`}
+            key={`${node.nodeID}_preExecutionText`}
           />
           <DetailBox
             label='Post-Execution Success Text'
@@ -191,7 +191,7 @@ function NodeEntry(props: {
                 handleChange()
               }
             }}
-            key={`${node.instanceID}_postExecutionSuccessText`}
+            key={`${node.nodeID}_postExecutionSuccessText`}
           />
           <DetailBox
             label='Post-Execution Failure Text'
@@ -203,7 +203,7 @@ function NodeEntry(props: {
                 handleChange()
               }
             }}
-            key={`${node.instanceID}_postExecutionFailureText`}
+            key={`${node.nodeID}_postExecutionFailureText`}
           />
           <DetailBox
             label='Action'
@@ -215,7 +215,7 @@ function NodeEntry(props: {
                 handleChange()
               }
             }}
-            key={`${node.instanceID}_actionData`}
+            key={`${node.nodeID}_actionData`}
           />
           <DetailNumber
             label='Success Chance'
@@ -230,7 +230,7 @@ function NodeEntry(props: {
                 handleChange()
               }
             }}
-            key={`${node.instanceID}_successChance`}
+            key={`${node.nodeID}_successChance`}
           />
         </div>
       </div>
@@ -283,7 +283,7 @@ function NodeStructuring(props: {
     className += structureReference.expandable ? ' Expandable' : ' Ends'
     className += structureReference.isExpanded ? ' IsExpanded' : ' IsCollapsed'
 
-    if (structureReference.name === nodePendingDrop?.name) {
+    if (structureReference.nodeID === nodePendingDrop?.nodeID) {
       className += ' DropPending'
     }
 
@@ -300,7 +300,7 @@ function NodeStructuring(props: {
             grabNode(structureReference)
           }}
           onDragEnter={() => {
-            if (structureReference.name !== nodePendingDrop?.name) {
+            if (structureReference.nodeID !== nodePendingDrop?.nodeID) {
               pendDrop(structureReference)
             }
           }}
@@ -330,13 +330,13 @@ function NodeStructuring(props: {
               fill='#fff'
             />
           </svg>
-          <div className='Name'>{structureReference.name}</div>
+          <div className='Name'>{structureReference.nodeID}</div>
         </div>
         {structureReference.isExpanded ? (
           <div className='Subnodes'>
             {structureReference.subnodes.map(
               (subnode: NodeStructureReference) => (
-                <Node structureReference={subnode} key={subnode.name} />
+                <Node structureReference={subnode} key={subnode.nodeID} />
               ),
             )}
           </div>
@@ -350,7 +350,7 @@ function NodeStructuring(props: {
   const renderNodes = (): JSX.Element | null => {
     let nodeElements: Array<JSX.Element | null> = nodeStructure.subnodes.map(
       (subnode: NodeStructureReference) => (
-        <Node structureReference={subnode} key={subnode.name} />
+        <Node structureReference={subnode} key={subnode.nodeID} />
       ),
     )
     let className: string = 'Nodes'

@@ -41,8 +41,9 @@ const ExecuteNodePath = (props: {
       let username: string = currentUser.userID
 
       if (props.selectedNode !== undefined && props.selectedNode !== null) {
-        if (props.selectedNode.willSucceed === true) {
-          props.selectedNode.className = 'succeeded'
+        props.selectedNode.execute()
+
+        if (props.selectedNode.succeeded) {
           gameLogic.handleNodeSelection(props.selectedNode, props.missionState)
 
           setConsoleOutputs([
@@ -54,7 +55,6 @@ const ExecuteNodePath = (props: {
             },
           ])
         } else {
-          props.selectedNode.className = 'failed'
           setConsoleOutputs([
             ...consoleOutputs,
             {

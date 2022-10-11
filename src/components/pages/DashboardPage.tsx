@@ -170,48 +170,52 @@ export default function DashboardPage(props: {
                     )
                   if (endSubnode?.expandable !== false) {
                     gameLogic.handleNodeSelection(selectedNode, missionState)
-                    selectedNode.className = 'default'
+                    selectedNode.color = ''
                     return
                   }
                   setNodeActionSelectionPromptIsDisplayed(true)
                 }
               }}
               applyNodeClassName={(node: MissionNode) => {
-                switch (node.className) {
+                let className = ''
+
+                switch (node.color) {
                   case 'green':
-                    return 'green'
+                    className = 'green'
                     break
                   case 'pink':
-                    return 'pink'
+                    className = 'pink'
                     break
                   case 'yellow':
-                    return 'yellow'
+                    className = 'yellow'
                     break
                   case 'blue':
-                    return 'blue'
+                    className = 'blue'
                     break
                   case 'purple':
-                    return 'purple'
+                    className = 'purple'
                     break
                   case 'red':
-                    return 'red'
+                    className = 'red'
                     break
                   case 'khaki':
-                    return 'khaki'
+                    className = 'khaki'
                     break
                   case 'orange':
-                    return 'orange'
-                    break
-                  case 'succeeded':
-                    return 'succeeded'
-                    break
-                  case 'failed':
-                    return 'failed'
+                    className = 'orange'
                     break
                   default:
-                    return 'default'
+                    className = 'default'
                     break
                 }
+
+                if (node.executed && node.succeeded) {
+                  className = 'succeeded'
+                } else if (node.executed && !node.succeeded) {
+                  className = 'failed'
+                }
+
+                return className
               }}
               renderNodeTooltipDescription={(node: MissionNode) => ''}
             />

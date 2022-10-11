@@ -7,7 +7,7 @@ import { AnyObject } from './toolbox/objects'
 // component to expand and collapse
 // the structure.
 export default class NodeStructureReference {
-  name: string
+  nodeID: string
   parentNode: NodeStructureReference | null
   subnodes: Array<NodeStructureReference>
   _isExpanded: boolean
@@ -21,11 +21,11 @@ export default class NodeStructureReference {
   }
 
   constructor(
-    name: string,
+    nodeID: string,
     parentNode: NodeStructureReference | null,
     subnodes: Array<NodeStructureReference>,
   ) {
-    this.name = name
+    this.nodeID = nodeID
     this.parentNode = parentNode
     this.subnodes = subnodes
     this._isExpanded = false
@@ -37,7 +37,7 @@ export default class NodeStructureReference {
     if (this.expandable) {
       this._isExpanded = true
     } else {
-      throw new Error(`Cannot expand ${this.name} as it has no subnodes:`)
+      throw new Error(`Cannot expand ${this.nodeID} as it has no subnodes:`)
     }
   }
 
@@ -47,7 +47,7 @@ export default class NodeStructureReference {
     if (this.expandable) {
       this._isExpanded = false
     } else {
-      throw new Error(`Cannot collapse ${this.name} as it has no subnodes:`)
+      throw new Error(`Cannot collapse ${this.nodeID} as it has no subnodes:`)
     }
   }
 
@@ -72,7 +72,7 @@ export default class NodeStructureReference {
       for (let index: number = 0; index < siblings.length; index++) {
         let sibling = siblings[index]
 
-        if (this.name === sibling.name) {
+        if (this.nodeID === sibling.nodeID) {
           siblings.splice(index, 1)
         }
       }
@@ -140,7 +140,7 @@ export default class NodeStructureReference {
 
       if (subnodeResults !== undefined) {
         return subnodeResults
-      } else if (subnode.name === target.name) {
+      } else if (subnode.nodeID === target.nodeID) {
         return subnode
       }
     }

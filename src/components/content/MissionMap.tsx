@@ -181,8 +181,8 @@ export default class MissionMap extends React.Component<
     let relationships: MissionNodeRelationship[] = this.state.relationships
     for (let relationship of relationships) {
       if (
-        `${relationship.prerequisite.name}` === `${node.name}` ||
-        `${relationship.unlocks.name}` === `${node.name}`
+        `${relationship.prerequisite.nodeID}` === `${node.nodeID}` ||
+        `${relationship.unlocks.nodeID}` === `${node.nodeID}`
       ) {
         return true
       }
@@ -456,7 +456,7 @@ export default class MissionMap extends React.Component<
             y2 += (mapYScale / 3) * mapScale
           }
         }
-        let key = `unlocks-${relationship.unlocks.name}_prereq-${relationship.prerequisite.name}`
+        let key = `unlocks-${relationship.unlocks.nodeID}_prereq-${relationship.prerequisite.nodeID}`
         let strokeWidth: number = 3 * mapScale
         let includeOrigin = Math.abs(x1 - x2) > 1 || Math.abs(y1 - y2) > 1
 
@@ -716,7 +716,7 @@ export default class MissionMap extends React.Component<
               </div>
             )
           }}
-          searchableProperties={['name']}
+          searchableProperties={['nodeID']}
           availableProperties={[
             {
               id: 'final-node',
@@ -731,7 +731,7 @@ export default class MissionMap extends React.Component<
           ajaxStatus={missionAjaxStatus}
           listSpecificItemClassName={'mapped-node'}
           applyClassNameAddon={this.applyMappedNodeClassName}
-          applyElementID={(node: MissionNode) => `mapped-node_${node.name}`}
+          applyElementID={(node: MissionNode) => `mapped-node_${node.nodeID}`}
           // -- NODE POSITIONING --
           applyStyling={(node: MissionNode) => {
             let styling: React.CSSProperties = {}
