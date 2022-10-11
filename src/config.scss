@@ -11,18 +11,30 @@ $color-accent-light: #b6fff8;
 $color-error: $color-main;
 $color-error-faded: $color-main;
 // MDL application color scheme
-$terminal: #5fc9be;
-$communication: #2ab21f;
-$infrastructure: #f8ff00;
-$satellite-services: #679ac4;
-$air-defense: pink;
-$success: green;
-$fail: red;
-$attack: #ff6900;
-$defend: #974b35;
-$node-alt1: #ff5b5b;
-$node-alt2: #a31010;
-$node-alt3: #00dfff;
+// Terminal color schemes
+$terminal: #3bfce8;
+$terminal-green: #65eb59;
+$terminal-yellow: #f7e346;
+$terminal-blue: #34a1fb;
+$terminal-pink: #fa39ac;
+$terminal-khaki: #fdd496;
+$terminal-purple: #dea3ff;
+$terminal-red: #f9484f;
+$terminal-orange: #ffab50;
+
+// Node color schemes
+$node-green: #64a95e;
+$node-yellow: #b4a956;
+$node-blue: #537693;
+$node-pink: #ab5e8c;
+$node-khaki: #968975;
+$node-purple: #745d82;
+$node-red: #8a2e32;
+$node-orange: #bc842d;
+
+// Indicates if the node succeeded or failed
+$fail: #ff000a;
+$success: #65eb59;
 
 // height and width for input and output boxes
 $height: 650px;

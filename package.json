@@ -29,6 +29,7 @@
     "dotenv": "^10.0.0",
     "express": "^4.17.2",
     "express-session": "^1.17.2",
+    "lodash": "^4.17.21",
     "marked": "^1.2.9",
     "mongoose": "^6.5.3",
     "mysql2": "^2.3.3",
@@ -73,5 +74,7 @@
     "trailingComma": "all",
     "quoteProps": "consistent"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "@types/lodash": "^4.14.185"
+  }
 }

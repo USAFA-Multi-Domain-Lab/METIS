@@ -1,13 +1,26 @@
 import React, { useEffect, useState } from 'react'
 import { useStore } from 'react-context-hook'
-import { createTestMission, MissionNode } from '../../modules/missions'
+import { createTestMission, Mission, MissionNode } from '../../modules/missions'
 import { EAjaxStatus } from '../../modules/toolbox/ajax'
 import usersModule, { IUser } from '../../modules/users'
-import Markdown from '../content/Markdown'
 import Branding from '../content/Branding'
 import MissionMap from '../content/MissionMap'
-import OutputBox from '../content/OutputPanel'
+import OutputPanel from '../content/OutputPanel'
 import './DashboardPage.scss'
+import gameLogic from '../../modules/game-logic'
+import NodeStructureReference from '../../modules/node-reference'
+import { AnyObject } from 'mongoose'
+import ExecuteNodePath from '../content/ExecuteNodePath'
+import NodeActions from '../content/NodeActions'
+
+const mission = createTestMission()
+const initialMissionState =
+  NodeStructureReference.constructNodeStructureReference(
+    mission.name,
+    mission.nodeStructure,
+  )
+
+initialMissionState.expand()
 
 // This will render a dashboard with a radar
 // on it, indicating air traffic passing by.
@@ -27,14 +40,33 @@ export default function DashboardPage(props: {
   )
   const [consoleOutputs, setConsoleOutputs] =
     useStore<Array<{ date: number; value: string }>>('consoleOutputs')
+  let [outputPanelIsDisplayed, setOutputPanelIsDisplayed] = useStore<boolean>(
+    'outputPanelIsDisplayed',
+  )
+  let [executeNodePathPromptIsDisplayed, setExecuteNodePathPromptIsDisplayed] =
+    useStore<boolean>('executeNodePathPromptIsDisplayed')
+  let [
+    nodeActionSelectionPromptIsDisplayed,
+    setNodeActionSelectionPromptIsDisplayed,
+  ] = useStore<boolean>('nodeActionSelectionPromptIsDisplayed')
 
   /* -- COMPONENT STATE -- */
+
+  const [missionState, setMissionState] =
+    useState<NodeStructureReference>(initialMissionState)
+  const [forcedUpdateCounter, setForcedUpdateCounter] = useState<number>(0)
+  let [lastSelectedNode, setLastSelectedNode] = useState<MissionNode | null>()
 
   /* -- COMPONENT EFFECTS -- */
 
   /* -- COMPONENTS -- */
 
   /* -- COMPONENT FUNCTIONS -- */
+
+  // This forces a rerender of the component.
+  const forceUpdate = (): void => {
+    setForcedUpdateCounter(forcedUpdateCounter + 1)
+  }
 
   // This will logout the current user.
   const logout = () => {
@@ -62,7 +94,34 @@ export default function DashboardPage(props: {
   /* -- RENDER -- */
 
   let show: boolean = props.show
+
   let className: string = 'DashboardPage'
+
+  let missionRender = Mission.renderMission(
+    mission,
+    missionState,
+    mission.nodeStructure,
+  )
+
+  if (
+    outputPanelIsDisplayed === true &&
+    executeNodePathPromptIsDisplayed === false &&
+    nodeActionSelectionPromptIsDisplayed === false
+  ) {
+    className = 'DashboardPageWithOutputPanelOnly'
+  } else if (
+    outputPanelIsDisplayed === true &&
+    nodeActionSelectionPromptIsDisplayed === true &&
+    executeNodePathPromptIsDisplayed === false
+  ) {
+    className = 'DashboardPageWithOutputPanelAndNodeActionPrompt'
+  } else if (
+    outputPanelIsDisplayed === true &&
+    executeNodePathPromptIsDisplayed === true &&
+    nodeActionSelectionPromptIsDisplayed === false
+  ) {
+    className = 'DashboardPageWithOutputPanelAndExecuteNodePathPrompt'
+  }
 
   if (show) {
     return (
@@ -83,29 +142,90 @@ export default function DashboardPage(props: {
           // -- content --
           <div className='Content'>
             <MissionMap
-              mission={createTestMission()}
+              mission={missionRender}
               missionAjaxStatus={EAjaxStatus.Loaded}
-              handleNodeSelection={(node: MissionNode) => {
+              handleNodeSelection={(selectedNode: MissionNode) => {
                 if (currentUser !== null) {
                   let username: string = currentUser.userID
 
-                  setConsoleOutputs([
-                    ...consoleOutputs,
-                    {
-                      date: Date.now(),
+                  if (selectedNode !== undefined) {
+                    lastSelectedNode = selectedNode
+                    setLastSelectedNode(lastSelectedNode)
+                  }
+
+                  if (selectedNode.preExecutionText !== '') {
+                    let timeStamp: number = 5 * (new Date() as any)
+                    consoleOutputs.push({
+                      date: timeStamp,
                       value: `<span class='line-cursor'>${username}@USAFA: </span>
-                              <span class='${node.name}'>${node.preExecutionText}</span>`,
-                    },
-                  ])
+                              <span class="default">${selectedNode.preExecutionText}</span>`,
+                    })
+                    setOutputPanelIsDisplayed(true)
+                  }
+
+                  let endSubnode: NodeStructureReference | undefined =
+                    NodeStructureReference.findReference(
+                      missionState,
+                      selectedNode,
+                    )
+                  if (endSubnode?.expandable !== false) {
+                    gameLogic.handleNodeSelection(selectedNode, missionState)
+                    selectedNode.className = 'default'
+                    return
+                  }
+                  setNodeActionSelectionPromptIsDisplayed(true)
                 }
-                // use ref below
-                // const BorderBox = document.querySelector('.BorderBox')
-                // BorderBox?.scrollTo(0, 10000000000000000)
               }}
-              applyNodeClassName={(node: MissionNode) => ''}
+              applyNodeClassName={(node: MissionNode) => {
+                switch (node.className) {
+                  case 'green':
+                    return 'green'
+                    break
+                  case 'pink':
+                    return 'pink'
+                    break
+                  case 'yellow':
+                    return 'yellow'
+                    break
+                  case 'blue':
+                    return 'blue'
+                    break
+                  case 'purple':
+                    return 'purple'
+                    break
+                  case 'red':
+                    return 'red'
+                    break
+                  case 'khaki':
+                    return 'khaki'
+                    break
+                  case 'orange':
+                    return 'orange'
+                    break
+                  case 'succeeded':
+                    return 'succeeded'
+                    break
+                  case 'failed':
+                    return 'failed'
+                    break
+                  default:
+                    return 'default'
+                    break
+                }
+              }}
               renderNodeTooltipDescription={(node: MissionNode) => ''}
             />
-            <OutputBox />
+            <OutputPanel />
+            <NodeActions
+              name={lastSelectedNode?.name}
+              selectedNode={lastSelectedNode}
+              missionState={missionState}
+            />
+            <ExecuteNodePath
+              name={lastSelectedNode?.name}
+              selectedNode={lastSelectedNode}
+              missionState={missionState}
+            />
           </div>
         }
       </div>

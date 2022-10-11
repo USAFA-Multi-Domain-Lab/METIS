@@ -11,14 +11,46 @@
   color: $terminal;
 }
 
-.Communications {
-  color: $communication;
+.green {
+  color: $terminal-green;
 }
 
-.Infrastructure {
-  color: $infrastructure;
+.pink {
+  color: $terminal-pink;
 }
 
-.Satellite .Services {
-  color: $satellite-services;
+.yellow {
+  color: $terminal-yellow;
+}
+
+.blue {
+  color: $terminal-blue;
+}
+
+.khaki {
+  color: $terminal-khaki;
+}
+
+.purple {
+  color: $terminal-purple;
+}
+
+.red {
+  color: $terminal-red;
+}
+
+.orange {
+  color: $terminal-orange;
+}
+
+.default {
+  color: $color-main;
+}
+
+.succeeded {
+  color: $success;
+}
+
+.failed {
+  color: $fail;
 }

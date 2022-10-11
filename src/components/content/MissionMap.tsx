@@ -2,7 +2,7 @@
 
 import './MissionMap.scss'
 import React from 'react'
-import List, { IListItemProperty } from './List'
+import List from './List'
 import strings from '../../modules/toolbox/strings'
 import { EAjaxStatus } from '../../modules/toolbox/ajax'
 import MoreInformation from './MoreInformation'

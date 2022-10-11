@@ -1,5 +1,6 @@
 import React from 'react'
 import { useStore, withStore } from 'react-context-hook'
+import { MissionNode } from '../modules/missions'
 import { IUser } from '../modules/users'
 
 /* -- constants -- */
@@ -29,6 +30,10 @@ export default class GlobalState {
   tooltips: React.RefObject<HTMLDivElement>
   tooltipDescription: string
   consoleOutputs: Array<{ date: number; value: string }>
+  outputPanelIsDisplayed: boolean
+  executeNodePathPromptIsDisplayed: boolean
+  nodeActionSelectionPromptIsDisplayed: boolean
+  lastSelectedNode: MissionNode | null
 
   constructor(stateSetters: IStateSetters) {
     this.currentUser = null
@@ -42,6 +47,10 @@ export default class GlobalState {
     this.tooltips = React.createRef()
     this.tooltipDescription = ''
     this.consoleOutputs = []
+    this.outputPanelIsDisplayed = false
+    this.executeNodePathPromptIsDisplayed = false
+    this.nodeActionSelectionPromptIsDisplayed = false
+    this.lastSelectedNode = null
   }
 
   // This will position the currently
