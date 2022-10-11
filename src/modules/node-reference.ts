@@ -8,6 +8,7 @@ import { AnyObject } from './toolbox/objects'
 // the structure.
 export default class NodeStructureReference {
   name: string
+  parentNode: NodeStructureReference | null
   subnodes: Array<NodeStructureReference>
   _isExpanded: boolean
 
@@ -19,8 +20,13 @@ export default class NodeStructureReference {
     return this.subnodes.length > 0
   }
 
-  constructor(name: string, subnodes: Array<NodeStructureReference>) {
+  constructor(
+    name: string,
+    parentNode: NodeStructureReference | null,
+    subnodes: Array<NodeStructureReference>,
+  ) {
     this.name = name
+    this.parentNode = parentNode
     this.subnodes = subnodes
     this._isExpanded = false
   }
@@ -55,6 +61,37 @@ export default class NodeStructureReference {
     }
   }
 
+  // This will move this reference to
+  // a new parent node.
+  move(destination: NodeStructureReference): void {
+    let parentNode: NodeStructureReference | null = this.parentNode
+
+    if (parentNode !== null) {
+      let siblings: NodeStructureReference[] = parentNode.subnodes
+
+      for (let index: number = 0; index < siblings.length; index++) {
+        let sibling = siblings[index]
+
+        if (this.name === sibling.name) {
+          siblings.splice(index, 1)
+        }
+      }
+
+      destination.subnodes.push(this)
+      this.parentNode = destination
+    }
+  }
+
+  // This will expand all subnodes
+  // of this node if possible.
+  expandSubnodes(): void {
+    for (let subnode of this.subnodes) {
+      if (subnode.expandable) {
+        subnode.expand()
+      }
+    }
+  }
+
   // This will convert mission
   // nodeStructure data into a
   // NodeStructureReference.
@@ -78,9 +115,19 @@ export default class NodeStructureReference {
       }
     }
 
-    return new NodeStructureReference(name, subnodes)
+    let nodeStructureReference: NodeStructureReference =
+      new NodeStructureReference(name, null, subnodes)
+
+    for (let subnode of subnodes) {
+      subnode.parentNode = nodeStructureReference
+    }
+
+    return nodeStructureReference
   }
 
+  // This will dig deep into a given
+  // node structure reference and find
+  // the given target subnode.
   static findReference = (
     reference: NodeStructureReference,
     target: MissionNode,
@@ -95,14 +142,6 @@ export default class NodeStructureReference {
         return subnodeResults
       } else if (subnode.name === target.name) {
         return subnode
-      }
-    }
-  }
-
-  expandSubnodes(): void {
-    for (let subnode of this.subnodes) {
-      if (subnode.expandable) {
-        subnode.expand()
       }
     }
   }

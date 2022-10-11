@@ -11,120 +11,6 @@ import MissionMap from '../content/MissionMap'
 import Tooltip from '../content/Tooltip'
 import './MissionFormPage.scss'
 
-// This is a reference to a node
-// used in the NodeStructuring
-// component to expand and collapse
-// the structure.
-class NodeStructureReference {
-  name: string
-  parentNode: NodeStructureReference | null
-  subnodes: Array<NodeStructureReference>
-  _isExpanded: boolean
-
-  get isExpanded(): boolean {
-    return this._isExpanded
-  }
-
-  get expands(): boolean {
-    return this.subnodes.length > 0
-  }
-
-  constructor(
-    name: string,
-    parentNode: NodeStructureReference | null,
-    subnodes: Array<NodeStructureReference>,
-  ) {
-    this.name = name
-    this.parentNode = parentNode
-    this.subnodes = subnodes
-    this._isExpanded = false
-  }
-
-  // This will mark this reference
-  // as expanded if possible.
-  expand(): void {
-    if (this.expands) {
-      this._isExpanded = true
-    } else {
-      throw new Error(`Cannot expand ${this.name} as it has no subnodes:`)
-    }
-  }
-
-  // This will mark this reference
-  // as collapsed if possible.
-  collapse(): void {
-    if (this.expands) {
-      this._isExpanded = false
-    } else {
-      throw new Error(`Cannot collapse ${this.name} as it has no subnodes:`)
-    }
-  }
-
-  // This will toggle between expanded
-  // and collapse if possible.
-  toggle(): void {
-    if (this.isExpanded) {
-      this.collapse()
-    } else {
-      this.expand()
-    }
-  }
-
-  // This will move this reference to
-  // a new parent node.
-  move(destination: NodeStructureReference): void {
-    let parentNode: NodeStructureReference | null = this.parentNode
-
-    if (parentNode !== null) {
-      let siblings: NodeStructureReference[] = parentNode.subnodes
-
-      for (let index: number = 0; index < siblings.length; index++) {
-        let sibling = siblings[index]
-
-        if (this.name === sibling.name) {
-          siblings.splice(index, 1)
-        }
-      }
-
-      destination.subnodes.push(this)
-      this.parentNode = destination
-    }
-  }
-
-  // This will convert mission
-  // nodeStructure data into a
-  // NodeStructureReference.
-  static constructNodeStructureReference(
-    name: string,
-    nodeStructure: AnyObject,
-  ): NodeStructureReference {
-    let subnodes: Array<NodeStructureReference> = []
-    let subnodeKeyValuePairs: Array<[string, AnyObject | string]> = Object.keys(
-      nodeStructure,
-    ).map((key: string) => [key, nodeStructure[key]])
-
-    for (let subnodeKeyValuePair of subnodeKeyValuePairs) {
-      let key: string = subnodeKeyValuePair[0]
-      let value: AnyObject | string = subnodeKeyValuePair[1]
-
-      if (typeof value !== 'string') {
-        subnodes.push(
-          NodeStructureReference.constructNodeStructureReference(key, value),
-        )
-      }
-    }
-
-    let nodeStructureReference: NodeStructureReference =
-      new NodeStructureReference(name, null, subnodes)
-
-    for (let subnode of subnodes) {
-      subnode.parentNode = nodeStructureReference
-    }
-
-    return nodeStructureReference
-  }
-}
-
 // This will render a dashboard with a radar
 // on it, indicating air traffic passing by.
 export default function MissionFormPage(props: {
@@ -394,7 +280,7 @@ function NodeStructuring(props: {
     }
     let className: string = 'Node'
 
-    className += structureReference.expands ? ' Expands' : ' Ends'
+    className += structureReference.expandable ? ' Expandable' : ' Ends'
     className += structureReference.isExpanded ? ' IsExpanded' : ' IsCollapsed'
 
     if (structureReference.name === nodePendingDrop?.name) {
