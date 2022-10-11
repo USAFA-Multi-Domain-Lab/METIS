@@ -60,7 +60,7 @@ $background-bar: linear-gradient(
 
   .Content {
     display: flex;
-    justify-content: center;
+    justify-content: flex-start;
     align-items: center;
     flex-flow: row wrap;
     width: 100%;
@@ -71,6 +71,10 @@ $background-bar: linear-gradient(
     }
 
     .NodeActions {
+      display: none;
+    }
+
+    .ExecuteNodePath {
       display: none;
     }
 
@@ -85,7 +89,7 @@ $background-bar: linear-gradient(
 }
 
 // Displays the Mission Map and Output Panel only
-.DashboardPageWithOutputPanel {
+.DashboardPageWithOutputPanelOnly {
   margin: 0 auto;
   padding: 35px 30px 0;
 
@@ -116,7 +120,7 @@ $background-bar: linear-gradient(
 
   .Content {
     display: flex;
-    justify-content: center;
+    justify-content: flex-start;
     align-items: center;
     flex-flow: row wrap;
     width: 100%;
@@ -129,6 +133,10 @@ $background-bar: linear-gradient(
     .NodeActions {
       display: none;
     }
+
+    .ExecuteNodePath {
+      display: none;
+    }
   }
 
   @media only screen and (max-width: 1000px) {
@@ -136,8 +144,8 @@ $background-bar: linear-gradient(
   }
 }
 
-// Displays the Mission Map, Output Panel, and Execution Prompt
-.DashboardPageWithOutputPanelAndExecutePrompt {
+// Displays the Mission Map, Output Panel, and Node Action Window
+.DashboardPageWithOutputPanelAndNodeActionPrompt {
   margin: 0 auto;
   padding: 35px 30px 0;
 
@@ -168,7 +176,7 @@ $background-bar: linear-gradient(
 
   .Content {
     display: flex;
-    justify-content: center;
+    justify-content: flex-start;
     align-items: center;
     flex-flow: row wrap;
     width: 100%;
@@ -176,6 +184,62 @@ $background-bar: linear-gradient(
     .MissionMap {
       margin-right: 10px;
       width: 60%;
+    }
+
+    .ExecuteNodePath {
+      display: none;
+    }
+  }
+
+  @media only screen and (max-width: 1000px) {
+    padding: 20px;
+  }
+}
+
+// Displays the Mission Map, Output Panel, and Node Action Window
+.DashboardPageWithOutputPanelAndExecuteNodePathPrompt {
+  margin: 0 auto;
+  padding: 35px 30px 0;
+
+  .Navigation {
+    display: grid;
+    grid-template-columns: auto 150px 130px;
+    margin: 0 auto 55px;
+    height: 30px;
+    vertical-align: bottom;
+
+    .Link {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-flow: row wrap;
+      -webkit-user-select: none;
+      user-select: none;
+      cursor: pointer;
+      transition: opacity 175ms;
+
+      &:hover {
+        border: 2px solid $color-accent;
+        border-radius: 5px;
+        text-align: center;
+      }
+    }
+  }
+
+  .Content {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    flex-flow: row wrap;
+    width: 100%;
+
+    .MissionMap {
+      margin-right: 10px;
+      width: 60%;
+    }
+
+    .NodeActions {
+      display: none;
     }
   }
 

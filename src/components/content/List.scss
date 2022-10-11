@@ -320,6 +320,14 @@
       &.default {
         background-color: $background-alt1;
       }
+
+      &.succeeded {
+        border-color: $success;
+      }
+
+      &.failed {
+        border-color: $fail;
+      }
     }
 
     .page-number {

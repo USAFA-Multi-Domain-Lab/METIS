@@ -1,0 +1,59 @@
+@import '../../config.scss';
+
+.ExecuteNodePath {
+  position: absolute;
+  top: 300px;
+  left: 20%;
+  z-index: 100000000;
+  width: 30%;
+  height: 14%;
+  margin-right: 10px;
+  border: 2px solid $color-main;
+  background-color: $background-main;
+  padding: 0;
+  margin: 0;
+  padding: 10px 20px;
+  overflow-y: auto;
+  overflow-x: hidden;
+
+  .PromptDisplayText {
+    font-size: 0.95em;
+    margin: 0 0 10px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    list-style-type: none;
+    height: fit-content;
+  }
+
+  .x {
+    position: relative;
+    left: 99%;
+    list-style-type: none;
+    width: 10%;
+    margin: 0 0 3px;
+    padding: 0;
+
+    &.x:hover {
+      cursor: pointer;
+      color: black;
+    }
+  }
+
+  .ExecutionButton {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 20px 5px 20px 0;
+    color: $color-accent-light;
+    background-color: $background-alt2;
+    padding: 5px;
+    border: 2px solid $color-main;
+    border-radius: 4px;
+    height: auto;
+
+    &.ExecutionButton:hover {
+      cursor: pointer;
+      background-color: black;
+    }
+  }
+}

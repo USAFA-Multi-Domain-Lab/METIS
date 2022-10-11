@@ -10,7 +10,7 @@ import './DashboardPage.scss'
 import gameLogic from '../../modules/game-logic'
 import NodeStructureReference from '../../modules/node-reference'
 import { AnyObject } from 'mongoose'
-import ExecuteNodes from '../content/ExecuteNodes'
+import ExecuteNodePath from '../content/ExecuteNodePath'
 import NodeActions from '../content/NodeActions'
 
 const mission = createTestMission()
@@ -43,8 +43,12 @@ export default function DashboardPage(props: {
   let [outputPanelIsDisplayed, setOutputPanelIsDisplayed] = useStore<boolean>(
     'outputPanelIsDisplayed',
   )
-  let [nodeActionWindowIsDisplayed, setNodeActionWindowIsDisplayed] =
-    useStore<boolean>('nodeActionWindowIsDisplayed')
+  let [executeNodePathPromptIsDisplayed, setExecuteNodePathPromptIsDisplayed] =
+    useStore<boolean>('executeNodePathPromptIsDisplayed')
+  let [
+    nodeActionSelectionPromptIsDisplayed,
+    setNodeActionSelectionPromptIsDisplayed,
+  ] = useStore<boolean>('nodeActionSelectionPromptIsDisplayed')
 
   /* -- COMPONENT STATE -- */
 
@@ -101,14 +105,22 @@ export default function DashboardPage(props: {
 
   if (
     outputPanelIsDisplayed === true &&
-    nodeActionWindowIsDisplayed === false
+    executeNodePathPromptIsDisplayed === false &&
+    nodeActionSelectionPromptIsDisplayed === false
   ) {
-    className = 'DashboardPageWithOutputPanel'
+    className = 'DashboardPageWithOutputPanelOnly'
   } else if (
     outputPanelIsDisplayed === true &&
-    nodeActionWindowIsDisplayed === true
+    nodeActionSelectionPromptIsDisplayed === true &&
+    executeNodePathPromptIsDisplayed === false
   ) {
-    className = 'DashboardPageWithOutputPanelAndExecutePrompt'
+    className = 'DashboardPageWithOutputPanelAndNodeActionPrompt'
+  } else if (
+    outputPanelIsDisplayed === true &&
+    executeNodePathPromptIsDisplayed === true &&
+    nodeActionSelectionPromptIsDisplayed === false
+  ) {
+    className = 'DashboardPageWithOutputPanelAndExecuteNodePathPrompt'
   }
 
   if (show) {
@@ -141,27 +153,31 @@ export default function DashboardPage(props: {
                     setLastSelectedNode(lastSelectedNode)
                   }
 
-                  let timeStamp: number = 5 * (new Date() as any)
-                  consoleOutputs.push({
-                    date: timeStamp,
-                    value: `<span class='line-cursor'>${username}@USAFA: </span>
-                              <span class = ${selectedNode.color}>${selectedNode.preExecutionText}</span>`,
-                  })
-
-                  let initialNodes = missionState.subnodes
-                  for (let subnode of initialNodes) {
-                    if (selectedNode.name === subnode.name) {
-                      gameLogic.handleNodeSelection(selectedNode, missionState)
-                      setOutputPanelIsDisplayed(true)
-                      return
-                    }
+                  if (selectedNode.preExecutionText !== '') {
+                    let timeStamp: number = 5 * (new Date() as any)
+                    consoleOutputs.push({
+                      date: timeStamp,
+                      value: `<span class='line-cursor'>${username}@USAFA: </span>
+                              <span class="default">${selectedNode.preExecutionText}</span>`,
+                    })
+                    setOutputPanelIsDisplayed(true)
                   }
-                  setNodeActionWindowIsDisplayed(true)
-                  setOutputPanelIsDisplayed(true)
+
+                  let endSubnode: NodeStructureReference | undefined =
+                    NodeStructureReference.findReference(
+                      missionState,
+                      selectedNode,
+                    )
+                  if (endSubnode?.expandable !== false) {
+                    gameLogic.handleNodeSelection(selectedNode, missionState)
+                    selectedNode.className = 'default'
+                    return
+                  }
+                  setNodeActionSelectionPromptIsDisplayed(true)
                 }
               }}
               applyNodeClassName={(node: MissionNode) => {
-                switch (node.color) {
+                switch (node.className) {
                   case 'green':
                     return 'green'
                     break
@@ -186,6 +202,12 @@ export default function DashboardPage(props: {
                   case 'orange':
                     return 'orange'
                     break
+                  case 'succeeded':
+                    return 'succeeded'
+                    break
+                  case 'failed':
+                    return 'failed'
+                    break
                   default:
                     return 'default'
                     break
@@ -193,13 +215,14 @@ export default function DashboardPage(props: {
               }}
               renderNodeTooltipDescription={(node: MissionNode) => ''}
             />
+            <OutputPanel />
             <NodeActions
               name={lastSelectedNode?.name}
               selectedNode={lastSelectedNode}
               missionState={missionState}
             />
-            <OutputPanel />
-            <ExecuteNodes
+            <ExecuteNodePath
+              name={lastSelectedNode?.name}
               selectedNode={lastSelectedNode}
               missionState={missionState}
             />

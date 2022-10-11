@@ -46,3 +46,11 @@
 .default {
   color: $color-main;
 }
+
+.succeeded {
+  color: $success;
+}
+
+.failed {
+  color: $fail;
+}

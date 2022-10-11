@@ -15,108 +15,89 @@ const NodeActions = (props: {
   const [currentUser, setCurrentUser] = useStore<IUser | null>('currentUser')
   const [consoleOutputs, setConsoleOutputs] =
     useStore<Array<{ date: number; value: string }>>('consoleOutputs')
-  const [nodeActionWindowIsDisplayed, setNodeActionWindowIsDisplayed] =
-    useStore<boolean>('nodeActionWindowIsDisplayed')
+  const [
+    executeNodePathPromptIsDisplayed,
+    setExecuteNodePathPromptIsDisplayed,
+  ] = useStore<boolean>('executeNodePathPromptIsDisplayed')
+  const [
+    nodeActionSelectionPromptIsDisplayed,
+    setNodeActionSelectionPromptIsDisplayed,
+  ] = useStore<boolean>('nodeActionSelectionPromptIsDisplayed')
 
   /* -- COMPONENT STATE -- */
   const [forcedUpdateCounter, setForcedUpdateCounter] = useState<number>(0)
+  const [displayNodeActionList, setDisplayNodeActionList] =
+    useState<boolean>(false)
 
   /* -- COMPONENT FUNCTIONS -- */
-
   // This forces a rerender of the component.
   const forceUpdate = (): void => {
     setForcedUpdateCounter(forcedUpdateCounter + 1)
   }
 
   // Closes the execution prompt window
-  const cancelExecution = (): void => {
-    setNodeActionWindowIsDisplayed(false)
+  const closeWindow = (): void => {
+    setNodeActionSelectionPromptIsDisplayed(false)
   }
 
-  const attack = () => {
-    setNodeActionWindowIsDisplayed(false)
-
-    if (currentUser !== null) {
-      let username: string = currentUser.userID
-
-      if (props.selectedNode !== undefined && props.selectedNode !== null) {
-        if (props.selectedNode._willSucceed === true) {
-          gameLogic.handleNodeSelection(props.selectedNode, props.missionState)
-          forceUpdate()
-
-          setConsoleOutputs([
-            ...consoleOutputs,
-            {
-              date: Date.now(),
-              value: `<span class='line-cursor'>${username}@USAFA: </span>
-                       <span class = ${props.selectedNode.color}>${props.selectedNode.postExecutionSuccessText}</span>`,
-            },
-          ])
-        } else {
-          forceUpdate()
-          setConsoleOutputs([
-            ...consoleOutputs,
-            {
-              date: Date.now(),
-              value: `<span class='line-cursor'>${username}@USAFA: </span>
-                      <span class = ${props.selectedNode.color}>${props.selectedNode.postExecutionFailureText}</span>`,
-            },
-          ])
-        }
-      }
+  const revealOptions = () => {
+    if (displayNodeActionList === false) {
+      setDisplayNodeActionList(true)
+    } else {
+      setDisplayNodeActionList(false)
     }
   }
 
-  const defend = () => {
-    setNodeActionWindowIsDisplayed(false)
+  const nodeActionSelection = (): void => {
+    setNodeActionSelectionPromptIsDisplayed(false)
+    setExecuteNodePathPromptIsDisplayed(true)
+  }
 
-    if (currentUser !== null) {
-      let username: string = currentUser.userID
+  /* -- RENDER -- */
 
-      if (props.selectedNode !== undefined && props.selectedNode !== null) {
-        if (props.selectedNode._willSucceed === true) {
-          gameLogic.handleNodeSelection(props.selectedNode, props.missionState)
-          forceUpdate()
+  let className: string = 'NodeActionList'
 
-          setConsoleOutputs([
-            ...consoleOutputs,
-            {
-              date: Date.now(),
-              value: `<span class='line-cursor'>${username}@USAFA: </span>
-                       <span class = ${props.selectedNode.color}>${props.selectedNode.postExecutionSuccessText}</span>`,
-            },
-          ])
-        } else {
-          forceUpdate()
-          setConsoleOutputs([
-            ...consoleOutputs,
-            {
-              date: Date.now(),
-              value: `<span class='line-cursor'>${username}@USAFA: </span>
-                      <span class = ${props.selectedNode.color}>${props.selectedNode.postExecutionFailureText}</span>`,
-            },
-          ])
-        }
-      }
-    }
+  if (displayNodeActionList === false) {
+    className = 'hide NodeActionList'
+  } else {
+    className = 'NodeActionList'
   }
 
   return (
     <div className='NodeActions'>
-      <li className='x' onClick={cancelExecution}>
+      <p className='x' onClick={closeWindow}>
         x
-      </li>
+      </p>
 
-      <li className='PromptDisplayText'>
-        Do you want to execute {props.name}?
-      </li>
-      <div className='ButtonOptions'>
-        <button className='AttackButton' onClick={attack}>
-          Attack
-        </button>
-        <button className='DefendButton' onClick={defend}>
-          Defend
-        </button>
+      <p className='PromptDisplayText'>
+        What you would like to do to {props.name}?
+      </p>
+
+      {/* Need a function to be able to generate however many buttons they want
+         with whatever text they want */}
+
+      <div className='NodeActionDefault' onClick={revealOptions}>
+        Choose an action{' '}
+      </div>
+      <div className={className}>
+        <div className='NodeAction' onClick={nodeActionSelection}>
+          Deny
+        </div>
+        <div className='NodeAction' onClick={nodeActionSelection}>
+          Degrade
+        </div>
+        <div className='NodeAction' onClick={nodeActionSelection}>
+          Disrupt
+        </div>
+        <div className='NodeAction' onClick={nodeActionSelection}>
+          Destroy
+        </div>
+        <div className='NodeAction' onClick={nodeActionSelection}>
+          Manipulate
+        </div>
+        <div className='NodeAction' onClick={nodeActionSelection}>
+          Extract
+        </div>
       </div>
     </div>
   )
