@@ -1,7 +1,6 @@
-import { v4 as generateHash } from 'uuid'
 import NodeStructureReference from './node-reference'
 import { isInteger } from './numbers'
-import { cloneDeep, random } from 'lodash'
+import { cloneDeep } from 'lodash'
 import { AnyObject } from 'mongoose'
 
 // This is the raw mission data returned
@@ -343,7 +342,7 @@ export function createTestMission(): Mission {
         actionData: 'exec command',
         executable: false,
         successChance: 0.3,
-        mapX: 2,
+        mapX: 1,
         mapY: -2,
       },
       'Internet Provider': {
@@ -356,7 +355,7 @@ export function createTestMission(): Mission {
         actionData: 'exec command',
         executable: false,
         successChance: 0.3,
-        mapX: 2,
+        mapX: 1,
         mapY: -1,
       },
       'Instant Messaging': {
@@ -369,7 +368,7 @@ export function createTestMission(): Mission {
         actionData: 'exec command',
         executable: false,
         successChance: 0.3,
-        mapX: 2,
+        mapX: 1,
         mapY: 0,
       },
       'File Sharing Service': {
@@ -382,7 +381,7 @@ export function createTestMission(): Mission {
         actionData: 'exec command',
         executable: false,
         successChance: 0.3,
-        mapX: 2,
+        mapX: 1,
         mapY: 1,
       },
       'Cellular Tower': {
@@ -395,7 +394,7 @@ export function createTestMission(): Mission {
         actionData: 'exec command',
         executable: false,
         successChance: 0.3,
-        mapX: 4,
+        mapX: 2,
         mapY: -2,
       },
       'Service Provider': {
@@ -408,7 +407,7 @@ export function createTestMission(): Mission {
         actionData: 'exec command',
         executable: false,
         successChance: 0.3,
-        mapX: 4,
+        mapX: 2,
         mapY: -1,
       },
 
@@ -422,7 +421,7 @@ export function createTestMission(): Mission {
         actionData: 'exec command',
         executable: false,
         successChance: 0.3,
-        mapX: 4,
+        mapX: 2,
         mapY: 0,
       },
 
@@ -436,7 +435,7 @@ export function createTestMission(): Mission {
         actionData: 'exec command',
         executable: false,
         successChance: 0.3,
-        mapX: 4,
+        mapX: 2,
         mapY: 1,
       },
       'Air Defense': {
@@ -462,7 +461,7 @@ export function createTestMission(): Mission {
         actionData: 'exec command',
         executable: false,
         successChance: 0.3,
-        mapX: 2,
+        mapX: 1,
         mapY: 2,
       },
       'Individual Launch Sites': {
@@ -476,7 +475,7 @@ export function createTestMission(): Mission {
         actionData: 'exec command',
         executable: false,
         successChance: 0.3,
-        mapX: 4,
+        mapX: 2,
         mapY: 2,
       },
       'Launcher System': {
@@ -489,7 +488,7 @@ export function createTestMission(): Mission {
         actionData: 'exec command',
         executable: false,
         successChance: 0.3,
-        mapX: 6,
+        mapX: 3,
         mapY: 2,
       },
       'Radar System': {
@@ -502,7 +501,7 @@ export function createTestMission(): Mission {
         actionData: 'exec command',
         executable: false,
         successChance: 0.3,
-        mapX: 6,
+        mapX: 3,
         mapY: 3,
       },
       'Infrastructure': {
@@ -528,7 +527,7 @@ export function createTestMission(): Mission {
         actionData: 'exec command',
         executable: false,
         successChance: 0.3,
-        mapX: 2,
+        mapX: 1,
         mapY: 4,
       },
       'Electrical System': {
@@ -541,7 +540,7 @@ export function createTestMission(): Mission {
         actionData: 'exec command',
         executable: false,
         successChance: 0.3,
-        mapX: 2,
+        mapX: 1,
         mapY: 5,
       },
       'Water System': {
@@ -554,7 +553,7 @@ export function createTestMission(): Mission {
         actionData: 'exec command',
         executable: false,
         successChance: 0.3,
-        mapX: 2,
+        mapX: 1,
         mapY: 6,
       },
       'Road System': {
@@ -567,7 +566,7 @@ export function createTestMission(): Mission {
         actionData: 'exec command',
         executable: false,
         successChance: 0.3,
-        mapX: 2,
+        mapX: 1,
         mapY: 7,
       },
       'Track Monitoring': {
@@ -580,7 +579,7 @@ export function createTestMission(): Mission {
         actionData: 'exec command',
         executable: false,
         successChance: 0.3,
-        mapX: 4,
+        mapX: 2,
         mapY: 3,
       },
       'Track Switch System': {
@@ -593,7 +592,7 @@ export function createTestMission(): Mission {
         actionData: 'exec command',
         executable: false,
         successChance: 0.3,
-        mapX: 4,
+        mapX: 2,
         mapY: 4,
       },
       'Regional Service': {
@@ -606,7 +605,7 @@ export function createTestMission(): Mission {
         actionData: 'exec command',
         executable: false,
         successChance: 0.3,
-        mapX: 4,
+        mapX: 2,
         mapY: 5,
       },
       'Valve System': {
@@ -619,7 +618,7 @@ export function createTestMission(): Mission {
         actionData: 'exec command',
         executable: false,
         successChance: 0.3,
-        mapX: 4,
+        mapX: 2,
         mapY: 6,
       },
       'Traffic Light System': {
@@ -632,7 +631,7 @@ export function createTestMission(): Mission {
         actionData: 'exec command',
         executable: false,
         successChance: 0.3,
-        mapX: 4,
+        mapX: 2,
         mapY: 7,
       },
       'CCTV System': {
@@ -645,7 +644,7 @@ export function createTestMission(): Mission {
         actionData: 'exec command',
         executable: false,
         successChance: 0.3,
-        mapX: 4,
+        mapX: 2,
         mapY: 8,
       },
       'Satellite Services': {
@@ -671,7 +670,7 @@ export function createTestMission(): Mission {
         actionData: 'exec command',
         executable: false,
         successChance: 0.3,
-        mapX: 2,
+        mapX: 1,
         mapY: 9,
       },
       'Data Transfer': {
@@ -684,7 +683,7 @@ export function createTestMission(): Mission {
         actionData: 'exec command',
         executable: false,
         successChance: 0.3,
-        mapX: 2,
+        mapX: 1,
         mapY: 10,
       },
       'Imagery Collection': {
@@ -697,7 +696,7 @@ export function createTestMission(): Mission {
         actionData: 'exec command',
         executable: false,
         successChance: 0.3,
-        mapX: 2,
+        mapX: 1,
         mapY: 11,
       },
       'Sensor Observation': {
@@ -710,7 +709,7 @@ export function createTestMission(): Mission {
         actionData: 'exec command',
         executable: false,
         successChance: 0.3,
-        mapX: 2,
+        mapX: 1,
         mapY: 12,
       },
     },

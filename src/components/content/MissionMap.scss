@@ -233,11 +233,11 @@
     position: relative;
     z-index: $z-index-objective-map-pointers;
     border: 2px solid transparent;
-    stroke: rgba($color-main, 0.65);
+    stroke: rgba($color-main, 1);
     marker {
       polygon,
       circle {
-        fill: rgba($color-accent, 1);
+        fill: rgba($color-accent-light, 1);
         stroke: none;
       }
     }
