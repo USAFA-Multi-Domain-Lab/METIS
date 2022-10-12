@@ -28,12 +28,19 @@ const NodeActions = (props: {
   /* -- COMPONENT STATE -- */
   const [displayNodeActionList, setDisplayNodeActionList] =
     useState<boolean>(false)
+  const [forcedUpdateCounter, setForcedUpdateCounter] = useState<number>(0)
 
   /* -- COMPONENT FUNCTIONS -- */
+  // This forces a rerender of the component.
+  const forceUpdate = (): void => {
+    setForcedUpdateCounter(forcedUpdateCounter + 1)
+  }
 
   // Closes the execution prompt window
   const closeWindow = (): void => {
     setNodeActionSelectionPromptIsDisplayed(false)
+    setDisplayNodeActionList(false)
+    setNodeActionItemDisplay([])
   }
 
   const revealOptions = () => {
@@ -48,6 +55,7 @@ const NodeActions = (props: {
     setNodeActionSelectionPromptIsDisplayed(false)
     setExecuteNodePathPromptIsDisplayed(true)
     setDisplayNodeActionList(false)
+    setNodeActionItemDisplay([])
   }
 
   /* -- RENDER -- */

@@ -350,7 +350,7 @@ export function createTestMission(): Mission {
         ],
         successChance: 0.3,
         mapX: 0,
-        mapY: -2,
+        mapY: -3,
       },
       'Cellular Network': {
         nodeID: 'Cellular Network',
@@ -372,7 +372,7 @@ export function createTestMission(): Mission {
         ],
         successChance: 0.3,
         mapX: 2,
-        mapY: -2,
+        mapY: -5,
       },
       'Internet Provider': {
         nodeID: 'Internet Provider',
@@ -394,7 +394,7 @@ export function createTestMission(): Mission {
         ],
         successChance: 0.3,
         mapX: 2,
-        mapY: -1,
+        mapY: -4,
       },
       'Instant Messaging': {
         nodeID: 'Instant Messaging',
@@ -416,7 +416,7 @@ export function createTestMission(): Mission {
         ],
         successChance: 0.3,
         mapX: 2,
-        mapY: 0,
+        mapY: -3,
       },
       'File Sharing Service': {
         nodeID: 'File Sharing Service',
@@ -438,7 +438,7 @@ export function createTestMission(): Mission {
         ],
         successChance: 0.3,
         mapX: 2,
-        mapY: 1,
+        mapY: -2,
       },
       'Cellular Tower': {
         nodeID: 'Cellular Tower',
@@ -460,7 +460,7 @@ export function createTestMission(): Mission {
         ],
         successChance: 0.3,
         mapX: 4,
-        mapY: -2,
+        mapY: -5,
       },
       'Service Provider': {
         nodeID: 'Service Provider',
@@ -472,17 +472,10 @@ export function createTestMission(): Mission {
         actionData: 'exec command',
         executable: true,
         delayExecution: 2,
-        nodeActionItems: [
-          'Deny',
-          'Degrade',
-          'Disrupt',
-          'Destroy',
-          'Manipulate',
-          'Extract',
-        ],
+        nodeActionItems: ['Deny', 'Degrade', 'Disrupt'],
         successChance: 0.3,
         mapX: 4,
-        mapY: -1,
+        mapY: -4,
       },
 
       'Central Server 1': {
@@ -505,7 +498,7 @@ export function createTestMission(): Mission {
         ],
         successChance: 0.3,
         mapX: 4,
-        mapY: 0,
+        mapY: -3,
       },
 
       'Central Server 2': {
@@ -528,7 +521,7 @@ export function createTestMission(): Mission {
         ],
         successChance: 0.3,
         mapX: 4,
-        mapY: 1,
+        mapY: -2,
       },
       'Air Defense': {
         nodeID: 'Air Defense',
@@ -550,7 +543,7 @@ export function createTestMission(): Mission {
         ],
         successChance: 0.3,
         mapX: 0,
-        mapY: 2,
+        mapY: -1,
       },
       'IADS Network': {
         nodeID: 'IADS Network',
@@ -572,7 +565,7 @@ export function createTestMission(): Mission {
         ],
         successChance: 0.3,
         mapX: 2,
-        mapY: 2,
+        mapY: -1,
       },
       'Individual Launch Sites': {
         nodeID: 'Individual Launch Sites',
@@ -595,7 +588,7 @@ export function createTestMission(): Mission {
         ],
         successChance: 0.3,
         mapX: 4,
-        mapY: 2,
+        mapY: -1,
       },
       'Launcher System': {
         nodeID: 'Launcher System',
@@ -617,7 +610,7 @@ export function createTestMission(): Mission {
         ],
         successChance: 0.3,
         mapX: 6,
-        mapY: 2,
+        mapY: -1,
       },
       'Radar System': {
         nodeID: 'Radar System',
@@ -639,7 +632,7 @@ export function createTestMission(): Mission {
         ],
         successChance: 0.3,
         mapX: 6,
-        mapY: 3,
+        mapY: 0,
       },
       'Infrastructure': {
         nodeID: 'Infrastructure',
@@ -661,7 +654,7 @@ export function createTestMission(): Mission {
         ],
         successChance: 0.3,
         mapX: 0,
-        mapY: 4,
+        mapY: 1,
       },
       'Railroad System': {
         nodeID: 'Railroad System',
@@ -683,7 +676,7 @@ export function createTestMission(): Mission {
         ],
         successChance: 0.3,
         mapX: 2,
-        mapY: 4,
+        mapY: 0,
       },
       'Electrical System': {
         nodeID: 'Electrical System',
@@ -705,7 +698,7 @@ export function createTestMission(): Mission {
         ],
         successChance: 0.3,
         mapX: 2,
-        mapY: 5,
+        mapY: 1,
       },
       'Water System': {
         nodeID: 'Water System',
@@ -727,7 +720,7 @@ export function createTestMission(): Mission {
         ],
         successChance: 0.3,
         mapX: 2,
-        mapY: 6,
+        mapY: 2,
       },
       'Road System': {
         nodeID: 'Road System',
@@ -749,7 +742,7 @@ export function createTestMission(): Mission {
         ],
         successChance: 0.3,
         mapX: 2,
-        mapY: 7,
+        mapY: 3,
       },
       'Track Monitoring': {
         nodeID: 'Track Monitoring',
@@ -771,7 +764,7 @@ export function createTestMission(): Mission {
         ],
         successChance: 0.3,
         mapX: 4,
-        mapY: 3,
+        mapY: 0,
       },
       'Track Switch System': {
         nodeID: 'Track Switch System',
@@ -793,7 +786,7 @@ export function createTestMission(): Mission {
         ],
         successChance: 0.3,
         mapX: 4,
-        mapY: 4,
+        mapY: 1,
       },
       'Regional Service': {
         nodeID: 'Regional Service',
@@ -815,7 +808,7 @@ export function createTestMission(): Mission {
         ],
         successChance: 0.3,
         mapX: 4,
-        mapY: 5,
+        mapY: 2,
       },
       'Valve System': {
         nodeID: 'Valve System',
@@ -837,7 +830,7 @@ export function createTestMission(): Mission {
         ],
         successChance: 0.3,
         mapX: 4,
-        mapY: 6,
+        mapY: 3,
       },
       'Traffic Light System': {
         nodeID: 'Traffic Light System',
@@ -859,7 +852,7 @@ export function createTestMission(): Mission {
         ],
         successChance: 0.3,
         mapX: 4,
-        mapY: 7,
+        mapY: 4,
       },
       'CCTV System': {
         nodeID: 'CCTV System',
@@ -881,7 +874,7 @@ export function createTestMission(): Mission {
         ],
         successChance: 0.3,
         mapX: 4,
-        mapY: 8,
+        mapY: 5,
       },
       'Satellite Services': {
         nodeID: 'Satellite Services',
@@ -903,7 +896,7 @@ export function createTestMission(): Mission {
         ],
         successChance: 0.3,
         mapX: 0,
-        mapY: 9,
+        mapY: 4,
       },
       'Global Positioning': {
         nodeID: 'Global Positioning',
@@ -925,7 +918,7 @@ export function createTestMission(): Mission {
         ],
         successChance: 0.3,
         mapX: 2,
-        mapY: 9,
+        mapY: 4,
       },
       'Data Transfer': {
         nodeID: 'Data Transfer',
@@ -947,7 +940,7 @@ export function createTestMission(): Mission {
         ],
         successChance: 0.3,
         mapX: 2,
-        mapY: 10,
+        mapY: 5,
       },
       'Imagery Collection': {
         nodeID: 'Imagery Collection',
@@ -969,7 +962,7 @@ export function createTestMission(): Mission {
         ],
         successChance: 0.3,
         mapX: 2,
-        mapY: 11,
+        mapY: 6,
       },
       'Sensor Observation': {
         nodeID: 'Sensor Observation',
@@ -991,7 +984,7 @@ export function createTestMission(): Mission {
         ],
         successChance: 0.3,
         mapX: 2,
-        mapY: 12,
+        mapY: 7,
       },
     },
   }

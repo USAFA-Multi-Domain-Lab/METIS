@@ -42,6 +42,8 @@ const ExecuteNodePath = (props: {
       if (props.selectedNode !== undefined && props.selectedNode !== null) {
         props.selectedNode.execute()
 
+        // ! Start time delay function here
+
         if (props.selectedNode.succeeded) {
           gameLogic.handleNodeSelection(props.selectedNode, props.missionState)
 

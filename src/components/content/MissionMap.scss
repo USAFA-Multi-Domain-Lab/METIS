@@ -179,20 +179,26 @@
         }
 
         .wrapper {
-          position: relative;
-          white-space: nowrap;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          white-space: pre-line;
+          overflow-y: scroll;
 
           .score {
             display: inline-block;
             background-color: $background-alt1;
-            vertical-align: bottom;
+            vertical-align: center;
           }
 
           .title {
-            display: inline-block;
-            vertical-align: bottom;
+            display: flex;
+            justify-content: center;
+            align-items: center;
             color: $color-main;
-            text-overflow: ellipsis;
+            height: 100%;
+            padding-top: auto;
+            line-height: auto;
           }
         }
 

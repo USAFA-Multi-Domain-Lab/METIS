@@ -49,13 +49,13 @@ class MissionNodeRelationship {
 
 /* -- constants -- */
 
-const defaultMapScale: number = 0.75
+const defaultMapScale: number = 0.5
 const maxMapScale: number = 2.0
 const minMapScale: number = 0.25
 const mapXScale: number = 300.0 /*px*/
-const mapYScale: number = 75.0 /*px*/
+const mapYScale: number = 110.0 /*px*/
 const gridPadding: number = 20.0 /*px*/
-const mapItemFontSize: number = 15 /*px*/
+const mapItemFontSize: number = 20 /*px*/
 const mapCuttoff: number = 1600 /*px*/
 
 /* -- components -- */
@@ -693,22 +693,20 @@ export default class MissionMap extends React.Component<
           getItemDisplay={(node: MissionNode) => {
             let fontSize: number = mapItemFontSize * mapScale
             let height: number = (mapYScale - gridPadding * 2) * mapScale
-            let scoreWidth: number = 40 * mapScale
-            let lineHeight: number = height
+            let scoreWidth: number = 25 * mapScale
+            let lineHeight: number = height - 3
             return (
               <div
                 className='wrapper'
                 style={{
-                  height: `${height}px`,
+                  height: `${height - 5}px`,
                 }}
               >
                 <div
                   className='title'
                   style={{
                     width: `calc(100% - ${scoreWidth}px)`,
-                    height: `${height}px`,
                     fontSize: `${fontSize}px`,
-                    lineHeight: `${lineHeight}px`,
                   }}
                 >
                   {node.name}
