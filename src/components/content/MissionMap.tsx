@@ -120,7 +120,7 @@ export default class MissionMap extends React.Component<
       relationships: [],
       navigationIsActive: false,
       mapOffsetX: 0,
-      mapOffsetY: 0,
+      mapOffsetY: mapYScale * -5.25,
       mapScale: defaultMapScale,
     }
   }

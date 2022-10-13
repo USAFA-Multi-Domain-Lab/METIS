@@ -1,5 +1,5 @@
 import NodeStructureReference from './node-reference'
-import { isInteger } from './numbers'
+import { Counter, isInteger } from './numbers'
 import { cloneDeep } from 'lodash'
 import { AnyObject } from 'mongoose'
 
@@ -27,8 +27,16 @@ export interface IMissionNodeJson {
   executable: boolean
   nodeActionItems: Array<{ text: string; timeDelay: number }>
   successChance: number
-  mapX: number
-  mapY: number
+}
+
+// These are options available to
+// some using the renderMission function
+// in the Mission class.
+export interface IMissionRenderOptions {
+  // This will ignore whether a node is
+  // expanded or collapsed and render
+  // everything regardless.
+  ignoreVisibility?: boolean
 }
 
 // This represents an individual node
@@ -155,10 +163,6 @@ export class Mission {
       for (let key of nodeDataKeys) {
         let nodeDatum: IMissionNodeJson = (nodeDataJson as any)[key]
 
-        if (!isInteger(nodeDatum.mapX) || !isInteger(nodeDatum.mapY)) {
-          throw new Error()
-        }
-
         let node: MissionNode = new MissionNode(
           nodeDatum.nodeID,
           nodeDatum.name,
@@ -170,8 +174,8 @@ export class Mission {
           nodeDatum.executable,
           nodeDatum.nodeActionItems,
           nodeDatum.successChance,
-          nodeDatum.mapX,
-          nodeDatum.mapY,
+          0,
+          0,
         )
 
         nodeData.set(key, node)
@@ -186,12 +190,28 @@ export class Mission {
     }
   }
 
+  // This will construct a new mission
+  // based on the original mission and
+  // a node structure reference that represents
+  // that mission. The node structure reference
+  // will be read to determine all the currently
+  // expanded and collapsed nodes, rendering a
+  // mission that only display the nodes that
+  // have been expanded into view.
   static renderMission = (
     originalMission: Mission,
     nodeStructureReference: NodeStructureReference,
     nodeStructure: AnyObject,
+    options: IMissionRenderOptions = {},
     missionRender: Mission | null = null,
+    depth: number = -1,
+    rowCount: Counter = new Counter(0),
   ): Mission => {
+    // If mission render is null,
+    // then this should be the functions
+    // initial call before any recursion.
+    // Therefore the missionRender should
+    // be initialized.
     if (missionRender === null) {
       missionRender = new Mission(
         originalMission.name,
@@ -200,12 +220,20 @@ export class Mission {
         new Map<string, MissionNode>(),
       )
       nodeStructure = missionRender.nodeStructure
-    } else {
+    }
+    // Else, this function was recursively
+    // called with a reference to a particular
+    // node in the mission. This node should be
+    // included in the nodeData for the missionRender
+    // so that it displays.
+    else {
       let nodeID: string = nodeStructureReference.nodeID
       let nodeDatum: MissionNode | undefined =
         originalMission.nodeData.get(nodeID)
 
       if (nodeDatum !== undefined) {
+        nodeDatum.mapX = depth
+        nodeDatum.mapY = rowCount.count
         missionRender.nodeData.set(nodeID, nodeDatum)
       } else {
         console.error(
@@ -223,37 +251,51 @@ export class Mission {
     }
 
     let subnodes = nodeStructureReference.subnodes
-
-    if (!nodeStructureReference.isExpanded) {
+    // If the current node being examined is
+    // collapsed, then this recursive function
+    // should not dig deeper, and the render is
+    // returned up the chain.
+    if (!options.ignoreVisibility && nodeStructureReference.isCollapsed) {
       for (let key of Object.keys(nodeStructure)) {
         delete nodeStructure[key]
       }
       return missionRender
     }
+    // Else, the node is expanded, the subnodes
+    // should then be examined by recursively
+    // calling this function.
+    else {
+      subnodes.forEach((subnode: NodeStructureReference, index: number) => {
+        if (!(subnode.nodeID in nodeStructure)) {
+          console.error(
+            new Error(
+              `Cannot render mission since the nodeReference subnode ${subnode.nodeID} cannot be found in nodeStructure:`,
+            ),
+          )
+          return new Mission(
+            originalMission.name,
+            originalMission.versionNumber,
+            {},
+            new Map<string, MissionNode>(),
+          )
+        }
 
-    for (let subnode of subnodes) {
-      if (!(subnode.nodeID in nodeStructure)) {
-        console.error(
-          new Error(
-            `Cannot render mission since the nodeReference subnode ${subnode.nodeID} cannot be found in nodeStructure:`,
-          ),
+        let substructure: AnyObject = nodeStructure[subnode.nodeID]
+
+        if (index > 0) {
+          rowCount.increment()
+        }
+
+        Mission.renderMission(
+          originalMission,
+          subnode,
+          substructure,
+          options,
+          missionRender,
+          depth + 1,
+          rowCount,
         )
-        return new Mission(
-          originalMission.name,
-          originalMission.versionNumber,
-          {},
-          new Map<string, MissionNode>(),
-        )
-      }
-
-      let substructure: AnyObject = nodeStructure[subnode.nodeID]
-
-      Mission.renderMission(
-        originalMission,
-        subnode,
-        substructure,
-        missionRender,
-      )
+      })
     }
 
     return missionRender

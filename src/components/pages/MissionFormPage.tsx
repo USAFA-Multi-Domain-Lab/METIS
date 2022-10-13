@@ -32,7 +32,9 @@ export default function MissionFormPage(props: {
 
   const [mountHandled, setMountHandled] = useState<boolean>()
   const [forcedUpdateCounter, setForcedUpdateCounter] = useState<number>(0)
-  const [mission, selectMission] = useState<Mission | null>(null)
+  const [mission, setMission] = useState<Mission | null>(null)
+  const [nodeStructure, setNodeStructure] =
+    useState<NodeStructureReference | null>(null)
   const [selectedNode, selectNode] = useState<MissionNode | null>(null)
   const [nodeStructuringIsActive, activateNodeStructuring] =
     useState<boolean>(false)
@@ -42,7 +44,21 @@ export default function MissionFormPage(props: {
   // Equivalent of componentDidMount.
   useEffect(() => {
     if (!mountHandled) {
-      selectMission(createTestMission())
+      let mission: Mission = createTestMission()
+      let nodeStructure: NodeStructureReference =
+        NodeStructureReference.constructNodeStructureReference(
+          'ROOT',
+          mission.nodeStructure,
+        )
+
+      setMission(mission)
+      setNodeStructure(nodeStructure)
+      setMountHandled(true)
+    }
+  }, [mountHandled])
+  // Equivalent of componentDidMount.
+  useEffect(() => {
+    if (!mountHandled) {
       setMountHandled(true)
     }
   }, [mountHandled])
@@ -54,6 +70,13 @@ export default function MissionFormPage(props: {
   // Forces a rerender.
   const forceUpdate = (): void => {
     setForcedUpdateCounter(forcedUpdateCounter + 1)
+  }
+
+  const handleNodeStructureChange = (): void => {
+    if (mission !== null && nodeStructure !== null) {
+      mission.nodeStructure = nodeStructure.deconstructNodeStructureReference()
+      forceUpdate()
+    }
   }
 
   // This will logout the current user.
@@ -82,7 +105,14 @@ export default function MissionFormPage(props: {
     className += ' SidePanelIsExpanded'
   }
 
-  if (show && mission !== null) {
+  if (show && mission !== null && nodeStructure !== null) {
+    let missionRender = Mission.renderMission(
+      mission,
+      nodeStructure,
+      mission.nodeStructure,
+      { ignoreVisibility: true },
+    )
+
     return (
       <div className={className}>
         {
@@ -99,7 +129,7 @@ export default function MissionFormPage(props: {
         }
         <div className='Content'>
           <MissionMap
-            mission={mission}
+            mission={missionRender}
             missionAjaxStatus={EAjaxStatus.Loaded}
             handleNodeSelection={(node: MissionNode) => {
               if (selectedNode?.nodeID !== node.nodeID) {
@@ -127,7 +157,8 @@ export default function MissionFormPage(props: {
           />
           <NodeStructuring
             active={nodeStructuringIsActive}
-            mission={mission}
+            nodeStructure={nodeStructure}
+            handleNodeStructureChange={handleNodeStructureChange}
             handleCloseRequest={() => activateNodeStructuring(false)}
           />
         </div>
@@ -245,24 +276,26 @@ function NodeEntry(props: {
 // can be defined.
 function NodeStructuring(props: {
   active: boolean
-  mission: Mission
+  nodeStructure: NodeStructureReference
+  handleNodeStructureChange: (
+    updatedNodeStructure: NodeStructureReference,
+  ) => void
   handleCloseRequest: () => void
 }): JSX.Element | null {
   let active: boolean = props.active
-  let mission: Mission = props.mission
+  let nodeStructure: NodeStructureReference = props.nodeStructure
+  let handleNodeStructureChange: (
+    updatedNodeStructure: NodeStructureReference,
+  ) => void = props.handleNodeStructureChange
   let handleCloseRequest = props.handleCloseRequest
 
-  const [mountHandled, setMountHandled] = useState<boolean>(false)
   const [forcedUpdateCounter, setForcedUpdateCounter] = useState<number>(0)
-  const [nodeStructure, setNodeStructure] = useState<NodeStructureReference>(
-    new NodeStructureReference('DEFAULT', null, []),
-  )
   const [nodeGrabbed, grabNode] = useState<NodeStructureReference | null>(null)
   const [nodePendingDrop, pendDrop] = useState<NodeStructureReference | null>(
     null,
   )
 
-  // This forces a rerender.
+  // Forces a rerender.
   const forceUpdate = (): void => {
     setForcedUpdateCounter(forcedUpdateCounter + 1)
   }
@@ -315,6 +348,7 @@ function NodeStructuring(props: {
 
               if (nodeGrabbed !== null) {
                 nodeGrabbed.move(destinationNode)
+                handleNodeStructureChange(nodeStructure)
               }
 
               pendDrop(null)
@@ -357,20 +391,6 @@ function NodeStructuring(props: {
 
     return <div className={className}>{nodeElements}</div>
   }
-
-  // Equivalent of componentDidMount.
-  useEffect(() => {
-    if (!mountHandled) {
-      let nodeStructure: NodeStructureReference =
-        NodeStructureReference.constructNodeStructureReference(
-          'ROOT',
-          mission.nodeStructure,
-        )
-
-      setNodeStructure(nodeStructure)
-      setMountHandled(true)
-    }
-  }, [mountHandled])
 
   if (active) {
     return (
