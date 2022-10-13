@@ -1,7 +1,6 @@
-import { v4 as generateHash } from 'uuid'
 import NodeStructureReference from './node-reference'
 import { isInteger } from './numbers'
-import { cloneDeep, random } from 'lodash'
+import { cloneDeep } from 'lodash'
 import { AnyObject } from 'mongoose'
 
 // This is the raw mission data returned

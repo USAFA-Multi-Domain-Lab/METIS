@@ -52,9 +52,12 @@ class MissionNodeRelationship {
 const defaultMapScale: number = 0.5
 const maxMapScale: number = 2.0
 const minMapScale: number = 0.25
-const mapXScale: number = 300.0 /*px*/
+const mapXScale: number = 440.0 /*px*/
 const mapYScale: number = 110.0 /*px*/
-const gridPadding: number = 20.0 /*px*/
+const gridPaddingX: number = 100.0 /*px*/
+const gridPaddingY: number = 20.0 /*px*/
+const pointerOriginOffset: number = 20 /*px*/
+const pointerArrowOffset: number = 30 /*px*/
 const mapItemFontSize: number = 20 /*px*/
 const mapCuttoff: number = 1600 /*px*/
 
@@ -405,6 +408,8 @@ export default class MissionMap extends React.Component<
       ) {
         // calculates the start and end coordinates
         // for the line element used as a pointer.
+        let x0: number = 0
+        let y0: number = 0
         let x1: number = mapOffsetX
         let y1: number = mapOffsetY
         let x2: number = mapOffsetX
@@ -421,6 +426,8 @@ export default class MissionMap extends React.Component<
         x2 += mapBounds.width / 2
         y1 += mapBounds.height / 2
         y2 += mapBounds.height / 2
+        x0 = x1
+        y0 = y1
         // the pointer needs to have its start
         // and end offset so that the pointer doesn't
         // intersect the node and prerequisite elements.
@@ -429,46 +436,73 @@ export default class MissionMap extends React.Component<
         // node element and above the prerequisite
         // element so it doesn't pass through and collide
         // with either element.
-        if (y1 > y2) {
-          y1 -= (mapYScale / 2) * mapScale
-          y2 += (mapYScale / 2) * mapScale - 0.001
-        } else if (y1 < y2) {
-          y1 += (mapYScale / 2) * mapScale
-          y2 -= (mapYScale / 2) * mapScale - 0.001
-        }
+        // if (y1 > y2) {
+        //   y1 -= (mapYScale / 2) * mapScale
+        //   y2 += (mapYScale / 2) * mapScale - 0.001
+        // } else if (y1 < y2) {
+        //   y1 += (mapYScale / 2) * mapScale
+        //   y2 -= (mapYScale / 2) * mapScale - 0.001
+        // }
         if (x1 > x2) {
           x1 -= (mapXScale / 2) * mapScale
           x2 += (mapXScale / 2) * mapScale - 0.001
+          // if (Math.abs(x1 - x2) > 1) {
+          x1 += (gridPaddingX - pointerOriginOffset) * mapScale
+          x2 -= (gridPaddingX - pointerArrowOffset) * mapScale
+          // }
         } else if (x1 < x2) {
           x1 += (mapXScale / 2) * mapScale
           x2 -= (mapXScale / 2) * mapScale - 0.001
+          // if (Math.abs(x1 - x2) > 1) {
+          x1 -= (gridPaddingX - pointerOriginOffset) * mapScale
+          x2 += (gridPaddingX - pointerArrowOffset) * mapScale
+          // }
         }
-        if (Math.abs(x1 - x2) < 1 && Math.abs(y1 - y2) > 1) {
-          if (x1 > x2) {
-            x2 -= (mapXScale / 3) * mapScale
-          } else if (x1 < x2) {
-            x2 += (mapXScale / 3) * mapScale
-          }
-        } else if (Math.abs(y1 - y2) < 1 && Math.abs(x1 - x2) > 1) {
-          if (y1 > y2) {
-            y2 -= (mapYScale / 3) * mapScale
-          } else if (y1 < y2) {
-            y2 += (mapYScale / 3) * mapScale
-          }
-        }
+        // if (Math.abs(x1 - x2) < 1 && Math.abs(y1 - y2) > 1) {
+        //   if (x1 > x2) {
+        //     x2 -= (mapXScale / 3) * mapScale
+        //   } else if (x1 < x2) {
+        //     x2 += (mapXScale / 3) * mapScale
+        //   }
+        // } else if (Math.abs(y1 - y2) < 1 && Math.abs(x1 - x2) > 1) {
+        //   if (y1 > y2) {
+        //     y2 -= (mapYScale / 3) * mapScale
+        //   } else if (y1 < y2) {
+        //     y2 += (mapYScale / 3) * mapScale
+        //   }
+        // }
         let key = `unlocks-${relationship.unlocks.nodeID}_prereq-${relationship.prerequisite.nodeID}`
-        let strokeWidth: number = 3 * mapScale
+        let strokeWidth: number = 4 * mapScale
         let includeOrigin = Math.abs(x1 - x2) > 1 || Math.abs(y1 - y2) > 1
+        let includeVerticalLine: boolean = y1 != y2
 
         return (
           <g key={key}>
             <line
+              x1={x0}
+              y1={y0}
+              x2={x1}
+              y2={y1}
+              strokeWidth={strokeWidth}
+              // markerStart={includeOrigin ? `url(#pointer-start)` : undefined}
+            />
+            {includeVerticalLine ? (
+              <line
+                x1={x1}
+                y1={y1}
+                x2={x1}
+                y2={y2}
+                strokeWidth={strokeWidth}
+                markerStart={includeOrigin ? `url(#pointer-start)` : undefined}
+              />
+            ) : null}
+            <line
               x1={x1}
-              y1={y1}
+              y1={y2}
               x2={x2}
               y2={y2}
               strokeWidth={strokeWidth}
-              markerStart={includeOrigin ? `url(#pointer-start)` : undefined}
+              // markerStart={includeOrigin ? `url(#pointer-start)` : undefined}
               markerEnd={`url(#pointer-end)`}
             />
           </g>
@@ -692,7 +726,7 @@ export default class MissionMap extends React.Component<
           itemsPerPage={null}
           getItemDisplay={(node: MissionNode) => {
             let fontSize: number = mapItemFontSize * mapScale
-            let height: number = (mapYScale - gridPadding * 2) * mapScale
+            let height: number = (mapYScale - gridPaddingY * 2) * mapScale
             let scoreWidth: number = 25 * mapScale
             return (
               <div
@@ -750,8 +784,8 @@ export default class MissionMap extends React.Component<
               }
               let styling_top: number = y
               let styling_left: number = x
-              let styling_width: number = mapXScale - gridPadding * 2
-              let styling_height: number = mapYScale - gridPadding * 2
+              let styling_width: number = mapXScale - gridPaddingX * 2
+              let styling_height: number = mapYScale - gridPaddingY * 2
               let styling_fontSize: number = mapItemFontSize
               let styling_lineHeight: number = mapItemFontSize
               // let styling_paddingVertical: number =
@@ -796,23 +830,23 @@ export default class MissionMap extends React.Component<
           <defs>
             <marker
               id={`pointer-end`}
+              markerWidth='7'
+              markerHeight='7'
+              refX='3.5'
+              refY='3.5'
+              orient='auto'
+            >
+              <polygon points='0 0, 7 3.5, 0 7, 3.5 3.5' />
+            </marker>
+            <marker
+              id={`pointer-start`}
               markerWidth='8'
               markerHeight='8'
               refX='4'
               refY='4'
               orient='auto'
             >
-              <polygon points='0 0, 8 4, 0 8, 4 4' />
-            </marker>
-            <marker
-              id={`pointer-start`}
-              markerWidth='10'
-              markerHeight='10'
-              refX='5'
-              refY='5'
-              orient='auto'
-            >
-              <circle cx={5} cy={5} r={1.5} />
+              <circle cx={4} cy={4} r={1.75} />
             </marker>
           </defs>
           {this.renderPointers()}
