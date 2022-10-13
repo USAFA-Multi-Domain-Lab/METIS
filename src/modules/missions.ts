@@ -363,7 +363,7 @@ export function createTestMission(): Mission {
           { text: 'Extract', timeDelay: 6000 },
         ],
         successChance: 0.3,
-        mapX: 2,
+        mapX: 1,
         mapY: -5,
       },
       'Internet Provider': {
@@ -384,7 +384,7 @@ export function createTestMission(): Mission {
           { text: 'Extract', timeDelay: 6000 },
         ],
         successChance: 0.3,
-        mapX: 2,
+        mapX: 1,
         mapY: -4,
       },
       'Instant Messaging': {
@@ -405,7 +405,7 @@ export function createTestMission(): Mission {
           { text: 'Extract', timeDelay: 6000 },
         ],
         successChance: 0.3,
-        mapX: 2,
+        mapX: 1,
         mapY: -3,
       },
       'File Sharing Service': {
@@ -426,7 +426,7 @@ export function createTestMission(): Mission {
           { text: 'Extract', timeDelay: 6000 },
         ],
         successChance: 0.3,
-        mapX: 2,
+        mapX: 1,
         mapY: -2,
       },
       'Cellular Tower': {
@@ -447,7 +447,7 @@ export function createTestMission(): Mission {
           { text: 'Extract', timeDelay: 6000 },
         ],
         successChance: 0.3,
-        mapX: 4,
+        mapX: 2,
         mapY: -5,
       },
       'Service Provider': {
@@ -465,7 +465,7 @@ export function createTestMission(): Mission {
           { text: 'Destroy', timeDelay: 3000 },
         ],
         successChance: 0.3,
-        mapX: 4,
+        mapX: 2,
         mapY: -4,
       },
 
@@ -487,7 +487,7 @@ export function createTestMission(): Mission {
           { text: 'Extract', timeDelay: 6000 },
         ],
         successChance: 0.3,
-        mapX: 4,
+        mapX: 2,
         mapY: -3,
       },
 
@@ -509,7 +509,7 @@ export function createTestMission(): Mission {
           { text: 'Extract', timeDelay: 6000 },
         ],
         successChance: 0.3,
-        mapX: 4,
+        mapX: 2,
         mapY: -2,
       },
       'Air Defense': {
@@ -551,7 +551,7 @@ export function createTestMission(): Mission {
           { text: 'Extract', timeDelay: 6000 },
         ],
         successChance: 0.3,
-        mapX: 2,
+        mapX: 1,
         mapY: -1,
       },
       'Individual Launch Sites': {
@@ -573,7 +573,7 @@ export function createTestMission(): Mission {
           { text: 'Extract', timeDelay: 6000 },
         ],
         successChance: 0.3,
-        mapX: 4,
+        mapX: 2,
         mapY: -1,
       },
       'Launcher System': {
@@ -594,7 +594,7 @@ export function createTestMission(): Mission {
           { text: 'Extract', timeDelay: 6000 },
         ],
         successChance: 0.3,
-        mapX: 6,
+        mapX: 3,
         mapY: -1,
       },
       'Radar System': {
@@ -615,7 +615,7 @@ export function createTestMission(): Mission {
           { text: 'Extract', timeDelay: 6000 },
         ],
         successChance: 0.3,
-        mapX: 6,
+        mapX: 3,
         mapY: 0,
       },
       'Infrastructure': {
@@ -657,7 +657,7 @@ export function createTestMission(): Mission {
           { text: 'Extract', timeDelay: 6000 },
         ],
         successChance: 0.3,
-        mapX: 2,
+        mapX: 1,
         mapY: 0,
       },
       'Electrical System': {
@@ -678,7 +678,7 @@ export function createTestMission(): Mission {
           { text: 'Extract', timeDelay: 6000 },
         ],
         successChance: 0.3,
-        mapX: 2,
+        mapX: 1,
         mapY: 1,
       },
       'Water System': {
@@ -699,7 +699,7 @@ export function createTestMission(): Mission {
           { text: 'Extract', timeDelay: 6000 },
         ],
         successChance: 0.3,
-        mapX: 2,
+        mapX: 1,
         mapY: 2,
       },
       'Road System': {
@@ -720,7 +720,7 @@ export function createTestMission(): Mission {
           { text: 'Extract', timeDelay: 6000 },
         ],
         successChance: 0.3,
-        mapX: 2,
+        mapX: 1,
         mapY: 3,
       },
       'Track Monitoring': {
@@ -741,7 +741,7 @@ export function createTestMission(): Mission {
           { text: 'Extract', timeDelay: 6000 },
         ],
         successChance: 0.3,
-        mapX: 4,
+        mapX: 2,
         mapY: 0,
       },
       'Track Switch System': {
@@ -762,7 +762,7 @@ export function createTestMission(): Mission {
           { text: 'Extract', timeDelay: 6000 },
         ],
         successChance: 0.3,
-        mapX: 4,
+        mapX: 2,
         mapY: 1,
       },
       'Regional Service': {
@@ -783,7 +783,7 @@ export function createTestMission(): Mission {
           { text: 'Extract', timeDelay: 6000 },
         ],
         successChance: 0.3,
-        mapX: 4,
+        mapX: 2,
         mapY: 2,
       },
       'Valve System': {
@@ -804,7 +804,7 @@ export function createTestMission(): Mission {
           { text: 'Extract', timeDelay: 6000 },
         ],
         successChance: 0.3,
-        mapX: 4,
+        mapX: 2,
         mapY: 3,
       },
       'Traffic Light System': {
@@ -825,7 +825,7 @@ export function createTestMission(): Mission {
           { text: 'Extract', timeDelay: 6000 },
         ],
         successChance: 0.3,
-        mapX: 4,
+        mapX: 2,
         mapY: 4,
       },
       'CCTV System': {
@@ -846,7 +846,7 @@ export function createTestMission(): Mission {
           { text: 'Extract', timeDelay: 6000 },
         ],
         successChance: 0.3,
-        mapX: 4,
+        mapX: 2,
         mapY: 5,
       },
       'Satellite Services': {
@@ -888,7 +888,7 @@ export function createTestMission(): Mission {
           { text: 'Extract', timeDelay: 6000 },
         ],
         successChance: 0.3,
-        mapX: 2,
+        mapX: 1,
         mapY: 4,
       },
       'Data Transfer': {
@@ -909,7 +909,7 @@ export function createTestMission(): Mission {
           { text: 'Extract', timeDelay: 6000 },
         ],
         successChance: 0.3,
-        mapX: 2,
+        mapX: 1,
         mapY: 5,
       },
       'Imagery Collection': {
@@ -930,7 +930,7 @@ export function createTestMission(): Mission {
           { text: 'Extract', timeDelay: 6000 },
         ],
         successChance: 0.3,
-        mapX: 2,
+        mapX: 1,
         mapY: 6,
       },
       'Sensor Observation': {
@@ -951,7 +951,7 @@ export function createTestMission(): Mission {
           { text: 'Extract', timeDelay: 6000 },
         ],
         successChance: 0.3,
-        mapX: 2,
+        mapX: 1,
         mapY: 7,
       },
     },

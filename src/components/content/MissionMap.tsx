@@ -728,6 +728,7 @@ export default class MissionMap extends React.Component<
             let fontSize: number = mapItemFontSize * mapScale
             let height: number = (mapYScale - gridPaddingY * 2) * mapScale
             let scoreWidth: number = 25 * mapScale
+            let lineHeight: number = height * 0.34
             return (
               <div
                 className='wrapper'
@@ -740,6 +741,7 @@ export default class MissionMap extends React.Component<
                   style={{
                     width: `calc(100% - ${scoreWidth}px)`,
                     fontSize: `${fontSize}px`,
+                    lineHeight: `${lineHeight}px`,
                   }}
                 >
                   {node.name}
