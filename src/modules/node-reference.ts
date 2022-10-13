@@ -1,5 +1,4 @@
-import MissionMap from '../components/content/MissionMap'
-import { Mission, MissionNode } from './missions'
+import { MissionNode } from './missions'
 import { AnyObject } from './toolbox/objects'
 
 // This is a reference to a node
@@ -14,6 +13,10 @@ export default class NodeStructureReference {
 
   get isExpanded(): boolean {
     return this._isExpanded
+  }
+
+  get isCollapsed(): boolean {
+    return !this._isExpanded
   }
 
   get expandable(): boolean {
@@ -92,12 +95,20 @@ export default class NodeStructureReference {
     }
   }
 
+  // This will convert this NodeStructureReference
+  // back into regular mission nodeStructure
+  // data.
+  deconstructNodeStructureReference(): AnyObject {
+    return NodeStructureReference.deconstructNodeStructureReference(this, {})
+  }
+
   // This will convert mission
   // nodeStructure data into a
   // NodeStructureReference.
   static constructNodeStructureReference(
-    name: string,
+    nodeID: string,
     nodeStructure: AnyObject,
+    expandAll: boolean = false,
   ): NodeStructureReference {
     let subnodes: Array<NodeStructureReference> = []
     let subnodeKeyValuePairs: Array<[string, AnyObject | string]> = Object.keys(
@@ -110,19 +121,52 @@ export default class NodeStructureReference {
 
       if (typeof value !== 'string') {
         subnodes.push(
-          NodeStructureReference.constructNodeStructureReference(key, value),
+          NodeStructureReference.constructNodeStructureReference(
+            key,
+            value,
+            expandAll,
+          ),
         )
       }
     }
 
     let nodeStructureReference: NodeStructureReference =
-      new NodeStructureReference(name, null, subnodes)
+      new NodeStructureReference(nodeID, null, subnodes)
+
+    if (expandAll && nodeStructureReference.expandable) {
+      nodeStructureReference.expand()
+    }
 
     for (let subnode of subnodes) {
       subnode.parentNode = nodeStructureReference
     }
 
     return nodeStructureReference
+  }
+
+  // This will convert this NodeStructureReference
+  // back into regular mission nodeStructure
+  // data.
+  static deconstructNodeStructureReference(
+    nodeStructureReference: NodeStructureReference,
+    nodeStructure: AnyObject = {},
+  ): AnyObject {
+    let subnodes: NodeStructureReference[] = nodeStructureReference.subnodes
+
+    if (subnodes.length > 0) {
+      for (let subnodeReference of nodeStructureReference.subnodes) {
+        let substructure: AnyObject = {}
+        nodeStructure[subnodeReference.nodeID] = substructure
+        NodeStructureReference.deconstructNodeStructureReference(
+          subnodeReference,
+          substructure,
+        )
+      }
+    } else {
+      nodeStructure['END'] = 'END'
+    }
+
+    return nodeStructure
   }
 
   // This will dig deep into a given

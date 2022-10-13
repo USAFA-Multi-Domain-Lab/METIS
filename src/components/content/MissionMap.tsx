@@ -49,7 +49,7 @@ class MissionNodeRelationship {
 
 /* -- constants -- */
 
-const defaultMapScale: number = 0.75
+const defaultMapScale: number = 0.5
 const maxMapScale: number = 2.0
 const minMapScale: number = 0.25
 const mapXScale: number = 440.0 /*px*/
@@ -120,7 +120,7 @@ export default class MissionMap extends React.Component<
       relationships: [],
       navigationIsActive: false,
       mapOffsetX: 0,
-      mapOffsetY: 0,
+      mapOffsetY: mapYScale * -5.25,
       mapScale: defaultMapScale,
     }
   }
