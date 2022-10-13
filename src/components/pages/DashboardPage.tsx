@@ -10,7 +10,7 @@ import './DashboardPage.scss'
 import gameLogic from '../../modules/game-logic'
 import NodeStructureReference from '../../modules/node-reference'
 import ExecuteNodePath from '../content/ExecuteNodePath'
-import NodeActions from '../content/NodeActions'
+import NodeActions, { INodeActionItem } from '../content/NodeActions'
 
 const mission = createTestMission()
 const initialMissionState =
@@ -49,8 +49,10 @@ export default function DashboardPage(props: {
     setNodeActionSelectionPromptIsDisplayed,
   ] = useStore<boolean>('nodeActionSelectionPromptIsDisplayed')
   let [nodeActionItemDisplay, setNodeActionItemDisplay] = useStore<
-    Array<{ value: string }>
+    Array<INodeActionItem>
   >('nodeActionItemDisplay')
+  let [outputDelayTime, setOutputDelayTime] =
+    useStore<number>('outputDelayTime')
 
   /* -- COMPONENT STATE -- */
 
@@ -171,9 +173,7 @@ export default function DashboardPage(props: {
                     return
                   } else {
                     for (let nodeActionItem of selectedNode.nodeActionItems) {
-                      nodeActionItemDisplay.push({
-                        value: nodeActionItem,
-                      })
+                      nodeActionItemDisplay.push(nodeActionItem)
                     }
                     setNodeActionSelectionPromptIsDisplayed(true)
                   }

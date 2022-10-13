@@ -2,6 +2,7 @@ import React from 'react'
 import { useStore, withStore } from 'react-context-hook'
 import { MissionNode } from '../modules/missions'
 import { IUser } from '../modules/users'
+import { INodeActionItem } from './content/NodeActions'
 
 /* -- constants -- */
 
@@ -34,7 +35,8 @@ export default class GlobalState {
   executeNodePathPromptIsDisplayed: boolean
   nodeActionSelectionPromptIsDisplayed: boolean
   lastSelectedNode: MissionNode | null
-  nodeActionItemDisplay: Array<{ value: string }>
+  nodeActionItemDisplay: Array<INodeActionItem>
+  outputDelayTime: number
 
   constructor(stateSetters: IStateSetters) {
     this.currentUser = null
@@ -53,6 +55,7 @@ export default class GlobalState {
     this.nodeActionSelectionPromptIsDisplayed = false
     this.lastSelectedNode = null
     this.nodeActionItemDisplay = []
+    this.outputDelayTime = 0
   }
 
   // This will position the currently

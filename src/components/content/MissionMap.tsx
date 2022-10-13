@@ -694,7 +694,6 @@ export default class MissionMap extends React.Component<
             let fontSize: number = mapItemFontSize * mapScale
             let height: number = (mapYScale - gridPadding * 2) * mapScale
             let scoreWidth: number = 25 * mapScale
-            let lineHeight: number = height - 3
             return (
               <div
                 className='wrapper'

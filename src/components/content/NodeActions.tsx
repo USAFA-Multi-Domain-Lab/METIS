@@ -5,6 +5,11 @@ import { MissionNode } from '../../modules/missions'
 import { IUser } from '../../modules/users'
 import NodeStructureReference from '../../modules/node-reference'
 
+export interface INodeActionItem {
+  text: string
+  timeDelay: number
+}
+
 const NodeActions = (props: {
   selectedNode: MissionNode | null | undefined
   missionState: NodeStructureReference
@@ -22,8 +27,10 @@ const NodeActions = (props: {
     setNodeActionSelectionPromptIsDisplayed,
   ] = useStore<boolean>('nodeActionSelectionPromptIsDisplayed')
   const [nodeActionItemDisplay, setNodeActionItemDisplay] = useStore<
-    Array<{ value: string }>
+    Array<INodeActionItem>
   >('nodeActionItemDisplay')
+  const [outputDelayTime, setOutputDelayTime] =
+    useStore<number>('outputDelayTime')
 
   /* -- COMPONENT STATE -- */
   const [displayNodeActionList, setDisplayNodeActionList] =
@@ -51,11 +58,12 @@ const NodeActions = (props: {
     }
   }
 
-  const nodeActionSelection = (): void => {
+  const nodeActionSelection = (nodeActionItem: INodeActionItem): void => {
     setNodeActionSelectionPromptIsDisplayed(false)
     setExecuteNodePathPromptIsDisplayed(true)
     setDisplayNodeActionList(false)
     setNodeActionItemDisplay([])
+    setOutputDelayTime(nodeActionItem.timeDelay)
   }
 
   /* -- RENDER -- */
@@ -78,22 +86,19 @@ const NodeActions = (props: {
         What you would like to do to {props.selectedNode?.name}?
       </p>
 
-      {/* Need a function to be able to generate however many buttons they want
-         with whatever text they want */}
-
       <div className='NodeActionDefault' onClick={revealOptions}>
         Choose an action
         <div className='ArrowDown'>^</div>
       </div>
       <div className={className}>
-        {nodeActionItemDisplay.map((nodeActionItem: { value: string }) => {
+        {nodeActionItemDisplay.map((nodeActionItem: INodeActionItem) => {
           return (
             <div
               className='NodeAction'
-              key={nodeActionItem.value}
-              onClick={nodeActionSelection}
+              key={nodeActionItem.text}
+              onClick={() => nodeActionSelection(nodeActionItem)}
             >
-              {nodeActionItem.value}
+              {nodeActionItem.text}
             </div>
           )
         })}

@@ -5,6 +5,7 @@ import { MissionNode } from '../../modules/missions'
 import { IUser } from '../../modules/users'
 import gameLogic from '../../modules/game-logic'
 import NodeStructureReference from '../../modules/node-reference'
+import ProgressBar from './ProgressBar'
 
 const ExecuteNodePath = (props: {
   selectedNode: MissionNode | null | undefined
@@ -18,6 +19,7 @@ const ExecuteNodePath = (props: {
     executeNodePathPromptIsDisplayed,
     setExecuteNodePathPromptIsDisplayed,
   ] = useStore<boolean>('executeNodePathPromptIsDisplayed')
+  const [outputDelayTime] = useStore<number>('outputDelayTime')
 
   /* -- COMPONENT STATE -- */
   const [forcedUpdateCounter, setForcedUpdateCounter] = useState<number>(0)
@@ -42,8 +44,12 @@ const ExecuteNodePath = (props: {
       if (props.selectedNode !== undefined && props.selectedNode !== null) {
         props.selectedNode.execute()
 
-        // ! Start time delay function here
+        //  Start time delay function here
+        console.log(outputDelayTime)
+        // ProgressBar()
 
+        // Output message in the terminal which differs based on whether
+        // it passes or fails
         if (props.selectedNode.succeeded) {
           gameLogic.handleNodeSelection(props.selectedNode, props.missionState)
 
