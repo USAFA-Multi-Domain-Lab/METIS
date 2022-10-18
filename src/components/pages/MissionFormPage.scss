@@ -114,14 +114,14 @@ $background-bar: linear-gradient(
     border: 2px solid $color-main;
     width: 100%;
     height: $height;
-    padding: 20px 0 40px;
+    padding: 15px 0 40px;
     background-color: $background-alt2;
 
     .Close {
       cursor: pointer;
       user-select: none;
       position: relative;
-      top: -14px;
+      top: -9px;
       left: -30px;
       margin: 0 0 -40px auto;
       width: 0;
@@ -134,10 +134,18 @@ $background-bar: linear-gradient(
   &.NodeStructuring {
     .BorderBox {
       .Nodes {
-        padding: 30px 0 0;
+        padding: 0;
+
+        .Padding {
+          height: 35px;
+
+          &.DropPending {
+            background-color: $background-main;
+          }
+        }
 
         .Node {
-          $indicator-translate-y: 5px;
+          $indicator-translate-y: 7px;
 
           // This will return the transform value
           // for the indicator triangle, placing
@@ -155,30 +163,52 @@ $background-bar: linear-gradient(
           .ParentNode {
             cursor: pointer;
             user-select: none;
-            display: grid;
-            grid-template-columns: 18px auto;
-            padding: 1.5px 0 0 20px;
+            display: block;
+            padding: 0 0 0 20px;
             font-size: 12px;
 
-            * {
-              pointer-events: none;
+            .Top,
+            .Bottom {
+              position: relative;
+              z-index: 1;
+              height: 0.175rem;
             }
 
-            .Indicator,
-            .Name {
-              height: 1.25rem;
+            .Top {
+              margin: 0 0 -0.175rem;
             }
 
-            .Indicator {
-              width: 12px;
+            .Center {
+              position: relative;
+              z-index: 0;
+              display: grid;
+              grid-template-columns: 18px auto;
+              margin: 0 0 -0.175rem;
 
-              .Triangle {
-                transform: getIndicatorTriangleTransform(false);
+              * {
+                pointer-events: none;
+              }
+
+              .Indicator,
+              .Name {
+                height: 1.35rem;
+                line-height: 1.3rem;
+              }
+
+              .Indicator {
+                width: 12px;
+
+                .Triangle {
+                  transform: getIndicatorTriangleTransform(false);
+                }
+              }
+
+              &:hover {
+                background-color: $background-main;
               }
             }
 
-            &:hover {
-              background-color: $background-main;
+            .Bottom {
             }
           }
 
@@ -222,7 +252,37 @@ $background-bar: linear-gradient(
           }
 
           &.DropPending {
-            background-color: $background-main;
+            &.DropPendingTop {
+              > .ParentNode > .Top {
+                margin-top: -0.0875rem;
+                padding-bottom: 0.0875rem;
+                background: linear-gradient(
+                  to top,
+                  transparent 0px,
+                  transparent 0.0875rem,
+                  $color-main 0.0875rem,
+                  $color-main 0.175rem
+                );
+              }
+            }
+
+            &.DropPendingCenter {
+              background-color: $background-main;
+            }
+
+            &.DropPendingBottom {
+              > .ParentNode > .Bottom {
+                margin-bottom: -0.0875rem;
+                padding-top: 0.0875rem;
+                background: linear-gradient(
+                  to bottom,
+                  transparent 0px,
+                  transparent 0.0875rem,
+                  $color-main 0.0875rem,
+                  $color-main 0.175rem
+                );
+              }
+            }
           }
         }
       }

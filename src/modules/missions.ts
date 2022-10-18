@@ -2,6 +2,7 @@ import NodeStructureReference from './node-reference'
 import { Counter, isInteger } from './numbers'
 import { cloneDeep } from 'lodash'
 import { AnyObject } from 'mongoose'
+import seedrandom, { PRNG } from 'seedrandom'
 
 // This is the raw mission data returned
 // from the server used to create instances
@@ -9,6 +10,7 @@ import { AnyObject } from 'mongoose'
 export interface IMissionJson {
   name: string
   versionNumber: number
+  seed: number
   nodeStructure: object
   nodeData: object
 }
@@ -78,6 +80,7 @@ export class MissionNode {
     actionData: string,
     executable: boolean,
     successChance: number,
+    willSucceed: boolean,
     mapX: number,
     mapY: number,
   ) {
@@ -91,7 +94,7 @@ export class MissionNode {
     this.executable = executable
     this._executed = false
     this.successChance = successChance
-    this._willSucceed = MissionNode.checkSuccess(successChance)
+    this._willSucceed = willSucceed
     this.mapX = mapX
     this.mapY = mapY
   }
@@ -106,10 +109,6 @@ export class MissionNode {
     }
     return this._executed && this._willSucceed
   }
-
-  static checkSuccess = (successChance: number): boolean => {
-    return Math.random() >= successChance
-  }
 }
 
 // This represents a mission for a
@@ -119,17 +118,27 @@ export class Mission {
   versionNumber: number
   nodeStructure: object
   nodeData: Map<string, MissionNode>
+  seed: number
 
   constructor(
     name: string,
     versionNumber: number,
     nodeStructure: object,
     nodeData: Map<string, MissionNode>,
+    seed: number,
   ) {
     this.name = name
     this.versionNumber = versionNumber
     this.nodeStructure = nodeStructure
     this.nodeData = nodeData
+    this.seed = seed
+  }
+
+  // This will determine whether a
+  // node succeeds or fails based
+  // on the success chance passed.
+  static determineNodeSuccess = (successChance: number, rng: PRNG): boolean => {
+    return rng.double() <= successChance
   }
 
   // This will create a new Mission
@@ -142,6 +151,7 @@ export class Mission {
       let mission: Mission
       let name: string = json.name
       let versionNumber: number = json.versionNumber
+      let seed: number = json.seed
       let nodeStructure: object = json.nodeStructure
       let nodeDataJson: object = json.nodeData
       let nodeData: Map<string, MissionNode> = new Map<string, MissionNode>()
@@ -152,6 +162,12 @@ export class Mission {
       if (!isInteger(versionNumber)) {
         throw new Error()
       }
+
+      // Set seed for random so that we get
+      // the same success/failure results
+      // for the nodes in this mission as other
+      // students taking this mission.
+      let rng = seedrandom(`${seed}`)
 
       // Converts raw node data into MissionNode
       // objects, then it stores the created
@@ -169,6 +185,7 @@ export class Mission {
           nodeDatum.actionData,
           nodeDatum.executable,
           nodeDatum.successChance,
+          Mission.determineNodeSuccess(nodeDatum.successChance, rng),
           0,
           0,
         )
@@ -177,7 +194,7 @@ export class Mission {
       }
 
       // Create mission object and return it.
-      mission = new Mission(name, versionNumber, nodeStructure, nodeData)
+      mission = new Mission(name, versionNumber, nodeStructure, nodeData, seed)
       return mission
     } catch (error) {
       console.error('Invalid JSON passed to create Mission object.')
@@ -213,6 +230,7 @@ export class Mission {
         originalMission.versionNumber,
         cloneDeep(originalMission.nodeStructure),
         new Map<string, MissionNode>(),
+        originalMission.seed,
       )
       nodeStructure = missionRender.nodeStructure
     }
@@ -241,6 +259,7 @@ export class Mission {
           originalMission.versionNumber,
           {},
           new Map<string, MissionNode>(),
+          originalMission.seed,
         )
       }
     }
@@ -272,6 +291,7 @@ export class Mission {
             originalMission.versionNumber,
             {},
             new Map<string, MissionNode>(),
+            originalMission.seed,
           )
         }
 
@@ -304,6 +324,7 @@ export function createTestMission(): Mission {
   const testMissionJson: IMissionJson = {
     name: 'Incredible Mission',
     versionNumber: 1,
+    seed: 9802384709349,
     nodeStructure: {
       'Communications': {
         'Cellular Network': {
@@ -362,7 +383,7 @@ export function createTestMission(): Mission {
     },
     nodeData: {
       'Communications': {
-        nodeID: 'Communications',
+        nodeID: '1',
         name: 'Communications',
         color: 'green',
         preExecutionText: '',
@@ -375,7 +396,7 @@ export function createTestMission(): Mission {
         mapY: -2,
       },
       'Cellular Network': {
-        nodeID: 'Cellular Network',
+        nodeID: '2',
         name: 'Cellular Network',
         color: 'green',
         preExecutionText: 'Cellular Network has not been executed.',
@@ -388,7 +409,7 @@ export function createTestMission(): Mission {
         mapY: -2,
       },
       'Internet Provider': {
-        nodeID: 'Internet Provider',
+        nodeID: '3',
         name: 'Internet Provider',
         color: 'green',
         preExecutionText: 'Internet Provider has not been executed.',
@@ -401,7 +422,7 @@ export function createTestMission(): Mission {
         mapY: -1,
       },
       'Instant Messaging': {
-        nodeID: 'Instant Messaging',
+        nodeID: '4',
         name: 'Instant Messaging',
         color: 'green',
         preExecutionText: 'Instant Messaging has not been executed.',
@@ -414,7 +435,7 @@ export function createTestMission(): Mission {
         mapY: 0,
       },
       'File Sharing Service': {
-        nodeID: 'File Sharing Service',
+        nodeID: '5',
         name: 'File Sharing Service',
         color: 'green',
         preExecutionText: 'File Sharing Service has not been executed.',
@@ -427,7 +448,7 @@ export function createTestMission(): Mission {
         mapY: 1,
       },
       'Cellular Tower': {
-        nodeID: 'Cellular Tower',
+        nodeID: '6',
         name: 'Cellular Tower',
         color: 'green',
         preExecutionText: 'Cellular Tower has not been executed.',
@@ -454,7 +475,7 @@ export function createTestMission(): Mission {
       },
 
       'Central Server 1': {
-        nodeID: 'Central Server 1',
+        nodeID: '8',
         name: 'Central Server 1',
         color: 'green',
         preExecutionText: 'Central Server 1 has not been executed.',
@@ -468,7 +489,7 @@ export function createTestMission(): Mission {
       },
 
       'Central Server 2': {
-        nodeID: 'Central Server 2',
+        nodeID: '9',
         name: 'Central Server 2',
         color: 'green',
         preExecutionText: 'Central Server 2 has not been executed.',
@@ -481,7 +502,7 @@ export function createTestMission(): Mission {
         mapY: 1,
       },
       'Air Defense': {
-        nodeID: 'Air Defense',
+        nodeID: '10',
         name: 'Air Defense',
         color: 'pink',
         preExecutionText: '',
@@ -494,7 +515,7 @@ export function createTestMission(): Mission {
         mapY: 2,
       },
       'IADS Network': {
-        nodeID: 'IADS Network',
+        nodeID: '11',
         name: 'IADS Network',
         color: 'pink',
         preExecutionText: 'IADS Network has not been executed.',
@@ -507,7 +528,7 @@ export function createTestMission(): Mission {
         mapY: 2,
       },
       'Individual Launch Sites': {
-        nodeID: 'Individual Launch Sites',
+        nodeID: '12',
         name: 'Individual Launch Sites',
         color: 'pink',
         preExecutionText: 'Individual Launch Sites has not been executed.',
@@ -521,7 +542,7 @@ export function createTestMission(): Mission {
         mapY: 2,
       },
       'Launcher System': {
-        nodeID: 'Launcher System',
+        nodeID: '13',
         name: 'Launcher System',
         color: 'pink',
         preExecutionText: 'Launcher System has not been executed.',
@@ -534,7 +555,7 @@ export function createTestMission(): Mission {
         mapY: 2,
       },
       'Radar System': {
-        nodeID: 'Radar System',
+        nodeID: '14',
         name: 'Radar System',
         color: 'pink',
         preExecutionText: 'Radar System has not been executed.',
@@ -547,7 +568,7 @@ export function createTestMission(): Mission {
         mapY: 3,
       },
       'Infrastructure': {
-        nodeID: 'Infrastructure',
+        nodeID: '15',
         name: 'Infrastructure',
         color: 'yellow',
         preExecutionText: '',
@@ -560,7 +581,7 @@ export function createTestMission(): Mission {
         mapY: 4,
       },
       'Railroad System': {
-        nodeID: 'Railroad System',
+        nodeID: '16',
         name: 'Railroad System',
         color: 'yellow',
         preExecutionText: 'Railroad System has not been executed.',
@@ -573,7 +594,7 @@ export function createTestMission(): Mission {
         mapY: 4,
       },
       'Electrical System': {
-        nodeID: 'Electrical System',
+        nodeID: '17',
         name: 'Electrical System',
         color: 'yellow',
         preExecutionText: 'Electrical System has not been executed.',
@@ -586,7 +607,7 @@ export function createTestMission(): Mission {
         mapY: 5,
       },
       'Water System': {
-        nodeID: 'Water System',
+        nodeID: '18',
         name: 'Water System',
         color: 'yellow',
         preExecutionText: 'Water System has not been executed.',
@@ -599,7 +620,7 @@ export function createTestMission(): Mission {
         mapY: 6,
       },
       'Road System': {
-        nodeID: 'Road System',
+        nodeID: '19',
         name: 'Road System',
         color: 'yellow',
         preExecutionText: 'Road System has not been executed.',
@@ -612,7 +633,7 @@ export function createTestMission(): Mission {
         mapY: 7,
       },
       'Track Monitoring': {
-        nodeID: 'Track Monitoring',
+        nodeID: '20',
         name: 'Track Monitoring',
         color: 'yellow',
         preExecutionText: 'Track Monitoring has not been executed.',
@@ -625,7 +646,7 @@ export function createTestMission(): Mission {
         mapY: 3,
       },
       'Track Switch System': {
-        nodeID: 'Track Switch System',
+        nodeID: '21',
         name: 'Track Switch System',
         color: 'yellow',
         preExecutionText: 'Track Switch System has not been executed.',
@@ -638,7 +659,7 @@ export function createTestMission(): Mission {
         mapY: 4,
       },
       'Regional Service': {
-        nodeID: 'Regional Service',
+        nodeID: '22',
         name: 'Regional Service',
         color: 'yellow',
         preExecutionText: 'Regional Service has not been executed.',
@@ -651,7 +672,7 @@ export function createTestMission(): Mission {
         mapY: 5,
       },
       'Valve System': {
-        nodeID: 'Valve System',
+        nodeID: '23',
         name: 'Valve System',
         color: 'yellow',
         preExecutionText: 'Valve System has not been executed.',
@@ -664,7 +685,7 @@ export function createTestMission(): Mission {
         mapY: 6,
       },
       'Traffic Light System': {
-        nodeID: 'Traffic Light System',
+        nodeID: '24',
         name: 'Traffic Light System',
         color: 'yellow',
         preExecutionText: 'Traffic Light System has not been executed.',
@@ -677,7 +698,7 @@ export function createTestMission(): Mission {
         mapY: 7,
       },
       'CCTV System': {
-        nodeID: 'CCTV System',
+        nodeID: '25',
         name: 'CCTV System',
         color: 'yellow',
         preExecutionText: 'CCTV System has not been executed.',
@@ -690,7 +711,7 @@ export function createTestMission(): Mission {
         mapY: 8,
       },
       'Satellite Services': {
-        nodeID: 'Satellite Services',
+        nodeID: '26',
         name: 'Satellite Services',
         color: 'blue',
         preExecutionText: '',
@@ -703,7 +724,7 @@ export function createTestMission(): Mission {
         mapY: 9,
       },
       'Global Positioning': {
-        nodeID: 'Global Positioning',
+        nodeID: '27',
         name: 'Global Positioning',
         color: 'blue',
         preExecutionText: 'Global Positioning has not been executed.',
@@ -716,7 +737,7 @@ export function createTestMission(): Mission {
         mapY: 9,
       },
       'Data Transfer': {
-        nodeID: 'Data Transfer',
+        nodeID: '28',
         name: 'Data Transfer',
         color: 'blue',
         preExecutionText: 'Data Transfer has not been executed.',
@@ -729,7 +750,7 @@ export function createTestMission(): Mission {
         mapY: 10,
       },
       'Imagery Collection': {
-        nodeID: 'Imagery Collection',
+        nodeID: '29',
         name: 'Imagery Collection',
         color: 'blue',
         preExecutionText: 'Imagery Collection has not been executed.',
@@ -742,7 +763,7 @@ export function createTestMission(): Mission {
         mapY: 11,
       },
       'Sensor Observation': {
-        nodeID: 'Sensor Observation',
+        nodeID: '30',
         name: 'Sensor Observation',
         color: 'blue',
         preExecutionText: 'Sensor Observation has not been executed.',

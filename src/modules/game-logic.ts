@@ -10,6 +10,7 @@ export function createInitialMissionState(): Mission {
     versionNumber: referenceMission.versionNumber,
     nodeStructure: {},
     nodeData: new Map<string, MissionNode>(),
+    seed: referenceMission.seed,
   }
 
   for (let nodeKey in referenceMission.nodeStructure) {
