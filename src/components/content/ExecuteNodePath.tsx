@@ -3,9 +3,9 @@ import './ExecuteNodePath.scss'
 import { useStore } from 'react-context-hook'
 import { MissionNode } from '../../modules/missions'
 import { IUser } from '../../modules/users'
-import gameLogic from '../../modules/game-logic'
+import gameLogic, { nodeProcessBar } from '../../modules/game-logic'
 import NodeStructureReference from '../../modules/node-reference'
-import ProgressBar from './ProgressBar'
+import NodeHoverDisplay from './NodeHoverDisplay'
 
 const ExecuteNodePath = (props: {
   selectedNode: MissionNode | null | undefined
@@ -19,7 +19,8 @@ const ExecuteNodePath = (props: {
     executeNodePathPromptIsDisplayed,
     setExecuteNodePathPromptIsDisplayed,
   ] = useStore<boolean>('executeNodePathPromptIsDisplayed')
-  const [outputDelayTime] = useStore<number>('outputDelayTime')
+  const [processDelayTime] = useStore<number>('processDelayTime')
+  const [nodeActionItemText] = useStore<string>('nodeActionItemText')
 
   /* -- COMPONENT STATE -- */
   const [forcedUpdateCounter, setForcedUpdateCounter] = useState<number>(0)
@@ -42,36 +43,45 @@ const ExecuteNodePath = (props: {
       let username: string = currentUser.userID
 
       if (props.selectedNode !== undefined && props.selectedNode !== null) {
-        props.selectedNode.execute()
-
-        //  Start time delay function here
-        console.log(outputDelayTime)
-        // ProgressBar()
-
-        // Output message in the terminal which differs based on whether
-        // it passes or fails
-        if (props.selectedNode.succeeded) {
-          gameLogic.handleNodeSelection(props.selectedNode, props.missionState)
-
-          setConsoleOutputs([
-            ...consoleOutputs,
-            {
-              date: Date.now(),
-              value: `<span class='line-cursor'>${username}@USAFA: </span>
-                     <span class="succeeded">${props.selectedNode.postExecutionSuccessText}</span>`,
-            },
-          ])
-        } else {
-          setConsoleOutputs([
-            ...consoleOutputs,
-            {
-              date: Date.now(),
-              value: `<span class='line-cursor'>${username}@USAFA: </span>
-                    <span class="failed">${props.selectedNode.postExecutionFailureText}</span>`,
-            },
-          ])
-        }
+        props.selectedNode.isExecuting()
       }
+
+      // ! Start time delay function here
+      // nodeProcessBar()
+
+      setTimeout(() => {
+        if (props.selectedNode !== undefined && props.selectedNode !== null) {
+          props.selectedNode.execute()
+          props.selectedNode.isExecuting()
+
+          // Output message in the terminal which differs based on whether
+          // it passes or fails
+          if (props.selectedNode.succeeded) {
+            gameLogic.handleNodeSelection(
+              props.selectedNode,
+              props.missionState,
+            )
+
+            setConsoleOutputs([
+              ...consoleOutputs,
+              {
+                date: Date.now(),
+                value: `<span class='line-cursor'>${username}@USAFA: </span>
+                     <span class="succeeded">${props.selectedNode.postExecutionSuccessText}</span>`,
+              },
+            ])
+          } else {
+            setConsoleOutputs([
+              ...consoleOutputs,
+              {
+                date: Date.now(),
+                value: `<span class='line-cursor'>${username}@USAFA: </span>
+                    <span class="failed">${props.selectedNode.postExecutionFailureText}</span>`,
+              },
+            ])
+          }
+        }
+      }, processDelayTime)
     }
   }
 
@@ -82,10 +92,12 @@ const ExecuteNodePath = (props: {
       </p>
 
       <p className='PromptDisplayText'>
-        Do you want to execute {props.selectedNode?.name}?
+        Do you want to {nodeActionItemText.toLowerCase()}{' '}
+        {props.selectedNode?.name}?
       </p>
+      <NodeHoverDisplay selectedNode={props.selectedNode} />
       <button className='ExecutionButton' onClick={execute}>
-        Execute
+        {nodeActionItemText}
       </button>
     </div>
   )

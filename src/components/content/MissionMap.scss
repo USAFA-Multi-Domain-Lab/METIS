@@ -178,6 +178,11 @@
           display: none;
         }
 
+        .NodeHoverDisplay {
+          position: absolute;
+          top: 0;
+        }
+
         .wrapper {
           display: flex;
           justify-content: center;
@@ -213,13 +218,13 @@
           }
         }
 
-        &.final,
-        &.bonus {
-          // background-color: adjust-color(
-          //   $background-color-negative,
-          //   $lightness: 7.5%
-          // );
-        }
+        // &.final,
+        // &.bonus {
+        // background-color: adjust-color(
+        //   $background-color-negative,
+        //   $lightness: 7.5%
+        // );
+        // }
       }
 
       .page-number {

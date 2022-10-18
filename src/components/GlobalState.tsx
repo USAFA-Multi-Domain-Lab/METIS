@@ -36,7 +36,8 @@ export default class GlobalState {
   nodeActionSelectionPromptIsDisplayed: boolean
   lastSelectedNode: MissionNode | null
   nodeActionItemDisplay: Array<INodeActionItem>
-  outputDelayTime: number
+  nodeActionItemText: string
+  processDelayTime: number
 
   constructor(stateSetters: IStateSetters) {
     this.currentUser = null
@@ -55,7 +56,8 @@ export default class GlobalState {
     this.nodeActionSelectionPromptIsDisplayed = false
     this.lastSelectedNode = null
     this.nodeActionItemDisplay = []
-    this.outputDelayTime = 0
+    this.nodeActionItemText = ''
+    this.processDelayTime = 0
   }
 
   // This will position the currently

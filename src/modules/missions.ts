@@ -17,6 +17,7 @@ export interface IMissionJson {
 // from the server used to create instances
 // of MissionNode in the Mission class.
 export interface IMissionNodeJson {
+  executing: boolean
   nodeID: string
   name: string
   color: string
@@ -26,6 +27,8 @@ export interface IMissionNodeJson {
   actionData: string
   executable: boolean
   nodeActionItems: Array<{ text: string; timeDelay: number }>
+  selectedNodeAction: string
+  executionTimeSpan: number
   successChance: number
 }
 
@@ -52,7 +55,10 @@ export class MissionNode {
   actionData: string
   executable: boolean
   nodeActionItems: Array<{ text: string; timeDelay: number }>
+  selectedNodeAction: string | null
+  executionTimeSpan: number | null
   _executed: boolean
+  _executing: boolean
   successChance: number
   _willSucceed: boolean
   mapX: number
@@ -68,6 +74,10 @@ export class MissionNode {
 
   get succeeded(): boolean {
     return this._executed && this._willSucceed
+  }
+
+  get executing(): boolean {
+    return this._executing
   }
 
   constructor(
@@ -93,11 +103,23 @@ export class MissionNode {
     this.actionData = actionData
     this.executable = executable
     this.nodeActionItems = nodeActionItems
+    this.selectedNodeAction = null
+    this.executionTimeSpan = null
     this._executed = false
+    this._executing = false
     this.successChance = successChance
     this._willSucceed = MissionNode.checkSuccess(successChance)
     this.mapX = mapX
     this.mapY = mapY
+  }
+
+  isExecuting(): boolean {
+    if (this.executable === true && this.executed === false) {
+      this._executing = true
+    } else if (this.executable === true && this.executed === true) {
+      this._executing = false
+    }
+    return this._executing
   }
 
   // This will execute the node if it
@@ -310,64 +332,72 @@ export function createTestMission(): Mission {
     name: 'Incredible Mission',
     versionNumber: 1,
     nodeStructure: {
-      'Communications': {
-        'Cellular Network': {
-          'Cellular Tower': {
-            END: 'END',
-          },
-        },
-        'Internet Provider': {
-          'Service Provider': {
-            END: 'END',
-          },
-        },
-        'Instant Messaging': {
-          'Central Server 1': {
-            END: 'END',
-          },
-        },
-        'File Sharing Service': {
-          'Central Server 2': {
-            END: 'END',
-          },
-        },
-      },
-      'Air Defense': {
-        'IADS Network': {
-          'Individual Launch Sites': {
-            'Launcher System': {
+      '1': {
+        '2': {
+          '3': {
+            '4': {
               END: 'END',
             },
-            'Radar System': { END: 'END' },
+          },
+        },
+        '5': {
+          '6': {
+            '7': {
+              END: 'END',
+            },
+          },
+        },
+        '8': {
+          '9': {
+            '10': {
+              END: 'END',
+            },
+          },
+        },
+        '11': {
+          '12': {
+            '13': {
+              END: 'END',
+            },
           },
         },
       },
-      'Infrastructure': {
-        'Railroad System': {
-          'Track Monitoring': { END: 'END' },
-          'Track Switch System': { END: 'END' },
-        },
-        'Electrical System': {
-          'Regional Service': { END: 'END' },
-        },
-        'Water System': {
-          'Valve System': { END: 'END' },
-        },
-        'Road System': {
-          'Traffic Light System': { END: 'END' },
-          'CCTV System': { END: 'END' },
+      '14': {
+        '15': {
+          '16': {
+            '17': {
+              END: 'END',
+            },
+            '18': { END: 'END' },
+          },
         },
       },
-      'Satellite Services': {
-        'Global Positioning': { END: 'END' },
-        'Data Transfer': { END: 'END' },
-        'Imagery Collection': { END: 'END' },
-        'Sensor Observation': { END: 'END' },
+      '19': {
+        '20': {
+          '21': { END: 'END' },
+          '22': { END: 'END' },
+        },
+        '23': {
+          '24': { END: 'END' },
+        },
+        '25': {
+          '26': { END: 'END' },
+        },
+        '27': {
+          '28': { END: 'END' },
+          '29': { END: 'END' },
+        },
+      },
+      '30': {
+        '31': { END: 'END' },
+        '32': { END: 'END' },
+        '33': { END: 'END' },
+        '34': { END: 'END' },
       },
     },
     nodeData: {
-      'Communications': {
-        nodeID: 'Communications',
+      '1': {
+        nodeID: '1',
         name: 'Communications',
         color: 'green',
         preExecutionText: '',
@@ -387,13 +417,13 @@ export function createTestMission(): Mission {
         mapX: 0,
         mapY: -3,
       },
-      'Cellular Network': {
-        nodeID: 'Cellular Network',
+      '2': {
+        nodeID: '2',
         name: 'Cellular Network',
         color: 'green',
         preExecutionText: 'Cellular Network has not been executed.',
-        postExecutionSuccessText: 'Cellular Network has been executed.',
-        postExecutionFailureText: 'Cellular Network has failed to execute.',
+        postExecutionSuccessText: 'Cellular Network succeeded.',
+        postExecutionFailureText: 'Cellular Network failed.',
         actionData: 'exec command',
         executable: false,
         nodeActionItems: [
@@ -408,8 +438,8 @@ export function createTestMission(): Mission {
         mapX: 1,
         mapY: -5,
       },
-      'Internet Provider': {
-        nodeID: 'Internet Provider',
+      '5': {
+        nodeID: '5',
         name: 'Internet Provider',
         color: 'green',
         preExecutionText: 'Internet Provider has not been executed.',
@@ -429,8 +459,8 @@ export function createTestMission(): Mission {
         mapX: 1,
         mapY: -4,
       },
-      'Instant Messaging': {
-        nodeID: 'Instant Messaging',
+      '8': {
+        nodeID: '8',
         name: 'Instant Messaging',
         color: 'green',
         preExecutionText: 'Instant Messaging has not been executed.',
@@ -450,8 +480,8 @@ export function createTestMission(): Mission {
         mapX: 1,
         mapY: -3,
       },
-      'File Sharing Service': {
-        nodeID: 'File Sharing Service',
+      '11': {
+        nodeID: '11',
         name: 'File Sharing Service',
         color: 'green',
         preExecutionText: 'File Sharing Service has not been executed.',
@@ -471,15 +501,16 @@ export function createTestMission(): Mission {
         mapX: 1,
         mapY: -2,
       },
-      'Cellular Tower': {
-        nodeID: 'Cellular Tower',
-        name: 'Cellular Tower',
+
+      '3': {
+        nodeID: '3',
+        name: 'Callbank Cellular',
         color: 'green',
-        preExecutionText: 'Cellular Tower has not been executed.',
-        postExecutionSuccessText: 'Cellular Tower has been executed.',
-        postExecutionFailureText: 'Cellular Tower has failed to execute.',
+        preExecutionText: 'Callbank Cellular has not been executed.',
+        postExecutionSuccessText: 'Callbank Cellular has been executed.',
+        postExecutionFailureText: 'Callbank Cellular has failed to execute.',
         actionData: 'exec command',
-        executable: true,
+        executable: false,
         nodeActionItems: [
           { text: 'Deny', timeDelay: 1000 },
           { text: 'Degrade', timeDelay: 2000 },
@@ -489,57 +520,71 @@ export function createTestMission(): Mission {
           { text: 'Extract', timeDelay: 6000 },
         ],
         successChance: 0.3,
-        mapX: 2,
+        mapX: 3,
         mapY: -5,
       },
-      'Service Provider': {
-        nodeID: 'Service Provider',
+
+      '6': {
+        nodeID: '6',
         name: 'Service Provider',
         color: 'green',
         preExecutionText: 'Service Provider has not been executed.',
         postExecutionSuccessText: 'Service Provider has been executed.',
         postExecutionFailureText: 'Service Provider has failed to execute.',
         actionData: 'exec command',
-        executable: true,
+        executable: false,
         nodeActionItems: [
           { text: 'Deny', timeDelay: 1000 },
           { text: 'Degrade', timeDelay: 2000 },
           { text: 'Destroy', timeDelay: 3000 },
         ],
         successChance: 0.3,
-        mapX: 2,
+        mapX: 3,
         mapY: -4,
       },
-
-      'Central Server 1': {
-        nodeID: 'Central Server 1',
-        name: 'Central Server 1',
+      '9': {
+        nodeID: '9',
+        name: 'Service Provider',
         color: 'green',
-        preExecutionText: 'Central Server 1 has not been executed.',
-        postExecutionSuccessText: 'Central Server 1 has been executed.',
-        postExecutionFailureText: 'Central Server 1 has failed to execute.',
+        preExecutionText: 'Service Provider has not been executed.',
+        postExecutionSuccessText: 'Service Provider has been executed.',
+        postExecutionFailureText: 'Service Provider has failed to execute.',
         actionData: 'exec command',
-        executable: true,
+        executable: false,
         nodeActionItems: [
           { text: 'Deny', timeDelay: 1000 },
           { text: 'Degrade', timeDelay: 2000 },
           { text: 'Destroy', timeDelay: 3000 },
-          { text: 'Disrupt', timeDelay: 4000 },
-          { text: 'Manipulate', timeDelay: 5000 },
-          { text: 'Extract', timeDelay: 6000 },
         ],
         successChance: 0.3,
-        mapX: 2,
+        mapX: 3,
         mapY: -3,
       },
-
-      'Central Server 2': {
-        nodeID: 'Central Server 2',
-        name: 'Central Server 2',
+      '12': {
+        nodeID: '12',
+        name: 'Service Provider',
         color: 'green',
-        preExecutionText: 'Central Server 2 has not been executed.',
-        postExecutionSuccessText: 'Central Server 2 has been executed.',
-        postExecutionFailureText: 'Central Server 2 has failed to execute.',
+        preExecutionText: 'Service Provider has not been executed.',
+        postExecutionSuccessText: 'Service Provider has been executed.',
+        postExecutionFailureText: 'Service Provider has failed to execute.',
+        actionData: 'exec command',
+        executable: false,
+        nodeActionItems: [
+          { text: 'Deny', timeDelay: 1000 },
+          { text: 'Degrade', timeDelay: 2000 },
+          { text: 'Destroy', timeDelay: 3000 },
+        ],
+        successChance: 0.3,
+        mapX: 3,
+        mapY: -2,
+      },
+      '4': {
+        nodeID: '4',
+        name: 'Cellular Towers',
+        color: 'green',
+        preExecutionText: 'Cellular Towers has not been executed.',
+        postExecutionSuccessText: 'Cellular Towers has been executed.',
+        postExecutionFailureText: 'Cellular Towers has failed to execute.',
         actionData: 'exec command',
         executable: true,
         nodeActionItems: [
@@ -551,11 +596,74 @@ export function createTestMission(): Mission {
           { text: 'Extract', timeDelay: 6000 },
         ],
         successChance: 0.3,
-        mapX: 2,
+        mapX: 4,
+        mapY: -5,
+      },
+      '7': {
+        nodeID: '7',
+        name: 'Main Server',
+        color: 'green',
+        preExecutionText: 'Main Server has not been executed.',
+        postExecutionSuccessText: 'Main Server has been executed.',
+        postExecutionFailureText: 'Main Server has failed to execute.',
+        actionData: 'exec command',
+        executable: true,
+        nodeActionItems: [
+          { text: 'Deny', timeDelay: 1000 },
+          { text: 'Degrade', timeDelay: 2000 },
+          { text: 'Destroy', timeDelay: 3000 },
+          { text: 'Disrupt', timeDelay: 4000 },
+          { text: 'Manipulate', timeDelay: 5000 },
+          { text: 'Extract', timeDelay: 6000 },
+        ],
+        successChance: 0.3,
+        mapX: 4,
+        mapY: -4,
+      },
+      '10': {
+        nodeID: '10',
+        name: 'Main Server',
+        color: 'green',
+        preExecutionText: 'Main Server has not been executed.',
+        postExecutionSuccessText: 'Main Server has been executed.',
+        postExecutionFailureText: 'Main Server has failed to execute.',
+        actionData: 'exec command',
+        executable: true,
+        nodeActionItems: [
+          { text: 'Deny', timeDelay: 1000 },
+          { text: 'Degrade', timeDelay: 2000 },
+          { text: 'Destroy', timeDelay: 3000 },
+          { text: 'Disrupt', timeDelay: 4000 },
+          { text: 'Manipulate', timeDelay: 5000 },
+          { text: 'Extract', timeDelay: 6000 },
+        ],
+        successChance: 0.3,
+        mapX: 4,
+        mapY: -3,
+      },
+      '13': {
+        nodeID: '13',
+        name: 'Main Server',
+        color: 'green',
+        preExecutionText: 'Main Server has not been executed.',
+        postExecutionSuccessText: 'Main Server has been executed.',
+        postExecutionFailureText: 'Main Server has failed to execute.',
+        actionData: 'exec command',
+        executable: true,
+        nodeActionItems: [
+          { text: 'Deny', timeDelay: 1000 },
+          { text: 'Degrade', timeDelay: 2000 },
+          { text: 'Destroy', timeDelay: 3000 },
+          { text: 'Disrupt', timeDelay: 4000 },
+          { text: 'Manipulate', timeDelay: 5000 },
+          { text: 'Extract', timeDelay: 6000 },
+        ],
+        successChance: 0.3,
+        mapX: 4,
         mapY: -2,
       },
-      'Air Defense': {
-        nodeID: 'Air Defense',
+      '14': {
+        nodeID: '14',
         name: 'Air Defense',
         color: 'pink',
         preExecutionText: '',
@@ -575,8 +683,8 @@ export function createTestMission(): Mission {
         mapX: 0,
         mapY: -1,
       },
-      'IADS Network': {
-        nodeID: 'IADS Network',
+      '15': {
+        nodeID: '15',
         name: 'IADS Network',
         color: 'pink',
         preExecutionText: 'IADS Network has not been executed.',
@@ -596,14 +704,14 @@ export function createTestMission(): Mission {
         mapX: 1,
         mapY: -1,
       },
-      'Individual Launch Sites': {
-        nodeID: 'Individual Launch Sites',
-        name: 'Individual Launch Sites',
+      '16': {
+        nodeID: '16',
+        name: 'Individual IADS Sites',
         color: 'pink',
-        preExecutionText: 'Individual Launch Sites has not been executed.',
-        postExecutionSuccessText: 'Individual Launch Sites has been executed.',
+        preExecutionText: 'Individual IADS Sites has not been executed.',
+        postExecutionSuccessText: 'Individual IADS Sites has been executed.',
         postExecutionFailureText:
-          'Individual Launch Sites has failed to execute.',
+          'Individual IADS Sites has failed to execute.',
         actionData: 'exec command',
         executable: false,
         nodeActionItems: [
@@ -618,13 +726,13 @@ export function createTestMission(): Mission {
         mapX: 2,
         mapY: -1,
       },
-      'Launcher System': {
-        nodeID: 'Launcher System',
-        name: 'Launcher System',
+      '17': {
+        nodeID: '17',
+        name: 'Launchers',
         color: 'pink',
-        preExecutionText: 'Launcher System has not been executed.',
-        postExecutionSuccessText: 'Launcher System has been executed.',
-        postExecutionFailureText: 'Launcher System has failed to execute.',
+        preExecutionText: 'Launchers has not been executed.',
+        postExecutionSuccessText: 'Launchers has been executed.',
+        postExecutionFailureText: 'Launchers has failed to execute.',
         actionData: 'exec command',
         executable: true,
         nodeActionItems: [
@@ -639,13 +747,13 @@ export function createTestMission(): Mission {
         mapX: 3,
         mapY: -1,
       },
-      'Radar System': {
-        nodeID: 'Radar System',
-        name: 'Radar System',
+      '18': {
+        nodeID: '18',
+        name: 'Radars',
         color: 'pink',
-        preExecutionText: 'Radar System has not been executed.',
-        postExecutionSuccessText: 'Radar System has been executed.',
-        postExecutionFailureText: 'Radar System has failed to execute.',
+        preExecutionText: 'Radars has not been executed.',
+        postExecutionSuccessText: 'Radars has been executed.',
+        postExecutionFailureText: 'Radars has failed to execute.',
         actionData: 'exec command',
         executable: true,
         nodeActionItems: [
@@ -660,8 +768,8 @@ export function createTestMission(): Mission {
         mapX: 3,
         mapY: 0,
       },
-      'Infrastructure': {
-        nodeID: 'Infrastructure',
+      '19': {
+        nodeID: '19',
         name: 'Infrastructure',
         color: 'yellow',
         preExecutionText: '',
@@ -681,8 +789,8 @@ export function createTestMission(): Mission {
         mapX: 0,
         mapY: 1,
       },
-      'Railroad System': {
-        nodeID: 'Railroad System',
+      '20': {
+        nodeID: '20',
         name: 'Railroad System',
         color: 'yellow',
         preExecutionText: 'Railroad System has not been executed.',
@@ -702,8 +810,8 @@ export function createTestMission(): Mission {
         mapX: 1,
         mapY: 0,
       },
-      'Electrical System': {
-        nodeID: 'Electrical System',
+      '23': {
+        nodeID: '23',
         name: 'Electrical System',
         color: 'yellow',
         preExecutionText: 'Electrical System has not been executed.',
@@ -723,8 +831,8 @@ export function createTestMission(): Mission {
         mapX: 1,
         mapY: 1,
       },
-      'Water System': {
-        nodeID: 'Water System',
+      '25': {
+        nodeID: '25',
         name: 'Water System',
         color: 'yellow',
         preExecutionText: 'Water System has not been executed.',
@@ -744,8 +852,8 @@ export function createTestMission(): Mission {
         mapX: 1,
         mapY: 2,
       },
-      'Road System': {
-        nodeID: 'Road System',
+      '27': {
+        nodeID: '27',
         name: 'Road System',
         color: 'yellow',
         preExecutionText: 'Road System has not been executed.',
@@ -765,8 +873,8 @@ export function createTestMission(): Mission {
         mapX: 1,
         mapY: 3,
       },
-      'Track Monitoring': {
-        nodeID: 'Track Monitoring',
+      '21': {
+        nodeID: '21',
         name: 'Track Monitoring',
         color: 'yellow',
         preExecutionText: 'Track Monitoring has not been executed.',
@@ -786,8 +894,8 @@ export function createTestMission(): Mission {
         mapX: 2,
         mapY: 0,
       },
-      'Track Switch System': {
-        nodeID: 'Track Switch System',
+      '22': {
+        nodeID: '22',
         name: 'Track Switch System',
         color: 'yellow',
         preExecutionText: 'Track Switch System has not been executed.',
@@ -807,8 +915,8 @@ export function createTestMission(): Mission {
         mapX: 2,
         mapY: 1,
       },
-      'Regional Service': {
-        nodeID: 'Regional Service',
+      '24': {
+        nodeID: '24',
         name: 'Regional Service',
         color: 'yellow',
         preExecutionText: 'Regional Service has not been executed.',
@@ -828,8 +936,8 @@ export function createTestMission(): Mission {
         mapX: 2,
         mapY: 2,
       },
-      'Valve System': {
-        nodeID: 'Valve System',
+      '26': {
+        nodeID: '26',
         name: 'Valve System',
         color: 'yellow',
         preExecutionText: 'Valve System has not been executed.',
@@ -849,8 +957,8 @@ export function createTestMission(): Mission {
         mapX: 2,
         mapY: 3,
       },
-      'Traffic Light System': {
-        nodeID: 'Traffic Light System',
+      '28': {
+        nodeID: '28',
         name: 'Traffic Light System',
         color: 'yellow',
         preExecutionText: 'Traffic Light System has not been executed.',
@@ -870,8 +978,8 @@ export function createTestMission(): Mission {
         mapX: 2,
         mapY: 4,
       },
-      'CCTV System': {
-        nodeID: 'CCTV System',
+      '29': {
+        nodeID: '29',
         name: 'CCTV System',
         color: 'yellow',
         preExecutionText: 'CCTV System has not been executed.',
@@ -891,8 +999,8 @@ export function createTestMission(): Mission {
         mapX: 2,
         mapY: 5,
       },
-      'Satellite Services': {
-        nodeID: 'Satellite Services',
+      '30': {
+        nodeID: '30',
         name: 'Satellite Services',
         color: 'blue',
         preExecutionText: '',
@@ -912,8 +1020,8 @@ export function createTestMission(): Mission {
         mapX: 0,
         mapY: 4,
       },
-      'Global Positioning': {
-        nodeID: 'Global Positioning',
+      '31': {
+        nodeID: '31',
         name: 'Global Positioning',
         color: 'blue',
         preExecutionText: 'Global Positioning has not been executed.',
@@ -933,8 +1041,8 @@ export function createTestMission(): Mission {
         mapX: 1,
         mapY: 4,
       },
-      'Data Transfer': {
-        nodeID: 'Data Transfer',
+      '32': {
+        nodeID: '32',
         name: 'Data Transfer',
         color: 'blue',
         preExecutionText: 'Data Transfer has not been executed.',
@@ -954,8 +1062,8 @@ export function createTestMission(): Mission {
         mapX: 1,
         mapY: 5,
       },
-      'Imagery Collection': {
-        nodeID: 'Imagery Collection',
+      '33': {
+        nodeID: '33',
         name: 'Imagery Collection',
         color: 'blue',
         preExecutionText: 'Imagery Collection has not been executed.',
@@ -975,8 +1083,8 @@ export function createTestMission(): Mission {
         mapX: 1,
         mapY: 6,
       },
-      'Sensor Observation': {
-        nodeID: 'Sensor Observation',
+      '34': {
+        nodeID: '34',
         name: 'Sensor Observation',
         color: 'blue',
         preExecutionText: 'Sensor Observation has not been executed.',

@@ -4,7 +4,8 @@
   position: fixed;
   z-index: $z-index-action-panel;
   top: 50px;
-  left: 0;
+  left: 35%;
+  width: 30%;
 
   .glue {
     transition: 200ms opacity;

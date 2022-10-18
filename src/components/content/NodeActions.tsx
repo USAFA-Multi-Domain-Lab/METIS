@@ -29,8 +29,10 @@ const NodeActions = (props: {
   const [nodeActionItemDisplay, setNodeActionItemDisplay] = useStore<
     Array<INodeActionItem>
   >('nodeActionItemDisplay')
-  const [outputDelayTime, setOutputDelayTime] =
-    useStore<number>('outputDelayTime')
+  const [processDelayTime, setProcessDelayTime] =
+    useStore<number>('processDelayTime')
+  const [nodeActionItemText, setNodeActionItemText] =
+    useStore<string>('nodeActionItemText')
 
   /* -- COMPONENT STATE -- */
   const [displayNodeActionList, setDisplayNodeActionList] =
@@ -63,7 +65,13 @@ const NodeActions = (props: {
     setExecuteNodePathPromptIsDisplayed(true)
     setDisplayNodeActionList(false)
     setNodeActionItemDisplay([])
-    setOutputDelayTime(nodeActionItem.timeDelay)
+    setProcessDelayTime(nodeActionItem.timeDelay)
+    setNodeActionItemText(nodeActionItem.text)
+
+    if (props.selectedNode !== null && props.selectedNode !== undefined) {
+      props.selectedNode.executionTimeSpan = nodeActionItem.timeDelay
+      props.selectedNode.selectedNodeAction = nodeActionItem.text
+    }
   }
 
   /* -- RENDER -- */

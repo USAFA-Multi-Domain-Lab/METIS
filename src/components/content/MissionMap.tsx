@@ -9,6 +9,8 @@ import MoreInformation from './MoreInformation'
 import { Mission, MissionNode } from '../../modules/missions'
 import { Action, EActionPurpose } from './Action'
 import { ActionPanel } from './ActionPanel'
+import { useStore } from 'react-context-hook'
+import NodeHoverDisplay from './NodeHoverDisplay'
 
 /* -- interfaces -- */
 
@@ -120,7 +122,7 @@ export default class MissionMap extends React.Component<
       relationships: [],
       navigationIsActive: false,
       mapOffsetX: 0,
-      mapOffsetY: mapYScale * -5.25,
+      mapOffsetY: mapYScale * -3.5,
       mapScale: defaultMapScale,
     }
   }
@@ -729,6 +731,7 @@ export default class MissionMap extends React.Component<
             let height: number = (mapYScale - gridPaddingY * 2) * mapScale
             let scoreWidth: number = 25 * mapScale
             let lineHeight: number = height * 0.34
+
             return (
               <div
                 className='wrapper'

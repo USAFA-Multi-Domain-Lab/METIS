@@ -11,6 +11,8 @@ import gameLogic from '../../modules/game-logic'
 import NodeStructureReference from '../../modules/node-reference'
 import ExecuteNodePath from '../content/ExecuteNodePath'
 import NodeActions, { INodeActionItem } from '../content/NodeActions'
+import NodeHoverDisplay from '../content/NodeHoverDisplay'
+import Tooltip from '../content/Tooltip'
 
 const mission = createTestMission()
 const initialMissionState =
@@ -51,8 +53,10 @@ export default function DashboardPage(props: {
   let [nodeActionItemDisplay, setNodeActionItemDisplay] = useStore<
     Array<INodeActionItem>
   >('nodeActionItemDisplay')
-  let [outputDelayTime, setOutputDelayTime] =
-    useStore<number>('outputDelayTime')
+  const [processDelayTime, setProcessDelayTime] =
+    useStore<number>('processDelayTime')
+  const [nodeActionItemText, setNodeActionItemText] =
+    useStore<string>('nodeActionItemText')
 
   /* -- COMPONENT STATE -- */
 
@@ -180,7 +184,7 @@ export default function DashboardPage(props: {
                 }
               }}
               applyNodeClassName={(node: MissionNode) => {
-                let className = ''
+                let className = ' '
 
                 switch (node.color) {
                   case 'green':
@@ -211,16 +215,37 @@ export default function DashboardPage(props: {
                     className = 'default'
                     break
                 }
+                if (node.executing === true && node.executed === false) {
+                  className = 'ProcessingNode'
+                }
 
                 if (node.executed && node.succeeded) {
-                  className = 'succeeded'
+                  className += ' succeeded'
                 } else if (node.executed && !node.succeeded) {
-                  className = 'failed'
+                  className += ' failed'
                 }
 
                 return className
               }}
-              renderNodeTooltipDescription={(node: MissionNode) => ''}
+              renderNodeTooltipDescription={(node: MissionNode) => {
+                let description = ''
+                let nodeActionDisplay = 'None selected'
+
+                if (node.selectedNodeAction !== null) {
+                  nodeActionDisplay = node.selectedNodeAction
+                }
+
+                if (node.executable === true && node.executed) {
+                  description =
+                    `* Executed node in ${
+                      (node.executionTimeSpan as number) / 1000
+                    } second(s)\n` +
+                    `* Node action executed: ${nodeActionDisplay}\n` +
+                    `* Chance of success: ${node.successChance * 100}%\n`
+                }
+
+                return description
+              }}
             />
             <OutputPanel />
             <NodeActions
