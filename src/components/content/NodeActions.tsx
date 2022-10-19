@@ -8,6 +8,7 @@ import NodeStructureReference from '../../modules/node-reference'
 export interface INodeActionItem {
   text: string
   timeDelay: number
+  successChance: number
 }
 
 const NodeActions = (props: {
@@ -33,6 +34,8 @@ const NodeActions = (props: {
     useStore<number>('processDelayTime')
   const [nodeActionItemText, setNodeActionItemText] =
     useStore<string>('nodeActionItemText')
+  const [nodeActionSuccessChance, setNodeActionSuccessChance] =
+    useStore<number>('nodeActionSuccessChance')
 
   /* -- COMPONENT STATE -- */
   const [displayNodeActionList, setDisplayNodeActionList] =
@@ -67,10 +70,22 @@ const NodeActions = (props: {
     setNodeActionItemDisplay([])
     setProcessDelayTime(nodeActionItem.timeDelay)
     setNodeActionItemText(nodeActionItem.text)
+    setNodeActionSuccessChance(nodeActionItem.successChance)
+
+    if (Math.random() <= nodeActionItem.successChance) {
+      if (props.selectedNode !== null && props.selectedNode !== undefined) {
+        props.selectedNode._willSucceed = true
+      }
+    } else {
+      if (props.selectedNode !== null && props.selectedNode !== undefined) {
+        props.selectedNode._willSucceed = false
+      }
+    }
 
     if (props.selectedNode !== null && props.selectedNode !== undefined) {
       props.selectedNode.executionTimeSpan = nodeActionItem.timeDelay
       props.selectedNode.selectedNodeAction = nodeActionItem.text
+      props.selectedNode.successChance = nodeActionItem.successChance
     }
   }
 

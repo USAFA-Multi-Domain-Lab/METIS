@@ -57,6 +57,10 @@ export default function DashboardPage(props: {
     useStore<number>('processDelayTime')
   const [nodeActionItemText, setNodeActionItemText] =
     useStore<string>('nodeActionItemText')
+  const [nodeActionSuccessChance, setNodeActionSuccessChance] =
+    useStore<number>('nodeActionSuccessChance')
+  let [selectedDivElement, setSelectedDivElement] =
+    useStore<HTMLDivElement>('selectedDivElement')
 
   /* -- COMPONENT STATE -- */
 
@@ -215,8 +219,15 @@ export default function DashboardPage(props: {
                     className = 'default'
                     break
                 }
-                if (node.executing === true && node.executed === false) {
-                  className = 'ProcessingNode'
+                if (node.executing) {
+                  className = 'LoadingBar'
+
+                  let selectedNodeParentDiv =
+                    document.querySelector<HTMLDivElement>('.LoadingBar')
+                  // console.log(selectedNodeParentDiv)
+                  if (selectedNodeParentDiv !== null) {
+                    setSelectedDivElement(selectedNodeParentDiv)
+                  }
                 }
 
                 if (node.executed && node.succeeded) {
@@ -240,8 +251,10 @@ export default function DashboardPage(props: {
                     `* Executed node in ${
                       (node.executionTimeSpan as number) / 1000
                     } second(s)\n` +
-                    `* Node action executed: ${nodeActionDisplay}\n` +
-                    `* Chance of success: ${node.successChance * 100}%\n`
+                    `* Node action executed: ${node.selectedNodeAction}\n` +
+                    `* Chance of success: ${
+                      (node.successChance as number) * 100
+                    }%\n`
                 }
 
                 return description

@@ -733,23 +733,33 @@ export default class MissionMap extends React.Component<
             let lineHeight: number = height * 0.34
 
             return (
-              <div
-                className='wrapper'
-                style={{
-                  height: `${height - 5}px`,
-                }}
-              >
+              <>
                 <div
-                  className='title'
+                  className='download hide'
                   style={{
-                    width: `calc(100% - ${scoreWidth}px)`,
-                    fontSize: `${fontSize}px`,
-                    lineHeight: `${lineHeight}px`,
+                    width: `1%`,
+                    height: `${height}px`,
+                    backgroundColor: '#2a6f05',
+                  }}
+                ></div>
+                <div
+                  className='wrapper'
+                  style={{
+                    height: `${height - 5}px`,
                   }}
                 >
-                  {node.name}
+                  <div
+                    className='title'
+                    style={{
+                      width: `calc(100% - ${scoreWidth}px)`,
+                      fontSize: `${fontSize}px`,
+                      lineHeight: `${lineHeight}px`,
+                    }}
+                  >
+                    {node.name}
+                  </div>
                 </div>
-              </div>
+              </>
             )
           }}
           searchableProperties={['nodeID']}

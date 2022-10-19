@@ -21,6 +21,10 @@ const ExecuteNodePath = (props: {
   ] = useStore<boolean>('executeNodePathPromptIsDisplayed')
   const [processDelayTime] = useStore<number>('processDelayTime')
   const [nodeActionItemText] = useStore<string>('nodeActionItemText')
+  const [nodeActionSuccessChance, setNodeActionSuccessChance] =
+    useStore<number>('nodeActionSuccessChance')
+  const [selectedDivElement, setSelectedDivElement] =
+    useStore<HTMLDivElement>('selectedDivElement')
 
   /* -- COMPONENT STATE -- */
   const [forcedUpdateCounter, setForcedUpdateCounter] = useState<number>(0)
@@ -42,12 +46,7 @@ const ExecuteNodePath = (props: {
     if (currentUser !== null) {
       let username: string = currentUser.userID
 
-      if (props.selectedNode !== undefined && props.selectedNode !== null) {
-        props.selectedNode.isExecuting()
-      }
-
-      // ! Start time delay function here
-      // nodeProcessBar()
+      nodeProcessBar(processDelayTime, selectedDivElement)
 
       setTimeout(() => {
         if (props.selectedNode !== undefined && props.selectedNode !== null) {
@@ -83,6 +82,10 @@ const ExecuteNodePath = (props: {
         }
       }, processDelayTime)
     }
+  }
+
+  if (props.selectedNode !== undefined && props.selectedNode !== null) {
+    props.selectedNode.isExecuting()
   }
 
   return (

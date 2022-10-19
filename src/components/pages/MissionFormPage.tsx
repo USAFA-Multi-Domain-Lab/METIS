@@ -250,7 +250,7 @@ function NodeEntry(props: {
           />
           <DetailNumber
             label='Success Chance'
-            initialValue={node.successChance * 100}
+            initialValue={0}
             minimum={0}
             maximum={100}
             unit='%'
