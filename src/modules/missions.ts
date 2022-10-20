@@ -2,6 +2,7 @@ import NodeStructureReference from './node-reference'
 import { Counter, isInteger } from './numbers'
 import { cloneDeep } from 'lodash'
 import { AnyObject } from 'mongoose'
+import seedrandom, { PRNG } from 'seedrandom'
 
 // This is the raw mission data returned
 // from the server used to create instances
@@ -9,6 +10,7 @@ import { AnyObject } from 'mongoose'
 export interface IMissionJson {
   name: string
   versionNumber: number
+  seed: number
   nodeStructure: object
   nodeData: object
 }
@@ -31,8 +33,6 @@ export interface IMissionNodeJson {
     timeDelay: number
     successChance: number
   }>
-  selectedNodeAction: string
-  executionTimeSpan: number
   successChance: number
 }
 
@@ -103,6 +103,7 @@ export class MissionNode {
       successChance: number
     }>,
     successChance: number,
+    willSucceed: boolean,
     mapX: number,
     mapY: number,
   ) {
@@ -144,10 +145,6 @@ export class MissionNode {
     }
     return this._executed && this._willSucceed
   }
-
-  // static checkSuccess = (successChance: number): boolean => {
-  //   return Math.random() <= successChance
-  // }
 }
 
 // This represents a mission for a
@@ -157,17 +154,27 @@ export class Mission {
   versionNumber: number
   nodeStructure: object
   nodeData: Map<string, MissionNode>
+  seed: number
 
   constructor(
     name: string,
     versionNumber: number,
     nodeStructure: object,
     nodeData: Map<string, MissionNode>,
+    seed: number,
   ) {
     this.name = name
     this.versionNumber = versionNumber
     this.nodeStructure = nodeStructure
     this.nodeData = nodeData
+    this.seed = seed
+  }
+
+  // This will determine whether a
+  // node succeeds or fails based
+  // on the success chance passed.
+  static determineNodeSuccess = (successChance: number, rng: PRNG): boolean => {
+    return rng.double() <= successChance
   }
 
   // This will create a new Mission
@@ -180,6 +187,7 @@ export class Mission {
       let mission: Mission
       let name: string = json.name
       let versionNumber: number = json.versionNumber
+      let seed: number = json.seed
       let nodeStructure: object = json.nodeStructure
       let nodeDataJson: object = json.nodeData
       let nodeData: Map<string, MissionNode> = new Map<string, MissionNode>()
@@ -190,6 +198,12 @@ export class Mission {
       if (!isInteger(versionNumber)) {
         throw new Error()
       }
+
+      // Set seed for random so that we get
+      // the same success/failure results
+      // for the nodes in this mission as other
+      // students taking this mission.
+      let rng = seedrandom(`${seed}`)
 
       // Converts raw node data into MissionNode
       // objects, then it stores the created
@@ -208,6 +222,7 @@ export class Mission {
           nodeDatum.executable,
           nodeDatum.nodeActionItems,
           nodeDatum.successChance,
+          Mission.determineNodeSuccess(nodeDatum.successChance, rng),
           0,
           0,
         )
@@ -216,7 +231,7 @@ export class Mission {
       }
 
       // Create mission object and return it.
-      mission = new Mission(name, versionNumber, nodeStructure, nodeData)
+      mission = new Mission(name, versionNumber, nodeStructure, nodeData, seed)
       return mission
     } catch (error) {
       console.error('Invalid JSON passed to create Mission object.')
@@ -252,6 +267,7 @@ export class Mission {
         originalMission.versionNumber,
         cloneDeep(originalMission.nodeStructure),
         new Map<string, MissionNode>(),
+        originalMission.seed,
       )
       nodeStructure = missionRender.nodeStructure
     }
@@ -280,6 +296,7 @@ export class Mission {
           originalMission.versionNumber,
           {},
           new Map<string, MissionNode>(),
+          originalMission.seed,
         )
       }
     }
@@ -311,6 +328,7 @@ export class Mission {
             originalMission.versionNumber,
             {},
             new Map<string, MissionNode>(),
+            originalMission.seed,
           )
         }
 
@@ -343,6 +361,7 @@ export function createTestMission(): Mission {
   const testMissionJson: IMissionJson = {
     name: 'Incredible Mission',
     versionNumber: 1,
+    seed: 9802384709349,
     nodeStructure: {
       '1': {
         '2': {

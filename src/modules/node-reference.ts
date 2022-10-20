@@ -1,6 +1,17 @@
 import { MissionNode } from './missions'
 import { AnyObject } from './toolbox/objects'
 
+// This is an enum used by the
+// NodeStructureReference move
+// function to describe the
+// purpose of the target
+// property past.
+export enum ENodeTargetRelation {
+  Parent,
+  PreviousSibling,
+  FollowingSibling,
+}
+
 // This is a reference to a node
 // used in the NodeStructuring
 // component to expand and collapse
@@ -10,6 +21,73 @@ export default class NodeStructureReference {
   parentNode: NodeStructureReference | null
   subnodes: Array<NodeStructureReference>
   _isExpanded: boolean
+
+  get siblings(): Array<NodeStructureReference> {
+    let siblings: Array<NodeStructureReference> = []
+
+    if (this.parentNode !== null) {
+      let childrenOfParent: Array<NodeStructureReference> =
+        this.parentNode.subnodes
+
+      siblings = childrenOfParent.filter(
+        (childOfParent: NodeStructureReference) =>
+          childOfParent.nodeID !== this.nodeID,
+      )
+    }
+
+    return siblings
+  }
+
+  get childrenOfParnet(): Array<NodeStructureReference> {
+    let childrenOfParent: Array<NodeStructureReference> = []
+
+    if (this.parentNode !== null) {
+      childrenOfParent = this.parentNode.subnodes
+    }
+
+    return childrenOfParent
+  }
+
+  get previousSibling(): NodeStructureReference | null {
+    let previousSibling: NodeStructureReference | null = null
+
+    if (this.parentNode !== null) {
+      let childrenOfParent: Array<NodeStructureReference> =
+        this.parentNode.subnodes
+
+      childrenOfParent.forEach(
+        (childOfParent: NodeStructureReference, index: number) => {
+          if (childOfParent.nodeID === this.nodeID && index > 0) {
+            previousSibling = childrenOfParent[index - 1]
+          }
+        },
+      )
+    }
+
+    return previousSibling
+  }
+
+  get followingSibling(): NodeStructureReference | null {
+    let followingSibling: NodeStructureReference | null = null
+
+    if (this.parentNode !== null) {
+      let childrenOfParent: Array<NodeStructureReference> =
+        this.parentNode.subnodes
+
+      childrenOfParent.forEach(
+        (childOfParent: NodeStructureReference, index: number) => {
+          if (
+            childOfParent.nodeID === this.nodeID &&
+            index + 1 < childrenOfParent.length
+          ) {
+            followingSibling = childrenOfParent[index + 1]
+          }
+        },
+      )
+    }
+
+    return followingSibling
+  }
 
   get isExpanded(): boolean {
     return this._isExpanded
@@ -65,9 +143,16 @@ export default class NodeStructureReference {
   }
 
   // This will move this reference to
-  // a new parent node.
-  move(destination: NodeStructureReference): void {
+  // a new location relative to the target
+  // and relation this target has to the
+  // destination.
+  move(
+    target: NodeStructureReference,
+    targetRelation: ENodeTargetRelation,
+  ): void {
     let parentNode: NodeStructureReference | null = this.parentNode
+    let newParentNode: NodeStructureReference | null = target.parentNode
+    let newParentNodeSubnodes: Array<NodeStructureReference> = []
 
     if (parentNode !== null) {
       let siblings: NodeStructureReference[] = parentNode.subnodes
@@ -79,9 +164,41 @@ export default class NodeStructureReference {
           siblings.splice(index, 1)
         }
       }
+    }
 
-      destination.subnodes.push(this)
-      this.parentNode = destination
+    switch (targetRelation) {
+      case ENodeTargetRelation.Parent:
+        target.subnodes.push(this)
+        this.parentNode = target
+        break
+      case ENodeTargetRelation.PreviousSibling:
+        if (newParentNode !== null) {
+          newParentNode.subnodes.forEach((subnode: NodeStructureReference) => {
+            newParentNodeSubnodes.push(subnode)
+
+            if (subnode.nodeID === target.nodeID) {
+              newParentNodeSubnodes.push(this)
+              this.parentNode = newParentNode
+            }
+          })
+
+          newParentNode.subnodes = newParentNodeSubnodes
+        }
+        break
+      case ENodeTargetRelation.FollowingSibling:
+        if (newParentNode !== null) {
+          newParentNode.subnodes.forEach((subnode: NodeStructureReference) => {
+            if (subnode.nodeID === target.nodeID) {
+              newParentNodeSubnodes.push(this)
+              this.parentNode = newParentNode
+            }
+
+            newParentNodeSubnodes.push(subnode)
+          })
+
+          newParentNode.subnodes = newParentNodeSubnodes
+        }
+        break
     }
   }
 

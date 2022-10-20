@@ -22,9 +22,9 @@ export const handleNodeSelection = (
 }
 
 // Runs the loading bar to progress according to the time frame used
-export const nodeProcessBar = (
+export const runNodeLoadingBar = (
   timeDelay: number,
-  nodeClassName: HTMLDivElement,
+  nodeElement: HTMLDivElement,
 ) => {
   let process = 0
   if (process == 0) {
@@ -35,25 +35,20 @@ export const nodeProcessBar = (
       if (width >= 100) {
         clearInterval(id)
         process = 0
-        if (
-          nodeClassName !== null &&
-          nodeClassName.firstElementChild !== null
-        ) {
-          ;(nodeClassName.firstElementChild as HTMLDivElement).classList.add(
-            'hide',
-          )
+        if (nodeElement !== null && nodeElement.firstElementChild !== null) {
+          let firstChild: HTMLDivElement =
+            nodeElement.firstElementChild as HTMLDivElement
+
+          firstChild.classList.add('hide')
         }
       } else {
         width++
-        if (
-          nodeClassName !== null &&
-          nodeClassName.firstElementChild !== null
-        ) {
-          ;(nodeClassName.firstElementChild as HTMLDivElement).classList.remove(
-            'hide',
-          )
-          ;(nodeClassName.firstElementChild as HTMLDivElement).style.width =
-            width + '%'
+        if (nodeElement !== null && nodeElement.firstElementChild !== null) {
+          let firstChild: HTMLDivElement =
+            nodeElement.firstElementChild as HTMLDivElement
+
+          firstChild.classList.remove('hide')
+          firstChild.style.width = width + '%'
         }
       }
     }
@@ -62,5 +57,5 @@ export const nodeProcessBar = (
 
 export default {
   handleNodeSelection,
-  nodeProcessBar,
+  nodeProcessBar: runNodeLoadingBar,
 }
