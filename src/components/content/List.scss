@@ -284,61 +284,6 @@
         user-select: none;
         background-color: rgba($background-color-negative, 0.5);
       }
-
-      &.green {
-        background-color: $node-green;
-      }
-
-      &.pink {
-        background-color: $node-pink;
-      }
-
-      &.yellow {
-        background-color: $node-yellow;
-      }
-
-      &.blue {
-        background-color: $node-blue;
-      }
-
-      &.khaki {
-        background-color: $node-khaki;
-      }
-
-      &.purple {
-        background-color: $node-purple;
-      }
-
-      &.red {
-        background-color: $node-red;
-      }
-
-      &.orange {
-        background-color: $node-orange;
-      }
-
-      &.default {
-        background-color: $background-alt1;
-      }
-
-      &.succeeded {
-        background-color: $background-alt1;
-        border-color: $success;
-      }
-
-      &.failed {
-        background-color: $background-alt1;
-        border-color: $fail;
-      }
-
-      .download {
-        background-color: #2a6f05;
-        width: 1%;
-      }
-
-      .hide {
-        display: none;
-      }
     }
 
     .page-number {

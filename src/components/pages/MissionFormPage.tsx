@@ -1,15 +1,27 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { useStore } from 'react-context-hook'
 import { createTestMission, Mission, MissionNode } from '../../modules/missions'
-import NodeStructureReference from '../../modules/node-reference'
+import NodeStructureReference, {
+  ENodeTargetRelation,
+} from '../../modules/node-reference'
 import { EAjaxStatus } from '../../modules/toolbox/ajax'
 import inputs from '../../modules/toolbox/inputs'
-import { AnyObject, SingleTypeObject } from '../../modules/toolbox/objects'
 import usersModule, { IUser } from '../../modules/users'
 import Branding from '../content/Branding'
 import MissionMap from '../content/MissionMap'
 import Tooltip from '../content/Tooltip'
 import './MissionFormPage.scss'
+
+// This is a enum used to describe
+// the locations that one node can
+// be dragged and dropped on another
+// node, whether that's the top, center,
+// or bottom of the drop zone.
+enum ENodeDropLocation {
+  Top,
+  Center,
+  Bottom,
+}
 
 // This will render a dashboard with a radar
 // on it, indicating air traffic passing by.
@@ -294,10 +306,71 @@ function NodeStructuring(props: {
   const [nodePendingDrop, pendDrop] = useState<NodeStructureReference | null>(
     null,
   )
+  const [dropLocation, setDropLocation] = useState<ENodeDropLocation>(
+    ENodeDropLocation.Center,
+  )
 
   // Forces a rerender.
   const forceUpdate = (): void => {
     setForcedUpdateCounter(forcedUpdateCounter + 1)
+  }
+
+  const Padding = (props: { uniqueClassName?: string }): JSX.Element | null => {
+    const [dropPendingHere, setDropPendingHere] = useState<boolean>(false)
+
+    let uniqueClassName: string | undefined = props.uniqueClassName
+    let className: string | undefined = 'Padding'
+
+    // This will set this padding as
+    // the currently hovered over drop
+    // zone.
+    const pendDropHere = (): void => {
+      setDropPendingHere(true)
+      pendDrop(nodeStructure)
+    }
+
+    // This will stop this padding from
+    // being the currently hovered over
+    // drop zone.
+    const cancelDropHere = (): void => {
+      if (nodePendingDrop !== null) {
+        setDropPendingHere(false)
+        pendDrop(null)
+      }
+    }
+
+    if (uniqueClassName !== undefined) {
+      className += ` ${uniqueClassName}`
+    }
+
+    if (dropPendingHere && nodeStructure.nodeID === nodePendingDrop?.nodeID) {
+      className += ' DropPending'
+    }
+
+    return (
+      <div
+        className={className}
+        draggable={true}
+        onDragOver={(event: React.DragEvent) => {
+          event.preventDefault()
+        }}
+        onDragEnter={pendDropHere}
+        onDragLeave={cancelDropHere}
+        onDrop={(event: React.DragEvent) => {
+          if (nodePendingDrop !== null) {
+            let destinationNode = nodePendingDrop
+
+            if (nodeGrabbed !== null) {
+              nodeGrabbed.move(destinationNode, ENodeTargetRelation.Parent)
+              handleNodeStructureChange(nodeStructure)
+            }
+
+            pendDrop(null)
+            grabNode(null)
+          }
+        }}
+      ></div>
+    )
   }
 
   // This will render a node in the
@@ -318,6 +391,18 @@ function NodeStructuring(props: {
 
     if (structureReference.nodeID === nodePendingDrop?.nodeID) {
       className += ' DropPending'
+
+      switch (dropLocation) {
+        case ENodeDropLocation.Top:
+          className += ' DropPendingTop'
+          break
+        case ENodeDropLocation.Center:
+          className += ' DropPendingCenter'
+          break
+        case ENodeDropLocation.Bottom:
+          className += ' DropPendingBottom'
+          break
+      }
     }
 
     return (
@@ -326,28 +411,31 @@ function NodeStructuring(props: {
           className='ParentNode'
           onClick={handleClick}
           draggable={true}
-          onDragOver={(event: React.DragEvent) => {
-            event.preventDefault()
-          }}
           onDragCapture={() => {
             grabNode(structureReference)
           }}
-          onDragEnter={() => {
-            if (structureReference.nodeID !== nodePendingDrop?.nodeID) {
-              pendDrop(structureReference)
-            }
-          }}
-          onDragLeave={() => {
-            if (nodePendingDrop !== null) {
-              pendDrop(null)
-            }
-          }}
           onDrop={(event: React.DragEvent) => {
             if (nodePendingDrop !== null) {
-              let destinationNode = nodePendingDrop
+              let target: NodeStructureReference = nodePendingDrop
+              let targetRelation: ENodeTargetRelation
+
+              switch (dropLocation) {
+                case ENodeDropLocation.Top:
+                  targetRelation = ENodeTargetRelation.FollowingSibling
+                  break
+                case ENodeDropLocation.Center:
+                  targetRelation = ENodeTargetRelation.Parent
+                  break
+                case ENodeDropLocation.Bottom:
+                  targetRelation = ENodeTargetRelation.PreviousSibling
+                  break
+                default:
+                  targetRelation = ENodeTargetRelation.Parent
+                  break
+              }
 
               if (nodeGrabbed !== null) {
-                nodeGrabbed.move(destinationNode)
+                nodeGrabbed.move(target, targetRelation)
                 handleNodeStructureChange(nodeStructure)
               }
 
@@ -356,15 +444,67 @@ function NodeStructuring(props: {
             }
           }}
         >
-          <svg className='Indicator'>
-            <polygon
-              points='0,0 7,0 3.5,7'
-              style={{ transformOrigin: '3.5px 3.5px' }}
-              className='Triangle'
-              fill='#fff'
-            />
-          </svg>
-          <div className='Name'>{structureReference.nodeID}</div>
+          <div
+            className='Top'
+            onDragOver={(event: React.DragEvent) => {
+              event.preventDefault()
+            }}
+            onDragEnter={() => {
+              if (structureReference.nodeID !== nodePendingDrop?.nodeID) {
+                pendDrop(structureReference)
+                setDropLocation(ENodeDropLocation.Top)
+              }
+            }}
+            onDragLeave={() => {
+              if (nodePendingDrop !== null) {
+                pendDrop(null)
+              }
+            }}
+          ></div>
+          <div
+            className='Center'
+            onDragOver={(event: React.DragEvent) => {
+              event.preventDefault()
+            }}
+            onDragEnter={() => {
+              if (structureReference.nodeID !== nodePendingDrop?.nodeID) {
+                pendDrop(structureReference)
+                setDropLocation(ENodeDropLocation.Center)
+              }
+            }}
+            onDragLeave={() => {
+              if (nodePendingDrop !== null) {
+                pendDrop(null)
+              }
+            }}
+          >
+            <svg className='Indicator'>
+              <polygon
+                points='0,0 7,0 3.5,7'
+                style={{ transformOrigin: '3.5px 3.5px' }}
+                className='Triangle'
+                fill='#fff'
+              />
+            </svg>
+            <div className='Name'>{structureReference.nodeID}</div>
+          </div>
+          <div
+            className='Bottom'
+            onDragOver={(event: React.DragEvent) => {
+              event.preventDefault()
+            }}
+            onDragEnter={() => {
+              if (structureReference.nodeID !== nodePendingDrop?.nodeID) {
+                pendDrop(structureReference)
+                setDropLocation(ENodeDropLocation.Bottom)
+              }
+            }}
+            onDragLeave={() => {
+              if (nodePendingDrop !== null) {
+                pendDrop(null)
+              }
+            }}
+          ></div>
         </div>
         {structureReference.isExpanded ? (
           <div className='Subnodes'>
@@ -389,7 +529,13 @@ function NodeStructuring(props: {
     )
     let className: string = 'Nodes'
 
-    return <div className={className}>{nodeElements}</div>
+    return (
+      <div className={className}>
+        <Padding uniqueClassName={'PaddingTop'} key={'PaddingTop'} />
+        {nodeElements}
+        <Padding uniqueClassName={'PaddingBottom'} key={'PaddingBottom'} />
+      </div>
+    )
   }
 
   if (active) {

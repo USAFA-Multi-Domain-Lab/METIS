@@ -3,7 +3,7 @@ import './ExecuteNodePath.scss'
 import { useStore } from 'react-context-hook'
 import { MissionNode } from '../../modules/missions'
 import { IUser } from '../../modules/users'
-import gameLogic, { nodeProcessBar } from '../../modules/game-logic'
+import gameLogic, { runNodeLoadingBar } from '../../modules/game-logic'
 import NodeStructureReference from '../../modules/node-reference'
 import NodeHoverDisplay from './NodeHoverDisplay'
 
@@ -46,7 +46,7 @@ const ExecuteNodePath = (props: {
     if (currentUser !== null) {
       let username: string = currentUser.userID
 
-      nodeProcessBar(processDelayTime, selectedDivElement)
+      runNodeLoadingBar(processDelayTime, selectedDivElement)
 
       setTimeout(() => {
         if (props.selectedNode !== undefined && props.selectedNode !== null) {

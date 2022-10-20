@@ -9,8 +9,6 @@ import MoreInformation from './MoreInformation'
 import { Mission, MissionNode } from '../../modules/missions'
 import { Action, EActionPurpose } from './Action'
 import { ActionPanel } from './ActionPanel'
-import { useStore } from 'react-context-hook'
-import NodeHoverDisplay from './NodeHoverDisplay'
 
 /* -- interfaces -- */
 
@@ -735,7 +733,7 @@ export default class MissionMap extends React.Component<
             return (
               <>
                 <div
-                  className='download hide'
+                  className='loading hide'
                   style={{
                     height: `${height}px`,
                   }}
