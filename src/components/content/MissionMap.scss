@@ -218,6 +218,84 @@
           }
         }
 
+        &.green {
+          background-color: $node-green;
+        }
+
+        &.pink {
+          background-color: $node-pink;
+        }
+
+        &.yellow {
+          background-color: $node-yellow;
+        }
+
+        &.blue {
+          background-color: $node-blue;
+        }
+
+        &.khaki {
+          background-color: $node-khaki;
+        }
+
+        &.purple {
+          background-color: $node-purple;
+        }
+
+        &.red {
+          background-color: $node-red;
+        }
+
+        &.orange {
+          background-color: $node-orange;
+        }
+
+        &.default {
+          background-color: $background-alt1;
+        }
+
+        &.succeeded {
+          background-color: $background-alt1;
+          border-color: $success;
+        }
+
+        &.failed {
+          background-color: $background-alt1;
+          border-color: $fail;
+        }
+
+        .hide {
+          display: none;
+        }
+
+        @keyframes loading-animation {
+          from {
+            background-position-x: 0;
+          }
+          to {
+            background-position-x: 40px;
+          }
+        }
+
+        .loading {
+          background-image: linear-gradient(
+            -45deg,
+            $loading-1 25%,
+            $loading-2 25%,
+            $loading-2 50%,
+            $loading-1 50%,
+            $loading-1 75%,
+            $loading-2 75%,
+            $loading-2 100%,
+            $loading-1 100%
+          );
+          background-size: 40px 40px;
+          animation-name: loading-animation;
+          animation-duration: 0.75s;
+          animation-timing-function: linear;
+          animation-iteration-count: infinite;
+        }
+
         // &.final,
         // &.bonus {
         // background-color: adjust-color(

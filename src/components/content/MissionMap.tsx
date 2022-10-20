@@ -733,11 +733,10 @@ export default class MissionMap extends React.Component<
             return (
               <>
                 <div
-                  className='download hide'
+                  className='loading hide'
                   style={{
                     width: `1%`,
                     height: `${height}px`,
-                    backgroundColor: '#2a6f05',
                   }}
                 ></div>
                 <div
