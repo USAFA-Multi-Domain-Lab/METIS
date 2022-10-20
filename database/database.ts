@@ -59,8 +59,8 @@ export function ensureDefaultDataExists(): void {
               },
             },
           },
-          nodeData: {
-            Apples: {
+          nodeData: [
+            {
               name: 'Apples',
               preExecutionText: 'Apples has not been executed.',
               postExecutionSuccessText: 'Apples has been executed.',
@@ -70,7 +70,7 @@ export function ensureDefaultDataExists(): void {
               mapX: 0,
               mapY: -2,
             },
-            Bananas: {
+            {
               name: 'Bananas',
               preExecutionText: 'Bananas has not been executed.',
               postExecutionSuccessText: 'Bananas has been executed.',
@@ -80,7 +80,7 @@ export function ensureDefaultDataExists(): void {
               mapX: -1,
               mapY: 0,
             },
-            Oranges: {
+            {
               name: 'Oranges',
               preExecutionText: 'Oranges has not been executed.',
               postExecutionSuccessText: 'Oranges has been executed.',
@@ -90,7 +90,7 @@ export function ensureDefaultDataExists(): void {
               mapX: 1,
               mapY: 0,
             },
-            Kiwi: {
+            {
               name: 'Kiwi',
               preExecutionText: 'Kiwi has not been executed.',
               postExecutionSuccessText: 'Kiwi has been executed.',
@@ -100,7 +100,7 @@ export function ensureDefaultDataExists(): void {
               mapX: -1,
               mapY: 2,
             },
-            Tomatoes: {
+            {
               name: 'Tomatoes',
               preExecutionText: 'Tomatoes has not been executed.',
               postExecutionSuccessText: 'Tomatoes has been executed.',
@@ -110,7 +110,7 @@ export function ensureDefaultDataExists(): void {
               mapX: 1,
               mapY: 2,
             },
-          },
+          ],
         }
 
         missionModel.create(
