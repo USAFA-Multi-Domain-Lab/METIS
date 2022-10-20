@@ -737,9 +737,7 @@ export default class MissionMap extends React.Component<
                 <div
                   className='download hide'
                   style={{
-                    width: `1%`,
                     height: `${height}px`,
-                    backgroundColor: '#2a6f05',
                   }}
                 ></div>
                 <div
