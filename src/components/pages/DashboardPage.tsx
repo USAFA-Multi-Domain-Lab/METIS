@@ -20,6 +20,7 @@ const initialMissionState =
   NodeStructureReference.constructNodeStructureReference(
     mission.name,
     mission.nodeStructure,
+    mission.nodeData,
   )
 
 initialMissionState.expand()
@@ -191,35 +192,6 @@ export default function DashboardPage(props: {
               applyNodeClassName={(node: MissionNode) => {
                 let className = ' '
 
-                switch (node.color) {
-                  case 'green':
-                    className = 'green'
-                    break
-                  case 'pink':
-                    className = 'pink'
-                    break
-                  case 'yellow':
-                    className = 'yellow'
-                    break
-                  case 'blue':
-                    className = 'blue'
-                    break
-                  case 'purple':
-                    className = 'purple'
-                    break
-                  case 'red':
-                    className = 'red'
-                    break
-                  case 'khaki':
-                    className = 'khaki'
-                    break
-                  case 'orange':
-                    className = 'orange'
-                    break
-                  default:
-                    className = 'default'
-                    break
-                }
                 if (node.executing) {
                   className = 'LoadingBar'
 

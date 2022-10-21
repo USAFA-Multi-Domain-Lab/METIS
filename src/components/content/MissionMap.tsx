@@ -621,6 +621,36 @@ export default class MissionMap extends React.Component<
 
     let classNameExternalAddon: string = this.props.applyNodeClassName(node)
 
+    switch (node.color) {
+      case 'green':
+        className = 'green'
+        break
+      case 'pink':
+        className = 'pink'
+        break
+      case 'yellow':
+        className = 'yellow'
+        break
+      case 'blue':
+        className = 'blue'
+        break
+      case 'purple':
+        className = 'purple'
+        break
+      case 'red':
+        className = 'red'
+        break
+      case 'khaki':
+        className = 'khaki'
+        break
+      case 'orange':
+        className = 'orange'
+        break
+      default:
+        className = 'default'
+        break
+    }
+
     if (classNameExternalAddon.length > 0) {
       className += ` ${classNameExternalAddon}`
     }

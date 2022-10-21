@@ -102,8 +102,6 @@ export class MissionNode {
       timeDelay: number
       successChance: number
     }>,
-    successChance: number,
-    willSucceed: boolean,
     mapX: number,
     mapY: number,
   ) {
@@ -221,8 +219,6 @@ export class Mission {
           nodeDatum.actionData,
           nodeDatum.executable,
           nodeDatum.nodeActionItems,
-          nodeDatum.successChance,
-          Mission.determineNodeSuccess(nodeDatum.successChance, rng),
           0,
           0,
         )
