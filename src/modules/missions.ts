@@ -2,6 +2,7 @@ import { Counter, isInteger } from './numbers'
 import { AnyObject } from 'mongoose'
 import seedrandom, { PRNG } from 'seedrandom'
 import { v4 as generateHash } from 'uuid'
+import axios, { AxiosResponse } from 'axios'
 
 // This is an enum used by the
 // MissionNode move
@@ -42,8 +43,37 @@ export interface IMissionNodeJson {
     text: string
     timeDelay: number
     successChance: number
+    willSucceed: boolean
   }>
+}
+
+// These are options available to
+// some using the renderMission function
+// in the Mission class.
+export interface IMissionRenderOptions {
+  // This will ignore whether a node is
+  // expanded or collapsed and render
+  // everything regardless.
+  ignoreVisibility?: boolean
+}
+
+export class MissionNodeAction {
+  text: string
+  timeDelay: number
   successChance: number
+  willSucceed: boolean
+
+  constructor(
+    text: string,
+    timeDelay: number,
+    successChance: number,
+    willSucceed: boolean,
+  ) {
+    this.text = text
+    this.timeDelay = timeDelay
+    this.successChance = successChance
+    this.willSucceed = willSucceed
+  }
 }
 
 // This represents an individual node
@@ -61,23 +91,23 @@ export class MissionNode {
   postExecutionFailureText: string
   actionData: string
   executable: boolean
-  nodeActionItems: Array<{
-    text: string
-    timeDelay: number
-    successChance: number
-  }>
-  selectedNodeAction: string | null
-  executionTimeSpan: number | null
+  nodeActionItems: Array<MissionNodeAction>
+  selectedNodeAction: MissionNodeAction | null
   _executed: boolean
   _executing: boolean
-  successChance: number | null
-  _willSucceed: boolean
   mapX: number
   mapY: number
   _isExpanded: boolean
 
   get willSucceed(): boolean {
-    return this._willSucceed
+    let willSucceed: boolean = false
+    let selectedNodeAction: MissionNodeAction | null = this.selectedNodeAction
+
+    if (selectedNodeAction !== null) {
+      willSucceed = selectedNodeAction.willSucceed
+    }
+
+    return willSucceed
   }
 
   get executed(): boolean {
@@ -85,11 +115,21 @@ export class MissionNode {
   }
 
   get succeeded(): boolean {
-    return this._executed && this._willSucceed
+    return this._executed && this.willSucceed
   }
 
   get executing(): boolean {
     return this._executing
+  }
+
+  get successChance(): number | null {
+    let successChance: number | null = null
+
+    if (this.selectedNodeAction !== null) {
+      successChance = this.selectedNodeAction.successChance
+    }
+
+    return successChance
   }
 
   constructor(
@@ -102,11 +142,7 @@ export class MissionNode {
     postExecutionFailureText: string,
     actionData: string,
     executable: boolean,
-    nodeActionItems: Array<{
-      text: string
-      timeDelay: number
-      successChance: number
-    }>,
+    nodeActionItems: Array<MissionNodeAction>,
     mapX: number,
     mapY: number,
   ) {
@@ -123,11 +159,8 @@ export class MissionNode {
     this.executable = executable
     this.nodeActionItems = nodeActionItems
     this.selectedNodeAction = null
-    this.executionTimeSpan = null
     this._executed = false
     this._executing = false
-    this.successChance = null
-    this._willSucceed = false
     this.mapX = mapX
     this.mapY = mapY
     this._isExpanded = false
@@ -150,7 +183,7 @@ export class MissionNode {
     if (this.executable) {
       this._executed = true
     }
-    return this._executed && this._willSucceed
+    return this._executed
   }
 
   // This is called when a change
@@ -397,6 +430,21 @@ export class Mission {
       // objects in the nodeData map.
       for (let key of nodeDataKeys) {
         let nodeDatum: IMissionNodeJson = nodeData[key]
+        let nodeActionItems = []
+
+        for (let actionItem of nodeDatum.nodeActionItems) {
+          let willSucceed: boolean = Mission.determineNodeSuccess(
+            actionItem.successChance,
+            this.rng,
+          )
+          let nodeAction: MissionNodeAction = new MissionNodeAction(
+            actionItem.text,
+            actionItem.timeDelay,
+            actionItem.successChance,
+            willSucceed,
+          )
+          nodeActionItems.push(nodeAction)
+        }
 
         let node: MissionNode = new MissionNode(
           this,
@@ -408,7 +456,7 @@ export class Mission {
           nodeDatum.postExecutionFailureText,
           nodeDatum.actionData,
           nodeDatum.executable,
-          nodeDatum.nodeActionItems,
+          nodeActionItems,
           0,
           0,
         )
@@ -550,7 +598,7 @@ export function createTestMission(expandAll: boolean = false): Mission {
   const testMissionJson: IMissionJson = {
     name: 'Incredible Mission',
     versionNumber: 1,
-    seed: 9802384709349,
+    seed: 980238470934,
     nodeStructure: {
       '1': {
         '2': {
@@ -626,12 +674,42 @@ export function createTestMission(expandAll: boolean = false): Mission {
         actionData: 'exec command',
         executable: false,
         nodeActionItems: [
-          { text: 'Deny', timeDelay: 1000, successChance: 0.5 },
-          { text: 'Degrade', timeDelay: 2000, successChance: 0.6 },
-          { text: 'Destroy', timeDelay: 3000, successChance: 0.6 },
-          { text: 'Disrupt', timeDelay: 4000, successChance: 0.7 },
-          { text: 'Manipulate', timeDelay: 5000, successChance: 0.8 },
-          { text: 'Extract', timeDelay: 6000, successChance: 0.8 },
+          {
+            text: 'Deny',
+            timeDelay: 1000,
+            successChance: 0.5,
+            willSucceed: false,
+          },
+          {
+            text: 'Degrade',
+            timeDelay: 2000,
+            successChance: 0.6,
+            willSucceed: false,
+          },
+          {
+            text: 'Destroy',
+            timeDelay: 3000,
+            successChance: 0.6,
+            willSucceed: false,
+          },
+          {
+            text: 'Disrupt',
+            timeDelay: 4000,
+            successChance: 0.7,
+            willSucceed: false,
+          },
+          {
+            text: 'Manipulate',
+            timeDelay: 5000,
+            successChance: 0.8,
+            willSucceed: false,
+          },
+          {
+            text: 'Extract',
+            timeDelay: 6000,
+            successChance: 0.8,
+            willSucceed: false,
+          },
         ],
         mapX: 0,
         mapY: -3,
@@ -646,12 +724,42 @@ export function createTestMission(expandAll: boolean = false): Mission {
         actionData: 'exec command',
         executable: false,
         nodeActionItems: [
-          { text: 'Deny', timeDelay: 1000, successChance: 0.5 },
-          { text: 'Degrade', timeDelay: 2000, successChance: 0.6 },
-          { text: 'Destroy', timeDelay: 3000, successChance: 0.6 },
-          { text: 'Disrupt', timeDelay: 4000, successChance: 0.7 },
-          { text: 'Manipulate', timeDelay: 5000, successChance: 0.8 },
-          { text: 'Extract', timeDelay: 6000, successChance: 0.8 },
+          {
+            text: 'Deny',
+            timeDelay: 1000,
+            successChance: 0.5,
+            willSucceed: false,
+          },
+          {
+            text: 'Degrade',
+            timeDelay: 2000,
+            successChance: 0.6,
+            willSucceed: false,
+          },
+          {
+            text: 'Destroy',
+            timeDelay: 3000,
+            successChance: 0.6,
+            willSucceed: false,
+          },
+          {
+            text: 'Disrupt',
+            timeDelay: 4000,
+            successChance: 0.7,
+            willSucceed: false,
+          },
+          {
+            text: 'Manipulate',
+            timeDelay: 5000,
+            successChance: 0.8,
+            willSucceed: false,
+          },
+          {
+            text: 'Extract',
+            timeDelay: 6000,
+            successChance: 0.8,
+            willSucceed: false,
+          },
         ],
         mapX: 1,
         mapY: -5,
@@ -666,12 +774,42 @@ export function createTestMission(expandAll: boolean = false): Mission {
         actionData: 'exec command',
         executable: false,
         nodeActionItems: [
-          { text: 'Deny', timeDelay: 1000, successChance: 0.5 },
-          { text: 'Degrade', timeDelay: 2000, successChance: 0.6 },
-          { text: 'Destroy', timeDelay: 3000, successChance: 0.6 },
-          { text: 'Disrupt', timeDelay: 4000, successChance: 0.7 },
-          { text: 'Manipulate', timeDelay: 5000, successChance: 0.8 },
-          { text: 'Extract', timeDelay: 6000, successChance: 0.8 },
+          {
+            text: 'Deny',
+            timeDelay: 1000,
+            successChance: 0.5,
+            willSucceed: false,
+          },
+          {
+            text: 'Degrade',
+            timeDelay: 2000,
+            successChance: 0.6,
+            willSucceed: false,
+          },
+          {
+            text: 'Destroy',
+            timeDelay: 3000,
+            successChance: 0.6,
+            willSucceed: false,
+          },
+          {
+            text: 'Disrupt',
+            timeDelay: 4000,
+            successChance: 0.7,
+            willSucceed: false,
+          },
+          {
+            text: 'Manipulate',
+            timeDelay: 5000,
+            successChance: 0.8,
+            willSucceed: false,
+          },
+          {
+            text: 'Extract',
+            timeDelay: 6000,
+            successChance: 0.8,
+            willSucceed: false,
+          },
         ],
         mapX: 1,
         mapY: -4,
@@ -686,12 +824,42 @@ export function createTestMission(expandAll: boolean = false): Mission {
         actionData: 'exec command',
         executable: false,
         nodeActionItems: [
-          { text: 'Deny', timeDelay: 1000, successChance: 0.5 },
-          { text: 'Degrade', timeDelay: 2000, successChance: 0.6 },
-          { text: 'Destroy', timeDelay: 3000, successChance: 0.6 },
-          { text: 'Disrupt', timeDelay: 4000, successChance: 0.7 },
-          { text: 'Manipulate', timeDelay: 5000, successChance: 0.8 },
-          { text: 'Extract', timeDelay: 6000, successChance: 0.8 },
+          {
+            text: 'Deny',
+            timeDelay: 1000,
+            successChance: 0.5,
+            willSucceed: false,
+          },
+          {
+            text: 'Degrade',
+            timeDelay: 2000,
+            successChance: 0.6,
+            willSucceed: false,
+          },
+          {
+            text: 'Destroy',
+            timeDelay: 3000,
+            successChance: 0.6,
+            willSucceed: false,
+          },
+          {
+            text: 'Disrupt',
+            timeDelay: 4000,
+            successChance: 0.7,
+            willSucceed: false,
+          },
+          {
+            text: 'Manipulate',
+            timeDelay: 5000,
+            successChance: 0.8,
+            willSucceed: false,
+          },
+          {
+            text: 'Extract',
+            timeDelay: 6000,
+            successChance: 0.8,
+            willSucceed: false,
+          },
         ],
         mapX: 1,
         mapY: -3,
@@ -706,12 +874,42 @@ export function createTestMission(expandAll: boolean = false): Mission {
         actionData: 'exec command',
         executable: false,
         nodeActionItems: [
-          { text: 'Deny', timeDelay: 1000, successChance: 0.5 },
-          { text: 'Degrade', timeDelay: 2000, successChance: 0.6 },
-          { text: 'Destroy', timeDelay: 3000, successChance: 0.6 },
-          { text: 'Disrupt', timeDelay: 4000, successChance: 0.7 },
-          { text: 'Manipulate', timeDelay: 5000, successChance: 0.8 },
-          { text: 'Extract', timeDelay: 6000, successChance: 0.8 },
+          {
+            text: 'Deny',
+            timeDelay: 1000,
+            successChance: 0.5,
+            willSucceed: false,
+          },
+          {
+            text: 'Degrade',
+            timeDelay: 2000,
+            successChance: 0.6,
+            willSucceed: false,
+          },
+          {
+            text: 'Destroy',
+            timeDelay: 3000,
+            successChance: 0.6,
+            willSucceed: false,
+          },
+          {
+            text: 'Disrupt',
+            timeDelay: 4000,
+            successChance: 0.7,
+            willSucceed: false,
+          },
+          {
+            text: 'Manipulate',
+            timeDelay: 5000,
+            successChance: 0.8,
+            willSucceed: false,
+          },
+          {
+            text: 'Extract',
+            timeDelay: 6000,
+            successChance: 0.8,
+            willSucceed: false,
+          },
         ],
         mapX: 1,
         mapY: -2,
@@ -727,12 +925,42 @@ export function createTestMission(expandAll: boolean = false): Mission {
         actionData: 'exec command',
         executable: false,
         nodeActionItems: [
-          { text: 'Deny', timeDelay: 1000, successChance: 0.5 },
-          { text: 'Degrade', timeDelay: 2000, successChance: 0.6 },
-          { text: 'Destroy', timeDelay: 3000, successChance: 0.6 },
-          { text: 'Disrupt', timeDelay: 4000, successChance: 0.7 },
-          { text: 'Manipulate', timeDelay: 5000, successChance: 0.8 },
-          { text: 'Extract', timeDelay: 6000, successChance: 0.8 },
+          {
+            text: 'Deny',
+            timeDelay: 1000,
+            successChance: 0.5,
+            willSucceed: false,
+          },
+          {
+            text: 'Degrade',
+            timeDelay: 2000,
+            successChance: 0.6,
+            willSucceed: false,
+          },
+          {
+            text: 'Destroy',
+            timeDelay: 3000,
+            successChance: 0.6,
+            willSucceed: false,
+          },
+          {
+            text: 'Disrupt',
+            timeDelay: 4000,
+            successChance: 0.7,
+            willSucceed: false,
+          },
+          {
+            text: 'Manipulate',
+            timeDelay: 5000,
+            successChance: 0.8,
+            willSucceed: false,
+          },
+          {
+            text: 'Extract',
+            timeDelay: 6000,
+            successChance: 0.8,
+            willSucceed: false,
+          },
         ],
         mapX: 3,
         mapY: -5,
@@ -748,9 +976,24 @@ export function createTestMission(expandAll: boolean = false): Mission {
         actionData: 'exec command',
         executable: false,
         nodeActionItems: [
-          { text: 'Deny', timeDelay: 1000, successChance: 0.5 },
-          { text: 'Degrade', timeDelay: 2000, successChance: 0.6 },
-          { text: 'Destroy', timeDelay: 3000, successChance: 0.6 },
+          {
+            text: 'Deny',
+            timeDelay: 1000,
+            successChance: 0.5,
+            willSucceed: false,
+          },
+          {
+            text: 'Degrade',
+            timeDelay: 2000,
+            successChance: 0.6,
+            willSucceed: false,
+          },
+          {
+            text: 'Destroy',
+            timeDelay: 3000,
+            successChance: 0.6,
+            willSucceed: false,
+          },
         ],
         mapX: 3,
         mapY: -4,
@@ -765,12 +1008,42 @@ export function createTestMission(expandAll: boolean = false): Mission {
         actionData: 'exec command',
         executable: false,
         nodeActionItems: [
-          { text: 'Deny', timeDelay: 1000, successChance: 0.5 },
-          { text: 'Degrade', timeDelay: 2000, successChance: 0.6 },
-          { text: 'Destroy', timeDelay: 3000, successChance: 0.6 },
-          { text: 'Disrupt', timeDelay: 4000, successChance: 0.7 },
-          { text: 'Manipulate', timeDelay: 5000, successChance: 0.8 },
-          { text: 'Extract', timeDelay: 6000, successChance: 0.8 },
+          {
+            text: 'Deny',
+            timeDelay: 1000,
+            successChance: 0.5,
+            willSucceed: false,
+          },
+          {
+            text: 'Degrade',
+            timeDelay: 2000,
+            successChance: 0.6,
+            willSucceed: false,
+          },
+          {
+            text: 'Destroy',
+            timeDelay: 3000,
+            successChance: 0.6,
+            willSucceed: false,
+          },
+          {
+            text: 'Disrupt',
+            timeDelay: 4000,
+            successChance: 0.7,
+            willSucceed: false,
+          },
+          {
+            text: 'Manipulate',
+            timeDelay: 5000,
+            successChance: 0.8,
+            willSucceed: false,
+          },
+          {
+            text: 'Extract',
+            timeDelay: 6000,
+            successChance: 0.8,
+            willSucceed: false,
+          },
         ],
         mapX: 3,
         mapY: -3,
@@ -785,12 +1058,42 @@ export function createTestMission(expandAll: boolean = false): Mission {
         actionData: 'exec command',
         executable: false,
         nodeActionItems: [
-          { text: 'Deny', timeDelay: 1000, successChance: 0.5 },
-          { text: 'Degrade', timeDelay: 2000, successChance: 0.6 },
-          { text: 'Destroy', timeDelay: 3000, successChance: 0.6 },
-          { text: 'Disrupt', timeDelay: 4000, successChance: 0.7 },
-          { text: 'Manipulate', timeDelay: 5000, successChance: 0.8 },
-          { text: 'Extract', timeDelay: 6000, successChance: 0.8 },
+          {
+            text: 'Deny',
+            timeDelay: 1000,
+            successChance: 0.5,
+            willSucceed: false,
+          },
+          {
+            text: 'Degrade',
+            timeDelay: 2000,
+            successChance: 0.6,
+            willSucceed: false,
+          },
+          {
+            text: 'Destroy',
+            timeDelay: 3000,
+            successChance: 0.6,
+            willSucceed: false,
+          },
+          {
+            text: 'Disrupt',
+            timeDelay: 4000,
+            successChance: 0.7,
+            willSucceed: false,
+          },
+          {
+            text: 'Manipulate',
+            timeDelay: 5000,
+            successChance: 0.8,
+            willSucceed: false,
+          },
+          {
+            text: 'Extract',
+            timeDelay: 6000,
+            successChance: 0.8,
+            willSucceed: false,
+          },
         ],
         mapX: 3,
         mapY: -2,
@@ -805,12 +1108,42 @@ export function createTestMission(expandAll: boolean = false): Mission {
         actionData: 'exec command',
         executable: true,
         nodeActionItems: [
-          { text: 'Deny', timeDelay: 1000, successChance: 0.5 },
-          { text: 'Degrade', timeDelay: 2000, successChance: 0.6 },
-          { text: 'Destroy', timeDelay: 3000, successChance: 0.6 },
-          { text: 'Disrupt', timeDelay: 4000, successChance: 0.7 },
-          { text: 'Manipulate', timeDelay: 5000, successChance: 0.8 },
-          { text: 'Extract', timeDelay: 6000, successChance: 0.8 },
+          {
+            text: 'Deny',
+            timeDelay: 1000,
+            successChance: 0.5,
+            willSucceed: false,
+          },
+          {
+            text: 'Degrade',
+            timeDelay: 2000,
+            successChance: 0.6,
+            willSucceed: false,
+          },
+          {
+            text: 'Destroy',
+            timeDelay: 3000,
+            successChance: 0.6,
+            willSucceed: false,
+          },
+          {
+            text: 'Disrupt',
+            timeDelay: 4000,
+            successChance: 0.7,
+            willSucceed: false,
+          },
+          {
+            text: 'Manipulate',
+            timeDelay: 5000,
+            successChance: 0.8,
+            willSucceed: false,
+          },
+          {
+            text: 'Extract',
+            timeDelay: 6000,
+            successChance: 0.8,
+            willSucceed: false,
+          },
         ],
         mapX: 4,
         mapY: -5,
@@ -825,12 +1158,42 @@ export function createTestMission(expandAll: boolean = false): Mission {
         actionData: 'exec command',
         executable: true,
         nodeActionItems: [
-          { text: 'Deny', timeDelay: 1000, successChance: 0.5 },
-          { text: 'Degrade', timeDelay: 2000, successChance: 0.6 },
-          { text: 'Destroy', timeDelay: 3000, successChance: 0.6 },
-          { text: 'Disrupt', timeDelay: 4000, successChance: 0.7 },
-          { text: 'Manipulate', timeDelay: 5000, successChance: 0.8 },
-          { text: 'Extract', timeDelay: 6000, successChance: 0.8 },
+          {
+            text: 'Deny',
+            timeDelay: 1000,
+            successChance: 0.5,
+            willSucceed: false,
+          },
+          {
+            text: 'Degrade',
+            timeDelay: 2000,
+            successChance: 0.6,
+            willSucceed: false,
+          },
+          {
+            text: 'Destroy',
+            timeDelay: 3000,
+            successChance: 0.6,
+            willSucceed: false,
+          },
+          {
+            text: 'Disrupt',
+            timeDelay: 4000,
+            successChance: 0.7,
+            willSucceed: false,
+          },
+          {
+            text: 'Manipulate',
+            timeDelay: 5000,
+            successChance: 0.8,
+            willSucceed: false,
+          },
+          {
+            text: 'Extract',
+            timeDelay: 6000,
+            successChance: 0.8,
+            willSucceed: false,
+          },
         ],
         mapX: 4,
         mapY: -4,
@@ -845,12 +1208,42 @@ export function createTestMission(expandAll: boolean = false): Mission {
         actionData: 'exec command',
         executable: true,
         nodeActionItems: [
-          { text: 'Deny', timeDelay: 1000, successChance: 0.5 },
-          { text: 'Degrade', timeDelay: 2000, successChance: 0.6 },
-          { text: 'Destroy', timeDelay: 3000, successChance: 0.6 },
-          { text: 'Disrupt', timeDelay: 4000, successChance: 0.7 },
-          { text: 'Manipulate', timeDelay: 5000, successChance: 0.8 },
-          { text: 'Extract', timeDelay: 6000, successChance: 0.8 },
+          {
+            text: 'Deny',
+            timeDelay: 1000,
+            successChance: 0.5,
+            willSucceed: false,
+          },
+          {
+            text: 'Degrade',
+            timeDelay: 2000,
+            successChance: 0.6,
+            willSucceed: false,
+          },
+          {
+            text: 'Destroy',
+            timeDelay: 3000,
+            successChance: 0.6,
+            willSucceed: false,
+          },
+          {
+            text: 'Disrupt',
+            timeDelay: 4000,
+            successChance: 0.7,
+            willSucceed: false,
+          },
+          {
+            text: 'Manipulate',
+            timeDelay: 5000,
+            successChance: 0.8,
+            willSucceed: false,
+          },
+          {
+            text: 'Extract',
+            timeDelay: 6000,
+            successChance: 0.8,
+            willSucceed: false,
+          },
         ],
         mapX: 4,
         mapY: -3,
@@ -865,12 +1258,42 @@ export function createTestMission(expandAll: boolean = false): Mission {
         actionData: 'exec command',
         executable: true,
         nodeActionItems: [
-          { text: 'Deny', timeDelay: 1000, successChance: 0.5 },
-          { text: 'Degrade', timeDelay: 2000, successChance: 0.6 },
-          { text: 'Destroy', timeDelay: 3000, successChance: 0.6 },
-          { text: 'Disrupt', timeDelay: 4000, successChance: 0.7 },
-          { text: 'Manipulate', timeDelay: 5000, successChance: 0.8 },
-          { text: 'Extract', timeDelay: 6000, successChance: 0.8 },
+          {
+            text: 'Deny',
+            timeDelay: 1000,
+            successChance: 0.5,
+            willSucceed: false,
+          },
+          {
+            text: 'Degrade',
+            timeDelay: 2000,
+            successChance: 0.6,
+            willSucceed: false,
+          },
+          {
+            text: 'Destroy',
+            timeDelay: 3000,
+            successChance: 0.6,
+            willSucceed: false,
+          },
+          {
+            text: 'Disrupt',
+            timeDelay: 4000,
+            successChance: 0.7,
+            willSucceed: false,
+          },
+          {
+            text: 'Manipulate',
+            timeDelay: 5000,
+            successChance: 0.8,
+            willSucceed: false,
+          },
+          {
+            text: 'Extract',
+            timeDelay: 6000,
+            successChance: 0.8,
+            willSucceed: false,
+          },
         ],
         mapX: 4,
         mapY: -2,
@@ -885,12 +1308,42 @@ export function createTestMission(expandAll: boolean = false): Mission {
         actionData: 'exec command',
         executable: false,
         nodeActionItems: [
-          { text: 'Deny', timeDelay: 1000, successChance: 0.5 },
-          { text: 'Degrade', timeDelay: 2000, successChance: 0.6 },
-          { text: 'Destroy', timeDelay: 3000, successChance: 0.6 },
-          { text: 'Disrupt', timeDelay: 4000, successChance: 0.7 },
-          { text: 'Manipulate', timeDelay: 5000, successChance: 0.8 },
-          { text: 'Extract', timeDelay: 6000, successChance: 0.8 },
+          {
+            text: 'Deny',
+            timeDelay: 1000,
+            successChance: 0.5,
+            willSucceed: false,
+          },
+          {
+            text: 'Degrade',
+            timeDelay: 2000,
+            successChance: 0.6,
+            willSucceed: false,
+          },
+          {
+            text: 'Destroy',
+            timeDelay: 3000,
+            successChance: 0.6,
+            willSucceed: false,
+          },
+          {
+            text: 'Disrupt',
+            timeDelay: 4000,
+            successChance: 0.7,
+            willSucceed: false,
+          },
+          {
+            text: 'Manipulate',
+            timeDelay: 5000,
+            successChance: 0.8,
+            willSucceed: false,
+          },
+          {
+            text: 'Extract',
+            timeDelay: 6000,
+            successChance: 0.8,
+            willSucceed: false,
+          },
         ],
         mapX: 0,
         mapY: -1,
@@ -905,12 +1358,42 @@ export function createTestMission(expandAll: boolean = false): Mission {
         actionData: 'exec command',
         executable: false,
         nodeActionItems: [
-          { text: 'Deny', timeDelay: 1000, successChance: 0.5 },
-          { text: 'Degrade', timeDelay: 2000, successChance: 0.6 },
-          { text: 'Destroy', timeDelay: 3000, successChance: 0.6 },
-          { text: 'Disrupt', timeDelay: 4000, successChance: 0.7 },
-          { text: 'Manipulate', timeDelay: 5000, successChance: 0.8 },
-          { text: 'Extract', timeDelay: 6000, successChance: 0.8 },
+          {
+            text: 'Deny',
+            timeDelay: 1000,
+            successChance: 0.5,
+            willSucceed: false,
+          },
+          {
+            text: 'Degrade',
+            timeDelay: 2000,
+            successChance: 0.6,
+            willSucceed: false,
+          },
+          {
+            text: 'Destroy',
+            timeDelay: 3000,
+            successChance: 0.6,
+            willSucceed: false,
+          },
+          {
+            text: 'Disrupt',
+            timeDelay: 4000,
+            successChance: 0.7,
+            willSucceed: false,
+          },
+          {
+            text: 'Manipulate',
+            timeDelay: 5000,
+            successChance: 0.8,
+            willSucceed: false,
+          },
+          {
+            text: 'Extract',
+            timeDelay: 6000,
+            successChance: 0.8,
+            willSucceed: false,
+          },
         ],
         mapX: 1,
         mapY: -1,
@@ -926,12 +1409,42 @@ export function createTestMission(expandAll: boolean = false): Mission {
         actionData: 'exec command',
         executable: false,
         nodeActionItems: [
-          { text: 'Deny', timeDelay: 1000, successChance: 0.5 },
-          { text: 'Degrade', timeDelay: 2000, successChance: 0.6 },
-          { text: 'Destroy', timeDelay: 3000, successChance: 0.6 },
-          { text: 'Disrupt', timeDelay: 4000, successChance: 0.7 },
-          { text: 'Manipulate', timeDelay: 5000, successChance: 0.8 },
-          { text: 'Extract', timeDelay: 6000, successChance: 0.8 },
+          {
+            text: 'Deny',
+            timeDelay: 1000,
+            successChance: 0.5,
+            willSucceed: false,
+          },
+          {
+            text: 'Degrade',
+            timeDelay: 2000,
+            successChance: 0.6,
+            willSucceed: false,
+          },
+          {
+            text: 'Destroy',
+            timeDelay: 3000,
+            successChance: 0.6,
+            willSucceed: false,
+          },
+          {
+            text: 'Disrupt',
+            timeDelay: 4000,
+            successChance: 0.7,
+            willSucceed: false,
+          },
+          {
+            text: 'Manipulate',
+            timeDelay: 5000,
+            successChance: 0.8,
+            willSucceed: false,
+          },
+          {
+            text: 'Extract',
+            timeDelay: 6000,
+            successChance: 0.8,
+            willSucceed: false,
+          },
         ],
         mapX: 2,
         mapY: -1,
@@ -946,12 +1459,42 @@ export function createTestMission(expandAll: boolean = false): Mission {
         actionData: 'exec command',
         executable: true,
         nodeActionItems: [
-          { text: 'Deny', timeDelay: 1000, successChance: 0.5 },
-          { text: 'Degrade', timeDelay: 2000, successChance: 0.6 },
-          { text: 'Destroy', timeDelay: 3000, successChance: 0.6 },
-          { text: 'Disrupt', timeDelay: 4000, successChance: 0.7 },
-          { text: 'Manipulate', timeDelay: 5000, successChance: 0.8 },
-          { text: 'Extract', timeDelay: 6000, successChance: 0.8 },
+          {
+            text: 'Deny',
+            timeDelay: 1000,
+            successChance: 0.5,
+            willSucceed: false,
+          },
+          {
+            text: 'Degrade',
+            timeDelay: 2000,
+            successChance: 0.6,
+            willSucceed: false,
+          },
+          {
+            text: 'Destroy',
+            timeDelay: 3000,
+            successChance: 0.6,
+            willSucceed: false,
+          },
+          {
+            text: 'Disrupt',
+            timeDelay: 4000,
+            successChance: 0.7,
+            willSucceed: false,
+          },
+          {
+            text: 'Manipulate',
+            timeDelay: 5000,
+            successChance: 0.8,
+            willSucceed: false,
+          },
+          {
+            text: 'Extract',
+            timeDelay: 6000,
+            successChance: 0.8,
+            willSucceed: false,
+          },
         ],
         mapX: 3,
         mapY: -1,
@@ -966,12 +1509,42 @@ export function createTestMission(expandAll: boolean = false): Mission {
         actionData: 'exec command',
         executable: true,
         nodeActionItems: [
-          { text: 'Deny', timeDelay: 1000, successChance: 0.5 },
-          { text: 'Degrade', timeDelay: 2000, successChance: 0.6 },
-          { text: 'Destroy', timeDelay: 3000, successChance: 0.6 },
-          { text: 'Disrupt', timeDelay: 4000, successChance: 0.7 },
-          { text: 'Manipulate', timeDelay: 5000, successChance: 0.8 },
-          { text: 'Extract', timeDelay: 6000, successChance: 0.8 },
+          {
+            text: 'Deny',
+            timeDelay: 1000,
+            successChance: 0.5,
+            willSucceed: false,
+          },
+          {
+            text: 'Degrade',
+            timeDelay: 2000,
+            successChance: 0.6,
+            willSucceed: false,
+          },
+          {
+            text: 'Destroy',
+            timeDelay: 3000,
+            successChance: 0.6,
+            willSucceed: false,
+          },
+          {
+            text: 'Disrupt',
+            timeDelay: 4000,
+            successChance: 0.7,
+            willSucceed: false,
+          },
+          {
+            text: 'Manipulate',
+            timeDelay: 5000,
+            successChance: 0.8,
+            willSucceed: false,
+          },
+          {
+            text: 'Extract',
+            timeDelay: 6000,
+            successChance: 0.8,
+            willSucceed: false,
+          },
         ],
         mapX: 3,
         mapY: 0,
@@ -986,12 +1559,42 @@ export function createTestMission(expandAll: boolean = false): Mission {
         actionData: 'exec command',
         executable: false,
         nodeActionItems: [
-          { text: 'Deny', timeDelay: 1000, successChance: 0.5 },
-          { text: 'Degrade', timeDelay: 2000, successChance: 0.6 },
-          { text: 'Destroy', timeDelay: 3000, successChance: 0.6 },
-          { text: 'Disrupt', timeDelay: 4000, successChance: 0.7 },
-          { text: 'Manipulate', timeDelay: 5000, successChance: 0.8 },
-          { text: 'Extract', timeDelay: 6000, successChance: 0.8 },
+          {
+            text: 'Deny',
+            timeDelay: 1000,
+            successChance: 0.5,
+            willSucceed: false,
+          },
+          {
+            text: 'Degrade',
+            timeDelay: 2000,
+            successChance: 0.6,
+            willSucceed: false,
+          },
+          {
+            text: 'Destroy',
+            timeDelay: 3000,
+            successChance: 0.6,
+            willSucceed: false,
+          },
+          {
+            text: 'Disrupt',
+            timeDelay: 4000,
+            successChance: 0.7,
+            willSucceed: false,
+          },
+          {
+            text: 'Manipulate',
+            timeDelay: 5000,
+            successChance: 0.8,
+            willSucceed: false,
+          },
+          {
+            text: 'Extract',
+            timeDelay: 6000,
+            successChance: 0.8,
+            willSucceed: false,
+          },
         ],
         mapX: 0,
         mapY: 1,
@@ -1006,12 +1609,42 @@ export function createTestMission(expandAll: boolean = false): Mission {
         actionData: 'exec command',
         executable: false,
         nodeActionItems: [
-          { text: 'Deny', timeDelay: 1000, successChance: 0.5 },
-          { text: 'Degrade', timeDelay: 2000, successChance: 0.6 },
-          { text: 'Destroy', timeDelay: 3000, successChance: 0.6 },
-          { text: 'Disrupt', timeDelay: 4000, successChance: 0.7 },
-          { text: 'Manipulate', timeDelay: 5000, successChance: 0.8 },
-          { text: 'Extract', timeDelay: 6000, successChance: 0.8 },
+          {
+            text: 'Deny',
+            timeDelay: 1000,
+            successChance: 0.5,
+            willSucceed: false,
+          },
+          {
+            text: 'Degrade',
+            timeDelay: 2000,
+            successChance: 0.6,
+            willSucceed: false,
+          },
+          {
+            text: 'Destroy',
+            timeDelay: 3000,
+            successChance: 0.6,
+            willSucceed: false,
+          },
+          {
+            text: 'Disrupt',
+            timeDelay: 4000,
+            successChance: 0.7,
+            willSucceed: false,
+          },
+          {
+            text: 'Manipulate',
+            timeDelay: 5000,
+            successChance: 0.8,
+            willSucceed: false,
+          },
+          {
+            text: 'Extract',
+            timeDelay: 6000,
+            successChance: 0.8,
+            willSucceed: false,
+          },
         ],
         mapX: 1,
         mapY: 0,
@@ -1026,12 +1659,42 @@ export function createTestMission(expandAll: boolean = false): Mission {
         actionData: 'exec command',
         executable: false,
         nodeActionItems: [
-          { text: 'Deny', timeDelay: 1000, successChance: 0.5 },
-          { text: 'Degrade', timeDelay: 2000, successChance: 0.6 },
-          { text: 'Destroy', timeDelay: 3000, successChance: 0.6 },
-          { text: 'Disrupt', timeDelay: 4000, successChance: 0.7 },
-          { text: 'Manipulate', timeDelay: 5000, successChance: 0.8 },
-          { text: 'Extract', timeDelay: 6000, successChance: 0.8 },
+          {
+            text: 'Deny',
+            timeDelay: 1000,
+            successChance: 0.5,
+            willSucceed: false,
+          },
+          {
+            text: 'Degrade',
+            timeDelay: 2000,
+            successChance: 0.6,
+            willSucceed: false,
+          },
+          {
+            text: 'Destroy',
+            timeDelay: 3000,
+            successChance: 0.6,
+            willSucceed: false,
+          },
+          {
+            text: 'Disrupt',
+            timeDelay: 4000,
+            successChance: 0.7,
+            willSucceed: false,
+          },
+          {
+            text: 'Manipulate',
+            timeDelay: 5000,
+            successChance: 0.8,
+            willSucceed: false,
+          },
+          {
+            text: 'Extract',
+            timeDelay: 6000,
+            successChance: 0.8,
+            willSucceed: false,
+          },
         ],
         mapX: 1,
         mapY: 1,
@@ -1046,12 +1709,42 @@ export function createTestMission(expandAll: boolean = false): Mission {
         actionData: 'exec command',
         executable: false,
         nodeActionItems: [
-          { text: 'Deny', timeDelay: 1000, successChance: 0.5 },
-          { text: 'Degrade', timeDelay: 2000, successChance: 0.6 },
-          { text: 'Destroy', timeDelay: 3000, successChance: 0.6 },
-          { text: 'Disrupt', timeDelay: 4000, successChance: 0.7 },
-          { text: 'Manipulate', timeDelay: 5000, successChance: 0.8 },
-          { text: 'Extract', timeDelay: 6000, successChance: 0.8 },
+          {
+            text: 'Deny',
+            timeDelay: 1000,
+            successChance: 0.5,
+            willSucceed: false,
+          },
+          {
+            text: 'Degrade',
+            timeDelay: 2000,
+            successChance: 0.6,
+            willSucceed: false,
+          },
+          {
+            text: 'Destroy',
+            timeDelay: 3000,
+            successChance: 0.6,
+            willSucceed: false,
+          },
+          {
+            text: 'Disrupt',
+            timeDelay: 4000,
+            successChance: 0.7,
+            willSucceed: false,
+          },
+          {
+            text: 'Manipulate',
+            timeDelay: 5000,
+            successChance: 0.8,
+            willSucceed: false,
+          },
+          {
+            text: 'Extract',
+            timeDelay: 6000,
+            successChance: 0.8,
+            willSucceed: false,
+          },
         ],
         mapX: 1,
         mapY: 2,
@@ -1066,12 +1759,42 @@ export function createTestMission(expandAll: boolean = false): Mission {
         actionData: 'exec command',
         executable: false,
         nodeActionItems: [
-          { text: 'Deny', timeDelay: 1000, successChance: 0.5 },
-          { text: 'Degrade', timeDelay: 2000, successChance: 0.6 },
-          { text: 'Destroy', timeDelay: 3000, successChance: 0.6 },
-          { text: 'Disrupt', timeDelay: 4000, successChance: 0.7 },
-          { text: 'Manipulate', timeDelay: 5000, successChance: 0.8 },
-          { text: 'Extract', timeDelay: 6000, successChance: 0.8 },
+          {
+            text: 'Deny',
+            timeDelay: 1000,
+            successChance: 0.5,
+            willSucceed: false,
+          },
+          {
+            text: 'Degrade',
+            timeDelay: 2000,
+            successChance: 0.6,
+            willSucceed: false,
+          },
+          {
+            text: 'Destroy',
+            timeDelay: 3000,
+            successChance: 0.6,
+            willSucceed: false,
+          },
+          {
+            text: 'Disrupt',
+            timeDelay: 4000,
+            successChance: 0.7,
+            willSucceed: false,
+          },
+          {
+            text: 'Manipulate',
+            timeDelay: 5000,
+            successChance: 0.8,
+            willSucceed: false,
+          },
+          {
+            text: 'Extract',
+            timeDelay: 6000,
+            successChance: 0.8,
+            willSucceed: false,
+          },
         ],
         mapX: 1,
         mapY: 3,
@@ -1086,12 +1809,42 @@ export function createTestMission(expandAll: boolean = false): Mission {
         actionData: 'exec command',
         executable: true,
         nodeActionItems: [
-          { text: 'Deny', timeDelay: 1000, successChance: 0.5 },
-          { text: 'Degrade', timeDelay: 2000, successChance: 0.6 },
-          { text: 'Destroy', timeDelay: 3000, successChance: 0.6 },
-          { text: 'Disrupt', timeDelay: 4000, successChance: 0.7 },
-          { text: 'Manipulate', timeDelay: 5000, successChance: 0.8 },
-          { text: 'Extract', timeDelay: 6000, successChance: 0.8 },
+          {
+            text: 'Deny',
+            timeDelay: 1000,
+            successChance: 0.5,
+            willSucceed: false,
+          },
+          {
+            text: 'Degrade',
+            timeDelay: 2000,
+            successChance: 0.6,
+            willSucceed: false,
+          },
+          {
+            text: 'Destroy',
+            timeDelay: 3000,
+            successChance: 0.6,
+            willSucceed: false,
+          },
+          {
+            text: 'Disrupt',
+            timeDelay: 4000,
+            successChance: 0.7,
+            willSucceed: false,
+          },
+          {
+            text: 'Manipulate',
+            timeDelay: 5000,
+            successChance: 0.8,
+            willSucceed: false,
+          },
+          {
+            text: 'Extract',
+            timeDelay: 6000,
+            successChance: 0.8,
+            willSucceed: false,
+          },
         ],
         mapX: 2,
         mapY: 0,
@@ -1106,12 +1859,42 @@ export function createTestMission(expandAll: boolean = false): Mission {
         actionData: 'exec command',
         executable: true,
         nodeActionItems: [
-          { text: 'Deny', timeDelay: 1000, successChance: 0.5 },
-          { text: 'Degrade', timeDelay: 2000, successChance: 0.6 },
-          { text: 'Destroy', timeDelay: 3000, successChance: 0.6 },
-          { text: 'Disrupt', timeDelay: 4000, successChance: 0.7 },
-          { text: 'Manipulate', timeDelay: 5000, successChance: 0.8 },
-          { text: 'Extract', timeDelay: 6000, successChance: 0.8 },
+          {
+            text: 'Deny',
+            timeDelay: 1000,
+            successChance: 0.5,
+            willSucceed: false,
+          },
+          {
+            text: 'Degrade',
+            timeDelay: 2000,
+            successChance: 0.6,
+            willSucceed: false,
+          },
+          {
+            text: 'Destroy',
+            timeDelay: 3000,
+            successChance: 0.6,
+            willSucceed: false,
+          },
+          {
+            text: 'Disrupt',
+            timeDelay: 4000,
+            successChance: 0.7,
+            willSucceed: false,
+          },
+          {
+            text: 'Manipulate',
+            timeDelay: 5000,
+            successChance: 0.8,
+            willSucceed: false,
+          },
+          {
+            text: 'Extract',
+            timeDelay: 6000,
+            successChance: 0.8,
+            willSucceed: false,
+          },
         ],
         mapX: 2,
         mapY: 1,
@@ -1126,12 +1909,42 @@ export function createTestMission(expandAll: boolean = false): Mission {
         actionData: 'exec command',
         executable: true,
         nodeActionItems: [
-          { text: 'Deny', timeDelay: 1000, successChance: 0.5 },
-          { text: 'Degrade', timeDelay: 2000, successChance: 0.6 },
-          { text: 'Destroy', timeDelay: 3000, successChance: 0.6 },
-          { text: 'Disrupt', timeDelay: 4000, successChance: 0.7 },
-          { text: 'Manipulate', timeDelay: 5000, successChance: 0.8 },
-          { text: 'Extract', timeDelay: 6000, successChance: 0.8 },
+          {
+            text: 'Deny',
+            timeDelay: 1000,
+            successChance: 0.5,
+            willSucceed: false,
+          },
+          {
+            text: 'Degrade',
+            timeDelay: 2000,
+            successChance: 0.6,
+            willSucceed: false,
+          },
+          {
+            text: 'Destroy',
+            timeDelay: 3000,
+            successChance: 0.6,
+            willSucceed: false,
+          },
+          {
+            text: 'Disrupt',
+            timeDelay: 4000,
+            successChance: 0.7,
+            willSucceed: false,
+          },
+          {
+            text: 'Manipulate',
+            timeDelay: 5000,
+            successChance: 0.8,
+            willSucceed: false,
+          },
+          {
+            text: 'Extract',
+            timeDelay: 6000,
+            successChance: 0.8,
+            willSucceed: false,
+          },
         ],
         mapX: 2,
         mapY: 2,
@@ -1146,12 +1959,42 @@ export function createTestMission(expandAll: boolean = false): Mission {
         actionData: 'exec command',
         executable: true,
         nodeActionItems: [
-          { text: 'Deny', timeDelay: 1000, successChance: 0.5 },
-          { text: 'Degrade', timeDelay: 2000, successChance: 0.6 },
-          { text: 'Destroy', timeDelay: 3000, successChance: 0.6 },
-          { text: 'Disrupt', timeDelay: 4000, successChance: 0.7 },
-          { text: 'Manipulate', timeDelay: 5000, successChance: 0.8 },
-          { text: 'Extract', timeDelay: 6000, successChance: 0.8 },
+          {
+            text: 'Deny',
+            timeDelay: 1000,
+            successChance: 0.5,
+            willSucceed: false,
+          },
+          {
+            text: 'Degrade',
+            timeDelay: 2000,
+            successChance: 0.6,
+            willSucceed: false,
+          },
+          {
+            text: 'Destroy',
+            timeDelay: 3000,
+            successChance: 0.6,
+            willSucceed: false,
+          },
+          {
+            text: 'Disrupt',
+            timeDelay: 4000,
+            successChance: 0.7,
+            willSucceed: false,
+          },
+          {
+            text: 'Manipulate',
+            timeDelay: 5000,
+            successChance: 0.8,
+            willSucceed: false,
+          },
+          {
+            text: 'Extract',
+            timeDelay: 6000,
+            successChance: 0.8,
+            willSucceed: false,
+          },
         ],
         mapX: 2,
         mapY: 3,
@@ -1166,12 +2009,42 @@ export function createTestMission(expandAll: boolean = false): Mission {
         actionData: 'exec command',
         executable: true,
         nodeActionItems: [
-          { text: 'Deny', timeDelay: 1000, successChance: 0.5 },
-          { text: 'Degrade', timeDelay: 2000, successChance: 0.6 },
-          { text: 'Destroy', timeDelay: 3000, successChance: 0.6 },
-          { text: 'Disrupt', timeDelay: 4000, successChance: 0.7 },
-          { text: 'Manipulate', timeDelay: 5000, successChance: 0.8 },
-          { text: 'Extract', timeDelay: 6000, successChance: 0.8 },
+          {
+            text: 'Deny',
+            timeDelay: 1000,
+            successChance: 0.5,
+            willSucceed: false,
+          },
+          {
+            text: 'Degrade',
+            timeDelay: 2000,
+            successChance: 0.6,
+            willSucceed: false,
+          },
+          {
+            text: 'Destroy',
+            timeDelay: 3000,
+            successChance: 0.6,
+            willSucceed: false,
+          },
+          {
+            text: 'Disrupt',
+            timeDelay: 4000,
+            successChance: 0.7,
+            willSucceed: false,
+          },
+          {
+            text: 'Manipulate',
+            timeDelay: 5000,
+            successChance: 0.8,
+            willSucceed: false,
+          },
+          {
+            text: 'Extract',
+            timeDelay: 6000,
+            successChance: 0.8,
+            willSucceed: false,
+          },
         ],
         mapX: 2,
         mapY: 4,
@@ -1186,12 +2059,42 @@ export function createTestMission(expandAll: boolean = false): Mission {
         actionData: 'exec command',
         executable: true,
         nodeActionItems: [
-          { text: 'Deny', timeDelay: 1000, successChance: 0.5 },
-          { text: 'Degrade', timeDelay: 2000, successChance: 0.6 },
-          { text: 'Destroy', timeDelay: 3000, successChance: 0.6 },
-          { text: 'Disrupt', timeDelay: 4000, successChance: 0.7 },
-          { text: 'Manipulate', timeDelay: 5000, successChance: 0.8 },
-          { text: 'Extract', timeDelay: 6000, successChance: 0.8 },
+          {
+            text: 'Deny',
+            timeDelay: 1000,
+            successChance: 0.5,
+            willSucceed: false,
+          },
+          {
+            text: 'Degrade',
+            timeDelay: 2000,
+            successChance: 0.6,
+            willSucceed: false,
+          },
+          {
+            text: 'Destroy',
+            timeDelay: 3000,
+            successChance: 0.6,
+            willSucceed: false,
+          },
+          {
+            text: 'Disrupt',
+            timeDelay: 4000,
+            successChance: 0.7,
+            willSucceed: false,
+          },
+          {
+            text: 'Manipulate',
+            timeDelay: 5000,
+            successChance: 0.8,
+            willSucceed: false,
+          },
+          {
+            text: 'Extract',
+            timeDelay: 6000,
+            successChance: 0.8,
+            willSucceed: false,
+          },
         ],
         mapX: 2,
         mapY: 5,
@@ -1206,12 +2109,42 @@ export function createTestMission(expandAll: boolean = false): Mission {
         actionData: 'exec command',
         executable: false,
         nodeActionItems: [
-          { text: 'Deny', timeDelay: 1000, successChance: 0.5 },
-          { text: 'Degrade', timeDelay: 2000, successChance: 0.6 },
-          { text: 'Destroy', timeDelay: 3000, successChance: 0.6 },
-          { text: 'Disrupt', timeDelay: 4000, successChance: 0.7 },
-          { text: 'Manipulate', timeDelay: 5000, successChance: 0.8 },
-          { text: 'Extract', timeDelay: 6000, successChance: 0.8 },
+          {
+            text: 'Deny',
+            timeDelay: 1000,
+            successChance: 0.5,
+            willSucceed: false,
+          },
+          {
+            text: 'Degrade',
+            timeDelay: 2000,
+            successChance: 0.6,
+            willSucceed: false,
+          },
+          {
+            text: 'Destroy',
+            timeDelay: 3000,
+            successChance: 0.6,
+            willSucceed: false,
+          },
+          {
+            text: 'Disrupt',
+            timeDelay: 4000,
+            successChance: 0.7,
+            willSucceed: false,
+          },
+          {
+            text: 'Manipulate',
+            timeDelay: 5000,
+            successChance: 0.8,
+            willSucceed: false,
+          },
+          {
+            text: 'Extract',
+            timeDelay: 6000,
+            successChance: 0.8,
+            willSucceed: false,
+          },
         ],
         mapX: 0,
         mapY: 4,
@@ -1226,12 +2159,42 @@ export function createTestMission(expandAll: boolean = false): Mission {
         actionData: 'exec command',
         executable: true,
         nodeActionItems: [
-          { text: 'Deny', timeDelay: 1000, successChance: 0.1 },
-          { text: 'Degrade', timeDelay: 2000, successChance: 0.25 },
-          { text: 'Destroy', timeDelay: 3000, successChance: 0.5 },
-          { text: 'Disrupt', timeDelay: 4000, successChance: 0.6 },
-          { text: 'Manipulate', timeDelay: 5000, successChance: 0.7 },
-          { text: 'Extract', timeDelay: 6000, successChance: 0.8 },
+          {
+            text: 'Deny',
+            timeDelay: 1000,
+            successChance: 0.5,
+            willSucceed: false,
+          },
+          {
+            text: 'Degrade',
+            timeDelay: 2000,
+            successChance: 0.6,
+            willSucceed: false,
+          },
+          {
+            text: 'Destroy',
+            timeDelay: 3000,
+            successChance: 0.6,
+            willSucceed: false,
+          },
+          {
+            text: 'Disrupt',
+            timeDelay: 4000,
+            successChance: 0.7,
+            willSucceed: false,
+          },
+          {
+            text: 'Manipulate',
+            timeDelay: 5000,
+            successChance: 0.8,
+            willSucceed: false,
+          },
+          {
+            text: 'Extract',
+            timeDelay: 6000,
+            successChance: 0.8,
+            willSucceed: false,
+          },
         ],
         mapX: 1,
         mapY: 4,
@@ -1246,12 +2209,42 @@ export function createTestMission(expandAll: boolean = false): Mission {
         actionData: 'exec command',
         executable: true,
         nodeActionItems: [
-          { text: 'Deny', timeDelay: 1000, successChance: 0.1 },
-          { text: 'Degrade', timeDelay: 2000, successChance: 0.25 },
-          { text: 'Destroy', timeDelay: 3000, successChance: 0.5 },
-          { text: 'Disrupt', timeDelay: 4000, successChance: 0.6 },
-          { text: 'Manipulate', timeDelay: 5000, successChance: 0.7 },
-          { text: 'Extract', timeDelay: 6000, successChance: 0.8 },
+          {
+            text: 'Deny',
+            timeDelay: 1000,
+            successChance: 0.5,
+            willSucceed: false,
+          },
+          {
+            text: 'Degrade',
+            timeDelay: 2000,
+            successChance: 0.6,
+            willSucceed: false,
+          },
+          {
+            text: 'Destroy',
+            timeDelay: 3000,
+            successChance: 0.6,
+            willSucceed: false,
+          },
+          {
+            text: 'Disrupt',
+            timeDelay: 4000,
+            successChance: 0.7,
+            willSucceed: false,
+          },
+          {
+            text: 'Manipulate',
+            timeDelay: 5000,
+            successChance: 0.8,
+            willSucceed: false,
+          },
+          {
+            text: 'Extract',
+            timeDelay: 6000,
+            successChance: 0.8,
+            willSucceed: false,
+          },
         ],
         mapX: 1,
         mapY: 5,
@@ -1266,12 +2259,42 @@ export function createTestMission(expandAll: boolean = false): Mission {
         actionData: 'exec command',
         executable: true,
         nodeActionItems: [
-          { text: 'Deny', timeDelay: 1000, successChance: 0.1 },
-          { text: 'Degrade', timeDelay: 2000, successChance: 0.25 },
-          { text: 'Destroy', timeDelay: 3000, successChance: 0.5 },
-          { text: 'Disrupt', timeDelay: 4000, successChance: 0.6 },
-          { text: 'Manipulate', timeDelay: 5000, successChance: 0.7 },
-          { text: 'Extract', timeDelay: 6000, successChance: 0.8 },
+          {
+            text: 'Deny',
+            timeDelay: 1000,
+            successChance: 0.5,
+            willSucceed: false,
+          },
+          {
+            text: 'Degrade',
+            timeDelay: 2000,
+            successChance: 0.6,
+            willSucceed: false,
+          },
+          {
+            text: 'Destroy',
+            timeDelay: 3000,
+            successChance: 0.6,
+            willSucceed: false,
+          },
+          {
+            text: 'Disrupt',
+            timeDelay: 4000,
+            successChance: 0.7,
+            willSucceed: false,
+          },
+          {
+            text: 'Manipulate',
+            timeDelay: 5000,
+            successChance: 0.8,
+            willSucceed: false,
+          },
+          {
+            text: 'Extract',
+            timeDelay: 6000,
+            successChance: 0.8,
+            willSucceed: false,
+          },
         ],
         mapX: 1,
         mapY: 6,
@@ -1286,12 +2309,42 @@ export function createTestMission(expandAll: boolean = false): Mission {
         actionData: 'exec command',
         executable: true,
         nodeActionItems: [
-          { text: 'Deny', timeDelay: 1000, successChance: 0.1 },
-          { text: 'Degrade', timeDelay: 2000, successChance: 0.25 },
-          { text: 'Destroy', timeDelay: 3000, successChance: 0.5 },
-          { text: 'Disrupt', timeDelay: 4000, successChance: 0.6 },
-          { text: 'Manipulate', timeDelay: 5000, successChance: 0.7 },
-          { text: 'Extract', timeDelay: 6000, successChance: 0.8 },
+          {
+            text: 'Deny',
+            timeDelay: 1000,
+            successChance: 0.5,
+            willSucceed: false,
+          },
+          {
+            text: 'Degrade',
+            timeDelay: 2000,
+            successChance: 0.6,
+            willSucceed: false,
+          },
+          {
+            text: 'Destroy',
+            timeDelay: 3000,
+            successChance: 0.6,
+            willSucceed: false,
+          },
+          {
+            text: 'Disrupt',
+            timeDelay: 4000,
+            successChance: 0.7,
+            willSucceed: false,
+          },
+          {
+            text: 'Manipulate',
+            timeDelay: 5000,
+            successChance: 0.8,
+            willSucceed: false,
+          },
+          {
+            text: 'Extract',
+            timeDelay: 6000,
+            successChance: 0.8,
+            willSucceed: false,
+          },
         ],
         mapX: 1,
         mapY: 7,

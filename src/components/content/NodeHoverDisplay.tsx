@@ -14,8 +14,8 @@ const NodeHoverDisplay = (props: {
 
   if (
     typeof props.selectedNode?.successChance === 'number' &&
-    typeof props.selectedNode?.executionTimeSpan === 'number' &&
-    typeof props.selectedNode?.selectedNodeAction === 'string'
+    typeof props.selectedNode?.selectedNodeAction?.timeDelay === 'number' &&
+    typeof props.selectedNode?.selectedNodeAction.text === 'string'
   ) {
     className = 'NodeHoverDisplay'
   } else {
@@ -26,10 +26,12 @@ const NodeHoverDisplay = (props: {
     <div className={className}>
       <div className='TimeToExecute'>
         Time to execute:{' '}
-        {(props.selectedNode?.executionTimeSpan as number) / 1000} second(s)
+        {(props.selectedNode?.selectedNodeAction?.timeDelay as number) / 1000}{' '}
+        second(s)
       </div>
       <div className='ChosenNodeAction'>
-        Node action selected: {props.selectedNode?.selectedNodeAction as string}
+        Node action selected:{' '}
+        {props.selectedNode?.selectedNodeAction?.text as string}
       </div>
       <div className='SuccessChance'>
         Chance of success: {(props.selectedNode?.successChance as number) * 100}

@@ -1,6 +1,10 @@
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useStore } from 'react-context-hook'
-import { createTestMission, Mission, MissionNode } from '../../modules/missions'
+import {
+  createTestMission,
+  MissionNode,
+  MissionNodeAction,
+} from '../../modules/missions'
 import { EAjaxStatus } from '../../modules/toolbox/ajax'
 import usersModule, { IUser } from '../../modules/users'
 import Branding from '../content/Branding'
@@ -10,7 +14,7 @@ import './DashboardPage.scss'
 import gameLogic from '../../modules/game-logic'
 import NodeStructureReference from '../../modules/node-reference'
 import ExecuteNodePath from '../content/ExecuteNodePath'
-import NodeActions, { INodeActionItem } from '../content/NodeActions'
+import NodeActions from '../content/NodeActions'
 import NodeHoverDisplay from '../content/NodeHoverDisplay'
 import Tooltip from '../content/Tooltip'
 import List from '../content/List'
@@ -46,7 +50,7 @@ export default function DashboardPage(props: {
     setNodeActionSelectionPromptIsDisplayed,
   ] = useStore<boolean>('nodeActionSelectionPromptIsDisplayed')
   let [nodeActionItemDisplay, setNodeActionItemDisplay] = useStore<
-    Array<INodeActionItem>
+    Array<MissionNodeAction>
   >('nodeActionItemDisplay')
   const [processDelayTime, setProcessDelayTime] =
     useStore<number>('processDelayTime')
@@ -207,15 +211,15 @@ export default function DashboardPage(props: {
                 let nodeActionDisplay = 'None selected'
 
                 if (node.selectedNodeAction !== null) {
-                  nodeActionDisplay = node.selectedNodeAction
+                  nodeActionDisplay = node.selectedNodeAction.text
                 }
 
                 if (node.executable === true && node.executed) {
                   description =
                     `* Executed node in ${
-                      (node.executionTimeSpan as number) / 1000
+                      (node.selectedNodeAction?.timeDelay as number) / 1000
                     } second(s)\n` +
-                    `* Node action executed: ${node.selectedNodeAction}\n` +
+                    `* Node action executed: ${node.selectedNodeAction?.text}\n` +
                     `* Chance of success: ${
                       (node.successChance as number) * 100
                     }%\n`

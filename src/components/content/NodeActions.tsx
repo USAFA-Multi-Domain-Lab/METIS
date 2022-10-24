@@ -1,15 +1,9 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import './NodeActions.scss'
 import { useStore } from 'react-context-hook'
-import { Mission, MissionNode } from '../../modules/missions'
+import { MissionNode, MissionNodeAction } from '../../modules/missions'
 import { IUser } from '../../modules/users'
-import NodeStructureReference from '../../modules/node-reference'
-
-export interface INodeActionItem {
-  text: string
-  timeDelay: number
-  successChance: number
-}
+import Tooltip from './Tooltip'
 
 const NodeActions = (props: {
   selectedNode: MissionNode | null | undefined
@@ -27,7 +21,7 @@ const NodeActions = (props: {
     setNodeActionSelectionPromptIsDisplayed,
   ] = useStore<boolean>('nodeActionSelectionPromptIsDisplayed')
   const [nodeActionItemDisplay, setNodeActionItemDisplay] = useStore<
-    Array<INodeActionItem>
+    Array<MissionNodeAction>
   >('nodeActionItemDisplay')
   const [processDelayTime, setProcessDelayTime] =
     useStore<number>('processDelayTime')
@@ -62,7 +56,7 @@ const NodeActions = (props: {
     }
   }
 
-  const nodeActionSelection = (nodeActionItem: INodeActionItem): void => {
+  const nodeActionSelection = (nodeActionItem: MissionNodeAction): void => {
     setNodeActionSelectionPromptIsDisplayed(false)
     setExecuteNodePathPromptIsDisplayed(true)
     setDisplayNodeActionList(false)
@@ -71,20 +65,8 @@ const NodeActions = (props: {
     setNodeActionItemText(nodeActionItem.text)
     setNodeActionSuccessChance(nodeActionItem.successChance)
 
-    if (Math.random() <= nodeActionItem.successChance) {
-      if (props.selectedNode !== null && props.selectedNode !== undefined) {
-        props.selectedNode._willSucceed = true
-      }
-    } else {
-      if (props.selectedNode !== null && props.selectedNode !== undefined) {
-        props.selectedNode._willSucceed = false
-      }
-    }
-
     if (props.selectedNode !== null && props.selectedNode !== undefined) {
-      props.selectedNode.executionTimeSpan = nodeActionItem.timeDelay
-      props.selectedNode.selectedNodeAction = nodeActionItem.text
-      props.selectedNode.successChance = nodeActionItem.successChance
+      props.selectedNode.selectedNodeAction = nodeActionItem
     }
   }
 
@@ -113,13 +95,23 @@ const NodeActions = (props: {
         <div className='ArrowDown'>^</div>
       </div>
       <div className={className}>
-        {nodeActionItemDisplay.map((nodeActionItem: INodeActionItem) => {
+        {nodeActionItemDisplay.map((nodeActionItem: MissionNodeAction) => {
           return (
             <div
               className='NodeAction'
               key={nodeActionItem.text}
               onClick={() => nodeActionSelection(nodeActionItem)}
             >
+              <Tooltip
+                description={
+                  `* Executed node in ${
+                    (nodeActionItem.timeDelay as number) / 1000
+                  } second(s)\n` +
+                  `* Chance of success: ${
+                    (nodeActionItem.successChance as number) * 100
+                  }%\n`
+                }
+              />
               {nodeActionItem.text}
             </div>
           )
