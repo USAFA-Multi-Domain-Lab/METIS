@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { useStore } from 'react-context-hook'
-import { createTestMission, Mission, MissionNode } from '../../modules/missions'
+import { createMission, Mission, MissionNode } from '../../modules/missions'
 import NodeStructureReference, {
   ENodeTargetRelation,
 } from '../../modules/node-reference'
@@ -56,7 +56,7 @@ export default function MissionFormPage(props: {
   // Equivalent of componentDidMount.
   useEffect(() => {
     if (!mountHandled) {
-      let mission: Mission = createTestMission()
+      let mission: Mission = createMission()
       let nodeStructure: NodeStructureReference =
         NodeStructureReference.constructNodeStructureReference(
           'ROOT',
@@ -267,8 +267,14 @@ function NodeEntry(props: {
             maximum={100}
             unit='%'
             deliverValue={(successChancePercentage: number | null) => {
-              if (node !== null && successChancePercentage !== null) {
-                node.successChance = successChancePercentage / 100.0
+              if (
+                node !== null &&
+                node?.selectedNodeAction !== null &&
+                node.selectedNodeAction.successChance !== null &&
+                successChancePercentage !== null
+              ) {
+                node.selectedNodeAction.successChance =
+                  successChancePercentage / 100.0
 
                 handleChange()
               }

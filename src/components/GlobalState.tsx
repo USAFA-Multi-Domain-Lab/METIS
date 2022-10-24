@@ -1,8 +1,7 @@
 import React from 'react'
 import { useStore, withStore } from 'react-context-hook'
-import { MissionNode } from '../modules/missions'
+import { MissionNode, MissionNodeAction } from '../modules/missions'
 import { IUser } from '../modules/users'
-import { INodeActionItem } from './content/NodeActions'
 
 /* -- constants -- */
 
@@ -35,7 +34,7 @@ export default class GlobalState {
   executeNodePathPromptIsDisplayed: boolean
   nodeActionSelectionPromptIsDisplayed: boolean
   lastSelectedNode: MissionNode | null
-  nodeActionItemDisplay: Array<INodeActionItem>
+  nodeActionItemDisplay: Array<MissionNodeAction>
   nodeActionItemText: string
   processDelayTime: number
   nodeActionSuccessChance: number

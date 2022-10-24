@@ -1,9 +1,9 @@
 import { AnyObject } from 'mongoose'
 import { JsxElement } from 'typescript'
-import missions, { createTestMission, Mission, MissionNode } from './missions'
+import missions, { createMission, Mission, MissionNode } from './missions'
 import NodeStructureReference from './node-reference'
 
-const referenceMission = createTestMission()
+const referenceMission = createMission()
 
 export const handleNodeSelection = (
   selectedNodeData: MissionNode,

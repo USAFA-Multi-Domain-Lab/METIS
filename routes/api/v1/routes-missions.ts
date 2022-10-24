@@ -36,6 +36,7 @@ router.get('/', (request, response) => {
   Mission.findOne({ name: 'Incredible Mission' }).exec(
     (error: Error, mission: any) => {
       if (error !== null || mission === null) {
+        console.error(error)
         return response.sendStatus(500)
       } else {
         return response.json({ mission })

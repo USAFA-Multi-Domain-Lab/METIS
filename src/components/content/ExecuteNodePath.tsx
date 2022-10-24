@@ -93,7 +93,6 @@ const ExecuteNodePath = (props: {
       <p className='x' onClick={closeWindow}>
         x
       </p>
-
       <p className='PromptDisplayText'>
         Do you want to {nodeActionItemText.toLowerCase()}{' '}
         {props.selectedNode?.name}?
