@@ -761,7 +761,6 @@ export default class MissionMap extends React.Component<
                 <div
                   className='loading hide'
                   style={{
-                    width: `1%`,
                     height: `${height}px`,
                   }}
                 ></div>
