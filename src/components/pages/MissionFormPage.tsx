@@ -63,7 +63,7 @@ export default function MissionFormPage(props: {
         NodeStructureReference.constructNodeStructureReference(
           'ROOT',
           mission.nodeStructure,
-          mission.nodeData,
+          mission.nodes,
         )
 
       setMission(mission)
@@ -115,13 +115,6 @@ export default function MissionFormPage(props: {
   }
 
   if (show && mission !== null && nodeStructure !== null) {
-    let missionRender = Mission.renderMission(
-      mission,
-      nodeStructure,
-      mission.nodeStructure,
-      { ignoreVisibility: true },
-    )
-
     return (
       <div className={className}>
         {
@@ -138,7 +131,7 @@ export default function MissionFormPage(props: {
         }
         <div className='Content'>
           <MissionMap
-            mission={missionRender}
+            mission={mission}
             missionAjaxStatus={EAjaxStatus.Loaded}
             handleNodeSelection={(node: MissionNode) => {
               if (selectedNode?.nodeID !== node.nodeID) {
@@ -182,7 +175,7 @@ export default function MissionFormPage(props: {
           <NodeStructuring
             active={nodeStructuringIsActive}
             nodeStructure={nodeStructure}
-            nodeData={mission.nodeData}
+            nodeData={mission.nodes}
             handleNodeStructureChange={handleNodeStructureChange}
             handleCloseRequest={() => activateNodeStructuring(false)}
           />

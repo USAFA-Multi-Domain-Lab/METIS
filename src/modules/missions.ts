@@ -1,8 +1,18 @@
-import NodeStructureReference from './node-reference'
 import { Counter, isInteger } from './numbers'
-import { cloneDeep } from 'lodash'
 import { AnyObject } from 'mongoose'
 import seedrandom, { PRNG } from 'seedrandom'
+import { v4 as generateHash } from 'uuid'
+
+// This is an enum used by the
+// MissionNode move
+// function to describe the
+// purpose of the target
+// property past.
+export enum ENodeTargetRelation {
+  Parent,
+  PreviousSibling,
+  FollowingSibling,
+}
 
 // This is the raw mission data returned
 // from the server used to create instances
@@ -36,22 +46,15 @@ export interface IMissionNodeJson {
   successChance: number
 }
 
-// These are options available to
-// some using the renderMission function
-// in the Mission class.
-export interface IMissionRenderOptions {
-  // This will ignore whether a node is
-  // expanded or collapsed and render
-  // everything regardless.
-  ignoreVisibility?: boolean
-}
-
 // This represents an individual node
 // for a student to execute within a
 // mission.
 export class MissionNode {
+  mission: Mission
   nodeID: string
   name: string
+  parentNode: MissionNode | null
+  childNodes: Array<MissionNode>
   color: string
   preExecutionText: string
   postExecutionSuccessText: string
@@ -71,6 +74,7 @@ export class MissionNode {
   _willSucceed: boolean
   mapX: number
   mapY: number
+  _isExpanded: boolean
 
   get willSucceed(): boolean {
     return this._willSucceed
@@ -89,6 +93,7 @@ export class MissionNode {
   }
 
   constructor(
+    mission: Mission,
     nodeID: string,
     name: string,
     color: string,
@@ -105,8 +110,11 @@ export class MissionNode {
     mapX: number,
     mapY: number,
   ) {
+    this.mission = mission
     this.nodeID = nodeID
     this.name = name
+    this.parentNode = null
+    this.childNodes = []
     this.color = color
     this.preExecutionText = preExecutionText
     this.postExecutionSuccessText = postExecutionSuccessText
@@ -122,6 +130,7 @@ export class MissionNode {
     this._willSucceed = false
     this.mapX = mapX
     this.mapY = mapY
+    this._isExpanded = false
   }
 
   isExecuting(): boolean {
@@ -143,6 +152,186 @@ export class MissionNode {
     }
     return this._executed && this._willSucceed
   }
+
+  // This is called when a change
+  // is made to the node structure.
+  _handleStructureChange(): void {
+    this.mission.handleStructureChange()
+  }
+
+  get siblings(): Array<MissionNode> {
+    let siblings: Array<MissionNode> = []
+
+    if (this.parentNode !== null) {
+      let childrenOfParent: Array<MissionNode> = this.parentNode.childNodes
+
+      siblings = childrenOfParent.filter(
+        (childOfParent: MissionNode) => childOfParent.nodeID !== this.nodeID,
+      )
+    }
+
+    return siblings
+  }
+
+  get childrenOfParnet(): Array<MissionNode> {
+    let childrenOfParent: Array<MissionNode> = []
+
+    if (this.parentNode !== null) {
+      childrenOfParent = this.parentNode.childNodes
+    }
+
+    return childrenOfParent
+  }
+
+  get previousSibling(): MissionNode | null {
+    let previousSibling: MissionNode | null = null
+
+    if (this.parentNode !== null) {
+      let childrenOfParent: Array<MissionNode> = this.parentNode.childNodes
+
+      childrenOfParent.forEach((childOfParent: MissionNode, index: number) => {
+        if (childOfParent.nodeID === this.nodeID && index > 0) {
+          previousSibling = childrenOfParent[index - 1]
+        }
+      })
+    }
+
+    return previousSibling
+  }
+
+  get followingSibling(): MissionNode | null {
+    let followingSibling: MissionNode | null = null
+
+    if (this.parentNode !== null) {
+      let childrenOfParent: Array<MissionNode> = this.parentNode.childNodes
+
+      childrenOfParent.forEach((childOfParent: MissionNode, index: number) => {
+        if (
+          childOfParent.nodeID === this.nodeID &&
+          index + 1 < childrenOfParent.length
+        ) {
+          followingSibling = childrenOfParent[index + 1]
+        }
+      })
+    }
+
+    return followingSibling
+  }
+
+  get isExpanded(): boolean {
+    return this._isExpanded
+  }
+
+  get isCollapsed(): boolean {
+    return !this._isExpanded
+  }
+
+  get expandable(): boolean {
+    return this.childNodes.length > 0
+  }
+
+  // This will mark this reference
+  // as expanded if possible.
+  expand(): void {
+    if (this.expandable) {
+      this._isExpanded = true
+      this._handleStructureChange()
+    } else {
+      throw new Error(`Cannot expand ${this.nodeID} as it has no childNodes:`)
+    }
+  }
+
+  // This will mark this reference
+  // as collapsed if possible.
+  collapse(): void {
+    if (this.expandable) {
+      this._isExpanded = false
+      this._handleStructureChange()
+    } else {
+      throw new Error(`Cannot collapse ${this.nodeID} as it has no childNodes:`)
+    }
+  }
+
+  // This will toggle between expanded
+  // and collapse if possible.
+  toggle(): void {
+    if (this.isExpanded) {
+      this.collapse()
+    } else {
+      this.expand()
+    }
+  }
+
+  // This will move this reference to
+  // a new location relative to the target
+  // and relation this target has to the
+  // destination.
+  move(target: MissionNode, targetRelation: ENodeTargetRelation): void {
+    let parentNode: MissionNode | null = this.parentNode
+    let newParentNode: MissionNode | null = target.parentNode
+    let newParentNodechildNodes: Array<MissionNode> = []
+
+    if (parentNode !== null) {
+      let siblings: MissionNode[] = parentNode.childNodes
+
+      for (let index: number = 0; index < siblings.length; index++) {
+        let sibling = siblings[index]
+
+        if (this.nodeID === sibling.nodeID) {
+          siblings.splice(index, 1)
+        }
+      }
+    }
+
+    switch (targetRelation) {
+      case ENodeTargetRelation.Parent:
+        target.childNodes.push(this)
+        this.parentNode = target
+        break
+      case ENodeTargetRelation.PreviousSibling:
+        if (newParentNode !== null) {
+          newParentNode.childNodes.forEach((childNode: MissionNode) => {
+            newParentNodechildNodes.push(childNode)
+
+            if (childNode.nodeID === target.nodeID) {
+              newParentNodechildNodes.push(this)
+              this.parentNode = newParentNode
+            }
+          })
+
+          newParentNode.childNodes = newParentNodechildNodes
+        }
+        break
+      case ENodeTargetRelation.FollowingSibling:
+        if (newParentNode !== null) {
+          newParentNode.childNodes.forEach((childNode: MissionNode) => {
+            if (childNode.nodeID === target.nodeID) {
+              newParentNodechildNodes.push(this)
+              this.parentNode = newParentNode
+            }
+
+            newParentNodechildNodes.push(childNode)
+          })
+
+          newParentNode.childNodes = newParentNodechildNodes
+        }
+        break
+    }
+
+    this._handleStructureChange()
+  }
+
+  // This will expand all child nodes
+  // of this node if possible.
+  expandChildNodes(): void {
+    for (let childNode of this.childNodes) {
+      if (childNode.expandable) {
+        childNode.expand()
+      }
+    }
+
+    this._handleStructureChange()
+  }
 }
 
 // This represents a mission for a
@@ -150,66 +339,67 @@ export class MissionNode {
 export class Mission {
   name: string
   versionNumber: number
-  nodeStructure: object
-  nodeData: Map<string, MissionNode>
+  nodeStructure: AnyObject
+  nodeData: AnyObject
+  nodes: Map<string, MissionNode>
   seed: number
+  rng: PRNG
+  rootNode: MissionNode
+  structureChangeKey: string
+  structureChangeHandlers: Array<(structureChangeKey: string) => void>
 
   constructor(
     name: string,
     versionNumber: number,
-    nodeStructure: object,
-    nodeData: Map<string, MissionNode>,
+    nodeStructure: AnyObject,
+    nodeData: AnyObject,
     seed: number,
+    expandAll: boolean = false,
   ) {
     this.name = name
     this.versionNumber = versionNumber
     this.nodeStructure = nodeStructure
     this.nodeData = nodeData
+    this.nodes = new Map<string, MissionNode>()
     this.seed = seed
+    this.rng = seedrandom(`${seed}`)
+    this.rootNode = new MissionNode(
+      this,
+      'ROOT',
+      'ROOT',
+      'default',
+      'N/A',
+      'N/A',
+      'N/A',
+      'N/A',
+      false,
+      [],
+      0,
+      0,
+    )
+    this.structureChangeKey = generateHash()
+    this.structureChangeHandlers = []
+
+    this.parseJSON()
+    this.mapNodeRelationships(expandAll, this.rootNode, nodeStructure)
+    this.positionNodes()
   }
 
-  // This will determine whether a
-  // node succeeds or fails based
-  // on the success chance passed.
-  static determineNodeSuccess = (successChance: number, rng: PRNG): boolean => {
-    return rng.double() <= successChance
-  }
-
-  // This will create a new Mission
-  // object from the JSON data returned
-  // from the server.
-  static fromJson(json: IMissionJson): Mission {
+  parseJSON(): void {
     try {
-      // Define variables, grabbing needed
-      // data from the JSON passed.
-      let mission: Mission
-      let name: string = json.name
-      let versionNumber: number = json.versionNumber
-      let seed: number = json.seed
-      let nodeStructure: object = json.nodeStructure
-      let nodeDataJson: object = json.nodeData
-      let nodeData: Map<string, MissionNode> = new Map<string, MissionNode>()
-      let nodeDataKeys: string[] = Object.keys(nodeDataJson)
+      let nodeData: AnyObject = this.nodeData
+      let nodeDataKeys: string[] = Object.keys(this.nodeData)
 
-      // Throws error if versionNumber is
-      // not an integer.
-      if (!isInteger(versionNumber)) {
-        throw new Error()
-      }
-
-      // Set seed for random so that we get
-      // the same success/failure results
-      // for the nodes in this mission as other
-      // students taking this mission.
-      let rng = seedrandom(`${seed}`)
+      this.nodes.clear()
 
       // Converts raw node data into MissionNode
       // objects, then it stores the created
       // objects in the nodeData map.
       for (let key of nodeDataKeys) {
-        let nodeDatum: IMissionNodeJson = (nodeDataJson as any)[key]
+        let nodeDatum: IMissionNodeJson = nodeData[key]
 
         let node: MissionNode = new MissionNode(
+          this,
           nodeDatum.nodeID,
           nodeDatum.name,
           nodeDatum.color,
@@ -223,137 +413,140 @@ export class Mission {
           0,
         )
 
-        nodeData.set(key, node)
+        this.nodes.set(key, node)
       }
-
-      // Create mission object and return it.
-      mission = new Mission(name, versionNumber, nodeStructure, nodeData, seed)
-      return mission
     } catch (error) {
       console.error('Invalid JSON passed to create Mission object.')
       throw error
     }
   }
 
-  // This will construct a new mission
-  // based on the original mission and
-  // a node structure reference that represents
-  // that mission. The node structure reference
-  // will be read to determine all the currently
-  // expanded and collapsed nodes, rendering a
-  // mission that only display the nodes that
-  // have been expanded into view.
-  static renderMission = (
-    originalMission: Mission,
-    nodeStructureReference: NodeStructureReference,
-    nodeStructure: AnyObject,
-    options: IMissionRenderOptions = {},
-    missionRender: Mission | null = null,
+  // This is called when a change
+  // is made to the node structure.
+  handleStructureChange(): void {
+    this.structureChangeKey = generateHash()
+
+    this.mapNodeRelationships()
+    this.positionNodes()
+
+    for (let handler of this.structureChangeHandlers) {
+      handler(this.structureChangeKey)
+    }
+  }
+
+  // This adds a handler that will
+  // be called when a structure change
+  // is made.
+  addStructureChangeHandler(
+    handler: (structureChangeKey: string) => void,
+  ): void {
+    this.structureChangeHandlers.push(handler)
+  }
+
+  // This will remove a structure change
+  // handler.
+  removeStructureChangeHandler(
+    handler: (structureChangeKey: string) => void,
+  ): void {
+    this.structureChangeHandlers.splice(
+      this.structureChangeHandlers.indexOf(handler),
+      1,
+    )
+  }
+
+  // This will remove all structure change
+  // handlers.
+  clearStructureChangeHandlers(): void {
+    this.structureChangeHandlers = []
+  }
+
+  // This will determine the relationship
+  // between nodes, parent to child and
+  // vise-versa.
+  mapNodeRelationships(
+    expandAll: boolean = false,
+    rootNode: MissionNode = this.rootNode,
+    nodeStructure: AnyObject = this.nodeStructure,
+  ): MissionNode {
+    let nodes: Map<string, MissionNode> = this.nodes
+    let childNodes: Array<MissionNode> = []
+    let childNodeKeyValuePairs: Array<[string, AnyObject | string]> =
+      Object.keys(nodeStructure).map((key: string) => [key, nodeStructure[key]])
+
+    for (let childNodeKeyValuePair of childNodeKeyValuePairs) {
+      let key: string = childNodeKeyValuePair[0]
+      let value: AnyObject | string = childNodeKeyValuePair[1]
+      let childNode: MissionNode | undefined = nodes.get(key)
+
+      if (typeof value !== 'string' && childNode !== undefined) {
+        childNodes.push(this.mapNodeRelationships(expandAll, childNode, value))
+      }
+    }
+    rootNode.childNodes = childNodes
+
+    if (expandAll && rootNode.expandable) {
+      rootNode.expand()
+    }
+
+    for (let childNode of childNodes) {
+      childNode.parentNode = rootNode
+    }
+
+    return rootNode
+  }
+
+  // This will position all the nodes
+  // with mapX and mapY values that
+  // correspond with the current state
+  // of the mission.
+  positionNodes = (
+    parentNode: MissionNode = this.rootNode,
     depth: number = -1,
     rowCount: Counter = new Counter(0),
   ): Mission => {
-    // If mission render is null,
-    // then this should be the functions
-    // initial call before any recursion.
-    // Therefore the missionRender should
-    // be initialized.
-    if (missionRender === null) {
-      missionRender = new Mission(
-        originalMission.name,
-        originalMission.versionNumber,
-        cloneDeep(originalMission.nodeStructure),
-        new Map<string, MissionNode>(),
-        originalMission.seed,
-      )
-      nodeStructure = missionRender.nodeStructure
-    }
     // Else, this function was recursively
     // called with a reference to a particular
     // node in the mission. This node should be
     // included in the nodeData for the missionRender
     // so that it displays.
-    else {
-      let nodeID: string = nodeStructureReference.nodeID
-      let nodeDatum: MissionNode | undefined =
-        originalMission.nodeData.get(nodeID)
-
-      if (nodeDatum !== undefined) {
-        nodeDatum.mapX = depth
-        nodeDatum.mapY = rowCount.count
-        missionRender.nodeData.set(nodeID, nodeDatum)
-      } else {
-        console.error(
-          new Error(
-            `Cannot render mission since the nodeDatum with the ID ${nodeID} could not be found in the original mission:`,
-          ),
-        )
-        return new Mission(
-          originalMission.name,
-          originalMission.versionNumber,
-          {},
-          new Map<string, MissionNode>(),
-          originalMission.seed,
-        )
-      }
+    if (parentNode.nodeID !== this.rootNode.nodeID) {
+      parentNode.mapX = depth
+      parentNode.mapY = rowCount.count
     }
 
-    let subnodes = nodeStructureReference.subnodes
-    // If the current node being examined is
-    // collapsed, then this recursive function
-    // should not dig deeper, and the render is
-    // returned up the chain.
-    if (!options.ignoreVisibility && nodeStructureReference.isCollapsed) {
-      for (let key of Object.keys(nodeStructure)) {
-        delete nodeStructure[key]
-      }
-      return missionRender
-    }
-    // Else, the node is expanded, the subnodes
-    // should then be examined by recursively
-    // calling this function.
-    else {
-      subnodes.forEach((subnode: NodeStructureReference, index: number) => {
-        if (!(subnode.nodeID in nodeStructure)) {
-          console.error(
-            new Error(
-              `Cannot render mission since the nodeReference subnode ${subnode.nodeID} cannot be found in nodeStructure:`,
-            ),
-          )
-          return new Mission(
-            originalMission.name,
-            originalMission.versionNumber,
-            {},
-            new Map<string, MissionNode>(),
-            originalMission.seed,
-          )
-        }
+    // If the parentNode is expanded, then
+    // child nodes could effect the positioning
+    // of sibling nodes, and the children should
+    // be accounted for.
+    if (parentNode.isExpanded) {
+      let childNodes = parentNode.childNodes
 
-        let substructure: AnyObject = nodeStructure[subnode.nodeID]
-
+      // The childNodes should then be examined
+      // by recursively calling this function.
+      childNodes.forEach((childNode: MissionNode, index: number) => {
         if (index > 0) {
           rowCount.increment()
         }
 
-        Mission.renderMission(
-          originalMission,
-          subnode,
-          substructure,
-          options,
-          missionRender,
-          depth + 1,
-          rowCount,
-        )
+        this.positionNodes(childNode, depth + 1, rowCount)
       })
     }
 
-    return missionRender
+    return this
+  }
+
+  // This will determine whether a
+  // node succeeds or fails based
+  // on the success chance passed.
+  static determineNodeSuccess = (successChance: number, rng: PRNG): boolean => {
+    return rng.double() <= successChance
   }
 }
 
 // ! TO-BE-REMOVED
 // This creates a test mission for
 // testing purposes.
-export function createTestMission(): Mission {
+export function createTestMission(expandAll: boolean = false): Mission {
   const testMissionJson: IMissionJson = {
     name: 'Incredible Mission',
     versionNumber: 1,
@@ -1106,7 +1299,14 @@ export function createTestMission(): Mission {
     },
   }
 
-  return Mission.fromJson(testMissionJson)
+  return new Mission(
+    testMissionJson.name,
+    testMissionJson.versionNumber,
+    testMissionJson.nodeStructure,
+    testMissionJson.nodeData,
+    testMissionJson.seed,
+    expandAll,
+  )
 }
 
 export default {

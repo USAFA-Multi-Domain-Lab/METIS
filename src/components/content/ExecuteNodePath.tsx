@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import './ExecuteNodePath.scss'
 import { useStore } from 'react-context-hook'
-import { MissionNode } from '../../modules/missions'
+import { Mission, MissionNode } from '../../modules/missions'
 import { IUser } from '../../modules/users'
 import gameLogic, { runNodeLoadingBar } from '../../modules/game-logic'
 import NodeStructureReference from '../../modules/node-reference'
@@ -9,7 +9,6 @@ import NodeHoverDisplay from './NodeHoverDisplay'
 
 const ExecuteNodePath = (props: {
   selectedNode: MissionNode | null | undefined
-  missionState: NodeStructureReference
 }) => {
   /* -- GLOBAL STATE -- */
   const [currentUser, setCurrentUser] = useStore<IUser | null>('currentUser')
@@ -56,10 +55,7 @@ const ExecuteNodePath = (props: {
           // Output message in the terminal which differs based on whether
           // it passes or fails
           if (props.selectedNode.succeeded) {
-            gameLogic.handleNodeSelection(
-              props.selectedNode,
-              props.missionState,
-            )
+            gameLogic.handleNodeSelection(props.selectedNode)
 
             setConsoleOutputs([
               ...consoleOutputs,

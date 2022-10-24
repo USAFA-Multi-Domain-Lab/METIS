@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useStore } from 'react-context-hook'
 import { createTestMission, Mission, MissionNode } from '../../modules/missions'
 import { EAjaxStatus } from '../../modules/toolbox/ajax'
@@ -16,14 +16,7 @@ import Tooltip from '../content/Tooltip'
 import List from '../content/List'
 
 const mission = createTestMission()
-const initialMissionState =
-  NodeStructureReference.constructNodeStructureReference(
-    mission.name,
-    mission.nodeStructure,
-    mission.nodeData,
-  )
-
-initialMissionState.expand()
+mission.rootNode.expand()
 
 // This will render a dashboard with a radar
 // on it, indicating air traffic passing by.
@@ -66,12 +59,18 @@ export default function DashboardPage(props: {
 
   /* -- COMPONENT STATE -- */
 
-  const [missionState, setMissionState] =
-    useState<NodeStructureReference>(initialMissionState)
+  const [mountHandled, setMountHandled] = useState<boolean>()
   const [forcedUpdateCounter, setForcedUpdateCounter] = useState<number>(0)
-  let [lastSelectedNode, setLastSelectedNode] = useState<MissionNode | null>()
+  const [lastSelectedNode, setLastSelectedNode] = useState<MissionNode | null>()
 
   /* -- COMPONENT EFFECTS -- */
+
+  // Equivalent of componentDidMount.
+  useEffect(() => {
+    if (!mountHandled) {
+      setMountHandled(true)
+    }
+  }, [mountHandled])
 
   /* -- COMPONENTS -- */
 
@@ -110,12 +109,6 @@ export default function DashboardPage(props: {
   let show: boolean = props.show
 
   let className: string = 'DashboardPage'
-
-  let missionRender = Mission.renderMission(
-    mission,
-    missionState,
-    mission.nodeStructure,
-  )
 
   if (
     outputPanelIsDisplayed === true &&
@@ -156,14 +149,13 @@ export default function DashboardPage(props: {
           // -- content --
           <div className='Content'>
             <MissionMap
-              mission={missionRender}
+              mission={mission}
               missionAjaxStatus={EAjaxStatus.Loaded}
               handleNodeSelection={(selectedNode: MissionNode) => {
                 if (currentUser !== null) {
                   let username: string = currentUser.userID
 
                   if (selectedNode !== undefined) {
-                    lastSelectedNode = selectedNode
                     setLastSelectedNode(lastSelectedNode)
                   }
 
@@ -178,7 +170,7 @@ export default function DashboardPage(props: {
                   }
 
                   if (selectedNode.executable === false) {
-                    gameLogic.handleNodeSelection(selectedNode, missionState)
+                    gameLogic.handleNodeSelection(selectedNode)
                     selectedNode.color = ''
                     return
                   } else {
@@ -197,7 +189,6 @@ export default function DashboardPage(props: {
 
                   let selectedNodeParentDiv =
                     document.querySelector<HTMLDivElement>('.LoadingBar')
-                  // console.log(selectedNodeParentDiv)
                   if (selectedNodeParentDiv !== null) {
                     setSelectedDivElement(selectedNodeParentDiv)
                   }
@@ -234,14 +225,8 @@ export default function DashboardPage(props: {
               }}
             />
             <OutputPanel />
-            <NodeActions
-              selectedNode={lastSelectedNode}
-              missionState={missionState}
-            />
-            <ExecuteNodePath
-              selectedNode={lastSelectedNode}
-              missionState={missionState}
-            />
+            <NodeActions selectedNode={lastSelectedNode} />
+            <ExecuteNodePath selectedNode={lastSelectedNode} />
           </div>
         }
       </div>

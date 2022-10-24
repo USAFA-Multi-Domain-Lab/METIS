@@ -5,19 +5,9 @@ import NodeStructureReference from './node-reference'
 
 const referenceMission = createTestMission()
 
-export const handleNodeSelection = (
-  selectedNodeData: MissionNode,
-  missionState: NodeStructureReference,
-) => {
-  let selectedReference: NodeStructureReference | undefined =
-    NodeStructureReference.findReference(missionState, selectedNodeData)
-
-  if (
-    selectedReference !== undefined &&
-    selectedReference.expandable &&
-    !selectedReference.isExpanded
-  ) {
-    selectedReference.expand()
+export const handleNodeSelection = (selectedNode: MissionNode) => {
+  if (selectedNode.expandable && !selectedNode.isExpanded) {
+    selectedNode.expand()
   }
 }
 

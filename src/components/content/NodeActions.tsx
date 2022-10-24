@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import './NodeActions.scss'
 import { useStore } from 'react-context-hook'
-import { MissionNode } from '../../modules/missions'
+import { Mission, MissionNode } from '../../modules/missions'
 import { IUser } from '../../modules/users'
 import NodeStructureReference from '../../modules/node-reference'
 
@@ -13,7 +13,6 @@ export interface INodeActionItem {
 
 const NodeActions = (props: {
   selectedNode: MissionNode | null | undefined
-  missionState: NodeStructureReference
 }) => {
   /* -- GLOBAL STATE -- */
   const [currentUser, setCurrentUser] = useStore<IUser | null>('currentUser')
