@@ -1,9 +1,5 @@
-import { AnyObject } from 'mongoose'
-import { JsxElement } from 'typescript'
-import missions, { createMission, Mission, MissionNode } from './missions'
+import missions, { MissionNode } from './missions'
 import NodeStructureReference from './node-reference'
-
-const referenceMission = createMission()
 
 export const handleNodeSelection = (
   selectedNodeData: MissionNode,
@@ -57,5 +53,5 @@ export const runNodeLoadingBar = (
 
 export default {
   handleNodeSelection,
-  nodeProcessBar: runNodeLoadingBar,
+  runNodeLoadingBar,
 }

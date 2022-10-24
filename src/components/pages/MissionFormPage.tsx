@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { useStore } from 'react-context-hook'
-import { createMission, Mission, MissionNode } from '../../modules/missions'
+import { getMission, Mission, MissionNode } from '../../modules/missions'
 import NodeStructureReference, {
   ENodeTargetRelation,
 } from '../../modules/node-reference'
@@ -56,7 +56,7 @@ export default function MissionFormPage(props: {
   // Equivalent of componentDidMount.
   useEffect(() => {
     if (!mountHandled) {
-      let mission: Mission = createMission()
+      let mission: Mission = getMission()
       let nodeStructure: NodeStructureReference =
         NodeStructureReference.constructNodeStructureReference(
           'ROOT',

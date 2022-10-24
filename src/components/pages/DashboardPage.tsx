@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { useStore } from 'react-context-hook'
 import {
-  createMission,
+  getMission,
   Mission,
   MissionNode,
   MissionNodeAction,
@@ -20,7 +20,7 @@ import NodeHoverDisplay from '../content/NodeHoverDisplay'
 import Tooltip from '../content/Tooltip'
 import List from '../content/List'
 
-const mission = createMission()
+const mission = getMission()
 const initialMissionState =
   NodeStructureReference.constructNodeStructureReference(
     mission.name,
@@ -167,8 +167,7 @@ export default function DashboardPage(props: {
                   let username: string = currentUser.userID
 
                   if (selectedNode !== undefined) {
-                    lastSelectedNode = selectedNode
-                    setLastSelectedNode(lastSelectedNode)
+                    setLastSelectedNode(selectedNode)
                   }
 
                   if (selectedNode.preExecutionText !== '') {
