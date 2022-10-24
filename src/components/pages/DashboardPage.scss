@@ -74,26 +74,28 @@ $background-bar: linear-gradient(
       margin-right: 10px;
       width: 100%;
     }
-
-    .NodeActions {
-      display: none;
-    }
-
-    .ExecuteNodePath {
-      display: none;
-    }
-
-    .OutputPanel {
-      display: none;
-    }
-
-    .NodeHoverDisplay {
-      display: none;
-    }
   }
 
   @media only screen and (max-width: 768px) {
     padding: 10px;
+  }
+}
+
+.DashboardPageWithMapOnly {
+  .NodeActions {
+    display: none;
+  }
+
+  .ExecuteNodePath {
+    display: none;
+  }
+
+  .OutputPanel {
+    display: none;
+  }
+
+  .NodeHoverDisplay {
+    display: none;
   }
 }
 

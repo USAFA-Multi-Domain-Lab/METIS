@@ -718,6 +718,7 @@ export default class List<TList extends object> extends React.Component<
             let selected: boolean = this.props.isItemSelected(item)
             let className = 'item'
             let classNameAddon = this.props.applyClassNameAddon(item)
+
             if (listSpecificItemClassName) {
               className += ` ${listSpecificItemClassName}`
             }

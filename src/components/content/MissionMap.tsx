@@ -756,10 +756,16 @@ export default class MissionMap extends React.Component<
             let scoreWidth: number = 25 * mapScale
             let lineHeight: number = height * 0.34
 
+            let loadingClassName: string = 'loading'
+
+            if (!node.executing) {
+              loadingClassName += ' hide'
+            }
+
             return (
               <>
                 <div
-                  className='loading hide'
+                  className={loadingClassName}
                   style={{
                     height: `${height}px`,
                   }}

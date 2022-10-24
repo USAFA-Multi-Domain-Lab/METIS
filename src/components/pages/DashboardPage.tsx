@@ -12,12 +12,8 @@ import MissionMap from '../content/MissionMap'
 import OutputPanel from '../content/OutputPanel'
 import './DashboardPage.scss'
 import gameLogic from '../../modules/game-logic'
-import NodeStructureReference from '../../modules/node-reference'
 import ExecuteNodePath from '../content/ExecuteNodePath'
 import NodeActions from '../content/NodeActions'
-import NodeHoverDisplay from '../content/NodeHoverDisplay'
-import Tooltip from '../content/Tooltip'
-import List from '../content/List'
 
 const mission = createTestMission()
 mission.rootNode.expand()
@@ -58,14 +54,14 @@ export default function DashboardPage(props: {
     useStore<string>('nodeActionItemText')
   const [nodeActionSuccessChance, setNodeActionSuccessChance] =
     useStore<number>('nodeActionSuccessChance')
-  let [selectedDivElement, setSelectedDivElement] =
-    useStore<HTMLDivElement>('selectedDivElement')
 
   /* -- COMPONENT STATE -- */
 
-  const [mountHandled, setMountHandled] = useState<boolean>()
+  const [mountHandled, setMountHandled] = useState<boolean>(false)
   const [forcedUpdateCounter, setForcedUpdateCounter] = useState<number>(0)
-  const [lastSelectedNode, setLastSelectedNode] = useState<MissionNode | null>()
+  const [lastSelectedNode, setLastSelectedNode] = useState<MissionNode | null>(
+    null,
+  )
 
   /* -- COMPONENT EFFECTS -- */
 
@@ -119,19 +115,21 @@ export default function DashboardPage(props: {
     executeNodePathPromptIsDisplayed === false &&
     nodeActionSelectionPromptIsDisplayed === false
   ) {
-    className = 'DashboardPageWithOutputPanelOnly'
+    className += ' DashboardPageWithOutputPanelOnly'
   } else if (
     outputPanelIsDisplayed === true &&
     nodeActionSelectionPromptIsDisplayed === true &&
     executeNodePathPromptIsDisplayed === false
   ) {
-    className = 'DashboardPageWithOutputPanelAndNodeActionPrompt'
+    className += ' DashboardPageWithOutputPanelAndNodeActionPrompt'
   } else if (
     outputPanelIsDisplayed === true &&
     executeNodePathPromptIsDisplayed === true &&
     nodeActionSelectionPromptIsDisplayed === false
   ) {
-    className = 'DashboardPageWithOutputPanelAndExecuteNodePathPrompt'
+    className += ' DashboardPageWithOutputPanelAndExecuteNodePathPrompt'
+  } else {
+    className += ' DashboardPageWithMapOnly'
   }
 
   if (show) {
@@ -159,9 +157,7 @@ export default function DashboardPage(props: {
                 if (currentUser !== null) {
                   let username: string = currentUser.userID
 
-                  if (selectedNode !== undefined) {
-                    setLastSelectedNode(lastSelectedNode)
-                  }
+                  setLastSelectedNode(selectedNode)
 
                   if (selectedNode.preExecutionText !== '') {
                     let timeStamp: number = 5 * (new Date() as any)
@@ -186,16 +182,10 @@ export default function DashboardPage(props: {
                 }
               }}
               applyNodeClassName={(node: MissionNode) => {
-                let className = ' '
+                let className = ''
 
                 if (node.executing) {
-                  className = 'LoadingBar'
-
-                  let selectedNodeParentDiv =
-                    document.querySelector<HTMLDivElement>('.LoadingBar')
-                  if (selectedNodeParentDiv !== null) {
-                    setSelectedDivElement(selectedNodeParentDiv)
-                  }
+                  className += ' LoadingBar'
                 }
 
                 if (node.executed && node.succeeded) {

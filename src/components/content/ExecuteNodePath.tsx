@@ -7,9 +7,7 @@ import gameLogic, { runNodeLoadingBar } from '../../modules/game-logic'
 import NodeStructureReference from '../../modules/node-reference'
 import NodeHoverDisplay from './NodeHoverDisplay'
 
-const ExecuteNodePath = (props: {
-  selectedNode: MissionNode | null | undefined
-}) => {
+const ExecuteNodePath = (props: { selectedNode: MissionNode | null }) => {
   /* -- GLOBAL STATE -- */
   const [currentUser, setCurrentUser] = useStore<IUser | null>('currentUser')
   const [consoleOutputs, setConsoleOutputs] =
@@ -22,8 +20,6 @@ const ExecuteNodePath = (props: {
   const [nodeActionItemText] = useStore<string>('nodeActionItemText')
   const [nodeActionSuccessChance, setNodeActionSuccessChance] =
     useStore<number>('nodeActionSuccessChance')
-  const [selectedDivElement, setSelectedDivElement] =
-    useStore<HTMLDivElement>('selectedDivElement')
 
   /* -- COMPONENT STATE -- */
   const [forcedUpdateCounter, setForcedUpdateCounter] = useState<number>(0)
@@ -40,48 +36,39 @@ const ExecuteNodePath = (props: {
   }
 
   const execute = () => {
-    setExecuteNodePathPromptIsDisplayed(false)
-
-    if (currentUser !== null) {
+    if (currentUser !== null && props.selectedNode !== null) {
       let username: string = currentUser.userID
+      let selectedNode: MissionNode = props.selectedNode
 
-      runNodeLoadingBar(processDelayTime, selectedDivElement)
+      setExecuteNodePathPromptIsDisplayed(false)
 
-      setTimeout(() => {
-        if (props.selectedNode !== undefined && props.selectedNode !== null) {
-          props.selectedNode.execute()
-          props.selectedNode.isExecuting()
+      selectedNode.execute((success: boolean) => {
+        // Output message in the terminal which differs based on whether
+        // it passes or fails
+        if (success) {
+          gameLogic.handleNodeSelection(selectedNode)
 
-          // Output message in the terminal which differs based on whether
-          // it passes or fails
-          if (props.selectedNode.succeeded) {
-            gameLogic.handleNodeSelection(props.selectedNode)
-
-            setConsoleOutputs([
-              ...consoleOutputs,
-              {
-                date: Date.now(),
-                value: `<span class='line-cursor'>${username}@USAFA: </span>
-                     <span class="succeeded">${props.selectedNode.postExecutionSuccessText}</span>`,
-              },
-            ])
-          } else {
-            setConsoleOutputs([
-              ...consoleOutputs,
-              {
-                date: Date.now(),
-                value: `<span class='line-cursor'>${username}@USAFA: </span>
-                    <span class="failed">${props.selectedNode.postExecutionFailureText}</span>`,
-              },
-            ])
-          }
+          setConsoleOutputs([
+            ...consoleOutputs,
+            {
+              date: Date.now(),
+              value: `<span class='line-cursor'>${username}@USAFA: </span>
+                     <span class="succeeded">${selectedNode.postExecutionSuccessText}</span>`,
+            },
+          ])
+        } else {
+          setConsoleOutputs([
+            ...consoleOutputs,
+            {
+              date: Date.now(),
+              value: `<span class='line-cursor'>${username}@USAFA: </span>
+                    <span class="failed">${selectedNode.postExecutionFailureText}</span>`,
+            },
+          ])
         }
-      }, processDelayTime)
+      })
+      runNodeLoadingBar(processDelayTime)
     }
-  }
-
-  if (props.selectedNode !== undefined && props.selectedNode !== null) {
-    props.selectedNode.isExecuting()
   }
 
   return (

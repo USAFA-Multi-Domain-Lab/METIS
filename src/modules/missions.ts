@@ -166,24 +166,25 @@ export class MissionNode {
     this._isExpanded = false
   }
 
-  isExecuting(): boolean {
-    if (this.executable === true && this.executed === false) {
-      this._executing = true
-    } else if (this.executable === true && this.executed === true) {
-      this._executing = false
-    }
-    return this._executing
-  }
+  // This will execute the selected
+  // node action after the time delay
+  // of the selected node action.
+  execute(callback: (success: boolean) => void): void {
+    let selectedNodeAction: MissionNodeAction | null = this.selectedNodeAction
 
-  // This will execute the node if it
-  // is executable and then return
-  // whether the node was successfully
-  // executed or not.
-  execute(): boolean {
-    if (this.executable) {
-      this._executed = true
+    if (
+      this.executable === true &&
+      this.executed === false &&
+      selectedNodeAction !== null
+    ) {
+      this._executing = true
+      setTimeout(() => {
+        this._executing = false
+        this._executed = true
+
+        callback(this.willSucceed)
+      }, selectedNodeAction.timeDelay)
     }
-    return this._executed
   }
 
   // This is called when a change
