@@ -38,7 +38,6 @@ export default class GlobalState {
   nodeActionItemText: string
   processDelayTime: number
   nodeActionSuccessChance: number
-  selectedDivElement: HTMLDivElement | null
 
   constructor(stateSetters: IStateSetters) {
     this.currentUser = null
@@ -60,7 +59,6 @@ export default class GlobalState {
     this.nodeActionItemText = ''
     this.processDelayTime = 0
     this.nodeActionSuccessChance = 0
-    this.selectedDivElement = null
   }
 
   // This will position the currently

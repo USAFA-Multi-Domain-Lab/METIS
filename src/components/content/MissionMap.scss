@@ -264,8 +264,8 @@
           border-color: $fail;
         }
 
-        .hide {
-          display: none;
+        &.LoadingBar {
+          background-color: $background-alt1;
         }
 
         @keyframes loading-animation {
@@ -278,6 +278,7 @@
         }
 
         .loading {
+          width: 0;
           background-image: linear-gradient(
             -45deg,
             $loading-1 25%,
@@ -294,6 +295,13 @@
           animation-duration: 0.75s;
           animation-timing-function: linear;
           animation-iteration-count: infinite;
+
+          &.hide {
+            display: none;
+            opacity: 0;
+            position: absolute;
+            left: -200vw;
+          }
         }
 
         // &.final,

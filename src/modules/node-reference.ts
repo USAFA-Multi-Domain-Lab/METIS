@@ -20,6 +20,7 @@ export default class NodeStructureReference {
   nodeID: string
   parentNode: NodeStructureReference | null
   subnodes: Array<NodeStructureReference>
+  displayName: string
   _isExpanded: boolean
 
   get siblings(): Array<NodeStructureReference> {
@@ -105,10 +106,12 @@ export default class NodeStructureReference {
     nodeID: string,
     parentNode: NodeStructureReference | null,
     subnodes: Array<NodeStructureReference>,
+    displayName: string = nodeID,
   ) {
     this.nodeID = nodeID
     this.parentNode = parentNode
     this.subnodes = subnodes
+    this.displayName = displayName
     this._isExpanded = false
   }
 
@@ -225,12 +228,15 @@ export default class NodeStructureReference {
   static constructNodeStructureReference(
     nodeID: string,
     nodeStructure: AnyObject,
+    nodeData: Map<string, MissionNode>,
     expandAll: boolean = false,
   ): NodeStructureReference {
     let subnodes: Array<NodeStructureReference> = []
     let subnodeKeyValuePairs: Array<[string, AnyObject | string]> = Object.keys(
       nodeStructure,
     ).map((key: string) => [key, nodeStructure[key]])
+    let node: MissionNode | undefined = nodeData.get(nodeID)
+    let displayName: string = node === undefined ? nodeID : node.name
 
     for (let subnodeKeyValuePair of subnodeKeyValuePairs) {
       let key: string = subnodeKeyValuePair[0]
@@ -241,6 +247,7 @@ export default class NodeStructureReference {
           NodeStructureReference.constructNodeStructureReference(
             key,
             value,
+            nodeData,
             expandAll,
           ),
         )
@@ -248,7 +255,7 @@ export default class NodeStructureReference {
     }
 
     let nodeStructureReference: NodeStructureReference =
-      new NodeStructureReference(nodeID, null, subnodes)
+      new NodeStructureReference(nodeID, null, subnodes, displayName)
 
     if (expandAll && nodeStructureReference.expandable) {
       nodeStructureReference.expand()

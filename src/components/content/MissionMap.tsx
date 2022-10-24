@@ -15,6 +15,7 @@ import { ActionPanel } from './ActionPanel'
 interface IMissionMap {
   mission: Mission
   missionAjaxStatus: EAjaxStatus
+
   handleNodeSelection: (node: MissionNode) => void
   handleMapEditRequest: (() => void) | null
   applyNodeClassName: (node: MissionNode) => string
@@ -22,7 +23,9 @@ interface IMissionMap {
 }
 
 interface IMissionMap_S {
-  relationships: MissionNodeRelationship[]
+  visibleNodes: Array<MissionNode>
+  relationships: Array<MissionNodeRelationship>
+  lastStructureChangeKey: string
   navigationIsActive: boolean
   mapOffsetX: number
   mapOffsetY: number
@@ -116,8 +119,12 @@ export default class MissionMap extends React.Component<
 
   // inherited
   get defaultState(): IMissionMap_S {
+    let mission: Mission = this.props.mission
+
     return {
+      visibleNodes: [],
       relationships: [],
+      lastStructureChangeKey: mission.structureChangeKey,
       navigationIsActive: false,
       mapOffsetX: 0,
       mapOffsetY: mapYScale * -3.5,
@@ -145,11 +152,13 @@ export default class MissionMap extends React.Component<
 
   // inherited
   componentDidMount(): void {
+    let mission: Mission = this.props.mission
     let map: HTMLDivElement | null = this.map.current
 
     window.addEventListener('wheel', this.preventMapZoomInterference, {
       passive: false,
     })
+    mission.addStructureChangeHandler(this.forceUpdate)
 
     if (map !== null) {
       new ResizeObserver(this.forceUpdate).observe(map)
@@ -160,7 +169,10 @@ export default class MissionMap extends React.Component<
 
   // inherited
   componentWillUnmount(): void {
+    let mission: Mission = this.props.mission
+
     window.removeEventListener('wheel', this.preventMapZoomInterference)
+    mission.removeStructureChangeHandler(this.forceUpdate)
   }
 
   /* -- functions | state-purposed -- */
@@ -169,9 +181,16 @@ export default class MissionMap extends React.Component<
   componentDidUpdate(previousProps: IMissionMap): void {
     if (
       previousProps.mission !== this.props.mission ||
-      previousProps.missionAjaxStatus !== this.props.missionAjaxStatus
+      previousProps.missionAjaxStatus !== this.props.missionAjaxStatus ||
+      this.state.lastStructureChangeKey !==
+        this.props.mission.structureChangeKey
     ) {
       this.updateRelationships()
+    }
+
+    if (previousProps.mission !== this.props.mission) {
+      previousProps.mission.removeStructureChangeHandler(this.forceUpdate)
+      this.props.mission.addStructureChangeHandler(this.forceUpdate)
     }
   }
 
@@ -199,60 +218,36 @@ export default class MissionMap extends React.Component<
   // updates the state with these values so
   // when rendering the pointers, these values
   // are at the ready.
-  updateRelationships = (): void => {
+  updateRelationships = (
+    parentNode: MissionNode = this.props.mission.rootNode,
+    visibleNodes: Array<MissionNode> = [],
+    relationships: Array<MissionNodeRelationship> = [],
+  ): void => {
     let mission: Mission = this.props.mission
-    let nodeStructure: any = mission.nodeStructure
-    let nodeData: Map<string, MissionNode> = mission.nodeData
-    let relationships: MissionNodeRelationship[] = []
-    let uncheckedNodes: Array<[string | null, any]> = []
-    // Pushes initial node to check
-    // to the uncheckedNodes to check.
-    uncheckedNodes.push([null, nodeStructure])
-    // This will continue until there are
-    // no more nodes to check.
-    while (uncheckedNodes.length > 0) {
-      let updatedUncheckedNodes: any[] = []
-      // Loops through each unchecked node.
-      for (let [prerequisite, unlockedStructure] of uncheckedNodes) {
-        // Gets subnodes from the unchecked node
-        // in question.
-        let subnodes: string[] = Object.keys(unlockedStructure)
-        // Loops through each subnode of the
-        // unchecked node.
-        for (let subnode of subnodes) {
-          // Checks that the subnode is
-          // actually a subnode.
-          if (prerequisite !== null && subnode !== 'END') {
-            // The prerequisite node data and
-            // the data of the unlocked node
-            // is retrieved.
-            let prerequisiteData: MissionNode | undefined =
-              nodeData.get(prerequisite)
-            let unlocksData: MissionNode | undefined = nodeData.get(subnode)
-            // If the data is not undefined...
-            if (prerequisiteData !== undefined && unlocksData !== undefined) {
-              // A new relationship is created...
-              let relationship: MissionNodeRelationship =
-                new MissionNodeRelationship(prerequisiteData, unlocksData)
-              // And that relationship is pushed to
-              // to the relationships array.
-              relationships.push(relationship)
-            }
-          }
-          // The subnode of the previously unchecked
-          // node is added to the array as a future
-          // node to check, but only if the end has
-          // not been reached.
-          if (subnode !== 'END') {
-            updatedUncheckedNodes.push([subnode, unlockedStructure[subnode]])
-          }
-        }
-      }
+    let rootNode: MissionNode = mission.rootNode
 
-      uncheckedNodes = updatedUncheckedNodes
+    let childNodes: Array<MissionNode> = parentNode.childNodes
+
+    for (let childNode of childNodes) {
+      if (parentNode.nodeID !== rootNode.nodeID) {
+        let relationship: MissionNodeRelationship = new MissionNodeRelationship(
+          parentNode,
+          childNode,
+        )
+        relationships.push(relationship)
+      }
+      visibleNodes.push(childNode)
+
+      if (childNode.isExpanded) {
+        this.updateRelationships(childNode, visibleNodes, relationships)
+      }
     }
 
-    this.setState({ relationships })
+    this.setState({
+      visibleNodes,
+      relationships,
+      lastStructureChangeKey: mission.structureChangeKey,
+    })
   }
 
   // This prevents map zoom interference from
@@ -621,6 +616,36 @@ export default class MissionMap extends React.Component<
 
     let classNameExternalAddon: string = this.props.applyNodeClassName(node)
 
+    switch (node.color) {
+      case 'green':
+        className = 'green'
+        break
+      case 'pink':
+        className = 'pink'
+        break
+      case 'yellow':
+        className = 'yellow'
+        break
+      case 'blue':
+        className = 'blue'
+        break
+      case 'purple':
+        className = 'purple'
+        break
+      case 'red':
+        className = 'red'
+        break
+      case 'khaki':
+        className = 'khaki'
+        break
+      case 'orange':
+        className = 'orange'
+        break
+      default:
+        className = 'default'
+        break
+    }
+
     if (classNameExternalAddon.length > 0) {
       className += ` ${classNameExternalAddon}`
     }
@@ -632,6 +657,7 @@ export default class MissionMap extends React.Component<
   render(): JSX.Element {
     let mission: Mission = this.props.mission
     let missionAjaxStatus: EAjaxStatus = this.props.missionAjaxStatus
+    let visibleNodes: Array<MissionNode> = this.state.visibleNodes
     let navigationIsActive: boolean = this.state.navigationIsActive
     let mapScale: number = this.state.mapScale
     let map: HTMLDivElement | null = this.map.current
@@ -722,7 +748,7 @@ export default class MissionMap extends React.Component<
           // -- MAPPED NODES --
         }
         <List<MissionNode>
-          items={Array.from(mission.nodeData.values())}
+          items={visibleNodes}
           itemsPerPage={null}
           getItemDisplay={(node: MissionNode) => {
             let fontSize: number = mapItemFontSize * mapScale
@@ -730,10 +756,16 @@ export default class MissionMap extends React.Component<
             let scoreWidth: number = 25 * mapScale
             let lineHeight: number = height * 0.34
 
+            let loadingClassName: string = 'loading'
+
+            if (!node.executing) {
+              loadingClassName += ' hide'
+            }
+
             return (
               <>
                 <div
-                  className='loading hide'
+                  className={loadingClassName}
                   style={{
                     height: `${height}px`,
                   }}

@@ -1,15 +1,12 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import './NodeActions.scss'
 import { useStore } from 'react-context-hook'
 import { MissionNode, MissionNodeAction } from '../../modules/missions'
 import { IUser } from '../../modules/users'
-import NodeStructureReference from '../../modules/node-reference'
-import { RNG } from 'random'
 import Tooltip from './Tooltip'
 
 const NodeActions = (props: {
   selectedNode: MissionNode | null | undefined
-  missionState: NodeStructureReference
 }) => {
   /* -- GLOBAL STATE -- */
   const [currentUser, setCurrentUser] = useStore<IUser | null>('currentUser')

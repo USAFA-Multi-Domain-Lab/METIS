@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useStore } from 'react-context-hook'
 import {
   getMission,
@@ -13,14 +13,10 @@ import MissionMap from '../content/MissionMap'
 import OutputPanel from '../content/OutputPanel'
 import './DashboardPage.scss'
 import gameLogic from '../../modules/game-logic'
-import NodeStructureReference from '../../modules/node-reference'
 import ExecuteNodePath from '../content/ExecuteNodePath'
 import NodeActions from '../content/NodeActions'
-import NodeHoverDisplay from '../content/NodeHoverDisplay'
-import Tooltip from '../content/Tooltip'
-import List from '../content/List'
 
-const mission = getMission()
+const mission = createMission()
 const initialMissionState =
   NodeStructureReference.constructNodeStructureReference(
     mission.name,
@@ -65,17 +61,23 @@ export default function DashboardPage(props: {
     useStore<string>('nodeActionItemText')
   const [nodeActionSuccessChance, setNodeActionSuccessChance] =
     useStore<number>('nodeActionSuccessChance')
-  let [selectedDivElement, setSelectedDivElement] =
-    useStore<HTMLDivElement>('selectedDivElement')
 
   /* -- COMPONENT STATE -- */
 
-  const [missionState, setMissionState] =
-    useState<NodeStructureReference>(initialMissionState)
+  const [mountHandled, setMountHandled] = useState<boolean>(false)
   const [forcedUpdateCounter, setForcedUpdateCounter] = useState<number>(0)
-  let [lastSelectedNode, setLastSelectedNode] = useState<MissionNode | null>()
+  const [lastSelectedNode, setLastSelectedNode] = useState<MissionNode | null>(
+    null,
+  )
 
   /* -- COMPONENT EFFECTS -- */
+
+  // Equivalent of componentDidMount.
+  useEffect(() => {
+    if (!mountHandled) {
+      setMountHandled(true)
+    }
+  }, [mountHandled])
 
   /* -- COMPONENTS -- */
 
@@ -115,30 +117,26 @@ export default function DashboardPage(props: {
 
   let className: string = 'DashboardPage'
 
-  let missionRender = Mission.renderMission(
-    mission,
-    missionState,
-    mission.nodeStructure,
-  )
-
   if (
     outputPanelIsDisplayed === true &&
     executeNodePathPromptIsDisplayed === false &&
     nodeActionSelectionPromptIsDisplayed === false
   ) {
-    className = 'DashboardPageWithOutputPanelOnly'
+    className += ' DashboardPageWithOutputPanelOnly'
   } else if (
     outputPanelIsDisplayed === true &&
     nodeActionSelectionPromptIsDisplayed === true &&
     executeNodePathPromptIsDisplayed === false
   ) {
-    className = 'DashboardPageWithOutputPanelAndNodeActionPrompt'
+    className += ' DashboardPageWithOutputPanelAndNodeActionPrompt'
   } else if (
     outputPanelIsDisplayed === true &&
     executeNodePathPromptIsDisplayed === true &&
     nodeActionSelectionPromptIsDisplayed === false
   ) {
-    className = 'DashboardPageWithOutputPanelAndExecuteNodePathPrompt'
+    className += ' DashboardPageWithOutputPanelAndExecuteNodePathPrompt'
+  } else {
+    className += ' DashboardPageWithMapOnly'
   }
 
   if (show) {
@@ -160,15 +158,13 @@ export default function DashboardPage(props: {
           // -- content --
           <div className='Content'>
             <MissionMap
-              mission={missionRender}
+              mission={mission}
               missionAjaxStatus={EAjaxStatus.Loaded}
               handleNodeSelection={(selectedNode: MissionNode) => {
                 if (currentUser !== null) {
                   let username: string = currentUser.userID
 
-                  if (selectedNode !== undefined) {
-                    setLastSelectedNode(selectedNode)
-                  }
+                  setLastSelectedNode(selectedNode)
 
                   if (selectedNode.preExecutionText !== '') {
                     let timeStamp: number = 5 * (new Date() as any)
@@ -181,7 +177,7 @@ export default function DashboardPage(props: {
                   }
 
                   if (selectedNode.executable === false) {
-                    gameLogic.handleNodeSelection(selectedNode, missionState)
+                    gameLogic.handleNodeSelection(selectedNode)
                     selectedNode.color = ''
                     return
                   } else {
@@ -193,45 +189,10 @@ export default function DashboardPage(props: {
                 }
               }}
               applyNodeClassName={(node: MissionNode) => {
-                let className = ' '
+                let className = ''
 
-                switch (node.color) {
-                  case 'green':
-                    className = 'green'
-                    break
-                  case 'pink':
-                    className = 'pink'
-                    break
-                  case 'yellow':
-                    className = 'yellow'
-                    break
-                  case 'blue':
-                    className = 'blue'
-                    break
-                  case 'purple':
-                    className = 'purple'
-                    break
-                  case 'red':
-                    className = 'red'
-                    break
-                  case 'khaki':
-                    className = 'khaki'
-                    break
-                  case 'orange':
-                    className = 'orange'
-                    break
-                  default:
-                    className = 'default'
-                    break
-                }
                 if (node.executing) {
-                  className = 'LoadingBar'
-
-                  let selectedNodeParentDiv =
-                    document.querySelector<HTMLDivElement>('.LoadingBar')
-                  if (selectedNodeParentDiv !== null) {
-                    setSelectedDivElement(selectedNodeParentDiv)
-                  }
+                  className += ' LoadingBar'
                 }
 
                 if (node.executed && node.succeeded) {
@@ -265,14 +226,8 @@ export default function DashboardPage(props: {
               }}
             />
             <OutputPanel />
-            <NodeActions
-              selectedNode={lastSelectedNode}
-              missionState={missionState}
-            />
-            <ExecuteNodePath
-              selectedNode={lastSelectedNode}
-              missionState={missionState}
-            />
+            <NodeActions selectedNode={lastSelectedNode} />
+            <ExecuteNodePath selectedNode={lastSelectedNode} />
           </div>
         }
       </div>
