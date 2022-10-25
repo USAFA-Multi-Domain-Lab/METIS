@@ -110,8 +110,8 @@ export function ensureDefaultDataExists(): void {
               '34': { END: 'END' },
             },
           },
-          nodeData: {
-            '1': {
+          nodeData: [
+            {
               nodeID: '1',
               name: 'Communications',
               color: 'green',
@@ -161,7 +161,7 @@ export function ensureDefaultDataExists(): void {
               mapX: 0,
               mapY: -3,
             },
-            '2': {
+            {
               nodeID: '2',
               name: 'Cellular Network',
               color: 'green',
@@ -211,7 +211,7 @@ export function ensureDefaultDataExists(): void {
               mapX: 1,
               mapY: -5,
             },
-            '5': {
+            {
               nodeID: '5',
               name: 'Internet Provider',
               color: 'green',
@@ -262,7 +262,7 @@ export function ensureDefaultDataExists(): void {
               mapX: 1,
               mapY: -4,
             },
-            '8': {
+            {
               nodeID: '8',
               name: 'Instant Messaging',
               color: 'green',
@@ -313,7 +313,7 @@ export function ensureDefaultDataExists(): void {
               mapX: 1,
               mapY: -3,
             },
-            '11': {
+            {
               nodeID: '11',
               name: 'File Sharing Service',
               color: 'green',
@@ -365,8 +365,7 @@ export function ensureDefaultDataExists(): void {
               mapX: 1,
               mapY: -2,
             },
-
-            '3': {
+            {
               nodeID: '3',
               name: 'Callbank Cellular',
               color: 'green',
@@ -417,8 +416,7 @@ export function ensureDefaultDataExists(): void {
               mapX: 3,
               mapY: -5,
             },
-
-            '6': {
+            {
               nodeID: '6',
               name: 'Service Provider',
               color: 'green',
@@ -451,7 +449,7 @@ export function ensureDefaultDataExists(): void {
               mapX: 3,
               mapY: -4,
             },
-            '9': {
+            {
               nodeID: '9',
               name: 'Service Provider',
               color: 'green',
@@ -502,7 +500,7 @@ export function ensureDefaultDataExists(): void {
               mapX: 3,
               mapY: -3,
             },
-            '12': {
+            {
               nodeID: '12',
               name: 'Service Provider',
               color: 'green',
@@ -553,7 +551,7 @@ export function ensureDefaultDataExists(): void {
               mapX: 3,
               mapY: -2,
             },
-            '4': {
+            {
               nodeID: '4',
               name: 'Cellular Towers',
               color: 'green',
@@ -604,7 +602,7 @@ export function ensureDefaultDataExists(): void {
               mapX: 4,
               mapY: -5,
             },
-            '7': {
+            {
               nodeID: '7',
               name: 'Main Server',
               color: 'green',
@@ -654,7 +652,7 @@ export function ensureDefaultDataExists(): void {
               mapX: 4,
               mapY: -4,
             },
-            '10': {
+            {
               nodeID: '10',
               name: 'Main Server',
               color: 'green',
@@ -704,7 +702,7 @@ export function ensureDefaultDataExists(): void {
               mapX: 4,
               mapY: -3,
             },
-            '13': {
+            {
               nodeID: '13',
               name: 'Main Server',
               color: 'green',
@@ -754,7 +752,7 @@ export function ensureDefaultDataExists(): void {
               mapX: 4,
               mapY: -2,
             },
-            '14': {
+            {
               nodeID: '14',
               name: 'Air Defense',
               color: 'pink',
@@ -804,7 +802,7 @@ export function ensureDefaultDataExists(): void {
               mapX: 0,
               mapY: -1,
             },
-            '15': {
+            {
               nodeID: '15',
               name: 'IADS Network',
               color: 'pink',
@@ -854,7 +852,7 @@ export function ensureDefaultDataExists(): void {
               mapX: 1,
               mapY: -1,
             },
-            '16': {
+            {
               nodeID: '16',
               name: 'Individual IADS Sites',
               color: 'pink',
@@ -906,7 +904,7 @@ export function ensureDefaultDataExists(): void {
               mapX: 2,
               mapY: -1,
             },
-            '17': {
+            {
               nodeID: '17',
               name: 'Launchers',
               color: 'pink',
@@ -956,7 +954,7 @@ export function ensureDefaultDataExists(): void {
               mapX: 3,
               mapY: -1,
             },
-            '18': {
+            {
               nodeID: '18',
               name: 'Radars',
               color: 'pink',
@@ -1006,7 +1004,7 @@ export function ensureDefaultDataExists(): void {
               mapX: 3,
               mapY: 0,
             },
-            '19': {
+            {
               nodeID: '19',
               name: 'Infrastructure',
               color: 'yellow',
@@ -1056,7 +1054,7 @@ export function ensureDefaultDataExists(): void {
               mapX: 0,
               mapY: 1,
             },
-            '20': {
+            {
               nodeID: '20',
               name: 'Railroad System',
               color: 'yellow',
@@ -1107,7 +1105,7 @@ export function ensureDefaultDataExists(): void {
               mapX: 1,
               mapY: 0,
             },
-            '23': {
+            {
               nodeID: '23',
               name: 'Electrical System',
               color: 'yellow',
@@ -1158,7 +1156,7 @@ export function ensureDefaultDataExists(): void {
               mapX: 1,
               mapY: 1,
             },
-            '25': {
+            {
               nodeID: '25',
               name: 'Water System',
               color: 'yellow',
@@ -1208,7 +1206,7 @@ export function ensureDefaultDataExists(): void {
               mapX: 1,
               mapY: 2,
             },
-            '27': {
+            {
               nodeID: '27',
               name: 'Road System',
               color: 'yellow',
@@ -1258,7 +1256,7 @@ export function ensureDefaultDataExists(): void {
               mapX: 1,
               mapY: 3,
             },
-            '21': {
+            {
               nodeID: '21',
               name: 'Track Monitoring',
               color: 'yellow',
@@ -1309,7 +1307,7 @@ export function ensureDefaultDataExists(): void {
               mapX: 2,
               mapY: 0,
             },
-            '22': {
+            {
               nodeID: '22',
               name: 'Track Switch System',
               color: 'yellow',
@@ -1361,7 +1359,7 @@ export function ensureDefaultDataExists(): void {
               mapX: 2,
               mapY: 1,
             },
-            '24': {
+            {
               nodeID: '24',
               name: 'Regional Service',
               color: 'yellow',
@@ -1412,7 +1410,7 @@ export function ensureDefaultDataExists(): void {
               mapX: 2,
               mapY: 2,
             },
-            '26': {
+            {
               nodeID: '26',
               name: 'Valve System',
               color: 'yellow',
@@ -1462,7 +1460,7 @@ export function ensureDefaultDataExists(): void {
               mapX: 2,
               mapY: 3,
             },
-            '28': {
+            {
               nodeID: '28',
               name: 'Traffic Light System',
               color: 'yellow',
@@ -1514,7 +1512,7 @@ export function ensureDefaultDataExists(): void {
               mapX: 2,
               mapY: 4,
             },
-            '29': {
+            {
               nodeID: '29',
               name: 'CCTV System',
               color: 'yellow',
@@ -1564,7 +1562,7 @@ export function ensureDefaultDataExists(): void {
               mapX: 2,
               mapY: 5,
             },
-            '30': {
+            {
               nodeID: '30',
               name: 'Satellite Services',
               color: 'blue',
@@ -1614,7 +1612,7 @@ export function ensureDefaultDataExists(): void {
               mapX: 0,
               mapY: 4,
             },
-            '31': {
+            {
               nodeID: '31',
               name: 'Global Positioning',
               color: 'blue',
@@ -1665,7 +1663,7 @@ export function ensureDefaultDataExists(): void {
               mapX: 1,
               mapY: 4,
             },
-            '32': {
+            {
               nodeID: '32',
               name: 'Data Transfer',
               color: 'blue',
@@ -1715,7 +1713,7 @@ export function ensureDefaultDataExists(): void {
               mapX: 1,
               mapY: 5,
             },
-            '33': {
+            {
               nodeID: '33',
               name: 'Imagery Collection',
               color: 'blue',
@@ -1766,7 +1764,7 @@ export function ensureDefaultDataExists(): void {
               mapX: 1,
               mapY: 6,
             },
-            '34': {
+            {
               nodeID: '34',
               name: 'Sensor Observation',
               color: 'blue',
@@ -1817,7 +1815,7 @@ export function ensureDefaultDataExists(): void {
               mapX: 1,
               mapY: 7,
             },
-          },
+          ],
         }
 
         missionModel.create(

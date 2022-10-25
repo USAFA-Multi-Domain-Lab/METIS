@@ -104,7 +104,7 @@ const NodeActions = (props: {
             >
               <Tooltip
                 description={
-                  `* Executed node in ${
+                  `* Time to execute: ${
                     (nodeActionItem.timeDelay as number) / 1000
                   } second(s)\n` +
                   `* Chance of success: ${

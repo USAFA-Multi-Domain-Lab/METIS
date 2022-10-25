@@ -24,8 +24,6 @@ export const runNodeLoadingBar = (timeDelay: number) => {
             'div.mapped-node.LoadingBar .loading',
           )
 
-        console.log(loadingElement)
-
         width++
 
         if (loadingElement !== null) {

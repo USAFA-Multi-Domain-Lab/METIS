@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useStore } from 'react-context-hook'
 import {
+  createTestMission,
   getMission,
   Mission,
   MissionNode,
@@ -15,15 +16,7 @@ import './DashboardPage.scss'
 import gameLogic from '../../modules/game-logic'
 import ExecuteNodePath from '../content/ExecuteNodePath'
 import NodeActions from '../content/NodeActions'
-
-const mission = createMission()
-const initialMissionState =
-  NodeStructureReference.constructNodeStructureReference(
-    mission.name,
-    mission.nodeStructure,
-  )
-
-initialMissionState.expand()
+import { AnyObject } from 'mongoose'
 
 // This will render a dashboard with a radar
 // on it, indicating air traffic passing by.
@@ -61,6 +54,7 @@ export default function DashboardPage(props: {
     useStore<string>('nodeActionItemText')
   const [nodeActionSuccessChance, setNodeActionSuccessChance] =
     useStore<number>('nodeActionSuccessChance')
+  const [mission, setMission] = useStore<Mission | null>('mission')
 
   /* -- COMPONENT STATE -- */
 
@@ -75,6 +69,9 @@ export default function DashboardPage(props: {
   // Equivalent of componentDidMount.
   useEffect(() => {
     if (!mountHandled) {
+      // getMission((mission: Mission) => {
+      //   setMission(mission)
+      // })
       setMountHandled(true)
     }
   }, [mountHandled])
@@ -139,7 +136,7 @@ export default function DashboardPage(props: {
     className += ' DashboardPageWithMapOnly'
   }
 
-  if (show) {
+  if (show && mission !== null) {
     return (
       <div className={className}>
         {

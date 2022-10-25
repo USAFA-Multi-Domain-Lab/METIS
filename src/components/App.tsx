@@ -9,6 +9,8 @@ import LoadingPage from './pages/LoadingPage'
 import GlobalState, { tooltipsOffsetX, tooltipsOffsetY } from './GlobalState'
 import Markdown, { MarkdownTheme } from './content/Markdown'
 import MissionFormPage from './pages/MissionFormPage'
+import { getMission, Mission } from '../modules/missions'
+import { AnyObject } from 'mongoose'
 
 const loadingMinTime = 500
 
@@ -68,6 +70,7 @@ function App(): JSX.Element | null {
   const [tooltipDescription] = useStore<string>('tooltipDescription')
   const [tooltips] = useStore<React.RefObject<HTMLDivElement>>('tooltips')
   const [hideTooltip] = useStore<() => void>('hideTooltip')
+  const [mission, setMission] = useStore<Mission | null>('mission')
 
   /* -- COMPONENT STATE -- */
 
@@ -139,11 +142,23 @@ function App(): JSX.Element | null {
           setCurrentPagePath(
             currentUser === null ? 'AuthPage' : 'DashboardPage',
           )
+
           setAppMountHandled(true)
           setLoadMessage(null)
         },
         () => {
           setErrorMessage('Server is down. Contact server administrator.')
+          setAppMountHandled(true)
+          setLoadMessage(null)
+        },
+      )
+
+      getMission(
+        (mission: Mission) => {
+          setMission(mission)
+        },
+        () => {
+          setErrorMessage('Failed to retrieve Mission.')
           setAppMountHandled(true)
           setLoadMessage(null)
         },
