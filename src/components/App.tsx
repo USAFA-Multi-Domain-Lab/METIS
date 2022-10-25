@@ -153,6 +153,9 @@ function App(): JSX.Element | null {
         },
       )
 
+      // This loads the mission in session from the database
+      // and stores it in a global state to be used on the DashboardPage
+      // where the Mission Map renders
       getMission(
         (mission: Mission) => {
           setMission(mission)
@@ -199,6 +202,7 @@ function App(): JSX.Element | null {
           theme={MarkdownTheme.ThemeSecondary}
         />
       </div>
+      {/* <StandardPage Page={SelectUserTypePage} targetPagePath='SelectUserTypePage' /> */}
       <StandardPage
         Page={AuthPage}
         targetPagePath='AuthPage'
