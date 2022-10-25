@@ -301,10 +301,26 @@ export class MissionNode {
   // and relation this target has to the
   // destination.
   move(target: MissionNode, targetRelation: ENodeTargetRelation): void {
+    let rootNode: MissionNode = this.mission.rootNode
     let parentNode: MissionNode | null = this.parentNode
     let newParentNode: MissionNode | null = target.parentNode
-    let newParentNodechildNodes: Array<MissionNode> = []
+    let newParentNodeChildNodes: Array<MissionNode> = []
 
+    // This makes sure that the target
+    // isn't being moved inside or beside
+    // itself.
+    let x: MissionNode | null = target
+
+    while (x !== null && x.nodeID !== rootNode.nodeID) {
+      if (this.nodeID === x.nodeID) {
+        return
+      }
+
+      x = x.parentNode
+    }
+
+    // This will remove the nodes
+    // current position in the structure.
     if (parentNode !== null) {
       let siblings: MissionNode[] = parentNode.childNodes
 
@@ -317,6 +333,7 @@ export class MissionNode {
       }
     }
 
+    // This will
     switch (targetRelation) {
       case ENodeTargetRelation.Parent:
         target.childNodes.push(this)
@@ -325,29 +342,29 @@ export class MissionNode {
       case ENodeTargetRelation.PreviousSibling:
         if (newParentNode !== null) {
           newParentNode.childNodes.forEach((childNode: MissionNode) => {
-            newParentNodechildNodes.push(childNode)
+            newParentNodeChildNodes.push(childNode)
 
             if (childNode.nodeID === target.nodeID) {
-              newParentNodechildNodes.push(this)
+              newParentNodeChildNodes.push(this)
               this.parentNode = newParentNode
             }
           })
 
-          newParentNode.childNodes = newParentNodechildNodes
+          newParentNode.childNodes = newParentNodeChildNodes
         }
         break
       case ENodeTargetRelation.FollowingSibling:
         if (newParentNode !== null) {
           newParentNode.childNodes.forEach((childNode: MissionNode) => {
             if (childNode.nodeID === target.nodeID) {
-              newParentNodechildNodes.push(this)
+              newParentNodeChildNodes.push(this)
               this.parentNode = newParentNode
             }
 
-            newParentNodechildNodes.push(childNode)
+            newParentNodeChildNodes.push(childNode)
           })
 
-          newParentNode.childNodes = newParentNodechildNodes
+          newParentNode.childNodes = newParentNodeChildNodes
         }
         break
     }

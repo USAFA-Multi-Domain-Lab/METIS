@@ -363,8 +363,12 @@ function NodeStructuring(props: {
   // This will render a node in the
   // structuring for the given node
   // name.
-  const Node = (props: { node: MissionNode }): JSX.Element | null => {
+  const Node = (props: {
+    node: MissionNode
+    disableDropPending?: boolean
+  }): JSX.Element | null => {
     let node: MissionNode = props.node
+    let disableDropPending: boolean = props.disableDropPending === true
     let handleClick = () => {
       // node.toggle()
       // forceUpdate()
@@ -373,6 +377,10 @@ function NodeStructuring(props: {
 
     className += node.expandable ? ' Expandable' : ' Ends'
     className += node.isExpanded ? ' IsExpanded' : ' IsCollapsed'
+
+    if (node.nodeID === nodeGrabbed?.nodeID) {
+      disableDropPending = true
+    }
 
     if (node.nodeID === nodePendingDrop?.nodeID) {
       className += ' DropPending'
@@ -434,7 +442,10 @@ function NodeStructuring(props: {
               event.preventDefault()
             }}
             onDragEnter={() => {
-              if (node.nodeID !== nodePendingDrop?.nodeID) {
+              if (
+                node.nodeID !== nodePendingDrop?.nodeID &&
+                !disableDropPending
+              ) {
                 pendDrop(node)
                 setDropLocation(ENodeDropLocation.Top)
               }
@@ -451,7 +462,10 @@ function NodeStructuring(props: {
               event.preventDefault()
             }}
             onDragEnter={() => {
-              if (node.nodeID !== nodePendingDrop?.nodeID) {
+              if (
+                node.nodeID !== nodePendingDrop?.nodeID &&
+                !disableDropPending
+              ) {
                 pendDrop(node)
                 setDropLocation(ENodeDropLocation.Center)
               }
@@ -478,7 +492,10 @@ function NodeStructuring(props: {
               event.preventDefault()
             }}
             onDragEnter={() => {
-              if (node.nodeID !== nodePendingDrop?.nodeID) {
+              if (
+                node.nodeID !== nodePendingDrop?.nodeID &&
+                !disableDropPending
+              ) {
                 pendDrop(node)
                 setDropLocation(ENodeDropLocation.Bottom)
               }
@@ -493,7 +510,11 @@ function NodeStructuring(props: {
         {node.isExpanded ? (
           <div className='ChildNodes'>
             {node.childNodes.map((childNode: MissionNode) => (
-              <Node node={childNode} key={childNode.nodeID} />
+              <Node
+                node={childNode}
+                disableDropPending={disableDropPending}
+                key={childNode.nodeID}
+              />
             ))}
           </div>
         ) : null}
