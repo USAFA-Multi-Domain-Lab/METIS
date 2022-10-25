@@ -1,9 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { useStore } from 'react-context-hook'
-import { createTestMission, Mission, MissionNode } from '../../modules/missions'
-import NodeStructureReference, {
+import {
+  createTestMission,
+  Mission,
+  MissionNode,
   ENodeTargetRelation,
-} from '../../modules/node-reference'
+} from '../../modules/missions'
 import { EAjaxStatus } from '../../modules/toolbox/ajax'
 import inputs from '../../modules/toolbox/inputs'
 import usersModule, { IUser } from '../../modules/users'
@@ -47,8 +49,6 @@ export default function MissionFormPage(props: {
   const [mountHandled, setMountHandled] = useState<boolean>()
   const [forcedUpdateCounter, setForcedUpdateCounter] = useState<number>(0)
   const [mission, setMission] = useState<Mission | null>(null)
-  const [nodeStructure, setNodeStructure] =
-    useState<NodeStructureReference | null>(null)
   const [selectedNode, selectNode] = useState<MissionNode | null>(null)
   const [nodeStructuringIsActive, activateNodeStructuring] =
     useState<boolean>(false)
@@ -58,16 +58,8 @@ export default function MissionFormPage(props: {
   // Equivalent of componentDidMount.
   useEffect(() => {
     if (!mountHandled) {
-      let mission: Mission = createTestMission()
-      let nodeStructure: NodeStructureReference =
-        NodeStructureReference.constructNodeStructureReference(
-          'ROOT',
-          mission.nodeStructure,
-          mission.nodes,
-        )
-
+      let mission: Mission = createTestMission(true)
       setMission(mission)
-      setNodeStructure(nodeStructure)
       setMountHandled(true)
     }
   }, [mountHandled])
@@ -79,13 +71,6 @@ export default function MissionFormPage(props: {
   // Forces a rerender.
   const forceUpdate = (): void => {
     setForcedUpdateCounter(forcedUpdateCounter + 1)
-  }
-
-  const handleNodeStructureChange = (): void => {
-    if (mission !== null && nodeStructure !== null) {
-      mission.nodeStructure = nodeStructure.deconstructNodeStructureReference()
-      forceUpdate()
-    }
   }
 
   // This will logout the current user.
@@ -114,7 +99,7 @@ export default function MissionFormPage(props: {
     className += ' SidePanelIsExpanded'
   }
 
-  if (show && mission !== null && nodeStructure !== null) {
+  if (show && mission !== null) {
     return (
       <div className={className}>
         {
@@ -174,9 +159,7 @@ export default function MissionFormPage(props: {
           />
           <NodeStructuring
             active={nodeStructuringIsActive}
-            nodeStructure={nodeStructure}
-            nodeData={mission.nodes}
-            handleNodeStructureChange={handleNodeStructureChange}
+            mission={mission}
             handleCloseRequest={() => activateNodeStructuring(false)}
           />
         </div>
@@ -300,26 +283,17 @@ function NodeEntry(props: {
 // can be defined.
 function NodeStructuring(props: {
   active: boolean
-  nodeStructure: NodeStructureReference
-  nodeData: Map<string, MissionNode>
-  handleNodeStructureChange: (
-    updatedNodeStructure: NodeStructureReference,
-  ) => void
+  mission: Mission
   handleCloseRequest: () => void
 }): JSX.Element | null {
   let active: boolean = props.active
-  let nodeStructure: NodeStructureReference = props.nodeStructure
-  let nodeData: Map<string, MissionNode> = props.nodeData
-  let handleNodeStructureChange: (
-    updatedNodeStructure: NodeStructureReference,
-  ) => void = props.handleNodeStructureChange
+  let mission: Mission = props.mission
   let handleCloseRequest = props.handleCloseRequest
+  let rootNode: MissionNode = mission.rootNode
 
   const [forcedUpdateCounter, setForcedUpdateCounter] = useState<number>(0)
-  const [nodeGrabbed, grabNode] = useState<NodeStructureReference | null>(null)
-  const [nodePendingDrop, pendDrop] = useState<NodeStructureReference | null>(
-    null,
-  )
+  const [nodeGrabbed, grabNode] = useState<MissionNode | null>(null)
+  const [nodePendingDrop, pendDrop] = useState<MissionNode | null>(null)
   const [dropLocation, setDropLocation] = useState<ENodeDropLocation>(
     ENodeDropLocation.Center,
   )
@@ -340,7 +314,7 @@ function NodeStructuring(props: {
     // zone.
     const pendDropHere = (): void => {
       setDropPendingHere(true)
-      pendDrop(nodeStructure)
+      pendDrop(rootNode)
     }
 
     // This will stop this padding from
@@ -357,7 +331,7 @@ function NodeStructuring(props: {
       className += ` ${uniqueClassName}`
     }
 
-    if (dropPendingHere && nodeStructure.nodeID === nodePendingDrop?.nodeID) {
+    if (dropPendingHere && rootNode.nodeID === nodePendingDrop?.nodeID) {
       className += ' DropPending'
     }
 
@@ -376,7 +350,6 @@ function NodeStructuring(props: {
 
             if (nodeGrabbed !== null) {
               nodeGrabbed.move(destinationNode, ENodeTargetRelation.Parent)
-              handleNodeStructureChange(nodeStructure)
             }
 
             pendDrop(null)
@@ -390,20 +363,18 @@ function NodeStructuring(props: {
   // This will render a node in the
   // structuring for the given node
   // name.
-  const Node = (props: {
-    structureReference: NodeStructureReference
-  }): JSX.Element | null => {
-    let structureReference: NodeStructureReference = props.structureReference
+  const Node = (props: { node: MissionNode }): JSX.Element | null => {
+    let node: MissionNode = props.node
     let handleClick = () => {
-      structureReference.toggle()
-      forceUpdate()
+      // node.toggle()
+      // forceUpdate()
     }
     let className: string = 'Node'
 
-    className += structureReference.expandable ? ' Expandable' : ' Ends'
-    className += structureReference.isExpanded ? ' IsExpanded' : ' IsCollapsed'
+    className += node.expandable ? ' Expandable' : ' Ends'
+    className += node.isExpanded ? ' IsExpanded' : ' IsCollapsed'
 
-    if (structureReference.nodeID === nodePendingDrop?.nodeID) {
+    if (node.nodeID === nodePendingDrop?.nodeID) {
       className += ' DropPending'
 
       switch (dropLocation) {
@@ -426,11 +397,11 @@ function NodeStructuring(props: {
           onClick={handleClick}
           draggable={true}
           onDragCapture={() => {
-            grabNode(structureReference)
+            grabNode(node)
           }}
           onDrop={(event: React.DragEvent) => {
             if (nodePendingDrop !== null) {
-              let target: NodeStructureReference = nodePendingDrop
+              let target: MissionNode = nodePendingDrop
               let targetRelation: ENodeTargetRelation
 
               switch (dropLocation) {
@@ -450,7 +421,6 @@ function NodeStructuring(props: {
 
               if (nodeGrabbed !== null) {
                 nodeGrabbed.move(target, targetRelation)
-                handleNodeStructureChange(nodeStructure)
               }
 
               pendDrop(null)
@@ -464,8 +434,8 @@ function NodeStructuring(props: {
               event.preventDefault()
             }}
             onDragEnter={() => {
-              if (structureReference.nodeID !== nodePendingDrop?.nodeID) {
-                pendDrop(structureReference)
+              if (node.nodeID !== nodePendingDrop?.nodeID) {
+                pendDrop(node)
                 setDropLocation(ENodeDropLocation.Top)
               }
             }}
@@ -481,8 +451,8 @@ function NodeStructuring(props: {
               event.preventDefault()
             }}
             onDragEnter={() => {
-              if (structureReference.nodeID !== nodePendingDrop?.nodeID) {
-                pendDrop(structureReference)
+              if (node.nodeID !== nodePendingDrop?.nodeID) {
+                pendDrop(node)
                 setDropLocation(ENodeDropLocation.Center)
               }
             }}
@@ -500,7 +470,7 @@ function NodeStructuring(props: {
                 fill='#fff'
               />
             </svg>
-            <div className='Name'>{structureReference.displayName}</div>
+            <div className='Name'>{node.name}</div>
           </div>
           <div
             className='Bottom'
@@ -508,8 +478,8 @@ function NodeStructuring(props: {
               event.preventDefault()
             }}
             onDragEnter={() => {
-              if (structureReference.nodeID !== nodePendingDrop?.nodeID) {
-                pendDrop(structureReference)
+              if (node.nodeID !== nodePendingDrop?.nodeID) {
+                pendDrop(node)
                 setDropLocation(ENodeDropLocation.Bottom)
               }
             }}
@@ -520,13 +490,11 @@ function NodeStructuring(props: {
             }}
           ></div>
         </div>
-        {structureReference.isExpanded ? (
-          <div className='Subnodes'>
-            {structureReference.subnodes.map(
-              (subnode: NodeStructureReference) => (
-                <Node structureReference={subnode} key={subnode.nodeID} />
-              ),
-            )}
+        {node.isExpanded ? (
+          <div className='ChildNodes'>
+            {node.childNodes.map((childNode: MissionNode) => (
+              <Node node={childNode} key={childNode.nodeID} />
+            ))}
           </div>
         ) : null}
       </div>
@@ -536,9 +504,9 @@ function NodeStructuring(props: {
   // This will render the nodes in the
   // node structuring.
   const renderNodes = (): JSX.Element | null => {
-    let nodeElements: Array<JSX.Element | null> = nodeStructure.subnodes.map(
-      (subnode: NodeStructureReference) => (
-        <Node structureReference={subnode} key={subnode.nodeID} />
+    let nodeElements: Array<JSX.Element | null> = rootNode.childNodes.map(
+      (childNode: MissionNode) => (
+        <Node node={childNode} key={childNode.nodeID} />
       ),
     )
     let className: string = 'Nodes'

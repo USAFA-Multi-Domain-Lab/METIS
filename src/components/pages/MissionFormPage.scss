@@ -166,7 +166,7 @@ $background-bar: linear-gradient(
           }
 
           .ParentNode {
-            cursor: pointer;
+            cursor: grab;
             user-select: none;
             display: block;
             padding: 0 0 0 20px;
@@ -217,7 +217,7 @@ $background-bar: linear-gradient(
             }
           }
 
-          .Subnodes {
+          .ChildNodes {
             padding-left: 20px;
           }
 

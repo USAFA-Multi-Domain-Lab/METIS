@@ -39,7 +39,7 @@ export default class NodeStructureReference {
     return siblings
   }
 
-  get childrenOfParnet(): Array<NodeStructureReference> {
+  get childrenOfParent(): Array<NodeStructureReference> {
     let childrenOfParent: Array<NodeStructureReference> = []
 
     if (this.parentNode !== null) {
