@@ -45,4 +45,56 @@
       resize: none;
     }
   }
+
+  &.DetailDropDown {
+    .Field {
+      .Option.Selected {
+        display: grid;
+        grid-template-columns: auto 20px;
+
+        .Indicator {
+          display: inline-block;
+          font-size: 16px;
+        }
+
+        .Text {
+          color: $color-accent-light;
+        }
+      }
+
+      .Option {
+        cursor: pointer;
+        user-select: none;
+        padding: 5px 0 5px;
+
+        &:first-child {
+          padding: 0;
+        }
+
+        &:nth-child(2) {
+          margin: 20px 0 0;
+        }
+      }
+
+      &.IsCollapsed {
+        .Option.Selected {
+          .Indicator {
+            transform: scale(1.25, 0.75);
+          }
+        }
+
+        .Option:not(.Selected) {
+          display: none;
+        }
+      }
+
+      &.IsExpanded {
+        .Option.Selected {
+          .Indicator {
+            transform: scale(1.25, -0.75);
+          }
+        }
+      }
+    }
+  }
 }

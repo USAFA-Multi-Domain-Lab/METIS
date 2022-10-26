@@ -210,3 +210,75 @@ export function DetailBox(props: {
     </div>
   )
 }
+
+// THis will render a detail for
+// a form, with a label and a drop
+// down box for selecting from various
+// options.
+
+export function DetailDropDown(props: {
+  label: string
+  options: Array<string>
+  currentValue: string
+  uniqueClassName?: string
+  deliverValue: (value: string) => void
+}): JSX.Element | null {
+  const field = useRef<HTMLTextAreaElement>(null)
+  const [mountHandled, setMountHandled] = useState<boolean>()
+  const [expanded, setExpanded] = useState<boolean>(false)
+
+  let label: string = props.label
+  let options: Array<string> = props.options
+  let currentValue: string = props.currentValue
+  let uniqueClassName: string = props.uniqueClassName
+    ? props.uniqueClassName
+    : ''
+  let deliverValue = props.deliverValue
+  let className: string = `Detail DetailDropDown ${uniqueClassName}`
+  let fieldClassName: string = 'Field FieldDropDown'
+
+  // Equivalent of componentDidMount.
+  useEffect(() => {
+    if (!mountHandled) {
+      setMountHandled(true)
+    }
+  }, [mountHandled])
+
+  if (expanded) {
+    fieldClassName += ' IsExpanded'
+  } else {
+    fieldClassName += ' IsCollapsed'
+  }
+
+  // render
+  return (
+    <div className={className}>
+      <div className='Label'>{`${label}:`}</div>
+      <div className={fieldClassName}>
+        <div
+          className='Option Selected'
+          onClick={() => {
+            setExpanded(!expanded)
+          }}
+        >
+          <div className='Text'>{currentValue}</div>
+          <div className='Indicator'>v</div>
+        </div>
+        {options.map((option: string) => {
+          return (
+            <div
+              className='Option'
+              key={`option_${option}`}
+              onClick={() => {
+                deliverValue(option)
+                setExpanded(false)
+              }}
+            >
+              {option}
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}

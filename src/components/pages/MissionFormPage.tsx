@@ -10,7 +10,12 @@ import { EAjaxStatus } from '../../modules/toolbox/ajax'
 import inputs from '../../modules/toolbox/inputs'
 import usersModule, { IUser } from '../../modules/users'
 import Branding from '../content/Branding'
-import { Detail, DetailBox, DetailNumber } from '../content/Form'
+import {
+  Detail,
+  DetailBox,
+  DetailNumber,
+  DetailDropDown,
+} from '../content/Form'
 import MissionMap from '../content/MissionMap'
 import Tooltip from '../content/Tooltip'
 import { v4 as generateHash } from 'uuid'
@@ -189,6 +194,42 @@ function NodeEntry(props: {
             }}
             key={`${node.nodeID}_name`}
           />
+          <DetailDropDown
+            label={'Color'}
+            options={[
+              'default',
+              'green',
+              'pink',
+              'yellow',
+              'blue',
+              'purple',
+              'red',
+              'khaki',
+              'orange',
+            ]}
+            currentValue={node.color}
+            uniqueClassName={'Color'}
+            deliverValue={(color: string) => {
+              if (node !== null) {
+                node.color = color
+
+                handleChange()
+              }
+            }}
+          />
+          <div
+            className='ColorFill'
+            onClick={() => {
+              if (node !== null) {
+                node.applyColorFill()
+                handleChange()
+              }
+            }}
+          >
+            {'[ '}
+            <span>Fill</span> {' ]'}
+            <Tooltip description='Shade all descendant nodes this color as well.' />
+          </div>
           <DetailBox
             label='Pre-Execution Text'
             initialValue={node.preExecutionText}

@@ -383,6 +383,16 @@ export class MissionNode {
 
     this._handleStructureChange()
   }
+
+  // This will color all descendant
+  // nodes the same color as this
+  // node.
+  applyColorFill(): void {
+    for (let childNode of this.childNodes) {
+      childNode.color = this.color
+      childNode.applyColorFill()
+    }
+  }
 }
 
 // This represents a mission for a

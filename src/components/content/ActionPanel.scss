@@ -4,8 +4,10 @@
   position: fixed;
   z-index: $z-index-action-panel;
   top: 50px;
-  left: 35%;
-  width: 30%;
+  margin: 0 auto;
+  white-space: nowrap;
+  width: -moz-fit-content;
+  width: fit-content;
 
   .glue {
     transition: 200ms opacity;

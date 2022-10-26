@@ -62,7 +62,7 @@ const gridPaddingY: number = 20.0 /*px*/
 const pointerOriginOffset: number = 20 /*px*/
 const pointerArrowOffset: number = 30 /*px*/
 const mapItemFontSize: number = 20 /*px*/
-const mapCuttoff: number = 1600 /*px*/
+// const mapCuttoff: number = 1600 /*px*/
 
 /* -- components -- */
 
@@ -278,10 +278,10 @@ export default class MissionMap extends React.Component<
         let mapOffsetY: number =
           this.state.mapOffsetY + event.movementY / mapScale
 
-        mapOffsetX = Math.min(mapOffsetX, mapCuttoff)
-        mapOffsetX = Math.max(mapOffsetX, -mapCuttoff)
-        mapOffsetY = Math.min(mapOffsetY, mapCuttoff)
-        mapOffsetY = Math.max(mapOffsetY, -mapCuttoff)
+        // mapOffsetX = Math.min(mapOffsetX, mapCuttoff)
+        // mapOffsetX = Math.max(mapOffsetX, -mapCuttoff)
+        // mapOffsetY = Math.min(mapOffsetY, mapCuttoff)
+        // mapOffsetY = Math.max(mapOffsetY, -mapCuttoff)
 
         this.setState((previousState: IMissionMap_S) => {
           return {
@@ -557,7 +557,7 @@ export default class MissionMap extends React.Component<
       }),
       edit: new Action({
         ...Action.defaultProps,
-        purpose: EActionPurpose.Edit,
+        purpose: EActionPurpose.Reorder,
         handleClick: handleMapEditRequest ? handleMapEditRequest : () => {},
         tooltipDescription: 'Edit the structure and order of nodes.',
       }),
