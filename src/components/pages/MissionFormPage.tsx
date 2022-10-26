@@ -126,21 +126,9 @@ export default function MissionFormPage(props: {
               }
               activateNodeStructuring(false)
             }}
-            // handleNodeAddition={() => {
-            //   let node: MissionNode = new MissionNode(
-            //     generateHash(),
-            //     'New Node',
-            //     'default',
-            //     'Node has not been executed.',
-            //     'Node has executed successfully.',
-            //     'Node has failed to execute.',
-            //     '',
-            //     true,
-            //     [],
-            //     0,
-            //     0,
-            //   )
-            // }}
+            handleMapCreateRequest={() => {
+              mission.spawnNewNode()
+            }}
             handleMapEditRequest={
               !nodeStructuringIsActive
                 ? () => {
@@ -429,6 +417,7 @@ function NodeStructuring(props: {
 
               if (nodeGrabbed !== null) {
                 nodeGrabbed.move(target, targetRelation)
+                target.expand()
               }
 
               pendDrop(null)

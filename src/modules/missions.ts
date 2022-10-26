@@ -523,6 +523,30 @@ export class Mission {
     this.structureChangeHandlers = []
   }
 
+  // This will create a new node
+  // called "New Node".
+  spawnNewNode(): void {
+    let rootNode: MissionNode = this.rootNode
+    let node: MissionNode = new MissionNode(
+      this,
+      generateHash(),
+      'New Node',
+      'default',
+      'Node has not been executed.',
+      'Node has executed successfully.',
+      'Node has failed to execute.',
+      '',
+      true,
+      [],
+      0,
+      0,
+    )
+    node.parentNode = rootNode
+    rootNode.childNodes.push(node)
+
+    this.handleStructureChange()
+  }
+
   // This will determine the relationship
   // between nodes, parent to child and
   // vise-versa.

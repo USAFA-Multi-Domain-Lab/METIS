@@ -8,6 +8,7 @@ import './Action.scss'
 // give different actions different
 // icons and looks
 export enum EActionPurpose {
+  Add,
   Edit,
   ZoomIn,
   ZoomOut,
@@ -41,6 +42,8 @@ export class Action extends React.Component<IAction_P, {}> {
   // name is returned to style it differently
   static getActionClassName(purpose: EActionPurpose): string {
     switch (purpose) {
+      case EActionPurpose.Add:
+        return 'Action add'
       case EActionPurpose.Edit:
         return 'Action edit'
       case EActionPurpose.ZoomIn:
@@ -55,7 +58,8 @@ export class Action extends React.Component<IAction_P, {}> {
   // html content for various actions
   static getActionInnerHTML(purpose: EActionPurpose): string | JSX.Element {
     switch (purpose) {
-      // cases would go here before default
+      case EActionPurpose.Add:
+        return '+'
       default:
         return ''
     }
