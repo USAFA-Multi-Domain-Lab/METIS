@@ -4,10 +4,12 @@
   position: fixed;
   z-index: $z-index-action-panel;
   top: 50px;
-  left: 35%;
-  width: 30%;
+  left: 25%;
+  width: 50%;
 
   .glue {
+    display: grid;
+    grid-template-columns: auto auto auto;
     transition: 200ms opacity;
     margin: 0 auto;
     // margin-left: 32px;

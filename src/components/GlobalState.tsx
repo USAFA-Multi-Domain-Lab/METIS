@@ -1,4 +1,3 @@
-import { AnyObject } from 'mongoose'
 import React from 'react'
 import { useStore, withStore } from 'react-context-hook'
 import { Mission, MissionNode, MissionNodeAction } from '../modules/missions'

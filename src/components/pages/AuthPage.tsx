@@ -14,6 +14,9 @@ export default function AuthPage(props: { show: boolean }): JSX.Element | null {
   const [currentUser, setCurrentUser] = useStore('currentUser')
   const [currentPagePath, setCurrentPagePath] = useStore('currentPagePath')
   const [loadingMessage, setLoadMessage] = useStore('loadingMessage')
+  const [lastLoadingMessage, setLastLoadingMessage] =
+    useStore<string>('lastLoadingMessage')
+  const [showAuth, setShowAuth] = useStore<boolean>('showAuth')
 
   /* -- COMPONENT REFS -- */
 
@@ -86,6 +89,7 @@ export default function AuthPage(props: { show: boolean }): JSX.Element | null {
               setLoadMessage(null)
               setCurrentUser(currentUser)
               setCurrentPagePath('DashboardPage')
+              setLastLoadingMessage('Initializing application...')
             } else {
               handleLoginError('Incorrect username or password.')
             }
@@ -108,6 +112,10 @@ export default function AuthPage(props: { show: boolean }): JSX.Element | null {
     }
   }
 
+  const returnToDashboard = () => {
+    setCurrentPagePath('DashboardPage')
+  }
+
   /* -- RENDER -- */
 
   let show: boolean = props.show
@@ -116,6 +124,9 @@ export default function AuthPage(props: { show: boolean }): JSX.Element | null {
   if (show && currentUser === null) {
     return (
       <div className='AuthPage'>
+        <div className='BackButton' onClick={returnToDashboard}>
+          &lt; Return to Mission
+        </div>
         <div className='Login'>
           <div className='ErrorMessage'>{errorMessage}</div>
           <div className='Header'>

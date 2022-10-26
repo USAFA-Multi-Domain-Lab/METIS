@@ -139,10 +139,8 @@ function App(): JSX.Element | null {
       usersModule.retrieveCurrentUser(
         (currentUser: IUser | null) => {
           setCurrentUser(currentUser)
-          setCurrentPagePath(
-            currentUser === null ? 'AuthPage' : 'DashboardPage',
-          )
-
+          setCurrentPagePath('DashboardPage')
+          setLastLoadingMessage('Initializing application...')
           setAppMountHandled(true)
           setLoadMessage(null)
         },
@@ -181,7 +179,7 @@ function App(): JSX.Element | null {
     if (loadingMessage !== null) {
       clearTimeout(loadingMinTimeout)
 
-      setLastLoadingMessage(loadingMessage)
+      setLastLoadingMessage('')
       setLoadingMinTimeReached(false)
       setLoadingMinTimeout(
         setTimeout(() => {
@@ -202,13 +200,16 @@ function App(): JSX.Element | null {
           theme={MarkdownTheme.ThemeSecondary}
         />
       </div>
-      {/* <StandardPage Page={SelectUserTypePage} targetPagePath='SelectUserTypePage' /> */}
       <StandardPage
         Page={AuthPage}
         targetPagePath='AuthPage'
         requireLogin={false}
       />
-      <StandardPage Page={DashboardPage} targetPagePath='DashboardPage' />
+      <StandardPage
+        Page={DashboardPage}
+        targetPagePath='DashboardPage'
+        requireLogin={false}
+      />
       <StandardPage Page={MissionFormPage} targetPagePath='MissionFormPage' />
       <ServerErrorPage />
       <LoadingPage />

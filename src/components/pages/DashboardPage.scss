@@ -35,7 +35,7 @@ $background-bar: linear-gradient(
 
   .Navigation {
     display: grid;
-    grid-template-columns: auto 150px 130px;
+    grid-template-columns: auto 110px;
     margin: 0 auto 55px;
     height: 30px;
     vertical-align: bottom;
@@ -44,7 +44,6 @@ $background-bar: linear-gradient(
       width: fit-content;
       padding-right: 20px;
     }
-
     .Link {
       display: flex;
       justify-content: center;
@@ -60,6 +59,14 @@ $background-bar: linear-gradient(
         border-radius: 5px;
         text-align: center;
       }
+    }
+
+    .Logout {
+      display: none;
+    }
+
+    .EditMission {
+      display: none;
     }
   }
 
@@ -145,6 +152,26 @@ $background-bar: linear-gradient(
 
     .NodeActions {
       display: none;
+    }
+  }
+}
+
+// This changes the layout of the navigation bar based on the if the
+// user is an instructor or not
+.DashboardPage {
+  .SignOut {
+    grid-template-columns: auto 160px 130px;
+
+    .Logout {
+      display: flex;
+    }
+
+    .Login {
+      display: none;
+    }
+
+    .EditMission {
+      display: flex;
     }
   }
 }

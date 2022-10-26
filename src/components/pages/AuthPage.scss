@@ -1,9 +1,20 @@
 @import '../../config.scss';
 
 .AuthPage {
+  .BackButton {
+    margin: 60px 80px 0;
+    font-size: 1.25em;
+    color: $color-accent-light;
+
+    &.BackButton:hover {
+      cursor: pointer;
+      color: $color-main;
+    }
+  }
+
   .Login {
     $border: 2px solid $color-accent;
-    padding: 80px 0 100px;
+    padding: 0 0 100px;
 
     .ErrorMessage {
       margin: 0 auto;
