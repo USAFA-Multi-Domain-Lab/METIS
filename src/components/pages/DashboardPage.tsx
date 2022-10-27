@@ -84,10 +84,11 @@ export default function DashboardPage(props: {
 
   // This will logout the current user.
   const logout = () => {
-    setLastLoadingMessage('Signing out...')
+    setLoadingMessage('')
 
     usersModule.logout(
       () => {
+        setLastLoadingMessage('Signing out...')
         setCurrentUser(null)
         setLoadingMessage(null)
         setCurrentPagePath('AuthPage')
@@ -174,33 +175,32 @@ export default function DashboardPage(props: {
               // mission={createTestMission(false)}
               missionAjaxStatus={EAjaxStatus.Loaded}
               handleNodeSelection={(selectedNode: MissionNode) => {
-                console.log(mission)
+                setLastSelectedNode(selectedNode)
 
-                if (currentUser !== null) {
-                  let username: string = currentUser.userID
+                if (selectedNode.preExecutionText !== '') {
+                  let timeStamp: number = 5 * (new Date() as any)
+                  consoleOutputs.push({
+                    date: timeStamp,
+                    value: `<span class='line-cursor'>MDL@${selectedNode.name.replaceAll(
+                      ' ',
+                      '-',
+                    )}: </span>
+                              <span class='default'>${
+                                selectedNode.preExecutionText
+                              }</span>`,
+                  })
+                  setOutputPanelIsDisplayed(true)
+                }
 
-                  setLastSelectedNode(selectedNode)
-
-                  if (selectedNode.preExecutionText !== '') {
-                    let timeStamp: number = 5 * (new Date() as any)
-                    consoleOutputs.push({
-                      date: timeStamp,
-                      value: `<span class='line-cursor'>${username}@USAFA: </span>
-                              <span class='default'>${selectedNode.preExecutionText}</span>`,
-                    })
-                    setOutputPanelIsDisplayed(true)
+                if (selectedNode.executable === false) {
+                  gameLogic.handleNodeSelection(selectedNode)
+                  selectedNode.color = ''
+                  return
+                } else {
+                  for (let nodeActionItem of selectedNode.nodeActionItems) {
+                    nodeActionItemDisplay.push(nodeActionItem)
                   }
-
-                  if (selectedNode.executable === false) {
-                    gameLogic.handleNodeSelection(selectedNode)
-                    selectedNode.color = ''
-                    return
-                  } else {
-                    for (let nodeActionItem of selectedNode.nodeActionItems) {
-                      nodeActionItemDisplay.push(nodeActionItem)
-                    }
-                    setNodeActionSelectionPromptIsDisplayed(true)
-                  }
+                  setNodeActionSelectionPromptIsDisplayed(true)
                 }
               }}
               applyNodeClassName={(node: MissionNode) => {

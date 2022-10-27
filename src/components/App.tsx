@@ -139,27 +139,27 @@ function App(): JSX.Element | null {
       usersModule.retrieveCurrentUser(
         (currentUser: IUser | null) => {
           setCurrentUser(currentUser)
-          setCurrentPagePath('DashboardPage')
-          setLastLoadingMessage('Initializing application...')
-          setAppMountHandled(true)
-          setLoadMessage(null)
-        },
-        () => {
-          setErrorMessage('Server is down. Contact server administrator.')
-          setAppMountHandled(true)
-          setLoadMessage(null)
-        },
-      )
 
-      // This loads the mission in session from the database
-      // and stores it in a global state to be used on the DashboardPage
-      // where the Mission Map renders
-      getMission(
-        (mission: Mission) => {
-          setMission(mission)
+          // This loads the mission in session from the database
+          // and stores it in a global state to be used on the DashboardPage
+          // where the Mission Map renders
+          getMission(
+            (mission: Mission) => {
+              setMission(mission)
+              setCurrentPagePath('DashboardPage')
+              setLastLoadingMessage('Initializing application...')
+              setAppMountHandled(true)
+              setLoadMessage(null)
+            },
+            () => {
+              setErrorMessage('Failed to retrieve mission.')
+              setAppMountHandled(true)
+              setLoadMessage(null)
+            },
+          )
         },
         () => {
-          setErrorMessage('Failed to retrieve Mission.')
+          setErrorMessage('Failed to sync session.')
           setAppMountHandled(true)
           setLoadMessage(null)
         },

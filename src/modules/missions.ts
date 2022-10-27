@@ -416,7 +416,10 @@ export class Mission {
 
     this.parseJSON()
     this.mapNodeRelationships(expandAll, this.rootNode, nodeStructure)
-    this.positionNodes()
+    // Calling this runs positionNodes.
+    // Without this line, positionNodes
+    // needs to be called independently.
+    this.rootNode.expand()
   }
 
   parseJSON(): void {
@@ -2382,7 +2385,7 @@ export function getMission(
       callback(mission)
     })
     .catch((error: AxiosError) => {
-      console.error('Failed to retrieve current mission.')
+      console.error('Failed to retrieve mission.')
       console.error(error)
       callbackError(error)
     })

@@ -44,8 +44,7 @@ const ExecuteNodePath = (props: { selectedNode: MissionNode | null }) => {
   }
 
   const execute = () => {
-    if (currentUser !== null && props.selectedNode !== null) {
-      let username: string = currentUser.userID
+    if (props.selectedNode !== null) {
       let selectedNode: MissionNode = props.selectedNode
 
       setExecuteNodePathPromptIsDisplayed(false)
@@ -60,8 +59,13 @@ const ExecuteNodePath = (props: { selectedNode: MissionNode | null }) => {
             ...consoleOutputs,
             {
               date: Date.now(),
-              value: `<span class='line-cursor'>${username}@USAFA: </span>
-                     <span class="succeeded">${selectedNode.postExecutionSuccessText}</span>`,
+              value: `<span class='line-cursor'>MDL@${selectedNode.name.replaceAll(
+                ' ',
+                '-',
+              )}: </span>
+                     <span class="succeeded">${
+                       selectedNode.postExecutionSuccessText
+                     }</span>`,
             },
           ])
         } else {
@@ -69,8 +73,13 @@ const ExecuteNodePath = (props: { selectedNode: MissionNode | null }) => {
             ...consoleOutputs,
             {
               date: Date.now(),
-              value: `<span class='line-cursor'>${username}@USAFA: </span>
-                    <span class="failed">${selectedNode.postExecutionFailureText}</span>`,
+              value: `<span class='line-cursor'>MDL@${selectedNode.name.replaceAll(
+                ' ',
+                '-',
+              )}: </span>
+                    <span class="failed">${
+                      selectedNode.postExecutionFailureText
+                    }</span>`,
             },
           ])
         }
