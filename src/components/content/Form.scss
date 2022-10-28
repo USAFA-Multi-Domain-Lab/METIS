@@ -1,7 +1,7 @@
 @import '../../config.scss';
 
 .Detail {
-  margin: 27px auto 0;
+  margin: 20px auto 0;
   width: 225px;
 
   .Label {
@@ -96,5 +96,28 @@
         }
       }
     }
+  }
+
+  &.DetailBox {
+    * {
+      transition: transform 250ms, opacity 250ms;
+    }
+
+    .Field {
+      overflow-y: hidden;
+      resize: none;
+    }
+
+    &.Disabled {
+      pointer-events: none;
+
+      * {
+        transform: scale(0.8);
+        opacity: 0.65;
+      }
+    }
+  }
+
+  &.DetailToggle {
   }
 }

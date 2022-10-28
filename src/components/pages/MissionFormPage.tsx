@@ -5,6 +5,7 @@ import {
   Mission,
   MissionNode,
   ENodeTargetRelation,
+  MissionNodeAction,
 } from '../../modules/missions'
 import { EAjaxStatus } from '../../modules/toolbox/ajax'
 import inputs from '../../modules/toolbox/inputs'
@@ -15,11 +16,13 @@ import {
   DetailBox,
   DetailNumber,
   DetailDropDown,
+  DetailToggle,
 } from '../content/Form'
 import MissionMap from '../content/MissionMap'
 import Tooltip from '../content/Tooltip'
 import { v4 as generateHash } from 'uuid'
 import './MissionFormPage.scss'
+import { Action, EActionPurpose } from '../content/Action'
 
 // This is a enum used to describe
 // the locations that one node can
@@ -132,7 +135,8 @@ export default function MissionFormPage(props: {
               activateNodeStructuring(false)
             }}
             handleMapCreateRequest={() => {
-              mission.spawnNewNode()
+              let newNode: MissionNode = mission.spawnNewNode()
+              selectNode(newNode)
             }}
             handleMapEditRequest={
               !nodeStructuringIsActive
@@ -173,6 +177,16 @@ function NodeEntry(props: {
   let node: MissionNode | null = props.node
   let handleChange = props.handleChange
   let handleCloseRequest = props.handleCloseRequest
+  let nodeActionDetailsClassName: string = 'NodeActionDetails'
+  let noActionsClassName: string = 'NoActions'
+
+  if (!node?.executable) {
+    nodeActionDetailsClassName += ' Disabled'
+  }
+
+  if (node === null || node.nodeActionItems.length > 0) {
+    noActionsClassName += ' Hidden'
+  }
 
   if (node !== null) {
     return (
@@ -216,6 +230,7 @@ function NodeEntry(props: {
                 handleChange()
               }
             }}
+            key={`${node.nodeID}_color`}
           />
           <div
             className='ColorFill'
@@ -230,9 +245,21 @@ function NodeEntry(props: {
             <span>Fill</span> {' ]'}
             <Tooltip description='Shade all descendant nodes this color as well.' />
           </div>
+          <DetailToggle
+            label={'Executable'}
+            initialValue={node.executable}
+            deliverValue={(executable: boolean) => {
+              if (node !== null) {
+                node.executable = executable
+                handleChange()
+              }
+            }}
+            key={`${node.nodeID}_executable`}
+          />
           <DetailBox
             label='Pre-Execution Text'
             initialValue={node.preExecutionText}
+            disabled={!node.executable}
             deliverValue={(preExecutionText: string) => {
               if (node !== null) {
                 node.preExecutionText = preExecutionText
@@ -245,6 +272,7 @@ function NodeEntry(props: {
           <DetailBox
             label='Post-Execution Success Text'
             initialValue={node.postExecutionSuccessText}
+            disabled={!node.executable}
             deliverValue={(postExecutionSuccessText: string) => {
               if (node !== null) {
                 node.preExecutionText = postExecutionSuccessText
@@ -257,6 +285,7 @@ function NodeEntry(props: {
           <DetailBox
             label='Post-Execution Failure Text'
             initialValue={node.postExecutionFailureText}
+            disabled={!node.executable}
             deliverValue={(postExecutionFailureText: string) => {
               if (node !== null) {
                 node.postExecutionFailureText = postExecutionFailureText
@@ -266,45 +295,98 @@ function NodeEntry(props: {
             }}
             key={`${node.nodeID}_postExecutionFailureText`}
           />
-          <DetailBox
-            label='Action'
-            initialValue={node.actionData}
-            deliverValue={(actionData: string) => {
-              if (node !== null) {
-                node.actionData = actionData
-
+          <div className={nodeActionDetailsClassName}>
+            <div className='Label'>Actions:</div>
+            {node.nodeActionItems.map((action: MissionNodeAction) => (
+              <NodeAction
+                action={action}
+                handleChange={handleChange}
+                key={action.text}
+              />
+            ))}
+            <div
+              className={noActionsClassName}
+              key={'no-actions-903jfksjdf092j3f'}
+            >
+              No actions exist for this node. Create one below.
+            </div>
+            <Action
+              purpose={EActionPurpose.Add}
+              handleClick={() => {
+                let action: MissionNodeAction = new MissionNodeAction(
+                  'New Action',
+                  5000,
+                  0.5,
+                  false,
+                )
+                node?.nodeActionItems.push(action)
                 handleChange()
-              }
-            }}
-            key={`${node.nodeID}_actionData`}
-          />
-          <DetailNumber
-            label='Success Chance'
-            initialValue={0}
-            minimum={0}
-            maximum={100}
-            unit='%'
-            deliverValue={(successChancePercentage: number | null) => {
-              if (
-                node !== null &&
-                node?.selectedNodeAction !== null &&
-                node.selectedNodeAction.successChance !== null &&
-                successChancePercentage !== null
-              ) {
-                node.selectedNodeAction.successChance =
-                  successChancePercentage / 100.0
-
-                handleChange()
-              }
-            }}
-            key={`${node.nodeID}_successChance`}
-          />
+              }}
+              tooltipDescription={'Add a new action to this node.'}
+              key={'actual-action_add-new-action'}
+            />
+          </div>
         </div>
       </div>
     )
   } else {
     return null
   }
+}
+
+// This will render an action
+// available to a node.
+function NodeAction(props: {
+  action: MissionNodeAction
+  handleChange: () => void
+}): JSX.Element | null {
+  let action: MissionNodeAction = props.action
+  let handleChange: () => void = props.handleChange
+
+  return (
+    <div className='NodeAction'>
+      <DetailBox
+        label='Name'
+        initialValue={action.text}
+        deliverValue={(name: string) => {
+          action.text = name
+        }}
+        key={`${action.actionID}_actionData`}
+      />
+      <DetailNumber
+        label='Success Chance'
+        initialValue={parseFloat(
+          `${(action.successChance * 100.0).toFixed(2)}`,
+        )}
+        minimum={0}
+        maximum={100}
+        unit='%'
+        deliverValue={(successChancePercentage: number | null) => {
+          if (successChancePercentage !== null) {
+            action.successChance = successChancePercentage / 100.0
+
+            handleChange()
+          }
+        }}
+        key={`${action.actionID}_successChance`}
+      />
+      <DetailNumber
+        label='Time Cost'
+        initialValue={action.timeDelay / 1000}
+        minimum={0}
+        maximum={60}
+        unit='s'
+        deliverValue={(timeCost: number | null) => {
+          if (timeCost !== null) {
+            action.timeDelay = timeCost * 1000
+
+            handleChange()
+          }
+        }}
+        key={`${action.actionID}_timeCost`}
+      />
+    </div>
+  )
 }
 
 // This will render a form where

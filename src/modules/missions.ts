@@ -58,6 +58,7 @@ export interface IMissionRenderOptions {
 }
 
 export class MissionNodeAction {
+  actionID: string
   text: string
   timeDelay: number
   successChance: number
@@ -69,6 +70,7 @@ export class MissionNodeAction {
     successChance: number,
     willSucceed: boolean,
   ) {
+    this.actionID = generateHash()
     this.text = text
     this.timeDelay = timeDelay
     this.successChance = successChance
@@ -534,8 +536,9 @@ export class Mission {
   }
 
   // This will create a new node
-  // called "New Node".
-  spawnNewNode(): void {
+  // called "New Node" and returns
+  // it.
+  spawnNewNode(): MissionNode {
     let rootNode: MissionNode = this.rootNode
     let node: MissionNode = new MissionNode(
       this,
@@ -555,6 +558,8 @@ export class Mission {
     rootNode.childNodes.push(node)
 
     this.handleStructureChange()
+
+    return node
   }
 
   // This will determine the relationship

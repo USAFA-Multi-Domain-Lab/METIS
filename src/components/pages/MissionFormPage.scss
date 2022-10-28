@@ -91,11 +91,6 @@ $background-bar: linear-gradient(
     }
 
     .SidePanel {
-      display: flex;
-      justify-content: flex-end;
-      align-items: center;
-      flex-flow: row wrap;
-
       .BorderBox {
         margin-left: 10px;
 
@@ -117,9 +112,8 @@ $background-bar: linear-gradient(
     overflow-y: auto;
     box-sizing: border-box;
     border: 2px solid $color-main;
-    width: 100%;
     height: $height;
-    padding: 15px 0 40px;
+    padding: 15px 0 0;
     background-color: $background-alt2;
 
     .Close {
@@ -135,6 +129,49 @@ $background-bar: linear-gradient(
       font-size: 26px;
     }
 
+    .NodeActionDetails {
+      > .Label {
+        margin: 40px auto 0;
+        border-bottom: 2px solid $color-main;
+        width: 225px;
+        padding: 0 0 8px;
+        font-size: 12.5px;
+      }
+
+      .NodeAction {
+        margin: 40px 0;
+      }
+
+      .Action {
+        display: block;
+        margin: 0 auto 40px;
+        width: 40px;
+        text-align: center;
+      }
+
+      .NoActions {
+        margin: 30px auto;
+        width: 225px;
+        font-size: 12.5px;
+      }
+
+      * {
+        transition: transform 250ms, opacity 250ms;
+      }
+
+      &.Disabled {
+        pointer-events: none;
+
+        > .Label,
+        .NodeAction .Detail *,
+        .NoActions,
+        .Action {
+          transform: scale(0.8);
+          opacity: 0.65;
+        }
+      }
+    }
+
     .Color {
       .Field {
         border-bottom: none;
@@ -145,7 +182,7 @@ $background-bar: linear-gradient(
       cursor: pointer;
       user-select: none;
       box-sizing: border-box;
-      margin: 5px auto 27px;
+      margin: 5px auto 0;
       border-bottom: 2px solid $color-main;
       width: 225px;
       padding: 15px 15px;
@@ -159,11 +196,19 @@ $background-bar: linear-gradient(
         font-weight: 400;
       }
     }
+
+    .Detail:last-child {
+      margin-bottom: 40px;
+    }
   }
 
   &.NodeStructuring {
     .BorderBox {
       .Nodes {
+        overflow-x: auto;
+        overflow-y: auto;
+        margin: 0 0 40px 0;
+        height: 100%;
         padding: 0;
 
         .Padding {
@@ -176,6 +221,8 @@ $background-bar: linear-gradient(
 
         .Node {
           $indicator-translate-y: 7px;
+
+          width: fit-content;
 
           // This will return the transform value
           // for the indicator triangle, placing
@@ -196,6 +243,8 @@ $background-bar: linear-gradient(
             display: block;
             padding: 0 0 0 20px;
             font-size: 12px;
+            white-space: nowrap;
+            width: 100%;
 
             .Top,
             .Bottom {

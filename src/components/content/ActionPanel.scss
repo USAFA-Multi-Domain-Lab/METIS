@@ -5,9 +5,9 @@
   z-index: $z-index-action-panel;
   top: 50px;
   margin: 0 auto;
-  white-space: nowrap;
   width: -moz-fit-content;
   width: fit-content;
+  white-space: nowrap;
 
   .glue {
     transition: 200ms opacity;

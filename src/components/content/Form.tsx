@@ -1,9 +1,12 @@
 // This will render a detail for
 // a form, with a label and a text
 
+import React from 'react'
 import { useEffect, useRef, useState } from 'react'
 import inputs from '../../modules/toolbox/inputs'
 import './Form.scss'
+import Toggle from './Toggle'
+import Tooltip from './Tooltip'
 
 // field for entering information.
 export function Detail(props: {
@@ -150,6 +153,7 @@ export function DetailNumber(props: {
 export function DetailBox(props: {
   label: string
   initialValue: string
+  disabled?: boolean
   deliverValue: (value: string) => void
 }): JSX.Element | null {
   const fieldOffsetHeight: number = 3
@@ -159,7 +163,9 @@ export function DetailBox(props: {
 
   let label: string = props.label
   let initialValue: string = props.initialValue
+  let disabled: boolean = props.disabled === true
   let deliverValue = props.deliverValue
+  let className: string = 'Detail DetailBox'
 
   // Called when a change is made in the
   // in the field element. This will resize
@@ -195,9 +201,13 @@ export function DetailBox(props: {
     }
   }, [mountHandled])
 
+  if (disabled) {
+    className += ' Disabled'
+  }
+
   // render
   return (
-    <div className='Detail DetailBox'>
+    <div className={className}>
       <div className='Label'>{`${label}:`}</div>
       <textarea
         className='Field FieldBox'
@@ -281,4 +291,75 @@ export function DetailDropDown(props: {
       </div>
     </div>
   )
+}
+
+export interface IDetailToggle_P {
+  // marks the form detail
+  label: string
+  // the default value for the input field
+  initialValue: boolean
+  // the description displayed when hovered over
+  tooltipDescription: string
+  // class name to apply to the root element
+  uniqueClassName: string
+  // delivers what the user inputs so that
+  // the parent component can track it
+  deliverValue: (value: boolean) => void
+}
+
+interface IDetailToggle_S {}
+
+// A field in a form that consists of a label
+// and an on/off toggle.
+export class DetailToggle extends React.Component<
+  IDetailToggle_P,
+  IDetailToggle_S
+> {
+  /* -- static-fields -- */
+
+  static defaultProps = {
+    initialValue: false,
+    tooltipDescription: '',
+    uniqueClassName: '',
+  }
+
+  /* -- non-static-fields -- */
+
+  // ...none added
+
+  /* -- initialization -- */
+
+  // constructor(props: IFormDetailToggle_P) {
+  //   super(props)
+  // }
+
+  componentDidMount(): void {}
+
+  /* -- functions | render -- */
+
+  // inherited
+  render(): JSX.Element | null {
+    let label: string = this.props.label
+    let initialValue: boolean = this.props.initialValue
+    let tooltipDescription: string = this.props.tooltipDescription
+    let hideTooltip: boolean = tooltipDescription.length === 0
+    let uniqueClassName: string = this.props.uniqueClassName
+    let className: string = 'Detail DetailToggle'
+    if (uniqueClassName.length > 0) {
+      className += ` ${uniqueClassName}`
+    }
+    tooltipDescription = `#### ${label}\n${tooltipDescription}`
+    return (
+      <div className={className}>
+        <label className='Label'>{label}</label>
+        <div className='Field'>
+          <Toggle
+            initiallyActivated={initialValue}
+            deliverValue={this.props.deliverValue}
+          />
+        </div>
+        {hideTooltip ? null : <Tooltip description={tooltipDescription} />}
+      </div>
+    )
+  }
 }
