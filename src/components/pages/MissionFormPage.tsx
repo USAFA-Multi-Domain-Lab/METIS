@@ -304,6 +304,7 @@ function NodeEntry(props: {
             {node.nodeActionItems.map((action: MissionNodeAction) => (
               <NodeAction
                 action={action}
+                node={node as any}
                 handleChange={handleChange}
                 key={action.text}
               />
@@ -342,9 +343,11 @@ function NodeEntry(props: {
 // available to a node.
 function NodeAction(props: {
   action: MissionNodeAction
+  node: MissionNode
   handleChange: () => void
 }): JSX.Element | null {
   let action: MissionNodeAction = props.action
+  let node: MissionNode = props.node
   let handleChange: () => void = props.handleChange
 
   return (
@@ -389,6 +392,18 @@ function NodeAction(props: {
         }}
         key={`${action.actionID}_timeCost`}
       />
+      <div
+        className='Delete'
+        onClick={() => {
+          node.nodeActionItems.splice(node.nodeActionItems.indexOf(action), 1)
+          handleChange()
+        }}
+        key={`${action.actionID}_delete`}
+      >
+        {'[ '}
+        <span>Delete</span> {' ]'}
+        <Tooltip description='Delete this action from the node.' />
+      </div>
     </div>
   )
 }
