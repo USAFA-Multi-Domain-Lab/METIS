@@ -605,12 +605,12 @@ export default class MissionMap extends React.Component<
       <div className='help' style={styling}>
         <MoreInformation
           tooltipDescription={
-            '##### mission-map\n' +
+            '##### Mission Map\n' +
             'This map is a layout of the nodes in the mission and ' +
             'their order of progression. Arrows indicate ' +
             'the order nodes should be completed, with divergent arrows ' +
             'indicating a branch in the mission, with a choice of a path to go down.\n' +
-            '##### controls:\n\n' +
+            '##### Controls:\n\n' +
             '`Click+Drag` *Pan.*\n' +
             '`Shift+Scroll` *Zoom in/out.*\n'
           }

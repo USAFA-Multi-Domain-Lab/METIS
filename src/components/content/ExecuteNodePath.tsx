@@ -105,11 +105,11 @@ const ExecuteNodePath = (props: { selectedNode: MissionNode | null }) => {
       </p>
       <NodeHoverDisplay selectedNode={props.selectedNode} />
       <div className='Buttons'>
-        <button className='ExecutionButton' onClick={execute}>
+        <button className='Button ExecutionButton' onClick={execute}>
           {nodeActionItemText}
         </button>
         <button
-          className='AdditionalActionButton'
+          className='Button AdditionalActionButton'
           onClick={selectAlternativeAction}
         >
           Choose another action

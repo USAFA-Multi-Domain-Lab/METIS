@@ -23,6 +23,7 @@ import Tooltip from '../content/Tooltip'
 import { v4 as generateHash } from 'uuid'
 import './MissionFormPage.scss'
 import { Action, EActionPurpose } from '../content/Action'
+import MoreInformation from '../content/MoreInformation'
 
 // This is a enum used to describe
 // the locations that one node can
@@ -137,6 +138,7 @@ export default function MissionFormPage(props: {
             handleMapCreateRequest={() => {
               let newNode: MissionNode = mission.spawnNewNode()
               selectNode(newNode)
+              activateNodeStructuring(false)
             }}
             handleMapEditRequest={
               !nodeStructuringIsActive
@@ -193,7 +195,9 @@ function NodeEntry(props: {
       <div className='NodeEntry SidePanel'>
         <div className='BorderBox'>
           <div className='Close' onClick={handleCloseRequest}>
-            x
+            <div className='Circle'>
+              <div className='X'>x</div>
+            </div>
             <Tooltip description='Close panel.' />
           </div>
           <Detail
@@ -657,8 +661,16 @@ function NodeStructuring(props: {
     return (
       <div className='NodeStructuring SidePanel'>
         <div className='BorderBox'>
+          <MoreInformation
+            tooltipDescription={
+              '##### Node Structuring\n' +
+              'Drag and drop the nodes below to reorder the structure of the mission. Nodes can be placed inside another node to nest nodes. Nodes can also be placed beside each other for more exact placement.'
+            }
+          />
           <div className='Close' onClick={handleCloseRequest}>
-            x
+            <div className='Circle'>
+              <div className='X'>x</div>
+            </div>
             <Tooltip description='Close panel.' />
           </div>
           {renderNodes()}
