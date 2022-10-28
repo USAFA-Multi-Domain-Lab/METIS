@@ -1,18 +1,29 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { useStore } from 'react-context-hook'
-import { createTestMission, Mission, MissionNode } from '../../modules/missions'
-import NodeStructureReference, {
+import {
+  createTestMission,
+  Mission,
+  MissionNode,
   ENodeTargetRelation,
-} from '../../modules/node-reference'
+  MissionNodeAction,
+} from '../../modules/missions'
 import { EAjaxStatus } from '../../modules/toolbox/ajax'
 import inputs from '../../modules/toolbox/inputs'
 import usersModule, { IUser } from '../../modules/users'
 import Branding from '../content/Branding'
-import { Detail, DetailBox, DetailNumber } from '../content/Form'
+import {
+  Detail,
+  DetailBox,
+  DetailNumber,
+  DetailDropDown,
+  DetailToggle,
+} from '../content/Form'
 import MissionMap from '../content/MissionMap'
 import Tooltip from '../content/Tooltip'
 import { v4 as generateHash } from 'uuid'
 import './MissionFormPage.scss'
+import { Action, EActionPurpose } from '../content/Action'
+import MoreInformation from '../content/MoreInformation'
 
 // This is a enum used to describe
 // the locations that one node can
@@ -47,8 +58,6 @@ export default function MissionFormPage(props: {
   const [mountHandled, setMountHandled] = useState<boolean>()
   const [forcedUpdateCounter, setForcedUpdateCounter] = useState<number>(0)
   const [mission, setMission] = useState<Mission | null>(null)
-  const [nodeStructure, setNodeStructure] =
-    useState<NodeStructureReference | null>(null)
   const [selectedNode, selectNode] = useState<MissionNode | null>(null)
   const [nodeStructuringIsActive, activateNodeStructuring] =
     useState<boolean>(false)
@@ -58,16 +67,8 @@ export default function MissionFormPage(props: {
   // Equivalent of componentDidMount.
   useEffect(() => {
     if (!mountHandled) {
-      let mission: Mission = createTestMission()
-      let nodeStructure: NodeStructureReference =
-        NodeStructureReference.constructNodeStructureReference(
-          'ROOT',
-          mission.nodeStructure,
-          mission.nodes,
-        )
-
+      let mission: Mission = createTestMission(true)
       setMission(mission)
-      setNodeStructure(nodeStructure)
       setMountHandled(true)
     }
   }, [mountHandled])
@@ -79,13 +80,6 @@ export default function MissionFormPage(props: {
   // Forces a rerender.
   const forceUpdate = (): void => {
     setForcedUpdateCounter(forcedUpdateCounter + 1)
-  }
-
-  const handleNodeStructureChange = (): void => {
-    if (mission !== null && nodeStructure !== null) {
-      mission.nodeStructure = nodeStructure.deconstructNodeStructureReference()
-      forceUpdate()
-    }
   }
 
   // This will logout the current user.
@@ -114,7 +108,7 @@ export default function MissionFormPage(props: {
     className += ' SidePanelIsExpanded'
   }
 
-  if (show && mission !== null && nodeStructure !== null) {
+  if (show && mission !== null) {
     return (
       <div className={className}>
         {
@@ -141,21 +135,11 @@ export default function MissionFormPage(props: {
               }
               activateNodeStructuring(false)
             }}
-            // handleNodeAddition={() => {
-            //   let node: MissionNode = new MissionNode(
-            //     generateHash(),
-            //     'New Node',
-            //     'default',
-            //     'Node has not been executed.',
-            //     'Node has executed successfully.',
-            //     'Node has failed to execute.',
-            //     '',
-            //     true,
-            //     [],
-            //     0,
-            //     0,
-            //   )
-            // }}
+            handleMapCreateRequest={() => {
+              let newNode: MissionNode = mission.spawnNewNode()
+              selectNode(newNode)
+              activateNodeStructuring(false)
+            }}
             handleMapEditRequest={
               !nodeStructuringIsActive
                 ? () => {
@@ -174,9 +158,7 @@ export default function MissionFormPage(props: {
           />
           <NodeStructuring
             active={nodeStructuringIsActive}
-            nodeStructure={nodeStructure}
-            nodeData={mission.nodes}
-            handleNodeStructureChange={handleNodeStructureChange}
+            mission={mission}
             handleCloseRequest={() => activateNodeStructuring(false)}
           />
         </div>
@@ -197,13 +179,25 @@ function NodeEntry(props: {
   let node: MissionNode | null = props.node
   let handleChange = props.handleChange
   let handleCloseRequest = props.handleCloseRequest
+  let nodeActionDetailsClassName: string = 'NodeActionDetails'
+  let noActionsClassName: string = 'NoActions'
+
+  if (!node?.executable) {
+    nodeActionDetailsClassName += ' Disabled'
+  }
+
+  if (node === null || node.nodeActionItems.length > 0) {
+    noActionsClassName += ' Hidden'
+  }
 
   if (node !== null) {
     return (
       <div className='NodeEntry SidePanel'>
         <div className='BorderBox'>
           <div className='Close' onClick={handleCloseRequest}>
-            x
+            <div className='Circle'>
+              <div className='X'>x</div>
+            </div>
             <Tooltip description='Close panel.' />
           </div>
           <Detail
@@ -218,9 +212,58 @@ function NodeEntry(props: {
             }}
             key={`${node.nodeID}_name`}
           />
+          <DetailDropDown
+            label={'Color'}
+            options={[
+              'default',
+              'green',
+              'pink',
+              'yellow',
+              'blue',
+              'purple',
+              'red',
+              'khaki',
+              'orange',
+            ]}
+            currentValue={node.color}
+            uniqueClassName={'Color'}
+            deliverValue={(color: string) => {
+              if (node !== null) {
+                node.color = color
+
+                handleChange()
+              }
+            }}
+            key={`${node.nodeID}_color`}
+          />
+          <div
+            className='ColorFill'
+            onClick={() => {
+              if (node !== null) {
+                node.applyColorFill()
+                handleChange()
+              }
+            }}
+          >
+            {'[ '}
+            <span>Fill</span> {' ]'}
+            <Tooltip description='Shade all descendant nodes this color as well.' />
+          </div>
+          <DetailToggle
+            label={'Executable'}
+            initialValue={node.executable}
+            deliverValue={(executable: boolean) => {
+              if (node !== null) {
+                node.executable = executable
+                handleChange()
+              }
+            }}
+            key={`${node.nodeID}_executable`}
+          />
           <DetailBox
             label='Pre-Execution Text'
             initialValue={node.preExecutionText}
+            disabled={!node.executable}
             deliverValue={(preExecutionText: string) => {
               if (node !== null) {
                 node.preExecutionText = preExecutionText
@@ -233,6 +276,7 @@ function NodeEntry(props: {
           <DetailBox
             label='Post-Execution Success Text'
             initialValue={node.postExecutionSuccessText}
+            disabled={!node.executable}
             deliverValue={(postExecutionSuccessText: string) => {
               if (node !== null) {
                 node.preExecutionText = postExecutionSuccessText
@@ -245,6 +289,7 @@ function NodeEntry(props: {
           <DetailBox
             label='Post-Execution Failure Text'
             initialValue={node.postExecutionFailureText}
+            disabled={!node.executable}
             deliverValue={(postExecutionFailureText: string) => {
               if (node !== null) {
                 node.postExecutionFailureText = postExecutionFailureText
@@ -254,39 +299,37 @@ function NodeEntry(props: {
             }}
             key={`${node.nodeID}_postExecutionFailureText`}
           />
-          <DetailBox
-            label='Action'
-            initialValue={node.actionData}
-            deliverValue={(actionData: string) => {
-              if (node !== null) {
-                node.actionData = actionData
-
+          <div className={nodeActionDetailsClassName}>
+            <div className='Label'>Actions:</div>
+            {node.nodeActionItems.map((action: MissionNodeAction) => (
+              <NodeAction
+                action={action}
+                handleChange={handleChange}
+                key={action.text}
+              />
+            ))}
+            <div
+              className={noActionsClassName}
+              key={'no-actions-903jfksjdf092j3f'}
+            >
+              No actions exist for this node. Create one below.
+            </div>
+            <Action
+              purpose={EActionPurpose.Add}
+              handleClick={() => {
+                let action: MissionNodeAction = new MissionNodeAction(
+                  'New Action',
+                  5000,
+                  0.5,
+                  false,
+                )
+                node?.nodeActionItems.push(action)
                 handleChange()
-              }
-            }}
-            key={`${node.nodeID}_actionData`}
-          />
-          <DetailNumber
-            label='Success Chance'
-            initialValue={0}
-            minimum={0}
-            maximum={100}
-            unit='%'
-            deliverValue={(successChancePercentage: number | null) => {
-              if (
-                node !== null &&
-                node?.selectedNodeAction !== null &&
-                node.selectedNodeAction.successChance !== null &&
-                successChancePercentage !== null
-              ) {
-                node.selectedNodeAction.successChance =
-                  successChancePercentage / 100.0
-
-                handleChange()
-              }
-            }}
-            key={`${node.nodeID}_successChance`}
-          />
+              }}
+              tooltipDescription={'Add a new action to this node.'}
+              key={'actual-action_add-new-action'}
+            />
+          </div>
         </div>
       </div>
     )
@@ -295,31 +338,77 @@ function NodeEntry(props: {
   }
 }
 
+// This will render an action
+// available to a node.
+function NodeAction(props: {
+  action: MissionNodeAction
+  handleChange: () => void
+}): JSX.Element | null {
+  let action: MissionNodeAction = props.action
+  let handleChange: () => void = props.handleChange
+
+  return (
+    <div className='NodeAction'>
+      <DetailBox
+        label='Name'
+        initialValue={action.text}
+        deliverValue={(name: string) => {
+          action.text = name
+        }}
+        key={`${action.actionID}_actionData`}
+      />
+      <DetailNumber
+        label='Success Chance'
+        initialValue={parseFloat(
+          `${(action.successChance * 100.0).toFixed(2)}`,
+        )}
+        minimum={0}
+        maximum={100}
+        unit='%'
+        deliverValue={(successChancePercentage: number | null) => {
+          if (successChancePercentage !== null) {
+            action.successChance = successChancePercentage / 100.0
+
+            handleChange()
+          }
+        }}
+        key={`${action.actionID}_successChance`}
+      />
+      <DetailNumber
+        label='Time Cost'
+        initialValue={action.timeDelay / 1000}
+        minimum={0}
+        maximum={60}
+        unit='s'
+        deliverValue={(timeCost: number | null) => {
+          if (timeCost !== null) {
+            action.timeDelay = timeCost * 1000
+
+            handleChange()
+          }
+        }}
+        key={`${action.actionID}_timeCost`}
+      />
+    </div>
+  )
+}
+
 // This will render a form where
 // the node structure for the mission
 // can be defined.
 function NodeStructuring(props: {
   active: boolean
-  nodeStructure: NodeStructureReference
-  nodeData: Map<string, MissionNode>
-  handleNodeStructureChange: (
-    updatedNodeStructure: NodeStructureReference,
-  ) => void
+  mission: Mission
   handleCloseRequest: () => void
 }): JSX.Element | null {
   let active: boolean = props.active
-  let nodeStructure: NodeStructureReference = props.nodeStructure
-  let nodeData: Map<string, MissionNode> = props.nodeData
-  let handleNodeStructureChange: (
-    updatedNodeStructure: NodeStructureReference,
-  ) => void = props.handleNodeStructureChange
+  let mission: Mission = props.mission
   let handleCloseRequest = props.handleCloseRequest
+  let rootNode: MissionNode = mission.rootNode
 
   const [forcedUpdateCounter, setForcedUpdateCounter] = useState<number>(0)
-  const [nodeGrabbed, grabNode] = useState<NodeStructureReference | null>(null)
-  const [nodePendingDrop, pendDrop] = useState<NodeStructureReference | null>(
-    null,
-  )
+  const [nodeGrabbed, grabNode] = useState<MissionNode | null>(null)
+  const [nodePendingDrop, pendDrop] = useState<MissionNode | null>(null)
   const [dropLocation, setDropLocation] = useState<ENodeDropLocation>(
     ENodeDropLocation.Center,
   )
@@ -340,7 +429,7 @@ function NodeStructuring(props: {
     // zone.
     const pendDropHere = (): void => {
       setDropPendingHere(true)
-      pendDrop(nodeStructure)
+      pendDrop(rootNode)
     }
 
     // This will stop this padding from
@@ -357,7 +446,7 @@ function NodeStructuring(props: {
       className += ` ${uniqueClassName}`
     }
 
-    if (dropPendingHere && nodeStructure.nodeID === nodePendingDrop?.nodeID) {
+    if (dropPendingHere && rootNode.nodeID === nodePendingDrop?.nodeID) {
       className += ' DropPending'
     }
 
@@ -376,7 +465,6 @@ function NodeStructuring(props: {
 
             if (nodeGrabbed !== null) {
               nodeGrabbed.move(destinationNode, ENodeTargetRelation.Parent)
-              handleNodeStructureChange(nodeStructure)
             }
 
             pendDrop(null)
@@ -391,19 +479,25 @@ function NodeStructuring(props: {
   // structuring for the given node
   // name.
   const Node = (props: {
-    structureReference: NodeStructureReference
+    node: MissionNode
+    disableDropPending?: boolean
   }): JSX.Element | null => {
-    let structureReference: NodeStructureReference = props.structureReference
+    let node: MissionNode = props.node
+    let disableDropPending: boolean = props.disableDropPending === true
     let handleClick = () => {
-      structureReference.toggle()
-      forceUpdate()
+      // node.toggle()
+      // forceUpdate()
     }
     let className: string = 'Node'
 
-    className += structureReference.expandable ? ' Expandable' : ' Ends'
-    className += structureReference.isExpanded ? ' IsExpanded' : ' IsCollapsed'
+    className += node.expandable ? ' Expandable' : ' Ends'
+    className += node.isExpanded ? ' IsExpanded' : ' IsCollapsed'
 
-    if (structureReference.nodeID === nodePendingDrop?.nodeID) {
+    if (node.nodeID === nodeGrabbed?.nodeID) {
+      disableDropPending = true
+    }
+
+    if (node.nodeID === nodePendingDrop?.nodeID) {
       className += ' DropPending'
 
       switch (dropLocation) {
@@ -426,11 +520,11 @@ function NodeStructuring(props: {
           onClick={handleClick}
           draggable={true}
           onDragCapture={() => {
-            grabNode(structureReference)
+            grabNode(node)
           }}
           onDrop={(event: React.DragEvent) => {
             if (nodePendingDrop !== null) {
-              let target: NodeStructureReference = nodePendingDrop
+              let target: MissionNode = nodePendingDrop
               let targetRelation: ENodeTargetRelation
 
               switch (dropLocation) {
@@ -450,7 +544,7 @@ function NodeStructuring(props: {
 
               if (nodeGrabbed !== null) {
                 nodeGrabbed.move(target, targetRelation)
-                handleNodeStructureChange(nodeStructure)
+                target.expand()
               }
 
               pendDrop(null)
@@ -464,8 +558,11 @@ function NodeStructuring(props: {
               event.preventDefault()
             }}
             onDragEnter={() => {
-              if (structureReference.nodeID !== nodePendingDrop?.nodeID) {
-                pendDrop(structureReference)
+              if (
+                node.nodeID !== nodePendingDrop?.nodeID &&
+                !disableDropPending
+              ) {
+                pendDrop(node)
                 setDropLocation(ENodeDropLocation.Top)
               }
             }}
@@ -481,8 +578,11 @@ function NodeStructuring(props: {
               event.preventDefault()
             }}
             onDragEnter={() => {
-              if (structureReference.nodeID !== nodePendingDrop?.nodeID) {
-                pendDrop(structureReference)
+              if (
+                node.nodeID !== nodePendingDrop?.nodeID &&
+                !disableDropPending
+              ) {
+                pendDrop(node)
                 setDropLocation(ENodeDropLocation.Center)
               }
             }}
@@ -500,7 +600,7 @@ function NodeStructuring(props: {
                 fill='#fff'
               />
             </svg>
-            <div className='Name'>{structureReference.displayName}</div>
+            <div className='Name'>{node.name}</div>
           </div>
           <div
             className='Bottom'
@@ -508,8 +608,11 @@ function NodeStructuring(props: {
               event.preventDefault()
             }}
             onDragEnter={() => {
-              if (structureReference.nodeID !== nodePendingDrop?.nodeID) {
-                pendDrop(structureReference)
+              if (
+                node.nodeID !== nodePendingDrop?.nodeID &&
+                !disableDropPending
+              ) {
+                pendDrop(node)
                 setDropLocation(ENodeDropLocation.Bottom)
               }
             }}
@@ -520,13 +623,15 @@ function NodeStructuring(props: {
             }}
           ></div>
         </div>
-        {structureReference.isExpanded ? (
-          <div className='Subnodes'>
-            {structureReference.subnodes.map(
-              (subnode: NodeStructureReference) => (
-                <Node structureReference={subnode} key={subnode.nodeID} />
-              ),
-            )}
+        {node.isExpanded ? (
+          <div className='ChildNodes'>
+            {node.childNodes.map((childNode: MissionNode) => (
+              <Node
+                node={childNode}
+                disableDropPending={disableDropPending}
+                key={childNode.nodeID}
+              />
+            ))}
           </div>
         ) : null}
       </div>
@@ -536,9 +641,9 @@ function NodeStructuring(props: {
   // This will render the nodes in the
   // node structuring.
   const renderNodes = (): JSX.Element | null => {
-    let nodeElements: Array<JSX.Element | null> = nodeStructure.subnodes.map(
-      (subnode: NodeStructureReference) => (
-        <Node structureReference={subnode} key={subnode.nodeID} />
+    let nodeElements: Array<JSX.Element | null> = rootNode.childNodes.map(
+      (childNode: MissionNode) => (
+        <Node node={childNode} key={childNode.nodeID} />
       ),
     )
     let className: string = 'Nodes'
@@ -556,8 +661,16 @@ function NodeStructuring(props: {
     return (
       <div className='NodeStructuring SidePanel'>
         <div className='BorderBox'>
+          <MoreInformation
+            tooltipDescription={
+              '##### Node Structuring\n' +
+              'Drag and drop the nodes below to reorder the structure of the mission. Nodes can be placed inside another node to nest nodes. Nodes can also be placed beside each other for more exact placement.'
+            }
+          />
           <div className='Close' onClick={handleCloseRequest}>
-            x
+            <div className='Circle'>
+              <div className='X'>x</div>
+            </div>
             <Tooltip description='Close panel.' />
           </div>
           {renderNodes()}

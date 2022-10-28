@@ -1,56 +1,58 @@
 @import '../../config.scss';
 
-.Text {
-  padding: 15px 0;
-  font-size: 0.75em;
-  list-style-type: none;
-  overflow: auto;
-}
+.ConsoleOutput {
+  .Text {
+    padding: 15px 0;
+    font-size: 0.75em;
+    list-style-type: none;
+    overflow: auto;
+  }
 
-.line-cursor {
-  color: $terminal;
-}
+  .line-cursor {
+    color: $terminal;
+  }
 
-.green {
-  color: $terminal-green;
-}
+  .green {
+    color: $terminal-green;
+  }
 
-.pink {
-  color: $terminal-pink;
-}
+  .pink {
+    color: $terminal-pink;
+  }
 
-.yellow {
-  color: $terminal-yellow;
-}
+  .yellow {
+    color: $terminal-yellow;
+  }
 
-.blue {
-  color: $terminal-blue;
-}
+  .blue {
+    color: $terminal-blue;
+  }
 
-.khaki {
-  color: $terminal-khaki;
-}
+  .khaki {
+    color: $terminal-khaki;
+  }
 
-.purple {
-  color: $terminal-purple;
-}
+  .purple {
+    color: $terminal-purple;
+  }
 
-.red {
-  color: $terminal-red;
-}
+  .red {
+    color: $terminal-red;
+  }
 
-.orange {
-  color: $terminal-orange;
-}
+  .orange {
+    color: $terminal-orange;
+  }
 
-.default {
-  color: $color-main;
-}
+  .default {
+    color: $color-main;
+  }
 
-.succeeded {
-  color: $success;
-}
+  .succeeded {
+    color: $success;
+  }
 
-.failed {
-  color: $fail;
+  .failed {
+    color: $fail;
+  }
 }

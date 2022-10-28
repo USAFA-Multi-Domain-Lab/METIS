@@ -24,8 +24,6 @@ export const runNodeLoadingBar = (timeDelay: number) => {
             'div.mapped-node.LoadingBar .loading',
           )
 
-        console.log(loadingElement)
-
         width++
 
         if (loadingElement !== null) {
@@ -38,5 +36,5 @@ export const runNodeLoadingBar = (timeDelay: number) => {
 
 export default {
   handleNodeSelection,
-  nodeProcessBar: runNodeLoadingBar,
+  runNodeLoadingBar,
 }

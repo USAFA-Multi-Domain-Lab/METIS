@@ -1,6 +1,6 @@
 import React from 'react'
 import { useStore, withStore } from 'react-context-hook'
-import { MissionNode, MissionNodeAction } from '../modules/missions'
+import { Mission, MissionNode, MissionNodeAction } from '../modules/missions'
 import { IUser } from '../modules/users'
 
 /* -- constants -- */
@@ -38,6 +38,7 @@ export default class GlobalState {
   nodeActionItemText: string
   processDelayTime: number
   nodeActionSuccessChance: number
+  mission: Mission | null
 
   constructor(stateSetters: IStateSetters) {
     this.currentUser = null
@@ -59,6 +60,7 @@ export default class GlobalState {
     this.nodeActionItemText = ''
     this.processDelayTime = 0
     this.nodeActionSuccessChance = 0
+    this.mission = null
   }
 
   // This will position the currently

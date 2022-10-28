@@ -2,7 +2,7 @@ import { Counter, isInteger } from './numbers'
 import { AnyObject } from 'mongoose'
 import seedrandom, { PRNG } from 'seedrandom'
 import { v4 as generateHash } from 'uuid'
-import axios, { AxiosResponse } from 'axios'
+import axios, { AxiosError, AxiosResponse } from 'axios'
 
 // This is an enum used by the
 // MissionNode move
@@ -22,8 +22,8 @@ export interface IMissionJson {
   name: string
   versionNumber: number
   seed: number
-  nodeStructure: object
-  nodeData: object
+  nodeStructure: AnyObject
+  nodeData: Array<AnyObject>
 }
 
 // This is the raw node data returned
@@ -58,6 +58,7 @@ export interface IMissionRenderOptions {
 }
 
 export class MissionNodeAction {
+  actionID: string
   text: string
   timeDelay: number
   successChance: number
@@ -69,6 +70,7 @@ export class MissionNodeAction {
     successChance: number,
     willSucceed: boolean,
   ) {
+    this.actionID = generateHash()
     this.text = text
     this.timeDelay = timeDelay
     this.successChance = successChance
@@ -207,7 +209,7 @@ export class MissionNode {
     return siblings
   }
 
-  get childrenOfParnet(): Array<MissionNode> {
+  get childrenOfParent(): Array<MissionNode> {
     let childrenOfParent: Array<MissionNode> = []
 
     if (this.parentNode !== null) {
@@ -301,10 +303,26 @@ export class MissionNode {
   // and relation this target has to the
   // destination.
   move(target: MissionNode, targetRelation: ENodeTargetRelation): void {
+    let rootNode: MissionNode = this.mission.rootNode
     let parentNode: MissionNode | null = this.parentNode
     let newParentNode: MissionNode | null = target.parentNode
-    let newParentNodechildNodes: Array<MissionNode> = []
+    let newParentNodeChildNodes: Array<MissionNode> = []
 
+    // This makes sure that the target
+    // isn't being moved inside or beside
+    // itself.
+    let x: MissionNode | null = target
+
+    while (x !== null && x.nodeID !== rootNode.nodeID) {
+      if (this.nodeID === x.nodeID) {
+        return
+      }
+
+      x = x.parentNode
+    }
+
+    // This will remove the nodes
+    // current position in the structure.
     if (parentNode !== null) {
       let siblings: MissionNode[] = parentNode.childNodes
 
@@ -317,6 +335,7 @@ export class MissionNode {
       }
     }
 
+    // This will
     switch (targetRelation) {
       case ENodeTargetRelation.Parent:
         target.childNodes.push(this)
@@ -325,29 +344,29 @@ export class MissionNode {
       case ENodeTargetRelation.PreviousSibling:
         if (newParentNode !== null) {
           newParentNode.childNodes.forEach((childNode: MissionNode) => {
-            newParentNodechildNodes.push(childNode)
+            newParentNodeChildNodes.push(childNode)
 
             if (childNode.nodeID === target.nodeID) {
-              newParentNodechildNodes.push(this)
+              newParentNodeChildNodes.push(this)
               this.parentNode = newParentNode
             }
           })
 
-          newParentNode.childNodes = newParentNodechildNodes
+          newParentNode.childNodes = newParentNodeChildNodes
         }
         break
       case ENodeTargetRelation.FollowingSibling:
         if (newParentNode !== null) {
           newParentNode.childNodes.forEach((childNode: MissionNode) => {
             if (childNode.nodeID === target.nodeID) {
-              newParentNodechildNodes.push(this)
+              newParentNodeChildNodes.push(this)
               this.parentNode = newParentNode
             }
 
-            newParentNodechildNodes.push(childNode)
+            newParentNodeChildNodes.push(childNode)
           })
 
-          newParentNode.childNodes = newParentNodechildNodes
+          newParentNode.childNodes = newParentNodeChildNodes
         }
         break
     }
@@ -366,6 +385,16 @@ export class MissionNode {
 
     this._handleStructureChange()
   }
+
+  // This will color all descendant
+  // nodes the same color as this
+  // node.
+  applyColorFill(): void {
+    for (let childNode of this.childNodes) {
+      childNode.color = this.color
+      childNode.applyColorFill()
+    }
+  }
 }
 
 // This represents a mission for a
@@ -374,7 +403,7 @@ export class Mission {
   name: string
   versionNumber: number
   nodeStructure: AnyObject
-  nodeData: AnyObject
+  nodeData: Array<AnyObject>
   nodes: Map<string, MissionNode>
   seed: number
   rng: PRNG
@@ -386,7 +415,7 @@ export class Mission {
     name: string,
     versionNumber: number,
     nodeStructure: AnyObject,
-    nodeData: AnyObject,
+    nodeData: Array<AnyObject>,
     seed: number,
     expandAll: boolean = false,
   ) {
@@ -416,21 +445,22 @@ export class Mission {
 
     this.parseJSON()
     this.mapNodeRelationships(expandAll, this.rootNode, nodeStructure)
-    this.positionNodes()
+    // Calling this runs positionNodes.
+    // Without this line, positionNodes
+    // needs to be called independently.
+    this.rootNode.expand()
   }
 
   parseJSON(): void {
     try {
-      let nodeData: AnyObject = this.nodeData
-      let nodeDataKeys: string[] = Object.keys(this.nodeData)
+      let nodeData: Array<AnyObject> = this.nodeData
 
       this.nodes.clear()
 
       // Converts raw node data into MissionNode
       // objects, then it stores the created
       // objects in the nodeData map.
-      for (let key of nodeDataKeys) {
-        let nodeDatum: IMissionNodeJson = nodeData[key]
+      for (let nodeDatum of nodeData) {
         let nodeActionItems = []
 
         for (let actionItem of nodeDatum.nodeActionItems) {
@@ -462,7 +492,7 @@ export class Mission {
           0,
         )
 
-        this.nodes.set(key, node)
+        this.nodes.set(node.nodeID, node)
       }
     } catch (error) {
       console.error('Invalid JSON passed to create Mission object.')
@@ -475,7 +505,6 @@ export class Mission {
   handleStructureChange(): void {
     this.structureChangeKey = generateHash()
 
-    this.mapNodeRelationships()
     this.positionNodes()
 
     for (let handler of this.structureChangeHandlers) {
@@ -507,6 +536,33 @@ export class Mission {
   // handlers.
   clearStructureChangeHandlers(): void {
     this.structureChangeHandlers = []
+  }
+
+  // This will create a new node
+  // called "New Node" and returns
+  // it.
+  spawnNewNode(): MissionNode {
+    let rootNode: MissionNode = this.rootNode
+    let node: MissionNode = new MissionNode(
+      this,
+      generateHash(),
+      'New Node',
+      'default',
+      'Node has not been executed.',
+      'Node has executed successfully.',
+      'Node has failed to execute.',
+      '',
+      true,
+      [],
+      0,
+      0,
+    )
+    node.parentNode = rootNode
+    rootNode.childNodes.push(node)
+
+    this.handleStructureChange()
+
+    return node
   }
 
   // This will determine the relationship
@@ -664,8 +720,8 @@ export function createTestMission(expandAll: boolean = false): Mission {
         '34': { END: 'END' },
       },
     },
-    nodeData: {
-      '1': {
+    nodeData: [
+      {
         nodeID: '1',
         name: 'Communications',
         color: 'green',
@@ -715,7 +771,7 @@ export function createTestMission(expandAll: boolean = false): Mission {
         mapX: 0,
         mapY: -3,
       },
-      '2': {
+      {
         nodeID: '2',
         name: 'Cellular Network',
         color: 'green',
@@ -765,7 +821,7 @@ export function createTestMission(expandAll: boolean = false): Mission {
         mapX: 1,
         mapY: -5,
       },
-      '5': {
+      {
         nodeID: '5',
         name: 'Internet Provider',
         color: 'green',
@@ -815,7 +871,7 @@ export function createTestMission(expandAll: boolean = false): Mission {
         mapX: 1,
         mapY: -4,
       },
-      '8': {
+      {
         nodeID: '8',
         name: 'Instant Messaging',
         color: 'green',
@@ -865,7 +921,7 @@ export function createTestMission(expandAll: boolean = false): Mission {
         mapX: 1,
         mapY: -3,
       },
-      '11': {
+      {
         nodeID: '11',
         name: 'File Sharing Service',
         color: 'green',
@@ -916,7 +972,7 @@ export function createTestMission(expandAll: boolean = false): Mission {
         mapY: -2,
       },
 
-      '3': {
+      {
         nodeID: '3',
         name: 'Callbank Cellular',
         color: 'green',
@@ -967,7 +1023,7 @@ export function createTestMission(expandAll: boolean = false): Mission {
         mapY: -5,
       },
 
-      '6': {
+      {
         nodeID: '6',
         name: 'Service Provider',
         color: 'green',
@@ -999,7 +1055,7 @@ export function createTestMission(expandAll: boolean = false): Mission {
         mapX: 3,
         mapY: -4,
       },
-      '9': {
+      {
         nodeID: '9',
         name: 'Service Provider',
         color: 'green',
@@ -1049,7 +1105,7 @@ export function createTestMission(expandAll: boolean = false): Mission {
         mapX: 3,
         mapY: -3,
       },
-      '12': {
+      {
         nodeID: '12',
         name: 'Service Provider',
         color: 'green',
@@ -1099,7 +1155,7 @@ export function createTestMission(expandAll: boolean = false): Mission {
         mapX: 3,
         mapY: -2,
       },
-      '4': {
+      {
         nodeID: '4',
         name: 'Cellular Towers',
         color: 'green',
@@ -1149,7 +1205,7 @@ export function createTestMission(expandAll: boolean = false): Mission {
         mapX: 4,
         mapY: -5,
       },
-      '7': {
+      {
         nodeID: '7',
         name: 'Main Server',
         color: 'green',
@@ -1199,7 +1255,7 @@ export function createTestMission(expandAll: boolean = false): Mission {
         mapX: 4,
         mapY: -4,
       },
-      '10': {
+      {
         nodeID: '10',
         name: 'Main Server',
         color: 'green',
@@ -1249,7 +1305,7 @@ export function createTestMission(expandAll: boolean = false): Mission {
         mapX: 4,
         mapY: -3,
       },
-      '13': {
+      {
         nodeID: '13',
         name: 'Main Server',
         color: 'green',
@@ -1299,7 +1355,7 @@ export function createTestMission(expandAll: boolean = false): Mission {
         mapX: 4,
         mapY: -2,
       },
-      '14': {
+      {
         nodeID: '14',
         name: 'Air Defense',
         color: 'pink',
@@ -1349,7 +1405,7 @@ export function createTestMission(expandAll: boolean = false): Mission {
         mapX: 0,
         mapY: -1,
       },
-      '15': {
+      {
         nodeID: '15',
         name: 'IADS Network',
         color: 'pink',
@@ -1399,7 +1455,7 @@ export function createTestMission(expandAll: boolean = false): Mission {
         mapX: 1,
         mapY: -1,
       },
-      '16': {
+      {
         nodeID: '16',
         name: 'Individual IADS Sites',
         color: 'pink',
@@ -1450,7 +1506,7 @@ export function createTestMission(expandAll: boolean = false): Mission {
         mapX: 2,
         mapY: -1,
       },
-      '17': {
+      {
         nodeID: '17',
         name: 'Launchers',
         color: 'pink',
@@ -1500,7 +1556,7 @@ export function createTestMission(expandAll: boolean = false): Mission {
         mapX: 3,
         mapY: -1,
       },
-      '18': {
+      {
         nodeID: '18',
         name: 'Radars',
         color: 'pink',
@@ -1550,7 +1606,7 @@ export function createTestMission(expandAll: boolean = false): Mission {
         mapX: 3,
         mapY: 0,
       },
-      '19': {
+      {
         nodeID: '19',
         name: 'Infrastructure',
         color: 'yellow',
@@ -1600,7 +1656,7 @@ export function createTestMission(expandAll: boolean = false): Mission {
         mapX: 0,
         mapY: 1,
       },
-      '20': {
+      {
         nodeID: '20',
         name: 'Railroad System',
         color: 'yellow',
@@ -1650,7 +1706,7 @@ export function createTestMission(expandAll: boolean = false): Mission {
         mapX: 1,
         mapY: 0,
       },
-      '23': {
+      {
         nodeID: '23',
         name: 'Electrical System',
         color: 'yellow',
@@ -1700,7 +1756,7 @@ export function createTestMission(expandAll: boolean = false): Mission {
         mapX: 1,
         mapY: 1,
       },
-      '25': {
+      {
         nodeID: '25',
         name: 'Water System',
         color: 'yellow',
@@ -1750,7 +1806,7 @@ export function createTestMission(expandAll: boolean = false): Mission {
         mapX: 1,
         mapY: 2,
       },
-      '27': {
+      {
         nodeID: '27',
         name: 'Road System',
         color: 'yellow',
@@ -1800,7 +1856,7 @@ export function createTestMission(expandAll: boolean = false): Mission {
         mapX: 1,
         mapY: 3,
       },
-      '21': {
+      {
         nodeID: '21',
         name: 'Track Monitoring',
         color: 'yellow',
@@ -1850,7 +1906,7 @@ export function createTestMission(expandAll: boolean = false): Mission {
         mapX: 2,
         mapY: 0,
       },
-      '22': {
+      {
         nodeID: '22',
         name: 'Track Switch System',
         color: 'yellow',
@@ -1900,7 +1956,7 @@ export function createTestMission(expandAll: boolean = false): Mission {
         mapX: 2,
         mapY: 1,
       },
-      '24': {
+      {
         nodeID: '24',
         name: 'Regional Service',
         color: 'yellow',
@@ -1950,7 +2006,7 @@ export function createTestMission(expandAll: boolean = false): Mission {
         mapX: 2,
         mapY: 2,
       },
-      '26': {
+      {
         nodeID: '26',
         name: 'Valve System',
         color: 'yellow',
@@ -2000,7 +2056,7 @@ export function createTestMission(expandAll: boolean = false): Mission {
         mapX: 2,
         mapY: 3,
       },
-      '28': {
+      {
         nodeID: '28',
         name: 'Traffic Light System',
         color: 'yellow',
@@ -2050,7 +2106,7 @@ export function createTestMission(expandAll: boolean = false): Mission {
         mapX: 2,
         mapY: 4,
       },
-      '29': {
+      {
         nodeID: '29',
         name: 'CCTV System',
         color: 'yellow',
@@ -2100,7 +2156,7 @@ export function createTestMission(expandAll: boolean = false): Mission {
         mapX: 2,
         mapY: 5,
       },
-      '30': {
+      {
         nodeID: '30',
         name: 'Satellite Services',
         color: 'blue',
@@ -2150,7 +2206,7 @@ export function createTestMission(expandAll: boolean = false): Mission {
         mapX: 0,
         mapY: 4,
       },
-      '31': {
+      {
         nodeID: '31',
         name: 'Global Positioning',
         color: 'blue',
@@ -2200,7 +2256,7 @@ export function createTestMission(expandAll: boolean = false): Mission {
         mapX: 1,
         mapY: 4,
       },
-      '32': {
+      {
         nodeID: '32',
         name: 'Data Transfer',
         color: 'blue',
@@ -2250,7 +2306,7 @@ export function createTestMission(expandAll: boolean = false): Mission {
         mapX: 1,
         mapY: 5,
       },
-      '33': {
+      {
         nodeID: '33',
         name: 'Imagery Collection',
         color: 'blue',
@@ -2300,7 +2356,7 @@ export function createTestMission(expandAll: boolean = false): Mission {
         mapX: 1,
         mapY: 6,
       },
-      '34': {
+      {
         nodeID: '34',
         name: 'Sensor Observation',
         color: 'blue',
@@ -2350,7 +2406,7 @@ export function createTestMission(expandAll: boolean = false): Mission {
         mapX: 1,
         mapY: 7,
       },
-    },
+    ],
   }
 
   return new Mission(
@@ -2363,8 +2419,37 @@ export function createTestMission(expandAll: boolean = false): Mission {
   )
 }
 
+// This gets the data from the database
+// and creates a specific mission based
+// on the data it returns
+export function getMission(
+  callback: (mission: Mission) => void,
+  callbackError: (error: AxiosError) => void = () => {},
+): void {
+  axios
+    .get('/api/v1/missions/')
+    .then((response: AxiosResponse<AnyObject>): void => {
+      let missionJson = response.data.mission
+      let mission = new Mission(
+        missionJson.name,
+        missionJson.versionNumber,
+        missionJson.nodeStructure,
+        missionJson.nodeData,
+        missionJson.seed,
+        false,
+      )
+      callback(mission)
+    })
+    .catch((error: AxiosError) => {
+      console.error('Failed to retrieve mission.')
+      console.error(error)
+      callbackError(error)
+    })
+}
+
 export default {
   MissionNode,
   Mission,
   createTestMission,
+  getMission,
 }

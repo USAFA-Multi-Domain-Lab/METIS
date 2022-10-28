@@ -39,11 +39,18 @@
     }
   }
 
-  .ExecutionButton {
+  .Buttons {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    flex-flow: row wrap;
+  }
+
+  .Button {
     display: flex;
     justify-content: center;
     align-items: center;
-    margin: 20px 5px 20px 0;
+    margin: 20px 10px 20px 0;
     color: $color-accent-light;
     background-color: $background-alt2;
     padding: 5px;
@@ -51,7 +58,7 @@
     border-radius: 4px;
     height: auto;
 
-    &.ExecutionButton:hover {
+    &:hover {
       cursor: pointer;
       background-color: black;
     }

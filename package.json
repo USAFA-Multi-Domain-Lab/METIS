@@ -33,7 +33,7 @@
     "express-session": "^1.17.2",
     "lodash": "^4.17.21",
     "marked": "^1.2.9",
-    "mongoose": "^6.5.3",
+    "mongoose": "^6.7.0",
     "mysql2": "^2.3.3",
     "node-sass": "^6.0.1",
     "pug": "^3.0.2",

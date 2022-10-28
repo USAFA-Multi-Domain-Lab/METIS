@@ -9,6 +9,8 @@ import LoadingPage from './pages/LoadingPage'
 import GlobalState, { tooltipsOffsetX, tooltipsOffsetY } from './GlobalState'
 import Markdown, { MarkdownTheme } from './content/Markdown'
 import MissionFormPage from './pages/MissionFormPage'
+import { getMission, Mission } from '../modules/missions'
+import { AnyObject } from 'mongoose'
 
 const loadingMinTime = 500
 
@@ -68,6 +70,7 @@ function App(): JSX.Element | null {
   const [tooltipDescription] = useStore<string>('tooltipDescription')
   const [tooltips] = useStore<React.RefObject<HTMLDivElement>>('tooltips')
   const [hideTooltip] = useStore<() => void>('hideTooltip')
+  const [mission, setMission] = useStore<Mission | null>('mission')
 
   /* -- COMPONENT STATE -- */
 
@@ -136,14 +139,27 @@ function App(): JSX.Element | null {
       usersModule.retrieveCurrentUser(
         (currentUser: IUser | null) => {
           setCurrentUser(currentUser)
-          setCurrentPagePath(
-            currentUser === null ? 'AuthPage' : 'DashboardPage',
+
+          // This loads the mission in session from the database
+          // and stores it in a global state to be used on the DashboardPage
+          // where the Mission Map renders
+          getMission(
+            (mission: Mission) => {
+              setMission(mission)
+              setCurrentPagePath('DashboardPage')
+              setLastLoadingMessage('Initializing application...')
+              setAppMountHandled(true)
+              setLoadMessage(null)
+            },
+            () => {
+              setErrorMessage('Failed to retrieve mission.')
+              setAppMountHandled(true)
+              setLoadMessage(null)
+            },
           )
-          setAppMountHandled(true)
-          setLoadMessage(null)
         },
         () => {
-          setErrorMessage('Server is down. Contact server administrator.')
+          setErrorMessage('Failed to sync session.')
           setAppMountHandled(true)
           setLoadMessage(null)
         },
@@ -163,7 +179,7 @@ function App(): JSX.Element | null {
     if (loadingMessage !== null) {
       clearTimeout(loadingMinTimeout)
 
-      setLastLoadingMessage(loadingMessage)
+      setLastLoadingMessage('')
       setLoadingMinTimeReached(false)
       setLoadingMinTimeout(
         setTimeout(() => {
@@ -189,7 +205,11 @@ function App(): JSX.Element | null {
         targetPagePath='AuthPage'
         requireLogin={false}
       />
-      <StandardPage Page={DashboardPage} targetPagePath='DashboardPage' />
+      <StandardPage
+        Page={DashboardPage}
+        targetPagePath='DashboardPage'
+        requireLogin={false}
+      />
       <StandardPage Page={MissionFormPage} targetPagePath='MissionFormPage' />
       <ServerErrorPage />
       <LoadingPage />
