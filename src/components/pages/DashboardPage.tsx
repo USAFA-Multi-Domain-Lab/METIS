@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useStore } from 'react-context-hook'
 import {
   createTestMission,
+  Mission,
   MissionNode,
   MissionNodeAction,
 } from '../../modules/missions'
@@ -14,9 +15,6 @@ import './DashboardPage.scss'
 import gameLogic from '../../modules/game-logic'
 import ExecuteNodePath from '../content/ExecuteNodePath'
 import NodeActions from '../content/NodeActions'
-
-const mission = createTestMission()
-mission.rootNode.expand()
 
 // This will render a dashboard with a radar
 // on it, indicating air traffic passing by.
@@ -31,6 +29,8 @@ export default function DashboardPage(props: {
   const [loadingMessage, setLoadingMessage] = useStore<string | null>(
     'loadingMessage',
   )
+  const [lastLoadingMessage, setLastLoadingMessage] =
+    useStore<string>('lastLoadingMessage')
   const [errorMessage, setErrorMessage] = useStore<string | null>(
     'errorMessage',
   )
@@ -54,6 +54,7 @@ export default function DashboardPage(props: {
     useStore<string>('nodeActionItemText')
   const [nodeActionSuccessChance, setNodeActionSuccessChance] =
     useStore<number>('nodeActionSuccessChance')
+  const [mission, setMission] = useStore<Mission | null>('mission')
 
   /* -- COMPONENT STATE -- */
 
@@ -83,10 +84,11 @@ export default function DashboardPage(props: {
 
   // This will logout the current user.
   const logout = () => {
-    setLoadingMessage('Signing out...')
+    setLoadingMessage('')
 
     usersModule.logout(
       () => {
+        setLastLoadingMessage('Signing out...')
         setCurrentUser(null)
         setLoadingMessage(null)
         setCurrentPagePath('AuthPage')
@@ -100,6 +102,11 @@ export default function DashboardPage(props: {
 
   // This will switch to the edit mission
   // form.
+  const login = () => {
+    setCurrentPagePath(currentUser === null ? 'AuthPage' : 'MissionFormPage')
+  }
+
+  // This will switch to the edit mission form.
   const editMission = () => {
     setCurrentPagePath('MissionFormPage')
   }
@@ -132,16 +139,29 @@ export default function DashboardPage(props: {
     className += ' DashboardPageWithMapOnly'
   }
 
-  if (show) {
+  // Keeps track of if the user is logged in or not.
+  // If the user is not logged in then the sign out button will not display.
+  // If the user is logged in then the "Login" button will change to "Edit Mission"
+  // and the "Sign Out" button will appear.
+  let navClassName = 'Navigation'
+
+  if (currentUser !== null) {
+    navClassName += ' SignOut'
+  }
+
+  if (show && mission !== null) {
     return (
       <div className={className}>
         {
           // -- navigation --
         }
-        <div className='Navigation'>
+        <div className={navClassName}>
           <Branding />
           <div className='EditMission Link' onClick={editMission}>
             Edit mission
+          </div>
+          <div className='Login Link' onClick={login}>
+            Login
           </div>
           <div className='Logout Link' onClick={logout}>
             Sign out
@@ -152,33 +172,35 @@ export default function DashboardPage(props: {
           <div className='Content'>
             <MissionMap
               mission={mission}
+              // mission={createTestMission(false)}
               missionAjaxStatus={EAjaxStatus.Loaded}
               handleNodeSelection={(selectedNode: MissionNode) => {
-                if (currentUser !== null) {
-                  let username: string = currentUser.userID
+                setLastSelectedNode(selectedNode)
 
-                  setLastSelectedNode(selectedNode)
+                if (selectedNode.preExecutionText !== '') {
+                  let timeStamp: number = 5 * (new Date() as any)
+                  consoleOutputs.push({
+                    date: timeStamp,
+                    value: `<span class='line-cursor'>MDL@${selectedNode.name.replaceAll(
+                      ' ',
+                      '-',
+                    )}: </span>
+                              <span class='default'>${
+                                selectedNode.preExecutionText
+                              }</span>`,
+                  })
+                  setOutputPanelIsDisplayed(true)
+                }
 
-                  if (selectedNode.preExecutionText !== '') {
-                    let timeStamp: number = 5 * (new Date() as any)
-                    consoleOutputs.push({
-                      date: timeStamp,
-                      value: `<span class='line-cursor'>${username}@USAFA: </span>
-                              <span class="default">${selectedNode.preExecutionText}</span>`,
-                    })
-                    setOutputPanelIsDisplayed(true)
+                if (selectedNode.executable === false) {
+                  gameLogic.handleNodeSelection(selectedNode)
+                  selectedNode.color = ''
+                  return
+                } else {
+                  for (let nodeActionItem of selectedNode.nodeActionItems) {
+                    nodeActionItemDisplay.push(nodeActionItem)
                   }
-
-                  if (selectedNode.executable === false) {
-                    gameLogic.handleNodeSelection(selectedNode)
-                    selectedNode.color = ''
-                    return
-                  } else {
-                    for (let nodeActionItem of selectedNode.nodeActionItems) {
-                      nodeActionItemDisplay.push(nodeActionItem)
-                    }
-                    setNodeActionSelectionPromptIsDisplayed(true)
-                  }
+                  setNodeActionSelectionPromptIsDisplayed(true)
                 }
               }}
               applyNodeClassName={(node: MissionNode) => {

@@ -2,7 +2,7 @@ import { Counter, isInteger } from './numbers'
 import { AnyObject } from 'mongoose'
 import seedrandom, { PRNG } from 'seedrandom'
 import { v4 as generateHash } from 'uuid'
-import axios, { AxiosResponse } from 'axios'
+import axios, { AxiosError, AxiosResponse } from 'axios'
 
 // This is an enum used by the
 // MissionNode move
@@ -445,7 +445,10 @@ export class Mission {
 
     this.parseJSON()
     this.mapNodeRelationships(expandAll, this.rootNode, nodeStructure)
-    this.positionNodes()
+    // Calling this runs positionNodes.
+    // Without this line, positionNodes
+    // needs to be called independently.
+    this.rootNode.expand()
   }
 
   parseJSON(): void {
@@ -2416,8 +2419,37 @@ export function createTestMission(expandAll: boolean = false): Mission {
   )
 }
 
+// This gets the data from the database
+// and creates a specific mission based
+// on the data it returns
+export function getMission(
+  callback: (mission: Mission) => void,
+  callbackError: (error: AxiosError) => void = () => {},
+): void {
+  axios
+    .get('/api/v1/missions/')
+    .then((response: AxiosResponse<AnyObject>): void => {
+      let missionJson = response.data.mission
+      let mission = new Mission(
+        missionJson.name,
+        missionJson.versionNumber,
+        missionJson.nodeStructure,
+        missionJson.nodeData,
+        missionJson.seed,
+        false,
+      )
+      callback(mission)
+    })
+    .catch((error: AxiosError) => {
+      console.error('Failed to retrieve mission.')
+      console.error(error)
+      callbackError(error)
+    })
+}
+
 export default {
   MissionNode,
   Mission,
   createTestMission,
+  getMission,
 }

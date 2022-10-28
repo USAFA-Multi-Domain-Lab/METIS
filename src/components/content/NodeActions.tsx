@@ -9,9 +9,6 @@ const NodeActions = (props: {
   selectedNode: MissionNode | null | undefined
 }) => {
   /* -- GLOBAL STATE -- */
-  const [currentUser, setCurrentUser] = useStore<IUser | null>('currentUser')
-  const [consoleOutputs, setConsoleOutputs] =
-    useStore<Array<{ date: number; value: string }>>('consoleOutputs')
   const [
     executeNodePathPromptIsDisplayed,
     setExecuteNodePathPromptIsDisplayed,
@@ -60,7 +57,6 @@ const NodeActions = (props: {
     setNodeActionSelectionPromptIsDisplayed(false)
     setExecuteNodePathPromptIsDisplayed(true)
     setDisplayNodeActionList(false)
-    setNodeActionItemDisplay([])
     setProcessDelayTime(nodeActionItem.timeDelay)
     setNodeActionItemText(nodeActionItem.text)
     setNodeActionSuccessChance(nodeActionItem.successChance)
@@ -104,7 +100,7 @@ const NodeActions = (props: {
             >
               <Tooltip
                 description={
-                  `* Executed node in ${
+                  `* Time to execute: ${
                     (nodeActionItem.timeDelay as number) / 1000
                   } second(s)\n` +
                   `* Chance of success: ${

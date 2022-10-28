@@ -10,6 +10,8 @@
   white-space: nowrap;
 
   .glue {
+    display: grid;
+    grid-template-columns: auto auto auto auto;
     transition: 200ms opacity;
     margin: 0 auto;
     // margin-left: 32px;

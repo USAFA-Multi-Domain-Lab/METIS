@@ -1,11 +1,12 @@
 import React, { useState } from 'react'
 import './ExecuteNodePath.scss'
 import { useStore } from 'react-context-hook'
-import { Mission, MissionNode } from '../../modules/missions'
+import { Mission, MissionNode, MissionNodeAction } from '../../modules/missions'
 import { IUser } from '../../modules/users'
 import gameLogic, { runNodeLoadingBar } from '../../modules/game-logic'
 import NodeStructureReference from '../../modules/node-reference'
 import NodeHoverDisplay from './NodeHoverDisplay'
+import NodeActions from './NodeActions'
 
 const ExecuteNodePath = (props: { selectedNode: MissionNode | null }) => {
   /* -- GLOBAL STATE -- */
@@ -16,10 +17,17 @@ const ExecuteNodePath = (props: { selectedNode: MissionNode | null }) => {
     executeNodePathPromptIsDisplayed,
     setExecuteNodePathPromptIsDisplayed,
   ] = useStore<boolean>('executeNodePathPromptIsDisplayed')
+  const [
+    nodeActionSelectionPromptIsDisplayed,
+    setNodeActionSelectionPromptIsDisplayed,
+  ] = useStore<boolean>('nodeActionSelectionPromptIsDisplayed')
   const [processDelayTime] = useStore<number>('processDelayTime')
   const [nodeActionItemText] = useStore<string>('nodeActionItemText')
   const [nodeActionSuccessChance, setNodeActionSuccessChance] =
     useStore<number>('nodeActionSuccessChance')
+  const [nodeActionItemDisplay, setNodeActionItemDisplay] = useStore<
+    Array<MissionNodeAction>
+  >('nodeActionItemDisplay')
 
   /* -- COMPONENT STATE -- */
   const [forcedUpdateCounter, setForcedUpdateCounter] = useState<number>(0)
@@ -36,8 +44,7 @@ const ExecuteNodePath = (props: { selectedNode: MissionNode | null }) => {
   }
 
   const execute = () => {
-    if (currentUser !== null && props.selectedNode !== null) {
-      let username: string = currentUser.userID
+    if (props.selectedNode !== null) {
       let selectedNode: MissionNode = props.selectedNode
 
       setExecuteNodePathPromptIsDisplayed(false)
@@ -52,8 +59,13 @@ const ExecuteNodePath = (props: { selectedNode: MissionNode | null }) => {
             ...consoleOutputs,
             {
               date: Date.now(),
-              value: `<span class='line-cursor'>${username}@USAFA: </span>
-                     <span class="succeeded">${selectedNode.postExecutionSuccessText}</span>`,
+              value: `<span class='line-cursor'>MDL@${selectedNode.name.replaceAll(
+                ' ',
+                '-',
+              )}: </span>
+                     <span class="succeeded">${
+                       selectedNode.postExecutionSuccessText
+                     }</span>`,
             },
           ])
         } else {
@@ -61,14 +73,25 @@ const ExecuteNodePath = (props: { selectedNode: MissionNode | null }) => {
             ...consoleOutputs,
             {
               date: Date.now(),
-              value: `<span class='line-cursor'>${username}@USAFA: </span>
-                    <span class="failed">${selectedNode.postExecutionFailureText}</span>`,
+              value: `<span class='line-cursor'>MDL@${selectedNode.name.replaceAll(
+                ' ',
+                '-',
+              )}: </span>
+                    <span class="failed">${
+                      selectedNode.postExecutionFailureText
+                    }</span>`,
             },
           ])
         }
       })
       runNodeLoadingBar(processDelayTime)
+      setNodeActionItemDisplay([])
     }
+  }
+
+  const selectAlternativeAction = () => {
+    setExecuteNodePathPromptIsDisplayed(false)
+    setNodeActionSelectionPromptIsDisplayed(true)
   }
 
   return (
@@ -81,9 +104,17 @@ const ExecuteNodePath = (props: { selectedNode: MissionNode | null }) => {
         {props.selectedNode?.name}?
       </p>
       <NodeHoverDisplay selectedNode={props.selectedNode} />
-      <button className='ExecutionButton' onClick={execute}>
-        {nodeActionItemText}
-      </button>
+      <div className='Buttons'>
+        <button className='ExecutionButton' onClick={execute}>
+          {nodeActionItemText}
+        </button>
+        <button
+          className='AdditionalActionButton'
+          onClick={selectAlternativeAction}
+        >
+          Choose another action
+        </button>
+      </div>
     </div>
   )
 }

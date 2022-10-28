@@ -5,6 +5,7 @@ import './AuthPage.scss'
 import usersModule, { IUser } from '../../modules/users'
 import { AxiosError } from 'axios'
 import { useStore } from 'react-context-hook'
+import { update } from 'lodash'
 
 // This will render a page where a user can
 // login to view the radar.
@@ -13,7 +14,9 @@ export default function AuthPage(props: { show: boolean }): JSX.Element | null {
 
   const [currentUser, setCurrentUser] = useStore('currentUser')
   const [currentPagePath, setCurrentPagePath] = useStore('currentPagePath')
-  const [loadingMessage, setLoadMessage] = useStore('loadingMessage')
+  const [loadingMessage, setLoadingMessage] = useStore('loadingMessage')
+  const [lastLoadingMessage, setLastLoadingMessage] =
+    useStore<string>('lastLoadingMessage')
 
   /* -- COMPONENT REFS -- */
 
@@ -65,7 +68,7 @@ export default function AuthPage(props: { show: boolean }): JSX.Element | null {
 
       if (userID.length > 0 && password.length > 0) {
         setIsSubmitting(true)
-        setLoadMessage('Logging in...')
+        setLoadingMessage('Logging in...')
         setErrorMessage(null)
 
         // Called when an error happens from
@@ -74,7 +77,7 @@ export default function AuthPage(props: { show: boolean }): JSX.Element | null {
         const handleLoginError = (errorMessage: string): void => {
           setIsSubmitting(false)
           setErrorMessage(errorMessage)
-          setLoadMessage(null)
+          setLoadingMessage(null)
         }
 
         usersModule.login(
@@ -83,9 +86,10 @@ export default function AuthPage(props: { show: boolean }): JSX.Element | null {
           (correct: boolean, currentUser: IUser | null) => {
             if (correct && currentUser !== null) {
               setIsSubmitting(false)
-              setLoadMessage(null)
+              setLoadingMessage(null)
               setCurrentUser(currentUser)
               setCurrentPagePath('DashboardPage')
+              setLastLoadingMessage('Initializing application...')
             } else {
               handleLoginError('Incorrect username or password.')
             }
@@ -108,6 +112,16 @@ export default function AuthPage(props: { show: boolean }): JSX.Element | null {
     }
   }
 
+  const returnToDashboard = () => {
+    // setLoadingMessage('Initializing application...')
+    setCurrentPagePath('DashboardPage')
+    // setLastLoadingMessage('Initializing application...')
+
+    // setTimeout(() => {
+    //   setLoadingMessage(null)
+    // }, 500)
+  }
+
   /* -- RENDER -- */
 
   let show: boolean = props.show
@@ -116,6 +130,9 @@ export default function AuthPage(props: { show: boolean }): JSX.Element | null {
   if (show && currentUser === null) {
     return (
       <div className='AuthPage'>
+        <div className='BackButton' onClick={returnToDashboard}>
+          &lt; Return to Mission
+        </div>
         <div className='Login'>
           <div className='ErrorMessage'>{errorMessage}</div>
           <div className='Header'>
