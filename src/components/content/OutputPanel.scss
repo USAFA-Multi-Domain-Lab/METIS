@@ -1,0 +1,30 @@
+@import '../../config.scss';
+
+.OutputPanel {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  flex-flow: row wrap;
+  width: 35%;
+
+  .BorderBox {
+    margin-left: 10px;
+    width: 100%;
+    height: $height;
+    border: 2px solid $color-main;
+    overflow: auto;
+
+    @media only screen and (max-width: 768px) {
+      margin: 0 0 0 5px;
+    }
+
+    @media only screen and (max-width: 275px) {
+      width: 30%;
+    }
+  }
+
+  .TextArea {
+    padding: 15px;
+    margin: 0;
+  }
+}

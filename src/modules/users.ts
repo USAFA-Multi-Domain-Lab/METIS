@@ -42,7 +42,7 @@ const retrieveCurrentUser = (
 const login = (
   userID: string,
   password: string,
-  callback: (currentUser: IUser | null) => void = () => {
+  callback: (correct: boolean, currentUser: IUser | null) => void = () => {
     /* does nothing if function is not passed */
   },
   callbackError: (error: AxiosError) => void = () => {
@@ -52,7 +52,10 @@ const login = (
   axios
     .post('/api/v1/users/login', { userID, password })
     .then((response: AxiosResponse) => {
-      retrieveCurrentUser(callback)
+      let correct: boolean = response.data.correct
+      let currentUser: IUser | null = response.data.currentUser
+
+      return callback(correct, currentUser)
     })
     .catch((error: AxiosError) => {
       console.log('Failed to login user.')

@@ -1,0 +1,61 @@
+@import '../../config.scss';
+
+.ActionPanel {
+  position: fixed;
+  z-index: $z-index-action-panel;
+  top: 50px;
+  left: 35%;
+  width: 30%;
+
+  .glue {
+    transition: 200ms opacity;
+    margin: 0 auto;
+    // margin-left: 32px;
+    border: 2px solid $color-main;
+    border-left: none;
+    border-top-right-radius: 20px;
+    border-bottom-right-radius: 20px;
+    width: fit-content;
+    padding: 8px 15px 8px 13px;
+    background-color: $background-main;
+
+    .LinkBack {
+      position: static;
+      padding: 0;
+      margin: 0;
+      opacity: 1;
+
+      .trigger {
+        position: static;
+        opacity: 1;
+        @extend .Action;
+        background-repeat: no-repeat;
+      }
+
+      &.style-back {
+        .trigger {
+          background-position: 11px 10px;
+          background-size: 18px 18px;
+        }
+      }
+
+      &.style-home {
+        .trigger {
+          background-position: 11px 8px;
+          background-size: 19px 19px;
+        }
+      }
+      &.style-logout {
+        .trigger {
+          background-position: 11.5px 9.5px;
+          background-size: 18px 18px;
+        }
+      }
+    }
+
+    .Action {
+      display: block;
+      margin: 12.5px 1.125px;
+    }
+  }
+}

@@ -41,8 +41,7 @@ userSchema.statics.authenticate = (
       if (error) {
         return callback(new StatusError(error.message), false, null)
       } else if (!user) {
-        let error: StatusError = new StatusError('User not found', 401)
-        return callback(error, false, null)
+        return callback(null, false, null)
       }
 
       //if there is no error and user exists, the encrypted password provided is verified

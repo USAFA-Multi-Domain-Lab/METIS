@@ -1,5 +1,6 @@
 import mongoose from 'mongoose'
 import { MONGO_HOST } from '../config'
+import missionModel from './models/model-mission'
 import userModel from './models/model-user'
 
 let connection: mongoose.Connection
@@ -7,12 +8,13 @@ let connection: mongoose.Connection
 // This will ensure that the data that by
 // default should be in the database exists.
 export function ensureDefaultDataExists(): void {
+  // Create admin user if it doesn't exist
   userModel.findOne({ userID: 'admin' }).exec((error: Error, user: any) => {
     if (user === null) {
       console.log('Admin user not found.')
       console.log('Creating admin user...')
 
-      const adminUser = {
+      const adminUserData = {
         userID: 'admin',
         firstName: 'N/A',
         lastName: 'N/A',
@@ -20,16 +22,1820 @@ export function ensureDefaultDataExists(): void {
       }
 
       //creates and saves user
-      userModel.create(adminUser, (error: Error, user: any) => {
+      userModel.create(adminUserData, (error: Error, adminUser: any) => {
         if (error) {
           console.error('Failed to create admin user:')
           console.error(error)
         } else {
-          console.log('Admin user created:', user.userID)
+          console.log('Admin user created:', adminUser.userID)
         }
       })
     }
   })
+
+  // Create incredible mission if it
+  // doesn't exist.
+  missionModel
+    .findOne({ name: 'Incredible Mission' })
+    .exec((error: Error, mission: any) => {
+      if (mission === null) {
+        console.log('"Incredible Mission" not found.')
+        console.log('Creating "Incredible Mission"...')
+
+        const incredibleMissionData = {
+          name: 'Incredible Mission',
+          versionNumber: 1,
+          seed: '980238470934',
+          nodeStructure: {
+            '1': {
+              '2': {
+                '3': {
+                  '4': {
+                    END: 'END',
+                  },
+                },
+              },
+              '5': {
+                '6': {
+                  '7': {
+                    END: 'END',
+                  },
+                },
+              },
+              '8': {
+                '9': {
+                  '10': {
+                    END: 'END',
+                  },
+                },
+              },
+              '11': {
+                '12': {
+                  '13': {
+                    END: 'END',
+                  },
+                },
+              },
+            },
+            '14': {
+              '15': {
+                '16': {
+                  '17': {
+                    END: 'END',
+                  },
+                  '18': { END: 'END' },
+                },
+              },
+            },
+            '19': {
+              '20': {
+                '21': { END: 'END' },
+                '22': { END: 'END' },
+              },
+              '23': {
+                '24': { END: 'END' },
+              },
+              '25': {
+                '26': { END: 'END' },
+              },
+              '27': {
+                '28': { END: 'END' },
+                '29': { END: 'END' },
+              },
+            },
+            '30': {
+              '31': { END: 'END' },
+              '32': { END: 'END' },
+              '33': { END: 'END' },
+              '34': { END: 'END' },
+            },
+          },
+          nodeData: {
+            '1': {
+              nodeID: '1',
+              name: 'Communications',
+              color: 'green',
+              preExecutionText: '',
+              postExecutionSuccessText: '',
+              postExecutionFailureText: '',
+              actionData: 'exec command',
+              executable: false,
+              nodeActionItems: [
+                {
+                  text: 'Deny',
+                  timeDelay: 1000,
+                  successChance: 0.5,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Degrade',
+                  timeDelay: 2000,
+                  successChance: 0.6,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Destroy',
+                  timeDelay: 3000,
+                  successChance: 0.6,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Disrupt',
+                  timeDelay: 4000,
+                  successChance: 0.7,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Manipulate',
+                  timeDelay: 5000,
+                  successChance: 0.8,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Extract',
+                  timeDelay: 6000,
+                  successChance: 0.8,
+                  willSucceed: false,
+                },
+              ],
+              mapX: 0,
+              mapY: -3,
+            },
+            '2': {
+              nodeID: '2',
+              name: 'Cellular Network',
+              color: 'green',
+              preExecutionText: 'Cellular Network has not been executed.',
+              postExecutionSuccessText: 'Cellular Network succeeded.',
+              postExecutionFailureText: 'Cellular Network failed.',
+              actionData: 'exec command',
+              executable: false,
+              nodeActionItems: [
+                {
+                  text: 'Deny',
+                  timeDelay: 1000,
+                  successChance: 0.5,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Degrade',
+                  timeDelay: 2000,
+                  successChance: 0.6,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Destroy',
+                  timeDelay: 3000,
+                  successChance: 0.6,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Disrupt',
+                  timeDelay: 4000,
+                  successChance: 0.7,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Manipulate',
+                  timeDelay: 5000,
+                  successChance: 0.8,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Extract',
+                  timeDelay: 6000,
+                  successChance: 0.8,
+                  willSucceed: false,
+                },
+              ],
+              mapX: 1,
+              mapY: -5,
+            },
+            '5': {
+              nodeID: '5',
+              name: 'Internet Provider',
+              color: 'green',
+              preExecutionText: 'Internet Provider has not been executed.',
+              postExecutionSuccessText: 'Internet Provider has been executed.',
+              postExecutionFailureText:
+                'Internet Provider has failed to execute.',
+              actionData: 'exec command',
+              executable: false,
+              nodeActionItems: [
+                {
+                  text: 'Deny',
+                  timeDelay: 1000,
+                  successChance: 0.5,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Degrade',
+                  timeDelay: 2000,
+                  successChance: 0.6,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Destroy',
+                  timeDelay: 3000,
+                  successChance: 0.6,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Disrupt',
+                  timeDelay: 4000,
+                  successChance: 0.7,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Manipulate',
+                  timeDelay: 5000,
+                  successChance: 0.8,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Extract',
+                  timeDelay: 6000,
+                  successChance: 0.8,
+                  willSucceed: false,
+                },
+              ],
+              mapX: 1,
+              mapY: -4,
+            },
+            '8': {
+              nodeID: '8',
+              name: 'Instant Messaging',
+              color: 'green',
+              preExecutionText: 'Instant Messaging has not been executed.',
+              postExecutionSuccessText: 'Instant Messaging has been executed.',
+              postExecutionFailureText:
+                'Instant Messaging has failed to execute.',
+              actionData: 'exec command',
+              executable: false,
+              nodeActionItems: [
+                {
+                  text: 'Deny',
+                  timeDelay: 1000,
+                  successChance: 0.5,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Degrade',
+                  timeDelay: 2000,
+                  successChance: 0.6,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Destroy',
+                  timeDelay: 3000,
+                  successChance: 0.6,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Disrupt',
+                  timeDelay: 4000,
+                  successChance: 0.7,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Manipulate',
+                  timeDelay: 5000,
+                  successChance: 0.8,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Extract',
+                  timeDelay: 6000,
+                  successChance: 0.8,
+                  willSucceed: false,
+                },
+              ],
+              mapX: 1,
+              mapY: -3,
+            },
+            '11': {
+              nodeID: '11',
+              name: 'File Sharing Service',
+              color: 'green',
+              preExecutionText: 'File Sharing Service has not been executed.',
+              postExecutionSuccessText:
+                'File Sharing Service has been executed.',
+              postExecutionFailureText:
+                'File Sharing Service has failed to execute.',
+              actionData: 'exec command',
+              executable: false,
+              nodeActionItems: [
+                {
+                  text: 'Deny',
+                  timeDelay: 1000,
+                  successChance: 0.5,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Degrade',
+                  timeDelay: 2000,
+                  successChance: 0.6,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Destroy',
+                  timeDelay: 3000,
+                  successChance: 0.6,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Disrupt',
+                  timeDelay: 4000,
+                  successChance: 0.7,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Manipulate',
+                  timeDelay: 5000,
+                  successChance: 0.8,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Extract',
+                  timeDelay: 6000,
+                  successChance: 0.8,
+                  willSucceed: false,
+                },
+              ],
+              mapX: 1,
+              mapY: -2,
+            },
+
+            '3': {
+              nodeID: '3',
+              name: 'Callbank Cellular',
+              color: 'green',
+              preExecutionText: 'Callbank Cellular has not been executed.',
+              postExecutionSuccessText: 'Callbank Cellular has been executed.',
+              postExecutionFailureText:
+                'Callbank Cellular has failed to execute.',
+              actionData: 'exec command',
+              executable: false,
+              nodeActionItems: [
+                {
+                  text: 'Deny',
+                  timeDelay: 1000,
+                  successChance: 0.5,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Degrade',
+                  timeDelay: 2000,
+                  successChance: 0.6,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Destroy',
+                  timeDelay: 3000,
+                  successChance: 0.6,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Disrupt',
+                  timeDelay: 4000,
+                  successChance: 0.7,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Manipulate',
+                  timeDelay: 5000,
+                  successChance: 0.8,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Extract',
+                  timeDelay: 6000,
+                  successChance: 0.8,
+                  willSucceed: false,
+                },
+              ],
+              mapX: 3,
+              mapY: -5,
+            },
+
+            '6': {
+              nodeID: '6',
+              name: 'Service Provider',
+              color: 'green',
+              preExecutionText: 'Service Provider has not been executed.',
+              postExecutionSuccessText: 'Service Provider has been executed.',
+              postExecutionFailureText:
+                'Service Provider has failed to execute.',
+              actionData: 'exec command',
+              executable: false,
+              nodeActionItems: [
+                {
+                  text: 'Deny',
+                  timeDelay: 1000,
+                  successChance: 0.5,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Degrade',
+                  timeDelay: 2000,
+                  successChance: 0.6,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Destroy',
+                  timeDelay: 3000,
+                  successChance: 0.6,
+                  willSucceed: false,
+                },
+              ],
+              mapX: 3,
+              mapY: -4,
+            },
+            '9': {
+              nodeID: '9',
+              name: 'Service Provider',
+              color: 'green',
+              preExecutionText: 'Service Provider has not been executed.',
+              postExecutionSuccessText: 'Service Provider has been executed.',
+              postExecutionFailureText:
+                'Service Provider has failed to execute.',
+              actionData: 'exec command',
+              executable: false,
+              nodeActionItems: [
+                {
+                  text: 'Deny',
+                  timeDelay: 1000,
+                  successChance: 0.5,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Degrade',
+                  timeDelay: 2000,
+                  successChance: 0.6,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Destroy',
+                  timeDelay: 3000,
+                  successChance: 0.6,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Disrupt',
+                  timeDelay: 4000,
+                  successChance: 0.7,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Manipulate',
+                  timeDelay: 5000,
+                  successChance: 0.8,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Extract',
+                  timeDelay: 6000,
+                  successChance: 0.8,
+                  willSucceed: false,
+                },
+              ],
+              mapX: 3,
+              mapY: -3,
+            },
+            '12': {
+              nodeID: '12',
+              name: 'Service Provider',
+              color: 'green',
+              preExecutionText: 'Service Provider has not been executed.',
+              postExecutionSuccessText: 'Service Provider has been executed.',
+              postExecutionFailureText:
+                'Service Provider has failed to execute.',
+              actionData: 'exec command',
+              executable: false,
+              nodeActionItems: [
+                {
+                  text: 'Deny',
+                  timeDelay: 1000,
+                  successChance: 0.5,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Degrade',
+                  timeDelay: 2000,
+                  successChance: 0.6,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Destroy',
+                  timeDelay: 3000,
+                  successChance: 0.6,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Disrupt',
+                  timeDelay: 4000,
+                  successChance: 0.7,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Manipulate',
+                  timeDelay: 5000,
+                  successChance: 0.8,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Extract',
+                  timeDelay: 6000,
+                  successChance: 0.8,
+                  willSucceed: false,
+                },
+              ],
+              mapX: 3,
+              mapY: -2,
+            },
+            '4': {
+              nodeID: '4',
+              name: 'Cellular Towers',
+              color: 'green',
+              preExecutionText: 'Cellular Towers has not been executed.',
+              postExecutionSuccessText: 'Cellular Towers has been executed.',
+              postExecutionFailureText:
+                'Cellular Towers has failed to execute.',
+              actionData: 'exec command',
+              executable: true,
+              nodeActionItems: [
+                {
+                  text: 'Deny',
+                  timeDelay: 1000,
+                  successChance: 0.5,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Degrade',
+                  timeDelay: 2000,
+                  successChance: 0.6,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Destroy',
+                  timeDelay: 3000,
+                  successChance: 0.6,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Disrupt',
+                  timeDelay: 4000,
+                  successChance: 0.7,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Manipulate',
+                  timeDelay: 5000,
+                  successChance: 0.8,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Extract',
+                  timeDelay: 6000,
+                  successChance: 0.8,
+                  willSucceed: false,
+                },
+              ],
+              mapX: 4,
+              mapY: -5,
+            },
+            '7': {
+              nodeID: '7',
+              name: 'Main Server',
+              color: 'green',
+              preExecutionText: 'Main Server has not been executed.',
+              postExecutionSuccessText: 'Main Server has been executed.',
+              postExecutionFailureText: 'Main Server has failed to execute.',
+              actionData: 'exec command',
+              executable: true,
+              nodeActionItems: [
+                {
+                  text: 'Deny',
+                  timeDelay: 1000,
+                  successChance: 0.5,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Degrade',
+                  timeDelay: 2000,
+                  successChance: 0.6,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Destroy',
+                  timeDelay: 3000,
+                  successChance: 0.6,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Disrupt',
+                  timeDelay: 4000,
+                  successChance: 0.7,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Manipulate',
+                  timeDelay: 5000,
+                  successChance: 0.8,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Extract',
+                  timeDelay: 6000,
+                  successChance: 0.8,
+                  willSucceed: false,
+                },
+              ],
+              mapX: 4,
+              mapY: -4,
+            },
+            '10': {
+              nodeID: '10',
+              name: 'Main Server',
+              color: 'green',
+              preExecutionText: 'Main Server has not been executed.',
+              postExecutionSuccessText: 'Main Server has been executed.',
+              postExecutionFailureText: 'Main Server has failed to execute.',
+              actionData: 'exec command',
+              executable: true,
+              nodeActionItems: [
+                {
+                  text: 'Deny',
+                  timeDelay: 1000,
+                  successChance: 0.5,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Degrade',
+                  timeDelay: 2000,
+                  successChance: 0.6,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Destroy',
+                  timeDelay: 3000,
+                  successChance: 0.6,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Disrupt',
+                  timeDelay: 4000,
+                  successChance: 0.7,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Manipulate',
+                  timeDelay: 5000,
+                  successChance: 0.8,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Extract',
+                  timeDelay: 6000,
+                  successChance: 0.8,
+                  willSucceed: false,
+                },
+              ],
+              mapX: 4,
+              mapY: -3,
+            },
+            '13': {
+              nodeID: '13',
+              name: 'Main Server',
+              color: 'green',
+              preExecutionText: 'Main Server has not been executed.',
+              postExecutionSuccessText: 'Main Server has been executed.',
+              postExecutionFailureText: 'Main Server has failed to execute.',
+              actionData: 'exec command',
+              executable: true,
+              nodeActionItems: [
+                {
+                  text: 'Deny',
+                  timeDelay: 1000,
+                  successChance: 0.5,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Degrade',
+                  timeDelay: 2000,
+                  successChance: 0.6,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Destroy',
+                  timeDelay: 3000,
+                  successChance: 0.6,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Disrupt',
+                  timeDelay: 4000,
+                  successChance: 0.7,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Manipulate',
+                  timeDelay: 5000,
+                  successChance: 0.8,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Extract',
+                  timeDelay: 6000,
+                  successChance: 0.8,
+                  willSucceed: false,
+                },
+              ],
+              mapX: 4,
+              mapY: -2,
+            },
+            '14': {
+              nodeID: '14',
+              name: 'Air Defense',
+              color: 'pink',
+              preExecutionText: '',
+              postExecutionSuccessText: '',
+              postExecutionFailureText: '',
+              actionData: 'exec command',
+              executable: false,
+              nodeActionItems: [
+                {
+                  text: 'Deny',
+                  timeDelay: 1000,
+                  successChance: 0.5,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Degrade',
+                  timeDelay: 2000,
+                  successChance: 0.6,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Destroy',
+                  timeDelay: 3000,
+                  successChance: 0.6,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Disrupt',
+                  timeDelay: 4000,
+                  successChance: 0.7,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Manipulate',
+                  timeDelay: 5000,
+                  successChance: 0.8,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Extract',
+                  timeDelay: 6000,
+                  successChance: 0.8,
+                  willSucceed: false,
+                },
+              ],
+              mapX: 0,
+              mapY: -1,
+            },
+            '15': {
+              nodeID: '15',
+              name: 'IADS Network',
+              color: 'pink',
+              preExecutionText: 'IADS Network has not been executed.',
+              postExecutionSuccessText: 'IADS Network has been executed.',
+              postExecutionFailureText: 'IADS Network has failed to execute.',
+              actionData: 'exec command',
+              executable: false,
+              nodeActionItems: [
+                {
+                  text: 'Deny',
+                  timeDelay: 1000,
+                  successChance: 0.5,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Degrade',
+                  timeDelay: 2000,
+                  successChance: 0.6,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Destroy',
+                  timeDelay: 3000,
+                  successChance: 0.6,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Disrupt',
+                  timeDelay: 4000,
+                  successChance: 0.7,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Manipulate',
+                  timeDelay: 5000,
+                  successChance: 0.8,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Extract',
+                  timeDelay: 6000,
+                  successChance: 0.8,
+                  willSucceed: false,
+                },
+              ],
+              mapX: 1,
+              mapY: -1,
+            },
+            '16': {
+              nodeID: '16',
+              name: 'Individual IADS Sites',
+              color: 'pink',
+              preExecutionText: 'Individual IADS Sites has not been executed.',
+              postExecutionSuccessText:
+                'Individual IADS Sites has been executed.',
+              postExecutionFailureText:
+                'Individual IADS Sites has failed to execute.',
+              actionData: 'exec command',
+              executable: false,
+              nodeActionItems: [
+                {
+                  text: 'Deny',
+                  timeDelay: 1000,
+                  successChance: 0.5,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Degrade',
+                  timeDelay: 2000,
+                  successChance: 0.6,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Destroy',
+                  timeDelay: 3000,
+                  successChance: 0.6,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Disrupt',
+                  timeDelay: 4000,
+                  successChance: 0.7,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Manipulate',
+                  timeDelay: 5000,
+                  successChance: 0.8,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Extract',
+                  timeDelay: 6000,
+                  successChance: 0.8,
+                  willSucceed: false,
+                },
+              ],
+              mapX: 2,
+              mapY: -1,
+            },
+            '17': {
+              nodeID: '17',
+              name: 'Launchers',
+              color: 'pink',
+              preExecutionText: 'Launchers has not been executed.',
+              postExecutionSuccessText: 'Launchers has been executed.',
+              postExecutionFailureText: 'Launchers has failed to execute.',
+              actionData: 'exec command',
+              executable: true,
+              nodeActionItems: [
+                {
+                  text: 'Deny',
+                  timeDelay: 1000,
+                  successChance: 0.5,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Degrade',
+                  timeDelay: 2000,
+                  successChance: 0.6,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Destroy',
+                  timeDelay: 3000,
+                  successChance: 0.6,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Disrupt',
+                  timeDelay: 4000,
+                  successChance: 0.7,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Manipulate',
+                  timeDelay: 5000,
+                  successChance: 0.8,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Extract',
+                  timeDelay: 6000,
+                  successChance: 0.8,
+                  willSucceed: false,
+                },
+              ],
+              mapX: 3,
+              mapY: -1,
+            },
+            '18': {
+              nodeID: '18',
+              name: 'Radars',
+              color: 'pink',
+              preExecutionText: 'Radars has not been executed.',
+              postExecutionSuccessText: 'Radars has been executed.',
+              postExecutionFailureText: 'Radars has failed to execute.',
+              actionData: 'exec command',
+              executable: true,
+              nodeActionItems: [
+                {
+                  text: 'Deny',
+                  timeDelay: 1000,
+                  successChance: 0.5,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Degrade',
+                  timeDelay: 2000,
+                  successChance: 0.6,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Destroy',
+                  timeDelay: 3000,
+                  successChance: 0.6,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Disrupt',
+                  timeDelay: 4000,
+                  successChance: 0.7,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Manipulate',
+                  timeDelay: 5000,
+                  successChance: 0.8,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Extract',
+                  timeDelay: 6000,
+                  successChance: 0.8,
+                  willSucceed: false,
+                },
+              ],
+              mapX: 3,
+              mapY: 0,
+            },
+            '19': {
+              nodeID: '19',
+              name: 'Infrastructure',
+              color: 'yellow',
+              preExecutionText: '',
+              postExecutionSuccessText: '',
+              postExecutionFailureText: '',
+              actionData: 'exec command',
+              executable: false,
+              nodeActionItems: [
+                {
+                  text: 'Deny',
+                  timeDelay: 1000,
+                  successChance: 0.5,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Degrade',
+                  timeDelay: 2000,
+                  successChance: 0.6,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Destroy',
+                  timeDelay: 3000,
+                  successChance: 0.6,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Disrupt',
+                  timeDelay: 4000,
+                  successChance: 0.7,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Manipulate',
+                  timeDelay: 5000,
+                  successChance: 0.8,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Extract',
+                  timeDelay: 6000,
+                  successChance: 0.8,
+                  willSucceed: false,
+                },
+              ],
+              mapX: 0,
+              mapY: 1,
+            },
+            '20': {
+              nodeID: '20',
+              name: 'Railroad System',
+              color: 'yellow',
+              preExecutionText: 'Railroad System has not been executed.',
+              postExecutionSuccessText: 'Railroad System has been executed.',
+              postExecutionFailureText:
+                'Railroad System has failed to execute.',
+              actionData: 'exec command',
+              executable: false,
+              nodeActionItems: [
+                {
+                  text: 'Deny',
+                  timeDelay: 1000,
+                  successChance: 0.5,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Degrade',
+                  timeDelay: 2000,
+                  successChance: 0.6,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Destroy',
+                  timeDelay: 3000,
+                  successChance: 0.6,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Disrupt',
+                  timeDelay: 4000,
+                  successChance: 0.7,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Manipulate',
+                  timeDelay: 5000,
+                  successChance: 0.8,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Extract',
+                  timeDelay: 6000,
+                  successChance: 0.8,
+                  willSucceed: false,
+                },
+              ],
+              mapX: 1,
+              mapY: 0,
+            },
+            '23': {
+              nodeID: '23',
+              name: 'Electrical System',
+              color: 'yellow',
+              preExecutionText: 'Electrical System has not been executed.',
+              postExecutionSuccessText: 'Electrical System has been executed.',
+              postExecutionFailureText:
+                'Electrical System has failed to execute.',
+              actionData: 'exec command',
+              executable: false,
+              nodeActionItems: [
+                {
+                  text: 'Deny',
+                  timeDelay: 1000,
+                  successChance: 0.5,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Degrade',
+                  timeDelay: 2000,
+                  successChance: 0.6,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Destroy',
+                  timeDelay: 3000,
+                  successChance: 0.6,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Disrupt',
+                  timeDelay: 4000,
+                  successChance: 0.7,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Manipulate',
+                  timeDelay: 5000,
+                  successChance: 0.8,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Extract',
+                  timeDelay: 6000,
+                  successChance: 0.8,
+                  willSucceed: false,
+                },
+              ],
+              mapX: 1,
+              mapY: 1,
+            },
+            '25': {
+              nodeID: '25',
+              name: 'Water System',
+              color: 'yellow',
+              preExecutionText: 'Water System has not been executed.',
+              postExecutionSuccessText: 'Water System has been executed.',
+              postExecutionFailureText: 'Water System has failed to execute.',
+              actionData: 'exec command',
+              executable: false,
+              nodeActionItems: [
+                {
+                  text: 'Deny',
+                  timeDelay: 1000,
+                  successChance: 0.5,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Degrade',
+                  timeDelay: 2000,
+                  successChance: 0.6,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Destroy',
+                  timeDelay: 3000,
+                  successChance: 0.6,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Disrupt',
+                  timeDelay: 4000,
+                  successChance: 0.7,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Manipulate',
+                  timeDelay: 5000,
+                  successChance: 0.8,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Extract',
+                  timeDelay: 6000,
+                  successChance: 0.8,
+                  willSucceed: false,
+                },
+              ],
+              mapX: 1,
+              mapY: 2,
+            },
+            '27': {
+              nodeID: '27',
+              name: 'Road System',
+              color: 'yellow',
+              preExecutionText: 'Road System has not been executed.',
+              postExecutionSuccessText: 'Road System has been executed.',
+              postExecutionFailureText: 'Road System has failed to execute.',
+              actionData: 'exec command',
+              executable: false,
+              nodeActionItems: [
+                {
+                  text: 'Deny',
+                  timeDelay: 1000,
+                  successChance: 0.5,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Degrade',
+                  timeDelay: 2000,
+                  successChance: 0.6,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Destroy',
+                  timeDelay: 3000,
+                  successChance: 0.6,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Disrupt',
+                  timeDelay: 4000,
+                  successChance: 0.7,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Manipulate',
+                  timeDelay: 5000,
+                  successChance: 0.8,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Extract',
+                  timeDelay: 6000,
+                  successChance: 0.8,
+                  willSucceed: false,
+                },
+              ],
+              mapX: 1,
+              mapY: 3,
+            },
+            '21': {
+              nodeID: '21',
+              name: 'Track Monitoring',
+              color: 'yellow',
+              preExecutionText: 'Track Monitoring has not been executed.',
+              postExecutionSuccessText: 'Track Monitoring has been executed.',
+              postExecutionFailureText:
+                'Track Monitoring has failed to execute.',
+              actionData: 'exec command',
+              executable: true,
+              nodeActionItems: [
+                {
+                  text: 'Deny',
+                  timeDelay: 1000,
+                  successChance: 0.5,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Degrade',
+                  timeDelay: 2000,
+                  successChance: 0.6,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Destroy',
+                  timeDelay: 3000,
+                  successChance: 0.6,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Disrupt',
+                  timeDelay: 4000,
+                  successChance: 0.7,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Manipulate',
+                  timeDelay: 5000,
+                  successChance: 0.8,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Extract',
+                  timeDelay: 6000,
+                  successChance: 0.8,
+                  willSucceed: false,
+                },
+              ],
+              mapX: 2,
+              mapY: 0,
+            },
+            '22': {
+              nodeID: '22',
+              name: 'Track Switch System',
+              color: 'yellow',
+              preExecutionText: 'Track Switch System has not been executed.',
+              postExecutionSuccessText:
+                'Track Switch System has been executed.',
+              postExecutionFailureText:
+                'Track Switch System has failed to execute.',
+              actionData: 'exec command',
+              executable: true,
+              nodeActionItems: [
+                {
+                  text: 'Deny',
+                  timeDelay: 1000,
+                  successChance: 0.5,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Degrade',
+                  timeDelay: 2000,
+                  successChance: 0.6,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Destroy',
+                  timeDelay: 3000,
+                  successChance: 0.6,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Disrupt',
+                  timeDelay: 4000,
+                  successChance: 0.7,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Manipulate',
+                  timeDelay: 5000,
+                  successChance: 0.8,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Extract',
+                  timeDelay: 6000,
+                  successChance: 0.8,
+                  willSucceed: false,
+                },
+              ],
+              mapX: 2,
+              mapY: 1,
+            },
+            '24': {
+              nodeID: '24',
+              name: 'Regional Service',
+              color: 'yellow',
+              preExecutionText: 'Regional Service has not been executed.',
+              postExecutionSuccessText: 'Regional Service has been executed.',
+              postExecutionFailureText:
+                'Regional Service has failed to execute.',
+              actionData: 'exec command',
+              executable: true,
+              nodeActionItems: [
+                {
+                  text: 'Deny',
+                  timeDelay: 1000,
+                  successChance: 0.5,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Degrade',
+                  timeDelay: 2000,
+                  successChance: 0.6,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Destroy',
+                  timeDelay: 3000,
+                  successChance: 0.6,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Disrupt',
+                  timeDelay: 4000,
+                  successChance: 0.7,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Manipulate',
+                  timeDelay: 5000,
+                  successChance: 0.8,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Extract',
+                  timeDelay: 6000,
+                  successChance: 0.8,
+                  willSucceed: false,
+                },
+              ],
+              mapX: 2,
+              mapY: 2,
+            },
+            '26': {
+              nodeID: '26',
+              name: 'Valve System',
+              color: 'yellow',
+              preExecutionText: 'Valve System has not been executed.',
+              postExecutionSuccessText: 'Valve System has been executed.',
+              postExecutionFailureText: 'Valve System has failed to execute.',
+              actionData: 'exec command',
+              executable: true,
+              nodeActionItems: [
+                {
+                  text: 'Deny',
+                  timeDelay: 1000,
+                  successChance: 0.5,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Degrade',
+                  timeDelay: 2000,
+                  successChance: 0.6,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Destroy',
+                  timeDelay: 3000,
+                  successChance: 0.6,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Disrupt',
+                  timeDelay: 4000,
+                  successChance: 0.7,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Manipulate',
+                  timeDelay: 5000,
+                  successChance: 0.8,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Extract',
+                  timeDelay: 6000,
+                  successChance: 0.8,
+                  willSucceed: false,
+                },
+              ],
+              mapX: 2,
+              mapY: 3,
+            },
+            '28': {
+              nodeID: '28',
+              name: 'Traffic Light System',
+              color: 'yellow',
+              preExecutionText: 'Traffic Light System has not been executed.',
+              postExecutionSuccessText:
+                'Traffic Light System has been executed.',
+              postExecutionFailureText:
+                'Traffic Light System has failed to execute.',
+              actionData: 'exec command',
+              executable: true,
+              nodeActionItems: [
+                {
+                  text: 'Deny',
+                  timeDelay: 1000,
+                  successChance: 0.5,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Degrade',
+                  timeDelay: 2000,
+                  successChance: 0.6,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Destroy',
+                  timeDelay: 3000,
+                  successChance: 0.6,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Disrupt',
+                  timeDelay: 4000,
+                  successChance: 0.7,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Manipulate',
+                  timeDelay: 5000,
+                  successChance: 0.8,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Extract',
+                  timeDelay: 6000,
+                  successChance: 0.8,
+                  willSucceed: false,
+                },
+              ],
+              mapX: 2,
+              mapY: 4,
+            },
+            '29': {
+              nodeID: '29',
+              name: 'CCTV System',
+              color: 'yellow',
+              preExecutionText: 'CCTV System has not been executed.',
+              postExecutionSuccessText: 'CCTV System has been executed.',
+              postExecutionFailureText: 'CCTV System has failed to execute.',
+              actionData: 'exec command',
+              executable: true,
+              nodeActionItems: [
+                {
+                  text: 'Deny',
+                  timeDelay: 1000,
+                  successChance: 0.5,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Degrade',
+                  timeDelay: 2000,
+                  successChance: 0.6,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Destroy',
+                  timeDelay: 3000,
+                  successChance: 0.6,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Disrupt',
+                  timeDelay: 4000,
+                  successChance: 0.7,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Manipulate',
+                  timeDelay: 5000,
+                  successChance: 0.8,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Extract',
+                  timeDelay: 6000,
+                  successChance: 0.8,
+                  willSucceed: false,
+                },
+              ],
+              mapX: 2,
+              mapY: 5,
+            },
+            '30': {
+              nodeID: '30',
+              name: 'Satellite Services',
+              color: 'blue',
+              preExecutionText: '',
+              postExecutionSuccessText: '',
+              postExecutionFailureText: '',
+              actionData: 'exec command',
+              executable: false,
+              nodeActionItems: [
+                {
+                  text: 'Deny',
+                  timeDelay: 1000,
+                  successChance: 0.5,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Degrade',
+                  timeDelay: 2000,
+                  successChance: 0.6,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Destroy',
+                  timeDelay: 3000,
+                  successChance: 0.6,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Disrupt',
+                  timeDelay: 4000,
+                  successChance: 0.7,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Manipulate',
+                  timeDelay: 5000,
+                  successChance: 0.8,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Extract',
+                  timeDelay: 6000,
+                  successChance: 0.8,
+                  willSucceed: false,
+                },
+              ],
+              mapX: 0,
+              mapY: 4,
+            },
+            '31': {
+              nodeID: '31',
+              name: 'Global Positioning',
+              color: 'blue',
+              preExecutionText: 'Global Positioning has not been executed.',
+              postExecutionSuccessText: 'Global Positioning has been executed.',
+              postExecutionFailureText:
+                'Global Positioning has failed to execute.',
+              actionData: 'exec command',
+              executable: true,
+              nodeActionItems: [
+                {
+                  text: 'Deny',
+                  timeDelay: 1000,
+                  successChance: 0.5,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Degrade',
+                  timeDelay: 2000,
+                  successChance: 0.6,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Destroy',
+                  timeDelay: 3000,
+                  successChance: 0.6,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Disrupt',
+                  timeDelay: 4000,
+                  successChance: 0.7,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Manipulate',
+                  timeDelay: 5000,
+                  successChance: 0.8,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Extract',
+                  timeDelay: 6000,
+                  successChance: 0.8,
+                  willSucceed: false,
+                },
+              ],
+              mapX: 1,
+              mapY: 4,
+            },
+            '32': {
+              nodeID: '32',
+              name: 'Data Transfer',
+              color: 'blue',
+              preExecutionText: 'Data Transfer has not been executed.',
+              postExecutionSuccessText: 'Data Transfer has been executed.',
+              postExecutionFailureText: 'Data Transfer has failed to execute.',
+              actionData: 'exec command',
+              executable: true,
+              nodeActionItems: [
+                {
+                  text: 'Deny',
+                  timeDelay: 1000,
+                  successChance: 0.5,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Degrade',
+                  timeDelay: 2000,
+                  successChance: 0.6,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Destroy',
+                  timeDelay: 3000,
+                  successChance: 0.6,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Disrupt',
+                  timeDelay: 4000,
+                  successChance: 0.7,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Manipulate',
+                  timeDelay: 5000,
+                  successChance: 0.8,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Extract',
+                  timeDelay: 6000,
+                  successChance: 0.8,
+                  willSucceed: false,
+                },
+              ],
+              mapX: 1,
+              mapY: 5,
+            },
+            '33': {
+              nodeID: '33',
+              name: 'Imagery Collection',
+              color: 'blue',
+              preExecutionText: 'Imagery Collection has not been executed.',
+              postExecutionSuccessText: 'Imagery Collection has been executed.',
+              postExecutionFailureText:
+                'Imagery Collection has failed to execute.',
+              actionData: 'exec command',
+              executable: true,
+              nodeActionItems: [
+                {
+                  text: 'Deny',
+                  timeDelay: 1000,
+                  successChance: 0.5,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Degrade',
+                  timeDelay: 2000,
+                  successChance: 0.6,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Destroy',
+                  timeDelay: 3000,
+                  successChance: 0.6,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Disrupt',
+                  timeDelay: 4000,
+                  successChance: 0.7,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Manipulate',
+                  timeDelay: 5000,
+                  successChance: 0.8,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Extract',
+                  timeDelay: 6000,
+                  successChance: 0.8,
+                  willSucceed: false,
+                },
+              ],
+              mapX: 1,
+              mapY: 6,
+            },
+            '34': {
+              nodeID: '34',
+              name: 'Sensor Observation',
+              color: 'blue',
+              preExecutionText: 'Sensor Observation has not been executed.',
+              postExecutionSuccessText: 'Sensor Observation has been executed.',
+              postExecutionFailureText:
+                'Sensor Observation has failed to execute.',
+              actionData: 'exec command',
+              executable: true,
+              nodeActionItems: [
+                {
+                  text: 'Deny',
+                  timeDelay: 1000,
+                  successChance: 0.5,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Degrade',
+                  timeDelay: 2000,
+                  successChance: 0.6,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Destroy',
+                  timeDelay: 3000,
+                  successChance: 0.6,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Disrupt',
+                  timeDelay: 4000,
+                  successChance: 0.7,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Manipulate',
+                  timeDelay: 5000,
+                  successChance: 0.8,
+                  willSucceed: false,
+                },
+                {
+                  text: 'Extract',
+                  timeDelay: 6000,
+                  successChance: 0.8,
+                  willSucceed: false,
+                },
+              ],
+              mapX: 1,
+              mapY: 7,
+            },
+          },
+        }
+
+        missionModel.create(
+          incredibleMissionData,
+          (error: Error, incredibleMission: any) => {
+            if (error) {
+              console.error('Failed to create "Incredible Mission":')
+              console.error(error)
+            } else {
+              console.log(
+                '"Incredible Mission" created:',
+                incredibleMission.name,
+              )
+            }
+          },
+        )
+      }
+    })
 }
 
 // This will initialize the database for

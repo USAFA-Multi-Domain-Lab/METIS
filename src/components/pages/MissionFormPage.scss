@@ -1,0 +1,296 @@
+@import '../../config.scss';
+
+$background-bar: linear-gradient(
+    to right,
+    transparent 0%,
+    transparent 50%,
+    $background-main 50%,
+    $background-main 100%
+  ),
+  linear-gradient(
+    to bottom,
+    transparent 0%,
+    transparent calc(50% - 1.5px),
+    $color-main calc(50% - 1.5px),
+    $color-main calc(50% + 1.5px),
+    transparent calc(50% + 1.5px),
+    transparent 100%
+  );
+
+@keyframes mini-bar-circuit {
+  from {
+    transform: rotate(-90deg);
+    background: $background-bar;
+  }
+  to {
+    transform: rotate(270deg);
+    background: $background-bar;
+  }
+}
+
+.MissionFormPage {
+  margin: 0 auto;
+  padding: 35px 75px 0;
+
+  &.SidePanelIsExpanded {
+    .Content {
+      grid-template-columns: auto 325px;
+    }
+  }
+
+  &:not(.SidePanelIsExpanded) {
+    .Content {
+      grid-template-columns: auto;
+    }
+  }
+
+  .Navigation {
+    display: grid;
+    grid-template-columns: auto 130px;
+    margin: 0 auto 55px;
+    height: 30px;
+    vertical-align: bottom;
+
+    .Branding {
+      width: fit-content;
+      padding-right: 20px;
+    }
+
+    .Heading {
+      display: inline-block;
+      padding: 0 0;
+      line-height: 3rem;
+      font-size: 30px;
+    }
+
+    .Link {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-flow: row wrap;
+      -webkit-user-select: none;
+      user-select: none;
+      cursor: pointer;
+      transition: opacity 175ms;
+
+      &:hover {
+        border: 2px solid $color-accent;
+        border-radius: 5px;
+        text-align: center;
+      }
+    }
+  }
+
+  .Content {
+    display: grid;
+    margin: 0 auto;
+
+    .MissionMap {
+      width: unset;
+      background-color: $background-alt2;
+    }
+
+    .SidePanel {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      flex-flow: row wrap;
+
+      .BorderBox {
+        margin-left: 10px;
+
+        @media only screen and (max-width: 768px) {
+          margin: 0 0 0 5px;
+        }
+
+        @media only screen and (max-width: 275px) {
+          width: 30%;
+        }
+      }
+    }
+  }
+}
+
+.SidePanel {
+  .BorderBox {
+    overflow-x: hidden;
+    overflow-y: auto;
+    box-sizing: border-box;
+    border: 2px solid $color-main;
+    width: 100%;
+    height: $height;
+    padding: 15px 0 40px;
+    background-color: $background-alt2;
+
+    .Close {
+      cursor: pointer;
+      user-select: none;
+      position: relative;
+      top: -9px;
+      left: -30px;
+      margin: 0 0 -40px auto;
+      width: 0;
+      height: 40px;
+      position: relative;
+      font-size: 26px;
+    }
+  }
+
+  &.NodeStructuring {
+    .BorderBox {
+      .Nodes {
+        padding: 0;
+
+        .Padding {
+          height: 35px;
+
+          &.DropPending {
+            background-color: $background-main;
+          }
+        }
+
+        .Node {
+          $indicator-translate-y: 7px;
+
+          // This will return the transform value
+          // for the indicator triangle, placing
+          // it in the correct position.
+          @function getIndicatorTriangleTransform($isExpanded) {
+            $indicator-translate: translate(0, $indicator-translate-y);
+
+            @if $isExpanded {
+              @return $indicator-translate;
+            } @else {
+              @return $indicator-translate rotate(-90deg);
+            }
+          }
+
+          .ParentNode {
+            cursor: pointer;
+            user-select: none;
+            display: block;
+            padding: 0 0 0 20px;
+            font-size: 12px;
+
+            .Top,
+            .Bottom {
+              position: relative;
+              z-index: 1;
+              height: 0.175rem;
+            }
+
+            .Top {
+              margin: 0 0 -0.175rem;
+            }
+
+            .Center {
+              position: relative;
+              z-index: 0;
+              display: grid;
+              grid-template-columns: 18px auto;
+              margin: 0 0 -0.175rem;
+
+              * {
+                pointer-events: none;
+              }
+
+              .Indicator,
+              .Name {
+                height: 1.35rem;
+                line-height: 1.3rem;
+              }
+
+              .Indicator {
+                width: 12px;
+
+                .Triangle {
+                  transform: getIndicatorTriangleTransform(false);
+                }
+              }
+
+              &:hover {
+                background-color: $background-main;
+              }
+            }
+
+            .Bottom {
+            }
+          }
+
+          .Subnodes {
+            padding-left: 20px;
+          }
+
+          &.Expandable {
+            .ParentNode {
+              .Indicator {
+              }
+            }
+          }
+
+          &.Ends {
+            .ParentNode {
+              .Indicator {
+                opacity: 0;
+              }
+            }
+          }
+
+          &.IsExpanded {
+            .ParentNode {
+              .Indicator {
+                .Triangle {
+                  transform: getIndicatorTriangleTransform(true);
+                }
+              }
+            }
+          }
+
+          &.IsCollapsed {
+            .ParentNode {
+              .Indicator {
+                .Triangle {
+                  transform: getIndicatorTriangleTransform(false);
+                }
+              }
+            }
+          }
+
+          &.DropPending {
+            &.DropPendingTop {
+              > .ParentNode > .Top {
+                margin-top: -0.0875rem;
+                padding-bottom: 0.0875rem;
+                background: linear-gradient(
+                  to top,
+                  transparent 0px,
+                  transparent 0.0875rem,
+                  $color-main 0.0875rem,
+                  $color-main 0.175rem
+                );
+              }
+            }
+
+            &.DropPendingCenter {
+              background-color: $background-main;
+            }
+
+            &.DropPendingBottom {
+              > .ParentNode > .Bottom {
+                margin-bottom: -0.0875rem;
+                padding-top: 0.0875rem;
+                background: linear-gradient(
+                  to bottom,
+                  transparent 0px,
+                  transparent 0.0875rem,
+                  $color-main 0.0875rem,
+                  $color-main 0.175rem
+                );
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

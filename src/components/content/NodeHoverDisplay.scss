@@ -1,0 +1,28 @@
+@import '../../config.scss';
+
+.NodeHoverDisplay {
+  font-size: 14px;
+  margin-top: 10px;
+
+  .TimeToExecute,
+  .ChosenNodeAction,
+  .SuccessChance {
+    margin: 5px 0;
+  }
+
+  .TimeToExecute {
+    color: $terminal;
+  }
+
+  .ChosenNodeAction {
+    color: $terminal-blue;
+  }
+
+  .SuccessChance {
+    color: $terminal-red;
+  }
+}
+
+.hide {
+  display: none;
+}

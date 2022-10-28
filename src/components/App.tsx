@@ -3,41 +3,55 @@ import DashboardPage from './pages/DashboardPage'
 import AuthPage from './pages/AuthPage'
 import { useStore, withStore } from 'react-context-hook'
 import usersModule, { IUser } from '../modules/users'
-import { useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import ServerErrorPage from './pages/ServerErrorPage'
 import LoadingPage from './pages/LoadingPage'
+import GlobalState, { tooltipsOffsetX, tooltipsOffsetY } from './GlobalState'
+import Markdown, { MarkdownTheme } from './content/Markdown'
+import MissionFormPage from './pages/MissionFormPage'
 
 const loadingMinTime = 500
 
 // This function normalizes how pages are rendered.
 // in the application.
 function StandardPage(props: {
-  Page: () => JSX.Element | null
+  Page: (props: { show: boolean }) => JSX.Element | null
+  targetPagePath: string
+  requireLogin?: boolean // default true
 }): JSX.Element | null {
-  const [appMountHandled] = useStore('appMountHandled')
-  const [errorMessage] = useStore('errorMessage')
-  const [loadingMessage] = useStore('loadingMessage')
-  const [loadingMinTimeReached] = useStore('loadingMinTimeReached')
+  const [currentUser] = useStore<IUser | null>('currentUser')
+  const [currentPagePath] = useStore<string>('currentPagePath')
+  const [appMountHandled] = useStore<boolean>('appMountHandled')
+  const [errorMessage] = useStore<string | null>('errorMessage')
+  const [loadingMessage] = useStore<string | null>('loadingMessage')
+  const [loadingMinTimeReached] = useStore<boolean>('loadingMinTimeReached')
 
   let Page = props.Page
+  let targetPagePath: string = props.targetPagePath
+  let requireLogin: boolean =
+    props.requireLogin === undefined ? true : props.requireLogin
 
-  if (
-    appMountHandled &&
-    loadingMessage === null &&
-    loadingMinTimeReached &&
-    errorMessage === null
-  ) {
-    return <Page />
-  } else {
-    return null
-  }
+  return (
+    <Page
+      show={
+        (currentUser !== null || !requireLogin) &&
+        currentPagePath === targetPagePath &&
+        appMountHandled &&
+        loadingMessage === null &&
+        loadingMinTimeReached &&
+        errorMessage === null
+      }
+    />
+  )
 }
 
 // This is the renderer for the entire application.
 function App(): JSX.Element | null {
-  // -- GLOBAL STATE --
+  /* -- GLOBAL STATE -- */
 
   const [currentUser, setCurrentUser] = useStore<IUser | null>('currentUser')
+  const [currentPagePath, setCurrentPagePath] =
+    useStore<string>('currentPagePath')
   const [appMountHandled, setAppMountHandled] =
     useStore<boolean>('appMountHandled')
   const [loadingMessage, setLoadMessage] = useStore<string | null>(
@@ -51,12 +65,68 @@ function App(): JSX.Element | null {
   const [errorMessage, setErrorMessage] = useStore<string | null>(
     'errorMessage',
   )
+  const [tooltipDescription] = useStore<string>('tooltipDescription')
+  const [tooltips] = useStore<React.RefObject<HTMLDivElement>>('tooltips')
+  const [hideTooltip] = useStore<() => void>('hideTooltip')
 
-  // -- COMPONENT STATE --
+  /* -- COMPONENT STATE -- */
 
+  const [forcedUpdateCounter, setForcedUpdateCounter] = useState<number>(0)
   const [loadingMinTimeout, setLoadingMinTimeout] = useState<any>(undefined)
 
-  // -- COMPONENT EFFECTS --
+  /* -- COMPONENT FUNCTIONS -- */
+
+  // This will force the component to
+  // rerender.
+  const forceUpdate = (): void => {
+    setForcedUpdateCounter(forcedUpdateCounter + 1)
+  }
+
+  /* -- COMPONENT HANDLERS -- */
+
+  // This will reposition the currently
+  // displayed tooltip based on the mouse
+  // position.
+  const positionTooltip = (event: MouseEvent): void => {
+    let tooltips_elm: HTMLDivElement | null = tooltips.current
+
+    if (tooltips_elm) {
+      let pageWidth = window.innerWidth - 25
+      let pageHeight = window.innerHeight - 25
+      let tooltipsWidth: number = tooltips_elm.clientWidth
+      let tooltipsHeight: number = tooltips_elm.clientHeight
+      let mouseX: number = event.pageX
+      let mouseY: number = event.pageY
+      let scrollY: number = window.scrollY
+      let tooltipsDestinationX: number = pageWidth / 2 - tooltipsWidth / 2
+      let tooltipsDestinationY: number = mouseY // scrollY + pageHeight / 2
+
+      // -- tooltip destination x --
+
+      while (tooltipsDestinationX > mouseX) {
+        tooltipsDestinationX -= tooltipsWidth
+      }
+      while (tooltipsDestinationX + tooltipsWidth < mouseX) {
+        tooltipsDestinationX += tooltipsWidth
+      }
+      if (tooltipsDestinationX < tooltipsOffsetX) {
+        tooltipsDestinationX = tooltipsOffsetX
+      }
+      if (tooltipsDestinationX > pageWidth - tooltipsWidth - tooltipsOffsetX) {
+        tooltipsDestinationX = pageWidth - tooltipsWidth - tooltipsOffsetX
+      }
+
+      if (mouseY - scrollY > pageHeight - tooltipsHeight - tooltipsOffsetY) {
+        tooltipsDestinationY -= tooltipsHeight + tooltipsOffsetY
+      } else {
+        tooltipsDestinationY += tooltipsOffsetY
+      }
+
+      tooltips_elm.style.transform = `translate(${tooltipsDestinationX}px, ${tooltipsDestinationY}px)`
+    }
+  }
+
+  /* -- COMPONENT EFFECTS -- */
 
   // This is called to handle the app being mounted,
   // will load the user in the session to see if a
@@ -66,6 +136,9 @@ function App(): JSX.Element | null {
       usersModule.retrieveCurrentUser(
         (currentUser: IUser | null) => {
           setCurrentUser(currentUser)
+          setCurrentPagePath(
+            currentUser === null ? 'AuthPage' : 'DashboardPage',
+          )
           setAppMountHandled(true)
           setLoadMessage(null)
         },
@@ -75,6 +148,11 @@ function App(): JSX.Element | null {
           setLoadMessage(null)
         },
       )
+
+      document.addEventListener('mousemove', positionTooltip)
+      document.addEventListener('drag', positionTooltip)
+
+      hideTooltip()
     }
   }, [appMountHandled])
 
@@ -96,37 +174,27 @@ function App(): JSX.Element | null {
     }
   }, [loadingMessage])
 
+  /* -- RENDER -- */
+
   return (
     <div className='App' key={'App'}>
-      <StandardPage Page={AuthPage} />
-      <StandardPage Page={DashboardPage} />
+      <div className='tooltips' ref={tooltips}>
+        <Markdown
+          markdown={tooltipDescription}
+          theme={MarkdownTheme.ThemeSecondary}
+        />
+      </div>
+      <StandardPage
+        Page={AuthPage}
+        targetPagePath='AuthPage'
+        requireLogin={false}
+      />
+      <StandardPage Page={DashboardPage} targetPagePath='DashboardPage' />
+      <StandardPage Page={MissionFormPage} targetPagePath='MissionFormPage' />
       <ServerErrorPage />
       <LoadingPage />
     </div>
   )
 }
 
-// -- GLOBAL APPLICATION STATE --
-
-// This is the interface defining the global
-// state for the application.
-interface IGlobalState {
-  currentUser: IUser | null
-  appMountHandled: boolean
-  loadingMinTimeReached: boolean
-  loadingMessage: string | null
-  lastLoadingMessage: string
-  errorMessage: string | null
-}
-
-// This is the initial state of the application.
-const initialGlobalState: IGlobalState = {
-  currentUser: null,
-  appMountHandled: false,
-  loadingMessage: 'Initializing application...',
-  lastLoadingMessage: '',
-  loadingMinTimeReached: false,
-  errorMessage: null,
-}
-
-export default withStore(App, initialGlobalState)
+export default GlobalState.createAppWithGlobalState(App)

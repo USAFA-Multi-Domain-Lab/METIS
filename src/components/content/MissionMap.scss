@@ -1,34 +1,28 @@
-$color-background-darkest: $color-background-primary-darkest;
-$color-background-darker: $color-background-primary-darker;
-$color-background-dark: $color-background-primary-dark;
-$color-background: $color-background-primary;
-$color-background-light: $color-background-primary-light;
-$color-background-lighter: $color-background-primary-lighter;
-$color-background-lightest: $color-background-primary-lightest;
+@import '../../config.scss';
 
-& {
+.MissionMap {
   overflow: hidden;
   box-sizing: border-box;
-  margin: 0 auto;
-  border: 2px solid rgba($color-border-lightest, 0.65);
-  width: 90%;
-  max-width: 1050px;
-  height: 550px;
+  margin: 0;
+  border: 2px solid $color-main;
+  width: 700px;
+  height: $height;
   padding: 0;
   background: linear-gradient(
       to right,
-      rgba($color-background-primary-light, 0.6) 0,
-      rgba($color-background-primary-light, 0.6) 1%,
+      rgba($color-accent, 0.6) 0,
+      rgba($color-accent, 0.6) 1%,
       transparent 1%,
       transparent 100%
     ),
     linear-gradient(
       to bottom,
-      rgba($color-background-primary-light, 0.6) 0,
-      rgba($color-background-primary-light, 0.6) 4%,
-      rgba($color-background, 0.45) 4%,
-      rgba($color-background, 0.45) 100%
+      rgba($color-accent, 0.6) 0,
+      rgba(rgba($color-accent, 1), 0.6) 4%,
+      rgba($background-main, 0.45) 4%,
+      rgba($background-main, 0.45) 100%
     );
+  text-align: center;
 
   &.active-navigation {
     .ActionPanel {
@@ -71,9 +65,9 @@ $color-background-lightest: $color-background-primary-lightest;
 
     .glue {
       transition: 250ms background-color;
-      @include border-flare($opacity: 0.65, $radius: 0);
-      border-top-left-radius: 20px;
-      border-top-right-radius: 20px;
+      border: 2px solid $color-main;
+      border-bottom: none;
+      border-radius: 0;
 
       .Action {
         display: inline-block;
@@ -167,7 +161,7 @@ $color-background-lightest: $color-background-primary-lightest;
         height: 35px;
         min-height: unset;
         background-color: adjust-color(
-          $color-background-primary-lightest,
+          $background-color-negative,
           $lightness: 5%
         );
         font-weight: 700;
@@ -180,21 +174,35 @@ $color-background-lightest: $color-background-primary-lightest;
           opacity: 0.5;
         }
 
+        &.no-items {
+          display: none;
+        }
+
+        .NodeHoverDisplay {
+          position: absolute;
+          top: 0;
+        }
+
         .wrapper {
-          position: relative;
-          white-space: nowrap;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          white-space: pre-line;
+          overflow-y: scroll;
 
           .score {
             display: inline-block;
-            background-color: $color-background-secondary-darkest;
-            vertical-align: bottom;
+            background-color: $background-alt1;
+            vertical-align: center;
           }
 
           .title {
-            display: inline-block;
-            vertical-align: bottom;
-            color: $color-font-dark;
-            text-overflow: ellipsis;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: $color-main;
+            height: 100%;
+            padding-top: auto;
           }
         }
 
@@ -210,13 +218,99 @@ $color-background-lightest: $color-background-primary-lightest;
           }
         }
 
-        &.final,
-        &.bonus {
-          // background-color: adjust-color(
-          //   $color-background-primary-lightest,
-          //   $lightness: 7.5%
-          // );
+        &.green {
+          background-color: $node-green;
         }
+
+        &.pink {
+          background-color: $node-pink;
+        }
+
+        &.yellow {
+          background-color: $node-yellow;
+        }
+
+        &.blue {
+          background-color: $node-blue;
+        }
+
+        &.khaki {
+          background-color: $node-khaki;
+        }
+
+        &.purple {
+          background-color: $node-purple;
+        }
+
+        &.red {
+          background-color: $node-red;
+        }
+
+        &.orange {
+          background-color: $node-orange;
+        }
+
+        &.default {
+          background-color: $background-alt1;
+        }
+
+        &.succeeded {
+          background-color: $background-alt1;
+          border-color: $success;
+        }
+
+        &.failed {
+          background-color: $background-alt1;
+          border-color: $fail;
+        }
+
+        &.LoadingBar {
+          background-color: $background-alt1;
+        }
+
+        @keyframes loading-animation {
+          from {
+            background-position-x: 0;
+          }
+          to {
+            background-position-x: 40px;
+          }
+        }
+
+        .loading {
+          width: 0;
+          background-image: linear-gradient(
+            -45deg,
+            $loading-1 25%,
+            $loading-2 25%,
+            $loading-2 50%,
+            $loading-1 50%,
+            $loading-1 75%,
+            $loading-2 75%,
+            $loading-2 100%,
+            $loading-1 100%
+          );
+          background-size: 40px 40px;
+          animation-name: loading-animation;
+          animation-duration: 0.75s;
+          animation-timing-function: linear;
+          animation-iteration-count: infinite;
+
+          &.hide {
+            display: none;
+            opacity: 0;
+            position: absolute;
+            left: -200vw;
+          }
+        }
+
+        // &.final,
+        // &.bonus {
+        // background-color: adjust-color(
+        //   $background-color-negative,
+        //   $lightness: 7.5%
+        // );
+        // }
       }
 
       .page-number {
@@ -235,13 +329,21 @@ $color-background-lightest: $color-background-primary-lightest;
     position: relative;
     z-index: $z-index-objective-map-pointers;
     border: 2px solid transparent;
-    stroke: rgba($color-border-lightest, 0.65);
+    stroke: rgba($color-main, 1);
     marker {
       polygon,
       circle {
-        fill: rgba($color-background-tertiary-lightest, 1);
+        fill: rgba($color-accent-light, 1);
         stroke: none;
       }
     }
+  }
+
+  @media only screen and (max-width: 768px) {
+    margin: 0 5px 0 0;
+  }
+
+  @media only screen and (max-width: 275px) {
+    width: 30%;
   }
 }
