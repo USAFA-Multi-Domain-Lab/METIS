@@ -198,9 +198,14 @@ export default function DashboardPage(props: {
                   return
                 } else {
                   for (let nodeActionItem of selectedNode.nodeActionItems) {
-                    nodeActionItemDisplay.push(nodeActionItem)
+                    if (!selectedNode.executed) {
+                      nodeActionItemDisplay.push(nodeActionItem)
+                    }
                   }
-                  setNodeActionSelectionPromptIsDisplayed(true)
+
+                  if (!selectedNode.executed && !selectedNode.executing) {
+                    setNodeActionSelectionPromptIsDisplayed(true)
+                  }
                 }
               }}
               applyNodeClassName={(node: MissionNode) => {
@@ -242,7 +247,10 @@ export default function DashboardPage(props: {
             />
             <OutputPanel />
             <NodeActions selectedNode={lastSelectedNode} />
-            <ExecuteNodePath selectedNode={lastSelectedNode} />
+            <ExecuteNodePath
+              selectedNode={lastSelectedNode}
+              allNodes={mission.nodes}
+            />
           </div>
         }
       </div>

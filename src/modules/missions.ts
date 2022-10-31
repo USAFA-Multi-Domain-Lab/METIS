@@ -178,6 +178,7 @@ export class MissionNode {
       selectedNodeAction !== null
     ) {
       this._executing = true
+
       setTimeout(() => {
         this._executing = false
         this._executed = true

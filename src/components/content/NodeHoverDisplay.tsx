@@ -1,15 +1,9 @@
-import React from 'react'
 import './NodeHoverDisplay.scss'
-import { useStore } from 'react-context-hook'
 import { MissionNode } from '../../modules/missions'
 
 const NodeHoverDisplay = (props: {
   selectedNode: MissionNode | null | undefined
 }) => {
-  /* -- GLOBAL STATE -- */
-  const [processDelayTime] = useStore<number>('processDelayTime')
-  const [nodeActionItemText] = useStore<string>('nodeActionItemText')
-
   let className = 'NodeHoverDisplay'
 
   if (
