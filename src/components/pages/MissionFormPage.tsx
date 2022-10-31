@@ -186,7 +186,7 @@ function NodeEntry(props: {
     nodeActionDetailsClassName += ' Disabled'
   }
 
-  if (node === null || node.nodeActionItems.length > 0) {
+  if (node === null || node.actions.length > 0) {
     noActionsClassName += ' Hidden'
   }
 
@@ -301,12 +301,12 @@ function NodeEntry(props: {
           />
           <div className={nodeActionDetailsClassName}>
             <div className='Label'>Actions:</div>
-            {node.nodeActionItems.map((action: MissionNodeAction) => (
+            {node.actions.map((action: MissionNodeAction) => (
               <NodeAction
                 action={action}
                 node={node as any}
                 handleChange={handleChange}
-                key={action.text}
+                key={action.name}
               />
             ))}
             <div
@@ -318,14 +318,17 @@ function NodeEntry(props: {
             <Action
               purpose={EActionPurpose.Add}
               handleClick={() => {
-                let action: MissionNodeAction = new MissionNodeAction(
-                  'New Action',
-                  5000,
-                  0.5,
-                  false,
-                )
-                node?.nodeActionItems.push(action)
-                handleChange()
+                if (node !== null) {
+                  let action: MissionNodeAction = new MissionNodeAction(
+                    node.mission,
+                    generateHash(),
+                    'New Action',
+                    5000,
+                    0.5,
+                  )
+                  node.actions.push(action)
+                  handleChange()
+                }
               }}
               tooltipDescription={'Add a new action to this node.'}
               key={'actual-action_add-new-action'}
@@ -354,9 +357,9 @@ function NodeAction(props: {
     <div className='NodeAction'>
       <DetailBox
         label='Name'
-        initialValue={action.text}
+        initialValue={action.name}
         deliverValue={(name: string) => {
-          action.text = name
+          action.name = name
         }}
         key={`${action.actionID}_actionData`}
       />
@@ -379,13 +382,13 @@ function NodeAction(props: {
       />
       <DetailNumber
         label='Time Cost'
-        initialValue={action.timeDelay / 1000}
+        initialValue={action.processTime / 1000}
         minimum={0}
         maximum={60}
         unit='s'
         deliverValue={(timeCost: number | null) => {
           if (timeCost !== null) {
-            action.timeDelay = timeCost * 1000
+            action.processTime = timeCost * 1000
 
             handleChange()
           }
@@ -395,7 +398,7 @@ function NodeAction(props: {
       <div
         className='Delete'
         onClick={() => {
-          node.nodeActionItems.splice(node.nodeActionItems.indexOf(action), 1)
+          node.actions.splice(node.actions.indexOf(action), 1)
           handleChange()
         }}
         key={`${action.actionID}_delete`}

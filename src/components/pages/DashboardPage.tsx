@@ -197,7 +197,7 @@ export default function DashboardPage(props: {
                   selectedNode.color = ''
                   return
                 } else {
-                  for (let nodeActionItem of selectedNode.nodeActionItems) {
+                  for (let nodeActionItem of selectedNode.actions) {
                     nodeActionItemDisplay.push(nodeActionItem)
                   }
                   setNodeActionSelectionPromptIsDisplayed(true)
@@ -222,16 +222,16 @@ export default function DashboardPage(props: {
                 let description = ''
                 let nodeActionDisplay = 'None selected'
 
-                if (node.selectedNodeAction !== null) {
-                  nodeActionDisplay = node.selectedNodeAction.text
+                if (node.selectedAction !== null) {
+                  nodeActionDisplay = node.selectedAction.name
                 }
 
                 if (node.executable === true && node.executed) {
                   description =
                     `* Executed node in ${
-                      (node.selectedNodeAction?.timeDelay as number) / 1000
+                      (node.selectedAction?.processTime as number) / 1000
                     } second(s)\n` +
-                    `* Node action executed: ${node.selectedNodeAction?.text}\n` +
+                    `* Node action executed: ${node.selectedAction?.name}\n` +
                     `* Chance of success: ${
                       (node.successChance as number) * 100
                     }%\n`

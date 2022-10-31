@@ -58,23 +58,44 @@ export interface IMissionRenderOptions {
 }
 
 export class MissionNodeAction {
+  mission: Mission
   actionID: string
-  text: string
-  timeDelay: number
+  name: string
+  processTime: number
   successChance: number
-  willSucceed: boolean
+  _willSucceed: boolean
+
+  // Getter for _willSucceed
+  get willSucceed(): boolean {
+    return this._willSucceed
+  }
 
   constructor(
-    text: string,
-    timeDelay: number,
+    mission: Mission,
+    actionID: string,
+    name: string,
+    processTime: number,
     successChance: number,
-    willSucceed: boolean,
   ) {
-    this.actionID = generateHash()
-    this.text = text
-    this.timeDelay = timeDelay
+    this.mission = mission
+    this.actionID = actionID
+    this.name = name
+    this.processTime = processTime
     this.successChance = successChance
-    this.willSucceed = willSucceed
+    this._willSucceed = MissionNodeAction.determineActionSuccess(
+      successChance,
+      mission.rng,
+    )
+  }
+
+  // This will determine whether a
+  // node action succeeds or fails based
+  // on the success chance passed.
+  static determineActionSuccess = (
+    successChance: number,
+    rng: PRNG,
+  ): boolean => {
+    return rng.double() <= successChance
   }
 }
 
@@ -93,8 +114,8 @@ export class MissionNode {
   postExecutionFailureText: string
   actionData: string
   executable: boolean
-  nodeActionItems: Array<MissionNodeAction>
-  selectedNodeAction: MissionNodeAction | null
+  actions: Array<MissionNodeAction>
+  selectedAction: MissionNodeAction | null
   _executed: boolean
   _executing: boolean
   mapX: number
@@ -103,10 +124,10 @@ export class MissionNode {
 
   get willSucceed(): boolean {
     let willSucceed: boolean = false
-    let selectedNodeAction: MissionNodeAction | null = this.selectedNodeAction
+    let selectedAction: MissionNodeAction | null = this.selectedAction
 
-    if (selectedNodeAction !== null) {
-      willSucceed = selectedNodeAction.willSucceed
+    if (selectedAction !== null) {
+      willSucceed = selectedAction.willSucceed
     }
 
     return willSucceed
@@ -127,8 +148,8 @@ export class MissionNode {
   get successChance(): number | null {
     let successChance: number | null = null
 
-    if (this.selectedNodeAction !== null) {
-      successChance = this.selectedNodeAction.successChance
+    if (this.selectedAction !== null) {
+      successChance = this.selectedAction.successChance
     }
 
     return successChance
@@ -159,8 +180,8 @@ export class MissionNode {
     this.postExecutionFailureText = postExecutionFailureText
     this.actionData = actionData
     this.executable = executable
-    this.nodeActionItems = nodeActionItems
-    this.selectedNodeAction = null
+    this.actions = nodeActionItems
+    this.selectedAction = null
     this._executed = false
     this._executing = false
     this.mapX = mapX
@@ -172,7 +193,7 @@ export class MissionNode {
   // node action after the time delay
   // of the selected node action.
   execute(callback: (success: boolean) => void): void {
-    let selectedNodeAction: MissionNodeAction | null = this.selectedNodeAction
+    let selectedNodeAction: MissionNodeAction | null = this.selectedAction
 
     if (
       this.executable === true &&
@@ -185,7 +206,7 @@ export class MissionNode {
         this._executed = true
 
         callback(this.willSucceed)
-      }, selectedNodeAction.timeDelay)
+      }, selectedNodeAction.processTime)
     }
   }
 
@@ -405,7 +426,7 @@ export class Mission {
   nodeStructure: AnyObject
   nodeData: Array<AnyObject>
   nodes: Map<string, MissionNode>
-  seed: number
+  seed: string
   rng: PRNG
   rootNode: MissionNode
   structureChangeKey: string
@@ -416,7 +437,7 @@ export class Mission {
     versionNumber: number,
     nodeStructure: AnyObject,
     nodeData: Array<AnyObject>,
-    seed: number,
+    seed: string,
     expandAll: boolean = false,
   ) {
     this.name = name
@@ -461,20 +482,17 @@ export class Mission {
       // objects, then it stores the created
       // objects in the nodeData map.
       for (let nodeDatum of nodeData) {
-        let nodeActionItems = []
+        let actions = []
 
-        for (let actionItem of nodeDatum.nodeActionItems) {
-          let willSucceed: boolean = Mission.determineNodeSuccess(
-            actionItem.successChance,
-            this.rng,
-          )
+        for (let action of nodeDatum.actions) {
           let nodeAction: MissionNodeAction = new MissionNodeAction(
-            actionItem.text,
-            actionItem.timeDelay,
-            actionItem.successChance,
-            willSucceed,
+            this,
+            action.actionID,
+            action.name,
+            action.processTime,
+            action.successChance,
           )
-          nodeActionItems.push(nodeAction)
+          actions.push(nodeAction)
         }
 
         let node: MissionNode = new MissionNode(
@@ -487,7 +505,7 @@ export class Mission {
           nodeDatum.postExecutionFailureText,
           nodeDatum.actionData,
           nodeDatum.executable,
-          nodeActionItems,
+          actions,
           0,
           0,
         )
@@ -639,79 +657,31 @@ export class Mission {
 
     return this
   }
-
-  // This will determine whether a
-  // node succeeds or fails based
-  // on the success chance passed.
-  static determineNodeSuccess = (successChance: number, rng: PRNG): boolean => {
-    return rng.double() <= successChance
-  }
 }
 
 // ! TO-BE-REMOVED
 // This creates a test mission for
 // testing purposes.
 export function createTestMission(expandAll: boolean = false): Mission {
-  const testMissionJson: IMissionJson = {
+  const testMissionJson = {
     name: 'Incredible Mission',
     versionNumber: 1,
-    seed: 980238470934,
+    seed: '980238470934',
     nodeStructure: {
       '1': {
-        '2': {
-          '3': {
-            '4': {
-              END: 'END',
-            },
-          },
-        },
-        '5': {
-          '6': {
-            '7': {
-              END: 'END',
-            },
-          },
-        },
-        '8': {
-          '9': {
-            '10': {
-              END: 'END',
-            },
-          },
-        },
-        '11': {
-          '12': {
-            '13': {
-              END: 'END',
-            },
-          },
-        },
+        '2': { '3': { '4': { END: 'END' } } },
+        '5': { '6': { '7': { END: 'END' } } },
+        '8': { '9': { '10': { END: 'END' } } },
+        '11': { '12': { '13': { END: 'END' } } },
       },
       '14': {
-        '15': {
-          '16': {
-            '17': {
-              END: 'END',
-            },
-            '18': { END: 'END' },
-          },
-        },
+        '15': { '16': { '17': { END: 'END' }, '18': { END: 'END' } } },
       },
       '19': {
-        '20': {
-          '21': { END: 'END' },
-          '22': { END: 'END' },
-        },
-        '23': {
-          '24': { END: 'END' },
-        },
-        '25': {
-          '26': { END: 'END' },
-        },
-        '27': {
-          '28': { END: 'END' },
-          '29': { END: 'END' },
-        },
+        '20': { '21': { END: 'END' }, '22': { END: 'END' } },
+        '23': { '24': { END: 'END' } },
+        '25': { '26': { END: 'END' } },
+        '27': { '28': { END: 'END' }, '29': { END: 'END' } },
       },
       '30': {
         '31': { END: 'END' },
@@ -730,42 +700,42 @@ export function createTestMission(expandAll: boolean = false): Mission {
         postExecutionFailureText: '',
         actionData: 'exec command',
         executable: false,
-        nodeActionItems: [
+        actions: [
           {
-            text: 'Deny',
-            timeDelay: 1000,
+            actionID: '13c8e7d8-9be6-4e05-ac98-134967ded155',
+            name: 'Deny',
+            processTime: 1000,
             successChance: 0.5,
-            willSucceed: false,
           },
           {
-            text: 'Degrade',
-            timeDelay: 2000,
+            actionID: '3d33abca-0f6f-4572-8f9e-8811359160e9',
+            name: 'Degrade',
+            processTime: 2000,
             successChance: 0.6,
-            willSucceed: false,
           },
           {
-            text: 'Destroy',
-            timeDelay: 3000,
+            actionID: '46be848e-3c76-4475-a0d5-6a1bf79013f4',
+            name: 'Destroy',
+            processTime: 3000,
             successChance: 0.6,
-            willSucceed: false,
           },
           {
-            text: 'Disrupt',
-            timeDelay: 4000,
+            actionID: '1115d8b4-6929-4842-af53-e218eb57b2a4',
+            name: 'Disrupt',
+            processTime: 4000,
             successChance: 0.7,
-            willSucceed: false,
           },
           {
-            text: 'Manipulate',
-            timeDelay: 5000,
+            actionID: '569c9409-6b2e-4d32-91ec-fb01644264eb',
+            name: 'Manipulate',
+            processTime: 5000,
             successChance: 0.8,
-            willSucceed: false,
           },
           {
-            text: 'Extract',
-            timeDelay: 6000,
+            actionID: '2b44a09f-5128-48da-afa4-990fd3d37211',
+            name: 'Extract',
+            processTime: 6000,
             successChance: 0.8,
-            willSucceed: false,
           },
         ],
         mapX: 0,
@@ -780,42 +750,42 @@ export function createTestMission(expandAll: boolean = false): Mission {
         postExecutionFailureText: 'Cellular Network failed.',
         actionData: 'exec command',
         executable: false,
-        nodeActionItems: [
+        actions: [
           {
-            text: 'Deny',
-            timeDelay: 1000,
+            actionID: '51f623c7-a076-40dd-ac0e-bc0579730638',
+            name: 'Deny',
+            processTime: 1000,
             successChance: 0.5,
-            willSucceed: false,
           },
           {
-            text: 'Degrade',
-            timeDelay: 2000,
+            actionID: '840399e6-0343-4676-a721-22c2c6fa21be',
+            name: 'Degrade',
+            processTime: 2000,
             successChance: 0.6,
-            willSucceed: false,
           },
           {
-            text: 'Destroy',
-            timeDelay: 3000,
+            actionID: 'bc31da91-928e-493c-8edd-0ca92c04870f',
+            name: 'Destroy',
+            processTime: 3000,
             successChance: 0.6,
-            willSucceed: false,
           },
           {
-            text: 'Disrupt',
-            timeDelay: 4000,
+            actionID: '2dd1bd93-d6ea-41ed-a7c2-69dacdd9dd19',
+            name: 'Disrupt',
+            processTime: 4000,
             successChance: 0.7,
-            willSucceed: false,
           },
           {
-            text: 'Manipulate',
-            timeDelay: 5000,
+            actionID: '2d5b26a0-2963-4980-8bfb-8f7bb132327e',
+            name: 'Manipulate',
+            processTime: 5000,
             successChance: 0.8,
-            willSucceed: false,
           },
           {
-            text: 'Extract',
-            timeDelay: 6000,
+            actionID: '27025a3e-62ee-4a2c-8b2d-92293beba72e',
+            name: 'Extract',
+            processTime: 6000,
             successChance: 0.8,
-            willSucceed: false,
           },
         ],
         mapX: 1,
@@ -830,42 +800,42 @@ export function createTestMission(expandAll: boolean = false): Mission {
         postExecutionFailureText: 'Internet Provider has failed to execute.',
         actionData: 'exec command',
         executable: false,
-        nodeActionItems: [
+        actions: [
           {
-            text: 'Deny',
-            timeDelay: 1000,
+            actionID: 'e106b445-5bf0-411f-a49d-572669c417cb',
+            name: 'Deny',
+            processTime: 1000,
             successChance: 0.5,
-            willSucceed: false,
           },
           {
-            text: 'Degrade',
-            timeDelay: 2000,
+            actionID: 'fb9f702b-fa8f-4314-9e14-b1fba5a62425',
+            name: 'Degrade',
+            processTime: 2000,
             successChance: 0.6,
-            willSucceed: false,
           },
           {
-            text: 'Destroy',
-            timeDelay: 3000,
+            actionID: '4896fb1b-9656-4ae2-bf13-b5293932b936',
+            name: 'Destroy',
+            processTime: 3000,
             successChance: 0.6,
-            willSucceed: false,
           },
           {
-            text: 'Disrupt',
-            timeDelay: 4000,
+            actionID: 'b6fd19d6-e42f-4da6-bab4-ea7bec2f0fb1',
+            name: 'Disrupt',
+            processTime: 4000,
             successChance: 0.7,
-            willSucceed: false,
           },
           {
-            text: 'Manipulate',
-            timeDelay: 5000,
+            actionID: '9faabb93-1678-40e0-99b8-3de42cda4136',
+            name: 'Manipulate',
+            processTime: 5000,
             successChance: 0.8,
-            willSucceed: false,
           },
           {
-            text: 'Extract',
-            timeDelay: 6000,
+            actionID: '7f9a2ebd-f28f-4616-a9ca-c8ddf383d098',
+            name: 'Extract',
+            processTime: 6000,
             successChance: 0.8,
-            willSucceed: false,
           },
         ],
         mapX: 1,
@@ -880,42 +850,42 @@ export function createTestMission(expandAll: boolean = false): Mission {
         postExecutionFailureText: 'Instant Messaging has failed to execute.',
         actionData: 'exec command',
         executable: false,
-        nodeActionItems: [
+        actions: [
           {
-            text: 'Deny',
-            timeDelay: 1000,
+            actionID: 'e60c6d72-2d90-4ed6-a028-1e507a80918e',
+            name: 'Deny',
+            processTime: 1000,
             successChance: 0.5,
-            willSucceed: false,
           },
           {
-            text: 'Degrade',
-            timeDelay: 2000,
+            actionID: '517fb952-316e-489b-98a2-3dc661572c61',
+            name: 'Degrade',
+            processTime: 2000,
             successChance: 0.6,
-            willSucceed: false,
           },
           {
-            text: 'Destroy',
-            timeDelay: 3000,
+            actionID: '06c89ad1-f434-4fae-8f3a-42da1d63092c',
+            name: 'Destroy',
+            processTime: 3000,
             successChance: 0.6,
-            willSucceed: false,
           },
           {
-            text: 'Disrupt',
-            timeDelay: 4000,
+            actionID: '9430a7eb-1acc-42bb-b4b9-def07281cd4e',
+            name: 'Disrupt',
+            processTime: 4000,
             successChance: 0.7,
-            willSucceed: false,
           },
           {
-            text: 'Manipulate',
-            timeDelay: 5000,
+            actionID: 'c5de503b-112e-4122-a5b8-39f5d2875f6a',
+            name: 'Manipulate',
+            processTime: 5000,
             successChance: 0.8,
-            willSucceed: false,
           },
           {
-            text: 'Extract',
-            timeDelay: 6000,
+            actionID: '4a7d197f-4141-4720-af17-718b93b8e91a',
+            name: 'Extract',
+            processTime: 6000,
             successChance: 0.8,
-            willSucceed: false,
           },
         ],
         mapX: 1,
@@ -930,48 +900,47 @@ export function createTestMission(expandAll: boolean = false): Mission {
         postExecutionFailureText: 'File Sharing Service has failed to execute.',
         actionData: 'exec command',
         executable: false,
-        nodeActionItems: [
+        actions: [
           {
-            text: 'Deny',
-            timeDelay: 1000,
+            actionID: '7386ca9e-92ff-4091-8c87-2b6a6e856a55',
+            name: 'Deny',
+            processTime: 1000,
             successChance: 0.5,
-            willSucceed: false,
           },
           {
-            text: 'Degrade',
-            timeDelay: 2000,
+            actionID: 'eaccba96-ad61-48b4-8332-87399587ae9d',
+            name: 'Degrade',
+            processTime: 2000,
             successChance: 0.6,
-            willSucceed: false,
           },
           {
-            text: 'Destroy',
-            timeDelay: 3000,
+            actionID: 'f1ce8896-f7ce-4973-859f-9b7c02dd8caf',
+            name: 'Destroy',
+            processTime: 3000,
             successChance: 0.6,
-            willSucceed: false,
           },
           {
-            text: 'Disrupt',
-            timeDelay: 4000,
+            actionID: '89c87555-529d-4780-a2ca-e2515141b15c',
+            name: 'Disrupt',
+            processTime: 4000,
             successChance: 0.7,
-            willSucceed: false,
           },
           {
-            text: 'Manipulate',
-            timeDelay: 5000,
+            actionID: 'd3799688-c263-46cf-ab36-ee20518f2b49',
+            name: 'Manipulate',
+            processTime: 5000,
             successChance: 0.8,
-            willSucceed: false,
           },
           {
-            text: 'Extract',
-            timeDelay: 6000,
+            actionID: '2d2cf7df-e3c3-4344-963b-3517f344b3a9',
+            name: 'Extract',
+            processTime: 6000,
             successChance: 0.8,
-            willSucceed: false,
           },
         ],
         mapX: 1,
         mapY: -2,
       },
-
       {
         nodeID: '3',
         name: 'Callbank Cellular',
@@ -981,48 +950,47 @@ export function createTestMission(expandAll: boolean = false): Mission {
         postExecutionFailureText: 'Callbank Cellular has failed to execute.',
         actionData: 'exec command',
         executable: false,
-        nodeActionItems: [
+        actions: [
           {
-            text: 'Deny',
-            timeDelay: 1000,
+            actionID: 'bff0132f-e284-44c6-9e2e-6d286277097c',
+            name: 'Deny',
+            processTime: 1000,
             successChance: 0.5,
-            willSucceed: false,
           },
           {
-            text: 'Degrade',
-            timeDelay: 2000,
+            actionID: 'd7586633-4808-4d31-bf57-3c9d9cdf3b07',
+            name: 'Degrade',
+            processTime: 2000,
             successChance: 0.6,
-            willSucceed: false,
           },
           {
-            text: 'Destroy',
-            timeDelay: 3000,
+            actionID: 'b86a8e35-ee98-46d2-be76-00b4e228e88c',
+            name: 'Destroy',
+            processTime: 3000,
             successChance: 0.6,
-            willSucceed: false,
           },
           {
-            text: 'Disrupt',
-            timeDelay: 4000,
+            actionID: '814c70f4-111c-485f-a14a-b8f48de1c980',
+            name: 'Disrupt',
+            processTime: 4000,
             successChance: 0.7,
-            willSucceed: false,
           },
           {
-            text: 'Manipulate',
-            timeDelay: 5000,
+            actionID: '51f1a959-b0a2-4533-aee6-84dddf488277',
+            name: 'Manipulate',
+            processTime: 5000,
             successChance: 0.8,
-            willSucceed: false,
           },
           {
-            text: 'Extract',
-            timeDelay: 6000,
+            actionID: 'd7a58860-3ab6-48aa-9d57-a5f4e5304150',
+            name: 'Extract',
+            processTime: 6000,
             successChance: 0.8,
-            willSucceed: false,
           },
         ],
         mapX: 3,
         mapY: -5,
       },
-
       {
         nodeID: '6',
         name: 'Service Provider',
@@ -1032,24 +1000,24 @@ export function createTestMission(expandAll: boolean = false): Mission {
         postExecutionFailureText: 'Service Provider has failed to execute.',
         actionData: 'exec command',
         executable: false,
-        nodeActionItems: [
+        actions: [
           {
-            text: 'Deny',
-            timeDelay: 1000,
+            actionID: '0dadf4d9-cc2e-4f34-a02c-350833a6dcc7',
+            name: 'Deny',
+            processTime: 1000,
             successChance: 0.5,
-            willSucceed: false,
           },
           {
-            text: 'Degrade',
-            timeDelay: 2000,
+            actionID: 'be6521e7-ca71-46c7-9a61-42dbffced96a',
+            name: 'Degrade',
+            processTime: 2000,
             successChance: 0.6,
-            willSucceed: false,
           },
           {
-            text: 'Destroy',
-            timeDelay: 3000,
+            actionID: 'a6f863df-407c-4d46-ac38-68c7574274ba',
+            name: 'Destroy',
+            processTime: 3000,
             successChance: 0.6,
-            willSucceed: false,
           },
         ],
         mapX: 3,
@@ -1064,42 +1032,42 @@ export function createTestMission(expandAll: boolean = false): Mission {
         postExecutionFailureText: 'Service Provider has failed to execute.',
         actionData: 'exec command',
         executable: false,
-        nodeActionItems: [
+        actions: [
           {
-            text: 'Deny',
-            timeDelay: 1000,
+            actionID: 'b1688df2-40ad-47ec-9bf4-88c81d0dc67d',
+            name: 'Deny',
+            processTime: 1000,
             successChance: 0.5,
-            willSucceed: false,
           },
           {
-            text: 'Degrade',
-            timeDelay: 2000,
+            actionID: '4d0d935a-022f-4276-87b1-f2f0b0449ddf',
+            name: 'Degrade',
+            processTime: 2000,
             successChance: 0.6,
-            willSucceed: false,
           },
           {
-            text: 'Destroy',
-            timeDelay: 3000,
+            actionID: 'b4258421-9178-4c40-af92-486e0ddb1e54',
+            name: 'Destroy',
+            processTime: 3000,
             successChance: 0.6,
-            willSucceed: false,
           },
           {
-            text: 'Disrupt',
-            timeDelay: 4000,
+            actionID: '51a25aee-b66e-42f1-93a6-30659bcf0714',
+            name: 'Disrupt',
+            processTime: 4000,
             successChance: 0.7,
-            willSucceed: false,
           },
           {
-            text: 'Manipulate',
-            timeDelay: 5000,
+            actionID: '0b3de085-464c-4416-bc85-6fb278824042',
+            name: 'Manipulate',
+            processTime: 5000,
             successChance: 0.8,
-            willSucceed: false,
           },
           {
-            text: 'Extract',
-            timeDelay: 6000,
+            actionID: '415ac79b-13c3-4862-99ea-afba90762463',
+            name: 'Extract',
+            processTime: 6000,
             successChance: 0.8,
-            willSucceed: false,
           },
         ],
         mapX: 3,
@@ -1114,42 +1082,42 @@ export function createTestMission(expandAll: boolean = false): Mission {
         postExecutionFailureText: 'Service Provider has failed to execute.',
         actionData: 'exec command',
         executable: false,
-        nodeActionItems: [
+        actions: [
           {
-            text: 'Deny',
-            timeDelay: 1000,
+            actionID: '21074efc-e0d3-4068-b032-622b05ad2d50',
+            name: 'Deny',
+            processTime: 1000,
             successChance: 0.5,
-            willSucceed: false,
           },
           {
-            text: 'Degrade',
-            timeDelay: 2000,
+            actionID: '6dffeb1c-edec-4889-90af-74265a383d30',
+            name: 'Degrade',
+            processTime: 2000,
             successChance: 0.6,
-            willSucceed: false,
           },
           {
-            text: 'Destroy',
-            timeDelay: 3000,
+            actionID: 'c5ebde3f-13a6-4353-be4d-e1bbb22dec32',
+            name: 'Destroy',
+            processTime: 3000,
             successChance: 0.6,
-            willSucceed: false,
           },
           {
-            text: 'Disrupt',
-            timeDelay: 4000,
+            actionID: '665da164-58e4-4baf-8d76-df776ad71bca',
+            name: 'Disrupt',
+            processTime: 4000,
             successChance: 0.7,
-            willSucceed: false,
           },
           {
-            text: 'Manipulate',
-            timeDelay: 5000,
+            actionID: '65cc9e96-ae9d-44ca-8c17-d47bd8d065aa',
+            name: 'Manipulate',
+            processTime: 5000,
             successChance: 0.8,
-            willSucceed: false,
           },
           {
-            text: 'Extract',
-            timeDelay: 6000,
+            actionID: 'dba4f7fb-c206-49e7-ab50-f3f237d6cb4e',
+            name: 'Extract',
+            processTime: 6000,
             successChance: 0.8,
-            willSucceed: false,
           },
         ],
         mapX: 3,
@@ -1164,42 +1132,42 @@ export function createTestMission(expandAll: boolean = false): Mission {
         postExecutionFailureText: 'Cellular Towers has failed to execute.',
         actionData: 'exec command',
         executable: true,
-        nodeActionItems: [
+        actions: [
           {
-            text: 'Deny',
-            timeDelay: 1000,
+            actionID: '02cfa229-4d2a-4dd3-9bb3-bf2b13d84815',
+            name: 'Deny',
+            processTime: 1000,
             successChance: 0.5,
-            willSucceed: false,
           },
           {
-            text: 'Degrade',
-            timeDelay: 2000,
+            actionID: 'cf2df2a5-b828-4df3-bac2-7e89d76c4601',
+            name: 'Degrade',
+            processTime: 2000,
             successChance: 0.6,
-            willSucceed: false,
           },
           {
-            text: 'Destroy',
-            timeDelay: 3000,
+            actionID: 'a07994f5-a807-41bc-9647-b5ac5951dc40',
+            name: 'Destroy',
+            processTime: 3000,
             successChance: 0.6,
-            willSucceed: false,
           },
           {
-            text: 'Disrupt',
-            timeDelay: 4000,
+            actionID: '074c3d78-3d98-487d-8d34-5685829ecab2',
+            name: 'Disrupt',
+            processTime: 4000,
             successChance: 0.7,
-            willSucceed: false,
           },
           {
-            text: 'Manipulate',
-            timeDelay: 5000,
+            actionID: 'b5e49fca-dc9c-4bb1-875e-7f5033f0cb04',
+            name: 'Manipulate',
+            processTime: 5000,
             successChance: 0.8,
-            willSucceed: false,
           },
           {
-            text: 'Extract',
-            timeDelay: 6000,
+            actionID: '35cf34b3-86e6-40e6-86aa-f050cf3376e2',
+            name: 'Extract',
+            processTime: 6000,
             successChance: 0.8,
-            willSucceed: false,
           },
         ],
         mapX: 4,
@@ -1214,42 +1182,42 @@ export function createTestMission(expandAll: boolean = false): Mission {
         postExecutionFailureText: 'Main Server has failed to execute.',
         actionData: 'exec command',
         executable: true,
-        nodeActionItems: [
+        actions: [
           {
-            text: 'Deny',
-            timeDelay: 1000,
+            actionID: 'c291d6f2-22cc-4823-8521-0c286a4b746e',
+            name: 'Deny',
+            processTime: 1000,
             successChance: 0.5,
-            willSucceed: false,
           },
           {
-            text: 'Degrade',
-            timeDelay: 2000,
+            actionID: '2fd99f78-e565-444c-a067-e63085931e56',
+            name: 'Degrade',
+            processTime: 2000,
             successChance: 0.6,
-            willSucceed: false,
           },
           {
-            text: 'Destroy',
-            timeDelay: 3000,
+            actionID: '29315099-c434-46e5-bd0e-ccaefc63a0a8',
+            name: 'Destroy',
+            processTime: 3000,
             successChance: 0.6,
-            willSucceed: false,
           },
           {
-            text: 'Disrupt',
-            timeDelay: 4000,
+            actionID: '7504c4fa-f470-47a5-93eb-819bb3e3227e',
+            name: 'Disrupt',
+            processTime: 4000,
             successChance: 0.7,
-            willSucceed: false,
           },
           {
-            text: 'Manipulate',
-            timeDelay: 5000,
+            actionID: 'da103e1d-8114-43a2-8e43-0c83cc422e32',
+            name: 'Manipulate',
+            processTime: 5000,
             successChance: 0.8,
-            willSucceed: false,
           },
           {
-            text: 'Extract',
-            timeDelay: 6000,
+            actionID: 'a1ac306f-7af6-49d1-957f-c80fca30954d',
+            name: 'Extract',
+            processTime: 6000,
             successChance: 0.8,
-            willSucceed: false,
           },
         ],
         mapX: 4,
@@ -1264,42 +1232,42 @@ export function createTestMission(expandAll: boolean = false): Mission {
         postExecutionFailureText: 'Main Server has failed to execute.',
         actionData: 'exec command',
         executable: true,
-        nodeActionItems: [
+        actions: [
           {
-            text: 'Deny',
-            timeDelay: 1000,
+            actionID: 'b8a9849e-f29c-4ded-ba24-f22400c25ba7',
+            name: 'Deny',
+            processTime: 1000,
             successChance: 0.5,
-            willSucceed: false,
           },
           {
-            text: 'Degrade',
-            timeDelay: 2000,
+            actionID: '9d16c084-f009-4ff5-8be7-4509198546b8',
+            name: 'Degrade',
+            processTime: 2000,
             successChance: 0.6,
-            willSucceed: false,
           },
           {
-            text: 'Destroy',
-            timeDelay: 3000,
+            actionID: '28e75888-2b89-4115-8320-1077775fc93f',
+            name: 'Destroy',
+            processTime: 3000,
             successChance: 0.6,
-            willSucceed: false,
           },
           {
-            text: 'Disrupt',
-            timeDelay: 4000,
+            actionID: '0017c7fb-d220-4d31-9967-9e8420eee0d5',
+            name: 'Disrupt',
+            processTime: 4000,
             successChance: 0.7,
-            willSucceed: false,
           },
           {
-            text: 'Manipulate',
-            timeDelay: 5000,
+            actionID: 'eb1a161a-ed1e-4ec1-baf2-c7654b6f7703',
+            name: 'Manipulate',
+            processTime: 5000,
             successChance: 0.8,
-            willSucceed: false,
           },
           {
-            text: 'Extract',
-            timeDelay: 6000,
+            actionID: '3770c909-ac41-4712-ac6f-074c82f6500d',
+            name: 'Extract',
+            processTime: 6000,
             successChance: 0.8,
-            willSucceed: false,
           },
         ],
         mapX: 4,
@@ -1314,42 +1282,42 @@ export function createTestMission(expandAll: boolean = false): Mission {
         postExecutionFailureText: 'Main Server has failed to execute.',
         actionData: 'exec command',
         executable: true,
-        nodeActionItems: [
+        actions: [
           {
-            text: 'Deny',
-            timeDelay: 1000,
+            actionID: 'b836ce3e-118d-4611-9f06-baa9cd2490a4',
+            name: 'Deny',
+            processTime: 1000,
             successChance: 0.5,
-            willSucceed: false,
           },
           {
-            text: 'Degrade',
-            timeDelay: 2000,
+            actionID: '40bba0a6-bd49-431f-8f28-be9f8392c652',
+            name: 'Degrade',
+            processTime: 2000,
             successChance: 0.6,
-            willSucceed: false,
           },
           {
-            text: 'Destroy',
-            timeDelay: 3000,
+            actionID: 'df5e3af6-c216-4734-9506-adfc0626f4b0',
+            name: 'Destroy',
+            processTime: 3000,
             successChance: 0.6,
-            willSucceed: false,
           },
           {
-            text: 'Disrupt',
-            timeDelay: 4000,
+            actionID: 'e9696493-3a45-4742-b320-dcc8698e88b3',
+            name: 'Disrupt',
+            processTime: 4000,
             successChance: 0.7,
-            willSucceed: false,
           },
           {
-            text: 'Manipulate',
-            timeDelay: 5000,
+            actionID: '0dc8a928-baf1-4158-b777-bc2a4f0ab261',
+            name: 'Manipulate',
+            processTime: 5000,
             successChance: 0.8,
-            willSucceed: false,
           },
           {
-            text: 'Extract',
-            timeDelay: 6000,
+            actionID: 'a77f7b0b-3851-479e-9256-c2d9fd11e4d2',
+            name: 'Extract',
+            processTime: 6000,
             successChance: 0.8,
-            willSucceed: false,
           },
         ],
         mapX: 4,
@@ -1364,42 +1332,42 @@ export function createTestMission(expandAll: boolean = false): Mission {
         postExecutionFailureText: '',
         actionData: 'exec command',
         executable: false,
-        nodeActionItems: [
+        actions: [
           {
-            text: 'Deny',
-            timeDelay: 1000,
+            actionID: 'e58f3888-29cb-46ec-a7c2-59df43e6c55a',
+            name: 'Deny',
+            processTime: 1000,
             successChance: 0.5,
-            willSucceed: false,
           },
           {
-            text: 'Degrade',
-            timeDelay: 2000,
+            actionID: 'b2db5530-9154-4676-a590-db95678dd2ac',
+            name: 'Degrade',
+            processTime: 2000,
             successChance: 0.6,
-            willSucceed: false,
           },
           {
-            text: 'Destroy',
-            timeDelay: 3000,
+            actionID: '6721a0b4-9f3b-4732-9d28-087e1439be1e',
+            name: 'Destroy',
+            processTime: 3000,
             successChance: 0.6,
-            willSucceed: false,
           },
           {
-            text: 'Disrupt',
-            timeDelay: 4000,
+            actionID: 'e0c60aae-e25c-46c4-8a77-caa6cc710671',
+            name: 'Disrupt',
+            processTime: 4000,
             successChance: 0.7,
-            willSucceed: false,
           },
           {
-            text: 'Manipulate',
-            timeDelay: 5000,
+            actionID: 'c7ba4065-249e-4ae0-996d-ae4392861c62',
+            name: 'Manipulate',
+            processTime: 5000,
             successChance: 0.8,
-            willSucceed: false,
           },
           {
-            text: 'Extract',
-            timeDelay: 6000,
+            actionID: '4e2ca073-8ec9-43fd-9c57-6c73a90b54da',
+            name: 'Extract',
+            processTime: 6000,
             successChance: 0.8,
-            willSucceed: false,
           },
         ],
         mapX: 0,
@@ -1414,42 +1382,42 @@ export function createTestMission(expandAll: boolean = false): Mission {
         postExecutionFailureText: 'IADS Network has failed to execute.',
         actionData: 'exec command',
         executable: false,
-        nodeActionItems: [
+        actions: [
           {
-            text: 'Deny',
-            timeDelay: 1000,
+            actionID: '0937da57-a9cc-44bf-9400-5a94b808a4f1',
+            name: 'Deny',
+            processTime: 1000,
             successChance: 0.5,
-            willSucceed: false,
           },
           {
-            text: 'Degrade',
-            timeDelay: 2000,
+            actionID: '45fa771e-8e4e-4bf7-ad0b-15354a8199ea',
+            name: 'Degrade',
+            processTime: 2000,
             successChance: 0.6,
-            willSucceed: false,
           },
           {
-            text: 'Destroy',
-            timeDelay: 3000,
+            actionID: 'ad6079a3-ebd3-45e9-9d25-ee327a400e0d',
+            name: 'Destroy',
+            processTime: 3000,
             successChance: 0.6,
-            willSucceed: false,
           },
           {
-            text: 'Disrupt',
-            timeDelay: 4000,
+            actionID: 'e4a53923-2e82-49d9-8416-9e8b2a11e697',
+            name: 'Disrupt',
+            processTime: 4000,
             successChance: 0.7,
-            willSucceed: false,
           },
           {
-            text: 'Manipulate',
-            timeDelay: 5000,
+            actionID: 'e827681d-0b04-43a4-aca6-c117cbd4104c',
+            name: 'Manipulate',
+            processTime: 5000,
             successChance: 0.8,
-            willSucceed: false,
           },
           {
-            text: 'Extract',
-            timeDelay: 6000,
+            actionID: 'aedf829d-0f90-4575-90b2-013168c12185',
+            name: 'Extract',
+            processTime: 6000,
             successChance: 0.8,
-            willSucceed: false,
           },
         ],
         mapX: 1,
@@ -1465,42 +1433,42 @@ export function createTestMission(expandAll: boolean = false): Mission {
           'Individual IADS Sites has failed to execute.',
         actionData: 'exec command',
         executable: false,
-        nodeActionItems: [
+        actions: [
           {
-            text: 'Deny',
-            timeDelay: 1000,
+            actionID: 'cdc56bbb-67f0-46eb-9d08-3cb81d96c72d',
+            name: 'Deny',
+            processTime: 1000,
             successChance: 0.5,
-            willSucceed: false,
           },
           {
-            text: 'Degrade',
-            timeDelay: 2000,
+            actionID: 'aad2fe1a-beca-48bc-b5a0-d2b77c91c38d',
+            name: 'Degrade',
+            processTime: 2000,
             successChance: 0.6,
-            willSucceed: false,
           },
           {
-            text: 'Destroy',
-            timeDelay: 3000,
+            actionID: '61eba72a-e1c6-4138-a2ab-b3fae462d640',
+            name: 'Destroy',
+            processTime: 3000,
             successChance: 0.6,
-            willSucceed: false,
           },
           {
-            text: 'Disrupt',
-            timeDelay: 4000,
+            actionID: '1cf83ff1-82dd-448c-a57b-e24f57fdbdee',
+            name: 'Disrupt',
+            processTime: 4000,
             successChance: 0.7,
-            willSucceed: false,
           },
           {
-            text: 'Manipulate',
-            timeDelay: 5000,
+            actionID: '85ac433e-fb97-4a02-90c6-680b05a782ab',
+            name: 'Manipulate',
+            processTime: 5000,
             successChance: 0.8,
-            willSucceed: false,
           },
           {
-            text: 'Extract',
-            timeDelay: 6000,
+            actionID: 'c0210adc-eeea-4859-a4dc-8a41c9247e2b',
+            name: 'Extract',
+            processTime: 6000,
             successChance: 0.8,
-            willSucceed: false,
           },
         ],
         mapX: 2,
@@ -1515,42 +1483,42 @@ export function createTestMission(expandAll: boolean = false): Mission {
         postExecutionFailureText: 'Launchers has failed to execute.',
         actionData: 'exec command',
         executable: true,
-        nodeActionItems: [
+        actions: [
           {
-            text: 'Deny',
-            timeDelay: 1000,
+            actionID: '85e94f87-04d4-4cde-90f0-94d144ed456a',
+            name: 'Deny',
+            processTime: 1000,
             successChance: 0.5,
-            willSucceed: false,
           },
           {
-            text: 'Degrade',
-            timeDelay: 2000,
+            actionID: 'e7508758-1273-4fcd-8f2d-cdc39e835ccf',
+            name: 'Degrade',
+            processTime: 2000,
             successChance: 0.6,
-            willSucceed: false,
           },
           {
-            text: 'Destroy',
-            timeDelay: 3000,
+            actionID: '09b3ed40-2fbf-40af-b05c-3eca88eab910',
+            name: 'Destroy',
+            processTime: 3000,
             successChance: 0.6,
-            willSucceed: false,
           },
           {
-            text: 'Disrupt',
-            timeDelay: 4000,
+            actionID: '68b75a90-1137-4f5b-a08e-c4067de0d7db',
+            name: 'Disrupt',
+            processTime: 4000,
             successChance: 0.7,
-            willSucceed: false,
           },
           {
-            text: 'Manipulate',
-            timeDelay: 5000,
+            actionID: '44e782d3-0318-41f5-a923-14b791316c2a',
+            name: 'Manipulate',
+            processTime: 5000,
             successChance: 0.8,
-            willSucceed: false,
           },
           {
-            text: 'Extract',
-            timeDelay: 6000,
+            actionID: 'd5b0cd95-34e5-493e-81c2-644bc3063283',
+            name: 'Extract',
+            processTime: 6000,
             successChance: 0.8,
-            willSucceed: false,
           },
         ],
         mapX: 3,
@@ -1565,42 +1533,42 @@ export function createTestMission(expandAll: boolean = false): Mission {
         postExecutionFailureText: 'Radars has failed to execute.',
         actionData: 'exec command',
         executable: true,
-        nodeActionItems: [
+        actions: [
           {
-            text: 'Deny',
-            timeDelay: 1000,
+            actionID: '98600cf1-49f8-4fdc-9326-631da7eb05c9',
+            name: 'Deny',
+            processTime: 1000,
             successChance: 0.5,
-            willSucceed: false,
           },
           {
-            text: 'Degrade',
-            timeDelay: 2000,
+            actionID: 'dafcc2dd-f33c-4680-ad72-b67f240aea93',
+            name: 'Degrade',
+            processTime: 2000,
             successChance: 0.6,
-            willSucceed: false,
           },
           {
-            text: 'Destroy',
-            timeDelay: 3000,
+            actionID: 'dffad904-f645-45d1-b632-e632bc9ab1d9',
+            name: 'Destroy',
+            processTime: 3000,
             successChance: 0.6,
-            willSucceed: false,
           },
           {
-            text: 'Disrupt',
-            timeDelay: 4000,
+            actionID: '9b6e00e1-f0dd-44c2-86db-f71fc3bc8b70',
+            name: 'Disrupt',
+            processTime: 4000,
             successChance: 0.7,
-            willSucceed: false,
           },
           {
-            text: 'Manipulate',
-            timeDelay: 5000,
+            actionID: '2421accd-2c15-4269-961f-745b7d4e1b5a',
+            name: 'Manipulate',
+            processTime: 5000,
             successChance: 0.8,
-            willSucceed: false,
           },
           {
-            text: 'Extract',
-            timeDelay: 6000,
+            actionID: 'df589956-f882-4375-86f8-fd43bc54ae4c',
+            name: 'Extract',
+            processTime: 6000,
             successChance: 0.8,
-            willSucceed: false,
           },
         ],
         mapX: 3,
@@ -1615,42 +1583,42 @@ export function createTestMission(expandAll: boolean = false): Mission {
         postExecutionFailureText: '',
         actionData: 'exec command',
         executable: false,
-        nodeActionItems: [
+        actions: [
           {
-            text: 'Deny',
-            timeDelay: 1000,
+            actionID: 'f68c697d-843e-413e-8b6a-3433fd8c378d',
+            name: 'Deny',
+            processTime: 1000,
             successChance: 0.5,
-            willSucceed: false,
           },
           {
-            text: 'Degrade',
-            timeDelay: 2000,
+            actionID: 'c943801c-dd3b-48b3-ae6b-c267ed72d161',
+            name: 'Degrade',
+            processTime: 2000,
             successChance: 0.6,
-            willSucceed: false,
           },
           {
-            text: 'Destroy',
-            timeDelay: 3000,
+            actionID: '2665c987-ee4b-459d-9b25-714eb6e40693',
+            name: 'Destroy',
+            processTime: 3000,
             successChance: 0.6,
-            willSucceed: false,
           },
           {
-            text: 'Disrupt',
-            timeDelay: 4000,
+            actionID: '50b23b23-d1ce-466b-8134-e7a752b59eac',
+            name: 'Disrupt',
+            processTime: 4000,
             successChance: 0.7,
-            willSucceed: false,
           },
           {
-            text: 'Manipulate',
-            timeDelay: 5000,
+            actionID: 'a2dbf3af-fed4-4199-b9a6-9f719ae4c931',
+            name: 'Manipulate',
+            processTime: 5000,
             successChance: 0.8,
-            willSucceed: false,
           },
           {
-            text: 'Extract',
-            timeDelay: 6000,
+            actionID: 'e90eaa14-ff0b-48c0-9064-db7ab6867a38',
+            name: 'Extract',
+            processTime: 6000,
             successChance: 0.8,
-            willSucceed: false,
           },
         ],
         mapX: 0,
@@ -1665,42 +1633,42 @@ export function createTestMission(expandAll: boolean = false): Mission {
         postExecutionFailureText: 'Railroad System has failed to execute.',
         actionData: 'exec command',
         executable: false,
-        nodeActionItems: [
+        actions: [
           {
-            text: 'Deny',
-            timeDelay: 1000,
+            actionID: 'e4b25d60-e6bd-4a26-a011-cff02beee372',
+            name: 'Deny',
+            processTime: 1000,
             successChance: 0.5,
-            willSucceed: false,
           },
           {
-            text: 'Degrade',
-            timeDelay: 2000,
+            actionID: '1a1505d8-b28d-4dcd-bdf0-dfeab8c43f15',
+            name: 'Degrade',
+            processTime: 2000,
             successChance: 0.6,
-            willSucceed: false,
           },
           {
-            text: 'Destroy',
-            timeDelay: 3000,
+            actionID: '4d718382-6f40-4f6e-af1d-aff45b4533fc',
+            name: 'Destroy',
+            processTime: 3000,
             successChance: 0.6,
-            willSucceed: false,
           },
           {
-            text: 'Disrupt',
-            timeDelay: 4000,
+            actionID: 'd0e4e786-4dcf-4bb9-aa92-efa1b31f5197',
+            name: 'Disrupt',
+            processTime: 4000,
             successChance: 0.7,
-            willSucceed: false,
           },
           {
-            text: 'Manipulate',
-            timeDelay: 5000,
+            actionID: '81a626b7-e722-40ca-ad3c-add01eb9db54',
+            name: 'Manipulate',
+            processTime: 5000,
             successChance: 0.8,
-            willSucceed: false,
           },
           {
-            text: 'Extract',
-            timeDelay: 6000,
+            actionID: '9964ba90-ee92-4df6-8d71-3ee3efa868be',
+            name: 'Extract',
+            processTime: 6000,
             successChance: 0.8,
-            willSucceed: false,
           },
         ],
         mapX: 1,
@@ -1715,42 +1683,42 @@ export function createTestMission(expandAll: boolean = false): Mission {
         postExecutionFailureText: 'Electrical System has failed to execute.',
         actionData: 'exec command',
         executable: false,
-        nodeActionItems: [
+        actions: [
           {
-            text: 'Deny',
-            timeDelay: 1000,
+            actionID: 'f4b62c8e-4912-4667-8fa7-b60308fa2566',
+            name: 'Deny',
+            processTime: 1000,
             successChance: 0.5,
-            willSucceed: false,
           },
           {
-            text: 'Degrade',
-            timeDelay: 2000,
+            actionID: 'c1001d37-51d2-41b8-832b-dc689bd2c2c2',
+            name: 'Degrade',
+            processTime: 2000,
             successChance: 0.6,
-            willSucceed: false,
           },
           {
-            text: 'Destroy',
-            timeDelay: 3000,
+            actionID: '6e34b2fd-997b-450a-8fc0-b54b48d56fce',
+            name: 'Destroy',
+            processTime: 3000,
             successChance: 0.6,
-            willSucceed: false,
           },
           {
-            text: 'Disrupt',
-            timeDelay: 4000,
+            actionID: '5cab7389-6f14-481d-b17e-e0844cba9cf2',
+            name: 'Disrupt',
+            processTime: 4000,
             successChance: 0.7,
-            willSucceed: false,
           },
           {
-            text: 'Manipulate',
-            timeDelay: 5000,
+            actionID: '283baf96-5d2b-4365-a508-b553682c4bcb',
+            name: 'Manipulate',
+            processTime: 5000,
             successChance: 0.8,
-            willSucceed: false,
           },
           {
-            text: 'Extract',
-            timeDelay: 6000,
+            actionID: 'c4149c3d-b2fe-4353-9e35-80148ecbc3f4',
+            name: 'Extract',
+            processTime: 6000,
             successChance: 0.8,
-            willSucceed: false,
           },
         ],
         mapX: 1,
@@ -1765,42 +1733,42 @@ export function createTestMission(expandAll: boolean = false): Mission {
         postExecutionFailureText: 'Water System has failed to execute.',
         actionData: 'exec command',
         executable: false,
-        nodeActionItems: [
+        actions: [
           {
-            text: 'Deny',
-            timeDelay: 1000,
+            actionID: '3d985448-19b0-46f0-bd35-1acc7f1de99f',
+            name: 'Deny',
+            processTime: 1000,
             successChance: 0.5,
-            willSucceed: false,
           },
           {
-            text: 'Degrade',
-            timeDelay: 2000,
+            actionID: '28408bb2-03f3-47f2-82c9-b0d3161fd65f',
+            name: 'Degrade',
+            processTime: 2000,
             successChance: 0.6,
-            willSucceed: false,
           },
           {
-            text: 'Destroy',
-            timeDelay: 3000,
+            actionID: '0fc78a78-1b08-4cd3-918e-a7e8c69bae5b',
+            name: 'Destroy',
+            processTime: 3000,
             successChance: 0.6,
-            willSucceed: false,
           },
           {
-            text: 'Disrupt',
-            timeDelay: 4000,
+            actionID: '76f32274-3ed0-4eb6-9051-2fc5df254f0e',
+            name: 'Disrupt',
+            processTime: 4000,
             successChance: 0.7,
-            willSucceed: false,
           },
           {
-            text: 'Manipulate',
-            timeDelay: 5000,
+            actionID: '364158c9-ff99-4b49-8496-f4018c3e7ffe',
+            name: 'Manipulate',
+            processTime: 5000,
             successChance: 0.8,
-            willSucceed: false,
           },
           {
-            text: 'Extract',
-            timeDelay: 6000,
+            actionID: '5364b949-5d56-4e1a-bf28-324a011af9a1',
+            name: 'Extract',
+            processTime: 6000,
             successChance: 0.8,
-            willSucceed: false,
           },
         ],
         mapX: 1,
@@ -1815,42 +1783,42 @@ export function createTestMission(expandAll: boolean = false): Mission {
         postExecutionFailureText: 'Road System has failed to execute.',
         actionData: 'exec command',
         executable: false,
-        nodeActionItems: [
+        actions: [
           {
-            text: 'Deny',
-            timeDelay: 1000,
+            actionID: '4e1339e3-6d29-4103-a46f-8c3b9a0357be',
+            name: 'Deny',
+            processTime: 1000,
             successChance: 0.5,
-            willSucceed: false,
           },
           {
-            text: 'Degrade',
-            timeDelay: 2000,
+            actionID: '8cce60de-92c0-4cb4-8049-193795e0abe6',
+            name: 'Degrade',
+            processTime: 2000,
             successChance: 0.6,
-            willSucceed: false,
           },
           {
-            text: 'Destroy',
-            timeDelay: 3000,
+            actionID: 'ac42c84d-cbde-4aac-9345-8838aea05c49',
+            name: 'Destroy',
+            processTime: 3000,
             successChance: 0.6,
-            willSucceed: false,
           },
           {
-            text: 'Disrupt',
-            timeDelay: 4000,
+            actionID: 'ac1c083a-4b7c-4e4d-bb96-b65f2ac5c5a2',
+            name: 'Disrupt',
+            processTime: 4000,
             successChance: 0.7,
-            willSucceed: false,
           },
           {
-            text: 'Manipulate',
-            timeDelay: 5000,
+            actionID: 'dff65b2c-bc4e-4df2-bb4a-0ea5c78cd697',
+            name: 'Manipulate',
+            processTime: 5000,
             successChance: 0.8,
-            willSucceed: false,
           },
           {
-            text: 'Extract',
-            timeDelay: 6000,
+            actionID: '8477a484-a524-49ab-883d-0db6b466083b',
+            name: 'Extract',
+            processTime: 6000,
             successChance: 0.8,
-            willSucceed: false,
           },
         ],
         mapX: 1,
@@ -1865,42 +1833,42 @@ export function createTestMission(expandAll: boolean = false): Mission {
         postExecutionFailureText: 'Track Monitoring has failed to execute.',
         actionData: 'exec command',
         executable: true,
-        nodeActionItems: [
+        actions: [
           {
-            text: 'Deny',
-            timeDelay: 1000,
+            actionID: 'b6907e7e-abae-4d86-bbad-171c8a2b5aca',
+            name: 'Deny',
+            processTime: 1000,
             successChance: 0.5,
-            willSucceed: false,
           },
           {
-            text: 'Degrade',
-            timeDelay: 2000,
+            actionID: 'e85171ce-f245-4852-8c8c-36e68b251c6b',
+            name: 'Degrade',
+            processTime: 2000,
             successChance: 0.6,
-            willSucceed: false,
           },
           {
-            text: 'Destroy',
-            timeDelay: 3000,
+            actionID: '92950d99-3a37-4268-8f25-64eceadb7147',
+            name: 'Destroy',
+            processTime: 3000,
             successChance: 0.6,
-            willSucceed: false,
           },
           {
-            text: 'Disrupt',
-            timeDelay: 4000,
+            actionID: '517bd4dc-5383-4246-91be-fc7f4f618c93',
+            name: 'Disrupt',
+            processTime: 4000,
             successChance: 0.7,
-            willSucceed: false,
           },
           {
-            text: 'Manipulate',
-            timeDelay: 5000,
+            actionID: 'd99c9704-5a73-45a5-b730-feafb76a8fbd',
+            name: 'Manipulate',
+            processTime: 5000,
             successChance: 0.8,
-            willSucceed: false,
           },
           {
-            text: 'Extract',
-            timeDelay: 6000,
+            actionID: '79058129-efc7-4b2e-825a-f00a7a821783',
+            name: 'Extract',
+            processTime: 6000,
             successChance: 0.8,
-            willSucceed: false,
           },
         ],
         mapX: 2,
@@ -1915,42 +1883,42 @@ export function createTestMission(expandAll: boolean = false): Mission {
         postExecutionFailureText: 'Track Switch System has failed to execute.',
         actionData: 'exec command',
         executable: true,
-        nodeActionItems: [
+        actions: [
           {
-            text: 'Deny',
-            timeDelay: 1000,
+            actionID: 'a01c7a96-ec72-481b-b248-e64895878c86',
+            name: 'Deny',
+            processTime: 1000,
             successChance: 0.5,
-            willSucceed: false,
           },
           {
-            text: 'Degrade',
-            timeDelay: 2000,
+            actionID: '931ce29b-9661-4a59-b4fb-14aa23bc722a',
+            name: 'Degrade',
+            processTime: 2000,
             successChance: 0.6,
-            willSucceed: false,
           },
           {
-            text: 'Destroy',
-            timeDelay: 3000,
+            actionID: '90c336be-043a-48f2-8a8a-e2f1027498ae',
+            name: 'Destroy',
+            processTime: 3000,
             successChance: 0.6,
-            willSucceed: false,
           },
           {
-            text: 'Disrupt',
-            timeDelay: 4000,
+            actionID: 'eefe8f4f-3475-4be6-8d3e-2f21f979ed78',
+            name: 'Disrupt',
+            processTime: 4000,
             successChance: 0.7,
-            willSucceed: false,
           },
           {
-            text: 'Manipulate',
-            timeDelay: 5000,
+            actionID: '6ebaf660-badf-408d-a88f-3fd625515048',
+            name: 'Manipulate',
+            processTime: 5000,
             successChance: 0.8,
-            willSucceed: false,
           },
           {
-            text: 'Extract',
-            timeDelay: 6000,
+            actionID: '043c2bf6-389b-4b22-8f6d-f6d477143ee9',
+            name: 'Extract',
+            processTime: 6000,
             successChance: 0.8,
-            willSucceed: false,
           },
         ],
         mapX: 2,
@@ -1965,42 +1933,42 @@ export function createTestMission(expandAll: boolean = false): Mission {
         postExecutionFailureText: 'Regional Service has failed to execute.',
         actionData: 'exec command',
         executable: true,
-        nodeActionItems: [
+        actions: [
           {
-            text: 'Deny',
-            timeDelay: 1000,
+            actionID: '85be76e1-8057-4b8c-9c9f-53ce516351a6',
+            name: 'Deny',
+            processTime: 1000,
             successChance: 0.5,
-            willSucceed: false,
           },
           {
-            text: 'Degrade',
-            timeDelay: 2000,
+            actionID: '3d71ea78-54c9-4f4d-9124-c45142e5852b',
+            name: 'Degrade',
+            processTime: 2000,
             successChance: 0.6,
-            willSucceed: false,
           },
           {
-            text: 'Destroy',
-            timeDelay: 3000,
+            actionID: '405de4f9-7bac-4a43-8a0b-db9c6629ec5c',
+            name: 'Destroy',
+            processTime: 3000,
             successChance: 0.6,
-            willSucceed: false,
           },
           {
-            text: 'Disrupt',
-            timeDelay: 4000,
+            actionID: 'b74a443f-9dc6-4bd3-9f4b-db8c488c1a85',
+            name: 'Disrupt',
+            processTime: 4000,
             successChance: 0.7,
-            willSucceed: false,
           },
           {
-            text: 'Manipulate',
-            timeDelay: 5000,
+            actionID: '07ec5e60-a6df-4b13-ae34-c5b8044fef1e',
+            name: 'Manipulate',
+            processTime: 5000,
             successChance: 0.8,
-            willSucceed: false,
           },
           {
-            text: 'Extract',
-            timeDelay: 6000,
+            actionID: '3f8bafc3-cccb-418e-875b-83f7245dad0a',
+            name: 'Extract',
+            processTime: 6000,
             successChance: 0.8,
-            willSucceed: false,
           },
         ],
         mapX: 2,
@@ -2015,42 +1983,42 @@ export function createTestMission(expandAll: boolean = false): Mission {
         postExecutionFailureText: 'Valve System has failed to execute.',
         actionData: 'exec command',
         executable: true,
-        nodeActionItems: [
+        actions: [
           {
-            text: 'Deny',
-            timeDelay: 1000,
+            actionID: '1796d607-911e-4dbb-bc60-916b961082a8',
+            name: 'Deny',
+            processTime: 1000,
             successChance: 0.5,
-            willSucceed: false,
           },
           {
-            text: 'Degrade',
-            timeDelay: 2000,
+            actionID: '46a4ff39-920d-4d46-9f0f-7204cfcb450b',
+            name: 'Degrade',
+            processTime: 2000,
             successChance: 0.6,
-            willSucceed: false,
           },
           {
-            text: 'Destroy',
-            timeDelay: 3000,
+            actionID: 'e5f3effb-3f10-4e53-801a-09548c44de2e',
+            name: 'Destroy',
+            processTime: 3000,
             successChance: 0.6,
-            willSucceed: false,
           },
           {
-            text: 'Disrupt',
-            timeDelay: 4000,
+            actionID: '129ce2ef-de75-440c-8631-2ad5b237f20e',
+            name: 'Disrupt',
+            processTime: 4000,
             successChance: 0.7,
-            willSucceed: false,
           },
           {
-            text: 'Manipulate',
-            timeDelay: 5000,
+            actionID: '08c13970-f96d-4149-9507-47d15c780807',
+            name: 'Manipulate',
+            processTime: 5000,
             successChance: 0.8,
-            willSucceed: false,
           },
           {
-            text: 'Extract',
-            timeDelay: 6000,
+            actionID: 'ec026859-a5ca-464c-9be2-9ccab8c1c5cc',
+            name: 'Extract',
+            processTime: 6000,
             successChance: 0.8,
-            willSucceed: false,
           },
         ],
         mapX: 2,
@@ -2065,42 +2033,42 @@ export function createTestMission(expandAll: boolean = false): Mission {
         postExecutionFailureText: 'Traffic Light System has failed to execute.',
         actionData: 'exec command',
         executable: true,
-        nodeActionItems: [
+        actions: [
           {
-            text: 'Deny',
-            timeDelay: 1000,
+            actionID: '2e7da483-078e-4a96-be26-6b8dfeed8770',
+            name: 'Deny',
+            processTime: 1000,
             successChance: 0.5,
-            willSucceed: false,
           },
           {
-            text: 'Degrade',
-            timeDelay: 2000,
+            actionID: '832cbf4d-d476-4dcb-a2b7-658856453bc4',
+            name: 'Degrade',
+            processTime: 2000,
             successChance: 0.6,
-            willSucceed: false,
           },
           {
-            text: 'Destroy',
-            timeDelay: 3000,
+            actionID: '2377523e-9d83-48fa-a31c-2f436b73995f',
+            name: 'Destroy',
+            processTime: 3000,
             successChance: 0.6,
-            willSucceed: false,
           },
           {
-            text: 'Disrupt',
-            timeDelay: 4000,
+            actionID: 'a44a895d-ecda-4ecc-9956-7d00e6cd36e2',
+            name: 'Disrupt',
+            processTime: 4000,
             successChance: 0.7,
-            willSucceed: false,
           },
           {
-            text: 'Manipulate',
-            timeDelay: 5000,
+            actionID: '13d7fd1a-121a-429d-bd81-250451181e9b',
+            name: 'Manipulate',
+            processTime: 5000,
             successChance: 0.8,
-            willSucceed: false,
           },
           {
-            text: 'Extract',
-            timeDelay: 6000,
+            actionID: '06f45ba6-4da8-4a01-a5e8-20bb71de1ef9',
+            name: 'Extract',
+            processTime: 6000,
             successChance: 0.8,
-            willSucceed: false,
           },
         ],
         mapX: 2,
@@ -2115,42 +2083,42 @@ export function createTestMission(expandAll: boolean = false): Mission {
         postExecutionFailureText: 'CCTV System has failed to execute.',
         actionData: 'exec command',
         executable: true,
-        nodeActionItems: [
+        actions: [
           {
-            text: 'Deny',
-            timeDelay: 1000,
+            actionID: 'ca750e80-b3af-4895-9857-458897defd9f',
+            name: 'Deny',
+            processTime: 1000,
             successChance: 0.5,
-            willSucceed: false,
           },
           {
-            text: 'Degrade',
-            timeDelay: 2000,
+            actionID: 'd8865520-f9df-425e-bb30-be75e1f7c8cf',
+            name: 'Degrade',
+            processTime: 2000,
             successChance: 0.6,
-            willSucceed: false,
           },
           {
-            text: 'Destroy',
-            timeDelay: 3000,
+            actionID: 'c612c450-5d7e-40f4-9c12-e495b53dbeec',
+            name: 'Destroy',
+            processTime: 3000,
             successChance: 0.6,
-            willSucceed: false,
           },
           {
-            text: 'Disrupt',
-            timeDelay: 4000,
+            actionID: 'a1ca19d9-407e-4cc8-989b-ec21fb2f0d91',
+            name: 'Disrupt',
+            processTime: 4000,
             successChance: 0.7,
-            willSucceed: false,
           },
           {
-            text: 'Manipulate',
-            timeDelay: 5000,
+            actionID: 'f5798e1a-8f03-458b-8777-c8b3c3dcced1',
+            name: 'Manipulate',
+            processTime: 5000,
             successChance: 0.8,
-            willSucceed: false,
           },
           {
-            text: 'Extract',
-            timeDelay: 6000,
+            actionID: '7a688b05-acdb-4b12-a9e5-4a355b21ac83',
+            name: 'Extract',
+            processTime: 6000,
             successChance: 0.8,
-            willSucceed: false,
           },
         ],
         mapX: 2,
@@ -2165,42 +2133,42 @@ export function createTestMission(expandAll: boolean = false): Mission {
         postExecutionFailureText: '',
         actionData: 'exec command',
         executable: false,
-        nodeActionItems: [
+        actions: [
           {
-            text: 'Deny',
-            timeDelay: 1000,
+            actionID: 'f9da3f12-4714-4c0e-b477-819a582da2fe',
+            name: 'Deny',
+            processTime: 1000,
             successChance: 0.5,
-            willSucceed: false,
           },
           {
-            text: 'Degrade',
-            timeDelay: 2000,
+            actionID: 'b6dd70f0-279f-427b-8e7c-0999d624e8fd',
+            name: 'Degrade',
+            processTime: 2000,
             successChance: 0.6,
-            willSucceed: false,
           },
           {
-            text: 'Destroy',
-            timeDelay: 3000,
+            actionID: '9a008ef3-db94-4109-ad99-c276cc85e055',
+            name: 'Destroy',
+            processTime: 3000,
             successChance: 0.6,
-            willSucceed: false,
           },
           {
-            text: 'Disrupt',
-            timeDelay: 4000,
+            actionID: '66409265-ee27-4abe-b273-676b741dd8ca',
+            name: 'Disrupt',
+            processTime: 4000,
             successChance: 0.7,
-            willSucceed: false,
           },
           {
-            text: 'Manipulate',
-            timeDelay: 5000,
+            actionID: '7343b3f4-6e84-4542-87da-74a9f702c448',
+            name: 'Manipulate',
+            processTime: 5000,
             successChance: 0.8,
-            willSucceed: false,
           },
           {
-            text: 'Extract',
-            timeDelay: 6000,
+            actionID: '1e85bac9-9870-4669-b046-c62b8c89d010',
+            name: 'Extract',
+            processTime: 6000,
             successChance: 0.8,
-            willSucceed: false,
           },
         ],
         mapX: 0,
@@ -2215,42 +2183,42 @@ export function createTestMission(expandAll: boolean = false): Mission {
         postExecutionFailureText: 'Global Positioning has failed to execute.',
         actionData: 'exec command',
         executable: true,
-        nodeActionItems: [
+        actions: [
           {
-            text: 'Deny',
-            timeDelay: 1000,
+            actionID: '7fdf5682-9c40-47bb-86ca-4f6d60979b81',
+            name: 'Deny',
+            processTime: 1000,
             successChance: 0.5,
-            willSucceed: false,
           },
           {
-            text: 'Degrade',
-            timeDelay: 2000,
+            actionID: '516a9f09-9ab9-45a8-b25d-53bc466f5f93',
+            name: 'Degrade',
+            processTime: 2000,
             successChance: 0.6,
-            willSucceed: false,
           },
           {
-            text: 'Destroy',
-            timeDelay: 3000,
+            actionID: 'd4163294-cc15-4d5f-8dbb-d515823e9fea',
+            name: 'Destroy',
+            processTime: 3000,
             successChance: 0.6,
-            willSucceed: false,
           },
           {
-            text: 'Disrupt',
-            timeDelay: 4000,
+            actionID: 'c5bd02cf-8667-43a4-84ca-6dfca1edc58f',
+            name: 'Disrupt',
+            processTime: 4000,
             successChance: 0.7,
-            willSucceed: false,
           },
           {
-            text: 'Manipulate',
-            timeDelay: 5000,
+            actionID: '7eaf24a5-d775-4e8b-a376-6689068dc9c1',
+            name: 'Manipulate',
+            processTime: 5000,
             successChance: 0.8,
-            willSucceed: false,
           },
           {
-            text: 'Extract',
-            timeDelay: 6000,
+            actionID: 'a994ff3c-5581-4fb0-a028-20357cfe4b37',
+            name: 'Extract',
+            processTime: 6000,
             successChance: 0.8,
-            willSucceed: false,
           },
         ],
         mapX: 1,
@@ -2265,42 +2233,42 @@ export function createTestMission(expandAll: boolean = false): Mission {
         postExecutionFailureText: 'Data Transfer has failed to execute.',
         actionData: 'exec command',
         executable: true,
-        nodeActionItems: [
+        actions: [
           {
-            text: 'Deny',
-            timeDelay: 1000,
+            actionID: '2cc0d495-39c8-44c0-aea0-0ac8c24579d4',
+            name: 'Deny',
+            processTime: 1000,
             successChance: 0.5,
-            willSucceed: false,
           },
           {
-            text: 'Degrade',
-            timeDelay: 2000,
+            actionID: '6f61a93e-b027-454c-abe9-b713ecf59a35',
+            name: 'Degrade',
+            processTime: 2000,
             successChance: 0.6,
-            willSucceed: false,
           },
           {
-            text: 'Destroy',
-            timeDelay: 3000,
+            actionID: '38da1404-e7af-490a-94b7-33e815f359f0',
+            name: 'Destroy',
+            processTime: 3000,
             successChance: 0.6,
-            willSucceed: false,
           },
           {
-            text: 'Disrupt',
-            timeDelay: 4000,
+            actionID: '9c6dccfe-d5a2-42f4-a7aa-d902a654350b',
+            name: 'Disrupt',
+            processTime: 4000,
             successChance: 0.7,
-            willSucceed: false,
           },
           {
-            text: 'Manipulate',
-            timeDelay: 5000,
+            actionID: '21bcc29a-e6ff-483b-8520-d6ded6a7f068',
+            name: 'Manipulate',
+            processTime: 5000,
             successChance: 0.8,
-            willSucceed: false,
           },
           {
-            text: 'Extract',
-            timeDelay: 6000,
+            actionID: 'be55613a-6087-4d01-91a6-dc91c0722f49',
+            name: 'Extract',
+            processTime: 6000,
             successChance: 0.8,
-            willSucceed: false,
           },
         ],
         mapX: 1,
@@ -2315,42 +2283,42 @@ export function createTestMission(expandAll: boolean = false): Mission {
         postExecutionFailureText: 'Imagery Collection has failed to execute.',
         actionData: 'exec command',
         executable: true,
-        nodeActionItems: [
+        actions: [
           {
-            text: 'Deny',
-            timeDelay: 1000,
+            actionID: 'f02cdc12-ebe9-497c-9861-226ed6a90b8c',
+            name: 'Deny',
+            processTime: 1000,
             successChance: 0.5,
-            willSucceed: false,
           },
           {
-            text: 'Degrade',
-            timeDelay: 2000,
+            actionID: '0ca0520b-be81-4e60-a23f-15fb680fcaf0',
+            name: 'Degrade',
+            processTime: 2000,
             successChance: 0.6,
-            willSucceed: false,
           },
           {
-            text: 'Destroy',
-            timeDelay: 3000,
+            actionID: 'e04d14f3-23fa-4be1-9161-08b5f56d58cc',
+            name: 'Destroy',
+            processTime: 3000,
             successChance: 0.6,
-            willSucceed: false,
           },
           {
-            text: 'Disrupt',
-            timeDelay: 4000,
+            actionID: '0bca525e-849b-42f2-b384-d02dd8bd76ac',
+            name: 'Disrupt',
+            processTime: 4000,
             successChance: 0.7,
-            willSucceed: false,
           },
           {
-            text: 'Manipulate',
-            timeDelay: 5000,
+            actionID: 'cacf4cdf-d46b-4dd7-881e-2d9d25f10cd2',
+            name: 'Manipulate',
+            processTime: 5000,
             successChance: 0.8,
-            willSucceed: false,
           },
           {
-            text: 'Extract',
-            timeDelay: 6000,
+            actionID: 'e23339b4-dc51-42cc-9856-67ac66a1cce8',
+            name: 'Extract',
+            processTime: 6000,
             successChance: 0.8,
-            willSucceed: false,
           },
         ],
         mapX: 1,
@@ -2365,42 +2333,42 @@ export function createTestMission(expandAll: boolean = false): Mission {
         postExecutionFailureText: 'Sensor Observation has failed to execute.',
         actionData: 'exec command',
         executable: true,
-        nodeActionItems: [
+        actions: [
           {
-            text: 'Deny',
-            timeDelay: 1000,
+            actionID: 'bed7323c-6fdb-46f9-89b1-d1e4f6146065',
+            name: 'Deny',
+            processTime: 1000,
             successChance: 0.5,
-            willSucceed: false,
           },
           {
-            text: 'Degrade',
-            timeDelay: 2000,
+            actionID: 'ff336f82-48d7-4f5e-924f-359b00e9f24f',
+            name: 'Degrade',
+            processTime: 2000,
             successChance: 0.6,
-            willSucceed: false,
           },
           {
-            text: 'Destroy',
-            timeDelay: 3000,
+            actionID: 'f3e8f4db-ef34-4619-bb75-a862182b88cb',
+            name: 'Destroy',
+            processTime: 3000,
             successChance: 0.6,
-            willSucceed: false,
           },
           {
-            text: 'Disrupt',
-            timeDelay: 4000,
+            actionID: '2bcd1458-1846-4e1e-80b2-1a2a4ec84803',
+            name: 'Disrupt',
+            processTime: 4000,
             successChance: 0.7,
-            willSucceed: false,
           },
           {
-            text: 'Manipulate',
-            timeDelay: 5000,
+            actionID: 'fdf6a1c4-e2de-4058-9f9a-925eaee261aa',
+            name: 'Manipulate',
+            processTime: 5000,
             successChance: 0.8,
-            willSucceed: false,
           },
           {
-            text: 'Extract',
-            timeDelay: 6000,
+            actionID: '23417a3f-04db-4398-81c3-9a86d4660756',
+            name: 'Extract',
+            processTime: 6000,
             successChance: 0.8,
-            willSucceed: false,
           },
         ],
         mapX: 1,

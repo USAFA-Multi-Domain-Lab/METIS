@@ -57,12 +57,12 @@ const NodeActions = (props: {
     setNodeActionSelectionPromptIsDisplayed(false)
     setExecuteNodePathPromptIsDisplayed(true)
     setDisplayNodeActionList(false)
-    setProcessDelayTime(nodeActionItem.timeDelay)
-    setNodeActionItemText(nodeActionItem.text)
+    setProcessDelayTime(nodeActionItem.processTime)
+    setNodeActionItemText(nodeActionItem.name)
     setNodeActionSuccessChance(nodeActionItem.successChance)
 
     if (props.selectedNode !== null && props.selectedNode !== undefined) {
-      props.selectedNode.selectedNodeAction = nodeActionItem
+      props.selectedNode.selectedAction = nodeActionItem
     }
   }
 
@@ -95,20 +95,20 @@ const NodeActions = (props: {
           return (
             <div
               className='NodeAction'
-              key={nodeActionItem.text}
+              key={nodeActionItem.name}
               onClick={() => nodeActionSelection(nodeActionItem)}
             >
               <Tooltip
                 description={
                   `* Time to execute: ${
-                    (nodeActionItem.timeDelay as number) / 1000
+                    (nodeActionItem.processTime as number) / 1000
                   } second(s)\n` +
                   `* Chance of success: ${
                     (nodeActionItem.successChance as number) * 100
                   }%\n`
                 }
               />
-              {nodeActionItem.text}
+              {nodeActionItem.name}
             </div>
           )
         })}
