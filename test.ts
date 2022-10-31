@@ -1925,13 +1925,14 @@ import { v4 as generateHash } from 'uuid'
 import util from 'util'
 import fs from 'fs'
 
-let nodeData = incredibleMissionData.nodeData
+let nodeData = incredibleMissionData.nodeData as any
 
 for (let nodeDatum of nodeData) {
   let actions = nodeDatum.actions
 
   for (let action of actions) {
     action.actionID = generateHash()
+    action.description = `This will ${action.name.toLowerCase()}.`
   }
 }
 

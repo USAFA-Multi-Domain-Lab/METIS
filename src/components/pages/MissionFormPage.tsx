@@ -323,6 +323,7 @@ function NodeEntry(props: {
                     node.mission,
                     generateHash(),
                     'New Action',
+                    '',
                     5000,
                     0.5,
                   )
@@ -355,13 +356,23 @@ function NodeAction(props: {
 
   return (
     <div className='NodeAction'>
-      <DetailBox
+      <Detail
         label='Name'
         initialValue={action.name}
         deliverValue={(name: string) => {
           action.name = name
+          handleChange()
         }}
         key={`${action.actionID}_actionData`}
+      />
+      <DetailBox
+        label='Description'
+        initialValue={action.description}
+        deliverValue={(description: string) => {
+          action.description = description
+          handleChange()
+        }}
+        key={`${action.actionID}_description`}
       />
       <DetailNumber
         label='Success Chance'
@@ -381,7 +392,7 @@ function NodeAction(props: {
         key={`${action.actionID}_successChance`}
       />
       <DetailNumber
-        label='Time Cost'
+        label='Process Time'
         initialValue={action.processTime / 1000}
         minimum={0}
         maximum={60}
