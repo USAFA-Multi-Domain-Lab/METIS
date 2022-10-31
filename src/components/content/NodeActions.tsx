@@ -14,18 +14,16 @@ const NodeActions = (props: {
     setExecuteNodePathPromptIsDisplayed,
   ] = useStore<boolean>('executeNodePathPromptIsDisplayed')
   const [
-    nodeActionSelectionPromptIsDisplayed,
-    setNodeActionSelectionPromptIsDisplayed,
-  ] = useStore<boolean>('nodeActionSelectionPromptIsDisplayed')
-  const [nodeActionItemDisplay, setNodeActionItemDisplay] = useStore<
-    Array<MissionNodeAction>
-  >('nodeActionItemDisplay')
-  const [processDelayTime, setProcessDelayTime] =
-    useStore<number>('processDelayTime')
-  const [nodeActionItemText, setNodeActionItemText] =
-    useStore<string>('nodeActionItemText')
-  const [nodeActionSuccessChance, setNodeActionSuccessChance] =
-    useStore<number>('nodeActionSuccessChance')
+    actionSelectionPromptIsDisplayed,
+    setActionSelectionPromptIsDisplayed,
+  ] = useStore<boolean>('actionSelectionPromptIsDisplayed')
+  const [actionDisplay, setActionDisplay] =
+    useStore<Array<MissionNodeAction>>('actionDisplay')
+  const [processTime, setProcessTime] = useStore<number>('processTime')
+  const [actionName, setActionName] = useStore<string>('actionName')
+  const [actionSuccessChance, setActionSuccessChance] = useStore<number>(
+    'actionSuccessChance',
+  )
 
   /* -- COMPONENT STATE -- */
   const [displayNodeActionList, setDisplayNodeActionList] =
@@ -40,9 +38,9 @@ const NodeActions = (props: {
 
   // Closes the execution prompt window
   const closeWindow = (): void => {
-    setNodeActionSelectionPromptIsDisplayed(false)
+    setActionSelectionPromptIsDisplayed(false)
     setDisplayNodeActionList(false)
-    setNodeActionItemDisplay([])
+    setActionDisplay([])
   }
 
   const revealOptions = () => {
@@ -53,16 +51,17 @@ const NodeActions = (props: {
     }
   }
 
-  const nodeActionSelection = (nodeActionItem: MissionNodeAction): void => {
-    setNodeActionSelectionPromptIsDisplayed(false)
+  const nodeActionSelection = (action: MissionNodeAction): void => {
+    setActionSelectionPromptIsDisplayed(false)
     setExecuteNodePathPromptIsDisplayed(true)
     setDisplayNodeActionList(false)
-    setProcessDelayTime(nodeActionItem.timeDelay)
-    setNodeActionItemText(nodeActionItem.text)
-    setNodeActionSuccessChance(nodeActionItem.successChance)
+    setProcessTime(action.timeDelay)
+    setActionName(action.text)
+    setActionSuccessChance(action.successChance)
+    console.log(action)
 
     if (props.selectedNode !== null && props.selectedNode !== undefined) {
-      props.selectedNode.selectedNodeAction = nodeActionItem
+      props.selectedNode.selectedNodeAction = action
     }
   }
 
@@ -91,24 +90,25 @@ const NodeActions = (props: {
         <div className='ArrowDown'>^</div>
       </div>
       <div className={className}>
-        {nodeActionItemDisplay.map((nodeActionItem: MissionNodeAction) => {
+        {actionDisplay.map((action: MissionNodeAction) => {
           return (
             <div
               className='NodeAction'
-              key={nodeActionItem.text}
-              onClick={() => nodeActionSelection(nodeActionItem)}
+              key={action.text}
+              onClick={() => nodeActionSelection(action)}
             >
               <Tooltip
                 description={
                   `* Time to execute: ${
-                    (nodeActionItem.timeDelay as number) / 1000
+                    (action.timeDelay as number) / 1000
                   } second(s)\n` +
                   `* Chance of success: ${
-                    (nodeActionItem.successChance as number) * 100
-                  }%\n`
+                    (action.successChance as number) * 100
+                  }%\n` +
+                  `* Description: ${action.description}`
                 }
               />
-              {nodeActionItem.text}
+              {action.text}
             </div>
           )
         })}

@@ -41,19 +41,15 @@ export default function DashboardPage(props: {
   )
   let [executeNodePathPromptIsDisplayed, setExecuteNodePathPromptIsDisplayed] =
     useStore<boolean>('executeNodePathPromptIsDisplayed')
-  let [
-    nodeActionSelectionPromptIsDisplayed,
-    setNodeActionSelectionPromptIsDisplayed,
-  ] = useStore<boolean>('nodeActionSelectionPromptIsDisplayed')
-  let [nodeActionItemDisplay, setNodeActionItemDisplay] = useStore<
-    Array<MissionNodeAction>
-  >('nodeActionItemDisplay')
-  const [processDelayTime, setProcessDelayTime] =
-    useStore<number>('processDelayTime')
-  const [nodeActionItemText, setNodeActionItemText] =
-    useStore<string>('nodeActionItemText')
-  const [nodeActionSuccessChance, setNodeActionSuccessChance] =
-    useStore<number>('nodeActionSuccessChance')
+  let [actionSelectionPromptIsDisplayed, setActionSelectionPromptIsDisplayed] =
+    useStore<boolean>('actionSelectionPromptIsDisplayed')
+  let [actionDisplay, setActionDisplay] =
+    useStore<Array<MissionNodeAction>>('actionDisplay')
+  const [processTime, setProcessTime] = useStore<number>('processTime')
+  const [actionName, setActionName] = useStore<string>('actionName')
+  const [actionSuccessChance, setActionSuccessChance] = useStore<number>(
+    'actionSuccessChance',
+  )
   const [mission, setMission] = useStore<Mission | null>('mission')
 
   /* -- COMPONENT STATE -- */
@@ -120,19 +116,19 @@ export default function DashboardPage(props: {
   if (
     outputPanelIsDisplayed === true &&
     executeNodePathPromptIsDisplayed === false &&
-    nodeActionSelectionPromptIsDisplayed === false
+    actionSelectionPromptIsDisplayed === false
   ) {
     className += ' DashboardPageWithOutputPanelOnly'
   } else if (
     outputPanelIsDisplayed === true &&
-    nodeActionSelectionPromptIsDisplayed === true &&
+    actionSelectionPromptIsDisplayed === true &&
     executeNodePathPromptIsDisplayed === false
   ) {
     className += ' DashboardPageWithOutputPanelAndNodeActionPrompt'
   } else if (
     outputPanelIsDisplayed === true &&
     executeNodePathPromptIsDisplayed === true &&
-    nodeActionSelectionPromptIsDisplayed === false
+    actionSelectionPromptIsDisplayed === false
   ) {
     className += ' DashboardPageWithOutputPanelAndExecuteNodePathPrompt'
   } else {
@@ -172,7 +168,6 @@ export default function DashboardPage(props: {
           <div className='Content'>
             <MissionMap
               mission={mission}
-              // mission={createTestMission(false)}
               missionAjaxStatus={EAjaxStatus.Loaded}
               handleNodeSelection={(selectedNode: MissionNode) => {
                 setLastSelectedNode(selectedNode)
@@ -198,13 +193,10 @@ export default function DashboardPage(props: {
                   return
                 } else {
                   for (let nodeActionItem of selectedNode.nodeActionItems) {
-                    if (!selectedNode.executed) {
-                      nodeActionItemDisplay.push(nodeActionItem)
-                    }
+                    actionDisplay.push(nodeActionItem)
                   }
-
-                  if (!selectedNode.executed && !selectedNode.executing) {
-                    setNodeActionSelectionPromptIsDisplayed(true)
+                  if (mission.disableNodes === false) {
+                    setActionSelectionPromptIsDisplayed(true)
                   }
                 }
               }}
@@ -247,10 +239,7 @@ export default function DashboardPage(props: {
             />
             <OutputPanel />
             <NodeActions selectedNode={lastSelectedNode} />
-            <ExecuteNodePath
-              selectedNode={lastSelectedNode}
-              allNodes={mission.nodes}
-            />
+            <ExecuteNodePath selectedNode={lastSelectedNode} />
           </div>
         }
       </div>

@@ -3,6 +3,7 @@ import { AnyObject } from 'mongoose'
 import seedrandom, { PRNG } from 'seedrandom'
 import { v4 as generateHash } from 'uuid'
 import axios, { AxiosError, AxiosResponse } from 'axios'
+import { stringify } from 'querystring'
 
 // This is an enum used by the
 // MissionNode move
@@ -63,18 +64,21 @@ export class MissionNodeAction {
   timeDelay: number
   successChance: number
   willSucceed: boolean
+  description: string
 
   constructor(
     text: string,
     timeDelay: number,
     successChance: number,
     willSucceed: boolean,
+    description: string,
   ) {
     this.actionID = generateHash()
     this.text = text
     this.timeDelay = timeDelay
     this.successChance = successChance
     this.willSucceed = willSucceed
+    this.description = description
   }
 }
 
@@ -181,9 +185,18 @@ export class MissionNode {
     ) {
       this._executing = true
 
+      // If a node is being executed then this disables all the nodes
+      // while the node is being executed.
+      if (this.executing) {
+        this.mission._disableNodes = true
+      }
+
       setTimeout(() => {
         this._executing = false
         this._executed = true
+
+        // Enables all the nodes after the selected node is done executing.
+        this.mission._disableNodes = false
 
         callback(this.willSucceed)
       }, selectedNodeAction.timeDelay)
@@ -411,6 +424,11 @@ export class Mission {
   rootNode: MissionNode
   structureChangeKey: string
   structureChangeHandlers: Array<(structureChangeKey: string) => void>
+  _disableNodes: boolean
+
+  get disableNodes(): boolean {
+    return this._disableNodes
+  }
 
   constructor(
     name: string,
@@ -443,6 +461,7 @@ export class Mission {
     )
     this.structureChangeKey = generateHash()
     this.structureChangeHandlers = []
+    this._disableNodes = false
 
     this.parseJSON()
     this.mapNodeRelationships(expandAll, this.rootNode, nodeStructure)
@@ -474,6 +493,7 @@ export class Mission {
             actionItem.timeDelay,
             actionItem.successChance,
             willSucceed,
+            actionItem.description,
           )
           nodeActionItems.push(nodeAction)
         }

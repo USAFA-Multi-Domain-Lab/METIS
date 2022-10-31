@@ -32,12 +32,12 @@ export default class GlobalState {
   consoleOutputs: Array<{ date: number; value: string }>
   outputPanelIsDisplayed: boolean
   executeNodePathPromptIsDisplayed: boolean
-  nodeActionSelectionPromptIsDisplayed: boolean
+  actionSelectionPromptIsDisplayed: boolean
   lastSelectedNode: MissionNode | null
-  nodeActionItemDisplay: Array<MissionNodeAction>
-  nodeActionItemText: string
-  processDelayTime: number
-  nodeActionSuccessChance: number
+  actionDisplay: Array<MissionNodeAction>
+  actionName: string
+  processTime: number
+  actionSuccessChance: number
   mission: Mission | null
 
   constructor(stateSetters: IStateSetters) {
@@ -54,12 +54,12 @@ export default class GlobalState {
     this.consoleOutputs = []
     this.outputPanelIsDisplayed = false
     this.executeNodePathPromptIsDisplayed = false
-    this.nodeActionSelectionPromptIsDisplayed = false
+    this.actionSelectionPromptIsDisplayed = false
     this.lastSelectedNode = null
-    this.nodeActionItemDisplay = []
-    this.nodeActionItemText = ''
-    this.processDelayTime = 0
-    this.nodeActionSuccessChance = 0
+    this.actionDisplay = []
+    this.actionName = ''
+    this.processTime = 0
+    this.actionSuccessChance = 0
     this.mission = null
   }
 

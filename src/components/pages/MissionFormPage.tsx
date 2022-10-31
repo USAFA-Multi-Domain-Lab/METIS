@@ -326,6 +326,7 @@ function NodeEntry(props: {
                   5000,
                   0.5,
                   false,
+                  '',
                 )
                 node?.nodeActionItems.push(action)
                 handleChange()
