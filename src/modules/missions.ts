@@ -58,6 +58,7 @@ export interface IMissionRenderOptions {
 }
 
 export class MissionNodeAction {
+  actionID: string
   text: string
   timeDelay: number
   successChance: number
@@ -69,6 +70,7 @@ export class MissionNodeAction {
     successChance: number,
     willSucceed: boolean,
   ) {
+    this.actionID = generateHash()
     this.text = text
     this.timeDelay = timeDelay
     this.successChance = successChance
@@ -302,10 +304,26 @@ export class MissionNode {
   // and relation this target has to the
   // destination.
   move(target: MissionNode, targetRelation: ENodeTargetRelation): void {
+    let rootNode: MissionNode = this.mission.rootNode
     let parentNode: MissionNode | null = this.parentNode
     let newParentNode: MissionNode | null = target.parentNode
-    let newParentNodechildNodes: Array<MissionNode> = []
+    let newParentNodeChildNodes: Array<MissionNode> = []
 
+    // This makes sure that the target
+    // isn't being moved inside or beside
+    // itself.
+    let x: MissionNode | null = target
+
+    while (x !== null && x.nodeID !== rootNode.nodeID) {
+      if (this.nodeID === x.nodeID) {
+        return
+      }
+
+      x = x.parentNode
+    }
+
+    // This will remove the nodes
+    // current position in the structure.
     if (parentNode !== null) {
       let siblings: MissionNode[] = parentNode.childNodes
 
@@ -318,6 +336,7 @@ export class MissionNode {
       }
     }
 
+    // This will
     switch (targetRelation) {
       case ENodeTargetRelation.Parent:
         target.childNodes.push(this)
@@ -326,29 +345,29 @@ export class MissionNode {
       case ENodeTargetRelation.PreviousSibling:
         if (newParentNode !== null) {
           newParentNode.childNodes.forEach((childNode: MissionNode) => {
-            newParentNodechildNodes.push(childNode)
+            newParentNodeChildNodes.push(childNode)
 
             if (childNode.nodeID === target.nodeID) {
-              newParentNodechildNodes.push(this)
+              newParentNodeChildNodes.push(this)
               this.parentNode = newParentNode
             }
           })
 
-          newParentNode.childNodes = newParentNodechildNodes
+          newParentNode.childNodes = newParentNodeChildNodes
         }
         break
       case ENodeTargetRelation.FollowingSibling:
         if (newParentNode !== null) {
           newParentNode.childNodes.forEach((childNode: MissionNode) => {
             if (childNode.nodeID === target.nodeID) {
-              newParentNodechildNodes.push(this)
+              newParentNodeChildNodes.push(this)
               this.parentNode = newParentNode
             }
 
-            newParentNodechildNodes.push(childNode)
+            newParentNodeChildNodes.push(childNode)
           })
 
-          newParentNode.childNodes = newParentNodechildNodes
+          newParentNode.childNodes = newParentNodeChildNodes
         }
         break
     }
@@ -366,6 +385,16 @@ export class MissionNode {
     }
 
     this._handleStructureChange()
+  }
+
+  // This will color all descendant
+  // nodes the same color as this
+  // node.
+  applyColorFill(): void {
+    for (let childNode of this.childNodes) {
+      childNode.color = this.color
+      childNode.applyColorFill()
+    }
   }
 }
 
@@ -508,6 +537,33 @@ export class Mission {
   // handlers.
   clearStructureChangeHandlers(): void {
     this.structureChangeHandlers = []
+  }
+
+  // This will create a new node
+  // called "New Node" and returns
+  // it.
+  spawnNewNode(): MissionNode {
+    let rootNode: MissionNode = this.rootNode
+    let node: MissionNode = new MissionNode(
+      this,
+      generateHash(),
+      'New Node',
+      'default',
+      'Node has not been executed.',
+      'Node has executed successfully.',
+      'Node has failed to execute.',
+      '',
+      true,
+      [],
+      0,
+      0,
+    )
+    node.parentNode = rootNode
+    rootNode.childNodes.push(node)
+
+    this.handleStructureChange()
+
+    return node
   }
 
   // This will determine the relationship

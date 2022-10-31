@@ -15,8 +15,8 @@ import { ActionPanel } from './ActionPanel'
 interface IMissionMap {
   mission: Mission
   missionAjaxStatus: EAjaxStatus
-
   handleNodeSelection: (node: MissionNode) => void
+  handleMapCreateRequest: (() => void) | null
   handleMapEditRequest: (() => void) | null
   applyNodeClassName: (node: MissionNode) => string
   renderNodeTooltipDescription: (node: MissionNode) => string
@@ -62,7 +62,7 @@ const gridPaddingY: number = 20.0 /*px*/
 const pointerOriginOffset: number = 20 /*px*/
 const pointerArrowOffset: number = 30 /*px*/
 const mapItemFontSize: number = 20 /*px*/
-const mapCuttoff: number = 1600 /*px*/
+// const mapCuttoff: number = 1600 /*px*/
 
 /* -- components -- */
 
@@ -134,6 +134,7 @@ export default class MissionMap extends React.Component<
 
   // inherited
   static defaultProps = {
+    handleMapCreateRequest: null,
     handleMapEditRequest: null,
     applyMappedNodeClassName: () => '',
     renderMappedNodeTooltipDescription:
@@ -277,10 +278,10 @@ export default class MissionMap extends React.Component<
         let mapOffsetY: number =
           this.state.mapOffsetY + event.movementY / mapScale
 
-        mapOffsetX = Math.min(mapOffsetX, mapCuttoff)
-        mapOffsetX = Math.max(mapOffsetX, -mapCuttoff)
-        mapOffsetY = Math.min(mapOffsetY, mapCuttoff)
-        mapOffsetY = Math.max(mapOffsetY, -mapCuttoff)
+        // mapOffsetX = Math.min(mapOffsetX, mapCuttoff)
+        // mapOffsetX = Math.max(mapOffsetX, -mapCuttoff)
+        // mapOffsetY = Math.min(mapOffsetY, mapCuttoff)
+        // mapOffsetY = Math.max(mapOffsetY, -mapCuttoff)
 
         this.setState((previousState: IMissionMap_S) => {
           return {
@@ -529,8 +530,8 @@ export default class MissionMap extends React.Component<
   // actions on the map.
   renderMapActionPanel(styling: React.CSSProperties): JSX.Element | null {
     let mapScale: number = this.state.mapScale
-    let handleMapEditRequest: (() => void) | null =
-      this.props.handleMapEditRequest
+    let handleMapCreateRequest = this.props.handleMapCreateRequest
+    let handleMapEditRequest = this.props.handleMapEditRequest
     let actionsUniqueClassName: string = 'map-actions'
 
     let availableActions = {
@@ -548,18 +549,27 @@ export default class MissionMap extends React.Component<
         tooltipDescription:
           'Zoom out. \n*[Shift + Scroll] on the map will also zoom in and out.*',
       }),
+      add: new Action({
+        ...Action.defaultProps,
+        purpose: EActionPurpose.Add,
+        handleClick: handleMapCreateRequest ? handleMapCreateRequest : () => {},
+        tooltipDescription: 'Create a new node.',
+      }),
       edit: new Action({
         ...Action.defaultProps,
-        purpose: EActionPurpose.Edit,
+        purpose: EActionPurpose.Reorder,
         handleClick: handleMapEditRequest ? handleMapEditRequest : () => {},
-        tooltipDescription:
-          'Map the order of objectives throughout the mission.',
+        tooltipDescription: 'Edit the structure and order of nodes.',
       }),
     }
     let activeActions: Action[] = []
 
     activeActions.push(availableActions.zoomIn)
     activeActions.push(availableActions.zoomOut)
+
+    if (handleMapCreateRequest !== null) {
+      activeActions.push(availableActions.add)
+    }
 
     if (handleMapEditRequest !== null) {
       activeActions.push(availableActions.edit)
@@ -595,12 +605,12 @@ export default class MissionMap extends React.Component<
       <div className='help' style={styling}>
         <MoreInformation
           tooltipDescription={
-            '##### mission-map\n' +
+            '##### Mission Map\n' +
             'This map is a layout of the nodes in the mission and ' +
             'their order of progression. Arrows indicate ' +
             'the order nodes should be completed, with divergent arrows ' +
             'indicating a branch in the mission, with a choice of a path to go down.\n' +
-            '##### controls:\n\n' +
+            '##### Controls:\n\n' +
             '`Click+Drag` *Pan.*\n' +
             '`Shift+Scroll` *Zoom in/out.*\n'
           }
@@ -655,7 +665,6 @@ export default class MissionMap extends React.Component<
 
   // inherited
   render(): JSX.Element {
-    let mission: Mission = this.props.mission
     let missionAjaxStatus: EAjaxStatus = this.props.missionAjaxStatus
     let visibleNodes: Array<MissionNode> = this.state.visibleNodes
     let navigationIsActive: boolean = this.state.navigationIsActive

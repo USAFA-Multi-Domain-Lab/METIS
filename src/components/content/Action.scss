@@ -26,6 +26,20 @@
     background-repeat: no-repeat;
   }
 
+  &.down {
+    background: url('/assets/images/icons/down.svg'), $background-alt1;
+    background-position: 5.4px 9.5px;
+    background-size: 30px 30px;
+    background-repeat: no-repeat;
+  }
+
+  &.reorder {
+    background: url('/assets/images/icons/reorder.svg'), $background-alt1;
+    background-position: 12px 11px;
+    background-size: 16px 16px;
+    background-repeat: no-repeat;
+  }
+
   &.zoom-in {
     cursor: zoom-in;
     background: url('/assets/images/icons/zoom-in.svg'), $background-alt1;

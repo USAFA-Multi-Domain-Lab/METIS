@@ -91,11 +91,6 @@ $background-bar: linear-gradient(
     }
 
     .SidePanel {
-      display: flex;
-      justify-content: flex-end;
-      align-items: center;
-      flex-flow: row wrap;
-
       .BorderBox {
         margin-left: 10px;
 
@@ -117,28 +112,134 @@ $background-bar: linear-gradient(
     overflow-y: auto;
     box-sizing: border-box;
     border: 2px solid $color-main;
-    width: 100%;
     height: $height;
-    padding: 15px 0 40px;
+    padding: 15px 0 0;
     background-color: $background-alt2;
+
+    .MoreInformation {
+      display: block;
+      position: relative;
+      top: -2.25px;
+      left: -41px;
+      margin: 0 0 -26px auto;
+      transform: scale(0.75);
+    }
 
     .Close {
       cursor: pointer;
       user-select: none;
+      display: block;
+      cursor: pointer;
+      user-select: none;
       position: relative;
       top: -9px;
-      left: -30px;
+      left: 0px;
+      transform: scale(0.77);
       margin: 0 0 -40px auto;
-      width: 0;
+      width: 40px;
       height: 40px;
-      position: relative;
       font-size: 26px;
+
+      .Circle {
+        display: grid;
+        place-content: center;
+        border: 3px solid $color-main;
+        border-radius: 50%;
+        width: 26px;
+        height: 26px;
+        background-color: $background-alt1;
+
+        .X {
+          display: block;
+          height: 1em;
+          font-family: 'Arial', monospace;
+          font-size: 22px;
+          font-weight: bolder;
+          line-height: 0.825em;
+        }
+      }
+    }
+
+    .NodeActionDetails {
+      > .Label {
+        margin: 40px auto 0;
+        border-bottom: 2px solid $color-main;
+        width: 225px;
+        padding: 0 0 8px;
+        font-size: 12.5px;
+      }
+
+      .NodeAction {
+        margin: 40px 0;
+      }
+
+      .Action {
+        display: block;
+        margin: 0 auto 40px;
+        width: 40px;
+        text-align: center;
+      }
+
+      .NoActions {
+        margin: 30px auto;
+        width: 225px;
+        font-size: 12.5px;
+      }
+
+      * {
+        transition: transform 250ms, opacity 250ms;
+      }
+
+      &.Disabled {
+        pointer-events: none;
+
+        > .Label,
+        .NodeAction .Detail *,
+        .NoActions,
+        .Action {
+          transform: scale(0.8);
+          opacity: 0.65;
+        }
+      }
+    }
+
+    .Color {
+      .Field {
+        border-bottom: none;
+      }
+    }
+
+    .ColorFill {
+      cursor: pointer;
+      user-select: none;
+      box-sizing: border-box;
+      margin: 5px auto 0;
+      border-bottom: 2px solid $color-main;
+      width: 225px;
+      padding: 15px 15px;
+      text-align: right;
+      color: $color-main;
+      font-size: 12.5px;
+      font-weight: 700;
+
+      span {
+        color: $color-accent-light;
+        font-weight: 400;
+      }
+    }
+
+    .Detail:last-child {
+      margin-bottom: 40px;
     }
   }
 
   &.NodeStructuring {
     .BorderBox {
       .Nodes {
+        overflow-x: auto;
+        overflow-y: auto;
+        margin: 0 0 40px 0;
+        height: 100%;
         padding: 0;
 
         .Padding {
@@ -151,6 +252,8 @@ $background-bar: linear-gradient(
 
         .Node {
           $indicator-translate-y: 7px;
+
+          width: fit-content;
 
           // This will return the transform value
           // for the indicator triangle, placing
@@ -166,11 +269,13 @@ $background-bar: linear-gradient(
           }
 
           .ParentNode {
-            cursor: pointer;
+            cursor: grab;
             user-select: none;
             display: block;
             padding: 0 0 0 20px;
             font-size: 12px;
+            white-space: nowrap;
+            width: 100%;
 
             .Top,
             .Bottom {
@@ -217,7 +322,7 @@ $background-bar: linear-gradient(
             }
           }
 
-          .Subnodes {
+          .ChildNodes {
             padding-left: 20px;
           }
 

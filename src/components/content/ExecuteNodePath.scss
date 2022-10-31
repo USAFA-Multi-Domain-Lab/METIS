@@ -46,8 +46,7 @@
     flex-flow: row wrap;
   }
 
-  .ExecutionButton,
-  .AdditionalActionButton {
+  .Button {
     display: flex;
     justify-content: center;
     align-items: center;
@@ -59,8 +58,7 @@
     border-radius: 4px;
     height: auto;
 
-    &.ExecutionButton:hover,
-    &.AdditionalActionButton:hover {
+    &:hover {
       cursor: pointer;
       background-color: black;
     }

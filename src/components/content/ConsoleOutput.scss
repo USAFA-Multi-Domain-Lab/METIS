@@ -1,10 +1,12 @@
 @import '../../config.scss';
 
-.Text {
-  padding: 15px 0;
-  font-size: 0.75em;
-  list-style-type: none;
-  overflow: auto;
+.ConsoleOutput {
+  .Text {
+    padding: 15px 0;
+    font-size: 0.75em;
+    list-style-type: none;
+    overflow: auto;
+  }
 
   .line-cursor {
     color: $terminal;
