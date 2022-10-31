@@ -203,6 +203,10 @@ export default function DashboardPage(props: {
               applyNodeClassName={(node: MissionNode) => {
                 let className = ''
 
+                if (node.executable) {
+                  className += 'ExecutableNode'
+                }
+
                 if (node.executing) {
                   className += ' LoadingBar'
                 }
