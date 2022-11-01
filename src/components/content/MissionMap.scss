@@ -254,6 +254,14 @@
           background-color: $background-alt1;
         }
 
+        &.ExecutableNode {
+          border-color: $executable;
+        }
+
+        &.LoadingBar {
+          background-color: $background-alt1;
+        }
+
         &.succeeded {
           background-color: $background-alt1;
           border-color: $success;
@@ -262,14 +270,6 @@
         &.failed {
           background-color: $background-alt1;
           border-color: $fail;
-        }
-
-        &.LoadingBar {
-          background-color: $background-alt1;
-        }
-
-        &.ExecutableNode {
-          border-color: $executable;
         }
 
         @keyframes loading-animation {

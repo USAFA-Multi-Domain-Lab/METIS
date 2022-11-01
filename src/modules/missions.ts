@@ -98,6 +98,7 @@ export class MissionNode {
   actionData: string
   executable: boolean
   nodeActionItems: Array<MissionNodeAction>
+
   selectedNodeAction: MissionNodeAction | null
   _executed: boolean
   _executing: boolean

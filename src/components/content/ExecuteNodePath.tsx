@@ -1,17 +1,9 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import './ExecuteNodePath.scss'
 import { useStore } from 'react-context-hook'
-import missions, {
-  Mission,
-  MissionNode,
-  MissionNodeAction,
-} from '../../modules/missions'
-import { IUser } from '../../modules/users'
+import { MissionNode, MissionNodeAction } from '../../modules/missions'
 import gameLogic, { runNodeLoadingBar } from '../../modules/game-logic'
-import NodeStructureReference from '../../modules/node-reference'
 import ActionPropertyDisplay from './ActionPropertyDisplay'
-import NodeActions from './NodeActions'
-import Tooltip from './Tooltip'
 
 const ExecuteNodePath = (props: { selectedNode: MissionNode | null }) => {
   /* -- GLOBAL STATE -- */

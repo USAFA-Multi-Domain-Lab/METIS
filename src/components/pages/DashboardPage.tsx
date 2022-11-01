@@ -36,14 +36,18 @@ export default function DashboardPage(props: {
   )
   const [consoleOutputs, setConsoleOutputs] =
     useStore<Array<{ date: number; value: string }>>('consoleOutputs')
-  let [outputPanelIsDisplayed, setOutputPanelIsDisplayed] = useStore<boolean>(
+  const [outputPanelIsDisplayed, setOutputPanelIsDisplayed] = useStore<boolean>(
     'outputPanelIsDisplayed',
   )
-  let [executeNodePathPromptIsDisplayed, setExecuteNodePathPromptIsDisplayed] =
-    useStore<boolean>('executeNodePathPromptIsDisplayed')
-  let [actionSelectionPromptIsDisplayed, setActionSelectionPromptIsDisplayed] =
-    useStore<boolean>('actionSelectionPromptIsDisplayed')
-  let [actionDisplay, setActionDisplay] =
+  const [
+    executeNodePathPromptIsDisplayed,
+    setExecuteNodePathPromptIsDisplayed,
+  ] = useStore<boolean>('executeNodePathPromptIsDisplayed')
+  const [
+    actionSelectionPromptIsDisplayed,
+    setActionSelectionPromptIsDisplayed,
+  ] = useStore<boolean>('actionSelectionPromptIsDisplayed')
+  const [actionDisplay, setActionDisplay] =
     useStore<Array<MissionNodeAction>>('actionDisplay')
   const [processTime, setProcessTime] = useStore<number>('processTime')
   const [actionName, setActionName] = useStore<string>('actionName')
@@ -195,8 +199,13 @@ export default function DashboardPage(props: {
                   for (let nodeActionItem of selectedNode.nodeActionItems) {
                     actionDisplay.push(nodeActionItem)
                   }
-                  if (mission.disableNodes === false) {
+                  if (
+                    mission.disableNodes === false &&
+                    selectedNode.executed === false
+                  ) {
                     setActionSelectionPromptIsDisplayed(true)
+                  } else if (mission.disableNodes === true) {
+                    setActionDisplay([])
                   }
                 }
               }}
@@ -204,7 +213,7 @@ export default function DashboardPage(props: {
                 let className = ''
 
                 if (node.executable) {
-                  className += 'ExecutableNode'
+                  className = 'ExecutableNode'
                 }
 
                 if (node.executing) {
