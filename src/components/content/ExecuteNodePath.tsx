@@ -37,6 +37,7 @@ const ExecuteNodePath = (props: { selectedNode: MissionNode | null }) => {
   // Closes the execution prompt window
   const closeWindow = (): void => {
     setExecuteNodePathPromptIsDisplayed(false)
+    setActionDisplay([])
   }
 
   const execute = () => {
