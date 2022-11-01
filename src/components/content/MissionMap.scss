@@ -178,7 +178,7 @@
           display: none;
         }
 
-        .NodeHoverDisplay {
+        .ActionPropertyDisplay {
           position: absolute;
           top: 0;
         }
@@ -254,6 +254,10 @@
           background-color: $background-alt1;
         }
 
+        &.LoadingBar {
+          background-color: $background-alt1;
+        }
+
         &.succeeded {
           background-color: $background-alt1;
           border-color: $success;
@@ -262,10 +266,6 @@
         &.failed {
           background-color: $background-alt1;
           border-color: $fail;
-        }
-
-        &.LoadingBar {
-          background-color: $background-alt1;
         }
 
         @keyframes loading-animation {

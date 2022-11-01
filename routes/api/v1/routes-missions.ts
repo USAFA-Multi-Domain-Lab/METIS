@@ -31,18 +31,35 @@ router.post('/', (request, response) => {
 })
 
 // -- GET | /api/v1/missions/ --
-// This will return the mission.
+// This will return all of the missions.
 router.get('/', (request, response) => {
-  Mission.findOne({ name: 'Incredible Mission' }).exec(
-    (error: Error, mission: any) => {
-      if (error !== null || mission === null) {
-        console.error(error)
-        return response.sendStatus(500)
-      } else {
-        return response.json({ mission })
-      }
-    },
-  )
+  // console.log(request.query)
+  let idValue = request.query.missionID
+  // console.log(idValue)
+
+  if (idValue === undefined) {
+    Mission.find({})
+      .select('-nodeStructure -nodeData')
+      .exec((error: Error, missions: any) => {
+        if (error !== null || missions === null) {
+          console.error(error)
+          return response.sendStatus(500)
+        } else {
+          return response.json({ missions })
+        }
+      })
+  } else {
+    Mission.findOne({ missionID: idValue }).exec(
+      (error: Error, mission: any) => {
+        if (error !== null || mission === null) {
+          console.error(error)
+          return response.sendStatus(500)
+        } else {
+          return response.json({ mission })
+        }
+      },
+    )
+  }
 })
 
 // -- PUT | /api/v1/missions/ --

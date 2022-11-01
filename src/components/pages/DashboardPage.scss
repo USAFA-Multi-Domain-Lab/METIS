@@ -101,7 +101,7 @@ $background-bar: linear-gradient(
     display: none;
   }
 
-  .NodeHoverDisplay {
+  .ActionPropertyDisplay {
     display: none;
   }
 }
@@ -125,7 +125,7 @@ $background-bar: linear-gradient(
 }
 
 // Displays the Mission Map, Output Panel, and Node Action Window
-.DashboardPageWithOutputPanelAndNodeActionPrompt {
+.DashboardPageWithOutputPanelAndActionPrompt {
   .Content {
     .MissionMap {
       margin-right: 10px;
@@ -136,7 +136,7 @@ $background-bar: linear-gradient(
       display: none;
     }
 
-    .NodeHoverDisplay {
+    .ActionPropertyDisplay {
       display: none;
     }
   }
@@ -172,6 +172,38 @@ $background-bar: linear-gradient(
 
     .EditMission {
       display: flex;
+    }
+  }
+}
+
+.DashboardPageWithExecuteNodePathPromptOnly {
+  .Content {
+    .OutputPanel {
+      display: none;
+    }
+
+    .ExecuteNodePath {
+      left: 35%;
+    }
+
+    .NodeActions {
+      display: none;
+    }
+  }
+}
+
+.DashboardPageWithActionSelectionPromptOnly {
+  .Content {
+    .OutputPanel {
+      display: none;
+    }
+
+    .NodeActions {
+      left: 35%;
+    }
+
+    .ExecuteNodePath {
+      display: none;
     }
   }
 }

@@ -1,11 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useStore } from 'react-context-hook'
-import {
-  createTestMission,
-  Mission,
-  MissionNode,
-  MissionNodeAction,
-} from '../../modules/missions'
+import { Mission, MissionNode, MissionNodeAction } from '../../modules/missions'
 import { EAjaxStatus } from '../../modules/toolbox/ajax'
 import usersModule, { IUser } from '../../modules/users'
 import Branding from '../content/Branding'
@@ -36,24 +31,19 @@ export default function DashboardPage(props: {
   )
   const [consoleOutputs, setConsoleOutputs] =
     useStore<Array<{ date: number; value: string }>>('consoleOutputs')
-  let [outputPanelIsDisplayed, setOutputPanelIsDisplayed] = useStore<boolean>(
+  const [outputPanelIsDisplayed, setOutputPanelIsDisplayed] = useStore<boolean>(
     'outputPanelIsDisplayed',
   )
-  let [executeNodePathPromptIsDisplayed, setExecuteNodePathPromptIsDisplayed] =
-    useStore<boolean>('executeNodePathPromptIsDisplayed')
-  let [
-    nodeActionSelectionPromptIsDisplayed,
-    setNodeActionSelectionPromptIsDisplayed,
-  ] = useStore<boolean>('nodeActionSelectionPromptIsDisplayed')
-  let [nodeActionItemDisplay, setNodeActionItemDisplay] = useStore<
-    Array<MissionNodeAction>
-  >('nodeActionItemDisplay')
-  const [processDelayTime, setProcessDelayTime] =
-    useStore<number>('processDelayTime')
-  const [nodeActionItemText, setNodeActionItemText] =
-    useStore<string>('nodeActionItemText')
-  const [nodeActionSuccessChance, setNodeActionSuccessChance] =
-    useStore<number>('nodeActionSuccessChance')
+  const [
+    executeNodePathPromptIsDisplayed,
+    setExecuteNodePathPromptIsDisplayed,
+  ] = useStore<boolean>('executeNodePathPromptIsDisplayed')
+  const [
+    actionSelectionPromptIsDisplayed,
+    setActionSelectionPromptIsDisplayed,
+  ] = useStore<boolean>('actionSelectionPromptIsDisplayed')
+  const [actionDisplay, setActionDisplay] =
+    useStore<Array<MissionNodeAction>>('actionDisplay')
   const [mission, setMission] = useStore<Mission | null>('mission')
 
   /* -- COMPONENT STATE -- */
@@ -120,21 +110,33 @@ export default function DashboardPage(props: {
   if (
     outputPanelIsDisplayed === true &&
     executeNodePathPromptIsDisplayed === false &&
-    nodeActionSelectionPromptIsDisplayed === false
+    actionSelectionPromptIsDisplayed === false
   ) {
     className += ' DashboardPageWithOutputPanelOnly'
   } else if (
     outputPanelIsDisplayed === true &&
-    nodeActionSelectionPromptIsDisplayed === true &&
+    actionSelectionPromptIsDisplayed === true &&
     executeNodePathPromptIsDisplayed === false
   ) {
-    className += ' DashboardPageWithOutputPanelAndNodeActionPrompt'
+    className += ' DashboardPageWithOutputPanelAndActionPrompt'
   } else if (
     outputPanelIsDisplayed === true &&
     executeNodePathPromptIsDisplayed === true &&
-    nodeActionSelectionPromptIsDisplayed === false
+    actionSelectionPromptIsDisplayed === false
   ) {
     className += ' DashboardPageWithOutputPanelAndExecuteNodePathPrompt'
+  } else if (
+    outputPanelIsDisplayed === false &&
+    executeNodePathPromptIsDisplayed === true &&
+    actionSelectionPromptIsDisplayed === false
+  ) {
+    className += ' DashboardPageWithExecuteNodePathPromptOnly'
+  } else if (
+    outputPanelIsDisplayed === false &&
+    executeNodePathPromptIsDisplayed === false &&
+    actionSelectionPromptIsDisplayed === true
+  ) {
+    className += ' DashboardPageWithActionSelectionPromptOnly'
   } else {
     className += ' DashboardPageWithMapOnly'
   }
@@ -172,7 +174,6 @@ export default function DashboardPage(props: {
           <div className='Content'>
             <MissionMap
               mission={mission}
-              // mission={createTestMission(false)}
               missionAjaxStatus={EAjaxStatus.Loaded}
               handleNodeSelection={(selectedNode: MissionNode) => {
                 setLastSelectedNode(selectedNode)
@@ -198,9 +199,16 @@ export default function DashboardPage(props: {
                   return
                 } else {
                   for (let nodeActionItem of selectedNode.actions) {
-                    nodeActionItemDisplay.push(nodeActionItem)
+                    actionDisplay.push(nodeActionItem)
                   }
-                  setNodeActionSelectionPromptIsDisplayed(true)
+                  if (
+                    mission.disableNodes === false &&
+                    selectedNode.executed === false
+                  ) {
+                    setActionSelectionPromptIsDisplayed(true)
+                  } else {
+                    setActionDisplay([])
+                  }
                 }
               }}
               applyNodeClassName={(node: MissionNode) => {

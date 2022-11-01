@@ -104,6 +104,10 @@ export default function MissionFormPage(props: {
   let show: boolean = props.show
   let className: string = 'MissionFormPage'
 
+  if (mission !== null) {
+    mission.mapNodeRelationships(true)
+  }
+
   if (selectedNode !== null || nodeStructuringIsActive) {
     className += ' SidePanelIsExpanded'
   }

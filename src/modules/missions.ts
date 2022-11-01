@@ -3,6 +3,7 @@ import { AnyObject } from 'mongoose'
 import seedrandom, { PRNG } from 'seedrandom'
 import { v4 as generateHash } from 'uuid'
 import axios, { AxiosError, AxiosResponse } from 'axios'
+import { stringify } from 'querystring'
 
 // This is an enum used by the
 // MissionNode move
@@ -204,9 +205,19 @@ export class MissionNode {
       selectedAction !== null
     ) {
       this._executing = true
+
+      // If a node is being executed then this disables all the nodes
+      // while the node is being executed.
+      if (this.executing) {
+        this.mission._disableNodes = true
+      }
+
       setTimeout(() => {
         this._executing = false
         this._executed = true
+
+        // Enables all the nodes after the selected node is done executing.
+        this.mission._disableNodes = false
 
         callback(this.willSucceed)
       }, selectedAction.processTime)
@@ -434,6 +445,11 @@ export class Mission {
   rootNode: MissionNode
   structureChangeKey: string
   structureChangeHandlers: Array<(structureChangeKey: string) => void>
+  _disableNodes: boolean
+
+  get disableNodes(): boolean {
+    return this._disableNodes
+  }
 
   constructor(
     name: string,
@@ -466,6 +482,7 @@ export class Mission {
     )
     this.structureChangeKey = generateHash()
     this.structureChangeHandlers = []
+    this._disableNodes = false
 
     this.parseJSON()
     this.mapNodeRelationships(expandAll, this.rootNode, nodeStructure)
@@ -2600,7 +2617,7 @@ export function getMission(
   callbackError: (error: AxiosError) => void = () => {},
 ): void {
   axios
-    .get('/api/v1/missions/')
+    .get(`/api/v1/missions?missionID=${'63602fc6ad6c744aaa090f52'}`)
     .then((response: AxiosResponse<AnyObject>): void => {
       let missionJson = response.data.mission
       let mission = new Mission(
