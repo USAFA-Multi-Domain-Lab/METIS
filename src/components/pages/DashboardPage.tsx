@@ -49,11 +49,6 @@ export default function DashboardPage(props: {
   ] = useStore<boolean>('actionSelectionPromptIsDisplayed')
   const [actionDisplay, setActionDisplay] =
     useStore<Array<MissionNodeAction>>('actionDisplay')
-  const [processTime, setProcessTime] = useStore<number>('processTime')
-  const [actionName, setActionName] = useStore<string>('actionName')
-  const [actionSuccessChance, setActionSuccessChance] = useStore<number>(
-    'actionSuccessChance',
-  )
   const [mission, setMission] = useStore<Mission | null>('mission')
 
   /* -- COMPONENT STATE -- */
@@ -128,13 +123,25 @@ export default function DashboardPage(props: {
     actionSelectionPromptIsDisplayed === true &&
     executeNodePathPromptIsDisplayed === false
   ) {
-    className += ' DashboardPageWithOutputPanelAndNodeActionPrompt'
+    className += ' DashboardPageWithOutputPanelAndActionPrompt'
   } else if (
     outputPanelIsDisplayed === true &&
     executeNodePathPromptIsDisplayed === true &&
     actionSelectionPromptIsDisplayed === false
   ) {
     className += ' DashboardPageWithOutputPanelAndExecuteNodePathPrompt'
+  } else if (
+    outputPanelIsDisplayed === false &&
+    executeNodePathPromptIsDisplayed === true &&
+    actionSelectionPromptIsDisplayed === false
+  ) {
+    className += ' DashboardPageWithExecuteNodePathPromptOnly'
+  } else if (
+    outputPanelIsDisplayed === false &&
+    executeNodePathPromptIsDisplayed === false &&
+    actionSelectionPromptIsDisplayed === true
+  ) {
+    className += ' DashboardPageWithActionSelectionPromptOnly'
   } else {
     className += ' DashboardPageWithMapOnly'
   }
@@ -204,7 +211,7 @@ export default function DashboardPage(props: {
                     selectedNode.executed === false
                   ) {
                     setActionSelectionPromptIsDisplayed(true)
-                  } else if (mission.disableNodes === true) {
+                  } else {
                     setActionDisplay([])
                   }
                 }
