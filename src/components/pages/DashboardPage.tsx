@@ -1,11 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useStore } from 'react-context-hook'
-import {
-  createTestMission,
-  Mission,
-  MissionNode,
-  MissionNodeAction,
-} from '../../modules/missions'
+import { Mission, MissionNode, MissionNodeAction } from '../../modules/missions'
 import { EAjaxStatus } from '../../modules/toolbox/ajax'
 import usersModule, { IUser } from '../../modules/users'
 import Branding from '../content/Branding'
@@ -218,10 +213,6 @@ export default function DashboardPage(props: {
               }}
               applyNodeClassName={(node: MissionNode) => {
                 let className = ''
-
-                if (node.executable) {
-                  className = 'ExecutableNode'
-                }
 
                 if (node.executing) {
                   className += ' LoadingBar'

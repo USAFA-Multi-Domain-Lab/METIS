@@ -2449,7 +2449,7 @@ export function getMission(
   callbackError: (error: AxiosError) => void = () => {},
 ): void {
   axios
-    .get('/api/v1/missions/')
+    .get(`/api/v1/missions?missionID=${'63602fc6ad6c744aaa090f52'}`)
     .then((response: AxiosResponse<AnyObject>): void => {
       let missionJson = response.data.mission
       let mission = new Mission(
