@@ -39,6 +39,7 @@ export default class GlobalState {
   processTime: number
   actionSuccessChance: number
   mission: Mission | null
+  allMissions: Array<Mission>
 
   constructor(stateSetters: IStateSetters) {
     this.currentUser = null
@@ -61,6 +62,7 @@ export default class GlobalState {
     this.processTime = 0
     this.actionSuccessChance = 0
     this.mission = null
+    this.allMissions = []
   }
 
   // This will position the currently

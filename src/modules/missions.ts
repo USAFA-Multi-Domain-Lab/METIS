@@ -1,9 +1,8 @@
-import { Counter, isInteger } from './numbers'
+import { Counter } from './numbers'
 import { AnyObject } from 'mongoose'
 import seedrandom, { PRNG } from 'seedrandom'
 import { v4 as generateHash } from 'uuid'
 import axios, { AxiosError, AxiosResponse } from 'axios'
-import { stringify } from 'querystring'
 
 // This is an enum used by the
 // MissionNode move
@@ -435,6 +434,7 @@ export class MissionNode {
 // This represents a mission for a
 // student to complete.
 export class Mission {
+  missionID: string
   name: string
   versionNumber: number
   nodeStructure: AnyObject
@@ -452,6 +452,7 @@ export class Mission {
   }
 
   constructor(
+    missionID: string,
     name: string,
     versionNumber: number,
     nodeStructure: AnyObject,
@@ -459,6 +460,7 @@ export class Mission {
     seed: string,
     expandAll: boolean = false,
   ) {
+    this.missionID = missionID
     this.name = name
     this.versionNumber = versionNumber
     this.nodeStructure = nodeStructure
@@ -685,6 +687,7 @@ export class Mission {
 // testing purposes.
 export function createTestMission(expandAll: boolean = false): Mission {
   const testMissionJson = {
+    missionID: '636177fb5e82600adaed8bd4',
     name: 'Incredible Mission',
     versionNumber: 1,
     seed: '980238470934',
@@ -2600,6 +2603,7 @@ export function createTestMission(expandAll: boolean = false): Mission {
   }
 
   return new Mission(
+    testMissionJson.missionID,
     testMissionJson.name,
     testMissionJson.versionNumber,
     testMissionJson.nodeStructure,
@@ -2615,12 +2619,15 @@ export function createTestMission(expandAll: boolean = false): Mission {
 export function getMission(
   callback: (mission: Mission) => void,
   callbackError: (error: AxiosError) => void = () => {},
+  selectedMissionIDValue: string,
 ): void {
   axios
-    .get(`/api/v1/missions?missionID=${'63602fc6ad6c744aaa090f52'}`)
+    .get(`/api/v1/missions?missionID=${selectedMissionIDValue}`)
     .then((response: AxiosResponse<AnyObject>): void => {
       let missionJson = response.data.mission
+
       let mission = new Mission(
+        missionJson.missionID,
         missionJson.name,
         missionJson.versionNumber,
         missionJson.nodeStructure,
@@ -2629,6 +2636,24 @@ export function getMission(
         false,
       )
       callback(mission)
+    })
+    .catch((error: AxiosError) => {
+      console.error('Failed to retrieve mission.')
+      console.error(error)
+      callbackError(error)
+    })
+}
+
+export function getAllMissions(
+  callback: (missions: Array<Mission>) => void,
+  callbackError: (error: AxiosError) => void = () => {},
+): void {
+  axios
+    .get(`/api/v1/missions/`)
+    .then((response: AxiosResponse<AnyObject>): void => {
+      let missionsJson = response.data.missions
+
+      callback(missionsJson)
     })
     .catch((error: AxiosError) => {
       console.error('Failed to retrieve mission.')

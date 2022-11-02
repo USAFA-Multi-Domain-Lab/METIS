@@ -1,7 +1,7 @@
 import './App.scss'
 import DashboardPage from './pages/DashboardPage'
 import AuthPage from './pages/AuthPage'
-import { useStore, withStore } from 'react-context-hook'
+import { useStore } from 'react-context-hook'
 import usersModule, { IUser } from '../modules/users'
 import React, { useEffect, useState } from 'react'
 import ServerErrorPage from './pages/ServerErrorPage'
@@ -9,8 +9,8 @@ import LoadingPage from './pages/LoadingPage'
 import GlobalState, { tooltipsOffsetX, tooltipsOffsetY } from './GlobalState'
 import Markdown, { MarkdownTheme } from './content/Markdown'
 import MissionFormPage from './pages/MissionFormPage'
-import { getMission, Mission } from '../modules/missions'
-import { AnyObject } from 'mongoose'
+import { getAllMissions, Mission } from '../modules/missions'
+import StudentMissionSelectionPage from './pages/StudentMissionSelectionPage'
 
 const loadingMinTime = 500
 
@@ -70,7 +70,7 @@ function App(): JSX.Element | null {
   const [tooltipDescription] = useStore<string>('tooltipDescription')
   const [tooltips] = useStore<React.RefObject<HTMLDivElement>>('tooltips')
   const [hideTooltip] = useStore<() => void>('hideTooltip')
-  const [mission, setMission] = useStore<Mission | null>('mission')
+  const [allMissions, setAllMissions] = useStore<Array<Mission>>('allMissions')
 
   /* -- COMPONENT STATE -- */
 
@@ -143,11 +143,11 @@ function App(): JSX.Element | null {
           // This loads the mission in session from the database
           // and stores it in a global state to be used on the DashboardPage
           // where the Mission Map renders
-          getMission(
-            (mission: Mission) => {
-              setMission(mission)
-              setCurrentPagePath('DashboardPage')
-              setLastLoadingMessage('Initializing application...')
+          getAllMissions(
+            (missions: Array<Mission>) => {
+              setAllMissions(missions)
+              setCurrentPagePath('StudentMissionSelectionPage')
+              setLastLoadingMessage('Getting Missions...')
               setAppMountHandled(true)
               setLoadMessage(null)
             },
@@ -208,6 +208,11 @@ function App(): JSX.Element | null {
       <StandardPage
         Page={DashboardPage}
         targetPagePath='DashboardPage'
+        requireLogin={false}
+      />
+      <StandardPage
+        Page={StudentMissionSelectionPage}
+        targetPagePath='StudentMissionSelectionPage'
         requireLogin={false}
       />
       <StandardPage Page={MissionFormPage} targetPagePath='MissionFormPage' />

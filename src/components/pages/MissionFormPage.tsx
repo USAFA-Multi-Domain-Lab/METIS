@@ -52,6 +52,9 @@ export default function MissionFormPage(props: {
   const [errorMessage, setErrorMessage] = useStore<string | null>(
     'errorMessage',
   )
+  const [lastLoadingMessage, setLastLoadingMessage] = useStore<string | null>(
+    'lastLoadingMessage',
+  )
 
   /* -- COMPONENT STATE -- */
 
@@ -91,6 +94,7 @@ export default function MissionFormPage(props: {
         setCurrentUser(null)
         setLoadingMessage(null)
         setCurrentPagePath('AuthPage')
+        setLastLoadingMessage('Signing out...')
       },
       () => {
         setLoadingMessage(null)

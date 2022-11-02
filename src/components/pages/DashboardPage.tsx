@@ -176,6 +176,8 @@ export default function DashboardPage(props: {
               mission={mission}
               missionAjaxStatus={EAjaxStatus.Loaded}
               handleNodeSelection={(selectedNode: MissionNode) => {
+                console.log(mission.name)
+
                 setLastSelectedNode(selectedNode)
 
                 if (selectedNode.preExecutionText !== '') {

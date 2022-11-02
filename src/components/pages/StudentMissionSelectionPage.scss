@@ -1,0 +1,17 @@
+@import '../../config.scss';
+
+.StudentMissionSelectionPage {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 90vh;
+
+  .MissionName {
+    margin-top: 20px;
+
+    &.MissionName:hover {
+      cursor: pointer;
+      color: $terminal;
+    }
+  }
+}
