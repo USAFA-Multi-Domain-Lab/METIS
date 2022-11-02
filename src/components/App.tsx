@@ -10,7 +10,7 @@ import GlobalState, { tooltipsOffsetX, tooltipsOffsetY } from './GlobalState'
 import Markdown, { MarkdownTheme } from './content/Markdown'
 import MissionFormPage from './pages/MissionFormPage'
 import { getAllMissions, Mission } from '../modules/missions'
-import StudentMissionSelectionPage from './pages/StudentMissionSelectionPage'\
+import StudentMissionSelectionPage from './pages/StudentMissionSelectionPage'
 import { AnyObject } from '../modules/toolbox/objects'
 
 // Default props in every page props.
