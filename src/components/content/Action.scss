@@ -55,4 +55,11 @@
     background-size: 21px 21px;
     background-repeat: no-repeat;
   }
+
+  &.save {
+    background: url('/assets/images/icons/save.svg'), $background-alt1;
+    background-position: 9.5px 8px;
+    background-size: 22px 22px;
+    background-repeat: no-repeat;
+  }
 }

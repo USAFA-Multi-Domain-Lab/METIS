@@ -1,6 +1,8 @@
 import React from 'react'
 import { useStore, withStore } from 'react-context-hook'
-import { Mission, MissionNode, MissionNodeAction } from '../modules/missions'
+import { Mission } from '../modules/missions'
+import { MissionNode } from '../modules/mission-nodes'
+import { MissionNodeAction } from '../modules/mission-node-actions'
 import { IUser } from '../modules/users'
 
 /* -- constants -- */

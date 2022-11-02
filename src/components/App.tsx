@@ -10,19 +10,30 @@ import GlobalState, { tooltipsOffsetX, tooltipsOffsetY } from './GlobalState'
 import Markdown, { MarkdownTheme } from './content/Markdown'
 import MissionFormPage from './pages/MissionFormPage'
 import { getAllMissions, Mission } from '../modules/missions'
-import StudentMissionSelectionPage from './pages/StudentMissionSelectionPage'
+import StudentMissionSelectionPage from './pages/StudentMissionSelectionPage'\
+import { AnyObject } from '../modules/toolbox/objects'
+
+// Default props in every page props.
+export interface IPageProps {
+  goToPage: (pagePath: string, pageProps: AnyObject) => void
+}
 
 const loadingMinTime = 500
 
 // This function normalizes how pages are rendered.
 // in the application.
 function StandardPage(props: {
-  Page: (props: { show: boolean }) => JSX.Element | null
+  Page: (props: { show: boolean; pageProps: any }) => JSX.Element | null
   targetPagePath: string
   requireLogin?: boolean // default true
 }): JSX.Element | null {
   const [currentUser] = useStore<IUser | null>('currentUser')
-  const [currentPagePath] = useStore<string>('currentPagePath')
+  const [currentPagePath, setCurrentPagePath] =
+    useStore<string>('currentPagePath')
+  const [currentPageProps, setCurrentPageProps] = useStore<AnyObject>(
+    'currentPageProps',
+    {},
+  )
   const [appMountHandled] = useStore<boolean>('appMountHandled')
   const [errorMessage] = useStore<string | null>('errorMessage')
   const [loadingMessage] = useStore<string | null>('loadingMessage')
@@ -32,6 +43,16 @@ function StandardPage(props: {
   let targetPagePath: string = props.targetPagePath
   let requireLogin: boolean =
     props.requireLogin === undefined ? true : props.requireLogin
+  let pageProps: AnyObject = { ...currentPageProps }
+
+  // This will go to a specific page
+  // passing the necessary props.
+  const goToPage = (pagePath: string, pageProps: AnyObject): void => {
+    setCurrentPagePath(pagePath)
+    setCurrentPageProps(pageProps)
+  }
+
+  pageProps = { ...pageProps, goToPage }
 
   return (
     <Page
@@ -43,6 +64,7 @@ function StandardPage(props: {
         loadingMinTimeReached &&
         errorMessage === null
       }
+      pageProps={pageProps}
     />
   )
 }

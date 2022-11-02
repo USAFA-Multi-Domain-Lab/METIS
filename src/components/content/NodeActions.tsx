@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import './NodeActions.scss'
 import { useStore } from 'react-context-hook'
-import { MissionNode, MissionNodeAction } from '../../modules/missions'
+import { MissionNode } from '../../modules/mission-nodes'
+import { MissionNodeAction } from '../../modules/mission-node-actions'
 import Tooltip from './Tooltip'
 
 const NodeActions = (props: {

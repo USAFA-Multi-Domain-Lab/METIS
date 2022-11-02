@@ -33,9 +33,7 @@ router.post('/', (request, response) => {
 // -- GET | /api/v1/missions/ --
 // This will return all of the missions.
 router.get('/', (request, response) => {
-  // console.log(request.query)
   let idValue = request.query.missionID
-  // console.log(idValue)
 
   if (idValue === undefined) {
     Mission.find({})
@@ -51,9 +49,13 @@ router.get('/', (request, response) => {
   } else {
     Mission.findOne({ missionID: idValue }).exec(
       (error: Error, mission: any) => {
-        if (error !== null || mission === null) {
+        console.log(mission)
+
+        if (error !== null) {
           console.error(error)
           return response.sendStatus(500)
+        } else if (mission === null) {
+          return response.sendStatus(404)
         } else {
           return response.json({ mission })
         }

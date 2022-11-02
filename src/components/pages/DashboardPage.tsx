@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useStore } from 'react-context-hook'
-import { Mission, MissionNode, MissionNodeAction } from '../../modules/missions'
+import { Mission } from '../../modules/missions'
 import { EAjaxStatus } from '../../modules/toolbox/ajax'
 import usersModule, { IUser } from '../../modules/users'
 import Branding from '../content/Branding'
@@ -10,12 +10,21 @@ import './DashboardPage.scss'
 import gameLogic from '../../modules/game-logic'
 import ExecuteNodePath from '../content/ExecuteNodePath'
 import NodeActions from '../content/NodeActions'
+import { AnyObject } from '../../modules/toolbox/objects'
+import { IPageProps } from '../App'
+import { MissionNodeAction } from '../../modules/mission-node-actions'
+import { MissionNode } from '../../modules/mission-nodes'
+
+interface IDashboardPageProps extends IPageProps {}
 
 // This will render a dashboard with a radar
 // on it, indicating air traffic passing by.
 export default function DashboardPage(props: {
   show: boolean
+  pageProps: IDashboardPageProps
 }): JSX.Element | null {
+  let pageProps: IDashboardPageProps = props.pageProps
+
   /* -- GLOBAL STATE -- */
 
   const [currentUser, setCurrentUser] = useStore<IUser | null>('currentUser')
@@ -93,12 +102,16 @@ export default function DashboardPage(props: {
   // This will switch to the edit mission
   // form.
   const login = () => {
-    setCurrentPagePath(currentUser === null ? 'AuthPage' : 'MissionFormPage')
+    if (currentUser === null) {
+      pageProps.goToPage('AuthPage', {})
+    }
   }
 
   // This will switch to the edit mission form.
   const editMission = () => {
-    setCurrentPagePath('MissionFormPage')
+    if (currentUser !== null && mission !== null) {
+      pageProps.goToPage('MissionFormPage', { mission: mission.clone(true) })
+    }
   }
 
   /* -- RENDER -- */
