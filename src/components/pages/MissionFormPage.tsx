@@ -40,11 +40,9 @@ interface IMissionFormPageProps extends IPageProps {
 // This will render a dashboard with a radar
 // on it, indicating air traffic passing by.
 export default function MissionFormPage(props: {
-  show: boolean
   pageProps: IMissionFormPageProps
 }): JSX.Element | null {
-  let show: boolean = props.show
-  let mission: Mission = props.pageProps.mission
+  let pageProps: IMissionFormPageProps = props.pageProps
 
   /* -- GLOBAL STATE -- */
 
@@ -73,54 +71,60 @@ export default function MissionFormPage(props: {
 
   // Equivalent of componentDidMount.
   useEffect(() => {
-    if (!mountHandled) {
+    if (!mountHandled && pageProps.isCurrentPage) {
       setMountHandled(true)
+    } else if (mountHandled && !pageProps.isCurrentPage) {
+      setMountHandled(false)
     }
-  }, [mountHandled])
+  }, [mountHandled, pageProps.isCurrentPage])
 
-  /* -- COMPONENTS -- */
+  if (pageProps.show) {
+    let mission: Mission = pageProps.mission
 
-  /* -- COMPONENT FUNCTIONS -- */
+    /* -- COMPONENTS -- */
 
-  // Forces a rerender.
-  const forceUpdate = (): void => {
-    setForcedUpdateCounter(forcedUpdateCounter + 1)
-  }
+    /* -- COMPONENT FUNCTIONS -- */
 
-  // This will logout the current user.
-  const logout = () => {
-    setLoadingMessage('Signing out...')
+    // Forces a rerender.
+    const forceUpdate = (): void => {
+      setForcedUpdateCounter(forcedUpdateCounter + 1)
+    }
 
-    usersModule.logout(
-      () => {
-        setCurrentUser(null)
-        setLoadingMessage(null)
-        setCurrentPagePath('AuthPage')
-        setLastLoadingMessage('Signing out...')
-      },
-      () => {
-        setLoadingMessage(null)
-        setErrorMessage('Server is down. Contact system administrator.')
-      },
-    )
-  }
+    // This will logout the current user.
+    const logout = () => {
+      setLoadingMessage('Signing out...')
 
-  /* -- RENDER -- */
+      usersModule.logout(
+        () => {
+          setCurrentUser(null)
+          setLoadingMessage(null)
+          setCurrentPagePath('AuthPage')
+          setLastLoadingMessage('Signing out...')
+        },
+        () => {
+          setLoadingMessage(null)
+          setErrorMessage('Server is down. Contact system administrator.')
+        },
+      )
+    }
 
-  let className: string = 'MissionFormPage'
+    /* -- RENDER -- */
 
-  if (selectedNode !== null || nodeStructuringIsActive) {
-    className += ' SidePanelIsExpanded'
-  }
+    let className: string = 'MissionFormPage'
 
-  if (show && mission !== null) {
+    if (selectedNode !== null || nodeStructuringIsActive) {
+      className += ' SidePanelIsExpanded'
+    }
+
     return (
       <div className={className}>
         {
           // -- navigation --
         }
         <div className='Navigation'>
-          <Branding />
+          <Branding
+            goHome={() => pageProps.goToPage('StudentMissionSelectionPage', {})}
+          />
           <div className='Logout Link' onClick={logout}>
             Sign out
           </div>

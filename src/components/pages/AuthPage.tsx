@@ -5,11 +5,15 @@ import './AuthPage.scss'
 import usersModule, { IUser } from '../../modules/users'
 import { AxiosError } from 'axios'
 import { useStore } from 'react-context-hook'
-import { update } from 'lodash'
+import { IPageProps } from '../App'
+
+interface IAuthPagProps extends IPageProps {}
 
 // This will render a page where a user can
 // login to view the radar.
-export default function AuthPage(props: { show: boolean }): JSX.Element | null {
+export default function AuthPage(props: {
+  pageProps: IAuthPagProps
+}): JSX.Element | null {
   /* -- GLOBAL STATE -- */
 
   const [currentUser, setCurrentUser] = useStore('currentUser')
@@ -88,7 +92,7 @@ export default function AuthPage(props: { show: boolean }): JSX.Element | null {
               setIsSubmitting(false)
               setLoadingMessage(null)
               setCurrentUser(currentUser)
-              setCurrentPagePath('DashboardPage')
+              setCurrentPagePath('GamePage')
               setLastLoadingMessage('Initializing application...')
             } else {
               handleLoginError('Incorrect username or password.')
@@ -114,7 +118,7 @@ export default function AuthPage(props: { show: boolean }): JSX.Element | null {
 
   const returnToDashboard = () => {
     // setLoadingMessage('Initializing application...')
-    setCurrentPagePath('DashboardPage')
+    setCurrentPagePath('GamePage')
     // setLastLoadingMessage('Initializing application...')
 
     // setTimeout(() => {
@@ -124,7 +128,7 @@ export default function AuthPage(props: { show: boolean }): JSX.Element | null {
 
   /* -- RENDER -- */
 
-  let show: boolean = props.show
+  let show: boolean = props.pageProps.show
   let submitIsDisabled: boolean = !canSubmit() || isSubmitting
 
   if (show && currentUser === null) {

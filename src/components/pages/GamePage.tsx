@@ -6,24 +6,24 @@ import usersModule, { IUser } from '../../modules/users'
 import Branding from '../content/Branding'
 import MissionMap from '../content/MissionMap'
 import OutputPanel from '../content/OutputPanel'
-import './DashboardPage.scss'
+import './GamePage.scss'
 import gameLogic from '../../modules/game-logic'
 import ExecuteNodePath from '../content/ExecuteNodePath'
 import NodeActions from '../content/NodeActions'
-import { AnyObject } from '../../modules/toolbox/objects'
 import { IPageProps } from '../App'
 import { MissionNodeAction } from '../../modules/mission-node-actions'
 import { MissionNode } from '../../modules/mission-nodes'
 
-interface IDashboardPageProps extends IPageProps {}
+interface IGamePageProps extends IPageProps {
+  mission: Mission
+}
 
 // This will render a dashboard with a radar
 // on it, indicating air traffic passing by.
-export default function DashboardPage(props: {
-  show: boolean
-  pageProps: IDashboardPageProps
+export default function GamePage(props: {
+  pageProps: IGamePageProps
 }): JSX.Element | null {
-  let pageProps: IDashboardPageProps = props.pageProps
+  let pageProps: IGamePageProps = props.pageProps
 
   /* -- GLOBAL STATE -- */
 
@@ -53,7 +53,6 @@ export default function DashboardPage(props: {
   ] = useStore<boolean>('actionSelectionPromptIsDisplayed')
   const [actionDisplay, setActionDisplay] =
     useStore<Array<MissionNodeAction>>('actionDisplay')
-  const [mission, setMission] = useStore<Mission | null>('mission')
 
   /* -- COMPONENT STATE -- */
 
@@ -67,111 +66,115 @@ export default function DashboardPage(props: {
 
   // Equivalent of componentDidMount.
   useEffect(() => {
-    if (!mountHandled) {
+    if (!mountHandled && pageProps.isCurrentPage) {
       setMountHandled(true)
+    } else if (mountHandled && !pageProps.isCurrentPage) {
+      setMountHandled(false)
     }
-  }, [mountHandled])
+  }, [mountHandled, pageProps.isCurrentPage])
 
-  /* -- COMPONENTS -- */
+  if (pageProps.show) {
+    let mission: Mission = pageProps.mission
 
-  /* -- COMPONENT FUNCTIONS -- */
+    /* -- COMPONENTS -- */
 
-  // This forces a rerender of the component.
-  const forceUpdate = (): void => {
-    setForcedUpdateCounter(forcedUpdateCounter + 1)
-  }
+    /* -- COMPONENT FUNCTIONS -- */
 
-  // This will logout the current user.
-  const logout = () => {
-    setLoadingMessage('')
-
-    usersModule.logout(
-      () => {
-        setLastLoadingMessage('Signing out...')
-        setCurrentUser(null)
-        setLoadingMessage(null)
-        setCurrentPagePath('AuthPage')
-      },
-      () => {
-        setLoadingMessage(null)
-        setErrorMessage('Server is down. Contact system administrator.')
-      },
-    )
-  }
-
-  // This will switch to the edit mission
-  // form.
-  const login = () => {
-    if (currentUser === null) {
-      pageProps.goToPage('AuthPage', {})
+    // This forces a rerender of the component.
+    const forceUpdate = (): void => {
+      setForcedUpdateCounter(forcedUpdateCounter + 1)
     }
-  }
 
-  // This will switch to the edit mission form.
-  const editMission = () => {
-    if (currentUser !== null && mission !== null) {
-      pageProps.goToPage('MissionFormPage', { mission: mission.clone(true) })
+    // This will logout the current user.
+    const logout = () => {
+      setLoadingMessage('')
+
+      usersModule.logout(
+        () => {
+          setLastLoadingMessage('Signing out...')
+          setCurrentUser(null)
+          setLoadingMessage(null)
+          setCurrentPagePath('AuthPage')
+        },
+        () => {
+          setLoadingMessage(null)
+          setErrorMessage('Server is down. Contact system administrator.')
+        },
+      )
     }
-  }
 
-  /* -- RENDER -- */
+    // This will switch to the edit mission
+    // form.
+    const login = () => {
+      if (currentUser === null) {
+        pageProps.goToPage('AuthPage', {})
+      }
+    }
 
-  let show: boolean = props.show
+    // This will switch to the edit mission form.
+    const editMission = () => {
+      if (currentUser !== null && mission !== null) {
+        pageProps.goToPage('MissionFormPage', { mission: mission.clone(true) })
+      }
+    }
 
-  let className: string = 'DashboardPage'
+    /* -- RENDER -- */
 
-  if (
-    outputPanelIsDisplayed === true &&
-    executeNodePathPromptIsDisplayed === false &&
-    actionSelectionPromptIsDisplayed === false
-  ) {
-    className += ' DashboardPageWithOutputPanelOnly'
-  } else if (
-    outputPanelIsDisplayed === true &&
-    actionSelectionPromptIsDisplayed === true &&
-    executeNodePathPromptIsDisplayed === false
-  ) {
-    className += ' DashboardPageWithOutputPanelAndActionPrompt'
-  } else if (
-    outputPanelIsDisplayed === true &&
-    executeNodePathPromptIsDisplayed === true &&
-    actionSelectionPromptIsDisplayed === false
-  ) {
-    className += ' DashboardPageWithOutputPanelAndExecuteNodePathPrompt'
-  } else if (
-    outputPanelIsDisplayed === false &&
-    executeNodePathPromptIsDisplayed === true &&
-    actionSelectionPromptIsDisplayed === false
-  ) {
-    className += ' DashboardPageWithExecuteNodePathPromptOnly'
-  } else if (
-    outputPanelIsDisplayed === false &&
-    executeNodePathPromptIsDisplayed === false &&
-    actionSelectionPromptIsDisplayed === true
-  ) {
-    className += ' DashboardPageWithActionSelectionPromptOnly'
-  } else {
-    className += ' DashboardPageWithMapOnly'
-  }
+    let className: string = 'GamePage'
 
-  // Keeps track of if the user is logged in or not.
-  // If the user is not logged in then the sign out button will not display.
-  // If the user is logged in then the "Login" button will change to "Edit Mission"
-  // and the "Sign Out" button will appear.
-  let navClassName = 'Navigation'
+    if (
+      outputPanelIsDisplayed === true &&
+      executeNodePathPromptIsDisplayed === false &&
+      actionSelectionPromptIsDisplayed === false
+    ) {
+      className += ' GamePageWithOutputPanelOnly'
+    } else if (
+      outputPanelIsDisplayed === true &&
+      actionSelectionPromptIsDisplayed === true &&
+      executeNodePathPromptIsDisplayed === false
+    ) {
+      className += ' GamePageWithOutputPanelAndActionPrompt'
+    } else if (
+      outputPanelIsDisplayed === true &&
+      executeNodePathPromptIsDisplayed === true &&
+      actionSelectionPromptIsDisplayed === false
+    ) {
+      className += ' GamePageWithOutputPanelAndExecuteNodePathPrompt'
+    } else if (
+      outputPanelIsDisplayed === false &&
+      executeNodePathPromptIsDisplayed === true &&
+      actionSelectionPromptIsDisplayed === false
+    ) {
+      className += ' GamePageWithExecuteNodePathPromptOnly'
+    } else if (
+      outputPanelIsDisplayed === false &&
+      executeNodePathPromptIsDisplayed === false &&
+      actionSelectionPromptIsDisplayed === true
+    ) {
+      className += ' GamePageWithActionSelectionPromptOnly'
+    } else {
+      className += ' GamePageWithMapOnly'
+    }
 
-  if (currentUser !== null) {
-    navClassName += ' SignOut'
-  }
+    // Keeps track of if the user is logged in or not.
+    // If the user is not logged in then the sign out button will not display.
+    // If the user is logged in then the "Login" button will change to "Edit Mission"
+    // and the "Sign Out" button will appear.
+    let navClassName = 'Navigation'
 
-  if (show && mission !== null) {
+    if (currentUser !== null) {
+      navClassName += ' SignOut'
+    }
+
     return (
       <div className={className}>
         {
           // -- navigation --
         }
         <div className={navClassName}>
-          <Branding />
+          <Branding
+            goHome={() => pageProps.goToPage('StudentMissionSelectionPage', {})}
+          />
           <div className='EditMission Link' onClick={editMission}>
             Edit mission
           </div>

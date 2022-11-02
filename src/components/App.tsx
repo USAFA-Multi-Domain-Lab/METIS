@@ -1,5 +1,5 @@
 import './App.scss'
-import DashboardPage from './pages/DashboardPage'
+import GamePage from './pages/GamePage'
 import AuthPage from './pages/AuthPage'
 import { useStore } from 'react-context-hook'
 import usersModule, { IUser } from '../modules/users'
@@ -16,6 +16,9 @@ import { AnyObject } from '../modules/toolbox/objects'
 // Default props in every page props.
 export interface IPageProps {
   goToPage: (pagePath: string, pageProps: AnyObject) => void
+  show: boolean
+  currentPagePath: string
+  isCurrentPage: boolean
 }
 
 const loadingMinTime = 500
@@ -23,7 +26,7 @@ const loadingMinTime = 500
 // This function normalizes how pages are rendered.
 // in the application.
 function StandardPage(props: {
-  Page: (props: { show: boolean; pageProps: any }) => JSX.Element | null
+  Page: (props: { pageProps: any }) => JSX.Element | null
   targetPagePath: string
   requireLogin?: boolean // default true
 }): JSX.Element | null {
@@ -52,21 +55,21 @@ function StandardPage(props: {
     setCurrentPageProps(pageProps)
   }
 
-  pageProps = { ...pageProps, goToPage }
+  pageProps = {
+    ...pageProps,
+    goToPage,
+    show:
+      (currentUser !== null || !requireLogin) &&
+      currentPagePath === targetPagePath &&
+      appMountHandled &&
+      loadingMessage === null &&
+      loadingMinTimeReached &&
+      errorMessage === null,
+    currentPagePath,
+    isCurrentPage: currentPagePath === targetPagePath,
+  }
 
-  return (
-    <Page
-      show={
-        (currentUser !== null || !requireLogin) &&
-        currentPagePath === targetPagePath &&
-        appMountHandled &&
-        loadingMessage === null &&
-        loadingMinTimeReached &&
-        errorMessage === null
-      }
-      pageProps={pageProps}
-    />
-  )
+  return <Page pageProps={pageProps} />
 }
 
 // This is the renderer for the entire application.
@@ -76,6 +79,10 @@ function App(): JSX.Element | null {
   const [currentUser, setCurrentUser] = useStore<IUser | null>('currentUser')
   const [currentPagePath, setCurrentPagePath] =
     useStore<string>('currentPagePath')
+  const [currentPageProps, setCurrentPageProps] = useStore<AnyObject>(
+    'currentPageProps',
+    {},
+  )
   const [appMountHandled, setAppMountHandled] =
     useStore<boolean>('appMountHandled')
   const [loadingMessage, setLoadMessage] = useStore<string | null>(
@@ -92,7 +99,6 @@ function App(): JSX.Element | null {
   const [tooltipDescription] = useStore<string>('tooltipDescription')
   const [tooltips] = useStore<React.RefObject<HTMLDivElement>>('tooltips')
   const [hideTooltip] = useStore<() => void>('hideTooltip')
-  const [allMissions, setAllMissions] = useStore<Array<Mission>>('allMissions')
 
   /* -- COMPONENT STATE -- */
 
@@ -105,6 +111,13 @@ function App(): JSX.Element | null {
   // rerender.
   const forceUpdate = (): void => {
     setForcedUpdateCounter(forcedUpdateCounter + 1)
+  }
+
+  // This will go to a specific page
+  // passing the necessary props.
+  const goToPage = (pagePath: string, pageProps: AnyObject): void => {
+    setCurrentPagePath(pagePath)
+    setCurrentPageProps(pageProps)
   }
 
   /* -- COMPONENT HANDLERS -- */
@@ -161,24 +174,14 @@ function App(): JSX.Element | null {
       usersModule.retrieveCurrentUser(
         (currentUser: IUser | null) => {
           setCurrentUser(currentUser)
+          setAppMountHandled(true)
+          setLoadMessage(null)
 
-          // This loads the mission in session from the database
-          // and stores it in a global state to be used on the DashboardPage
-          // where the Mission Map renders
-          getAllMissions(
-            (missions: Array<Mission>) => {
-              setAllMissions(missions)
-              setCurrentPagePath('StudentMissionSelectionPage')
-              setLastLoadingMessage('Getting Missions...')
-              setAppMountHandled(true)
-              setLoadMessage(null)
-            },
-            () => {
-              setErrorMessage('Failed to retrieve mission.')
-              setAppMountHandled(true)
-              setLoadMessage(null)
-            },
-          )
+          if (loadingMessage !== null) {
+            setLastLoadingMessage(loadingMessage)
+          }
+
+          goToPage('StudentMissionSelectionPage', {})
         },
         () => {
           setErrorMessage('Failed to sync session.')
@@ -228,8 +231,8 @@ function App(): JSX.Element | null {
         requireLogin={false}
       />
       <StandardPage
-        Page={DashboardPage}
-        targetPagePath='DashboardPage'
+        Page={GamePage}
+        targetPagePath='GamePage'
         requireLogin={false}
       />
       <StandardPage

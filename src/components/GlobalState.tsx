@@ -4,6 +4,7 @@ import { Mission } from '../modules/missions'
 import { MissionNode } from '../modules/mission-nodes'
 import { MissionNodeAction } from '../modules/mission-node-actions'
 import { IUser } from '../modules/users'
+import { AnyObject } from 'mongoose'
 
 /* -- constants -- */
 
@@ -23,6 +24,7 @@ interface IStateSetters {
 export default class GlobalState {
   currentUser: IUser | null
   currentPagePath: string
+  currentPageProps: AnyObject
   appMountHandled: boolean
   stateSetters: IStateSetters
   loadingMinTimeReached: boolean
@@ -45,7 +47,8 @@ export default class GlobalState {
 
   constructor(stateSetters: IStateSetters) {
     this.currentUser = null
-    this.currentPagePath = 'DashboardPage'
+    this.currentPagePath = ''
+    this.currentPageProps = {}
     this.appMountHandled = false
     this.stateSetters = stateSetters
     this.loadingMessage = 'Initializing application...'

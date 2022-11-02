@@ -1,14 +1,19 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useStore } from 'react-context-hook'
-import { getMission, Mission } from '../../modules/missions'
+import { getAllMissions, getMission, Mission } from '../../modules/missions'
 import { Counter } from '../../modules/numbers'
+import { IPageProps } from '../App'
 import './StudentMissionSelectionPage.scss'
 
-const StudentMissionSelectionPage = (): JSX.Element | null => {
+interface IStudentMissionSelectionPageProps extends IPageProps {}
+
+const StudentMissionSelectionPage = (props: {
+  pageProps: IStudentMissionSelectionPageProps
+}): JSX.Element | null => {
+  let pageProps: IStudentMissionSelectionPageProps = props.pageProps
+
   /* -- GLOBAL STATE -- */
 
-  const [currentPagePath, setCurrentPagePath] =
-    useStore<string>('currentPagePath')
   const [appMountHandled, setAppMountHandled] =
     useStore<boolean>('appMountHandled')
   const [loadingMessage, setLoadMessage] = useStore<string | null>(
@@ -21,59 +26,92 @@ const StudentMissionSelectionPage = (): JSX.Element | null => {
     'errorMessage',
   )
 
-  // ! Will be removed at next merge with jordan.stokes branch (11.2.2022)
-  const [mission, setMission] = useStore<Mission | null>('mission')
-  const [allMissions] = useStore<Array<Mission>>('allMissions')
-  // ! Will be removed at next merge with jordan.stokes branch (11.2.2022)
-
   /* -- COMPONENT STATE -- */
 
-  /* -- COMPONENT FUNCTIONS -- */
+  const [mountHandled, setMountHandled] = useState<boolean>(false)
+  const [missions, setMissions] = useState<Array<Mission>>([])
 
-  // This loads the mission in session from the database
-  // and stores it in a global state to be used on the DashboardPage
-  // where the Mission Map renders
-  const selectMission = (missionIDValue: string) => {
-    setLoadMessage('')
+  /* -- COMPONENT EFFECTS -- */
 
-    getMission(
-      (selectedMission: Mission) => {
-        setMission(selectedMission)
-        setCurrentPagePath('DashboardPage')
-        setLastLoadingMessage('Initializing application...')
-        setLoadMessage(null)
-      },
-      () => {
-        setErrorMessage('Failed to retrieve mission.')
-        setLoadMessage(null)
-      },
-      missionIDValue,
-    )
-  }
+  // Equivalent of componentDidMount.
+  useEffect(() => {
+    if (!mountHandled && pageProps.isCurrentPage) {
+      let loadingMessage: string = 'Getting missions...'
 
-  /* -- RENDER -- */
+      setLoadMessage(loadingMessage)
 
-  let number: Counter = new Counter(1)
+      // This loads the mission in session from the database
+      // and stores it in a global state to be used on the GamePage
+      // where the Mission Map renders
+      getAllMissions(
+        (missions: Array<Mission>) => {
+          setMissions(missions)
+          setLastLoadingMessage(loadingMessage)
+          setLoadMessage(null)
+          setMountHandled(true)
+        },
+        () => {
+          setErrorMessage('Failed to retrieve mission.')
+          setLastLoadingMessage(loadingMessage)
+          setLoadMessage(null)
+          setMountHandled(true)
+        },
+      )
+    } else if (mountHandled && !pageProps.isCurrentPage) {
+      setMountHandled(false)
+    }
+  }, [mountHandled, pageProps.isCurrentPage])
 
-  return (
-    <div className='StudentMissionSelectionPage'>
-      <div className='MissionList'>
-        Choose your mission:
-        {allMissions.map((mission: Mission) => {
-          return (
-            <div
-              className='MissionName'
-              key={mission.name}
-              onClick={() => selectMission(mission.missionID)}
-            >
-              {' '}
-              {number.count++}. {mission.name}
-            </div>
-          )
-        })}
+  // If active page.
+  if (pageProps.show) {
+    /* -- COMPONENT FUNCTIONS -- */
+
+    // This loads the mission in session from the database
+    // and stores it in a global state to be used on the GamePage
+    // where the Mission Map renders
+    const selectMission = (missionIDValue: string) => {
+      setLoadMessage('')
+
+      getMission(
+        (selectedMission: Mission) => {
+          pageProps.goToPage('GamePage', { mission: selectedMission })
+          setLastLoadingMessage('Initializing application...')
+          setLoadMessage(null)
+        },
+        () => {
+          setErrorMessage('Failed to retrieve mission.')
+          setLoadMessage(null)
+        },
+        missionIDValue,
+      )
+    }
+
+    /* -- RENDER -- */
+
+    let number: Counter = new Counter(1)
+
+    return (
+      <div className='StudentMissionSelectionPage'>
+        <div className='MissionList'>
+          Choose your mission:
+          {missions.map((mission: Mission) => {
+            return (
+              <div
+                className='MissionName'
+                key={mission.name}
+                onClick={() => selectMission(mission.missionID)}
+              >
+                {' '}
+                {number.count++}. {mission.name}
+              </div>
+            )
+          })}
+        </div>
       </div>
-    </div>
-  )
+    )
+  } else {
+    return null
+  }
 }
 
 export default StudentMissionSelectionPage

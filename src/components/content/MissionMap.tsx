@@ -679,6 +679,7 @@ export default class MissionMap extends React.Component<
 
   // inherited
   render(): JSX.Element {
+    let mission: Mission = this.props.mission
     let missionAjaxStatus: EAjaxStatus = this.props.missionAjaxStatus
     let visibleNodes: Array<MissionNode> = this.state.visibleNodes
     let navigationIsActive: boolean = this.state.navigationIsActive
@@ -881,7 +882,7 @@ export default class MissionMap extends React.Component<
             }
             return styling
           }}
-          headingText={'Mission Map'}
+          headingText={mission.name}
           alwaysUseBlanks={false}
         />
 
