@@ -34,6 +34,8 @@ const StudentMissionSelectionPage = (): JSX.Element | null => {
   // and stores it in a global state to be used on the DashboardPage
   // where the Mission Map renders
   const selectMission = (missionIDValue: string) => {
+    setLoadMessage('')
+
     getMission(
       (selectedMission: Mission) => {
         setMission(selectedMission)
