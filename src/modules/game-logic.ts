@@ -1,4 +1,4 @@
-import { MissionNode } from './missions'
+import { MissionNode } from './mission-nodes'
 
 export const handleNodeSelection = (selectedNode: MissionNode) => {
   if (selectedNode.expandable && !selectedNode.isExpanded) {

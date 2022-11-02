@@ -14,6 +14,7 @@ export enum EActionPurpose {
   Reorder,
   ZoomIn,
   ZoomOut,
+  Save,
 }
 
 // Interface for props for Action component.
@@ -56,6 +57,8 @@ export class Action extends React.Component<IAction_P, {}> {
         return 'Action zoom-in'
       case EActionPurpose.ZoomOut:
         return 'Action zoom-out'
+      case EActionPurpose.Save:
+        return 'Action save'
       default:
         return 'Action hidden'
     }

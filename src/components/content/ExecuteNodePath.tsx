@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import './ExecuteNodePath.scss'
 import { useStore } from 'react-context-hook'
-import { MissionNode, MissionNodeAction } from '../../modules/missions'
+import { MissionNode } from '../../modules/mission-nodes'
+import { MissionNodeAction } from '../../modules/mission-node-actions'
 import gameLogic, { runNodeLoadingBar } from '../../modules/game-logic'
 import ActionPropertyDisplay from './ActionPropertyDisplay'
 

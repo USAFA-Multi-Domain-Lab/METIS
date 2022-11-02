@@ -6,7 +6,8 @@ import List from './List'
 import strings from '../../modules/toolbox/strings'
 import { EAjaxStatus } from '../../modules/toolbox/ajax'
 import MoreInformation from './MoreInformation'
-import { Mission, MissionNode } from '../../modules/missions'
+import { Mission } from '../../modules/missions'
+import { MissionNode } from '../../modules/mission-nodes'
 import { Action, EActionPurpose } from './Action'
 import { ActionPanel } from './ActionPanel'
 
@@ -18,6 +19,7 @@ interface IMissionMap {
   handleNodeSelection: (node: MissionNode) => void
   handleMapCreateRequest: (() => void) | null
   handleMapEditRequest: (() => void) | null
+  handleMapSaveRequest: (() => void) | null
   applyNodeClassName: (node: MissionNode) => string
   renderNodeTooltipDescription: (node: MissionNode) => string
 }
@@ -136,6 +138,7 @@ export default class MissionMap extends React.Component<
   static defaultProps = {
     handleMapCreateRequest: null,
     handleMapEditRequest: null,
+    handleMapSaveRequest: null,
     applyMappedNodeClassName: () => '',
     renderMappedNodeTooltipDescription:
       MissionMap.renderMappedNodeTooltipDescription_default,
@@ -532,6 +535,7 @@ export default class MissionMap extends React.Component<
     let mapScale: number = this.state.mapScale
     let handleMapCreateRequest = this.props.handleMapCreateRequest
     let handleMapEditRequest = this.props.handleMapEditRequest
+    let handleMapSaveRequest = this.props.handleMapSaveRequest
     let actionsUniqueClassName: string = 'map-actions'
 
     let availableActions = {
@@ -561,6 +565,12 @@ export default class MissionMap extends React.Component<
         handleClick: handleMapEditRequest ? handleMapEditRequest : () => {},
         tooltipDescription: 'Edit the structure and order of nodes.',
       }),
+      save: new Action({
+        ...Action.defaultProps,
+        purpose: EActionPurpose.Save,
+        handleClick: handleMapSaveRequest ? handleMapSaveRequest : () => {},
+        tooltipDescription: 'Save changes.',
+      }),
     }
     let activeActions: Action[] = []
 
@@ -573,6 +583,10 @@ export default class MissionMap extends React.Component<
 
     if (handleMapEditRequest !== null) {
       activeActions.push(availableActions.edit)
+    }
+
+    if (handleMapSaveRequest !== null) {
+      activeActions.push(availableActions.save)
     }
 
     if (mapScale === maxMapScale) {

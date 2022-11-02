@@ -1,5 +1,5 @@
 import './ActionPropertyDisplay.scss'
-import { MissionNode } from '../../modules/missions'
+import { MissionNode } from '../../modules/mission-nodes'
 
 const ActionPropertyDisplay = (props: {
   selectedNode: MissionNode | null | undefined

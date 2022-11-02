@@ -1,14 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { useStore } from 'react-context-hook'
-import {
-  createTestMission,
-  Mission,
-  MissionNode,
-  ENodeTargetRelation,
-  MissionNodeAction,
-} from '../../modules/missions'
+import { Mission, saveMission } from '../../modules/missions'
 import { EAjaxStatus } from '../../modules/toolbox/ajax'
-import inputs from '../../modules/toolbox/inputs'
 import usersModule, { IUser } from '../../modules/users'
 import Branding from '../content/Branding'
 import {
@@ -24,6 +17,10 @@ import { v4 as generateHash } from 'uuid'
 import './MissionFormPage.scss'
 import { Action, EActionPurpose } from '../content/Action'
 import MoreInformation from '../content/MoreInformation'
+import { AnyObject } from '../../modules/toolbox/objects'
+import { IPageProps } from '../App'
+import { ENodeTargetRelation, MissionNode } from '../../modules/mission-nodes'
+import { MissionNodeAction } from '../../modules/mission-node-actions'
 
 // This is a enum used to describe
 // the locations that one node can
@@ -36,11 +33,19 @@ enum ENodeDropLocation {
   Bottom,
 }
 
+interface IMissionFormPageProps extends IPageProps {
+  mission: Mission
+}
+
 // This will render a dashboard with a radar
 // on it, indicating air traffic passing by.
 export default function MissionFormPage(props: {
   show: boolean
+  pageProps: IMissionFormPageProps
 }): JSX.Element | null {
+  let show: boolean = props.show
+  let mission: Mission = props.pageProps.mission
+
   /* -- GLOBAL STATE -- */
 
   const [currentUser, setCurrentUser] = useStore<IUser | null>('currentUser')
@@ -57,7 +62,6 @@ export default function MissionFormPage(props: {
 
   const [mountHandled, setMountHandled] = useState<boolean>()
   const [forcedUpdateCounter, setForcedUpdateCounter] = useState<number>(0)
-  const [mission, setMission] = useState<Mission | null>(null)
   const [selectedNode, selectNode] = useState<MissionNode | null>(null)
   const [nodeStructuringIsActive, activateNodeStructuring] =
     useState<boolean>(false)
@@ -67,8 +71,6 @@ export default function MissionFormPage(props: {
   // Equivalent of componentDidMount.
   useEffect(() => {
     if (!mountHandled) {
-      let mission: Mission = createTestMission(true)
-      setMission(mission)
       setMountHandled(true)
     }
   }, [mountHandled])
@@ -101,12 +103,7 @@ export default function MissionFormPage(props: {
 
   /* -- RENDER -- */
 
-  let show: boolean = props.show
   let className: string = 'MissionFormPage'
-
-  if (mission !== null) {
-    mission.mapNodeRelationships(true)
-  }
 
   if (selectedNode !== null || nodeStructuringIsActive) {
     className += ' SidePanelIsExpanded'
@@ -152,6 +149,15 @@ export default function MissionFormPage(props: {
                   }
                 : null
             }
+            handleMapSaveRequest={() => {
+              saveMission(
+                mission,
+                () => {
+                  console.log('Mission saved.')
+                },
+                (error: Error) => {},
+              )
+            }}
             applyNodeClassName={(node: MissionNode) => ''}
             renderNodeTooltipDescription={(node: MissionNode) => ''}
           />
@@ -324,7 +330,7 @@ function NodeEntry(props: {
               handleClick={() => {
                 if (node !== null) {
                   let action: MissionNodeAction = new MissionNodeAction(
-                    node.mission,
+                    node,
                     generateHash(),
                     'New Action',
                     '',
