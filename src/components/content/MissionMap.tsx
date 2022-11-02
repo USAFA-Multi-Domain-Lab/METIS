@@ -810,6 +810,7 @@ export default class MissionMap extends React.Component<
                   >
                     {node.name}
                   </div>
+                  <div className='dorito'></div>
                 </div>
               </>
             )
