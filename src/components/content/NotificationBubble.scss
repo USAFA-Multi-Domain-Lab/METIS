@@ -1,0 +1,63 @@
+@import '../../config.scss';
+
+@mixin fade() {
+  @keyframes fade {
+    from {
+      opacity: 1;
+    }
+    to {
+      opacity: 0;
+    }
+  }
+
+  animation-name: fade;
+  animation-timing-function: linear;
+  animation-fill-mode: both;
+  animation-duration: 1000ms;
+}
+
+.NotificationBubble {
+  box-sizing: border-box;
+  white-space: nowrap;
+  margin: 0 auto 20px;
+  border: 2px solid $color-main;
+  border-radius: 16px;
+  width: 450px;
+  padding: 12px 25px 16px;
+  background-color: rgba($background-alt1, 0.95);
+  color: $color-main;
+  line-height: 1.5em;
+  font-size: 15px;
+  font-weight: 700;
+
+  .Message {
+    display: inline-block;
+    white-space: normal;
+    width: 370px;
+  }
+
+  .Dismiss {
+    pointer-events: all;
+    cursor: pointer;
+    -webkit-user-select: none;
+    user-select: none;
+    display: inline-block;
+    transform: scale(1.15, 1);
+    position: relative;
+    top: -2px;
+    width: 10px;
+    vertical-align: top;
+    padding: 0 20px 0 20px;
+    font-size: 24px;
+    font-weight: 100;
+    text-align: center;
+  }
+
+  &.Dismissed {
+    display: none;
+  }
+
+  &.Expired {
+    @include fade();
+  }
+}

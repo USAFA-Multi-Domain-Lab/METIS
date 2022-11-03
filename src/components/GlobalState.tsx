@@ -34,6 +34,7 @@ export default class GlobalState {
   tooltips: React.RefObject<HTMLDivElement>
   tooltipDescription: string
   consoleOutputs: Array<{ date: number; value: string }>
+  notifications: Array<Notification>
   outputPanelIsDisplayed: boolean
   executeNodePathPromptIsDisplayed: boolean
   actionSelectionPromptIsDisplayed: boolean
@@ -58,6 +59,7 @@ export default class GlobalState {
     this.tooltips = React.createRef()
     this.tooltipDescription = ''
     this.consoleOutputs = []
+    this.notifications = []
     this.outputPanelIsDisplayed = false
     this.executeNodePathPromptIsDisplayed = false
     this.actionSelectionPromptIsDisplayed = false

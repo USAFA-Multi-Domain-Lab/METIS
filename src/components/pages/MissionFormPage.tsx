@@ -164,9 +164,11 @@ export default function MissionFormPage(props: {
               saveMission(
                 mission,
                 () => {
-                  console.log('Mission saved.')
+                  pageProps.notify('Mission successfully saved.', 3000)
                 },
-                (error: Error) => {},
+                (error: Error) => {
+                  pageProps.notify('Mission failed to save.', 3000)
+                },
               )
             }}
             applyNodeClassName={(node: MissionNode) => ''}

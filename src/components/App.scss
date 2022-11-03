@@ -77,4 +77,25 @@
       }
     }
   }
+
+  .Notifications {
+    $width: 600px;
+    pointer-events: none;
+    position: absolute;
+    z-index: $z-index-notifications;
+    left: calc(50% - (#{$width} / 2));
+    box-sizing: border-box;
+    width: $width;
+    height: 100%;
+    padding-top: 75px;
+
+    .Glue {
+      position: -webkit-sticky;
+      position: sticky;
+      top: 75px;
+
+      .NotificationBubble {
+      }
+    }
+  }
 }
