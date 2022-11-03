@@ -28,8 +28,6 @@ export default function GamePage(props: {
   /* -- GLOBAL STATE -- */
 
   const [currentUser, setCurrentUser] = useStore<IUser | null>('currentUser')
-  const [currentPagePath, setCurrentPagePath] =
-    useStore<string>('currentPagePath')
   const [loadingMessage, setLoadingMessage] = useStore<string | null>(
     'loadingMessage',
   )
@@ -94,7 +92,12 @@ export default function GamePage(props: {
           setLastLoadingMessage('Signing out...')
           setCurrentUser(null)
           setLoadingMessage(null)
-          pageProps.goToPage('AuthPage', {})
+          pageProps.goToPage('AuthPage', {
+            goBackPagePath: 'StudentMissionSelectionPage',
+            goBackPageProps: {},
+            postLoginPagePath: 'StudentMissionSelectionPage',
+            postLoginPageProps: {},
+          })
         },
         () => {
           setLoadingMessage(null)
@@ -107,7 +110,12 @@ export default function GamePage(props: {
     // form.
     const login = () => {
       if (currentUser === null) {
-        pageProps.goToPage('AuthPage', {})
+        pageProps.goToPage('AuthPage', {
+          goBackPagePath: 'GamePage',
+          goBackPageProps: { mission },
+          postLoginPagePath: 'GamePage',
+          postLoginPageProps: { mission },
+        })
       }
     }
 

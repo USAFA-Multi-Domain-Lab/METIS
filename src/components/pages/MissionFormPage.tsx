@@ -47,8 +47,6 @@ export default function MissionFormPage(props: {
   /* -- GLOBAL STATE -- */
 
   const [currentUser, setCurrentUser] = useStore<IUser | null>('currentUser')
-  const [currentPagePath, setCurrentPagePath] =
-    useStore<string>('currentPagePath')
   const [loadingMessage, setLoadingMessage] = useStore<string | null>(
     'loadingMessage',
   )
@@ -98,7 +96,12 @@ export default function MissionFormPage(props: {
         () => {
           setCurrentUser(null)
           setLoadingMessage(null)
-          setCurrentPagePath('AuthPage')
+          pageProps.goToPage('AuthPage', {
+            goBackPagePath: 'StudentMissionSelectionPage',
+            goBackPageProps: {},
+            postLoginPagePath: 'StudentMissionSelectionPage',
+            postLoginPageProps: {},
+          })
           setLastLoadingMessage('Signing out...')
         },
         () => {

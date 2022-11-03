@@ -11,8 +11,8 @@ import { AnyObject } from '../../modules/toolbox/objects'
 interface IAuthPagProps extends IPageProps {
   goBackPagePath: string
   goBackPageProps: AnyObject
-  postLoginPath: string
-  postLoginProps: AnyObject
+  postLoginPagePath: string
+  postLoginPathProps: AnyObject
 }
 
 // This will render a page where a user can
@@ -25,7 +25,6 @@ export default function AuthPage(props: {
   /* -- GLOBAL STATE -- */
 
   const [currentUser, setCurrentUser] = useStore('currentUser')
-  const [currentPagePath, setCurrentPagePath] = useStore('currentPagePath')
   const [loadingMessage, setLoadingMessage] = useStore('loadingMessage')
   const [lastLoadingMessage, setLastLoadingMessage] =
     useStore<string>('lastLoadingMessage')
@@ -100,7 +99,10 @@ export default function AuthPage(props: {
               setIsSubmitting(false)
               setLoadingMessage(null)
               setCurrentUser(currentUser)
-              pageProps.goToPage('GamePage', {})
+              pageProps.goToPage(
+                pageProps.postLoginPagePath,
+                pageProps.postLoginPathProps,
+              )
               setLastLoadingMessage('Initializing application...')
             } else {
               handleLoginError('Incorrect username or password.')
@@ -125,7 +127,7 @@ export default function AuthPage(props: {
   }
 
   const returnToDashboard = () => {
-    pageProps.goToPage('GamePage', {})
+    pageProps.goToPage(pageProps.goBackPagePath, pageProps.goBackPageProps)
   }
 
   /* -- RENDER -- */
