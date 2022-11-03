@@ -6,8 +6,14 @@ import usersModule, { IUser } from '../../modules/users'
 import { AxiosError } from 'axios'
 import { useStore } from 'react-context-hook'
 import { IPageProps } from '../App'
+import { AnyObject } from '../../modules/toolbox/objects'
 
-interface IAuthPagProps extends IPageProps {}
+interface IAuthPagProps extends IPageProps {
+  goBackPagePath: string
+  goBackPageProps: AnyObject
+  postLoginPath: string
+  postLoginProps: AnyObject
+}
 
 // This will render a page where a user can
 // login to view the radar.

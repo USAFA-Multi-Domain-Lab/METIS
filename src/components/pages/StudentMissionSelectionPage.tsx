@@ -117,8 +117,6 @@ const StudentMissionSelectionPage = (props: {
 
     /* -- RENDER -- */
 
-    let number: Counter = new Counter(1)
-
     // Keeps track of if the user is logged in or not.
     // If the user is not logged in then the sign out button will not display.
     // If the user is logged in then the "Login" button will change to "Edit Mission"
@@ -145,21 +143,21 @@ const StudentMissionSelectionPage = (props: {
         </div>
         {/* { Content } */}
         <div className='MissionListContainer'>
-          <div className='MissionList'>
+          <ol className='MissionList'>
             Choose your mission:
             {missions.map((mission: Mission) => {
               return (
-                <div
+                <li
                   className='MissionName'
                   key={mission.name}
                   onClick={() => selectMission(mission.missionID)}
                 >
                   {' '}
-                  {number.count++}.{mission.name}
-                </div>
+                  {mission.name}
+                </li>
               )
             })}
-          </div>
+          </ol>
         </div>
       </div>
     )

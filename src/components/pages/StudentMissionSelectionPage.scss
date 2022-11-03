@@ -48,15 +48,21 @@
   }
 
   .MissionList {
+    width: 50%;
     font-size: 1.2em;
   }
 
   .MissionName {
     margin-top: 20px;
+    margin-left: 35px;
+    width: fit-content;
 
     &.MissionName:hover {
       cursor: pointer;
       color: $terminal;
     }
+  }
+  @media only screen and (max-width: 768px) {
+    padding: 20px;
   }
 }
