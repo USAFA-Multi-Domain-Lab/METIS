@@ -93,10 +93,10 @@ export default function GamePage(props: {
           setCurrentUser(null)
           setLoadingMessage(null)
           pageProps.goToPage('AuthPage', {
-            goBackPagePath: 'StudentMissionSelectionPage',
-            goBackPageProps: {},
-            postLoginPagePath: 'StudentMissionSelectionPage',
-            postLoginPageProps: {},
+            goBackPagePath: 'GamePage',
+            goBackPageProps: { mission },
+            postLoginPagePath: 'GamePage',
+            postLoginPageProps: { mission },
           })
         },
         () => {
@@ -181,7 +181,7 @@ export default function GamePage(props: {
         }
         <div className={navClassName}>
           <Branding
-            goHome={() => pageProps.goToPage('StudentMissionSelectionPage', {})}
+            goHome={() => pageProps.goToPage('MissionSelectionPage', {})}
           />
           <div className='EditMission Link' onClick={editMission}>
             Edit mission
@@ -200,7 +200,7 @@ export default function GamePage(props: {
               mission={mission}
               missionAjaxStatus={EAjaxStatus.Loaded}
               handleNodeSelection={(selectedNode: MissionNode) => {
-                console.log(mission.name)
+                console.log(selectedNode.device)
 
                 setLastSelectedNode(selectedNode)
 

@@ -10,7 +10,7 @@ import GlobalState, { tooltipsOffsetX, tooltipsOffsetY } from './GlobalState'
 import Markdown, { MarkdownTheme } from './content/Markdown'
 import MissionFormPage from './pages/MissionFormPage'
 import { getAllMissions, Mission } from '../modules/missions'
-import StudentMissionSelectionPage from './pages/StudentMissionSelectionPage'
+import MissionSelectionPage from './pages/MissionSelectionPage'
 import { AnyObject } from '../modules/toolbox/objects'
 
 // Default props in every page props.
@@ -181,7 +181,7 @@ function App(): JSX.Element | null {
             setLastLoadingMessage(loadingMessage)
           }
 
-          goToPage('StudentMissionSelectionPage', {})
+          goToPage('MissionSelectionPage', {})
         },
         () => {
           setErrorMessage('Failed to sync session.')
@@ -236,8 +236,8 @@ function App(): JSX.Element | null {
         requireLogin={false}
       />
       <StandardPage
-        Page={StudentMissionSelectionPage}
-        targetPagePath='StudentMissionSelectionPage'
+        Page={MissionSelectionPage}
+        targetPagePath='MissionSelectionPage'
         requireLogin={false}
       />
       <StandardPage Page={MissionFormPage} targetPagePath='MissionFormPage' />

@@ -17,7 +17,6 @@ import { v4 as generateHash } from 'uuid'
 import './MissionFormPage.scss'
 import { Action, EActionPurpose } from '../content/Action'
 import MoreInformation from '../content/MoreInformation'
-import { AnyObject } from '../../modules/toolbox/objects'
 import { IPageProps } from '../App'
 import { ENodeTargetRelation, MissionNode } from '../../modules/mission-nodes'
 import { MissionNodeAction } from '../../modules/mission-node-actions'
@@ -97,10 +96,8 @@ export default function MissionFormPage(props: {
           setCurrentUser(null)
           setLoadingMessage(null)
           pageProps.goToPage('AuthPage', {
-            goBackPagePath: 'StudentMissionSelectionPage',
-            goBackPageProps: {},
-            postLoginPagePath: 'StudentMissionSelectionPage',
-            postLoginPageProps: {},
+            goBackPagePath: 'GamePage',
+            goBackPageProps: { mission: mission.clone(false) },
           })
           setLastLoadingMessage('Signing out...')
         },
@@ -126,7 +123,7 @@ export default function MissionFormPage(props: {
         }
         <div className='Navigation'>
           <Branding
-            goHome={() => pageProps.goToPage('StudentMissionSelectionPage', {})}
+            goHome={() => pageProps.goToPage('MissionSelectionPage', {})}
           />
           <div className='Logout Link' onClick={logout}>
             Sign out

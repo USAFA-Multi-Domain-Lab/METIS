@@ -49,6 +49,7 @@ export class MissionNode {
   postExecutionSuccessText: string
   postExecutionFailureText: string
   executable: boolean
+  device: boolean
   actions: Array<MissionNodeAction> = []
   selectedAction: MissionNodeAction | null
   _executed: boolean
@@ -99,6 +100,7 @@ export class MissionNode {
     postExecutionSuccessText: string,
     postExecutionFailureText: string,
     executable: boolean,
+    device: boolean,
     actionData: Array<AnyObject>,
     mapX: number,
     mapY: number,
@@ -113,6 +115,7 @@ export class MissionNode {
     this.postExecutionSuccessText = postExecutionSuccessText
     this.postExecutionFailureText = postExecutionFailureText
     this.executable = executable
+    this.device = device
     this.selectedAction = null
     this._executed = false
     this._executing = false

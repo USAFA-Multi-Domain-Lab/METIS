@@ -100,8 +100,8 @@ export default function AuthPage(props: {
               setLoadingMessage(null)
               setCurrentUser(currentUser)
               pageProps.goToPage(
-                pageProps.postLoginPagePath,
-                pageProps.postLoginPathProps,
+                pageProps.goBackPagePath,
+                pageProps.goBackPageProps,
               )
               setLastLoadingMessage('Initializing application...')
             } else {
@@ -139,7 +139,7 @@ export default function AuthPage(props: {
     return (
       <div className='AuthPage'>
         <div className='BackButton' onClick={returnToDashboard}>
-          &lt; Return to Mission
+          &lt; Previous Page
         </div>
         <div className='Login'>
           <div className='ErrorMessage'>{errorMessage}</div>

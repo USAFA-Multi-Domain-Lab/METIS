@@ -1,6 +1,6 @@
 @import '../../config.scss';
 
-.StudentMissionSelectionPage {
+.MissionSelectionPage {
   margin: 0 auto;
   padding: 35px 20% 0;
   height: 90vh;
@@ -48,7 +48,6 @@
   }
 
   .MissionList {
-    width: 50%;
     font-size: 1.2em;
   }
 
@@ -64,5 +63,17 @@
   }
   @media only screen and (max-width: 768px) {
     padding: 20px;
+  }
+}
+
+.MissionSelectionPage {
+  .SignOut {
+    .Logout {
+      display: flex;
+    }
+
+    .Login {
+      display: none;
+    }
   }
 }

@@ -5,14 +5,14 @@ import { Counter } from '../../modules/numbers'
 import { IPageProps } from '../App'
 import Branding from '../content/Branding'
 import usersModule, { IUser } from '../../modules/users'
-import './StudentMissionSelectionPage.scss'
+import './MissionSelectionPage.scss'
 
-interface IStudentMissionSelectionPageProps extends IPageProps {}
+interface IMissionSelectionPageProps extends IPageProps {}
 
-const StudentMissionSelectionPage = (props: {
-  pageProps: IStudentMissionSelectionPageProps
+const MissionSelectionPage = (props: {
+  pageProps: IMissionSelectionPageProps
 }): JSX.Element | null => {
-  let pageProps: IStudentMissionSelectionPageProps = props.pageProps
+  let pageProps: IMissionSelectionPageProps = props.pageProps
 
   /* -- GLOBAL STATE -- */
 
@@ -98,7 +98,12 @@ const StudentMissionSelectionPage = (props: {
           setLastLoadingMessage('Signing out...')
           setCurrentUser(null)
           setLoadingMessage(null)
-          pageProps.goToPage('AuthPage', {})
+          pageProps.goToPage('AuthPage', {
+            goBackPagePath: 'MissionSelectionPage',
+            goBackPageProps: {},
+            postLoginPagePath: 'MissionSelectionPage',
+            postLoginPageProps: {},
+          })
         },
         () => {
           setLoadingMessage(null)
@@ -111,7 +116,12 @@ const StudentMissionSelectionPage = (props: {
     // form.
     const login = () => {
       if (currentUser === null) {
-        pageProps.goToPage('AuthPage', {})
+        pageProps.goToPage('AuthPage', {
+          goBackPagePath: 'MissionSelectionPage',
+          goBackPageProps: {},
+          postLoginPagePath: 'MissionSelectionPage',
+          postLoginPageProps: {},
+        })
       }
     }
 
@@ -128,11 +138,11 @@ const StudentMissionSelectionPage = (props: {
     }
 
     return (
-      <div className='StudentMissionSelectionPage'>
+      <div className='MissionSelectionPage'>
         {/* { Navigation } */}
         <div className={navClassName}>
           <Branding
-            goHome={() => pageProps.goToPage('StudentMissionSelectionPage', {})}
+            goHome={() => pageProps.goToPage('MissionSelectionPage', {})}
           />
           <div className='Login Link' onClick={login}>
             Login
@@ -166,4 +176,4 @@ const StudentMissionSelectionPage = (props: {
   }
 }
 
-export default StudentMissionSelectionPage
+export default MissionSelectionPage

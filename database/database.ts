@@ -77,6 +77,7 @@ export function ensureDefaultDataExists(): void {
             postExecutionFailureText: '',
             actionData: 'exec command',
             executable: false,
+            device: false,
             actions: [
               {
                 actionID: '29db5000-811e-49c8-a43d-1d946b5fbd89',
@@ -133,6 +134,7 @@ export function ensureDefaultDataExists(): void {
             postExecutionFailureText: 'Cellular Network failed.',
             actionData: 'exec command',
             executable: false,
+            device: false,
             actions: [
               {
                 actionID: 'd8a4241a-e483-460a-92a9-ef89b347b735',
@@ -190,6 +192,7 @@ export function ensureDefaultDataExists(): void {
               'Internet Provider has failed to execute.',
             actionData: 'exec command',
             executable: false,
+            device: false,
             actions: [
               {
                 actionID: 'efdde98a-d150-4712-8c3f-3781d5726ca5',
@@ -247,6 +250,7 @@ export function ensureDefaultDataExists(): void {
               'Instant Messaging has failed to execute.',
             actionData: 'exec command',
             executable: false,
+            device: false,
             actions: [
               {
                 actionID: '6cdaca7a-3cee-4ddd-b44b-3415966bf17b',
@@ -304,6 +308,7 @@ export function ensureDefaultDataExists(): void {
               'File Sharing Service has failed to execute.',
             actionData: 'exec command',
             executable: false,
+            device: false,
             actions: [
               {
                 actionID: '93aaeb8d-0cfc-49df-9e97-1ee6cc72770a',
@@ -361,6 +366,7 @@ export function ensureDefaultDataExists(): void {
               'Callbank Cellular has failed to execute.',
             actionData: 'exec command',
             executable: false,
+            device: false,
             actions: [
               {
                 actionID: 'a50cd5ee-490f-45ca-b633-d45818a95bdb',
@@ -417,6 +423,7 @@ export function ensureDefaultDataExists(): void {
             postExecutionFailureText: 'Service Provider has failed to execute.',
             actionData: 'exec command',
             executable: false,
+            device: false,
             actions: [
               {
                 actionID: '1c202e10-38d3-4c52-8b51-ab2934506e5b',
@@ -452,6 +459,7 @@ export function ensureDefaultDataExists(): void {
             postExecutionFailureText: 'Service Provider has failed to execute.',
             actionData: 'exec command',
             executable: false,
+            device: false,
             actions: [
               {
                 actionID: '28c69db7-1563-40aa-ba38-523d2f9ed7ff',
@@ -508,6 +516,7 @@ export function ensureDefaultDataExists(): void {
             postExecutionFailureText: 'Service Provider has failed to execute.',
             actionData: 'exec command',
             executable: false,
+            device: false,
             actions: [
               {
                 actionID: 'f1bc48de-7d95-4225-acea-61e432853df9',
@@ -564,6 +573,7 @@ export function ensureDefaultDataExists(): void {
             postExecutionFailureText: 'Cellular Towers has failed to execute.',
             actionData: 'exec command',
             executable: true,
+            device: false,
             actions: [
               {
                 actionID: 'afb38dd0-61ac-4ec1-94e1-0699b2fa7d81',
@@ -620,6 +630,7 @@ export function ensureDefaultDataExists(): void {
             postExecutionFailureText: 'Main Server has failed to execute.',
             actionData: 'exec command',
             executable: true,
+            device: false,
             actions: [
               {
                 actionID: '765779fb-e72e-4d31-b622-1d2974d20620',
@@ -676,6 +687,7 @@ export function ensureDefaultDataExists(): void {
             postExecutionFailureText: 'Main Server has failed to execute.',
             actionData: 'exec command',
             executable: true,
+            device: false,
             actions: [
               {
                 actionID: 'd55b4d78-1513-4b85-88a0-c66ab3fc2ed2',
@@ -732,6 +744,7 @@ export function ensureDefaultDataExists(): void {
             postExecutionFailureText: 'Main Server has failed to execute.',
             actionData: 'exec command',
             executable: true,
+            device: false,
             actions: [
               {
                 actionID: 'b34b264e-6988-4b8a-a669-80e9e5f5580d',
@@ -788,6 +801,7 @@ export function ensureDefaultDataExists(): void {
             postExecutionFailureText: '',
             actionData: 'exec command',
             executable: false,
+            device: false,
             actions: [
               {
                 actionID: '6e7dd1ac-e8ec-478a-a982-8240018a89e8',
@@ -844,6 +858,7 @@ export function ensureDefaultDataExists(): void {
             postExecutionFailureText: 'IADS Network has failed to execute.',
             actionData: 'exec command',
             executable: false,
+            device: false,
             actions: [
               {
                 actionID: '46342488-1739-4761-b06e-31227b4ad366',
@@ -902,6 +917,7 @@ export function ensureDefaultDataExists(): void {
               'Individual IADS Sites has failed to execute.',
             actionData: 'exec command',
             executable: false,
+            device: false,
             actions: [
               {
                 actionID: '849d0a2e-aa4e-45ee-93c3-a769990e060e',
@@ -958,6 +974,7 @@ export function ensureDefaultDataExists(): void {
             postExecutionFailureText: 'Launchers has failed to execute.',
             actionData: 'exec command',
             executable: true,
+            device: false,
             actions: [
               {
                 actionID: '42cb82e4-3ffd-4213-8287-64b911208c47',
@@ -1014,6 +1031,7 @@ export function ensureDefaultDataExists(): void {
             postExecutionFailureText: 'Radars has failed to execute.',
             actionData: 'exec command',
             executable: true,
+            device: false,
             actions: [
               {
                 actionID: 'f2ab130b-6d44-43e5-b8fa-1426db1fc06f',
@@ -1070,6 +1088,7 @@ export function ensureDefaultDataExists(): void {
             postExecutionFailureText: '',
             actionData: 'exec command',
             executable: false,
+            device: false,
             actions: [
               {
                 actionID: '11ae7514-e47f-492f-8210-da1cbd719d5b',
@@ -1126,6 +1145,7 @@ export function ensureDefaultDataExists(): void {
             postExecutionFailureText: 'Railroad System has failed to execute.',
             actionData: 'exec command',
             executable: false,
+            device: false,
             actions: [
               {
                 actionID: 'd933a442-d7bc-4e2f-9e0c-a2a8119d8e51',
@@ -1183,6 +1203,7 @@ export function ensureDefaultDataExists(): void {
               'Electrical System has failed to execute.',
             actionData: 'exec command',
             executable: false,
+            device: false,
             actions: [
               {
                 actionID: '0b87dfa4-e0cb-4160-b2b0-cb4afa7597d0',
@@ -1239,6 +1260,7 @@ export function ensureDefaultDataExists(): void {
             postExecutionFailureText: 'Water System has failed to execute.',
             actionData: 'exec command',
             executable: false,
+            device: false,
             actions: [
               {
                 actionID: '7d0b50c0-89a1-4048-9f47-d41aa2adbfc0',
@@ -1295,6 +1317,7 @@ export function ensureDefaultDataExists(): void {
             postExecutionFailureText: 'Road System has failed to execute.',
             actionData: 'exec command',
             executable: false,
+            device: false,
             actions: [
               {
                 actionID: '57f90ba3-d5d9-4668-a215-3d8fb624f7d4',
@@ -1351,6 +1374,7 @@ export function ensureDefaultDataExists(): void {
             postExecutionFailureText: 'Track Monitoring has failed to execute.',
             actionData: 'exec command',
             executable: true,
+            device: false,
             actions: [
               {
                 actionID: '16f205d9-3172-480f-8024-814ef8d9cbf1',
@@ -1408,6 +1432,7 @@ export function ensureDefaultDataExists(): void {
               'Track Switch System has failed to execute.',
             actionData: 'exec command',
             executable: true,
+            device: false,
             actions: [
               {
                 actionID: 'c56be2b0-0592-48e9-ba00-dfb202949d70',
@@ -1464,6 +1489,7 @@ export function ensureDefaultDataExists(): void {
             postExecutionFailureText: 'Regional Service has failed to execute.',
             actionData: 'exec command',
             executable: true,
+            device: false,
             actions: [
               {
                 actionID: '583fe452-0b98-4237-8201-c3167b9cde6a',
@@ -1520,6 +1546,7 @@ export function ensureDefaultDataExists(): void {
             postExecutionFailureText: 'Valve System has failed to execute.',
             actionData: 'exec command',
             executable: true,
+            device: false,
             actions: [
               {
                 actionID: 'f214af64-7a6d-4a94-9862-013cdfaeb4f2',
@@ -1577,6 +1604,7 @@ export function ensureDefaultDataExists(): void {
               'Traffic Light System has failed to execute.',
             actionData: 'exec command',
             executable: true,
+            device: false,
             actions: [
               {
                 actionID: 'fe18e272-a4e0-4507-a07b-60f10538932a',
@@ -1633,6 +1661,7 @@ export function ensureDefaultDataExists(): void {
             postExecutionFailureText: 'CCTV System has failed to execute.',
             actionData: 'exec command',
             executable: true,
+            device: false,
             actions: [
               {
                 actionID: '265cd0e7-4fe8-4c39-a860-aa29a8a653a1',
@@ -1689,6 +1718,7 @@ export function ensureDefaultDataExists(): void {
             postExecutionFailureText: '',
             actionData: 'exec command',
             executable: false,
+            device: false,
             actions: [
               {
                 actionID: '290cc02a-d9a0-4dfa-adf4-5579d3a8a8c9',
@@ -1746,6 +1776,7 @@ export function ensureDefaultDataExists(): void {
               'Global Positioning has failed to execute.',
             actionData: 'exec command',
             executable: true,
+            device: false,
             actions: [
               {
                 actionID: '6fe1af1d-5d60-49a8-ae01-c1e64b02c82d',
@@ -1802,6 +1833,7 @@ export function ensureDefaultDataExists(): void {
             postExecutionFailureText: 'Data Transfer has failed to execute.',
             actionData: 'exec command',
             executable: true,
+            device: false,
             actions: [
               {
                 actionID: 'bff61011-1aea-4f8c-874f-c0ca771c8400',
@@ -1859,6 +1891,7 @@ export function ensureDefaultDataExists(): void {
               'Imagery Collection has failed to execute.',
             actionData: 'exec command',
             executable: true,
+            device: false,
             actions: [
               {
                 actionID: '689dfd2d-e28a-4f81-b2ac-f6466caf5c92',
@@ -1916,6 +1949,7 @@ export function ensureDefaultDataExists(): void {
               'Sensor Observation has failed to execute.',
             actionData: 'exec command',
             executable: true,
+            device: false,
             actions: [
               {
                 actionID: '7cf46809-51d7-4d99-9ec6-8f272e30e26c',
@@ -2002,6 +2036,7 @@ export function ensureDefaultDataExists(): void {
             postExecutionFailureText: '',
             actionData: 'exec command',
             executable: false,
+            device: false,
             actions: [
               {
                 actionID: '29db5000-811e-49c8-a43d-1d946b5fbd89',
@@ -2058,6 +2093,7 @@ export function ensureDefaultDataExists(): void {
             postExecutionFailureText: 'Cellular Network failed.',
             actionData: 'exec command',
             executable: false,
+            device: false,
             actions: [
               {
                 actionID: 'd8a4241a-e483-460a-92a9-ef89b347b735',
@@ -2115,6 +2151,7 @@ export function ensureDefaultDataExists(): void {
               'Internet Provider has failed to execute.',
             actionData: 'exec command',
             executable: false,
+            device: false,
             actions: [
               {
                 actionID: 'efdde98a-d150-4712-8c3f-3781d5726ca5',
@@ -2172,6 +2209,7 @@ export function ensureDefaultDataExists(): void {
               'Instant Messaging has failed to execute.',
             actionData: 'exec command',
             executable: false,
+            device: false,
             actions: [
               {
                 actionID: '6cdaca7a-3cee-4ddd-b44b-3415966bf17b',
@@ -2229,6 +2267,7 @@ export function ensureDefaultDataExists(): void {
               'File Sharing Service has failed to execute.',
             actionData: 'exec command',
             executable: false,
+            device: false,
             actions: [
               {
                 actionID: '93aaeb8d-0cfc-49df-9e97-1ee6cc72770a',
@@ -2286,6 +2325,7 @@ export function ensureDefaultDataExists(): void {
               'Callbank Cellular has failed to execute.',
             actionData: 'exec command',
             executable: false,
+            device: false,
             actions: [
               {
                 actionID: 'a50cd5ee-490f-45ca-b633-d45818a95bdb',
@@ -2342,6 +2382,7 @@ export function ensureDefaultDataExists(): void {
             postExecutionFailureText: 'Service Provider has failed to execute.',
             actionData: 'exec command',
             executable: false,
+            device: false,
             actions: [
               {
                 actionID: '1c202e10-38d3-4c52-8b51-ab2934506e5b',
@@ -2377,6 +2418,7 @@ export function ensureDefaultDataExists(): void {
             postExecutionFailureText: 'Service Provider has failed to execute.',
             actionData: 'exec command',
             executable: false,
+            device: false,
             actions: [
               {
                 actionID: '28c69db7-1563-40aa-ba38-523d2f9ed7ff',
@@ -2433,6 +2475,7 @@ export function ensureDefaultDataExists(): void {
             postExecutionFailureText: 'Service Provider has failed to execute.',
             actionData: 'exec command',
             executable: false,
+            device: false,
             actions: [
               {
                 actionID: 'f1bc48de-7d95-4225-acea-61e432853df9',
@@ -2489,6 +2532,7 @@ export function ensureDefaultDataExists(): void {
             postExecutionFailureText: 'Cellular Towers has failed to execute.',
             actionData: 'exec command',
             executable: true,
+            device: false,
             actions: [
               {
                 actionID: 'afb38dd0-61ac-4ec1-94e1-0699b2fa7d81',
@@ -2545,6 +2589,7 @@ export function ensureDefaultDataExists(): void {
             postExecutionFailureText: 'Main Server has failed to execute.',
             actionData: 'exec command',
             executable: true,
+            device: false,
             actions: [
               {
                 actionID: '765779fb-e72e-4d31-b622-1d2974d20620',
@@ -2601,6 +2646,7 @@ export function ensureDefaultDataExists(): void {
             postExecutionFailureText: 'Main Server has failed to execute.',
             actionData: 'exec command',
             executable: true,
+            device: false,
             actions: [
               {
                 actionID: 'd55b4d78-1513-4b85-88a0-c66ab3fc2ed2',
@@ -2657,6 +2703,7 @@ export function ensureDefaultDataExists(): void {
             postExecutionFailureText: 'Main Server has failed to execute.',
             actionData: 'exec command',
             executable: true,
+            device: false,
             actions: [
               {
                 actionID: 'b34b264e-6988-4b8a-a669-80e9e5f5580d',
@@ -2713,6 +2760,7 @@ export function ensureDefaultDataExists(): void {
             postExecutionFailureText: '',
             actionData: 'exec command',
             executable: false,
+            device: false,
             actions: [
               {
                 actionID: '6e7dd1ac-e8ec-478a-a982-8240018a89e8',
@@ -2769,6 +2817,7 @@ export function ensureDefaultDataExists(): void {
             postExecutionFailureText: 'IADS Network has failed to execute.',
             actionData: 'exec command',
             executable: false,
+            device: false,
             actions: [
               {
                 actionID: '46342488-1739-4761-b06e-31227b4ad366',
@@ -2827,6 +2876,7 @@ export function ensureDefaultDataExists(): void {
               'Individual IADS Sites has failed to execute.',
             actionData: 'exec command',
             executable: false,
+            device: false,
             actions: [
               {
                 actionID: '849d0a2e-aa4e-45ee-93c3-a769990e060e',
@@ -2883,6 +2933,7 @@ export function ensureDefaultDataExists(): void {
             postExecutionFailureText: 'Launchers has failed to execute.',
             actionData: 'exec command',
             executable: true,
+            device: false,
             actions: [
               {
                 actionID: '42cb82e4-3ffd-4213-8287-64b911208c47',
@@ -2939,6 +2990,7 @@ export function ensureDefaultDataExists(): void {
             postExecutionFailureText: 'Radars has failed to execute.',
             actionData: 'exec command',
             executable: true,
+            device: false,
             actions: [
               {
                 actionID: 'f2ab130b-6d44-43e5-b8fa-1426db1fc06f',
@@ -2995,6 +3047,7 @@ export function ensureDefaultDataExists(): void {
             postExecutionFailureText: '',
             actionData: 'exec command',
             executable: false,
+            device: false,
             actions: [
               {
                 actionID: '11ae7514-e47f-492f-8210-da1cbd719d5b',
@@ -3051,6 +3104,7 @@ export function ensureDefaultDataExists(): void {
             postExecutionFailureText: 'Railroad System has failed to execute.',
             actionData: 'exec command',
             executable: false,
+            device: false,
             actions: [
               {
                 actionID: 'd933a442-d7bc-4e2f-9e0c-a2a8119d8e51',
@@ -3108,6 +3162,7 @@ export function ensureDefaultDataExists(): void {
               'Electrical System has failed to execute.',
             actionData: 'exec command',
             executable: false,
+            device: false,
             actions: [
               {
                 actionID: '0b87dfa4-e0cb-4160-b2b0-cb4afa7597d0',
@@ -3164,6 +3219,7 @@ export function ensureDefaultDataExists(): void {
             postExecutionFailureText: 'Water System has failed to execute.',
             actionData: 'exec command',
             executable: false,
+            device: false,
             actions: [
               {
                 actionID: '7d0b50c0-89a1-4048-9f47-d41aa2adbfc0',
@@ -3220,6 +3276,7 @@ export function ensureDefaultDataExists(): void {
             postExecutionFailureText: 'Road System has failed to execute.',
             actionData: 'exec command',
             executable: false,
+            device: false,
             actions: [
               {
                 actionID: '57f90ba3-d5d9-4668-a215-3d8fb624f7d4',
@@ -3276,6 +3333,7 @@ export function ensureDefaultDataExists(): void {
             postExecutionFailureText: 'Track Monitoring has failed to execute.',
             actionData: 'exec command',
             executable: true,
+            device: false,
             actions: [
               {
                 actionID: '16f205d9-3172-480f-8024-814ef8d9cbf1',
@@ -3333,6 +3391,7 @@ export function ensureDefaultDataExists(): void {
               'Track Switch System has failed to execute.',
             actionData: 'exec command',
             executable: true,
+            device: false,
             actions: [
               {
                 actionID: 'c56be2b0-0592-48e9-ba00-dfb202949d70',
@@ -3389,6 +3448,7 @@ export function ensureDefaultDataExists(): void {
             postExecutionFailureText: 'Regional Service has failed to execute.',
             actionData: 'exec command',
             executable: true,
+            device: false,
             actions: [
               {
                 actionID: '583fe452-0b98-4237-8201-c3167b9cde6a',
@@ -3445,6 +3505,7 @@ export function ensureDefaultDataExists(): void {
             postExecutionFailureText: 'Valve System has failed to execute.',
             actionData: 'exec command',
             executable: true,
+            device: false,
             actions: [
               {
                 actionID: 'f214af64-7a6d-4a94-9862-013cdfaeb4f2',
@@ -3502,6 +3563,7 @@ export function ensureDefaultDataExists(): void {
               'Traffic Light System has failed to execute.',
             actionData: 'exec command',
             executable: true,
+            device: false,
             actions: [
               {
                 actionID: 'fe18e272-a4e0-4507-a07b-60f10538932a',
@@ -3558,6 +3620,7 @@ export function ensureDefaultDataExists(): void {
             postExecutionFailureText: 'CCTV System has failed to execute.',
             actionData: 'exec command',
             executable: true,
+            device: false,
             actions: [
               {
                 actionID: '265cd0e7-4fe8-4c39-a860-aa29a8a653a1',
@@ -3614,6 +3677,7 @@ export function ensureDefaultDataExists(): void {
             postExecutionFailureText: '',
             actionData: 'exec command',
             executable: false,
+            device: false,
             actions: [
               {
                 actionID: '290cc02a-d9a0-4dfa-adf4-5579d3a8a8c9',
@@ -3671,6 +3735,7 @@ export function ensureDefaultDataExists(): void {
               'Global Positioning has failed to execute.',
             actionData: 'exec command',
             executable: true,
+            device: false,
             actions: [
               {
                 actionID: '6fe1af1d-5d60-49a8-ae01-c1e64b02c82d',
@@ -3727,6 +3792,7 @@ export function ensureDefaultDataExists(): void {
             postExecutionFailureText: 'Data Transfer has failed to execute.',
             actionData: 'exec command',
             executable: true,
+            device: false,
             actions: [
               {
                 actionID: 'bff61011-1aea-4f8c-874f-c0ca771c8400',
@@ -3784,6 +3850,7 @@ export function ensureDefaultDataExists(): void {
               'Imagery Collection has failed to execute.',
             actionData: 'exec command',
             executable: true,
+            device: false,
             actions: [
               {
                 actionID: '689dfd2d-e28a-4f81-b2ac-f6466caf5c92',
@@ -3841,6 +3908,7 @@ export function ensureDefaultDataExists(): void {
               'Sensor Observation has failed to execute.',
             actionData: 'exec command',
             executable: true,
+            device: false,
             actions: [
               {
                 actionID: '7cf46809-51d7-4d99-9ec6-8f272e30e26c',
