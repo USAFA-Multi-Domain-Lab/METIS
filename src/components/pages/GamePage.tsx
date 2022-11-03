@@ -200,8 +200,6 @@ export default function GamePage(props: {
               mission={mission}
               missionAjaxStatus={EAjaxStatus.Loaded}
               handleNodeSelection={(selectedNode: MissionNode) => {
-                console.log(selectedNode.device)
-
                 setLastSelectedNode(selectedNode)
 
                 if (selectedNode.preExecutionText !== '') {

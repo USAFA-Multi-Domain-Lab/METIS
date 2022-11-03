@@ -1776,7 +1776,7 @@ export function ensureDefaultDataExists(): void {
               'Global Positioning has failed to execute.',
             actionData: 'exec command',
             executable: true,
-            device: false,
+            device: true,
             actions: [
               {
                 actionID: '6fe1af1d-5d60-49a8-ae01-c1e64b02c82d',
@@ -1891,7 +1891,7 @@ export function ensureDefaultDataExists(): void {
               'Imagery Collection has failed to execute.',
             actionData: 'exec command',
             executable: true,
-            device: false,
+            device: true,
             actions: [
               {
                 actionID: '689dfd2d-e28a-4f81-b2ac-f6466caf5c92',
@@ -3735,7 +3735,7 @@ export function ensureDefaultDataExists(): void {
               'Global Positioning has failed to execute.',
             actionData: 'exec command',
             executable: true,
-            device: false,
+            device: true,
             actions: [
               {
                 actionID: '6fe1af1d-5d60-49a8-ae01-c1e64b02c82d',
@@ -3850,7 +3850,7 @@ export function ensureDefaultDataExists(): void {
               'Imagery Collection has failed to execute.',
             actionData: 'exec command',
             executable: true,
-            device: false,
+            device: true,
             actions: [
               {
                 actionID: '689dfd2d-e28a-4f81-b2ac-f6466caf5c92',

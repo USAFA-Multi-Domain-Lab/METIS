@@ -780,10 +780,24 @@ export default class MissionMap extends React.Component<
             let scoreWidth: number = 25 * mapScale
             let lineHeight: number = height * 0.34
 
+            // Dynamic Class Names
             let loadingClassName: string = 'loading'
+            let deviceClassName: string = 'dorito hide'
+            let doritoColor: string = ''
 
+            // Logic to manipulate class names
             if (!node.executing) {
               loadingClassName += ' hide'
+            }
+
+            if (node.device) {
+              doritoColor += ' black'
+              deviceClassName = 'dorito'
+            } else if (node.executable && !node.device) {
+              doritoColor += ' white'
+              deviceClassName = 'dorito'
+            } else {
+              doritoColor += ' transparent'
             }
 
             return (
@@ -810,7 +824,16 @@ export default class MissionMap extends React.Component<
                   >
                     {node.name}
                   </div>
-                  <div className='dorito'></div>
+                  <div
+                    className={deviceClassName}
+                    style={{
+                      borderLeft: `${scoreWidth * 0.4}px solid transparent`,
+                      borderRight: `${scoreWidth * 0.4}px solid transparent`,
+                      borderBottom: `${
+                        scoreWidth * 0.8
+                      }px solid ${doritoColor}`,
+                    }}
+                  ></div>
                 </div>
               </>
             )

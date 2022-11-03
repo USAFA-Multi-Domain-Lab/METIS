@@ -207,11 +207,17 @@
         }
 
         .dorito {
-          background: url('/assets/images/icons/dorito.svg'), $background-alt1;
-          background-position: 11.5px 10.5px;
-          background-size: 17px 17px;
-          background-repeat: no-repeat;
-          z-index: 100;
+          width: 0;
+          height: 0;
+          margin-right: 5px;
+
+          &.WhiteDorito {
+            border-bottom: 10px solid white;
+          }
+
+          &.BlackDorito {
+            border-bottom: 10px solid black;
+          }
         }
 
         .properties {
