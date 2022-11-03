@@ -94,7 +94,7 @@ export default function GamePage(props: {
           setLastLoadingMessage('Signing out...')
           setCurrentUser(null)
           setLoadingMessage(null)
-          setCurrentPagePath('AuthPage')
+          pageProps.goToPage('AuthPage', {})
         },
         () => {
           setLoadingMessage(null)

@@ -3,6 +3,8 @@ import { useStore } from 'react-context-hook'
 import { getAllMissions, getMission, Mission } from '../../modules/missions'
 import { Counter } from '../../modules/numbers'
 import { IPageProps } from '../App'
+import Branding from '../content/Branding'
+import usersModule, { IUser } from '../../modules/users'
 import './StudentMissionSelectionPage.scss'
 
 interface IStudentMissionSelectionPageProps extends IPageProps {}
@@ -16,7 +18,7 @@ const StudentMissionSelectionPage = (props: {
 
   const [appMountHandled, setAppMountHandled] =
     useStore<boolean>('appMountHandled')
-  const [loadingMessage, setLoadMessage] = useStore<string | null>(
+  const [loadingMessage, setLoadingMessage] = useStore<string | null>(
     'loadingMessage',
   )
   const [lastLoadingMessage, setLastLoadingMessage] =
@@ -25,6 +27,7 @@ const StudentMissionSelectionPage = (props: {
   const [errorMessage, setErrorMessage] = useStore<string | null>(
     'errorMessage',
   )
+  const [currentUser, setCurrentUser] = useStore<IUser | null>('currentUser')
 
   /* -- COMPONENT STATE -- */
 
@@ -38,7 +41,7 @@ const StudentMissionSelectionPage = (props: {
     if (!mountHandled && pageProps.isCurrentPage) {
       let loadingMessage: string = 'Getting missions...'
 
-      setLoadMessage(loadingMessage)
+      setLoadingMessage(loadingMessage)
 
       // This loads the mission in session from the database
       // and stores it in a global state to be used on the GamePage
@@ -47,13 +50,13 @@ const StudentMissionSelectionPage = (props: {
         (missions: Array<Mission>) => {
           setMissions(missions)
           setLastLoadingMessage(loadingMessage)
-          setLoadMessage(null)
+          setLoadingMessage(null)
           setMountHandled(true)
         },
         () => {
           setErrorMessage('Failed to retrieve mission.')
           setLastLoadingMessage(loadingMessage)
-          setLoadMessage(null)
+          setLoadingMessage(null)
           setMountHandled(true)
         },
       )
@@ -70,42 +73,93 @@ const StudentMissionSelectionPage = (props: {
     // and stores it in a global state to be used on the GamePage
     // where the Mission Map renders
     const selectMission = (missionIDValue: string) => {
-      setLoadMessage('')
+      setLoadingMessage('')
 
       getMission(
         (selectedMission: Mission) => {
           pageProps.goToPage('GamePage', { mission: selectedMission })
           setLastLoadingMessage('Initializing application...')
-          setLoadMessage(null)
+          setLoadingMessage(null)
         },
         () => {
           setErrorMessage('Failed to retrieve mission.')
-          setLoadMessage(null)
+          setLoadingMessage(null)
         },
         missionIDValue,
       )
+    }
+
+    // This will logout the current user.
+    const logout = () => {
+      setLoadingMessage('')
+
+      usersModule.logout(
+        () => {
+          setLastLoadingMessage('Signing out...')
+          setCurrentUser(null)
+          setLoadingMessage(null)
+          pageProps.goToPage('AuthPage', {})
+        },
+        () => {
+          setLoadingMessage(null)
+          setErrorMessage('Server is down. Contact system administrator.')
+        },
+      )
+    }
+
+    // This will switch to the edit mission
+    // form.
+    const login = () => {
+      if (currentUser === null) {
+        pageProps.goToPage('AuthPage', {})
+      }
     }
 
     /* -- RENDER -- */
 
     let number: Counter = new Counter(1)
 
+    // Keeps track of if the user is logged in or not.
+    // If the user is not logged in then the sign out button will not display.
+    // If the user is logged in then the "Login" button will change to "Edit Mission"
+    // and the "Sign Out" button will appear.
+    let navClassName = 'Navigation'
+
+    if (currentUser !== null) {
+      navClassName += ' SignOut'
+    }
+
     return (
       <div className='StudentMissionSelectionPage'>
-        <div className='MissionList'>
-          Choose your mission:
-          {missions.map((mission: Mission) => {
-            return (
-              <div
-                className='MissionName'
-                key={mission.name}
-                onClick={() => selectMission(mission.missionID)}
-              >
-                {' '}
-                {number.count++}. {mission.name}
-              </div>
-            )
-          })}
+        {/* { Navigation } */}
+        <div className={navClassName}>
+          <Branding
+            goHome={() => pageProps.goToPage('StudentMissionSelectionPage', {})}
+          />
+          <div className='Login Link' onClick={login}>
+            Login
+          </div>
+          <div className='Logout Link' onClick={logout}>
+            Sign out
+          </div>
+        </div>
+        {/* { Content } */}
+        <div className='MissionListContainer'>
+          <div className='MissionList'>
+            Choose your mission:
+            {missions.map((mission: Mission) => {
+              return (
+                <div
+                  className='MissionName'
+                  key={mission.name}
+                  onClick={() => selectMission(mission.missionID)}
+                >
+                  {' '}
+                  {number.count++}.{mission.name}
+                </div>
+              )
+            })}
+          </div>
         </div>
       </div>
     )

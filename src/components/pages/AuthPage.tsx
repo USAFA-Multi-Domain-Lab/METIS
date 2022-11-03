@@ -14,6 +14,8 @@ interface IAuthPagProps extends IPageProps {}
 export default function AuthPage(props: {
   pageProps: IAuthPagProps
 }): JSX.Element | null {
+  let pageProps: IAuthPagProps = props.pageProps
+
   /* -- GLOBAL STATE -- */
 
   const [currentUser, setCurrentUser] = useStore('currentUser')
@@ -92,7 +94,7 @@ export default function AuthPage(props: {
               setIsSubmitting(false)
               setLoadingMessage(null)
               setCurrentUser(currentUser)
-              setCurrentPagePath('GamePage')
+              pageProps.goToPage('GamePage', {})
               setLastLoadingMessage('Initializing application...')
             } else {
               handleLoginError('Incorrect username or password.')
@@ -117,13 +119,7 @@ export default function AuthPage(props: {
   }
 
   const returnToDashboard = () => {
-    // setLoadingMessage('Initializing application...')
-    setCurrentPagePath('GamePage')
-    // setLastLoadingMessage('Initializing application...')
-
-    // setTimeout(() => {
-    //   setLoadingMessage(null)
-    // }, 500)
+    pageProps.goToPage('GamePage', {})
   }
 
   /* -- RENDER -- */
