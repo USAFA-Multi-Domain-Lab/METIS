@@ -791,10 +791,13 @@ export default class MissionMap extends React.Component<
             }
 
             if (node.device) {
-              doritoColor += ' black'
+              doritoColor += ' #9ae700'
+              // doritoColor += ' #ffee00'
+              // doritoColor += ' black'
               deviceClassName = 'dorito'
             } else if (node.executable && !node.device) {
-              doritoColor += ' white'
+              doritoColor += ' #00d7ff'
+              // doritoColor += ' white'
               deviceClassName = 'dorito'
             } else {
               doritoColor += ' transparent'
@@ -824,16 +827,15 @@ export default class MissionMap extends React.Component<
                   >
                     {node.name}
                   </div>
-                  <div
-                    className={deviceClassName}
-                    style={{
-                      borderLeft: `${scoreWidth * 0.4}px solid transparent`,
-                      borderRight: `${scoreWidth * 0.4}px solid transparent`,
-                      borderBottom: `${
-                        scoreWidth * 0.8
-                      }px solid ${doritoColor}`,
-                    }}
-                  ></div>
+                  <div className='DoritoContainer'>
+                    <div
+                      className={deviceClassName}
+                      style={{
+                        borderRight: `${scoreWidth + 2}px solid ${doritoColor}`,
+                        borderBottom: `${scoreWidth + 2}px solid transparent`,
+                      }}
+                    ></div>
+                  </div>
                 </div>
               </>
             )

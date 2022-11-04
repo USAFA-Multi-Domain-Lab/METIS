@@ -630,7 +630,7 @@ export function ensureDefaultDataExists(): void {
             postExecutionFailureText: 'Main Server has failed to execute.',
             actionData: 'exec command',
             executable: true,
-            device: false,
+            device: true,
             actions: [
               {
                 actionID: '765779fb-e72e-4d31-b622-1d2974d20620',
@@ -744,7 +744,7 @@ export function ensureDefaultDataExists(): void {
             postExecutionFailureText: 'Main Server has failed to execute.',
             actionData: 'exec command',
             executable: true,
-            device: false,
+            device: true,
             actions: [
               {
                 actionID: 'b34b264e-6988-4b8a-a669-80e9e5f5580d',
@@ -974,7 +974,7 @@ export function ensureDefaultDataExists(): void {
             postExecutionFailureText: 'Launchers has failed to execute.',
             actionData: 'exec command',
             executable: true,
-            device: false,
+            device: true,
             actions: [
               {
                 actionID: '42cb82e4-3ffd-4213-8287-64b911208c47',
@@ -1432,7 +1432,7 @@ export function ensureDefaultDataExists(): void {
               'Track Switch System has failed to execute.',
             actionData: 'exec command',
             executable: true,
-            device: false,
+            device: true,
             actions: [
               {
                 actionID: 'c56be2b0-0592-48e9-ba00-dfb202949d70',
@@ -1546,7 +1546,7 @@ export function ensureDefaultDataExists(): void {
             postExecutionFailureText: 'Valve System has failed to execute.',
             actionData: 'exec command',
             executable: true,
-            device: false,
+            device: true,
             actions: [
               {
                 actionID: 'f214af64-7a6d-4a94-9862-013cdfaeb4f2',
@@ -1661,7 +1661,7 @@ export function ensureDefaultDataExists(): void {
             postExecutionFailureText: 'CCTV System has failed to execute.',
             actionData: 'exec command',
             executable: true,
-            device: false,
+            device: true,
             actions: [
               {
                 actionID: '265cd0e7-4fe8-4c39-a860-aa29a8a653a1',
@@ -2589,7 +2589,7 @@ export function ensureDefaultDataExists(): void {
             postExecutionFailureText: 'Main Server has failed to execute.',
             actionData: 'exec command',
             executable: true,
-            device: false,
+            device: true,
             actions: [
               {
                 actionID: '765779fb-e72e-4d31-b622-1d2974d20620',
@@ -2703,7 +2703,7 @@ export function ensureDefaultDataExists(): void {
             postExecutionFailureText: 'Main Server has failed to execute.',
             actionData: 'exec command',
             executable: true,
-            device: false,
+            device: true,
             actions: [
               {
                 actionID: 'b34b264e-6988-4b8a-a669-80e9e5f5580d',
@@ -3391,7 +3391,7 @@ export function ensureDefaultDataExists(): void {
               'Track Switch System has failed to execute.',
             actionData: 'exec command',
             executable: true,
-            device: false,
+            device: true,
             actions: [
               {
                 actionID: 'c56be2b0-0592-48e9-ba00-dfb202949d70',
@@ -3505,7 +3505,7 @@ export function ensureDefaultDataExists(): void {
             postExecutionFailureText: 'Valve System has failed to execute.',
             actionData: 'exec command',
             executable: true,
-            device: false,
+            device: true,
             actions: [
               {
                 actionID: 'f214af64-7a6d-4a94-9862-013cdfaeb4f2',
@@ -3620,7 +3620,7 @@ export function ensureDefaultDataExists(): void {
             postExecutionFailureText: 'CCTV System has failed to execute.',
             actionData: 'exec command',
             executable: true,
-            device: false,
+            device: true,
             actions: [
               {
                 actionID: '265cd0e7-4fe8-4c39-a860-aa29a8a653a1',

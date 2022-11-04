@@ -182,6 +182,7 @@ export default function GamePage(props: {
         <div className={navClassName}>
           <Branding
             goHome={() => pageProps.goToPage('MissionSelectionPage', {})}
+            tooltipDescription='Go home.'
           />
           <div className='EditMission Link' onClick={editMission}>
             Edit mission
@@ -263,7 +264,7 @@ export default function GamePage(props: {
                     `* Executed node in ${
                       (node.selectedAction?.processTime as number) / 1000
                     } second(s)\n` +
-                    `* Node action executed: ${node.selectedAction?.name}\n` +
+                    `* Action executed: ${node.selectedAction?.name}\n` +
                     `* Chance of success: ${
                       (node.successChance as number) * 100
                     }%\n`

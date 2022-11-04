@@ -13,7 +13,7 @@ const ActionPropertyDisplay = (props: {
         second(s)
       </div>
       <div className='ChosenNodeAction'>
-        Node action selected: {selectedAction?.name as string}
+        Action selected: {selectedAction?.name as string}
       </div>
       <div className='SuccessChance'>
         Chance of success: {(props.selectedNode?.successChance as number) * 100}

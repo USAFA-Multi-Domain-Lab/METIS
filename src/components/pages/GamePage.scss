@@ -31,7 +31,7 @@ $background-bar: linear-gradient(
 // Displays Mission Map only
 .GamePage {
   margin: 0 auto;
-  padding: 35px 30px 0;
+  padding: 35px 30px;
 
   .Navigation {
     display: grid;
@@ -108,6 +108,10 @@ $background-bar: linear-gradient(
 
 // Displays the Mission Map and Output Panel only
 .GamePageWithOutputPanelOnly {
+  .Navigation {
+    margin: 0 2% 55px;
+  }
+
   .Content {
     .MissionMap {
       margin-right: 10px;
@@ -126,6 +130,10 @@ $background-bar: linear-gradient(
 
 // Displays the Mission Map, Output Panel, and Node Action Window
 .GamePageWithOutputPanelAndActionPrompt {
+  .Navigation {
+    margin: 0 2% 55px;
+  }
+
   .Content {
     .MissionMap {
       margin-right: 10px;
@@ -144,6 +152,10 @@ $background-bar: linear-gradient(
 
 // Displays the Mission Map, Output Panel, and Node Action Window
 .GamePageWithOutputPanelAndExecuteNodePathPrompt {
+  .Navigation {
+    margin: 0 2% 55px;
+  }
+
   .Content {
     .MissionMap {
       margin-right: 10px;

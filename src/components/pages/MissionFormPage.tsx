@@ -124,6 +124,7 @@ export default function MissionFormPage(props: {
         <div className='Navigation'>
           <Branding
             goHome={() => pageProps.goToPage('MissionSelectionPage', {})}
+            tooltipDescription='Go home.'
           />
           <div className='Logout Link' onClick={logout}>
             Sign out

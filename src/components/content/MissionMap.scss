@@ -206,16 +206,29 @@
           }
         }
 
+        .DoritoContainer {
+          display: flex;
+          justify-content: flex-end;
+          align-items: flex-start;
+          height: 100%;
+          width: fit-content;
+        }
+
         .dorito {
           width: 0;
           height: 0;
-          margin-right: 5px;
 
           &.WhiteDorito {
+            position: relative;
+            top: 0;
+            left: 100%;
             border-bottom: 10px solid white;
           }
 
           &.BlackDorito {
+            position: relative;
+            top: 0;
+            left: 100%;
             border-bottom: 10px solid black;
           }
         }

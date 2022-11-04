@@ -143,6 +143,7 @@ const MissionSelectionPage = (props: {
         <div className={navClassName}>
           <Branding
             goHome={() => pageProps.goToPage('MissionSelectionPage', {})}
+            tooltipDescription=''
           />
           <div className='Login Link' onClick={login}>
             Login

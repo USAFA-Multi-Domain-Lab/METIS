@@ -22,9 +22,11 @@ const OutputPanel = (): JSX.Element | null => {
   return (
     <div className='OutputPanel'>
       <div className='BorderBox'>
-        <span className='MinimizeButton' onClick={closeOutputPanel}>
-          x
-        </span>
+        <div className='MinimizeButtonContainer'>
+          <span className='MinimizeButton' onClick={closeOutputPanel}>
+            x
+          </span>
+        </div>
         <ul className='TextArea'>
           {consoleOutputs.map(
             (consoleOutput: { date: number; value: string }) => {

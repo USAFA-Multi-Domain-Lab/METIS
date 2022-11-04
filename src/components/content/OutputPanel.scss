@@ -14,16 +14,22 @@
     border: 2px solid $color-main;
     overflow: auto;
 
-    .MinimizeButton {
-      width: 100%;
-      position: relative;
+    .MinimizeButtonContainer {
+      position: sticky;
       top: 5px;
-      left: 94%;
-      font-size: 1.25em;
+      margin-left: 92%;
 
-      &.MinimizeButton:hover {
-        cursor: pointer;
-        color: black;
+      .MinimizeButton {
+        width: 100%;
+        font-size: 1.25em;
+
+        &.MinimizeButton:hover {
+          cursor: pointer;
+          color: black;
+        }
+      }
+      @media only screen and (min-width: 1200px) {
+        margin-left: 95%;
       }
     }
 
