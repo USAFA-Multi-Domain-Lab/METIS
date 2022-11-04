@@ -25,6 +25,7 @@ export interface IAction_P {
   tooltipDescription: string | null
   key: string | undefined
   uniqueClassName: string
+  disabled: boolean
 }
 
 /* -- classes -- */
@@ -38,6 +39,7 @@ export class Action extends React.Component<IAction_P, {}> {
     tooltipDescription: null,
     key: undefined,
     uniqueClassName: '',
+    disabled: false,
   }
 
   // different actions are styled differently.
@@ -80,9 +82,10 @@ export class Action extends React.Component<IAction_P, {}> {
     let tooltipDescription: string | null = this.props.tooltipDescription
     let key: string | undefined = this.props.key
     let uniqueClassName: string = this.props.uniqueClassName
-    let className: string = `${Action.getActionClassName(
-      purpose,
-    )} ${uniqueClassName}`
+    let disabled: boolean = this.props.disabled
+    let className: string = `${Action.getActionClassName(purpose)}${
+      disabled ? ' Disabled ' : ' '
+    }${uniqueClassName}`
     let innerHTML: string | JSX.Element = Action.getActionInnerHTML(purpose)
 
     return (

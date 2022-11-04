@@ -20,6 +20,8 @@ interface IMissionMap {
   handleMapCreateRequest: (() => void) | null
   handleMapEditRequest: (() => void) | null
   handleMapSaveRequest: (() => void) | null
+  editCanBeRequested: boolean
+  saveCanBeRequested: boolean
   applyNodeClassName: (node: MissionNode) => string
   renderNodeTooltipDescription: (node: MissionNode) => string
 }
@@ -139,6 +141,8 @@ export default class MissionMap extends React.Component<
     handleMapCreateRequest: null,
     handleMapEditRequest: null,
     handleMapSaveRequest: null,
+    editCanBeRequested: true,
+    saveCanBeRequested: true,
     applyMappedNodeClassName: () => '',
     renderMappedNodeTooltipDescription:
       MissionMap.renderMappedNodeTooltipDescription_default,
@@ -536,6 +540,8 @@ export default class MissionMap extends React.Component<
     let handleMapCreateRequest = this.props.handleMapCreateRequest
     let handleMapEditRequest = this.props.handleMapEditRequest
     let handleMapSaveRequest = this.props.handleMapSaveRequest
+    let editCanBeRequested: boolean = this.props.editCanBeRequested
+    let saveCanBeRequested: boolean = this.props.saveCanBeRequested
     let actionsUniqueClassName: string = 'map-actions'
 
     let availableActions = {
@@ -564,12 +570,14 @@ export default class MissionMap extends React.Component<
         purpose: EActionPurpose.Reorder,
         handleClick: handleMapEditRequest ? handleMapEditRequest : () => {},
         tooltipDescription: 'Edit the structure and order of nodes.',
+        disabled: !editCanBeRequested,
       }),
       save: new Action({
         ...Action.defaultProps,
         purpose: EActionPurpose.Save,
         handleClick: handleMapSaveRequest ? handleMapSaveRequest : () => {},
         tooltipDescription: 'Save changes.',
+        disabled: !saveCanBeRequested,
       }),
     }
     let activeActions: Action[] = []

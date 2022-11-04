@@ -61,6 +61,7 @@ export default function MissionFormPage(props: {
 
   const [mountHandled, setMountHandled] = useState<boolean>()
   const [forcedUpdateCounter, setForcedUpdateCounter] = useState<number>(0)
+  const [areUnsavedChanges, setAreUnsavedChanges] = useState<boolean>(false)
   const [selectedNode, selectNode] = useState<MissionNode | null>(null)
   const [nodeStructuringIsActive, activateNodeStructuring] =
     useState<boolean>(false)
@@ -86,6 +87,32 @@ export default function MissionFormPage(props: {
     // Forces a rerender.
     const forceUpdate = (): void => {
       setForcedUpdateCounter(forcedUpdateCounter + 1)
+    }
+
+    // This is called when a change is
+    // made that would require saving.
+    const handleChange = (): void => {
+      setAreUnsavedChanges(true)
+      forceUpdate()
+    }
+
+    // This is called to save any changes
+    // made.
+    const save = (): void => {
+      if (areUnsavedChanges) {
+        setAreUnsavedChanges(false)
+
+        saveMission(
+          mission,
+          () => {
+            pageProps.notify('Mission successfully saved.', 3000)
+          },
+          (error: Error) => {
+            pageProps.notify('Mission failed to save.', 3000)
+            setAreUnsavedChanges(true)
+          },
+        )
+      }
     }
 
     // This will logout the current user.
@@ -152,36 +179,25 @@ export default function MissionFormPage(props: {
               selectNode(newNode)
               activateNodeStructuring(false)
             }}
-            handleMapEditRequest={
-              !nodeStructuringIsActive
-                ? () => {
-                    activateNodeStructuring(true)
-                    selectNode(null)
-                  }
-                : null
-            }
-            handleMapSaveRequest={() => {
-              saveMission(
-                mission,
-                () => {
-                  pageProps.notify('Mission successfully saved.', 3000)
-                },
-                (error: Error) => {
-                  pageProps.notify('Mission failed to save.', 3000)
-                },
-              )
+            handleMapEditRequest={() => {
+              activateNodeStructuring(true)
+              selectNode(null)
             }}
+            handleMapSaveRequest={save}
+            editCanBeRequested={!nodeStructuringIsActive}
+            saveCanBeRequested={areUnsavedChanges}
             applyNodeClassName={(node: MissionNode) => ''}
             renderNodeTooltipDescription={(node: MissionNode) => ''}
           />
           <NodeEntry
             node={selectedNode}
-            handleChange={forceUpdate}
+            handleChange={handleChange}
             handleCloseRequest={() => selectNode(null)}
           />
           <NodeStructuring
             active={nodeStructuringIsActive}
             mission={mission}
+            handleChange={handleChange}
             handleCloseRequest={() => activateNodeStructuring(false)}
           />
         </div>
@@ -451,10 +467,12 @@ function NodeAction(props: {
 function NodeStructuring(props: {
   active: boolean
   mission: Mission
+  handleChange: () => void
   handleCloseRequest: () => void
 }): JSX.Element | null {
   let active: boolean = props.active
   let mission: Mission = props.mission
+  let handleChange = props.handleChange
   let handleCloseRequest = props.handleCloseRequest
   let rootNode: MissionNode = mission.rootNode
 
@@ -517,6 +535,7 @@ function NodeStructuring(props: {
 
             if (nodeGrabbed !== null) {
               nodeGrabbed.move(destinationNode, ENodeTargetRelation.Parent)
+              handleChange()
             }
 
             pendDrop(null)
@@ -597,6 +616,7 @@ function NodeStructuring(props: {
               if (nodeGrabbed !== null) {
                 nodeGrabbed.move(target, targetRelation)
                 target.expand()
+                handleChange()
               }
 
               pendDrop(null)
