@@ -28,6 +28,11 @@ const MissionSelectionPage = (props: {
     'errorMessage',
   )
   const [currentUser, setCurrentUser] = useStore<IUser | null>('currentUser')
+  const [consoleOutputs, setConsoleOutputs] =
+    useStore<Array<{ date: number; value: string }>>('consoleOutputs')
+  const [outputPanelIsDisplayed, setOutputPanelIsDisplayed] = useStore<boolean>(
+    'outputPanelIsDisplayed',
+  )
 
   /* -- COMPONENT STATE -- */
 
@@ -87,6 +92,8 @@ const MissionSelectionPage = (props: {
         },
         missionIDValue,
       )
+      setConsoleOutputs([])
+      setOutputPanelIsDisplayed(false)
     }
 
     // This will logout the current user.
