@@ -308,9 +308,9 @@ export default class MissionMap extends React.Component<
 
     // This cancels the zoom if the shift
     // key is not pressed.
-    if (!event.shiftKey) {
-      return
-    }
+    // if (!event.shiftKey) {
+    //   return
+    // }
 
     let map: HTMLDivElement | null = this.map.current
     if (map) {
