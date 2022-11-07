@@ -143,8 +143,8 @@ export default function MissionFormPage(props: {
           setCurrentUser(null)
           setLoadingMessage(null)
           pageProps.goToPage('AuthPage', {
-            goBackPagePath: 'GamePage',
-            goBackPageProps: { mission: mission.clone(false) },
+            goBackPagePath: 'MissionSelectionPage',
+            goBackPageProps: {},
           })
           setLastLoadingMessage('Signing out...')
         },
