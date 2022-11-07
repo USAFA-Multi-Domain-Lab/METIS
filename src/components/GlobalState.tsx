@@ -5,6 +5,7 @@ import { MissionNode } from '../modules/mission-nodes'
 import { MissionNodeAction } from '../modules/mission-node-actions'
 import { IUser } from '../modules/users'
 import { AnyObject } from 'mongoose'
+import { IConfirmation } from './content/Confirmation'
 
 /* -- constants -- */
 
@@ -34,6 +35,8 @@ export default class GlobalState {
   tooltips: React.RefObject<HTMLDivElement>
   tooltipDescription: string
   consoleOutputs: Array<{ date: number; value: string }>
+  notifications: Array<Notification>
+  confirmation: IConfirmation | null
   outputPanelIsDisplayed: boolean
   executeNodePathPromptIsDisplayed: boolean
   actionSelectionPromptIsDisplayed: boolean
@@ -58,6 +61,8 @@ export default class GlobalState {
     this.tooltips = React.createRef()
     this.tooltipDescription = ''
     this.consoleOutputs = []
+    this.notifications = []
+    this.confirmation = null
     this.outputPanelIsDisplayed = false
     this.executeNodePathPromptIsDisplayed = false
     this.actionSelectionPromptIsDisplayed = false

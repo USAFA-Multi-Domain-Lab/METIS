@@ -12,10 +12,17 @@ import MissionFormPage from './pages/MissionFormPage'
 import { getAllMissions, Mission } from '../modules/missions'
 import MissionSelectionPage from './pages/MissionSelectionPage'
 import { AnyObject } from '../modules/toolbox/objects'
+import Notification from '../modules/notifications'
+import NotificationBubble from './content/NotificationBubble'
+import Confirmation, { IConfirmation } from './content/Confirmation'
+import { AjaxStatus } from './content/AjaxStatusDisplay'
 
 // Default props in every page props.
 export interface IPageProps {
+  forceUpdate: () => void
   goToPage: (pagePath: string, pageProps: AnyObject) => void
+  notify: (message: string, duration: number | null) => Notification
+  confirm: (message: string, handleConfirmation: () => void) => void
   show: boolean
   currentPagePath: string
   isCurrentPage: boolean
@@ -30,6 +37,8 @@ function StandardPage(props: {
   targetPagePath: string
   requireLogin?: boolean // default true
 }): JSX.Element | null {
+  /* -- global-state -- */
+
   const [currentUser] = useStore<IUser | null>('currentUser')
   const [currentPagePath, setCurrentPagePath] =
     useStore<string>('currentPagePath')
@@ -41,12 +50,32 @@ function StandardPage(props: {
   const [errorMessage] = useStore<string | null>('errorMessage')
   const [loadingMessage] = useStore<string | null>('loadingMessage')
   const [loadingMinTimeReached] = useStore<boolean>('loadingMinTimeReached')
+  const [notifications, setNotifications] = useStore<Array<Notification>>(
+    'notifications',
+    [],
+  )
+  const [confirmation, setConfirmation] = useStore<IConfirmation | null>(
+    'confirmation',
+    null,
+  )
+  const [forcedUpdateCounter, setForcedUpdateCounter] = useStore<number>(
+    'forcedUpdateCounter',
+  )
+
+  /* -- fields -- */
 
   let Page = props.Page
   let targetPagePath: string = props.targetPagePath
   let requireLogin: boolean =
     props.requireLogin === undefined ? true : props.requireLogin
   let pageProps: AnyObject = { ...currentPageProps }
+
+  /* -- functions -- */
+
+  // This will force an update.
+  const forceUpdate = (): void => {
+    setForcedUpdateCounter(forcedUpdateCounter + 1)
+  }
 
   // This will go to a specific page
   // passing the necessary props.
@@ -55,9 +84,54 @@ function StandardPage(props: {
     setCurrentPageProps(pageProps)
   }
 
+  // This can be called to the notify
+  // the user of something.
+  const notify = (message: string, duration: number | null): Notification => {
+    let notification: Notification = new Notification(
+      message,
+      (dismissed: boolean, expired: boolean) => {
+        if (dismissed) {
+          notifications.splice(notifications.indexOf(notification), 1)
+        } else if (expired) {
+          setTimeout(() => {
+            notifications.splice(notifications.indexOf(notification), 1)
+            forceUpdate()
+          }, 1000)
+        }
+        forceUpdate()
+      },
+      duration,
+    )
+    notifications.push(notification)
+    forceUpdate()
+    return notification
+  }
+
+  // This will pop up a confirmation box
+  // to confirm some action.
+  const confirm = (message: string, handleConfirmation: () => {}): void => {
+    let confirmation: IConfirmation = {
+      ...Confirmation.defaultProps,
+      ajaxStatus: AjaxStatus.Inactive,
+      active: true,
+      confirmationMessage: message,
+      handleConfirmation: () => {
+        handleConfirmation()
+        setConfirmation(null)
+      },
+      handleCancelation: () => setConfirmation(null),
+    }
+    setConfirmation(confirmation)
+  }
+
+  /* -- page-props-construction -- */
+
   pageProps = {
     ...pageProps,
+    forceUpdate,
     goToPage,
+    notify,
+    confirm,
     show:
       (currentUser !== null || !requireLogin) &&
       currentPagePath === targetPagePath &&
@@ -68,6 +142,8 @@ function StandardPage(props: {
     currentPagePath,
     isCurrentPage: currentPagePath === targetPagePath,
   }
+
+  /* -- render -- */
 
   return <Page pageProps={pageProps} />
 }
@@ -96,13 +172,21 @@ function App(): JSX.Element | null {
   const [errorMessage, setErrorMessage] = useStore<string | null>(
     'errorMessage',
   )
+  const [forcedUpdateCounter, setForcedUpdateCounter] = useStore<number>(
+    'forcedUpdateCounter',
+    0,
+  )
   const [tooltipDescription] = useStore<string>('tooltipDescription')
   const [tooltips] = useStore<React.RefObject<HTMLDivElement>>('tooltips')
   const [hideTooltip] = useStore<() => void>('hideTooltip')
+  const [notifications] = useStore<Array<Notification>>('notifications')
+  const [confirmation, setConfirmation] = useStore<IConfirmation | null>(
+    'confirmation',
+    null,
+  )
 
   /* -- COMPONENT STATE -- */
 
-  const [forcedUpdateCounter, setForcedUpdateCounter] = useState<number>(0)
   const [loadingMinTimeout, setLoadingMinTimeout] = useState<any>(undefined)
 
   /* -- COMPONENT FUNCTIONS -- */
@@ -225,6 +309,17 @@ function App(): JSX.Element | null {
           theme={MarkdownTheme.ThemeSecondary}
         />
       </div>
+      <div className='Notifications'>
+        <div className='Glue'>
+          {notifications.map((notification: Notification) => (
+            <NotificationBubble
+              notification={notification}
+              key={notification.notificationID}
+            />
+          ))}
+        </div>
+      </div>
+      {confirmation !== null ? new Confirmation(confirmation).render() : null}
       <StandardPage
         Page={AuthPage}
         targetPagePath='AuthPage'

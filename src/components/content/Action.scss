@@ -6,7 +6,8 @@
   -webkit-user-select: none;
   user-select: none;
   cursor: pointer;
-  transition: 500ms transform, 500ms background-size, 500ms background-position;
+  transition: 500ms transform, 500ms background-size, 500ms background-position,
+    500ms opacity;
   margin: 0 5px;
   border: 3px solid $color-main;
   border-radius: $border-radius;
@@ -19,9 +20,21 @@
   font-weight: 700;
   vertical-align: top;
 
+  &.Disabled {
+    pointer-events: none;
+    opacity: 0.35;
+  }
+
   &.edit {
     background: url('/assets/images/icons/edit.svg'), $background-alt1;
     background-position: 11.5px 10.5px;
+    background-size: 17px 17px;
+    background-repeat: no-repeat;
+  }
+
+  &.remove {
+    background: url('/assets/images/icons/remove.svg'), $background-alt1;
+    background-position: 12.5px 11px;
     background-size: 17px 17px;
     background-repeat: no-repeat;
   }

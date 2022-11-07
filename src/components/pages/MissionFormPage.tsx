@@ -60,6 +60,7 @@ export default function MissionFormPage(props: {
 
   const [mountHandled, setMountHandled] = useState<boolean>()
   const [forcedUpdateCounter, setForcedUpdateCounter] = useState<number>(0)
+  const [areUnsavedChanges, setAreUnsavedChanges] = useState<boolean>(false)
   const [selectedNode, selectNode] = useState<MissionNode | null>(null)
   const [nodeStructuringIsActive, activateNodeStructuring] =
     useState<boolean>(false)
@@ -85,6 +86,52 @@ export default function MissionFormPage(props: {
     // Forces a rerender.
     const forceUpdate = (): void => {
       setForcedUpdateCounter(forcedUpdateCounter + 1)
+    }
+
+    // This is called when a change is
+    // made that would require saving.
+    const handleChange = (): void => {
+      setAreUnsavedChanges(true)
+      forceUpdate()
+    }
+
+    // This is called to save any changes
+    // made.
+    const save = (): void => {
+      if (areUnsavedChanges) {
+        setAreUnsavedChanges(false)
+
+        saveMission(
+          mission,
+          () => {
+            pageProps.notify('Mission successfully saved.', 3000)
+          },
+          (error: Error) => {
+            pageProps.notify('Mission failed to save.', 3000)
+            setAreUnsavedChanges(true)
+          },
+        )
+      }
+    }
+
+    // This is called when a node is
+    // requested to be deleted.
+    const handleNodeDeleteRequest = (node: MissionNode): void => {
+      let confirmationMessage: string = ''
+
+      if (node.hasChildren) {
+        confirmationMessage =
+          'Please confirm the deletion of this node. \n**This node has child nodes, and all child nodes will be deleted as well.**'
+      } else {
+        confirmationMessage = 'Please confirm the deletion of this node.'
+      }
+
+      pageProps.confirm(confirmationMessage, () => {
+        node.delete()
+        handleChange()
+        activateNodeStructuring(false)
+        selectNode(null)
+      })
     }
 
     // This will logout the current user.
@@ -150,34 +197,30 @@ export default function MissionFormPage(props: {
               selectNode(newNode)
               activateNodeStructuring(false)
             }}
-            handleMapEditRequest={
-              !nodeStructuringIsActive
-                ? () => {
-                    activateNodeStructuring(true)
-                    selectNode(null)
-                  }
-                : null
-            }
-            handleMapSaveRequest={() => {
-              saveMission(
-                mission,
-                () => {
-                  console.log('Mission saved.')
-                },
-                (error: Error) => {},
-              )
+            handleMapEditRequest={() => {
+              activateNodeStructuring(true)
+              selectNode(null)
             }}
+            handleMapSaveRequest={save}
+            editCanBeRequested={!nodeStructuringIsActive}
+            saveCanBeRequested={areUnsavedChanges}
             applyNodeClassName={(node: MissionNode) => ''}
             renderNodeTooltipDescription={(node: MissionNode) => ''}
           />
           <NodeEntry
             node={selectedNode}
-            handleChange={forceUpdate}
+            handleChange={handleChange}
+            handleDeleteRequest={() => {
+              if (selectedNode !== null) {
+                handleNodeDeleteRequest(selectedNode)
+              }
+            }}
             handleCloseRequest={() => selectNode(null)}
           />
           <NodeStructuring
             active={nodeStructuringIsActive}
             mission={mission}
+            handleChange={handleChange}
             handleCloseRequest={() => activateNodeStructuring(false)}
           />
         </div>
@@ -193,10 +236,12 @@ export default function MissionFormPage(props: {
 function NodeEntry(props: {
   node: MissionNode | null
   handleChange: () => void
+  handleDeleteRequest: () => void
   handleCloseRequest: () => void
 }): JSX.Element | null {
   let node: MissionNode | null = props.node
   let handleChange = props.handleChange
+  let handleDeleteRequest = props.handleDeleteRequest
   let handleCloseRequest = props.handleCloseRequest
   let nodeActionDetailsClassName: string = 'NodeActionDetails'
   let noActionsClassName: string = 'NoActions'
@@ -334,25 +379,33 @@ function NodeEntry(props: {
             >
               No actions exist for this node. Create one below.
             </div>
-            <Action
-              purpose={EActionPurpose.Add}
-              handleClick={() => {
-                if (node !== null) {
-                  let action: MissionNodeAction = new MissionNodeAction(
-                    node,
-                    generateHash(),
-                    'New Action',
-                    '',
-                    5000,
-                    0.5,
-                  )
-                  node.actions.push(action)
-                  handleChange()
-                }
-              }}
-              tooltipDescription={'Add a new action to this node.'}
-              key={'actual-action_add-new-action'}
-            />
+            <div className='UserActions'>
+              <Action
+                purpose={EActionPurpose.Add}
+                handleClick={() => {
+                  if (node !== null) {
+                    let action: MissionNodeAction = new MissionNodeAction(
+                      node,
+                      generateHash(),
+                      'New Action',
+                      '',
+                      5000,
+                      0.5,
+                    )
+                    node.actions.push(action)
+                    handleChange()
+                  }
+                }}
+                tooltipDescription={'Add a new action to this node.'}
+                key={`actual-action_add-new-action_${node.nodeID}`}
+              />
+              <Action
+                purpose={EActionPurpose.Remove}
+                handleClick={handleDeleteRequest}
+                tooltipDescription={'Delete this node.'}
+                key={`actual-action_delete-node_${node.nodeID}`}
+              />
+            </div>
           </div>
         </div>
       </div>
@@ -434,7 +487,7 @@ function NodeAction(props: {
         key={`${action.actionID}_delete`}
       >
         {'[ '}
-        <span>Delete</span> {' ]'}
+        <span>Delete Action</span> {' ]'}
         <Tooltip description='Delete this action from the node.' />
       </div>
     </div>
@@ -447,10 +500,12 @@ function NodeAction(props: {
 function NodeStructuring(props: {
   active: boolean
   mission: Mission
+  handleChange: () => void
   handleCloseRequest: () => void
 }): JSX.Element | null {
   let active: boolean = props.active
   let mission: Mission = props.mission
+  let handleChange = props.handleChange
   let handleCloseRequest = props.handleCloseRequest
   let rootNode: MissionNode = mission.rootNode
 
@@ -513,6 +568,7 @@ function NodeStructuring(props: {
 
             if (nodeGrabbed !== null) {
               nodeGrabbed.move(destinationNode, ENodeTargetRelation.Parent)
+              handleChange()
             }
 
             pendDrop(null)
@@ -593,6 +649,7 @@ function NodeStructuring(props: {
               if (nodeGrabbed !== null) {
                 nodeGrabbed.move(target, targetRelation)
                 target.expand()
+                handleChange()
               }
 
               pendDrop(null)

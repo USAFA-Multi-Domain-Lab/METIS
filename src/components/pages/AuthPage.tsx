@@ -98,12 +98,12 @@ export default function AuthPage(props: {
             if (correct && currentUser !== null) {
               setIsSubmitting(false)
               setLoadingMessage(null)
+              setLastLoadingMessage('Initializing application...')
               setCurrentUser(currentUser)
               pageProps.goToPage(
                 pageProps.goBackPagePath,
                 pageProps.goBackPageProps,
               )
-              setLastLoadingMessage('Initializing application...')
             } else {
               handleLoginError('Incorrect username or password.')
             }

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useStore } from 'react-context-hook'
-import { Mission } from '../../modules/missions'
+import { EMissionCloneMethod, Mission } from '../../modules/missions'
 import { EAjaxStatus } from '../../modules/toolbox/ajax'
 import usersModule, { IUser } from '../../modules/users'
 import Branding from '../content/Branding'
@@ -122,7 +122,12 @@ export default function GamePage(props: {
     // This will switch to the edit mission form.
     const editMission = () => {
       if (currentUser !== null && mission !== null) {
-        pageProps.goToPage('MissionFormPage', { mission: mission.clone(true) })
+        pageProps.goToPage('MissionFormPage', {
+          mission: mission.clone({
+            method: EMissionCloneMethod.LikeOriginal,
+            expandAll: true,
+          }),
+        })
       }
     }
 

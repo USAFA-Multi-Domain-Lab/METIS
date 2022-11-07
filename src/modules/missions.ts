@@ -6,6 +6,14 @@ import { AnyObject } from './toolbox/objects'
 import { MissionNode } from './mission-nodes'
 import { MissionNodeAction } from './mission-node-actions'
 
+// This is the method that the clone
+// function in the Mission class uses
+// to clone a mission.
+export enum EMissionCloneMethod {
+  LikeOriginal,
+  IncludeModifications,
+}
+
 // This is the raw mission data returned
 // from the server used to create instances
 // of the Mission class.
@@ -18,12 +26,22 @@ export interface IMissionJSON {
   nodeData: Array<AnyObject>
 }
 
+// This is a config that can be passed
+// when cloning a mission to configure
+// how you want this mission to be cloned.
+export interface IMissionCloneOptions {
+  method: EMissionCloneMethod
+  expandAll?: boolean
+}
+
 // This represents a mission for a
 // student to complete.
 export class Mission {
   missionID: string
   name: string
   versionNumber: number
+  _originalNodeStructure: AnyObject
+  _originalNodeData: Array<AnyObject>
   _nodeStructure: AnyObject
   _nodeData: Array<AnyObject>
   _nodeStructureLastChangeKey: string
@@ -79,6 +97,8 @@ export class Mission {
     this.versionNumber = versionNumber
     this._nodeStructure = nodeStructure
     this._nodeData = nodeData
+    this._originalNodeStructure = nodeStructure
+    this._originalNodeData = nodeData
     this.nodes = new Map<string, MissionNode>()
     this.seed = seed
     this.rng = seedrandom(`${seed}`)
@@ -349,16 +369,36 @@ export class Mission {
 
   // This will create a copy of this
   // Mission.
-  clone(expandAll: boolean = false): Mission {
-    return new Mission(
-      this.missionID,
-      this.name,
-      this.versionNumber,
-      this._exportNodeStructure(),
-      this._exportNodeData(),
-      this.seed,
-      expandAll,
-    )
+  clone(
+    options: IMissionCloneOptions = {
+      method: EMissionCloneMethod.IncludeModifications,
+      expandAll: false,
+    },
+  ): Mission {
+    switch (options.method) {
+      case EMissionCloneMethod.LikeOriginal:
+        return new Mission(
+          this.missionID,
+          this.name,
+          this.versionNumber,
+          this._originalNodeStructure,
+          this._originalNodeData,
+          this.seed,
+          options.expandAll === true,
+        )
+        break
+      case EMissionCloneMethod.IncludeModifications:
+        return new Mission(
+          this.missionID,
+          this.name,
+          this.versionNumber,
+          this._exportNodeStructure(),
+          this._exportNodeData(),
+          this.seed,
+          options.expandAll === true,
+        )
+        break
+    }
   }
 }
 
