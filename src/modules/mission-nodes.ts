@@ -392,6 +392,18 @@ export class MissionNode {
       childNode.applyColorFill()
     }
   }
+
+  // This will delete this node and
+  // all child nodes from the mission.
+  delete(): void {
+    for (let childNode of this.childNodes) {
+      childNode.delete()
+    }
+
+    this.childrenOfParent.splice(this.childrenOfParent.indexOf(this), 1)
+
+    this._handleStructureChange()
+  }
 }
 
 export default {

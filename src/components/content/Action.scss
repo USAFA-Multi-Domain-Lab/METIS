@@ -32,6 +32,13 @@
     background-repeat: no-repeat;
   }
 
+  &.remove {
+    background: url('/assets/images/icons/remove.svg'), $background-alt1;
+    background-position: 12.5px 11px;
+    background-size: 17px 17px;
+    background-repeat: no-repeat;
+  }
+
   &.down {
     background: url('/assets/images/icons/down.svg'), $background-alt1;
     background-position: 5.4px 9.5px;

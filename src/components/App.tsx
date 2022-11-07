@@ -14,12 +14,15 @@ import StudentMissionSelectionPage from './pages/StudentMissionSelectionPage'
 import { AnyObject } from '../modules/toolbox/objects'
 import Notification from '../modules/notifications'
 import NotificationBubble from './content/NotificationBubble'
+import Confirmation, { IConfirmation } from './content/Confirmation'
+import { AjaxStatus } from './content/AjaxStatusDisplay'
 
 // Default props in every page props.
 export interface IPageProps {
   forceUpdate: () => void
   goToPage: (pagePath: string, pageProps: AnyObject) => void
   notify: (message: string, duration: number | null) => Notification
+  confirm: (message: string, handleConfirmation: () => void) => void
   show: boolean
   currentPagePath: string
   isCurrentPage: boolean
@@ -50,6 +53,10 @@ function StandardPage(props: {
   const [notifications, setNotifications] = useStore<Array<Notification>>(
     'notifications',
     [],
+  )
+  const [confirmation, setConfirmation] = useStore<IConfirmation | null>(
+    'confirmation',
+    null,
   )
   const [forcedUpdateCounter, setForcedUpdateCounter] = useStore<number>(
     'forcedUpdateCounter',
@@ -100,6 +107,23 @@ function StandardPage(props: {
     return notification
   }
 
+  // This will pop up a confirmation box
+  // to confirm some action.
+  const confirm = (message: string, handleConfirmation: () => {}): void => {
+    let confirmation: IConfirmation = {
+      ...Confirmation.defaultProps,
+      ajaxStatus: AjaxStatus.Inactive,
+      active: true,
+      confirmationMessage: message,
+      handleConfirmation: () => {
+        handleConfirmation()
+        setConfirmation(null)
+      },
+      handleCancelation: () => setConfirmation(null),
+    }
+    setConfirmation(confirmation)
+  }
+
   /* -- page-props-construction -- */
 
   pageProps = {
@@ -107,6 +131,7 @@ function StandardPage(props: {
     forceUpdate,
     goToPage,
     notify,
+    confirm,
     show:
       (currentUser !== null || !requireLogin) &&
       currentPagePath === targetPagePath &&
@@ -155,6 +180,10 @@ function App(): JSX.Element | null {
   const [tooltips] = useStore<React.RefObject<HTMLDivElement>>('tooltips')
   const [hideTooltip] = useStore<() => void>('hideTooltip')
   const [notifications] = useStore<Array<Notification>>('notifications')
+  const [confirmation, setConfirmation] = useStore<IConfirmation | null>(
+    'confirmation',
+    null,
+  )
 
   /* -- COMPONENT STATE -- */
 
@@ -290,6 +319,7 @@ function App(): JSX.Element | null {
           ))}
         </div>
       </div>
+      {confirmation !== null ? new Confirmation(confirmation).render() : null}
       <StandardPage
         Page={AuthPage}
         targetPagePath='AuthPage'

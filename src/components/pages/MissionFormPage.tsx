@@ -17,7 +17,6 @@ import { v4 as generateHash } from 'uuid'
 import './MissionFormPage.scss'
 import { Action, EActionPurpose } from '../content/Action'
 import MoreInformation from '../content/MoreInformation'
-import { AnyObject } from '../../modules/toolbox/objects'
 import { IPageProps } from '../App'
 import { ENodeTargetRelation, MissionNode } from '../../modules/mission-nodes'
 import { MissionNodeAction } from '../../modules/mission-node-actions'
@@ -115,6 +114,26 @@ export default function MissionFormPage(props: {
       }
     }
 
+    // This is called when a node is
+    // requested to be deleted.
+    const handleNodeDeleteRequest = (node: MissionNode): void => {
+      let confirmationMessage: string = ''
+
+      if (node.hasChildren) {
+        confirmationMessage =
+          'Please confirm the deletion of this node. \n**This node has child nodes, and all child nodes will be deleted as well.**'
+      } else {
+        confirmationMessage = 'Please confirm the deletion of this node.'
+      }
+
+      pageProps.confirm(confirmationMessage, () => {
+        node.delete()
+        handleChange()
+        activateNodeStructuring(false)
+        selectNode(null)
+      })
+    }
+
     // This will logout the current user.
     const logout = () => {
       setLoadingMessage('Signing out...')
@@ -192,6 +211,11 @@ export default function MissionFormPage(props: {
           <NodeEntry
             node={selectedNode}
             handleChange={handleChange}
+            handleDeleteRequest={() => {
+              if (selectedNode !== null) {
+                handleNodeDeleteRequest(selectedNode)
+              }
+            }}
             handleCloseRequest={() => selectNode(null)}
           />
           <NodeStructuring
@@ -213,10 +237,12 @@ export default function MissionFormPage(props: {
 function NodeEntry(props: {
   node: MissionNode | null
   handleChange: () => void
+  handleDeleteRequest: () => void
   handleCloseRequest: () => void
 }): JSX.Element | null {
   let node: MissionNode | null = props.node
   let handleChange = props.handleChange
+  let handleDeleteRequest = props.handleDeleteRequest
   let handleCloseRequest = props.handleCloseRequest
   let nodeActionDetailsClassName: string = 'NodeActionDetails'
   let noActionsClassName: string = 'NoActions'
@@ -354,25 +380,33 @@ function NodeEntry(props: {
             >
               No actions exist for this node. Create one below.
             </div>
-            <Action
-              purpose={EActionPurpose.Add}
-              handleClick={() => {
-                if (node !== null) {
-                  let action: MissionNodeAction = new MissionNodeAction(
-                    node,
-                    generateHash(),
-                    'New Action',
-                    '',
-                    5000,
-                    0.5,
-                  )
-                  node.actions.push(action)
-                  handleChange()
-                }
-              }}
-              tooltipDescription={'Add a new action to this node.'}
-              key={'actual-action_add-new-action'}
-            />
+            <div className='UserActions'>
+              <Action
+                purpose={EActionPurpose.Add}
+                handleClick={() => {
+                  if (node !== null) {
+                    let action: MissionNodeAction = new MissionNodeAction(
+                      node,
+                      generateHash(),
+                      'New Action',
+                      '',
+                      5000,
+                      0.5,
+                    )
+                    node.actions.push(action)
+                    handleChange()
+                  }
+                }}
+                tooltipDescription={'Add a new action to this node.'}
+                key={`actual-action_add-new-action_${node.nodeID}`}
+              />
+              <Action
+                purpose={EActionPurpose.Remove}
+                handleClick={handleDeleteRequest}
+                tooltipDescription={'Delete this node.'}
+                key={`actual-action_delete-node_${node.nodeID}`}
+              />
+            </div>
           </div>
         </div>
       </div>
@@ -454,7 +488,7 @@ function NodeAction(props: {
         key={`${action.actionID}_delete`}
       >
         {'[ '}
-        <span>Delete</span> {' ]'}
+        <span>Delete Action</span> {' ]'}
         <Tooltip description='Delete this action from the node.' />
       </div>
     </div>

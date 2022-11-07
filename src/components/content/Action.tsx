@@ -10,6 +10,7 @@ import './Action.scss'
 export enum EActionPurpose {
   Add,
   Edit,
+  Remove,
   Down,
   Reorder,
   ZoomIn,
@@ -51,6 +52,8 @@ export class Action extends React.Component<IAction_P, {}> {
         return 'Action add'
       case EActionPurpose.Edit:
         return 'Action edit'
+      case EActionPurpose.Remove:
+        return 'Action remove'
       case EActionPurpose.Down:
         return 'Action down'
       case EActionPurpose.Reorder:
