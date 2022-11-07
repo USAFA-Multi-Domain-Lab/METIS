@@ -1,7 +1,11 @@
 import React from 'react'
 import { useStore, withStore } from 'react-context-hook'
-import { Mission, MissionNode, MissionNodeAction } from '../modules/missions'
+import { Mission } from '../modules/missions'
+import { MissionNode } from '../modules/mission-nodes'
+import { MissionNodeAction } from '../modules/mission-node-actions'
 import { IUser } from '../modules/users'
+import { AnyObject } from 'mongoose'
+import { IConfirmation } from './content/Confirmation'
 
 /* -- constants -- */
 
@@ -21,6 +25,7 @@ interface IStateSetters {
 export default class GlobalState {
   currentUser: IUser | null
   currentPagePath: string
+  currentPageProps: AnyObject
   appMountHandled: boolean
   stateSetters: IStateSetters
   loadingMinTimeReached: boolean
@@ -30,19 +35,23 @@ export default class GlobalState {
   tooltips: React.RefObject<HTMLDivElement>
   tooltipDescription: string
   consoleOutputs: Array<{ date: number; value: string }>
+  notifications: Array<Notification>
+  confirmation: IConfirmation | null
   outputPanelIsDisplayed: boolean
   executeNodePathPromptIsDisplayed: boolean
-  nodeActionSelectionPromptIsDisplayed: boolean
+  actionSelectionPromptIsDisplayed: boolean
   lastSelectedNode: MissionNode | null
-  nodeActionItemDisplay: Array<MissionNodeAction>
-  nodeActionItemText: string
-  processDelayTime: number
-  nodeActionSuccessChance: number
+  actionDisplay: Array<MissionNodeAction>
+  actionName: string
+  processTime: number
+  actionSuccessChance: number
   mission: Mission | null
+  allMissions: Array<Mission>
 
   constructor(stateSetters: IStateSetters) {
     this.currentUser = null
-    this.currentPagePath = 'DashboardPage'
+    this.currentPagePath = ''
+    this.currentPageProps = {}
     this.appMountHandled = false
     this.stateSetters = stateSetters
     this.loadingMessage = 'Initializing application...'
@@ -52,15 +61,18 @@ export default class GlobalState {
     this.tooltips = React.createRef()
     this.tooltipDescription = ''
     this.consoleOutputs = []
+    this.notifications = []
+    this.confirmation = null
     this.outputPanelIsDisplayed = false
     this.executeNodePathPromptIsDisplayed = false
-    this.nodeActionSelectionPromptIsDisplayed = false
+    this.actionSelectionPromptIsDisplayed = false
     this.lastSelectedNode = null
-    this.nodeActionItemDisplay = []
-    this.nodeActionItemText = ''
-    this.processDelayTime = 0
-    this.nodeActionSuccessChance = 0
+    this.actionDisplay = []
+    this.actionName = ''
+    this.processTime = 0
+    this.actionSuccessChance = 0
     this.mission = null
+    this.allMissions = []
   }
 
   // This will position the currently

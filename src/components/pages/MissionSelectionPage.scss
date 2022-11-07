@@ -1,0 +1,82 @@
+@import '../../config.scss';
+
+.MissionSelectionPage {
+  margin: 0 auto;
+  padding: 35px 20% 0;
+  height: 90vh;
+
+  .Navigation {
+    display: grid;
+    grid-template-columns: auto 110px;
+    margin: 0 auto 55px;
+    height: 30px;
+    vertical-align: bottom;
+
+    .Branding {
+      width: fit-content;
+      padding-right: 20px;
+    }
+    .Link {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-flow: row wrap;
+      -webkit-user-select: none;
+      user-select: none;
+      cursor: pointer;
+      transition: opacity 175ms;
+
+      &:hover {
+        border: 2px solid $color-accent;
+        border-radius: 5px;
+        text-align: center;
+      }
+    }
+
+    .Logout {
+      display: none;
+    }
+  }
+
+  .MissionListContainer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-flow: column;
+    text-align: left;
+    height: 50%;
+    margin: 0;
+  }
+
+  .MissionList {
+    margin: 0;
+    padding: 0;
+    font-size: 1.2em;
+  }
+
+  .MissionName {
+    margin-top: 20px;
+    margin-left: 35px;
+    width: fit-content;
+
+    &.MissionName:hover {
+      cursor: pointer;
+      color: $terminal;
+    }
+  }
+  @media only screen and (max-width: 768px) {
+    padding: 20px;
+  }
+}
+
+.MissionSelectionPage {
+  .SignOut {
+    .Logout {
+      display: flex;
+    }
+
+    .Login {
+      display: none;
+    }
+  }
+}

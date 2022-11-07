@@ -5,15 +5,26 @@ import './AuthPage.scss'
 import usersModule, { IUser } from '../../modules/users'
 import { AxiosError } from 'axios'
 import { useStore } from 'react-context-hook'
-import { update } from 'lodash'
+import { IPageProps } from '../App'
+import { AnyObject } from '../../modules/toolbox/objects'
+
+interface IAuthPagProps extends IPageProps {
+  goBackPagePath: string
+  goBackPageProps: AnyObject
+  postLoginPagePath: string
+  postLoginPathProps: AnyObject
+}
 
 // This will render a page where a user can
 // login to view the radar.
-export default function AuthPage(props: { show: boolean }): JSX.Element | null {
+export default function AuthPage(props: {
+  pageProps: IAuthPagProps
+}): JSX.Element | null {
+  let pageProps: IAuthPagProps = props.pageProps
+
   /* -- GLOBAL STATE -- */
 
   const [currentUser, setCurrentUser] = useStore('currentUser')
-  const [currentPagePath, setCurrentPagePath] = useStore('currentPagePath')
   const [loadingMessage, setLoadingMessage] = useStore('loadingMessage')
   const [lastLoadingMessage, setLastLoadingMessage] =
     useStore<string>('lastLoadingMessage')
@@ -87,9 +98,12 @@ export default function AuthPage(props: { show: boolean }): JSX.Element | null {
             if (correct && currentUser !== null) {
               setIsSubmitting(false)
               setLoadingMessage(null)
-              setCurrentUser(currentUser)
-              setCurrentPagePath('DashboardPage')
               setLastLoadingMessage('Initializing application...')
+              setCurrentUser(currentUser)
+              pageProps.goToPage(
+                pageProps.goBackPagePath,
+                pageProps.goBackPageProps,
+              )
             } else {
               handleLoginError('Incorrect username or password.')
             }
@@ -113,25 +127,19 @@ export default function AuthPage(props: { show: boolean }): JSX.Element | null {
   }
 
   const returnToDashboard = () => {
-    // setLoadingMessage('Initializing application...')
-    setCurrentPagePath('DashboardPage')
-    // setLastLoadingMessage('Initializing application...')
-
-    // setTimeout(() => {
-    //   setLoadingMessage(null)
-    // }, 500)
+    pageProps.goToPage(pageProps.goBackPagePath, pageProps.goBackPageProps)
   }
 
   /* -- RENDER -- */
 
-  let show: boolean = props.show
+  let show: boolean = props.pageProps.show
   let submitIsDisabled: boolean = !canSubmit() || isSubmitting
 
   if (show && currentUser === null) {
     return (
       <div className='AuthPage'>
         <div className='BackButton' onClick={returnToDashboard}>
-          &lt; Return to Mission
+          &lt; Previous Page
         </div>
         <div className='Login'>
           <div className='ErrorMessage'>{errorMessage}</div>

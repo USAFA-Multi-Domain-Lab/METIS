@@ -36,8 +36,15 @@ $node-orange: #bc842d;
 // Indicates if the node succeeded or failed
 $fail: #ff000a;
 $success: #65eb59;
+
+// Used for the linear gradient that is used for the
+// loading (processing) bar
 $loading-1: #2a6f05;
 $loading-2: #44921a;
+
+// Distinguishes if a node is executable or not
+$border-color-main: #00d7ff;
+
 // height and width for input and output boxes
 $height: 650px;
 
@@ -50,4 +57,6 @@ $z-index-objective-map-prompt: 20;
 $z-index-objective-map-field-entry: 75;
 $z-index-objective-map-more-info: 25;
 $z-index-action-panel: 50;
+$z-index-notifications: 75;
+$z-index-confirmation: 100;
 $z-index-tooltips: 250;

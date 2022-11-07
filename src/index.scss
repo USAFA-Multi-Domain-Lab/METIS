@@ -48,6 +48,22 @@ code {
   }
 }
 
+.Button {
+  display: inline-block;
+  margin: 20px 10px 20px 0;
+  color: $color-accent-light;
+  background-color: $background-alt2;
+  padding: 5px;
+  border: 2px solid $color-main;
+  border-radius: 4px;
+  height: auto;
+
+  &:hover {
+    cursor: pointer;
+    background-color: black;
+  }
+}
+
 .Hidden {
   pointer-events: none;
   opacity: 0;

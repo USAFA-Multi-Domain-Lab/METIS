@@ -1,0 +1,15 @@
+@import '../../config.scss';
+
+.AjaxStatusDisplay {
+  .status {
+    user-select: none;
+    padding: 40px 0;
+    color: $color-main;
+    font-size: 19px;
+    letter-spacing: 2px;
+  }
+
+  &.inline {
+    display: inline-block;
+  }
+}

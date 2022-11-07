@@ -1,13 +1,17 @@
 @import '../../config.scss';
 
-.NodeHoverDisplay {
+.ActionPropertyDisplay {
+  border: 2px solid $border-color-main;
+  border-radius: 10px;
   font-size: 14px;
-  margin-top: 10px;
+  margin-top: 20px;
 
   .TimeToExecute,
   .ChosenNodeAction,
-  .SuccessChance {
-    margin: 5px 0;
+  .SuccessChance,
+  .Description {
+    margin: 10px 0;
+    padding: 0 20px;
   }
 
   .TimeToExecute {
@@ -20,6 +24,10 @@
 
   .SuccessChance {
     color: $terminal-red;
+  }
+
+  .Description {
+    color: $terminal-yellow;
   }
 }
 

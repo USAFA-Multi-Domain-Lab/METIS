@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import './NodeActions.scss'
 import { useStore } from 'react-context-hook'
-import { MissionNode, MissionNodeAction } from '../../modules/missions'
-import { IUser } from '../../modules/users'
+import { MissionNode } from '../../modules/mission-nodes'
+import { MissionNodeAction } from '../../modules/mission-node-actions'
 import Tooltip from './Tooltip'
 
 const NodeActions = (props: {
@@ -14,55 +14,48 @@ const NodeActions = (props: {
     setExecuteNodePathPromptIsDisplayed,
   ] = useStore<boolean>('executeNodePathPromptIsDisplayed')
   const [
-    nodeActionSelectionPromptIsDisplayed,
-    setNodeActionSelectionPromptIsDisplayed,
-  ] = useStore<boolean>('nodeActionSelectionPromptIsDisplayed')
-  const [nodeActionItemDisplay, setNodeActionItemDisplay] = useStore<
-    Array<MissionNodeAction>
-  >('nodeActionItemDisplay')
-  const [processDelayTime, setProcessDelayTime] =
-    useStore<number>('processDelayTime')
-  const [nodeActionItemText, setNodeActionItemText] =
-    useStore<string>('nodeActionItemText')
-  const [nodeActionSuccessChance, setNodeActionSuccessChance] =
-    useStore<number>('nodeActionSuccessChance')
+    actionSelectionPromptIsDisplayed,
+    setActionSelectionPromptIsDisplayed,
+  ] = useStore<boolean>('actionSelectionPromptIsDisplayed')
+  const [actionDisplay, setActionDisplay] =
+    useStore<Array<MissionNodeAction>>('actionDisplay')
+  const [processTime, setProcessTime] = useStore<number>('processTime')
+  const [actionName, setActionName] = useStore<string>('actionName')
+  const [actionSuccessChance, setActionSuccessChance] = useStore<number>(
+    'actionSuccessChance',
+  )
 
   /* -- COMPONENT STATE -- */
-  const [displayNodeActionList, setDisplayNodeActionList] =
-    useState<boolean>(false)
+  const [displayActionList, setDisplayActionList] = useState<boolean>(false)
   const [forcedUpdateCounter, setForcedUpdateCounter] = useState<number>(0)
 
   /* -- COMPONENT FUNCTIONS -- */
-  // This forces a rerender of the component.
-  const forceUpdate = (): void => {
-    setForcedUpdateCounter(forcedUpdateCounter + 1)
-  }
 
   // Closes the execution prompt window
   const closeWindow = (): void => {
-    setNodeActionSelectionPromptIsDisplayed(false)
-    setDisplayNodeActionList(false)
-    setNodeActionItemDisplay([])
+    setActionSelectionPromptIsDisplayed(false)
+    setDisplayActionList(false)
+    setActionDisplay([])
   }
 
   const revealOptions = () => {
-    if (displayNodeActionList === false) {
-      setDisplayNodeActionList(true)
+    if (displayActionList === false) {
+      setDisplayActionList(true)
     } else {
-      setDisplayNodeActionList(false)
+      setDisplayActionList(false)
     }
   }
 
-  const nodeActionSelection = (nodeActionItem: MissionNodeAction): void => {
-    setNodeActionSelectionPromptIsDisplayed(false)
+  const selectAction = (action: MissionNodeAction): void => {
+    setActionSelectionPromptIsDisplayed(false)
     setExecuteNodePathPromptIsDisplayed(true)
-    setDisplayNodeActionList(false)
-    setProcessDelayTime(nodeActionItem.timeDelay)
-    setNodeActionItemText(nodeActionItem.text)
-    setNodeActionSuccessChance(nodeActionItem.successChance)
+    setDisplayActionList(false)
+    setProcessTime(action.processTime)
+    setActionName(action.name)
+    setActionSuccessChance(action.successChance)
 
     if (props.selectedNode !== null && props.selectedNode !== undefined) {
-      props.selectedNode.selectedNodeAction = nodeActionItem
+      props.selectedNode.selectedAction = action
     }
   }
 
@@ -70,7 +63,7 @@ const NodeActions = (props: {
 
   let className: string = 'NodeActionList'
 
-  if (displayNodeActionList === false) {
+  if (displayActionList === false) {
     className = 'hide NodeActionList'
   } else {
     className = 'NodeActionList'
@@ -91,24 +84,25 @@ const NodeActions = (props: {
         <div className='ArrowDown'>^</div>
       </div>
       <div className={className}>
-        {nodeActionItemDisplay.map((nodeActionItem: MissionNodeAction) => {
+        {actionDisplay.map((action: MissionNodeAction) => {
           return (
             <div
               className='NodeAction'
-              key={nodeActionItem.text}
-              onClick={() => nodeActionSelection(nodeActionItem)}
+              key={action.name}
+              onClick={() => selectAction(action)}
             >
               <Tooltip
                 description={
                   `* Time to execute: ${
-                    (nodeActionItem.timeDelay as number) / 1000
+                    (action.processTime as number) / 1000
                   } second(s)\n` +
                   `* Chance of success: ${
-                    (nodeActionItem.successChance as number) * 100
-                  }%\n`
+                    (action.successChance as number) * 100
+                  }%\n` +
+                  `* Description: ${action.description}`
                 }
               />
-              {nodeActionItem.text}
+              {action.name}
             </div>
           )
         })}

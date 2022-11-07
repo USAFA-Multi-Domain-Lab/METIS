@@ -25,33 +25,42 @@
      inkscape:document-units="px"
      showgrid="false"
      inkscape:zoom="32.602476"
-     inkscape:cx="10.106594"
-     inkscape:cy="12.836449"
-     inkscape:window-width="1792"
-     inkscape:window-height="1003"
+     inkscape:cx="10.137267"
+     inkscape:cy="12.867121"
+     inkscape:window-width="2560"
+     inkscape:window-height="1323"
      inkscape:window-x="0"
-     inkscape:window-y="25"
+     inkscape:window-y="1105"
      inkscape:window-maximized="1"
-     inkscape:current-layer="layer1" />
+     inkscape:current-layer="g296" />
   <defs
      id="defs2" />
   <g
      inkscape:label="Capa 1"
      inkscape:groupmode="layer"
      id="layer1">
-    <circle
-       style="fill:none;stroke:#ffffff;stroke-width:0.762;stroke-dasharray:none;stroke-opacity:1"
-       id="path234"
-       cx="3.175"
-       cy="3.175"
-       r="2.7939999" />
-    <path
-       style="fill:none;stroke:#ffffff;stroke-width:0.719087;stroke-dasharray:none;stroke-opacity:1"
-       d="M 4.8832994,3.175 H 1.4667005"
-       id="path1115-9" />
-    <path
-       style="fill:none;stroke:#ffffff;stroke-width:0.719087;stroke-dasharray:none;stroke-opacity:1"
-       d="M 3.175,4.8832994 V 1.4667005"
-       id="path1115-9-8" />
+    <g
+       id="g296"
+       transform="matrix(0.83334006,0,0,0.83331627,3.0373779e-5,3.0372912e-5)"
+       style="stroke-width:1.0001">
+      <circle
+         style="fill:none;stroke:#ffffff;stroke-width:0.762073;stroke-dasharray:none;stroke-opacity:1"
+         id="path234"
+         cx="3.175"
+         cy="3.175"
+         r="2.7939999" />
+      <path
+         style="fill:none;stroke:#ffffff;stroke-width:0.719156;stroke-dasharray:none;stroke-opacity:1"
+         d="M 4.8832994,3.175 H 1.4667005"
+         id="path1115-9" />
+      <path
+         style="fill:none;stroke:#ffffff;stroke-width:0.719156;stroke-dasharray:none;stroke-opacity:1"
+         d="M 3.175,4.8832994 V 1.4667005"
+         id="path1115-9-8" />
+      <path
+         style="fill:none;stroke:#ffffff;stroke-width:0.719156;stroke-dasharray:none;stroke-opacity:1"
+         d="M 7.3656383,7.3658631 4.9498071,4.9499628"
+         id="path1115-9-8-6" />
+    </g>
   </g>
 </svg>

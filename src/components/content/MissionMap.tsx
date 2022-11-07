@@ -6,7 +6,8 @@ import List from './List'
 import strings from '../../modules/toolbox/strings'
 import { EAjaxStatus } from '../../modules/toolbox/ajax'
 import MoreInformation from './MoreInformation'
-import { Mission, MissionNode } from '../../modules/missions'
+import { Mission } from '../../modules/missions'
+import { MissionNode } from '../../modules/mission-nodes'
 import { Action, EActionPurpose } from './Action'
 import { ActionPanel } from './ActionPanel'
 
@@ -18,6 +19,9 @@ interface IMissionMap {
   handleNodeSelection: (node: MissionNode) => void
   handleMapCreateRequest: (() => void) | null
   handleMapEditRequest: (() => void) | null
+  handleMapSaveRequest: (() => void) | null
+  editCanBeRequested: boolean
+  saveCanBeRequested: boolean
   applyNodeClassName: (node: MissionNode) => string
   renderNodeTooltipDescription: (node: MissionNode) => string
 }
@@ -136,6 +140,9 @@ export default class MissionMap extends React.Component<
   static defaultProps = {
     handleMapCreateRequest: null,
     handleMapEditRequest: null,
+    handleMapSaveRequest: null,
+    editCanBeRequested: true,
+    saveCanBeRequested: true,
     applyMappedNodeClassName: () => '',
     renderMappedNodeTooltipDescription:
       MissionMap.renderMappedNodeTooltipDescription_default,
@@ -301,9 +308,9 @@ export default class MissionMap extends React.Component<
 
     // This cancels the zoom if the shift
     // key is not pressed.
-    if (!event.shiftKey) {
-      return
-    }
+    // if (!event.shiftKey) {
+    //   return
+    // }
 
     let map: HTMLDivElement | null = this.map.current
     if (map) {
@@ -532,6 +539,9 @@ export default class MissionMap extends React.Component<
     let mapScale: number = this.state.mapScale
     let handleMapCreateRequest = this.props.handleMapCreateRequest
     let handleMapEditRequest = this.props.handleMapEditRequest
+    let handleMapSaveRequest = this.props.handleMapSaveRequest
+    let editCanBeRequested: boolean = this.props.editCanBeRequested
+    let saveCanBeRequested: boolean = this.props.saveCanBeRequested
     let actionsUniqueClassName: string = 'map-actions'
 
     let availableActions = {
@@ -560,6 +570,14 @@ export default class MissionMap extends React.Component<
         purpose: EActionPurpose.Reorder,
         handleClick: handleMapEditRequest ? handleMapEditRequest : () => {},
         tooltipDescription: 'Edit the structure and order of nodes.',
+        disabled: !editCanBeRequested,
+      }),
+      save: new Action({
+        ...Action.defaultProps,
+        purpose: EActionPurpose.Save,
+        handleClick: handleMapSaveRequest ? handleMapSaveRequest : () => {},
+        tooltipDescription: 'Save changes.',
+        disabled: !saveCanBeRequested,
       }),
     }
     let activeActions: Action[] = []
@@ -573,6 +591,10 @@ export default class MissionMap extends React.Component<
 
     if (handleMapEditRequest !== null) {
       activeActions.push(availableActions.edit)
+    }
+
+    if (handleMapSaveRequest !== null) {
+      activeActions.push(availableActions.save)
     }
 
     if (mapScale === maxMapScale) {
@@ -665,6 +687,7 @@ export default class MissionMap extends React.Component<
 
   // inherited
   render(): JSX.Element {
+    let mission: Mission = this.props.mission
     let missionAjaxStatus: EAjaxStatus = this.props.missionAjaxStatus
     let visibleNodes: Array<MissionNode> = this.state.visibleNodes
     let navigationIsActive: boolean = this.state.navigationIsActive
@@ -765,10 +788,27 @@ export default class MissionMap extends React.Component<
             let scoreWidth: number = 25 * mapScale
             let lineHeight: number = height * 0.34
 
+            // Dynamic Class Names
             let loadingClassName: string = 'loading'
+            let deviceClassName: string = 'dorito hide'
+            let doritoColor: string = ''
 
+            // Logic to manipulate class names
             if (!node.executing) {
               loadingClassName += ' hide'
+            }
+
+            if (node.device) {
+              doritoColor += ' #9ae700'
+              // doritoColor += ' #ffee00'
+              // doritoColor += ' black'
+              deviceClassName = 'dorito'
+            } else if (node.executable && !node.device) {
+              doritoColor += ' #00d7ff'
+              // doritoColor += ' white'
+              deviceClassName = 'dorito'
+            } else {
+              doritoColor += ' transparent'
             }
 
             return (
@@ -794,6 +834,15 @@ export default class MissionMap extends React.Component<
                     }}
                   >
                     {node.name}
+                  </div>
+                  <div className='DoritoContainer'>
+                    <div
+                      className={deviceClassName}
+                      style={{
+                        borderRight: `${scoreWidth + 2}px solid ${doritoColor}`,
+                        borderBottom: `${scoreWidth + 2}px solid transparent`,
+                      }}
+                    ></div>
                   </div>
                 </div>
               </>
@@ -867,7 +916,7 @@ export default class MissionMap extends React.Component<
             }
             return styling
           }}
-          headingText={'Mission Map'}
+          headingText={mission.name}
           alwaysUseBlanks={false}
         />
 

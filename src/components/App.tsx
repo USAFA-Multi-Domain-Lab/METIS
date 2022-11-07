@@ -1,7 +1,7 @@
 import './App.scss'
-import DashboardPage from './pages/DashboardPage'
+import GamePage from './pages/GamePage'
 import AuthPage from './pages/AuthPage'
-import { useStore, withStore } from 'react-context-hook'
+import { useStore } from 'react-context-hook'
 import usersModule, { IUser } from '../modules/users'
 import React, { useEffect, useState } from 'react'
 import ServerErrorPage from './pages/ServerErrorPage'
@@ -9,42 +9,143 @@ import LoadingPage from './pages/LoadingPage'
 import GlobalState, { tooltipsOffsetX, tooltipsOffsetY } from './GlobalState'
 import Markdown, { MarkdownTheme } from './content/Markdown'
 import MissionFormPage from './pages/MissionFormPage'
-import { getMission, Mission } from '../modules/missions'
-import { AnyObject } from 'mongoose'
+import { getAllMissions, Mission } from '../modules/missions'
+import MissionSelectionPage from './pages/MissionSelectionPage'
+import { AnyObject } from '../modules/toolbox/objects'
+import Notification from '../modules/notifications'
+import NotificationBubble from './content/NotificationBubble'
+import Confirmation, { IConfirmation } from './content/Confirmation'
+import { AjaxStatus } from './content/AjaxStatusDisplay'
+
+// Default props in every page props.
+export interface IPageProps {
+  forceUpdate: () => void
+  goToPage: (pagePath: string, pageProps: AnyObject) => void
+  notify: (message: string, duration: number | null) => Notification
+  confirm: (message: string, handleConfirmation: () => void) => void
+  show: boolean
+  currentPagePath: string
+  isCurrentPage: boolean
+}
 
 const loadingMinTime = 500
 
 // This function normalizes how pages are rendered.
 // in the application.
 function StandardPage(props: {
-  Page: (props: { show: boolean }) => JSX.Element | null
+  Page: (props: { pageProps: any }) => JSX.Element | null
   targetPagePath: string
   requireLogin?: boolean // default true
 }): JSX.Element | null {
+  /* -- global-state -- */
+
   const [currentUser] = useStore<IUser | null>('currentUser')
-  const [currentPagePath] = useStore<string>('currentPagePath')
+  const [currentPagePath, setCurrentPagePath] =
+    useStore<string>('currentPagePath')
+  const [currentPageProps, setCurrentPageProps] = useStore<AnyObject>(
+    'currentPageProps',
+    {},
+  )
   const [appMountHandled] = useStore<boolean>('appMountHandled')
   const [errorMessage] = useStore<string | null>('errorMessage')
   const [loadingMessage] = useStore<string | null>('loadingMessage')
   const [loadingMinTimeReached] = useStore<boolean>('loadingMinTimeReached')
+  const [notifications, setNotifications] = useStore<Array<Notification>>(
+    'notifications',
+    [],
+  )
+  const [confirmation, setConfirmation] = useStore<IConfirmation | null>(
+    'confirmation',
+    null,
+  )
+  const [forcedUpdateCounter, setForcedUpdateCounter] = useStore<number>(
+    'forcedUpdateCounter',
+  )
+
+  /* -- fields -- */
 
   let Page = props.Page
   let targetPagePath: string = props.targetPagePath
   let requireLogin: boolean =
     props.requireLogin === undefined ? true : props.requireLogin
+  let pageProps: AnyObject = { ...currentPageProps }
 
-  return (
-    <Page
-      show={
-        (currentUser !== null || !requireLogin) &&
-        currentPagePath === targetPagePath &&
-        appMountHandled &&
-        loadingMessage === null &&
-        loadingMinTimeReached &&
-        errorMessage === null
-      }
-    />
-  )
+  /* -- functions -- */
+
+  // This will force an update.
+  const forceUpdate = (): void => {
+    setForcedUpdateCounter(forcedUpdateCounter + 1)
+  }
+
+  // This will go to a specific page
+  // passing the necessary props.
+  const goToPage = (pagePath: string, pageProps: AnyObject): void => {
+    setCurrentPagePath(pagePath)
+    setCurrentPageProps(pageProps)
+  }
+
+  // This can be called to the notify
+  // the user of something.
+  const notify = (message: string, duration: number | null): Notification => {
+    let notification: Notification = new Notification(
+      message,
+      (dismissed: boolean, expired: boolean) => {
+        if (dismissed) {
+          notifications.splice(notifications.indexOf(notification), 1)
+        } else if (expired) {
+          setTimeout(() => {
+            notifications.splice(notifications.indexOf(notification), 1)
+            forceUpdate()
+          }, 1000)
+        }
+        forceUpdate()
+      },
+      duration,
+    )
+    notifications.push(notification)
+    forceUpdate()
+    return notification
+  }
+
+  // This will pop up a confirmation box
+  // to confirm some action.
+  const confirm = (message: string, handleConfirmation: () => {}): void => {
+    let confirmation: IConfirmation = {
+      ...Confirmation.defaultProps,
+      ajaxStatus: AjaxStatus.Inactive,
+      active: true,
+      confirmationMessage: message,
+      handleConfirmation: () => {
+        handleConfirmation()
+        setConfirmation(null)
+      },
+      handleCancelation: () => setConfirmation(null),
+    }
+    setConfirmation(confirmation)
+  }
+
+  /* -- page-props-construction -- */
+
+  pageProps = {
+    ...pageProps,
+    forceUpdate,
+    goToPage,
+    notify,
+    confirm,
+    show:
+      (currentUser !== null || !requireLogin) &&
+      currentPagePath === targetPagePath &&
+      appMountHandled &&
+      loadingMessage === null &&
+      loadingMinTimeReached &&
+      errorMessage === null,
+    currentPagePath,
+    isCurrentPage: currentPagePath === targetPagePath,
+  }
+
+  /* -- render -- */
+
+  return <Page pageProps={pageProps} />
 }
 
 // This is the renderer for the entire application.
@@ -54,6 +155,10 @@ function App(): JSX.Element | null {
   const [currentUser, setCurrentUser] = useStore<IUser | null>('currentUser')
   const [currentPagePath, setCurrentPagePath] =
     useStore<string>('currentPagePath')
+  const [currentPageProps, setCurrentPageProps] = useStore<AnyObject>(
+    'currentPageProps',
+    {},
+  )
   const [appMountHandled, setAppMountHandled] =
     useStore<boolean>('appMountHandled')
   const [loadingMessage, setLoadMessage] = useStore<string | null>(
@@ -67,14 +172,21 @@ function App(): JSX.Element | null {
   const [errorMessage, setErrorMessage] = useStore<string | null>(
     'errorMessage',
   )
+  const [forcedUpdateCounter, setForcedUpdateCounter] = useStore<number>(
+    'forcedUpdateCounter',
+    0,
+  )
   const [tooltipDescription] = useStore<string>('tooltipDescription')
   const [tooltips] = useStore<React.RefObject<HTMLDivElement>>('tooltips')
   const [hideTooltip] = useStore<() => void>('hideTooltip')
-  const [mission, setMission] = useStore<Mission | null>('mission')
+  const [notifications] = useStore<Array<Notification>>('notifications')
+  const [confirmation, setConfirmation] = useStore<IConfirmation | null>(
+    'confirmation',
+    null,
+  )
 
   /* -- COMPONENT STATE -- */
 
-  const [forcedUpdateCounter, setForcedUpdateCounter] = useState<number>(0)
   const [loadingMinTimeout, setLoadingMinTimeout] = useState<any>(undefined)
 
   /* -- COMPONENT FUNCTIONS -- */
@@ -83,6 +195,13 @@ function App(): JSX.Element | null {
   // rerender.
   const forceUpdate = (): void => {
     setForcedUpdateCounter(forcedUpdateCounter + 1)
+  }
+
+  // This will go to a specific page
+  // passing the necessary props.
+  const goToPage = (pagePath: string, pageProps: AnyObject): void => {
+    setCurrentPagePath(pagePath)
+    setCurrentPageProps(pageProps)
   }
 
   /* -- COMPONENT HANDLERS -- */
@@ -139,24 +258,14 @@ function App(): JSX.Element | null {
       usersModule.retrieveCurrentUser(
         (currentUser: IUser | null) => {
           setCurrentUser(currentUser)
+          setAppMountHandled(true)
+          setLoadMessage(null)
 
-          // This loads the mission in session from the database
-          // and stores it in a global state to be used on the DashboardPage
-          // where the Mission Map renders
-          getMission(
-            (mission: Mission) => {
-              setMission(mission)
-              setCurrentPagePath('DashboardPage')
-              setLastLoadingMessage('Initializing application...')
-              setAppMountHandled(true)
-              setLoadMessage(null)
-            },
-            () => {
-              setErrorMessage('Failed to retrieve mission.')
-              setAppMountHandled(true)
-              setLoadMessage(null)
-            },
-          )
+          if (loadingMessage !== null) {
+            setLastLoadingMessage(loadingMessage)
+          }
+
+          goToPage('MissionSelectionPage', {})
         },
         () => {
           setErrorMessage('Failed to sync session.')
@@ -200,14 +309,30 @@ function App(): JSX.Element | null {
           theme={MarkdownTheme.ThemeSecondary}
         />
       </div>
+      <div className='Notifications'>
+        <div className='Glue'>
+          {notifications.map((notification: Notification) => (
+            <NotificationBubble
+              notification={notification}
+              key={notification.notificationID}
+            />
+          ))}
+        </div>
+      </div>
+      {confirmation !== null ? new Confirmation(confirmation).render() : null}
       <StandardPage
         Page={AuthPage}
         targetPagePath='AuthPage'
         requireLogin={false}
       />
       <StandardPage
-        Page={DashboardPage}
-        targetPagePath='DashboardPage'
+        Page={GamePage}
+        targetPagePath='GamePage'
+        requireLogin={false}
+      />
+      <StandardPage
+        Page={MissionSelectionPage}
+        targetPagePath='MissionSelectionPage'
         requireLogin={false}
       />
       <StandardPage Page={MissionFormPage} targetPagePath='MissionFormPage' />

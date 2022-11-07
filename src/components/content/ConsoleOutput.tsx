@@ -20,9 +20,6 @@ const ConsoleOutput = (props: { value: string }) => {
         ref={scrollRef}
         dangerouslySetInnerHTML={{ __html: props.value }}
       ></li>
-      {/* <div className='Text' ref={scrollRef}>
-        <Markdown markdown={props.value} theme={MarkdownTheme.ThemePrimary} />
-      </div> */}
     </div>
   )
 }

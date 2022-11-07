@@ -1,16 +1,13 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import './ExecuteNodePath.scss'
 import { useStore } from 'react-context-hook'
-import { Mission, MissionNode, MissionNodeAction } from '../../modules/missions'
-import { IUser } from '../../modules/users'
+import { MissionNode } from '../../modules/mission-nodes'
+import { MissionNodeAction } from '../../modules/mission-node-actions'
 import gameLogic, { runNodeLoadingBar } from '../../modules/game-logic'
-import NodeStructureReference from '../../modules/node-reference'
-import NodeHoverDisplay from './NodeHoverDisplay'
-import NodeActions from './NodeActions'
+import ActionPropertyDisplay from './ActionPropertyDisplay'
 
 const ExecuteNodePath = (props: { selectedNode: MissionNode | null }) => {
   /* -- GLOBAL STATE -- */
-  const [currentUser, setCurrentUser] = useStore<IUser | null>('currentUser')
   const [consoleOutputs, setConsoleOutputs] =
     useStore<Array<{ date: number; value: string }>>('consoleOutputs')
   const [
@@ -18,16 +15,16 @@ const ExecuteNodePath = (props: { selectedNode: MissionNode | null }) => {
     setExecuteNodePathPromptIsDisplayed,
   ] = useStore<boolean>('executeNodePathPromptIsDisplayed')
   const [
-    nodeActionSelectionPromptIsDisplayed,
-    setNodeActionSelectionPromptIsDisplayed,
-  ] = useStore<boolean>('nodeActionSelectionPromptIsDisplayed')
-  const [processDelayTime] = useStore<number>('processDelayTime')
-  const [nodeActionItemText] = useStore<string>('nodeActionItemText')
-  const [nodeActionSuccessChance, setNodeActionSuccessChance] =
-    useStore<number>('nodeActionSuccessChance')
-  const [nodeActionItemDisplay, setNodeActionItemDisplay] = useStore<
-    Array<MissionNodeAction>
-  >('nodeActionItemDisplay')
+    actionSelectionPromptIsDisplayed,
+    setActionSelectionPromptIsDisplayed,
+  ] = useStore<boolean>('actionSelectionPromptIsDisplayed')
+  const [processTime] = useStore<number>('processTime')
+  const [actionName] = useStore<string>('actionName')
+  const [actionSuccessChance, setActionSuccessChance] = useStore<number>(
+    'actionSuccessChance',
+  )
+  const [actionDisplay, setActionDisplay] =
+    useStore<Array<MissionNodeAction>>('actionDisplay')
 
   /* -- COMPONENT STATE -- */
   const [forcedUpdateCounter, setForcedUpdateCounter] = useState<number>(0)
@@ -41,6 +38,7 @@ const ExecuteNodePath = (props: { selectedNode: MissionNode | null }) => {
   // Closes the execution prompt window
   const closeWindow = (): void => {
     setExecuteNodePathPromptIsDisplayed(false)
+    setActionDisplay([])
   }
 
   const execute = () => {
@@ -52,6 +50,7 @@ const ExecuteNodePath = (props: { selectedNode: MissionNode | null }) => {
       selectedNode.execute((success: boolean) => {
         // Output message in the terminal which differs based on whether
         // it passes or fails
+
         if (success) {
           gameLogic.handleNodeSelection(selectedNode)
 
@@ -84,14 +83,14 @@ const ExecuteNodePath = (props: { selectedNode: MissionNode | null }) => {
           ])
         }
       })
-      runNodeLoadingBar(processDelayTime)
-      setNodeActionItemDisplay([])
+      runNodeLoadingBar(processTime)
+      setActionDisplay([])
     }
   }
 
   const selectAlternativeAction = () => {
     setExecuteNodePathPromptIsDisplayed(false)
-    setNodeActionSelectionPromptIsDisplayed(true)
+    setActionSelectionPromptIsDisplayed(true)
   }
 
   return (
@@ -100,13 +99,12 @@ const ExecuteNodePath = (props: { selectedNode: MissionNode | null }) => {
         x
       </p>
       <p className='PromptDisplayText'>
-        Do you want to {nodeActionItemText.toLowerCase()}{' '}
-        {props.selectedNode?.name}?
+        Do you want to {actionName.toLowerCase()} {props.selectedNode?.name}?
       </p>
-      <NodeHoverDisplay selectedNode={props.selectedNode} />
+      <ActionPropertyDisplay selectedNode={props.selectedNode} />
       <div className='Buttons'>
         <button className='Button ExecutionButton' onClick={execute}>
-          {nodeActionItemText}
+          {actionName}
         </button>
         <button
           className='Button AdditionalActionButton'

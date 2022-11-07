@@ -178,7 +178,7 @@
           display: none;
         }
 
-        .NodeHoverDisplay {
+        .ActionPropertyDisplay {
           position: absolute;
           top: 0;
         }
@@ -203,6 +203,33 @@
             color: $color-main;
             height: 100%;
             padding-top: auto;
+          }
+        }
+
+        .DoritoContainer {
+          display: flex;
+          justify-content: flex-end;
+          align-items: flex-start;
+          height: 100%;
+          width: fit-content;
+        }
+
+        .dorito {
+          width: 0;
+          height: 0;
+
+          &.WhiteDorito {
+            position: relative;
+            top: 0;
+            left: 100%;
+            border-bottom: 10px solid white;
+          }
+
+          &.BlackDorito {
+            position: relative;
+            top: 0;
+            left: 100%;
+            border-bottom: 10px solid black;
           }
         }
 
@@ -254,6 +281,10 @@
           background-color: $background-alt1;
         }
 
+        &.LoadingBar {
+          background-color: $background-alt1;
+        }
+
         &.succeeded {
           background-color: $background-alt1;
           border-color: $success;
@@ -262,10 +293,6 @@
         &.failed {
           background-color: $background-alt1;
           border-color: $fail;
-        }
-
-        &.LoadingBar {
-          background-color: $background-alt1;
         }
 
         @keyframes loading-animation {

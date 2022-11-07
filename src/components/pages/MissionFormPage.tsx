@@ -1,14 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { useStore } from 'react-context-hook'
-import {
-  createTestMission,
-  Mission,
-  MissionNode,
-  ENodeTargetRelation,
-  MissionNodeAction,
-} from '../../modules/missions'
+import { Mission, saveMission } from '../../modules/missions'
 import { EAjaxStatus } from '../../modules/toolbox/ajax'
-import inputs from '../../modules/toolbox/inputs'
 import usersModule, { IUser } from '../../modules/users'
 import Branding from '../content/Branding'
 import {
@@ -24,6 +17,9 @@ import { v4 as generateHash } from 'uuid'
 import './MissionFormPage.scss'
 import { Action, EActionPurpose } from '../content/Action'
 import MoreInformation from '../content/MoreInformation'
+import { IPageProps } from '../App'
+import { ENodeTargetRelation, MissionNode } from '../../modules/mission-nodes'
+import { MissionNodeAction } from '../../modules/mission-node-actions'
 
 // This is a enum used to describe
 // the locations that one node can
@@ -36,28 +32,35 @@ enum ENodeDropLocation {
   Bottom,
 }
 
+interface IMissionFormPageProps extends IPageProps {
+  mission: Mission
+}
+
 // This will render a dashboard with a radar
 // on it, indicating air traffic passing by.
 export default function MissionFormPage(props: {
-  show: boolean
+  pageProps: IMissionFormPageProps
 }): JSX.Element | null {
+  let pageProps: IMissionFormPageProps = props.pageProps
+
   /* -- GLOBAL STATE -- */
 
   const [currentUser, setCurrentUser] = useStore<IUser | null>('currentUser')
-  const [currentPagePath, setCurrentPagePath] =
-    useStore<string>('currentPagePath')
   const [loadingMessage, setLoadingMessage] = useStore<string | null>(
     'loadingMessage',
   )
   const [errorMessage, setErrorMessage] = useStore<string | null>(
     'errorMessage',
   )
+  const [lastLoadingMessage, setLastLoadingMessage] = useStore<string | null>(
+    'lastLoadingMessage',
+  )
 
   /* -- COMPONENT STATE -- */
 
   const [mountHandled, setMountHandled] = useState<boolean>()
   const [forcedUpdateCounter, setForcedUpdateCounter] = useState<number>(0)
-  const [mission, setMission] = useState<Mission | null>(null)
+  const [areUnsavedChanges, setAreUnsavedChanges] = useState<boolean>(false)
   const [selectedNode, selectNode] = useState<MissionNode | null>(null)
   const [nodeStructuringIsActive, activateNodeStructuring] =
     useState<boolean>(false)
@@ -66,56 +69,110 @@ export default function MissionFormPage(props: {
 
   // Equivalent of componentDidMount.
   useEffect(() => {
-    if (!mountHandled) {
-      let mission: Mission = createTestMission(true)
-      setMission(mission)
+    if (!mountHandled && pageProps.isCurrentPage) {
       setMountHandled(true)
+    } else if (mountHandled && !pageProps.isCurrentPage) {
+      setMountHandled(false)
     }
-  }, [mountHandled])
+  }, [mountHandled, pageProps.isCurrentPage])
 
-  /* -- COMPONENTS -- */
+  if (pageProps.show) {
+    let mission: Mission = pageProps.mission
 
-  /* -- COMPONENT FUNCTIONS -- */
+    /* -- COMPONENTS -- */
 
-  // Forces a rerender.
-  const forceUpdate = (): void => {
-    setForcedUpdateCounter(forcedUpdateCounter + 1)
-  }
+    /* -- COMPONENT FUNCTIONS -- */
 
-  // This will logout the current user.
-  const logout = () => {
-    setLoadingMessage('Signing out...')
+    // Forces a rerender.
+    const forceUpdate = (): void => {
+      setForcedUpdateCounter(forcedUpdateCounter + 1)
+    }
 
-    usersModule.logout(
-      () => {
-        setCurrentUser(null)
-        setLoadingMessage(null)
-        setCurrentPagePath('AuthPage')
-      },
-      () => {
-        setLoadingMessage(null)
-        setErrorMessage('Server is down. Contact system administrator.')
-      },
-    )
-  }
+    // This is called when a change is
+    // made that would require saving.
+    const handleChange = (): void => {
+      setAreUnsavedChanges(true)
+      forceUpdate()
+    }
 
-  /* -- RENDER -- */
+    // This is called to save any changes
+    // made.
+    const save = (): void => {
+      if (areUnsavedChanges) {
+        setAreUnsavedChanges(false)
 
-  let show: boolean = props.show
-  let className: string = 'MissionFormPage'
+        saveMission(
+          mission,
+          () => {
+            pageProps.notify('Mission successfully saved.', 3000)
+          },
+          (error: Error) => {
+            pageProps.notify('Mission failed to save.', 3000)
+            setAreUnsavedChanges(true)
+          },
+        )
+      }
+    }
 
-  if (selectedNode !== null || nodeStructuringIsActive) {
-    className += ' SidePanelIsExpanded'
-  }
+    // This is called when a node is
+    // requested to be deleted.
+    const handleNodeDeleteRequest = (node: MissionNode): void => {
+      let confirmationMessage: string = ''
 
-  if (show && mission !== null) {
+      if (node.hasChildren) {
+        confirmationMessage =
+          'Please confirm the deletion of this node. \n**This node has child nodes, and all child nodes will be deleted as well.**'
+      } else {
+        confirmationMessage = 'Please confirm the deletion of this node.'
+      }
+
+      pageProps.confirm(confirmationMessage, () => {
+        node.delete()
+        handleChange()
+        activateNodeStructuring(false)
+        selectNode(null)
+      })
+    }
+
+    // This will logout the current user.
+    const logout = () => {
+      setLoadingMessage('Signing out...')
+
+      usersModule.logout(
+        () => {
+          setCurrentUser(null)
+          setLoadingMessage(null)
+          pageProps.goToPage('AuthPage', {
+            goBackPagePath: 'MissionSelectionPage',
+            goBackPageProps: {},
+          })
+          setLastLoadingMessage('Signing out...')
+        },
+        () => {
+          setLoadingMessage(null)
+          setErrorMessage('Server is down. Contact system administrator.')
+        },
+      )
+    }
+
+    /* -- RENDER -- */
+
+    let className: string = 'MissionFormPage'
+
+    if (selectedNode !== null || nodeStructuringIsActive) {
+      className += ' SidePanelIsExpanded'
+    }
+
     return (
       <div className={className}>
         {
           // -- navigation --
         }
         <div className='Navigation'>
-          <Branding />
+          <Branding
+            goHome={() => pageProps.goToPage('MissionSelectionPage', {})}
+            tooltipDescription='Go home.'
+          />
           <div className='Logout Link' onClick={logout}>
             Sign out
           </div>
@@ -140,25 +197,30 @@ export default function MissionFormPage(props: {
               selectNode(newNode)
               activateNodeStructuring(false)
             }}
-            handleMapEditRequest={
-              !nodeStructuringIsActive
-                ? () => {
-                    activateNodeStructuring(true)
-                    selectNode(null)
-                  }
-                : null
-            }
+            handleMapEditRequest={() => {
+              activateNodeStructuring(true)
+              selectNode(null)
+            }}
+            handleMapSaveRequest={save}
+            editCanBeRequested={!nodeStructuringIsActive}
+            saveCanBeRequested={areUnsavedChanges}
             applyNodeClassName={(node: MissionNode) => ''}
             renderNodeTooltipDescription={(node: MissionNode) => ''}
           />
           <NodeEntry
             node={selectedNode}
-            handleChange={forceUpdate}
+            handleChange={handleChange}
+            handleDeleteRequest={() => {
+              if (selectedNode !== null) {
+                handleNodeDeleteRequest(selectedNode)
+              }
+            }}
             handleCloseRequest={() => selectNode(null)}
           />
           <NodeStructuring
             active={nodeStructuringIsActive}
             mission={mission}
+            handleChange={handleChange}
             handleCloseRequest={() => activateNodeStructuring(false)}
           />
         </div>
@@ -174,10 +236,12 @@ export default function MissionFormPage(props: {
 function NodeEntry(props: {
   node: MissionNode | null
   handleChange: () => void
+  handleDeleteRequest: () => void
   handleCloseRequest: () => void
 }): JSX.Element | null {
   let node: MissionNode | null = props.node
   let handleChange = props.handleChange
+  let handleDeleteRequest = props.handleDeleteRequest
   let handleCloseRequest = props.handleCloseRequest
   let nodeActionDetailsClassName: string = 'NodeActionDetails'
   let noActionsClassName: string = 'NoActions'
@@ -186,7 +250,7 @@ function NodeEntry(props: {
     nodeActionDetailsClassName += ' Disabled'
   }
 
-  if (node === null || node.nodeActionItems.length > 0) {
+  if (node === null || node.actions.length > 0) {
     noActionsClassName += ' Hidden'
   }
 
@@ -301,11 +365,12 @@ function NodeEntry(props: {
           />
           <div className={nodeActionDetailsClassName}>
             <div className='Label'>Actions:</div>
-            {node.nodeActionItems.map((action: MissionNodeAction) => (
+            {node.actions.map((action: MissionNodeAction) => (
               <NodeAction
                 action={action}
+                node={node as any}
                 handleChange={handleChange}
-                key={action.text}
+                key={action.name}
               />
             ))}
             <div
@@ -314,21 +379,33 @@ function NodeEntry(props: {
             >
               No actions exist for this node. Create one below.
             </div>
-            <Action
-              purpose={EActionPurpose.Add}
-              handleClick={() => {
-                let action: MissionNodeAction = new MissionNodeAction(
-                  'New Action',
-                  5000,
-                  0.5,
-                  false,
-                )
-                node?.nodeActionItems.push(action)
-                handleChange()
-              }}
-              tooltipDescription={'Add a new action to this node.'}
-              key={'actual-action_add-new-action'}
-            />
+            <div className='UserActions'>
+              <Action
+                purpose={EActionPurpose.Add}
+                handleClick={() => {
+                  if (node !== null) {
+                    let action: MissionNodeAction = new MissionNodeAction(
+                      node,
+                      generateHash(),
+                      'New Action',
+                      '',
+                      5000,
+                      0.5,
+                    )
+                    node.actions.push(action)
+                    handleChange()
+                  }
+                }}
+                tooltipDescription={'Add a new action to this node.'}
+                key={`actual-action_add-new-action_${node.nodeID}`}
+              />
+              <Action
+                purpose={EActionPurpose.Remove}
+                handleClick={handleDeleteRequest}
+                tooltipDescription={'Delete this node.'}
+                key={`actual-action_delete-node_${node.nodeID}`}
+              />
+            </div>
           </div>
         </div>
       </div>
@@ -342,20 +419,32 @@ function NodeEntry(props: {
 // available to a node.
 function NodeAction(props: {
   action: MissionNodeAction
+  node: MissionNode
   handleChange: () => void
 }): JSX.Element | null {
   let action: MissionNodeAction = props.action
+  let node: MissionNode = props.node
   let handleChange: () => void = props.handleChange
 
   return (
     <div className='NodeAction'>
-      <DetailBox
+      <Detail
         label='Name'
-        initialValue={action.text}
+        initialValue={action.name}
         deliverValue={(name: string) => {
-          action.text = name
+          action.name = name
+          handleChange()
         }}
         key={`${action.actionID}_actionData`}
+      />
+      <DetailBox
+        label='Description'
+        initialValue={action.description}
+        deliverValue={(description: string) => {
+          action.description = description
+          handleChange()
+        }}
+        key={`${action.actionID}_description`}
       />
       <DetailNumber
         label='Success Chance'
@@ -375,20 +464,32 @@ function NodeAction(props: {
         key={`${action.actionID}_successChance`}
       />
       <DetailNumber
-        label='Time Cost'
-        initialValue={action.timeDelay / 1000}
+        label='Process Time'
+        initialValue={action.processTime / 1000}
         minimum={0}
         maximum={60}
         unit='s'
         deliverValue={(timeCost: number | null) => {
           if (timeCost !== null) {
-            action.timeDelay = timeCost * 1000
+            action.processTime = timeCost * 1000
 
             handleChange()
           }
         }}
         key={`${action.actionID}_timeCost`}
       />
+      <div
+        className='Delete'
+        onClick={() => {
+          node.actions.splice(node.actions.indexOf(action), 1)
+          handleChange()
+        }}
+        key={`${action.actionID}_delete`}
+      >
+        {'[ '}
+        <span>Delete Action</span> {' ]'}
+        <Tooltip description='Delete this action from the node.' />
+      </div>
     </div>
   )
 }
@@ -399,10 +500,12 @@ function NodeAction(props: {
 function NodeStructuring(props: {
   active: boolean
   mission: Mission
+  handleChange: () => void
   handleCloseRequest: () => void
 }): JSX.Element | null {
   let active: boolean = props.active
   let mission: Mission = props.mission
+  let handleChange = props.handleChange
   let handleCloseRequest = props.handleCloseRequest
   let rootNode: MissionNode = mission.rootNode
 
@@ -465,6 +568,7 @@ function NodeStructuring(props: {
 
             if (nodeGrabbed !== null) {
               nodeGrabbed.move(destinationNode, ENodeTargetRelation.Parent)
+              handleChange()
             }
 
             pendDrop(null)
@@ -545,6 +649,7 @@ function NodeStructuring(props: {
               if (nodeGrabbed !== null) {
                 nodeGrabbed.move(target, targetRelation)
                 target.expand()
+                handleChange()
               }
 
               pendDrop(null)
