@@ -6,13 +6,18 @@ import Tooltip from './Tooltip'
 const Branding = (props: {
   goHome: () => void
   tooltipDescription: string
-}): JSX.Element => {
-  return (
-    <div className='Branding' onClick={props.goHome}>
-      MDL
-      <Tooltip description={props.tooltipDescription} />
-    </div>
-  )
+  showTooltip: boolean
+}): JSX.Element | null => {
+  if (props.showTooltip) {
+    return (
+      <div className='Branding' onClick={props.goHome}>
+        MDL
+        <Tooltip description={props.tooltipDescription} />
+      </div>
+    )
+  } else {
+    return <div className='Branding disabled'>MDL</div>
+  }
 }
 
 export default Branding

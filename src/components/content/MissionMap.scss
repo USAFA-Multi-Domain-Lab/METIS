@@ -206,31 +206,48 @@
           }
         }
 
-        .DoritoContainer {
-          display: flex;
-          justify-content: flex-end;
-          align-items: flex-start;
+        .DogEarContainer {
+          position: relative;
+          top: 0;
+          left: 0;
+          width: 15%;
           height: 100%;
-          width: fit-content;
+
+          &.hide {
+            display: none;
+          }
+
+          .DogEarWhite,
+          .DogEarBlack {
+            background: url(../../assets/images/icons/dog_ear.svg);
+            background-size: 100% 100%;
+            background-repeat: no-repeat;
+            width: 100%;
+            height: 60%;
+          }
+
+          .DogEarBlack {
+            filter: invert(100%) sepia(5%) saturate(2%) hue-rotate(182deg)
+              brightness(109%) contrast(101%);
+          }
         }
 
-        .dorito {
-          width: 0;
-          height: 0;
+        .executable {
+          background: url(../../assets/images/icons/lightning.svg);
+          background-size: 100% 100%;
+          background-repeat: no-repeat;
+          width: 15%;
+          height: 100%;
+          margin: 0 2%;
+        }
 
-          &.WhiteDorito {
-            position: relative;
-            top: 0;
-            left: 100%;
-            border-bottom: 10px solid white;
-          }
-
-          &.BlackDorito {
-            position: relative;
-            top: 0;
-            left: 100%;
-            border-bottom: 10px solid black;
-          }
+        .device {
+          background: url(../../assets/images/icons/device.svg);
+          background-size: 100% 100%;
+          background-repeat: no-repeat;
+          width: 15%;
+          height: 100%;
+          margin: 0 4%;
         }
 
         .properties {

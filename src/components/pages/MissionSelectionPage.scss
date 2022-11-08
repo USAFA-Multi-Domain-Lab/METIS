@@ -1,16 +1,19 @@
 @import '../../config.scss';
 
 .MissionSelectionPage {
-  margin: 0 auto;
-  padding: 35px 20% 0;
-  height: 90vh;
+  margin: 0;
+  background: url('../../assets/images/landing-page-img.jpg');
+  background-size: 100% 100%;
+  background-position: center;
+  background-repeat: no-repeat;
+  box-shadow: inset 0 0 0 10000000000px RGBA(0, 72, 124, 0.5);
 
   .Navigation {
     display: grid;
     grid-template-columns: auto 110px;
-    margin: 0 auto 55px;
+    margin: 0 0 30px;
+    padding: 35px 35px 0;
     height: 30px;
-    vertical-align: bottom;
 
     .Branding {
       width: fit-content;
@@ -38,34 +41,81 @@
     }
   }
 
-  .MissionListContainer {
+  .MissionSelectionContent {
     display: flex;
     justify-content: center;
     align-items: center;
-    flex-flow: column;
-    text-align: left;
-    height: 50%;
-    margin: 0;
-  }
+    flex-flow: row wrap;
+    height: 100vh;
 
-  .MissionList {
-    margin: 0;
-    padding: 0;
-    font-size: 1.2em;
-  }
+    .MissionListContainer {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-flow: column;
+      text-align: left;
+      width: 100%;
+      margin: 0;
+    }
 
-  .MissionName {
-    margin-top: 20px;
-    margin-left: 35px;
-    width: fit-content;
+    .MissionList {
+      background-color: black;
+      border: 3px solid white;
+      border-radius: 15px;
+      margin: 0;
+      padding: 0;
+      font-size: 1em;
+      max-height: 30vh;
+      overflow-y: scroll;
+      width: 50%;
 
-    &.MissionName:hover {
-      cursor: pointer;
-      color: $terminal;
+      .HeadingContainer {
+        position: sticky;
+        top: 0px;
+        background-color: black;
+        width: 100%;
+        overflow-x: hidden;
+
+        .Heading {
+          width: fill;
+          font-size: 1.1em;
+          padding: 20px 0 20px 20px;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+      }
+
+      .MissionName {
+        padding: 10px 0 10px 20px;
+        width: fill;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+
+        &.MissionName:hover {
+          cursor: pointer;
+          background-color: $node-blue;
+          color: $terminal;
+        }
+      }
     }
   }
-  @media only screen and (max-width: 768px) {
-    padding: 20px;
+
+  @media only screen and (min-width: 1200px) {
+    .MissionSelectionContent {
+      .MissionListContainer {
+        width: 75%;
+      }
+    }
+  }
+
+  @media only screen and (min-width: 1500px) {
+    .MissionSelectionContent {
+      .MissionListContainer {
+        width: 50%;
+      }
+    }
   }
 }
 

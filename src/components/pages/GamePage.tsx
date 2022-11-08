@@ -51,6 +51,7 @@ export default function GamePage(props: {
   ] = useStore<boolean>('actionSelectionPromptIsDisplayed')
   const [actionDisplay, setActionDisplay] =
     useStore<Array<MissionNodeAction>>('actionDisplay')
+  const [hideTooltip] = useStore<() => void>('hideTooltip')
 
   /* -- COMPONENT STATE -- */
 
@@ -183,6 +184,7 @@ export default function GamePage(props: {
           <Branding
             goHome={() => pageProps.goToPage('MissionSelectionPage', {})}
             tooltipDescription='Go home.'
+            showTooltip={true}
           />
           <div className='EditMission Link' onClick={editMission}>
             Edit mission
@@ -252,14 +254,14 @@ export default function GamePage(props: {
                 return className
               }}
               renderNodeTooltipDescription={(node: MissionNode) => {
-                let description = ''
+                let description: string = ''
                 let nodeActionDisplay = 'None selected'
 
                 if (node.selectedAction !== null) {
                   nodeActionDisplay = node.selectedAction.name
                 }
 
-                if (node.executable === true && node.executed) {
+                if (node.executable && node.executed) {
                   description =
                     `* Executed node in ${
                       (node.selectedAction?.processTime as number) / 1000
@@ -267,7 +269,23 @@ export default function GamePage(props: {
                     `* Action executed: ${node.selectedAction?.name}\n` +
                     `* Chance of success: ${
                       (node.successChance as number) * 100
-                    }%\n`
+                    }%\n` +
+                    `* Device: ${
+                      // All of this is to capitalize the first letter.
+                      node.device.toString().charAt(0).toUpperCase() +
+                      node.device.toString().slice(1)
+                    }\n` +
+                    `* Executable: ${
+                      node.executable.toString().charAt(0).toUpperCase() +
+                      node.executable.toString().slice(1)
+                    }`
+                }
+
+                // This is for the tooltip message that will display
+                if (node.device && node.executable && !node.executed) {
+                  description = '* Device: True\n' + '* Executable: True'
+                } else if (node.executable && !node.device && !node.executed) {
+                  description = '* Device: False\n' + '* Executable: True'
                 }
 
                 return description
