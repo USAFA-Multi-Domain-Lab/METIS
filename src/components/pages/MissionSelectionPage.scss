@@ -7,6 +7,7 @@
   background-position: center;
   background-repeat: no-repeat;
   box-shadow: inset 0 0 0 10000000000px RGBA(0, 72, 124, 0.5);
+  height: fit-content;
 
   .Navigation {
     display: grid;
@@ -46,7 +47,7 @@
     justify-content: center;
     align-items: center;
     flex-flow: row wrap;
-    height: 100vh;
+    height: calc(100vh - 147px);
 
     .MissionListContainer {
       display: flex;
@@ -99,6 +100,16 @@
           color: $terminal;
         }
       }
+    }
+  }
+
+  .credit {
+    padding: 20px;
+    text-align: right;
+    font-size: 0.6em;
+
+    &.credit a {
+      text-decoration: none;
     }
   }
 

@@ -77,6 +77,15 @@ $background-bar: linear-gradient(
     flex-flow: row wrap;
     width: 100%;
 
+    .Tokens {
+      display: flex;
+      justify-content: flex-start;
+      align-items: center;
+      width: 100%;
+      margin: 0 0 20px;
+      font-size: 1.2em;
+    }
+
     .MissionMap {
       margin-right: 10px;
       width: 100%;
@@ -113,6 +122,10 @@ $background-bar: linear-gradient(
   }
 
   .Content {
+    .Tokens {
+      margin: 0 0 20px 2%;
+    }
+
     .MissionMap {
       margin-right: 10px;
       width: 60%;
@@ -135,6 +148,10 @@ $background-bar: linear-gradient(
   }
 
   .Content {
+    .Tokens {
+      margin: 0 0 20px 2%;
+    }
+
     .MissionMap {
       margin-right: 10px;
       width: 60%;
@@ -157,6 +174,10 @@ $background-bar: linear-gradient(
   }
 
   .Content {
+    .Tokens {
+      margin: 0 0 20px 2%;
+    }
+
     .MissionMap {
       margin-right: 10px;
       width: 60%;

@@ -42,6 +42,7 @@ const MissionSelectionPage = (props: {
   ] = useStore<boolean>('actionSelectionPromptIsDisplayed')
   const [actionDisplay, setActionDisplay] =
     useStore<Array<MissionNodeAction>>('actionDisplay')
+  const [tokenCount, setTokenCount] = useStore<number | null>('tokenCount')
 
   /* -- COMPONENT STATE -- */
 
@@ -106,6 +107,7 @@ const MissionSelectionPage = (props: {
       setExecuteNodePathPromptIsDisplayed(false)
       setActionSelectionPromptIsDisplayed(false)
       setActionDisplay([])
+      setTokenCount(null)
     }
 
     // This will logout the current user.
@@ -219,6 +221,16 @@ const MissionSelectionPage = (props: {
               </div>
             </div>
           </div>
+        </div>
+        <div className='credit'>
+          Photo by{' '}
+          <a href='https://unsplash.com/@adigold1?utm_source=unsplash&utm_medium=referral&utm_content=creditCopyText'>
+            Adi Goldstein
+          </a>{' '}
+          on{' '}
+          <a href='https://unsplash.com/?utm_source=unsplash&utm_medium=referral&utm_content=creditCopyText'>
+            Unsplash
+          </a>
         </div>
       </div>
     )

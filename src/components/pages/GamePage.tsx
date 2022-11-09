@@ -51,7 +51,7 @@ export default function GamePage(props: {
   ] = useStore<boolean>('actionSelectionPromptIsDisplayed')
   const [actionDisplay, setActionDisplay] =
     useStore<Array<MissionNodeAction>>('actionDisplay')
-  const [hideTooltip] = useStore<() => void>('hideTooltip')
+  const [tokenCount, setTokenCount] = useStore<number>('tokenCount')
 
   /* -- COMPONENT STATE -- */
 
@@ -175,6 +175,11 @@ export default function GamePage(props: {
       navClassName += ' SignOut'
     }
 
+    // Sets the default amount of tokens the users will have to spend for each mission
+    if (tokenCount === null) {
+      setTokenCount(mission.tokenCount)
+    }
+
     return (
       <div className={className}>
         {
@@ -199,6 +204,7 @@ export default function GamePage(props: {
         {
           // -- content --
           <div className='Content'>
+            <div className='Tokens'>Tokens remaining: {tokenCount} </div>
             <MissionMap
               mission={mission}
               missionAjaxStatus={EAjaxStatus.Loaded}
@@ -293,7 +299,10 @@ export default function GamePage(props: {
             />
             <OutputPanel />
             <NodeActions selectedNode={lastSelectedNode} />
-            <ExecuteNodePath selectedNode={lastSelectedNode} />
+            <ExecuteNodePath
+              selectedNode={lastSelectedNode}
+              defaultTokenCount={mission.tokenCount}
+            />
           </div>
         }
       </div>
