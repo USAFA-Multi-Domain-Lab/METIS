@@ -174,7 +174,7 @@ const MissionSelectionPage = (props: {
             tooltipDescription=''
             showTooltip={false}
           />
-          <div className='EditMission Link'>Edit mission</div>
+          <div className='EditMissions Link'>Edit missions</div>
           <div className='Login Link' onClick={login}>
             Login
           </div>
