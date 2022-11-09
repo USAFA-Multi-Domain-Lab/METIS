@@ -7,6 +7,7 @@ import Branding from '../content/Branding'
 import usersModule, { IUser } from '../../modules/users'
 import './MissionSelectionPage.scss'
 import { MissionNodeAction } from '../../modules/mission-node-actions'
+import Tooltip from '../content/Tooltip'
 
 interface IMissionSelectionPageProps extends IPageProps {}
 
@@ -154,10 +155,14 @@ const MissionSelectionPage = (props: {
     // If the user is not logged in then the sign out button will not display.
     // If the user is logged in then the "Login" button will change to "Edit Mission"
     // and the "Sign Out" button will appear.
-    let navClassName = 'Navigation'
+    let navClassName: string = 'Navigation'
+    let editMissionsContainerClassName: string = 'EditMissionsContainer'
+    let editMissionListClassName: string = 'MissionList'
 
     if (currentUser !== null) {
       navClassName += ' SignOut'
+      editMissionsContainerClassName += ' show'
+      editMissionListClassName += ' show'
     }
 
     return (
@@ -169,6 +174,7 @@ const MissionSelectionPage = (props: {
             tooltipDescription=''
             showTooltip={false}
           />
+          <div className='EditMission Link'>Edit mission</div>
           <div className='Login Link' onClick={login}>
             Login
           </div>
@@ -179,7 +185,7 @@ const MissionSelectionPage = (props: {
         {/* { Content } */}
         <div className='MissionSelectionContent'>
           <div className='MissionListContainer'>
-            <div className='MissionList'>
+            <div className={editMissionListClassName}>
               <div className='HeadingContainer'>
                 <div className='Heading'>Select your mission:</div>
               </div>
@@ -221,17 +227,27 @@ const MissionSelectionPage = (props: {
               </div>
             </div>
           </div>
+          <div className={editMissionsContainerClassName}>
+            <div className='NewMissionButton'>
+              +
+              <Tooltip description='New Mission' />
+            </div>
+            <div className='DeleteMissionButton'>
+              <Tooltip description='Delete Mission' />
+            </div>
+            <div className='CloneMissionButton'>
+              <Tooltip description='Clone Mission' />
+            </div>
+            <div className='PowerButton'>
+              <Tooltip description='Disable/Enable Mission' />
+            </div>
+            <div className='SaveButton'>
+              <Tooltip description='Save Mission' />
+            </div>
+          </div>
         </div>
-        <div className='credit'>
-          Photo by{' '}
-          <a href='https://unsplash.com/@adigold1?utm_source=unsplash&utm_medium=referral&utm_content=creditCopyText'>
-            Adi Goldstein
-          </a>{' '}
-          on{' '}
-          <a href='https://unsplash.com/?utm_source=unsplash&utm_medium=referral&utm_content=creditCopyText'>
-            Unsplash
-          </a>
-        </div>
+
+        <div className='credit'>Photo by Adi Goldstein on Unsplash</div>
       </div>
     )
   } else {

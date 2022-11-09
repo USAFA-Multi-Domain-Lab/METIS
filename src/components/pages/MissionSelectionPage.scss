@@ -37,6 +37,10 @@
       }
     }
 
+    .EditMission {
+      display: none;
+    }
+
     .Logout {
       display: none;
     }
@@ -46,7 +50,7 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    flex-flow: row wrap;
+    flex-flow: column;
     height: calc(100vh - 147px);
 
     .MissionListContainer {
@@ -101,19 +105,19 @@
         }
       }
     }
+
+    .EditMissionsContainer {
+      display: none;
+    }
   }
 
   .credit {
     padding: 20px;
     text-align: right;
     font-size: 0.6em;
-
-    &.credit a {
-      text-decoration: none;
-    }
   }
 
-  @media only screen and (min-width: 1200px) {
+  @media only screen and (min-width: 1100px) {
     .MissionSelectionContent {
       .MissionListContainer {
         width: 75%;
@@ -132,12 +136,164 @@
 
 .MissionSelectionPage {
   .SignOut {
+    grid-template-columns: auto 160px 130px;
+
+    .EditMission {
+      display: flex;
+    }
+
     .Logout {
       display: flex;
     }
 
     .Login {
       display: none;
+    }
+  }
+
+  .MissionSelectionContent {
+    .MissionList {
+      &.show {
+        border-bottom-right-radius: 0px;
+        border-bottom-left-radius: 0px;
+      }
+    }
+
+    .EditMissionsContainer {
+      &.show {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-flow: row wrap;
+        width: 50%;
+        height: auto;
+        border: 3px solid white;
+        padding: 20px 0;
+        background-color: black;
+        border-top: none;
+        border-bottom-right-radius: 15px;
+        border-bottom-left-radius: 15px;
+
+        .NewMissionButton {
+          border: 2px solid white;
+          border-radius: 10px;
+          padding: 4px 13px;
+          font-size: 1.5em;
+          margin: 0 10px;
+
+          &.NewMissionButton:hover {
+            cursor: pointer;
+            background-color: $node-blue;
+          }
+        }
+
+        .CloneMissionButton,
+        .DeleteMissionButton,
+        .PowerButton,
+        .SaveButton {
+          border: 2px solid white;
+          border-radius: 10px;
+          padding: 8px 16px;
+          font-size: 1.5em;
+          margin: 0 10px;
+
+          &.NewMissionButton:hover,
+          &.CloneMissionButton:hover,
+          &.DeleteMissionButton:hover,
+          &.PowerButton:hover,
+          &.SaveButton:hover {
+            cursor: pointer;
+            background-color: $node-blue;
+          }
+        }
+
+        .DeleteMissionButton {
+          background: url('../../assets/images/icons/lightning.svg');
+          background-size: 65% 65%;
+          background-position: center;
+          background-repeat: no-repeat;
+          width: 2%;
+          height: 50%;
+          background-color: black;
+        }
+
+        .CloneMissionButton {
+          background: url('../../assets/images/icons/zoom-in.svg');
+          background-size: 65% 65%;
+          background-position: center;
+          background-repeat: no-repeat;
+          width: 2%;
+          height: 50%;
+          background-color: black;
+        }
+
+        .PowerButton {
+          background: url('../../assets/images/icons/device.svg');
+          background-size: 65% 65%;
+          background-position: center;
+          background-repeat: no-repeat;
+          width: 2%;
+          height: 50%;
+          background-color: black;
+        }
+
+        .SaveButton {
+          background: url('../../assets/images/icons/save.svg');
+          background-size: 65% 65%;
+          background-position: center;
+          background-repeat: no-repeat;
+          width: 2%;
+          height: 50%;
+          background-color: black;
+        }
+      }
+    }
+  }
+
+  @media only screen and (max-width: 600px) {
+    .MissionSelectionContent {
+      .EditMissionsContainer {
+        &.show {
+          flex-flow: column;
+
+          .NewMissionButton,
+          .CloneMissionButton,
+          .DeleteMissionButton,
+          .PowerButton,
+          .SaveButton {
+            font-size: 20px;
+            padding: 5px 12px;
+            margin: 5px 0;
+          }
+
+          .CloneMissionButton,
+          .DeleteMissionButton,
+          .PowerButton,
+          .SaveButton {
+            padding: 16px 15px;
+          }
+        }
+      }
+    }
+  }
+
+  @media only screen and (min-width: 1100px) {
+    .MissionSelectionContent {
+      .EditMissionsContainer {
+        &.show {
+          width: 37.5%;
+        }
+      }
+    }
+  }
+
+  @media only screen and (min-width: 1500px) {
+    .MissionSelectionContent {
+      .EditMissionsContainer {
+        &.show {
+          width: 25%;
+        }
+      }
     }
   }
 }
