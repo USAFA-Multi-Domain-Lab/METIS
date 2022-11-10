@@ -104,6 +104,14 @@
           color: $terminal;
         }
       }
+
+      .CreateMission {
+        cursor: pointer;
+        user-select: none;
+        position: relative;
+        left: -24px;
+        margin: 35px 0 0 0;
+      }
     }
 
     .EditMissionsContainer {

@@ -12,18 +12,34 @@ router.post('/', (request, response) => {
   let body: any = request.body
 
   if ('mission' in body) {
-    let mission: any = body.mission
+    let missionData: any = body.mission
+    if (
+      'name' in missionData &&
+      'versionNumber' in missionData &&
+      'nodeStructure' in missionData &&
+      'nodeData' in missionData
+    ) {
+      let name: any = missionData.name
+      let versionNumber: any = missionData.versionNumber
+      let nodeStructure: any = missionData.nodeStructure
+      let nodeData: any = missionData.nodeData
 
-    if (typeof mission === 'object' && 'name' in body) {
-      let name: any = body.name
-
-      new Mission({
+      let mission = new Mission({
         name,
-        nodeStructure: {},
-        nodeData: [],
+        versionNumber,
+        nodeStructure,
+        nodeData,
       })
-    } else {
-      return response.sendStatus(400)
+
+      mission.save((error: Error) => {
+        if (error) {
+          console.log('Failed to create mission:')
+          console.error(error)
+          return response.sendStatus(500)
+        } else {
+          return response.json({ mission })
+        }
+      })
     }
   } else {
     return response.sendStatus(400)

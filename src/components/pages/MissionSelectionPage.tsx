@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react'
 import { useStore } from 'react-context-hook'
 import { getAllMissions, getMission, Mission } from '../../modules/missions'
-import { Counter } from '../../modules/numbers'
 import { IPageProps } from '../App'
 import Branding from '../content/Branding'
 import usersModule, { IUser } from '../../modules/users'
 import './MissionSelectionPage.scss'
 import { MissionNodeAction } from '../../modules/mission-node-actions'
 import Tooltip from '../content/Tooltip'
+import { Counter } from '../../modules/numbers'
 
 interface IMissionSelectionPageProps extends IPageProps {}
 
@@ -147,6 +147,12 @@ const MissionSelectionPage = (props: {
       }
     }
 
+    // This will start the process for
+    //creating a new mission.
+    const createMission = (): void => {
+      pageProps.goToPage('MissionFormPage', { mission: null })
+    }
+
     /* -- RENDER -- */
 
     let number: Counter = new Counter(1)
@@ -244,6 +250,10 @@ const MissionSelectionPage = (props: {
             <div className='SaveButton'>
               <Tooltip description='Save Mission' />
             </div>
+          </div>
+
+          <div className='CreateMission' onClick={createMission}>
+            Create new mission.
           </div>
         </div>
 

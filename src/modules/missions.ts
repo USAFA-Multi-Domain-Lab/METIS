@@ -128,10 +128,12 @@ export class Mission {
 
     this._importNodeData(nodeData)
     this._importNodeStructure(nodeStructure, this.rootNode, expandAll)
-    // Calling this runs positionNodes.
-    // Without this line, positionNodes
-    // needs to be called independently.
-    this.rootNode.expand()
+
+    if (this.rootNode.expandable) {
+      this.rootNode.expand()
+    } else {
+      this.positionNodes()
+    }
   }
 
   // This will determine the relationship
@@ -144,15 +146,16 @@ export class Mission {
   ): MissionNode {
     let nodes: Map<string, MissionNode> = this.nodes
     let childNodes: Array<MissionNode> = []
-    let childNodeKeyValuePairs: Array<[string, AnyObject | string]> =
-      Object.keys(nodeStructure).map((key: string) => [key, nodeStructure[key]])
+    let childNodeKeyValuePairs: Array<[string, AnyObject]> = Object.keys(
+      nodeStructure,
+    ).map((key: string) => [key, nodeStructure[key]])
 
     for (let childNodeKeyValuePair of childNodeKeyValuePairs) {
       let key: string = childNodeKeyValuePair[0]
-      let value: AnyObject | string = childNodeKeyValuePair[1]
+      let value: AnyObject = childNodeKeyValuePair[1]
       let childNode: MissionNode | undefined = nodes.get(key)
 
-      if (typeof value !== 'string' && childNode !== undefined) {
+      if (childNode !== undefined) {
         childNodes.push(this._importNodeStructure(value, childNode, expandAll))
       }
     }
@@ -224,7 +227,7 @@ export class Mission {
           childNode,
         )
       } else {
-        nodeStructure[childNode.nodeID] = { END: 'END' }
+        nodeStructure[childNode.nodeID] = {}
       }
     }
 
@@ -325,6 +328,7 @@ export class Mission {
     )
     node.parentNode = rootNode
     rootNode.childNodes.push(node)
+    rootNode.expand()
     this.nodes.set(node.nodeID, node)
 
     this.handleStructureChange()
@@ -341,16 +345,16 @@ export class Mission {
     depth: number = -1,
     rowCount: Counter = new Counter(0),
   ): Mission => {
-    // Else, this function was recursively
+    // If the parent node isn't the rootNode,
+    // then this function was recursively
     // called with a reference to a particular
     // node in the mission. This node should be
-    // included in the nodeData for the missionRender
-    // so that it displays.
+    // included in the nodeData for the
+    //  missionRender so that it displays.
     if (parentNode.nodeID !== this.rootNode.nodeID) {
       parentNode.mapX = depth
       parentNode.mapY = rowCount.count
     }
-
     // If the parentNode is expanded, then
     // child nodes could effect the positioning
     // of sibling nodes, and the children should
@@ -407,6 +411,37 @@ export class Mission {
         break
     }
   }
+}
+
+// This will create a brand new mission.
+export function createMission(
+  mission: Mission,
+  expandAll: boolean,
+  callback: (mission: Mission) => void,
+  callbackError: (error: AxiosError) => void = () => {},
+): void {
+  axios
+    .post(`/api/v1/missions/`, { mission: mission.toJSON() })
+    .then((response: AxiosResponse<AnyObject>): void => {
+      let missionJson = response.data.mission
+
+      let mission = new Mission(
+        missionJson.missionID,
+        missionJson.name,
+        missionJson.versionNumber,
+        missionJson.nodeStructure,
+        missionJson.nodeData,
+        missionJson.seed,
+        expandAll,
+      )
+
+      callback(mission)
+    })
+    .catch((error: AxiosError) => {
+      console.error('Failed to save mission.')
+      console.error(error)
+      callbackError(error)
+    })
 }
 
 // This gets the data from the database
@@ -478,6 +513,8 @@ export function saveMission(
 
 export default {
   Mission,
+  createMission,
   getMission,
+  getAllMissions,
   saveMission,
 }
