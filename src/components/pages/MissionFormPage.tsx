@@ -79,7 +79,7 @@ export default function MissionFormPage(props: {
 
       // Creating a new mission.
       if (pageProps.mission === null) {
-        mission = new Mission('', 'New Mission', 1, {}, [], '')
+        mission = new Mission('', 'New Mission', 1, 5, {}, [], '')
         existsInDatabase = false
       }
       // Editing an existing mission.
