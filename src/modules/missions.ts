@@ -21,6 +21,7 @@ export interface IMissionJSON {
   missionID: string
   name: string
   versionNumber: number
+  tokenCount: number
   seed: string
   nodeStructure: AnyObject
   nodeData: Array<AnyObject>
@@ -40,6 +41,7 @@ export class Mission {
   missionID: string
   name: string
   versionNumber: number
+  tokenCount: number
   _originalNodeStructure: AnyObject
   _originalNodeData: Array<AnyObject>
   _nodeStructure: AnyObject
@@ -87,6 +89,7 @@ export class Mission {
     missionID: string,
     name: string,
     versionNumber: number,
+    tokenCount: number,
     nodeStructure: AnyObject,
     nodeData: Array<AnyObject>,
     seed: string,
@@ -95,6 +98,7 @@ export class Mission {
     this.missionID = missionID
     this.name = name
     this.versionNumber = versionNumber
+    this.tokenCount = tokenCount
     this._nodeStructure = nodeStructure
     this._nodeData = nodeData
     this._originalNodeStructure = nodeStructure
@@ -255,6 +259,7 @@ export class Mission {
       missionID: this.missionID,
       name: this.name,
       versionNumber: this.versionNumber,
+      tokenCount: this.tokenCount,
       seed: this.seed,
       nodeStructure: this.nodeStructure,
       nodeData: this.nodeData,
@@ -381,6 +386,7 @@ export class Mission {
           this.missionID,
           this.name,
           this.versionNumber,
+          this.tokenCount,
           this._originalNodeStructure,
           this._originalNodeData,
           this.seed,
@@ -392,6 +398,7 @@ export class Mission {
           this.missionID,
           this.name,
           this.versionNumber,
+          this.tokenCount,
           this._exportNodeStructure(),
           this._exportNodeData(),
           this.seed,
@@ -419,6 +426,7 @@ export function getMission(
         missionJson.missionID,
         missionJson.name,
         missionJson.versionNumber,
+        missionJson.tokenCount,
         missionJson.nodeStructure,
         missionJson.nodeData,
         missionJson.seed,

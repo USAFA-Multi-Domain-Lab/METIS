@@ -1,12 +1,15 @@
-import { useState } from 'react'
 import './ExecuteNodePath.scss'
 import { useStore } from 'react-context-hook'
 import { MissionNode } from '../../modules/mission-nodes'
 import { MissionNodeAction } from '../../modules/mission-node-actions'
 import gameLogic, { runNodeLoadingBar } from '../../modules/game-logic'
 import ActionPropertyDisplay from './ActionPropertyDisplay'
+import { useState } from 'react'
 
-const ExecuteNodePath = (props: { selectedNode: MissionNode | null }) => {
+const ExecuteNodePath = (props: {
+  selectedNode: MissionNode | null
+  defaultTokenCount: number
+}) => {
   /* -- GLOBAL STATE -- */
   const [consoleOutputs, setConsoleOutputs] =
     useStore<Array<{ date: number; value: string }>>('consoleOutputs')
@@ -20,20 +23,13 @@ const ExecuteNodePath = (props: { selectedNode: MissionNode | null }) => {
   ] = useStore<boolean>('actionSelectionPromptIsDisplayed')
   const [processTime] = useStore<number>('processTime')
   const [actionName] = useStore<string>('actionName')
-  const [actionSuccessChance, setActionSuccessChance] = useStore<number>(
-    'actionSuccessChance',
-  )
   const [actionDisplay, setActionDisplay] =
     useStore<Array<MissionNodeAction>>('actionDisplay')
+  const [tokenCount, setTokenCount] = useStore<number>('tokenCount')
 
   /* -- COMPONENT STATE -- */
-  const [forcedUpdateCounter, setForcedUpdateCounter] = useState<number>(0)
 
   /* -- COMPONENT FUNCTIONS -- */
-  // This forces a rerender of the component.
-  const forceUpdate = (): void => {
-    setForcedUpdateCounter(forcedUpdateCounter + 1)
-  }
 
   // Closes the execution prompt window
   const closeWindow = (): void => {
@@ -45,46 +41,49 @@ const ExecuteNodePath = (props: { selectedNode: MissionNode | null }) => {
     if (props.selectedNode !== null) {
       let selectedNode: MissionNode = props.selectedNode
 
-      setExecuteNodePathPromptIsDisplayed(false)
+      if (tokenCount > 0) {
+        setExecuteNodePathPromptIsDisplayed(false)
 
-      selectedNode.execute((success: boolean) => {
-        // Output message in the terminal which differs based on whether
-        // it passes or fails
+        selectedNode.execute((success: boolean) => {
+          // Output message in the terminal which differs based on whether
+          // it passes or fails
 
-        if (success) {
-          gameLogic.handleNodeSelection(selectedNode)
+          if (success) {
+            gameLogic.handleNodeSelection(selectedNode)
 
-          setConsoleOutputs([
-            ...consoleOutputs,
-            {
-              date: Date.now(),
-              value: `<span class='line-cursor'>MDL@${selectedNode.name.replaceAll(
-                ' ',
-                '-',
-              )}: </span>
+            setConsoleOutputs([
+              ...consoleOutputs,
+              {
+                date: Date.now(),
+                value: `<span class='line-cursor'>MDL@${selectedNode.name.replaceAll(
+                  ' ',
+                  '-',
+                )}: </span>
                      <span class="succeeded">${
                        selectedNode.postExecutionSuccessText
                      }</span>`,
-            },
-          ])
-        } else {
-          setConsoleOutputs([
-            ...consoleOutputs,
-            {
-              date: Date.now(),
-              value: `<span class='line-cursor'>MDL@${selectedNode.name.replaceAll(
-                ' ',
-                '-',
-              )}: </span>
+              },
+            ])
+          } else {
+            setConsoleOutputs([
+              ...consoleOutputs,
+              {
+                date: Date.now(),
+                value: `<span class='line-cursor'>MDL@${selectedNode.name.replaceAll(
+                  ' ',
+                  '-',
+                )}: </span>
                     <span class="failed">${
                       selectedNode.postExecutionFailureText
                     }</span>`,
-            },
-          ])
-        }
-      })
-      runNodeLoadingBar(processTime)
-      setActionDisplay([])
+              },
+            ])
+          }
+        })
+        runNodeLoadingBar(processTime)
+        setActionDisplay([])
+        setTokenCount(tokenCount - 1)
+      }
     }
   }
 

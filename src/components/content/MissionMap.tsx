@@ -10,6 +10,7 @@ import { Mission } from '../../modules/missions'
 import { MissionNode } from '../../modules/mission-nodes'
 import { Action, EActionPurpose } from './Action'
 import { ActionPanel } from './ActionPanel'
+import Tooltip from './Tooltip'
 
 /* -- interfaces -- */
 
@@ -790,25 +791,27 @@ export default class MissionMap extends React.Component<
 
             // Dynamic Class Names
             let loadingClassName: string = 'loading'
-            let deviceClassName: string = 'dorito hide'
-            let doritoColor: string = ''
+            let deviceClassName: string = ''
+            let executableClassName: string = 'hide'
+            let dogEarClassName: string = ''
+            let dogEarContainerClassName: string = 'DogEarContainer'
 
-            // Logic to manipulate class names
+            // Logic to handle if the loading bar is displayed or not.
             if (!node.executing) {
               loadingClassName += ' hide'
             }
 
-            if (node.device) {
-              doritoColor += ' #9ae700'
-              // doritoColor += ' #ffee00'
-              // doritoColor += ' black'
-              deviceClassName = 'dorito'
+            // Logic to handle nodes that are executable and nodes that
+            // are devices.
+            if (node.device && node.executable) {
+              dogEarClassName = 'DogEarBlack'
+              deviceClassName = 'device'
+              executableClassName = 'executable'
             } else if (node.executable && !node.device) {
-              doritoColor += ' #00d7ff'
-              // doritoColor += ' white'
-              deviceClassName = 'dorito'
+              dogEarClassName = 'DogEarWhite'
+              deviceClassName = 'executable'
             } else {
-              doritoColor += ' transparent'
+              dogEarContainerClassName += ' hide'
             }
 
             return (
@@ -835,15 +838,12 @@ export default class MissionMap extends React.Component<
                   >
                     {node.name}
                   </div>
-                  <div className='DoritoContainer'>
-                    <div
-                      className={deviceClassName}
-                      style={{
-                        borderRight: `${scoreWidth + 2}px solid ${doritoColor}`,
-                        borderBottom: `${scoreWidth + 2}px solid transparent`,
-                      }}
-                    ></div>
-                  </div>
+                  <div className={deviceClassName}></div>
+                  {/* <div className={executableClassName}></div> */}
+
+                  {/* <div className={dogEarContainerClassName}>
+                    <div className={dogEarClassName}></div>
+                  </div> */}
                 </div>
               </>
             )
