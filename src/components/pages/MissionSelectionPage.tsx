@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useStore } from 'react-context-hook'
 import { getAllMissions, getMission, Mission } from '../../modules/missions'
-import { Counter } from '../../modules/numbers'
 import { IPageProps } from '../App'
 import Branding from '../content/Branding'
 import usersModule, { IUser } from '../../modules/users'
@@ -132,6 +131,12 @@ const MissionSelectionPage = (props: {
       }
     }
 
+    // This will start the process for
+    //creating a new mission.
+    const createMission = (): void => {
+      pageProps.goToPage('MissionFormPage', { mission: null })
+    }
+
     /* -- RENDER -- */
 
     // Keeps track of if the user is logged in or not.
@@ -176,6 +181,9 @@ const MissionSelectionPage = (props: {
               )
             })}
           </ol>
+          <div className='CreateMission' onClick={createMission}>
+            Create new mission.
+          </div>
         </div>
       </div>
     )

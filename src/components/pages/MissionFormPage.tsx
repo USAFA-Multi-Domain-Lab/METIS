@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { useStore } from 'react-context-hook'
-import { Mission, saveMission } from '../../modules/missions'
+import { createMission, Mission, saveMission } from '../../modules/missions'
 import { EAjaxStatus } from '../../modules/toolbox/ajax'
 import usersModule, { IUser } from '../../modules/users'
 import Branding from '../content/Branding'
@@ -33,7 +33,9 @@ enum ENodeDropLocation {
 }
 
 interface IMissionFormPageProps extends IPageProps {
-  mission: Mission
+  // If null, a new mission is being
+  // created.
+  mission: Mission | null
 }
 
 // This will render a dashboard with a radar
@@ -64,21 +66,36 @@ export default function MissionFormPage(props: {
   const [selectedNode, selectNode] = useState<MissionNode | null>(null)
   const [nodeStructuringIsActive, activateNodeStructuring] =
     useState<boolean>(false)
+  const [mission, setMission] = useState<Mission | null>(null)
+  const [existsInDatabase, setExistsInDatabase] = useState<boolean>(false)
 
   /* -- COMPONENT EFFECTS -- */
 
   // Equivalent of componentDidMount.
   useEffect(() => {
     if (!mountHandled && pageProps.isCurrentPage) {
+      let mission: Mission
+      let existsInDatabase: boolean
+
+      // Creating a new mission.
+      if (pageProps.mission === null) {
+        mission = new Mission('', 'New Mission', 1, {}, [], '')
+        existsInDatabase = false
+      }
+      // Editing an existing mission.
+      else {
+        mission = pageProps.mission
+        existsInDatabase = true
+      }
+
+      setMission(mission)
       setMountHandled(true)
     } else if (mountHandled && !pageProps.isCurrentPage) {
       setMountHandled(false)
     }
   }, [mountHandled, pageProps.isCurrentPage])
 
-  if (pageProps.show) {
-    let mission: Mission = pageProps.mission
-
+  if (pageProps.show && mission !== null) {
     /* -- COMPONENTS -- */
 
     /* -- COMPONENT FUNCTIONS -- */
@@ -101,16 +118,32 @@ export default function MissionFormPage(props: {
       if (areUnsavedChanges) {
         setAreUnsavedChanges(false)
 
-        saveMission(
-          mission,
-          () => {
-            pageProps.notify('Mission successfully saved.', 3000)
-          },
-          (error: Error) => {
-            pageProps.notify('Mission failed to save.', 3000)
-            setAreUnsavedChanges(true)
-          },
-        )
+        if (!existsInDatabase) {
+          createMission(
+            mission,
+            true,
+            (resultingMission: Mission) => {
+              pageProps.notify('Mission successfully saved.', 3000)
+              setMission(resultingMission)
+              setExistsInDatabase(true)
+            },
+            (error: Error) => {
+              pageProps.notify('Mission failed to save', 3000)
+              setAreUnsavedChanges(true)
+            },
+          )
+        } else {
+          saveMission(
+            mission,
+            () => {
+              pageProps.notify('Mission successfully saved.', 3000)
+            },
+            (error: Error) => {
+              pageProps.notify('Mission failed to save.', 3000)
+              setAreUnsavedChanges(true)
+            },
+          )
+        }
       }
     }
 
@@ -194,6 +227,7 @@ export default function MissionFormPage(props: {
             }}
             handleMapCreateRequest={() => {
               let newNode: MissionNode = mission.spawnNewNode()
+              handleChange()
               selectNode(newNode)
               activateNodeStructuring(false)
             }}

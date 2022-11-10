@@ -54,6 +54,14 @@
     font-size: 1.2em;
   }
 
+  .CreateMission {
+    cursor: pointer;
+    user-select: none;
+    position: relative;
+    left: -24px;
+    margin: 35px 0 0 0;
+  }
+
   .MissionName {
     margin-top: 20px;
     margin-left: 35px;
