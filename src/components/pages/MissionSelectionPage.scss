@@ -37,10 +37,6 @@
       }
     }
 
-    .EditMissions {
-      display: none;
-    }
-
     .Logout {
       display: none;
     }
@@ -72,7 +68,7 @@
       font-size: 1em;
       max-height: 30vh;
       overflow-y: scroll;
-      width: 50%;
+      width: 75%;
 
       .HeadingContainer {
         position: sticky;
@@ -80,6 +76,7 @@
         background-color: black;
         width: 100%;
         overflow-x: hidden;
+        z-index: 100;
 
         .Heading {
           width: fill;
@@ -91,26 +88,35 @@
         }
       }
 
-      .MissionName {
-        padding: 10px 0 10px 20px;
+      .IndividualMissionContainer {
+        display: flex;
+        justify-content: flex-start;
+        align-items: center;
+        flex-flow: row wrap;
         width: fill;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
 
-        &.MissionName:hover {
+        &.IndividualMissionContainer:hover {
           cursor: pointer;
           background-color: $node-blue;
           color: $terminal;
         }
-      }
 
-      .CreateMission {
-        cursor: pointer;
-        user-select: none;
-        position: relative;
-        left: -24px;
-        margin: 35px 0 0 0;
+        .MissionName {
+          padding: 10px 0 10px 20px;
+          width: 50%;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+
+          &.MissionName:hover {
+            cursor: pointer;
+            color: $terminal;
+          }
+        }
+
+        .ActionsContainer {
+          display: none;
+        }
       }
     }
 
@@ -144,12 +150,6 @@
 
 .MissionSelectionPage {
   .SignOut {
-    grid-template-columns: auto 160px 130px;
-
-    .EditMissions {
-      display: flex;
-    }
-
     .Logout {
       display: flex;
     }
@@ -164,6 +164,73 @@
       &.show {
         border-bottom-right-radius: 0px;
         border-bottom-left-radius: 0px;
+
+        .ActionsContainer {
+          display: flex;
+          justify-content: flex-end;
+          align-items: center;
+          flex-flow: row wrap;
+          width: 40%;
+
+          .remove,
+          .copy,
+          .edit,
+          .Toggle {
+            margin: 0 5px;
+
+            &.remove:hover,
+            &.copy:hover,
+            &.edit:hover {
+              filter: invert(68%) sepia(94%) saturate(322%) hue-rotate(117deg)
+                brightness(200%) contrast(98%);
+            }
+          }
+
+          .edit {
+            background: url('../../assets/images/icons/edit.svg');
+            background-size: 65% 65%;
+            background-position: center;
+            background-repeat: no-repeat;
+            width: 1em;
+            height: 1em;
+            border: none;
+          }
+
+          .remove {
+            background: url('../../assets/images/icons/remove.svg');
+            background-size: 65% 65%;
+            background-position: center;
+            background-repeat: no-repeat;
+            width: 1em;
+            height: 1em;
+            border: none;
+          }
+
+          .copy {
+            background: url('../../assets/images/icons/copy.svg');
+            background-size: 65% 65%;
+            background-position: center;
+            background-repeat: no-repeat;
+            width: 1em;
+            height: 1em;
+            border: none;
+          }
+
+          .Toggle {
+            background-color: transparent;
+
+            &.Activated {
+              border-color: $terminal;
+              .Switch {
+                background-color: $terminal;
+              }
+            }
+
+            .Switch {
+              background-color: white;
+            }
+          }
+        }
       }
     }
 
@@ -176,130 +243,65 @@
         width: 50%;
         height: auto;
         border: 3px solid white;
-        padding: 20px 0;
+        padding: 10px 0;
         background-color: black;
         border-top: none;
         border-bottom-right-radius: 15px;
         border-bottom-left-radius: 15px;
 
         .NewMissionButton {
+          display: flex;
+          justify-content: center;
+          align-items: center;
           border: 2px solid white;
+          background-color: black;
           border-radius: 10px;
-          padding: 4px 13px;
+          font-weight: 400;
           font-size: 1.5em;
-          margin: 0 10px;
+          width: 1.25em;
+          height: 1.25em;
 
           &.NewMissionButton:hover {
             cursor: pointer;
             background-color: $node-blue;
           }
         }
-
-        .CloneMissionButton,
-        .DeleteMissionButton,
-        .PowerButton,
-        .SaveButton {
-          border: 2px solid white;
-          border-radius: 10px;
-          padding: 8px 16px;
-          font-size: 1.5em;
-          margin: 0 10px;
-
-          &.NewMissionButton:hover,
-          &.CloneMissionButton:hover,
-          &.DeleteMissionButton:hover,
-          &.PowerButton:hover,
-          &.SaveButton:hover {
-            cursor: pointer;
-            background-color: $node-blue;
-          }
-        }
-
-        .DeleteMissionButton {
-          background: url('../../assets/images/icons/lightning.svg');
-          background-size: 65% 65%;
-          background-position: center;
-          background-repeat: no-repeat;
-          width: 2%;
-          height: 50%;
-          background-color: black;
-        }
-
-        .CloneMissionButton {
-          background: url('../../assets/images/icons/zoom-in.svg');
-          background-size: 65% 65%;
-          background-position: center;
-          background-repeat: no-repeat;
-          width: 2%;
-          height: 50%;
-          background-color: black;
-        }
-
-        .PowerButton {
-          background: url('../../assets/images/icons/device.svg');
-          background-size: 65% 65%;
-          background-position: center;
-          background-repeat: no-repeat;
-          width: 2%;
-          height: 50%;
-          background-color: black;
-        }
-
-        .SaveButton {
-          background: url('../../assets/images/icons/save.svg');
-          background-size: 65% 65%;
-          background-position: center;
-          background-repeat: no-repeat;
-          width: 2%;
-          height: 50%;
-          background-color: black;
-        }
       }
     }
   }
 
-  @media only screen and (max-width: 600px) {
-    .MissionSelectionContent {
-      .EditMissionsContainer {
-        &.show {
-          flex-flow: column;
+  // @media only screen and (max-width: 600px) {
+  //   .MissionSelectionContent {
+  //     .EditMissionsContainer {
+  //       &.show {
+  //         flex-flow: column;
 
-          .NewMissionButton,
-          .CloneMissionButton,
-          .DeleteMissionButton,
-          .PowerButton,
-          .SaveButton {
-            font-size: 20px;
-            padding: 5px 12px;
-            margin: 5px 0;
-          }
+  //         .NewMissionButton,
+  //         .CloneMissionButton,
+  //         .DeleteMissionButton,
+  //         .PowerButton,
+  //         .SaveButton {
+  //           font-size: 20px;
+  //           padding: 5px 12px;
+  //           margin: 5px 0;
+  //         }
 
-          .CloneMissionButton,
-          .DeleteMissionButton,
-          .PowerButton,
-          .SaveButton {
-            padding: 16px 15px;
-          }
-        }
-      }
-    }
-  }
+  //         .CloneMissionButton,
+  //         .DeleteMissionButton,
+  //         .PowerButton,
+  //         .SaveButton {
+  //           padding: 16px 15px;
+  //         }
+  //       }
+  //     }
+  //   }
+  // }
 
   @media only screen and (min-width: 1100px) {
     .MissionSelectionContent {
       .EditMissionsContainer {
         &.show {
           width: 37.5%;
-        }
-      }
-    }
-  }
-
-  @media only screen and (min-width: 1500px) {
-    .MissionSelectionContent {
-      .EditMissionsContainer {
-        &.show {
-          width: 25%;
         }
       }
     }

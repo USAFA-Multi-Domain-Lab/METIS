@@ -839,7 +839,6 @@ export default class MissionMap extends React.Component<
                     {node.name}
                   </div>
                   <div className={deviceClassName}></div>
-                  {/* <div className={executableClassName}></div> */}
 
                   {/* <div className={dogEarContainerClassName}>
                     <div className={dogEarClassName}></div>

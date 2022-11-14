@@ -8,6 +8,8 @@ import './MissionSelectionPage.scss'
 import { MissionNodeAction } from '../../modules/mission-node-actions'
 import Tooltip from '../content/Tooltip'
 import { Counter } from '../../modules/numbers'
+import { Action, EActionPurpose } from '../content/Action'
+import Toggle from '../content/Toggle'
 
 interface IMissionSelectionPageProps extends IPageProps {}
 
@@ -164,11 +166,13 @@ const MissionSelectionPage = (props: {
     let navClassName: string = 'Navigation'
     let editMissionsContainerClassName: string = 'EditMissionsContainer'
     let editMissionListClassName: string = 'MissionList'
+    let actionContainerClassName: string = 'ActionsContainer'
 
     if (currentUser !== null) {
       navClassName += ' SignOut'
       editMissionsContainerClassName += ' show'
       editMissionListClassName += ' show'
+      actionContainerClassName += ' show'
     }
 
     return (
@@ -180,7 +184,6 @@ const MissionSelectionPage = (props: {
             tooltipDescription=''
             showTooltip={false}
           />
-          <div className='EditMissions Link'>Edit missions</div>
           <div className='Login Link' onClick={login}>
             Login
           </div>
@@ -197,63 +200,53 @@ const MissionSelectionPage = (props: {
               </div>
               {missions.map((mission: Mission) => {
                 return (
-                  <div
-                    className='MissionName'
-                    key={mission.name}
-                    onClick={() => selectMission(mission.missionID)}
-                  >
-                    {' '}
-                    {number.count++}. {mission.name}
+                  <div className='IndividualMissionContainer'>
+                    <div
+                      className='MissionName'
+                      key={mission.name}
+                      onClick={() => selectMission(mission.missionID)}
+                    >
+                      {' '}
+                      {number.count++}. {mission.name}
+                    </div>
+                    <div className='ActionsContainer'>
+                      <Action
+                        purpose={EActionPurpose.Edit}
+                        handleClick={() => {}}
+                        tooltipDescription={'Edit mission'}
+                        key={`${mission.missionID}`}
+                      />
+                      <Action
+                        purpose={EActionPurpose.Remove}
+                        handleClick={() => {}}
+                        tooltipDescription={'Delete mission'}
+                        key={`${mission.missionID}`}
+                      />
+                      <Action
+                        purpose={EActionPurpose.Copy}
+                        handleClick={() => {}}
+                        tooltipDescription={'Copy mission'}
+                        key={`${mission.missionID}`}
+                      />
+                      <Toggle
+                        initiallyActivated={false}
+                        deliverValue={() => true}
+                      />
+                    </div>
                   </div>
                 )
               })}
-              <div className='MissionName'>
-                {number.count++}. Addtional Mission
-              </div>
-              <div className='MissionName'>
-                {number.count++}. Addtional Mission
-              </div>
-              <div className='MissionName'>
-                {number.count++}. Addtional Mission
-              </div>
-              <div className='MissionName'>
-                {number.count++}. Addtional Mission
-              </div>
-              <div className='MissionName'>
-                {number.count++}. Addtional Mission
-              </div>
-              <div className='MissionName'>
-                {number.count++}. Addtional Mission
-              </div>
-              <div className='MissionName'>
-                {number.count++}. Addtional Mission
-              </div>
-              <div className='MissionName'>
-                {number.count++}. Addtional Mission
-              </div>
             </div>
           </div>
           <div className={editMissionsContainerClassName}>
-            <div className='NewMissionButton'>
-              +
-              <Tooltip description='New Mission' />
-            </div>
-            <div className='DeleteMissionButton'>
-              <Tooltip description='Delete Mission' />
-            </div>
-            <div className='CloneMissionButton'>
-              <Tooltip description='Clone Mission' />
-            </div>
-            <div className='PowerButton'>
-              <Tooltip description='Disable/Enable Mission' />
-            </div>
-            <div className='SaveButton'>
-              <Tooltip description='Save Mission' />
-            </div>
-          </div>
-
-          <div className='CreateMission' onClick={createMission}>
-            Create new mission.
+            <Action
+              purpose={EActionPurpose.Add}
+              handleClick={() => {
+                createMission()
+              }}
+              tooltipDescription={'Create new mission'}
+              uniqueClassName={'NewMissionButton'}
+            />
           </div>
         </div>
 
