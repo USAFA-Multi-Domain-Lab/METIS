@@ -159,7 +159,7 @@ export default function MissionFormPage(props: {
         confirmationMessage = 'Please confirm the deletion of this node.'
       }
 
-      pageProps.confirm(confirmationMessage, () => {
+      pageProps.confirm(confirmationMessage, (entry?: string) => {
         node.delete()
         handleChange()
         activateNodeStructuring(false)

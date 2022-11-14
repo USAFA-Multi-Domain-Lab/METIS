@@ -207,30 +207,6 @@ const MissionSelectionPage = (props: {
                   </div>
                 )
               })}
-              <div className='MissionName'>
-                {number.count++}. Addtional Mission
-              </div>
-              <div className='MissionName'>
-                {number.count++}. Addtional Mission
-              </div>
-              <div className='MissionName'>
-                {number.count++}. Addtional Mission
-              </div>
-              <div className='MissionName'>
-                {number.count++}. Addtional Mission
-              </div>
-              <div className='MissionName'>
-                {number.count++}. Addtional Mission
-              </div>
-              <div className='MissionName'>
-                {number.count++}. Addtional Mission
-              </div>
-              <div className='MissionName'>
-                {number.count++}. Addtional Mission
-              </div>
-              <div className='MissionName'>
-                {number.count++}. Addtional Mission
-              </div>
             </div>
           </div>
           <div className={editMissionsContainerClassName}>
