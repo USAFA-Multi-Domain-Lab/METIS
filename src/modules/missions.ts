@@ -512,10 +512,61 @@ export function saveMission(
     })
 }
 
+// This will delete the mission with
+// the given missionID.
+export function copyMission(
+  originalID: string,
+  copyName: string,
+  callback: (copy: Mission) => void,
+  callbackError: (error: Error) => void,
+): void {
+  axios
+    .put(`/api/v1/missions/copy/`, { originalID, copyName })
+    .then((response: AxiosResponse<AnyObject>) => {
+      let missionJson = response.data.copy
+
+      let copy = new Mission(
+        missionJson.missionID,
+        missionJson.name,
+        missionJson.versionNumber,
+        5,
+        missionJson.nodeStructure,
+        missionJson.nodeData,
+        missionJson.seed,
+        false,
+      )
+
+      callback(copy)
+    })
+    .catch((error: AxiosError) => {
+      console.error('Failed to copy mission.')
+      console.error(error)
+      callbackError(error)
+    })
+}
+
+// This will delete the mission with
+// the given missionID.
+export function deleteMission(
+  missionID: number,
+  callback: () => void,
+  callbackError: (error: Error) => void,
+): void {
+  axios
+    .delete(`/api/v1/missions?missionID=${missionID}`)
+    .then(callback)
+    .catch((error: AxiosError) => {
+      console.error('Failed to delete mission.')
+      console.error(error)
+      callbackError(error)
+    })
+}
+
 export default {
   Mission,
   createMission,
   getMission,
   getAllMissions,
   saveMission,
+  deleteMission,
 }

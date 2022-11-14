@@ -107,6 +107,44 @@ router.put('/', (request, response) => {
   }
 })
 
+// -- PUT | /api/v1/missions/copy/ --
+// This will copy a mission.
+router.put('/copy/', (request, response) => {
+  let body: any = request.body
+
+  if ('originalID' in body && 'copyName' in body) {
+    let originalID: string = body.originalID
+    let copyName: string = body.copyName
+
+    Mission.findOne({ originalID }, (error: any, mission: any) => {
+      if (error !== null) {
+        return response.sendStatus(500)
+      } else if (mission === null) {
+        return response.sendStatus(404)
+      } else {
+        let copy = new Mission({
+          name: copyName,
+          versionNumber: mission.versionNumber,
+          nodeStructure: mission.nodeStructure,
+          nodeData: mission.nodeData,
+        })
+
+        copy.save((error: Error) => {
+          if (error) {
+            console.log('Failed to copy mission:')
+            console.error(error)
+            return response.sendStatus(500)
+          } else {
+            return response.json({ copy })
+          }
+        })
+      }
+    })
+  } else {
+    return response.sendStatus(400)
+  }
+})
+
 // -- DELETE | /api/v1/missions/ --
 // This will delete a mission.
 router.delete('/', (request, response) => {
