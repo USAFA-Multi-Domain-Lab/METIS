@@ -43,7 +43,7 @@ export function ensureDefaultDataExists(): void {
       const attackMissionData = {
         name: 'Attack Mission',
         versionNumber: 1,
-        tokenCount: 5,
+        initialTokens: 5,
         seed: '980238470934',
         nodeStructure: {
           '1': {
@@ -2003,7 +2003,7 @@ export function ensureDefaultDataExists(): void {
       const defensiveMissionData = {
         name: 'Defensive Mission',
         versionNumber: 1,
-        tokenCount: 10,
+        initialTokens: 10,
         seed: '980238470935',
         nodeStructure: {
           '1': {

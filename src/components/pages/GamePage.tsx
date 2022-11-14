@@ -182,7 +182,7 @@ export default function GamePage(props: {
 
     // Sets the default amount of tokens the users will have to spend for each mission
     if (tokenCount === null) {
-      setTokenCount(mission.tokenCount)
+      setTokenCount(mission.initialTokens)
     }
 
     return (
@@ -306,7 +306,7 @@ export default function GamePage(props: {
             <NodeActions selectedNode={lastSelectedNode} />
             <ExecuteNodePath
               selectedNode={lastSelectedNode}
-              defaultTokenCount={mission.tokenCount}
+              defaultTokenCount={mission.initialTokens}
             />
           </div>
         }
