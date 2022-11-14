@@ -790,10 +790,12 @@ export default class MissionMap extends React.Component<
 
             // Dynamic Class Names
             let loadingClassName: string = 'loading'
-            let deviceClassName: string = ''
-            let executableClassName: string = 'hide'
-            let dogEarClassName: string = ''
-            let dogEarContainerClassName: string = 'DogEarContainer'
+            let iconClassName: string = ''
+            //  Remove all red comments below if the client chooses to go
+            //  with the icons rather than the dor ear in the top-right
+            //  corner of node.
+            // ! let dogEarClassName: string = ''
+            // ! let dogEarContainerClassName: string = 'DogEarContainer'
 
             // Logic to handle if the loading bar is displayed or not.
             if (!node.executing) {
@@ -803,14 +805,13 @@ export default class MissionMap extends React.Component<
             // Logic to handle nodes that are executable and nodes that
             // are devices.
             if (node.device && node.executable) {
-              dogEarClassName = 'DogEarBlack'
-              deviceClassName = 'device'
-              executableClassName = 'executable'
+              // ! dogEarClassName = 'DogEarBlack'
+              iconClassName = 'device'
             } else if (node.executable && !node.device) {
-              dogEarClassName = 'DogEarWhite'
-              deviceClassName = 'executable'
+              // ! dogEarClassName = 'DogEarWhite'
+              iconClassName = 'executable'
             } else {
-              dogEarContainerClassName += ' hide'
+              // ! dogEarContainerClassName += ' hide'
             }
 
             return (
@@ -837,7 +838,7 @@ export default class MissionMap extends React.Component<
                   >
                     {node.name}
                   </div>
-                  <div className={deviceClassName}></div>
+                  <div className={iconClassName}></div>
 
                   {/* <div className={dogEarContainerClassName}>
                     <div className={dogEarClassName}></div>

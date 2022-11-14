@@ -5,10 +5,7 @@ import { MissionNodeAction } from '../../modules/mission-node-actions'
 import gameLogic, { runNodeLoadingBar } from '../../modules/game-logic'
 import ActionPropertyDisplay from './ActionPropertyDisplay'
 
-const ExecuteNodePath = (props: {
-  selectedNode: MissionNode | null
-  defaultTokenCount: number
-}) => {
+const ExecuteNodePath = (props: { selectedNode: MissionNode | null }) => {
   /* -- GLOBAL STATE -- */
   const [consoleOutputs, setConsoleOutputs] =
     useStore<Array<{ date: number; value: string }>>('consoleOutputs')
@@ -82,6 +79,7 @@ const ExecuteNodePath = (props: {
         runNodeLoadingBar(processTime)
         setActionDisplay([])
         setTokenCount(tokenCount - 1)
+      } else {
       }
     }
   }

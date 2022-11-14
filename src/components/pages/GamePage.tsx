@@ -16,6 +16,7 @@ import { MissionNode } from '../../modules/mission-nodes'
 
 interface IGamePageProps extends IPageProps {
   mission: Mission
+  initialTokenCount: number
 }
 
 // This will render a dashboard with a radar
@@ -64,12 +65,21 @@ export default function GamePage(props: {
 
   // Equivalent of componentDidMount.
   useEffect(() => {
-    if (!mountHandled && pageProps.isCurrentPage) {
+    if (
+      !mountHandled &&
+      pageProps.isCurrentPage &&
+      pageProps.initialTokenCount !== undefined
+    ) {
+      setTokenCount(pageProps.initialTokenCount)
       setMountHandled(true)
-    } else if (mountHandled && !pageProps.isCurrentPage) {
+    } else if (
+      mountHandled &&
+      !pageProps.isCurrentPage &&
+      pageProps.initialTokenCount === undefined
+    ) {
       setMountHandled(false)
     }
-  }, [mountHandled, pageProps.isCurrentPage])
+  }, [mountHandled, pageProps.isCurrentPage, pageProps.initialTokenCount])
 
   if (pageProps.show) {
     let mission: Mission = pageProps.mission
@@ -174,11 +184,6 @@ export default function GamePage(props: {
       navClassName += ' SignOut'
     }
 
-    // Sets the default amount of tokens the users will have to spend for each mission
-    if (tokenCount === null) {
-      setTokenCount(mission.tokenCount)
-    }
-
     return (
       <div className={className}>
         {
@@ -203,7 +208,7 @@ export default function GamePage(props: {
         {
           // -- content --
           <div className='Content'>
-            <div className='Tokens'>Tokens remaining: {tokenCount} </div>
+            <div className='Tokens'>Tokens remaining: {tokenCount}</div>
             <MissionMap
               mission={mission}
               missionAjaxStatus={EAjaxStatus.Loaded}
@@ -298,10 +303,7 @@ export default function GamePage(props: {
             />
             <OutputPanel />
             <NodeActions selectedNode={lastSelectedNode} />
-            <ExecuteNodePath
-              selectedNode={lastSelectedNode}
-              defaultTokenCount={mission.tokenCount}
-            />
+            <ExecuteNodePath selectedNode={lastSelectedNode} />
           </div>
         }
       </div>

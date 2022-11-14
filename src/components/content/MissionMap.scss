@@ -205,7 +205,10 @@
             padding-top: auto;
           }
         }
-
+        // ! Displays the dog ear icon in the top-right corner of the node.
+        // ! This can be removed once the client expresses which icon
+        // ! option they want.
+        // ! {
         // .DogEarContainer {
         //   position: relative;
         //   top: 0;
@@ -231,6 +234,7 @@
         //       brightness(109%) contrast(101%);
         //   }
         // }
+        // ! }
 
         .executable {
           background: url(../../assets/images/icons/lightning.svg);

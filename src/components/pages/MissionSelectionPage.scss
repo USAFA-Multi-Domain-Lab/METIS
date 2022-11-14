@@ -138,14 +138,6 @@
       }
     }
   }
-
-  @media only screen and (min-width: 1500px) {
-    .MissionSelectionContent {
-      .MissionListContainer {
-        width: 50%;
-      }
-    }
-  }
 }
 
 .MissionSelectionPage {
@@ -170,7 +162,7 @@
           justify-content: flex-end;
           align-items: center;
           flex-flow: row wrap;
-          width: 40%;
+          width: 45%;
 
           .remove,
           .copy,
@@ -270,38 +262,40 @@
     }
   }
 
-  // @media only screen and (max-width: 600px) {
-  //   .MissionSelectionContent {
-  //     .EditMissionsContainer {
-  //       &.show {
-  //         flex-flow: column;
+  @media only screen and (max-width: 800px) {
+    .MissionListContainer {
+      .MissionList {
+        &.show {
+          .IndividualMissionContainer {
+            flex-flow: column;
+            .MissionName {
+              width: 100%;
+            }
+            .ActionsContainer {
+              justify-content: flex-start;
+              width: 100%;
+            }
+          }
+        }
+      }
+    }
+  }
 
-  //         .NewMissionButton,
-  //         .CloneMissionButton,
-  //         .DeleteMissionButton,
-  //         .PowerButton,
-  //         .SaveButton {
-  //           font-size: 20px;
-  //           padding: 5px 12px;
-  //           margin: 5px 0;
-  //         }
-
-  //         .CloneMissionButton,
-  //         .DeleteMissionButton,
-  //         .PowerButton,
-  //         .SaveButton {
-  //           padding: 16px 15px;
-  //         }
-  //       }
-  //     }
-  //   }
-  // }
+  @media only screen and (max-width: 1099px) {
+    .MissionSelectionContent {
+      .EditMissionsContainer {
+        &.show {
+          width: 75%;
+        }
+      }
+    }
+  }
 
   @media only screen and (min-width: 1100px) {
     .MissionSelectionContent {
       .EditMissionsContainer {
         &.show {
-          width: 37.5%;
+          width: 56.25%;
         }
       }
     }
