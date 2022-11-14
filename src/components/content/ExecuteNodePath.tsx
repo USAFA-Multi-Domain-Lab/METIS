@@ -4,7 +4,6 @@ import { MissionNode } from '../../modules/mission-nodes'
 import { MissionNodeAction } from '../../modules/mission-node-actions'
 import gameLogic, { runNodeLoadingBar } from '../../modules/game-logic'
 import ActionPropertyDisplay from './ActionPropertyDisplay'
-import { useState } from 'react'
 
 const ExecuteNodePath = (props: {
   selectedNode: MissionNode | null

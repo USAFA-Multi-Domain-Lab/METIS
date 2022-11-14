@@ -56,7 +56,6 @@ export default function GamePage(props: {
   /* -- COMPONENT STATE -- */
 
   const [mountHandled, setMountHandled] = useState<boolean>(false)
-  const [forcedUpdateCounter, setForcedUpdateCounter] = useState<number>(0)
   const [lastSelectedNode, setLastSelectedNode] = useState<MissionNode | null>(
     null,
   )
@@ -78,11 +77,6 @@ export default function GamePage(props: {
     /* -- COMPONENTS -- */
 
     /* -- COMPONENT FUNCTIONS -- */
-
-    // This forces a rerender of the component.
-    const forceUpdate = (): void => {
-      setForcedUpdateCounter(forcedUpdateCounter + 1)
-    }
 
     // This will logout the current user.
     const logout = () => {
@@ -282,7 +276,7 @@ export default function GamePage(props: {
                       (node.successChance as number) * 100
                     }%\n` +
                     `* Device: ${
-                      // All of this is to capitalize the first letter.
+                      // This capitalizes the first letter of the word.
                       node.device.toString().charAt(0).toUpperCase() +
                       node.device.toString().slice(1)
                     }\n` +

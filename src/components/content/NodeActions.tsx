@@ -27,7 +27,6 @@ const NodeActions = (props: {
 
   /* -- COMPONENT STATE -- */
   const [displayActionList, setDisplayActionList] = useState<boolean>(false)
-  const [forcedUpdateCounter, setForcedUpdateCounter] = useState<number>(0)
 
   /* -- COMPONENT FUNCTIONS -- */
 

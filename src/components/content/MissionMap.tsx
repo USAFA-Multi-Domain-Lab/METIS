@@ -10,7 +10,6 @@ import { Mission } from '../../modules/missions'
 import { MissionNode } from '../../modules/mission-nodes'
 import { Action, EActionPurpose } from './Action'
 import { ActionPanel } from './ActionPanel'
-import Tooltip from './Tooltip'
 
 /* -- interfaces -- */
 
