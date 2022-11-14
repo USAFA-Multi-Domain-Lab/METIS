@@ -20,6 +20,7 @@ import MoreInformation from '../content/MoreInformation'
 import { IPageProps } from '../App'
 import { ENodeTargetRelation, MissionNode } from '../../modules/mission-nodes'
 import { MissionNodeAction } from '../../modules/mission-node-actions'
+import { EToggleLockState } from '../content/Toggle'
 
 // This is a enum used to describe
 // the locations that one node can
@@ -89,6 +90,7 @@ export default function MissionFormPage(props: {
       }
 
       setMission(mission)
+      setExistsInDatabase(existsInDatabase)
       setMountHandled(true)
     } else if (mountHandled && !pageProps.isCurrentPage) {
       setMountHandled(false)
@@ -358,6 +360,22 @@ function NodeEntry(props: {
               }
             }}
             key={`${node.nodeID}_executable`}
+          />
+          <DetailToggle
+            label={'Device'}
+            initialValue={node.device}
+            lockState={
+              node.executable
+                ? EToggleLockState.Unlocked
+                : EToggleLockState.LockedDeactivation
+            }
+            deliverValue={(device: boolean) => {
+              if (node !== null) {
+                node.device = device
+                handleChange()
+              }
+            }}
+            key={`${node.nodeID}_device`}
           />
           <DetailBox
             label='Pre-Execution Text'

@@ -29,6 +29,7 @@ router.post('/', (request, response) => {
       let mission = new Mission({
         name,
         versionNumber,
+        initialTokens,
         nodeStructure,
         nodeData,
       })

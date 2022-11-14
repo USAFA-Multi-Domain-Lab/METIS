@@ -5,7 +5,7 @@ import React from 'react'
 import { useEffect, useRef, useState } from 'react'
 import inputs from '../../modules/toolbox/inputs'
 import './Form.scss'
-import Toggle from './Toggle'
+import Toggle, { EToggleLockState } from './Toggle'
 import Tooltip from './Tooltip'
 
 // field for entering information.
@@ -298,6 +298,9 @@ export interface IDetailToggle_P {
   label: string
   // the default value for the input field
   initialValue: boolean
+  // The toggle lock state of the toggle.
+  // (See Toggle.tsx)
+  lockState: EToggleLockState
   // the description displayed when hovered over
   tooltipDescription: string
   // class name to apply to the root element
@@ -319,6 +322,7 @@ export class DetailToggle extends React.Component<
 
   static defaultProps = {
     initialValue: false,
+    lockState: EToggleLockState.Unlocked,
     tooltipDescription: '',
     uniqueClassName: '',
   }
@@ -341,6 +345,7 @@ export class DetailToggle extends React.Component<
   render(): JSX.Element | null {
     let label: string = this.props.label
     let initialValue: boolean = this.props.initialValue
+    let lockState: EToggleLockState = this.props.lockState
     let tooltipDescription: string = this.props.tooltipDescription
     let hideTooltip: boolean = tooltipDescription.length === 0
     let uniqueClassName: string = this.props.uniqueClassName
@@ -355,6 +360,7 @@ export class DetailToggle extends React.Component<
         <div className='Field'>
           <Toggle
             initiallyActivated={initialValue}
+            lockState={lockState}
             deliverValue={this.props.deliverValue}
           />
         </div>
