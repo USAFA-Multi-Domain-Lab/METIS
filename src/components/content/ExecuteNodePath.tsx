@@ -6,6 +6,7 @@ import gameLogic, { runNodeLoadingBar } from '../../modules/game-logic'
 import ActionPropertyDisplay from './ActionPropertyDisplay'
 import { IPageProps } from '../App'
 import { Mission } from '../../modules/missions'
+import Notification from '../../modules/notifications'
 
 const ExecuteNodePath = (props: {
   mission: Mission

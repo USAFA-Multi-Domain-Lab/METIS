@@ -101,7 +101,6 @@ const MissionSelectionPage = (props: {
         (selectedMission: Mission) => {
           pageProps.goToPage('GamePage', {
             mission: selectedMission,
-            initialTokenCount: selectedMission.tokenCount,
           })
           setLastLoadingMessage('Initializing application...')
           setLoadingMessage(null)
