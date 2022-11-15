@@ -4,8 +4,13 @@ import { MissionNode } from '../../modules/mission-nodes'
 import { MissionNodeAction } from '../../modules/mission-node-actions'
 import gameLogic, { runNodeLoadingBar } from '../../modules/game-logic'
 import ActionPropertyDisplay from './ActionPropertyDisplay'
+import Notification from '../../modules/notifications'
+import { IPageProps } from '../App'
 
-const ExecuteNodePath = (props: { selectedNode: MissionNode | null }) => {
+const ExecuteNodePath = (props: {
+  selectedNode: MissionNode | null
+  pageProps: IPageProps
+}) => {
   /* -- GLOBAL STATE -- */
   const [consoleOutputs, setConsoleOutputs] =
     useStore<Array<{ date: number; value: string }>>('consoleOutputs')
@@ -80,6 +85,7 @@ const ExecuteNodePath = (props: { selectedNode: MissionNode | null }) => {
         setActionDisplay([])
         setTokenCount(tokenCount - 1)
       } else {
+        props.pageProps.notify(`You have no more tokens to spend.`, 3000)
       }
     }
   }

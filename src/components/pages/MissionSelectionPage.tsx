@@ -205,10 +205,12 @@ const MissionSelectionPage = (props: {
               {missions.map((mission: Mission) => {
                 if (mission !== null) {
                   return (
-                    <div className='IndividualMissionContainer'>
+                    <div
+                      className='IndividualMissionContainer'
+                      key={mission.missionID}
+                    >
                       <div
                         className='MissionName'
-                        key={mission.name}
                         onClick={() => selectMission(mission.missionID)}
                       >
                         {number.count++}. {mission.name}
@@ -218,24 +220,20 @@ const MissionSelectionPage = (props: {
                           purpose={EActionPurpose.Edit}
                           handleClick={() => {}}
                           tooltipDescription={'Edit mission'}
-                          key={`actual-action_edit-mission_${mission.missionID}`}
                         />
                         <Action
                           purpose={EActionPurpose.Remove}
                           handleClick={() => {}}
                           tooltipDescription={'Remove mission'}
-                          key={`actual-action_remove-mission_${mission.missionID}`}
                         />
                         <Action
                           purpose={EActionPurpose.Copy}
                           handleClick={() => {}}
                           tooltipDescription={'Copy mission'}
-                          key={`actual-action_copy-mission_${mission.missionID}`}
                         />
                         <Toggle
                           initiallyActivated={false}
                           deliverValue={() => true}
-                          key={`toggle-mission_${mission.missionID}`}
                         />
                       </div>
                     </div>
@@ -250,7 +248,6 @@ const MissionSelectionPage = (props: {
               handleClick={createMission}
               tooltipDescription={'Create new mission'}
               uniqueClassName={'NewMissionButton'}
-              key={'actual-action_create-mission'}
             />
           </div>
         </div>

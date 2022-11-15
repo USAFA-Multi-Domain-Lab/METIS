@@ -303,7 +303,10 @@ export default function GamePage(props: {
             />
             <OutputPanel />
             <NodeActions selectedNode={lastSelectedNode} />
-            <ExecuteNodePath selectedNode={lastSelectedNode} />
+            <ExecuteNodePath
+              selectedNode={lastSelectedNode}
+              pageProps={pageProps}
+            />
           </div>
         }
       </div>
