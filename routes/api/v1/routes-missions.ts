@@ -16,17 +16,20 @@ router.post('/', (request, response) => {
     if (
       'name' in missionData &&
       'versionNumber' in missionData &&
+      'initialTokens' in missionData &&
       'nodeStructure' in missionData &&
       'nodeData' in missionData
     ) {
       let name: any = missionData.name
       let versionNumber: any = missionData.versionNumber
+      let initialTokens: any = missionData.initialTokens
       let nodeStructure: any = missionData.nodeStructure
       let nodeData: any = missionData.nodeData
 
       let mission = new Mission({
         name,
         versionNumber,
+        initialTokens,
         nodeStructure,
         nodeData,
       })
@@ -102,6 +105,45 @@ router.put('/', (request, response) => {
     } else {
       return response.sendStatus(400)
     }
+  } else {
+    return response.sendStatus(400)
+  }
+})
+
+// -- PUT | /api/v1/missions/copy/ --
+// This will copy a mission.
+router.put('/copy/', (request, response) => {
+  let body: any = request.body
+
+  if ('originalID' in body && 'copyName' in body) {
+    let originalID: string = body.originalID
+    let copyName: string = body.copyName
+
+    Mission.findOne({ originalID }, (error: any, mission: any) => {
+      if (error !== null) {
+        return response.sendStatus(500)
+      } else if (mission === null) {
+        return response.sendStatus(404)
+      } else {
+        let copy = new Mission({
+          name: copyName,
+          versionNumber: mission.versionNumber,
+          initialTokens: mission.initialTokens,
+          nodeStructure: mission.nodeStructure,
+          nodeData: mission.nodeData,
+        })
+
+        copy.save((error: Error) => {
+          if (error) {
+            console.log('Failed to copy mission:')
+            console.error(error)
+            return response.sendStatus(500)
+          } else {
+            return response.json({ copy })
+          }
+        })
+      }
+    })
   } else {
     return response.sendStatus(400)
   }

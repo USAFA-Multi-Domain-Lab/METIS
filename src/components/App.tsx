@@ -16,12 +16,24 @@ import NotificationBubble from './content/NotificationBubble'
 import Confirmation, { IConfirmation } from './content/Confirmation'
 import { AjaxStatus } from './content/AjaxStatusDisplay'
 
+// Options available when confirming
+// an action using page props.
+export interface IConfirmOptions {
+  requireEntry?: boolean
+  entryLabel?: string
+  buttonConfirmText?: string
+}
+
 // Default props in every page props.
 export interface IPageProps {
   forceUpdate: () => void
   goToPage: (pagePath: string, pageProps: AnyObject) => void
   notify: (message: string, duration: number | null) => Notification
-  confirm: (message: string, handleConfirmation: () => void) => void
+  confirm: (
+    message: string,
+    handleConfirmation: () => void,
+    options?: IConfirmOptions,
+  ) => void
   show: boolean
   currentPagePath: string
   isCurrentPage: boolean
@@ -108,18 +120,30 @@ function StandardPage(props: {
 
   // This will pop up a confirmation box
   // to confirm some action.
-  const confirm = (message: string, handleConfirmation: () => {}): void => {
+  const confirm = (
+    message: string,
+    handleConfirmation: (entry?: string) => {},
+    options: IConfirmOptions = {},
+  ): void => {
     let confirmation: IConfirmation = {
       ...Confirmation.defaultProps,
       ajaxStatus: AjaxStatus.Inactive,
       active: true,
       confirmationMessage: message,
-      handleConfirmation: () => {
-        handleConfirmation()
+      handleConfirmation: (entry?: string) => {
+        handleConfirmation(entry)
         setConfirmation(null)
       },
       handleCancelation: () => setConfirmation(null),
+      buttonConfirmText: options.buttonConfirmText
+        ? options.buttonConfirmText
+        : Confirmation.defaultProps.buttonConfirmText,
+      requireEntry: options.requireEntry === true,
+      entryLabel: options.entryLabel
+        ? options.entryLabel
+        : Confirmation.defaultProps.entryLabel,
     }
+
     setConfirmation(confirmation)
   }
 
@@ -318,7 +342,7 @@ function App(): JSX.Element | null {
           ))}
         </div>
       </div>
-      {confirmation !== null ? new Confirmation(confirmation).render() : null}
+      {confirmation !== null ? <Confirmation {...confirmation} /> : null}
       <StandardPage
         Page={AuthPage}
         targetPagePath='AuthPage'

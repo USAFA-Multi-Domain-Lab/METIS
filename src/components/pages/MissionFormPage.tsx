@@ -20,6 +20,7 @@ import MoreInformation from '../content/MoreInformation'
 import { IPageProps } from '../App'
 import { ENodeTargetRelation, MissionNode } from '../../modules/mission-nodes'
 import { MissionNodeAction } from '../../modules/mission-node-actions'
+import { EToggleLockState } from '../content/Toggle'
 
 // This is a enum used to describe
 // the locations that one node can
@@ -89,6 +90,7 @@ export default function MissionFormPage(props: {
       }
 
       setMission(mission)
+      setExistsInDatabase(existsInDatabase)
       setMountHandled(true)
     } else if (mountHandled && !pageProps.isCurrentPage) {
       setMountHandled(false)
@@ -159,7 +161,7 @@ export default function MissionFormPage(props: {
         confirmationMessage = 'Please confirm the deletion of this node.'
       }
 
-      pageProps.confirm(confirmationMessage, () => {
+      pageProps.confirm(confirmationMessage, (entry?: string) => {
         node.delete()
         handleChange()
         activateNodeStructuring(false)
@@ -192,9 +194,9 @@ export default function MissionFormPage(props: {
 
     let className: string = 'MissionFormPage'
 
-    if (selectedNode !== null || nodeStructuringIsActive) {
-      className += ' SidePanelIsExpanded'
-    }
+    // if (selectedNode !== null || nodeStructuringIsActive) {
+    //   className += ' SidePanelIsExpanded'
+    // }
 
     return (
       <div className={className}>
@@ -242,6 +244,11 @@ export default function MissionFormPage(props: {
             applyNodeClassName={(node: MissionNode) => ''}
             renderNodeTooltipDescription={(node: MissionNode) => ''}
           />
+          <MissionDetails
+            active={selectedNode === null && !nodeStructuringIsActive}
+            mission={mission}
+            handleChange={handleChange}
+          />
           <NodeEntry
             node={selectedNode}
             handleChange={handleChange}
@@ -257,6 +264,49 @@ export default function MissionFormPage(props: {
             mission={mission}
             handleChange={handleChange}
             handleCloseRequest={() => activateNodeStructuring(false)}
+          />
+        </div>
+      </div>
+    )
+  } else {
+    return null
+  }
+}
+
+// This will render the basic editable
+// details of the mission itself.
+function MissionDetails(props: {
+  active: boolean
+  mission: Mission
+  handleChange: () => void
+}): JSX.Element | null {
+  let active: boolean = props.active
+  let mission: Mission = props.mission
+  let handleChange = props.handleChange
+
+  if (active) {
+    return (
+      <div className='MissionDetails SidePanel'>
+        <div className='BorderBox'>
+          <Detail
+            label='Name'
+            initialValue={mission.name}
+            deliverValue={(name: string) => {
+              mission.name = name
+              handleChange()
+            }}
+            key={`${mission.missionID}_name`}
+          />
+          <DetailNumber
+            label='Initial Tokens'
+            initialValue={mission.initialTokens}
+            deliverValue={(initialTokens: number | null) => {
+              if (initialTokens !== null) {
+                mission.initialTokens = initialTokens
+                handleChange()
+              }
+            }}
+            key={`${mission.missionID}_initialTokens`}
           />
         </div>
       </div>
@@ -358,6 +408,22 @@ function NodeEntry(props: {
               }
             }}
             key={`${node.nodeID}_executable`}
+          />
+          <DetailToggle
+            label={'Device'}
+            initialValue={node.device}
+            lockState={
+              node.executable
+                ? EToggleLockState.Unlocked
+                : EToggleLockState.LockedDeactivation
+            }
+            deliverValue={(device: boolean) => {
+              if (node !== null) {
+                node.device = device
+                handleChange()
+              }
+            }}
+            key={`${node.nodeID}_device`}
           />
           <DetailBox
             label='Pre-Execution Text'

@@ -4,13 +4,16 @@ import { MissionNode } from '../../modules/mission-nodes'
 import { MissionNodeAction } from '../../modules/mission-node-actions'
 import gameLogic, { runNodeLoadingBar } from '../../modules/game-logic'
 import ActionPropertyDisplay from './ActionPropertyDisplay'
-import Notification from '../../modules/notifications'
 import { IPageProps } from '../App'
+import { Mission } from '../../modules/missions'
 
 const ExecuteNodePath = (props: {
+  mission: Mission
   selectedNode: MissionNode | null
-  pageProps: IPageProps
+  notify: (message: string, duration: number | null) => Notification
 }) => {
+  let mission: Mission = props.mission
+
   /* -- GLOBAL STATE -- */
   const [consoleOutputs, setConsoleOutputs] =
     useStore<Array<{ date: number; value: string }>>('consoleOutputs')
@@ -26,7 +29,6 @@ const ExecuteNodePath = (props: {
   const [actionName] = useStore<string>('actionName')
   const [actionDisplay, setActionDisplay] =
     useStore<Array<MissionNodeAction>>('actionDisplay')
-  const [tokenCount, setTokenCount] = useStore<number>('tokenCount')
 
   /* -- COMPONENT STATE -- */
 
@@ -42,7 +44,7 @@ const ExecuteNodePath = (props: {
     if (props.selectedNode !== null) {
       let selectedNode: MissionNode = props.selectedNode
 
-      if (tokenCount > 0) {
+      if (mission.tokens > 0) {
         setExecuteNodePathPromptIsDisplayed(false)
 
         selectedNode.execute((success: boolean) => {
@@ -83,9 +85,9 @@ const ExecuteNodePath = (props: {
         })
         runNodeLoadingBar(processTime)
         setActionDisplay([])
-        setTokenCount(tokenCount - 1)
+        mission.tokens--
       } else {
-        props.pageProps.notify(`You have no more tokens to spend.`, 3000)
+        props.notify(`You have no more tokens to spend.`, 3000)
       }
     }
   }
