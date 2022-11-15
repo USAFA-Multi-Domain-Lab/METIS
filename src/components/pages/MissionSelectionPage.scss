@@ -221,6 +221,13 @@
             .Switch {
               background-color: white;
             }
+
+            &.Toggle:hover {
+              border-color: $terminal;
+              .Switch {
+                background-color: $terminal;
+              }
+            }
           }
         }
       }

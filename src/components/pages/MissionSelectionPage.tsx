@@ -14,6 +14,7 @@ import { MissionNodeAction } from '../../modules/mission-node-actions'
 import { Counter } from '../../modules/numbers'
 import { Action, EActionPurpose } from '../content/Action'
 import Toggle from '../content/Toggle'
+import Tooltip from '../content/Tooltip'
 
 interface IMissionSelectionPageProps extends IPageProps {}
 
@@ -231,10 +232,13 @@ const MissionSelectionPage = (props: {
                           handleClick={() => {}}
                           tooltipDescription={'Copy mission'}
                         />
-                        <Toggle
-                          initiallyActivated={false}
-                          deliverValue={() => true}
-                        />
+                        <div className='ToggleContainer'>
+                          <Toggle
+                            initiallyActivated={false}
+                            deliverValue={() => true}
+                          />
+                          <Tooltip description='This will allow students the ability to access this mission or not.' />
+                        </div>
                       </div>
                     </div>
                   )
