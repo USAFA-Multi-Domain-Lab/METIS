@@ -80,7 +80,7 @@ export default function MissionFormPage(props: {
 
       // Creating a new mission.
       if (pageProps.mission === null) {
-        mission = new Mission('', 'New Mission', 1, 5, {}, [], '')
+        mission = new Mission('', 'New Mission', 1, false, 5, {}, [], '')
         existsInDatabase = false
       }
       // Editing an existing mission.
@@ -296,6 +296,14 @@ function MissionDetails(props: {
               handleChange()
             }}
             key={`${mission.missionID}_name`}
+          />
+          <DetailToggle
+            label={'Live'}
+            initialValue={mission.live}
+            deliverValue={(live: boolean) => {
+              mission.live = live
+              handleChange()
+            }}
           />
           <DetailNumber
             label='Initial Tokens'
