@@ -50,7 +50,6 @@ const MissionSelectionPage = (props: {
   ] = useStore<boolean>('actionSelectionPromptIsDisplayed')
   const [actionDisplay, setActionDisplay] =
     useStore<Array<MissionNodeAction>>('actionDisplay')
-  const [tokenCount, setTokenCount] = useStore<number | null>('tokenCount')
 
   /* -- COMPONENT STATE -- */
 
@@ -102,7 +101,6 @@ const MissionSelectionPage = (props: {
         (selectedMission: Mission) => {
           pageProps.goToPage('GamePage', {
             mission: selectedMission,
-            initialResourceCount: selectedMission.tokenCount,
           })
           setLastLoadingMessage('Initializing application...')
           setLoadingMessage(null)

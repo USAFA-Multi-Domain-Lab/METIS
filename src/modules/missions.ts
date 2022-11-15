@@ -21,7 +21,7 @@ export interface IMissionJSON {
   missionID: string
   name: string
   versionNumber: number
-  tokenCount: number
+  initialTokens: number
   seed: string
   nodeStructure: AnyObject
   nodeData: Array<AnyObject>
@@ -41,7 +41,8 @@ export class Mission {
   missionID: string
   name: string
   versionNumber: number
-  tokenCount: number
+  initialTokens: number
+  tokens: number
   _originalNodeStructure: AnyObject
   _originalNodeData: Array<AnyObject>
   _nodeStructure: AnyObject
@@ -89,7 +90,7 @@ export class Mission {
     missionID: string,
     name: string,
     versionNumber: number,
-    tokenCount: number,
+    initialTokens: number,
     nodeStructure: AnyObject,
     nodeData: Array<AnyObject>,
     seed: string,
@@ -98,7 +99,8 @@ export class Mission {
     this.missionID = missionID
     this.name = name
     this.versionNumber = versionNumber
-    this.tokenCount = tokenCount
+    this.initialTokens = initialTokens
+    this.tokens = initialTokens
     this._nodeStructure = nodeStructure
     this._nodeData = nodeData
     this._originalNodeStructure = nodeStructure
@@ -248,6 +250,7 @@ export class Mission {
         postExecutionSuccessText: node.postExecutionSuccessText,
         postExecutionFailureText: node.postExecutionFailureText,
         executable: node.executable,
+        device: node.device,
         actions: node.actions.map((action: MissionNodeAction) =>
           action.toJSON(),
         ),
@@ -262,7 +265,7 @@ export class Mission {
       missionID: this.missionID,
       name: this.name,
       versionNumber: this.versionNumber,
-      tokenCount: this.tokenCount,
+      initialTokens: this.initialTokens,
       seed: this.seed,
       nodeStructure: this.nodeStructure,
       nodeData: this.nodeData,
@@ -320,8 +323,8 @@ export class Mission {
       'Node has not been executed.',
       'Node has executed successfully.',
       'Node has failed to execute.',
-      true,
-      true,
+      false,
+      false,
       [],
       0,
       0,
@@ -390,7 +393,7 @@ export class Mission {
           this.missionID,
           this.name,
           this.versionNumber,
-          this.tokenCount,
+          this.initialTokens,
           this._originalNodeStructure,
           this._originalNodeData,
           this.seed,
@@ -402,7 +405,7 @@ export class Mission {
           this.missionID,
           this.name,
           this.versionNumber,
-          this.tokenCount,
+          this.initialTokens,
           this._exportNodeStructure(),
           this._exportNodeData(),
           this.seed,
@@ -429,7 +432,7 @@ export function createMission(
         missionJson.missionID,
         missionJson.name,
         missionJson.versionNumber,
-        5,
+        missionJson.initialTokens,
         missionJson.nodeStructure,
         missionJson.nodeData,
         missionJson.seed,
@@ -462,7 +465,7 @@ export function getMission(
         missionJson.missionID,
         missionJson.name,
         missionJson.versionNumber,
-        5,
+        missionJson.initialTokens,
         missionJson.nodeStructure,
         missionJson.nodeData,
         missionJson.seed,
@@ -512,10 +515,61 @@ export function saveMission(
     })
 }
 
+// This will delete the mission with
+// the given missionID.
+export function copyMission(
+  originalID: string,
+  copyName: string,
+  callback: (copy: Mission) => void,
+  callbackError: (error: Error) => void,
+): void {
+  axios
+    .put(`/api/v1/missions/copy/`, { originalID, copyName })
+    .then((response: AxiosResponse<AnyObject>) => {
+      let missionJson = response.data.copy
+
+      let copy = new Mission(
+        missionJson.missionID,
+        missionJson.name,
+        missionJson.versionNumber,
+        missionJson.initialTokens,
+        missionJson.nodeStructure,
+        missionJson.nodeData,
+        missionJson.seed,
+        false,
+      )
+
+      callback(copy)
+    })
+    .catch((error: AxiosError) => {
+      console.error('Failed to copy mission.')
+      console.error(error)
+      callbackError(error)
+    })
+}
+
+// This will delete the mission with
+// the given missionID.
+export function deleteMission(
+  missionID: number,
+  callback: () => void,
+  callbackError: (error: Error) => void,
+): void {
+  axios
+    .delete(`/api/v1/missions?missionID=${missionID}`)
+    .then(callback)
+    .catch((error: AxiosError) => {
+      console.error('Failed to delete mission.')
+      console.error(error)
+      callbackError(error)
+    })
+}
+
 export default {
   Mission,
   createMission,
   getMission,
   getAllMissions,
   saveMission,
+  deleteMission,
 }

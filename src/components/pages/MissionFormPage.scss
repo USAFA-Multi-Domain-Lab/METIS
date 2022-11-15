@@ -32,17 +32,16 @@ $background-bar: linear-gradient(
   margin: 0 auto;
   padding: 35px 75px 0;
 
-  &.SidePanelIsExpanded {
-    .Content {
-      grid-template-columns: auto 325px;
-    }
-  }
-
-  &:not(.SidePanelIsExpanded) {
-    .Content {
-      grid-template-columns: auto;
-    }
-  }
+  //   &.SidePanelIsExpanded {
+  //     .Content {
+  //     }
+  //   }
+  //
+  //   &:not(.SidePanelIsExpanded) {
+  //     .Content {
+  //       grid-template-columns: auto;
+  //     }
+  //   }
 
   .Navigation {
     display: grid;
@@ -83,6 +82,7 @@ $background-bar: linear-gradient(
 
   .Content {
     display: grid;
+    grid-template-columns: auto 325px;
     margin: 0 auto;
 
     .MissionMap {

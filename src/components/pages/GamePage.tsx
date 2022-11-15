@@ -13,6 +13,7 @@ import NodeActions from '../content/NodeActions'
 import { IPageProps } from '../App'
 import { MissionNodeAction } from '../../modules/mission-node-actions'
 import { MissionNode } from '../../modules/mission-nodes'
+import Notification from '../../modules/notifications'
 
 interface IGamePageProps extends IPageProps {
   mission: Mission
@@ -52,7 +53,6 @@ export default function GamePage(props: {
   ] = useStore<boolean>('actionSelectionPromptIsDisplayed')
   const [actionDisplay, setActionDisplay] =
     useStore<Array<MissionNodeAction>>('actionDisplay')
-  const [tokenCount, setTokenCount] = useStore<number>('tokenCount')
 
   /* -- COMPONENT STATE -- */
 
@@ -70,7 +70,6 @@ export default function GamePage(props: {
       pageProps.isCurrentPage &&
       pageProps.initialResourceCount !== undefined
     ) {
-      setTokenCount(pageProps.initialResourceCount)
       setMountHandled(true)
     } else if (
       mountHandled &&
@@ -208,7 +207,9 @@ export default function GamePage(props: {
         {
           // -- content --
           <div className='Content'>
-            <div className='Resources'>Resources remaining: {tokenCount}</div>
+            <div className='Resources'>
+              Resources remaining: {mission.tokens}
+            </div>
             <MissionMap
               mission={mission}
               missionAjaxStatus={EAjaxStatus.Loaded}
@@ -272,6 +273,7 @@ export default function GamePage(props: {
                 }
 
                 if (node.executable && node.executed) {
+                  console.log(node)
                   description =
                     `* Executed node in ${
                       (node.selectedAction?.processTime as number) / 1000
@@ -304,8 +306,9 @@ export default function GamePage(props: {
             <OutputPanel />
             <NodeActions selectedNode={lastSelectedNode} />
             <ExecuteNodePath
+              mission={mission}
               selectedNode={lastSelectedNode}
-              pageProps={pageProps}
+              notify={pageProps.notify}
             />
           </div>
         }
