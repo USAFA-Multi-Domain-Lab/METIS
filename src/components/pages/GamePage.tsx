@@ -16,7 +16,7 @@ import { MissionNode } from '../../modules/mission-nodes'
 
 interface IGamePageProps extends IPageProps {
   mission: Mission
-  initialTokenCount: number
+  initialResourceCount: number
 }
 
 // This will render a dashboard with a radar
@@ -68,18 +68,18 @@ export default function GamePage(props: {
     if (
       !mountHandled &&
       pageProps.isCurrentPage &&
-      pageProps.initialTokenCount !== undefined
+      pageProps.initialResourceCount !== undefined
     ) {
-      setTokenCount(pageProps.initialTokenCount)
+      setTokenCount(pageProps.initialResourceCount)
       setMountHandled(true)
     } else if (
       mountHandled &&
       !pageProps.isCurrentPage &&
-      pageProps.initialTokenCount === undefined
+      pageProps.initialResourceCount === undefined
     ) {
       setMountHandled(false)
     }
-  }, [mountHandled, pageProps.isCurrentPage, pageProps.initialTokenCount])
+  }, [mountHandled, pageProps.isCurrentPage, pageProps.initialResourceCount])
 
   if (pageProps.show) {
     let mission: Mission = pageProps.mission
@@ -208,7 +208,7 @@ export default function GamePage(props: {
         {
           // -- content --
           <div className='Content'>
-            <div className='Tokens'>Tokens remaining: {tokenCount}</div>
+            <div className='Resources'>Resources remaining: {tokenCount}</div>
             <MissionMap
               mission={mission}
               missionAjaxStatus={EAjaxStatus.Loaded}

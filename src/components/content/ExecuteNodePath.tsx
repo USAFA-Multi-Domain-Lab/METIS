@@ -85,7 +85,7 @@ const ExecuteNodePath = (props: {
         setActionDisplay([])
         setTokenCount(tokenCount - 1)
       } else {
-        props.pageProps.notify(`You have no more tokens to spend.`, 3000)
+        props.pageProps.notify(`You have no more resources to spend.`, 3000)
       }
     }
   }

@@ -103,7 +103,7 @@
 
         .MissionName {
           padding: 10px 0 10px 20px;
-          width: 50%;
+          width: calc(100% - 200px);
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
@@ -162,20 +162,23 @@
           justify-content: flex-end;
           align-items: center;
           flex-flow: row wrap;
-          width: 45%;
+          width: fit-content;
+          padding-right: 5px;
 
           .remove,
           .copy,
           .edit,
           .Toggle {
-            margin: 0 5px;
-
             &.remove:hover,
             &.copy:hover,
             &.edit:hover {
               filter: invert(68%) sepia(94%) saturate(322%) hue-rotate(117deg)
                 brightness(200%) contrast(98%);
             }
+          }
+
+          .Toggle {
+            margin-left: 5px;
           }
 
           .edit {
@@ -259,6 +262,8 @@
           font-size: 1.5em;
           width: 1.25em;
           height: 1.25em;
+          margin: 0;
+          padding: 0;
 
           &.NewMissionButton:hover {
             cursor: pointer;
@@ -276,11 +281,13 @@
           .IndividualMissionContainer {
             flex-flow: column;
             .MissionName {
-              width: 100%;
+              width: calc(100% - 20px);
             }
             .ActionsContainer {
               justify-content: flex-start;
-              width: 100%;
+              width: calc(100% - 15px);
+              padding-left: 15px;
+              padding-right: 0;
             }
           }
         }

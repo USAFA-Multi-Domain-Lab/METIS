@@ -432,13 +432,13 @@ function NodeEntry(props: {
                   }
                 }}
                 tooltipDescription={'Add a new action to this node.'}
-                key={`actual-action_add-new-action_${node.nodeID}`}
+                // key={`actual-action_add-new-action_${node.nodeID}`}
               />
               <Action
                 purpose={EActionPurpose.Remove}
                 handleClick={handleDeleteRequest}
                 tooltipDescription={'Delete this node.'}
-                key={`actual-action_delete-node_${node.nodeID}`}
+                // key={`actual-action_delete-node_${node.nodeID}`}
               />
             </div>
           </div>

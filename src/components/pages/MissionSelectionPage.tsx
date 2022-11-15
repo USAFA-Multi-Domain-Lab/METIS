@@ -102,7 +102,7 @@ const MissionSelectionPage = (props: {
         (selectedMission: Mission) => {
           pageProps.goToPage('GamePage', {
             mission: selectedMission,
-            initialTokenCount: selectedMission.tokenCount,
+            initialResourceCount: selectedMission.tokenCount,
           })
           setLastLoadingMessage('Initializing application...')
           setLoadingMessage(null)
@@ -224,12 +224,22 @@ const MissionSelectionPage = (props: {
                         />
                         <Action
                           purpose={EActionPurpose.Remove}
-                          handleClick={() => {}}
+                          handleClick={() => {
+                            pageProps.confirm(
+                              'Are you sure you want to delete this mission?',
+                              () => {},
+                            )
+                          }}
                           tooltipDescription={'Remove mission'}
                         />
                         <Action
                           purpose={EActionPurpose.Copy}
-                          handleClick={() => {}}
+                          handleClick={() => {
+                            pageProps.confirm(
+                              'Enter the name of the new mission.',
+                              () => {},
+                            )
+                          }}
                           tooltipDescription={'Copy mission'}
                         />
                         <div className='ToggleContainer'>
