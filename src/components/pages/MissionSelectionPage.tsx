@@ -43,7 +43,6 @@ const MissionSelectionPage = (props: {
   ] = useStore<boolean>('actionSelectionPromptIsDisplayed')
   const [actionDisplay, setActionDisplay] =
     useStore<Array<MissionNodeAction>>('actionDisplay')
-  const [tokenCount, setTokenCount] = useStore<number | null>('tokenCount')
 
   /* -- COMPONENT STATE -- */
 
@@ -108,7 +107,6 @@ const MissionSelectionPage = (props: {
       setExecuteNodePathPromptIsDisplayed(false)
       setActionSelectionPromptIsDisplayed(false)
       setActionDisplay([])
-      setTokenCount(null)
     }
 
     // This will logout the current user.

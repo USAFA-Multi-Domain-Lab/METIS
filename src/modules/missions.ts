@@ -250,6 +250,7 @@ export class Mission {
         postExecutionSuccessText: node.postExecutionSuccessText,
         postExecutionFailureText: node.postExecutionFailureText,
         executable: node.executable,
+        device: node.device,
         actions: node.actions.map((action: MissionNodeAction) =>
           action.toJSON(),
         ),

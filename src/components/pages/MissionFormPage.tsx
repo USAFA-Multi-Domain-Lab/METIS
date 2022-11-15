@@ -194,9 +194,9 @@ export default function MissionFormPage(props: {
 
     let className: string = 'MissionFormPage'
 
-    if (selectedNode !== null || nodeStructuringIsActive) {
-      className += ' SidePanelIsExpanded'
-    }
+    // if (selectedNode !== null || nodeStructuringIsActive) {
+    //   className += ' SidePanelIsExpanded'
+    // }
 
     return (
       <div className={className}>
@@ -244,6 +244,11 @@ export default function MissionFormPage(props: {
             applyNodeClassName={(node: MissionNode) => ''}
             renderNodeTooltipDescription={(node: MissionNode) => ''}
           />
+          <MissionDetails
+            active={selectedNode === null && !nodeStructuringIsActive}
+            mission={mission}
+            handleChange={handleChange}
+          />
           <NodeEntry
             node={selectedNode}
             handleChange={handleChange}
@@ -259,6 +264,49 @@ export default function MissionFormPage(props: {
             mission={mission}
             handleChange={handleChange}
             handleCloseRequest={() => activateNodeStructuring(false)}
+          />
+        </div>
+      </div>
+    )
+  } else {
+    return null
+  }
+}
+
+// This will render the basic editable
+// details of the mission itself.
+function MissionDetails(props: {
+  active: boolean
+  mission: Mission
+  handleChange: () => void
+}): JSX.Element | null {
+  let active: boolean = props.active
+  let mission: Mission = props.mission
+  let handleChange = props.handleChange
+
+  if (active) {
+    return (
+      <div className='MissionDetails SidePanel'>
+        <div className='BorderBox'>
+          <Detail
+            label='Name'
+            initialValue={mission.name}
+            deliverValue={(name: string) => {
+              mission.name = name
+              handleChange()
+            }}
+            key={`${mission.missionID}_name`}
+          />
+          <DetailNumber
+            label='Initial Tokens'
+            initialValue={mission.initialTokens}
+            deliverValue={(initialTokens: number | null) => {
+              if (initialTokens !== null) {
+                mission.initialTokens = initialTokens
+                handleChange()
+              }
+            }}
+            key={`${mission.missionID}_initialTokens`}
           />
         </div>
       </div>
