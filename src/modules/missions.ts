@@ -482,6 +482,7 @@ export function getMission(
         false,
       )
       callback(mission)
+
       callbackEditMission(
         mission.clone({
           method: EMissionCloneMethod.LikeOriginal,
@@ -526,6 +527,24 @@ export function saveMission(
     .then(callback)
     .catch((error: AxiosError) => {
       console.error('Failed to save mission.')
+      console.error(error)
+      callbackError(error)
+    })
+}
+
+// This will update the live parameter
+// for the given mission to the server.
+export function setLive(
+  missionID: string,
+  isLive: boolean,
+  callback: () => void,
+  callbackError: (error: Error) => void,
+): void {
+  axios
+    .put(`/api/v1/missions/`, { mission: { live: isLive } })
+    .then(callback)
+    .catch((error: AxiosError) => {
+      console.error('Mission failed to go live.')
       console.error(error)
       callbackError(error)
     })
@@ -588,5 +607,6 @@ export default {
   getMission,
   getAllMissions,
   saveMission,
+  setLive,
   deleteMission,
 }
