@@ -209,6 +209,12 @@ export default function MissionFormPage(props: {
             tooltipDescription='Go home.'
             showTooltip={true}
           />
+          <div
+            className='GoBack Link'
+            onClick={() => pageProps.goToPage('MissionSelectionPage', {})}
+          >
+            Done
+          </div>
           <div className='Logout Link' onClick={logout}>
             Sign out
           </div>

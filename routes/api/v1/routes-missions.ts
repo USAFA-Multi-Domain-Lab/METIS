@@ -122,7 +122,7 @@ router.put('/copy/', (request, response) => {
     let originalID: string = body.originalID
     let copyName: string = body.copyName
 
-    Mission.findOne({ originalID }, (error: any, mission: any) => {
+    Mission.findOne({ missionID: originalID }, (error: any, mission: any) => {
       if (error !== null) {
         return response.sendStatus(500)
       } else if (mission === null) {

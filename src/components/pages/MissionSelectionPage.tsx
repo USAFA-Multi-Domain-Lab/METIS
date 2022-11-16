@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useStore } from 'react-context-hook'
 import {
+  copyMission,
   EMissionCloneMethod,
   getAllMissions,
   getMission,
@@ -227,7 +228,16 @@ const MissionSelectionPage = (props: {
                         />
                         <Action
                           purpose={EActionPurpose.Copy}
-                          handleClick={() => {}}
+                          handleClick={() => {
+                            copyMission(
+                              mission.missionID,
+                              'Copied mission',
+                              (copy: Mission) => {
+                                console.log(copy)
+                              },
+                              () => {},
+                            )
+                          }}
                           tooltipDescription={'Copy mission'}
                         />
                         <div className='ToggleContainer'>
