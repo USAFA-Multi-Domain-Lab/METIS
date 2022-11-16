@@ -16,12 +16,14 @@ router.post('/', (request, response) => {
     if (
       'name' in missionData &&
       'versionNumber' in missionData &&
+      'live' in missionData &&
       'initialResources' in missionData &&
       'nodeStructure' in missionData &&
       'nodeData' in missionData
     ) {
       let name: any = missionData.name
       let versionNumber: any = missionData.versionNumber
+      let live: any = missionData.live
       let initialResources: any = missionData.initialResources
       let nodeStructure: any = missionData.nodeStructure
       let nodeData: any = missionData.nodeData
@@ -29,6 +31,7 @@ router.post('/', (request, response) => {
       let mission = new Mission({
         name,
         versionNumber,
+        live,
         initialResources,
         nodeStructure,
         nodeData,
@@ -128,6 +131,7 @@ router.put('/copy/', (request, response) => {
         let copy = new Mission({
           name: copyName,
           versionNumber: mission.versionNumber,
+          live: mission.live,
           initialResources: mission.initialResources,
           nodeStructure: mission.nodeStructure,
           nodeData: mission.nodeData,

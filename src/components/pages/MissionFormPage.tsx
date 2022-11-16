@@ -315,6 +315,14 @@ function MissionDetails(props: {
             }}
             key={`${mission.missionID}_name`}
           />
+          <DetailToggle
+            label={'Live'}
+            initialValue={mission.live}
+            deliverValue={(live: boolean) => {
+              mission.live = live
+              handleChange()
+            }}
+          />
           <DetailNumber
             label='Initial Resources'
             initialValue={mission.initialResources}

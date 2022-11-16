@@ -21,6 +21,7 @@ export interface IMissionJSON {
   missionID: string
   name: string
   versionNumber: number
+  live: boolean
   initialResources: number
   seed: string
   nodeStructure: AnyObject
@@ -41,6 +42,7 @@ export class Mission {
   missionID: string
   name: string
   versionNumber: number
+  live: boolean
   initialResources: number
   resources: number
   _originalNodeStructure: AnyObject
@@ -90,6 +92,7 @@ export class Mission {
     missionID: string,
     name: string,
     versionNumber: number,
+    live: boolean,
     initialResources: number,
     nodeStructure: AnyObject,
     nodeData: Array<AnyObject>,
@@ -99,6 +102,7 @@ export class Mission {
     this.missionID = missionID
     this.name = name
     this.versionNumber = versionNumber
+    this.live = live
     this.initialResources = initialResources
     this.resources = initialResources
     this._nodeStructure = nodeStructure
@@ -265,6 +269,7 @@ export class Mission {
       missionID: this.missionID,
       name: this.name,
       versionNumber: this.versionNumber,
+      live: this.live,
       initialResources: this.initialResources,
       seed: this.seed,
       nodeStructure: this.nodeStructure,
@@ -393,6 +398,7 @@ export class Mission {
           this.missionID,
           this.name,
           this.versionNumber,
+          this.live,
           this.initialResources,
           this._originalNodeStructure,
           this._originalNodeData,
@@ -405,6 +411,7 @@ export class Mission {
           this.missionID,
           this.name,
           this.versionNumber,
+          this.live,
           this.initialResources,
           this._exportNodeStructure(),
           this._exportNodeData(),
@@ -432,6 +439,7 @@ export function createMission(
         missionJson.missionID,
         missionJson.name,
         missionJson.versionNumber,
+        missionJson.live,
         missionJson.initialResources,
         missionJson.nodeStructure,
         missionJson.nodeData,
@@ -466,6 +474,7 @@ export function getMission(
         missionJson.missionID,
         missionJson.name,
         missionJson.versionNumber,
+        missionJson.live,
         missionJson.initialResources,
         missionJson.nodeStructure,
         missionJson.nodeData,
@@ -539,6 +548,7 @@ export function copyMission(
         missionJson.missionID,
         missionJson.name,
         missionJson.versionNumber,
+        missionJson.live,
         missionJson.initialResources,
         missionJson.nodeStructure,
         missionJson.nodeData,
