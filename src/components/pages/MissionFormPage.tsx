@@ -1,6 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { useStore } from 'react-context-hook'
-import { createMission, Mission, saveMission } from '../../modules/missions'
+import {
+  createMission,
+  getMission,
+  Mission,
+  saveMission,
+} from '../../modules/missions'
 import { EAjaxStatus } from '../../modules/toolbox/ajax'
 import usersModule, { IUser } from '../../modules/users'
 import Branding from '../content/Branding'
@@ -36,7 +41,7 @@ enum ENodeDropLocation {
 interface IMissionFormPageProps extends IPageProps {
   // If null, a new mission is being
   // created.
-  mission: Mission | null
+  missionID: string | null
 }
 
 // This will render a dashboard with a radar
@@ -75,23 +80,36 @@ export default function MissionFormPage(props: {
   // Equivalent of componentDidMount.
   useEffect(() => {
     if (!mountHandled && pageProps.isCurrentPage) {
-      let mission: Mission
       let existsInDatabase: boolean
+      let missionID: string | null = pageProps.missionID
 
       // Creating a new mission.
-      if (pageProps.mission === null) {
-        mission = new Mission('', 'New Mission', 1, 5, {}, [], '')
+      if (missionID === null) {
+        let mission = new Mission('', 'New Mission', 1, 5, {}, [], '')
+        setMission(mission)
         existsInDatabase = false
       }
       // Editing an existing mission.
       else {
-        mission = pageProps.mission
-        existsInDatabase = true
-      }
+        setLoadingMessage('')
 
-      setMission(mission)
-      setExistsInDatabase(existsInDatabase)
-      setMountHandled(true)
+        getMission(
+          () => {},
+          (mission: Mission) => {
+            setLastLoadingMessage('Initializing application...')
+            setLoadingMessage(null)
+            setMission(mission)
+            setMountHandled(true)
+          },
+          () => {
+            setErrorMessage('Failed to retrieve mission.')
+            setLoadingMessage(null)
+          },
+          missionID,
+        )
+        existsInDatabase = true
+        setExistsInDatabase(existsInDatabase)
+      }
     } else if (mountHandled && !pageProps.isCurrentPage) {
       setMountHandled(false)
     }
@@ -298,15 +316,15 @@ function MissionDetails(props: {
             key={`${mission.missionID}_name`}
           />
           <DetailNumber
-            label='Initial Tokens'
-            initialValue={mission.initialTokens}
-            deliverValue={(initialTokens: number | null) => {
-              if (initialTokens !== null) {
-                mission.initialTokens = initialTokens
+            label='Initial Resources'
+            initialValue={mission.initialResources}
+            deliverValue={(initialResources: number | null) => {
+              if (initialResources !== null) {
+                mission.initialResources = initialResources
                 handleChange()
               }
             }}
-            key={`${mission.missionID}_initialTokens`}
+            key={`${mission.missionID}_initialResources`}
           />
         </div>
       </div>

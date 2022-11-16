@@ -68,7 +68,7 @@
       font-size: 1em;
       max-height: 30vh;
       overflow-y: scroll;
-      width: 75%;
+      width: 50%;
 
       .HeadingContainer {
         position: sticky;
@@ -76,7 +76,7 @@
         background-color: black;
         width: 100%;
         overflow-x: hidden;
-        z-index: 100;
+        z-index: 50;
 
         .Heading {
           width: fill;
@@ -103,7 +103,7 @@
 
         .MissionName {
           padding: 10px 0 10px 20px;
-          width: calc(100% - 200px);
+          width: calc(100% - 10px);
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
@@ -156,6 +156,13 @@
       &.show {
         border-bottom-right-radius: 0px;
         border-bottom-left-radius: 0px;
+        width: 75%;
+
+        .IndividualMissionContainer {
+          .MissionName {
+            width: calc(100% - 200px);
+          }
+        }
 
         .ActionsContainer {
           display: flex;

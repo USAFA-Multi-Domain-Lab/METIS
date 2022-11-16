@@ -127,10 +127,7 @@ export default function GamePage(props: {
     const editMission = () => {
       if (currentUser !== null && mission !== null) {
         pageProps.goToPage('MissionFormPage', {
-          mission: mission.clone({
-            method: EMissionCloneMethod.LikeOriginal,
-            expandAll: true,
-          }),
+          missionID: mission.missionID,
         })
       }
     }
@@ -208,7 +205,7 @@ export default function GamePage(props: {
           // -- content --
           <div className='Content'>
             <div className='Resources'>
-              Resources remaining: {mission.tokens}
+              Resources remaining: {mission.resources}
             </div>
             <MissionMap
               mission={mission}
@@ -273,7 +270,6 @@ export default function GamePage(props: {
                 }
 
                 if (node.executable && node.executed) {
-                  console.log(node)
                   description =
                     `* Executed node in ${
                       (node.selectedAction?.processTime as number) / 1000

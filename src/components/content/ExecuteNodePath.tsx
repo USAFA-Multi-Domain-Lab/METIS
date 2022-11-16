@@ -45,7 +45,7 @@ const ExecuteNodePath = (props: {
     if (props.selectedNode !== null) {
       let selectedNode: MissionNode = props.selectedNode
 
-      if (mission.tokens > 0) {
+      if (mission.resources > 0) {
         setExecuteNodePathPromptIsDisplayed(false)
 
         selectedNode.execute((success: boolean) => {
@@ -86,9 +86,9 @@ const ExecuteNodePath = (props: {
         })
         runNodeLoadingBar(processTime)
         setActionDisplay([])
-        mission.tokens--
+        mission.resources--
       } else {
-        props.pageProps.notify(`You have no more resources to spend.`, 3000)
+        props.notify(`You have no more resources to spend.`, 3000)
       }
     }
   }

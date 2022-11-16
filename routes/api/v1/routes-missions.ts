@@ -16,20 +16,20 @@ router.post('/', (request, response) => {
     if (
       'name' in missionData &&
       'versionNumber' in missionData &&
-      'initialTokens' in missionData &&
+      'initialResources' in missionData &&
       'nodeStructure' in missionData &&
       'nodeData' in missionData
     ) {
       let name: any = missionData.name
       let versionNumber: any = missionData.versionNumber
-      let initialTokens: any = missionData.initialTokens
+      let initialResources: any = missionData.initialResources
       let nodeStructure: any = missionData.nodeStructure
       let nodeData: any = missionData.nodeData
 
       let mission = new Mission({
         name,
         versionNumber,
-        initialTokens,
+        initialResources,
         nodeStructure,
         nodeData,
       })
@@ -119,7 +119,7 @@ router.put('/copy/', (request, response) => {
     let originalID: string = body.originalID
     let copyName: string = body.copyName
 
-    Mission.findOne({ originalID }, (error: any, mission: any) => {
+    Mission.findOne({ missionID: originalID }, (error: any, mission: any) => {
       if (error !== null) {
         return response.sendStatus(500)
       } else if (mission === null) {
@@ -128,7 +128,7 @@ router.put('/copy/', (request, response) => {
         let copy = new Mission({
           name: copyName,
           versionNumber: mission.versionNumber,
-          initialTokens: mission.initialTokens,
+          initialResources: mission.initialResources,
           nodeStructure: mission.nodeStructure,
           nodeData: mission.nodeData,
         })
@@ -152,10 +152,10 @@ router.put('/copy/', (request, response) => {
 // -- DELETE | /api/v1/missions/ --
 // This will delete a mission.
 router.delete('/', (request, response) => {
-  let body: any = request.body
+  let query: any = request.query
 
-  if ('missionID' in body) {
-    let missionID: any = body.missionID
+  if ('missionID' in query) {
+    let missionID: any = query.missionID
 
     if (typeof missionID === 'string') {
       Mission.deleteOne({ missionID }, (error: any) => {

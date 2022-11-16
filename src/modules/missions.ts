@@ -21,7 +21,7 @@ export interface IMissionJSON {
   missionID: string
   name: string
   versionNumber: number
-  initialTokens: number
+  initialResources: number
   seed: string
   nodeStructure: AnyObject
   nodeData: Array<AnyObject>
@@ -41,8 +41,8 @@ export class Mission {
   missionID: string
   name: string
   versionNumber: number
-  initialTokens: number
-  tokens: number
+  initialResources: number
+  resources: number
   _originalNodeStructure: AnyObject
   _originalNodeData: Array<AnyObject>
   _nodeStructure: AnyObject
@@ -90,7 +90,7 @@ export class Mission {
     missionID: string,
     name: string,
     versionNumber: number,
-    initialTokens: number,
+    initialResources: number,
     nodeStructure: AnyObject,
     nodeData: Array<AnyObject>,
     seed: string,
@@ -99,8 +99,8 @@ export class Mission {
     this.missionID = missionID
     this.name = name
     this.versionNumber = versionNumber
-    this.initialTokens = initialTokens
-    this.tokens = initialTokens
+    this.initialResources = initialResources
+    this.resources = initialResources
     this._nodeStructure = nodeStructure
     this._nodeData = nodeData
     this._originalNodeStructure = nodeStructure
@@ -265,7 +265,7 @@ export class Mission {
       missionID: this.missionID,
       name: this.name,
       versionNumber: this.versionNumber,
-      initialTokens: this.initialTokens,
+      initialResources: this.initialResources,
       seed: this.seed,
       nodeStructure: this.nodeStructure,
       nodeData: this.nodeData,
@@ -393,7 +393,7 @@ export class Mission {
           this.missionID,
           this.name,
           this.versionNumber,
-          this.initialTokens,
+          this.initialResources,
           this._originalNodeStructure,
           this._originalNodeData,
           this.seed,
@@ -405,7 +405,7 @@ export class Mission {
           this.missionID,
           this.name,
           this.versionNumber,
-          this.initialTokens,
+          this.initialResources,
           this._exportNodeStructure(),
           this._exportNodeData(),
           this.seed,
@@ -432,7 +432,7 @@ export function createMission(
         missionJson.missionID,
         missionJson.name,
         missionJson.versionNumber,
-        missionJson.initialTokens,
+        missionJson.initialResources,
         missionJson.nodeStructure,
         missionJson.nodeData,
         missionJson.seed,
@@ -453,6 +453,7 @@ export function createMission(
 // on the data it returns
 export function getMission(
   callback: (mission: Mission) => void,
+  callbackEditMission: (mission: Mission) => void,
   callbackError: (error: AxiosError) => void = () => {},
   selectedMissionIDValue: string,
 ): void {
@@ -465,13 +466,19 @@ export function getMission(
         missionJson.missionID,
         missionJson.name,
         missionJson.versionNumber,
-        missionJson.initialTokens,
+        missionJson.initialResources,
         missionJson.nodeStructure,
         missionJson.nodeData,
         missionJson.seed,
         false,
       )
       callback(mission)
+      callbackEditMission(
+        mission.clone({
+          method: EMissionCloneMethod.LikeOriginal,
+          expandAll: true,
+        }),
+      )
     })
     .catch((error: AxiosError) => {
       console.error('Failed to retrieve mission.')
@@ -532,7 +539,7 @@ export function copyMission(
         missionJson.missionID,
         missionJson.name,
         missionJson.versionNumber,
-        missionJson.initialTokens,
+        missionJson.initialResources,
         missionJson.nodeStructure,
         missionJson.nodeData,
         missionJson.seed,
@@ -551,7 +558,7 @@ export function copyMission(
 // This will delete the mission with
 // the given missionID.
 export function deleteMission(
-  missionID: number,
+  missionID: string,
   callback: () => void,
   callbackError: (error: Error) => void,
 ): void {

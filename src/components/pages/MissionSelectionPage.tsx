@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { useStore } from 'react-context-hook'
 import {
+  copyMission,
+  deleteMission,
   EMissionCloneMethod,
   getAllMissions,
   getMission,
@@ -105,6 +107,7 @@ const MissionSelectionPage = (props: {
           setLastLoadingMessage('Initializing application...')
           setLoadingMessage(null)
         },
+        () => {},
         () => {
           setErrorMessage('Failed to retrieve mission.')
           setLoadingMessage(null)
@@ -157,7 +160,7 @@ const MissionSelectionPage = (props: {
     // This will start the process for
     //creating a new mission.
     const createMission = (): void => {
-      pageProps.goToPage('MissionFormPage', { mission: null })
+      pageProps.goToPage('MissionFormPage', { missionID: null })
     }
 
     /* -- RENDER -- */
@@ -171,6 +174,8 @@ const MissionSelectionPage = (props: {
     let navClassName: string = 'Navigation'
     let editMissionsContainerClassName: string = 'EditMissionsContainer'
     let editMissionListClassName: string = 'MissionList'
+    let individualMissionContainerClassName: string =
+      'IndividualMissionContainer'
 
     if (currentUser !== null) {
       navClassName += ' SignOut'
@@ -202,55 +207,101 @@ const MissionSelectionPage = (props: {
                 <div className='Heading'>Select your mission:</div>
               </div>
               {missions.map((mission: Mission) => {
-                if (mission !== null) {
-                  return (
+                return (
+                  <div
+                    className={individualMissionContainerClassName}
+                    key={mission.missionID}
+                  >
                     <div
-                      className='IndividualMissionContainer'
-                      key={mission.missionID}
+                      className='MissionName'
+                      onClick={() => selectMission(mission.missionID)}
                     >
-                      <div
-                        className='MissionName'
-                        onClick={() => selectMission(mission.missionID)}
-                      >
-                        {number.count++}. {mission.name}
-                      </div>
-                      <div className='ActionsContainer'>
-                        <Action
-                          purpose={EActionPurpose.Edit}
-                          handleClick={() => {}}
-                          tooltipDescription={'Edit mission'}
+                      {number.count++}. {mission.name}
+                    </div>
+                    <div className='ActionsContainer'>
+                      <Action
+                        purpose={EActionPurpose.Edit}
+                        handleClick={() => {
+                          setLoadingMessage('')
+
+                          pageProps.goToPage('MissionFormPage', {
+                            missionID: mission.missionID,
+                          })
+                          setLastLoadingMessage('Initializing application...')
+                          setLoadingMessage(null)
+                        }}
+                        tooltipDescription={'Edit mission'}
+                      />
+                      <Action
+                        purpose={EActionPurpose.Remove}
+                        handleClick={() => {
+                          pageProps.confirm(
+                            'Are you sure you want to delete this mission?',
+                            () => {
+                              deleteMission(
+                                mission.missionID,
+                                () => {
+                                  pageProps.notify(
+                                    `Successfully deleted ${mission.name}.`,
+                                    3000,
+                                  )
+                                },
+                                () => {
+                                  pageProps.notify(
+                                    `Failed to delete ${mission.name}.`,
+                                    3000,
+                                  )
+                                },
+                              )
+                            },
+                          )
+                        }}
+                        tooltipDescription={'Remove mission'}
+                      />
+                      <Action
+                        purpose={EActionPurpose.Copy}
+                        handleClick={() => {
+                          pageProps.confirm(
+                            'Enter the name of the new mission.',
+                            () => {
+                              copyMission(
+                                mission.missionID,
+                                mission.name,
+                                () => {
+                                  pageProps.notify(
+                                    `Successfully copied ${mission.name}.`,
+                                    3000,
+                                  )
+                                },
+                                () => {
+                                  pageProps.notify(
+                                    `Failed to copy ${mission.name}.`,
+                                    3000,
+                                  )
+                                },
+                              )
+                            },
+                            {
+                              requireEntry: true,
+                              entryLabel: 'Name',
+                            },
+                          )
+                        }}
+                        tooltipDescription={'Copy mission'}
+                      />
+                      <div className='ToggleContainer'>
+                        <Toggle
+                          initiallyActivated={false}
+                          deliverValue={() =>
+                            // mission.live === true
+                            true
+                          }
                         />
-                        <Action
-                          purpose={EActionPurpose.Remove}
-                          handleClick={() => {
-                            pageProps.confirm(
-                              'Are you sure you want to delete this mission?',
-                              () => {},
-                            )
-                          }}
-                          tooltipDescription={'Remove mission'}
-                        />
-                        <Action
-                          purpose={EActionPurpose.Copy}
-                          handleClick={() => {
-                            pageProps.confirm(
-                              'Enter the name of the new mission.',
-                              () => {},
-                            )
-                          }}
-                          tooltipDescription={'Copy mission'}
-                        />
-                        <div className='ToggleContainer'>
-                          <Toggle
-                            initiallyActivated={false}
-                            deliverValue={() => true}
-                          />
-                          <Tooltip description='This will allow students the ability to access this mission or not.' />
-                        </div>
+                        <Tooltip description='This will allow students the ability to access this mission or not.' />
                       </div>
                     </div>
-                  )
-                }
+                  </div>
+                )
               })}
             </div>
           </div>
