@@ -85,7 +85,7 @@ export default function MissionFormPage(props: {
 
       // Creating a new mission.
       if (missionID === null) {
-        let mission = new Mission('', 'New Mission', 1, 5, {}, [], '')
+        let mission = new Mission('', 'New Mission', 1, false, 5, {}, [], '')
         setMission(mission)
         existsInDatabase = false
       }
