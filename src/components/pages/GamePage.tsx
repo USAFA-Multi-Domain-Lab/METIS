@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useStore } from 'react-context-hook'
-import { Mission } from '../../modules/missions'
+import { getMission, Mission } from '../../modules/missions'
 import { EAjaxStatus } from '../../modules/toolbox/ajax'
 import usersModule, { IUser } from '../../modules/users'
 import Branding from '../content/Branding'
@@ -15,7 +15,7 @@ import { MissionNodeAction } from '../../modules/mission-node-actions'
 import { MissionNode } from '../../modules/mission-nodes'
 
 interface IGamePageProps extends IPageProps {
-  mission: Mission
+  missionID: string
 }
 
 // This will render a dashboard with a radar
@@ -55,6 +55,7 @@ export default function GamePage(props: {
   /* -- COMPONENT STATE -- */
 
   const [mountHandled, setMountHandled] = useState<boolean>(false)
+  const [mission, setMission] = useState<Mission | null>(null)
   const [lastSelectedNode, setLastSelectedNode] = useState<MissionNode | null>(
     null,
   )
@@ -64,15 +65,27 @@ export default function GamePage(props: {
   // Equivalent of componentDidMount.
   useEffect(() => {
     if (!mountHandled && pageProps.isCurrentPage) {
-      setMountHandled(true)
+      setLoadingMessage('Loading mission...')
+      getMission(
+        pageProps.missionID,
+        (mission: Mission) => {
+          setLoadingMessage(null)
+          setLastLoadingMessage('Loading mission...')
+          setMission(mission)
+          setMountHandled(true)
+        },
+        (error: Error) => {
+          setErrorMessage('Failed to load mission.')
+          setMountHandled(true)
+        },
+      )
     } else if (mountHandled && !pageProps.isCurrentPage) {
+      setMission(null)
       setMountHandled(false)
     }
   }, [mountHandled, pageProps.isCurrentPage])
 
-  if (pageProps.show) {
-    let mission: Mission = pageProps.mission
-
+  if (pageProps.show && mission !== null) {
     /* -- COMPONENTS -- */
 
     /* -- COMPONENT FUNCTIONS -- */
@@ -88,9 +101,9 @@ export default function GamePage(props: {
           setLoadingMessage(null)
           pageProps.goToPage('AuthPage', {
             goBackPagePath: 'GamePage',
-            goBackPageProps: { mission },
+            goBackPageProps: { missionID: mission.missionID },
             postLoginPagePath: 'GamePage',
-            postLoginPageProps: { mission },
+            postLoginPageProps: { missionID: mission.missionID },
           })
         },
         () => {
@@ -106,9 +119,9 @@ export default function GamePage(props: {
       if (currentUser === null) {
         pageProps.goToPage('AuthPage', {
           goBackPagePath: 'GamePage',
-          goBackPageProps: { mission },
+          goBackPageProps: { missionID: mission.missionID },
           postLoginPagePath: 'GamePage',
-          postLoginPageProps: { mission },
+          postLoginPageProps: { missionID: mission.missionID },
         })
       }
     }

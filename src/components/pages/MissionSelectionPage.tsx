@@ -98,24 +98,10 @@ const MissionSelectionPage = (props: {
     // This loads the mission in session from the database
     // and stores it in a global state to be used on the GamePage
     // where the Mission Map renders
-    const selectMission = (missionIDValue: string) => {
-      setLoadingMessage('')
-
-      getMission(
-        (selectedMission: Mission) => {
-          pageProps.goToPage('GamePage', {
-            mission: selectedMission,
-          })
-          setLastLoadingMessage('Initializing application...')
-          setLoadingMessage(null)
-        },
-        () => {},
-        () => {
-          setErrorMessage('Failed to retrieve mission.')
-          setLoadingMessage(null)
-        },
-        missionIDValue,
-      )
+    const selectMission = (missionID: string) => {
+      pageProps.goToPage('GamePage', {
+        missionID,
+      })
       setConsoleOutputs([])
       setOutputPanelIsDisplayed(false)
       setExecuteNodePathPromptIsDisplayed(false)

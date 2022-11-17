@@ -460,13 +460,13 @@ export function createMission(
 // and creates a specific mission based
 // on the data it returns
 export function getMission(
+  missionID: string,
   callback: (mission: Mission) => void,
-  callbackEditMission: (mission: Mission) => void,
   callbackError: (error: AxiosError) => void = () => {},
-  selectedMissionIDValue: string,
+  options: { expandAllNodes?: boolean } = {},
 ): void {
   axios
-    .get(`/api/v1/missions?missionID=${selectedMissionIDValue}`)
+    .get(`/api/v1/missions?missionID=${missionID}`)
     .then((response: AxiosResponse<AnyObject>): void => {
       let missionJson = response.data.mission
 
@@ -479,16 +479,9 @@ export function getMission(
         missionJson.nodeStructure,
         missionJson.nodeData,
         missionJson.seed,
-        false,
+        options.expandAllNodes === true,
       )
       callback(mission)
-
-      callbackEditMission(
-        mission.clone({
-          method: EMissionCloneMethod.LikeOriginal,
-          expandAll: true,
-        }),
-      )
     })
     .catch((error: AxiosError) => {
       console.error('Failed to retrieve mission.')

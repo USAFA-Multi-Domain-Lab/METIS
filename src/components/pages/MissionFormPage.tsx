@@ -68,11 +68,11 @@ export default function MissionFormPage(props: {
 
   const [mountHandled, setMountHandled] = useState<boolean>()
   const [forcedUpdateCounter, setForcedUpdateCounter] = useState<number>(0)
+  const [mission, setMission] = useState<Mission | null>(null)
   const [areUnsavedChanges, setAreUnsavedChanges] = useState<boolean>(false)
   const [selectedNode, selectNode] = useState<MissionNode | null>(null)
   const [nodeStructuringIsActive, activateNodeStructuring] =
     useState<boolean>(false)
-  const [mission, setMission] = useState<Mission | null>(null)
   const [existsInDatabase, setExistsInDatabase] = useState<boolean>(false)
 
   /* -- COMPONENT EFFECTS -- */
@@ -94,7 +94,7 @@ export default function MissionFormPage(props: {
         setLoadingMessage('')
 
         getMission(
-          () => {},
+          missionID,
           (mission: Mission) => {
             setLastLoadingMessage('Initializing application...')
             setLoadingMessage(null)
@@ -105,12 +105,18 @@ export default function MissionFormPage(props: {
             setErrorMessage('Failed to retrieve mission.')
             setLoadingMessage(null)
           },
-          missionID,
+          { expandAllNodes: true },
         )
         existsInDatabase = true
         setExistsInDatabase(existsInDatabase)
       }
     } else if (mountHandled && !pageProps.isCurrentPage) {
+      setForcedUpdateCounter(0)
+      setMission(null)
+      setAreUnsavedChanges(false)
+      selectNode(null)
+      activateNodeStructuring(false)
+      setExistsInDatabase(false)
       setMountHandled(false)
     }
   }, [mountHandled, pageProps.isCurrentPage])
@@ -249,8 +255,8 @@ export default function MissionFormPage(props: {
                   (concludeAction: () => void) => {
                     save(
                       () => {
-                        concludeAction()
                         pageProps.goToPage('MissionSelectionPage', {})
+                        concludeAction()
                       },
                       () => {
                         concludeAction()
@@ -259,8 +265,8 @@ export default function MissionFormPage(props: {
                   },
                   {
                     handleAlternate: (concludeAction: () => void) => {
-                      concludeAction()
                       pageProps.goToPage('MissionSelectionPage', {})
+                      concludeAction()
                     },
                     pendingMessageUponConfirm: 'Saving...',
                     pendingMessageUponAlternate: 'Discarding...',
@@ -277,15 +283,17 @@ export default function MissionFormPage(props: {
             className='PlayTest Link'
             onClick={() => {
               if (!areUnsavedChanges) {
-                pageProps.goToPage('MissionSelectionPage', {})
+                pageProps.goToPage('GamePage', { missionID: mission.missionID })
               } else {
                 pageProps.confirm(
                   'You have unsaved changes. What do you want to do with them?',
                   (concludeAction: () => void) => {
                     save(
                       () => {
+                        pageProps.goToPage('GamePage', {
+                          missionID: mission.missionID,
+                        })
                         concludeAction()
-                        pageProps.goToPage('GamePage', { mission })
                       },
                       () => {
                         concludeAction()
@@ -294,8 +302,10 @@ export default function MissionFormPage(props: {
                   },
                   {
                     handleAlternate: (concludeAction: () => void) => {
+                      pageProps.goToPage('GamePage', {
+                        missionID: mission.missionID,
+                      })
                       concludeAction()
-                      pageProps.goToPage('GamePage', { mission })
                     },
                     pendingMessageUponConfirm: 'Saving...',
                     pendingMessageUponAlternate: 'Discarding...',

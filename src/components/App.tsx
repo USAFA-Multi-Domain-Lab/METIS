@@ -14,7 +14,7 @@ import { AnyObject } from '../modules/toolbox/objects'
 import Notification from '../modules/notifications'
 import NotificationBubble from './content/NotificationBubble'
 import Confirmation, { IConfirmation } from './content/Confirmation'
-import { AjaxStatus } from './content/AjaxStatusDisplay'
+import { EAjaxStatus } from '../modules/toolbox/ajax'
 
 // Options available when confirming
 // an action using page props.
@@ -132,14 +132,14 @@ function StandardPage(props: {
     options: IConfirmOptions = {},
   ): void => {
     let confirmation: IConfirmation = {
-      confirmAjaxStatus: AjaxStatus.Inactive,
-      alternateAjaxStatus: AjaxStatus.Inactive,
+      confirmAjaxStatus: EAjaxStatus.NotLoaded,
+      alternateAjaxStatus: EAjaxStatus.NotLoaded,
       active: true,
       confirmationMessage: message,
       handleConfirmation: (entry: string) => {
         setConfirmation({
           ...confirmation,
-          confirmAjaxStatus: AjaxStatus.Pending,
+          confirmAjaxStatus: EAjaxStatus.Loading,
         })
         handleConfirmation(() => {
           setConfirmation(null)
@@ -150,7 +150,7 @@ function StandardPage(props: {
             if (options.handleAlternate) {
               setConfirmation({
                 ...confirmation,
-                alternateAjaxStatus: AjaxStatus.Pending,
+                alternateAjaxStatus: EAjaxStatus.Loading,
               })
               options.handleAlternate(() => {
                 setConfirmation(null)
