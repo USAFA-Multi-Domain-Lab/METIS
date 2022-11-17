@@ -7,6 +7,7 @@ import {
   getAllMissions,
   getMission,
   Mission,
+  setLive,
 } from '../../modules/missions'
 import { IPageProps } from '../App'
 import Branding from '../content/Branding'
@@ -15,8 +16,9 @@ import './MissionSelectionPage.scss'
 import { MissionNodeAction } from '../../modules/mission-node-actions'
 import { Counter } from '../../modules/numbers'
 import { Action, EActionPurpose } from '../content/Action'
-import Toggle from '../content/Toggle'
+import Toggle, { EToggleLockState } from '../content/Toggle'
 import Tooltip from '../content/Tooltip'
+import { Detail } from '../content/Form'
 
 interface IMissionSelectionPageProps extends IPageProps {}
 
@@ -243,13 +245,14 @@ const MissionSelectionPage = (props: {
                                 () => {
                                   pageProps.notify(
                                     `Successfully deleted ${mission.name}.`,
-                                    3000,
+                                    1000,
                                   )
+                                  setMountHandled(false)
                                 },
                                 () => {
                                   pageProps.notify(
                                     `Failed to delete ${mission.name}.`,
-                                    3000,
+                                    1000,
                                   )
                                 },
                               )
@@ -263,23 +266,26 @@ const MissionSelectionPage = (props: {
                         handleClick={() => {
                           pageProps.confirm(
                             'Enter the name of the new mission.',
-                            () => {
-                              copyMission(
-                                mission.missionID,
-                                mission.name,
-                                () => {
-                                  pageProps.notify(
-                                    `Successfully copied ${mission.name}.`,
-                                    3000,
-                                  )
-                                },
-                                () => {
-                                  pageProps.notify(
-                                    `Failed to copy ${mission.name}.`,
-                                    3000,
-                                  )
-                                },
-                              )
+                            (entry?: string) => {
+                              if (entry !== undefined) {
+                                copyMission(
+                                  mission.missionID,
+                                  entry,
+                                  () => {
+                                    pageProps.notify(
+                                      `Successfully copied ${mission.name}.`,
+                                      1000,
+                                    )
+                                    setMountHandled(false)
+                                  },
+                                  () => {
+                                    pageProps.notify(
+                                      `Failed to copy ${mission.name}.`,
+                                      1000,
+                                    )
+                                  },
+                                )
+                              }
                             },
                             {
                               requireEntry: true,
@@ -291,11 +297,46 @@ const MissionSelectionPage = (props: {
                       />
                       <div className='ToggleContainer'>
                         <Toggle
-                          initiallyActivated={false}
-                          deliverValue={() =>
-                            // mission.live === true
-                            true
-                          }
+                          initiallyActivated={mission.live}
+                          // lockState={
+                          //   mission
+                          //     ? EToggleLockState.Unlocked
+                          //     : EToggleLockState.LockedDeactivation
+                          // }
+                          deliverValue={(live: boolean) => {
+                            mission.live = live
+
+                            setLive(
+                              mission.missionID,
+                              live,
+                              () => {
+                                if (live) {
+                                  pageProps.notify(
+                                    'Mission was successfully turned on.',
+                                    3000,
+                                  )
+                                } else {
+                                  pageProps.notify(
+                                    'Mission was successfully turned off.',
+                                    3000,
+                                  )
+                                }
+                              },
+                              () => {
+                                if (live) {
+                                  pageProps.notify(
+                                    'Mission failed to turn on.',
+                                    3000,
+                                  )
+                                } else {
+                                  pageProps.notify(
+                                    'Mission failed to turn off.',
+                                    3000,
+                                  )
+                                }
+                              },
+                            )
+                          }}
                         />
                         <Tooltip description='This will allow students the ability to access this mission or not.' />
                       </div>
@@ -312,6 +353,12 @@ const MissionSelectionPage = (props: {
               tooltipDescription={'Create new mission'}
               uniqueClassName={'NewMissionButton'}
             />
+            {/* <Action
+              purpose={EActionPurpose.Save}
+              handleClick={() => {}}
+              tooltipDescription={'Save Changes'}
+              uniqueClassName={'SaveButton'}
+            /> */}
           </div>
         </div>
 
