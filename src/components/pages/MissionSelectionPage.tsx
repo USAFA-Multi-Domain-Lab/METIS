@@ -3,7 +3,6 @@ import { useStore } from 'react-context-hook'
 import {
   copyMission,
   deleteMission,
-  EMissionCloneMethod,
   getAllMissions,
   getMission,
   Mission,
@@ -18,7 +17,7 @@ import { Counter } from '../../modules/numbers'
 import { Action, EActionPurpose } from '../content/Action'
 import Toggle, { EToggleLockState } from '../content/Toggle'
 import Tooltip from '../content/Tooltip'
-import { Detail } from '../content/Form'
+import { EAjaxStatus } from '../../modules/toolbox/ajax'
 
 interface IMissionSelectionPageProps extends IPageProps {}
 
@@ -59,6 +58,9 @@ const MissionSelectionPage = (props: {
 
   const [mountHandled, setMountHandled] = useState<boolean>(false)
   const [missions, setMissions] = useState<Array<Mission>>([])
+  const [liveAjaxStatus, setLiveAjaxStatus] = useState<EAjaxStatus>(
+    EAjaxStatus.NotLoaded,
+  )
 
   /* -- COMPONENT EFFECTS -- */
 
@@ -176,8 +178,6 @@ const MissionSelectionPage = (props: {
     let navClassName: string = 'Navigation'
     let editMissionsContainerClassName: string = 'EditMissionsContainer'
     let editMissionListClassName: string = 'MissionList'
-    let individualMissionContainerClassName: string =
-      'IndividualMissionContainer'
 
     if (currentUser !== null) {
       navClassName += ' SignOut'
@@ -212,6 +212,8 @@ const MissionSelectionPage = (props: {
                 // Logic for missions to appear/disappear for students
                 // based on what the instructor sets the individual
                 // mission to.
+                let individualMissionContainerClassName: string =
+                  'IndividualMissionContainer'
                 if (mission.live) {
                   individualMissionContainerClassName += ' show'
                 } else if (currentUser !== null) {
@@ -219,6 +221,20 @@ const MissionSelectionPage = (props: {
                 } else {
                   individualMissionContainerClassName =
                     'IndividualMissionContainer'
+                }
+
+                // Logic that will lock the mission toggle while a request is being sent
+                // to set the mission.live paramter
+                let lockLiveToggle: EToggleLockState = EToggleLockState.Unlocked
+                if (liveAjaxStatus === EAjaxStatus.Loading && mission.live) {
+                  lockLiveToggle = EToggleLockState.LockedActivation
+                } else if (
+                  liveAjaxStatus === EAjaxStatus.Loading &&
+                  !mission.live
+                ) {
+                  lockLiveToggle = EToggleLockState.LockedDeactivation
+                } else {
+                  lockLiveToggle = EToggleLockState.Unlocked
                 }
 
                 return (
@@ -310,11 +326,7 @@ const MissionSelectionPage = (props: {
                       <div className='ToggleContainer'>
                         <Toggle
                           initiallyActivated={mission.live}
-                          // lockState={
-                          //   mission.requestInProgress
-                          //     ? EToggleLockState.Unlocked
-                          //     : EToggleLockState.LockedDeactivation
-                          // }
+                          lockState={lockLiveToggle}
                           deliverValue={(live: boolean) => {
                             mission.live = live
 
@@ -324,31 +336,35 @@ const MissionSelectionPage = (props: {
                               () => {
                                 if (live) {
                                   pageProps.notify(
-                                    'Mission was successfully turned on.',
+                                    `${mission.name} was successfully turned on.`,
                                     3000,
                                   )
+                                  setLiveAjaxStatus(EAjaxStatus.Loaded)
                                 } else {
                                   pageProps.notify(
-                                    'Mission was successfully turned off.',
+                                    `${mission.name} was successfully turned off.`,
                                     3000,
                                   )
+                                  setLiveAjaxStatus(EAjaxStatus.Loaded)
                                 }
                               },
                               () => {
                                 if (live) {
                                   pageProps.notify(
-                                    'Mission failed to turn on.',
+                                    `${mission.name} failed to turn on.`,
                                     3000,
                                   )
+                                  setLiveAjaxStatus(EAjaxStatus.Error)
                                 } else {
                                   pageProps.notify(
-                                    'Mission failed to turn off.',
+                                    `${mission.name} failed to turn off.`,
                                     3000,
                                   )
+                                  setLiveAjaxStatus(EAjaxStatus.Error)
                                 }
                               },
                             )
-                            // Mission.setRequestInProgress()
+                            setLiveAjaxStatus(EAjaxStatus.Loading)
                           }}
                         />
                         <Tooltip description='This will allow students the ability to access this mission or not.' />
