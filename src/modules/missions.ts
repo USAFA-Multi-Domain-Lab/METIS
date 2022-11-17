@@ -5,6 +5,7 @@ import axios, { AxiosError, AxiosResponse } from 'axios'
 import { AnyObject } from './toolbox/objects'
 import { MissionNode } from './mission-nodes'
 import { MissionNodeAction } from './mission-node-actions'
+import { AjaxStatus } from '../components/content/AjaxStatusDisplay'
 
 // This is the method that the clone
 // function in the Mission class uses
@@ -39,6 +40,9 @@ export interface IMissionCloneOptions {
 // This represents a mission for a
 // student to complete.
 export class Mission {
+  static setRequestInProgress() {
+    throw new Error('Method not implemented.')
+  }
   missionID: string
   name: string
   versionNumber: number
@@ -58,6 +62,7 @@ export class Mission {
   structureChangeKey: string
   structureChangeHandlers: Array<(structureChangeKey: string) => void>
   _disableNodes: boolean
+  _requestInProgress: boolean
 
   // This will return the node
   // structure for the mission,
@@ -86,6 +91,10 @@ export class Mission {
 
   get disableNodes(): boolean {
     return this._disableNodes
+  }
+
+  get requestInProgress(): boolean {
+    return this._requestInProgress
   }
 
   constructor(
@@ -131,6 +140,7 @@ export class Mission {
     this._nodeDataLastChangeKey = this.structureChangeKey
     this.structureChangeHandlers = []
     this._disableNodes = false
+    this._requestInProgress = this.requestInProgress
 
     this._importNodeData(nodeData)
     this._importNodeStructure(nodeStructure, this.rootNode, expandAll)
@@ -421,6 +431,16 @@ export class Mission {
         break
     }
   }
+
+  setRequestInProgress(): boolean {
+    if (!this.requestInProgress) {
+      this._requestInProgress = true
+      return this.requestInProgress
+    } else {
+      this._requestInProgress = false
+      return this.requestInProgress
+    }
+  }
 }
 
 // This will create a brand new mission.
@@ -544,7 +564,10 @@ export function setLive(
     .put(`/api/v1/missions/`, {
       mission: { missionID: missionID, live: isLive },
     })
-    .then(callback)
+    .then(() => {
+      // Mission.setRequestInProgress()
+      callback()
+    })
     .catch((error: AxiosError) => {
       console.error('Mission failed to go live.')
       console.error(error)

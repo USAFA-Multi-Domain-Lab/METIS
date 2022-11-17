@@ -209,6 +209,18 @@ const MissionSelectionPage = (props: {
                 <div className='Heading'>Select your mission:</div>
               </div>
               {missions.map((mission: Mission) => {
+                // Logic for missions to appear/disappear for students
+                // based on what the instructor sets the individual
+                // mission to.
+                if (mission.live) {
+                  individualMissionContainerClassName += ' show'
+                } else if (currentUser !== null) {
+                  individualMissionContainerClassName += ' show'
+                } else {
+                  individualMissionContainerClassName =
+                    'IndividualMissionContainer'
+                }
+
                 return (
                   <div
                     className={individualMissionContainerClassName}
@@ -299,7 +311,7 @@ const MissionSelectionPage = (props: {
                         <Toggle
                           initiallyActivated={mission.live}
                           // lockState={
-                          //   mission
+                          //   mission.requestInProgress
                           //     ? EToggleLockState.Unlocked
                           //     : EToggleLockState.LockedDeactivation
                           // }
@@ -336,6 +348,7 @@ const MissionSelectionPage = (props: {
                                 }
                               },
                             )
+                            // Mission.setRequestInProgress()
                           }}
                         />
                         <Tooltip description='This will allow students the ability to access this mission or not.' />
