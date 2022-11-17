@@ -20,8 +20,13 @@ import { AjaxStatus } from './content/AjaxStatusDisplay'
 // an action using page props.
 export interface IConfirmOptions {
   requireEntry?: boolean
+  handleAlternate?: (concludeAction: () => void, entry: string) => void
   entryLabel?: string
+  pendingMessageUponConfirm?: string
+  pendingMessageUponAlternate?: string
   buttonConfirmText?: string
+  buttonAlternateText?: string
+  buttonCancelText?: string
 }
 
 // Default props in every page props.
@@ -31,7 +36,7 @@ export interface IPageProps {
   notify: (message: string, duration: number | null) => Notification
   confirm: (
     message: string,
-    handleConfirmation: () => void,
+    handleConfirmation: (concludeAction: () => void, entry: string) => void,
     options?: IConfirmOptions,
   ) => void
   show: boolean
@@ -119,25 +124,58 @@ function StandardPage(props: {
   }
 
   // This will pop up a confirmation box
-  // to confirm some action.
+  // to confirm some action. concludeAction
+  // must be called by the handleConfirmation
+  // callback function to make the confirm
+  // box disappear.
   const confirm = (
     message: string,
-    handleConfirmation: (entry?: string) => {},
+    handleConfirmation: (concludeAction: () => void, entry: string) => {},
     options: IConfirmOptions = {},
   ): void => {
     let confirmation: IConfirmation = {
-      ...Confirmation.defaultProps,
-      ajaxStatus: AjaxStatus.Inactive,
+      confirmAjaxStatus: AjaxStatus.Inactive,
+      alternateAjaxStatus: AjaxStatus.Inactive,
       active: true,
       confirmationMessage: message,
-      handleConfirmation: (entry?: string) => {
-        handleConfirmation(entry)
-        setConfirmation(null)
+      handleConfirmation: (entry: string) => {
+        setConfirmation({
+          ...confirmation,
+          confirmAjaxStatus: AjaxStatus.Pending,
+        })
+        handleConfirmation(() => {
+          setConfirmation(null)
+        }, entry)
       },
+      handleAlternate: options.handleAlternate
+        ? (entry: string) => {
+            if (options.handleAlternate) {
+              setConfirmation({
+                ...confirmation,
+                alternateAjaxStatus: AjaxStatus.Pending,
+              })
+              options.handleAlternate(() => {
+                setConfirmation(null)
+              }, entry)
+            }
+          }
+        : null,
       handleCancelation: () => setConfirmation(null),
+      pendingMessageUponConfirm: options.pendingMessageUponConfirm
+        ? options.pendingMessageUponConfirm
+        : Confirmation.defaultProps.pendingMessageUponConfirm,
+      pendingMessageUponAlternate: options.pendingMessageUponAlternate
+        ? options.pendingMessageUponAlternate
+        : Confirmation.defaultProps.pendingMessageUponAlternate,
       buttonConfirmText: options.buttonConfirmText
         ? options.buttonConfirmText
         : Confirmation.defaultProps.buttonConfirmText,
+      buttonAlternateText: options.buttonAlternateText
+        ? options.buttonAlternateText
+        : Confirmation.defaultProps.buttonAlternateText,
+      buttonCancelText: options.buttonCancelText
+        ? options.buttonCancelText
+        : Confirmation.defaultProps.buttonCancelText,
       requireEntry: options.requireEntry === true,
       entryLabel: options.entryLabel
         ? options.entryLabel

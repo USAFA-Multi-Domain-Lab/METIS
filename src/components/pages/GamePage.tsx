@@ -17,7 +17,6 @@ import Notification from '../../modules/notifications'
 
 interface IGamePageProps extends IPageProps {
   mission: Mission
-  initialTokenCount: number
 }
 
 // This will render a dashboard with a radar
@@ -65,20 +64,12 @@ export default function GamePage(props: {
 
   // Equivalent of componentDidMount.
   useEffect(() => {
-    if (
-      !mountHandled &&
-      pageProps.isCurrentPage &&
-      pageProps.initialTokenCount !== undefined
-    ) {
+    if (!mountHandled && pageProps.isCurrentPage) {
       setMountHandled(true)
-    } else if (
-      mountHandled &&
-      !pageProps.isCurrentPage &&
-      pageProps.initialTokenCount === undefined
-    ) {
+    } else if (mountHandled && !pageProps.isCurrentPage) {
       setMountHandled(false)
     }
-  }, [mountHandled, pageProps.isCurrentPage, pageProps.initialTokenCount])
+  }, [mountHandled, pageProps.isCurrentPage])
 
   if (pageProps.show) {
     let mission: Mission = pageProps.mission

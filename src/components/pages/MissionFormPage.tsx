@@ -116,7 +116,10 @@ export default function MissionFormPage(props: {
 
     // This is called to save any changes
     // made.
-    const save = (): void => {
+    const save = (
+      callback: () => void = () => {},
+      callbackError: (error: Error) => void = () => {},
+    ): void => {
       if (areUnsavedChanges) {
         setAreUnsavedChanges(false)
 
@@ -128,10 +131,12 @@ export default function MissionFormPage(props: {
               pageProps.notify('Mission successfully saved.', 3000)
               setMission(resultingMission)
               setExistsInDatabase(true)
+              callback()
             },
             (error: Error) => {
               pageProps.notify('Mission failed to save', 3000)
               setAreUnsavedChanges(true)
+              callbackError(error)
             },
           )
         } else {
@@ -139,10 +144,12 @@ export default function MissionFormPage(props: {
             mission,
             () => {
               pageProps.notify('Mission successfully saved.', 3000)
+              callback()
             },
             (error: Error) => {
               pageProps.notify('Mission failed to save.', 3000)
               setAreUnsavedChanges(true)
+              callbackError(error)
             },
           )
         }
@@ -161,12 +168,16 @@ export default function MissionFormPage(props: {
         confirmationMessage = 'Please confirm the deletion of this node.'
       }
 
-      pageProps.confirm(confirmationMessage, (entry?: string) => {
-        node.delete()
-        handleChange()
-        activateNodeStructuring(false)
-        selectNode(null)
-      })
+      pageProps.confirm(
+        confirmationMessage,
+        (concludeAction: () => void, entry?: string) => {
+          node.delete()
+          handleChange()
+          activateNodeStructuring(false)
+          selectNode(null)
+          concludeAction()
+        },
+      )
     }
 
     // This will logout the current user.
@@ -210,10 +221,74 @@ export default function MissionFormPage(props: {
             showTooltip={true}
           />
           <div
-            className='GoBack Link'
-            onClick={() => pageProps.goToPage('MissionSelectionPage', {})}
+            className='Done Link'
+            onClick={() => {
+              if (!areUnsavedChanges) {
+                pageProps.goToPage('MissionSelectionPage', {})
+              } else {
+                pageProps.confirm(
+                  'You have unsaved changes. What do you want to do with them?',
+                  (concludeAction: () => void) => {
+                    save(
+                      () => {
+                        concludeAction()
+                        pageProps.goToPage('MissionSelectionPage', {})
+                      },
+                      () => {
+                        concludeAction()
+                      },
+                    )
+                  },
+                  {
+                    handleAlternate: (concludeAction: () => void) => {
+                      concludeAction()
+                      pageProps.goToPage('MissionSelectionPage', {})
+                    },
+                    pendingMessageUponConfirm: 'Saving...',
+                    pendingMessageUponAlternate: 'Discarding...',
+                    buttonConfirmText: 'Save',
+                    buttonAlternateText: 'Discard',
+                  },
+                )
+              }
+            }}
           >
             Done
+          </div>
+          <div
+            className='PlayTest Link'
+            onClick={() => {
+              if (!areUnsavedChanges) {
+                pageProps.goToPage('MissionSelectionPage', {})
+              } else {
+                pageProps.confirm(
+                  'You have unsaved changes. What do you want to do with them?',
+                  (concludeAction: () => void) => {
+                    save(
+                      () => {
+                        concludeAction()
+                        pageProps.goToPage('GamePage', { mission })
+                      },
+                      () => {
+                        concludeAction()
+                      },
+                    )
+                  },
+                  {
+                    handleAlternate: (concludeAction: () => void) => {
+                      concludeAction()
+                      pageProps.goToPage('GamePage', { mission })
+                    },
+                    pendingMessageUponConfirm: 'Saving...',
+                    pendingMessageUponAlternate: 'Discarding...',
+                    buttonConfirmText: 'Save',
+                    buttonAlternateText: 'Discard',
+                  },
+                )
+              }
+            }}
+          >
+            Play test
           </div>
           <div className='Logout Link' onClick={logout}>
             Sign out
