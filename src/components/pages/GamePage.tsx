@@ -75,6 +75,7 @@ export default function GamePage(props: {
       !pageProps.isCurrentPage &&
       pageProps.initialResourceCount === undefined
     ) {
+      setLastSelectedNode(null)
       setMountHandled(false)
     }
   }, [mountHandled, pageProps.isCurrentPage, pageProps.initialResourceCount])

@@ -90,6 +90,8 @@ const MissionSelectionPage = (props: {
       )
     } else if (mountHandled && !pageProps.isCurrentPage) {
       setMountHandled(false)
+      setMissions([])
+      setLiveAjaxStatus(EAjaxStatus.NotLoaded)
     }
   }, [mountHandled, pageProps.isCurrentPage])
 

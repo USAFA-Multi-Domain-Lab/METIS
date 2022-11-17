@@ -236,11 +236,14 @@
                 background-color: white;
               }
 
-              &.Toggle:hover {
+              &.Activated:hover {
                 border-color: $terminal;
                 .Switch {
                   background-color: $terminal;
                 }
+              }
+              &.Locked:hover {
+                cursor: pointer;
               }
             }
           }
