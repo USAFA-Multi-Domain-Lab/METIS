@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useStore } from 'react-context-hook'
-import { EMissionCloneMethod, Mission } from '../../modules/missions'
+import { Mission } from '../../modules/missions'
 import { EAjaxStatus } from '../../modules/toolbox/ajax'
 import usersModule, { IUser } from '../../modules/users'
 import Branding from '../content/Branding'
@@ -13,7 +13,6 @@ import NodeActions from '../content/NodeActions'
 import { IPageProps } from '../App'
 import { MissionNodeAction } from '../../modules/mission-node-actions'
 import { MissionNode } from '../../modules/mission-nodes'
-import Notification from '../../modules/notifications'
 
 interface IGamePageProps extends IPageProps {
   mission: Mission

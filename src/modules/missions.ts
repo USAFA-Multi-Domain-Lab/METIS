@@ -541,7 +541,9 @@ export function setLive(
   callbackError: (error: Error) => void,
 ): void {
   axios
-    .put(`/api/v1/missions/`, { mission: { live: isLive } })
+    .put(`/api/v1/missions/`, {
+      mission: { missionID: missionID, live: isLive },
+    })
     .then(callback)
     .catch((error: AxiosError) => {
       console.error('Mission failed to go live.')
