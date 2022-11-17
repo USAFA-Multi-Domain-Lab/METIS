@@ -10,7 +10,7 @@ const missionSchema: Schema = new Schema(
     versionNumber: { type: Number, required: true },
     live: { type: Boolean, required: true },
     seed: { type: ObjectId, required: true, auto: true },
-    initialTokens: { type: Number, required: true },
+    initialResources: { type: Number, required: true },
     nodeStructure: { type: {}, required: true },
     nodeData: { type: [], required: true },
   },

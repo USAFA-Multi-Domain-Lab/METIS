@@ -68,7 +68,7 @@
       font-size: 1em;
       max-height: 30vh;
       overflow-y: scroll;
-      width: 75%;
+      width: 50%;
 
       .HeadingContainer {
         position: sticky;
@@ -76,7 +76,7 @@
         background-color: black;
         width: 100%;
         overflow-x: hidden;
-        z-index: 100;
+        z-index: 50;
 
         .Heading {
           width: fill;
@@ -103,7 +103,7 @@
 
         .MissionName {
           padding: 10px 0 10px 20px;
-          width: 50%;
+          width: calc(100% - 10px);
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
@@ -156,26 +156,36 @@
       &.show {
         border-bottom-right-radius: 0px;
         border-bottom-left-radius: 0px;
+        width: 75%;
+
+        .IndividualMissionContainer {
+          .MissionName {
+            width: calc(100% - 200px);
+          }
+        }
 
         .ActionsContainer {
           display: flex;
           justify-content: flex-end;
           align-items: center;
           flex-flow: row wrap;
-          width: 45%;
+          width: fit-content;
+          padding-right: 5px;
 
           .remove,
           .copy,
           .edit,
           .Toggle {
-            margin: 0 5px;
-
             &.remove:hover,
             &.copy:hover,
             &.edit:hover {
               filter: invert(68%) sepia(94%) saturate(322%) hue-rotate(117deg)
                 brightness(200%) contrast(98%);
             }
+          }
+
+          .Toggle {
+            margin-left: 5px;
           }
 
           .edit {
@@ -259,12 +269,32 @@
           font-size: 1.5em;
           width: 1.25em;
           height: 1.25em;
+          margin: 0;
+          padding: 0;
 
           &.NewMissionButton:hover {
             cursor: pointer;
             background-color: $node-blue;
           }
         }
+
+        // .SaveButton {
+        //   background: url('../../assets/images/icons/save.svg');
+        //   background-size: 65% 65%;
+        //   background-position: center;
+        //   background-repeat: no-repeat;
+        //   width: 1.1em;
+        //   height: 1.1em;
+        //   border: 2px solid white;
+        //   border-radius: 10px;
+        //   margin: 0 10px;
+        //   padding: 0;
+
+        //   &.SaveButton:hover {
+        //     cursor: pointer;
+        //     background-color: $node-blue;
+        //   }
+        // }
       }
     }
   }
@@ -276,11 +306,13 @@
           .IndividualMissionContainer {
             flex-flow: column;
             .MissionName {
-              width: 100%;
+              width: calc(100% - 20px);
             }
             .ActionsContainer {
               justify-content: flex-start;
-              width: 100%;
+              width: calc(100% - 15px);
+              padding-left: 15px;
+              padding-right: 0;
             }
           }
         }

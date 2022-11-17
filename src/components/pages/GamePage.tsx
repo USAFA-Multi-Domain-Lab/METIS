@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useStore } from 'react-context-hook'
-import { EMissionCloneMethod, Mission } from '../../modules/missions'
+import { Mission } from '../../modules/missions'
 import { EAjaxStatus } from '../../modules/toolbox/ajax'
 import usersModule, { IUser } from '../../modules/users'
 import Branding from '../content/Branding'
@@ -13,7 +13,6 @@ import NodeActions from '../content/NodeActions'
 import { IPageProps } from '../App'
 import { MissionNodeAction } from '../../modules/mission-node-actions'
 import { MissionNode } from '../../modules/mission-nodes'
-import Notification from '../../modules/notifications'
 
 interface IGamePageProps extends IPageProps {
   mission: Mission
@@ -118,10 +117,7 @@ export default function GamePage(props: {
     const editMission = () => {
       if (currentUser !== null && mission !== null) {
         pageProps.goToPage('MissionFormPage', {
-          mission: mission.clone({
-            method: EMissionCloneMethod.LikeOriginal,
-            expandAll: true,
-          }),
+          missionID: mission.missionID,
         })
       }
     }
@@ -198,7 +194,9 @@ export default function GamePage(props: {
         {
           // -- content --
           <div className='Content'>
-            <div className='Tokens'>Tokens remaining: {mission.tokens} </div>
+            <div className='Resources'>
+              Resources remaining: {mission.resources}
+            </div>
             <MissionMap
               mission={mission}
               missionAjaxStatus={EAjaxStatus.Loaded}
@@ -262,7 +260,6 @@ export default function GamePage(props: {
                 }
 
                 if (node.executable && node.executed) {
-                  console.log(node)
                   description =
                     `* Executed node in ${
                       (node.selectedAction?.processTime as number) / 1000

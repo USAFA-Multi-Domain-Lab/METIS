@@ -22,7 +22,7 @@ export interface IMissionJSON {
   name: string
   versionNumber: number
   live: boolean
-  initialTokens: number
+  initialResources: number
   seed: string
   nodeStructure: AnyObject
   nodeData: Array<AnyObject>
@@ -43,8 +43,8 @@ export class Mission {
   name: string
   versionNumber: number
   live: boolean
-  initialTokens: number
-  tokens: number
+  initialResources: number
+  resources: number
   _originalNodeStructure: AnyObject
   _originalNodeData: Array<AnyObject>
   _nodeStructure: AnyObject
@@ -93,7 +93,7 @@ export class Mission {
     name: string,
     versionNumber: number,
     live: boolean,
-    initialTokens: number,
+    initialResources: number,
     nodeStructure: AnyObject,
     nodeData: Array<AnyObject>,
     seed: string,
@@ -103,8 +103,8 @@ export class Mission {
     this.name = name
     this.versionNumber = versionNumber
     this.live = live
-    this.initialTokens = initialTokens
-    this.tokens = initialTokens
+    this.initialResources = initialResources
+    this.resources = initialResources
     this._nodeStructure = nodeStructure
     this._nodeData = nodeData
     this._originalNodeStructure = nodeStructure
@@ -270,7 +270,7 @@ export class Mission {
       name: this.name,
       versionNumber: this.versionNumber,
       live: this.live,
-      initialTokens: this.initialTokens,
+      initialResources: this.initialResources,
       seed: this.seed,
       nodeStructure: this.nodeStructure,
       nodeData: this.nodeData,
@@ -399,7 +399,7 @@ export class Mission {
           this.name,
           this.versionNumber,
           this.live,
-          this.initialTokens,
+          this.initialResources,
           this._originalNodeStructure,
           this._originalNodeData,
           this.seed,
@@ -412,7 +412,7 @@ export class Mission {
           this.name,
           this.versionNumber,
           this.live,
-          this.initialTokens,
+          this.initialResources,
           this._exportNodeStructure(),
           this._exportNodeData(),
           this.seed,
@@ -440,7 +440,7 @@ export function createMission(
         missionJson.name,
         missionJson.versionNumber,
         missionJson.live,
-        missionJson.initialTokens,
+        missionJson.initialResources,
         missionJson.nodeStructure,
         missionJson.nodeData,
         missionJson.seed,
@@ -461,6 +461,7 @@ export function createMission(
 // on the data it returns
 export function getMission(
   callback: (mission: Mission) => void,
+  callbackEditMission: (mission: Mission) => void,
   callbackError: (error: AxiosError) => void = () => {},
   selectedMissionIDValue: string,
 ): void {
@@ -474,13 +475,20 @@ export function getMission(
         missionJson.name,
         missionJson.versionNumber,
         missionJson.live,
-        missionJson.initialTokens,
+        missionJson.initialResources,
         missionJson.nodeStructure,
         missionJson.nodeData,
         missionJson.seed,
         false,
       )
       callback(mission)
+
+      callbackEditMission(
+        mission.clone({
+          method: EMissionCloneMethod.LikeOriginal,
+          expandAll: true,
+        }),
+      )
     })
     .catch((error: AxiosError) => {
       console.error('Failed to retrieve mission.')
@@ -524,6 +532,26 @@ export function saveMission(
     })
 }
 
+// This will update the live parameter
+// for the given mission to the server.
+export function setLive(
+  missionID: string,
+  isLive: boolean,
+  callback: () => void,
+  callbackError: (error: Error) => void,
+): void {
+  axios
+    .put(`/api/v1/missions/`, {
+      mission: { missionID: missionID, live: isLive },
+    })
+    .then(callback)
+    .catch((error: AxiosError) => {
+      console.error('Mission failed to go live.')
+      console.error(error)
+      callbackError(error)
+    })
+}
+
 // This will delete the mission with
 // the given missionID.
 export function copyMission(
@@ -542,7 +570,7 @@ export function copyMission(
         missionJson.name,
         missionJson.versionNumber,
         missionJson.live,
-        missionJson.initialTokens,
+        missionJson.initialResources,
         missionJson.nodeStructure,
         missionJson.nodeData,
         missionJson.seed,
@@ -561,7 +589,7 @@ export function copyMission(
 // This will delete the mission with
 // the given missionID.
 export function deleteMission(
-  missionID: number,
+  missionID: string,
   callback: () => void,
   callbackError: (error: Error) => void,
 ): void {
@@ -581,5 +609,6 @@ export default {
   getMission,
   getAllMissions,
   saveMission,
+  setLive,
   deleteMission,
 }

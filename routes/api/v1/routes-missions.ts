@@ -17,14 +17,14 @@ router.post('/', (request, response) => {
       'name' in missionData &&
       'versionNumber' in missionData &&
       'live' in missionData &&
-      'initialTokens' in missionData &&
+      'initialResources' in missionData &&
       'nodeStructure' in missionData &&
       'nodeData' in missionData
     ) {
       let name: any = missionData.name
       let versionNumber: any = missionData.versionNumber
       let live: any = missionData.live
-      let initialTokens: any = missionData.initialTokens
+      let initialResources: any = missionData.initialResources
       let nodeStructure: any = missionData.nodeStructure
       let nodeData: any = missionData.nodeData
 
@@ -32,7 +32,7 @@ router.post('/', (request, response) => {
         name,
         versionNumber,
         live,
-        initialTokens,
+        initialResources,
         nodeStructure,
         nodeData,
       })
@@ -132,7 +132,7 @@ router.put('/copy/', (request, response) => {
           name: copyName,
           versionNumber: mission.versionNumber,
           live: mission.live,
-          initialTokens: mission.initialTokens,
+          initialResources: mission.initialResources,
           nodeStructure: mission.nodeStructure,
           nodeData: mission.nodeData,
         })
@@ -156,10 +156,10 @@ router.put('/copy/', (request, response) => {
 // -- DELETE | /api/v1/missions/ --
 // This will delete a mission.
 router.delete('/', (request, response) => {
-  let body: any = request.body
+  let query: any = request.query
 
-  if ('missionID' in body) {
-    let missionID: any = body.missionID
+  if ('missionID' in query) {
+    let missionID: any = query.missionID
 
     if (typeof missionID === 'string') {
       Mission.deleteOne({ missionID }, (error: any) => {

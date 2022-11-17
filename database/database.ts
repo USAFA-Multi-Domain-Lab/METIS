@@ -43,7 +43,7 @@ export function ensureDefaultDataExists(): void {
         name: 'Attack Mission',
         versionNumber: 1,
         live: true,
-        initialTokens: 5,
+        initialResources: 5,
         seed: '980238470934',
         nodeStructure: {
           '1': {
@@ -2004,7 +2004,7 @@ export function ensureDefaultDataExists(): void {
         name: 'Defensive Mission',
         versionNumber: 1,
         live: true,
-        initialTokens: 10,
+        initialResources: 10,
         seed: '980238470935',
         nodeStructure: {
           '1': {

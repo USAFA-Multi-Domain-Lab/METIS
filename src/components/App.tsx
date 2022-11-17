@@ -111,10 +111,8 @@ function StandardPage(props: {
         } else if (expired) {
           setTimeout(() => {
             notifications.splice(notifications.indexOf(notification), 1)
-            forceUpdate()
           }, 1000)
         }
-        forceUpdate()
       },
       duration,
     )
