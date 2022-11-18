@@ -35,36 +35,37 @@ export function ensureDefaultDataExists(): void {
 
   // Creates multiple missions if they
   // don't exist.
-  missionModel.find({}).exec((error: Error, mission: any) => {
-    if (mission.length === 0) {
+  missionModel.find({}).exec((error: Error, missions: any) => {
+    if (missions.length === 0) {
       console.log('No missions were found.')
-      console.log('Creating 2 missions...')
 
       const attackMissionData = {
         name: 'Attack Mission',
         versionNumber: 1,
+        live: true,
+        initialResources: 5,
         seed: '980238470934',
         nodeStructure: {
           '1': {
-            '2': { '3': { '4': { END: 'END' } } },
-            '5': { '6': { '7': { END: 'END' } } },
-            '8': { '9': { '10': { END: 'END' } } },
-            '11': { '12': { '13': { END: 'END' } } },
+            '2': { '3': { '4': {} } },
+            '5': { '6': { '7': {} } },
+            '8': { '9': { '10': {} } },
+            '11': { '12': { '13': {} } },
           },
           '14': {
-            '15': { '16': { '17': { END: 'END' }, '18': { END: 'END' } } },
+            '15': { '16': { '17': {}, '18': {} } },
           },
           '19': {
-            '20': { '21': { END: 'END' }, '22': { END: 'END' } },
-            '23': { '24': { END: 'END' } },
-            '25': { '26': { END: 'END' } },
-            '27': { '28': { END: 'END' }, '29': { END: 'END' } },
+            '20': { '21': {}, '22': {} },
+            '23': { '24': {} },
+            '25': { '26': {} },
+            '27': { '28': {}, '29': {} },
           },
           '30': {
-            '31': { END: 'END' },
-            '32': { END: 'END' },
-            '33': { END: 'END' },
-            '34': { END: 'END' },
+            '31': {},
+            '32': {},
+            '33': {},
+            '34': {},
           },
         },
         nodeData: [
@@ -80,7 +81,7 @@ export function ensureDefaultDataExists(): void {
             device: false,
             actions: [
               {
-                actionID: '29db5000-811e-49c8-a43d-1d946b5fbd89',
+                actionID: '29db5000-811e-49c8-a43d-1d946b5fbd88',
                 name: 'Deny',
                 processTime: 1000,
                 successChance: 0.5,
@@ -2002,28 +2003,30 @@ export function ensureDefaultDataExists(): void {
       const defensiveMissionData = {
         name: 'Defensive Mission',
         versionNumber: 1,
+        live: true,
+        initialResources: 10,
         seed: '980238470935',
         nodeStructure: {
           '1': {
-            '2': { '3': { '4': { END: 'END' } } },
-            '5': { '6': { '7': { END: 'END' } } },
-            '8': { '9': { '10': { END: 'END' } } },
-            '11': { '12': { '13': { END: 'END' } } },
+            '2': { '3': { '4': {} } },
+            '5': { '6': { '7': {} } },
+            '8': { '9': { '10': {} } },
+            '11': { '12': { '13': {} } },
           },
           '14': {
-            '15': { '16': { '17': { END: 'END' }, '18': { END: 'END' } } },
+            '15': { '16': { '17': {}, '18': {} } },
           },
           '19': {
-            '20': { '21': { END: 'END' }, '22': { END: 'END' } },
-            '23': { '24': { END: 'END' } },
-            '25': { '26': { END: 'END' } },
-            '27': { '28': { END: 'END' }, '29': { END: 'END' } },
+            '20': { '21': {}, '22': {} },
+            '23': { '24': {} },
+            '25': { '26': {} },
+            '27': { '28': {}, '29': {} },
           },
           '30': {
-            '31': { END: 'END' },
-            '32': { END: 'END' },
-            '33': { END: 'END' },
-            '34': { END: 'END' },
+            '31': {},
+            '32': {},
+            '33': {},
+            '34': {},
           },
         },
         nodeData: [
@@ -3959,15 +3962,25 @@ export function ensureDefaultDataExists(): void {
         ],
       }
 
+      console.log('Creating both missions...')
+
+      missionModel.create(attackMissionData, (error: Error, mission: any) => {
+        if (error) {
+          console.error(`Failed to create ${mission.name}.`)
+          console.error(error)
+        } else {
+          console.log(`${mission.name} has been created.`)
+        }
+      })
+
       missionModel.create(
-        attackMissionData,
         defensiveMissionData,
         (error: Error, mission: any) => {
           if (error) {
-            console.error('Failed to create both missions.')
+            console.error(`Failed to create ${mission.name}.`)
             console.error(error)
           } else {
-            console.log('Both missions have been created.')
+            console.log(`${mission.name} has been created.`)
           }
         },
       )

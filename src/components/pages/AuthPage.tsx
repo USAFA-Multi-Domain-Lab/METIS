@@ -1,6 +1,6 @@
 // This will render the interface for booking a
 
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useRef, useState } from 'react'
 import './AuthPage.scss'
 import usersModule, { IUser } from '../../modules/users'
 import { AxiosError } from 'axios'
@@ -100,9 +100,13 @@ export default function AuthPage(props: {
               setLoadingMessage(null)
               setLastLoadingMessage('Initializing application...')
               setCurrentUser(currentUser)
+
+              console.log(pageProps.postLoginPagePath)
+              console.log(pageProps.postLoginPathProps)
+
               pageProps.goToPage(
-                pageProps.goBackPagePath,
-                pageProps.goBackPageProps,
+                pageProps.postLoginPagePath,
+                pageProps.postLoginPathProps,
               )
             } else {
               handleLoginError('Incorrect username or password.')
@@ -144,7 +148,7 @@ export default function AuthPage(props: {
         <div className='Login'>
           <div className='ErrorMessage'>{errorMessage}</div>
           <div className='Header'>
-            <div className='Heading'>MDL</div>
+            <div className='Heading'></div>
           </div>
           <form
             className='Form'

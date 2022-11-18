@@ -16,6 +16,7 @@ export enum EActionPurpose {
   ZoomIn,
   ZoomOut,
   Save,
+  Copy,
 }
 
 // Interface for props for Action component.
@@ -64,6 +65,8 @@ export class Action extends React.Component<IAction_P, {}> {
         return 'Action zoom-out'
       case EActionPurpose.Save:
         return 'Action save'
+      case EActionPurpose.Copy:
+        return 'Action copy'
       default:
         return 'Action hidden'
     }
@@ -100,7 +103,7 @@ export class Action extends React.Component<IAction_P, {}> {
       >
         {innerHTML}
         {tooltipDescription ? (
-          <Tooltip description={tooltipDescription} />
+          <Tooltip description={tooltipDescription} display={true} />
         ) : null}
       </div>
     )

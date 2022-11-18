@@ -790,25 +790,19 @@ export default class MissionMap extends React.Component<
 
             // Dynamic Class Names
             let loadingClassName: string = 'loading'
-            let deviceClassName: string = 'dorito hide'
-            let doritoColor: string = ''
+            let iconClassName: string = ''
 
-            // Logic to manipulate class names
+            // Logic to handle if the loading bar is displayed or not.
             if (!node.executing) {
               loadingClassName += ' hide'
             }
 
-            if (node.device) {
-              doritoColor += ' #9ae700'
-              // doritoColor += ' #ffee00'
-              // doritoColor += ' black'
-              deviceClassName = 'dorito'
+            // Logic to handle nodes that are executable and nodes that
+            // are devices.
+            if (node.device && node.executable) {
+              iconClassName = 'device'
             } else if (node.executable && !node.device) {
-              doritoColor += ' #00d7ff'
-              // doritoColor += ' white'
-              deviceClassName = 'dorito'
-            } else {
-              doritoColor += ' transparent'
+              iconClassName = 'executable'
             }
 
             return (
@@ -835,15 +829,7 @@ export default class MissionMap extends React.Component<
                   >
                     {node.name}
                   </div>
-                  <div className='DoritoContainer'>
-                    <div
-                      className={deviceClassName}
-                      style={{
-                        borderRight: `${scoreWidth + 2}px solid ${doritoColor}`,
-                        borderBottom: `${scoreWidth + 2}px solid transparent`,
-                      }}
-                    ></div>
-                  </div>
+                  <div className={iconClassName}></div>
                 </div>
               </>
             )

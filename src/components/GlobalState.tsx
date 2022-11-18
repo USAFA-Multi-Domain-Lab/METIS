@@ -45,7 +45,6 @@ export default class GlobalState {
   actionName: string
   processTime: number
   actionSuccessChance: number
-  mission: Mission | null
   allMissions: Array<Mission>
 
   constructor(stateSetters: IStateSetters) {
@@ -71,7 +70,6 @@ export default class GlobalState {
     this.actionName = ''
     this.processTime = 0
     this.actionSuccessChance = 0
-    this.mission = null
     this.allMissions = []
   }
 

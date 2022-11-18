@@ -27,7 +27,6 @@ const NodeActions = (props: {
 
   /* -- COMPONENT STATE -- */
   const [displayActionList, setDisplayActionList] = useState<boolean>(false)
-  const [forcedUpdateCounter, setForcedUpdateCounter] = useState<number>(0)
 
   /* -- COMPONENT FUNCTIONS -- */
 
@@ -101,6 +100,7 @@ const NodeActions = (props: {
                   }%\n` +
                   `* Description: ${action.description}`
                 }
+                display={true}
               />
               {action.name}
             </div>

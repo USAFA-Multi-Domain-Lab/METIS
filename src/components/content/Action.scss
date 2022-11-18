@@ -75,4 +75,11 @@
     background-size: 22px 22px;
     background-repeat: no-repeat;
   }
+
+  &.copy {
+    background: url('/assets/images/icons/copy.svg'), $background-alt1;
+    background-position: 11.5px 10.5px;
+    background-size: 17px 17px;
+    background-repeat: no-repeat;
+  }
 }

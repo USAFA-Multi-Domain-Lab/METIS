@@ -88,6 +88,7 @@
     width: $width;
     height: 100%;
     padding-top: 75px;
+    z-index: 200;
 
     .Glue {
       position: -webkit-sticky;

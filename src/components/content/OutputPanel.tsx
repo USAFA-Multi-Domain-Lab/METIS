@@ -1,8 +1,6 @@
-import React, { useEffect, useRef } from 'react'
 import './OutputPanel.scss'
 import { useStore } from 'react-context-hook'
 import ConsoleOutput from './ConsoleOutput'
-import { Mission } from '../../modules/missions'
 
 const OutputPanel = (): JSX.Element | null => {
   /* -- GLOBAL STATE -- */

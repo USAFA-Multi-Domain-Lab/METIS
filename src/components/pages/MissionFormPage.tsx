@@ -1,6 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { useStore } from 'react-context-hook'
-import { Mission, saveMission } from '../../modules/missions'
+import {
+  createMission,
+  getMission,
+  Mission,
+  saveMission,
+} from '../../modules/missions'
 import { EAjaxStatus } from '../../modules/toolbox/ajax'
 import usersModule, { IUser } from '../../modules/users'
 import Branding from '../content/Branding'
@@ -20,6 +25,7 @@ import MoreInformation from '../content/MoreInformation'
 import { IPageProps } from '../App'
 import { ENodeTargetRelation, MissionNode } from '../../modules/mission-nodes'
 import { MissionNodeAction } from '../../modules/mission-node-actions'
+import { EToggleLockState } from '../content/Toggle'
 
 // This is a enum used to describe
 // the locations that one node can
@@ -33,7 +39,9 @@ enum ENodeDropLocation {
 }
 
 interface IMissionFormPageProps extends IPageProps {
-  mission: Mission
+  // If null, a new mission is being
+  // created.
+  missionID: string | null
 }
 
 // This will render a dashboard with a radar
@@ -60,25 +68,60 @@ export default function MissionFormPage(props: {
 
   const [mountHandled, setMountHandled] = useState<boolean>()
   const [forcedUpdateCounter, setForcedUpdateCounter] = useState<number>(0)
+  const [mission, setMission] = useState<Mission | null>(null)
   const [areUnsavedChanges, setAreUnsavedChanges] = useState<boolean>(false)
   const [selectedNode, selectNode] = useState<MissionNode | null>(null)
   const [nodeStructuringIsActive, activateNodeStructuring] =
     useState<boolean>(false)
+  const [existsInDatabase, setExistsInDatabase] = useState<boolean>(false)
 
   /* -- COMPONENT EFFECTS -- */
 
   // Equivalent of componentDidMount.
   useEffect(() => {
     if (!mountHandled && pageProps.isCurrentPage) {
-      setMountHandled(true)
+      let existsInDatabase: boolean
+      let missionID: string | null = pageProps.missionID
+
+      // Creating a new mission.
+      if (missionID === null) {
+        let mission = new Mission('', 'New Mission', 1, false, 5, {}, [], '')
+        setMission(mission)
+        existsInDatabase = false
+      }
+      // Editing an existing mission.
+      else {
+        setLoadingMessage('')
+
+        getMission(
+          missionID,
+          (mission: Mission) => {
+            setLastLoadingMessage('Initializing application...')
+            setLoadingMessage(null)
+            setMission(mission)
+            setMountHandled(true)
+          },
+          () => {
+            setErrorMessage('Failed to retrieve mission.')
+            setLoadingMessage(null)
+          },
+          { expandAllNodes: true },
+        )
+        existsInDatabase = true
+        setExistsInDatabase(existsInDatabase)
+      }
     } else if (mountHandled && !pageProps.isCurrentPage) {
+      setForcedUpdateCounter(0)
+      setMission(null)
+      setAreUnsavedChanges(false)
+      selectNode(null)
+      activateNodeStructuring(false)
+      setExistsInDatabase(false)
       setMountHandled(false)
     }
   }, [mountHandled, pageProps.isCurrentPage])
 
-  if (pageProps.show) {
-    let mission: Mission = pageProps.mission
-
+  if (pageProps.show && mission !== null) {
     /* -- COMPONENTS -- */
 
     /* -- COMPONENT FUNCTIONS -- */
@@ -97,20 +140,43 @@ export default function MissionFormPage(props: {
 
     // This is called to save any changes
     // made.
-    const save = (): void => {
+    const save = (
+      callback: () => void = () => {},
+      callbackError: (error: Error) => void = () => {},
+    ): void => {
       if (areUnsavedChanges) {
         setAreUnsavedChanges(false)
 
-        saveMission(
-          mission,
-          () => {
-            pageProps.notify('Mission successfully saved.', 3000)
-          },
-          (error: Error) => {
-            pageProps.notify('Mission failed to save.', 3000)
-            setAreUnsavedChanges(true)
-          },
-        )
+        if (!existsInDatabase) {
+          createMission(
+            mission,
+            true,
+            (resultingMission: Mission) => {
+              pageProps.notify('Mission successfully saved.', 3000)
+              setMission(resultingMission)
+              setExistsInDatabase(true)
+              callback()
+            },
+            (error: Error) => {
+              pageProps.notify('Mission failed to save', 3000)
+              setAreUnsavedChanges(true)
+              callbackError(error)
+            },
+          )
+        } else {
+          saveMission(
+            mission,
+            () => {
+              pageProps.notify('Mission successfully saved.', 3000)
+              callback()
+            },
+            (error: Error) => {
+              pageProps.notify('Mission failed to save.', 3000)
+              setAreUnsavedChanges(true)
+              callbackError(error)
+            },
+          )
+        }
       }
     }
 
@@ -126,12 +192,16 @@ export default function MissionFormPage(props: {
         confirmationMessage = 'Please confirm the deletion of this node.'
       }
 
-      pageProps.confirm(confirmationMessage, () => {
-        node.delete()
-        handleChange()
-        activateNodeStructuring(false)
-        selectNode(null)
-      })
+      pageProps.confirm(
+        confirmationMessage,
+        (concludeAction: () => void, entry?: string) => {
+          node.delete()
+          handleChange()
+          activateNodeStructuring(false)
+          selectNode(null)
+          concludeAction()
+        },
+      )
     }
 
     // This will logout the current user.
@@ -159,9 +229,9 @@ export default function MissionFormPage(props: {
 
     let className: string = 'MissionFormPage'
 
-    if (selectedNode !== null || nodeStructuringIsActive) {
-      className += ' SidePanelIsExpanded'
-    }
+    // if (selectedNode !== null || nodeStructuringIsActive) {
+    //   className += ' SidePanelIsExpanded'
+    // }
 
     return (
       <div className={className}>
@@ -172,7 +242,82 @@ export default function MissionFormPage(props: {
           <Branding
             goHome={() => pageProps.goToPage('MissionSelectionPage', {})}
             tooltipDescription='Go home.'
+            showTooltip={true}
           />
+          <div
+            className='Done Link'
+            onClick={() => {
+              if (!areUnsavedChanges) {
+                pageProps.goToPage('MissionSelectionPage', {})
+              } else {
+                pageProps.confirm(
+                  'You have unsaved changes. What do you want to do with them?',
+                  (concludeAction: () => void) => {
+                    save(
+                      () => {
+                        pageProps.goToPage('MissionSelectionPage', {})
+                        concludeAction()
+                      },
+                      () => {
+                        concludeAction()
+                      },
+                    )
+                  },
+                  {
+                    handleAlternate: (concludeAction: () => void) => {
+                      pageProps.goToPage('MissionSelectionPage', {})
+                      concludeAction()
+                    },
+                    pendingMessageUponConfirm: 'Saving...',
+                    pendingMessageUponAlternate: 'Discarding...',
+                    buttonConfirmText: 'Save',
+                    buttonAlternateText: 'Discard',
+                  },
+                )
+              }
+            }}
+          >
+            Done
+          </div>
+          <div
+            className='PlayTest Link'
+            onClick={() => {
+              if (!areUnsavedChanges) {
+                pageProps.goToPage('GamePage', { missionID: mission.missionID })
+              } else {
+                pageProps.confirm(
+                  'You have unsaved changes. What do you want to do with them?',
+                  (concludeAction: () => void) => {
+                    save(
+                      () => {
+                        pageProps.goToPage('GamePage', {
+                          missionID: mission.missionID,
+                        })
+                        concludeAction()
+                      },
+                      () => {
+                        concludeAction()
+                      },
+                    )
+                  },
+                  {
+                    handleAlternate: (concludeAction: () => void) => {
+                      pageProps.goToPage('GamePage', {
+                        missionID: mission.missionID,
+                      })
+                      concludeAction()
+                    },
+                    pendingMessageUponConfirm: 'Saving...',
+                    pendingMessageUponAlternate: 'Discarding...',
+                    buttonConfirmText: 'Save',
+                    buttonAlternateText: 'Discard',
+                  },
+                )
+              }
+            }}
+          >
+            Play test
+          </div>
           <div className='Logout Link' onClick={logout}>
             Sign out
           </div>
@@ -194,6 +339,7 @@ export default function MissionFormPage(props: {
             }}
             handleMapCreateRequest={() => {
               let newNode: MissionNode = mission.spawnNewNode()
+              handleChange()
               selectNode(newNode)
               activateNodeStructuring(false)
             }}
@@ -206,6 +352,11 @@ export default function MissionFormPage(props: {
             saveCanBeRequested={areUnsavedChanges}
             applyNodeClassName={(node: MissionNode) => ''}
             renderNodeTooltipDescription={(node: MissionNode) => ''}
+          />
+          <MissionDetails
+            active={selectedNode === null && !nodeStructuringIsActive}
+            mission={mission}
+            handleChange={handleChange}
           />
           <NodeEntry
             node={selectedNode}
@@ -222,6 +373,57 @@ export default function MissionFormPage(props: {
             mission={mission}
             handleChange={handleChange}
             handleCloseRequest={() => activateNodeStructuring(false)}
+          />
+        </div>
+      </div>
+    )
+  } else {
+    return null
+  }
+}
+
+// This will render the basic editable
+// details of the mission itself.
+function MissionDetails(props: {
+  active: boolean
+  mission: Mission
+  handleChange: () => void
+}): JSX.Element | null {
+  let active: boolean = props.active
+  let mission: Mission = props.mission
+  let handleChange = props.handleChange
+
+  if (active) {
+    return (
+      <div className='MissionDetails SidePanel'>
+        <div className='BorderBox'>
+          <Detail
+            label='Name'
+            initialValue={mission.name}
+            deliverValue={(name: string) => {
+              mission.name = name
+              handleChange()
+            }}
+            key={`${mission.missionID}_name`}
+          />
+          <DetailToggle
+            label={'Live'}
+            initialValue={mission.live}
+            deliverValue={(live: boolean) => {
+              mission.live = live
+              handleChange()
+            }}
+          />
+          <DetailNumber
+            label='Initial Resources'
+            initialValue={mission.initialResources}
+            deliverValue={(initialResources: number | null) => {
+              if (initialResources !== null) {
+                mission.initialResources = initialResources
+                handleChange()
+              }
+            }}
+            key={`${mission.missionID}_initialResources`}
           />
         </div>
       </div>
@@ -262,7 +464,7 @@ function NodeEntry(props: {
             <div className='Circle'>
               <div className='X'>x</div>
             </div>
-            <Tooltip description='Close panel.' />
+            <Tooltip description='Close panel.' display={true} />
           </div>
           <Detail
             label='Name'
@@ -311,7 +513,10 @@ function NodeEntry(props: {
           >
             {'[ '}
             <span>Fill</span> {' ]'}
-            <Tooltip description='Shade all descendant nodes this color as well.' />
+            <Tooltip
+              description='Shade all descendant nodes this color as well.'
+              display={true}
+            />
           </div>
           <DetailToggle
             label={'Executable'}
@@ -323,6 +528,22 @@ function NodeEntry(props: {
               }
             }}
             key={`${node.nodeID}_executable`}
+          />
+          <DetailToggle
+            label={'Device'}
+            initialValue={node.device}
+            lockState={
+              node.executable
+                ? EToggleLockState.Unlocked
+                : EToggleLockState.LockedDeactivation
+            }
+            deliverValue={(device: boolean) => {
+              if (node !== null) {
+                node.device = device
+                handleChange()
+              }
+            }}
+            key={`${node.nodeID}_device`}
           />
           <DetailBox
             label='Pre-Execution Text'
@@ -397,13 +618,13 @@ function NodeEntry(props: {
                   }
                 }}
                 tooltipDescription={'Add a new action to this node.'}
-                key={`actual-action_add-new-action_${node.nodeID}`}
+                // key={`actual-action_add-new-action_${node.nodeID}`}
               />
               <Action
                 purpose={EActionPurpose.Remove}
                 handleClick={handleDeleteRequest}
                 tooltipDescription={'Delete this node.'}
-                key={`actual-action_delete-node_${node.nodeID}`}
+                // key={`actual-action_delete-node_${node.nodeID}`}
               />
             </div>
           </div>
@@ -488,7 +709,10 @@ function NodeAction(props: {
       >
         {'[ '}
         <span>Delete Action</span> {' ]'}
-        <Tooltip description='Delete this action from the node.' />
+        <Tooltip
+          description='Delete this action from the node.'
+          display={true}
+        />
       </div>
     </div>
   )
@@ -776,7 +1000,7 @@ function NodeStructuring(props: {
             <div className='Circle'>
               <div className='X'>x</div>
             </div>
-            <Tooltip description='Close panel.' />
+            <Tooltip description='Close panel.' display={true} />
           </div>
           {renderNodes()}
         </div>

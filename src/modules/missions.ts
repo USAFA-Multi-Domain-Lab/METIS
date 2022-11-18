@@ -21,6 +21,8 @@ export interface IMissionJSON {
   missionID: string
   name: string
   versionNumber: number
+  live: boolean
+  initialResources: number
   seed: string
   nodeStructure: AnyObject
   nodeData: Array<AnyObject>
@@ -37,9 +39,15 @@ export interface IMissionCloneOptions {
 // This represents a mission for a
 // student to complete.
 export class Mission {
+  static setRequestInProgress() {
+    throw new Error('Method not implemented.')
+  }
   missionID: string
   name: string
   versionNumber: number
+  live: boolean
+  initialResources: number
+  resources: number
   _originalNodeStructure: AnyObject
   _originalNodeData: Array<AnyObject>
   _nodeStructure: AnyObject
@@ -87,6 +95,8 @@ export class Mission {
     missionID: string,
     name: string,
     versionNumber: number,
+    live: boolean,
+    initialResources: number,
     nodeStructure: AnyObject,
     nodeData: Array<AnyObject>,
     seed: string,
@@ -95,6 +105,9 @@ export class Mission {
     this.missionID = missionID
     this.name = name
     this.versionNumber = versionNumber
+    this.live = live
+    this.initialResources = initialResources
+    this.resources = initialResources
     this._nodeStructure = nodeStructure
     this._nodeData = nodeData
     this._originalNodeStructure = nodeStructure
@@ -124,10 +137,12 @@ export class Mission {
 
     this._importNodeData(nodeData)
     this._importNodeStructure(nodeStructure, this.rootNode, expandAll)
-    // Calling this runs positionNodes.
-    // Without this line, positionNodes
-    // needs to be called independently.
-    this.rootNode.expand()
+
+    if (this.rootNode.expandable) {
+      this.rootNode.expand()
+    } else {
+      this.positionNodes()
+    }
   }
 
   // This will determine the relationship
@@ -140,15 +155,16 @@ export class Mission {
   ): MissionNode {
     let nodes: Map<string, MissionNode> = this.nodes
     let childNodes: Array<MissionNode> = []
-    let childNodeKeyValuePairs: Array<[string, AnyObject | string]> =
-      Object.keys(nodeStructure).map((key: string) => [key, nodeStructure[key]])
+    let childNodeKeyValuePairs: Array<[string, AnyObject]> = Object.keys(
+      nodeStructure,
+    ).map((key: string) => [key, nodeStructure[key]])
 
     for (let childNodeKeyValuePair of childNodeKeyValuePairs) {
       let key: string = childNodeKeyValuePair[0]
-      let value: AnyObject | string = childNodeKeyValuePair[1]
+      let value: AnyObject = childNodeKeyValuePair[1]
       let childNode: MissionNode | undefined = nodes.get(key)
 
-      if (typeof value !== 'string' && childNode !== undefined) {
+      if (childNode !== undefined) {
         childNodes.push(this._importNodeStructure(value, childNode, expandAll))
       }
     }
@@ -220,7 +236,7 @@ export class Mission {
           childNode,
         )
       } else {
-        nodeStructure[childNode.nodeID] = { END: 'END' }
+        nodeStructure[childNode.nodeID] = {}
       }
     }
 
@@ -241,6 +257,7 @@ export class Mission {
         postExecutionSuccessText: node.postExecutionSuccessText,
         postExecutionFailureText: node.postExecutionFailureText,
         executable: node.executable,
+        device: node.device,
         actions: node.actions.map((action: MissionNodeAction) =>
           action.toJSON(),
         ),
@@ -255,6 +272,8 @@ export class Mission {
       missionID: this.missionID,
       name: this.name,
       versionNumber: this.versionNumber,
+      live: this.live,
+      initialResources: this.initialResources,
       seed: this.seed,
       nodeStructure: this.nodeStructure,
       nodeData: this.nodeData,
@@ -312,14 +331,15 @@ export class Mission {
       'Node has not been executed.',
       'Node has executed successfully.',
       'Node has failed to execute.',
-      true,
-      true,
+      false,
+      false,
       [],
       0,
       0,
     )
     node.parentNode = rootNode
     rootNode.childNodes.push(node)
+    rootNode.expand()
     this.nodes.set(node.nodeID, node)
 
     this.handleStructureChange()
@@ -336,16 +356,16 @@ export class Mission {
     depth: number = -1,
     rowCount: Counter = new Counter(0),
   ): Mission => {
-    // Else, this function was recursively
+    // If the parent node isn't the rootNode,
+    // then this function was recursively
     // called with a reference to a particular
     // node in the mission. This node should be
-    // included in the nodeData for the missionRender
-    // so that it displays.
+    // included in the nodeData for the
+    //  missionRender so that it displays.
     if (parentNode.nodeID !== this.rootNode.nodeID) {
       parentNode.mapX = depth
       parentNode.mapY = rowCount.count
     }
-
     // If the parentNode is expanded, then
     // child nodes could effect the positioning
     // of sibling nodes, and the children should
@@ -381,6 +401,8 @@ export class Mission {
           this.missionID,
           this.name,
           this.versionNumber,
+          this.live,
+          this.initialResources,
           this._originalNodeStructure,
           this._originalNodeData,
           this.seed,
@@ -392,6 +414,8 @@ export class Mission {
           this.missionID,
           this.name,
           this.versionNumber,
+          this.live,
+          this.initialResources,
           this._exportNodeStructure(),
           this._exportNodeData(),
           this.seed,
@@ -402,16 +426,15 @@ export class Mission {
   }
 }
 
-// This gets the data from the database
-// and creates a specific mission based
-// on the data it returns
-export function getMission(
+// This will create a brand new mission.
+export function createMission(
+  mission: Mission,
+  expandAll: boolean,
   callback: (mission: Mission) => void,
   callbackError: (error: AxiosError) => void = () => {},
-  selectedMissionIDValue: string,
 ): void {
   axios
-    .get(`/api/v1/missions?missionID=${selectedMissionIDValue}`)
+    .post(`/api/v1/missions/`, { mission: mission.toJSON() })
     .then((response: AxiosResponse<AnyObject>): void => {
       let missionJson = response.data.mission
 
@@ -419,10 +442,47 @@ export function getMission(
         missionJson.missionID,
         missionJson.name,
         missionJson.versionNumber,
+        missionJson.live,
+        missionJson.initialResources,
         missionJson.nodeStructure,
         missionJson.nodeData,
         missionJson.seed,
-        false,
+        expandAll,
+      )
+
+      callback(mission)
+    })
+    .catch((error: AxiosError) => {
+      console.error('Failed to save mission.')
+      console.error(error)
+      callbackError(error)
+    })
+}
+
+// This gets the data from the database
+// and creates a specific mission based
+// on the data it returns
+export function getMission(
+  missionID: string,
+  callback: (mission: Mission) => void,
+  callbackError: (error: AxiosError) => void = () => {},
+  options: { expandAllNodes?: boolean } = {},
+): void {
+  axios
+    .get(`/api/v1/missions?missionID=${missionID}`)
+    .then((response: AxiosResponse<AnyObject>): void => {
+      let missionJson = response.data.mission
+
+      let mission = new Mission(
+        missionJson.missionID,
+        missionJson.name,
+        missionJson.versionNumber,
+        missionJson.live,
+        missionJson.initialResources,
+        missionJson.nodeStructure,
+        missionJson.nodeData,
+        missionJson.seed,
+        options.expandAllNodes === true,
       )
       callback(mission)
     })
@@ -468,8 +528,83 @@ export function saveMission(
     })
 }
 
+// This will update the live parameter
+// for the given mission to the server.
+export function setLive(
+  missionID: string,
+  isLive: boolean,
+  callback: () => void,
+  callbackError: (error: Error) => void,
+): void {
+  axios
+    .put(`/api/v1/missions/`, {
+      mission: { missionID: missionID, live: isLive },
+    })
+    .then(callback)
+    .catch((error: AxiosError) => {
+      console.error('Mission failed to go live.')
+      console.error(error)
+      callbackError(error)
+    })
+}
+
+// This will delete the mission with
+// the given missionID.
+export function copyMission(
+  originalID: string,
+  copyName: string,
+  callback: (copy: Mission) => void,
+  callbackError: (error: Error) => void,
+): void {
+  axios
+    .put(`/api/v1/missions/copy/`, { originalID, copyName })
+    .then((response: AxiosResponse<AnyObject>) => {
+      let missionJson = response.data.copy
+
+      let copy = new Mission(
+        missionJson.missionID,
+        missionJson.name,
+        missionJson.versionNumber,
+        missionJson.live,
+        missionJson.initialResources,
+        missionJson.nodeStructure,
+        missionJson.nodeData,
+        missionJson.seed,
+        false,
+      )
+
+      callback(copy)
+    })
+    .catch((error: AxiosError) => {
+      console.error('Failed to copy mission.')
+      console.error(error)
+      callbackError(error)
+    })
+}
+
+// This will delete the mission with
+// the given missionID.
+export function deleteMission(
+  missionID: string,
+  callback: () => void,
+  callbackError: (error: Error) => void,
+): void {
+  axios
+    .delete(`/api/v1/missions?missionID=${missionID}`)
+    .then(callback)
+    .catch((error: AxiosError) => {
+      console.error('Failed to delete mission.')
+      console.error(error)
+      callbackError(error)
+    })
+}
+
 export default {
   Mission,
+  createMission,
   getMission,
+  getAllMissions,
   saveMission,
+  setLive,
+  deleteMission,
 }

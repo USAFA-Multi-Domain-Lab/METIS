@@ -1,22 +1,29 @@
 import React from 'react'
-import AjaxStatusDisplay, { AjaxStatus } from './AjaxStatusDisplay'
+import AjaxStatusDisplay from './AjaxStatusDisplay'
 import Markdown, { MarkdownTheme } from './Markdown'
 import './Confirmation.scss'
+import { EAjaxStatus } from '../../modules/toolbox/ajax'
 
 export interface IConfirmation {
   active: boolean
   confirmationMessage: string
-  pendingAjaxCallMessage: string
-  ajaxStatus: AjaxStatus
-  handleConfirmation: () => void
-  handleAlternative: (() => void) | null
+  pendingMessageUponConfirm: string
+  pendingMessageUponAlternate: string
+  confirmAjaxStatus: EAjaxStatus
+  alternateAjaxStatus: EAjaxStatus
+  handleConfirmation: (entry: string) => void
+  handleAlternate: ((entry: string) => void) | null
   handleCancelation: () => void
   buttonCancelText: string
   buttonConfirmText: string
   buttonAlternateText: string
+  requireEntry: boolean
+  entryLabel: string
 }
 
-interface IConfirmation_S {}
+interface IConfirmation_S {
+  entry: string
+}
 
 export default class Confirmation extends React.Component<
   IConfirmation,
@@ -24,34 +31,78 @@ export default class Confirmation extends React.Component<
 > {
   static defaultProps = {
     confirmationMessage: 'Please confirm this action.',
-    pendingAjaxCallMessage: 'submitting...',
-    handleAlternative: null,
+    pendingMessageUponConfirm: 'Submitting...',
+    pendingMessageUponAlternate: 'Submitting...',
+    handleAlternate: null,
     buttonCancelText: 'Cancel',
     buttonConfirmText: 'Confirm',
     buttonAlternateText: 'Other',
+    requireEntry: false,
+    entryLabel: 'Entry',
   }
 
+  state: IConfirmation_S = {
+    entry: '',
+  }
+
+  // Called when the entry field
+  // is updated with new text.
+  handleEntryChange = (event: React.ChangeEvent<HTMLInputElement>): void => {
+    this.setState({ entry: event.target.value })
+  }
+
+  // inherited
   render(): JSX.Element | null {
-    let ajaxStatus: AjaxStatus = this.props.ajaxStatus
+    let confirmAjaxStatus: EAjaxStatus = this.props.confirmAjaxStatus
+    let alternateAjaxStatus: EAjaxStatus = this.props.alternateAjaxStatus
     let active: boolean = this.props.active
-    let handleAlternative: (() => void) | null = this.props.handleAlternative
+    let handleAlternate = this.props.handleAlternate
     let confirmationMessage: string = this.props.confirmationMessage
-    let pendingAjaxCallMessage: string = this.props.pendingAjaxCallMessage
+    let pendingMessageUponConfirm: string = this.props.pendingMessageUponConfirm
+    let pendingMessageUponAlternate: string =
+      this.props.pendingMessageUponAlternate
     let buttonCancelText: string = this.props.buttonCancelText
     let buttonConfirmText: string = this.props.buttonConfirmText
     let buttonAlternateText: string = this.props.buttonAlternateText
+    let requireEntry: boolean = this.props.requireEntry
+    let entryLabel: string = this.props.entryLabel
+    let entry: string = this.state.entry
+    let readyToConfirm: boolean = !requireEntry || entry.length > 0
+
     let confirmationClassName: string = `Confirmation${
       active ? ' active' : ''
-    }${ajaxStatus === AjaxStatus.Pending ? ' pending' : ''}`
+    }${
+      confirmAjaxStatus === EAjaxStatus.Loading ||
+      alternateAjaxStatus === EAjaxStatus.Loading
+        ? ' pending'
+        : ''
+    }`
     let messageClassName: string = `message${
-      ajaxStatus === AjaxStatus.Pending ? ' hidden' : ''
+      confirmAjaxStatus === EAjaxStatus.Loading ||
+      alternateAjaxStatus === EAjaxStatus.Loading
+        ? ' hidden'
+        : ''
+    }`
+    let entryClassName: string = `entry${
+      !requireEntry ||
+      confirmAjaxStatus === EAjaxStatus.Loading ||
+      alternateAjaxStatus === EAjaxStatus.Loading
+        ? ' hidden'
+        : ''
     }`
     let actionsClassName: string = `actions${
-      ajaxStatus === AjaxStatus.Pending ? ' hidden' : ''
+      confirmAjaxStatus === EAjaxStatus.Loading ||
+      alternateAjaxStatus === EAjaxStatus.Loading
+        ? ' hidden'
+        : ''
     }`
-    let buttonAlternateClassName: string = `button-alternate button ${
-      handleAlternative ? '' : ' hidden'
+    let buttonConfirmClassName: string = `'button-confirm Button${
+      readyToConfirm ? '' : ' Disabled'
     }`
+    let buttonAlternateClassName: string = `button-alternate Button ${
+      handleAlternate ? '' : ' hidden'
+    }`
+
     return (
       <div className={confirmationClassName}>
         <div className='backing'>
@@ -62,6 +113,14 @@ export default class Confirmation extends React.Component<
                 markdown={confirmationMessage}
               />
             </div>
+            <div className={entryClassName}>
+              <div className='label'>{entryLabel}:</div>
+              <input
+                className='field'
+                type='text'
+                onChange={this.handleEntryChange}
+              />
+            </div>
             <div className={actionsClassName}>
               <div
                 className='button-cancel Button'
@@ -70,22 +129,33 @@ export default class Confirmation extends React.Component<
                 {buttonCancelText}
               </div>
               <div
-                className='button-confirm Button'
-                onClick={this.props.handleConfirmation}
+                className={buttonConfirmClassName}
+                onClick={() => this.props.handleConfirmation(this.state.entry)}
               >
                 {buttonConfirmText}
               </div>
               <div
                 className={buttonAlternateClassName}
-                onClick={handleAlternative ? handleAlternative : () => {}}
+                onClick={
+                  handleAlternate
+                    ? () => {
+                        if (handleAlternate) {
+                          handleAlternate(this.state.entry)
+                        }
+                      }
+                    : () => {}
+                }
               >
                 {buttonAlternateText}
               </div>
             </div>
             <AjaxStatusDisplay
-              status={ajaxStatus}
-              pendingMessage={pendingAjaxCallMessage}
-              style={{}}
+              status={confirmAjaxStatus}
+              pendingMessage={pendingMessageUponConfirm}
+            />
+            <AjaxStatusDisplay
+              status={alternateAjaxStatus}
+              pendingMessage={pendingMessageUponAlternate}
             />
           </div>
         </div>

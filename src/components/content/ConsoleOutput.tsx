@@ -1,6 +1,5 @@
-import React, { useEffect, useRef } from 'react'
+import { useEffect, useRef } from 'react'
 import './ConsoleOutput.scss'
-import Markdown, { MarkdownTheme } from './Markdown'
 
 const ConsoleOutput = (props: { value: string }) => {
   const scrollRef = useRef<HTMLLIElement>(null)

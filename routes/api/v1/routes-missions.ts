@@ -12,18 +12,40 @@ router.post('/', (request, response) => {
   let body: any = request.body
 
   if ('mission' in body) {
-    let mission: any = body.mission
+    let missionData: any = body.mission
+    if (
+      'name' in missionData &&
+      'versionNumber' in missionData &&
+      'live' in missionData &&
+      'initialResources' in missionData &&
+      'nodeStructure' in missionData &&
+      'nodeData' in missionData
+    ) {
+      let name: any = missionData.name
+      let versionNumber: any = missionData.versionNumber
+      let live: any = missionData.live
+      let initialResources: any = missionData.initialResources
+      let nodeStructure: any = missionData.nodeStructure
+      let nodeData: any = missionData.nodeData
 
-    if (typeof mission === 'object' && 'name' in body) {
-      let name: any = body.name
-
-      new Mission({
+      let mission = new Mission({
         name,
-        nodeStructure: {},
-        nodeData: [],
+        versionNumber,
+        live,
+        initialResources,
+        nodeStructure,
+        nodeData,
       })
-    } else {
-      return response.sendStatus(400)
+
+      mission.save((error: Error) => {
+        if (error) {
+          console.log('Failed to create mission:')
+          console.error(error)
+          return response.sendStatus(500)
+        } else {
+          return response.json({ mission })
+        }
+      })
     }
   } else {
     return response.sendStatus(400)
@@ -91,13 +113,53 @@ router.put('/', (request, response) => {
   }
 })
 
+// -- PUT | /api/v1/missions/copy/ --
+// This will copy a mission.
+router.put('/copy/', (request, response) => {
+  let body: any = request.body
+
+  if ('originalID' in body && 'copyName' in body) {
+    let originalID: string = body.originalID
+    let copyName: string = body.copyName
+
+    Mission.findOne({ missionID: originalID }, (error: any, mission: any) => {
+      if (error !== null) {
+        return response.sendStatus(500)
+      } else if (mission === null) {
+        return response.sendStatus(404)
+      } else {
+        let copy = new Mission({
+          name: copyName,
+          versionNumber: mission.versionNumber,
+          live: mission.live,
+          initialResources: mission.initialResources,
+          nodeStructure: mission.nodeStructure,
+          nodeData: mission.nodeData,
+        })
+
+        copy.save((error: Error) => {
+          if (error) {
+            console.log('Failed to copy mission:')
+            console.error(error)
+            return response.sendStatus(500)
+          } else {
+            return response.json({ copy })
+          }
+        })
+      }
+    })
+  } else {
+    return response.sendStatus(400)
+  }
+})
+
 // -- DELETE | /api/v1/missions/ --
 // This will delete a mission.
 router.delete('/', (request, response) => {
-  let body: any = request.body
+  let query: any = request.query
 
-  if ('missionID' in body) {
-    let missionID: any = body.missionID
+  if ('missionID' in query) {
+    let missionID: any = query.missionID
 
     if (typeof missionID === 'string') {
       Mission.deleteOne({ missionID }, (error: any) => {

@@ -206,31 +206,22 @@
           }
         }
 
-        .DoritoContainer {
-          display: flex;
-          justify-content: flex-end;
-          align-items: flex-start;
+        .executable {
+          background: url(../../assets/images/icons/lightning.svg);
+          background-size: 100% 100%;
+          background-repeat: no-repeat;
+          width: 15%;
           height: 100%;
-          width: fit-content;
+          margin: 0 2%;
         }
 
-        .dorito {
-          width: 0;
-          height: 0;
-
-          &.WhiteDorito {
-            position: relative;
-            top: 0;
-            left: 100%;
-            border-bottom: 10px solid white;
-          }
-
-          &.BlackDorito {
-            position: relative;
-            top: 0;
-            left: 100%;
-            border-bottom: 10px solid black;
-          }
+        .device {
+          background: url(../../assets/images/icons/device.svg);
+          background-size: 100% 100%;
+          background-repeat: no-repeat;
+          width: 15%;
+          height: 100%;
+          margin: 0 4%;
         }
 
         .properties {

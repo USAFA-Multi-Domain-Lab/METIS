@@ -1,6 +1,12 @@
 import { useEffect, useState } from 'react'
 import { useStore } from 'react-context-hook'
-import { EMissionCloneMethod, Mission } from '../../modules/missions'
+import {
+  copyMission,
+  deleteMission,
+  getMission,
+  Mission,
+  setLive,
+} from '../../modules/missions'
 import { EAjaxStatus } from '../../modules/toolbox/ajax'
 import usersModule, { IUser } from '../../modules/users'
 import Branding from '../content/Branding'
@@ -13,9 +19,12 @@ import NodeActions from '../content/NodeActions'
 import { IPageProps } from '../App'
 import { MissionNodeAction } from '../../modules/mission-node-actions'
 import { MissionNode } from '../../modules/mission-nodes'
+import { Action, EActionPurpose } from '../content/Action'
+import Toggle, { EToggleLockState } from '../content/Toggle'
+import Tooltip from '../content/Tooltip'
 
 interface IGamePageProps extends IPageProps {
-  mission: Mission
+  missionID: string
 }
 
 // This will render a dashboard with a radar
@@ -55,9 +64,12 @@ export default function GamePage(props: {
   /* -- COMPONENT STATE -- */
 
   const [mountHandled, setMountHandled] = useState<boolean>(false)
-  const [forcedUpdateCounter, setForcedUpdateCounter] = useState<number>(0)
+  const [mission, setMission] = useState<Mission | null>(null)
   const [lastSelectedNode, setLastSelectedNode] = useState<MissionNode | null>(
     null,
+  )
+  const [liveAjaxStatus, setLiveAjaxStatus] = useState<EAjaxStatus>(
+    EAjaxStatus.NotLoaded,
   )
 
   /* -- COMPONENT EFFECTS -- */
@@ -65,23 +77,31 @@ export default function GamePage(props: {
   // Equivalent of componentDidMount.
   useEffect(() => {
     if (!mountHandled && pageProps.isCurrentPage) {
-      setMountHandled(true)
+      setLoadingMessage('Launching mission...')
+      getMission(
+        pageProps.missionID,
+        (mission: Mission) => {
+          setLoadingMessage(null)
+          setLastLoadingMessage('Launching mission...')
+          setMission(mission)
+          setMountHandled(true)
+        },
+        (error: Error) => {
+          setErrorMessage('Failed to load mission.')
+          setMountHandled(true)
+        },
+      )
     } else if (mountHandled && !pageProps.isCurrentPage) {
+      setMission(null)
+      setLastSelectedNode(null)
       setMountHandled(false)
     }
   }, [mountHandled, pageProps.isCurrentPage])
 
-  if (pageProps.show) {
-    let mission: Mission = pageProps.mission
-
+  if (pageProps.show && mission !== null) {
     /* -- COMPONENTS -- */
 
     /* -- COMPONENT FUNCTIONS -- */
-
-    // This forces a rerender of the component.
-    const forceUpdate = (): void => {
-      setForcedUpdateCounter(forcedUpdateCounter + 1)
-    }
 
     // This will logout the current user.
     const logout = () => {
@@ -94,9 +114,9 @@ export default function GamePage(props: {
           setLoadingMessage(null)
           pageProps.goToPage('AuthPage', {
             goBackPagePath: 'GamePage',
-            goBackPageProps: { mission },
+            goBackPageProps: { missionID: mission.missionID },
             postLoginPagePath: 'GamePage',
-            postLoginPageProps: { mission },
+            postLoginPageProps: { missionID: mission.missionID },
           })
         },
         () => {
@@ -112,24 +132,21 @@ export default function GamePage(props: {
       if (currentUser === null) {
         pageProps.goToPage('AuthPage', {
           goBackPagePath: 'GamePage',
-          goBackPageProps: { mission },
+          goBackPageProps: { missionID: mission.missionID },
           postLoginPagePath: 'GamePage',
-          postLoginPageProps: { mission },
+          postLoginPageProps: { missionID: mission.missionID },
         })
       }
     }
 
     // This will switch to the edit mission form.
-    const editMission = () => {
-      if (currentUser !== null && mission !== null) {
-        pageProps.goToPage('MissionFormPage', {
-          mission: mission.clone({
-            method: EMissionCloneMethod.LikeOriginal,
-            expandAll: true,
-          }),
-        })
-      }
-    }
+    // const editMission = () => {
+    //   if (currentUser !== null && mission !== null) {
+    //     pageProps.goToPage('MissionFormPage', {
+    //       missionID: mission.missionID,
+    //     })
+    //   }
+    // }
 
     /* -- RENDER -- */
 
@@ -174,9 +191,30 @@ export default function GamePage(props: {
     // If the user is logged in then the "Login" button will change to "Edit Mission"
     // and the "Sign Out" button will appear.
     let navClassName = 'Navigation'
+    let actionsClassName = 'ActionsContainer'
 
     if (currentUser !== null) {
       navClassName += ' SignOut'
+      actionsClassName += ' show'
+    }
+
+    // Logic that will lock the mission toggle while a request is being sent
+    // to set the mission.live paramter
+    let lockLiveToggle: EToggleLockState = EToggleLockState.Unlocked
+    if (liveAjaxStatus === EAjaxStatus.Loading && mission.live) {
+      lockLiveToggle = EToggleLockState.LockedActivation
+    } else if (liveAjaxStatus === EAjaxStatus.Loading && !mission.live) {
+      lockLiveToggle = EToggleLockState.LockedDeactivation
+    } else {
+      lockLiveToggle = EToggleLockState.Unlocked
+    }
+
+    // Logic that lets the user visually grab their attention to show them that
+    // they don't have any more resources left to spend.
+    let resourcesClassName: string = 'Resources'
+
+    if (mission.resources <= 0) {
+      resourcesClassName += ' RedAlert'
     }
 
     return (
@@ -188,9 +226,13 @@ export default function GamePage(props: {
           <Branding
             goHome={() => pageProps.goToPage('MissionSelectionPage', {})}
             tooltipDescription='Go home.'
+            showTooltip={true}
           />
-          <div className='EditMission Link' onClick={editMission}>
-            Edit mission
+          <div
+            className='Home Link'
+            onClick={() => pageProps.goToPage('MissionSelectionPage', {})}
+          >
+            Back to selection
           </div>
           <div className='Login Link' onClick={login}>
             Login
@@ -202,6 +244,148 @@ export default function GamePage(props: {
         {
           // -- content --
           <div className='Content'>
+            <div className='ResourceAndActionContainer'>
+              <div className={resourcesClassName}>
+                Resources remaining: {mission.resources}
+              </div>
+              <div className={actionsClassName}>
+                <Action
+                  purpose={EActionPurpose.Edit}
+                  handleClick={() => {
+                    setLoadingMessage('')
+
+                    pageProps.goToPage('MissionFormPage', {
+                      missionID: mission.missionID,
+                    })
+                    setLastLoadingMessage('Initializing application...')
+                    setLoadingMessage(null)
+                  }}
+                  tooltipDescription={'Edit mission.'}
+                />
+                <Action
+                  purpose={EActionPurpose.Remove}
+                  handleClick={() => {
+                    pageProps.confirm(
+                      'Are you sure you want to delete this mission?',
+                      (concludeAction: () => void) => {
+                        deleteMission(
+                          mission.missionID,
+                          () => {
+                            // pageProps.notify(
+                            //   `Successfully deleted ${mission.name}.`,
+                            //   1000,
+                            // )
+                            pageProps.goToPage('MissionSelectionPage', {})
+                            setMountHandled(false)
+                            concludeAction()
+                          },
+                          () => {
+                            // pageProps.notify(
+                            //   `Failed to delete ${mission.name}.`,
+                            //   1000,
+                            // )
+                          },
+                        )
+                      },
+                      {
+                        pendingMessageUponConfirm: 'Deleting...',
+                      },
+                    )
+                  }}
+                  tooltipDescription={'Remove mission.'}
+                />
+                <Action
+                  purpose={EActionPurpose.Copy}
+                  handleClick={() => {
+                    pageProps.confirm(
+                      'Enter the name of the new mission.',
+                      (concludeAction: () => void, entry: string) => {
+                        copyMission(
+                          mission.missionID,
+                          entry,
+                          () => {
+                            // pageProps.notify(
+                            //   `Successfully copied ${mission.name}.`,
+                            //   1000,
+                            // )
+                            pageProps.goToPage('MissionSelectionPage', {})
+                            setMountHandled(false)
+                            concludeAction()
+                          },
+                          () => {
+                            // pageProps.notify(
+                            //   `Failed to copy ${mission.name}.`,
+                            //   1000,
+                            // )
+                            concludeAction()
+                          },
+                        )
+                      },
+                      {
+                        requireEntry: true,
+                        entryLabel: 'Name',
+                        buttonConfirmText: 'Copy',
+                        pendingMessageUponConfirm: 'Copying...',
+                      },
+                    )
+                  }}
+                  tooltipDescription={'Copy mission.'}
+                />
+                <div className='ToggleContainer'>
+                  <Toggle
+                    initiallyActivated={mission.live}
+                    lockState={lockLiveToggle}
+                    deliverValue={(live: boolean) => {
+                      mission.live = live
+
+                      setLive(
+                        mission.missionID,
+                        live,
+                        () => {
+                          if (live) {
+                            // pageProps.notify(
+                            //   `${mission.name} was successfully turned on.`,
+                            //   3000,
+                            // )
+                            setLiveAjaxStatus(EAjaxStatus.Loaded)
+                          } else {
+                            // pageProps.notify(
+                            //   `${mission.name} was successfully turned off.`,
+                            //   3000,
+                            // )
+                            setLiveAjaxStatus(EAjaxStatus.Loaded)
+                          }
+                        },
+                        () => {
+                          if (live) {
+                            // pageProps.notify(
+                            //   `${mission.name} failed to turn on.`,
+                            //   3000,
+                            // )
+                            setLiveAjaxStatus(EAjaxStatus.Error)
+                          } else {
+                            // pageProps.notify(
+                            //   `${mission.name} failed to turn off.`,
+                            //   3000,
+                            // )
+                            setLiveAjaxStatus(EAjaxStatus.Error)
+                          }
+                        },
+                      )
+                      setLiveAjaxStatus(EAjaxStatus.Loading)
+                    }}
+                  />
+                  <Tooltip
+                    description={
+                      !mission.live
+                        ? 'Set mission as live. Allowing students to access it.'
+                        : 'Set mission as no longer live. Preventing students from accessing it.'
+                    }
+                    display={true}
+                  />
+                </div>
+              </div>
+            </div>
             <MissionMap
               mission={mission}
               missionAjaxStatus={EAjaxStatus.Loaded}
@@ -257,14 +441,14 @@ export default function GamePage(props: {
                 return className
               }}
               renderNodeTooltipDescription={(node: MissionNode) => {
-                let description = ''
+                let description: string = ''
                 let nodeActionDisplay = 'None selected'
 
                 if (node.selectedAction !== null) {
                   nodeActionDisplay = node.selectedAction.name
                 }
 
-                if (node.executable === true && node.executed) {
+                if (node.executable && node.executed) {
                   description =
                     `* Executed node in ${
                       (node.selectedAction?.processTime as number) / 1000
@@ -272,7 +456,23 @@ export default function GamePage(props: {
                     `* Action executed: ${node.selectedAction?.name}\n` +
                     `* Chance of success: ${
                       (node.successChance as number) * 100
-                    }%\n`
+                    }%\n` +
+                    `* Device: ${
+                      // This capitalizes the first letter of the word.
+                      node.device.toString().charAt(0).toUpperCase() +
+                      node.device.toString().slice(1)
+                    }\n` +
+                    `* Executable: ${
+                      node.executable.toString().charAt(0).toUpperCase() +
+                      node.executable.toString().slice(1)
+                    }`
+                }
+
+                // This is for the tooltip message that will display
+                if (node.device && node.executable && !node.executed) {
+                  description = '* Device: True\n' + '* Executable: True'
+                } else if (node.executable && !node.device && !node.executed) {
+                  description = '* Device: False\n' + '* Executable: True'
                 }
 
                 return description
@@ -280,7 +480,11 @@ export default function GamePage(props: {
             />
             <OutputPanel />
             <NodeActions selectedNode={lastSelectedNode} />
-            <ExecuteNodePath selectedNode={lastSelectedNode} />
+            <ExecuteNodePath
+              mission={mission}
+              selectedNode={lastSelectedNode}
+              notify={pageProps.notify}
+            />
           </div>
         }
       </div>

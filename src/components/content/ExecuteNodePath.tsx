@@ -1,12 +1,21 @@
-import { useState } from 'react'
 import './ExecuteNodePath.scss'
 import { useStore } from 'react-context-hook'
 import { MissionNode } from '../../modules/mission-nodes'
 import { MissionNodeAction } from '../../modules/mission-node-actions'
 import gameLogic, { runNodeLoadingBar } from '../../modules/game-logic'
 import ActionPropertyDisplay from './ActionPropertyDisplay'
+import { Mission } from '../../modules/missions'
+import Notification from '../../modules/notifications'
+import { isDisabled } from '@testing-library/user-event/dist/utils'
+import Tooltip from './Tooltip'
 
-const ExecuteNodePath = (props: { selectedNode: MissionNode | null }) => {
+const ExecuteNodePath = (props: {
+  mission: Mission
+  selectedNode: MissionNode | null
+  notify: (message: string, duration: number | null) => Notification
+}) => {
+  let mission: Mission = props.mission
+
   /* -- GLOBAL STATE -- */
   const [consoleOutputs, setConsoleOutputs] =
     useStore<Array<{ date: number; value: string }>>('consoleOutputs')
@@ -20,20 +29,12 @@ const ExecuteNodePath = (props: { selectedNode: MissionNode | null }) => {
   ] = useStore<boolean>('actionSelectionPromptIsDisplayed')
   const [processTime] = useStore<number>('processTime')
   const [actionName] = useStore<string>('actionName')
-  const [actionSuccessChance, setActionSuccessChance] = useStore<number>(
-    'actionSuccessChance',
-  )
   const [actionDisplay, setActionDisplay] =
     useStore<Array<MissionNodeAction>>('actionDisplay')
 
   /* -- COMPONENT STATE -- */
-  const [forcedUpdateCounter, setForcedUpdateCounter] = useState<number>(0)
 
   /* -- COMPONENT FUNCTIONS -- */
-  // This forces a rerender of the component.
-  const forceUpdate = (): void => {
-    setForcedUpdateCounter(forcedUpdateCounter + 1)
-  }
 
   // Closes the execution prompt window
   const closeWindow = (): void => {
@@ -45,52 +46,68 @@ const ExecuteNodePath = (props: { selectedNode: MissionNode | null }) => {
     if (props.selectedNode !== null) {
       let selectedNode: MissionNode = props.selectedNode
 
-      setExecuteNodePathPromptIsDisplayed(false)
+      if (mission.resources > 0) {
+        setExecuteNodePathPromptIsDisplayed(false)
 
-      selectedNode.execute((success: boolean) => {
-        // Output message in the terminal which differs based on whether
-        // it passes or fails
+        selectedNode.execute((success: boolean) => {
+          // Output message in the terminal which differs based on whether
+          // it passes or fails
 
-        if (success) {
-          gameLogic.handleNodeSelection(selectedNode)
+          if (success) {
+            gameLogic.handleNodeSelection(selectedNode)
 
-          setConsoleOutputs([
-            ...consoleOutputs,
-            {
-              date: Date.now(),
-              value: `<span class='line-cursor'>MDL@${selectedNode.name.replaceAll(
-                ' ',
-                '-',
-              )}: </span>
+            setConsoleOutputs([
+              ...consoleOutputs,
+              {
+                date: Date.now(),
+                value: `<span class='line-cursor'>MDL@${selectedNode.name.replaceAll(
+                  ' ',
+                  '-',
+                )}: </span>
                      <span class="succeeded">${
                        selectedNode.postExecutionSuccessText
                      }</span>`,
-            },
-          ])
-        } else {
-          setConsoleOutputs([
-            ...consoleOutputs,
-            {
-              date: Date.now(),
-              value: `<span class='line-cursor'>MDL@${selectedNode.name.replaceAll(
-                ' ',
-                '-',
-              )}: </span>
+              },
+            ])
+          } else {
+            setConsoleOutputs([
+              ...consoleOutputs,
+              {
+                date: Date.now(),
+                value: `<span class='line-cursor'>MDL@${selectedNode.name.replaceAll(
+                  ' ',
+                  '-',
+                )}: </span>
                     <span class="failed">${
                       selectedNode.postExecutionFailureText
                     }</span>`,
-            },
-          ])
-        }
-      })
-      runNodeLoadingBar(processTime)
-      setActionDisplay([])
+              },
+            ])
+          }
+        })
+        runNodeLoadingBar(processTime)
+        setActionDisplay([])
+        mission.resources--
+      } else {
+        // props.notify(`You have no more resources to spend.`, 3000)
+      }
     }
   }
 
   const selectAlternativeAction = () => {
     setExecuteNodePathPromptIsDisplayed(false)
     setActionSelectionPromptIsDisplayed(true)
+  }
+
+  /* -- RENDER -- */
+
+  // Logic to disable the execute button once a user is out of tokens.
+  let executionButtonClassName: string = 'Button ExecutionButton'
+  let displayTooltip: boolean = false
+
+  if (mission.resources <= 0) {
+    executionButtonClassName += ' disabled'
+    displayTooltip = true
   }
 
   return (
@@ -103,9 +120,14 @@ const ExecuteNodePath = (props: { selectedNode: MissionNode | null }) => {
       </p>
       <ActionPropertyDisplay selectedNode={props.selectedNode} />
       <div className='Buttons'>
-        <button className='Button ExecutionButton' onClick={execute}>
+        <button className={executionButtonClassName} onClick={execute}>
           {actionName}
+          <Tooltip
+            description={`You cannot ${actionName.toLowerCase()} because you have no more resources left to spend.`}
+            display={displayTooltip}
+          />
         </button>
+
         <button
           className='Button AdditionalActionButton'
           onClick={selectAlternativeAction}

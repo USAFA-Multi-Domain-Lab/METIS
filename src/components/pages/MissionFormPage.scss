@@ -32,27 +32,25 @@ $background-bar: linear-gradient(
   margin: 0 auto;
   padding: 35px 75px 0;
 
-  &.SidePanelIsExpanded {
-    .Content {
-      grid-template-columns: auto 325px;
-    }
-  }
-
-  &:not(.SidePanelIsExpanded) {
-    .Content {
-      grid-template-columns: auto;
-    }
-  }
+  //   &.SidePanelIsExpanded {
+  //     .Content {
+  //     }
+  //   }
+  //
+  //   &:not(.SidePanelIsExpanded) {
+  //     .Content {
+  //       grid-template-columns: auto;
+  //     }
+  //   }
 
   .Navigation {
     display: grid;
-    grid-template-columns: auto 130px;
+    grid-template-columns: auto 130px 130px 130px;
     margin: 0 auto 55px;
     height: 30px;
     vertical-align: bottom;
 
     .Branding {
-      width: fit-content;
       padding-right: 20px;
     }
 
@@ -83,6 +81,7 @@ $background-bar: linear-gradient(
 
   .Content {
     display: grid;
+    grid-template-columns: auto 325px;
     margin: 0 auto;
 
     .MissionMap {
@@ -155,7 +154,7 @@ $background-bar: linear-gradient(
           font-family: 'Arial', monospace;
           font-size: 22px;
           font-weight: bolder;
-          line-height: 0.825em;
+          line-height: 0.82em;
         }
       }
     }
@@ -260,10 +259,11 @@ $background-bar: linear-gradient(
 
   &.NodeStructuring {
     .BorderBox {
+      overflow-y: hidden;
       .Nodes {
         overflow-x: auto;
         overflow-y: auto;
-        margin: 0 0 40px 0;
+        margin: 0;
         height: 100%;
         padding: 0;
 
