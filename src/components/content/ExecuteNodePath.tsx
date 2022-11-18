@@ -102,11 +102,11 @@ const ExecuteNodePath = (props: {
   /* -- RENDER -- */
 
   // Logic to disable the execute button once a user is out of tokens.
-  let isDisabled: boolean = false
+  let executionButtonClassName: string = 'Button ExecutionButton'
   let displayTooltip: boolean = false
 
   if (mission.resources <= 0) {
-    isDisabled = true
+    executionButtonClassName += ' disabled'
     displayTooltip = true
   }
 
@@ -120,11 +120,7 @@ const ExecuteNodePath = (props: {
       </p>
       <ActionPropertyDisplay selectedNode={props.selectedNode} />
       <div className='Buttons'>
-        <button
-          className='Button ExecutionButton'
-          onClick={execute}
-          disabled={isDisabled}
-        >
+        <button className={executionButtonClassName} onClick={execute}>
           {actionName}
           <Tooltip
             description={`You cannot ${actionName.toLowerCase()} because you have no more resources left to spend.`}
