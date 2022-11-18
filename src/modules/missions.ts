@@ -5,6 +5,7 @@ import axios, { AxiosError, AxiosResponse } from 'axios'
 import { AnyObject } from './toolbox/objects'
 import { MissionNode } from './mission-nodes'
 import { MissionNodeAction } from './mission-node-actions'
+import { AjaxStatus } from '../components/content/AjaxStatusDisplay'
 
 // This is the method that the clone
 // function in the Mission class uses
@@ -39,6 +40,9 @@ export interface IMissionCloneOptions {
 // This represents a mission for a
 // student to complete.
 export class Mission {
+  static setRequestInProgress() {
+    throw new Error('Method not implemented.')
+  }
   missionID: string
   name: string
   versionNumber: number

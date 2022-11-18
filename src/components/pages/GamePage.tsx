@@ -81,6 +81,7 @@ export default function GamePage(props: {
       )
     } else if (mountHandled && !pageProps.isCurrentPage) {
       setMission(null)
+      setLastSelectedNode(null)
       setMountHandled(false)
     }
   }, [mountHandled, pageProps.isCurrentPage])

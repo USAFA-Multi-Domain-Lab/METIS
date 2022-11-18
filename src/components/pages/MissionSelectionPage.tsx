@@ -3,7 +3,6 @@ import { useStore } from 'react-context-hook'
 import {
   copyMission,
   deleteMission,
-  EMissionCloneMethod,
   getAllMissions,
   getMission,
   Mission,
@@ -18,7 +17,7 @@ import { Counter } from '../../modules/numbers'
 import { Action, EActionPurpose } from '../content/Action'
 import Toggle, { EToggleLockState } from '../content/Toggle'
 import Tooltip from '../content/Tooltip'
-import { Detail } from '../content/Form'
+import { EAjaxStatus } from '../../modules/toolbox/ajax'
 
 interface IMissionSelectionPageProps extends IPageProps {}
 
@@ -59,6 +58,9 @@ const MissionSelectionPage = (props: {
 
   const [mountHandled, setMountHandled] = useState<boolean>(false)
   const [missions, setMissions] = useState<Array<Mission>>([])
+  const [liveAjaxStatus, setLiveAjaxStatus] = useState<EAjaxStatus>(
+    EAjaxStatus.NotLoaded,
+  )
 
   /* -- COMPONENT EFFECTS -- */
 
@@ -88,6 +90,8 @@ const MissionSelectionPage = (props: {
       )
     } else if (mountHandled && !pageProps.isCurrentPage) {
       setMountHandled(false)
+      setMissions([])
+      setLiveAjaxStatus(EAjaxStatus.NotLoaded)
     }
   }, [mountHandled, pageProps.isCurrentPage])
 
@@ -162,8 +166,6 @@ const MissionSelectionPage = (props: {
     let navClassName: string = 'Navigation'
     let editMissionsContainerClassName: string = 'EditMissionsContainer'
     let editMissionListClassName: string = 'MissionList'
-    let individualMissionContainerClassName: string =
-      'IndividualMissionContainer'
 
     if (currentUser !== null) {
       navClassName += ' SignOut'
@@ -195,6 +197,34 @@ const MissionSelectionPage = (props: {
                 <div className='Heading'>Select your mission:</div>
               </div>
               {missions.map((mission: Mission) => {
+                // Logic for missions to appear/disappear for students
+                // based on what the instructor sets the individual
+                // mission to.
+                let individualMissionContainerClassName: string =
+                  'IndividualMissionContainer'
+                if (mission.live) {
+                  individualMissionContainerClassName += ' show'
+                } else if (currentUser !== null) {
+                  individualMissionContainerClassName += ' show'
+                } else {
+                  individualMissionContainerClassName =
+                    'IndividualMissionContainer'
+                }
+
+                // Logic that will lock the mission toggle while a request is being sent
+                // to set the mission.live paramter
+                let lockLiveToggle: EToggleLockState = EToggleLockState.Unlocked
+                if (liveAjaxStatus === EAjaxStatus.Loading && mission.live) {
+                  lockLiveToggle = EToggleLockState.LockedActivation
+                } else if (
+                  liveAjaxStatus === EAjaxStatus.Loading &&
+                  !mission.live
+                ) {
+                  lockLiveToggle = EToggleLockState.LockedDeactivation
+                } else {
+                  lockLiveToggle = EToggleLockState.Unlocked
+                }
+
                 return (
                   <div
                     className={individualMissionContainerClassName}
@@ -230,19 +260,18 @@ const MissionSelectionPage = (props: {
                               deleteMission(
                                 mission.missionID,
                                 () => {
-                                  pageProps.notify(
-                                    `Successfully deleted ${mission.name}.`,
-                                    1000,
-                                  )
+                                  // pageProps.notify(
+                                  //   `Successfully deleted ${mission.name}.`,
+                                  //   1000,
+                                  // )
                                   setMountHandled(false)
                                   concludeAction()
                                 },
                                 () => {
-                                  pageProps.notify(
-                                    `Failed to delete ${mission.name}.`,
-                                    1000,
-                                  )
-                                  concludeAction()
+                                  // pageProps.notify(
+                                  //   `Failed to delete ${mission.name}.`,
+                                  //   1000,
+                                  // )
                                 },
                               )
                             },
@@ -263,18 +292,18 @@ const MissionSelectionPage = (props: {
                                 mission.missionID,
                                 entry,
                                 () => {
-                                  pageProps.notify(
-                                    `Successfully copied ${mission.name}.`,
-                                    1000,
-                                  )
+                                  // pageProps.notify(
+                                  //   `Successfully copied ${mission.name}.`,
+                                  //   1000,
+                                  // )
                                   setMountHandled(false)
                                   concludeAction()
                                 },
                                 () => {
-                                  pageProps.notify(
-                                    `Failed to copy ${mission.name}.`,
-                                    1000,
-                                  )
+                                  // pageProps.notify(
+                                  //   `Failed to copy ${mission.name}.`,
+                                  //   1000,
+                                  // )
                                   concludeAction()
                                 },
                               )
@@ -292,11 +321,7 @@ const MissionSelectionPage = (props: {
                       <div className='ToggleContainer'>
                         <Toggle
                           initiallyActivated={mission.live}
-                          // lockState={
-                          //   mission
-                          //     ? EToggleLockState.Unlocked
-                          //     : EToggleLockState.LockedDeactivation
-                          // }
+                          lockState={lockLiveToggle}
                           deliverValue={(live: boolean) => {
                             mission.live = live
 
@@ -305,31 +330,36 @@ const MissionSelectionPage = (props: {
                               live,
                               () => {
                                 if (live) {
-                                  pageProps.notify(
-                                    'Mission was successfully turned on.',
-                                    3000,
-                                  )
+                                  // pageProps.notify(
+                                  //   `${mission.name} was successfully turned on.`,
+                                  //   3000,
+                                  // )
+                                  setLiveAjaxStatus(EAjaxStatus.Loaded)
                                 } else {
-                                  pageProps.notify(
-                                    'Mission was successfully turned off.',
-                                    3000,
-                                  )
+                                  // pageProps.notify(
+                                  //   `${mission.name} was successfully turned off.`,
+                                  //   3000,
+                                  // )
+                                  setLiveAjaxStatus(EAjaxStatus.Loaded)
                                 }
                               },
                               () => {
                                 if (live) {
-                                  pageProps.notify(
-                                    'Mission failed to turn on.',
-                                    3000,
-                                  )
+                                  // pageProps.notify(
+                                  //   `${mission.name} failed to turn on.`,
+                                  //   3000,
+                                  // )
+                                  setLiveAjaxStatus(EAjaxStatus.Error)
                                 } else {
-                                  pageProps.notify(
-                                    'Mission failed to turn off.',
-                                    3000,
-                                  )
+                                  // pageProps.notify(
+                                  //   `${mission.name} failed to turn off.`,
+                                  //   3000,
+                                  // )
+                                  setLiveAjaxStatus(EAjaxStatus.Error)
                                 }
                               },
                             )
+                            setLiveAjaxStatus(EAjaxStatus.Loading)
                           }}
                         />
                         <Tooltip
@@ -353,12 +383,6 @@ const MissionSelectionPage = (props: {
               tooltipDescription={'Create new mission'}
               uniqueClassName={'NewMissionButton'}
             />
-            {/* <Action
-              purpose={EActionPurpose.Save}
-              handleClick={() => {}}
-              tooltipDescription={'Save Changes'}
-              uniqueClassName={'SaveButton'}
-            /> */}
           </div>
         </div>
 
