@@ -5,7 +5,6 @@ import axios, { AxiosError, AxiosResponse } from 'axios'
 import { AnyObject } from './toolbox/objects'
 import { MissionNode } from './mission-nodes'
 import { MissionNodeAction } from './mission-node-actions'
-import { AjaxStatus } from '../components/content/AjaxStatusDisplay'
 
 // This is the method that the clone
 // function in the Mission class uses
