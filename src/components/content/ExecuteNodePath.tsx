@@ -4,9 +4,10 @@ import { MissionNode } from '../../modules/mission-nodes'
 import { MissionNodeAction } from '../../modules/mission-node-actions'
 import gameLogic, { runNodeLoadingBar } from '../../modules/game-logic'
 import ActionPropertyDisplay from './ActionPropertyDisplay'
-import { IPageProps } from '../App'
 import { Mission } from '../../modules/missions'
 import Notification from '../../modules/notifications'
+import { isDisabled } from '@testing-library/user-event/dist/utils'
+import Tooltip from './Tooltip'
 
 const ExecuteNodePath = (props: {
   mission: Mission
@@ -88,7 +89,7 @@ const ExecuteNodePath = (props: {
         setActionDisplay([])
         mission.resources--
       } else {
-        props.notify(`You have no more resources to spend.`, 3000)
+        // props.notify(`You have no more resources to spend.`, 3000)
       }
     }
   }
@@ -96,6 +97,17 @@ const ExecuteNodePath = (props: {
   const selectAlternativeAction = () => {
     setExecuteNodePathPromptIsDisplayed(false)
     setActionSelectionPromptIsDisplayed(true)
+  }
+
+  /* -- RENDER -- */
+
+  // Logic to disable the execute button once a user is out of tokens.
+  let isDisabled: boolean = false
+  let displayTooltip: boolean = false
+
+  if (mission.resources <= 0) {
+    isDisabled = true
+    displayTooltip = true
   }
 
   return (
@@ -108,9 +120,18 @@ const ExecuteNodePath = (props: {
       </p>
       <ActionPropertyDisplay selectedNode={props.selectedNode} />
       <div className='Buttons'>
-        <button className='Button ExecutionButton' onClick={execute}>
+        <button
+          className='Button ExecutionButton'
+          onClick={execute}
+          disabled={isDisabled}
+        >
           {actionName}
+          <Tooltip
+            description={`You cannot ${actionName.toLowerCase()} because you have no more resources left to spend.`}
+            display={displayTooltip}
+          />
         </button>
+
         <button
           className='Button AdditionalActionButton'
           onClick={selectAlternativeAction}

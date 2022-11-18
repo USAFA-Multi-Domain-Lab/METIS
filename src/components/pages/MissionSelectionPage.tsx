@@ -4,7 +4,6 @@ import {
   copyMission,
   deleteMission,
   getAllMissions,
-  getMission,
   Mission,
   setLive,
 } from '../../modules/missions'
@@ -235,7 +234,7 @@ const MissionSelectionPage = (props: {
                       onClick={() => selectMission(mission.missionID)}
                     >
                       {number.count++}. {mission.name}
-                      <Tooltip description={'Launch mission.'} />
+                      <Tooltip description={'Launch mission.'} display={true} />
                     </div>
                     <div className='ActionsContainer'>
                       <Action
@@ -368,6 +367,7 @@ const MissionSelectionPage = (props: {
                               ? 'Set mission as live. Allowing students to access it.'
                               : 'Set mission as no longer live. Preventing students from accessing it.'
                           }
+                          display={true}
                         />
                       </div>
                     </div>

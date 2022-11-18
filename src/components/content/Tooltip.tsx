@@ -8,6 +8,7 @@ import { v4 as uuid } from 'uuid'
 
 interface ITooltip {
   description: string
+  display: boolean
 }
 interface ITooltip_S {}
 
@@ -108,13 +109,16 @@ export default class Tooltip extends React.Component<ITooltip, ITooltip_S> {
   render() {
     return (
       <div className='Tooltip' ref={this.rootElement}>
-        <TooltipLogic tooltip={this} />
+        <TooltipLogic tooltip={this} display={this.props.display} />
       </div>
     )
   }
 }
 
-function TooltipLogic(props: { tooltip: Tooltip }): JSX.Element | null {
+function TooltipLogic(props: {
+  tooltip: Tooltip
+  display: boolean
+}): JSX.Element | null {
   const [getCurrentTooltipID] = useStore<() => string | null>(
     'getCurrentTooltipID',
   )
@@ -124,15 +128,19 @@ function TooltipLogic(props: { tooltip: Tooltip }): JSX.Element | null {
 
   let tooltip: Tooltip = props.tooltip
 
-  return (
-    <div className='TooltipLogic'>
-      {((): null => {
-        tooltip.getCurrentTooltipID = getCurrentTooltipID
-        tooltip.showTooltip = showTooltip
-        tooltip.hideTooltip = hideTooltip
+  if (props.display) {
+    return (
+      <div className='TooltipLogic'>
+        {((): null => {
+          tooltip.getCurrentTooltipID = getCurrentTooltipID
+          tooltip.showTooltip = showTooltip
+          tooltip.hideTooltip = hideTooltip
 
-        return null
-      })()}
-    </div>
-  )
+          return null
+        })()}
+      </div>
+    )
+  } else {
+    return null
+  }
 }

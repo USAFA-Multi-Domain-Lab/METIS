@@ -18,7 +18,6 @@
     height: 30px;
 
     .Branding {
-      width: fit-content;
       padding-right: 20px;
     }
     .Link {
@@ -188,10 +187,6 @@
               }
             }
 
-            .Toggle {
-              margin-left: 5px;
-            }
-
             .edit {
               background: url('../../assets/images/icons/edit.svg');
               background-size: 65% 65%;
@@ -223,6 +218,7 @@
             }
 
             .Toggle {
+              margin-left: 5px;
               background-color: transparent;
 
               &.Activated {
