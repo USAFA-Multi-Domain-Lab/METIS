@@ -273,17 +273,17 @@ const MissionSelectionPage = (props: {
                               deleteMission(
                                 mission.missionID,
                                 () => {
-                                  pageProps.notify(
-                                    `Successfully deleted ${mission.name}.`,
-                                    1000,
-                                  )
+                                  // pageProps.notify(
+                                  //   `Successfully deleted ${mission.name}.`,
+                                  //   1000,
+                                  // )
                                   setMountHandled(false)
                                 },
                                 () => {
-                                  pageProps.notify(
-                                    `Failed to delete ${mission.name}.`,
-                                    1000,
-                                  )
+                                  // pageProps.notify(
+                                  //   `Failed to delete ${mission.name}.`,
+                                  //   1000,
+                                  // )
                                 },
                               )
                             },
@@ -302,17 +302,17 @@ const MissionSelectionPage = (props: {
                                   mission.missionID,
                                   entry,
                                   () => {
-                                    pageProps.notify(
-                                      `Successfully copied ${mission.name}.`,
-                                      1000,
-                                    )
+                                    // pageProps.notify(
+                                    //   `Successfully copied ${mission.name}.`,
+                                    //   1000,
+                                    // )
                                     setMountHandled(false)
                                   },
                                   () => {
-                                    pageProps.notify(
-                                      `Failed to copy ${mission.name}.`,
-                                      1000,
-                                    )
+                                    // pageProps.notify(
+                                    //   `Failed to copy ${mission.name}.`,
+                                    //   1000,
+                                    // )
                                   },
                                 )
                               }
@@ -337,31 +337,31 @@ const MissionSelectionPage = (props: {
                               live,
                               () => {
                                 if (live) {
-                                  pageProps.notify(
-                                    `${mission.name} was successfully turned on.`,
-                                    3000,
-                                  )
+                                  // pageProps.notify(
+                                  //   `${mission.name} was successfully turned on.`,
+                                  //   3000,
+                                  // )
                                   setLiveAjaxStatus(EAjaxStatus.Loaded)
                                 } else {
-                                  pageProps.notify(
-                                    `${mission.name} was successfully turned off.`,
-                                    3000,
-                                  )
+                                  // pageProps.notify(
+                                  //   `${mission.name} was successfully turned off.`,
+                                  //   3000,
+                                  // )
                                   setLiveAjaxStatus(EAjaxStatus.Loaded)
                                 }
                               },
                               () => {
                                 if (live) {
-                                  pageProps.notify(
-                                    `${mission.name} failed to turn on.`,
-                                    3000,
-                                  )
+                                  // pageProps.notify(
+                                  //   `${mission.name} failed to turn on.`,
+                                  //   3000,
+                                  // )
                                   setLiveAjaxStatus(EAjaxStatus.Error)
                                 } else {
-                                  pageProps.notify(
-                                    `${mission.name} failed to turn off.`,
-                                    3000,
-                                  )
+                                  // pageProps.notify(
+                                  //   `${mission.name} failed to turn off.`,
+                                  //   3000,
+                                  // )
                                   setLiveAjaxStatus(EAjaxStatus.Error)
                                 }
                               },
@@ -384,12 +384,6 @@ const MissionSelectionPage = (props: {
               tooltipDescription={'Create new mission'}
               uniqueClassName={'NewMissionButton'}
             />
-            {/* <Action
-              purpose={EActionPurpose.Save}
-              handleClick={() => {}}
-              tooltipDescription={'Save Changes'}
-              uniqueClassName={'SaveButton'}
-            /> */}
           </div>
         </div>
 
