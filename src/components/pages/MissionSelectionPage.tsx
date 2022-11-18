@@ -205,6 +205,7 @@ const MissionSelectionPage = (props: {
                       onClick={() => selectMission(mission.missionID)}
                     >
                       {number.count++}. {mission.name}
+                      <Tooltip description={'Launch mission.'} />
                     </div>
                     <div className='ActionsContainer'>
                       <Action

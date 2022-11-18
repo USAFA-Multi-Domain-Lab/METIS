@@ -76,6 +76,7 @@ function StandardPage(props: {
   )
   const [forcedUpdateCounter, setForcedUpdateCounter] = useStore<number>(
     'forcedUpdateCounter',
+    0,
   )
 
   /* -- fields -- */
@@ -113,6 +114,7 @@ function StandardPage(props: {
             notifications.splice(notifications.indexOf(notification), 1)
           }, 1000)
         }
+        forceUpdate()
       },
       duration,
     )
@@ -238,7 +240,7 @@ function App(): JSX.Element | null {
   const [tooltipDescription] = useStore<string>('tooltipDescription')
   const [tooltips] = useStore<React.RefObject<HTMLDivElement>>('tooltips')
   const [hideTooltip] = useStore<() => void>('hideTooltip')
-  const [notifications] = useStore<Array<Notification>>('notifications')
+  const [notifications] = useStore<Array<Notification>>('notifications', [])
   const [confirmation, setConfirmation] = useStore<IConfirmation | null>(
     'confirmation',
     null,

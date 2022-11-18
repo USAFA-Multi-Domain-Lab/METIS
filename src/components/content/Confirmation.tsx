@@ -83,7 +83,13 @@ export default class Confirmation extends React.Component<
         ? ' hidden'
         : ''
     }`
-    let entryClassName: string = `entry${requireEntry ? '' : ' hidden'}`
+    let entryClassName: string = `entry${
+      !requireEntry ||
+      confirmAjaxStatus === EAjaxStatus.Loading ||
+      alternateAjaxStatus === EAjaxStatus.Loading
+        ? ' hidden'
+        : ''
+    }`
     let actionsClassName: string = `actions${
       confirmAjaxStatus === EAjaxStatus.Loading ||
       alternateAjaxStatus === EAjaxStatus.Loading

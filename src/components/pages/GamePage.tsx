@@ -65,12 +65,12 @@ export default function GamePage(props: {
   // Equivalent of componentDidMount.
   useEffect(() => {
     if (!mountHandled && pageProps.isCurrentPage) {
-      setLoadingMessage('Loading mission...')
+      setLoadingMessage('Launching mission...')
       getMission(
         pageProps.missionID,
         (mission: Mission) => {
           setLoadingMessage(null)
-          setLastLoadingMessage('Loading mission...')
+          setLastLoadingMessage('Launching mission...')
           setMission(mission)
           setMountHandled(true)
         },
@@ -194,8 +194,11 @@ export default function GamePage(props: {
             tooltipDescription='Go home.'
             showTooltip={true}
           />
-          <div className='EditMission Link' onClick={editMission}>
-            Edit mission
+          <div
+            className='Home Link'
+            onClick={() => pageProps.goToPage('MissionSelectionPage', {})}
+          >
+            Back to selection
           </div>
           <div className='Login Link' onClick={login}>
             Login
