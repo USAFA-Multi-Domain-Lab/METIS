@@ -65,7 +65,7 @@ const MissionSelectionPage = (props: {
   // Equivalent of componentDidMount.
   useEffect(() => {
     if (!mountHandled && pageProps.isCurrentPage) {
-      let loadingMessage: string = 'Getting missions...'
+      let loadingMessage: string = 'Retrieving missions...'
 
       setLoadingMessage(loadingMessage)
 
