@@ -26,6 +26,7 @@ import { IPageProps } from '../App'
 import { ENodeTargetRelation, MissionNode } from '../../modules/mission-nodes'
 import { MissionNodeAction } from '../../modules/mission-node-actions'
 import { EToggleLockState } from '../content/Toggle'
+import Markdown, { MarkdownTheme } from '../content/Markdown'
 
 // This is a enum used to describe
 // the locations that one node can
@@ -921,14 +922,7 @@ function NodeStructuring(props: {
               }
             }}
           >
-            <svg className='Indicator'>
-              <polygon
-                points='0,0 7,0 3.5,7'
-                style={{ transformOrigin: '3.5px 3.5px' }}
-                className='Triangle'
-                fill='#fff'
-              />
-            </svg>
+            <div className='Indicator'>•</div>
             <div className='Name'>{node.name}</div>
           </div>
           <div

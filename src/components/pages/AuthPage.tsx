@@ -101,9 +101,6 @@ export default function AuthPage(props: {
               setLastLoadingMessage('Initializing application...')
               setCurrentUser(currentUser)
 
-              console.log(pageProps.postLoginPagePath)
-              console.log(pageProps.postLoginPathProps)
-
               pageProps.goToPage(
                 pageProps.postLoginPagePath,
                 pageProps.postLoginPathProps,

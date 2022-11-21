@@ -71,8 +71,6 @@ router.get('/', (request, response) => {
   } else {
     Mission.findOne({ missionID: idValue }).exec(
       (error: Error, mission: any) => {
-        console.log(mission)
-
         if (error !== null) {
           console.error(error)
           return response.sendStatus(500)
