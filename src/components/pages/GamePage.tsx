@@ -313,7 +313,6 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
                         ? 'Set mission as live. Allowing students to access it.'
                         : 'Set mission as no longer live. Preventing students from accessing it.'
                     }
-                    display={true}
                   />
                 </div>
               </div>

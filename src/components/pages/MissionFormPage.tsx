@@ -426,7 +426,7 @@ function NodeEntry(props: {
             <div className='Circle'>
               <div className='X'>x</div>
             </div>
-            <Tooltip description='Close panel.' display={true} />
+            <Tooltip description='Close panel.' />
           </div>
           <Detail
             label='Name'
@@ -475,10 +475,7 @@ function NodeEntry(props: {
           >
             {'[ '}
             <span>Fill</span> {' ]'}
-            <Tooltip
-              description='Shade all descendant nodes this color as well.'
-              display={true}
-            />
+            <Tooltip description='Shade all descendant nodes this color as well.' />
           </div>
           <DetailToggle
             label={'Executable'}
@@ -671,10 +668,7 @@ function NodeAction(props: {
       >
         {'[ '}
         <span>Delete Action</span> {' ]'}
-        <Tooltip
-          description='Delete this action from the node.'
-          display={true}
-        />
+        <Tooltip description='Delete this action from the node.' />
       </div>
     </div>
   )
@@ -962,7 +956,7 @@ function NodeStructuring(props: {
             <div className='Circle'>
               <div className='X'>x</div>
             </div>
-            <Tooltip description='Close panel.' display={true} />
+            <Tooltip description='Close panel.' />
           </div>
           {renderNodes()}
         </div>

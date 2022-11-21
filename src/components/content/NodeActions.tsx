@@ -100,7 +100,6 @@ const NodeActions = (props: {
                   }%\n` +
                   `* Description: ${action.description}`
                 }
-                display={true}
               />
               {action.name}
             </div>

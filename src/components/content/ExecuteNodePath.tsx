@@ -122,10 +122,11 @@ const ExecuteNodePath = (props: {
       <div className='Buttons'>
         <button className={executionButtonClassName} onClick={execute}>
           {actionName}
-          <Tooltip
-            description={`You cannot ${actionName.toLowerCase()} because you have no more resources left to spend.`}
-            display={displayTooltip}
-          />
+          {displayTooltip ? (
+            <Tooltip
+              description={`You cannot ${actionName.toLowerCase()} because you have no more resources left to spend.`}
+            />
+          ) : null}
         </button>
 
         <button

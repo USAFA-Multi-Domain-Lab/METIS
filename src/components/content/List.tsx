@@ -509,9 +509,7 @@ export default class List<TList extends object> extends React.Component<
             }}
           />
           <div className='search-hint'>{filterHint}</div>
-          {hideSearchTooltip ? null : (
-            <Tooltip description={'Search list.'} display={true} />
-          )}
+          {hideSearchTooltip ? null : <Tooltip description={'Search list.'} />}
         </div>
         {/* {this.renderSortByMethods()} */}
       </div>
@@ -791,7 +789,7 @@ export default class List<TList extends object> extends React.Component<
                   <div className='properties'>{propertyElements}</div>
                 ) : null}
                 {tooltipDescription ? (
-                  <Tooltip description={tooltipDescription} display={true} />
+                  <Tooltip description={tooltipDescription} />
                 ) : null}
               </div>,
             )
@@ -937,9 +935,7 @@ export default class List<TList extends object> extends React.Component<
         <div className='top'>
           <div className={previousPageClassName} onClick={this.turnBackPage}>
             {'<'}
-            {isPreviousPage ? (
-              <Tooltip description={'Previous page.'} display={true} />
-            ) : null}
+            {isPreviousPage ? <Tooltip description={'Previous page.'} /> : null}
           </div>
           <div className='list-header'>
             <h2 className='list-heading'>
@@ -951,9 +947,7 @@ export default class List<TList extends object> extends React.Component<
           </div>
           <div className={nextPageClassName} onClick={this.turnPage}>
             {'>'}
-            {isNextPage ? (
-              <Tooltip description={'Next page.'} display={true} />
-            ) : null}
+            {isNextPage ? <Tooltip description={'Next page.'} /> : null}
           </div>
         </div>
         {this.renderFiltering()}

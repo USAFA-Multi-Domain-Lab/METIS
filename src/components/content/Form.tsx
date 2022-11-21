@@ -364,9 +364,7 @@ export class DetailToggle extends React.Component<
             deliverValue={this.props.deliverValue}
           />
         </div>
-        {hideTooltip ? null : (
-          <Tooltip description={tooltipDescription} display={true} />
-        )}
+        {hideTooltip ? null : <Tooltip description={tooltipDescription} />}
       </div>
     )
   }
