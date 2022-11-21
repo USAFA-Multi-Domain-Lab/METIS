@@ -10,9 +10,7 @@ import {
 } from '../../modules/missions'
 import { IPage } from '../App'
 import Branding from '../content/Branding'
-import usersModule, { IUser } from '../../modules/users'
 import './MissionSelectionPage.scss'
-import { MissionNodeAction } from '../../modules/mission-node-actions'
 import { Counter } from '../../modules/numbers'
 import { Action, EActionPurpose } from '../content/Action'
 import Toggle, { EToggleLockState } from '../content/Toggle'
@@ -188,6 +186,9 @@ export default function MissionSelectionPage(
                         appActions.confirm(
                           'Are you sure you want to delete this mission?',
                           (concludeAction: () => void) => {
+                            concludeAction()
+                            appActions.beginLoading('Deleting mission...')
+
                             deleteMission(
                               mission.missionID,
                               () => {
@@ -195,7 +196,6 @@ export default function MissionSelectionPage(
                                   `Successfully deleted ${mission.name}.`,
                                 )
                                 setMountHandled(false)
-                                concludeAction()
                               },
                               () => {
                                 appActions.notify(
@@ -217,6 +217,9 @@ export default function MissionSelectionPage(
                         appActions.confirm(
                           'Enter the name of the new mission.',
                           (concludeAction: () => void, entry: string) => {
+                            concludeAction()
+                            appActions.beginLoading('Copying mission...')
+
                             copyMission(
                               mission.missionID,
                               entry,
@@ -225,13 +228,11 @@ export default function MissionSelectionPage(
                                   `Successfully copied ${mission.name}.`,
                                 )
                                 setMountHandled(false)
-                                concludeAction()
                               },
                               () => {
                                 appActions.notify(
                                   `Failed to copy ${mission.name}.`,
                                 )
-                                concludeAction()
                               },
                             )
                           },

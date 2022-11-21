@@ -28,6 +28,7 @@ export interface IAppStateValues {
   tooltipDescription: string
   consoleOutputs: Array<{ date: number; value: string }>
   notifications: Array<Notification>
+  postLoadNotifications: Array<Notification>
   confirmation: IConfirmation | null
   outputPanelIsDisplayed: boolean
   executeNodePathPromptIsDisplayed: boolean
@@ -57,6 +58,7 @@ export interface IAppStateSetters {
     consoleOutputs: Array<{ date: number; value: string }>,
   ) => void
   setNotifications: (notifications: Array<Notification>) => void
+  setPostLoadNotifications: (postLoadNotifications: Array<Notification>) => void
   setConfirmation: (confirmation: IConfirmation | null) => void
   setOutputPanelIsDisplayed: (outputPanelIsDisplayed: boolean) => void
   setExecuteNodePathPromptIsDisplayed: (
@@ -90,7 +92,6 @@ export interface IConfirmOptions {
 
 const loadingMinTime = 500
 const pageSwitchMinTime = 500
-const notifiyDurationDefault = 3000
 
 /* -- CLASSES -- */
 
@@ -101,6 +102,14 @@ export class AppActions {
 
   constructor(appState: AppState) {
     this.appState = appState
+  }
+
+  _handleLoadCompletion = (): void => {
+    for (let notification of this.appState.postLoadNotifications) {
+      this.appState.notifications.push(notification)
+      notification.startExpirationTimer()
+    }
+    this.appState.setPostLoadNotifications([])
   }
 
   // This will force the component to
@@ -119,6 +128,10 @@ export class AppActions {
 
     setTimeout(() => {
       this.appState.setPageSwitchMinTimeReached(true)
+
+      if (!this.appState.loading && this.appState.loadingMinTimeReached) {
+        this._handleLoadCompletion()
+      }
     }, pageSwitchMinTime)
   }
 
@@ -133,6 +146,10 @@ export class AppActions {
     this.appState.setLoadingMinTimeReached(false)
     setTimeout(() => {
       this.appState.setLoadingMinTimeReached(true)
+
+      if (!this.appState.loading && this.appState.pageSwitchMinTimeReached) {
+        this._handleLoadCompletion()
+      }
     }, loadingMinTime)
   }
 
@@ -142,6 +159,13 @@ export class AppActions {
   // set in the global state.
   finishLoading = (): void => {
     this.appState.setLoading(false)
+
+    if (
+      this.appState.loadingMinTimeReached &&
+      this.appState.pageSwitchMinTimeReached
+    ) {
+      this._handleLoadCompletion()
+    }
   }
 
   // This will navigate the user to the
@@ -153,10 +177,12 @@ export class AppActions {
 
   // This can be called to the notify
   // the user of something.
-  notify = (
-    message: string,
-    duration: number | null = notifiyDurationDefault,
-  ): Notification => {
+  notify = (message: string, duration?: number | null): Notification => {
+    let onLoadingPage: boolean =
+      this.appState.loading ||
+      !this.appState.loadingMinTimeReached ||
+      !this.appState.pageSwitchMinTimeReached
+
     let notification: Notification = new Notification(
       message,
       (dismissed: boolean, expired: boolean) => {
@@ -176,9 +202,15 @@ export class AppActions {
         }
         this.forceUpdate()
       },
-      duration,
+      { duration, startExpirationTimer: !onLoadingPage },
     )
-    this.appState.notifications.push(notification)
+
+    if (!onLoadingPage) {
+      this.appState.notifications.push(notification)
+    } else {
+      this.appState.postLoadNotifications.push(notification)
+    }
+
     this.forceUpdate()
     return notification
   }
@@ -281,6 +313,7 @@ export default class AppState implements IAppStateValues, IAppStateValues {
   tooltipDescription: string
   consoleOutputs: { date: number; value: string }[]
   notifications: Notification[]
+  postLoadNotifications: Array<Notification>
   confirmation: IConfirmation | null
   outputPanelIsDisplayed: boolean
   executeNodePathPromptIsDisplayed: boolean
@@ -306,6 +339,7 @@ export default class AppState implements IAppStateValues, IAppStateValues {
   setTooltipDescription: (tooltipDescription: string) => void
   setConsoleOutputs: (consoleOutputs: { date: number; value: string }[]) => void
   setNotifications: (notifications: Notification[]) => void
+  setPostLoadNotifications: (postLoadNotifications: Array<Notification>) => void
   setConfirmation: (confirmation: IConfirmation | null) => void
   setOutputPanelIsDisplayed: (outputPanelIsDisplayed: boolean) => void
   setExecuteNodePathPromptIsDisplayed: (
@@ -337,6 +371,7 @@ export default class AppState implements IAppStateValues, IAppStateValues {
       tooltipDescription: '',
       consoleOutputs: [],
       notifications: [],
+      postLoadNotifications: [],
       confirmation: null,
       outputPanelIsDisplayed: false,
       executeNodePathPromptIsDisplayed: false,
@@ -366,6 +401,7 @@ export default class AppState implements IAppStateValues, IAppStateValues {
       setTooltips: (): void => {},
       setConsoleOutputs: (): void => {},
       setNotifications: (): void => {},
+      setPostLoadNotifications: (): void => {},
       setConfirmation: (): void => {},
       setOutputPanelIsDisplayed: (): void => {},
       setExecuteNodePathPromptIsDisplayed: (): void => {},
@@ -397,6 +433,7 @@ export default class AppState implements IAppStateValues, IAppStateValues {
     this.tooltipDescription = appStateValues.tooltipDescription
     this.consoleOutputs = appStateValues.consoleOutputs
     this.notifications = appStateValues.notifications
+    this.postLoadNotifications = appStateValues.postLoadNotifications
     this.confirmation = appStateValues.confirmation
     this.outputPanelIsDisplayed = appStateValues.outputPanelIsDisplayed
     this.executeNodePathPromptIsDisplayed =
@@ -425,6 +462,7 @@ export default class AppState implements IAppStateValues, IAppStateValues {
     this.setTooltipDescription = appStateSetters.setTooltipDescription
     this.setConsoleOutputs = appStateSetters.setConsoleOutputs
     this.setNotifications = appStateSetters.setNotifications
+    this.setPostLoadNotifications = appStateSetters.setPostLoadNotifications
     this.setConfirmation = appStateSetters.setConfirmation
     this.setOutputPanelIsDisplayed = appStateSetters.setOutputPanelIsDisplayed
     this.setExecuteNodePathPromptIsDisplayed =
@@ -444,6 +482,13 @@ export default class AppState implements IAppStateValues, IAppStateValues {
   // passed, using a new instance of
   // app state.
   static createAppWithState(App: any): any {
+    let appActions: AppActions = new AppActions(
+      new AppState(
+        AppState.defaultAppStateValues,
+        AppState.defaultAppStateSetters,
+      ),
+    )
+
     // This adds an extra layer to the
     // rendering of the app component.
     // This is done so that the stateSetters
@@ -484,6 +529,9 @@ export default class AppState implements IAppStateValues, IAppStateValues {
       >('consoleOutputs')
       const [notifications, setNotifications] =
         useStore<Notification[]>('notifications')
+      const [postLoadNotifications, setPostLoadNotifications] = useStore<
+        Array<Notification>
+      >('postLoadNotifications')
       const [confirmation, setConfirmation] = useStore<IConfirmation | null>(
         'confirmation',
       )
@@ -523,6 +571,7 @@ export default class AppState implements IAppStateValues, IAppStateValues {
         tooltipDescription,
         consoleOutputs,
         notifications,
+        postLoadNotifications,
         confirmation,
         outputPanelIsDisplayed,
         executeNodePathPromptIsDisplayed,
@@ -549,6 +598,7 @@ export default class AppState implements IAppStateValues, IAppStateValues {
         setTooltipDescription,
         setConsoleOutputs,
         setNotifications,
+        setPostLoadNotifications,
         setConfirmation,
         setOutputPanelIsDisplayed,
         setExecuteNodePathPromptIsDisplayed,
@@ -561,7 +611,7 @@ export default class AppState implements IAppStateValues, IAppStateValues {
         setAllMissions,
       }
       let appState = new AppState(appStateValues, appStateSetters)
-      let appActions = new AppActions(appState)
+      appActions.appState = appState
 
       return <App appState={appState} appActions={appActions} />
     }
