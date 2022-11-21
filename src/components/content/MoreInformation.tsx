@@ -30,7 +30,7 @@ export default class MoreInformation extends React.Component<Props, State> {
         <div className='circle'>
           <div className='question-mark'>?</div>
         </div>
-        <Tooltip description={tooltipDescription} />
+        <Tooltip description={tooltipDescription} display={true} />
       </div>
     )
   }

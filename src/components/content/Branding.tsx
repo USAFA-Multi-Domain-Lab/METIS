@@ -11,12 +11,11 @@ const Branding = (props: {
   if (props.showTooltip) {
     return (
       <div className='Branding' onClick={props.goHome}>
-        MDL
-        <Tooltip description={props.tooltipDescription} />
+        <Tooltip description={props.tooltipDescription} display={true} />
       </div>
     )
   } else {
-    return <div className='Branding disabled'>MDL</div>
+    return <div className='Branding disabled'></div>
   }
 }
 

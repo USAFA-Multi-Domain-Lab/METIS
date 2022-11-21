@@ -35,13 +35,12 @@ $background-bar: linear-gradient(
 
   .Navigation {
     display: grid;
-    grid-template-columns: auto 110px;
+    grid-template-columns: auto 180px 130px;
     margin: 0 auto 55px;
     height: 30px;
     vertical-align: bottom;
 
     .Branding {
-      width: fit-content;
       padding-right: 20px;
     }
     .Link {
@@ -77,13 +76,30 @@ $background-bar: linear-gradient(
     flex-flow: row wrap;
     width: 100%;
 
-    .Resources {
+    .ResourceAndActionContainer {
       display: flex;
       justify-content: flex-start;
       align-items: center;
+      flex-flow: row wrap;
       width: 100%;
-      margin: 0 0 20px;
-      font-size: 1.2em;
+      margin: 0 0 10px;
+
+      .Resources {
+        display: flex;
+        justify-content: flex-start;
+        align-items: center;
+        width: calc(100% - 210px);
+        margin: 0 0 20px;
+        font-size: 1.2em;
+
+        &.RedAlert {
+          color: $terminal-red;
+        }
+      }
+
+      .ActionsContainer {
+        display: none;
+      }
     }
 
     .MissionMap {
@@ -122,8 +138,8 @@ $background-bar: linear-gradient(
   }
 
   .Content {
-    .Resources {
-      margin: 0 0 20px 2%;
+    .ResourceAndActionContainer {
+      margin: 0 2% 20px 2.5%;
     }
 
     .MissionMap {
@@ -148,8 +164,8 @@ $background-bar: linear-gradient(
   }
 
   .Content {
-    .Resources {
-      margin: 0 0 20px 2%;
+    .ResourceAndActionContainer {
+      margin: 0 2% 20px 2.5%;
     }
 
     .MissionMap {
@@ -174,8 +190,8 @@ $background-bar: linear-gradient(
   }
 
   .Content {
-    .Resources {
-      margin: 0 0 20px 2%;
+    .ResourceAndActionContainer {
+      margin: 0 2% 20px 2.5%;
     }
 
     .MissionMap {
@@ -205,6 +221,87 @@ $background-bar: linear-gradient(
 
     .EditMission {
       display: flex;
+    }
+  }
+
+  .Content {
+    .ResourceAndActionContainer {
+      .ActionsContainer {
+        &.show {
+          display: flex;
+          justify-content: flex-end;
+          align-items: center;
+          width: fit-content;
+
+          .remove,
+          .copy,
+          .edit,
+          .Toggle {
+            &.remove:hover,
+            &.copy:hover,
+            &.edit:hover {
+              filter: invert(68%) sepia(94%) saturate(322%) hue-rotate(117deg)
+                brightness(200%) contrast(98%);
+            }
+          }
+
+          .edit {
+            background: url('../../assets/images/icons/edit.svg');
+            background-size: 65% 65%;
+            background-position: center;
+            background-repeat: no-repeat;
+            width: 1.2em;
+            height: 1.2em;
+            border: none;
+          }
+
+          .remove {
+            background: url('../../assets/images/icons/remove.svg');
+            background-size: 65% 65%;
+            background-position: center;
+            background-repeat: no-repeat;
+            width: 1.2em;
+            height: 1.3em;
+            border: none;
+          }
+
+          .copy {
+            background: url('../../assets/images/icons/copy.svg');
+            background-size: 65% 65%;
+            background-position: center;
+            background-repeat: no-repeat;
+            width: 1.2em;
+            height: 1.2em;
+            border: none;
+          }
+
+          .Toggle {
+            margin-left: 5px;
+            background-color: #1a2a1a;
+
+            &.Activated {
+              border-color: $terminal;
+              .Switch {
+                background-color: $terminal;
+              }
+            }
+
+            .Switch {
+              background-color: white;
+            }
+
+            &.Activated:hover {
+              border-color: $terminal;
+              .Switch {
+                background-color: $terminal;
+              }
+            }
+            &.Locked:hover {
+              cursor: pointer;
+            }
+          }
+        }
+      }
     }
   }
 }

@@ -46,6 +46,10 @@
     flex-flow: row wrap;
   }
 
+  .ExecuteButtonTooltip {
+    display: none;
+  }
+
   .Button {
     display: flex;
     justify-content: center;
@@ -61,6 +65,17 @@
     &:hover {
       cursor: pointer;
       background-color: black;
+    }
+
+    &.ExecutionButton {
+      &.disabled {
+        cursor: default;
+        opacity: 0.35;
+
+        &.disabled:hover {
+          background-color: $background-alt2;
+        }
+      }
     }
   }
 }

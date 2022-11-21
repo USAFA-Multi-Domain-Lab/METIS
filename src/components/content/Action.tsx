@@ -103,7 +103,7 @@ export class Action extends React.Component<IAction_P, {}> {
       >
         {innerHTML}
         {tooltipDescription ? (
-          <Tooltip description={tooltipDescription} />
+          <Tooltip description={tooltipDescription} display={true} />
         ) : null}
       </div>
     )

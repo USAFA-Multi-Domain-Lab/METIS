@@ -132,7 +132,7 @@ export default function AuthPage(props: IAuthPage): JSX.Element | null {
       <div className='Login'>
         <div className='ErrorMessage'>{errorMessage}</div>
         <div className='Header'>
-          <div className='Heading'>MDL</div>
+          <div className='Heading'></div>
         </div>
         <form className='Form' onChange={handleChange} onSubmit={handleSubmit}>
           <input

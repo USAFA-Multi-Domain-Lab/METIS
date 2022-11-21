@@ -6,6 +6,7 @@ import { v4 as uuid } from 'uuid'
 
 interface ITooltip {
   description: string
+  display: boolean
 }
 interface ITooltip_S {}
 
@@ -111,7 +112,7 @@ export default class Tooltip extends React.Component<ITooltip, ITooltip_S> {
   render() {
     return (
       <div className='Tooltip' ref={this.rootElement}>
-        <TooltipLogic tooltip={this} />
+        <TooltipLogic tooltip={this} display={this.props.display} />
       </div>
     )
   }

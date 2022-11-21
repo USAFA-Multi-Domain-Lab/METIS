@@ -6,6 +6,8 @@ import gameLogic, { runNodeLoadingBar } from '../../modules/game-logic'
 import ActionPropertyDisplay from './ActionPropertyDisplay'
 import { Mission } from '../../modules/missions'
 import Notification from '../../modules/notifications'
+import { isDisabled } from '@testing-library/user-event/dist/utils'
+import Tooltip from './Tooltip'
 
 const ExecuteNodePath = (props: {
   mission: Mission
@@ -97,6 +99,17 @@ const ExecuteNodePath = (props: {
     setActionSelectionPromptIsDisplayed(true)
   }
 
+  /* -- RENDER -- */
+
+  // Logic to disable the execute button once a user is out of tokens.
+  let executionButtonClassName: string = 'Button ExecutionButton'
+  let displayTooltip: boolean = false
+
+  if (mission.resources <= 0) {
+    executionButtonClassName += ' disabled'
+    displayTooltip = true
+  }
+
   return (
     <div className='ExecuteNodePath'>
       <p className='x' onClick={closeWindow}>
@@ -107,9 +120,14 @@ const ExecuteNodePath = (props: {
       </p>
       <ActionPropertyDisplay selectedNode={props.selectedNode} />
       <div className='Buttons'>
-        <button className='Button ExecutionButton' onClick={execute}>
+        <button className={executionButtonClassName} onClick={execute}>
           {actionName}
+          <Tooltip
+            description={`You cannot ${actionName.toLowerCase()} because you have no more resources left to spend.`}
+            display={displayTooltip}
+          />
         </button>
+
         <button
           className='Button AdditionalActionButton'
           onClick={selectAlternativeAction}
