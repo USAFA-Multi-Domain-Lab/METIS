@@ -1,12 +1,12 @@
 import './App.scss'
 import GamePage from './pages/GamePage'
-import AuthPage from './pages/AuthPage'
+import AuthPage, { IAuthPage } from './pages/AuthPage'
 import { useStore } from 'react-context-hook'
 import usersModule, { IUser } from '../modules/users'
 import React, { useEffect, useState } from 'react'
 import ServerErrorPage from './pages/ServerErrorPage'
 import LoadingPage from './pages/LoadingPage'
-import GlobalState, { tooltipsOffsetX, tooltipsOffsetY } from './GlobalState'
+import AppState, { AppActions } from './AppState'
 import Markdown, { MarkdownTheme } from './content/Markdown'
 import MissionFormPage from './pages/MissionFormPage'
 import MissionSelectionPage from './pages/MissionSelectionPage'
@@ -15,256 +15,43 @@ import Notification from '../modules/notifications'
 import NotificationBubble from './content/NotificationBubble'
 import Confirmation, { IConfirmation } from './content/Confirmation'
 import { EAjaxStatus } from '../modules/toolbox/ajax'
+import { tooltipsOffsetX, tooltipsOffsetY } from './content/Tooltip'
 
-// Options available when confirming
-// an action using page props.
-export interface IConfirmOptions {
-  requireEntry?: boolean
-  handleAlternate?: (concludeAction: () => void, entry: string) => void
-  entryLabel?: string
-  pendingMessageUponConfirm?: string
-  pendingMessageUponAlternate?: string
-  buttonConfirmText?: string
-  buttonAlternateText?: string
-  buttonCancelText?: string
+// Default props in every page.
+export interface IPage {
+  appState: AppState
+  appActions: AppActions
 }
 
-// Default props in every page props.
-export interface IPageProps {
-  forceUpdate: () => void
-  goToPage: (pagePath: string, pageProps: AnyObject) => void
-  notify: (message: string, duration: number | null) => Notification
-  confirm: (
-    message: string,
-    handleConfirmation: (concludeAction: () => void, entry: string) => void,
-    options?: IConfirmOptions,
-  ) => void
-  show: boolean
-  currentPagePath: string
-  isCurrentPage: boolean
-}
+// This is a registry of all pages
+// in the system for use.
+let pageRegistry: Map<string, (props: any) => JSX.Element | null> = new Map<
+  string,
+  (props: any) => JSX.Element | null
+>()
 
-const loadingMinTime = 500
-
-// This function normalizes how pages are rendered.
-// in the application.
-function StandardPage(props: {
-  Page: (props: { pageProps: any }) => JSX.Element | null
-  targetPagePath: string
-  requireLogin?: boolean // default true
-}): JSX.Element | null {
-  /* -- global-state -- */
-
-  const [currentUser] = useStore<IUser | null>('currentUser')
-  const [currentPagePath, setCurrentPagePath] =
-    useStore<string>('currentPagePath')
-  const [currentPageProps, setCurrentPageProps] = useStore<AnyObject>(
-    'currentPageProps',
-    {},
-  )
-  const [appMountHandled] = useStore<boolean>('appMountHandled')
-  const [errorMessage] = useStore<string | null>('errorMessage')
-  const [loadingMessage] = useStore<string | null>('loadingMessage')
-  const [loadingMinTimeReached] = useStore<boolean>('loadingMinTimeReached')
-  const [notifications, setNotifications] = useStore<Array<Notification>>(
-    'notifications',
-    [],
-  )
-  const [confirmation, setConfirmation] = useStore<IConfirmation | null>(
-    'confirmation',
-    null,
-  )
-  const [forcedUpdateCounter, setForcedUpdateCounter] = useStore<number>(
-    'forcedUpdateCounter',
-    0,
-  )
-
-  /* -- fields -- */
-
-  let Page = props.Page
-  let targetPagePath: string = props.targetPagePath
-  let requireLogin: boolean =
-    props.requireLogin === undefined ? true : props.requireLogin
-  let pageProps: AnyObject = { ...currentPageProps }
-
-  /* -- functions -- */
-
-  // This will force an update.
-  const forceUpdate = (): void => {
-    setForcedUpdateCounter(forcedUpdateCounter + 1)
-  }
-
-  // This will go to a specific page
-  // passing the necessary props.
-  const goToPage = (pagePath: string, pageProps: AnyObject): void => {
-    setCurrentPagePath(pagePath)
-    setCurrentPageProps(pageProps)
-  }
-
-  // This can be called to the notify
-  // the user of something.
-  const notify = (message: string, duration: number | null): Notification => {
-    let notification: Notification = new Notification(
-      message,
-      (dismissed: boolean, expired: boolean) => {
-        if (dismissed) {
-          notifications.splice(notifications.indexOf(notification), 1)
-        } else if (expired) {
-          setTimeout(() => {
-            notifications.splice(notifications.indexOf(notification), 1)
-            forceUpdate()
-          }, 1000)
-        }
-        forceUpdate()
-      },
-      duration,
-    )
-    notifications.push(notification)
-    forceUpdate()
-    return notification
-  }
-
-  // This will pop up a confirmation box
-  // to confirm some action. concludeAction
-  // must be called by the handleConfirmation
-  // callback function to make the confirm
-  // box disappear.
-  const confirm = (
-    message: string,
-    handleConfirmation: (concludeAction: () => void, entry: string) => {},
-    options: IConfirmOptions = {},
-  ): void => {
-    let confirmation: IConfirmation = {
-      confirmAjaxStatus: EAjaxStatus.NotLoaded,
-      alternateAjaxStatus: EAjaxStatus.NotLoaded,
-      active: true,
-      confirmationMessage: message,
-      handleConfirmation: (entry: string) => {
-        setConfirmation({
-          ...confirmation,
-          confirmAjaxStatus: EAjaxStatus.Loading,
-        })
-        handleConfirmation(() => {
-          setConfirmation(null)
-        }, entry)
-      },
-      handleAlternate: options.handleAlternate
-        ? (entry: string) => {
-            if (options.handleAlternate) {
-              setConfirmation({
-                ...confirmation,
-                alternateAjaxStatus: EAjaxStatus.Loading,
-              })
-              options.handleAlternate(() => {
-                setConfirmation(null)
-              }, entry)
-            }
-          }
-        : null,
-      handleCancelation: () => setConfirmation(null),
-      pendingMessageUponConfirm: options.pendingMessageUponConfirm
-        ? options.pendingMessageUponConfirm
-        : Confirmation.defaultProps.pendingMessageUponConfirm,
-      pendingMessageUponAlternate: options.pendingMessageUponAlternate
-        ? options.pendingMessageUponAlternate
-        : Confirmation.defaultProps.pendingMessageUponAlternate,
-      buttonConfirmText: options.buttonConfirmText
-        ? options.buttonConfirmText
-        : Confirmation.defaultProps.buttonConfirmText,
-      buttonAlternateText: options.buttonAlternateText
-        ? options.buttonAlternateText
-        : Confirmation.defaultProps.buttonAlternateText,
-      buttonCancelText: options.buttonCancelText
-        ? options.buttonCancelText
-        : Confirmation.defaultProps.buttonCancelText,
-      requireEntry: options.requireEntry === true,
-      entryLabel: options.entryLabel
-        ? options.entryLabel
-        : Confirmation.defaultProps.entryLabel,
-    }
-
-    setConfirmation(confirmation)
-  }
-
-  /* -- page-props-construction -- */
-
-  pageProps = {
-    ...pageProps,
-    forceUpdate,
-    goToPage,
-    notify,
-    confirm,
-    show:
-      (currentUser !== null || !requireLogin) &&
-      currentPagePath === targetPagePath &&
-      appMountHandled &&
-      loadingMessage === null &&
-      loadingMinTimeReached &&
-      errorMessage === null,
-    currentPagePath,
-    isCurrentPage: currentPagePath === targetPagePath,
-  }
-
-  /* -- render -- */
-
-  return <Page pageProps={pageProps} />
+// This will register a specific page
+// with the given path so that it can
+// be switched to by the application
+// from other pages.
+export function registerPage<TPage extends IPage>(
+  targetPagePath: string,
+  Page: (props: TPage) => JSX.Element | null,
+): void {
+  pageRegistry.set(targetPagePath, Page)
 }
 
 // This is the renderer for the entire application.
-function App(): JSX.Element | null {
-  /* -- GLOBAL STATE -- */
-
-  const [currentUser, setCurrentUser] = useStore<IUser | null>('currentUser')
-  const [currentPagePath, setCurrentPagePath] =
-    useStore<string>('currentPagePath')
-  const [currentPageProps, setCurrentPageProps] = useStore<AnyObject>(
-    'currentPageProps',
-    {},
-  )
-  const [appMountHandled, setAppMountHandled] =
-    useStore<boolean>('appMountHandled')
-  const [loadingMessage, setLoadMessage] = useStore<string | null>(
-    'loadingMessage',
-  )
-  const [lastLoadingMessage, setLastLoadingMessage] =
-    useStore<string>('lastLoadingMessage')
-  const [loadingMinTimeReached, setLoadingMinTimeReached] = useStore<boolean>(
-    'loadingMinTimeReached',
-  )
-  const [errorMessage, setErrorMessage] = useStore<string | null>(
-    'errorMessage',
-  )
-  const [forcedUpdateCounter, setForcedUpdateCounter] = useStore<number>(
-    'forcedUpdateCounter',
-    0,
-  )
-  const [tooltipDescription] = useStore<string>('tooltipDescription')
-  const [tooltips] = useStore<React.RefObject<HTMLDivElement>>('tooltips')
-  const [hideTooltip] = useStore<() => void>('hideTooltip')
-  const [notifications] = useStore<Array<Notification>>('notifications', [])
-  const [confirmation, setConfirmation] = useStore<IConfirmation | null>(
-    'confirmation',
-    null,
-  )
+function App(props: {
+  appState: AppState
+  appActions: AppActions
+}): JSX.Element | null {
+  let appState = props.appState
+  let appActions = props.appActions
 
   /* -- COMPONENT STATE -- */
 
   const [loadingMinTimeout, setLoadingMinTimeout] = useState<any>(undefined)
-
-  /* -- COMPONENT FUNCTIONS -- */
-
-  // This will force the component to
-  // rerender.
-  const forceUpdate = (): void => {
-    setForcedUpdateCounter(forcedUpdateCounter + 1)
-  }
-
-  // This will go to a specific page
-  // passing the necessary props.
-  const goToPage = (pagePath: string, pageProps: AnyObject): void => {
-    setCurrentPagePath(pagePath)
-    setCurrentPageProps(pageProps)
-  }
 
   /* -- COMPONENT HANDLERS -- */
 
@@ -272,7 +59,7 @@ function App(): JSX.Element | null {
   // displayed tooltip based on the mouse
   // position.
   const positionTooltip = (event: MouseEvent): void => {
-    let tooltips_elm: HTMLDivElement | null = tooltips.current
+    let tooltips_elm: HTMLDivElement | null = appState.tooltips.current
 
     if (tooltips_elm) {
       let pageWidth = window.innerWidth - 25
@@ -316,64 +103,81 @@ function App(): JSX.Element | null {
   // will load the user in the session to see if a
   // login is necessary.
   useEffect(() => {
-    if (!appMountHandled) {
+    if (!appState.appMountHandled) {
+      let tooltips_elm: HTMLDivElement | null | undefined =
+        appState.tooltips.current
+
+      appActions.beginLoading(AppState.defaultAppStateValues.loadingMessage)
+
       usersModule.retrieveCurrentUser(
         (currentUser: IUser | null) => {
-          setCurrentUser(currentUser)
-          setAppMountHandled(true)
-          setLoadMessage(null)
-
-          if (loadingMessage !== null) {
-            setLastLoadingMessage(loadingMessage)
-          }
-
-          goToPage('MissionSelectionPage', {})
+          appState.setCurrentUser(currentUser)
+          appState.setAppMountHandled(true)
+          appActions.finishLoading()
+          appActions.goToPage('MissionSelectionPage', {})
         },
         () => {
-          setErrorMessage('Failed to sync session.')
-          setAppMountHandled(true)
-          setLoadMessage(null)
+          appState.setErrorMessage('Failed to sync session.')
+          appState.setAppMountHandled(true)
+          appActions.finishLoading()
         },
       )
 
       document.addEventListener('mousemove', positionTooltip)
       document.addEventListener('drag', positionTooltip)
 
-      hideTooltip()
+      if (tooltips_elm !== null) {
+        tooltips_elm.id = ''
+        tooltips_elm.style.visibility = 'hidden'
+        appState.setTooltipDescription('')
+      }
     }
-  }, [appMountHandled])
+  }, [appState.appMountHandled])
 
-  // This handles the minTime variables, which are
-  // used to set a minumum time that the load screen
-  // is displayed for.
-  useEffect(() => {
-    if (loadingMessage !== null) {
-      clearTimeout(loadingMinTimeout)
+  /* -- PAGE PROPS CONSTRUCTION -- */
 
-      setLastLoadingMessage('')
-      setLoadingMinTimeReached(false)
-      setLoadingMinTimeout(
-        setTimeout(() => {
-          setLoadingMinTimeReached(true)
-          setLoadingMinTimeout(undefined)
-        }, loadingMinTime),
-      )
-    }
-  }, [loadingMessage])
+  let pageProps: IPage = {
+    appState,
+    appActions,
+    ...appState.currentPageProps,
+  }
 
   /* -- RENDER -- */
 
+  let className: string = 'App'
+
+  // This will render the current page.
+  const renderCurrentPage = (): JSX.Element | null => {
+    let Page = pageRegistry.get(appState.currentPagePath)
+
+    if (Page) {
+      return <Page {...pageProps} />
+    } else {
+      return null
+    }
+  }
+
+  if (appState.errorMessage !== null) {
+    className += ' ServerError'
+  } else if (
+    appState.loading ||
+    !appState.loadingMinTimeReached ||
+    !appState.pageSwitchMinTimeReached
+  ) {
+    className += ' Loading'
+  }
+
   return (
-    <div className='App' key={'App'}>
-      <div className='tooltips' ref={tooltips}>
+    <div className={className} key={'App'}>
+      <div className='tooltips' ref={appState.tooltips}>
         <Markdown
-          markdown={tooltipDescription}
+          markdown={appState.tooltipDescription}
           theme={MarkdownTheme.ThemeSecondary}
         />
       </div>
       <div className='Notifications'>
         <div className='Glue'>
-          {notifications.map((notification: Notification) => (
+          {appState.notifications.map((notification: Notification) => (
             <NotificationBubble
               notification={notification}
               key={notification.notificationID}
@@ -381,27 +185,21 @@ function App(): JSX.Element | null {
           ))}
         </div>
       </div>
-      {confirmation !== null ? <Confirmation {...confirmation} /> : null}
-      <StandardPage
-        Page={AuthPage}
-        targetPagePath='AuthPage'
-        requireLogin={false}
-      />
-      <StandardPage
-        Page={GamePage}
-        targetPagePath='GamePage'
-        requireLogin={false}
-      />
-      <StandardPage
-        Page={MissionSelectionPage}
-        targetPagePath='MissionSelectionPage'
-        requireLogin={false}
-      />
-      <StandardPage Page={MissionFormPage} targetPagePath='MissionFormPage' />
-      <ServerErrorPage />
-      <LoadingPage />
+      {appState.confirmation !== null ? (
+        <Confirmation {...appState.confirmation} />
+      ) : null}
+      <ServerErrorPage {...pageProps} />
+      <LoadingPage {...pageProps} />
+      {renderCurrentPage()}
     </div>
   )
 }
 
-export default GlobalState.createAppWithGlobalState(App)
+// -- PAGE REGISTRATION --
+
+registerPage('AuthPage', AuthPage)
+registerPage('MissionSelectionPage', MissionSelectionPage)
+registerPage('GamePage', GamePage)
+registerPage('MissionFormPage', MissionFormPage)
+
+export default AppState.createAppWithState(App)

@@ -1,33 +1,24 @@
-// This will render the interface for booking a
-
 import React, { useRef, useState } from 'react'
 import './AuthPage.scss'
 import usersModule, { IUser } from '../../modules/users'
 import { AxiosError } from 'axios'
 import { useStore } from 'react-context-hook'
-import { IPageProps } from '../App'
+import { IPage } from '../App'
 import { AnyObject } from '../../modules/toolbox/objects'
+import AppState, { AppActions } from '../AppState'
 
-interface IAuthPagProps extends IPageProps {
-  goBackPagePath: string
-  goBackPageProps: AnyObject
-  postLoginPagePath: string
-  postLoginPathProps: AnyObject
+export interface IAuthPageSpecific {
+  returningPagePath: string
+  returningPageProps: AnyObject
 }
+
+export interface IAuthPage extends IPage, IAuthPageSpecific {}
 
 // This will render a page where a user can
 // login to view the radar.
-export default function AuthPage(props: {
-  pageProps: IAuthPagProps
-}): JSX.Element | null {
-  let pageProps: IAuthPagProps = props.pageProps
-
-  /* -- GLOBAL STATE -- */
-
-  const [currentUser, setCurrentUser] = useStore('currentUser')
-  const [loadingMessage, setLoadingMessage] = useStore('loadingMessage')
-  const [lastLoadingMessage, setLastLoadingMessage] =
-    useStore<string>('lastLoadingMessage')
+export default function AuthPage(props: IAuthPage): JSX.Element | null {
+  let appState: AppState = props.appState
+  let appActions: AppActions = props.appActions
 
   /* -- COMPONENT REFS -- */
 
@@ -79,7 +70,7 @@ export default function AuthPage(props: {
 
       if (userID.length > 0 && password.length > 0) {
         setIsSubmitting(true)
-        setLoadingMessage('Logging in...')
+        appActions.beginLoading('Logging in...')
         setErrorMessage(null)
 
         // Called when an error happens from
@@ -88,7 +79,7 @@ export default function AuthPage(props: {
         const handleLoginError = (errorMessage: string): void => {
           setIsSubmitting(false)
           setErrorMessage(errorMessage)
-          setLoadingMessage(null)
+          appActions.finishLoading()
         }
 
         usersModule.login(
@@ -97,12 +88,11 @@ export default function AuthPage(props: {
           (correct: boolean, currentUser: IUser | null) => {
             if (correct && currentUser !== null) {
               setIsSubmitting(false)
-              setLoadingMessage(null)
-              setLastLoadingMessage('Initializing application...')
-              setCurrentUser(currentUser)
-              pageProps.goToPage(
-                pageProps.goBackPagePath,
-                pageProps.goBackPageProps,
+              appActions.finishLoading()
+              appState.setCurrentUser(currentUser)
+              appActions.goToPage(
+                props.returningPagePath,
+                props.returningPageProps,
               )
             } else {
               handleLoginError('Incorrect username or password.')
@@ -126,54 +116,45 @@ export default function AuthPage(props: {
     }
   }
 
-  const returnToDashboard = () => {
-    pageProps.goToPage(pageProps.goBackPagePath, pageProps.goBackPageProps)
+  const goBack = () => {
+    appActions.goToPage(props.returningPagePath, props.returningPageProps)
   }
 
   /* -- RENDER -- */
 
-  let show: boolean = props.pageProps.show
   let submitIsDisabled: boolean = !canSubmit() || isSubmitting
 
-  if (show && currentUser === null) {
-    return (
-      <div className='AuthPage'>
-        <div className='BackButton' onClick={returnToDashboard}>
-          &lt; Previous Page
-        </div>
-        <div className='Login'>
-          <div className='ErrorMessage'>{errorMessage}</div>
-          <div className='Header'>
-            <div className='Heading'>MDL</div>
-          </div>
-          <form
-            className='Form'
-            onChange={handleChange}
-            onSubmit={handleSubmit}
-          >
-            <input
-              className='UserID Field'
-              type='text'
-              placeholder='Username'
-              ref={userIDField}
-            />
-            <input
-              className='Password Field'
-              type='password'
-              placeholder='Password'
-              ref={passwordField}
-            />
-            <input
-              className='Submit'
-              type='submit'
-              value='Login'
-              disabled={submitIsDisabled}
-            />
-          </form>
-        </div>
+  return (
+    <div className='AuthPage Page'>
+      <div className='BackButton' onClick={goBack}>
+        &lt; Cancel
       </div>
-    )
-  } else {
-    return null
-  }
+      <div className='Login'>
+        <div className='ErrorMessage'>{errorMessage}</div>
+        <div className='Header'>
+          <div className='Heading'>MDL</div>
+        </div>
+        <form className='Form' onChange={handleChange} onSubmit={handleSubmit}>
+          <input
+            className='UserID Field'
+            type='text'
+            placeholder='Username'
+            ref={userIDField}
+          />
+          <input
+            className='Password Field'
+            type='password'
+            placeholder='Password'
+            ref={passwordField}
+          />
+          <input
+            className='Submit'
+            type='submit'
+            value='Login'
+            disabled={submitIsDisabled}
+          />
+        </form>
+      </div>
+    </div>
+  )
 }

@@ -4,14 +4,13 @@ import { MissionNode } from '../../modules/mission-nodes'
 import { MissionNodeAction } from '../../modules/mission-node-actions'
 import gameLogic, { runNodeLoadingBar } from '../../modules/game-logic'
 import ActionPropertyDisplay from './ActionPropertyDisplay'
-import { IPageProps } from '../App'
 import { Mission } from '../../modules/missions'
 import Notification from '../../modules/notifications'
 
 const ExecuteNodePath = (props: {
   mission: Mission
   selectedNode: MissionNode | null
-  notify: (message: string, duration: number | null) => Notification
+  notify: (message: string, duration?: number | null) => Notification
 }) => {
   let mission: Mission = props.mission
 
@@ -88,7 +87,7 @@ const ExecuteNodePath = (props: {
         setActionDisplay([])
         mission.resources--
       } else {
-        props.notify(`You have no more resources to spend.`, 3000)
+        props.notify(`You have no more resources to spend.`)
       }
     }
   }

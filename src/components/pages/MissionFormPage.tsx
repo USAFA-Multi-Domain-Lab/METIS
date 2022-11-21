@@ -22,10 +22,11 @@ import { v4 as generateHash } from 'uuid'
 import './MissionFormPage.scss'
 import { Action, EActionPurpose } from '../content/Action'
 import MoreInformation from '../content/MoreInformation'
-import { IPageProps } from '../App'
+import { IPage } from '../App'
 import { ENodeTargetRelation, MissionNode } from '../../modules/mission-nodes'
 import { MissionNodeAction } from '../../modules/mission-node-actions'
 import { EToggleLockState } from '../content/Toggle'
+import AppState, { AppActions } from '../AppState'
 
 // This is a enum used to describe
 // the locations that one node can
@@ -38,7 +39,7 @@ enum ENodeDropLocation {
   Bottom,
 }
 
-interface IMissionFormPageProps extends IPageProps {
+export interface IMissionFormPage extends IPage {
   // If null, a new mission is being
   // created.
   missionID: string | null
@@ -46,23 +47,11 @@ interface IMissionFormPageProps extends IPageProps {
 
 // This will render a dashboard with a radar
 // on it, indicating air traffic passing by.
-export default function MissionFormPage(props: {
-  pageProps: IMissionFormPageProps
-}): JSX.Element | null {
-  let pageProps: IMissionFormPageProps = props.pageProps
-
-  /* -- GLOBAL STATE -- */
-
-  const [currentUser, setCurrentUser] = useStore<IUser | null>('currentUser')
-  const [loadingMessage, setLoadingMessage] = useStore<string | null>(
-    'loadingMessage',
-  )
-  const [errorMessage, setErrorMessage] = useStore<string | null>(
-    'errorMessage',
-  )
-  const [lastLoadingMessage, setLastLoadingMessage] = useStore<string | null>(
-    'lastLoadingMessage',
-  )
+export default function MissionFormPage(
+  props: IMissionFormPage,
+): JSX.Element | null {
+  let appState: AppState = props.appState
+  let appActions: AppActions = props.appActions
 
   /* -- COMPONENT STATE -- */
 
@@ -79,9 +68,9 @@ export default function MissionFormPage(props: {
 
   // Equivalent of componentDidMount.
   useEffect(() => {
-    if (!mountHandled && pageProps.isCurrentPage) {
+    if (!mountHandled) {
       let existsInDatabase: boolean
-      let missionID: string | null = pageProps.missionID
+      let missionID: string | null = props.missionID
 
       // Creating a new mission.
       if (missionID === null) {
@@ -91,37 +80,28 @@ export default function MissionFormPage(props: {
       }
       // Editing an existing mission.
       else {
-        setLoadingMessage('')
+        appActions.beginLoading('Loading mission...')
 
         getMission(
           missionID,
           (mission: Mission) => {
-            setLastLoadingMessage('Initializing application...')
-            setLoadingMessage(null)
             setMission(mission)
+            appActions.finishLoading()
             setMountHandled(true)
           },
           () => {
-            setErrorMessage('Failed to retrieve mission.')
-            setLoadingMessage(null)
+            appActions.finishLoading()
+            appActions.handleServerError('Failed to load mission.')
           },
           { expandAllNodes: true },
         )
         existsInDatabase = true
         setExistsInDatabase(existsInDatabase)
       }
-    } else if (mountHandled && !pageProps.isCurrentPage) {
-      setForcedUpdateCounter(0)
-      setMission(null)
-      setAreUnsavedChanges(false)
-      selectNode(null)
-      activateNodeStructuring(false)
-      setExistsInDatabase(false)
-      setMountHandled(false)
     }
-  }, [mountHandled, pageProps.isCurrentPage])
+  }, [mountHandled])
 
-  if (pageProps.show && mission !== null) {
+  if (mission !== null) {
     /* -- COMPONENTS -- */
 
     /* -- COMPONENT FUNCTIONS -- */
@@ -152,13 +132,13 @@ export default function MissionFormPage(props: {
             mission,
             true,
             (resultingMission: Mission) => {
-              pageProps.notify('Mission successfully saved.', 3000)
+              appActions.notify('Mission successfully saved.')
               setMission(resultingMission)
               setExistsInDatabase(true)
               callback()
             },
             (error: Error) => {
-              pageProps.notify('Mission failed to save', 3000)
+              appActions.notify('Mission failed to save')
               setAreUnsavedChanges(true)
               callbackError(error)
             },
@@ -167,11 +147,11 @@ export default function MissionFormPage(props: {
           saveMission(
             mission,
             () => {
-              pageProps.notify('Mission successfully saved.', 3000)
+              appActions.notify('Mission successfully saved.')
               callback()
             },
             (error: Error) => {
-              pageProps.notify('Mission failed to save.', 3000)
+              appActions.notify('Mission failed to save.')
               setAreUnsavedChanges(true)
               callbackError(error)
             },
@@ -192,7 +172,7 @@ export default function MissionFormPage(props: {
         confirmationMessage = 'Please confirm the deletion of this node.'
       }
 
-      pageProps.confirm(
+      appActions.confirm(
         confirmationMessage,
         (concludeAction: () => void, entry?: string) => {
           node.delete()
@@ -205,42 +185,22 @@ export default function MissionFormPage(props: {
     }
 
     // This will logout the current user.
-    const logout = () => {
-      setLoadingMessage('Signing out...')
-
-      usersModule.logout(
-        () => {
-          setCurrentUser(null)
-          setLoadingMessage(null)
-          pageProps.goToPage('AuthPage', {
-            goBackPagePath: 'MissionSelectionPage',
-            goBackPageProps: {},
-          })
-          setLastLoadingMessage('Signing out...')
-        },
-        () => {
-          setLoadingMessage(null)
-          setErrorMessage('Server is down. Contact system administrator.')
-        },
-      )
-    }
+    const logout = () =>
+      appActions.logout({
+        returningPagePath: 'GamePage',
+        returningPageProps: { missionID: mission.missionID },
+      })
 
     /* -- RENDER -- */
 
-    let className: string = 'MissionFormPage'
-
-    // if (selectedNode !== null || nodeStructuringIsActive) {
-    //   className += ' SidePanelIsExpanded'
-    // }
-
     return (
-      <div className={className}>
+      <div className={'MissionFormPage Page'}>
         {
           // -- navigation --
         }
         <div className='Navigation'>
           <Branding
-            goHome={() => pageProps.goToPage('MissionSelectionPage', {})}
+            goHome={() => appActions.goToPage('MissionSelectionPage', {})}
             tooltipDescription='Go home.'
             showTooltip={true}
           />
@@ -248,14 +208,14 @@ export default function MissionFormPage(props: {
             className='Done Link'
             onClick={() => {
               if (!areUnsavedChanges) {
-                pageProps.goToPage('MissionSelectionPage', {})
+                appActions.goToPage('MissionSelectionPage', {})
               } else {
-                pageProps.confirm(
+                appActions.confirm(
                   'You have unsaved changes. What do you want to do with them?',
                   (concludeAction: () => void) => {
                     save(
                       () => {
-                        pageProps.goToPage('MissionSelectionPage', {})
+                        appActions.goToPage('MissionSelectionPage', {})
                         concludeAction()
                       },
                       () => {
@@ -265,7 +225,7 @@ export default function MissionFormPage(props: {
                   },
                   {
                     handleAlternate: (concludeAction: () => void) => {
-                      pageProps.goToPage('MissionSelectionPage', {})
+                      appActions.goToPage('MissionSelectionPage', {})
                       concludeAction()
                     },
                     pendingMessageUponConfirm: 'Saving...',
@@ -283,14 +243,16 @@ export default function MissionFormPage(props: {
             className='PlayTest Link'
             onClick={() => {
               if (!areUnsavedChanges) {
-                pageProps.goToPage('GamePage', { missionID: mission.missionID })
+                appActions.goToPage('GamePage', {
+                  missionID: mission.missionID,
+                })
               } else {
-                pageProps.confirm(
+                appActions.confirm(
                   'You have unsaved changes. What do you want to do with them?',
                   (concludeAction: () => void) => {
                     save(
                       () => {
-                        pageProps.goToPage('GamePage', {
+                        appActions.goToPage('GamePage', {
                           missionID: mission.missionID,
                         })
                         concludeAction()
@@ -302,7 +264,7 @@ export default function MissionFormPage(props: {
                   },
                   {
                     handleAlternate: (concludeAction: () => void) => {
-                      pageProps.goToPage('GamePage', {
+                      appActions.goToPage('GamePage', {
                         missionID: mission.missionID,
                       })
                       concludeAction()

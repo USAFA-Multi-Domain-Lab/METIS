@@ -5,18 +5,12 @@
   top: 0;
   left: 0;
   z-index: 10;
-  transition: opacity 600ms;
   box-sizing: border-box;
   width: 100vw;
   height: 100vh;
   padding: calc(50vh - 125px) 0 0;
   background-color: $background-main;
   text-align: center;
-
-  &.invisible {
-    pointer-events: none;
-    opacity: 0;
-  }
 
   .Message {
     margin-top: 20px;
