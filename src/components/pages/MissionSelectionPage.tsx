@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react'
-import { useStore } from 'react-context-hook'
 import {
   copyMission,
   deleteMission,
@@ -16,6 +15,7 @@ import Toggle, { EToggleLockState } from '../content/Toggle'
 import Tooltip from '../content/Tooltip'
 import { EAjaxStatus } from '../../modules/toolbox/ajax'
 import AppState, { AppActions } from '../AppState'
+import Navigation from '../content/Navigation'
 
 export interface IMissionSelectionPage extends IPage {}
 
@@ -92,15 +92,10 @@ export default function MissionSelectionPage(
   let number: Counter = new Counter(1)
 
   // Keeps track of if the user is logged in or not.
-  // If the user is not logged in then the sign out button will not display.
-  // If the user is logged in then the "Login" button will change to "Edit Mission"
-  // and the "Sign Out" button will appear.
-  let navClassName: string = 'Navigation'
   let editMissionsContainerClassName: string = 'EditMissionsContainer'
   let editMissionListClassName: string = 'MissionList'
 
   if (appState.currentUser !== null) {
-    navClassName += ' SignOut'
     editMissionsContainerClassName += ' show'
     editMissionListClassName += ' show'
   }
@@ -108,15 +103,15 @@ export default function MissionSelectionPage(
   return (
     <div className='MissionSelectionPage Page'>
       {/* { Navigation } */}
-      <div className={navClassName}>
-        <Branding goHome={null} tooltipDescription={null} />
-        <div className='Login Link' onClick={login}>
-          Login
-        </div>
-        <div className='Logout Link' onClick={logout}>
-          Sign out
-        </div>
-      </div>
+      <Navigation
+        appState={appState}
+        appActions={appActions}
+        mission={null}
+        pagePath='MissionSelectionPage'
+        pageProps={{}}
+        brandingCallback={null}
+        brandingTooltipDescription={null}
+      />
       {/* { Content } */}
       <div className='MissionSelectionContent'>
         <div className='MissionListContainer'>
@@ -284,8 +279,8 @@ export default function MissionSelectionPage(
                       <Tooltip
                         description={
                           !mission.live
-                            ? 'Set mission as live. Allowing students to access it.'
-                            : 'Set mission as no longer live. Preventing students from accessing it.'
+                            ? 'Sets mission as live thus allowing students to access it.'
+                            : 'Disables mission thus preventing students from accessing it.'
                         }
                       />
                     </div>
