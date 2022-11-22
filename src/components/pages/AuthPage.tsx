@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import './AuthPage.scss'
 import usersModule, { IUser } from '../../modules/users'
 import { AxiosError } from 'axios'
@@ -27,9 +27,23 @@ export default function AuthPage(props: IAuthPage): JSX.Element | null {
 
   /* -- COMPONENT STATE -- */
 
+  const [mountHandled, setMountHandled] = useState<boolean>(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
   const [forcedUpdateCounter, setForcedUpdateCounter] = useState<number>(0)
+
+  /* -- COMPONENT EFFECTS -- */
+
+  // Equivalent of componentDidMount.
+  useEffect(() => {
+    if (!mountHandled) {
+      let userIDField_elm: HTMLInputElement | null = userIDField.current
+
+      if (userIDField_elm) {
+        userIDField_elm.focus()
+      }
+    }
+  }, [mountHandled])
 
   /* -- COMPONENT FUNCTIONS -- */
 
@@ -126,9 +140,6 @@ export default function AuthPage(props: IAuthPage): JSX.Element | null {
 
   return (
     <div className='AuthPage Page'>
-      <div className='BackButton' onClick={goBack}>
-        &lt; Cancel
-      </div>
       <div className='Login'>
         <div className='ErrorMessage'>{errorMessage}</div>
         <div className='Header'>
@@ -148,11 +159,14 @@ export default function AuthPage(props: IAuthPage): JSX.Element | null {
             ref={passwordField}
           />
           <input
-            className='Submit'
+            className='Submit Button'
             type='submit'
             value='Login'
             disabled={submitIsDisabled}
           />
+          <div className='Button' onClick={goBack}>
+            Back
+          </div>
         </form>
       </div>
     </div>

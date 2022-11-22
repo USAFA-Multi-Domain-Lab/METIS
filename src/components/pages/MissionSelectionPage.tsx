@@ -94,10 +94,15 @@ export default function MissionSelectionPage(
   // Keeps track of if the user is logged in or not.
   let editMissionsContainerClassName: string = 'EditMissionsContainer'
   let editMissionListClassName: string = 'MissionList'
+  let noMissionsClassName: string = 'NoMissions'
 
   if (appState.currentUser !== null) {
     editMissionsContainerClassName += ' show'
     editMissionListClassName += ' show'
+  }
+
+  if (missions.length > 0) {
+    noMissionsClassName += ' hidden'
   }
 
   return (
@@ -288,6 +293,7 @@ export default function MissionSelectionPage(
                 </div>
               )
             })}
+            <div className={noMissionsClassName}>No missions available...</div>
           </div>
         </div>
         <div className={editMissionsContainerClassName}>

@@ -20,6 +20,7 @@ import AppState, { AppActions } from '../AppState'
 import { Action, EActionPurpose } from '../content/Action'
 import Toggle, { EToggleLockState } from '../content/Toggle'
 import Tooltip from '../content/Tooltip'
+import { AxiosError } from 'axios'
 import Navigation from '../content/Navigation'
 
 export interface IGamePage extends IPage {
@@ -56,10 +57,17 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
           setMission(mission)
           setMountHandled(true)
         },
-        (error: Error) => {
-          appActions.finishLoading()
-          appActions.handleServerError('Failed to load mission.')
-          setMountHandled(true)
+        (error: AxiosError) => {
+          if (error.response?.status === 401) {
+            appActions.goToPage('MissionSelectionPage', {})
+            appActions.notify(
+              'Please select a different mission. The last-selected mission is not accesible to students.',
+            )
+          } else {
+            appActions.finishLoading()
+            appActions.handleServerError('Failed to load mission.')
+            setMountHandled(true)
+          }
         },
       )
     }

@@ -66,6 +66,11 @@ export default function MissionFormPage(
 
   // Equivalent of componentDidMount.
   useEffect(() => {
+    if (appState.currentUser === null) {
+      appActions.goToPage('MissionSelectionPage', {})
+      appActions.notify('Mission form page is not accessible to students.')
+    }
+
     if (!mountHandled) {
       let existsInDatabase: boolean
       let missionID: string | null = props.missionID
@@ -547,7 +552,7 @@ function NodeEntry(props: {
                 action={action}
                 node={node as any}
                 handleChange={handleChange}
-                key={action.name}
+                key={action.actionID}
               />
             ))}
             <div
@@ -612,7 +617,7 @@ function NodeAction(props: {
           action.name = name
           handleChange()
         }}
-        key={`${action.actionID}_actionData`}
+        key={`${action.actionID}_name`}
       />
       <DetailBox
         label='Description'

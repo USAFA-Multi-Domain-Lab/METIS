@@ -58,13 +58,13 @@ router.post('/', requireLogin, (request, response) => {
 router.get('/', (request, response) => {
   let missionID = request.query.missionID
 
-  let queries: any = {}
-
-  if (!isLoggedIn(request)) {
-    queries.live = true
-  }
-
   if (missionID === undefined) {
+    let queries: any = {}
+
+    if (!isLoggedIn(request)) {
+      queries.live = true
+    }
+
     Mission.find({ ...queries })
       .select('-nodeStructure -nodeData')
       .exec((error: Error, missions: any) => {
@@ -76,18 +76,18 @@ router.get('/', (request, response) => {
         }
       })
   } else {
-    Mission.findOne({ missionID, ...queries }).exec(
-      (error: Error, mission: any) => {
-        if (error !== null) {
-          console.error(error)
-          return response.sendStatus(500)
-        } else if (mission === null) {
-          return response.sendStatus(404)
-        } else {
-          return response.json({ mission })
-        }
-      },
-    )
+    Mission.findOne({ missionID }).exec((error: Error, mission: any) => {
+      if (error !== null) {
+        console.error(error)
+        return response.sendStatus(500)
+      } else if (mission === null) {
+        return response.sendStatus(404)
+      } else if (!mission.live && !isLoggedIn(request)) {
+        return response.sendStatus(401)
+      } else {
+        return response.json({ mission })
+      }
+    })
   }
 })
 
