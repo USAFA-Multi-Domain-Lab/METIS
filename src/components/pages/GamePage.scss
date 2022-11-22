@@ -102,9 +102,9 @@ $background-bar: linear-gradient(
         display: flex;
         justify-content: flex-start;
         align-items: center;
-        width: calc(100% - 184px);
+        width: calc(100% - 167px);
         margin: 0 0 20px;
-        font-size: 1.2em;
+        font-size: 1em;
 
         &.RedAlert {
           color: $terminal-red;
@@ -325,8 +325,8 @@ $background-bar: linear-gradient(
             background-size: 65% 65%;
             background-position: center;
             background-repeat: no-repeat;
-            width: 1.2em;
-            height: 1.2em;
+            width: 1em;
+            height: 1em;
             border: none;
           }
 
@@ -335,8 +335,8 @@ $background-bar: linear-gradient(
             background-size: 65% 65%;
             background-position: center;
             background-repeat: no-repeat;
-            width: 1.2em;
-            height: 1.3em;
+            width: 1em;
+            height: 1em;
             border: none;
           }
 
@@ -345,8 +345,8 @@ $background-bar: linear-gradient(
             background-size: 65% 65%;
             background-position: center;
             background-repeat: no-repeat;
-            width: 1.2em;
-            height: 1.2em;
+            width: 1em;
+            height: 1em;
             border: none;
           }
 

@@ -98,11 +98,16 @@ export default function MissionSelectionPage(
   let navClassName: string = 'Navigation'
   let editMissionsContainerClassName: string = 'EditMissionsContainer'
   let editMissionListClassName: string = 'MissionList'
+  let noMissionsClassName: string = 'NoMissions'
 
   if (appState.currentUser !== null) {
     navClassName += ' SignOut'
     editMissionsContainerClassName += ' show'
     editMissionListClassName += ' show'
+  }
+
+  if (missions.length > 0) {
+    noMissionsClassName += ' hidden'
   }
 
   return (
@@ -293,6 +298,7 @@ export default function MissionSelectionPage(
                 </div>
               )
             })}
+            <div className={noMissionsClassName}>No missions available...</div>
           </div>
         </div>
         <div className={editMissionsContainerClassName}>

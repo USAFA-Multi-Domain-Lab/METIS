@@ -57,13 +57,15 @@ code {
   border: 2px solid $color-main;
   border-radius: 4px;
   height: auto;
+  font-size: 1em;
 
   &:hover {
     cursor: pointer;
     background-color: black;
   }
 
-  &.Disabled {
+  &.Disabled,
+  &:disabled {
     opacity: 0.35;
     pointer-events: none;
   }

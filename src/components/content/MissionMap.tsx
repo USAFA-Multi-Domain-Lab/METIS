@@ -550,14 +550,14 @@ export default class MissionMap extends React.Component<
         purpose: EActionPurpose.ZoomIn,
         handleClick: this.handleZoomInRequest,
         tooltipDescription:
-          'Zoom in. \n*[Shift + Scroll] on the map will also zoom in and out.*',
+          'Zoom in. \n*[Scroll] on the map will also zoom in and out.*',
       }),
       zoomOut: new Action({
         ...Action.defaultProps,
         purpose: EActionPurpose.ZoomOut,
         handleClick: this.handleZoomOutRequest,
         tooltipDescription:
-          'Zoom out. \n*[Shift + Scroll] on the map will also zoom in and out.*',
+          'Zoom out. \n*[Scroll] on the map will also zoom in and out.*',
       }),
       add: new Action({
         ...Action.defaultProps,
@@ -638,7 +638,7 @@ export default class MissionMap extends React.Component<
             'indicating a branch in the mission, with a choice of a path to go down.\n' +
             '##### Controls:\n\n' +
             '`Click+Drag` *Pan.*\n' +
-            '`Shift+Scroll` *Zoom in/out.*\n'
+            '`Scroll` *Zoom in/out.*\n'
           }
         />
       </div>
