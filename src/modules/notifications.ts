@@ -1,5 +1,12 @@
 import { v4 as generateHash } from 'uuid'
 
+export interface INotificationOptions {
+  duration?: number | null
+  startExpirationTimer?: boolean
+}
+
+const defaultDuration: number = 3000
+
 // This represents a notification that
 // can be displayed to the user.
 export default class Notification {
@@ -9,6 +16,7 @@ export default class Notification {
   _duration: number | null /* ms */
   _dismissed: boolean
   _expired: boolean
+  _expirationTimerStarted: boolean
 
   get notificationID(): string {
     return this._notificationID
@@ -45,28 +53,22 @@ export default class Notification {
   constructor(
     message: string,
     handleDismissalOrExpiration: (dismissed: boolean, expired: boolean) => void,
-    duration: number | null = 3000,
+    options: INotificationOptions,
   ) {
     this._notificationID = generateHash()
     this._message = message
     this._handleDismissalOrExpiration = handleDismissalOrExpiration
-    this._duration = duration
+    this._duration =
+      options.duration !== undefined ? options.duration : defaultDuration
     this._dismissed = false
     this._expired = false
+    this._expirationTimerStarted = false
 
-    this._age()
-  }
-
-  // This will age the notification for
-  // the duration set.
-  _age(): void {
-    if (this._duration !== null) {
-      setTimeout(() => {
-        if (!this._dismissed) {
-          this._expired = true
-          this._handleDismissalOrExpiration(false, true)
-        }
-      }, this._duration)
+    if (
+      options.startExpirationTimer === true ||
+      options.startExpirationTimer === undefined
+    ) {
+      this.startExpirationTimer()
     }
   }
 
@@ -75,6 +77,21 @@ export default class Notification {
     if (!this.dismissedOrExpired) {
       this._dismissed = true
       this._handleDismissalOrExpiration(true, false)
+    }
+  }
+
+  // This will start the expiration
+  // timer if it hasn't been started
+  // already.
+  startExpirationTimer(): void {
+    if (this._duration !== null && !this._expirationTimerStarted) {
+      setTimeout(() => {
+        if (!this._dismissed) {
+          this._expired = true
+          this._handleDismissalOrExpiration(false, true)
+        }
+      }, this._duration)
+      this._expirationTimerStarted = true
     }
   }
 }

@@ -20,6 +20,7 @@
     .Branding {
       padding-right: 20px;
     }
+
     .Link {
       display: flex;
       justify-content: center;
@@ -43,6 +44,7 @@
   }
 
   .MissionSelectionContent {
+    user-select: none;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -90,6 +92,7 @@
 
       .IndividualMissionContainer {
         display: none;
+
         &.show {
           display: flex;
           justify-content: flex-start;
@@ -120,6 +123,11 @@
             display: none;
           }
         }
+      }
+
+      .NoMissions {
+        padding: 0 0 25px 20px;
+        font-size: 0.825em;
       }
     }
 

@@ -16,50 +16,24 @@ import './GamePage.scss'
 import gameLogic from '../../modules/game-logic'
 import ExecuteNodePath from '../content/ExecuteNodePath'
 import NodeActions from '../content/NodeActions'
-import { IPageProps } from '../App'
+import { IPage } from '../App'
 import { MissionNodeAction } from '../../modules/mission-node-actions'
 import { MissionNode } from '../../modules/mission-nodes'
+import AppState, { AppActions } from '../AppState'
 import { Action, EActionPurpose } from '../content/Action'
 import Toggle, { EToggleLockState } from '../content/Toggle'
 import Tooltip from '../content/Tooltip'
+import { AxiosError } from 'axios'
 
-interface IGamePageProps extends IPageProps {
+export interface IGamePage extends IPage {
   missionID: string
 }
 
 // This will render a dashboard with a radar
 // on it, indicating air traffic passing by.
-export default function GamePage(props: {
-  pageProps: IGamePageProps
-}): JSX.Element | null {
-  let pageProps: IGamePageProps = props.pageProps
-
-  /* -- GLOBAL STATE -- */
-
-  const [currentUser, setCurrentUser] = useStore<IUser | null>('currentUser')
-  const [loadingMessage, setLoadingMessage] = useStore<string | null>(
-    'loadingMessage',
-  )
-  const [lastLoadingMessage, setLastLoadingMessage] =
-    useStore<string>('lastLoadingMessage')
-  const [errorMessage, setErrorMessage] = useStore<string | null>(
-    'errorMessage',
-  )
-  const [consoleOutputs, setConsoleOutputs] =
-    useStore<Array<{ date: number; value: string }>>('consoleOutputs')
-  const [outputPanelIsDisplayed, setOutputPanelIsDisplayed] = useStore<boolean>(
-    'outputPanelIsDisplayed',
-  )
-  const [
-    executeNodePathPromptIsDisplayed,
-    setExecuteNodePathPromptIsDisplayed,
-  ] = useStore<boolean>('executeNodePathPromptIsDisplayed')
-  const [
-    actionSelectionPromptIsDisplayed,
-    setActionSelectionPromptIsDisplayed,
-  ] = useStore<boolean>('actionSelectionPromptIsDisplayed')
-  const [actionDisplay, setActionDisplay] =
-    useStore<Array<MissionNodeAction>>('actionDisplay')
+export default function GamePage(props: IGamePage): JSX.Element | null {
+  let appState: AppState = props.appState
+  let appActions: AppActions = props.appActions
 
   /* -- COMPONENT STATE -- */
 
@@ -76,114 +50,86 @@ export default function GamePage(props: {
 
   // Equivalent of componentDidMount.
   useEffect(() => {
-    if (!mountHandled && pageProps.isCurrentPage) {
-      setLoadingMessage('Launching mission...')
+    if (!mountHandled) {
+      appActions.beginLoading('Launching mission...')
       getMission(
-        pageProps.missionID,
+        props.missionID,
         (mission: Mission) => {
-          setLoadingMessage(null)
-          setLastLoadingMessage('Launching mission...')
+          appActions.finishLoading()
           setMission(mission)
           setMountHandled(true)
         },
-        (error: Error) => {
-          setErrorMessage('Failed to load mission.')
-          setMountHandled(true)
+        (error: AxiosError) => {
+          if (error.response?.status === 401) {
+            appActions.goToPage('MissionSelectionPage', {})
+            appActions.notify(
+              'Please select a different mission. The last-selected mission is not accesible to students.',
+            )
+          } else {
+            appActions.finishLoading()
+            appActions.handleServerError('Failed to load mission.')
+            setMountHandled(true)
+          }
         },
       )
-    } else if (mountHandled && !pageProps.isCurrentPage) {
-      setMission(null)
-      setLastSelectedNode(null)
-      setMountHandled(false)
     }
-  }, [mountHandled, pageProps.isCurrentPage])
+  }, [mountHandled])
 
-  if (pageProps.show && mission !== null) {
+  if (mission !== null) {
     /* -- COMPONENTS -- */
 
     /* -- COMPONENT FUNCTIONS -- */
 
     // This will logout the current user.
-    const logout = () => {
-      setLoadingMessage('')
+    const logout = () =>
+      appActions.logout({
+        returningPagePath: 'GamePage',
+        returningPageProps: { missionID: mission.missionID },
+      })
 
-      usersModule.logout(
-        () => {
-          setLastLoadingMessage('Signing out...')
-          setCurrentUser(null)
-          setLoadingMessage(null)
-          pageProps.goToPage('AuthPage', {
-            goBackPagePath: 'GamePage',
-            goBackPageProps: { missionID: mission.missionID },
-            postLoginPagePath: 'GamePage',
-            postLoginPageProps: { missionID: mission.missionID },
-          })
-        },
-        () => {
-          setLoadingMessage(null)
-          setErrorMessage('Server is down. Contact system administrator.')
-        },
-      )
-    }
-
-    // This will switch to the edit mission
-    // form.
-    const login = () => {
-      if (currentUser === null) {
-        pageProps.goToPage('AuthPage', {
-          goBackPagePath: 'GamePage',
-          goBackPageProps: { missionID: mission.missionID },
-          postLoginPagePath: 'GamePage',
-          postLoginPageProps: { missionID: mission.missionID },
-        })
-      }
-    }
-
-    // This will switch to the edit mission form.
-    // const editMission = () => {
-    //   if (currentUser !== null && mission !== null) {
-    //     pageProps.goToPage('MissionFormPage', {
-    //       missionID: mission.missionID,
-    //     })
-    //   }
-    // }
+    // This will switch to the login page.
+    const login = () =>
+      appActions.goToPage('AuthPage', {
+        returningPagePath: 'GamePage',
+        returningPageProps: { missionID: mission.missionID },
+      })
 
     /* -- RENDER -- */
 
-    let className: string = 'GamePage'
+    let className: string = 'GamePage Page'
 
     if (
-      outputPanelIsDisplayed === true &&
-      executeNodePathPromptIsDisplayed === false &&
-      actionSelectionPromptIsDisplayed === false
+      appState.outputPanelIsDisplayed === true &&
+      appState.executeNodePathPromptIsDisplayed === false &&
+      appState.actionSelectionPromptIsDisplayed === false
     ) {
-      className += ' GamePageWithOutputPanelOnly'
+      className += ' DisplayOutputPanel'
     } else if (
-      outputPanelIsDisplayed === true &&
-      actionSelectionPromptIsDisplayed === true &&
-      executeNodePathPromptIsDisplayed === false
+      appState.outputPanelIsDisplayed === true &&
+      appState.actionSelectionPromptIsDisplayed === true &&
+      appState.executeNodePathPromptIsDisplayed === false
     ) {
-      className += ' GamePageWithOutputPanelAndActionPrompt'
+      className += ' DisplayOutputAndActionPrompt'
     } else if (
-      outputPanelIsDisplayed === true &&
-      executeNodePathPromptIsDisplayed === true &&
-      actionSelectionPromptIsDisplayed === false
+      appState.outputPanelIsDisplayed === true &&
+      appState.executeNodePathPromptIsDisplayed === true &&
+      appState.actionSelectionPromptIsDisplayed === false
     ) {
-      className += ' GamePageWithOutputPanelAndExecuteNodePathPrompt'
+      className += ' DisplayOutputPanelAndPathPrompt'
     } else if (
-      outputPanelIsDisplayed === false &&
-      executeNodePathPromptIsDisplayed === true &&
-      actionSelectionPromptIsDisplayed === false
+      appState.outputPanelIsDisplayed === false &&
+      appState.executeNodePathPromptIsDisplayed === true &&
+      appState.actionSelectionPromptIsDisplayed === false
     ) {
-      className += ' GamePageWithExecuteNodePathPromptOnly'
+      className += ' DisplayPathPrompt'
     } else if (
-      outputPanelIsDisplayed === false &&
-      executeNodePathPromptIsDisplayed === false &&
-      actionSelectionPromptIsDisplayed === true
+      appState.outputPanelIsDisplayed === false &&
+      appState.executeNodePathPromptIsDisplayed === false &&
+      appState.actionSelectionPromptIsDisplayed === true
     ) {
-      className += ' GamePageWithActionSelectionPromptOnly'
+      className += ' DisplayActionPrompt'
     } else {
-      className += ' GamePageWithMapOnly'
+      className += ' DisplayMapOnly'
     }
 
     // Keeps track of if the user is logged in or not.
@@ -193,7 +139,7 @@ export default function GamePage(props: {
     let navClassName = 'Navigation'
     let actionsClassName = 'ActionsContainer'
 
-    if (currentUser !== null) {
+    if (appState.currentUser !== null) {
       navClassName += ' SignOut'
       actionsClassName += ' show'
     }
@@ -224,13 +170,12 @@ export default function GamePage(props: {
         }
         <div className={navClassName}>
           <Branding
-            goHome={() => pageProps.goToPage('MissionSelectionPage', {})}
+            goHome={() => appActions.goToPage('MissionSelectionPage', {})}
             tooltipDescription='Go home.'
-            showTooltip={true}
           />
           <div
             className='Home Link'
-            onClick={() => pageProps.goToPage('MissionSelectionPage', {})}
+            onClick={() => appActions.goToPage('MissionSelectionPage', {})}
           >
             Back to selection
           </div>
@@ -252,38 +197,33 @@ export default function GamePage(props: {
                 <Action
                   purpose={EActionPurpose.Edit}
                   handleClick={() => {
-                    setLoadingMessage('')
-
-                    pageProps.goToPage('MissionFormPage', {
+                    appActions.goToPage('MissionFormPage', {
                       missionID: mission.missionID,
                     })
-                    setLastLoadingMessage('Initializing application...')
-                    setLoadingMessage(null)
                   }}
                   tooltipDescription={'Edit mission.'}
                 />
                 <Action
                   purpose={EActionPurpose.Remove}
                   handleClick={() => {
-                    pageProps.confirm(
+                    appActions.confirm(
                       'Are you sure you want to delete this mission?',
                       (concludeAction: () => void) => {
+                        concludeAction()
+                        appActions.beginLoading('Deleting mission...')
+
                         deleteMission(
                           mission.missionID,
                           () => {
-                            // pageProps.notify(
-                            //   `Successfully deleted ${mission.name}.`,
-                            //   1000,
-                            // )
-                            pageProps.goToPage('MissionSelectionPage', {})
-                            setMountHandled(false)
-                            concludeAction()
+                            appActions.notify(
+                              `Successfully deleted ${mission.name}.`,
+                            )
+                            appActions.goToPage('MissionSelectionPage', {})
                           },
                           () => {
-                            // pageProps.notify(
-                            //   `Failed to delete ${mission.name}.`,
-                            //   1000,
-                            // )
+                            appActions.notify(
+                              `Failed to delete ${mission.name}.`,
+                            )
                           },
                         )
                       },
@@ -297,26 +237,27 @@ export default function GamePage(props: {
                 <Action
                   purpose={EActionPurpose.Copy}
                   handleClick={() => {
-                    pageProps.confirm(
+                    appActions.confirm(
                       'Enter the name of the new mission.',
                       (concludeAction: () => void, entry: string) => {
+                        concludeAction()
+                        appActions.beginLoading('Copying mission...')
+
                         copyMission(
                           mission.missionID,
                           entry,
-                          () => {
-                            // pageProps.notify(
-                            //   `Successfully copied ${mission.name}.`,
-                            //   1000,
-                            // )
-                            pageProps.goToPage('MissionSelectionPage', {})
+                          (copy: Mission) => {
+                            appActions.notify(
+                              `Successfully copied ${mission.name}.`,
+                            )
+                            appActions.goToPage('GamePage', {
+                              missionID: copy.missionID,
+                            })
                             setMountHandled(false)
                             concludeAction()
                           },
                           () => {
-                            // pageProps.notify(
-                            //   `Failed to copy ${mission.name}.`,
-                            //   1000,
-                            // )
+                            appActions.notify(`Failed to copy ${mission.name}.`)
                             concludeAction()
                           },
                         )
@@ -381,7 +322,6 @@ export default function GamePage(props: {
                         ? 'Set mission as live. Allowing students to access it.'
                         : 'Set mission as no longer live. Preventing students from accessing it.'
                     }
-                    display={true}
                   />
                 </div>
               </div>
@@ -394,7 +334,7 @@ export default function GamePage(props: {
 
                 if (selectedNode.preExecutionText !== '') {
                   let timeStamp: number = 5 * (new Date() as any)
-                  consoleOutputs.push({
+                  appState.consoleOutputs.push({
                     date: timeStamp,
                     value: `<span class='line-cursor'>MDL@${selectedNode.name.replaceAll(
                       ' ',
@@ -404,7 +344,7 @@ export default function GamePage(props: {
                                 selectedNode.preExecutionText
                               }</span>`,
                   })
-                  setOutputPanelIsDisplayed(true)
+                  appState.setOutputPanelIsDisplayed(true)
                 }
 
                 if (selectedNode.executable === false) {
@@ -413,15 +353,15 @@ export default function GamePage(props: {
                   return
                 } else {
                   for (let nodeActionItem of selectedNode.actions) {
-                    actionDisplay.push(nodeActionItem)
+                    appState.actionDisplay.push(nodeActionItem)
                   }
                   if (
                     mission.disableNodes === false &&
                     selectedNode.executed === false
                   ) {
-                    setActionSelectionPromptIsDisplayed(true)
+                    appState.setActionSelectionPromptIsDisplayed(true)
                   } else {
-                    setActionDisplay([])
+                    appState.setActionDisplay([])
                   }
                 }
               }}
@@ -483,7 +423,7 @@ export default function GamePage(props: {
             <ExecuteNodePath
               mission={mission}
               selectedNode={lastSelectedNode}
-              notify={pageProps.notify}
+              notify={appActions.notify}
             />
           </div>
         }

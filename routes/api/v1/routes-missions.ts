@@ -1,6 +1,7 @@
 //npm imports
 import express from 'express'
 import Mission from '../../../database/models/model-mission'
+import { isLoggedIn, requireLogin } from '../../../user'
 
 //fields
 const router = express.Router()
@@ -8,7 +9,7 @@ const router = express.Router()
 // -- POST | /api/v1/missions/ --
 
 // This will create a new mission.
-router.post('/', (request, response) => {
+router.post('/', requireLogin, (request, response) => {
   let body: any = request.body
 
   if ('mission' in body) {
@@ -55,10 +56,16 @@ router.post('/', (request, response) => {
 // -- GET | /api/v1/missions/ --
 // This will return all of the missions.
 router.get('/', (request, response) => {
-  let idValue = request.query.missionID
+  let missionID = request.query.missionID
 
-  if (idValue === undefined) {
-    Mission.find({})
+  if (missionID === undefined) {
+    let queries: any = {}
+
+    if (!isLoggedIn(request)) {
+      queries.live = true
+    }
+
+    Mission.find({ ...queries })
       .select('-nodeStructure -nodeData')
       .exec((error: Error, missions: any) => {
         if (error !== null || missions === null) {
@@ -69,26 +76,24 @@ router.get('/', (request, response) => {
         }
       })
   } else {
-    Mission.findOne({ missionID: idValue }).exec(
-      (error: Error, mission: any) => {
-        console.log(mission)
-
-        if (error !== null) {
-          console.error(error)
-          return response.sendStatus(500)
-        } else if (mission === null) {
-          return response.sendStatus(404)
-        } else {
-          return response.json({ mission })
-        }
-      },
-    )
+    Mission.findOne({ missionID }).exec((error: Error, mission: any) => {
+      if (error !== null) {
+        console.error(error)
+        return response.sendStatus(500)
+      } else if (mission === null) {
+        return response.sendStatus(404)
+      } else if (!mission.live && !isLoggedIn(request)) {
+        return response.sendStatus(401)
+      } else {
+        return response.json({ mission })
+      }
+    })
   }
 })
 
 // -- PUT | /api/v1/missions/ --
 // This will update the mission.
-router.put('/', (request, response) => {
+router.put('/', requireLogin, (request, response) => {
   let body: any = request.body
 
   if ('mission' in body) {
@@ -115,7 +120,7 @@ router.put('/', (request, response) => {
 
 // -- PUT | /api/v1/missions/copy/ --
 // This will copy a mission.
-router.put('/copy/', (request, response) => {
+router.put('/copy/', requireLogin, (request, response) => {
   let body: any = request.body
 
   if ('originalID' in body && 'copyName' in body) {
@@ -155,7 +160,7 @@ router.put('/copy/', (request, response) => {
 
 // -- DELETE | /api/v1/missions/ --
 // This will delete a mission.
-router.delete('/', (request, response) => {
+router.delete('/', requireLogin, (request, response) => {
   let query: any = request.query
 
   if ('missionID' in query) {

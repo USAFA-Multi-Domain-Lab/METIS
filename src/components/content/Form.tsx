@@ -8,45 +8,48 @@ import './Form.scss'
 import Toggle, { EToggleLockState } from './Toggle'
 import Tooltip from './Tooltip'
 
-// field for entering information.
-export function Detail(props: {
+interface IDetail {
   label: string
   initialValue: string
   deliverValue: (value: string) => void
-}): JSX.Element | null {
-  const field = useRef<HTMLInputElement>(null)
-  const [mountHandled, setMountHandled] = useState<boolean>()
+}
 
-  let label: string = props.label
-  let initialValue: string = props.initialValue
-  let deliverValue = props.deliverValue
+interface IDetail_S {}
 
-  // Equivalent of componentDidMount.
-  useEffect(() => {
-    if (!mountHandled) {
-      let fieldElement: HTMLInputElement | null = field.current
+// field for entering information.
+export class Detail extends React.Component<IDetail, IDetail_S> {
+  field: React.RefObject<HTMLInputElement> = React.createRef()
 
-      if (fieldElement) {
-        fieldElement.value = initialValue
-      }
+  // inherited
+  componentDidMount(): void {
+    let initialValue: string = this.props.initialValue
+    let fieldElement: HTMLInputElement | null = this.field.current
 
-      setMountHandled(true)
+    if (fieldElement) {
+      fieldElement.value = initialValue
     }
-  }, [mountHandled])
+  }
 
-  return (
-    <div className='Detail'>
-      <div className='Label'>{`${label}:`}</div>
-      <input
-        className='Field'
-        type='text'
-        ref={field}
-        onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-          deliverValue(event.target.value)
-        }}
-      />
-    </div>
-  )
+  // inherited
+  render(): JSX.Element | null {
+    let label: string = this.props.label
+    let initialValue: string = this.props.initialValue
+    let deliverValue = this.props.deliverValue
+
+    return (
+      <div className='Detail'>
+        <div className='Label'>{`${label}:`}</div>
+        <input
+          className='Field'
+          type='text'
+          ref={this.field}
+          onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+            deliverValue(event.target.value)
+          }}
+        />
+      </div>
+    )
+  }
 }
 
 // This will render a detail for
@@ -62,7 +65,7 @@ export function DetailNumber(props: {
   deliverValue: (value: number | null) => void
 }): JSX.Element | null {
   const field = useRef<HTMLInputElement>(null)
-  const [mountHandled, setMountHandled] = useState<boolean>()
+  const [mountHandled, setMountHandled] = useState<boolean>(false)
 
   let label: string = props.label
   let initialValue: number = props.initialValue
@@ -159,7 +162,7 @@ export function DetailBox(props: {
   const fieldOffsetHeight: number = 3
 
   const field = useRef<HTMLTextAreaElement>(null)
-  const [mountHandled, setMountHandled] = useState<boolean>()
+  const [mountHandled, setMountHandled] = useState<boolean>(false)
 
   let label: string = props.label
   let initialValue: string = props.initialValue
@@ -234,7 +237,7 @@ export function DetailDropDown(props: {
   deliverValue: (value: string) => void
 }): JSX.Element | null {
   const field = useRef<HTMLTextAreaElement>(null)
-  const [mountHandled, setMountHandled] = useState<boolean>()
+  const [mountHandled, setMountHandled] = useState<boolean>(false)
   const [expanded, setExpanded] = useState<boolean>(false)
 
   let label: string = props.label
@@ -364,9 +367,7 @@ export class DetailToggle extends React.Component<
             deliverValue={this.props.deliverValue}
           />
         </div>
-        {hideTooltip ? null : (
-          <Tooltip description={tooltipDescription} display={true} />
-        )}
+        {hideTooltip ? null : <Tooltip description={tooltipDescription} />}
       </div>
     )
   }

@@ -1,26 +1,24 @@
 import { useStore } from 'react-context-hook'
+import { IPage } from '../App'
+import AppState, { AppActions } from '../AppState'
 import './ServerErrorPage.scss'
+
+export interface IServerErrorPage extends IPage {}
 
 // This will render a page that displays a server
 // error that has occured.
-export default function ServerErrorPage(): JSX.Element | null {
-  // -- GLOBAL STATE --
+export default function ServerErrorPage(
+  props: IServerErrorPage,
+): JSX.Element | null {
+  let appState: AppState = props.appState
+  let appActions: AppActions = props.appActions
 
-  const [errorMessage, setErrorMessage] = useStore<string | null>(
-    'errorMessage',
+  return (
+    <div className='ServerErrorPage Page'>
+      <div className='ErrorMessage'>{appState.errorMessage}</div>
+      <a className='Refresh' href='/'>
+        Refresh.
+      </a>
+    </div>
   )
-  const [loadingMinTimeReached] = useStore<boolean>('loadingMinTimeReached')
-
-  if (errorMessage !== null && loadingMinTimeReached) {
-    return (
-      <div className='ServerErrorPage'>
-        <div className='ErrorMessage'>{errorMessage}</div>
-        <a className='Refresh' href='/'>
-          Refresh.
-        </a>
-      </div>
-    )
-  } else {
-    return null
-  }
 }
