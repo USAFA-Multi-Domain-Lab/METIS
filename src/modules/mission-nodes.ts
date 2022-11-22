@@ -404,6 +404,7 @@ export class MissionNode {
     }
 
     this.childrenOfParent.splice(this.childrenOfParent.indexOf(this), 1)
+    this.mission.nodes.delete(this.nodeID)
 
     this._handleStructureChange()
   }

@@ -575,7 +575,11 @@ export default class MissionMap extends React.Component<
       save: new Action({
         ...Action.defaultProps,
         purpose: EActionPurpose.Save,
-        handleClick: handleMapSaveRequest ? handleMapSaveRequest : () => {},
+        handleClick: () => {
+          if (handleMapSaveRequest) {
+            handleMapSaveRequest()
+          }
+        },
         tooltipDescription: 'Save changes.',
         disabled: !saveCanBeRequested,
       }),

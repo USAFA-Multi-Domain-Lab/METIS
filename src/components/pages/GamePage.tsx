@@ -95,33 +95,33 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
       appState.executeNodePathPromptIsDisplayed === false &&
       appState.actionSelectionPromptIsDisplayed === false
     ) {
-      className += ' GamePageWithOutputPanelOnly'
+      className += ' DisplayOutputPanel'
     } else if (
       appState.outputPanelIsDisplayed === true &&
       appState.actionSelectionPromptIsDisplayed === true &&
       appState.executeNodePathPromptIsDisplayed === false
     ) {
-      className += ' GamePageWithOutputPanelAndActionPrompt'
+      className += ' DisplayOutputAndActionPrompt'
     } else if (
       appState.outputPanelIsDisplayed === true &&
       appState.executeNodePathPromptIsDisplayed === true &&
       appState.actionSelectionPromptIsDisplayed === false
     ) {
-      className += ' GamePageWithOutputPanelAndExecuteNodePathPrompt'
+      className += ' DisplayOutputPanelAndPathPrompt'
     } else if (
       appState.outputPanelIsDisplayed === false &&
       appState.executeNodePathPromptIsDisplayed === true &&
       appState.actionSelectionPromptIsDisplayed === false
     ) {
-      className += ' GamePageWithExecuteNodePathPromptOnly'
+      className += ' DisplayPathPrompt'
     } else if (
       appState.outputPanelIsDisplayed === false &&
       appState.executeNodePathPromptIsDisplayed === false &&
       appState.actionSelectionPromptIsDisplayed === true
     ) {
-      className += ' GamePageWithActionSelectionPromptOnly'
+      className += ' DisplayActionPrompt'
     } else {
-      className += ' GamePageWithMapOnly'
+      className += ' DisplayMapOnly'
     }
 
     // Keeps track of if the user is logged in or not.
@@ -164,7 +164,6 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
           <Branding
             goHome={() => appActions.goToPage('MissionSelectionPage', {})}
             tooltipDescription='Go home.'
-            showTooltip={true}
           />
           <div
             className='Home Link'
@@ -239,11 +238,13 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
                         copyMission(
                           mission.missionID,
                           entry,
-                          () => {
+                          (copy: Mission) => {
                             appActions.notify(
                               `Successfully copied ${mission.name}.`,
                             )
-                            appActions.goToPage('MissionSelectionPage', {})
+                            appActions.goToPage('GamePage', {
+                              missionID: copy.missionID,
+                            })
                             setMountHandled(false)
                             concludeAction()
                           },

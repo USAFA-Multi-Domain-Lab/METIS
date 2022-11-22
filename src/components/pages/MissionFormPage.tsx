@@ -202,7 +202,6 @@ export default function MissionFormPage(
           <Branding
             goHome={() => appActions.goToPage('MissionSelectionPage', {})}
             tooltipDescription='Go home.'
-            showTooltip={true}
           />
           <div
             className='Done Link'
@@ -878,12 +877,13 @@ function NodeStructuring(props: {
             }}
           >
             <svg className='Indicator'>
-              <polygon
+              {/* <polygon
                 points='0,0 7,0 3.5,7'
                 style={{ transformOrigin: '3.5px 3.5px' }}
                 className='Triangle'
                 fill='#fff'
-              />
+              /> */}
+              {<circle className='Circle' fill='#fff' r='3' cx='3' cy='3' />}
             </svg>
             <div className='Name'>{node.name}</div>
           </div>

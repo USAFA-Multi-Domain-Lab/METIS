@@ -121,10 +121,11 @@ export class AppActions {
   // This will go to a specific page
   // passing the necessary props.
   goToPage = (pagePath: string, pageProps: AnyObject): void => {
-    this.appState.setLoadingMessage('Switch pages...')
+    this.appState.setLoadingMessage('Switching pages...')
     this.appState.setPageSwitchMinTimeReached(false)
-    this.appState.setCurrentPagePath(pagePath)
+    this.appState.setCurrentPagePath('')
     this.appState.setCurrentPageProps(pageProps)
+    this.appState.setCurrentPagePath(pagePath)
 
     setTimeout(() => {
       this.appState.setPageSwitchMinTimeReached(true)

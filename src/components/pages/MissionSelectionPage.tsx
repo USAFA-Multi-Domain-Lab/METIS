@@ -109,11 +109,7 @@ export default function MissionSelectionPage(
     <div className='MissionSelectionPage Page'>
       {/* { Navigation } */}
       <div className={navClassName}>
-        <Branding
-          goHome={() => null}
-          tooltipDescription=''
-          showTooltip={false}
-        />
+        <Branding goHome={null} tooltipDescription={null} />
         <div className='Login Link' onClick={login}>
           Login
         </div>
