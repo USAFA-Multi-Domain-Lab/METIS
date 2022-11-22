@@ -29,8 +29,15 @@ $background-bar: linear-gradient(
 }
 
 .MissionFormPage {
+  display: grid;
+  overflow-x: hidden;
+  overflow-y: hidden;
+  grid-template-rows: 85px calc(100vh - 85px - 70px);
   margin: 0 auto;
-  padding: 35px 75px 0;
+  padding: 35px 30px;
+  box-sizing: border-box;
+  width: 100vw;
+  height: 100vh;
 
   //   &.SidePanelIsExpanded {
   //     .Content {
@@ -46,7 +53,8 @@ $background-bar: linear-gradient(
   .Navigation {
     display: grid;
     grid-template-columns: auto 130px 130px 130px;
-    margin: 0 auto 55px;
+    margin: 0 auto;
+    width: 100%;
     height: 30px;
     vertical-align: bottom;
 
@@ -82,14 +90,18 @@ $background-bar: linear-gradient(
   .Content {
     display: grid;
     grid-template-columns: auto 325px;
+    grid-template-rows: 100%;
     margin: 0 auto;
+    height: 100%;
 
     .MissionMap {
+      height: 100%;
       width: unset;
       background-color: $background-alt2;
     }
 
     .SidePanel {
+      height: 100%;
       .BorderBox {
         margin-left: 10px;
 
@@ -106,12 +118,13 @@ $background-bar: linear-gradient(
 }
 
 .SidePanel {
+  height: 100%;
   .BorderBox {
     overflow-x: hidden;
     overflow-y: auto;
     box-sizing: border-box;
     border: 2px solid $color-main;
-    height: $height;
+    height: 100%;
     padding: 15px 0 0;
     background-color: $background-alt2;
 
@@ -281,9 +294,9 @@ $background-bar: linear-gradient(
           width: fit-content;
 
           // This will return the transform value
-          // for the indicator triangle, placing
+          // for the indicator circle, placing
           // it in the correct position.
-          @function getIndicatorTriangleTransform($isExpanded) {
+          @function getIndicatorCircleTransform($isExpanded) {
             $indicator-translate: translate(0, $indicator-translate-y);
 
             @if $isExpanded {
@@ -333,8 +346,8 @@ $background-bar: linear-gradient(
               .Indicator {
                 width: 12px;
 
-                .Triangle {
-                  transform: getIndicatorTriangleTransform(false);
+                .Circle {
+                  transform: getIndicatorCircleTransform(false);
                 }
               }
 
@@ -369,8 +382,8 @@ $background-bar: linear-gradient(
           &.IsExpanded {
             .ParentNode {
               .Indicator {
-                .Triangle {
-                  transform: getIndicatorTriangleTransform(true);
+                .Circle {
+                  transform: getIndicatorCircleTransform(true);
                 }
               }
             }
@@ -379,8 +392,8 @@ $background-bar: linear-gradient(
           &.IsCollapsed {
             .ParentNode {
               .Indicator {
-                .Triangle {
-                  transform: getIndicatorTriangleTransform(false);
+                .Circle {
+                  transform: getIndicatorCircleTransform(false);
                 }
               }
             }

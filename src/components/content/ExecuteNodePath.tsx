@@ -12,7 +12,7 @@ import Tooltip from './Tooltip'
 const ExecuteNodePath = (props: {
   mission: Mission
   selectedNode: MissionNode | null
-  notify: (message: string, duration: number | null) => Notification
+  notify: (message: string, duration?: number | null) => Notification
 }) => {
   let mission: Mission = props.mission
 
@@ -89,7 +89,7 @@ const ExecuteNodePath = (props: {
         setActionDisplay([])
         mission.resources--
       } else {
-        // props.notify(`You have no more resources to spend.`, 3000)
+        props.notify(`You have no more resources to spend.`)
       }
     }
   }
@@ -122,10 +122,11 @@ const ExecuteNodePath = (props: {
       <div className='Buttons'>
         <button className={executionButtonClassName} onClick={execute}>
           {actionName}
-          <Tooltip
-            description={`You cannot ${actionName.toLowerCase()} because you have no more resources left to spend.`}
-            display={displayTooltip}
-          />
+          {displayTooltip ? (
+            <Tooltip
+              description={`You cannot ${actionName.toLowerCase()} because you have no more resources left to spend.`}
+            />
+          ) : null}
         </button>
 
         <button

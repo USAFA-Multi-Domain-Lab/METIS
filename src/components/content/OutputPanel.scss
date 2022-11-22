@@ -5,14 +5,14 @@
   justify-content: flex-end;
   align-items: center;
   flex-flow: row wrap;
-  width: 35%;
 
   .BorderBox {
     margin-left: 10px;
     width: 100%;
-    height: $height;
+    height: 100%;
     border: 2px solid $color-main;
     overflow: auto;
+    box-sizing: border-box;
 
     .MinimizeButtonContainer {
       position: sticky;

@@ -1,6 +1,7 @@
 //npm imports
 import express from 'express'
 import Mission from '../../../database/models/model-mission'
+import { isLoggedIn, requireLogin } from '../../../user'
 
 //fields
 const router = express.Router()
@@ -8,7 +9,7 @@ const router = express.Router()
 // -- POST | /api/v1/missions/ --
 
 // This will create a new mission.
-router.post('/', (request, response) => {
+router.post('/', requireLogin, (request, response) => {
   let body: any = request.body
 
   if ('mission' in body) {
@@ -55,10 +56,16 @@ router.post('/', (request, response) => {
 // -- GET | /api/v1/missions/ --
 // This will return all of the missions.
 router.get('/', (request, response) => {
-  let idValue = request.query.missionID
+  let missionID = request.query.missionID
 
-  if (idValue === undefined) {
-    Mission.find({})
+  let queries: any = {}
+
+  if (!isLoggedIn(request)) {
+    queries.live = true
+  }
+
+  if (missionID === undefined) {
+    Mission.find({ ...queries })
       .select('-nodeStructure -nodeData')
       .exec((error: Error, missions: any) => {
         if (error !== null || missions === null) {
@@ -69,7 +76,7 @@ router.get('/', (request, response) => {
         }
       })
   } else {
-    Mission.findOne({ missionID: idValue }).exec(
+    Mission.findOne({ missionID, ...queries }).exec(
       (error: Error, mission: any) => {
         if (error !== null) {
           console.error(error)
@@ -86,7 +93,7 @@ router.get('/', (request, response) => {
 
 // -- PUT | /api/v1/missions/ --
 // This will update the mission.
-router.put('/', (request, response) => {
+router.put('/', requireLogin, (request, response) => {
   let body: any = request.body
 
   if ('mission' in body) {
@@ -113,7 +120,7 @@ router.put('/', (request, response) => {
 
 // -- PUT | /api/v1/missions/copy/ --
 // This will copy a mission.
-router.put('/copy/', (request, response) => {
+router.put('/copy/', requireLogin, (request, response) => {
   let body: any = request.body
 
   if ('originalID' in body && 'copyName' in body) {
@@ -153,7 +160,7 @@ router.put('/copy/', (request, response) => {
 
 // -- DELETE | /api/v1/missions/ --
 // This will delete a mission.
-router.delete('/', (request, response) => {
+router.delete('/', requireLogin, (request, response) => {
   let query: any = request.query
 
   if ('missionID' in query) {

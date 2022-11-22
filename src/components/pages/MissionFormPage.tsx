@@ -22,11 +22,11 @@ import { v4 as generateHash } from 'uuid'
 import './MissionFormPage.scss'
 import { Action, EActionPurpose } from '../content/Action'
 import MoreInformation from '../content/MoreInformation'
-import { IPageProps } from '../App'
+import { IPage } from '../App'
 import { ENodeTargetRelation, MissionNode } from '../../modules/mission-nodes'
 import { MissionNodeAction } from '../../modules/mission-node-actions'
 import { EToggleLockState } from '../content/Toggle'
-import Markdown, { MarkdownTheme } from '../content/Markdown'
+import AppState, { AppActions } from '../AppState'
 
 // This is a enum used to describe
 // the locations that one node can
@@ -39,7 +39,7 @@ enum ENodeDropLocation {
   Bottom,
 }
 
-interface IMissionFormPageProps extends IPageProps {
+export interface IMissionFormPage extends IPage {
   // If null, a new mission is being
   // created.
   missionID: string | null
@@ -47,23 +47,11 @@ interface IMissionFormPageProps extends IPageProps {
 
 // This will render a dashboard with a radar
 // on it, indicating air traffic passing by.
-export default function MissionFormPage(props: {
-  pageProps: IMissionFormPageProps
-}): JSX.Element | null {
-  let pageProps: IMissionFormPageProps = props.pageProps
-
-  /* -- GLOBAL STATE -- */
-
-  const [currentUser, setCurrentUser] = useStore<IUser | null>('currentUser')
-  const [loadingMessage, setLoadingMessage] = useStore<string | null>(
-    'loadingMessage',
-  )
-  const [errorMessage, setErrorMessage] = useStore<string | null>(
-    'errorMessage',
-  )
-  const [lastLoadingMessage, setLastLoadingMessage] = useStore<string | null>(
-    'lastLoadingMessage',
-  )
+export default function MissionFormPage(
+  props: IMissionFormPage,
+): JSX.Element | null {
+  let appState: AppState = props.appState
+  let appActions: AppActions = props.appActions
 
   /* -- COMPONENT STATE -- */
 
@@ -80,9 +68,9 @@ export default function MissionFormPage(props: {
 
   // Equivalent of componentDidMount.
   useEffect(() => {
-    if (!mountHandled && pageProps.isCurrentPage) {
+    if (!mountHandled) {
       let existsInDatabase: boolean
-      let missionID: string | null = pageProps.missionID
+      let missionID: string | null = props.missionID
 
       // Creating a new mission.
       if (missionID === null) {
@@ -92,37 +80,28 @@ export default function MissionFormPage(props: {
       }
       // Editing an existing mission.
       else {
-        setLoadingMessage('')
+        appActions.beginLoading('Loading mission...')
 
         getMission(
           missionID,
           (mission: Mission) => {
-            setLastLoadingMessage('Initializing application...')
-            setLoadingMessage(null)
             setMission(mission)
+            appActions.finishLoading()
             setMountHandled(true)
           },
           () => {
-            setErrorMessage('Failed to retrieve mission.')
-            setLoadingMessage(null)
+            appActions.finishLoading()
+            appActions.handleServerError('Failed to load mission.')
           },
           { expandAllNodes: true },
         )
         existsInDatabase = true
         setExistsInDatabase(existsInDatabase)
       }
-    } else if (mountHandled && !pageProps.isCurrentPage) {
-      setForcedUpdateCounter(0)
-      setMission(null)
-      setAreUnsavedChanges(false)
-      selectNode(null)
-      activateNodeStructuring(false)
-      setExistsInDatabase(false)
-      setMountHandled(false)
     }
-  }, [mountHandled, pageProps.isCurrentPage])
+  }, [mountHandled])
 
-  if (pageProps.show && mission !== null) {
+  if (mission !== null) {
     /* -- COMPONENTS -- */
 
     /* -- COMPONENT FUNCTIONS -- */
@@ -153,13 +132,13 @@ export default function MissionFormPage(props: {
             mission,
             true,
             (resultingMission: Mission) => {
-              pageProps.notify('Mission successfully saved.', 3000)
+              appActions.notify('Mission successfully saved.')
               setMission(resultingMission)
               setExistsInDatabase(true)
               callback()
             },
             (error: Error) => {
-              pageProps.notify('Mission failed to save', 3000)
+              appActions.notify('Mission failed to save')
               setAreUnsavedChanges(true)
               callbackError(error)
             },
@@ -168,11 +147,11 @@ export default function MissionFormPage(props: {
           saveMission(
             mission,
             () => {
-              pageProps.notify('Mission successfully saved.', 3000)
+              appActions.notify('Mission successfully saved.')
               callback()
             },
             (error: Error) => {
-              pageProps.notify('Mission failed to save.', 3000)
+              appActions.notify('Mission failed to save.')
               setAreUnsavedChanges(true)
               callbackError(error)
             },
@@ -193,7 +172,7 @@ export default function MissionFormPage(props: {
         confirmationMessage = 'Please confirm the deletion of this node.'
       }
 
-      pageProps.confirm(
+      appActions.confirm(
         confirmationMessage,
         (concludeAction: () => void, entry?: string) => {
           node.delete()
@@ -206,57 +185,36 @@ export default function MissionFormPage(props: {
     }
 
     // This will logout the current user.
-    const logout = () => {
-      setLoadingMessage('Signing out...')
-
-      usersModule.logout(
-        () => {
-          setCurrentUser(null)
-          setLoadingMessage(null)
-          pageProps.goToPage('AuthPage', {
-            goBackPagePath: 'MissionSelectionPage',
-            goBackPageProps: {},
-          })
-          setLastLoadingMessage('Signing out...')
-        },
-        () => {
-          setLoadingMessage(null)
-          setErrorMessage('Server is down. Contact system administrator.')
-        },
-      )
-    }
+    const logout = () =>
+      appActions.logout({
+        returningPagePath: 'GamePage',
+        returningPageProps: { missionID: mission.missionID },
+      })
 
     /* -- RENDER -- */
 
-    let className: string = 'MissionFormPage'
-
-    // if (selectedNode !== null || nodeStructuringIsActive) {
-    //   className += ' SidePanelIsExpanded'
-    // }
-
     return (
-      <div className={className}>
+      <div className={'MissionFormPage Page'}>
         {
           // -- navigation --
         }
         <div className='Navigation'>
           <Branding
-            goHome={() => pageProps.goToPage('MissionSelectionPage', {})}
+            goHome={() => appActions.goToPage('MissionSelectionPage', {})}
             tooltipDescription='Go home.'
-            showTooltip={true}
           />
           <div
             className='Done Link'
             onClick={() => {
               if (!areUnsavedChanges) {
-                pageProps.goToPage('MissionSelectionPage', {})
+                appActions.goToPage('MissionSelectionPage', {})
               } else {
-                pageProps.confirm(
+                appActions.confirm(
                   'You have unsaved changes. What do you want to do with them?',
                   (concludeAction: () => void) => {
                     save(
                       () => {
-                        pageProps.goToPage('MissionSelectionPage', {})
+                        appActions.goToPage('MissionSelectionPage', {})
                         concludeAction()
                       },
                       () => {
@@ -266,7 +224,7 @@ export default function MissionFormPage(props: {
                   },
                   {
                     handleAlternate: (concludeAction: () => void) => {
-                      pageProps.goToPage('MissionSelectionPage', {})
+                      appActions.goToPage('MissionSelectionPage', {})
                       concludeAction()
                     },
                     pendingMessageUponConfirm: 'Saving...',
@@ -284,14 +242,16 @@ export default function MissionFormPage(props: {
             className='PlayTest Link'
             onClick={() => {
               if (!areUnsavedChanges) {
-                pageProps.goToPage('GamePage', { missionID: mission.missionID })
+                appActions.goToPage('GamePage', {
+                  missionID: mission.missionID,
+                })
               } else {
-                pageProps.confirm(
+                appActions.confirm(
                   'You have unsaved changes. What do you want to do with them?',
                   (concludeAction: () => void) => {
                     save(
                       () => {
-                        pageProps.goToPage('GamePage', {
+                        appActions.goToPage('GamePage', {
                           missionID: mission.missionID,
                         })
                         concludeAction()
@@ -303,7 +263,7 @@ export default function MissionFormPage(props: {
                   },
                   {
                     handleAlternate: (concludeAction: () => void) => {
-                      pageProps.goToPage('GamePage', {
+                      appActions.goToPage('GamePage', {
                         missionID: mission.missionID,
                       })
                       concludeAction()
@@ -465,7 +425,7 @@ function NodeEntry(props: {
             <div className='Circle'>
               <div className='X'>x</div>
             </div>
-            <Tooltip description='Close panel.' display={true} />
+            <Tooltip description='Close panel.' />
           </div>
           <Detail
             label='Name'
@@ -514,10 +474,7 @@ function NodeEntry(props: {
           >
             {'[ '}
             <span>Fill</span> {' ]'}
-            <Tooltip
-              description='Shade all descendant nodes this color as well.'
-              display={true}
-            />
+            <Tooltip description='Shade all descendant nodes this color as well.' />
           </div>
           <DetailToggle
             label={'Executable'}
@@ -710,10 +667,7 @@ function NodeAction(props: {
       >
         {'[ '}
         <span>Delete Action</span> {' ]'}
-        <Tooltip
-          description='Delete this action from the node.'
-          display={true}
-        />
+        <Tooltip description='Delete this action from the node.' />
       </div>
     </div>
   )
@@ -922,7 +876,16 @@ function NodeStructuring(props: {
               }
             }}
           >
-            <div className='Indicator'>•</div>
+            <svg className='Indicator'>
+              {/* <polygon
+                points='0,0 7,0 3.5,7'
+                style={{ transformOrigin: '3.5px 3.5px' }}
+                className='Triangle'
+                fill='#fff'
+              /> */}
+              {<circle className='Circle' fill='#fff' r='3' cx='3' cy='3' />}
+            </svg>
+            {/* <div className='Indicator'>•</div> */}
             <div className='Name'>{node.name}</div>
           </div>
           <div
@@ -994,7 +957,7 @@ function NodeStructuring(props: {
             <div className='Circle'>
               <div className='X'>x</div>
             </div>
-            <Tooltip description='Close panel.' display={true} />
+            <Tooltip description='Close panel.' />
           </div>
           {renderNodes()}
         </div>

@@ -1,11 +1,9 @@
 @import '../../config.scss';
 
 .NodeActions {
-  position: absolute;
-  top: 300px;
-  left: 20%;
+  box-sizing: border-box;
   z-index: 100;
-  width: 30%;
+  width: 350px;
   height: auto;
   margin-right: 10px;
   border: 2px solid $color-main;

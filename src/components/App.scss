@@ -5,6 +5,32 @@
   min-width: 100vw;
   min-height: 100vh;
 
+  &.ServerError {
+    .Page:not(.ServerErrorPage) {
+      @extend .hidden;
+    }
+  }
+
+  &:not(.ServerError) {
+    .Page.ServerErrorPage {
+      @extend .hidden;
+    }
+  }
+
+  &.Loading {
+    .Page:not(.LoadingPage) {
+      @extend .hidden;
+    }
+  }
+
+  &:not(.Loading) {
+    .Page.LoadingPage {
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 600ms;
+    }
+  }
+
   *.hidden {
     pointer-events: none;
     opacity: 0;
