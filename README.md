@@ -1,4 +1,4 @@
-# mdl-web-app
+# CESAR (Cyber Effects Simulator and Relay)
 
 ### purpose
 
