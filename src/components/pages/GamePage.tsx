@@ -7,7 +7,6 @@ import {
   setLive,
 } from '../../modules/missions'
 import { EAjaxStatus } from '../../modules/toolbox/ajax'
-
 import MissionMap from '../content/MissionMap'
 import OutputPanel from '../content/OutputPanel'
 import './GamePage.scss'
