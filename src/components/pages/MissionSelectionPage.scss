@@ -12,33 +12,11 @@
 
   .Navigation {
     display: grid;
-    grid-template-columns: auto 110px;
-    margin: 0 0 30px;
-    padding: 35px 35px 0;
-    height: 30px;
+    grid-template-columns: auto 130px;
+    padding: 30px 30px 35px;
+    width: calc(100vw - 60px);
 
-    .Branding {
-      padding-right: 20px;
-    }
-
-    .Link {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      flex-flow: row wrap;
-      -webkit-user-select: none;
-      user-select: none;
-      cursor: pointer;
-      transition: opacity 175ms;
-
-      &:hover {
-        border: 2px solid $color-accent;
-        border-radius: 5px;
-        text-align: center;
-      }
-    }
-
-    .Logout {
+    .Home {
       display: none;
     }
   }
@@ -153,16 +131,6 @@
 
 // This is for the instructors page
 .MissionSelectionPage {
-  .SignOut {
-    .Logout {
-      display: flex;
-    }
-
-    .Login {
-      display: none;
-    }
-  }
-
   .MissionSelectionContent {
     .MissionList {
       &.show {

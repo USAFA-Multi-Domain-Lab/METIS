@@ -1,5 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react'
-import { useStore } from 'react-context-hook'
+import React, { useEffect, useState } from 'react'
 import {
   createMission,
   getMission,
@@ -7,7 +6,6 @@ import {
   saveMission,
 } from '../../modules/missions'
 import { EAjaxStatus } from '../../modules/toolbox/ajax'
-import usersModule, { IUser } from '../../modules/users'
 import Branding from '../content/Branding'
 import {
   Detail,
@@ -527,7 +525,7 @@ function NodeEntry(props: {
             disabled={!node.executable}
             deliverValue={(postExecutionSuccessText: string) => {
               if (node !== null) {
-                node.preExecutionText = postExecutionSuccessText
+                node.postExecutionSuccessText = postExecutionSuccessText
 
                 handleChange()
               }
@@ -890,6 +888,7 @@ function NodeStructuring(props: {
               /> */}
               {<circle className='Circle' fill='#fff' r='3' cx='3' cy='3' />}
             </svg>
+            {/* <div className='Indicator'>•</div> */}
             <div className='Name'>{node.name}</div>
           </div>
           <div
