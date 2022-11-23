@@ -525,7 +525,7 @@ function NodeEntry(props: {
             disabled={!node.executable}
             deliverValue={(postExecutionSuccessText: string) => {
               if (node !== null) {
-                node.preExecutionText = postExecutionSuccessText
+                node.postExecutionSuccessText = postExecutionSuccessText
 
                 handleChange()
               }
