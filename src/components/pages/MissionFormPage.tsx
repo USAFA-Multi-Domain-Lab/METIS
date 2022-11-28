@@ -25,6 +25,7 @@ import { ENodeTargetRelation, MissionNode } from '../../modules/mission-nodes'
 import { MissionNodeAction } from '../../modules/mission-node-actions'
 import { EToggleLockState } from '../content/Toggle'
 import AppState, { AppActions } from '../AppState'
+import Navigation from '../content/Navigation'
 
 // This is a enum used to describe
 // the locations that one node can
@@ -201,91 +202,89 @@ export default function MissionFormPage(
         {
           // -- navigation --
         }
-        <div className='Navigation'>
-          <Branding
-            goHome={() => appActions.goToPage('MissionSelectionPage', {})}
-            tooltipDescription='Go home.'
-          />
-          <div
-            className='Done Link'
-            onClick={() => {
-              if (!areUnsavedChanges) {
-                appActions.goToPage('MissionSelectionPage', {})
-              } else {
-                appActions.confirm(
-                  'You have unsaved changes. What do you want to do with them?',
-                  (concludeAction: () => void) => {
-                    save(
-                      () => {
+        <Navigation
+          links={[
+            {
+              text: 'Done',
+              handleClick: () => {
+                if (!areUnsavedChanges) {
+                  appActions.goToPage('MissionSelectionPage', {})
+                } else {
+                  appActions.confirm(
+                    'You have unsaved changes. What do you want to do with them?',
+                    (concludeAction: () => void) => {
+                      save(
+                        () => {
+                          appActions.goToPage('MissionSelectionPage', {})
+                          concludeAction()
+                        },
+                        () => {
+                          concludeAction()
+                        },
+                      )
+                    },
+                    {
+                      handleAlternate: (concludeAction: () => void) => {
                         appActions.goToPage('MissionSelectionPage', {})
                         concludeAction()
                       },
-                      () => {
-                        concludeAction()
-                      },
-                    )
-                  },
-                  {
-                    handleAlternate: (concludeAction: () => void) => {
-                      appActions.goToPage('MissionSelectionPage', {})
-                      concludeAction()
+                      pendingMessageUponConfirm: 'Saving...',
+                      pendingMessageUponAlternate: 'Discarding...',
+                      buttonConfirmText: 'Save',
+                      buttonAlternateText: 'Discard',
                     },
-                    pendingMessageUponConfirm: 'Saving...',
-                    pendingMessageUponAlternate: 'Discarding...',
-                    buttonConfirmText: 'Save',
-                    buttonAlternateText: 'Discard',
-                  },
-                )
-              }
-            }}
-          >
-            Done
-          </div>
-          <div
-            className='PlayTest Link'
-            onClick={() => {
-              if (!areUnsavedChanges) {
-                appActions.goToPage('GamePage', {
-                  missionID: mission.missionID,
-                })
-              } else {
-                appActions.confirm(
-                  'You have unsaved changes. What do you want to do with them?',
-                  (concludeAction: () => void) => {
-                    save(
-                      () => {
+                  )
+                }
+              },
+              visible: true,
+            },
+            {
+              text: 'Play test',
+              handleClick: () => {
+                if (!areUnsavedChanges) {
+                  appActions.goToPage('GamePage', {
+                    missionID: mission.missionID,
+                  })
+                } else {
+                  appActions.confirm(
+                    'You have unsaved changes. What do you want to do with them?',
+                    (concludeAction: () => void) => {
+                      save(
+                        () => {
+                          appActions.goToPage('GamePage', {
+                            missionID: mission.missionID,
+                          })
+                          concludeAction()
+                        },
+                        () => {
+                          concludeAction()
+                        },
+                      )
+                    },
+                    {
+                      handleAlternate: (concludeAction: () => void) => {
                         appActions.goToPage('GamePage', {
                           missionID: mission.missionID,
                         })
                         concludeAction()
                       },
-                      () => {
-                        concludeAction()
-                      },
-                    )
-                  },
-                  {
-                    handleAlternate: (concludeAction: () => void) => {
-                      appActions.goToPage('GamePage', {
-                        missionID: mission.missionID,
-                      })
-                      concludeAction()
+                      pendingMessageUponConfirm: 'Saving...',
+                      pendingMessageUponAlternate: 'Discarding...',
+                      buttonConfirmText: 'Save',
+                      buttonAlternateText: 'Discard',
                     },
-                    pendingMessageUponConfirm: 'Saving...',
-                    pendingMessageUponAlternate: 'Discarding...',
-                    buttonConfirmText: 'Save',
-                    buttonAlternateText: 'Discard',
-                  },
-                )
-              }
-            }}
-          >
-            Play test
-          </div>
-          <div className='Logout Link' onClick={logout}>
-            Sign out
-          </div>
-        </div>
+                  )
+                }
+              },
+              visible: true,
+            },
+            { text: 'Log out', handleClick: logout, visible: true },
+          ]}
+          brandingCallback={() =>
+            appActions.goToPage('MissionSelectionPage', {})
+          }
+          brandingTooltipDescription='Go home.'
+        />
         {
           // -- content --
         }

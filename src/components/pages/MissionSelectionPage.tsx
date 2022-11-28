@@ -7,7 +7,6 @@ import {
   setLive,
 } from '../../modules/missions'
 import { IPage } from '../App'
-import Branding from '../content/Branding'
 import './MissionSelectionPage.scss'
 import { Counter } from '../../modules/numbers'
 import { Action, EActionPurpose } from '../content/Action'
@@ -94,11 +93,16 @@ export default function MissionSelectionPage(
   // Keeps track of if the user is logged in or not.
   let editMissionsContainerClassName: string = 'EditMissionsContainer'
   let editMissionListClassName: string = 'MissionList'
+  let displayLogin: boolean = true
+  let displayLogout: boolean = false
+
   let noMissionsClassName: string = 'NoMissions'
 
   if (appState.currentUser !== null) {
     editMissionsContainerClassName += ' show'
     editMissionListClassName += ' show'
+    displayLogin = false
+    displayLogout = true
   }
 
   if (missions.length > 0) {
@@ -109,13 +113,12 @@ export default function MissionSelectionPage(
     <div className='MissionSelectionPage Page'>
       {/* { Navigation } */}
       <Navigation
-        appState={appState}
-        appActions={appActions}
-        mission={null}
-        pagePath='MissionSelectionPage'
-        pageProps={{}}
         brandingCallback={null}
         brandingTooltipDescription={null}
+        links={[
+          { text: 'Login', handleClick: login, visible: displayLogin },
+          { text: 'Log out', handleClick: logout, visible: displayLogout },
+        ]}
       />
       {/* { Content } */}
       <div className='MissionSelectionContent'>

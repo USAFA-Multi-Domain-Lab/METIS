@@ -77,6 +77,20 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
 
     /* -- COMPONENT FUNCTIONS -- */
 
+    // This will logout the current user.
+    const logout = () =>
+      appActions.logout({
+        returningPagePath: 'GamePage',
+        returningPageProps: { missionID: mission.missionID },
+      })
+
+    // This will switch to the auth page.
+    const login = () =>
+      appActions.goToPage('AuthPage', {
+        returningPagePath: 'GamePage',
+        returningPageProps: { missionID: mission.missionID },
+      })
+
     /* -- RENDER -- */
 
     let className: string = 'GamePage Page'
@@ -117,9 +131,13 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
 
     // Keeps track of if the user is logged in or not.
     let actionsClassName = 'ActionsContainer'
+    let displayLogin: boolean = true
+    let displayLogout: boolean = false
 
     if (appState.currentUser !== null) {
       actionsClassName += ' show'
+      displayLogin = false
+      displayLogout = true
     }
 
     // Logic that will lock the mission toggle while a request is being sent
@@ -147,11 +165,17 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
           // -- navigation --
         }
         <Navigation
-          appState={appState}
-          appActions={appActions}
-          mission={mission}
-          pagePath='GamePage'
-          pageProps={{ missionID: mission.missionID }}
+          links={[
+            {
+              text: 'Back to selection',
+              handleClick: () => {
+                appActions.goToPage('MissionSelectionPage', {})
+              },
+              visible: true,
+            },
+            { text: 'Login', handleClick: login, visible: displayLogin },
+            { text: 'Log out', handleClick: logout, visible: displayLogout },
+          ]}
           brandingCallback={() =>
             appActions.goToPage('MissionSelectionPage', {})
           }

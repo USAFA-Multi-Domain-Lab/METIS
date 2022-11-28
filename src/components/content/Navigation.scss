@@ -28,21 +28,4 @@
       margin: 0 10px;
     }
   }
-
-  .Logout {
-    display: none;
-  }
-}
-
-// This is for the instructors view.
-.Navigation {
-  &.SignOut {
-    .Logout {
-      display: grid;
-    }
-
-    .Login {
-      display: none;
-    }
-  }
 }

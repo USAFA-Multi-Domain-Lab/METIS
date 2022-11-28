@@ -11,14 +11,9 @@
   height: fit-content;
 
   .Navigation {
-    display: grid;
     grid-template-columns: auto 130px;
     padding: 30px 30px 35px;
     width: calc(100vw - 60px);
-
-    .Home {
-      display: none;
-    }
   }
 
   .MissionSelectionContent {
