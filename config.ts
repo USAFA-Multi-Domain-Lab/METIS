@@ -17,7 +17,7 @@ declare module 'express-session' {
 
 // -- config-variables | default-values --
 
-export let PORT: number = 3000
+export let PORT: number = 8080
 
 export let MONGO_HOST = 'mongodb://localhost:27017/mdl'
 

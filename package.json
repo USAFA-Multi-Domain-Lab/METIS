@@ -70,7 +70,7 @@
     "not ie_mob > 0",
     "not dead"
   ],
-  "proxy": "http://localhost:3000",
+  "proxy": "http://localhost:8080",
   "prettier": {
     "tabWidth": 2,
     "singleQuote": true,
