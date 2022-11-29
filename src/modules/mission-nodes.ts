@@ -56,6 +56,7 @@ export class MissionNode {
   _executing: boolean
   mapX: number
   mapY: number
+  depth: number
   _isExpanded: boolean
 
   get willSucceed(): boolean {
@@ -121,6 +122,7 @@ export class MissionNode {
     this._executing = false
     this.mapX = mapX
     this.mapY = mapY
+    this.depth = -1
     this._isExpanded = false
 
     this.parseActionData(actionData)
@@ -271,6 +273,7 @@ export class MissionNode {
   expand(): void {
     if (this.expandable) {
       this._isExpanded = true
+      this.mission.lastExpandedNode = this
       this._handleStructureChange()
     } else {
       throw new Error(`Cannot expand ${this.nodeID} as it has no childNodes:`)

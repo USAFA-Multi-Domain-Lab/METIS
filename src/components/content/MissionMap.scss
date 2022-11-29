@@ -22,7 +22,6 @@
       rgba($background-main, 0.45) 4%,
       rgba($background-main, 0.45) 100%
     );
-  text-align: center;
 
   &.active-navigation {
     .ActionPanel {
@@ -106,10 +105,12 @@
   /* -- MAP | LIST -- */
 
   .List {
+    position: relative;
+    top: 4.5px;
     overflow: visible;
     margin: 0;
     height: 100%;
-    width: unset;
+    width: 100%;
     padding: 0;
     border: none;
     background: none;
@@ -127,6 +128,7 @@
         border-radius: 0;
         width: 100%;
         padding: 10px;
+        text-align: center;
 
         .list-heading {
           border-radius: 0;
@@ -154,7 +156,7 @@
         z-index: $z-index-objective-map-item;
         box-sizing: border-box;
         transition: 250ms opacity;
-        margin: 0 auto;
+        margin: 0;
         border: none;
         border-radius: 0;
         width: 260px;
@@ -164,6 +166,7 @@
           $background-color-negative,
           $lightness: 5%
         );
+        text-align: center;
         font-weight: 700;
         font-size: 13.5px;
         line-height: 13.5px;
@@ -176,6 +179,11 @@
 
         &.no-items {
           display: none;
+        }
+
+        &.item-markdown {
+          margin-left: 0;
+          margin-right: 0;
         }
 
         .ActionPropertyDisplay {
