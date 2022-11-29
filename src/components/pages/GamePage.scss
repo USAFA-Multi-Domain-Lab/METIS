@@ -32,16 +32,23 @@ $background-bar: linear-gradient(
 .GamePage {
   $page-vertical-padding: 35px;
   $page-horizontal-padding: 30px;
+  $page-width: calc(100vw - #{$page-horizontal-padding * 2});
+  $page-height: calc(100vh - #{$page-vertical-padding * 2});
   $page-row-1-height: 85px;
+  $page-row-2-height: calc(#{$page-height} - #{$page-row-1-height});
+  $resource-n-action-height: 55px;
+  $map-n-output-height: calc(
+    #{$page-row-2-height} - #{$resource-n-action-height}
+  );
   $node-action-width: 400px;
 
   overflow-x: hidden;
   overflow-y: hidden;
   display: grid;
-  width: calc(100vw - #{$page-horizontal-padding * 2});
-  height: calc(100vh - #{$page-vertical-padding * 2});
-  grid-template-columns: calc(100vw - #{$page-horizontal-padding * 2});
-  grid-template-rows: $page-row-1-height auto;
+  width: $page-width;
+  height: $page-height;
+  grid-template-columns: $page-width;
+  grid-template-rows: $page-row-1-height $page-row-2-height;
   margin: 0 auto;
   padding: $page-vertical-padding $page-horizontal-padding;
 
@@ -88,7 +95,7 @@ $background-bar: linear-gradient(
     display: grid;
     grid-template-rows: $content-row-1-height auto;
     width: 100%;
-    height: 100%;
+    height: $page-row-2-height;
 
     .ResourceAndActionContainer {
       display: flex;
@@ -96,6 +103,7 @@ $background-bar: linear-gradient(
       align-items: center;
       flex-flow: row wrap;
       width: 100%;
+      height: $resource-n-action-height;
       margin: 0;
 
       .Resources {
@@ -119,11 +127,11 @@ $background-bar: linear-gradient(
     .MissionMap {
       margin-right: 10px;
       width: 100%;
-      height: 100%;
+      height: $map-n-output-height;
     }
 
     .OutputPanel {
-      height: 100%;
+      height: $map-n-output-height;
     }
 
     .NodeActions {
