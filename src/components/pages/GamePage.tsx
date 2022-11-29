@@ -21,7 +21,6 @@ import Toggle, { EToggleLockState } from '../content/Toggle'
 import Tooltip from '../content/Tooltip'
 import Navigation from '../content/Navigation'
 import { AxiosError } from 'axios'
-import Navigation from '../content/Navigation'
 
 export interface IGamePage extends IPage {
   missionID: string
