@@ -7,6 +7,9 @@ export interface IMissionNodeActionJSON {
   description: string
   processTime: number
   successChance: number
+  resourceCost: number
+  postExecutionSuccessText: string
+  postExecutionFailureText: string
 }
 
 export class MissionNodeAction {
@@ -16,6 +19,9 @@ export class MissionNodeAction {
   description: string
   processTime: number
   successChance: number
+  resourceCost: number
+  postExecutionSuccessText: string
+  postExecutionFailureText: string
   _willSucceed: boolean
 
   // Getter for _willSucceed
@@ -30,6 +36,9 @@ export class MissionNodeAction {
     description: string,
     processTime: number,
     successChance: number,
+    resourceCost: number,
+    postExecutionSuccessText: string,
+    postExecutionFailureText: string,
   ) {
     this.node = node
     this.actionID = actionID
@@ -37,6 +46,9 @@ export class MissionNodeAction {
     this.description = description
     this.processTime = processTime
     this.successChance = successChance
+    this.resourceCost = 1 // resourceCost // ! Change once the database has been updated
+    this.postExecutionSuccessText = `Succeeded to ${this.name.toLowerCase()} ${this.node.name.toLowerCase()}.` // postExecutionSuccessText // ! Change once the database has been updated
+    this.postExecutionFailureText = `Failed to ${this.name.toLowerCase()} ${this.node.name.toLowerCase()}.` // postExecutionFailureText // ! Change once the database has been updated
     this._willSucceed = MissionNodeAction.determineActionSuccess(
       successChance,
       node.mission.rng,
@@ -50,6 +62,9 @@ export class MissionNodeAction {
       description: this.description,
       processTime: this.processTime,
       successChance: this.successChance,
+      resourceCost: this.resourceCost,
+      postExecutionSuccessText: this.postExecutionSuccessText,
+      postExecutionFailureText: this.postExecutionFailureText,
     }
   }
 

@@ -518,32 +518,6 @@ function NodeEntry(props: {
             }}
             key={`${node.nodeID}_preExecutionText`}
           />
-          <DetailBox
-            label='Post-Execution Success Text'
-            initialValue={node.postExecutionSuccessText}
-            disabled={!node.executable}
-            deliverValue={(postExecutionSuccessText: string) => {
-              if (node !== null) {
-                node.postExecutionSuccessText = postExecutionSuccessText
-
-                handleChange()
-              }
-            }}
-            key={`${node.nodeID}_postExecutionSuccessText`}
-          />
-          <DetailBox
-            label='Post-Execution Failure Text'
-            initialValue={node.postExecutionFailureText}
-            disabled={!node.executable}
-            deliverValue={(postExecutionFailureText: string) => {
-              if (node !== null) {
-                node.postExecutionFailureText = postExecutionFailureText
-
-                handleChange()
-              }
-            }}
-            key={`${node.nodeID}_postExecutionFailureText`}
-          />
           <div className={nodeActionDetailsClassName}>
             <div className='Label'>Actions:</div>
             {node.actions.map((action: MissionNodeAction) => (
@@ -572,6 +546,9 @@ function NodeEntry(props: {
                       '',
                       5000,
                       0.5,
+                      1,
+                      '',
+                      '',
                     )
                     node.actions.push(action)
                     handleChange()
@@ -658,6 +635,44 @@ function NodeAction(props: {
           }
         }}
         key={`${action.actionID}_timeCost`}
+      />
+      <DetailNumber
+        label='Resource Cost'
+        initialValue={action.resourceCost}
+        deliverValue={(resourceCost: number | null) => {
+          if (resourceCost !== null) {
+            action.resourceCost = resourceCost
+
+            handleChange()
+          }
+        }}
+        key={`${action.actionID}_resourceCost`}
+      />
+      <DetailBox
+        label='Post-Execution Success Text'
+        initialValue={action.postExecutionSuccessText}
+        disabled={!node.executable}
+        deliverValue={(postExecutionSuccessText: string) => {
+          if (postExecutionSuccessText !== null) {
+            action.postExecutionSuccessText = postExecutionSuccessText
+
+            handleChange()
+          }
+        }}
+        key={`${action.actionID}_postExecutionSuccessText`}
+      />
+      <DetailBox
+        label='Post-Execution Failure Text'
+        initialValue={action.postExecutionFailureText}
+        disabled={!node.executable}
+        deliverValue={(postExecutionFailureText: string) => {
+          if (postExecutionFailureText !== null) {
+            action.postExecutionFailureText = postExecutionFailureText
+
+            handleChange()
+          }
+        }}
+        key={`${action.actionID}_postExecutionFailureText`}
       />
       <div
         className='Delete'

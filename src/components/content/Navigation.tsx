@@ -1,5 +1,6 @@
 import Branding from './Branding'
 import './Navigation.scss'
+import { v4 as generateHash } from 'uuid'
 
 interface INavLink {
   text: string
@@ -23,7 +24,11 @@ const Navigation = (props: {
       {links.map((link: INavLink) => {
         if (link?.visible) {
           return (
-            <div className='Link' onClick={link.handleClick}>
+            <div
+              className='Link'
+              onClick={link.handleClick}
+              key={generateHash()}
+            >
               {link.text}
             </div>
           )
