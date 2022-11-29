@@ -30,10 +30,12 @@ interface IMissionMap_S {
   visibleNodes: Array<MissionNode>
   relationships: Array<MissionNodeRelationship>
   lastStructureChangeKey: string
+  lastExpandedNode: MissionNode | null
   navigationIsActive: boolean
   mapOffsetX: number
   mapOffsetY: number
   mapScale: number
+  nodeDepth: number
 }
 
 // represents a location on the mission map
@@ -129,10 +131,12 @@ export default class MissionMap extends React.Component<
       visibleNodes: [],
       relationships: [],
       lastStructureChangeKey: mission.structureChangeKey,
+      lastExpandedNode: mission.lastExpandedNode,
       navigationIsActive: false,
-      mapOffsetX: 0,
-      mapOffsetY: mapYScale * -3.5,
+      mapOffsetX: gridPaddingX / 2,
+      mapOffsetY: mapYScale * 2,
       mapScale: defaultMapScale,
+      nodeDepth: mission.depth,
     }
   }
 
@@ -194,11 +198,18 @@ export default class MissionMap extends React.Component<
         this.props.mission.structureChangeKey
     ) {
       this.updateRelationships()
+      this.revealNewNodes()
     }
 
     if (previousProps.mission !== this.props.mission) {
       previousProps.mission.removeStructureChangeHandler(this.forceUpdate)
       this.props.mission.addStructureChangeHandler(this.forceUpdate)
+    }
+
+    if (this.state.nodeDepth < this.props.mission.depth) {
+      this.setState({ nodeDepth: this.props.mission.depth }, () => {
+        this.revealNewNodes()
+      })
     }
   }
 
@@ -256,6 +267,38 @@ export default class MissionMap extends React.Component<
       relationships,
       lastStructureChangeKey: mission.structureChangeKey,
     })
+  }
+
+  // This will reveal new nodes that have
+  // been just unlocked.
+  revealNewNodes = (): void => {
+    let mission: Mission = this.props.mission
+    let map: HTMLDivElement | null = this.map.current
+    let mapScale: number = this.state.mapScale
+    let mapOffsetX: number = this.state.mapOffsetX
+
+    if (
+      this.state.lastExpandedNode !== mission.lastExpandedNode &&
+      mission.lastExpandedNode !== null &&
+      map
+    ) {
+      let mapBounds: DOMRect = map.getBoundingClientRect()
+
+      let mapWidthInNodes: number = mapBounds.width / mapScale / mapXScale
+      let mapOffsetXInNodes: number = -1 * (mapOffsetX / mapXScale)
+      let nodeDepthShown: number = mapWidthInNodes + mapOffsetXInNodes - 1
+      let nodeDepthRevealed: number = mission.lastExpandedNode.depth + 1
+      let correctionDifferenceInNodes: number =
+        nodeDepthShown - nodeDepthRevealed
+      let correctionDifference: number =
+        correctionDifferenceInNodes * mapXScale - gridPaddingX / 2
+
+      if (correctionDifference < 0) {
+        mapOffsetX += correctionDifference
+      }
+
+      this.setState({ lastExpandedNode: mission.lastExpandedNode, mapOffsetX })
+    }
   }
 
   // This prevents map zoom interference from
@@ -413,10 +456,10 @@ export default class MissionMap extends React.Component<
         // for the line element used as a pointer.
         let x0: number = 0
         let y0: number = 0
-        let x1: number = mapOffsetX
-        let y1: number = mapOffsetY
-        let x2: number = mapOffsetX
-        let y2: number = mapOffsetY
+        let x1: number = mapOffsetX + mapXScale / 2
+        let y1: number = mapOffsetY + mapYScale / 2
+        let x2: number = mapOffsetX + mapXScale / 2
+        let y2: number = mapOffsetY + mapYScale / 2
         x1 += prerequisiteX * mapXScale
         y1 += prerequisiteY * mapYScale
         x2 += unlocksX * mapXScale
@@ -425,10 +468,8 @@ export default class MissionMap extends React.Component<
         y1 *= mapScale
         x2 *= mapScale
         y2 *= mapScale
-        x1 += mapBounds.width / 2
-        x2 += mapBounds.width / 2
-        y1 += mapBounds.height / 2
-        y2 += mapBounds.height / 2
+        // y1 += mapBounds.height
+        // y2 += mapBounds.height
         x0 = x1
         y0 = y1
         // the pointer needs to have its start
@@ -712,9 +753,9 @@ export default class MissionMap extends React.Component<
       let mapOffsetX = this.state.mapOffsetX
       let mapOffsetY = this.state.mapOffsetY
 
-      mapStyling.backgroundPosition = `calc(50% + ${
-        mapOffsetX * mapScale
-      }px) calc(50% + ${mapOffsetY * mapScale}px)`
+      mapStyling.backgroundPosition = `calc(${mapOffsetX * mapScale}px) calc(${
+        mapOffsetY * mapScale
+      }px)`
       mapStyling.backgroundSize = `${mapXScale * mapScale}px ${
         mapYScale * mapScale
       }px`
@@ -873,6 +914,8 @@ export default class MissionMap extends React.Component<
                 x += nodeX * mapXScale
                 y += nodeY * mapYScale
               }
+              x += gridPaddingX
+              y += gridPaddingY
               let styling_top: number = y
               let styling_left: number = x
               let styling_width: number = mapXScale - gridPaddingX * 2
@@ -892,8 +935,7 @@ export default class MissionMap extends React.Component<
               // styling_paddingVertical *= mapScale
               // styling_paddingHorizontal *= mapScale
               styling_marginTop *= mapScale
-              styling_top += mapBounds.height / 2
-              styling_top -= styling_height / 2
+              // styling_top += mapBounds.height / 2
               styling.top = `${styling_top}px`
               styling.left = `${styling_left}px`
               styling.width = `${styling_width}px`

@@ -58,9 +58,11 @@ export class Mission {
   seed: string
   rng: PRNG
   rootNode: MissionNode
+  lastExpandedNode: MissionNode | null
   structureChangeKey: string
   structureChangeHandlers: Array<(structureChangeKey: string) => void>
   _disableNodes: boolean
+  _depth: number
 
   // This will return the node
   // structure for the mission,
@@ -89,6 +91,10 @@ export class Mission {
 
   get disableNodes(): boolean {
     return this._disableNodes
+  }
+
+  get depth(): number {
+    return this._depth
   }
 
   constructor(
@@ -129,11 +135,13 @@ export class Mission {
       0,
       0,
     )
+    this.lastExpandedNode = null
     this.structureChangeKey = generateHash()
     this._nodeStructureLastChangeKey = this.structureChangeKey
     this._nodeDataLastChangeKey = this.structureChangeKey
     this.structureChangeHandlers = []
     this._disableNodes = false
+    this._depth = -1
 
     this._importNodeData(nodeData)
     this._importNodeStructure(nodeStructure, this.rootNode, expandAll)
@@ -356,6 +364,8 @@ export class Mission {
     depth: number = -1,
     rowCount: Counter = new Counter(0),
   ): Mission => {
+    parentNode.depth = depth
+
     // If the parent node isn't the rootNode,
     // then this function was recursively
     // called with a reference to a particular
@@ -365,6 +375,11 @@ export class Mission {
     if (parentNode.nodeID !== this.rootNode.nodeID) {
       parentNode.mapX = depth
       parentNode.mapY = rowCount.count
+    }
+    // Else the depth of the mission is reset
+    // for recalculation.
+    else {
+      this._depth = -1
     }
     // If the parentNode is expanded, then
     // child nodes could effect the positioning
@@ -382,6 +397,13 @@ export class Mission {
 
         this.positionNodes(childNode, depth + 1, rowCount)
       })
+    }
+
+    // This will increase the mission depth
+    // if a node is found with a greater depth
+    // than what's currently set.
+    if (this._depth < depth) {
+      this._depth = depth
     }
 
     return this

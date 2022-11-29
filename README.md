@@ -36,7 +36,7 @@ environment.json
 
 ```json
 {
-  "PORT": 3000,
+  "PORT": 8080,
   "MONGO_HOST": "mongodb://localhost:27017/mdl"
 }
 ```

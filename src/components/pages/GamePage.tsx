@@ -19,6 +19,7 @@ import AppState, { AppActions } from '../AppState'
 import { Action, EActionPurpose } from '../content/Action'
 import Toggle, { EToggleLockState } from '../content/Toggle'
 import Tooltip from '../content/Tooltip'
+import Navigation from '../content/Navigation'
 import { AxiosError } from 'axios'
 import Navigation from '../content/Navigation'
 
