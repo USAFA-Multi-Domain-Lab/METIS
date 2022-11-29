@@ -391,23 +391,7 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
                     `* Action executed: ${node.selectedAction?.name}\n` +
                     `* Chance of success: ${
                       (node.successChance as number) * 100
-                    }%\n` +
-                    `* Device: ${
-                      // This capitalizes the first letter of the word.
-                      node.device.toString().charAt(0).toUpperCase() +
-                      node.device.toString().slice(1)
-                    }\n` +
-                    `* Executable: ${
-                      node.executable.toString().charAt(0).toUpperCase() +
-                      node.executable.toString().slice(1)
-                    }`
-                }
-
-                // This is for the tooltip message that will display
-                if (node.device && node.executable && !node.executed) {
-                  description = '* Device: True\n' + '* Executable: True'
-                } else if (node.executable && !node.device && !node.executed) {
-                  description = '* Device: False\n' + '* Executable: True'
+                    }%`
                 }
 
                 return description
