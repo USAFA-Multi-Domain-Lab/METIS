@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { useStore } from 'react-context-hook'
+import { useBeforeunload } from 'react-beforeunload'
 import {
   createMission,
   getMission,
@@ -106,6 +106,14 @@ export default function MissionFormPage(
     }
   }, [mountHandled])
 
+  // Guards against refreshing or navigating away
+  // with unsaved changes.
+  useBeforeunload((event) => {
+    if (areUnsavedChanges) {
+      event.preventDefault()
+    }
+  })
+
   if (mission !== null) {
     /* -- COMPONENTS -- */
 
@@ -200,9 +208,7 @@ export default function MissionFormPage(
 
     return (
       <div className={'MissionFormPage Page'}>
-        {
-          // -- navigation --
-        }
+        {/* -- NAVIGATION -- */}
         <div className='Navigation'>
           <Branding
             goHome={() => appActions.goToPage('MissionSelectionPage', {})}
@@ -288,9 +294,7 @@ export default function MissionFormPage(
             Sign out
           </div>
         </div>
-        {
-          // -- content --
-        }
+        {/* -- CONTENT -- */}
         <div className='Content'>
           <MissionMap
             mission={mission}
