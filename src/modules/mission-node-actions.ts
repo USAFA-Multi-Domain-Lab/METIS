@@ -46,7 +46,7 @@ export class MissionNodeAction {
     this.description = description
     this.processTime = processTime
     this.successChance = successChance
-    this.resourceCost = 1 // resourceCost // ! Change once the database has been updated
+    this.resourceCost = 4 // resourceCost // ! Change once the database has been updated
     this.postExecutionSuccessText = `Succeeded to ${this.name.toLowerCase()} ${this.node.name.toLowerCase()}.` // postExecutionSuccessText // ! Change once the database has been updated
     this.postExecutionFailureText = `Failed to ${this.name.toLowerCase()} ${this.node.name.toLowerCase()}.` // postExecutionFailureText // ! Change once the database has been updated
     this._willSucceed = MissionNodeAction.determineActionSuccess(

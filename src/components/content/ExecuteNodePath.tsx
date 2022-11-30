@@ -7,6 +7,8 @@ import ActionPropertyDisplay from './ActionPropertyDisplay'
 import { Mission } from '../../modules/missions'
 import Notification from '../../modules/notifications'
 import Tooltip from './Tooltip'
+import AppState from '../AppState'
+import { useState } from 'react'
 
 const ExecuteNodePath = (props: {
   mission: Mission
@@ -43,12 +45,11 @@ const ExecuteNodePath = (props: {
 
   const execute = () => {
     if (props.selectedNode !== null) {
-      let resources: number = mission.resources
       let selectedNode: MissionNode = props.selectedNode
       let selectedAction: MissionNodeAction | null = selectedNode.selectedAction
       let resourceCost: number | undefined = selectedAction?.resourceCost
 
-      if (resources > 0 && resourceCost !== undefined) {
+      if (mission.resources > 0 && resourceCost !== undefined) {
         setExecuteNodePathPromptIsDisplayed(false)
 
         selectedNode.execute((success: boolean) => {
@@ -112,10 +113,10 @@ const ExecuteNodePath = (props: {
         })
         runNodeLoadingBar(processTime)
         setActionDisplay([])
-        // resources - resourceCost
+        let spendResources: number = mission.resources - resourceCost
+        mission.resources = spendResources
       } else if (resourceCost === undefined) {
-        console.error(`${actionName}'s resource cost is undefined.`)
-        props.notify(`Contact your administrator.`)
+        console.error(`The selected action's resource cost is undefined.`)
       } else {
         props.notify(`You have no more resources to spend.`)
       }

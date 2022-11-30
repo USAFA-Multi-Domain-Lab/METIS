@@ -102,7 +102,7 @@ const NodeActions = (props: {
                   `**Resource cost:** ${
                     action.resourceCost as number
                   } resource(s)\n` +
-                  `**Description:** ${strings.limit(action.description, 350)}`
+                  `**Description:** ${strings.limit(action.description, 160)}`
                 }
               />
               {action.name}
