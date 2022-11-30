@@ -210,7 +210,36 @@ export default function MissionFormPage(
         {/* -- NAVIGATION -- */}
         <div className='Navigation'>
           <Branding
-            goHome={() => appActions.goToPage('MissionSelectionPage', {})}
+            goHome={() => {
+              if (!areUnsavedChanges) {
+                appActions.goToPage('MissionSelectionPage', {})
+              } else {
+                appActions.confirm(
+                  'You have unsaved changes. What do you want to do with them?',
+                  (concludeAction: () => void) => {
+                    save(
+                      () => {
+                        appActions.goToPage('MissionSelectionPage', {})
+                        concludeAction()
+                      },
+                      () => {
+                        concludeAction()
+                      },
+                    )
+                  },
+                  {
+                    handleAlternate: (concludeAction: () => void) => {
+                      appActions.goToPage('MissionSelectionPage', {})
+                      concludeAction()
+                    },
+                    pendingMessageUponConfirm: 'Saving...',
+                    pendingMessageUponAlternate: 'Discarding...',
+                    buttonConfirmText: 'Save',
+                    buttonAlternateText: 'Discard',
+                  },
+                )
+              }
+            }}
             tooltipDescription='Go home.'
           />
           <div
