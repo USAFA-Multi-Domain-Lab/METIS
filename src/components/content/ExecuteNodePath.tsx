@@ -6,8 +6,8 @@ import gameLogic, { runNodeLoadingBar } from '../../modules/game-logic'
 import ActionPropertyDisplay from './ActionPropertyDisplay'
 import { Mission } from '../../modules/missions'
 import Notification from '../../modules/notifications'
-import { isDisabled } from '@testing-library/user-event/dist/utils'
 import Tooltip from './Tooltip'
+import { useState } from 'react'
 
 const ExecuteNodePath = (props: {
   mission: Mission
@@ -18,7 +18,7 @@ const ExecuteNodePath = (props: {
 
   /* -- GLOBAL STATE -- */
   const [consoleOutputs, setConsoleOutputs] =
-    useStore<Array<{ date: number; value: string }>>('consoleOutputs')
+    useStore<Array<{ date: number; value: string | null }>>('consoleOutputs')
   const [
     executeNodePathPromptIsDisplayed,
     setExecuteNodePathPromptIsDisplayed,
@@ -52,8 +52,7 @@ const ExecuteNodePath = (props: {
         selectedNode.execute((success: boolean) => {
           // Output message in the terminal which differs based on whether
           // it passes or fails
-
-          if (success) {
+          if (success && selectedNode.postExecutionSuccessText !== '') {
             gameLogic.handleNodeSelection(selectedNode)
 
             setConsoleOutputs([
@@ -69,7 +68,17 @@ const ExecuteNodePath = (props: {
                      }</span>`,
               },
             ])
-          } else {
+          } else if (success && selectedNode.postExecutionSuccessText === '') {
+            gameLogic.handleNodeSelection(selectedNode)
+
+            setConsoleOutputs([
+              ...consoleOutputs,
+              {
+                date: Date.now(),
+                value: null,
+              },
+            ])
+          } else if (!success && selectedNode.postExecutionFailureText !== '') {
             setConsoleOutputs([
               ...consoleOutputs,
               {
@@ -81,6 +90,14 @@ const ExecuteNodePath = (props: {
                     <span class="failed">${
                       selectedNode.postExecutionFailureText
                     }</span>`,
+              },
+            ])
+          } else {
+            setConsoleOutputs([
+              ...consoleOutputs,
+              {
+                date: Date.now(),
+                value: null,
               },
             ])
           }
