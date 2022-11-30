@@ -2,7 +2,7 @@ import Branding from './Branding'
 import './Navigation.scss'
 import { v4 as generateHash } from 'uuid'
 
-interface INavLink {
+export interface INavLink {
   text: string
   handleClick: () => void
   visible?: boolean

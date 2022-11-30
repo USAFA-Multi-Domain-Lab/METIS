@@ -61,10 +61,6 @@ export class MissionNode {
   static default_name: string = 'Unnamed Node'
   static default_color: string = 'default'
   static default_preExecutionText: string = 'Node has not been executed.'
-  static default_postExecutionSuccessText: string =
-    'Node has executed successfully.'
-  static default_postExecutionFailureText: string =
-    'Node has failed to execute.'
   static default_executable: boolean = false
   static default_device: boolean = false
   static default_actionData: Array<AnyObject> = []
