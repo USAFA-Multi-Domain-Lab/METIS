@@ -23,14 +23,15 @@ export interface IMissionNodeJson {
   name: string
   color: string
   preExecutionText: string
-  postExecutionSuccessText: string
-  postExecutionFailureText: string
   actionData: string
   executable: boolean
   nodeActionItems: Array<{
     text: string
     timeDelay: number
     successChance: number
+    resourceCost: number
+    postExecutionSuccessText: string
+    postExecutionFailureText: string
     willSucceed: boolean
   }>
 }
@@ -46,8 +47,6 @@ export class MissionNode {
   childNodes: Array<MissionNode>
   color: string
   preExecutionText: string
-  postExecutionSuccessText: string
-  postExecutionFailureText: string
   executable: boolean
   device: boolean
   actions: Array<MissionNodeAction> = []
@@ -111,8 +110,6 @@ export class MissionNode {
     name: string,
     color: string,
     preExecutionText: string,
-    postExecutionSuccessText: string,
-    postExecutionFailureText: string,
     executable: boolean,
     device: boolean,
     actionData: Array<AnyObject>,
@@ -126,8 +123,6 @@ export class MissionNode {
     this.childNodes = []
     this.color = color
     this.preExecutionText = preExecutionText
-    this.postExecutionSuccessText = postExecutionSuccessText
-    this.postExecutionFailureText = postExecutionFailureText
     this.executable = executable
     this.device = device
     this.selectedAction = null
@@ -154,6 +149,9 @@ export class MissionNode {
         actionDatum.description,
         actionDatum.processTime,
         actionDatum.successChance,
+        actionDatum.resourceCost,
+        actionDatum.postExecutionSuccessText,
+        actionDatum.postExecutionFailureText,
       )
       actions.push(nodeAction)
     }

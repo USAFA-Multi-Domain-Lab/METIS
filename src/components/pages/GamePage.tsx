@@ -19,8 +19,8 @@ import AppState, { AppActions } from '../AppState'
 import { Action, EActionPurpose } from '../content/Action'
 import Toggle, { EToggleLockState } from '../content/Toggle'
 import Tooltip from '../content/Tooltip'
-import { AxiosError } from 'axios'
 import Navigation from '../content/Navigation'
+import { AxiosError } from 'axios'
 
 export interface IGamePage extends IPage {
   missionID: string
@@ -77,6 +77,20 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
 
     /* -- COMPONENT FUNCTIONS -- */
 
+    // This will logout the current user.
+    const logout = () =>
+      appActions.logout({
+        returningPagePath: 'GamePage',
+        returningPageProps: { missionID: mission.missionID },
+      })
+
+    // This will switch to the auth page.
+    const login = () =>
+      appActions.goToPage('AuthPage', {
+        returningPagePath: 'GamePage',
+        returningPageProps: { missionID: mission.missionID },
+      })
+
     /* -- RENDER -- */
 
     let className: string = 'GamePage Page'
@@ -117,9 +131,13 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
 
     // Keeps track of if the user is logged in or not.
     let actionsClassName = 'ActionsContainer'
+    let displayLogin: boolean = true
+    let displayLogout: boolean = false
 
     if (appState.currentUser !== null) {
       actionsClassName += ' show'
+      displayLogin = false
+      displayLogout = true
     }
 
     // Logic that will lock the mission toggle while a request is being sent
@@ -147,11 +165,17 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
           // -- navigation --
         }
         <Navigation
-          appState={appState}
-          appActions={appActions}
-          mission={mission}
-          pagePath='GamePage'
-          pageProps={{ missionID: mission.missionID }}
+          links={[
+            {
+              text: 'Back to selection',
+              handleClick: () => {
+                appActions.goToPage('MissionSelectionPage', {})
+              },
+              visible: true,
+            },
+            { text: 'Login', handleClick: login, visible: displayLogin },
+            { text: 'Log out', handleClick: logout, visible: displayLogout },
+          ]}
           brandingCallback={() =>
             appActions.goToPage('MissionSelectionPage', {})
           }
@@ -367,23 +391,7 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
                     `* Action executed: ${node.selectedAction?.name}\n` +
                     `* Chance of success: ${
                       (node.successChance as number) * 100
-                    }%\n` +
-                    `* Device: ${
-                      // This capitalizes the first letter of the word.
-                      node.device.toString().charAt(0).toUpperCase() +
-                      node.device.toString().slice(1)
-                    }\n` +
-                    `* Executable: ${
-                      node.executable.toString().charAt(0).toUpperCase() +
-                      node.executable.toString().slice(1)
-                    }`
-                }
-
-                // This is for the tooltip message that will display
-                if (node.device && node.executable && !node.executed) {
-                  description = '* Device: True\n' + '* Executable: True'
-                } else if (node.executable && !node.device && !node.executed) {
-                  description = '* Device: False\n' + '* Executable: True'
+                    }%`
                 }
 
                 return description

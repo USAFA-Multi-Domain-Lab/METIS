@@ -7,7 +7,6 @@ import ActionPropertyDisplay from './ActionPropertyDisplay'
 import { Mission } from '../../modules/missions'
 import Notification from '../../modules/notifications'
 import Tooltip from './Tooltip'
-import { useState } from 'react'
 
 const ExecuteNodePath = (props: {
   mission: Mission
@@ -45,14 +44,16 @@ const ExecuteNodePath = (props: {
   const execute = () => {
     if (props.selectedNode !== null) {
       let selectedNode: MissionNode = props.selectedNode
+      let selectedAction: MissionNodeAction | null = selectedNode.selectedAction
+      let resourceCost: number | undefined = selectedAction?.resourceCost
 
-      if (mission.resources > 0) {
+      if (mission.resources > 0 && resourceCost !== undefined) {
         setExecuteNodePathPromptIsDisplayed(false)
 
         selectedNode.execute((success: boolean) => {
           // Output message in the terminal which differs based on whether
           // it passes or fails
-          if (success && selectedNode.postExecutionSuccessText !== '') {
+          if (success && selectedAction?.postExecutionSuccessText !== '') {
             gameLogic.handleNodeSelection(selectedNode)
 
             setConsoleOutputs([
@@ -64,11 +65,14 @@ const ExecuteNodePath = (props: {
                   '-',
                 )}: </span>
                      <span class="succeeded">${
-                       selectedNode.postExecutionSuccessText
+                       selectedAction?.postExecutionSuccessText
                      }</span>`,
               },
             ])
-          } else if (success && selectedNode.postExecutionSuccessText === '') {
+          } else if (
+            success &&
+            selectedAction?.postExecutionSuccessText === ''
+          ) {
             gameLogic.handleNodeSelection(selectedNode)
 
             setConsoleOutputs([
@@ -78,7 +82,10 @@ const ExecuteNodePath = (props: {
                 value: null,
               },
             ])
-          } else if (!success && selectedNode.postExecutionFailureText !== '') {
+          } else if (
+            !success &&
+            selectedAction?.postExecutionFailureText !== ''
+          ) {
             setConsoleOutputs([
               ...consoleOutputs,
               {
@@ -88,7 +95,7 @@ const ExecuteNodePath = (props: {
                   '-',
                 )}: </span>
                     <span class="failed">${
-                      selectedNode.postExecutionFailureText
+                      selectedAction?.postExecutionFailureText
                     }</span>`,
               },
             ])
@@ -104,7 +111,10 @@ const ExecuteNodePath = (props: {
         })
         runNodeLoadingBar(processTime)
         setActionDisplay([])
-        mission.resources--
+        let spendResources: number = mission.resources - resourceCost
+        mission.resources = spendResources
+      } else if (resourceCost === undefined) {
+        console.error(`The selected action's resource cost is undefined.`)
       } else {
         props.notify(`You have no more resources to spend.`)
       }

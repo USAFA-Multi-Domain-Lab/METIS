@@ -26,6 +26,7 @@ import { ENodeTargetRelation, MissionNode } from '../../modules/mission-nodes'
 import { MissionNodeAction } from '../../modules/mission-node-actions'
 import { EToggleLockState } from '../content/Toggle'
 import AppState, { AppActions } from '../AppState'
+import Navigation from '../content/Navigation'
 
 // This is a enum used to describe
 // the locations that one node can
@@ -207,122 +208,122 @@ export default function MissionFormPage(
 
     return (
       <div className={'MissionFormPage Page'}>
-        {/* -- NAVIGATION -- */}
-        <div className='Navigation'>
-          <Branding
-            goHome={() => {
-              if (!areUnsavedChanges) {
-                appActions.goToPage('MissionSelectionPage', {})
-              } else {
-                appActions.confirm(
-                  'You have unsaved changes. What do you want to do with them?',
-                  (concludeAction: () => void) => {
-                    save(
-                      () => {
+        {
+          // -- navigation --
+        }
+        <Navigation
+          links={[
+            {
+              text: 'Done',
+              handleClick: () => {
+                if (!areUnsavedChanges) {
+                  appActions.goToPage('MissionSelectionPage', {})
+                } else {
+                  appActions.confirm(
+                    'You have unsaved changes. What do you want to do with them?',
+                    (concludeAction: () => void) => {
+                      save(
+                        () => {
+                          appActions.goToPage('MissionSelectionPage', {})
+                          concludeAction()
+                        },
+                        () => {
+                          concludeAction()
+                        },
+                      )
+                    },
+                    {
+                      handleAlternate: (concludeAction: () => void) => {
                         appActions.goToPage('MissionSelectionPage', {})
                         concludeAction()
                       },
-                      () => {
-                        concludeAction()
-                      },
-                    )
-                  },
-                  {
-                    handleAlternate: (concludeAction: () => void) => {
-                      appActions.goToPage('MissionSelectionPage', {})
-                      concludeAction()
+                      pendingMessageUponConfirm: 'Saving...',
+                      pendingMessageUponAlternate: 'Discarding...',
+                      buttonConfirmText: 'Save',
+                      buttonAlternateText: 'Discard',
                     },
-                    pendingMessageUponConfirm: 'Saving...',
-                    pendingMessageUponAlternate: 'Discarding...',
-                    buttonConfirmText: 'Save',
-                    buttonAlternateText: 'Discard',
-                  },
-                )
-              }
-            }}
-            tooltipDescription='Go home.'
-          />
-          <div
-            className='Done Link'
-            onClick={() => {
-              if (!areUnsavedChanges) {
-                appActions.goToPage('MissionSelectionPage', {})
-              } else {
-                appActions.confirm(
-                  'You have unsaved changes. What do you want to do with them?',
-                  (concludeAction: () => void) => {
-                    save(
-                      () => {
-                        appActions.goToPage('MissionSelectionPage', {})
-                        concludeAction()
-                      },
-                      () => {
-                        concludeAction()
-                      },
-                    )
-                  },
-                  {
-                    handleAlternate: (concludeAction: () => void) => {
-                      appActions.goToPage('MissionSelectionPage', {})
-                      concludeAction()
+                  )
+                }
+              },
+              visible: true,
+            },
+            {
+              text: 'Play test',
+              handleClick: () => {
+                if (!areUnsavedChanges) {
+                  appActions.goToPage('GamePage', {
+                    missionID: mission.missionID,
+                  })
+                } else {
+                  appActions.confirm(
+                    'You have unsaved changes. What do you want to do with them?',
+                    (concludeAction: () => void) => {
+                      save(
+                        () => {
+                          appActions.goToPage('GamePage', {
+                            missionID: mission.missionID,
+                          })
+                          concludeAction()
+                        },
+                        () => {
+                          concludeAction()
+                        },
+                      )
                     },
-                    pendingMessageUponConfirm: 'Saving...',
-                    pendingMessageUponAlternate: 'Discarding...',
-                    buttonConfirmText: 'Save',
-                    buttonAlternateText: 'Discard',
-                  },
-                )
-              }
-            }}
-          >
-            Done
-          </div>
-          <div
-            className='PlayTest Link'
-            onClick={() => {
-              if (!areUnsavedChanges) {
-                appActions.goToPage('GamePage', {
-                  missionID: mission.missionID,
-                })
-              } else {
-                appActions.confirm(
-                  'You have unsaved changes. What do you want to do with them?',
-                  (concludeAction: () => void) => {
-                    save(
-                      () => {
+                    {
+                      handleAlternate: (concludeAction: () => void) => {
                         appActions.goToPage('GamePage', {
                           missionID: mission.missionID,
                         })
                         concludeAction()
                       },
-                      () => {
-                        concludeAction()
-                      },
-                    )
-                  },
-                  {
-                    handleAlternate: (concludeAction: () => void) => {
-                      appActions.goToPage('GamePage', {
-                        missionID: mission.missionID,
-                      })
+                      pendingMessageUponConfirm: 'Saving...',
+                      pendingMessageUponAlternate: 'Discarding...',
+                      buttonConfirmText: 'Save',
+                      buttonAlternateText: 'Discard',
+                    },
+                  )
+                }
+              },
+              visible: true,
+            },
+            { text: 'Log out', handleClick: logout, visible: true },
+          ]}
+          brandingCallback={() => {
+            if (!areUnsavedChanges) {
+              appActions.goToPage('MissionSelectionPage', {})
+            } else {
+              appActions.confirm(
+                'You have unsaved changes. What do you want to do with them?',
+                (concludeAction: () => void) => {
+                  save(
+                    () => {
+                      appActions.goToPage('MissionSelectionPage', {})
                       concludeAction()
                     },
-                    pendingMessageUponConfirm: 'Saving...',
-                    pendingMessageUponAlternate: 'Discarding...',
-                    buttonConfirmText: 'Save',
-                    buttonAlternateText: 'Discard',
+                    () => {
+                      concludeAction()
+                    },
+                  )
+                },
+                {
+                  handleAlternate: (concludeAction: () => void) => {
+                    appActions.goToPage('MissionSelectionPage', {})
+                    concludeAction()
                   },
-                )
-              }
-            }}
-          >
-            Play test
-          </div>
-          <div className='Logout Link' onClick={logout}>
-            Sign out
-          </div>
-        </div>
-        {/* -- CONTENT -- */}
+                  pendingMessageUponConfirm: 'Saving...',
+                  pendingMessageUponAlternate: 'Discarding...',
+                  buttonConfirmText: 'Save',
+                  buttonAlternateText: 'Discard',
+                },
+              )
+            }
+          }}
+          brandingTooltipDescription='Go home.'
+        />
+        {
+          // -- content --
+        }
         <div className='Content'>
           <MissionMap
             mission={mission}
@@ -553,32 +554,6 @@ function NodeEntry(props: {
             }}
             key={`${node.nodeID}_preExecutionText`}
           />
-          <DetailBox
-            label='Post-Execution Success Text'
-            initialValue={node.postExecutionSuccessText}
-            disabled={!node.executable}
-            deliverValue={(postExecutionSuccessText: string) => {
-              if (node !== null) {
-                node.postExecutionSuccessText = postExecutionSuccessText
-
-                handleChange()
-              }
-            }}
-            key={`${node.nodeID}_postExecutionSuccessText`}
-          />
-          <DetailBox
-            label='Post-Execution Failure Text'
-            initialValue={node.postExecutionFailureText}
-            disabled={!node.executable}
-            deliverValue={(postExecutionFailureText: string) => {
-              if (node !== null) {
-                node.postExecutionFailureText = postExecutionFailureText
-
-                handleChange()
-              }
-            }}
-            key={`${node.nodeID}_postExecutionFailureText`}
-          />
           <div className={nodeActionDetailsClassName}>
             <div className='Label'>Actions:</div>
             {node.actions.map((action: MissionNodeAction) => (
@@ -607,6 +582,9 @@ function NodeEntry(props: {
                       '',
                       5000,
                       0.5,
+                      1,
+                      '',
+                      '',
                     )
                     node.actions.push(action)
                     handleChange()
@@ -693,6 +671,44 @@ function NodeAction(props: {
           }
         }}
         key={`${action.actionID}_timeCost`}
+      />
+      <DetailNumber
+        label='Resource Cost'
+        initialValue={action.resourceCost}
+        deliverValue={(resourceCost: number | null) => {
+          if (resourceCost !== null) {
+            action.resourceCost = resourceCost
+
+            handleChange()
+          }
+        }}
+        key={`${action.actionID}_resourceCost`}
+      />
+      <DetailBox
+        label='Post-Execution Success Text'
+        initialValue={action.postExecutionSuccessText}
+        disabled={!node.executable}
+        deliverValue={(postExecutionSuccessText: string) => {
+          if (postExecutionSuccessText !== null) {
+            action.postExecutionSuccessText = postExecutionSuccessText
+
+            handleChange()
+          }
+        }}
+        key={`${action.actionID}_postExecutionSuccessText`}
+      />
+      <DetailBox
+        label='Post-Execution Failure Text'
+        initialValue={action.postExecutionFailureText}
+        disabled={!node.executable}
+        deliverValue={(postExecutionFailureText: string) => {
+          if (postExecutionFailureText !== null) {
+            action.postExecutionFailureText = postExecutionFailureText
+
+            handleChange()
+          }
+        }}
+        key={`${action.actionID}_postExecutionFailureText`}
       />
       <div
         className='Delete'

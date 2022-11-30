@@ -53,7 +53,6 @@ $background-bar: linear-gradient(
   padding: $page-vertical-padding $page-horizontal-padding;
 
   .Navigation {
-    display: grid;
     grid-template-columns: auto 220px 130px;
   }
 

@@ -4,6 +4,7 @@ import { useStore } from 'react-context-hook'
 import { MissionNode } from '../../modules/mission-nodes'
 import { MissionNodeAction } from '../../modules/mission-node-actions'
 import Tooltip from './Tooltip'
+import strings from '../../modules/toolbox/strings'
 
 const NodeActions = (props: {
   selectedNode: MissionNode | null | undefined
@@ -92,13 +93,16 @@ const NodeActions = (props: {
             >
               <Tooltip
                 description={
-                  `* Time to execute: ${
+                  `**Time to execute:** ${
                     (action.processTime as number) / 1000
                   } second(s)\n` +
-                  `* Chance of success: ${
+                  `**Chance of success:** ${
                     (action.successChance as number) * 100
                   }%\n` +
-                  `* Description: ${action.description}`
+                  `**Resource cost:** ${
+                    action.resourceCost as number
+                  } resource(s)\n` +
+                  `**Description:** ${strings.limit(action.description, 160)}`
                 }
               />
               {action.name}
