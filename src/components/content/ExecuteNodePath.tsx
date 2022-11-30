@@ -7,8 +7,6 @@ import ActionPropertyDisplay from './ActionPropertyDisplay'
 import { Mission } from '../../modules/missions'
 import Notification from '../../modules/notifications'
 import Tooltip from './Tooltip'
-import AppState from '../AppState'
-import { useState } from 'react'
 
 const ExecuteNodePath = (props: {
   mission: Mission

@@ -280,9 +280,32 @@ export default function MissionFormPage(
             },
             { text: 'Log out', handleClick: logout, visible: true },
           ]}
-          brandingCallback={() =>
-            appActions.goToPage('MissionSelectionPage', {})
-          }
+          brandingCallback={() => {
+            appActions.confirm(
+              'You have unsaved changes. What do you want to do with them?',
+              (concludeAction: () => void) => {
+                save(
+                  () => {
+                    appActions.goToPage('MissionSelectionPage', {})
+                    concludeAction()
+                  },
+                  () => {
+                    concludeAction()
+                  },
+                )
+              },
+              {
+                handleAlternate: (concludeAction: () => void) => {
+                  appActions.goToPage('MissionSelectionPage', {})
+                  concludeAction()
+                },
+                pendingMessageUponConfirm: 'Saving...',
+                pendingMessageUponAlternate: 'Discarding...',
+                buttonConfirmText: 'Save',
+                buttonAlternateText: 'Discard',
+              },
+            )
+          }}
           brandingTooltipDescription='Go home.'
         />
         {
