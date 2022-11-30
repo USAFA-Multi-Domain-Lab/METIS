@@ -200,6 +200,22 @@ export class Mission {
       // objects, then it stores the created
       // objects in the nodeData map.
       for (let nodeDatum of nodeData) {
+        nodeDatum = {
+          name: MissionNode.default_name,
+          color: MissionNode.default_color,
+          preExecutionText: MissionNode.default_preExecutionText,
+          postExecutionSuccessText:
+            MissionNode.default_postExecutionSuccessText,
+          postExecutionFailureText:
+            MissionNode.default_postExecutionFailureText,
+          executable: MissionNode.default_executable,
+          device: MissionNode.default_device,
+          actionData: MissionNode.default_actionData,
+          mapX: MissionNode.default_mapX,
+          mapY: MissionNode.default_mapY,
+          ...nodeDatum,
+        }
+
         let node: MissionNode = new MissionNode(
           this,
           nodeDatum.nodeID,
@@ -335,15 +351,15 @@ export class Mission {
       this,
       generateHash(),
       'New Node',
-      'default',
-      'Node has not been executed.',
-      'Node has executed successfully.',
-      'Node has failed to execute.',
-      false,
-      false,
-      [],
-      0,
-      0,
+      MissionNode.default_color,
+      MissionNode.default_preExecutionText,
+      MissionNode.default_postExecutionSuccessText,
+      MissionNode.default_postExecutionFailureText,
+      MissionNode.default_executable,
+      MissionNode.default_device,
+      MissionNode.default_actionData,
+      MissionNode.default_mapX,
+      MissionNode.default_mapY,
     )
     node.parentNode = rootNode
     rootNode.childNodes.push(node)

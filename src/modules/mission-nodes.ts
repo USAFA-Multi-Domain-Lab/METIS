@@ -59,6 +59,19 @@ export class MissionNode {
   depth: number
   _isExpanded: boolean
 
+  static default_name: string = 'Unnamed Node'
+  static default_color: string = 'default'
+  static default_preExecutionText: string = 'Node has not been executed.'
+  static default_postExecutionSuccessText: string =
+    'Node has executed successfully.'
+  static default_postExecutionFailureText: string =
+    'Node has failed to execute.'
+  static default_executable: boolean = false
+  static default_device: boolean = false
+  static default_actionData: Array<AnyObject> = []
+  static default_mapX: number = 0
+  static default_mapY: number = 0
+
   get willSucceed(): boolean {
     let willSucceed: boolean = false
     let selectedAction: MissionNodeAction | null = this.selectedAction
