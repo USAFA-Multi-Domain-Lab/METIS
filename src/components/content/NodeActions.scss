@@ -37,6 +37,12 @@
     height: fit-content;
   }
 
+  .NoActions {
+    color: $terminal-red;
+    margin: 0;
+    padding: 0;
+  }
+
   .NodeActionDefault {
     display: grid;
     grid-template-columns: auto 50px;
@@ -52,16 +58,16 @@
       cursor: pointer;
       background-color: black;
     }
-  }
 
-  .ArrowDown {
-    position: relative;
-    bottom: 7px;
-    color: $color-accent-light;
-    font-size: 2em;
-    transform-origin: 50%;
-    transform: rotate(180deg);
-    -webkit-transform: rotate(180deg);
+    .ArrowDown {
+      position: relative;
+      bottom: 7px;
+      color: $color-accent-light;
+      font-size: 2em;
+      transform-origin: 50%;
+      transform: rotate(180deg);
+      -webkit-transform: rotate(180deg);
+    }
   }
 
   .NodeActionList {

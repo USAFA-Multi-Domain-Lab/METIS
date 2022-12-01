@@ -27,7 +27,7 @@ const OutputPanel = (): JSX.Element | null => {
         </div>
         <ul className='TextArea'>
           {consoleOutputs.map(
-            (consoleOutput: { date: number; value: string }) => {
+            (consoleOutput: { date: number; value: string | null }) => {
               return (
                 <ConsoleOutput
                   key={consoleOutput.date}

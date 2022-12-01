@@ -26,7 +26,7 @@ export interface IAppStateValues {
   errorMessage: string | null
   tooltips: React.RefObject<HTMLDivElement>
   tooltipDescription: string
-  consoleOutputs: Array<{ date: number; value: string }>
+  consoleOutputs: Array<{ date: number; value: string | null }>
   notifications: Array<Notification>
   postLoadNotifications: Array<Notification>
   confirmation: IConfirmation | null
@@ -55,7 +55,7 @@ export interface IAppStateSetters {
   setTooltips: (tooltips: React.RefObject<HTMLDivElement>) => void
   setTooltipDescription: (tooltipDescription: string) => void
   setConsoleOutputs: (
-    consoleOutputs: Array<{ date: number; value: string }>,
+    consoleOutputs: Array<{ date: number; value: string | null }>,
   ) => void
   setNotifications: (notifications: Array<Notification>) => void
   setPostLoadNotifications: (postLoadNotifications: Array<Notification>) => void
@@ -312,7 +312,7 @@ export default class AppState implements IAppStateValues, IAppStateValues {
   errorMessage: string | null
   tooltips: React.RefObject<HTMLDivElement>
   tooltipDescription: string
-  consoleOutputs: { date: number; value: string }[]
+  consoleOutputs: { date: number; value: string | null }[]
   notifications: Notification[]
   postLoadNotifications: Array<Notification>
   confirmation: IConfirmation | null
@@ -338,7 +338,9 @@ export default class AppState implements IAppStateValues, IAppStateValues {
   setErrorMessage: (errorMessage: string | null) => void
   setTooltips: (tooltips: React.RefObject<HTMLDivElement>) => void
   setTooltipDescription: (tooltipDescription: string) => void
-  setConsoleOutputs: (consoleOutputs: { date: number; value: string }[]) => void
+  setConsoleOutputs: (
+    consoleOutputs: { date: number; value: string | null }[],
+  ) => void
   setNotifications: (notifications: Notification[]) => void
   setPostLoadNotifications: (postLoadNotifications: Array<Notification>) => void
   setConfirmation: (confirmation: IConfirmation | null) => void
@@ -525,7 +527,7 @@ export default class AppState implements IAppStateValues, IAppStateValues {
       const [consoleOutputs, setConsoleOutputs] = useStore<
         {
           date: number
-          value: string
+          value: string | null
         }[]
       >('consoleOutputs')
       const [notifications, setNotifications] =

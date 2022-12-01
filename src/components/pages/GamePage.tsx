@@ -345,15 +345,25 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
                 if (selectedNode.executable === false) {
                   gameLogic.handleNodeSelection(selectedNode)
                   selectedNode.color = ''
-                  return
                 } else {
                   for (let nodeActionItem of selectedNode.actions) {
                     appState.actionDisplay.push(nodeActionItem)
                   }
                   if (
                     mission.disableNodes === false &&
-                    selectedNode.executed === false
+                    selectedNode.executed === false &&
+                    appState.actionDisplay.length > 1
                   ) {
+                    appState.setActionSelectionPromptIsDisplayed(true)
+                  } else if (appState.actionDisplay.length === 1) {
+                    appState.setActionSelectionPromptIsDisplayed(false)
+                    appState.setExecuteNodePathPromptIsDisplayed(true)
+                    selectedNode.selectedAction = selectedNode.actions[0]
+                  } else if (selectedNode.actions.length === 0) {
+                    console.error(
+                      `${selectedNode.name} has no actions to choose from.`,
+                      selectedNode.actions,
+                    )
                     appState.setActionSelectionPromptIsDisplayed(true)
                   } else {
                     appState.setActionDisplay([])
@@ -398,10 +408,11 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
               }}
             />
             <OutputPanel />
-            <NodeActions selectedNode={lastSelectedNode} />
+            <NodeActions selectedNode={lastSelectedNode} appState={appState} />
             <ExecuteNodePath
               mission={mission}
               selectedNode={lastSelectedNode}
+              appState={appState}
               notify={appActions.notify}
             />
           </div>

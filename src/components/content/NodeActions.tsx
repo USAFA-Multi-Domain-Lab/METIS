@@ -5,10 +5,16 @@ import { MissionNode } from '../../modules/mission-nodes'
 import { MissionNodeAction } from '../../modules/mission-node-actions'
 import Tooltip from './Tooltip'
 import strings from '../../modules/toolbox/strings'
+import AppState from '../AppState'
 
 const NodeActions = (props: {
   selectedNode: MissionNode | null | undefined
+  appState: AppState
 }) => {
+  let appState: AppState = props.appState
+  let actionDisplay = appState.actionDisplay
+  let setActionDisplay = appState.setActionDisplay
+
   /* -- GLOBAL STATE -- */
   const [
     executeNodePathPromptIsDisplayed,
@@ -18,8 +24,8 @@ const NodeActions = (props: {
     actionSelectionPromptIsDisplayed,
     setActionSelectionPromptIsDisplayed,
   ] = useStore<boolean>('actionSelectionPromptIsDisplayed')
-  const [actionDisplay, setActionDisplay] =
-    useStore<Array<MissionNodeAction>>('actionDisplay')
+  // const [actionDisplay, setActionDisplay] =
+  //   useStore<Array<MissionNodeAction>>('actionDisplay')
   const [processTime, setProcessTime] = useStore<number>('processTime')
   const [actionName, setActionName] = useStore<string>('actionName')
   const [actionSuccessChance, setActionSuccessChance] = useStore<number>(
@@ -61,57 +67,72 @@ const NodeActions = (props: {
 
   /* -- RENDER -- */
 
-  let className: string = 'NodeActionList'
+  let nodeActionListClassName: string = 'NodeActionList'
 
   if (displayActionList === false) {
-    className = 'hide NodeActionList'
-  } else {
-    className = 'NodeActionList'
+    nodeActionListClassName += ' hide'
   }
 
-  return (
-    <div className='NodeActions'>
-      <p className='x' onClick={closeWindow}>
-        x
-      </p>
+  if (actionDisplay.length > 0) {
+    return (
+      <div className='NodeActions'>
+        <p className='x' onClick={closeWindow}>
+          x
+        </p>
 
-      <p className='PromptDisplayText'>
-        What you would like to do to {props.selectedNode?.name}?
-      </p>
+        <p className='PromptDisplayText'>
+          What you would like to do to {props.selectedNode?.name}?
+        </p>
 
-      <div className='NodeActionDefault' onClick={revealOptions}>
-        Choose an action
-        <div className='ArrowDown'>^</div>
+        <div className='NodeActionDefault' onClick={revealOptions}>
+          Choose an action
+          <div className='ArrowDown'>^</div>
+        </div>
+        <div className={nodeActionListClassName}>
+          {actionDisplay.map((action: MissionNodeAction) => {
+            return (
+              <div
+                className='NodeAction'
+                key={action.actionID}
+                onClick={() => selectAction(action)}
+              >
+                <Tooltip
+                  description={
+                    `**Time to execute:** ${
+                      (action.processTime as number) / 1000
+                    } second(s)\n` +
+                    `**Chance of success:** ${
+                      (action.successChance as number) * 100
+                    }%\n` +
+                    `**Resource cost:** ${
+                      action.resourceCost as number
+                    } resource(s)\n` +
+                    `**Description:** ${strings.limit(action.description, 160)}`
+                  }
+                />
+                {action.name}
+              </div>
+            )
+          })}
+        </div>
       </div>
-      <div className={className}>
-        {actionDisplay.map((action: MissionNodeAction) => {
-          return (
-            <div
-              className='NodeAction'
-              key={action.name}
-              onClick={() => selectAction(action)}
-            >
-              <Tooltip
-                description={
-                  `**Time to execute:** ${
-                    (action.processTime as number) / 1000
-                  } second(s)\n` +
-                  `**Chance of success:** ${
-                    (action.successChance as number) * 100
-                  }%\n` +
-                  `**Resource cost:** ${
-                    action.resourceCost as number
-                  } resource(s)\n` +
-                  `**Description:** ${strings.limit(action.description, 160)}`
-                }
-              />
-              {action.name}
-            </div>
-          )
-        })}
+    )
+  } else {
+    return (
+      <div className='NodeActions'>
+        <p className='x' onClick={closeWindow}>
+          x
+        </p>
+        <p className='PromptDisplayText'>
+          What you would like to do to {props.selectedNode?.name}?
+        </p>
+        <p className='NoActions'>
+          No actions exist for this node. Contact your instructor for further
+          instructions.
+        </p>
       </div>
-    </div>
-  )
+    )
+  }
 }
 
 export default NodeActions
