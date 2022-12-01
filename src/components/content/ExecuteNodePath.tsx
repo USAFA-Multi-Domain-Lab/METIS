@@ -1,5 +1,4 @@
 import './ExecuteNodePath.scss'
-import { useStore } from 'react-context-hook'
 import { MissionNode } from '../../modules/mission-nodes'
 import { MissionNodeAction } from '../../modules/mission-node-actions'
 import gameLogic, { runNodeLoadingBar } from '../../modules/game-logic'
@@ -7,43 +6,38 @@ import ActionPropertyDisplay from './ActionPropertyDisplay'
 import { Mission } from '../../modules/missions'
 import Notification from '../../modules/notifications'
 import Tooltip from './Tooltip'
-import AppState from '../AppState'
 
 const ExecuteNodePath = (props: {
   mission: Mission
   selectedNode: MissionNode | null
-  appState: AppState
   notify: (message: string, duration?: number | null) => Notification
+  consoleOutputs: Array<{ date: number; value: string | null }>
+  setConsoleOutputs: (
+    consoleOutputs: { date: number; value: string | null }[],
+  ) => void
+  setActionSelectionPromptIsDisplayed: (
+    actionSelectionPromptIsDisplayed: boolean,
+  ) => void
+  setExecuteNodePathPromptIsDisplayed: (
+    executeNodePathPromptIsDisplayed: boolean,
+  ) => void
+  processTime: number
+  actionDisplay: Array<MissionNodeAction>
+  setActionDisplay: (actionDisplay: Array<MissionNodeAction>) => void
 }) => {
   let mission: Mission = props.mission
-  let appState: AppState = props.appState
-
+  const consoleOutputs = props.consoleOutputs
+  const setConsoleOutputs = props.setConsoleOutputs
   const setExecuteNodePathPromptIsDisplayed =
-    props.appState.setExecuteNodePathPromptIsDisplayed
-  const consoleOutputs = props.appState.consoleOutputs
-  const setConsoleOutputs = props.appState.setConsoleOutputs
+    props.setExecuteNodePathPromptIsDisplayed
   const setActionSelectionPromptIsDisplayed =
-    props.appState.setActionSelectionPromptIsDisplayed
-  const processTime = props.appState.processTime
-  const setActionDisplay = props.appState.setActionDisplay
+    props.setActionSelectionPromptIsDisplayed
+
+  const processTime = props.processTime
+  const actionDisplay = props.actionDisplay
+  const setActionDisplay = props.setActionDisplay
 
   let actionName: string | undefined = props.selectedNode?.selectedAction?.name
-
-  /* -- GLOBAL STATE -- */
-  // const [consoleOutputs, setConsoleOutputs] =
-  //   useStore<Array<{ date: number; value: string | null }>>('consoleOutputs')
-  // const [
-  //   executeNodePathPromptIsDisplayed,
-  //   setExecuteNodePathPromptIsDisplayed,
-  // ] = useStore<boolean>('executeNodePathPromptIsDisplayed')
-  // const [
-  //   actionSelectionPromptIsDisplayed,
-  //   setActionSelectionPromptIsDisplayed,
-  // ] = useStore<boolean>('actionSelectionPromptIsDisplayed')
-  // const [processTime] = useStore<number>('processTime')
-
-  // const [actionDisplay, setActionDisplay] =
-  //   useStore<Array<MissionNodeAction>>('actionDisplay')
 
   /* -- COMPONENT STATE -- */
 
@@ -144,7 +138,7 @@ const ExecuteNodePath = (props: {
   }
 
   const selectAlternativeAction = () => {
-    if (appState.actionDisplay.length > 1) {
+    if (actionDisplay.length > 1) {
       setExecuteNodePathPromptIsDisplayed(false)
       setActionSelectionPromptIsDisplayed(true)
     }
@@ -160,7 +154,7 @@ const ExecuteNodePath = (props: {
   if (mission.resources <= 0) {
     executionButtonClassName += ' disabled'
     displayTooltip = true
-  } else if (appState.actionDisplay.length === 1) {
+  } else if (actionDisplay.length === 1) {
     additionalActionButtonClassName += ' disabled'
   }
 

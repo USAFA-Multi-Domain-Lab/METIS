@@ -1,39 +1,35 @@
 import { useState } from 'react'
 import './NodeActions.scss'
-import { useStore } from 'react-context-hook'
 import { MissionNode } from '../../modules/mission-nodes'
 import { MissionNodeAction } from '../../modules/mission-node-actions'
 import Tooltip from './Tooltip'
 import strings from '../../modules/toolbox/strings'
-import AppState from '../AppState'
 
 const NodeActions = (props: {
   selectedNode: MissionNode | null | undefined
-  appState: AppState
+  setActionSelectionPromptIsDisplayed: (
+    actionSelectionPromptIsDisplayed: boolean,
+  ) => void
+  setExecuteNodePathPromptIsDisplayed: (
+    executeNodePathPromptIsDisplayed: boolean,
+  ) => void
+  setProcessTime: (processTime: number) => void
+  actionDisplay: Array<MissionNodeAction>
+  setActionDisplay: (actionDisplay: Array<MissionNodeAction>) => void
 }) => {
-  let appState: AppState = props.appState
-  let actionDisplay = appState.actionDisplay
-  let setActionDisplay = appState.setActionDisplay
+  let actionDisplay = props.actionDisplay
+  let setActionDisplay = props.setActionDisplay
 
-  /* -- GLOBAL STATE -- */
-  const [
-    executeNodePathPromptIsDisplayed,
-    setExecuteNodePathPromptIsDisplayed,
-  ] = useStore<boolean>('executeNodePathPromptIsDisplayed')
-  const [
-    actionSelectionPromptIsDisplayed,
-    setActionSelectionPromptIsDisplayed,
-  ] = useStore<boolean>('actionSelectionPromptIsDisplayed')
-  // const [actionDisplay, setActionDisplay] =
-  //   useStore<Array<MissionNodeAction>>('actionDisplay')
-  const [processTime, setProcessTime] = useStore<number>('processTime')
-  const [actionName, setActionName] = useStore<string>('actionName')
-  const [actionSuccessChance, setActionSuccessChance] = useStore<number>(
-    'actionSuccessChance',
-  )
+  const setExecuteNodePathPromptIsDisplayed =
+    props.setExecuteNodePathPromptIsDisplayed
+  const setActionSelectionPromptIsDisplayed =
+    props.setActionSelectionPromptIsDisplayed
+  const setProcessTime = props.setProcessTime
 
   /* -- COMPONENT STATE -- */
   const [displayActionList, setDisplayActionList] = useState<boolean>(false)
+  const [actionName, setActionName] = useState<string>('')
+  const [actionSuccessChance, setActionSuccessChance] = useState<number>(0)
 
   /* -- COMPONENT FUNCTIONS -- */
 

@@ -1,11 +1,20 @@
 import './OutputPanel.scss'
 import { useStore } from 'react-context-hook'
 import ConsoleOutput from './ConsoleOutput'
+import { useState } from 'react'
 
-const OutputPanel = (): JSX.Element | null => {
+const OutputPanel = (props: {
+  consoleOutputs: Array<{ date: number; value: string | null }>
+  setConsoleOutputs: (
+    consoleOutputs: { date: number; value: string | null }[],
+  ) => void
+}): JSX.Element | null => {
+  let consoleOutputs = props.consoleOutputs
+  let setConsoleOutputs = props.setConsoleOutputs
+
   /* -- GLOBAL STATE -- */
-  const [consoleOutputs, setConsoleOutputs] =
-    useStore<Array<{ date: number; value: string }>>('consoleOutputs')
+  // const [consoleOutputs, setConsoleOutputs] =
+  //   useStore<Array<{ date: number; value: string }>>('consoleOutputs')
   const [outputPanelIsDisplayed, setOutputPanelIsDisplayed] = useStore<boolean>(
     'outputPanelIsDisplayed',
   )

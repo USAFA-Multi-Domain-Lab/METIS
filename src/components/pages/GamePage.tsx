@@ -21,6 +21,7 @@ import Toggle, { EToggleLockState } from '../content/Toggle'
 import Tooltip from '../content/Tooltip'
 import Navigation from '../content/Navigation'
 import { AxiosError } from 'axios'
+import { MissionNodeAction } from '../../modules/mission-node-actions'
 
 export interface IGamePage extends IPage {
   missionID: string
@@ -41,6 +42,23 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
   )
   const [liveAjaxStatus, setLiveAjaxStatus] = useState<EAjaxStatus>(
     EAjaxStatus.NotLoaded,
+  )
+  const [consoleOutputs, setConsoleOutputs] = useState<
+    Array<{ date: number; value: string | null }>
+  >([])
+  const [outputPanelIsDisplayed, setOutputPanelIsDisplayed] =
+    useState<boolean>(false)
+  const [
+    executeNodePathPromptIsDisplayed,
+    setExecuteNodePathPromptIsDisplayed,
+  ] = useState<boolean>(false)
+  const [
+    actionSelectionPromptIsDisplayed,
+    setActionSelectionPromptIsDisplayed,
+  ] = useState<boolean>(false)
+  const [processTime, setProcessTime] = useState<number>(0)
+  const [actionDisplay, setActionDisplay] = useState<Array<MissionNodeAction>>(
+    [],
   )
 
   /* -- COMPONENT EFFECTS -- */
@@ -96,33 +114,33 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
     let className: string = 'GamePage Page'
 
     if (
-      appState.outputPanelIsDisplayed === true &&
-      appState.executeNodePathPromptIsDisplayed === false &&
-      appState.actionSelectionPromptIsDisplayed === false
+      outputPanelIsDisplayed === true &&
+      executeNodePathPromptIsDisplayed === false &&
+      actionSelectionPromptIsDisplayed === false
     ) {
       className += ' DisplayOutputPanel'
     } else if (
-      appState.outputPanelIsDisplayed === true &&
-      appState.actionSelectionPromptIsDisplayed === true &&
-      appState.executeNodePathPromptIsDisplayed === false
+      outputPanelIsDisplayed === true &&
+      actionSelectionPromptIsDisplayed === true &&
+      executeNodePathPromptIsDisplayed === false
     ) {
       className += ' DisplayOutputAndActionPrompt'
     } else if (
-      appState.outputPanelIsDisplayed === true &&
-      appState.executeNodePathPromptIsDisplayed === true &&
-      appState.actionSelectionPromptIsDisplayed === false
+      outputPanelIsDisplayed === true &&
+      executeNodePathPromptIsDisplayed === true &&
+      actionSelectionPromptIsDisplayed === false
     ) {
       className += ' DisplayOutputPanelAndPathPrompt'
     } else if (
-      appState.outputPanelIsDisplayed === false &&
-      appState.executeNodePathPromptIsDisplayed === true &&
-      appState.actionSelectionPromptIsDisplayed === false
+      outputPanelIsDisplayed === false &&
+      executeNodePathPromptIsDisplayed === true &&
+      actionSelectionPromptIsDisplayed === false
     ) {
       className += ' DisplayPathPrompt'
     } else if (
-      appState.outputPanelIsDisplayed === false &&
-      appState.executeNodePathPromptIsDisplayed === false &&
-      appState.actionSelectionPromptIsDisplayed === true
+      outputPanelIsDisplayed === false &&
+      executeNodePathPromptIsDisplayed === false &&
+      actionSelectionPromptIsDisplayed === true
     ) {
       className += ' DisplayActionPrompt'
     } else {
@@ -329,7 +347,7 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
 
                 if (selectedNode.preExecutionText !== '') {
                   let timeStamp: number = 5 * (new Date() as any)
-                  appState.consoleOutputs.push({
+                  consoleOutputs.push({
                     date: timeStamp,
                     value: `<span class='line-cursor'>MDL@${selectedNode.name.replaceAll(
                       ' ',
@@ -339,7 +357,7 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
                                 selectedNode.preExecutionText
                               }</span>`,
                   })
-                  appState.setOutputPanelIsDisplayed(true)
+                  setOutputPanelIsDisplayed(true)
                 }
 
                 if (selectedNode.executable === false) {
@@ -347,26 +365,26 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
                   selectedNode.color = ''
                 } else {
                   for (let nodeActionItem of selectedNode.actions) {
-                    appState.actionDisplay.push(nodeActionItem)
+                    actionDisplay.push(nodeActionItem)
                   }
                   if (
                     mission.disableNodes === false &&
                     selectedNode.executed === false &&
-                    appState.actionDisplay.length > 1
+                    actionDisplay.length > 1
                   ) {
-                    appState.setActionSelectionPromptIsDisplayed(true)
-                  } else if (appState.actionDisplay.length === 1) {
-                    appState.setActionSelectionPromptIsDisplayed(false)
-                    appState.setExecuteNodePathPromptIsDisplayed(true)
+                    setActionSelectionPromptIsDisplayed(true)
+                  } else if (actionDisplay.length === 1) {
+                    setActionSelectionPromptIsDisplayed(false)
+                    setExecuteNodePathPromptIsDisplayed(true)
                     selectedNode.selectedAction = selectedNode.actions[0]
                   } else if (selectedNode.actions.length === 0) {
                     console.error(
                       `${selectedNode.name} has no actions to choose from.`,
                       selectedNode.actions,
                     )
-                    appState.setActionSelectionPromptIsDisplayed(true)
+                    setActionSelectionPromptIsDisplayed(true)
                   } else {
-                    appState.setActionDisplay([])
+                    setActionDisplay([])
                   }
                 }
               }}
@@ -407,12 +425,36 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
                 return description
               }}
             />
-            <OutputPanel />
-            <NodeActions selectedNode={lastSelectedNode} appState={appState} />
+            <OutputPanel
+              consoleOutputs={consoleOutputs}
+              setConsoleOutputs={setConsoleOutputs}
+            />
+            <NodeActions
+              selectedNode={lastSelectedNode}
+              setActionSelectionPromptIsDisplayed={
+                setActionSelectionPromptIsDisplayed
+              }
+              setExecuteNodePathPromptIsDisplayed={
+                setExecuteNodePathPromptIsDisplayed
+              }
+              setProcessTime={setProcessTime}
+              actionDisplay={actionDisplay}
+              setActionDisplay={setActionDisplay}
+            />
             <ExecuteNodePath
               mission={mission}
               selectedNode={lastSelectedNode}
-              appState={appState}
+              consoleOutputs={consoleOutputs}
+              setConsoleOutputs={setConsoleOutputs}
+              setActionSelectionPromptIsDisplayed={
+                setActionSelectionPromptIsDisplayed
+              }
+              setExecuteNodePathPromptIsDisplayed={
+                setExecuteNodePathPromptIsDisplayed
+              }
+              processTime={processTime}
+              actionDisplay={actionDisplay}
+              setActionDisplay={setActionDisplay}
               notify={appActions.notify}
             />
           </div>
