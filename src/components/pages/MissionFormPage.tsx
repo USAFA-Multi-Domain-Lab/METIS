@@ -7,7 +7,6 @@ import {
   saveMission,
 } from '../../modules/missions'
 import { EAjaxStatus } from '../../modules/toolbox/ajax'
-import Branding from '../content/Branding'
 import {
   Detail,
   DetailBox,
@@ -465,97 +464,108 @@ function NodeEntry(props: {
             </div>
             <Tooltip description='Close panel.' />
           </div>
-          <Detail
-            label='Name'
-            initialValue={node.name}
-            deliverValue={(name: string) => {
-              if (node !== null) {
-                node.name = name
+          <div className='NodeInfoContainer'>
+            <h3 className='NodeInfo'>Node Information:</h3>
+            <Detail
+              label='Name'
+              initialValue={node.name}
+              deliverValue={(name: string) => {
+                if (node !== null) {
+                  node.name = name
 
-                handleChange()
-              }
-            }}
-            key={`${node.nodeID}_name`}
-          />
-          <DetailDropDown
-            label={'Color'}
-            options={[
-              'default',
-              'green',
-              'pink',
-              'yellow',
-              'blue',
-              'purple',
-              'red',
-              'khaki',
-              'orange',
-            ]}
-            currentValue={node.color}
-            uniqueClassName={'Color'}
-            deliverValue={(color: string) => {
-              if (node !== null) {
-                node.color = color
+                  handleChange()
+                }
+              }}
+              key={`${node.nodeID}_name`}
+            />
+            <DetailDropDown
+              label={'Color'}
+              options={[
+                'default',
+                'green',
+                'pink',
+                'yellow',
+                'blue',
+                'purple',
+                'red',
+                'khaki',
+                'orange',
+              ]}
+              currentValue={node.color}
+              uniqueClassName={'Color'}
+              deliverValue={(color: string) => {
+                if (node !== null) {
+                  node.color = color
 
-                handleChange()
+                  handleChange()
+                }
+              }}
+              key={`${node.nodeID}_color`}
+            />
+            <div
+              className='ColorFill'
+              onClick={() => {
+                if (node !== null) {
+                  node.applyColorFill()
+                  handleChange()
+                }
+              }}
+            >
+              {'[ '}
+              <span>Fill</span> {' ]'}
+              <Tooltip description='Shade all descendant nodes this color as well.' />
+            </div>
+            <DetailToggle
+              label={'Executable'}
+              initialValue={node.executable}
+              deliverValue={(executable: boolean) => {
+                if (node !== null) {
+                  node.executable = executable
+                  handleChange()
+                }
+              }}
+              key={`${node.nodeID}_executable`}
+            />
+            <DetailToggle
+              label={'Device'}
+              initialValue={node.device}
+              lockState={
+                node.executable
+                  ? EToggleLockState.Unlocked
+                  : EToggleLockState.LockedDeactivation
               }
-            }}
-            key={`${node.nodeID}_color`}
-          />
-          <div
-            className='ColorFill'
-            onClick={() => {
-              if (node !== null) {
-                node.applyColorFill()
-                handleChange()
-              }
-            }}
-          >
-            {'[ '}
-            <span>Fill</span> {' ]'}
-            <Tooltip description='Shade all descendant nodes this color as well.' />
+              deliverValue={(device: boolean) => {
+                if (node !== null) {
+                  node.device = device
+                  handleChange()
+                }
+              }}
+              key={`${node.nodeID}_device`}
+            />
+            <DetailBox
+              label='Pre-Execution Text'
+              initialValue={node.preExecutionText}
+              disabled={!node.executable}
+              deliverValue={(preExecutionText: string) => {
+                if (node !== null) {
+                  node.preExecutionText = preExecutionText
+
+                  handleChange()
+                }
+              }}
+              key={`${node.nodeID}_preExecutionText`}
+            />
+            <div className='RemoveContainer'>
+              <Action
+                purpose={EActionPurpose.Remove}
+                handleClick={handleDeleteRequest}
+                tooltipDescription={'Delete this node.'}
+                // key={`actual-action_delete-node_${node.nodeID}`}
+              />
+            </div>
           </div>
-          <DetailToggle
-            label={'Executable'}
-            initialValue={node.executable}
-            deliverValue={(executable: boolean) => {
-              if (node !== null) {
-                node.executable = executable
-                handleChange()
-              }
-            }}
-            key={`${node.nodeID}_executable`}
-          />
-          <DetailToggle
-            label={'Device'}
-            initialValue={node.device}
-            lockState={
-              node.executable
-                ? EToggleLockState.Unlocked
-                : EToggleLockState.LockedDeactivation
-            }
-            deliverValue={(device: boolean) => {
-              if (node !== null) {
-                node.device = device
-                handleChange()
-              }
-            }}
-            key={`${node.nodeID}_device`}
-          />
-          <DetailBox
-            label='Pre-Execution Text'
-            initialValue={node.preExecutionText}
-            disabled={!node.executable}
-            deliverValue={(preExecutionText: string) => {
-              if (node !== null) {
-                node.preExecutionText = preExecutionText
-
-                handleChange()
-              }
-            }}
-            key={`${node.nodeID}_preExecutionText`}
-          />
           <div className={nodeActionDetailsClassName}>
-            <div className='Label'>Actions:</div>
+            <h3 className='ActionInfo'>Actions:</h3>
             {node.actions.map((action: MissionNodeAction) => (
               <NodeAction
                 action={action}
@@ -592,12 +602,6 @@ function NodeEntry(props: {
                 }}
                 tooltipDescription={'Add a new action to this node.'}
                 // key={`actual-action_add-new-action_${node.nodeID}`}
-              />
-              <Action
-                purpose={EActionPurpose.Remove}
-                handleClick={handleDeleteRequest}
-                tooltipDescription={'Delete this node.'}
-                // key={`actual-action_delete-node_${node.nodeID}`}
               />
             </div>
           </div>

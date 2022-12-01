@@ -13,17 +13,18 @@
   @mixin fieldDimensions() {
     box-sizing: border-box;
     margin: 8px 0 0;
-    border-top: 2px solid $color-main;
-    border-bottom: 2px solid $color-main;
     width: 100%;
     padding: 11px 10px 11px;
   }
 
   .Field {
     @include fieldDimensions();
+    border-top: 2px solid $color-main;
+    border-bottom: 2px solid $color-main;
     background-color: $background-alt2;
     color: $color-accent-light;
     font-size: 14px;
+    width: calc(100% - 10px);
   }
 
   &.DetailNumber {

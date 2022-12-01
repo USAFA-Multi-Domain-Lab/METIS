@@ -53,38 +53,6 @@ $background-bar: linear-gradient(
   .Navigation {
     display: grid;
     grid-template-columns: auto 130px 130px 130px;
-    // margin: 0 auto;
-    // width: 100%;
-    // height: 30px;
-    // vertical-align: bottom;
-
-    // .Branding {
-    //   padding-right: 20px;
-    // }
-
-    // .Heading {
-    //   display: inline-block;
-    //   padding: 0 0;
-    //   line-height: 3rem;
-    //   font-size: 30px;
-    // }
-
-    // .Link {
-    //   display: flex;
-    //   justify-content: center;
-    //   align-items: center;
-    //   flex-flow: row wrap;
-    //   -webkit-user-select: none;
-    //   user-select: none;
-    //   cursor: pointer;
-    //   transition: opacity 175ms;
-
-    //   &:hover {
-    //     border: 2px solid $color-accent;
-    //     border-radius: 5px;
-    //     text-align: center;
-    //   }
-    // }
   }
 
   .Content {
@@ -172,7 +140,38 @@ $background-bar: linear-gradient(
       }
     }
 
+    .NodeInfoContainer {
+      margin: 30px 30px 10px;
+      border: 2px solid $terminal-blue;
+      border-radius: 10px;
+
+      .NodeInfo {
+        padding-left: 10px;
+        color: $terminal;
+      }
+
+      .RemoveContainer {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
+        margin: 20px 0;
+      }
+    }
+
     .NodeActionDetails {
+      margin: 30px 30px 10px;
+      padding-left: 10px;
+      border: 2px solid $terminal-blue;
+      border-radius: 10px;
+      height: auto;
+      max-height: 600px;
+      overflow-y: scroll;
+
+      .ActionInfo {
+        color: $terminal;
+      }
+
       > .Label {
         margin: 40px auto 0;
         border-bottom: 2px solid $color-main;
@@ -250,9 +249,9 @@ $background-bar: linear-gradient(
       cursor: pointer;
       user-select: none;
       box-sizing: border-box;
-      margin: 5px auto 0;
+      margin: 0 auto;
       border-bottom: 2px solid $color-main;
-      width: 225px;
+      width: calc(100% - 10px);
       padding: 15px 15px;
       text-align: right;
       color: $color-main;

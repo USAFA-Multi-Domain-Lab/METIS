@@ -378,10 +378,10 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
                     setExecuteNodePathPromptIsDisplayed(true)
                     selectedNode.selectedAction = selectedNode.actions[0]
                   } else if (selectedNode.actions.length === 0) {
-                    console.error(
-                      `${selectedNode.name} has no actions to choose from.`,
-                      selectedNode.actions,
-                    )
+                    // console.error(
+                    //   `${selectedNode.name} has no actions to choose from.`,
+                    //   selectedNode.actions,
+                    // )
                     setActionSelectionPromptIsDisplayed(true)
                   } else {
                     setActionDisplay([])
