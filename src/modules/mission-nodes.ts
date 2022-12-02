@@ -4,7 +4,10 @@
 // purpose of the target
 
 import { Mission } from './missions'
-import { MissionNodeAction } from './mission-node-actions'
+import {
+  IMissionNodeActionJSON,
+  MissionNodeAction,
+} from './mission-node-actions'
 import { AnyObject } from './toolbox/objects'
 
 // property past.
@@ -18,22 +21,14 @@ export enum ENodeTargetRelation {
 // from the server used to create instances
 // of MissionNode in the Mission class.
 export interface IMissionNodeJson {
-  executing: boolean
   nodeID: string
   name: string
   color: string
   preExecutionText: string
   actionData: string
   executable: boolean
-  nodeActionItems: Array<{
-    text: string
-    timeDelay: number
-    successChance: number
-    resourceCost: number
-    postExecutionSuccessText: string
-    postExecutionFailureText: string
-    willSucceed: boolean
-  }>
+  device: boolean
+  actions: Array<IMissionNodeActionJSON>
 }
 
 // This represents an individual node

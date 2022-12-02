@@ -149,6 +149,8 @@ export class Mission {
     } else {
       this.positionNodes()
     }
+
+    console.log(this)
   }
 
   // This will determine the relationship
