@@ -111,7 +111,7 @@ $background-bar: linear-gradient(
       display: block;
       cursor: pointer;
       user-select: none;
-      position: relative;
+      position: sticky;
       top: -9px;
       left: 0px;
       transform: scale(0.77);
@@ -141,35 +141,13 @@ $background-bar: linear-gradient(
     }
 
     .NodeInfoContainer {
-      margin: 30px 30px 10px;
-      border: 2px solid $terminal-blue;
-      border-radius: 10px;
-
-      .NodeInfo {
-        padding-left: 10px;
-        color: $terminal;
-      }
-
-      .RemoveContainer {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        width: 100%;
-        margin: 20px 0;
-      }
+      margin: 40px 45px 40px 20px;
     }
 
     .NodeActionDetails {
-      margin: 30px 30px 10px;
-      padding-left: 10px;
-      border: 2px solid $terminal-blue;
-      border-radius: 10px;
-      height: auto;
-      max-height: 600px;
-      overflow-y: scroll;
-
       .ActionInfo {
         color: $terminal;
+        margin: 30px auto -30px 25px;
       }
 
       > .Label {
@@ -181,7 +159,14 @@ $background-bar: linear-gradient(
       }
 
       .NodeAction {
-        margin: 40px 0;
+        margin: 40px 45px 20px 20px;
+        border: 2px solid $terminal-blue;
+        border-radius: 10px;
+        padding-bottom: 30px;
+
+        .Detail {
+          width: calc(225px - 20px);
+        }
 
         .Delete {
           cursor: pointer;
@@ -189,7 +174,7 @@ $background-bar: linear-gradient(
           box-sizing: border-box;
           margin: 5px auto 0;
           border-bottom: 2px solid $color-main;
-          width: 225px;
+          width: calc(225px - 20px);
           padding: 15px 15px;
           text-align: right;
           color: $color-main;
@@ -199,6 +184,25 @@ $background-bar: linear-gradient(
           span {
             color: $color-accent-light;
             font-weight: 400;
+          }
+        }
+      }
+
+      .SelectorContainer {
+        display: grid;
+        grid-template-columns: auto auto;
+        width: 100%;
+        margin: 0 30px 40px;
+
+        &.hide {
+          display: none;
+        }
+
+        .Previous,
+        .Next {
+          &:hover {
+            cursor: pointer;
+            color: $terminal;
           }
         }
       }
@@ -249,9 +253,9 @@ $background-bar: linear-gradient(
       cursor: pointer;
       user-select: none;
       box-sizing: border-box;
-      margin: 0 auto;
+      margin: 5px auto 0;
       border-bottom: 2px solid $color-main;
-      width: calc(100% - 10px);
+      width: 225px;
       padding: 15px 15px;
       text-align: right;
       color: $color-main;

@@ -445,6 +445,26 @@ function NodeEntry(props: {
   let handleCloseRequest = props.handleCloseRequest
   let nodeActionDetailsClassName: string = 'NodeActionDetails'
   let noActionsClassName: string = 'NoActions'
+  let selectorContainerClassName: string = 'SelectorContainer'
+
+  /* -- COMPONENT STATE -- */
+  const [displayedAction, setDisplayedAction] = useState<number>(0)
+
+  /* -- COMPONENT FUNCTIONS -- */
+
+  const displayNextAction = () => {
+    if (displayedAction >= 0) {
+      setDisplayedAction(displayedAction + 1)
+    }
+  }
+
+  const displayPreviousAction = () => {
+    if (displayedAction !== 0) {
+      setDisplayedAction(displayedAction - 1)
+    }
+  }
+
+  /* -- RENDER -- */
 
   if (!node?.executable) {
     nodeActionDetailsClassName += ' Disabled'
@@ -452,6 +472,10 @@ function NodeEntry(props: {
 
   if (node === null || node.actions.length > 0) {
     noActionsClassName += ' Hidden'
+  }
+
+  if (node?.actions.length === 0 || node?.actions.length === 1) {
+    selectorContainerClassName += ' hide'
   }
 
   if (node !== null) {
@@ -465,7 +489,6 @@ function NodeEntry(props: {
             <Tooltip description='Close panel.' />
           </div>
           <div className='NodeInfoContainer'>
-            <h3 className='NodeInfo'>Node Information:</h3>
             <Detail
               label='Name'
               initialValue={node.name}
@@ -555,30 +578,28 @@ function NodeEntry(props: {
               }}
               key={`${node.nodeID}_preExecutionText`}
             />
-            <div className='RemoveContainer'>
-              <Action
-                purpose={EActionPurpose.Remove}
-                handleClick={handleDeleteRequest}
-                tooltipDescription={'Delete this node.'}
-                // key={`actual-action_delete-node_${node.nodeID}`}
-              />
-            </div>
           </div>
           <div className={nodeActionDetailsClassName}>
-            <h3 className='ActionInfo'>Actions:</h3>
-            {node.actions.map((action: MissionNodeAction) => (
-              <NodeAction
-                action={action}
-                node={node as any}
-                handleChange={handleChange}
-                key={action.actionID}
-              />
-            ))}
+            <h4 className='ActionInfo'>Action(s):</h4>
+            <NodeAction
+              action={node.actions[displayedAction]}
+              node={node as any}
+              handleChange={handleChange}
+              key={node.actions[displayedAction].actionID}
+            />
             <div
               className={noActionsClassName}
               key={'no-actions-903jfksjdf092j3f'}
             >
               No actions exist for this node. Create one below.
+            </div>
+            <div className={selectorContainerClassName}>
+              <div className='Previous' onClick={displayPreviousAction}>
+                previous
+              </div>
+              <div className='Next' onClick={displayNextAction}>
+                next
+              </div>
             </div>
             <div className='UserActions'>
               <Action
@@ -602,6 +623,12 @@ function NodeEntry(props: {
                 }}
                 tooltipDescription={'Add a new action to this node.'}
                 // key={`actual-action_add-new-action_${node.nodeID}`}
+              />
+              <Action
+                purpose={EActionPurpose.Remove}
+                handleClick={handleDeleteRequest}
+                tooltipDescription={'Delete this node.'}
+                // key={`actual-action_delete-node_${node.nodeID}`}
               />
             </div>
           </div>
