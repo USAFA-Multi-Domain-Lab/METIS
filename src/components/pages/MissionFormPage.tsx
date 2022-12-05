@@ -334,6 +334,30 @@ export default function MissionFormPage(
                 selectNode(null)
               }
               activateNodeStructuring(false)
+
+              if (
+                node !== null &&
+                node.executable &&
+                node.actions.length === 0
+              ) {
+                // Loop through and check to make sure there all nodes have at least
+                // one action to choose from. If a node doesn't have at least one
+                // action then it will auto-generate one for that node.
+                let newActionArray: Array<MissionNodeAction> = [
+                  new MissionNodeAction(
+                    node,
+                    generateHash(),
+                    'New Action',
+                    'Enter your description here.',
+                    5000,
+                    0.5,
+                    1,
+                    'Enter your successful post-execution message here.',
+                    'Enter your failed post-execution message here.',
+                  ),
+                ]
+                node.actions = newActionArray
+              }
             }}
             handleMapCreateRequest={() => {
               let newNode: MissionNode = mission.spawnNewNode()
@@ -443,9 +467,9 @@ function NodeEntry(props: {
   let handleChange = props.handleChange
   let handleDeleteRequest = props.handleDeleteRequest
   let handleCloseRequest = props.handleCloseRequest
-  let nodeActionDetailsClassName: string = 'NodeActionDetails'
-  let noActionsClassName: string = 'NoActions'
+  let totalActions: number | undefined = node?.actions.length
   let selectorContainerClassName: string = 'SelectorContainer'
+  let actionKey: string = ''
 
   /* -- COMPONENT STATE -- */
   const [displayedAction, setDisplayedAction] = useState<number>(0)
@@ -453,29 +477,38 @@ function NodeEntry(props: {
   /* -- COMPONENT FUNCTIONS -- */
 
   const displayNextAction = () => {
-    if (displayedAction >= 0) {
-      setDisplayedAction(displayedAction + 1)
+    if (node?.actions !== undefined) {
+      let lastAction: number = node?.actions.length - 1
+
+      if (displayedAction === lastAction) {
+        setDisplayedAction(0)
+      } else {
+        setDisplayedAction(displayedAction + 1)
+      }
     }
   }
 
   const displayPreviousAction = () => {
-    if (displayedAction !== 0) {
+    if (displayedAction === 0 && node?.actions !== undefined) {
+      setDisplayedAction(node?.actions.length - 1)
+    } else {
       setDisplayedAction(displayedAction - 1)
     }
   }
 
   /* -- RENDER -- */
 
-  if (!node?.executable) {
-    nodeActionDetailsClassName += ' Disabled'
-  }
-
-  if (node === null || node.actions.length > 0) {
-    noActionsClassName += ' Hidden'
-  }
-
-  if (node?.actions.length === 0 || node?.actions.length === 1) {
+  if (
+    node === null ||
+    node.actions.length === 0 ||
+    node.actions.length === 1 ||
+    node.actions[0] === undefined
+  ) {
     selectorContainerClassName += ' hide'
+  } else if (node.actions.length > 0) {
+    actionKey = node.actions[displayedAction].actionID
+  } else if (node.actions.length <= 0) {
+    actionKey = 'no_action_id_to_choose_from'
   }
 
   if (node !== null) {
@@ -538,14 +571,27 @@ function NodeEntry(props: {
               <span>Fill</span> {' ]'}
               <Tooltip description='Shade all descendant nodes this color as well.' />
             </div>
+            <DetailBox
+              label='Pre-Execution Text'
+              initialValue={node.preExecutionText}
+              deliverValue={(preExecutionText: string) => {
+                if (node !== null) {
+                  node.preExecutionText = preExecutionText
+
+                  handleChange()
+                }
+              }}
+              key={`${node.nodeID}_preExecutionText`}
+            />
             <DetailToggle
               label={'Executable'}
               initialValue={node.executable}
               deliverValue={(executable: boolean) => {
                 if (node !== null) {
                   node.executable = executable
-                  handleChange()
                 }
+
+                handleChange()
               }}
               key={`${node.nodeID}_executable`}
             />
@@ -565,72 +611,66 @@ function NodeEntry(props: {
               }}
               key={`${node.nodeID}_device`}
             />
-            <DetailBox
-              label='Pre-Execution Text'
-              initialValue={node.preExecutionText}
-              disabled={!node.executable}
-              deliverValue={(preExecutionText: string) => {
-                if (node !== null) {
-                  node.preExecutionText = preExecutionText
-
-                  handleChange()
-                }
-              }}
-              key={`${node.nodeID}_preExecutionText`}
-            />
-          </div>
-          <div className={nodeActionDetailsClassName}>
-            <h4 className='ActionInfo'>Action(s):</h4>
-            <NodeAction
-              action={node.actions[displayedAction]}
-              node={node as any}
-              handleChange={handleChange}
-              key={node.actions[displayedAction].actionID}
-            />
-            <div
-              className={noActionsClassName}
-              key={'no-actions-903jfksjdf092j3f'}
-            >
-              No actions exist for this node. Create one below.
+            <div className='DeleteNode' onClick={handleDeleteRequest}>
+              [ <span>Delete Node</span> ]
+              <Tooltip description='Delete this node.' />{' '}
             </div>
+          </div>
+          <h4 className='ActionInfo'>Action(s):</h4>
+          <div className='NodeActionDetails'>
             <div className={selectorContainerClassName}>
               <div className='Previous' onClick={displayPreviousAction}>
                 previous
+              </div>
+              <div className='CurrentActionDisplayed'>
+                {displayedAction + 1}/{totalActions}
               </div>
               <div className='Next' onClick={displayNextAction}>
                 next
               </div>
             </div>
-            <div className='UserActions'>
-              <Action
-                purpose={EActionPurpose.Add}
-                handleClick={() => {
-                  if (node !== null) {
-                    let action: MissionNodeAction = new MissionNodeAction(
-                      node,
-                      generateHash(),
-                      'New Action',
-                      '',
-                      5000,
-                      0.5,
-                      1,
-                      '',
-                      '',
-                    )
-                    node.actions.push(action)
-                    handleChange()
-                  }
-                }}
-                tooltipDescription={'Add a new action to this node.'}
-                // key={`actual-action_add-new-action_${node.nodeID}`}
-              />
-              <Action
-                purpose={EActionPurpose.Remove}
-                handleClick={handleDeleteRequest}
-                tooltipDescription={'Delete this node.'}
-                // key={`actual-action_delete-node_${node.nodeID}`}
-              />
+            <NodeAction
+              action={node.actions[displayedAction]}
+              node={node}
+              handleChange={handleChange}
+              key={actionKey}
+            />
+            <div className={selectorContainerClassName}>
+              <div className='Previous' onClick={displayPreviousAction}>
+                previous
+              </div>
+              <div className='CurrentActionDisplayed'>
+                {displayedAction + 1}/{totalActions}
+              </div>
+              <div className='Next' onClick={displayNextAction}>
+                next
+              </div>
             </div>
+          </div>
+          <div className='UserActions'>
+            <Action
+              purpose={EActionPurpose.Add}
+              handleClick={() => {
+                if (node !== null) {
+                  let action: MissionNodeAction = new MissionNodeAction(
+                    node,
+                    generateHash(),
+                    'New Action',
+                    'Enter your description here.',
+                    5000,
+                    0.5,
+                    1,
+                    'Enter your successful post-execution message here.',
+                    'Enter your failed post-execution message here.',
+                  )
+
+                  node.actions.push(action)
+                  handleChange()
+                }
+              }}
+              tooltipDescription={'Add a new action to this node.'}
+              // key={`actual-action_add-new-action_${node.nodeID}`}
+            />
           </div>
         </div>
       </div>
@@ -650,111 +690,125 @@ function NodeAction(props: {
   let action: MissionNodeAction = props.action
   let node: MissionNode = props.node
   let handleChange: () => void = props.handleChange
+  let nodeActionClassName: string = 'NodeAction'
 
-  return (
-    <div className='NodeAction'>
-      <Detail
-        label='Name'
-        initialValue={action.name}
-        deliverValue={(name: string) => {
-          action.name = name
-          handleChange()
-        }}
-        key={`${action.actionID}_name`}
-      />
-      <DetailBox
-        label='Description'
-        initialValue={action.description}
-        deliverValue={(description: string) => {
-          action.description = description
-          handleChange()
-        }}
-        key={`${action.actionID}_description`}
-      />
-      <DetailNumber
-        label='Success Chance'
-        initialValue={parseFloat(
-          `${(action.successChance * 100.0).toFixed(2)}`,
-        )}
-        minimum={0}
-        maximum={100}
-        unit='%'
-        deliverValue={(successChancePercentage: number | null) => {
-          if (successChancePercentage !== null) {
-            action.successChance = successChancePercentage / 100.0
+  /* -- RENDER -- */
+  if (node !== null && !node?.executable) {
+    nodeActionClassName += ' Disabled'
+  }
 
+  if (action !== undefined) {
+    return (
+      <div className={nodeActionClassName}>
+        <Detail
+          label='Name'
+          initialValue={action.name}
+          deliverValue={(name: string) => {
+            action.name = name
             handleChange()
-          }
-        }}
-        key={`${action.actionID}_successChance`}
-      />
-      <DetailNumber
-        label='Process Time'
-        initialValue={action.processTime / 1000}
-        minimum={0}
-        maximum={60}
-        unit='s'
-        deliverValue={(timeCost: number | null) => {
-          if (timeCost !== null) {
-            action.processTime = timeCost * 1000
-
+          }}
+          key={`${action.actionID}_name`}
+        />
+        <DetailBox
+          label='Description'
+          initialValue={action.description}
+          deliverValue={(description: string) => {
+            action.description = description
             handleChange()
-          }
-        }}
-        key={`${action.actionID}_timeCost`}
-      />
-      <DetailNumber
-        label='Resource Cost'
-        initialValue={action.resourceCost}
-        deliverValue={(resourceCost: number | null) => {
-          if (resourceCost !== null) {
-            action.resourceCost = resourceCost
+          }}
+          key={`${action.actionID}_description`}
+        />
+        <DetailNumber
+          label='Success Chance'
+          initialValue={parseFloat(
+            `${(action.successChance * 100.0).toFixed(2)}`,
+          )}
+          minimum={0}
+          maximum={100}
+          unit='%'
+          deliverValue={(successChancePercentage: number | null) => {
+            if (successChancePercentage !== null) {
+              action.successChance = successChancePercentage / 100.0
 
-            handleChange()
-          }
-        }}
-        key={`${action.actionID}_resourceCost`}
-      />
-      <DetailBox
-        label='Post-Execution Success Text'
-        initialValue={action.postExecutionSuccessText}
-        disabled={!node.executable}
-        deliverValue={(postExecutionSuccessText: string) => {
-          if (postExecutionSuccessText !== null) {
-            action.postExecutionSuccessText = postExecutionSuccessText
+              handleChange()
+            }
+          }}
+          key={`${action.actionID}_successChance`}
+        />
+        <DetailNumber
+          label='Process Time'
+          initialValue={action.processTime / 1000}
+          minimum={0}
+          maximum={60}
+          unit='s'
+          deliverValue={(timeCost: number | null) => {
+            if (timeCost !== null) {
+              action.processTime = timeCost * 1000
 
-            handleChange()
-          }
-        }}
-        key={`${action.actionID}_postExecutionSuccessText`}
-      />
-      <DetailBox
-        label='Post-Execution Failure Text'
-        initialValue={action.postExecutionFailureText}
-        disabled={!node.executable}
-        deliverValue={(postExecutionFailureText: string) => {
-          if (postExecutionFailureText !== null) {
-            action.postExecutionFailureText = postExecutionFailureText
+              handleChange()
+            }
+          }}
+          key={`${action.actionID}_timeCost`}
+        />
+        <DetailNumber
+          label='Resource Cost'
+          initialValue={action.resourceCost}
+          deliverValue={(resourceCost: number | null) => {
+            if (resourceCost !== null) {
+              action.resourceCost = resourceCost
 
+              handleChange()
+            }
+          }}
+          key={`${action.actionID}_resourceCost`}
+        />
+        <DetailBox
+          label='Post-Execution Success Text'
+          initialValue={action.postExecutionSuccessText}
+          deliverValue={(postExecutionSuccessText: string) => {
+            if (postExecutionSuccessText !== null) {
+              action.postExecutionSuccessText = postExecutionSuccessText
+
+              handleChange()
+            }
+          }}
+          key={`${action.actionID}_postExecutionSuccessText`}
+        />
+        <DetailBox
+          label='Post-Execution Failure Text'
+          initialValue={action.postExecutionFailureText}
+          deliverValue={(postExecutionFailureText: string) => {
+            if (postExecutionFailureText !== null) {
+              action.postExecutionFailureText = postExecutionFailureText
+
+              handleChange()
+            }
+          }}
+          key={`${action.actionID}_postExecutionFailureText`}
+        />
+        <div
+          className='Delete'
+          onClick={() => {
+            node.actions.splice(node.actions.indexOf(action), 1)
             handleChange()
-          }
-        }}
-        key={`${action.actionID}_postExecutionFailureText`}
-      />
-      <div
-        className='Delete'
-        onClick={() => {
-          node.actions.splice(node.actions.indexOf(action), 1)
-          handleChange()
-        }}
-        key={`${action.actionID}_delete`}
-      >
-        {'[ '}
-        <span>Delete Action</span> {' ]'}
-        <Tooltip description='Delete this action from the node.' />
+          }}
+          key={`${action.actionID}_delete`}
+        >
+          {'[ '}
+          <span>Delete Action</span> {' ]'}
+          <Tooltip description='Delete this action from the node.' />
+        </div>
       </div>
-    </div>
-  )
+    )
+  } else {
+    return (
+      <div className='NodeAction'>
+        <div className='NoActions' key={'no-actions-903jfksjdf092j3f'}>
+          No actions exist for this node. Create one below.
+        </div>
+      </div>
+    )
+  }
 }
 
 // This will render a form where

@@ -141,14 +141,33 @@ $background-bar: linear-gradient(
     }
 
     .NodeInfoContainer {
-      margin: 40px 45px 40px 20px;
+      margin: 40px 45px 40px 15px;
+
+      .DeleteNode {
+        display: block;
+        width: 225px;
+        margin: 30px auto 0;
+        text-align: right;
+        font-size: 0.85em;
+
+        span {
+          color: $color-accent-light;
+          font-weight: 400;
+        }
+
+        &:hover {
+          cursor: pointer;
+        }
+      }
+    }
+
+    .ActionInfo {
+      color: $terminal;
+      margin: 30px auto 0px 15px;
     }
 
     .NodeActionDetails {
-      .ActionInfo {
-        color: $terminal;
-        margin: 30px auto -30px 25px;
-      }
+      margin-top: 20px;
 
       > .Label {
         margin: 40px auto 0;
@@ -159,10 +178,16 @@ $background-bar: linear-gradient(
       }
 
       .NodeAction {
-        margin: 40px 45px 20px 20px;
+        margin: 0 45px 0 20px;
         border: 2px solid $terminal-blue;
         border-radius: 10px;
         padding-bottom: 30px;
+
+        &.Disabled {
+          pointer-events: none;
+          transform: scale(0.95);
+          opacity: 0.65;
+        }
 
         .Detail {
           width: calc(225px - 20px);
@@ -186,13 +211,20 @@ $background-bar: linear-gradient(
             font-weight: 400;
           }
         }
+
+        .NoActions {
+          margin: 30px auto 0;
+          width: calc(100% - 60px);
+          font-size: 0.85em;
+        }
       }
 
       .SelectorContainer {
         display: grid;
-        grid-template-columns: auto auto;
-        width: 100%;
-        margin: 0 30px 40px;
+        grid-template-columns: 33% 33% 33%;
+        width: calc(100% - 60px);
+        margin: 20px 20px;
+        text-align: center;
 
         &.hide {
           display: none;
@@ -200,46 +232,35 @@ $background-bar: linear-gradient(
 
         .Previous,
         .Next {
+          user-select: none;
           &:hover {
             cursor: pointer;
             color: $terminal;
           }
         }
-      }
-    }
 
-    .NoActions {
-      margin: 30px auto;
-      width: 225px;
-      font-size: 12.5px;
+        .CurrentActionDisplayed {
+          &:hover {
+            cursor: default;
+          }
+        }
+      }
     }
 
     .UserActions {
       display: block;
-      margin: 0 auto 40px;
-      width: 225px;
+      margin: 30px 45px 40px 20px;
+      width: calc(100% - 65px);
       text-align: center;
 
       .Action {
         width: 40px;
         text-align: center;
+        margin: 0;
       }
 
       * {
         transition: transform 250ms, opacity 250ms;
-      }
-
-      &.Disabled {
-        pointer-events: none;
-
-        > .Label,
-        .NodeAction .Detail *,
-        .NodeAction .Delete,
-        .NoActions,
-        .Action {
-          transform: scale(0.8);
-          opacity: 0.65;
-        }
       }
     }
 
