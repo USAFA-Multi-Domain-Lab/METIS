@@ -25,7 +25,6 @@ export interface IMissionNodeJson {
   name: string
   color: string
   preExecutionText: string
-  actionData: string
   executable: boolean
   device: boolean
   actions: Array<IMissionNodeActionJSON>
@@ -58,7 +57,7 @@ export class MissionNode {
   static default_preExecutionText: string = 'Node has not been executed.'
   static default_executable: boolean = false
   static default_device: boolean = false
-  static default_actionData: Array<AnyObject> = []
+  static default_actions: Array<IMissionNodeActionJSON> = []
   static default_mapX: number = 0
   static default_mapY: number = 0
 
@@ -103,7 +102,7 @@ export class MissionNode {
     preExecutionText: string,
     executable: boolean,
     device: boolean,
-    actionData: Array<AnyObject>,
+    actionJSON: Array<IMissionNodeActionJSON>,
     mapX: number,
     mapY: number,
   ) {
@@ -124,27 +123,27 @@ export class MissionNode {
     this.depth = -1
     this._isExpanded = false
 
-    this.parseActionData(actionData)
+    this.parseActionJSON(actionJSON)
   }
 
-  // This will turn the action data
+  // This will turn the action JSON
   // into new MissionNodeAction objects.
-  parseActionData(actionData: Array<AnyObject>): void {
+  parseActionJSON(actionJSON: Array<IMissionNodeActionJSON>): void {
     let actions = []
 
-    for (let actionDatum of actionData) {
-      let nodeAction: MissionNodeAction = new MissionNodeAction(
+    for (let action of actionJSON) {
+      let actionObject: MissionNodeAction = new MissionNodeAction(
         this,
-        actionDatum.actionID,
-        actionDatum.name,
-        actionDatum.description,
-        actionDatum.processTime,
-        actionDatum.successChance,
-        actionDatum.resourceCost,
-        actionDatum.postExecutionSuccessText,
-        actionDatum.postExecutionFailureText,
+        action.actionID,
+        action.name,
+        action.description,
+        action.processTime,
+        action.successChance,
+        action.resourceCost,
+        action.postExecutionSuccessText,
+        action.postExecutionFailureText,
       )
-      actions.push(nodeAction)
+      actions.push(actionObject)
     }
 
     this.actions = actions

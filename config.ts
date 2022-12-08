@@ -23,6 +23,8 @@ export let PORT: number = 8080
 
 export let MONGO_HOST = 'localhost'
 export let MONGO_PORT = 27017
+export let MONGO_USERNAME: string | undefined
+export let MONGO_PASSWORD: string | undefined
 
 // -- config-variables | environment-override --
 
@@ -39,8 +41,15 @@ if (fs.existsSync('./environment.json')) {
   // database config
   if ('MONGO_HOST' in environmentData) {
     MONGO_HOST = environmentData['MONGO_HOST']
-  } else if ('MONGO_PORT') {
+  }
+  if ('MONGO_PORT' in environmentData) {
     MONGO_PORT = environmentData['MONGO_PORT']
+  }
+  if ('MONGO_USERNAME' in environmentData) {
+    MONGO_USERNAME = environmentData['MONGO_USERNAME']
+  }
+  if ('MONGO_PASSWORD' in environmentData) {
+    MONGO_PASSWORD = environmentData['MONGO_PASSWORD']
   }
 }
 

@@ -2,7 +2,7 @@ import mongoose, { Schema, Model } from 'mongoose'
 import bcrypt from 'bcrypt'
 import { StatusError } from '../../modules/error'
 
-const userSchema = new Schema({
+const UserSchema = new Schema({
   userID: {
     type: String,
     unique: true,
@@ -30,14 +30,13 @@ const userSchema = new Schema({
 })
 
 //authenticates user making a request is in the database
-userSchema.statics.authenticate = (
+UserSchema.statics.authenticate = (
   request,
   callback: (error: StatusError | null, correct: boolean, user: any) => void,
 ) => {
   //searches for user based on email provided
-  userModel
-    .findOne({ userID: request.body.userID })
-    .exec((error: Error, user: any) => {
+  UserModel.findOne({ userID: request.body.userID }).exec(
+    (error: Error, user: any) => {
       if (error) {
         return callback(new StatusError(error.message), false, null)
       } else if (!user) {
@@ -60,11 +59,12 @@ userSchema.statics.authenticate = (
           }
         },
       )
-    })
+    },
+  )
 }
 
 //before a new user is saved, the password will be encrypted
-userSchema.pre('save', function (next) {
+UserSchema.pre('save', function (next) {
   bcrypt.hash(this.password, 10, (error: Error | undefined, hash: string) => {
     if (error) {
       return next(error)
@@ -74,6 +74,6 @@ userSchema.pre('save', function (next) {
   })
 })
 
-const userModel: any = mongoose.model('User', userSchema)
+const UserModel: any = mongoose.model('User', UserSchema)
 
-export default userModel
+export default UserModel

@@ -50,10 +50,6 @@ export class Mission {
   resources: number
   _originalNodeStructure: AnyObject
   _originalNodeData: Array<AnyObject>
-  _nodeStructure: AnyObject
-  _nodeData: Array<AnyObject>
-  _nodeStructureLastChangeKey: string
-  _nodeDataLastChangeKey: string
   nodes: Map<string, MissionNode>
   seed: string
   rng: PRNG
@@ -69,12 +65,7 @@ export class Mission {
   // updating it if the mission
   // has been modified.
   get nodeStructure(): AnyObject {
-    if (this._nodeStructureLastChangeKey !== this.structureChangeKey) {
-      this._nodeStructure = this._exportNodeStructure()
-      this._nodeStructureLastChangeKey = this.structureChangeKey
-    }
-
-    return this._nodeStructure
+    return this._exportNodeStructure()
   }
 
   // This will return the node
@@ -82,11 +73,7 @@ export class Mission {
   // updating it if the mission
   // has been modified.
   get nodeData(): Array<AnyObject> {
-    if (this._nodeDataLastChangeKey !== this.structureChangeKey) {
-      this._nodeData = this._exportNodeData()
-      this._nodeDataLastChangeKey = this.structureChangeKey
-    }
-    return this._nodeData
+    return this._exportNodeData()
   }
 
   get disableNodes(): boolean {
@@ -114,8 +101,6 @@ export class Mission {
     this.live = live
     this.initialResources = initialResources
     this.resources = initialResources
-    this._nodeStructure = nodeStructure
-    this._nodeData = nodeData
     this._originalNodeStructure = nodeStructure
     this._originalNodeData = nodeData
     this.nodes = new Map<string, MissionNode>()
@@ -135,8 +120,6 @@ export class Mission {
     )
     this.lastExpandedNode = null
     this.structureChangeKey = generateHash()
-    this._nodeStructureLastChangeKey = this.structureChangeKey
-    this._nodeDataLastChangeKey = this.structureChangeKey
     this.structureChangeHandlers = []
     this._disableNodes = false
     this._depth = -1
@@ -206,7 +189,7 @@ export class Mission {
           preExecutionText: MissionNode.default_preExecutionText,
           executable: MissionNode.default_executable,
           device: MissionNode.default_device,
-          actionData: MissionNode.default_actionData,
+          actions: MissionNode.default_actions,
           mapX: MissionNode.default_mapX,
           mapY: MissionNode.default_mapY,
           ...nodeDatum,
@@ -347,7 +330,7 @@ export class Mission {
       MissionNode.default_preExecutionText,
       MissionNode.default_executable,
       MissionNode.default_device,
-      MissionNode.default_actionData,
+      MissionNode.default_actions,
       MissionNode.default_mapX,
       MissionNode.default_mapY,
     )
