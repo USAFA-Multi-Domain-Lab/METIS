@@ -1,9 +1,13 @@
 // This will render a detail for
 // a form, with a label and a text
 
+import { initial } from 'lodash'
 import React from 'react'
 import { useEffect, useRef, useState } from 'react'
+import { MissionNodeAction } from '../../modules/mission-node-actions'
+import { MissionNode } from '../../modules/mission-nodes'
 import inputs from '../../modules/toolbox/inputs'
+import { AppActions } from '../AppState'
 import './Form.scss'
 import Toggle, { EToggleLockState } from './Toggle'
 import Tooltip from './Tooltip'
@@ -156,6 +160,9 @@ export function DetailNumber(props: {
 export function DetailBox(props: {
   label: string
   initialValue: string
+  appActions?: AppActions
+  selectedNode?: MissionNode
+  action?: MissionNodeAction
   disabled?: boolean
   deliverValue: (value: string) => void
 }): JSX.Element | null {
@@ -219,12 +226,24 @@ export function DetailBox(props: {
           resizeField(event)
           deliverValue(event.target.value)
         }}
+        onBlur={(event: React.FocusEvent) => {
+          let target: HTMLTextAreaElement = event.target as HTMLTextAreaElement
+
+          if (props.appActions !== undefined && target.value === '') {
+            deliverValue(initialValue)
+            setMountHandled(false)
+            props.appActions.notify(
+              'The post-execution text field must have at least one character.',
+              10000,
+            )
+          }
+        }}
       />
     </div>
   )
 }
 
-// THis will render a detail for
+// This will render a detail for
 // a form, with a label and a drop
 // down box for selecting from various
 // options.

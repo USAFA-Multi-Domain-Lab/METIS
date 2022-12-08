@@ -62,6 +62,7 @@ export default function MissionFormPage(
   const [nodeStructuringIsActive, activateNodeStructuring] =
     useState<boolean>(false)
   const [existsInDatabase, setExistsInDatabase] = useState<boolean>(false)
+  const [displayedAction, setDisplayedAction] = useState<number>(0)
 
   /* -- COMPONENT EFFECTS -- */
 
@@ -328,11 +329,58 @@ export default function MissionFormPage(
             mission={mission}
             missionAjaxStatus={EAjaxStatus.Loaded}
             handleNodeSelection={(node: MissionNode) => {
-              if (selectedNode?.nodeID !== node.nodeID) {
-                selectNode(node)
+              setDisplayedAction(0)
+
+              if (selectedNode !== null) {
+                if (selectedNode.nodeID !== node.nodeID) {
+                  selectNode(node)
+                } else {
+                  selectNode(null)
+                }
               } else {
-                selectNode(null)
+                selectNode(node)
               }
+
+              // if (selectedNode !== null && selectedNode.executable) {
+              //   // Logic to make sure the instructor knows that the post-execution text has to have at least one character. It cannot be an empty string or set as null.
+              //   let emptyPostExecutionTextArray: Array<string> = []
+
+              //   for (let action of selectedNode.actions) {
+              //     if (
+              //       action.postExecutionSuccessText !== null &&
+              //       action.postExecutionSuccessText !== ''
+              //     ) {
+              //       emptyPostExecutionTextArray.push(
+              //         action.postExecutionSuccessText,
+              //       )
+              //     } else if (
+              //       action.postExecutionFailureText !== null &&
+              //       action.postExecutionFailureText !== ''
+              //     ) {
+              //       emptyPostExecutionTextArray.push(
+              //         action.postExecutionFailureText,
+              //       )
+              //     } else {
+              //       appActions.notify(
+              //         `${selectedNode.name} has an action called "${action.name}" with a post-execution text that is empty and requires at least one character.`,
+              //         null,
+              //       )
+              //     }
+              //   }
+
+              //   if (
+              //     emptyPostExecutionTextArray.length ===
+              //     selectedNode.actions.length
+              //   ) {
+              //     if (selectedNode.nodeID !== node.nodeID) {
+              //       selectNode(node)
+              //     } else {
+              //       selectNode(null)
+              //     }
+              //   }
+              // } else {
+              //   selectNode(node)
+              // }
               activateNodeStructuring(false)
 
               if (
@@ -340,9 +388,10 @@ export default function MissionFormPage(
                 node.executable &&
                 node.actions.length === 0
               ) {
-                // Loop through and check to make sure there all nodes have at least
-                // one action to choose from. If a node doesn't have at least one
-                // action then it will auto-generate one for that node.
+                // Checks to make sure the selected node has at least
+                // one action to choose from. If the selected node doesn't
+                // have at least one action then it will auto-generate one
+                // for that node.
                 let newActionArray: Array<MissionNodeAction> = [
                   new MissionNodeAction(
                     node,
@@ -357,6 +406,13 @@ export default function MissionFormPage(
                   ),
                 ]
                 node.actions = newActionArray
+
+                appActions.notify(
+                  `Auto-generated an action for ${node.name} because it is an executable node with no actions to execute.`,
+                  10000,
+                )
+
+                handleChange()
               }
             }}
             handleMapCreateRequest={() => {
@@ -382,6 +438,9 @@ export default function MissionFormPage(
           />
           <NodeEntry
             node={selectedNode}
+            appActions={appActions}
+            displayedAction={displayedAction}
+            setDisplayedAction={setDisplayedAction}
             handleChange={handleChange}
             handleDeleteRequest={() => {
               if (selectedNode !== null) {
@@ -459,20 +518,27 @@ function MissionDetails(props: {
 // a given node can be edited.
 function NodeEntry(props: {
   node: MissionNode | null
+  appActions: AppActions
+  displayedAction: number
+  setDisplayedAction: (displayedAction: number) => void
   handleChange: () => void
   handleDeleteRequest: () => void
   handleCloseRequest: () => void
 }): JSX.Element | null {
   let node: MissionNode | null = props.node
+  let appActions: AppActions = props.appActions
+  let displayedAction: number = props.displayedAction
+  let setDisplayedAction = props.setDisplayedAction
   let handleChange = props.handleChange
   let handleDeleteRequest = props.handleDeleteRequest
   let handleCloseRequest = props.handleCloseRequest
   let totalActions: number | undefined = node?.actions.length
   let selectorContainerClassName: string = 'SelectorContainer'
+  let actionTitleClassName: string = 'ActionInfo'
+  let addNewActionClassName: string = 'Action add'
   let actionKey: string = ''
 
   /* -- COMPONENT STATE -- */
-  const [displayedAction, setDisplayedAction] = useState<number>(0)
 
   /* -- COMPONENT FUNCTIONS -- */
 
@@ -498,6 +564,8 @@ function NodeEntry(props: {
 
   /* -- RENDER -- */
 
+  // Logic that hides the buttons that select which action is being
+  // displayed because there is 1 action or less for the selected node.
   if (
     node === null ||
     node.actions.length === 0 ||
@@ -505,9 +573,23 @@ function NodeEntry(props: {
     node.actions[0] === undefined
   ) {
     selectorContainerClassName += ' hide'
-  } else if (node.actions.length > 0) {
+    actionKey = 'no_action_id_to_choose_from'
+  }
+
+  // If a node is not executable then it hides all of the information
+  // pertaining to the actions for that node.
+  if (node !== null && !node.executable) {
+    selectorContainerClassName += ' hide'
+    actionTitleClassName += ' Hide'
+    addNewActionClassName += ' Hide'
+  }
+
+  // Logic that keeps the app from crashing by making the key for the
+  // individual action that is being displayed under the action(s) section
+  // change dynamically.
+  if (node !== null && node.actions.length > 0) {
     actionKey = node.actions[displayedAction].actionID
-  } else if (node.actions.length <= 0) {
+  } else if (node !== null && node.actions.length <= 0) {
     actionKey = 'no_action_id_to_choose_from'
   }
 
@@ -589,6 +671,32 @@ function NodeEntry(props: {
               deliverValue={(executable: boolean) => {
                 if (node !== null) {
                   node.executable = executable
+
+                  if (executable && node.actions.length === 0) {
+                    // Checks to make sure the selected node has at least
+                    // one action to choose from. If the selected node doesn't
+                    // have at least one action then it will auto-generate one
+                    // for that node.
+                    let newActionArray: Array<MissionNodeAction> = [
+                      new MissionNodeAction(
+                        node,
+                        generateHash(),
+                        'New Action',
+                        'Enter your description here.',
+                        5000,
+                        0.5,
+                        1,
+                        'Enter your successful post-execution message here.',
+                        'Enter your failed post-execution message here.',
+                      ),
+                    ]
+                    node.actions = newActionArray
+
+                    appActions.notify(
+                      `Auto-generated an action for ${node.name} because it is an executable node with no actions to execute.`,
+                      10000,
+                    )
+                  }
                 }
 
                 handleChange()
@@ -611,12 +719,17 @@ function NodeEntry(props: {
               }}
               key={`${node.nodeID}_device`}
             />
-            <div className='DeleteNode' onClick={handleDeleteRequest}>
-              [ <span>Delete Node</span> ]
-              <Tooltip description='Delete this node.' />{' '}
+            <div className='DeleteNodeContainer'>
+              <div className='DeleteNode' onClick={handleDeleteRequest}>
+                [{' '}
+                <span className='Text'>
+                  Delete Node <span className='RightBracket'>]</span>
+                  <Tooltip description='Delete this node.' />
+                </span>
+              </div>
             </div>
           </div>
-          <h4 className='ActionInfo'>Action(s):</h4>
+          <h4 className={actionTitleClassName}>Action(s):</h4>
           <div className='NodeActionDetails'>
             <div className={selectorContainerClassName}>
               <div className='Previous' onClick={displayPreviousAction}>
@@ -632,6 +745,8 @@ function NodeEntry(props: {
             <NodeAction
               action={node.actions[displayedAction]}
               node={node}
+              appActions={appActions}
+              setDisplayedAction={setDisplayedAction}
               handleChange={handleChange}
               key={actionKey}
             />
@@ -669,6 +784,7 @@ function NodeEntry(props: {
                 }
               }}
               tooltipDescription={'Add a new action to this node.'}
+              uniqueClassName={addNewActionClassName}
               // key={`actual-action_add-new-action_${node.nodeID}`}
             />
           </div>
@@ -685,16 +801,36 @@ function NodeEntry(props: {
 function NodeAction(props: {
   action: MissionNodeAction
   node: MissionNode
+  appActions: AppActions
   handleChange: () => void
+  setDisplayedAction: (displayedAction: number) => void
 }): JSX.Element | null {
   let action: MissionNodeAction = props.action
   let node: MissionNode = props.node
+  let appActions: AppActions = props.appActions
   let handleChange: () => void = props.handleChange
+  let setDisplayedAction: (displayedAction: number) => void =
+    props.setDisplayedAction
   let nodeActionClassName: string = 'NodeAction'
+  let deleteActionClassName: string = 'Delete'
+  let addNewActionClassName: string = ''
+  let addNewActionTooltipDescription: string = ''
 
   /* -- RENDER -- */
-  if (node !== null && !node?.executable) {
-    nodeActionClassName += ' Disabled'
+  if (node !== null && !node.executable) {
+    nodeActionClassName += ' Hide'
+  }
+
+  if (node.actions.length === 1) {
+    deleteActionClassName += ' Disabled'
+  }
+
+  if (!node.executable) {
+    addNewActionClassName += ' disabled'
+    addNewActionTooltipDescription =
+      'Toggle the executable button on to be able to create actions.'
+  } else {
+    addNewActionTooltipDescription = 'Add a new action to this node.'
   }
 
   if (action !== undefined) {
@@ -765,8 +901,15 @@ function NodeAction(props: {
         <DetailBox
           label='Post-Execution Success Text'
           initialValue={action.postExecutionSuccessText}
+          appActions={appActions}
+          selectedNode={node}
+          action={action}
           deliverValue={(postExecutionSuccessText: string) => {
-            if (postExecutionSuccessText !== null) {
+            if (
+              postExecutionSuccessText !== null &&
+              postExecutionSuccessText !== '' &&
+              postExecutionSuccessText !== action.postExecutionSuccessText
+            ) {
               action.postExecutionSuccessText = postExecutionSuccessText
 
               handleChange()
@@ -777,8 +920,15 @@ function NodeAction(props: {
         <DetailBox
           label='Post-Execution Failure Text'
           initialValue={action.postExecutionFailureText}
+          appActions={appActions}
+          selectedNode={node}
+          action={action}
           deliverValue={(postExecutionFailureText: string) => {
-            if (postExecutionFailureText !== null) {
+            if (
+              postExecutionFailureText !== null &&
+              postExecutionFailureText !== '' &&
+              postExecutionFailureText !== action.postExecutionFailureText
+            ) {
               action.postExecutionFailureText = postExecutionFailureText
 
               handleChange()
@@ -787,9 +937,12 @@ function NodeAction(props: {
           key={`${action.actionID}_postExecutionFailureText`}
         />
         <div
-          className='Delete'
+          className={deleteActionClassName}
           onClick={() => {
-            node.actions.splice(node.actions.indexOf(action), 1)
+            if (node.actions.length > 1) {
+              node.actions.splice(node.actions.indexOf(action), 1)
+            }
+            setDisplayedAction(0)
             handleChange()
           }}
           key={`${action.actionID}_delete`}
@@ -802,11 +955,42 @@ function NodeAction(props: {
     )
   } else {
     return (
-      <div className='NodeAction'>
-        <div className='NoActions' key={'no-actions-903jfksjdf092j3f'}>
-          No actions exist for this node. Create one below.
+      <>
+        <h4 className='ActionInfo' style={{ marginBottom: '20px' }}>
+          Action(s):
+        </h4>
+        <div className='NodeAction'>
+          <div className='NoActions' key={'no-actions-903jfksjdf092j3f'}>
+            No actions exist for this node. Create one below.
+          </div>
         </div>
-      </div>
+        <div className='UserActions'>
+          <Action
+            purpose={EActionPurpose.Add}
+            handleClick={() => {
+              if (node !== null && node.executable) {
+                let action: MissionNodeAction = new MissionNodeAction(
+                  node,
+                  generateHash(),
+                  'New Action',
+                  'Enter your description here.',
+                  5000,
+                  0.5,
+                  1,
+                  'Enter your successful post-execution message here.',
+                  'Enter your failed post-execution message here.',
+                )
+
+                node.actions.push(action)
+                handleChange()
+              }
+            }}
+            tooltipDescription={addNewActionTooltipDescription}
+            uniqueClassName={addNewActionClassName}
+            // key={`actual-action_add-new-action_${node.nodeID}`}
+          />
+        </div>
+      </>
     )
   }
 }

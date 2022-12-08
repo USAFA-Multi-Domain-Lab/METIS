@@ -143,20 +143,26 @@ $background-bar: linear-gradient(
     .NodeInfoContainer {
       margin: 40px 45px 40px 15px;
 
-      .DeleteNode {
+      .DeleteNodeContainer {
         display: block;
         width: 225px;
         margin: 30px auto 0;
         text-align: right;
         font-size: 0.85em;
 
-        span {
-          color: $color-accent-light;
-          font-weight: 400;
-        }
+        .DeleteNode {
+          .Text {
+            color: $color-accent-light;
+            font-weight: 400;
+          }
 
-        &:hover {
-          cursor: pointer;
+          .RightBracket {
+            color: $color-main;
+          }
+
+          &:hover {
+            cursor: pointer;
+          }
         }
       }
     }
@@ -164,6 +170,10 @@ $background-bar: linear-gradient(
     .ActionInfo {
       color: $terminal;
       margin: 30px auto 0px 15px;
+
+      &.Hide {
+        display: none;
+      }
     }
 
     .NodeActionDetails {
@@ -183,10 +193,8 @@ $background-bar: linear-gradient(
         border-radius: 10px;
         padding-bottom: 30px;
 
-        &.Disabled {
-          pointer-events: none;
-          transform: scale(0.95);
-          opacity: 0.65;
+        &.Hide {
+          display: none;
         }
 
         .Detail {
@@ -216,6 +224,14 @@ $background-bar: linear-gradient(
           margin: 30px auto 0;
           width: calc(100% - 60px);
           font-size: 0.85em;
+        }
+
+        .Delete {
+          &.Disabled {
+            pointer-events: none;
+            transform: scale(0.95);
+            opacity: 0.65;
+          }
         }
       }
 
@@ -257,6 +273,18 @@ $background-bar: linear-gradient(
         width: 40px;
         text-align: center;
         margin: 0;
+
+        &.add {
+          &.Hide {
+            display: none;
+          }
+
+          &.disabled {
+            cursor: default;
+            transform: scale(0.95);
+            opacity: 0.65;
+          }
+        }
       }
 
       * {

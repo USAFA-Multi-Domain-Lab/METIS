@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react'
 import './ConsoleOutput.scss'
 
-const ConsoleOutput = (props: { value: string | null }) => {
+const ConsoleOutput = (props: { value: string }) => {
   const scrollRef = useRef<HTMLLIElement>(null)
 
   useEffect(() => {
@@ -12,19 +12,15 @@ const ConsoleOutput = (props: { value: string | null }) => {
     }
   }, [])
 
-  if (props.value !== null) {
-    return (
-      <div className='ConsoleOutput'>
-        <li
-          className='Text'
-          ref={scrollRef}
-          dangerouslySetInnerHTML={{ __html: props.value }}
-        ></li>
-      </div>
-    )
-  } else {
-    return null
-  }
+  return (
+    <div className='ConsoleOutput'>
+      <li
+        className='Text'
+        ref={scrollRef}
+        dangerouslySetInnerHTML={{ __html: props.value }}
+      ></li>
+    </div>
+  )
 }
 
 export default ConsoleOutput

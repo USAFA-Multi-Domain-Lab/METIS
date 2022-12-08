@@ -44,7 +44,7 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
     EAjaxStatus.NotLoaded,
   )
   const [consoleOutputs, setConsoleOutputs] = useState<
-    Array<{ date: number; value: string | null }>
+    Array<{ date: number; value: string }>
   >([])
   const [outputPanelIsDisplayed, setOutputPanelIsDisplayed] =
     useState<boolean>(false)
@@ -427,7 +427,7 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
             />
             <OutputPanel
               consoleOutputs={consoleOutputs}
-              setConsoleOutputs={setConsoleOutputs}
+              setOutputPanelIsDisplayed={setOutputPanelIsDisplayed}
             />
             <NodeActions
               selectedNode={lastSelectedNode}

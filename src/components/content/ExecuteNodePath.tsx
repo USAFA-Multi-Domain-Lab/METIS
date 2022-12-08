@@ -11,10 +11,8 @@ const ExecuteNodePath = (props: {
   mission: Mission
   selectedNode: MissionNode | null
   notify: (message: string, duration?: number | null) => Notification
-  consoleOutputs: Array<{ date: number; value: string | null }>
-  setConsoleOutputs: (
-    consoleOutputs: { date: number; value: string | null }[],
-  ) => void
+  consoleOutputs: Array<{ date: number; value: string }>
+  setConsoleOutputs: (consoleOutputs: { date: number; value: string }[]) => void
   setActionSelectionPromptIsDisplayed: (
     actionSelectionPromptIsDisplayed: boolean,
   ) => void
@@ -65,7 +63,11 @@ const ExecuteNodePath = (props: {
           selectedNode.execute((success: boolean) => {
             // Output message in the terminal which differs based on whether
             // it passes or fails
-            if (success && selectedAction?.postExecutionSuccessText !== '') {
+            if (
+              success &&
+              selectedAction?.postExecutionSuccessText !== '' &&
+              selectedAction?.postExecutionSuccessText !== null
+            ) {
               gameLogic.handleNodeSelection(selectedNode)
 
               setConsoleOutputs([
@@ -82,21 +84,9 @@ const ExecuteNodePath = (props: {
                 },
               ])
             } else if (
-              success &&
-              selectedAction?.postExecutionSuccessText === ''
-            ) {
-              gameLogic.handleNodeSelection(selectedNode)
-
-              setConsoleOutputs([
-                ...consoleOutputs,
-                {
-                  date: Date.now(),
-                  value: null,
-                },
-              ])
-            } else if (
               !success &&
-              selectedAction?.postExecutionFailureText !== ''
+              selectedAction?.postExecutionFailureText !== '' &&
+              selectedAction?.postExecutionFailureText !== null
             ) {
               setConsoleOutputs([
                 ...consoleOutputs,
@@ -109,14 +99,6 @@ const ExecuteNodePath = (props: {
                     <span class="failed">${
                       selectedAction?.postExecutionFailureText
                     }</span>`,
-                },
-              ])
-            } else {
-              setConsoleOutputs([
-                ...consoleOutputs,
-                {
-                  date: Date.now(),
-                  value: null,
                 },
               ])
             }
