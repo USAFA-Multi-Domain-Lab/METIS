@@ -76,7 +76,6 @@ export function ensureDefaultDataExists(): void {
             preExecutionText: '',
             postExecutionSuccessText: '',
             postExecutionFailureText: '',
-            actionData: 'exec command',
             executable: false,
             device: false,
             actions: [
@@ -133,7 +132,6 @@ export function ensureDefaultDataExists(): void {
             preExecutionText: 'Cellular Network has not been executed.',
             postExecutionSuccessText: 'Cellular Network succeeded.',
             postExecutionFailureText: 'Cellular Network failed.',
-            actionData: 'exec command',
             executable: false,
             device: false,
             actions: [
@@ -191,7 +189,6 @@ export function ensureDefaultDataExists(): void {
             postExecutionSuccessText: 'Internet Provider has been executed.',
             postExecutionFailureText:
               'Internet Provider has failed to execute.',
-            actionData: 'exec command',
             executable: false,
             device: false,
             actions: [
@@ -249,7 +246,6 @@ export function ensureDefaultDataExists(): void {
             postExecutionSuccessText: 'Instant Messaging has been executed.',
             postExecutionFailureText:
               'Instant Messaging has failed to execute.',
-            actionData: 'exec command',
             executable: false,
             device: false,
             actions: [
@@ -307,7 +303,6 @@ export function ensureDefaultDataExists(): void {
             postExecutionSuccessText: 'File Sharing Service has been executed.',
             postExecutionFailureText:
               'File Sharing Service has failed to execute.',
-            actionData: 'exec command',
             executable: false,
             device: false,
             actions: [
@@ -365,7 +360,6 @@ export function ensureDefaultDataExists(): void {
             postExecutionSuccessText: 'Callbank Cellular has been executed.',
             postExecutionFailureText:
               'Callbank Cellular has failed to execute.',
-            actionData: 'exec command',
             executable: false,
             device: false,
             actions: [
@@ -422,7 +416,6 @@ export function ensureDefaultDataExists(): void {
             preExecutionText: 'Service Provider has not been executed.',
             postExecutionSuccessText: 'Service Provider has been executed.',
             postExecutionFailureText: 'Service Provider has failed to execute.',
-            actionData: 'exec command',
             executable: false,
             device: false,
             actions: [
@@ -458,7 +451,6 @@ export function ensureDefaultDataExists(): void {
             preExecutionText: 'Service Provider has not been executed.',
             postExecutionSuccessText: 'Service Provider has been executed.',
             postExecutionFailureText: 'Service Provider has failed to execute.',
-            actionData: 'exec command',
             executable: false,
             device: false,
             actions: [
@@ -515,7 +507,6 @@ export function ensureDefaultDataExists(): void {
             preExecutionText: 'Service Provider has not been executed.',
             postExecutionSuccessText: 'Service Provider has been executed.',
             postExecutionFailureText: 'Service Provider has failed to execute.',
-            actionData: 'exec command',
             executable: false,
             device: false,
             actions: [
@@ -572,7 +563,6 @@ export function ensureDefaultDataExists(): void {
             preExecutionText: 'Cellular Towers has not been executed.',
             postExecutionSuccessText: 'Cellular Towers has been executed.',
             postExecutionFailureText: 'Cellular Towers has failed to execute.',
-            actionData: 'exec command',
             executable: true,
             device: false,
             actions: [
@@ -629,7 +619,6 @@ export function ensureDefaultDataExists(): void {
             preExecutionText: 'Main Server has not been executed.',
             postExecutionSuccessText: 'Main Server has been executed.',
             postExecutionFailureText: 'Main Server has failed to execute.',
-            actionData: 'exec command',
             executable: true,
             device: true,
             actions: [
@@ -686,7 +675,6 @@ export function ensureDefaultDataExists(): void {
             preExecutionText: 'Main Server has not been executed.',
             postExecutionSuccessText: 'Main Server has been executed.',
             postExecutionFailureText: 'Main Server has failed to execute.',
-            actionData: 'exec command',
             executable: true,
             device: false,
             actions: [
@@ -743,7 +731,6 @@ export function ensureDefaultDataExists(): void {
             preExecutionText: 'Main Server has not been executed.',
             postExecutionSuccessText: 'Main Server has been executed.',
             postExecutionFailureText: 'Main Server has failed to execute.',
-            actionData: 'exec command',
             executable: true,
             device: true,
             actions: [
@@ -800,7 +787,6 @@ export function ensureDefaultDataExists(): void {
             preExecutionText: '',
             postExecutionSuccessText: '',
             postExecutionFailureText: '',
-            actionData: 'exec command',
             executable: false,
             device: false,
             actions: [
@@ -857,7 +843,6 @@ export function ensureDefaultDataExists(): void {
             preExecutionText: 'IADS Network has not been executed.',
             postExecutionSuccessText: 'IADS Network has been executed.',
             postExecutionFailureText: 'IADS Network has failed to execute.',
-            actionData: 'exec command',
             executable: false,
             device: false,
             actions: [
@@ -916,7 +901,6 @@ export function ensureDefaultDataExists(): void {
               'Individual IADS Sites has been executed.',
             postExecutionFailureText:
               'Individual IADS Sites has failed to execute.',
-            actionData: 'exec command',
             executable: false,
             device: false,
             actions: [
@@ -973,7 +957,6 @@ export function ensureDefaultDataExists(): void {
             preExecutionText: 'Launchers has not been executed.',
             postExecutionSuccessText: 'Launchers has been executed.',
             postExecutionFailureText: 'Launchers has failed to execute.',
-            actionData: 'exec command',
             executable: true,
             device: true,
             actions: [
@@ -1030,7 +1013,6 @@ export function ensureDefaultDataExists(): void {
             preExecutionText: 'Radars has not been executed.',
             postExecutionSuccessText: 'Radars has been executed.',
             postExecutionFailureText: 'Radars has failed to execute.',
-            actionData: 'exec command',
             executable: true,
             device: false,
             actions: [
@@ -1087,7 +1069,6 @@ export function ensureDefaultDataExists(): void {
             preExecutionText: '',
             postExecutionSuccessText: '',
             postExecutionFailureText: '',
-            actionData: 'exec command',
             executable: false,
             device: false,
             actions: [
@@ -1144,7 +1125,6 @@ export function ensureDefaultDataExists(): void {
             preExecutionText: 'Railroad System has not been executed.',
             postExecutionSuccessText: 'Railroad System has been executed.',
             postExecutionFailureText: 'Railroad System has failed to execute.',
-            actionData: 'exec command',
             executable: false,
             device: false,
             actions: [
@@ -1202,7 +1182,6 @@ export function ensureDefaultDataExists(): void {
             postExecutionSuccessText: 'Electrical System has been executed.',
             postExecutionFailureText:
               'Electrical System has failed to execute.',
-            actionData: 'exec command',
             executable: false,
             device: false,
             actions: [
@@ -1259,7 +1238,6 @@ export function ensureDefaultDataExists(): void {
             preExecutionText: 'Water System has not been executed.',
             postExecutionSuccessText: 'Water System has been executed.',
             postExecutionFailureText: 'Water System has failed to execute.',
-            actionData: 'exec command',
             executable: false,
             device: false,
             actions: [
@@ -1316,7 +1294,6 @@ export function ensureDefaultDataExists(): void {
             preExecutionText: 'Road System has not been executed.',
             postExecutionSuccessText: 'Road System has been executed.',
             postExecutionFailureText: 'Road System has failed to execute.',
-            actionData: 'exec command',
             executable: false,
             device: false,
             actions: [
@@ -1373,7 +1350,6 @@ export function ensureDefaultDataExists(): void {
             preExecutionText: 'Track Monitoring has not been executed.',
             postExecutionSuccessText: 'Track Monitoring has been executed.',
             postExecutionFailureText: 'Track Monitoring has failed to execute.',
-            actionData: 'exec command',
             executable: true,
             device: false,
             actions: [
@@ -1431,7 +1407,6 @@ export function ensureDefaultDataExists(): void {
             postExecutionSuccessText: 'Track Switch System has been executed.',
             postExecutionFailureText:
               'Track Switch System has failed to execute.',
-            actionData: 'exec command',
             executable: true,
             device: true,
             actions: [
@@ -1488,7 +1463,6 @@ export function ensureDefaultDataExists(): void {
             preExecutionText: 'Regional Service has not been executed.',
             postExecutionSuccessText: 'Regional Service has been executed.',
             postExecutionFailureText: 'Regional Service has failed to execute.',
-            actionData: 'exec command',
             executable: true,
             device: false,
             actions: [
@@ -1545,7 +1519,6 @@ export function ensureDefaultDataExists(): void {
             preExecutionText: 'Valve System has not been executed.',
             postExecutionSuccessText: 'Valve System has been executed.',
             postExecutionFailureText: 'Valve System has failed to execute.',
-            actionData: 'exec command',
             executable: true,
             device: true,
             actions: [
@@ -1603,7 +1576,6 @@ export function ensureDefaultDataExists(): void {
             postExecutionSuccessText: 'Traffic Light System has been executed.',
             postExecutionFailureText:
               'Traffic Light System has failed to execute.',
-            actionData: 'exec command',
             executable: true,
             device: false,
             actions: [
@@ -1660,7 +1632,6 @@ export function ensureDefaultDataExists(): void {
             preExecutionText: 'CCTV System has not been executed.',
             postExecutionSuccessText: 'CCTV System has been executed.',
             postExecutionFailureText: 'CCTV System has failed to execute.',
-            actionData: 'exec command',
             executable: true,
             device: true,
             actions: [
@@ -1717,7 +1688,6 @@ export function ensureDefaultDataExists(): void {
             preExecutionText: '',
             postExecutionSuccessText: '',
             postExecutionFailureText: '',
-            actionData: 'exec command',
             executable: false,
             device: false,
             actions: [
@@ -1775,7 +1745,6 @@ export function ensureDefaultDataExists(): void {
             postExecutionSuccessText: 'Global Positioning has been executed.',
             postExecutionFailureText:
               'Global Positioning has failed to execute.',
-            actionData: 'exec command',
             executable: true,
             device: true,
             actions: [
@@ -1832,7 +1801,6 @@ export function ensureDefaultDataExists(): void {
             preExecutionText: 'Data Transfer has not been executed.',
             postExecutionSuccessText: 'Data Transfer has been executed.',
             postExecutionFailureText: 'Data Transfer has failed to execute.',
-            actionData: 'exec command',
             executable: true,
             device: false,
             actions: [
@@ -1890,7 +1858,6 @@ export function ensureDefaultDataExists(): void {
             postExecutionSuccessText: 'Imagery Collection has been executed.',
             postExecutionFailureText:
               'Imagery Collection has failed to execute.',
-            actionData: 'exec command',
             executable: true,
             device: true,
             actions: [
@@ -1948,7 +1915,6 @@ export function ensureDefaultDataExists(): void {
             postExecutionSuccessText: 'Sensor Observation has been executed.',
             postExecutionFailureText:
               'Sensor Observation has failed to execute.',
-            actionData: 'exec command',
             executable: true,
             device: false,
             actions: [
@@ -2037,7 +2003,6 @@ export function ensureDefaultDataExists(): void {
             preExecutionText: '',
             postExecutionSuccessText: '',
             postExecutionFailureText: '',
-            actionData: 'exec command',
             executable: false,
             device: false,
             actions: [
@@ -2094,7 +2059,6 @@ export function ensureDefaultDataExists(): void {
             preExecutionText: 'Cellular Network has not been executed.',
             postExecutionSuccessText: 'Cellular Network succeeded.',
             postExecutionFailureText: 'Cellular Network failed.',
-            actionData: 'exec command',
             executable: false,
             device: false,
             actions: [
@@ -2152,7 +2116,6 @@ export function ensureDefaultDataExists(): void {
             postExecutionSuccessText: 'Internet Provider has been executed.',
             postExecutionFailureText:
               'Internet Provider has failed to execute.',
-            actionData: 'exec command',
             executable: false,
             device: false,
             actions: [
@@ -2210,7 +2173,6 @@ export function ensureDefaultDataExists(): void {
             postExecutionSuccessText: 'Instant Messaging has been executed.',
             postExecutionFailureText:
               'Instant Messaging has failed to execute.',
-            actionData: 'exec command',
             executable: false,
             device: false,
             actions: [
@@ -2268,7 +2230,6 @@ export function ensureDefaultDataExists(): void {
             postExecutionSuccessText: 'File Sharing Service has been executed.',
             postExecutionFailureText:
               'File Sharing Service has failed to execute.',
-            actionData: 'exec command',
             executable: false,
             device: false,
             actions: [
@@ -2326,7 +2287,6 @@ export function ensureDefaultDataExists(): void {
             postExecutionSuccessText: 'Callbank Cellular has been executed.',
             postExecutionFailureText:
               'Callbank Cellular has failed to execute.',
-            actionData: 'exec command',
             executable: false,
             device: false,
             actions: [
@@ -2383,7 +2343,6 @@ export function ensureDefaultDataExists(): void {
             preExecutionText: 'Service Provider has not been executed.',
             postExecutionSuccessText: 'Service Provider has been executed.',
             postExecutionFailureText: 'Service Provider has failed to execute.',
-            actionData: 'exec command',
             executable: false,
             device: false,
             actions: [
@@ -2419,7 +2378,6 @@ export function ensureDefaultDataExists(): void {
             preExecutionText: 'Service Provider has not been executed.',
             postExecutionSuccessText: 'Service Provider has been executed.',
             postExecutionFailureText: 'Service Provider has failed to execute.',
-            actionData: 'exec command',
             executable: false,
             device: false,
             actions: [
@@ -2476,7 +2434,6 @@ export function ensureDefaultDataExists(): void {
             preExecutionText: 'Service Provider has not been executed.',
             postExecutionSuccessText: 'Service Provider has been executed.',
             postExecutionFailureText: 'Service Provider has failed to execute.',
-            actionData: 'exec command',
             executable: false,
             device: false,
             actions: [
@@ -2533,7 +2490,6 @@ export function ensureDefaultDataExists(): void {
             preExecutionText: 'Cellular Towers has not been executed.',
             postExecutionSuccessText: 'Cellular Towers has been executed.',
             postExecutionFailureText: 'Cellular Towers has failed to execute.',
-            actionData: 'exec command',
             executable: true,
             device: false,
             actions: [
@@ -2590,7 +2546,6 @@ export function ensureDefaultDataExists(): void {
             preExecutionText: 'Main Server has not been executed.',
             postExecutionSuccessText: 'Main Server has been executed.',
             postExecutionFailureText: 'Main Server has failed to execute.',
-            actionData: 'exec command',
             executable: true,
             device: true,
             actions: [
@@ -2647,7 +2602,6 @@ export function ensureDefaultDataExists(): void {
             preExecutionText: 'Main Server has not been executed.',
             postExecutionSuccessText: 'Main Server has been executed.',
             postExecutionFailureText: 'Main Server has failed to execute.',
-            actionData: 'exec command',
             executable: true,
             device: false,
             actions: [
@@ -2704,7 +2658,6 @@ export function ensureDefaultDataExists(): void {
             preExecutionText: 'Main Server has not been executed.',
             postExecutionSuccessText: 'Main Server has been executed.',
             postExecutionFailureText: 'Main Server has failed to execute.',
-            actionData: 'exec command',
             executable: true,
             device: true,
             actions: [
@@ -2761,7 +2714,6 @@ export function ensureDefaultDataExists(): void {
             preExecutionText: '',
             postExecutionSuccessText: '',
             postExecutionFailureText: '',
-            actionData: 'exec command',
             executable: false,
             device: false,
             actions: [
@@ -2818,7 +2770,6 @@ export function ensureDefaultDataExists(): void {
             preExecutionText: 'IADS Network has not been executed.',
             postExecutionSuccessText: 'IADS Network has been executed.',
             postExecutionFailureText: 'IADS Network has failed to execute.',
-            actionData: 'exec command',
             executable: false,
             device: false,
             actions: [
@@ -2877,7 +2828,6 @@ export function ensureDefaultDataExists(): void {
               'Individual IADS Sites has been executed.',
             postExecutionFailureText:
               'Individual IADS Sites has failed to execute.',
-            actionData: 'exec command',
             executable: false,
             device: false,
             actions: [
@@ -2934,7 +2884,6 @@ export function ensureDefaultDataExists(): void {
             preExecutionText: 'Launchers has not been executed.',
             postExecutionSuccessText: 'Launchers has been executed.',
             postExecutionFailureText: 'Launchers has failed to execute.',
-            actionData: 'exec command',
             executable: true,
             device: false,
             actions: [
@@ -2991,7 +2940,6 @@ export function ensureDefaultDataExists(): void {
             preExecutionText: 'Radars has not been executed.',
             postExecutionSuccessText: 'Radars has been executed.',
             postExecutionFailureText: 'Radars has failed to execute.',
-            actionData: 'exec command',
             executable: true,
             device: false,
             actions: [
@@ -3048,7 +2996,6 @@ export function ensureDefaultDataExists(): void {
             preExecutionText: '',
             postExecutionSuccessText: '',
             postExecutionFailureText: '',
-            actionData: 'exec command',
             executable: false,
             device: false,
             actions: [
@@ -3105,7 +3052,6 @@ export function ensureDefaultDataExists(): void {
             preExecutionText: 'Railroad System has not been executed.',
             postExecutionSuccessText: 'Railroad System has been executed.',
             postExecutionFailureText: 'Railroad System has failed to execute.',
-            actionData: 'exec command',
             executable: false,
             device: false,
             actions: [
@@ -3163,7 +3109,6 @@ export function ensureDefaultDataExists(): void {
             postExecutionSuccessText: 'Electrical System has been executed.',
             postExecutionFailureText:
               'Electrical System has failed to execute.',
-            actionData: 'exec command',
             executable: false,
             device: false,
             actions: [
@@ -3220,7 +3165,6 @@ export function ensureDefaultDataExists(): void {
             preExecutionText: 'Water System has not been executed.',
             postExecutionSuccessText: 'Water System has been executed.',
             postExecutionFailureText: 'Water System has failed to execute.',
-            actionData: 'exec command',
             executable: false,
             device: false,
             actions: [
@@ -3277,7 +3221,6 @@ export function ensureDefaultDataExists(): void {
             preExecutionText: 'Road System has not been executed.',
             postExecutionSuccessText: 'Road System has been executed.',
             postExecutionFailureText: 'Road System has failed to execute.',
-            actionData: 'exec command',
             executable: false,
             device: false,
             actions: [
@@ -3334,7 +3277,6 @@ export function ensureDefaultDataExists(): void {
             preExecutionText: 'Track Monitoring has not been executed.',
             postExecutionSuccessText: 'Track Monitoring has been executed.',
             postExecutionFailureText: 'Track Monitoring has failed to execute.',
-            actionData: 'exec command',
             executable: true,
             device: false,
             actions: [
@@ -3392,7 +3334,6 @@ export function ensureDefaultDataExists(): void {
             postExecutionSuccessText: 'Track Switch System has been executed.',
             postExecutionFailureText:
               'Track Switch System has failed to execute.',
-            actionData: 'exec command',
             executable: true,
             device: true,
             actions: [
@@ -3449,7 +3390,6 @@ export function ensureDefaultDataExists(): void {
             preExecutionText: 'Regional Service has not been executed.',
             postExecutionSuccessText: 'Regional Service has been executed.',
             postExecutionFailureText: 'Regional Service has failed to execute.',
-            actionData: 'exec command',
             executable: true,
             device: false,
             actions: [
@@ -3506,7 +3446,6 @@ export function ensureDefaultDataExists(): void {
             preExecutionText: 'Valve System has not been executed.',
             postExecutionSuccessText: 'Valve System has been executed.',
             postExecutionFailureText: 'Valve System has failed to execute.',
-            actionData: 'exec command',
             executable: true,
             device: true,
             actions: [
@@ -3564,7 +3503,6 @@ export function ensureDefaultDataExists(): void {
             postExecutionSuccessText: 'Traffic Light System has been executed.',
             postExecutionFailureText:
               'Traffic Light System has failed to execute.',
-            actionData: 'exec command',
             executable: true,
             device: false,
             actions: [
@@ -3621,7 +3559,6 @@ export function ensureDefaultDataExists(): void {
             preExecutionText: 'CCTV System has not been executed.',
             postExecutionSuccessText: 'CCTV System has been executed.',
             postExecutionFailureText: 'CCTV System has failed to execute.',
-            actionData: 'exec command',
             executable: true,
             device: true,
             actions: [
@@ -3678,7 +3615,6 @@ export function ensureDefaultDataExists(): void {
             preExecutionText: '',
             postExecutionSuccessText: '',
             postExecutionFailureText: '',
-            actionData: 'exec command',
             executable: false,
             device: false,
             actions: [
@@ -3736,7 +3672,6 @@ export function ensureDefaultDataExists(): void {
             postExecutionSuccessText: 'Global Positioning has been executed.',
             postExecutionFailureText:
               'Global Positioning has failed to execute.',
-            actionData: 'exec command',
             executable: true,
             device: true,
             actions: [
@@ -3793,7 +3728,6 @@ export function ensureDefaultDataExists(): void {
             preExecutionText: 'Data Transfer has not been executed.',
             postExecutionSuccessText: 'Data Transfer has been executed.',
             postExecutionFailureText: 'Data Transfer has failed to execute.',
-            actionData: 'exec command',
             executable: true,
             device: false,
             actions: [
@@ -3851,7 +3785,6 @@ export function ensureDefaultDataExists(): void {
             postExecutionSuccessText: 'Imagery Collection has been executed.',
             postExecutionFailureText:
               'Imagery Collection has failed to execute.',
-            actionData: 'exec command',
             executable: true,
             device: true,
             actions: [
@@ -3909,7 +3842,6 @@ export function ensureDefaultDataExists(): void {
             postExecutionSuccessText: 'Sensor Observation has been executed.',
             postExecutionFailureText:
               'Sensor Observation has failed to execute.',
-            actionData: 'exec command',
             executable: true,
             device: false,
             actions: [

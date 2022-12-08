@@ -4,7 +4,10 @@
 // purpose of the target
 
 import { Mission } from './missions'
-import { MissionNodeAction } from './mission-node-actions'
+import {
+  IMissionNodeActionJSON,
+  MissionNodeAction,
+} from './mission-node-actions'
 import { AnyObject } from './toolbox/objects'
 
 // property past.
@@ -25,7 +28,7 @@ export interface IMissionNodeJson {
   preExecutionText: string
   postExecutionSuccessText: string
   postExecutionFailureText: string
-  actionData: string
+  actions: string
   executable: boolean
   nodeActionItems: Array<{
     text: string
@@ -68,7 +71,7 @@ export class MissionNode {
     'Node has failed to execute.'
   static default_executable: boolean = false
   static default_device: boolean = false
-  static default_actionData: Array<AnyObject> = []
+  static default_actions: Array<IMissionNodeActionJSON> = []
   static default_mapX: number = 0
   static default_mapY: number = 0
 
@@ -115,7 +118,7 @@ export class MissionNode {
     postExecutionFailureText: string,
     executable: boolean,
     device: boolean,
-    actionData: Array<AnyObject>,
+    actionJSON: Array<IMissionNodeActionJSON>,
     mapX: number,
     mapY: number,
   ) {
@@ -138,16 +141,16 @@ export class MissionNode {
     this.depth = -1
     this._isExpanded = false
 
-    this.parseActionData(actionData)
+    this.parseActionJSON(actionJSON)
   }
 
   // This will turn the action data
   // into new MissionNodeAction objects.
-  parseActionData(actionData: Array<AnyObject>): void {
+  parseActionJSON(actionJSON: Array<AnyObject>): void {
     let actions = []
 
-    for (let actionDatum of actionData) {
-      let nodeAction: MissionNodeAction = new MissionNodeAction(
+    for (let actionDatum of actionJSON) {
+      let actionObject: MissionNodeAction = new MissionNodeAction(
         this,
         actionDatum.actionID,
         actionDatum.name,
@@ -155,7 +158,7 @@ export class MissionNode {
         actionDatum.processTime,
         actionDatum.successChance,
       )
-      actions.push(nodeAction)
+      actions.push(actionObject)
     }
 
     this.actions = actions
