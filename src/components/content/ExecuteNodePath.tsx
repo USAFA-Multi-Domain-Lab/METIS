@@ -23,15 +23,13 @@ const ExecuteNodePath = (props: {
 }) => {
   let mission: Mission = props.mission
   let selectedNode: MissionNode | null | undefined = props.selectedNode
-  const consoleOutputs = props.consoleOutputs
-  const setConsoleOutputs = props.setConsoleOutputs
-  const setExecuteNodePathPromptIsDisplayed =
+  let consoleOutputs = props.consoleOutputs
+  let setConsoleOutputs = props.setConsoleOutputs
+  let setExecuteNodePathPromptIsDisplayed =
     props.setExecuteNodePathPromptIsDisplayed
-  const setActionSelectionPromptIsDisplayed =
+  let setActionSelectionPromptIsDisplayed =
     props.setActionSelectionPromptIsDisplayed
-
-  const processTime = props.processTime
-
+  let processTime = props.processTime
   let actionName: string | undefined = props.selectedNode?.selectedAction?.name
 
   /* -- COMPONENT STATE -- */
@@ -55,15 +53,12 @@ const ExecuteNodePath = (props: {
         let spendResources: number = mission.resources - resourceCost
         if (spendResources >= 0) {
           mission.resources = spendResources
+          runNodeLoadingBar(processTime)
 
           selectedNode.execute((success: boolean) => {
             // Output message in the terminal which differs based on whether
             // it passes or fails
-            if (
-              success &&
-              selectedAction?.postExecutionSuccessText !== '' &&
-              selectedAction?.postExecutionSuccessText !== null
-            ) {
+            if (success) {
               gameLogic.handleNodeSelection(selectedNode)
 
               setConsoleOutputs([
@@ -79,11 +74,7 @@ const ExecuteNodePath = (props: {
                      }</span>`,
                 },
               ])
-            } else if (
-              !success &&
-              selectedAction?.postExecutionFailureText !== '' &&
-              selectedAction?.postExecutionFailureText !== null
-            ) {
+            } else if (!success) {
               setConsoleOutputs([
                 ...consoleOutputs,
                 {
@@ -105,7 +96,6 @@ const ExecuteNodePath = (props: {
             3500,
           )
         }
-        runNodeLoadingBar(processTime)
       } else if (resourceCost === undefined) {
         console.error(`The selected action's resource cost is undefined.`)
       } else {
