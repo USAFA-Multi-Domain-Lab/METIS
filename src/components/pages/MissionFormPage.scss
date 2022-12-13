@@ -154,14 +154,14 @@ $background-bar: linear-gradient(
           .Text {
             color: $color-accent-light;
             font-weight: 400;
+
+            &:hover {
+              cursor: pointer;
+            }
           }
 
           .RightBracket {
             color: $color-main;
-          }
-
-          &:hover {
-            cursor: pointer;
           }
         }
       }

@@ -63,6 +63,7 @@ export default function MissionFormPage(
     useState<boolean>(false)
   const [existsInDatabase, setExistsInDatabase] = useState<boolean>(false)
   const [displayedAction, setDisplayedAction] = useState<number>(0)
+  const [emptyStringArray, setEmptyStringArray] = useState<Array<string>>([])
 
   /* -- COMPONENT EFFECTS -- */
 
@@ -127,8 +128,16 @@ export default function MissionFormPage(
     // This is called when a change is
     // made that would require saving.
     const handleChange = (): void => {
-      setAreUnsavedChanges(true)
-      forceUpdate()
+      if (emptyStringArray.length === 0) {
+        setAreUnsavedChanges(true)
+        forceUpdate()
+      } else {
+        setAreUnsavedChanges(false)
+        appActions.notify(
+          `**Error:** The node called "${selectedNode?.name.toLowerCase()}" has at least one field that was left empty. This field must contain at least one character.`,
+          null,
+        )
+      }
     }
 
     // This is called to save any changes
@@ -331,56 +340,32 @@ export default function MissionFormPage(
             handleNodeSelection={(node: MissionNode) => {
               setDisplayedAction(0)
 
-              if (selectedNode !== null) {
-                if (selectedNode.nodeID !== node.nodeID) {
+              if (selectedNode !== null && selectedNode.executable) {
+                if (
+                  selectedNode.nodeID !== node.nodeID &&
+                  emptyStringArray.length === 0
+                ) {
                   selectNode(node)
-                } else {
+                } else if (
+                  selectedNode.nodeID === node.nodeID &&
+                  emptyStringArray.length === 0
+                ) {
                   selectNode(null)
+                } else {
+                  appActions.notify(
+                    `**Error:** The node called "${selectedNode.name.toLowerCase()}" has at least one field that was left empty. This field must contain at least one character.`,
+                    null,
+                  )
                 }
+              } else if (
+                selectedNode !== null &&
+                selectedNode.nodeID === node.nodeID &&
+                !selectedNode.executable
+              ) {
+                selectNode(null)
               } else {
                 selectNode(node)
               }
-
-              // if (selectedNode !== null && selectedNode.executable) {
-              //   // Logic to make sure the instructor knows that the post-execution text has to have at least one character. It cannot be an empty string or set as null.
-              //   let emptyPostExecutionTextArray: Array<string> = []
-
-              //   for (let action of selectedNode.actions) {
-              //     if (
-              //       action.postExecutionSuccessText !== null &&
-              //       action.postExecutionSuccessText !== ''
-              //     ) {
-              //       emptyPostExecutionTextArray.push(
-              //         action.postExecutionSuccessText,
-              //       )
-              //     } else if (
-              //       action.postExecutionFailureText !== null &&
-              //       action.postExecutionFailureText !== ''
-              //     ) {
-              //       emptyPostExecutionTextArray.push(
-              //         action.postExecutionFailureText,
-              //       )
-              //     } else {
-              //       appActions.notify(
-              //         `${selectedNode.name} has an action called "${action.name}" with a post-execution text that is empty and requires at least one character.`,
-              //         null,
-              //       )
-              //     }
-              //   }
-
-              //   if (
-              //     emptyPostExecutionTextArray.length ===
-              //     selectedNode.actions.length
-              //   ) {
-              //     if (selectedNode.nodeID !== node.nodeID) {
-              //       selectNode(node)
-              //     } else {
-              //       selectNode(null)
-              //     }
-              //   }
-              // } else {
-              //   selectNode(node)
-              // }
               activateNodeStructuring(false)
 
               if (
@@ -434,6 +419,8 @@ export default function MissionFormPage(
           <MissionDetails
             active={selectedNode === null && !nodeStructuringIsActive}
             mission={mission}
+            emptyStringArray={emptyStringArray}
+            setEmptyStringArray={setEmptyStringArray}
             handleChange={handleChange}
           />
           <NodeEntry
@@ -441,13 +428,17 @@ export default function MissionFormPage(
             appActions={appActions}
             displayedAction={displayedAction}
             setDisplayedAction={setDisplayedAction}
+            emptyStringArray={emptyStringArray}
+            setEmptyStringArray={setEmptyStringArray}
             handleChange={handleChange}
             handleDeleteRequest={() => {
               if (selectedNode !== null) {
                 handleNodeDeleteRequest(selectedNode)
               }
             }}
-            handleCloseRequest={() => selectNode(null)}
+            handleCloseRequest={() => {
+              selectNode(null)
+            }}
           />
           <NodeStructuring
             active={nodeStructuringIsActive}
@@ -468,11 +459,24 @@ export default function MissionFormPage(
 function MissionDetails(props: {
   active: boolean
   mission: Mission
+  emptyStringArray: Array<string>
+  setEmptyStringArray: (emptyStringArray: Array<string>) => void
   handleChange: () => void
 }): JSX.Element | null {
   let active: boolean = props.active
   let mission: Mission = props.mission
+  let emptyStringArray: Array<string> = props.emptyStringArray
+  let setEmptyStringArray = props.setEmptyStringArray
   let handleChange = props.handleChange
+
+  /* -- COMPONENT FUNCTIONS -- */
+  const removeEmptyString = (field: string) => {
+    emptyStringArray.map((emptyString: string, index: number) => {
+      if (emptyString === `missionID=${mission.missionID}_field=${field}`) {
+        emptyStringArray.splice(index, 1)
+      }
+    })
+  }
 
   if (active) {
     return (
@@ -482,8 +486,16 @@ function MissionDetails(props: {
             label='Name'
             initialValue={mission.name}
             deliverValue={(name: string) => {
-              mission.name = name
-              handleChange()
+              if (name !== '') {
+                mission.name = name
+                removeEmptyString('name')
+                handleChange()
+              } else {
+                setEmptyStringArray([
+                  ...emptyStringArray,
+                  `missionID=${mission.missionID}_field=name`,
+                ])
+              }
             }}
             key={`${mission.missionID}_name`}
           />
@@ -521,6 +533,8 @@ function NodeEntry(props: {
   appActions: AppActions
   displayedAction: number
   setDisplayedAction: (displayedAction: number) => void
+  emptyStringArray: Array<string>
+  setEmptyStringArray: (emptyStringArray: Array<string>) => void
   handleChange: () => void
   handleDeleteRequest: () => void
   handleCloseRequest: () => void
@@ -529,6 +543,8 @@ function NodeEntry(props: {
   let appActions: AppActions = props.appActions
   let displayedAction: number = props.displayedAction
   let setDisplayedAction = props.setDisplayedAction
+  let emptyStringArray: Array<string> = props.emptyStringArray
+  let setEmptyStringArray = props.setEmptyStringArray
   let handleChange = props.handleChange
   let handleDeleteRequest = props.handleDeleteRequest
   let handleCloseRequest = props.handleCloseRequest
@@ -560,6 +576,17 @@ function NodeEntry(props: {
     } else {
       setDisplayedAction(displayedAction - 1)
     }
+  }
+
+  const removeEmptyString = (field: string) => {
+    emptyStringArray.map((emptyString: string, index: number) => {
+      if (
+        node !== null &&
+        emptyString === `nodeID=${node.nodeID}_field=${field}`
+      ) {
+        emptyStringArray.splice(index, 1)
+      }
+    })
   }
 
   /* -- RENDER -- */
@@ -608,10 +635,15 @@ function NodeEntry(props: {
               label='Name'
               initialValue={node.name}
               deliverValue={(name: string) => {
-                if (node !== null) {
+                if (node !== null && name !== '') {
                   node.name = name
-
+                  removeEmptyString('name')
                   handleChange()
+                } else if (node !== null) {
+                  setEmptyStringArray([
+                    ...emptyStringArray,
+                    `nodeID=${node.nodeID}_field=name`,
+                  ])
                 }
               }}
               key={`${node.nodeID}_name`}
@@ -654,12 +686,11 @@ function NodeEntry(props: {
               <Tooltip description='Shade all descendant nodes this color as well.' />
             </div>
             <DetailBox
-              label='Pre-Execution Text'
+              label='Pre-Execution Text (optional)'
               initialValue={node.preExecutionText}
               deliverValue={(preExecutionText: string) => {
                 if (node !== null) {
                   node.preExecutionText = preExecutionText
-
                   handleChange()
                 }
               }}
@@ -673,10 +704,7 @@ function NodeEntry(props: {
                   node.executable = executable
 
                   if (executable && node.actions.length === 0) {
-                    // Checks to make sure the selected node has at least
-                    // one action to choose from. If the selected node doesn't
-                    // have at least one action then it will auto-generate one
-                    // for that node.
+                    // Checks to make sure the selected node has at least one action to choose from. If the selected node does not have at least one action then it will auto-generate one for that node.
                     let newActionArray: Array<MissionNodeAction> = [
                       new MissionNodeAction(
                         node,
@@ -701,14 +729,31 @@ function NodeEntry(props: {
 
                 handleChange()
               }}
+              lockState={
+                emptyStringArray.length === 0
+                  ? EToggleLockState.Unlocked
+                  : emptyStringArray.length > 0 && node.executable
+                  ? EToggleLockState.LockedActivation
+                  : emptyStringArray.length > 0 && !node.executable
+                  ? EToggleLockState.LockedDeactivation
+                  : EToggleLockState.Unlocked
+              }
               key={`${node.nodeID}_executable`}
             />
             <DetailToggle
               label={'Device'}
               initialValue={node.device}
               lockState={
-                node.executable
+                emptyStringArray.length === 0 && node.executable
                   ? EToggleLockState.Unlocked
+                  : emptyStringArray.length > 0 &&
+                    node.executable &&
+                    node.device
+                  ? EToggleLockState.LockedActivation
+                  : emptyStringArray.length > 0 &&
+                    node.executable &&
+                    !node.device
+                  ? EToggleLockState.LockedDeactivation
                   : EToggleLockState.LockedDeactivation
               }
               deliverValue={(device: boolean) => {
@@ -720,9 +765,9 @@ function NodeEntry(props: {
               key={`${node.nodeID}_device`}
             />
             <div className='DeleteNodeContainer'>
-              <div className='DeleteNode' onClick={handleDeleteRequest}>
+              <div className='DeleteNode'>
                 [{' '}
-                <span className='Text'>
+                <span className='Text' onClick={handleDeleteRequest}>
                   Delete Node <span className='RightBracket'>]</span>
                   <Tooltip description='Delete this node.' />
                 </span>
@@ -747,6 +792,8 @@ function NodeEntry(props: {
               node={node}
               appActions={appActions}
               setDisplayedAction={setDisplayedAction}
+              emptyStringArray={emptyStringArray}
+              setEmptyStringArray={setEmptyStringArray}
               handleChange={handleChange}
               key={actionKey}
             />
@@ -804,6 +851,8 @@ function NodeAction(props: {
   appActions: AppActions
   handleChange: () => void
   setDisplayedAction: (displayedAction: number) => void
+  emptyStringArray: Array<string>
+  setEmptyStringArray: (emptyStringArray: Array<string>) => void
 }): JSX.Element | null {
   let action: MissionNodeAction = props.action
   let node: MissionNode = props.node
@@ -811,10 +860,21 @@ function NodeAction(props: {
   let handleChange: () => void = props.handleChange
   let setDisplayedAction: (displayedAction: number) => void =
     props.setDisplayedAction
+  let emptyStringArray: Array<string> = props.emptyStringArray
+  let setEmptyStringArray = props.setEmptyStringArray
   let nodeActionClassName: string = 'NodeAction'
   let deleteActionClassName: string = 'Delete'
   let addNewActionClassName: string = ''
   let addNewActionTooltipDescription: string = ''
+
+  /* -- COMPONENT FUNCTIONS -- */
+  const removeEmptyString = (field: string) => {
+    emptyStringArray.map((emptyString: string, index: number) => {
+      if (emptyString === `actionID=${action.actionID}_field=${field}`) {
+        emptyStringArray.splice(index, 1)
+      }
+    })
+  }
 
   /* -- RENDER -- */
   if (node !== null && !node.executable) {
@@ -840,17 +900,35 @@ function NodeAction(props: {
           label='Name'
           initialValue={action.name}
           deliverValue={(name: string) => {
-            action.name = name
-            handleChange()
+            if (name !== '') {
+              action.name = name
+              removeEmptyString('name')
+              handleChange()
+            } else {
+              setEmptyStringArray([
+                ...emptyStringArray,
+                `actionID=${action.actionID}_field=name`,
+              ])
+            }
           }}
           key={`${action.actionID}_name`}
         />
         <DetailBox
           label='Description'
           initialValue={action.description}
+          appActions={appActions}
+          selectedNode={node}
           deliverValue={(description: string) => {
-            action.description = description
-            handleChange()
+            if (description !== '') {
+              action.description = description
+              removeEmptyString('description')
+              handleChange()
+            } else {
+              setEmptyStringArray([
+                ...emptyStringArray,
+                `actionID=${action.actionID}_field=description`,
+              ])
+            }
           }}
           key={`${action.actionID}_description`}
         />
@@ -903,16 +981,16 @@ function NodeAction(props: {
           initialValue={action.postExecutionSuccessText}
           appActions={appActions}
           selectedNode={node}
-          action={action}
           deliverValue={(postExecutionSuccessText: string) => {
-            if (
-              postExecutionSuccessText !== null &&
-              postExecutionSuccessText !== '' &&
-              postExecutionSuccessText !== action.postExecutionSuccessText
-            ) {
+            if (postExecutionSuccessText !== '') {
               action.postExecutionSuccessText = postExecutionSuccessText
-
+              removeEmptyString('postExecutionSuccessText')
               handleChange()
+            } else {
+              setEmptyStringArray([
+                ...emptyStringArray,
+                `actionID=${action.actionID}_field=postExecutionSuccessText`,
+              ])
             }
           }}
           key={`${action.actionID}_postExecutionSuccessText`}
@@ -922,16 +1000,16 @@ function NodeAction(props: {
           initialValue={action.postExecutionFailureText}
           appActions={appActions}
           selectedNode={node}
-          action={action}
           deliverValue={(postExecutionFailureText: string) => {
-            if (
-              postExecutionFailureText !== null &&
-              postExecutionFailureText !== '' &&
-              postExecutionFailureText !== action.postExecutionFailureText
-            ) {
+            if (postExecutionFailureText !== '') {
               action.postExecutionFailureText = postExecutionFailureText
-
+              removeEmptyString('postExecutionFailureText')
               handleChange()
+            } else {
+              setEmptyStringArray([
+                ...emptyStringArray,
+                `actionID=${action.actionID}_field=postExecutionFailureText`,
+              ])
             }
           }}
           key={`${action.actionID}_postExecutionFailureText`}

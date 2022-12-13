@@ -20,10 +20,9 @@ const ExecuteNodePath = (props: {
     executeNodePathPromptIsDisplayed: boolean,
   ) => void
   processTime: number
-  actionDisplay: Array<MissionNodeAction>
-  setActionDisplay: (actionDisplay: Array<MissionNodeAction>) => void
 }) => {
   let mission: Mission = props.mission
+  let selectedNode: MissionNode | null | undefined = props.selectedNode
   const consoleOutputs = props.consoleOutputs
   const setConsoleOutputs = props.setConsoleOutputs
   const setExecuteNodePathPromptIsDisplayed =
@@ -32,8 +31,6 @@ const ExecuteNodePath = (props: {
     props.setActionSelectionPromptIsDisplayed
 
   const processTime = props.processTime
-  const actionDisplay = props.actionDisplay
-  const setActionDisplay = props.setActionDisplay
 
   let actionName: string | undefined = props.selectedNode?.selectedAction?.name
 
@@ -44,7 +41,6 @@ const ExecuteNodePath = (props: {
   // Closes the execution prompt window
   const closeWindow = (): void => {
     setExecuteNodePathPromptIsDisplayed(false)
-    setActionDisplay([])
   }
 
   const execute = () => {
@@ -57,7 +53,7 @@ const ExecuteNodePath = (props: {
         setExecuteNodePathPromptIsDisplayed(false)
 
         let spendResources: number = mission.resources - resourceCost
-        if (spendResources > 0) {
+        if (spendResources >= 0) {
           mission.resources = spendResources
 
           selectedNode.execute((success: boolean) => {
@@ -110,7 +106,6 @@ const ExecuteNodePath = (props: {
           )
         }
         runNodeLoadingBar(processTime)
-        setActionDisplay([])
       } else if (resourceCost === undefined) {
         console.error(`The selected action's resource cost is undefined.`)
       } else {
@@ -120,7 +115,7 @@ const ExecuteNodePath = (props: {
   }
 
   const selectAlternativeAction = () => {
-    if (actionDisplay.length > 1) {
+    if (selectedNode && selectedNode.actions.length > 1) {
       setExecuteNodePathPromptIsDisplayed(false)
       setActionSelectionPromptIsDisplayed(true)
     }
@@ -136,7 +131,7 @@ const ExecuteNodePath = (props: {
   if (mission.resources <= 0) {
     executionButtonClassName += ' disabled'
     displayTooltip = true
-  } else if (actionDisplay.length === 1) {
+  } else if (selectedNode && selectedNode.actions.length === 1) {
     additionalActionButtonClassName += ' disabled'
   }
 

@@ -1,7 +1,6 @@
 // This will render a detail for
 // a form, with a label and a text
 
-import { initial } from 'lodash'
 import React from 'react'
 import { useEffect, useRef, useState } from 'react'
 import { MissionNodeAction } from '../../modules/mission-node-actions'
@@ -15,6 +14,9 @@ import Tooltip from './Tooltip'
 interface IDetail {
   label: string
   initialValue: string
+  appActions?: AppActions
+  selectedNode?: MissionNode
+  action?: MissionNodeAction
   deliverValue: (value: string) => void
 }
 
@@ -23,6 +25,7 @@ interface IDetail_S {}
 // field for entering information.
 export class Detail extends React.Component<IDetail, IDetail_S> {
   field: React.RefObject<HTMLInputElement> = React.createRef()
+  state = { isEmptyString: false }
 
   // inherited
   componentDidMount(): void {
@@ -39,18 +42,42 @@ export class Detail extends React.Component<IDetail, IDetail_S> {
     let label: string = this.props.label
     let initialValue: string = this.props.initialValue
     let deliverValue = this.props.deliverValue
+    let fieldErrorClassName: string
+    let labelClassName: string
+    let fieldClassName: string
+
+    if (!this.state.isEmptyString) {
+      fieldErrorClassName = 'FieldErrorMessage hide'
+      labelClassName = 'Label'
+      fieldClassName = 'Field'
+    } else {
+      fieldErrorClassName = 'FieldErrorMessage'
+      labelClassName = ' Label Error'
+      fieldClassName = 'Field Error'
+    }
 
     return (
       <div className='Detail'>
-        <div className='Label'>{`${label}:`}</div>
+        <div className={labelClassName}>{`${label}:`}</div>
         <input
-          className='Field'
+          className={fieldClassName}
           type='text'
           ref={this.field}
           onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
             deliverValue(event.target.value)
+            this.setState({ isEmptyString: false })
+          }}
+          onBlur={(event: React.FocusEvent) => {
+            let target: HTMLInputElement = event.target as HTMLInputElement
+
+            if (target.value === '') {
+              this.setState({ isEmptyString: true })
+            }
           }}
         />
+        <div className={fieldErrorClassName}>
+          At least one character is required here.
+        </div>
       </div>
     )
   }
@@ -164,18 +191,22 @@ export function DetailBox(props: {
   selectedNode?: MissionNode
   action?: MissionNodeAction
   disabled?: boolean
-  deliverValue: (value: string) => void
+  deliverValue: (value: string | '') => void
 }): JSX.Element | null {
   const fieldOffsetHeight: number = 3
 
   const field = useRef<HTMLTextAreaElement>(null)
   const [mountHandled, setMountHandled] = useState<boolean>(false)
+  const [isEmptyString, setIsEmptyString] = useState<boolean>(false)
 
   let label: string = props.label
   let initialValue: string = props.initialValue
   let disabled: boolean = props.disabled === true
   let deliverValue = props.deliverValue
   let className: string = 'Detail DetailBox'
+  let fieldClassName: string
+  let labelClassName: string
+  let fieldErrorClassName: string
 
   // Called when a change is made in the
   // in the field element. This will resize
@@ -215,30 +246,50 @@ export function DetailBox(props: {
     className += ' Disabled'
   }
 
+  if (
+    (isEmptyString || initialValue === '') &&
+    props.appActions !== undefined &&
+    props.selectedNode !== undefined
+  ) {
+    fieldClassName = 'Field FieldBox Error'
+    labelClassName = 'Label Error'
+    fieldErrorClassName = 'FieldErrorMessage'
+  } else {
+    fieldClassName = 'Field FieldBox'
+    labelClassName = 'Label'
+    fieldErrorClassName = 'FieldErrorMessage hide'
+  }
+
   // render
   return (
     <div className={className}>
-      <div className='Label'>{`${label}:`}</div>
+      <div className={labelClassName}>{`${label}:`}</div>
       <textarea
-        className='Field FieldBox'
+        className={fieldClassName}
         ref={field}
         onChange={(event: React.ChangeEvent<HTMLTextAreaElement>) => {
           resizeField(event)
           deliverValue(event.target.value)
+
+          if (event.target.value !== '') {
+            setIsEmptyString(false)
+          }
         }}
         onBlur={(event: React.FocusEvent) => {
           let target: HTMLTextAreaElement = event.target as HTMLTextAreaElement
 
-          if (props.appActions !== undefined && target.value === '') {
-            deliverValue(initialValue)
-            setMountHandled(false)
-            props.appActions.notify(
-              'The post-execution text field must have at least one character.',
-              10000,
-            )
+          if (
+            props.appActions !== undefined &&
+            props.selectedNode !== undefined &&
+            target.value === ''
+          ) {
+            setIsEmptyString(true)
           }
         }}
       />
+      <div className={fieldErrorClassName}>
+        At least one character is required here.
+      </div>
     </div>
   )
 }

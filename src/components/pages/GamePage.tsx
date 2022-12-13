@@ -57,9 +57,6 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
     setActionSelectionPromptIsDisplayed,
   ] = useState<boolean>(false)
   const [processTime, setProcessTime] = useState<number>(0)
-  const [actionDisplay, setActionDisplay] = useState<Array<MissionNodeAction>>(
-    [],
-  )
 
   /* -- COMPONENT EFFECTS -- */
 
@@ -345,7 +342,10 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
               handleNodeSelection={(selectedNode: MissionNode) => {
                 setLastSelectedNode(selectedNode)
 
-                if (selectedNode.preExecutionText !== '') {
+                if (
+                  selectedNode.preExecutionText !== '' &&
+                  selectedNode.preExecutionText !== null
+                ) {
                   let timeStamp: number = 5 * (new Date() as any)
                   consoleOutputs.push({
                     date: timeStamp,
@@ -364,27 +364,18 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
                   gameLogic.handleNodeSelection(selectedNode)
                   selectedNode.color = ''
                 } else {
-                  for (let nodeActionItem of selectedNode.actions) {
-                    actionDisplay.push(nodeActionItem)
-                  }
                   if (
                     mission.disableNodes === false &&
                     selectedNode.executed === false &&
-                    actionDisplay.length > 1
+                    selectedNode.actions.length > 1
                   ) {
                     setActionSelectionPromptIsDisplayed(true)
-                  } else if (actionDisplay.length === 1) {
+                  } else if (selectedNode.actions.length === 1) {
                     setActionSelectionPromptIsDisplayed(false)
                     setExecuteNodePathPromptIsDisplayed(true)
                     selectedNode.selectedAction = selectedNode.actions[0]
                   } else if (selectedNode.actions.length === 0) {
-                    // console.error(
-                    //   `${selectedNode.name} has no actions to choose from.`,
-                    //   selectedNode.actions,
-                    // )
                     setActionSelectionPromptIsDisplayed(true)
-                  } else {
-                    setActionDisplay([])
                   }
                 }
               }}
@@ -438,8 +429,6 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
                 setExecuteNodePathPromptIsDisplayed
               }
               setProcessTime={setProcessTime}
-              actionDisplay={actionDisplay}
-              setActionDisplay={setActionDisplay}
             />
             <ExecuteNodePath
               mission={mission}
@@ -453,8 +442,6 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
                 setExecuteNodePathPromptIsDisplayed
               }
               processTime={processTime}
-              actionDisplay={actionDisplay}
-              setActionDisplay={setActionDisplay}
               notify={appActions.notify}
             />
           </div>

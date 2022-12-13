@@ -14,11 +14,8 @@ const NodeActions = (props: {
     executeNodePathPromptIsDisplayed: boolean,
   ) => void
   setProcessTime: (processTime: number) => void
-  actionDisplay: Array<MissionNodeAction>
-  setActionDisplay: (actionDisplay: Array<MissionNodeAction>) => void
 }) => {
-  let actionDisplay = props.actionDisplay
-  let setActionDisplay = props.setActionDisplay
+  let selectedNode: MissionNode | null | undefined = props.selectedNode
 
   const setExecuteNodePathPromptIsDisplayed =
     props.setExecuteNodePathPromptIsDisplayed
@@ -37,7 +34,6 @@ const NodeActions = (props: {
   const closeWindow = (): void => {
     setActionSelectionPromptIsDisplayed(false)
     setDisplayActionList(false)
-    setActionDisplay([])
   }
 
   const revealOptions = () => {
@@ -69,7 +65,7 @@ const NodeActions = (props: {
     nodeActionListClassName += ' hide'
   }
 
-  if (actionDisplay.length > 0) {
+  if (selectedNode && selectedNode.actions.length > 0) {
     return (
       <div className='NodeActions'>
         <p className='x' onClick={closeWindow}>
@@ -85,7 +81,7 @@ const NodeActions = (props: {
           <div className='ArrowDown'>^</div>
         </div>
         <div className={nodeActionListClassName}>
-          {actionDisplay.map((action: MissionNodeAction) => {
+          {selectedNode.actions.map((action: MissionNodeAction) => {
             return (
               <div
                 className='NodeAction'
