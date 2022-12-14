@@ -586,6 +586,7 @@ function NodeEntry(props: {
   let actionTitleClassName: string = 'ActionInfo'
   let addNewActionClassName: string = 'Action add'
   let actionKey: string = ''
+  let toggleErrorMessage: string | undefined = undefined
 
   /* -- COMPONENT STATE -- */
   const [mountHandled, setMountHandled] = useState<boolean>()
@@ -691,6 +692,11 @@ function NodeEntry(props: {
     actionKey = node.actions[displayedAction].actionID
   } else if (node !== null && node.actions.length <= 0) {
     actionKey = 'no_action_id_to_choose_from'
+  }
+
+  if (isEmptyString) {
+    toggleErrorMessage =
+      'The button above is locked until there are no empty fields.'
   }
 
   if (node !== null) {
@@ -836,9 +842,7 @@ function NodeEntry(props: {
             <DetailToggle
               label={'Device'}
               initialValue={node.device}
-              errorMessage={
-                'The button above is locked until there are no empty fields.'
-              }
+              errorMessage={toggleErrorMessage}
               lockState={
                 !isEmptyString && node.executable
                   ? EToggleLockState.Unlocked

@@ -447,8 +447,9 @@ export class DetailToggle extends React.Component<
     tooltipDescription = `#### ${label}\n${tooltipDescription}`
 
     if (
-      lockState === EToggleLockState.LockedActivation ||
-      lockState === EToggleLockState.LockedDeactivation
+      errorMessage !== undefined &&
+      (lockState === EToggleLockState.LockedActivation ||
+        lockState === EToggleLockState.LockedDeactivation)
     ) {
       fieldErrorClassName = 'FieldErrorMessage'
     }
