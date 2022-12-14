@@ -63,7 +63,15 @@ export default function MissionFormPage(
     useState<boolean>(false)
   const [existsInDatabase, setExistsInDatabase] = useState<boolean>(false)
   const [displayedAction, setDisplayedAction] = useState<number>(0)
-  const [emptyStringArray, setEmptyStringArray] = useState<Array<string>>([])
+  const [missionEmptyStringArray, setMissionEmptyStringArray] = useState<
+    Array<string>
+  >([])
+  const [nodeEmptyStringArray, setNodeEmptyStringArray] = useState<
+    Array<string>
+  >([])
+  const [actionEmptyStringArray, setActionEmptyStringArray] = useState<
+    Array<string>
+  >([])
 
   /* -- COMPONENT EFFECTS -- */
 
@@ -128,16 +136,8 @@ export default function MissionFormPage(
     // This is called when a change is
     // made that would require saving.
     const handleChange = (): void => {
-      if (emptyStringArray.length === 0) {
-        setAreUnsavedChanges(true)
-        forceUpdate()
-      } else {
-        setAreUnsavedChanges(false)
-        appActions.notify(
-          `**Error:** The node called "${selectedNode?.name.toLowerCase()}" has at least one field that was left empty. This field must contain at least one character.`,
-          null,
-        )
-      }
+      setAreUnsavedChanges(true)
+      forceUpdate()
     }
 
     // This is called to save any changes
@@ -340,29 +340,44 @@ export default function MissionFormPage(
             handleNodeSelection={(node: MissionNode) => {
               setDisplayedAction(0)
 
-              if (selectedNode !== null && selectedNode.executable) {
+              if (
+                selectedNode !== null &&
+                missionEmptyStringArray.length === 0 &&
+                selectedNode.executable
+              ) {
                 if (
                   selectedNode.nodeID !== node.nodeID &&
-                  emptyStringArray.length === 0
+                  nodeEmptyStringArray.length === 0 &&
+                  actionEmptyStringArray.length === 0
                 ) {
                   selectNode(node)
                 } else if (
                   selectedNode.nodeID === node.nodeID &&
-                  emptyStringArray.length === 0
+                  nodeEmptyStringArray.length === 0 &&
+                  actionEmptyStringArray.length === 0
                 ) {
                   selectNode(null)
                 } else {
                   appActions.notify(
-                    `**Error:** The node called "${selectedNode.name.toLowerCase()}" has at least one field that was left empty. This field must contain at least one character.`,
+                    `**Error:** The node called "${selectedNode.name.toLowerCase()}" has at least one field that was left empty. These fields must contain at least one character.`,
                     null,
                   )
                 }
               } else if (
                 selectedNode !== null &&
+                missionEmptyStringArray.length === 0 &&
                 selectedNode.nodeID === node.nodeID &&
                 !selectedNode.executable
               ) {
                 selectNode(null)
+              } else if (
+                selectedNode === null &&
+                missionEmptyStringArray.length > 0
+              ) {
+                appActions.notify(
+                  `**Error:** The mission side panel has at least one field that was left empty. This field must contain at least one character.`,
+                  null,
+                )
               } else {
                 selectNode(node)
               }
@@ -412,15 +427,20 @@ export default function MissionFormPage(
             }}
             handleMapSaveRequest={save}
             editCanBeRequested={!nodeStructuringIsActive}
-            saveCanBeRequested={areUnsavedChanges}
+            saveCanBeRequested={
+              areUnsavedChanges &&
+              missionEmptyStringArray.length === 0 &&
+              nodeEmptyStringArray.length === 0 &&
+              actionEmptyStringArray.length === 0
+            }
             applyNodeClassName={(node: MissionNode) => ''}
             renderNodeTooltipDescription={(node: MissionNode) => ''}
           />
           <MissionDetails
             active={selectedNode === null && !nodeStructuringIsActive}
             mission={mission}
-            emptyStringArray={emptyStringArray}
-            setEmptyStringArray={setEmptyStringArray}
+            missionEmptyStringArray={missionEmptyStringArray}
+            setMissionEmptyStringArray={setMissionEmptyStringArray}
             handleChange={handleChange}
           />
           <NodeEntry
@@ -428,16 +448,22 @@ export default function MissionFormPage(
             appActions={appActions}
             displayedAction={displayedAction}
             setDisplayedAction={setDisplayedAction}
-            emptyStringArray={emptyStringArray}
-            setEmptyStringArray={setEmptyStringArray}
+            nodeEmptyStringArray={nodeEmptyStringArray}
+            setNodeEmptyStringArray={setNodeEmptyStringArray}
+            actionEmptyStringArray={actionEmptyStringArray}
+            setActionEmptyStringArray={setActionEmptyStringArray}
             handleChange={handleChange}
             handleDeleteRequest={() => {
               if (selectedNode !== null) {
                 handleNodeDeleteRequest(selectedNode)
+                setNodeEmptyStringArray([])
+                setActionEmptyStringArray([])
               }
             }}
             handleCloseRequest={() => {
               selectNode(null)
+              setActionEmptyStringArray([])
+              setNodeEmptyStringArray([])
             }}
           />
           <NodeStructuring
@@ -459,21 +485,24 @@ export default function MissionFormPage(
 function MissionDetails(props: {
   active: boolean
   mission: Mission
-  emptyStringArray: Array<string>
-  setEmptyStringArray: (emptyStringArray: Array<string>) => void
+  missionEmptyStringArray: Array<string>
+  setMissionEmptyStringArray: (missionEmptyString: Array<string>) => void
   handleChange: () => void
 }): JSX.Element | null {
   let active: boolean = props.active
   let mission: Mission = props.mission
-  let emptyStringArray: Array<string> = props.emptyStringArray
-  let setEmptyStringArray = props.setEmptyStringArray
+  let missionEmptyStringArray: Array<string> = props.missionEmptyStringArray
+  let setMissionEmptyStringArray: (missionEmptyString: Array<string>) => void =
+    props.setMissionEmptyStringArray
   let handleChange = props.handleChange
 
   /* -- COMPONENT FUNCTIONS -- */
-  const removeEmptyString = (field: string) => {
-    emptyStringArray.map((emptyString: string, index: number) => {
-      if (emptyString === `missionID=${mission.missionID}_field=${field}`) {
-        emptyStringArray.splice(index, 1)
+  const removeMissionEmptyString = (field: string) => {
+    missionEmptyStringArray.map((missionEmptyString: string, index: number) => {
+      if (
+        missionEmptyString === `missionID=${mission.missionID}_field=${field}`
+      ) {
+        missionEmptyStringArray.splice(index, 1)
       }
     })
   }
@@ -488,11 +517,11 @@ function MissionDetails(props: {
             deliverValue={(name: string) => {
               if (name !== '') {
                 mission.name = name
-                removeEmptyString('name')
+                removeMissionEmptyString('name')
                 handleChange()
               } else {
-                setEmptyStringArray([
-                  ...emptyStringArray,
+                setMissionEmptyStringArray([
+                  ...missionEmptyStringArray,
                   `missionID=${mission.missionID}_field=name`,
                 ])
               }
@@ -533,8 +562,10 @@ function NodeEntry(props: {
   appActions: AppActions
   displayedAction: number
   setDisplayedAction: (displayedAction: number) => void
-  emptyStringArray: Array<string>
-  setEmptyStringArray: (emptyStringArray: Array<string>) => void
+  nodeEmptyStringArray: Array<string>
+  setNodeEmptyStringArray: (nodeEmptyStringArray: Array<string>) => void
+  actionEmptyStringArray: Array<string>
+  setActionEmptyStringArray: (actionEmptyString: Array<string>) => void
   handleChange: () => void
   handleDeleteRequest: () => void
   handleCloseRequest: () => void
@@ -543,8 +574,10 @@ function NodeEntry(props: {
   let appActions: AppActions = props.appActions
   let displayedAction: number = props.displayedAction
   let setDisplayedAction = props.setDisplayedAction
-  let emptyStringArray: Array<string> = props.emptyStringArray
-  let setEmptyStringArray = props.setEmptyStringArray
+  let nodeEmptyStringArray: Array<string> = props.nodeEmptyStringArray
+  let setNodeEmptyStringArray = props.setNodeEmptyStringArray
+  let actionEmptyStringArray: Array<string> = props.actionEmptyStringArray
+  let setActionEmptyStringArray = props.setActionEmptyStringArray
   let handleChange = props.handleChange
   let handleDeleteRequest = props.handleDeleteRequest
   let handleCloseRequest = props.handleCloseRequest
@@ -555,6 +588,28 @@ function NodeEntry(props: {
   let actionKey: string = ''
 
   /* -- COMPONENT STATE -- */
+  const [mountHandled, setMountHandled] = useState<boolean>()
+  const [isEmptyString, setIsEmptyString] = useState<boolean>(false)
+
+  /* -- COMPONENT EFFECTS -- */
+
+  // Equivalent of componentDidMount.
+  useEffect(() => {
+    if (!mountHandled) {
+      if (
+        nodeEmptyStringArray.length === 0 &&
+        actionEmptyStringArray.length === 0
+      ) {
+        setIsEmptyString(false)
+      } else if (
+        nodeEmptyStringArray.length > 0 ||
+        actionEmptyStringArray.length > 0
+      ) {
+        setIsEmptyString(true)
+      }
+      setMountHandled(true)
+    }
+  }, [mountHandled])
 
   /* -- COMPONENT FUNCTIONS -- */
 
@@ -562,29 +617,47 @@ function NodeEntry(props: {
     if (node?.actions !== undefined) {
       let lastAction: number = node?.actions.length - 1
 
-      if (displayedAction === lastAction) {
-        setDisplayedAction(0)
+      if (!isEmptyString) {
+        if (displayedAction === lastAction) {
+          setDisplayedAction(0)
+          setMountHandled(false)
+        } else {
+          setDisplayedAction(displayedAction + 1)
+          setMountHandled(false)
+        }
+        setActionEmptyStringArray([])
       } else {
-        setDisplayedAction(displayedAction + 1)
+        appActions.notify(
+          `**Error:** The node called "${node.name.toLowerCase()}" has at least one field that was left empty. These fields must contain at least one character.`,
+          null,
+        )
       }
     }
   }
 
   const displayPreviousAction = () => {
-    if (displayedAction === 0 && node?.actions !== undefined) {
-      setDisplayedAction(node?.actions.length - 1)
+    if (!isEmptyString) {
+      if (displayedAction === 0 && node?.actions !== undefined) {
+        setDisplayedAction(node?.actions.length - 1)
+      } else {
+        setDisplayedAction(displayedAction - 1)
+      }
+      setActionEmptyStringArray([])
     } else {
-      setDisplayedAction(displayedAction - 1)
+      appActions.notify(
+        `**Error:** The node called "${node?.name.toLowerCase()}" has at least one field that was left empty. These fields must contain at least one character.`,
+        null,
+      )
     }
   }
 
-  const removeEmptyString = (field: string) => {
-    emptyStringArray.map((emptyString: string, index: number) => {
+  const removeNodeEmptyString = (field: string) => {
+    nodeEmptyStringArray.map((nodeEmptyString: string, index: number) => {
       if (
         node !== null &&
-        emptyString === `nodeID=${node.nodeID}_field=${field}`
+        nodeEmptyString === `nodeID=${node.nodeID}_field=${field}`
       ) {
-        emptyStringArray.splice(index, 1)
+        nodeEmptyStringArray.splice(index, 1)
       }
     })
   }
@@ -624,7 +697,21 @@ function NodeEntry(props: {
     return (
       <div className='NodeEntry SidePanel'>
         <div className='BorderBox'>
-          <div className='Close' onClick={handleCloseRequest}>
+          <div
+            className='Close'
+            onClick={() => {
+              if (!isEmptyString) {
+                handleCloseRequest()
+              } else if (node !== null) {
+                appActions.notify(
+                  `**Error:** The node called "${node.name.toLowerCase()}" has at least one field that was left empty. These fields must contain at least one character.`,
+                  null,
+                )
+              }
+              setMountHandled(false)
+            }}
+            key={'close-node-side-panel'}
+          >
             <div className='Circle'>
               <div className='X'>x</div>
             </div>
@@ -637,13 +724,15 @@ function NodeEntry(props: {
               deliverValue={(name: string) => {
                 if (node !== null && name !== '') {
                   node.name = name
-                  removeEmptyString('name')
+                  removeNodeEmptyString('name')
+                  setMountHandled(false)
                   handleChange()
                 } else if (node !== null) {
-                  setEmptyStringArray([
-                    ...emptyStringArray,
+                  setNodeEmptyStringArray([
+                    ...nodeEmptyStringArray,
                     `nodeID=${node.nodeID}_field=name`,
                   ])
+                  setMountHandled(false)
                 }
               }}
               key={`${node.nodeID}_name`}
@@ -688,6 +777,7 @@ function NodeEntry(props: {
             <DetailBox
               label='Pre-Execution Text (optional)'
               initialValue={node.preExecutionText}
+              emptyStringAllowed={true}
               deliverValue={(preExecutionText: string) => {
                 if (node !== null) {
                   node.preExecutionText = preExecutionText
@@ -699,6 +789,9 @@ function NodeEntry(props: {
             <DetailToggle
               label={'Executable'}
               initialValue={node.executable}
+              errorMessage={
+                'The button above is locked until there are no empty fields.'
+              }
               deliverValue={(executable: boolean) => {
                 if (node !== null) {
                   node.executable = executable
@@ -730,11 +823,11 @@ function NodeEntry(props: {
                 handleChange()
               }}
               lockState={
-                emptyStringArray.length === 0
+                !isEmptyString
                   ? EToggleLockState.Unlocked
-                  : emptyStringArray.length > 0 && node.executable
+                  : isEmptyString && node.executable
                   ? EToggleLockState.LockedActivation
-                  : emptyStringArray.length > 0 && !node.executable
+                  : isEmptyString && !node.executable
                   ? EToggleLockState.LockedDeactivation
                   : EToggleLockState.Unlocked
               }
@@ -743,16 +836,15 @@ function NodeEntry(props: {
             <DetailToggle
               label={'Device'}
               initialValue={node.device}
+              errorMessage={
+                'The button above is locked until there are no empty fields.'
+              }
               lockState={
-                emptyStringArray.length === 0 && node.executable
+                !isEmptyString && node.executable
                   ? EToggleLockState.Unlocked
-                  : emptyStringArray.length > 0 &&
-                    node.executable &&
-                    node.device
+                  : isEmptyString && node.executable && node.device
                   ? EToggleLockState.LockedActivation
-                  : emptyStringArray.length > 0 &&
-                    node.executable &&
-                    !node.device
+                  : isEmptyString && node.executable && !node.device
                   ? EToggleLockState.LockedDeactivation
                   : EToggleLockState.LockedDeactivation
               }
@@ -791,9 +883,11 @@ function NodeEntry(props: {
               action={node.actions[displayedAction]}
               node={node}
               appActions={appActions}
+              displayedAction={displayedAction}
               setDisplayedAction={setDisplayedAction}
-              emptyStringArray={emptyStringArray}
-              setEmptyStringArray={setEmptyStringArray}
+              actionEmptyStringArray={actionEmptyStringArray}
+              setActionEmptyStringArray={setActionEmptyStringArray}
+              setMountHandled={setMountHandled}
               handleChange={handleChange}
               key={actionKey}
             />
@@ -850,28 +944,34 @@ function NodeAction(props: {
   node: MissionNode
   appActions: AppActions
   handleChange: () => void
+  displayedAction: number
   setDisplayedAction: (displayedAction: number) => void
-  emptyStringArray: Array<string>
-  setEmptyStringArray: (emptyStringArray: Array<string>) => void
+  actionEmptyStringArray: Array<string>
+  setActionEmptyStringArray: (actionEmptyStringArray: Array<string>) => void
+  setMountHandled: (mountHandled: boolean) => void
 }): JSX.Element | null {
   let action: MissionNodeAction = props.action
   let node: MissionNode = props.node
   let appActions: AppActions = props.appActions
   let handleChange: () => void = props.handleChange
+  let displayedAction: number = props.displayedAction
   let setDisplayedAction: (displayedAction: number) => void =
     props.setDisplayedAction
-  let emptyStringArray: Array<string> = props.emptyStringArray
-  let setEmptyStringArray = props.setEmptyStringArray
+  let actionEmptyStringArray: Array<string> = props.actionEmptyStringArray
+  let setActionEmptyStringArray: (
+    actionEmptyStringArray: Array<string>,
+  ) => void = props.setActionEmptyStringArray
+  let setMountHandled: (mountHandled: boolean) => void = props.setMountHandled
   let nodeActionClassName: string = 'NodeAction'
   let deleteActionClassName: string = 'Delete'
   let addNewActionClassName: string = ''
   let addNewActionTooltipDescription: string = ''
 
   /* -- COMPONENT FUNCTIONS -- */
-  const removeEmptyString = (field: string) => {
-    emptyStringArray.map((emptyString: string, index: number) => {
-      if (emptyString === `actionID=${action.actionID}_field=${field}`) {
-        emptyStringArray.splice(index, 1)
+  const removeActionEmptyString = (field: string) => {
+    actionEmptyStringArray.map((actionEmptyString: string, index: number) => {
+      if (actionEmptyString === `actionID=${action.actionID}_field=${field}`) {
+        actionEmptyStringArray.splice(index, 1)
       }
     })
   }
@@ -902,13 +1002,15 @@ function NodeAction(props: {
           deliverValue={(name: string) => {
             if (name !== '') {
               action.name = name
-              removeEmptyString('name')
+              removeActionEmptyString('name')
+              setMountHandled(false)
               handleChange()
             } else {
-              setEmptyStringArray([
-                ...emptyStringArray,
+              setActionEmptyStringArray([
+                ...actionEmptyStringArray,
                 `actionID=${action.actionID}_field=name`,
               ])
+              setMountHandled(false)
             }
           }}
           key={`${action.actionID}_name`}
@@ -921,13 +1023,15 @@ function NodeAction(props: {
           deliverValue={(description: string) => {
             if (description !== '') {
               action.description = description
-              removeEmptyString('description')
+              removeActionEmptyString('description')
+              setMountHandled(false)
               handleChange()
             } else {
-              setEmptyStringArray([
-                ...emptyStringArray,
+              setActionEmptyStringArray([
+                ...actionEmptyStringArray,
                 `actionID=${action.actionID}_field=description`,
               ])
+              setMountHandled(false)
             }
           }}
           key={`${action.actionID}_description`}
@@ -984,13 +1088,15 @@ function NodeAction(props: {
           deliverValue={(postExecutionSuccessText: string) => {
             if (postExecutionSuccessText !== '') {
               action.postExecutionSuccessText = postExecutionSuccessText
-              removeEmptyString('postExecutionSuccessText')
+              removeActionEmptyString('postExecutionSuccessText')
+              setMountHandled(false)
               handleChange()
             } else {
-              setEmptyStringArray([
-                ...emptyStringArray,
+              setActionEmptyStringArray([
+                ...actionEmptyStringArray,
                 `actionID=${action.actionID}_field=postExecutionSuccessText`,
               ])
+              setMountHandled(false)
             }
           }}
           key={`${action.actionID}_postExecutionSuccessText`}
@@ -1003,13 +1109,15 @@ function NodeAction(props: {
           deliverValue={(postExecutionFailureText: string) => {
             if (postExecutionFailureText !== '') {
               action.postExecutionFailureText = postExecutionFailureText
-              removeEmptyString('postExecutionFailureText')
+              removeActionEmptyString('postExecutionFailureText')
+              setMountHandled(false)
               handleChange()
             } else {
-              setEmptyStringArray([
-                ...emptyStringArray,
+              setActionEmptyStringArray([
+                ...actionEmptyStringArray,
                 `actionID=${action.actionID}_field=postExecutionFailureText`,
               ])
+              setMountHandled(false)
             }
           }}
           key={`${action.actionID}_postExecutionFailureText`}
@@ -1020,7 +1128,8 @@ function NodeAction(props: {
             if (node.actions.length > 1) {
               node.actions.splice(node.actions.indexOf(action), 1)
             }
-            setDisplayedAction(0)
+            setDisplayedAction(displayedAction - 1)
+            setActionEmptyStringArray([])
             handleChange()
           }}
           key={`${action.actionID}_delete`}

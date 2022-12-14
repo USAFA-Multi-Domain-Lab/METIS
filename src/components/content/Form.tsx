@@ -17,6 +17,7 @@ interface IDetail {
   appActions?: AppActions
   selectedNode?: MissionNode
   action?: MissionNodeAction
+  emptyStringAllowed?: boolean
   deliverValue: (value: string) => void
 }
 
@@ -35,25 +36,30 @@ export class Detail extends React.Component<IDetail, IDetail_S> {
     if (fieldElement) {
       fieldElement.value = initialValue
     }
+
+    if (this.props.emptyStringAllowed && initialValue === '') {
+      this.setState({ isEmptyString: false })
+    } else if (!this.props.emptyStringAllowed && initialValue === '') {
+      this.setState({ isEmptyString: true })
+    }
   }
 
   // inherited
   render(): JSX.Element | null {
     let label: string = this.props.label
-    let initialValue: string = this.props.initialValue
+    let emptyStringAllowed: boolean | undefined = this.props.emptyStringAllowed
     let deliverValue = this.props.deliverValue
-    let fieldErrorClassName: string
-    let labelClassName: string
-    let fieldClassName: string
+    let fieldErrorClassName: string = 'FieldErrorMessage hide'
+    let labelClassName: string = 'Label'
+    let fieldClassName: string = 'Field'
 
-    if (!this.state.isEmptyString) {
-      fieldErrorClassName = 'FieldErrorMessage hide'
-      labelClassName = 'Label'
-      fieldClassName = 'Field'
-    } else {
+    if (!emptyStringAllowed && this.state.isEmptyString) {
+      fieldClassName += ' Error'
+      labelClassName += ' Error'
       fieldErrorClassName = 'FieldErrorMessage'
-      labelClassName = ' Label Error'
-      fieldClassName = 'Field Error'
+    } else if (emptyStringAllowed) {
+      fieldClassName = 'Field FieldBox'
+      labelClassName = 'Label'
     }
 
     return (
@@ -65,13 +71,18 @@ export class Detail extends React.Component<IDetail, IDetail_S> {
           ref={this.field}
           onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
             deliverValue(event.target.value)
-            this.setState({ isEmptyString: false })
+
+            if (event.target.value !== '') {
+              this.setState({ isEmptyString: false })
+            }
           }}
           onBlur={(event: React.FocusEvent) => {
             let target: HTMLInputElement = event.target as HTMLInputElement
 
-            if (target.value === '') {
+            if (!emptyStringAllowed && target.value === '') {
               this.setState({ isEmptyString: true })
+            } else if (emptyStringAllowed && target.value === '') {
+              this.setState({ isEmptyString: false })
             }
           }}
         />
@@ -190,6 +201,7 @@ export function DetailBox(props: {
   appActions?: AppActions
   selectedNode?: MissionNode
   action?: MissionNodeAction
+  emptyStringAllowed?: boolean
   disabled?: boolean
   deliverValue: (value: string | '') => void
 }): JSX.Element | null {
@@ -201,12 +213,13 @@ export function DetailBox(props: {
 
   let label: string = props.label
   let initialValue: string = props.initialValue
+  let emptyStringAllowed: boolean | undefined = props.emptyStringAllowed
   let disabled: boolean = props.disabled === true
   let deliverValue = props.deliverValue
   let className: string = 'Detail DetailBox'
-  let fieldClassName: string
-  let labelClassName: string
-  let fieldErrorClassName: string
+  let fieldClassName: string = 'Field FieldBox'
+  let labelClassName: string = 'Label'
+  let fieldErrorClassName: string = 'FieldErrorMessage hide'
 
   // Called when a change is made in the
   // in the field element. This will resize
@@ -238,6 +251,12 @@ export function DetailBox(props: {
         }px`
       }
 
+      if (emptyStringAllowed && initialValue === '') {
+        setIsEmptyString(false)
+      } else if (!emptyStringAllowed && initialValue === '') {
+        setIsEmptyString(true)
+      }
+
       setMountHandled(true)
     }
   }, [mountHandled])
@@ -246,18 +265,13 @@ export function DetailBox(props: {
     className += ' Disabled'
   }
 
-  if (
-    (isEmptyString || initialValue === '') &&
-    props.appActions !== undefined &&
-    props.selectedNode !== undefined
-  ) {
-    fieldClassName = 'Field FieldBox Error'
-    labelClassName = 'Label Error'
+  if (!emptyStringAllowed && isEmptyString) {
+    fieldClassName += ' Error'
+    labelClassName += ' Error'
     fieldErrorClassName = 'FieldErrorMessage'
-  } else {
+  } else if (emptyStringAllowed) {
     fieldClassName = 'Field FieldBox'
     labelClassName = 'Label'
-    fieldErrorClassName = 'FieldErrorMessage hide'
   }
 
   // render
@@ -278,12 +292,10 @@ export function DetailBox(props: {
         onBlur={(event: React.FocusEvent) => {
           let target: HTMLTextAreaElement = event.target as HTMLTextAreaElement
 
-          if (
-            props.appActions !== undefined &&
-            props.selectedNode !== undefined &&
-            target.value === ''
-          ) {
+          if (!emptyStringAllowed && target.value === '') {
             setIsEmptyString(true)
+          } else if (emptyStringAllowed && target.value === '') {
+            setIsEmptyString(false)
           }
         }}
       />
@@ -378,6 +390,9 @@ export interface IDetailToggle_P {
   tooltipDescription: string
   // class name to apply to the root element
   uniqueClassName: string
+  // if an error message is needed then this is the
+  // message that will be displayed
+  errorMessage?: string
   // delivers what the user inputs so that
   // the parent component can track it
   deliverValue: (value: boolean) => void
@@ -422,13 +437,24 @@ export class DetailToggle extends React.Component<
     let tooltipDescription: string = this.props.tooltipDescription
     let hideTooltip: boolean = tooltipDescription.length === 0
     let uniqueClassName: string = this.props.uniqueClassName
-    let className: string = 'Detail DetailToggle'
+    let errorMessage: string | undefined = this.props.errorMessage
+    let containerClassName: string = 'Detail DetailToggle'
+    let fieldErrorClassName: string = 'FieldErrorMessage hide'
+
     if (uniqueClassName.length > 0) {
-      className += ` ${uniqueClassName}`
+      containerClassName += ` ${uniqueClassName}`
     }
     tooltipDescription = `#### ${label}\n${tooltipDescription}`
+
+    if (
+      lockState === EToggleLockState.LockedActivation ||
+      lockState === EToggleLockState.LockedDeactivation
+    ) {
+      fieldErrorClassName = 'FieldErrorMessage'
+    }
+
     return (
-      <div className={className}>
+      <div className={containerClassName}>
         <label className='Label'>{label}</label>
         <div className='Field'>
           <Toggle
@@ -438,6 +464,7 @@ export class DetailToggle extends React.Component<
           />
         </div>
         {hideTooltip ? null : <Tooltip description={tooltipDescription} />}
+        <div className={fieldErrorClassName}>{errorMessage}</div>
       </div>
     )
   }
