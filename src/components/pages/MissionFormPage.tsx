@@ -26,6 +26,7 @@ import { MissionNodeAction } from '../../modules/mission-node-actions'
 import { EToggleLockState } from '../content/Toggle'
 import AppState, { AppActions } from '../AppState'
 import Navigation from '../content/Navigation'
+import { JsxElement } from 'typescript'
 
 // This is a enum used to describe
 // the locations that one node can
@@ -565,7 +566,7 @@ function NodeEntry(props: {
   nodeEmptyStringArray: Array<string>
   setNodeEmptyStringArray: (nodeEmptyStringArray: Array<string>) => void
   actionEmptyStringArray: Array<string>
-  setActionEmptyStringArray: (actionEmptyString: Array<string>) => void
+  setActionEmptyStringArray: (actionEmptyStringArray: Array<string>) => void
   handleChange: () => void
   handleDeleteRequest: () => void
   handleCloseRequest: () => void
@@ -573,19 +574,17 @@ function NodeEntry(props: {
   let node: MissionNode | null = props.node
   let appActions: AppActions = props.appActions
   let displayedAction: number = props.displayedAction
-  let setDisplayedAction = props.setDisplayedAction
+  let setDisplayedAction: (displayedAction: number) => void =
+    props.setDisplayedAction
   let nodeEmptyStringArray: Array<string> = props.nodeEmptyStringArray
   let setNodeEmptyStringArray = props.setNodeEmptyStringArray
   let actionEmptyStringArray: Array<string> = props.actionEmptyStringArray
-  let setActionEmptyStringArray = props.setActionEmptyStringArray
+  let setActionEmptyStringArray: (
+    actionEmptyStringArray: Array<string>,
+  ) => void = props.setActionEmptyStringArray
   let handleChange = props.handleChange
   let handleDeleteRequest = props.handleDeleteRequest
   let handleCloseRequest = props.handleCloseRequest
-  let totalActions: number | undefined = node?.actions.length
-  let selectorContainerClassName: string = 'SelectorContainer'
-  let actionTitleClassName: string = 'ActionInfo'
-  let addNewActionClassName: string = 'Action add'
-  let actionKey: string = ''
   let toggleErrorMessage: string | undefined = undefined
 
   /* -- COMPONENT STATE -- */
@@ -614,44 +613,6 @@ function NodeEntry(props: {
 
   /* -- COMPONENT FUNCTIONS -- */
 
-  const displayNextAction = () => {
-    if (node?.actions !== undefined) {
-      let lastAction: number = node?.actions.length - 1
-
-      if (!isEmptyString) {
-        if (displayedAction === lastAction) {
-          setDisplayedAction(0)
-          setMountHandled(false)
-        } else {
-          setDisplayedAction(displayedAction + 1)
-          setMountHandled(false)
-        }
-        setActionEmptyStringArray([])
-      } else {
-        appActions.notify(
-          `**Error:** The node called "${node.name.toLowerCase()}" has at least one field that was left empty. These fields must contain at least one character.`,
-          null,
-        )
-      }
-    }
-  }
-
-  const displayPreviousAction = () => {
-    if (!isEmptyString) {
-      if (displayedAction === 0 && node?.actions !== undefined) {
-        setDisplayedAction(node?.actions.length - 1)
-      } else {
-        setDisplayedAction(displayedAction - 1)
-      }
-      setActionEmptyStringArray([])
-    } else {
-      appActions.notify(
-        `**Error:** The node called "${node?.name.toLowerCase()}" has at least one field that was left empty. These fields must contain at least one character.`,
-        null,
-      )
-    }
-  }
-
   const removeNodeEmptyString = (field: string) => {
     nodeEmptyStringArray.map((nodeEmptyString: string, index: number) => {
       if (
@@ -664,35 +625,6 @@ function NodeEntry(props: {
   }
 
   /* -- RENDER -- */
-
-  // Logic that hides the buttons that select which action is being
-  // displayed because there is 1 action or less for the selected node.
-  if (
-    node === null ||
-    node.actions.length === 0 ||
-    node.actions.length === 1 ||
-    node.actions[0] === undefined
-  ) {
-    selectorContainerClassName += ' hide'
-    actionKey = 'no_action_id_to_choose_from'
-  }
-
-  // If a node is not executable then it hides all of the information
-  // pertaining to the actions for that node.
-  if (node !== null && !node.executable) {
-    selectorContainerClassName += ' hide'
-    actionTitleClassName += ' Hide'
-    addNewActionClassName += ' Hide'
-  }
-
-  // Logic that keeps the app from crashing by making the key for the
-  // individual action that is being displayed under the action(s) section
-  // change dynamically.
-  if (node !== null && node.actions.length > 0) {
-    actionKey = node.actions[displayedAction].actionID
-  } else if (node !== null && node.actions.length <= 0) {
-    actionKey = 'no_action_id_to_choose_from'
-  }
 
   if (isEmptyString) {
     toggleErrorMessage =
@@ -753,7 +685,7 @@ function NodeEntry(props: {
                 'blue',
                 'purple',
                 'red',
-                'khaki',
+                'brown',
                 'orange',
               ]}
               currentValue={node.color}
@@ -870,71 +802,182 @@ function NodeEntry(props: {
               </div>
             </div>
           </div>
-          <h4 className={actionTitleClassName}>Action(s):</h4>
-          <div className='NodeActionDetails'>
-            <div className={selectorContainerClassName}>
-              <div className='Previous' onClick={displayPreviousAction}>
-                previous
-              </div>
-              <div className='CurrentActionDisplayed'>
-                {displayedAction + 1}/{totalActions}
-              </div>
-              <div className='Next' onClick={displayNextAction}>
-                next
-              </div>
-            </div>
-            <NodeAction
-              action={node.actions[displayedAction]}
-              node={node}
-              appActions={appActions}
-              displayedAction={displayedAction}
-              setDisplayedAction={setDisplayedAction}
-              actionEmptyStringArray={actionEmptyStringArray}
-              setActionEmptyStringArray={setActionEmptyStringArray}
-              setMountHandled={setMountHandled}
-              handleChange={handleChange}
-              key={actionKey}
-            />
-            <div className={selectorContainerClassName}>
-              <div className='Previous' onClick={displayPreviousAction}>
-                previous
-              </div>
-              <div className='CurrentActionDisplayed'>
-                {displayedAction + 1}/{totalActions}
-              </div>
-              <div className='Next' onClick={displayNextAction}>
-                next
-              </div>
-            </div>
-          </div>
-          <div className='UserActions'>
-            <Action
-              purpose={EActionPurpose.Add}
-              handleClick={() => {
-                if (node !== null) {
-                  let action: MissionNodeAction = new MissionNodeAction(
-                    node,
-                    generateHash(),
-                    'New Action',
-                    'Enter your description here.',
-                    5000,
-                    0.5,
-                    1,
-                    'Enter your successful post-execution message here.',
-                    'Enter your failed post-execution message here.',
-                  )
-
-                  node.actions.push(action)
-                  handleChange()
-                }
-              }}
-              tooltipDescription={'Add a new action to this node.'}
-              uniqueClassName={addNewActionClassName}
-              // key={`actual-action_add-new-action_${node.nodeID}`}
-            />
-          </div>
+          <NodeActions
+            node={node}
+            appActions={appActions}
+            isEmptyString={isEmptyString}
+            displayedAction={displayedAction}
+            setDisplayedAction={setDisplayedAction}
+            setMountHandled={setMountHandled}
+            actionEmptyStringArray={actionEmptyStringArray}
+            setActionEmptyStringArray={setActionEmptyStringArray}
+            handleChange={handleChange}
+          />
         </div>
       </div>
+    )
+  } else {
+    return null
+  }
+}
+
+function NodeActions(props: {
+  node: MissionNode
+  appActions: AppActions
+  isEmptyString: boolean
+  displayedAction: number
+  setDisplayedAction: (displayedAction: number) => void
+  setMountHandled: (mountHandled: boolean) => void
+  actionEmptyStringArray: Array<string>
+  setActionEmptyStringArray: (actionEmptyStringArray: Array<string>) => void
+  handleChange: () => void
+}): JSX.Element | null {
+  let node: MissionNode = props.node
+  let appActions: AppActions = props.appActions
+  let isEmptyString: boolean = props.isEmptyString
+  let displayedAction: number = props.displayedAction
+  let setDisplayedAction: (displayedAction: number) => void =
+    props.setDisplayedAction
+  let setMountHandled: (mountHandled: boolean) => void = props.setMountHandled
+  let actionEmptyStringArray: Array<string> = props.actionEmptyStringArray
+  let setActionEmptyStringArray: (
+    actionEmptyStringArray: Array<string>,
+  ) => void = props.setActionEmptyStringArray
+  let handleChange = props.handleChange
+  let totalActions: number | undefined = node.actions.length
+  let actionKey: string = ''
+  let addNewActionClassName: string = 'Action add'
+  let selectorContainerClassName: string = 'SelectorContainer'
+
+  /* -- COMPONENT FUNCTIONS -- */
+
+  const displayNextAction = () => {
+    if (node.actions !== undefined) {
+      let lastAction: number = node?.actions.length - 1
+
+      if (!isEmptyString) {
+        if (displayedAction === lastAction) {
+          setDisplayedAction(0)
+          setMountHandled(false)
+        } else {
+          setDisplayedAction(displayedAction + 1)
+          setMountHandled(false)
+        }
+        setActionEmptyStringArray([])
+      } else {
+        appActions.notify(
+          `**Error:** The node called "${node.name.toLowerCase()}" has at least one field that was left empty. These fields must contain at least one character.`,
+          null,
+        )
+      }
+    }
+  }
+
+  const displayPreviousAction = () => {
+    if (!isEmptyString) {
+      if (displayedAction === 0 && node?.actions !== undefined) {
+        setDisplayedAction(node?.actions.length - 1)
+      } else {
+        setDisplayedAction(displayedAction - 1)
+      }
+      setActionEmptyStringArray([])
+    } else {
+      appActions.notify(
+        `**Error:** The node called "${node?.name.toLowerCase()}" has at least one field that was left empty. These fields must contain at least one character.`,
+        null,
+      )
+    }
+  }
+
+  /* -- RENDER -- */
+
+  // Logic that hides the buttons that select which action is being
+  // displayed because there is 1 action or less for the selected node.
+  if (
+    node.actions.length === 0 ||
+    node.actions.length === 1 ||
+    node.actions[0] === undefined
+  ) {
+    actionKey = 'no_action_id_to_choose_from'
+    selectorContainerClassName += ' Hidden'
+  }
+
+  // Logic that keeps the app from crashing by making the key for the
+  // individual action that is being displayed under the action(s) section
+  // change dynamically.
+  if (node.actions.length > 0) {
+    actionKey = node.actions[displayedAction].actionID
+  } else if (node.actions.length <= 0) {
+    actionKey = 'no_action_id_to_choose_from'
+  }
+
+  if (node.executable) {
+    return (
+      <>
+        <h4 className='ActionInfo'>Action(s):</h4>
+        <div className='NodeActionDetails'>
+          <div className={selectorContainerClassName}>
+            <div className='Previous' onClick={displayPreviousAction}>
+              previous
+            </div>
+            <div className='CurrentActionDisplayed'>
+              {displayedAction + 1}/{totalActions}
+            </div>
+            <div className='Next' onClick={displayNextAction}>
+              next
+            </div>
+          </div>
+          <NodeAction
+            action={node.actions[displayedAction]}
+            node={node}
+            appActions={appActions}
+            displayedAction={displayedAction}
+            setDisplayedAction={setDisplayedAction}
+            actionEmptyStringArray={actionEmptyStringArray}
+            setActionEmptyStringArray={setActionEmptyStringArray}
+            setMountHandled={setMountHandled}
+            handleChange={handleChange}
+            key={actionKey}
+          />
+          <div className={selectorContainerClassName}>
+            <div className='Previous' onClick={displayPreviousAction}>
+              previous
+            </div>
+            <div className='CurrentActionDisplayed'>
+              {displayedAction + 1}/{totalActions}
+            </div>
+            <div className='Next' onClick={displayNextAction}>
+              next
+            </div>
+          </div>
+        </div>
+        <div className='UserActions'>
+          <Action
+            purpose={EActionPurpose.Add}
+            handleClick={() => {
+              if (node !== null) {
+                let action: MissionNodeAction = new MissionNodeAction(
+                  node,
+                  generateHash(),
+                  'New Action',
+                  'Enter your description here.',
+                  5000,
+                  0.5,
+                  1,
+                  'Enter your successful post-execution message here.',
+                  'Enter your failed post-execution message here.',
+                )
+
+                node.actions.push(action)
+                handleChange()
+              }
+            }}
+            tooltipDescription={'Add a new action to this node.'}
+            uniqueClassName={addNewActionClassName}
+            // key={`actual-action_add-new-action_${node.nodeID}`}
+          />
+        </div>
+      </>
     )
   } else {
     return null
@@ -966,10 +1009,7 @@ function NodeAction(props: {
     actionEmptyStringArray: Array<string>,
   ) => void = props.setActionEmptyStringArray
   let setMountHandled: (mountHandled: boolean) => void = props.setMountHandled
-  let nodeActionClassName: string = 'NodeAction'
   let deleteActionClassName: string = 'Delete'
-  let addNewActionClassName: string = ''
-  let addNewActionTooltipDescription: string = ''
 
   /* -- COMPONENT FUNCTIONS -- */
   const removeActionEmptyString = (field: string) => {
@@ -981,25 +1021,14 @@ function NodeAction(props: {
   }
 
   /* -- RENDER -- */
-  if (node !== null && !node.executable) {
-    nodeActionClassName += ' Hide'
-  }
 
   if (node.actions.length === 1) {
     deleteActionClassName += ' Disabled'
   }
 
-  if (!node.executable) {
-    addNewActionClassName += ' disabled'
-    addNewActionTooltipDescription =
-      'Toggle the executable button on to be able to create actions.'
-  } else {
-    addNewActionTooltipDescription = 'Add a new action to this node.'
-  }
-
-  if (action !== undefined) {
+  if (node.executable) {
     return (
-      <div className={nodeActionClassName}>
+      <div className='NodeAction'>
         <Detail
           label='Name'
           initialValue={action.name}
@@ -1145,44 +1174,7 @@ function NodeAction(props: {
       </div>
     )
   } else {
-    return (
-      <>
-        <h4 className='ActionInfo' style={{ marginBottom: '20px' }}>
-          Action(s):
-        </h4>
-        <div className='NodeAction'>
-          <div className='NoActions' key={'no-actions-903jfksjdf092j3f'}>
-            No actions exist for this node. Create one below.
-          </div>
-        </div>
-        <div className='UserActions'>
-          <Action
-            purpose={EActionPurpose.Add}
-            handleClick={() => {
-              if (node !== null && node.executable) {
-                let action: MissionNodeAction = new MissionNodeAction(
-                  node,
-                  generateHash(),
-                  'New Action',
-                  'Enter your description here.',
-                  5000,
-                  0.5,
-                  1,
-                  'Enter your successful post-execution message here.',
-                  'Enter your failed post-execution message here.',
-                )
-
-                node.actions.push(action)
-                handleChange()
-              }
-            }}
-            tooltipDescription={addNewActionTooltipDescription}
-            uniqueClassName={addNewActionClassName}
-            // key={`actual-action_add-new-action_${node.nodeID}`}
-          />
-        </div>
-      </>
-    )
+    return null
   }
 }
 

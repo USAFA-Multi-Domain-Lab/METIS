@@ -170,10 +170,6 @@ $background-bar: linear-gradient(
     .ActionInfo {
       color: $terminal;
       margin: 30px auto 0px 15px;
-
-      &.Hide {
-        display: none;
-      }
     }
 
     .NodeActionDetails {
@@ -192,10 +188,6 @@ $background-bar: linear-gradient(
         border: 2px solid $terminal-blue;
         border-radius: 10px;
         padding-bottom: 30px;
-
-        &.Hide {
-          display: none;
-        }
 
         .Detail {
           width: calc(225px - 20px);
@@ -242,10 +234,6 @@ $background-bar: linear-gradient(
         margin: 20px 20px;
         text-align: center;
 
-        &.hide {
-          display: none;
-        }
-
         .Previous,
         .Next {
           user-select: none;
@@ -273,18 +261,6 @@ $background-bar: linear-gradient(
         width: 40px;
         text-align: center;
         margin: 0;
-
-        &.add {
-          &.Hide {
-            display: none;
-          }
-
-          &.disabled {
-            cursor: default;
-            transform: scale(0.95);
-            opacity: 0.65;
-          }
-        }
       }
 
       * {

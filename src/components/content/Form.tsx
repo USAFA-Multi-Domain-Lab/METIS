@@ -203,7 +203,7 @@ export function DetailBox(props: {
   action?: MissionNodeAction
   emptyStringAllowed?: boolean
   disabled?: boolean
-  deliverValue: (value: string | '') => void
+  deliverValue: (value: string) => void
 }): JSX.Element | null {
   const fieldOffsetHeight: number = 3
 
@@ -228,7 +228,8 @@ export function DetailBox(props: {
   const resizeField = (
     event:
       | React.KeyboardEvent<HTMLTextAreaElement>
-      | React.ChangeEvent<HTMLTextAreaElement>,
+      | React.ChangeEvent<HTMLTextAreaElement>
+      | React.FocusEvent,
   ): void => {
     let fieldElement: HTMLTextAreaElement = event.target as HTMLTextAreaElement
 
@@ -291,6 +292,7 @@ export function DetailBox(props: {
         }}
         onBlur={(event: React.FocusEvent) => {
           let target: HTMLTextAreaElement = event.target as HTMLTextAreaElement
+          resizeField(event)
 
           if (!emptyStringAllowed && target.value === '') {
             setIsEmptyString(true)
