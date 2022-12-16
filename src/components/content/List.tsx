@@ -96,8 +96,10 @@ interface IList_P<TList> {
   applyClassNameAddon: (item: TList) => string
   // adds and ID to the element
   applyElementID: (item: TList) => string | undefined
+  // custom styling for the list itself
+  listStyling: React.CSSProperties
   // custom styling for the item in question
-  applyStyling: (item: TList) => React.CSSProperties
+  applyItemStyling: (item: TList) => React.CSSProperties
   // what's displayed in the heading
   headingText: string
   // what's displayed below the heading
@@ -181,6 +183,7 @@ export default class List<TList extends object> extends React.Component<
     listSpecificItemClassName: '',
     applyClassNameAddon: () => '',
     applyElementID: () => undefined,
+    listStyling: {},
     applyStyling: () => {},
     subheadingText: null,
     itemsPerPage: 5,
@@ -746,7 +749,7 @@ export default class List<TList extends object> extends React.Component<
               <div
                 className={className}
                 id={this.props.applyElementID(item)}
-                style={this.props.applyStyling(item)}
+                style={this.props.applyItemStyling(item)}
                 key={this.props.renderKey(item, index)}
                 draggable={this.props.handleGrab !== null}
                 onClick={() => {
@@ -847,6 +850,7 @@ export default class List<TList extends object> extends React.Component<
     let clickable: boolean = this.props.handleSelection !== null
     let grabbable: boolean = this.props.handleGrab !== null
     let ajaxStatus: EAjaxStatus = this.props.ajaxStatus
+    let listStyling: React.CSSProperties = this.props.listStyling
     let listSpecificItemClassName: string | null =
       this.props.listSpecificItemClassName
     let headingText: string = this.props.headingText
@@ -931,7 +935,7 @@ export default class List<TList extends object> extends React.Component<
     // -- render --
 
     return (
-      <div className={listClassName}>
+      <div className={listClassName} style={listStyling}>
         <div className='top'>
           <div className={previousPageClassName} onClick={this.turnBackPage}>
             {'<'}

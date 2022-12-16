@@ -26,6 +26,12 @@
     opacity: 0.35;
   }
 
+  &.cancel {
+    transition: 500ms transform;
+    font-weight: 400;
+    line-height: 34.5px;
+  }
+
   &.edit {
     background: url('/assets/images/icons/edit.svg'), $background-alt1;
     background-position: 11.5px 10.5px;

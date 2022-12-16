@@ -3,7 +3,11 @@ import seedrandom, { PRNG } from 'seedrandom'
 import { v4 as generateHash } from 'uuid'
 import axios, { AxiosError, AxiosResponse } from 'axios'
 import { AnyObject } from './toolbox/objects'
-import { MissionNode } from './mission-nodes'
+import {
+  ENodeTargetRelation,
+  MissionNode,
+  MissionNodeCreator,
+} from './mission-nodes'
 import { MissionNodeAction } from './mission-node-actions'
 
 // This is the method that the clone
@@ -39,9 +43,6 @@ export interface IMissionCloneOptions {
 // This represents a mission for a
 // student to complete.
 export class Mission {
-  static setRequestInProgress() {
-    throw new Error('Method not implemented.')
-  }
   missionID: string
   name: string
   versionNumber: number
@@ -55,10 +56,13 @@ export class Mission {
   rng: PRNG
   rootNode: MissionNode
   lastExpandedNode: MissionNode | null
+  _lastCreatedNode: MissionNode | null
   structureChangeKey: string
   structureChangeHandlers: Array<(structureChangeKey: string) => void>
   _disableNodes: boolean
   _depth: number
+  _nodeCreationTarget: MissionNode | null
+  _nodeCreators: Array<MissionNodeCreator>
 
   // This will return the node
   // structure for the mission,
@@ -76,12 +80,85 @@ export class Mission {
     return this._exportNodeData()
   }
 
+  // Getter for _lastCreatedNode.
+  get lastCreatedNode(): MissionNode | null {
+    return this._lastCreatedNode
+  }
+
+  // Getter for _disableNodes.
   get disableNodes(): boolean {
     return this._disableNodes
   }
 
+  // Getter for _depth.
   get depth(): number {
     return this._depth
+  }
+
+  // Getter for _nodeCreationTarget.
+  get nodeCreationTarget(): MissionNode | null {
+    return this._nodeCreationTarget
+  }
+
+  // Setter for _nodeCreationTarget.
+  set nodeCreationTarget(nodeCreationTarget: MissionNode | null) {
+    this._nodeCreationTarget = nodeCreationTarget
+    this._nodeCreators = []
+
+    if (nodeCreationTarget !== null) {
+      // this._nodeCreators.push(
+      //   new MissionNodeCreator(
+      //     this,
+      //     nodeCreationTarget,
+      //     ENodeTargetRelation.ParentOfTargetAndChildren,
+      //     0,
+      //     0,
+      //   ),
+      // )
+      this._nodeCreators.push(
+        new MissionNodeCreator(
+          this,
+          nodeCreationTarget,
+          ENodeTargetRelation.ParentOfTargetOnly,
+          0,
+          0,
+        ),
+      )
+      this._nodeCreators.push(
+        new MissionNodeCreator(
+          this,
+          nodeCreationTarget,
+          ENodeTargetRelation.BetweenTargetAndChildren,
+          0,
+          0,
+        ),
+      )
+      this._nodeCreators.push(
+        new MissionNodeCreator(
+          this,
+          nodeCreationTarget,
+          ENodeTargetRelation.PreviousSiblingOfTarget,
+          0,
+          0,
+        ),
+      )
+      this._nodeCreators.push(
+        new MissionNodeCreator(
+          this,
+          nodeCreationTarget,
+          ENodeTargetRelation.FollowingSiblingOfTarget,
+          0,
+          0,
+        ),
+      )
+    }
+
+    this.handleStructureChange()
+  }
+
+  // Getter for _nodeCreators.
+  get nodeCreators(): Array<MissionNodeCreator> {
+    return this._nodeCreators
   }
 
   constructor(
@@ -119,10 +196,13 @@ export class Mission {
       0,
     )
     this.lastExpandedNode = null
+    this._lastCreatedNode = null
     this.structureChangeKey = generateHash()
     this.structureChangeHandlers = []
     this._disableNodes = false
     this._depth = -1
+    this._nodeCreationTarget = null
+    this._nodeCreators = []
 
     this._importNodeData(nodeData)
     this._importNodeStructure(nodeStructure, this.rootNode, expandAll)
@@ -132,8 +212,6 @@ export class Mission {
     } else {
       this.positionNodes()
     }
-
-    console.log(this)
   }
 
   // This will determine the relationship
@@ -286,6 +364,10 @@ export class Mission {
 
     this.positionNodes()
 
+    if (this.nodeCreationTarget !== null) {
+      this.positionNodeCreators()
+    }
+
     for (let handler of this.structureChangeHandlers) {
       handler(this.structureChangeKey)
     }
@@ -338,6 +420,7 @@ export class Mission {
     rootNode.childNodes.push(node)
     rootNode.expand()
     this.nodes.set(node.nodeID, node)
+    this._lastCreatedNode = node
 
     this.handleStructureChange()
 
@@ -353,7 +436,7 @@ export class Mission {
     depth: number = -1,
     rowCount: Counter = new Counter(0),
   ): Mission => {
-    parentNode.depth = depth
+    let nodeCreationTarget: MissionNode | null = this.nodeCreationTarget
 
     // If the parent node isn't the rootNode,
     // then this function was recursively
@@ -370,12 +453,31 @@ export class Mission {
     else {
       this._depth = -1
     }
+
+    parentNode.depth = depth
+
+    // If the nodeCreationTarget is this parentNode,
+    // the positioning is offset to account for the
+    // node creators that must be rendered.
+    if (nodeCreationTarget?.nodeID === parentNode.nodeID) {
+      depth++
+    }
+
     // If the parentNode is expanded, then
     // child nodes could effect the positioning
     // of sibling nodes, and the children should
     // be accounted for.
     if (parentNode.isExpanded) {
       let childNodes = parentNode.childNodes
+
+      // If the nodeCreationTarget is a child of the
+      // parentNode, the positioning is offset to account
+      // for the node creators that must be rendered.
+      for (let childNode of childNodes) {
+        if (nodeCreationTarget?.nodeID === childNode.nodeID) {
+          depth += 1
+        }
+      }
 
       // The childNodes should then be examined
       // by recursively calling this function.
@@ -384,7 +486,21 @@ export class Mission {
           rowCount.increment()
         }
 
+        // If the nodeCreationTarget is this childNode,
+        // the positioning is offset to account for the
+        // node creators that must be rendered.
+        if (nodeCreationTarget?.nodeID === childNode.nodeID) {
+          rowCount.increment()
+        }
+
         this.positionNodes(childNode, depth + 1, rowCount)
+
+        // If the nodeCreationTarget is this childNode,
+        // the positioning is offset to account for the
+        // node creators that must be rendered.
+        if (nodeCreationTarget?.nodeID === childNode.nodeID) {
+          rowCount.increment()
+        }
       })
     }
 
@@ -396,6 +512,42 @@ export class Mission {
     }
 
     return this
+  }
+
+  // This will position all the nodes
+  // creators with mapX and mapY values that
+  // correspond with the current state
+  // of the mission.
+  positionNodeCreators = (): void => {
+    let nodeCreationTarget: MissionNode | null = this.nodeCreationTarget
+    let nodeCreators: Array<MissionNodeCreator> = this.nodeCreators
+
+    if (nodeCreationTarget !== null) {
+      for (let nodeCreator of nodeCreators) {
+        switch (nodeCreator.creationTargetRelation) {
+          case ENodeTargetRelation.ParentOfTargetAndChildren:
+            nodeCreator.mapX = nodeCreationTarget.mapX - 2
+            nodeCreator.mapY = nodeCreationTarget.mapY
+            break
+          case ENodeTargetRelation.ParentOfTargetOnly:
+            nodeCreator.mapX = nodeCreationTarget.mapX - 1
+            nodeCreator.mapY = nodeCreationTarget.mapY
+            break
+          case ENodeTargetRelation.BetweenTargetAndChildren:
+            nodeCreator.mapX = nodeCreationTarget.mapX + 1
+            nodeCreator.mapY = nodeCreationTarget.mapY
+            break
+          case ENodeTargetRelation.PreviousSiblingOfTarget:
+            nodeCreator.mapX = nodeCreationTarget.mapX
+            nodeCreator.mapY = nodeCreationTarget.mapY - 1
+            break
+          case ENodeTargetRelation.FollowingSiblingOfTarget:
+            nodeCreator.mapX = nodeCreationTarget.mapX
+            nodeCreator.mapY = nodeCreationTarget.mapY + 1
+            break
+        }
+      }
+    }
   }
 
   // This will create a copy of this

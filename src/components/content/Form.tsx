@@ -193,6 +193,7 @@ export function DetailBox(props: {
       let fieldElement: HTMLTextAreaElement | null = field.current
 
       if (fieldElement) {
+        console.log(fieldElement.scrollHeight)
         fieldElement.value = initialValue
         fieldElement.style.height = '1px'
         fieldElement.style.height = `${
