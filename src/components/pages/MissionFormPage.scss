@@ -53,38 +53,6 @@ $background-bar: linear-gradient(
   .Navigation {
     display: grid;
     grid-template-columns: auto 130px 130px 130px;
-    // margin: 0 auto;
-    // width: 100%;
-    // height: 30px;
-    // vertical-align: bottom;
-
-    // .Branding {
-    //   padding-right: 20px;
-    // }
-
-    // .Heading {
-    //   display: inline-block;
-    //   padding: 0 0;
-    //   line-height: 3rem;
-    //   font-size: 30px;
-    // }
-
-    // .Link {
-    //   display: flex;
-    //   justify-content: center;
-    //   align-items: center;
-    //   flex-flow: row wrap;
-    //   -webkit-user-select: none;
-    //   user-select: none;
-    //   cursor: pointer;
-    //   transition: opacity 175ms;
-
-    //   &:hover {
-    //     border: 2px solid $color-accent;
-    //     border-radius: 5px;
-    //     text-align: center;
-    //   }
-    // }
   }
 
   .Content {
@@ -143,7 +111,7 @@ $background-bar: linear-gradient(
       display: block;
       cursor: pointer;
       user-select: none;
-      position: relative;
+      position: sticky;
       top: -9px;
       left: 0px;
       transform: scale(0.77);
@@ -172,7 +140,41 @@ $background-bar: linear-gradient(
       }
     }
 
+    .NodeInfoContainer {
+      margin: 40px 45px 40px 15px;
+
+      .DeleteNodeContainer {
+        display: block;
+        width: 225px;
+        margin: 30px auto 0;
+        text-align: right;
+        font-size: 0.85em;
+
+        .DeleteNode {
+          .Text {
+            color: $color-accent-light;
+            font-weight: 400;
+
+            &:hover {
+              cursor: pointer;
+            }
+          }
+
+          .RightBracket {
+            color: $color-main;
+          }
+        }
+      }
+    }
+
+    .ActionInfo {
+      color: $terminal;
+      margin: 30px auto 0px 15px;
+    }
+
     .NodeActionDetails {
+      margin-top: 20px;
+
       > .Label {
         margin: 40px auto 0;
         border-bottom: 2px solid $color-main;
@@ -182,7 +184,14 @@ $background-bar: linear-gradient(
       }
 
       .NodeAction {
-        margin: 40px 0;
+        margin: 0 45px 0 20px;
+        border: 2px solid $terminal-blue;
+        border-radius: 10px;
+        padding-bottom: 30px;
+
+        .Detail {
+          width: calc(225px - 20px);
+        }
 
         .Delete {
           cursor: pointer;
@@ -190,7 +199,7 @@ $background-bar: linear-gradient(
           box-sizing: border-box;
           margin: 5px auto 0;
           border-bottom: 2px solid $color-main;
-          width: 225px;
+          width: calc(225px - 20px);
           padding: 15px 15px;
           text-align: right;
           color: $color-main;
@@ -202,41 +211,60 @@ $background-bar: linear-gradient(
             font-weight: 400;
           }
         }
-      }
-    }
 
-    .NoActions {
-      margin: 30px auto;
-      width: 225px;
-      font-size: 12.5px;
+        .NoActions {
+          margin: 30px auto 0;
+          width: calc(100% - 60px);
+          font-size: 0.85em;
+        }
+
+        .Delete {
+          &.Disabled {
+            pointer-events: none;
+            transform: scale(0.95);
+            opacity: 0.65;
+          }
+        }
+      }
+
+      .SelectorContainer {
+        display: grid;
+        grid-template-columns: 33% 33% 33%;
+        width: calc(100% - 60px);
+        margin: 20px 20px;
+        text-align: center;
+
+        .Previous,
+        .Next {
+          user-select: none;
+          &:hover {
+            cursor: pointer;
+            color: $terminal;
+          }
+        }
+
+        .CurrentActionDisplayed {
+          &:hover {
+            cursor: default;
+          }
+        }
+      }
     }
 
     .UserActions {
       display: block;
-      margin: 0 auto 40px;
-      width: 225px;
+      margin: 30px 45px 40px 20px;
+      width: calc(100% - 65px);
       text-align: center;
 
       .Action {
         width: 40px;
         text-align: center;
+        margin: 0;
       }
 
       * {
         transition: transform 250ms, opacity 250ms;
-      }
-
-      &.Disabled {
-        pointer-events: none;
-
-        > .Label,
-        .NodeAction .Detail *,
-        .NodeAction .Delete,
-        .NoActions,
-        .Action {
-          transform: scale(0.8);
-          opacity: 0.65;
-        }
       }
     }
 

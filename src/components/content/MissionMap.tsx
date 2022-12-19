@@ -712,8 +712,8 @@ export default class MissionMap extends React.Component<
       case 'red':
         className = 'red'
         break
-      case 'khaki':
-        className = 'khaki'
+      case 'brown':
+        className = 'brown'
         break
       case 'orange':
         className = 'orange'

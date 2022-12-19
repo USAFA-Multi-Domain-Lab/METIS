@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import './NodeActions.scss'
-import { useStore } from 'react-context-hook'
 import { MissionNode } from '../../modules/mission-nodes'
 import { MissionNodeAction } from '../../modules/mission-node-actions'
 import Tooltip from './Tooltip'
@@ -8,26 +7,26 @@ import strings from '../../modules/toolbox/strings'
 
 const NodeActions = (props: {
   selectedNode: MissionNode | null | undefined
+  setActionSelectionPromptIsDisplayed: (
+    actionSelectionPromptIsDisplayed: boolean,
+  ) => void
+  setExecuteNodePathPromptIsDisplayed: (
+    executeNodePathPromptIsDisplayed: boolean,
+  ) => void
+  setProcessTime: (processTime: number) => void
 }) => {
-  /* -- GLOBAL STATE -- */
-  const [
-    executeNodePathPromptIsDisplayed,
-    setExecuteNodePathPromptIsDisplayed,
-  ] = useStore<boolean>('executeNodePathPromptIsDisplayed')
-  const [
-    actionSelectionPromptIsDisplayed,
-    setActionSelectionPromptIsDisplayed,
-  ] = useStore<boolean>('actionSelectionPromptIsDisplayed')
-  const [actionDisplay, setActionDisplay] =
-    useStore<Array<MissionNodeAction>>('actionDisplay')
-  const [processTime, setProcessTime] = useStore<number>('processTime')
-  const [actionName, setActionName] = useStore<string>('actionName')
-  const [actionSuccessChance, setActionSuccessChance] = useStore<number>(
-    'actionSuccessChance',
-  )
+  let selectedNode: MissionNode | null | undefined = props.selectedNode
+
+  const setExecuteNodePathPromptIsDisplayed =
+    props.setExecuteNodePathPromptIsDisplayed
+  const setActionSelectionPromptIsDisplayed =
+    props.setActionSelectionPromptIsDisplayed
+  const setProcessTime = props.setProcessTime
 
   /* -- COMPONENT STATE -- */
   const [displayActionList, setDisplayActionList] = useState<boolean>(false)
+  const [actionName, setActionName] = useState<string>('')
+  const [actionSuccessChance, setActionSuccessChance] = useState<number>(0)
 
   /* -- COMPONENT FUNCTIONS -- */
 
@@ -35,7 +34,6 @@ const NodeActions = (props: {
   const closeWindow = (): void => {
     setActionSelectionPromptIsDisplayed(false)
     setDisplayActionList(false)
-    setActionDisplay([])
   }
 
   const revealOptions = () => {
@@ -61,57 +59,72 @@ const NodeActions = (props: {
 
   /* -- RENDER -- */
 
-  let className: string = 'NodeActionList'
+  let nodeActionListClassName: string = 'NodeActionList'
 
   if (displayActionList === false) {
-    className = 'hide NodeActionList'
-  } else {
-    className = 'NodeActionList'
+    nodeActionListClassName += ' hide'
   }
 
-  return (
-    <div className='NodeActions'>
-      <p className='x' onClick={closeWindow}>
-        x
-      </p>
+  if (selectedNode && selectedNode.actions.length > 0) {
+    return (
+      <div className='NodeActions'>
+        <p className='x' onClick={closeWindow}>
+          x
+        </p>
 
-      <p className='PromptDisplayText'>
-        What you would like to do to {props.selectedNode?.name}?
-      </p>
+        <p className='PromptDisplayText'>
+          What you would like to do to {props.selectedNode?.name}?
+        </p>
 
-      <div className='NodeActionDefault' onClick={revealOptions}>
-        Choose an action
-        <div className='ArrowDown'>^</div>
+        <div className='NodeActionDefault' onClick={revealOptions}>
+          Choose an action
+          <div className='ArrowDown'>^</div>
+        </div>
+        <div className={nodeActionListClassName}>
+          {selectedNode.actions.map((action: MissionNodeAction) => {
+            return (
+              <div
+                className='NodeAction'
+                key={action.actionID}
+                onClick={() => selectAction(action)}
+              >
+                <Tooltip
+                  description={
+                    `**Time to execute:** ${
+                      (action.processTime as number) / 1000
+                    } second(s)\n` +
+                    `**Chance of success:** ${
+                      (action.successChance as number) * 100
+                    }%\n` +
+                    `**Resource cost:** ${
+                      action.resourceCost as number
+                    } resource(s)\n` +
+                    `**Description:** ${strings.limit(action.description, 160)}`
+                  }
+                />
+                {action.name}
+              </div>
+            )
+          })}
+        </div>
       </div>
-      <div className={className}>
-        {actionDisplay.map((action: MissionNodeAction) => {
-          return (
-            <div
-              className='NodeAction'
-              key={action.name}
-              onClick={() => selectAction(action)}
-            >
-              <Tooltip
-                description={
-                  `**Time to execute:** ${
-                    (action.processTime as number) / 1000
-                  } second(s)\n` +
-                  `**Chance of success:** ${
-                    (action.successChance as number) * 100
-                  }%\n` +
-                  `**Resource cost:** ${
-                    action.resourceCost as number
-                  } resource(s)\n` +
-                  `**Description:** ${strings.limit(action.description, 160)}`
-                }
-              />
-              {action.name}
-            </div>
-          )
-        })}
+    )
+  } else {
+    return (
+      <div className='NodeActions'>
+        <p className='x' onClick={closeWindow}>
+          x
+        </p>
+        <p className='PromptDisplayText'>
+          What you would like to do to {props.selectedNode?.name}?
+        </p>
+        <p className='NoActions'>
+          No actions exist for this node. Contact your instructor for further
+          instructions.
+        </p>
       </div>
-    </div>
-  )
+    )
+  }
 }
 
 export default NodeActions

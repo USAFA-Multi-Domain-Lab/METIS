@@ -65,14 +65,12 @@
       background-color: black;
     }
 
-    &.ExecutionButton {
-      &.disabled {
-        cursor: default;
-        opacity: 0.35;
+    &.disabled {
+      cursor: default;
+      opacity: 0.35;
 
-        &.disabled:hover {
-          background-color: $background-alt2;
-        }
+      &.disabled:hover {
+        background-color: $background-alt2;
       }
     }
   }

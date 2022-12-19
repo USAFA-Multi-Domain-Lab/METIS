@@ -21,22 +21,14 @@ export enum ENodeTargetRelation {
 // from the server used to create instances
 // of MissionNode in the Mission class.
 export interface IMissionNodeJson {
-  executing: boolean
   nodeID: string
   name: string
   color: string
   preExecutionText: string
   actions: string
   executable: boolean
-  nodeActionItems: Array<{
-    text: string
-    timeDelay: number
-    successChance: number
-    resourceCost: number
-    postExecutionSuccessText: string
-    postExecutionFailureText: string
-    willSucceed: boolean
-  }>
+  device: boolean
+  actions: Array<IMissionNodeActionJSON>
 }
 
 // This represents an individual node

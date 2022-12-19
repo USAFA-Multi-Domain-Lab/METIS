@@ -1,5 +1,4 @@
 import './ExecuteNodePath.scss'
-import { useStore } from 'react-context-hook'
 import { MissionNode } from '../../modules/mission-nodes'
 import { MissionNodeAction } from '../../modules/mission-node-actions'
 import gameLogic, { runNodeLoadingBar } from '../../modules/game-logic'
@@ -12,24 +11,26 @@ const ExecuteNodePath = (props: {
   mission: Mission
   selectedNode: MissionNode | null
   notify: (message: string, duration?: number | null) => Notification
+  consoleOutputs: Array<{ date: number; value: string }>
+  setConsoleOutputs: (consoleOutputs: { date: number; value: string }[]) => void
+  setActionSelectionPromptIsDisplayed: (
+    actionSelectionPromptIsDisplayed: boolean,
+  ) => void
+  setExecuteNodePathPromptIsDisplayed: (
+    executeNodePathPromptIsDisplayed: boolean,
+  ) => void
+  processTime: number
 }) => {
   let mission: Mission = props.mission
-
-  /* -- GLOBAL STATE -- */
-  const [consoleOutputs, setConsoleOutputs] =
-    useStore<Array<{ date: number; value: string | null }>>('consoleOutputs')
-  const [
-    executeNodePathPromptIsDisplayed,
-    setExecuteNodePathPromptIsDisplayed,
-  ] = useStore<boolean>('executeNodePathPromptIsDisplayed')
-  const [
-    actionSelectionPromptIsDisplayed,
-    setActionSelectionPromptIsDisplayed,
-  ] = useStore<boolean>('actionSelectionPromptIsDisplayed')
-  const [processTime] = useStore<number>('processTime')
-  const [actionName] = useStore<string>('actionName')
-  const [actionDisplay, setActionDisplay] =
-    useStore<Array<MissionNodeAction>>('actionDisplay')
+  let selectedNode: MissionNode | null | undefined = props.selectedNode
+  let consoleOutputs = props.consoleOutputs
+  let setConsoleOutputs = props.setConsoleOutputs
+  let setExecuteNodePathPromptIsDisplayed =
+    props.setExecuteNodePathPromptIsDisplayed
+  let setActionSelectionPromptIsDisplayed =
+    props.setActionSelectionPromptIsDisplayed
+  let processTime = props.processTime
+  let actionName: string | undefined = props.selectedNode?.selectedAction?.name
 
   /* -- COMPONENT STATE -- */
 
@@ -38,7 +39,6 @@ const ExecuteNodePath = (props: {
   // Closes the execution prompt window
   const closeWindow = (): void => {
     setExecuteNodePathPromptIsDisplayed(false)
-    setActionDisplay([])
   }
 
   const execute = () => {
@@ -50,69 +50,52 @@ const ExecuteNodePath = (props: {
       if (mission.resources > 0 && resourceCost !== undefined) {
         setExecuteNodePathPromptIsDisplayed(false)
 
-        selectedNode.execute((success: boolean) => {
-          // Output message in the terminal which differs based on whether
-          // it passes or fails
-          if (success && selectedAction?.postExecutionSuccessText !== '') {
-            gameLogic.handleNodeSelection(selectedNode)
+        let spendResources: number = mission.resources - resourceCost
+        if (spendResources >= 0) {
+          mission.resources = spendResources
+          runNodeLoadingBar(processTime)
 
-            setConsoleOutputs([
-              ...consoleOutputs,
-              {
-                date: Date.now(),
-                value: `<span class='line-cursor'>MDL@${selectedNode.name.replaceAll(
-                  ' ',
-                  '-',
-                )}: </span>
+          selectedNode.execute((success: boolean) => {
+            // Output message in the terminal which differs based on whether
+            // it passes or fails
+            if (success) {
+              gameLogic.handleNodeSelection(selectedNode)
+
+              setConsoleOutputs([
+                ...consoleOutputs,
+                {
+                  date: Date.now(),
+                  value: `<span class='line-cursor'>MDL@${selectedNode.name.replaceAll(
+                    ' ',
+                    '-',
+                  )}: </span>
                      <span class="succeeded">${
                        selectedAction?.postExecutionSuccessText
                      }</span>`,
-              },
-            ])
-          } else if (
-            success &&
-            selectedAction?.postExecutionSuccessText === ''
-          ) {
-            gameLogic.handleNodeSelection(selectedNode)
-
-            setConsoleOutputs([
-              ...consoleOutputs,
-              {
-                date: Date.now(),
-                value: null,
-              },
-            ])
-          } else if (
-            !success &&
-            selectedAction?.postExecutionFailureText !== ''
-          ) {
-            setConsoleOutputs([
-              ...consoleOutputs,
-              {
-                date: Date.now(),
-                value: `<span class='line-cursor'>MDL@${selectedNode.name.replaceAll(
-                  ' ',
-                  '-',
-                )}: </span>
+                },
+              ])
+            } else if (!success) {
+              setConsoleOutputs([
+                ...consoleOutputs,
+                {
+                  date: Date.now(),
+                  value: `<span class='line-cursor'>MDL@${selectedNode.name.replaceAll(
+                    ' ',
+                    '-',
+                  )}: </span>
                     <span class="failed">${
                       selectedAction?.postExecutionFailureText
                     }</span>`,
-              },
-            ])
-          } else {
-            setConsoleOutputs([
-              ...consoleOutputs,
-              {
-                date: Date.now(),
-                value: null,
-              },
-            ])
-          }
-        })
-        runNodeLoadingBar(processTime)
-        setActionDisplay([])
-        let spendResources: number = mission.resources - resourceCost
-        mission.resources = spendResources
+                },
+              ])
+            }
+          })
+        } else {
+          props.notify(
+            `You don't have enough resources left to spend on ${selectedNode.name}.`,
+            3500,
+          )
+        }
       } else if (resourceCost === undefined) {
         console.error(`The selected action's resource cost is undefined.`)
       } else {
@@ -122,8 +105,10 @@ const ExecuteNodePath = (props: {
   }
 
   const selectAlternativeAction = () => {
-    setExecuteNodePathPromptIsDisplayed(false)
-    setActionSelectionPromptIsDisplayed(true)
+    if (selectedNode && selectedNode.actions.length > 1) {
+      setExecuteNodePathPromptIsDisplayed(false)
+      setActionSelectionPromptIsDisplayed(true)
+    }
   }
 
   /* -- RENDER -- */
@@ -131,10 +116,13 @@ const ExecuteNodePath = (props: {
   // Logic to disable the execute button once a user is out of tokens.
   let executionButtonClassName: string = 'Button ExecutionButton'
   let displayTooltip: boolean = false
+  let additionalActionButtonClassName: string = 'Button AdditionalActionButton'
 
   if (mission.resources <= 0) {
     executionButtonClassName += ' disabled'
     displayTooltip = true
+  } else if (selectedNode && selectedNode.actions.length === 1) {
+    additionalActionButtonClassName += ' disabled'
   }
 
   return (
@@ -143,7 +131,7 @@ const ExecuteNodePath = (props: {
         x
       </p>
       <p className='PromptDisplayText'>
-        Do you want to {actionName.toLowerCase()} {props.selectedNode?.name}?
+        Do you want to {actionName?.toLowerCase()} {props.selectedNode?.name}?
       </p>
       <ActionPropertyDisplay selectedNode={props.selectedNode} />
       <div className='Buttons'>
@@ -151,13 +139,13 @@ const ExecuteNodePath = (props: {
           {actionName}
           {displayTooltip ? (
             <Tooltip
-              description={`You cannot ${actionName.toLowerCase()} because you have no more resources left to spend.`}
+              description={`You cannot ${actionName?.toLowerCase()} because you have no more resources left to spend.`}
             />
           ) : null}
         </button>
 
         <button
-          className='Button AdditionalActionButton'
+          className={additionalActionButtonClassName}
           onClick={selectAlternativeAction}
         >
           Choose another action

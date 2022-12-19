@@ -4,10 +4,24 @@
   margin: 20px auto 0;
   width: 225px;
 
+  .FieldErrorMessage {
+    font-size: 0.7em;
+    color: $color-error-alt;
+    margin-top: 5px;
+
+    &.hide {
+      display: none;
+    }
+  }
+
   .Label {
     margin: 11px 0 0;
     width: 100%;
     font-size: 12.5px;
+
+    &.Error {
+      color: $color-error-alt;
+    }
   }
 
   @mixin fieldDimensions() {
@@ -24,6 +38,12 @@
     background-color: $background-alt2;
     color: $color-accent-light;
     font-size: 14px;
+
+    &.Error {
+      border-top: 2px solid $color-error-alt;
+      border-bottom: 2px solid $color-error-alt;
+      color: $color-error-alt;
+    }
   }
 
   &.DetailNumber {
@@ -44,6 +64,22 @@
     .Field {
       overflow-y: hidden;
       resize: none;
+
+      &.Error {
+        border-top: 2px solid $color-error-alt;
+        border-bottom: 2px solid $color-error-alt;
+        color: $color-error-alt;
+      }
+    }
+
+    .FieldErrorMessage {
+      font-size: 0.7em;
+      color: $color-error-alt;
+      margin-top: 5px;
+
+      &.hide {
+        display: none;
+      }
     }
   }
 
@@ -117,8 +153,5 @@
         opacity: 0.65;
       }
     }
-  }
-
-  &.DetailToggle {
   }
 }

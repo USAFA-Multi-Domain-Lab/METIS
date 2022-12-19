@@ -7,7 +7,6 @@ import {
   saveMission,
 } from '../../modules/missions'
 import { EAjaxStatus } from '../../modules/toolbox/ajax'
-import Branding from '../content/Branding'
 import {
   Detail,
   DetailBox,
@@ -27,6 +26,7 @@ import { MissionNodeAction } from '../../modules/mission-node-actions'
 import { EToggleLockState } from '../content/Toggle'
 import AppState, { AppActions } from '../AppState'
 import Navigation from '../content/Navigation'
+import { JsxElement } from 'typescript'
 
 // This is a enum used to describe
 // the locations that one node can
@@ -63,6 +63,16 @@ export default function MissionFormPage(
   const [nodeStructuringIsActive, activateNodeStructuring] =
     useState<boolean>(false)
   const [existsInDatabase, setExistsInDatabase] = useState<boolean>(false)
+  const [displayedAction, setDisplayedAction] = useState<number>(0)
+  const [missionEmptyStringArray, setMissionEmptyStringArray] = useState<
+    Array<string>
+  >([])
+  const [nodeEmptyStringArray, setNodeEmptyStringArray] = useState<
+    Array<string>
+  >([])
+  const [actionEmptyStringArray, setActionEmptyStringArray] = useState<
+    Array<string>
+  >([])
 
   /* -- COMPONENT EFFECTS -- */
 
@@ -329,12 +339,82 @@ export default function MissionFormPage(
             mission={mission}
             missionAjaxStatus={EAjaxStatus.Loaded}
             handleNodeSelection={(node: MissionNode) => {
-              if (selectedNode?.nodeID !== node.nodeID) {
-                selectNode(node)
-              } else {
+              setDisplayedAction(0)
+
+              if (
+                selectedNode !== null &&
+                missionEmptyStringArray.length === 0 &&
+                selectedNode.executable
+              ) {
+                if (
+                  selectedNode.nodeID !== node.nodeID &&
+                  nodeEmptyStringArray.length === 0 &&
+                  actionEmptyStringArray.length === 0
+                ) {
+                  selectNode(node)
+                } else if (
+                  selectedNode.nodeID === node.nodeID &&
+                  nodeEmptyStringArray.length === 0 &&
+                  actionEmptyStringArray.length === 0
+                ) {
+                  selectNode(null)
+                } else {
+                  appActions.notify(
+                    `**Error:** The node called "${selectedNode.name.toLowerCase()}" has at least one field that was left empty. These fields must contain at least one character.`,
+                    null,
+                  )
+                }
+              } else if (
+                selectedNode !== null &&
+                missionEmptyStringArray.length === 0 &&
+                selectedNode.nodeID === node.nodeID &&
+                !selectedNode.executable
+              ) {
                 selectNode(null)
+              } else if (
+                selectedNode === null &&
+                missionEmptyStringArray.length > 0
+              ) {
+                appActions.notify(
+                  `**Error:** The mission side panel has at least one field that was left empty. This field must contain at least one character.`,
+                  null,
+                )
+              } else {
+                selectNode(node)
               }
               activateNodeStructuring(false)
+
+              if (
+                node !== null &&
+                node.executable &&
+                node.actions.length === 0
+              ) {
+                // Checks to make sure the selected node has at least
+                // one action to choose from. If the selected node doesn't
+                // have at least one action then it will auto-generate one
+                // for that node.
+                let newActionArray: Array<MissionNodeAction> = [
+                  new MissionNodeAction(
+                    node,
+                    generateHash(),
+                    'New Action',
+                    'Enter your description here.',
+                    5000,
+                    0.5,
+                    1,
+                    'Enter your successful post-execution message here.',
+                    'Enter your failed post-execution message here.',
+                  ),
+                ]
+                node.actions = newActionArray
+
+                appActions.notify(
+                  `Auto-generated an action for ${node.name} because it is an executable node with no actions to execute.`,
+                  10000,
+                )
+
+                handleChange()
+              }
             }}
             handleMapCreateRequest={() => {
               let newNode: MissionNode = mission.spawnNewNode()
@@ -348,24 +428,44 @@ export default function MissionFormPage(
             }}
             handleMapSaveRequest={save}
             editCanBeRequested={!nodeStructuringIsActive}
-            saveCanBeRequested={areUnsavedChanges}
+            saveCanBeRequested={
+              areUnsavedChanges &&
+              missionEmptyStringArray.length === 0 &&
+              nodeEmptyStringArray.length === 0 &&
+              actionEmptyStringArray.length === 0
+            }
             applyNodeClassName={(node: MissionNode) => ''}
             renderNodeTooltipDescription={(node: MissionNode) => ''}
           />
           <MissionDetails
             active={selectedNode === null && !nodeStructuringIsActive}
             mission={mission}
+            missionEmptyStringArray={missionEmptyStringArray}
+            setMissionEmptyStringArray={setMissionEmptyStringArray}
             handleChange={handleChange}
           />
           <NodeEntry
             node={selectedNode}
+            appActions={appActions}
+            displayedAction={displayedAction}
+            setDisplayedAction={setDisplayedAction}
+            nodeEmptyStringArray={nodeEmptyStringArray}
+            setNodeEmptyStringArray={setNodeEmptyStringArray}
+            actionEmptyStringArray={actionEmptyStringArray}
+            setActionEmptyStringArray={setActionEmptyStringArray}
             handleChange={handleChange}
             handleDeleteRequest={() => {
               if (selectedNode !== null) {
                 handleNodeDeleteRequest(selectedNode)
+                setNodeEmptyStringArray([])
+                setActionEmptyStringArray([])
               }
             }}
-            handleCloseRequest={() => selectNode(null)}
+            handleCloseRequest={() => {
+              selectNode(null)
+              setActionEmptyStringArray([])
+              setNodeEmptyStringArray([])
+            }}
           />
           <NodeStructuring
             active={nodeStructuringIsActive}
@@ -386,11 +486,27 @@ export default function MissionFormPage(
 function MissionDetails(props: {
   active: boolean
   mission: Mission
+  missionEmptyStringArray: Array<string>
+  setMissionEmptyStringArray: (missionEmptyString: Array<string>) => void
   handleChange: () => void
 }): JSX.Element | null {
   let active: boolean = props.active
   let mission: Mission = props.mission
+  let missionEmptyStringArray: Array<string> = props.missionEmptyStringArray
+  let setMissionEmptyStringArray: (missionEmptyString: Array<string>) => void =
+    props.setMissionEmptyStringArray
   let handleChange = props.handleChange
+
+  /* -- COMPONENT FUNCTIONS -- */
+  const removeMissionEmptyString = (field: string) => {
+    missionEmptyStringArray.map((missionEmptyString: string, index: number) => {
+      if (
+        missionEmptyString === `missionID=${mission.missionID}_field=${field}`
+      ) {
+        missionEmptyStringArray.splice(index, 1)
+      }
+    })
+  }
 
   if (active) {
     return (
@@ -400,8 +516,16 @@ function MissionDetails(props: {
             label='Name'
             initialValue={mission.name}
             deliverValue={(name: string) => {
-              mission.name = name
-              handleChange()
+              if (name !== '') {
+                mission.name = name
+                removeMissionEmptyString('name')
+                handleChange()
+              } else {
+                setMissionEmptyStringArray([
+                  ...missionEmptyStringArray,
+                  `missionID=${mission.missionID}_field=name`,
+                ])
+              }
             }}
             key={`${mission.missionID}_name`}
           />
@@ -436,173 +560,435 @@ function MissionDetails(props: {
 // a given node can be edited.
 function NodeEntry(props: {
   node: MissionNode | null
+  appActions: AppActions
+  displayedAction: number
+  setDisplayedAction: (displayedAction: number) => void
+  nodeEmptyStringArray: Array<string>
+  setNodeEmptyStringArray: (nodeEmptyStringArray: Array<string>) => void
+  actionEmptyStringArray: Array<string>
+  setActionEmptyStringArray: (actionEmptyStringArray: Array<string>) => void
   handleChange: () => void
   handleDeleteRequest: () => void
   handleCloseRequest: () => void
 }): JSX.Element | null {
   let node: MissionNode | null = props.node
+  let appActions: AppActions = props.appActions
+  let displayedAction: number = props.displayedAction
+  let setDisplayedAction: (displayedAction: number) => void =
+    props.setDisplayedAction
+  let nodeEmptyStringArray: Array<string> = props.nodeEmptyStringArray
+  let setNodeEmptyStringArray = props.setNodeEmptyStringArray
+  let actionEmptyStringArray: Array<string> = props.actionEmptyStringArray
+  let setActionEmptyStringArray: (
+    actionEmptyStringArray: Array<string>,
+  ) => void = props.setActionEmptyStringArray
   let handleChange = props.handleChange
   let handleDeleteRequest = props.handleDeleteRequest
   let handleCloseRequest = props.handleCloseRequest
-  let nodeActionDetailsClassName: string = 'NodeActionDetails'
-  let noActionsClassName: string = 'NoActions'
+  let toggleErrorMessage: string | undefined = undefined
 
-  if (!node?.executable) {
-    nodeActionDetailsClassName += ' Disabled'
+  /* -- COMPONENT STATE -- */
+  const [mountHandled, setMountHandled] = useState<boolean>()
+  const [isEmptyString, setIsEmptyString] = useState<boolean>(false)
+
+  /* -- COMPONENT EFFECTS -- */
+
+  // Equivalent of componentDidMount.
+  useEffect(() => {
+    if (!mountHandled) {
+      if (
+        nodeEmptyStringArray.length === 0 &&
+        actionEmptyStringArray.length === 0
+      ) {
+        setIsEmptyString(false)
+      } else if (
+        nodeEmptyStringArray.length > 0 ||
+        actionEmptyStringArray.length > 0
+      ) {
+        setIsEmptyString(true)
+      }
+      setMountHandled(true)
+    }
+  }, [mountHandled])
+
+  /* -- COMPONENT FUNCTIONS -- */
+
+  const removeNodeEmptyString = (field: string) => {
+    nodeEmptyStringArray.map((nodeEmptyString: string, index: number) => {
+      if (
+        node !== null &&
+        nodeEmptyString === `nodeID=${node.nodeID}_field=${field}`
+      ) {
+        nodeEmptyStringArray.splice(index, 1)
+      }
+    })
   }
 
-  if (node === null || node.actions.length > 0) {
-    noActionsClassName += ' Hidden'
+  /* -- RENDER -- */
+
+  if (isEmptyString) {
+    toggleErrorMessage =
+      'The button above is locked until there are no empty fields.'
   }
 
   if (node !== null) {
     return (
       <div className='NodeEntry SidePanel'>
         <div className='BorderBox'>
-          <div className='Close' onClick={handleCloseRequest}>
+          <div
+            className='Close'
+            onClick={() => {
+              if (!isEmptyString) {
+                handleCloseRequest()
+              } else if (node !== null) {
+                appActions.notify(
+                  `**Error:** The node called "${node.name.toLowerCase()}" has at least one field that was left empty. These fields must contain at least one character.`,
+                  null,
+                )
+              }
+              setMountHandled(false)
+            }}
+            key={'close-node-side-panel'}
+          >
             <div className='Circle'>
               <div className='X'>x</div>
             </div>
             <Tooltip description='Close panel.' />
           </div>
-          <Detail
-            label='Name'
-            initialValue={node.name}
-            deliverValue={(name: string) => {
-              if (node !== null) {
-                node.name = name
+          <div className='NodeInfoContainer'>
+            <Detail
+              label='Name'
+              initialValue={node.name}
+              deliverValue={(name: string) => {
+                if (node !== null && name !== '') {
+                  node.name = name
+                  removeNodeEmptyString('name')
+                  setMountHandled(false)
+                  handleChange()
+                } else if (node !== null) {
+                  setNodeEmptyStringArray([
+                    ...nodeEmptyStringArray,
+                    `nodeID=${node.nodeID}_field=name`,
+                  ])
+                  setMountHandled(false)
+                }
+              }}
+              key={`${node.nodeID}_name`}
+            />
+            <DetailDropDown
+              label={'Color'}
+              options={[
+                'default',
+                'green',
+                'pink',
+                'yellow',
+                'blue',
+                'purple',
+                'red',
+                'brown',
+                'orange',
+              ]}
+              currentValue={node.color}
+              uniqueClassName={'Color'}
+              deliverValue={(color: string) => {
+                if (node !== null) {
+                  node.color = color
 
-                handleChange()
-              }
-            }}
-            key={`${node.nodeID}_name`}
-          />
-          <DetailDropDown
-            label={'Color'}
-            options={[
-              'default',
-              'green',
-              'pink',
-              'yellow',
-              'blue',
-              'purple',
-              'red',
-              'khaki',
-              'orange',
-            ]}
-            currentValue={node.color}
-            uniqueClassName={'Color'}
-            deliverValue={(color: string) => {
-              if (node !== null) {
-                node.color = color
-
-                handleChange()
-              }
-            }}
-            key={`${node.nodeID}_color`}
-          />
-          <div
-            className='ColorFill'
-            onClick={() => {
-              if (node !== null) {
-                node.applyColorFill()
-                handleChange()
-              }
-            }}
-          >
-            {'[ '}
-            <span>Fill</span> {' ]'}
-            <Tooltip description='Shade all descendant nodes this color as well.' />
-          </div>
-          <DetailToggle
-            label={'Executable'}
-            initialValue={node.executable}
-            deliverValue={(executable: boolean) => {
-              if (node !== null) {
-                node.executable = executable
-                handleChange()
-              }
-            }}
-            key={`${node.nodeID}_executable`}
-          />
-          <DetailToggle
-            label={'Device'}
-            initialValue={node.device}
-            lockState={
-              node.executable
-                ? EToggleLockState.Unlocked
-                : EToggleLockState.LockedDeactivation
-            }
-            deliverValue={(device: boolean) => {
-              if (node !== null) {
-                node.device = device
-                handleChange()
-              }
-            }}
-            key={`${node.nodeID}_device`}
-          />
-          <DetailBox
-            label='Pre-Execution Text'
-            initialValue={node.preExecutionText}
-            disabled={!node.executable}
-            deliverValue={(preExecutionText: string) => {
-              if (node !== null) {
-                node.preExecutionText = preExecutionText
-
-                handleChange()
-              }
-            }}
-            key={`${node.nodeID}_preExecutionText`}
-          />
-          <div className={nodeActionDetailsClassName}>
-            <div className='Label'>Actions:</div>
-            {node.actions.map((action: MissionNodeAction) => (
-              <NodeAction
-                action={action}
-                node={node as any}
-                handleChange={handleChange}
-                key={action.actionID}
-              />
-            ))}
+                  handleChange()
+                }
+              }}
+              key={`${node.nodeID}_color`}
+            />
             <div
-              className={noActionsClassName}
-              key={'no-actions-903jfksjdf092j3f'}
+              className='ColorFill'
+              onClick={() => {
+                if (node !== null) {
+                  node.applyColorFill()
+                  handleChange()
+                }
+              }}
             >
-              No actions exist for this node. Create one below.
+              {'[ '}
+              <span>Fill</span> {' ]'}
+              <Tooltip description='Shade all descendant nodes this color as well.' />
             </div>
-            <div className='UserActions'>
-              <Action
-                purpose={EActionPurpose.Add}
-                handleClick={() => {
-                  if (node !== null) {
-                    let action: MissionNodeAction = new MissionNodeAction(
-                      node,
-                      generateHash(),
-                      'New Action',
-                      '',
-                      5000,
-                      0.5,
-                      1,
-                      '',
-                      '',
+            <DetailBox
+              label='Pre-Execution Text (optional)'
+              initialValue={node.preExecutionText}
+              emptyStringAllowed={true}
+              deliverValue={(preExecutionText: string) => {
+                if (node !== null) {
+                  node.preExecutionText = preExecutionText
+                  handleChange()
+                }
+              }}
+              key={`${node.nodeID}_preExecutionText`}
+            />
+            <DetailNumber
+              label='Depth Padding'
+              initialValue={node.mapX}
+              deliverValue={(value: number | null) => {
+                if (node !== null && value !== null) {
+                  let newValue: number = value + 1
+                  node.mapX = newValue
+                  handleChange()
+                }
+              }}
+            />
+            <DetailToggle
+              label={'Executable'}
+              initialValue={node.executable}
+              errorMessage={
+                'The button above is locked until there are no empty fields.'
+              }
+              deliverValue={(executable: boolean) => {
+                if (node !== null) {
+                  node.executable = executable
+
+                  if (executable && node.actions.length === 0) {
+                    // Checks to make sure the selected node has at least one action to choose from. If the selected node does not have at least one action then it will auto-generate one for that node.
+                    let newActionArray: Array<MissionNodeAction> = [
+                      new MissionNodeAction(
+                        node,
+                        generateHash(),
+                        'New Action',
+                        'Enter your description here.',
+                        5000,
+                        0.5,
+                        1,
+                        'Enter your successful post-execution message here.',
+                        'Enter your failed post-execution message here.',
+                      ),
+                    ]
+                    node.actions = newActionArray
+
+                    appActions.notify(
+                      `Auto-generated an action for ${node.name} because it is an executable node with no actions to execute.`,
+                      10000,
                     )
-                    node.actions.push(action)
-                    handleChange()
                   }
-                }}
-                tooltipDescription={'Add a new action to this node.'}
-                // key={`actual-action_add-new-action_${node.nodeID}`}
-              />
-              <Action
-                purpose={EActionPurpose.Remove}
-                handleClick={handleDeleteRequest}
-                tooltipDescription={'Delete this node.'}
-                // key={`actual-action_delete-node_${node.nodeID}`}
-              />
+                }
+
+                handleChange()
+              }}
+              lockState={
+                !isEmptyString
+                  ? EToggleLockState.Unlocked
+                  : isEmptyString && node.executable
+                  ? EToggleLockState.LockedActivation
+                  : isEmptyString && !node.executable
+                  ? EToggleLockState.LockedDeactivation
+                  : EToggleLockState.Unlocked
+              }
+              key={`${node.nodeID}_executable`}
+            />
+            <DetailToggle
+              label={'Device'}
+              initialValue={node.device}
+              errorMessage={toggleErrorMessage}
+              lockState={
+                !isEmptyString && node.executable
+                  ? EToggleLockState.Unlocked
+                  : isEmptyString && node.executable && node.device
+                  ? EToggleLockState.LockedActivation
+                  : isEmptyString && node.executable && !node.device
+                  ? EToggleLockState.LockedDeactivation
+                  : EToggleLockState.LockedDeactivation
+              }
+              deliverValue={(device: boolean) => {
+                if (node !== null) {
+                  node.device = device
+                  handleChange()
+                }
+              }}
+              key={`${node.nodeID}_device`}
+            />
+            <div className='DeleteNodeContainer'>
+              <div className='DeleteNode'>
+                [{' '}
+                <span className='Text' onClick={handleDeleteRequest}>
+                  Delete Node <span className='RightBracket'>]</span>
+                  <Tooltip description='Delete this node.' />
+                </span>
+              </div>
+            </div>
+          </div>
+          <NodeActions
+            node={node}
+            appActions={appActions}
+            isEmptyString={isEmptyString}
+            displayedAction={displayedAction}
+            setDisplayedAction={setDisplayedAction}
+            setMountHandled={setMountHandled}
+            actionEmptyStringArray={actionEmptyStringArray}
+            setActionEmptyStringArray={setActionEmptyStringArray}
+            handleChange={handleChange}
+          />
+        </div>
+      </div>
+    )
+  } else {
+    return null
+  }
+}
+
+function NodeActions(props: {
+  node: MissionNode
+  appActions: AppActions
+  isEmptyString: boolean
+  displayedAction: number
+  setDisplayedAction: (displayedAction: number) => void
+  setMountHandled: (mountHandled: boolean) => void
+  actionEmptyStringArray: Array<string>
+  setActionEmptyStringArray: (actionEmptyStringArray: Array<string>) => void
+  handleChange: () => void
+}): JSX.Element | null {
+  let node: MissionNode = props.node
+  let appActions: AppActions = props.appActions
+  let isEmptyString: boolean = props.isEmptyString
+  let displayedAction: number = props.displayedAction
+  let setDisplayedAction: (displayedAction: number) => void =
+    props.setDisplayedAction
+  let setMountHandled: (mountHandled: boolean) => void = props.setMountHandled
+  let actionEmptyStringArray: Array<string> = props.actionEmptyStringArray
+  let setActionEmptyStringArray: (
+    actionEmptyStringArray: Array<string>,
+  ) => void = props.setActionEmptyStringArray
+  let handleChange = props.handleChange
+  let totalActions: number | undefined = node.actions.length
+  let actionKey: string = ''
+  let addNewActionClassName: string = 'Action add'
+  let selectorContainerClassName: string = 'SelectorContainer'
+
+  /* -- COMPONENT FUNCTIONS -- */
+
+  const displayNextAction = () => {
+    if (node.actions !== undefined) {
+      let lastAction: number = node?.actions.length - 1
+
+      if (!isEmptyString) {
+        if (displayedAction === lastAction) {
+          setDisplayedAction(0)
+          setMountHandled(false)
+        } else {
+          setDisplayedAction(displayedAction + 1)
+          setMountHandled(false)
+        }
+        setActionEmptyStringArray([])
+      } else {
+        appActions.notify(
+          `**Error:** The node called "${node.name.toLowerCase()}" has at least one field that was left empty. These fields must contain at least one character.`,
+          null,
+        )
+      }
+    }
+  }
+
+  const displayPreviousAction = () => {
+    if (!isEmptyString) {
+      if (displayedAction === 0 && node?.actions !== undefined) {
+        setDisplayedAction(node?.actions.length - 1)
+      } else {
+        setDisplayedAction(displayedAction - 1)
+      }
+      setActionEmptyStringArray([])
+    } else {
+      appActions.notify(
+        `**Error:** The node called "${node?.name.toLowerCase()}" has at least one field that was left empty. These fields must contain at least one character.`,
+        null,
+      )
+    }
+  }
+
+  /* -- RENDER -- */
+
+  // Logic that hides the buttons that select which action is being
+  // displayed because there is 1 action or less for the selected node.
+  if (
+    node.actions.length === 0 ||
+    node.actions.length === 1 ||
+    node.actions[0] === undefined
+  ) {
+    actionKey = 'no_action_id_to_choose_from'
+    selectorContainerClassName += ' Hidden'
+  }
+
+  // Logic that keeps the app from crashing by making the key for the
+  // individual action that is being displayed under the action(s) section
+  // change dynamically.
+  if (node.actions.length > 0) {
+    actionKey = node.actions[displayedAction].actionID
+  } else if (node.actions.length <= 0) {
+    actionKey = 'no_action_id_to_choose_from'
+  }
+
+  if (node.executable) {
+    return (
+      <>
+        <h4 className='ActionInfo'>Action(s):</h4>
+        <div className='NodeActionDetails'>
+          <div className={selectorContainerClassName}>
+            <div className='Previous' onClick={displayPreviousAction}>
+              previous
+            </div>
+            <div className='CurrentActionDisplayed'>
+              {displayedAction + 1}/{totalActions}
+            </div>
+            <div className='Next' onClick={displayNextAction}>
+              next
+            </div>
+          </div>
+          <NodeAction
+            action={node.actions[displayedAction]}
+            node={node}
+            appActions={appActions}
+            displayedAction={displayedAction}
+            setDisplayedAction={setDisplayedAction}
+            actionEmptyStringArray={actionEmptyStringArray}
+            setActionEmptyStringArray={setActionEmptyStringArray}
+            setMountHandled={setMountHandled}
+            handleChange={handleChange}
+            key={actionKey}
+          />
+          <div className={selectorContainerClassName}>
+            <div className='Previous' onClick={displayPreviousAction}>
+              previous
+            </div>
+            <div className='CurrentActionDisplayed'>
+              {displayedAction + 1}/{totalActions}
+            </div>
+            <div className='Next' onClick={displayNextAction}>
+              next
             </div>
           </div>
         </div>
-      </div>
+        <div className='UserActions'>
+          <Action
+            purpose={EActionPurpose.Add}
+            handleClick={() => {
+              if (node !== null) {
+                let action: MissionNodeAction = new MissionNodeAction(
+                  node,
+                  generateHash(),
+                  'New Action',
+                  'Enter your description here.',
+                  5000,
+                  0.5,
+                  1,
+                  'Enter your successful post-execution message here.',
+                  'Enter your failed post-execution message here.',
+                )
+
+                node.actions.push(action)
+                handleChange()
+              }
+            }}
+            tooltipDescription={'Add a new action to this node.'}
+            uniqueClassName={addNewActionClassName}
+            // key={`actual-action_add-new-action_${node.nodeID}`}
+          />
+        </div>
+      </>
     )
   } else {
     return null
@@ -614,116 +1000,193 @@ function NodeEntry(props: {
 function NodeAction(props: {
   action: MissionNodeAction
   node: MissionNode
+  appActions: AppActions
   handleChange: () => void
+  displayedAction: number
+  setDisplayedAction: (displayedAction: number) => void
+  actionEmptyStringArray: Array<string>
+  setActionEmptyStringArray: (actionEmptyStringArray: Array<string>) => void
+  setMountHandled: (mountHandled: boolean) => void
 }): JSX.Element | null {
   let action: MissionNodeAction = props.action
   let node: MissionNode = props.node
+  let appActions: AppActions = props.appActions
   let handleChange: () => void = props.handleChange
+  let displayedAction: number = props.displayedAction
+  let setDisplayedAction: (displayedAction: number) => void =
+    props.setDisplayedAction
+  let actionEmptyStringArray: Array<string> = props.actionEmptyStringArray
+  let setActionEmptyStringArray: (
+    actionEmptyStringArray: Array<string>,
+  ) => void = props.setActionEmptyStringArray
+  let setMountHandled: (mountHandled: boolean) => void = props.setMountHandled
+  let deleteActionClassName: string = 'Delete'
 
-  return (
-    <div className='NodeAction'>
-      <Detail
-        label='Name'
-        initialValue={action.name}
-        deliverValue={(name: string) => {
-          action.name = name
-          handleChange()
-        }}
-        key={`${action.actionID}_name`}
-      />
-      <DetailBox
-        label='Description'
-        initialValue={action.description}
-        deliverValue={(description: string) => {
-          action.description = description
-          handleChange()
-        }}
-        key={`${action.actionID}_description`}
-      />
-      <DetailNumber
-        label='Success Chance'
-        initialValue={parseFloat(
-          `${(action.successChance * 100.0).toFixed(2)}`,
-        )}
-        minimum={0}
-        maximum={100}
-        unit='%'
-        deliverValue={(successChancePercentage: number | null) => {
-          if (successChancePercentage !== null) {
-            action.successChance = successChancePercentage / 100.0
+  /* -- COMPONENT FUNCTIONS -- */
+  const removeActionEmptyString = (field: string) => {
+    actionEmptyStringArray.map((actionEmptyString: string, index: number) => {
+      if (actionEmptyString === `actionID=${action.actionID}_field=${field}`) {
+        actionEmptyStringArray.splice(index, 1)
+      }
+    })
+  }
 
+  /* -- RENDER -- */
+
+  if (node.actions.length === 1) {
+    deleteActionClassName += ' Disabled'
+  }
+
+  if (node.executable) {
+    return (
+      <div className='NodeAction'>
+        <Detail
+          label='Name'
+          initialValue={action.name}
+          deliverValue={(name: string) => {
+            if (name !== '') {
+              action.name = name
+              removeActionEmptyString('name')
+              setMountHandled(false)
+              handleChange()
+            } else {
+              setActionEmptyStringArray([
+                ...actionEmptyStringArray,
+                `actionID=${action.actionID}_field=name`,
+              ])
+              setMountHandled(false)
+            }
+          }}
+          key={`${action.actionID}_name`}
+        />
+        <DetailBox
+          label='Description'
+          initialValue={action.description}
+          appActions={appActions}
+          selectedNode={node}
+          deliverValue={(description: string) => {
+            if (description !== '') {
+              action.description = description
+              removeActionEmptyString('description')
+              setMountHandled(false)
+              handleChange()
+            } else {
+              setActionEmptyStringArray([
+                ...actionEmptyStringArray,
+                `actionID=${action.actionID}_field=description`,
+              ])
+              setMountHandled(false)
+            }
+          }}
+          key={`${action.actionID}_description`}
+        />
+        <DetailNumber
+          label='Success Chance'
+          initialValue={parseFloat(
+            `${(action.successChance * 100.0).toFixed(2)}`,
+          )}
+          minimum={0}
+          maximum={100}
+          unit='%'
+          deliverValue={(successChancePercentage: number | null) => {
+            if (successChancePercentage !== null) {
+              action.successChance = successChancePercentage / 100.0
+
+              handleChange()
+            }
+          }}
+          key={`${action.actionID}_successChance`}
+        />
+        <DetailNumber
+          label='Process Time'
+          initialValue={action.processTime / 1000}
+          minimum={0}
+          maximum={60}
+          unit='s'
+          deliverValue={(timeCost: number | null) => {
+            if (timeCost !== null) {
+              action.processTime = timeCost * 1000
+
+              handleChange()
+            }
+          }}
+          key={`${action.actionID}_timeCost`}
+        />
+        <DetailNumber
+          label='Resource Cost'
+          initialValue={action.resourceCost}
+          deliverValue={(resourceCost: number | null) => {
+            if (resourceCost !== null) {
+              action.resourceCost = resourceCost
+
+              handleChange()
+            }
+          }}
+          key={`${action.actionID}_resourceCost`}
+        />
+        <DetailBox
+          label='Post-Execution Success Text'
+          initialValue={action.postExecutionSuccessText}
+          appActions={appActions}
+          selectedNode={node}
+          deliverValue={(postExecutionSuccessText: string) => {
+            if (postExecutionSuccessText !== '') {
+              action.postExecutionSuccessText = postExecutionSuccessText
+              removeActionEmptyString('postExecutionSuccessText')
+              setMountHandled(false)
+              handleChange()
+            } else {
+              setActionEmptyStringArray([
+                ...actionEmptyStringArray,
+                `actionID=${action.actionID}_field=postExecutionSuccessText`,
+              ])
+              setMountHandled(false)
+            }
+          }}
+          key={`${action.actionID}_postExecutionSuccessText`}
+        />
+        <DetailBox
+          label='Post-Execution Failure Text'
+          initialValue={action.postExecutionFailureText}
+          appActions={appActions}
+          selectedNode={node}
+          deliverValue={(postExecutionFailureText: string) => {
+            if (postExecutionFailureText !== '') {
+              action.postExecutionFailureText = postExecutionFailureText
+              removeActionEmptyString('postExecutionFailureText')
+              setMountHandled(false)
+              handleChange()
+            } else {
+              setActionEmptyStringArray([
+                ...actionEmptyStringArray,
+                `actionID=${action.actionID}_field=postExecutionFailureText`,
+              ])
+              setMountHandled(false)
+            }
+          }}
+          key={`${action.actionID}_postExecutionFailureText`}
+        />
+        <div
+          className={deleteActionClassName}
+          onClick={() => {
+            if (node.actions.length > 1) {
+              node.actions.splice(node.actions.indexOf(action), 1)
+            }
+            setDisplayedAction(displayedAction - 1)
+            setActionEmptyStringArray([])
             handleChange()
-          }
-        }}
-        key={`${action.actionID}_successChance`}
-      />
-      <DetailNumber
-        label='Process Time'
-        initialValue={action.processTime / 1000}
-        minimum={0}
-        maximum={60}
-        unit='s'
-        deliverValue={(timeCost: number | null) => {
-          if (timeCost !== null) {
-            action.processTime = timeCost * 1000
-
-            handleChange()
-          }
-        }}
-        key={`${action.actionID}_timeCost`}
-      />
-      <DetailNumber
-        label='Resource Cost'
-        initialValue={action.resourceCost}
-        deliverValue={(resourceCost: number | null) => {
-          if (resourceCost !== null) {
-            action.resourceCost = resourceCost
-
-            handleChange()
-          }
-        }}
-        key={`${action.actionID}_resourceCost`}
-      />
-      <DetailBox
-        label='Post-Execution Success Text'
-        initialValue={action.postExecutionSuccessText}
-        disabled={!node.executable}
-        deliverValue={(postExecutionSuccessText: string) => {
-          if (postExecutionSuccessText !== null) {
-            action.postExecutionSuccessText = postExecutionSuccessText
-
-            handleChange()
-          }
-        }}
-        key={`${action.actionID}_postExecutionSuccessText`}
-      />
-      <DetailBox
-        label='Post-Execution Failure Text'
-        initialValue={action.postExecutionFailureText}
-        disabled={!node.executable}
-        deliverValue={(postExecutionFailureText: string) => {
-          if (postExecutionFailureText !== null) {
-            action.postExecutionFailureText = postExecutionFailureText
-
-            handleChange()
-          }
-        }}
-        key={`${action.actionID}_postExecutionFailureText`}
-      />
-      <div
-        className='Delete'
-        onClick={() => {
-          node.actions.splice(node.actions.indexOf(action), 1)
-          handleChange()
-        }}
-        key={`${action.actionID}_delete`}
-      >
-        {'[ '}
-        <span>Delete Action</span> {' ]'}
-        <Tooltip description='Delete this action from the node.' />
+          }}
+          key={`${action.actionID}_delete`}
+        >
+          {'[ '}
+          <span>Delete Action</span> {' ]'}
+          <Tooltip description='Delete this action from the node.' />
+        </div>
       </div>
-    </div>
-  )
+    )
+  } else {
+    return null
+  }
 }
 
 // This will render a form where

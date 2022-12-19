@@ -1,9 +1,6 @@
 import React from 'react'
 import { useStore, withStore } from 'react-context-hook'
 import usersModule from '../modules/users'
-import { Mission } from '../modules/missions'
-import { MissionNode } from '../modules/mission-nodes'
-import { MissionNodeAction } from '../modules/mission-node-actions'
 import { IUser } from '../modules/users'
 import { AnyObject } from 'mongoose'
 import Confirmation, { IConfirmation } from './content/Confirmation'
@@ -26,19 +23,9 @@ export interface IAppStateValues {
   errorMessage: string | null
   tooltips: React.RefObject<HTMLDivElement>
   tooltipDescription: string
-  consoleOutputs: Array<{ date: number; value: string }>
   notifications: Array<Notification>
   postLoadNotifications: Array<Notification>
   confirmation: IConfirmation | null
-  outputPanelIsDisplayed: boolean
-  executeNodePathPromptIsDisplayed: boolean
-  actionSelectionPromptIsDisplayed: boolean
-  lastSelectedNode: MissionNode | null
-  actionDisplay: Array<MissionNodeAction>
-  actionName: string
-  processTime: number
-  actionSuccessChance: number
-  allMissions: Array<Mission>
 }
 
 export interface IAppStateSetters {
@@ -54,25 +41,9 @@ export interface IAppStateSetters {
   setErrorMessage: (errorMessage: string | null) => void
   setTooltips: (tooltips: React.RefObject<HTMLDivElement>) => void
   setTooltipDescription: (tooltipDescription: string) => void
-  setConsoleOutputs: (
-    consoleOutputs: Array<{ date: number; value: string }>,
-  ) => void
   setNotifications: (notifications: Array<Notification>) => void
   setPostLoadNotifications: (postLoadNotifications: Array<Notification>) => void
   setConfirmation: (confirmation: IConfirmation | null) => void
-  setOutputPanelIsDisplayed: (outputPanelIsDisplayed: boolean) => void
-  setExecuteNodePathPromptIsDisplayed: (
-    executeNodePathPromptIsDisplayed: boolean,
-  ) => void
-  setActionSelectionPromptIsDisplayed: (
-    actionSelectionPromptIsDisplayed: boolean,
-  ) => void
-  setLastSelectedNode: (lastSelectedNode: MissionNode | null) => void
-  setActionDisplay: (actionDisplay: Array<MissionNodeAction>) => void
-  setActionName: (actionName: string) => void
-  setProcessTime: (processTime: number) => void
-  setActionSuccessChance: (actionSuccessChance: number) => void
-  setAllMissions: (allMissions: Array<Mission>) => void
 }
 
 // Options available when confirming
@@ -312,19 +283,9 @@ export default class AppState implements IAppStateValues, IAppStateValues {
   errorMessage: string | null
   tooltips: React.RefObject<HTMLDivElement>
   tooltipDescription: string
-  consoleOutputs: { date: number; value: string }[]
   notifications: Notification[]
   postLoadNotifications: Array<Notification>
   confirmation: IConfirmation | null
-  outputPanelIsDisplayed: boolean
-  executeNodePathPromptIsDisplayed: boolean
-  actionSelectionPromptIsDisplayed: boolean
-  lastSelectedNode: MissionNode | null
-  actionDisplay: MissionNodeAction[]
-  actionName: string
-  processTime: number
-  actionSuccessChance: number
-  allMissions: Mission[]
 
   setForcedUpdateCounter: (forcedUpdateCounter: number) => void
   setCurrentUser: (user: IUser | null) => void
@@ -338,23 +299,9 @@ export default class AppState implements IAppStateValues, IAppStateValues {
   setErrorMessage: (errorMessage: string | null) => void
   setTooltips: (tooltips: React.RefObject<HTMLDivElement>) => void
   setTooltipDescription: (tooltipDescription: string) => void
-  setConsoleOutputs: (consoleOutputs: { date: number; value: string }[]) => void
   setNotifications: (notifications: Notification[]) => void
   setPostLoadNotifications: (postLoadNotifications: Array<Notification>) => void
   setConfirmation: (confirmation: IConfirmation | null) => void
-  setOutputPanelIsDisplayed: (outputPanelIsDisplayed: boolean) => void
-  setExecuteNodePathPromptIsDisplayed: (
-    executeNodePathPromptIsDisplayed: boolean,
-  ) => void
-  setActionSelectionPromptIsDisplayed: (
-    actionSelectionPromptIsDisplayed: boolean,
-  ) => void
-  setLastSelectedNode: (lastSelectedNode: MissionNode | null) => void
-  setActionDisplay: (actionDisplay: MissionNodeAction[]) => void
-  setActionName: (actionName: string) => void
-  setProcessTime: (processTime: number) => void
-  setActionSuccessChance: (actionSuccessChance: number) => void
-  setAllMissions: (allMissions: Mission[]) => void
 
   static get defaultAppStateValues(): IAppStateValues {
     return {
@@ -370,19 +317,9 @@ export default class AppState implements IAppStateValues, IAppStateValues {
       errorMessage: null,
       tooltips: React.createRef(),
       tooltipDescription: '',
-      consoleOutputs: [],
       notifications: [],
       postLoadNotifications: [],
       confirmation: null,
-      outputPanelIsDisplayed: false,
-      executeNodePathPromptIsDisplayed: false,
-      actionSelectionPromptIsDisplayed: false,
-      lastSelectedNode: null,
-      actionDisplay: [],
-      actionName: '',
-      processTime: 0,
-      actionSuccessChance: 0,
-      allMissions: [],
     }
   }
 
@@ -400,19 +337,9 @@ export default class AppState implements IAppStateValues, IAppStateValues {
       setPageSwitchMinTimeReached: (): void => {},
       setErrorMessage: (): void => {},
       setTooltips: (): void => {},
-      setConsoleOutputs: (): void => {},
       setNotifications: (): void => {},
       setPostLoadNotifications: (): void => {},
       setConfirmation: (): void => {},
-      setOutputPanelIsDisplayed: (): void => {},
-      setExecuteNodePathPromptIsDisplayed: (): void => {},
-      setActionSelectionPromptIsDisplayed: (): void => {},
-      setLastSelectedNode: (): void => {},
-      setActionDisplay: (): void => {},
-      setActionName: (): void => {},
-      setProcessTime: (): void => {},
-      setActionSuccessChance: (): void => {},
-      setAllMissions: (): void => {},
     }
   }
 
@@ -432,21 +359,9 @@ export default class AppState implements IAppStateValues, IAppStateValues {
     this.errorMessage = appStateValues.errorMessage
     this.tooltips = appStateValues.tooltips
     this.tooltipDescription = appStateValues.tooltipDescription
-    this.consoleOutputs = appStateValues.consoleOutputs
     this.notifications = appStateValues.notifications
     this.postLoadNotifications = appStateValues.postLoadNotifications
     this.confirmation = appStateValues.confirmation
-    this.outputPanelIsDisplayed = appStateValues.outputPanelIsDisplayed
-    this.executeNodePathPromptIsDisplayed =
-      appStateValues.executeNodePathPromptIsDisplayed
-    this.actionSelectionPromptIsDisplayed =
-      appStateValues.actionSelectionPromptIsDisplayed
-    this.lastSelectedNode = appStateValues.lastSelectedNode
-    this.actionDisplay = appStateValues.actionDisplay
-    this.actionName = appStateValues.actionName
-    this.processTime = appStateValues.processTime
-    this.actionSuccessChance = appStateValues.actionSuccessChance
-    this.allMissions = appStateValues.allMissions
 
     this.setForcedUpdateCounter = appStateSetters.setForcedUpdateCounter
     this.setCurrentUser = appStateSetters.setCurrentUser
@@ -461,21 +376,9 @@ export default class AppState implements IAppStateValues, IAppStateValues {
     this.setErrorMessage = appStateSetters.setErrorMessage
     this.setTooltips = appStateSetters.setTooltips
     this.setTooltipDescription = appStateSetters.setTooltipDescription
-    this.setConsoleOutputs = appStateSetters.setConsoleOutputs
     this.setNotifications = appStateSetters.setNotifications
     this.setPostLoadNotifications = appStateSetters.setPostLoadNotifications
     this.setConfirmation = appStateSetters.setConfirmation
-    this.setOutputPanelIsDisplayed = appStateSetters.setOutputPanelIsDisplayed
-    this.setExecuteNodePathPromptIsDisplayed =
-      appStateSetters.setExecuteNodePathPromptIsDisplayed
-    this.setActionSelectionPromptIsDisplayed =
-      appStateSetters.setActionSelectionPromptIsDisplayed
-    this.setLastSelectedNode = appStateSetters.setLastSelectedNode
-    this.setActionDisplay = appStateSetters.setActionDisplay
-    this.setActionName = appStateSetters.setActionName
-    this.setProcessTime = appStateSetters.setProcessTime
-    this.setActionSuccessChance = appStateSetters.setActionSuccessChance
-    this.setAllMissions = appStateSetters.setAllMissions
   }
 
   // This will create a new app
@@ -522,12 +425,6 @@ export default class AppState implements IAppStateValues, IAppStateValues {
         useStore<React.RefObject<HTMLDivElement>>('tooltips')
       const [tooltipDescription, setTooltipDescription] =
         useStore<string>('tooltipDescription')
-      const [consoleOutputs, setConsoleOutputs] = useStore<
-        {
-          date: number
-          value: string
-        }[]
-      >('consoleOutputs')
       const [notifications, setNotifications] =
         useStore<Notification[]>('notifications')
       const [postLoadNotifications, setPostLoadNotifications] = useStore<
@@ -536,26 +433,6 @@ export default class AppState implements IAppStateValues, IAppStateValues {
       const [confirmation, setConfirmation] = useStore<IConfirmation | null>(
         'confirmation',
       )
-      const [outputPanelIsDisplayed, setOutputPanelIsDisplayed] =
-        useStore<boolean>('outputPanelIsDisplayed')
-      const [
-        executeNodePathPromptIsDisplayed,
-        setExecuteNodePathPromptIsDisplayed,
-      ] = useStore<boolean>('executeNodePathPromptIsDisplayed')
-      const [
-        actionSelectionPromptIsDisplayed,
-        setActionSelectionPromptIsDisplayed,
-      ] = useStore<boolean>('actionSelectionPromptIsDisplayed')
-      const [lastSelectedNode, setLastSelectedNode] =
-        useStore<MissionNode | null>('lastSelectedNode')
-      const [actionDisplay, setActionDisplay] =
-        useStore<MissionNodeAction[]>('actionDisplay')
-      const [actionName, setActionName] = useStore<string>('actionName')
-      const [processTime, setProcessTime] = useStore<number>('processTime')
-      const [actionSuccessChance, setActionSuccessChance] = useStore<number>(
-        'actionSuccessChance',
-      )
-      const [allMissions, setAllMissions] = useStore<Mission[]>('allMissions')
 
       let appStateValues: IAppStateValues = {
         forcedUpdateCounter,
@@ -570,19 +447,9 @@ export default class AppState implements IAppStateValues, IAppStateValues {
         errorMessage,
         tooltips,
         tooltipDescription,
-        consoleOutputs,
         notifications,
         postLoadNotifications,
         confirmation,
-        outputPanelIsDisplayed,
-        executeNodePathPromptIsDisplayed,
-        actionSelectionPromptIsDisplayed,
-        lastSelectedNode,
-        actionDisplay,
-        actionName,
-        processTime,
-        actionSuccessChance,
-        allMissions,
       }
       let appStateSetters: IAppStateSetters = {
         setForcedUpdateCounter,
@@ -597,19 +464,9 @@ export default class AppState implements IAppStateValues, IAppStateValues {
         setErrorMessage,
         setTooltips,
         setTooltipDescription,
-        setConsoleOutputs,
         setNotifications,
         setPostLoadNotifications,
         setConfirmation,
-        setOutputPanelIsDisplayed,
-        setExecuteNodePathPromptIsDisplayed,
-        setActionSelectionPromptIsDisplayed,
-        setLastSelectedNode,
-        setActionDisplay,
-        setActionName,
-        setProcessTime,
-        setActionSuccessChance,
-        setAllMissions,
       }
       let appState = new AppState(appStateValues, appStateSetters)
       appActions.appState = appState

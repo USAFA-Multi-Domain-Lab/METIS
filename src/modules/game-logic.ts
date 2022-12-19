@@ -12,6 +12,7 @@ export const runNodeLoadingBar = (timeDelay: number) => {
   if (process == 0) {
     process = 1
     let width = 1
+
     let id = setInterval(frame, timeDelay / 100)
 
     function frame() {
