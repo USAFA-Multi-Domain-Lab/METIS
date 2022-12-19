@@ -724,6 +724,17 @@ function NodeEntry(props: {
               }}
               key={`${node.nodeID}_preExecutionText`}
             />
+            <DetailNumber
+              label='Depth Padding'
+              initialValue={node.mapX}
+              deliverValue={(value: number | null) => {
+                if (node !== null && value !== null) {
+                  let newValue: number = value + 1
+                  node.mapX = newValue
+                  handleChange()
+                }
+              }}
+            />
             <DetailToggle
               label={'Executable'}
               initialValue={node.executable}
