@@ -52,6 +52,7 @@ export class MissionNode implements IMissionMappable {
   mapX: number
   mapY: number
   depth: number
+  depthPadding: number
   _isExpanded: boolean
 
   static default_name: string = 'Unnamed Node'
@@ -62,6 +63,7 @@ export class MissionNode implements IMissionMappable {
   static default_actions: Array<IMissionNodeActionJSON> = []
   static default_mapX: number = 0
   static default_mapY: number = 0
+  static default_depthPadding: number = 0
 
   get willSucceed(): boolean {
     let willSucceed: boolean = false
@@ -130,6 +132,7 @@ export class MissionNode implements IMissionMappable {
     actionJSON: Array<IMissionNodeActionJSON>,
     mapX: number,
     mapY: number,
+    depthPadding: number,
   ) {
     this.mission = mission
     this.nodeID = nodeID
@@ -146,6 +149,7 @@ export class MissionNode implements IMissionMappable {
     this.mapX = mapX
     this.mapY = mapY
     this.depth = -1
+    this.depthPadding = depthPadding
     this._isExpanded = false
 
     this.parseActionJSON(actionJSON)

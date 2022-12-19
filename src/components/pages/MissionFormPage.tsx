@@ -21,7 +21,11 @@ import './MissionFormPage.scss'
 import { Action, EActionPurpose } from '../content/Action'
 import MoreInformation from '../content/MoreInformation'
 import { IPage } from '../App'
-import { ENodeTargetRelation, MissionNode } from '../../modules/mission-nodes'
+import {
+  ENodeTargetRelation,
+  MissionNode,
+  MissionNodeCreator,
+} from '../../modules/mission-nodes'
 import { MissionNodeAction } from '../../modules/mission-node-actions'
 import { EToggleLockState } from '../content/Toggle'
 import AppState, { AppActions } from '../AppState'
@@ -217,21 +221,67 @@ export default function MissionFormPage(
 
       if (node.hasChildren) {
         confirmationMessage =
-          'Please confirm the deletion of this node. \n**This node has child nodes, and all child nodes will be deleted as well.**'
+          `**Note: This node has children** \n` +
+          `Please confirm if you would like to delete "${node.name}" only or "${node.name}" and all of it's children.`
+        appActions.confirm(
+          confirmationMessage,
+          (concludeAction: () => void, entry?: string) => {
+            node.delete()
+            handleChange()
+            activateNodeStructuring(false)
+            selectNode(null)
+            concludeAction()
+          },
+          {
+            handleAlternate: (concludeAction: () => void) => {
+              let parentOfSelectedNode: MissionNode | null = node.parentNode
+              let childrenofSelectedNode: Array<MissionNode> = node.childNodes
+
+              // Logic to turn the selected node's children nodes into
+              // the selected node's siblings.
+              childrenofSelectedNode.forEach((childNode: MissionNode) => {
+                if (parentOfSelectedNode !== null) {
+                  parentOfSelectedNode.childNodes.splice(
+                    parentOfSelectedNode.childNodes.indexOf(node),
+                    0,
+                    childNode,
+                  )
+                }
+              })
+
+              // Logic to delete the selected node from the mission
+              // and restructure the mission to display properly.
+              if (parentOfSelectedNode !== null) {
+                parentOfSelectedNode.childNodes.splice(
+                  parentOfSelectedNode.childNodes.indexOf(node),
+                  1,
+                )
+                mission.nodes.delete(node.nodeID)
+                mission.nodeData.splice(mission.nodeData.indexOf(node), 1)
+                mission.handleStructureChange()
+              }
+
+              selectNode(null)
+              handleChange()
+              concludeAction()
+            },
+            buttonConfirmText: `${node.name} + Children`,
+            buttonAlternateText: `${node.name}`,
+          },
+        )
       } else {
         confirmationMessage = 'Please confirm the deletion of this node.'
+        appActions.confirm(
+          confirmationMessage,
+          (concludeAction: () => void, entry?: string) => {
+            node.delete()
+            handleChange()
+            activateNodeStructuring(false)
+            selectNode(null)
+            concludeAction()
+          },
+        )
       }
-
-      appActions.confirm(
-        confirmationMessage,
-        (concludeAction: () => void, entry?: string) => {
-          node.delete()
-          handleChange()
-          activateNodeStructuring(false)
-          selectNode(null)
-          concludeAction()
-        },
-      )
     }
 
     // This will logout the current user.
@@ -243,11 +293,16 @@ export default function MissionFormPage(
 
     /* -- RENDER -- */
 
-    let grayOutSaveButton: boolean =
-      !areUnsavedChanges &&
-      missionEmptyStringArray.length > 0 &&
-      nodeEmptyStringArray.length > 0 &&
-      actionEmptyStringArray.length > 0
+    let grayOutSaveButton: boolean = true
+
+    if (
+      areUnsavedChanges &&
+      missionEmptyStringArray.length === 0 &&
+      nodeEmptyStringArray.length === 0 &&
+      actionEmptyStringArray.length === 0
+    ) {
+      grayOutSaveButton = false
+    }
 
     return (
       <div className={'MissionFormPage Page'}>
@@ -477,6 +532,7 @@ export default function MissionFormPage(
             actionEmptyStringArray={actionEmptyStringArray}
             setActionEmptyStringArray={setActionEmptyStringArray}
             handleChange={handleChange}
+            mission={mission}
             handleDeleteRequest={() => {
               if (selectedNode !== null) {
                 handleNodeDeleteRequest(selectedNode)
@@ -593,6 +649,7 @@ function NodeEntry(props: {
   handleChange: () => void
   handleDeleteRequest: () => void
   handleCloseRequest: () => void
+  mission: Mission
 }): JSX.Element | null {
   let node: MissionNode | null = props.node
   let appActions: AppActions = props.appActions
@@ -609,6 +666,7 @@ function NodeEntry(props: {
   let handleDeleteRequest = props.handleDeleteRequest
   let handleCloseRequest = props.handleCloseRequest
   let toggleErrorMessage: string | undefined = undefined
+  let mission: Mission = props.mission
 
   /* -- COMPONENT STATE -- */
   const [mountHandled, setMountHandled] = useState<boolean>()
@@ -749,11 +807,16 @@ function NodeEntry(props: {
             />
             <DetailNumber
               label='Depth Padding'
-              initialValue={node.mapX}
+              initialValue={node.depthPadding}
               deliverValue={(value: number | null) => {
                 if (node !== null && value !== null) {
-                  let newValue: number = value + 1
-                  node.mapX = newValue
+                  node.depthPadding = value
+
+                  // node.siblings.forEach((sibling) => {
+                  //   sibling.depthPadding = value
+                  // })
+
+                  mission.handleStructureChange()
                   handleChange()
                 }
               }}
