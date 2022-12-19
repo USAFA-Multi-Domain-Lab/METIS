@@ -59,7 +59,7 @@ export default function MissionFormPage(
   const [forcedUpdateCounter, setForcedUpdateCounter] = useState<number>(0)
   const [mission, setMission] = useState<Mission | null>(null)
   const [areUnsavedChanges, setAreUnsavedChanges] = useState<boolean>(false)
-  const [selectedNode, selectNode] = useState<MissionNode | null>(null)
+  const [selectedNode, setSelectedNode] = useState<MissionNode | null>(null)
   const [nodeStructuringIsActive, activateNodeStructuring] =
     useState<boolean>(false)
   const [existsInDatabase, setExistsInDatabase] = useState<boolean>(false)
@@ -116,6 +116,21 @@ export default function MissionFormPage(
     }
   }, [mountHandled])
 
+  // This will deselect the selected node
+  // if the node creation target is made null.
+  useEffect(() => {
+    if (mission?.nodeCreationTarget === null) {
+      setSelectedNode(null)
+    }
+  }, [mission?.nodeCreationTarget])
+
+  // This will select a newly created node.
+  useEffect(() => {
+    if (mission && mission.lastCreatedNode !== null) {
+      setSelectedNode(mission.lastCreatedNode)
+    }
+  }, [mission?.lastCreatedNode])
+
   // Guards against refreshing or navigating away
   // with unsaved changes.
   useBeforeunload((event) => {
@@ -139,6 +154,18 @@ export default function MissionFormPage(
     const handleChange = (): void => {
       setAreUnsavedChanges(true)
       forceUpdate()
+    }
+
+    // This will select or unselect a node
+    const selectNode = (node: MissionNode | null) => {
+      if (node !== null) {
+        node.revealNodeCreators()
+      }
+      if (node === null && selectedNode !== null) {
+        selectedNode.hideNodeCreators()
+      }
+
+      setSelectedNode(node)
     }
 
     // This is called to save any changes
@@ -215,6 +242,12 @@ export default function MissionFormPage(
       })
 
     /* -- RENDER -- */
+
+    let grayOutSaveButton: boolean =
+      !areUnsavedChanges &&
+      missionEmptyStringArray.length > 0 &&
+      nodeEmptyStringArray.length > 0 &&
+      actionEmptyStringArray.length > 0
 
     return (
       <div className={'MissionFormPage Page'}>
@@ -416,24 +449,14 @@ export default function MissionFormPage(
                 handleChange()
               }
             }}
-            handleMapCreateRequest={() => {
-              let newNode: MissionNode = mission.spawnNewNode()
-              handleChange()
-              selectNode(newNode)
-              activateNodeStructuring(false)
-            }}
             handleMapEditRequest={() => {
               activateNodeStructuring(true)
               selectNode(null)
             }}
             handleMapSaveRequest={save}
-            editCanBeRequested={!nodeStructuringIsActive}
-            saveCanBeRequested={
-              areUnsavedChanges &&
-              missionEmptyStringArray.length === 0 &&
-              nodeEmptyStringArray.length === 0 &&
-              actionEmptyStringArray.length === 0
-            }
+            grayOutCreateButton={false}
+            grayOutEditButton={nodeStructuringIsActive}
+            grayOutSaveButton={grayOutSaveButton}
             applyNodeClassName={(node: MissionNode) => ''}
             renderNodeTooltipDescription={(node: MissionNode) => ''}
           />
@@ -1262,7 +1285,10 @@ function NodeStructuring(props: {
             let destinationNode = nodePendingDrop
 
             if (nodeGrabbed !== null) {
-              nodeGrabbed.move(destinationNode, ENodeTargetRelation.Parent)
+              nodeGrabbed.move(
+                destinationNode,
+                ENodeTargetRelation.ChildOfTarget,
+              )
               handleChange()
             }
 
@@ -1328,16 +1354,16 @@ function NodeStructuring(props: {
 
               switch (dropLocation) {
                 case ENodeDropLocation.Top:
-                  targetRelation = ENodeTargetRelation.FollowingSibling
+                  targetRelation = ENodeTargetRelation.PreviousSiblingOfTarget
                   break
                 case ENodeDropLocation.Center:
-                  targetRelation = ENodeTargetRelation.Parent
+                  targetRelation = ENodeTargetRelation.ChildOfTarget
                   break
                 case ENodeDropLocation.Bottom:
-                  targetRelation = ENodeTargetRelation.PreviousSibling
+                  targetRelation = ENodeTargetRelation.FollowingSiblingOfTarget
                   break
                 default:
-                  targetRelation = ENodeTargetRelation.Parent
+                  targetRelation = ENodeTargetRelation.ChildOfTarget
                   break
               }
 

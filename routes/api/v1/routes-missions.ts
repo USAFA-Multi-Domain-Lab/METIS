@@ -1,5 +1,6 @@
 //npm imports
 import express from 'express'
+import { ERROR_BAD_DATA } from '../../../database/database'
 import Mission from '../../../database/models/model-mission'
 import { isLoggedIn, requireLogin } from '../../../user'
 
@@ -42,7 +43,12 @@ router.post('/', requireLogin, (request, response) => {
         if (error) {
           console.log('Failed to create mission:')
           console.error(error)
-          return response.sendStatus(500)
+
+          if (error.name === ERROR_BAD_DATA) {
+            return response.sendStatus(400)
+          } else {
+            return response.sendStatus(500)
+          }
         } else {
           return response.json({ mission })
         }

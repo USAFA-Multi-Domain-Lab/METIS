@@ -106,7 +106,6 @@
 
   .List {
     position: relative;
-    top: 4.5px;
     overflow: visible;
     margin: 0;
     height: 100%;
@@ -204,7 +203,6 @@
           justify-content: center;
           align-items: center;
           white-space: pre-line;
-          overflow-y: auto;
 
           .score {
             display: inline-block;
@@ -338,13 +336,19 @@
           }
         }
 
-        // &.final,
-        // &.bonus {
-        // background-color: adjust-color(
-        //   $background-color-negative,
-        //   $lightness: 7.5%
-        // );
-        // }
+        &.node-creator {
+          background-color: $background-alt2;
+          overflow: hidden;
+
+          .wrapper {
+            overflow: hidden;
+
+            .title {
+              transform: scale(1.75);
+              overflow: hidden;
+            }
+          }
+        }
       }
 
       .page-number {

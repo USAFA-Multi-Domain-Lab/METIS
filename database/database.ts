@@ -1,10 +1,18 @@
 import { exec } from 'child_process'
-import mongoose from 'mongoose'
-import { MONGO_HOST, MONGO_PORT, SCHEMA_BUILD_NUMBER } from '../config'
+import mongoose, { ConnectOptions } from 'mongoose'
+import {
+  MONGO_HOST,
+  MONGO_PASSWORD,
+  MONGO_PORT,
+  MONGO_USERNAME,
+  SCHEMA_BUILD_NUMBER,
+} from '../config'
 import { attackMissionData, defensiveMissionData } from './initial-mission-data'
 import InfoModel from './models/model-info'
 import MissionModel from './models/model-mission'
 import UserModel from './models/model-user'
+
+export const ERROR_BAD_DATA: string = 'BadDataError'
 
 const BUILD_DIR: string = './database/builds/'
 
@@ -103,7 +111,7 @@ function ensureDefaultMissionsExists(
 
       MissionModel.create(attackMissionData, (error: Error, mission: any) => {
         if (error) {
-          console.error(`Failed to create ${mission.name}.`)
+          console.error(`Failed to create ${attackMissionData.name}.`)
           console.error(error)
           callbackError(error)
         } else {
@@ -113,7 +121,7 @@ function ensureDefaultMissionsExists(
             defensiveMissionData,
             (error: Error, mission: any) => {
               if (error) {
-                console.error(`Failed to create ${mission.name}.`)
+                console.error(`Failed to create ${defensiveMissionData.name}.`)
                 console.error(error)
                 callbackError(error)
               } else {
@@ -163,43 +171,38 @@ function buildSchema(
 ): void {
   let nextBuildNumber: number = currentBuildNumber + 1
   let buildPath: string = generateFilePath(nextBuildNumber)
+  let command: string = `mongosh --host ${MONGO_HOST} --port ${MONGO_PORT} --file ${buildPath}`
+
+  if (MONGO_USERNAME && MONGO_PASSWORD) {
+    command += ` --username ${MONGO_USERNAME} --password ${MONGO_PASSWORD}`
+  }
 
   console.log(`Database is migrating to build ${nextBuildNumber}`)
 
-  exec(
-    `mongosh --host ${MONGO_HOST} --port ${MONGO_PORT} --file ${buildPath}`,
-    (error, stdout, stderr) => {
-      if (!error) {
-        let stdoutSplit: Array<string> = stdout.split(
-          `Loading file: ${buildPath}`,
-        )
+  exec(command, (error, stdout, stderr) => {
+    if (!error) {
+      let stdoutSplit: Array<string> = stdout.split(
+        `Loading file: ${buildPath}`,
+      )
 
-        if (stdoutSplit.length > 1) {
-          stdout = stdoutSplit[1]
-        }
-
-        console.log(stdout)
-        console.log(
-          `Database successfully migrated to build ${nextBuildNumber}`,
-        )
-
-        if (nextBuildNumber < targetBuildNumber) {
-          buildSchema(
-            nextBuildNumber,
-            targetBuildNumber,
-            callback,
-            callbackError,
-          )
-        } else {
-          callback()
-        }
-      } else {
-        console.error(`Database failed to migrate to ${nextBuildNumber}`)
-        console.error(error)
-        callbackError(error)
+      if (stdoutSplit.length > 1) {
+        stdout = stdoutSplit[1]
       }
-    },
-  )
+
+      console.log(stdout)
+      console.log(`Database successfully migrated to build ${nextBuildNumber}`)
+
+      if (nextBuildNumber < targetBuildNumber) {
+        buildSchema(nextBuildNumber, targetBuildNumber, callback, callbackError)
+      } else {
+        callback()
+      }
+    } else {
+      console.error(`Database failed to migrate to ${nextBuildNumber}`)
+      console.error(error)
+      callbackError(error)
+    }
+  })
 }
 
 // This will check to make sure that the schema
@@ -250,7 +253,14 @@ export function initialize(
   callback: () => void = () => {},
   callbackError: (error: Error) => void = () => {},
 ) {
-  mongoose.connect(`mongodb://${MONGO_HOST}:${MONGO_PORT}/mdl`)
+  let connectOptions: ConnectOptions = {}
+
+  if (MONGO_USERNAME && MONGO_PASSWORD) {
+    connectOptions.user = MONGO_USERNAME
+    connectOptions.pass = MONGO_PASSWORD
+  }
+
+  mongoose.connect(`mongodb://${MONGO_HOST}:${MONGO_PORT}/mdl`, connectOptions)
 
   connection = mongoose.connection
 

@@ -8,13 +8,15 @@ import {
   IMissionNodeActionJSON,
   MissionNodeAction,
 } from './mission-node-actions'
-import { AnyObject } from './toolbox/objects'
+import { IMissionMappable } from '../components/content/MissionMap'
 
-// property past.
 export enum ENodeTargetRelation {
-  Parent,
-  PreviousSibling,
-  FollowingSibling,
+  ParentOfTargetAndChildren,
+  ParentOfTargetOnly,
+  ChildOfTarget,
+  BetweenTargetAndChildren,
+  PreviousSiblingOfTarget,
+  FollowingSiblingOfTarget,
 }
 
 // This is the raw node data returned
@@ -25,7 +27,6 @@ export interface IMissionNodeJson {
   name: string
   color: string
   preExecutionText: string
-  actions: string
   executable: boolean
   device: boolean
   actions: Array<IMissionNodeActionJSON>
@@ -34,7 +35,7 @@ export interface IMissionNodeJson {
 // This represents an individual node
 // for a student to execute within a
 // mission.
-export class MissionNode {
+export class MissionNode implements IMissionMappable {
   mission: Mission
   nodeID: string
   name: string
@@ -95,6 +96,29 @@ export class MissionNode {
     return successChance
   }
 
+  get descendantDepth(): number {
+    let deepestDescendant: MissionNode = this
+
+    while (deepestDescendant.childNodes.length > 0) {
+      deepestDescendant = deepestDescendant.childNodes[0]
+    }
+
+    return deepestDescendant.depth
+  }
+
+  get descendantMaxY(): number {
+    let deepestLowestDescendant: MissionNode = this
+
+    while (deepestLowestDescendant.childNodes.length > 0) {
+      deepestLowestDescendant =
+        deepestLowestDescendant.childNodes[
+          deepestLowestDescendant.childNodes.length - 1
+        ]
+    }
+
+    return deepestLowestDescendant.mapY
+  }
+
   constructor(
     mission: Mission,
     nodeID: string,
@@ -127,22 +151,22 @@ export class MissionNode {
     this.parseActionJSON(actionJSON)
   }
 
-  // This will turn the action data
+  // This will turn the action JSON
   // into new MissionNodeAction objects.
-  parseActionJSON(actionJSON: Array<AnyObject>): void {
+  parseActionJSON(actionJSON: Array<IMissionNodeActionJSON>): void {
     let actions = []
 
-    for (let actionDatum of actionJSON) {
+    for (let action of actionJSON) {
       let actionObject: MissionNodeAction = new MissionNodeAction(
         this,
-        actionDatum.actionID,
-        actionDatum.name,
-        actionDatum.description,
-        actionDatum.processTime,
-        actionDatum.successChance,
-        actionDatum.resourceCost,
-        actionDatum.postExecutionSuccessText,
-        actionDatum.postExecutionFailureText,
+        action.actionID,
+        action.name,
+        action.description,
+        action.processTime,
+        action.successChance,
+        action.resourceCost,
+        action.postExecutionSuccessText,
+        action.postExecutionFailureText,
       )
       actions.push(actionObject)
     }
@@ -214,7 +238,7 @@ export class MissionNode {
   }
 
   get childrenOfParent(): Array<MissionNode> {
-    let childrenOfParent: Array<MissionNode> = []
+    let childrenOfParent: Array<MissionNode> = [this]
 
     if (this.parentNode !== null) {
       childrenOfParent = this.parentNode.childNodes
@@ -340,35 +364,84 @@ export class MissionNode {
       }
     }
 
-    // This will
+    // This will move the target based on
+    // its relation to this node.
     switch (targetRelation) {
-      case ENodeTargetRelation.Parent:
+      case ENodeTargetRelation.ParentOfTargetOnly:
+        this.parentNode = target.parentNode
+        let targetAndTargetSiblings: Array<MissionNode> =
+          target.childrenOfParent
+
+        if (target.parentNode !== null) {
+          for (
+            let index: number = 0;
+            index < targetAndTargetSiblings.length;
+            index++
+          ) {
+            let sibling = targetAndTargetSiblings[index]
+
+            if (target.nodeID === sibling.nodeID) {
+              targetAndTargetSiblings[index] = this
+            }
+          }
+
+          target.parentNode.childNodes = targetAndTargetSiblings
+        }
+
+        this.childNodes = [target]
+        target.parentNode = this
+
+        this.expand()
+
+        break
+      case ENodeTargetRelation.ParentOfTargetAndChildren:
+        // TODO
+        break
+      case ENodeTargetRelation.BetweenTargetAndChildren:
+        let childNodes: Array<MissionNode> = target.childNodes
+
+        target.childNodes = [this]
+        this.parentNode = target
+
+        for (let childNode of childNodes) {
+          childNode.parentNode = this
+        }
+        this.childNodes = childNodes
+
+        target.expand()
+
+        if (childNodes.length > 0) {
+          this.expand()
+        }
+
+        break
+      case ENodeTargetRelation.ChildOfTarget:
         target.childNodes.push(this)
         this.parentNode = target
         break
-      case ENodeTargetRelation.PreviousSibling:
+      case ENodeTargetRelation.PreviousSiblingOfTarget:
         if (newParentNode !== null) {
           newParentNode.childNodes.forEach((childNode: MissionNode) => {
-            newParentNodeChildNodes.push(childNode)
-
             if (childNode.nodeID === target.nodeID) {
               newParentNodeChildNodes.push(this)
               this.parentNode = newParentNode
             }
+
+            newParentNodeChildNodes.push(childNode)
           })
 
           newParentNode.childNodes = newParentNodeChildNodes
         }
         break
-      case ENodeTargetRelation.FollowingSibling:
+      case ENodeTargetRelation.FollowingSiblingOfTarget:
         if (newParentNode !== null) {
           newParentNode.childNodes.forEach((childNode: MissionNode) => {
+            newParentNodeChildNodes.push(childNode)
+
             if (childNode.nodeID === target.nodeID) {
               newParentNodeChildNodes.push(this)
               this.parentNode = newParentNode
             }
-
-            newParentNodeChildNodes.push(childNode)
           })
 
           newParentNode.childNodes = newParentNodeChildNodes
@@ -401,6 +474,20 @@ export class MissionNode {
     }
   }
 
+  // This will reveal the node creators,
+  // allowing a node to be created adjacent
+  // to it if the mission is tied to a map.
+  revealNodeCreators(): void {
+    this.mission.nodeCreationTarget = this
+  }
+
+  // This will hide any revealled node
+  // creators, restoring the view
+  // to only the node structure.
+  hideNodeCreators(): void {
+    this.mission.nodeCreationTarget = null
+  }
+
   // This will delete this node and
   // all child nodes from the mission.
   delete(): void {
@@ -415,6 +502,122 @@ export class MissionNode {
   }
 }
 
+// This represents a node that, when triggered,
+// will spawn a new node in a mission in a specific
+// location.
+export class MissionNodeCreator implements IMissionMappable {
+  _nodeID: string
+  _name: string
+  _mission: Mission
+  _creationTarget: MissionNode
+  _creationTargetRelation: ENodeTargetRelation
+  mapX: number
+  mapY: number
+  _createdNode: MissionNode | null = null
+
+  // Getter for _nodeID.
+  get nodeID(): string {
+    return this._nodeID
+  }
+
+  // Getter for _name.
+  get name(): string {
+    return this._name
+  }
+
+  // Getter for _mission.
+  get mission(): Mission {
+    return this._mission
+  }
+
+  // Getter for _creationTarget.
+  get creationTarget(): MissionNode {
+    return this._creationTarget
+  }
+
+  // Getter for _creationTargetRelation.
+  get creationTargetRelation(): ENodeTargetRelation {
+    return this._creationTargetRelation
+  }
+
+  // Getter for _createdNode.
+  get createdNode(): MissionNode | null {
+    return this._createdNode
+  }
+
+  // Implementation requirement only.
+  get executable(): boolean {
+    return false
+  }
+
+  // Implementation requirement only.
+  get executing(): boolean {
+    return false
+  }
+
+  // Implementation requirement only.
+  get device(): boolean {
+    return false
+  }
+
+  constructor(
+    mission: Mission,
+    creationTarget: MissionNode,
+    creationTargetRelation: ENodeTargetRelation,
+    mapX: number,
+    mapY: number,
+  ) {
+    let relationTitle: string = ''
+
+    switch (creationTargetRelation) {
+      case ENodeTargetRelation.ParentOfTargetAndChildren:
+        relationTitle = 'parent-of-target-and-children'
+        break
+      case ENodeTargetRelation.ParentOfTargetOnly:
+        relationTitle = 'parent-of-target-only'
+        break
+      case ENodeTargetRelation.BetweenTargetAndChildren:
+        relationTitle = 'between-target-and-children'
+        break
+      case ENodeTargetRelation.ChildOfTarget:
+        relationTitle = 'child-of-target'
+        break
+      case ENodeTargetRelation.PreviousSiblingOfTarget:
+        relationTitle = 'previous-sibling-of-target'
+        break
+      case ENodeTargetRelation.FollowingSiblingOfTarget:
+        relationTitle = 'following-sibling-of-target'
+        break
+    }
+
+    this._nodeID = `node-creator_with-${creationTarget.nodeID}-as-${relationTitle}`
+    this._name = '+'
+    this._mission = mission
+    this.mapX = mapX
+    this.mapY = mapY
+    this._creationTarget = creationTarget
+    this._creationTargetRelation = creationTargetRelation
+  }
+
+  // This is called to create the
+  // new node.
+  create(): MissionNode {
+    if (this.createdNode !== null) {
+      console.error(new Error("Can't create node. Node is already created."))
+    }
+
+    let node: MissionNode = this.mission.spawnNewNode()
+
+    // node.color = this.creationTarget.color
+    node.move(this.creationTarget, this.creationTargetRelation)
+    this._createdNode = this.createdNode
+    this.mission.nodeCreationTarget = null
+
+    return node
+  }
+}
+
 export default {
   MissionNode,
+  MissionNodeCreator,
 }

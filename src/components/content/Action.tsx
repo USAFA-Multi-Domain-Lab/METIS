@@ -8,6 +8,7 @@ import './Action.scss'
 // give different actions different
 // icons and looks
 export enum EActionPurpose {
+  Cancel,
   Add,
   Edit,
   Remove,
@@ -49,6 +50,8 @@ export class Action extends React.Component<IAction_P, {}> {
   // name is returned to style it differently
   static getActionClassName(purpose: EActionPurpose): string {
     switch (purpose) {
+      case EActionPurpose.Cancel:
+        return 'Action cancel'
       case EActionPurpose.Add:
         return 'Action add'
       case EActionPurpose.Edit:
@@ -75,6 +78,8 @@ export class Action extends React.Component<IAction_P, {}> {
   // html content for various actions
   static getActionInnerHTML(purpose: EActionPurpose): string | JSX.Element {
     switch (purpose) {
+      case EActionPurpose.Cancel:
+        return 'x'
       case EActionPurpose.Add:
         return '+'
       default:

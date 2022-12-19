@@ -1,4 +1,5 @@
 import mongoose, { Schema } from 'mongoose'
+import { ERROR_BAD_DATA } from '../database'
 
 let ObjectId = mongoose.Types.ObjectId
 
@@ -16,7 +17,7 @@ export const MissionSchema: Schema = new Schema(
       type: [
         {
           _id: { type: ObjectId, required: false, auto: true },
-          nodeID: { type: String, required: true, unique: true, auto: true },
+          nodeID: { type: String, required: true },
           name: { type: String, required: true },
           color: { type: String, required: true },
           preExecutionText: { type: String, required: true },
@@ -29,8 +30,6 @@ export const MissionSchema: Schema = new Schema(
                 actionID: {
                   type: String,
                   required: true,
-                  unique: true,
-                  auto: true,
                 },
                 name: { type: String, required: true },
                 description: { type: String, required: true },
@@ -50,7 +49,7 @@ export const MissionSchema: Schema = new Schema(
   },
   {
     _id: false,
-    strict: false,
+    strict: true,
     minimize: false,
     toJSON: {
       transform: function (doc, ret) {
@@ -59,6 +58,45 @@ export const MissionSchema: Schema = new Schema(
     },
   },
 )
+
+const enforceUniqueIDs = (mission: any, next: any): void => {
+  let nodeIDs: Array<string> = []
+
+  for (let nodeDatum of mission.nodeData) {
+    if (!nodeIDs.includes(nodeDatum.nodeID)) {
+      nodeIDs.push(nodeDatum.nodeID)
+
+      let actionIDs: Array<string> = []
+
+      for (let action of nodeDatum.actions) {
+        if (!actionIDs.includes(action.actionID)) {
+          actionIDs.push(action.actionID)
+        } else {
+          let error: Error = new Error(
+            `Duplicate actionID (${action.actionID}) used in node (${nodeDatum.nodeID}).`,
+          )
+          error.name = ERROR_BAD_DATA
+          next(error)
+        }
+      }
+    } else {
+      let error: Error = new Error(
+        `Duplicate nodeID used in mission: ${nodeDatum.nodeID}`,
+      )
+      error.name = ERROR_BAD_DATA
+      next(error)
+    }
+  }
+
+  next()
+}
+
+MissionSchema.pre('update', function (next) {
+  enforceUniqueIDs(this, next)
+})
+MissionSchema.pre('save', function (next) {
+  enforceUniqueIDs(this, next)
+})
 
 const MissionModel: any = mongoose.model('Mission', MissionSchema)
 
