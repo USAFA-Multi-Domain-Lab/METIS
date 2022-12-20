@@ -494,15 +494,43 @@ export class MissionNode implements IMissionMappable {
 
   // This will delete this node and
   // all child nodes from the mission.
-  delete(): void {
+  deleteNodeAndChildren(): void {
     for (let childNode of this.childNodes) {
-      childNode.delete()
+      childNode.deleteNodeAndChildren()
     }
 
     this.childrenOfParent.splice(this.childrenOfParent.indexOf(this), 1)
     this.mission.nodes.delete(this.nodeID)
 
     this._handleStructureChange()
+  }
+
+  // This will turn this node's children nodes into
+  // this node's siblings and then delete this node
+  // afterwards.
+  deleteNodeAndShiftChildren(): void {
+    let parentOfSelectedNode: MissionNode | null = this.parentNode
+    let childrenofSelectedNode: Array<MissionNode> = this.childNodes
+
+    childrenofSelectedNode.forEach((childNode: MissionNode) => {
+      if (parentOfSelectedNode !== null) {
+        parentOfSelectedNode.childNodes.splice(
+          parentOfSelectedNode.childNodes.indexOf(this),
+          0,
+          childNode,
+        )
+        childNode.parentNode = parentOfSelectedNode
+      }
+    })
+
+    if (parentOfSelectedNode !== null) {
+      parentOfSelectedNode.childNodes.splice(
+        parentOfSelectedNode.childNodes.indexOf(this),
+        1,
+      )
+      this.mission.nodes.delete(this.nodeID)
+      this.mission.handleStructureChange()
+    }
   }
 }
 

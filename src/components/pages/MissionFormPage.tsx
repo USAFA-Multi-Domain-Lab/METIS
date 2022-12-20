@@ -21,16 +21,11 @@ import './MissionFormPage.scss'
 import { Action, EActionPurpose } from '../content/Action'
 import MoreInformation from '../content/MoreInformation'
 import { IPage } from '../App'
-import {
-  ENodeTargetRelation,
-  MissionNode,
-  MissionNodeCreator,
-} from '../../modules/mission-nodes'
+import { ENodeTargetRelation, MissionNode } from '../../modules/mission-nodes'
 import { MissionNodeAction } from '../../modules/mission-node-actions'
 import { EToggleLockState } from '../content/Toggle'
 import AppState, { AppActions } from '../AppState'
 import Navigation from '../content/Navigation'
-import { JsxElement } from 'typescript'
 
 // This is a enum used to describe
 // the locations that one node can
@@ -217,16 +212,12 @@ export default function MissionFormPage(
     // This is called when a node is
     // requested to be deleted.
     const handleNodeDeleteRequest = (node: MissionNode): void => {
-      let confirmationMessage: string = ''
-
       if (node.hasChildren) {
-        confirmationMessage =
-          `**Note: This node has children** \n` +
-          `Please confirm if you would like to delete "${node.name}" only or "${node.name}" and all of it's children.`
         appActions.confirm(
-          confirmationMessage,
-          (concludeAction: () => void, entry?: string) => {
-            node.delete()
+          `**Note: This node has children** \n` +
+            `Please confirm if you would like to delete "${node.name}" only or "${node.name}" and all of it's children.`,
+          (concludeAction: () => void) => {
+            node.deleteNodeAndChildren()
             handleChange()
             activateNodeStructuring(false)
             selectNode(null)
@@ -234,35 +225,10 @@ export default function MissionFormPage(
           },
           {
             handleAlternate: (concludeAction: () => void) => {
-              let parentOfSelectedNode: MissionNode | null = node.parentNode
-              let childrenofSelectedNode: Array<MissionNode> = node.childNodes
-
-              // Logic to turn the selected node's children nodes into
-              // the selected node's siblings.
-              childrenofSelectedNode.forEach((childNode: MissionNode) => {
-                if (parentOfSelectedNode !== null) {
-                  parentOfSelectedNode.childNodes.splice(
-                    parentOfSelectedNode.childNodes.indexOf(node),
-                    0,
-                    childNode,
-                  )
-                }
-              })
-
-              // Logic to delete the selected node from the mission
-              // and restructure the mission to display properly.
-              if (parentOfSelectedNode !== null) {
-                parentOfSelectedNode.childNodes.splice(
-                  parentOfSelectedNode.childNodes.indexOf(node),
-                  1,
-                )
-                mission.nodes.delete(node.nodeID)
-                mission.nodeData.splice(mission.nodeData.indexOf(node), 1)
-                mission.handleStructureChange()
-              }
-
-              selectNode(null)
+              node.deleteNodeAndShiftChildren()
               handleChange()
+              activateNodeStructuring(false)
+              selectNode(null)
               concludeAction()
             },
             buttonConfirmText: `${node.name} + Children`,
@@ -270,11 +236,10 @@ export default function MissionFormPage(
           },
         )
       } else {
-        confirmationMessage = 'Please confirm the deletion of this node.'
         appActions.confirm(
-          confirmationMessage,
-          (concludeAction: () => void, entry?: string) => {
-            node.delete()
+          'Please confirm the deletion of this node.',
+          (concludeAction: () => void) => {
+            node.deleteNodeAndChildren()
             handleChange()
             activateNodeStructuring(false)
             selectNode(null)
