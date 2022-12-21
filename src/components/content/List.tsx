@@ -23,7 +23,7 @@ interface IList_P<TList> {
   availableProperties: IListItemProperty[]
   // returns what's rendered inside the
   // item's box
-  getItemDisplay: (item: TList) => string | JSX.Element
+  renderItemDisplay: (item: TList) => string | JSX.Element
   // items that are selected are marked differently
   // when displayed to the user
   isItemSelected: (item: TList) => boolean
@@ -716,7 +716,8 @@ export default class List<TList extends object> extends React.Component<
                 item,
                 propertyTooltipDescription,
               )
-            let display: string | JSX.Element = this.props.getItemDisplay(item)
+            let display: string | JSX.Element =
+              this.props.renderItemDisplay(item)
             let renderedDisplay: string | JSX.Element = ''
             let selected: boolean = this.props.isItemSelected(item)
             let className = 'item'

@@ -32,6 +32,10 @@ export interface IMissionNodeJson {
   actions: Array<IMissionNodeActionJSON>
 }
 
+interface AppleInterface {
+  apples: boolean
+}
+
 // This represents an individual node
 // for a student to execute within a
 // mission.
@@ -477,14 +481,14 @@ export class MissionNode implements IMissionMappable {
   // This will reveal the node creators,
   // allowing a node to be created adjacent
   // to it if the mission is tied to a map.
-  revealNodeCreators(): void {
+  generateNodeCreators(): void {
     this.mission.nodeCreationTarget = this
   }
 
   // This will hide any revealled node
   // creators, restoring the view
   // to only the node structure.
-  hideNodeCreators(): void {
+  destroyNodeCreators(): void {
     this.mission.nodeCreationTarget = null
   }
 
@@ -513,6 +517,7 @@ export class MissionNodeCreator implements IMissionMappable {
   _creationTargetRelation: ENodeTargetRelation
   mapX: number
   mapY: number
+  depth: number
   _createdNode: MissionNode | null = null
 
   // Getter for _nodeID.
@@ -595,6 +600,7 @@ export class MissionNodeCreator implements IMissionMappable {
     this._mission = mission
     this.mapX = mapX
     this.mapY = mapY
+    this.depth = -1
     this._creationTarget = creationTarget
     this._creationTargetRelation = creationTargetRelation
   }

@@ -12,7 +12,7 @@ import {
   MissionNode,
   MissionNodeCreator,
 } from '../../modules/mission-nodes'
-import { Action, EActionPurpose } from './Action'
+import { Action, EActionPurpose, IAction } from './Action'
 import { ActionPanel } from './ActionPanel'
 
 /* -- interfaces -- */
@@ -20,6 +20,7 @@ import { ActionPanel } from './ActionPanel'
 interface IMissionMap {
   mission: Mission
   missionAjaxStatus: EAjaxStatus
+  selectedNode: MissionNode | null
   handleNodeSelection: (node: MissionNode) => void
   handleMapEditRequest: (() => void) | null
   handleMapSaveRequest: (() => void) | null
@@ -42,7 +43,6 @@ interface IMissionMap_S {
   mapOffsetY: number
   mapScale: number
   nodeDepth: number
-  creationModeActive: boolean
 }
 
 export interface IMissionMappable {
@@ -50,6 +50,7 @@ export interface IMissionMappable {
   name: string
   mapX: number
   mapY: number
+  depth: number
   executing: boolean
   executable: boolean
   device: boolean
@@ -157,7 +158,6 @@ export default class MissionMap extends React.Component<
       mapOffsetY: baseMapYScale * 2,
       mapScale: defaultMapScale,
       nodeDepth: mission.depth,
-      creationModeActive: false,
     }
   }
 
@@ -193,8 +193,16 @@ export default class MissionMap extends React.Component<
     return currentGridPaddingY
   }
 
+  // This is whether creation mode is active,
+  // and if nodes are pending to be added by
+  // the user.
+  get creationModeActive(): boolean {
+    return this.props.mission.nodeCreationTarget !== null
+  }
+
   // inherited
   static defaultProps = {
+    selectedNode: null,
     handleMapEditRequest: null,
     handleMapSaveRequest: null,
     allowCreationMode: false,
@@ -256,6 +264,7 @@ export default class MissionMap extends React.Component<
     ) {
       this.updateAllRelationships()
       this.revealNewNodes()
+      this.revealNewNodeCreators()
     }
 
     if (previousProps.mission !== this.props.mission) {
@@ -272,6 +281,46 @@ export default class MissionMap extends React.Component<
 
   // inherited
   forceUpdate = () => super.forceUpdate()
+
+  // This will pan the offset to a new
+  // value gradually.
+  panSmoothly = (targetMapOffset: IMapCoordinates): void => {
+    let currentMapOffset: IMapCoordinates = {
+      x: this.state.mapOffsetX,
+      y: this.state.mapOffsetY,
+    }
+    let differenceX: number = targetMapOffset.x - currentMapOffset.x
+    let differenceY: number = targetMapOffset.y - currentMapOffset.y
+    let deltaX: number = differenceX / 5
+    let deltaY: number = differenceY / 5
+
+    if (Math.abs(deltaX) < 4) {
+      deltaX = differenceX
+    }
+    if (Math.abs(deltaY) < 4) {
+      deltaY = differenceY
+    }
+
+    let updatedMapOffset: IMapCoordinates = {
+      x: currentMapOffset.x + deltaX,
+      y: currentMapOffset.y + deltaY,
+    }
+
+    this.setState(
+      {
+        mapOffsetX: updatedMapOffset.x,
+        mapOffsetY: updatedMapOffset.y,
+      },
+      () => {
+        if (
+          targetMapOffset.x !== updatedMapOffset.x ||
+          targetMapOffset.y !== updatedMapOffset.y
+        ) {
+          setTimeout(() => this.panSmoothly(targetMapOffset), 5)
+        }
+      },
+    )
+  }
 
   // returns whether this node is linked with any
   // other node in the state
@@ -437,6 +486,7 @@ export default class MissionMap extends React.Component<
     let map: HTMLDivElement | null = this.map.current
     let mapScale: number = this.state.mapScale
     let mapOffsetX: number = this.state.mapOffsetX
+    let mapOffsetY: number = this.state.mapOffsetY
     let mapXScale: number = this.currentMapXScale
     let gridPaddingX: number = this.currentGridPaddingX
 
@@ -460,7 +510,49 @@ export default class MissionMap extends React.Component<
         mapOffsetX += correctionDifference
       }
 
-      this.setState({ lastExpandedNode: mission.lastExpandedNode, mapOffsetX })
+      this.setState({ lastExpandedNode: mission.lastExpandedNode }, () =>
+        this.panSmoothly({ x: mapOffsetX, y: mapOffsetY }),
+      )
+    }
+  }
+
+  // This will reveal new node creators
+  // that have been newly generated in a
+  // node.
+  revealNewNodeCreators = (): void => {
+    let mission: Mission = this.props.mission
+    let map: HTMLDivElement | null = this.map.current
+    let mapScale: number = this.state.mapScale
+    let mapOffsetX: number = this.state.mapOffsetX
+    let mapOffsetY: number = this.state.mapOffsetY
+    let mapXScale: number = this.currentMapXScale
+    let gridPaddingX: number = this.currentGridPaddingX
+
+    if (map) {
+      let greatestNodeCreatorDepth: number = -1
+
+      for (let nodeCreator of mission.nodeCreators) {
+        if (greatestNodeCreatorDepth < nodeCreator.depth) {
+          greatestNodeCreatorDepth = nodeCreator.depth
+        }
+      }
+
+      let mapBounds: DOMRect = map.getBoundingClientRect()
+
+      let mapWidthInNodes: number = mapBounds.width / mapScale / mapXScale
+      let mapOffsetXInNodes: number = -1 * (mapOffsetX / mapXScale)
+      let nodeDepthShown: number = mapWidthInNodes + mapOffsetXInNodes - 1
+      let nodeDepthRevealed: number = greatestNodeCreatorDepth
+      let correctionDifferenceInNodes: number =
+        nodeDepthShown - nodeDepthRevealed
+      let correctionDifference: number =
+        correctionDifferenceInNodes * mapXScale - gridPaddingX / 2
+
+      if (correctionDifference < 0) {
+        mapOffsetX += correctionDifference
+      }
+
+      this.panSmoothly({ x: mapOffsetX, y: mapOffsetY })
     }
   }
 
@@ -593,10 +685,50 @@ export default class MissionMap extends React.Component<
     this.setState({ mapScale })
   }
 
+  // This is called when a node is selected.
+  handleNodeSelection = (newlySelectedNode: MissionNode) => {
+    let currentlySelectedNode: MissionNode | null = this.props.selectedNode
+    let allowCreationMode: boolean = this.props.allowCreationMode
+
+    if (
+      currentlySelectedNode === null ||
+      currentlySelectedNode.nodeID !== newlySelectedNode.nodeID ||
+      !allowCreationMode
+    ) {
+      if (
+        currentlySelectedNode !== null &&
+        currentlySelectedNode.nodeID !== newlySelectedNode.nodeID
+      ) {
+        this.deactivateNodeCreation()
+      }
+      this.props.handleNodeSelection(newlySelectedNode)
+    }
+  }
+
   // This is called when a node is requested to
   // be created.
   handleNodeCreationRequest = (nodeCreator: MissionNodeCreator): void => {
     nodeCreator.create()
+  }
+
+  // This is called to reveal the node creators
+  // for the selectedNode.
+  activateNodeCreation = (): void => {
+    let selectedNode: MissionNode | null = this.props.selectedNode
+
+    if (selectedNode !== null) {
+      selectedNode.generateNodeCreators()
+    }
+  }
+
+  // This is called to hide the node creators
+  // for the selectedNode.
+  deactivateNodeCreation = (): void => {
+    let selectedNode: MissionNode | null = this.props.selectedNode
+
+    if (selectedNode !== null) {
+      selectedNode.destroyNodeCreators()
+    }
   }
 
   /* -- functions | render -- */
@@ -609,7 +741,7 @@ export default class MissionMap extends React.Component<
     let handleMapEditRequest = this.props.handleMapEditRequest
     let handleMapSaveRequest = this.props.handleMapSaveRequest
     let allowCreationMode: boolean = this.props.allowCreationMode
-    let creationModeActive: boolean = this.state.creationModeActive
+    let creationModeActive: boolean = this.creationModeActive
     let grayOutCreateButton: boolean = this.props.grayOutCreateButton
     let grayOutEditButton: boolean = this.props.grayOutEditButton
     let grayOutSaveButton: boolean = this.props.grayOutSaveButton
@@ -633,7 +765,7 @@ export default class MissionMap extends React.Component<
       create: new Action({
         ...Action.defaultProps,
         purpose: EActionPurpose.Add,
-        handleClick: () => this.setState({ creationModeActive: true }),
+        handleClick: () => {},
         tooltipDescription:
           'Enter creation mode. This will allow new nodes to be created.',
         disabled: grayOutCreateButton,
@@ -641,7 +773,7 @@ export default class MissionMap extends React.Component<
       create_exit: new Action({
         ...Action.defaultProps,
         purpose: EActionPurpose.Cancel,
-        handleClick: () => this.setState({ creationModeActive: false }),
+        handleClick: () => {},
         tooltipDescription: 'Exit creation mode.',
         disabled: grayOutCreateButton,
       }),
@@ -790,7 +922,12 @@ export default class MissionMap extends React.Component<
   }
 
   // This will create the display text for a node.
-  renderNodeDisplay = (node: IMissionMappable): JSX.Element => {
+  renderNodeDisplay = (
+    node: IMissionMappable,
+    actions: Array<IAction> = [],
+  ): JSX.Element => {
+    let selectedNode: MissionNode | null = this.props.selectedNode
+    let allowCreationMode: boolean = this.props.allowCreationMode
     let mapScale: number = this.state.mapScale
     let fontSize: number = mapItemFontSize * mapScale
     let mapYScale: number = this.currentMapYScale
@@ -798,10 +935,23 @@ export default class MissionMap extends React.Component<
     let height: number = (mapYScale - gridPaddingY * 2) * mapScale
     let scoreWidth: number = 25 * mapScale
     let lineHeight: number = height * 0.34
+    let actionMarginTop = height * 0.22
+    let actionWidth: number = height * 0.5
+    let actionHeight: number = height * 0.5
+    let actionFontSize: number = fontSize * 1.75
+    let actionLineHeight: number = actionHeight * 0.9
+    let actionStyle: React.CSSProperties = {
+      marginTop: `-${actionMarginTop}px`,
+      width: `${actionWidth}px`,
+      height: `${actionHeight}px`,
+      fontSize: `${actionFontSize}px`,
+      lineHeight: `${actionLineHeight}px`,
+    }
 
     // Dynamic Class Names
     let loadingClassName: string = 'loading'
     let iconClassName: string = ''
+    let actionUniqueClassName: string = ''
 
     // Logic to handle if the loading bar is displayed or not.
     if (!node.executing) {
@@ -816,6 +966,17 @@ export default class MissionMap extends React.Component<
       iconClassName = 'executable'
     }
 
+    // This will hide the add action if the
+    // node isn't the selected node or if
+    // node creation is not active.
+    if (
+      !allowCreationMode ||
+      this.creationModeActive ||
+      selectedNode?.nodeID !== node.nodeID
+    ) {
+      actionUniqueClassName = 'Hidden'
+    }
+
     return (
       <>
         <div
@@ -823,6 +984,7 @@ export default class MissionMap extends React.Component<
           style={{
             height: `${height}px`,
           }}
+          onClick={() => {}}
         ></div>
         <div
           className='wrapper'
@@ -842,6 +1004,16 @@ export default class MissionMap extends React.Component<
           </div>
           <div className={iconClassName}></div>
         </div>
+        {actions.map((action: IAction): JSX.Element | null => {
+          return (
+            <Action
+              {...action}
+              style={{ ...action.style, ...actionStyle }}
+              uniqueClassName={`${action.uniqueClassName} ${actionUniqueClassName}`}
+              key={action.componentKey}
+            />
+          )
+        })}
       </>
     )
   }
@@ -909,10 +1081,22 @@ export default class MissionMap extends React.Component<
       <List<MissionNode>
         items={visibleNodes}
         itemsPerPage={null}
-        getItemDisplay={this.renderNodeDisplay}
+        renderItemDisplay={(node: MissionNode) => {
+          let itemActions: Array<IAction> = [
+            {
+              ...Action.defaultProps,
+              purpose: EActionPurpose.Add,
+              componentKey: 'node-add',
+              handleClick: () => {
+                this.activateNodeCreation()
+              },
+            },
+          ]
+          return this.renderNodeDisplay(node, itemActions)
+        }}
         searchableProperties={['nodeID']}
         noItemsDisplay={null}
-        handleSelection={this.props.handleNodeSelection}
+        handleSelection={this.handleNodeSelection}
         renderTooltipDescription={this.props.renderNodeTooltipDescription}
         ajaxStatus={missionAjaxStatus}
         listSpecificItemClassName={'mapped-node'}
@@ -948,7 +1132,7 @@ export default class MissionMap extends React.Component<
         <List<MissionNodeCreator>
           items={mission.nodeCreators}
           itemsPerPage={null}
-          getItemDisplay={this.renderNodeDisplay}
+          renderItemDisplay={this.renderNodeDisplay}
           searchableProperties={['nodeID']}
           noItemsDisplay={null}
           handleSelection={this.handleNodeCreationRequest}
@@ -1137,6 +1321,7 @@ export default class MissionMap extends React.Component<
   // inherited
   render(): JSX.Element {
     let navigationIsActive: boolean = this.state.navigationIsActive
+    let creationModeActive: boolean = this.creationModeActive
     let mapScale: number = this.state.mapScale
     let map: HTMLDivElement | null = this.map.current
     let mapStyling: React.CSSProperties = {}
@@ -1170,6 +1355,9 @@ export default class MissionMap extends React.Component<
     }
     if (navigationIsActive) {
       mapClassName += ' active-navigation'
+    }
+    if (creationModeActive) {
+      mapClassName += ' creation-mode'
     }
 
     return (
@@ -1223,7 +1411,6 @@ export default class MissionMap extends React.Component<
           // -- NODE CREATORS --
         }
         {this.renderNodeCreators()}
-
         {
           // -- POINTERS -- //
         }

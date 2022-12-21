@@ -106,15 +106,6 @@ export class Mission {
     this._nodeCreators = []
 
     if (nodeCreationTarget !== null) {
-      // this._nodeCreators.push(
-      //   new MissionNodeCreator(
-      //     this,
-      //     nodeCreationTarget,
-      //     ENodeTargetRelation.ParentOfTargetAndChildren,
-      //     0,
-      //     0,
-      //   ),
-      // )
       this._nodeCreators.push(
         new MissionNodeCreator(
           this,
@@ -528,22 +519,27 @@ export class Mission {
           case ENodeTargetRelation.ParentOfTargetAndChildren:
             nodeCreator.mapX = nodeCreationTarget.mapX - 2
             nodeCreator.mapY = nodeCreationTarget.mapY
+            nodeCreator.depth = nodeCreationTarget.depth - 2
             break
           case ENodeTargetRelation.ParentOfTargetOnly:
             nodeCreator.mapX = nodeCreationTarget.mapX - 1
             nodeCreator.mapY = nodeCreationTarget.mapY
+            nodeCreator.depth = nodeCreationTarget.depth - 1
             break
           case ENodeTargetRelation.BetweenTargetAndChildren:
             nodeCreator.mapX = nodeCreationTarget.mapX + 1
             nodeCreator.mapY = nodeCreationTarget.mapY
+            nodeCreator.depth = nodeCreationTarget.depth + 1
             break
           case ENodeTargetRelation.PreviousSiblingOfTarget:
             nodeCreator.mapX = nodeCreationTarget.mapX
             nodeCreator.mapY = nodeCreationTarget.mapY - 1
+            nodeCreator.depth = nodeCreationTarget.depth
             break
           case ENodeTargetRelation.FollowingSiblingOfTarget:
             nodeCreator.mapX = nodeCreationTarget.mapX
             nodeCreator.mapY = nodeCreationTarget.mapY + 1
+            nodeCreator.depth = nodeCreationTarget.depth
             break
         }
       }

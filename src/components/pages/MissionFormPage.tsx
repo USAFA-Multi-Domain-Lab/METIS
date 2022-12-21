@@ -116,14 +116,6 @@ export default function MissionFormPage(
     }
   }, [mountHandled])
 
-  // This will deselect the selected node
-  // if the node creation target is made null.
-  useEffect(() => {
-    if (mission?.nodeCreationTarget === null) {
-      setSelectedNode(null)
-    }
-  }, [mission?.nodeCreationTarget])
-
   // This will select a newly created node.
   useEffect(() => {
     if (mission && mission.lastCreatedNode !== null) {
@@ -158,13 +150,6 @@ export default function MissionFormPage(
 
     // This will select or unselect a node
     const selectNode = (node: MissionNode | null) => {
-      if (node !== null) {
-        node.revealNodeCreators()
-      }
-      if (node === null && selectedNode !== null) {
-        selectedNode.hideNodeCreators()
-      }
-
       setSelectedNode(node)
     }
 
@@ -371,6 +356,8 @@ export default function MissionFormPage(
           <MissionMap
             mission={mission}
             missionAjaxStatus={EAjaxStatus.Loaded}
+            selectedNode={selectedNode}
+            allowCreationMode={true}
             handleNodeSelection={(node: MissionNode) => {
               setDisplayedAction(0)
 
@@ -485,6 +472,9 @@ export default function MissionFormPage(
               }
             }}
             handleCloseRequest={() => {
+              if (selectedNode !== null) {
+                selectedNode.destroyNodeCreators()
+              }
               selectNode(null)
               setActionEmptyStringArray([])
               setNodeEmptyStringArray([])

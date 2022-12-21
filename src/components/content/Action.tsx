@@ -21,13 +21,14 @@ export enum EActionPurpose {
 }
 
 // Interface for props for Action component.
-export interface IAction_P {
+export interface IAction {
   purpose: EActionPurpose
   handleClick: (event: React.MouseEvent) => void
   handleCopy: (event: React.ClipboardEvent) => void
   tooltipDescription: string | null
-  key: string | undefined
+  componentKey: string | undefined
   uniqueClassName: string
+  style: React.CSSProperties
   disabled: boolean
 }
 
@@ -36,12 +37,13 @@ export interface IAction_P {
 // something represented by an icon,
 // explained by a tooltip, that when
 // clicked calls back to cause an action
-export class Action extends React.Component<IAction_P, {}> {
+export class Action extends React.Component<IAction, {}> {
   static defaultProps = {
     handleCopy: () => {},
     tooltipDescription: null,
-    key: undefined,
+    componentKey: undefined,
     uniqueClassName: '',
+    style: {},
     disabled: false,
   }
 
@@ -91,8 +93,9 @@ export class Action extends React.Component<IAction_P, {}> {
   render(): JSX.Element | null {
     let purpose: EActionPurpose = this.props.purpose
     let tooltipDescription: string | null = this.props.tooltipDescription
-    let key: string | undefined = this.props.key
+    let key: string | undefined = this.props.componentKey
     let uniqueClassName: string = this.props.uniqueClassName
+    let style: React.CSSProperties = this.props.style
     let disabled: boolean = this.props.disabled
     let className: string = `${Action.getActionClassName(purpose)}${
       disabled ? ' Disabled ' : ' '
@@ -102,6 +105,7 @@ export class Action extends React.Component<IAction_P, {}> {
     return (
       <div
         className={className}
+        style={style}
         key={key ? key : className}
         onClick={this.props.handleClick}
         onCopy={this.props.handleCopy}
