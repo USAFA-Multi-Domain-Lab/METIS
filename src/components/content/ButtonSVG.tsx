@@ -1,13 +1,13 @@
 import React from 'react'
 import Tooltip from './Tooltip'
-import './Action.scss'
+import './ButtonSVG.scss'
 
 /* -- interfaces -- */
 
-// the purpose of an action, helps
-// give different actions different
+// the purpose of a button, helps
+// give different buttons different
 // icons and looks
-export enum EActionPurpose {
+export enum EButtonSVGPurpose {
   Cancel,
   Add,
   Edit,
@@ -20,9 +20,9 @@ export enum EActionPurpose {
   Copy,
 }
 
-// Interface for props for Action component.
-export interface IAction {
-  purpose: EActionPurpose
+// Interface for props for ButtonSVG component.
+export interface IButtonSVG {
+  purpose: EButtonSVGPurpose
   handleClick: (event: React.MouseEvent) => void
   handleCopy: (event: React.ClipboardEvent) => void
   tooltipDescription: string | null
@@ -37,7 +37,7 @@ export interface IAction {
 // something represented by an icon,
 // explained by a tooltip, that when
 // clicked calls back to cause an action
-export class Action extends React.Component<IAction, {}> {
+export class ButtonSVG extends React.Component<IButtonSVG, {}> {
   static defaultProps = {
     handleCopy: () => {},
     tooltipDescription: null,
@@ -47,42 +47,42 @@ export class Action extends React.Component<IAction, {}> {
     disabled: false,
   }
 
-  // different actions are styled differently.
-  // based on the purpose of the action, a class
+  // different buttons are styled differently.
+  // based on the purpose of the button, a class
   // name is returned to style it differently
-  static getActionClassName(purpose: EActionPurpose): string {
+  static getButtonClassName(purpose: EButtonSVGPurpose): string {
     switch (purpose) {
-      case EActionPurpose.Cancel:
-        return 'Action cancel'
-      case EActionPurpose.Add:
-        return 'Action add'
-      case EActionPurpose.Edit:
-        return 'Action edit'
-      case EActionPurpose.Remove:
-        return 'Action remove'
-      case EActionPurpose.Down:
-        return 'Action down'
-      case EActionPurpose.Reorder:
-        return 'Action reorder'
-      case EActionPurpose.ZoomIn:
-        return 'Action zoom-in'
-      case EActionPurpose.ZoomOut:
-        return 'Action zoom-out'
-      case EActionPurpose.Save:
-        return 'Action save'
-      case EActionPurpose.Copy:
-        return 'Action copy'
+      case EButtonSVGPurpose.Cancel:
+        return 'ButtonSVG cancel'
+      case EButtonSVGPurpose.Add:
+        return 'ButtonSVG add'
+      case EButtonSVGPurpose.Edit:
+        return 'ButtonSVG edit'
+      case EButtonSVGPurpose.Remove:
+        return 'ButtonSVG remove'
+      case EButtonSVGPurpose.Down:
+        return 'ButtonSVG down'
+      case EButtonSVGPurpose.Reorder:
+        return 'ButtonSVG reorder'
+      case EButtonSVGPurpose.ZoomIn:
+        return 'ButtonSVG zoom-in'
+      case EButtonSVGPurpose.ZoomOut:
+        return 'ButtonSVG zoom-out'
+      case EButtonSVGPurpose.Save:
+        return 'ButtonSVG save'
+      case EButtonSVGPurpose.Copy:
+        return 'ButtonSVG copy'
       default:
-        return 'Action hidden'
+        return 'ButtonSVG hidden'
     }
   }
 
-  // html content for various actions
-  static getActionInnerHTML(purpose: EActionPurpose): string | JSX.Element {
+  // html content for various buttons
+  static getButtonInnerHTML(purpose: EButtonSVGPurpose): string | JSX.Element {
     switch (purpose) {
-      case EActionPurpose.Cancel:
+      case EButtonSVGPurpose.Cancel:
         return 'x'
-      case EActionPurpose.Add:
+      case EButtonSVGPurpose.Add:
         return '+'
       default:
         return ''
@@ -91,16 +91,16 @@ export class Action extends React.Component<IAction, {}> {
 
   // inherited
   render(): JSX.Element | null {
-    let purpose: EActionPurpose = this.props.purpose
+    let purpose: EButtonSVGPurpose = this.props.purpose
     let tooltipDescription: string | null = this.props.tooltipDescription
     let key: string | undefined = this.props.componentKey
     let uniqueClassName: string = this.props.uniqueClassName
     let style: React.CSSProperties = this.props.style
     let disabled: boolean = this.props.disabled
-    let className: string = `${Action.getActionClassName(purpose)}${
+    let className: string = `${ButtonSVG.getButtonClassName(purpose)}${
       disabled ? ' Disabled ' : ' '
     }${uniqueClassName}`
-    let innerHTML: string | JSX.Element = Action.getActionInnerHTML(purpose)
+    let innerHTML: string | JSX.Element = ButtonSVG.getButtonInnerHTML(purpose)
 
     return (
       <div

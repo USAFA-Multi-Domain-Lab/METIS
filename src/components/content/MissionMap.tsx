@@ -12,8 +12,8 @@ import {
   MissionNode,
   MissionNodeCreator,
 } from '../../modules/mission-nodes'
-import { Action, EActionPurpose, IAction } from './Action'
-import { ActionPanel } from './ActionPanel'
+import { ButtonSVG, EButtonSVGPurpose, IButtonSVG } from './ButtonSVG'
+import { ButtonSVGPanel } from './ButtonSVGPanel'
 
 /* -- interfaces -- */
 
@@ -748,45 +748,45 @@ export default class MissionMap extends React.Component<
     let actionsUniqueClassName: string = 'map-actions'
 
     let availableActions = {
-      zoomIn: new Action({
-        ...Action.defaultProps,
-        purpose: EActionPurpose.ZoomIn,
+      zoomIn: new ButtonSVG({
+        ...ButtonSVG.defaultProps,
+        purpose: EButtonSVGPurpose.ZoomIn,
         handleClick: this.handleZoomInRequest,
         tooltipDescription:
           'Zoom in. \n*[Scroll] on the map will also zoom in and out.*',
       }),
-      zoomOut: new Action({
-        ...Action.defaultProps,
-        purpose: EActionPurpose.ZoomOut,
+      zoomOut: new ButtonSVG({
+        ...ButtonSVG.defaultProps,
+        purpose: EButtonSVGPurpose.ZoomOut,
         handleClick: this.handleZoomOutRequest,
         tooltipDescription:
           'Zoom out. \n*[Scroll] on the map will also zoom in and out.*',
       }),
-      create: new Action({
-        ...Action.defaultProps,
-        purpose: EActionPurpose.Add,
+      create: new ButtonSVG({
+        ...ButtonSVG.defaultProps,
+        purpose: EButtonSVGPurpose.Add,
         handleClick: () => {},
         tooltipDescription:
           'Enter creation mode. This will allow new nodes to be created.',
         disabled: grayOutCreateButton,
       }),
-      create_exit: new Action({
-        ...Action.defaultProps,
-        purpose: EActionPurpose.Cancel,
+      create_exit: new ButtonSVG({
+        ...ButtonSVG.defaultProps,
+        purpose: EButtonSVGPurpose.Cancel,
         handleClick: () => {},
         tooltipDescription: 'Exit creation mode.',
         disabled: grayOutCreateButton,
       }),
-      edit: new Action({
-        ...Action.defaultProps,
-        purpose: EActionPurpose.Reorder,
+      edit: new ButtonSVG({
+        ...ButtonSVG.defaultProps,
+        purpose: EButtonSVGPurpose.Reorder,
         handleClick: handleMapEditRequest ? handleMapEditRequest : () => {},
         tooltipDescription: 'Edit the structure and order of nodes.',
         disabled: grayOutEditButton,
       }),
-      save: new Action({
-        ...Action.defaultProps,
-        purpose: EActionPurpose.Save,
+      save: new ButtonSVG({
+        ...ButtonSVG.defaultProps,
+        purpose: EButtonSVGPurpose.Save,
         handleClick: () => {
           if (handleMapSaveRequest) {
             handleMapSaveRequest()
@@ -796,7 +796,7 @@ export default class MissionMap extends React.Component<
         disabled: grayOutSaveButton,
       }),
     }
-    let activeActions: Action[] = []
+    let activeActions: ButtonSVG[] = []
 
     activeActions.push(availableActions.zoomIn)
     activeActions.push(availableActions.zoomOut)
@@ -827,8 +827,8 @@ export default class MissionMap extends React.Component<
 
     if (activeActions.length > 0) {
       return (
-        <ActionPanel
-          actions={activeActions}
+        <ButtonSVGPanel
+          buttons={activeActions}
           linkBack={null}
           styling={styling}
           uniqueClassName={actionsUniqueClassName}
@@ -924,7 +924,7 @@ export default class MissionMap extends React.Component<
   // This will create the display text for a node.
   renderNodeDisplay = (
     node: IMissionMappable,
-    actions: Array<IAction> = [],
+    actions: Array<IButtonSVG> = [],
   ): JSX.Element => {
     let selectedNode: MissionNode | null = this.props.selectedNode
     let allowCreationMode: boolean = this.props.allowCreationMode
@@ -1004,9 +1004,9 @@ export default class MissionMap extends React.Component<
           </div>
           <div className={iconClassName}></div>
         </div>
-        {actions.map((action: IAction): JSX.Element | null => {
+        {actions.map((action: IButtonSVG): JSX.Element | null => {
           return (
-            <Action
+            <ButtonSVG
               {...action}
               style={{ ...action.style, ...actionStyle }}
               uniqueClassName={`${action.uniqueClassName} ${actionUniqueClassName}`}
@@ -1062,6 +1062,21 @@ export default class MissionMap extends React.Component<
     return className
   }
 
+  // This will constructor the buttons
+  // available for a given node.
+  constructNodeButtons(node: MissionNode): Array<IButtonSVG> {
+    return [
+      {
+        ...ButtonSVG.defaultProps,
+        purpose: EButtonSVGPurpose.Add,
+        componentKey: 'node-add',
+        handleClick: () => {
+          this.activateNodeCreation()
+        },
+      },
+    ]
+  }
+
   // This renders the list of nodes in the
   // mission.
   renderNodes(): JSX.Element | null {
@@ -1081,19 +1096,9 @@ export default class MissionMap extends React.Component<
       <List<MissionNode>
         items={visibleNodes}
         itemsPerPage={null}
-        renderItemDisplay={(node: MissionNode) => {
-          let itemActions: Array<IAction> = [
-            {
-              ...Action.defaultProps,
-              purpose: EActionPurpose.Add,
-              componentKey: 'node-add',
-              handleClick: () => {
-                this.activateNodeCreation()
-              },
-            },
-          ]
-          return this.renderNodeDisplay(node, itemActions)
-        }}
+        renderItemDisplay={(node: MissionNode) =>
+          this.renderNodeDisplay(node, this.constructNodeButtons(node))
+        }
         searchableProperties={['nodeID']}
         noItemsDisplay={null}
         handleSelection={this.handleNodeSelection}

@@ -518,92 +518,6 @@ export default class List<TList extends object> extends React.Component<
       </div>
     )
   }
-  //
-  //   // This will render the sort by methods
-  //   // that can be clicked to sort the list
-  //   // of items.
-  //   renderSortByMethods(): JSX.Element | null {
-  //     let selectedSortByMethod: ESortByMethod = this.state.selectedSortByMethod
-  //
-  //     const availableActions: {
-  //       name: IAction_P
-  //       mostRecent: IAction_P
-  //       leastRecent: IAction_P
-  //     } = {
-  //       name: {
-  //         ...Action.defaultProps,
-  //         purpose: EActionPurpose.Alphabetical,
-  //         handleClick: () =>
-  //           this.setState(
-  //             { selectedSortByMethod: ESortByMethod.Name },
-  //             this.filter,
-  //           ),
-  //         tooltipDescription: 'Sort list alphabetically.',
-  //         key: 'name',
-  //         uniqueClassName:
-  //           selectedSortByMethod === ESortByMethod.Name ? ' selected' : '',
-  //       },
-  //       mostRecent: {
-  //         ...Action.defaultProps,
-  //         purpose: EActionPurpose.Clock,
-  //         handleClick: () =>
-  //           this.setState(
-  //             { selectedSortByMethod: ESortByMethod.MostRecent },
-  //             this.filter,
-  //           ),
-  //         tooltipDescription: 'Sort list most recent.',
-  //         key: 'most-recent',
-  //         uniqueClassName:
-  //           selectedSortByMethod === ESortByMethod.MostRecent ? ' selected' : '',
-  //       },
-  //       leastRecent: {
-  //         ...Action.defaultProps,
-  //         purpose: EActionPurpose.ClockSmall,
-  //         handleClick: () =>
-  //           this.setState(
-  //             { selectedSortByMethod: ESortByMethod.LeastRecent },
-  //             this.filter,
-  //           ),
-  //         tooltipDescription: 'Sort list by least recent.',
-  //         key: 'least-recent',
-  //         uniqueClassName:
-  //           selectedSortByMethod === ESortByMethod.LeastRecent ? ' selected' : '',
-  //       },
-  //     }
-  //
-  //     let sortByMethods: ESortByMethod[] = this.props.sortByMethods
-  //     let nameProperty: string | null = this.props.nameProperty
-  //     let timeCreatedProperty: string | null = this.props.timeCreatedProperty
-  //     let sortByMethodElements: Array<JSX.Element | null> = []
-  //
-  //     for (let sortByMethod of sortByMethods) {
-  //       switch (sortByMethod) {
-  //         case ESortByMethod.Name:
-  //           if (nameProperty !== null) {
-  //             sortByMethodElements.push(
-  //               new Action(availableActions.name).render(),
-  //             )
-  //           }
-  //           break
-  //         case ESortByMethod.MostRecent:
-  //           if (timeCreatedProperty !== null) {
-  //             sortByMethodElements.push(
-  //               new Action(availableActions.mostRecent).render(),
-  //             )
-  //           }
-  //           break
-  //         case ESortByMethod.LeastRecent:
-  //           if (timeCreatedProperty !== null) {
-  //             sortByMethodElements.push(
-  //               new Action(availableActions.leastRecent).render(),
-  //             )
-  //           }
-  //           break
-  //       }
-  //     }
-  //
-  //     return <div className='sort-by-methods'>{sortByMethodElements}</div>
-  //   }
 
   // renders the tooltip addon that will
   // be displayed for an item containing
@@ -917,21 +831,6 @@ export default class List<TList extends object> extends React.Component<
     } else if (ajaxStatus === EAjaxStatus.Error) {
       listClassName += ' error'
     }
-
-    // -- other-logic --
-
-    // if (
-    //   ajaxStatus !== EAjaxStatus.NotLoaded &&
-    //   ajaxStatus !== EAjaxStatus.Loaded
-    // ) {
-    //   actions = [
-    //     {
-    //       ...Action.defaultProps,
-    //       purpose: EActionPurpose.Blank,
-    //       handleClick: () => {},
-    //     },
-    //   ]
-    // }
 
     // -- render --
 

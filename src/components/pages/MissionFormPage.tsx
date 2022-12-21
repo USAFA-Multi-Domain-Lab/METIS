@@ -18,7 +18,7 @@ import MissionMap from '../content/MissionMap'
 import Tooltip from '../content/Tooltip'
 import { v4 as generateHash } from 'uuid'
 import './MissionFormPage.scss'
-import { Action, EActionPurpose } from '../content/Action'
+import { ButtonSVG, EButtonSVGPurpose } from '../content/ButtonSVG'
 import MoreInformation from '../content/MoreInformation'
 import { IPage } from '../App'
 import { ENodeTargetRelation, MissionNode } from '../../modules/mission-nodes'
@@ -976,8 +976,8 @@ function NodeActions(props: {
           </div>
         </div>
         <div className='UserActions'>
-          <Action
-            purpose={EActionPurpose.Add}
+          <ButtonSVG
+            purpose={EButtonSVGPurpose.Add}
             handleClick={() => {
               if (node !== null) {
                 let action: MissionNodeAction = new MissionNodeAction(

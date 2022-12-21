@@ -24,7 +24,7 @@
     );
 
   &.active-navigation {
-    .ActionPanel {
+    .ButtonSVGPanel {
       pointer-events: none;
     }
 
@@ -47,22 +47,22 @@
     }
   }
 
-  /* -- MAP | ACTION PANEL -- */
+  /* -- MAP | BUTTON SVG PANEL -- */
 
-  .map-actions.ActionPanel {
+  .map-actions.ButtonSVGPanel {
     position: relative !important;
     margin-bottom: -65px;
     height: 65px;
 
     &.map-is-zoomed-in {
-      .Action.zoom-in {
+      .ButtonSVG.zoom-in {
         pointer-events: none;
         opacity: 0.5;
       }
     }
 
     &.map-is-zoomed-out {
-      .Action.zoom-out {
+      .ButtonSVG.zoom-out {
         pointer-events: none;
         opacity: 0.5;
       }
@@ -74,7 +74,7 @@
       border-bottom: none;
       border-radius: 0;
 
-      .Action {
+      .ButtonSVG {
         display: inline-block;
         margin: 0 10px;
       }
@@ -343,7 +343,7 @@
           }
         }
 
-        .Action.add {
+        .ButtonSVG.add {
           font-size: unset;
           position: relative;
           border: unset;

@@ -1,6 +1,6 @@
 @import '../../config.scss';
 
-.ActionPanel {
+.ButtonSVGPanel {
   position: fixed;
   z-index: $z-index-action-panel;
   top: 50px;
@@ -30,7 +30,7 @@
       .trigger {
         position: static;
         opacity: 1;
-        @extend .Action;
+        @extend .ButtonSVG;
         background-repeat: no-repeat;
       }
 
@@ -55,7 +55,7 @@
       }
     }
 
-    .Action {
+    .ButtonSVG {
       display: block;
       margin: 12.5px 1.125px;
     }

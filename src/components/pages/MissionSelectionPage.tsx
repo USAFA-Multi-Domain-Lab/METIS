@@ -9,7 +9,7 @@ import {
 import { IPage } from '../App'
 import './MissionSelectionPage.scss'
 import { Counter } from '../../modules/numbers'
-import { Action, EActionPurpose } from '../content/Action'
+import { ButtonSVG, EButtonSVGPurpose } from '../content/ButtonSVG'
 import Toggle, { EToggleLockState } from '../content/Toggle'
 import Tooltip from '../content/Tooltip'
 import { EAjaxStatus } from '../../modules/toolbox/ajax'
@@ -169,8 +169,8 @@ export default function MissionSelectionPage(
                     <Tooltip description={'Launch mission.'} />
                   </div>
                   <div className='ActionsContainer'>
-                    <Action
-                      purpose={EActionPurpose.Edit}
+                    <ButtonSVG
+                      purpose={EButtonSVGPurpose.Edit}
                       handleClick={() => {
                         appActions.goToPage('MissionFormPage', {
                           missionID: mission.missionID,
@@ -178,8 +178,8 @@ export default function MissionSelectionPage(
                       }}
                       tooltipDescription={'Edit mission.'}
                     />
-                    <Action
-                      purpose={EActionPurpose.Remove}
+                    <ButtonSVG
+                      purpose={EButtonSVGPurpose.Remove}
                       handleClick={() => {
                         appActions.confirm(
                           'Are you sure you want to delete this mission?',
@@ -209,8 +209,8 @@ export default function MissionSelectionPage(
                       }}
                       tooltipDescription={'Remove mission.'}
                     />
-                    <Action
-                      purpose={EActionPurpose.Copy}
+                    <ButtonSVG
+                      purpose={EButtonSVGPurpose.Copy}
                       handleClick={() => {
                         appActions.confirm(
                           'Enter the name of the new mission.',
@@ -300,8 +300,8 @@ export default function MissionSelectionPage(
           </div>
         </div>
         <div className={editMissionsContainerClassName}>
-          <Action
-            purpose={EActionPurpose.Add}
+          <ButtonSVG
+            purpose={EButtonSVGPurpose.Add}
             handleClick={createMission}
             tooltipDescription={'Create new mission'}
             uniqueClassName={'NewMissionButton'}
