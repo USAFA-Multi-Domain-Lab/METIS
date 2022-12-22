@@ -200,6 +200,13 @@
           margin-right: 0;
         }
 
+        &.Selected {
+          .title {
+            overflow: hidden;
+            white-space: nowrap;
+          }
+        }
+
         .ActionPropertyDisplay {
           position: absolute;
           top: 0;
@@ -218,12 +225,12 @@
           }
 
           .title {
-            display: flex;
-            justify-content: center;
+            display: grid;
             align-items: center;
             color: $color-main;
             height: 100%;
             padding-top: auto;
+            text-align: center;
           }
         }
 
@@ -343,14 +350,20 @@
           }
         }
 
-        .ButtonSVG.add {
+        .ButtonSVG {
           font-size: unset;
           position: relative;
           border: unset;
           border: 2px solid $color-main;
-          border-radius: 0;
+          border-radius: 6px;
           background-color: rgba($background-alt1, 0.9);
           color: $color-main;
+
+          &.remove {
+            background-position: 50% 50%;
+            background-size: 70% 70%;
+            background-repeat: no-repeat;
+          }
         }
 
         &.node-creator {

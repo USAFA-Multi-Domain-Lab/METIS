@@ -151,6 +151,8 @@ export default function MissionFormPage(
     // This will select or unselect a node
     const selectNode = (node: MissionNode | null) => {
       setSelectedNode(node)
+      setNodeEmptyStringArray([])
+      setActionEmptyStringArray([])
     }
 
     // This is called to save any changes
@@ -196,27 +198,37 @@ export default function MissionFormPage(
     }
 
     // This is called when a node is
-    // requested to be deleted.
-    const handleNodeDeleteRequest = (node: MissionNode): void => {
-      let confirmationMessage: string = ''
-
-      if (node.hasChildren) {
-        confirmationMessage =
-          'Please confirm the deletion of this node. \n**This node has child nodes, and all child nodes will be deleted as well.**'
-      } else {
-        confirmationMessage = 'Please confirm the deletion of this node.'
+    // requested to be added.
+    const handleNodeAddRequest = (): void => {
+      if (selectedNode !== null) {
+        selectedNode.generateNodeCreators()
       }
+    }
 
-      appActions.confirm(
-        confirmationMessage,
-        (concludeAction: () => void, entry?: string) => {
-          node.delete()
-          handleChange()
-          activateNodeStructuring(false)
-          selectNode(null)
-          concludeAction()
-        },
-      )
+    // This is called when a node is
+    // requested to be deleted.
+    const handleNodeDeleteRequest = (): void => {
+      if (selectedNode !== null) {
+        let confirmationMessage: string = ''
+
+        if (selectedNode.hasChildren) {
+          confirmationMessage =
+            'Please confirm the deletion of this node. \n**This node has child nodes, and all child nodes will be deleted as well.**'
+        } else {
+          confirmationMessage = 'Please confirm the deletion of this node.'
+        }
+
+        appActions.confirm(
+          confirmationMessage,
+          (concludeAction: () => void, entry?: string) => {
+            selectedNode.delete()
+            handleChange()
+            activateNodeStructuring(false)
+            selectNode(null)
+            concludeAction()
+          },
+        )
+      }
     }
 
     // This will logout the current user.
@@ -229,10 +241,10 @@ export default function MissionFormPage(
     /* -- RENDER -- */
 
     let grayOutSaveButton: boolean =
-      !areUnsavedChanges &&
-      missionEmptyStringArray.length > 0 &&
-      nodeEmptyStringArray.length > 0 &&
-      actionEmptyStringArray.length > 0
+      !areUnsavedChanges ||
+      (missionEmptyStringArray.length > 0 &&
+        nodeEmptyStringArray.length > 0 &&
+        actionEmptyStringArray.length > 0)
 
     return (
       <div className={'MissionFormPage Page'}>
@@ -436,6 +448,8 @@ export default function MissionFormPage(
                 handleChange()
               }
             }}
+            handleNodeDeselection={() => selectNode(null)}
+            handleNodeDeletionRequest={handleNodeDeleteRequest}
             handleMapEditRequest={() => {
               activateNodeStructuring(true)
               selectNode(null)
@@ -464,13 +478,8 @@ export default function MissionFormPage(
             actionEmptyStringArray={actionEmptyStringArray}
             setActionEmptyStringArray={setActionEmptyStringArray}
             handleChange={handleChange}
-            handleDeleteRequest={() => {
-              if (selectedNode !== null) {
-                handleNodeDeleteRequest(selectedNode)
-                setNodeEmptyStringArray([])
-                setActionEmptyStringArray([])
-              }
-            }}
+            handleAddRequest={handleNodeAddRequest}
+            handleDeleteRequest={handleNodeDeleteRequest}
             handleCloseRequest={() => {
               if (selectedNode !== null) {
                 selectedNode.destroyNodeCreators()
@@ -581,6 +590,7 @@ function NodeEntry(props: {
   actionEmptyStringArray: Array<string>
   setActionEmptyStringArray: (actionEmptyStringArray: Array<string>) => void
   handleChange: () => void
+  handleAddRequest: () => void
   handleDeleteRequest: () => void
   handleCloseRequest: () => void
 }): JSX.Element | null {
@@ -596,6 +606,7 @@ function NodeEntry(props: {
     actionEmptyStringArray: Array<string>,
   ) => void = props.setActionEmptyStringArray
   let handleChange = props.handleChange
+  let handleAddNodeRequest = props.handleAddRequest
   let handleDeleteRequest = props.handleDeleteRequest
   let handleCloseRequest = props.handleCloseRequest
   let toggleErrorMessage: string | undefined = undefined
@@ -816,13 +827,26 @@ function NodeEntry(props: {
               }}
               key={`${node.nodeID}_device`}
             />
-            <div className='DeleteNodeContainer'>
-              <div className='DeleteNode'>
+            <div className='ButtonContainer'>
+              <div
+                className='FormButton AddNode'
+                onClick={handleAddNodeRequest}
+              >
                 [{' '}
-                <span className='Text' onClick={handleDeleteRequest}>
-                  Delete Node <span className='RightBracket'>]</span>
-                  <Tooltip description='Delete this node.' />
+                <span className='Text'>
+                  Add adjacent node <span className='RightBracket'>]</span>
                 </span>
+                <Tooltip description='Delete this node.' />
+              </div>
+              <div
+                className='FormButton DeleteNode'
+                onClick={handleDeleteRequest}
+              >
+                [{' '}
+                <span className='Text'>
+                  Delete node <span className='RightBracket'>]</span>
+                </span>
+                <Tooltip description='Delete this node.' />
               </div>
             </div>
           </div>
