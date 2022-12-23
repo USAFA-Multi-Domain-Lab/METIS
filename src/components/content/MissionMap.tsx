@@ -954,7 +954,7 @@ export default class MissionMap extends React.Component<
     let selectedNode: MissionNode | null = this.props.selectedNode
     let allowCreationMode: boolean = this.props.allowCreationMode
     let mapScale: number = this.state.mapScale
-    let fontSize: number = mapItemFontSize * mapScale
+    let titleFontSize: number = mapItemFontSize * mapScale
     let mapXScale: number = this.currentMapXScale
     let mapYScale: number = this.currentMapYScale
     let gridPaddingX: number = this.currentGridPaddingX
@@ -962,12 +962,12 @@ export default class MissionMap extends React.Component<
     let width: number = (mapXScale - gridPaddingX * 2) * mapScale
     let height: number = (mapYScale - gridPaddingY * 2) * mapScale
     let titleWidthSubtrahend: number = width * 0.1
-    let lineHeight: number = height * 0.34
+    let titleLineHeight: number = height * 0.34
     let buttonMarginTop = height * -0.175
     let buttonMarginSides = height * 0.05
     let buttonWidth: number = height * 0.575
     let buttonHeight: number = height * 0.575
-    let buttonFontSize: number = fontSize * 2
+    let buttonFontSize: number = titleFontSize * 2
     let buttonLineHeight: number = buttonHeight * 0.9
     let buttonStyle: React.CSSProperties = {
       marginTop: ``,
@@ -982,6 +982,12 @@ export default class MissionMap extends React.Component<
     let loadingClassName: string = 'loading'
     let iconClassName: string = ''
     let buttonUniqueClassName: string = ''
+
+    // This will shift the title line
+    // height if the node is selected.
+    if (node.nodeID === selectedNode?.nodeID) {
+      titleLineHeight *= 2
+    }
 
     // Logic to handle if the loading bar is displayed or not.
     if (!node.executing) {
@@ -1017,8 +1023,8 @@ export default class MissionMap extends React.Component<
             className='title'
             style={{
               width: `calc(100% - ${titleWidthSubtrahend}px)`,
-              fontSize: `${fontSize}px`,
-              lineHeight: `${lineHeight}px`,
+              fontSize: `${titleFontSize}px`,
+              lineHeight: `${titleLineHeight}px`,
             }}
           >
             {node.name}

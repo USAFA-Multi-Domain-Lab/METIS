@@ -750,14 +750,15 @@ function NodeEntry(props: {
             />
             <DetailNumber
               label='Depth Padding'
-              initialValue={node.mapX}
+              initialValue={node.depthPadding}
               deliverValue={(value: number | null) => {
                 if (node !== null && value !== null) {
-                  let newValue: number = value + 1
-                  node.mapX = newValue
+                  let newValue: number = value
+                  node.depthPadding = newValue
                   handleChange()
                 }
               }}
+              key={`${node.nodeID}_depthPadding`}
             />
             <DetailToggle
               label={'Executable'}

@@ -21,6 +21,7 @@ export const MissionSchema: Schema = new Schema(
           name: { type: String, required: true },
           color: { type: String, required: true },
           preExecutionText: { type: String, required: true },
+          depthPadding: { type: Number, required: true },
           executable: { type: Boolean, required: true },
           device: { type: Boolean, required: true },
           actions: {

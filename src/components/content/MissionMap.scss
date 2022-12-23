@@ -200,13 +200,6 @@
           margin-right: 0;
         }
 
-        &.Selected {
-          .title {
-            overflow: hidden;
-            white-space: nowrap;
-          }
-        }
-
         .ActionPropertyDisplay {
           position: absolute;
           top: 0;
@@ -254,6 +247,14 @@
 
         .properties {
           display: none;
+        }
+
+        &.Selected {
+          .title {
+            align-items: unset;
+            overflow: hidden;
+            white-space: nowrap;
+          }
         }
 
         &.scoreless {

@@ -180,6 +180,7 @@ export class Mission {
       'ROOT',
       'default',
       'N/A',
+      0,
       false,
       false,
       [],
@@ -256,6 +257,7 @@ export class Mission {
           name: MissionNode.default_name,
           color: MissionNode.default_color,
           preExecutionText: MissionNode.default_preExecutionText,
+          depthPadding: MissionNode.default_depthPadding,
           executable: MissionNode.default_executable,
           device: MissionNode.default_device,
           actions: MissionNode.default_actions,
@@ -270,6 +272,7 @@ export class Mission {
           nodeDatum.name,
           nodeDatum.color,
           nodeDatum.preExecutionText,
+          nodeDatum.depthPadding,
           nodeDatum.executable,
           nodeDatum.device,
           nodeDatum.actions,
@@ -324,6 +327,7 @@ export class Mission {
         name: node.name,
         color: node.color,
         preExecutionText: node.preExecutionText,
+        depthPadding: node.depthPadding,
         executable: node.executable,
         device: node.device,
         actions: node.actions.map((action: MissionNodeAction) =>
@@ -401,6 +405,7 @@ export class Mission {
       'New Node',
       MissionNode.default_color,
       MissionNode.default_preExecutionText,
+      MissionNode.default_depthPadding,
       MissionNode.default_executable,
       MissionNode.default_device,
       MissionNode.default_actions,
@@ -428,6 +433,8 @@ export class Mission {
     rowCount: Counter = new Counter(0),
   ): Mission => {
     let nodeCreationTarget: MissionNode | null = this.nodeCreationTarget
+
+    depth += parentNode.depthPadding
 
     // If the parent node isn't the rootNode,
     // then this function was recursively

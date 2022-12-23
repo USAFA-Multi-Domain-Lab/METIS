@@ -49,6 +49,7 @@ export class MissionNode implements IMissionMappable {
   preExecutionText: string
   executable: boolean
   device: boolean
+  _depthPadding: number
   actions: Array<MissionNodeAction> = []
   selectedAction: MissionNodeAction | null
   _executed: boolean
@@ -61,11 +62,23 @@ export class MissionNode implements IMissionMappable {
   static default_name: string = 'Unnamed Node'
   static default_color: string = 'default'
   static default_preExecutionText: string = 'Node has not been executed.'
+  static default_depthPadding: number = 0
   static default_executable: boolean = false
   static default_device: boolean = false
   static default_actions: Array<IMissionNodeActionJSON> = []
   static default_mapX: number = 0
   static default_mapY: number = 0
+
+  // Getter for _depthPadding.
+  get depthPadding(): number {
+    return this._depthPadding
+  }
+
+  // Setter for _depthPadding.
+  set depthPadding(depthPadding: number) {
+    this._depthPadding = depthPadding
+    this._handleStructureChange()
+  }
 
   get willSucceed(): boolean {
     let willSucceed: boolean = false
@@ -129,6 +142,7 @@ export class MissionNode implements IMissionMappable {
     name: string,
     color: string,
     preExecutionText: string,
+    depthPadding: number,
     executable: boolean,
     device: boolean,
     actionJSON: Array<IMissionNodeActionJSON>,
@@ -142,6 +156,7 @@ export class MissionNode implements IMissionMappable {
     this.childNodes = []
     this.color = color
     this.preExecutionText = preExecutionText
+    this._depthPadding = depthPadding
     this.executable = executable
     this.device = device
     this.selectedAction = null
