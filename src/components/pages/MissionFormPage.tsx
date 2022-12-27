@@ -90,8 +90,10 @@ export default function MissionFormPage(
       // Creating a new mission.
       if (missionID === null) {
         let mission = new Mission('', 'New Mission', 1, false, 5, {}, [], '')
-        setMission(mission)
         existsInDatabase = false
+        setMission(mission)
+        setAreUnsavedChanges(true)
+        setMountHandled(true)
       }
       // Editing an existing mission.
       else {
@@ -115,13 +117,6 @@ export default function MissionFormPage(
       }
     }
   }, [mountHandled])
-
-  // This will select a newly created node.
-  useEffect(() => {
-    if (mission && mission.lastCreatedNode !== null) {
-      setSelectedNode(mission.lastCreatedNode)
-    }
-  }, [mission?.lastCreatedNode])
 
   // Guards against refreshing or navigating away
   // with unsaved changes.
@@ -225,6 +220,21 @@ export default function MissionFormPage(
             handleChange()
             activateNodeStructuring(false)
             selectNode(null)
+
+            // If a node is deleted, and no remain
+            // in the mission, one is auto-generated.
+            // If this has happened, the user is
+            // notified here.
+            if (
+              mission.nodes.size === 1 &&
+              mission.lastCreatedNode?.nodeID ===
+                Array.from(mission.nodes.values())[0].nodeID
+            ) {
+              appActions.notify(
+                'Auto-generated a node for this mission, since missions must have at least one node.',
+              )
+            }
+
             concludeAction()
           },
         )
@@ -448,6 +458,10 @@ export default function MissionFormPage(
                 handleChange()
               }
             }}
+            handleNodeCreation={(node: MissionNode) => {
+              setSelectedNode(node)
+              handleChange()
+            }}
             handleNodeDeselection={() => selectNode(null)}
             handleNodeDeletionRequest={handleNodeDeleteRequest}
             handleMapEditRequest={() => {
@@ -610,6 +624,7 @@ function NodeEntry(props: {
   let handleDeleteRequest = props.handleDeleteRequest
   let handleCloseRequest = props.handleCloseRequest
   let toggleErrorMessage: string | undefined = undefined
+  let deleteNodeClassName: string = 'FormButton DeleteNode'
 
   /* -- COMPONENT STATE -- */
   const [mountHandled, setMountHandled] = useState<boolean>()
@@ -650,12 +665,18 @@ function NodeEntry(props: {
 
   /* -- RENDER -- */
 
-  if (isEmptyString) {
-    toggleErrorMessage =
-      'The button above is locked until there are no empty fields.'
-  }
-
   if (node !== null) {
+    let mission: Mission = node.mission
+
+    if (isEmptyString) {
+      toggleErrorMessage =
+        'The button above is locked until there are no empty fields.'
+    }
+
+    if (mission.nodes.size === 0) {
+      deleteNodeClassName += ' Hidden'
+    }
+
     return (
       <div className='NodeEntry SidePanel'>
         <div className='BorderBox'>
@@ -840,7 +861,7 @@ function NodeEntry(props: {
                 <Tooltip description='Delete this node.' />
               </div>
               <div
-                className='FormButton DeleteNode'
+                className={deleteNodeClassName}
                 onClick={handleDeleteRequest}
               >
                 [{' '}

@@ -23,6 +23,7 @@ interface IMissionMap {
   missionAjaxStatus: EAjaxStatus
   selectedNode: MissionNode | null
   handleNodeSelection: (node: MissionNode) => void
+  handleNodeCreation: (node: MissionNode) => void
   handleNodeDeselection: (() => void) | null
   handleNodeDeletionRequest: ((node: MissionNode) => void) | null
   handleMapEditRequest: (() => void) | null
@@ -142,6 +143,7 @@ export default class MissionMap extends React.Component<
   // inherited
   static defaultProps = {
     selectedNode: null,
+    handleNodeCreation: () => {},
     handleNodeDeselection: null,
     handleNodeDeletionRequest: null,
     handleMapEditRequest: null,
@@ -712,7 +714,8 @@ export default class MissionMap extends React.Component<
   // This is called when a node is requested to
   // be created.
   handleNodeCreationRequest = (nodeCreator: MissionNodeCreator): void => {
-    nodeCreator.create()
+    let node: MissionNode = nodeCreator.create()
+    this.props.handleNodeCreation(node)
   }
 
   // This is called to reveal the node creators
@@ -1098,6 +1101,7 @@ export default class MissionMap extends React.Component<
   // This will constructor the buttons
   // available for a given node.
   constructNodeButtons(node: MissionNode): Array<IButtonSVG> {
+    let mission: Mission = this.props.mission
     let selectedNode: MissionNode | null = this.props.selectedNode
     let allowCreationMode: boolean = this.props.allowCreationMode
     let creationModeActive: boolean = this.creationModeActive
@@ -1158,7 +1162,11 @@ export default class MissionMap extends React.Component<
           activeNodeButtons.push(availableNodeButtons.add_cancel)
         }
       }
-      if (handleNodeDeletionRequest !== null && !creationModeActive) {
+      if (
+        handleNodeDeletionRequest !== null &&
+        !creationModeActive &&
+        mission.nodes.size > 1
+      ) {
         activeNodeButtons.push(availableNodeButtons.remove)
       }
     }

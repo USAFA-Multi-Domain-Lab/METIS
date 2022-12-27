@@ -199,6 +199,10 @@ export class Mission {
     this._importNodeData(nodeData)
     this._importNodeStructure(nodeStructure, this.rootNode, expandAll)
 
+    if (this.nodes.size === 0) {
+      this.spawnNewNode()
+    }
+
     if (this.rootNode.expandable) {
       this.rootNode.expand()
     } else {

@@ -190,12 +190,14 @@ export default function MissionSelectionPage(
                             deleteMission(
                               mission.missionID,
                               () => {
+                                appActions.finishLoading()
                                 appActions.notify(
                                   `Successfully deleted ${mission.name}.`,
                                 )
                                 setMountHandled(false)
                               },
                               () => {
+                                appActions.finishLoading()
                                 appActions.notify(
                                   `Failed to delete ${mission.name}.`,
                                 )
@@ -222,12 +224,14 @@ export default function MissionSelectionPage(
                               mission.missionID,
                               entry,
                               () => {
+                                appActions.finishLoading()
                                 appActions.notify(
                                   `Successfully copied ${mission.name}.`,
                                 )
                                 setMountHandled(false)
                               },
                               () => {
+                                appActions.finishLoading()
                                 appActions.notify(
                                   `Failed to copy ${mission.name}.`,
                                 )
