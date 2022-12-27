@@ -47,14 +47,13 @@ export class MissionNode implements IMissionMappable {
   device: boolean
   actions: Array<MissionNodeAction> = []
   selectedAction: MissionNodeAction | null
-  _executed: boolean
-  _executing: boolean
+  executed: boolean
+  executing: boolean
   mapX: number
   mapY: number
   depth: number
   depthPadding: number
   _isExpanded: boolean
-  _totalExecutionAttempts: number
 
   static default_name: string = 'Unnamed Node'
   static default_color: string = 'default'
@@ -65,39 +64,6 @@ export class MissionNode implements IMissionMappable {
   static default_mapX: number = 0
   static default_mapY: number = 0
   static default_depthPadding: number = 0
-
-  get willSucceed(): boolean {
-    let willSucceed: boolean = false
-    let selectedAction: MissionNodeAction | null = this.selectedAction
-
-    if (selectedAction !== null) {
-      willSucceed = selectedAction.willSucceed
-    }
-
-    return willSucceed
-  }
-
-  get executed(): boolean {
-    return this._executed
-  }
-
-  get succeeded(): boolean {
-    return this._executed && this.willSucceed
-  }
-
-  get executing(): boolean {
-    return this._executing
-  }
-
-  get successChance(): number | null {
-    let successChance: number | null = null
-
-    if (this.selectedAction !== null) {
-      successChance = this.selectedAction.successChance
-    }
-
-    return successChance
-  }
 
   get descendantDepth(): number {
     let deepestDescendant: MissionNode = this
@@ -120,10 +86,6 @@ export class MissionNode implements IMissionMappable {
     }
 
     return deepestLowestDescendant.mapY
-  }
-
-  get totalExecutionAttempts(): number {
-    return this._totalExecutionAttempts
   }
 
   constructor(
@@ -149,14 +111,13 @@ export class MissionNode implements IMissionMappable {
     this.executable = executable
     this.device = device
     this.selectedAction = null
-    this._executed = false
-    this._executing = false
+    this.executed = false
+    this.executing = false
     this.mapX = mapX
     this.mapY = mapY
     this.depth = -1
     this.depthPadding = depthPadding
     this._isExpanded = false
-    this._totalExecutionAttempts = 3
 
     this.parseActionJSON(actionJSON)
   }
@@ -182,42 +143,6 @@ export class MissionNode implements IMissionMappable {
     }
 
     this.actions = actions
-  }
-
-  // This will execute the selected
-  // node action after the time delay
-  // of the selected node action.
-  execute(callback: (success: boolean) => void): void {
-    let selectedAction: MissionNodeAction | null = this.selectedAction
-
-    if (this._totalExecutionAttempts > 0) {
-      if (
-        (this.executable === true && selectedAction !== null) ||
-        (this.succeeded === false && selectedAction !== null)
-      ) {
-        this._executing = true
-
-        // If a node is being executed then this disables all the nodes
-        // while the node is being executed.
-        if (this.executing) {
-          this.mission.disableNodes = true
-        }
-
-        setTimeout(() => {
-          this._executing = false
-          this._executed = true
-
-          // Enables all the nodes after the selected node is done executing.
-          this.mission.disableNodes = false
-
-          // This reduces the users total execution attempts by 1 each time
-          // they execute a node.
-          this._totalExecutionAttempts--
-
-          callback(this.willSucceed)
-        }, selectedAction.processTime)
-      }
-    }
   }
 
   // This is called when a change

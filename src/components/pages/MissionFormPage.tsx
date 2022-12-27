@@ -1220,10 +1220,14 @@ function NodeAction(props: {
         <div
           className={deleteActionClassName}
           onClick={() => {
-            if (node.actions.length > 1) {
+            if (action === node.actions[0]) {
+              node.actions.shift()
+              setDisplayedAction(0)
+            } else if (node.actions.length > 1) {
               node.actions.splice(node.actions.indexOf(action), 1)
+              setDisplayedAction(displayedAction - 1)
             }
-            setDisplayedAction(displayedAction - 1)
+
             setActionEmptyStringArray([])
             handleChange()
           }}

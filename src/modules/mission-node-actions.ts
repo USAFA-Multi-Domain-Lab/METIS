@@ -1,6 +1,5 @@
 import { PRNG } from 'seedrandom'
 import { MissionNode } from './mission-nodes'
-import { Mission } from './missions'
 
 export interface IMissionNodeActionJSON {
   actionID: string
@@ -31,8 +30,21 @@ export class MissionNodeAction {
     return this._willSucceedArray
   }
 
+  // Getter for _willSucceed
   get willSucceed(): boolean {
     return this._willSucceed
+  }
+
+  // Gets the total amount of attempts
+  // that a user can have to execute a node
+  get totalExecutionAttempts(): number {
+    return Math.floor(this.node.mission.initialResources / this.resourceCost)
+  }
+
+  // Determines if a node succeeded or not
+  // after it is executed
+  get succeeded(): boolean {
+    return this.node.executed && this.willSucceed
   }
 
   constructor(
@@ -57,7 +69,7 @@ export class MissionNodeAction {
     this.postExecutionFailureText = postExecutionFailureText
     this._willSucceedArray =
       MissionNodeAction.determineDifferentSuccessOutcomes(
-        node,
+        this.totalExecutionAttempts,
         successChance,
         node.mission.rng,
       )
@@ -81,12 +93,11 @@ export class MissionNodeAction {
   // node action succeeds or fails based
   // on the success chance passed.
   static determineDifferentSuccessOutcomes = (
-    node: MissionNode,
+    totalExecutionAttempts: number,
     successChance: number,
     rng: PRNG,
   ): Array<boolean> => {
     let willSucceedArray: Array<boolean> = []
-    let totalExecutionAttempts: number = node.totalExecutionAttempts
 
     for (let i = 0; i < totalExecutionAttempts; i++) {
       let willSucceed: boolean = rng.double() <= successChance
@@ -97,7 +108,7 @@ export class MissionNodeAction {
   }
 
   // After the node is executed, the willSucceed that was just used is
-  // removed from the willSucceedArray so that if the user re-executes
+  // removed from the "willSucceedArray" so that if the user re-executes
   // they can potentially see a different result.
   updateWillSucceedArray(): Array<boolean> {
     this._willSucceedArray.shift()
@@ -105,10 +116,43 @@ export class MissionNodeAction {
     return this._willSucceedArray
   }
 
+  // This updates the "willSucceed" property for re-execution purposes
   updateWillSucceed(): boolean {
     this._willSucceed = this._willSucceedArray[0]
 
     return this._willSucceed
+  }
+
+  // This will execute the selected
+  // node action after the time delay
+  // of the selected node action.
+  executeAction(callback: (success: boolean) => void): void {
+    let selectedAction: MissionNodeAction | null = this
+
+    if (this.totalExecutionAttempts > 0) {
+      if (
+        (this.node.executable === true && selectedAction !== null) ||
+        (this.succeeded === false && selectedAction !== null)
+      ) {
+        this.node.executing = true
+
+        // If a node is being executed then this disables all the nodes
+        // while the node is being executed.
+        if (this.node.executing) {
+          this.node.mission.disableNodes = true
+        }
+
+        setTimeout(() => {
+          this.node.executing = false
+          this.node.executed = true
+
+          // Enables all the nodes after the selected node is done executing.
+          this.node.mission.disableNodes = false
+
+          callback(this.willSucceed)
+        }, selectedAction.processTime)
+      }
+    }
   }
 }
 

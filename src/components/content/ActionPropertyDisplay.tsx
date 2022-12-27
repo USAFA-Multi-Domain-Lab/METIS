@@ -16,8 +16,8 @@ const ActionPropertyDisplay = (props: {
         Action selected: {selectedAction?.name as string}
       </div>
       <div className='SuccessChance'>
-        Chance of success: {(props.selectedNode?.successChance as number) * 100}
-        %
+        Chance of success:{' '}
+        {(props.selectedNode?.selectedAction?.successChance as number) * 100}%
       </div>
       <div className='ResourceCost'>
         Resource cost: {selectedAction?.resourceCost} resource(s)

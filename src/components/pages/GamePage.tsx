@@ -56,7 +56,6 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
     actionSelectionPromptIsDisplayed,
     setActionSelectionPromptIsDisplayed,
   ] = useState<boolean>(false)
-  const [processTime, setProcessTime] = useState<number>(0)
 
   /* -- COMPONENT EFFECTS -- */
 
@@ -342,21 +341,10 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
               handleNodeSelection={(selectedNode: MissionNode) => {
                 setLastSelectedNode(selectedNode)
 
-                if (selectedNode.executable) {
-                  console.log(
-                    selectedNode.name,
-                    '-',
-                    selectedNode.actions[0].name,
-                    '-',
-                    selectedNode.actions[0].willSucceedArray,
-                  )
-                }
-
                 if (
                   selectedNode.preExecutionText !== '' &&
                   selectedNode.preExecutionText !== null &&
-                  selectedNode.succeeded !== true &&
-                  selectedNode.totalExecutionAttempts > 0
+                  selectedNode.selectedAction?.succeeded !== true
                 ) {
                   let timeStamp: number = 5 * (new Date() as any)
                   consoleOutputs.push({
@@ -378,21 +366,19 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
                 } else {
                   if (
                     !mission.disableNodes &&
-                    !selectedNode.succeeded &&
-                    selectedNode.actions.length > 1 &&
-                    selectedNode.totalExecutionAttempts > 0
+                    !selectedNode.selectedAction?.succeeded &&
+                    selectedNode.actions.length > 1
                   ) {
                     setActionSelectionPromptIsDisplayed(true)
                   } else if (
                     selectedNode.actions.length === 1 &&
-                    selectedNode.totalExecutionAttempts > 0 &&
-                    !selectedNode.succeeded
+                    !selectedNode.selectedAction?.succeeded
                   ) {
                     selectedNode.selectedAction = selectedNode.actions[0]
-                    setProcessTime(selectedNode.actions[0].processTime)
+                    selectedNode.selectedAction.processTime =
+                      selectedNode.actions[0].processTime
                     setActionSelectionPromptIsDisplayed(false)
                     setExecuteNodePathPromptIsDisplayed(true)
-                    selectedNode.selectedAction = selectedNode.actions[0]
                   } else if (selectedNode.actions.length === 0) {
                     setActionSelectionPromptIsDisplayed(true)
                   }
@@ -405,9 +391,9 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
                   className += ' LoadingBar'
                 }
 
-                if (node.executed && node.succeeded) {
+                if (node.executed && node.selectedAction?.succeeded) {
                   className += ' succeeded'
-                } else if (node.executed && !node.succeeded) {
+                } else if (node.executed && !node.selectedAction?.succeeded) {
                   className += ' failed'
                 }
 
@@ -428,7 +414,7 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
                     } second(s)\n` +
                     `* Action executed: ${node.selectedAction?.name}\n` +
                     `* Chance of success: ${
-                      (node.successChance as number) * 100
+                      (node.selectedAction?.successChance as number) * 100
                     }%`
                 }
 
@@ -447,7 +433,6 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
               setExecuteNodePathPromptIsDisplayed={
                 setExecuteNodePathPromptIsDisplayed
               }
-              setProcessTime={setProcessTime}
             />
             <ExecuteNodePath
               mission={mission}
@@ -460,7 +445,6 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
               setExecuteNodePathPromptIsDisplayed={
                 setExecuteNodePathPromptIsDisplayed
               }
-              processTime={processTime}
               notify={appActions.notify}
             />
           </div>

@@ -19,7 +19,6 @@ const ExecuteNodePath = (props: {
   setExecuteNodePathPromptIsDisplayed: (
     executeNodePathPromptIsDisplayed: boolean,
   ) => void
-  processTime: number
 }) => {
   let mission: Mission = props.mission
   let selectedNode: MissionNode | null | undefined = props.selectedNode
@@ -29,7 +28,6 @@ const ExecuteNodePath = (props: {
     props.setExecuteNodePathPromptIsDisplayed
   let setActionSelectionPromptIsDisplayed =
     props.setActionSelectionPromptIsDisplayed
-  let processTime = props.processTime
   let actionName: string | undefined = props.selectedNode?.selectedAction?.name
 
   /* -- COMPONENT STATE -- */
@@ -46,8 +44,13 @@ const ExecuteNodePath = (props: {
       let selectedNode: MissionNode = props.selectedNode
       let selectedAction: MissionNodeAction | null = selectedNode.selectedAction
       let resourceCost: number | undefined = selectedAction?.resourceCost
+      let processTime: number | undefined = selectedAction?.processTime
 
-      if (mission.resources > 0 && resourceCost !== undefined) {
+      if (
+        mission.resources > 0 &&
+        resourceCost !== undefined &&
+        processTime !== undefined
+      ) {
         setExecuteNodePathPromptIsDisplayed(false)
 
         let spendResources: number = mission.resources - resourceCost
@@ -55,7 +58,7 @@ const ExecuteNodePath = (props: {
           mission.resources = spendResources
           runNodeLoadingBar(processTime)
 
-          selectedNode.execute((success: boolean) => {
+          selectedNode.selectedAction?.executeAction((success: boolean) => {
             // Output message in the terminal which differs based on whether
             // it passes or fails
             if (success) {

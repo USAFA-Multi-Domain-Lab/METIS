@@ -13,7 +13,6 @@ const NodeActions = (props: {
   setExecuteNodePathPromptIsDisplayed: (
     executeNodePathPromptIsDisplayed: boolean,
   ) => void
-  setProcessTime: (processTime: number) => void
 }) => {
   let selectedNode: MissionNode | null | undefined = props.selectedNode
 
@@ -21,12 +20,9 @@ const NodeActions = (props: {
     props.setExecuteNodePathPromptIsDisplayed
   const setActionSelectionPromptIsDisplayed =
     props.setActionSelectionPromptIsDisplayed
-  const setProcessTime = props.setProcessTime
 
   /* -- COMPONENT STATE -- */
   const [displayActionList, setDisplayActionList] = useState<boolean>(false)
-  const [actionName, setActionName] = useState<string>('')
-  const [actionSuccessChance, setActionSuccessChance] = useState<number>(0)
 
   /* -- COMPONENT FUNCTIONS -- */
 
@@ -48,12 +44,10 @@ const NodeActions = (props: {
     setActionSelectionPromptIsDisplayed(false)
     setExecuteNodePathPromptIsDisplayed(true)
     setDisplayActionList(false)
-    setProcessTime(action.processTime)
-    setActionName(action.name)
-    setActionSuccessChance(action.successChance)
 
     if (props.selectedNode !== null && props.selectedNode !== undefined) {
       props.selectedNode.selectedAction = action
+      props.selectedNode.selectedAction.processTime = action.processTime
     }
   }
 
