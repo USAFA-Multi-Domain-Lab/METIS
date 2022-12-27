@@ -286,10 +286,6 @@
           background-color: $background-alt1;
         }
 
-        &.LoadingBar {
-          background-color: $background-alt1;
-        }
-
         &.succeeded {
           background-color: $background-alt1;
           border-color: $success;
@@ -298,6 +294,11 @@
         &.failed {
           background-color: $background-alt1;
           border-color: $fail;
+        }
+
+        &.LoadingBar {
+          background-color: $background-alt1;
+          border-color: $color-main;
         }
 
         @keyframes loading-animation {

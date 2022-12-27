@@ -1,5 +1,6 @@
 import { PRNG } from 'seedrandom'
 import { MissionNode } from './mission-nodes'
+import { Mission } from './missions'
 
 export interface IMissionNodeActionJSON {
   actionID: string
@@ -22,9 +23,14 @@ export class MissionNodeAction {
   resourceCost: number
   postExecutionSuccessText: string
   postExecutionFailureText: string
+  _willSucceedArray: Array<boolean>
   _willSucceed: boolean
 
-  // Getter for _willSucceed
+  // Getter for _willSucceedArray
+  get willSucceedArray(): Array<boolean> {
+    return this._willSucceedArray
+  }
+
   get willSucceed(): boolean {
     return this._willSucceed
   }
@@ -49,10 +55,13 @@ export class MissionNodeAction {
     this.resourceCost = resourceCost
     this.postExecutionSuccessText = postExecutionSuccessText
     this.postExecutionFailureText = postExecutionFailureText
-    this._willSucceed = MissionNodeAction.determineActionSuccess(
-      successChance,
-      node.mission.rng,
-    )
+    this._willSucceedArray =
+      MissionNodeAction.determineDifferentSuccessOutcomes(
+        node,
+        successChance,
+        node.mission.rng,
+      )
+    this._willSucceed = this._willSucceedArray[0]
   }
 
   toJSON(): IMissionNodeActionJSON {
@@ -71,11 +80,35 @@ export class MissionNodeAction {
   // This will determine whether a
   // node action succeeds or fails based
   // on the success chance passed.
-  static determineActionSuccess = (
+  static determineDifferentSuccessOutcomes = (
+    node: MissionNode,
     successChance: number,
     rng: PRNG,
-  ): boolean => {
-    return rng.double() <= successChance
+  ): Array<boolean> => {
+    let willSucceedArray: Array<boolean> = []
+    let totalExecutionAttempts: number = node.totalExecutionAttempts
+
+    for (let i = 0; i < totalExecutionAttempts; i++) {
+      let willSucceed: boolean = rng.double() <= successChance
+      willSucceedArray.push(willSucceed)
+    }
+
+    return willSucceedArray
+  }
+
+  // After the node is executed, the willSucceed that was just used is
+  // removed from the willSucceedArray so that if the user re-executes
+  // they can potentially see a different result.
+  updateWillSucceedArray(): Array<boolean> {
+    this._willSucceedArray.shift()
+
+    return this._willSucceedArray
+  }
+
+  updateWillSucceed(): boolean {
+    this._willSucceed = this._willSucceedArray[0]
+
+    return this._willSucceed
   }
 }
 

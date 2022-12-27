@@ -342,9 +342,21 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
               handleNodeSelection={(selectedNode: MissionNode) => {
                 setLastSelectedNode(selectedNode)
 
+                if (selectedNode.executable) {
+                  console.log(
+                    selectedNode.name,
+                    '-',
+                    selectedNode.actions[0].name,
+                    '-',
+                    selectedNode.actions[0].willSucceedArray,
+                  )
+                }
+
                 if (
                   selectedNode.preExecutionText !== '' &&
-                  selectedNode.preExecutionText !== null
+                  selectedNode.preExecutionText !== null &&
+                  selectedNode.succeeded !== true &&
+                  selectedNode.totalExecutionAttempts > 0
                 ) {
                   let timeStamp: number = 5 * (new Date() as any)
                   consoleOutputs.push({
@@ -360,19 +372,21 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
                   setOutputPanelIsDisplayed(true)
                 }
 
-                if (selectedNode.executable === false) {
+                if (!selectedNode.executable) {
                   gameLogic.handleNodeSelection(selectedNode)
                   selectedNode.color = ''
                 } else {
                   if (
-                    mission.disableNodes === false &&
-                    selectedNode.executed === false &&
-                    selectedNode.actions.length > 1
+                    !mission.disableNodes &&
+                    !selectedNode.succeeded &&
+                    selectedNode.actions.length > 1 &&
+                    selectedNode.totalExecutionAttempts > 0
                   ) {
                     setActionSelectionPromptIsDisplayed(true)
                   } else if (
                     selectedNode.actions.length === 1 &&
-                    selectedNode.executed === false
+                    selectedNode.totalExecutionAttempts > 0 &&
+                    !selectedNode.succeeded
                   ) {
                     selectedNode.selectedAction = selectedNode.actions[0]
                     setProcessTime(selectedNode.actions[0].processTime)

@@ -231,8 +231,8 @@ export default function MissionFormPage(
               selectNode(null)
               concludeAction()
             },
-            buttonConfirmText: `${node.name} + Children`,
-            buttonAlternateText: `${node.name}`,
+            buttonConfirmText: `Node + Children`,
+            buttonAlternateText: `Node`,
           },
         )
       } else {

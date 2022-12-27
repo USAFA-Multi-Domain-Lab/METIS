@@ -54,6 +54,7 @@ export class MissionNode implements IMissionMappable {
   depth: number
   depthPadding: number
   _isExpanded: boolean
+  _totalExecutionAttempts: number
 
   static default_name: string = 'Unnamed Node'
   static default_color: string = 'default'
@@ -121,6 +122,10 @@ export class MissionNode implements IMissionMappable {
     return deepestLowestDescendant.mapY
   }
 
+  get totalExecutionAttempts(): number {
+    return this._totalExecutionAttempts
+  }
+
   constructor(
     mission: Mission,
     nodeID: string,
@@ -151,6 +156,7 @@ export class MissionNode implements IMissionMappable {
     this.depth = -1
     this.depthPadding = depthPadding
     this._isExpanded = false
+    this._totalExecutionAttempts = 3
 
     this.parseActionJSON(actionJSON)
   }
@@ -184,28 +190,33 @@ export class MissionNode implements IMissionMappable {
   execute(callback: (success: boolean) => void): void {
     let selectedAction: MissionNodeAction | null = this.selectedAction
 
-    if (
-      this.executable === true &&
-      this.executed === false &&
-      selectedAction !== null
-    ) {
-      this._executing = true
+    if (this._totalExecutionAttempts > 0) {
+      if (
+        (this.executable === true && selectedAction !== null) ||
+        (this.succeeded === false && selectedAction !== null)
+      ) {
+        this._executing = true
 
-      // If a node is being executed then this disables all the nodes
-      // while the node is being executed.
-      if (this.executing) {
-        this.mission._disableNodes = true
+        // If a node is being executed then this disables all the nodes
+        // while the node is being executed.
+        if (this.executing) {
+          this.mission.disableNodes = true
+        }
+
+        setTimeout(() => {
+          this._executing = false
+          this._executed = true
+
+          // Enables all the nodes after the selected node is done executing.
+          this.mission.disableNodes = false
+
+          // This reduces the users total execution attempts by 1 each time
+          // they execute a node.
+          this._totalExecutionAttempts--
+
+          callback(this.willSucceed)
+        }, selectedAction.processTime)
       }
-
-      setTimeout(() => {
-        this._executing = false
-        this._executed = true
-
-        // Enables all the nodes after the selected node is done executing.
-        this.mission._disableNodes = false
-
-        callback(this.willSucceed)
-      }, selectedAction.processTime)
     }
   }
 

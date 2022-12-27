@@ -59,7 +59,7 @@ export class Mission {
   _lastCreatedNode: MissionNode | null
   structureChangeKey: string
   structureChangeHandlers: Array<(structureChangeKey: string) => void>
-  _disableNodes: boolean
+  disableNodes: boolean
   _depth: number
   _nodeCreationTarget: MissionNode | null
   _nodeCreators: Array<MissionNodeCreator>
@@ -83,11 +83,6 @@ export class Mission {
   // Getter for _lastCreatedNode.
   get lastCreatedNode(): MissionNode | null {
     return this._lastCreatedNode
-  }
-
-  // Getter for _disableNodes.
-  get disableNodes(): boolean {
-    return this._disableNodes
   }
 
   // Getter for _depth.
@@ -200,7 +195,7 @@ export class Mission {
     this._lastCreatedNode = null
     this.structureChangeKey = generateHash()
     this.structureChangeHandlers = []
-    this._disableNodes = false
+    this.disableNodes = false
     this._depth = -1
     this._nodeCreationTarget = null
     this._nodeCreators = []

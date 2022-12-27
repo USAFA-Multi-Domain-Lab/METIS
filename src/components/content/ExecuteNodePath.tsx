@@ -74,6 +74,8 @@ const ExecuteNodePath = (props: {
                      }</span>`,
                 },
               ])
+
+              selectedAction?.updateWillSucceedArray()
             } else if (!success) {
               setConsoleOutputs([
                 ...consoleOutputs,
@@ -88,6 +90,8 @@ const ExecuteNodePath = (props: {
                     }</span>`,
                 },
               ])
+
+              selectedAction?.updateWillSucceedArray()
             }
           })
         } else {
@@ -135,7 +139,13 @@ const ExecuteNodePath = (props: {
       </p>
       <ActionPropertyDisplay selectedNode={props.selectedNode} />
       <div className='Buttons'>
-        <button className={executionButtonClassName} onClick={execute}>
+        <button
+          className={executionButtonClassName}
+          onClick={() => {
+            execute()
+            props.selectedNode?.selectedAction?.updateWillSucceed()
+          }}
+        >
           {actionName}
           {displayTooltip ? (
             <Tooltip
