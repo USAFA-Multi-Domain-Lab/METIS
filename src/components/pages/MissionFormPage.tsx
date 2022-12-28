@@ -1401,7 +1401,9 @@ function NodeStructuring(props: {
 
               if (nodeGrabbed !== null) {
                 nodeGrabbed.move(target, targetRelation)
-                target.expand()
+                if (target.hasChildren) {
+                  target.expand()
+                }
                 handleChange()
               }
 
