@@ -21,7 +21,11 @@ import './MissionFormPage.scss'
 import { ButtonSVG, EButtonSVGPurpose } from '../content/ButtonSVG'
 import MoreInformation from '../content/MoreInformation'
 import { IPage } from '../App'
-import { ENodeTargetRelation, MissionNode } from '../../modules/mission-nodes'
+import {
+  ENodeDeleteMethod,
+  ENodeTargetRelation,
+  MissionNode,
+} from '../../modules/mission-nodes'
 import { MissionNodeAction } from '../../modules/mission-node-actions'
 import { EToggleLockState } from '../content/Toggle'
 import AppState, { AppActions } from '../AppState'
@@ -216,7 +220,9 @@ export default function MissionFormPage(
             `**Note: This node has children** \n` +
               `Please confirm if you would like to delete "${selectedNode.name}" only or "${selectedNode.name}" and all of it's children.`,
             (concludeAction: () => void) => {
-              selectedNode.deleteNodeAndChildren()
+              selectedNode.delete({
+                deleteMethod: ENodeDeleteMethod.DeleteNodeAndChildren,
+              })
               handleChange()
               activateNodeStructuring(false)
               selectNode(null)
@@ -225,7 +231,9 @@ export default function MissionFormPage(
             },
             {
               handleAlternate: (concludeAction: () => void) => {
-                selectedNode.deleteNodeAndShiftChildren()
+                selectedNode.delete({
+                  deleteMethod: ENodeDeleteMethod.DeleteNodeAndShiftChildren,
+                })
                 handleChange()
                 activateNodeStructuring(false)
                 selectNode(null)
@@ -240,7 +248,7 @@ export default function MissionFormPage(
           appActions.confirm(
             'Please confirm the deletion of this node.',
             (concludeAction: () => void) => {
-              selectedNode.deleteNodeAndChildren()
+              selectedNode.delete()
               handleChange()
               activateNodeStructuring(false)
               selectNode(null)

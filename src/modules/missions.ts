@@ -181,7 +181,6 @@ export class Mission {
       [],
       0,
       0,
-      0,
     )
     this.lastExpandedNode = null
     this._lastCreatedNode = null
@@ -276,7 +275,6 @@ export class Mission {
           nodeDatum.executable,
           nodeDatum.device,
           nodeDatum.actions,
-          0,
           0,
           0,
         )
@@ -412,7 +410,6 @@ export class Mission {
       MissionNode.default_actions,
       MissionNode.default_mapX,
       MissionNode.default_mapY,
-      MissionNode.default_depthPadding,
     )
     node.parentNode = rootNode
     rootNode.childNodes.push(node)
