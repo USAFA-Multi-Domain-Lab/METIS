@@ -964,6 +964,8 @@ export default class MissionMap extends React.Component<
     let gridPaddingY: number = this.currentGridPaddingY
     let width: number = (mapXScale - gridPaddingX * 2) * mapScale
     let height: number = (mapYScale - gridPaddingY * 2) * mapScale
+    let loadingHeight: number = height - 4
+    let loadingMarginBottom: number = -loadingHeight
     let titleWidthSubtrahend: number = width * 0.1
     let titleLineHeight: number = height * 0.34
     let buttonMarginTop = height * -0.175
@@ -972,6 +974,10 @@ export default class MissionMap extends React.Component<
     let buttonHeight: number = height * 0.575
     let buttonFontSize: number = titleFontSize * 2
     let buttonLineHeight: number = buttonHeight * 0.9
+    let loadingStyle: React.CSSProperties = {
+      marginBottom: `${loadingMarginBottom}px`,
+      height: `${loadingHeight}px`,
+    }
     let buttonStyle: React.CSSProperties = {
       marginTop: ``,
       margin: `${buttonMarginTop}px ${buttonMarginSides}px 0`,
@@ -1011,9 +1017,7 @@ export default class MissionMap extends React.Component<
       <>
         <div
           className={loadingClassName}
-          style={{
-            height: `${height}px`,
-          }}
+          style={loadingStyle}
           onClick={() => {}}
         ></div>
         <div
