@@ -673,7 +673,7 @@ function NodeEntry(props: {
         'The button above is locked until there are no empty fields.'
     }
 
-    if (mission.nodes.size === 0) {
+    if (mission.nodes.size < 2) {
       deleteNodeClassName += ' Hidden'
     }
 

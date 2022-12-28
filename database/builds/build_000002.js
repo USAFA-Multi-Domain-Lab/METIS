@@ -1,5 +1,8 @@
-conn = Mongo('<host:port>')
-db = conn.getDB('mdl')
+// This migration script is responsible
+// for adding the depthPadding property
+// to the node level of the mission schema.
+
+use('mdl')
 
 print('Migrating mission data to updated schema...')
 
