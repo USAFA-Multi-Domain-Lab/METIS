@@ -16,7 +16,7 @@ import NodeActions from '../content/NodeActions'
 import { IPage } from '../App'
 import { MissionNode } from '../../modules/mission-nodes'
 import AppState, { AppActions } from '../AppState'
-import { Action, EActionPurpose } from '../content/Action'
+import { ButtonSVG, EButtonSVGPurpose } from '../content/ButtonSVG'
 import Toggle, { EToggleLockState } from '../content/Toggle'
 import Tooltip from '../content/Tooltip'
 import Navigation from '../content/Navigation'
@@ -203,8 +203,8 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
                 Resources remaining: {mission.resources}
               </div>
               <div className={actionsClassName}>
-                <Action
-                  purpose={EActionPurpose.Edit}
+                <ButtonSVG
+                  purpose={EButtonSVGPurpose.Edit}
                   handleClick={() => {
                     appActions.goToPage('MissionFormPage', {
                       missionID: mission.missionID,
@@ -212,8 +212,8 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
                   }}
                   tooltipDescription={'Edit mission.'}
                 />
-                <Action
-                  purpose={EActionPurpose.Remove}
+                <ButtonSVG
+                  purpose={EButtonSVGPurpose.Remove}
                   handleClick={() => {
                     appActions.confirm(
                       'Are you sure you want to delete this mission?',
@@ -243,8 +243,8 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
                   }}
                   tooltipDescription={'Remove mission.'}
                 />
-                <Action
-                  purpose={EActionPurpose.Copy}
+                <ButtonSVG
+                  purpose={EButtonSVGPurpose.Copy}
                   handleClick={() => {
                     appActions.confirm(
                       'Enter the name of the new mission.',

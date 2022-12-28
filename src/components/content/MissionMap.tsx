@@ -12,15 +12,20 @@ import {
   MissionNode,
   MissionNodeCreator,
 } from '../../modules/mission-nodes'
-import { Action, EActionPurpose } from './Action'
-import { ActionPanel } from './ActionPanel'
+import { ButtonSVG, EButtonSVGPurpose, IButtonSVG } from './ButtonSVG'
+import { ButtonSVGPanel } from './ButtonSVGPanel'
+import { SingleTypeObject } from '../../modules/toolbox/objects'
 
 /* -- interfaces -- */
 
 interface IMissionMap {
   mission: Mission
   missionAjaxStatus: EAjaxStatus
+  selectedNode: MissionNode | null
   handleNodeSelection: (node: MissionNode) => void
+  handleNodeCreation: (node: MissionNode) => void
+  handleNodeDeselection: (() => void) | null
+  handleNodeDeletionRequest: ((node: MissionNode) => void) | null
   handleMapEditRequest: (() => void) | null
   handleMapSaveRequest: (() => void) | null
   allowCreationMode: boolean
@@ -42,7 +47,6 @@ interface IMissionMap_S {
   mapOffsetY: number
   mapScale: number
   nodeDepth: number
-  creationModeActive: boolean
 }
 
 export interface IMissionMappable {
@@ -50,6 +54,7 @@ export interface IMissionMappable {
   name: string
   mapX: number
   mapY: number
+  depth: number
   executing: boolean
   executable: boolean
   device: boolean
@@ -82,8 +87,7 @@ const baseMapXScale: number = 440.0 /*px*/
 const baseMapYScale: number = 110.0 /*px*/
 const baseGridPaddingX: number = 100.0 /*px*/
 const baseGridPaddingY: number = 20.0 /*px*/
-// const createNodePaddingX: number = 100.0 /*px*/
-// const createNodePaddingY: number = 20.0 /*px*/
+const selectedNodePaddingY: number = 40.0 /*px*/
 const pointerOriginOffset: number = 20 /*px*/
 const pointerArrowOffset: number = 30 /*px*/
 const mapItemFontSize: number = 20 /*px*/
@@ -95,7 +99,7 @@ export default class MissionMap extends React.Component<
   IMissionMap,
   IMissionMap_S
 > {
-  /* -- static functions -- */
+  /* -- static -- */
 
   // gets the coordinates on the map where
   // the cursor currently is, accounts for
@@ -111,8 +115,8 @@ export default class MissionMap extends React.Component<
     let mapOffsetX = mapUnscaledOffsetX * mapScale
     let mapOffsetY = mapUnscaledOffsetY * mapScale
     let mapCoordinates: IMapCoordinates = {
-      x: (clientX - mapOffsetX - mapBounds.x - mapBounds.width / 2) / mapScale,
-      y: (clientY - mapOffsetY - mapBounds.y - mapBounds.height / 2) / mapScale,
+      x: (clientX - mapOffsetX - mapBounds.x) / mapScale,
+      y: (clientY - mapOffsetY - mapBounds.y) / mapScale,
     }
     return mapCoordinates
   }
@@ -136,6 +140,23 @@ export default class MissionMap extends React.Component<
     )}\n${nodeTypeInfo}${scoreInfo}\n${prompt}`
   }
 
+  // inherited
+  static defaultProps = {
+    selectedNode: null,
+    handleNodeCreation: () => {},
+    handleNodeDeselection: null,
+    handleNodeDeletionRequest: null,
+    handleMapEditRequest: null,
+    handleMapSaveRequest: null,
+    allowCreationMode: false,
+    grayOutCreateButton: false,
+    grayOutEditButton: false,
+    grayOutSaveButton: false,
+    applyMappedNodeClassName: () => '',
+    renderMappedNodeTooltipDescription:
+      MissionMap.renderMappedNodeTooltipDescription_default,
+  }
+
   /* -- fields -- */
 
   map: React.RefObject<HTMLDivElement> = React.createRef()
@@ -157,7 +178,6 @@ export default class MissionMap extends React.Component<
       mapOffsetY: baseMapYScale * 2,
       mapScale: defaultMapScale,
       nodeDepth: mission.depth,
-      creationModeActive: false,
     }
   }
 
@@ -193,17 +213,11 @@ export default class MissionMap extends React.Component<
     return currentGridPaddingY
   }
 
-  // inherited
-  static defaultProps = {
-    handleMapEditRequest: null,
-    handleMapSaveRequest: null,
-    allowCreationMode: false,
-    grayOutCreateButton: false,
-    grayOutEditButton: false,
-    grayOutSaveButton: false,
-    applyMappedNodeClassName: () => '',
-    renderMappedNodeTooltipDescription:
-      MissionMap.renderMappedNodeTooltipDescription_default,
+  // This is whether creation mode is active,
+  // and if nodes are pending to be added by
+  // the user.
+  get creationModeActive(): boolean {
+    return this.props.mission.nodeCreationTarget !== null
   }
 
   /* -- initialize -- */
@@ -256,6 +270,7 @@ export default class MissionMap extends React.Component<
     ) {
       this.updateAllRelationships()
       this.revealNewNodes()
+      this.revealNewNodeCreators()
     }
 
     if (previousProps.mission !== this.props.mission) {
@@ -272,6 +287,46 @@ export default class MissionMap extends React.Component<
 
   // inherited
   forceUpdate = () => super.forceUpdate()
+
+  // This will pan the offset to a new
+  // value gradually.
+  panSmoothly = (targetMapOffset: IMapCoordinates): void => {
+    let currentMapOffset: IMapCoordinates = {
+      x: this.state.mapOffsetX,
+      y: this.state.mapOffsetY,
+    }
+    let differenceX: number = targetMapOffset.x - currentMapOffset.x
+    let differenceY: number = targetMapOffset.y - currentMapOffset.y
+    let deltaX: number = differenceX / 5
+    let deltaY: number = differenceY / 5
+
+    if (Math.abs(deltaX) < 4) {
+      deltaX = differenceX
+    }
+    if (Math.abs(deltaY) < 4) {
+      deltaY = differenceY
+    }
+
+    let updatedMapOffset: IMapCoordinates = {
+      x: currentMapOffset.x + deltaX,
+      y: currentMapOffset.y + deltaY,
+    }
+
+    this.setState(
+      {
+        mapOffsetX: updatedMapOffset.x,
+        mapOffsetY: updatedMapOffset.y,
+      },
+      () => {
+        if (
+          targetMapOffset.x !== updatedMapOffset.x ||
+          targetMapOffset.y !== updatedMapOffset.y
+        ) {
+          setTimeout(() => this.panSmoothly(targetMapOffset), 5)
+        }
+      },
+    )
+  }
 
   // returns whether this node is linked with any
   // other node in the state
@@ -437,6 +492,7 @@ export default class MissionMap extends React.Component<
     let map: HTMLDivElement | null = this.map.current
     let mapScale: number = this.state.mapScale
     let mapOffsetX: number = this.state.mapOffsetX
+    let mapOffsetY: number = this.state.mapOffsetY
     let mapXScale: number = this.currentMapXScale
     let gridPaddingX: number = this.currentGridPaddingX
 
@@ -460,7 +516,49 @@ export default class MissionMap extends React.Component<
         mapOffsetX += correctionDifference
       }
 
-      this.setState({ lastExpandedNode: mission.lastExpandedNode, mapOffsetX })
+      this.setState({ lastExpandedNode: mission.lastExpandedNode }, () =>
+        this.panSmoothly({ x: mapOffsetX, y: mapOffsetY }),
+      )
+    }
+  }
+
+  // This will reveal new node creators
+  // that have been newly generated in a
+  // node.
+  revealNewNodeCreators = (): void => {
+    let mission: Mission = this.props.mission
+    let map: HTMLDivElement | null = this.map.current
+    let mapScale: number = this.state.mapScale
+    let mapOffsetX: number = this.state.mapOffsetX
+    let mapOffsetY: number = this.state.mapOffsetY
+    let mapXScale: number = this.currentMapXScale
+    let gridPaddingX: number = this.currentGridPaddingX
+
+    if (map) {
+      let greatestNodeCreatorDepth: number = -1
+
+      for (let nodeCreator of mission.nodeCreators) {
+        if (greatestNodeCreatorDepth < nodeCreator.depth) {
+          greatestNodeCreatorDepth = nodeCreator.depth
+        }
+      }
+
+      let mapBounds: DOMRect = map.getBoundingClientRect()
+
+      let mapWidthInNodes: number = mapBounds.width / mapScale / mapXScale
+      let mapOffsetXInNodes: number = -1 * (mapOffsetX / mapXScale)
+      let nodeDepthShown: number = mapWidthInNodes + mapOffsetXInNodes - 1
+      let nodeDepthRevealed: number = greatestNodeCreatorDepth
+      let correctionDifferenceInNodes: number =
+        nodeDepthShown - nodeDepthRevealed
+      let correctionDifference: number =
+        correctionDifferenceInNodes * mapXScale - gridPaddingX / 2
+
+      if (correctionDifference < 0) {
+        mapOffsetX += correctionDifference
+      }
+
+      this.panSmoothly({ x: mapOffsetX, y: mapOffsetY })
     }
   }
 
@@ -593,10 +691,51 @@ export default class MissionMap extends React.Component<
     this.setState({ mapScale })
   }
 
+  // This is called when a node is selected.
+  handleNodeSelection = (newlySelectedNode: MissionNode) => {
+    let currentlySelectedNode: MissionNode | null = this.props.selectedNode
+    let allowCreationMode: boolean = this.props.allowCreationMode
+
+    if (
+      currentlySelectedNode === null ||
+      currentlySelectedNode.nodeID !== newlySelectedNode.nodeID ||
+      !allowCreationMode
+    ) {
+      if (
+        currentlySelectedNode !== null &&
+        currentlySelectedNode.nodeID !== newlySelectedNode.nodeID
+      ) {
+        this.deactivateNodeCreation()
+      }
+      this.props.handleNodeSelection(newlySelectedNode)
+    }
+  }
+
   // This is called when a node is requested to
   // be created.
   handleNodeCreationRequest = (nodeCreator: MissionNodeCreator): void => {
-    nodeCreator.create()
+    let node: MissionNode = nodeCreator.create()
+    this.props.handleNodeCreation(node)
+  }
+
+  // This is called to reveal the node creators
+  // for the selectedNode.
+  activateNodeCreation = (): void => {
+    let selectedNode: MissionNode | null = this.props.selectedNode
+
+    if (selectedNode !== null) {
+      selectedNode.generateNodeCreators()
+    }
+  }
+
+  // This is called to hide the node creators
+  // for the selectedNode.
+  deactivateNodeCreation = (): void => {
+    let selectedNode: MissionNode | null = this.props.selectedNode
+
+    if (selectedNode !== null) {
+      selectedNode.destroyNodeCreators()
+    }
   }
 
   /* -- functions | render -- */
@@ -609,52 +748,52 @@ export default class MissionMap extends React.Component<
     let handleMapEditRequest = this.props.handleMapEditRequest
     let handleMapSaveRequest = this.props.handleMapSaveRequest
     let allowCreationMode: boolean = this.props.allowCreationMode
-    let creationModeActive: boolean = this.state.creationModeActive
+    let creationModeActive: boolean = this.creationModeActive
     let grayOutCreateButton: boolean = this.props.grayOutCreateButton
     let grayOutEditButton: boolean = this.props.grayOutEditButton
     let grayOutSaveButton: boolean = this.props.grayOutSaveButton
     let actionsUniqueClassName: string = 'map-actions'
 
     let availableActions = {
-      zoomIn: new Action({
-        ...Action.defaultProps,
-        purpose: EActionPurpose.ZoomIn,
+      zoomIn: new ButtonSVG({
+        ...ButtonSVG.defaultProps,
+        purpose: EButtonSVGPurpose.ZoomIn,
         handleClick: this.handleZoomInRequest,
         tooltipDescription:
           'Zoom in. \n*[Scroll] on the map will also zoom in and out.*',
       }),
-      zoomOut: new Action({
-        ...Action.defaultProps,
-        purpose: EActionPurpose.ZoomOut,
+      zoomOut: new ButtonSVG({
+        ...ButtonSVG.defaultProps,
+        purpose: EButtonSVGPurpose.ZoomOut,
         handleClick: this.handleZoomOutRequest,
         tooltipDescription:
           'Zoom out. \n*[Scroll] on the map will also zoom in and out.*',
       }),
-      create: new Action({
-        ...Action.defaultProps,
-        purpose: EActionPurpose.Add,
-        handleClick: () => this.setState({ creationModeActive: true }),
-        tooltipDescription:
-          'Enter creation mode. This will allow new nodes to be created.',
-        disabled: grayOutCreateButton,
-      }),
-      create_exit: new Action({
-        ...Action.defaultProps,
-        purpose: EActionPurpose.Cancel,
-        handleClick: () => this.setState({ creationModeActive: false }),
-        tooltipDescription: 'Exit creation mode.',
-        disabled: grayOutCreateButton,
-      }),
-      edit: new Action({
-        ...Action.defaultProps,
-        purpose: EActionPurpose.Reorder,
+      // create: new ButtonSVG({
+      //   ...ButtonSVG.defaultProps,
+      //   purpose: EButtonSVGPurpose.Add,
+      //   handleClick: () => {},
+      //   tooltipDescription:
+      //     'Enter creation mode. This will allow new nodes to be created.',
+      //   disabled: grayOutCreateButton,
+      // }),
+      // create_exit: new ButtonSVG({
+      //   ...ButtonSVG.defaultProps,
+      //   purpose: EButtonSVGPurpose.Cancel,
+      //   handleClick: () => {},
+      //   tooltipDescription: 'Exit creation mode.',
+      //   disabled: grayOutCreateButton,
+      // }),
+      edit: new ButtonSVG({
+        ...ButtonSVG.defaultProps,
+        purpose: EButtonSVGPurpose.Reorder,
         handleClick: handleMapEditRequest ? handleMapEditRequest : () => {},
         tooltipDescription: 'Edit the structure and order of nodes.',
         disabled: grayOutEditButton,
       }),
-      save: new Action({
-        ...Action.defaultProps,
-        purpose: EActionPurpose.Save,
+      save: new ButtonSVG({
+        ...ButtonSVG.defaultProps,
+        purpose: EButtonSVGPurpose.Save,
         handleClick: () => {
           if (handleMapSaveRequest) {
             handleMapSaveRequest()
@@ -664,18 +803,18 @@ export default class MissionMap extends React.Component<
         disabled: grayOutSaveButton,
       }),
     }
-    let activeActions: Action[] = []
+    let activeActions: ButtonSVG[] = []
 
     activeActions.push(availableActions.zoomIn)
     activeActions.push(availableActions.zoomOut)
 
-    if (allowCreationMode) {
-      if (!creationModeActive) {
-        activeActions.push(availableActions.create)
-      } else {
-        activeActions.push(availableActions.create_exit)
-      }
-    }
+    // if (allowCreationMode) {
+    //   if (!creationModeActive) {
+    //     activeActions.push(availableActions.create)
+    //   } else {
+    //     activeActions.push(availableActions.create_exit)
+    //   }
+    // }
 
     if (handleMapEditRequest !== null) {
       activeActions.push(availableActions.edit)
@@ -695,8 +834,8 @@ export default class MissionMap extends React.Component<
 
     if (activeActions.length > 0) {
       return (
-        <ActionPanel
-          actions={activeActions}
+        <ButtonSVGPanel
+          buttons={activeActions}
           linkBack={null}
           styling={styling}
           uniqueClassName={actionsUniqueClassName}
@@ -733,8 +872,10 @@ export default class MissionMap extends React.Component<
   // rendering it with the correct position
   // and scale on the map.
   applyNodeStyling = (node: IMissionMappable) => {
+    let selectedNode: MissionNode | null = this.props.selectedNode
     let styling: React.CSSProperties = {}
     let map: HTMLDivElement | null = this.map.current
+
     if (map) {
       let mapScale: number = this.state.mapScale
       let mapBounds: DOMRect = map.getBoundingClientRect()
@@ -751,38 +892,57 @@ export default class MissionMap extends React.Component<
       let x: number = offsetX
       let y: number = offsetY
 
+      // This will position the node at the
+      // correct coordinates.
       x += nodeX * mapXScale
       y += nodeY * mapYScale
 
+      // This adjusts the x to center the node
+      // in its cell.
       x += gridPaddingX
-      y += gridPaddingY
+
+      // This adjusts the y to center the node
+      // in its cell, unless its the selected
+      // node. Then the node will take up the
+      // full height of the cell instead.
+      if (node.nodeID !== selectedNode?.nodeID) {
+        y += gridPaddingY
+      }
+
       let styling_top: number = y
       let styling_left: number = x
-      let styling_width: number = mapXScale - gridPaddingX * 2
-      let styling_height: number = mapYScale - gridPaddingY * 2
+      let styling_width: number = mapXScale
+      let styling_height: number = mapYScale
+
+      // This will adjust the width of the
+      // node to give it padding in its cell.
+      styling_width -= gridPaddingX * 2
+
+      // This will adjust the height of the
+      // node to give it padding in its cell,
+      // but only if its not the selected node.
+      if (node.nodeID !== selectedNode?.nodeID) {
+        styling_height -= gridPaddingY * 2
+      }
+
       let styling_fontSize: number = mapItemFontSize
       let styling_lineHeight: number = mapItemFontSize
-      // let styling_paddingVertical: number =
-      //   (styling_height - mapItemFontSize) / 2
-      // let styling_paddingHorizontal: number = 12.5
       let styling_marginTop: number = -styling_height
+
       styling_top *= mapScale
       styling_left *= mapScale
       styling_width *= mapScale
       styling_height *= mapScale
       styling_fontSize *= mapScale
       styling_lineHeight *= mapScale
-      // styling_paddingVertical *= mapScale
-      // styling_paddingHorizontal *= mapScale
       styling_marginTop *= mapScale
-      // styling_top += mapBounds.height / 2
+
       styling.top = `${styling_top}px`
       styling.left = `${styling_left}px`
       styling.width = `${styling_width}px`
       styling.height = `${styling_height}px`
       styling.fontSize = `${styling_fontSize}px`
       styling.lineHeight = `${styling_lineHeight}px`
-      // styling.padding = `${styling_paddingVertical}px ${styling_paddingHorizontal}px`
       styling.padding = '0'
       styling.marginBottom = `${styling_marginTop}px`
     }
@@ -790,18 +950,53 @@ export default class MissionMap extends React.Component<
   }
 
   // This will create the display text for a node.
-  renderNodeDisplay = (node: IMissionMappable): JSX.Element => {
+  renderNodeDisplay = (
+    node: IMissionMappable,
+    buttons: Array<IButtonSVG> = [],
+  ): JSX.Element => {
+    let selectedNode: MissionNode | null = this.props.selectedNode
+    let allowCreationMode: boolean = this.props.allowCreationMode
     let mapScale: number = this.state.mapScale
-    let fontSize: number = mapItemFontSize * mapScale
+    let titleFontSize: number = mapItemFontSize * mapScale
+    let mapXScale: number = this.currentMapXScale
     let mapYScale: number = this.currentMapYScale
+    let gridPaddingX: number = this.currentGridPaddingX
     let gridPaddingY: number = this.currentGridPaddingY
+    let width: number = (mapXScale - gridPaddingX * 2) * mapScale
     let height: number = (mapYScale - gridPaddingY * 2) * mapScale
-    let scoreWidth: number = 25 * mapScale
-    let lineHeight: number = height * 0.34
+    let loadingHeight: number = height - 4
+    let loadingMarginBottom: number = -loadingHeight
+    let titleWidthSubtrahend: number = width * 0.1
+    let titleLineHeight: number = height * 0.34
+    let buttonMarginTop = height * -0.175
+    let buttonMarginSides = height * 0.05
+    let buttonWidth: number = height * 0.575
+    let buttonHeight: number = height * 0.575
+    let buttonFontSize: number = titleFontSize * 2
+    let buttonLineHeight: number = buttonHeight * 0.9
+    let loadingStyle: React.CSSProperties = {
+      marginBottom: `${loadingMarginBottom}px`,
+      height: `${loadingHeight}px`,
+    }
+    let buttonStyle: React.CSSProperties = {
+      marginTop: ``,
+      margin: `${buttonMarginTop}px ${buttonMarginSides}px 0`,
+      width: `${buttonWidth}px`,
+      height: `${buttonHeight}px`,
+      fontSize: `${buttonFontSize}px`,
+      lineHeight: `${buttonLineHeight}px`,
+    }
 
     // Dynamic Class Names
     let loadingClassName: string = 'loading'
     let iconClassName: string = ''
+    let buttonUniqueClassName: string = ''
+
+    // This will shift the title line
+    // height if the node is selected.
+    if (node.nodeID === selectedNode?.nodeID) {
+      titleLineHeight *= 2
+    }
 
     // Logic to handle if the loading bar is displayed or not.
     if (!node.executing) {
@@ -812,17 +1007,18 @@ export default class MissionMap extends React.Component<
     // are devices.
     if (node.device && node.executable) {
       iconClassName = 'device'
+      titleWidthSubtrahend += width * 0.15
     } else if (node.executable && !node.device) {
       iconClassName = 'executable'
+      titleWidthSubtrahend += width * 0.15
     }
 
     return (
       <>
         <div
           className={loadingClassName}
-          style={{
-            height: `${height}px`,
-          }}
+          style={loadingStyle}
+          onClick={() => {}}
         ></div>
         <div
           className='wrapper'
@@ -833,15 +1029,25 @@ export default class MissionMap extends React.Component<
           <div
             className='title'
             style={{
-              width: `calc(100% - ${scoreWidth}px)`,
-              fontSize: `${fontSize}px`,
-              lineHeight: `${lineHeight}px`,
+              width: `calc(100% - ${titleWidthSubtrahend}px)`,
+              fontSize: `${titleFontSize}px`,
+              lineHeight: `${titleLineHeight}px`,
             }}
           >
             {node.name}
           </div>
           <div className={iconClassName}></div>
         </div>
+        {buttons.map((button: IButtonSVG): JSX.Element | null => {
+          return (
+            <ButtonSVG
+              {...button}
+              style={{ ...button.style, ...buttonStyle }}
+              uniqueClassName={`${button.uniqueClassName} ${buttonUniqueClassName}`}
+              key={button.componentKey}
+            />
+          )
+        })}
       </>
     )
   }
@@ -849,6 +1055,8 @@ export default class MissionMap extends React.Component<
   // applys an addon class name to the node
   // passed from the mapped node list.
   applyMappedNodeClassName = (node: MissionNode) => {
+    let selectedNode: MissionNode | null = this.props.selectedNode
+
     let className: string = ''
 
     let classNameExternalAddon: string = this.props.applyNodeClassName(node)
@@ -887,7 +1095,87 @@ export default class MissionMap extends React.Component<
       className += ` ${classNameExternalAddon}`
     }
 
+    if (node.nodeID === selectedNode?.nodeID) {
+      className += ' Selected'
+    }
+
     return className
+  }
+
+  // This will constructor the buttons
+  // available for a given node.
+  constructNodeButtons(node: MissionNode): Array<IButtonSVG> {
+    let mission: Mission = this.props.mission
+    let selectedNode: MissionNode | null = this.props.selectedNode
+    let allowCreationMode: boolean = this.props.allowCreationMode
+    let creationModeActive: boolean = this.creationModeActive
+    let handleNodeDeselection = this.props.handleNodeDeselection
+    let handleNodeDeletionRequest = this.props.handleNodeDeletionRequest
+
+    let availableNodeButtons: SingleTypeObject<IButtonSVG> = {
+      deselect: {
+        ...ButtonSVG.defaultProps,
+        purpose: EButtonSVGPurpose.Cancel,
+        componentKey: 'node-button-deselect',
+        tooltipDescription: 'Deselect this node (Closes panel view also).',
+        handleClick: () => {
+          if (handleNodeDeselection !== null) {
+            handleNodeDeselection()
+          }
+        },
+      },
+      add: {
+        ...ButtonSVG.defaultProps,
+        purpose: EButtonSVGPurpose.Add,
+        componentKey: 'node-button-add',
+        tooltipDescription: 'Create an adjacent node on the map.',
+        handleClick: this.activateNodeCreation,
+      },
+      add_cancel: {
+        ...ButtonSVG.defaultProps,
+        purpose: EButtonSVGPurpose.Cancel,
+        componentKey: 'node-button-add-cancel',
+        tooltipDescription: 'Cancel node creation.',
+        handleClick: this.deactivateNodeCreation,
+      },
+      remove: {
+        ...ButtonSVG.defaultProps,
+        purpose: EButtonSVGPurpose.Remove,
+        componentKey: 'node-button-remove',
+        tooltipDescription: 'Delete this node.',
+        handleClick: () => {
+          if (handleNodeDeletionRequest !== null) {
+            handleNodeDeletionRequest(node)
+          }
+        },
+      },
+    }
+    let activeNodeButtons: Array<IButtonSVG> = []
+
+    // This will add all the appropriate
+    // buttons to the active node buttons,
+    // based on the current state of the map.
+    if (node.nodeID === selectedNode?.nodeID) {
+      if (handleNodeDeselection !== null && !creationModeActive) {
+        activeNodeButtons.push(availableNodeButtons.deselect)
+      }
+      if (allowCreationMode) {
+        if (!creationModeActive) {
+          activeNodeButtons.push(availableNodeButtons.add)
+        } else {
+          activeNodeButtons.push(availableNodeButtons.add_cancel)
+        }
+      }
+      if (
+        handleNodeDeletionRequest !== null &&
+        !creationModeActive &&
+        mission.nodes.size > 1
+      ) {
+        activeNodeButtons.push(availableNodeButtons.remove)
+      }
+    }
+
+    return activeNodeButtons
   }
 
   // This renders the list of nodes in the
@@ -909,10 +1197,12 @@ export default class MissionMap extends React.Component<
       <List<MissionNode>
         items={visibleNodes}
         itemsPerPage={null}
-        getItemDisplay={this.renderNodeDisplay}
+        renderItemDisplay={(node: MissionNode) =>
+          this.renderNodeDisplay(node, this.constructNodeButtons(node))
+        }
         searchableProperties={['nodeID']}
         noItemsDisplay={null}
-        handleSelection={this.props.handleNodeSelection}
+        handleSelection={this.handleNodeSelection}
         renderTooltipDescription={this.props.renderNodeTooltipDescription}
         ajaxStatus={missionAjaxStatus}
         listSpecificItemClassName={'mapped-node'}
@@ -948,7 +1238,7 @@ export default class MissionMap extends React.Component<
         <List<MissionNodeCreator>
           items={mission.nodeCreators}
           itemsPerPage={null}
-          getItemDisplay={this.renderNodeDisplay}
+          renderItemDisplay={this.renderNodeDisplay}
           searchableProperties={['nodeID']}
           noItemsDisplay={null}
           handleSelection={this.handleNodeCreationRequest}
@@ -1137,6 +1427,7 @@ export default class MissionMap extends React.Component<
   // inherited
   render(): JSX.Element {
     let navigationIsActive: boolean = this.state.navigationIsActive
+    let creationModeActive: boolean = this.creationModeActive
     let mapScale: number = this.state.mapScale
     let map: HTMLDivElement | null = this.map.current
     let mapStyling: React.CSSProperties = {}
@@ -1170,6 +1461,9 @@ export default class MissionMap extends React.Component<
     }
     if (navigationIsActive) {
       mapClassName += ' active-navigation'
+    }
+    if (creationModeActive) {
+      mapClassName += ' creation-mode'
     }
 
     return (
@@ -1223,7 +1517,6 @@ export default class MissionMap extends React.Component<
           // -- NODE CREATORS --
         }
         {this.renderNodeCreators()}
-
         {
           // -- POINTERS -- //
         }

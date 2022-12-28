@@ -1,5 +1,11 @@
-conn = Mongo('<host:port>')
-db = conn.getDB('mdl')
+// This migration script is responsible
+// for adding the resource cost property
+// to the action level of the mission schema
+// and moving post-execution text from the
+// node level down to the action level of the
+// mission schema.
+
+use('mdl')
 
 print('Migrating mission data to updated schema...')
 

@@ -24,7 +24,7 @@
     );
 
   &.active-navigation {
-    .ActionPanel {
+    .ButtonSVGPanel {
       pointer-events: none;
     }
 
@@ -41,22 +41,28 @@
     }
   }
 
-  /* -- MAP | ACTION PANEL -- */
+  &.creation-mode {
+    .navigation {
+      background-color: $background-creation-mode;
+    }
+  }
 
-  .map-actions.ActionPanel {
+  /* -- MAP | BUTTON SVG PANEL -- */
+
+  .map-actions.ButtonSVGPanel {
     position: relative !important;
     margin-bottom: -65px;
     height: 65px;
 
     &.map-is-zoomed-in {
-      .Action.zoom-in {
+      .ButtonSVG.zoom-in {
         pointer-events: none;
         opacity: 0.5;
       }
     }
 
     &.map-is-zoomed-out {
-      .Action.zoom-out {
+      .ButtonSVG.zoom-out {
         pointer-events: none;
         opacity: 0.5;
       }
@@ -68,7 +74,7 @@
       border-bottom: none;
       border-radius: 0;
 
-      .Action {
+      .ButtonSVG {
         display: inline-block;
         margin: 0 10px;
       }
@@ -160,6 +166,7 @@
 
       .item {
         position: relative;
+        overflow: visible;
         z-index: $z-index-objective-map-item;
         box-sizing: border-box;
         transition: 250ms opacity;
@@ -211,12 +218,12 @@
           }
 
           .title {
-            display: flex;
-            justify-content: center;
+            display: grid;
             align-items: center;
             color: $color-main;
             height: 100%;
             padding-top: auto;
+            text-align: center;
           }
         }
 
@@ -240,6 +247,14 @@
 
         .properties {
           display: none;
+        }
+
+        &.Selected {
+          .title {
+            align-items: unset;
+            overflow: hidden;
+            white-space: nowrap;
+          }
         }
 
         &.scoreless {
@@ -334,6 +349,22 @@
             opacity: 0;
             position: absolute;
             left: -200vw;
+          }
+        }
+
+        .ButtonSVG {
+          font-size: unset;
+          position: relative;
+          border: unset;
+          border: 2px solid $color-main;
+          border-radius: 6px;
+          background-color: rgba($background-alt1, 0.9);
+          color: $color-main;
+
+          &.remove {
+            background-position: 50% 50%;
+            background-size: 70% 70%;
+            background-repeat: no-repeat;
           }
         }
 

@@ -1,15 +1,15 @@
 import React from 'react'
-import { Action } from './Action'
-import './ActionPanel.scss'
+import { ButtonSVG } from './ButtonSVG'
+import './ButtonSVGPanel.scss'
 
-export interface IActionPanel {
-  actions: Action[]
+export interface IButtonSVGPanel {
+  buttons: ButtonSVG[]
   linkBack: JSX.Element | null
   styling: React.CSSProperties
   uniqueClassName: string
 }
 
-export class ActionPanel extends React.Component<IActionPanel, {}> {
+export class ButtonSVGPanel extends React.Component<IButtonSVGPanel, {}> {
   static defaultProps = {
     styling: {},
     uniqueClassName: '',
@@ -20,13 +20,13 @@ export class ActionPanel extends React.Component<IActionPanel, {}> {
 
     return (
       <div
-        className={`ActionPanel ${uniqueClassName}`}
+        className={`ButtonSVGPanel ${uniqueClassName}`}
         style={this.props.styling}
       >
         <div className='glue'>
           {this.props.linkBack}
-          {this.props.actions.map((action: Action) => {
-            return action.render()
+          {this.props.buttons.map((button: ButtonSVG) => {
+            return button.render()
           })}
         </div>
       </div>

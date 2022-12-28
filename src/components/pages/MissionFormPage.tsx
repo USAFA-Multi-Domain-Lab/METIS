@@ -18,7 +18,7 @@ import MissionMap from '../content/MissionMap'
 import Tooltip from '../content/Tooltip'
 import { v4 as generateHash } from 'uuid'
 import './MissionFormPage.scss'
-import { Action, EActionPurpose } from '../content/Action'
+import { ButtonSVG, EButtonSVGPurpose } from '../content/ButtonSVG'
 import MoreInformation from '../content/MoreInformation'
 import { IPage } from '../App'
 import { ENodeTargetRelation, MissionNode } from '../../modules/mission-nodes'
@@ -89,8 +89,10 @@ export default function MissionFormPage(
       // Creating a new mission.
       if (missionID === null) {
         let mission = new Mission('', 'New Mission', 1, false, 5, {}, [], '')
-        setMission(mission)
         existsInDatabase = false
+        setMission(mission)
+        setAreUnsavedChanges(true)
+        setMountHandled(true)
       }
       // Editing an existing mission.
       else {
@@ -114,21 +116,6 @@ export default function MissionFormPage(
       }
     }
   }, [mountHandled])
-
-  // This will deselect the selected node
-  // if the node creation target is made null.
-  useEffect(() => {
-    if (mission?.nodeCreationTarget === null) {
-      setSelectedNode(null)
-    }
-  }, [mission?.nodeCreationTarget])
-
-  // This will select a newly created node.
-  useEffect(() => {
-    if (mission && mission.lastCreatedNode !== null) {
-      setSelectedNode(mission.lastCreatedNode)
-    }
-  }, [mission?.lastCreatedNode])
 
   // Guards against refreshing or navigating away
   // with unsaved changes.
@@ -157,14 +144,9 @@ export default function MissionFormPage(
 
     // This will select or unselect a node
     const selectNode = (node: MissionNode | null) => {
-      if (node !== null) {
-        node.revealNodeCreators()
-      }
-      if (node === null && selectedNode !== null) {
-        selectedNode.hideNodeCreators()
-      }
-
       setSelectedNode(node)
+      setNodeEmptyStringArray([])
+      setActionEmptyStringArray([])
     }
 
     // This is called to save any changes
@@ -209,43 +191,71 @@ export default function MissionFormPage(
       }
     }
 
+    // If a node is deleted, and no remain
+    // in the mission, one is auto-generated.
+    // If this has happened, the user is
+    // notified here.
+    const ensureOneNodeExists = (): void => {
+      if (
+        mission.nodes.size === 1 &&
+        mission.lastCreatedNode?.nodeID ===
+          Array.from(mission.nodes.values())[0].nodeID
+      ) {
+        appActions.notify(
+          'Auto-generated a node for this mission, since missions must have at least one node.',
+        )
+      }
+    }
+
     // This is called when a node is
     // requested to be deleted.
-    const handleNodeDeleteRequest = (node: MissionNode): void => {
-      if (node.hasChildren) {
-        appActions.confirm(
-          `**Note: This node has children** \n` +
-            `Please confirm if you would like to delete "${node.name}" only or "${node.name}" and all of it's children.`,
-          (concludeAction: () => void) => {
-            node.deleteNodeAndChildren()
-            handleChange()
-            activateNodeStructuring(false)
-            selectNode(null)
-            concludeAction()
-          },
-          {
-            handleAlternate: (concludeAction: () => void) => {
-              node.deleteNodeAndShiftChildren()
+    const handleNodeDeleteRequest = (): void => {
+      if (selectedNode !== null) {
+        if (selectedNode.hasChildren) {
+          appActions.confirm(
+            `**Note: This node has children** \n` +
+              `Please confirm if you would like to delete "${selectedNode.name}" only or "${selectedNode.name}" and all of it's children.`,
+            (concludeAction: () => void) => {
+              selectedNode.deleteNodeAndChildren()
               handleChange()
               activateNodeStructuring(false)
               selectNode(null)
+              ensureOneNodeExists()
               concludeAction()
             },
-            buttonConfirmText: `Node + Children`,
-            buttonAlternateText: `Node`,
-          },
-        )
-      } else {
-        appActions.confirm(
-          'Please confirm the deletion of this node.',
-          (concludeAction: () => void) => {
-            node.deleteNodeAndChildren()
-            handleChange()
-            activateNodeStructuring(false)
-            selectNode(null)
-            concludeAction()
-          },
-        )
+            {
+              handleAlternate: (concludeAction: () => void) => {
+                selectedNode.deleteNodeAndShiftChildren()
+                handleChange()
+                activateNodeStructuring(false)
+                selectNode(null)
+                ensureOneNodeExists()
+                concludeAction()
+              },
+              buttonConfirmText: `Node + Children`,
+              buttonAlternateText: `Node`,
+            },
+          )
+        } else {
+          appActions.confirm(
+            'Please confirm the deletion of this node.',
+            (concludeAction: () => void) => {
+              selectedNode.deleteNodeAndChildren()
+              handleChange()
+              activateNodeStructuring(false)
+              selectNode(null)
+              ensureOneNodeExists()
+              concludeAction()
+            },
+          )
+        }
+      }
+    }
+
+    // requested to be added.
+    const handleNodeAddRequest = (): void => {
+      if (selectedNode !== null) {
+        selectedNode.generateNodeCreators()
       }
     }
 
@@ -258,16 +268,11 @@ export default function MissionFormPage(
 
     /* -- RENDER -- */
 
-    let grayOutSaveButton: boolean = true
-
-    if (
-      areUnsavedChanges &&
-      missionEmptyStringArray.length === 0 &&
-      nodeEmptyStringArray.length === 0 &&
-      actionEmptyStringArray.length === 0
-    ) {
-      grayOutSaveButton = false
-    }
+    let grayOutSaveButton: boolean =
+      !areUnsavedChanges ||
+      (missionEmptyStringArray.length > 0 &&
+        nodeEmptyStringArray.length > 0 &&
+        actionEmptyStringArray.length > 0)
 
     return (
       <div className={'MissionFormPage Page'}>
@@ -391,6 +396,8 @@ export default function MissionFormPage(
           <MissionMap
             mission={mission}
             missionAjaxStatus={EAjaxStatus.Loaded}
+            selectedNode={selectedNode}
+            allowCreationMode={true}
             handleNodeSelection={(node: MissionNode) => {
               setDisplayedAction(0)
 
@@ -469,6 +476,12 @@ export default function MissionFormPage(
                 handleChange()
               }
             }}
+            handleNodeCreation={(node: MissionNode) => {
+              setSelectedNode(node)
+              handleChange()
+            }}
+            handleNodeDeselection={() => selectNode(null)}
+            handleNodeDeletionRequest={handleNodeDeleteRequest}
             handleMapEditRequest={() => {
               activateNodeStructuring(true)
               selectNode(null)
@@ -497,18 +510,13 @@ export default function MissionFormPage(
             actionEmptyStringArray={actionEmptyStringArray}
             setActionEmptyStringArray={setActionEmptyStringArray}
             handleChange={handleChange}
-            mission={mission}
-            handleDeleteRequest={() => {
-              if (selectedNode !== null) {
-                handleNodeDeleteRequest(selectedNode)
-                setNodeEmptyStringArray([])
-                setActionEmptyStringArray([])
-              }
-            }}
+            handleAddRequest={handleNodeAddRequest}
+            handleDeleteRequest={handleNodeDeleteRequest}
             handleCloseRequest={() => {
+              if (selectedNode !== null) {
+                selectedNode.destroyNodeCreators()
+              }
               selectNode(null)
-              setActionEmptyStringArray([])
-              setNodeEmptyStringArray([])
             }}
           />
           <NodeStructuring
@@ -612,9 +620,9 @@ function NodeEntry(props: {
   actionEmptyStringArray: Array<string>
   setActionEmptyStringArray: (actionEmptyStringArray: Array<string>) => void
   handleChange: () => void
+  handleAddRequest: () => void
   handleDeleteRequest: () => void
   handleCloseRequest: () => void
-  mission: Mission
 }): JSX.Element | null {
   let node: MissionNode | null = props.node
   let appActions: AppActions = props.appActions
@@ -628,10 +636,11 @@ function NodeEntry(props: {
     actionEmptyStringArray: Array<string>,
   ) => void = props.setActionEmptyStringArray
   let handleChange = props.handleChange
+  let handleAddNodeRequest = props.handleAddRequest
   let handleDeleteRequest = props.handleDeleteRequest
   let handleCloseRequest = props.handleCloseRequest
   let toggleErrorMessage: string | undefined = undefined
-  let mission: Mission = props.mission
+  let deleteNodeClassName: string = 'FormButton DeleteNode'
 
   /* -- COMPONENT STATE -- */
   const [mountHandled, setMountHandled] = useState<boolean>()
@@ -672,12 +681,18 @@ function NodeEntry(props: {
 
   /* -- RENDER -- */
 
-  if (isEmptyString) {
-    toggleErrorMessage =
-      'The button above is locked until there are no empty fields.'
-  }
-
   if (node !== null) {
+    let mission: Mission = node.mission
+
+    if (isEmptyString) {
+      toggleErrorMessage =
+        'The button above is locked until there are no empty fields.'
+    }
+
+    if (mission.nodes.size < 2) {
+      deleteNodeClassName += ' Hidden'
+    }
+
     return (
       <div className='NodeEntry SidePanel'>
         <div className='BorderBox'>
@@ -773,18 +788,13 @@ function NodeEntry(props: {
             <DetailNumber
               label='Depth Padding'
               initialValue={node.depthPadding}
-              deliverValue={(value: number | null) => {
-                if (node !== null && value !== null) {
-                  node.depthPadding = value
-
-                  // node.siblings.forEach((sibling) => {
-                  //   sibling.depthPadding = value
-                  // })
-
-                  mission.handleStructureChange()
+              deliverValue={(depthPadding: number | null) => {
+                if (node !== null && depthPadding !== null) {
+                  node.depthPadding = depthPadding
                   handleChange()
                 }
               }}
+              key={`${node.nodeID}_depthPadding`}
             />
             <DetailToggle
               label={'Executable'}
@@ -854,13 +864,26 @@ function NodeEntry(props: {
               }}
               key={`${node.nodeID}_device`}
             />
-            <div className='DeleteNodeContainer'>
-              <div className='DeleteNode'>
+            <div className='ButtonContainer'>
+              <div
+                className='FormButton AddNode'
+                onClick={handleAddNodeRequest}
+              >
                 [{' '}
-                <span className='Text' onClick={handleDeleteRequest}>
-                  Delete Node <span className='RightBracket'>]</span>
-                  <Tooltip description='Delete this node.' />
+                <span className='Text'>
+                  Add adjacent node <span className='RightBracket'>]</span>
                 </span>
+                <Tooltip description='Delete this node.' />
+              </div>
+              <div
+                className={deleteNodeClassName}
+                onClick={handleDeleteRequest}
+              >
+                [{' '}
+                <span className='Text'>
+                  Delete node <span className='RightBracket'>]</span>
+                </span>
+                <Tooltip description='Delete this node.' />
               </div>
             </div>
           </div>
@@ -1014,8 +1037,8 @@ function NodeActions(props: {
           </div>
         </div>
         <div className='UserActions'>
-          <Action
-            purpose={EActionPurpose.Add}
+          <ButtonSVG
+            purpose={EButtonSVGPurpose.Add}
             handleClick={() => {
               if (node !== null) {
                 let action: MissionNodeAction = new MissionNodeAction(

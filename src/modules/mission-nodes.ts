@@ -19,6 +19,11 @@ export enum ENodeTargetRelation {
   FollowingSiblingOfTarget,
 }
 
+export enum ENodeDeleteMethod {
+  DeleteNodeAndChildren,
+  DeleteNodeAndShiftChildren,
+}
+
 // This is the raw node data returned
 // from the server used to create instances
 // of MissionNode in the Mission class.
@@ -30,6 +35,14 @@ export interface IMissionNodeJson {
   executable: boolean
   device: boolean
   actions: Array<IMissionNodeActionJSON>
+}
+
+// These are options that can be passed
+// when deleting a node with the delete
+// function.
+export interface INodeDeleteOptions {
+  calledByParentDelete?: boolean // Default "false"
+  deleteMethod?: ENodeDeleteMethod // Default "ENodeDeleteMethod.DeleteNodeAndChildren"
 }
 
 // This represents an individual node
@@ -45,6 +58,7 @@ export class MissionNode implements IMissionMappable {
   preExecutionText: string
   executable: boolean
   device: boolean
+  _depthPadding: number
   actions: Array<MissionNodeAction> = []
   selectedAction: MissionNodeAction | null
   executed: boolean
@@ -52,18 +66,28 @@ export class MissionNode implements IMissionMappable {
   mapX: number
   mapY: number
   depth: number
-  depthPadding: number
   _isExpanded: boolean
 
   static default_name: string = 'Unnamed Node'
   static default_color: string = 'default'
   static default_preExecutionText: string = 'Node has not been executed.'
+  static default_depthPadding: number = 0
   static default_executable: boolean = false
   static default_device: boolean = false
   static default_actions: Array<IMissionNodeActionJSON> = []
   static default_mapX: number = 0
   static default_mapY: number = 0
-  static default_depthPadding: number = 0
+
+  // Getter for _depthPadding.
+  get depthPadding(): number {
+    return this._depthPadding
+  }
+
+  // Setter for _depthPadding.
+  set depthPadding(depthPadding: number) {
+    this._depthPadding = depthPadding
+    this._handleStructureChange()
+  }
 
   get descendantDepth(): number {
     let deepestDescendant: MissionNode = this
@@ -94,12 +118,12 @@ export class MissionNode implements IMissionMappable {
     name: string,
     color: string,
     preExecutionText: string,
+    depthPadding: number,
     executable: boolean,
     device: boolean,
     actionJSON: Array<IMissionNodeActionJSON>,
     mapX: number,
     mapY: number,
-    depthPadding: number,
   ) {
     this.mission = mission
     this.nodeID = nodeID
@@ -108,6 +132,7 @@ export class MissionNode implements IMissionMappable {
     this.childNodes = []
     this.color = color
     this.preExecutionText = preExecutionText
+    this._depthPadding = depthPadding
     this.executable = executable
     this.device = device
     this.selectedAction = null
@@ -116,7 +141,6 @@ export class MissionNode implements IMissionMappable {
     this.mapX = mapX
     this.mapY = mapY
     this.depth = -1
-    this.depthPadding = depthPadding
     this._isExpanded = false
 
     this.parseActionJSON(actionJSON)
@@ -417,55 +441,82 @@ export class MissionNode implements IMissionMappable {
   // This will reveal the node creators,
   // allowing a node to be created adjacent
   // to it if the mission is tied to a map.
-  revealNodeCreators(): void {
+  generateNodeCreators(): void {
     this.mission.nodeCreationTarget = this
   }
 
   // This will hide any revealled node
   // creators, restoring the view
   // to only the node structure.
-  hideNodeCreators(): void {
+  destroyNodeCreators(): void {
     this.mission.nodeCreationTarget = null
   }
 
-  // This will delete this node and
-  // all child nodes from the mission.
-  deleteNodeAndChildren(): void {
-    for (let childNode of this.childNodes) {
-      childNode.deleteNodeAndChildren()
+  // This will delete a node given the
+  // options passed by the caller.
+  delete(
+    options: INodeDeleteOptions = {
+      calledByParentDelete: false,
+      deleteMethod: ENodeDeleteMethod.DeleteNodeAndChildren,
+    },
+  ): void {
+    let calledByParentDelete: boolean = options.calledByParentDelete === true
+    let deleteMethod: ENodeDeleteMethod = options.deleteMethod
+      ? options.deleteMethod
+      : ENodeDeleteMethod.DeleteNodeAndChildren
+
+    switch (deleteMethod) {
+      case ENodeDeleteMethod.DeleteNodeAndChildren:
+        let childNodes: Array<MissionNode> = [...this.childNodes]
+
+        for (let childNode of childNodes) {
+          let childOptions: INodeDeleteOptions = {
+            ...options,
+            calledByParentDelete: true,
+          }
+          childNode.delete(childOptions)
+        }
+
+        this.childrenOfParent.splice(this.childrenOfParent.indexOf(this), 1)
+        this.mission.nodes.delete(this.nodeID)
+        break
+      case ENodeDeleteMethod.DeleteNodeAndShiftChildren:
+        let parentOfSelectedNode: MissionNode | null = this.parentNode
+        let childrenofSelectedNode: Array<MissionNode> = [...this.childNodes]
+
+        childrenofSelectedNode.forEach((childNode: MissionNode) => {
+          if (parentOfSelectedNode !== null) {
+            parentOfSelectedNode.childNodes.splice(
+              parentOfSelectedNode.childNodes.indexOf(this),
+              0,
+              childNode,
+            )
+            childNode.parentNode = parentOfSelectedNode
+          }
+        })
+
+        if (parentOfSelectedNode !== null) {
+          parentOfSelectedNode.childNodes.splice(
+            parentOfSelectedNode.childNodes.indexOf(this),
+            1,
+          )
+          this.mission.nodes.delete(this.nodeID)
+          this.mission.handleStructureChange()
+        }
+        break
     }
 
-    this.childrenOfParent.splice(this.childrenOfParent.indexOf(this), 1)
-    this.mission.nodes.delete(this.nodeID)
-
-    this._handleStructureChange()
-  }
-
-  // This will turn this node's children nodes into
-  // this node's siblings and then delete this node
-  // afterwards.
-  deleteNodeAndShiftChildren(): void {
-    let parentOfSelectedNode: MissionNode | null = this.parentNode
-    let childrenofSelectedNode: Array<MissionNode> = this.childNodes
-
-    childrenofSelectedNode.forEach((childNode: MissionNode) => {
-      if (parentOfSelectedNode !== null) {
-        parentOfSelectedNode.childNodes.splice(
-          parentOfSelectedNode.childNodes.indexOf(this),
-          0,
-          childNode,
-        )
-        childNode.parentNode = parentOfSelectedNode
+    if (calledByParentDelete !== true) {
+      // Structure change is handled as long
+      // as one node exists. If not, a new
+      // node is created. Creating this node
+      // will handle the structure change for
+      // us.
+      if (this.mission.nodes.size > 0) {
+        this._handleStructureChange()
+      } else {
+        this.mission.spawnNewNode()
       }
-    })
-
-    if (parentOfSelectedNode !== null) {
-      parentOfSelectedNode.childNodes.splice(
-        parentOfSelectedNode.childNodes.indexOf(this),
-        1,
-      )
-      this.mission.nodes.delete(this.nodeID)
-      this.mission.handleStructureChange()
     }
   }
 }
@@ -481,6 +532,7 @@ export class MissionNodeCreator implements IMissionMappable {
   _creationTargetRelation: ENodeTargetRelation
   mapX: number
   mapY: number
+  depth: number
   _createdNode: MissionNode | null = null
 
   // Getter for _nodeID.
@@ -563,6 +615,7 @@ export class MissionNodeCreator implements IMissionMappable {
     this._mission = mission
     this.mapX = mapX
     this.mapY = mapY
+    this.depth = -1
     this._creationTarget = creationTarget
     this._creationTargetRelation = creationTargetRelation
   }

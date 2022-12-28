@@ -3,6 +3,28 @@ import { ERROR_BAD_DATA } from '../database'
 
 let ObjectId = mongoose.Types.ObjectId
 
+const NODE_DATA_MIN_LENGTH = 1
+const ACTIONS_MIN_LENGTH = 1
+
+/* -- SCHEMA VALIDATORS -- */
+
+// Validator for missions.nodeData.
+const validate_missions_nodeData = (nodeData: Array<any>): boolean => {
+  let minLengthReached: boolean = nodeData.length >= NODE_DATA_MIN_LENGTH
+  let minLengthOfActionsReached: boolean = true
+
+  for (let nodeDatum of nodeData) {
+    if (nodeDatum.executable && nodeDatum.actions.length < ACTIONS_MIN_LENGTH) {
+      minLengthOfActionsReached = false
+      break
+    }
+  }
+
+  return minLengthReached && minLengthOfActionsReached
+}
+
+/* -- SCHEMA -- */
+
 export const MissionSchema: Schema = new Schema(
   {
     _id: { type: ObjectId, required: false, auto: true },
@@ -21,6 +43,7 @@ export const MissionSchema: Schema = new Schema(
           name: { type: String, required: true },
           color: { type: String, required: true },
           preExecutionText: { type: String, required: true },
+          depthPadding: { type: Number, required: true },
           executable: { type: Boolean, required: true },
           device: { type: Boolean, required: true },
           actions: {
@@ -45,6 +68,7 @@ export const MissionSchema: Schema = new Schema(
         },
       ],
       required: true,
+      validate: validate_missions_nodeData,
     },
   },
   {

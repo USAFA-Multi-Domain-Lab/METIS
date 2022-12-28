@@ -174,7 +174,7 @@ function buildSchema(
   let command: string = `mongosh --host ${MONGO_HOST} --port ${MONGO_PORT} --file ${buildPath}`
 
   if (MONGO_USERNAME && MONGO_PASSWORD) {
-    command += ` --username ${MONGO_USERNAME} --password ${MONGO_PASSWORD}`
+    command += ` --username ${MONGO_USERNAME} --password ${MONGO_PASSWORD} --authenticationDatabase mdl`
   }
 
   console.log(`Database is migrating to build ${nextBuildNumber}`)

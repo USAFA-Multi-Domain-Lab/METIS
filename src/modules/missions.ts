@@ -101,15 +101,6 @@ export class Mission {
     this._nodeCreators = []
 
     if (nodeCreationTarget !== null) {
-      // this._nodeCreators.push(
-      //   new MissionNodeCreator(
-      //     this,
-      //     nodeCreationTarget,
-      //     ENodeTargetRelation.ParentOfTargetAndChildren,
-      //     0,
-      //     0,
-      //   ),
-      // )
       this._nodeCreators.push(
         new MissionNodeCreator(
           this,
@@ -184,6 +175,7 @@ export class Mission {
       'ROOT',
       'default',
       'N/A',
+      0,
       false,
       false,
       [],
@@ -202,6 +194,10 @@ export class Mission {
 
     this._importNodeData(nodeData)
     this._importNodeStructure(nodeStructure, this.rootNode, expandAll)
+
+    if (this.nodes.size === 0) {
+      this.spawnNewNode()
+    }
 
     if (this.rootNode.expandable) {
       this.rootNode.expand()
@@ -261,6 +257,7 @@ export class Mission {
           name: MissionNode.default_name,
           color: MissionNode.default_color,
           preExecutionText: MissionNode.default_preExecutionText,
+          depthPadding: MissionNode.default_depthPadding,
           executable: MissionNode.default_executable,
           device: MissionNode.default_device,
           actions: MissionNode.default_actions,
@@ -275,6 +272,7 @@ export class Mission {
           nodeDatum.name,
           nodeDatum.color,
           nodeDatum.preExecutionText,
+          nodeDatum.depthPadding,
           nodeDatum.executable,
           nodeDatum.device,
           nodeDatum.actions,
@@ -330,6 +328,7 @@ export class Mission {
         name: node.name,
         color: node.color,
         preExecutionText: node.preExecutionText,
+        depthPadding: node.depthPadding,
         executable: node.executable,
         device: node.device,
         actions: node.actions.map((action: MissionNodeAction) =>
@@ -407,6 +406,7 @@ export class Mission {
       'New Node',
       MissionNode.default_color,
       MissionNode.default_preExecutionText,
+      MissionNode.default_depthPadding,
       MissionNode.default_executable,
       MissionNode.default_device,
       MissionNode.default_actions,
@@ -435,6 +435,8 @@ export class Mission {
     rowCount: Counter = new Counter(0),
   ): Mission => {
     let nodeCreationTarget: MissionNode | null = this.nodeCreationTarget
+
+    depth += parentNode.depthPadding
 
     // If the parent node isn't the rootNode,
     // then this function was recursively
@@ -530,22 +532,27 @@ export class Mission {
           case ENodeTargetRelation.ParentOfTargetAndChildren:
             nodeCreator.mapX = nodeCreationTarget.mapX - 2
             nodeCreator.mapY = nodeCreationTarget.mapY
+            nodeCreator.depth = nodeCreationTarget.depth - 2
             break
           case ENodeTargetRelation.ParentOfTargetOnly:
             nodeCreator.mapX = nodeCreationTarget.mapX - 1
             nodeCreator.mapY = nodeCreationTarget.mapY
+            nodeCreator.depth = nodeCreationTarget.depth - 1
             break
           case ENodeTargetRelation.BetweenTargetAndChildren:
             nodeCreator.mapX = nodeCreationTarget.mapX + 1
             nodeCreator.mapY = nodeCreationTarget.mapY
+            nodeCreator.depth = nodeCreationTarget.depth + 1
             break
           case ENodeTargetRelation.PreviousSiblingOfTarget:
             nodeCreator.mapX = nodeCreationTarget.mapX
             nodeCreator.mapY = nodeCreationTarget.mapY - 1
+            nodeCreator.depth = nodeCreationTarget.depth
             break
           case ENodeTargetRelation.FollowingSiblingOfTarget:
             nodeCreator.mapX = nodeCreationTarget.mapX
             nodeCreator.mapY = nodeCreationTarget.mapY + 1
+            nodeCreator.depth = nodeCreationTarget.depth
             break
         }
       }
