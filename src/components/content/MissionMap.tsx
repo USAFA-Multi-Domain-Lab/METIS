@@ -115,8 +115,8 @@ export default class MissionMap extends React.Component<
     let mapOffsetX = mapUnscaledOffsetX * mapScale
     let mapOffsetY = mapUnscaledOffsetY * mapScale
     let mapCoordinates: IMapCoordinates = {
-      x: (clientX - mapOffsetX - mapBounds.x - mapBounds.width / 2) / mapScale,
-      y: (clientY - mapOffsetY - mapBounds.y - mapBounds.height / 2) / mapScale,
+      x: (clientX - mapOffsetX - mapBounds.x) / mapScale,
+      y: (clientY - mapOffsetY - mapBounds.y) / mapScale,
     }
     return mapCoordinates
   }
