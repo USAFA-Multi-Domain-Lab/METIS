@@ -23,7 +23,7 @@ export class MissionNodeAction {
   postExecutionSuccessText: string
   postExecutionFailureText: string
   _willSucceedArray: Array<boolean>
-  _willSucceed: boolean
+  _willSucceed: boolean | null
 
   // Getter for _willSucceedArray
   get willSucceedArray(): Array<boolean> {
@@ -31,7 +31,7 @@ export class MissionNodeAction {
   }
 
   // Getter for _willSucceed
-  get willSucceed(): boolean {
+  get willSucceed(): boolean | null {
     return this._willSucceed
   }
 
@@ -43,7 +43,7 @@ export class MissionNodeAction {
 
   // Determines if a node succeeded or not
   // after it is executed
-  get succeeded(): boolean {
+  get succeeded(): boolean | null {
     return this.node.executed && this.willSucceed
   }
 
@@ -73,7 +73,7 @@ export class MissionNodeAction {
         successChance,
         node.mission.rng,
       )
-    this._willSucceed = this._willSucceedArray[0]
+    this._willSucceed = null
   }
 
   toJSON(): IMissionNodeActionJSON {
@@ -149,8 +149,17 @@ export class MissionNodeAction {
           // Enables all the nodes after the selected node is done executing.
           this.node.mission.disableNodes = false
 
-          callback(this.willSucceed)
+          if (this.willSucceed !== null) {
+            callback(this.willSucceed)
+          }
         }, selectedAction.processTime)
+      } else if (
+        selectedAction !== null &&
+        (this.succeeded === null || this.willSucceed === null)
+      ) {
+        console.error(
+          `The "willSucceed" property for the action called ${selectedAction.name} on the node called ${this.node.name} is null.`,
+        )
       }
     }
   }
