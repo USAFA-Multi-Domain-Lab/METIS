@@ -1372,14 +1372,18 @@ function NodeStructuring(props: {
   }): JSX.Element | null => {
     let node: MissionNode = props.node
     let disableDropPending: boolean = props.disableDropPending === true
-    let handleClick = () => {
-      // node.toggle()
-      // forceUpdate()
+
+    /* -- COMPONENT FUNCTIONS -- */
+    const handleClick = () => {
+      node.toggleNodeStructurePanel()
+      forceUpdate()
     }
+
+    /* -- RENDER -- */
     let className: string = 'Node'
+    let indicatorClassName: string = 'Indicator'
 
     className += node.expandable ? ' Expandable' : ' Ends'
-    className += node.isExpanded ? ' IsExpanded' : ' IsCollapsed'
 
     if (node.nodeID === nodeGrabbed?.nodeID) {
       disableDropPending = true
@@ -1401,11 +1405,14 @@ function NodeStructuring(props: {
       }
     }
 
+    if (!node.isExpanded) {
+      indicatorClassName += ' isCollapsed'
+    }
+
     return (
       <div className={className}>
         <div
           className='ParentNode'
-          onClick={handleClick}
           draggable={true}
           onDragCapture={() => {
             grabNode(node)
@@ -1437,7 +1444,6 @@ function NodeStructuring(props: {
                 }
                 handleChange()
               }
-
               pendDrop(null)
               grabNode(null)
             }
@@ -1463,6 +1469,7 @@ function NodeStructuring(props: {
               }
             }}
           ></div>
+
           <div
             className='Center'
             onDragOver={(event: React.DragEvent) => {
@@ -1483,16 +1490,13 @@ function NodeStructuring(props: {
               }
             }}
           >
-            <svg className='Indicator'>
-              {/* <polygon
-                points='0,0 7,0 3.5,7'
-                style={{ transformOrigin: '3.5px 3.5px' }}
+            <svg className={indicatorClassName} onClick={handleClick}>
+              <polygon
+                points='3,7 10,7 6.5,14'
                 className='Triangle'
                 fill='#fff'
-              /> */}
-              {<circle className='Circle' fill='#fff' r='3' cx='3' cy='3' />}
+              />
             </svg>
-            {/* <div className='Indicator'>•</div> */}
             <div className='Name'>{node.name}</div>
           </div>
           <div

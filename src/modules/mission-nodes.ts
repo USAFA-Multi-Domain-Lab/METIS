@@ -67,6 +67,7 @@ export class MissionNode implements IMissionMappable {
   mapY: number
   depth: number
   _isExpanded: boolean
+  _structurePanelIsExpanded: boolean
 
   static default_name: string = 'Unnamed Node'
   static default_color: string = 'default'
@@ -142,6 +143,7 @@ export class MissionNode implements IMissionMappable {
     this.mapY = mapY
     this.depth = -1
     this._isExpanded = false
+    this._structurePanelIsExpanded = false
 
     this.parseActionJSON(actionJSON)
   }
@@ -258,6 +260,14 @@ export class MissionNode implements IMissionMappable {
     return this.childNodes.length > 0
   }
 
+  get structurePanelIsExpanded(): boolean {
+    return this._structurePanelIsExpanded
+  }
+
+  get structurePanelIsCollapsed(): boolean {
+    return !this._structurePanelIsExpanded
+  }
+
   // This will mark this reference
   // as expanded if possible.
   expand(): void {
@@ -288,6 +298,14 @@ export class MissionNode implements IMissionMappable {
       this.collapse()
     } else {
       this.expand()
+    }
+  }
+
+  toggleNodeStructurePanel(): void {
+    if (this.expandable && this.structurePanelIsCollapsed) {
+      this._structurePanelIsExpanded = true
+    } else {
+      this._structurePanelIsExpanded = false
     }
   }
 
@@ -445,7 +463,7 @@ export class MissionNode implements IMissionMappable {
     this.mission.nodeCreationTarget = this
   }
 
-  // This will hide any revealled node
+  // This will hide any revealed node
   // creators, restoring the view
   // to only the node structure.
   destroyNodeCreators(): void {

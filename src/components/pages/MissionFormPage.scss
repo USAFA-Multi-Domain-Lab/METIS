@@ -330,7 +330,6 @@ $background-bar: linear-gradient(
           }
 
           .ParentNode {
-            cursor: grab;
             user-select: none;
             display: block;
             padding: 0 0 0 20px;
@@ -356,9 +355,9 @@ $background-bar: linear-gradient(
               grid-template-columns: 18px auto;
               margin: 0 0 -0.175rem;
 
-              * {
-                pointer-events: none;
-              }
+              // * {
+              //   pointer-events: none;
+              // }
 
               .Indicator,
               .Name {
@@ -368,18 +367,26 @@ $background-bar: linear-gradient(
 
               .Indicator {
                 width: 12px;
+                padding: 0 auto;
+                height: 1.35rem;
+                line-height: 1.3rem;
 
-                .Circle {
-                  transform: getIndicatorCircleTransform(false);
+                &.isCollapsed {
+                  transform: rotate(-90deg);
                 }
+
+                &:hover {
+                  cursor: pointer;
+                }
+              }
+
+              .Name:hover {
+                cursor: grab;
               }
 
               &:hover {
                 background-color: $background-main;
               }
-            }
-
-            .Bottom {
             }
           }
 
@@ -387,37 +394,10 @@ $background-bar: linear-gradient(
             padding-left: 20px;
           }
 
-          &.Expandable {
-            .ParentNode {
-              .Indicator {
-              }
-            }
-          }
-
           &.Ends {
             .ParentNode {
               .Indicator {
                 opacity: 0;
-              }
-            }
-          }
-
-          &.IsExpanded {
-            .ParentNode {
-              .Indicator {
-                .Circle {
-                  transform: getIndicatorCircleTransform(true);
-                }
-              }
-            }
-          }
-
-          &.IsCollapsed {
-            .ParentNode {
-              .Indicator {
-                .Circle {
-                  transform: getIndicatorCircleTransform(false);
-                }
               }
             }
           }
