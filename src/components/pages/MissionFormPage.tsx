@@ -130,7 +130,8 @@ export default function MissionFormPage(
   })
 
   if (mission !== null) {
-    /* -- COMPONENTS -- */
+    let missionDetailsIsActive: boolean =
+      selectedNode === null && !nodeStructuringIsActive
 
     /* -- COMPONENT FUNCTIONS -- */
 
@@ -143,12 +144,24 @@ export default function MissionFormPage(
     // made that would require saving.
     const handleChange = (): void => {
       setAreUnsavedChanges(true)
+
+      if (mission.nodeCreationTarget !== null && selectedNode !== null) {
+        selectedNode.destroyNodeCreators()
+      }
+
       forceUpdate()
     }
 
     // This will select or unselect a node
     const selectNode = (node: MissionNode | null) => {
+      if (selectedNode !== null) {
+        selectedNode.destroyNodeCreators()
+      }
+
       setSelectedNode(node)
+      setDisplayedAction(0)
+      activateNodeStructuring(false)
+      setMissionEmptyStringArray([])
       setNodeEmptyStringArray([])
       setActionEmptyStringArray([])
     }
@@ -211,6 +224,42 @@ export default function MissionFormPage(
       }
     }
 
+    // If a node is selected and is executable,
+    // this ensures that at least on action
+    // exists.
+    const ensureOneActionExistsIfExecutable = (): void => {
+      if (
+        selectedNode !== null &&
+        selectedNode.executable &&
+        selectedNode.actions.length === 0
+      ) {
+        // Checks to make sure the selected node has at least
+        // one action to choose from. If the selected node doesn't
+        // have at least one action then it will auto-generate one
+        // for that node.
+        let newActionArray: Array<MissionNodeAction> = [
+          new MissionNodeAction(
+            selectedNode,
+            generateHash(),
+            'New Action',
+            'Enter your description here.',
+            5000,
+            0.5,
+            1,
+            'Enter your successful post-execution message here.',
+            'Enter your failed post-execution message here.',
+          ),
+        ]
+        selectedNode.actions = newActionArray
+
+        appActions.notify(
+          `Auto-generated an action for ${selectedNode.name} because it is an executable node with no actions to execute.`,
+        )
+
+        handleChange()
+      }
+    }
+
     // This is called when a node is
     // requested to be deleted.
     const handleNodeDeleteRequest = (): void => {
@@ -267,6 +316,33 @@ export default function MissionFormPage(
       }
     }
 
+    // This verifies that node selection
+    // is able to change.
+    const validateNodeSelectionChange = (
+      onValid: () => void,
+      onInvalid: () => void = () => {},
+    ): void => {
+      if (missionDetailsIsActive && missionEmptyStringArray.length > 0) {
+        appActions.notify(
+          `**Error:** The mission side panel has at least one field that was left empty. This field must contain at least one character.`,
+          null,
+        )
+        return onInvalid()
+      }
+      if (
+        selectedNode !== null &&
+        (nodeEmptyStringArray.length > 0 || actionEmptyStringArray.length > 0)
+      ) {
+        appActions.notify(
+          `**Error:** The node called "${selectedNode.name.toLowerCase()}" has at least one field that was left empty. These fields must contain at least one character.`,
+          null,
+        )
+        return onInvalid()
+      }
+
+      return onValid()
+    }
+
     // This will logout the current user.
     const logout = () =>
       appActions.logout({
@@ -276,11 +352,15 @@ export default function MissionFormPage(
 
     /* -- RENDER -- */
 
-    let grayOutSaveButton: boolean =
-      !areUnsavedChanges ||
-      (missionEmptyStringArray.length > 0 &&
-        nodeEmptyStringArray.length > 0 &&
-        actionEmptyStringArray.length > 0)
+    let isEmptyString: boolean =
+      missionEmptyStringArray.length > 0 ||
+      nodeEmptyStringArray.length > 0 ||
+      actionEmptyStringArray.length > 0
+    let grayOutSaveButton: boolean = !areUnsavedChanges || isEmptyString
+    let grayOutEditButton: boolean = nodeStructuringIsActive || isEmptyString
+    let grayOutDeselectNodeButton: boolean = isEmptyString
+    let grayOutAddNodeButton: boolean = isEmptyString
+    let grayOutDeleteNodeButton: boolean = mission.nodes.size < 2
 
     return (
       <div className={'MissionFormPage Page'}>
@@ -407,102 +487,36 @@ export default function MissionFormPage(
             selectedNode={selectedNode}
             allowCreationMode={true}
             handleNodeSelection={(node: MissionNode) => {
-              setDisplayedAction(0)
-
-              if (
-                selectedNode !== null &&
-                missionEmptyStringArray.length === 0 &&
-                selectedNode.executable
-              ) {
-                if (
-                  selectedNode.nodeID !== node.nodeID &&
-                  nodeEmptyStringArray.length === 0 &&
-                  actionEmptyStringArray.length === 0
-                ) {
-                  selectNode(node)
-                } else if (
-                  selectedNode.nodeID === node.nodeID &&
-                  nodeEmptyStringArray.length === 0 &&
-                  actionEmptyStringArray.length === 0
-                ) {
-                  selectNode(null)
-                } else {
-                  appActions.notify(
-                    `**Error:** The node called "${selectedNode.name.toLowerCase()}" has at least one field that was left empty. These fields must contain at least one character.`,
-                    null,
-                  )
-                }
-              } else if (
-                selectedNode !== null &&
-                missionEmptyStringArray.length === 0 &&
-                selectedNode.nodeID === node.nodeID &&
-                !selectedNode.executable
-              ) {
-                selectNode(null)
-              } else if (
-                selectedNode === null &&
-                missionEmptyStringArray.length > 0
-              ) {
-                appActions.notify(
-                  `**Error:** The mission side panel has at least one field that was left empty. This field must contain at least one character.`,
-                  null,
-                )
-              } else {
+              validateNodeSelectionChange(() => {
                 selectNode(node)
-              }
-              activateNodeStructuring(false)
-
-              if (
-                node !== null &&
-                node.executable &&
-                node.actions.length === 0
-              ) {
-                // Checks to make sure the selected node has at least
-                // one action to choose from. If the selected node doesn't
-                // have at least one action then it will auto-generate one
-                // for that node.
-                let newActionArray: Array<MissionNodeAction> = [
-                  new MissionNodeAction(
-                    node,
-                    generateHash(),
-                    'New Action',
-                    'Enter your description here.',
-                    5000,
-                    0.5,
-                    1,
-                    'Enter your successful post-execution message here.',
-                    'Enter your failed post-execution message here.',
-                  ),
-                ]
-                node.actions = newActionArray
-
-                appActions.notify(
-                  `Auto-generated an action for ${node.name} because it is an executable node with no actions to execute.`,
-                  10000,
-                )
-
-                handleChange()
-              }
+                ensureOneActionExistsIfExecutable()
+              })
             }}
             handleNodeCreation={(node: MissionNode) => {
               setSelectedNode(node)
               handleChange()
             }}
-            handleNodeDeselection={() => selectNode(null)}
+            handleNodeDeselection={() => {
+              validateNodeSelectionChange(() => {
+                selectNode(null)
+              })
+            }}
             handleNodeDeletionRequest={handleNodeDeleteRequest}
             handleMapEditRequest={() => {
-              activateNodeStructuring(true)
               selectNode(null)
+              activateNodeStructuring(true)
             }}
             handleMapSaveRequest={save}
-            grayOutCreateButton={false}
-            grayOutEditButton={nodeStructuringIsActive}
+            grayOutEditButton={grayOutEditButton}
             grayOutSaveButton={grayOutSaveButton}
+            grayOutDeselectNodeButton={grayOutDeselectNodeButton}
+            grayOutAddNodeButton={grayOutAddNodeButton}
+            grayOutDeleteNodeButton={grayOutDeleteNodeButton}
             applyNodeClassName={(node: MissionNode) => ''}
             renderNodeTooltipDescription={(node: MissionNode) => ''}
           />
           <MissionDetails
-            active={selectedNode === null && !nodeStructuringIsActive}
+            active={missionDetailsIsActive}
             mission={mission}
             missionEmptyStringArray={missionEmptyStringArray}
             setMissionEmptyStringArray={setMissionEmptyStringArray}
@@ -521,10 +535,9 @@ export default function MissionFormPage(
             handleAddRequest={handleNodeAddRequest}
             handleDeleteRequest={handleNodeDeleteRequest}
             handleCloseRequest={() => {
-              if (selectedNode !== null) {
-                selectedNode.destroyNodeCreators()
-              }
-              selectNode(null)
+              validateNodeSelectionChange(() => {
+                selectNode(null)
+              })
             }}
           />
           <NodeStructuring
@@ -572,6 +585,9 @@ function MissionDetails(props: {
     return (
       <div className='MissionDetails SidePanel'>
         <div className='BorderBox'>
+          <div className='BoxTop'>
+            <div className='ErrorMessage Hidden'></div>
+          </div>
           <Detail
             label='Name'
             initialValue={mission.name}
@@ -643,33 +659,26 @@ function NodeEntry(props: {
   let setActionEmptyStringArray: (
     actionEmptyStringArray: Array<string>,
   ) => void = props.setActionEmptyStringArray
+  let isEmptyString: boolean =
+    nodeEmptyStringArray.length > 0 || actionEmptyStringArray.length > 0
   let handleChange = props.handleChange
   let handleAddNodeRequest = props.handleAddRequest
   let handleDeleteRequest = props.handleDeleteRequest
   let handleCloseRequest = props.handleCloseRequest
+  let errorMessageClassName: string = 'ErrorMessage'
+  let closeClassName: string = 'Close'
   let toggleErrorMessage: string | undefined = undefined
   let deleteNodeClassName: string = 'FormButton DeleteNode'
+  let addNodeClassName: string = 'FormButton AddNode'
 
   /* -- COMPONENT STATE -- */
   const [mountHandled, setMountHandled] = useState<boolean>()
-  const [isEmptyString, setIsEmptyString] = useState<boolean>(false)
 
   /* -- COMPONENT EFFECTS -- */
 
   // Equivalent of componentDidMount.
   useEffect(() => {
     if (!mountHandled) {
-      if (
-        nodeEmptyStringArray.length === 0 &&
-        actionEmptyStringArray.length === 0
-      ) {
-        setIsEmptyString(false)
-      } else if (
-        nodeEmptyStringArray.length > 0 ||
-        actionEmptyStringArray.length > 0
-      ) {
-        setIsEmptyString(true)
-      }
       setMountHandled(true)
     }
   }, [mountHandled])
@@ -693,37 +702,49 @@ function NodeEntry(props: {
     let mission: Mission = node.mission
 
     if (isEmptyString) {
+      closeClassName += ' Disabled'
       toggleErrorMessage =
         'The button above is locked until there are no empty fields.'
+    } else {
+      errorMessageClassName += ' Hidden'
     }
 
     if (mission.nodes.size < 2) {
-      deleteNodeClassName += ' Hidden'
+      deleteNodeClassName += ' Disabled'
+    }
+    if (isEmptyString) {
+      addNodeClassName += ' Disabled'
     }
 
     return (
       <div className='NodeEntry SidePanel'>
         <div className='BorderBox'>
-          <div
-            className='Close'
-            onClick={() => {
-              if (!isEmptyString) {
-                handleCloseRequest()
-              } else if (node !== null) {
-                appActions.notify(
-                  `**Error:** The node called "${node.name.toLowerCase()}" has at least one field that was left empty. These fields must contain at least one character.`,
-                  null,
-                )
-              }
-              setMountHandled(false)
-            }}
-            key={'close-node-side-panel'}
-          >
-            <div className='Circle'>
-              <div className='X'>x</div>
+          <div className='BoxTop'>
+            <div className={errorMessageClassName}>
+              Fix all errors before closing panel.
             </div>
-            <Tooltip description='Close panel.' />
+            <div
+              className={closeClassName}
+              onClick={() => {
+                if (!isEmptyString) {
+                  handleCloseRequest()
+                } else if (node !== null) {
+                  appActions.notify(
+                    `**Error:** The node called "${node.name.toLowerCase()}" has at least one field that was left empty. These fields must contain at least one character.`,
+                    null,
+                  )
+                }
+                setMountHandled(false)
+              }}
+              key={'close-node-side-panel'}
+            >
+              <div className='Circle'>
+                <div className='X'>x</div>
+              </div>
+              <Tooltip description='Close panel.' />
+            </div>
           </div>
+
           <div className='NodeInfoContainer'>
             <Detail
               label='Name'
@@ -873,10 +894,7 @@ function NodeEntry(props: {
               key={`${node.nodeID}_device`}
             />
             <div className='ButtonContainer'>
-              <div
-                className='FormButton AddNode'
-                onClick={handleAddNodeRequest}
-              >
+              <div className={addNodeClassName} onClick={handleAddNodeRequest}>
                 [{' '}
                 <span className='Text'>
                   Add adjacent node <span className='RightBracket'>]</span>
@@ -1558,18 +1576,22 @@ function NodeStructuring(props: {
     return (
       <div className='NodeStructuring SidePanel'>
         <div className='BorderBox'>
-          <MoreInformation
-            tooltipDescription={
-              '##### Node Structuring\n' +
-              'Drag and drop the nodes below to reorder the structure of the mission. Nodes can be placed inside another node to nest nodes. Nodes can also be placed beside each other for more exact placement.'
-            }
-          />
-          <div className='Close' onClick={handleCloseRequest}>
-            <div className='Circle'>
-              <div className='X'>x</div>
+          <div className='BoxTop'>
+            <div className='ErrorMessage Hidden'></div>
+            <MoreInformation
+              tooltipDescription={
+                '##### Node Structuring\n' +
+                'Drag and drop the nodes below to reorder the structure of the mission. Nodes can be placed inside another node to nest nodes. Nodes can also be placed beside each other for more exact placement.'
+              }
+            />
+            <div className='Close' onClick={handleCloseRequest}>
+              <div className='Circle'>
+                <div className='X'>x</div>
+              </div>
+              <Tooltip description='Close panel.' />
             </div>
-            <Tooltip description='Close panel.' />
           </div>
+
           {renderNodes()}
         </div>
       </div>

@@ -147,6 +147,7 @@
 
     &.Disabled {
       pointer-events: none;
+      opacity: unset;
 
       * {
         transform: scale(0.8);

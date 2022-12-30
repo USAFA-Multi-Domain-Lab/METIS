@@ -63,12 +63,12 @@ code {
     cursor: pointer;
     background-color: black;
   }
+}
 
-  &.Disabled,
-  &:disabled {
-    opacity: 0.35;
-    pointer-events: none;
-  }
+.Disabled,
+:disabled {
+  opacity: 0.35;
+  pointer-events: none;
 }
 
 .Hidden {
