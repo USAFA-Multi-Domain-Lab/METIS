@@ -55,7 +55,7 @@ export class Mission {
   seed: string
   rng: PRNG
   rootNode: MissionNode
-  lastExpandedNode: MissionNode | null
+  lastOpenedNode: MissionNode | null
   _lastCreatedNode: MissionNode | null
   structureChangeKey: string
   structureChangeHandlers: Array<(structureChangeKey: string) => void>
@@ -182,7 +182,7 @@ export class Mission {
       0,
       0,
     )
-    this.lastExpandedNode = null
+    this.lastOpenedNode = null
     this._lastCreatedNode = null
     this.structureChangeKey = generateHash()
     this.structureChangeHandlers = []
@@ -198,8 +198,8 @@ export class Mission {
       this.spawnNewNode()
     }
 
-    if (this.rootNode.expandable) {
-      this.rootNode.expand()
+    if (this.rootNode.hasChildren) {
+      this.rootNode.open()
     } else {
       this.positionNodes()
     }
@@ -230,8 +230,8 @@ export class Mission {
     }
     rootNode.childNodes = childNodes
 
-    if (expandAll && rootNode.expandable) {
-      rootNode.expand()
+    if (expandAll && rootNode.hasChildren) {
+      rootNode.open()
     }
 
     for (let childNode of childNodes) {
@@ -413,7 +413,7 @@ export class Mission {
     )
     node.parentNode = rootNode
     rootNode.childNodes.push(node)
-    rootNode.expand()
+    rootNode.open()
     this.nodes.set(node.nodeID, node)
     this._lastCreatedNode = node
 
@@ -464,7 +464,7 @@ export class Mission {
     // child nodes could effect the positioning
     // of sibling nodes, and the children should
     // be accounted for.
-    if (parentNode.isExpanded) {
+    if (parentNode.isOpen) {
       let childNodes = parentNode.childNodes
 
       // If the nodeCreationTarget is a child of the

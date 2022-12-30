@@ -1375,7 +1375,7 @@ function NodeStructuring(props: {
 
     /* -- COMPONENT FUNCTIONS -- */
     const handleClick = () => {
-      node.toggleNodeStructurePanel()
+      node.toggleMenuExpansion()
       forceUpdate()
     }
 
@@ -1383,7 +1383,7 @@ function NodeStructuring(props: {
     let className: string = 'Node'
     let indicatorClassName: string = 'Indicator'
 
-    className += node.expandable ? ' Expandable' : ' Ends'
+    className += node.hasChildren ? ' Expandable' : ' Ends'
 
     if (node.nodeID === nodeGrabbed?.nodeID) {
       disableDropPending = true
@@ -1405,7 +1405,7 @@ function NodeStructuring(props: {
       }
     }
 
-    if (!node.isExpanded) {
+    if (node.collapsedInMenu) {
       indicatorClassName += ' isCollapsed'
     }
 
@@ -1440,7 +1440,7 @@ function NodeStructuring(props: {
               if (nodeGrabbed !== null) {
                 nodeGrabbed.move(target, targetRelation)
                 if (target.hasChildren) {
-                  target.expand()
+                  target.open()
                 }
                 handleChange()
               }
@@ -1520,7 +1520,7 @@ function NodeStructuring(props: {
             }}
           ></div>
         </div>
-        {node.isExpanded ? (
+        {node.expandedInMenu ? (
           <div className='ChildNodes'>
             {node.childNodes.map((childNode: MissionNode) => (
               <Node

@@ -172,7 +172,7 @@ export default class MissionMap extends React.Component<
       mainRelationships: [],
       nodeCreatorRelationships: [],
       lastStructureChangeKey: mission.structureChangeKey,
-      lastExpandedNode: mission.lastExpandedNode,
+      lastExpandedNode: mission.lastOpenedNode,
       navigationIsActive: false,
       mapOffsetX: baseGridPaddingX / 2,
       mapOffsetY: baseMapYScale * 2,
@@ -385,7 +385,7 @@ export default class MissionMap extends React.Component<
       }
       visibleNodes.push(childNode)
 
-      if (childNode.isExpanded) {
+      if (childNode.isOpen) {
         this.updateMainRelationships(childNode, visibleNodes, relationships)
       }
     }
@@ -497,8 +497,8 @@ export default class MissionMap extends React.Component<
     let gridPaddingX: number = this.currentGridPaddingX
 
     if (
-      this.state.lastExpandedNode !== mission.lastExpandedNode &&
-      mission.lastExpandedNode !== null &&
+      this.state.lastExpandedNode !== mission.lastOpenedNode &&
+      mission.lastOpenedNode !== null &&
       map
     ) {
       let mapBounds: DOMRect = map.getBoundingClientRect()
@@ -506,7 +506,7 @@ export default class MissionMap extends React.Component<
       let mapWidthInNodes: number = mapBounds.width / mapScale / mapXScale
       let mapOffsetXInNodes: number = -1 * (mapOffsetX / mapXScale)
       let nodeDepthShown: number = mapWidthInNodes + mapOffsetXInNodes - 1
-      let nodeDepthRevealed: number = mission.lastExpandedNode.depth + 1
+      let nodeDepthRevealed: number = mission.lastOpenedNode.depth + 1
       let correctionDifferenceInNodes: number =
         nodeDepthShown - nodeDepthRevealed
       let correctionDifference: number =
@@ -516,7 +516,7 @@ export default class MissionMap extends React.Component<
         mapOffsetX += correctionDifference
       }
 
-      this.setState({ lastExpandedNode: mission.lastExpandedNode }, () =>
+      this.setState({ lastExpandedNode: mission.lastOpenedNode }, () =>
         this.panSmoothly({ x: mapOffsetX, y: mapOffsetY }),
       )
     }

@@ -66,8 +66,8 @@ export class MissionNode implements IMissionMappable {
   mapX: number
   mapY: number
   depth: number
-  _isExpanded: boolean
-  _structurePanelIsExpanded: boolean
+  _isOpen: boolean
+  _expandedInMenu: boolean
 
   static default_name: string = 'Unnamed Node'
   static default_color: string = 'default'
@@ -142,8 +142,8 @@ export class MissionNode implements IMissionMappable {
     this.mapX = mapX
     this.mapY = mapY
     this.depth = -1
-    this._isExpanded = false
-    this._structurePanelIsExpanded = false
+    this._isOpen = false
+    this._expandedInMenu = true
 
     this.parseActionJSON(actionJSON)
   }
@@ -248,65 +248,41 @@ export class MissionNode implements IMissionMappable {
     return followingSibling
   }
 
-  get isExpanded(): boolean {
-    return this._isExpanded
+  get isOpen(): boolean {
+    return this._isOpen
   }
 
-  get isCollapsed(): boolean {
-    return !this._isExpanded
+  get isClosed(): boolean {
+    return !this._isOpen
   }
 
-  get expandable(): boolean {
-    return this.childNodes.length > 0
+  get expandedInMenu(): boolean {
+    return this._expandedInMenu
   }
 
-  get structurePanelIsExpanded(): boolean {
-    return this._structurePanelIsExpanded
+  get collapsedInMenu(): boolean {
+    return !this._expandedInMenu
   }
 
-  get structurePanelIsCollapsed(): boolean {
-    return !this._structurePanelIsExpanded
+  // This will open the node.
+  open(): void {
+    this._isOpen = true
+    this.mission.lastOpenedNode = this
+    this._handleStructureChange()
   }
 
-  // This will mark this reference
-  // as expanded if possible.
-  expand(): void {
-    if (this.expandable) {
-      this._isExpanded = true
-      this.mission.lastExpandedNode = this
-      this._handleStructureChange()
-    } else {
-      throw new Error(`Cannot expand ${this.nodeID} as it has no childNodes:`)
-    }
+  // This will close the node.
+  close(): void {
+    this._isOpen = false
+    this._handleStructureChange()
   }
 
-  // This will mark this reference
-  // as collapsed if possible.
-  collapse(): void {
-    if (this.expandable) {
-      this._isExpanded = false
-      this._handleStructureChange()
-    } else {
-      throw new Error(`Cannot collapse ${this.nodeID} as it has no childNodes:`)
-    }
-  }
-
-  // This will toggle between expanded
-  // and collapse if possible.
-  toggle(): void {
-    if (this.isExpanded) {
-      this.collapse()
-    } else {
-      this.expand()
-    }
-  }
-
-  toggleNodeStructurePanel(): void {
-    if (this.expandable && this.structurePanelIsCollapsed) {
-      this._structurePanelIsExpanded = true
-    } else {
-      this._structurePanelIsExpanded = false
-    }
+  // This will toggle the expandedInMenu
+  // property. Also pizza is delicious.
+  // Especially if it's from 600, or as
+  // Jacob likes to call it, Pinthouse.
+  toggleMenuExpansion(): void {
+    this._expandedInMenu = !this._expandedInMenu
   }
 
   // This will move this reference to
@@ -373,7 +349,7 @@ export class MissionNode implements IMissionMappable {
         this.childNodes = [target]
         target.parentNode = this
 
-        this.expand()
+        this.open()
 
         break
       case ENodeTargetRelation.ParentOfTargetAndChildren:
@@ -390,10 +366,10 @@ export class MissionNode implements IMissionMappable {
         }
         this.childNodes = childNodes
 
-        target.expand()
+        target.open()
 
         if (childNodes.length > 0) {
-          this.expand()
+          this.open()
         }
 
         break
@@ -434,15 +410,12 @@ export class MissionNode implements IMissionMappable {
     this._handleStructureChange()
   }
 
-  // This will expand all child nodes
+  // This will open all child nodes
   // of this node if possible.
-  expandChildNodes(): void {
+  openChildNodes(): void {
     for (let childNode of this.childNodes) {
-      if (childNode.expandable) {
-        childNode.expand()
-      }
+      childNode.open()
     }
-
     this._handleStructureChange()
   }
 

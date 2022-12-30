@@ -87,6 +87,7 @@ $background-bar: linear-gradient(
 
 .SidePanel {
   height: 100%;
+
   .BorderBox {
     overflow-x: hidden;
     overflow-y: auto;
@@ -300,7 +301,7 @@ $background-bar: linear-gradient(
         overflow-x: auto;
         overflow-y: auto;
         margin: 0;
-        height: 100%;
+        height: calc(100% - 33px);
         padding: 0;
 
         .Padding {

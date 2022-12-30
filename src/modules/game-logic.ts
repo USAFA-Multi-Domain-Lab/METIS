@@ -1,8 +1,8 @@
 import { MissionNode } from './mission-nodes'
 
 export const handleNodeSelection = (selectedNode: MissionNode) => {
-  if (selectedNode.expandable && !selectedNode.isExpanded) {
-    selectedNode.expand()
+  if (selectedNode.hasChildren && !selectedNode.isOpen) {
+    selectedNode.open()
   }
 }
 
