@@ -8,6 +8,7 @@ import MongoStore from 'connect-mongo'
 import database from './database/database'
 import mongoose from 'mongoose'
 import { sys } from 'typescript'
+import { expressLogger } from './modules/logging'
 
 declare module 'express-session' {
   export interface SessionData {
@@ -62,6 +63,10 @@ export function configure(
 ): void {
   let connection: mongoose.Connection | null
 
+  // Logger setup.
+  app.use(expressLogger)
+
+  // Database setup.
   database.initialize(() => {
     connection = database.getConnection()
 

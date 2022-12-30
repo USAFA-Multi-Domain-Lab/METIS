@@ -2,6 +2,7 @@
 import express from 'express'
 import { ERROR_BAD_DATA } from '../../../database/database'
 import Mission from '../../../database/models/model-mission'
+import { databaseLogger } from '../../../modules/logging'
 import { isLoggedIn, requireLogin } from '../../../user'
 
 //fields
@@ -41,8 +42,8 @@ router.post('/', requireLogin, (request, response) => {
 
       mission.save((error: Error) => {
         if (error) {
-          console.log('Failed to create mission:')
-          console.error(error)
+          databaseLogger.error('Failed to create mission:')
+          databaseLogger.error(error)
 
           if (error.name === ERROR_BAD_DATA) {
             return response.sendStatus(400)
@@ -50,6 +51,7 @@ router.post('/', requireLogin, (request, response) => {
             return response.sendStatus(500)
           }
         } else {
+          databaseLogger.info(`New mission created named "${name}".`)
           return response.json({ mission })
         }
       })
@@ -75,22 +77,28 @@ router.get('/', (request, response) => {
       .select('-nodeStructure -nodeData')
       .exec((error: Error, missions: any) => {
         if (error !== null || missions === null) {
-          console.error(error)
+          databaseLogger.error('Failed to retrieve missions.')
+          databaseLogger.error(error)
           return response.sendStatus(500)
         } else {
+          databaseLogger.info('All missions retrieved.')
           return response.json({ missions })
         }
       })
   } else {
     Mission.findOne({ missionID }).exec((error: Error, mission: any) => {
       if (error !== null) {
-        console.error(error)
+        databaseLogger.error(
+          `Failed to retrieve mission with ID "${missionID}".`,
+        )
+        databaseLogger.error(error)
         return response.sendStatus(500)
       } else if (mission === null) {
         return response.sendStatus(404)
       } else if (!mission.live && !isLoggedIn(request)) {
         return response.sendStatus(401)
       } else {
+        databaseLogger.info(`Mission with ID "${missionID}" retrieved.`)
         return response.json({ mission })
       }
     })
@@ -111,8 +119,13 @@ router.put('/', requireLogin, (request, response) => {
 
       Mission.updateOne({ missionID }, mission, (error: any) => {
         if (error !== null) {
+          databaseLogger.error(
+            `Failed to update mission with the ID "${missionID}".`,
+          )
+          databaseLogger.error(error)
           return response.sendStatus(500)
         } else {
+          databaseLogger.info(`Updated mission with the ID "${missionID}".`)
           return response.sendStatus(200)
         }
       })
@@ -135,6 +148,10 @@ router.put('/copy/', requireLogin, (request, response) => {
 
     Mission.findOne({ missionID: originalID }, (error: any, mission: any) => {
       if (error !== null) {
+        databaseLogger.error(
+          `Failed to copy mission with the original ID "${originalID}":`,
+        )
+        databaseLogger.error(error)
         return response.sendStatus(500)
       } else if (mission === null) {
         return response.sendStatus(404)
@@ -150,10 +167,15 @@ router.put('/copy/', requireLogin, (request, response) => {
 
         copy.save((error: Error) => {
           if (error) {
-            console.log('Failed to copy mission:')
-            console.error(error)
+            databaseLogger.error(
+              `Failed to copy mission with the original ID "${originalID}":`,
+            )
+            databaseLogger.error(error)
             return response.sendStatus(500)
           } else {
+            databaseLogger.info(
+              `Copied mission with the original ID "${originalID}".`,
+            )
             return response.json({ copy })
           }
         })
@@ -175,8 +197,11 @@ router.delete('/', requireLogin, (request, response) => {
     if (typeof missionID === 'string') {
       Mission.deleteOne({ missionID }, (error: any) => {
         if (error !== null) {
+          databaseLogger.error('Failed to delete mission:')
+          databaseLogger.error(error)
           return response.sendStatus(500)
         } else {
+          databaseLogger.info(`Deleted mission with the ID "${missionID}".`)
           return response.sendStatus(200)
         }
       })

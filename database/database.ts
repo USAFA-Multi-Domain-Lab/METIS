@@ -7,6 +7,7 @@ import {
   MONGO_USERNAME,
   SCHEMA_BUILD_NUMBER,
 } from '../config'
+import { databaseLogger } from '../modules/logging'
 import { attackMissionData, defensiveMissionData } from './initial-mission-data'
 import InfoModel from './models/model-info'
 import MissionModel from './models/model-mission'
@@ -25,12 +26,12 @@ function ensureDefaultInfoExists(
 ): void {
   InfoModel.findOne({ infoID: 'default' }).exec((error: Error, info: any) => {
     if (error !== null) {
-      console.error('Failed to query database for default info:')
-      console.error(error)
+      databaseLogger.error('Failed to query database for default info:')
+      databaseLogger.error(error)
       callbackError(error)
     } else if (info === null) {
-      console.log('Info not found.')
-      console.log('Creating info...')
+      databaseLogger.info('Info not found.')
+      databaseLogger.info('Creating info...')
 
       const infoData = {
         infoID: 'default',
@@ -40,13 +41,13 @@ function ensureDefaultInfoExists(
       // Creates and saves info
       InfoModel.create(infoData, (error: Error, info: any) => {
         if (error) {
-          console.error(
+          databaseLogger.error(
             'Failed to create and store server info in the database:',
           )
-          console.error(error)
+          databaseLogger.error(error)
           callbackError(error)
         } else {
-          console.log('Server info created:', info.infoID)
+          databaseLogger.info('Server info created:', info.infoID)
           callback()
         }
       })
@@ -63,12 +64,12 @@ function ensureDefaultUsersExists(
 ): void {
   UserModel.findOne({ userID: 'admin' }).exec((error: Error, user: any) => {
     if (error !== null) {
-      console.error('Failed to query database for the default user:')
-      console.error(error)
+      databaseLogger.error('Failed to query database for the default user:')
+      databaseLogger.error(error)
       callbackError(error)
     } else if (user === null) {
-      console.log('Admin user not found.')
-      console.log('Creating admin user...')
+      databaseLogger.info('Admin user not found.')
+      databaseLogger.info('Creating admin user...')
 
       const adminUserData = {
         userID: 'admin',
@@ -80,11 +81,11 @@ function ensureDefaultUsersExists(
       //creates and saves user
       UserModel.create(adminUserData, (error: Error, adminUser: any) => {
         if (error) {
-          console.error('Failed to create admin user:')
-          console.error(error)
+          databaseLogger.error('Failed to create admin user:')
+          databaseLogger.error(error)
           callbackError(error)
         } else {
-          console.log('Admin user created:', adminUser.userID)
+          databaseLogger.info('Admin user created:', adminUser.userID)
           callback()
         }
       })
@@ -102,30 +103,32 @@ function ensureDefaultMissionsExists(
 ): void {
   MissionModel.find({}).exec((error: Error, missions: any) => {
     if (error !== null) {
-      console.error('Failed to query database for default missions:')
-      console.error(error)
+      databaseLogger.error('Failed to query database for default missions:')
+      databaseLogger.error(error)
       callbackError(error)
     } else if (missions.length === 0) {
-      console.log('No missions were found.')
-      console.log('Creating both missions...')
+      databaseLogger.info('No missions were found.')
+      databaseLogger.info('Creating both missions...')
 
       MissionModel.create(attackMissionData, (error: Error, mission: any) => {
         if (error) {
-          console.error(`Failed to create ${attackMissionData.name}.`)
-          console.error(error)
+          databaseLogger.error(`Failed to create ${attackMissionData.name}.`)
+          databaseLogger.error(error)
           callbackError(error)
         } else {
-          console.log(`${mission.name} has been created.`)
+          databaseLogger.info(`${mission.name} has been created.`)
 
           MissionModel.create(
             defensiveMissionData,
             (error: Error, mission: any) => {
               if (error) {
-                console.error(`Failed to create ${defensiveMissionData.name}.`)
-                console.error(error)
+                databaseLogger.error(
+                  `Failed to create ${defensiveMissionData.name}.`,
+                )
+                databaseLogger.error(error)
                 callbackError(error)
               } else {
-                console.log(`${mission.name} has been created.`)
+                databaseLogger.info(`${mission.name} has been created.`)
                 callback()
               }
             },
@@ -177,7 +180,7 @@ function buildSchema(
     command += ` --username ${MONGO_USERNAME} --password ${MONGO_PASSWORD} --authenticationDatabase mdl`
   }
 
-  console.log(`Database is migrating to build ${nextBuildNumber}`)
+  databaseLogger.info(`Database is migrating to build ${nextBuildNumber}`)
 
   exec(command, (error, stdout, stderr) => {
     if (!error) {
@@ -189,8 +192,10 @@ function buildSchema(
         stdout = stdoutSplit[1]
       }
 
-      console.log(stdout)
-      console.log(`Database successfully migrated to build ${nextBuildNumber}`)
+      databaseLogger.info(stdout)
+      databaseLogger.info(
+        `Database successfully migrated to build ${nextBuildNumber}`,
+      )
 
       if (nextBuildNumber < targetBuildNumber) {
         buildSchema(nextBuildNumber, targetBuildNumber, callback, callbackError)
@@ -198,8 +203,8 @@ function buildSchema(
         callback()
       }
     } else {
-      console.error(`Database failed to migrate to ${nextBuildNumber}`)
-      console.error(error)
+      databaseLogger.error(`Database failed to migrate to ${nextBuildNumber}`)
+      databaseLogger.error(error)
       callbackError(error)
     }
   })
@@ -216,15 +221,15 @@ export function ensureCorrectSchemaBuild(
 ): void {
   InfoModel.findOne({ infoID: 'default' }).exec((error: Error, info: any) => {
     if (error !== null) {
-      console.error('Failed to query database for current schema build:')
-      console.error(error)
+      databaseLogger.error('Failed to query database for current schema build:')
+      databaseLogger.error(error)
     } else if (info !== null) {
       let currentBuildNumber: number = info.schemaBuildNumber
       let targetBuildNumber: number = SCHEMA_BUILD_NUMBER
 
       if (currentBuildNumber > targetBuildNumber) {
-        console.error('Failed to check for schema updates:')
-        console.error(
+        databaseLogger.error('Failed to check for schema updates:')
+        databaseLogger.error(
           'The current schema build number found in the database was newer than ' +
             'the target build number found in the config.',
         )
@@ -239,7 +244,9 @@ export function ensureCorrectSchemaBuild(
         callback()
       }
     } else {
-      console.error('Failed to check for schema updates. Info data missing.')
+      databaseLogger.error(
+        'Failed to check for schema updates. Info data missing.',
+      )
       callbackError(
         new Error('Failed to check for schema updates. Info data missing.'),
       )
@@ -267,13 +274,13 @@ export function initialize(
   // database error handling
   connection.on('error', () => {
     let error: Error = new Error('Failed connection to database')
-    console.error(error)
+    databaseLogger.error(error)
     callbackError(error)
   })
 
   // logs when server succesfully connects to database
   connection.once('open', () => {
-    console.log('Connected to database.')
+    databaseLogger.info('Connected to database.')
     ensureDefaultDataExists(
       () => ensureCorrectSchemaBuild(callback, callbackError),
       callbackError,
