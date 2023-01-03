@@ -816,10 +816,10 @@ function NodeEntry(props: {
             />
             <DetailNumber
               label='Depth Padding'
-              initialValue={node.depthPadding * 2}
+              initialValue={node.depthPadding}
               deliverValue={(depthPadding: number | null) => {
                 if (node !== null && depthPadding !== null) {
-                  node.depthPadding = depthPadding / 2
+                  node.depthPadding = depthPadding
                   handleChange()
                 }
               }}

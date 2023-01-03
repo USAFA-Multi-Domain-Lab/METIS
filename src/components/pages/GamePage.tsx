@@ -10,7 +10,6 @@ import { EAjaxStatus } from '../../modules/toolbox/ajax'
 import MissionMap from '../content/MissionMap'
 import OutputPanel from '../content/OutputPanel'
 import './GamePage.scss'
-import gameLogic from '../../modules/game-logic'
 import ExecuteNodePath from '../content/ExecuteNodePath'
 import NodeActions from '../content/NodeActions'
 import { IPage } from '../App'
@@ -21,7 +20,6 @@ import Toggle, { EToggleLockState } from '../content/Toggle'
 import Tooltip from '../content/Tooltip'
 import Navigation from '../content/Navigation'
 import { AxiosError } from 'axios'
-import { MissionNodeAction } from '../../modules/mission-node-actions'
 
 export interface IGamePage extends IPage {
   missionID: string
@@ -56,6 +54,7 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
     actionSelectionPromptIsDisplayed,
     setActionSelectionPromptIsDisplayed,
   ] = useState<boolean>(false)
+  const [loadingWidth, setLoadingWidth] = useState<number>(0)
 
   /* -- COMPONENT EFFECTS -- */
 
@@ -338,6 +337,7 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
             <MissionMap
               mission={mission}
               missionAjaxStatus={EAjaxStatus.Loaded}
+              loadingWidth={loadingWidth}
               handleNodeSelection={(selectedNode: MissionNode) => {
                 setLastSelectedNode(selectedNode)
 
@@ -361,7 +361,10 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
                 }
 
                 if (!selectedNode.executable) {
-                  gameLogic.handleNodeSelection(selectedNode)
+                  if (selectedNode.hasChildren && !selectedNode.isOpen) {
+                    selectedNode.open()
+                  }
+
                   selectedNode.color = ''
                 } else {
                   if (
@@ -385,7 +388,7 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
                 }
               }}
               applyNodeClassName={(node: MissionNode) => {
-                let className = ''
+                let className: string = ''
 
                 if (node.executing) {
                   className += ' LoadingBar'
@@ -421,10 +424,6 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
                 return description
               }}
             />
-            <OutputPanel
-              consoleOutputs={consoleOutputs}
-              setOutputPanelIsDisplayed={setOutputPanelIsDisplayed}
-            />
             <NodeActions
               selectedNode={lastSelectedNode}
               setActionSelectionPromptIsDisplayed={
@@ -445,7 +444,13 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
               setExecuteNodePathPromptIsDisplayed={
                 setExecuteNodePathPromptIsDisplayed
               }
+              loadingWidth={loadingWidth}
+              setLoadingWidth={setLoadingWidth}
               notify={appActions.notify}
+            />
+            <OutputPanel
+              consoleOutputs={consoleOutputs}
+              setOutputPanelIsDisplayed={setOutputPanelIsDisplayed}
             />
           </div>
         }

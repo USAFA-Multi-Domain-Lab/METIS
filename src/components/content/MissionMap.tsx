@@ -22,6 +22,7 @@ interface IMissionMap {
   mission: Mission
   missionAjaxStatus: EAjaxStatus
   selectedNode: MissionNode | null
+  loadingWidth?: number
   handleNodeSelection: (node: MissionNode) => void
   handleNodeCreation: (node: MissionNode) => void
   handleNodeDeselection: (() => void) | null
@@ -969,6 +970,7 @@ export default class MissionMap extends React.Component<
     let height: number = (mapYScale - gridPaddingY * 2) * mapScale
     let loadingHeight: number = height - 4
     let loadingMarginBottom: number = -loadingHeight
+    let loadingWidth: number | undefined = this.props.loadingWidth
     let titleWidthSubtrahend: number = width * 0.1
     let titleLineHeight: number = height * 0.34
     let buttonMarginTop = height * -0.175
@@ -980,6 +982,7 @@ export default class MissionMap extends React.Component<
     let loadingStyle: React.CSSProperties = {
       marginBottom: `${loadingMarginBottom}px`,
       height: `${loadingHeight}px`,
+      width: `${loadingWidth}%`,
     }
     let buttonStyle: React.CSSProperties = {
       marginTop: ``,
@@ -989,6 +992,10 @@ export default class MissionMap extends React.Component<
       fontSize: `${buttonFontSize}px`,
       lineHeight: `${buttonLineHeight}px`,
     }
+
+    /* -- COMPONENT FUNCTIONS -- */
+
+    /* -- RENDER -- */
 
     // Dynamic Class Names
     let loadingClassName: string = 'loading'
