@@ -433,8 +433,6 @@ export class Mission {
   ): Mission => {
     let nodeCreationTarget: MissionNode | null = this.nodeCreationTarget
 
-    depth += parentNode.depthPadding
-
     // If the parent node isn't the rootNode,
     // then this function was recursively
     // called with a reference to a particular

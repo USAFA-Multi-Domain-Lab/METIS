@@ -42,7 +42,7 @@ export const MissionSchema: Schema = new Schema(
           nodeID: { type: String, required: true },
           name: { type: String, required: true },
           color: { type: String, required: true },
-          preExecutionText: { type: String, required: true },
+          preExecutionText: { type: String, required: false, default: '' },
           depthPadding: { type: Number, required: true },
           executable: { type: Boolean, required: true },
           device: { type: Boolean, required: true },

@@ -5,7 +5,7 @@ export interface INotificationOptions {
   startExpirationTimer?: boolean
 }
 
-const defaultDuration: number = 3000
+const defaultDuration: number = 5000
 
 // This represents a notification that
 // can be displayed to the user.

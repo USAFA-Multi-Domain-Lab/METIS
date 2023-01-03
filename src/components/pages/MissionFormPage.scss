@@ -94,51 +94,68 @@ $background-bar: linear-gradient(
     box-sizing: border-box;
     border: 2px solid $color-main;
     height: 100%;
-    padding: 15px 0 0;
     background-color: $background-alt2;
 
-    .MoreInformation {
-      display: inline-block;
+    .BoxTop {
+      display: grid;
+      grid-template-columns: auto 30px 30px;
+      box-sizing: border-box;
+      height: 50px;
+      padding: 10px 27px 0;
       position: sticky;
-      top: -9px;
-      left: 77%;
-      transform: scale(0.77);
-    }
+      z-index: 1;
+      top: 0;
+      background: linear-gradient(
+        $background-alt2 0%,
+        $background-alt2 80%,
+        transparent 100%
+      );
 
-    .Close {
-      cursor: pointer;
-      user-select: none;
-      display: inline-block;
-      position: sticky;
-      top: -9px;
-      left: 88%;
-      transform: scale(0.77);
-      height: 20px;
-      font-size: 26px;
+      .ErrorMessage {
+        margin: 10px 0 0;
+        font-size: 0.8em;
+        color: $color-error-alt;
+      }
 
-      .Circle {
-        display: grid;
-        place-content: center;
-        margin: 0 auto;
-        border: 3px solid $color-main;
-        border-radius: 50%;
-        width: 28px;
-        height: 28px;
-        background-color: $background-alt1;
+      .MoreInformation {
+        margin-top: 4.5px;
+        transform: scale(0.77);
+        grid-column: 2 / 3;
+      }
 
-        .X {
-          display: block;
-          height: 1em;
-          font-family: 'Arial', monospace;
-          font-size: 22px;
-          font-weight: bolder;
-          line-height: 0.82em;
+      .Close {
+        cursor: pointer;
+        user-select: none;
+        transform: scale(0.77);
+        grid-column: 3 / 4;
+        margin-top: 5px;
+        height: 20px;
+        font-size: 26px;
+
+        .Circle {
+          display: grid;
+          place-content: center;
+          margin: 0 auto;
+          border: 3px solid $color-main;
+          border-radius: 50%;
+          width: 28px;
+          height: 28px;
+          background-color: $background-alt1;
+
+          .X {
+            display: block;
+            height: 1em;
+            font-family: 'Arial', monospace;
+            font-size: 22px;
+            font-weight: bolder;
+            line-height: 0.82em;
+          }
         }
       }
     }
 
     .NodeInfoContainer {
-      margin: 40px 45px 40px 15px;
+      margin: 15px 45px 40px 15px;
 
       .ButtonContainer {
         display: block;

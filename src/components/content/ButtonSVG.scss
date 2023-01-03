@@ -21,11 +21,6 @@
   vertical-align: top;
   text-align: center;
 
-  &.Disabled {
-    pointer-events: none;
-    opacity: 0.35;
-  }
-
   &.cancel {
     transition: 500ms transform;
     font-family: 'Calibri';

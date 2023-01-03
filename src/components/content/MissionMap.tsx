@@ -29,9 +29,11 @@ interface IMissionMap {
   handleMapEditRequest: (() => void) | null
   handleMapSaveRequest: (() => void) | null
   allowCreationMode: boolean
-  grayOutCreateButton: boolean
   grayOutEditButton: boolean
   grayOutSaveButton: boolean
+  grayOutDeselectNodeButton: boolean
+  grayOutAddNodeButton: boolean
+  grayOutDeleteNodeButton: boolean
   applyNodeClassName: (node: MissionNode) => string
   renderNodeTooltipDescription: (node: MissionNode) => string
 }
@@ -149,9 +151,11 @@ export default class MissionMap extends React.Component<
     handleMapEditRequest: null,
     handleMapSaveRequest: null,
     allowCreationMode: false,
-    grayOutCreateButton: false,
     grayOutEditButton: false,
     grayOutSaveButton: false,
+    grayOutDeselectNodeButton: false,
+    grayOutAddNodeButton: false,
+    grayOutDeleteNodeButton: false,
     applyMappedNodeClassName: () => '',
     renderMappedNodeTooltipDescription:
       MissionMap.renderMappedNodeTooltipDescription_default,
@@ -749,7 +753,6 @@ export default class MissionMap extends React.Component<
     let handleMapSaveRequest = this.props.handleMapSaveRequest
     let allowCreationMode: boolean = this.props.allowCreationMode
     let creationModeActive: boolean = this.creationModeActive
-    let grayOutCreateButton: boolean = this.props.grayOutCreateButton
     let grayOutEditButton: boolean = this.props.grayOutEditButton
     let grayOutSaveButton: boolean = this.props.grayOutSaveButton
     let actionsUniqueClassName: string = 'map-actions'
@@ -1108,6 +1111,10 @@ export default class MissionMap extends React.Component<
     let mission: Mission = this.props.mission
     let selectedNode: MissionNode | null = this.props.selectedNode
     let allowCreationMode: boolean = this.props.allowCreationMode
+    let grayOutDeselectNodeButton: boolean =
+      this.props.grayOutDeselectNodeButton
+    let grayOutAddNodeButton: boolean = this.props.grayOutAddNodeButton
+    let grayOutDeleteNodeButton: boolean = this.props.grayOutDeleteNodeButton
     let creationModeActive: boolean = this.creationModeActive
     let handleNodeDeselection = this.props.handleNodeDeselection
     let handleNodeDeletionRequest = this.props.handleNodeDeletionRequest
@@ -1118,6 +1125,7 @@ export default class MissionMap extends React.Component<
         purpose: EButtonSVGPurpose.Cancel,
         componentKey: 'node-button-deselect',
         tooltipDescription: 'Deselect this node (Closes panel view also).',
+        disabled: grayOutDeselectNodeButton,
         handleClick: () => {
           if (handleNodeDeselection !== null) {
             handleNodeDeselection()
@@ -1129,6 +1137,7 @@ export default class MissionMap extends React.Component<
         purpose: EButtonSVGPurpose.Add,
         componentKey: 'node-button-add',
         tooltipDescription: 'Create an adjacent node on the map.',
+        disabled: grayOutAddNodeButton,
         handleClick: this.activateNodeCreation,
       },
       add_cancel: {
@@ -1136,6 +1145,7 @@ export default class MissionMap extends React.Component<
         purpose: EButtonSVGPurpose.Cancel,
         componentKey: 'node-button-add-cancel',
         tooltipDescription: 'Cancel node creation.',
+        disabled: grayOutAddNodeButton,
         handleClick: this.deactivateNodeCreation,
       },
       remove: {
@@ -1143,6 +1153,7 @@ export default class MissionMap extends React.Component<
         purpose: EButtonSVGPurpose.Remove,
         componentKey: 'node-button-remove',
         tooltipDescription: 'Delete this node.',
+        disabled: grayOutDeleteNodeButton,
         handleClick: () => {
           if (handleNodeDeletionRequest !== null) {
             handleNodeDeletionRequest(node)
@@ -1166,11 +1177,7 @@ export default class MissionMap extends React.Component<
           activeNodeButtons.push(availableNodeButtons.add_cancel)
         }
       }
-      if (
-        handleNodeDeletionRequest !== null &&
-        !creationModeActive &&
-        mission.nodes.size > 1
-      ) {
+      if (handleNodeDeletionRequest !== null && !creationModeActive) {
         activeNodeButtons.push(availableNodeButtons.remove)
       }
     }
