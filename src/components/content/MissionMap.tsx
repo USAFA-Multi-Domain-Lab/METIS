@@ -993,10 +993,6 @@ export default class MissionMap extends React.Component<
       lineHeight: `${buttonLineHeight}px`,
     }
 
-    /* -- COMPONENT FUNCTIONS -- */
-
-    /* -- RENDER -- */
-
     // Dynamic Class Names
     let loadingClassName: string = 'loading'
     let iconClassName: string = ''

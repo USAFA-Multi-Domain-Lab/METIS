@@ -44,8 +44,11 @@ const ExecuteNodePath = (props: {
     setExecuteNodePathPromptIsDisplayed(false)
   }
 
+  // Creates an interval to visually display the loading bar's progress
   const runLoadingBar = (): void => {
     if (processTime !== undefined) {
+      let loadingDuration = setInterval(loadingBar, processTime / 100)
+
       function loadingBar() {
         if (loadingWidth >= 100) {
           clearInterval(loadingDuration)
@@ -55,8 +58,6 @@ const ExecuteNodePath = (props: {
           setLoadingWidth(loadingWidth)
         }
       }
-
-      let loadingDuration = setInterval(loadingBar, processTime / 100)
     }
   }
 
