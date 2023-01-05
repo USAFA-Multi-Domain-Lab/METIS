@@ -18,7 +18,7 @@ declare module 'express-session' {
 
 // -- config-variables | default-values --
 
-export let SCHEMA_BUILD_NUMBER: number = 3
+export let SCHEMA_BUILD_NUMBER: number = 4
 
 export let PORT: number = 8080
 
