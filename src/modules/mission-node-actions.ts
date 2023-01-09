@@ -100,7 +100,7 @@ export class MissionNodeAction {
     let willSucceedArray: Array<boolean> = []
     let willSucceed: boolean = false
 
-    for (let i = 0; i < totalExecutionAttempts || !willSucceed; i++) {
+    for (let i = 0; i < totalExecutionAttempts && !willSucceed; i++) {
       willSucceed = rng.double() <= successChance
       willSucceedArray.push(willSucceed)
     }
