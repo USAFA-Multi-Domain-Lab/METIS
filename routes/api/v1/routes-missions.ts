@@ -9,13 +9,13 @@ import { isLoggedIn, requireLogin } from '../../../user'
 const router = express.Router()
 
 // -- POST | /api/v1/missions/ --
-
 // This will create a new mission.
 router.post('/', requireLogin, (request, response) => {
   let body: any = request.body
 
   if ('mission' in body) {
     let missionData: any = body.mission
+
     if (
       'name' in missionData &&
       'versionNumber' in missionData &&
