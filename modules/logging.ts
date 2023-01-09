@@ -3,16 +3,21 @@ import expressWinston from 'express-winston'
 
 export const databaseLogger = winston.createLogger({
   level: 'info',
-  format: winston.format.json(),
+  format: winston.format.combine(
+    winston.format.json(),
+    winston.format.errors({ stack: true }),
+  ),
   defaultMeta: { service: 'user-service' },
   transports: [
-    //
-    // - Write all logs with importance level of `error` or less to `./logs/error.log`
-    // - Write all logs with importance level of `info` or less to `./logs/default.log`
-    //
     new winston.transports.File({
       filename: './logs/database-error.log',
       level: 'error',
+      format: winston.format.combine(
+        winston.format.json(),
+        winston.format.errors({ stack: true }),
+        winston.format.colorize(),
+        winston.format.prettyPrint(),
+      ),
     }),
     new winston.transports.File({ filename: './logs/database.log' }),
   ],

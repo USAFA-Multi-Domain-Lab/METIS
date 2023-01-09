@@ -34,6 +34,7 @@ export const MissionSchema: Schema = new Schema(
     live: { type: Boolean, required: true },
     seed: { type: ObjectId, required: true, auto: true },
     initialResources: { type: Number, required: true },
+    deleted: { type: Boolean, required: true, default: false },
     nodeStructure: { type: {}, required: true },
     nodeData: {
       type: [
@@ -44,6 +45,7 @@ export const MissionSchema: Schema = new Schema(
           color: { type: String, required: true },
           preExecutionText: { type: String, required: false, default: '' },
           depthPadding: { type: Number, required: true },
+
           executable: { type: Boolean, required: true },
           device: { type: Boolean, required: true },
           actions: {

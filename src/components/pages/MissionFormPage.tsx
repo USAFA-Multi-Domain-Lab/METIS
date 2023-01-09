@@ -665,7 +665,7 @@ function NodeEntry(props: {
   let handleAddNodeRequest = props.handleAddRequest
   let handleDeleteRequest = props.handleDeleteRequest
   let handleCloseRequest = props.handleCloseRequest
-  let errorMessageClassName: string = 'ErrorMessage'
+  let boxTopClassName: string = 'BoxTop'
   let closeClassName: string = 'Close'
   let toggleErrorMessage: string | undefined = undefined
   let deleteNodeClassName: string = 'FormButton DeleteNode'
@@ -705,8 +705,7 @@ function NodeEntry(props: {
       closeClassName += ' Disabled'
       toggleErrorMessage =
         'The button above is locked until there are no empty fields.'
-    } else {
-      errorMessageClassName += ' Hidden'
+      boxTopClassName += ' IsError'
     }
 
     if (mission.nodes.size < 2) {
@@ -719,8 +718,8 @@ function NodeEntry(props: {
     return (
       <div className='NodeEntry SidePanel'>
         <div className='BorderBox'>
-          <div className='BoxTop'>
-            <div className={errorMessageClassName}>
+          <div className={boxTopClassName}>
+            <div className='ErrorMessage'>
               Fix all errors before closing panel.
             </div>
             <div

@@ -1,4 +1,5 @@
 @import './config.scss';
+@import './util.scss';
 
 @font-face {
   font-family: 'Rancho';
@@ -72,9 +73,5 @@ code {
 }
 
 .Hidden {
-  pointer-events: none;
-  opacity: 0;
-  position: absolute;
-  top: -200vh;
-  left: -200vw;
+  @include hide();
 }

@@ -9,13 +9,13 @@ import { isLoggedIn, requireLogin } from '../../../user'
 const router = express.Router()
 
 // -- POST | /api/v1/missions/ --
-
 // This will create a new mission.
 router.post('/', requireLogin, (request, response) => {
   let body: any = request.body
 
   if ('mission' in body) {
     let missionData: any = body.mission
+
     if (
       'name' in missionData &&
       'versionNumber' in missionData &&
@@ -74,7 +74,9 @@ router.get('/', (request, response) => {
     }
 
     Mission.find({ ...queries })
-      .select('-nodeStructure -nodeData')
+      .select('-deleted -nodeStructure -nodeData')
+      .where('deleted')
+      .equals(false)
       .exec((error: Error, missions: any) => {
         if (error !== null || missions === null) {
           databaseLogger.error('Failed to retrieve missions.')
@@ -195,7 +197,7 @@ router.delete('/', requireLogin, (request, response) => {
     let missionID: any = query.missionID
 
     if (typeof missionID === 'string') {
-      Mission.deleteOne({ missionID }, (error: any) => {
+      Mission.updateOne({ missionID }, { deleted: true }, (error: any) => {
         if (error !== null) {
           databaseLogger.error('Failed to delete mission:')
           databaseLogger.error(error)
