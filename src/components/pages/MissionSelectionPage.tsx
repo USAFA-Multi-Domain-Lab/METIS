@@ -10,11 +10,10 @@ import { IPage } from '../App'
 import './MissionSelectionPage.scss'
 import { Counter } from '../../modules/numbers'
 import { ButtonSVG, EButtonSVGPurpose } from '../content/ButtonSVG'
-import Toggle, { EToggleLockState } from '../content/Toggle'
-import Tooltip from '../content/Tooltip'
 import { EAjaxStatus } from '../../modules/toolbox/ajax'
 import AppState, { AppActions } from '../AppState'
 import Navigation from '../content/Navigation'
+import MissionSelectionRow from '../content/MissionSelectionRow'
 
 export interface IMissionSelectionPage extends IPage {}
 
@@ -81,196 +80,116 @@ export default function MissionSelectionPage(
       returningPageProps: {},
     })
 
+  // This is called when a user requests
+  // to edit the mission.
+  const handleEditRequest = (mission: Mission) => {
+    appActions.goToPage('MissionFormPage', {
+      missionID: mission.missionID,
+    })
+  }
+
+  // This is called when a user requests
+  // to delete the mission.
+  const handleDeleteRequest = (mission: Mission) => {
+    appActions.confirm(
+      'Are you sure you want to delete this mission?',
+      (concludeAction: () => void) => {
+        concludeAction()
+        appActions.beginLoading('Deleting mission...')
+
+        deleteMission(
+          mission.missionID,
+          () => {
+            appActions.finishLoading()
+            appActions.notify(`Successfully deleted ${mission.name}.`)
+            setMountHandled(false)
+          },
+          () => {
+            appActions.finishLoading()
+            appActions.notify(`Failed to delete ${mission.name}.`)
+          },
+        )
+      },
+      {
+        pendingMessageUponConfirm: 'Deleting...',
+      },
+    )
+  }
+
+  // This is called when a user requests
+  // to copy the mission.
+  const handleCopyRequest = (mission: Mission) => {
+    appActions.confirm(
+      'Enter the name of the new mission.',
+      (concludeAction: () => void, entry: string) => {
+        concludeAction()
+        appActions.beginLoading('Copying mission...')
+
+        copyMission(
+          mission.missionID,
+          entry,
+          () => {
+            appActions.finishLoading()
+            appActions.notify(`Successfully copied ${mission.name}.`)
+            setMountHandled(false)
+          },
+          () => {
+            appActions.finishLoading()
+            appActions.notify(`Failed to copy ${mission.name}.`)
+          },
+        )
+      },
+      {
+        requireEntry: true,
+        entryLabel: 'Name',
+        buttonConfirmText: 'Copy',
+        pendingMessageUponConfirm: 'Copying...',
+      },
+    )
+  }
+
+  // This is called when a user requests
+  // to toggle a mission between being live
+  // and not being live.
+  const handleToggleLiveRequest = (mission: Mission, live: boolean) => {
+    let previousLiveState: boolean = mission.live
+
+    mission.live = live
+
+    setLive(
+      mission.missionID,
+      live,
+      () => {
+        if (live) {
+          appActions.notify(`${mission.name} was successfully turned on.`)
+          setLiveAjaxStatus(EAjaxStatus.Loaded)
+        } else {
+          appActions.notify(`${mission.name} was successfully turned off.`)
+          setLiveAjaxStatus(EAjaxStatus.Loaded)
+        }
+      },
+      () => {
+        if (live) {
+          appActions.notify(`${mission.name} failed to turn on.`)
+          setLiveAjaxStatus(EAjaxStatus.Error)
+        } else {
+          appActions.notify(`${mission.name} failed to turn off.`)
+          setLiveAjaxStatus(EAjaxStatus.Error)
+        }
+        mission.live = previousLiveState
+      },
+    )
+    setLiveAjaxStatus(EAjaxStatus.Loading)
+  }
+
   // This will start the process for
   //creating a new mission.
   const createMission = (): void =>
     appActions.goToPage('MissionFormPage', { missionID: null })
 
-  /* -- INTERNAL COMPONENTS -- */
-
-  // This will render a row on the page
-  // for the given mission.
-  const MissionSelectionRow = (props: {
-    mission: Mission
-  }): JSX.Element | null => {
-    let mission: Mission = props.mission
-
-    // -- HANDLERS --
-
-    // This is called when a user requests
-    // to edit the mission.
-    const handleEditRequest = () => {
-      appActions.goToPage('MissionFormPage', {
-        missionID: mission.missionID,
-      })
-    }
-
-    // This is called when a user requests
-    // to delete the mission.
-    const handleDeleteRequest = () => {
-      appActions.confirm(
-        'Are you sure you want to delete this mission?',
-        (concludeAction: () => void) => {
-          concludeAction()
-          appActions.beginLoading('Deleting mission...')
-
-          deleteMission(
-            mission.missionID,
-            () => {
-              appActions.finishLoading()
-              appActions.notify(`Successfully deleted ${mission.name}.`)
-              setMountHandled(false)
-            },
-            () => {
-              appActions.finishLoading()
-              appActions.notify(`Failed to delete ${mission.name}.`)
-            },
-          )
-        },
-        {
-          pendingMessageUponConfirm: 'Deleting...',
-        },
-      )
-    }
-
-    // This is called when a user requests
-    // to copy the mission.
-    const handleCopyRequest = () => {
-      appActions.confirm(
-        'Enter the name of the new mission.',
-        (concludeAction: () => void, entry: string) => {
-          concludeAction()
-          appActions.beginLoading('Copying mission...')
-
-          copyMission(
-            mission.missionID,
-            entry,
-            () => {
-              appActions.finishLoading()
-              appActions.notify(`Successfully copied ${mission.name}.`)
-              setMountHandled(false)
-            },
-            () => {
-              appActions.finishLoading()
-              appActions.notify(`Failed to copy ${mission.name}.`)
-            },
-          )
-        },
-        {
-          requireEntry: true,
-          entryLabel: 'Name',
-          buttonConfirmText: 'Copy',
-          pendingMessageUponConfirm: 'Copying...',
-        },
-      )
-    }
-
-    // This is called when a user requests
-    // to toggle a mission between being live
-    // and not being live.
-    const handleToggleLiveRequest = (live: boolean) => {
-      let previousLiveState: boolean = mission.live
-
-      mission.live = live
-
-      setLive(
-        mission.missionID,
-        live,
-        () => {
-          if (live) {
-            appActions.notify(`${mission.name} was successfully turned on.`)
-            setLiveAjaxStatus(EAjaxStatus.Loaded)
-          } else {
-            appActions.notify(`${mission.name} was successfully turned off.`)
-            setLiveAjaxStatus(EAjaxStatus.Loaded)
-          }
-        },
-        () => {
-          if (live) {
-            appActions.notify(`${mission.name} failed to turn on.`)
-            setLiveAjaxStatus(EAjaxStatus.Error)
-          } else {
-            appActions.notify(`${mission.name} failed to turn off.`)
-            setLiveAjaxStatus(EAjaxStatus.Error)
-          }
-          mission.live = previousLiveState
-        },
-      )
-      setLiveAjaxStatus(EAjaxStatus.Loading)
-    }
-
-    // -- RENDER --
-
-    // Logic for missions to appear/disappear for students
-    // based on what the instructor sets the individual
-    // mission to.
-    let individualMissionContainerClassName: string =
-      'IndividualMissionContainer'
-    if (mission.live) {
-      individualMissionContainerClassName += ' show'
-    } else if (appState.currentUser !== null) {
-      individualMissionContainerClassName += ' show'
-    } else {
-      individualMissionContainerClassName = 'IndividualMissionContainer'
-    }
-
-    // Logic that will lock the mission toggle while a request is being sent
-    // to set the mission.live paramter
-    let lockLiveToggle: EToggleLockState = EToggleLockState.Unlocked
-    if (liveAjaxStatus === EAjaxStatus.Loading && mission.live) {
-      lockLiveToggle = EToggleLockState.LockedActivation
-    } else if (liveAjaxStatus === EAjaxStatus.Loading && !mission.live) {
-      lockLiveToggle = EToggleLockState.LockedDeactivation
-    } else {
-      lockLiveToggle = EToggleLockState.Unlocked
-    }
-
-    return (
-      <div
-        className={individualMissionContainerClassName}
-        key={mission.missionID}
-      >
-        <div
-          className='MissionName'
-          onClick={() => selectMission(mission.missionID)}
-        >
-          {number.count++}. {mission.name}
-          <Tooltip description={'Launch mission.'} />
-        </div>
-        <div className='ActionsContainer'>
-          <ButtonSVG
-            purpose={EButtonSVGPurpose.Edit}
-            handleClick={handleEditRequest}
-            tooltipDescription={'Edit mission.'}
-          />
-          <ButtonSVG
-            purpose={EButtonSVGPurpose.Remove}
-            handleClick={handleDeleteRequest}
-            tooltipDescription={'Remove mission.'}
-          />
-          <ButtonSVG
-            purpose={EButtonSVGPurpose.Copy}
-            handleClick={handleCopyRequest}
-            tooltipDescription={'Copy mission.'}
-          />
-          <div className='ToggleContainer'>
-            <Toggle
-              initiallyActivated={mission.live}
-              lockState={lockLiveToggle}
-              deliverValue={handleToggleLiveRequest}
-            />
-            <Tooltip
-              description={
-                !mission.live
-                  ? 'Sets mission as live thus allowing students to access it.'
-                  : 'Disables mission thus preventing students from accessing it.'
-              }
-            />
-          </div>
-        </div>
-      </div>
-    )
-  }
+  // This will prompt the user to import
+  // a mission from their system.
+  const importMission = (): void => {}
 
   /* -- RENDER -- */
 
@@ -295,6 +214,29 @@ export default function MissionSelectionPage(
     noMissionsClassName += ' hidden'
   }
 
+  // This will iterate over the missions,
+  // and render all the rows for the list.
+  const renderMissionSelectionRows = (): JSX.Element[] => {
+    let missionSelectionRows: JSX.Element[] = missions.map(
+      (mission: Mission) => (
+        <MissionSelectionRow
+          mission={mission}
+          liveAjaxStatus={liveAjaxStatus}
+          handleSelectionRequest={() => selectMission(mission.missionID)}
+          handleEditRequest={() => handleEditRequest(mission)}
+          handleDeleteRequest={() => handleDeleteRequest(mission)}
+          handleCopyRequest={() => handleCopyRequest(mission)}
+          handleToggleLiveRequest={(live: boolean) =>
+            handleToggleLiveRequest(mission, live)
+          }
+          key={`MissionSelectionRow_${mission.missionID}`}
+        />
+      ),
+    )
+
+    return missionSelectionRows
+  }
+
   return (
     <div className='MissionSelectionPage Page'>
       {/* { Navigation } */}
@@ -313,9 +255,9 @@ export default function MissionSelectionPage(
             <div className='HeadingContainer'>
               <div className='Heading'>Select your mission:</div>
             </div>
-            {missions.map((mission: Mission) => (
-              <MissionSelectionRow mission={mission} />
-            ))}
+            <div className='MissionSelectionRows'>
+              {renderMissionSelectionRows()}
+            </div>
             <div className={noMissionsClassName}>No missions available...</div>
           </div>
         </div>
@@ -325,6 +267,11 @@ export default function MissionSelectionPage(
             handleClick={createMission}
             tooltipDescription={'Create new mission'}
             uniqueClassName={'NewMissionButton'}
+          />
+          <ButtonSVG
+            purpose={EButtonSVGPurpose.Upload}
+            handleClick={importMission}
+            tooltipDescription={'Import a .cesar file from your local system.'}
           />
         </div>
       </div>

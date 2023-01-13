@@ -27,6 +27,8 @@ export let MONGO_PORT = 27017
 export let MONGO_USERNAME: string | undefined
 export let MONGO_PASSWORD: string | undefined
 
+export const APP_DIR = path.join(__dirname)
+
 // -- config-variables | environment-override --
 
 if (fs.existsSync('./environment.json')) {
@@ -100,6 +102,14 @@ export function configure(
 
     // links the file path to css and resource files
     app.use(express.static('build'))
+
+    // This will do clean up when the application
+    // terminates.
+    process.on('SIGINT', () => {
+      // Deletes temp folder.
+      fs.rmdirSync(path.join(APP_DIR, 'temp'), { recursive: true })
+      process.exit()
+    })
 
     callback()
   }, callbackError)

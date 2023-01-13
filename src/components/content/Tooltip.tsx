@@ -165,6 +165,7 @@ function TooltipLogic(props: { tooltip: Tooltip }): JSX.Element | null {
       tooltips_elm.style.visibility = 'hidden'
 
       setTooltipDescription('')
+      console.log(_)
     }
   }
 

@@ -1,11 +1,15 @@
 //npm imports
 import express from 'express'
+import fs from 'fs'
+import path from 'path'
+import { v4 as generateHash } from 'uuid'
 import { filterErrors_findOne } from '../../../database/api-call-handlers'
 import { ERROR_BAD_DATA } from '../../../database/database'
 import InfoModel from '../../../database/models/model-info'
 import MissionModel from '../../../database/models/model-mission'
 import { databaseLogger } from '../../../modules/logging'
 import { isLoggedIn, requireLogin } from '../../../user'
+import { APP_DIR } from '../../../config'
 
 //fields
 const router = express.Router()
@@ -163,7 +167,7 @@ router.get('/', (request, response) => {
 
 // -- GET /api/v1/missions/export/
 // This will return all of the missions.
-router.get('/export/', requireLogin, (request, response) => {
+router.get('/export/*', requireLogin, (request, response) => {
   let missionID = request.query.missionID
 
   if (missionID !== undefined) {
@@ -178,13 +182,43 @@ router.get('/export/', requireLogin, (request, response) => {
           filterErrors_findOne('missions', response, (mission: any) => {
             databaseLogger.info(`Mission with ID "${missionID}" retrieved.`)
 
-            return response.json({
-              ...mission._doc,
-              missionID: undefined,
-              live: undefined,
-              deleted: undefined,
-              schemaBuildNumber: info.schemaBuildNumber,
-            })
+            // Gather details for temporary file
+            // that will be sent in the response.
+            let tempSubfolderName: string = generateHash()
+            let tempFileName: string = `${mission.name}.cesar`
+            let tempFolderPath: string = path.join(APP_DIR, 'temp')
+            let tempSubfolderPath: string = path.join(
+              tempFolderPath,
+              tempSubfolderName,
+            )
+            let tempFilePath: string = path.join(
+              tempSubfolderPath,
+              tempFileName,
+            )
+            let tempFileContents = JSON.stringify(
+              {
+                ...mission._doc,
+                missionID: undefined,
+                live: undefined,
+                deleted: undefined,
+                schemaBuildNumber: info.schemaBuildNumber,
+              },
+              null,
+              2,
+            )
+
+            // Create the temp directory
+            // if it doesn't exist.
+            if (!fs.existsSync(tempFolderPath)) {
+              fs.mkdirSync(tempFolderPath)
+            }
+
+            // Create the file.
+            fs.mkdirSync(tempSubfolderPath, {})
+            fs.writeFileSync(tempFilePath, tempFileContents)
+
+            // Send it in the response.
+            response.sendFile(tempFilePath)
           }),
         )
       }),

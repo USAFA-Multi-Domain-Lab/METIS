@@ -85,6 +85,8 @@ export const MissionSchema: Schema = new Schema(
   },
 )
 
+/* -- FILTERS -- */
+
 const enforceUniqueIDs = (mission: any, next: any): void => {
   let nodeIDs: Array<string> = []
 
@@ -117,6 +119,13 @@ const enforceUniqueIDs = (mission: any, next: any): void => {
   next()
 }
 
+const filterOutUnusedIDs = (mission: any) => {
+  console.log(mission)
+}
+
+MissionSchema.post(/^find/, function (docs) {
+  filterOutUnusedIDs(docs)
+})
 MissionSchema.pre('update', function (next) {
   enforceUniqueIDs(this, next)
 })
