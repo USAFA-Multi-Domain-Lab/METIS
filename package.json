@@ -1,6 +1,6 @@
 {
   "name": "cesar",
-  "version": "0.1.0",
+  "version": "1.1.1",
   "private": true,
   "dependencies": {
     "@testing-library/jest-dom": "^5.16.1",
@@ -14,7 +14,6 @@
     "@types/jest": "^27.4.0",
     "@types/marked": "^1.2.2",
     "@types/mongoose": "^5.11.97",
-    "@types/node": "^16.11.19",
     "@types/random": "^3.0.1",
     "@types/react": "^17.0.38",
     "@types/react-beforeunload": "^2.1.1",
@@ -60,7 +59,8 @@
     "serve-react": "react-scripts start",
     "build-react": "react-scripts build",
     "test-react": "react-scripts test",
-    "eject-react": "react-scripts eject"
+    "eject-react": "react-scripts eject",
+    "test": "nyc mocha -r ts-node/register test/*.ts"
   },
   "eslintConfig": {
     "extends": [
@@ -84,6 +84,11 @@
     "quoteProps": "consistent"
   },
   "devDependencies": {
-    "@types/lodash": "^4.14.185"
+    "@types/chai": "^4.3.4",
+    "@types/mocha": "^10.0.1",
+    "@types/node": "^18.11.18",
+    "chai": "^4.3.7",
+    "mocha": "^10.2.0",
+    "nyc": "^15.1.0"
   }
 }
