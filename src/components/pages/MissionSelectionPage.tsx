@@ -116,7 +116,6 @@ export default function MissionSelectionPage(
       // are reloaded to retrieve the newly
       // created missions.
       const loadMissionsCallback = () => {
-        console.log(successfulUploadCount, failedUploadCount, invalidFileCount)
         // Notifies of successful uploads.
         if (successfulUploadCount > 0) {
           appActions.notify(
