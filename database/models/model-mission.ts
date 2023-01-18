@@ -120,7 +120,7 @@ const enforceUniqueIDs = (mission: any, next: any): void => {
 }
 
 const filterOutUnusedIDs = (mission: any) => {
-  console.log(mission)
+  console.log('Need to filter unused IDs still.')
 }
 
 MissionSchema.post(/^find/, function (docs) {

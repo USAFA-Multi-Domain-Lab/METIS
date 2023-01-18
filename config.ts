@@ -16,7 +16,7 @@ declare module 'express-session' {
   }
 }
 
-// -- config-variables | default-values --
+/* -- config-variables | default-values -- */
 
 export let SCHEMA_BUILD_NUMBER: number = 4
 
@@ -29,7 +29,7 @@ export let MONGO_PASSWORD: string | undefined
 
 export const APP_DIR = path.join(__dirname)
 
-// -- config-variables | environment-override --
+/* -- config-variables | environment-override -- */
 
 if (fs.existsSync('./environment.json')) {
   let environmentData: any = fs.readFileSync('./environment.json', 'utf8')
@@ -55,6 +55,8 @@ if (fs.existsSync('./environment.json')) {
     MONGO_PASSWORD = environmentData['MONGO_PASSWORD']
   }
 }
+
+/* -- functions -- */
 
 // This will configure the express app
 // for use.
@@ -122,3 +124,6 @@ const defaultExports = {
 }
 
 export default defaultExports
+function multer(arg0: { dest: string }) {
+  throw new Error('Function not implemented.')
+}

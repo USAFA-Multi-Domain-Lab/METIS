@@ -1,4 +1,4 @@
-import User from '../models/model-user'
+import User from '../database/models/model-user'
 
 // This is middleware to make sure
 // a called route checks whether there

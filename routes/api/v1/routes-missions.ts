@@ -10,6 +10,7 @@ import MissionModel from '../../../database/models/model-mission'
 import { databaseLogger } from '../../../modules/logging'
 import { isLoggedIn, requireLogin } from '../../../user'
 import { APP_DIR } from '../../../config'
+import uploads from '../../../middleware/uploads'
 
 //fields
 const router = express.Router()
@@ -68,56 +69,75 @@ router.post('/', requireLogin, (request, response) => {
 })
 
 // -- POST | /api/v1/missions/import/ --
-router.post('/import/', requireLogin, (request, response) => {
-  let body: any = request.body
-
-  if ('mission' in body) {
-    let missionData: any = body.mission
+router.post(
+  '/import/',
+  requireLogin,
+  uploads.array('file', 12),
+  (request, response) => {
+    let body: any = request.body
 
     if (
-      'name' in missionData &&
-      'versionNumber' in missionData &&
-      'initialResources' in missionData &&
-      'schemaBuildNumber' in missionData &&
-      'nodeStructure' in missionData &&
-      'nodeData' in missionData
+      request.files &&
+      request.files instanceof Array &&
+      request.files.length > 0
     ) {
-      let name: any = missionData.name
-      let versionNumber: any = missionData.versionNumber
-      let live: any = false
-      let initialResources: any = missionData.initialResources
-      let nodeStructure: any = missionData.nodeStructure
-      let nodeData: any = missionData.nodeData
+      let failedImportCount: number = 0
 
-      let mission = new MissionModel({
-        name,
-        versionNumber,
-        live,
-        initialResources,
-        nodeStructure,
-        nodeData,
-      })
+      request.files.forEach((file, index: number) => {
+        let contents_string = fs.readFileSync(file.path, { encoding: 'utf-8' })
 
-      mission.save((error: Error) => {
-        if (error) {
-          databaseLogger.error('Failed to import mission:')
-          databaseLogger.error(error)
+        let contents_JSON = JSON.parse(contents_string)
 
-          if (error.name === ERROR_BAD_DATA) {
-            return response.sendStatus(400)
-          } else {
-            return response.sendStatus(500)
-          }
+        if (
+          'name' in contents_JSON &&
+          'versionNumber' in contents_JSON &&
+          'initialResources' in contents_JSON &&
+          'schemaBuildNumber' in contents_JSON &&
+          'nodeStructure' in contents_JSON &&
+          'nodeData' in contents_JSON
+        ) {
+          let name: any = contents_JSON.name
+          let versionNumber: any = contents_JSON.versionNumber
+          let live: any = false
+          let initialResources: any = contents_JSON.initialResources
+          let nodeStructure: any = contents_JSON.nodeStructure
+          let nodeData: any = contents_JSON.nodeData
+
+          let mission = new MissionModel({
+            name,
+            versionNumber,
+            live,
+            initialResources,
+            nodeStructure,
+            nodeData,
+          })
+
+          mission.save((error: Error) => {
+            if (error) {
+              databaseLogger.error('Failed to import mission:')
+              databaseLogger.error(error)
+
+              failedImportCount++
+            } else {
+              databaseLogger.info(`New mission created named "${name}".`)
+            }
+            if (index + 1 === request.files?.length) {
+              if (failedImportCount > 0) {
+                console.log(`Failed to import ${failedImportCount} missions.`)
+              }
+
+              return response.sendStatus(200)
+            }
+          })
         } else {
-          databaseLogger.info(`New mission created named "${name}".`)
-          return response.json({ mission })
+          failedImportCount++
         }
       })
+    } else {
+      return response.sendStatus(400)
     }
-  } else {
-    return response.sendStatus(400)
-  }
-})
+  },
+)
 
 // -- GET | /api/v1/missions/ --
 // This will return all of the missions.
@@ -186,7 +206,10 @@ router.get('/export/*', requireLogin, (request, response) => {
             // that will be sent in the response.
             let tempSubfolderName: string = generateHash()
             let tempFileName: string = `${mission.name}.cesar`
-            let tempFolderPath: string = path.join(APP_DIR, 'temp')
+            let tempFolderPath: string = path.join(
+              APP_DIR,
+              '/temp/missions/exports/',
+            )
             let tempSubfolderPath: string = path.join(
               tempFolderPath,
               tempSubfolderName,
@@ -210,7 +233,7 @@ router.get('/export/*', requireLogin, (request, response) => {
             // Create the temp directory
             // if it doesn't exist.
             if (!fs.existsSync(tempFolderPath)) {
-              fs.mkdirSync(tempFolderPath)
+              fs.mkdirSync(tempFolderPath, { recursive: true })
             }
 
             // Create the file.
