@@ -76,6 +76,8 @@ router.post(
   (request, response) => {
     let body: any = request.body
 
+    // Verifies files were included
+    // in the request.
     if (
       request.files &&
       request.files instanceof Array &&
@@ -83,11 +85,16 @@ router.post(
     ) {
       let failedImportCount: number = 0
 
+      // Iterates through files.
       request.files.forEach((file, index: number) => {
+        // Reads files contents.
         let contents_string = fs.readFileSync(file.path, { encoding: 'utf-8' })
 
+        // Converts to JSON.
         let contents_JSON = JSON.parse(contents_string)
 
+        // Verifies valid properties were
+        // included.
         if (
           'name' in contents_JSON &&
           'versionNumber' in contents_JSON &&

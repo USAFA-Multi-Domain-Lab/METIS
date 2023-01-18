@@ -27,6 +27,7 @@ export default function MissionSelectionPage(
 
   /* -- COMPONENT REFS -- */
 
+  const page = useRef<HTMLDivElement>(null)
   const importMissionTrigger = useRef<HTMLInputElement>(null)
 
   /* -- COMPONENT STATE -- */
@@ -96,6 +97,89 @@ export default function MissionSelectionPage(
       returningPagePath: 'MissionSelectionPage',
       returningPageProps: {},
     })
+
+  // This will import files as missions.
+  const importMissionFiles = (files: FileList) => {
+    let filesRemaining = files.length
+    let successfulUploadCount = 0
+    let failedUploadCount = 0
+    let invalidFileCount: number = 0
+
+    // This is called when a file
+    // import is processed, whether
+    // successfully or unsuccessfully
+    // uploaded.
+    const handleFileImportCompletion = () => {
+      filesRemaining--
+
+      // This is called after the missions
+      // are reloaded to retrieve the newly
+      // created missions.
+      const loadMissionsCallback = () => {
+        console.log(successfulUploadCount, failedUploadCount, invalidFileCount)
+        // Notifies of successful uploads.
+        if (successfulUploadCount > 0) {
+          appActions.notify(
+            `Successfully imported ${successfulUploadCount} mission${
+              successfulUploadCount === 1 ? '' : 's'
+            }.`,
+          )
+        }
+        // Notifies of failed uploads.
+        if (failedUploadCount > 0) {
+          appActions.notify(
+            `Failed to import ${successfulUploadCount} mission${
+              failedUploadCount === 1 ? '' : 's'
+            }.`,
+          )
+        }
+        // Notifies of invalid files
+        // rejected from being uploaded.
+        if (invalidFileCount > 0) {
+          appActions.notify(
+            `${invalidFileCount} of the files uploaded did not have the .cesar extension and therefore ${
+              invalidFileCount === 1 ? 'was' : 'were'
+            } rejected.`,
+          )
+        }
+      }
+
+      // Reloads missions after all file
+      // uploads have been processed.
+      if (filesRemaining <= 0) {
+        loadMissions(loadMissionsCallback, loadMissionsCallback)
+      }
+    }
+
+    // Switch to load screen.
+    appActions.beginLoading(
+      `Importing ${filesRemaining} file${filesRemaining === 1 ? '' : 's'}...`,
+    )
+
+    // Iterates over files for upload.
+    for (let file of files) {
+      // If a .cesar file, import it.
+      if (file.name.endsWith('.cesar')) {
+        importMission(
+          file,
+          false,
+          () => {
+            successfulUploadCount++
+            handleFileImportCompletion()
+          },
+          (error: Error) => {
+            failedUploadCount++
+            handleFileImportCompletion()
+          },
+        )
+      }
+      // Else, don't.
+      else {
+        invalidFileCount++
+        handleFileImportCompletion()
+      }
+    }
+  }
 
   // This is called when a user requests
   // to edit the mission.
@@ -223,95 +307,50 @@ export default function MissionSelectionPage(
       importMissionTrigger_elm.files !== null &&
       importMissionTrigger_elm.files.length > 0
     ) {
-      let files: FileList = importMissionTrigger_elm.files
-      let filesRemaining = files.length
-      let successfulUploadCount = 0
-      let failedUploadCount = 0
-      let invalidFileCount: number = 0
-
-      // This is called when a file
-      // import is processed, whether
-      // successfully or unsuccessfully
-      // uploaded.
-      const handleFileImportCompletion = () => {
-        filesRemaining--
-
-        // This is called after the missions
-        // are reloaded to retrieve the newly
-        // created missions.
-        const loadMissionsCallback = () => {
-          console.log(
-            successfulUploadCount,
-            failedUploadCount,
-            invalidFileCount,
-          )
-          // Notifies of successful uploads.
-          if (successfulUploadCount > 0) {
-            appActions.notify(
-              `Successfully imported ${successfulUploadCount} mission${
-                successfulUploadCount === 1 ? '' : 's'
-              }.`,
-            )
-          }
-          // Notifies of failed uploads.
-          if (failedUploadCount > 0) {
-            appActions.notify(
-              `Failed to import ${successfulUploadCount} mission${
-                failedUploadCount === 1 ? '' : 's'
-              }.`,
-            )
-          }
-          // Notifies of invalid files
-          // rejected from being uploaded.
-          if (invalidFileCount > 0) {
-            appActions.notify(
-              `${invalidFileCount} of the files uploaded did not have the .cesar extension and therefore ${
-                invalidFileCount === 1 ? 'was' : 'were'
-              } rejected.`,
-            )
-          }
-        }
-
-        // Reloads missions after all file
-        // uploads have been processed.
-        if (filesRemaining <= 0) {
-          loadMissions(loadMissionsCallback, loadMissionsCallback)
-        }
-      }
-
-      // Switch to load screen.
-      appActions.beginLoading(
-        `Importing ${filesRemaining} file${filesRemaining === 1 ? '' : 's'}...`,
-      )
-
-      // Iterates over files for upload.
-      for (let file of files) {
-        // If a .cesar file, import it.
-        if (file.name.endsWith('.cesar')) {
-          importMission(
-            file,
-            false,
-            () => {
-              successfulUploadCount++
-              handleFileImportCompletion()
-            },
-            (error: Error) => {
-              failedUploadCount++
-              handleFileImportCompletion()
-            },
-          )
-        }
-        // Else, don't.
-        else {
-          invalidFileCount++
-          handleFileImportCompletion()
-        }
-      }
+      importMissionFiles(importMissionTrigger_elm.files)
     }
   }
 
   // This is a file is dropped onto the page.
-  const handleFileDrop = (): void => {}
+  const handleFileDrop = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault()
+
+    let page_elm: HTMLDivElement | null = page.current
+
+    if (page_elm !== null) {
+      let files: FileList = event.dataTransfer.files
+
+      page_elm.classList.remove('DropPending')
+
+      if (files.length > 0) {
+        importMissionFiles(files)
+      }
+    }
+  }
+
+  // This is called when a user drags over
+  // the page.
+  const handleFileDragOver = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault()
+
+    let page_elm: HTMLDivElement | null = page.current
+
+    if (page_elm !== null) {
+      page_elm.classList.add('DropPending')
+    }
+  }
+
+  // This is called when the user is
+  // no longer dragging over the page.
+  const handleFileDragLeave = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault()
+
+    let page_elm: HTMLDivElement | null = page.current
+
+    if (page_elm !== null) {
+      page_elm.classList.remove('DropPending')
+    }
+  }
 
   // This will start the process for
   //creating a new mission.
@@ -365,7 +404,17 @@ export default function MissionSelectionPage(
   }
 
   return (
-    <div className='MissionSelectionPage Page'>
+    <div
+      className='MissionSelectionPage Page'
+      ref={page}
+      onDragOver={handleFileDragOver}
+      onDragLeave={handleFileDragLeave}
+      onDrop={handleFileDrop}
+    >
+      {/* { File Drop Box } */}
+      <div className={'FileDropBox'}>
+        <div className='UploadIcon'></div>
+      </div>
       {/* { Navigation } */}
       <Navigation
         brandingCallback={null}
