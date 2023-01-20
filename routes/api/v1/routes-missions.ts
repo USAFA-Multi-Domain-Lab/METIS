@@ -72,10 +72,8 @@ router.post('/', requireLogin, (request, response) => {
 router.post(
   '/import/',
   requireLogin,
-  uploads.array('file', 12),
+  uploads.array('files', 12),
   (request, response) => {
-    let body: any = request.body
-
     // Verifies files were included
     // in the request.
     if (
@@ -83,7 +81,13 @@ router.post(
       request.files instanceof Array &&
       request.files.length > 0
     ) {
+      let fileProcessCount: number = 0
+      let successfulImportCount: number = 0
       let failedImportCount: number = 0
+      let failedImportErrorMessages: Array<{
+        fileName: string
+        errorMessage: string
+      }> = []
 
       // Iterates through files.
       request.files.forEach((file, index: number) => {
@@ -124,22 +128,52 @@ router.post(
               databaseLogger.error('Failed to import mission:')
               databaseLogger.error(error)
 
+              failedImportErrorMessages.push({
+                fileName: file.filename,
+                errorMessage: error.message,
+              })
+
               failedImportCount++
             } else {
               databaseLogger.info(`New mission created named "${name}".`)
+
+              successfulImportCount++
             }
-            if (index + 1 === request.files?.length) {
+
+            fileProcessCount++
+
+            if (fileProcessCount === request.files?.length) {
               if (failedImportCount > 0) {
-                console.log(`Failed to import ${failedImportCount} missions.`)
+                databaseLogger.error(
+                  `Failed to import ${failedImportCount} missions.`,
+                )
               }
 
-              return response.sendStatus(200)
+              return response.json({
+                successfulImportCount,
+                failedImportCount,
+                failedImportErrorMessages,
+              })
             }
           })
         } else {
           failedImportCount++
+          fileProcessCount++
         }
       })
+
+      if (
+        fileProcessCount === request.files?.length &&
+        fileProcessCount === failedImportCount
+      ) {
+        databaseLogger.error(`Failed to import ${failedImportCount} missions.`)
+
+        return response.json({
+          successfulImportCount,
+          failedImportCount,
+          failedImportErrorMessages,
+        })
+      }
     } else {
       return response.sendStatus(400)
     }

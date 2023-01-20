@@ -3,7 +3,7 @@ import {
   copyMission,
   deleteMission,
   getAllMissions,
-  importMission,
+  importMissions,
   Mission,
   setLive,
 } from '../../modules/missions'
@@ -100,84 +100,80 @@ export default function MissionSelectionPage(
 
   // This will import files as missions.
   const importMissionFiles = (files: FileList) => {
-    let filesRemaining = files.length
-    let successfulUploadCount = 0
-    let failedUploadCount = 0
-    let invalidFileCount: number = 0
+    let validFiles: Array<File> = []
+    let successfulImportCount = 0
+    let invalidContentsCount = 0
+    let invalidFileExtensionCount: number = 0
 
     // This is called when a file
     // import is processed, whether
     // successfully or unsuccessfully
     // uploaded.
     const handleFileImportCompletion = () => {
-      filesRemaining--
-
       // This is called after the missions
       // are reloaded to retrieve the newly
       // created missions.
       const loadMissionsCallback = () => {
         // Notifies of successful uploads.
-        if (successfulUploadCount > 0) {
+        if (successfulImportCount > 0) {
           appActions.notify(
-            `Successfully imported ${successfulUploadCount} mission${
-              successfulUploadCount === 1 ? '' : 's'
+            `Successfully imported ${successfulImportCount} mission${
+              successfulImportCount === 1 ? '' : 's'
             }.`,
           )
         }
         // Notifies of failed uploads.
-        if (failedUploadCount > 0) {
+        if (invalidContentsCount > 0) {
           appActions.notify(
-            `Failed to import ${successfulUploadCount} mission${
-              failedUploadCount === 1 ? '' : 's'
-            }.`,
+            `${invalidContentsCount} of the files uploaded did not have valid content and therefore ${
+              invalidContentsCount === 1 ? 'was' : 'were'
+            } rejected.`,
           )
         }
         // Notifies of invalid files
         // rejected from being uploaded.
-        if (invalidFileCount > 0) {
+        if (invalidFileExtensionCount > 0) {
           appActions.notify(
-            `${invalidFileCount} of the files uploaded did not have the .cesar extension and therefore ${
-              invalidFileCount === 1 ? 'was' : 'were'
+            `${invalidFileExtensionCount} of the files uploaded did not have the .cesar extension and therefore ${
+              invalidFileExtensionCount === 1 ? 'was' : 'were'
             } rejected.`,
           )
         }
       }
 
-      // Reloads missions after all file
-      // uploads have been processed.
-      if (filesRemaining <= 0) {
-        loadMissions(loadMissionsCallback, loadMissionsCallback)
-      }
+      // Reloads missions now that all files
+      // have been processed.
+      loadMissions(loadMissionsCallback, loadMissionsCallback)
     }
 
     // Switch to load screen.
     appActions.beginLoading(
-      `Importing ${filesRemaining} file${filesRemaining === 1 ? '' : 's'}...`,
+      `Importing ${files.length} file${files.length === 1 ? '' : 's'}...`,
     )
 
     // Iterates over files for upload.
     for (let file of files) {
       // If a .cesar file, import it.
       if (file.name.endsWith('.cesar')) {
-        importMission(
-          file,
-          false,
-          () => {
-            successfulUploadCount++
-            handleFileImportCompletion()
-          },
-          (error: Error) => {
-            failedUploadCount++
-            handleFileImportCompletion()
-          },
-        )
+        validFiles.push(file)
       }
       // Else, don't.
       else {
-        invalidFileCount++
-        handleFileImportCompletion()
+        invalidFileExtensionCount++
       }
     }
+
+    importMissions(
+      validFiles,
+      false,
+      (successCount: number, failureCount: number) => {
+        successfulImportCount += successCount
+        invalidContentsCount += failureCount
+        handleFileImportCompletion()
+      },
+      (error: Error) =>
+        appActions.notify(`An unexpected error occurred while importing.`),
+    )
   }
 
   // This is called when a user requests

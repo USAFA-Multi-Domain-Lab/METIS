@@ -629,14 +629,17 @@ export function createMission(
 // This will import a .cesar file
 // to the server to create a new
 // mission.
-export function importMission(
-  file: File,
+export function importMissions(
+  files: FileList | Array<File>,
   expandAll: boolean,
-  callback: (/*mission: Mission*/) => void,
+  callback: (successfulImportCount: number, failedImportCount: number) => void,
   callbackError: (error: AxiosError) => void = () => {},
 ): void {
   const formData = new FormData()
-  formData.append('file', file)
+
+  for (let file of files) {
+    formData.append('files', file)
+  }
 
   axios
     .post(`/api/v1/missions/import/`, formData, {
@@ -645,23 +648,10 @@ export function importMission(
       },
     })
     .then((response: AxiosResponse<AnyObject>): void => {
-      //       let missionJson = response.data.mission
-      //
-      //       let mission = new Mission(
-      //         missionJson.missionID,
-      //         missionJson.name,
-      //         missionJson.versionNumber,
-      //         missionJson.live,
-      //         missionJson.initialResources,
-      //         missionJson.nodeStructure,
-      //         missionJson.nodeData,
-      //         missionJson.seed,
-      //         expandAll,
-      //       )
-      //
-      //       callback(mission)
+      let successfulImportCount: number = response.data.successfulImportCount
+      let failedImportCount: number = response.data.failedImportCount
 
-      callback()
+      callback(successfulImportCount, failedImportCount)
     })
     .catch((error: AxiosError) => {
       console.error('Failed to save mission.')

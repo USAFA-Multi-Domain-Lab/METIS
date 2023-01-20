@@ -119,18 +119,43 @@ const enforceUniqueIDs = (mission: any, next: any): void => {
   next()
 }
 
-const filterOutUnusedIDs = (mission: any) => {
-  console.log('Need to filter unused IDs still.')
+const filterOutUnusedIDs = (missions: any): void => {
+  let mission: any
+
+  if (missions instanceof Array) {
+    for (let mission of missions) {
+      return filterOutUnusedIDs(mission)
+    }
+    return
+  } else {
+    mission = missions._doc
+  }
+
+  delete mission._id
+
+  if (mission.nodeData instanceof Array) {
+    for (let node of mission.nodeData) {
+      node = node._doc
+      delete node._id
+
+      if (node.actions instanceof Array) {
+        for (let action of node.actions) {
+          action = action._doc
+          delete action._id
+        }
+      }
+    }
+  }
 }
 
-MissionSchema.post(/^find/, function (docs) {
-  filterOutUnusedIDs(docs)
+MissionSchema.pre('save', function (next) {
+  enforceUniqueIDs(this, next)
 })
 MissionSchema.pre('update', function (next) {
   enforceUniqueIDs(this, next)
 })
-MissionSchema.pre('save', function (next) {
-  enforceUniqueIDs(this, next)
+MissionSchema.post(/^find/, function (docs) {
+  filterOutUnusedIDs(docs)
 })
 
 const MissionModel: any = mongoose.model('Mission', MissionSchema)
