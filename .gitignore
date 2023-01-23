@@ -16,6 +16,7 @@ npm-debug.log*
 .env.test.local
 .env.production.local
 environment.json
+environment-test.json
 
 # log
 /logs
