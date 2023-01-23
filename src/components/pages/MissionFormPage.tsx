@@ -325,7 +325,7 @@ export default function MissionFormPage(
       if (missionDetailsIsActive && missionEmptyStringArray.length > 0) {
         appActions.notify(
           `**Error:** The mission side panel has at least one field that was left empty. This field must contain at least one character.`,
-          null,
+          { duration: null },
         )
         return onInvalid()
       }
@@ -335,7 +335,7 @@ export default function MissionFormPage(
       ) {
         appActions.notify(
           `**Error:** The node called "${selectedNode.name.toLowerCase()}" has at least one field that was left empty. These fields must contain at least one character.`,
-          null,
+          { duration: null },
         )
         return onInvalid()
       }
@@ -730,7 +730,7 @@ function NodeEntry(props: {
                 } else if (node !== null) {
                   appActions.notify(
                     `**Error:** The node called "${node.name.toLowerCase()}" has at least one field that was left empty. These fields must contain at least one character.`,
-                    null,
+                    { duration: null },
                   )
                 }
                 setMountHandled(false)
@@ -853,7 +853,7 @@ function NodeEntry(props: {
 
                     appActions.notify(
                       `Auto-generated an action for ${node.name} because it is an executable node with no actions to execute.`,
-                      10000,
+                      { duration: 10000 },
                     )
                   }
                 }
@@ -977,7 +977,7 @@ function NodeActions(props: {
       } else {
         appActions.notify(
           `**Error:** The node called "${node.name.toLowerCase()}" has at least one field that was left empty. These fields must contain at least one character.`,
-          null,
+          { duration: null },
         )
       }
     }
@@ -994,7 +994,7 @@ function NodeActions(props: {
     } else {
       appActions.notify(
         `**Error:** The node called "${node?.name.toLowerCase()}" has at least one field that was left empty. These fields must contain at least one character.`,
-        null,
+        { duration: null },
       )
     }
   }

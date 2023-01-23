@@ -13,6 +13,7 @@ import Notification from '../modules/notifications'
 import NotificationBubble from './content/NotificationBubble'
 import Confirmation from './content/Confirmation'
 import { tooltipsOffsetX, tooltipsOffsetY } from './content/Tooltip'
+import Prompt from './content/Prompt'
 
 // Default props in every page.
 export interface IPage {
@@ -185,6 +186,7 @@ function App(props: {
       {appState.confirmation !== null ? (
         <Confirmation {...appState.confirmation} />
       ) : null}
+      {appState.prompt !== null ? <Prompt {...appState.prompt} /> : null}
       <ServerErrorPage {...pageProps} />
       <LoadingPage {...pageProps} />
       {renderCurrentPage()}

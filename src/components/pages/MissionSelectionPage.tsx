@@ -16,6 +16,8 @@ import AppState, { AppActions } from '../AppState'
 import Navigation from '../content/Navigation'
 import MissionSelectionRow from '../content/MissionSelectionRow'
 import axios from 'axios'
+import { ButtonText } from '../content/ButtonText'
+import Notification from '../../modules/notifications'
 
 export interface IMissionSelectionPage extends IPage {}
 
@@ -104,6 +106,10 @@ export default function MissionSelectionPage(
     let successfulImportCount = 0
     let invalidContentsCount = 0
     let invalidFileExtensionCount: number = 0
+    let invalidContentsErrorMessages: Array<{
+      fileName: string
+      errorMessage: string
+    }> = []
 
     // This is called when a file
     // import is processed, whether
@@ -124,10 +130,33 @@ export default function MissionSelectionPage(
         }
         // Notifies of failed uploads.
         if (invalidContentsCount > 0) {
-          appActions.notify(
+          let notification: Notification = appActions.notify(
             `${invalidContentsCount} of the files uploaded did not have valid content and therefore ${
               invalidContentsCount === 1 ? 'was' : 'were'
             } rejected.`,
+            {
+              duration: null,
+              buttons: [
+                {
+                  ...ButtonText.defaultProps,
+                  text: 'View errors',
+                  handleClick: () => {
+                    let prompt: string = ''
+
+                    for (let errorMessage of invalidContentsErrorMessages) {
+                      prompt += `**${errorMessage.fileName}**\n`
+                      prompt += `\`\`\``
+                      prompt += errorMessage.errorMessage
+                      prompt += `\`\`\``
+                    }
+
+                    notification.dismiss()
+                    appActions.prompt(prompt)
+                  },
+                  componentKey: 'invalid-contents-view-errors',
+                },
+              ],
+            },
           )
         }
         // Notifies of invalid files
@@ -166,9 +195,14 @@ export default function MissionSelectionPage(
     importMissions(
       validFiles,
       false,
-      (successCount: number, failureCount: number) => {
+      (
+        successCount: number,
+        failureCount: number,
+        errorMessages: Array<{ fileName: string; errorMessage: string }>,
+      ) => {
         successfulImportCount += successCount
         invalidContentsCount += failureCount
+        invalidContentsErrorMessages = errorMessages
         handleFileImportCompletion()
       },
       (error: Error) =>

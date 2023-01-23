@@ -128,9 +128,16 @@ router.post(
               databaseLogger.error('Failed to import mission:')
               databaseLogger.error(error)
 
+              let fileName: string = file.originalname
+              let errorMessage: string = error.message
+
+              while (errorMessage.includes('`')) {
+                errorMessage = errorMessage.replace('`', '*')
+              }
+
               failedImportErrorMessages.push({
-                fileName: file.filename,
-                errorMessage: error.message,
+                fileName,
+                errorMessage,
               })
 
               failedImportCount++

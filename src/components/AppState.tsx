@@ -4,9 +4,11 @@ import usersModule from '../modules/users'
 import { IUser } from '../modules/users'
 import { AnyObject } from 'mongoose'
 import Confirmation, { IConfirmation } from './content/Confirmation'
+import Prompt, { IPrompt } from './content/Prompt'
 import Notification from '../modules/notifications'
 import { EAjaxStatus } from '../modules/toolbox/ajax'
 import { IAuthPageSpecific } from './pages/AuthPage'
+import { ButtonText, IButtonText } from './content/ButtonText'
 
 /* -- INTERFACES -- */
 
@@ -26,6 +28,7 @@ export interface IAppStateValues {
   notifications: Array<Notification>
   postLoadNotifications: Array<Notification>
   confirmation: IConfirmation | null
+  prompt: IPrompt | null
 }
 
 export interface IAppStateSetters {
@@ -44,6 +47,7 @@ export interface IAppStateSetters {
   setNotifications: (notifications: Array<Notification>) => void
   setPostLoadNotifications: (postLoadNotifications: Array<Notification>) => void
   setConfirmation: (confirmation: IConfirmation | null) => void
+  setPrompt: (prompt: IPrompt | null) => void
 }
 
 // Options available when confirming
@@ -57,6 +61,19 @@ export interface IConfirmOptions {
   buttonConfirmText?: string
   buttonAlternateText?: string
   buttonCancelText?: string
+}
+
+// Options available when prompting a user
+// with a message.
+export interface IPromptOptions {
+  buttonDismissalText?: string
+}
+
+// Options available when notifying
+// the user using the notify function.
+export interface INotifyOptions {
+  duration?: number | null
+  buttons?: Array<IButtonText>
 }
 
 /* -- CONSTANTS -- */
@@ -149,7 +166,7 @@ export class AppActions {
 
   // This can be called to the notify
   // the user of something.
-  notify = (message: string, duration?: number | null): Notification => {
+  notify = (message: string, options: INotifyOptions = {}): Notification => {
     let onLoadingPage: boolean =
       this.appState.loading ||
       !this.appState.loadingMinTimeReached ||
@@ -174,7 +191,7 @@ export class AppActions {
         }
         this.forceUpdate()
       },
-      { duration, startExpirationTimer: !onLoadingPage },
+      { ...options, startExpirationTimer: !onLoadingPage },
     )
 
     if (!onLoadingPage) {
@@ -249,6 +266,21 @@ export class AppActions {
     this.appState.setConfirmation(confirmation)
   }
 
+  // This will pop up a prompt box
+  // to inform the user of a something.
+  prompt = (message: string, options: IPromptOptions = {}): void => {
+    let prompt: IPrompt = {
+      active: true,
+      promptMessage: message,
+      handleDismissal: () => this.appState.setPrompt(null),
+      buttonDismissalText: options.buttonDismissalText
+        ? options.buttonDismissalText
+        : Prompt.defaultProps.buttonDismissalText,
+    }
+
+    this.appState.setPrompt(prompt)
+  }
+
   // This will logout the current user from
   // the session.
   logout = (authPageProps: IAuthPageSpecific) => {
@@ -286,6 +318,7 @@ export default class AppState implements IAppStateValues, IAppStateValues {
   notifications: Notification[]
   postLoadNotifications: Array<Notification>
   confirmation: IConfirmation | null
+  prompt: IPrompt | null
 
   setForcedUpdateCounter: (forcedUpdateCounter: number) => void
   setCurrentUser: (user: IUser | null) => void
@@ -302,6 +335,7 @@ export default class AppState implements IAppStateValues, IAppStateValues {
   setNotifications: (notifications: Notification[]) => void
   setPostLoadNotifications: (postLoadNotifications: Array<Notification>) => void
   setConfirmation: (confirmation: IConfirmation | null) => void
+  setPrompt: (prompt: IPrompt | null) => void
 
   static get defaultAppStateValues(): IAppStateValues {
     return {
@@ -320,6 +354,7 @@ export default class AppState implements IAppStateValues, IAppStateValues {
       notifications: [],
       postLoadNotifications: [],
       confirmation: null,
+      prompt: null,
     }
   }
 
@@ -340,6 +375,7 @@ export default class AppState implements IAppStateValues, IAppStateValues {
       setNotifications: (): void => {},
       setPostLoadNotifications: (): void => {},
       setConfirmation: (): void => {},
+      setPrompt: (): void => {},
     }
   }
 
@@ -362,6 +398,7 @@ export default class AppState implements IAppStateValues, IAppStateValues {
     this.notifications = appStateValues.notifications
     this.postLoadNotifications = appStateValues.postLoadNotifications
     this.confirmation = appStateValues.confirmation
+    this.prompt = appStateValues.prompt
 
     this.setForcedUpdateCounter = appStateSetters.setForcedUpdateCounter
     this.setCurrentUser = appStateSetters.setCurrentUser
@@ -379,6 +416,7 @@ export default class AppState implements IAppStateValues, IAppStateValues {
     this.setNotifications = appStateSetters.setNotifications
     this.setPostLoadNotifications = appStateSetters.setPostLoadNotifications
     this.setConfirmation = appStateSetters.setConfirmation
+    this.setPrompt = appStateSetters.setPrompt
   }
 
   // This will create a new app
@@ -433,6 +471,7 @@ export default class AppState implements IAppStateValues, IAppStateValues {
       const [confirmation, setConfirmation] = useStore<IConfirmation | null>(
         'confirmation',
       )
+      const [prompt, setPrompt] = useStore<IPrompt | null>('prompt')
 
       let appStateValues: IAppStateValues = {
         forcedUpdateCounter,
@@ -450,6 +489,7 @@ export default class AppState implements IAppStateValues, IAppStateValues {
         notifications,
         postLoadNotifications,
         confirmation,
+        prompt,
       }
       let appStateSetters: IAppStateSetters = {
         setForcedUpdateCounter,
@@ -467,6 +507,7 @@ export default class AppState implements IAppStateValues, IAppStateValues {
         setNotifications,
         setPostLoadNotifications,
         setConfirmation,
+        setPrompt,
       }
       let appState = new AppState(appStateValues, appStateSetters)
       appActions.appState = appState

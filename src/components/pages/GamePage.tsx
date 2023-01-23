@@ -295,13 +295,13 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
                           if (live) {
                             appActions.notify(
                               `${mission.name} was successfully turned on.`,
-                              3000,
+                              { duration: 3000 },
                             )
                             setLiveAjaxStatus(EAjaxStatus.Loaded)
                           } else {
                             appActions.notify(
                               `${mission.name} was successfully turned off.`,
-                              3000,
+                              { duration: 3000 },
                             )
                             setLiveAjaxStatus(EAjaxStatus.Loaded)
                           }
@@ -310,13 +310,13 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
                           if (live) {
                             appActions.notify(
                               `${mission.name} failed to turn on.`,
-                              3000,
+                              { duration: 3000 },
                             )
                             setLiveAjaxStatus(EAjaxStatus.Error)
                           } else {
                             appActions.notify(
                               `${mission.name} failed to turn off.`,
-                              3000,
+                              { duration: 3000 },
                             )
                             setLiveAjaxStatus(EAjaxStatus.Error)
                           }

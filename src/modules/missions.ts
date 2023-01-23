@@ -632,7 +632,11 @@ export function createMission(
 export function importMissions(
   files: FileList | Array<File>,
   expandAll: boolean,
-  callback: (successfulImportCount: number, failedImportCount: number) => void,
+  callback: (
+    successfulImportCount: number,
+    failedImportCount: number,
+    errorMessages: Array<{ fileName: string; errorMessage: string }>,
+  ) => void,
   callbackError: (error: AxiosError) => void = () => {},
 ): void {
   const formData = new FormData()
@@ -650,8 +654,16 @@ export function importMissions(
     .then((response: AxiosResponse<AnyObject>): void => {
       let successfulImportCount: number = response.data.successfulImportCount
       let failedImportCount: number = response.data.failedImportCount
+      let failedImportErrorMessages: Array<{
+        fileName: string
+        errorMessage: string
+      }> = response.data.failedImportErrorMessages
 
-      callback(successfulImportCount, failedImportCount)
+      callback(
+        successfulImportCount,
+        failedImportCount,
+        failedImportErrorMessages,
+      )
     })
     .catch((error: AxiosError) => {
       console.error('Failed to save mission.')
