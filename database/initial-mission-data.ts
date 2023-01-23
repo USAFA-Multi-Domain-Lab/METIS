@@ -37,7 +37,7 @@ export let attackMissionData = {
       preExecutionText: '',
       postExecutionSuccessText: '',
       postExecutionFailureText: '',
-
+      depthPadding: 0,
       executable: false,
       device: false,
       actions: [
@@ -94,7 +94,7 @@ export let attackMissionData = {
       preExecutionText: 'Cellular Network has not been executed.',
       postExecutionSuccessText: 'Cellular Network succeeded.',
       postExecutionFailureText: 'Cellular Network failed.',
-
+      depthPadding: 0,
       executable: false,
       device: false,
       actions: [
@@ -151,7 +151,7 @@ export let attackMissionData = {
       preExecutionText: 'Internet Provider has not been executed.',
       postExecutionSuccessText: 'Internet Provider has been executed.',
       postExecutionFailureText: 'Internet Provider has failed to execute.',
-
+      depthPadding: 0,
       executable: false,
       device: false,
       actions: [
@@ -208,7 +208,7 @@ export let attackMissionData = {
       preExecutionText: 'Instant Messaging has not been executed.',
       postExecutionSuccessText: 'Instant Messaging has been executed.',
       postExecutionFailureText: 'Instant Messaging has failed to execute.',
-
+      depthPadding: 0,
       executable: false,
       device: false,
       actions: [
@@ -265,7 +265,7 @@ export let attackMissionData = {
       preExecutionText: 'File Sharing Service has not been executed.',
       postExecutionSuccessText: 'File Sharing Service has been executed.',
       postExecutionFailureText: 'File Sharing Service has failed to execute.',
-
+      depthPadding: 0,
       executable: false,
       device: false,
       actions: [
@@ -322,7 +322,7 @@ export let attackMissionData = {
       preExecutionText: 'Callbank Cellular has not been executed.',
       postExecutionSuccessText: 'Callbank Cellular has been executed.',
       postExecutionFailureText: 'Callbank Cellular has failed to execute.',
-
+      depthPadding: 0,
       executable: false,
       device: false,
       actions: [
@@ -379,7 +379,7 @@ export let attackMissionData = {
       preExecutionText: 'Service Provider has not been executed.',
       postExecutionSuccessText: 'Service Provider has been executed.',
       postExecutionFailureText: 'Service Provider has failed to execute.',
-
+      depthPadding: 0,
       executable: false,
       device: false,
       actions: [
@@ -415,7 +415,7 @@ export let attackMissionData = {
       preExecutionText: 'Service Provider has not been executed.',
       postExecutionSuccessText: 'Service Provider has been executed.',
       postExecutionFailureText: 'Service Provider has failed to execute.',
-
+      depthPadding: 0,
       executable: false,
       device: false,
       actions: [
@@ -472,7 +472,7 @@ export let attackMissionData = {
       preExecutionText: 'Service Provider has not been executed.',
       postExecutionSuccessText: 'Service Provider has been executed.',
       postExecutionFailureText: 'Service Provider has failed to execute.',
-
+      depthPadding: 0,
       executable: false,
       device: false,
       actions: [
@@ -529,7 +529,7 @@ export let attackMissionData = {
       preExecutionText: 'Cellular Towers has not been executed.',
       postExecutionSuccessText: 'Cellular Towers has been executed.',
       postExecutionFailureText: 'Cellular Towers has failed to execute.',
-
+      depthPadding: 0,
       executable: true,
       device: false,
       actions: [
@@ -586,7 +586,7 @@ export let attackMissionData = {
       preExecutionText: 'Main Server has not been executed.',
       postExecutionSuccessText: 'Main Server has been executed.',
       postExecutionFailureText: 'Main Server has failed to execute.',
-
+      depthPadding: 0,
       executable: true,
       device: true,
       actions: [
@@ -643,7 +643,7 @@ export let attackMissionData = {
       preExecutionText: 'Main Server has not been executed.',
       postExecutionSuccessText: 'Main Server has been executed.',
       postExecutionFailureText: 'Main Server has failed to execute.',
-
+      depthPadding: 0,
       executable: true,
       device: false,
       actions: [
@@ -700,7 +700,7 @@ export let attackMissionData = {
       preExecutionText: 'Main Server has not been executed.',
       postExecutionSuccessText: 'Main Server has been executed.',
       postExecutionFailureText: 'Main Server has failed to execute.',
-
+      depthPadding: 0,
       executable: true,
       device: true,
       actions: [
@@ -757,7 +757,7 @@ export let attackMissionData = {
       preExecutionText: '',
       postExecutionSuccessText: '',
       postExecutionFailureText: '',
-
+      depthPadding: 0,
       executable: false,
       device: false,
       actions: [
@@ -814,7 +814,7 @@ export let attackMissionData = {
       preExecutionText: 'IADS Network has not been executed.',
       postExecutionSuccessText: 'IADS Network has been executed.',
       postExecutionFailureText: 'IADS Network has failed to execute.',
-
+      depthPadding: 0,
       executable: false,
       device: false,
       actions: [
@@ -871,7 +871,7 @@ export let attackMissionData = {
       preExecutionText: 'Individual IADS Sites has not been executed.',
       postExecutionSuccessText: 'Individual IADS Sites has been executed.',
       postExecutionFailureText: 'Individual IADS Sites has failed to execute.',
-
+      depthPadding: 0,
       executable: false,
       device: false,
       actions: [
@@ -928,7 +928,7 @@ export let attackMissionData = {
       preExecutionText: 'Launchers has not been executed.',
       postExecutionSuccessText: 'Launchers has been executed.',
       postExecutionFailureText: 'Launchers has failed to execute.',
-
+      depthPadding: 0,
       executable: true,
       device: true,
       actions: [
@@ -985,7 +985,7 @@ export let attackMissionData = {
       preExecutionText: 'Radars has not been executed.',
       postExecutionSuccessText: 'Radars has been executed.',
       postExecutionFailureText: 'Radars has failed to execute.',
-
+      depthPadding: 0,
       executable: true,
       device: false,
       actions: [
@@ -1042,7 +1042,7 @@ export let attackMissionData = {
       preExecutionText: '',
       postExecutionSuccessText: '',
       postExecutionFailureText: '',
-
+      depthPadding: 0,
       executable: false,
       device: false,
       actions: [
@@ -1099,7 +1099,7 @@ export let attackMissionData = {
       preExecutionText: 'Railroad System has not been executed.',
       postExecutionSuccessText: 'Railroad System has been executed.',
       postExecutionFailureText: 'Railroad System has failed to execute.',
-
+      depthPadding: 0,
       executable: false,
       device: false,
       actions: [
@@ -1156,7 +1156,7 @@ export let attackMissionData = {
       preExecutionText: 'Electrical System has not been executed.',
       postExecutionSuccessText: 'Electrical System has been executed.',
       postExecutionFailureText: 'Electrical System has failed to execute.',
-
+      depthPadding: 0,
       executable: false,
       device: false,
       actions: [
@@ -1213,7 +1213,7 @@ export let attackMissionData = {
       preExecutionText: 'Water System has not been executed.',
       postExecutionSuccessText: 'Water System has been executed.',
       postExecutionFailureText: 'Water System has failed to execute.',
-
+      depthPadding: 0,
       executable: false,
       device: false,
       actions: [
@@ -1270,7 +1270,7 @@ export let attackMissionData = {
       preExecutionText: 'Road System has not been executed.',
       postExecutionSuccessText: 'Road System has been executed.',
       postExecutionFailureText: 'Road System has failed to execute.',
-
+      depthPadding: 0,
       executable: false,
       device: false,
       actions: [
@@ -1327,7 +1327,7 @@ export let attackMissionData = {
       preExecutionText: 'Track Monitoring has not been executed.',
       postExecutionSuccessText: 'Track Monitoring has been executed.',
       postExecutionFailureText: 'Track Monitoring has failed to execute.',
-
+      depthPadding: 0,
       executable: true,
       device: false,
       actions: [
@@ -1384,7 +1384,7 @@ export let attackMissionData = {
       preExecutionText: 'Track Switch System has not been executed.',
       postExecutionSuccessText: 'Track Switch System has been executed.',
       postExecutionFailureText: 'Track Switch System has failed to execute.',
-
+      depthPadding: 0,
       executable: true,
       device: true,
       actions: [
@@ -1441,7 +1441,7 @@ export let attackMissionData = {
       preExecutionText: 'Regional Service has not been executed.',
       postExecutionSuccessText: 'Regional Service has been executed.',
       postExecutionFailureText: 'Regional Service has failed to execute.',
-
+      depthPadding: 0,
       executable: true,
       device: false,
       actions: [
@@ -1498,7 +1498,7 @@ export let attackMissionData = {
       preExecutionText: 'Valve System has not been executed.',
       postExecutionSuccessText: 'Valve System has been executed.',
       postExecutionFailureText: 'Valve System has failed to execute.',
-
+      depthPadding: 0,
       executable: true,
       device: true,
       actions: [
@@ -1555,7 +1555,7 @@ export let attackMissionData = {
       preExecutionText: 'Traffic Light System has not been executed.',
       postExecutionSuccessText: 'Traffic Light System has been executed.',
       postExecutionFailureText: 'Traffic Light System has failed to execute.',
-
+      depthPadding: 0,
       executable: true,
       device: false,
       actions: [
@@ -1612,7 +1612,7 @@ export let attackMissionData = {
       preExecutionText: 'CCTV System has not been executed.',
       postExecutionSuccessText: 'CCTV System has been executed.',
       postExecutionFailureText: 'CCTV System has failed to execute.',
-
+      depthPadding: 0,
       executable: true,
       device: true,
       actions: [
@@ -1669,7 +1669,7 @@ export let attackMissionData = {
       preExecutionText: '',
       postExecutionSuccessText: '',
       postExecutionFailureText: '',
-
+      depthPadding: 0,
       executable: false,
       device: false,
       actions: [
@@ -1726,7 +1726,7 @@ export let attackMissionData = {
       preExecutionText: 'Global Positioning has not been executed.',
       postExecutionSuccessText: 'Global Positioning has been executed.',
       postExecutionFailureText: 'Global Positioning has failed to execute.',
-
+      depthPadding: 0,
       executable: true,
       device: true,
       actions: [
@@ -1783,7 +1783,7 @@ export let attackMissionData = {
       preExecutionText: 'Data Transfer has not been executed.',
       postExecutionSuccessText: 'Data Transfer has been executed.',
       postExecutionFailureText: 'Data Transfer has failed to execute.',
-
+      depthPadding: 0,
       executable: true,
       device: false,
       actions: [
@@ -1840,7 +1840,7 @@ export let attackMissionData = {
       preExecutionText: 'Imagery Collection has not been executed.',
       postExecutionSuccessText: 'Imagery Collection has been executed.',
       postExecutionFailureText: 'Imagery Collection has failed to execute.',
-
+      depthPadding: 0,
       executable: true,
       device: true,
       actions: [
@@ -1897,7 +1897,7 @@ export let attackMissionData = {
       preExecutionText: 'Sensor Observation has not been executed.',
       postExecutionSuccessText: 'Sensor Observation has been executed.',
       postExecutionFailureText: 'Sensor Observation has failed to execute.',
-
+      depthPadding: 0,
       executable: true,
       device: false,
       actions: [
@@ -1987,7 +1987,7 @@ export let defensiveMissionData = {
       preExecutionText: '',
       postExecutionSuccessText: '',
       postExecutionFailureText: '',
-
+      depthPadding: 0,
       executable: false,
       device: false,
       actions: [
@@ -2044,7 +2044,7 @@ export let defensiveMissionData = {
       preExecutionText: 'Cellular Network has not been executed.',
       postExecutionSuccessText: 'Cellular Network succeeded.',
       postExecutionFailureText: 'Cellular Network failed.',
-
+      depthPadding: 0,
       executable: false,
       device: false,
       actions: [
@@ -2101,7 +2101,7 @@ export let defensiveMissionData = {
       preExecutionText: 'Internet Provider has not been executed.',
       postExecutionSuccessText: 'Internet Provider has been executed.',
       postExecutionFailureText: 'Internet Provider has failed to execute.',
-
+      depthPadding: 0,
       executable: false,
       device: false,
       actions: [
@@ -2158,7 +2158,7 @@ export let defensiveMissionData = {
       preExecutionText: 'Instant Messaging has not been executed.',
       postExecutionSuccessText: 'Instant Messaging has been executed.',
       postExecutionFailureText: 'Instant Messaging has failed to execute.',
-
+      depthPadding: 0,
       executable: false,
       device: false,
       actions: [
@@ -2215,7 +2215,7 @@ export let defensiveMissionData = {
       preExecutionText: 'File Sharing Service has not been executed.',
       postExecutionSuccessText: 'File Sharing Service has been executed.',
       postExecutionFailureText: 'File Sharing Service has failed to execute.',
-
+      depthPadding: 0,
       executable: false,
       device: false,
       actions: [
@@ -2272,7 +2272,7 @@ export let defensiveMissionData = {
       preExecutionText: 'Callbank Cellular has not been executed.',
       postExecutionSuccessText: 'Callbank Cellular has been executed.',
       postExecutionFailureText: 'Callbank Cellular has failed to execute.',
-
+      depthPadding: 0,
       executable: false,
       device: false,
       actions: [
@@ -2329,7 +2329,7 @@ export let defensiveMissionData = {
       preExecutionText: 'Service Provider has not been executed.',
       postExecutionSuccessText: 'Service Provider has been executed.',
       postExecutionFailureText: 'Service Provider has failed to execute.',
-
+      depthPadding: 0,
       executable: false,
       device: false,
       actions: [
@@ -2365,7 +2365,7 @@ export let defensiveMissionData = {
       preExecutionText: 'Service Provider has not been executed.',
       postExecutionSuccessText: 'Service Provider has been executed.',
       postExecutionFailureText: 'Service Provider has failed to execute.',
-
+      depthPadding: 0,
       executable: false,
       device: false,
       actions: [
@@ -2422,7 +2422,7 @@ export let defensiveMissionData = {
       preExecutionText: 'Service Provider has not been executed.',
       postExecutionSuccessText: 'Service Provider has been executed.',
       postExecutionFailureText: 'Service Provider has failed to execute.',
-
+      depthPadding: 0,
       executable: false,
       device: false,
       actions: [
@@ -2479,7 +2479,7 @@ export let defensiveMissionData = {
       preExecutionText: 'Cellular Towers has not been executed.',
       postExecutionSuccessText: 'Cellular Towers has been executed.',
       postExecutionFailureText: 'Cellular Towers has failed to execute.',
-
+      depthPadding: 0,
       executable: true,
       device: false,
       actions: [
@@ -2536,7 +2536,7 @@ export let defensiveMissionData = {
       preExecutionText: 'Main Server has not been executed.',
       postExecutionSuccessText: 'Main Server has been executed.',
       postExecutionFailureText: 'Main Server has failed to execute.',
-
+      depthPadding: 0,
       executable: true,
       device: true,
       actions: [
@@ -2593,7 +2593,7 @@ export let defensiveMissionData = {
       preExecutionText: 'Main Server has not been executed.',
       postExecutionSuccessText: 'Main Server has been executed.',
       postExecutionFailureText: 'Main Server has failed to execute.',
-
+      depthPadding: 0,
       executable: true,
       device: false,
       actions: [
@@ -2650,7 +2650,7 @@ export let defensiveMissionData = {
       preExecutionText: 'Main Server has not been executed.',
       postExecutionSuccessText: 'Main Server has been executed.',
       postExecutionFailureText: 'Main Server has failed to execute.',
-
+      depthPadding: 0,
       executable: true,
       device: true,
       actions: [
@@ -2707,7 +2707,7 @@ export let defensiveMissionData = {
       preExecutionText: '',
       postExecutionSuccessText: '',
       postExecutionFailureText: '',
-
+      depthPadding: 0,
       executable: false,
       device: false,
       actions: [
@@ -2764,7 +2764,7 @@ export let defensiveMissionData = {
       preExecutionText: 'IADS Network has not been executed.',
       postExecutionSuccessText: 'IADS Network has been executed.',
       postExecutionFailureText: 'IADS Network has failed to execute.',
-
+      depthPadding: 0,
       executable: false,
       device: false,
       actions: [
@@ -2821,7 +2821,7 @@ export let defensiveMissionData = {
       preExecutionText: 'Individual IADS Sites has not been executed.',
       postExecutionSuccessText: 'Individual IADS Sites has been executed.',
       postExecutionFailureText: 'Individual IADS Sites has failed to execute.',
-
+      depthPadding: 0,
       executable: false,
       device: false,
       actions: [
@@ -2878,7 +2878,7 @@ export let defensiveMissionData = {
       preExecutionText: 'Launchers has not been executed.',
       postExecutionSuccessText: 'Launchers has been executed.',
       postExecutionFailureText: 'Launchers has failed to execute.',
-
+      depthPadding: 0,
       executable: true,
       device: false,
       actions: [
@@ -2935,7 +2935,7 @@ export let defensiveMissionData = {
       preExecutionText: 'Radars has not been executed.',
       postExecutionSuccessText: 'Radars has been executed.',
       postExecutionFailureText: 'Radars has failed to execute.',
-
+      depthPadding: 0,
       executable: true,
       device: false,
       actions: [
@@ -2992,7 +2992,7 @@ export let defensiveMissionData = {
       preExecutionText: '',
       postExecutionSuccessText: '',
       postExecutionFailureText: '',
-
+      depthPadding: 0,
       executable: false,
       device: false,
       actions: [
@@ -3049,7 +3049,7 @@ export let defensiveMissionData = {
       preExecutionText: 'Railroad System has not been executed.',
       postExecutionSuccessText: 'Railroad System has been executed.',
       postExecutionFailureText: 'Railroad System has failed to execute.',
-
+      depthPadding: 0,
       executable: false,
       device: false,
       actions: [
@@ -3106,7 +3106,7 @@ export let defensiveMissionData = {
       preExecutionText: 'Electrical System has not been executed.',
       postExecutionSuccessText: 'Electrical System has been executed.',
       postExecutionFailureText: 'Electrical System has failed to execute.',
-
+      depthPadding: 0,
       executable: false,
       device: false,
       actions: [
@@ -3163,7 +3163,7 @@ export let defensiveMissionData = {
       preExecutionText: 'Water System has not been executed.',
       postExecutionSuccessText: 'Water System has been executed.',
       postExecutionFailureText: 'Water System has failed to execute.',
-
+      depthPadding: 0,
       executable: false,
       device: false,
       actions: [
@@ -3220,7 +3220,7 @@ export let defensiveMissionData = {
       preExecutionText: 'Road System has not been executed.',
       postExecutionSuccessText: 'Road System has been executed.',
       postExecutionFailureText: 'Road System has failed to execute.',
-
+      depthPadding: 0,
       executable: false,
       device: false,
       actions: [
@@ -3277,7 +3277,7 @@ export let defensiveMissionData = {
       preExecutionText: 'Track Monitoring has not been executed.',
       postExecutionSuccessText: 'Track Monitoring has been executed.',
       postExecutionFailureText: 'Track Monitoring has failed to execute.',
-
+      depthPadding: 0,
       executable: true,
       device: false,
       actions: [
@@ -3334,7 +3334,7 @@ export let defensiveMissionData = {
       preExecutionText: 'Track Switch System has not been executed.',
       postExecutionSuccessText: 'Track Switch System has been executed.',
       postExecutionFailureText: 'Track Switch System has failed to execute.',
-
+      depthPadding: 0,
       executable: true,
       device: true,
       actions: [
@@ -3391,7 +3391,7 @@ export let defensiveMissionData = {
       preExecutionText: 'Regional Service has not been executed.',
       postExecutionSuccessText: 'Regional Service has been executed.',
       postExecutionFailureText: 'Regional Service has failed to execute.',
-
+      depthPadding: 0,
       executable: true,
       device: false,
       actions: [
@@ -3448,7 +3448,7 @@ export let defensiveMissionData = {
       preExecutionText: 'Valve System has not been executed.',
       postExecutionSuccessText: 'Valve System has been executed.',
       postExecutionFailureText: 'Valve System has failed to execute.',
-
+      depthPadding: 0,
       executable: true,
       device: true,
       actions: [
@@ -3505,7 +3505,7 @@ export let defensiveMissionData = {
       preExecutionText: 'Traffic Light System has not been executed.',
       postExecutionSuccessText: 'Traffic Light System has been executed.',
       postExecutionFailureText: 'Traffic Light System has failed to execute.',
-
+      depthPadding: 0,
       executable: true,
       device: false,
       actions: [
@@ -3562,7 +3562,7 @@ export let defensiveMissionData = {
       preExecutionText: 'CCTV System has not been executed.',
       postExecutionSuccessText: 'CCTV System has been executed.',
       postExecutionFailureText: 'CCTV System has failed to execute.',
-
+      depthPadding: 0,
       executable: true,
       device: true,
       actions: [
@@ -3619,7 +3619,7 @@ export let defensiveMissionData = {
       preExecutionText: '',
       postExecutionSuccessText: '',
       postExecutionFailureText: '',
-
+      depthPadding: 0,
       executable: false,
       device: false,
       actions: [
@@ -3676,7 +3676,7 @@ export let defensiveMissionData = {
       preExecutionText: 'Global Positioning has not been executed.',
       postExecutionSuccessText: 'Global Positioning has been executed.',
       postExecutionFailureText: 'Global Positioning has failed to execute.',
-
+      depthPadding: 0,
       executable: true,
       device: true,
       actions: [
@@ -3733,7 +3733,7 @@ export let defensiveMissionData = {
       preExecutionText: 'Data Transfer has not been executed.',
       postExecutionSuccessText: 'Data Transfer has been executed.',
       postExecutionFailureText: 'Data Transfer has failed to execute.',
-
+      depthPadding: 0,
       executable: true,
       device: false,
       actions: [
@@ -3790,7 +3790,7 @@ export let defensiveMissionData = {
       preExecutionText: 'Imagery Collection has not been executed.',
       postExecutionSuccessText: 'Imagery Collection has been executed.',
       postExecutionFailureText: 'Imagery Collection has failed to execute.',
-
+      depthPadding: 0,
       executable: true,
       device: true,
       actions: [
@@ -3847,7 +3847,7 @@ export let defensiveMissionData = {
       preExecutionText: 'Sensor Observation has not been executed.',
       postExecutionSuccessText: 'Sensor Observation has been executed.',
       postExecutionFailureText: 'Sensor Observation has failed to execute.',
-
+      depthPadding: 0,
       executable: true,
       device: false,
       actions: [

@@ -2,6 +2,8 @@
 # packages
 /node_modules
 npm-debug.log*
+/coverage
+.nyc_output
 
 # react
 /build
