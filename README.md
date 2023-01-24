@@ -28,7 +28,7 @@ This is a mini game used by the United States Air Force Academy to educate cadet
 
 ## environment-configuration
 
-To configure the app further, an `environment.json` can be created in the project directory with a custom configuration. This configuration will overrite values defined in `config.ts`. Any values not provided will simply remain as their defaults. Make sure the Mongo configuration in the file works with the Mongo server you have running. An example `environment.json` is provided below.
+To configure the app further, an `environment.json` and/or `environment-test.json` can be created in the project directory with a custom configuration. This configuration will overrite values defined in `config.ts`. Any values not provided will simply remain as their defaults. Make sure the Mongo configuration in the file works with the Mongo server you have running. An example `environment.json` is provided below.
 
 ---
 
@@ -42,3 +42,11 @@ environment.json
 ```
 
 ---
+
+environment-test.json
+
+```json
+{
+ "MONGO_DB": "mdl-test"
+}
+```
