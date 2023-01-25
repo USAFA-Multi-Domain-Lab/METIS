@@ -11,7 +11,7 @@
   padding: 0;
   margin: 0;
   padding: 10px 20px 25px 20px;
-  overflow-y: auto;
+  overflow-y: scroll;
   overflow-x: hidden;
 
   .x {
@@ -31,9 +31,6 @@
   .PromptDisplayText {
     font-size: 0.95em;
     margin: 0 0 10px;
-    overflow-y: auto;
-    overflow-x: hidden;
-    list-style-type: none;
     height: fit-content;
   }
 
@@ -53,6 +50,7 @@
     padding: 5px;
     border: 2px solid $color-main;
     line-height: 20px;
+    overflow: hidden;
 
     &.NodeActionDefault:hover {
       cursor: pointer;
@@ -79,28 +77,45 @@
     margin: 0;
     border: 2px solid $color-main;
     background-color: $background-alt2;
-    max-height: 245px;
-    overflow-y: auto;
-    overflow-x: hidden;
-  }
+    height: auto;
 
-  .NodeAction {
-    display: flex;
-    justify-content: flex-start;
-    align-items: center;
-    width: 97%;
-    padding: 5px;
-    color: $color-accent-light;
-    list-style-type: none;
-    text-decoration: none;
+    .NodeAction {
+      display: flex;
+      justify-content: flex-start;
+      align-items: center;
+      width: 97%;
+      padding: 5px;
+      color: $color-accent-light;
+      list-style-type: none;
+      text-decoration: none;
 
-    &.NodeAction:hover {
-      cursor: pointer;
-      background-color: black;
+      &.NodeAction:hover {
+        cursor: pointer;
+        background-color: black;
+      }
     }
   }
 
   .hide {
     display: none;
+  }
+}
+
+@media only screen and (max-width: 700px) {
+  .NodeActions {
+    .PromptDisplayText {
+      width: 100%;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .NodeActionList {
+      .NodeAction {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+    }
   }
 }

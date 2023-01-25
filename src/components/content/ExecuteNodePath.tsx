@@ -5,6 +5,7 @@ import ActionPropertyDisplay from './ActionPropertyDisplay'
 import { Mission } from '../../modules/missions'
 import Notification from '../../modules/notifications'
 import Tooltip from './Tooltip'
+import { start } from 'repl'
 
 const ExecuteNodePath = (props: {
   mission: Mission
@@ -142,12 +143,19 @@ const ExecuteNodePath = (props: {
   let executionButtonClassName: string = 'Button ExecutionButton'
   let displayTooltip: boolean = false
   let additionalActionButtonClassName: string = 'Button AdditionalActionButton'
+  let gridTemplateColumns: string = 'auto auto'
+  let gridTemplateRows: string = 'none'
 
   if (mission.resources <= 0) {
     executionButtonClassName += ' disabled'
     displayTooltip = true
   } else if (selectedNode && selectedNode.actions.length === 1) {
     additionalActionButtonClassName += ' disabled'
+  }
+
+  if (actionName && actionName?.length >= 15) {
+    gridTemplateColumns = 'none'
+    gridTemplateRows = 'auto auto'
   }
 
   return (
@@ -159,7 +167,14 @@ const ExecuteNodePath = (props: {
         Do you want to {actionName?.toLowerCase()} {props.selectedNode?.name}?
       </p>
       <ActionPropertyDisplay selectedNode={props.selectedNode} />
-      <div className='Buttons'>
+      <div
+        className='Buttons'
+        style={{
+          gridTemplateColumns: `${gridTemplateColumns}`,
+          gridTemplateRows: `${gridTemplateRows}`,
+          placeContent: 'start',
+        }}
+      >
         <button
           className={executionButtonClassName}
           onClick={() => {

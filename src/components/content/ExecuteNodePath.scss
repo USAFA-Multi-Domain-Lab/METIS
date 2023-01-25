@@ -21,6 +21,12 @@
     overflow-x: hidden;
     list-style-type: none;
     height: fit-content;
+
+    @media only screen and (max-width: 655px) {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
   }
 
   .x {
@@ -38,39 +44,41 @@
   }
 
   .Buttons {
-    display: flex;
-    justify-content: flex-start;
-    align-items: center;
-    flex-flow: row wrap;
-  }
+    // styling for the grid-template-columns
+    // and grid-template-rows can be found
+    // in the "ExecuteNodePath.tsx file"
+    display: grid;
 
-  .ExecuteButtonTooltip {
-    display: none;
-  }
+    .Button {
+      text-align: center;
+      margin: 0 15px 15px 0;
+      color: $color-accent-light;
+      background-color: $background-alt2;
+      padding: 5px;
+      border: 2px solid $color-main;
+      border-radius: 4px;
+      height: fit-content;
+      width: fit-content;
 
-  .Button {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin: 20px 10px 20px 0;
-    color: $color-accent-light;
-    background-color: $background-alt2;
-    padding: 5px;
-    border: 2px solid $color-main;
-    border-radius: 4px;
-    height: auto;
+      &:hover {
+        cursor: pointer;
+        background-color: black;
+      }
 
-    &:hover {
-      cursor: pointer;
-      background-color: black;
-    }
+      &.disabled {
+        cursor: default;
+        opacity: 0.35;
 
-    &.disabled {
-      cursor: default;
-      opacity: 0.35;
+        &.disabled:hover {
+          background-color: $background-alt2;
+        }
+      }
 
-      &.disabled:hover {
-        background-color: $background-alt2;
+      @media only screen and (max-width: 655px) {
+        width: 100%;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
     }
   }
