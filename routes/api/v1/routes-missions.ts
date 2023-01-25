@@ -91,11 +91,90 @@ router.post(
 
       // Iterates through files.
       request.files.forEach((file, index: number) => {
+        let contents_string: string
+        let contents_JSON: any
+
         // Reads files contents.
-        let contents_string = fs.readFileSync(file.path, { encoding: 'utf-8' })
+        try {
+          contents_string = fs.readFileSync(file.path, {
+            encoding: 'utf-8',
+          })
+        } catch (error) {
+          // Error should only occur if the
+          // file does not have utf-8 encoding.
+          let fileName: string = file.originalname
+          let errorMessage: string =
+            'Failed to read file. This file is either not actually a .cesar file or is corrupted.'
+
+          // Error message is included in response.
+          failedImportErrorMessages.push({
+            fileName,
+            errorMessage,
+          })
+          failedImportCount++
+
+          // Returns since no further processing
+          // of this file should occur.
+          fileProcessCount++
+          return
+        }
 
         // Converts to JSON.
-        let contents_JSON = JSON.parse(contents_string)
+
+        try {
+          contents_JSON = JSON.parse(contents_string)
+        } catch (error: any) {
+          // An error may occur due
+          // to a syntax error with the JSON.
+          let fileName: string = file.originalname
+          let syntaxErrorRegularExpression: RegExp =
+            /in JSON at position [0-9]+/
+          let errorAsString: string = `${error}`
+          let errorMessage: string = 'Error parsing JSON.\n'
+
+          let syntaxErrorResults: RegExpMatchArray | null = errorAsString.match(
+            syntaxErrorRegularExpression,
+          )
+
+          if (syntaxErrorResults !== null) {
+            let match: string = syntaxErrorResults[0]
+            let matchSplit: string[] = match.split(' ')
+            let characterPosition: number = parseInt(
+              matchSplit[matchSplit.length - 1],
+            )
+            let contextStart: number = Math.max(characterPosition - 24, 0)
+            let contextEnd: number = Math.min(
+              characterPosition + 24,
+              contents_string.length - 1,
+            )
+            let surroundingContext: string = contents_string.substring(
+              contextStart,
+              contextEnd,
+            )
+
+            while (surroundingContext.includes('\n')) {
+              surroundingContext = surroundingContext.replace('\n', ' ')
+            }
+            surroundingContext = surroundingContext.trim()
+
+            errorMessage += `Unexpected token in JSON at character ${
+              characterPosition + 1
+            }.`
+            // errorMessage += `${surroundingContext}`
+          }
+
+          // Error is pushed and included in response.
+          failedImportErrorMessages.push({
+            fileName,
+            errorMessage,
+          })
+          failedImportCount++
+
+          // Returns since no further processing
+          // of this file should occur.
+          fileProcessCount++
+          return
+        }
 
         // Verifies valid properties were
         // included.
@@ -107,6 +186,7 @@ router.post(
           'nodeStructure' in contents_JSON &&
           'nodeData' in contents_JSON
         ) {
+          // Main properties extrated from contents.
           let name: any = contents_JSON.name
           let versionNumber: any = contents_JSON.versionNumber
           let live: any = false
@@ -114,6 +194,7 @@ router.post(
           let nodeStructure: any = contents_JSON.nodeStructure
           let nodeData: any = contents_JSON.nodeData
 
+          // Model created.
           let mission = new MissionModel({
             name,
             versionNumber,
@@ -123,6 +204,7 @@ router.post(
             nodeData,
           })
 
+          // Model saved.
           mission.save((error: Error) => {
             if (error) {
               databaseLogger.error('Failed to import mission:')

@@ -106,6 +106,7 @@ export default function MissionSelectionPage(
     let successfulImportCount = 0
     let invalidContentsCount = 0
     let invalidFileExtensionCount: number = 0
+    let serverErrorFailureCount: number = 0
     let invalidContentsErrorMessages: Array<{
       fileName: string
       errorMessage: string
@@ -128,6 +129,16 @@ export default function MissionSelectionPage(
             }.`,
           )
         }
+        // Notifies of files that were valid
+        // to upload but failed due to a server
+        // error.
+        if (serverErrorFailureCount) {
+          appActions.notify(
+            `An unexpected error occurred while importing ${serverErrorFailureCount} file${
+              serverErrorFailureCount !== 1 ? 's' : ''
+            }.`,
+          )
+        }
         // Notifies of failed uploads.
         if (invalidContentsCount > 0) {
           let notification: Notification = appActions.notify(
@@ -145,9 +156,9 @@ export default function MissionSelectionPage(
 
                     for (let errorMessage of invalidContentsErrorMessages) {
                       prompt += `**${errorMessage.fileName}**\n`
-                      prompt += `\`\`\``
-                      prompt += errorMessage.errorMessage
-                      prompt += `\`\`\``
+                      prompt += `\`\`\`\n`
+                      prompt += `${errorMessage.errorMessage}\n`
+                      prompt += `\`\`\`\n`
                     }
 
                     notification.dismiss()
@@ -205,8 +216,10 @@ export default function MissionSelectionPage(
         invalidContentsErrorMessages = errorMessages
         handleFileImportCompletion()
       },
-      (error: Error) =>
-        appActions.notify(`An unexpected error occurred while importing.`),
+      (error: Error) => {
+        serverErrorFailureCount += validFiles.length
+        handleFileImportCompletion()
+      },
     )
   }
 

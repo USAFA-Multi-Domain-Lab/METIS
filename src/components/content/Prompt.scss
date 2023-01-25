@@ -33,11 +33,12 @@
 
       .Message {
         overflow-y: auto;
+        box-sizing: border-box;
         margin: 0 auto;
         border: 2px solid $color-main;
         border-radius: 20px;
         max-height: 300px;
-        width: -moz-fit-content;
+        max-width: 100%;
         width: fit-content;
         padding: 10px 30px 25px;
         background-color: rgba($background-alt1, 1);

@@ -3,6 +3,7 @@ import path from 'path'
 import fs from 'fs'
 
 import config from './config'
+import { expressLogger, expressLoggingHandler } from './modules/logging'
 
 const app = express()
 
@@ -27,7 +28,7 @@ config.configure(
     // page not found handling
     app.use((request: any, response: any) => {
       response.status(404)
-      response.render('error/v-not-found')
+      return response.render('error/v-not-found')
     })
 
     // last line of defense error handling (generic server error)
@@ -35,10 +36,11 @@ config.configure(
       if (!error.status) {
         error.status = 500
       }
-      console.log(error)
+      expressLogger.error(error)
 
+      response.status(500)
       response.locals.error = error
-      response.render('error/v-server-error')
+      return response.render('error/v-server-error')
     })
 
     // establishes server to listen at the given port
