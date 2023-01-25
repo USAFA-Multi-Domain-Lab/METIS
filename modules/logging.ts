@@ -5,6 +5,7 @@ export const databaseLogger = winston.createLogger({
   level: 'info',
   format: winston.format.combine(
     winston.format.json(),
+    winston.format.timestamp(),
     winston.format.errors({ stack: true }),
   ),
   defaultMeta: { service: 'user-service' },
@@ -14,6 +15,7 @@ export const databaseLogger = winston.createLogger({
       level: 'error',
       format: winston.format.combine(
         winston.format.json(),
+        winston.format.timestamp(),
         winston.format.errors({ stack: true }),
         winston.format.colorize(),
         winston.format.prettyPrint(),
@@ -23,11 +25,48 @@ export const databaseLogger = winston.createLogger({
   ],
 })
 
-export const expressLogger = expressWinston.logger({
-  transports: [new winston.transports.File({ filename: 'logs/express.log' })],
+export const expressLogger = winston.createLogger({
+  level: 'info',
   format: winston.format.combine(
-    winston.format.colorize(),
     winston.format.json(),
+    winston.format.timestamp(),
+    winston.format.errors({ stack: true }),
+  ),
+  defaultMeta: { service: 'user-service' },
+  transports: [
+    new winston.transports.File({
+      filename: './logs/express-error.log',
+      level: 'error',
+      format: winston.format.combine(
+        winston.format.json(),
+        winston.format.timestamp(),
+        winston.format.errors({ stack: true }),
+        winston.format.colorize(),
+        winston.format.prettyPrint(),
+      ),
+    }),
+    new winston.transports.File({ filename: './logs/express.log' }),
+  ],
+})
+
+export const expressLoggingHandler = expressWinston.logger({
+  transports: [
+    new winston.transports.File({
+      filename: './logs/express-error.log',
+      level: 'error',
+      format: winston.format.combine(
+        winston.format.json(),
+        winston.format.timestamp(),
+        winston.format.errors({ stack: true }),
+        winston.format.colorize(),
+        winston.format.prettyPrint(),
+      ),
+    }),
+    new winston.transports.File({ filename: './logs/express.log' }),
+  ],
+  format: winston.format.combine(
+    winston.format.json(),
+    winston.format.timestamp(),
   ),
   meta: true, // optional: control whether you want to log the meta data about the request (default to true)
   msg: 'HTTP {{req.method}} {{req.url}}', // optional: customize the default logging message. E.g. "{{res.statusCode}} {{req.method}} {{res.responseTime}}ms {{req.url}}"
@@ -41,4 +80,5 @@ export const expressLogger = expressWinston.logger({
 export default {
   databaseLogger,
   expressLogger,
+  expressLoggingHandler,
 }

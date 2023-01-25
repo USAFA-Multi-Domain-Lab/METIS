@@ -22,3 +22,6 @@ environment-test.json
 # log
 /logs
 *.log
+
+# temp
+/temp

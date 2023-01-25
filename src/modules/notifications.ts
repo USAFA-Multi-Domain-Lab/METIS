@@ -1,7 +1,9 @@
 import { v4 as generateHash } from 'uuid'
+import { ButtonText, IButtonText } from '../components/content/ButtonText'
 
 export interface INotificationOptions {
   duration?: number | null
+  buttons?: Array<IButtonText>
   startExpirationTimer?: boolean
 }
 
@@ -14,6 +16,7 @@ export default class Notification {
   _message: string
   _handleDismissalOrExpiration: (dismissed: boolean, expired: boolean) => void
   _duration: number | null /* ms */
+  _buttons: Array<IButtonText>
   _dismissed: boolean
   _expired: boolean
   _expirationTimerStarted: boolean
@@ -28,6 +31,10 @@ export default class Notification {
 
   get duration(): number | null {
     return this._duration
+  }
+
+  get buttons(): Array<IButtonText> {
+    return this._buttons
   }
 
   // This is whether the user dismissed
@@ -60,6 +67,7 @@ export default class Notification {
     this._handleDismissalOrExpiration = handleDismissalOrExpiration
     this._duration =
       options.duration !== undefined ? options.duration : defaultDuration
+    this._buttons = options.buttons !== undefined ? options.buttons : []
     this._dismissed = false
     this._expired = false
     this._expirationTimerStarted = false

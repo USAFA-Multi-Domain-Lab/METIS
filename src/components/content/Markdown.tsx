@@ -61,13 +61,10 @@ export default class Markdown extends React.Component<
     let cursor: number = maxSpaceCount
     while (cursor > 1) {
       let spaces: string = ' '.repeat(cursor)
-      {
-        // ! REMOVE THIS CODE TO REMOVE GAP
-        // markdown = markdown.replaceAll(
-        //   spaces,
-        //   `<span>${'&nbsp;'.repeat(cursor)}</span>`,
-        // )
-      }
+      markdown = markdown.replaceAll(
+        spaces,
+        `<span>${'&nbsp;'.repeat(cursor)}</span>`,
+      )
       cursor--
     }
     markdown = markdown.replaceAll('\n ', '\n<span>&nbsp;</span>')

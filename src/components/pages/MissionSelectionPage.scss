@@ -10,6 +10,53 @@
   box-shadow: inset 0 0 0 10000000000px RGBA(0, 72, 124, 0.5);
   height: fit-content;
 
+  &.DropPending {
+    .FileDropBox {
+      opacity: 0.65;
+
+      .UploadIcon {
+        transform: scale(1);
+      }
+    }
+  }
+
+  &:not(.DropPending) {
+    .FileDropBox {
+      opacity: 0;
+
+      .UploadIcon {
+        transform: scale(0.65);
+      }
+    }
+  }
+
+  .FileDropBox {
+    pointer-events: none;
+    display: grid;
+    place-content: center;
+    box-sizing: border-box;
+    position: fixed;
+    z-index: $z-index-file-drop-box;
+    top: 0;
+    left: 0;
+    transition: opacity 175ms;
+    width: 100vw;
+    height: 100vh;
+    margin: 0;
+    padding: 0;
+    background: $color-accent;
+
+    .UploadIcon {
+      transition: transform 175ms;
+      width: 250px;
+      height: 250px;
+      background: url('/assets/images/icons/upload.svg');
+      background-size: contain;
+      background-position: center;
+      background-repeat: no-repeat;
+    }
+  }
+
   .Navigation {
     grid-template-columns: auto 130px;
     padding: 30px 30px 35px;
@@ -63,23 +110,23 @@
         }
       }
 
-      .IndividualMissionContainer {
-        display: none;
+      .MissionSelectionRow {
+        display: flex;
 
         &.show {
-          display: flex;
+          cursor: pointer;
           justify-content: flex-start;
           align-items: center;
           flex-flow: row wrap;
           width: fill;
 
-          &.IndividualMissionContainer:hover {
-            cursor: pointer;
+          &.MissionSelectionRow:hover {
             background-color: $node-blue;
             color: $terminal;
           }
 
           .MissionName {
+            cursor: pointer;
             padding: 10px 0 10px 20px;
             width: calc(100% - 10px);
             white-space: nowrap;
@@ -87,7 +134,6 @@
             text-overflow: ellipsis;
 
             &.MissionName:hover {
-              cursor: pointer;
               color: $terminal;
             }
           }
@@ -95,6 +141,10 @@
           .ActionsContainer {
             display: none;
           }
+        }
+
+        &:not(.show) {
+          display: none;
         }
       }
 
@@ -133,59 +183,66 @@
         border-bottom-left-radius: 0px;
         width: 75%;
 
-        .IndividualMissionContainer {
+        .MissionSelectionRow {
           .MissionName {
-            width: calc(100% - 200px);
+            display: block;
+            box-sizing: border-box;
+            height: 40px;
+            width: 100%;
           }
 
           .ActionsContainer {
             display: flex;
+            box-sizing: border-box;
+            margin-top: -40px;
+            margin-left: auto;
             justify-content: flex-end;
             align-items: center;
             flex-flow: row wrap;
             width: fit-content;
-            padding-right: 5px;
+            height: 40px;
+            padding-right: 15px;
 
-            .remove,
-            .copy,
-            .edit,
+            .ButtonSVG,
             .Toggle {
               &.remove:hover,
               &.copy:hover,
-              &.edit:hover {
+              &.edit:hover,
+              &.download:hover {
                 filter: invert(68%) sepia(94%) saturate(322%) hue-rotate(117deg)
                   brightness(200%) contrast(98%);
               }
             }
 
-            .edit {
-              background: url('../../assets/images/icons/edit.svg');
-              background-size: 65% 65%;
-              background-position: center;
-              background-repeat: no-repeat;
-              width: 1em;
-              height: 1em;
-              border: none;
-            }
+            .ButtonSVG {
+              @mixin background($url, $background-position: center) {
+                background: url($url);
+                background-repeat: no-repeat;
+                background-size: 65% 65%;
+                background-position: $background-position;
+                width: 1em;
+                height: 1em;
+                border: none;
+              }
 
-            .remove {
-              background: url('../../assets/images/icons/remove.svg');
-              background-size: 65% 65%;
-              background-position: center;
-              background-repeat: no-repeat;
-              width: 1em;
-              height: 1em;
-              border: none;
-            }
+              &.edit {
+                @include background('../../assets/images/icons/edit.svg');
+              }
 
-            .copy {
-              background: url('../../assets/images/icons/copy.svg');
-              background-size: 65% 65%;
-              background-position: center;
-              background-repeat: no-repeat;
-              width: 1em;
-              height: 1em;
-              border: none;
+              &.remove {
+                @include background('../../assets/images/icons/remove.svg');
+              }
+
+              &.copy {
+                @include background('../../assets/images/icons/copy.svg');
+              }
+
+              &.download {
+                @include background(
+                  $url: '../../assets/images/icons/download.svg',
+                  $background-position: center 75%
+                );
+              }
             }
 
             .Toggle {
@@ -209,7 +266,7 @@
                   background-color: $terminal;
                 }
               }
-              &.Locked:hover {
+              &.Locked {
                 cursor: pointer;
               }
             }
@@ -233,25 +290,33 @@
         border-bottom-right-radius: 15px;
         border-bottom-left-radius: 15px;
 
-        .NewMissionButton {
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          border: 2px solid white;
-          background-color: black;
-          border-radius: 10px;
-          font-weight: 400;
-          font-size: 1.5em;
-          width: 1.25em;
-          height: 1.25em;
-          margin: 0;
-          padding: 0;
+        // ! Alterations like this should be
+        // ! universal for these buttons to
+        // ! maintain consistent styling
+        // ! throughout the application.
+        //         .NewMissionButton {
+        //           display: flex;
+        //           justify-content: center;
+        //           align-items: center;
+        //           border: 2px solid white;
+        //           background-color: black;
+        //           border-radius: 10px;
+        //           font-weight: 400;
+        //           font-size: 1.5em;
+        //           width: 1.25em;
+        //           height: 1.25em;
+        //           margin: 0;
+        //           padding: 0;
+        //
+        //           &.NewMissionButton:hover {
+        //             cursor: pointer;
+        //             background-color: $node-blue;
+        //           }
+        //         }
+      }
 
-          &.NewMissionButton:hover {
-            cursor: pointer;
-            background-color: $node-blue;
-          }
-        }
+      .ButtonSVG {
+        transform: scale(0.8);
       }
     }
   }
@@ -260,7 +325,7 @@
     .MissionListContainer {
       .MissionList {
         &.show {
-          .IndividualMissionContainer {
+          .MissionSelectionRow {
             flex-flow: column;
             .MissionName {
               width: calc(100% - 20px);

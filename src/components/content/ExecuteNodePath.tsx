@@ -5,12 +5,12 @@ import ActionPropertyDisplay from './ActionPropertyDisplay'
 import { Mission } from '../../modules/missions'
 import Notification from '../../modules/notifications'
 import Tooltip from './Tooltip'
-import { start } from 'repl'
+import { INotifyOptions } from '../AppState'
 
 const ExecuteNodePath = (props: {
   mission: Mission
   selectedNode: MissionNode | null
-  notify: (message: string, duration?: number | null) => Notification
+  notify: (message: string, options: INotifyOptions) => Notification
   consoleOutputs: Array<{ date: number; value: string }>
   setConsoleOutputs: (consoleOutputs: { date: number; value: string }[]) => void
   setActionSelectionPromptIsDisplayed: (
@@ -119,13 +119,13 @@ const ExecuteNodePath = (props: {
         } else {
           props.notify(
             `You don't have enough resources left to spend on ${selectedNode.name}.`,
-            3500,
+            { duration: 3500 },
           )
         }
       } else if (resourceCost === undefined) {
         console.error(`The selected action's resource cost is undefined.`)
       } else {
-        props.notify(`You have no more resources to spend.`)
+        props.notify(`You have no more resources to spend.`, {})
       }
     }
   }

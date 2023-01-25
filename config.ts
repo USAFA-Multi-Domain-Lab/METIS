@@ -8,7 +8,7 @@ import MongoStore from 'connect-mongo'
 import database from './database/database'
 import mongoose from 'mongoose'
 import { sys } from 'typescript'
-import { expressLogger } from './modules/logging'
+import { expressLoggingHandler } from './modules/logging'
 
 declare module 'express-session' {
   export interface SessionData {
@@ -16,7 +16,7 @@ declare module 'express-session' {
   }
 }
 
-// -- config-variables | default-values --
+/* -- config-variables | default-values -- */
 
 export let SCHEMA_BUILD_NUMBER: number = 4
 
@@ -28,7 +28,9 @@ export let MONGO_PORT = 27017
 export let MONGO_USERNAME: string | undefined
 export let MONGO_PASSWORD: string | undefined
 
-// -- config-variables | environment-override --
+export const APP_DIR = path.join(__dirname)
+
+/* -- config-variables | environment-override -- */
 
 export let environmentFilePath: string = './environment.json'
 
@@ -64,6 +66,8 @@ if (fs.existsSync(environmentFilePath)) {
   }
 }
 
+/* -- functions -- */
+
 // This will configure the express app
 // for use.
 export function configure(
@@ -74,7 +78,7 @@ export function configure(
   let connection: mongoose.Connection | null
 
   // Logger setup.
-  app.use(expressLogger)
+  app.use(expressLoggingHandler)
 
   // Database setup.
   database.initialize(() => {
@@ -111,6 +115,14 @@ export function configure(
     // links the file path to css and resource files
     app.use(express.static('build'))
 
+    // This will do clean up when the application
+    // terminates.
+    process.on('SIGINT', () => {
+      // Deletes temp folder.
+      fs.rmdirSync(path.join(APP_DIR, 'temp'), { recursive: true })
+      process.exit()
+    })
+
     callback()
   }, callbackError)
 }
@@ -123,3 +135,6 @@ const defaultExports = {
 }
 
 export default defaultExports
+function multer(arg0: { dest: string }) {
+  throw new Error('Function not implemented.')
+}

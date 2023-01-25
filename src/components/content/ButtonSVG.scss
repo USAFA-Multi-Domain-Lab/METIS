@@ -85,4 +85,18 @@
     background-size: 17px 17px;
     background-repeat: no-repeat;
   }
+
+  &.upload {
+    background: url('/assets/images/icons/upload.svg'), $background-alt1;
+    background-position: 8.4px 9.5px;
+    background-size: 24px 24px;
+    background-repeat: no-repeat;
+  }
+
+  &.download {
+    background: url('/assets/images/icons/download.svg'), $background-alt1;
+    background-position: 7.5px 12.5px;
+    background-size: 25px 25px;
+    background-repeat: no-repeat;
+  }
 }

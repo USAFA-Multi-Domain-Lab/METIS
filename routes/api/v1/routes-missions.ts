@@ -1,9 +1,16 @@
 //npm imports
 import express from 'express'
+import fs from 'fs'
+import path from 'path'
+import { v4 as generateHash } from 'uuid'
+import { filterErrors_findOne } from '../../../database/api-call-handlers'
 import { ERROR_BAD_DATA } from '../../../database/database'
-import Mission from '../../../database/models/model-mission'
+import InfoModel from '../../../database/models/model-info'
+import MissionModel from '../../../database/models/model-mission'
 import { databaseLogger } from '../../../modules/logging'
 import { isLoggedIn, requireLogin } from '../../../user'
+import { APP_DIR } from '../../../config'
+import uploads from '../../../middleware/uploads'
 
 //fields
 const router = express.Router()
@@ -31,7 +38,7 @@ router.post('/', requireLogin, (request, response) => {
       let nodeStructure: any = missionData.nodeStructure
       let nodeData: any = missionData.nodeData
 
-      let mission = new Mission({
+      let mission = new MissionModel({
         name,
         versionNumber,
         live,
@@ -61,6 +68,207 @@ router.post('/', requireLogin, (request, response) => {
   }
 })
 
+// -- POST | /api/v1/missions/import/ --
+router.post(
+  '/import/',
+  requireLogin,
+  uploads.array('files', 12),
+  (request, response) => {
+    // Verifies files were included
+    // in the request.
+    if (
+      request.files &&
+      request.files instanceof Array &&
+      request.files.length > 0
+    ) {
+      let fileProcessCount: number = 0
+      let successfulImportCount: number = 0
+      let failedImportCount: number = 0
+      let failedImportErrorMessages: Array<{
+        fileName: string
+        errorMessage: string
+      }> = []
+
+      // Iterates through files.
+      request.files.forEach((file, index: number) => {
+        let contents_string: string
+        let contents_JSON: any
+
+        // Reads files contents.
+        try {
+          contents_string = fs.readFileSync(file.path, {
+            encoding: 'utf-8',
+          })
+        } catch (error) {
+          // Error should only occur if the
+          // file does not have utf-8 encoding.
+          let fileName: string = file.originalname
+          let errorMessage: string =
+            'Failed to read file. This file is either not actually a .cesar file or is corrupted.'
+
+          // Error message is included in response.
+          failedImportErrorMessages.push({
+            fileName,
+            errorMessage,
+          })
+          failedImportCount++
+
+          // Returns since no further processing
+          // of this file should occur.
+          fileProcessCount++
+          return
+        }
+
+        // Converts to JSON.
+
+        try {
+          contents_JSON = JSON.parse(contents_string)
+        } catch (error: any) {
+          // An error may occur due
+          // to a syntax error with the JSON.
+          let fileName: string = file.originalname
+          let syntaxErrorRegularExpression: RegExp =
+            /in JSON at position [0-9]+/
+          let errorAsString: string = `${error}`
+          let errorMessage: string = 'Error parsing JSON.\n'
+
+          let syntaxErrorResults: RegExpMatchArray | null = errorAsString.match(
+            syntaxErrorRegularExpression,
+          )
+
+          if (syntaxErrorResults !== null) {
+            let match: string = syntaxErrorResults[0]
+            let matchSplit: string[] = match.split(' ')
+            let characterPosition: number = parseInt(
+              matchSplit[matchSplit.length - 1],
+            )
+            let contextStart: number = Math.max(characterPosition - 24, 0)
+            let contextEnd: number = Math.min(
+              characterPosition + 24,
+              contents_string.length - 1,
+            )
+            let surroundingContext: string = contents_string.substring(
+              contextStart,
+              contextEnd,
+            )
+
+            while (surroundingContext.includes('\n')) {
+              surroundingContext = surroundingContext.replace('\n', ' ')
+            }
+            surroundingContext = surroundingContext.trim()
+
+            errorMessage += `Unexpected token in JSON at character ${
+              characterPosition + 1
+            }.`
+            // errorMessage += `${surroundingContext}`
+          }
+
+          // Error is pushed and included in response.
+          failedImportErrorMessages.push({
+            fileName,
+            errorMessage,
+          })
+          failedImportCount++
+
+          // Returns since no further processing
+          // of this file should occur.
+          fileProcessCount++
+          return
+        }
+
+        // Verifies valid properties were
+        // included.
+        if (
+          'name' in contents_JSON &&
+          'versionNumber' in contents_JSON &&
+          'initialResources' in contents_JSON &&
+          'schemaBuildNumber' in contents_JSON &&
+          'nodeStructure' in contents_JSON &&
+          'nodeData' in contents_JSON
+        ) {
+          // Main properties extrated from contents.
+          let name: any = contents_JSON.name
+          let versionNumber: any = contents_JSON.versionNumber
+          let live: any = false
+          let initialResources: any = contents_JSON.initialResources
+          let nodeStructure: any = contents_JSON.nodeStructure
+          let nodeData: any = contents_JSON.nodeData
+
+          // Model created.
+          let mission = new MissionModel({
+            name,
+            versionNumber,
+            live,
+            initialResources,
+            nodeStructure,
+            nodeData,
+          })
+
+          // Model saved.
+          mission.save((error: Error) => {
+            if (error) {
+              databaseLogger.error('Failed to import mission:')
+              databaseLogger.error(error)
+
+              let fileName: string = file.originalname
+              let errorMessage: string = error.message
+
+              while (errorMessage.includes('`')) {
+                errorMessage = errorMessage.replace('`', '*')
+              }
+
+              failedImportErrorMessages.push({
+                fileName,
+                errorMessage,
+              })
+
+              failedImportCount++
+            } else {
+              databaseLogger.info(`New mission created named "${name}".`)
+
+              successfulImportCount++
+            }
+
+            fileProcessCount++
+
+            if (fileProcessCount === request.files?.length) {
+              if (failedImportCount > 0) {
+                databaseLogger.error(
+                  `Failed to import ${failedImportCount} missions.`,
+                )
+              }
+
+              return response.json({
+                successfulImportCount,
+                failedImportCount,
+                failedImportErrorMessages,
+              })
+            }
+          })
+        } else {
+          failedImportCount++
+          fileProcessCount++
+        }
+      })
+
+      if (
+        fileProcessCount === request.files?.length &&
+        fileProcessCount === failedImportCount
+      ) {
+        databaseLogger.error(`Failed to import ${failedImportCount} missions.`)
+
+        return response.json({
+          successfulImportCount,
+          failedImportCount,
+          failedImportErrorMessages,
+        })
+      }
+    } else {
+      return response.sendStatus(400)
+    }
+  },
+)
+
 // -- GET | /api/v1/missions/ --
 // This will return all of the missions.
 router.get('/', (request, response) => {
@@ -73,7 +281,7 @@ router.get('/', (request, response) => {
       queries.live = true
     }
 
-    Mission.find({ ...queries })
+    MissionModel.find({ ...queries })
       .select('-deleted -nodeStructure -nodeData')
       .where('deleted')
       .equals(false)
@@ -88,7 +296,7 @@ router.get('/', (request, response) => {
         }
       })
   } else {
-    Mission.findOne({ missionID }).exec((error: Error, mission: any) => {
+    MissionModel.findOne({ missionID }).exec((error: Error, mission: any) => {
       if (error !== null) {
         databaseLogger.error(
           `Failed to retrieve mission with ID "${missionID}".`,
@@ -107,6 +315,72 @@ router.get('/', (request, response) => {
   }
 })
 
+// -- GET /api/v1/missions/export/
+// This will return all of the missions.
+router.get('/export/*', requireLogin, (request, response) => {
+  let missionID = request.query.missionID
+
+  if (missionID !== undefined) {
+    // Retrieve database info.
+    InfoModel.findOne(
+      { infoID: 'default' },
+      filterErrors_findOne('infos', response, (info: any) => {
+        databaseLogger.info('Database info retrieved.')
+
+        // Retrieve original mission.
+        MissionModel.findOne({ missionID }).exec(
+          filterErrors_findOne('missions', response, (mission: any) => {
+            databaseLogger.info(`Mission with ID "${missionID}" retrieved.`)
+
+            // Gather details for temporary file
+            // that will be sent in the response.
+            let tempSubfolderName: string = generateHash()
+            let tempFileName: string = `${mission.name}.cesar`
+            let tempFolderPath: string = path.join(
+              APP_DIR,
+              '/temp/missions/exports/',
+            )
+            let tempSubfolderPath: string = path.join(
+              tempFolderPath,
+              tempSubfolderName,
+            )
+            let tempFilePath: string = path.join(
+              tempSubfolderPath,
+              tempFileName,
+            )
+            let tempFileContents = JSON.stringify(
+              {
+                ...mission._doc,
+                missionID: undefined,
+                live: undefined,
+                deleted: undefined,
+                schemaBuildNumber: info.schemaBuildNumber,
+              },
+              null,
+              2,
+            )
+
+            // Create the temp directory
+            // if it doesn't exist.
+            if (!fs.existsSync(tempFolderPath)) {
+              fs.mkdirSync(tempFolderPath, { recursive: true })
+            }
+
+            // Create the file.
+            fs.mkdirSync(tempSubfolderPath, {})
+            fs.writeFileSync(tempFilePath, tempFileContents)
+
+            // Send it in the response.
+            response.sendFile(tempFilePath)
+          }),
+        )
+      }),
+    )
+  } else {
+    return response.sendStatus(400)
+  }
+})
+
 // -- PUT | /api/v1/missions/ --
 // This will update the mission.
 router.put('/', requireLogin, (request, response) => {
@@ -119,7 +393,7 @@ router.put('/', requireLogin, (request, response) => {
       let missionID: string = mission.missionID
       delete mission.missionID
 
-      Mission.updateOne({ missionID }, mission, (error: any) => {
+      MissionModel.updateOne({ missionID }, mission, (error: any) => {
         if (error !== null) {
           databaseLogger.error(
             `Failed to update mission with the ID "${missionID}".`,
@@ -148,41 +422,44 @@ router.put('/copy/', requireLogin, (request, response) => {
     let originalID: string = body.originalID
     let copyName: string = body.copyName
 
-    Mission.findOne({ missionID: originalID }, (error: any, mission: any) => {
-      if (error !== null) {
-        databaseLogger.error(
-          `Failed to copy mission with the original ID "${originalID}":`,
-        )
-        databaseLogger.error(error)
-        return response.sendStatus(500)
-      } else if (mission === null) {
-        return response.sendStatus(404)
-      } else {
-        let copy = new Mission({
-          name: copyName,
-          versionNumber: mission.versionNumber,
-          live: mission.live,
-          initialResources: mission.initialResources,
-          nodeStructure: mission.nodeStructure,
-          nodeData: mission.nodeData,
-        })
+    MissionModel.findOne(
+      { missionID: originalID },
+      (error: any, mission: any) => {
+        if (error !== null) {
+          databaseLogger.error(
+            `Failed to copy mission with the original ID "${originalID}":`,
+          )
+          databaseLogger.error(error)
+          return response.sendStatus(500)
+        } else if (mission === null) {
+          return response.sendStatus(404)
+        } else {
+          let copy = new MissionModel({
+            name: copyName,
+            versionNumber: mission.versionNumber,
+            live: mission.live,
+            initialResources: mission.initialResources,
+            nodeStructure: mission.nodeStructure,
+            nodeData: mission.nodeData,
+          })
 
-        copy.save((error: Error) => {
-          if (error) {
-            databaseLogger.error(
-              `Failed to copy mission with the original ID "${originalID}":`,
-            )
-            databaseLogger.error(error)
-            return response.sendStatus(500)
-          } else {
-            databaseLogger.info(
-              `Copied mission with the original ID "${originalID}".`,
-            )
-            return response.json({ copy })
-          }
-        })
-      }
-    })
+          copy.save((error: Error) => {
+            if (error) {
+              databaseLogger.error(
+                `Failed to copy mission with the original ID "${originalID}":`,
+              )
+              databaseLogger.error(error)
+              return response.sendStatus(500)
+            } else {
+              databaseLogger.info(
+                `Copied mission with the original ID "${originalID}".`,
+              )
+              return response.json({ copy })
+            }
+          })
+        }
+      },
+    )
   } else {
     return response.sendStatus(400)
   }
@@ -197,7 +474,7 @@ router.delete('/', requireLogin, (request, response) => {
     let missionID: any = query.missionID
 
     if (typeof missionID === 'string') {
-      Mission.updateOne({ missionID }, { deleted: true }, (error: any) => {
+      MissionModel.updateOne({ missionID }, { deleted: true }, (error: any) => {
         if (error !== null) {
           databaseLogger.error('Failed to delete mission:')
           databaseLogger.error(error)

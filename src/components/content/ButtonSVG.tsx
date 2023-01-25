@@ -18,6 +18,8 @@ export enum EButtonSVGPurpose {
   ZoomOut,
   Save,
   Copy,
+  Upload,
+  Download,
 }
 
 // Interface for props for ButtonSVG component.
@@ -72,6 +74,10 @@ export class ButtonSVG extends React.Component<IButtonSVG, {}> {
         return 'ButtonSVG save'
       case EButtonSVGPurpose.Copy:
         return 'ButtonSVG copy'
+      case EButtonSVGPurpose.Upload:
+        return 'ButtonSVG upload'
+      case EButtonSVGPurpose.Download:
+        return 'ButtonSVG download'
       default:
         return 'ButtonSVG hidden'
     }

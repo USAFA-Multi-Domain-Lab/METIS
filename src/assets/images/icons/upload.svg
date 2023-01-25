@@ -1,0 +1,10 @@
+<svg width="200" height="200" xmlns="http://www.w3.org/2000/svg" stroke="null">
+ <title>download</title>
+
+ <g stroke="null">
+  <title stroke="null">Layer 1</title>
+  <rect fill="none" x="15" y="-84.37725" width="170" height="246" id="svg_1" stroke-width="20" stroke="#ffffff" rx="20"/>
+  <path transform="rotate(135 99.9999 54.8491)" fill="#ffffff" stroke-width="0" d="m61.49881,93.3502l0,-77.00216l77.00224,77.00216l-77.00224,0z" id="svg_4" stroke="null"/>
+  <line stroke="#ffffff" fill="none" stroke-width="25" x1="100" y1="117.68352" x2="100" y2="53.41145" id="svg_5"/>
+ </g>
+</svg>
