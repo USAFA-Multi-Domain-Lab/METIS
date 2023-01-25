@@ -1200,7 +1200,7 @@ function NodeAction(props: {
           label='Process Time'
           initialValue={action.processTime / 1000}
           minimum={0}
-          maximum={60}
+          maximum={3600}
           unit='s'
           deliverValue={(timeCost: number | null) => {
             if (timeCost !== null) {
