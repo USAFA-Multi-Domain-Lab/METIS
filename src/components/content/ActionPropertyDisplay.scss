@@ -12,27 +12,13 @@
   .ResourceCost,
   .Description {
     margin: 10px 0;
-    padding: 0 20px;
-  }
-
-  .TimeToExecute {
+    padding: 0 5px;
     color: $terminal;
-  }
 
-  .ChosenNodeAction {
-    color: $terminal-blue;
-  }
-
-  .SuccessChance {
-    color: $terminal-red;
-  }
-
-  .ResourceCost {
-    color: $terminal-purple;
-  }
-
-  .Description {
-    color: $terminal-yellow;
+    span {
+      color: $terminal;
+      text-decoration: underline;
+    }
   }
 }
 

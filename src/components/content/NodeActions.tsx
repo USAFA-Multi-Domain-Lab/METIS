@@ -71,8 +71,10 @@ const NodeActions = (props: {
         </p>
 
         <div className='NodeActionDefault' onClick={revealOptions}>
-          Choose an action
-          <div className='ArrowDown'>^</div>
+          <div className='DefaultText'>
+            Choose an action <div className='ArrowDown'>^</div>
+          </div>
+          {/* <div className='ArrowDown'>^</div> */}
         </div>
         <div className={nodeActionListClassName}>
           {selectedNode.actions.map((action: MissionNodeAction) => {

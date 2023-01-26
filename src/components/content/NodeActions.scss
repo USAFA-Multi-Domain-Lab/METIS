@@ -5,13 +5,13 @@
   z-index: 100;
   width: 350px;
   height: auto;
+  max-height: 300px;
   margin-right: 10px;
   border: 2px solid $color-main;
   background-color: $background-main;
   padding: 0;
   margin: 0;
   padding: 10px 20px 25px 20px;
-  overflow-y: scroll;
   overflow-x: hidden;
 
   .x {
@@ -41,50 +41,51 @@
   }
 
   .NodeActionDefault {
-    display: grid;
-    grid-template-columns: auto 50px;
     width: 75%;
     margin: 20px 0 1px 0;
-    color: $color-accent-light;
     background-color: $background-alt2;
-    padding: 5px;
     border: 2px solid $color-main;
-    line-height: 20px;
-    overflow: hidden;
+    vertical-align: center;
 
     &.NodeActionDefault:hover {
       cursor: pointer;
       background-color: black;
     }
 
-    .ArrowDown {
-      position: relative;
-      bottom: 7px;
+    .DefaultText {
+      display: grid;
+      grid-template-columns: auto 50px;
+      width: calc(100% - 15px);
+      padding: 5px 0 5px 10px;
       color: $color-accent-light;
-      font-size: 2em;
-      transform-origin: 50%;
-      transform: rotate(180deg);
-      -webkit-transform: rotate(180deg);
+      height: 20px;
+      user-select: none;
+
+      .ArrowDown {
+        position: relative;
+        height: 22px;
+        color: $color-accent-light;
+        font-size: 2em;
+        transform: rotate(180deg);
+        -webkit-transform: rotate(180deg);
+      }
     }
   }
 
   .NodeActionList {
-    display: flex;
-    align-items: center;
-    flex-flow: column;
+    display: grid;
+    grid-template-columns: 100%;
+    place-content: start;
     width: 75%;
-    padding: 5px;
     margin: 0;
     border: 2px solid $color-main;
     background-color: $background-alt2;
-    height: auto;
+    height: 15vh;
+    overflow-y: scroll;
 
     .NodeAction {
-      display: flex;
-      justify-content: flex-start;
-      align-items: center;
-      width: 97%;
-      padding: 5px;
+      width: calc(100% - 10px);
+      padding: 5px 0 5px 10px;
       color: $color-accent-light;
       list-style-type: none;
       text-decoration: none;
@@ -104,18 +105,34 @@
 @media only screen and (max-width: 700px) {
   .NodeActions {
     .PromptDisplayText {
-      width: 100%;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
 
-    .NodeActionList {
-      .NodeAction {
+    .NodeActionDefault {
+      .DefaultText {
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
       }
+    }
+
+    .NodeActionList {
+      .NodeAction {
+        min-height: 20px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+    }
+  }
+}
+
+@media only screen and (max-height: 690px) {
+  .NodeActions {
+    .NodeActionList {
+      height: 10vh;
     }
   }
 }

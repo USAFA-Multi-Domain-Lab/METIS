@@ -153,6 +153,7 @@ const ExecuteNodePath = (props: {
     additionalActionButtonClassName += ' disabled'
   }
 
+  // This determines if the buttons are in rows or columns
   if (actionName && actionName?.length >= 15) {
     gridTemplateColumns = 'none'
     gridTemplateRows = 'auto auto'
@@ -182,7 +183,7 @@ const ExecuteNodePath = (props: {
             props.selectedNode?.selectedAction?.updateWillSucceed()
           }}
         >
-          {actionName}
+          EXECUTE {actionName?.toUpperCase()}
           {displayTooltip ? (
             <Tooltip
               description={`You cannot ${actionName?.toLowerCase()} because you have no more resources left to spend.`}
@@ -194,7 +195,7 @@ const ExecuteNodePath = (props: {
           className={additionalActionButtonClassName}
           onClick={selectAlternativeAction}
         >
-          Choose another action
+          Back
         </button>
       </div>
     </div>

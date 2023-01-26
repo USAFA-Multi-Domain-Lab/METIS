@@ -40,7 +40,7 @@ $background-bar: linear-gradient(
   $map-n-output-height: calc(
     #{$page-row-2-height} - #{$resource-n-action-height}
   );
-  $node-action-width: 26vw;
+  $node-action-width: 400px;
 
   overflow-x: hidden;
   overflow-y: hidden;
@@ -117,6 +117,11 @@ $background-bar: linear-gradient(
             $content-row-1-height}
         );
       }
+
+      @media only screen and (max-width: 670px) {
+        left: 25vw;
+        width: 50vw;
+      }
     }
 
     .ExecuteNodePath {
@@ -135,6 +140,11 @@ $background-bar: linear-gradient(
             $content-row-1-height}
         );
       }
+
+      @media only screen and (max-width: 670px) {
+        left: 25vw;
+        width: 50vw;
+      }
     }
   }
 
@@ -146,13 +156,17 @@ $background-bar: linear-gradient(
     .NodeActions {
       display: none;
 
-      @media only screen and (max-height: 585px) {
+      @media only screen and (max-height: 585px) and (max-width: 670px) {
         display: none;
       }
     }
 
     .ExecuteNodePath {
       display: none;
+
+      @media only screen and (max-height: 670px) and (max-width: 670px) {
+        display: none;
+      }
     }
 
     .OutputPanel {
@@ -180,13 +194,17 @@ $background-bar: linear-gradient(
       .NodeActions {
         display: none;
 
-        @media only screen and (max-height: 585px) {
+        @media only screen and (max-height: 585px) and (max-width: 670px) {
           display: none;
         }
       }
 
       .ExecuteNodePath {
         display: none;
+
+        @media only screen and (max-height: 670px) and (max-width: 670px) {
+          display: none;
+        }
       }
 
       .ActionPropertyDisplay {
@@ -213,10 +231,19 @@ $background-bar: linear-gradient(
           calc(calc(100vw - #{$page-horizontal-padding * 2}) * 0.325) + #{$page-horizontal-padding} -
             #{$node-action-width / 2}
         );
+
+        @media only screen and (max-width: 670px) {
+          left: 25vw;
+          width: 50vw;
+        }
       }
 
       .ExecuteNodePath {
         display: none;
+
+        @media only screen and (max-height: 670px) and (max-width: 670px) {
+          display: none;
+        }
       }
 
       .ActionPropertyDisplay {
@@ -241,7 +268,7 @@ $background-bar: linear-gradient(
       .NodeActions {
         display: none;
 
-        @media only screen and (max-height: 585px) {
+        @media only screen and (max-height: 585px) and (max-width: 670px) {
           display: none;
         }
       }
@@ -251,6 +278,11 @@ $background-bar: linear-gradient(
           calc(calc(100vw - #{$page-horizontal-padding * 2}) * 0.325) + #{$page-horizontal-padding} -
             #{$node-action-width / 2}
         );
+
+        @media only screen and (max-width: 670px) {
+          left: 25vw;
+          width: 50vw;
+        }
       }
     }
   }
@@ -264,7 +296,7 @@ $background-bar: linear-gradient(
       .NodeActions {
         display: none;
 
-        @media only screen and (max-height: 585px) {
+        @media only screen and (max-height: 585px) and (max-width: 670px) {
           display: none;
         }
       }
@@ -279,6 +311,10 @@ $background-bar: linear-gradient(
 
       .ExecuteNodePath {
         display: none;
+
+        @media only screen and (max-height: 670px) and (max-width: 670px) {
+          display: none;
+        }
       }
     }
   }

@@ -7,25 +7,25 @@ const ActionPropertyDisplay = (props: {
   let selectedAction = props.selectedNode?.selectedAction
 
   return (
-    <div className='ActionPropertyDisplay'>
-      <div className='TimeToExecute'>
-        Time to execute: {(selectedAction?.processTime as number) / 1000}{' '}
-        second(s)
-      </div>
-      <div className='ChosenNodeAction'>
-        Action selected: {selectedAction?.name as string}
-      </div>
-      <div className='SuccessChance'>
-        Chance of success:{' '}
+    <ul className='ActionPropertyDisplay'>
+      <li className='ChosenNodeAction'>
+        <span>Action selected:</span> {selectedAction?.name as string}
+      </li>
+      <li className='TimeToExecute'>
+        <span>Time to execute:</span>{' '}
+        {(selectedAction?.processTime as number) / 1000} second(s)
+      </li>
+      <li className='SuccessChance'>
+        <span>Chance of success:</span>{' '}
         {(props.selectedNode?.selectedAction?.successChance as number) * 100}%
-      </div>
-      <div className='ResourceCost'>
-        Resource cost: {selectedAction?.resourceCost} resource(s)
-      </div>
-      <div className='Description'>
-        Description: {selectedAction?.description}
-      </div>
-    </div>
+      </li>
+      <li className='ResourceCost'>
+        <span>Resource cost:</span> {selectedAction?.resourceCost} resource(s)
+      </li>
+      <li className='Description'>
+        <span>Description:</span> {selectedAction?.description}
+      </li>
+    </ul>
   )
 }
 

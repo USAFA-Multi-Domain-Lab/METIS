@@ -81,5 +81,12 @@
         text-overflow: ellipsis;
       }
     }
+
+    .ExecutionButton {
+      &:hover {
+        color: $terminal-red;
+        background-color: black;
+      }
+    }
   }
 }
