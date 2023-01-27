@@ -18,6 +18,7 @@ npm-debug.log*
 .env.production.local
 environment.json
 environment-test.json
+.vscode
 
 # log
 /logs
