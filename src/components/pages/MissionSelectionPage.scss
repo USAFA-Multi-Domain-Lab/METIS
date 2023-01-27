@@ -321,27 +321,6 @@
     }
   }
 
-  @media only screen and (max-width: 800px) {
-    .MissionListContainer {
-      .MissionList {
-        &.show {
-          .MissionSelectionRow {
-            flex-flow: column;
-            .MissionName {
-              width: calc(100% - 20px);
-            }
-            .ActionsContainer {
-              justify-content: flex-start;
-              width: calc(100% - 15px);
-              padding-left: 15px;
-              padding-right: 0;
-            }
-          }
-        }
-      }
-    }
-  }
-
   @media only screen and (max-width: 1099px) {
     .MissionSelectionContent {
       .EditMissionsContainer {

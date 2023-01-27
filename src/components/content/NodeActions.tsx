@@ -35,6 +35,7 @@ const NodeActions = (props: {
   const revealOptions = () => {
     if (displayActionList === false) {
       setDisplayActionList(true)
+      window.scrollTo({ top: 0 })
     } else {
       setDisplayActionList(false)
     }
@@ -74,7 +75,6 @@ const NodeActions = (props: {
           <div className='DefaultText'>
             Choose an action <div className='ArrowDown'>^</div>
           </div>
-          {/* <div className='ArrowDown'>^</div> */}
         </div>
         <div className={nodeActionListClassName}>
           {selectedNode.actions.map((action: MissionNodeAction) => {

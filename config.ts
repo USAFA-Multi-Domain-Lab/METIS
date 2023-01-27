@@ -34,8 +34,10 @@ export const APP_DIR = path.join(__dirname)
 
 export let environmentFilePath: string = './environment.json'
 
-if (process.env.environmentFilePath !== undefined) {
-  environmentFilePath = process.env.environmentFilePath
+// changes the environment for when the unit tests are being run
+if (process.env.environment === 'TEST') {
+  environmentFilePath = './environment-test.json'
+  MONGO_DB = 'mdl-test'
 }
 
 if (fs.existsSync(environmentFilePath)) {
