@@ -22,6 +22,7 @@ export let SCHEMA_BUILD_NUMBER: number = 4
 
 export let PORT: number = 8080
 
+export let MONGO_DB: string = 'mdl'
 export let MONGO_HOST = 'localhost'
 export let MONGO_PORT = 27017
 export let MONGO_USERNAME: string | undefined
@@ -31,8 +32,14 @@ export const APP_DIR = path.join(__dirname)
 
 /* -- config-variables | environment-override -- */
 
-if (fs.existsSync('./environment.json')) {
-  let environmentData: any = fs.readFileSync('./environment.json', 'utf8')
+export let environmentFilePath: string = './environment.json'
+
+if (process.env.environmentFilePath !== undefined) {
+  environmentFilePath = process.env.environmentFilePath
+}
+
+if (fs.existsSync(environmentFilePath)) {
+  let environmentData: any = fs.readFileSync(environmentFilePath, 'utf8')
 
   environmentData = JSON.parse(environmentData)
 
@@ -42,6 +49,9 @@ if (fs.existsSync('./environment.json')) {
   }
 
   // database config
+  if ('MONGO_DB' in environmentData) {
+    MONGO_DB = environmentData['MONGO_DB']
+  }
   if ('MONGO_HOST' in environmentData) {
     MONGO_HOST = environmentData['MONGO_HOST']
   }
@@ -118,6 +128,7 @@ export function configure(
 }
 
 const defaultExports = {
+  MONGO_DB,
   PORT,
   MONGO_HOST,
   configure,

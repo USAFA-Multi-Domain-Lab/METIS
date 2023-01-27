@@ -1,7 +1,6 @@
 import './ExecuteNodePath.scss'
 import { MissionNode } from '../../modules/mission-nodes'
 import { MissionNodeAction } from '../../modules/mission-node-actions'
-import gameLogic, { runNodeLoadingBar } from '../../modules/game-logic'
 import ActionPropertyDisplay from './ActionPropertyDisplay'
 import { Mission } from '../../modules/missions'
 import Notification from '../../modules/notifications'
@@ -20,9 +19,13 @@ const ExecuteNodePath = (props: {
   setExecuteNodePathPromptIsDisplayed: (
     executeNodePathPromptIsDisplayed: boolean,
   ) => void
+  loadingWidth: number
+  setLoadingWidth: (loadingWidth: number) => void
 }) => {
   let mission: Mission = props.mission
   let selectedNode: MissionNode | null | undefined = props.selectedNode
+  let processTime: number | undefined =
+    props.selectedNode?.selectedAction?.processTime
   let consoleOutputs = props.consoleOutputs
   let setConsoleOutputs = props.setConsoleOutputs
   let setExecuteNodePathPromptIsDisplayed =
@@ -30,6 +33,8 @@ const ExecuteNodePath = (props: {
   let setActionSelectionPromptIsDisplayed =
     props.setActionSelectionPromptIsDisplayed
   let actionName: string | undefined = props.selectedNode?.selectedAction?.name
+  let loadingWidth: number = props.loadingWidth
+  let setLoadingWidth = props.setLoadingWidth
 
   /* -- COMPONENT STATE -- */
 
@@ -40,30 +45,44 @@ const ExecuteNodePath = (props: {
     setExecuteNodePathPromptIsDisplayed(false)
   }
 
+  // Creates an interval to visually display the loading bar's progress
+  const runLoadingBar = (): void => {
+    if (processTime !== undefined) {
+      let loadingDuration = setInterval(loadingBar, processTime / 100)
+
+      function loadingBar() {
+        if (loadingWidth >= 100) {
+          clearInterval(loadingDuration)
+          setLoadingWidth(0)
+        } else {
+          loadingWidth++
+          setLoadingWidth(loadingWidth)
+        }
+      }
+    }
+  }
+
   const execute = () => {
     if (props.selectedNode !== null) {
       let selectedNode: MissionNode = props.selectedNode
       let selectedAction: MissionNodeAction | null = selectedNode.selectedAction
       let resourceCost: number | undefined = selectedAction?.resourceCost
-      let processTime: number | undefined = selectedAction?.processTime
 
-      if (
-        mission.resources > 0 &&
-        resourceCost !== undefined &&
-        processTime !== undefined
-      ) {
+      if (mission.resources > 0 && resourceCost !== undefined) {
         setExecuteNodePathPromptIsDisplayed(false)
 
         let spendResources: number = mission.resources - resourceCost
         if (spendResources >= 0) {
           mission.resources = spendResources
-          runNodeLoadingBar(processTime)
+          runLoadingBar()
 
-          selectedNode.selectedAction?.executeAction((success: boolean) => {
+          selectedAction?.executeAction((success: boolean) => {
             // Output message in the terminal which differs based on whether
             // it passes or fails
             if (success) {
-              gameLogic.handleNodeSelection(selectedNode)
+              if (selectedNode.hasChildren && !selectedNode.isOpen) {
+                selectedNode.open()
+              }
 
               setConsoleOutputs([
                 ...consoleOutputs,
@@ -94,7 +113,6 @@ const ExecuteNodePath = (props: {
                     }</span>`,
                 },
               ])
-
               selectedAction?.updateWillSucceedArray()
             }
           })
@@ -125,12 +143,19 @@ const ExecuteNodePath = (props: {
   let executionButtonClassName: string = 'Button ExecutionButton'
   let displayTooltip: boolean = false
   let additionalActionButtonClassName: string = 'Button AdditionalActionButton'
+  let gridTemplateColumns: string = 'auto auto'
+  let gridTemplateRows: string = 'none'
 
   if (mission.resources <= 0) {
     executionButtonClassName += ' disabled'
     displayTooltip = true
   } else if (selectedNode && selectedNode.actions.length === 1) {
     additionalActionButtonClassName += ' disabled'
+  }
+
+  if (actionName && actionName?.length >= 15) {
+    gridTemplateColumns = 'none'
+    gridTemplateRows = 'auto auto'
   }
 
   return (
@@ -142,7 +167,14 @@ const ExecuteNodePath = (props: {
         Do you want to {actionName?.toLowerCase()} {props.selectedNode?.name}?
       </p>
       <ActionPropertyDisplay selectedNode={props.selectedNode} />
-      <div className='Buttons'>
+      <div
+        className='Buttons'
+        style={{
+          gridTemplateColumns: `${gridTemplateColumns}`,
+          gridTemplateRows: `${gridTemplateRows}`,
+          placeContent: 'start',
+        }}
+      >
         <button
           className={executionButtonClassName}
           onClick={() => {

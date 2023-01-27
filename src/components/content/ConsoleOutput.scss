@@ -5,7 +5,8 @@
     padding: 15px 0;
     font-size: 0.75em;
     list-style-type: none;
-    overflow: auto;
+    word-wrap: break-word;
+    line-break: strict;
   }
 
   .line-cursor {

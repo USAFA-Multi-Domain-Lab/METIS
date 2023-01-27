@@ -40,7 +40,7 @@ $background-bar: linear-gradient(
   $map-n-output-height: calc(
     #{$page-row-2-height} - #{$resource-n-action-height}
   );
-  $node-action-width: 400px;
+  $node-action-width: 26vw;
 
   overflow-x: hidden;
   overflow-y: hidden;
@@ -109,6 +109,14 @@ $background-bar: linear-gradient(
       );
       left: calc(50vw - #{$node-action-width / 2});
       width: $node-action-width;
+      max-height: 38vh;
+
+      @media only screen and (max-height: 585px) {
+        top: calc(
+          10px + #{$page-vertical-padding + $page-row-1-height +
+            $content-row-1-height}
+        );
+      }
     }
 
     .ExecuteNodePath {
@@ -119,6 +127,14 @@ $background-bar: linear-gradient(
       );
       left: calc(50vw - #{$node-action-width / 2});
       width: $node-action-width;
+      max-height: 50vh;
+
+      @media only screen and (max-height: 670px) {
+        top: calc(
+          10px + #{$page-vertical-padding + $page-row-1-height +
+            $content-row-1-height}
+        );
+      }
     }
   }
 
@@ -129,6 +145,10 @@ $background-bar: linear-gradient(
   &.DisplayMapOnly {
     .NodeActions {
       display: none;
+
+      @media only screen and (max-height: 585px) {
+        display: none;
+      }
     }
 
     .ExecuteNodePath {
@@ -159,6 +179,10 @@ $background-bar: linear-gradient(
 
       .NodeActions {
         display: none;
+
+        @media only screen and (max-height: 585px) {
+          display: none;
+        }
       }
 
       .ExecuteNodePath {
@@ -215,10 +239,11 @@ $background-bar: linear-gradient(
       }
 
       .NodeActions {
-        left: calc(
-          calc(calc(100vw - #{$page-horizontal-padding * 2}) * 0.325) + #{$page-horizontal-padding} -
-            #{$node-action-width / 2}
-        );
+        display: none;
+
+        @media only screen and (max-height: 585px) {
+          display: none;
+        }
       }
 
       .ExecuteNodePath {
@@ -238,6 +263,10 @@ $background-bar: linear-gradient(
 
       .NodeActions {
         display: none;
+
+        @media only screen and (max-height: 585px) {
+          display: none;
+        }
       }
     }
   }

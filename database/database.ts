@@ -1,6 +1,7 @@
 import { exec } from 'child_process'
 import mongoose, { ConnectOptions } from 'mongoose'
 import {
+  MONGO_DB,
   MONGO_HOST,
   MONGO_PASSWORD,
   MONGO_PORT,
@@ -177,7 +178,7 @@ function buildSchema(
   let command: string = `mongosh --host ${MONGO_HOST} --port ${MONGO_PORT} --file ${buildPath}`
 
   if (MONGO_USERNAME && MONGO_PASSWORD) {
-    command += ` --username ${MONGO_USERNAME} --password ${MONGO_PASSWORD} --authenticationDatabase mdl`
+    command += ` --username ${MONGO_USERNAME} --password ${MONGO_PASSWORD} --authenticationDatabase ${MONGO_DB}`
   }
 
   databaseLogger.info(`Database is migrating to build ${nextBuildNumber}`)
@@ -267,7 +268,10 @@ export function initialize(
     connectOptions.pass = MONGO_PASSWORD
   }
 
-  mongoose.connect(`mongodb://${MONGO_HOST}:${MONGO_PORT}/mdl`, connectOptions)
+  mongoose.connect(
+    `mongodb://${MONGO_HOST}:${MONGO_PORT}/${MONGO_DB}`,
+    connectOptions,
+  )
 
   connection = mongoose.connection
 

@@ -4,7 +4,7 @@
   border: 2px solid $border-color-main;
   border-radius: 10px;
   font-size: 14px;
-  margin-top: 20px;
+  margin: 20px auto;
 
   .TimeToExecute,
   .ChosenNodeAction,
@@ -38,4 +38,20 @@
 
 .hide {
   display: none;
+}
+
+@media only screen and (max-width: 655px) {
+  .ActionPropertyDisplay {
+    .TimeToExecute,
+    .ChosenNodeAction,
+    .SuccessChance,
+    .ResourceCost,
+    .Description {
+      margin: 5px 0 0 5px;
+      padding: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  }
 }

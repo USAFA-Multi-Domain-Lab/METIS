@@ -2,6 +2,9 @@
 # packages
 /node_modules
 npm-debug.log*
+/coverage
+/.nyc_output
+/.nyc_output/processinfo
 
 # react
 /build
@@ -14,6 +17,7 @@ npm-debug.log*
 .env.test.local
 .env.production.local
 environment.json
+environment-test.json
 
 # log
 /logs
