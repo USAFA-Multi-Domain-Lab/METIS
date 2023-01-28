@@ -35,6 +35,7 @@ interface IMissionMap {
   grayOutDeselectNodeButton: boolean
   grayOutAddNodeButton: boolean
   grayOutDeleteNodeButton: boolean
+  elementRef: React.RefObject<HTMLDivElement>
   applyNodeClassName: (node: MissionNode) => string
   renderNodeTooltipDescription: (node: MissionNode) => string
 }
@@ -157,6 +158,7 @@ export default class MissionMap extends React.Component<
     grayOutDeselectNodeButton: false,
     grayOutAddNodeButton: false,
     grayOutDeleteNodeButton: false,
+    elementRef: React.createRef(),
     applyMappedNodeClassName: () => '',
     renderMappedNodeTooltipDescription:
       MissionMap.renderMappedNodeTooltipDescription_default,
@@ -164,7 +166,7 @@ export default class MissionMap extends React.Component<
 
   /* -- fields -- */
 
-  map: React.RefObject<HTMLDivElement> = React.createRef()
+  map: React.RefObject<HTMLDivElement>
 
   /* -- getters -- */
 
@@ -229,6 +231,8 @@ export default class MissionMap extends React.Component<
 
   constructor(props: IMissionMap) {
     super(props)
+
+    this.map = props.elementRef ? props.elementRef : React.createRef()
 
     this.state = {
       ...this.defaultState,
@@ -1025,6 +1029,7 @@ export default class MissionMap extends React.Component<
           className={loadingClassName}
           style={loadingStyle}
           onClick={() => {}}
+          ref={this.props.elementRef}
         ></div>
         <div
           className='wrapper'

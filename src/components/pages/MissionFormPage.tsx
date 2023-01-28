@@ -1,5 +1,5 @@
 import { useBeforeunload } from 'react-beforeunload'
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import {
   createMission,
   getMission,
@@ -30,6 +30,7 @@ import { MissionNodeAction } from '../../modules/mission-node-actions'
 import { EToggleLockState } from '../content/Toggle'
 import AppState, { AppActions } from '../AppState'
 import Navigation from '../content/Navigation'
+import { ResizeBar } from '../content/ResizeBar'
 
 // This is a enum used to describe
 // the locations that one node can
@@ -55,6 +56,13 @@ export default function MissionFormPage(
 ): JSX.Element | null {
   let appState: AppState = props.appState
   let appActions: AppActions = props.appActions
+
+  /* -- COMPONENT REFS -- */
+
+  const missionMap_ref = useRef<HTMLDivElement>(null)
+  const missionDetails_ref = useRef<HTMLDivElement>(null)
+  const nodeEntry_ref = useRef<HTMLDivElement>(null)
+  const nodeStructuring_ref = useRef<HTMLDivElement>(null)
 
   /* -- COMPONENT STATE -- */
 
@@ -361,6 +369,15 @@ export default function MissionFormPage(
     let grayOutDeselectNodeButton: boolean = isEmptyString
     let grayOutAddNodeButton: boolean = isEmptyString
     let grayOutDeleteNodeButton: boolean = mission.nodes.size < 2
+    let target2_ref: React.RefObject<HTMLDivElement> = React.createRef()
+
+    if (missionDetailsIsActive) {
+      target2_ref = missionDetails_ref
+    } else if (selectedNode !== null) {
+      target2_ref = nodeEntry_ref
+    } else if (nodeStructuringIsActive) {
+      target2_ref = nodeStructuring_ref
+    }
 
     return (
       <div className={'MissionFormPage Page'}>
@@ -514,6 +531,7 @@ export default function MissionFormPage(
             grayOutDeleteNodeButton={grayOutDeleteNodeButton}
             applyNodeClassName={(node: MissionNode) => ''}
             renderNodeTooltipDescription={(node: MissionNode) => ''}
+            elementRef={missionMap_ref}
           />
           <MissionDetails
             active={missionDetailsIsActive}
@@ -521,6 +539,7 @@ export default function MissionFormPage(
             missionEmptyStringArray={missionEmptyStringArray}
             setMissionEmptyStringArray={setMissionEmptyStringArray}
             handleChange={handleChange}
+            elementRef={missionDetails_ref}
           />
           <NodeEntry
             node={selectedNode}
@@ -539,13 +558,16 @@ export default function MissionFormPage(
                 selectNode(null)
               })
             }}
+            elementRef={nodeEntry_ref}
           />
           <NodeStructuring
             active={nodeStructuringIsActive}
             mission={mission}
             handleChange={handleChange}
             handleCloseRequest={() => activateNodeStructuring(false)}
+            elementRef={nodeStructuring_ref}
           />
+          <ResizeBar target1={missionMap_ref} target2={target2_ref} />
         </div>
       </div>
     )
@@ -560,12 +582,16 @@ function MissionDetails(props: {
   active: boolean
   mission: Mission
   missionEmptyStringArray: Array<string>
+  elementRef?: React.RefObject<HTMLDivElement>
   setMissionEmptyStringArray: (missionEmptyString: Array<string>) => void
   handleChange: () => void
 }): JSX.Element | null {
   let active: boolean = props.active
   let mission: Mission = props.mission
   let missionEmptyStringArray: Array<string> = props.missionEmptyStringArray
+  let elementRef: React.RefObject<HTMLDivElement> = props.elementRef
+    ? props.elementRef
+    : React.createRef()
   let setMissionEmptyStringArray: (missionEmptyString: Array<string>) => void =
     props.setMissionEmptyStringArray
   let handleChange = props.handleChange
@@ -583,7 +609,7 @@ function MissionDetails(props: {
 
   if (active) {
     return (
-      <div className='MissionDetails SidePanel'>
+      <div className='MissionDetails SidePanel' ref={elementRef}>
         <div className='BorderBox'>
           <div className='BoxTop'>
             <div className='ErrorMessage Hidden'></div>
@@ -638,10 +664,11 @@ function NodeEntry(props: {
   node: MissionNode | null
   appActions: AppActions
   displayedAction: number
-  setDisplayedAction: (displayedAction: number) => void
   nodeEmptyStringArray: Array<string>
-  setNodeEmptyStringArray: (nodeEmptyStringArray: Array<string>) => void
   actionEmptyStringArray: Array<string>
+  elementRef?: React.RefObject<HTMLDivElement>
+  setDisplayedAction: (displayedAction: number) => void
+  setNodeEmptyStringArray: (nodeEmptyStringArray: Array<string>) => void
   setActionEmptyStringArray: (actionEmptyStringArray: Array<string>) => void
   handleChange: () => void
   handleAddRequest: () => void
@@ -661,6 +688,9 @@ function NodeEntry(props: {
   ) => void = props.setActionEmptyStringArray
   let isEmptyString: boolean =
     nodeEmptyStringArray.length > 0 || actionEmptyStringArray.length > 0
+  let elementRef: React.RefObject<HTMLDivElement> = props.elementRef
+    ? props.elementRef
+    : React.createRef()
   let handleChange = props.handleChange
   let handleAddNodeRequest = props.handleAddRequest
   let handleDeleteRequest = props.handleDeleteRequest
@@ -716,7 +746,7 @@ function NodeEntry(props: {
     }
 
     return (
-      <div className='NodeEntry SidePanel'>
+      <div className='NodeEntry SidePanel' ref={elementRef}>
         <div className='BorderBox'>
           <div className={boxTopClassName}>
             <div className='ErrorMessage'>
@@ -1298,6 +1328,7 @@ function NodeAction(props: {
 function NodeStructuring(props: {
   active: boolean
   mission: Mission
+  elementRef?: React.RefObject<HTMLDivElement>
   handleChange: () => void
   handleCloseRequest: () => void
 }): JSX.Element | null {
@@ -1305,6 +1336,9 @@ function NodeStructuring(props: {
   let mission: Mission = props.mission
   let handleChange = props.handleChange
   let handleCloseRequest = props.handleCloseRequest
+  let elementRef: React.RefObject<HTMLDivElement> = props.elementRef
+    ? props.elementRef
+    : React.createRef()
   let rootNode: MissionNode = mission.rootNode
 
   const [forcedUpdateCounter, setForcedUpdateCounter] = useState<number>(0)
@@ -1573,7 +1607,7 @@ function NodeStructuring(props: {
 
   if (active) {
     return (
-      <div className='NodeStructuring SidePanel'>
+      <div className='NodeStructuring SidePanel' ref={elementRef}>
         <div className='BorderBox'>
           <div className='BoxTop'>
             <div className='ErrorMessage Hidden'></div>
