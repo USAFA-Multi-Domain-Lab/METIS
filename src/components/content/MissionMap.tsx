@@ -166,7 +166,7 @@ export default class MissionMap extends React.Component<
 
   /* -- fields -- */
 
-  map: React.RefObject<HTMLDivElement>
+  map: React.RefObject<HTMLDivElement> = React.createRef()
 
   /* -- getters -- */
 
@@ -231,8 +231,6 @@ export default class MissionMap extends React.Component<
 
   constructor(props: IMissionMap) {
     super(props)
-
-    this.map = props.elementRef ? props.elementRef : React.createRef()
 
     this.state = {
       ...this.defaultState,
