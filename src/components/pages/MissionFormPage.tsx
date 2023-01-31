@@ -487,7 +487,7 @@ export default function MissionFormPage(
         <div className='Content'>
           <PanelSizeRelationship
             panel1={{
-              minSize: 325,
+              minSize: 330,
               render: () => (
                 <MissionMap
                   mission={mission}
@@ -526,7 +526,7 @@ export default function MissionFormPage(
               ),
             }}
             panel2={{
-              minSize: 325,
+              minSize: 330,
               render: () => {
                 if (missionDetailsIsActive) {
                   return (
@@ -574,7 +574,7 @@ export default function MissionFormPage(
               },
             }}
             sizingMode={EPanelSizingMode.Panel1_Auto__Panel2_Defined}
-            initialDefinedSize={325}
+            initialDefinedSize={330}
           />
         </div>
       </div>
@@ -618,6 +618,7 @@ function MissionDetails(props: {
           <div className='BoxTop'>
             <div className='ErrorMessage Hidden'></div>
           </div>
+          <div className='SidePanelSection MainDetails'>
           <Detail
             label='Name'
             initialValue={mission.name}
@@ -654,6 +655,7 @@ function MissionDetails(props: {
             }}
             key={`${mission.missionID}_initialResources`}
           />
+          </div>
         </div>
       </div>
     )
@@ -773,8 +775,7 @@ function NodeEntry(props: {
               <Tooltip description='Close panel.' />
             </div>
           </div>
-
-          <div className='NodeInfoContainer'>
+          <div className='NodeInfoContainer SidePanelSection'>
             <Detail
               label='Name'
               initialValue={node.name}
@@ -819,7 +820,7 @@ function NodeEntry(props: {
               key={`${node.nodeID}_color`}
             />
             <div
-              className='ColorFill'
+              className='ColorFill Detail'
               onClick={() => {
                 if (node !== null) {
                   node.applyColorFill()
@@ -1054,8 +1055,8 @@ function NodeActions(props: {
   if (node.executable) {
     return (
       <>
-        <h4 className='ActionInfo'>Action(s):</h4>
-        <div className='NodeActionDetails'>
+        <div className='NodeActionDetails SidePanelSection'>
+          <h4 className='ActionInfo'>Action(s):</h4>
           <div className={selectorContainerClassName}>
             <div className='Previous' onClick={displayPreviousAction}>
               previous
@@ -1091,7 +1092,7 @@ function NodeActions(props: {
             </div>
           </div>
         </div>
-        <div className='UserActions'>
+        <div className='UserActions SidePanelSection'>
           <ButtonSVG
             purpose={EButtonSVGPurpose.Add}
             handleClick={() => {

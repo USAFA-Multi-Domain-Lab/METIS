@@ -64,6 +64,7 @@ $background-bar: linear-gradient(
         box-sizing: border-box;
         border: 2px solid $color-main;
         height: 100%;
+        padding: 0;
         background-color: $background-alt2;
 
         .BoxTop {
@@ -131,132 +132,143 @@ $background-bar: linear-gradient(
           }
         }
 
-        .NodeInfoContainer {
-          margin: 15px 45px 40px 15px;
+        .SidePanelSection {
+            margin: 20px 6.5% 40px;
 
-          .ButtonContainer {
-            display: block;
-            width: 225px;
-            margin: 25px auto 0;
-            text-align: right;
-            font-size: 0.85em;
+          &.NodeInfoContainer {
 
-            .FormButton {
-              cursor: pointer;
-              margin: 5px 0 0;
-
-              .Text {
-                color: $color-accent-light;
-                font-weight: 400;
-              }
-
-              .RightBracket {
-                color: $color-main;
-              }
-            }
-          }
-        }
-
-        .ActionInfo {
-          color: $terminal;
-          margin: 30px auto 0px 15px;
-        }
-
-        .NodeActionDetails {
-          margin-top: 20px;
-
-          > .Label {
-            margin: 40px auto 0;
-            border-bottom: 2px solid $color-main;
-            width: 225px;
-            padding: 0 0 8px;
-            font-size: 12.5px;
-          }
-
-          .NodeAction {
-            margin: 0 45px 0 20px;
-            border: 2px solid $terminal-blue;
-            border-radius: 10px;
-            padding-bottom: 30px;
-
-            .Detail {
-              width: calc(225px - 20px);
-            }
-
-            .Delete {
-              cursor: pointer;
-              user-select: none;
-              box-sizing: border-box;
-              margin: 5px auto 0;
-              border-bottom: 2px solid $color-main;
-              width: calc(225px - 20px);
-              padding: 15px 15px;
+            .ButtonContainer {
+              display: block;
+              min-width: 225px;
+              margin: 20px 8% 0;
               text-align: right;
-              color: $color-main;
-              font-size: 12.5px;
-              font-weight: 700;
-
-              span {
-                color: $color-accent-light;
-                font-weight: 400;
-              }
-            }
-
-            .NoActions {
-              margin: 30px auto 0;
-              width: calc(100% - 60px);
               font-size: 0.85em;
-            }
 
-            .Delete {
-              &.Disabled {
-                pointer-events: none;
-                transform: scale(0.95);
-                opacity: 0.65;
-              }
-            }
-          }
-
-          .SelectorContainer {
-            display: grid;
-            grid-template-columns: 33% 33% 33%;
-            width: calc(100% - 60px);
-            margin: 20px 20px;
-            text-align: center;
-
-            .Previous,
-            .Next {
-              user-select: none;
-              &:hover {
+              .FormButton {
                 cursor: pointer;
-                color: $terminal;
-              }
-            }
+                margin: 5px 0 0;
 
-            .CurrentActionDisplayed {
-              &:hover {
-                cursor: default;
+                .Text {
+                  color: $color-accent-light;
+                  font-weight: 400;
+                }
+
+                .RightBracket {
+                  color: $color-main;
+                }
               }
             }
           }
-        }
 
-        .UserActions {
-          display: block;
-          margin: 30px 45px 40px 20px;
-          width: calc(100% - 65px);
-          text-align: center;
+          &.NodeActionDetails {
+            border: 2px solid $color-main;
+            background-color: rgba($background-main, 0.65);
 
-          .Action {
-            width: 40px;
+            .ActionInfo {
+              margin: 0 auto;
+              padding-top: 25px;
+              text-align: center;
+              color: $color-accent;
+              font-size: 15px;
+            }
+
+            > .Label {
+              margin: 40px auto 0;
+              border-bottom: 2px solid $color-main;
+              width: 225px;
+              padding: 0 0 8px;
+              font-size: 12.5px;
+            }
+
+            .NodeAction {
+              margin: 20px 0;
+              padding: 20px 0 30px;
+              border-top: 2px solid $color-main;
+              border-bottom: 2px solid $color-main;
+
+              .Detail {
+                min-width: calc(225px - 20px);
+
+                .Field {
+                  background: none;
+                }
+              }
+
+              .Delete {
+                cursor: pointer;
+                user-select: none;
+                box-sizing: border-box;
+                margin: 20px 8% 0;
+                min-width: calc(225px - 20px);
+                padding: 15px 15px;
+                text-align: right;
+                color: $color-main;
+                font-size: 12.5px;
+                font-weight: 700;
+
+                span {
+                  color: $color-accent-light;
+                  font-weight: 400;
+                }
+              }
+
+              .NoActions {
+                margin: 30px auto 0;
+                width: calc(100% - 60px);
+                font-size: 0.85em;
+              }
+
+              .Delete {
+                &.Disabled {
+                  pointer-events: none;
+                  transform: scale(0.95);
+                  opacity: 0.65;
+                }
+              }
+            }
+
+            .SelectorContainer {
+              display: grid;
+              grid-template-columns: 1fr 1fr 1fr;
+              margin: 20px auto;
+              width: 225px;
+              text-align: center;
+              font-size: 14px;
+
+              .Previous,
+              .Next {
+                user-select: none;
+                &:hover {
+                  cursor: pointer;
+                  color: $terminal;
+                }
+              }
+
+              .CurrentActionDisplayed {
+                &:hover {
+                  cursor: default;
+                }
+              }
+            }
+          }
+
+&.UserActions {
+            display: block;
             text-align: center;
-            margin: 0;
-          }
 
-          * {
-            transition: transform 250ms, opacity 250ms;
+            .Action {
+              width: 40px;
+              text-align: center;
+              margin: 0;
+            }
+
+            * {
+              transition: transform 250ms, opacity 250ms;
+            }
           }
         }
+
+          
 
         .Color {
           .Field {
@@ -268,9 +280,10 @@ $background-bar: linear-gradient(
           cursor: pointer;
           user-select: none;
           box-sizing: border-box;
-          margin: 5px auto 0;
+          margin-top: 5px;
+          margin-bottom: 0;
           border-bottom: 2px solid $color-main;
-          width: 225px;
+          min-width: 225px;
           padding: 15px 15px;
           text-align: right;
           color: $color-main;

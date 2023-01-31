@@ -1,8 +1,8 @@
 @import '../../config.scss';
 
 .Detail {
-  margin: 20px auto 0;
-  width: 225px;
+  margin: 20px 8% 0;
+  min-width: 225px;
 
   .FieldErrorMessage {
     font-size: 0.7em;
