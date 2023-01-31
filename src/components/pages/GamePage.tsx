@@ -30,6 +30,10 @@ export interface IGamePage extends IPage {
 export default function GamePage(props: IGamePage): JSX.Element | null {
   let appState: AppState = props.appState
   let appActions: AppActions = props.appActions
+  let dateFormatStyle: Intl.DateTimeFormat = new Intl.DateTimeFormat('en-GB', {
+    hour: '2-digit',
+    minute: '2-digit',
+  })
 
   /* -- COMPONENT STATE -- */
 
@@ -349,10 +353,9 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
                   let timeStamp: number = 5 * (new Date() as any)
                   consoleOutputs.push({
                     date: timeStamp,
-                    value: `<span class='line-cursor'>MDL@${selectedNode.name.replaceAll(
-                      ' ',
-                      '-',
-                    )}: </span>
+                    value: `<span class='line-cursor'>[${dateFormatStyle.format(
+                      Date.now(),
+                    )}] MDL@${selectedNode.name.replaceAll(' ', '-')}: </span>
                               <span class='default'>${
                                 selectedNode.preExecutionText
                               }</span>`,
@@ -368,7 +371,6 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
                   selectedNode.color = ''
                 } else {
                   if (
-                    !mission.disableNodes &&
                     !selectedNode.selectedAction?.succeeded &&
                     selectedNode.actions.length > 1
                   ) {
@@ -406,10 +408,25 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
                 let description: string = ''
                 let nodeActionDisplay = 'None selected'
 
+                // This creates the tooltip hover over effect
+                // that displays the description of the node
+                // prior to being executed.
+                if (
+                  node !== null &&
+                  !node.executed &&
+                  !node.executing &&
+                  node.description !== ''
+                ) {
+                  description = node.description
+                }
+
                 if (node.selectedAction !== null) {
                   nodeActionDisplay = node.selectedAction.name
                 }
 
+                // This creates the tooltip hover over effect
+                // that displays the description of the node
+                // after it has been executed.
                 if (node.executable && node.executed) {
                   description =
                     `* Executed node in ${
@@ -447,6 +464,7 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
               loadingWidth={loadingWidth}
               setLoadingWidth={setLoadingWidth}
               notify={appActions.notify}
+              dateFormatStyle={dateFormatStyle}
             />
             <OutputPanel
               consoleOutputs={consoleOutputs}

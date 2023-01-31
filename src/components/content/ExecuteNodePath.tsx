@@ -21,6 +21,7 @@ const ExecuteNodePath = (props: {
   ) => void
   loadingWidth: number
   setLoadingWidth: (loadingWidth: number) => void
+  dateFormatStyle: Intl.DateTimeFormat
 }) => {
   let mission: Mission = props.mission
   let selectedNode: MissionNode | null | undefined = props.selectedNode
@@ -35,6 +36,7 @@ const ExecuteNodePath = (props: {
   let actionName: string | undefined = props.selectedNode?.selectedAction?.name
   let loadingWidth: number = props.loadingWidth
   let setLoadingWidth = props.setLoadingWidth
+  let dateFormatStyle: Intl.DateTimeFormat = props.dateFormatStyle
 
   /* -- COMPONENT STATE -- */
 
@@ -73,6 +75,17 @@ const ExecuteNodePath = (props: {
 
         let spendResources: number = mission.resources - resourceCost
         if (spendResources >= 0) {
+          consoleOutputs.push({
+            date: Date.now(),
+            value: `<span class='line-cursor'>[${dateFormatStyle.format(
+              Date.now(),
+            )}] MDL@${selectedNode.name.replaceAll(' ', '-')}: 
+            </span>
+                     <span class="default">Started executing the action called "${
+                       selectedAction?.name
+                     }."</span>`,
+          })
+
           mission.resources = spendResources
           runLoadingBar()
 
@@ -88,10 +101,9 @@ const ExecuteNodePath = (props: {
                 ...consoleOutputs,
                 {
                   date: Date.now(),
-                  value: `<span class='line-cursor'>MDL@${selectedNode.name.replaceAll(
-                    ' ',
-                    '-',
-                  )}: </span>
+                  value: `<span class='line-cursor'>[${dateFormatStyle.format(
+                    Date.now(),
+                  )}] MDL@${selectedNode.name.replaceAll(' ', '-')}: </span>
                      <span class="succeeded">${
                        selectedAction?.postExecutionSuccessText
                      }</span>`,
@@ -104,10 +116,9 @@ const ExecuteNodePath = (props: {
                 ...consoleOutputs,
                 {
                   date: Date.now(),
-                  value: `<span class='line-cursor'>MDL@${selectedNode.name.replaceAll(
-                    ' ',
-                    '-',
-                  )}: </span>
+                  value: `<span class='line-cursor'>[${dateFormatStyle.format(
+                    Date.now(),
+                  )}] MDL@${selectedNode.name.replaceAll(' ', '-')}: </span>
                     <span class="failed">${
                       selectedAction?.postExecutionFailureText
                     }</span>`,

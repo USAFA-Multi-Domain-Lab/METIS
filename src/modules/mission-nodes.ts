@@ -31,6 +31,7 @@ export interface IMissionNodeJson {
   nodeID: string
   name: string
   color: string
+  description: string
   preExecutionText: string
   executable: boolean
   device: boolean
@@ -55,6 +56,7 @@ export class MissionNode implements IMissionMappable {
   parentNode: MissionNode | null
   childNodes: Array<MissionNode>
   color: string
+  description: string
   preExecutionText: string
   executable: boolean
   device: boolean
@@ -71,6 +73,7 @@ export class MissionNode implements IMissionMappable {
 
   static default_name: string = 'Unnamed Node'
   static default_color: string = 'default'
+  static default_description: string = 'Description text goes here.'
   static default_preExecutionText: string = 'Node has not been executed.'
   static default_depthPadding: number = 0
   static default_executable: boolean = false
@@ -118,6 +121,7 @@ export class MissionNode implements IMissionMappable {
     nodeID: string,
     name: string,
     color: string,
+    description: string,
     preExecutionText: string,
     depthPadding: number,
     executable: boolean,
@@ -132,6 +136,7 @@ export class MissionNode implements IMissionMappable {
     this.parentNode = null
     this.childNodes = []
     this.color = color
+    this.description = 'Description goes here.' // ! Delete string to the left and set equal to "description" once the database is ready.
     this.preExecutionText = preExecutionText
     this._depthPadding = depthPadding
     this.executable = executable
