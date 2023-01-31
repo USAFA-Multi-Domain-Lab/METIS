@@ -225,18 +225,15 @@ export function DetailBox(props: {
   // in the field element. This will resize
   // the field based on the height of the
   // content.
-  const resizeField = (
-    event:
-      | React.KeyboardEvent<HTMLTextAreaElement>
-      | React.ChangeEvent<HTMLTextAreaElement>
-      | React.FocusEvent,
-  ): void => {
-    let fieldElement: HTMLTextAreaElement = event.target as HTMLTextAreaElement
+  const resizeField = (): void => {
+    let fieldElement: HTMLTextAreaElement | null = field.current
 
-    fieldElement.style.height = '1px'
-    fieldElement.style.height = `${
-      fieldOffsetHeight + fieldElement.scrollHeight
-    }px`
+    if (fieldElement) {
+      fieldElement.style.height = '1px'
+      fieldElement.style.height = `${
+        fieldOffsetHeight + fieldElement.scrollHeight
+      }px`
+    }
   }
 
   // Equivalent of componentDidMount.
@@ -250,6 +247,8 @@ export function DetailBox(props: {
         fieldElement.style.height = `${
           fieldOffsetHeight + fieldElement.scrollHeight
         }px`
+
+        new ResizeObserver(() => resizeField()).observe(fieldElement)
       }
 
       if (emptyStringAllowed && initialValue === '') {
@@ -283,7 +282,7 @@ export function DetailBox(props: {
         className={fieldClassName}
         ref={field}
         onChange={(event: React.ChangeEvent<HTMLTextAreaElement>) => {
-          resizeField(event)
+          resizeField()
           deliverValue(event.target.value)
 
           if (event.target.value !== '') {
@@ -292,7 +291,7 @@ export function DetailBox(props: {
         }}
         onBlur={(event: React.FocusEvent) => {
           let target: HTMLTextAreaElement = event.target as HTMLTextAreaElement
-          resizeField(event)
+          resizeField()
 
           if (!emptyStringAllowed && target.value === '') {
             setIsEmptyString(true)
