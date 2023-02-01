@@ -6,32 +6,27 @@ import { Mission } from '../../modules/missions'
 import Notification from '../../modules/notifications'
 import Tooltip from './Tooltip'
 import { INotifyOptions } from '../AppState'
+import { IConsoleOutput } from './ConsoleOutput'
 
 const ExecuteNodePath = (props: {
+  isOpen: boolean
   mission: Mission
   selectedNode: MissionNode | null
   notify: (message: string, options: INotifyOptions) => Notification
-  consoleOutputs: Array<{ date: number; value: string }>
-  setConsoleOutputs: (consoleOutputs: { date: number; value: string }[]) => void
-  setActionSelectionPromptIsDisplayed: (
-    actionSelectionPromptIsDisplayed: boolean,
-  ) => void
-  setExecuteNodePathPromptIsDisplayed: (
-    executeNodePathPromptIsDisplayed: boolean,
-  ) => void
+  outputToConsole: (output: IConsoleOutput) => void
+  handleCloseRequest: () => void
+  handleGoBackRequest: () => void
   loadingWidth: number
   setLoadingWidth: (loadingWidth: number) => void
 }) => {
+  let isOpen: boolean = props.isOpen
   let mission: Mission = props.mission
-  let selectedNode: MissionNode | null | undefined = props.selectedNode
+  let selectedNode: MissionNode | null = props.selectedNode
   let processTime: number | undefined =
     props.selectedNode?.selectedAction?.processTime
-  let consoleOutputs = props.consoleOutputs
-  let setConsoleOutputs = props.setConsoleOutputs
-  let setExecuteNodePathPromptIsDisplayed =
-    props.setExecuteNodePathPromptIsDisplayed
-  let setActionSelectionPromptIsDisplayed =
-    props.setActionSelectionPromptIsDisplayed
+  let outputToConsole = props.outputToConsole
+  let handleCloseRequest = props.handleCloseRequest
+  let handleGoBackRequest = props.handleGoBackRequest
   let actionName: string | undefined = props.selectedNode?.selectedAction?.name
   let loadingWidth: number = props.loadingWidth
   let setLoadingWidth = props.setLoadingWidth
@@ -42,7 +37,7 @@ const ExecuteNodePath = (props: {
 
   // Closes the execution prompt window
   const closeWindow = (): void => {
-    setExecuteNodePathPromptIsDisplayed(false)
+    handleCloseRequest()
   }
 
   // Creates an interval to visually display the loading bar's progress
@@ -63,20 +58,24 @@ const ExecuteNodePath = (props: {
   }
 
   const execute = () => {
-    if (props.selectedNode !== null) {
+    if (
+      props.selectedNode !== null &&
+      props.selectedNode.selectedAction !== null
+    ) {
       let selectedNode: MissionNode = props.selectedNode
-      let selectedAction: MissionNodeAction | null = selectedNode.selectedAction
-      let resourceCost: number | undefined = selectedAction?.resourceCost
+      let selectedAction: MissionNodeAction = props.selectedNode.selectedAction
+      let resourceCost: number | undefined = selectedAction.resourceCost
 
       if (mission.resources > 0 && resourceCost !== undefined) {
-        setExecuteNodePathPromptIsDisplayed(false)
+        closeWindow()
 
         let spendResources: number = mission.resources - resourceCost
+
         if (spendResources >= 0) {
           mission.resources = spendResources
           runLoadingBar()
 
-          selectedAction?.executeAction((success: boolean) => {
+          selectedAction.executeAction((success: boolean) => {
             // Output message in the terminal which differs based on whether
             // it passes or fails
             if (success) {
@@ -84,35 +83,29 @@ const ExecuteNodePath = (props: {
                 selectedNode.open()
               }
 
-              setConsoleOutputs([
-                ...consoleOutputs,
-                {
-                  date: Date.now(),
-                  value: `<span class='line-cursor'>MDL@${selectedNode.name.replaceAll(
-                    ' ',
-                    '-',
-                  )}: </span>
+              outputToConsole({
+                date: Date.now(),
+                value: `<span class='line-cursor'>MDL@${selectedNode.name.replaceAll(
+                  ' ',
+                  '-',
+                )}: </span>
                      <span class="succeeded">${
-                       selectedAction?.postExecutionSuccessText
+                       selectedAction.postExecutionSuccessText
                      }</span>`,
-                },
-              ])
+              })
 
               selectedAction?.updateWillSucceedArray()
             } else if (!success) {
-              setConsoleOutputs([
-                ...consoleOutputs,
-                {
-                  date: Date.now(),
-                  value: `<span class='line-cursor'>MDL@${selectedNode.name.replaceAll(
-                    ' ',
-                    '-',
-                  )}: </span>
+              outputToConsole({
+                date: Date.now(),
+                value: `<span class='line-cursor'>MDL@${selectedNode.name.replaceAll(
+                  ' ',
+                  '-',
+                )}: </span>
                     <span class="failed">${
-                      selectedAction?.postExecutionFailureText
+                      selectedAction.postExecutionFailureText
                     }</span>`,
-                },
-              ])
+              })
               selectedAction?.updateWillSucceedArray()
             }
           })
@@ -130,21 +123,19 @@ const ExecuteNodePath = (props: {
     }
   }
 
-  const selectAlternativeAction = () => {
-    if (selectedNode && selectedNode.actions.length > 1) {
-      setExecuteNodePathPromptIsDisplayed(false)
-      setActionSelectionPromptIsDisplayed(true)
-    }
-  }
-
   /* -- RENDER -- */
 
   // Logic to disable the execute button once a user is out of tokens.
+  let className: string = 'ExecuteNodePath'
   let executionButtonClassName: string = 'Button ExecutionButton'
   let displayTooltip: boolean = false
   let additionalActionButtonClassName: string = 'Button AdditionalActionButton'
   let gridTemplateColumns: string = 'auto auto'
   let gridTemplateRows: string = 'none'
+
+  if (!isOpen) {
+    className += ' Hidden'
+  }
 
   if (mission.resources <= 0) {
     executionButtonClassName += ' disabled'
@@ -159,7 +150,7 @@ const ExecuteNodePath = (props: {
   }
 
   return (
-    <div className='ExecuteNodePath'>
+    <div className={className}>
       <p className='x' onClick={closeWindow}>
         x
       </p>
@@ -192,7 +183,7 @@ const ExecuteNodePath = (props: {
 
         <button
           className={additionalActionButtonClassName}
-          onClick={selectAlternativeAction}
+          onClick={handleGoBackRequest}
         >
           Choose another action
         </button>

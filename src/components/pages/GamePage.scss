@@ -1,34 +1,5 @@
 @import '../../config.scss';
 
-$background-bar: linear-gradient(
-    to right,
-    transparent 0%,
-    transparent 50%,
-    $background-main 50%,
-    $background-main 100%
-  ),
-  linear-gradient(
-    to bottom,
-    transparent 0%,
-    transparent calc(50% - 1.5px),
-    $color-main calc(50% - 1.5px),
-    $color-main calc(50% + 1.5px),
-    transparent calc(50% + 1.5px),
-    transparent 100%
-  );
-
-@keyframes mini-bar-circuit {
-  from {
-    transform: rotate(-90deg);
-    background: $background-bar;
-  }
-  to {
-    transform: rotate(270deg);
-    background: $background-bar;
-  }
-}
-
-// Displays Mission Map only
 .GamePage {
   $page-vertical-padding: 35px;
   $page-horizontal-padding: 30px;
@@ -87,278 +58,128 @@ $background-bar: linear-gradient(
       }
 
       .ActionsContainer {
-        display: none;
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        width: fit-content;
+
+        .remove,
+        .copy,
+        .edit,
+        .Toggle {
+          &.remove:hover,
+          &.copy:hover,
+          &.edit:hover {
+            filter: invert(68%) sepia(94%) saturate(322%) hue-rotate(117deg)
+              brightness(200%) contrast(98%);
+          }
+        }
+
+        .edit {
+          background: url('../../assets/images/icons/edit.svg');
+          background-size: 65% 65%;
+          background-position: center;
+          background-repeat: no-repeat;
+          width: 1em;
+          height: 1em;
+          border: none;
+        }
+
+        .remove {
+          background: url('../../assets/images/icons/remove.svg');
+          background-size: 65% 65%;
+          background-position: center;
+          background-repeat: no-repeat;
+          width: 1em;
+          height: 1em;
+          border: none;
+        }
+
+        .copy {
+          background: url('../../assets/images/icons/copy.svg');
+          background-size: 65% 65%;
+          background-position: center;
+          background-repeat: no-repeat;
+          width: 1em;
+          height: 1em;
+          border: none;
+        }
+
+        .Toggle {
+          margin-left: 5px;
+          background-color: #1a2a1a;
+
+          &.Activated {
+            border-color: $terminal;
+            .Switch {
+              background-color: $terminal;
+            }
+          }
+
+          .Switch {
+            background-color: white;
+          }
+
+          &.Activated:hover {
+            border-color: $terminal;
+            .Switch {
+              background-color: $terminal;
+            }
+          }
+          &.Locked:hover {
+            cursor: pointer;
+          }
+        }
+      }
+    }
+
+    .PanelSizeRelationship {
+      &,
+      .ResizablePanel,
+      .ResizeBar,
+      .MissionMap,
+      .OutputPanel {
+        height: $map-n-output-height;
+      }
+
+      .ResizablePanel {
+        display: grid;
+
+        .MissionMap,
+        .NodeActions,
+        .ExecuteNodePath {
+          grid-column: 1 / 2;
+          grid-row: 1 / 2;
+        }
       }
     }
 
     .MissionMap {
       margin-right: 10px;
       width: 100%;
-      height: $map-n-output-height;
     }
 
     .OutputPanel {
-      height: $map-n-output-height;
     }
 
     .NodeActions {
-      position: absolute;
-      top: calc(
-        125px + #{$page-vertical-padding + $page-row-1-height +
-          $content-row-1-height}
-      );
-      left: calc(50vw - #{$node-action-width / 2});
-      width: $node-action-width;
-      max-height: 38vh;
-
-      @media only screen and (max-height: 585px) {
-        top: calc(
-          10px + #{$page-vertical-padding + $page-row-1-height +
-            $content-row-1-height}
-        );
-      }
+      position: relative;
+      top: 50%;
+      transform: translateY(-50%);
+      min-height: 150px;
+      max-height: 60%;
     }
 
     .ExecuteNodePath {
-      position: absolute;
-      top: calc(
-        125px + #{$page-vertical-padding + $page-row-1-height +
-          $content-row-1-height}
-      );
-      left: calc(50vw - #{$node-action-width / 2});
-      width: $node-action-width;
-      max-height: 50vh;
-
-      @media only screen and (max-height: 670px) {
-        top: calc(
-          10px + #{$page-vertical-padding + $page-row-1-height +
-            $content-row-1-height}
-        );
-      }
+      position: relative;
+      top: 50%;
+      transform: translateY(-50%);
+      min-height: 320px;
+      max-height: 60%;
     }
   }
 
   @media only screen and (max-width: 768px) {
     padding: 10px;
-  }
-
-  &.DisplayMapOnly {
-    .NodeActions {
-      display: none;
-
-      @media only screen and (max-height: 585px) {
-        display: none;
-      }
-    }
-
-    .ExecuteNodePath {
-      display: none;
-    }
-
-    .OutputPanel {
-      display: none;
-    }
-
-    .ActionPropertyDisplay {
-      display: none;
-    }
-  }
-
-  // Displays the Mission Map and Output Panel only
-  &.DisplayOutputPanel {
-    .Content {
-      .ResourceAndActionContainer {
-        grid-column: 1 / 3;
-      }
-
-      .MissionMap {
-        width: 100%;
-      }
-
-      .NodeActions {
-        display: none;
-
-        @media only screen and (max-height: 585px) {
-          display: none;
-        }
-      }
-
-      .ExecuteNodePath {
-        display: none;
-      }
-
-      .ActionPropertyDisplay {
-        display: none;
-      }
-    }
-  }
-
-  // Displays the Mission Map, Output Panel, and Node Action Window
-  &.DisplayOutputAndActionPrompt {
-    .Content {
-      .ResourceAndActionContainer {
-        grid-column: 1 / 3;
-      }
-
-      .MissionMap {
-        width: 100%;
-      }
-
-      .NodeActions {
-        left: calc(
-          calc(calc(100vw - #{$page-horizontal-padding * 2}) * 0.325) + #{$page-horizontal-padding} -
-            #{$node-action-width / 2}
-        );
-      }
-
-      .ExecuteNodePath {
-        display: none;
-      }
-
-      .ActionPropertyDisplay {
-        display: none;
-      }
-    }
-  }
-
-  // Displays the Mission Map, Output Panel, and Execution Path Prompt
-  &.DisplayOutputPanelAndPathPrompt {
-    .Content {
-      .ResourceAndActionContainer {
-        grid-column: 1 / 3;
-      }
-
-      .MissionMap {
-        width: 100%;
-      }
-
-      .NodeActions {
-        display: none;
-
-        @media only screen and (max-height: 585px) {
-          display: none;
-        }
-      }
-
-      .ExecuteNodePath {
-        left: calc(
-          calc(calc(100vw - #{$page-horizontal-padding * 2}) * 0.325) + #{$page-horizontal-padding} -
-            #{$node-action-width / 2}
-        );
-      }
-    }
-  }
-
-  &.DisplayPathPrompt {
-    .Content {
-      .OutputPanel {
-        display: none;
-      }
-
-      .NodeActions {
-        display: none;
-
-        @media only screen and (max-height: 585px) {
-          display: none;
-        }
-      }
-    }
-  }
-
-  &.DisplayActionPrompt {
-    .Content {
-      .OutputPanel {
-        display: none;
-      }
-
-      .ExecuteNodePath {
-        display: none;
-      }
-    }
-  }
-}
-
-// This changes the layout of the navigation bar based on the if the
-// user is an instructor or not
-.GamePage {
-  .Content {
-    .ResourceAndActionContainer {
-      .ActionsContainer {
-        &.show {
-          display: flex;
-          justify-content: flex-end;
-          align-items: center;
-          width: fit-content;
-
-          .remove,
-          .copy,
-          .edit,
-          .Toggle {
-            &.remove:hover,
-            &.copy:hover,
-            &.edit:hover {
-              filter: invert(68%) sepia(94%) saturate(322%) hue-rotate(117deg)
-                brightness(200%) contrast(98%);
-            }
-          }
-
-          .edit {
-            background: url('../../assets/images/icons/edit.svg');
-            background-size: 65% 65%;
-            background-position: center;
-            background-repeat: no-repeat;
-            width: 1em;
-            height: 1em;
-            border: none;
-          }
-
-          .remove {
-            background: url('../../assets/images/icons/remove.svg');
-            background-size: 65% 65%;
-            background-position: center;
-            background-repeat: no-repeat;
-            width: 1em;
-            height: 1em;
-            border: none;
-          }
-
-          .copy {
-            background: url('../../assets/images/icons/copy.svg');
-            background-size: 65% 65%;
-            background-position: center;
-            background-repeat: no-repeat;
-            width: 1em;
-            height: 1em;
-            border: none;
-          }
-
-          .Toggle {
-            margin-left: 5px;
-            background-color: #1a2a1a;
-
-            &.Activated {
-              border-color: $terminal;
-              .Switch {
-                background-color: $terminal;
-              }
-            }
-
-            .Switch {
-              background-color: white;
-            }
-
-            &.Activated:hover {
-              border-color: $terminal;
-              .Switch {
-                background-color: $terminal;
-              }
-            }
-            &.Locked:hover {
-              cursor: pointer;
-            }
-          }
-        }
-      }
-    }
   }
 }

@@ -1,6 +1,8 @@
 @import '../../config.scss';
 
 .ResizablePanel {
+  overflow-x: hidden;
+  overflow-y: hidden;
   height: 100%;
 }
 
@@ -24,13 +26,22 @@
       transparent $ResizeBar-width
     );
 
-    &:hover,
-    &.IsDragging {
+    &:hover {
       cursor: ew-resize;
       opacity: 1;
     }
+  }
 
-    &.IsDragging {
+  &.IsDragging {
+    *,
+    *::before,
+    *::after {
+      user-select: none !important;
+    }
+
+    .ResizeBar {
+      cursor: ew-resize;
+      opacity: 1;
       background: linear-gradient(
         to right,
         transparent 3px,

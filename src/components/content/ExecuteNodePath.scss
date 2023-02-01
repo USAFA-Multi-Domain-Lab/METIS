@@ -4,14 +4,12 @@
   box-sizing: border-box;
   z-index: 100;
   width: 350px;
-  max-height: 430px;
-  margin-right: 10px;
+  margin: 0 auto;
   border: 2px solid $color-main;
-  background-color: $background-main;
-  padding: 0;
-  margin: 0;
+  height: fit-content;
   padding: 10px 20px;
-  overflow-y: scroll;
+  background-color: $background-main;
+  overflow-y: auto;
   overflow-x: hidden;
 
   .PromptDisplayText {

@@ -11,6 +11,7 @@ export enum EPanelSizingMode {
 
 interface IResizablePanel {
   minSize: number /*px*/
+  isOpen: boolean
   render: () => JSX.Element | null
 }
 
@@ -26,6 +27,7 @@ export class ResizablePanel extends React.Component<
   // inherited
   static defaultProps = {
     minSize: 200,
+    isOpen: true,
   }
 
   // inherited
@@ -37,9 +39,15 @@ export class ResizablePanel extends React.Component<
 
   // inherited
   render(): JSX.Element | null {
+    let minSize: number = this.props.minSize
+    let isOpen: boolean = this.props.isOpen === true
     let className: string = 'ResizablePanel'
     let style: React.CSSProperties = {
-      minWidth: `${this.props.minSize}px`,
+      minWidth: `${minSize}px`,
+    }
+
+    if (!isOpen) {
+      className += ' Hidden'
     }
 
     return (
@@ -223,7 +231,7 @@ export class PanelSizeRelationship extends React.Component<
     let style: React.CSSProperties = {}
 
     if (isDragging) {
-      resizeBarClassName += ' IsDragging'
+      className += ' IsDragging'
     }
 
     switch (this.props.sizingMode) {
@@ -237,7 +245,12 @@ export class PanelSizeRelationship extends React.Component<
         break
     }
 
-    style.gridTemplateColumns = `${panel1GridTemplateColumn} ${PanelSizeRelationship.RESIZE_BAR_WIDTH}px ${panel2GridTemplateColumn}`
+    if (panel1.isOpen && panel2.isOpen) {
+      style.gridTemplateColumns = `${panel1GridTemplateColumn} ${PanelSizeRelationship.RESIZE_BAR_WIDTH}px ${panel2GridTemplateColumn}`
+    } else {
+      style.gridTemplateColumns = 'auto'
+      resizeBarClassName += ' Hidden'
+    }
 
     return (
       <div

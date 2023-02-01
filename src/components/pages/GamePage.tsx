@@ -23,7 +23,10 @@ import { AxiosError } from 'axios'
 import {
   EPanelSizingMode,
   PanelSizeRelationship,
+  ResizablePanel,
 } from '../content/ResizablePanels'
+import { MissionNodeAction } from '../../modules/mission-node-actions'
+import { IConsoleOutput } from '../content/ConsoleOutput'
 
 export interface IGamePage extends IPage {
   missionID: string
@@ -50,14 +53,10 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
   >([])
   const [outputPanelIsDisplayed, setOutputPanelIsDisplayed] =
     useState<boolean>(false)
-  const [
-    executeNodePathPromptIsDisplayed,
-    setExecuteNodePathPromptIsDisplayed,
-  ] = useState<boolean>(false)
-  const [
-    actionSelectionPromptIsDisplayed,
-    setActionSelectionPromptIsDisplayed,
-  ] = useState<boolean>(false)
+  const [executeNodePathIsDisplayed, setExecuteNodePathIsDisplayed] =
+    useState<boolean>(false)
+  const [nodeActionsIsDisplayed, setNodeActionsIsDisplayed] =
+    useState<boolean>(false)
   const [loadingWidth, setLoadingWidth] = useState<number>(0)
 
   /* -- COMPONENT EFFECTS -- */
@@ -108,53 +107,24 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
         returningPageProps: { missionID: mission.missionID },
       })
 
+    // This will output to the console.
+    const outputToConsole = (output: IConsoleOutput): void => {
+      let newOutputs = [...consoleOutputs]
+      newOutputs.push({ date: Date.now(), value: output.value })
+      setConsoleOutputs(newOutputs)
+    }
+
     /* -- RENDER -- */
 
     let className: string = 'GamePage Page'
 
-    if (
-      outputPanelIsDisplayed === true &&
-      executeNodePathPromptIsDisplayed === false &&
-      actionSelectionPromptIsDisplayed === false
-    ) {
-      className += ' DisplayOutputPanel'
-    } else if (
-      outputPanelIsDisplayed === true &&
-      actionSelectionPromptIsDisplayed === true &&
-      executeNodePathPromptIsDisplayed === false
-    ) {
-      className += ' DisplayOutputAndActionPrompt'
-    } else if (
-      outputPanelIsDisplayed === true &&
-      executeNodePathPromptIsDisplayed === true &&
-      actionSelectionPromptIsDisplayed === false
-    ) {
-      className += ' DisplayOutputPanelAndPathPrompt'
-    } else if (
-      outputPanelIsDisplayed === false &&
-      executeNodePathPromptIsDisplayed === true &&
-      actionSelectionPromptIsDisplayed === false
-    ) {
-      className += ' DisplayPathPrompt'
-    } else if (
-      outputPanelIsDisplayed === false &&
-      executeNodePathPromptIsDisplayed === false &&
-      actionSelectionPromptIsDisplayed === true
-    ) {
-      className += ' DisplayActionPrompt'
-    } else {
-      className += ' DisplayMapOnly'
-    }
-
     // Keeps track of if the user is logged in or not.
     let actionsClassName = 'ActionsContainer'
-    let displayLogin: boolean = true
-    let displayLogout: boolean = false
+    let displayLogin: boolean = appState.currentUser === null
+    let displayLogout: boolean = !displayLogin
 
-    if (appState.currentUser !== null) {
-      actionsClassName += ' show'
-      displayLogin = false
-      displayLogout = true
+    if (appState.currentUser === null) {
+      actionsClassName += ' Hidden'
     }
 
     // Logic that will lock the mission toggle while a request is being sent
@@ -341,105 +311,158 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
 
             <PanelSizeRelationship
               panel1={{
-                minSize: 330,
+                ...ResizablePanel.defaultProps,
+                minSize: 400,
                 render: () => (
-                  <MissionMap
-                    mission={mission}
-                    missionAjaxStatus={EAjaxStatus.Loaded}
-                    loadingWidth={loadingWidth}
-                    handleNodeSelection={(selectedNode: MissionNode) => {
-                      setLastSelectedNode(selectedNode)
+                  <>
+                    <MissionMap
+                      mission={mission}
+                      missionAjaxStatus={EAjaxStatus.Loaded}
+                      loadingWidth={loadingWidth}
+                      handleNodeSelection={(selectedNode: MissionNode) => {
+                        setLastSelectedNode(selectedNode)
 
-                      if (
-                        selectedNode.preExecutionText !== '' &&
-                        selectedNode.preExecutionText !== null &&
-                        selectedNode.selectedAction?.succeeded !== true
-                      ) {
-                        let timeStamp: number = 5 * (new Date() as any)
-                        consoleOutputs.push({
-                          date: timeStamp,
-                          value: `<span class='line-cursor'>MDL@${selectedNode.name.replaceAll(
-                            ' ',
-                            '-',
-                          )}: </span>
+                        if (
+                          selectedNode.preExecutionText !== '' &&
+                          selectedNode.preExecutionText !== null &&
+                          selectedNode.selectedAction?.succeeded !== true
+                        ) {
+                          let timeStamp: number = 5 * (new Date() as any)
+                          consoleOutputs.push({
+                            date: timeStamp,
+                            value: `<span class='line-cursor'>MDL@${selectedNode.name.replaceAll(
+                              ' ',
+                              '-',
+                            )}: </span>
                               <span class='default'>${
                                 selectedNode.preExecutionText
                               }</span>`,
-                        })
-                        setOutputPanelIsDisplayed(true)
-                      }
-
-                      if (!selectedNode.executable) {
-                        if (selectedNode.hasChildren && !selectedNode.isOpen) {
-                          selectedNode.open()
+                          })
+                          setOutputPanelIsDisplayed(true)
                         }
 
-                        selectedNode.color = ''
-                      } else {
-                        if (
-                          !mission.disableNodes &&
-                          !selectedNode.selectedAction?.succeeded &&
-                          selectedNode.actions.length > 1
-                        ) {
-                          setActionSelectionPromptIsDisplayed(true)
+                        if (!selectedNode.executable) {
+                          if (
+                            selectedNode.hasChildren &&
+                            !selectedNode.isOpen
+                          ) {
+                            selectedNode.open()
+                          }
+
+                          selectedNode.color = ''
+                        } else {
+                          if (
+                            !mission.disableNodes &&
+                            !selectedNode.selectedAction?.succeeded &&
+                            selectedNode.actions.length > 1
+                          ) {
+                            setNodeActionsIsDisplayed(true)
+                          } else if (
+                            selectedNode.actions.length === 1 &&
+                            !selectedNode.selectedAction?.succeeded
+                          ) {
+                            selectedNode.selectedAction =
+                              selectedNode.actions[0]
+                            selectedNode.selectedAction.processTime =
+                              selectedNode.actions[0].processTime
+                            setNodeActionsIsDisplayed(false)
+                            setExecuteNodePathIsDisplayed(true)
+                          } else if (selectedNode.actions.length === 0) {
+                            setNodeActionsIsDisplayed(true)
+                          }
+                        }
+                      }}
+                      applyNodeClassName={(node: MissionNode) => {
+                        let className: string = ''
+
+                        if (node.executing) {
+                          className += ' LoadingBar'
+                        }
+
+                        if (node.executed && node.selectedAction?.succeeded) {
+                          className += ' succeeded'
                         } else if (
-                          selectedNode.actions.length === 1 &&
-                          !selectedNode.selectedAction?.succeeded
+                          node.executed &&
+                          !node.selectedAction?.succeeded
                         ) {
-                          selectedNode.selectedAction = selectedNode.actions[0]
-                          selectedNode.selectedAction.processTime =
-                            selectedNode.actions[0].processTime
-                          setActionSelectionPromptIsDisplayed(false)
-                          setExecuteNodePathPromptIsDisplayed(true)
-                        } else if (selectedNode.actions.length === 0) {
-                          setActionSelectionPromptIsDisplayed(true)
+                          className += ' failed'
                         }
+
+                        return className
+                      }}
+                      renderNodeTooltipDescription={(node: MissionNode) => {
+                        let description: string = ''
+                        let nodeActionDisplay = 'None selected'
+
+                        if (node.selectedAction !== null) {
+                          nodeActionDisplay = node.selectedAction.name
+                        }
+
+                        if (node.executable && node.executed) {
+                          description =
+                            `* Executed node in ${
+                              (node.selectedAction?.processTime as number) /
+                              1000
+                            } second(s)\n` +
+                            `* Action executed: ${node.selectedAction?.name}\n` +
+                            `* Chance of success: ${
+                              (node.selectedAction?.successChance as number) *
+                              100
+                            }%`
+                        }
+
+                        return description
+                      }}
+                    />
+                    <NodeActions
+                      isOpen={nodeActionsIsDisplayed}
+                      selectedNode={lastSelectedNode}
+                      handleActionSelectionRequest={(
+                        action: MissionNodeAction,
+                      ) => {
+                        setNodeActionsIsDisplayed(false)
+
+                        if (lastSelectedNode !== null) {
+                          lastSelectedNode.selectedAction = action
+                          if (lastSelectedNode.selectedAction !== null) {
+                            lastSelectedNode.selectedAction.processTime =
+                              action.processTime
+                          }
+                          setExecuteNodePathIsDisplayed(true)
+                        }
+                      }}
+                      handleCloseRequest={() =>
+                        setNodeActionsIsDisplayed(false)
                       }
-                    }}
-                    applyNodeClassName={(node: MissionNode) => {
-                      let className: string = ''
-
-                      if (node.executing) {
-                        className += ' LoadingBar'
+                    />
+                    <ExecuteNodePath
+                      isOpen={executeNodePathIsDisplayed}
+                      mission={mission}
+                      selectedNode={lastSelectedNode}
+                      outputToConsole={outputToConsole}
+                      handleCloseRequest={() =>
+                        setExecuteNodePathIsDisplayed(false)
                       }
-
-                      if (node.executed && node.selectedAction?.succeeded) {
-                        className += ' succeeded'
-                      } else if (
-                        node.executed &&
-                        !node.selectedAction?.succeeded
-                      ) {
-                        className += ' failed'
-                      }
-
-                      return className
-                    }}
-                    renderNodeTooltipDescription={(node: MissionNode) => {
-                      let description: string = ''
-                      let nodeActionDisplay = 'None selected'
-
-                      if (node.selectedAction !== null) {
-                        nodeActionDisplay = node.selectedAction.name
-                      }
-
-                      if (node.executable && node.executed) {
-                        description =
-                          `* Executed node in ${
-                            (node.selectedAction?.processTime as number) / 1000
-                          } second(s)\n` +
-                          `* Action executed: ${node.selectedAction?.name}\n` +
-                          `* Chance of success: ${
-                            (node.selectedAction?.successChance as number) * 100
-                          }%`
-                      }
-
-                      return description
-                    }}
-                  />
+                      handleGoBackRequest={() => {
+                        if (
+                          lastSelectedNode &&
+                          lastSelectedNode.actions.length > 1
+                        ) {
+                          setExecuteNodePathIsDisplayed(false)
+                          setNodeActionsIsDisplayed(true)
+                        }
+                      }}
+                      loadingWidth={loadingWidth}
+                      setLoadingWidth={setLoadingWidth}
+                      notify={appActions.notify}
+                    />
+                  </>
                 ),
               }}
               panel2={{
+                ...ResizablePanel.defaultProps,
                 minSize: 400,
+                isOpen: outputPanelIsDisplayed,
                 render: () => (
                   <OutputPanel
                     consoleOutputs={consoleOutputs}
@@ -449,31 +472,6 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
               }}
               sizingMode={EPanelSizingMode.Panel1_Auto__Panel2_Defined}
               initialDefinedSize={400}
-            />
-
-            <NodeActions
-              selectedNode={lastSelectedNode}
-              setActionSelectionPromptIsDisplayed={
-                setActionSelectionPromptIsDisplayed
-              }
-              setExecuteNodePathPromptIsDisplayed={
-                setExecuteNodePathPromptIsDisplayed
-              }
-            />
-            <ExecuteNodePath
-              mission={mission}
-              selectedNode={lastSelectedNode}
-              consoleOutputs={consoleOutputs}
-              setConsoleOutputs={setConsoleOutputs}
-              setActionSelectionPromptIsDisplayed={
-                setActionSelectionPromptIsDisplayed
-              }
-              setExecuteNodePathPromptIsDisplayed={
-                setExecuteNodePathPromptIsDisplayed
-              }
-              loadingWidth={loadingWidth}
-              setLoadingWidth={setLoadingWidth}
-              notify={appActions.notify}
             />
           </div>
         }

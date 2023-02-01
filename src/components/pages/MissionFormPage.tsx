@@ -33,6 +33,7 @@ import Navigation from '../content/Navigation'
 import {
   EPanelSizingMode,
   PanelSizeRelationship,
+  ResizablePanel,
 } from '../content/ResizablePanels'
 
 // This is a enum used to describe
@@ -487,6 +488,7 @@ export default function MissionFormPage(
         <div className='Content'>
           <PanelSizeRelationship
             panel1={{
+              ...ResizablePanel.defaultProps,
               minSize: 330,
               render: () => (
                 <MissionMap
@@ -526,6 +528,7 @@ export default function MissionFormPage(
               ),
             }}
             panel2={{
+              ...ResizablePanel.defaultProps,
               minSize: 330,
               render: () => {
                 if (missionDetailsIsActive) {
@@ -619,42 +622,42 @@ function MissionDetails(props: {
             <div className='ErrorMessage Hidden'></div>
           </div>
           <div className='SidePanelSection MainDetails'>
-          <Detail
-            label='Name'
-            initialValue={mission.name}
-            deliverValue={(name: string) => {
-              if (name !== '') {
-                mission.name = name
-                removeMissionEmptyString('name')
+            <Detail
+              label='Name'
+              initialValue={mission.name}
+              deliverValue={(name: string) => {
+                if (name !== '') {
+                  mission.name = name
+                  removeMissionEmptyString('name')
+                  handleChange()
+                } else {
+                  setMissionEmptyStringArray([
+                    ...missionEmptyStringArray,
+                    `missionID=${mission.missionID}_field=name`,
+                  ])
+                }
+              }}
+              key={`${mission.missionID}_name`}
+            />
+            <DetailToggle
+              label={'Live'}
+              initialValue={mission.live}
+              deliverValue={(live: boolean) => {
+                mission.live = live
                 handleChange()
-              } else {
-                setMissionEmptyStringArray([
-                  ...missionEmptyStringArray,
-                  `missionID=${mission.missionID}_field=name`,
-                ])
-              }
-            }}
-            key={`${mission.missionID}_name`}
-          />
-          <DetailToggle
-            label={'Live'}
-            initialValue={mission.live}
-            deliverValue={(live: boolean) => {
-              mission.live = live
-              handleChange()
-            }}
-          />
-          <DetailNumber
-            label='Initial Resources'
-            initialValue={mission.initialResources}
-            deliverValue={(initialResources: number | null) => {
-              if (initialResources !== null) {
-                mission.initialResources = initialResources
-                handleChange()
-              }
-            }}
-            key={`${mission.missionID}_initialResources`}
-          />
+              }}
+            />
+            <DetailNumber
+              label='Initial Resources'
+              initialValue={mission.initialResources}
+              deliverValue={(initialResources: number | null) => {
+                if (initialResources !== null) {
+                  mission.initialResources = initialResources
+                  handleChange()
+                }
+              }}
+              key={`${mission.missionID}_initialResources`}
+            />
           </div>
         </div>
       </div>
