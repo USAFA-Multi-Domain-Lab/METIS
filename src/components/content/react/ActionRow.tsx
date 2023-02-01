@@ -2,23 +2,33 @@ import { Mission } from '../../../modules/missions'
 import { EAjaxStatus } from '../../../modules/toolbox/ajax'
 import Toggle, { EToggleLockState } from './Toggle'
 import Tooltip from './Tooltip'
-import '../sass/MissionSelectionRow.scss'
+import '../sass/ActionRow.scss'
 import { MiniButtonSVGPanel } from './MiniButtonSVGPanel'
 import { EMiniButtonSVGPurpose, MiniButtonSVG } from './MiniButtonSVG'
+import AppState from '../../AppState'
 
 // This will render a row on the page
 // for the given mission.
-export default function MissionSelectionRow(props: {
+export default function ActionRow(props: {
   mission: Mission
+  uniqueClassName?: string
+  innerText: string
+  tooltipDescription?: string
   liveAjaxStatus: EAjaxStatus
-  handleSelectionRequest: () => void
+  appState: AppState
+  handleSelectionRequest?: () => void
   handleEditRequest: () => void
   handleDeleteRequest: () => void
   handleCopyRequest: () => void
   handleToggleLiveRequest: (live: boolean) => void
 }): JSX.Element | null {
+  // Global variables
   let mission: Mission = props.mission
+  let uniqueClassName: string | undefined = props.uniqueClassName
+  let innerText: string = props.innerText
+  let tooltipDescription: string | undefined = props.tooltipDescription
   let liveAjaxStatus: EAjaxStatus = props.liveAjaxStatus
+  let appState: AppState = props.appState
   let currentActions: MiniButtonSVG[] = []
   let availableMiniActions = {
     edit: new MiniButtonSVG({
@@ -55,10 +65,19 @@ export default function MissionSelectionRow(props: {
 
   // -- RENDER --
 
-  // Logic for missions to appear/disappear for students
-  // based on what the instructor sets the individual
-  // mission to.
-  let missionSelectionRowClassName: string = 'MissionSelectionRow'
+  let actionsContainerClassName: string = 'ActionsContainer'
+
+  if (uniqueClassName === undefined) {
+    uniqueClassName = 'NoClassName'
+  }
+
+  if (tooltipDescription === undefined) {
+    tooltipDescription = ''
+  }
+
+  if (appState.currentUser !== null) {
+    actionsContainerClassName += ' InstructorView'
+  }
 
   // Logic that will lock the mission toggle while a request is being sent
   // to set the mission.live paramter
@@ -79,12 +98,12 @@ export default function MissionSelectionRow(props: {
   )
 
   return (
-    <div className={missionSelectionRowClassName}>
-      <div className='MissionName' onClick={props.handleSelectionRequest}>
-        {mission.name}
-        <Tooltip description={'Launch mission.'} />
+    <div className='MissionSelectionRow'>
+      <div className={uniqueClassName} onClick={props.handleSelectionRequest}>
+        {innerText}
+        <Tooltip description={tooltipDescription} />
       </div>
-      <div className='ActionsContainer'>
+      <div className={actionsContainerClassName}>
         <MiniButtonSVGPanel buttons={currentActions} linkBack={null} />
         <div className='ToggleContainer'>
           <Toggle

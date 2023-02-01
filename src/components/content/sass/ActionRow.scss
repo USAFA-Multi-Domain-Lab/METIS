@@ -8,30 +8,12 @@
   flex-flow: row wrap;
   width: fill;
 
-  &.MissionSelectionRow:hover {
-    background-color: $node-blue;
-    color: $terminal;
-  }
-
-  .MissionName {
-    display: block;
-    box-sizing: border-box;
-    height: 40px;
-    width: 100%;
-    cursor: pointer;
-    padding: 10px 0 10px 20px;
-    width: calc(100% - 10px);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-
-    &.MissionName:hover {
-      color: $terminal;
-    }
+  .NoClassName {
+    display: none;
   }
 
   .ActionsContainer {
-    display: flex;
+    display: none;
     box-sizing: border-box;
     margin-top: -40px;
     margin-left: auto;
@@ -66,6 +48,10 @@
       &.Locked {
         cursor: pointer;
       }
+    }
+
+    &.InstructorView {
+      display: flex;
     }
   }
 }

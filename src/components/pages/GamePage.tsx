@@ -1,11 +1,5 @@
 import { useEffect, useState } from 'react'
-import {
-  copyMission,
-  deleteMission,
-  getMission,
-  Mission,
-  setLive,
-} from '../../modules/missions'
+import { getMission, Mission } from '../../modules/missions'
 import { EAjaxStatus } from '../../modules/toolbox/ajax'
 import MissionMap from '../content/react/MissionMap'
 import OutputPanel from '../content/react/OutputPanel'
@@ -15,14 +9,16 @@ import NodeActions from '../content/react/NodeActions'
 import { IPage } from '../App'
 import { MissionNode } from '../../modules/mission-nodes'
 import AppState, { AppActions } from '../AppState'
-import { ButtonSVG, EButtonSVGPurpose } from '../content/react/ButtonSVG'
-import Toggle, { EToggleLockState } from '../content/react/Toggle'
-import Tooltip from '../content/react/Tooltip'
 import Navigation from '../content/react/Navigation'
 import { AxiosError } from 'axios'
+import ActionRow from '../content/react/ActionRow'
 
 export interface IGamePage extends IPage {
   missionID: string
+  handleEditRequest: (mission: Mission) => void
+  handleDeleteRequest: (mission: Mission) => void
+  handleCopyRequest: (mission: Mission) => void
+  handleToggleLiveRequest: (mission: Mission, live: boolean) => void
 }
 
 // This will render a dashboard with a radar
@@ -98,14 +94,26 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
     const logout = () =>
       appActions.logout({
         returningPagePath: 'GamePage',
-        returningPageProps: { missionID: mission.missionID },
+        returningPageProps: {
+          missionID: mission.missionID,
+          handleEditRequest: props.handleEditRequest,
+          handleDeleteRequest: props.handleDeleteRequest,
+          handleCopyRequest: props.handleCopyRequest,
+          handleToggleLiveRequest: props.handleToggleLiveRequest,
+        },
       })
 
     // This will switch to the auth page.
     const login = () =>
       appActions.goToPage('AuthPage', {
         returningPagePath: 'GamePage',
-        returningPageProps: { missionID: mission.missionID },
+        returningPageProps: {
+          missionID: mission.missionID,
+          handleEditRequest: props.handleEditRequest,
+          handleDeleteRequest: props.handleDeleteRequest,
+          handleCopyRequest: props.handleCopyRequest,
+          handleToggleLiveRequest: props.handleToggleLiveRequest,
+        },
       })
 
     /* -- RENDER -- */
@@ -147,25 +155,12 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
     }
 
     // Keeps track of if the user is logged in or not.
-    let actionsClassName = 'ActionsContainer'
     let displayLogin: boolean = true
     let displayLogout: boolean = false
 
     if (appState.currentUser !== null) {
-      actionsClassName += ' show'
       displayLogin = false
       displayLogout = true
-    }
-
-    // Logic that will lock the mission toggle while a request is being sent
-    // to set the mission.live paramter
-    let lockLiveToggle: EToggleLockState = EToggleLockState.Unlocked
-    if (liveAjaxStatus === EAjaxStatus.Loading && mission.live) {
-      lockLiveToggle = EToggleLockState.LockedActivation
-    } else if (liveAjaxStatus === EAjaxStatus.Loading && !mission.live) {
-      lockLiveToggle = EToggleLockState.LockedDeactivation
-    } else {
-      lockLiveToggle = EToggleLockState.Unlocked
     }
 
     // Logic that lets the user visually grab their attention to show them that
@@ -201,143 +196,19 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
         {
           // -- content --
           <div className='Content'>
-            <div className='ResourceAndActionContainer'>
-              <div className={resourcesClassName}>
-                Resources remaining: {mission.resources}
-              </div>
-              <div className={actionsClassName}>
-                <ButtonSVG
-                  purpose={EButtonSVGPurpose.Edit}
-                  handleClick={() => {
-                    appActions.goToPage('MissionFormPage', {
-                      missionID: mission.missionID,
-                    })
-                  }}
-                  tooltipDescription={'Edit mission.'}
-                />
-                <ButtonSVG
-                  purpose={EButtonSVGPurpose.Remove}
-                  handleClick={() => {
-                    appActions.confirm(
-                      'Are you sure you want to delete this mission?',
-                      (concludeAction: () => void) => {
-                        concludeAction()
-                        appActions.beginLoading('Deleting mission...')
-
-                        deleteMission(
-                          mission.missionID,
-                          () => {
-                            appActions.notify(
-                              `Successfully deleted ${mission.name}.`,
-                            )
-                            appActions.goToPage('MissionSelectionPage', {})
-                          },
-                          () => {
-                            appActions.notify(
-                              `Failed to delete ${mission.name}.`,
-                            )
-                          },
-                        )
-                      },
-                      {
-                        pendingMessageUponConfirm: 'Deleting...',
-                      },
-                    )
-                  }}
-                  tooltipDescription={'Remove mission.'}
-                />
-                <ButtonSVG
-                  purpose={EButtonSVGPurpose.Copy}
-                  handleClick={() => {
-                    appActions.confirm(
-                      'Enter the name of the new mission.',
-                      (concludeAction: () => void, entry: string) => {
-                        concludeAction()
-                        appActions.beginLoading('Copying mission...')
-
-                        copyMission(
-                          mission.missionID,
-                          entry,
-                          (copy: Mission) => {
-                            appActions.notify(
-                              `Successfully copied ${mission.name}.`,
-                            )
-                            appActions.goToPage('GamePage', {
-                              missionID: copy.missionID,
-                            })
-                            setMountHandled(false)
-                            concludeAction()
-                          },
-                          () => {
-                            appActions.notify(`Failed to copy ${mission.name}.`)
-                            concludeAction()
-                          },
-                        )
-                      },
-                      {
-                        requireEntry: true,
-                        entryLabel: 'Name',
-                        buttonConfirmText: 'Copy',
-                        pendingMessageUponConfirm: 'Copying...',
-                      },
-                    )
-                  }}
-                  tooltipDescription={'Copy mission.'}
-                />
-                <div className='ToggleContainer'>
-                  <Toggle
-                    initiallyActivated={mission.live}
-                    lockState={lockLiveToggle}
-                    deliverValue={(live: boolean) => {
-                      mission.live = live
-
-                      setLive(
-                        mission.missionID,
-                        live,
-                        () => {
-                          if (live) {
-                            appActions.notify(
-                              `${mission.name} was successfully turned on.`,
-                              { duration: 3000 },
-                            )
-                            setLiveAjaxStatus(EAjaxStatus.Loaded)
-                          } else {
-                            appActions.notify(
-                              `${mission.name} was successfully turned off.`,
-                              { duration: 3000 },
-                            )
-                            setLiveAjaxStatus(EAjaxStatus.Loaded)
-                          }
-                        },
-                        () => {
-                          if (live) {
-                            appActions.notify(
-                              `${mission.name} failed to turn on.`,
-                              { duration: 3000 },
-                            )
-                            setLiveAjaxStatus(EAjaxStatus.Error)
-                          } else {
-                            appActions.notify(
-                              `${mission.name} failed to turn off.`,
-                              { duration: 3000 },
-                            )
-                            setLiveAjaxStatus(EAjaxStatus.Error)
-                          }
-                        },
-                      )
-                      setLiveAjaxStatus(EAjaxStatus.Loading)
-                    }}
-                  />
-                  <Tooltip
-                    description={
-                      !mission.live
-                        ? 'Sets mission as live thus allowing students to access it.'
-                        : 'Disables mission thus preventing students from accessing it.'
-                    }
-                  />
-                </div>
-              </div>
-            </div>
+            <ActionRow
+              mission={mission}
+              uniqueClassName={resourcesClassName}
+              innerText={`Resources remaining: ${mission.resources}`}
+              liveAjaxStatus={liveAjaxStatus}
+              appState={appState}
+              handleEditRequest={() => props.handleEditRequest(mission)}
+              handleDeleteRequest={() => props.handleDeleteRequest(mission)}
+              handleCopyRequest={() => props.handleCopyRequest(mission)}
+              handleToggleLiveRequest={(live: boolean) =>
+                props.handleToggleLiveRequest(mission, live)
+              }
+            />
             <MissionMap
               mission={mission}
               missionAjaxStatus={EAjaxStatus.Loaded}

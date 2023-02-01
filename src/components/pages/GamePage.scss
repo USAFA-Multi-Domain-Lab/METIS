@@ -64,30 +64,22 @@ $background-bar: linear-gradient(
     width: 100%;
     height: $page-row-2-height;
 
-    .ResourceAndActionContainer {
-      display: flex;
-      justify-content: flex-start;
-      align-items: center;
-      flex-flow: row wrap;
-      width: 100%;
-      height: $resource-n-action-height;
-      margin: 0;
-
+    .MissionSelectionRow {
       .Resources {
         display: flex;
-        justify-content: flex-start;
+        box-sizing: border-box;
         align-items: center;
-        width: calc(100% - 167px);
-        margin: 0 0 20px;
-        font-size: 1em;
+        height: 40px;
+        cursor: default;
+        padding: 10px 0 0;
+        width: 100%;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
 
         &.RedAlert {
           color: $terminal-red;
         }
-      }
-
-      .ActionsContainer {
-        display: none;
       }
     }
 
@@ -148,10 +140,7 @@ $background-bar: linear-gradient(
     }
   }
 
-  @media only screen and (max-width: 768px) {
-    padding: 10px;
-  }
-
+  // Displays the map only
   &.DisplayMapOnly {
     .NodeActions {
       display: none;
@@ -182,10 +171,6 @@ $background-bar: linear-gradient(
   &.DisplayOutputPanel {
     .Content {
       grid-template-columns: 65% 35%;
-
-      .ResourceAndActionContainer {
-        grid-column: 1 / 3;
-      }
 
       .MissionMap {
         width: 100%;
@@ -218,7 +203,7 @@ $background-bar: linear-gradient(
     .Content {
       grid-template-columns: 65% 35%;
 
-      .ResourceAndActionContainer {
+      .MissionSelectionRow {
         grid-column: 1 / 3;
       }
 
@@ -257,7 +242,7 @@ $background-bar: linear-gradient(
     .Content {
       grid-template-columns: 65% 35%;
 
-      .ResourceAndActionContainer {
+      .MissionSelectionRow {
         grid-column: 1 / 3;
       }
 
@@ -287,6 +272,8 @@ $background-bar: linear-gradient(
     }
   }
 
+  // Hides the Node Action Selection window prompt and displays
+  // the Execute Node Path window prompt
   &.DisplayPathPrompt {
     .Content {
       .OutputPanel {
@@ -303,6 +290,8 @@ $background-bar: linear-gradient(
     }
   }
 
+  // Hides the Execute Node Path window prompt and displays
+  // the Node Action Selection window prompt
   &.DisplayActionPrompt {
     .Content {
       .OutputPanel {
@@ -318,89 +307,8 @@ $background-bar: linear-gradient(
       }
     }
   }
-}
 
-// This changes the layout of the navigation bar based on the if the
-// user is an instructor or not
-.GamePage {
-  .Content {
-    .ResourceAndActionContainer {
-      .ActionsContainer {
-        &.show {
-          display: flex;
-          justify-content: flex-end;
-          align-items: center;
-          width: fit-content;
-
-          .remove,
-          .copy,
-          .edit,
-          .Toggle {
-            &.remove:hover,
-            &.copy:hover,
-            &.edit:hover {
-              filter: invert(68%) sepia(94%) saturate(322%) hue-rotate(117deg)
-                brightness(200%) contrast(98%);
-            }
-          }
-
-          .edit {
-            background: url('../../assets/images/icons/edit.svg');
-            background-size: 65% 65%;
-            background-position: center;
-            background-repeat: no-repeat;
-            width: 1em;
-            height: 1em;
-            border: none;
-          }
-
-          .remove {
-            background: url('../../assets/images/icons/remove.svg');
-            background-size: 65% 65%;
-            background-position: center;
-            background-repeat: no-repeat;
-            width: 1em;
-            height: 1em;
-            border: none;
-          }
-
-          .copy {
-            background: url('../../assets/images/icons/copy.svg');
-            background-size: 65% 65%;
-            background-position: center;
-            background-repeat: no-repeat;
-            width: 1em;
-            height: 1em;
-            border: none;
-          }
-
-          .Toggle {
-            margin-left: 5px;
-            background-color: #1a2a1a;
-
-            &.Activated {
-              border-color: $terminal;
-              .Switch {
-                background-color: $terminal;
-              }
-            }
-
-            .Switch {
-              background-color: white;
-            }
-
-            &.Activated:hover {
-              border-color: $terminal;
-              .Switch {
-                background-color: $terminal;
-              }
-            }
-            &.Locked:hover {
-              cursor: pointer;
-            }
-          }
-        }
-      }
-    }
+  @media only screen and (max-width: 768px) {
+    padding: 10px;
   }
 }

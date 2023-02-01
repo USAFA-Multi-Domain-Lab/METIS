@@ -9,12 +9,11 @@ import {
 } from '../../modules/missions'
 import { IPage } from '../App'
 import './MissionSelectionPage.scss'
-import { Counter } from '../../modules/numbers'
 import { ButtonSVG, EButtonSVGPurpose } from '../content/react/ButtonSVG'
 import { EAjaxStatus } from '../../modules/toolbox/ajax'
 import AppState, { AppActions } from '../AppState'
 import Navigation from '../content/react/Navigation'
-import MissionSelectionRow from '../content/react/MissionSelectionRow'
+import ActionRow from '../content/react/ActionRow'
 import { ButtonText } from '../content/react/ButtonText'
 import Notification from '../../modules/notifications'
 
@@ -83,6 +82,10 @@ export default function MissionSelectionPage(
   const selectMission = (missionID: string) =>
     appActions.goToPage('GamePage', {
       missionID,
+      handleEditRequest,
+      handleDeleteRequest,
+      handleCopyRequest,
+      handleToggleLiveRequest,
     })
 
   // This will logout the current user.
@@ -227,6 +230,10 @@ export default function MissionSelectionPage(
   const handleEditRequest = (mission: Mission) => {
     appActions.goToPage('MissionFormPage', {
       missionID: mission.missionID,
+      handleEditRequest,
+      handleDeleteRequest,
+      handleCopyRequest,
+      handleToggleLiveRequest,
     })
   }
 
@@ -400,8 +407,6 @@ export default function MissionSelectionPage(
 
   /* -- RENDER -- */
 
-  let number: Counter = new Counter(1)
-
   // Keeps track of if the user is logged in or not.
   let editMissionsContainerClassName: string = 'EditMissionsContainer'
   let editMissionListClassName: string = 'MissionList'
@@ -426,9 +431,13 @@ export default function MissionSelectionPage(
   const renderMissionSelectionRows = (): JSX.Element[] => {
     let missionSelectionRows: JSX.Element[] = missions.map(
       (mission: Mission) => (
-        <MissionSelectionRow
+        <ActionRow
           mission={mission}
+          uniqueClassName={'MissionName'}
+          innerText={mission.name}
+          tooltipDescription={'Launch mission.'}
           liveAjaxStatus={liveAjaxStatus}
+          appState={appState}
           handleSelectionRequest={() => selectMission(mission.missionID)}
           handleEditRequest={() => handleEditRequest(mission)}
           handleDeleteRequest={() => handleDeleteRequest(mission)}
