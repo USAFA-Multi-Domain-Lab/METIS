@@ -1,5 +1,9 @@
 @import '../../config.scss';
 
+.ResizablePanel {
+  height: 100%;
+}
+
 .PanelSizeRelationship {
   $ResizeBar-width: 10px;
 
