@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import './NodeActions.scss'
 import { MissionNode } from '../../modules/mission-nodes'
 import { MissionNodeAction } from '../../modules/mission-node-actions'
@@ -15,14 +15,31 @@ const NodeActions = (props: {
   ) => void
 }) => {
   let selectedNode: MissionNode | null | undefined = props.selectedNode
-
   const setExecuteNodePathPromptIsDisplayed =
     props.setExecuteNodePathPromptIsDisplayed
   const setActionSelectionPromptIsDisplayed =
     props.setActionSelectionPromptIsDisplayed
 
+  /* -- COMPONENT REF -- */
+  const scrollRef = useRef<HTMLDivElement>(null)
+
   /* -- COMPONENT STATE -- */
   const [displayActionList, setDisplayActionList] = useState<boolean>(false)
+  const [mountHandled, setMountHandled] = useState<boolean>(true)
+
+  /* -- COMPONENT EFFECT -- */
+  useEffect(() => {
+    if (!mountHandled) {
+      let scrollRefElement: HTMLDivElement | null = scrollRef.current
+
+      if (scrollRefElement !== null) {
+        scrollRefElement.children[0].scrollIntoView({
+          behavior: 'auto',
+        })
+      }
+      setMountHandled(true)
+    }
+  }, [mountHandled])
 
   /* -- COMPONENT FUNCTIONS -- */
 
@@ -35,7 +52,7 @@ const NodeActions = (props: {
   const revealOptions = () => {
     if (displayActionList === false) {
       setDisplayActionList(true)
-      window.scrollTo({ top: 0 })
+      setMountHandled(false)
     } else {
       setDisplayActionList(false)
     }
@@ -76,32 +93,37 @@ const NodeActions = (props: {
             Choose an action <div className='ArrowDown'>^</div>
           </div>
         </div>
-        <div className={nodeActionListClassName}>
-          {selectedNode.actions.map((action: MissionNodeAction) => {
-            return (
-              <div
-                className='NodeAction'
-                key={action.actionID}
-                onClick={() => selectAction(action)}
-              >
-                <Tooltip
-                  description={
-                    `**Time to execute:** ${
-                      (action.processTime as number) / 1000
-                    } second(s)\n` +
-                    `**Chance of success:** ${
-                      (action.successChance as number) * 100
-                    }%\n` +
-                    `**Resource cost:** ${
-                      action.resourceCost as number
-                    } resource(s)\n` +
-                    `**Description:** ${strings.limit(action.description, 160)}`
-                  }
-                />
-                {action.name}
-              </div>
-            )
-          })}
+        <div className={nodeActionListClassName} ref={scrollRef}>
+          {selectedNode.actions.map(
+            (action: MissionNodeAction, index: number) => {
+              return (
+                <div
+                  className='NodeAction'
+                  key={action.actionID}
+                  onClick={() => selectAction(action)}
+                >
+                  <Tooltip
+                    description={
+                      `**Time to execute:** ${
+                        (action.processTime as number) / 1000
+                      } second(s)\n` +
+                      `**Chance of success:** ${
+                        (action.successChance as number) * 100
+                      }%\n` +
+                      `**Resource cost:** ${
+                        action.resourceCost as number
+                      } resource(s)\n` +
+                      `**Description:** ${strings.limit(
+                        action.description,
+                        160,
+                      )}`
+                    }
+                  />
+                  {action.name}
+                </div>
+              )
+            },
+          )}
         </div>
       </div>
     )

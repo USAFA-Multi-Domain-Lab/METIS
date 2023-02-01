@@ -99,7 +99,11 @@ export default class Tooltip extends React.Component<ITooltip, ITooltip_S> {
 
     if (tooltip && parent) {
       let parentIsHoveredOver: boolean = parent.matches(':hover')
-      if (parentIsHoveredOver && !this.isCurrentTooltipID) {
+      if (
+        parentIsHoveredOver &&
+        !this.isCurrentTooltipID &&
+        this.props.description !== ''
+      ) {
         this.showTooltip(this.tooltipID, this.props.description)
       } else if (!parentIsHoveredOver && this.isCurrentTooltipID) {
         this.hideTooltip()

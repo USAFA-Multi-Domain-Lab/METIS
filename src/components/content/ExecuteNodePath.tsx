@@ -25,6 +25,8 @@ const ExecuteNodePath = (props: {
 }) => {
   let mission: Mission = props.mission
   let selectedNode: MissionNode | null | undefined = props.selectedNode
+  let selectedAction: MissionNodeAction | null | undefined =
+    selectedNode?.selectedAction
   let processTime: number | undefined =
     props.selectedNode?.selectedAction?.processTime
   let consoleOutputs = props.consoleOutputs
@@ -37,6 +39,61 @@ const ExecuteNodePath = (props: {
   let loadingWidth: number = props.loadingWidth
   let setLoadingWidth = props.setLoadingWidth
   let dateFormatStyle: Intl.DateTimeFormat = props.dateFormatStyle
+  let executingOutputMessage: string
+  let postExecutionSuccessText: string
+  let postExecutionFailureText: string
+
+  // console output message variables
+  if (
+    selectedNode !== null &&
+    selectedNode !== undefined &&
+    selectedAction !== null &&
+    selectedAction !== undefined
+  ) {
+    executingOutputMessage = `
+  <span class='line-cursor'>
+  [${dateFormatStyle.format(Date.now())}] 
+  MDL@${selectedNode?.name.replaceAll(' ', '-')}: 
+  </span>
+  
+  <span class='default'>
+  Started executing ${selectedNode.name}.</br>
+  </span>
+
+  <ul class='SelectedActionPropertyList'>
+  <li class='SelectedActionProperty'>
+  Action selected: ${actionName}
+  </li></br>
+  <li class='SelectedActionProperty'>
+  Time to execute: ${selectedAction.processTime / 1000} second(s)
+  </li></br>
+  <li class='SelectedActionProperty'>
+  Chance of success: ${selectedAction.successChance * 100}%
+  </li></br>
+  <li class='SelectedActionProperty'>
+  Resource cost: ${selectedAction.resourceCost} resource(s)
+  </li></br>
+  </ul>
+  `
+    postExecutionSuccessText = `
+  <span class='line-cursor'>
+  [${dateFormatStyle.format(Date.now())}] 
+  MDL@${selectedNode?.name.replaceAll(' ', '-')}: 
+  </span>
+  
+  <span class='succeeded'>
+  ${selectedAction?.postExecutionSuccessText}
+  </span>
+  `
+    postExecutionFailureText = `
+  <span class='line-cursor'>
+  [${dateFormatStyle.format(Date.now())}] 
+  MDL@${selectedNode?.name.replaceAll(' ', '-')}: 
+  </span>
+  <span class='failed'>${selectedAction?.postExecutionFailureText}
+  </span>
+  `
+  }
 
   /* -- COMPONENT STATE -- */
 
@@ -77,13 +134,7 @@ const ExecuteNodePath = (props: {
         if (spendResources >= 0) {
           consoleOutputs.push({
             date: Date.now(),
-            value: `<span class='line-cursor'>[${dateFormatStyle.format(
-              Date.now(),
-            )}] MDL@${selectedNode.name.replaceAll(' ', '-')}: 
-            </span>
-                     <span class="default">Started executing the action called "${
-                       selectedAction?.name
-                     }."</span>`,
+            value: executingOutputMessage,
           })
 
           mission.resources = spendResources
@@ -101,12 +152,7 @@ const ExecuteNodePath = (props: {
                 ...consoleOutputs,
                 {
                   date: Date.now(),
-                  value: `<span class='line-cursor'>[${dateFormatStyle.format(
-                    Date.now(),
-                  )}] MDL@${selectedNode.name.replaceAll(' ', '-')}: </span>
-                     <span class="succeeded">${
-                       selectedAction?.postExecutionSuccessText
-                     }</span>`,
+                  value: postExecutionSuccessText,
                 },
               ])
 
@@ -116,12 +162,7 @@ const ExecuteNodePath = (props: {
                 ...consoleOutputs,
                 {
                   date: Date.now(),
-                  value: `<span class='line-cursor'>[${dateFormatStyle.format(
-                    Date.now(),
-                  )}] MDL@${selectedNode.name.replaceAll(' ', '-')}: </span>
-                    <span class="failed">${
-                      selectedAction?.postExecutionFailureText
-                    }</span>`,
+                  value: postExecutionFailureText,
                 },
               ])
               selectedAction?.updateWillSucceedArray()
@@ -154,20 +195,12 @@ const ExecuteNodePath = (props: {
   let executionButtonClassName: string = 'Button ExecutionButton'
   let displayTooltip: boolean = false
   let additionalActionButtonClassName: string = 'Button AdditionalActionButton'
-  let gridTemplateColumns: string = 'auto auto'
-  let gridTemplateRows: string = 'none'
 
   if (mission.resources <= 0) {
     executionButtonClassName += ' disabled'
     displayTooltip = true
   } else if (selectedNode && selectedNode.actions.length === 1) {
     additionalActionButtonClassName += ' disabled'
-  }
-
-  // This determines if the buttons are in rows or columns
-  if (actionName && actionName?.length >= 15) {
-    gridTemplateColumns = 'none'
-    gridTemplateRows = 'auto auto'
   }
 
   return (
@@ -179,14 +212,7 @@ const ExecuteNodePath = (props: {
         Do you want to {actionName?.toLowerCase()} {props.selectedNode?.name}?
       </p>
       <ActionPropertyDisplay selectedNode={props.selectedNode} />
-      <div
-        className='Buttons'
-        style={{
-          gridTemplateColumns: `${gridTemplateColumns}`,
-          gridTemplateRows: `${gridTemplateRows}`,
-          placeContent: 'start',
-        }}
-      >
+      <div className='Buttons'>
         <button
           className={executionButtonClassName}
           onClick={() => {
@@ -194,7 +220,7 @@ const ExecuteNodePath = (props: {
             props.selectedNode?.selectedAction?.updateWillSucceed()
           }}
         >
-          EXECUTE {actionName?.toUpperCase()}
+          EXECUTE ACTION
           {displayTooltip ? (
             <Tooltip
               description={`You cannot ${actionName?.toLowerCase()} because you have no more resources left to spend.`}

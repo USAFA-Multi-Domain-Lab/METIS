@@ -56,4 +56,13 @@
   .failed {
     color: $fail;
   }
+
+  .SelectedActionPropertyList {
+    padding: 15px 0 0 15px;
+    .SelectedActionProperty {
+      list-style: none;
+      text-decoration: none;
+      margin: -5px auto;
+    }
+  }
 }

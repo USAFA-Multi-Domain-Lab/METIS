@@ -802,6 +802,18 @@ function NodeEntry(props: {
               <Tooltip description='Shade all descendant nodes this color as well.' />
             </div>
             <DetailBox
+              label='Description (optional)'
+              initialValue={node.description}
+              emptyStringAllowed={true}
+              deliverValue={(description: string) => {
+                if (node !== null) {
+                  node.description = description
+                  handleChange()
+                }
+              }}
+              key={`${node.nodeID}_description`}
+            />
+            <DetailBox
               label='Pre-Execution Text (optional)'
               initialValue={node.preExecutionText}
               emptyStringAllowed={true}

@@ -44,10 +44,9 @@
   }
 
   .Buttons {
-    // styling for the grid-template-columns
-    // and grid-template-rows can be found
-    // in the "ExecuteNodePath.tsx file"
     display: grid;
+    grid-template-columns: auto auto;
+    place-content: start;
 
     .Button {
       text-align: center;
@@ -75,7 +74,7 @@
       }
 
       @media only screen and (max-width: 655px) {
-        width: 100%;
+        width: auto;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
