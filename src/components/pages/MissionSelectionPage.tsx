@@ -10,13 +10,12 @@ import {
 import { IPage } from '../App'
 import './MissionSelectionPage.scss'
 import { Counter } from '../../modules/numbers'
-import { ButtonSVG, EButtonSVGPurpose } from '../content/ButtonSVG'
+import { ButtonSVG, EButtonSVGPurpose } from '../content/react/ButtonSVG'
 import { EAjaxStatus } from '../../modules/toolbox/ajax'
 import AppState, { AppActions } from '../AppState'
-import Navigation from '../content/Navigation'
-import MissionSelectionRow from '../content/MissionSelectionRow'
-import axios from 'axios'
-import { ButtonText } from '../content/ButtonText'
+import Navigation from '../content/react/Navigation'
+import MissionSelectionRow from '../content/react/MissionSelectionRow'
+import { ButtonText } from '../content/react/ButtonText'
 import Notification from '../../modules/notifications'
 
 export interface IMissionSelectionPage extends IPage {}
@@ -412,8 +411,8 @@ export default function MissionSelectionPage(
   let noMissionsClassName: string = 'NoMissions'
 
   if (appState.currentUser !== null) {
-    editMissionsContainerClassName += ' show'
-    editMissionListClassName += ' show'
+    editMissionsContainerClassName += ' InstructorView'
+    editMissionListClassName += ' InstructorView'
     displayLogin = false
     displayLogout = true
   }

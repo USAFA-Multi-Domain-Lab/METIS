@@ -3,12 +3,12 @@ import { useStore, withStore } from 'react-context-hook'
 import usersModule from '../modules/users'
 import { IUser } from '../modules/users'
 import { AnyObject } from 'mongoose'
-import Confirmation, { IConfirmation } from './content/Confirmation'
-import Prompt, { IPrompt } from './content/Prompt'
+import Confirmation, { IConfirmation } from './content/react/Confirmation'
+import Prompt, { IPrompt } from './content/react/Prompt'
 import Notification from '../modules/notifications'
 import { EAjaxStatus } from '../modules/toolbox/ajax'
 import { IAuthPageSpecific } from './pages/AuthPage'
-import { ButtonText, IButtonText } from './content/ButtonText'
+import { ButtonText, IButtonText } from './content/react/ButtonText'
 
 /* -- INTERFACES -- */
 

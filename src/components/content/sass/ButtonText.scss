@@ -1,0 +1,25 @@
+@import '../../../config.scss';
+
+.ButtonText {
+  cursor: pointer;
+  pointer-events: all;
+  display: inline-block;
+  margin: 5px 0 0;
+
+  .Text {
+    color: $color-accent-light;
+    font-weight: 400;
+  }
+
+  .Bracket {
+    color: $color-main;
+  }
+
+  .LeftBracket {
+    padding-right: 8px;
+  }
+
+  .RightBracket {
+    padding-left: 7px;
+  }
+}

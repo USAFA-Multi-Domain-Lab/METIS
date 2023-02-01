@@ -1,6 +1,5 @@
 @import '../../config.scss';
 
-// This is for the students page
 .MissionSelectionPage {
   margin: 0;
   background: url('../../assets/images/landing-page-img.jpg');
@@ -79,83 +78,89 @@
       text-align: left;
       width: 100%;
       margin: 0;
-    }
 
-    .MissionList {
-      background-color: black;
-      border: 3px solid white;
-      border-radius: 15px;
-      margin: 0;
-      padding: 0;
-      font-size: 1em;
-      max-height: 30vh;
-      overflow-y: scroll;
-      width: 50%;
-
-      .HeadingContainer {
-        position: sticky;
-        top: 0px;
+      .MissionList {
         background-color: black;
-        width: 100%;
-        overflow-x: hidden;
-        z-index: 50;
+        border: 3px solid white;
+        border-radius: 15px;
+        margin: 0;
+        padding: 0;
+        font-size: 1em;
+        max-height: 30vh;
+        overflow-y: scroll;
+        width: 50%;
 
-        .Heading {
-          width: fill;
-          font-size: 1.1em;
-          padding: 20px 0 20px 20px;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-      }
-
-      .MissionSelectionRow {
-        display: flex;
-
-        &.show {
-          cursor: pointer;
-          justify-content: flex-start;
-          align-items: center;
-          flex-flow: row wrap;
-          width: fill;
-
-          &.MissionSelectionRow:hover {
-            background-color: $node-blue;
-            color: $terminal;
+        .MissionSelectionRows {
+          .MissionSelectionRow {
+            .ActionsContainer {
+              display: none;
+            }
           }
+        }
 
-          .MissionName {
-            cursor: pointer;
-            padding: 10px 0 10px 20px;
-            width: calc(100% - 10px);
+        // The mission list styling when the user logs in as
+        // an instructor
+        &.InstructorView {
+          border-bottom-right-radius: 0px;
+          border-bottom-left-radius: 0px;
+          width: 75%;
+
+          .MissionSelectionRows {
+            .MissionSelectionRow {
+              .ActionsContainer {
+                display: flex;
+              }
+            }
+          }
+        }
+
+        .HeadingContainer {
+          position: sticky;
+          top: 0px;
+          background-color: black;
+          width: 100%;
+          overflow-x: hidden;
+          z-index: 50;
+
+          .Heading {
+            width: fill;
+            font-size: 1.1em;
+            padding: 20px 0 20px 20px;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-
-            &.MissionName:hover {
-              color: $terminal;
-            }
-          }
-
-          .ActionsContainer {
-            display: none;
           }
         }
 
-        &:not(.show) {
-          display: none;
+        .NoMissions {
+          padding: 0 0 25px 20px;
+          font-size: 0.825em;
         }
-      }
-
-      .NoMissions {
-        padding: 0 0 25px 20px;
-        font-size: 0.825em;
       }
     }
 
     .EditMissionsContainer {
       display: none;
+
+      justify-content: center;
+      align-items: center;
+      flex-flow: row wrap;
+      width: 50%;
+      height: auto;
+      border: 3px solid white;
+      padding: 10px 0;
+      background-color: black;
+      border-top: none;
+      border-bottom-right-radius: 15px;
+      border-bottom-left-radius: 15px;
+
+      .ButtonSVG {
+        transform: scale(0.8);
+      }
+
+      &.InstructorView {
+        display: flex;
+      }
     }
   }
 
@@ -165,166 +170,10 @@
     font-size: 0.6em;
   }
 
-  @media only screen and (min-width: 1100px) {
-    .MissionSelectionContent {
-      .MissionListContainer {
-        width: 75%;
-      }
-    }
-  }
-}
-
-// This is for the instructors page
-.MissionSelectionPage {
-  .MissionSelectionContent {
-    .MissionList {
-      &.show {
-        border-bottom-right-radius: 0px;
-        border-bottom-left-radius: 0px;
-        width: 75%;
-
-        .MissionSelectionRow {
-          .MissionName {
-            display: block;
-            box-sizing: border-box;
-            height: 40px;
-            width: 100%;
-          }
-
-          .ActionsContainer {
-            display: flex;
-            box-sizing: border-box;
-            margin-top: -40px;
-            margin-left: auto;
-            justify-content: flex-end;
-            align-items: center;
-            flex-flow: row wrap;
-            width: fit-content;
-            height: 40px;
-            padding-right: 15px;
-
-            .ButtonSVG,
-            .Toggle {
-              &.remove:hover,
-              &.copy:hover,
-              &.edit:hover,
-              &.download:hover {
-                filter: invert(68%) sepia(94%) saturate(322%) hue-rotate(117deg)
-                  brightness(200%) contrast(98%);
-              }
-            }
-
-            .ButtonSVG {
-              @mixin background($url, $background-position: center) {
-                background: url($url);
-                background-repeat: no-repeat;
-                background-size: 65% 65%;
-                background-position: $background-position;
-                width: 1em;
-                height: 1em;
-                border: none;
-              }
-
-              &.edit {
-                @include background('../../assets/images/icons/edit.svg');
-              }
-
-              &.remove {
-                @include background('../../assets/images/icons/remove.svg');
-              }
-
-              &.copy {
-                @include background('../../assets/images/icons/copy.svg');
-              }
-
-              &.download {
-                @include background(
-                  $url: '../../assets/images/icons/download.svg',
-                  $background-position: center 75%
-                );
-              }
-            }
-
-            .Toggle {
-              margin-left: 5px;
-              background-color: transparent;
-
-              &.Activated {
-                border-color: $terminal;
-                .Switch {
-                  background-color: $terminal;
-                }
-              }
-
-              .Switch {
-                background-color: white;
-              }
-
-              &.Activated:hover {
-                border-color: $terminal;
-                .Switch {
-                  background-color: $terminal;
-                }
-              }
-              &.Locked {
-                cursor: pointer;
-              }
-            }
-          }
-        }
-      }
-    }
-
-    .EditMissionsContainer {
-      &.show {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        flex-flow: row wrap;
-        width: 50%;
-        height: auto;
-        border: 3px solid white;
-        padding: 10px 0;
-        background-color: black;
-        border-top: none;
-        border-bottom-right-radius: 15px;
-        border-bottom-left-radius: 15px;
-
-        // ! Alterations like this should be
-        // ! universal for these buttons to
-        // ! maintain consistent styling
-        // ! throughout the application.
-        //         .NewMissionButton {
-        //           display: flex;
-        //           justify-content: center;
-        //           align-items: center;
-        //           border: 2px solid white;
-        //           background-color: black;
-        //           border-radius: 10px;
-        //           font-weight: 400;
-        //           font-size: 1.5em;
-        //           width: 1.25em;
-        //           height: 1.25em;
-        //           margin: 0;
-        //           padding: 0;
-        //
-        //           &.NewMissionButton:hover {
-        //             cursor: pointer;
-        //             background-color: $node-blue;
-        //           }
-        //         }
-      }
-
-      .ButtonSVG {
-        transform: scale(0.8);
-      }
-    }
-  }
-
   @media only screen and (max-width: 1099px) {
     .MissionSelectionContent {
       .EditMissionsContainer {
-        &.show {
+        &.InstructorView {
           width: 75%;
         }
       }
@@ -333,8 +182,12 @@
 
   @media only screen and (min-width: 1100px) {
     .MissionSelectionContent {
+      .MissionListContainer {
+        width: 75%;
+      }
+
       .EditMissionsContainer {
-        &.show {
+        &.InstructorView {
           width: 56.25%;
         }
       }

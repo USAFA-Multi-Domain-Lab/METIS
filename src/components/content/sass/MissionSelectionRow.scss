@@ -1,0 +1,71 @@
+@import '../../../config.scss';
+
+.MissionSelectionRow {
+  display: flex;
+  cursor: pointer;
+  justify-content: flex-start;
+  align-items: center;
+  flex-flow: row wrap;
+  width: fill;
+
+  &.MissionSelectionRow:hover {
+    background-color: $node-blue;
+    color: $terminal;
+  }
+
+  .MissionName {
+    display: block;
+    box-sizing: border-box;
+    height: 40px;
+    width: 100%;
+    cursor: pointer;
+    padding: 10px 0 10px 20px;
+    width: calc(100% - 10px);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+
+    &.MissionName:hover {
+      color: $terminal;
+    }
+  }
+
+  .ActionsContainer {
+    display: flex;
+    box-sizing: border-box;
+    margin-top: -40px;
+    margin-left: auto;
+    justify-content: flex-end;
+    align-items: center;
+    flex-flow: row wrap;
+    width: fit-content;
+    height: 40px;
+    padding-right: 15px;
+
+    .Toggle {
+      margin-left: 5px;
+      background-color: transparent;
+
+      &.Activated {
+        border-color: $terminal;
+        .Switch {
+          background-color: $terminal;
+        }
+      }
+
+      .Switch {
+        background-color: white;
+      }
+
+      &.Activated:hover {
+        border-color: $terminal;
+        .Switch {
+          background-color: $terminal;
+        }
+      }
+      &.Locked {
+        cursor: pointer;
+      }
+    }
+  }
+}
