@@ -144,28 +144,32 @@ $background-bar: linear-gradient(
 
   // Displays the map only
   &.DisplayMapOnly {
-    .NodeActions {
-      display: none;
+    .Content {
+      grid-template-columns: 100%;
 
-      @media only screen and (max-height: 585px) and (max-width: 670px) {
+      .NodeActions {
+        display: none;
+
+        @media only screen and (max-height: 585px) and (max-width: 670px) {
+          display: none;
+        }
+      }
+
+      .ExecuteNodePath {
+        display: none;
+
+        @media only screen and (max-height: 670px) and (max-width: 670px) {
+          display: none;
+        }
+      }
+
+      .OutputPanel {
         display: none;
       }
-    }
 
-    .ExecuteNodePath {
-      display: none;
-
-      @media only screen and (max-height: 670px) and (max-width: 670px) {
+      .ActionPropertyDisplay {
         display: none;
       }
-    }
-
-    .OutputPanel {
-      display: none;
-    }
-
-    .ActionPropertyDisplay {
-      display: none;
     }
   }
 
