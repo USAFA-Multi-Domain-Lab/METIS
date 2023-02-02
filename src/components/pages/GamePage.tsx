@@ -241,22 +241,24 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
 
                   selectedNode.color = ''
                 } else {
-                  if (
-                    !selectedNode.selectedAction?.succeeded &&
-                    selectedNode.actions.length > 1
-                  ) {
-                    setActionSelectionPromptIsDisplayed(true)
-                  } else if (
-                    selectedNode.actions.length === 1 &&
-                    !selectedNode.selectedAction?.succeeded
-                  ) {
-                    selectedNode.selectedAction = selectedNode.actions[0]
-                    selectedNode.selectedAction.processTime =
-                      selectedNode.actions[0].processTime
-                    setActionSelectionPromptIsDisplayed(false)
-                    setExecuteNodePathPromptIsDisplayed(true)
-                  } else if (selectedNode.actions.length === 0) {
-                    setActionSelectionPromptIsDisplayed(true)
+                  if (!mission.disableNodes) {
+                    if (
+                      !selectedNode.selectedAction?.succeeded &&
+                      selectedNode.actions.length > 1
+                    ) {
+                      setActionSelectionPromptIsDisplayed(true)
+                    } else if (
+                      selectedNode.actions.length === 1 &&
+                      !selectedNode.selectedAction?.succeeded
+                    ) {
+                      selectedNode.selectedAction = selectedNode.actions[0]
+                      selectedNode.selectedAction.processTime =
+                        selectedNode.actions[0].processTime
+                      setActionSelectionPromptIsDisplayed(false)
+                      setExecuteNodePathPromptIsDisplayed(true)
+                    } else if (selectedNode.actions.length === 0) {
+                      setActionSelectionPromptIsDisplayed(true)
+                    }
                   }
                 }
               }}

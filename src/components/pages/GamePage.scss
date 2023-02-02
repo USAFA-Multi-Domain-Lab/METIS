@@ -64,7 +64,9 @@ $background-bar: linear-gradient(
     width: 100%;
     height: $page-row-2-height;
 
-    .MissionSelectionRow {
+    .ActionRow {
+      grid-column: 1 / 3;
+
       .Resources {
         display: flex;
         box-sizing: border-box;
@@ -203,10 +205,6 @@ $background-bar: linear-gradient(
     .Content {
       grid-template-columns: 65% 35%;
 
-      .MissionSelectionRow {
-        grid-column: 1 / 3;
-      }
-
       .MissionMap {
         width: 100%;
       }
@@ -241,10 +239,6 @@ $background-bar: linear-gradient(
   &.DisplayOutputPanelAndPathPrompt {
     .Content {
       grid-template-columns: 65% 35%;
-
-      .MissionSelectionRow {
-        grid-column: 1 / 3;
-      }
 
       .MissionMap {
         width: 100%;

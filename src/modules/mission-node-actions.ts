@@ -139,11 +139,11 @@ export class MissionNodeAction {
 
         // ! Delete so that multiple nodes can be executing at once
         {
-          // // If a node is being executed then this disables all the nodes
-          // // while the node is being executed.
-          // if (this.node.executing) {
-          //   this.node.mission.disableNodes = true
-          // }
+          // If a node is being executed then this disables all the nodes
+          // while the node is being executed.
+          if (this.node.executing) {
+            this.node.mission.disableNodes = true
+          }
         }
 
         setTimeout(() => {
@@ -152,8 +152,8 @@ export class MissionNodeAction {
 
           // ! Delete so that multiple nodes can be executing at once
           {
-            // // Enables all the nodes after the selected node is done executing.
-            // this.node.mission.disableNodes = false
+            // Enables all the nodes after the selected node is done executing.
+            this.node.mission.disableNodes = false
           }
 
           if (this.willSucceed !== null) {

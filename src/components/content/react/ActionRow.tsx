@@ -98,7 +98,7 @@ export default function ActionRow(props: {
   )
 
   return (
-    <div className='MissionSelectionRow'>
+    <div className='ActionRow'>
       <div className={uniqueClassName} onClick={props.handleSelectionRequest}>
         {innerText}
         <Tooltip description={tooltipDescription} />
