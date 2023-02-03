@@ -1,7 +1,7 @@
 @mixin hide() {
-  pointer-events: none;
-  opacity: 0;
-  position: absolute;
-  top: -200vh;
-  left: -200vw;
+  pointer-events: none !important;
+  opacity: 0 !important;
+  position: absolute !important;
+  top: -200vh !important;
+  left: -200vw !important;
 }
