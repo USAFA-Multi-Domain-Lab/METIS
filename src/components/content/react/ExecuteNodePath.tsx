@@ -6,51 +6,43 @@ import { Mission } from '../../../modules/missions'
 import Notification from '../../../modules/notifications'
 import Tooltip from './Tooltip'
 import { INotifyOptions } from '../../AppState'
+import { IConsoleOutput } from './ConsoleOutput'
 
 const ExecuteNodePath = (props: {
+  isOpen: boolean
   mission: Mission
   selectedNode: MissionNode | null
   notify: (message: string, options: INotifyOptions) => Notification
-  consoleOutputs: Array<{ date: number; value: string }>
-  setConsoleOutputs: (consoleOutputs: { date: number; value: string }[]) => void
-  setActionSelectionPromptIsDisplayed: (
-    actionSelectionPromptIsDisplayed: boolean,
-  ) => void
-  setExecuteNodePathPromptIsDisplayed: (
-    executeNodePathPromptIsDisplayed: boolean,
-  ) => void
+  outputToConsole: (output: IConsoleOutput) => void
+  handleCloseRequest: () => void
+  handleGoBackRequest: () => void
   loadingWidth: number
   setLoadingWidth: (loadingWidth: number) => void
   dateFormatStyle: Intl.DateTimeFormat
 }) => {
+  let isOpen: boolean = props.isOpen
   let mission: Mission = props.mission
-  let selectedNode: MissionNode | null | undefined = props.selectedNode
-  let selectedAction: MissionNodeAction | null | undefined =
-    selectedNode?.selectedAction
-  let processTime: number | undefined =
-    props.selectedNode?.selectedAction?.processTime
-  let consoleOutputs = props.consoleOutputs
-  let setConsoleOutputs = props.setConsoleOutputs
-  let setExecuteNodePathPromptIsDisplayed =
-    props.setExecuteNodePathPromptIsDisplayed
-  let setActionSelectionPromptIsDisplayed =
-    props.setActionSelectionPromptIsDisplayed
-  let actionName: string | undefined = props.selectedNode?.selectedAction?.name
-  let loadingWidth: number = props.loadingWidth
-  let setLoadingWidth = props.setLoadingWidth
-  let dateFormatStyle: Intl.DateTimeFormat = props.dateFormatStyle
-  let executingOutputMessage: string
-  let postExecutionSuccessText: string
-  let postExecutionFailureText: string
+  let selectedNode: MissionNode | null = props.selectedNode
 
-  // console output message variables
-  if (
-    selectedNode !== null &&
-    selectedNode !== undefined &&
-    selectedAction !== null &&
-    selectedAction !== undefined
-  ) {
-    executingOutputMessage = `
+  if (selectedNode !== null) {
+    let selectedAction: MissionNodeAction | null = selectedNode.selectedAction
+    let processTime: number | undefined =
+      props.selectedNode?.selectedAction?.processTime
+    let outputToConsole = props.outputToConsole
+    let handleCloseRequest = props.handleCloseRequest
+    let handleGoBackRequest = props.handleGoBackRequest
+    let actionName: string | undefined =
+      props.selectedNode?.selectedAction?.name
+    let loadingWidth: number = props.loadingWidth
+    let setLoadingWidth = props.setLoadingWidth
+    let dateFormatStyle: Intl.DateTimeFormat = props.dateFormatStyle
+    let executingOutputMessage: string
+    let postExecutionSuccessText: string
+    let postExecutionFailureText: string
+
+    // console output message variables
+    if (selectedAction !== null) {
+      executingOutputMessage = `
   <span class='line-cursor'>
   [${dateFormatStyle.format(Date.now())}] 
   MDL@${selectedNode?.name.replaceAll(' ', '-')}: 
@@ -75,7 +67,7 @@ const ExecuteNodePath = (props: {
   </li></br>
   </ul>
   `
-    postExecutionSuccessText = `
+      postExecutionSuccessText = `
   <span class='line-cursor'>
   [${dateFormatStyle.format(Date.now())}] 
   MDL@${selectedNode?.name.replaceAll(' ', '-')}: 
@@ -85,7 +77,7 @@ const ExecuteNodePath = (props: {
   ${selectedAction?.postExecutionSuccessText}
   </span>
   `
-    postExecutionFailureText = `
+      postExecutionFailureText = `
   <span class='line-cursor'>
   [${dateFormatStyle.format(Date.now())}] 
   MDL@${selectedNode?.name.replaceAll(' ', '-')}: 
@@ -93,150 +85,148 @@ const ExecuteNodePath = (props: {
   <span class='failed'>${selectedAction?.postExecutionFailureText}
   </span>
   `
-  }
+    }
 
-  /* -- COMPONENT STATE -- */
+    /* -- COMPONENT STATE -- */
 
-  /* -- COMPONENT FUNCTIONS -- */
+    /* -- COMPONENT FUNCTIONS -- */
 
-  // Closes the execution prompt window
-  const closeWindow = (): void => {
-    setExecuteNodePathPromptIsDisplayed(false)
-  }
+    // Closes the execution prompt window
+    const closeWindow = (): void => {
+      handleCloseRequest()
+    }
 
-  // Creates an interval to visually display the loading bar's progress
-  const runLoadingBar = (): void => {
-    if (processTime !== undefined) {
-      let loadingDuration = setInterval(loadingBar, processTime / 100)
+    // Creates an interval to visually display the loading bar's progress
+    const runLoadingBar = (): void => {
+      if (processTime !== undefined) {
+        let loadingDuration = setInterval(loadingBar, processTime / 100)
 
-      function loadingBar() {
-        if (loadingWidth >= 100) {
-          clearInterval(loadingDuration)
-          setLoadingWidth(0)
-        } else {
-          loadingWidth++
-          setLoadingWidth(loadingWidth)
+        function loadingBar() {
+          if (loadingWidth >= 100) {
+            clearInterval(loadingDuration)
+            setLoadingWidth(0)
+          } else {
+            loadingWidth++
+            setLoadingWidth(loadingWidth)
+          }
         }
       }
     }
-  }
 
-  const execute = () => {
-    if (props.selectedNode !== null) {
-      let selectedNode: MissionNode = props.selectedNode
-      let selectedAction: MissionNodeAction | null = selectedNode.selectedAction
-      let resourceCost: number | undefined = selectedAction?.resourceCost
+    const execute = () => {
+      if (
+        props.selectedNode !== null &&
+        props.selectedNode.selectedAction !== null
+      ) {
+        let selectedNode: MissionNode = props.selectedNode
+        let selectedAction: MissionNodeAction =
+          props.selectedNode.selectedAction
+        let resourceCost: number | undefined = selectedAction.resourceCost
 
-      if (mission.resources > 0 && resourceCost !== undefined) {
-        setExecuteNodePathPromptIsDisplayed(false)
+        if (mission.resources > 0 && resourceCost !== undefined) {
+          closeWindow()
 
-        let spendResources: number = mission.resources - resourceCost
-        if (spendResources >= 0) {
-          consoleOutputs.push({
-            date: Date.now(),
-            value: executingOutputMessage,
-          })
+          let spendResources: number = mission.resources - resourceCost
 
-          mission.resources = spendResources
-          runLoadingBar()
+          if (spendResources >= 0) {
+            outputToConsole({ date: Date.now(), value: executingOutputMessage })
 
-          selectedAction?.executeAction((success: boolean) => {
-            // Output message in the terminal which differs based on whether
-            // it passes or fails
-            if (success) {
-              if (selectedNode.hasChildren && !selectedNode.isOpen) {
-                selectedNode.open()
-              }
+            mission.resources = spendResources
+            runLoadingBar()
 
-              setConsoleOutputs([
-                ...consoleOutputs,
-                {
+            selectedAction.executeAction((success: boolean) => {
+              // Output message in the terminal which differs based on whether
+              // it passes or fails
+              if (success) {
+                if (selectedNode.hasChildren && !selectedNode.isOpen) {
+                  selectedNode.open()
+                }
+
+                outputToConsole({
                   date: Date.now(),
                   value: postExecutionSuccessText,
-                },
-              ])
+                })
 
-              selectedAction?.updateWillSucceedArray()
-            } else if (!success) {
-              setConsoleOutputs([
-                ...consoleOutputs,
-                {
+                selectedAction?.updateWillSucceedArray()
+              } else if (!success) {
+                outputToConsole({
                   date: Date.now(),
                   value: postExecutionFailureText,
-                },
-              ])
-              selectedAction?.updateWillSucceedArray()
-            }
-          })
+                })
+                selectedAction?.updateWillSucceedArray()
+              }
+            })
+          } else {
+            props.notify(
+              `You don't have enough resources left to spend on ${selectedNode.name}.`,
+              { duration: 3500 },
+            )
+          }
+        } else if (resourceCost === undefined) {
+          console.error(`The selected action's resource cost is undefined.`)
         } else {
-          props.notify(
-            `You don't have enough resources left to spend on ${selectedNode.name}.`,
-            { duration: 3500 },
-          )
+          props.notify(`You have no more resources to spend.`, {})
         }
-      } else if (resourceCost === undefined) {
-        console.error(`The selected action's resource cost is undefined.`)
-      } else {
-        props.notify(`You have no more resources to spend.`, {})
       }
     }
-  }
 
-  const selectAlternativeAction = () => {
-    if (selectedNode && selectedNode.actions.length > 1) {
-      setExecuteNodePathPromptIsDisplayed(false)
-      setActionSelectionPromptIsDisplayed(true)
+    /* -- RENDER -- */
+
+    // Logic to disable the execute button once a user is out of tokens.
+    let className: string = 'ExecuteNodePath'
+    let executionButtonClassName: string = 'Button ExecutionButton'
+    let displayTooltip: boolean = false
+    let additionalActionButtonClassName: string =
+      'Button AdditionalActionButton'
+
+    if (!isOpen) {
+      className += ' Hidden'
     }
-  }
 
-  /* -- RENDER -- */
+    if (mission.resources <= 0) {
+      executionButtonClassName += ' disabled'
+      displayTooltip = true
+    } else if (selectedNode && selectedNode.actions.length === 1) {
+      additionalActionButtonClassName += ' disabled'
+    }
 
-  // Logic to disable the execute button once a user is out of tokens.
-  let executionButtonClassName: string = 'Button ExecutionButton'
-  let displayTooltip: boolean = false
-  let additionalActionButtonClassName: string = 'Button AdditionalActionButton'
+    return (
+      <div className={className}>
+        <p className='x' onClick={closeWindow}>
+          x
+        </p>
+        <p className='PromptDisplayText'>
+          Do you want to {actionName?.toLowerCase()} {props.selectedNode?.name}?
+        </p>
+        <ActionPropertyDisplay selectedNode={props.selectedNode} />
+        <div className='Buttons'>
+          <button
+            className={executionButtonClassName}
+            onClick={() => {
+              execute()
+              props.selectedNode?.selectedAction?.updateWillSucceed()
+            }}
+          >
+            EXECUTE ACTION
+            {displayTooltip ? (
+              <Tooltip
+                description={`You cannot ${actionName?.toLowerCase()} because you have no more resources left to spend.`}
+              />
+            ) : null}
+          </button>
 
-  if (mission.resources <= 0) {
-    executionButtonClassName += ' disabled'
-    displayTooltip = true
-  } else if (selectedNode && selectedNode.actions.length === 1) {
-    additionalActionButtonClassName += ' disabled'
-  }
-
-  return (
-    <div className='ExecuteNodePath'>
-      <p className='x' onClick={closeWindow}>
-        x
-      </p>
-      <p className='PromptDisplayText'>
-        Do you want to {actionName?.toLowerCase()} {props.selectedNode?.name}?
-      </p>
-      <ActionPropertyDisplay selectedNode={props.selectedNode} />
-      <div className='Buttons'>
-        <button
-          className={executionButtonClassName}
-          onClick={() => {
-            execute()
-            props.selectedNode?.selectedAction?.updateWillSucceed()
-          }}
-        >
-          EXECUTE ACTION
-          {displayTooltip ? (
-            <Tooltip
-              description={`You cannot ${actionName?.toLowerCase()} because you have no more resources left to spend.`}
-            />
-          ) : null}
-        </button>
-
-        <button
-          className={additionalActionButtonClassName}
-          onClick={selectAlternativeAction}
-        >
-          Back
-        </button>
+          <button
+            className={additionalActionButtonClassName}
+            onClick={handleGoBackRequest}
+          >
+            Back
+          </button>
+        </div>
       </div>
-    </div>
-  )
+    )
+  } else {
+    return null
+  }
 }
 
 export default ExecuteNodePath

@@ -139,6 +139,7 @@
         text-align: center;
 
         .list-heading {
+          user-select: none;
           box-sizing: border-box;
           border-radius: 0;
           height: 50px;

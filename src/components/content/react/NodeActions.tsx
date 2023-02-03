@@ -6,19 +6,21 @@ import Tooltip from './Tooltip'
 import strings from '../../../modules/toolbox/strings'
 
 const NodeActions = (props: {
+  isOpen: boolean
   selectedNode: MissionNode | null | undefined
-  setActionSelectionPromptIsDisplayed: (
-    actionSelectionPromptIsDisplayed: boolean,
-  ) => void
-  setExecuteNodePathPromptIsDisplayed: (
-    executeNodePathPromptIsDisplayed: boolean,
-  ) => void
+  handleActionSelectionRequest: (action: MissionNodeAction) => void
+  handleCloseRequest: () => void
 }) => {
+  let isOpen: boolean = props.isOpen
   let selectedNode: MissionNode | null | undefined = props.selectedNode
-  const setExecuteNodePathPromptIsDisplayed =
-    props.setExecuteNodePathPromptIsDisplayed
-  const setActionSelectionPromptIsDisplayed =
-    props.setActionSelectionPromptIsDisplayed
+  let handleActionSelectionRequest = (action: MissionNodeAction) => {
+    setDisplayActionList(false)
+    props.handleActionSelectionRequest(action)
+  }
+  let handleCloseRequest = () => {
+    setDisplayActionList(false)
+    props.handleCloseRequest()
+  }
 
   /* -- COMPONENT REF -- */
   const scrollRef = useRef<HTMLDivElement>(null)
@@ -43,12 +45,6 @@ const NodeActions = (props: {
 
   /* -- COMPONENT FUNCTIONS -- */
 
-  // Closes the execution prompt window
-  const closeWindow = (): void => {
-    setActionSelectionPromptIsDisplayed(false)
-    setDisplayActionList(false)
-  }
-
   const revealOptions = () => {
     if (displayActionList === false) {
       setDisplayActionList(true)
@@ -58,20 +54,14 @@ const NodeActions = (props: {
     }
   }
 
-  const selectAction = (action: MissionNodeAction): void => {
-    setActionSelectionPromptIsDisplayed(false)
-    setExecuteNodePathPromptIsDisplayed(true)
-    setDisplayActionList(false)
-
-    if (props.selectedNode !== null && props.selectedNode !== undefined) {
-      props.selectedNode.selectedAction = action
-      props.selectedNode.selectedAction.processTime = action.processTime
-    }
-  }
-
   /* -- RENDER -- */
 
+  let nodeActionsClassName: string = 'NodeActions'
   let nodeActionListClassName: string = 'NodeActionList'
+
+  if (isOpen === false) {
+    nodeActionsClassName += ' Hidden'
+  }
 
   if (displayActionList === false) {
     nodeActionListClassName += ' hide'
@@ -79,8 +69,8 @@ const NodeActions = (props: {
 
   if (selectedNode && selectedNode.actions.length > 0) {
     return (
-      <div className='NodeActions'>
-        <p className='x' onClick={closeWindow}>
+      <div className={nodeActionsClassName}>
+        <p className='x' onClick={handleCloseRequest}>
           x
         </p>
 
@@ -100,7 +90,7 @@ const NodeActions = (props: {
                 <div
                   className='NodeAction'
                   key={action.actionID}
-                  onClick={() => selectAction(action)}
+                  onClick={() => handleActionSelectionRequest(action)}
                 >
                   <Tooltip
                     description={
@@ -129,8 +119,8 @@ const NodeActions = (props: {
     )
   } else {
     return (
-      <div className='NodeActions'>
-        <p className='x' onClick={closeWindow}>
+      <div className={nodeActionsClassName}>
+        <p className='x' onClick={handleCloseRequest}>
           x
         </p>
         <p className='PromptDisplayText'>

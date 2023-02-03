@@ -30,6 +30,11 @@ import { MissionNodeAction } from '../../modules/mission-node-actions'
 import { EToggleLockState } from '../content/react/Toggle'
 import AppState, { AppActions } from '../AppState'
 import Navigation from '../content/react/Navigation'
+import {
+  EPanelSizingMode,
+  PanelSizeRelationship,
+  ResizablePanel,
+} from '../content/ResizablePanels'
 
 // This is a enum used to describe
 // the locations that one node can
@@ -505,70 +510,98 @@ export default function MissionFormPage(
           // -- content --
         }
         <div className='Content'>
-          <MissionMap
-            mission={mission}
-            missionAjaxStatus={EAjaxStatus.Loaded}
-            selectedNode={selectedNode}
-            allowCreationMode={true}
-            handleNodeSelection={(node: MissionNode) => {
-              validateNodeSelectionChange(() => {
-                selectNode(node)
-                ensureOneActionExistsIfExecutable()
-              })
+          <PanelSizeRelationship
+            panel1={{
+              ...ResizablePanel.defaultProps,
+              minSize: 330,
+              render: () => (
+                <MissionMap
+                  mission={mission}
+                  missionAjaxStatus={EAjaxStatus.Loaded}
+                  selectedNode={selectedNode}
+                  allowCreationMode={true}
+                  handleNodeSelection={(node: MissionNode) => {
+                    validateNodeSelectionChange(() => {
+                      selectNode(node)
+                      ensureOneActionExistsIfExecutable()
+                    })
+                  }}
+                  handleNodeCreation={(node: MissionNode) => {
+                    setSelectedNode(node)
+                    handleChange()
+                  }}
+                  handleNodeDeselection={() => {
+                    validateNodeSelectionChange(() => {
+                      selectNode(null)
+                    })
+                  }}
+                  handleNodeDeletionRequest={handleNodeDeleteRequest}
+                  handleMapEditRequest={() => {
+                    selectNode(null)
+                    activateNodeStructuring(true)
+                  }}
+                  handleMapSaveRequest={save}
+                  grayOutEditButton={grayOutEditButton}
+                  grayOutSaveButton={grayOutSaveButton}
+                  grayOutDeselectNodeButton={grayOutDeselectNodeButton}
+                  grayOutAddNodeButton={grayOutAddNodeButton}
+                  grayOutDeleteNodeButton={grayOutDeleteNodeButton}
+                  applyNodeClassName={(node: MissionNode) => ''}
+                  renderNodeTooltipDescription={(node: MissionNode) => ''}
+                />
+              ),
             }}
-            handleNodeCreation={(node: MissionNode) => {
-              setSelectedNode(node)
-              handleChange()
+            panel2={{
+              ...ResizablePanel.defaultProps,
+              minSize: 330,
+              render: () => {
+                if (missionDetailsIsActive) {
+                  return (
+                    <MissionDetails
+                      active={missionDetailsIsActive}
+                      mission={mission}
+                      missionEmptyStringArray={missionEmptyStringArray}
+                      setMissionEmptyStringArray={setMissionEmptyStringArray}
+                      handleChange={handleChange}
+                    />
+                  )
+                } else if (selectedNode !== null) {
+                  return (
+                    <NodeEntry
+                      node={selectedNode}
+                      appActions={appActions}
+                      displayedAction={displayedAction}
+                      setDisplayedAction={setDisplayedAction}
+                      nodeEmptyStringArray={nodeEmptyStringArray}
+                      setNodeEmptyStringArray={setNodeEmptyStringArray}
+                      actionEmptyStringArray={actionEmptyStringArray}
+                      setActionEmptyStringArray={setActionEmptyStringArray}
+                      handleChange={handleChange}
+                      handleAddRequest={handleNodeAddRequest}
+                      handleDeleteRequest={handleNodeDeleteRequest}
+                      handleCloseRequest={() => {
+                        validateNodeSelectionChange(() => {
+                          selectNode(null)
+                        })
+                      }}
+                    />
+                  )
+                } else if (nodeStructuringIsActive) {
+                  return (
+                    <NodeStructuring
+                      active={nodeStructuringIsActive}
+                      mission={mission}
+                      handleChange={handleChange}
+                      handleCloseRequest={() => activateNodeStructuring(false)}
+                    />
+                  )
+                } else {
+                  return null
+                }
+              },
             }}
-            handleNodeDeselection={() => {
-              validateNodeSelectionChange(() => {
-                selectNode(null)
-              })
-            }}
-            handleNodeDeletionRequest={handleNodeDeleteRequest}
-            handleMapEditRequest={() => {
-              selectNode(null)
-              activateNodeStructuring(true)
-            }}
-            handleMapSaveRequest={save}
-            grayOutEditButton={grayOutEditButton}
-            grayOutSaveButton={grayOutSaveButton}
-            grayOutDeselectNodeButton={grayOutDeselectNodeButton}
-            grayOutAddNodeButton={grayOutAddNodeButton}
-            grayOutDeleteNodeButton={grayOutDeleteNodeButton}
-            applyNodeClassName={(node: MissionNode) => ''}
-            renderNodeTooltipDescription={(node: MissionNode) => ''}
-          />
-          <MissionDetails
-            active={missionDetailsIsActive}
-            mission={mission}
-            missionEmptyStringArray={missionEmptyStringArray}
-            setMissionEmptyStringArray={setMissionEmptyStringArray}
-            handleChange={handleChange}
-          />
-          <NodeEntry
-            node={selectedNode}
-            appActions={appActions}
-            displayedAction={displayedAction}
-            setDisplayedAction={setDisplayedAction}
-            nodeEmptyStringArray={nodeEmptyStringArray}
-            setNodeEmptyStringArray={setNodeEmptyStringArray}
-            actionEmptyStringArray={actionEmptyStringArray}
-            setActionEmptyStringArray={setActionEmptyStringArray}
-            handleChange={handleChange}
-            handleAddRequest={handleNodeAddRequest}
-            handleDeleteRequest={handleNodeDeleteRequest}
-            handleCloseRequest={() => {
-              validateNodeSelectionChange(() => {
-                selectNode(null)
-              })
-            }}
-          />
-          <NodeStructuring
-            active={nodeStructuringIsActive}
-            mission={mission}
-            handleChange={handleChange}
-            handleCloseRequest={() => activateNodeStructuring(false)}
+            sizingMode={EPanelSizingMode.Panel1_Auto__Panel2_Defined}
+            initialDefinedSize={330}
           />
         </div>
       </div>
@@ -612,42 +645,44 @@ function MissionDetails(props: {
           <div className='BoxTop'>
             <div className='ErrorMessage Hidden'></div>
           </div>
-          <Detail
-            label='Name'
-            initialValue={mission.name}
-            deliverValue={(name: string) => {
-              if (name !== '') {
-                mission.name = name
-                removeMissionEmptyString('name')
+          <div className='SidePanelSection MainDetails'>
+            <Detail
+              label='Name'
+              initialValue={mission.name}
+              deliverValue={(name: string) => {
+                if (name !== '') {
+                  mission.name = name
+                  removeMissionEmptyString('name')
+                  handleChange()
+                } else {
+                  setMissionEmptyStringArray([
+                    ...missionEmptyStringArray,
+                    `missionID=${mission.missionID}_field=name`,
+                  ])
+                }
+              }}
+              key={`${mission.missionID}_name`}
+            />
+            <DetailToggle
+              label={'Live'}
+              initialValue={mission.live}
+              deliverValue={(live: boolean) => {
+                mission.live = live
                 handleChange()
-              } else {
-                setMissionEmptyStringArray([
-                  ...missionEmptyStringArray,
-                  `missionID=${mission.missionID}_field=name`,
-                ])
-              }
-            }}
-            key={`${mission.missionID}_name`}
-          />
-          <DetailToggle
-            label={'Live'}
-            initialValue={mission.live}
-            deliverValue={(live: boolean) => {
-              mission.live = live
-              handleChange()
-            }}
-          />
-          <DetailNumber
-            label='Initial Resources'
-            initialValue={mission.initialResources}
-            deliverValue={(initialResources: number | null) => {
-              if (initialResources !== null) {
-                mission.initialResources = initialResources
-                handleChange()
-              }
-            }}
-            key={`${mission.missionID}_initialResources`}
-          />
+              }}
+            />
+            <DetailNumber
+              label='Initial Resources'
+              initialValue={mission.initialResources}
+              deliverValue={(initialResources: number | null) => {
+                if (initialResources !== null) {
+                  mission.initialResources = initialResources
+                  handleChange()
+                }
+              }}
+              key={`${mission.missionID}_initialResources`}
+            />
+          </div>
         </div>
       </div>
     )
@@ -767,8 +802,7 @@ function NodeEntry(props: {
               <Tooltip description='Close panel.' />
             </div>
           </div>
-
-          <div className='NodeInfoContainer'>
+          <div className='NodeInfoContainer SidePanelSection'>
             <Detail
               label='Name'
               initialValue={node.name}
@@ -813,7 +847,7 @@ function NodeEntry(props: {
               key={`${node.nodeID}_color`}
             />
             <div
-              className='ColorFill'
+              className='ColorFill Detail'
               onClick={() => {
                 if (node !== null) {
                   node.applyColorFill()
@@ -1060,8 +1094,8 @@ function NodeActions(props: {
   if (node.executable) {
     return (
       <>
-        <h4 className='ActionInfo'>Action(s):</h4>
-        <div className='NodeActionDetails'>
+        <div className='NodeActionDetails SidePanelSection'>
+          <h4 className='ActionInfo'>Action(s):</h4>
           <div className={selectorContainerClassName}>
             <div className='Previous' onClick={displayPreviousAction}>
               previous
@@ -1097,7 +1131,7 @@ function NodeActions(props: {
             </div>
           </div>
         </div>
-        <div className='UserActions'>
+        <div className='UserActions SidePanelSection'>
           <ButtonSVG
             purpose={EButtonSVGPurpose.Add}
             handleClick={() => {
