@@ -11,7 +11,7 @@ import { MissionNode } from '../../modules/mission-nodes'
 import AppState, { AppActions } from '../AppState'
 import Navigation from '../content/react/Navigation'
 import { AxiosError } from 'axios'
-import ActionRow from '../content/react/ActionRow'
+import MissionModificationPanel from '../content/react/MissionModificationPanel'
 
 export interface IGamePage extends IPage {
   missionID: string
@@ -196,18 +196,13 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
         {
           // -- content --
           <div className='Content'>
-            <ActionRow
+            <div className='Resources'>
+              Resources remaining: {mission.resources}
+            </div>
+            <MissionModificationPanel
               mission={mission}
-              uniqueClassName={resourcesClassName}
-              innerText={`Resources remaining: ${mission.resources}`}
-              liveAjaxStatus={liveAjaxStatus}
-              appState={appState}
-              handleEditRequest={() => props.handleEditRequest(mission)}
-              handleDeleteRequest={() => props.handleDeleteRequest(mission)}
-              handleCopyRequest={() => props.handleCopyRequest(mission)}
-              handleToggleLiveRequest={(live: boolean) =>
-                props.handleToggleLiveRequest(mission, live)
-              }
+              appActions={appActions}
+              setMountHandled={setMountHandled}
             />
             <MissionMap
               mission={mission}

@@ -1,0 +1,10 @@
+@import '../../../config.scss';
+
+.MissionSelectionRow {
+  display: flex;
+  cursor: pointer;
+  justify-content: flex-start;
+  align-items: center;
+  flex-flow: row wrap;
+  width: fill;
+}

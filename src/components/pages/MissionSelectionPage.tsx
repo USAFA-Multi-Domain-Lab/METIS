@@ -1,19 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
-import {
-  copyMission,
-  deleteMission,
-  getAllMissions,
-  importMissions,
-  Mission,
-  setLive,
-} from '../../modules/missions'
+import { getAllMissions, importMissions, Mission } from '../../modules/missions'
 import { IPage } from '../App'
 import './MissionSelectionPage.scss'
 import { ButtonSVG, EButtonSVGPurpose } from '../content/react/ButtonSVG'
-import { EAjaxStatus } from '../../modules/toolbox/ajax'
 import AppState, { AppActions } from '../AppState'
 import Navigation from '../content/react/Navigation'
-import ActionRow from '../content/react/ActionRow'
+import MissionSelectionRow from '../content/react/MissionSelectionRow'
 import { ButtonText } from '../content/react/ButtonText'
 import Notification from '../../modules/notifications'
 
@@ -34,9 +26,6 @@ export default function MissionSelectionPage(
 
   const [mountHandled, setMountHandled] = useState<boolean>(false)
   const [missions, setMissions] = useState<Array<Mission>>([])
-  const [liveAjaxStatus, setLiveAjaxStatus] = useState<EAjaxStatus>(
-    EAjaxStatus.NotLoaded,
-  )
 
   /* -- COMPONENT EFFECTS -- */
 
@@ -75,18 +64,6 @@ export default function MissionSelectionPage(
       },
     )
   }
-
-  // This loads the mission in session from the database
-  // and stores it in a global state to be used on the GamePage
-  // where the Mission Map renders
-  const selectMission = (missionID: string) =>
-    appActions.goToPage('GamePage', {
-      missionID,
-      handleEditRequest,
-      handleDeleteRequest,
-      handleCopyRequest,
-      handleToggleLiveRequest,
-    })
 
   // This will logout the current user.
   const logout = () =>
@@ -225,112 +202,6 @@ export default function MissionSelectionPage(
     )
   }
 
-  // This is called when a user requests
-  // to edit the mission.
-  const handleEditRequest = (mission: Mission) => {
-    appActions.goToPage('MissionFormPage', {
-      missionID: mission.missionID,
-      handleEditRequest,
-      handleDeleteRequest,
-      handleCopyRequest,
-      handleToggleLiveRequest,
-    })
-  }
-
-  // This is called when a user requests
-  // to delete the mission.
-  const handleDeleteRequest = (mission: Mission) => {
-    appActions.confirm(
-      'Are you sure you want to delete this mission?',
-      (concludeAction: () => void) => {
-        concludeAction()
-        appActions.beginLoading('Deleting mission...')
-
-        deleteMission(
-          mission.missionID,
-          () => {
-            appActions.finishLoading()
-            appActions.notify(`Successfully deleted ${mission.name}.`)
-            setMountHandled(false)
-          },
-          () => {
-            appActions.finishLoading()
-            appActions.notify(`Failed to delete ${mission.name}.`)
-          },
-        )
-      },
-      {
-        pendingMessageUponConfirm: 'Deleting...',
-      },
-    )
-  }
-
-  // This is called when a user requests
-  // to copy the mission.
-  const handleCopyRequest = (mission: Mission) => {
-    appActions.confirm(
-      'Enter the name of the new mission.',
-      (concludeAction: () => void, entry: string) => {
-        concludeAction()
-        appActions.beginLoading('Copying mission...')
-
-        copyMission(
-          mission.missionID,
-          entry,
-          () => {
-            appActions.finishLoading()
-            appActions.notify(`Successfully copied ${mission.name}.`)
-            setMountHandled(false)
-          },
-          () => {
-            appActions.finishLoading()
-            appActions.notify(`Failed to copy ${mission.name}.`)
-          },
-        )
-      },
-      {
-        requireEntry: true,
-        entryLabel: 'Name',
-        buttonConfirmText: 'Copy',
-        pendingMessageUponConfirm: 'Copying...',
-      },
-    )
-  }
-
-  // This is called when a user requests
-  // to toggle a mission between being live
-  // and not being live.
-  const handleToggleLiveRequest = (mission: Mission, live: boolean) => {
-    let previousLiveState: boolean = mission.live
-
-    mission.live = live
-
-    setLive(
-      mission.missionID,
-      live,
-      () => {
-        if (live) {
-          appActions.notify(`${mission.name} was successfully turned on.`)
-          setLiveAjaxStatus(EAjaxStatus.Loaded)
-        } else {
-          appActions.notify(`${mission.name} was successfully turned off.`)
-          setLiveAjaxStatus(EAjaxStatus.Loaded)
-        }
-      },
-      () => {
-        if (live) {
-          appActions.notify(`${mission.name} failed to turn on.`)
-          setLiveAjaxStatus(EAjaxStatus.Error)
-        } else {
-          appActions.notify(`${mission.name} failed to turn off.`)
-          setLiveAjaxStatus(EAjaxStatus.Error)
-        }
-        mission.live = previousLiveState
-      },
-    )
-    setLiveAjaxStatus(EAjaxStatus.Loading)
-  }
-
   // This is called when a request is made
   // to upload a file.
   const handleMissionImportRequest = (): void => {
@@ -431,20 +302,11 @@ export default function MissionSelectionPage(
   const renderMissionSelectionRows = (): JSX.Element[] => {
     let missionSelectionRows: JSX.Element[] = missions.map(
       (mission: Mission) => (
-        <ActionRow
+        <MissionSelectionRow
           mission={mission}
-          uniqueClassName={'MissionName'}
-          innerText={mission.name}
-          tooltipDescription={'Launch mission.'}
-          liveAjaxStatus={liveAjaxStatus}
-          appState={appState}
-          handleSelectionRequest={() => selectMission(mission.missionID)}
-          handleEditRequest={() => handleEditRequest(mission)}
-          handleDeleteRequest={() => handleDeleteRequest(mission)}
-          handleCopyRequest={() => handleCopyRequest(mission)}
-          handleToggleLiveRequest={(live: boolean) =>
-            handleToggleLiveRequest(mission, live)
-          }
+          appActions={appActions}
+          // goToPage={appActions.goToPage}
+          setMountHandled={setMountHandled}
           key={`MissionSelectionRow_${mission.missionID}`}
         />
       ),
