@@ -7,9 +7,9 @@ import { MissionNodeAction } from '../../../modules/mission-node-actions'
 import { MissionNode } from '../../../modules/mission-nodes'
 import inputs from '../../../modules/toolbox/inputs'
 import { AppActions } from '../../AppState'
-import '../sass/Form.scss'
-import Toggle, { EToggleLockState } from './Toggle'
-import Tooltip from './Tooltip'
+import './Form.scss'
+import Toggle, { EToggleLockState } from '../user-controls/Toggle'
+import Tooltip from '../communication/Tooltip'
 
 interface IDetail {
   label: string

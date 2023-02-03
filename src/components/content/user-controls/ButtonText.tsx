@@ -1,6 +1,6 @@
 import React from 'react'
-import Tooltip from './Tooltip'
-import '../sass/ButtonText.scss'
+import Tooltip from '../communication/Tooltip'
+import './ButtonText.scss'
 
 /* -- interfaces -- */
 

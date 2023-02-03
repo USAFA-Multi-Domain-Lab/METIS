@@ -1,7 +1,7 @@
 // -- imports --
 
 import React from 'react'
-import '../sass/Toggle.scss'
+import './Toggle.scss'
 
 /* -- enumerations */
 

@@ -1,4 +1,4 @@
-import '../sass/OutputPanel.scss'
+import './OutputPanel.scss'
 import ConsoleOutput from './ConsoleOutput'
 
 const OutputPanel = (props: {

@@ -5,9 +5,9 @@ import {
   setLive,
 } from '../../../modules/missions'
 import { EAjaxStatus } from '../../../modules/toolbox/ajax'
-import Toggle, { EToggleLockState } from './Toggle'
-import Tooltip from './Tooltip'
-import '../sass/MissionModificationPanel.scss'
+import Toggle, { EToggleLockState } from '../user-controls/Toggle'
+import Tooltip from '../communication/Tooltip'
+import './MissionModificationPanel.scss'
 import { MiniButtonSVGPanel } from './MiniButtonSVGPanel'
 import { EMiniButtonSVGPurpose, MiniButtonSVG } from './MiniButtonSVG'
 import { useStore } from 'react-context-hook'

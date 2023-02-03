@@ -1,4 +1,4 @@
-import '../sass/ActionPropertyDisplay.scss'
+import './ActionPropertyDisplay.scss'
 import { MissionNode } from '../../../modules/mission-nodes'
 
 const ActionPropertyDisplay = (props: {

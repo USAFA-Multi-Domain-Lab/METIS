@@ -1,19 +1,23 @@
 // -- imports --
 
-import '../sass/MissionMap.scss'
+import './MissionMap.scss'
 import React from 'react'
-import List from './List'
+import List from '../general-layout/List'
 import strings from '../../../modules/toolbox/strings'
 import { EAjaxStatus } from '../../../modules/toolbox/ajax'
-import MoreInformation from './MoreInformation'
+import MoreInformation from '../communication/MoreInformation'
 import { Mission } from '../../../modules/missions'
 import {
   ENodeTargetRelation,
   MissionNode,
   MissionNodeCreator,
 } from '../../../modules/mission-nodes'
-import { ButtonSVG, EButtonSVGPurpose, IButtonSVG } from './ButtonSVG'
-import { ButtonSVGPanel } from './ButtonSVGPanel'
+import {
+  ButtonSVG,
+  EButtonSVGPurpose,
+  IButtonSVG,
+} from '../user-controls/ButtonSVG'
+import { ButtonSVGPanel } from '../user-controls/ButtonSVGPanel'
 import { SingleTypeObject } from '../../../modules/toolbox/objects'
 
 /* -- interfaces -- */

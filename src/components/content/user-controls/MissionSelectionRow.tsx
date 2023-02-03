@@ -1,8 +1,8 @@
 import { Mission } from '../../../modules/missions'
-import Tooltip from './Tooltip'
-import '../sass/MissionSelectionRow.scss'
+import Tooltip from '../communication/Tooltip'
+import './MissionSelectionRow.scss'
 import { AppActions } from '../../AppState'
-import MissionModificationPanel from './MissionModificationPanel'
+import MissionModificationPanel from '../user-controls/MissionModificationPanel'
 
 // This will render a row on the page
 // for the given mission.

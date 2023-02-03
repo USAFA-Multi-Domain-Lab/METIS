@@ -1,5 +1,8 @@
 import { v4 as generateHash } from 'uuid'
-import { ButtonText, IButtonText } from '../components/content/react/ButtonText'
+import {
+  ButtonText,
+  IButtonText,
+} from '../components/content/user-controls/ButtonText'
 
 export interface INotificationOptions {
   duration?: number | null

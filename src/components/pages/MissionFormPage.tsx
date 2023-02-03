@@ -13,13 +13,16 @@ import {
   DetailNumber,
   DetailDropDown,
   DetailToggle,
-} from '../content/react/Form'
-import MissionMap from '../content/react/MissionMap'
-import Tooltip from '../content/react/Tooltip'
+} from '../content/form/Form'
+import MissionMap from '../content/game/MissionMap'
+import Tooltip from '../content/communication/Tooltip'
 import { v4 as generateHash } from 'uuid'
 import './MissionFormPage.scss'
-import { ButtonSVG, EButtonSVGPurpose } from '../content/react/ButtonSVG'
-import MoreInformation from '../content/react/MoreInformation'
+import {
+  ButtonSVG,
+  EButtonSVGPurpose,
+} from '../content/user-controls/ButtonSVG'
+import MoreInformation from '../content/communication/MoreInformation'
 import { IPage } from '../App'
 import {
   ENodeDeleteMethod,
@@ -27,14 +30,14 @@ import {
   MissionNode,
 } from '../../modules/mission-nodes'
 import { MissionNodeAction } from '../../modules/mission-node-actions'
-import { EToggleLockState } from '../content/react/Toggle'
+import { EToggleLockState } from '../content/user-controls/Toggle'
 import AppState, { AppActions } from '../AppState'
-import Navigation from '../content/react/Navigation'
+import Navigation from '../content/general-layout/Navigation'
 import {
   EPanelSizingMode,
   PanelSizeRelationship,
   ResizablePanel,
-} from '../content/ResizablePanels'
+} from '../content/general-layout/ResizablePanels'
 
 // This is a enum used to describe
 // the locations that one node can

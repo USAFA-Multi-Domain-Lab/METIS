@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
-import '../sass/NodeActions.scss'
+import './NodeActions.scss'
 import { MissionNode } from '../../../modules/mission-nodes'
 import { MissionNodeAction } from '../../../modules/mission-node-actions'
-import Tooltip from './Tooltip'
+import Tooltip from '../communication/Tooltip'
 import strings from '../../../modules/toolbox/strings'
 
 const NodeActions = (props: {

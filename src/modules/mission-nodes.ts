@@ -8,7 +8,7 @@ import {
   IMissionNodeActionJSON,
   MissionNodeAction,
 } from './mission-node-actions'
-import { IMissionMappable } from '../components/content/react/MissionMap'
+import { IMissionMappable } from '../components/content/game/MissionMap'
 
 export enum ENodeTargetRelation {
   ParentOfTargetAndChildren,

@@ -1,10 +1,10 @@
-import '../sass/ExecuteNodePath.scss'
+import './ExecuteNodePath.scss'
 import { MissionNode } from '../../../modules/mission-nodes'
 import { MissionNodeAction } from '../../../modules/mission-node-actions'
 import ActionPropertyDisplay from './ActionPropertyDisplay'
 import { Mission } from '../../../modules/missions'
 import Notification from '../../../modules/notifications'
-import Tooltip from './Tooltip'
+import Tooltip from '../communication/Tooltip'
 import { INotifyOptions } from '../../AppState'
 import { IConsoleOutput } from './ConsoleOutput'
 

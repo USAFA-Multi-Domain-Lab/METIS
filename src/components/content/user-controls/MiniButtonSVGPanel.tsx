@@ -1,15 +1,18 @@
 import React from 'react'
-import { ButtonSVG } from './ButtonSVG'
-import '../sass/ButtonSVGPanel.scss'
+import { MiniButtonSVG } from './MiniButtonSVG'
+import './ButtonSVGPanel.scss'
 
-export interface IButtonSVGPanel {
-  buttons: ButtonSVG[]
+export interface IMiniButtonSVGPanel {
+  buttons: MiniButtonSVG[]
   linkBack: JSX.Element | null
   styling: React.CSSProperties
   uniqueClassName: string
 }
 
-export class ButtonSVGPanel extends React.Component<IButtonSVGPanel, {}> {
+export class MiniButtonSVGPanel extends React.Component<
+  IMiniButtonSVGPanel,
+  {}
+> {
   static defaultProps = {
     styling: {},
     uniqueClassName: '',
@@ -20,12 +23,12 @@ export class ButtonSVGPanel extends React.Component<IButtonSVGPanel, {}> {
 
     return (
       <div
-        className={`ButtonSVGPanel ${uniqueClassName}`}
+        className={`MiniButtonSVGPanel ${uniqueClassName}`}
         style={this.props.styling}
       >
         <div className='glue'>
           {this.props.linkBack}
-          {this.props.buttons.map((button: ButtonSVG) => {
+          {this.props.buttons.map((button: MiniButtonSVG) => {
             return button.render()
           })}
         </div>

@@ -1,6 +1,6 @@
 /* -- scripts -- */
 
-import '../sass/MoreInformation.scss'
+import './MoreInformation.scss'
 import React from 'react'
 import Tooltip from './Tooltip'
 // import Tooltip from './Tooltip'

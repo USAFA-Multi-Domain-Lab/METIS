@@ -1,7 +1,7 @@
 import React from 'react'
 import AjaxStatusDisplay from './AjaxStatusDisplay'
-import Markdown, { MarkdownTheme } from './Markdown'
-import '../sass/Confirmation.scss'
+import Markdown, { MarkdownTheme } from '../general-layout/Markdown'
+import './Confirmation.scss'
 import { EAjaxStatus } from '../../../modules/toolbox/ajax'
 
 export interface IConfirmation {

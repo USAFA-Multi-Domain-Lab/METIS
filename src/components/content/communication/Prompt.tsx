@@ -1,6 +1,6 @@
 import React from 'react'
-import Markdown, { MarkdownTheme } from './Markdown'
-import '../sass/Prompt.scss'
+import Markdown, { MarkdownTheme } from '../general-layout/Markdown'
+import './Prompt.scss'
 
 export interface IPrompt {
   active: boolean

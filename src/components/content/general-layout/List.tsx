@@ -1,9 +1,9 @@
 /* -- imports -- */
 
-import '../sass/List.scss'
+import './List.scss'
 import React from 'react'
 import { EAjaxStatus } from '../../../modules/toolbox/ajax'
-import Tooltip from './Tooltip'
+import Tooltip from '../communication/Tooltip'
 
 /* -- enumerations -- */
 

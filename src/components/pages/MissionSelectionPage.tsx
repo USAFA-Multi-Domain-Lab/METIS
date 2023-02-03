@@ -2,11 +2,14 @@ import { useEffect, useRef, useState } from 'react'
 import { getAllMissions, importMissions, Mission } from '../../modules/missions'
 import { IPage } from '../App'
 import './MissionSelectionPage.scss'
-import { ButtonSVG, EButtonSVGPurpose } from '../content/react/ButtonSVG'
+import {
+  ButtonSVG,
+  EButtonSVGPurpose,
+} from '../content/user-controls/ButtonSVG'
 import AppState, { AppActions } from '../AppState'
-import Navigation from '../content/react/Navigation'
-import MissionSelectionRow from '../content/react/MissionSelectionRow'
-import { ButtonText } from '../content/react/ButtonText'
+import Navigation from '../content/general-layout/Navigation'
+import MissionSelectionRow from '../content/user-controls/MissionSelectionRow'
+import { ButtonText } from '../content/user-controls/ButtonText'
 import Notification from '../../modules/notifications'
 
 export interface IMissionSelectionPage extends IPage {}

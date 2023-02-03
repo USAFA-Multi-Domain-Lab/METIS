@@ -1,6 +1,6 @@
 import React from 'react'
 import { EAjaxStatus } from '../../../modules/toolbox/ajax'
-import '../sass/AjaxStatusDisplay.scss'
+import './AjaxStatusDisplay.scss'
 
 // -- interfaces --
 

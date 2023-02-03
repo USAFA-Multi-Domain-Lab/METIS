@@ -1,7 +1,7 @@
-import '../sass/NotificationBubble.scss'
+import './NotificationBubble.scss'
 import Notification from '../../../modules/notifications'
-import Markdown, { MarkdownTheme } from './Markdown'
-import { ButtonText, IButtonText } from './ButtonText'
+import Markdown, { MarkdownTheme } from '../general-layout/Markdown'
+import { ButtonText, IButtonText } from '../user-controls/ButtonText'
 
 // This will brand the app with the
 // logo.

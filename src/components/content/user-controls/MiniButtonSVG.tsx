@@ -1,13 +1,13 @@
 import React from 'react'
-import Tooltip from './Tooltip'
-import '../sass/ButtonSVG.scss'
+import Tooltip from '../communication/Tooltip'
+import './MiniButtonSVG.scss'
 
 /* -- interfaces -- */
 
-// the purpose of a button, helps
+// the purpose of a mini button, helps
 // give different buttons different
 // icons and looks
-export enum EButtonSVGPurpose {
+export enum EMiniButtonSVGPurpose {
   Cancel,
   Add,
   Edit,
@@ -22,9 +22,9 @@ export enum EButtonSVGPurpose {
   Download,
 }
 
-// Interface for props for ButtonSVG component.
-export interface IButtonSVG {
-  purpose: EButtonSVGPurpose
+// Interface for props for MiniButtonSVG component.
+export interface IMiniButtonSVG {
+  purpose: EMiniButtonSVGPurpose
   handleClick: (event: React.MouseEvent) => void
   handleCopy: (event: React.ClipboardEvent) => void
   tooltipDescription: string | null
@@ -39,7 +39,7 @@ export interface IButtonSVG {
 // something represented by an icon,
 // explained by a tooltip, that when
 // clicked calls back to cause an action
-export class ButtonSVG extends React.Component<IButtonSVG, {}> {
+export class MiniButtonSVG extends React.Component<IMiniButtonSVG, {}> {
   static defaultProps = {
     handleCopy: () => {},
     tooltipDescription: null,
@@ -52,43 +52,45 @@ export class ButtonSVG extends React.Component<IButtonSVG, {}> {
   // different buttons are styled differently.
   // based on the purpose of the button, a class
   // name is returned to style it differently
-  static getButtonClassName(purpose: EButtonSVGPurpose): string {
+  static getButtonClassName(purpose: EMiniButtonSVGPurpose): string {
     switch (purpose) {
-      case EButtonSVGPurpose.Cancel:
-        return 'ButtonSVG cancel'
-      case EButtonSVGPurpose.Add:
-        return 'ButtonSVG add'
-      case EButtonSVGPurpose.Edit:
-        return 'ButtonSVG edit'
-      case EButtonSVGPurpose.Remove:
-        return 'ButtonSVG remove'
-      case EButtonSVGPurpose.Down:
-        return 'ButtonSVG down'
-      case EButtonSVGPurpose.Reorder:
-        return 'ButtonSVG reorder'
-      case EButtonSVGPurpose.ZoomIn:
-        return 'ButtonSVG zoom-in'
-      case EButtonSVGPurpose.ZoomOut:
-        return 'ButtonSVG zoom-out'
-      case EButtonSVGPurpose.Save:
-        return 'ButtonSVG save'
-      case EButtonSVGPurpose.Copy:
-        return 'ButtonSVG copy'
-      case EButtonSVGPurpose.Upload:
-        return 'ButtonSVG upload'
-      case EButtonSVGPurpose.Download:
-        return 'ButtonSVG download'
+      case EMiniButtonSVGPurpose.Cancel:
+        return 'MiniButtonSVG cancel'
+      case EMiniButtonSVGPurpose.Add:
+        return 'MiniButtonSVG add'
+      case EMiniButtonSVGPurpose.Edit:
+        return 'MiniButtonSVG edit'
+      case EMiniButtonSVGPurpose.Remove:
+        return 'MiniButtonSVG remove'
+      case EMiniButtonSVGPurpose.Down:
+        return 'MiniButtonSVG down'
+      case EMiniButtonSVGPurpose.Reorder:
+        return 'MiniButtonSVG reorder'
+      case EMiniButtonSVGPurpose.ZoomIn:
+        return 'MiniButtonSVG zoom-in'
+      case EMiniButtonSVGPurpose.ZoomOut:
+        return 'MiniButtonSVG zoom-out'
+      case EMiniButtonSVGPurpose.Save:
+        return 'MiniButtonSVG save'
+      case EMiniButtonSVGPurpose.Copy:
+        return 'MiniButtonSVG copy'
+      case EMiniButtonSVGPurpose.Upload:
+        return 'MiniButtonSVG upload'
+      case EMiniButtonSVGPurpose.Download:
+        return 'MiniButtonSVG download'
       default:
-        return 'ButtonSVG hidden'
+        return 'MiniButtonSVG hidden'
     }
   }
 
   // html content for various buttons
-  static getButtonInnerHTML(purpose: EButtonSVGPurpose): string | JSX.Element {
+  static getButtonInnerHTML(
+    purpose: EMiniButtonSVGPurpose,
+  ): string | JSX.Element {
     switch (purpose) {
-      case EButtonSVGPurpose.Cancel:
+      case EMiniButtonSVGPurpose.Cancel:
         return 'x'
-      case EButtonSVGPurpose.Add:
+      case EMiniButtonSVGPurpose.Add:
         return '+'
       default:
         return ''
@@ -97,16 +99,17 @@ export class ButtonSVG extends React.Component<IButtonSVG, {}> {
 
   // inherited
   render(): JSX.Element | null {
-    let purpose: EButtonSVGPurpose = this.props.purpose
+    let purpose: EMiniButtonSVGPurpose = this.props.purpose
     let tooltipDescription: string | null = this.props.tooltipDescription
     let key: string | undefined = this.props.componentKey
     let uniqueClassName: string = this.props.uniqueClassName
     let style: React.CSSProperties = this.props.style
     let disabled: boolean = this.props.disabled
-    let className: string = `${ButtonSVG.getButtonClassName(purpose)}${
+    let className: string = `${MiniButtonSVG.getButtonClassName(purpose)}${
       disabled ? ' Disabled ' : ' '
     }${uniqueClassName}`
-    let innerHTML: string | JSX.Element = ButtonSVG.getButtonInnerHTML(purpose)
+    let innerHTML: string | JSX.Element =
+      MiniButtonSVG.getButtonInnerHTML(purpose)
 
     return (
       <div

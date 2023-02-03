@@ -133,10 +133,9 @@ $background-bar: linear-gradient(
         }
 
         .SidePanelSection {
-            margin: 20px 6.5% 40px;
+          margin: 20px 6.5% 40px;
 
           &.NodeInfoContainer {
-
             .ButtonContainer {
               display: block;
               min-width: 225px;
@@ -252,7 +251,7 @@ $background-bar: linear-gradient(
             }
           }
 
-&.UserActions {
+          &.UserActions {
             display: block;
             text-align: center;
 
@@ -267,8 +266,6 @@ $background-bar: linear-gradient(
             }
           }
         }
-
-          
 
         .Color {
           .Field {

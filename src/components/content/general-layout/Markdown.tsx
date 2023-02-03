@@ -2,7 +2,7 @@
 
 import React from 'react'
 import parse from 'marked'
-import '../sass/Markdown.scss'
+import './Markdown.scss'
 
 // -- style-imports --
 

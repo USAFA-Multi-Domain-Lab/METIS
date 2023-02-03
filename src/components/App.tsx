@@ -6,14 +6,17 @@ import { useEffect, useState } from 'react'
 import ServerErrorPage from './pages/ServerErrorPage'
 import LoadingPage from './pages/LoadingPage'
 import AppState, { AppActions } from './AppState'
-import Markdown, { MarkdownTheme } from './content/react/Markdown'
+import Markdown, { MarkdownTheme } from './content/general-layout/Markdown'
 import MissionFormPage from './pages/MissionFormPage'
 import MissionSelectionPage from './pages/MissionSelectionPage'
 import Notification from '../modules/notifications'
-import NotificationBubble from './content/react/NotificationBubble'
-import Confirmation from './content/react/Confirmation'
-import { tooltipsOffsetX, tooltipsOffsetY } from './content/react/Tooltip'
-import Prompt from './content/react/Prompt'
+import NotificationBubble from './content/communication/NotificationBubble'
+import Confirmation from './content/communication/Confirmation'
+import {
+  tooltipsOffsetX,
+  tooltipsOffsetY,
+} from './content/communication/Tooltip'
+import Prompt from './content/communication/Prompt'
 
 // Default props in every page.
 export interface IPage {

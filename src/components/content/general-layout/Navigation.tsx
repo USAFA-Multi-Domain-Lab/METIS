@@ -1,5 +1,5 @@
 import Branding from './Branding'
-import '../sass/Navigation.scss'
+import './Navigation.scss'
 import { v4 as generateHash } from 'uuid'
 
 export interface INavLink {

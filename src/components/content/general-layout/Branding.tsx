@@ -1,5 +1,5 @@
-import '../sass/Branding.scss'
-import Tooltip from './Tooltip'
+import './Branding.scss'
+import Tooltip from '../communication/Tooltip'
 
 // This will brand the app with the
 // logo.

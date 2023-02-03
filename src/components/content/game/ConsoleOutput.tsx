@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import '../sass/ConsoleOutput.scss'
+import './ConsoleOutput.scss'
 
 export interface IConsoleOutput {
   date: number

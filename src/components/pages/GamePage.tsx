@@ -1,24 +1,24 @@
 import { useEffect, useState } from 'react'
 import { getMission, Mission } from '../../modules/missions'
 import { EAjaxStatus } from '../../modules/toolbox/ajax'
-import MissionMap from '../content/react/MissionMap'
-import OutputPanel from '../content/react/OutputPanel'
+import MissionMap from '../content/game/MissionMap'
+import OutputPanel from '../content/game/OutputPanel'
 import './GamePage.scss'
-import ExecuteNodePath from '../content/react/ExecuteNodePath'
-import NodeActions from '../content/react/NodeActions'
+import ExecuteNodePath from '../content/game/ExecuteNodePath'
+import NodeActions from '../content/game/NodeActions'
 import { IPage } from '../App'
 import { MissionNode } from '../../modules/mission-nodes'
 import AppState, { AppActions } from '../AppState'
-import Navigation from '../content/react/Navigation'
+import Navigation from '../content/general-layout/Navigation'
 import { AxiosError } from 'axios'
-import MissionModificationPanel from '../content/react/MissionModificationPanel'
+import MissionModificationPanel from '../content/user-controls/MissionModificationPanel'
 import {
   EPanelSizingMode,
   PanelSizeRelationship,
   ResizablePanel,
-} from '../content/ResizablePanels'
+} from '../content/general-layout/ResizablePanels'
 import { MissionNodeAction } from '../../modules/mission-node-actions'
-import { IConsoleOutput } from '../content/react/ConsoleOutput'
+import { IConsoleOutput } from '../content/game/ConsoleOutput'
 
 export interface IGamePage extends IPage {
   missionID: string
