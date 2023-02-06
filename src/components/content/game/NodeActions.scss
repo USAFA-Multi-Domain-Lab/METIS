@@ -77,17 +77,21 @@
     margin: 0;
     border: 2px solid $color-main;
     background-color: $background-alt2;
-    height: 15vh;
+    height: 140px;
     overflow-y: scroll;
+    scrollbar-width: 5px;
 
-    .NodeAction {
-      width: calc(100% - 10px);
-      padding: 5px 0 5px 10px;
-      color: $color-accent-light;
-      list-style-type: none;
-      text-decoration: none;
+    .NodeActionContainer {
+      width: 100%;
 
-      &.NodeAction:hover {
+      .NodeAction {
+        width: 90%;
+        padding: 5px 0 5px 10px;
+        color: $color-accent-light;
+        list-style-type: none;
+        text-decoration: none;
+      }
+      &:hover {
         cursor: pointer;
         background-color: black;
       }
@@ -96,40 +100,5 @@
 
   .hide {
     display: none;
-  }
-}
-
-@media only screen and (max-width: 700px) {
-  .NodeActions {
-    .PromptDisplayText {
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .NodeActionDefault {
-      .DefaultText {
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
-    }
-
-    .NodeActionList {
-      .NodeAction {
-        min-height: 20px;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
-    }
-  }
-}
-
-@media only screen and (max-height: 690px) {
-  .NodeActions {
-    .NodeActionList {
-      height: 10vh;
-    }
   }
 }

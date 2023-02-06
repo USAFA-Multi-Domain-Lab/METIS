@@ -87,29 +87,31 @@ const NodeActions = (props: {
           {selectedNode.actions.map(
             (action: MissionNodeAction, index: number) => {
               return (
-                <div
-                  className='NodeAction'
-                  key={action.actionID}
-                  onClick={() => handleActionSelectionRequest(action)}
-                >
-                  <Tooltip
-                    description={
-                      `**Time to execute:** ${
-                        (action.processTime as number) / 1000
-                      } second(s)\n` +
-                      `**Chance of success:** ${
-                        (action.successChance as number) * 100
-                      }%\n` +
-                      `**Resource cost:** ${
-                        action.resourceCost as number
-                      } resource(s)\n` +
-                      `**Description:** ${strings.limit(
-                        action.description,
-                        160,
-                      )}`
-                    }
-                  />
-                  {action.name}
+                <div className='NodeActionContainer'>
+                  <div
+                    className='NodeAction'
+                    key={action.actionID}
+                    onClick={() => handleActionSelectionRequest(action)}
+                  >
+                    <Tooltip
+                      description={
+                        `**Time to execute:** ${
+                          (action.processTime as number) / 1000
+                        } second(s)\n` +
+                        `**Chance of success:** ${
+                          (action.successChance as number) * 100
+                        }%\n` +
+                        `**Resource cost:** ${
+                          action.resourceCost as number
+                        } resource(s)\n` +
+                        `**Description:** ${strings.limit(
+                          action.description,
+                          160,
+                        )}`
+                      }
+                    />
+                    {action.name}
+                  </div>
                 </div>
               )
             },
