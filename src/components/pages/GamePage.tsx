@@ -121,9 +121,7 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
 
     // This will output to the console.
     const outputToConsole = (output: IConsoleOutput): void => {
-      let newOutputs = [...consoleOutputs]
-      newOutputs.push({ date: Date.now(), value: output.value })
-      setConsoleOutputs(newOutputs)
+      consoleOutputs.push(output)
     }
 
     /* -- RENDER -- */
