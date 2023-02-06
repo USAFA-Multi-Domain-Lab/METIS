@@ -121,9 +121,7 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
 
     // This will output to the console.
     const outputToConsole = (output: IConsoleOutput): void => {
-      let newOutputs = [...consoleOutputs]
-      newOutputs.push({ date: Date.now(), value: output.value })
-      setConsoleOutputs(newOutputs)
+      consoleOutputs.push(output)
     }
 
     /* -- RENDER -- */
@@ -192,24 +190,25 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
                       loadingWidth={loadingWidth}
                       handleNodeSelection={(selectedNode: MissionNode) => {
                         setLastSelectedNode(selectedNode)
+                        let preExecutionText: string = `
+                          <span class='line-cursor'>
+                          [${dateFormatStyle.format(Date.now())}] 
+                          MDL@${selectedNode?.name.replaceAll(' ', '-')}: 
+                          </span>
+
+                          <span class='default'>
+                          ${selectedNode?.preExecutionText}
+                          </span>
+                          `
 
                         if (
                           selectedNode.preExecutionText !== '' &&
                           selectedNode.preExecutionText !== null &&
                           selectedNode.selectedAction?.succeeded !== true
                         ) {
-                          let timeStamp: number = 5 * (new Date() as any)
-                          consoleOutputs.push({
-                            date: timeStamp,
-                            value: `<span class='line-cursor'>[${dateFormatStyle.format(
-                              Date.now(),
-                            )}] MDL@${selectedNode.name.replaceAll(
-                              ' ',
-                              '-',
-                            )}: </span>
-                              <span class='default'>${
-                                selectedNode.preExecutionText
-                              }</span>`,
+                          outputToConsole({
+                            date: Date.now(),
+                            value: preExecutionText,
                           })
                           setOutputPanelIsDisplayed(true)
                         }
