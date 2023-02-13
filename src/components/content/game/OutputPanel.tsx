@@ -1,8 +1,8 @@
 import './OutputPanel.scss'
-import ConsoleOutput from './ConsoleOutput'
+import ConsoleOutput, { IConsoleOutput } from './ConsoleOutput'
 
 const OutputPanel = (props: {
-  consoleOutputs: Array<{ date: number; value: string }>
+  consoleOutputs: Array<JSX.Element>
   setOutputPanelIsDisplayed: (outputPanelIsDisplayed: boolean) => void
 }): JSX.Element | null => {
   let consoleOutputs = props.consoleOutputs
@@ -24,16 +24,9 @@ const OutputPanel = (props: {
           </span>
         </div>
         <ul className='TextArea'>
-          {consoleOutputs.map(
-            (consoleOutput: { date: number; value: string }) => {
-              return (
-                <ConsoleOutput
-                  key={consoleOutput.date}
-                  value={consoleOutput.value}
-                />
-              )
-            },
-          )}
+          {consoleOutputs.map((consoleOutput: JSX.Element) => {
+            return consoleOutput
+          })}
         </ul>
       </div>
     </div>

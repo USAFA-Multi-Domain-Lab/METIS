@@ -381,6 +381,13 @@ router.get('/export/*', requireLogin, (request, response) => {
   }
 })
 
+// -- GET /api/v1/missions/environment/
+// This will return the environment of
+// the database that is currently in use.
+router.get('/environment/', (request, response) => {
+  response.send(process.env)
+})
+
 // -- PUT | /api/v1/missions/ --
 // This will update the mission.
 router.put('/', requireLogin, (request, response) => {

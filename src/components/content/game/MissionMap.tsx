@@ -66,6 +66,7 @@ export interface IMissionMappable {
   executing: boolean
   executable: boolean
   device: boolean
+  loadingWidth: number | null
 }
 
 // represents a location on the mission map
@@ -975,7 +976,7 @@ export default class MissionMap extends React.Component<
     let height: number = (mapYScale - gridPaddingY * 2) * mapScale
     let loadingHeight: number = height - 4
     let loadingMarginBottom: number = -loadingHeight
-    let loadingWidth: number | undefined = this.props.loadingWidth
+    let loadingWidth: number | null = node.loadingWidth
     let titleWidthSubtrahend: number = width * 0.1
     let titleLineHeight: number = height * 0.34
     let buttonMarginTop = height * -0.175

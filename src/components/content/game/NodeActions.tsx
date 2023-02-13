@@ -87,7 +87,7 @@ const NodeActions = (props: {
           {selectedNode.actions.map(
             (action: MissionNodeAction, index: number) => {
               return (
-                <div className='NodeActionContainer'>
+                <div className='NodeActionContainer' key={action.actionID}>
                   <div
                     className='NodeAction'
                     key={action.actionID}

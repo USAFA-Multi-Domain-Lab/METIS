@@ -1,29 +1,35 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import './ConsoleOutput.scss'
 
 export interface IConsoleOutput {
   date: number
-  value: string
+  elements: JSX.Element
 }
 
-const ConsoleOutput = (props: { value: string }) => {
-  const scrollRef = useRef<HTMLLIElement>(null)
+const ConsoleOutput = (props: {
+  key: number
+  value: JSX.Element
+}): JSX.Element => {
+  const scrollRef = useRef<HTMLDivElement>(null)
+  const [mountHandled, setMountHandled] = useState<boolean>(false)
 
   useEffect(() => {
-    let scrollRefElement: HTMLLIElement | null = scrollRef.current
+    if (!mountHandled) {
+      let scrollRefElement: HTMLDivElement | null = scrollRef.current
 
-    if (scrollRefElement !== null) {
-      scrollRefElement.scrollIntoView({ behavior: 'smooth' })
+      if (scrollRefElement !== null) {
+        scrollRefElement.scrollIntoView({ behavior: 'smooth' })
+      }
+
+      setMountHandled(true)
     }
-  }, [])
+  }, [mountHandled])
+
+  /* -- RENDER -- */
 
   return (
-    <div className='ConsoleOutput'>
-      <li
-        className='Text'
-        ref={scrollRef}
-        dangerouslySetInnerHTML={{ __html: props.value }}
-      ></li>
+    <div className='ConsoleOutput' ref={scrollRef}>
+      {props.value}
     </div>
   )
 }

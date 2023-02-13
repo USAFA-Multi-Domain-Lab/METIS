@@ -61,6 +61,7 @@
     "serve-prod": "ts-node server.ts",
     "serve-dev": "nodemon server.ts",
     "serve-react": "react-scripts start",
+    "serve-test": "environment=TEST && export environment && npm run serve-dev",
     "build-react": "react-scripts build",
     "test-react": "react-scripts test",
     "eject-react": "react-scripts eject",

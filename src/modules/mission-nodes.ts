@@ -70,6 +70,8 @@ export class MissionNode implements IMissionMappable {
   depth: number
   _isOpen: boolean
   _expandedInMenu: boolean
+  _timeLeft: string | null
+  _loadingWidth: number
 
   static default_name: string = 'Unnamed Node'
   static default_color: string = 'default'
@@ -116,6 +118,22 @@ export class MissionNode implements IMissionMappable {
     return deepestLowestDescendant.mapY
   }
 
+  get timeLeft(): string | null {
+    return this._timeLeft
+  }
+
+  set timeLeft(timeLeft: string | null) {
+    this._timeLeft = timeLeft
+  }
+
+  get loadingWidth(): number {
+    return this._loadingWidth
+  }
+
+  set loadingWidth(loadingWidth: number) {
+    this._loadingWidth = loadingWidth
+  }
+
   constructor(
     mission: Mission,
     nodeID: string,
@@ -149,6 +167,8 @@ export class MissionNode implements IMissionMappable {
     this.depth = -1
     this._isOpen = false
     this._expandedInMenu = true
+    this._timeLeft = null
+    this._loadingWidth = 0
 
     this.parseActionJSON(actionJSON)
   }
@@ -574,6 +594,14 @@ export class MissionNodeCreator implements IMissionMappable {
   // Implementation requirement only.
   get device(): boolean {
     return false
+  }
+
+  get loadingWidth(): number | null {
+    if (this.createdNode) {
+      return this.createdNode.loadingWidth
+    } else {
+      return null
+    }
   }
 
   constructor(

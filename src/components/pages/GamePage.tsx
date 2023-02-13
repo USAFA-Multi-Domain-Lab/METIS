@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { Component, useEffect, useState } from 'react'
 import { getMission, Mission } from '../../modules/missions'
 import { EAjaxStatus } from '../../modules/toolbox/ajax'
 import MissionMap from '../content/game/MissionMap'
@@ -18,7 +18,7 @@ import {
   ResizablePanel,
 } from '../content/general-layout/ResizablePanels'
 import { MissionNodeAction } from '../../modules/mission-node-actions'
-import { IConsoleOutput } from '../content/game/ConsoleOutput'
+import ConsoleOutput, { IConsoleOutput } from '../content/game/ConsoleOutput'
 
 export interface IGamePage extends IPage {
   missionID: string
@@ -45,12 +45,7 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
   const [lastSelectedNode, setLastSelectedNode] = useState<MissionNode | null>(
     null,
   )
-  const [liveAjaxStatus, setLiveAjaxStatus] = useState<EAjaxStatus>(
-    EAjaxStatus.NotLoaded,
-  )
-  const [consoleOutputs, setConsoleOutputs] = useState<
-    Array<{ date: number; value: string }>
-  >([])
+  const [consoleOutputs, setConsoleOutputs] = useState<Array<JSX.Element>>([])
   const [outputPanelIsDisplayed, setOutputPanelIsDisplayed] =
     useState<boolean>(false)
   const [executeNodePathIsDisplayed, setExecuteNodePathIsDisplayed] =
@@ -58,6 +53,7 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
   const [nodeActionsIsDisplayed, setNodeActionsIsDisplayed] =
     useState<boolean>(false)
   const [loadingWidth, setLoadingWidth] = useState<number>(0)
+  const [timeLeft, setTimeLeft] = useState<number | null>(null)
 
   /* -- COMPONENT EFFECTS -- */
 
@@ -121,7 +117,9 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
 
     // This will output to the console.
     const outputToConsole = (output: IConsoleOutput): void => {
-      consoleOutputs.push(output)
+      consoleOutputs.push(
+        <ConsoleOutput key={output.date} value={output.elements} />,
+      )
     }
 
     /* -- RENDER -- */
@@ -190,16 +188,18 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
                       loadingWidth={loadingWidth}
                       handleNodeSelection={(selectedNode: MissionNode) => {
                         setLastSelectedNode(selectedNode)
-                        let preExecutionText: string = `
-                          <span class='line-cursor'>
-                          [${dateFormatStyle.format(Date.now())}] 
-                          MDL@${selectedNode?.name.replaceAll(' ', '-')}: 
-                          </span>
+                        let preExecutionText: JSX.Element = (
+                          <li className='Text'>
+                            <span className='line-cursor'>
+                              [{dateFormatStyle.format(Date.now())}] MDL@
+                              {selectedNode?.name.replaceAll(' ', '-')}:{' '}
+                            </span>
 
-                          <span class='default'>
-                          ${selectedNode?.preExecutionText}
-                          </span>
-                          `
+                            <span className='default'>
+                              {selectedNode?.preExecutionText}
+                            </span>
+                          </li>
+                        )
 
                         if (
                           selectedNode.preExecutionText !== '' &&
@@ -208,7 +208,7 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
                         ) {
                           outputToConsole({
                             date: Date.now(),
-                            value: preExecutionText,
+                            elements: preExecutionText,
                           })
                           setOutputPanelIsDisplayed(true)
                         }
@@ -224,7 +224,7 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
                           selectedNode.color = ''
                         } else {
                           if (
-                            !mission.disableNodes &&
+                            !selectedNode.executing &&
                             !selectedNode.selectedAction?.succeeded &&
                             selectedNode.actions.length > 1
                           ) {
@@ -298,6 +298,12 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
                             }%`
                         }
 
+                        if (node.executing && node.timeLeft !== null) {
+                          description =
+                            `* Time remaining: ${node.timeLeft} \n` +
+                            `* Description: ${node.description}\n`
+                        }
+
                         return description
                       }}
                     />
@@ -340,8 +346,8 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
                         }
                       }}
                       dateFormatStyle={dateFormatStyle}
-                      loadingWidth={loadingWidth}
                       setLoadingWidth={setLoadingWidth}
+                      setTimeLeft={setTimeLeft}
                       notify={appActions.notify}
                     />
                   </>

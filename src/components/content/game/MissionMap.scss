@@ -113,7 +113,7 @@
   .List {
     position: relative;
     overflow: visible;
-    margin: 0;
+    margin: -1px 0 0;
     height: 100%;
     width: 100%;
     padding: 0;
@@ -130,23 +130,29 @@
         position: relative;
         pointer-events: none;
         z-index: $z-index-objective-map-header;
-        margin: 30px auto 0;
+        margin: 0 auto;
         border-radius: 0;
         width: fit-content;
         max-width: 65%;
-        min-width: 260px;
-        padding: 10px;
+        min-width: 200px;
+        padding: 0;
         text-align: center;
+        background-color: none;
+        opacity: 0.95;
+        border: 2px solid $color-main;
+        border-top: none;
 
         .list-heading {
           user-select: none;
           box-sizing: border-box;
-          border-radius: 0;
-          height: 50px;
-          padding: 14px 26px;
+          border-radius: 0px;
+          height: 40px;
+          padding: 10px;
           overflow: hidden;
           white-space: nowrap;
           text-overflow: ellipsis;
+          background-color: $background-alt1;
+          opacity: 0.95;
         }
       }
 

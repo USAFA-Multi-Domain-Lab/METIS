@@ -16,98 +16,144 @@ const ExecuteNodePath = (props: {
   outputToConsole: (output: IConsoleOutput) => void
   handleCloseRequest: () => void
   handleGoBackRequest: () => void
-  loadingWidth: number
   setLoadingWidth: (loadingWidth: number) => void
+  setTimeLeft: (timeLeft: number | null) => void
   dateFormatStyle: Intl.DateTimeFormat
 }) => {
   let isOpen: boolean = props.isOpen
   let mission: Mission = props.mission
   let selectedNode: MissionNode | null = props.selectedNode
+  let selectedAction: MissionNodeAction | null | undefined =
+    selectedNode?.selectedAction
+  let outputToConsole = props.outputToConsole
+  let handleCloseRequest = props.handleCloseRequest
+  let handleGoBackRequest = props.handleGoBackRequest
+  let setLoadingWidth = props.setLoadingWidth
+  let setTimeLeft = props.setTimeLeft
+  let dateFormatStyle: Intl.DateTimeFormat = props.dateFormatStyle
 
-  if (selectedNode !== null) {
-    let selectedAction: MissionNodeAction | null = selectedNode.selectedAction
-    let processTime: number | undefined =
-      props.selectedNode?.selectedAction?.processTime
-    let outputToConsole = props.outputToConsole
-    let handleCloseRequest = props.handleCloseRequest
-    let handleGoBackRequest = props.handleGoBackRequest
-    let actionName: string | undefined =
-      props.selectedNode?.selectedAction?.name
-    let loadingWidth: number = props.loadingWidth
-    let setLoadingWidth = props.setLoadingWidth
-    let dateFormatStyle: Intl.DateTimeFormat = props.dateFormatStyle
-    let executingOutputMessage: string
-    let postExecutionSuccessText: string
-    let postExecutionFailureText: string
-
-    // console output message variables
-    if (selectedAction !== null) {
-      executingOutputMessage = `
-  <span class='line-cursor'>
-  [${dateFormatStyle.format(Date.now())}] 
-  MDL@${selectedNode?.name.replaceAll(' ', '-')}: 
-  </span>
-  
-  <span class='default'>
-  Started executing ${selectedNode.name}.</br>
-  </span>
-
-  <ul class='SelectedActionPropertyList'>
-  <li class='SelectedActionProperty'>
-  Action selected: ${actionName}
-  </li></br>
-  <li class='SelectedActionProperty'>
-  Time to execute: ${selectedAction.processTime / 1000} second(s)
-  </li></br>
-  <li class='SelectedActionProperty'>
-  Chance of success: ${selectedAction.successChance * 100}%
-  </li></br>
-  <li class='SelectedActionProperty'>
-  Resource cost: ${selectedAction.resourceCost} resource(s)
-  </li></br>
-  </ul>
-  `
-      postExecutionSuccessText = `
-  <span class='line-cursor'>
-  [${dateFormatStyle.format(Date.now())}] 
-  MDL@${selectedNode?.name.replaceAll(' ', '-')}: 
-  </span>
-  
-  <span class='succeeded'>
-  ${selectedAction?.postExecutionSuccessText}
-  </span>
-  `
-      postExecutionFailureText = `
-  <span class='line-cursor'>
-  [${dateFormatStyle.format(Date.now())}] 
-  MDL@${selectedNode?.name.replaceAll(' ', '-')}: 
-  </span>
-  <span class='failed'>${selectedAction?.postExecutionFailureText}
-  </span>
-  `
-    }
-
-    /* -- COMPONENT STATE -- */
+  if (selectedNode && selectedAction) {
+    /* -- COMPONENT VARIABLES -- */
+    let processTime: number = selectedAction.processTime
+    let actionName: string = selectedAction.name
+    let loadingWidth: number = selectedNode.loadingWidth
+    let timeLeft: string | null = selectedNode.timeLeft
 
     /* -- COMPONENT FUNCTIONS -- */
 
     // Closes the execution prompt window
-    const closeWindow = (): void => {
+    const closeWindow = () => {
       handleCloseRequest()
     }
 
+    const runTimer = () => {
+      if (selectedNode && processTime) {
+        let timeSpan: number = processTime / 1000
+        let minutesLeft: number | string = Math.floor(timeSpan / 60)
+        let secondsLeft: number | string = timeSpan % 60
+
+        // Logic that formats the timer
+        if (minutesLeft < 10 && secondsLeft < 10) {
+          minutesLeft = '0' + minutesLeft.toString()
+          secondsLeft = '0' + secondsLeft.toString()
+          timeLeft = minutesLeft + ':' + secondsLeft
+          selectedNode.timeLeft = timeLeft
+          setTimeLeft(timeSpan)
+        } else if (minutesLeft > 10 && secondsLeft < 10) {
+          secondsLeft = '0' + secondsLeft.toString()
+          timeLeft = minutesLeft + ':' + secondsLeft
+          selectedNode.timeLeft = timeLeft
+          setTimeLeft(timeSpan)
+        } else if (minutesLeft < 10 && secondsLeft > 10) {
+          minutesLeft = '0' + minutesLeft.toString()
+          timeLeft = minutesLeft + ':' + secondsLeft
+          selectedNode.timeLeft = timeLeft
+          setTimeLeft(timeSpan)
+        } else if (minutesLeft < 10) {
+          minutesLeft = '0' + minutesLeft.toString()
+          timeLeft = minutesLeft + ':' + secondsLeft
+          selectedNode.timeLeft = timeLeft
+          setTimeLeft(timeSpan)
+        } else if (secondsLeft < 10) {
+          secondsLeft = '0' + secondsLeft.toString()
+          timeLeft = minutesLeft + ':' + secondsLeft
+          selectedNode.timeLeft = timeLeft
+        } else {
+          timeLeft = minutesLeft + ':' + secondsLeft
+          selectedNode.timeLeft = timeLeft
+          setTimeLeft(timeSpan)
+        }
+
+        // Initializes the interval at which it will take
+        // to execute a node
+        let timerSpeed = processTime / 1000
+        let timePace = processTime / timerSpeed
+        let timerDuration = setInterval(timer, timePace)
+
+        function timer() {
+          if (selectedNode) {
+            if (timeSpan <= 0) {
+              clearInterval(timerDuration)
+              selectedNode.timeLeft = '0'
+              setTimeLeft(0)
+            } else {
+              timeSpan--
+              minutesLeft = Math.floor(timeSpan / 60)
+              secondsLeft = timeSpan % 60
+
+              // Logic that formats the timer
+              if (minutesLeft < 10 && secondsLeft < 10) {
+                minutesLeft = '0' + minutesLeft.toString()
+                secondsLeft = '0' + secondsLeft.toString()
+                timeLeft = minutesLeft + ':' + secondsLeft
+                selectedNode.timeLeft = timeLeft
+                setTimeLeft(timeSpan)
+              } else if (minutesLeft > 10 && secondsLeft < 10) {
+                secondsLeft = '0' + secondsLeft.toString()
+                timeLeft = minutesLeft + ':' + secondsLeft
+                selectedNode.timeLeft = timeLeft
+                setTimeLeft(timeSpan)
+              } else if (minutesLeft < 10 && secondsLeft > 10) {
+                minutesLeft = '0' + minutesLeft.toString()
+                timeLeft = minutesLeft + ':' + secondsLeft
+                selectedNode.timeLeft = timeLeft
+                setTimeLeft(timeSpan)
+              } else if (minutesLeft < 10) {
+                minutesLeft = '0' + minutesLeft.toString()
+                timeLeft = minutesLeft + ':' + secondsLeft
+                selectedNode.timeLeft = timeLeft
+                setTimeLeft(timeSpan)
+              } else if (secondsLeft < 10) {
+                secondsLeft = '0' + secondsLeft.toString()
+                timeLeft = minutesLeft + ':' + secondsLeft
+                selectedNode.timeLeft = timeLeft
+              } else {
+                timeLeft = minutesLeft + ':' + secondsLeft
+                selectedNode.timeLeft = timeLeft
+                setTimeLeft(timeSpan)
+              }
+            }
+          }
+        }
+      }
+    }
+
     // Creates an interval to visually display the loading bar's progress
-    const runLoadingBar = (): void => {
-      if (processTime !== undefined) {
+    const runLoadingBar = () => {
+      if (selectedNode && processTime && selectedNode.timeLeft !== null) {
         let loadingDuration = setInterval(loadingBar, processTime / 100)
 
         function loadingBar() {
-          if (loadingWidth >= 100) {
-            clearInterval(loadingDuration)
-            setLoadingWidth(0)
-          } else {
-            loadingWidth++
-            setLoadingWidth(loadingWidth)
+          if (selectedNode) {
+            if (loadingWidth >= 100) {
+              clearInterval(loadingDuration)
+              selectedNode.loadingWidth = 0
+              setLoadingWidth(0)
+            } else {
+              loadingWidth++
+              selectedNode.loadingWidth = loadingWidth
+              setLoadingWidth(loadingWidth)
+            }
           }
         }
       }
@@ -129,9 +175,46 @@ const ExecuteNodePath = (props: {
           let spendResources: number = mission.resources - resourceCost
 
           if (spendResources >= 0) {
-            outputToConsole({ date: Date.now(), value: executingOutputMessage })
-
             mission.resources = spendResources
+            outputToConsole({
+              date: Date.now(),
+              elements: (
+                <div className='Text'>
+                  <span className='line-cursor'>
+                    [{dateFormatStyle.format(Date.now())}] MDL@
+                    {selectedNode.name.replaceAll(' ', '-')}:{' '}
+                  </span>
+                  <span className='default'>
+                    Started executing {selectedNode.name}.<br></br>
+                  </span>
+                  <ul className='SelectedActionPropertyList'>
+                    <li className='SelectedActionProperty'>
+                      Action selected: {actionName}
+                    </li>
+                    <br></br>
+                    <li className='SelectedActionProperty'>
+                      Time to execute: {selectedAction.processTime / 1000}{' '}
+                      second(s)
+                    </li>
+                    <br></br>
+                    <li className='SelectedActionProperty'>
+                      Chance of success: {selectedAction.successChance * 100}%
+                    </li>
+                    <br></br>
+                    <li className='SelectedActionProperty'>
+                      Resource cost: {selectedAction.resourceCost} resource(s)
+                    </li>
+                    <br></br>
+                    {/* <li className='SelectedActionProperty'>
+                      Time remaining: {timeLeft} second(s)
+                    </li>
+                    <br></br> */}
+                  </ul>
+                </div>
+              ),
+            })
+
+            runTimer()
             runLoadingBar()
 
             selectedAction.executeAction((success: boolean) => {
@@ -144,16 +227,37 @@ const ExecuteNodePath = (props: {
 
                 outputToConsole({
                   date: Date.now(),
-                  value: postExecutionSuccessText,
+                  elements: (
+                    <div className='Text'>
+                      <span className='line-cursor'>
+                        [{dateFormatStyle.format(Date.now())}] MDL@
+                        {selectedNode.name.replaceAll(' ', '-')}:{' '}
+                      </span>
+                      <span className='succeeded'>
+                        {selectedAction.postExecutionSuccessText}
+                      </span>
+                    </div>
+                  ),
                 })
 
-                selectedAction?.updateWillSucceedArray()
+                selectedAction.updateWillSucceedArray()
               } else if (!success) {
                 outputToConsole({
                   date: Date.now(),
-                  value: postExecutionFailureText,
+                  elements: (
+                    <div className='Text'>
+                      <span className='line-cursor'>
+                        [{dateFormatStyle.format(Date.now())}] MDL@
+                        {selectedNode.name.replaceAll(' ', '-')}:{' '}
+                      </span>
+                      <span className='failed'>
+                        {selectedAction.postExecutionFailureText}
+                      </span>
+                    </div>
+                  ),
                 })
-                selectedAction?.updateWillSucceedArray()
+
+                selectedAction.updateWillSucceedArray()
               }
             })
           } else {
@@ -196,7 +300,7 @@ const ExecuteNodePath = (props: {
           x
         </p>
         <p className='PromptDisplayText'>
-          Do you want to {actionName?.toLowerCase()} {props.selectedNode?.name}?
+          Do you want to {actionName.toLowerCase()} {selectedNode.name}?
         </p>
         <ActionPropertyDisplay selectedNode={props.selectedNode} />
         <div className='Buttons'>
@@ -204,13 +308,13 @@ const ExecuteNodePath = (props: {
             className={executionButtonClassName}
             onClick={() => {
               execute()
-              props.selectedNode?.selectedAction?.updateWillSucceed()
+              selectedAction?.updateWillSucceed()
             }}
           >
             EXECUTE ACTION
             {displayTooltip ? (
               <Tooltip
-                description={`You cannot ${actionName?.toLowerCase()} because you have no more resources left to spend.`}
+                description={`You cannot ${actionName.toLowerCase()} because you have no more resources left to spend.`}
               />
             ) : null}
           </button>
