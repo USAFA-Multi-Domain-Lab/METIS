@@ -26,7 +26,6 @@ interface IMissionMap {
   mission: Mission
   missionAjaxStatus: EAjaxStatus
   selectedNode: MissionNode | null
-  loadingWidth?: number
   handleNodeSelection: (node: MissionNode) => void
   handleNodeCreation: (node: MissionNode) => void
   handleNodeDeselection: (() => void) | null

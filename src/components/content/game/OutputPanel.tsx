@@ -1,11 +1,14 @@
 import './OutputPanel.scss'
+import { MissionNode } from '../../../modules/mission-nodes'
 import ConsoleOutput, { IConsoleOutput } from './ConsoleOutput'
 
 const OutputPanel = (props: {
-  consoleOutputs: Array<JSX.Element>
+  consoleOutputs: Array<IConsoleOutput>
+  selectedNode: MissionNode | null
   setOutputPanelIsDisplayed: (outputPanelIsDisplayed: boolean) => void
 }): JSX.Element | null => {
-  let consoleOutputs = props.consoleOutputs
+  let consoleOutputs: Array<IConsoleOutput> = props.consoleOutputs
+  let selectedNode: MissionNode | null = props.selectedNode
   let setOutputPanelIsDisplayed = props.setOutputPanelIsDisplayed
 
   /* -- COMPONENT FUNCTIONS -- */
@@ -15,6 +18,23 @@ const OutputPanel = (props: {
   }
 
   /* -- RENDER -- */
+
+  consoleOutputs.forEach((consoleOutput: IConsoleOutput) => {
+    selectedNode?.mission.nodes.forEach((node: MissionNode) => {
+      if (
+        consoleOutput.elements.includes('Time remaining:') &&
+        consoleOutput.nodeID === node.nodeID
+      ) {
+        consoleOutput.elements = `
+              <div class='Text'>
+                <div class='Timer'>
+                Time remaining: ${node.timeLeft}
+                </div>
+              </div>`
+      }
+    })
+  })
+
   return (
     <div className='OutputPanel'>
       <div className='BorderBox'>
@@ -24,8 +44,13 @@ const OutputPanel = (props: {
           </span>
         </div>
         <ul className='TextArea'>
-          {consoleOutputs.map((consoleOutput: JSX.Element) => {
-            return consoleOutput
+          {consoleOutputs.map((consoleOutput: IConsoleOutput) => {
+            return (
+              <ConsoleOutput
+                key={consoleOutput.date}
+                value={consoleOutput.elements}
+              />
+            )
           })}
         </ul>
       </div>

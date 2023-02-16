@@ -1,4 +1,4 @@
-import { Component, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { getMission, Mission } from '../../modules/missions'
 import { EAjaxStatus } from '../../modules/toolbox/ajax'
 import MissionMap from '../content/game/MissionMap'
@@ -18,7 +18,7 @@ import {
   ResizablePanel,
 } from '../content/general-layout/ResizablePanels'
 import { MissionNodeAction } from '../../modules/mission-node-actions'
-import ConsoleOutput, { IConsoleOutput } from '../content/game/ConsoleOutput'
+import { IConsoleOutput } from '../content/game/ConsoleOutput'
 
 export interface IGamePage extends IPage {
   missionID: string
@@ -45,7 +45,9 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
   const [lastSelectedNode, setLastSelectedNode] = useState<MissionNode | null>(
     null,
   )
-  const [consoleOutputs, setConsoleOutputs] = useState<Array<JSX.Element>>([])
+  const [consoleOutputs, setConsoleOutputs] = useState<Array<IConsoleOutput>>(
+    [],
+  )
   const [outputPanelIsDisplayed, setOutputPanelIsDisplayed] =
     useState<boolean>(false)
   const [executeNodePathIsDisplayed, setExecuteNodePathIsDisplayed] =
@@ -53,7 +55,12 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
   const [nodeActionsIsDisplayed, setNodeActionsIsDisplayed] =
     useState<boolean>(false)
   const [loadingWidth, setLoadingWidth] = useState<number>(0)
-  const [timeLeft, setTimeLeft] = useState<number | null>(null)
+  const [timerIntervalIDArray, setTimerIntervalIDArray] = useState<
+    Array<any | null>
+  >([])
+  const [loadingBarIntervalIDArray, setLoadingBarIntervalIDArray] = useState<
+    Array<any | null>
+  >([])
 
   /* -- COMPONENT EFFECTS -- */
 
@@ -117,9 +124,7 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
 
     // This will output to the console.
     const outputToConsole = (output: IConsoleOutput): void => {
-      consoleOutputs.push(
-        <ConsoleOutput key={output.date} value={output.elements} />,
-      )
+      consoleOutputs.push(output)
     }
 
     /* -- RENDER -- */
@@ -185,21 +190,20 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
                     <MissionMap
                       mission={mission}
                       missionAjaxStatus={EAjaxStatus.Loaded}
-                      loadingWidth={loadingWidth}
                       handleNodeSelection={(selectedNode: MissionNode) => {
                         setLastSelectedNode(selectedNode)
-                        let preExecutionText: JSX.Element = (
-                          <li className='Text'>
-                            <span className='line-cursor'>
-                              [{dateFormatStyle.format(Date.now())}] MDL@
-                              {selectedNode?.name.replaceAll(' ', '-')}:{' '}
+
+                        let preExecutionText: string = `
+                            <div class='Text'>
+                            <span class='line-cursor'>
+                              [${dateFormatStyle.format(Date.now())}] MDL@
+                              ${selectedNode?.name.replaceAll(' ', '-')}:
                             </span>
 
-                            <span className='default'>
-                              {selectedNode?.preExecutionText}
+                            <span class='default'>
+                              ${selectedNode?.preExecutionText}
                             </span>
-                          </li>
-                        )
+                          </div>`
 
                         if (
                           selectedNode.preExecutionText !== '' &&
@@ -209,6 +213,7 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
                           outputToConsole({
                             date: Date.now(),
                             elements: preExecutionText,
+                            nodeID: selectedNode.nodeID,
                           })
                           setOutputPanelIsDisplayed(true)
                         }
@@ -223,24 +228,25 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
 
                           selectedNode.color = ''
                         } else {
-                          if (
-                            !selectedNode.executing &&
-                            !selectedNode.selectedAction?.succeeded &&
-                            selectedNode.actions.length > 1
-                          ) {
-                            setNodeActionsIsDisplayed(true)
-                          } else if (
-                            selectedNode.actions.length === 1 &&
-                            !selectedNode.selectedAction?.succeeded
-                          ) {
-                            selectedNode.selectedAction =
-                              selectedNode.actions[0]
-                            selectedNode.selectedAction.processTime =
-                              selectedNode.actions[0].processTime
-                            setNodeActionsIsDisplayed(false)
-                            setExecuteNodePathIsDisplayed(true)
-                          } else if (selectedNode.actions.length === 0) {
-                            setNodeActionsIsDisplayed(true)
+                          if (!selectedNode.executing) {
+                            if (
+                              !selectedNode.selectedAction?.succeeded &&
+                              selectedNode.actions.length > 1
+                            ) {
+                              setNodeActionsIsDisplayed(true)
+                            } else if (
+                              selectedNode.actions.length === 1 &&
+                              !selectedNode.selectedAction?.succeeded
+                            ) {
+                              selectedNode.selectedAction =
+                                selectedNode.actions[0]
+                              selectedNode.selectedAction.processTime =
+                                selectedNode.actions[0].processTime
+                              setNodeActionsIsDisplayed(false)
+                              setExecuteNodePathIsDisplayed(true)
+                            } else if (selectedNode.actions.length === 0) {
+                              setNodeActionsIsDisplayed(true)
+                            }
                           }
                         }
                       }}
@@ -345,9 +351,10 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
                           setNodeActionsIsDisplayed(true)
                         }
                       }}
+                      timerIntervalIDArray={timerIntervalIDArray}
+                      loadingBarIntervalIDArray={loadingBarIntervalIDArray}
                       dateFormatStyle={dateFormatStyle}
                       setLoadingWidth={setLoadingWidth}
-                      setTimeLeft={setTimeLeft}
                       notify={appActions.notify}
                     />
                   </>
@@ -360,6 +367,7 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
                 render: () => (
                   <OutputPanel
                     consoleOutputs={consoleOutputs}
+                    selectedNode={lastSelectedNode}
                     setOutputPanelIsDisplayed={setOutputPanelIsDisplayed}
                   />
                 ),
