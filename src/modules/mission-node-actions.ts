@@ -1,5 +1,7 @@
 import { PRNG } from 'seedrandom'
+import ExecuteNodePath from '../components/content/game/ExecuteNodePath'
 import { MissionNode } from './mission-nodes'
+import { Mission } from './missions'
 
 export interface IMissionNodeActionJSON {
   actionID: string
@@ -25,6 +27,22 @@ export class MissionNodeAction {
   _willSucceedArray: Array<boolean>
   _willSucceed: boolean | null
 
+  // This will be called if all the
+  // necessary conditions are met to
+  // execute a node action.
+  get readyToExecute(): boolean {
+    let node: MissionNode = this.node
+    let mission: Mission = node.mission
+    let resourceCost: number = this.resourceCost
+
+    return (
+      mission.resources >= resourceCost &&
+      node.executable &&
+      !this.succeeded &&
+      this.willSucceed !== null
+    )
+  }
+
   // Getter for _willSucceedArray
   get willSucceedArray(): Array<boolean> {
     return this._willSucceedArray
@@ -37,7 +55,7 @@ export class MissionNodeAction {
 
   // Gets the total amount of attempts
   // that a user can have to execute a node
-  get totalExecutionAttempts(): number {
+  get totalPossibleExecutionAttempts(): number {
     return Math.floor(this.node.mission.initialResources / this.resourceCost)
   }
 
@@ -69,7 +87,7 @@ export class MissionNodeAction {
     this.postExecutionFailureText = postExecutionFailureText
     this._willSucceedArray =
       MissionNodeAction.determineDifferentSuccessOutcomes(
-        this.totalExecutionAttempts,
+        this.totalPossibleExecutionAttempts,
         successChance,
         node.mission.rng,
       )
@@ -124,36 +142,47 @@ export class MissionNodeAction {
     return this._willSucceed
   }
 
-  // This will execute the selected
-  // node action after the time delay
-  // of the selected node action.
-  executeAction(callback: (success: boolean) => void): void {
-    let selectedAction: MissionNodeAction | null = this
+  // This will be called upon action
+  // execution completion.
+  _handleExecutionEnd = (success: boolean): void => {
+    let node: MissionNode = this.node
 
-    if (this.totalExecutionAttempts > 0) {
-      if (
-        (this.node.executable === true && selectedAction !== null) ||
-        (this.succeeded === false && selectedAction !== null)
-      ) {
-        this.node.executing = true
+    this.updateWillSucceedArray()
 
-        setTimeout(() => {
-          this.node.executing = false
-          this.node.executed = true
+    node.handleActionExecutionEnd()
 
-          if (this.willSucceed !== null) {
-            callback(this.willSucceed)
-          }
-        }, selectedAction.processTime)
-      } else if (
-        selectedAction !== null &&
-        (this.succeeded === null || this.willSucceed === null)
-      ) {
-        console.error(
-          `The "willSucceed" property for the action called ${selectedAction.name} on the node called ${this.node.name} is null.`,
-        )
+    if (success) {
+      if (node.hasChildren && !node.isOpen) {
+        node.open()
       }
+      ExecuteNodePath.handleExecutionSuccess(this)
+    } else if (!success) {
+      ExecuteNodePath.handleExecutionFailure(this)
     }
+  }
+
+  // This will execute the action.
+  execute(): void {
+    let node: MissionNode = this.node
+    let mission: Mission = node.mission
+    let resourceCost: number = this.resourceCost
+    let processTime: number = this.processTime
+    let willSucceed: boolean = this.willSucceed === true
+
+    if (!this.readyToExecute) {
+      throw Error('This action cannot currently be executed.')
+    }
+
+    mission.resources -= resourceCost
+
+    // node.runTimer()
+    // node.runLoadingBar()
+
+    node.handleActionExecutionStart(this)
+
+    setTimeout(() => {
+      this._handleExecutionEnd(willSucceed)
+    }, processTime)
   }
 }
 

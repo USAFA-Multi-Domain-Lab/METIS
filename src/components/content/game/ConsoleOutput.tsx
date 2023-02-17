@@ -2,12 +2,11 @@ import { useEffect, useRef, useState } from 'react'
 import './ConsoleOutput.scss'
 
 export interface IConsoleOutput {
-  date: number
-  nodeID: string
-  elements: string
+  key: string
+  innerHTML: string
 }
 
-const ConsoleOutput = (props: { key: number; value: string }): JSX.Element => {
+const ConsoleOutput = (props: IConsoleOutput): JSX.Element => {
   /* -- COMPONENT REF -- */
   const scrollRef = useRef<HTMLDivElement>(null)
 
@@ -23,36 +22,20 @@ const ConsoleOutput = (props: { key: number; value: string }): JSX.Element => {
         scrollRefElement.scrollIntoView({ behavior: 'smooth' })
       }
 
-      // updateElements(props.value)
-
       setMountHandled(true)
     }
   }, [mountHandled])
 
-  // const updateElements = (element: JSX.Element) => {
-  //   let childElements = element.props.children
-
-  //   if (childElements && typeof childElements !== 'string') {
-  //     childElements.forEach((childElement: JSX.Element) => {
-  //       if (childElement.key === `${selectedNode?.nodeID}_timer`) {
-  //         console.log(childElement.props)
-  //         childElement.props = {
-  //           children: ['Time remaining', `${selectedNode?.timeLeft}`],
-  //         }
-  //       }
-  //       if (childElement.props !== undefined) {
-  //         updateElements(childElement)
-  //       }
-  //     })
-  //   }
-  // }
-
   /* -- RENDER -- */
+
+  const { key, innerHTML } = props
+
   return (
     <div
       className='ConsoleOutput'
-      dangerouslySetInnerHTML={{ __html: props.value }}
+      dangerouslySetInnerHTML={{ __html: innerHTML }}
       ref={scrollRef}
+      key={key}
     ></div>
   )
 }

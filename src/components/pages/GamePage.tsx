@@ -28,15 +28,15 @@ export interface IGamePage extends IPage {
   handleToggleLiveRequest: (mission: Mission, live: boolean) => void
 }
 
+// This is the number of times per
+// second that the game updates.
+const GAME_TICK_RATE: number = 20
+
 // This will render a dashboard with a radar
 // on it, indicating air traffic passing by.
 export default function GamePage(props: IGamePage): JSX.Element | null {
   let appState: AppState = props.appState
   let appActions: AppActions = props.appActions
-  let dateFormatStyle: Intl.DateTimeFormat = new Intl.DateTimeFormat('en-GB', {
-    hour: '2-digit',
-    minute: '2-digit',
-  })
 
   /* -- COMPONENT STATE -- */
 
@@ -45,24 +45,24 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
   const [lastSelectedNode, setLastSelectedNode] = useState<MissionNode | null>(
     null,
   )
-  const [consoleOutputs, setConsoleOutputs] = useState<Array<IConsoleOutput>>(
-    [],
-  )
   const [outputPanelIsDisplayed, setOutputPanelIsDisplayed] =
     useState<boolean>(false)
   const [executeNodePathIsDisplayed, setExecuteNodePathIsDisplayed] =
     useState<boolean>(false)
   const [nodeActionsIsDisplayed, setNodeActionsIsDisplayed] =
     useState<boolean>(false)
-  const [loadingWidth, setLoadingWidth] = useState<number>(0)
-  const [timerIntervalIDArray, setTimerIntervalIDArray] = useState<
-    Array<any | null>
-  >([])
-  const [loadingBarIntervalIDArray, setLoadingBarIntervalIDArray] = useState<
-    Array<any | null>
-  >([])
 
-  /* -- COMPONENT EFFECTS -- */
+  // This will loop the game,
+  // updating at the given tick
+  // rate.
+  let loop: () => void = () => {
+    setTimeout(() => {
+      try {
+        appActions.forceUpdate()
+        loop()
+      } catch (error) {}
+    }, 1000 / GAME_TICK_RATE)
+  }
 
   // Equivalent of componentDidMount.
   useEffect(() => {
@@ -74,6 +74,7 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
           appActions.finishLoading()
           setMission(mission)
           setMountHandled(true)
+          loop()
         },
         (error: AxiosError) => {
           if (error.response?.status === 401) {
@@ -91,11 +92,14 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
     }
   }, [mountHandled])
 
+  // Equivalent of componentWillUnmount.
+  useEffect(() => {
+    return () => {
+      loop = () => {}
+    }
+  }, [])
+
   if (mission !== null) {
-    /* -- COMPONENTS -- */
-
-    /* -- COMPONENT FUNCTIONS -- */
-
     // This will logout the current user.
     const logout = () =>
       appActions.logout({
@@ -124,7 +128,7 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
 
     // This will output to the console.
     const outputToConsole = (output: IConsoleOutput): void => {
-      consoleOutputs.push(output)
+      mission.outputToConsole(output)
     }
 
     /* -- RENDER -- */
@@ -141,6 +145,32 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
 
     if (mission.resources <= 0) {
       resourcesClassName += ' RedAlert'
+    }
+
+    // This will render the execute node path
+    // prompt if the user has selected a node
+    // and an action.
+    const renderExecuteNodePath = () => {
+      if (
+        lastSelectedNode !== null &&
+        lastSelectedNode.selectedAction !== null
+      ) {
+        return (
+          <ExecuteNodePath
+            selectedAction={lastSelectedNode.selectedAction}
+            isOpen={executeNodePathIsDisplayed}
+            outputToConsole={outputToConsole}
+            handleCloseRequest={() => setExecuteNodePathIsDisplayed(false)}
+            handleGoBackRequest={() => {
+              if (lastSelectedNode && lastSelectedNode.actions.length > 1) {
+                setExecuteNodePathIsDisplayed(false)
+                setNodeActionsIsDisplayed(true)
+              }
+            }}
+            notify={appActions.notify}
+          />
+        )
+      }
     }
 
     return (
@@ -193,28 +223,14 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
                       handleNodeSelection={(selectedNode: MissionNode) => {
                         setLastSelectedNode(selectedNode)
 
-                        let preExecutionText: string = `
-                            <div class='Text'>
-                            <span class='line-cursor'>
-                              [${dateFormatStyle.format(Date.now())}] MDL@
-                              ${selectedNode?.name.replaceAll(' ', '-')}:
-                            </span>
-
-                            <span class='default'>
-                              ${selectedNode?.preExecutionText}
-                            </span>
-                          </div>`
-
                         if (
                           selectedNode.preExecutionText !== '' &&
                           selectedNode.preExecutionText !== null &&
                           selectedNode.selectedAction?.succeeded !== true
                         ) {
-                          outputToConsole({
-                            date: Date.now(),
-                            elements: preExecutionText,
-                            nodeID: selectedNode.nodeID,
-                          })
+                          let output: IConsoleOutput =
+                            OutputPanel.renderPreExecutionOutput(selectedNode)
+                          outputToConsole(output)
                           setOutputPanelIsDisplayed(true)
                         }
 
@@ -249,24 +265,6 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
                             }
                           }
                         }
-                      }}
-                      applyNodeClassName={(node: MissionNode) => {
-                        let className: string = ''
-
-                        if (node.executing) {
-                          className += ' LoadingBar'
-                        }
-
-                        if (node.executed && node.selectedAction?.succeeded) {
-                          className += ' succeeded'
-                        } else if (
-                          node.executed &&
-                          !node.selectedAction?.succeeded
-                        ) {
-                          className += ' failed'
-                        }
-
-                        return className
                       }}
                       renderNodeTooltipDescription={(node: MissionNode) => {
                         let description: string = ''
@@ -304,9 +302,12 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
                             }%`
                         }
 
-                        if (node.executing && node.timeLeft !== null) {
+                        if (
+                          node.executing
+                          // node.executionTimeRemaining !== null
+                        ) {
                           description =
-                            `* Time remaining: ${node.timeLeft} \n` +
+                            // `* Time remaining: ${node.executionTimeRemaining} \n` +
                             `* Description: ${node.description}\n`
                         }
 
@@ -334,29 +335,7 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
                         setNodeActionsIsDisplayed(false)
                       }
                     />
-                    <ExecuteNodePath
-                      isOpen={executeNodePathIsDisplayed}
-                      mission={mission}
-                      selectedNode={lastSelectedNode}
-                      outputToConsole={outputToConsole}
-                      handleCloseRequest={() =>
-                        setExecuteNodePathIsDisplayed(false)
-                      }
-                      handleGoBackRequest={() => {
-                        if (
-                          lastSelectedNode &&
-                          lastSelectedNode.actions.length > 1
-                        ) {
-                          setExecuteNodePathIsDisplayed(false)
-                          setNodeActionsIsDisplayed(true)
-                        }
-                      }}
-                      timerIntervalIDArray={timerIntervalIDArray}
-                      loadingBarIntervalIDArray={loadingBarIntervalIDArray}
-                      dateFormatStyle={dateFormatStyle}
-                      setLoadingWidth={setLoadingWidth}
-                      notify={appActions.notify}
-                    />
+                    {renderExecuteNodePath()}
                   </>
                 ),
               }}
@@ -366,8 +345,7 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
                 isOpen: outputPanelIsDisplayed,
                 render: () => (
                   <OutputPanel
-                    consoleOutputs={consoleOutputs}
-                    selectedNode={lastSelectedNode}
+                    mission={mission}
                     setOutputPanelIsDisplayed={setOutputPanelIsDisplayed}
                   />
                 ),

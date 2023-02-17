@@ -64,8 +64,8 @@ export interface IMissionMappable {
   depth: number
   executing: boolean
   executable: boolean
+  executionPercentCompleted: number
   device: boolean
-  loadingWidth: number | null
 }
 
 // represents a location on the mission map
@@ -163,8 +163,8 @@ export default class MissionMap extends React.Component<
     grayOutAddNodeButton: false,
     grayOutDeleteNodeButton: false,
     elementRef: React.createRef(),
-    applyMappedNodeClassName: () => '',
-    renderMappedNodeTooltipDescription:
+    applyNodeClassName: () => '',
+    renderNodeTooltipDescription:
       MissionMap.renderMappedNodeTooltipDescription_default,
   }
 
@@ -964,7 +964,7 @@ export default class MissionMap extends React.Component<
     buttons: Array<IButtonSVG> = [],
   ): JSX.Element => {
     let selectedNode: MissionNode | null = this.props.selectedNode
-    let allowCreationMode: boolean = this.props.allowCreationMode
+    let executionPercentCompleted: number = node.executionPercentCompleted
     let mapScale: number = this.state.mapScale
     let titleFontSize: number = mapItemFontSize * mapScale
     let mapXScale: number = this.currentMapXScale
@@ -975,7 +975,7 @@ export default class MissionMap extends React.Component<
     let height: number = (mapYScale - gridPaddingY * 2) * mapScale
     let loadingHeight: number = height - 4
     let loadingMarginBottom: number = -loadingHeight
-    let loadingWidth: number | null = node.loadingWidth
+    let loadingWidth: number | null = executionPercentCompleted * width
     let titleWidthSubtrahend: number = width * 0.1
     let titleLineHeight: number = height * 0.34
     let buttonMarginTop = height * -0.175
@@ -1101,6 +1101,16 @@ export default class MissionMap extends React.Component<
       default:
         className = 'default'
         break
+    }
+
+    if (node.executing) {
+      className += ' LoadingBar'
+    }
+
+    if (node.executed && node.selectedAction?.succeeded) {
+      className += ' succeeded'
+    } else if (node.executed && !node.selectedAction?.succeeded) {
+      className += ' failed'
     }
 
     if (classNameExternalAddon.length > 0) {

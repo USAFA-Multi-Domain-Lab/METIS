@@ -9,6 +9,7 @@ import {
   MissionNodeAction,
 } from './mission-node-actions'
 import { IMissionMappable } from '../components/content/game/MissionMap'
+import ExecuteNodePath from '../components/content/game/ExecuteNodePath'
 
 export enum ENodeTargetRelation {
   ParentOfTargetAndChildren,
@@ -63,6 +64,7 @@ export class MissionNode implements IMissionMappable {
   _depthPadding: number
   actions: Array<MissionNodeAction> = []
   selectedAction: MissionNodeAction | null
+  _executingAction: MissionNodeAction | null
   executed: boolean
   executing: boolean
   mapX: number
@@ -70,8 +72,8 @@ export class MissionNode implements IMissionMappable {
   depth: number
   _isOpen: boolean
   _expandedInMenu: boolean
-  _timeLeft: string | null
-  _loadingWidth: number
+  _executionTimeStart: number
+  _executionTimeEnd: number
 
   static default_name: string = 'Unnamed Node'
   static default_color: string = 'default'
@@ -95,6 +97,11 @@ export class MissionNode implements IMissionMappable {
     this._handleStructureChange()
   }
 
+  // Getter for _executingAction.
+  get executingAction(): MissionNodeAction | null {
+    return this._executingAction
+  }
+
   get descendantDepth(): number {
     let deepestDescendant: MissionNode = this
 
@@ -116,90 +123,6 @@ export class MissionNode implements IMissionMappable {
     }
 
     return deepestLowestDescendant.mapY
-  }
-
-  get timeLeft(): string | null {
-    return this._timeLeft
-  }
-
-  set timeLeft(timeLeft: string | null) {
-    this._timeLeft = timeLeft
-  }
-
-  get loadingWidth(): number {
-    return this._loadingWidth
-  }
-
-  set loadingWidth(loadingWidth: number) {
-    this._loadingWidth = loadingWidth
-  }
-
-  constructor(
-    mission: Mission,
-    nodeID: string,
-    name: string,
-    color: string,
-    description: string,
-    preExecutionText: string,
-    depthPadding: number,
-    executable: boolean,
-    device: boolean,
-    actionJSON: Array<IMissionNodeActionJSON>,
-    mapX: number,
-    mapY: number,
-  ) {
-    this.mission = mission
-    this.nodeID = nodeID
-    this.name = name
-    this.parentNode = null
-    this.childNodes = []
-    this.color = color
-    this.description = 'Description goes here.' // ! Delete string to the left and set equal to "description" once the database is ready.
-    this.preExecutionText = preExecutionText
-    this._depthPadding = depthPadding
-    this.executable = executable
-    this.device = device
-    this.selectedAction = null
-    this.executed = false
-    this.executing = false
-    this.mapX = mapX
-    this.mapY = mapY
-    this.depth = -1
-    this._isOpen = false
-    this._expandedInMenu = true
-    this._timeLeft = null
-    this._loadingWidth = 0
-
-    this.parseActionJSON(actionJSON)
-  }
-
-  // This will turn the action JSON
-  // into new MissionNodeAction objects.
-  parseActionJSON(actionJSON: Array<IMissionNodeActionJSON>): void {
-    let actions = []
-
-    for (let action of actionJSON) {
-      let actionObject: MissionNodeAction = new MissionNodeAction(
-        this,
-        action.actionID,
-        action.name,
-        action.description,
-        action.processTime,
-        action.successChance,
-        action.resourceCost,
-        action.postExecutionSuccessText,
-        action.postExecutionFailureText,
-      )
-      actions.push(actionObject)
-    }
-
-    this.actions = actions
-  }
-
-  // This is called when a change
-  // is made to the node structure.
-  _handleStructureChange(): void {
-    this.mission.handleStructureChange()
   }
 
   // This will return whether this node
@@ -287,6 +210,139 @@ export class MissionNode implements IMissionMappable {
 
   get collapsedInMenu(): boolean {
     return !this._expandedInMenu
+  }
+
+  get actionIsExecuting(): boolean {
+    return this.executingAction !== null
+  }
+
+  get executionTimeRemaining(): number {
+    let executionTimeEnd: number = this._executionTimeEnd
+    let now: number = Date.now()
+
+    if (executionTimeEnd < now) {
+      return 0
+    } else {
+      return executionTimeEnd - now
+    }
+  }
+
+  get executionDuration(): number {
+    let executionTimeEnd: number = this._executionTimeEnd
+    let executionTimeStart: number = this._executionTimeStart
+
+    return executionTimeEnd - executionTimeStart
+  }
+
+  get executionTimeRemainingFormatted(): string {
+    let executionTimeRemainingFormatted: string = ''
+    let executionTimeRemaining: number = this.executionTimeRemaining
+    let minutes: number = Math.floor(executionTimeRemaining / (60 * 1000))
+    let seconds: number = Math.floor(executionTimeRemaining % (60 * 1000))
+    let milliseconds: number = executionTimeRemaining % 1000
+
+    if (minutes < 10) {
+      executionTimeRemainingFormatted += '0'
+    }
+    executionTimeRemainingFormatted += `${minutes}:`
+
+    if (seconds < 10) {
+      executionTimeRemainingFormatted += '0'
+    }
+    executionTimeRemainingFormatted += `${seconds}:`
+
+    if (milliseconds < 100) {
+      executionTimeRemainingFormatted += '0'
+    }
+    if (milliseconds < 10) {
+      executionTimeRemainingFormatted += '0'
+    }
+    executionTimeRemainingFormatted += `${milliseconds}`
+
+    return executionTimeRemainingFormatted
+  }
+
+  get executionPercentCompleted(): number {
+    let executionDuration: number = this.executionDuration
+    let executionTimeEnd: number = this._executionTimeEnd
+    let now: number = Date.now()
+    let percentRemaining: number = (executionTimeEnd - now) / executionDuration
+    let percentCompleted: number = 1 - percentRemaining
+
+    if (percentCompleted === Infinity) {
+      percentCompleted = 0
+    }
+
+    return Math.min(percentCompleted, 1)
+  }
+
+  constructor(
+    mission: Mission,
+    nodeID: string,
+    name: string,
+    color: string,
+    description: string,
+    preExecutionText: string,
+    depthPadding: number,
+    executable: boolean,
+    device: boolean,
+    actionJSON: Array<IMissionNodeActionJSON>,
+    mapX: number,
+    mapY: number,
+  ) {
+    this.mission = mission
+    this.nodeID = nodeID
+    this.name = name
+    this.parentNode = null
+    this.childNodes = []
+    this.color = color
+    this.description = 'Description goes here.' // ! Delete string to the left and set equal to "description" once the database is ready.
+    this.preExecutionText = preExecutionText
+    this._depthPadding = depthPadding
+    this.executable = executable
+    this.device = device
+    this.selectedAction = null
+    this.executed = false
+    this.executing = false
+    this.mapX = mapX
+    this.mapY = mapY
+    this.depth = -1
+    this._isOpen = false
+    this._expandedInMenu = true
+    this._executingAction = null
+    this._executionTimeStart = 0
+    this._executionTimeEnd = 0
+
+    this.parseActionJSON(actionJSON)
+  }
+
+  // This will turn the action JSON
+  // into new MissionNodeAction objects.
+  parseActionJSON(actionJSON: Array<IMissionNodeActionJSON>): void {
+    let actions = []
+
+    for (let action of actionJSON) {
+      let actionObject: MissionNodeAction = new MissionNodeAction(
+        this,
+        action.actionID,
+        action.name,
+        action.description,
+        action.processTime,
+        action.successChance,
+        action.resourceCost,
+        action.postExecutionSuccessText,
+        action.postExecutionFailureText,
+      )
+      actions.push(actionObject)
+    }
+
+    this.actions = actions
+  }
+
+  // This is called when a change
+  // is made to the node structure.
+  _handleStructureChange(): void {
+    this.mission.handleStructureChange()
   }
 
   // This will open the node.
@@ -497,23 +553,23 @@ export class MissionNode implements IMissionMappable {
         this.mission.nodes.delete(this.nodeID)
         break
       case ENodeDeleteMethod.DeleteNodeAndShiftChildren:
-        let parentOfSelectedNode: MissionNode | null = this.parentNode
-        let childrenofSelectedNode: Array<MissionNode> = [...this.childNodes]
+        let parentOfThis: MissionNode | null = this.parentNode
+        let childrenofThis: Array<MissionNode> = [...this.childNodes]
 
-        childrenofSelectedNode.forEach((childNode: MissionNode) => {
-          if (parentOfSelectedNode !== null) {
-            parentOfSelectedNode.childNodes.splice(
-              parentOfSelectedNode.childNodes.indexOf(this),
+        childrenofThis.forEach((childNode: MissionNode) => {
+          if (parentOfThis !== null) {
+            parentOfThis.childNodes.splice(
+              parentOfThis.childNodes.indexOf(this),
               0,
               childNode,
             )
-            childNode.parentNode = parentOfSelectedNode
+            childNode.parentNode = parentOfThis
           }
         })
 
-        if (parentOfSelectedNode !== null) {
-          parentOfSelectedNode.childNodes.splice(
-            parentOfSelectedNode.childNodes.indexOf(this),
+        if (parentOfThis !== null) {
+          parentOfThis.childNodes.splice(
+            parentOfThis.childNodes.indexOf(this),
             1,
           )
           this.mission.nodes.delete(this.nodeID)
@@ -535,6 +591,42 @@ export class MissionNode implements IMissionMappable {
       }
     }
   }
+
+  // This is called when an action in
+  // this node is executed.
+  handleActionExecutionStart(action: MissionNodeAction): void {
+    if (!this.actions.includes(action)) {
+      throw new Error(
+        `Action ${action.actionID} is not a valid action for this node.`,
+      )
+    }
+    if (this.executing) {
+      throw new Error(
+        `Node is already executing an action. Cannot execute another action.`,
+      )
+    }
+
+    this.executing = true
+    this._executingAction = action
+    this._executionTimeStart = Date.now()
+    this._executionTimeEnd = this._executionTimeStart + action.processTime
+  }
+
+  // This is called when an action in
+  // this node has finished executing.
+  handleActionExecutionEnd(): void {
+    let executingAction: MissionNodeAction | null = this.executingAction
+
+    if (executingAction === null) {
+      throw new Error(
+        `No action is currently executing on this node. Cannot end execution.`,
+      )
+    }
+
+    this.executed = true
+    this.executing = false
+    this._executingAction = null
+  }
 }
 
 // This represents a node that, when triggered,
@@ -549,6 +641,7 @@ export class MissionNodeCreator implements IMissionMappable {
   mapX: number
   mapY: number
   depth: number
+  executionPercentCompleted: number = 0
   _createdNode: MissionNode | null = null
 
   // Getter for _nodeID.
@@ -594,14 +687,6 @@ export class MissionNodeCreator implements IMissionMappable {
   // Implementation requirement only.
   get device(): boolean {
     return false
-  }
-
-  get loadingWidth(): number | null {
-    if (this.createdNode) {
-      return this.createdNode.loadingWidth
-    } else {
-      return null
-    }
   }
 
   constructor(

@@ -9,6 +9,7 @@ import {
   MissionNodeCreator,
 } from './mission-nodes'
 import { MissionNodeAction } from './mission-node-actions'
+import { IConsoleOutput } from '../components/content/game/ConsoleOutput'
 
 // This is the method that the clone
 // function in the Mission class uses
@@ -63,6 +64,7 @@ export class Mission {
   _depth: number
   _nodeCreationTarget: MissionNode | null
   _nodeCreators: Array<MissionNodeCreator>
+  consoleOutputs: Array<IConsoleOutput>
 
   // This will return the node
   // structure for the mission,
@@ -191,6 +193,7 @@ export class Mission {
     this._depth = -1
     this._nodeCreationTarget = null
     this._nodeCreators = []
+    this.consoleOutputs = []
 
     this._importNodeData(nodeData)
     this._importNodeStructure(nodeStructure, this.rootNode, expandAll)
@@ -555,6 +558,10 @@ export class Mission {
         }
       }
     }
+  }
+
+  outputToConsole = (consoleOutput: IConsoleOutput): void => {
+    this.consoleOutputs.push(consoleOutput)
   }
 
   // This will create a copy of this
