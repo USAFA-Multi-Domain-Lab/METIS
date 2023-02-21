@@ -1,7 +1,7 @@
 import './OutputPanel.scss'
 import { MissionNode } from '../../../modules/mission-nodes'
 import ConsoleOutput, { IConsoleOutput } from './ConsoleOutput'
-import React from 'react'
+import { Component } from 'react'
 import { MissionNodeAction } from '../../../modules/mission-node-actions'
 import { Mission } from '../../../modules/missions'
 
@@ -14,10 +14,17 @@ export interface IOutputPanel_S {}
 
 // This component is responsible for displaying
 // console output in the game.
-export default class OutputPanel extends React.Component<
+export default class OutputPanel extends Component<
   IOutputPanel,
   IOutputPanel_S
 > {
+  timerTimeStamp: number | null
+
+  constructor(props: IOutputPanel) {
+    super(props)
+    this.timerTimeStamp = null
+  }
+
   static DATE_FORMAT: Intl.DateTimeFormat = new Intl.DateTimeFormat('en-GB', {
     hour: '2-digit',
     minute: '2-digit',
@@ -36,8 +43,8 @@ export default class OutputPanel extends React.Component<
     let innerHTML: string = `
         <div class='Text'>
         <span class='line-cursor'>
-          [${OutputPanel.formatDate(Date.now())}] MDL@
-          ${selectedNode.name.replaceAll(' ', '-')}:
+          [${OutputPanel.formatDate(Date.now())}] 
+          MDL@${selectedNode.name.replaceAll(' ', '-')}:
         </span>
 
         <span class='default'>
@@ -66,8 +73,8 @@ export default class OutputPanel extends React.Component<
     let innerHTML: string = `
         <div class='Text'>
           <span class='line-cursor'>
-            [${OutputPanel.formatDate(timeStamp)}] MDL@
-            ${nodeName.replaceAll(' ', '-')}:
+            [${OutputPanel.formatDate(timeStamp)}] 
+            MDL@${nodeName.replaceAll(' ', '-')}:
           </span>
           <span class='default'>
             Started executing ${nodeName}.<br></br>
@@ -89,10 +96,7 @@ export default class OutputPanel extends React.Component<
               Resource cost: ${resourceCostFormatted}
             </li>
             </br>
-            <li class='SelectedActionProperty'>
-              Time remaining: ${executingNode.executionTimeRemainingFormatted}
-            </li>
-            </br>
+
           </ul>
         </div>
       `
@@ -111,8 +115,8 @@ export default class OutputPanel extends React.Component<
     let innerHTML = `
         <div class='Text'>
           <span class='line-cursor'>
-            [${OutputPanel.formatDate(timeStamp)}] MDL@
-            ${nodeNameFormatted}:
+            [${OutputPanel.formatDate(timeStamp)}] 
+            MDL@${nodeNameFormatted}:
           </span>
           <span class='succeeded'>
             ${executedAction.postExecutionSuccessText}
@@ -147,14 +151,18 @@ export default class OutputPanel extends React.Component<
   // This returns the output sent to the
   // output panel while the node is executing
   // to display the time remaining.
-  static renderTimeLeftOutput(
-    executedAction: MissionNodeAction,
-  ): IConsoleOutput {
-    let executedNode: MissionNode = executedAction.node
-    let timeStamp: number = Date.now()
-    let key: string = `time_left_node-${executedNode.nodeID}_action-${executedAction.actionID}_${timeStamp}`
-    let innerHTML = `
-      `
+  static renderTimeLeftOutput(executedAction: MissionNodeAction) {
+    let executingNode: MissionNode = executedAction.node
+    let timerTimeStamp = Date.now()
+    let key: string = `time_left_node-${executingNode.nodeID}_action-${executedAction.actionID}_${timerTimeStamp}`
+
+    let innerHTML: string = `
+      <div class='Text'>
+        <div class='Timer'>
+          Time remaining: ${executingNode.executionTimeRemainingFormatted}
+        </div>
+        </br>
+      </div>`
 
     return { key, innerHTML }
   }
@@ -163,39 +171,25 @@ export default class OutputPanel extends React.Component<
   render(): JSX.Element | null {
     let mission: Mission = this.props.mission
     let consoleOutputs: Array<IConsoleOutput> = mission.consoleOutputs
+    let setOutputPanelIsDisplayed = this.props.setOutputPanelIsDisplayed
+
+    const closeOutputWindow = () => {
+      setOutputPanelIsDisplayed(false)
+    }
 
     /* -- RENDER -- */
-
-    // consoleOutputs.forEach((consoleOutput: IConsoleOutput) => {
-    //   selectedNode?.mission.nodes.forEach((node: MissionNode) => {
-    //     if (
-    //       consoleOutput.innerHTML.includes('Time remaining:') &&
-    //       consoleOutput.key.startsWith(`time_left_node-${node.nodeID}`)
-    //     ) {
-    //       consoleOutput.innerHTML = `
-    //             <div class='Text'>
-    //               <div class='Timer'>
-    //               Time remaining: ${node.timeLeft}
-    //               </div>
-    //             </div>`
-    //     }
-    //   })
-    // })
 
     return (
       <div className='OutputPanel'>
         <div className='BorderBox'>
           <div className='MinimizeButtonContainer'>
-            <span
-              className='MinimizeButton'
-              onClick={() => this.props.setOutputPanelIsDisplayed(false)}
-            >
+            <span className='MinimizeButton' onClick={closeOutputWindow}>
               x
             </span>
           </div>
           <ul className='TextArea'>
             {consoleOutputs.map((consoleOutput: IConsoleOutput) => {
-              return <ConsoleOutput {...consoleOutput} />
+              return <ConsoleOutput output={consoleOutput} />
             })}
           </ul>
         </div>

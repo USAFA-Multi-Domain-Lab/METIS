@@ -54,10 +54,6 @@ export interface IMissionFormPage extends IPage {
   // If null, a new mission is being
   // created.
   missionID: string | null
-  handleEditRequest: (mission: Mission) => void
-  handleDeleteRequest: (mission: Mission) => void
-  handleCopyRequest: (mission: Mission) => void
-  handleToggleLiveRequest: (mission: Mission, live: boolean) => void
 }
 
 // This will render a dashboard with a radar
@@ -361,10 +357,6 @@ export default function MissionFormPage(
         returningPagePath: 'GamePage',
         returningPageProps: {
           missionID: mission.missionID,
-          handleEditRequest: props.handleEditRequest,
-          handleDeleteRequest: props.handleDeleteRequest,
-          handleCopyRequest: props.handleCopyRequest,
-          handleToggleLiveRequest: props.handleToggleLiveRequest,
         },
       })
 
@@ -427,10 +419,6 @@ export default function MissionFormPage(
                 if (!areUnsavedChanges) {
                   appActions.goToPage('GamePage', {
                     missionID: mission.missionID,
-                    handleEditRequest: props.handleEditRequest,
-                    handleDeleteRequest: props.handleDeleteRequest,
-                    handleCopyRequest: props.handleCopyRequest,
-                    handleToggleLiveRequest: props.handleToggleLiveRequest,
                   })
                 } else {
                   appActions.confirm(
@@ -440,11 +428,6 @@ export default function MissionFormPage(
                         () => {
                           appActions.goToPage('GamePage', {
                             missionID: mission.missionID,
-                            handleEditRequest: props.handleEditRequest,
-                            handleDeleteRequest: props.handleDeleteRequest,
-                            handleCopyRequest: props.handleCopyRequest,
-                            handleToggleLiveRequest:
-                              props.handleToggleLiveRequest,
                           })
                           concludeAction()
                         },
@@ -457,11 +440,6 @@ export default function MissionFormPage(
                       handleAlternate: (concludeAction: () => void) => {
                         appActions.goToPage('GamePage', {
                           missionID: mission.missionID,
-                          handleEditRequest: props.handleEditRequest,
-                          handleDeleteRequest: props.handleDeleteRequest,
-                          handleCopyRequest: props.handleCopyRequest,
-                          handleToggleLiveRequest:
-                            props.handleToggleLiveRequest,
                         })
                         concludeAction()
                       },

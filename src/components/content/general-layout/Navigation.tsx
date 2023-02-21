@@ -22,7 +22,7 @@ const Navigation = (props: {
         tooltipDescription={props.brandingTooltipDescription}
       />
       {links.map((link: INavLink) => {
-        if (link?.visible) {
+        if (link.visible) {
           return (
             <div
               className='Link'

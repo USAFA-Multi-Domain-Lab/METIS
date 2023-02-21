@@ -237,8 +237,8 @@ export class MissionNode implements IMissionMappable {
   get executionTimeRemainingFormatted(): string {
     let executionTimeRemainingFormatted: string = ''
     let executionTimeRemaining: number = this.executionTimeRemaining
-    let minutes: number = Math.floor(executionTimeRemaining / (60 * 1000))
-    let seconds: number = Math.floor(executionTimeRemaining % (60 * 1000))
+    let minutes: number = Math.floor(executionTimeRemaining / 1000 / 60)
+    let seconds: number = Math.floor((executionTimeRemaining / 1000) % 60)
     let milliseconds: number = executionTimeRemaining % 1000
 
     if (minutes < 10) {

@@ -6,7 +6,9 @@ export interface IConsoleOutput {
   innerHTML: string
 }
 
-const ConsoleOutput = (props: IConsoleOutput): JSX.Element => {
+const ConsoleOutput = (props: { output: IConsoleOutput }): JSX.Element => {
+  let { key, innerHTML } = props.output
+
   /* -- COMPONENT REF -- */
   const scrollRef = useRef<HTMLDivElement>(null)
 
@@ -14,6 +16,8 @@ const ConsoleOutput = (props: IConsoleOutput): JSX.Element => {
   const [mountHandled, setMountHandled] = useState<boolean>(false)
 
   /* -- COMPONENT EFFECT -- */
+
+  // Equivalent of componentDidMount
   useEffect(() => {
     if (!mountHandled) {
       let scrollRefElement: HTMLDivElement | null = scrollRef.current
@@ -27,8 +31,6 @@ const ConsoleOutput = (props: IConsoleOutput): JSX.Element => {
   }, [mountHandled])
 
   /* -- RENDER -- */
-
-  const { key, innerHTML } = props
 
   return (
     <div

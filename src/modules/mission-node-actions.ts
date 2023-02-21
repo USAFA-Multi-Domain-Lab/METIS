@@ -1,5 +1,6 @@
 import { PRNG } from 'seedrandom'
 import ExecuteNodePath from '../components/content/game/ExecuteNodePath'
+import OutputPanel from '../components/content/game/OutputPanel'
 import { MissionNode } from './mission-nodes'
 import { Mission } from './missions'
 
@@ -39,7 +40,7 @@ export class MissionNodeAction {
       mission.resources >= resourceCost &&
       node.executable &&
       !this.succeeded &&
-      this.willSucceed !== null
+      this._willSucceedArray.length !== 0
     )
   }
 
@@ -62,7 +63,7 @@ export class MissionNodeAction {
   // Determines if a node succeeded or not
   // after it is executed
   get succeeded(): boolean | null {
-    return this.node.executed && this.willSucceed
+    return this.node.executed && this._willSucceed
   }
 
   constructor(
@@ -147,8 +148,6 @@ export class MissionNodeAction {
   _handleExecutionEnd = (success: boolean): void => {
     let node: MissionNode = this.node
 
-    this.updateWillSucceedArray()
-
     node.handleActionExecutionEnd()
 
     if (success) {
@@ -167,7 +166,7 @@ export class MissionNodeAction {
     let mission: Mission = node.mission
     let resourceCost: number = this.resourceCost
     let processTime: number = this.processTime
-    let willSucceed: boolean = this.willSucceed === true
+    let willSucceed: boolean = this.willSucceedArray[0]
 
     if (!this.readyToExecute) {
       throw Error('This action cannot currently be executed.')
@@ -175,13 +174,14 @@ export class MissionNodeAction {
 
     mission.resources -= resourceCost
 
-    // node.runTimer()
-    // node.runLoadingBar()
+    mission.outputToConsole(OutputPanel.renderTimeLeftOutput(this))
 
     node.handleActionExecutionStart(this)
 
     setTimeout(() => {
+      this.updateWillSucceed()
       this._handleExecutionEnd(willSucceed)
+      this.updateWillSucceedArray()
     }, processTime)
   }
 }

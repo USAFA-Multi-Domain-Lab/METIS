@@ -9,12 +9,16 @@
     line-break: strict;
 
     .SelectedActionPropertyList {
-      padding: 5px 0 0 15px;
+      padding-left: 15px;
       .SelectedActionProperty {
         list-style: none;
         text-decoration: none;
         margin: -5px auto;
       }
+    }
+
+    .Timer {
+      margin: -35px 0 0 15px;
     }
 
     .line-cursor {

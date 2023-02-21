@@ -22,10 +22,6 @@ import { IConsoleOutput } from '../content/game/ConsoleOutput'
 
 export interface IGamePage extends IPage {
   missionID: string
-  handleEditRequest: (mission: Mission) => void
-  handleDeleteRequest: (mission: Mission) => void
-  handleCopyRequest: (mission: Mission) => void
-  handleToggleLiveRequest: (mission: Mission, live: boolean) => void
 }
 
 // This is the number of times per
@@ -106,10 +102,6 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
         returningPagePath: 'GamePage',
         returningPageProps: {
           missionID: mission.missionID,
-          handleEditRequest: props.handleEditRequest,
-          handleDeleteRequest: props.handleDeleteRequest,
-          handleCopyRequest: props.handleCopyRequest,
-          handleToggleLiveRequest: props.handleToggleLiveRequest,
         },
       })
 
@@ -119,10 +111,6 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
         returningPagePath: 'GamePage',
         returningPageProps: {
           missionID: mission.missionID,
-          handleEditRequest: props.handleEditRequest,
-          handleDeleteRequest: props.handleDeleteRequest,
-          handleCopyRequest: props.handleCopyRequest,
-          handleToggleLiveRequest: props.handleToggleLiveRequest,
         },
       })
 
@@ -226,7 +214,8 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
                         if (
                           selectedNode.preExecutionText !== '' &&
                           selectedNode.preExecutionText !== null &&
-                          selectedNode.selectedAction?.succeeded !== true
+                          !selectedNode.selectedAction?.succeeded &&
+                          !selectedNode.executing
                         ) {
                           let output: IConsoleOutput =
                             OutputPanel.renderPreExecutionOutput(selectedNode)
@@ -244,27 +233,36 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
 
                           selectedNode.color = ''
                         } else {
-                          if (!selectedNode.executing) {
-                            if (
-                              !selectedNode.selectedAction?.succeeded &&
-                              selectedNode.actions.length > 1
-                            ) {
-                              setNodeActionsIsDisplayed(true)
-                            } else if (
-                              selectedNode.actions.length === 1 &&
-                              !selectedNode.selectedAction?.succeeded
-                            ) {
-                              selectedNode.selectedAction =
-                                selectedNode.actions[0]
-                              selectedNode.selectedAction.processTime =
-                                selectedNode.actions[0].processTime
-                              setNodeActionsIsDisplayed(false)
-                              setExecuteNodePathIsDisplayed(true)
-                            } else if (selectedNode.actions.length === 0) {
-                              setNodeActionsIsDisplayed(true)
-                            }
+                          if (
+                            !selectedNode.executing &&
+                            !selectedNode.selectedAction?.succeeded
+                          ) {
+                            setNodeActionsIsDisplayed(true)
+                          } else if (selectedNode.actions.length === 1) {
+                            selectedNode.selectedAction =
+                              selectedNode.actions[0]
+                            selectedNode.selectedAction.processTime =
+                              selectedNode.actions[0].processTime
+                            setNodeActionsIsDisplayed(false)
+                            setExecuteNodePathIsDisplayed(true)
                           }
                         }
+                      }}
+                      applyNodeClassName={(node: MissionNode) => {
+                        let className: string = ''
+
+                        if (node.selectedAction) {
+                          if (node.executed && node.selectedAction.succeeded) {
+                            className += ' succeeded'
+                          } else if (
+                            node.executed &&
+                            !node.selectedAction.succeeded
+                          ) {
+                            className += ' failed'
+                          }
+                        }
+
+                        return className
                       }}
                       renderNodeTooltipDescription={(node: MissionNode) => {
                         let description: string = ''
