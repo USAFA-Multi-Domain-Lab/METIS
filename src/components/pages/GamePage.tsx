@@ -234,19 +234,23 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
                           setOutputPanelIsDisplayed(true)
                         }
 
-                        if (!selectedNode.executable) {
-                          if (
-                            selectedNode.hasChildren &&
-                            !selectedNode.isOpen
-                          ) {
-                            selectedNode.open()
-                          }
-
+                        if (
+                          !selectedNode.executable &&
+                          selectedNode.hasChildren &&
+                          !selectedNode.isOpen
+                        ) {
+                          selectedNode.open()
                           selectedNode.color = ''
-                        } else {
+                        }
+
+                        if (
+                          selectedNode.executable &&
+                          !selectedNode.selectedAction?.succeeded &&
+                          mission.resources > 0
+                        ) {
                           if (
                             !selectedNode.executing &&
-                            !selectedNode.selectedAction?.succeeded
+                            selectedNode.actions.length !== 1
                           ) {
                             setNodeActionsIsDisplayed(true)
                           } else if (selectedNode.actions.length === 1) {
