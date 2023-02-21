@@ -412,6 +412,7 @@ export default function MissionFormPage(
                 }
               },
               visible: true,
+              key: 'done',
             },
             {
               text: 'Play test',
@@ -452,8 +453,14 @@ export default function MissionFormPage(
                 }
               },
               visible: true,
+              key: 'play-test',
             },
-            { text: 'Log out', handleClick: logout, visible: true },
+            {
+              text: 'Log out',
+              handleClick: logout,
+              visible: true,
+              key: 'logout',
+            },
           ]}
           brandingCallback={() => {
             if (!areUnsavedChanges) {

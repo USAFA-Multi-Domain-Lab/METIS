@@ -2,17 +2,20 @@ import Branding from './Branding'
 import './Navigation.scss'
 import { v4 as generateHash } from 'uuid'
 
+export interface INavigation {
+  links: Array<INavLink>
+  brandingCallback: (() => void) | null
+  brandingTooltipDescription: string | null
+}
+
 export interface INavLink {
   text: string
+  key: string
   handleClick: () => void
   visible?: boolean
 }
 
-const Navigation = (props: {
-  links: Array<INavLink>
-  brandingCallback: (() => void) | null
-  brandingTooltipDescription: string | null
-}): JSX.Element | null => {
+const Navigation = (props: INavigation): JSX.Element | null => {
   let links: Array<INavLink> = props.links
 
   return (
@@ -22,17 +25,20 @@ const Navigation = (props: {
         tooltipDescription={props.brandingTooltipDescription}
       />
       {links.map((link: INavLink) => {
-        if (link.visible) {
-          return (
-            <div
-              className='Link'
-              onClick={link.handleClick}
-              key={generateHash()}
-            >
-              {link.text}
-            </div>
-          )
+        let text: string = link.text
+        let key: string = link.key
+        let visible: boolean = link.visible ?? true
+        let className: string = 'Link'
+
+        if (!visible) {
+          className += ' Hidden'
         }
+
+        return (
+          <div className={className} onClick={link.handleClick} key={key}>
+            {text}
+          </div>
+        )
       })}
     </div>
   )

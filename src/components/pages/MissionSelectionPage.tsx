@@ -335,8 +335,18 @@ export default function MissionSelectionPage(
         brandingCallback={null}
         brandingTooltipDescription={null}
         links={[
-          { text: 'Login', handleClick: login, visible: displayLogin },
-          { text: 'Log out', handleClick: logout, visible: displayLogout },
+          {
+            text: 'Login',
+            handleClick: login,
+            visible: displayLogin,
+            key: 'login',
+          },
+          {
+            text: 'Log out',
+            handleClick: logout,
+            visible: displayLogout,
+            key: 'log-out',
+          },
         ]}
       />
       {/* { Content } */}

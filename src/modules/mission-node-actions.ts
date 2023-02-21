@@ -174,8 +174,6 @@ export class MissionNodeAction {
 
     mission.resources -= resourceCost
 
-    mission.outputToConsole(OutputPanel.renderTimeLeftOutput(this))
-
     node.handleActionExecutionStart(this)
 
     setTimeout(() => {

@@ -40,7 +40,7 @@ export default class OutputPanel extends Component<
   static renderPreExecutionOutput(selectedNode: MissionNode): IConsoleOutput {
     let timeStamp: number = Date.now()
     let key: string = `pre_execution_node-${selectedNode.nodeID}_${timeStamp}`
-    let innerHTML: string = `
+    let renderInnerHTML = () => `
         <div class='Text'>
         <span class='line-cursor'>
           [${OutputPanel.formatDate(Date.now())}] 
@@ -53,7 +53,7 @@ export default class OutputPanel extends Component<
       </div>
     `
 
-    return { key, innerHTML }
+    return { key, renderInnerHTML }
   }
 
   static renderActionStartOutput(
@@ -70,7 +70,7 @@ export default class OutputPanel extends Component<
     let successChanceFormatted: string = successChance * 100 + '%'
     let resourceCostFormatted: string = resourceCost + ' resource(s)'
     let key: string = `start_node-${executingNode.nodeID}_action-${executingAction.actionID}_${timeStamp}`
-    let innerHTML: string = `
+    let renderInnerHTML = () => `
         <div class='Text'>
           <span class='line-cursor'>
             [${OutputPanel.formatDate(timeStamp)}] 
@@ -96,12 +96,16 @@ export default class OutputPanel extends Component<
               Resource cost: ${resourceCostFormatted}
             </li>
             </br>
+            <li class='SelectedActionProperty'>
+              Time remaining: ${executingNode.formatTimeRemaining(true)}
+            </li>
+            </br>
 
           </ul>
         </div>
       `
 
-    return { key, innerHTML }
+    return { key, renderInnerHTML }
   }
 
   static renderExecutionSuccessOutput(
@@ -112,7 +116,7 @@ export default class OutputPanel extends Component<
     let nodeName: string = executedNode.name
     let nodeNameFormatted: string = nodeName.replaceAll(' ', '-')
     let key: string = `success_node-${executedNode.nodeID}_action-${executedAction.actionID}_${timeStamp}`
-    let innerHTML = `
+    let renderInnerHTML = () => `
         <div class='Text'>
           <span class='line-cursor'>
             [${OutputPanel.formatDate(timeStamp)}] 
@@ -124,7 +128,7 @@ export default class OutputPanel extends Component<
         </div>
         `
 
-    return { key, innerHTML }
+    return { key, renderInnerHTML }
   }
 
   static renderExecutionFailureOutput(
@@ -133,7 +137,7 @@ export default class OutputPanel extends Component<
     let timeStamp: number = Date.now()
     let executedNode: MissionNode = executedAction.node
     let key: string = `failure_node-${executedNode.nodeID}_action-${executedAction.actionID}_${timeStamp}`
-    let innerHTML: string = `
+    let renderInnerHTML = () => `
         <div class='Text'>
           <span class='line-cursor'>
             [${OutputPanel.formatDate(timeStamp)}] MDL@
@@ -145,26 +149,7 @@ export default class OutputPanel extends Component<
         </div>
         `
 
-    return { key, innerHTML }
-  }
-
-  // This returns the output sent to the
-  // output panel while the node is executing
-  // to display the time remaining.
-  static renderTimeLeftOutput(executedAction: MissionNodeAction) {
-    let executingNode: MissionNode = executedAction.node
-    let timerTimeStamp = Date.now()
-    let key: string = `time_left_node-${executingNode.nodeID}_action-${executedAction.actionID}_${timerTimeStamp}`
-
-    let innerHTML: string = `
-      <div class='Text'>
-        <div class='Timer'>
-          Time remaining: ${executingNode.executionTimeRemainingFormatted}
-        </div>
-        </br>
-      </div>`
-
-    return { key, innerHTML }
+    return { key, renderInnerHTML }
   }
 
   // inherited
@@ -189,7 +174,9 @@ export default class OutputPanel extends Component<
           </div>
           <ul className='TextArea'>
             {consoleOutputs.map((consoleOutput: IConsoleOutput) => {
-              return <ConsoleOutput output={consoleOutput} />
+              return (
+                <ConsoleOutput output={consoleOutput} key={consoleOutput.key} />
+              )
             })}
           </ul>
         </div>

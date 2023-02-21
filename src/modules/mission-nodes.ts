@@ -227,6 +227,17 @@ export class MissionNode implements IMissionMappable {
     }
   }
 
+  get executionSecondsRemaining(): number {
+    let executionTimeEnd: number = this._executionTimeEnd
+    let now: number = Date.now()
+
+    if (executionTimeEnd < now) {
+      return 0
+    } else {
+      return Math.floor((executionTimeEnd - now) / 1000)
+    }
+  }
+
   get executionDuration(): number {
     let executionTimeEnd: number = this._executionTimeEnd
     let executionTimeStart: number = this._executionTimeStart
@@ -234,12 +245,18 @@ export class MissionNode implements IMissionMappable {
     return executionTimeEnd - executionTimeStart
   }
 
-  get executionTimeRemainingFormatted(): string {
+  formatTimeRemaining(includeMilliseconds: boolean): string {
     let executionTimeRemainingFormatted: string = ''
-    let executionTimeRemaining: number = this.executionTimeRemaining
+    let executionTimeRemaining: number = includeMilliseconds
+      ? this.executionTimeRemaining
+      : this.executionSecondsRemaining * 1000
     let minutes: number = Math.floor(executionTimeRemaining / 1000 / 60)
     let seconds: number = Math.floor((executionTimeRemaining / 1000) % 60)
     let milliseconds: number = executionTimeRemaining % 1000
+
+    if (executionTimeRemaining === 0) {
+      return 'Done.'
+    }
 
     if (minutes < 10) {
       executionTimeRemainingFormatted += '0'
@@ -249,15 +266,20 @@ export class MissionNode implements IMissionMappable {
     if (seconds < 10) {
       executionTimeRemainingFormatted += '0'
     }
-    executionTimeRemainingFormatted += `${seconds}:`
+    executionTimeRemainingFormatted += `${seconds}`
 
-    if (milliseconds < 100) {
-      executionTimeRemainingFormatted += '0'
+    if (includeMilliseconds) {
+      executionTimeRemainingFormatted += ':'
+
+      if (milliseconds < 100) {
+        executionTimeRemainingFormatted += '0'
+      }
+      if (milliseconds < 10) {
+        executionTimeRemainingFormatted += '0'
+      }
+
+      executionTimeRemainingFormatted += `${milliseconds}`
     }
-    if (milliseconds < 10) {
-      executionTimeRemainingFormatted += '0'
-    }
-    executionTimeRemainingFormatted += `${milliseconds}`
 
     return executionTimeRemainingFormatted
   }

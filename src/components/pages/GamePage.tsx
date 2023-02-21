@@ -170,13 +170,24 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
           links={[
             {
               text: 'Back to selection',
+              key: 'back-to-selection',
               handleClick: () => {
                 appActions.goToPage('MissionSelectionPage', {})
               },
               visible: true,
             },
-            { text: 'Login', handleClick: login, visible: displayLogin },
-            { text: 'Log out', handleClick: logout, visible: displayLogout },
+            {
+              text: 'Login',
+              key: 'login',
+              handleClick: login,
+              visible: displayLogin,
+            },
+            {
+              text: 'Log out',
+              key: 'log-out',
+              handleClick: logout,
+              visible: displayLogout,
+            },
           ]}
           brandingCallback={() =>
             appActions.goToPage('MissionSelectionPage', {})
@@ -300,13 +311,11 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
                             }%`
                         }
 
-                        if (
-                          node.executing
-                          // node.executionTimeRemaining !== null
-                        ) {
+                        if (node.executing) {
                           description =
-                            // `* Time remaining: ${node.executionTimeRemaining} \n` +
-                            `* Description: ${node.description}\n`
+                            `* Time remaining: ${node.formatTimeRemaining(
+                              false,
+                            )} \n` + `* Description: ${node.description}\n`
                         }
 
                         return description
