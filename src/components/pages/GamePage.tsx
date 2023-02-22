@@ -243,17 +243,20 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
                           selectedNode.color = ''
                         }
 
-                        if (
-                          selectedNode.executable &&
-                          !selectedNode.selectedAction?.succeeded &&
-                          mission.resources > 0
-                        ) {
+                        if (mission.resources > 0) {
                           if (
+                            selectedNode.executable &&
+                            !selectedNode.selectedAction?.succeeded &&
                             !selectedNode.executing &&
                             selectedNode.actions.length !== 1
                           ) {
                             setNodeActionsIsDisplayed(true)
-                          } else if (selectedNode.actions.length === 1) {
+                          } else if (
+                            selectedNode.executable &&
+                            !selectedNode.selectedAction?.succeeded &&
+                            !selectedNode.executing &&
+                            selectedNode.actions.length === 1
+                          ) {
                             selectedNode.selectedAction =
                               selectedNode.actions[0]
                             selectedNode.selectedAction.processTime =
@@ -261,6 +264,11 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
                             setNodeActionsIsDisplayed(false)
                             setExecuteNodePathIsDisplayed(true)
                           }
+                        } else {
+                          appActions.notify(
+                            `You have no more resources left to spend.`,
+                            { duration: 3500 },
+                          )
                         }
                       }}
                       applyNodeClassName={(node: MissionNode) => {

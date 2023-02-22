@@ -3,7 +3,7 @@ import './ConsoleOutput.scss'
 
 export interface IConsoleOutput {
   key: string
-  renderInnerHTML: () => string
+  renderInnerHTML: () => JSX.Element
 }
 
 const ConsoleOutput = (props: { output: IConsoleOutput }): JSX.Element => {
@@ -33,12 +33,9 @@ const ConsoleOutput = (props: { output: IConsoleOutput }): JSX.Element => {
   /* -- RENDER -- */
 
   return (
-    <div
-      className='ConsoleOutput'
-      dangerouslySetInnerHTML={{ __html: renderInnerHTML() }}
-      ref={scrollRef}
-      key={key}
-    ></div>
+    <div className='ConsoleOutput' ref={scrollRef} key={key}>
+      {renderInnerHTML()}
+    </div>
   )
 }
 
