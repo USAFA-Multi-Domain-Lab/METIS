@@ -178,6 +178,7 @@
     display: grid;
     grid-template-columns: 50% 50%;
     opacity: 0.7;
+    user-select: none;
 
     .Version {
       padding: 20px;

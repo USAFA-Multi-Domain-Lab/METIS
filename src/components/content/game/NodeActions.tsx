@@ -17,8 +17,10 @@ const NodeActions = (props: {
   let isOpen: boolean = props.isOpen
   let selectedNode: MissionNode | null | undefined = props.selectedNode
   let handleActionSelectionRequest = (action: MissionNodeAction) => {
-    setDisplayActionList(false)
-    props.handleActionSelectionRequest(action)
+    if (action.readyToExecute) {
+      setDisplayActionList(false)
+      props.handleActionSelectionRequest(action)
+    }
   }
   let handleCloseRequest = () => {
     setDisplayActionList(false)

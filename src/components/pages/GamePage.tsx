@@ -262,7 +262,15 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
                             selectedNode.selectedAction.processTime =
                               selectedNode.actions[0].processTime
                             setNodeActionsIsDisplayed(false)
-                            setExecuteNodePathIsDisplayed(true)
+
+                            if (selectedNode.selectedAction.readyToExecute) {
+                              setExecuteNodePathIsDisplayed(true)
+                            } else {
+                              appActions.notify(
+                                `You cannot execute this action because you do not have enough resources remaining.`,
+                                { duration: 3500 },
+                              )
+                            }
                           }
                         } else {
                           appActions.notify(

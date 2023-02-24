@@ -90,6 +90,10 @@
         color: $color-accent-light;
         list-style-type: none;
         text-decoration: none;
+
+        &.Disabled {
+          pointer-events: none;
+        }
       }
       &:hover {
         cursor: pointer;

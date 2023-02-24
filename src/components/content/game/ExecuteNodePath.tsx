@@ -126,7 +126,7 @@ export default class ExecuteNodePath extends React.Component<
             EXECUTE ACTION
             {displayTooltip ? (
               <Tooltip
-                description={`You cannot ${actionName.toLowerCase()} because you have no more resources left to spend.`}
+                description={`You cannot execute this action because you do not have enough resources remaining.`}
               />
             ) : null}
           </button>

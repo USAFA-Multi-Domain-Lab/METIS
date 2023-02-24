@@ -9,4 +9,9 @@
   user-select: none;
   display: inline-block;
   padding: 0;
+
+  &.Disabled {
+    cursor: default;
+    opacity: 1;
+  }
 }

@@ -63,7 +63,9 @@
       }
 
       &.Disabled:hover {
+        cursor: default;
         background-color: $background-alt2;
+        color: $color-accent-light;
       }
 
       @media only screen and (max-width: 655px) {
