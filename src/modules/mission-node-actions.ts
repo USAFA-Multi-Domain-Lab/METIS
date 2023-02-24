@@ -1,6 +1,5 @@
 import { PRNG } from 'seedrandom'
 import ExecuteNodePath from '../components/content/game/ExecuteNodePath'
-import OutputPanel from '../components/content/game/OutputPanel'
 import { MissionNode } from './mission-nodes'
 import { Mission } from './missions'
 
@@ -37,7 +36,7 @@ export class MissionNodeAction {
     let resourceCost: number = this.resourceCost
 
     return (
-      mission.resources >= resourceCost &&
+      resourceCost <= mission.resources &&
       node.executable &&
       !this.succeeded &&
       this._willSucceedArray.length !== 0
