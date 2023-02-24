@@ -1,9 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
 import './NodeActions.scss'
 import { MissionNode } from '../../../modules/mission-nodes'
-import { MissionNodeAction } from '../../../modules/mission-node-actions'
+import missionNodeActions, {
+  MissionNodeAction,
+} from '../../../modules/mission-node-actions'
 import Tooltip from '../communication/Tooltip'
 import strings from '../../../modules/toolbox/strings'
+import { Mission } from '../../../modules/missions'
 
 const NodeActions = (props: {
   isOpen: boolean
@@ -84,38 +87,43 @@ const NodeActions = (props: {
           </div>
         </div>
         <div className={nodeActionListClassName} ref={scrollRef}>
-          {selectedNode.actions.map(
-            (action: MissionNodeAction, index: number) => {
-              return (
-                <div className='NodeActionContainer' key={action.actionID}>
-                  <div
-                    className='NodeAction'
-                    key={action.actionID}
-                    onClick={() => handleActionSelectionRequest(action)}
-                  >
-                    <Tooltip
-                      description={
-                        `**Time to execute:** ${
-                          (action.processTime as number) / 1000
-                        } second(s)\n` +
-                        `**Chance of success:** ${
-                          (action.successChance as number) * 100
-                        }%\n` +
-                        `**Resource cost:** ${
-                          action.resourceCost as number
-                        } resource(s)\n` +
-                        `**Description:** ${strings.limit(
-                          action.description,
-                          160,
-                        )}`
-                      }
-                    />
-                    {action.name}
-                  </div>
+          {selectedNode.actions.map((action: MissionNodeAction) => {
+            let mission: Mission = action.node.mission
+            let nodeActionClassName: string = 'NodeAction'
+
+            if (action.resourceCost > mission.resources) {
+              nodeActionClassName += ' Disabled'
+            }
+
+            return (
+              <div className='NodeActionContainer' key={action.actionID}>
+                <div
+                  className={nodeActionClassName}
+                  key={action.actionID}
+                  onClick={() => handleActionSelectionRequest(action)}
+                >
+                  <Tooltip
+                    description={
+                      `**Time to execute:** ${
+                        (action.processTime as number) / 1000
+                      } second(s)\n` +
+                      `**Chance of success:** ${
+                        (action.successChance as number) * 100
+                      }%\n` +
+                      `**Resource cost:** ${
+                        action.resourceCost as number
+                      } resource(s)\n` +
+                      `**Description:** ${strings.limit(
+                        action.description,
+                        160,
+                      )}`
+                    }
+                  />
+                  {action.name}
                 </div>
-              )
-            },
-          )}
+              </div>
+            )
+          })}
         </div>
       </div>
     )

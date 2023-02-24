@@ -384,7 +384,10 @@ export default function MissionSelectionPage(
         </div>
       </div>
 
-      <div className='credit'>Photo by Adi Goldstein on Unsplash</div>
+      <div className='FooterContainer'>
+        <div className='Version'>v1.2</div>
+        <div className='Credit'>Photo by Adi Goldstein on Unsplash</div>
+      </div>
     </div>
   )
 }
