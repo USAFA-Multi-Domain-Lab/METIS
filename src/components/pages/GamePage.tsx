@@ -222,6 +222,7 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
                       handleNodeSelection={(selectedNode: MissionNode) => {
                         setLastSelectedNode(selectedNode)
 
+                        // Logic to send the pre-execution text to the output panel
                         if (
                           selectedNode.preExecutionText !== '' &&
                           selectedNode.preExecutionText !== null &&
@@ -234,6 +235,8 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
                           setOutputPanelIsDisplayed(true)
                         }
 
+                        // Logic that opens the next level of nodes
+                        // (displays the selected node's child nodes)
                         if (
                           !selectedNode.executable &&
                           selectedNode.hasChildren &&
@@ -243,20 +246,19 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
                           selectedNode.color = ''
                         }
 
-                        if (mission.resources > 0) {
-                          if (
-                            selectedNode.executable &&
-                            !selectedNode.selectedAction?.succeeded &&
-                            !selectedNode.executing &&
-                            selectedNode.actions.length !== 1
-                          ) {
-                            setNodeActionsIsDisplayed(true)
-                          } else if (
-                            selectedNode.executable &&
-                            !selectedNode.selectedAction?.succeeded &&
-                            !selectedNode.executing &&
-                            selectedNode.actions.length === 1
-                          ) {
+                        // Logic that displays the node action &&
+                        // execute node path window prompts. It also
+                        // notifies the user if they click a node and
+                        // nothing happens.
+                        if (
+                          mission.resources > 0 &&
+                          selectedNode.executable &&
+                          !selectedNode.selectedAction?.succeeded &&
+                          !selectedNode.executing
+                        ) {
+                          setNodeActionsIsDisplayed(true)
+
+                          if (selectedNode.actions.length === 1) {
                             selectedNode.selectedAction =
                               selectedNode.actions[0]
                             selectedNode.selectedAction.processTime =
@@ -272,7 +274,12 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
                               )
                             }
                           }
-                        } else {
+                        } else if (
+                          mission.resources === 0 &&
+                          selectedNode.executable &&
+                          !selectedNode.selectedAction?.succeeded &&
+                          !selectedNode.executing
+                        ) {
                           appActions.notify(
                             `You have no more resources left to spend.`,
                             { duration: 3500 },
