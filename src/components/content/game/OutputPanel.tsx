@@ -43,7 +43,7 @@ export default class OutputPanel extends Component<
     let renderInnerHTML = () => (
       <div className='Text'>
         <span className='line-cursor'>
-          [{OutputPanel.formatDate(Date.now())}] MDL@
+          [{OutputPanel.formatDate(timeStamp)}] MDL@
           {selectedNode.name.replaceAll(' ', '-')}:{' '}
         </span>
         <span className='default'>{selectedNode.preExecutionText}</span>
