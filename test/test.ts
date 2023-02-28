@@ -1,3 +1,8 @@
+// For this file to run properly the developer needs to
+// run the scripts below first.
+// ? 1.) "npm run serve-test"
+// ? 2.) "npm run test"
+
 // file path (switches to the "mdl-test" database)
 process.env.environment = 'TEST'
 
