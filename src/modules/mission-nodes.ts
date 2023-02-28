@@ -335,7 +335,7 @@ export class MissionNode implements IMissionMappable {
     this.parentNode = null
     this.childNodes = []
     this.color = color
-    this.description = 'Description goes here.' // ! Delete string to the left and set equal to "description" once the database is ready.
+    this.description = description
     this.preExecutionText = preExecutionText
     this._depthPadding = depthPadding
     this.executable = executable

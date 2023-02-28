@@ -16,7 +16,6 @@ import {
 } from '../content/form/Form'
 import MissionMap from '../content/game/MissionMap'
 import Tooltip from '../content/communication/Tooltip'
-import { v4 as generateHash } from 'uuid'
 import './MissionFormPage.scss'
 import {
   ButtonSVG,
@@ -38,8 +37,8 @@ import {
   PanelSizeRelationship,
   ResizablePanel,
 } from '../content/general-layout/ResizablePanels'
-import { Asset } from '../../modules/assets'
-import { Mechanism } from '../../modules/mechanisms'
+// import { Asset } from '../../modules/assets'
+// import { Mechanism } from '../../modules/mechanisms'
 
 // This is a enum used to describe
 // the locations that one node can
@@ -840,13 +839,24 @@ function NodeEntry(props: {
               <Tooltip description='Shade all descendant nodes this color as well.' />
             </div>
             <DetailBox
-              label='Description (optional)'
+              label='Description'
               initialValue={node.description}
-              emptyStringAllowed={true}
               deliverValue={(description: string) => {
-                if (node !== null) {
+                if (
+                  node !== null &&
+                  description !== '' &&
+                  description !== null
+                ) {
                   node.description = description
+                  removeNodeEmptyString('description')
+                  setMountHandled(false)
                   handleChange()
+                } else if (node !== null) {
+                  setNodeEmptyStringArray([
+                    ...nodeEmptyStringArray,
+                    `nodeID=${node.nodeID}_field=description`,
+                  ])
+                  setMountHandled(false)
                 }
               }}
               key={`${node.nodeID}_description`}
