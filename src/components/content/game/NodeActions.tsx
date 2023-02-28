@@ -91,16 +91,19 @@ const NodeActions = (props: {
         <div className={nodeActionListClassName} ref={scrollRef}>
           {selectedNode.actions.map((action: MissionNodeAction) => {
             let mission: Mission = action.node.mission
-            let nodeActionClassName: string = 'NodeAction'
+            let nodeActionContainerClassName: string = 'NodeActionContainer'
 
             if (action.resourceCost > mission.resources) {
-              nodeActionClassName += ' Disabled'
+              nodeActionContainerClassName += ' Disabled'
             }
 
             return (
-              <div className='NodeActionContainer' key={action.actionID}>
+              <div
+                className={nodeActionContainerClassName}
+                key={action.actionID}
+              >
                 <div
-                  className={nodeActionClassName}
+                  className='NodeAction'
                   key={action.actionID}
                   onClick={() => handleActionSelectionRequest(action)}
                 >

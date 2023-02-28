@@ -859,13 +859,24 @@ function NodeEntry(props: {
               <Tooltip description='Shade all descendant nodes this color as well.' />
             </div>
             <DetailBox
-              label='Description (optional)'
+              label='Description'
               initialValue={node.description}
-              emptyStringAllowed={true}
               deliverValue={(description: string) => {
-                if (node !== null) {
+                if (
+                  node !== null &&
+                  description !== '' &&
+                  description !== null
+                ) {
                   node.description = description
+                  removeNodeEmptyString('description')
+                  setMountHandled(false)
                   handleChange()
+                } else if (node !== null) {
+                  setNodeEmptyStringArray([
+                    ...nodeEmptyStringArray,
+                    `nodeID=${node.nodeID}_field=description`,
+                  ])
+                  setMountHandled(false)
                 }
               }}
               key={`${node.nodeID}_description`}
