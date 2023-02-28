@@ -1,3 +1,8 @@
+// For this file to run properly the developer needs to
+// run the scripts below first.
+// ? 1.) "npm run serve-test"
+// ? 2.) "npm run test"
+
 // file path (switches to the "mdl-test" database)
 process.env.environment = 'TEST'
 
@@ -20,7 +25,8 @@ let missionID: string
 let MONGO_USERNAME: string | undefined = require('../config').MONGO_USERNAME
 let MONGO_PASSWORD: string | undefined = require('../config').MONGO_PASSWORD
 let MONGO_DB: string = require('../config').MONGO_DB
-const baseUrl = 'localhost:8080'
+let PORT: string = require('../config').PORT
+const baseUrl = `localhost:${PORT}`
 
 // json
 const userCredentials = {

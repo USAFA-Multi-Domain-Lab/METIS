@@ -37,7 +37,11 @@ environment.json
 ```json
 {
   "PORT": 8080,
-  "MONGO_HOST": "mongodb://localhost:27017/mdl"
+  "MONGO_HOST": "localhost",
+  "MONGO_PORT": "27017",
+  "MONGO_DB": "mdl",
+  "MONGO_USERNAME": "username",
+  "MONGO_PASSWORD": "password"
 }
 ```
 
@@ -45,8 +49,20 @@ environment-test.json
 
 ```json
 {
- "MONGO_DB": "mdl-test"
+  "PORT": 8081,
+  "MONGO_HOST": "localhost",
+  "MONGO_PORT": "27017",
+  "MONGO_DB": "mdl-test",
+  "MONGO_USERNAME": "username",
+  "MONGO_PASSWORD": "password"
 }
 ```
+
 ---
 
+## tests
+
+After the testing environment is configured, these commands can be used to run all tests.
+
+1. "npm run serve-test"
+2. "npm run test"
