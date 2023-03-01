@@ -91,6 +91,17 @@
         list-style-type: none;
         text-decoration: none;
       }
+
+      &.Disabled {
+        pointer-events: none;
+        user-select: none;
+
+        &:hover {
+          pointer-events: none;
+          user-select: none;
+        }
+      }
+
       &:hover {
         cursor: pointer;
         background-color: black;

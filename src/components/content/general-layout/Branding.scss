@@ -9,8 +9,9 @@
   user-select: none;
   display: inline-block;
   padding: 0;
-}
 
-.disabled {
-  cursor: default;
+  &.Disabled {
+    cursor: default;
+    opacity: 1;
+  }
 }

@@ -10,7 +10,7 @@ const Branding = (props: {
   let className: string = 'Branding'
 
   if (!props.goHome) {
-    className += ' disabled'
+    className += ' Disabled'
   }
 
   return (

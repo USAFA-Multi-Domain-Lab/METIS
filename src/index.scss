@@ -68,8 +68,8 @@ code {
 
 .Disabled,
 :disabled {
+  cursor: default;
   opacity: 0.35;
-  pointer-events: none;
 }
 
 .Hidden {

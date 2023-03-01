@@ -16,7 +16,6 @@ import {
 } from '../content/form/Form'
 import MissionMap from '../content/game/MissionMap'
 import Tooltip from '../content/communication/Tooltip'
-import { v4 as generateHash } from 'uuid'
 import './MissionFormPage.scss'
 import {
   ButtonSVG,
@@ -38,6 +37,8 @@ import {
   PanelSizeRelationship,
   ResizablePanel,
 } from '../content/general-layout/ResizablePanels'
+// import { Asset } from '../../modules/assets'
+// import { Mechanism } from '../../modules/mechanisms'
 
 // This is a enum used to describe
 // the locations that one node can
@@ -246,17 +247,7 @@ export default function MissionFormPage(
         // have at least one action then it will auto-generate one
         // for that node.
         let newActionArray: Array<MissionNodeAction> = [
-          new MissionNodeAction(
-            selectedNode,
-            generateHash(),
-            'New Action',
-            'Enter your description here.',
-            5000,
-            0.5,
-            1,
-            'Enter your successful post-execution message here.',
-            'Enter your failed post-execution message here.',
-          ),
+          MissionNode.createDefaultAction(selectedNode),
         ]
         selectedNode.actions = newActionArray
 
@@ -848,13 +839,24 @@ function NodeEntry(props: {
               <Tooltip description='Shade all descendant nodes this color as well.' />
             </div>
             <DetailBox
-              label='Description (optional)'
+              label='Description'
               initialValue={node.description}
-              emptyStringAllowed={true}
               deliverValue={(description: string) => {
-                if (node !== null) {
+                if (
+                  node !== null &&
+                  description !== '' &&
+                  description !== null
+                ) {
                   node.description = description
+                  removeNodeEmptyString('description')
+                  setMountHandled(false)
                   handleChange()
+                } else if (node !== null) {
+                  setNodeEmptyStringArray([
+                    ...nodeEmptyStringArray,
+                    `nodeID=${node.nodeID}_field=description`,
+                  ])
+                  setMountHandled(false)
                 }
               }}
               key={`${node.nodeID}_description`}
@@ -895,17 +897,7 @@ function NodeEntry(props: {
                   if (executable && node.actions.length === 0) {
                     // Checks to make sure the selected node has at least one action to choose from. If the selected node does not have at least one action then it will auto-generate one for that node.
                     let newActionArray: Array<MissionNodeAction> = [
-                      new MissionNodeAction(
-                        node,
-                        generateHash(),
-                        'New Action',
-                        'Enter your description here.',
-                        5000,
-                        0.5,
-                        1,
-                        'Enter your successful post-execution message here.',
-                        'Enter your failed post-execution message here.',
-                      ),
+                      MissionNode.createDefaultAction(node),
                     ]
                     node.actions = newActionArray
 
@@ -1124,18 +1116,8 @@ function NodeActions(props: {
             purpose={EButtonSVGPurpose.Add}
             handleClick={() => {
               if (node !== null) {
-                let action: MissionNodeAction = new MissionNodeAction(
-                  node,
-                  generateHash(),
-                  'New Action',
-                  'Enter your description here.',
-                  5000,
-                  0.5,
-                  1,
-                  'Enter your successful post-execution message here.',
-                  'Enter your failed post-execution message here.',
-                )
-
+                let action: MissionNodeAction =
+                  MissionNode.createDefaultAction(node)
                 node.actions.push(action)
                 handleChange()
               }
@@ -1323,6 +1305,39 @@ function NodeAction(props: {
           }}
           key={`${action.actionID}_postExecutionFailureText`}
         />
+        {/* {action.assets.map((asset: Asset) => {
+          return (
+            <div className='Asset' key={`asset_${asset.assetID}`}>
+              <DetailDropDown
+                label='Assets'
+                assetOptions={action.assets}
+                currentValue={asset.name}
+                deliverValue={(selectedOption: string) => {
+                  asset.name = selectedOption
+                  handleChange()
+                }}
+              />
+              <DetailDropDown
+                label='Asset Mechanisms'
+                options={asset.mechanismOptions}
+                currentValue={asset.selectedMechanism}
+                deliverValue={(selectedOption: string) => {
+                  asset.selectedMechanism = selectedOption
+                  handleChange()
+                }}
+              />
+              <DetailDropDown
+                label='State of Mechanism'
+                options={asset.mechanismStateOptions}
+                currentValue={asset.selectedMechanismState}
+                deliverValue={(selectedOption: string) => {
+                  asset.selectedMechanismState = selectedOption
+                  handleChange()
+                }}
+              />
+            </div>
+          )
+        })} */}
         <div
           className={deleteActionClassName}
           onClick={() => {

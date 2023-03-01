@@ -62,13 +62,10 @@
         background-color: black;
       }
 
-      &.disabled {
+      &.Disabled:hover {
         cursor: default;
-        opacity: 0.35;
-
-        &.disabled:hover {
-          background-color: $background-alt2;
-        }
+        background-color: $background-alt2;
+        color: $color-accent-light;
       }
 
       @media only screen and (max-width: 655px) {

@@ -69,13 +69,6 @@ export default class ExecuteNodePath extends React.Component<
   execute = () => {
     let selectedAction: MissionNodeAction = this.selectedAction
 
-    // !
-    // console.log(
-    //   this.selectedNode.name + ' ' + '-',
-    //   this.selectedAction.willSucceedArray,
-    // )
-    // !
-
     if (selectedAction.readyToExecute) {
       this.closeWindow()
       this.props.outputToConsole(
@@ -112,11 +105,11 @@ export default class ExecuteNodePath extends React.Component<
       className += ' Hidden'
     }
     if (!selectedAction.readyToExecute) {
-      executionButtonClassName += ' disabled'
+      executionButtonClassName += ' Disabled'
       displayTooltip = true
     }
     if (selectedNode.actions.length === 1) {
-      additionalActionButtonClassName += ' disabled'
+      additionalActionButtonClassName += ' Disabled'
     }
 
     return (
@@ -133,7 +126,7 @@ export default class ExecuteNodePath extends React.Component<
             EXECUTE ACTION
             {displayTooltip ? (
               <Tooltip
-                description={`You cannot ${actionName.toLowerCase()} because you have no more resources left to spend.`}
+                description={`You cannot execute this action because you do not have enough resources remaining.`}
               />
             ) : null}
           </button>

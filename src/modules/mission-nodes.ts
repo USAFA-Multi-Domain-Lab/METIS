@@ -9,7 +9,7 @@ import {
   MissionNodeAction,
 } from './mission-node-actions'
 import { IMissionMappable } from '../components/content/game/MissionMap'
-import ExecuteNodePath from '../components/content/game/ExecuteNodePath'
+import { v4 as generateHash } from 'uuid'
 
 export enum ENodeTargetRelation {
   ParentOfTargetAndChildren,
@@ -85,6 +85,20 @@ export class MissionNode implements IMissionMappable {
   static default_actions: Array<IMissionNodeActionJSON> = []
   static default_mapX: number = 0
   static default_mapY: number = 0
+
+  static createDefaultAction(node: MissionNode): MissionNodeAction {
+    return new MissionNodeAction(
+      node,
+      generateHash(),
+      'New Action',
+      'Enter your description here.',
+      5000,
+      0.5,
+      1,
+      'Enter your successful post-execution message here.',
+      'Enter your failed post-execution message here.',
+    )
+  }
 
   // Getter for _depthPadding.
   get depthPadding(): number {
@@ -230,11 +244,14 @@ export class MissionNode implements IMissionMappable {
   get executionSecondsRemaining(): number {
     let executionTimeEnd: number = this._executionTimeEnd
     let now: number = Date.now()
+    let timeRemaining: number = executionTimeEnd - now
 
     if (executionTimeEnd < now) {
       return 0
+    } else if (timeRemaining > 0 && timeRemaining < 1000) {
+      return 1
     } else {
-      return Math.floor((executionTimeEnd - now) / 1000)
+      return Math.floor(timeRemaining / 1000)
     }
   }
 
@@ -318,7 +335,7 @@ export class MissionNode implements IMissionMappable {
     this.parentNode = null
     this.childNodes = []
     this.color = color
-    this.description = 'Description goes here.' // ! Delete string to the left and set equal to "description" once the database is ready.
+    this.description = description
     this.preExecutionText = preExecutionText
     this._depthPadding = depthPadding
     this.executable = executable

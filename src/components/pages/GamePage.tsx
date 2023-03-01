@@ -222,6 +222,7 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
                       handleNodeSelection={(selectedNode: MissionNode) => {
                         setLastSelectedNode(selectedNode)
 
+                        // Logic to send the pre-execution text to the output panel
                         if (
                           selectedNode.preExecutionText !== '' &&
                           selectedNode.preExecutionText !== null &&
@@ -234,29 +235,55 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
                           setOutputPanelIsDisplayed(true)
                         }
 
-                        if (!selectedNode.executable) {
-                          if (
-                            selectedNode.hasChildren &&
-                            !selectedNode.isOpen
-                          ) {
-                            selectedNode.open()
-                          }
-
+                        // Logic that opens the next level of nodes
+                        // (displays the selected node's child nodes)
+                        if (
+                          !selectedNode.executable &&
+                          selectedNode.hasChildren &&
+                          !selectedNode.isOpen
+                        ) {
+                          selectedNode.open()
                           selectedNode.color = ''
-                        } else {
-                          if (
-                            !selectedNode.executing &&
-                            !selectedNode.selectedAction?.succeeded
-                          ) {
-                            setNodeActionsIsDisplayed(true)
-                          } else if (selectedNode.actions.length === 1) {
+                        }
+
+                        // Logic that displays the node action &&
+                        // execute node path window prompts. It also
+                        // notifies the user if they click a node and
+                        // nothing happens.
+                        if (
+                          mission.resources > 0 &&
+                          selectedNode.executable &&
+                          !selectedNode.selectedAction?.succeeded &&
+                          !selectedNode.executing
+                        ) {
+                          setNodeActionsIsDisplayed(true)
+
+                          if (selectedNode.actions.length === 1) {
                             selectedNode.selectedAction =
                               selectedNode.actions[0]
                             selectedNode.selectedAction.processTime =
                               selectedNode.actions[0].processTime
                             setNodeActionsIsDisplayed(false)
-                            setExecuteNodePathIsDisplayed(true)
+
+                            if (selectedNode.selectedAction.readyToExecute) {
+                              setExecuteNodePathIsDisplayed(true)
+                            } else {
+                              appActions.notify(
+                                `You cannot execute this action because you do not have enough resources remaining.`,
+                                { duration: 3500 },
+                              )
+                            }
                           }
+                        } else if (
+                          mission.resources === 0 &&
+                          selectedNode.executable &&
+                          !selectedNode.selectedAction?.succeeded &&
+                          !selectedNode.executing
+                        ) {
+                          appActions.notify(
+                            `You have no more resources left to spend.`,
+                            { duration: 3500 },
+                          )
                         }
                       }}
                       applyNodeClassName={(node: MissionNode) => {
