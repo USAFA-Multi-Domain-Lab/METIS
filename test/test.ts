@@ -34,36 +34,36 @@ const userCredentials = {
   password: 'temppass',
 }
 
-// functions
-const configureServer = (
-  callback: () => void,
-  callbackError: (error: Error) => void,
-) => {
-  const app = express()
+// // functions
+// const configureServer = (
+//   callback: () => void,
+//   callbackError: (error: Error) => void,
+// ) => {
+//   const app = express()
 
-  configure(
-    app,
-    () => {
-      // route imports
-      const indexRoute = require('../routes/routes-index')
-      const usersApiRoute = require('../routes/api/v1/routes-users')
-      const missionsApiRoute = require('../routes/api/v1/routes-missions')
+//   configure(
+//     app,
+//     () => {
+//       // route imports
+//       const indexRoute = require('../routes/routes-index')
+//       const usersApiRoute = require('../routes/api/v1/routes-users')
+//       const missionsApiRoute = require('../routes/api/v1/routes-missions')
 
-      // sets the paths that routes load at
-      app.use('/api/v1/users/', usersApiRoute)
-      app.use('/api/v1/missions/', missionsApiRoute)
-      app.use('*', indexRoute)
+//       // sets the paths that routes load at
+//       app.use('/api/v1/users/', usersApiRoute)
+//       app.use('/api/v1/missions/', missionsApiRoute)
+//       app.use('*', indexRoute)
 
-      // establishes server to listen at the given port
-      server = app.listen(app.get('port'))
+//       // establishes server to listen at the given port
+//       server = app.listen(app.get('port'))
 
-      callback()
-    },
-    (error) => {
-      callbackError(error)
-    },
-  )
-}
+//       callback()
+//     },
+//     (error) => {
+//       callbackError(error)
+//     },
+//   )
+// }
 
 // ! Make sure you run "npm run serve-test" in
 // ! the terminal before you run these tests
@@ -115,24 +115,6 @@ describe('Export/Import File Tests', function () {
   let agent: ChaiHttp.Agent = chai.request.agent(baseUrl)
 
   before(function (done) {
-    // configureServer(
-    //   () => {
-    //     agent
-    //       .post('/api/v1/users/login')
-    //       .send(userCredentials)
-    //       .then(function (response: ChaiHttp.Response) {
-    //         expect(response).to.have.status(200)
-    //         done()
-    //       })
-    //       .catch(function (error) {
-    //         done(error)
-    //       })
-    //   },
-    //   (error) => {
-    //     done(error)
-    //   },
-    // )
-
     agent
       .get('/api/v1/missions/')
       .then(function (response: ChaiHttp.Response) {
@@ -224,7 +206,7 @@ describe('Export/Import File Tests', function () {
   it('calling the import API with a valid file should have a "successfulImportCount" set to 1, "failedImportCount" set to 0, and an array called "failedImportErrorMessages" with a length of 0', function (done) {
     agent
       .post('/api/v1/missions/import/')
-      .attach('files', '/Users/jsthomas1288/Downloads/Valid Mission.cesar')
+      .attach('files', './test/static/Valid Mission.cesar')
       .then(function (response: ChaiHttp.Response) {
         expect(response).to.have.status(200)
         expect(response.body.successfulImportCount).to.equal(1)
@@ -240,7 +222,7 @@ describe('Export/Import File Tests', function () {
   it('calling the import API with an invalid file should have a "successfulImportCount" set to 0, "failedImportCount" set to 1, and an array called "failedImportErrorMessages" with a length of 1', function (done) {
     agent
       .post('/api/v1/missions/import/')
-      .attach('files', '/Users/jsthomas1288/Downloads/Invalid Mission.cesar')
+      .attach('files', './test/static/Invalid Mission.cesar')
       .then(function (response: ChaiHttp.Response) {
         expect(response).to.have.status(200)
         expect(response.body.successfulImportCount).to.equal(0)
@@ -256,7 +238,7 @@ describe('Export/Import File Tests', function () {
   it('calling the import API with a file that has valid contents, but an invalid extension should have a "successfulImportCount" set to 0, "failedImportCount" set to 1, and an array called "failedImportErrorMessages" with a length of 1', function (done) {
     agent
       .post('/api/v1/missions/import/')
-      .attach('files', '/Users/jsthomas1288/Downloads/Attack Mission.jpeg')
+      .attach('files', './test/static/Attack Mission.jpeg')
       .then(function (response: ChaiHttp.Response) {
         expect(response).to.have.status(200)
         expect(response.body.successfulImportCount).to.equal(0)
@@ -272,10 +254,7 @@ describe('Export/Import File Tests', function () {
   it('calling the import API with a file that has a syntax error should have a "successfulImportCount" set to 0, "failedImportCount" set to 1, and an array called "failedImportErrorMessages" with a length of 1', function (done) {
     agent
       .post('/api/v1/missions/import/')
-      .attach(
-        'files',
-        '/Users/jsthomas1288/Downloads/Syntax Error Mission.cesar',
-      )
+      .attach('files', './test/static/Syntax Error Mission.cesar')
       .then(function (response: ChaiHttp.Response) {
         expect(response).to.have.status(200)
         expect(response.body.successfulImportCount).to.equal(0)
@@ -291,10 +270,7 @@ describe('Export/Import File Tests', function () {
   it('calling the import API with a file that has an extra invalid property in the node data should have a "successfulImportCount" set to 0, "failedImportCount" set to 1, and an array called "failedImportErrorMessages" with a length of 1', function (done) {
     agent
       .post('/api/v1/missions/import/')
-      .attach(
-        'files',
-        '/Users/jsthomas1288/Downloads/Extra Invalid Property Mission.cesar',
-      )
+      .attach('files', './test/static/Extra Invalid Property Mission.cesar')
       .then(function (response: ChaiHttp.Response) {
         expect(response).to.have.status(200)
         expect(response.body.successfulImportCount).to.equal(0)
@@ -310,7 +286,7 @@ describe('Export/Import File Tests', function () {
   it('calling the import API with a file that has extra data in the node data should have a "successfulImportCount" set to 0, "failedImportCount" set to 1, and an array called "failedImportErrorMessages" with a length of 1', function (done) {
     agent
       .post('/api/v1/missions/import/')
-      .attach('files', '/Users/jsthomas1288/Downloads/Extra Data Mission.cesar')
+      .attach('files', './test/static/Extra Data Mission.cesar')
       .then(function (response: ChaiHttp.Response) {
         expect(response).to.have.status(200)
         expect(response.body.successfulImportCount).to.equal(0)
@@ -326,8 +302,8 @@ describe('Export/Import File Tests', function () {
   it('calling the import API with a multiple valid files should have a "successfulImportCount" set to 1, "failedImportCount" set to 0, and an array called "failedImportErrorMessages" with a length of 0', function (done) {
     agent
       .post('/api/v1/missions/import/')
-      .attach('files', '/Users/jsthomas1288/Downloads/Valid Mission.cesar')
-      .attach('files', '/Users/jsthomas1288/Downloads/Valid Mission(1).cesar')
+      .attach('files', './test/static/Valid Mission.cesar')
+      .attach('files', './test/static/Valid Mission(1).cesar')
       .then(function (response: ChaiHttp.Response) {
         expect(response).to.have.status(200)
         expect(response.body.successfulImportCount).to.equal(2)
@@ -343,8 +319,8 @@ describe('Export/Import File Tests', function () {
   it('calling the import API with one valid file and one invalid file should have a "successfulImportCount" set to 1, "failedImportCount" set to 1, and an array called "failedImportErrorMessages" with a length of 1', function (done) {
     agent
       .post('/api/v1/missions/import/')
-      .attach('files', '/Users/jsthomas1288/Downloads/Valid Mission.cesar')
-      .attach('files', '/Users/jsthomas1288/Downloads/Invalid Mission.cesar')
+      .attach('files', './test/static/Valid Mission.cesar')
+      .attach('files', './test/static/Invalid Mission.cesar')
       .then(function (response: ChaiHttp.Response) {
         expect(response).to.have.status(200)
         expect(response.body.successfulImportCount).to.equal(1)
@@ -360,7 +336,7 @@ describe('Export/Import File Tests', function () {
   it('calling the import API with a file that has an invalid extension (i.e., should be a .svg, .png, .pdf, etc. and is a .cesar instead) should have a "successfulImportCount" set to 0, "failedImportCount" set to 1, and an array called "failedImportErrorMessages" with a length of 1', function (done) {
     agent
       .post('/api/v1/missions/import/')
-      .attach('files', '/Users/jsthomas1288/Downloads/bolt-solid.cesar')
+      .attach('files', './test/static/bolt-solid.cesar')
       .then(function (response: ChaiHttp.Response) {
         expect(response).to.have.status(200)
         expect(response.body.successfulImportCount).to.equal(0)
@@ -374,11 +350,6 @@ describe('Export/Import File Tests', function () {
   })
 
   after(function (done) {
-    // // These are for when the server starts within this file
-    // connection = getConnection()
-    // connection?.close()
-    // server.close()
-
     // deletes all missions (except the first two missions)
     // in the test database that were created from
     // and then it closes the server and ends the
