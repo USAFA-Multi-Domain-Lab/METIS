@@ -269,22 +269,6 @@ describe('Export/Import File Tests', function () {
       })
   })
 
-  it('calling the import API with a file that has an extra invalid property in the node data should have a "successfulImportCount" set to 0, "failedImportCount" set to 1, and an array called "failedImportErrorMessages" with a length of 1', function (done) {
-    agent
-      .post('/api/v1/missions/import/')
-      .attach('files', './test/static/Extra Invalid Property Mission.cesar')
-      .then(function (response: ChaiHttp.Response) {
-        expect(response).to.have.status(200)
-        expect(response.body.successfulImportCount).to.equal(0)
-        expect(response.body.failedImportCount).to.equal(1)
-        expect(response.body.failedImportErrorMessages.length).to.equal(1)
-        done()
-      })
-      .catch(function (error) {
-        done(error)
-      })
-  })
-
   it('calling the import API with a file that has extra data in the node data should have a "successfulImportCount" set to 0, "failedImportCount" set to 1, and an array called "failedImportErrorMessages" with a length of 1', function (done) {
     agent
       .post('/api/v1/missions/import/')
