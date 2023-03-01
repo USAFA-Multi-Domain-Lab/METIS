@@ -15,9 +15,9 @@ export class Asset {
   selectedMechanism: Mechanism | null
   mechanisms: Array<Mechanism>
 
-  static createDefaultMechanism(asset: Asset) {
-    return new Mechanism(asset, generateHash(), 'Unnamed Mechanism', [], '')
-  }
+  // static createDefaultMechanism(asset: Asset) {
+  //   return new Mechanism(asset, generateHash(), 'Unnamed Mechanism', [], '')
+  // }
 
   constructor(
     assetID: string,

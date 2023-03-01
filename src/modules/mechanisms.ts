@@ -1,9 +1,11 @@
 import { Asset } from './assets'
+import { IMechanismStateJSON, MechanismState } from './mechanism-state'
+import { v4 as generateHash } from 'uuid'
 
 export interface IMechanismJSON {
   mechanismID: string
   name: string
-  states: Array<string>
+  states: Array<MechanismState>
   selectedState: string
 }
 
@@ -11,23 +13,31 @@ export class Mechanism {
   asset: Asset
   mechanismID: string
   name: string
-  states: Array<string>
+  states: Array<MechanismState>
   selectedState: string
+
+  // static createDefaultMechanismState(mechanism: Mechanism) {
+  //   return new MechanismState(
+  //     mechanism,
+  //     generateHash(),
+  //     'Unnamed Mechanism State',
+  //   )
+  // }
 
   constructor(
     asset: Asset,
     mechanismID: string,
     name: string,
-    states: Array<string>,
+    states: Array<MechanismState>,
     selectedState: string,
+    mechanismJSON: Array<IMechanismStateJSON>,
   ) {
-    // This is for when these properties
-    // are added to the database
     this.asset = asset
     this.mechanismID = mechanismID
     this.name = name
     this.states = states
     this.selectedState = selectedState
+    // this.parseMechanismStateJSON(mechanismJSON)
   }
 
   toJSON(): IMechanismJSON {
@@ -38,4 +48,21 @@ export class Mechanism {
       selectedState: this.selectedState,
     }
   }
+
+  // parseMechanismStateJSON(
+  //   mechanismStateJSON: Array<IMechanismStateJSON>,
+  // ): void {
+  //   let states: Array<MechanismState> = []
+
+  //   for (let state of mechanismStateJSON) {
+  //     let mechanismStateObject: MechanismState = new MechanismState(
+  //       this,
+  //       state.mechanismStateID,
+  //       state.name,
+  //     )
+  //     states.push(mechanismStateObject)
+  //   }
+
+  //   this.states = states
+  // }
 }

@@ -1,25 +1,21 @@
 import mongoose, { Schema } from 'mongoose'
+import MechanismModel from './model-mechanism'
 
 let ObjectId = mongoose.Types.ObjectId
+
+/* -- SCHEMA VALIDATORS -- */
 
 // Validator for assets
 const validate_assets = (): void => {}
 
-// Validator for asset.mechanisms
-const validate_assets_mechanisms = (): void => {}
-
 export const AssetSchema: Schema = new Schema({
   _id: { type: ObjectId, required: false, auto: true },
-  assetID: { type: ObjectId, required: true, unique: true, auto: true },
-  name: { type: String, required: true },
-  mechanisms: [
-    {
-      _id: { type: ObjectId, required: false, auto: true },
-      mechanismID: { type: String, required: true, unique: true },
-      states: { type: [String], required: true },
-      selectedState: { type: String, required: true },
-    },
-  ],
+  assetID: { type: String, required: true, unique: true },
+  name: { type: String, required: true, unique: true },
+  mechanisms: {
+    type: [MechanismModel],
+    required: true,
+  },
 })
 
 const AssetModel: any = mongoose.model('Asset', AssetSchema)

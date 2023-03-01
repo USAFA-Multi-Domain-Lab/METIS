@@ -48,6 +48,7 @@ export let attackMissionData = {
           processTime: 1000,
           successChance: 0.5,
           description: 'This will deny.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '80be986e-13b4-4794-9799-0516edfc01ba',
@@ -55,6 +56,7 @@ export let attackMissionData = {
           processTime: 2000,
           successChance: 0.6,
           description: 'This will degrade.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '5a3acf01-7ea6-48c5-bff8-155233dcf46c',
@@ -62,6 +64,7 @@ export let attackMissionData = {
           processTime: 3000,
           successChance: 0.6,
           description: 'This will destroy.',
+          mechanismStateIDs: [],
         },
         {
           actionID: 'fc198adf-830c-46f7-8f0b-42cd301146c7',
@@ -69,6 +72,7 @@ export let attackMissionData = {
           processTime: 4000,
           successChance: 0.7,
           description: 'This will disrupt.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '3585b92b-2a0c-4d86-bed6-9ccf2bb95032',
@@ -76,6 +80,7 @@ export let attackMissionData = {
           processTime: 5000,
           successChance: 0.8,
           description: 'This will manipulate.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '97b10701-2fde-44a5-b86d-10f1ac8de094',
@@ -83,6 +88,7 @@ export let attackMissionData = {
           processTime: 6000,
           successChance: 0.8,
           description: 'This will extract.',
+          mechanismStateIDs: [],
         },
       ],
       mapX: 0,
@@ -106,6 +112,7 @@ export let attackMissionData = {
           processTime: 1000,
           successChance: 0.5,
           description: 'This will deny.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '576ed1b0-c5b1-46e5-9f79-13c8a8c6e2a2',
@@ -113,6 +120,7 @@ export let attackMissionData = {
           processTime: 2000,
           successChance: 0.6,
           description: 'This will degrade.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '94acd154-e808-4075-86ea-5478fb64e728',
@@ -120,6 +128,7 @@ export let attackMissionData = {
           processTime: 3000,
           successChance: 0.6,
           description: 'This will destroy.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '699c4905-19b2-4a6e-947d-a3eabe7a63ab',
@@ -127,6 +136,7 @@ export let attackMissionData = {
           processTime: 4000,
           successChance: 0.7,
           description: 'This will disrupt.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '5e5f89ee-9f60-46c3-a539-69676cac03ea',
@@ -134,6 +144,7 @@ export let attackMissionData = {
           processTime: 5000,
           successChance: 0.8,
           description: 'This will manipulate.',
+          mechanismStateIDs: [],
         },
         {
           actionID: 'c1964697-45fd-4c13-8c36-299d4e2d8b8a',
@@ -141,6 +152,7 @@ export let attackMissionData = {
           processTime: 6000,
           successChance: 0.8,
           description: 'This will extract.',
+          mechanismStateIDs: [],
         },
       ],
       mapX: 1,
@@ -164,6 +176,7 @@ export let attackMissionData = {
           processTime: 1000,
           successChance: 0.5,
           description: 'This will deny.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '93d45723-6f20-4e37-9d70-93190c9e7a3d',
@@ -171,6 +184,7 @@ export let attackMissionData = {
           processTime: 2000,
           successChance: 0.6,
           description: 'This will degrade.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '0c19922d-55ff-4a97-817e-7bfbac066020',
@@ -178,6 +192,7 @@ export let attackMissionData = {
           processTime: 3000,
           successChance: 0.6,
           description: 'This will destroy.',
+          mechanismStateIDs: [],
         },
         {
           actionID: 'd91a98d8-87d9-429d-bdb9-5deacf580227',
@@ -185,6 +200,7 @@ export let attackMissionData = {
           processTime: 4000,
           successChance: 0.7,
           description: 'This will disrupt.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '34fc3ea9-7d7d-41dc-bc50-92ab113a2d8e',
@@ -192,6 +208,7 @@ export let attackMissionData = {
           processTime: 5000,
           successChance: 0.8,
           description: 'This will manipulate.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '42194bc7-678b-48e6-b5c0-7c09261b3f9a',
@@ -199,6 +216,7 @@ export let attackMissionData = {
           processTime: 6000,
           successChance: 0.8,
           description: 'This will extract.',
+          mechanismStateIDs: [],
         },
       ],
       mapX: 1,
@@ -222,6 +240,7 @@ export let attackMissionData = {
           processTime: 1000,
           successChance: 0.5,
           description: 'This will deny.',
+          mechanismStateIDs: [],
         },
         {
           actionID: 'c6f07649-8a3d-4dc3-b4ca-2c311615cfe6',
@@ -229,6 +248,7 @@ export let attackMissionData = {
           processTime: 2000,
           successChance: 0.6,
           description: 'This will degrade.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '04da55a5-ceaa-453a-8389-ec97c159912c',
@@ -236,6 +256,7 @@ export let attackMissionData = {
           processTime: 3000,
           successChance: 0.6,
           description: 'This will destroy.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '5d2fc680-20d9-4020-9ccd-8b534b54ca15',
@@ -243,6 +264,7 @@ export let attackMissionData = {
           processTime: 4000,
           successChance: 0.7,
           description: 'This will disrupt.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '2f335d63-44b0-4082-88bb-00d12d3b4034',
@@ -250,6 +272,7 @@ export let attackMissionData = {
           processTime: 5000,
           successChance: 0.8,
           description: 'This will manipulate.',
+          mechanismStateIDs: [],
         },
         {
           actionID: 'ea35a66b-a1c8-4f17-ac94-aef51776e0bf',
@@ -257,6 +280,7 @@ export let attackMissionData = {
           processTime: 6000,
           successChance: 0.8,
           description: 'This will extract.',
+          mechanismStateIDs: [],
         },
       ],
       mapX: 1,
@@ -280,6 +304,7 @@ export let attackMissionData = {
           processTime: 1000,
           successChance: 0.5,
           description: 'This will deny.',
+          mechanismStateIDs: [],
         },
         {
           actionID: 'a8b57bb3-75b8-45ae-a554-37f408b3a990',
@@ -287,6 +312,7 @@ export let attackMissionData = {
           processTime: 2000,
           successChance: 0.6,
           description: 'This will degrade.',
+          mechanismStateIDs: [],
         },
         {
           actionID: 'f5838cd3-5c67-453d-af7f-1ea0764e8667',
@@ -294,6 +320,7 @@ export let attackMissionData = {
           processTime: 3000,
           successChance: 0.6,
           description: 'This will destroy.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '47be6a99-1d56-40e9-ab83-4d38d4325b60',
@@ -301,6 +328,7 @@ export let attackMissionData = {
           processTime: 4000,
           successChance: 0.7,
           description: 'This will disrupt.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '4005c9c1-431c-4a4f-9db0-c0a889030f84',
@@ -308,6 +336,7 @@ export let attackMissionData = {
           processTime: 5000,
           successChance: 0.8,
           description: 'This will manipulate.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '43d46dee-524c-4521-b10d-f912fa970001',
@@ -315,6 +344,7 @@ export let attackMissionData = {
           processTime: 6000,
           successChance: 0.8,
           description: 'This will extract.',
+          mechanismStateIDs: [],
         },
       ],
       mapX: 1,
@@ -338,6 +368,7 @@ export let attackMissionData = {
           processTime: 1000,
           successChance: 0.5,
           description: 'This will deny.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '613095d4-8f8e-4187-ab94-86a1aed7103a',
@@ -345,6 +376,7 @@ export let attackMissionData = {
           processTime: 2000,
           successChance: 0.6,
           description: 'This will degrade.',
+          mechanismStateIDs: [],
         },
         {
           actionID: 'caaaf024-bcc2-4907-a9b5-7b8197ddef70',
@@ -352,6 +384,7 @@ export let attackMissionData = {
           processTime: 3000,
           successChance: 0.6,
           description: 'This will destroy.',
+          mechanismStateIDs: [],
         },
         {
           actionID: 'd9d2388d-ec53-4b2e-8508-86a66f4c3711',
@@ -359,6 +392,7 @@ export let attackMissionData = {
           processTime: 4000,
           successChance: 0.7,
           description: 'This will disrupt.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '76f9c0a3-24d3-4a84-b43f-87444aa0b8a2',
@@ -366,6 +400,7 @@ export let attackMissionData = {
           processTime: 5000,
           successChance: 0.8,
           description: 'This will manipulate.',
+          mechanismStateIDs: [],
         },
         {
           actionID: 'de33f965-aa6f-4956-aef6-62b2b9b28a57',
@@ -373,6 +408,7 @@ export let attackMissionData = {
           processTime: 6000,
           successChance: 0.8,
           description: 'This will extract.',
+          mechanismStateIDs: [],
         },
       ],
       mapX: 3,
@@ -396,6 +432,7 @@ export let attackMissionData = {
           processTime: 1000,
           successChance: 0.5,
           description: 'This will deny.',
+          mechanismStateIDs: [],
         },
         {
           actionID: 'e24f49e4-6e74-4ea2-a28b-ec918029572d',
@@ -403,6 +440,7 @@ export let attackMissionData = {
           processTime: 2000,
           successChance: 0.6,
           description: 'This will degrade.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '63789abd-15b9-4c8c-be70-489ddc0bc518',
@@ -410,6 +448,7 @@ export let attackMissionData = {
           processTime: 3000,
           successChance: 0.6,
           description: 'This will destroy.',
+          mechanismStateIDs: [],
         },
       ],
       mapX: 3,
@@ -433,6 +472,7 @@ export let attackMissionData = {
           processTime: 1000,
           successChance: 0.5,
           description: 'This will deny.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '512b7fdd-d44b-492a-ab9d-bf5aacad7ea0',
@@ -440,6 +480,7 @@ export let attackMissionData = {
           processTime: 2000,
           successChance: 0.6,
           description: 'This will degrade.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '89cc0e77-9e8f-4c0f-af6c-1a1c43b0e063',
@@ -447,6 +488,7 @@ export let attackMissionData = {
           processTime: 3000,
           successChance: 0.6,
           description: 'This will destroy.',
+          mechanismStateIDs: [],
         },
         {
           actionID: 'a5b1a8b6-132e-4f64-ad1b-f16799ffeb3b',
@@ -454,6 +496,7 @@ export let attackMissionData = {
           processTime: 4000,
           successChance: 0.7,
           description: 'This will disrupt.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '5794bdf9-aae1-4a7e-bf8c-b0d21f65afc2',
@@ -461,6 +504,7 @@ export let attackMissionData = {
           processTime: 5000,
           successChance: 0.8,
           description: 'This will manipulate.',
+          mechanismStateIDs: [],
         },
         {
           actionID: 'f9d4531f-3eaa-4939-b287-c32f210b16ee',
@@ -468,6 +512,7 @@ export let attackMissionData = {
           processTime: 6000,
           successChance: 0.8,
           description: 'This will extract.',
+          mechanismStateIDs: [],
         },
       ],
       mapX: 3,
@@ -491,6 +536,7 @@ export let attackMissionData = {
           processTime: 1000,
           successChance: 0.5,
           description: 'This will deny.',
+          mechanismStateIDs: [],
         },
         {
           actionID: 'fe431da2-c6b1-40b4-bc19-0bdf490f5619',
@@ -498,6 +544,7 @@ export let attackMissionData = {
           processTime: 2000,
           successChance: 0.6,
           description: 'This will degrade.',
+          mechanismStateIDs: [],
         },
         {
           actionID: 'a5e13e35-048f-46fd-917c-9896c340f120',
@@ -505,6 +552,7 @@ export let attackMissionData = {
           processTime: 3000,
           successChance: 0.6,
           description: 'This will destroy.',
+          mechanismStateIDs: [],
         },
         {
           actionID: 'aa86f05c-7948-4f2c-9114-348259fa893b',
@@ -512,6 +560,7 @@ export let attackMissionData = {
           processTime: 4000,
           successChance: 0.7,
           description: 'This will disrupt.',
+          mechanismStateIDs: [],
         },
         {
           actionID: 'ca7fd79d-9810-468b-b0e0-849f5ff05226',
@@ -519,6 +568,7 @@ export let attackMissionData = {
           processTime: 5000,
           successChance: 0.8,
           description: 'This will manipulate.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '3700f6b8-64b4-467d-9d0d-33909025620a',
@@ -526,6 +576,7 @@ export let attackMissionData = {
           processTime: 6000,
           successChance: 0.8,
           description: 'This will extract.',
+          mechanismStateIDs: [],
         },
       ],
       mapX: 3,
@@ -549,6 +600,7 @@ export let attackMissionData = {
           processTime: 1000,
           successChance: 0.5,
           description: 'This will deny.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '66ac6437-f521-491a-96fd-ebbd795a4a4f',
@@ -556,6 +608,7 @@ export let attackMissionData = {
           processTime: 2000,
           successChance: 0.6,
           description: 'This will degrade.',
+          mechanismStateIDs: [],
         },
         {
           actionID: 'e1abfa26-f5a9-432e-b966-8044020fb307',
@@ -563,6 +616,7 @@ export let attackMissionData = {
           processTime: 3000,
           successChance: 0.6,
           description: 'This will destroy.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '59c45473-6386-4c6c-ab33-29b68b3801d2',
@@ -570,6 +624,7 @@ export let attackMissionData = {
           processTime: 4000,
           successChance: 0.7,
           description: 'This will disrupt.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '401315a3-25a0-4f7a-ac43-7372283de890',
@@ -577,6 +632,7 @@ export let attackMissionData = {
           processTime: 5000,
           successChance: 0.8,
           description: 'This will manipulate.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '234e5a3f-465c-4fc9-bc7c-b3303f44bdcd',
@@ -584,6 +640,7 @@ export let attackMissionData = {
           processTime: 6000,
           successChance: 0.8,
           description: 'This will extract.',
+          mechanismStateIDs: [],
         },
       ],
       mapX: 4,
@@ -607,6 +664,7 @@ export let attackMissionData = {
           processTime: 1000,
           successChance: 0.5,
           description: 'This will deny.',
+          mechanismStateIDs: [],
         },
         {
           actionID: 'eec38dde-580f-4cbd-942d-7b8ace813f1f',
@@ -614,6 +672,7 @@ export let attackMissionData = {
           processTime: 2000,
           successChance: 0.6,
           description: 'This will degrade.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '2b7898e5-bd08-423f-b42f-e769c4d71ab5',
@@ -621,6 +680,7 @@ export let attackMissionData = {
           processTime: 3000,
           successChance: 0.6,
           description: 'This will destroy.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '217698e2-ba6b-4dfe-8648-2674db5e22a7',
@@ -628,6 +688,7 @@ export let attackMissionData = {
           processTime: 4000,
           successChance: 0.7,
           description: 'This will disrupt.',
+          mechanismStateIDs: [],
         },
         {
           actionID: 'a9b9d5ed-8c05-4671-b60d-1b4f42000152',
@@ -635,6 +696,7 @@ export let attackMissionData = {
           processTime: 5000,
           successChance: 0.8,
           description: 'This will manipulate.',
+          mechanismStateIDs: [],
         },
         {
           actionID: 'ffaedbf3-256f-4dae-a59b-e819a403a78d',
@@ -642,6 +704,7 @@ export let attackMissionData = {
           processTime: 6000,
           successChance: 0.8,
           description: 'This will extract.',
+          mechanismStateIDs: [],
         },
       ],
       mapX: 4,
@@ -665,6 +728,7 @@ export let attackMissionData = {
           processTime: 1000,
           successChance: 0.5,
           description: 'This will deny.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '616467f7-0d7d-45a5-ab7a-c29588a790b7',
@@ -672,6 +736,7 @@ export let attackMissionData = {
           processTime: 2000,
           successChance: 0.6,
           description: 'This will degrade.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '904c1f77-5840-44ec-ad1f-4cbad0ad7cf0',
@@ -679,6 +744,7 @@ export let attackMissionData = {
           processTime: 3000,
           successChance: 0.6,
           description: 'This will destroy.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '5f4c427c-f444-4609-bdae-8d28b381ed8e',
@@ -686,6 +752,7 @@ export let attackMissionData = {
           processTime: 4000,
           successChance: 0.7,
           description: 'This will disrupt.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '52b0a5e4-1bed-40d5-9dae-0ff4b6387515',
@@ -693,6 +760,7 @@ export let attackMissionData = {
           processTime: 5000,
           successChance: 0.8,
           description: 'This will manipulate.',
+          mechanismStateIDs: [],
         },
         {
           actionID: 'e2bbd122-87d2-4b1f-b049-bd581472435c',
@@ -700,6 +768,7 @@ export let attackMissionData = {
           processTime: 6000,
           successChance: 0.8,
           description: 'This will extract.',
+          mechanismStateIDs: [],
         },
       ],
       mapX: 4,
@@ -723,6 +792,7 @@ export let attackMissionData = {
           processTime: 1000,
           successChance: 0.5,
           description: 'This will deny.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '23d32cf0-997d-4453-b31f-e97e09aa3426',
@@ -730,6 +800,7 @@ export let attackMissionData = {
           processTime: 2000,
           successChance: 0.6,
           description: 'This will degrade.',
+          mechanismStateIDs: [],
         },
         {
           actionID: 'cdbc3b11-36b9-4871-987a-0867ebc5968f',
@@ -737,6 +808,7 @@ export let attackMissionData = {
           processTime: 3000,
           successChance: 0.6,
           description: 'This will destroy.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '5f69d0ce-b68a-49c9-9357-6a78c7ae20a7',
@@ -744,6 +816,7 @@ export let attackMissionData = {
           processTime: 4000,
           successChance: 0.7,
           description: 'This will disrupt.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '7de62775-0ffe-4426-881b-037f77f932ad',
@@ -751,6 +824,7 @@ export let attackMissionData = {
           processTime: 5000,
           successChance: 0.8,
           description: 'This will manipulate.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '407238d0-5bb7-42f8-ace5-fd934413b5f2',
@@ -758,6 +832,7 @@ export let attackMissionData = {
           processTime: 6000,
           successChance: 0.8,
           description: 'This will extract.',
+          mechanismStateIDs: [],
         },
       ],
       mapX: 4,
@@ -781,6 +856,7 @@ export let attackMissionData = {
           processTime: 1000,
           successChance: 0.5,
           description: 'This will deny.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '17f1a946-5764-4a6d-adc1-332b2da9a889',
@@ -788,6 +864,7 @@ export let attackMissionData = {
           processTime: 2000,
           successChance: 0.6,
           description: 'This will degrade.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '1f661e15-98b4-4d8f-a4af-dc627507911e',
@@ -795,6 +872,7 @@ export let attackMissionData = {
           processTime: 3000,
           successChance: 0.6,
           description: 'This will destroy.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '59971b31-c6fc-46dd-bc5f-f404ef49877d',
@@ -802,6 +880,7 @@ export let attackMissionData = {
           processTime: 4000,
           successChance: 0.7,
           description: 'This will disrupt.',
+          mechanismStateIDs: [],
         },
         {
           actionID: 'cec13717-df32-4c1b-8de8-ebff1557c9be',
@@ -809,6 +888,7 @@ export let attackMissionData = {
           processTime: 5000,
           successChance: 0.8,
           description: 'This will manipulate.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '23c9fd2f-428e-42b6-9966-eab68b16c035',
@@ -816,6 +896,7 @@ export let attackMissionData = {
           processTime: 6000,
           successChance: 0.8,
           description: 'This will extract.',
+          mechanismStateIDs: [],
         },
       ],
       mapX: 0,
@@ -839,6 +920,7 @@ export let attackMissionData = {
           processTime: 1000,
           successChance: 0.5,
           description: 'This will deny.',
+          mechanismStateIDs: [],
         },
         {
           actionID: 'b128441a-f6a1-4171-a5b8-0f5e576f1c4e',
@@ -846,6 +928,7 @@ export let attackMissionData = {
           processTime: 2000,
           successChance: 0.6,
           description: 'This will degrade.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '9c81afc6-5c48-464c-9126-7000fd8d3233',
@@ -853,6 +936,7 @@ export let attackMissionData = {
           processTime: 3000,
           successChance: 0.6,
           description: 'This will destroy.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '6fcdf2d9-54d8-47cd-adf6-e42abf56bb13',
@@ -860,6 +944,7 @@ export let attackMissionData = {
           processTime: 4000,
           successChance: 0.7,
           description: 'This will disrupt.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '5e10ff0e-cbb5-4cb7-ad2a-17d3be7edf10',
@@ -867,6 +952,7 @@ export let attackMissionData = {
           processTime: 5000,
           successChance: 0.8,
           description: 'This will manipulate.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '54ae9fab-d7d1-4391-b703-21e40c8b449e',
@@ -874,6 +960,7 @@ export let attackMissionData = {
           processTime: 6000,
           successChance: 0.8,
           description: 'This will extract.',
+          mechanismStateIDs: [],
         },
       ],
       mapX: 1,
@@ -897,6 +984,7 @@ export let attackMissionData = {
           processTime: 1000,
           successChance: 0.5,
           description: 'This will deny.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '747a7375-3ce1-4b3f-a247-7aea138d29d8',
@@ -904,6 +992,7 @@ export let attackMissionData = {
           processTime: 2000,
           successChance: 0.6,
           description: 'This will degrade.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '849a8221-fe6f-49c2-b825-2c08ffa552b5',
@@ -911,6 +1000,7 @@ export let attackMissionData = {
           processTime: 3000,
           successChance: 0.6,
           description: 'This will destroy.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '7ecec83b-d385-4eba-932a-e354274c2924',
@@ -918,6 +1008,7 @@ export let attackMissionData = {
           processTime: 4000,
           successChance: 0.7,
           description: 'This will disrupt.',
+          mechanismStateIDs: [],
         },
         {
           actionID: 'ee055bc0-0a12-4773-a2df-6ad1b26b1cfe',
@@ -925,6 +1016,7 @@ export let attackMissionData = {
           processTime: 5000,
           successChance: 0.8,
           description: 'This will manipulate.',
+          mechanismStateIDs: [],
         },
         {
           actionID: 'b72e54b6-071f-4402-9e2e-62282ab7731e',
@@ -932,6 +1024,7 @@ export let attackMissionData = {
           processTime: 6000,
           successChance: 0.8,
           description: 'This will extract.',
+          mechanismStateIDs: [],
         },
       ],
       mapX: 2,
@@ -955,6 +1048,7 @@ export let attackMissionData = {
           processTime: 1000,
           successChance: 0.5,
           description: 'This will deny.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '6a07b04c-8d63-43d7-ae9a-ddc765c88122',
@@ -962,6 +1056,7 @@ export let attackMissionData = {
           processTime: 2000,
           successChance: 0.6,
           description: 'This will degrade.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '60e39961-b4e1-4a6c-b6af-fab856ee02f4',
@@ -969,6 +1064,7 @@ export let attackMissionData = {
           processTime: 3000,
           successChance: 0.6,
           description: 'This will destroy.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '781dea4a-dc6b-46c5-b602-117bb31ee603',
@@ -976,6 +1072,7 @@ export let attackMissionData = {
           processTime: 4000,
           successChance: 0.7,
           description: 'This will disrupt.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '40c0f386-4af4-4608-b749-3a6de82d87f6',
@@ -983,6 +1080,7 @@ export let attackMissionData = {
           processTime: 5000,
           successChance: 0.8,
           description: 'This will manipulate.',
+          mechanismStateIDs: [],
         },
         {
           actionID: 'c57d6958-0d66-4fb9-a298-3435cc0cbeab',
@@ -990,6 +1088,7 @@ export let attackMissionData = {
           processTime: 6000,
           successChance: 0.8,
           description: 'This will extract.',
+          mechanismStateIDs: [],
         },
       ],
       mapX: 3,
@@ -1013,6 +1112,7 @@ export let attackMissionData = {
           processTime: 1000,
           successChance: 0.5,
           description: 'This will deny.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '55ad7b44-71bf-4afd-8e42-a3fa95728c3d',
@@ -1020,6 +1120,7 @@ export let attackMissionData = {
           processTime: 2000,
           successChance: 0.6,
           description: 'This will degrade.',
+          mechanismStateIDs: [],
         },
         {
           actionID: 'beddc315-8641-480e-94a7-f2aaf6bf40f4',
@@ -1027,6 +1128,7 @@ export let attackMissionData = {
           processTime: 3000,
           successChance: 0.6,
           description: 'This will destroy.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '4ede900c-a350-4bbe-a214-48ada33ba4ca',
@@ -1034,6 +1136,7 @@ export let attackMissionData = {
           processTime: 4000,
           successChance: 0.7,
           description: 'This will disrupt.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '63690c86-361f-4b73-b5dc-a68a54af8a3c',
@@ -1041,6 +1144,7 @@ export let attackMissionData = {
           processTime: 5000,
           successChance: 0.8,
           description: 'This will manipulate.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '19c2cb7b-cb56-4200-b43c-c87093e46eb8',
@@ -1048,6 +1152,7 @@ export let attackMissionData = {
           processTime: 6000,
           successChance: 0.8,
           description: 'This will extract.',
+          mechanismStateIDs: [],
         },
       ],
       mapX: 3,
@@ -1071,6 +1176,7 @@ export let attackMissionData = {
           processTime: 1000,
           successChance: 0.5,
           description: 'This will deny.',
+          mechanismStateIDs: [],
         },
         {
           actionID: 'ee389cb2-3eec-4644-b5a7-970dbbc90e42',
@@ -1078,6 +1184,7 @@ export let attackMissionData = {
           processTime: 2000,
           successChance: 0.6,
           description: 'This will degrade.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '6a4ac54d-25ab-4a3d-8593-5d9ee0942a19',
@@ -1085,6 +1192,7 @@ export let attackMissionData = {
           processTime: 3000,
           successChance: 0.6,
           description: 'This will destroy.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '44e25e2f-5c1d-4fe7-bc31-244514051f08',
@@ -1092,6 +1200,7 @@ export let attackMissionData = {
           processTime: 4000,
           successChance: 0.7,
           description: 'This will disrupt.',
+          mechanismStateIDs: [],
         },
         {
           actionID: 'f422a1c1-78b0-4f3a-81d3-02534137bbad',
@@ -1099,6 +1208,7 @@ export let attackMissionData = {
           processTime: 5000,
           successChance: 0.8,
           description: 'This will manipulate.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '6be91890-bb7b-4e39-968c-e901a61b02ab',
@@ -1106,6 +1216,7 @@ export let attackMissionData = {
           processTime: 6000,
           successChance: 0.8,
           description: 'This will extract.',
+          mechanismStateIDs: [],
         },
       ],
       mapX: 0,
@@ -1129,6 +1240,7 @@ export let attackMissionData = {
           processTime: 1000,
           successChance: 0.5,
           description: 'This will deny.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '9778c2a2-b440-4a0e-97bc-857d49d03566',
@@ -1136,6 +1248,7 @@ export let attackMissionData = {
           processTime: 2000,
           successChance: 0.6,
           description: 'This will degrade.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '3340a15e-da04-424c-9f7b-7b690bd6277b',
@@ -1143,6 +1256,7 @@ export let attackMissionData = {
           processTime: 3000,
           successChance: 0.6,
           description: 'This will destroy.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '2af3c598-0755-48c1-92c7-a957506788af',
@@ -1150,6 +1264,7 @@ export let attackMissionData = {
           processTime: 4000,
           successChance: 0.7,
           description: 'This will disrupt.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '8bf6dac3-199f-4031-92a6-64b99f663f44',
@@ -1157,6 +1272,7 @@ export let attackMissionData = {
           processTime: 5000,
           successChance: 0.8,
           description: 'This will manipulate.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '2163d948-04d3-4b7e-8a6d-ebcdeeac86a2',
@@ -1164,6 +1280,7 @@ export let attackMissionData = {
           processTime: 6000,
           successChance: 0.8,
           description: 'This will extract.',
+          mechanismStateIDs: [],
         },
       ],
       mapX: 1,
@@ -1187,6 +1304,7 @@ export let attackMissionData = {
           processTime: 1000,
           successChance: 0.5,
           description: 'This will deny.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '03ea3616-a045-4ce9-bda5-e54046a142e0',
@@ -1194,6 +1312,7 @@ export let attackMissionData = {
           processTime: 2000,
           successChance: 0.6,
           description: 'This will degrade.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '1639273d-25a7-42de-ae94-e8f26c36375a',
@@ -1201,6 +1320,7 @@ export let attackMissionData = {
           processTime: 3000,
           successChance: 0.6,
           description: 'This will destroy.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '58a5ac55-8b4e-4179-860e-949eba365be1',
@@ -1208,6 +1328,7 @@ export let attackMissionData = {
           processTime: 4000,
           successChance: 0.7,
           description: 'This will disrupt.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '1fb593c8-6a9b-4d8e-a9db-7867b99e0fdd',
@@ -1215,6 +1336,7 @@ export let attackMissionData = {
           processTime: 5000,
           successChance: 0.8,
           description: 'This will manipulate.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '036a3238-da36-4c9a-a449-1e0624fabe41',
@@ -1222,6 +1344,7 @@ export let attackMissionData = {
           processTime: 6000,
           successChance: 0.8,
           description: 'This will extract.',
+          mechanismStateIDs: [],
         },
       ],
       mapX: 1,
@@ -1245,6 +1368,7 @@ export let attackMissionData = {
           processTime: 1000,
           successChance: 0.5,
           description: 'This will deny.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '0dcb7164-becc-4be8-b33b-61ec6ca711f3',
@@ -1252,6 +1376,7 @@ export let attackMissionData = {
           processTime: 2000,
           successChance: 0.6,
           description: 'This will degrade.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '05f1ae43-1997-470d-b64f-b1f2f13ea618',
@@ -1259,6 +1384,7 @@ export let attackMissionData = {
           processTime: 3000,
           successChance: 0.6,
           description: 'This will destroy.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '0db939d0-bab1-43f8-beb7-68bd304ff141',
@@ -1266,6 +1392,7 @@ export let attackMissionData = {
           processTime: 4000,
           successChance: 0.7,
           description: 'This will disrupt.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '5fd74774-eca8-4210-bf5f-cf8db38575b6',
@@ -1273,6 +1400,7 @@ export let attackMissionData = {
           processTime: 5000,
           successChance: 0.8,
           description: 'This will manipulate.',
+          mechanismStateIDs: [],
         },
         {
           actionID: 'c0467c9c-6d0d-4fd8-8227-362038cdd443',
@@ -1280,6 +1408,7 @@ export let attackMissionData = {
           processTime: 6000,
           successChance: 0.8,
           description: 'This will extract.',
+          mechanismStateIDs: [],
         },
       ],
       mapX: 1,
@@ -1303,6 +1432,7 @@ export let attackMissionData = {
           processTime: 1000,
           successChance: 0.5,
           description: 'This will deny.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '86e15e1e-f098-451c-adb4-f29a086aa986',
@@ -1310,6 +1440,7 @@ export let attackMissionData = {
           processTime: 2000,
           successChance: 0.6,
           description: 'This will degrade.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '8451f1cb-d505-49d8-9166-9b1dcf098edc',
@@ -1317,6 +1448,7 @@ export let attackMissionData = {
           processTime: 3000,
           successChance: 0.6,
           description: 'This will destroy.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '3efc2886-bec8-4232-a9a0-7a49d9a20c7a',
@@ -1324,6 +1456,7 @@ export let attackMissionData = {
           processTime: 4000,
           successChance: 0.7,
           description: 'This will disrupt.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '45cae8cb-848d-4d4f-9344-37dcb8174398',
@@ -1331,6 +1464,7 @@ export let attackMissionData = {
           processTime: 5000,
           successChance: 0.8,
           description: 'This will manipulate.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '729c6681-feb6-479d-a960-ed896e3b941f',
@@ -1338,6 +1472,7 @@ export let attackMissionData = {
           processTime: 6000,
           successChance: 0.8,
           description: 'This will extract.',
+          mechanismStateIDs: [],
         },
       ],
       mapX: 1,
@@ -1361,6 +1496,7 @@ export let attackMissionData = {
           processTime: 1000,
           successChance: 0.5,
           description: 'This will deny.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '580e9598-dde2-47b5-ad56-53e067e9eb16',
@@ -1368,6 +1504,7 @@ export let attackMissionData = {
           processTime: 2000,
           successChance: 0.6,
           description: 'This will degrade.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '9894b2dd-f167-4cf6-9623-aa9d57c87212',
@@ -1375,6 +1512,7 @@ export let attackMissionData = {
           processTime: 3000,
           successChance: 0.6,
           description: 'This will destroy.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '001848c1-dd2c-4236-8ed3-c83915a73ed1',
@@ -1382,6 +1520,7 @@ export let attackMissionData = {
           processTime: 4000,
           successChance: 0.7,
           description: 'This will disrupt.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '02b86e36-12b5-49a2-b789-d1f8b1ea0841',
@@ -1389,6 +1528,7 @@ export let attackMissionData = {
           processTime: 5000,
           successChance: 0.8,
           description: 'This will manipulate.',
+          mechanismStateIDs: [],
         },
         {
           actionID: 'a7aad23e-9433-4a22-8ddc-73f957faad13',
@@ -1396,6 +1536,7 @@ export let attackMissionData = {
           processTime: 6000,
           successChance: 0.8,
           description: 'This will extract.',
+          mechanismStateIDs: [],
         },
       ],
       mapX: 2,
@@ -1419,6 +1560,7 @@ export let attackMissionData = {
           processTime: 1000,
           successChance: 0.5,
           description: 'This will deny.',
+          mechanismStateIDs: [],
         },
         {
           actionID: 'bfc363bd-c2c9-44bf-8def-37e030e117b8',
@@ -1426,6 +1568,7 @@ export let attackMissionData = {
           processTime: 2000,
           successChance: 0.6,
           description: 'This will degrade.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '29a6198d-ee20-4b50-88a0-537c103de03d',
@@ -1433,6 +1576,7 @@ export let attackMissionData = {
           processTime: 3000,
           successChance: 0.6,
           description: 'This will destroy.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '18fca62e-85f0-4986-8c29-8013500189e1',
@@ -1440,6 +1584,7 @@ export let attackMissionData = {
           processTime: 4000,
           successChance: 0.7,
           description: 'This will disrupt.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '8d31bc40-289f-4066-aea9-823acdf19adb',
@@ -1447,6 +1592,7 @@ export let attackMissionData = {
           processTime: 5000,
           successChance: 0.8,
           description: 'This will manipulate.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '4f3de0d1-4111-4f7c-b96d-6b7306ef6aed',
@@ -1454,6 +1600,7 @@ export let attackMissionData = {
           processTime: 6000,
           successChance: 0.8,
           description: 'This will extract.',
+          mechanismStateIDs: [],
         },
       ],
       mapX: 2,
@@ -1477,6 +1624,7 @@ export let attackMissionData = {
           processTime: 1000,
           successChance: 0.5,
           description: 'This will deny.',
+          mechanismStateIDs: [],
         },
         {
           actionID: 'a039893d-a510-450c-92ec-7bc27c880fcd',
@@ -1484,6 +1632,7 @@ export let attackMissionData = {
           processTime: 2000,
           successChance: 0.6,
           description: 'This will degrade.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '9aa2f549-6c44-41e3-8e82-a5d700501bb0',
@@ -1491,6 +1640,7 @@ export let attackMissionData = {
           processTime: 3000,
           successChance: 0.6,
           description: 'This will destroy.',
+          mechanismStateIDs: [],
         },
         {
           actionID: 'fd40e9da-c104-45f8-94db-0e4dc56ebe6d',
@@ -1498,6 +1648,7 @@ export let attackMissionData = {
           processTime: 4000,
           successChance: 0.7,
           description: 'This will disrupt.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '6c03d1f4-5daf-4b73-8529-5ba0c30006f6',
@@ -1505,6 +1656,7 @@ export let attackMissionData = {
           processTime: 5000,
           successChance: 0.8,
           description: 'This will manipulate.',
+          mechanismStateIDs: [],
         },
         {
           actionID: 'a578dac5-e2ea-40cd-9c2d-ce4e1fc98b30',
@@ -1512,6 +1664,7 @@ export let attackMissionData = {
           processTime: 6000,
           successChance: 0.8,
           description: 'This will extract.',
+          mechanismStateIDs: [],
         },
       ],
       mapX: 2,
@@ -1535,6 +1688,7 @@ export let attackMissionData = {
           processTime: 1000,
           successChance: 0.5,
           description: 'This will deny.',
+          mechanismStateIDs: [],
         },
         {
           actionID: 'ff92f0a3-0b51-4c66-a34e-3a53aeab60d0',
@@ -1542,6 +1696,7 @@ export let attackMissionData = {
           processTime: 2000,
           successChance: 0.6,
           description: 'This will degrade.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '64b20b5c-1b61-4257-8f35-5d2862e2dd77',
@@ -1549,6 +1704,7 @@ export let attackMissionData = {
           processTime: 3000,
           successChance: 0.6,
           description: 'This will destroy.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '0fb7b999-c039-46b3-85b3-049860fe0ef7',
@@ -1556,6 +1712,7 @@ export let attackMissionData = {
           processTime: 4000,
           successChance: 0.7,
           description: 'This will disrupt.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '964582c0-7c74-4c02-ba6b-609c449bbe4c',
@@ -1563,6 +1720,7 @@ export let attackMissionData = {
           processTime: 5000,
           successChance: 0.8,
           description: 'This will manipulate.',
+          mechanismStateIDs: [],
         },
         {
           actionID: 'b2a0c854-0ce7-408e-b6bf-01269d3a6840',
@@ -1570,6 +1728,7 @@ export let attackMissionData = {
           processTime: 6000,
           successChance: 0.8,
           description: 'This will extract.',
+          mechanismStateIDs: [],
         },
       ],
       mapX: 2,
@@ -1593,6 +1752,7 @@ export let attackMissionData = {
           processTime: 1000,
           successChance: 0.5,
           description: 'This will deny.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '93ba811e-cf6b-4eec-a28b-06d4816e2d15',
@@ -1600,6 +1760,7 @@ export let attackMissionData = {
           processTime: 2000,
           successChance: 0.6,
           description: 'This will degrade.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '31951c25-e187-4ee8-b166-aaf3bad5272e',
@@ -1607,6 +1768,7 @@ export let attackMissionData = {
           processTime: 3000,
           successChance: 0.6,
           description: 'This will destroy.',
+          mechanismStateIDs: [],
         },
         {
           actionID: 'ab13b241-713c-490c-9093-3ae8f28946e7',
@@ -1614,6 +1776,7 @@ export let attackMissionData = {
           processTime: 4000,
           successChance: 0.7,
           description: 'This will disrupt.',
+          mechanismStateIDs: [],
         },
         {
           actionID: 'd41c3721-5256-4f45-86ba-eb20d54406ed',
@@ -1621,6 +1784,7 @@ export let attackMissionData = {
           processTime: 5000,
           successChance: 0.8,
           description: 'This will manipulate.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '6faa5b89-94c7-494c-be13-79adad59f31d',
@@ -1628,6 +1792,7 @@ export let attackMissionData = {
           processTime: 6000,
           successChance: 0.8,
           description: 'This will extract.',
+          mechanismStateIDs: [],
         },
       ],
       mapX: 2,
@@ -1651,6 +1816,7 @@ export let attackMissionData = {
           processTime: 1000,
           successChance: 0.5,
           description: 'This will deny.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '8ab079e4-f142-4c61-aea5-b6891ff8332f',
@@ -1658,6 +1824,7 @@ export let attackMissionData = {
           processTime: 2000,
           successChance: 0.6,
           description: 'This will degrade.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '266b3682-6d9e-4eff-932d-929dc3f275a3',
@@ -1665,6 +1832,7 @@ export let attackMissionData = {
           processTime: 3000,
           successChance: 0.6,
           description: 'This will destroy.',
+          mechanismStateIDs: [],
         },
         {
           actionID: 'd3aa964d-cfc1-47de-94a2-9f4c746adb8e',
@@ -1672,6 +1840,7 @@ export let attackMissionData = {
           processTime: 4000,
           successChance: 0.7,
           description: 'This will disrupt.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '4b696bf6-ca13-49c6-8a1e-66040ea8a394',
@@ -1679,6 +1848,7 @@ export let attackMissionData = {
           processTime: 5000,
           successChance: 0.8,
           description: 'This will manipulate.',
+          mechanismStateIDs: [],
         },
         {
           actionID: 'd1ead431-811b-48bc-bd33-cc72b7b3648b',
@@ -1686,6 +1856,7 @@ export let attackMissionData = {
           processTime: 6000,
           successChance: 0.8,
           description: 'This will extract.',
+          mechanismStateIDs: [],
         },
       ],
       mapX: 2,
@@ -1709,6 +1880,7 @@ export let attackMissionData = {
           processTime: 1000,
           successChance: 0.5,
           description: 'This will deny.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '35800dc1-249b-44c7-b425-b3c5f7f480c2',
@@ -1716,6 +1888,7 @@ export let attackMissionData = {
           processTime: 2000,
           successChance: 0.6,
           description: 'This will degrade.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '62097622-b14b-449b-b8fb-eda05e7c1ad7',
@@ -1723,6 +1896,7 @@ export let attackMissionData = {
           processTime: 3000,
           successChance: 0.6,
           description: 'This will destroy.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '524ce418-4c4f-4673-bcb1-1350b9621823',
@@ -1730,6 +1904,7 @@ export let attackMissionData = {
           processTime: 4000,
           successChance: 0.7,
           description: 'This will disrupt.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '392ad0b5-0197-442b-b666-b00355640257',
@@ -1737,6 +1912,7 @@ export let attackMissionData = {
           processTime: 5000,
           successChance: 0.8,
           description: 'This will manipulate.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '1feb396c-1358-4ade-b3ff-8eae9f186c93',
@@ -1744,6 +1920,7 @@ export let attackMissionData = {
           processTime: 6000,
           successChance: 0.8,
           description: 'This will extract.',
+          mechanismStateIDs: [],
         },
       ],
       mapX: 0,
@@ -1767,6 +1944,7 @@ export let attackMissionData = {
           processTime: 1000,
           successChance: 0.5,
           description: 'This will deny.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '1e964a38-dcb5-462b-8d41-6ab413dfc410',
@@ -1774,6 +1952,7 @@ export let attackMissionData = {
           processTime: 2000,
           successChance: 0.6,
           description: 'This will degrade.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '5de30579-8af9-441d-bc43-5bfeef9ed23f',
@@ -1781,6 +1960,7 @@ export let attackMissionData = {
           processTime: 3000,
           successChance: 0.6,
           description: 'This will destroy.',
+          mechanismStateIDs: [],
         },
         {
           actionID: 'ed8640bb-068b-40a6-9666-cdab4b6aa206',
@@ -1788,6 +1968,7 @@ export let attackMissionData = {
           processTime: 4000,
           successChance: 0.7,
           description: 'This will disrupt.',
+          mechanismStateIDs: [],
         },
         {
           actionID: 'afb73d93-86bf-420b-95d5-44fd8985810b',
@@ -1795,6 +1976,7 @@ export let attackMissionData = {
           processTime: 5000,
           successChance: 0.8,
           description: 'This will manipulate.',
+          mechanismStateIDs: [],
         },
         {
           actionID: 'f21fdd09-28cb-4e95-8c34-ceb8b9bb15b0',
@@ -1802,6 +1984,7 @@ export let attackMissionData = {
           processTime: 6000,
           successChance: 0.8,
           description: 'This will extract.',
+          mechanismStateIDs: [],
         },
       ],
       mapX: 1,
@@ -1825,6 +2008,7 @@ export let attackMissionData = {
           processTime: 1000,
           successChance: 0.5,
           description: 'This will deny.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '49dfbefd-f7cd-47a3-889c-4a332cd06cab',
@@ -1832,6 +2016,7 @@ export let attackMissionData = {
           processTime: 2000,
           successChance: 0.6,
           description: 'This will degrade.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '30b80214-5505-4f69-8afa-6db17f3ddc8c',
@@ -1839,6 +2024,7 @@ export let attackMissionData = {
           processTime: 3000,
           successChance: 0.6,
           description: 'This will destroy.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '271da815-0966-4fb6-8f30-4dddf617a496',
@@ -1846,6 +2032,7 @@ export let attackMissionData = {
           processTime: 4000,
           successChance: 0.7,
           description: 'This will disrupt.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '59dfcf35-7f90-4ed7-8f16-18ce81fff66c',
@@ -1853,6 +2040,7 @@ export let attackMissionData = {
           processTime: 5000,
           successChance: 0.8,
           description: 'This will manipulate.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '090422d5-9576-4f15-8ace-2eacbcedb4eb',
@@ -1860,6 +2048,7 @@ export let attackMissionData = {
           processTime: 6000,
           successChance: 0.8,
           description: 'This will extract.',
+          mechanismStateIDs: [],
         },
       ],
       mapX: 1,
@@ -1883,6 +2072,7 @@ export let attackMissionData = {
           processTime: 1000,
           successChance: 0.5,
           description: 'This will deny.',
+          mechanismStateIDs: [],
         },
         {
           actionID: 'ba4ac186-83bf-4655-8f65-e80ef5f89708',
@@ -1890,6 +2080,7 @@ export let attackMissionData = {
           processTime: 2000,
           successChance: 0.6,
           description: 'This will degrade.',
+          mechanismStateIDs: [],
         },
         {
           actionID: 'd935e0e8-98e5-4f8e-8b5d-c4af9602ff58',
@@ -1897,6 +2088,7 @@ export let attackMissionData = {
           processTime: 3000,
           successChance: 0.6,
           description: 'This will destroy.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '082c8664-04ee-4db8-9831-a8a295806176',
@@ -1904,6 +2096,7 @@ export let attackMissionData = {
           processTime: 4000,
           successChance: 0.7,
           description: 'This will disrupt.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '11461012-8363-4e8b-9704-d784baae892d',
@@ -1911,6 +2104,7 @@ export let attackMissionData = {
           processTime: 5000,
           successChance: 0.8,
           description: 'This will manipulate.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '3e4e1939-863a-4ce4-a578-864e6d6d92dd',
@@ -1918,6 +2112,7 @@ export let attackMissionData = {
           processTime: 6000,
           successChance: 0.8,
           description: 'This will extract.',
+          mechanismStateIDs: [],
         },
       ],
       mapX: 1,
@@ -1941,6 +2136,7 @@ export let attackMissionData = {
           processTime: 1000,
           successChance: 0.5,
           description: 'This will deny.',
+          mechanismStateIDs: [],
         },
         {
           actionID: 'e1670b40-50fa-4364-8e6f-7b976269e69b',
@@ -1948,6 +2144,7 @@ export let attackMissionData = {
           processTime: 2000,
           successChance: 0.6,
           description: 'This will degrade.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '8ec24ee0-c8fa-4c05-84ba-5ac31c29f598',
@@ -1955,6 +2152,7 @@ export let attackMissionData = {
           processTime: 3000,
           successChance: 0.6,
           description: 'This will destroy.',
+          mechanismStateIDs: [],
         },
         {
           actionID: 'c4016043-313c-4676-b2fe-a488cf40b6c1',
@@ -1962,6 +2160,7 @@ export let attackMissionData = {
           processTime: 4000,
           successChance: 0.7,
           description: 'This will disrupt.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '18a4b254-26a2-48ab-9a37-d7ba21be69bd',
@@ -1969,6 +2168,7 @@ export let attackMissionData = {
           processTime: 5000,
           successChance: 0.8,
           description: 'This will manipulate.',
+          mechanismStateIDs: [],
         },
         {
           actionID: 'f7096a7a-8484-487e-bd0d-88171a5148b7',
@@ -1976,6 +2176,7 @@ export let attackMissionData = {
           processTime: 6000,
           successChance: 0.8,
           description: 'This will extract.',
+          mechanismStateIDs: [],
         },
       ],
       mapX: 1,
@@ -2032,6 +2233,7 @@ export let defensiveMissionData = {
           processTime: 1000,
           successChance: 0.5,
           description: 'This will deny.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '80be986e-13b4-4794-9799-0516edfc01ba',
@@ -2039,6 +2241,7 @@ export let defensiveMissionData = {
           processTime: 2000,
           successChance: 0.6,
           description: 'This will degrade.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '5a3acf01-7ea6-48c5-bff8-155233dcf46c',
@@ -2046,6 +2249,7 @@ export let defensiveMissionData = {
           processTime: 3000,
           successChance: 0.6,
           description: 'This will destroy.',
+          mechanismStateIDs: [],
         },
         {
           actionID: 'fc198adf-830c-46f7-8f0b-42cd301146c7',
@@ -2053,6 +2257,7 @@ export let defensiveMissionData = {
           processTime: 4000,
           successChance: 0.7,
           description: 'This will disrupt.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '3585b92b-2a0c-4d86-bed6-9ccf2bb95032',
@@ -2060,6 +2265,7 @@ export let defensiveMissionData = {
           processTime: 5000,
           successChance: 0.8,
           description: 'This will manipulate.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '97b10701-2fde-44a5-b86d-10f1ac8de094',
@@ -2067,6 +2273,7 @@ export let defensiveMissionData = {
           processTime: 6000,
           successChance: 0.8,
           description: 'This will extract.',
+          mechanismStateIDs: [],
         },
       ],
       mapX: 0,
@@ -2090,6 +2297,7 @@ export let defensiveMissionData = {
           processTime: 1000,
           successChance: 0.5,
           description: 'This will deny.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '576ed1b0-c5b1-46e5-9f79-13c8a8c6e2a2',
@@ -2097,6 +2305,7 @@ export let defensiveMissionData = {
           processTime: 2000,
           successChance: 0.6,
           description: 'This will degrade.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '94acd154-e808-4075-86ea-5478fb64e728',
@@ -2104,6 +2313,7 @@ export let defensiveMissionData = {
           processTime: 3000,
           successChance: 0.6,
           description: 'This will destroy.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '699c4905-19b2-4a6e-947d-a3eabe7a63ab',
@@ -2111,6 +2321,7 @@ export let defensiveMissionData = {
           processTime: 4000,
           successChance: 0.7,
           description: 'This will disrupt.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '5e5f89ee-9f60-46c3-a539-69676cac03ea',
@@ -2118,6 +2329,7 @@ export let defensiveMissionData = {
           processTime: 5000,
           successChance: 0.8,
           description: 'This will manipulate.',
+          mechanismStateIDs: [],
         },
         {
           actionID: 'c1964697-45fd-4c13-8c36-299d4e2d8b8a',
@@ -2125,6 +2337,7 @@ export let defensiveMissionData = {
           processTime: 6000,
           successChance: 0.8,
           description: 'This will extract.',
+          mechanismStateIDs: [],
         },
       ],
       mapX: 1,
@@ -2148,6 +2361,7 @@ export let defensiveMissionData = {
           processTime: 1000,
           successChance: 0.5,
           description: 'This will deny.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '93d45723-6f20-4e37-9d70-93190c9e7a3d',
@@ -2155,6 +2369,7 @@ export let defensiveMissionData = {
           processTime: 2000,
           successChance: 0.6,
           description: 'This will degrade.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '0c19922d-55ff-4a97-817e-7bfbac066020',
@@ -2162,6 +2377,7 @@ export let defensiveMissionData = {
           processTime: 3000,
           successChance: 0.6,
           description: 'This will destroy.',
+          mechanismStateIDs: [],
         },
         {
           actionID: 'd91a98d8-87d9-429d-bdb9-5deacf580227',
@@ -2169,6 +2385,7 @@ export let defensiveMissionData = {
           processTime: 4000,
           successChance: 0.7,
           description: 'This will disrupt.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '34fc3ea9-7d7d-41dc-bc50-92ab113a2d8e',
@@ -2176,6 +2393,7 @@ export let defensiveMissionData = {
           processTime: 5000,
           successChance: 0.8,
           description: 'This will manipulate.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '42194bc7-678b-48e6-b5c0-7c09261b3f9a',
@@ -2183,6 +2401,7 @@ export let defensiveMissionData = {
           processTime: 6000,
           successChance: 0.8,
           description: 'This will extract.',
+          mechanismStateIDs: [],
         },
       ],
       mapX: 1,
@@ -2206,6 +2425,7 @@ export let defensiveMissionData = {
           processTime: 1000,
           successChance: 0.5,
           description: 'This will deny.',
+          mechanismStateIDs: [],
         },
         {
           actionID: 'c6f07649-8a3d-4dc3-b4ca-2c311615cfe6',
@@ -2213,6 +2433,7 @@ export let defensiveMissionData = {
           processTime: 2000,
           successChance: 0.6,
           description: 'This will degrade.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '04da55a5-ceaa-453a-8389-ec97c159912c',
@@ -2220,6 +2441,7 @@ export let defensiveMissionData = {
           processTime: 3000,
           successChance: 0.6,
           description: 'This will destroy.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '5d2fc680-20d9-4020-9ccd-8b534b54ca15',
@@ -2227,6 +2449,7 @@ export let defensiveMissionData = {
           processTime: 4000,
           successChance: 0.7,
           description: 'This will disrupt.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '2f335d63-44b0-4082-88bb-00d12d3b4034',
@@ -2234,6 +2457,7 @@ export let defensiveMissionData = {
           processTime: 5000,
           successChance: 0.8,
           description: 'This will manipulate.',
+          mechanismStateIDs: [],
         },
         {
           actionID: 'ea35a66b-a1c8-4f17-ac94-aef51776e0bf',
@@ -2241,6 +2465,7 @@ export let defensiveMissionData = {
           processTime: 6000,
           successChance: 0.8,
           description: 'This will extract.',
+          mechanismStateIDs: [],
         },
       ],
       mapX: 1,
@@ -2264,6 +2489,7 @@ export let defensiveMissionData = {
           processTime: 1000,
           successChance: 0.5,
           description: 'This will deny.',
+          mechanismStateIDs: [],
         },
         {
           actionID: 'a8b57bb3-75b8-45ae-a554-37f408b3a990',
@@ -2271,6 +2497,7 @@ export let defensiveMissionData = {
           processTime: 2000,
           successChance: 0.6,
           description: 'This will degrade.',
+          mechanismStateIDs: [],
         },
         {
           actionID: 'f5838cd3-5c67-453d-af7f-1ea0764e8667',
@@ -2278,6 +2505,7 @@ export let defensiveMissionData = {
           processTime: 3000,
           successChance: 0.6,
           description: 'This will destroy.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '47be6a99-1d56-40e9-ab83-4d38d4325b60',
@@ -2285,6 +2513,7 @@ export let defensiveMissionData = {
           processTime: 4000,
           successChance: 0.7,
           description: 'This will disrupt.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '4005c9c1-431c-4a4f-9db0-c0a889030f84',
@@ -2292,6 +2521,7 @@ export let defensiveMissionData = {
           processTime: 5000,
           successChance: 0.8,
           description: 'This will manipulate.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '43d46dee-524c-4521-b10d-f912fa970001',
@@ -2299,6 +2529,7 @@ export let defensiveMissionData = {
           processTime: 6000,
           successChance: 0.8,
           description: 'This will extract.',
+          mechanismStateIDs: [],
         },
       ],
       mapX: 1,
@@ -2322,6 +2553,7 @@ export let defensiveMissionData = {
           processTime: 1000,
           successChance: 0.5,
           description: 'This will deny.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '613095d4-8f8e-4187-ab94-86a1aed7103a',
@@ -2329,6 +2561,7 @@ export let defensiveMissionData = {
           processTime: 2000,
           successChance: 0.6,
           description: 'This will degrade.',
+          mechanismStateIDs: [],
         },
         {
           actionID: 'caaaf024-bcc2-4907-a9b5-7b8197ddef70',
@@ -2336,6 +2569,7 @@ export let defensiveMissionData = {
           processTime: 3000,
           successChance: 0.6,
           description: 'This will destroy.',
+          mechanismStateIDs: [],
         },
         {
           actionID: 'd9d2388d-ec53-4b2e-8508-86a66f4c3711',
@@ -2343,6 +2577,7 @@ export let defensiveMissionData = {
           processTime: 4000,
           successChance: 0.7,
           description: 'This will disrupt.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '76f9c0a3-24d3-4a84-b43f-87444aa0b8a2',
@@ -2350,6 +2585,7 @@ export let defensiveMissionData = {
           processTime: 5000,
           successChance: 0.8,
           description: 'This will manipulate.',
+          mechanismStateIDs: [],
         },
         {
           actionID: 'de33f965-aa6f-4956-aef6-62b2b9b28a57',
@@ -2357,6 +2593,7 @@ export let defensiveMissionData = {
           processTime: 6000,
           successChance: 0.8,
           description: 'This will extract.',
+          mechanismStateIDs: [],
         },
       ],
       mapX: 3,
@@ -2380,6 +2617,7 @@ export let defensiveMissionData = {
           processTime: 1000,
           successChance: 0.5,
           description: 'This will deny.',
+          mechanismStateIDs: [],
         },
         {
           actionID: 'e24f49e4-6e74-4ea2-a28b-ec918029572d',
@@ -2387,6 +2625,7 @@ export let defensiveMissionData = {
           processTime: 2000,
           successChance: 0.6,
           description: 'This will degrade.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '63789abd-15b9-4c8c-be70-489ddc0bc518',
@@ -2394,6 +2633,7 @@ export let defensiveMissionData = {
           processTime: 3000,
           successChance: 0.6,
           description: 'This will destroy.',
+          mechanismStateIDs: [],
         },
       ],
       mapX: 3,
@@ -2417,6 +2657,7 @@ export let defensiveMissionData = {
           processTime: 1000,
           successChance: 0.5,
           description: 'This will deny.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '512b7fdd-d44b-492a-ab9d-bf5aacad7ea0',
@@ -2424,6 +2665,7 @@ export let defensiveMissionData = {
           processTime: 2000,
           successChance: 0.6,
           description: 'This will degrade.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '89cc0e77-9e8f-4c0f-af6c-1a1c43b0e063',
@@ -2431,6 +2673,7 @@ export let defensiveMissionData = {
           processTime: 3000,
           successChance: 0.6,
           description: 'This will destroy.',
+          mechanismStateIDs: [],
         },
         {
           actionID: 'a5b1a8b6-132e-4f64-ad1b-f16799ffeb3b',
@@ -2438,6 +2681,7 @@ export let defensiveMissionData = {
           processTime: 4000,
           successChance: 0.7,
           description: 'This will disrupt.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '5794bdf9-aae1-4a7e-bf8c-b0d21f65afc2',
@@ -2445,6 +2689,7 @@ export let defensiveMissionData = {
           processTime: 5000,
           successChance: 0.8,
           description: 'This will manipulate.',
+          mechanismStateIDs: [],
         },
         {
           actionID: 'f9d4531f-3eaa-4939-b287-c32f210b16ee',
@@ -2452,6 +2697,7 @@ export let defensiveMissionData = {
           processTime: 6000,
           successChance: 0.8,
           description: 'This will extract.',
+          mechanismStateIDs: [],
         },
       ],
       mapX: 3,
@@ -2475,6 +2721,7 @@ export let defensiveMissionData = {
           processTime: 1000,
           successChance: 0.5,
           description: 'This will deny.',
+          mechanismStateIDs: [],
         },
         {
           actionID: 'fe431da2-c6b1-40b4-bc19-0bdf490f5619',
@@ -2482,6 +2729,7 @@ export let defensiveMissionData = {
           processTime: 2000,
           successChance: 0.6,
           description: 'This will degrade.',
+          mechanismStateIDs: [],
         },
         {
           actionID: 'a5e13e35-048f-46fd-917c-9896c340f120',
@@ -2489,6 +2737,7 @@ export let defensiveMissionData = {
           processTime: 3000,
           successChance: 0.6,
           description: 'This will destroy.',
+          mechanismStateIDs: [],
         },
         {
           actionID: 'aa86f05c-7948-4f2c-9114-348259fa893b',
@@ -2496,6 +2745,7 @@ export let defensiveMissionData = {
           processTime: 4000,
           successChance: 0.7,
           description: 'This will disrupt.',
+          mechanismStateIDs: [],
         },
         {
           actionID: 'ca7fd79d-9810-468b-b0e0-849f5ff05226',
@@ -2503,6 +2753,7 @@ export let defensiveMissionData = {
           processTime: 5000,
           successChance: 0.8,
           description: 'This will manipulate.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '3700f6b8-64b4-467d-9d0d-33909025620a',
@@ -2510,6 +2761,7 @@ export let defensiveMissionData = {
           processTime: 6000,
           successChance: 0.8,
           description: 'This will extract.',
+          mechanismStateIDs: [],
         },
       ],
       mapX: 3,
@@ -2533,6 +2785,7 @@ export let defensiveMissionData = {
           processTime: 1000,
           successChance: 0.5,
           description: 'This will deny.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '66ac6437-f521-491a-96fd-ebbd795a4a4f',
@@ -2540,6 +2793,7 @@ export let defensiveMissionData = {
           processTime: 2000,
           successChance: 0.6,
           description: 'This will degrade.',
+          mechanismStateIDs: [],
         },
         {
           actionID: 'e1abfa26-f5a9-432e-b966-8044020fb307',
@@ -2547,6 +2801,7 @@ export let defensiveMissionData = {
           processTime: 3000,
           successChance: 0.6,
           description: 'This will destroy.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '59c45473-6386-4c6c-ab33-29b68b3801d2',
@@ -2554,6 +2809,7 @@ export let defensiveMissionData = {
           processTime: 4000,
           successChance: 0.7,
           description: 'This will disrupt.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '401315a3-25a0-4f7a-ac43-7372283de890',
@@ -2561,6 +2817,7 @@ export let defensiveMissionData = {
           processTime: 5000,
           successChance: 0.8,
           description: 'This will manipulate.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '234e5a3f-465c-4fc9-bc7c-b3303f44bdcd',
@@ -2568,6 +2825,7 @@ export let defensiveMissionData = {
           processTime: 6000,
           successChance: 0.8,
           description: 'This will extract.',
+          mechanismStateIDs: [],
         },
       ],
       mapX: 4,
@@ -2591,6 +2849,7 @@ export let defensiveMissionData = {
           processTime: 1000,
           successChance: 0.5,
           description: 'This will deny.',
+          mechanismStateIDs: [],
         },
         {
           actionID: 'eec38dde-580f-4cbd-942d-7b8ace813f1f',
@@ -2598,6 +2857,7 @@ export let defensiveMissionData = {
           processTime: 2000,
           successChance: 0.6,
           description: 'This will degrade.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '2b7898e5-bd08-423f-b42f-e769c4d71ab5',
@@ -2605,6 +2865,7 @@ export let defensiveMissionData = {
           processTime: 3000,
           successChance: 0.6,
           description: 'This will destroy.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '217698e2-ba6b-4dfe-8648-2674db5e22a7',
@@ -2612,6 +2873,7 @@ export let defensiveMissionData = {
           processTime: 4000,
           successChance: 0.7,
           description: 'This will disrupt.',
+          mechanismStateIDs: [],
         },
         {
           actionID: 'a9b9d5ed-8c05-4671-b60d-1b4f42000152',
@@ -2619,6 +2881,7 @@ export let defensiveMissionData = {
           processTime: 5000,
           successChance: 0.8,
           description: 'This will manipulate.',
+          mechanismStateIDs: [],
         },
         {
           actionID: 'ffaedbf3-256f-4dae-a59b-e819a403a78d',
@@ -2626,6 +2889,7 @@ export let defensiveMissionData = {
           processTime: 6000,
           successChance: 0.8,
           description: 'This will extract.',
+          mechanismStateIDs: [],
         },
       ],
       mapX: 4,
@@ -2649,6 +2913,7 @@ export let defensiveMissionData = {
           processTime: 1000,
           successChance: 0.5,
           description: 'This will deny.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '616467f7-0d7d-45a5-ab7a-c29588a790b7',
@@ -2656,6 +2921,7 @@ export let defensiveMissionData = {
           processTime: 2000,
           successChance: 0.6,
           description: 'This will degrade.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '904c1f77-5840-44ec-ad1f-4cbad0ad7cf0',
@@ -2663,6 +2929,7 @@ export let defensiveMissionData = {
           processTime: 3000,
           successChance: 0.6,
           description: 'This will destroy.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '5f4c427c-f444-4609-bdae-8d28b381ed8e',
@@ -2670,6 +2937,7 @@ export let defensiveMissionData = {
           processTime: 4000,
           successChance: 0.7,
           description: 'This will disrupt.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '52b0a5e4-1bed-40d5-9dae-0ff4b6387515',
@@ -2677,6 +2945,7 @@ export let defensiveMissionData = {
           processTime: 5000,
           successChance: 0.8,
           description: 'This will manipulate.',
+          mechanismStateIDs: [],
         },
         {
           actionID: 'e2bbd122-87d2-4b1f-b049-bd581472435c',
@@ -2684,6 +2953,7 @@ export let defensiveMissionData = {
           processTime: 6000,
           successChance: 0.8,
           description: 'This will extract.',
+          mechanismStateIDs: [],
         },
       ],
       mapX: 4,
@@ -2707,6 +2977,7 @@ export let defensiveMissionData = {
           processTime: 1000,
           successChance: 0.5,
           description: 'This will deny.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '23d32cf0-997d-4453-b31f-e97e09aa3426',
@@ -2714,6 +2985,7 @@ export let defensiveMissionData = {
           processTime: 2000,
           successChance: 0.6,
           description: 'This will degrade.',
+          mechanismStateIDs: [],
         },
         {
           actionID: 'cdbc3b11-36b9-4871-987a-0867ebc5968f',
@@ -2721,6 +2993,7 @@ export let defensiveMissionData = {
           processTime: 3000,
           successChance: 0.6,
           description: 'This will destroy.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '5f69d0ce-b68a-49c9-9357-6a78c7ae20a7',
@@ -2728,6 +3001,7 @@ export let defensiveMissionData = {
           processTime: 4000,
           successChance: 0.7,
           description: 'This will disrupt.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '7de62775-0ffe-4426-881b-037f77f932ad',
@@ -2735,6 +3009,7 @@ export let defensiveMissionData = {
           processTime: 5000,
           successChance: 0.8,
           description: 'This will manipulate.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '407238d0-5bb7-42f8-ace5-fd934413b5f2',
@@ -2742,6 +3017,7 @@ export let defensiveMissionData = {
           processTime: 6000,
           successChance: 0.8,
           description: 'This will extract.',
+          mechanismStateIDs: [],
         },
       ],
       mapX: 4,
@@ -2765,6 +3041,7 @@ export let defensiveMissionData = {
           processTime: 1000,
           successChance: 0.5,
           description: 'This will deny.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '17f1a946-5764-4a6d-adc1-332b2da9a889',
@@ -2772,6 +3049,7 @@ export let defensiveMissionData = {
           processTime: 2000,
           successChance: 0.6,
           description: 'This will degrade.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '1f661e15-98b4-4d8f-a4af-dc627507911e',
@@ -2779,6 +3057,7 @@ export let defensiveMissionData = {
           processTime: 3000,
           successChance: 0.6,
           description: 'This will destroy.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '59971b31-c6fc-46dd-bc5f-f404ef49877d',
@@ -2786,6 +3065,7 @@ export let defensiveMissionData = {
           processTime: 4000,
           successChance: 0.7,
           description: 'This will disrupt.',
+          mechanismStateIDs: [],
         },
         {
           actionID: 'cec13717-df32-4c1b-8de8-ebff1557c9be',
@@ -2793,6 +3073,7 @@ export let defensiveMissionData = {
           processTime: 5000,
           successChance: 0.8,
           description: 'This will manipulate.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '23c9fd2f-428e-42b6-9966-eab68b16c035',
@@ -2800,6 +3081,7 @@ export let defensiveMissionData = {
           processTime: 6000,
           successChance: 0.8,
           description: 'This will extract.',
+          mechanismStateIDs: [],
         },
       ],
       mapX: 0,
@@ -2823,6 +3105,7 @@ export let defensiveMissionData = {
           processTime: 1000,
           successChance: 0.5,
           description: 'This will deny.',
+          mechanismStateIDs: [],
         },
         {
           actionID: 'b128441a-f6a1-4171-a5b8-0f5e576f1c4e',
@@ -2830,6 +3113,7 @@ export let defensiveMissionData = {
           processTime: 2000,
           successChance: 0.6,
           description: 'This will degrade.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '9c81afc6-5c48-464c-9126-7000fd8d3233',
@@ -2837,6 +3121,7 @@ export let defensiveMissionData = {
           processTime: 3000,
           successChance: 0.6,
           description: 'This will destroy.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '6fcdf2d9-54d8-47cd-adf6-e42abf56bb13',
@@ -2844,6 +3129,7 @@ export let defensiveMissionData = {
           processTime: 4000,
           successChance: 0.7,
           description: 'This will disrupt.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '5e10ff0e-cbb5-4cb7-ad2a-17d3be7edf10',
@@ -2851,6 +3137,7 @@ export let defensiveMissionData = {
           processTime: 5000,
           successChance: 0.8,
           description: 'This will manipulate.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '54ae9fab-d7d1-4391-b703-21e40c8b449e',
@@ -2858,6 +3145,7 @@ export let defensiveMissionData = {
           processTime: 6000,
           successChance: 0.8,
           description: 'This will extract.',
+          mechanismStateIDs: [],
         },
       ],
       mapX: 1,
@@ -2881,6 +3169,7 @@ export let defensiveMissionData = {
           processTime: 1000,
           successChance: 0.5,
           description: 'This will deny.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '747a7375-3ce1-4b3f-a247-7aea138d29d8',
@@ -2888,6 +3177,7 @@ export let defensiveMissionData = {
           processTime: 2000,
           successChance: 0.6,
           description: 'This will degrade.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '849a8221-fe6f-49c2-b825-2c08ffa552b5',
@@ -2895,6 +3185,7 @@ export let defensiveMissionData = {
           processTime: 3000,
           successChance: 0.6,
           description: 'This will destroy.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '7ecec83b-d385-4eba-932a-e354274c2924',
@@ -2902,6 +3193,7 @@ export let defensiveMissionData = {
           processTime: 4000,
           successChance: 0.7,
           description: 'This will disrupt.',
+          mechanismStateIDs: [],
         },
         {
           actionID: 'ee055bc0-0a12-4773-a2df-6ad1b26b1cfe',
@@ -2909,6 +3201,7 @@ export let defensiveMissionData = {
           processTime: 5000,
           successChance: 0.8,
           description: 'This will manipulate.',
+          mechanismStateIDs: [],
         },
         {
           actionID: 'b72e54b6-071f-4402-9e2e-62282ab7731e',
@@ -2916,6 +3209,7 @@ export let defensiveMissionData = {
           processTime: 6000,
           successChance: 0.8,
           description: 'This will extract.',
+          mechanismStateIDs: [],
         },
       ],
       mapX: 2,
@@ -2939,6 +3233,7 @@ export let defensiveMissionData = {
           processTime: 1000,
           successChance: 0.5,
           description: 'This will deny.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '6a07b04c-8d63-43d7-ae9a-ddc765c88122',
@@ -2946,6 +3241,7 @@ export let defensiveMissionData = {
           processTime: 2000,
           successChance: 0.6,
           description: 'This will degrade.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '60e39961-b4e1-4a6c-b6af-fab856ee02f4',
@@ -2953,6 +3249,7 @@ export let defensiveMissionData = {
           processTime: 3000,
           successChance: 0.6,
           description: 'This will destroy.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '781dea4a-dc6b-46c5-b602-117bb31ee603',
@@ -2960,6 +3257,7 @@ export let defensiveMissionData = {
           processTime: 4000,
           successChance: 0.7,
           description: 'This will disrupt.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '40c0f386-4af4-4608-b749-3a6de82d87f6',
@@ -2967,6 +3265,7 @@ export let defensiveMissionData = {
           processTime: 5000,
           successChance: 0.8,
           description: 'This will manipulate.',
+          mechanismStateIDs: [],
         },
         {
           actionID: 'c57d6958-0d66-4fb9-a298-3435cc0cbeab',
@@ -2974,6 +3273,7 @@ export let defensiveMissionData = {
           processTime: 6000,
           successChance: 0.8,
           description: 'This will extract.',
+          mechanismStateIDs: [],
         },
       ],
       mapX: 3,
@@ -2997,6 +3297,7 @@ export let defensiveMissionData = {
           processTime: 1000,
           successChance: 0.5,
           description: 'This will deny.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '55ad7b44-71bf-4afd-8e42-a3fa95728c3d',
@@ -3004,6 +3305,7 @@ export let defensiveMissionData = {
           processTime: 2000,
           successChance: 0.6,
           description: 'This will degrade.',
+          mechanismStateIDs: [],
         },
         {
           actionID: 'beddc315-8641-480e-94a7-f2aaf6bf40f4',
@@ -3011,6 +3313,7 @@ export let defensiveMissionData = {
           processTime: 3000,
           successChance: 0.6,
           description: 'This will destroy.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '4ede900c-a350-4bbe-a214-48ada33ba4ca',
@@ -3018,6 +3321,7 @@ export let defensiveMissionData = {
           processTime: 4000,
           successChance: 0.7,
           description: 'This will disrupt.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '63690c86-361f-4b73-b5dc-a68a54af8a3c',
@@ -3025,6 +3329,7 @@ export let defensiveMissionData = {
           processTime: 5000,
           successChance: 0.8,
           description: 'This will manipulate.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '19c2cb7b-cb56-4200-b43c-c87093e46eb8',
@@ -3032,6 +3337,7 @@ export let defensiveMissionData = {
           processTime: 6000,
           successChance: 0.8,
           description: 'This will extract.',
+          mechanismStateIDs: [],
         },
       ],
       mapX: 3,
@@ -3055,6 +3361,7 @@ export let defensiveMissionData = {
           processTime: 1000,
           successChance: 0.5,
           description: 'This will deny.',
+          mechanismStateIDs: [],
         },
         {
           actionID: 'ee389cb2-3eec-4644-b5a7-970dbbc90e42',
@@ -3062,6 +3369,7 @@ export let defensiveMissionData = {
           processTime: 2000,
           successChance: 0.6,
           description: 'This will degrade.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '6a4ac54d-25ab-4a3d-8593-5d9ee0942a19',
@@ -3069,6 +3377,7 @@ export let defensiveMissionData = {
           processTime: 3000,
           successChance: 0.6,
           description: 'This will destroy.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '44e25e2f-5c1d-4fe7-bc31-244514051f08',
@@ -3076,6 +3385,7 @@ export let defensiveMissionData = {
           processTime: 4000,
           successChance: 0.7,
           description: 'This will disrupt.',
+          mechanismStateIDs: [],
         },
         {
           actionID: 'f422a1c1-78b0-4f3a-81d3-02534137bbad',
@@ -3083,6 +3393,7 @@ export let defensiveMissionData = {
           processTime: 5000,
           successChance: 0.8,
           description: 'This will manipulate.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '6be91890-bb7b-4e39-968c-e901a61b02ab',
@@ -3090,6 +3401,7 @@ export let defensiveMissionData = {
           processTime: 6000,
           successChance: 0.8,
           description: 'This will extract.',
+          mechanismStateIDs: [],
         },
       ],
       mapX: 0,
@@ -3113,6 +3425,7 @@ export let defensiveMissionData = {
           processTime: 1000,
           successChance: 0.5,
           description: 'This will deny.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '9778c2a2-b440-4a0e-97bc-857d49d03566',
@@ -3120,6 +3433,7 @@ export let defensiveMissionData = {
           processTime: 2000,
           successChance: 0.6,
           description: 'This will degrade.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '3340a15e-da04-424c-9f7b-7b690bd6277b',
@@ -3127,6 +3441,7 @@ export let defensiveMissionData = {
           processTime: 3000,
           successChance: 0.6,
           description: 'This will destroy.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '2af3c598-0755-48c1-92c7-a957506788af',
@@ -3134,6 +3449,7 @@ export let defensiveMissionData = {
           processTime: 4000,
           successChance: 0.7,
           description: 'This will disrupt.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '8bf6dac3-199f-4031-92a6-64b99f663f44',
@@ -3141,6 +3457,7 @@ export let defensiveMissionData = {
           processTime: 5000,
           successChance: 0.8,
           description: 'This will manipulate.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '2163d948-04d3-4b7e-8a6d-ebcdeeac86a2',
@@ -3148,6 +3465,7 @@ export let defensiveMissionData = {
           processTime: 6000,
           successChance: 0.8,
           description: 'This will extract.',
+          mechanismStateIDs: [],
         },
       ],
       mapX: 1,
@@ -3171,6 +3489,7 @@ export let defensiveMissionData = {
           processTime: 1000,
           successChance: 0.5,
           description: 'This will deny.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '03ea3616-a045-4ce9-bda5-e54046a142e0',
@@ -3178,6 +3497,7 @@ export let defensiveMissionData = {
           processTime: 2000,
           successChance: 0.6,
           description: 'This will degrade.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '1639273d-25a7-42de-ae94-e8f26c36375a',
@@ -3185,6 +3505,7 @@ export let defensiveMissionData = {
           processTime: 3000,
           successChance: 0.6,
           description: 'This will destroy.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '58a5ac55-8b4e-4179-860e-949eba365be1',
@@ -3192,6 +3513,7 @@ export let defensiveMissionData = {
           processTime: 4000,
           successChance: 0.7,
           description: 'This will disrupt.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '1fb593c8-6a9b-4d8e-a9db-7867b99e0fdd',
@@ -3199,6 +3521,7 @@ export let defensiveMissionData = {
           processTime: 5000,
           successChance: 0.8,
           description: 'This will manipulate.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '036a3238-da36-4c9a-a449-1e0624fabe41',
@@ -3206,6 +3529,7 @@ export let defensiveMissionData = {
           processTime: 6000,
           successChance: 0.8,
           description: 'This will extract.',
+          mechanismStateIDs: [],
         },
       ],
       mapX: 1,
@@ -3229,6 +3553,7 @@ export let defensiveMissionData = {
           processTime: 1000,
           successChance: 0.5,
           description: 'This will deny.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '0dcb7164-becc-4be8-b33b-61ec6ca711f3',
@@ -3236,6 +3561,7 @@ export let defensiveMissionData = {
           processTime: 2000,
           successChance: 0.6,
           description: 'This will degrade.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '05f1ae43-1997-470d-b64f-b1f2f13ea618',
@@ -3243,6 +3569,7 @@ export let defensiveMissionData = {
           processTime: 3000,
           successChance: 0.6,
           description: 'This will destroy.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '0db939d0-bab1-43f8-beb7-68bd304ff141',
@@ -3250,6 +3577,7 @@ export let defensiveMissionData = {
           processTime: 4000,
           successChance: 0.7,
           description: 'This will disrupt.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '5fd74774-eca8-4210-bf5f-cf8db38575b6',
@@ -3257,6 +3585,7 @@ export let defensiveMissionData = {
           processTime: 5000,
           successChance: 0.8,
           description: 'This will manipulate.',
+          mechanismStateIDs: [],
         },
         {
           actionID: 'c0467c9c-6d0d-4fd8-8227-362038cdd443',
@@ -3264,6 +3593,7 @@ export let defensiveMissionData = {
           processTime: 6000,
           successChance: 0.8,
           description: 'This will extract.',
+          mechanismStateIDs: [],
         },
       ],
       mapX: 1,
@@ -3287,6 +3617,7 @@ export let defensiveMissionData = {
           processTime: 1000,
           successChance: 0.5,
           description: 'This will deny.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '86e15e1e-f098-451c-adb4-f29a086aa986',
@@ -3294,6 +3625,7 @@ export let defensiveMissionData = {
           processTime: 2000,
           successChance: 0.6,
           description: 'This will degrade.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '8451f1cb-d505-49d8-9166-9b1dcf098edc',
@@ -3301,6 +3633,7 @@ export let defensiveMissionData = {
           processTime: 3000,
           successChance: 0.6,
           description: 'This will destroy.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '3efc2886-bec8-4232-a9a0-7a49d9a20c7a',
@@ -3308,6 +3641,7 @@ export let defensiveMissionData = {
           processTime: 4000,
           successChance: 0.7,
           description: 'This will disrupt.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '45cae8cb-848d-4d4f-9344-37dcb8174398',
@@ -3315,6 +3649,7 @@ export let defensiveMissionData = {
           processTime: 5000,
           successChance: 0.8,
           description: 'This will manipulate.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '729c6681-feb6-479d-a960-ed896e3b941f',
@@ -3322,6 +3657,7 @@ export let defensiveMissionData = {
           processTime: 6000,
           successChance: 0.8,
           description: 'This will extract.',
+          mechanismStateIDs: [],
         },
       ],
       mapX: 1,
@@ -3345,6 +3681,7 @@ export let defensiveMissionData = {
           processTime: 1000,
           successChance: 0.5,
           description: 'This will deny.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '580e9598-dde2-47b5-ad56-53e067e9eb16',
@@ -3352,6 +3689,7 @@ export let defensiveMissionData = {
           processTime: 2000,
           successChance: 0.6,
           description: 'This will degrade.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '9894b2dd-f167-4cf6-9623-aa9d57c87212',
@@ -3359,6 +3697,7 @@ export let defensiveMissionData = {
           processTime: 3000,
           successChance: 0.6,
           description: 'This will destroy.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '001848c1-dd2c-4236-8ed3-c83915a73ed1',
@@ -3366,6 +3705,7 @@ export let defensiveMissionData = {
           processTime: 4000,
           successChance: 0.7,
           description: 'This will disrupt.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '02b86e36-12b5-49a2-b789-d1f8b1ea0841',
@@ -3373,6 +3713,7 @@ export let defensiveMissionData = {
           processTime: 5000,
           successChance: 0.8,
           description: 'This will manipulate.',
+          mechanismStateIDs: [],
         },
         {
           actionID: 'a7aad23e-9433-4a22-8ddc-73f957faad13',
@@ -3380,6 +3721,7 @@ export let defensiveMissionData = {
           processTime: 6000,
           successChance: 0.8,
           description: 'This will extract.',
+          mechanismStateIDs: [],
         },
       ],
       mapX: 2,
@@ -3403,6 +3745,7 @@ export let defensiveMissionData = {
           processTime: 1000,
           successChance: 0.5,
           description: 'This will deny.',
+          mechanismStateIDs: [],
         },
         {
           actionID: 'bfc363bd-c2c9-44bf-8def-37e030e117b8',
@@ -3410,6 +3753,7 @@ export let defensiveMissionData = {
           processTime: 2000,
           successChance: 0.6,
           description: 'This will degrade.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '29a6198d-ee20-4b50-88a0-537c103de03d',
@@ -3417,6 +3761,7 @@ export let defensiveMissionData = {
           processTime: 3000,
           successChance: 0.6,
           description: 'This will destroy.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '18fca62e-85f0-4986-8c29-8013500189e1',
@@ -3424,6 +3769,7 @@ export let defensiveMissionData = {
           processTime: 4000,
           successChance: 0.7,
           description: 'This will disrupt.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '8d31bc40-289f-4066-aea9-823acdf19adb',
@@ -3431,6 +3777,7 @@ export let defensiveMissionData = {
           processTime: 5000,
           successChance: 0.8,
           description: 'This will manipulate.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '4f3de0d1-4111-4f7c-b96d-6b7306ef6aed',
@@ -3438,6 +3785,7 @@ export let defensiveMissionData = {
           processTime: 6000,
           successChance: 0.8,
           description: 'This will extract.',
+          mechanismStateIDs: [],
         },
       ],
       mapX: 2,
@@ -3461,6 +3809,7 @@ export let defensiveMissionData = {
           processTime: 1000,
           successChance: 0.5,
           description: 'This will deny.',
+          mechanismStateIDs: [],
         },
         {
           actionID: 'a039893d-a510-450c-92ec-7bc27c880fcd',
@@ -3468,6 +3817,7 @@ export let defensiveMissionData = {
           processTime: 2000,
           successChance: 0.6,
           description: 'This will degrade.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '9aa2f549-6c44-41e3-8e82-a5d700501bb0',
@@ -3475,6 +3825,7 @@ export let defensiveMissionData = {
           processTime: 3000,
           successChance: 0.6,
           description: 'This will destroy.',
+          mechanismStateIDs: [],
         },
         {
           actionID: 'fd40e9da-c104-45f8-94db-0e4dc56ebe6d',
@@ -3482,6 +3833,7 @@ export let defensiveMissionData = {
           processTime: 4000,
           successChance: 0.7,
           description: 'This will disrupt.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '6c03d1f4-5daf-4b73-8529-5ba0c30006f6',
@@ -3489,6 +3841,7 @@ export let defensiveMissionData = {
           processTime: 5000,
           successChance: 0.8,
           description: 'This will manipulate.',
+          mechanismStateIDs: [],
         },
         {
           actionID: 'a578dac5-e2ea-40cd-9c2d-ce4e1fc98b30',
@@ -3496,6 +3849,7 @@ export let defensiveMissionData = {
           processTime: 6000,
           successChance: 0.8,
           description: 'This will extract.',
+          mechanismStateIDs: [],
         },
       ],
       mapX: 2,
@@ -3519,6 +3873,7 @@ export let defensiveMissionData = {
           processTime: 1000,
           successChance: 0.5,
           description: 'This will deny.',
+          mechanismStateIDs: [],
         },
         {
           actionID: 'ff92f0a3-0b51-4c66-a34e-3a53aeab60d0',
@@ -3526,6 +3881,7 @@ export let defensiveMissionData = {
           processTime: 2000,
           successChance: 0.6,
           description: 'This will degrade.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '64b20b5c-1b61-4257-8f35-5d2862e2dd77',
@@ -3533,6 +3889,7 @@ export let defensiveMissionData = {
           processTime: 3000,
           successChance: 0.6,
           description: 'This will destroy.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '0fb7b999-c039-46b3-85b3-049860fe0ef7',
@@ -3540,6 +3897,7 @@ export let defensiveMissionData = {
           processTime: 4000,
           successChance: 0.7,
           description: 'This will disrupt.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '964582c0-7c74-4c02-ba6b-609c449bbe4c',
@@ -3547,6 +3905,7 @@ export let defensiveMissionData = {
           processTime: 5000,
           successChance: 0.8,
           description: 'This will manipulate.',
+          mechanismStateIDs: [],
         },
         {
           actionID: 'b2a0c854-0ce7-408e-b6bf-01269d3a6840',
@@ -3554,6 +3913,7 @@ export let defensiveMissionData = {
           processTime: 6000,
           successChance: 0.8,
           description: 'This will extract.',
+          mechanismStateIDs: [],
         },
       ],
       mapX: 2,
@@ -3577,6 +3937,7 @@ export let defensiveMissionData = {
           processTime: 1000,
           successChance: 0.5,
           description: 'This will deny.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '93ba811e-cf6b-4eec-a28b-06d4816e2d15',
@@ -3584,6 +3945,7 @@ export let defensiveMissionData = {
           processTime: 2000,
           successChance: 0.6,
           description: 'This will degrade.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '31951c25-e187-4ee8-b166-aaf3bad5272e',
@@ -3591,6 +3953,7 @@ export let defensiveMissionData = {
           processTime: 3000,
           successChance: 0.6,
           description: 'This will destroy.',
+          mechanismStateIDs: [],
         },
         {
           actionID: 'ab13b241-713c-490c-9093-3ae8f28946e7',
@@ -3598,6 +3961,7 @@ export let defensiveMissionData = {
           processTime: 4000,
           successChance: 0.7,
           description: 'This will disrupt.',
+          mechanismStateIDs: [],
         },
         {
           actionID: 'd41c3721-5256-4f45-86ba-eb20d54406ed',
@@ -3605,6 +3969,7 @@ export let defensiveMissionData = {
           processTime: 5000,
           successChance: 0.8,
           description: 'This will manipulate.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '6faa5b89-94c7-494c-be13-79adad59f31d',
@@ -3612,6 +3977,7 @@ export let defensiveMissionData = {
           processTime: 6000,
           successChance: 0.8,
           description: 'This will extract.',
+          mechanismStateIDs: [],
         },
       ],
       mapX: 2,
@@ -3635,6 +4001,7 @@ export let defensiveMissionData = {
           processTime: 1000,
           successChance: 0.5,
           description: 'This will deny.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '8ab079e4-f142-4c61-aea5-b6891ff8332f',
@@ -3642,6 +4009,7 @@ export let defensiveMissionData = {
           processTime: 2000,
           successChance: 0.6,
           description: 'This will degrade.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '266b3682-6d9e-4eff-932d-929dc3f275a3',
@@ -3649,6 +4017,7 @@ export let defensiveMissionData = {
           processTime: 3000,
           successChance: 0.6,
           description: 'This will destroy.',
+          mechanismStateIDs: [],
         },
         {
           actionID: 'd3aa964d-cfc1-47de-94a2-9f4c746adb8e',
@@ -3656,6 +4025,7 @@ export let defensiveMissionData = {
           processTime: 4000,
           successChance: 0.7,
           description: 'This will disrupt.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '4b696bf6-ca13-49c6-8a1e-66040ea8a394',
@@ -3663,6 +4033,7 @@ export let defensiveMissionData = {
           processTime: 5000,
           successChance: 0.8,
           description: 'This will manipulate.',
+          mechanismStateIDs: [],
         },
         {
           actionID: 'd1ead431-811b-48bc-bd33-cc72b7b3648b',
@@ -3670,6 +4041,7 @@ export let defensiveMissionData = {
           processTime: 6000,
           successChance: 0.8,
           description: 'This will extract.',
+          mechanismStateIDs: [],
         },
       ],
       mapX: 2,
@@ -3693,6 +4065,7 @@ export let defensiveMissionData = {
           processTime: 1000,
           successChance: 0.5,
           description: 'This will deny.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '35800dc1-249b-44c7-b425-b3c5f7f480c2',
@@ -3700,6 +4073,7 @@ export let defensiveMissionData = {
           processTime: 2000,
           successChance: 0.6,
           description: 'This will degrade.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '62097622-b14b-449b-b8fb-eda05e7c1ad7',
@@ -3707,6 +4081,7 @@ export let defensiveMissionData = {
           processTime: 3000,
           successChance: 0.6,
           description: 'This will destroy.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '524ce418-4c4f-4673-bcb1-1350b9621823',
@@ -3714,6 +4089,7 @@ export let defensiveMissionData = {
           processTime: 4000,
           successChance: 0.7,
           description: 'This will disrupt.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '392ad0b5-0197-442b-b666-b00355640257',
@@ -3721,6 +4097,7 @@ export let defensiveMissionData = {
           processTime: 5000,
           successChance: 0.8,
           description: 'This will manipulate.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '1feb396c-1358-4ade-b3ff-8eae9f186c93',
@@ -3728,6 +4105,7 @@ export let defensiveMissionData = {
           processTime: 6000,
           successChance: 0.8,
           description: 'This will extract.',
+          mechanismStateIDs: [],
         },
       ],
       mapX: 0,
@@ -3751,6 +4129,7 @@ export let defensiveMissionData = {
           processTime: 1000,
           successChance: 0.5,
           description: 'This will deny.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '1e964a38-dcb5-462b-8d41-6ab413dfc410',
@@ -3758,6 +4137,7 @@ export let defensiveMissionData = {
           processTime: 2000,
           successChance: 0.6,
           description: 'This will degrade.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '5de30579-8af9-441d-bc43-5bfeef9ed23f',
@@ -3765,6 +4145,7 @@ export let defensiveMissionData = {
           processTime: 3000,
           successChance: 0.6,
           description: 'This will destroy.',
+          mechanismStateIDs: [],
         },
         {
           actionID: 'ed8640bb-068b-40a6-9666-cdab4b6aa206',
@@ -3772,6 +4153,7 @@ export let defensiveMissionData = {
           processTime: 4000,
           successChance: 0.7,
           description: 'This will disrupt.',
+          mechanismStateIDs: [],
         },
         {
           actionID: 'afb73d93-86bf-420b-95d5-44fd8985810b',
@@ -3779,6 +4161,7 @@ export let defensiveMissionData = {
           processTime: 5000,
           successChance: 0.8,
           description: 'This will manipulate.',
+          mechanismStateIDs: [],
         },
         {
           actionID: 'f21fdd09-28cb-4e95-8c34-ceb8b9bb15b0',
@@ -3786,6 +4169,7 @@ export let defensiveMissionData = {
           processTime: 6000,
           successChance: 0.8,
           description: 'This will extract.',
+          mechanismStateIDs: [],
         },
       ],
       mapX: 1,
@@ -3809,6 +4193,7 @@ export let defensiveMissionData = {
           processTime: 1000,
           successChance: 0.5,
           description: 'This will deny.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '49dfbefd-f7cd-47a3-889c-4a332cd06cab',
@@ -3816,6 +4201,7 @@ export let defensiveMissionData = {
           processTime: 2000,
           successChance: 0.6,
           description: 'This will degrade.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '30b80214-5505-4f69-8afa-6db17f3ddc8c',
@@ -3823,6 +4209,7 @@ export let defensiveMissionData = {
           processTime: 3000,
           successChance: 0.6,
           description: 'This will destroy.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '271da815-0966-4fb6-8f30-4dddf617a496',
@@ -3830,6 +4217,7 @@ export let defensiveMissionData = {
           processTime: 4000,
           successChance: 0.7,
           description: 'This will disrupt.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '59dfcf35-7f90-4ed7-8f16-18ce81fff66c',
@@ -3837,6 +4225,7 @@ export let defensiveMissionData = {
           processTime: 5000,
           successChance: 0.8,
           description: 'This will manipulate.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '090422d5-9576-4f15-8ace-2eacbcedb4eb',
@@ -3844,6 +4233,7 @@ export let defensiveMissionData = {
           processTime: 6000,
           successChance: 0.8,
           description: 'This will extract.',
+          mechanismStateIDs: [],
         },
       ],
       mapX: 1,
@@ -3867,6 +4257,7 @@ export let defensiveMissionData = {
           processTime: 1000,
           successChance: 0.5,
           description: 'This will deny.',
+          mechanismStateIDs: [],
         },
         {
           actionID: 'ba4ac186-83bf-4655-8f65-e80ef5f89708',
@@ -3874,6 +4265,7 @@ export let defensiveMissionData = {
           processTime: 2000,
           successChance: 0.6,
           description: 'This will degrade.',
+          mechanismStateIDs: [],
         },
         {
           actionID: 'd935e0e8-98e5-4f8e-8b5d-c4af9602ff58',
@@ -3881,6 +4273,7 @@ export let defensiveMissionData = {
           processTime: 3000,
           successChance: 0.6,
           description: 'This will destroy.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '082c8664-04ee-4db8-9831-a8a295806176',
@@ -3888,6 +4281,7 @@ export let defensiveMissionData = {
           processTime: 4000,
           successChance: 0.7,
           description: 'This will disrupt.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '11461012-8363-4e8b-9704-d784baae892d',
@@ -3895,6 +4289,7 @@ export let defensiveMissionData = {
           processTime: 5000,
           successChance: 0.8,
           description: 'This will manipulate.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '3e4e1939-863a-4ce4-a578-864e6d6d92dd',
@@ -3902,6 +4297,7 @@ export let defensiveMissionData = {
           processTime: 6000,
           successChance: 0.8,
           description: 'This will extract.',
+          mechanismStateIDs: [],
         },
       ],
       mapX: 1,
@@ -3925,6 +4321,7 @@ export let defensiveMissionData = {
           processTime: 1000,
           successChance: 0.5,
           description: 'This will deny.',
+          mechanismStateIDs: [],
         },
         {
           actionID: 'e1670b40-50fa-4364-8e6f-7b976269e69b',
@@ -3932,6 +4329,7 @@ export let defensiveMissionData = {
           processTime: 2000,
           successChance: 0.6,
           description: 'This will degrade.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '8ec24ee0-c8fa-4c05-84ba-5ac31c29f598',
@@ -3939,6 +4337,7 @@ export let defensiveMissionData = {
           processTime: 3000,
           successChance: 0.6,
           description: 'This will destroy.',
+          mechanismStateIDs: [],
         },
         {
           actionID: 'c4016043-313c-4676-b2fe-a488cf40b6c1',
@@ -3946,6 +4345,7 @@ export let defensiveMissionData = {
           processTime: 4000,
           successChance: 0.7,
           description: 'This will disrupt.',
+          mechanismStateIDs: [],
         },
         {
           actionID: '18a4b254-26a2-48ab-9a37-d7ba21be69bd',
@@ -3953,6 +4353,7 @@ export let defensiveMissionData = {
           processTime: 5000,
           successChance: 0.8,
           description: 'This will manipulate.',
+          mechanismStateIDs: [],
         },
         {
           actionID: 'f7096a7a-8484-487e-bd0d-88171a5148b7',
@@ -3960,6 +4361,7 @@ export let defensiveMissionData = {
           processTime: 6000,
           successChance: 0.8,
           description: 'This will extract.',
+          mechanismStateIDs: [],
         },
       ],
       mapX: 1,
