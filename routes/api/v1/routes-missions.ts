@@ -94,6 +94,25 @@ router.post(
         let contents_string: string
         let contents_JSON: any
 
+        // If the file is not a .cesar file,
+        // it is skipped.
+        if (!file.originalname.toLowerCase().endsWith('.cesar')) {
+          let fileName: string = file.originalname
+          let errorMessage: string = 'File is not a .cesar file.'
+
+          // Error message is included in response.
+          failedImportErrorMessages.push({
+            fileName,
+            errorMessage,
+          })
+          failedImportCount++
+
+          // Returns since no further processing
+          // of this file should occur.
+          fileProcessCount++
+          return
+        }
+
         // Reads files contents.
         try {
           contents_string = fs.readFileSync(file.path, {

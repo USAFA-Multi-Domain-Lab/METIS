@@ -1,6 +1,8 @@
 // file path (switches to the "mdl-test" database)
 process.env.environment = 'TEST'
 
+process.argv
+
 // npm imports
 import mocha from 'mocha'
 import chai, { expect } from 'chai'
@@ -20,7 +22,8 @@ let missionID: string
 let MONGO_USERNAME: string | undefined = require('../config').MONGO_USERNAME
 let MONGO_PASSWORD: string | undefined = require('../config').MONGO_PASSWORD
 let MONGO_DB: string = require('../config').MONGO_DB
-const baseUrl = 'localhost:8080'
+let PORT: string = require('../config').PORT
+const baseUrl = `localhost:${PORT}`
 
 // json
 const userCredentials = {

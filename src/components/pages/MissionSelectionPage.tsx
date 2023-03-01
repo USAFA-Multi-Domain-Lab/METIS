@@ -176,7 +176,7 @@ export default function MissionSelectionPage(
     // Iterates over files for upload.
     for (let file of files) {
       // If a .cesar file, import it.
-      if (file.name.endsWith('.cesar')) {
+      if (file.name.toLowerCase().endsWith('.cesar')) {
         validFiles.push(file)
       }
       // Else, don't.

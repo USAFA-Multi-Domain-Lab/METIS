@@ -181,19 +181,20 @@ function buildSchema(
     command += ` --username ${MONGO_USERNAME} --password ${MONGO_PASSWORD} --authenticationDatabase ${MONGO_DB}`
   }
 
+  process.env.MONGO_DB = MONGO_DB
+
   databaseLogger.info(`Database is migrating to build ${nextBuildNumber}`)
 
   exec(command, (error, stdout, stderr) => {
+    let stdoutSplit: Array<string> = stdout.split(`Loading file: ${buildPath}`)
+
+    if (stdoutSplit.length > 1) {
+      stdout = stdoutSplit[1]
+    }
+
+    databaseLogger.info(stdout)
+
     if (!error) {
-      let stdoutSplit: Array<string> = stdout.split(
-        `Loading file: ${buildPath}`,
-      )
-
-      if (stdoutSplit.length > 1) {
-        stdout = stdoutSplit[1]
-      }
-
-      databaseLogger.info(stdout)
       databaseLogger.info(
         `Database successfully migrated to build ${nextBuildNumber}`,
       )
