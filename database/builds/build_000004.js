@@ -1,7 +1,6 @@
 // This migration script is responsible
-// for generating a default action for
-// any existing nodes that are executable
-// and without an action.
+// for adding the deleted property
+// to the missions collection.
 
 use('mdl')
 

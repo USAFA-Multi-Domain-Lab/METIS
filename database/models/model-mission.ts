@@ -249,6 +249,7 @@ export const MissionSchema: Schema = new Schema(
             required: true,
             validate: validate_missions_nodeData_color,
           },
+          description: { type: String, required: true },
           preExecutionText: { type: String, required: false, default: '' },
           depthPadding: {
             type: Number,
