@@ -116,6 +116,33 @@ router.post(
         fileProcessCount++
       }
 
+      // This is called to handle any
+      // necessary migrations if the upload
+      // is marked with a previous schema
+      // build.
+      const migrateIfOutdated = (missionData: any, file: MulterFile): void => {
+        let schemaBuildNumber: number = missionData.schemaBuildNumber
+
+        // If schema build number was not
+        // included in JSON, an error is
+        // thrown.
+        if (!schemaBuildNumber) {
+          let error: Error = new Error('No schema build number found.')
+          handleMissionImportError(file, error)
+        }
+
+        // BUILD 5
+        if (schemaBuildNumber === 4) {
+          let nodeData = missionData.nodeData
+
+          // Adds a default description to all
+          // nodes.
+          for (let nodeDatum of nodeData) {
+            nodeDatum.description = 'Description not set...'
+          }
+        }
+      }
+
       // This will be called when it is
       // finally time to send the response
       // for this request.
@@ -159,7 +186,6 @@ router.post(
         }
 
         // Converts to JSON.
-
         try {
           contents_JSON = JSON.parse(contents_string)
         } catch (error: any) {
@@ -206,7 +232,10 @@ router.post(
           return handleMissionImportError(file, error)
         }
 
-        // Model created.
+        // Migrates if necessary.
+        migrateIfOutdated(contents_JSON, file)
+
+        // Model creation.
         try {
           // Deletes the schemaBuildNumber field
           // so an error isn't thrown, since the
