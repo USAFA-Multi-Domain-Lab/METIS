@@ -1,5 +1,5 @@
 //npm imports
-import express from 'express'
+import express, { Express } from 'express'
 import fs from 'fs'
 import path from 'path'
 import { v4 as generateHash } from 'uuid'
@@ -11,6 +11,8 @@ import { databaseLogger } from '../../../modules/logging'
 import { isLoggedIn, requireLogin } from '../../../user'
 import { APP_DIR } from '../../../config'
 import uploads from '../../../middleware/uploads'
+
+type MulterFile = Express.Multer.File
 
 //fields
 const router = express.Router()
@@ -89,28 +91,59 @@ router.post(
         errorMessage: string
       }> = []
 
+      // This is called when an error occurs
+      // while creating the mission.
+      const handleMissionImportError = (
+        file: MulterFile,
+        error: Error,
+      ): void => {
+        databaseLogger.error('Failed to import mission:')
+        databaseLogger.error(error)
+
+        let fileName: string = file.originalname
+        let errorMessage: string = error.message
+
+        while (errorMessage.includes('`')) {
+          errorMessage = errorMessage.replace('`', '*')
+        }
+
+        failedImportErrorMessages.push({
+          fileName,
+          errorMessage,
+        })
+
+        failedImportCount++
+        fileProcessCount++
+      }
+
+      // This will be called when it is
+      // finally time to send the response
+      // for this request.
+      const finalizeResponse = (): void => {
+        if (failedImportCount > 0) {
+          databaseLogger.error(
+            `Failed to import ${failedImportCount} missions.`,
+          )
+        }
+
+        response.json({
+          successfulImportCount,
+          failedImportCount,
+          failedImportErrorMessages,
+        })
+      }
+
       // Iterates through files.
-      request.files.forEach((file, index: number) => {
+      request.files.forEach((file: MulterFile, index: number) => {
         let contents_string: string
         let contents_JSON: any
 
         // If the file is not a .cesar file,
         // it is skipped.
         if (!file.originalname.toLowerCase().endsWith('.cesar')) {
-          let fileName: string = file.originalname
-          let errorMessage: string = 'File is not a .cesar file.'
+          let error: Error = new Error('File is not a .cesar file.')
 
-          // Error message is included in response.
-          failedImportErrorMessages.push({
-            fileName,
-            errorMessage,
-          })
-          failedImportCount++
-
-          // Returns since no further processing
-          // of this file should occur.
-          fileProcessCount++
-          return
+          return handleMissionImportError(file, error)
         }
 
         // Reads files contents.
@@ -118,24 +151,11 @@ router.post(
           contents_string = fs.readFileSync(file.path, {
             encoding: 'utf-8',
           })
-        } catch (error) {
-          // Error should only occur if the
-          // file does not have utf-8 encoding.
-          let fileName: string = file.originalname
-          let errorMessage: string =
+        } catch (error: any) {
+          error.message =
             'Failed to read file. This file is either not actually a .cesar file or is corrupted.'
 
-          // Error message is included in response.
-          failedImportErrorMessages.push({
-            fileName,
-            errorMessage,
-          })
-          failedImportCount++
-
-          // Returns since no further processing
-          // of this file should occur.
-          fileProcessCount++
-          return
+          return handleMissionImportError(file, error)
         }
 
         // Converts to JSON.
@@ -145,7 +165,6 @@ router.post(
         } catch (error: any) {
           // An error may occur due
           // to a syntax error with the JSON.
-          let fileName: string = file.originalname
           let syntaxErrorRegularExpression: RegExp =
             /in JSON at position [0-9]+/
           let errorAsString: string = `${error}`
@@ -182,91 +201,51 @@ router.post(
             // errorMessage += `${surroundingContext}`
           }
 
-          // Error is pushed and included in response.
-          failedImportErrorMessages.push({
-            fileName,
-            errorMessage,
-          })
-          failedImportCount++
+          error.message = errorMessage
 
-          // Returns since no further processing
-          // of this file should occur.
-          fileProcessCount++
-          return
+          return handleMissionImportError(file, error)
         }
 
-        // Verifies valid properties were
-        // included.
-        if (
-          'name' in contents_JSON &&
-          'versionNumber' in contents_JSON &&
-          'initialResources' in contents_JSON &&
-          'schemaBuildNumber' in contents_JSON &&
-          'nodeStructure' in contents_JSON &&
-          'nodeData' in contents_JSON
-        ) {
-          // Main properties extrated from contents.
-          let name: any = contents_JSON.name
-          let versionNumber: any = contents_JSON.versionNumber
-          let live: any = false
-          let initialResources: any = contents_JSON.initialResources
-          let nodeStructure: any = contents_JSON.nodeStructure
-          let nodeData: any = contents_JSON.nodeData
+        // Model created.
+        try {
+          // Deletes the schemaBuildNumber field
+          // so an error isn't thrown, since the
+          // schema is set to strict and this field
+          // is not in the schema.
+          delete contents_JSON.schemaBuildNumber
 
-          // Model created.
-          let mission = new MissionModel({
-            name,
-            versionNumber,
-            live,
-            initialResources,
-            nodeStructure,
-            nodeData,
-          })
+          let mission = new MissionModel(contents_JSON)
 
           // Model saved.
           mission.save((error: Error) => {
             if (error) {
-              databaseLogger.error('Failed to import mission:')
-              databaseLogger.error(error)
-
-              let fileName: string = file.originalname
-              let errorMessage: string = error.message
-
-              while (errorMessage.includes('`')) {
-                errorMessage = errorMessage.replace('`', '*')
-              }
-
-              failedImportErrorMessages.push({
-                fileName,
-                errorMessage,
-              })
-
-              failedImportCount++
+              handleMissionImportError(file, error)
             } else {
-              databaseLogger.info(`New mission created named "${name}".`)
+              databaseLogger.info(
+                `New mission created named "${mission.name}".`,
+              )
 
               successfulImportCount++
+              fileProcessCount++
             }
-
-            fileProcessCount++
 
             if (fileProcessCount === request.files?.length) {
-              if (failedImportCount > 0) {
-                databaseLogger.error(
-                  `Failed to import ${failedImportCount} missions.`,
-                )
-              }
-
-              return response.json({
-                successfulImportCount,
-                failedImportCount,
-                failedImportErrorMessages,
-              })
+              return finalizeResponse()
             }
           })
-        } else {
-          failedImportCount++
-          fileProcessCount++
+        } catch (error: any) {
+          if (
+            error.message.endsWith(
+              'is not in schema and strict mode is set to throw.',
+            )
+          ) {
+            error.message = error.message.replace(
+              'is not in schema and strict mode is set to throw.',
+              'is not in schema. Please delete this field and try again.',
+            )
+          }
+
+          return handleMissionImportError(file, error)
         }
       })
 
@@ -274,13 +253,7 @@ router.post(
         fileProcessCount === request.files?.length &&
         fileProcessCount === failedImportCount
       ) {
-        databaseLogger.error(`Failed to import ${failedImportCount} missions.`)
-
-        return response.json({
-          successfulImportCount,
-          failedImportCount,
-          failedImportErrorMessages,
-        })
+        return finalizeResponse()
       }
     } else {
       return response.sendStatus(400)

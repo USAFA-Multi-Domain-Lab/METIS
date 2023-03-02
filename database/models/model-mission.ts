@@ -226,7 +226,7 @@ export const MissionSchema: Schema = new Schema(
     missionID: { type: ObjectId, required: true, unique: true, auto: true },
     name: { type: String, required: true },
     versionNumber: { type: Number, required: true },
-    live: { type: Boolean, required: true },
+    live: { type: Boolean, required: true, default: false },
     seed: { type: ObjectId, required: true, auto: true },
     initialResources: {
       type: Number,
@@ -298,7 +298,7 @@ export const MissionSchema: Schema = new Schema(
   },
   {
     _id: false,
-    strict: true,
+    strict: 'throw',
     minimize: false,
     toJSON: {
       transform: function (doc, ret) {
