@@ -91,8 +91,6 @@ export let attackMissionData = {
           mechanismStateIDs: [],
         },
       ],
-      mapX: 0,
-      mapY: -3,
     },
     {
       nodeID: '2',
@@ -155,8 +153,6 @@ export let attackMissionData = {
           mechanismStateIDs: [],
         },
       ],
-      mapX: 1,
-      mapY: -5,
     },
     {
       nodeID: '5',
@@ -219,8 +215,6 @@ export let attackMissionData = {
           mechanismStateIDs: [],
         },
       ],
-      mapX: 1,
-      mapY: -4,
     },
     {
       nodeID: '8',
@@ -283,8 +277,6 @@ export let attackMissionData = {
           mechanismStateIDs: [],
         },
       ],
-      mapX: 1,
-      mapY: -3,
     },
     {
       nodeID: '11',
@@ -347,8 +339,6 @@ export let attackMissionData = {
           mechanismStateIDs: [],
         },
       ],
-      mapX: 1,
-      mapY: -2,
     },
     {
       nodeID: '3',
@@ -411,8 +401,6 @@ export let attackMissionData = {
           mechanismStateIDs: [],
         },
       ],
-      mapX: 3,
-      mapY: -5,
     },
     {
       nodeID: '6',
@@ -451,8 +439,6 @@ export let attackMissionData = {
           mechanismStateIDs: [],
         },
       ],
-      mapX: 3,
-      mapY: -4,
     },
     {
       nodeID: '9',
@@ -515,8 +501,6 @@ export let attackMissionData = {
           mechanismStateIDs: [],
         },
       ],
-      mapX: 3,
-      mapY: -3,
     },
     {
       nodeID: '12',
@@ -579,8 +563,6 @@ export let attackMissionData = {
           mechanismStateIDs: [],
         },
       ],
-      mapX: 3,
-      mapY: -2,
     },
     {
       nodeID: '4',
@@ -643,8 +625,6 @@ export let attackMissionData = {
           mechanismStateIDs: [],
         },
       ],
-      mapX: 4,
-      mapY: -5,
     },
     {
       nodeID: '7',
@@ -707,8 +687,6 @@ export let attackMissionData = {
           mechanismStateIDs: [],
         },
       ],
-      mapX: 4,
-      mapY: -4,
     },
     {
       nodeID: '10',
@@ -771,8 +749,6 @@ export let attackMissionData = {
           mechanismStateIDs: [],
         },
       ],
-      mapX: 4,
-      mapY: -3,
     },
     {
       nodeID: '13',
@@ -835,8 +811,6 @@ export let attackMissionData = {
           mechanismStateIDs: [],
         },
       ],
-      mapX: 4,
-      mapY: -2,
     },
     {
       nodeID: '14',
@@ -899,8 +873,6 @@ export let attackMissionData = {
           mechanismStateIDs: [],
         },
       ],
-      mapX: 0,
-      mapY: -1,
     },
     {
       nodeID: '15',
@@ -963,8 +935,6 @@ export let attackMissionData = {
           mechanismStateIDs: [],
         },
       ],
-      mapX: 1,
-      mapY: -1,
     },
     {
       nodeID: '16',
@@ -1027,8 +997,6 @@ export let attackMissionData = {
           mechanismStateIDs: [],
         },
       ],
-      mapX: 2,
-      mapY: -1,
     },
     {
       nodeID: '17',
@@ -1091,8 +1059,6 @@ export let attackMissionData = {
           mechanismStateIDs: [],
         },
       ],
-      mapX: 3,
-      mapY: -1,
     },
     {
       nodeID: '18',
@@ -1155,8 +1121,6 @@ export let attackMissionData = {
           mechanismStateIDs: [],
         },
       ],
-      mapX: 3,
-      mapY: 0,
     },
     {
       nodeID: '19',
@@ -1219,8 +1183,6 @@ export let attackMissionData = {
           mechanismStateIDs: [],
         },
       ],
-      mapX: 0,
-      mapY: 1,
     },
     {
       nodeID: '20',
@@ -1283,8 +1245,6 @@ export let attackMissionData = {
           mechanismStateIDs: [],
         },
       ],
-      mapX: 1,
-      mapY: 0,
     },
     {
       nodeID: '23',
@@ -1347,8 +1307,6 @@ export let attackMissionData = {
           mechanismStateIDs: [],
         },
       ],
-      mapX: 1,
-      mapY: 1,
     },
     {
       nodeID: '25',
@@ -1411,8 +1369,6 @@ export let attackMissionData = {
           mechanismStateIDs: [],
         },
       ],
-      mapX: 1,
-      mapY: 2,
     },
     {
       nodeID: '27',
@@ -1475,8 +1431,6 @@ export let attackMissionData = {
           mechanismStateIDs: [],
         },
       ],
-      mapX: 1,
-      mapY: 3,
     },
     {
       nodeID: '21',
@@ -1539,8 +1493,6 @@ export let attackMissionData = {
           mechanismStateIDs: [],
         },
       ],
-      mapX: 2,
-      mapY: 0,
     },
     {
       nodeID: '22',
@@ -1603,8 +1555,6 @@ export let attackMissionData = {
           mechanismStateIDs: [],
         },
       ],
-      mapX: 2,
-      mapY: 1,
     },
     {
       nodeID: '24',
@@ -1667,8 +1617,6 @@ export let attackMissionData = {
           mechanismStateIDs: [],
         },
       ],
-      mapX: 2,
-      mapY: 2,
     },
     {
       nodeID: '26',
@@ -1731,8 +1679,6 @@ export let attackMissionData = {
           mechanismStateIDs: [],
         },
       ],
-      mapX: 2,
-      mapY: 3,
     },
     {
       nodeID: '28',
@@ -1795,8 +1741,6 @@ export let attackMissionData = {
           mechanismStateIDs: [],
         },
       ],
-      mapX: 2,
-      mapY: 4,
     },
     {
       nodeID: '29',
@@ -1859,8 +1803,6 @@ export let attackMissionData = {
           mechanismStateIDs: [],
         },
       ],
-      mapX: 2,
-      mapY: 5,
     },
     {
       nodeID: '30',
@@ -1923,8 +1865,6 @@ export let attackMissionData = {
           mechanismStateIDs: [],
         },
       ],
-      mapX: 0,
-      mapY: 4,
     },
     {
       nodeID: '31',
@@ -1987,8 +1927,6 @@ export let attackMissionData = {
           mechanismStateIDs: [],
         },
       ],
-      mapX: 1,
-      mapY: 4,
     },
     {
       nodeID: '32',
@@ -2051,8 +1989,6 @@ export let attackMissionData = {
           mechanismStateIDs: [],
         },
       ],
-      mapX: 1,
-      mapY: 5,
     },
     {
       nodeID: '33',
@@ -2115,8 +2051,6 @@ export let attackMissionData = {
           mechanismStateIDs: [],
         },
       ],
-      mapX: 1,
-      mapY: 6,
     },
     {
       nodeID: '34',
@@ -2179,8 +2113,6 @@ export let attackMissionData = {
           mechanismStateIDs: [],
         },
       ],
-      mapX: 1,
-      mapY: 7,
     },
   ],
 }
@@ -2276,8 +2208,6 @@ export let defensiveMissionData = {
           mechanismStateIDs: [],
         },
       ],
-      mapX: 0,
-      mapY: -3,
     },
     {
       nodeID: '2',
@@ -2340,8 +2270,6 @@ export let defensiveMissionData = {
           mechanismStateIDs: [],
         },
       ],
-      mapX: 1,
-      mapY: -5,
     },
     {
       nodeID: '5',
@@ -2404,8 +2332,6 @@ export let defensiveMissionData = {
           mechanismStateIDs: [],
         },
       ],
-      mapX: 1,
-      mapY: -4,
     },
     {
       nodeID: '8',
@@ -2468,8 +2394,6 @@ export let defensiveMissionData = {
           mechanismStateIDs: [],
         },
       ],
-      mapX: 1,
-      mapY: -3,
     },
     {
       nodeID: '11',
@@ -2532,8 +2456,6 @@ export let defensiveMissionData = {
           mechanismStateIDs: [],
         },
       ],
-      mapX: 1,
-      mapY: -2,
     },
     {
       nodeID: '3',
@@ -2596,8 +2518,6 @@ export let defensiveMissionData = {
           mechanismStateIDs: [],
         },
       ],
-      mapX: 3,
-      mapY: -5,
     },
     {
       nodeID: '6',
@@ -2636,8 +2556,6 @@ export let defensiveMissionData = {
           mechanismStateIDs: [],
         },
       ],
-      mapX: 3,
-      mapY: -4,
     },
     {
       nodeID: '9',
@@ -2700,8 +2618,6 @@ export let defensiveMissionData = {
           mechanismStateIDs: [],
         },
       ],
-      mapX: 3,
-      mapY: -3,
     },
     {
       nodeID: '12',
@@ -2764,8 +2680,6 @@ export let defensiveMissionData = {
           mechanismStateIDs: [],
         },
       ],
-      mapX: 3,
-      mapY: -2,
     },
     {
       nodeID: '4',
@@ -2828,8 +2742,6 @@ export let defensiveMissionData = {
           mechanismStateIDs: [],
         },
       ],
-      mapX: 4,
-      mapY: -5,
     },
     {
       nodeID: '7',
@@ -2892,8 +2804,6 @@ export let defensiveMissionData = {
           mechanismStateIDs: [],
         },
       ],
-      mapX: 4,
-      mapY: -4,
     },
     {
       nodeID: '10',
@@ -2956,8 +2866,6 @@ export let defensiveMissionData = {
           mechanismStateIDs: [],
         },
       ],
-      mapX: 4,
-      mapY: -3,
     },
     {
       nodeID: '13',
@@ -3020,8 +2928,6 @@ export let defensiveMissionData = {
           mechanismStateIDs: [],
         },
       ],
-      mapX: 4,
-      mapY: -2,
     },
     {
       nodeID: '14',
@@ -3084,8 +2990,6 @@ export let defensiveMissionData = {
           mechanismStateIDs: [],
         },
       ],
-      mapX: 0,
-      mapY: -1,
     },
     {
       nodeID: '15',
@@ -3148,8 +3052,6 @@ export let defensiveMissionData = {
           mechanismStateIDs: [],
         },
       ],
-      mapX: 1,
-      mapY: -1,
     },
     {
       nodeID: '16',
@@ -3212,8 +3114,6 @@ export let defensiveMissionData = {
           mechanismStateIDs: [],
         },
       ],
-      mapX: 2,
-      mapY: -1,
     },
     {
       nodeID: '17',
@@ -3276,8 +3176,6 @@ export let defensiveMissionData = {
           mechanismStateIDs: [],
         },
       ],
-      mapX: 3,
-      mapY: -1,
     },
     {
       nodeID: '18',
@@ -3340,8 +3238,6 @@ export let defensiveMissionData = {
           mechanismStateIDs: [],
         },
       ],
-      mapX: 3,
-      mapY: 0,
     },
     {
       nodeID: '19',
@@ -3404,8 +3300,6 @@ export let defensiveMissionData = {
           mechanismStateIDs: [],
         },
       ],
-      mapX: 0,
-      mapY: 1,
     },
     {
       nodeID: '20',
@@ -3468,8 +3362,6 @@ export let defensiveMissionData = {
           mechanismStateIDs: [],
         },
       ],
-      mapX: 1,
-      mapY: 0,
     },
     {
       nodeID: '23',
@@ -3532,8 +3424,6 @@ export let defensiveMissionData = {
           mechanismStateIDs: [],
         },
       ],
-      mapX: 1,
-      mapY: 1,
     },
     {
       nodeID: '25',
@@ -3596,8 +3486,6 @@ export let defensiveMissionData = {
           mechanismStateIDs: [],
         },
       ],
-      mapX: 1,
-      mapY: 2,
     },
     {
       nodeID: '27',
@@ -3660,8 +3548,6 @@ export let defensiveMissionData = {
           mechanismStateIDs: [],
         },
       ],
-      mapX: 1,
-      mapY: 3,
     },
     {
       nodeID: '21',
@@ -3724,8 +3610,6 @@ export let defensiveMissionData = {
           mechanismStateIDs: [],
         },
       ],
-      mapX: 2,
-      mapY: 0,
     },
     {
       nodeID: '22',
@@ -3788,8 +3672,6 @@ export let defensiveMissionData = {
           mechanismStateIDs: [],
         },
       ],
-      mapX: 2,
-      mapY: 1,
     },
     {
       nodeID: '24',
@@ -3852,8 +3734,6 @@ export let defensiveMissionData = {
           mechanismStateIDs: [],
         },
       ],
-      mapX: 2,
-      mapY: 2,
     },
     {
       nodeID: '26',
@@ -3916,8 +3796,6 @@ export let defensiveMissionData = {
           mechanismStateIDs: [],
         },
       ],
-      mapX: 2,
-      mapY: 3,
     },
     {
       nodeID: '28',
@@ -3980,8 +3858,6 @@ export let defensiveMissionData = {
           mechanismStateIDs: [],
         },
       ],
-      mapX: 2,
-      mapY: 4,
     },
     {
       nodeID: '29',
@@ -4044,8 +3920,6 @@ export let defensiveMissionData = {
           mechanismStateIDs: [],
         },
       ],
-      mapX: 2,
-      mapY: 5,
     },
     {
       nodeID: '30',
@@ -4108,8 +3982,6 @@ export let defensiveMissionData = {
           mechanismStateIDs: [],
         },
       ],
-      mapX: 0,
-      mapY: 4,
     },
     {
       nodeID: '31',
@@ -4172,8 +4044,6 @@ export let defensiveMissionData = {
           mechanismStateIDs: [],
         },
       ],
-      mapX: 1,
-      mapY: 4,
     },
     {
       nodeID: '32',
@@ -4236,8 +4106,6 @@ export let defensiveMissionData = {
           mechanismStateIDs: [],
         },
       ],
-      mapX: 1,
-      mapY: 5,
     },
     {
       nodeID: '33',
@@ -4300,8 +4168,6 @@ export let defensiveMissionData = {
           mechanismStateIDs: [],
         },
       ],
-      mapX: 1,
-      mapY: 6,
     },
     {
       nodeID: '34',
@@ -4364,8 +4230,6 @@ export let defensiveMissionData = {
           mechanismStateIDs: [],
         },
       ],
-      mapX: 1,
-      mapY: 7,
     },
   ],
 }

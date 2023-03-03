@@ -3,7 +3,7 @@ import path from 'path'
 import fs from 'fs'
 
 import config from './config'
-import { expressLogger, expressLoggingHandler } from './modules/logging'
+import { expressLogger } from './modules/logging'
 
 const app = express()
 

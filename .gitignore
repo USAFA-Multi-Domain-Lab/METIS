@@ -26,3 +26,6 @@ environment-test.json
 
 # temp
 /temp
+
+# backup
+/database/backups
