@@ -5,6 +5,7 @@ import axios, { AxiosError, AxiosResponse } from 'axios'
 import { AnyObject } from './toolbox/objects'
 import {
   ENodeTargetRelation,
+  IMissionNodeJson as IMissionNodeJSON,
   MissionNode,
   MissionNodeCreator,
 } from './mission-nodes'
@@ -51,7 +52,7 @@ export class Mission {
   initialResources: number
   resources: number
   _originalNodeStructure: AnyObject
-  _originalNodeData: Array<AnyObject>
+  _originalNodeData: Array<IMissionNodeJSON>
   nodes: Map<string, MissionNode>
   seed: string
   rng: PRNG
@@ -156,7 +157,7 @@ export class Mission {
     live: boolean,
     initialResources: number,
     nodeStructure: AnyObject,
-    nodeData: Array<AnyObject>,
+    nodeData: Array<IMissionNodeJSON>,
     seed: string,
     expandAll: boolean = false,
   ) {
@@ -248,7 +249,7 @@ export class Mission {
   // This will import the nodeData
   // JSON creating MissionNode objects
   // from it.
-  _importNodeData(nodeData: Array<AnyObject>): void {
+  _importNodeData(nodeData: Array<IMissionNodeJSON>): void {
     try {
       this.nodes.clear()
 
@@ -256,18 +257,18 @@ export class Mission {
       // objects, then it stores the created
       // objects in the nodeData map.
       for (let nodeDatum of nodeData) {
-        nodeDatum = {
+        let defaultNodeDatum = {
           name: MissionNode.default_name,
           color: MissionNode.default_color,
+          description: MissionNode.default_description,
           preExecutionText: MissionNode.default_preExecutionText,
           depthPadding: MissionNode.default_depthPadding,
           executable: MissionNode.default_executable,
           device: MissionNode.default_device,
           actions: MissionNode.default_actions,
-          mapX: MissionNode.default_mapX,
-          mapY: MissionNode.default_mapY,
-          ...nodeDatum,
         }
+
+        nodeDatum = { ...defaultNodeDatum, ...nodeDatum }
 
         let node: MissionNode = new MissionNode(
           this,
@@ -280,8 +281,6 @@ export class Mission {
           nodeDatum.executable,
           nodeDatum.device,
           nodeDatum.actions,
-          0,
-          0,
         )
 
         this.nodes.set(node.nodeID, node)
@@ -324,12 +323,13 @@ export class Mission {
   // stored in this Mission object
   // back into the nodeData JSON,
   // supposedly for saving to the server.
-  _exportNodeData(): Array<AnyObject> {
+  _exportNodeData(): Array<IMissionNodeJSON> {
     return Array.from(this.nodes.values()).map((node) => {
       return {
         nodeID: node.nodeID,
         name: node.name,
         color: node.color,
+        description: node.description,
         preExecutionText: node.preExecutionText,
         depthPadding: node.depthPadding,
         executable: node.executable,

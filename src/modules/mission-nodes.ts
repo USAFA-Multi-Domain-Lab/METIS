@@ -34,6 +34,7 @@ export interface IMissionNodeJson {
   color: string
   description: string
   preExecutionText: string
+  depthPadding: number
   executable: boolean
   device: boolean
   actions: Array<IMissionNodeActionJSON>
@@ -327,8 +328,8 @@ export class MissionNode implements IMissionMappable {
     executable: boolean,
     device: boolean,
     actionJSON: Array<IMissionNodeActionJSON>,
-    mapX: number,
-    mapY: number,
+    mapX: number = MissionNode.default_mapX,
+    mapY: number = MissionNode.default_mapY,
   ) {
     this.mission = mission
     this.nodeID = nodeID

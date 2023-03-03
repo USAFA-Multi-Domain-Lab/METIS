@@ -64,6 +64,8 @@ router.post('/', requireLogin, (request, response) => {
           return response.json({ mission })
         }
       })
+    } else {
+      return response.sendStatus(400)
     }
   } else {
     return response.sendStatus(400)
@@ -414,25 +416,79 @@ router.get('/environment/', (request, response) => {
 router.put('/', requireLogin, (request, response) => {
   let body: any = request.body
 
+  // Mission is included in body.
   if ('mission' in body) {
-    let mission: any = body.mission
+    let missionUpdates: any = body.mission
 
-    if (typeof mission === 'object' && 'missionID' in mission) {
-      let missionID: string = mission.missionID
-      delete mission.missionID
+    // Mission is an object and
+    // has a missionID property.
+    if (typeof missionUpdates === 'object' && 'missionID' in missionUpdates) {
+      let missionID: string = missionUpdates.missionID
 
-      MissionModel.updateOne({ missionID }, mission, (error: any) => {
+      // Original mission is retrieved.
+      MissionModel.findOne({ missionID }).exec((error: Error, mission: any) => {
+        // Handles errors.
         if (error !== null) {
           databaseLogger.error(
-            `Failed to update mission with the ID "${missionID}".`,
+            `### Failed to retrieve mission with ID "${missionID}".`,
           )
           databaseLogger.error(error)
           return response.sendStatus(500)
-        } else {
-          databaseLogger.info(`Updated mission with the ID "${missionID}".`)
-          return response.sendStatus(200)
+        }
+        // Handles mission not found.
+        else if (mission === null) {
+          return response.sendStatus(404)
+        }
+        // Handle proper mission retrieval.
+        else {
+          // Places all values found in
+          // missionUpdates and puts it in
+          // the retrieved mongoose document.
+          for (let key in missionUpdates) {
+            if (key !== '_id' && key !== 'missionID') {
+              mission[key] = missionUpdates[key]
+            }
+          }
+
+          // Save the updated mission.
+          mission.save((error: Error) => {
+            // Handles errors.
+            if (error !== null) {
+              databaseLogger.error(
+                `### Failed to update mission with ID "${missionID}".`,
+              )
+              databaseLogger.error(error)
+
+              // If this error was a validation error,
+              // then it is a bad request.
+              if (error.message.includes('validation failed')) {
+                return response.sendStatus(400)
+              }
+              // Else it's a server error.
+              else {
+                return response.sendStatus(500)
+              }
+            }
+            // Handles successful save.
+            else {
+              return response.send({ mission: mission })
+            }
+          })
         }
       })
+
+      // MissionModel.updateOne({ missionID }, mission, (error: any) => {
+      //   if (error !== null) {
+      //     databaseLogger.error(
+      //       `Failed to update mission with the ID "${missionID}".`,
+      //     )
+      //     databaseLogger.error(error)
+      //     return response.sendStatus(500)
+      //   } else {
+      //     databaseLogger.info(`Updated mission with the ID "${missionID}".`)
+      //     return response.sendStatus(200)
+      //   }
+      // })
     } else {
       return response.sendStatus(400)
     }
