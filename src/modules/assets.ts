@@ -6,7 +6,7 @@ import { AnyObject } from './toolbox/objects'
 export interface IAssetJSON {
   assetID: string
   name: string
-  mechanisms: Array<IMechanismJSON>
+  mechanisms: Array<Mechanism>
 }
 
 export class Asset {
@@ -15,22 +15,21 @@ export class Asset {
   selectedMechanism: Mechanism | null
   mechanisms: Array<Mechanism>
 
-  // static createDefaultMechanism(asset: Asset) {
-  //   return new Mechanism(asset, generateHash(), 'Unnamed Mechanism', [], '')
-  // }
+  static createDefaultMechanism(asset: Asset) {
+    return new Mechanism(asset, generateHash(), 'Unnamed Mechanism', [], [])
+  }
 
   constructor(
     assetID: string,
     name: string,
-    mechanisms: Array<Mechanism>,
-    // ! mechanismJSON: Array<IMechanismJSON>,
+    mechanismData: Array<IMechanismJSON>,
   ) {
     this.assetID = assetID
     this.name = name
     this.selectedMechanism = null
-    this.mechanisms = mechanisms
+    this.mechanisms = []
 
-    // ! this.parseMechanismJSON(mechanismJSON)
+    this._importMechanismData(mechanismData)
   }
 
   toJSON(): IAssetJSON {
@@ -41,22 +40,22 @@ export class Asset {
     }
   }
 
-  // ! parseMechanismJSON(mechanismJSON: Array<IMechanismJSON>): void {
-  //   let mechanisms: Array<Mechanism> = []
+  _importMechanismData(mechanismData: Array<IMechanismJSON>): void {
+    let mechanisms: Array<Mechanism> = []
 
-  //   for (let mechanism of mechanismJSON) {
-  //     let mechanismObject: Mechanism = new Mechanism(
-  //       this,
-  //       mechanism.mechanismID,
-  //       mechanism.name,
-  //       mechanism.states,
-  //       mechanism.selectedState,
-  //     )
-  //     mechanisms.push(mechanismObject)
-  //   }
+    for (let mechanism of mechanismData) {
+      let mechanismObject: Mechanism = new Mechanism(
+        this,
+        mechanism.mechanismID,
+        mechanism.name,
+        mechanism.states,
+        [],
+      )
+      mechanisms.push(mechanismObject)
+    }
 
-  //   this.mechanisms = mechanisms
-  // }
+    this.mechanisms = mechanisms
+  }
 }
 
 export function getAsset(

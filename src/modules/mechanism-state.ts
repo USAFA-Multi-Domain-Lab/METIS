@@ -2,6 +2,7 @@ import { Mechanism } from './mechanisms'
 
 export interface IMechanismStateJSON {
   mechanismStateID: string
+  mechanismID: string
   name: string
 }
 
@@ -19,6 +20,7 @@ export class MechanismState {
   toJSON(): IMechanismStateJSON {
     return {
       mechanismStateID: this.mechanismStateID,
+      mechanismID: this.mechanism.mechanismID,
       name: this.name,
     }
   }

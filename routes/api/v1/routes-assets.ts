@@ -9,7 +9,7 @@ const router = express.Router()
 
 // -- GET | /api/v1/assets/ --
 // This will return all of the assets.
-router.get('/', requireLogin, (request, response) => {
+router.get('/', (request, response) => {
   let assetID = request.query.assetID
 
   if (assetID === undefined) {
