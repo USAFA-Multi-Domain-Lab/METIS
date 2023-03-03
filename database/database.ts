@@ -1,4 +1,5 @@
 import { exec } from 'child_process'
+import formatDate from 'dateformat'
 import mongoose, { ConnectOptions } from 'mongoose'
 import {
   MONGO_DB,
@@ -256,6 +257,39 @@ export function ensureCorrectSchemaBuild(
   })
 }
 
+// Creates a backup of the database.
+function createBackup(
+  callback: () => void = () => {},
+  callbackError: (error: Error) => void = () => {},
+): void {
+  const now: Date = new Date()
+  const nowFormatted: string = formatDate(now, 'isoDateTime')
+  let command: string = `mongodump --host ${MONGO_HOST} --port ${MONGO_PORT} --db ${MONGO_DB} --out ./database/backups/${nowFormatted}`
+
+  if (MONGO_USERNAME && MONGO_PASSWORD) {
+    command += ` --username ${MONGO_USERNAME} --password ${MONGO_PASSWORD} --authenticationDatabase ${MONGO_DB}`
+  }
+
+  exec(command, (error, stdout, stderr) => {
+    if (!error) {
+      let stdoutSplit: Array<string> = stdout.split(
+        `Loading file: ./database/backup.js`,
+      )
+
+      if (stdoutSplit.length > 1) {
+        stdout = stdoutSplit[1]
+      }
+
+      databaseLogger.info(stdout)
+
+      callback()
+    } else {
+      databaseLogger.error(error)
+      callbackError(error)
+    }
+  })
+}
+
 // This will initialize the database for
 // use.
 export function initialize(
@@ -269,6 +303,7 @@ export function initialize(
     connectOptions.pass = MONGO_PASSWORD
   }
 
+  mongoose.set('strictQuery', true)
   mongoose.connect(
     `mongodb://${MONGO_HOST}:${MONGO_PORT}/${MONGO_DB}`,
     connectOptions,
@@ -286,8 +321,12 @@ export function initialize(
   // logs when server succesfully connects to database
   connection.once('open', () => {
     databaseLogger.info('Connected to database.')
-    ensureDefaultDataExists(
-      () => ensureCorrectSchemaBuild(callback, callbackError),
+    createBackup(
+      () =>
+        ensureDefaultDataExists(
+          () => ensureCorrectSchemaBuild(callback, callbackError),
+          callbackError,
+        ),
       callbackError,
     )
   })
