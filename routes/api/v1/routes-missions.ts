@@ -61,7 +61,29 @@ router.post('/', requireLogin, (request, response) => {
           }
         } else {
           databaseLogger.info(`New mission created named "${name}".`)
-          return response.json({ mission })
+
+          // Retrieves newly created mission
+          // to return in response. This is
+          // called again, one to call the
+          // queryForApiResponse function,
+          // and two, to ensure what's returned
+          // is what is in the database.
+          MissionModel.findOne({ missionID: mission.missionID })
+            .queryForApiResponse('findOne')
+            .exec((error: Error, mission: any) => {
+              // If something goes wrong, this is
+              // a server issue. If there was something
+              // the client did, an error would have
+              // already been thrown in the first query.
+              if (error || !mission) {
+                databaseLogger.error('Failed to retrieve newly created mission')
+                databaseLogger.error(error)
+                return response.sendStatus(500)
+              } else {
+                // Return updated mission to the user.
+                return response.send({ mission })
+              }
+            })
         }
       })
     } else {
@@ -304,10 +326,8 @@ router.get('/', (request, response) => {
       queries.live = true
     }
 
-    MissionModel.find({ ...queries })
-      .select('-deleted -nodeStructure -nodeData')
-      .where('deleted')
-      .equals(false)
+    MissionModel.find({ ...queries }, { nodeStructure: 0, nodeData: 0 })
+      .queryForApiResponse('find')
       .exec((error: Error, missions: any) => {
         if (error !== null || missions === null) {
           databaseLogger.error('Failed to retrieve missions.')
@@ -319,22 +339,24 @@ router.get('/', (request, response) => {
         }
       })
   } else {
-    MissionModel.findOne({ missionID }).exec((error: Error, mission: any) => {
-      if (error !== null) {
-        databaseLogger.error(
-          `Failed to retrieve mission with ID "${missionID}".`,
-        )
-        databaseLogger.error(error)
-        return response.sendStatus(500)
-      } else if (mission === null) {
-        return response.sendStatus(404)
-      } else if (!mission.live && !isLoggedIn(request)) {
-        return response.sendStatus(401)
-      } else {
-        databaseLogger.info(`Mission with ID "${missionID}" retrieved.`)
-        return response.json({ mission })
-      }
-    })
+    MissionModel.findOne({ missionID })
+      .queryForApiResponse('findOne')
+      .exec((error: Error, mission: any) => {
+        if (error !== null) {
+          databaseLogger.error(
+            `Failed to retrieve mission with ID "${missionID}".`,
+          )
+          databaseLogger.error(error)
+          return response.sendStatus(500)
+        } else if (mission === null) {
+          return response.sendStatus(404)
+        } else if (!mission.live && !isLoggedIn(request)) {
+          return response.sendStatus(401)
+        } else {
+          databaseLogger.info(`Mission with ID "${missionID}" retrieved.`)
+          return response.json({ mission })
+        }
+      })
   }
 })
 
@@ -351,52 +373,55 @@ router.get('/export/*', requireLogin, (request, response) => {
         databaseLogger.info('Database info retrieved.')
 
         // Retrieve original mission.
-        MissionModel.findOne({ missionID }).exec(
-          filterErrors_findOne('missions', response, (mission: any) => {
-            databaseLogger.info(`Mission with ID "${missionID}" retrieved.`)
+        MissionModel.findOne({ missionID })
+          .queryForApiResponse('findOne')
+          .exec(
+            filterErrors_findOne('missions', response, (mission: any) => {
+              console.log(mission._doc)
+              databaseLogger.info(`Mission with ID "${missionID}" retrieved.`)
 
-            // Gather details for temporary file
-            // that will be sent in the response.
-            let tempSubfolderName: string = generateHash()
-            let tempFileName: string = `${mission.name}.cesar`
-            let tempFolderPath: string = path.join(
-              APP_DIR,
-              '/temp/missions/exports/',
-            )
-            let tempSubfolderPath: string = path.join(
-              tempFolderPath,
-              tempSubfolderName,
-            )
-            let tempFilePath: string = path.join(
-              tempSubfolderPath,
-              tempFileName,
-            )
-            let tempFileContents = JSON.stringify(
-              {
-                ...mission._doc,
-                missionID: undefined,
-                live: undefined,
-                deleted: undefined,
-                schemaBuildNumber: info.schemaBuildNumber,
-              },
-              null,
-              2,
-            )
+              // Gather details for temporary file
+              // that will be sent in the response.
+              let tempSubfolderName: string = generateHash()
+              let tempFileName: string = `${mission.name}.cesar`
+              let tempFolderPath: string = path.join(
+                APP_DIR,
+                '/temp/missions/exports/',
+              )
+              let tempSubfolderPath: string = path.join(
+                tempFolderPath,
+                tempSubfolderName,
+              )
+              let tempFilePath: string = path.join(
+                tempSubfolderPath,
+                tempFileName,
+              )
+              let tempFileContents = JSON.stringify(
+                {
+                  ...mission._doc,
+                  missionID: undefined,
+                  live: undefined,
+                  deleted: undefined,
+                  schemaBuildNumber: info.schemaBuildNumber,
+                },
+                null,
+                2,
+              )
 
-            // Create the temp directory
-            // if it doesn't exist.
-            if (!fs.existsSync(tempFolderPath)) {
-              fs.mkdirSync(tempFolderPath, { recursive: true })
-            }
+              // Create the temp directory
+              // if it doesn't exist.
+              if (!fs.existsSync(tempFolderPath)) {
+                fs.mkdirSync(tempFolderPath, { recursive: true })
+              }
 
-            // Create the file.
-            fs.mkdirSync(tempSubfolderPath, {})
-            fs.writeFileSync(tempFilePath, tempFileContents)
+              // Create the file.
+              fs.mkdirSync(tempSubfolderPath, {})
+              fs.writeFileSync(tempFilePath, tempFileContents)
 
-            // Send it in the response.
-            response.sendFile(tempFilePath)
-          }),
-        )
+              // Send it in the response.
+              response.sendFile(tempFilePath)
+            }),
+          )
       }),
     )
   } else {
@@ -471,7 +496,30 @@ router.put('/', requireLogin, (request, response) => {
             }
             // Handles successful save.
             else {
-              return response.send({ mission: mission })
+              // Retrieves newly updated mission
+              // to return in response. This is
+              // called again, one to call the
+              // queryForApiResponse function,
+              // and two, to ensure what's returned
+              // is what is in the database.
+              MissionModel.findOne({ missionID })
+                .queryForApiResponse('findOne')
+                .exec((error: Error, mission: any) => {
+                  // If something goes wrong, this is
+                  // a server issue. If there was something
+                  // the client did, an error would have
+                  // already been thrown in the first query.
+                  if (error || !mission) {
+                    databaseLogger.error(
+                      'Failed to retrieve newly updated mission',
+                    )
+                    databaseLogger.error(error)
+                    return response.sendStatus(500)
+                  } else {
+                    // Return updated mission to the user.
+                    return response.send({ mission })
+                  }
+                })
             }
           })
         }
