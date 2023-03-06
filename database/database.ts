@@ -370,14 +370,14 @@ export function initialize(
   // logs when server succesfully connects to database
   connection.once('open', () => {
     databaseLogger.info('Connected to database.')
-    createBackup(
-      () =>
-        ensureDefaultDataExists(
-          () => ensureCorrectSchemaBuild(callback, callbackError),
-          callbackError,
-        ),
-      callbackError,
-    )
+    createBackup(() => {
+      ensureDefaultDataExists(
+        () => ensureCorrectSchemaBuild(callback, callbackError),
+        callbackError,
+      ),
+        // Create a backup every 24 hours.
+        setInterval(createBackup, 1000 * 60 * 60 * 24)
+    }, callbackError)
   })
 }
 
