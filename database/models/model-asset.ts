@@ -1,6 +1,6 @@
 import mongoose, { Schema } from 'mongoose'
 import { ERROR_BAD_DATA } from '../database'
-import MechanismModel from './model-mechanism'
+import { MechanismSchema } from './model-mechanism'
 
 let ObjectId = mongoose.Types.ObjectId
 
@@ -70,7 +70,7 @@ export const AssetSchema: Schema = new Schema({
   assetID: { type: String, required: true, unique: true },
   name: { type: String, required: true, unique: true },
   mechanisms: {
-    type: [MechanismModel],
+    type: [MechanismSchema],
     required: true,
     validate: validate_assets_mechanisms,
   },

@@ -14,10 +14,12 @@ config.configure(
     const indexRoute = require('./routes/routes-index')
     const usersApiRoute = require('./routes/api/v1/routes-users')
     const missionsApiRoute = require('./routes/api/v1/routes-missions')
+    const assetsApiRoute = require('./routes/api/v1/routes-assets')
 
     // sets the paths that routes load at
     app.use('/api/v1/users/', usersApiRoute)
     app.use('/api/v1/missions/', missionsApiRoute)
+    app.use('/api/v1/assets/', assetsApiRoute)
     app.use('/api/v1/', (request, response) => {
       response.status(404)
       response.render('error/v-not-found')

@@ -3,17 +3,14 @@ import mongoose, { Schema } from 'mongoose'
 let ObjectId = mongoose.Types.ObjectId
 
 export const MechanismStateSchema: Schema = new Schema({
-  type: {
-    _id: { type: ObjectId, required: false, auto: true },
-    mechnismStateID: { type: String, required: true, unique: true },
-    mechanism: {
-      type: ObjectId,
-      ref: 'Mechanism',
-      required: true,
-      unique: true,
-    },
-    name: { type: String, required: true, unique: true },
+  _id: { type: ObjectId, required: false, auto: true },
+  mechanismStateID: { type: String, required: true, unique: true },
+  mechanismID: {
+    type: String,
+    ref: 'Mechanism.mechanismID',
+    required: true,
   },
+  name: { type: String, required: true, unique: true },
 })
 
 const MechanismStateModel: any = mongoose.model(

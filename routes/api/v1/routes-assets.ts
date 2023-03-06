@@ -2,7 +2,7 @@
 import express from 'express'
 import AssetModel from '../../../database/models/model-asset'
 import { databaseLogger } from '../../../modules/logging'
-import { isLoggedIn, requireLogin } from '../../../user'
+import { isLoggedIn } from '../../../user'
 
 //fields
 const router = express.Router()
@@ -15,8 +15,12 @@ router.get('/', (request, response) => {
   if (assetID === undefined) {
     let queries: any = {}
 
+    if (!isLoggedIn(request)) {
+      queries.live = true
+    }
+
     AssetModel.find({ ...queries }).exec((error: Error, assets: any) => {
-      if (error !== null || assets !== null) {
+      if (error !== null || assets === null) {
         databaseLogger.error('Failed to retrieve assets.')
         databaseLogger.error(error)
         return response.sendStatus(500)
@@ -42,3 +46,5 @@ router.get('/', (request, response) => {
     })
   }
 })
+
+module.exports = router
