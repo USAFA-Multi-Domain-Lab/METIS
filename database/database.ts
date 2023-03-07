@@ -10,7 +10,7 @@ import {
 } from '../config'
 import { databaseLogger } from '../modules/logging'
 import { attackMissionData, defensiveMissionData } from './initial-mission-data'
-import { radarAssetData } from './models/initial-asset-data'
+import { lightsAssetData, radarAssetData } from './initial-asset-data'
 import AssetModel from './models/model-asset'
 import InfoModel from './models/model-info'
 import MissionModel from './models/model-mission'
@@ -166,6 +166,21 @@ function ensureDefaultAssetsExists(
             databaseLogger.error(`Failed to create ${radarAssetData.name}.`)
             databaseLogger.error(error)
             callbackError(error)
+          } else {
+            databaseLogger.info(`${radarAssetData.name} has been created.`)
+
+            AssetModel.create(lightsAssetData, (error: Error) => {
+              if (error) {
+                databaseLogger.error(
+                  `Failed to create ${lightsAssetData.name}.`,
+                )
+                databaseLogger.error(error)
+                callbackError(error)
+              } else {
+                databaseLogger.info(`${lightsAssetData.name} has been created.`)
+                callback()
+              }
+            })
           }
         })
       } else {

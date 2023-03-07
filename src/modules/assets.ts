@@ -12,7 +12,7 @@ export interface IAssetJSON {
 export class Asset {
   assetID: string
   name: string
-  selectedMechanism: Mechanism | null
+  selectedMechanismName: string | null
   mechanisms: Array<Mechanism>
 
   static createDefaultMechanism(asset: Asset) {
@@ -26,7 +26,7 @@ export class Asset {
   ) {
     this.assetID = assetID
     this.name = name
-    this.selectedMechanism = null
+    this.selectedMechanismName = null
     this.mechanisms = []
 
     this._importMechanismData(mechanismData)

@@ -16,7 +16,6 @@ import {
 } from '../content/form/Form'
 import MissionMap from '../content/game/MissionMap'
 import Tooltip from '../content/communication/Tooltip'
-import { v4 as generateHash } from 'uuid'
 import './MissionFormPage.scss'
 import {
   ButtonSVG,
@@ -38,8 +37,9 @@ import {
   PanelSizeRelationship,
   ResizablePanel,
 } from '../content/general-layout/ResizablePanels'
-import { Asset } from '../../modules/assets'
+import { Asset, getAllAssets } from '../../modules/assets'
 import { Mechanism } from '../../modules/mechanisms'
+import { MechanismState } from '../../modules/mechanism-state'
 
 // This is a enum used to describe
 // the locations that one node can
@@ -71,6 +71,7 @@ export default function MissionFormPage(
   const [mountHandled, setMountHandled] = useState<boolean>()
   const [forcedUpdateCounter, setForcedUpdateCounter] = useState<number>(0)
   const [mission, setMission] = useState<Mission | null>(null)
+  const [assets, setAssets] = useState<Array<Asset>>([])
   const [areUnsavedChanges, setAreUnsavedChanges] = useState<boolean>(false)
   const [selectedNode, setSelectedNode] = useState<MissionNode | null>(null)
   const [nodeStructuringIsActive, activateNodeStructuring] =
@@ -117,7 +118,7 @@ export default function MissionFormPage(
           (mission: Mission) => {
             setMission(mission)
             appActions.finishLoading()
-            setMountHandled(true)
+            // setMountHandled(true)
           },
           () => {
             appActions.finishLoading()
@@ -127,6 +128,21 @@ export default function MissionFormPage(
         )
         existsInDatabase = true
         setExistsInDatabase(existsInDatabase)
+
+        // This loads the assets that the
+        // actions will affect.
+        appActions.beginLoading('Loading assets...')
+
+        getAllAssets(
+          (assets: Array<Asset>) => {
+            setAssets(assets)
+            appActions.finishLoading()
+          },
+          (error: Error) => {
+            appActions.handleServerError('Failed to retrieve assets...')
+            appActions.finishLoading()
+          },
+        )
       }
     }
   }, [mountHandled])
@@ -550,6 +566,7 @@ export default function MissionFormPage(
                     <NodeEntry
                       node={selectedNode}
                       appActions={appActions}
+                      assets={assets}
                       displayedAction={displayedAction}
                       setDisplayedAction={setDisplayedAction}
                       nodeEmptyStringArray={nodeEmptyStringArray}
@@ -676,6 +693,7 @@ function MissionDetails(props: {
 function NodeEntry(props: {
   node: MissionNode | null
   appActions: AppActions
+  assets: Array<Asset>
   displayedAction: number
   setDisplayedAction: (displayedAction: number) => void
   nodeEmptyStringArray: Array<string>
@@ -689,6 +707,7 @@ function NodeEntry(props: {
 }): JSX.Element | null {
   let node: MissionNode | null = props.node
   let appActions: AppActions = props.appActions
+  let assets: Array<Asset> = props.assets
   let displayedAction: number = props.displayedAction
   let setDisplayedAction: (displayedAction: number) => void =
     props.setDisplayedAction
@@ -956,6 +975,7 @@ function NodeEntry(props: {
             node={node}
             appActions={appActions}
             isEmptyString={isEmptyString}
+            assets={assets}
             displayedAction={displayedAction}
             setDisplayedAction={setDisplayedAction}
             setMountHandled={setMountHandled}
@@ -975,6 +995,7 @@ function NodeActions(props: {
   node: MissionNode
   appActions: AppActions
   isEmptyString: boolean
+  assets: Array<Asset>
   displayedAction: number
   setDisplayedAction: (displayedAction: number) => void
   setMountHandled: (mountHandled: boolean) => void
@@ -985,6 +1006,7 @@ function NodeActions(props: {
   let node: MissionNode = props.node
   let appActions: AppActions = props.appActions
   let isEmptyString: boolean = props.isEmptyString
+  let assets: Array<Asset> = props.assets
   let displayedAction: number = props.displayedAction
   let setDisplayedAction: (displayedAction: number) => void =
     props.setDisplayedAction
@@ -1081,6 +1103,7 @@ function NodeActions(props: {
             action={node.actions[displayedAction]}
             node={node}
             appActions={appActions}
+            assets={assets}
             displayedAction={displayedAction}
             setDisplayedAction={setDisplayedAction}
             actionEmptyStringArray={actionEmptyStringArray}
@@ -1130,6 +1153,7 @@ function NodeAction(props: {
   action: MissionNodeAction
   node: MissionNode
   appActions: AppActions
+  assets: Array<Asset>
   handleChange: () => void
   displayedAction: number
   setDisplayedAction: (displayedAction: number) => void
@@ -1150,6 +1174,7 @@ function NodeAction(props: {
   ) => void = props.setActionEmptyStringArray
   let setMountHandled: (mountHandled: boolean) => void = props.setMountHandled
   let deleteActionClassName: string = 'Delete'
+  let assets: Array<Asset> = props.assets
 
   /* -- COMPONENT FUNCTIONS -- */
   const removeActionEmptyString = (field: string) => {
@@ -1295,39 +1320,12 @@ function NodeAction(props: {
           }}
           key={`${action.actionID}_postExecutionFailureText`}
         />
-        {/* {action.assets.map((asset: Asset) => {
-          return (
-            <div className='Asset' key={`asset_${asset.assetID}`}>
-              <DetailDropDown
-                label='Assets'
-                assetOptions={action.assets}
-                currentValue={asset.name}
-                deliverValue={(selectedOption: string) => {
-                  asset.name = selectedOption
-                  handleChange()
-                }}
-              />
-              <DetailDropDown
-                label='Asset Mechanisms'
-                options={asset.mechanismOptions}
-                currentValue={asset.selectedMechanism}
-                deliverValue={(selectedOption: string) => {
-                  asset.selectedMechanism = selectedOption
-                  handleChange()
-                }}
-              />
-              <DetailDropDown
-                label='State of Mechanism'
-                options={asset.mechanismStateOptions}
-                currentValue={asset.selectedMechanismState}
-                deliverValue={(selectedOption: string) => {
-                  asset.selectedMechanismState = selectedOption
-                  handleChange()
-                }}
-              />
-            </div>
-          )
-        })} */}
+        <NodeActionAsset
+          node={node}
+          action={action}
+          assets={assets}
+          handleChange={handleChange}
+        />
         <div
           className={deleteActionClassName}
           onClick={() => {
@@ -1348,6 +1346,132 @@ function NodeAction(props: {
           <span>Delete Action</span> {' ]'}
           <Tooltip description='Delete this action from the node.' />
         </div>
+      </div>
+    )
+  } else {
+    return null
+  }
+}
+
+// This will render an action
+// available to a node.
+function NodeActionAsset(props: {
+  node: MissionNode
+  action: MissionNodeAction
+  assets: Array<Asset>
+  handleChange: () => void
+}): JSX.Element | null {
+  let mission: Mission = props.node.mission
+  let node: MissionNode = props.node
+  let action: MissionNodeAction = props.action
+  let assets: Array<Asset> = props.assets
+  let handleChange = props.handleChange
+  let allMechanisms: Array<Mechanism> = []
+  let allMechanismStates: Array<MechanismState> = []
+  let assignedAssets: Array<Asset> = []
+  let assetOptions: Array<string> = []
+  let mechanismOptions: Array<string> = []
+  let mechanismStateOptions: Array<string> = []
+  let selectedMechanismName: string = 'Select a mechanism'
+  let selectedMechanismStateName: string = 'Select a state'
+
+  /* -- COMPONENT STATE -- */
+  const [mountHandled, setMountHandled] = useState<boolean>(false)
+
+  /* -- COMPONENT EFFECTS -- */
+
+  // Equivalent to componentDidMount.
+  useEffect(() => {
+    if (!mountHandled) {
+      assignAssets()
+      createOptions()
+      setMountHandled(true)
+    }
+  }, [mountHandled])
+
+  /* -- COMPONENT FUNCTIONS -- */
+
+  const assignAssets = () => {
+    assets.forEach((asset: Asset) => {
+      asset.mechanisms.forEach((mechanism: Mechanism) => {
+        mechanism.states.forEach((mechanismState: MechanismState) => {
+          action.mechanismStateIDs.forEach((mechanismStateID: string) => {
+            if (mechanismStateID === mechanismState.mechanismStateID) {
+              assignedAssets.push(asset)
+            }
+          })
+        })
+      })
+    })
+  }
+
+  const createOptions = () => {
+    assets.forEach((asset: Asset) => {
+      assetOptions.push(asset.name)
+
+      if (mechanismOptions.length === 0) {
+        asset.mechanisms.forEach((mechanism: Mechanism) => {
+          mechanismOptions.push(mechanism.name)
+
+          if (mechanismStateOptions.length === 0) {
+            mechanism.states.forEach((mechanismState: MechanismState) => {
+              mechanismStateOptions.push(mechanismState.name)
+            })
+          }
+        })
+      }
+    })
+  }
+
+  /* -- RENDER -- */
+
+  if (assignedAssets.length > 0) {
+    return (
+      <div className='Asset'>
+        {assignedAssets.map((asset: Asset) => {
+          if (
+            asset.selectedMechanismName !== null &&
+            asset.selectedMechanismName !== undefined
+          ) {
+            selectedMechanismName = asset.selectedMechanismName
+          }
+
+          return (
+            <>
+              <DetailDropDown
+                label='Assets'
+                options={assetOptions}
+                currentValue={asset.name}
+                deliverValue={(selectedOption: string) => {
+                  // asset.name = selectedOption
+                  handleChange()
+                }}
+                key={`node-${node.nodeID}_action-${action.actionID}_asset-${asset.assetID}`}
+              />
+              <DetailDropDown
+                label='Asset Mechanisms'
+                options={mechanismOptions}
+                currentValue={selectedMechanismName}
+                deliverValue={(selectedOption: string) => {
+                  asset.selectedMechanismName = selectedOption
+                  handleChange()
+                }}
+                key={`node-${node.nodeID}_action-${action.actionID}_asset-${asset.assetID}`}
+              />
+              <DetailDropDown
+                label='Mechanism State'
+                options={mechanismStateOptions}
+                currentValue={selectedMechanismName}
+                deliverValue={(selectedOption: string) => {
+                  // mechanism.selectedMechanismState = selectedOption
+                  // action.mechanismStateIDs.push(mechanismState.mechanismStateID)
+                  handleChange()
+                }}
+                key={`node-${node.nodeID}_action-${action.actionID}_asset-${asset.assetID}`}
+              />
+            </>
+          )
+        })}
       </div>
     )
   } else {

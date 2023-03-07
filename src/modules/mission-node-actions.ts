@@ -88,7 +88,7 @@ export class MissionNodeAction {
     this.resourceCost = resourceCost
     this.postExecutionSuccessText = postExecutionSuccessText
     this.postExecutionFailureText = postExecutionFailureText
-    this.mechanismStateIDs = mechanismStateIDs
+    this.mechanismStateIDs = ['Radar-1_Motor-1_ON']
     this._willSucceedArray =
       MissionNodeAction.determineDifferentSuccessOutcomes(
         this.totalPossibleExecutionAttempts,
