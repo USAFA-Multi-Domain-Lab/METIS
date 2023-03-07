@@ -1,5 +1,30 @@
 # changelog
 
+# version-1.2 | 3-7-2024
+
+- Missions can now be imported and exported as files
+- Created a new testing environment to ensure application stability
+- Database will now automatically backup upon server start-up and every 24 hours thereafter
+- Missions are now scrupulously validated before saved to the database
+- Added resize bars to the game and mission form page. These resize bars can be used to resize the relationship between two panels being displayed in the viewport
+- Updated system to allow for multiple nodes to be executed at once
+- A version watermark was added to the bottom of the mission selection page. Clicking the watermark will allow the user to view the changelog for the project
+- Design changes made to the map prompts shown during gameplay
+- A new type of notification was introduced, called a prompt, which will more forcifully notify a user of given information, with a button below to dismiss it
+- Added a detailed output message that will display in the console once an action begins executing
+- Added a description property to mission nodes, which will be displayed upon hover-over
+- When selecting an action to execute on a node, options that require more resources than that available to the student are now greyed out
+- Timestamps are now shown for console outputs during gameplay
+- Regular notifications will now sometimes have buttons below the message to perform relevant actions
+- Hovering over a node while an action is being executed on it will display the time remaining before that action is completed
+- Prompts displayed in the map during gameplay will now be perfectly centered within the map
+- Fixed text overflow issue in the console output panel on the game page. Text will now not overflow off the panel
+- Raised and restyled the mission title for the mission map to reduce interference with the content being displayed
+- Greatly reorganized the project to help project scalability
+- Fixed an issue, where, if an API request was made to update a mission, and within the nodeData, there was an ommitted property, the original value of that property would be deleted
+- Fixed issue where the selection box for a mission on the mission selection page did not take up the full width available to it
+- Various optimizations and other minor bug fixes and improvements
+
 # version-1.1.2 | 1-24-2023
 
 - Fixed issue where multiple nodes could be executed at the same time
