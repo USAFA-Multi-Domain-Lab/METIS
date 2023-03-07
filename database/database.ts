@@ -11,6 +11,8 @@ import {
 } from '../config'
 import { databaseLogger } from '../modules/logging'
 import { attackMissionData, defensiveMissionData } from './initial-mission-data'
+import { lightsAssetData, radarAssetData } from './initial-asset-data'
+import AssetModel from './models/model-asset'
 import InfoModel from './models/model-info'
 import MissionModel from './models/model-mission'
 import UserModel from './models/model-user'
@@ -143,6 +145,51 @@ function ensureDefaultMissionsExists(
   })
 }
 
+// Creates a default asset
+// if none exist.
+function ensureDefaultAssetsExists(
+  callback: () => void = () => {},
+  callbackError: (error: Error) => void = () => {},
+): void {
+  AssetModel.find({})
+    .populate('mechanisms mechanisms.states')
+    .exec((error: Error, assets: any) => {
+      if (error !== null) {
+        databaseLogger.error('Failed to query database for default assets:')
+        databaseLogger.error(error)
+        callbackError(error)
+      } else if (assets.length === 0) {
+        databaseLogger.info('No assets were found.')
+        databaseLogger.info('Creating radar asset...')
+
+        AssetModel.create(radarAssetData, (error: Error) => {
+          if (error) {
+            databaseLogger.error(`Failed to create ${radarAssetData.name}.`)
+            databaseLogger.error(error)
+            callbackError(error)
+          } else {
+            databaseLogger.info(`${radarAssetData.name} has been created.`)
+
+            AssetModel.create(lightsAssetData, (error: Error) => {
+              if (error) {
+                databaseLogger.error(
+                  `Failed to create ${lightsAssetData.name}.`,
+                )
+                databaseLogger.error(error)
+                callbackError(error)
+              } else {
+                databaseLogger.info(`${lightsAssetData.name} has been created.`)
+                callback()
+              }
+            })
+          }
+        })
+      } else {
+        callback()
+      }
+    })
+}
+
 // This will ensure that the data that by
 // default should be in the database exists.
 export function ensureDefaultDataExists(
@@ -150,7 +197,9 @@ export function ensureDefaultDataExists(
   callbackError: (error: Error) => void = () => {},
 ): void {
   ensureDefaultInfoExists(() =>
-    ensureDefaultUsersExists(() => ensureDefaultMissionsExists(callback)),
+    ensureDefaultUsersExists(() => {
+      ensureDefaultMissionsExists(() => ensureDefaultAssetsExists(callback))
+    }),
   )
 }
 

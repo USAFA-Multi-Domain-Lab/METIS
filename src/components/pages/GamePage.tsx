@@ -312,8 +312,7 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
                         if (
                           node !== null &&
                           !node.executed &&
-                          !node.executing &&
-                          node.description !== ''
+                          !node.executing
                         ) {
                           description = node.description
                         }

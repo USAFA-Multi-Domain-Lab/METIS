@@ -12,6 +12,7 @@ export interface IMissionNodeActionJSON {
   resourceCost: number
   postExecutionSuccessText: string
   postExecutionFailureText: string
+  mechanismStateIDs: Array<string>
 }
 
 export class MissionNodeAction {
@@ -24,6 +25,7 @@ export class MissionNodeAction {
   resourceCost: number
   postExecutionSuccessText: string
   postExecutionFailureText: string
+  mechanismStateIDs: Array<string>
   _willSucceedArray: Array<boolean>
   _willSucceed: boolean | null
 
@@ -75,6 +77,7 @@ export class MissionNodeAction {
     resourceCost: number,
     postExecutionSuccessText: string,
     postExecutionFailureText: string,
+    mechanismStateIDs: Array<string>,
   ) {
     this.node = node
     this.actionID = actionID
@@ -85,6 +88,7 @@ export class MissionNodeAction {
     this.resourceCost = resourceCost
     this.postExecutionSuccessText = postExecutionSuccessText
     this.postExecutionFailureText = postExecutionFailureText
+    this.mechanismStateIDs = ['Radar-1_Motor-1_ON']
     this._willSucceedArray =
       MissionNodeAction.determineDifferentSuccessOutcomes(
         this.totalPossibleExecutionAttempts,
@@ -104,6 +108,7 @@ export class MissionNodeAction {
       resourceCost: this.resourceCost,
       postExecutionSuccessText: this.postExecutionSuccessText,
       postExecutionFailureText: this.postExecutionFailureText,
+      mechanismStateIDs: this.mechanismStateIDs,
     }
   }
 

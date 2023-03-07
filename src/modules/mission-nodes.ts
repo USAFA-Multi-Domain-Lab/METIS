@@ -98,6 +98,7 @@ export class MissionNode implements IMissionMappable {
       1,
       'Enter your successful post-execution message here.',
       'Enter your failed post-execution message here.',
+      [],
     )
   }
 
@@ -372,6 +373,7 @@ export class MissionNode implements IMissionMappable {
         action.resourceCost,
         action.postExecutionSuccessText,
         action.postExecutionFailureText,
+        action.mechanismStateIDs,
       )
       actions.push(actionObject)
     }
