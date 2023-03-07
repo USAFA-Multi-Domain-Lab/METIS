@@ -63,6 +63,7 @@
   }
 
   .MissionSelectionContent {
+    -webkit-user-select: none;
     user-select: none;
     display: flex;
     justify-content: center;
@@ -180,6 +181,7 @@
 
     * {
       opacity: 0.7;
+      width: -moz-fit-content;
       width: fit-content;
     }
 
@@ -195,6 +197,7 @@
     }
 
     .Credit {
+      -webkit-user-select: none;
       user-select: none;
       margin-left: auto;
       padding: 20px;
