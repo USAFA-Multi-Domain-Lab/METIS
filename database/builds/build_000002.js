@@ -2,7 +2,13 @@
 // for adding the depthPadding property
 // to the node level of the mission schema.
 
-use('mdl')
+let dbName = 'mdl'
+
+if (process.env.MONGO_DB) {
+  dbName = process.env.MONGO_DB
+}
+
+use(dbName)
 
 print('Migrating mission data to updated schema...')
 
