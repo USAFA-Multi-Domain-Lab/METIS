@@ -17,6 +17,7 @@ import {
   tooltipsOffsetY,
 } from './content/communication/Tooltip'
 import Prompt from './content/communication/Prompt'
+import ChangelogPage from './pages/ChangelogPage'
 
 // Default props in every page.
 export interface IPage {
@@ -202,6 +203,7 @@ function App(props: {
 registerPage('AuthPage', AuthPage)
 registerPage('MissionSelectionPage', MissionSelectionPage)
 registerPage('GamePage', GamePage)
+registerPage('ChangelogPage', ChangelogPage)
 registerPage('MissionFormPage', MissionFormPage)
 
 export default AppState.createAppWithState(App)

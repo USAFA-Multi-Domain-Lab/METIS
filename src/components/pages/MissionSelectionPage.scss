@@ -176,16 +176,27 @@
 
   .FooterContainer {
     display: grid;
-    grid-template-columns: 50% 50%;
-    opacity: 0.7;
-    user-select: none;
+    grid-template-columns: auto auto;
+
+    * {
+      opacity: 0.7;
+      width: fit-content;
+    }
 
     .Version {
+      cursor: pointer;
+      margin-right: auto;
       padding: 20px;
       font-size: 0.6em;
+
+      &:hover {
+        opacity: 1;
+      }
     }
 
     .Credit {
+      user-select: none;
+      margin-left: auto;
       padding: 20px;
       text-align: right;
       font-size: 0.6em;
