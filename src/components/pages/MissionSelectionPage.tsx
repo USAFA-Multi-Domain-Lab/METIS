@@ -11,6 +11,7 @@ import Navigation from '../content/general-layout/Navigation'
 import MissionSelectionRow from '../content/user-controls/MissionSelectionRow'
 import { ButtonText } from '../content/user-controls/ButtonText'
 import Notification from '../../modules/notifications'
+import Tooltip from '../content/communication/Tooltip'
 
 export interface IMissionSelectionPage extends IPage {}
 
@@ -279,6 +280,10 @@ export default function MissionSelectionPage(
   const createMission = (): void =>
     appActions.goToPage('MissionFormPage', { missionID: null })
 
+  // This will switch to the changelog
+  // page.
+  const viewChangelog = (): void => appActions.goToPage('ChangelogPage', {})
+
   /* -- RENDER -- */
 
   // Keeps track of if the user is logged in or not.
@@ -385,7 +390,10 @@ export default function MissionSelectionPage(
       </div>
 
       <div className='FooterContainer'>
-        <div className='Version'>v1.2</div>
+        <div className='Version' onClick={viewChangelog}>
+          v1.2
+          <Tooltip description={'View changelog.'} />
+        </div>
         <div className='Credit'>Photo by Adi Goldstein on Unsplash</div>
       </div>
     </div>

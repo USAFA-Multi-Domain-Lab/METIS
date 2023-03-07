@@ -12,11 +12,13 @@ config.configure(
   () => {
     // route imports
     const indexRoute = require('./routes/routes-index')
+    const infoRoute = require('./routes/api/v1/routes-info')
     const usersApiRoute = require('./routes/api/v1/routes-users')
     const missionsApiRoute = require('./routes/api/v1/routes-missions')
     const assetsApiRoute = require('./routes/api/v1/routes-assets')
 
     // sets the paths that routes load at
+    app.use('/api/v1/info/', infoRoute)
     app.use('/api/v1/users/', usersApiRoute)
     app.use('/api/v1/missions/', missionsApiRoute)
     app.use('/api/v1/assets/', assetsApiRoute)

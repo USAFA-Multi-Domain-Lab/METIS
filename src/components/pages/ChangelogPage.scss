@@ -1,0 +1,22 @@
+@import '../../config.scss';
+
+.ChangelogPage {
+  $page-vertical-padding: 35px;
+  $page-horizontal-padding: 30px;
+  $page-width: calc(100vw - #{$page-horizontal-padding * 2});
+  width: $page-width;
+  padding: $page-vertical-padding $page-horizontal-padding;
+
+  .Navigation {
+    margin: 0 0 65px;
+    grid-template-columns: auto 220px 130px;
+  }
+
+  .Changelog {
+    margin: 0 25px 65px;
+    padding: 25px 40px;
+    border: 3px solid $color-main;
+    border-radius: 15px;
+    background-color: $background-alt2;
+  }
+}
