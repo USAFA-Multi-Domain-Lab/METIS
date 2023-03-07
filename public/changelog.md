@@ -1,5 +1,9 @@
 # changelog
 
+# version-1.2.1 | 3-7-2023
+
+- Added code to recover possibly corrupted data
+
 # version-1.2 | 3-7-2023
 
 - Missions can now be imported and exported as files
