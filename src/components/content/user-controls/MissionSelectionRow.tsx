@@ -35,7 +35,13 @@ export default function MissionSelectionRow(props: {
       <MissionModificationPanel
         mission={mission}
         appActions={appActions}
-        setMountHandled={setMountHandled}
+        handleSuccessfulCopy={() => {
+          setMountHandled(false)
+        }}
+        handleSuccessfulDeletion={() => {
+          setMountHandled(false)
+        }}
+        handleSuccessfulToggleLive={() => {}}
       />
     </div>
   )

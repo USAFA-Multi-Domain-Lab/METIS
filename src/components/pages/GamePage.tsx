@@ -204,7 +204,15 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
               <MissionModificationPanel
                 mission={mission}
                 appActions={appActions}
-                setMountHandled={setMountHandled}
+                handleSuccessfulCopy={(resultingMission: Mission) => {
+                  appActions.goToPage('GamePage', {
+                    missionID: resultingMission.missionID,
+                  })
+                }}
+                handleSuccessfulDeletion={() => {
+                  appActions.goToPage('MissionSelectionPage', {})
+                }}
+                handleSuccessfulToggleLive={() => {}}
               />
             </div>
 

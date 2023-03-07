@@ -1,6 +1,6 @@
 # changelog
 
-# version-1.2 | 3-7-2024
+# version-1.2 | 3-7-2023
 
 - Missions can now be imported and exported as files
 - Created a new testing environment to ensure application stability
