@@ -19,23 +19,16 @@ while (cursor_missions.hasNext()) {
   let nodeData = mission.nodeData
 
   for (let nodeDatum of nodeData) {
-    if (nodeDatum.description === '') {
-      nodeDatum.description = 'No description set...'
-    }
-
     let actions = nodeDatum.actions
 
     for (let action of actions) {
-      if (action.description === '') {
-        action.description = 'No description set...'
-      }
-      if (action.postExecutionSuccessText === '') {
-        action.postExecutionSuccessText = 'No success text set...'
-      }
-      if (action.postExecutionFailureText === '') {
-        action.postExecutionFailureText = 'No failure text set...'
-      }
+      action.resourceCost = 1
+      action.postExecutionSuccessText = nodeDatum.postExecutionSuccessText
+      action.postExecutionFailureText = nodeDatum.postExecutionFailureText
     }
+
+    delete nodeDatum.postExecutionSuccessText
+    delete nodeDatum.postExecutionFailureText
   }
 
   db.missions.updateOne({ missionID: mission.missionID }, { $set: mission })
