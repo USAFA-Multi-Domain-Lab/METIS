@@ -13,15 +13,20 @@ use(dbName)
 
 print('Migrating mission data to updated schema...')
 
-let cursor_missions = db.missions.find({}, { missionID: 1, nodeData: 1 })
+let cursor_missions = db.missions.find(
+  {},
+  { missionID: 1, nodeData: 1, nodeStructure: 1 },
+)
 
 while (cursor_missions.hasNext()) {
   let mission = cursor_missions.next()
+  let parentNodeStructure = mission.nodeStructure
   let nodeData = mission.nodeData
   let nodeDataIDs = nodeData.map((nodeDatum) => nodeDatum.nodeID)
   let nodeStructureIDs = []
 
-  const populateNodeStructureIDs = (nodeStructure = parentNodeStructure) => {
+  const populateNodeStructureIDs = (nodeStructure) => {
+    print(nodeStructure)
     for (let [key, value] of Object.entries(nodeStructure)) {
       nodeStructureIDs.push(key)
 
@@ -29,14 +34,15 @@ while (cursor_missions.hasNext()) {
     }
   }
 
-  populateNodeStructureIDs()
+  populateNodeStructureIDs(parentNodeStructure)
 
-  console.log(`nodeDataIDs.length:\t${nodeDataIDs.length}`)
-  console.log(`nodeStructureIDs.length:\t${nodeStructureIDs.length}`)
-  console.log('\n')
-  console.log(`nodeDataIDs:\n${nodeDataIDs}`)
-  console.log('\n')
-  console.log(`nodeStructureIDs:\n${nodeStructureIDs}`)
+  print(`nodeDataIDs.length:\t${nodeDataIDs.length}`)
+  print(`nodeStructureIDs.length:\t${nodeStructureIDs.length}`)
+  print('\n')
+  print(`nodeDataIDs:\n${nodeDataIDs}`)
+  print('\n')
+  print(`nodeStructureIDs:\n${nodeStructureIDs}`)
+  print('\n\n\n')
 
   // db.missions.updateOne({ missionID: mission.missionID }, { $set: mission })
 }
