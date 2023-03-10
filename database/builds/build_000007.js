@@ -34,19 +34,9 @@ while (cursor_missions.hasNext()) {
 
   populateNodeStructureIDs(parentNodeStructure)
 
-  print(`missionID: ${mission.missionID}`)
-  print('BEFORE')
-  print(`nodeDataLength: ${nodeData.length}`)
-  print(`nodeStructureIDsLength: ${nodeStructureIDs.length}`)
-
   nodeData = nodeData.filter((nodeDatum) =>
     nodeStructureIDs.includes(nodeDatum.nodeID),
   )
-
-  print('AFTER')
-  print(`nodeDataLength: ${nodeData.length}`)
-  print(`nodeStructureIDsLength: ${nodeStructureIDs.length}`)
-  print('\n\n')
 
   db.missions.updateOne({ missionID: mission.missionID }, { $set: mission })
 }
