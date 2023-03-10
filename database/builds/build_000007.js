@@ -35,14 +35,6 @@ while (cursor_missions.hasNext()) {
 
   populateNodeStructureIDs(parentNodeStructure)
 
-  for (let nodeDatum of nodeData) {
-    if (!nodeStructureIDs.includes(nodeDatum.nodeID)) {
-      print('Deleting nodeDatum: ' + nodeDatum.nodeID)
-      nodeData = nodeData.filter(
-        (nodeDatum) => nodeDatum.nodeID !== nodeDatum.nodeID,
-      )
-    }
-  }
   nodeData = nodeData.filter((nodeDatum) =>
     nodeStructureIDs.includes(nodeDatum.nodeID),
   )
