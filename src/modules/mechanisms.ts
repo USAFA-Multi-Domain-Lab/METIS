@@ -14,7 +14,7 @@ export class Mechanism {
   mechanismID: string
   name: string
   states: Array<MechanismState>
-  selectedStateName: string | null
+  selectedState: MechanismState | null
 
   static createDefaultMechanismState(mechanism: Mechanism) {
     return new MechanismState(
@@ -35,7 +35,7 @@ export class Mechanism {
     this.mechanismID = mechanismID
     this.name = name
     this.states = states
-    this.selectedStateName = null
+    this.selectedState = null
     this.parseMechanismStateJSON(mechanismStateJSON)
   }
 
