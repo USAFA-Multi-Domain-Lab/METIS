@@ -25,7 +25,6 @@ while (cursor_missions.hasNext()) {
   let nodeStructureIDs = []
 
   const populateNodeStructureIDs = (nodeStructure) => {
-    print(nodeStructure)
     for (let [key, value] of Object.entries(nodeStructure)) {
       nodeStructureIDs.push(key)
 
