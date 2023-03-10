@@ -22,7 +22,6 @@ while (cursor_missions.hasNext()) {
   let mission = cursor_missions.next()
   let parentNodeStructure = mission.nodeStructure
   let nodeData = mission.nodeData
-  let nodeDataIDs = nodeData.map((nodeDatum) => nodeDatum.nodeID)
   let nodeStructureIDs = []
 
   const populateNodeStructureIDs = (nodeStructure) => {
@@ -36,13 +35,20 @@ while (cursor_missions.hasNext()) {
 
   populateNodeStructureIDs(parentNodeStructure)
 
-  print(`nodeDataIDs.length:\t${nodeDataIDs.length}`)
-  print(`nodeStructureIDs.length:\t${nodeStructureIDs.length}`)
-  print('\n')
-  print(`nodeDataIDs:\n${nodeDataIDs}`)
-  print('\n')
-  print(`nodeStructureIDs:\n${nodeStructureIDs}`)
-  print('\n\n\n')
+  for (let nodeDatum of nodeData) {
+    if (!nodeStructureIDs.includes(nodeDatum.nodeID)) {
+      print('Deleting nodeDatum: ' + nodeDatum.nodeID)
+      nodeData = nodeData.filter(
+        (nodeDatum) => nodeDatum.nodeID !== nodeDatum.nodeID,
+      )
+    }
+  }
+  nodeData = nodeData.filter((nodeDatum) =>
+    nodeStructureIDs.includes(nodeDatum.nodeID),
+  )
+
+  print(`nodeDataLength: ${nodeData.length}`)
+  print(`nodeStructureIDsLength: ${nodeStructureIDs.length}`)
 
   // db.missions.updateOne({ missionID: mission.missionID }, { $set: mission })
 }
