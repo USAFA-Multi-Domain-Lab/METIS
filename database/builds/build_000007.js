@@ -38,9 +38,11 @@ while (cursor_missions.hasNext()) {
     nodeStructureIDs.includes(nodeDatum.nodeID),
   )
 
+  mission.nodeData = nodeData
+
   db.missions.updateOne({ missionID: mission.missionID }, { $set: mission })
 }
 
 print('Updating schema build number...')
 
-db.infos.updateOne({ infoID: 'default' }, { $set: { schemaBuildNumber: 6 } })
+db.infos.updateOne({ infoID: 'default' }, { $set: { schemaBuildNumber: 7 } })
