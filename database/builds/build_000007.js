@@ -24,6 +24,11 @@ while (cursor_missions.hasNext()) {
   let nodeData = mission.nodeData
   let nodeStructureIDs = []
 
+  print(`missionID: ${mission.missionID}`)
+  print('BEFORE')
+  print(`nodeDataLength: ${nodeData.length}`)
+  print(`nodeStructureIDsLength: ${nodeStructureIDs.length}`)
+
   const populateNodeStructureIDs = (nodeStructure) => {
     for (let [key, value] of Object.entries(nodeStructure)) {
       nodeStructureIDs.push(key)
@@ -38,6 +43,7 @@ while (cursor_missions.hasNext()) {
     nodeStructureIDs.includes(nodeDatum.nodeID),
   )
 
+  print('AFTER')
   print(`nodeDataLength: ${nodeData.length}`)
   print(`nodeStructureIDsLength: ${nodeStructureIDs.length}`)
 
