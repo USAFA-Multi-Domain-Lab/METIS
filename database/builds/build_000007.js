@@ -46,6 +46,7 @@ while (cursor_missions.hasNext()) {
   print('AFTER')
   print(`nodeDataLength: ${nodeData.length}`)
   print(`nodeStructureIDsLength: ${nodeStructureIDs.length}`)
+  print('\n\n')
 
   // db.missions.updateOne({ missionID: mission.missionID }, { $set: mission })
 }
