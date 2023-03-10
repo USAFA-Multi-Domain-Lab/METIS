@@ -10,6 +10,8 @@ import { AppActions } from '../../AppState'
 import './Form.scss'
 import Toggle, { EToggleLockState } from '../user-controls/Toggle'
 import Tooltip from '../communication/Tooltip'
+import { render } from 'react-dom'
+import { Asset } from '../../../modules/assets'
 
 interface IDetail {
   label: string
@@ -311,24 +313,25 @@ export function DetailBox(props: {
 // a form, with a label and a drop
 // down box for selecting from various
 // options.
-
-export function DetailDropDown(props: {
+export function DetailDropDown<TOption>(props: {
   label: string
-  options: Array<string>
-  currentValue: string
+  options: Array<TOption>
+  currentValue: TOption | null | undefined
   uniqueClassName?: string
-  deliverValue: (value: string) => void
+  renderDisplayName: (option: TOption) => string
+  deliverValue: (value: TOption) => void
 }): JSX.Element | null {
   const field = useRef<HTMLTextAreaElement>(null)
   const [mountHandled, setMountHandled] = useState<boolean>(false)
   const [expanded, setExpanded] = useState<boolean>(false)
 
   let label: string = props.label
-  let options: Array<string> = props.options
-  let currentValue: string = props.currentValue
+  let options: Array<TOption> = props.options
+  let currentValue: TOption | null | undefined = props.currentValue
   let uniqueClassName: string = props.uniqueClassName
     ? props.uniqueClassName
     : ''
+  let renderDisplayName = props.renderDisplayName
   let deliverValue = props.deliverValue
   let className: string = `Detail DetailDropDown ${uniqueClassName}`
   let fieldClassName: string = 'Field FieldDropDown'
@@ -346,37 +349,72 @@ export function DetailDropDown(props: {
     fieldClassName += ' IsCollapsed'
   }
 
-  // render
-  return (
-    <div className={className}>
-      <div className='Label'>{`${label}:`}</div>
-      <div className={fieldClassName}>
-        <div
-          className='Option Selected'
-          onClick={() => {
-            setExpanded(!expanded)
-          }}
-        >
-          <div className='Text'>{currentValue}</div>
-          <div className='Indicator'>v</div>
+  if (currentValue) {
+    // render
+    return (
+      <div className={className}>
+        <div className='Label'>{`${label}:`}</div>
+        <div className={fieldClassName}>
+          <div
+            className='Option Selected'
+            onClick={() => {
+              setExpanded(!expanded)
+            }}
+          >
+            <div className='Text'>{renderDisplayName(currentValue)}</div>
+            <div className='Indicator'>v</div>
+          </div>
+          {options.map((option: TOption) => {
+            return (
+              <div
+                className='Option'
+                key={`option_${renderDisplayName(option)}`}
+                onClick={() => {
+                  deliverValue(option)
+                  setExpanded(false)
+                }}
+              >
+                {renderDisplayName(option)}
+              </div>
+            )
+          })}
         </div>
-        {options.map((option: string) => {
-          return (
-            <div
-              className='Option'
-              key={`option_${option}`}
-              onClick={() => {
-                deliverValue(option)
-                setExpanded(false)
-              }}
-            >
-              {option}
-            </div>
-          )
-        })}
       </div>
-    </div>
-  )
+    )
+  } else if (currentValue === null || currentValue === undefined) {
+    return (
+      <div className={className}>
+        <div className='Label'>{`${label}:`}</div>
+        <div className={fieldClassName}>
+          <div
+            className='Option Selected'
+            onClick={() => {
+              setExpanded(!expanded)
+            }}
+          >
+            <div className='Text'>Select an option</div>
+            <div className='Indicator'>v</div>
+          </div>
+          {options.map((option: TOption) => {
+            return (
+              <div
+                className='Option'
+                key={`option_${renderDisplayName(option)}`}
+                onClick={() => {
+                  deliverValue(option)
+                  setExpanded(false)
+                }}
+              >
+                {renderDisplayName(option)}
+              </div>
+            )
+          })}
+        </div>
+      </div>
+    )
+  } else {
+    return null
+  }
 }
 
 export interface IDetailToggle_P {

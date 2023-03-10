@@ -12,7 +12,7 @@ export interface IAssetJSON {
 export class Asset {
   assetID: string
   name: string
-  selectedMechanismName: string | null
+  selectedMechanism: Mechanism | null
   mechanisms: Array<Mechanism>
 
   static createDefaultMechanism(asset: Asset) {
@@ -26,7 +26,7 @@ export class Asset {
   ) {
     this.assetID = assetID
     this.name = name
-    this.selectedMechanismName = null
+    this.selectedMechanism = null
     this.mechanisms = []
 
     this._importMechanismData(mechanismData)
@@ -91,8 +91,12 @@ export function getAllAssets(
     .get(`/api/v1/assets`)
     .then((response: AxiosResponse) => {
       let assetsJson = response.data.assets
+      let assets: Array<Asset> = assetsJson.map(
+        (assetJson: any) =>
+          new Asset(assetJson.assetID, assetJson.name, assetJson.mechanisms),
+      )
 
-      callback(assetsJson)
+      callback(assets)
     })
     .catch((error: AxiosError) => {
       console.error('Failed to retrieve assets.')
