@@ -21,7 +21,7 @@ export const MechanismSchema: Schema = new Schema({
     required: true,
     unique: true,
   },
-  name: { type: String, required: true, unique: true },
+  name: { type: String, required: true },
   states: {
     type: [MechanismStateSchema],
     required: true,

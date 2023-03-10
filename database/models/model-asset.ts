@@ -116,6 +116,52 @@ AssetSchema.pre('update', function (next) {
 AssetSchema.post(/^find/, function (docs) {
   filterOutUnusedIDs(docs)
 })
+AssetSchema.plugin((schema) => {
+  // This is responsible for removing
+  // excess properties from the asset
+  // data that should be hidden from the
+  // API.
+  schema.query.queryForApiResponse = function (
+    findFunctionName: 'find' | 'findOne',
+  ) {
+    // Get projection.
+    let projection = this.projection()
+
+    // Create if does not exist.
+    if (projection === undefined) {
+      projection = {}
+    }
+
+    // Remove all unneeded properties.
+    if (!('_id' in projection)) {
+      projection['_id'] = 0
+    }
+    if (!('__v' in projection)) {
+      projection['__v'] = 0
+    }
+    if (!('mechanisms' in projection) && !('mechanisms._id' in projection)) {
+      projection['mechanisms._id'] = 0
+    }
+    if (
+      !('mechanisms' in projection) &&
+      !('mechanisms.states' in projection) &&
+      !('mechanisms.states._id' in projection)
+    ) {
+      projection['mechanisms.states._id'] = 0
+    }
+
+    // Set projection.
+    this.projection(projection)
+
+    // Calls the appropriate find function.
+    switch (findFunctionName) {
+      case 'find':
+        return this.find()
+      case 'findOne':
+        return this.findOne()
+    }
+  }
+})
 
 const AssetModel: any = mongoose.model('Asset', AssetSchema)
 

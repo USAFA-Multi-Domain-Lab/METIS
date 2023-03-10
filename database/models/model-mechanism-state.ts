@@ -10,7 +10,7 @@ export const MechanismStateSchema: Schema = new Schema({
     ref: 'Mechanism.mechanismID',
     required: true,
   },
-  name: { type: String, required: true, unique: true },
+  name: { type: String, required: true },
 })
 
 const MechanismStateModel: any = mongoose.model(
