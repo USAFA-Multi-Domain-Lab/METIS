@@ -12,23 +12,30 @@ use(dbName)
 
 print('Migrating mission data to updated schema...')
 
+// Get missions from database.
 let cursor_missions = db.missions.find({}, { missionID: 1, nodeData: 1 })
 
+// Loop through missions.
 while (cursor_missions.hasNext()) {
   let mission = cursor_missions.next()
   let nodeData = mission.nodeData
 
+  // Loop through nodeData.
   for (let nodeDatum of nodeData) {
+    // Set description to  default if empty.
     if (nodeDatum.description === '') {
       nodeDatum.description = 'No description set...'
     }
 
     let actions = nodeDatum.actions
 
+    // Loop through actions.
     for (let action of actions) {
+      // Set description to  default if empty.
       if (action.description === '') {
         action.description = 'No description set...'
       }
+      // Set success and failure text to default if empty.
       if (action.postExecutionSuccessText === '') {
         action.postExecutionSuccessText = 'No success text set...'
       }
@@ -38,6 +45,7 @@ while (cursor_missions.hasNext()) {
     }
   }
 
+  // Update mission in database.
   db.missions.updateOne({ missionID: mission.missionID }, { $set: mission })
 }
 
