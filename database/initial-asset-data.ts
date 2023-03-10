@@ -1,39 +1,39 @@
 // -- initial --
 
 export let radarAssetData = {
-  assetID: 'Radar-1',
+  assetID: 'Radar',
   name: 'Radar',
   mechanisms: [
     {
-      assetID: 'Radar-1',
-      mechanismID: 'Radar-1_Power-1',
+      assetID: 'Radar',
+      mechanismID: 'Radar-Power',
       name: 'Power',
       states: [
         {
-          mechanismID: 'Radar-1_Power-1',
-          mechanismStateID: 'Radar-1_Power-1_ON',
+          mechanismID: 'Radar-Power',
+          mechanismStateID: 'Radar-Power-ON',
           name: 'ON',
         },
         {
-          mechanismID: 'Radar-1_Power-1',
-          mechanismStateID: 'Radar-1_Power-1_OFF',
+          mechanismID: 'Radar-Power',
+          mechanismStateID: 'Radar-Power-OFF',
           name: 'OFF',
         },
       ],
     },
     {
-      assetID: 'Radar-1',
-      mechanismID: 'Radar-1_Motor-1',
+      assetID: 'Radar',
+      mechanismID: 'Radar-Motor',
       name: 'Motor',
       states: [
         {
-          mechanismID: 'Radar-1_Motor-1',
-          mechanismStateID: 'Radar-1_Motor-1_ON',
+          mechanismID: 'Radar-Motor',
+          mechanismStateID: 'Radar-Motor-ON',
           name: 'ON',
         },
         {
-          mechanismID: 'Radar-1_Motor-1',
-          mechanismStateID: 'Radar-1_Motor-1_OFF',
+          mechanismID: 'Radar-Motor',
+          mechanismStateID: 'Radar-Motor-OFF',
           name: 'OFF',
         },
       ],
@@ -42,39 +42,39 @@ export let radarAssetData = {
 }
 
 export let lightsAssetData = {
-  assetID: 'Lights-1',
+  assetID: 'Lights',
   name: 'Lights',
   mechanisms: [
     {
-      assetID: 'Lights-1',
-      mechanismID: 'Lights-1_Power-1',
+      assetID: 'Lights',
+      mechanismID: 'Lights-Power',
       name: 'Power',
       states: [
         {
-          mechanismID: 'Lights-1_Power-1',
-          mechanismStateID: 'Lights-1_Power-1_ON',
+          mechanismID: 'Lights-Power',
+          mechanismStateID: 'Lights-Power-ON',
           name: 'ON',
         },
         {
-          mechanismID: 'Lights-1_Power-1',
-          mechanismStateID: 'Lights-1_Power-1_OFF',
+          mechanismID: 'Lights-Power',
+          mechanismStateID: 'Lights-Power-OFF',
           name: 'OFF',
         },
       ],
     },
     {
-      assetID: 'Lights-1',
-      mechanismID: 'Lights-1_Color-1',
+      assetID: 'Lights',
+      mechanismID: 'Lights-Color',
       name: 'Color',
       states: [
         {
-          mechanismID: 'Lights-1_Color-1',
-          mechanismStateID: 'Lights-1_Color-1_ON',
+          mechanismID: 'Lights-Color',
+          mechanismStateID: 'Lights-Color-ON',
           name: 'ON',
         },
         {
-          mechanismID: 'Lights-1_Color-1',
-          mechanismStateID: 'Lights-1_Color-1_OFF',
+          mechanismID: 'Lights-Color',
+          mechanismStateID: 'Lights-Color-OFF',
           name: 'OFF',
         },
       ],

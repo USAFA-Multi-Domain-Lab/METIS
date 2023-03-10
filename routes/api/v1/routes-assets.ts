@@ -19,31 +19,35 @@ router.get('/', (request, response) => {
       queries.live = true
     }
 
-    AssetModel.find({ ...queries }).exec((error: Error, assets: any) => {
-      if (error !== null || assets === null) {
-        databaseLogger.error('Failed to retrieve assets.')
-        databaseLogger.error(error)
-        return response.sendStatus(500)
-      } else {
-        databaseLogger.info('All assets retrieved.')
-        return response.json({ assets })
-      }
-    })
+    AssetModel.find({ ...queries })
+      .queryForApiResponse('find')
+      .exec((error: Error, assets: any) => {
+        if (error !== null || assets === null) {
+          databaseLogger.error('Failed to retrieve assets.')
+          databaseLogger.error(error)
+          return response.sendStatus(500)
+        } else {
+          databaseLogger.info('All assets retrieved.')
+          return response.json({ assets })
+        }
+      })
   } else {
-    AssetModel.findOne({ assetID }).exec((error: Error, asset: any) => {
-      if (error !== null) {
-        databaseLogger.error(`Failed to retrieve asset with ID "${assetID}."`)
-        databaseLogger.error(error)
-        return response.sendStatus(500)
-      } else if (asset === null) {
-        return response.sendStatus(404)
-      } else if (!isLoggedIn(request)) {
-        return response.sendStatus(401)
-      } else {
-        databaseLogger.info(`Asset with ID "${assetID}" retrieved.`)
-        return response.json({ asset })
-      }
-    })
+    AssetModel.findOne({ assetID })
+      .queryForApiResponse('findOne')
+      .exec((error: Error, asset: any) => {
+        if (error !== null) {
+          databaseLogger.error(`Failed to retrieve asset with ID "${assetID}."`)
+          databaseLogger.error(error)
+          return response.sendStatus(500)
+        } else if (asset === null) {
+          return response.sendStatus(404)
+        } else if (!isLoggedIn(request)) {
+          return response.sendStatus(401)
+        } else {
+          databaseLogger.info(`Asset with ID "${assetID}" retrieved.`)
+          return response.json({ asset })
+        }
+      })
   }
 })
 
