@@ -48,9 +48,9 @@ while (cursor_missions.hasNext()) {
   print(`nodeStructureIDsLength: ${nodeStructureIDs.length}`)
   print('\n\n')
 
-  // db.missions.updateOne({ missionID: mission.missionID }, { $set: mission })
+  db.missions.updateOne({ missionID: mission.missionID }, { $set: mission })
 }
 
-// print('Updating schema build number...')
+print('Updating schema build number...')
 
-// db.infos.updateOne({ infoID: 'default' }, { $set: { schemaBuildNumber: 6 } })
+db.infos.updateOne({ infoID: 'default' }, { $set: { schemaBuildNumber: 6 } })
