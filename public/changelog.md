@@ -1,8 +1,8 @@
 # changelog
 
-# version-1.2.1 | 3-7-2023
+# version-1.2.1 | 3-10-2023
 
-- Added code to recover possibly corrupted data
+- Fix for corrupted data
 
 # version-1.2 | 3-7-2023
 
