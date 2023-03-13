@@ -40,6 +40,7 @@ import {
 import { Asset, getAllAssets } from '../../modules/assets'
 import { Mechanism } from '../../modules/mechanisms'
 import { MechanismState } from '../../modules/mechanism-state'
+import { useStore } from 'react-context-hook'
 
 // This is a enum used to describe
 // the locations that one node can
@@ -118,7 +119,6 @@ export default function MissionFormPage(
           (mission: Mission) => {
             setMission(mission)
             appActions.finishLoading()
-            // setMountHandled(true)
           },
           () => {
             appActions.finishLoading()
@@ -129,14 +129,13 @@ export default function MissionFormPage(
         existsInDatabase = true
         setExistsInDatabase(existsInDatabase)
 
-        // This loads the assets that the
-        // actions will affect.
         appActions.beginLoading('Loading assets...')
-
+        // Grabs all the assets from the database
         getAllAssets(
           (assets: Array<Asset>) => {
             setAssets(assets)
             appActions.finishLoading()
+            setMountHandled(true)
           },
           (error: Error) => {
             appActions.handleServerError('Failed to retrieve assets...')
@@ -565,8 +564,8 @@ export default function MissionFormPage(
                   return (
                     <NodeEntry
                       node={selectedNode}
-                      appActions={appActions}
                       assets={assets}
+                      appActions={appActions}
                       displayedAction={displayedAction}
                       setDisplayedAction={setDisplayedAction}
                       nodeEmptyStringArray={nodeEmptyStringArray}
@@ -692,8 +691,8 @@ function MissionDetails(props: {
 // a given node can be edited.
 function NodeEntry(props: {
   node: MissionNode | null
-  appActions: AppActions
   assets: Array<Asset>
+  appActions: AppActions
   displayedAction: number
   setDisplayedAction: (displayedAction: number) => void
   nodeEmptyStringArray: Array<string>
@@ -706,8 +705,8 @@ function NodeEntry(props: {
   handleCloseRequest: () => void
 }): JSX.Element | null {
   let node: MissionNode | null = props.node
-  let appActions: AppActions = props.appActions
   let assets: Array<Asset> = props.assets
+  let appActions: AppActions = props.appActions
   let displayedAction: number = props.displayedAction
   let setDisplayedAction: (displayedAction: number) => void =
     props.setDisplayedAction
@@ -801,7 +800,7 @@ function NodeEntry(props: {
               <Tooltip description='Close panel.' />
             </div>
           </div>
-          <div className='NodeInfoContainer SidePanelSection'>
+          <div className='SidePanelSection'>
             <Detail
               label='Name'
               initialValue={node.name}
@@ -821,7 +820,7 @@ function NodeEntry(props: {
               }}
               key={`${node.nodeID}_name`}
             />
-            <DetailDropDown
+            <DetailDropDown<string>
               label={'Color'}
               options={[
                 'default',
@@ -836,6 +835,7 @@ function NodeEntry(props: {
               ]}
               currentValue={node.color}
               uniqueClassName={'Color'}
+              renderDisplayName={(color) => color}
               deliverValue={(color: string) => {
                 if (node !== null) {
                   node.color = color
@@ -845,18 +845,22 @@ function NodeEntry(props: {
               }}
               key={`${node.nodeID}_color`}
             />
-            <div
-              className='ColorFill Detail'
-              onClick={() => {
-                if (node !== null) {
-                  node.applyColorFill()
-                  handleChange()
-                }
-              }}
-            >
-              {'[ '}
-              <span>Fill</span> {' ]'}
-              <Tooltip description='Shade all descendant nodes this color as well.' />
+            <div className='ButtonContainer'>
+              <div
+                className='ColorFill Detail FormButton'
+                onClick={() => {
+                  if (node !== null) {
+                    node.applyColorFill()
+                    handleChange()
+                  }
+                }}
+              >
+                <span className='Text'>
+                  <span className='LeftBracket'>[</span> Fill{' '}
+                  <span className='RightBracket'>]</span>
+                  <Tooltip description='Shade all descendant nodes this color as well.' />
+                </span>
+              </div>
             </div>
             <DetailBox
               label='Description'
@@ -963,30 +967,27 @@ function NodeEntry(props: {
               key={`${node.nodeID}_device`}
             />
             <div className='ButtonContainer'>
-              <div className={addNodeClassName} onClick={handleAddNodeRequest}>
-                [{' '}
-                <span className='Text'>
-                  Add adjacent node <span className='RightBracket'>]</span>
+              <div className={addNodeClassName}>
+                <span className='Text' onClick={handleAddNodeRequest}>
+                  <span className='LeftBracket'>[</span> Add adjacent node{' '}
+                  <span className='RightBracket'>]</span>
+                  <Tooltip description='Add one or multiple nodes adjacent to this node.' />
                 </span>
-                <Tooltip description='Delete this node.' />
               </div>
-              <div
-                className={deleteNodeClassName}
-                onClick={handleDeleteRequest}
-              >
-                [{' '}
-                <span className='Text'>
-                  Delete node <span className='RightBracket'>]</span>
+              <div className={deleteNodeClassName}>
+                <span className='Text' onClick={handleDeleteRequest}>
+                  <span className='LeftBracket'>[</span> Delete node{' '}
+                  <span className='RightBracket'>]</span>
+                  <Tooltip description='Delete this node.' />
                 </span>
-                <Tooltip description='Delete this node.' />
               </div>
             </div>
           </div>
           <NodeActions
             node={node}
+            assets={assets}
             appActions={appActions}
             isEmptyString={isEmptyString}
-            assets={assets}
             displayedAction={displayedAction}
             setDisplayedAction={setDisplayedAction}
             setMountHandled={setMountHandled}
@@ -1004,9 +1005,9 @@ function NodeEntry(props: {
 
 function NodeActions(props: {
   node: MissionNode
+  assets: Array<Asset>
   appActions: AppActions
   isEmptyString: boolean
-  assets: Array<Asset>
   displayedAction: number
   setDisplayedAction: (displayedAction: number) => void
   setMountHandled: (mountHandled: boolean) => void
@@ -1015,9 +1016,9 @@ function NodeActions(props: {
   handleChange: () => void
 }): JSX.Element | null {
   let node: MissionNode = props.node
+  let assets: Array<Asset> = props.assets
   let appActions: AppActions = props.appActions
   let isEmptyString: boolean = props.isEmptyString
-  let assets: Array<Asset> = props.assets
   let displayedAction: number = props.displayedAction
   let setDisplayedAction: (displayedAction: number) => void =
     props.setDisplayedAction
@@ -1036,7 +1037,7 @@ function NodeActions(props: {
 
   const displayNextAction = () => {
     if (node.actions !== undefined) {
-      let lastAction: number = node?.actions.length - 1
+      let lastAction: number = node.actions.length - 1
 
       if (!isEmptyString) {
         if (displayedAction === lastAction) {
@@ -1058,15 +1059,15 @@ function NodeActions(props: {
 
   const displayPreviousAction = () => {
     if (!isEmptyString) {
-      if (displayedAction === 0 && node?.actions !== undefined) {
-        setDisplayedAction(node?.actions.length - 1)
+      if (displayedAction === 0 && node.actions !== undefined) {
+        setDisplayedAction(node.actions.length - 1)
       } else {
         setDisplayedAction(displayedAction - 1)
       }
       setActionEmptyStringArray([])
     } else {
       appActions.notify(
-        `**Error:** The node called "${node?.name.toLowerCase()}" has at least one field that was left empty. These fields must contain at least one character.`,
+        `**Error:** The node called "${node.name.toLowerCase()}" has at least one field that was left empty. These fields must contain at least one character.`,
         { duration: null },
       )
     }
@@ -1112,9 +1113,8 @@ function NodeActions(props: {
           </div>
           <NodeAction
             action={node.actions[displayedAction]}
-            node={node}
-            appActions={appActions}
             assets={assets}
+            appActions={appActions}
             displayedAction={displayedAction}
             setDisplayedAction={setDisplayedAction}
             actionEmptyStringArray={actionEmptyStringArray}
@@ -1162,9 +1162,8 @@ function NodeActions(props: {
 // available to a node.
 function NodeAction(props: {
   action: MissionNodeAction
-  node: MissionNode
-  appActions: AppActions
   assets: Array<Asset>
+  appActions: AppActions
   handleChange: () => void
   displayedAction: number
   setDisplayedAction: (displayedAction: number) => void
@@ -1173,7 +1172,8 @@ function NodeAction(props: {
   setMountHandled: (mountHandled: boolean) => void
 }): JSX.Element | null {
   let action: MissionNodeAction = props.action
-  let node: MissionNode = props.node
+  let node: MissionNode = action.node
+  let assets: Array<Asset> = props.assets
   let appActions: AppActions = props.appActions
   let handleChange: () => void = props.handleChange
   let displayedAction: number = props.displayedAction
@@ -1184,8 +1184,7 @@ function NodeAction(props: {
     actionEmptyStringArray: Array<string>,
   ) => void = props.setActionEmptyStringArray
   let setMountHandled: (mountHandled: boolean) => void = props.setMountHandled
-  let deleteActionClassName: string = 'Delete'
-  let assets: Array<Asset> = props.assets
+  let deleteActionClassName: string = 'FormButton DeleteAction'
 
   /* -- COMPONENT FUNCTIONS -- */
   const removeActionEmptyString = (field: string) => {
@@ -1194,6 +1193,19 @@ function NodeAction(props: {
         actionEmptyStringArray.splice(index, 1)
       }
     })
+  }
+
+  const handleDeleteRequest = () => {
+    if (action === node.actions[0]) {
+      node.actions.shift()
+      setDisplayedAction(0)
+    } else if (node.actions.length > 1) {
+      node.actions.splice(node.actions.indexOf(action), 1)
+      setDisplayedAction(displayedAction - 1)
+    }
+
+    setActionEmptyStringArray([])
+    handleChange()
   }
 
   /* -- RENDER -- */
@@ -1331,31 +1343,22 @@ function NodeAction(props: {
           }}
           key={`${action.actionID}_postExecutionFailureText`}
         />
-        <NodeActionAsset
-          node={node}
+        <NodeActionAssets
           action={action}
           assets={assets}
           handleChange={handleChange}
         />
-        <div
-          className={deleteActionClassName}
-          onClick={() => {
-            if (action === node.actions[0]) {
-              node.actions.shift()
-              setDisplayedAction(0)
-            } else if (node.actions.length > 1) {
-              node.actions.splice(node.actions.indexOf(action), 1)
-              setDisplayedAction(displayedAction - 1)
-            }
-
-            setActionEmptyStringArray([])
-            handleChange()
-          }}
-          key={`${action.actionID}_delete`}
-        >
-          {'[ '}
-          <span>Delete Action</span> {' ]'}
-          <Tooltip description='Delete this action from the node.' />
+        <div className='ButtonContainer'>
+          <div
+            className={deleteActionClassName}
+            key={`${action.actionID}_delete`}
+          >
+            <span className='Text' onClick={handleDeleteRequest}>
+              <span className='LeftBracket'>[</span> Delete Action{' '}
+              <span className='RightBracket'>]</span>
+              <Tooltip description='Delete this action from the node.' />
+            </span>
+          </div>
         </div>
       </div>
     )
@@ -1364,126 +1367,362 @@ function NodeAction(props: {
   }
 }
 
-// This will render an action
-// available to a node.
-function NodeActionAsset(props: {
-  node: MissionNode
+// This will render the list of assets
+// that the user previously selected
+function NodeActionAssets(props: {
   action: MissionNodeAction
   assets: Array<Asset>
   handleChange: () => void
 }): JSX.Element | null {
-  let mission: Mission = props.node.mission
-  let node: MissionNode = props.node
+  /* -- COMPONENT VARIABLES -- */
   let action: MissionNodeAction = props.action
   let assets: Array<Asset> = props.assets
   let handleChange = props.handleChange
-  let allMechanisms: Array<Mechanism> = []
-  let allMechanismStates: Array<MechanismState> = []
-  let assignedAssets: Array<Asset> = []
-  let assetOptions: Array<string> = []
-  let mechanismOptions: Array<string> = []
-  let mechanismStateOptions: Array<string> = []
-  let selectedMechanismName: string = 'Select a mechanism'
-  let selectedMechanismStateName: string = 'Select a state'
+  let addAssetClassName: string = 'FormButton AddAsset'
+  let cancelAssetClassName: string = 'Hidden'
 
   /* -- COMPONENT STATE -- */
-  const [mountHandled, setMountHandled] = useState<boolean>(false)
-
-  /* -- COMPONENT EFFECTS -- */
-
-  // Equivalent to componentDidMount.
-  useEffect(() => {
-    if (!mountHandled) {
-      assignAssets()
-      createOptions()
-      setMountHandled(true)
-    }
-  }, [mountHandled])
+  const [forcedUpdateCounter, setForcedUpdateCounter] = useStore<number>(
+    'forcedUpdateCounter',
+  )
 
   /* -- COMPONENT FUNCTIONS -- */
-
-  const assignAssets = () => {
-    assets.forEach((asset: Asset) => {
-      asset.mechanisms.forEach((mechanism: Mechanism) => {
-        mechanism.states.forEach((mechanismState: MechanismState) => {
-          action.mechanismStateIDs.forEach((mechanismStateID: string) => {
-            if (mechanismStateID === mechanismState.mechanismStateID) {
-              assignedAssets.push(asset)
-            }
-          })
-        })
-      })
-    })
+  const removeAsset = (mechanismStateID: string) => {
+    action.mechanismStateIDs.splice(
+      action.mechanismStateIDs.indexOf(mechanismStateID),
+      1,
+    )
+    handleChange()
   }
 
-  const createOptions = () => {
-    assets.forEach((asset: Asset) => {
-      assetOptions.push(asset.name)
+  // This allows the user to add an asset to the
+  // affected asset list.
+  const addAsset = () => {
+    action.addAssetButtonIsDisplayed = false
+    action.cancelAssetButtonIsDisplayed = true
+    setForcedUpdateCounter(forcedUpdateCounter + 1)
+  }
 
-      if (mechanismOptions.length === 0) {
-        asset.mechanisms.forEach((mechanism: Mechanism) => {
-          mechanismOptions.push(mechanism.name)
+  // This allows the user to be able to cancel adding
+  // an asset to the affected asset list.
+  const cancelAsset = () => {
+    action.addAssetButtonIsDisplayed = true
+    action.cancelAssetButtonIsDisplayed = false
 
-          if (mechanismStateOptions.length === 0) {
-            mechanism.states.forEach((mechanismState: MechanismState) => {
-              mechanismStateOptions.push(mechanismState.name)
-            })
-          }
-        })
-      }
-    })
+    if (action.selectedAsset && action.selectedAsset.selectedMechanism) {
+      action.selectedAsset.selectedMechanism.selectedState = null
+    }
+    if (action.selectedAsset) {
+      action.selectedAsset.selectedMechanism = null
+    }
+    action.selectedAsset = null
   }
 
   /* -- RENDER -- */
 
-  if (assignedAssets.length > 0) {
+  // Logic to hide the add asset button and
+  // display the cancel button
+  if (!action.addAssetButtonIsDisplayed) {
+    addAssetClassName += ' Hidden'
+    cancelAssetClassName = 'FormButton'
+  }
+
+  // Logic to hide the cancel button
+  if (!action.cancelAssetButtonIsDisplayed) {
+    cancelAssetClassName += ' Hidden'
+  }
+
+  if (action.mechanismStateIDs.length > 0) {
+    return (
+      <div className='Assets'>
+        <h5 className='AssetInfo'>Asset(s):</h5>
+        <div className='AssetListTitle'>Assets that will be affected:</div>
+        <div className='SelectedAssetListContainer'>
+          {action.mechanismStateIDs.map(
+            (mechanismStateID: string, index: number) => {
+              return (
+                <div
+                  className='SelectedAssetList'
+                  key={`action-${action.actionID}_SelectedAssetList-${index}`}
+                >
+                  <div
+                    className='SelectedAsset'
+                    key={`action-${action.actionID}_mechanismState-${mechanismStateID}`}
+                  >
+                    {mechanismStateID}{' '}
+                  </div>
+                  <div
+                    className='RemoveAssetButton'
+                    onClick={() => removeAsset(mechanismStateID)}
+                    key={`action-${action.actionID}_mechanismState-${mechanismStateID}_remove`}
+                  >
+                    x
+                  </div>
+                </div>
+              )
+            },
+          )}
+        </div>
+
+        <NodeActionAsset
+          action={action}
+          assets={assets}
+          handleChange={handleChange}
+        />
+
+        <div className='ButtonContainer'>
+          <div
+            className={addAssetClassName}
+            key={`${action.actionID}_addAsset`}
+          >
+            <span className='Text' onClick={() => addAsset()}>
+              <span className='LeftBracket'>[</span> Add Asset{' '}
+              <span className='RightBracket'>]</span>
+              <Tooltip description='Add an asset that the action will affect upon successful execution.' />
+            </span>
+          </div>
+
+          <div
+            className={cancelAssetClassName}
+            key={`${action.actionID}_cancelAsset`}
+          >
+            <span className='Text' onClick={() => cancelAsset()}>
+              <span className='LeftBracket'>[</span> Cancel{' '}
+              <span className='RightBracket'>]</span>
+            </span>
+          </div>
+        </div>
+      </div>
+    )
+  } else if (action.mechanismStateIDs.length === 0) {
+    return (
+      <div className='Assets'>
+        <NodeActionAsset
+          action={action}
+          assets={assets}
+          handleChange={handleChange}
+        />
+        <div className='ButtonContainer'>
+          <div
+            className={addAssetClassName}
+            key={`${action.actionID}_addAsset`}
+          >
+            <span className='Text' onClick={() => addAsset()}>
+              <span className='LeftBracket'>[</span> Add Asset{' '}
+              <span className='RightBracket'>]</span>
+              <Tooltip description='Add an asset that the action will affect upon successful execution.' />
+            </span>
+          </div>
+
+          <div
+            className={cancelAssetClassName}
+            key={`${action.actionID}_cancelAsset`}
+          >
+            <span className='Text' onClick={() => cancelAsset()}>
+              <span className='LeftBracket'>[</span> Cancel{' '}
+              <span className='RightBracket'>]</span>
+            </span>
+          </div>
+        </div>
+      </div>
+    )
+  } else {
+    return null
+  }
+}
+
+// This will render an asset
+// drop down to a action.
+function NodeActionAsset(props: {
+  action: MissionNodeAction
+  assets: Array<Asset>
+  handleChange: () => void
+}): JSX.Element | null {
+  /* -- COMPONENT VARIABLES -- */
+  let action: MissionNodeAction = props.action
+  let assets: Array<Asset> = props.assets
+  let handleChange = props.handleChange
+
+  /* -- COMPONENT STATE -- */
+  const [forcedUpdateCounter, setForcedUpdateCounter] = useStore<number>(
+    'forcedUpdateCounter',
+  )
+
+  /* -- RENDER -- */
+
+  if (assets.length > 0 && !action.addAssetButtonIsDisplayed) {
     return (
       <div className='Asset'>
-        {assignedAssets.map((asset: Asset) => {
-          if (
-            asset.selectedMechanismName !== null &&
-            asset.selectedMechanismName !== undefined
-          ) {
-            selectedMechanismName = asset.selectedMechanismName
-          }
-
-          return (
-            <>
-              <DetailDropDown
-                label='Assets'
-                options={assetOptions}
-                currentValue={asset.name}
-                deliverValue={(selectedOption: string) => {
-                  // asset.name = selectedOption
-                  handleChange()
-                }}
-                key={`node-${node.nodeID}_action-${action.actionID}_asset-${asset.assetID}`}
-              />
-              <DetailDropDown
-                label='Asset Mechanisms'
-                options={mechanismOptions}
-                currentValue={selectedMechanismName}
-                deliverValue={(selectedOption: string) => {
-                  asset.selectedMechanismName = selectedOption
-                  handleChange()
-                }}
-                key={`node-${node.nodeID}_action-${action.actionID}_asset-${asset.assetID}`}
-              />
-              <DetailDropDown
-                label='Mechanism State'
-                options={mechanismStateOptions}
-                currentValue={selectedMechanismName}
-                deliverValue={(selectedOption: string) => {
-                  // mechanism.selectedMechanismState = selectedOption
-                  // action.mechanismStateIDs.push(mechanismState.mechanismStateID)
-                  handleChange()
-                }}
-                key={`node-${node.nodeID}_action-${action.actionID}_asset-${asset.assetID}`}
-              />
-            </>
-          )
-        })}
+        <DetailDropDown<Asset>
+          label={`Asset`}
+          options={assets}
+          currentValue={action.selectedAsset}
+          renderDisplayName={(asset: Asset) => asset.name}
+          deliverValue={(asset: Asset) => {
+            action.selectedAsset = asset
+            setForcedUpdateCounter(forcedUpdateCounter + 1)
+          }}
+          key={`action-${action.actionID}_asset`}
+        />
+        <AssetMechanism action={action} handleChange={handleChange} />
       </div>
+    )
+  } else {
+    return null
+  }
+}
+
+function AssetMechanism(props: {
+  action: MissionNodeAction
+  handleChange: () => void
+}): JSX.Element | null {
+  /* -- COMPONENT VARIABLES -- */
+  let action: MissionNodeAction = props.action
+  let handleChange = props.handleChange
+  let currentMechanismOptions: Array<Mechanism> = []
+
+  /* -- COMPONENT STATE -- */
+  const [forcedUpdateCounter, setForcedUpdateCounter] = useStore<number>(
+    'forcedUpdateCounter',
+  )
+
+  /* -- RENDER -- */
+
+  if (action.selectedAsset) {
+    // Creates the list of mechanism options for
+    // the user to select from
+    currentMechanismOptions = action.selectedAsset.mechanisms
+
+    return (
+      <>
+        <DetailDropDown<Mechanism>
+          label='Asset Mechanism'
+          options={currentMechanismOptions}
+          currentValue={action.selectedAsset.selectedMechanism}
+          renderDisplayName={(mechanism: Mechanism) => mechanism.name}
+          deliverValue={(mechanism: Mechanism) => {
+            if (action.selectedAsset) {
+              action.selectedAsset.selectedMechanism = mechanism
+              setForcedUpdateCounter(forcedUpdateCounter + 1)
+            }
+          }}
+          key={`action-${action.actionID}_mechanism`}
+        />
+        <AssetMechanismMechanismState
+          action={action}
+          handleChange={handleChange}
+        />
+      </>
+    )
+  } else {
+    return null
+  }
+}
+
+function AssetMechanismMechanismState(props: {
+  action: MissionNodeAction
+  handleChange: () => void
+}): JSX.Element | null {
+  /* -- COMPONENT VARIABLES -- */
+  let action: MissionNodeAction = props.action
+  let handleChange = props.handleChange
+  let currentMechanismStateOptions: Array<MechanismState> = []
+  let submitAssetClassName: string = 'Hidden'
+
+  /* -- COMPONENT STATE -- */
+  const [forcedUpdateCounter, setForcedUpdateCounter] = useStore<number>(
+    'forcedUpdateCounter',
+  )
+
+  /* -- COMPONENT FUNCTIONS -- */
+
+  // This adds the selected mechanismStateID to an
+  // array stored in each action so that the user
+  // can see it in the affected asset list.
+  // Upon submission the drop-down lists are reset
+  // to their default state, the add asset button
+  // is displayed and the user is able to save the mission.
+  const submitAsset = () => {
+    if (
+      action.selectedAsset &&
+      action.selectedAsset.selectedMechanism &&
+      action.selectedAsset.selectedMechanism.selectedState
+    ) {
+      action.mechanismStateIDs.push(
+        action.selectedAsset.selectedMechanism.selectedState.mechanismStateID,
+      )
+    }
+    action.addAssetButtonIsDisplayed = true
+    handleChange()
+    if (action.selectedAsset && action.selectedAsset.selectedMechanism) {
+      action.selectedAsset.selectedMechanism.selectedState = null
+    }
+    if (action.selectedAsset) {
+      action.selectedAsset.selectedMechanism = null
+    }
+    action.selectedAsset = null
+  }
+
+  /* -- RENDER -- */
+
+  // Logic to hide/display the submit asset button
+  if (
+    !action.cancelAssetButtonIsDisplayed &&
+    !action.addAssetButtonIsDisplayed
+  ) {
+    submitAssetClassName = 'FormButton'
+  } else if (
+    action.cancelAssetButtonIsDisplayed ||
+    action.addAssetButtonIsDisplayed
+  ) {
+    submitAssetClassName += ' Hidden'
+  }
+
+  if (
+    action.selectedAsset &&
+    action.selectedAsset.selectedMechanism &&
+    !action.addAssetButtonIsDisplayed
+  ) {
+    // Creates a list of mechanism-state options
+    // for the user to select from
+    currentMechanismStateOptions = action.selectedAsset.selectedMechanism.states
+
+    return (
+      <>
+        <DetailDropDown<MechanismState>
+          label='Mechanism State'
+          options={currentMechanismStateOptions}
+          currentValue={action.selectedAsset.selectedMechanism.selectedState}
+          renderDisplayName={(mechanismState: MechanismState) =>
+            mechanismState.name
+          }
+          deliverValue={(mechanismState: MechanismState) => {
+            if (
+              action.selectedAsset &&
+              action.selectedAsset.selectedMechanism
+            ) {
+              action.selectedAsset.selectedMechanism.selectedState =
+                mechanismState
+            }
+            action.cancelAssetButtonIsDisplayed = false
+            setForcedUpdateCounter(forcedUpdateCounter + 1)
+          }}
+          key={`action-${action.actionID}_mechanismState`}
+        />
+
+        <div className='ButtonContainer'>
+          <div
+            className={submitAssetClassName}
+            key={`${action.actionID}_submitAsset`}
+          >
+            <span className='Text' onClick={() => submitAsset()}>
+              <span className='LeftBracket'>[</span> Submit Asset{' '}
+              <span className='RightBracket'>]</span>
+              <Tooltip description='Submits asset to the list of assets that will be affected.' />
+            </span>
+          </div>
+        </div>
+      </>
     )
   } else {
     return null

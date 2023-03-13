@@ -1,5 +1,6 @@
 import { PRNG } from 'seedrandom'
 import ExecuteNodePath from '../components/content/game/ExecuteNodePath'
+import { Asset } from './assets'
 import { MissionNode } from './mission-nodes'
 import { Mission } from './missions'
 
@@ -26,8 +27,11 @@ export class MissionNodeAction {
   postExecutionSuccessText: string
   postExecutionFailureText: string
   mechanismStateIDs: Array<string>
+  selectedAsset: Asset | null
   _willSucceedArray: Array<boolean>
   _willSucceed: boolean | null
+  _addAssetButtonIsDisplayed: boolean
+  _cancelAssetButtonIsDisplayed: boolean
 
   // This will be called if all the
   // necessary conditions are met to
@@ -67,6 +71,22 @@ export class MissionNodeAction {
     return this.node.executed && this._willSucceed
   }
 
+  get addAssetButtonIsDisplayed(): boolean {
+    return this._addAssetButtonIsDisplayed
+  }
+
+  set addAssetButtonIsDisplayed(addAssetButtonIsDisplayed: boolean) {
+    this._addAssetButtonIsDisplayed = addAssetButtonIsDisplayed
+  }
+
+  get cancelAssetButtonIsDisplayed(): boolean {
+    return this._cancelAssetButtonIsDisplayed
+  }
+
+  set cancelAssetButtonIsDisplayed(cancelAssetButtonIsDisplayed: boolean) {
+    this._cancelAssetButtonIsDisplayed = cancelAssetButtonIsDisplayed
+  }
+
   constructor(
     node: MissionNode,
     actionID: string,
@@ -88,7 +108,12 @@ export class MissionNodeAction {
     this.resourceCost = resourceCost
     this.postExecutionSuccessText = postExecutionSuccessText
     this.postExecutionFailureText = postExecutionFailureText
-    this.mechanismStateIDs = ['Radar-1_Motor-1_ON']
+    this.mechanismStateIDs = [
+      'WellsFargoBankBuilding-Power-ON',
+      'Radar-Motor-OFF',
+      'Lights-Power-ON',
+    ]
+    this.selectedAsset = null
     this._willSucceedArray =
       MissionNodeAction.determineDifferentSuccessOutcomes(
         this.totalPossibleExecutionAttempts,
@@ -96,6 +121,8 @@ export class MissionNodeAction {
         node.mission.rng,
       )
     this._willSucceed = null
+    this._addAssetButtonIsDisplayed = true
+    this._cancelAssetButtonIsDisplayed = false
   }
 
   toJSON(): IMissionNodeActionJSON {

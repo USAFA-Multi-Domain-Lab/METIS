@@ -6,7 +6,7 @@ export interface IMechanismJSON {
   mechanismID: string
   assetID: string
   name: string
-  states: Array<MechanismState>
+  states: Array<IMechanismStateJSON>
 }
 
 export class Mechanism {
@@ -28,13 +28,12 @@ export class Mechanism {
     asset: Asset,
     mechanismID: string,
     name: string,
-    states: Array<MechanismState>,
     mechanismStateJSON: Array<IMechanismStateJSON>,
   ) {
     this.asset = asset
     this.mechanismID = mechanismID
     this.name = name
-    this.states = states
+    this.states = []
     this.selectedState = null
     this.parseMechanismStateJSON(mechanismStateJSON)
   }
@@ -44,7 +43,9 @@ export class Mechanism {
       mechanismID: this.mechanismID,
       assetID: this.asset.assetID,
       name: this.name,
-      states: this.states,
+      states: this.states.map((mechanismState: MechanismState) =>
+        mechanismState.toJSON(),
+      ),
     }
   }
 
