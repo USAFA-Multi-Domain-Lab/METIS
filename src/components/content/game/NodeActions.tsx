@@ -1,9 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import './NodeActions.scss'
 import { MissionNode } from '../../../modules/mission-nodes'
-import missionNodeActions, {
-  MissionNodeAction,
-} from '../../../modules/mission-node-actions'
+import { MissionNodeAction } from '../../../modules/mission-node-actions'
 import Tooltip from '../communication/Tooltip'
 import strings from '../../../modules/toolbox/strings'
 import { Mission } from '../../../modules/missions'
@@ -63,29 +61,41 @@ const NodeActions = (props: {
 
   let nodeActionsClassName: string = 'NodeActions'
   let nodeActionListClassName: string = 'NodeActionList'
+  let ArrowUpClassName: string = 'ArrowUp Hidden'
+  let ArrowDownClassName: string = 'ArrowDown'
 
-  if (isOpen === false) {
+  if (!isOpen) {
     nodeActionsClassName += ' Hidden'
   }
 
-  if (displayActionList === false) {
-    nodeActionListClassName += ' hide'
+  if (!displayActionList) {
+    nodeActionListClassName += ' Hidden'
+  }
+
+  if (displayActionList) {
+    ArrowUpClassName = 'ArrowUp'
+    ArrowDownClassName += ' Hidden'
   }
 
   if (selectedNode && selectedNode.actions.length > 0) {
     return (
       <div className={nodeActionsClassName}>
-        <p className='x' onClick={handleCloseRequest}>
-          x
-        </p>
+        <div className='Close'>
+          <div className='CloseButton' onClick={handleCloseRequest}>
+            x
+            <Tooltip description='Close window.' />
+          </div>
+        </div>
 
-        <p className='PromptDisplayText'>
+        <div className='PromptDisplayText'>
           What you would like to do to {props.selectedNode?.name}?
-        </p>
+        </div>
 
         <div className='NodeActionDefault' onClick={revealOptions}>
           <div className='DefaultText'>
-            Choose an action <div className='ArrowDown'>^</div>
+            Choose an action
+            <div className={ArrowDownClassName}>^</div>
+            <div className={ArrowUpClassName}>^</div>
           </div>
         </div>
         <div className={nodeActionListClassName} ref={scrollRef}>
@@ -135,16 +145,17 @@ const NodeActions = (props: {
   } else {
     return (
       <div className={nodeActionsClassName}>
-        <p className='x' onClick={handleCloseRequest}>
+        <div className='x' onClick={handleCloseRequest}>
           x
-        </p>
-        <p className='PromptDisplayText'>
+          <Tooltip description='Close window.' />
+        </div>
+        <div className='PromptDisplayText'>
           What you would like to do to {props.selectedNode?.name}?
-        </p>
-        <p className='NoActions'>
+        </div>
+        <div className='NoActions'>
           No actions exist for this node. Contact your instructor for further
           instructions.
-        </p>
+        </div>
       </div>
     )
   }

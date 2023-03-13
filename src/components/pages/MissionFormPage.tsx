@@ -1185,6 +1185,7 @@ function NodeAction(props: {
   ) => void = props.setActionEmptyStringArray
   let setMountHandled: (mountHandled: boolean) => void = props.setMountHandled
   let deleteActionClassName: string = 'FormButton DeleteAction'
+  let nodeActionClassName: string = 'NodeAction'
 
   /* -- COMPONENT FUNCTIONS -- */
   const removeActionEmptyString = (field: string) => {
@@ -1212,11 +1213,12 @@ function NodeAction(props: {
 
   if (node.actions.length === 1) {
     deleteActionClassName += ' Disabled'
+    nodeActionClassName += ' DisableBottomBorder'
   }
 
   if (node.executable) {
     return (
-      <div className='NodeAction'>
+      <div className={nodeActionClassName}>
         <Detail
           label='Name'
           initialValue={action.name}
@@ -1416,6 +1418,7 @@ function NodeActionAssets(props: {
       action.selectedAsset.selectedMechanism = null
     }
     action.selectedAsset = null
+    setForcedUpdateCounter(forcedUpdateCounter + 1)
   }
 
   /* -- RENDER -- */
@@ -1443,20 +1446,15 @@ function NodeActionAssets(props: {
               return (
                 <div
                   className='SelectedAssetList'
-                  key={`action-${action.actionID}_SelectedAssetList-${index}`}
+                  key={`action-${action.actionID}_mechanismState-${mechanismStateID}`}
                 >
-                  <div
-                    className='SelectedAsset'
-                    key={`action-${action.actionID}_mechanismState-${mechanismStateID}`}
-                  >
-                    {mechanismStateID}{' '}
-                  </div>
+                  <div className='SelectedAsset'>{mechanismStateID} </div>
                   <div
                     className='RemoveAssetButton'
                     onClick={() => removeAsset(mechanismStateID)}
-                    key={`action-${action.actionID}_mechanismState-${mechanismStateID}_remove`}
                   >
                     x
+                    <Tooltip description='Remove asset.' />
                   </div>
                 </div>
               )
