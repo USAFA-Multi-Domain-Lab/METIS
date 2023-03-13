@@ -75,3 +75,31 @@ code {
 .Hidden {
   @include hide();
 }
+
+.Close {
+  position: sticky;
+  top: 0px;
+  margin-right: 20px;
+  padding: 10px 0 20px;
+  width: calc(100% - 20px);
+  background: linear-gradient(
+    $background-main 0%,
+    $background-main 80%,
+    transparent 100%
+  );
+
+  .CloseButton {
+    position: relative;
+    left: calc(100% - 25px);
+    border: 2px solid $color-main;
+    border-radius: 50%;
+    width: 22px;
+    height: 21px;
+    background-color: $background-alt1;
+    text-align: center;
+
+    &:hover {
+      cursor: pointer;
+    }
+  }
+}

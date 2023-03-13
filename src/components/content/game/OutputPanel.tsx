@@ -4,6 +4,7 @@ import ConsoleOutput, { IConsoleOutput } from './ConsoleOutput'
 import { Component } from 'react'
 import { MissionNodeAction } from '../../../modules/mission-node-actions'
 import { Mission } from '../../../modules/missions'
+import Tooltip from '../communication/Tooltip'
 
 export interface IOutputPanel {
   mission: Mission
@@ -177,10 +178,11 @@ export default class OutputPanel extends Component<
     return (
       <div className='OutputPanel'>
         <div className='BorderBox'>
-          <div className='MinimizeButtonContainer'>
-            <span className='MinimizeButton' onClick={closeOutputWindow}>
+          <div className='Close'>
+            <div className='CloseButton' onClick={closeOutputWindow}>
               x
-            </span>
+              <Tooltip description='Minimize terminal.' />
+            </div>
           </div>
           <ul className='TextArea'>
             {consoleOutputs.map((consoleOutput: IConsoleOutput) => {

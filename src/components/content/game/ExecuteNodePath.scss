@@ -7,7 +7,7 @@
   margin: 0 auto;
   border: 2px solid $color-main;
   height: fit-content;
-  padding: 10px 20px;
+  padding: 0 20px 10px;
   background-color: $background-main;
   overflow-y: auto;
   overflow-x: hidden;
@@ -27,18 +27,9 @@
     }
   }
 
-  .x {
-    position: relative;
-    left: 99%;
-    list-style-type: none;
-    width: 10%;
-    margin: 0 0 3px;
-    padding: 0;
-
-    &.x:hover {
-      cursor: pointer;
-      color: black;
-    }
+  .Close {
+    width: 100%;
+    margin: 0;
   }
 
   .Buttons {

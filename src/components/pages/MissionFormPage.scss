@@ -112,7 +112,7 @@ $background-bar: linear-gradient(
 
             .Circle {
               display: grid;
-              place-content: center;
+              place-items: center;
               margin: 0 auto;
               border: 3px solid $color-main;
               border-radius: 50%;
@@ -197,6 +197,11 @@ $background-bar: linear-gradient(
               border-top: 2px solid $color-main;
               border-bottom: 2px solid $color-main;
 
+              &.DisableBottomBorder {
+                border-bottom: none;
+                margin: 20px 0 0;
+              }
+
               .Detail {
                 min-width: calc(225px - 20px);
 
@@ -226,19 +231,27 @@ $background-bar: linear-gradient(
                   .SelectedAssetList {
                     display: grid;
                     grid-template-columns: auto 20px;
-                    width: 100%;
 
                     .SelectedAsset {
                       margin: 5px 10px 5px 0;
                       font-size: 14px;
                       color: $color-accent-light;
+                      word-break: break-all;
+                      line-break: strict;
                     }
+
                     .RemoveAssetButton {
                       display: grid;
+                      place-items: center;
                       align-items: center;
-
+                      margin: 5px auto;
+                      border: 2px solid $color-main;
+                      border-radius: 50%;
+                      width: 22px;
+                      height: 21px;
+                      background-color: $background-alt1;
+                      text-align: center;
                       &:hover {
-                        color: black;
                         cursor: pointer;
                       }
                     }
