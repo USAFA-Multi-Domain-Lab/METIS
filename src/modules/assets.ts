@@ -16,7 +16,7 @@ export class Asset {
   mechanisms: Array<Mechanism>
 
   static createDefaultMechanism(asset: Asset) {
-    return new Mechanism(asset, generateHash(), 'Unnamed Mechanism', [], [])
+    return new Mechanism(asset, generateHash(), 'Unnamed Mechanism', [])
   }
 
   constructor(
@@ -49,7 +49,6 @@ export class Asset {
         mechanism.mechanismID,
         mechanism.name,
         mechanism.states,
-        [],
       )
       mechanisms.push(mechanismObject)
     }
