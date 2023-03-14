@@ -117,6 +117,7 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
     // This will output to the console.
     const outputToConsole = (output: IConsoleOutput): void => {
       mission.outputToConsole(output)
+      setOutputPanelIsDisplayed(true)
     }
 
     /* -- RENDER -- */
@@ -232,7 +233,6 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
                           let output: IConsoleOutput =
                             OutputPanel.renderPreExecutionOutput(selectedNode)
                           outputToConsole(output)
-                          setOutputPanelIsDisplayed(true)
                         }
 
                         // Logic that opens the next level of nodes

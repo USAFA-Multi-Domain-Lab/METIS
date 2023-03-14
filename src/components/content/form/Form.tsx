@@ -3,22 +3,14 @@
 
 import React from 'react'
 import { useEffect, useRef, useState } from 'react'
-import { MissionNodeAction } from '../../../modules/mission-node-actions'
-import { MissionNode } from '../../../modules/mission-nodes'
 import inputs from '../../../modules/toolbox/inputs'
-import { AppActions } from '../../AppState'
 import './Form.scss'
 import Toggle, { EToggleLockState } from '../user-controls/Toggle'
 import Tooltip from '../communication/Tooltip'
-import { render } from 'react-dom'
-import { Asset } from '../../../modules/assets'
 
 interface IDetail {
   label: string
   initialValue: string
-  appActions?: AppActions
-  selectedNode?: MissionNode
-  action?: MissionNodeAction
   emptyStringAllowed?: boolean
   deliverValue: (value: string) => void
 }
@@ -200,9 +192,6 @@ export function DetailNumber(props: {
 export function DetailBox(props: {
   label: string
   initialValue: string
-  appActions?: AppActions
-  selectedNode?: MissionNode
-  action?: MissionNodeAction
   emptyStringAllowed?: boolean
   disabled?: boolean
   deliverValue: (value: string) => void
