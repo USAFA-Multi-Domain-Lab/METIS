@@ -1,0 +1,54 @@
+@import '../../../config.scss';
+@import '../../../util.scss';
+
+.Assets {
+  .AssetInfo {
+    margin: 0 auto;
+    padding-top: 25px;
+    text-align: center;
+    color: $color-accent;
+    font-size: 15px;
+  }
+
+  .AssetListTitle {
+    font-size: 12.5px;
+    margin: 30px 8% 8px;
+  }
+
+  .SelectedAssetListContainer {
+    margin: 0 8%;
+    padding: 11px 10px;
+    padding-right: 0;
+    border-top: 2px solid $color-main;
+    border-bottom: 2px solid $color-main;
+
+    .SelectedAssetList {
+      display: grid;
+      grid-template-columns: auto 50px;
+
+      .SelectedAsset {
+        margin: 5px 10px 5px 0;
+        font-size: 14px;
+        color: $color-accent-light;
+        word-break: break-all;
+        line-break: strict;
+      }
+
+      .RemoveAssetButton {
+        display: grid;
+        place-items: center;
+        align-items: center;
+        margin: 5px auto;
+        border: 2px solid $color-main;
+        border-radius: 50%;
+        width: 20px;
+        height: 20px;
+        background-color: $background-alt1;
+
+        &:hover {
+          cursor: pointer;
+        }
+      }
+    }
+  }
+}

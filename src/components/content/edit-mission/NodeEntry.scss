@@ -1,0 +1,43 @@
+@import '../../../config.scss';
+@import '../../../util.scss';
+
+.NodeEntry {
+  &.SidePanel {
+    .BorderBox {
+      .BoxTop {
+        .Close {
+          background: linear-gradient(
+            $background-alt2 0%,
+            $background-alt2 80%,
+            transparent 100%
+          );
+          grid-column: 3 / 3;
+
+          &.Disabled {
+            grid-column: 2 / 3;
+            margin: 0 30px;
+          }
+        }
+      }
+
+      .SidePanelSection {
+        margin: 20px 6.5% 40px;
+
+        .ButtonContainer {
+          .ColorFill {
+            border-bottom: 2px solid $color-main;
+            min-width: 225px;
+            padding: 0 0 15px;
+            margin: 5px 0 0;
+          }
+        }
+
+        .Color {
+          .Field {
+            border-bottom: none;
+          }
+        }
+      }
+    }
+  }
+}
