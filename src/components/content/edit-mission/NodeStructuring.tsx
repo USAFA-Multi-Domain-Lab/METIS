@@ -2,6 +2,7 @@
 // the node structure for the mission
 
 import { useState } from 'react'
+import { useStore } from 'react-context-hook'
 import {
   ENodeTargetRelation,
   MissionNode,
@@ -35,7 +36,9 @@ export default function NodeStructuring(props: {
   let handleCloseRequest = props.handleCloseRequest
   let rootNode: MissionNode = mission.rootNode
 
-  const [forcedUpdateCounter, setForcedUpdateCounter] = useState<number>(0)
+  const [forcedUpdateCounter, setForcedUpdateCounter] = useStore<number>(
+    'forcedUpdateCounter',
+  )
   const [nodeGrabbed, grabNode] = useState<MissionNode | null>(null)
   const [nodePendingDrop, pendDrop] = useState<MissionNode | null>(null)
   const [dropLocation, setDropLocation] = useState<ENodeDropLocation>(
@@ -119,10 +122,10 @@ export default function NodeStructuring(props: {
     let disableDropPending: boolean = props.disableDropPending === true
 
     /* -- COMPONENT FUNCTIONS -- */
-    const handleClick = () => {
-      node.toggleMenuExpansion()
-      console.log(node.expandedInMenu)
+    const toggleNode = () => {
+      console.log(node.name)
 
+      node.toggleMenuExpansion()
       forceUpdate()
     }
 
@@ -237,7 +240,11 @@ export default function NodeStructuring(props: {
               }
             }}
           >
-            <svg className={indicatorClassName} onClick={handleClick}>
+            <svg
+              className={indicatorClassName}
+              onMouseUp={toggleNode}
+              key={`${node.nodeID}_triangle`}
+            >
               <polygon
                 points='3,7 10,7 6.5,14'
                 className='Triangle'
@@ -320,7 +327,6 @@ export default function NodeStructuring(props: {
               </div>
             </div>
           </div>
-
           {renderNodes()}
         </div>
       </div>

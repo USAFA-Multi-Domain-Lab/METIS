@@ -1,61 +1,37 @@
 @import '../../../config.scss';
-@import '../../../util.scss';
 
-$background-bar: linear-gradient(
-    to right,
-    transparent 0%,
-    transparent 50%,
-    $background-main 50%,
-    $background-main 100%
-  ),
-  linear-gradient(
-    to bottom,
-    transparent 0%,
-    transparent calc(50% - 1.5px),
-    $color-main calc(50% - 1.5px),
-    $color-main calc(50% + 1.5px),
-    transparent calc(50% + 1.5px),
-    transparent 100%
-  );
+// $background-bar: linear-gradient(
+//     to right,
+//     transparent 0%,
+//     transparent 50%,
+//     $background-main 50%,
+//     $background-main 100%
+//   ),
+//   linear-gradient(
+//     to bottom,
+//     transparent 0%,
+//     transparent calc(50% - 1.5px),
+//     $color-main calc(50% - 1.5px),
+//     $color-main calc(50% + 1.5px),
+//     transparent calc(50% + 1.5px),
+//     transparent 100%
+//   );
 
-@keyframes mini-bar-circuit {
-  from {
-    transform: rotate(-90deg);
-    background: $background-bar;
-  }
-  to {
-    transform: rotate(270deg);
-    background: $background-bar;
-  }
-}
+// @keyframes mini-bar-circuit {
+//   from {
+//     transform: rotate(-90deg);
+//     background: $background-bar;
+//   }
+//   to {
+//     transform: rotate(270deg);
+//     background: $background-bar;
+//   }
+// }
 
 .NodeStructuring {
   &.SidePanel {
     .BorderBox {
-      overflow-x: hidden;
-      overflow-y: auto;
-      box-sizing: border-box;
-      border: 2px solid $color-main;
-      height: 100%;
-      padding: 0;
-      background-color: $background-alt2;
-
       .BoxTop {
-        display: grid;
-        grid-template-columns: auto 30px 30px;
-        box-sizing: border-box;
-        position: sticky;
-        top: 0;
-        z-index: 1;
-        margin: 0 0 -20px;
-        height: 70px;
-        padding: 5px 10px 0;
-        background: linear-gradient(
-          $background-alt2 0%,
-          $background-alt2 80%,
-          transparent 100%
-        );
-
         .MoreInformation {
           grid-column: 2 / 3;
           transform: scale(0.77);
@@ -96,25 +72,24 @@ $background-bar: linear-gradient(
           }
 
           .Node {
-            $indicator-translate-y: 7px;
+            // $indicator-translate-y: 7px;
 
             width: fit-content;
 
             // This will return the transform value
             // for the indicator circle, placing
             // it in the correct position.
-            @function getIndicatorCircleTransform($isExpanded) {
-              $indicator-translate: translate(0, $indicator-translate-y);
+            // @function getIndicatorCircleTransform($isExpanded) {
+            //   $indicator-translate: translate(0, $indicator-translate-y);
 
-              @if $isExpanded {
-                @return $indicator-translate;
-              } @else {
-                @return $indicator-translate rotate(-90deg);
-              }
-            }
+            //   @if $isExpanded {
+            //     @return $indicator-translate;
+            //   } @else {
+            //     @return $indicator-translate rotate(-90deg);
+            //   }
+            // }
 
             .ParentNode {
-              user-select: none;
               display: block;
               padding: 0 0 0 20px;
               font-size: 12px;
@@ -133,15 +108,12 @@ $background-bar: linear-gradient(
               }
 
               .Center {
-                position: relative;
                 z-index: 0;
                 display: grid;
                 grid-template-columns: 18px auto;
                 margin: 0 0 -0.175rem;
-
-                // * {
-                //   pointer-events: none;
-                // }
+                pointer-events: all;
+                user-select: all;
 
                 .Indicator,
                 .Name {
@@ -150,10 +122,8 @@ $background-bar: linear-gradient(
                 }
 
                 .Indicator {
+                  grid-column: 1 / 2;
                   width: 12px;
-                  padding: 0 auto;
-                  height: 1.35rem;
-                  line-height: 1.3rem;
 
                   &.isCollapsed {
                     transform: rotate(-90deg);
