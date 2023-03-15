@@ -1,7 +1,4 @@
-// This will render a form where
-
 import { useEffect, useState } from 'react'
-import { useStore } from 'react-context-hook'
 import { Asset } from '../../../modules/assets'
 import { MissionNodeAction } from '../../../modules/mission-node-actions'
 import { MissionNode } from '../../../modules/mission-nodes'
@@ -16,48 +13,42 @@ import {
   DetailToggle,
 } from '../form/Form'
 import { EToggleLockState } from '../user-controls/Toggle'
-import NodeActions from './NodeActions'
+import NodeActionDetails from './NodeActionDetails'
 import './NodeEntry.scss'
 
+// This will render a form where
 // a given node can be edited.
 export default function NodeEntry(props: {
   node: MissionNode | null
   appActions: AppActions
   assets: Array<Asset>
   displayedAction: number
-  setDisplayedAction: (displayedAction: number) => void
   nodeEmptyStringArray: Array<string>
-  setNodeEmptyStringArray: (nodeEmptyStringArray: Array<string>) => void
   actionEmptyStringArray: Array<string>
+  setDisplayedAction: (displayedAction: number) => void
+  setNodeEmptyStringArray: (nodeEmptyStringArray: Array<string>) => void
   setActionEmptyStringArray: (actionEmptyStringArray: Array<string>) => void
   handleChange: () => void
   handleAddRequest: () => void
   handleDeleteRequest: () => void
   handleCloseRequest: () => void
 }): JSX.Element | null {
+  /* -- COMPONENT VARIABLES -- */
   let node: MissionNode | null = props.node
   let appActions: AppActions = props.appActions
   let assets: Array<Asset> = props.assets
   let displayedAction: number = props.displayedAction
-  let setDisplayedAction: (displayedAction: number) => void =
-    props.setDisplayedAction
   let nodeEmptyStringArray: Array<string> = props.nodeEmptyStringArray
-  let setNodeEmptyStringArray = props.setNodeEmptyStringArray
   let actionEmptyStringArray: Array<string> = props.actionEmptyStringArray
-  let setActionEmptyStringArray: (
-    actionEmptyStringArray: Array<string>,
-  ) => void = props.setActionEmptyStringArray
-  let isEmptyString: boolean =
-    nodeEmptyStringArray.length > 0 || actionEmptyStringArray.length > 0
+  let setDisplayedAction = props.setDisplayedAction
+  let setNodeEmptyStringArray = props.setNodeEmptyStringArray
+  let setActionEmptyStringArray = props.setActionEmptyStringArray
   let handleChange = props.handleChange
   let handleAddNodeRequest = props.handleAddRequest
   let handleDeleteRequest = props.handleDeleteRequest
   let handleCloseRequest = props.handleCloseRequest
-  let boxTopClassName: string = 'BoxTop'
-  let closeClassName: string = 'Close'
-  let toggleErrorMessage: string | undefined = undefined
-  let deleteNodeClassName: string = 'FormButton DeleteNode'
-  let addNodeClassName: string = 'FormButton AddNode'
+  let isEmptyString: boolean =
+    nodeEmptyStringArray.length > 0 || actionEmptyStringArray.length > 0
 
   /* -- COMPONENT STATE -- */
   const [mountHandled, setMountHandled] = useState<boolean>()
@@ -73,6 +64,11 @@ export default function NodeEntry(props: {
 
   /* -- COMPONENT FUNCTIONS -- */
 
+  // If a field that was previously left empty
+  // meets the requirements then this will remove
+  // the key that was stored when the field was empty
+  // which will let the user know that the field has
+  // met its requirements when the state updates.
   const removeNodeEmptyString = (field: string) => {
     nodeEmptyStringArray.map((nodeEmptyString: string, index: number) => {
       if (
@@ -86,6 +82,15 @@ export default function NodeEntry(props: {
 
   /* -- RENDER -- */
 
+  // Default class names
+  let boxTopClassName: string = 'BoxTop'
+  let closeClassName: string = 'Close'
+  let deleteNodeClassName: string = 'FormButton DeleteNode'
+  let addNodeClassName: string = 'FormButton AddNode'
+
+  // Default error message
+  let toggleErrorMessage: string | undefined = undefined
+
   if (node !== null) {
     let mission: Mission = node.mission
 
@@ -94,13 +99,12 @@ export default function NodeEntry(props: {
       toggleErrorMessage =
         'The button above is locked until there are no empty fields.'
       boxTopClassName += ' IsError'
+      addNodeClassName += ' Disabled'
     }
 
+    // Logic to disable the delete node button
     if (mission.nodes.size < 2) {
       deleteNodeClassName += ' Disabled'
-    }
-    if (isEmptyString) {
-      addNodeClassName += ' Disabled'
     }
 
     return (
@@ -314,16 +318,16 @@ export default function NodeEntry(props: {
               </div>
             </div>
           </div>
-          <NodeActions
+          <NodeActionDetails
             node={node}
             appActions={appActions}
             assets={assets}
             isEmptyString={isEmptyString}
             displayedAction={displayedAction}
-            setDisplayedAction={setDisplayedAction}
-            setMountHandled={setMountHandled}
             actionEmptyStringArray={actionEmptyStringArray}
             setActionEmptyStringArray={setActionEmptyStringArray}
+            setDisplayedAction={setDisplayedAction}
+            setMountHandled={setMountHandled}
             handleChange={handleChange}
           />
         </div>

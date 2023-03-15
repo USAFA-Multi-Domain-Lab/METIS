@@ -1,6 +1,3 @@
-// This will render a form where
-// the node structure for the mission
-
 import { useState } from 'react'
 import { useStore } from 'react-context-hook'
 import {
@@ -23,6 +20,8 @@ enum ENodeDropLocation {
   Bottom,
 }
 
+// This will render a form where
+// the node structure for the mission
 // can be defined.
 export default function NodeStructuring(props: {
   active: boolean
@@ -123,8 +122,6 @@ export default function NodeStructuring(props: {
 
     /* -- COMPONENT FUNCTIONS -- */
     const toggleNode = () => {
-      console.log(node.name)
-
       node.toggleMenuExpansion()
       forceUpdate()
     }

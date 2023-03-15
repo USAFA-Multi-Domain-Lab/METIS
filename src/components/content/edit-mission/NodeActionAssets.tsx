@@ -1,5 +1,3 @@
-// This will render the list of assets
-
 import { useStore } from 'react-context-hook'
 import { Asset } from '../../../modules/assets'
 import { MissionNodeAction } from '../../../modules/mission-node-actions'
@@ -7,18 +5,19 @@ import Tooltip from '../communication/Tooltip'
 import NodeActionAsset from './NodeActionAsset'
 import './NodeActionAssets.scss'
 
+// This will render the list of assets
 // that the user previously selected
 export default function NodeActionAssets(props: {
   action: MissionNodeAction
   assets: Array<Asset>
+  isEmptyString: boolean
   handleChange: () => void
 }): JSX.Element | null {
   /* -- COMPONENT VARIABLES -- */
   let action: MissionNodeAction = props.action
   let assets: Array<Asset> = props.assets
+  let isEmptyString: boolean = props.isEmptyString
   let handleChange = props.handleChange
-  let addAssetClassName: string = 'FormButton AddAsset'
-  let cancelAssetClassName: string = 'Hidden'
 
   /* -- COMPONENT STATE -- */
   const [forcedUpdateCounter, setForcedUpdateCounter] = useStore<number>(
@@ -60,6 +59,11 @@ export default function NodeActionAssets(props: {
 
   /* -- RENDER -- */
 
+  // Default class names
+  let addAssetClassName: string = 'FormButton AddAsset'
+  let cancelAssetClassName: string = 'Hidden'
+  let removeAssetButtonClassName: string = 'RemoveAssetButton'
+
   // Logic to hide the add asset button and
   // display the cancel button
   if (!action.addAssetButtonIsDisplayed) {
@@ -70,6 +74,15 @@ export default function NodeActionAssets(props: {
   // Logic to hide the cancel button
   if (!action.cancelAssetButtonIsDisplayed) {
     cancelAssetClassName += ' Hidden'
+  }
+
+  // if a field is left empty on the node
+  // level or the action level then
+  // the addAsset and removeAsset buttons
+  // are disabled.
+  if (isEmptyString) {
+    addAssetClassName += ' Disabled'
+    removeAssetButtonClassName += ' Disabled'
   }
 
   if (action.mechanismStateIDs.length > 0) {
@@ -87,7 +100,7 @@ export default function NodeActionAssets(props: {
                 >
                   <div className='SelectedAsset'>{mechanismStateID} </div>
                   <div
-                    className='RemoveAssetButton'
+                    className={removeAssetButtonClassName}
                     onClick={() => removeAsset(mechanismStateID)}
                   >
                     x
@@ -102,6 +115,7 @@ export default function NodeActionAssets(props: {
         <NodeActionAsset
           action={action}
           assets={assets}
+          isEmptyString={isEmptyString}
           handleChange={handleChange}
         />
 
@@ -135,6 +149,7 @@ export default function NodeActionAssets(props: {
         <NodeActionAsset
           action={action}
           assets={assets}
+          isEmptyString={isEmptyString}
           handleChange={handleChange}
         />
         <div className='ButtonContainer'>

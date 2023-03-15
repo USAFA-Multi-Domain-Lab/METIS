@@ -96,12 +96,6 @@
             .RightBracket {
               color: $color-main;
             }
-
-            &.Disabled {
-              pointer-events: none;
-              transform: scale(0.95);
-              opacity: 0.65;
-            }
           }
         }
       }
