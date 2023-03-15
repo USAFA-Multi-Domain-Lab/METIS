@@ -1,22 +1,21 @@
-import { useStore } from 'react-context-hook'
 import { Asset } from '../../../modules/assets'
 import { MissionNodeAction } from '../../../modules/mission-node-actions'
 import { MissionNode } from '../../../modules/mission-nodes'
 import { AppActions } from '../../AppState'
 import { ButtonSVG, EButtonSVGPurpose } from '../user-controls/ButtonSVG'
-import NodeAction from './NodeAction'
-import './NodeActions.scss'
+import NodeActionEntry from './NodeActionEntry'
+import './NodeActionDetails.scss'
 
-export default function NodeActions(props: {
+export default function NodeActionDetails(props: {
   node: MissionNode
   appActions: AppActions
   assets: Array<Asset>
   isEmptyString: boolean
   displayedAction: number
-  setDisplayedAction: (displayedAction: number) => void
-  setMountHandled: (mountHandled: boolean) => void
   actionEmptyStringArray: Array<string>
   setActionEmptyStringArray: (actionEmptyStringArray: Array<string>) => void
+  setDisplayedAction: (displayedAction: number) => void
+  setMountHandled: (mountHandled: boolean) => void
   handleChange: () => void
 }): JSX.Element | null {
   let node: MissionNode = props.node
@@ -24,13 +23,10 @@ export default function NodeActions(props: {
   let assets: Array<Asset> = props.assets
   let isEmptyString: boolean = props.isEmptyString
   let displayedAction: number = props.displayedAction
-  let setDisplayedAction: (displayedAction: number) => void =
-    props.setDisplayedAction
-  let setMountHandled: (mountHandled: boolean) => void = props.setMountHandled
   let actionEmptyStringArray: Array<string> = props.actionEmptyStringArray
-  let setActionEmptyStringArray: (
-    actionEmptyStringArray: Array<string>,
-  ) => void = props.setActionEmptyStringArray
+  let setActionEmptyStringArray = props.setActionEmptyStringArray
+  let setDisplayedAction = props.setDisplayedAction
+  let setMountHandled = props.setMountHandled
   let handleChange = props.handleChange
   let totalActions: number | undefined = node.actions.length
   let actionKey: string = ''
@@ -115,10 +111,10 @@ export default function NodeActions(props: {
               next
             </div>
           </div>
-          <NodeAction
+          <NodeActionEntry
             action={node.actions[displayedAction]}
-            appActions={appActions}
             assets={assets}
+            isEmptyString={isEmptyString}
             displayedAction={displayedAction}
             setDisplayedAction={setDisplayedAction}
             actionEmptyStringArray={actionEmptyStringArray}
@@ -152,7 +148,6 @@ export default function NodeActions(props: {
             }}
             tooltipDescription={'Add a new action to this node.'}
             uniqueClassName={addNewActionClassName}
-            // key={`actual-action_add-new-action_${node.nodeID}`}
           />
         </div>
       </>

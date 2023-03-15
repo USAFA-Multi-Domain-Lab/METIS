@@ -1,42 +1,36 @@
-// This will render an action
-
-import { useStore } from 'react-context-hook'
 import { Asset } from '../../../modules/assets'
 import { MissionNodeAction } from '../../../modules/mission-node-actions'
 import { MissionNode } from '../../../modules/mission-nodes'
-import { AppActions } from '../../AppState'
 import Tooltip from '../communication/Tooltip'
 import { Detail, DetailBox, DetailNumber } from '../form/Form'
 import NodeActionAssets from './NodeActionAssets'
-import './NodeAction.scss'
+import './NodeActionEntry.scss'
 
+// This will render an action
 // available to a node.
-export default function NodeAction(props: {
+export default function NodeActionEntry(props: {
   action: MissionNodeAction
-  appActions: AppActions
   assets: Array<Asset>
-  handleChange: () => void
   displayedAction: number
-  setDisplayedAction: (displayedAction: number) => void
+  isEmptyString: boolean
   actionEmptyStringArray: Array<string>
+  setDisplayedAction: (displayedAction: number) => void
   setActionEmptyStringArray: (actionEmptyStringArray: Array<string>) => void
   setMountHandled: (mountHandled: boolean) => void
+  handleChange: () => void
 }): JSX.Element | null {
   let action: MissionNodeAction = props.action
-  let appActions: AppActions = props.appActions
   let node: MissionNode = action.node
   let assets: Array<Asset> = props.assets
-  let handleChange: () => void = props.handleChange
   let displayedAction: number = props.displayedAction
-  let setDisplayedAction: (displayedAction: number) => void =
-    props.setDisplayedAction
+  let isEmptyString: boolean = props.isEmptyString
   let actionEmptyStringArray: Array<string> = props.actionEmptyStringArray
-  let setActionEmptyStringArray: (
-    actionEmptyStringArray: Array<string>,
-  ) => void = props.setActionEmptyStringArray
+  let setDisplayedAction = props.setDisplayedAction
+  let setActionEmptyStringArray = props.setActionEmptyStringArray
   let setMountHandled: (mountHandled: boolean) => void = props.setMountHandled
+  let handleChange = props.handleChange
   let deleteActionClassName: string = 'FormButton DeleteAction'
-  let nodeActionClassName: string = 'NodeAction'
+  let nodeActionClassName: string = 'NodeActionEntry'
 
   /* -- COMPONENT FUNCTIONS -- */
   const removeActionEmptyString = (field: string) => {
@@ -193,6 +187,7 @@ export default function NodeAction(props: {
         <NodeActionAssets
           action={action}
           assets={assets}
+          isEmptyString={isEmptyString}
           handleChange={handleChange}
         />
         <div className='ButtonContainer'>

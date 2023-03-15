@@ -7,10 +7,12 @@ import './AssetMechanism.scss'
 
 export default function AssetMechanism(props: {
   action: MissionNodeAction
+  isEmptyString: boolean
   handleChange: () => void
 }): JSX.Element | null {
   /* -- COMPONENT VARIABLES -- */
   let action: MissionNodeAction = props.action
+  let isEmptyString: boolean = props.isEmptyString
   let handleChange = props.handleChange
   let currentMechanismOptions: Array<Mechanism> = []
 
@@ -43,6 +45,7 @@ export default function AssetMechanism(props: {
         />
         <AssetMechanismMechanismState
           action={action}
+          isEmptyString={isEmptyString}
           handleChange={handleChange}
         />
       </>

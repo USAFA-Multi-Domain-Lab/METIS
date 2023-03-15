@@ -3,11 +3,11 @@ import { Mission, setLive } from '../../../modules/missions'
 import { EAjaxStatus } from '../../../modules/toolbox/ajax'
 import { AppActions } from '../../AppState'
 import { Detail, DetailNumber, DetailToggle } from '../form/Form'
-import './MissionDetails.scss'
+import './MissionEntry.scss'
 
 // This will render the basic editable
 // details of the mission itself.
-export default function MissionDetails(props: {
+export default function MissionEntry(props: {
   active: boolean
   mission: Mission
   appActions: AppActions
@@ -75,7 +75,7 @@ export default function MissionDetails(props: {
 
   if (active) {
     return (
-      <div className='MissionDetails SidePanel'>
+      <div className='MissionEntry SidePanel'>
         <div className='BorderBox'>
           <div className='BoxTop'>
             <div className='ErrorMessage Hidden'></div>

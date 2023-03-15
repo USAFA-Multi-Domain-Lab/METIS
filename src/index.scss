@@ -70,6 +70,8 @@ code {
 :disabled {
   cursor: default;
   opacity: 0.35;
+  user-select: none;
+  pointer-events: none;
 }
 
 .Hidden {

@@ -20,7 +20,7 @@ import {
   ResizablePanel,
 } from '../content/general-layout/ResizablePanels'
 import { Asset, getAllAssets } from '../../modules/assets'
-import MissionDetails from '../content/edit-mission/MissionDetails'
+import MissionEntry from '../content/edit-mission/MissionEntry'
 import NodeEntry from '../content/edit-mission/NodeEntry'
 import NodeStructuring from '../content/edit-mission/NodeStructuring'
 
@@ -524,7 +524,7 @@ export default function MissionFormPage(
               render: () => {
                 if (missionDetailsIsActive) {
                   return (
-                    <MissionDetails
+                    <MissionEntry
                       active={missionDetailsIsActive}
                       mission={mission}
                       appActions={appActions}

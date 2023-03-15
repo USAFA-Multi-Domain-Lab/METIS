@@ -7,13 +7,14 @@ import './AssetMechanismMechanismState.scss'
 
 export default function AssetMechanismMechanismState(props: {
   action: MissionNodeAction
+  isEmptyString: boolean
   handleChange: () => void
 }): JSX.Element | null {
   /* -- COMPONENT VARIABLES -- */
   let action: MissionNodeAction = props.action
+  let isEmptyString: boolean = props.isEmptyString
   let handleChange = props.handleChange
   let currentMechanismStateOptions: Array<MechanismState> = []
-  let submitAssetClassName: string = 'Hidden'
 
   /* -- COMPONENT STATE -- */
   const [forcedUpdateCounter, setForcedUpdateCounter] = useStore<number>(
@@ -51,6 +52,8 @@ export default function AssetMechanismMechanismState(props: {
 
   /* -- RENDER -- */
 
+  let submitAssetClassName: string = 'Hidden'
+
   // Logic to hide/display the submit asset button
   if (
     !action.cancelAssetButtonIsDisplayed &&
@@ -62,6 +65,13 @@ export default function AssetMechanismMechanismState(props: {
     action.addAssetButtonIsDisplayed
   ) {
     submitAssetClassName += ' Hidden'
+  }
+
+  // if a field is left empty on the node
+  // level or the action level then
+  // the submit button is disabled.
+  if (isEmptyString) {
+    submitAssetClassName += ' Disabled'
   }
 
   if (
