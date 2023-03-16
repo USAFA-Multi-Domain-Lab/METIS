@@ -1,5 +1,9 @@
 # changelog
 
+# version 1.2.2 | 3-16-2023
+
+- Fixed an issue where the nodes in the node structure panel found in the edit mission page were not collapsing and expanding
+
 # version-1.2.1 | 3-10-2023
 
 - Fix for corrupted data
