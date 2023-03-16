@@ -1580,7 +1580,7 @@ function NodeStructuring(props: {
               }
             }}
           >
-            <svg className={indicatorClassName} onClick={handleClick}>
+            <svg className={indicatorClassName} onMouseUp={handleClick}>
               <polygon
                 points='3,7 10,7 6.5,14'
                 className='Triangle'
