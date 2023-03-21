@@ -2,7 +2,13 @@
 // for adding the deleted property
 // to the missions collection.
 
-use('mdl')
+let dbName = 'mdl'
+
+if (process.env.MONGO_DB) {
+  dbName = process.env.MONGO_DB
+}
+
+use(dbName)
 
 print('Migrating mission data to updated schema...')
 

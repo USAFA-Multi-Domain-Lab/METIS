@@ -1,6 +1,14 @@
 # changelog
 
-# version-1.2 | 3-7-2024
+# version 1.2.2 | 3-16-2023
+
+- Fixed an issue where the nodes in the node structure panel found in the edit mission page were not collapsing and expanding
+
+# version-1.2.1 | 3-10-2023
+
+- Fix for corrupted data
+
+# version-1.2 | 3-7-2023
 
 - Missions can now be imported and exported as files
 - Created a new testing environment to ensure application stability

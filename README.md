@@ -7,7 +7,7 @@ This is a mini game used by the United States Air Force Academy to educate cadet
 ### production-set-up
 
 - Have `node` (NodeJS) and `npm` (Node Package Manager) installed (`npm` installs with `node` typically).
-- Have `mongo` installed.
+- Have `mongod`, `mongosh`, and `mongodb-database-tools` installed.
 - Set up and run a Mongo server.
 - Create and configure an `environment.json`, reference the **environment-configuration** section for help.
 - Run `npm install` in project directory to install dependencies.
@@ -17,7 +17,7 @@ This is a mini game used by the United States Air Force Academy to educate cadet
 ### development-set-up
 
 - Have `node` (NodeJS) and `npm` (Node Package Manager) installed (`npm` installs with `node` typically).
-- Have `mongo` installed.
+- Have `mongod`, `mongosh`, and `mongodb-database-tools` installed.
 - Set up and run a Mongo server.
 - Create and configure an `environment.json`, reference the **environment-configuration** section for help.
 - Run `npm install --also=dev` in project directory to install all packages, including development packages.

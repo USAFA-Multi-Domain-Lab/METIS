@@ -18,7 +18,9 @@ import { AppActions } from '../../AppState'
 export default function MissionModificationPanel(props: {
   mission: Mission
   appActions: AppActions
-  setMountHandled: (mountHandled: boolean) => void
+  handleSuccessfulCopy: (resultingMission: Mission) => void
+  handleSuccessfulDeletion: () => void
+  handleSuccessfulToggleLive: () => void
 }) {
   /* -- GLOBAL STATE -- */
   const [currentUser] = useStore<IUser | null>('currentUser')
@@ -27,7 +29,9 @@ export default function MissionModificationPanel(props: {
   let mission: Mission = props.mission
   let appActions: AppActions = props.appActions
   let currentActions: MiniButtonSVG[] = []
-  let setMountHandled = props.setMountHandled
+  let handleSuccessfulDeletion = props.handleSuccessfulDeletion
+  let handleSuccessfulCopy = props.handleSuccessfulCopy
+  let handleSuccessfulToggleLive = props.handleSuccessfulToggleLive
 
   /* -- COMPONENT STATE -- */
 
@@ -59,7 +63,7 @@ export default function MissionModificationPanel(props: {
           () => {
             appActions.finishLoading()
             appActions.notify(`Successfully deleted ${mission.name}.`)
-            setMountHandled(false)
+            handleSuccessfulDeletion()
           },
           () => {
             appActions.finishLoading()
@@ -85,10 +89,10 @@ export default function MissionModificationPanel(props: {
         copyMission(
           mission.missionID,
           entry,
-          () => {
+          (resultingMission: Mission) => {
             appActions.finishLoading()
             appActions.notify(`Successfully copied ${mission.name}.`)
-            setMountHandled(false)
+            handleSuccessfulCopy(resultingMission)
           },
           () => {
             appActions.finishLoading()
@@ -120,9 +124,11 @@ export default function MissionModificationPanel(props: {
         if (live) {
           appActions.notify(`${mission.name} was successfully turned on.`)
           setLiveAjaxStatus(EAjaxStatus.Loaded)
+          handleSuccessfulToggleLive()
         } else {
           appActions.notify(`${mission.name} was successfully turned off.`)
           setLiveAjaxStatus(EAjaxStatus.Loaded)
+          handleSuccessfulToggleLive()
         }
       },
       () => {

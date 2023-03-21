@@ -234,6 +234,7 @@ function buildSchema(
   process.env.MONGO_DB = MONGO_DB
 
   databaseLogger.info(`Database is migrating to build ${nextBuildNumber}`)
+  console.log(`Database is migrating to build ${nextBuildNumber}`)
 
   exec(command, (error, stdout, stderr) => {
     let stdoutSplit: Array<string> = stdout.split(`Loading file: ${buildPath}`)
@@ -243,11 +244,13 @@ function buildSchema(
     }
 
     databaseLogger.info(stdout)
+    console.log(stdout)
 
     if (!error) {
       databaseLogger.info(
         `Database successfully migrated to build ${nextBuildNumber}`,
       )
+      console.log(`Database successfully migrated to build ${nextBuildNumber}`)
 
       if (nextBuildNumber < targetBuildNumber) {
         buildSchema(nextBuildNumber, targetBuildNumber, callback, callbackError)
@@ -257,6 +260,7 @@ function buildSchema(
     } else {
       databaseLogger.error(`Database failed to migrate to ${nextBuildNumber}`)
       databaseLogger.error(error)
+      console.log(`Database failed to migrate to ${nextBuildNumber}`)
       callbackError(error)
     }
   })
