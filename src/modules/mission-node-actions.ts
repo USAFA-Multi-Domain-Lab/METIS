@@ -108,11 +108,7 @@ export class MissionNodeAction {
     this.resourceCost = resourceCost
     this.postExecutionSuccessText = postExecutionSuccessText
     this.postExecutionFailureText = postExecutionFailureText
-    this.mechanismStateIDs = [
-      'WellsFargoBankBuilding-Power-ON',
-      'Radar-Motor-OFF',
-      'Lights-Power-ON',
-    ]
+    this.mechanismStateIDs = mechanismStateIDs
     this.selectedAsset = null
     this._willSucceedArray =
       MissionNodeAction.determineDifferentSuccessOutcomes(
