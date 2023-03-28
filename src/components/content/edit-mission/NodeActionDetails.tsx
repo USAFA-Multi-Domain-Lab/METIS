@@ -1,15 +1,14 @@
-import { Asset } from '../../../modules/assets'
 import { MissionNodeAction } from '../../../modules/mission-node-actions'
 import { MissionNode } from '../../../modules/mission-nodes'
 import { AppActions } from '../../AppState'
 import { ButtonSVG, EButtonSVGPurpose } from '../user-controls/ButtonSVG'
 import NodeActionEntry from './NodeActionEntry'
 import './NodeActionDetails.scss'
+import { AnyObject } from '../../../modules/toolbox/objects'
 
 export default function NodeActionDetails(props: {
   node: MissionNode
   appActions: AppActions
-  assets: Array<Asset>
   isEmptyString: boolean
   displayedAction: number
   actionEmptyStringArray: Array<string>
@@ -20,7 +19,6 @@ export default function NodeActionDetails(props: {
 }): JSX.Element | null {
   let node: MissionNode = props.node
   let appActions: AppActions = props.appActions
-  let assets: Array<Asset> = props.assets
   let isEmptyString: boolean = props.isEmptyString
   let displayedAction: number = props.displayedAction
   let actionEmptyStringArray: Array<string> = props.actionEmptyStringArray
@@ -113,7 +111,6 @@ export default function NodeActionDetails(props: {
           </div>
           <NodeActionEntry
             action={node.actions[displayedAction]}
-            assets={assets}
             isEmptyString={isEmptyString}
             displayedAction={displayedAction}
             setDisplayedAction={setDisplayedAction}

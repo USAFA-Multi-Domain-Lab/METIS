@@ -377,7 +377,6 @@ router.get('/export/*', requireLogin, (request, response) => {
           .queryForApiResponse('findOne')
           .exec(
             filterErrors_findOne('missions', response, (mission: any) => {
-              console.log(mission._doc)
               databaseLogger.info(`Mission with ID "${missionID}" retrieved.`)
 
               // Gather details for temporary file

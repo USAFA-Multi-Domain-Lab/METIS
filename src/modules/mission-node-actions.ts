@@ -1,8 +1,9 @@
 import { PRNG } from 'seedrandom'
+import { assetTestData } from '../asset-test-data'
 import ExecuteNodePath from '../components/content/game/ExecuteNodePath'
-import { Asset } from './assets'
 import { MissionNode } from './mission-nodes'
 import { Mission } from './missions'
+import { AnyObject } from './toolbox/objects'
 
 export interface IMissionNodeActionJSON {
   actionID: string
@@ -13,7 +14,7 @@ export interface IMissionNodeActionJSON {
   resourceCost: number
   postExecutionSuccessText: string
   postExecutionFailureText: string
-  mechanismStateIDs: Array<string>
+  commandScripts: Array<string>
 }
 
 export class MissionNodeAction {
@@ -26,12 +27,9 @@ export class MissionNodeAction {
   resourceCost: number
   postExecutionSuccessText: string
   postExecutionFailureText: string
-  mechanismStateIDs: Array<string>
-  selectedAsset: Asset | null
+  commandScripts: Array<string>
   _willSucceedArray: Array<boolean>
   _willSucceed: boolean | null
-  _addAssetButtonIsDisplayed: boolean
-  _cancelAssetButtonIsDisplayed: boolean
 
   // This will be called if all the
   // necessary conditions are met to
@@ -71,22 +69,6 @@ export class MissionNodeAction {
     return this.node.executed && this._willSucceed
   }
 
-  get addAssetButtonIsDisplayed(): boolean {
-    return this._addAssetButtonIsDisplayed
-  }
-
-  set addAssetButtonIsDisplayed(addAssetButtonIsDisplayed: boolean) {
-    this._addAssetButtonIsDisplayed = addAssetButtonIsDisplayed
-  }
-
-  get cancelAssetButtonIsDisplayed(): boolean {
-    return this._cancelAssetButtonIsDisplayed
-  }
-
-  set cancelAssetButtonIsDisplayed(cancelAssetButtonIsDisplayed: boolean) {
-    this._cancelAssetButtonIsDisplayed = cancelAssetButtonIsDisplayed
-  }
-
   constructor(
     node: MissionNode,
     actionID: string,
@@ -97,7 +79,7 @@ export class MissionNodeAction {
     resourceCost: number,
     postExecutionSuccessText: string,
     postExecutionFailureText: string,
-    mechanismStateIDs: Array<string>,
+    commandScripts: Array<string>,
   ) {
     this.node = node
     this.actionID = actionID
@@ -108,8 +90,7 @@ export class MissionNodeAction {
     this.resourceCost = resourceCost
     this.postExecutionSuccessText = postExecutionSuccessText
     this.postExecutionFailureText = postExecutionFailureText
-    this.mechanismStateIDs = mechanismStateIDs
-    this.selectedAsset = null
+    this.commandScripts = commandScripts
     this._willSucceedArray =
       MissionNodeAction.determineDifferentSuccessOutcomes(
         this.totalPossibleExecutionAttempts,
@@ -117,8 +98,6 @@ export class MissionNodeAction {
         node.mission.rng,
       )
     this._willSucceed = null
-    this._addAssetButtonIsDisplayed = true
-    this._cancelAssetButtonIsDisplayed = false
   }
 
   toJSON(): IMissionNodeActionJSON {
@@ -131,7 +110,7 @@ export class MissionNodeAction {
       resourceCost: this.resourceCost,
       postExecutionSuccessText: this.postExecutionSuccessText,
       postExecutionFailureText: this.postExecutionFailureText,
-      mechanismStateIDs: this.mechanismStateIDs,
+      commandScripts: this.commandScripts,
     }
   }
 
@@ -211,4 +190,4 @@ export class MissionNodeAction {
   }
 }
 
-export default { MissionNodeAction }
+export default MissionNodeAction

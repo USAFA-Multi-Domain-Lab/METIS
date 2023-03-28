@@ -285,7 +285,7 @@ export const MissionSchema: Schema = new Schema(
                 },
                 postExecutionSuccessText: { type: String, required: true },
                 postExecutionFailureText: { type: String, required: true },
-                mechanismStateIDs: { type: [String], required: true },
+                commandScripts: { type: [String], required: true },
               },
             ],
             required: true,

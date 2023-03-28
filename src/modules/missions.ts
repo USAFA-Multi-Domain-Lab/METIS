@@ -212,7 +212,7 @@ export class Mission {
 
   // This will determine the relationship
   // between nodes, parent to child and
-  // vise-versa.
+  // vice versa.
   _importNodeStructure(
     nodeStructure: AnyObject,
     rootNode: MissionNode = this.rootNode,

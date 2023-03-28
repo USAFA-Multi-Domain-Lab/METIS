@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
-import { Asset } from '../../../modules/assets'
 import { MissionNodeAction } from '../../../modules/mission-node-actions'
 import { MissionNode } from '../../../modules/mission-nodes'
 import { Mission } from '../../../modules/missions'
+import { AnyObject } from '../../../modules/toolbox/objects'
 import { AppActions } from '../../AppState'
 import Tooltip from '../communication/Tooltip'
 import {
@@ -21,7 +21,6 @@ import './NodeEntry.scss'
 export default function NodeEntry(props: {
   node: MissionNode | null
   appActions: AppActions
-  assets: Array<Asset>
   displayedAction: number
   nodeEmptyStringArray: Array<string>
   actionEmptyStringArray: Array<string>
@@ -36,7 +35,6 @@ export default function NodeEntry(props: {
   /* -- COMPONENT VARIABLES -- */
   let node: MissionNode | null = props.node
   let appActions: AppActions = props.appActions
-  let assets: Array<Asset> = props.assets
   let displayedAction: number = props.displayedAction
   let nodeEmptyStringArray: Array<string> = props.nodeEmptyStringArray
   let actionEmptyStringArray: Array<string> = props.actionEmptyStringArray
@@ -321,7 +319,6 @@ export default function NodeEntry(props: {
           <NodeActionDetails
             node={node}
             appActions={appActions}
-            assets={assets}
             isEmptyString={isEmptyString}
             displayedAction={displayedAction}
             actionEmptyStringArray={actionEmptyStringArray}

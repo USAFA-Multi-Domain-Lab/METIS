@@ -1,1 +1,48 @@
 @import '../../../config.scss';
+
+.Asset {
+  margin: 30px 8% 0;
+  min-width: calc(225px - 20px);
+
+  .AssetPath {
+    display: grid;
+    align-items: center;
+    border: 2px solid $color-main;
+    padding: 10px;
+    margin: 0 0 0px;
+    color: $color-accent-light;
+
+    &.AndBackButton {
+      grid-template-columns: 20px auto;
+    }
+
+    &.EndOfAssetPath {
+      border-bottom: none;
+    }
+
+    .BackButton {
+      color: $color-accent-light;
+
+      &:hover {
+        cursor: pointer;
+      }
+    }
+  }
+
+  .AssetOptions {
+    border: 2px solid $color-main;
+    border-top: none;
+
+    .AssetOption {
+      width: calc(100% - 20px);
+      padding: 10px;
+      color: $color-accent-light;
+
+      &:hover {
+        cursor: pointer;
+        color: $color-main;
+        background-color: black;
+      }
+    }
+  }
+}

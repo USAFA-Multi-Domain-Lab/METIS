@@ -1,6 +1,6 @@
-import { Asset } from '../../../modules/assets'
 import { MissionNodeAction } from '../../../modules/mission-node-actions'
 import { MissionNode } from '../../../modules/mission-nodes'
+import { AnyObject } from '../../../modules/toolbox/objects'
 import Tooltip from '../communication/Tooltip'
 import { Detail, DetailBox, DetailNumber } from '../form/Form'
 import NodeActionAssets from './NodeActionAssets'
@@ -10,7 +10,6 @@ import './NodeActionEntry.scss'
 // available to a node.
 export default function NodeActionEntry(props: {
   action: MissionNodeAction
-  assets: Array<Asset>
   displayedAction: number
   isEmptyString: boolean
   actionEmptyStringArray: Array<string>
@@ -21,7 +20,6 @@ export default function NodeActionEntry(props: {
 }): JSX.Element | null {
   let action: MissionNodeAction = props.action
   let node: MissionNode = action.node
-  let assets: Array<Asset> = props.assets
   let displayedAction: number = props.displayedAction
   let isEmptyString: boolean = props.isEmptyString
   let actionEmptyStringArray: Array<string> = props.actionEmptyStringArray
@@ -186,7 +184,6 @@ export default function NodeActionEntry(props: {
         />
         <NodeActionAssets
           action={action}
-          assets={assets}
           isEmptyString={isEmptyString}
           handleChange={handleChange}
         />

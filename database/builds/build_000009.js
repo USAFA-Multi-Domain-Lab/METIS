@@ -23,7 +23,7 @@ while (cursor_missions.hasNext()) {
     let actions = nodeDatum.actions
 
     for (let action of actions) {
-      action.mechanismStateIDs = []
+      action.commandScripts = []
     }
   }
 

@@ -19,10 +19,10 @@ import {
   PanelSizeRelationship,
   ResizablePanel,
 } from '../content/general-layout/ResizablePanels'
-import { Asset, getAllAssets } from '../../modules/assets'
 import MissionEntry from '../content/edit-mission/MissionEntry'
 import NodeEntry from '../content/edit-mission/NodeEntry'
 import NodeStructuring from '../content/edit-mission/NodeStructuring'
+import { AnyObject } from 'mongoose'
 
 export interface IMissionFormPage extends IPage {
   // If null, a new mission is being
@@ -44,7 +44,6 @@ export default function MissionFormPage(
   const [mountHandled, setMountHandled] = useState<boolean>()
   const [forcedUpdateCounter, setForcedUpdateCounter] = useState<number>(0)
   const [mission, setMission] = useState<Mission | null>(null)
-  const [assets, setAssets] = useState<Array<Asset>>([])
   const [areUnsavedChanges, setAreUnsavedChanges] = useState<boolean>(false)
   const [selectedNode, setSelectedNode] = useState<MissionNode | null>(null)
   const [nodeStructuringIsActive, activateNodeStructuring] =
@@ -100,20 +99,6 @@ export default function MissionFormPage(
         )
         existsInDatabase = true
         setExistsInDatabase(existsInDatabase)
-
-        appActions.beginLoading('Loading assets...')
-        // Grabs all the assets from the database
-        getAllAssets(
-          (assets: Array<Asset>) => {
-            setAssets(assets)
-            appActions.finishLoading()
-            setMountHandled(true)
-          },
-          (error: Error) => {
-            appActions.handleServerError('Failed to retrieve assets...')
-            appActions.finishLoading()
-          },
-        )
       }
     }
   }, [mountHandled])
@@ -538,7 +523,6 @@ export default function MissionFormPage(
                     <NodeEntry
                       node={selectedNode}
                       appActions={appActions}
-                      assets={assets}
                       displayedAction={displayedAction}
                       setDisplayedAction={setDisplayedAction}
                       nodeEmptyStringArray={nodeEmptyStringArray}
