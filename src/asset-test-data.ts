@@ -6,6 +6,7 @@ export const assetTestData: AnyObject = {
       traffic: {
         zone: {
           commercial: {
+            master: { ON: 'commandScript', OFF: 'commadnScript' },
             direction: {
               east: {
                 color: {
@@ -36,9 +37,9 @@ export const assetTestData: AnyObject = {
                 },
               },
             },
-            master: { ON: 'commandScript', OFF: 'commadnScript' },
           },
           industrial: {
+            master: { ON: 'commandScript', OFF: 'commadnScript' },
             direction: {
               east: {
                 color: {
@@ -69,9 +70,9 @@ export const assetTestData: AnyObject = {
                 },
               },
             },
-            master: { ON: 'commandScript', OFF: 'commadnScript' },
           },
           military: {
+            master: { ON: 'commandScript', OFF: 'commadnScript' },
             direction: {
               east: {
                 color: {
@@ -102,9 +103,9 @@ export const assetTestData: AnyObject = {
                 },
               },
             },
-            master: { ON: 'commandScript', OFF: 'commadnScript' },
           },
           residential: {
+            master: { ON: 'commandScript', OFF: 'commadnScript' },
             direction: {
               east: {
                 color: {
@@ -135,12 +136,14 @@ export const assetTestData: AnyObject = {
                 },
               },
             },
-            master: { ON: 'commandScript', OFF: 'commadnScript' },
           },
         },
       },
       bank: {
-        color: { white: 'commandScript', red: 'commandScript' },
+        color: {
+          white: { ON: 'commandScript', OFF: 'commandScript' },
+          red: { ON: 'commandScript', OFF: 'commandScript' },
+        },
       },
     },
     network_2: {
@@ -284,7 +287,10 @@ export const assetTestData: AnyObject = {
         },
       },
       bank: {
-        color: { white: 'commandScript', red: 'commandScript' },
+        color: {
+          white: { ON: 'commandScript', OFF: 'commandScript' },
+          red: { ON: 'commandScript', OFF: 'commandScript' },
+        },
       },
     },
   },
@@ -430,7 +436,10 @@ export const assetTestData: AnyObject = {
         },
       },
       bank: {
-        color: { white: 'commandScript', red: 'commandScript' },
+        color: {
+          white: { ON: 'commandScript', OFF: 'commandScript' },
+          red: { ON: 'commandScript', OFF: 'commandScript' },
+        },
       },
     },
     network_2: {
@@ -574,7 +583,10 @@ export const assetTestData: AnyObject = {
         },
       },
       bank: {
-        color: { white: 'commandScript', red: 'commandScript' },
+        color: {
+          white: { ON: 'commandScript', OFF: 'commandScript' },
+          red: { ON: 'commandScript', OFF: 'commandScript' },
+        },
       },
     },
   },

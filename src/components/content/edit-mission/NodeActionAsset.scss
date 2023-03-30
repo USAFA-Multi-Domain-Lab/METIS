@@ -8,12 +8,13 @@
     display: grid;
     align-items: center;
     border: 2px solid $color-main;
-    padding: 10px;
-    margin: 0 0 0px;
+    padding: 10px 10px;
     color: $color-accent-light;
+    word-break: break-all;
+    user-select: none;
 
     &.AndBackButton {
-      grid-template-columns: 20px auto;
+      grid-template-columns: 50px auto;
     }
 
     &.EndOfAssetPath {
@@ -22,9 +23,15 @@
 
     .BackButton {
       color: $color-accent-light;
+      text-align: center;
+      padding: 5px;
+      margin: 0 10px;
 
       &:hover {
         cursor: pointer;
+        background-color: $color-negative;
+        opacity: 0.7;
+        border-radius: 10px;
       }
     }
   }
@@ -32,17 +39,5 @@
   .AssetOptions {
     border: 2px solid $color-main;
     border-top: none;
-
-    .AssetOption {
-      width: calc(100% - 20px);
-      padding: 10px;
-      color: $color-accent-light;
-
-      &:hover {
-        cursor: pointer;
-        color: $color-main;
-        background-color: black;
-      }
-    }
   }
 }

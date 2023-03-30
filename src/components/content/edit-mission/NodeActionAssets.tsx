@@ -28,7 +28,7 @@ export default function NodeActionAssets(props: {
   /* -- RENDER -- */
 
   // Default class names
-  let removeAssetButtonClassName: string = 'RemoveAssetButton'
+  let removeAssetButtonClassName: string = 'CloseButton'
 
   // if a field is left empty on the node
   // level or the action level then
@@ -51,12 +51,14 @@ export default function NodeActionAssets(props: {
                   key={`action-${action.actionID}_commandScript-${commandScripts}_index-${index}`}
                 >
                   <div className='SelectedAsset'>{commandScripts} </div>
-                  <div
-                    className={removeAssetButtonClassName}
-                    onClick={() => removeAsset(commandScripts)}
-                  >
-                    x
-                    <Tooltip description='Remove asset.' />
+                  <div className='Close'>
+                    <div
+                      className={removeAssetButtonClassName}
+                      onClick={() => removeAsset(commandScripts)}
+                    >
+                      x
+                      <Tooltip description='Remove asset.' />
+                    </div>
                   </div>
                 </div>
               )

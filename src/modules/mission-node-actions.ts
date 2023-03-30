@@ -1,9 +1,7 @@
 import { PRNG } from 'seedrandom'
-import { assetTestData } from '../asset-test-data'
 import ExecuteNodePath from '../components/content/game/ExecuteNodePath'
 import { MissionNode } from './mission-nodes'
 import { Mission } from './missions'
-import { AnyObject } from './toolbox/objects'
 
 export interface IMissionNodeActionJSON {
   actionID: string

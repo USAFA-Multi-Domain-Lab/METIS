@@ -4,6 +4,7 @@ import Tooltip from '../communication/Tooltip'
 import { useState } from 'react'
 import { AnyObject } from '../../../modules/toolbox/objects'
 import { assetTestData } from '../../../asset-test-data'
+import AssetOption from './AssetOption'
 
 // This will render an asset
 // drop down to a action.
@@ -71,9 +72,10 @@ export default function NodeActionAsset(props: {
 
     // Grabs the next set of assets the user will
     // be able to select from.
-    let nextAssetOptions: Array<string> = Object.keys(assets)
-    if (!nextAssetOptions.includes('0')) {
-      setAssetOptions(nextAssetOptions)
+    let subAssets: Array<string> = Object.keys(assets)
+
+    if (!subAssets.includes('0')) {
+      setAssetOptions(subAssets)
     } else {
       setAssetOptions([])
       setAddAssetButtonIsDisplayed(false)
@@ -81,25 +83,23 @@ export default function NodeActionAsset(props: {
     }
   }
 
-  // Called when a user selects an asset. Works similar
-  // to a file explorer.
-  const handleAssetSelection = (assetOption: string) => {
-    // Adds selected asset to the path for the user
-    // to see.
-    assetPath.push(assetOption)
-
-    updateCurrentAssetStructureLocation()
-  }
-
   const handleBackClick = () => {
     assetPath.pop()
+
+    // If the user is at the end of a structure
+    // and can submit then when they hit the back
+    // button this will remove the submit button
+    // and display the cancel button.
     updateCurrentAssetStructureLocation()
+
+    // Removes the last asset that was added
+    // to the asset path and updates the
+    // asset structure to show the user
+    // the correct options to choose from.
     if (!cancelAssetButtonIsDisplayed) {
       setCancelAssetButtonIsDisplayed(true)
     }
   }
-
-  /* -- RENDER -- */
 
   // Default class names
   let currentAssetPath: string = 'Select a Facility:'
@@ -156,13 +156,17 @@ export default function NodeActionAsset(props: {
           <div className='AssetOptions'>
             {assetOptions.map((assetOption: string) => {
               return (
-                <div
-                  className='AssetOption'
-                  onClick={() => handleAssetSelection(assetOption)}
+                <AssetOption
+                  action={action}
+                  assetOption={assetOption}
+                  assetPath={assetPath}
+                  assets={assets}
+                  assetOptions={assetOptions}
+                  updateCurrentAssetStructureLocation={
+                    updateCurrentAssetStructureLocation
+                  }
                   key={`action-${action.actionID}_asset-${assetOption}`}
-                >
-                  {assetOption}
-                </div>
+                />
               )
             })}
           </div>
@@ -178,6 +182,7 @@ export default function NodeActionAsset(props: {
               <span className='RightBracket'>]</span>
             </span>
           </div>
+
           <div
             className={submitAssetClassName}
             key={`${action.actionID}_submitAsset`}

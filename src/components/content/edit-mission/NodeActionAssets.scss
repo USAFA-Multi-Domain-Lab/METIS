@@ -23,30 +23,21 @@
 
     .SelectedAssetList {
       display: grid;
+      align-items: center;
       grid-template-columns: auto 50px;
+      margin: 10px auto;
 
       .SelectedAsset {
-        margin: 5px 10px 5px 0;
+        margin-right: 10px;
         font-size: 14px;
         color: $color-accent-light;
         word-break: break-all;
         line-break: strict;
       }
 
-      .RemoveAssetButton {
-        display: grid;
-        place-items: center;
-        align-items: center;
-        margin: 5px auto;
-        border: 2px solid $color-main;
-        border-radius: 50%;
-        width: 20px;
-        height: 20px;
-        background-color: $background-alt1;
-
-        &:hover {
-          cursor: pointer;
-        }
+      .Close {
+        padding: 0;
+        margin: 0;
       }
     }
   }

@@ -1,0 +1,49 @@
+@import '../../../config.scss';
+
+.AssetOption {
+  display: grid;
+  grid-template-columns: 18px auto;
+  // grid-template-columns: 18px 20px auto;
+  width: calc(100% - 20px);
+  padding: 10px;
+  user-select: none;
+
+  .Indicator {
+    display: grid;
+    grid-column: 1 / 2;
+    // grid-column: 1 / 3;
+    align-items: center;
+    width: 12px;
+    height: 20px;
+    transform: rotate(-90deg);
+
+    &.isExpanded {
+      transform: rotate(0deg);
+    }
+
+    &:hover {
+      cursor: pointer;
+    }
+  }
+
+  .AssetOptionText {
+    grid-column: 2 / 2;
+  }
+
+  .AssetOptionText,
+  .SubAssetOptionText {
+    color: $color-accent-light;
+
+    &:hover,
+    .SubAssetOptionText:hover {
+      cursor: pointer;
+      color: $color-main;
+    }
+  }
+
+  .SubAssetOption {
+    grid-column: 1 / 1;
+    padding-left: 30px;
+    margin: 5px auto;
+  }
+}
