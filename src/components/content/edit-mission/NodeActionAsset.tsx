@@ -147,12 +147,14 @@ export default function NodeActionAsset(props: {
     return (
       <>
         <div className='Asset'>
+          <div className='AssetFinderTitle'>Asset Finder:</div>
           <div className={assetPathClassName}>
             <span className={backButtonClassName} onClick={handleBackClick}>
               &lt;
             </span>{' '}
             {currentAssetPath}
           </div>
+
           <div className='AssetOptions'>
             {assetOptions.map((assetOption: string) => {
               return (
