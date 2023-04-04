@@ -205,6 +205,28 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
                 mission={mission}
                 appActions={appActions}
                 handleSuccessfulCopy={(resultingMission: Mission) => {
+                  // appActions.confirm(
+                  //   'Would you like to go to the copied mission, or return to the current mission?',
+                  //   (concludeAction: () => void) => {
+                  //     appActions.goToPage('GamePage', {
+                  //       missionID: mission.missionID,
+                  //     })
+                  //     concludeAction()
+                  //   },
+                  //   {
+                  //     handleAlternate: (concludeAction: () => void) => {
+                  //       appActions.goToPage('GamePage', {
+                  //         missionID: resultingMission.missionID,
+                  //       })
+                  //       concludeAction()
+                  //     },
+                  //     pendingMessageUponConfirm: 'Launching mission...',
+                  //     pendingMessageUponAlternate: 'Launching mission...',
+                  //     buttonConfirmText: 'Current Mission',
+                  //     buttonAlternateText: 'Copied Mission',
+                  //   },
+                  // )
+
                   appActions.goToPage('GamePage', {
                     missionID: resultingMission.missionID,
                   })
