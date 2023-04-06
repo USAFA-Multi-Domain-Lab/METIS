@@ -11,6 +11,7 @@ import { databaseLogger } from '../../../modules/logging'
 import { isLoggedIn, requireLogin } from '../../../user'
 import { APP_DIR } from '../../../config'
 import uploads from '../../../middleware/uploads'
+import { commandScripts } from '../../../action-execution'
 
 type MulterFile = Express.Multer.File
 
@@ -433,6 +434,34 @@ router.get('/export/*', requireLogin, (request, response) => {
 // the database that is currently in use.
 router.get('/environment/', (request, response) => {
   response.send(process.env)
+})
+
+// -- PUT /api/v1/missions/handle-action-execution/
+//
+router.put('/handle-action-execution/', requireLogin, (request, response) => {
+  let body: any = request.body
+
+  if ('missionID' in body && 'nodeID' in body && 'actionID' in body) {
+    let missionID = body.missionID
+    let nodeID = body.nodeID
+    let actionID = body.actionID
+
+    MissionModel.findOne({ missionID }).exec((error: Error, mission: any) => {
+      mission.nodeData.forEach((node: any) => {
+        if (node.nodeID === nodeID) {
+          node.actions.forEach((action: any) => {
+            if (action.actionID === actionID) {
+              for (let script of action.scripts) {
+                commandScripts[script.scriptName](script.label)
+              }
+            }
+          })
+        }
+      })
+    })
+  } else {
+    return response.sendStatus(400)
+  }
 })
 
 // -- PUT | /api/v1/missions/ --

@@ -285,7 +285,16 @@ export const MissionSchema: Schema = new Schema(
                 },
                 postExecutionSuccessText: { type: String, required: true },
                 postExecutionFailureText: { type: String, required: true },
-                commandScripts: { type: [String], required: true },
+                scripts: {
+                  type: [
+                    {
+                      label: { type: String, required: true },
+                      scriptName: { type: String, required: true },
+                      args: { type: Array, required: true },
+                    },
+                  ],
+                  required: true,
+                },
               },
             ],
             required: true,

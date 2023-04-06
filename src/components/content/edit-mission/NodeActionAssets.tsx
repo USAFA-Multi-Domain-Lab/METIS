@@ -1,5 +1,7 @@
-import { MissionNodeAction } from '../../../modules/mission-node-actions'
-import { AnyObject } from '../../../modules/toolbox/objects'
+import {
+  IScript,
+  MissionNodeAction,
+} from '../../../modules/mission-node-actions'
 import Tooltip from '../communication/Tooltip'
 import NodeActionAsset from './NodeActionAsset'
 import './NodeActionAssets.scss'
@@ -16,12 +18,15 @@ export default function NodeActionAssets(props: {
   let isEmptyString: boolean = props.isEmptyString
   let handleChange = props.handleChange
 
+  let iScriptProperties: IScript = {
+    label: 'label',
+    scriptName: 'scriptName',
+    args: ['args'],
+  }
+
   /* -- COMPONENT FUNCTIONS -- */
-  const removeAsset = (mechanismStateID: string) => {
-    action.commandScripts.splice(
-      action.commandScripts.indexOf(mechanismStateID),
-      1,
-    )
+  const removeAsset = (script: IScript) => {
+    action.scripts.splice(action.scripts.indexOf(script), 1)
     handleChange()
   }
 
@@ -37,48 +42,50 @@ export default function NodeActionAssets(props: {
     removeAssetButtonClassName += ' Disabled'
   }
 
-  if (action.commandScripts.length > 0) {
+  if (action.scripts.length > 0) {
     return (
       <div className='Assets'>
         <h5 className='AssetInfo'>Asset(s):</h5>
         <div className='AssetListTitle'>Assets that will be affected:</div>
         <div className='SelectedAssetListContainer'>
-          {action.commandScripts.map(
-            (commandScripts: string, index: number) => {
-              return (
-                <div
-                  className='SelectedAssetList'
-                  key={`action-${action.actionID}_commandScript-${commandScripts}_index-${index}`}
-                >
-                  <div className='SelectedAsset'>{commandScripts} </div>
-                  <div className='Close'>
-                    <div
-                      className={removeAssetButtonClassName}
-                      onClick={() => removeAsset(commandScripts)}
-                    >
-                      x
-                      <Tooltip description='Remove asset.' />
-                    </div>
+          {action.scripts.map((script: IScript, index: number) => {
+            return (
+              <div
+                className='SelectedAssetList'
+                key={`action-${action.actionID}_commandScript-${script}_index-${index}`}
+              >
+                <div className='SelectedAsset'>
+                  {script.scriptName}("{script.label}"){' '}
+                </div>
+                <div className='Close'>
+                  <div
+                    className={removeAssetButtonClassName}
+                    onClick={() => removeAsset(script)}
+                  >
+                    x
+                    <Tooltip description='Remove asset.' />
                   </div>
                 </div>
-              )
-            },
-          )}
+              </div>
+            )
+          })}
         </div>
 
         <NodeActionAsset
           action={action}
           isEmptyString={isEmptyString}
+          iScriptProperties={iScriptProperties}
           handleChange={handleChange}
         />
       </div>
     )
-  } else if (action.commandScripts.length === 0) {
+  } else if (action.scripts.length === 0) {
     return (
       <div className='Assets'>
         <NodeActionAsset
           action={action}
           isEmptyString={isEmptyString}
+          iScriptProperties={iScriptProperties}
           handleChange={handleChange}
         />
       </div>

@@ -1,4 +1,7 @@
-import { MissionNodeAction } from '../../../modules/mission-node-actions'
+import {
+  IScript,
+  MissionNodeAction,
+} from '../../../modules/mission-node-actions'
 import './NodeActionAsset.scss'
 import Tooltip from '../communication/Tooltip'
 import { useState } from 'react'
@@ -11,11 +14,13 @@ import AssetOption from './AssetOption'
 export default function NodeActionAsset(props: {
   action: MissionNodeAction
   isEmptyString: boolean
+  iScriptProperties: IScript
   handleChange: () => void
 }): JSX.Element | null {
   /* -- COMPONENT VARIABLES -- */
   let action: MissionNodeAction = props.action
   let isEmptyString: boolean = props.isEmptyString
+  let iScriptProperties: IScript = props.iScriptProperties
   let handleChange = props.handleChange
   let assets: AnyObject = assetTestData
 
@@ -24,6 +29,7 @@ export default function NodeActionAsset(props: {
   const [assetOptions, setAssetOptions] = useState<Array<string>>(
     Object.keys(assets),
   )
+  const [selectedScript, setSelectedScript] = useState<IScript | null>(null)
   const [addAssetButtonIsDisplayed, setAddAssetButtonIsDisplayed] =
     useState<boolean>(true)
   const [cancelAssetButtonIsDisplayed, setCancelAssetButtonIsDisplayed] =
@@ -54,14 +60,16 @@ export default function NodeActionAsset(props: {
   // to their default state, the add asset button
   // is displayed and the user is able to save the mission.
   const submitAsset = () => {
-    action.commandScripts.push(currentAssetPath)
+    if (selectedScript !== null) {
+      action.scripts.push(selectedScript)
+    }
     setAddAssetButtonIsDisplayed(true)
     handleChange()
     setAssetPath([])
     setAssetOptions(Object.keys(assetTestData))
   }
 
-  const updateCurrentAssetStructureLocation = () => {
+  const updateCurrentLocation = () => {
     // Updates the structure, or path, based on
     // which assets are selected.
     for (let asset of assetPath) {
@@ -69,17 +77,25 @@ export default function NodeActionAsset(props: {
         assets = assets[asset]
       }
     }
+  }
+
+  const updateAssetOptions = () => {
+    updateCurrentLocation()
 
     // Grabs the next set of assets the user will
     // be able to select from.
     let subAssets: Array<string> = Object.keys(assets)
 
-    if (!subAssets.includes('0')) {
-      setAssetOptions(subAssets)
-    } else {
+    if (
+      subAssets.includes(iScriptProperties.label) &&
+      subAssets.includes(iScriptProperties.scriptName) &&
+      subAssets.includes(iScriptProperties.args[0])
+    ) {
       setAssetOptions([])
       setAddAssetButtonIsDisplayed(false)
       setCancelAssetButtonIsDisplayed(false)
+    } else {
+      setAssetOptions(subAssets)
     }
   }
 
@@ -90,7 +106,8 @@ export default function NodeActionAsset(props: {
     // and can submit then when they hit the back
     // button this will remove the submit button
     // and display the cancel button.
-    updateCurrentAssetStructureLocation()
+    updateCurrentLocation()
+    updateAssetOptions()
 
     // Removes the last asset that was added
     // to the asset path and updates the
@@ -161,12 +178,11 @@ export default function NodeActionAsset(props: {
                 <AssetOption
                   action={action}
                   assetOption={assetOption}
-                  assetPath={assetPath}
                   assets={assets}
-                  assetOptions={assetOptions}
-                  updateCurrentAssetStructureLocation={
-                    updateCurrentAssetStructureLocation
-                  }
+                  iScriptProperties={iScriptProperties}
+                  assetPath={assetPath}
+                  updateAssetOptions={updateAssetOptions}
+                  setSelectedScript={setSelectedScript}
                   key={`action-${action.actionID}_asset-${assetOption}`}
                 />
               )

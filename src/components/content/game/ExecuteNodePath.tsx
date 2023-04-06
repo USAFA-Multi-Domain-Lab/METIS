@@ -1,7 +1,10 @@
 import React from 'react'
 import './ExecuteNodePath.scss'
 import { MissionNode } from '../../../modules/mission-nodes'
-import { MissionNodeAction } from '../../../modules/mission-node-actions'
+import {
+  handleSuccessfulActionExecution,
+  MissionNodeAction,
+} from '../../../modules/mission-node-actions'
 import ActionPropertyDisplay from './ActionPropertyDisplay'
 import { Mission } from '../../../modules/missions'
 import Notification from '../../../modules/notifications'
@@ -9,6 +12,8 @@ import Tooltip from '../communication/Tooltip'
 import { INotifyOptions } from '../../AppState'
 import { IConsoleOutput } from './ConsoleOutput'
 import OutputPanel from './OutputPanel'
+import { useStore } from 'react-context-hook'
+import { IUser } from '../../../modules/users'
 
 /* -- INTERFACE(S) -- */
 
@@ -21,7 +26,87 @@ interface IExecuteNodePath {
   handleGoBackRequest: () => void
 }
 
-interface IExecuteNodePath_S {}
+interface IExecuteNodePath_S {
+  currentUser: IUser | null
+}
+
+function Buttons(props: {
+  selectedAction: MissionNodeAction
+  handleGoBackRequest: () => void
+  handleCloseRequest: () => void
+  outputToConsole: (output: IConsoleOutput) => void
+  notify: (message: string, options: INotifyOptions) => Notification
+}): JSX.Element | null {
+  /* -- COMPONENT VARIABLES -- */
+  let selectedAction: MissionNodeAction = props.selectedAction
+  let selectedNode: MissionNode = selectedAction.node
+  let mission: Mission = selectedNode.mission
+  let handleGoBackRequest = props.handleGoBackRequest
+  let notify = props.notify
+  let outputToConsole = props.outputToConsole
+  let handleCloseRequest = props.handleCloseRequest
+
+  /* -- GLOBAL STATE -- */
+  const [currentUser] = useStore<IUser | null>('currentUser')
+
+  /* -- COMPONENT FUNCTIONS -- */
+  // Closes the execution prompt window.
+  const closeWindow = () => {
+    handleCloseRequest()
+  }
+
+  const execute = () => {
+    if (selectedAction.readyToExecute) {
+      closeWindow()
+      outputToConsole(OutputPanel.renderActionStartOutput(selectedAction))
+      selectedAction.execute(useAssets)
+    } else {
+      notify(
+        `The action you attempted to execute is not currently executable.`,
+        { duration: 3500 },
+      )
+    }
+  }
+
+  /* -- RENDER -- */
+
+  let executionButtonClassName: string = 'Button ExecutionButton'
+  let additionalActionButtonClassName: string = 'Button AdditionalActionButton'
+  let displayTooltip: boolean = false
+  let useAssets: boolean = false
+
+  if (!selectedAction.readyToExecute) {
+    executionButtonClassName += ' Disabled'
+    displayTooltip = true
+  }
+  if (selectedNode.actions.length === 1) {
+    additionalActionButtonClassName += ' Disabled'
+  }
+
+  if (currentUser && currentUser.userID === 'admin') {
+    useAssets = true
+  }
+
+  return (
+    <div className='Buttons'>
+      <button className={executionButtonClassName} onClick={execute}>
+        EXECUTE ACTION
+        {displayTooltip ? (
+          <Tooltip
+            description={`You cannot execute this action because you do not have enough resources remaining.`}
+          />
+        ) : null}
+      </button>
+
+      <button
+        className={additionalActionButtonClassName}
+        onClick={handleGoBackRequest}
+      >
+        Back
+      </button>
+    </div>
+  )
+}
 
 export default class ExecuteNodePath extends React.Component<
   IExecuteNodePath,
@@ -31,7 +116,8 @@ export default class ExecuteNodePath extends React.Component<
   // has finished executing and the result
   // was a success.
   static handleExecutionSuccess(action: MissionNodeAction): void {
-    let mission: Mission = action.node.mission
+    let node: MissionNode = action.node
+    let mission: Mission = node.mission
 
     mission.outputToConsole(OutputPanel.renderExecutionSuccessOutput(action))
   }
@@ -61,40 +147,18 @@ export default class ExecuteNodePath extends React.Component<
 
   componentWillUnmount(): void {}
 
-  // Closes the execution prompt window
+  // Closes the execution prompt window.
   closeWindow = () => {
     this.props.handleCloseRequest()
-  }
-
-  execute = () => {
-    let selectedAction: MissionNodeAction = this.selectedAction
-
-    if (selectedAction.readyToExecute) {
-      this.closeWindow()
-      this.props.outputToConsole(
-        OutputPanel.renderActionStartOutput(selectedAction),
-      )
-      selectedAction.execute()
-    } else {
-      this.props.notify(
-        `The action you attempted to execute is not currently executable.`,
-        { duration: 3500 },
-      )
-    }
   }
 
   render(): JSX.Element | null {
     let selectedNode: MissionNode = this.selectedNode
     let selectedAction: MissionNodeAction = this.props.selectedAction
     let isOpen: boolean = this.props.isOpen
-    let handleGoBackRequest = this.props.handleGoBackRequest
 
     // Logic to disable the execute button once a user is out of tokens.
     let className: string = 'ExecuteNodePath'
-    let executionButtonClassName: string = 'Button ExecutionButton'
-    let displayTooltip: boolean = false
-    let additionalActionButtonClassName: string =
-      'Button AdditionalActionButton'
 
     /* -- COMPONENT VARIABLES -- */
     let actionName: string = selectedAction.name
@@ -103,13 +167,6 @@ export default class ExecuteNodePath extends React.Component<
 
     if (!isOpen) {
       className += ' Hidden'
-    }
-    if (!selectedAction.readyToExecute) {
-      executionButtonClassName += ' Disabled'
-      displayTooltip = true
-    }
-    if (selectedNode.actions.length === 1) {
-      additionalActionButtonClassName += ' Disabled'
     }
 
     return (
@@ -124,23 +181,13 @@ export default class ExecuteNodePath extends React.Component<
           Do you want to {actionName.toLowerCase()} {selectedNode.name}?
         </div>
         <ActionPropertyDisplay selectedNode={selectedNode} />
-        <div className='Buttons'>
-          <button className={executionButtonClassName} onClick={this.execute}>
-            EXECUTE ACTION
-            {displayTooltip ? (
-              <Tooltip
-                description={`You cannot execute this action because you do not have enough resources remaining.`}
-              />
-            ) : null}
-          </button>
-
-          <button
-            className={additionalActionButtonClassName}
-            onClick={handleGoBackRequest}
-          >
-            Back
-          </button>
-        </div>
+        <Buttons
+          selectedAction={this.selectedAction}
+          handleGoBackRequest={this.props.handleGoBackRequest}
+          handleCloseRequest={this.props.handleCloseRequest}
+          outputToConsole={this.props.outputToConsole}
+          notify={this.props.notify}
+        />
       </div>
     )
   }

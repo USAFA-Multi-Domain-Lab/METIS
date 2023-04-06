@@ -373,7 +373,7 @@ export class MissionNode implements IMissionMappable {
         action.resourceCost,
         action.postExecutionSuccessText,
         action.postExecutionFailureText,
-        action.commandScripts,
+        action.scripts,
       )
       actions.push(actionObject)
     }

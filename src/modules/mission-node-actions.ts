@@ -1,7 +1,14 @@
+import axios, { AxiosError } from 'axios'
 import { PRNG } from 'seedrandom'
 import ExecuteNodePath from '../components/content/game/ExecuteNodePath'
 import { MissionNode } from './mission-nodes'
 import { Mission } from './missions'
+
+export interface IScript {
+  label: string
+  scriptName: string
+  args: Array<any>
+}
 
 export interface IMissionNodeActionJSON {
   actionID: string
@@ -12,7 +19,7 @@ export interface IMissionNodeActionJSON {
   resourceCost: number
   postExecutionSuccessText: string
   postExecutionFailureText: string
-  commandScripts: Array<string>
+  scripts: Array<IScript>
 }
 
 export class MissionNodeAction {
@@ -25,7 +32,7 @@ export class MissionNodeAction {
   resourceCost: number
   postExecutionSuccessText: string
   postExecutionFailureText: string
-  commandScripts: Array<string>
+  scripts: Array<IScript>
   _willSucceedArray: Array<boolean>
   _willSucceed: boolean | null
 
@@ -77,7 +84,7 @@ export class MissionNodeAction {
     resourceCost: number,
     postExecutionSuccessText: string,
     postExecutionFailureText: string,
-    commandScripts: Array<string>,
+    scripts: Array<IScript>,
   ) {
     this.node = node
     this.actionID = actionID
@@ -88,7 +95,7 @@ export class MissionNodeAction {
     this.resourceCost = resourceCost
     this.postExecutionSuccessText = postExecutionSuccessText
     this.postExecutionFailureText = postExecutionFailureText
-    this.commandScripts = commandScripts
+    this.scripts = scripts
     this._willSucceedArray =
       MissionNodeAction.determineDifferentSuccessOutcomes(
         this.totalPossibleExecutionAttempts,
@@ -108,7 +115,7 @@ export class MissionNodeAction {
       resourceCost: this.resourceCost,
       postExecutionSuccessText: this.postExecutionSuccessText,
       postExecutionFailureText: this.postExecutionFailureText,
-      commandScripts: this.commandScripts,
+      scripts: this.scripts,
     }
   }
 
@@ -149,8 +156,9 @@ export class MissionNodeAction {
 
   // This will be called upon action
   // execution completion.
-  _handleExecutionEnd = (success: boolean): void => {
+  _handleExecutionEnd = (success: boolean, useAssets: boolean): void => {
     let node: MissionNode = this.node
+    let mission: Mission = node.mission
 
     node.handleActionExecutionEnd()
 
@@ -162,10 +170,18 @@ export class MissionNodeAction {
     } else if (!success) {
       ExecuteNodePath.handleExecutionFailure(this)
     }
+
+    if (success && useAssets) {
+      handleSuccessfulActionExecution(
+        mission.missionID,
+        node.nodeID,
+        this.actionID,
+      )
+    }
   }
 
   // This will execute the action.
-  execute(): void {
+  execute(useAssets: boolean): void {
     let node: MissionNode = this.node
     let mission: Mission = node.mission
     let resourceCost: number = this.resourceCost
@@ -182,10 +198,27 @@ export class MissionNodeAction {
 
     setTimeout(() => {
       this.updateWillSucceed()
-      this._handleExecutionEnd(willSucceed)
+      this._handleExecutionEnd(willSucceed, useAssets)
       this.updateWillSucceedArray()
     }, processTime)
   }
 }
 
-export default MissionNodeAction
+export function handleSuccessfulActionExecution(
+  missionID: string,
+  nodeID: string,
+  actionID: string,
+): void {
+  axios
+    .put(`/api/v1/missions/handle-action-execution/`, {
+      missionID: missionID,
+      nodeID: nodeID,
+      actionID: actionID,
+    })
+    .catch((error: AxiosError) => {
+      console.error('Failed to handle successful action execution.')
+      console.error(error)
+    })
+}
+
+export default { MissionNodeAction, handleSuccessfulActionExecution }
