@@ -289,6 +289,7 @@ export const MissionSchema: Schema = new Schema(
                   type: [
                     {
                       label: { type: String, required: true },
+                      description: { type: String, required: true },
                       scriptName: { type: String, required: true },
                       args: { type: Array, required: true },
                     },

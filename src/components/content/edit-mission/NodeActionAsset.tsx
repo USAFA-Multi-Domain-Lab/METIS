@@ -14,15 +14,14 @@ import AssetOption from './AssetOption'
 export default function NodeActionAsset(props: {
   action: MissionNodeAction
   isEmptyString: boolean
-  iScriptProperties: IScript
   handleChange: () => void
 }): JSX.Element | null {
   /* -- COMPONENT VARIABLES -- */
   let action: MissionNodeAction = props.action
   let isEmptyString: boolean = props.isEmptyString
-  let iScriptProperties: IScript = props.iScriptProperties
   let handleChange = props.handleChange
   let assets: AnyObject = assetTestData
+  let matchesIScriptProperties: boolean = false
 
   /* -- COMPONENT STATE -- */
   const [assetPath, setAssetPath] = useState<Array<string>>([])
@@ -86,17 +85,35 @@ export default function NodeActionAsset(props: {
     // be able to select from.
     let subAssets: Array<string> = Object.keys(assets)
 
-    if (
-      subAssets.includes(iScriptProperties.label) &&
-      subAssets.includes(iScriptProperties.scriptName) &&
-      subAssets.includes(iScriptProperties.args[0])
-    ) {
+    validateEndOfAssetPath(subAssets)
+
+    if (matchesIScriptProperties) {
       setAssetOptions([])
       setAddAssetButtonIsDisplayed(false)
       setCancelAssetButtonIsDisplayed(false)
     } else {
       setAssetOptions(subAssets)
     }
+  }
+
+  const validateEndOfAssetPath = (subAssets: Array<string>) => {
+    let iScriptProperties: IScript = {
+      label: 'label',
+      description: 'description',
+      scriptName: 'scriptName',
+      args: ['args'],
+    }
+
+    subAssets.forEach((subAsset: string) => {
+      if (
+        subAsset === iScriptProperties.label ||
+        subAsset === iScriptProperties.description ||
+        subAsset === iScriptProperties.scriptName ||
+        subAsset === iScriptProperties.args[0]
+      ) {
+        matchesIScriptProperties = true
+      }
+    })
   }
 
   const handleBackClick = () => {
@@ -174,12 +191,14 @@ export default function NodeActionAsset(props: {
 
           <div className='AssetOptions'>
             {assetOptions.map((assetOption: string) => {
+              // AssetOption was broken down into its own
+              // function component so that each asset option
+              // can expand and collapse individually.
               return (
                 <AssetOption
                   action={action}
                   assetOption={assetOption}
                   assets={assets}
-                  iScriptProperties={iScriptProperties}
                   assetPath={assetPath}
                   updateAssetOptions={updateAssetOptions}
                   setSelectedScript={setSelectedScript}

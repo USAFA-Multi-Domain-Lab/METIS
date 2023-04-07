@@ -6,6 +6,7 @@ import { Mission } from './missions'
 
 export interface IScript {
   label: string
+  description: string
   scriptName: string
   args: Array<any>
 }

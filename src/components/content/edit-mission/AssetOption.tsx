@@ -5,6 +5,7 @@ import {
   IScript,
 } from '../../../modules/mission-node-actions'
 import { AnyObject } from '../../../modules/toolbox/objects'
+import Tooltip from '../communication/Tooltip'
 import './AssetOption.scss'
 
 export default function AssetOption(props: {
@@ -12,7 +13,6 @@ export default function AssetOption(props: {
   assetOption: string
   assetPath: Array<string>
   assets: AnyObject
-  iScriptProperties: IScript
   updateAssetOptions: () => void
   setSelectedScript: (selectedScript: IScript) => void
 }): JSX.Element | null {
@@ -21,9 +21,9 @@ export default function AssetOption(props: {
   let assetOption: string = props.assetOption
   let assetPath: Array<string> = props.assetPath
   let assets: AnyObject = props.assets
-  let iScriptProperties: IScript = props.iScriptProperties
   let updateAssetOptions = props.updateAssetOptions
   let setSelectedScript = props.setSelectedScript
+  let matchesIScriptProperties: boolean = false
 
   /* -- GLOBAL STATE -- */
   const [forcedUpdateCounter, setForcedUpdateCounter] = useStore<number>(
@@ -48,6 +48,26 @@ export default function AssetOption(props: {
     }
   }
 
+  const validateEndOfAssetPath = (subAssets: Array<string>) => {
+    let iScriptProperties: IScript = {
+      label: 'label',
+      description: 'description',
+      scriptName: 'scriptName',
+      args: ['args'],
+    }
+
+    subAssets.forEach((subAsset: string) => {
+      if (
+        subAsset === iScriptProperties.label ||
+        subAsset === iScriptProperties.description ||
+        subAsset === iScriptProperties.scriptName ||
+        subAsset === iScriptProperties.args[0]
+      ) {
+        matchesIScriptProperties = true
+      }
+    })
+  }
+
   // Called when a user selects an asset. Works similar
   // to a file explorer.
   const handleAssetSelection = (assetOption: string) => {
@@ -55,12 +75,21 @@ export default function AssetOption(props: {
     // to see.
     assetPath.push(assetOption)
 
-    if (assets.label && assets.scriptName && assets.args) {
+    // Checks if the selected asset option
+    // matches the criteria to be able to
+    // save to an action and selects the
+    // object to be saved if it matches.
+    if (matchesIScriptProperties) {
       let script: any = assets
       setSelectedScript(script)
     }
 
+    // Collapses all previously expanded assets.
     setSelectedAssetOptions([])
+
+    // Updates where the user is within the
+    // asset structure and the available
+    // asset options the user can select.
     updateCurrentLocation()
     updateAssetOptions()
   }
@@ -76,65 +105,100 @@ export default function AssetOption(props: {
     assetPath.push(assetOption)
     assetPath.push(subAssetOption)
 
+    // Checks if the selected asset option
+    // matches the criteria to be able to
+    // save to an action and selects the
+    // object to be saved if it matches.
+    if (matchesIScriptProperties) {
+      let script: any = assets
+      setSelectedScript(script)
+    }
+
+    // Collapses all previously expanded assets.
     setSelectedAssetOptions([])
+
+    // Updates where the user is within the
+    // asset structure and the available
+    // asset options the user can select.
     updateCurrentLocation()
     updateAssetOptions()
   }
 
+  // Expands and collapses assets with a folder icon.
   const toggleSubAssets = (selectedOption: string) => {
     assetPath.push(selectedOption)
 
     updateCurrentLocation()
 
-    let subAssets: Array<string> = Object.keys(assets)
+    let subAssetNames: Array<string> = Object.keys(assets)
+
+    validateEndOfAssetPath(subAssetNames)
 
     if (
-      !selectedAssetOptions.includes(selectedOption) &&
-      !subAssets.includes(iScriptProperties.label) &&
-      !subAssets.includes(iScriptProperties.scriptName) &&
-      !subAssets.includes(iScriptProperties.args[0])
+      selectedAssetOptions.includes(selectedOption) &&
+      !matchesIScriptProperties
     ) {
-      selectedAssetOptions.push(selectedOption)
-      setSubAssetOptions(subAssets)
-    } else {
       selectedAssetOptions.splice(
         selectedAssetOptions.indexOf(selectedOption),
         1,
       )
       setForcedUpdateCounter(forcedUpdateCounter + 1)
+    } else {
+      selectedAssetOptions.push(selectedOption)
+      setSubAssetOptions(subAssetNames)
     }
 
     assetPath.pop()
   }
 
+  // Checks if the current assets have sub-asset options.
+  // If so, the user interface is updated to display properly.
   const checkForSubAssets = () => {
+    // Temporarily adds the current option to the asset path
+    // to be able to go one layer deeper in the structure.
     assetPath.push(assetOption)
 
     updateCurrentLocation()
 
-    let subAssets: Array<string> = Object.keys(assets)
+    let subAssetNames: Array<string> = Object.keys(assets)
 
-    if (
-      subAssets.includes(iScriptProperties.label) &&
-      subAssets.includes(iScriptProperties.scriptName) &&
-      subAssets.includes(iScriptProperties.args[0])
-    ) {
+    validateEndOfAssetPath(subAssetNames)
+
+    if (matchesIScriptProperties) {
       // Hides the triangle if there are
       // no options after what the user
       // can currently see
       indicatorClassName += ' Hidden'
       folderClassName += ' Hidden'
       fileClassName = 'File'
+      assetTooltipDescription = assets.description
     }
 
+    // Checks the sub-assets to see if they have a
+    // property called "description."
+    // If so, it sets the tool-tip description
+    // for the sub-assets so that the user knows
+    // what that sub-asset will do before selecting it.
+    let subAssets: Array<AnyObject> = Object.values(assets)
+    subAssets.forEach((asset: AnyObject) => {
+      if (asset.description !== undefined) {
+        subAssetTooltipDescription = asset.description
+      }
+    })
+
+    //  Removes the asset that was added temporarily so that
+    // the path can return to normal.
     assetPath.pop()
   }
 
   /* -- RENDER -- */
+
   // Default class names
   let indicatorClassName: string = 'Indicator'
   let folderClassName: string = 'Folder'
-  let fileClassName: string = 'Hidden'
+  let fileClassName: string = 'File Hidden'
+  let assetTooltipDescription: string = ''
+  let subAssetTooltipDescription: string = ''
 
   if (selectedAssetOptions.includes(assetOption)) {
     indicatorClassName += ' isExpanded'
@@ -142,7 +206,6 @@ export default function AssetOption(props: {
     indicatorClassName = 'Indicator'
   }
 
-  // Checks if an asset option has a sub-asset option
   checkForSubAssets()
 
   return (
@@ -186,6 +249,7 @@ export default function AssetOption(props: {
         onClick={() => handleAssetSelection(assetOption)}
       >
         {assetOption}
+        <Tooltip description={assetTooltipDescription} />
       </div>
 
       {subAssetOptions.map((subAssetOption: string) => {
@@ -202,6 +266,7 @@ export default function AssetOption(props: {
                 }
               >
                 {subAssetOption}
+                <Tooltip description={subAssetTooltipDescription} />
               </span>
             </div>
           )

@@ -49,6 +49,7 @@
 
   .AssetOptionText,
   .SubAssetOptionText {
+    width: fit-content;
     color: $color-accent-light;
 
     &:hover,

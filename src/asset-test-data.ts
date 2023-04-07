@@ -5,17 +5,47 @@ export const assetTestData: AnyObject = {
     network_1: {
       bank: {
         color: {
-          white: { label: 'white', scriptName: 'BankColor', args: ['white'] },
-          blue: { label: 'blue', scriptName: 'BankColor', args: [] },
-          red: { label: 'red', scriptName: 'BankColor', args: [] },
-          green: { label: 'green', scriptName: 'BankColor', args: [] },
-          yellow: { label: 'yellow', scriptName: 'BankColor', args: [] },
-          purple: { label: 'purple', scriptName: 'BankColor', args: [] },
-          off: { label: 'OFF', scriptName: 'BankColor', args: [] },
-          brightOrange: {
-            label: 'Bright Orange',
+          white: {
+            label: 'white',
+            description: 'Turns the bank color to white.',
             scriptName: 'BankColor',
-            args: [],
+            args: ['white'],
+          },
+          blue: {
+            label: 'blue',
+            description: 'Turns the bank color to blue.',
+            scriptName: 'BankColor',
+            args: ['blue'],
+          },
+          red: {
+            label: 'red',
+            description: 'Turns the bank color to red.',
+            scriptName: 'BankColor',
+            args: ['red'],
+          },
+          green: {
+            label: 'green',
+            description: 'Turns the bank color to green.',
+            scriptName: 'BankColor',
+            args: ['green'],
+          },
+          yellow: {
+            label: 'yellow',
+            description: 'Turns the bank color to yellow.',
+            scriptName: 'BankColor',
+            args: ['yellow'],
+          },
+          purple: {
+            label: 'purple',
+            description: 'Turns the bank color to purple.',
+            scriptName: 'BankColor',
+            args: ['purple'],
+          },
+          off: {
+            label: 'OFF',
+            description: 'Turns the bank color off.',
+            scriptName: 'BankColor',
+            args: ['off'],
           },
         },
       },

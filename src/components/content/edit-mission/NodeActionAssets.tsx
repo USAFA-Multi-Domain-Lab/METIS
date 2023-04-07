@@ -18,12 +18,6 @@ export default function NodeActionAssets(props: {
   let isEmptyString: boolean = props.isEmptyString
   let handleChange = props.handleChange
 
-  let iScriptProperties: IScript = {
-    label: 'label',
-    scriptName: 'scriptName',
-    args: ['args'],
-  }
-
   /* -- COMPONENT FUNCTIONS -- */
   const removeAsset = (script: IScript) => {
     action.scripts.splice(action.scripts.indexOf(script), 1)
@@ -74,7 +68,6 @@ export default function NodeActionAssets(props: {
         <NodeActionAsset
           action={action}
           isEmptyString={isEmptyString}
-          iScriptProperties={iScriptProperties}
           handleChange={handleChange}
         />
       </div>
@@ -85,7 +78,6 @@ export default function NodeActionAssets(props: {
         <NodeActionAsset
           action={action}
           isEmptyString={isEmptyString}
-          iScriptProperties={iScriptProperties}
           handleChange={handleChange}
         />
       </div>
