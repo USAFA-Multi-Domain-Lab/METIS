@@ -205,31 +205,37 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
                 mission={mission}
                 appActions={appActions}
                 handleSuccessfulCopy={(resultingMission: Mission) => {
-                  // appActions.confirm(
-                  //   'Would you like to go to the copied mission, or return to the current mission?',
-                  //   (concludeAction: () => void) => {
-                  //     appActions.goToPage('GamePage', {
-                  //       missionID: mission.missionID,
-                  //     })
-                  //     concludeAction()
-                  //   },
-                  //   {
-                  //     handleAlternate: (concludeAction: () => void) => {
-                  //       appActions.goToPage('GamePage', {
-                  //         missionID: resultingMission.missionID,
-                  //       })
-                  //       concludeAction()
-                  //     },
-                  //     pendingMessageUponConfirm: 'Launching mission...',
-                  //     pendingMessageUponAlternate: 'Launching mission...',
-                  //     buttonConfirmText: 'Current Mission',
-                  //     buttonAlternateText: 'Copied Mission',
-                  //   },
-                  // )
-
-                  appActions.goToPage('GamePage', {
-                    missionID: resultingMission.missionID,
-                  })
+                  // This gives the user the option
+                  // to go to the mission they are
+                  // copying or return to the current
+                  // mission.
+                  appActions.confirm(
+                    'Would you like to go to the copied mission, or return to the current mission?',
+                    (concludeAction: () => void) => {
+                      // Return to the current mission
+                      setMountHandled(false)
+                      appActions.goToPage('GamePage', {
+                        missionID: mission.missionID,
+                      })
+                      appActions.finishLoading()
+                      concludeAction()
+                    },
+                    {
+                      handleAlternate: (concludeAction: () => void) => {
+                        // Go to the copied mission.
+                        setMountHandled(false)
+                        appActions.goToPage('GamePage', {
+                          missionID: resultingMission.missionID,
+                        })
+                        appActions.finishLoading()
+                        concludeAction()
+                      },
+                      pendingMessageUponConfirm: 'Launching mission...',
+                      pendingMessageUponAlternate: 'Launching mission...',
+                      buttonConfirmText: 'Current Mission',
+                      buttonAlternateText: 'Copied Mission',
+                    },
+                  )
                 }}
                 handleSuccessfulDeletion={() => {
                   appActions.goToPage('MissionSelectionPage', {})

@@ -83,22 +83,25 @@ export default function MissionModificationPanel(props: {
     appActions.confirm(
       'Enter the name of the new mission.',
       (concludeAction: () => void, entry: string) => {
-        concludeAction()
         appActions.beginLoading('Copying mission...')
 
         copyMission(
           mission.missionID,
           entry,
           (resultingMission: Mission) => {
-            appActions.finishLoading()
-            appActions.notify(`Successfully copied ${mission.name}.`)
+            // -----------------------------------------------
+            // finishes loading inside this function.
+            // This function can be found in GamePage.tsx
             handleSuccessfulCopy(resultingMission)
+            // -----------------------------------------------
+            appActions.notify(`Successfully copied ${mission.name}.`)
           },
           () => {
             appActions.finishLoading()
             appActions.notify(`Failed to copy ${mission.name}.`)
           },
         )
+        concludeAction()
       },
       {
         requireEntry: true,
