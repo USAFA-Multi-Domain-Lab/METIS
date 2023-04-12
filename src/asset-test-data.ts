@@ -47,7 +47,7 @@ export const assetTestData: AnyObject = {
             originalPath: '',
             args: { color: 'purple' },
           },
-          off: {
+          OFF: {
             label: 'Cyber-City_Bank-Light: "OFF"',
             description: 'Turns the bank color off.',
             scriptName: 'BankColor',
@@ -1562,14 +1562,14 @@ export const assetTestData: AnyObject = {
       },
       gas: {
         all_sections: {
-          on: {
+          ON: {
             label: 'Cyber-City_Gas-All-Sections: "ON"',
             description: 'Turns gas section 1 on.',
             scriptName: 'Gas',
             originalPath: '',
             args: { state: 'ON' },
           },
-          off: {
+          OFF: {
             label: 'Cyber-City_Gas-All-Sections: "OFF"',
             description: 'Turns gas section 1 off.',
             scriptName: 'Gas',
@@ -1579,14 +1579,14 @@ export const assetTestData: AnyObject = {
         },
         sections: {
           section_1: {
-            on: {
+            ON: {
               label: 'Cyber-City_Gas-Section-1: "ON"',
               description: 'Turns gas section 1 on.',
               scriptName: 'Gas',
               originalPath: '',
               args: { section: '1', state: 'ON' },
             },
-            off: {
+            OFF: {
               label: 'Cyber-City_Gas-Section-1: "OFF"',
               description: 'Turns gas section 1 off.',
               scriptName: 'Gas',
@@ -1595,14 +1595,14 @@ export const assetTestData: AnyObject = {
             },
           },
           section_2: {
-            on: {
+            ON: {
               label: 'Cyber-City_Gas-Section-2: "ON"',
               description: 'Turns gas section 2 on.',
               scriptName: 'Gas',
               originalPath: '',
               args: { section: '2', state: 'ON' },
             },
-            off: {
+            OFF: {
               label: 'Cyber-City_Gas-Section-2: "OFF"',
               description: 'Turns gas section 2 off.',
               scriptName: 'Gas',
@@ -1611,14 +1611,14 @@ export const assetTestData: AnyObject = {
             },
           },
           section_3: {
-            on: {
+            ON: {
               label: 'Cyber-City_Gas-Section-3: "ON"',
               description: 'Turns gas section 3 on.',
               scriptName: 'Gas',
               originalPath: '',
               args: { section: '3', state: 'ON' },
             },
-            off: {
+            OFF: {
               label: 'Cyber-City_Gas-Section-3: "OFF"',
               description: 'Turns gas section 3 off.',
               scriptName: 'Gas',
@@ -1629,14 +1629,14 @@ export const assetTestData: AnyObject = {
         },
       },
       light_strip: {
-        on: {
+        ON: {
           label: 'Cyber-City_Light-Strip: "ON"',
           description: 'Turns the light strip on.',
           scriptName: 'LightStrip',
           originalPath: '',
           args: { state: 'ON' },
         },
-        off: {
+        OFF: {
           label: 'Cyber-City_Light-Strip: "OFF"',
           description: 'Turns the light strip off.',
           scriptName: 'LightStrip',
@@ -1647,14 +1647,14 @@ export const assetTestData: AnyObject = {
       lights: {
         buildings: {
           admin_building: {
-            on: {
+            ON: {
               label: 'Cyber-City_Lights-Admin-Building: "ON"',
               description: "Turns the admin building's lights on.",
               scriptName: 'BuildingLights',
               originalPath: '',
               args: { building: 'admin building', state: 'ON' },
             },
-            off: {
+            OFF: {
               label: 'Cyber-City_Lights-Admin-Building: "OFF"',
               description: "Turns the admin building's lights off.",
               scriptName: 'BuildingLights',
@@ -1663,14 +1663,14 @@ export const assetTestData: AnyObject = {
             },
           },
           barracks_1: {
-            on: {
+            ON: {
               label: 'Cyber-City_Lights-Barracks-1: "ON"',
               description: "Turns the barracks' lights on.",
               scriptName: 'BuildingLights',
               originalPath: '',
               args: { building: 'barracks 1', state: 'ON' },
             },
-            off: {
+            OFF: {
               label: 'Cyber-City_Lights-Barracks-1: "OFF"',
               description: "Turns the barracks' lights off.",
               scriptName: 'BuildingLights',
@@ -1679,14 +1679,14 @@ export const assetTestData: AnyObject = {
             },
           },
           barracks_2: {
-            on: {
+            ON: {
               label: 'Cyber-City_Lights-Barracks-2: "ON"',
               description: "Turns the barracks' lights on.",
               scriptName: 'BuildingLights',
               originalPath: '',
               args: { building: 'barracks 2', state: 'ON' },
             },
-            off: {
+            OFF: {
               label: 'Cyber-City_Lights-Barracks-2: "OFF"',
               description: "Turns the barracks' lights off.",
               scriptName: 'BuildingLights',
@@ -1695,14 +1695,14 @@ export const assetTestData: AnyObject = {
             },
           },
           brown_house: {
-            on: {
+            ON: {
               label: 'Cyber-City_Lights-Brown-House: "ON"',
               description: "Turns the brown house's lights on.",
               scriptName: 'BuildingLights',
               originalPath: '',
               args: { building: 'brown house', state: 'ON' },
             },
-            off: {
+            OFF: {
               label: 'Cyber-City_Lights-Brown-House: "OFF"',
               description: "Turns the brown house's lights off.",
               scriptName: 'BuildingLights',
@@ -1711,14 +1711,14 @@ export const assetTestData: AnyObject = {
             },
           },
           cuppa_jo: {
-            on: {
+            ON: {
               label: 'Cyber-City_Lights-Cuppa-Jo: "ON"',
               description: "Turns the cuppa jo's lights on.",
               scriptName: 'BuildingLights',
               originalPath: '',
               args: { building: 'cuppa jo', state: 'ON' },
             },
-            off: {
+            OFF: {
               label: 'Cyber-City_Lights-Cuppa-Jo: "OFF"',
               description: "Turns the cuppa jo's lights off.",
               scriptName: 'BuildingLights',
@@ -1727,14 +1727,14 @@ export const assetTestData: AnyObject = {
             },
           },
           facespace: {
-            on: {
+            ON: {
               label: 'Cyber-City_Lights-Facespace: "ON"',
               description: "Turns the facespace's lights on.",
               scriptName: 'BuildingLights',
               originalPath: '',
               args: { building: 'facespace', state: 'ON' },
             },
-            off: {
+            OFF: {
               label: 'Cyber-City_Lights-Facespace: "OFF"',
               description: "Turns the facespace's lights off.",
               scriptName: 'BuildingLights',
@@ -1743,14 +1743,14 @@ export const assetTestData: AnyObject = {
             },
           },
           firehouse: {
-            on: {
+            ON: {
               label: 'Cyber-City_Lights-Firehouse: "ON"',
               description: "Turns the firehouse's lights on.",
               scriptName: 'BuildingLights',
               originalPath: '',
               args: { building: 'firehouse', state: 'ON' },
             },
-            off: {
+            OFF: {
               label: 'Cyber-City_Lights-Firehouse: "OFF"',
               description: "Turns the firehouse's lights off.",
               scriptName: 'BuildingLights',
@@ -1759,14 +1759,14 @@ export const assetTestData: AnyObject = {
             },
           },
           general_store: {
-            on: {
+            ON: {
               label: 'Cyber-City_Lights-General-Store: "ON"',
               description: "Turns the general store's lights on.",
               scriptName: 'BuildingLights',
               originalPath: '',
               args: { building: 'general store', state: 'ON' },
             },
-            off: {
+            OFF: {
               label: 'Cyber-City_Lights-General-Store: "OFF"',
               description: "Turns the general store's lights off.",
               scriptName: 'BuildingLights',
@@ -1775,14 +1775,14 @@ export const assetTestData: AnyObject = {
             },
           },
           green_house: {
-            on: {
+            ON: {
               label: 'Cyber-City_Lights-Green-House: "ON"',
               description: "Turns the green house's lights on.",
               scriptName: 'BuildingLights',
               originalPath: '',
               args: { building: 'green house', state: 'ON' },
             },
-            off: {
+            OFF: {
               label: 'Cyber-City_Lights-Green-House: "OFF"',
               description: "Turns the green house's lights off.",
               scriptName: 'BuildingLights',
@@ -1791,14 +1791,14 @@ export const assetTestData: AnyObject = {
             },
           },
           isp: {
-            on: {
+            ON: {
               label: 'Cyber-City_Lights-ISP: "ON"',
               description: "Turns the isp's lights on.",
               scriptName: 'BuildingLights',
               originalPath: '',
               args: { building: 'isp', state: 'ON' },
             },
-            off: {
+            OFF: {
               label: 'Cyber-City_Lights-ISP: "OFF"',
               description: "Turns the isp's lights off.",
               scriptName: 'BuildingLights',
@@ -1807,14 +1807,14 @@ export const assetTestData: AnyObject = {
             },
           },
           large_tower: {
-            on: {
+            ON: {
               label: 'Cyber-City_Lights-Large-Tower: "ON"',
               description: "Turns the large tower's lights on.",
               scriptName: 'BuildingLights',
               originalPath: '',
               args: { building: 'large tower', state: 'ON' },
             },
-            off: {
+            OFF: {
               label: 'Cyber-City_Lights-Large-Tower: "OFF"',
               description: "Turns the large tower's lights off.",
               scriptName: 'BuildingLights',
@@ -1823,14 +1823,14 @@ export const assetTestData: AnyObject = {
             },
           },
           military: {
-            on: {
+            ON: {
               label: 'Cyber-City_Lights-Military: "ON"',
               description: "Turns the military's lights on.",
               scriptName: 'BuildingLights',
               originalPath: '',
               args: { building: 'military', state: 'ON' },
             },
-            off: {
+            OFF: {
               label: 'Cyber-City_Lights-Military: "OFF"',
               description: "Turns the military's lights off.",
               scriptName: 'BuildingLights',
@@ -1839,14 +1839,14 @@ export const assetTestData: AnyObject = {
             },
           },
           police_station: {
-            on: {
+            ON: {
               label: 'Cyber-City_Lights-Police-Station: "ON"',
               description: "Turns the police station's lights on.",
               scriptName: 'BuildingLights',
               originalPath: '',
               args: { building: 'police station', state: 'ON' },
             },
-            off: {
+            OFF: {
               label: 'Cyber-City_Lights-Police-Station: "OFF"',
               description: "Turns the police station's lights off.",
               scriptName: 'BuildingLights',
@@ -1855,14 +1855,14 @@ export const assetTestData: AnyObject = {
             },
           },
           power_plant: {
-            on: {
+            ON: {
               label: 'Cyber-City_Lights-Power-Plant: "ON"',
               description: "Turns the power plant's lights on.",
               scriptName: 'BuildingLights',
               originalPath: '',
               args: { building: 'power plant', state: 'ON' },
             },
-            off: {
+            OFF: {
               label: 'Cyber-City_Lights-Power-Plant: "OFF"',
               description: "Turns the power plant's lights off.",
               scriptName: 'BuildingLights',
@@ -1871,14 +1871,14 @@ export const assetTestData: AnyObject = {
             },
           },
           small_tower: {
-            on: {
+            ON: {
               label: 'Cyber-City_Lights-Small-Tower: "ON"',
               description: "Turns the small tower's lights on.",
               scriptName: 'BuildingLights',
               originalPath: '',
               args: { building: 'small tower', state: 'ON' },
             },
-            off: {
+            OFF: {
               label: 'Cyber-City_Lights-Small-Tower: "OFF"',
               description: "Turns the small tower's lights off.",
               scriptName: 'BuildingLights',
@@ -1887,14 +1887,14 @@ export const assetTestData: AnyObject = {
             },
           },
           toms_club: {
-            on: {
+            ON: {
               label: 'Cyber-City_Lights-Toms-Club: "ON"',
               description: "Turns toms club's lights on.",
               scriptName: 'BuildingLights',
               originalPath: '',
               args: { building: 'toms club', state: 'ON' },
             },
-            off: {
+            OFF: {
               label: 'Cyber-City_Lights-Toms-Club: "OFF"',
               description: "Turns toms club's lights off.",
               scriptName: 'BuildingLights',
@@ -1903,14 +1903,14 @@ export const assetTestData: AnyObject = {
             },
           },
           train_station: {
-            on: {
+            ON: {
               label: 'Cyber-City_Lights-Train-Station: "ON"',
               description: "Turns the train station's lights on.",
               scriptName: 'BuildingLights',
               originalPath: '',
               args: { building: 'train station', state: 'ON' },
             },
-            off: {
+            OFF: {
               label: 'Cyber-City_Lights-Train-Station: "OFF"',
               description: "Turns the train station's lights off.",
               scriptName: 'BuildingLights',
@@ -1919,14 +1919,14 @@ export const assetTestData: AnyObject = {
             },
           },
           watson_elementary: {
-            on: {
+            ON: {
               label: 'Cyber-City_Lights-Watson-Elementary: "ON"',
               description: "Turns watson elementary's lights on.",
               scriptName: 'BuildingLights',
               originalPath: '',
               args: { building: 'watson elementary', state: 'ON' },
             },
-            off: {
+            OFF: {
               label: 'Cyber-City_Lights-Watson-Elementary: "OFF"',
               description: "Turns watson elementary's lights off.",
               scriptName: 'BuildingLights',
@@ -1938,13 +1938,13 @@ export const assetTestData: AnyObject = {
         // ! per Michael's request this is left out to prevent issues.
         // zones: {
         // commercial: {
-        //   on: {
+        //   ON: {
         //     label: 'Cyber-City_Lights-Zone-Commercial: "ON"',
         //     description: 'Turns all the lights in the commercial area on.',
         //     scriptName: 'BuildingLights',
         //     args: { zone: 'commercial', state: 'ON' }
         //   },
-        //   off: {
+        //   OFF: {
         //     label: 'Cyber-City_Lights-Zone-Commercial: "OFF"',
         //     description: 'Turns all the lights in the commercial area off.',
         //     scriptName: 'BuildingLights',
@@ -1952,13 +1952,13 @@ export const assetTestData: AnyObject = {
         //   },
         // },
         // industrial: {
-        //   on: {
+        //   ON: {
         //     label: 'Cyber-City_Lights-Zone-Industrial: "ON"',
         //     description: 'Turns all the lights in the industrial area on.',
         //     scriptName: 'BuildingLights',
         //     args: { zone: 'industrial', state: 'ON' }
         //   },
-        //   off: {
+        //   OFF: {
         //     label: 'Cyber-City_Lights-Zone-Industrial: "OFF"',
         //     description: 'Turns all the lights in the industrial area off.',
         //     scriptName: 'BuildingLights',
@@ -1966,13 +1966,13 @@ export const assetTestData: AnyObject = {
         //   },
         // },
         // military: {
-        //   on: {
+        //   ON: {
         //     label: 'Cyber-City_Lights-Zone-Military: "ON"',
         //     description: 'Turns all the lights in the military area on.',
         //     scriptName: 'BuildingLights',
         //     args: { zone: 'military', state: 'ON' }
         //   },
-        //   off: {
+        //   OFF: {
         //     label: 'Cyber-City_Lights-Zone-Military: "OFF"',
         //     description: 'Turns all the lights in the military area off.',
         //     scriptName: 'BuildingLights',
@@ -1980,13 +1980,13 @@ export const assetTestData: AnyObject = {
         //   },
         // },
         //   residential: {
-        //     on: {
+        //     ON: {
         //       label: 'Cyber-City_Lights-Zone-Residential: "ON"',
         //       description: 'Turns all the lights in the residential area on.',
         //       scriptName: 'BuildingLights',
         //       args: { zone: 'residential', state: 'ON' }
         //     },
-        //     off: {
+        //     OFF: {
         //       label: 'Cyber-City_Lights-Zone-Residential: "OFF"',
         //       description: 'Turns all the lights in the residential area off.',
         //       scriptName: 'BuildingLights',
@@ -1995,22 +1995,22 @@ export const assetTestData: AnyObject = {
         //   },
         // },
       },
-      radar: {
-        on: {
-          label: 'Cyber-City_Radar: "ON"',
-          description: 'Turns the radar on.',
-          scriptName: 'Radar',
-          originalPath: '',
-          args: { state: 'ON' },
-        },
-        off: {
-          label: 'Cyber-City_Radar: "OFF"',
-          description: 'Turns the radar off.',
-          scriptName: 'Radar',
-          originalPath: '',
-          args: { state: 'OFF' },
-        },
-      },
+      // radar: {
+      //   ON: {
+      //     label: 'Cyber-City_Radar: "ON"',
+      //     description: 'Turns the radar on.',
+      //     scriptName: 'Radar',
+      //     originalPath: '',
+      //     args: { state: 'ON' },
+      //   },
+      //   OFF: {
+      //     label: 'Cyber-City_Radar: "OFF"',
+      //     description: 'Turns the radar off.',
+      //     scriptName: 'Radar',
+      //     originalPath: '',
+      //     args: { state: 'OFF' },
+      //   },
+      // },
       rail_switch: {
         zones: {
           military: {
@@ -2019,14 +2019,14 @@ export const assetTestData: AnyObject = {
               description: 'Turns the military rail switch to left.',
               scriptName: 'RailSwitch',
               originalPath: '',
-              args: { zone: 'military', state: 'left' },
+              args: { zone: 'military', direction: 'left' },
             },
             right: {
               label: 'Cyber-City_Rail-Switch-Military: "right"',
               description: 'Turns the military rail switch to right.',
               scriptName: 'RailSwitch',
               originalPath: '',
-              args: { zone: 'military', state: 'right' },
+              args: { zone: 'military', direction: 'right' },
             },
           },
           industrial: {
@@ -2035,14 +2035,14 @@ export const assetTestData: AnyObject = {
               description: 'Turns the industrial rail switch to left.',
               scriptName: 'RailSwitch',
               originalPath: '',
-              args: { zone: 'industrial', state: 'left' },
+              args: { zone: 'industrial', direction: 'left' },
             },
             right: {
               label: 'Cyber-City_Rail-Switch-Industrial: "right"',
               description: 'Turns the industrial rail switch to right.',
               scriptName: 'RailSwitch',
               originalPath: '',
-              args: { zone: 'industrial', state: 'right' },
+              args: { zone: 'industrial', direction: 'right' },
             },
           },
           residential: {
@@ -2051,34 +2051,34 @@ export const assetTestData: AnyObject = {
               description: 'Turns the residential rail switch to left.',
               scriptName: 'RailSwitch',
               originalPath: '',
-              args: { zone: 'residential', state: 'left' },
+              args: { zone: 'residential', direction: 'left' },
             },
             right: {
               label: 'Cyber-City_Rail-Switch-Residential: "right"',
               description: 'Turns the residential rail switch to right.',
               scriptName: 'RailSwitch',
               originalPath: '',
-              args: { zone: 'residential', state: 'right' },
+              args: { zone: 'residential', direction: 'right' },
             },
           },
         },
       },
-      train: {
-        on: {
-          label: 'Cyber-City_Train: "ON"',
-          description: 'Turns the train on.',
-          scriptName: 'Train',
-          originalPath: '',
-          args: { state: 'ON' },
-        },
-        off: {
-          label: 'Cyber-City_Train: "OFF"',
-          description: 'Turns the train off.',
-          scriptName: 'Train',
-          originalPath: '',
-          args: { state: 'OFF' },
-        },
-      },
+      // train: {
+      //   ON: {
+      //     label: 'Cyber-City_Train: "ON"',
+      //     description: 'Turns the train on.',
+      //     scriptName: 'Train',
+      //     originalPath: '',
+      //     args: { state: 'ON' },
+      //   },
+      //   OFF: {
+      //     label: 'Cyber-City_Train: "OFF"',
+      //     description: 'Turns the train off.',
+      //     scriptName: 'Train',
+      //     originalPath: '',
+      //     args: { state: 'OFF' },
+      //   },
+      // },
       water: {
         color: {
           white: {
@@ -2123,14 +2123,14 @@ export const assetTestData: AnyObject = {
             originalPath: '',
             args: { color: 'purple' },
           },
-          skyblue: {
+          sky_blue: {
             label: 'Cyber-City_Water-Tower-Color: "sky blue"',
             description: 'Turns the water tower color to sky blue.',
             scriptName: 'WaterTower',
             originalPath: '',
             args: { color: 'skyblue' },
           },
-          off: {
+          OFF: {
             label: 'Cyber-City_Water-Tower-Color: "OFF"',
             description: 'Turns the water tower color off.',
             scriptName: 'WaterTower',

@@ -91,7 +91,10 @@ export function changeRadarState(data: { state: string }) {
     })
 }
 
-export function changeRailSwitchState(data: { zone: string; state: string }) {
+export function changeRailSwitchState(data: {
+  zone: string
+  direction: string
+}) {
   axios
     .put(`${config.PLC_API_HOST}/api/railswitch`, data, {
       headers: {

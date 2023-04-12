@@ -1,0 +1,17 @@
+@import '../../../config.scss';
+
+.SubAssetOption {
+  grid-column: 1 / 1;
+  padding-left: 60px;
+  margin: 5px auto;
+
+  .SubAssetOptionText {
+    width: fit-content;
+    color: $color-accent-light;
+
+    &:hover {
+      cursor: pointer;
+      color: $color-main;
+    }
+  }
+}
