@@ -3,12 +3,14 @@ import { PRNG } from 'seedrandom'
 import ExecuteNodePath from '../components/content/game/ExecuteNodePath'
 import { MissionNode } from './mission-nodes'
 import { Mission } from './missions'
+import { AnyObject } from './toolbox/objects'
 
 export interface IScript {
   label: string
   description: string
   scriptName: string
-  args: Array<any>
+  originalPath: string
+  args: AnyObject
 }
 
 export interface IMissionNodeActionJSON {

@@ -38,9 +38,9 @@ export default function AssetOption(props: {
 
   /* -- COMPONENT FUNCTIONS -- */
 
+  // Updates the structure, or path, based on
+  // which assets are selected.
   const updateCurrentLocation = () => {
-    // Updates the structure, or path, based on
-    // which assets are selected.
     for (let asset of assetPath) {
       if (assets[asset] !== undefined) {
         assets = assets[asset]
@@ -48,20 +48,32 @@ export default function AssetOption(props: {
     }
   }
 
-  const validateEndOfAssetPath = (subAssets: Array<string>) => {
+  // Checks to see if the user is at the end of the structure.
+  const validateEndOfAssetPath = (subAssetNames: Array<string>) => {
+    // This reflects the interface of a script
+    // that will be saved to a mission-node-action.
+    // This is used to check subAssets and see if
+    // they cointain these properties which means a
+    // user has reached the end of the asset structure.
     let iScriptProperties: IScript = {
       label: 'label',
       description: 'description',
       scriptName: 'scriptName',
-      args: ['args'],
+      originalPath: 'originalPath',
+      args: { args: 'args' },
     }
 
-    subAssets.forEach((subAsset: string) => {
+    // This loops through the subAssetNames that are passed
+    // and validates if any of the script properties are there
+    // to validate if the user has reached the end of the asset
+    // structure.
+    subAssetNames.forEach((subAsset: string) => {
       if (
         subAsset === iScriptProperties.label ||
         subAsset === iScriptProperties.description ||
         subAsset === iScriptProperties.scriptName ||
-        subAsset === iScriptProperties.args[0]
+        subAsset === iScriptProperties.originalPath ||
+        subAsset === iScriptProperties.args.args
       ) {
         matchesIScriptProperties = true
       }
@@ -126,28 +138,37 @@ export default function AssetOption(props: {
 
   // Expands and collapses assets with a folder icon.
   const toggleSubAssets = (selectedOption: string) => {
+    // Temporarily adds the current option to the asset path
+    // to be able to go one layer deeper in the structure.
     assetPath.push(selectedOption)
 
+    // Goes to the next layer in the asset structure.
     updateCurrentLocation()
 
+    // Grabs all the names of the sub-assets.
     let subAssetNames: Array<string> = Object.keys(assets)
 
+    // Checks to see if this is the end of the structure.
     validateEndOfAssetPath(subAssetNames)
 
     if (
       selectedAssetOptions.includes(selectedOption) &&
       !matchesIScriptProperties
     ) {
+      // Collapses the expanded asset.
       selectedAssetOptions.splice(
         selectedAssetOptions.indexOf(selectedOption),
         1,
       )
       setForcedUpdateCounter(forcedUpdateCounter + 1)
     } else {
+      // Expands the collapsed asset.
       selectedAssetOptions.push(selectedOption)
       setSubAssetOptions(subAssetNames)
     }
 
+    //  Removes the asset that was added temporarily so that
+    // the path can return to normal.
     assetPath.pop()
   }
 
@@ -158,19 +179,34 @@ export default function AssetOption(props: {
     // to be able to go one layer deeper in the structure.
     assetPath.push(assetOption)
 
+    // Goes to the next layer in the asset structure.
     updateCurrentLocation()
 
+    // Grabs all the names of the sub-assets.
     let subAssetNames: Array<string> = Object.keys(assets)
 
+    // Checks to see if this is the end of the structure.
     validateEndOfAssetPath(subAssetNames)
 
     if (matchesIScriptProperties) {
-      // Hides the triangle if there are
-      // no options after what the user
-      // can currently see
+      // Hides the expand/collapse icon
+      // if the user is at the end of
+      // the asset structure.
       indicatorClassName += ' Hidden'
+
+      // Hides the folder icon
+      // if the user is at the end of
+      // the asset structure.
       folderClassName += ' Hidden'
+
+      // Displays the file icon so that
+      // the user knows that they are at
+      // the end of the asset structure.
       fileClassName = 'File'
+
+      // Displays short decription to let
+      // the user know what each "file"
+      // option will do upon submission.
       assetTooltipDescription = assets.description
     }
 

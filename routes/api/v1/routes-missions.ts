@@ -452,9 +452,7 @@ router.put('/handle-action-execution/', requireLogin, (request, response) => {
           node.actions.forEach((action: any) => {
             if (action.actionID === actionID) {
               for (let script of action.scripts) {
-                for (let arg of script.args) {
-                  commandScripts[script.scriptName](arg)
-                }
+                commandScripts[script.scriptName](script.args)
               }
             }
           })

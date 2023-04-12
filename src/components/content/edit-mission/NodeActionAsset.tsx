@@ -60,6 +60,7 @@ export default function NodeActionAsset(props: {
   // is displayed and the user is able to save the mission.
   const submitAsset = () => {
     if (selectedScript !== null) {
+      selectedScript.originalPath = assetPath.join('/')
       action.scripts.push(selectedScript)
     }
     setAddAssetButtonIsDisplayed(true)
@@ -68,9 +69,9 @@ export default function NodeActionAsset(props: {
     setAssetOptions(Object.keys(assetTestData))
   }
 
+  // Updates the structure, or path, based on
+  // which assets are selected.
   const updateCurrentLocation = () => {
-    // Updates the structure, or path, based on
-    // which assets are selected.
     for (let asset of assetPath) {
       if (assets[asset] !== undefined) {
         assets = assets[asset]
@@ -78,44 +79,63 @@ export default function NodeActionAsset(props: {
     }
   }
 
+  // Updates the current asset names that are
+  // being displayed for the user.
   const updateAssetOptions = () => {
+    // Goes to the next layer in the asset structure.
     updateCurrentLocation()
 
-    // Grabs the next set of assets the user will
-    // be able to select from.
-    let subAssets: Array<string> = Object.keys(assets)
+    // Grabs all the names of the sub-assets.
+    let subAssetNames: Array<string> = Object.keys(assets)
 
-    validateEndOfAssetPath(subAssets)
+    // Checks to see if this is the end of the structure.
+    validateEndOfAssetPath(subAssetNames)
 
     if (matchesIScriptProperties) {
+      // At the end of the structure
+      // the submit asset button is displayed.
       setAssetOptions([])
       setAddAssetButtonIsDisplayed(false)
       setCancelAssetButtonIsDisplayed(false)
     } else {
-      setAssetOptions(subAssets)
+      setAssetOptions(subAssetNames)
     }
   }
 
-  const validateEndOfAssetPath = (subAssets: Array<string>) => {
+  // Checks to see if the user is at the end of the structure.
+  const validateEndOfAssetPath = (subAssetNames: Array<string>) => {
+    // This reflects the interface of a script
+    // that will be saved to a mission-node-action.
+    // This is used to check subAssets and see if
+    // they cointain these properties which means a
+    // user has reached the end of the asset structure.
     let iScriptProperties: IScript = {
       label: 'label',
       description: 'description',
       scriptName: 'scriptName',
-      args: ['args'],
+      originalPath: 'originalPath',
+      args: { args: 'args' },
     }
 
-    subAssets.forEach((subAsset: string) => {
+    // This loops through the subAssetNames that are passed
+    // and validates if any of the script properties are there
+    // to validate if the user has reached the end of the asset
+    // structure.
+    subAssetNames.forEach((subAsset: string) => {
       if (
         subAsset === iScriptProperties.label ||
         subAsset === iScriptProperties.description ||
         subAsset === iScriptProperties.scriptName ||
-        subAsset === iScriptProperties.args[0]
+        subAsset === iScriptProperties.originalPath ||
+        subAsset === iScriptProperties.args.args
       ) {
         matchesIScriptProperties = true
       }
     })
   }
 
+  // Handles clicking the back arrow within
+  // the asset finder.
   const handleBackClick = () => {
     assetPath.pop()
 
@@ -194,6 +214,8 @@ export default function NodeActionAsset(props: {
               // AssetOption was broken down into its own
               // function component so that each asset option
               // can expand and collapse individually.
+              // (i.e., each AssetOption needed individual
+              // react states)
               return (
                 <AssetOption
                   action={action}

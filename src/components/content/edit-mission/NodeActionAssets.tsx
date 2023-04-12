@@ -19,7 +19,9 @@ export default function NodeActionAssets(props: {
   let handleChange = props.handleChange
 
   /* -- COMPONENT FUNCTIONS -- */
-  const removeAsset = (script: IScript) => {
+
+  // Removes script from the mission-node-action.
+  const removeScript = (script: IScript) => {
     action.scripts.splice(action.scripts.indexOf(script), 1)
     handleChange()
   }
@@ -43,18 +45,28 @@ export default function NodeActionAssets(props: {
         <div className='AssetListTitle'>Assets that will be affected:</div>
         <div className='SelectedAssetListContainer'>
           {action.scripts.map((script: IScript, index: number) => {
+            let args = Object.values(script.args).join(', ')
+
             return (
               <div
                 className='SelectedAssetList'
                 key={`action-${action.actionID}_commandScript-${script}_index-${index}`}
               >
                 <div className='SelectedAsset'>
-                  {script.scriptName}("{script.label}"){' '}
+                  {script.label}{' '}
+                  <Tooltip
+                    description={
+                      `* Label: ${script.label}\n` +
+                      `* Description: ${script.description}\n` +
+                      `* Script: ${script.scriptName}(${args})\n` +
+                      `* Orginal asset path: ${script.originalPath}`
+                    }
+                  />
                 </div>
                 <div className='Close'>
                   <div
                     className={removeAssetButtonClassName}
-                    onClick={() => removeAsset(script)}
+                    onClick={() => removeScript(script)}
                   >
                     x
                     <Tooltip description='Remove asset.' />

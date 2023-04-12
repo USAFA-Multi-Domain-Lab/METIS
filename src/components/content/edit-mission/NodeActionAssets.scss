@@ -32,6 +32,10 @@
         color: $color-accent-light;
         word-break: break-all;
         line-break: strict;
+
+        &:hover {
+          cursor: default;
+        }
       }
 
       .Close {
