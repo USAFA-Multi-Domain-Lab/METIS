@@ -77,8 +77,58 @@ export const expressLoggingHandler = expressWinston.logger({
   }, // optional: allows to skip some log messages based on request and/or response
 })
 
+export const plcApiLogger = winston.createLogger({
+  level: 'info',
+  format: winston.format.combine(
+    winston.format.json(),
+    winston.format.timestamp(),
+    winston.format.errors({ stack: true }),
+  ),
+  defaultMeta: { service: 'user-service' },
+  transports: [
+    new winston.transports.File({
+      filename: './logs/plc-api-error.log',
+      level: 'error',
+      format: winston.format.combine(
+        winston.format.json(),
+        winston.format.timestamp(),
+        winston.format.errors({ stack: true }),
+        winston.format.colorize(),
+        winston.format.prettyPrint(),
+      ),
+    }),
+    new winston.transports.File({ filename: './logs/plc-api.log' }),
+  ],
+})
+
+export const testLogger = winston.createLogger({
+  level: 'info',
+  format: winston.format.combine(
+    winston.format.json(),
+    winston.format.timestamp(),
+    winston.format.errors({ stack: true }),
+  ),
+  defaultMeta: { service: 'user-service' },
+  transports: [
+    new winston.transports.File({
+      filename: './logs/test-error.log',
+      level: 'error',
+      format: winston.format.combine(
+        winston.format.json(),
+        winston.format.timestamp(),
+        winston.format.errors({ stack: true }),
+        winston.format.colorize(),
+        winston.format.prettyPrint(),
+      ),
+    }),
+    new winston.transports.File({ filename: './logs/test.log' }),
+  ],
+})
+
 export default {
   databaseLogger,
   expressLogger,
   expressLoggingHandler,
+  plcApiLogger,
+  testLogger,
 }

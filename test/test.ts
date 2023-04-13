@@ -19,6 +19,7 @@ import express from 'express'
 // cesar imports
 import { getConnection, initialize } from '../database/database'
 import { configure } from '../config'
+import { testLogger } from '../modules/logging'
 
 // global fields
 let connection: mongoose.Connection | null
@@ -124,7 +125,7 @@ describe('Export/Import File Tests', function () {
         missionID = response.body.missions[0].missionID
       })
       .catch(function (error) {
-        console.error(error)
+        testLogger.error(error)
       })
 
     agent
@@ -143,6 +144,7 @@ describe('Export/Import File Tests', function () {
             })
             .catch(function (error) {
               done(error)
+              testLogger.error(error)
             })
         } else {
           done(
@@ -152,6 +154,7 @@ describe('Export/Import File Tests', function () {
       })
       .catch(function (error) {
         done(error)
+        testLogger.error(error)
       })
   })
 
@@ -164,6 +167,7 @@ describe('Export/Import File Tests', function () {
       })
       .catch(function (error) {
         done(error)
+        testLogger.error(error)
       })
   })
 
@@ -176,6 +180,7 @@ describe('Export/Import File Tests', function () {
       })
       .catch(function (error) {
         done(error)
+        testLogger.error(error)
       })
   })
 
@@ -190,6 +195,7 @@ describe('Export/Import File Tests', function () {
       })
       .catch(function (error) {
         done(error)
+        testLogger.error(error)
       })
   })
 
@@ -202,6 +208,7 @@ describe('Export/Import File Tests', function () {
       })
       .catch(function (error) {
         done(error)
+        testLogger.error(error)
       })
   })
 
@@ -218,6 +225,7 @@ describe('Export/Import File Tests', function () {
       })
       .catch(function (error) {
         done(error)
+        testLogger.error(error)
       })
   })
 
@@ -234,6 +242,7 @@ describe('Export/Import File Tests', function () {
       })
       .catch(function (error) {
         done(error)
+        testLogger.error(error)
       })
   })
 
@@ -250,6 +259,7 @@ describe('Export/Import File Tests', function () {
       })
       .catch(function (error) {
         done(error)
+        testLogger.error(error)
       })
   })
 
@@ -266,6 +276,7 @@ describe('Export/Import File Tests', function () {
       })
       .catch(function (error) {
         done(error)
+        testLogger.error(error)
       })
   })
 
@@ -282,6 +293,7 @@ describe('Export/Import File Tests', function () {
       })
       .catch(function (error) {
         done(error)
+        testLogger.error(error)
       })
   })
 
@@ -298,6 +310,7 @@ describe('Export/Import File Tests', function () {
       })
       .catch(function (error) {
         done(error)
+        testLogger.error(error)
       })
   })
 
@@ -314,6 +327,7 @@ describe('Export/Import File Tests', function () {
       })
       .catch(function (error) {
         done(error)
+        testLogger.error(error)
       })
   })
 
@@ -331,6 +345,7 @@ describe('Export/Import File Tests', function () {
       })
       .catch(function (error) {
         done(error)
+        testLogger.error(error)
       })
   })
 
@@ -348,6 +363,7 @@ describe('Export/Import File Tests', function () {
       })
       .catch(function (error) {
         done(error)
+        testLogger.error(error)
       })
   })
 
@@ -364,6 +380,7 @@ describe('Export/Import File Tests', function () {
       })
       .catch(function (error) {
         done(error)
+        testLogger.error(error)
       })
   })
 
@@ -395,6 +412,7 @@ describe('Export/Import File Tests', function () {
       })
       .catch(function (error) {
         done(error)
+        testLogger.error(error)
       })
   })
 })

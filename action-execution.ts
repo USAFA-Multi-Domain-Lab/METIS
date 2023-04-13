@@ -2,6 +2,7 @@ import { AnyObject, SingleTypeObject } from './modules/toolbox/objects'
 import axios, { AxiosError } from 'axios'
 import config from './config'
 import https from 'https'
+import { plcApiLogger } from './modules/logging'
 
 const httpsAgent = new https.Agent({ rejectUnauthorized: false })
 
@@ -14,7 +15,7 @@ export function changeBankColor(data: { color: string }) {
       httpsAgent: httpsAgent,
     })
     .catch((error: AxiosError) => {
-      console.error(error)
+      plcApiLogger.error(error)
     })
 }
 
@@ -32,7 +33,7 @@ export function changeTrafficLightColor(data: {
       httpsAgent: httpsAgent,
     })
     .catch((error: AxiosError) => {
-      console.error(error)
+      plcApiLogger.error(error)
     })
 }
 
@@ -45,7 +46,7 @@ export function changeGasState(data: { state: string; section?: string }) {
       httpsAgent: httpsAgent,
     })
     .catch((error: AxiosError) => {
-      console.error(error)
+      plcApiLogger.error(error)
     })
 }
 
@@ -58,7 +59,7 @@ export function changeLightStripState(data: { state: string }) {
       httpsAgent: httpsAgent,
     })
     .catch((error: AxiosError) => {
-      console.error(error)
+      plcApiLogger.error(error)
     })
 }
 
@@ -74,7 +75,7 @@ export function changeBuildingLightColor(data: {
       httpsAgent: httpsAgent,
     })
     .catch((error: AxiosError) => {
-      console.error(error)
+      plcApiLogger.error(error)
     })
 }
 
@@ -87,7 +88,7 @@ export function changeRadarState(data: { state: string }) {
       httpsAgent: httpsAgent,
     })
     .catch((error: AxiosError) => {
-      console.error(error)
+      plcApiLogger.error(error)
     })
 }
 
@@ -103,7 +104,7 @@ export function changeRailSwitchState(data: {
       httpsAgent: httpsAgent,
     })
     .catch((error: AxiosError) => {
-      console.error(error)
+      plcApiLogger.error(error)
     })
 }
 
@@ -116,7 +117,7 @@ export function changeTrainState(data: { state: string }) {
       httpsAgent: httpsAgent,
     })
     .catch((error: AxiosError) => {
-      console.error(error)
+      plcApiLogger.error(error)
     })
 }
 
@@ -129,7 +130,7 @@ export function changeWaterTowerColor(data: { color: string }) {
       httpsAgent: httpsAgent,
     })
     .catch((error: AxiosError) => {
-      console.error(error)
+      plcApiLogger.error(error)
     })
 }
 
