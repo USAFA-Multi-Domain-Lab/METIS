@@ -1,6 +1,6 @@
 import { AnyObject } from './modules/toolbox/objects'
 
-export const assetTestData: AnyObject = {
+export const assetData: AnyObject = {
   cyber_city: {
     network_1: {
       bank: {

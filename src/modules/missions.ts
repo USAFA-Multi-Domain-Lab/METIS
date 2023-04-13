@@ -5,7 +5,7 @@ import axios, { AxiosError, AxiosResponse } from 'axios'
 import { AnyObject } from './toolbox/objects'
 import {
   ENodeTargetRelation,
-  IMissionNodeJson as IMissionNodeJSON,
+  IMissionNodeJSON as IMissionNodeJSON,
   MissionNode,
   MissionNodeCreator,
 } from './mission-nodes'

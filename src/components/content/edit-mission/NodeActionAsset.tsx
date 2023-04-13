@@ -6,7 +6,7 @@ import './NodeActionAsset.scss'
 import Tooltip from '../communication/Tooltip'
 import { useState } from 'react'
 import { AnyObject } from '../../../modules/toolbox/objects'
-import { assetTestData } from '../../../asset-test-data'
+import { assetData } from '../../../asset-data'
 import AssetOption from './AssetOption'
 
 // This will render an asset
@@ -20,7 +20,7 @@ export default function NodeActionAsset(props: {
   let action: MissionNodeAction = props.action
   let isEmptyString: boolean = props.isEmptyString
   let handleChange = props.handleChange
-  let assets: AnyObject = assetTestData
+  let assets: AnyObject = assetData
   let matchesIScriptProperties: boolean = false
 
   /* -- COMPONENT STATE -- */
@@ -49,7 +49,7 @@ export default function NodeActionAsset(props: {
     setAddAssetButtonIsDisplayed(true)
     setCancelAssetButtonIsDisplayed(false)
     setAssetPath([])
-    setAssetOptions(Object.keys(assetTestData))
+    setAssetOptions(Object.keys(assetData))
   }
 
   // This adds the selected commandScript to an
@@ -66,7 +66,7 @@ export default function NodeActionAsset(props: {
     setAddAssetButtonIsDisplayed(true)
     handleChange()
     setAssetPath([])
-    setAssetOptions(Object.keys(assetTestData))
+    setAssetOptions(Object.keys(assetData))
   }
 
   // Updates the structure, or path, based on

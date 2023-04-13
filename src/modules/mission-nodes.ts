@@ -28,7 +28,7 @@ export enum ENodeDeleteMethod {
 // This is the raw node data returned
 // from the server used to create instances
 // of MissionNode in the Mission class.
-export interface IMissionNodeJson {
+export interface IMissionNodeJSON {
   nodeID: string
   name: string
   color: string
