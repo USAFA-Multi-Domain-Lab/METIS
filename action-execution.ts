@@ -23,7 +23,7 @@ export function changeTrafficLightColor(data: {
   zone: string
   direction: string
   color: string
-  state: string
+  power: string
 }) {
   axios
     .put(`${config.PLC_API_HOST}/api/traffic`, data, {
@@ -37,7 +37,7 @@ export function changeTrafficLightColor(data: {
     })
 }
 
-export function changeGasState(data: { state: string; section?: string }) {
+export function changeGasState(data: { power: string; section?: string }) {
   axios
     .put(`${config.PLC_API_HOST}/api/gas`, data, {
       headers: {
@@ -50,7 +50,7 @@ export function changeGasState(data: { state: string; section?: string }) {
     })
 }
 
-export function changeLightStripState(data: { state: string }) {
+export function changeLightStripState(data: { power: string }) {
   axios
     .put(`${config.PLC_API_HOST}/api/lstrip`, data, {
       headers: {
@@ -65,7 +65,7 @@ export function changeLightStripState(data: { state: string }) {
 
 export function changeBuildingLightColor(data: {
   building: string
-  state: string
+  power: string
 }) {
   axios
     .put(`${config.PLC_API_HOST}/api/lights`, data, {
@@ -79,7 +79,7 @@ export function changeBuildingLightColor(data: {
     })
 }
 
-export function changeRadarState(data: { state: string }) {
+export function changeRadarState(data: { power: string }) {
   axios
     .put(`${config.PLC_API_HOST}/api/radar`, data, {
       headers: {
@@ -108,7 +108,7 @@ export function changeRailSwitchState(data: {
     })
 }
 
-export function changeTrainState(data: { state: string }) {
+export function changeTrainState(data: { power: string }) {
   axios
     .put(`${config.PLC_API_HOST}/api/train`, data, {
       headers: {

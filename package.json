@@ -65,8 +65,8 @@
     "build-react": "react-scripts build",
     "test-react": "react-scripts test",
     "eject-react": "react-scripts eject",
-    "test": "mocha -r ts-node/register test/*.ts",
-    "test-coverage": "nyc mocha -r ts-node/register test/*.ts"
+    "test": "mocha -r ts-node/register test/*.ts --exit",
+    "test-coverage": "nyc mocha -r ts-node/register test/*.ts --exit"
   },
   "eslintConfig": {
     "extends": [

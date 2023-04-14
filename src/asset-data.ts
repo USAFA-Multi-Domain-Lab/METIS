@@ -59,22 +59,22 @@ export const assetData: AnyObject = {
       traffic: {
         zone: {
           commercial: {
-            // master: {
-            //   ON: {
-            //     label: 'ON',
-            //     description:
-            //       'This will turn on every color in every direction.',
-            //     scriptName: 'TrafficLight',
-            //     args: 'ON'
-            //   },
-            //   OFF: {
-            //     label: 'OFF',
-            //     description:
-            //       'This will turn off every color in every direction.',
-            //     scriptName: 'TrafficLight',
-            //     args: 'OFF'
-            //   },
-            // },
+            power: {
+              ON: {
+                label: 'ON',
+                description:
+                  'This will turn on the power for traffic lights in the commercial area.',
+                scriptName: 'TrafficLight',
+                args: { power: 'ON' },
+              },
+              OFF: {
+                label: 'OFF',
+                description:
+                  'This will turn off the power for traffic lights in the commercial area.',
+                scriptName: 'TrafficLight',
+                args: { power: 'OFF' },
+              },
+            },
             direction: {
               east: {
                 color: {
@@ -89,7 +89,7 @@ export const assetData: AnyObject = {
                         zone: 'commercial',
                         direction: 'east',
                         color: 'green',
-                        state: 'ON',
+                        power: 'ON',
                       },
                     },
                     OFF: {
@@ -102,7 +102,7 @@ export const assetData: AnyObject = {
                         zone: 'commercial',
                         direction: 'east',
                         color: 'green',
-                        state: 'OFF',
+                        power: 'OFF',
                       },
                     },
                   },
@@ -117,7 +117,7 @@ export const assetData: AnyObject = {
                         zone: 'commercial',
                         direction: 'east',
                         color: 'red',
-                        state: 'ON',
+                        power: 'ON',
                       },
                     },
                     OFF: {
@@ -130,7 +130,7 @@ export const assetData: AnyObject = {
                         zone: 'commercial',
                         direction: 'east',
                         color: 'red',
-                        state: 'OFF',
+                        power: 'OFF',
                       },
                     },
                   },
@@ -145,7 +145,7 @@ export const assetData: AnyObject = {
                         zone: 'commercial',
                         direction: 'east',
                         color: 'yellow',
-                        state: 'ON',
+                        power: 'ON',
                       },
                     },
                     OFF: {
@@ -158,7 +158,7 @@ export const assetData: AnyObject = {
                         zone: 'commercial',
                         direction: 'east',
                         color: 'yellow',
-                        state: 'OFF',
+                        power: 'OFF',
                       },
                     },
                   },
@@ -177,7 +177,7 @@ export const assetData: AnyObject = {
                         zone: 'commercial',
                         direction: 'north',
                         color: 'green',
-                        state: 'ON',
+                        power: 'ON',
                       },
                     },
                     OFF: {
@@ -190,7 +190,7 @@ export const assetData: AnyObject = {
                         zone: 'commercial',
                         direction: 'north',
                         color: 'green',
-                        state: 'OFF',
+                        power: 'OFF',
                       },
                     },
                   },
@@ -205,7 +205,7 @@ export const assetData: AnyObject = {
                         zone: 'commercial',
                         direction: 'north',
                         color: 'red',
-                        state: 'ON',
+                        power: 'ON',
                       },
                     },
                     OFF: {
@@ -218,7 +218,7 @@ export const assetData: AnyObject = {
                         zone: 'commercial',
                         direction: 'north',
                         color: 'red',
-                        state: 'OFF',
+                        power: 'OFF',
                       },
                     },
                   },
@@ -233,7 +233,7 @@ export const assetData: AnyObject = {
                         zone: 'commercial',
                         direction: 'north',
                         color: 'yellow',
-                        state: 'ON',
+                        power: 'ON',
                       },
                     },
                     OFF: {
@@ -247,7 +247,7 @@ export const assetData: AnyObject = {
                         zone: 'commercial',
                         direction: 'north',
                         color: 'yellow',
-                        state: 'OFF',
+                        power: 'OFF',
                       },
                     },
                   },
@@ -266,7 +266,7 @@ export const assetData: AnyObject = {
                         zone: 'commercial',
                         direction: 'south',
                         color: 'green',
-                        state: 'ON',
+                        power: 'ON',
                       },
                     },
                     OFF: {
@@ -279,7 +279,7 @@ export const assetData: AnyObject = {
                         zone: 'commercial',
                         direction: 'south',
                         color: 'green',
-                        state: 'OFF',
+                        power: 'OFF',
                       },
                     },
                   },
@@ -294,7 +294,7 @@ export const assetData: AnyObject = {
                         zone: 'commercial',
                         direction: 'south',
                         color: 'red',
-                        state: 'ON',
+                        power: 'ON',
                       },
                     },
                     OFF: {
@@ -307,7 +307,7 @@ export const assetData: AnyObject = {
                         zone: 'commercial',
                         direction: 'south',
                         color: 'red',
-                        state: 'OFF',
+                        power: 'OFF',
                       },
                     },
                   },
@@ -322,7 +322,7 @@ export const assetData: AnyObject = {
                         zone: 'commercial',
                         direction: 'south',
                         color: 'yellow',
-                        state: 'ON',
+                        power: 'ON',
                       },
                     },
                     OFF: {
@@ -336,7 +336,7 @@ export const assetData: AnyObject = {
                         zone: 'commercial',
                         direction: 'south',
                         color: 'yellow',
-                        state: 'OFF',
+                        power: 'OFF',
                       },
                     },
                   },
@@ -355,7 +355,7 @@ export const assetData: AnyObject = {
                         zone: 'commercial',
                         direction: 'west',
                         color: 'green',
-                        state: 'ON',
+                        power: 'ON',
                       },
                     },
                     OFF: {
@@ -368,7 +368,7 @@ export const assetData: AnyObject = {
                         zone: 'commercial',
                         direction: 'west',
                         color: 'green',
-                        state: 'OFF',
+                        power: 'OFF',
                       },
                     },
                   },
@@ -383,7 +383,7 @@ export const assetData: AnyObject = {
                         zone: 'commercial',
                         direction: 'west',
                         color: 'red',
-                        state: 'ON',
+                        power: 'ON',
                       },
                     },
                     OFF: {
@@ -396,7 +396,7 @@ export const assetData: AnyObject = {
                         zone: 'commercial',
                         direction: 'west',
                         color: 'red',
-                        state: 'OFF',
+                        power: 'OFF',
                       },
                     },
                   },
@@ -411,7 +411,7 @@ export const assetData: AnyObject = {
                         zone: 'commercial',
                         direction: 'west',
                         color: 'yellow',
-                        state: 'ON',
+                        power: 'ON',
                       },
                     },
                     OFF: {
@@ -424,7 +424,7 @@ export const assetData: AnyObject = {
                         zone: 'commercial',
                         direction: 'west',
                         color: 'yellow',
-                        state: 'OFF',
+                        power: 'OFF',
                       },
                     },
                   },
@@ -433,22 +433,22 @@ export const assetData: AnyObject = {
             },
           },
           industrial: {
-            // master: {
-            //   ON: {
-            //     label: 'ON',
-            //     description:
-            //       'This will turn on every color in every direction.',
-            //     scriptName: 'TrafficLight',
-            //     args: 'ON'
-            //   },
-            //   OFF: {
-            //     label: 'OFF',
-            //     description:
-            //       'This will turn off every color in every direction.',
-            //     scriptName: 'TrafficLight',
-            // args: 'OFF'
-            //   },
-            // },
+            power: {
+              ON: {
+                label: 'ON',
+                description:
+                  'This will turn on the power for traffic lights in the industrial area.',
+                scriptName: 'TrafficLight',
+                args: { power: 'ON' },
+              },
+              OFF: {
+                label: 'OFF',
+                description:
+                  'This will turn off the power for traffic lights in the industrial area.',
+                scriptName: 'TrafficLight',
+                args: { power: 'OFF' },
+              },
+            },
             direction: {
               east: {
                 color: {
@@ -463,7 +463,7 @@ export const assetData: AnyObject = {
                         zone: 'industrial',
                         direction: 'east',
                         color: 'green',
-                        state: 'ON',
+                        power: 'ON',
                       },
                     },
                     OFF: {
@@ -476,7 +476,7 @@ export const assetData: AnyObject = {
                         zone: 'industrial',
                         direction: 'east',
                         color: 'green',
-                        state: 'OFF',
+                        power: 'OFF',
                       },
                     },
                   },
@@ -491,7 +491,7 @@ export const assetData: AnyObject = {
                         zone: 'industrial',
                         direction: 'east',
                         color: 'red',
-                        state: 'ON',
+                        power: 'ON',
                       },
                     },
                     OFF: {
@@ -504,7 +504,7 @@ export const assetData: AnyObject = {
                         zone: 'industrial',
                         direction: 'east',
                         color: 'red',
-                        state: 'OFF',
+                        power: 'OFF',
                       },
                     },
                   },
@@ -519,7 +519,7 @@ export const assetData: AnyObject = {
                         zone: 'industrial',
                         direction: 'east',
                         color: 'yellow',
-                        state: 'ON',
+                        power: 'ON',
                       },
                     },
                     OFF: {
@@ -532,7 +532,7 @@ export const assetData: AnyObject = {
                         zone: 'industrial',
                         direction: 'east',
                         color: 'yellow',
-                        state: 'OFF',
+                        power: 'OFF',
                       },
                     },
                   },
@@ -551,7 +551,7 @@ export const assetData: AnyObject = {
                         zone: 'industrial',
                         direction: 'north',
                         color: 'green',
-                        state: 'ON',
+                        power: 'ON',
                       },
                     },
                     OFF: {
@@ -564,7 +564,7 @@ export const assetData: AnyObject = {
                         zone: 'industrial',
                         direction: 'north',
                         color: 'green',
-                        state: 'OFF',
+                        power: 'OFF',
                       },
                     },
                   },
@@ -579,7 +579,7 @@ export const assetData: AnyObject = {
                         zone: 'industrial',
                         direction: 'north',
                         color: 'red',
-                        state: 'ON',
+                        power: 'ON',
                       },
                     },
                     OFF: {
@@ -592,7 +592,7 @@ export const assetData: AnyObject = {
                         zone: 'industrial',
                         direction: 'north',
                         color: 'red',
-                        state: 'OFF',
+                        power: 'OFF',
                       },
                     },
                   },
@@ -607,7 +607,7 @@ export const assetData: AnyObject = {
                         zone: 'industrial',
                         direction: 'north',
                         color: 'yellow',
-                        state: 'ON',
+                        power: 'ON',
                       },
                     },
                     OFF: {
@@ -621,7 +621,7 @@ export const assetData: AnyObject = {
                         zone: 'industrial',
                         direction: 'north',
                         color: 'yellow',
-                        state: 'OFF',
+                        power: 'OFF',
                       },
                     },
                   },
@@ -640,7 +640,7 @@ export const assetData: AnyObject = {
                         zone: 'industrial',
                         direction: 'south',
                         color: 'green',
-                        state: 'ON',
+                        power: 'ON',
                       },
                     },
                     OFF: {
@@ -653,7 +653,7 @@ export const assetData: AnyObject = {
                         zone: 'industrial',
                         direction: 'south',
                         color: 'green',
-                        state: 'OFF',
+                        power: 'OFF',
                       },
                     },
                   },
@@ -668,7 +668,7 @@ export const assetData: AnyObject = {
                         zone: 'industrial',
                         direction: 'south',
                         color: 'red',
-                        state: 'ON',
+                        power: 'ON',
                       },
                     },
                     OFF: {
@@ -681,7 +681,7 @@ export const assetData: AnyObject = {
                         zone: 'industrial',
                         direction: 'south',
                         color: 'red',
-                        state: 'OFF',
+                        power: 'OFF',
                       },
                     },
                   },
@@ -696,7 +696,7 @@ export const assetData: AnyObject = {
                         zone: 'industrial',
                         direction: 'south',
                         color: 'yellow',
-                        state: 'ON',
+                        power: 'ON',
                       },
                     },
                     OFF: {
@@ -710,7 +710,7 @@ export const assetData: AnyObject = {
                         zone: 'industrial',
                         direction: 'south',
                         color: 'yellow',
-                        state: 'OFF',
+                        power: 'OFF',
                       },
                     },
                   },
@@ -729,7 +729,7 @@ export const assetData: AnyObject = {
                         zone: 'industrial',
                         direction: 'west',
                         color: 'green',
-                        state: 'ON',
+                        power: 'ON',
                       },
                     },
                     OFF: {
@@ -742,7 +742,7 @@ export const assetData: AnyObject = {
                         zone: 'industrial',
                         direction: 'west',
                         color: 'green',
-                        state: 'OFF',
+                        power: 'OFF',
                       },
                     },
                   },
@@ -757,7 +757,7 @@ export const assetData: AnyObject = {
                         zone: 'industrial',
                         direction: 'west',
                         color: 'red',
-                        state: 'ON',
+                        power: 'ON',
                       },
                     },
                     OFF: {
@@ -770,7 +770,7 @@ export const assetData: AnyObject = {
                         zone: 'industrial',
                         direction: 'west',
                         color: 'red',
-                        state: 'OFF',
+                        power: 'OFF',
                       },
                     },
                   },
@@ -785,7 +785,7 @@ export const assetData: AnyObject = {
                         zone: 'industrial',
                         direction: 'west',
                         color: 'yellow',
-                        state: 'ON',
+                        power: 'ON',
                       },
                     },
                     OFF: {
@@ -798,7 +798,7 @@ export const assetData: AnyObject = {
                         zone: 'industrial',
                         direction: 'west',
                         color: 'yellow',
-                        state: 'OFF',
+                        power: 'OFF',
                       },
                     },
                   },
@@ -807,22 +807,22 @@ export const assetData: AnyObject = {
             },
           },
           military: {
-            // master: {
-            //   ON: {
-            //     label: 'ON',
-            //     description:
-            //       'This will turn on every color in every direction.',
-            //     scriptName: 'TrafficLight',
-            //     args: 'ON'
-            //   },
-            //   OFF: {
-            //     label: 'OFF',
-            //     description:
-            //       'This will turn off every color in every direction.',
-            //     scriptName: 'TrafficLight',
-            //     args: 'OFF'
-            //   },
-            // },
+            power: {
+              ON: {
+                label: 'ON',
+                description:
+                  'This will turn on the power for traffic lights in the military area.',
+                scriptName: 'TrafficLight',
+                args: { power: 'ON' },
+              },
+              OFF: {
+                label: 'OFF',
+                description:
+                  'This will turn off the power for traffic lights in the military area.',
+                scriptName: 'TrafficLight',
+                args: { power: 'OFF' },
+              },
+            },
             direction: {
               east: {
                 color: {
@@ -837,7 +837,7 @@ export const assetData: AnyObject = {
                         zone: 'military',
                         direction: 'east',
                         color: 'green',
-                        state: 'ON',
+                        power: 'ON',
                       },
                     },
                     OFF: {
@@ -850,7 +850,7 @@ export const assetData: AnyObject = {
                         zone: 'military',
                         direction: 'east',
                         color: 'green',
-                        state: 'OFF',
+                        power: 'OFF',
                       },
                     },
                   },
@@ -865,7 +865,7 @@ export const assetData: AnyObject = {
                         zone: 'military',
                         direction: 'east',
                         color: 'red',
-                        state: 'ON',
+                        power: 'ON',
                       },
                     },
                     OFF: {
@@ -878,7 +878,7 @@ export const assetData: AnyObject = {
                         zone: 'military',
                         direction: 'east',
                         color: 'red',
-                        state: 'OFF',
+                        power: 'OFF',
                       },
                     },
                   },
@@ -893,7 +893,7 @@ export const assetData: AnyObject = {
                         zone: 'military',
                         direction: 'east',
                         color: 'yellow',
-                        state: 'ON',
+                        power: 'ON',
                       },
                     },
                     OFF: {
@@ -906,7 +906,7 @@ export const assetData: AnyObject = {
                         zone: 'military',
                         direction: 'east',
                         color: 'yellow',
-                        state: 'OFF',
+                        power: 'OFF',
                       },
                     },
                   },
@@ -925,7 +925,7 @@ export const assetData: AnyObject = {
                         zone: 'military',
                         direction: 'north',
                         color: 'green',
-                        state: 'ON',
+                        power: 'ON',
                       },
                     },
                     OFF: {
@@ -938,7 +938,7 @@ export const assetData: AnyObject = {
                         zone: 'military',
                         direction: 'north',
                         color: 'green',
-                        state: 'OFF',
+                        power: 'OFF',
                       },
                     },
                   },
@@ -953,7 +953,7 @@ export const assetData: AnyObject = {
                         zone: 'military',
                         direction: 'north',
                         color: 'red',
-                        state: 'ON',
+                        power: 'ON',
                       },
                     },
                     OFF: {
@@ -966,7 +966,7 @@ export const assetData: AnyObject = {
                         zone: 'military',
                         direction: 'north',
                         color: 'red',
-                        state: 'OFF',
+                        power: 'OFF',
                       },
                     },
                   },
@@ -981,7 +981,7 @@ export const assetData: AnyObject = {
                         zone: 'military',
                         direction: 'north',
                         color: 'yellow',
-                        state: 'ON',
+                        power: 'ON',
                       },
                     },
                     OFF: {
@@ -994,7 +994,7 @@ export const assetData: AnyObject = {
                         zone: 'military',
                         direction: 'north',
                         color: 'yellow',
-                        state: 'OFF',
+                        power: 'OFF',
                       },
                     },
                   },
@@ -1013,7 +1013,7 @@ export const assetData: AnyObject = {
                         zone: 'military',
                         direction: 'south',
                         color: 'green',
-                        state: 'ON',
+                        power: 'ON',
                       },
                     },
                     OFF: {
@@ -1026,7 +1026,7 @@ export const assetData: AnyObject = {
                         zone: 'military',
                         direction: 'south',
                         color: 'green',
-                        state: 'OFF',
+                        power: 'OFF',
                       },
                     },
                   },
@@ -1041,7 +1041,7 @@ export const assetData: AnyObject = {
                         zone: 'military',
                         direction: 'south',
                         color: 'red',
-                        state: 'ON',
+                        power: 'ON',
                       },
                     },
                     OFF: {
@@ -1054,7 +1054,7 @@ export const assetData: AnyObject = {
                         zone: 'military',
                         direction: 'south',
                         color: 'red',
-                        state: 'OFF',
+                        power: 'OFF',
                       },
                     },
                   },
@@ -1069,7 +1069,7 @@ export const assetData: AnyObject = {
                         zone: 'military',
                         direction: 'south',
                         color: 'yellow',
-                        state: 'ON',
+                        power: 'ON',
                       },
                     },
                     OFF: {
@@ -1082,7 +1082,7 @@ export const assetData: AnyObject = {
                         zone: 'military',
                         direction: 'south',
                         color: 'yellow',
-                        state: 'OFF',
+                        power: 'OFF',
                       },
                     },
                   },
@@ -1101,7 +1101,7 @@ export const assetData: AnyObject = {
                         zone: 'military',
                         direction: 'west',
                         color: 'green',
-                        state: 'ON',
+                        power: 'ON',
                       },
                     },
                     OFF: {
@@ -1114,7 +1114,7 @@ export const assetData: AnyObject = {
                         zone: 'military',
                         direction: 'west',
                         color: 'green',
-                        state: 'OFF',
+                        power: 'OFF',
                       },
                     },
                   },
@@ -1129,7 +1129,7 @@ export const assetData: AnyObject = {
                         zone: 'military',
                         direction: 'west',
                         color: 'red',
-                        state: 'ON',
+                        power: 'ON',
                       },
                     },
                     OFF: {
@@ -1142,7 +1142,7 @@ export const assetData: AnyObject = {
                         zone: 'military',
                         direction: 'west',
                         color: 'red',
-                        state: 'OFF',
+                        power: 'OFF',
                       },
                     },
                   },
@@ -1157,7 +1157,7 @@ export const assetData: AnyObject = {
                         zone: 'military',
                         direction: 'west',
                         color: 'yellow',
-                        state: 'ON',
+                        power: 'ON',
                       },
                     },
                     OFF: {
@@ -1170,7 +1170,7 @@ export const assetData: AnyObject = {
                         zone: 'military',
                         direction: 'west',
                         color: 'yellow',
-                        state: 'OFF',
+                        power: 'OFF',
                       },
                     },
                   },
@@ -1179,22 +1179,22 @@ export const assetData: AnyObject = {
             },
           },
           residential: {
-            // master: {
-            //   ON: {
-            //     label: 'ON',
-            //     description:
-            //       'This will turn on every color in every direction.',
-            //     scriptName: 'TrafficLight',
-            //     args: 'ON'
-            //   },
-            //   OFF: {
-            //     label: 'OFF',
-            //     description:
-            //       'This will turn off every color in every direction.',
-            //     scriptName: 'TrafficLight',
-            //     args: 'OFF'
-            //   },
-            // },
+            power: {
+              ON: {
+                label: 'ON',
+                description:
+                  'This will turn on the power for traffic lights in the residential area.',
+                scriptName: 'TrafficLight',
+                args: { power: 'ON' },
+              },
+              OFF: {
+                label: 'OFF',
+                description:
+                  'This will turn off the power for traffic lights in the residential area.',
+                scriptName: 'TrafficLight',
+                args: { power: 'OFF' },
+              },
+            },
             direction: {
               east: {
                 color: {
@@ -1209,7 +1209,7 @@ export const assetData: AnyObject = {
                         zone: 'residential',
                         direction: 'east',
                         color: 'green',
-                        state: 'ON',
+                        power: 'ON',
                       },
                     },
                     OFF: {
@@ -1222,7 +1222,7 @@ export const assetData: AnyObject = {
                         zone: 'residential',
                         direction: 'east',
                         color: 'green',
-                        state: 'OFF',
+                        power: 'OFF',
                       },
                     },
                   },
@@ -1237,7 +1237,7 @@ export const assetData: AnyObject = {
                         zone: 'residential',
                         direction: 'east',
                         color: 'red',
-                        state: 'ON',
+                        power: 'ON',
                       },
                     },
                     OFF: {
@@ -1250,7 +1250,7 @@ export const assetData: AnyObject = {
                         zone: 'residential',
                         direction: 'east',
                         color: 'red',
-                        state: 'OFF',
+                        power: 'OFF',
                       },
                     },
                   },
@@ -1265,7 +1265,7 @@ export const assetData: AnyObject = {
                         zone: 'residential',
                         direction: 'east',
                         color: 'yellow',
-                        state: 'ON',
+                        power: 'ON',
                       },
                     },
                     OFF: {
@@ -1279,7 +1279,7 @@ export const assetData: AnyObject = {
                         zone: 'residential',
                         direction: 'east',
                         color: 'yellow',
-                        state: 'OFF',
+                        power: 'OFF',
                       },
                     },
                   },
@@ -1298,7 +1298,7 @@ export const assetData: AnyObject = {
                         zone: 'residential',
                         direction: 'north',
                         color: 'green',
-                        state: 'ON',
+                        power: 'ON',
                       },
                     },
                     OFF: {
@@ -1312,7 +1312,7 @@ export const assetData: AnyObject = {
                         zone: 'residential',
                         direction: 'north',
                         color: 'green',
-                        state: 'OFF',
+                        power: 'OFF',
                       },
                     },
                   },
@@ -1327,7 +1327,7 @@ export const assetData: AnyObject = {
                         zone: 'residential',
                         direction: 'north',
                         color: 'red',
-                        state: 'ON',
+                        power: 'ON',
                       },
                     },
                     OFF: {
@@ -1340,7 +1340,7 @@ export const assetData: AnyObject = {
                         zone: 'residential',
                         direction: 'north',
                         color: 'red',
-                        state: 'OFF',
+                        power: 'OFF',
                       },
                     },
                   },
@@ -1356,7 +1356,7 @@ export const assetData: AnyObject = {
                         zone: 'residential',
                         direction: 'north',
                         color: 'yellow',
-                        state: 'ON',
+                        power: 'ON',
                       },
                     },
                     OFF: {
@@ -1370,7 +1370,7 @@ export const assetData: AnyObject = {
                         zone: 'residential',
                         direction: 'north',
                         color: 'yellow',
-                        state: 'OFF',
+                        power: 'OFF',
                       },
                     },
                   },
@@ -1389,7 +1389,7 @@ export const assetData: AnyObject = {
                         zone: 'residential',
                         direction: 'south',
                         color: 'green',
-                        state: 'ON',
+                        power: 'ON',
                       },
                     },
                     OFF: {
@@ -1403,7 +1403,7 @@ export const assetData: AnyObject = {
                         zone: 'residential',
                         direction: 'south',
                         color: 'green',
-                        state: 'OFF',
+                        power: 'OFF',
                       },
                     },
                   },
@@ -1418,7 +1418,7 @@ export const assetData: AnyObject = {
                         zone: 'residential',
                         direction: 'south',
                         color: 'red',
-                        state: 'ON',
+                        power: 'ON',
                       },
                     },
                     OFF: {
@@ -1431,7 +1431,7 @@ export const assetData: AnyObject = {
                         zone: 'residential',
                         direction: 'south',
                         color: 'red',
-                        state: 'OFF',
+                        power: 'OFF',
                       },
                     },
                   },
@@ -1447,7 +1447,7 @@ export const assetData: AnyObject = {
                         zone: 'residential',
                         direction: 'south',
                         color: 'yellow',
-                        state: 'ON',
+                        power: 'ON',
                       },
                     },
                     OFF: {
@@ -1461,7 +1461,7 @@ export const assetData: AnyObject = {
                         zone: 'residential',
                         direction: 'south',
                         color: 'yellow',
-                        state: 'OFF',
+                        power: 'OFF',
                       },
                     },
                   },
@@ -1480,7 +1480,7 @@ export const assetData: AnyObject = {
                         zone: 'residential',
                         direction: 'west',
                         color: 'green',
-                        state: 'ON',
+                        power: 'ON',
                       },
                     },
                     OFF: {
@@ -1493,7 +1493,7 @@ export const assetData: AnyObject = {
                         zone: 'residential',
                         direction: 'west',
                         color: 'green',
-                        state: 'OFF',
+                        power: 'OFF',
                       },
                     },
                   },
@@ -1508,7 +1508,7 @@ export const assetData: AnyObject = {
                         zone: 'residential',
                         direction: 'west',
                         color: 'red',
-                        state: 'ON',
+                        power: 'ON',
                       },
                     },
                     OFF: {
@@ -1521,7 +1521,7 @@ export const assetData: AnyObject = {
                         zone: 'residential',
                         direction: 'west',
                         color: 'red',
-                        state: 'OFF',
+                        power: 'OFF',
                       },
                     },
                   },
@@ -1536,7 +1536,7 @@ export const assetData: AnyObject = {
                         zone: 'residential',
                         direction: 'west',
                         color: 'yellow',
-                        state: 'ON',
+                        power: 'ON',
                       },
                     },
                     OFF: {
@@ -1550,7 +1550,7 @@ export const assetData: AnyObject = {
                         zone: 'residential',
                         direction: 'west',
                         color: 'yellow',
-                        state: 'OFF',
+                        power: 'OFF',
                       },
                     },
                   },
@@ -1567,14 +1567,14 @@ export const assetData: AnyObject = {
             description: 'Turns gas section 1 on.',
             scriptName: 'Gas',
             originalPath: '',
-            args: { state: 'ON' },
+            args: { power: 'ON' },
           },
           OFF: {
             label: 'Cyber-City_Gas-All-Sections: "OFF"',
             description: 'Turns gas section 1 off.',
             scriptName: 'Gas',
             originalPath: '',
-            args: { state: 'OFF' },
+            args: { power: 'OFF' },
           },
         },
         sections: {
@@ -1584,14 +1584,14 @@ export const assetData: AnyObject = {
               description: 'Turns gas section 1 on.',
               scriptName: 'Gas',
               originalPath: '',
-              args: { section: '1', state: 'ON' },
+              args: { section: '1', power: 'ON' },
             },
             OFF: {
               label: 'Cyber-City_Gas-Section-1: "OFF"',
               description: 'Turns gas section 1 off.',
               scriptName: 'Gas',
               originalPath: '',
-              args: { section: '1', state: 'OFF' },
+              args: { section: '1', power: 'OFF' },
             },
           },
           section_2: {
@@ -1600,14 +1600,14 @@ export const assetData: AnyObject = {
               description: 'Turns gas section 2 on.',
               scriptName: 'Gas',
               originalPath: '',
-              args: { section: '2', state: 'ON' },
+              args: { section: '2', power: 'ON' },
             },
             OFF: {
               label: 'Cyber-City_Gas-Section-2: "OFF"',
               description: 'Turns gas section 2 off.',
               scriptName: 'Gas',
               originalPath: '',
-              args: { section: '2', state: 'OFF' },
+              args: { section: '2', power: 'OFF' },
             },
           },
           section_3: {
@@ -1616,14 +1616,14 @@ export const assetData: AnyObject = {
               description: 'Turns gas section 3 on.',
               scriptName: 'Gas',
               originalPath: '',
-              args: { section: '3', state: 'ON' },
+              args: { section: '3', power: 'ON' },
             },
             OFF: {
               label: 'Cyber-City_Gas-Section-3: "OFF"',
               description: 'Turns gas section 3 off.',
               scriptName: 'Gas',
               originalPath: '',
-              args: { section: '3', state: 'OFF' },
+              args: { section: '3', power: 'OFF' },
             },
           },
         },
@@ -1634,14 +1634,14 @@ export const assetData: AnyObject = {
           description: 'Turns the light strip on.',
           scriptName: 'LightStrip',
           originalPath: '',
-          args: { state: 'ON' },
+          args: { power: 'ON' },
         },
         OFF: {
           label: 'Cyber-City_Light-Strip: "OFF"',
           description: 'Turns the light strip off.',
           scriptName: 'LightStrip',
           originalPath: '',
-          args: { state: 'OFF' },
+          args: { power: 'OFF' },
         },
       },
       lights: {
@@ -1652,14 +1652,14 @@ export const assetData: AnyObject = {
               description: "Turns the admin building's lights on.",
               scriptName: 'BuildingLights',
               originalPath: '',
-              args: { building: 'admin building', state: 'ON' },
+              args: { building: 'admin building', power: 'ON' },
             },
             OFF: {
               label: 'Cyber-City_Lights-Admin-Building: "OFF"',
               description: "Turns the admin building's lights off.",
               scriptName: 'BuildingLights',
               originalPath: '',
-              args: { building: 'admin building', state: 'OFF' },
+              args: { building: 'admin building', power: 'OFF' },
             },
           },
           barracks_1: {
@@ -1668,14 +1668,14 @@ export const assetData: AnyObject = {
               description: "Turns the barracks' lights on.",
               scriptName: 'BuildingLights',
               originalPath: '',
-              args: { building: 'barracks 1', state: 'ON' },
+              args: { building: 'barracks 1', power: 'ON' },
             },
             OFF: {
               label: 'Cyber-City_Lights-Barracks-1: "OFF"',
               description: "Turns the barracks' lights off.",
               scriptName: 'BuildingLights',
               originalPath: '',
-              args: { building: 'barracks 1', state: 'OFF' },
+              args: { building: 'barracks 1', power: 'OFF' },
             },
           },
           barracks_2: {
@@ -1684,14 +1684,14 @@ export const assetData: AnyObject = {
               description: "Turns the barracks' lights on.",
               scriptName: 'BuildingLights',
               originalPath: '',
-              args: { building: 'barracks 2', state: 'ON' },
+              args: { building: 'barracks 2', power: 'ON' },
             },
             OFF: {
               label: 'Cyber-City_Lights-Barracks-2: "OFF"',
               description: "Turns the barracks' lights off.",
               scriptName: 'BuildingLights',
               originalPath: '',
-              args: { building: 'barracks 2', state: 'OFF' },
+              args: { building: 'barracks 2', power: 'OFF' },
             },
           },
           brown_house: {
@@ -1700,14 +1700,14 @@ export const assetData: AnyObject = {
               description: "Turns the brown house's lights on.",
               scriptName: 'BuildingLights',
               originalPath: '',
-              args: { building: 'brown house', state: 'ON' },
+              args: { building: 'brown house', power: 'ON' },
             },
             OFF: {
               label: 'Cyber-City_Lights-Brown-House: "OFF"',
               description: "Turns the brown house's lights off.",
               scriptName: 'BuildingLights',
               originalPath: '',
-              args: { building: 'brown house', state: 'OFF' },
+              args: { building: 'brown house', power: 'OFF' },
             },
           },
           cuppa_jo: {
@@ -1716,14 +1716,14 @@ export const assetData: AnyObject = {
               description: "Turns the cuppa jo's lights on.",
               scriptName: 'BuildingLights',
               originalPath: '',
-              args: { building: 'cuppa jo', state: 'ON' },
+              args: { building: 'cuppa jo', power: 'ON' },
             },
             OFF: {
               label: 'Cyber-City_Lights-Cuppa-Jo: "OFF"',
               description: "Turns the cuppa jo's lights off.",
               scriptName: 'BuildingLights',
               originalPath: '',
-              args: { building: 'cuppa jo', state: 'OFF' },
+              args: { building: 'cuppa jo', power: 'OFF' },
             },
           },
           facespace: {
@@ -1732,14 +1732,14 @@ export const assetData: AnyObject = {
               description: "Turns the facespace's lights on.",
               scriptName: 'BuildingLights',
               originalPath: '',
-              args: { building: 'facespace', state: 'ON' },
+              args: { building: 'facespace', power: 'ON' },
             },
             OFF: {
               label: 'Cyber-City_Lights-Facespace: "OFF"',
               description: "Turns the facespace's lights off.",
               scriptName: 'BuildingLights',
               originalPath: '',
-              args: { building: 'facespace', state: 'OFF' },
+              args: { building: 'facespace', power: 'OFF' },
             },
           },
           firehouse: {
@@ -1748,14 +1748,14 @@ export const assetData: AnyObject = {
               description: "Turns the firehouse's lights on.",
               scriptName: 'BuildingLights',
               originalPath: '',
-              args: { building: 'firehouse', state: 'ON' },
+              args: { building: 'firehouse', power: 'ON' },
             },
             OFF: {
               label: 'Cyber-City_Lights-Firehouse: "OFF"',
               description: "Turns the firehouse's lights off.",
               scriptName: 'BuildingLights',
               originalPath: '',
-              args: { building: 'firehouse', state: 'OFF' },
+              args: { building: 'firehouse', power: 'OFF' },
             },
           },
           general_store: {
@@ -1764,14 +1764,14 @@ export const assetData: AnyObject = {
               description: "Turns the general store's lights on.",
               scriptName: 'BuildingLights',
               originalPath: '',
-              args: { building: 'general store', state: 'ON' },
+              args: { building: 'general store', power: 'ON' },
             },
             OFF: {
               label: 'Cyber-City_Lights-General-Store: "OFF"',
               description: "Turns the general store's lights off.",
               scriptName: 'BuildingLights',
               originalPath: '',
-              args: { building: 'general store', state: 'OFF' },
+              args: { building: 'general store', power: 'OFF' },
             },
           },
           green_house: {
@@ -1780,14 +1780,14 @@ export const assetData: AnyObject = {
               description: "Turns the green house's lights on.",
               scriptName: 'BuildingLights',
               originalPath: '',
-              args: { building: 'green house', state: 'ON' },
+              args: { building: 'green house', power: 'ON' },
             },
             OFF: {
               label: 'Cyber-City_Lights-Green-House: "OFF"',
               description: "Turns the green house's lights off.",
               scriptName: 'BuildingLights',
               originalPath: '',
-              args: { building: 'green house', state: 'OFF' },
+              args: { building: 'green house', power: 'OFF' },
             },
           },
           isp: {
@@ -1796,14 +1796,14 @@ export const assetData: AnyObject = {
               description: "Turns the isp's lights on.",
               scriptName: 'BuildingLights',
               originalPath: '',
-              args: { building: 'isp', state: 'ON' },
+              args: { building: 'isp', power: 'ON' },
             },
             OFF: {
               label: 'Cyber-City_Lights-ISP: "OFF"',
               description: "Turns the isp's lights off.",
               scriptName: 'BuildingLights',
               originalPath: '',
-              args: { building: 'isp', state: 'OFF' },
+              args: { building: 'isp', power: 'OFF' },
             },
           },
           large_tower: {
@@ -1812,14 +1812,14 @@ export const assetData: AnyObject = {
               description: "Turns the large tower's lights on.",
               scriptName: 'BuildingLights',
               originalPath: '',
-              args: { building: 'large tower', state: 'ON' },
+              args: { building: 'large tower', power: 'ON' },
             },
             OFF: {
               label: 'Cyber-City_Lights-Large-Tower: "OFF"',
               description: "Turns the large tower's lights off.",
               scriptName: 'BuildingLights',
               originalPath: '',
-              args: { building: 'large tower', state: 'OFF' },
+              args: { building: 'large tower', power: 'OFF' },
             },
           },
           military: {
@@ -1828,14 +1828,14 @@ export const assetData: AnyObject = {
               description: "Turns the military's lights on.",
               scriptName: 'BuildingLights',
               originalPath: '',
-              args: { building: 'military', state: 'ON' },
+              args: { building: 'military', power: 'ON' },
             },
             OFF: {
               label: 'Cyber-City_Lights-Military: "OFF"',
               description: "Turns the military's lights off.",
               scriptName: 'BuildingLights',
               originalPath: '',
-              args: { building: 'military', state: 'OFF' },
+              args: { building: 'military', power: 'OFF' },
             },
           },
           police_station: {
@@ -1844,14 +1844,14 @@ export const assetData: AnyObject = {
               description: "Turns the police station's lights on.",
               scriptName: 'BuildingLights',
               originalPath: '',
-              args: { building: 'police station', state: 'ON' },
+              args: { building: 'police station', power: 'ON' },
             },
             OFF: {
               label: 'Cyber-City_Lights-Police-Station: "OFF"',
               description: "Turns the police station's lights off.",
               scriptName: 'BuildingLights',
               originalPath: '',
-              args: { building: 'police station', state: 'OFF' },
+              args: { building: 'police station', power: 'OFF' },
             },
           },
           power_plant: {
@@ -1860,14 +1860,14 @@ export const assetData: AnyObject = {
               description: "Turns the power plant's lights on.",
               scriptName: 'BuildingLights',
               originalPath: '',
-              args: { building: 'power plant', state: 'ON' },
+              args: { building: 'power plant', power: 'ON' },
             },
             OFF: {
               label: 'Cyber-City_Lights-Power-Plant: "OFF"',
               description: "Turns the power plant's lights off.",
               scriptName: 'BuildingLights',
               originalPath: '',
-              args: { building: 'power plant', state: 'OFF' },
+              args: { building: 'power plant', power: 'OFF' },
             },
           },
           small_tower: {
@@ -1876,14 +1876,14 @@ export const assetData: AnyObject = {
               description: "Turns the small tower's lights on.",
               scriptName: 'BuildingLights',
               originalPath: '',
-              args: { building: 'small tower', state: 'ON' },
+              args: { building: 'small tower', power: 'ON' },
             },
             OFF: {
               label: 'Cyber-City_Lights-Small-Tower: "OFF"',
               description: "Turns the small tower's lights off.",
               scriptName: 'BuildingLights',
               originalPath: '',
-              args: { building: 'small tower', state: 'OFF' },
+              args: { building: 'small tower', power: 'OFF' },
             },
           },
           toms_club: {
@@ -1892,14 +1892,14 @@ export const assetData: AnyObject = {
               description: "Turns toms club's lights on.",
               scriptName: 'BuildingLights',
               originalPath: '',
-              args: { building: 'toms club', state: 'ON' },
+              args: { building: 'toms club', power: 'ON' },
             },
             OFF: {
               label: 'Cyber-City_Lights-Toms-Club: "OFF"',
               description: "Turns toms club's lights off.",
               scriptName: 'BuildingLights',
               originalPath: '',
-              args: { building: 'toms club', state: 'OFF' },
+              args: { building: 'toms club', power: 'OFF' },
             },
           },
           train_station: {
@@ -1908,14 +1908,14 @@ export const assetData: AnyObject = {
               description: "Turns the train station's lights on.",
               scriptName: 'BuildingLights',
               originalPath: '',
-              args: { building: 'train station', state: 'ON' },
+              args: { building: 'train station', power: 'ON' },
             },
             OFF: {
               label: 'Cyber-City_Lights-Train-Station: "OFF"',
               description: "Turns the train station's lights off.",
               scriptName: 'BuildingLights',
               originalPath: '',
-              args: { building: 'train station', state: 'OFF' },
+              args: { building: 'train station', power: 'OFF' },
             },
           },
           watson_elementary: {
@@ -1924,14 +1924,14 @@ export const assetData: AnyObject = {
               description: "Turns watson elementary's lights on.",
               scriptName: 'BuildingLights',
               originalPath: '',
-              args: { building: 'watson elementary', state: 'ON' },
+              args: { building: 'watson elementary', power: 'ON' },
             },
             OFF: {
               label: 'Cyber-City_Lights-Watson-Elementary: "OFF"',
               description: "Turns watson elementary's lights off.",
               scriptName: 'BuildingLights',
               originalPath: '',
-              args: { building: 'watson elementary', state: 'OFF' },
+              args: { building: 'watson elementary', power: 'OFF' },
             },
           },
         },
@@ -1942,13 +1942,13 @@ export const assetData: AnyObject = {
         //     label: 'Cyber-City_Lights-Zone-Commercial: "ON"',
         //     description: 'Turns all the lights in the commercial area on.',
         //     scriptName: 'BuildingLights',
-        //     args: { zone: 'commercial', state: 'ON' }
+        //     args: { zone: 'commercial', power: 'ON' }
         //   },
         //   OFF: {
         //     label: 'Cyber-City_Lights-Zone-Commercial: "OFF"',
         //     description: 'Turns all the lights in the commercial area off.',
         //     scriptName: 'BuildingLights',
-        //     args: { zone: 'commercial', state: 'OFF' }
+        //     args: { zone: 'commercial', power: 'OFF' }
         //   },
         // },
         // industrial: {
@@ -1956,13 +1956,13 @@ export const assetData: AnyObject = {
         //     label: 'Cyber-City_Lights-Zone-Industrial: "ON"',
         //     description: 'Turns all the lights in the industrial area on.',
         //     scriptName: 'BuildingLights',
-        //     args: { zone: 'industrial', state: 'ON' }
+        //     args: { zone: 'industrial', power: 'ON' }
         //   },
         //   OFF: {
         //     label: 'Cyber-City_Lights-Zone-Industrial: "OFF"',
         //     description: 'Turns all the lights in the industrial area off.',
         //     scriptName: 'BuildingLights',
-        //     args: { zone: 'industrial', state: 'OFF' }
+        //     args: { zone: 'industrial', power: 'OFF' }
         //   },
         // },
         // military: {
@@ -1970,13 +1970,13 @@ export const assetData: AnyObject = {
         //     label: 'Cyber-City_Lights-Zone-Military: "ON"',
         //     description: 'Turns all the lights in the military area on.',
         //     scriptName: 'BuildingLights',
-        //     args: { zone: 'military', state: 'ON' }
+        //     args: { zone: 'military', power: 'ON' }
         //   },
         //   OFF: {
         //     label: 'Cyber-City_Lights-Zone-Military: "OFF"',
         //     description: 'Turns all the lights in the military area off.',
         //     scriptName: 'BuildingLights',
-        //     args: { zone: 'military', state: 'OFF' }
+        //     args: { zone: 'military', power: 'OFF' }
         //   },
         // },
         //   residential: {
@@ -1984,13 +1984,13 @@ export const assetData: AnyObject = {
         //       label: 'Cyber-City_Lights-Zone-Residential: "ON"',
         //       description: 'Turns all the lights in the residential area on.',
         //       scriptName: 'BuildingLights',
-        //       args: { zone: 'residential', state: 'ON' }
+        //       args: { zone: 'residential', power: 'ON' }
         //     },
         //     OFF: {
         //       label: 'Cyber-City_Lights-Zone-Residential: "OFF"',
         //       description: 'Turns all the lights in the residential area off.',
         //       scriptName: 'BuildingLights',
-        //       args: { zone: 'residential', state: 'OFF' }
+        //       args: { zone: 'residential', power: 'OFF' }
         //     },
         //   },
         // },
@@ -2001,14 +2001,14 @@ export const assetData: AnyObject = {
       //     description: 'Turns the radar on.',
       //     scriptName: 'Radar',
       //     originalPath: '',
-      //     args: { state: 'ON' },
+      //     args: { power: 'ON' },
       //   },
       //   OFF: {
       //     label: 'Cyber-City_Radar: "OFF"',
       //     description: 'Turns the radar off.',
       //     scriptName: 'Radar',
       //     originalPath: '',
-      //     args: { state: 'OFF' },
+      //     args: { power: 'OFF' },
       //   },
       // },
       rail_switch: {
@@ -2069,14 +2069,14 @@ export const assetData: AnyObject = {
       //     description: 'Turns the train on.',
       //     scriptName: 'Train',
       //     originalPath: '',
-      //     args: { state: 'ON' },
+      //     args: { power: 'ON' },
       //   },
       //   OFF: {
       //     label: 'Cyber-City_Train: "OFF"',
       //     description: 'Turns the train off.',
       //     scriptName: 'Train',
       //     originalPath: '',
-      //     args: { state: 'OFF' },
+      //     args: { power: 'OFF' },
       //   },
       // },
       water: {

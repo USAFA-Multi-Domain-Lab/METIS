@@ -12,18 +12,14 @@ process.argv
 import mocha from 'mocha'
 import chai, { expect } from 'chai'
 import chaiHttp from 'chai-http'
-import node from 'ts-node'
 import mongoose from 'mongoose'
-import express from 'express'
 
 // cesar imports
-import { getConnection, initialize } from '../database/database'
-import { configure } from '../config'
+import { initialize } from '../database/database'
 import { testLogger } from '../modules/logging'
 
 // global fields
-let connection: mongoose.Connection | null
-let server: any
+let connection: mongoose.Connection = mongoose.connection
 let missionID: string
 let MONGO_USERNAME: string | undefined = require('../config').MONGO_USERNAME
 let MONGO_PASSWORD: string | undefined = require('../config').MONGO_PASSWORD
@@ -37,37 +33,6 @@ const userCredentials = {
   password: 'temppass',
 }
 
-// // functions
-// const configureServer = (
-//   callback: () => void,
-//   callbackError: (error: Error) => void,
-// ) => {
-//   const app = express()
-
-//   configure(
-//     app,
-//     () => {
-//       // route imports
-//       const indexRoute = require('../routes/routes-index')
-//       const usersApiRoute = require('../routes/api/v1/routes-users')
-//       const missionsApiRoute = require('../routes/api/v1/routes-missions')
-
-//       // sets the paths that routes load at
-//       app.use('/api/v1/users/', usersApiRoute)
-//       app.use('/api/v1/missions/', missionsApiRoute)
-//       app.use('*', indexRoute)
-
-//       // establishes server to listen at the given port
-//       server = app.listen(app.get('port'))
-
-//       callback()
-//     },
-//     (error) => {
-//       callbackError(error)
-//     },
-//   )
-// }
-
 // ! Make sure you run "npm run serve-test" in
 // ! the terminal before you run these tests
 
@@ -75,37 +40,35 @@ const userCredentials = {
 // connection to the database
 describe('Database Connection Tests', function () {
   before(function (done) {
-    initialize(() => {
-      done()
-    })
-  })
-
-  it('should be connected to a database', function (done) {
-    connection = getConnection()
-    expect(connection?.readyState).to.equal(1)
-    done()
-  })
-
-  it('calling "connection.close()" should close the connection to the database', function (done) {
-    connection = getConnection()
-    connection?.close()
-    connection?.once('close', function () {
-      expect(connection?.readyState).to.equal(0)
-      done()
-    })
-  })
-
-  after(function (done) {
     if (
       MONGO_DB === 'mdl' ||
       MONGO_USERNAME === undefined ||
       MONGO_PASSWORD === undefined
     ) {
       console.log('Configure your "environment-test.json" file')
-      connection = getConnection()
-      connection?.close()
+      testLogger.info('Configure your "environment-test.json" file')
+      done()
     }
+
+    initialize()
+    connection.once('open', done)
+  })
+
+  it('should be connected to a database', function (done) {
+    expect(connection.readyState).to.equal(1)
     done()
+  })
+
+  it('calling "connection.close()" should close the connection to the database', function (done) {
+    connection.close()
+    connection.once('close', function () {
+      expect(connection.readyState).to.equal(0)
+      done()
+    })
+  })
+
+  after(function (done) {
+    connection.close(done)
   })
 })
 
@@ -118,6 +81,8 @@ describe('Export/Import File Tests', function () {
   let agent: ChaiHttp.Agent = chai.request.agent(baseUrl)
 
   before(function (done) {
+    initialize()
+
     agent
       .get('/api/v1/missions/')
       .then(function (response: ChaiHttp.Response) {
@@ -143,18 +108,21 @@ describe('Export/Import File Tests', function () {
               done()
             })
             .catch(function (error) {
-              done(error)
               testLogger.error(error)
+              done(error)
             })
         } else {
+          testLogger.error(
+            'Database is not using "mdl-test." Please make sure the test database is running.',
+          )
           done(
             'Database is not using "mdl-test." Please make sure the test database is running.',
           )
         }
       })
       .catch(function (error) {
-        done(error)
         testLogger.error(error)
+        done(error)
       })
   })
 
@@ -166,8 +134,8 @@ describe('Export/Import File Tests', function () {
         done()
       })
       .catch(function (error) {
-        done(error)
         testLogger.error(error)
+        done(error)
       })
   })
 
@@ -179,8 +147,8 @@ describe('Export/Import File Tests', function () {
         done()
       })
       .catch(function (error) {
-        done(error)
         testLogger.error(error)
+        done(error)
       })
   })
 
@@ -194,8 +162,8 @@ describe('Export/Import File Tests', function () {
         done()
       })
       .catch(function (error) {
-        done(error)
         testLogger.error(error)
+        done(error)
       })
   })
 
@@ -207,8 +175,8 @@ describe('Export/Import File Tests', function () {
         done()
       })
       .catch(function (error) {
-        done(error)
         testLogger.error(error)
+        done(error)
       })
   })
 
@@ -224,8 +192,8 @@ describe('Export/Import File Tests', function () {
         done()
       })
       .catch(function (error) {
-        done(error)
         testLogger.error(error)
+        done(error)
       })
   })
 
@@ -241,8 +209,8 @@ describe('Export/Import File Tests', function () {
         done()
       })
       .catch(function (error) {
-        done(error)
         testLogger.error(error)
+        done(error)
       })
   })
 
@@ -258,8 +226,8 @@ describe('Export/Import File Tests', function () {
         done()
       })
       .catch(function (error) {
-        done(error)
         testLogger.error(error)
+        done(error)
       })
   })
 
@@ -275,8 +243,8 @@ describe('Export/Import File Tests', function () {
         done()
       })
       .catch(function (error) {
-        done(error)
         testLogger.error(error)
+        done(error)
       })
   })
 
@@ -292,8 +260,8 @@ describe('Export/Import File Tests', function () {
         done()
       })
       .catch(function (error) {
-        done(error)
         testLogger.error(error)
+        done(error)
       })
   })
 
@@ -309,8 +277,8 @@ describe('Export/Import File Tests', function () {
         done()
       })
       .catch(function (error) {
-        done(error)
         testLogger.error(error)
+        done(error)
       })
   })
 
@@ -326,8 +294,8 @@ describe('Export/Import File Tests', function () {
         done()
       })
       .catch(function (error) {
-        done(error)
         testLogger.error(error)
+        done(error)
       })
   })
 
@@ -344,8 +312,8 @@ describe('Export/Import File Tests', function () {
         done()
       })
       .catch(function (error) {
-        done(error)
         testLogger.error(error)
+        done(error)
       })
   })
 
@@ -362,8 +330,8 @@ describe('Export/Import File Tests', function () {
         done()
       })
       .catch(function (error) {
-        done(error)
         testLogger.error(error)
+        done(error)
       })
   })
 
@@ -379,8 +347,8 @@ describe('Export/Import File Tests', function () {
         done()
       })
       .catch(function (error) {
-        done(error)
         testLogger.error(error)
+        done(error)
       })
   })
 
@@ -408,11 +376,12 @@ describe('Export/Import File Tests', function () {
               })
           }
         }
-        done()
+        connection.close(done)
       })
       .catch(function (error) {
-        done(error)
         testLogger.error(error)
+        connection.close()
+        done(error)
       })
   })
 })
