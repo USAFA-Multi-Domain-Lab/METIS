@@ -114,9 +114,12 @@ export default class ExecuteNodePath extends React.Component<
 
     return (
       <div className={className}>
-        <p className='x' onClick={this.closeWindow}>
-          x
-        </p>
+        <div className='Close'>
+          <div className='CloseButton' onClick={this.closeWindow}>
+            x
+            <Tooltip description='Close window.' />
+          </div>
+        </div>
         <p className='PromptDisplayText'>
           Do you want to {actionName.toLowerCase()} {selectedNode.name}?
         </p>
