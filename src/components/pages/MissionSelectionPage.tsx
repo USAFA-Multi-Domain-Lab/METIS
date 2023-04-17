@@ -391,7 +391,7 @@ export default function MissionSelectionPage(
 
       <div className='FooterContainer'>
         <div className='Version' onClick={viewChangelog}>
-          v1.2.1
+          v1.2.2
           <Tooltip description={'View changelog.'} />
         </div>
         <div className='Credit'>Photo by Adi Goldstein on Unsplash</div>
