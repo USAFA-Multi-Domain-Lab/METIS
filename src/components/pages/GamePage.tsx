@@ -363,15 +363,16 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
                         // after it has been executed.
                         if (node.executable && node.executed) {
                           description =
+                            `* Action executed: "${node.selectedAction?.name}"\n` +
                             `* Executed node in ${
                               (node.selectedAction?.processTime as number) /
                               1000
                             } second(s)\n` +
-                            `* Action executed: ${node.selectedAction?.name}\n` +
                             `* Chance of success: ${
                               (node.selectedAction?.successChance as number) *
                               100
-                            }%`
+                            }%\n` +
+                            `* Resources used: ${node.selectedAction?.resourceCost} resource(s)`
                         }
 
                         if (node.executing) {
