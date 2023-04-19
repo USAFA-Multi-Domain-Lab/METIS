@@ -83,9 +83,9 @@
       .MissionList {
         background-color: black;
         border: 3px solid white;
-        border-radius: 15px;
+        border-radius: 5px;
         margin: 0;
-        padding: 0;
+        padding: 6px 0;
         font-size: 1em;
         max-height: 30vh;
         overflow-y: scroll;
@@ -162,8 +162,8 @@
       padding: 10px 0;
       background-color: black;
       border-top: none;
-      border-bottom-right-radius: 15px;
-      border-bottom-left-radius: 15px;
+      border-bottom-right-radius: 5px;
+      border-bottom-left-radius: 5px;
 
       .ButtonSVG {
         transform: scale(0.8);

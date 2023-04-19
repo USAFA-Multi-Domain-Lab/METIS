@@ -1629,19 +1629,53 @@ export const assetData: AnyObject = {
         },
       },
       light_strip: {
-        ON: {
-          label: 'Cyber-City_Light-Strip: "ON"',
-          description: 'Turns the light strip on.',
-          scriptName: 'LightStrip',
-          originalPath: '',
-          args: { power: 'ON' },
+        master: {
+          ON: {
+            label: 'Cyber-City_Light-Strip: "ON"',
+            description: "Turns the light strip's power and lights on.",
+            scriptName: 'LightStrip',
+            originalPath: '',
+            args: { master: 'ON' },
+          },
+          OFF: {
+            label: 'Cyber-City_Light-Strip: "OFF"',
+            description: "Turns the light strip's power and lights off.",
+            scriptName: 'LightStrip',
+            originalPath: '',
+            args: { master: 'OFF' },
+          },
         },
-        OFF: {
-          label: 'Cyber-City_Light-Strip: "OFF"',
-          description: 'Turns the light strip off.',
-          scriptName: 'LightStrip',
-          originalPath: '',
-          args: { power: 'OFF' },
+        power: {
+          ON: {
+            label: 'Cyber-City_Light-Strip-Power: "ON"',
+            description: "Turns the light strip's power on.",
+            scriptName: 'LightStrip',
+            originalPath: '',
+            args: { power: 'ON' },
+          },
+          OFF: {
+            label: 'Cyber-City_Light-Strip-Power: "OFF"',
+            description: "Turns the light strip's power off.",
+            scriptName: 'LightStrip',
+            originalPath: '',
+            args: { power: 'OFF' },
+          },
+        },
+        lights: {
+          ON: {
+            label: 'Cyber-City_Light-Strip-Lights: "ON"',
+            description: "Turns the light strip's lights on.",
+            scriptName: 'LightStrip',
+            originalPath: '',
+            args: { lights: 'ON' },
+          },
+          OFF: {
+            label: 'Cyber-City_Light-Strip-Lights: "OFF"',
+            description: "Turns the light strip's lights off.",
+            scriptName: 'LightStrip',
+            originalPath: '',
+            args: { lights: 'OFF' },
+          },
         },
       },
       lights: {
@@ -1995,22 +2029,56 @@ export const assetData: AnyObject = {
         //   },
         // },
       },
-      // radar: {
-      //   ON: {
-      //     label: 'Cyber-City_Radar: "ON"',
-      //     description: 'Turns the radar on.',
-      //     scriptName: 'Radar',
-      //     originalPath: '',
-      //     args: { power: 'ON' },
-      //   },
-      //   OFF: {
-      //     label: 'Cyber-City_Radar: "OFF"',
-      //     description: 'Turns the radar off.',
-      //     scriptName: 'Radar',
-      //     originalPath: '',
-      //     args: { power: 'OFF' },
-      //   },
-      // },
+      radar: {
+        master: {
+          ON: {
+            label: 'Cyber-City_Radar: "ON"',
+            description: "Turns the radar's power and motor on.",
+            scriptName: 'Radar',
+            originalPath: '',
+            args: { master: 'ON' },
+          },
+          OFF: {
+            label: 'Cyber-City_Radar: "OFF"',
+            description: "Turns the radar's power and motor off.",
+            scriptName: 'Radar',
+            originalPath: '',
+            args: { master: 'OFF' },
+          },
+        },
+        power: {
+          ON: {
+            label: 'Cyber-City_Radar-Power: "ON"',
+            description: "Turns the radar's power on.",
+            scriptName: 'Radar',
+            originalPath: '',
+            args: { power: 'ON' },
+          },
+          OFF: {
+            label: 'Cyber-City_Radar-Power: "OFF"',
+            description: "Turns the radar's power off.",
+            scriptName: 'Radar',
+            originalPath: '',
+            args: { power: 'OFF' },
+          },
+        },
+        motor: {
+          ON: {
+            label: 'Cyber-City_Radar-Motor: "ON"',
+            description: "Turns the radar's motor on.",
+            scriptName: 'Radar',
+            originalPath: '',
+            args: { motor: 'ON' },
+          },
+          OFF: {
+            label: 'Cyber-City_Radar-Motor: "OFF"',
+            description: "Turns the radar's motor off.",
+            scriptName: 'Radar',
+            originalPath: '',
+            args: { motor: 'OFF' },
+          },
+        },
+      },
       rail_switch: {
         zones: {
           military: {
