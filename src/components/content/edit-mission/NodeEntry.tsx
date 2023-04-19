@@ -120,7 +120,7 @@ export default function NodeEntry(props: {
                 } else if (node !== null) {
                   appActions.notify(
                     `**Error:** The node called "${node.name.toLowerCase()}" has at least one field that was left empty. These fields must contain at least one character.`,
-                    { duration: null },
+                    { duration: null, errorMessage: true },
                   )
                 }
                 setMountHandled(false)
@@ -252,7 +252,11 @@ export default function NodeEntry(props: {
                   node.executable = executable
 
                   if (executable && node.actions.length === 0) {
-                    // Checks to make sure the selected node has at least one action to choose from. If the selected node does not have at least one action then it will auto-generate one for that node.
+                    // Checks to make sure the selected node has
+                    // at least one action to choose from. If the
+                    // selected node does not have at least one
+                    // action then it will auto-generate one for
+                    // that node.
                     let newActionArray: Array<MissionNodeAction> = [
                       MissionNode.createDefaultAction(node),
                     ]

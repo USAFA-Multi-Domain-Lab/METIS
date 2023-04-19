@@ -297,7 +297,7 @@ export default function MissionFormPage(
       if (missionDetailsIsActive && missionEmptyStringArray.length > 0) {
         appActions.notify(
           `**Error:** The mission side panel has at least one field that was left empty. This field must contain at least one character.`,
-          { duration: null },
+          { duration: null, errorMessage: true },
         )
         return onInvalid()
       }
@@ -307,11 +307,10 @@ export default function MissionFormPage(
       ) {
         appActions.notify(
           `**Error:** The node called "${selectedNode.name.toLowerCase()}" has at least one field that was left empty. These fields must contain at least one character.`,
-          { duration: null },
+          { duration: null, errorMessage: true },
         )
         return onInvalid()
       }
-
       return onValid()
     }
 
@@ -335,6 +334,16 @@ export default function MissionFormPage(
     let grayOutDeselectNodeButton: boolean = isEmptyString
     let grayOutAddNodeButton: boolean = isEmptyString
     let grayOutDeleteNodeButton: boolean = mission.nodes.size < 2
+
+    if (!isEmptyString) {
+      for (let notification of appState.notifications) {
+        if (notification.errorMessage) {
+          setTimeout(() => {
+            notification.dismiss()
+          }, 2000)
+        }
+      }
+    }
 
     return (
       <div className={'MissionFormPage Page'}>

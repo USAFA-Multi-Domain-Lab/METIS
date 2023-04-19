@@ -49,7 +49,7 @@ export default function NodeActionDetails(props: {
       } else {
         appActions.notify(
           `**Error:** The node called "${node.name.toLowerCase()}" has at least one field that was left empty. These fields must contain at least one character.`,
-          { duration: null },
+          { duration: null, errorMessage: true },
         )
       }
     }
@@ -66,7 +66,7 @@ export default function NodeActionDetails(props: {
     } else {
       appActions.notify(
         `**Error:** The node called "${node.name.toLowerCase()}" has at least one field that was left empty. These fields must contain at least one character.`,
-        { duration: null },
+        { duration: null, errorMessage: true },
       )
     }
   }

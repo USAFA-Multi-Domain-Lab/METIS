@@ -6,6 +6,7 @@ import {
 
 export interface INotificationOptions {
   duration?: number | null
+  errorMessage?: boolean
   buttons?: Array<IButtonText>
   startExpirationTimer?: boolean
 }
@@ -23,6 +24,7 @@ export default class Notification {
   _dismissed: boolean
   _expired: boolean
   _expirationTimerStarted: boolean
+  _errorMessage: boolean
 
   get notificationID(): string {
     return this._notificationID
@@ -60,6 +62,12 @@ export default class Notification {
     return this._dismissed || this._expired
   }
 
+  // This is if the message is an error
+  // message or not.
+  get errorMessage(): boolean {
+    return this._errorMessage
+  }
+
   constructor(
     message: string,
     handleDismissalOrExpiration: (dismissed: boolean, expired: boolean) => void,
@@ -74,6 +82,8 @@ export default class Notification {
     this._dismissed = false
     this._expired = false
     this._expirationTimerStarted = false
+    this._errorMessage =
+      options.errorMessage !== undefined ? options.errorMessage : false
 
     if (
       options.startExpirationTimer === true ||

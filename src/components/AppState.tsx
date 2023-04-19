@@ -76,6 +76,7 @@ export interface IPromptOptions {
 export interface INotifyOptions {
   duration?: number | null
   buttons?: Array<IButtonText>
+  errorMessage?: boolean
 }
 
 /* -- CONSTANTS -- */
