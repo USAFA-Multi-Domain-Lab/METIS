@@ -99,4 +99,11 @@
     background-size: 25px 25px;
     background-repeat: no-repeat;
   }
+
+  &.search {
+    background: url('/assets/images/icons/search.svg'), $background-alt1;
+    background-position: 9px 8px;
+    background-size: 25px 25px;
+    background-repeat: no-repeat;
+  }
 }

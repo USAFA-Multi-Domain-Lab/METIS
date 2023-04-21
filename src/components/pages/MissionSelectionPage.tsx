@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { getAllMissions, importMissions, Mission } from '../../modules/missions'
 import { IPage } from '../App'
 import './MissionSelectionPage.scss'
@@ -25,11 +25,20 @@ export default function MissionSelectionPage(
 
   const page = useRef<HTMLDivElement>(null)
   const importMissionTrigger = useRef<HTMLInputElement>(null)
+  const inputFocusRef = useRef<HTMLInputElement>(null)
 
   /* -- COMPONENT STATE -- */
 
   const [mountHandled, setMountHandled] = useState<boolean>(false)
   const [missions, setMissions] = useState<Array<Mission>>([])
+  const [displayedMissions, setDisplayedMissions] = useState<Array<Mission>>([])
+  const [allMissionsFromSearch, setAllMissionsFromSearch] = useState<
+    Array<Mission>
+  >([])
+  const [currentMissionSet, setCurrentMissionSet] = useState<number>(1)
+  const [displaySearchBar, setDisplaySearchBar] = useState<boolean>(false)
+  const [resetMissionList, setResetMissionList] = useState<boolean>(false)
+  const [searchText, setSearchText] = useState<string>('')
 
   /* -- COMPONENT EFFECTS -- */
 
@@ -41,6 +50,31 @@ export default function MissionSelectionPage(
       loadMissions(handleLoadCompletion, handleLoadCompletion)
     }
   }, [mountHandled])
+
+  // This will reset the mission list to what
+  // it was when the page loaded initially.
+  useEffect(() => {
+    if (resetMissionList) {
+      missions.forEach((mission: Mission, index: number) => {
+        if (index < numberOfMissionsShown) {
+          displayedMissions.push(mission)
+        }
+      })
+
+      setResetMissionList(false)
+    }
+  }, [!resetMissionList])
+
+  // This automatically focuses the search bar
+  // input element.
+  useEffect(() => {
+    if (displaySearchBar) {
+      const inputElement: HTMLInputElement | null = inputFocusRef.current
+      if (inputElement !== null) {
+        inputElement.focus()
+      }
+    }
+  }, [!displaySearchBar])
 
   /* -- COMPONENT FUNCTIONS -- */
 
@@ -58,6 +92,11 @@ export default function MissionSelectionPage(
     getAllMissions(
       (missions: Array<Mission>) => {
         setMissions(missions)
+        missions.forEach((mission: Mission, index: number) => {
+          if (index < numberOfMissionsShown) {
+            displayedMissions.push(mission)
+          }
+        })
         appActions.finishLoading()
         callback()
       },
@@ -284,31 +323,236 @@ export default function MissionSelectionPage(
   // page.
   const viewChangelog = (): void => appActions.goToPage('ChangelogPage', {})
 
+  // Toggles through the pages of missions.
+  const showPreviousMissionSet = () => {
+    let previousDisplayOfMissions: Array<Mission> = []
+
+    if (currentMissionSet !== 1) {
+      setCurrentMissionSet(currentMissionSet - 1)
+
+      // Sets the range of missions that will be displayed.
+      let missionRangeStart: number =
+        (currentMissionSet - 2) * numberOfMissionsShown // Subtract 2 here because arrays start at index 0 and currentMissionSet starts at 1 for displaying purposes.
+      let missionRangeStop: number =
+        (currentMissionSet - 1) * numberOfMissionsShown
+
+      if (searchText !== '') {
+        // Loops through all the missions from the search
+        // that the user has done and selects which missions
+        // to display based on the created range.
+        allMissionsFromSearch.forEach((mission: Mission, index: number) => {
+          if (index >= missionRangeStart && index < missionRangeStop) {
+            previousDisplayOfMissions.push(mission)
+          }
+        })
+      } else {
+        // Loops through all the missions and selects which
+        // missions to display based on the created range.
+        missions.forEach((mission: Mission, index: number) => {
+          if (index >= missionRangeStart && index < missionRangeStop) {
+            previousDisplayOfMissions.push(mission)
+          }
+        })
+      }
+
+      // Updates the missions that are currently being
+      // displayed.
+      setDisplayedMissions(previousDisplayOfMissions)
+    } else {
+      setCurrentMissionSet(totalMissionSets)
+
+      // Sets the initial range of missions that will
+      // be displayed.
+      let previousMissionSet: number = totalMissionSets - 1
+      let missionRangeStart: number = previousMissionSet * numberOfMissionsShown
+      let missionRangeStop: number = totalMissionSets * numberOfMissionsShown
+
+      if (searchText !== '') {
+        // Loops through all the missions from the search
+        // that the user has done and selects which missions
+        // to display based on the created range.
+        allMissionsFromSearch.forEach((mission: Mission, index: number) => {
+          if (index >= missionRangeStart && index < missionRangeStop) {
+            previousDisplayOfMissions.push(mission)
+          }
+        })
+      } else {
+        // Loops through all the missions and selects which
+        // missions to display based on the created range.
+        missions.forEach((mission: Mission, index: number) => {
+          if (index >= missionRangeStart && index < missionRangeStop) {
+            previousDisplayOfMissions.push(mission)
+          }
+        })
+      }
+
+      // Updates the missions that are currently being
+      // displayed.
+      setDisplayedMissions(previousDisplayOfMissions)
+    }
+  }
+
+  // Toggles through the pages of missions.
+  const showNextMissionSet = () => {
+    let nextDisplayOfMissions: Array<Mission> = []
+
+    if (currentMissionSet !== totalMissionSets) {
+      setCurrentMissionSet(currentMissionSet + 1)
+
+      // Sets the range of missions that will be displayed.
+      let missionRangeStart: number = currentMissionSet * numberOfMissionsShown
+      let nextMissionSet: number = currentMissionSet + 1
+      let missionRangeStop: number = nextMissionSet * numberOfMissionsShown
+
+      if (searchText !== '') {
+        // Loops through all the missions from the search
+        // that the user has done and selects which missions
+        // to display based on the created range.
+        allMissionsFromSearch.forEach((mission: Mission, index: number) => {
+          if (index >= missionRangeStart && index < missionRangeStop) {
+            nextDisplayOfMissions.push(mission)
+          }
+        })
+      } else {
+        // Loops through all the missions and selects which
+        // missions to display based on the created range.
+        missions.forEach((mission: Mission, index: number) => {
+          if (index >= missionRangeStart && index < missionRangeStop) {
+            nextDisplayOfMissions.push(mission)
+          }
+        })
+      }
+      // Updates the missions that are currently being
+      // displayed.
+      setDisplayedMissions(nextDisplayOfMissions)
+    } else {
+      setCurrentMissionSet(1)
+
+      if (searchText !== '') {
+        // Loops through all the missions from the search
+        // that the user has done and selects which missions
+        // to display based on the created range.
+        allMissionsFromSearch.forEach((mission: Mission, index: number) => {
+          if (index < numberOfMissionsShown) {
+            nextDisplayOfMissions.push(mission)
+          }
+        })
+      } else {
+        // Brings the user back to the "first page" of missions.
+        missions.forEach((mission: Mission, index: number) => {
+          if (index < numberOfMissionsShown) {
+            nextDisplayOfMissions.push(mission)
+          }
+        })
+      }
+
+      // Updates the missions that are currently being
+      // displayed.
+      setDisplayedMissions(nextDisplayOfMissions)
+    }
+  }
+
+  // Toggles the search bar.
+  const toggleMissionSearch = () => {
+    if (displaySearchBar) {
+      // Resets the mission list display
+      // when the search bar is toggled off.
+      setSearchText('')
+      setDisplayedMissions([])
+      setCurrentMissionSet(1)
+      setResetMissionList(true)
+
+      setDisplaySearchBar(false)
+    } else {
+      setDisplaySearchBar(true)
+    }
+  }
+
+  // Searches for missions and displays missions
+  // based on what the user types.
+  const onSearch = (e: React.FormEvent<HTMLInputElement>) => {
+    let currentText: string = e.currentTarget.value
+    let newSearchText: string = currentText.toLowerCase()
+    let allMissionsFromSearch: Array<Mission> = []
+    let displayedSearchMissions: Array<Mission> = []
+
+    missions.forEach((mission: Mission) => {
+      if (newSearchText) {
+        let missionName: string = mission.name.toLowerCase()
+        let missionNameMatch: boolean = missionName.includes(newSearchText)
+
+        if (missionNameMatch) {
+          allMissionsFromSearch.push(mission)
+        }
+      } else {
+        setResetMissionList(true)
+      }
+    })
+
+    // Shows the user what they have typed.
+    setSearchText(currentText)
+
+    // Changes the current page number to 1.
+    setCurrentMissionSet(1)
+
+    // Sets and shows the first range, or page,
+    // of missions based on the user's input.
+    setAllMissionsFromSearch(allMissionsFromSearch)
+    allMissionsFromSearch.forEach((mission: Mission, index: number) => {
+      if (index < numberOfMissionsShown) {
+        displayedSearchMissions.push(mission)
+      }
+    })
+    setDisplayedMissions(displayedSearchMissions)
+  }
+
   /* -- RENDER -- */
 
   // Keeps track of if the user is logged in or not.
   let editMissionsContainerClassName: string = 'EditMissionsContainer'
   let editMissionListClassName: string = 'MissionList'
+  let missionNavPanelClassName: string = 'MissionNavPanel'
+  let searchContainerClassName: string = 'Hidden'
   let displayLogin: boolean = true
   let displayLogout: boolean = false
 
   let noMissionsClassName: string = 'NoMissions'
 
+  // Variables used for mission pagination
+  let numberOfMissionsShown: number = 5
+  let totalMissionSets: number = Math.ceil(
+    missions.length / numberOfMissionsShown,
+  )
+
   if (appState.currentUser !== null) {
     editMissionsContainerClassName += ' InstructorView'
     editMissionListClassName += ' InstructorView'
+    missionNavPanelClassName += ' InstructorView'
     displayLogin = false
     displayLogout = true
   }
 
-  if (missions.length > 0) {
-    noMissionsClassName += ' hidden'
+  if (displayedMissions.length > 0) {
+    noMissionsClassName += ' Hidden'
+  }
+
+  if (displaySearchBar) {
+    searchContainerClassName = 'SearchContainer'
+    numberOfMissionsShown = numberOfMissionsShown - 1
+  }
+
+  // Changes the total number of pages based on what
+  // the user types in the search bar.
+  if (searchText !== '') {
+    totalMissionSets = Math.ceil(
+      allMissionsFromSearch.length / numberOfMissionsShown,
+    )
   }
 
   // This will iterate over the missions,
   // and render all the rows for the list.
   const renderMissionSelectionRows = (): JSX.Element[] => {
-    let missionSelectionRows: JSX.Element[] = missions.map(
+    let missionSelectionRows: JSX.Element[] = displayedMissions.map(
       (mission: Mission) => (
         <MissionSelectionRow
           mission={mission}
@@ -360,11 +604,40 @@ export default function MissionSelectionPage(
           <div className={editMissionListClassName}>
             <div className='HeadingContainer'>
               <div className='Heading'>Select your mission:</div>
+              <ButtonSVG
+                purpose={EButtonSVGPurpose.Search}
+                handleClick={toggleMissionSearch}
+                tooltipDescription={'Search for a specific mission.'}
+              />
+            </div>
+            <div className={searchContainerClassName}>
+              <input
+                placeholder='Type here to search...'
+                className='SearchBar'
+                value={searchText}
+                onChange={onSearch}
+                ref={inputFocusRef}
+              />
             </div>
             <div className='MissionSelectionRows'>
               {renderMissionSelectionRows()}
             </div>
             <div className={noMissionsClassName}>No missions available...</div>
+          </div>
+          <div className={missionNavPanelClassName}>
+            <div className='PreviousMissionSetButton'>
+              <span className='Text' onClick={showPreviousMissionSet}>
+                Previous
+              </span>
+            </div>
+            <div className='CurrentMissionSet'>
+              {currentMissionSet} / {totalMissionSets}
+            </div>
+            <div className='NextMissionSetButton'>
+              <span className='Text' onClick={showNextMissionSet}>
+                Next
+              </span>
+            </div>
           </div>
         </div>
         <div className={editMissionsContainerClassName}>

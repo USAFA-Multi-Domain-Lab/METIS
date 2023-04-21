@@ -2029,56 +2029,58 @@ export const assetData: AnyObject = {
         //   },
         // },
       },
-      radar: {
-        master: {
-          ON: {
-            label: 'Cyber-City_Radar: "ON"',
-            description: "Turns the radar's power and motor on.",
-            scriptName: 'Radar',
-            originalPath: '',
-            args: { master: 'ON' },
-          },
-          OFF: {
-            label: 'Cyber-City_Radar: "OFF"',
-            description: "Turns the radar's power and motor off.",
-            scriptName: 'Radar',
-            originalPath: '',
-            args: { master: 'OFF' },
-          },
-        },
-        power: {
-          ON: {
-            label: 'Cyber-City_Radar-Power: "ON"',
-            description: "Turns the radar's power on.",
-            scriptName: 'Radar',
-            originalPath: '',
-            args: { power: 'ON' },
-          },
-          OFF: {
-            label: 'Cyber-City_Radar-Power: "OFF"',
-            description: "Turns the radar's power off.",
-            scriptName: 'Radar',
-            originalPath: '',
-            args: { power: 'OFF' },
-          },
-        },
-        motor: {
-          ON: {
-            label: 'Cyber-City_Radar-Motor: "ON"',
-            description: "Turns the radar's motor on.",
-            scriptName: 'Radar',
-            originalPath: '',
-            args: { motor: 'ON' },
-          },
-          OFF: {
-            label: 'Cyber-City_Radar-Motor: "OFF"',
-            description: "Turns the radar's motor off.",
-            scriptName: 'Radar',
-            originalPath: '',
-            args: { motor: 'OFF' },
-          },
-        },
-      },
+      // ! DO NOT use until hardware has been fixed.
+      // radar: {
+      //   master: {
+      //     ON: {
+      //       label: 'Cyber-City_Radar: "ON"',
+      //       description: "Turns the radar's power and motor on.",
+      //       scriptName: 'Radar',
+      //       originalPath: '',
+      //       args: { master: 'ON' },
+      //     },
+      //     OFF: {
+      //       label: 'Cyber-City_Radar: "OFF"',
+      //       description: "Turns the radar's power and motor off.",
+      //       scriptName: 'Radar',
+      //       originalPath: '',
+      //       args: { master: 'OFF' },
+      //     },
+      //   },
+      //   power: {
+      //     ON: {
+      //       label: 'Cyber-City_Radar-Power: "ON"',
+      //       description: "Turns the radar's power on.",
+      //       scriptName: 'Radar',
+      //       originalPath: '',
+      //       args: { power: 'ON' },
+      //     },
+      //     OFF: {
+      //       label: 'Cyber-City_Radar-Power: "OFF"',
+      //       description: "Turns the radar's power off.",
+      //       scriptName: 'Radar',
+      //       originalPath: '',
+      //       args: { power: 'OFF' },
+      //     },
+      //   },
+      //   motor: {
+      //     ON: {
+      //       label: 'Cyber-City_Radar-Motor: "ON"',
+      //       description: "Turns the radar's motor on.",
+      //       scriptName: 'Radar',
+      //       originalPath: '',
+      //       args: { motor: 'ON' },
+      //     },
+      //     OFF: {
+      //       label: 'Cyber-City_Radar-Motor: "OFF"',
+      //       description: "Turns the radar's motor off.",
+      //       scriptName: 'Radar',
+      //       originalPath: '',
+      //       args: { motor: 'OFF' },
+      //     },
+      //   },
+      // },
+      // ! -------------------------------------------------
       rail_switch: {
         zones: {
           military: {
@@ -2131,22 +2133,22 @@ export const assetData: AnyObject = {
           },
         },
       },
-      // train: {
-      //   ON: {
-      //     label: 'Cyber-City_Train: "ON"',
-      //     description: 'Turns the train on.',
-      //     scriptName: 'Train',
-      //     originalPath: '',
-      //     args: { power: 'ON' },
-      //   },
-      //   OFF: {
-      //     label: 'Cyber-City_Train: "OFF"',
-      //     description: 'Turns the train off.',
-      //     scriptName: 'Train',
-      //     originalPath: '',
-      //     args: { power: 'OFF' },
-      //   },
-      // },
+      train: {
+        ON: {
+          label: 'Cyber-City_Train: "ON"',
+          description: 'Turns the train on.',
+          scriptName: 'Train',
+          originalPath: '',
+          args: { power: 'ON' },
+        },
+        OFF: {
+          label: 'Cyber-City_Train: "OFF"',
+          description: 'Turns the train off.',
+          scriptName: 'Train',
+          originalPath: '',
+          args: { power: 'OFF' },
+        },
+      },
       water: {
         color: {
           white: {
