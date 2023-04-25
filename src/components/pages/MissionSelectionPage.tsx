@@ -55,12 +55,16 @@ export default function MissionSelectionPage(
   // it was when the page loaded initially.
   useEffect(() => {
     if (resetMissionList) {
+      setCurrentMissionSet(1)
+      let displayedMissions: Array<Mission> = []
+
       missions.forEach((mission: Mission, index: number) => {
         if (index < numberOfMissionsShown) {
           displayedMissions.push(mission)
         }
       })
 
+      setDisplayedMissions(displayedMissions)
       setResetMissionList(false)
     }
   }, [!resetMissionList])
@@ -92,11 +96,7 @@ export default function MissionSelectionPage(
     getAllMissions(
       (missions: Array<Mission>) => {
         setMissions(missions)
-        missions.forEach((mission: Mission, index: number) => {
-          if (index < numberOfMissionsShown) {
-            displayedMissions.push(mission)
-          }
-        })
+        setResetMissionList(true)
         appActions.finishLoading()
         callback()
       },
@@ -520,9 +520,7 @@ export default function MissionSelectionPage(
 
   // Variables used for mission pagination
   let numberOfMissionsShown: number = 5
-  let totalMissionSets: number = Math.ceil(
-    missions.length / numberOfMissionsShown,
-  )
+  let totalMissionSets: number = 1
 
   if (appState.currentUser !== null) {
     editMissionsContainerClassName += ' InstructorView'
@@ -534,6 +532,7 @@ export default function MissionSelectionPage(
 
   if (displayedMissions.length > 0) {
     noMissionsClassName += ' Hidden'
+    totalMissionSets = Math.ceil(missions.length / numberOfMissionsShown)
   }
 
   if (displaySearchBar) {
@@ -543,7 +542,7 @@ export default function MissionSelectionPage(
 
   // Changes the total number of pages based on what
   // the user types in the search bar.
-  if (searchText !== '') {
+  if (searchText !== '' && allMissionsFromSearch.length > 0) {
     totalMissionSets = Math.ceil(
       allMissionsFromSearch.length / numberOfMissionsShown,
     )
