@@ -2,15 +2,13 @@ import { NextFunction } from 'express'
 import { Request, Response } from 'express-serve-static-core'
 
 // middleware that requires the user to be logged in
-export const requireLogin = (
-  request: Request,
-  response: Response,
-  next: NextFunction,
-): void => {
-  if (request.session.userID !== undefined) {
-    next()
-  } else {
-    response.sendStatus(401)
+export const requireLogin = () => {
+  return (request: Request, response: Response, next: NextFunction): void => {
+    if (request.session.userID !== undefined) {
+      next()
+    } else {
+      response.sendStatus(401)
+    }
   }
 }
 

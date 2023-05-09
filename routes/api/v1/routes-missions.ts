@@ -20,7 +20,7 @@ const router = express.Router()
 
 // -- POST | /api/v1/missions/ --
 // This will create a new mission.
-router.post('/', requireLogin, (request, response) => {
+router.post('/', requireLogin(), (request, response) => {
   let body: any = request.body
 
   if ('mission' in body) {
