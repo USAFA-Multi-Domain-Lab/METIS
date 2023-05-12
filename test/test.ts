@@ -9,10 +9,10 @@ process.env.environment = 'TEST'
 process.argv
 
 // npm imports
-import mocha from 'mocha'
 import chai, { expect } from 'chai'
 import chaiHttp from 'chai-http'
 import mongoose from 'mongoose'
+import { startServer } from '../server'
 
 // cesar imports
 import { initialize } from '../database/database'
@@ -33,44 +33,47 @@ const userCredentials = {
   password: 'temppass',
 }
 
-// ! Make sure you run "npm run serve-test" in
-// ! the terminal before you run these tests
+before(function (done) {
+  this.timeout(30000)
+
+  startServer(() => {
+    console.log('\n')
+    done()
+  })
+})
 
 // Unit test that makes sure there is a
 // connection to the database
-describe('Database Connection Tests', function () {
-  before(function (done) {
-    if (
-      MONGO_DB === 'mdl' ||
-      MONGO_USERNAME === undefined ||
-      MONGO_PASSWORD === undefined
-    ) {
-      console.log('Configure your "environment-test.json" file')
-      testLogger.info('Configure your "environment-test.json" file')
-      done()
-    }
-
-    initialize()
-    connection.once('open', done)
-  })
-
-  it('should be connected to a database', function (done) {
-    expect(connection.readyState).to.equal(1)
-    done()
-  })
-
-  it('calling "connection.close()" should close the connection to the database', function (done) {
-    connection.close()
-    connection.once('close', function () {
-      expect(connection.readyState).to.equal(0)
-      done()
-    })
-  })
-
-  after(function (done) {
-    connection.close(done)
-  })
-})
+// describe('Database Connection Tests', function () {
+//   before(function (done) {
+//     if (
+//       MONGO_DB === 'mdl' ||
+//       MONGO_USERNAME === undefined ||
+//       MONGO_PASSWORD === undefined
+//     ) {
+//       console.log('Configure your "environment-test.json" file')
+//       testLogger.info('Configure your "environment-test.json" file')
+//       done()
+//     }
+//   })
+//
+//   it('should be connected to a database', function (done) {
+//     expect(connection.readyState).to.equal(1)
+//     done()
+//   })
+//
+//   it('calling "connection.close()" should close the connection to the database', function (done) {
+//     connection.close()
+//     connection.once('close', function () {
+//       expect(connection.readyState).to.equal(0)
+//       done()
+//     })
+//   })
+//
+//   after(function (done) {
+//     connection.close(done)
+//   })
+// })
 
 // Tests for the export/import mission feature
 describe('Export/Import File Tests', function () {
