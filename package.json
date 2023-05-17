@@ -61,11 +61,10 @@
     "serve-prod": "ts-node server.ts",
     "serve-dev": "nodemon server.ts",
     "serve-react": "react-scripts start",
-    "serve-test": "environment=TEST && export environment && npm run serve-dev",
     "build-react": "react-scripts build",
     "test-react": "react-scripts test",
     "eject-react": "react-scripts eject",
-    "test": "mocha -r ts-node/register test/*.ts --exit",
+    "test": "mocha -r ts-node/register test/*.ts --timeout 5000 --exit",
     "test-coverage": "nyc mocha -r ts-node/register test/*.ts --exit"
   },
   "eslintConfig": {

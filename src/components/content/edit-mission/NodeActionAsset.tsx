@@ -6,7 +6,7 @@ import './NodeActionAsset.scss'
 import Tooltip from '../communication/Tooltip'
 import { useState } from 'react'
 import { AnyObject } from '../../../modules/toolbox/objects'
-import { assetData } from '../../../asset-data'
+import { assetData } from '../../../modules/asset-data'
 import AssetOption from './AssetOption'
 
 // This will render an asset

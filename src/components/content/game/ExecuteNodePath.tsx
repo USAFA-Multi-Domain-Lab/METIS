@@ -1,10 +1,7 @@
 import React from 'react'
 import './ExecuteNodePath.scss'
 import { MissionNode } from '../../../modules/mission-nodes'
-import {
-  handleSuccessfulActionExecution,
-  MissionNodeAction,
-} from '../../../modules/mission-node-actions'
+import { MissionNodeAction } from '../../../modules/mission-node-actions'
 import ActionPropertyDisplay from './ActionPropertyDisplay'
 import { Mission } from '../../../modules/missions'
 import Notification from '../../../modules/notifications'

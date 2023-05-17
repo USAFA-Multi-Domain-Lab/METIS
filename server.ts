@@ -15,11 +15,13 @@ export function startServer(callback: () => void = () => {}): void {
       const infoRoute = require('./routes/api/v1/routes-info')
       const usersApiRoute = require('./routes/api/v1/routes-users')
       const missionsApiRoute = require('./routes/api/v1/routes-missions')
+      const testApiRoute = require('./test/api/v1/routes-test')
 
       // sets the paths that routes load at
       app.use('/api/v1/info/', infoRoute)
       app.use('/api/v1/users/', usersApiRoute)
       app.use('/api/v1/missions/', missionsApiRoute)
+      app.use('/api/v1/test/', testApiRoute)
       app.use('/api/v1/', (request, response) => {
         response.status(404)
         response.render('error/v-not-found')

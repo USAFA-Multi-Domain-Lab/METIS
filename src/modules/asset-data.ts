@@ -1,4 +1,4 @@
-import { AnyObject } from './modules/toolbox/objects'
+import { AnyObject } from './toolbox/objects'
 
 export const assetData: AnyObject = {
   cyber_city: {
