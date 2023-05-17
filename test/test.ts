@@ -8,7 +8,7 @@ import mocha from 'mocha'
 import chai, { expect } from 'chai'
 import chaiHttp from 'chai-http'
 
-// cesar imports
+// metis imports
 import { testLogger } from '../modules/logging'
 import { commandScripts } from '../action-execution'
 import { AnyObject } from '../modules/toolbox/objects'

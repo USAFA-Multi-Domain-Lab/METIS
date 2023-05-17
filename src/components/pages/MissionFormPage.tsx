@@ -432,7 +432,7 @@ export default function MissionFormPage(
               text: 'Log out',
               handleClick: logout,
               visible: true,
-              key: 'logout',
+              key: 'log-out',
             },
           ]}
           brandingCallback={() => {
