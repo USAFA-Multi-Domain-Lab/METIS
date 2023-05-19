@@ -113,7 +113,11 @@ export default function SubAssetOption(props: {
     validateEndOfAssetPath(subAssetNames)
 
     if (matchesIScriptProperties) {
-      subAssetTooltipDescription = assets.description
+      subAssetTooltipDescription =
+        `* File name: ${subAssetOption}\n` +
+        `* Description: ${assets.description}`
+    } else {
+      subAssetTooltipDescription = subAssetOption
     }
 
     // Removes the asset that was added temporarily so that
@@ -130,13 +134,13 @@ export default function SubAssetOption(props: {
 
   return (
     <div className='SubAssetOption'>
-      <span
+      <div
         className='SubAssetOptionText'
         onClick={() => handleSubAssetSelection(assetOption, subAssetOption)}
       >
         {subAssetOption}
         <Tooltip description={subAssetTooltipDescription} />
-      </span>
+      </div>
     </div>
   )
 }

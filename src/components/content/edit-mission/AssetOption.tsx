@@ -177,7 +177,10 @@ export default function AssetOption(props: {
       // Displays short decription to let
       // the user know what each "file"
       // option will do upon submission.
-      assetTooltipDescription = assets.description
+      assetTooltipDescription =
+        `* File name: ${assetOption}\n` + `* Description: ${assets.description}`
+    } else {
+      assetTooltipDescription = assetOption
     }
 
     //  Removes the asset that was added temporarily so that

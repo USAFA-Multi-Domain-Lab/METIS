@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import {
   createMission,
   getMission,
+  getMissionNodeColorOptions,
   Mission,
   saveMission,
 } from '../../modules/missions'
@@ -22,7 +23,6 @@ import {
 import MissionEntry from '../content/edit-mission/MissionEntry'
 import NodeEntry from '../content/edit-mission/NodeEntry'
 import NodeStructuring from '../content/edit-mission/NodeStructuring'
-import { AnyObject } from 'mongoose'
 
 export interface IMissionFormPage extends IPage {
   // If null, a new mission is being
@@ -59,6 +59,7 @@ export default function MissionFormPage(
   const [actionEmptyStringArray, setActionEmptyStringArray] = useState<
     Array<string>
   >([])
+  const [colorOptions, setColorOptions] = useState<Array<string>>([])
 
   /* -- COMPONENT EFFECTS -- */
 
@@ -68,6 +69,15 @@ export default function MissionFormPage(
       appActions.goToPage('MissionSelectionPage', {})
       appActions.notify('Mission form page is not accessible to students.')
     }
+
+    getMissionNodeColorOptions(
+      (colorOptions: Array<string>) => {
+        setColorOptions(colorOptions)
+      },
+      (error) => {
+        console.log(error)
+      },
+    )
 
     if (!mountHandled) {
       let existsInDatabase: boolean
@@ -99,6 +109,7 @@ export default function MissionFormPage(
         )
         existsInDatabase = true
         setExistsInDatabase(existsInDatabase)
+        setMountHandled(true)
       }
     }
   }, [mountHandled])
@@ -532,6 +543,7 @@ export default function MissionFormPage(
                     <NodeEntry
                       node={selectedNode}
                       appActions={appActions}
+                      colorOptions={colorOptions}
                       displayedAction={displayedAction}
                       setDisplayedAction={setDisplayedAction}
                       nodeEmptyStringArray={nodeEmptyStringArray}

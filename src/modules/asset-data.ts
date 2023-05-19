@@ -2211,4 +2211,241 @@ export const assetData: AnyObject = {
       },
     },
   },
+  MDL: {
+    'Alpha Suite': {
+      ASCOT: {
+        Friendly: {
+          'Space': {
+            SAT_THAADS: {
+              Kill: {
+                label: 'SAT_THAADS: "kill"',
+                description: 'This kills the SAT_THAADS entity.',
+                scriptName: '',
+                originalPath: '',
+                args: {},
+              },
+            },
+            SAT_ISR: {
+              Kill: {
+                label: 'SAT_ISRL "kill"',
+                description: 'This kills the SAT_ISR entity.',
+                scriptName: '',
+                originalPath: '',
+                args: {},
+              },
+            },
+          },
+          'Cyber': {
+            'RED-DOOR': {
+              Kill: {
+                label: 'RED-DOOR: "kill"',
+                description: 'This kills the RED-DOOR entity.',
+                scriptName: '',
+                originalPath: '',
+                args: {},
+              },
+            },
+          },
+          'Air': {
+            'RPA-A': {
+              'Redirect RPA': {
+                label: 'Redirect RPA: "RPA-A"',
+                description: 'This redirects the RPA-A entity.',
+                scriptName: '',
+                originalPath: '',
+                args: {},
+              },
+            },
+            'RPA-B': {
+              'Redirect RPA': {
+                label: 'Redirect RPA: "RPA-B"',
+                description: 'This redirects the RPA-B entity.',
+                scriptName: '',
+                originalPath: '',
+                args: {},
+              },
+            },
+            'MQ-25': {
+              'Redirect RPA': {
+                label: 'Redirect RPA: "MQ-25"',
+                description: 'This redirects the RPA entity.',
+                scriptName: '',
+                originalPath: '',
+                args: {},
+              },
+            },
+          },
+          'Land': {
+            'RESUPPLY': {
+              Kill: {
+                label: 'RESUPPLY: "kill"',
+                description: 'This will kill the resupply entity.',
+                scriptName: '',
+                originalPath: '',
+                args: {},
+              },
+            },
+            'THAADS-A': {
+              Kill: {
+                label: 'THAADS-A: "kill"',
+                description: 'This will kill the THAADS-A entity.',
+                scriptName: '',
+                originalPath: '',
+                args: {},
+              },
+            },
+            'THAADS-B': {
+              Kill: {
+                label: 'THAADS-B: "kill"',
+                description: 'This will kill the THAADS-B entity.',
+                scriptName: '',
+                originalPath: '',
+                args: {},
+              },
+            },
+            'THAADS-C': {
+              Kill: {
+                label: 'THAADS-C: "kill"',
+                description: 'This will kill the THAADS-C entity.',
+                scriptName: '',
+                originalPath: '',
+                args: {},
+              },
+            },
+            'THAADS ADOC': {
+              'Disable auto fire': {
+                label: 'THAADS ADOC: "disable auto fire"',
+                description:
+                  'This will disable auto fire for the THAADS ADOC entity.',
+                scriptName: '',
+                originalPath: '',
+                args: {},
+              },
+            },
+            'EZOHIGUMA-1': {
+              Kill: {
+                label: 'EZOHIGUMA-1: "kill"',
+                description: 'This will kill the EZOHIGUMA-1 entity.',
+                scriptName: '',
+                originalPath: '',
+                args: {},
+              },
+            },
+            'EZOHIGUMA-2': {
+              Kill: {
+                label: 'EZOHIGUMA-2: "kill"',
+                description: 'This will kill the EZOHIGUMA-2 entity.',
+                scriptName: '',
+                originalPath: '',
+                args: {},
+              },
+            },
+            'RPA-UPLINK': {
+              Kill: {
+                label: 'RPA-UPLINK: "kill"',
+                description: 'This will kill the RPA-UPLINK entity.',
+                scriptName: '',
+                originalPath: '',
+                args: {},
+              },
+            },
+            'LOGISTICS': {
+              Kill: {
+                label: 'LOGISTICS: "kill"',
+                description: 'This will kill the LOGISTICS entity.',
+                scriptName: '',
+                originalPath: '',
+                args: {},
+              },
+            },
+          },
+          'Surface': {},
+          'Sub-Surface': {},
+        },
+        //   Hostile: {
+        //     'Space': {},
+        //     'Cyber': {},
+        //     'Air': {},
+        //     'Land': {},
+        //     'Surface': {},
+        //     'Sub-Surface': {},
+        //   },
+        //   Neutral: {
+        //     'Space': {},
+        //     'Cyber': {},
+        //     'Air': {},
+        //     'Land': {},
+        //     'Surface': {},
+        //     'Sub-Surface': {},
+        //   },
+        //   Unknown: {
+        //     'Space': {},
+        //     'Cyber': {},
+        //     'Air': {},
+        //     'Land': {},
+        //     'Surface': {},
+        //     'Sub-Surface': {},
+        //   },
+        // },
+        // mIRC: {
+        //   'mIRC Server': {
+        //     EFFECTS: ['Shutdown Server', 'List all channels', 'List all users'],
+        //   },
+        //   'Channels': {
+        //     'CJTF H COMMAND A': {},
+        //     'JFACC OPS A': {},
+        //     'JFLCC OPS A': {},
+        //     'JFMCC OPS A': {},
+        //     'UFSOCC OPS A': {},
+        //     'JFSCC OPS A': {},
+        //     'JFCCC OPS A': {},
+        //     'TEXT 2 SPEECH A': {},
+        //     'AUDIO_TRIGGER A': {},
+        //     'ALL SOURCE INTEL A': {},
+        //     'CESAR A': {},
+        //     'METIS A': {},
+        //     'AWACS A': {},
+        //   },
+        // },
+        // Sonomarc: {
+        //   Frequencies: {
+        //     'BEIGE-41': {},
+        //     'CRIMMSON-28': {},
+        //     'VIOLET-26': {},
+        //     'TEAL-36': {},
+        //     'AMBER-38': {},
+        //     'COBALT-45': {},
+        //     'SAGE-32': {},
+        //     'SCARLETT-28': {},
+        //     'SIENNA-31': {},
+        //     'ROYAL-44': {},
+        //     'CIDER-23': {},
+        //     'PLUM-33': {},
+        //     'SAPPHIRE-24': {},
+        //     'PEWTER-35': {},
+        //     'LIME-30': {},
+        //     'HAZEL-47': {},
+        //     'YELLOW-16': {},
+        //     'RUBY-22': {},
+        //     'MOCHA-38': {},
+        //     'FLINT-22': {},
+        //     'BLUE-51': {},
+        //     'PINK-52': {},
+        //     'ORANGE-61': {},
+        //     'BROWN-62': {},
+        //     'GRAY-17': {},
+        //     'LEMON-18': {},
+        //     'PEACH-19': {},
+        //     'ROSE-35': {},
+        //     'BLUSH-29': {},
+        //     'PALE-42': {},
+        //     'GREEN-37': {},
+        //     'PURPLE-14': {},
+        //     'BLOSSOM-55': {},
+        //     'CANARY-14': {},
+        //   },
+      },
+    },
+    'Omega Suite': {},
+  },
 }

@@ -44,9 +44,11 @@
 
   .AssetOptionText {
     grid-column: 3 / 3;
-    grid-row: 1 / 1;
-    width: fit-content;
+    grid-row: 1 / 2;
     color: $color-accent-light;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 
     &:hover {
       cursor: pointer;

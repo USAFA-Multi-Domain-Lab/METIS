@@ -14,7 +14,7 @@
 
   .Navigation {
     display: grid;
-    grid-template-columns: auto 130px 130px 130px;
+    grid-template-columns: auto 130px 150px 130px;
   }
 
   .Content {
@@ -29,6 +29,20 @@
 
     .SidePanel {
       height: 100%;
+      scrollbar-color: $color-pointer-mark $background-alt2;
+
+      ::-webkit-scrollbar {
+        background: $background-alt2;
+      }
+
+      ::-webkit-scrollbar-thumb {
+        background-color: $color-pointer-mark;
+        -webkit-border-radius: 8px;
+        border-radius: 8px;
+        background-clip: content-box;
+        border: 4px solid transparent;
+        min-height: 50px;
+      }
 
       .BorderBox {
         overflow-x: hidden;

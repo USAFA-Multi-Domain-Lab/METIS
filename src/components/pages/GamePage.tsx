@@ -234,9 +234,7 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
                         // Logic to send the pre-execution text to the output panel
                         if (
                           selectedNode.preExecutionText !== '' &&
-                          selectedNode.preExecutionText !== null &&
-                          !selectedNode.selectedAction?.succeeded &&
-                          !selectedNode.executing
+                          selectedNode.preExecutionText !== null
                         ) {
                           let output: IConsoleOutput =
                             OutputPanel.renderPreExecutionOutput(selectedNode)
