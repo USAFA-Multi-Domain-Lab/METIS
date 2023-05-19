@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'
 import { MissionNodeAction } from '../../../modules/mission-node-actions'
 import { MissionNode } from '../../../modules/mission-nodes'
 import { Mission } from '../../../modules/missions'
-import { AnyObject } from '../../../modules/toolbox/objects'
 import { AppActions } from '../../AppState'
 import Tooltip from '../communication/Tooltip'
 import {
@@ -24,6 +23,7 @@ export default function NodeEntry(props: {
   displayedAction: number
   nodeEmptyStringArray: Array<string>
   actionEmptyStringArray: Array<string>
+  colorOptions: Array<string>
   setDisplayedAction: (displayedAction: number) => void
   setNodeEmptyStringArray: (nodeEmptyStringArray: Array<string>) => void
   setActionEmptyStringArray: (actionEmptyStringArray: Array<string>) => void
@@ -38,6 +38,7 @@ export default function NodeEntry(props: {
   let displayedAction: number = props.displayedAction
   let nodeEmptyStringArray: Array<string> = props.nodeEmptyStringArray
   let actionEmptyStringArray: Array<string> = props.actionEmptyStringArray
+  let colorOptions: Array<string> = props.colorOptions
   let setDisplayedAction = props.setDisplayedAction
   let setNodeEmptyStringArray = props.setNodeEmptyStringArray
   let setActionEmptyStringArray = props.setActionEmptyStringArray
@@ -155,19 +156,20 @@ export default function NodeEntry(props: {
             />
             <DetailDropDown<string>
               label={'Color'}
-              options={[
-                'default',
-                'green',
-                'pink',
-                'yellow',
-                'blue',
-                'purple',
-                'red',
-                'brown',
-                'orange',
-              ]}
-              currentValue={node.color}
+              options={colorOptions}
+              currentValue={`Choose a color`}
               uniqueClassName={'Color'}
+              uniqueDropDownStyling={{}}
+              uniqueOptionStyling={(color) => {
+                return { backgroundColor: `${color}` }
+              }}
+              renderOptionClassName={(color) => {
+                if (node && node.color === color) {
+                  return 'SelectedOption'
+                } else {
+                  return ''
+                }
+              }}
               renderDisplayName={(color) => color}
               deliverValue={(color: string) => {
                 if (node !== null) {

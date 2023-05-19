@@ -21,48 +21,12 @@
       color: $terminal;
     }
 
-    .green {
-      color: $terminal-green;
-    }
-
-    .pink {
-      color: $terminal-pink;
-    }
-
-    .yellow {
-      color: $terminal-yellow;
-    }
-
-    .blue {
-      color: $terminal-blue;
-    }
-
-    .brown {
-      color: $terminal-khaki;
-    }
-
-    .purple {
-      color: $terminal-purple;
-    }
-
-    .red {
-      color: $terminal-red;
-    }
-
-    .orange {
-      color: $terminal-orange;
-    }
-
-    .default {
-      color: $color-main;
-    }
-
     .succeeded {
-      color: $success;
+      color: $terminal-success;
     }
 
     .failed {
-      color: $fail;
+      color: $terminal-fail;
     }
   }
 }

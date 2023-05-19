@@ -66,6 +66,7 @@ export interface IMissionMappable {
   executable: boolean
   executionPercentCompleted: number
   device: boolean
+  color: string
 }
 
 // represents a location on the mission map
@@ -972,18 +973,20 @@ export default class MissionMap extends React.Component<
     let gridPaddingX: number = this.currentGridPaddingX
     let gridPaddingY: number = this.currentGridPaddingY
     let width: number = (mapXScale - gridPaddingX * 2) * mapScale
-    let height: number = (mapYScale - gridPaddingY * 2) * mapScale
-    let loadingHeight: number = height - 4
+    let wrapperHeight: number = (mapYScale - gridPaddingY * 2) * mapScale
+    let loadingHeight: number = wrapperHeight - 4
     let loadingMarginBottom: number = -loadingHeight
     let loadingWidth: number | null = executionPercentCompleted * (width - 4) // subtracted 4 from the width to account for the 2px border
     let titleWidthSubtrahend: number = width * 0.1
-    let titleLineHeight: number = height * 0.34
-    let buttonMarginTop = height * -0.175
-    let buttonMarginSides = height * 0.05
-    let buttonWidth: number = height * 0.575
-    let buttonHeight: number = height * 0.575
+    let titleLineHeight: number = wrapperHeight * 0.34
+    let buttonMarginTop = wrapperHeight * -0.175
+    let buttonMarginSides = wrapperHeight * 0.05
+    let buttonWidth: number = wrapperHeight * 0.575
+    let buttonHeight: number = wrapperHeight * 0.575
     let buttonFontSize: number = titleFontSize * 2
     let buttonLineHeight: number = buttonHeight * 0.9
+    let titleHeight: string = '100%'
+    let iconHeight: string = '100%'
     let loadingStyle: React.CSSProperties = {
       marginBottom: `${loadingMarginBottom}px`,
       height: `${loadingHeight}px`,
@@ -1007,6 +1010,9 @@ export default class MissionMap extends React.Component<
     // height if the node is selected.
     if (node.nodeID === selectedNode?.nodeID) {
       titleLineHeight *= 2
+      wrapperHeight *= 1.595
+      titleHeight = '50%'
+      iconHeight = '50%'
     }
 
     // Logic to handle if the loading bar is displayed or not.
@@ -1035,7 +1041,8 @@ export default class MissionMap extends React.Component<
         <div
           className='wrapper'
           style={{
-            height: `${height - 5}px`,
+            height: `${wrapperHeight - 5}px`,
+            border: `2px solid ${node.color}`,
           }}
         >
           <div
@@ -1044,22 +1051,26 @@ export default class MissionMap extends React.Component<
               width: `calc(100% - ${titleWidthSubtrahend}px)`,
               fontSize: `${titleFontSize}px`,
               lineHeight: `${titleLineHeight}px`,
+              height: `${titleHeight}`,
             }}
           >
             {node.name}
           </div>
-          <div className={iconClassName}></div>
+          <div
+            className={iconClassName}
+            style={{ height: `${iconHeight}` }}
+          ></div>
+          {buttons.map((button: IButtonSVG): JSX.Element | null => {
+            return (
+              <ButtonSVG
+                {...button}
+                style={{ ...button.style, ...buttonStyle }}
+                uniqueClassName={`${button.uniqueClassName} ${buttonUniqueClassName}`}
+                key={button.componentKey}
+              />
+            )
+          })}
         </div>
-        {buttons.map((button: IButtonSVG): JSX.Element | null => {
-          return (
-            <ButtonSVG
-              {...button}
-              style={{ ...button.style, ...buttonStyle }}
-              uniqueClassName={`${button.uniqueClassName} ${buttonUniqueClassName}`}
-              key={button.componentKey}
-            />
-          )
-        })}
       </>
     )
   }
@@ -1072,36 +1083,6 @@ export default class MissionMap extends React.Component<
     let className: string = ''
 
     let classNameExternalAddon: string = this.props.applyNodeClassName(node)
-
-    switch (node.color) {
-      case 'green':
-        className = 'green'
-        break
-      case 'pink':
-        className = 'pink'
-        break
-      case 'yellow':
-        className = 'yellow'
-        break
-      case 'blue':
-        className = 'blue'
-        break
-      case 'purple':
-        className = 'purple'
-        break
-      case 'red':
-        className = 'red'
-        break
-      case 'brown':
-        className = 'brown'
-        break
-      case 'orange':
-        className = 'orange'
-        break
-      default:
-        className = 'default'
-        break
-    }
 
     if (node.executing) {
       className += ' LoadingBar'

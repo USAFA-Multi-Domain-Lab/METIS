@@ -37,8 +37,10 @@ $node-red: #8a2e32;
 $node-orange: #bc842d;
 
 // Indicates if the node succeeded or failed
-$fail: #ff000a;
-$success: #65eb59;
+$terminal-fail: #ff000a;
+$terminal-success: #65eb59;
+$node-fail: #8a2e32;
+$node-success: #64a95e;
 
 // Used for the linear gradient that is used for the
 // loading (processing) bar

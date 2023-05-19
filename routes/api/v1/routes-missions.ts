@@ -16,6 +16,7 @@ import validateRequestBodyKeys, {
   RequestBodyFilters,
   validateRequestQueryKeys,
 } from '../../../modules/requests'
+import { colorOptions } from '../../../modules/mission-node-colors'
 
 type MulterFile = Express.Multer.File
 
@@ -443,6 +444,19 @@ router.get(
   validateRequestQueryKeys({}),
   (request, response) => {
     response.send(process.env)
+  },
+)
+
+// -- GET /api/v1/missions/colors/
+// This will return all the available
+// color options that can be used to
+// style a mission-node.
+router.get(
+  '/colors/',
+  requireLogin,
+  validateRequestQueryKeys({}),
+  (request, response) => {
+    response.json({ colorOptions })
   },
 )
 

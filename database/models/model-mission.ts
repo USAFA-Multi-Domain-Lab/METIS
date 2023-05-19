@@ -1,4 +1,5 @@
 import mongoose, { Schema } from 'mongoose'
+import { colorOptions } from '../../modules/mission-node-colors'
 import { ERROR_BAD_DATA } from '../database'
 
 let ObjectId = mongoose.Types.ObjectId
@@ -165,17 +166,7 @@ const validate_missions_nodeData = (nodeData: Array<any>): boolean => {
 
 // Validator for missions.nodeData.color.
 const validate_missions_nodeData_color = (color: string): boolean => {
-  let validColors: Array<string> = [
-    'default',
-    'green',
-    'pink',
-    'yellow',
-    'blue',
-    'purple',
-    'red',
-    'brown',
-    'orange',
-  ]
+  let validColors: Array<string> = colorOptions
   let isValidColor: boolean = validColors.includes(color)
 
   return isValidColor

@@ -34,6 +34,29 @@
         .Color {
           .Field {
             border-bottom: none;
+
+            .AllOptions {
+              display: flex;
+              justify-content: flex-start;
+              align-items: center;
+              flex-flow: row wrap;
+              width: 100%;
+              margin: 10px 0 0;
+
+              .Option {
+                width: 15px;
+                height: 15px;
+                margin: 5px;
+                padding: 0;
+                color: transparent;
+                overflow: hidden;
+                border: 1px solid $color-main;
+
+                &.SelectedOption {
+                  border: 2px solid black;
+                }
+              }
+            }
           }
         }
       }

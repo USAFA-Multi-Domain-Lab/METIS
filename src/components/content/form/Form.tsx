@@ -7,6 +7,8 @@ import inputs from '../../../modules/toolbox/inputs'
 import './Form.scss'
 import Toggle, { EToggleLockState } from '../user-controls/Toggle'
 import Tooltip from '../communication/Tooltip'
+import { To } from 'react-router'
+import { AnyObject } from '../../../modules/toolbox/objects'
 
 interface IDetail {
   label: string
@@ -307,6 +309,9 @@ export function DetailDropDown<TOption>(props: {
   options: Array<TOption>
   currentValue: TOption | null | undefined
   uniqueClassName?: string
+  uniqueOptionStyling: (option: TOption) => AnyObject
+  uniqueDropDownStyling: AnyObject
+  renderOptionClassName: (option: TOption) => string
   renderDisplayName: (option: TOption) => string
   deliverValue: (value: TOption) => void
 }): JSX.Element | null {
@@ -320,10 +325,15 @@ export function DetailDropDown<TOption>(props: {
   let uniqueClassName: string = props.uniqueClassName
     ? props.uniqueClassName
     : ''
+  let uniqueOptionStyling = props.uniqueOptionStyling
+  let uniqueDropDownStyling: AnyObject = props.uniqueDropDownStyling
+  let renderOptionClassName = props.renderOptionClassName
   let renderDisplayName = props.renderDisplayName
   let deliverValue = props.deliverValue
   let className: string = `Detail DetailDropDown ${uniqueClassName}`
   let fieldClassName: string = 'Field FieldDropDown'
+  let allOptionsClassName: string = 'AllOptions'
+  let optionClassName: string = 'Option'
 
   // Equivalent of componentDidMount.
   useEffect(() => {
@@ -336,12 +346,13 @@ export function DetailDropDown<TOption>(props: {
     fieldClassName += ' IsExpanded'
   } else {
     fieldClassName += ' IsCollapsed'
+    allOptionsClassName += 'Hidden'
   }
 
   if (currentValue) {
     // render
     return (
-      <div className={className}>
+      <div className={className} style={uniqueDropDownStyling}>
         <div className='Label'>{`${label}:`}</div>
         <div className={fieldClassName}>
           <div
@@ -353,26 +364,29 @@ export function DetailDropDown<TOption>(props: {
             <div className='Text'>{renderDisplayName(currentValue)}</div>
             <div className='Indicator'>v</div>
           </div>
-          {options.map((option: TOption) => {
-            return (
-              <div
-                className='Option'
-                key={`option_${renderDisplayName(option)}`}
-                onClick={() => {
-                  deliverValue(option)
-                  setExpanded(false)
-                }}
-              >
-                {renderDisplayName(option)}
-              </div>
-            )
-          })}
+          <div className={allOptionsClassName}>
+            {options.map((option: TOption) => {
+              return (
+                <div
+                  className={`Option ${renderOptionClassName(option)}`}
+                  style={uniqueOptionStyling(option)}
+                  key={`option_${renderDisplayName(option)}`}
+                  onClick={() => {
+                    deliverValue(option)
+                    setExpanded(false)
+                  }}
+                >
+                  {renderDisplayName(option)}
+                </div>
+              )
+            })}
+          </div>
         </div>
       </div>
     )
   } else if (currentValue === null || currentValue === undefined) {
     return (
-      <div className={className}>
+      <div className={className} style={uniqueDropDownStyling}>
         <div className='Label'>{`${label}:`}</div>
         <div className={fieldClassName}>
           <div
@@ -384,20 +398,23 @@ export function DetailDropDown<TOption>(props: {
             <div className='Text'>Select an option</div>
             <div className='Indicator'>v</div>
           </div>
-          {options.map((option: TOption) => {
-            return (
-              <div
-                className='Option'
-                key={`option_${renderDisplayName(option)}`}
-                onClick={() => {
-                  deliverValue(option)
-                  setExpanded(false)
-                }}
-              >
-                {renderDisplayName(option)}
-              </div>
-            )
-          })}
+          <div className={allOptionsClassName}>
+            {options.map((option: TOption) => {
+              return (
+                <div
+                  className={optionClassName}
+                  style={uniqueOptionStyling(option)}
+                  key={`option_${renderDisplayName(option)}`}
+                  onClick={() => {
+                    deliverValue(option)
+                    setExpanded(false)
+                  }}
+                >
+                  {renderDisplayName(option)}
+                </div>
+              )
+            })}
+          </div>
         </div>
       </div>
     )

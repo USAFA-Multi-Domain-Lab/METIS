@@ -734,6 +734,24 @@ export function getAllMissions(
     })
 }
 
+export function getMissionNodeColorOptions(
+  callback: (colors: Array<string>) => void,
+  callbackError: (error: AxiosError) => void = () => {},
+): void {
+  axios
+    .get(`/api/v1/missions/colors/`)
+    .then((response: AxiosResponse<AnyObject>): void => {
+      let colorJSON = response.data.colorOptions
+
+      callback(colorJSON)
+    })
+    .catch((error: AxiosError) => {
+      console.error('Failed to retrieve the color options.')
+      console.error(error)
+      callbackError(error)
+    })
+}
+
 // This will save the given mission
 // to the server.
 export function saveMission(

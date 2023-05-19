@@ -77,7 +77,7 @@ export class MissionNode implements IMissionMappable {
   _executionTimeEnd: number
 
   static default_name: string = 'Unnamed Node'
-  static default_color: string = 'default'
+  static default_color: string = '#ffffff'
   static default_description: string = 'Description text goes here.'
   static default_preExecutionText: string = 'Node has not been executed.'
   static default_depthPadding: number = 0
@@ -729,6 +729,10 @@ export class MissionNodeCreator implements IMissionMappable {
   // Implementation requirement only.
   get device(): boolean {
     return false
+  }
+
+  get color(): string {
+    return ''
   }
 
   constructor(
