@@ -2447,5 +2447,7 @@ export const assetData: AnyObject = {
       },
     },
     'Omega Suite': {},
+    'Alpha SuiteAlpha SuiteAlpha SuiteAlpha SuiteAlpha SuiteAlpha SuiteAlpha SuiteAlpha Suite':
+      {},
   },
 }

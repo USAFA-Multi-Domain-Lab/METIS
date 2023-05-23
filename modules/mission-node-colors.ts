@@ -8,5 +8,5 @@ export const colorOptions: Array<string> = [
   '#f9484f',
   '#fdd496',
   '#ffab50',
-  // '#000000',
+  '#000000',
 ]
