@@ -162,6 +162,8 @@ export default function NodeActionAsset(props: {
   let cancelAssetClassName: string = 'Hidden'
   let backButtonClassName: string = 'Hidden'
   let assetPathClassName: string = 'AssetPath'
+  let assetOptionsClassName: string = 'AssetOptions'
+  let noAssetsText: string = 'No assets here...'
 
   // Displays the current path selected.
   if (assetPath.length > 0) {
@@ -197,6 +199,11 @@ export default function NodeActionAsset(props: {
     addAssetClassName += ' Disabled'
   }
 
+  if (assetOptions.length === 0) {
+    assetOptionsClassName += ' NoAssets'
+    assetOptions.push(noAssetsText)
+  }
+
   if (!addAssetButtonIsDisplayed) {
     return (
       <>
@@ -209,7 +216,7 @@ export default function NodeActionAsset(props: {
             {currentAssetPath}
           </div>
 
-          <div className='AssetOptions'>
+          <div className={assetOptionsClassName}>
             {assetOptions.map((assetOption: string) => {
               // AssetOption was broken down into its own
               // function component so that each asset option

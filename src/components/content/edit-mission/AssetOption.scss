@@ -8,6 +8,11 @@
   padding: 10px;
   user-select: none;
 
+  &.NoAssetOption {
+    grid-template-columns: auto;
+    padding-left: 20px;
+  }
+
   .Indicator {
     display: grid;
     grid-column: 1 / 3;
@@ -53,6 +58,18 @@
     &:hover {
       cursor: pointer;
       color: $color-main;
+    }
+
+    &.NoAssetOptionText {
+      grid-column: 1 / 1;
+      pointer-events: none;
+      user-select: none;
+      -webkit-user-select: none;
+
+      &:hover {
+        cursor: default;
+        color: $color-accent-light;
+      }
     }
   }
 }

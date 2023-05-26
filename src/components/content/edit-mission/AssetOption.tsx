@@ -183,6 +183,10 @@ export default function AssetOption(props: {
       assetTooltipDescription = assetOption
     }
 
+    if (subAssetNames.length === 0) {
+      indicatorClassName += ' Hidden'
+    }
+
     //  Removes the asset that was added temporarily so that
     // the path can return to normal.
     assetPath.pop()
@@ -195,6 +199,8 @@ export default function AssetOption(props: {
   let folderClassName: string = 'Folder'
   let fileClassName: string = 'File Hidden'
   let assetTooltipDescription: string = ''
+  let assetOptionClassName: string = 'AssetOption'
+  let assetOptionTextClassName: string = 'AssetOptionText'
 
   if (selectedAssetOptions.includes(assetOption)) {
     indicatorClassName += ' isExpanded'
@@ -202,10 +208,16 @@ export default function AssetOption(props: {
     indicatorClassName = 'Indicator'
   }
 
+  if (assetOption === 'No assets here...') {
+    folderClassName += ' Hidden'
+    assetOptionClassName += ' NoAssetOption'
+    assetOptionTextClassName += ' NoAssetOptionText'
+  }
+
   checkForSubAssets()
 
   return (
-    <div className='AssetOption'>
+    <div className={assetOptionClassName}>
       <svg
         className={indicatorClassName}
         onClick={() => toggleSubAssets(assetOption)}
@@ -241,7 +253,7 @@ export default function AssetOption(props: {
       </svg>
 
       <div
-        className='AssetOptionText'
+        className={assetOptionTextClassName}
         onClick={() => handleAssetSelection(assetOption)}
       >
         {assetOption}

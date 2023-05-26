@@ -44,5 +44,10 @@
   .AssetOptions {
     border: 2px solid $color-main;
     border-top: none;
+
+    &.NoAssets {
+      height: 20px;
+      padding: 10px;
+    }
   }
 }
