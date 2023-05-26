@@ -249,7 +249,6 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
                           !selectedNode.isOpen
                         ) {
                           selectedNode.open()
-                          selectedNode.color = ''
                         }
 
                         // Logic that displays the node action &&
@@ -292,22 +291,7 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
                           )
                         }
                       }}
-                      applyNodeClassName={(node: MissionNode) => {
-                        let className: string = ''
-
-                        if (node.selectedAction) {
-                          if (node.executed && node.selectedAction.succeeded) {
-                            className += ' succeeded'
-                          } else if (
-                            node.executed &&
-                            !node.selectedAction.succeeded
-                          ) {
-                            className += ' failed'
-                          }
-                        }
-
-                        return className
-                      }}
+                      applyNodeClassName={(node: MissionNode) => ''}
                       renderNodeTooltipDescription={(node: MissionNode) => {
                         let description: string = ''
                         let nodeActionDisplay = 'None selected'

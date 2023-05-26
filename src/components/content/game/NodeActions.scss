@@ -79,7 +79,7 @@
     background-color: $background-alt2;
     height: auto;
     max-height: 140px;
-    overflow-y: scroll;
+    overflow-y: auto;
     scrollbar-color: $color-pointer-mark $background-alt2;
 
     &::-webkit-scrollbar {

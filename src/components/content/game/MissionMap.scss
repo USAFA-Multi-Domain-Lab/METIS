@@ -202,6 +202,10 @@
           display: none;
         }
 
+        &.mapped-node {
+          background-color: $background-main;
+        }
+
         &.item-markdown {
           margin-left: 0;
           margin-right: 0;
@@ -297,10 +301,6 @@
 
         &.failed {
           background-color: $node-fail;
-        }
-
-        &.LoadingBar {
-          background-color: $background-alt1;
         }
 
         @keyframes loading-animation {

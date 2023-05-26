@@ -157,18 +157,27 @@ export default function NodeEntry(props: {
             <DetailDropDown<string>
               label={'Color'}
               options={colorOptions}
-              currentValue={`Choose a color`}
               uniqueClassName={'Color'}
+              currentValue={`Choose a color`}
+              isExpanded={true}
               uniqueDropDownStyling={{}}
               uniqueOptionStyling={(color) => {
-                return { backgroundColor: `${color}` }
+                if (node && node.color === color) {
+                  return {
+                    backgroundColor: `${color}`,
+                    width: '65%',
+                    height: '62%',
+                    margin: '4px 3px 3px 4px',
+                    border: '2px solid black',
+                  }
+                } else {
+                  return {
+                    backgroundColor: `${color}`,
+                  }
+                }
               }}
               renderOptionClassName={(color) => {
-                if (node && node.color === color) {
-                  return 'SelectedOption'
-                } else {
-                  return ''
-                }
+                return ''
               }}
               renderDisplayName={(color) => color}
               deliverValue={(color: string) => {
@@ -180,21 +189,32 @@ export default function NodeEntry(props: {
               }}
               key={`${node.nodeID}_color`}
             />
-            <div className='ButtonContainer'>
-              <div
-                className='ColorFill Detail FormButton'
-                onClick={() => {
-                  if (node !== null) {
-                    node.applyColorFill()
-                    handleChange()
-                  }
-                }}
-              >
-                <span className='Text'>
-                  <span className='LeftBracket'>[</span> Fill{' '}
-                  <span className='RightBracket'>]</span>
-                  <Tooltip description='Shade all descendant nodes this color as well.' />
+            <div className='ColorInfo'>
+              <div className='SelectedColorText'>
+                Selected color:{' '}
+                <span
+                  className='SelectedColorBox'
+                  style={{ backgroundColor: `${node.color}` }}
+                >
+                  {node.color}
                 </span>
+              </div>
+              <div className='ButtonContainer'>
+                <div
+                  className='ColorFill Detail FormButton'
+                  onClick={() => {
+                    if (node !== null) {
+                      node.applyColorFill()
+                      handleChange()
+                    }
+                  }}
+                >
+                  <span className='Text'>
+                    <span className='LeftBracket'>[</span> Fill{' '}
+                    <span className='RightBracket'>]</span>
+                    <Tooltip description='Shade all descendant nodes this color as well.' />
+                  </span>
+                </div>
               </div>
             </div>
             <DetailBox

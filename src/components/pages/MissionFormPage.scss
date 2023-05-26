@@ -25,6 +25,16 @@
       height: 100%;
       width: unset;
       background-color: $background-alt2;
+
+      .List {
+        .items {
+          .item {
+            &.mapped-node {
+              background-color: $background-alt2;
+            }
+          }
+        }
+      }
     }
 
     .SidePanel {

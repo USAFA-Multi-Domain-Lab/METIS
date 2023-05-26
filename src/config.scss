@@ -5,7 +5,9 @@ $color-faded: rgb(195, 154, 154);
 $color-negative: #000;
 $background-alt1: #1a2a1a;
 $background-alt2: #333347;
-$background-alt3: #420000;
+$background-alt3: #420002;
+$background-alt4: #231d20;
+$background-alt5: #616060;
 $background-color-negative: #dfdfff;
 $color-accent: #5fc9be;
 $color-accent-light: #b6fff8;
@@ -39,13 +41,16 @@ $node-orange: #bc842d;
 // Indicates if the node succeeded or failed
 $terminal-fail: #ff000a;
 $terminal-success: #65eb59;
-$node-fail: #8a2e32;
-$node-success: #64a95e;
+$node-fail: $background-alt3;
+$node-success: #223e20;
 
 // Used for the linear gradient that is used for the
 // loading (processing) bar
 $loading-1: #2a6f05;
 $loading-2: #44921a;
+
+// Used for when a node is opened
+$node-opened: #9da39a;
 
 // Used to color different map modes.
 $background-creation-mode: rgba($node-blue, 0.2);

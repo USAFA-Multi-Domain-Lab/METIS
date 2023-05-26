@@ -731,8 +731,14 @@ export class MissionNodeCreator implements IMissionMappable {
     return false
   }
 
+  // Implementation requirement only.
   get color(): string {
     return ''
+  }
+
+  // Implementation requirement only.
+  get isOpen(): boolean {
+    return false
   }
 
   constructor(

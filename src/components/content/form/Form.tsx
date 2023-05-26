@@ -308,9 +308,10 @@ export function DetailDropDown<TOption>(props: {
   label: string
   options: Array<TOption>
   currentValue: TOption | null | undefined
-  uniqueClassName?: string
-  uniqueOptionStyling: (option: TOption) => AnyObject
+  isExpanded: boolean
   uniqueDropDownStyling: AnyObject
+  uniqueOptionStyling: (option: TOption) => AnyObject
+  uniqueClassName?: string
   renderOptionClassName: (option: TOption) => string
   renderDisplayName: (option: TOption) => string
   deliverValue: (value: TOption) => void
@@ -322,11 +323,12 @@ export function DetailDropDown<TOption>(props: {
   let label: string = props.label
   let options: Array<TOption> = props.options
   let currentValue: TOption | null | undefined = props.currentValue
+  let isExpanded: boolean = props.isExpanded
+  let uniqueDropDownStyling: AnyObject = props.uniqueDropDownStyling
+  let uniqueOptionStyling = props.uniqueOptionStyling
   let uniqueClassName: string = props.uniqueClassName
     ? props.uniqueClassName
     : ''
-  let uniqueOptionStyling = props.uniqueOptionStyling
-  let uniqueDropDownStyling: AnyObject = props.uniqueDropDownStyling
   let renderOptionClassName = props.renderOptionClassName
   let renderDisplayName = props.renderDisplayName
   let deliverValue = props.deliverValue
@@ -373,7 +375,7 @@ export function DetailDropDown<TOption>(props: {
                   key={`option_${renderDisplayName(option)}`}
                   onClick={() => {
                     deliverValue(option)
-                    setExpanded(false)
+                    setExpanded(isExpanded)
                   }}
                 >
                   {renderDisplayName(option)}
@@ -407,7 +409,7 @@ export function DetailDropDown<TOption>(props: {
                   key={`option_${renderDisplayName(option)}`}
                   onClick={() => {
                     deliverValue(option)
-                    setExpanded(false)
+                    setExpanded(isExpanded)
                   }}
                 >
                   {renderDisplayName(option)}

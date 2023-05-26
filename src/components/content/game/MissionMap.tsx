@@ -67,6 +67,7 @@ export interface IMissionMappable {
   executionPercentCompleted: number
   device: boolean
   color: string
+  isOpen: boolean
 }
 
 // represents a location on the mission map
@@ -974,7 +975,7 @@ export default class MissionMap extends React.Component<
     let gridPaddingY: number = this.currentGridPaddingY
     let width: number = (mapXScale - gridPaddingX * 2) * mapScale
     let wrapperHeight: number = (mapYScale - gridPaddingY * 2) * mapScale
-    let loadingHeight: number = wrapperHeight - 4
+    let loadingHeight: number = wrapperHeight - 2
     let loadingMarginBottom: number = -loadingHeight
     let loadingWidth: number | null = executionPercentCompleted * (width - 4) // subtracted 4 from the width to account for the 2px border
     let titleWidthSubtrahend: number = width * 0.1
@@ -1005,6 +1006,7 @@ export default class MissionMap extends React.Component<
     let loadingClassName: string = 'loading'
     let iconClassName: string = ''
     let buttonUniqueClassName: string = ''
+    let titleClassName: string = 'title'
 
     // This will shift the title line
     // height if the node is selected.
@@ -1018,6 +1020,10 @@ export default class MissionMap extends React.Component<
     // Logic to handle if the loading bar is displayed or not.
     if (!node.executing) {
       loadingClassName += ' hide'
+    }
+
+    if (node.isOpen) {
+      titleClassName += ' opened'
     }
 
     // Logic to handle nodes that are executable and nodes that
@@ -1043,10 +1049,11 @@ export default class MissionMap extends React.Component<
           style={{
             height: `${wrapperHeight - 5}px`,
             border: `2px solid ${node.color}`,
+            paddingTop: `${wrapperHeight * 0.03}px`,
           }}
         >
           <div
-            className='title'
+            className={titleClassName}
             style={{
               width: `calc(100% - ${titleWidthSubtrahend}px)`,
               fontSize: `${titleFontSize}px`,
@@ -1083,10 +1090,6 @@ export default class MissionMap extends React.Component<
     let className: string = ''
 
     let classNameExternalAddon: string = this.props.applyNodeClassName(node)
-
-    if (node.executing) {
-      className += ' LoadingBar'
-    }
 
     if (node.executed && node.selectedAction?.succeeded) {
       className += ' succeeded'
