@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useStore } from 'react-context-hook'
 import { MissionNodeAction } from '../../../modules/mission-node-actions'
 import { MissionNode } from '../../../modules/mission-nodes'
 import { Mission } from '../../../modules/missions'
@@ -23,7 +24,6 @@ export default function NodeEntry(props: {
   displayedAction: number
   nodeEmptyStringArray: Array<string>
   actionEmptyStringArray: Array<string>
-  colorOptions: Array<string>
   setDisplayedAction: (displayedAction: number) => void
   setNodeEmptyStringArray: (nodeEmptyStringArray: Array<string>) => void
   setActionEmptyStringArray: (actionEmptyStringArray: Array<string>) => void
@@ -38,7 +38,6 @@ export default function NodeEntry(props: {
   let displayedAction: number = props.displayedAction
   let nodeEmptyStringArray: Array<string> = props.nodeEmptyStringArray
   let actionEmptyStringArray: Array<string> = props.actionEmptyStringArray
-  let colorOptions: Array<string> = props.colorOptions
   let setDisplayedAction = props.setDisplayedAction
   let setNodeEmptyStringArray = props.setNodeEmptyStringArray
   let setActionEmptyStringArray = props.setActionEmptyStringArray
@@ -48,6 +47,9 @@ export default function NodeEntry(props: {
   let handleCloseRequest = props.handleCloseRequest
   let isEmptyString: boolean =
     nodeEmptyStringArray.length > 0 || actionEmptyStringArray.length > 0
+
+  /* -- GLOBAL STATE -- */
+  const [colorOptions] = useStore<Array<string>>('missionNodeColors')
 
   /* -- COMPONENT STATE -- */
   const [mountHandled, setMountHandled] = useState<boolean>()

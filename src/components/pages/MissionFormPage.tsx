@@ -59,7 +59,6 @@ export default function MissionFormPage(
   const [actionEmptyStringArray, setActionEmptyStringArray] = useState<
     Array<string>
   >([])
-  const [colorOptions, setColorOptions] = useState<Array<string>>([])
 
   /* -- COMPONENT EFFECTS -- */
 
@@ -69,15 +68,6 @@ export default function MissionFormPage(
       appActions.goToPage('MissionSelectionPage', {})
       appActions.notify('Mission form page is not accessible to students.')
     }
-
-    getMissionNodeColorOptions(
-      (colorOptions: Array<string>) => {
-        setColorOptions(colorOptions)
-      },
-      (error) => {
-        console.log(error)
-      },
-    )
 
     if (!mountHandled) {
       let existsInDatabase: boolean
@@ -543,7 +533,6 @@ export default function MissionFormPage(
                     <NodeEntry
                       node={selectedNode}
                       appActions={appActions}
-                      colorOptions={colorOptions}
                       displayedAction={displayedAction}
                       setDisplayedAction={setDisplayedAction}
                       nodeEmptyStringArray={nodeEmptyStringArray}

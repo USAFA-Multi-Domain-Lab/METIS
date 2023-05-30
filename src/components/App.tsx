@@ -18,6 +18,7 @@ import {
 } from './content/communication/Tooltip'
 import Prompt from './content/communication/Prompt'
 import ChangelogPage from './pages/ChangelogPage'
+import { getMissionNodeColorOptions } from '../modules/missions'
 
 // Default props in every page.
 export interface IPage {
@@ -110,6 +111,10 @@ function App(props: {
         appState.tooltips.current
 
       appActions.beginLoading(AppState.defaultAppStateValues.loadingMessage)
+
+      getMissionNodeColorOptions((colorOptions: Array<string>) => {
+        appState.setMissionNodeColors(colorOptions)
+      })
 
       usersModule.retrieveCurrentUser(
         (currentUser: IUser | null) => {
