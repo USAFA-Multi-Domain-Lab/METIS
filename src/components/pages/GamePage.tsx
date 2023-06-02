@@ -291,7 +291,15 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
                           )
                         }
                       }}
-                      applyNodeClassName={(node: MissionNode) => ''}
+                      applyNodeClassName={(node: MissionNode) => {
+                        let className: string = ''
+
+                        if (node.isOpen) {
+                          className += ' opened'
+                        }
+
+                        return className
+                      }}
                       renderNodeTooltipDescription={(node: MissionNode) => {
                         let description: string = ''
                         let nodeActionDisplay = 'None selected'
@@ -332,7 +340,7 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
                           description =
                             `* Time remaining: ${node.formatTimeRemaining(
                               false,
-                            )} \n` + `* Description: ${node.description}\n`
+                            )} \n` + `* Description: ${node.description}`
                         }
 
                         return description

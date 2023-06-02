@@ -133,6 +133,7 @@ export default function MissionSelectionPage(
       fileName: string
       errorMessage: string
     }> = []
+    let contents_JSON: any
 
     // This is called when a file
     // import is processed, whether
@@ -196,7 +197,7 @@ export default function MissionSelectionPage(
         // rejected from being uploaded.
         if (invalidFileExtensionCount > 0) {
           appActions.notify(
-            `${invalidFileExtensionCount} of the files uploaded did not have the .cesar extension and therefore ${
+            `${invalidFileExtensionCount} of the files uploaded did not have the .metis extension and therefore ${
               invalidFileExtensionCount === 1 ? 'was' : 'were'
             } rejected.`,
           )
@@ -215,8 +216,12 @@ export default function MissionSelectionPage(
 
     // Iterates over files for upload.
     for (let file of files) {
-      // If a .cesar file, import it.
       if (file.name.toLowerCase().endsWith('.cesar')) {
+        // If a .cesar file, import it.
+        validFiles.push(file)
+      }
+      // If a .metis file, import it.
+      else if (file.name.toLowerCase().endsWith('.metis')) {
         validFiles.push(file)
       }
       // Else, don't.
@@ -649,7 +654,7 @@ export default function MissionSelectionPage(
           <ButtonSVG
             purpose={EButtonSVGPurpose.Upload}
             handleClick={handleMissionImportRequest}
-            tooltipDescription={'Import a .cesar file from your local system.'}
+            tooltipDescription={'Import a .metis file from your local system.'}
           />
           <input
             className='ImportMissionTrigger'
@@ -661,12 +666,18 @@ export default function MissionSelectionPage(
         </div>
       </div>
 
-      <div className='FooterContainer'>
-        <div className='Version' onClick={viewChangelog}>
+      <div className='FooterContainer' draggable={false}>
+        <div className='Version' onClick={viewChangelog} draggable={false}>
           v1.2.1
           <Tooltip description={'View changelog.'} />
         </div>
-        <div className='Credit'>Photo by Adi Goldstein on Unsplash</div>
+        <a
+          href='https://www.midjourney.com/'
+          className='Credit'
+          draggable={false}
+        >
+          Photo by Midjourney
+        </a>
       </div>
     </div>
   )

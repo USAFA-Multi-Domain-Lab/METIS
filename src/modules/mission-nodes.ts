@@ -741,6 +741,10 @@ export class MissionNodeCreator implements IMissionMappable {
     return false
   }
 
+  get childNodes(): MissionNode[] {
+    return []
+  }
+
   constructor(
     mission: Mission,
     creationTarget: MissionNode,

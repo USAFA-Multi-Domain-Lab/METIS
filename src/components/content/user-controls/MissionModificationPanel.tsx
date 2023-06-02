@@ -171,12 +171,12 @@ export default function MissionModificationPanel(props: {
       purpose: EMiniButtonSVGPurpose.Download,
       handleClick: () => {
         window.open(
-          `/api/v1/missions/export/${mission.name}.cesar?missionID=${mission.missionID}`,
+          `/api/v1/missions/export/${mission.name}.metis?missionID=${mission.missionID}`,
           '_blank',
         )
       },
       tooltipDescription:
-        'Export this mission as a .cesar file to your local system.',
+        'Export this mission as a .metis file to your local system.',
     }),
   }
 

@@ -166,8 +166,8 @@ const validate_missions_nodeData = (nodeData: Array<any>): boolean => {
 
 // Validator for missions.nodeData.color.
 const validate_missions_nodeData_color = (color: string): boolean => {
-  let validColors: Array<string> = colorOptions
-  let isValidColor: boolean = validColors.includes(color)
+  let colorExpression: RegExp = /^#([a-f0-9]{6})$/
+  let isValidColor: boolean = colorExpression.test(color)
 
   return isValidColor
 }

@@ -192,14 +192,6 @@ router.post(
         let contents_string: string
         let contents_JSON: any
 
-        // If the file is not a .cesar file,
-        // it is skipped.
-        if (!file.originalname.toLowerCase().endsWith('.cesar')) {
-          let error: Error = new Error('File is not a .cesar file.')
-
-          return handleMissionImportError(file, error)
-        }
-
         // Reads files contents.
         try {
           contents_string = fs.readFileSync(file.path, {
@@ -207,7 +199,7 @@ router.post(
           })
         } catch (error: any) {
           error.message =
-            'Failed to read file. This file is either not actually a .cesar file or is corrupted.'
+            'Failed to read file. This file is either not actually a .cesar file, not actually a .metis file, or is corrupted.'
 
           return handleMissionImportError(file, error)
         }
@@ -215,6 +207,34 @@ router.post(
         // Converts to JSON.
         try {
           contents_JSON = JSON.parse(contents_string)
+
+          if (
+            contents_JSON.schemaBuildNumber <= 9 &&
+            !file.originalname.toLowerCase().endsWith('.cesar')
+          ) {
+            // If the file's schemaBuildNumber is 9
+            // or less and it is not a .cesar file,
+            // it is skipped.
+
+            let error: Error = new Error(
+              `The file "${file.originalname}" was rejected because it did not have the .cesar extension.`,
+            )
+
+            return handleMissionImportError(file, error)
+          }
+          // If the file's schemaBuildNumber is 10
+          // or greater and it is not a .metis file,
+          // it is skipped.
+          else if (
+            contents_JSON.schemaBuildNumber >= 10 &&
+            !file.originalname.toLowerCase().endsWith('.metis')
+          ) {
+            let error: Error = new Error(
+              `The file "${file.originalname}" was rejected because it did not have the .metis extension.`,
+            )
+
+            return handleMissionImportError(file, error)
+          }
         } catch (error: any) {
           // An error may occur due
           // to a syntax error with the JSON.
@@ -392,7 +412,7 @@ router.get(
               // Gather details for temporary file
               // that will be sent in the response.
               let tempSubfolderName: string = generateHash()
-              let tempFileName: string = `${mission.name}.cesar`
+              let tempFileName: string = `${mission.name}.metis`
               let tempFolderPath: string = path.join(
                 APP_DIR,
                 '/temp/missions/exports/',

@@ -636,7 +636,7 @@ export function createMission(
     })
 }
 
-// This will import a .cesar file
+// This will import a .metis file
 // to the server to create a new
 // mission.
 export function importMissions(

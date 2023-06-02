@@ -33,7 +33,7 @@ export let attackMissionData = {
     {
       nodeID: '1',
       name: 'Communications',
-      color: 'green',
+      color: '#65eb59',
       description: 'Description goes here.',
       preExecutionText: '',
       postExecutionSuccessText: '',
@@ -95,7 +95,7 @@ export let attackMissionData = {
     {
       nodeID: '2',
       name: 'Cellular Network',
-      color: 'green',
+      color: '#65eb59',
       description: 'Description goes here.',
       preExecutionText: 'Cellular Network has not been executed.',
       postExecutionSuccessText: 'Cellular Network succeeded.',
@@ -157,7 +157,7 @@ export let attackMissionData = {
     {
       nodeID: '5',
       name: 'Internet Provider',
-      color: 'green',
+      color: '#65eb59',
       description: 'Description goes here.',
       preExecutionText: 'Internet Provider has not been executed.',
       postExecutionSuccessText: 'Internet Provider has been executed.',
@@ -219,7 +219,7 @@ export let attackMissionData = {
     {
       nodeID: '8',
       name: 'Instant Messaging',
-      color: 'green',
+      color: '#65eb59',
       description: 'Description goes here.',
       preExecutionText: 'Instant Messaging has not been executed.',
       postExecutionSuccessText: 'Instant Messaging has been executed.',
@@ -281,7 +281,7 @@ export let attackMissionData = {
     {
       nodeID: '11',
       name: 'File Sharing Service',
-      color: 'green',
+      color: '#65eb59',
       description: 'Description goes here.',
       preExecutionText: 'File Sharing Service has not been executed.',
       postExecutionSuccessText: 'File Sharing Service has been executed.',
@@ -343,7 +343,7 @@ export let attackMissionData = {
     {
       nodeID: '3',
       name: 'Callbank Cellular',
-      color: 'green',
+      color: '#65eb59',
       description: 'Description goes here.',
       preExecutionText: 'Callbank Cellular has not been executed.',
       postExecutionSuccessText: 'Callbank Cellular has been executed.',
@@ -405,7 +405,7 @@ export let attackMissionData = {
     {
       nodeID: '6',
       name: 'Service Provider',
-      color: 'green',
+      color: '#65eb59',
       description: 'Description goes here.',
       preExecutionText: 'Service Provider has not been executed.',
       postExecutionSuccessText: 'Service Provider has been executed.',
@@ -443,7 +443,7 @@ export let attackMissionData = {
     {
       nodeID: '9',
       name: 'Service Provider',
-      color: 'green',
+      color: '#65eb59',
       description: 'Description goes here.',
       preExecutionText: 'Service Provider has not been executed.',
       postExecutionSuccessText: 'Service Provider has been executed.',
@@ -505,7 +505,7 @@ export let attackMissionData = {
     {
       nodeID: '12',
       name: 'Service Provider',
-      color: 'green',
+      color: '#65eb59',
       description: 'Description goes here.',
       preExecutionText: 'Service Provider has not been executed.',
       postExecutionSuccessText: 'Service Provider has been executed.',
@@ -567,7 +567,7 @@ export let attackMissionData = {
     {
       nodeID: '4',
       name: 'Cellular Towers',
-      color: 'green',
+      color: '#65eb59',
       description: 'Description goes here.',
       preExecutionText: 'Cellular Towers has not been executed.',
       postExecutionSuccessText: 'Cellular Towers has been executed.',
@@ -629,7 +629,7 @@ export let attackMissionData = {
     {
       nodeID: '7',
       name: 'Main Server',
-      color: 'green',
+      color: '#65eb59',
       description: 'Description goes here.',
       preExecutionText: 'Main Server has not been executed.',
       postExecutionSuccessText: 'Main Server has been executed.',
@@ -691,7 +691,7 @@ export let attackMissionData = {
     {
       nodeID: '10',
       name: 'Main Server',
-      color: 'green',
+      color: '#65eb59',
       description: 'Description goes here.',
       preExecutionText: 'Main Server has not been executed.',
       postExecutionSuccessText: 'Main Server has been executed.',
@@ -753,7 +753,7 @@ export let attackMissionData = {
     {
       nodeID: '13',
       name: 'Main Server',
-      color: 'green',
+      color: '#65eb59',
       description: 'Description goes here.',
       preExecutionText: 'Main Server has not been executed.',
       postExecutionSuccessText: 'Main Server has been executed.',
@@ -815,7 +815,7 @@ export let attackMissionData = {
     {
       nodeID: '14',
       name: 'Air Defense',
-      color: 'pink',
+      color: '#fa39ac',
       description: 'Description goes here.',
       preExecutionText: '',
       postExecutionSuccessText: '',
@@ -877,7 +877,7 @@ export let attackMissionData = {
     {
       nodeID: '15',
       name: 'IADS Network',
-      color: 'pink',
+      color: '#fa39ac',
       description: 'Description goes here.',
       preExecutionText: 'IADS Network has not been executed.',
       postExecutionSuccessText: 'IADS Network has been executed.',
@@ -939,7 +939,7 @@ export let attackMissionData = {
     {
       nodeID: '16',
       name: 'Individual IADS Sites',
-      color: 'pink',
+      color: '#fa39ac',
       description: 'Description goes here.',
       preExecutionText: 'Individual IADS Sites has not been executed.',
       postExecutionSuccessText: 'Individual IADS Sites has been executed.',
@@ -1001,7 +1001,7 @@ export let attackMissionData = {
     {
       nodeID: '17',
       name: 'Launchers',
-      color: 'pink',
+      color: '#fa39ac',
       description: 'Description goes here.',
       preExecutionText: 'Launchers has not been executed.',
       postExecutionSuccessText: 'Launchers has been executed.',
@@ -1063,7 +1063,7 @@ export let attackMissionData = {
     {
       nodeID: '18',
       name: 'Radars',
-      color: 'pink',
+      color: '#fa39ac',
       description: 'Description goes here.',
       preExecutionText: 'Radars has not been executed.',
       postExecutionSuccessText: 'Radars has been executed.',
@@ -1125,7 +1125,7 @@ export let attackMissionData = {
     {
       nodeID: '19',
       name: 'Infrastructure',
-      color: 'yellow',
+      color: '#f7e346',
       description: 'Description goes here.',
       preExecutionText: '',
       postExecutionSuccessText: '',
@@ -1187,7 +1187,7 @@ export let attackMissionData = {
     {
       nodeID: '20',
       name: 'Railroad System',
-      color: 'yellow',
+      color: '#f7e346',
       description: 'Description goes here.',
       preExecutionText: 'Railroad System has not been executed.',
       postExecutionSuccessText: 'Railroad System has been executed.',
@@ -1249,7 +1249,7 @@ export let attackMissionData = {
     {
       nodeID: '23',
       name: 'Electrical System',
-      color: 'yellow',
+      color: '#f7e346',
       description: 'Description goes here.',
       preExecutionText: 'Electrical System has not been executed.',
       postExecutionSuccessText: 'Electrical System has been executed.',
@@ -1311,7 +1311,7 @@ export let attackMissionData = {
     {
       nodeID: '25',
       name: 'Water System',
-      color: 'yellow',
+      color: '#f7e346',
       description: 'Description goes here.',
       preExecutionText: 'Water System has not been executed.',
       postExecutionSuccessText: 'Water System has been executed.',
@@ -1373,7 +1373,7 @@ export let attackMissionData = {
     {
       nodeID: '27',
       name: 'Road System',
-      color: 'yellow',
+      color: '#f7e346',
       description: 'Description goes here.',
       preExecutionText: 'Road System has not been executed.',
       postExecutionSuccessText: 'Road System has been executed.',
@@ -1435,7 +1435,7 @@ export let attackMissionData = {
     {
       nodeID: '21',
       name: 'Track Monitoring',
-      color: 'yellow',
+      color: '#f7e346',
       description: 'Description goes here.',
       preExecutionText: 'Track Monitoring has not been executed.',
       postExecutionSuccessText: 'Track Monitoring has been executed.',
@@ -1497,7 +1497,7 @@ export let attackMissionData = {
     {
       nodeID: '22',
       name: 'Track Switch System',
-      color: 'yellow',
+      color: '#f7e346',
       description: 'Description goes here.',
       preExecutionText: 'Track Switch System has not been executed.',
       postExecutionSuccessText: 'Track Switch System has been executed.',
@@ -1559,7 +1559,7 @@ export let attackMissionData = {
     {
       nodeID: '24',
       name: 'Regional Service',
-      color: 'yellow',
+      color: '#f7e346',
       description: 'Description goes here.',
       preExecutionText: 'Regional Service has not been executed.',
       postExecutionSuccessText: 'Regional Service has been executed.',
@@ -1621,7 +1621,7 @@ export let attackMissionData = {
     {
       nodeID: '26',
       name: 'Valve System',
-      color: 'yellow',
+      color: '#f7e346',
       description: 'Description goes here.',
       preExecutionText: 'Valve System has not been executed.',
       postExecutionSuccessText: 'Valve System has been executed.',
@@ -1683,7 +1683,7 @@ export let attackMissionData = {
     {
       nodeID: '28',
       name: 'Traffic Light System',
-      color: 'yellow',
+      color: '#f7e346',
       description: 'Description goes here.',
       preExecutionText: 'Traffic Light System has not been executed.',
       postExecutionSuccessText: 'Traffic Light System has been executed.',
@@ -1745,7 +1745,7 @@ export let attackMissionData = {
     {
       nodeID: '29',
       name: 'CCTV System',
-      color: 'yellow',
+      color: '#f7e346',
       description: 'Description goes here.',
       preExecutionText: 'CCTV System has not been executed.',
       postExecutionSuccessText: 'CCTV System has been executed.',
@@ -1807,7 +1807,7 @@ export let attackMissionData = {
     {
       nodeID: '30',
       name: 'Satellite Services',
-      color: 'blue',
+      color: '#34a1fb',
       description: 'Description goes here.',
       preExecutionText: '',
       postExecutionSuccessText: '',
@@ -1869,7 +1869,7 @@ export let attackMissionData = {
     {
       nodeID: '31',
       name: 'Global Positioning',
-      color: 'blue',
+      color: '#34a1fb',
       description: 'Description goes here.',
       preExecutionText: 'Global Positioning has not been executed.',
       postExecutionSuccessText: 'Global Positioning has been executed.',
@@ -1931,7 +1931,7 @@ export let attackMissionData = {
     {
       nodeID: '32',
       name: 'Data Transfer',
-      color: 'blue',
+      color: '#34a1fb',
       description: 'Description goes here.',
       preExecutionText: 'Data Transfer has not been executed.',
       postExecutionSuccessText: 'Data Transfer has been executed.',
@@ -1993,7 +1993,7 @@ export let attackMissionData = {
     {
       nodeID: '33',
       name: 'Imagery Collection',
-      color: 'blue',
+      color: '#34a1fb',
       description: 'Description goes here.',
       preExecutionText: 'Imagery Collection has not been executed.',
       postExecutionSuccessText: 'Imagery Collection has been executed.',
@@ -2055,7 +2055,7 @@ export let attackMissionData = {
     {
       nodeID: '34',
       name: 'Sensor Observation',
-      color: 'blue',
+      color: '#34a1fb',
       description: 'Description goes here.',
       preExecutionText: 'Sensor Observation has not been executed.',
       postExecutionSuccessText: 'Sensor Observation has been executed.',
@@ -2150,7 +2150,7 @@ export let defensiveMissionData = {
     {
       nodeID: '1',
       name: 'Communications',
-      color: 'green',
+      color: '#65eb59',
       description: 'Description goes here.',
       preExecutionText: '',
       postExecutionSuccessText: '',
@@ -2212,7 +2212,7 @@ export let defensiveMissionData = {
     {
       nodeID: '2',
       name: 'Cellular Network',
-      color: 'green',
+      color: '#65eb59',
       description: 'Description goes here.',
       preExecutionText: 'Cellular Network has not been executed.',
       postExecutionSuccessText: 'Cellular Network succeeded.',
@@ -2274,7 +2274,7 @@ export let defensiveMissionData = {
     {
       nodeID: '5',
       name: 'Internet Provider',
-      color: 'green',
+      color: '#65eb59',
       description: 'Description goes here.',
       preExecutionText: 'Internet Provider has not been executed.',
       postExecutionSuccessText: 'Internet Provider has been executed.',
@@ -2336,7 +2336,7 @@ export let defensiveMissionData = {
     {
       nodeID: '8',
       name: 'Instant Messaging',
-      color: 'green',
+      color: '#65eb59',
       description: 'Description goes here.',
       preExecutionText: 'Instant Messaging has not been executed.',
       postExecutionSuccessText: 'Instant Messaging has been executed.',
@@ -2398,7 +2398,7 @@ export let defensiveMissionData = {
     {
       nodeID: '11',
       name: 'File Sharing Service',
-      color: 'green',
+      color: '#65eb59',
       description: 'Description goes here.',
       preExecutionText: 'File Sharing Service has not been executed.',
       postExecutionSuccessText: 'File Sharing Service has been executed.',
@@ -2460,7 +2460,7 @@ export let defensiveMissionData = {
     {
       nodeID: '3',
       name: 'Callbank Cellular',
-      color: 'green',
+      color: '#65eb59',
       description: 'Description goes here.',
       preExecutionText: 'Callbank Cellular has not been executed.',
       postExecutionSuccessText: 'Callbank Cellular has been executed.',
@@ -2522,7 +2522,7 @@ export let defensiveMissionData = {
     {
       nodeID: '6',
       name: 'Service Provider',
-      color: 'green',
+      color: '#65eb59',
       description: 'Description goes here.',
       preExecutionText: 'Service Provider has not been executed.',
       postExecutionSuccessText: 'Service Provider has been executed.',
@@ -2560,7 +2560,7 @@ export let defensiveMissionData = {
     {
       nodeID: '9',
       name: 'Service Provider',
-      color: 'green',
+      color: '#65eb59',
       description: 'Description goes here.',
       preExecutionText: 'Service Provider has not been executed.',
       postExecutionSuccessText: 'Service Provider has been executed.',
@@ -2622,7 +2622,7 @@ export let defensiveMissionData = {
     {
       nodeID: '12',
       name: 'Service Provider',
-      color: 'green',
+      color: '#65eb59',
       description: 'Description goes here.',
       preExecutionText: 'Service Provider has not been executed.',
       postExecutionSuccessText: 'Service Provider has been executed.',
@@ -2684,7 +2684,7 @@ export let defensiveMissionData = {
     {
       nodeID: '4',
       name: 'Cellular Towers',
-      color: 'green',
+      color: '#65eb59',
       description: 'Description goes here.',
       preExecutionText: 'Cellular Towers has not been executed.',
       postExecutionSuccessText: 'Cellular Towers has been executed.',
@@ -2746,7 +2746,7 @@ export let defensiveMissionData = {
     {
       nodeID: '7',
       name: 'Main Server',
-      color: 'green',
+      color: '#65eb59',
       description: 'Description goes here.',
       preExecutionText: 'Main Server has not been executed.',
       postExecutionSuccessText: 'Main Server has been executed.',
@@ -2808,7 +2808,7 @@ export let defensiveMissionData = {
     {
       nodeID: '10',
       name: 'Main Server',
-      color: 'green',
+      color: '#65eb59',
       description: 'Description goes here.',
       preExecutionText: 'Main Server has not been executed.',
       postExecutionSuccessText: 'Main Server has been executed.',
@@ -2870,7 +2870,7 @@ export let defensiveMissionData = {
     {
       nodeID: '13',
       name: 'Main Server',
-      color: 'green',
+      color: '#65eb59',
       description: 'Description goes here.',
       preExecutionText: 'Main Server has not been executed.',
       postExecutionSuccessText: 'Main Server has been executed.',
@@ -2932,7 +2932,7 @@ export let defensiveMissionData = {
     {
       nodeID: '14',
       name: 'Air Defense',
-      color: 'pink',
+      color: '#fa39ac',
       description: 'Description goes here.',
       preExecutionText: '',
       postExecutionSuccessText: '',
@@ -2994,7 +2994,7 @@ export let defensiveMissionData = {
     {
       nodeID: '15',
       name: 'IADS Network',
-      color: 'pink',
+      color: '#fa39ac',
       description: 'Description goes here.',
       preExecutionText: 'IADS Network has not been executed.',
       postExecutionSuccessText: 'IADS Network has been executed.',
@@ -3056,7 +3056,7 @@ export let defensiveMissionData = {
     {
       nodeID: '16',
       name: 'Individual IADS Sites',
-      color: 'pink',
+      color: '#fa39ac',
       description: 'Description goes here.',
       preExecutionText: 'Individual IADS Sites has not been executed.',
       postExecutionSuccessText: 'Individual IADS Sites has been executed.',
@@ -3118,7 +3118,7 @@ export let defensiveMissionData = {
     {
       nodeID: '17',
       name: 'Launchers',
-      color: 'pink',
+      color: '#fa39ac',
       description: 'Description goes here.',
       preExecutionText: 'Launchers has not been executed.',
       postExecutionSuccessText: 'Launchers has been executed.',
@@ -3180,7 +3180,7 @@ export let defensiveMissionData = {
     {
       nodeID: '18',
       name: 'Radars',
-      color: 'pink',
+      color: '#fa39ac',
       description: 'Description goes here.',
       preExecutionText: 'Radars has not been executed.',
       postExecutionSuccessText: 'Radars has been executed.',
@@ -3242,7 +3242,7 @@ export let defensiveMissionData = {
     {
       nodeID: '19',
       name: 'Infrastructure',
-      color: 'yellow',
+      color: '#f7e346',
       description: 'Description goes here.',
       preExecutionText: '',
       postExecutionSuccessText: '',
@@ -3304,7 +3304,7 @@ export let defensiveMissionData = {
     {
       nodeID: '20',
       name: 'Railroad System',
-      color: 'yellow',
+      color: '#f7e346',
       description: 'Description goes here.',
       preExecutionText: 'Railroad System has not been executed.',
       postExecutionSuccessText: 'Railroad System has been executed.',
@@ -3366,7 +3366,7 @@ export let defensiveMissionData = {
     {
       nodeID: '23',
       name: 'Electrical System',
-      color: 'yellow',
+      color: '#f7e346',
       description: 'Description goes here.',
       preExecutionText: 'Electrical System has not been executed.',
       postExecutionSuccessText: 'Electrical System has been executed.',
@@ -3428,7 +3428,7 @@ export let defensiveMissionData = {
     {
       nodeID: '25',
       name: 'Water System',
-      color: 'yellow',
+      color: '#f7e346',
       description: 'Description goes here.',
       preExecutionText: 'Water System has not been executed.',
       postExecutionSuccessText: 'Water System has been executed.',
@@ -3490,7 +3490,7 @@ export let defensiveMissionData = {
     {
       nodeID: '27',
       name: 'Road System',
-      color: 'yellow',
+      color: '#f7e346',
       description: 'Description goes here.',
       preExecutionText: 'Road System has not been executed.',
       postExecutionSuccessText: 'Road System has been executed.',
@@ -3552,7 +3552,7 @@ export let defensiveMissionData = {
     {
       nodeID: '21',
       name: 'Track Monitoring',
-      color: 'yellow',
+      color: '#f7e346',
       description: 'Description goes here.',
       preExecutionText: 'Track Monitoring has not been executed.',
       postExecutionSuccessText: 'Track Monitoring has been executed.',
@@ -3614,7 +3614,7 @@ export let defensiveMissionData = {
     {
       nodeID: '22',
       name: 'Track Switch System',
-      color: 'yellow',
+      color: '#f7e346',
       description: 'Description goes here.',
       preExecutionText: 'Track Switch System has not been executed.',
       postExecutionSuccessText: 'Track Switch System has been executed.',
@@ -3676,7 +3676,7 @@ export let defensiveMissionData = {
     {
       nodeID: '24',
       name: 'Regional Service',
-      color: 'yellow',
+      color: '#f7e346',
       description: 'Description goes here.',
       preExecutionText: 'Regional Service has not been executed.',
       postExecutionSuccessText: 'Regional Service has been executed.',
@@ -3738,7 +3738,7 @@ export let defensiveMissionData = {
     {
       nodeID: '26',
       name: 'Valve System',
-      color: 'yellow',
+      color: '#f7e346',
       description: 'Description goes here.',
       preExecutionText: 'Valve System has not been executed.',
       postExecutionSuccessText: 'Valve System has been executed.',
@@ -3800,7 +3800,7 @@ export let defensiveMissionData = {
     {
       nodeID: '28',
       name: 'Traffic Light System',
-      color: 'yellow',
+      color: '#f7e346',
       description: 'Description goes here.',
       preExecutionText: 'Traffic Light System has not been executed.',
       postExecutionSuccessText: 'Traffic Light System has been executed.',
@@ -3862,7 +3862,7 @@ export let defensiveMissionData = {
     {
       nodeID: '29',
       name: 'CCTV System',
-      color: 'yellow',
+      color: '#f7e346',
       description: 'Description goes here.',
       preExecutionText: 'CCTV System has not been executed.',
       postExecutionSuccessText: 'CCTV System has been executed.',
@@ -3924,7 +3924,7 @@ export let defensiveMissionData = {
     {
       nodeID: '30',
       name: 'Satellite Services',
-      color: 'blue',
+      color: '#34a1fb',
       description: 'Description goes here.',
       preExecutionText: '',
       postExecutionSuccessText: '',
@@ -3986,7 +3986,7 @@ export let defensiveMissionData = {
     {
       nodeID: '31',
       name: 'Global Positioning',
-      color: 'blue',
+      color: '#34a1fb',
       description: 'Description goes here.',
       preExecutionText: 'Global Positioning has not been executed.',
       postExecutionSuccessText: 'Global Positioning has been executed.',
@@ -4048,7 +4048,7 @@ export let defensiveMissionData = {
     {
       nodeID: '32',
       name: 'Data Transfer',
-      color: 'blue',
+      color: '#34a1fb',
       description: 'Description goes here.',
       preExecutionText: 'Data Transfer has not been executed.',
       postExecutionSuccessText: 'Data Transfer has been executed.',
@@ -4110,7 +4110,7 @@ export let defensiveMissionData = {
     {
       nodeID: '33',
       name: 'Imagery Collection',
-      color: 'blue',
+      color: '#34a1fb',
       description: 'Description goes here.',
       preExecutionText: 'Imagery Collection has not been executed.',
       postExecutionSuccessText: 'Imagery Collection has been executed.',
@@ -4172,7 +4172,7 @@ export let defensiveMissionData = {
     {
       nodeID: '34',
       name: 'Sensor Observation',
-      color: 'blue',
+      color: '#34a1fb',
       description: 'Description goes here.',
       preExecutionText: 'Sensor Observation has not been executed.',
       postExecutionSuccessText: 'Sensor Observation has been executed.',

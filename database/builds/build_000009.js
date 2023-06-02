@@ -1,5 +1,5 @@
 // This migration script is responsible
-// for adding the mechanismStateIDs property
+// for adding the scripts property
 // to the action level of the missions
 // collection.
 
