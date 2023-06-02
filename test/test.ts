@@ -49,7 +49,7 @@ const testMission = {
       {
         nodeID: '7e6e3ddd-53be-40b1-881e-945cd6891425',
         name: 'Test Node',
-        color: 'default',
+        color: '#ffffff',
         description: 'This is a new node.',
         preExecutionText: 'Node has not been executed.',
         depthPadding: 0,
@@ -110,7 +110,7 @@ const correctUpdateTestMission = {
       {
         nodeID: '7e6e3ddd-53be-40b1-881e-945cd6891425',
         name: 'Test Node',
-        color: 'default',
+        color: '#ffffff',
         description: 'This is a new node.',
         preExecutionText: 'Node has not been executed.',
         depthPadding: 0,
@@ -398,7 +398,7 @@ describe('Export/Import File Tests', function () {
       })
   })
 
-  it('calling the import API with a multiple valid files should have a "successfulImportCount" set to 1, "failedImportCount" set to 0, and an array called "failedImportErrorMessages" with a length of 0', function (done) {
+  it('calling the import API with a multiple valid files should have a "successfulImportCount" set to 2, "failedImportCount" set to 0, and an array called "failedImportErrorMessages" with a length of 0', function (done) {
     agent
       .post('/api/v1/missions/import/')
       .attach('files', './test/static/Valid Mission.cesar')
