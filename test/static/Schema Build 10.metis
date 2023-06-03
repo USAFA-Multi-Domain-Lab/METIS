@@ -56,18 +56,15 @@
       "33": {},
       "34": {}
     },
-    "eeb6f946-a9db-4026-a071-08cc479db35e": {
-      "52e0adc1-858b-4cc5-bd2c-837cbfad4514": {},
-      "17e87d47-9884-4a08-97a1-a81727d1d74d": {},
-      "b2b4451c-5acd-4251-81ec-038415a05aff": {},
-      "30ad7557-c014-4129-9f2f-c66adfddb82d": {}
-    }
+    "ffac5728-fce4-4549-bef1-233c1debc8ac": {},
+    "a79b6ff7-b838-4f5b-b54e-2d443e1135e6": {}
   },
   "nodeData": [
     {
       "nodeID": "1",
       "name": "Communications",
-      "color": "#ffffff",
+      "color": "#65eb59",
+      "description": "Description not set...",
       "preExecutionText": "",
       "depthPadding": 0,
       "executable": false,
@@ -81,14 +78,16 @@
           "successChance": 0.5,
           "resourceCost": 1,
           "postExecutionSuccessText": "Communications has succeeded to deny.",
-          "postExecutionFailureText": "Communications has failed to deny."
+          "postExecutionFailureText": "Communications has failed to deny.",
+          "scripts": []
         }
       ]
     },
     {
       "nodeID": "2",
       "name": "Cellular Network",
-      "color": "#ffffff",
+      "color": "#65eb59",
+      "description": "Description not set...",
       "preExecutionText": "Cellular Network has not been executed.",
       "depthPadding": 0,
       "executable": false,
@@ -102,7 +101,8 @@
           "successChance": 0.5,
           "resourceCost": 1,
           "postExecutionSuccessText": "Cellular Network succeeded.",
-          "postExecutionFailureText": "Cellular Network failed."
+          "postExecutionFailureText": "Cellular Network failed.",
+          "scripts": []
         },
         {
           "actionID": "576ed1b0-c5b1-46e5-9f79-13c8a8c6e2a2",
@@ -112,7 +112,8 @@
           "successChance": 0.6,
           "resourceCost": 1,
           "postExecutionSuccessText": "Cellular Network succeeded.",
-          "postExecutionFailureText": "Cellular Network failed."
+          "postExecutionFailureText": "Cellular Network failed.",
+          "scripts": []
         },
         {
           "actionID": "94acd154-e808-4075-86ea-5478fb64e728",
@@ -122,7 +123,8 @@
           "successChance": 0.6,
           "resourceCost": 1,
           "postExecutionSuccessText": "Cellular Network succeeded.",
-          "postExecutionFailureText": "Cellular Network failed."
+          "postExecutionFailureText": "Cellular Network failed.",
+          "scripts": []
         },
         {
           "actionID": "699c4905-19b2-4a6e-947d-a3eabe7a63ab",
@@ -132,7 +134,8 @@
           "successChance": 0.7,
           "resourceCost": 1,
           "postExecutionSuccessText": "Cellular Network succeeded.",
-          "postExecutionFailureText": "Cellular Network failed."
+          "postExecutionFailureText": "Cellular Network failed.",
+          "scripts": []
         },
         {
           "actionID": "5e5f89ee-9f60-46c3-a539-69676cac03ea",
@@ -142,7 +145,8 @@
           "successChance": 0.8,
           "resourceCost": 1,
           "postExecutionSuccessText": "Cellular Network succeeded.",
-          "postExecutionFailureText": "Cellular Network failed."
+          "postExecutionFailureText": "Cellular Network failed.",
+          "scripts": []
         },
         {
           "actionID": "c1964697-45fd-4c13-8c36-299d4e2d8b8a",
@@ -152,14 +156,16 @@
           "successChance": 0.8,
           "resourceCost": 1,
           "postExecutionSuccessText": "Cellular Network succeeded.",
-          "postExecutionFailureText": "Cellular Network failed."
+          "postExecutionFailureText": "Cellular Network failed.",
+          "scripts": []
         }
       ]
     },
     {
       "nodeID": "5",
       "name": "Internet Provider",
-      "color": "#ffffff",
+      "color": "#65eb59",
+      "description": "Description not set...",
       "preExecutionText": "Internet Provider has not been executed.",
       "depthPadding": 0,
       "executable": false,
@@ -173,7 +179,8 @@
           "successChance": 0.5,
           "resourceCost": 1,
           "postExecutionSuccessText": "Internet Provider has been executed.",
-          "postExecutionFailureText": "Internet Provider has failed to execute."
+          "postExecutionFailureText": "Internet Provider has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "93d45723-6f20-4e37-9d70-93190c9e7a3d",
@@ -183,7 +190,8 @@
           "successChance": 0.6,
           "resourceCost": 1,
           "postExecutionSuccessText": "Internet Provider has been executed.",
-          "postExecutionFailureText": "Internet Provider has failed to execute."
+          "postExecutionFailureText": "Internet Provider has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "0c19922d-55ff-4a97-817e-7bfbac066020",
@@ -193,7 +201,8 @@
           "successChance": 0.6,
           "resourceCost": 1,
           "postExecutionSuccessText": "Internet Provider has been executed.",
-          "postExecutionFailureText": "Internet Provider has failed to execute."
+          "postExecutionFailureText": "Internet Provider has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "d91a98d8-87d9-429d-bdb9-5deacf580227",
@@ -203,7 +212,8 @@
           "successChance": 0.7,
           "resourceCost": 1,
           "postExecutionSuccessText": "Internet Provider has been executed.",
-          "postExecutionFailureText": "Internet Provider has failed to execute."
+          "postExecutionFailureText": "Internet Provider has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "34fc3ea9-7d7d-41dc-bc50-92ab113a2d8e",
@@ -213,7 +223,8 @@
           "successChance": 0.8,
           "resourceCost": 1,
           "postExecutionSuccessText": "Internet Provider has been executed.",
-          "postExecutionFailureText": "Internet Provider has failed to execute."
+          "postExecutionFailureText": "Internet Provider has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "42194bc7-678b-48e6-b5c0-7c09261b3f9a",
@@ -223,14 +234,16 @@
           "successChance": 0.8,
           "resourceCost": 1,
           "postExecutionSuccessText": "Internet Provider has been executed.",
-          "postExecutionFailureText": "Internet Provider has failed to execute."
+          "postExecutionFailureText": "Internet Provider has failed to execute.",
+          "scripts": []
         }
       ]
     },
     {
       "nodeID": "8",
       "name": "Instant Messaging",
-      "color": "#ffffff",
+      "color": "#65eb59",
+      "description": "Description not set...",
       "preExecutionText": "Instant Messaging has not been executed.",
       "depthPadding": 0,
       "executable": false,
@@ -244,7 +257,8 @@
           "successChance": 0.5,
           "resourceCost": 1,
           "postExecutionSuccessText": "Instant Messaging has been executed.",
-          "postExecutionFailureText": "Instant Messaging has failed to execute."
+          "postExecutionFailureText": "Instant Messaging has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "c6f07649-8a3d-4dc3-b4ca-2c311615cfe6",
@@ -254,7 +268,8 @@
           "successChance": 0.6,
           "resourceCost": 1,
           "postExecutionSuccessText": "Instant Messaging has been executed.",
-          "postExecutionFailureText": "Instant Messaging has failed to execute."
+          "postExecutionFailureText": "Instant Messaging has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "04da55a5-ceaa-453a-8389-ec97c159912c",
@@ -264,7 +279,8 @@
           "successChance": 0.6,
           "resourceCost": 1,
           "postExecutionSuccessText": "Instant Messaging has been executed.",
-          "postExecutionFailureText": "Instant Messaging has failed to execute."
+          "postExecutionFailureText": "Instant Messaging has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "5d2fc680-20d9-4020-9ccd-8b534b54ca15",
@@ -274,7 +290,8 @@
           "successChance": 0.7,
           "resourceCost": 1,
           "postExecutionSuccessText": "Instant Messaging has been executed.",
-          "postExecutionFailureText": "Instant Messaging has failed to execute."
+          "postExecutionFailureText": "Instant Messaging has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "2f335d63-44b0-4082-88bb-00d12d3b4034",
@@ -284,7 +301,8 @@
           "successChance": 0.8,
           "resourceCost": 1,
           "postExecutionSuccessText": "Instant Messaging has been executed.",
-          "postExecutionFailureText": "Instant Messaging has failed to execute."
+          "postExecutionFailureText": "Instant Messaging has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "ea35a66b-a1c8-4f17-ac94-aef51776e0bf",
@@ -294,14 +312,16 @@
           "successChance": 0.8,
           "resourceCost": 1,
           "postExecutionSuccessText": "Instant Messaging has been executed.",
-          "postExecutionFailureText": "Instant Messaging has failed to execute."
+          "postExecutionFailureText": "Instant Messaging has failed to execute.",
+          "scripts": []
         }
       ]
     },
     {
       "nodeID": "11",
       "name": "File Sharing Service",
-      "color": "#ffffff",
+      "color": "#65eb59",
+      "description": "Description not set...",
       "preExecutionText": "File Sharing Service has not been executed.",
       "depthPadding": 0,
       "executable": false,
@@ -315,7 +335,8 @@
           "successChance": 0.5,
           "resourceCost": 1,
           "postExecutionSuccessText": "File Sharing Service has been executed.",
-          "postExecutionFailureText": "File Sharing Service has failed to execute."
+          "postExecutionFailureText": "File Sharing Service has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "a8b57bb3-75b8-45ae-a554-37f408b3a990",
@@ -325,7 +346,8 @@
           "successChance": 0.6,
           "resourceCost": 1,
           "postExecutionSuccessText": "File Sharing Service has been executed.",
-          "postExecutionFailureText": "File Sharing Service has failed to execute."
+          "postExecutionFailureText": "File Sharing Service has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "f5838cd3-5c67-453d-af7f-1ea0764e8667",
@@ -335,7 +357,8 @@
           "successChance": 0.6,
           "resourceCost": 1,
           "postExecutionSuccessText": "File Sharing Service has been executed.",
-          "postExecutionFailureText": "File Sharing Service has failed to execute."
+          "postExecutionFailureText": "File Sharing Service has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "47be6a99-1d56-40e9-ab83-4d38d4325b60",
@@ -345,7 +368,8 @@
           "successChance": 0.7,
           "resourceCost": 1,
           "postExecutionSuccessText": "File Sharing Service has been executed.",
-          "postExecutionFailureText": "File Sharing Service has failed to execute."
+          "postExecutionFailureText": "File Sharing Service has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "4005c9c1-431c-4a4f-9db0-c0a889030f84",
@@ -355,7 +379,8 @@
           "successChance": 0.8,
           "resourceCost": 1,
           "postExecutionSuccessText": "File Sharing Service has been executed.",
-          "postExecutionFailureText": "File Sharing Service has failed to execute."
+          "postExecutionFailureText": "File Sharing Service has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "43d46dee-524c-4521-b10d-f912fa970001",
@@ -365,14 +390,16 @@
           "successChance": 0.8,
           "resourceCost": 1,
           "postExecutionSuccessText": "File Sharing Service has been executed.",
-          "postExecutionFailureText": "File Sharing Service has failed to execute."
+          "postExecutionFailureText": "File Sharing Service has failed to execute.",
+          "scripts": []
         }
       ]
     },
     {
       "nodeID": "3",
       "name": "Callbank Cellular",
-      "color": "#ffffff",
+      "color": "#65eb59",
+      "description": "Description not set...",
       "preExecutionText": "Callbank Cellular has not been executed.",
       "depthPadding": 0,
       "executable": false,
@@ -386,7 +413,8 @@
           "successChance": 0.5,
           "resourceCost": 1,
           "postExecutionSuccessText": "Callbank Cellular has been executed.",
-          "postExecutionFailureText": "Callbank Cellular has failed to execute."
+          "postExecutionFailureText": "Callbank Cellular has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "613095d4-8f8e-4187-ab94-86a1aed7103a",
@@ -396,7 +424,8 @@
           "successChance": 0.6,
           "resourceCost": 1,
           "postExecutionSuccessText": "Callbank Cellular has been executed.",
-          "postExecutionFailureText": "Callbank Cellular has failed to execute."
+          "postExecutionFailureText": "Callbank Cellular has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "caaaf024-bcc2-4907-a9b5-7b8197ddef70",
@@ -406,7 +435,8 @@
           "successChance": 0.6,
           "resourceCost": 1,
           "postExecutionSuccessText": "Callbank Cellular has been executed.",
-          "postExecutionFailureText": "Callbank Cellular has failed to execute."
+          "postExecutionFailureText": "Callbank Cellular has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "d9d2388d-ec53-4b2e-8508-86a66f4c3711",
@@ -416,7 +446,8 @@
           "successChance": 0.7,
           "resourceCost": 1,
           "postExecutionSuccessText": "Callbank Cellular has been executed.",
-          "postExecutionFailureText": "Callbank Cellular has failed to execute."
+          "postExecutionFailureText": "Callbank Cellular has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "76f9c0a3-24d3-4a84-b43f-87444aa0b8a2",
@@ -426,7 +457,8 @@
           "successChance": 0.8,
           "resourceCost": 1,
           "postExecutionSuccessText": "Callbank Cellular has been executed.",
-          "postExecutionFailureText": "Callbank Cellular has failed to execute."
+          "postExecutionFailureText": "Callbank Cellular has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "de33f965-aa6f-4956-aef6-62b2b9b28a57",
@@ -436,14 +468,16 @@
           "successChance": 0.8,
           "resourceCost": 1,
           "postExecutionSuccessText": "Callbank Cellular has been executed.",
-          "postExecutionFailureText": "Callbank Cellular has failed to execute."
+          "postExecutionFailureText": "Callbank Cellular has failed to execute.",
+          "scripts": []
         }
       ]
     },
     {
       "nodeID": "6",
       "name": "Service Provider",
-      "color": "#ffffff",
+      "color": "#65eb59",
+      "description": "Description not set...",
       "preExecutionText": "Service Provider has not been executed.",
       "depthPadding": 0,
       "executable": false,
@@ -457,7 +491,8 @@
           "successChance": 0.5,
           "resourceCost": 1,
           "postExecutionSuccessText": "Service Provider has been executed.",
-          "postExecutionFailureText": "Service Provider has failed to execute."
+          "postExecutionFailureText": "Service Provider has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "e24f49e4-6e74-4ea2-a28b-ec918029572d",
@@ -467,7 +502,8 @@
           "successChance": 0.6,
           "resourceCost": 1,
           "postExecutionSuccessText": "Service Provider has been executed.",
-          "postExecutionFailureText": "Service Provider has failed to execute."
+          "postExecutionFailureText": "Service Provider has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "63789abd-15b9-4c8c-be70-489ddc0bc518",
@@ -477,14 +513,16 @@
           "successChance": 0.6,
           "resourceCost": 1,
           "postExecutionSuccessText": "Service Provider has been executed.",
-          "postExecutionFailureText": "Service Provider has failed to execute."
+          "postExecutionFailureText": "Service Provider has failed to execute.",
+          "scripts": []
         }
       ]
     },
     {
       "nodeID": "9",
       "name": "Service Provider",
-      "color": "#ffffff",
+      "color": "#65eb59",
+      "description": "Description not set...",
       "preExecutionText": "Service Provider has not been executed.",
       "depthPadding": 0,
       "executable": false,
@@ -498,7 +536,8 @@
           "successChance": 0.5,
           "resourceCost": 1,
           "postExecutionSuccessText": "Service Provider has been executed.",
-          "postExecutionFailureText": "Service Provider has failed to execute."
+          "postExecutionFailureText": "Service Provider has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "512b7fdd-d44b-492a-ab9d-bf5aacad7ea0",
@@ -508,7 +547,8 @@
           "successChance": 0.6,
           "resourceCost": 1,
           "postExecutionSuccessText": "Service Provider has been executed.",
-          "postExecutionFailureText": "Service Provider has failed to execute."
+          "postExecutionFailureText": "Service Provider has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "89cc0e77-9e8f-4c0f-af6c-1a1c43b0e063",
@@ -518,7 +558,8 @@
           "successChance": 0.6,
           "resourceCost": 1,
           "postExecutionSuccessText": "Service Provider has been executed.",
-          "postExecutionFailureText": "Service Provider has failed to execute."
+          "postExecutionFailureText": "Service Provider has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "a5b1a8b6-132e-4f64-ad1b-f16799ffeb3b",
@@ -528,7 +569,8 @@
           "successChance": 0.7,
           "resourceCost": 1,
           "postExecutionSuccessText": "Service Provider has been executed.",
-          "postExecutionFailureText": "Service Provider has failed to execute."
+          "postExecutionFailureText": "Service Provider has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "5794bdf9-aae1-4a7e-bf8c-b0d21f65afc2",
@@ -538,7 +580,8 @@
           "successChance": 0.8,
           "resourceCost": 1,
           "postExecutionSuccessText": "Service Provider has been executed.",
-          "postExecutionFailureText": "Service Provider has failed to execute."
+          "postExecutionFailureText": "Service Provider has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "f9d4531f-3eaa-4939-b287-c32f210b16ee",
@@ -548,14 +591,16 @@
           "successChance": 0.8,
           "resourceCost": 1,
           "postExecutionSuccessText": "Service Provider has been executed.",
-          "postExecutionFailureText": "Service Provider has failed to execute."
+          "postExecutionFailureText": "Service Provider has failed to execute.",
+          "scripts": []
         }
       ]
     },
     {
       "nodeID": "12",
       "name": "Service Provider",
-      "color": "#ffffff",
+      "color": "#65eb59",
+      "description": "Description not set...",
       "preExecutionText": "Service Provider has not been executed.",
       "depthPadding": 0,
       "executable": false,
@@ -569,7 +614,8 @@
           "successChance": 0.5,
           "resourceCost": 1,
           "postExecutionSuccessText": "Service Provider has been executed.",
-          "postExecutionFailureText": "Service Provider has failed to execute."
+          "postExecutionFailureText": "Service Provider has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "fe431da2-c6b1-40b4-bc19-0bdf490f5619",
@@ -579,7 +625,8 @@
           "successChance": 0.6,
           "resourceCost": 1,
           "postExecutionSuccessText": "Service Provider has been executed.",
-          "postExecutionFailureText": "Service Provider has failed to execute."
+          "postExecutionFailureText": "Service Provider has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "a5e13e35-048f-46fd-917c-9896c340f120",
@@ -589,7 +636,8 @@
           "successChance": 0.6,
           "resourceCost": 1,
           "postExecutionSuccessText": "Service Provider has been executed.",
-          "postExecutionFailureText": "Service Provider has failed to execute."
+          "postExecutionFailureText": "Service Provider has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "aa86f05c-7948-4f2c-9114-348259fa893b",
@@ -599,7 +647,8 @@
           "successChance": 0.7,
           "resourceCost": 1,
           "postExecutionSuccessText": "Service Provider has been executed.",
-          "postExecutionFailureText": "Service Provider has failed to execute."
+          "postExecutionFailureText": "Service Provider has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "ca7fd79d-9810-468b-b0e0-849f5ff05226",
@@ -609,7 +658,8 @@
           "successChance": 0.8,
           "resourceCost": 1,
           "postExecutionSuccessText": "Service Provider has been executed.",
-          "postExecutionFailureText": "Service Provider has failed to execute."
+          "postExecutionFailureText": "Service Provider has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "3700f6b8-64b4-467d-9d0d-33909025620a",
@@ -619,14 +669,16 @@
           "successChance": 0.8,
           "resourceCost": 1,
           "postExecutionSuccessText": "Service Provider has been executed.",
-          "postExecutionFailureText": "Service Provider has failed to execute."
+          "postExecutionFailureText": "Service Provider has failed to execute.",
+          "scripts": []
         }
       ]
     },
     {
       "nodeID": "4",
       "name": "Cellular Towers",
-      "color": "#ffffff",
+      "color": "#65eb59",
+      "description": "Description not set...",
       "preExecutionText": "Cellular Towers has not been executed.",
       "depthPadding": 0,
       "executable": true,
@@ -640,7 +692,8 @@
           "successChance": 0,
           "resourceCost": 1,
           "postExecutionSuccessText": "Cellular Towers has been executed.",
-          "postExecutionFailureText": "Cellular Towers has failed to execute."
+          "postExecutionFailureText": "Cellular Towers has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "66ac6437-f521-491a-96fd-ebbd795a4a4f",
@@ -650,7 +703,8 @@
           "successChance": 0.6,
           "resourceCost": 1,
           "postExecutionSuccessText": "Cellular Towers has been executed.",
-          "postExecutionFailureText": "Cellular Towers has failed to execute."
+          "postExecutionFailureText": "Cellular Towers has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "e1abfa26-f5a9-432e-b966-8044020fb307",
@@ -660,7 +714,8 @@
           "successChance": 0.6,
           "resourceCost": 1,
           "postExecutionSuccessText": "Cellular Towers has been executed.",
-          "postExecutionFailureText": "Cellular Towers has failed to execute."
+          "postExecutionFailureText": "Cellular Towers has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "59c45473-6386-4c6c-ab33-29b68b3801d2",
@@ -670,7 +725,8 @@
           "successChance": 0.7,
           "resourceCost": 1,
           "postExecutionSuccessText": "Cellular Towers has been executed.",
-          "postExecutionFailureText": "Cellular Towers has failed to execute."
+          "postExecutionFailureText": "Cellular Towers has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "401315a3-25a0-4f7a-ac43-7372283de890",
@@ -680,7 +736,8 @@
           "successChance": 0.8,
           "resourceCost": 1,
           "postExecutionSuccessText": "Cellular Towers has been executed.",
-          "postExecutionFailureText": "Cellular Towers has failed to execute."
+          "postExecutionFailureText": "Cellular Towers has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "234e5a3f-465c-4fc9-bc7c-b3303f44bdcd",
@@ -690,14 +747,16 @@
           "successChance": 0.8,
           "resourceCost": 1,
           "postExecutionSuccessText": "Cellular Towers has been executed.",
-          "postExecutionFailureText": "Cellular Towers has failed to execute."
+          "postExecutionFailureText": "Cellular Towers has failed to execute.",
+          "scripts": []
         }
       ]
     },
     {
       "nodeID": "7",
       "name": "Main Server",
-      "color": "#ffffff",
+      "color": "#65eb59",
+      "description": "Description not set...",
       "preExecutionText": "Main Server has not been executed.",
       "depthPadding": 0,
       "executable": true,
@@ -711,7 +770,8 @@
           "successChance": 0.5,
           "resourceCost": 1,
           "postExecutionSuccessText": "Main Server has been executed.",
-          "postExecutionFailureText": "Main Server has failed to execute."
+          "postExecutionFailureText": "Main Server has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "eec38dde-580f-4cbd-942d-7b8ace813f1f",
@@ -721,7 +781,8 @@
           "successChance": 0.6,
           "resourceCost": 1,
           "postExecutionSuccessText": "Main Server has been executed.",
-          "postExecutionFailureText": "Main Server has failed to execute."
+          "postExecutionFailureText": "Main Server has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "2b7898e5-bd08-423f-b42f-e769c4d71ab5",
@@ -731,7 +792,8 @@
           "successChance": 0.6,
           "resourceCost": 1,
           "postExecutionSuccessText": "Main Server has been executed.",
-          "postExecutionFailureText": "Main Server has failed to execute."
+          "postExecutionFailureText": "Main Server has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "217698e2-ba6b-4dfe-8648-2674db5e22a7",
@@ -741,7 +803,8 @@
           "successChance": 0.7,
           "resourceCost": 1,
           "postExecutionSuccessText": "Main Server has been executed.",
-          "postExecutionFailureText": "Main Server has failed to execute."
+          "postExecutionFailureText": "Main Server has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "a9b9d5ed-8c05-4671-b60d-1b4f42000152",
@@ -751,7 +814,8 @@
           "successChance": 0.8,
           "resourceCost": 1,
           "postExecutionSuccessText": "Main Server has been executed.",
-          "postExecutionFailureText": "Main Server has failed to execute."
+          "postExecutionFailureText": "Main Server has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "ffaedbf3-256f-4dae-a59b-e819a403a78d",
@@ -761,14 +825,16 @@
           "successChance": 0.8,
           "resourceCost": 1,
           "postExecutionSuccessText": "Main Server has been executed.",
-          "postExecutionFailureText": "Main Server has failed to execute."
+          "postExecutionFailureText": "Main Server has failed to execute.",
+          "scripts": []
         }
       ]
     },
     {
       "nodeID": "10",
       "name": "Main Server",
-      "color": "#ffffff",
+      "color": "#65eb59",
+      "description": "Description not set...",
       "preExecutionText": "Main Server has not been executed.",
       "depthPadding": 0,
       "executable": true,
@@ -782,7 +848,8 @@
           "successChance": 0.5,
           "resourceCost": 1,
           "postExecutionSuccessText": "Main Server has been executed.",
-          "postExecutionFailureText": "Main Server has failed to execute."
+          "postExecutionFailureText": "Main Server has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "616467f7-0d7d-45a5-ab7a-c29588a790b7",
@@ -792,7 +859,8 @@
           "successChance": 0.6,
           "resourceCost": 1,
           "postExecutionSuccessText": "Main Server has been executed.",
-          "postExecutionFailureText": "Main Server has failed to execute."
+          "postExecutionFailureText": "Main Server has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "904c1f77-5840-44ec-ad1f-4cbad0ad7cf0",
@@ -802,7 +870,8 @@
           "successChance": 0.6,
           "resourceCost": 1,
           "postExecutionSuccessText": "Main Server has been executed.",
-          "postExecutionFailureText": "Main Server has failed to execute."
+          "postExecutionFailureText": "Main Server has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "5f4c427c-f444-4609-bdae-8d28b381ed8e",
@@ -812,7 +881,8 @@
           "successChance": 0.7,
           "resourceCost": 1,
           "postExecutionSuccessText": "Main Server has been executed.",
-          "postExecutionFailureText": "Main Server has failed to execute."
+          "postExecutionFailureText": "Main Server has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "52b0a5e4-1bed-40d5-9dae-0ff4b6387515",
@@ -822,7 +892,8 @@
           "successChance": 0.8,
           "resourceCost": 1,
           "postExecutionSuccessText": "Main Server has been executed.",
-          "postExecutionFailureText": "Main Server has failed to execute."
+          "postExecutionFailureText": "Main Server has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "e2bbd122-87d2-4b1f-b049-bd581472435c",
@@ -832,14 +903,16 @@
           "successChance": 0.8,
           "resourceCost": 1,
           "postExecutionSuccessText": "Main Server has been executed.",
-          "postExecutionFailureText": "Main Server has failed to execute."
+          "postExecutionFailureText": "Main Server has failed to execute.",
+          "scripts": []
         }
       ]
     },
     {
       "nodeID": "13",
       "name": "Main Server",
-      "color": "#ffffff",
+      "color": "#65eb59",
+      "description": "Description not set...",
       "preExecutionText": "Main Server has not been executed.",
       "depthPadding": 0,
       "executable": true,
@@ -853,7 +926,8 @@
           "successChance": 0.5,
           "resourceCost": 1,
           "postExecutionSuccessText": "Main Server has been executed.",
-          "postExecutionFailureText": "Main Server has failed to execute."
+          "postExecutionFailureText": "Main Server has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "23d32cf0-997d-4453-b31f-e97e09aa3426",
@@ -863,7 +937,8 @@
           "successChance": 0.6,
           "resourceCost": 1,
           "postExecutionSuccessText": "Main Server has been executed.",
-          "postExecutionFailureText": "Main Server has failed to execute."
+          "postExecutionFailureText": "Main Server has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "cdbc3b11-36b9-4871-987a-0867ebc5968f",
@@ -873,7 +948,8 @@
           "successChance": 0.6,
           "resourceCost": 1,
           "postExecutionSuccessText": "Main Server has been executed.",
-          "postExecutionFailureText": "Main Server has failed to execute."
+          "postExecutionFailureText": "Main Server has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "5f69d0ce-b68a-49c9-9357-6a78c7ae20a7",
@@ -883,7 +959,8 @@
           "successChance": 0.7,
           "resourceCost": 1,
           "postExecutionSuccessText": "Main Server has been executed.",
-          "postExecutionFailureText": "Main Server has failed to execute."
+          "postExecutionFailureText": "Main Server has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "7de62775-0ffe-4426-881b-037f77f932ad",
@@ -893,7 +970,8 @@
           "successChance": 0.8,
           "resourceCost": 1,
           "postExecutionSuccessText": "Main Server has been executed.",
-          "postExecutionFailureText": "Main Server has failed to execute."
+          "postExecutionFailureText": "Main Server has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "407238d0-5bb7-42f8-ace5-fd934413b5f2",
@@ -903,14 +981,16 @@
           "successChance": 0.8,
           "resourceCost": 1,
           "postExecutionSuccessText": "Main Server has been executed.",
-          "postExecutionFailureText": "Main Server has failed to execute."
+          "postExecutionFailureText": "Main Server has failed to execute.",
+          "scripts": []
         }
       ]
     },
     {
       "nodeID": "14",
       "name": "Air Defense",
-      "color": "#ffffff",
+      "color": "#fa39ac",
+      "description": "Description not set...",
       "preExecutionText": "",
       "depthPadding": 0,
       "executable": false,
@@ -924,14 +1004,16 @@
           "successChance": 0.5,
           "resourceCost": 1,
           "postExecutionSuccessText": "Air Defense has succeeded to deny.",
-          "postExecutionFailureText": "Air Defense has failed to deny."
+          "postExecutionFailureText": "Air Defense has failed to deny.",
+          "scripts": []
         }
       ]
     },
     {
       "nodeID": "15",
       "name": "IADS Network",
-      "color": "#ffffff",
+      "color": "#fa39ac",
+      "description": "Description not set...",
       "preExecutionText": "IADS Network has not been executed.",
       "depthPadding": 0,
       "executable": false,
@@ -945,7 +1027,8 @@
           "successChance": 0.5,
           "resourceCost": 1,
           "postExecutionSuccessText": "IADS Network has been executed.",
-          "postExecutionFailureText": "IADS Network has failed to execute."
+          "postExecutionFailureText": "IADS Network has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "b128441a-f6a1-4171-a5b8-0f5e576f1c4e",
@@ -955,7 +1038,8 @@
           "successChance": 0.6,
           "resourceCost": 1,
           "postExecutionSuccessText": "IADS Network has been executed.",
-          "postExecutionFailureText": "IADS Network has failed to execute."
+          "postExecutionFailureText": "IADS Network has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "9c81afc6-5c48-464c-9126-7000fd8d3233",
@@ -965,7 +1049,8 @@
           "successChance": 0.6,
           "resourceCost": 1,
           "postExecutionSuccessText": "IADS Network has been executed.",
-          "postExecutionFailureText": "IADS Network has failed to execute."
+          "postExecutionFailureText": "IADS Network has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "6fcdf2d9-54d8-47cd-adf6-e42abf56bb13",
@@ -975,7 +1060,8 @@
           "successChance": 0.7,
           "resourceCost": 1,
           "postExecutionSuccessText": "IADS Network has been executed.",
-          "postExecutionFailureText": "IADS Network has failed to execute."
+          "postExecutionFailureText": "IADS Network has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "5e10ff0e-cbb5-4cb7-ad2a-17d3be7edf10",
@@ -985,7 +1071,8 @@
           "successChance": 0.8,
           "resourceCost": 1,
           "postExecutionSuccessText": "IADS Network has been executed.",
-          "postExecutionFailureText": "IADS Network has failed to execute."
+          "postExecutionFailureText": "IADS Network has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "54ae9fab-d7d1-4391-b703-21e40c8b449e",
@@ -995,14 +1082,16 @@
           "successChance": 0.8,
           "resourceCost": 1,
           "postExecutionSuccessText": "IADS Network has been executed.",
-          "postExecutionFailureText": "IADS Network has failed to execute."
+          "postExecutionFailureText": "IADS Network has failed to execute.",
+          "scripts": []
         }
       ]
     },
     {
       "nodeID": "16",
       "name": "Individual IADS Sites",
-      "color": "#ffffff",
+      "color": "#fa39ac",
+      "description": "Description not set...",
       "preExecutionText": "Individual IADS Sites has not been executed.",
       "depthPadding": 0,
       "executable": false,
@@ -1016,7 +1105,8 @@
           "successChance": 0.5,
           "resourceCost": 1,
           "postExecutionSuccessText": "Individual IADS Sites has been executed.",
-          "postExecutionFailureText": "Individual IADS Sites has failed to execute."
+          "postExecutionFailureText": "Individual IADS Sites has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "747a7375-3ce1-4b3f-a247-7aea138d29d8",
@@ -1026,7 +1116,8 @@
           "successChance": 0.6,
           "resourceCost": 1,
           "postExecutionSuccessText": "Individual IADS Sites has been executed.",
-          "postExecutionFailureText": "Individual IADS Sites has failed to execute."
+          "postExecutionFailureText": "Individual IADS Sites has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "849a8221-fe6f-49c2-b825-2c08ffa552b5",
@@ -1036,7 +1127,8 @@
           "successChance": 0.6,
           "resourceCost": 1,
           "postExecutionSuccessText": "Individual IADS Sites has been executed.",
-          "postExecutionFailureText": "Individual IADS Sites has failed to execute."
+          "postExecutionFailureText": "Individual IADS Sites has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "7ecec83b-d385-4eba-932a-e354274c2924",
@@ -1046,7 +1138,8 @@
           "successChance": 0.7,
           "resourceCost": 1,
           "postExecutionSuccessText": "Individual IADS Sites has been executed.",
-          "postExecutionFailureText": "Individual IADS Sites has failed to execute."
+          "postExecutionFailureText": "Individual IADS Sites has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "ee055bc0-0a12-4773-a2df-6ad1b26b1cfe",
@@ -1056,7 +1149,8 @@
           "successChance": 0.8,
           "resourceCost": 1,
           "postExecutionSuccessText": "Individual IADS Sites has been executed.",
-          "postExecutionFailureText": "Individual IADS Sites has failed to execute."
+          "postExecutionFailureText": "Individual IADS Sites has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "b72e54b6-071f-4402-9e2e-62282ab7731e",
@@ -1066,39 +1160,21 @@
           "successChance": 0.8,
           "resourceCost": 1,
           "postExecutionSuccessText": "Individual IADS Sites has been executed.",
-          "postExecutionFailureText": "Individual IADS Sites has failed to execute."
+          "postExecutionFailureText": "Individual IADS Sites has failed to execute.",
+          "scripts": []
         }
       ]
     },
     {
       "nodeID": "17",
       "name": "Launchers",
-      "color": "#ffffff",
+      "color": "#fa39ac",
+      "description": "Description not set...",
       "preExecutionText": "Launchers has not been executed.",
       "depthPadding": 0,
       "executable": true,
       "device": false,
       "actions": [
-        {
-          "actionID": "42cb82e4-3ffd-4213-8287-64b911208c47",
-          "name": "Deny",
-          "description": "This will deny.",
-          "processTime": 1000,
-          "successChance": 0.5,
-          "resourceCost": 1,
-          "postExecutionSuccessText": "Launchers has been executed.",
-          "postExecutionFailureText": "Launchers has failed to execute."
-        },
-        {
-          "actionID": "6a07b04c-8d63-43d7-ae9a-ddc765c88122",
-          "name": "Degrade",
-          "description": "This will degrade.",
-          "processTime": 2000,
-          "successChance": 0.6,
-          "resourceCost": 1,
-          "postExecutionSuccessText": "Launchers has been executed.",
-          "postExecutionFailureText": "Launchers has failed to execute."
-        },
         {
           "actionID": "60e39961-b4e1-4a6c-b6af-fab856ee02f4",
           "name": "Destroy",
@@ -1107,7 +1183,8 @@
           "successChance": 0.6,
           "resourceCost": 1,
           "postExecutionSuccessText": "Launchers has been executed.",
-          "postExecutionFailureText": "Launchers has failed to execute."
+          "postExecutionFailureText": "Launchers has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "781dea4a-dc6b-46c5-b602-117bb31ee603",
@@ -1117,7 +1194,8 @@
           "successChance": 0.7,
           "resourceCost": 1,
           "postExecutionSuccessText": "Launchers has been executed.",
-          "postExecutionFailureText": "Launchers has failed to execute."
+          "postExecutionFailureText": "Launchers has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "40c0f386-4af4-4608-b749-3a6de82d87f6",
@@ -1127,7 +1205,8 @@
           "successChance": 0.8,
           "resourceCost": 1,
           "postExecutionSuccessText": "Launchers has been executed.",
-          "postExecutionFailureText": "Launchers has failed to execute."
+          "postExecutionFailureText": "Launchers has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "c57d6958-0d66-4fb9-a298-3435cc0cbeab",
@@ -1137,14 +1216,16 @@
           "successChance": 0.8,
           "resourceCost": 1,
           "postExecutionSuccessText": "Launchers has been executed.",
-          "postExecutionFailureText": "Launchers has failed to execute."
+          "postExecutionFailureText": "Launchers has failed to execute.",
+          "scripts": []
         }
       ]
     },
     {
       "nodeID": "18",
       "name": "Radars",
-      "color": "#ffffff",
+      "color": "#fa39ac",
+      "description": "Description not set...",
       "preExecutionText": "Radars has not been executed.",
       "depthPadding": 0,
       "executable": true,
@@ -1158,7 +1239,8 @@
           "successChance": 0.5,
           "resourceCost": 1,
           "postExecutionSuccessText": "Radars has been executed.",
-          "postExecutionFailureText": "Radars has failed to execute."
+          "postExecutionFailureText": "Radars has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "55ad7b44-71bf-4afd-8e42-a3fa95728c3d",
@@ -1168,7 +1250,8 @@
           "successChance": 0.6,
           "resourceCost": 1,
           "postExecutionSuccessText": "Radars has been executed.",
-          "postExecutionFailureText": "Radars has failed to execute."
+          "postExecutionFailureText": "Radars has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "beddc315-8641-480e-94a7-f2aaf6bf40f4",
@@ -1178,7 +1261,8 @@
           "successChance": 0.6,
           "resourceCost": 1,
           "postExecutionSuccessText": "Radars has been executed.",
-          "postExecutionFailureText": "Radars has failed to execute."
+          "postExecutionFailureText": "Radars has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "4ede900c-a350-4bbe-a214-48ada33ba4ca",
@@ -1188,7 +1272,8 @@
           "successChance": 0.7,
           "resourceCost": 1,
           "postExecutionSuccessText": "Radars has been executed.",
-          "postExecutionFailureText": "Radars has failed to execute."
+          "postExecutionFailureText": "Radars has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "63690c86-361f-4b73-b5dc-a68a54af8a3c",
@@ -1198,7 +1283,8 @@
           "successChance": 0.8,
           "resourceCost": 1,
           "postExecutionSuccessText": "Radars has been executed.",
-          "postExecutionFailureText": "Radars has failed to execute."
+          "postExecutionFailureText": "Radars has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "19c2cb7b-cb56-4200-b43c-c87093e46eb8",
@@ -1208,14 +1294,16 @@
           "successChance": 0.8,
           "resourceCost": 1,
           "postExecutionSuccessText": "Radars has been executed.",
-          "postExecutionFailureText": "Radars has failed to execute."
+          "postExecutionFailureText": "Radars has failed to execute.",
+          "scripts": []
         }
       ]
     },
     {
       "nodeID": "19",
       "name": "Infrastructure",
-      "color": "#ffffff",
+      "color": "#f7e346",
+      "description": "Description not set...",
       "preExecutionText": "",
       "depthPadding": 0,
       "executable": false,
@@ -1229,14 +1317,16 @@
           "successChance": 0.5,
           "resourceCost": 1,
           "postExecutionSuccessText": "Infrastructure has succeeded to deny.",
-          "postExecutionFailureText": "Infrastructure has failed to deny."
+          "postExecutionFailureText": "Infrastructure has failed to deny.",
+          "scripts": []
         }
       ]
     },
     {
       "nodeID": "20",
       "name": "Railroad System",
-      "color": "#ffffff",
+      "color": "#f7e346",
+      "description": "Description not set...",
       "preExecutionText": "Railroad System has not been executed.",
       "depthPadding": 0,
       "executable": false,
@@ -1250,7 +1340,8 @@
           "successChance": 0.5,
           "resourceCost": 1,
           "postExecutionSuccessText": "Railroad System has been executed.",
-          "postExecutionFailureText": "Railroad System has failed to execute."
+          "postExecutionFailureText": "Railroad System has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "9778c2a2-b440-4a0e-97bc-857d49d03566",
@@ -1260,7 +1351,8 @@
           "successChance": 0.6,
           "resourceCost": 1,
           "postExecutionSuccessText": "Railroad System has been executed.",
-          "postExecutionFailureText": "Railroad System has failed to execute."
+          "postExecutionFailureText": "Railroad System has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "3340a15e-da04-424c-9f7b-7b690bd6277b",
@@ -1270,7 +1362,8 @@
           "successChance": 0.6,
           "resourceCost": 1,
           "postExecutionSuccessText": "Railroad System has been executed.",
-          "postExecutionFailureText": "Railroad System has failed to execute."
+          "postExecutionFailureText": "Railroad System has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "2af3c598-0755-48c1-92c7-a957506788af",
@@ -1280,7 +1373,8 @@
           "successChance": 0.7,
           "resourceCost": 1,
           "postExecutionSuccessText": "Railroad System has been executed.",
-          "postExecutionFailureText": "Railroad System has failed to execute."
+          "postExecutionFailureText": "Railroad System has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "8bf6dac3-199f-4031-92a6-64b99f663f44",
@@ -1290,7 +1384,8 @@
           "successChance": 0.8,
           "resourceCost": 1,
           "postExecutionSuccessText": "Railroad System has been executed.",
-          "postExecutionFailureText": "Railroad System has failed to execute."
+          "postExecutionFailureText": "Railroad System has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "2163d948-04d3-4b7e-8a6d-ebcdeeac86a2",
@@ -1300,14 +1395,16 @@
           "successChance": 0.8,
           "resourceCost": 1,
           "postExecutionSuccessText": "Railroad System has been executed.",
-          "postExecutionFailureText": "Railroad System has failed to execute."
+          "postExecutionFailureText": "Railroad System has failed to execute.",
+          "scripts": []
         }
       ]
     },
     {
       "nodeID": "23",
       "name": "Electrical System",
-      "color": "#ffffff",
+      "color": "#f7e346",
+      "description": "Description not set...",
       "preExecutionText": "Electrical System has not been executed.",
       "depthPadding": 0,
       "executable": false,
@@ -1321,7 +1418,8 @@
           "successChance": 0.5,
           "resourceCost": 1,
           "postExecutionSuccessText": "Electrical System has been executed.",
-          "postExecutionFailureText": "Electrical System has failed to execute."
+          "postExecutionFailureText": "Electrical System has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "03ea3616-a045-4ce9-bda5-e54046a142e0",
@@ -1331,7 +1429,8 @@
           "successChance": 0.6,
           "resourceCost": 1,
           "postExecutionSuccessText": "Electrical System has been executed.",
-          "postExecutionFailureText": "Electrical System has failed to execute."
+          "postExecutionFailureText": "Electrical System has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "1639273d-25a7-42de-ae94-e8f26c36375a",
@@ -1341,7 +1440,8 @@
           "successChance": 0.6,
           "resourceCost": 1,
           "postExecutionSuccessText": "Electrical System has been executed.",
-          "postExecutionFailureText": "Electrical System has failed to execute."
+          "postExecutionFailureText": "Electrical System has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "58a5ac55-8b4e-4179-860e-949eba365be1",
@@ -1351,7 +1451,8 @@
           "successChance": 0.7,
           "resourceCost": 1,
           "postExecutionSuccessText": "Electrical System has been executed.",
-          "postExecutionFailureText": "Electrical System has failed to execute."
+          "postExecutionFailureText": "Electrical System has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "1fb593c8-6a9b-4d8e-a9db-7867b99e0fdd",
@@ -1361,7 +1462,8 @@
           "successChance": 0.8,
           "resourceCost": 1,
           "postExecutionSuccessText": "Electrical System has been executed.",
-          "postExecutionFailureText": "Electrical System has failed to execute."
+          "postExecutionFailureText": "Electrical System has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "036a3238-da36-4c9a-a449-1e0624fabe41",
@@ -1371,14 +1473,16 @@
           "successChance": 0.8,
           "resourceCost": 1,
           "postExecutionSuccessText": "Electrical System has been executed.",
-          "postExecutionFailureText": "Electrical System has failed to execute."
+          "postExecutionFailureText": "Electrical System has failed to execute.",
+          "scripts": []
         }
       ]
     },
     {
       "nodeID": "25",
       "name": "Water System",
-      "color": "#ffffff",
+      "color": "#f7e346",
+      "description": "Description not set...",
       "preExecutionText": "Water System has not been executed.",
       "depthPadding": 0,
       "executable": false,
@@ -1392,7 +1496,8 @@
           "successChance": 0.5,
           "resourceCost": 1,
           "postExecutionSuccessText": "Water System has been executed.",
-          "postExecutionFailureText": "Water System has failed to execute."
+          "postExecutionFailureText": "Water System has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "0dcb7164-becc-4be8-b33b-61ec6ca711f3",
@@ -1402,7 +1507,8 @@
           "successChance": 0.6,
           "resourceCost": 1,
           "postExecutionSuccessText": "Water System has been executed.",
-          "postExecutionFailureText": "Water System has failed to execute."
+          "postExecutionFailureText": "Water System has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "05f1ae43-1997-470d-b64f-b1f2f13ea618",
@@ -1412,7 +1518,8 @@
           "successChance": 0.6,
           "resourceCost": 1,
           "postExecutionSuccessText": "Water System has been executed.",
-          "postExecutionFailureText": "Water System has failed to execute."
+          "postExecutionFailureText": "Water System has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "0db939d0-bab1-43f8-beb7-68bd304ff141",
@@ -1422,7 +1529,8 @@
           "successChance": 0.7,
           "resourceCost": 1,
           "postExecutionSuccessText": "Water System has been executed.",
-          "postExecutionFailureText": "Water System has failed to execute."
+          "postExecutionFailureText": "Water System has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "5fd74774-eca8-4210-bf5f-cf8db38575b6",
@@ -1432,7 +1540,8 @@
           "successChance": 0.8,
           "resourceCost": 1,
           "postExecutionSuccessText": "Water System has been executed.",
-          "postExecutionFailureText": "Water System has failed to execute."
+          "postExecutionFailureText": "Water System has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "c0467c9c-6d0d-4fd8-8227-362038cdd443",
@@ -1442,14 +1551,16 @@
           "successChance": 0.8,
           "resourceCost": 1,
           "postExecutionSuccessText": "Water System has been executed.",
-          "postExecutionFailureText": "Water System has failed to execute."
+          "postExecutionFailureText": "Water System has failed to execute.",
+          "scripts": []
         }
       ]
     },
     {
       "nodeID": "27",
       "name": "Road System",
-      "color": "#ffffff",
+      "color": "#f7e346",
+      "description": "Description not set...",
       "preExecutionText": "Road System has not been executed.",
       "depthPadding": 0,
       "executable": false,
@@ -1463,7 +1574,8 @@
           "successChance": 0.5,
           "resourceCost": 1,
           "postExecutionSuccessText": "Road System has been executed.",
-          "postExecutionFailureText": "Road System has failed to execute."
+          "postExecutionFailureText": "Road System has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "86e15e1e-f098-451c-adb4-f29a086aa986",
@@ -1473,7 +1585,8 @@
           "successChance": 0.6,
           "resourceCost": 1,
           "postExecutionSuccessText": "Road System has been executed.",
-          "postExecutionFailureText": "Road System has failed to execute."
+          "postExecutionFailureText": "Road System has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "8451f1cb-d505-49d8-9166-9b1dcf098edc",
@@ -1483,7 +1596,8 @@
           "successChance": 0.6,
           "resourceCost": 1,
           "postExecutionSuccessText": "Road System has been executed.",
-          "postExecutionFailureText": "Road System has failed to execute."
+          "postExecutionFailureText": "Road System has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "3efc2886-bec8-4232-a9a0-7a49d9a20c7a",
@@ -1493,7 +1607,8 @@
           "successChance": 0.7,
           "resourceCost": 1,
           "postExecutionSuccessText": "Road System has been executed.",
-          "postExecutionFailureText": "Road System has failed to execute."
+          "postExecutionFailureText": "Road System has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "45cae8cb-848d-4d4f-9344-37dcb8174398",
@@ -1503,7 +1618,8 @@
           "successChance": 0.8,
           "resourceCost": 1,
           "postExecutionSuccessText": "Road System has been executed.",
-          "postExecutionFailureText": "Road System has failed to execute."
+          "postExecutionFailureText": "Road System has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "729c6681-feb6-479d-a960-ed896e3b941f",
@@ -1513,14 +1629,16 @@
           "successChance": 0.8,
           "resourceCost": 1,
           "postExecutionSuccessText": "Road System has been executed.",
-          "postExecutionFailureText": "Road System has failed to execute."
+          "postExecutionFailureText": "Road System has failed to execute.",
+          "scripts": []
         }
       ]
     },
     {
       "nodeID": "21",
       "name": "Track Monitoring",
-      "color": "#ffffff",
+      "color": "#f7e346",
+      "description": "Description not set...",
       "preExecutionText": "Track Monitoring has not been executed.",
       "depthPadding": 0,
       "executable": true,
@@ -1534,7 +1652,8 @@
           "successChance": 0.5,
           "resourceCost": 1,
           "postExecutionSuccessText": "Track Monitoring has been executed.",
-          "postExecutionFailureText": "Track Monitoring has failed to execute."
+          "postExecutionFailureText": "Track Monitoring has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "580e9598-dde2-47b5-ad56-53e067e9eb16",
@@ -1544,7 +1663,8 @@
           "successChance": 0.6,
           "resourceCost": 1,
           "postExecutionSuccessText": "Track Monitoring has been executed.",
-          "postExecutionFailureText": "Track Monitoring has failed to execute."
+          "postExecutionFailureText": "Track Monitoring has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "9894b2dd-f167-4cf6-9623-aa9d57c87212",
@@ -1554,7 +1674,8 @@
           "successChance": 0.6,
           "resourceCost": 1,
           "postExecutionSuccessText": "Track Monitoring has been executed.",
-          "postExecutionFailureText": "Track Monitoring has failed to execute."
+          "postExecutionFailureText": "Track Monitoring has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "001848c1-dd2c-4236-8ed3-c83915a73ed1",
@@ -1564,7 +1685,8 @@
           "successChance": 0.7,
           "resourceCost": 1,
           "postExecutionSuccessText": "Track Monitoring has been executed.",
-          "postExecutionFailureText": "Track Monitoring has failed to execute."
+          "postExecutionFailureText": "Track Monitoring has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "02b86e36-12b5-49a2-b789-d1f8b1ea0841",
@@ -1574,7 +1696,8 @@
           "successChance": 0.8,
           "resourceCost": 1,
           "postExecutionSuccessText": "Track Monitoring has been executed.",
-          "postExecutionFailureText": "Track Monitoring has failed to execute."
+          "postExecutionFailureText": "Track Monitoring has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "a7aad23e-9433-4a22-8ddc-73f957faad13",
@@ -1584,14 +1707,16 @@
           "successChance": 0.8,
           "resourceCost": 1,
           "postExecutionSuccessText": "Track Monitoring has been executed.",
-          "postExecutionFailureText": "Track Monitoring has failed to execute."
+          "postExecutionFailureText": "Track Monitoring has failed to execute.",
+          "scripts": []
         }
       ]
     },
     {
       "nodeID": "22",
       "name": "Track Switch System",
-      "color": "#ffffff",
+      "color": "#f7e346",
+      "description": "Description not set...",
       "preExecutionText": "Track Switch System has not been executed.",
       "depthPadding": 0,
       "executable": true,
@@ -1605,7 +1730,8 @@
           "successChance": 0.5,
           "resourceCost": 1,
           "postExecutionSuccessText": "Track Switch System has been executed.",
-          "postExecutionFailureText": "Track Switch System has failed to execute."
+          "postExecutionFailureText": "Track Switch System has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "bfc363bd-c2c9-44bf-8def-37e030e117b8",
@@ -1615,7 +1741,8 @@
           "successChance": 0.6,
           "resourceCost": 1,
           "postExecutionSuccessText": "Track Switch System has been executed.",
-          "postExecutionFailureText": "Track Switch System has failed to execute."
+          "postExecutionFailureText": "Track Switch System has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "29a6198d-ee20-4b50-88a0-537c103de03d",
@@ -1625,7 +1752,8 @@
           "successChance": 0.6,
           "resourceCost": 1,
           "postExecutionSuccessText": "Track Switch System has been executed.",
-          "postExecutionFailureText": "Track Switch System has failed to execute."
+          "postExecutionFailureText": "Track Switch System has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "18fca62e-85f0-4986-8c29-8013500189e1",
@@ -1635,7 +1763,8 @@
           "successChance": 0.7,
           "resourceCost": 1,
           "postExecutionSuccessText": "Track Switch System has been executed.",
-          "postExecutionFailureText": "Track Switch System has failed to execute."
+          "postExecutionFailureText": "Track Switch System has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "8d31bc40-289f-4066-aea9-823acdf19adb",
@@ -1645,7 +1774,8 @@
           "successChance": 0.8,
           "resourceCost": 1,
           "postExecutionSuccessText": "Track Switch System has been executed.",
-          "postExecutionFailureText": "Track Switch System has failed to execute."
+          "postExecutionFailureText": "Track Switch System has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "4f3de0d1-4111-4f7c-b96d-6b7306ef6aed",
@@ -1655,14 +1785,16 @@
           "successChance": 0.8,
           "resourceCost": 1,
           "postExecutionSuccessText": "Track Switch System has been executed.",
-          "postExecutionFailureText": "Track Switch System has failed to execute."
+          "postExecutionFailureText": "Track Switch System has failed to execute.",
+          "scripts": []
         }
       ]
     },
     {
       "nodeID": "24",
       "name": "Regional Service",
-      "color": "#ffffff",
+      "color": "#f7e346",
+      "description": "Description not set...",
       "preExecutionText": "Regional Service has not been executed.",
       "depthPadding": 0,
       "executable": true,
@@ -1676,7 +1808,8 @@
           "successChance": 0.5,
           "resourceCost": 1,
           "postExecutionSuccessText": "Regional Service has been executed.",
-          "postExecutionFailureText": "Regional Service has failed to execute."
+          "postExecutionFailureText": "Regional Service has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "a039893d-a510-450c-92ec-7bc27c880fcd",
@@ -1686,7 +1819,8 @@
           "successChance": 0.6,
           "resourceCost": 1,
           "postExecutionSuccessText": "Regional Service has been executed.",
-          "postExecutionFailureText": "Regional Service has failed to execute."
+          "postExecutionFailureText": "Regional Service has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "9aa2f549-6c44-41e3-8e82-a5d700501bb0",
@@ -1696,7 +1830,8 @@
           "successChance": 0.6,
           "resourceCost": 1,
           "postExecutionSuccessText": "Regional Service has been executed.",
-          "postExecutionFailureText": "Regional Service has failed to execute."
+          "postExecutionFailureText": "Regional Service has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "fd40e9da-c104-45f8-94db-0e4dc56ebe6d",
@@ -1706,7 +1841,8 @@
           "successChance": 0.7,
           "resourceCost": 1,
           "postExecutionSuccessText": "Regional Service has been executed.",
-          "postExecutionFailureText": "Regional Service has failed to execute."
+          "postExecutionFailureText": "Regional Service has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "6c03d1f4-5daf-4b73-8529-5ba0c30006f6",
@@ -1716,7 +1852,8 @@
           "successChance": 0.8,
           "resourceCost": 1,
           "postExecutionSuccessText": "Regional Service has been executed.",
-          "postExecutionFailureText": "Regional Service has failed to execute."
+          "postExecutionFailureText": "Regional Service has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "a578dac5-e2ea-40cd-9c2d-ce4e1fc98b30",
@@ -1726,14 +1863,16 @@
           "successChance": 0.8,
           "resourceCost": 1,
           "postExecutionSuccessText": "Regional Service has been executed.",
-          "postExecutionFailureText": "Regional Service has failed to execute."
+          "postExecutionFailureText": "Regional Service has failed to execute.",
+          "scripts": []
         }
       ]
     },
     {
       "nodeID": "26",
       "name": "Valve System",
-      "color": "#ffffff",
+      "color": "#f7e346",
+      "description": "Description not set...",
       "preExecutionText": "Valve System has not been executed.",
       "depthPadding": 0,
       "executable": true,
@@ -1747,7 +1886,8 @@
           "successChance": 0.5,
           "resourceCost": 1,
           "postExecutionSuccessText": "Valve System has been executed.",
-          "postExecutionFailureText": "Valve System has failed to execute."
+          "postExecutionFailureText": "Valve System has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "ff92f0a3-0b51-4c66-a34e-3a53aeab60d0",
@@ -1757,7 +1897,8 @@
           "successChance": 0.6,
           "resourceCost": 1,
           "postExecutionSuccessText": "Valve System has been executed.",
-          "postExecutionFailureText": "Valve System has failed to execute."
+          "postExecutionFailureText": "Valve System has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "64b20b5c-1b61-4257-8f35-5d2862e2dd77",
@@ -1767,7 +1908,8 @@
           "successChance": 0.6,
           "resourceCost": 1,
           "postExecutionSuccessText": "Valve System has been executed.",
-          "postExecutionFailureText": "Valve System has failed to execute."
+          "postExecutionFailureText": "Valve System has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "0fb7b999-c039-46b3-85b3-049860fe0ef7",
@@ -1777,7 +1919,8 @@
           "successChance": 0.7,
           "resourceCost": 1,
           "postExecutionSuccessText": "Valve System has been executed.",
-          "postExecutionFailureText": "Valve System has failed to execute."
+          "postExecutionFailureText": "Valve System has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "964582c0-7c74-4c02-ba6b-609c449bbe4c",
@@ -1787,7 +1930,8 @@
           "successChance": 0.8,
           "resourceCost": 1,
           "postExecutionSuccessText": "Valve System has been executed.",
-          "postExecutionFailureText": "Valve System has failed to execute."
+          "postExecutionFailureText": "Valve System has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "b2a0c854-0ce7-408e-b6bf-01269d3a6840",
@@ -1797,14 +1941,16 @@
           "successChance": 0.8,
           "resourceCost": 1,
           "postExecutionSuccessText": "Valve System has been executed.",
-          "postExecutionFailureText": "Valve System has failed to execute."
+          "postExecutionFailureText": "Valve System has failed to execute.",
+          "scripts": []
         }
       ]
     },
     {
       "nodeID": "28",
       "name": "Traffic Light System",
-      "color": "#ffffff",
+      "color": "#f7e346",
+      "description": "Description not set...",
       "preExecutionText": "Traffic Light System has not been executed.",
       "depthPadding": 0,
       "executable": true,
@@ -1818,7 +1964,8 @@
           "successChance": 0.5,
           "resourceCost": 1,
           "postExecutionSuccessText": "Traffic Light System has been executed.",
-          "postExecutionFailureText": "Traffic Light System has failed to execute."
+          "postExecutionFailureText": "Traffic Light System has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "93ba811e-cf6b-4eec-a28b-06d4816e2d15",
@@ -1828,7 +1975,8 @@
           "successChance": 0.6,
           "resourceCost": 1,
           "postExecutionSuccessText": "Traffic Light System has been executed.",
-          "postExecutionFailureText": "Traffic Light System has failed to execute."
+          "postExecutionFailureText": "Traffic Light System has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "31951c25-e187-4ee8-b166-aaf3bad5272e",
@@ -1838,7 +1986,8 @@
           "successChance": 0.6,
           "resourceCost": 1,
           "postExecutionSuccessText": "Traffic Light System has been executed.",
-          "postExecutionFailureText": "Traffic Light System has failed to execute."
+          "postExecutionFailureText": "Traffic Light System has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "ab13b241-713c-490c-9093-3ae8f28946e7",
@@ -1848,7 +1997,8 @@
           "successChance": 0.7,
           "resourceCost": 1,
           "postExecutionSuccessText": "Traffic Light System has been executed.",
-          "postExecutionFailureText": "Traffic Light System has failed to execute."
+          "postExecutionFailureText": "Traffic Light System has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "d41c3721-5256-4f45-86ba-eb20d54406ed",
@@ -1858,7 +2008,8 @@
           "successChance": 0.8,
           "resourceCost": 1,
           "postExecutionSuccessText": "Traffic Light System has been executed.",
-          "postExecutionFailureText": "Traffic Light System has failed to execute."
+          "postExecutionFailureText": "Traffic Light System has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "6faa5b89-94c7-494c-be13-79adad59f31d",
@@ -1868,14 +2019,16 @@
           "successChance": 0.8,
           "resourceCost": 1,
           "postExecutionSuccessText": "Traffic Light System has been executed.",
-          "postExecutionFailureText": "Traffic Light System has failed to execute."
+          "postExecutionFailureText": "Traffic Light System has failed to execute.",
+          "scripts": []
         }
       ]
     },
     {
       "nodeID": "29",
       "name": "CCTV System",
-      "color": "#ffffff",
+      "color": "#f7e346",
+      "description": "Description not set...",
       "preExecutionText": "CCTV System has not been executed.",
       "depthPadding": 0,
       "executable": true,
@@ -1889,7 +2042,8 @@
           "successChance": 0.5,
           "resourceCost": 1,
           "postExecutionSuccessText": "CCTV System has been executed.",
-          "postExecutionFailureText": "CCTV System has failed to execute."
+          "postExecutionFailureText": "CCTV System has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "8ab079e4-f142-4c61-aea5-b6891ff8332f",
@@ -1899,7 +2053,8 @@
           "successChance": 0.6,
           "resourceCost": 1,
           "postExecutionSuccessText": "CCTV System has been executed.",
-          "postExecutionFailureText": "CCTV System has failed to execute."
+          "postExecutionFailureText": "CCTV System has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "266b3682-6d9e-4eff-932d-929dc3f275a3",
@@ -1909,7 +2064,8 @@
           "successChance": 0.6,
           "resourceCost": 1,
           "postExecutionSuccessText": "CCTV System has been executed.",
-          "postExecutionFailureText": "CCTV System has failed to execute."
+          "postExecutionFailureText": "CCTV System has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "d3aa964d-cfc1-47de-94a2-9f4c746adb8e",
@@ -1919,7 +2075,8 @@
           "successChance": 0.7,
           "resourceCost": 1,
           "postExecutionSuccessText": "CCTV System has been executed.",
-          "postExecutionFailureText": "CCTV System has failed to execute."
+          "postExecutionFailureText": "CCTV System has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "4b696bf6-ca13-49c6-8a1e-66040ea8a394",
@@ -1929,7 +2086,8 @@
           "successChance": 0.8,
           "resourceCost": 1,
           "postExecutionSuccessText": "CCTV System has been executed.",
-          "postExecutionFailureText": "CCTV System has failed to execute."
+          "postExecutionFailureText": "CCTV System has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "d1ead431-811b-48bc-bd33-cc72b7b3648b",
@@ -1939,14 +2097,16 @@
           "successChance": 0.8,
           "resourceCost": 1,
           "postExecutionSuccessText": "CCTV System has been executed.",
-          "postExecutionFailureText": "CCTV System has failed to execute."
+          "postExecutionFailureText": "CCTV System has failed to execute.",
+          "scripts": []
         }
       ]
     },
     {
       "nodeID": "30",
       "name": "Satellite Services",
-      "color": "#ffffff",
+      "color": "#34a1fb",
+      "description": "Description not set...",
       "preExecutionText": "",
       "depthPadding": 0,
       "executable": false,
@@ -1960,14 +2120,16 @@
           "successChance": 0.5,
           "resourceCost": 1,
           "postExecutionSuccessText": "Satellite Services succeeded to deny.",
-          "postExecutionFailureText": "Satellite Services failed to deny."
+          "postExecutionFailureText": "Satellite Services failed to deny.",
+          "scripts": []
         }
       ]
     },
     {
       "nodeID": "31",
       "name": "Global Positioning",
-      "color": "#ffffff",
+      "color": "#34a1fb",
+      "description": "Description not set...",
       "preExecutionText": "No depending beeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee convinced in unfeeling he. Excellence she unaffected and too sentiments her. Rooms he doors there ye aware in by shall. Education remainder in so cordially. His remainder and own dejection daughters sportsmen. Is easy took he shed to kind.\n\nSaw yet kindness too replying whatever marianne. Old sentiments resolution admiration unaffected its mrs literature. Behaviour new set existence dashwoods. It satisfied to mr commanded consisted disposing engrossed. Tall snug do of till on easy. Form not calm new fail.\n\nHusbands ask repeated resolved but laughter debating. She end cordial visitor noisier fat subject general picture. Or if offering confined entrance no. Nay rapturous him see something residence. Highly talked do so vulgar. Her use behaved spirits and natural attempt say feeling. Exquisite mr incommode immediate he something ourselves it of. Law conduct yet chiefly beloved examine village proceed. ",
       "depthPadding": 0,
       "executable": true,
@@ -1977,11 +2139,12 @@
           "actionID": "6fe1af1d-5d60-49a8-ae01-c1e64b02c82d",
           "name": "CBC Cellular Tower CBC Cellular Tower",
           "description": "This will deny.",
-          "processTime": 1000,
-          "successChance": 1,
+          "processTime": 70000,
+          "successChance": 0.5,
           "resourceCost": 1,
           "postExecutionSuccessText": "Global Positioning has succeeded to execute CBC Cellular Tower CBC Cellular Tower.",
-          "postExecutionFailureText": "Global Positioning has failed to execute CBC Cellular Tower CBC Cellular Tower."
+          "postExecutionFailureText": "Global Positioning has failed to execute CBC Cellular Tower CBC Cellular Tower.",
+          "scripts": []
         },
         {
           "actionID": "1e964a38-dcb5-462b-8d41-6ab413dfc410",
@@ -1991,7 +2154,8 @@
           "successChance": 0.6,
           "resourceCost": 2,
           "postExecutionSuccessText": "Global Positioning has been executed.",
-          "postExecutionFailureText": "Global Positioning has failed to execute."
+          "postExecutionFailureText": "Global Positioning has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "5de30579-8af9-441d-bc43-5bfeef9ed23f",
@@ -2001,7 +2165,8 @@
           "successChance": 0.6,
           "resourceCost": 3,
           "postExecutionSuccessText": "Global Positioning has been executed.",
-          "postExecutionFailureText": "Global Positioning has failed to execute."
+          "postExecutionFailureText": "Global Positioning has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "ed8640bb-068b-40a6-9666-cdab4b6aa206",
@@ -2011,7 +2176,8 @@
           "successChance": 0.7,
           "resourceCost": 4,
           "postExecutionSuccessText": "Global Positioning has been executed.",
-          "postExecutionFailureText": "Global Positioning has failed to execute."
+          "postExecutionFailureText": "Global Positioning has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "afb73d93-86bf-420b-95d5-44fd8985810b",
@@ -2021,7 +2187,8 @@
           "successChance": 0.8,
           "resourceCost": 5,
           "postExecutionSuccessText": "Global Positioning has been executed.",
-          "postExecutionFailureText": "Global Positioning has failed to execute."
+          "postExecutionFailureText": "Global Positioning has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "f21fdd09-28cb-4e95-8c34-ceb8b9bb15b0",
@@ -2031,7 +2198,8 @@
           "successChance": 0.8,
           "resourceCost": 6,
           "postExecutionSuccessText": "Global Positioning has been executed.",
-          "postExecutionFailureText": "Global Positioning has failed to execute."
+          "postExecutionFailureText": "Global Positioning has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "5e0df4e3-4546-49df-af7e-4d104b8844f9",
@@ -2041,7 +2209,8 @@
           "successChance": 0.5,
           "resourceCost": 1,
           "postExecutionSuccessText": "Enter your successful post-execution message here.",
-          "postExecutionFailureText": "Enter your failed post-execution message here."
+          "postExecutionFailureText": "Enter your failed post-execution message here.",
+          "scripts": []
         },
         {
           "actionID": "87379453-6e01-4fa3-9047-f4c0a3af6f14",
@@ -2051,7 +2220,8 @@
           "successChance": 0.5,
           "resourceCost": 1,
           "postExecutionSuccessText": "Enter your successful post-execution message here.",
-          "postExecutionFailureText": "Enter your failed post-execution message here."
+          "postExecutionFailureText": "Enter your failed post-execution message here.",
+          "scripts": []
         },
         {
           "actionID": "405dc005-67ef-44ac-80ce-fde5c0646d9c",
@@ -2061,7 +2231,8 @@
           "successChance": 0.5,
           "resourceCost": 1,
           "postExecutionSuccessText": "Enter your successful post-execution message here.",
-          "postExecutionFailureText": "Enter your failed post-execution message here."
+          "postExecutionFailureText": "Enter your failed post-execution message here.",
+          "scripts": []
         },
         {
           "actionID": "2845edba-def7-4e0c-8001-1fecde56d387",
@@ -2071,7 +2242,8 @@
           "successChance": 0.5,
           "resourceCost": 1,
           "postExecutionSuccessText": "Enter your successful post-execution message here.",
-          "postExecutionFailureText": "Enter your failed post-execution message here."
+          "postExecutionFailureText": "Enter your failed post-execution message here.",
+          "scripts": []
         },
         {
           "actionID": "bd46eda4-175c-495d-84a2-bef70d5fe43f",
@@ -2081,7 +2253,8 @@
           "successChance": 0.5,
           "resourceCost": 1,
           "postExecutionSuccessText": "Enter your successful post-execution message here.",
-          "postExecutionFailureText": "Enter your failed post-execution message here."
+          "postExecutionFailureText": "Enter your failed post-execution message here.",
+          "scripts": []
         },
         {
           "actionID": "57efc1d4-1d70-4b04-ba44-2d11eb9f3d67",
@@ -2091,7 +2264,8 @@
           "successChance": 0.5,
           "resourceCost": 1,
           "postExecutionSuccessText": "Enter your successful post-execution message here.",
-          "postExecutionFailureText": "Enter your failed post-execution message here."
+          "postExecutionFailureText": "Enter your failed post-execution message here.",
+          "scripts": []
         },
         {
           "actionID": "60c4d300-bfb0-460c-8afc-b3081fefcd2c",
@@ -2101,7 +2275,8 @@
           "successChance": 0.5,
           "resourceCost": 1,
           "postExecutionSuccessText": "Enter your successful post-execution message here.",
-          "postExecutionFailureText": "Enter your failed post-execution message here."
+          "postExecutionFailureText": "Enter your failed post-execution message here.",
+          "scripts": []
         },
         {
           "actionID": "8471f996-4639-4159-bca8-bae985f5250b",
@@ -2111,7 +2286,8 @@
           "successChance": 0.5,
           "resourceCost": 1,
           "postExecutionSuccessText": "Enter your successful post-execution message here.",
-          "postExecutionFailureText": "Enter your failed post-execution message here."
+          "postExecutionFailureText": "Enter your failed post-execution message here.",
+          "scripts": []
         },
         {
           "actionID": "d9a64de0-ce98-46ea-8a26-6723d24ef06b",
@@ -2121,7 +2297,8 @@
           "successChance": 0.5,
           "resourceCost": 1,
           "postExecutionSuccessText": "Enter your successful post-execution message here.",
-          "postExecutionFailureText": "Enter your failed post-execution message here."
+          "postExecutionFailureText": "Enter your failed post-execution message here.",
+          "scripts": []
         },
         {
           "actionID": "7eab4515-2f6f-490d-a273-bc68aed785a0",
@@ -2131,7 +2308,8 @@
           "successChance": 0.5,
           "resourceCost": 1,
           "postExecutionSuccessText": "Enter your successful post-execution message here.",
-          "postExecutionFailureText": "Enter your failed post-execution message here."
+          "postExecutionFailureText": "Enter your failed post-execution message here.",
+          "scripts": []
         },
         {
           "actionID": "7ff7f272-761b-4390-a85b-709982c92db1",
@@ -2141,7 +2319,8 @@
           "successChance": 0.5,
           "resourceCost": 1,
           "postExecutionSuccessText": "Enter your successful post-execution message here.",
-          "postExecutionFailureText": "Enter your failed post-execution message here."
+          "postExecutionFailureText": "Enter your failed post-execution message here.",
+          "scripts": []
         },
         {
           "actionID": "5e8a6db8-dac0-4d3a-994d-81cfa4a1d1a6",
@@ -2151,7 +2330,8 @@
           "successChance": 0.5,
           "resourceCost": 1,
           "postExecutionSuccessText": "Enter your successful post-execution message here.",
-          "postExecutionFailureText": "Enter your failed post-execution message here."
+          "postExecutionFailureText": "Enter your failed post-execution message here.",
+          "scripts": []
         },
         {
           "actionID": "4fba4226-f00f-4556-aac9-6f3c44848e7b",
@@ -2161,7 +2341,8 @@
           "successChance": 0.5,
           "resourceCost": 1,
           "postExecutionSuccessText": "Enter your successful post-execution message here.",
-          "postExecutionFailureText": "Enter your failed post-execution message here."
+          "postExecutionFailureText": "Enter your failed post-execution message here.",
+          "scripts": []
         },
         {
           "actionID": "84eac75e-5d00-4cb4-a56d-13db1a85a1a5",
@@ -2171,7 +2352,8 @@
           "successChance": 0.5,
           "resourceCost": 1,
           "postExecutionSuccessText": "Enter your successful post-execution message here.",
-          "postExecutionFailureText": "Enter your failed post-execution message here."
+          "postExecutionFailureText": "Enter your failed post-execution message here.",
+          "scripts": []
         },
         {
           "actionID": "b9b484de-4854-4897-9959-7032aa30b3ac",
@@ -2181,7 +2363,8 @@
           "successChance": 0.5,
           "resourceCost": 1,
           "postExecutionSuccessText": "Enter your successful post-execution message here.",
-          "postExecutionFailureText": "Enter your failed post-execution message here."
+          "postExecutionFailureText": "Enter your failed post-execution message here.",
+          "scripts": []
         },
         {
           "actionID": "0de8c733-ecda-41e5-a0e3-fed2584b340b",
@@ -2191,7 +2374,8 @@
           "successChance": 0.5,
           "resourceCost": 1,
           "postExecutionSuccessText": "Enter your successful post-execution message here.",
-          "postExecutionFailureText": "Enter your failed post-execution message here."
+          "postExecutionFailureText": "Enter your failed post-execution message here.",
+          "scripts": []
         },
         {
           "actionID": "7d4eb8e5-a3b6-4f72-8d69-0c07f48fba53",
@@ -2201,7 +2385,8 @@
           "successChance": 0.5,
           "resourceCost": 1,
           "postExecutionSuccessText": "Enter your successful post-execution message here.",
-          "postExecutionFailureText": "Enter your failed post-execution message here."
+          "postExecutionFailureText": "Enter your failed post-execution message here.",
+          "scripts": []
         },
         {
           "actionID": "6fd8ca82-c009-44cb-b97a-c05d280aab55",
@@ -2211,7 +2396,8 @@
           "successChance": 0.5,
           "resourceCost": 1,
           "postExecutionSuccessText": "Enter your successful post-execution message here.",
-          "postExecutionFailureText": "Enter your failed post-execution message here."
+          "postExecutionFailureText": "Enter your failed post-execution message here.",
+          "scripts": []
         },
         {
           "actionID": "cbac07f5-38db-46ac-abf6-615fa4d39869",
@@ -2221,7 +2407,8 @@
           "successChance": 0.5,
           "resourceCost": 1,
           "postExecutionSuccessText": "Enter your successful post-execution message here.",
-          "postExecutionFailureText": "Enter your failed post-execution message here."
+          "postExecutionFailureText": "Enter your failed post-execution message here.",
+          "scripts": []
         },
         {
           "actionID": "916d377b-e2d8-467b-bfcd-78c3ce3e2a4e",
@@ -2231,7 +2418,8 @@
           "successChance": 0.5,
           "resourceCost": 1,
           "postExecutionSuccessText": "Enter your successful post-execution message here.",
-          "postExecutionFailureText": "Enter your failed post-execution message here."
+          "postExecutionFailureText": "Enter your failed post-execution message here.",
+          "scripts": []
         },
         {
           "actionID": "74a4ea9e-5bbe-480c-a36f-d59b24cb297d",
@@ -2241,7 +2429,8 @@
           "successChance": 0.5,
           "resourceCost": 1,
           "postExecutionSuccessText": "Enter your successful post-execution message here.",
-          "postExecutionFailureText": "Enter your failed post-execution message here."
+          "postExecutionFailureText": "Enter your failed post-execution message here.",
+          "scripts": []
         },
         {
           "actionID": "8164ef09-1930-416f-a492-5d601da023b4",
@@ -2251,7 +2440,8 @@
           "successChance": 0.5,
           "resourceCost": 1,
           "postExecutionSuccessText": "Enter your successful post-execution message here.",
-          "postExecutionFailureText": "Enter your failed post-execution message here."
+          "postExecutionFailureText": "Enter your failed post-execution message here.",
+          "scripts": []
         },
         {
           "actionID": "883bfc8d-9a3e-4973-ba7d-f4aa2e89ee15",
@@ -2261,7 +2451,8 @@
           "successChance": 0.5,
           "resourceCost": 1,
           "postExecutionSuccessText": "Enter your successful post-execution message here.",
-          "postExecutionFailureText": "Enter your failed post-execution message here."
+          "postExecutionFailureText": "Enter your failed post-execution message here.",
+          "scripts": []
         },
         {
           "actionID": "6090d067-d3f6-4d11-b19d-d3ba6f2a1faf",
@@ -2271,14 +2462,16 @@
           "successChance": 0.5,
           "resourceCost": 1,
           "postExecutionSuccessText": "Enter your successful post-execution message here.",
-          "postExecutionFailureText": "Enter your failed post-execution message here."
+          "postExecutionFailureText": "Enter your failed post-execution message here.",
+          "scripts": []
         }
       ]
     },
     {
       "nodeID": "32",
       "name": "Data Transfer",
-      "color": "#ffffff",
+      "color": "#34a1fb",
+      "description": "Description not set...",
       "preExecutionText": "Data Transfer has not been executed.",
       "depthPadding": 0,
       "executable": true,
@@ -2288,11 +2481,12 @@
           "actionID": "bff61011-1aea-4f8c-874f-c0ca771c8400",
           "name": "Deny",
           "description": "This will deny.",
-          "processTime": 1000,
+          "processTime": 85000,
           "successChance": 0.5,
           "resourceCost": 1,
           "postExecutionSuccessText": "Data Transfer has been executed.",
-          "postExecutionFailureText": "Data Transfer has failed to execute."
+          "postExecutionFailureText": "Data Transfer has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "49dfbefd-f7cd-47a3-889c-4a332cd06cab",
@@ -2302,7 +2496,8 @@
           "successChance": 0.6,
           "resourceCost": 2,
           "postExecutionSuccessText": "Data Transfer has been executed.",
-          "postExecutionFailureText": "Data Transfer has failed to execute."
+          "postExecutionFailureText": "Data Transfer has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "30b80214-5505-4f69-8afa-6db17f3ddc8c",
@@ -2312,7 +2507,8 @@
           "successChance": 0.6,
           "resourceCost": 3,
           "postExecutionSuccessText": "Data Transfer has been executed.",
-          "postExecutionFailureText": "Data Transfer has failed to execute."
+          "postExecutionFailureText": "Data Transfer has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "271da815-0966-4fb6-8f30-4dddf617a496",
@@ -2322,7 +2518,8 @@
           "successChance": 0.7,
           "resourceCost": 4,
           "postExecutionSuccessText": "Data Transfer has been executed.",
-          "postExecutionFailureText": "Data Transfer has failed to execute."
+          "postExecutionFailureText": "Data Transfer has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "59dfcf35-7f90-4ed7-8f16-18ce81fff66c",
@@ -2332,7 +2529,8 @@
           "successChance": 0.8,
           "resourceCost": 5,
           "postExecutionSuccessText": "Data Transfer has been executed.",
-          "postExecutionFailureText": "Data Transfer has failed to execute."
+          "postExecutionFailureText": "Data Transfer has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "090422d5-9576-4f15-8ace-2eacbcedb4eb",
@@ -2342,14 +2540,16 @@
           "successChance": 0.8,
           "resourceCost": 6,
           "postExecutionSuccessText": "Data Transfer has been executed.",
-          "postExecutionFailureText": "Data Transfer has failed to execute."
+          "postExecutionFailureText": "Data Transfer has failed to execute.",
+          "scripts": []
         }
       ]
     },
     {
       "nodeID": "33",
       "name": "Imagery Collection",
-      "color": "#ffffff",
+      "color": "#34a1fb",
+      "description": "Description not set...",
       "preExecutionText": "Imagery Collection has not been executed.",
       "depthPadding": 0,
       "executable": true,
@@ -2359,11 +2559,12 @@
           "actionID": "689dfd2d-e28a-4f81-b2ac-f6466caf5c92",
           "name": "Deny",
           "description": "This will deny.",
-          "processTime": 1000,
+          "processTime": 20000,
           "successChance": 0.5,
           "resourceCost": 1,
           "postExecutionSuccessText": "Imagery Collection has been executed.",
-          "postExecutionFailureText": "Imagery Collection has failed to execute."
+          "postExecutionFailureText": "Imagery Collection has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "ba4ac186-83bf-4655-8f65-e80ef5f89708",
@@ -2373,7 +2574,8 @@
           "successChance": 0.6,
           "resourceCost": 2,
           "postExecutionSuccessText": "Imagery Collection has been executed.",
-          "postExecutionFailureText": "Imagery Collection has failed to execute."
+          "postExecutionFailureText": "Imagery Collection has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "d935e0e8-98e5-4f8e-8b5d-c4af9602ff58",
@@ -2383,7 +2585,8 @@
           "successChance": 0.6,
           "resourceCost": 3,
           "postExecutionSuccessText": "Imagery Collection has been executed.",
-          "postExecutionFailureText": "Imagery Collection has failed to execute."
+          "postExecutionFailureText": "Imagery Collection has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "082c8664-04ee-4db8-9831-a8a295806176",
@@ -2393,7 +2596,8 @@
           "successChance": 0.7,
           "resourceCost": 4,
           "postExecutionSuccessText": "Imagery Collection has been executed.",
-          "postExecutionFailureText": "Imagery Collection has failed to execute."
+          "postExecutionFailureText": "Imagery Collection has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "11461012-8363-4e8b-9704-d784baae892d",
@@ -2403,7 +2607,8 @@
           "successChance": 0.8,
           "resourceCost": 5,
           "postExecutionSuccessText": "Imagery Collection has been executed.",
-          "postExecutionFailureText": "Imagery Collection has failed to execute."
+          "postExecutionFailureText": "Imagery Collection has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "3e4e1939-863a-4ce4-a578-864e6d6d92dd",
@@ -2413,14 +2618,16 @@
           "successChance": 0.8,
           "resourceCost": 6,
           "postExecutionSuccessText": "Imagery Collection has been executed.",
-          "postExecutionFailureText": "Imagery Collection has failed to execute."
+          "postExecutionFailureText": "Imagery Collection has failed to execute.",
+          "scripts": []
         }
       ]
     },
     {
       "nodeID": "34",
       "name": "Sensor Observation",
-      "color": "#ffffff",
+      "color": "#34a1fb",
+      "description": "Description not set...",
       "preExecutionText": "Sensor Observation has not been executed.",
       "depthPadding": 0,
       "executable": true,
@@ -2430,11 +2637,12 @@
           "actionID": "7cf46809-51d7-4d99-9ec6-8f272e30e26c",
           "name": "Deny",
           "description": "This will deny.",
-          "processTime": 1000,
+          "processTime": 15000,
           "successChance": 0.5,
           "resourceCost": 1,
           "postExecutionSuccessText": "Sensor Observation has been executed.",
-          "postExecutionFailureText": "Sensor Observation has failed to execute."
+          "postExecutionFailureText": "Sensor Observation has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "e1670b40-50fa-4364-8e6f-7b976269e69b",
@@ -2444,7 +2652,8 @@
           "successChance": 0.6,
           "resourceCost": 2,
           "postExecutionSuccessText": "Sensor Observation has been executed.",
-          "postExecutionFailureText": "Sensor Observation has failed to execute."
+          "postExecutionFailureText": "Sensor Observation has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "8ec24ee0-c8fa-4c05-84ba-5ac31c29f598",
@@ -2454,7 +2663,8 @@
           "successChance": 0.6,
           "resourceCost": 3,
           "postExecutionSuccessText": "Sensor Observation has been executed.",
-          "postExecutionFailureText": "Sensor Observation has failed to execute."
+          "postExecutionFailureText": "Sensor Observation has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "c4016043-313c-4676-b2fe-a488cf40b6c1",
@@ -2464,7 +2674,8 @@
           "successChance": 0.7,
           "resourceCost": 4,
           "postExecutionSuccessText": "Sensor Observation has been executed.",
-          "postExecutionFailureText": "Sensor Observation has failed to execute."
+          "postExecutionFailureText": "Sensor Observation has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "18a4b254-26a2-48ab-9a37-d7ba21be69bd",
@@ -2474,7 +2685,8 @@
           "successChance": 0.8,
           "resourceCost": 5,
           "postExecutionSuccessText": "Sensor Observation has been executed.",
-          "postExecutionFailureText": "Sensor Observation has failed to execute."
+          "postExecutionFailureText": "Sensor Observation has failed to execute.",
+          "scripts": []
         },
         {
           "actionID": "f7096a7a-8484-487e-bd0d-88171a5148b7",
@@ -2484,61 +2696,79 @@
           "successChance": 0.8,
           "resourceCost": 6,
           "postExecutionSuccessText": "Sensor Observation has been executed.",
-          "postExecutionFailureText": "Sensor Observation has failed to execute."
+          "postExecutionFailureText": "Sensor Observation has failed to execute.",
+          "scripts": []
         }
       ]
     },
     {
-      "nodeID": "eeb6f946-a9db-4026-a071-08cc479db35e",
-      "name": "Cell",
-      "color": "#ffffff",
+      "nodeID": "ffac5728-fce4-4549-bef1-233c1debc8ac",
+      "name": "New Node",
+      "color": "#f9484f",
+      "description": "Description not set...",
       "preExecutionText": "Node has not been executed.",
       "depthPadding": 0,
-      "executable": false,
+      "executable": true,
       "device": false,
-      "actions": []
+      "actions": [
+        {
+          "actionID": "5b13c791-be1b-4a0f-8102-2871046b476e",
+          "name": "New Action",
+          "description": "Enter your description here.",
+          "processTime": 5000,
+          "successChance": 1,
+          "resourceCost": 5,
+          "postExecutionSuccessText": "Enter your successful post-execution message here.",
+          "postExecutionFailureText": "Enter your failed post-execution message here.",
+          "scripts": []
+        },
+        {
+          "actionID": "dedc6c11-4781-44cd-908d-e2c7925427bd",
+          "name": "New Action",
+          "description": "Enter your description here.",
+          "processTime": 5000,
+          "successChance": 0,
+          "resourceCost": 1,
+          "postExecutionSuccessText": "Enter your successful post-execution message here.",
+          "postExecutionFailureText": "Enter your failed post-execution message here.",
+          "scripts": []
+        }
+      ]
     },
     {
-      "nodeID": "52e0adc1-858b-4cc5-bd2c-837cbfad4514",
-      "name": "Cell",
+      "nodeID": "a79b6ff7-b838-4f5b-b54e-2d443e1135e6",
+      "name": "New Node",
       "color": "#ffffff",
+      "description": "Description text goes here.",
       "preExecutionText": "Node has not been executed.",
       "depthPadding": 0,
-      "executable": false,
+      "executable": true,
       "device": false,
-      "actions": []
-    },
-    {
-      "nodeID": "17e87d47-9884-4a08-97a1-a81727d1d74d",
-      "name": "Cell",
-      "color": "#ffffff",
-      "preExecutionText": "Node has not been executed.",
-      "depthPadding": 0,
-      "executable": false,
-      "device": false,
-      "actions": []
-    },
-    {
-      "nodeID": "b2b4451c-5acd-4251-81ec-038415a05aff",
-      "name": "Cell",
-      "color": "#ffffff",
-      "preExecutionText": "Node has not been executed.",
-      "depthPadding": 0,
-      "executable": false,
-      "device": false,
-      "actions": []
-    },
-    {
-      "nodeID": "30ad7557-c014-4129-9f2f-c66adfddb82d",
-      "name": "Cell",
-      "color": "#ffffff",
-      "preExecutionText": "Node has not been executed.",
-      "depthPadding": 0,
-      "executable": false,
-      "device": false,
-      "actions": []
+      "actions": [
+        {
+          "actionID": "bf3f5b0d-3fd2-466b-a1a2-a7467f51c5ac",
+          "name": "New Action",
+          "description": "Enter your description here.",
+          "processTime": 5000,
+          "successChance": 1,
+          "resourceCost": 1,
+          "postExecutionSuccessText": "Enter your successful post-execution message here.",
+          "postExecutionFailureText": "Enter your failed post-execution message here.",
+          "scripts": []
+        },
+        {
+          "actionID": "78d74616-aace-4d07-a007-91fe6f258e56",
+          "name": "New Action",
+          "description": "Enter your description here.",
+          "processTime": 5000,
+          "successChance": 0,
+          "resourceCost": 1,
+          "postExecutionSuccessText": "Enter your successful post-execution message here.",
+          "postExecutionFailureText": "Enter your failed post-execution message here.",
+          "scripts": []
+        }
+      ]
     }
   ],
-  "__v": 0,
-  "schemaBuildNumber": 4
+  "schemaBuildNumber": 10
 }

@@ -225,7 +225,7 @@ describe('Export/Import File Tests', function () {
       })
   })
 
-  it('calling the missions API should return a successful (200) response', function (done) {
+  it('Calling the missions route on the API should return a successful (200) response', function (done) {
     agent
       .get('/api/v1/missions/')
       .then(function (response: ChaiHttp.Response) {
@@ -238,7 +238,7 @@ describe('Export/Import File Tests', function () {
       })
   })
 
-  it('user should be logged in to access the import and/or export API', function (done) {
+  it('User should be logged in to access the import and/or export API', function (done) {
     agent
       .get('/api/v1/users/')
       .then(function (response: ChaiHttp.Response) {
@@ -251,7 +251,7 @@ describe('Export/Import File Tests', function () {
       })
   })
 
-  it('calling export API should return a successful (200) response', function (done) {
+  it('Calling export route on the API should return a successful (200) response', function (done) {
     agent
       .get(
         `/api/v1/missions/export/Attack%20Mission.cesar?missionID=${missionID}`,
@@ -266,7 +266,7 @@ describe('Export/Import File Tests', function () {
       })
   })
 
-  it('calling the export API without a missionID as a query should return a not found (404) response', function (done) {
+  it('Calling the export route on the API without a missionID as a query should return a not found (404) response', function (done) {
     agent
       .get(`/api/v1/missions/export/`)
       .then(function (response: ChaiHttp.Response) {
@@ -279,7 +279,7 @@ describe('Export/Import File Tests', function () {
       })
   })
 
-  it('calling the import API with a valid file should have a "successfulImportCount" set to 1, "failedImportCount" set to 0, and an array called "failedImportErrorMessages" with a length of 0', function (done) {
+  it('Calling the import route on the API with a valid file should have a "successfulImportCount" set to 1, "failedImportCount" set to 0, and an array called "failedImportErrorMessages" with a length of 0', function (done) {
     agent
       .post('/api/v1/missions/import/')
       .attach('files', './test/static/Valid Mission.cesar')
@@ -296,7 +296,7 @@ describe('Export/Import File Tests', function () {
       })
   })
 
-  it('calling the import API with an invalid file should have a "successfulImportCount" set to 0, "failedImportCount" set to 1, and an array called "failedImportErrorMessages" with a length of 1', function (done) {
+  it('Calling the import route on the API with an invalid file should have a "successfulImportCount" set to 0, "failedImportCount" set to 1, and an array called "failedImportErrorMessages" with a length of 1', function (done) {
     agent
       .post('/api/v1/missions/import/')
       .attach('files', './test/static/Invalid Mission.cesar')
@@ -313,7 +313,7 @@ describe('Export/Import File Tests', function () {
       })
   })
 
-  it('calling the import API with a file that has valid contents, but an invalid extension should have a "successfulImportCount" set to 0, "failedImportCount" set to 1, and an array called "failedImportErrorMessages" with a length of 1', function (done) {
+  it('Calling the import route on the API with a file that has valid contents, but an invalid extension should have a "successfulImportCount" set to 0, "failedImportCount" set to 1, and an array called "failedImportErrorMessages" with a length of 1', function (done) {
     agent
       .post('/api/v1/missions/import/')
       .attach('files', './test/static/Attack Mission.jpeg')
@@ -330,7 +330,7 @@ describe('Export/Import File Tests', function () {
       })
   })
 
-  it('calling the import API with a file that has a "schemaBuildNumber" missing should have a "successfulImportCount" set to 0, "failedImportCount" set to 1, and an array called "failedImportErrorMessages" with a length of 1', function (done) {
+  it('Calling the import route on the API with a file that has a "schemaBuildNumber" missing should have a "successfulImportCount" set to 0, "failedImportCount" set to 1, and an array called "failedImportErrorMessages" with a length of 1', function (done) {
     agent
       .post('/api/v1/missions/import/')
       .attach('files', './test/static/No schemaBuildNumber Mission.cesar')
@@ -347,7 +347,7 @@ describe('Export/Import File Tests', function () {
       })
   })
 
-  it('calling the import API with a file that has a syntax error should have a "successfulImportCount" set to 0, "failedImportCount" set to 1, and an array called "failedImportErrorMessages" with a length of 1', function (done) {
+  it('Calling the import route on the API with a file that has a syntax error should have a "successfulImportCount" set to 0, "failedImportCount" set to 1, and an array called "failedImportErrorMessages" with a length of 1', function (done) {
     agent
       .post('/api/v1/missions/import/')
       .attach('files', './test/static/Syntax Error Mission.cesar')
@@ -364,7 +364,7 @@ describe('Export/Import File Tests', function () {
       })
   })
 
-  it('calling the import API with a file that has an extra invalid property in the node data should have a "successfulImportCount" set to 0, "failedImportCount" set to 1, and an array called "failedImportErrorMessages" with a length of 1', function (done) {
+  it('Calling the import route on the API with a file that has an extra invalid property in the node data should have a "successfulImportCount" set to 0, "failedImportCount" set to 1, and an array called "failedImportErrorMessages" with a length of 1', function (done) {
     agent
       .post('/api/v1/missions/import/')
       .attach('files', './test/static/Extra Invalid Property Mission.cesar')
@@ -381,7 +381,7 @@ describe('Export/Import File Tests', function () {
       })
   })
 
-  it('calling the import API with a file that has extra data in the node data should have a "successfulImportCount" set to 0, "failedImportCount" set to 1, and an array called "failedImportErrorMessages" with a length of 1', function (done) {
+  it('Calling the import route on the API with a file that has extra data in the node data should have a "successfulImportCount" set to 0, "failedImportCount" set to 1, and an array called "failedImportErrorMessages" with a length of 1', function (done) {
     agent
       .post('/api/v1/missions/import/')
       .attach('files', './test/static/Extra Data Mission.cesar')
@@ -398,7 +398,7 @@ describe('Export/Import File Tests', function () {
       })
   })
 
-  it('calling the import API with a multiple valid files should have a "successfulImportCount" set to 2, "failedImportCount" set to 0, and an array called "failedImportErrorMessages" with a length of 0', function (done) {
+  it('Calling the import route on the API with a multiple valid files should have a "successfulImportCount" set to 2, "failedImportCount" set to 0, and an array called "failedImportErrorMessages" with a length of 0', function (done) {
     agent
       .post('/api/v1/missions/import/')
       .attach('files', './test/static/Valid Mission.cesar')
@@ -416,7 +416,7 @@ describe('Export/Import File Tests', function () {
       })
   })
 
-  it('calling the import API with one valid file and one invalid file should have a "successfulImportCount" set to 1, "failedImportCount" set to 1, and an array called "failedImportErrorMessages" with a length of 1', function (done) {
+  it('Calling the import route on the API with one valid file and one invalid file should have a "successfulImportCount" set to 1, "failedImportCount" set to 1, and an array called "failedImportErrorMessages" with a length of 1', function (done) {
     agent
       .post('/api/v1/missions/import/')
       .attach('files', './test/static/Valid Mission.cesar')
@@ -434,7 +434,7 @@ describe('Export/Import File Tests', function () {
       })
   })
 
-  it('calling the import API with a file that has an invalid extension (i.e., should be a .svg, .png, .pdf, etc. and is a .cesar instead) should have a "successfulImportCount" set to 0, "failedImportCount" set to 1, and an array called "failedImportErrorMessages" with a length of 1', function (done) {
+  it('Calling the import route on the API with a file that has an invalid extension (i.e., should be a .svg, .png, .pdf, etc. and is a .cesar instead) should have a "successfulImportCount" set to 0, "failedImportCount" set to 1, and an array called "failedImportErrorMessages" with a length of 1', function (done) {
     agent
       .post('/api/v1/missions/import/')
       .attach('files', './test/static/bolt-solid.cesar')
@@ -443,6 +443,112 @@ describe('Export/Import File Tests', function () {
         expect(response.body.successfulImportCount).to.equal(0)
         expect(response.body.failedImportCount).to.equal(1)
         expect(response.body.failedImportErrorMessages.length).to.equal(1)
+        done()
+      })
+      .catch(function (error) {
+        testLogger.error(error)
+        done(error)
+      })
+  })
+
+  it('Calling the import route on the API with a valid file that has a "schemaBuildNumber" of 9 or less and a ".cesar" extension should have a "successfulImportCount" set to 1, "failedImportCount" set to 0, and an array called "failedImportErrorMessages" with a length of 0', function (done) {
+    agent
+      .post('/api/v1/missions/import/')
+      .attach('files', './test/static/Schema Build 4.cesar')
+      .then(function (response: ChaiHttp.Response) {
+        expect(response).to.have.status(200)
+        expect(response.body.successfulImportCount).to.equal(1)
+        expect(response.body.failedImportCount).to.equal(0)
+        expect(response.body.failedImportErrorMessages.length).to.equal(0)
+        done()
+      })
+      .catch(function (error) {
+        testLogger.error(error)
+        done(error)
+      })
+  })
+
+  it('Calling the import route on the API with a valid file that has a "schemaBuildNumber" of 9 or less and a ".metis" extension should have a "successfulImportCount" set to 0, "failedImportCount" set to 1, and an array called "failedImportErrorMessages" with a length of 1', function (done) {
+    agent
+      .post('/api/v1/missions/import/')
+      .attach('files', './test/static/Schema Build 4.metis')
+      .then(function (response: ChaiHttp.Response) {
+        expect(response).to.have.status(200)
+        expect(response.body.successfulImportCount).to.equal(0)
+        expect(response.body.failedImportCount).to.equal(1)
+        expect(response.body.failedImportErrorMessages.length).to.equal(1)
+        done()
+      })
+      .catch(function (error) {
+        testLogger.error(error)
+        done(error)
+      })
+  })
+
+  it('Calling the import route on the API with a valid file that has a "schemaBuildNumber" of 10 or greater and a ".metis" extension should have a "successfulImportCount" set to 1, "failedImportCount" set to 0, and an array called "failedImportErrorMessages" with a length of 0', function (done) {
+    agent
+      .post('/api/v1/missions/import/')
+      .attach('files', './test/static/Schema Build 10.metis')
+      .then(function (response: ChaiHttp.Response) {
+        expect(response).to.have.status(200)
+        expect(response.body.successfulImportCount).to.equal(1)
+        expect(response.body.failedImportCount).to.equal(0)
+        expect(response.body.failedImportErrorMessages.length).to.equal(0)
+        done()
+      })
+      .catch(function (error) {
+        testLogger.error(error)
+        done(error)
+      })
+  })
+
+  it('Calling the import route on the API with a valid file that has a "schemaBuildNumber" of 10 or greater and a ".cesar" extension should have a "successfulImportCount" set to 0, "failedImportCount" set to 1, and an array called "failedImportErrorMessages" with a length of 1', function (done) {
+    agent
+      .post('/api/v1/missions/import/')
+      .attach('files', './test/static/Schema Build 10.cesar')
+      .then(function (response: ChaiHttp.Response) {
+        expect(response).to.have.status(200)
+        expect(response.body.successfulImportCount).to.equal(0)
+        expect(response.body.failedImportCount).to.equal(1)
+        expect(response.body.failedImportErrorMessages.length).to.equal(1)
+        done()
+      })
+      .catch(function (error) {
+        testLogger.error(error)
+        done(error)
+      })
+  })
+
+  it('Calling the import route on the API with a valid file that has a "schemaBuildNumber" of 10 or greater and a ".metis" extension and a valid file that has a "schemaBuildNumber" of 9 or less and a ".metis" extension should have a "successfulImportCount" set to 1, "failedImportCount" set to 1, and an array called "failedImportErrorMessages" with a length of 1', function (done) {
+    agent
+      .post('/api/v1/missions/import/')
+      .attach('files', './test/static/Schema Build 10.metis')
+      .attach('files', './test/static/Schema Build 4.metis')
+      .then(function (response: ChaiHttp.Response) {
+        expect(response).to.have.status(200)
+        expect(response.body.successfulImportCount).to.equal(1)
+        expect(response.body.failedImportCount).to.equal(1)
+        expect(response.body.failedImportErrorMessages.length).to.equal(1)
+        done()
+      })
+      .catch(function (error) {
+        testLogger.error(error)
+        done(error)
+      })
+  })
+
+  it('Calling the import route on the API with a valid file that has a "schemaBuildNumber" of 10 or greater and a ".metis" extension, a valid file that has a "schemaBuildNumber" of 9 or less and a ".metis" extension, a file that has an invalid extension (i.e., should be a .svg, .png, .pdf, etc. and is a .cesar instead), and a file that has valid contents, but an invalid extension should have a "successfulImportCount" set to 1, "failedImportCount" set to 3, and an array called "failedImportErrorMessages" with a length of 3', function (done) {
+    agent
+      .post('/api/v1/missions/import/')
+      .attach('files', './test/static/Schema Build 10.metis')
+      .attach('files', './test/static/Schema Build 4.metis')
+      .attach('files', './test/static/bolt-solid.cesar')
+      .attach('files', './test/static/Attack Mission.jpeg')
+      .then(function (response: ChaiHttp.Response) {
+        expect(response).to.have.status(200)
+        expect(response.body.successfulImportCount).to.equal(1)
+        expect(response.body.failedImportCount).to.equal(3)
+        expect(response.body.failedImportErrorMessages.length).to.equal(3)
         done()
       })
       .catch(function (error) {

@@ -207,34 +207,6 @@ router.post(
         // Converts to JSON.
         try {
           contents_JSON = JSON.parse(contents_string)
-
-          if (
-            contents_JSON.schemaBuildNumber <= 9 &&
-            !file.originalname.toLowerCase().endsWith('.cesar')
-          ) {
-            // If the file's schemaBuildNumber is 9
-            // or less and it is not a .cesar file,
-            // it is skipped.
-
-            let error: Error = new Error(
-              `The file "${file.originalname}" was rejected because it did not have the .cesar extension.`,
-            )
-
-            return handleMissionImportError(file, error)
-          }
-          // If the file's schemaBuildNumber is 10
-          // or greater and it is not a .metis file,
-          // it is skipped.
-          else if (
-            contents_JSON.schemaBuildNumber >= 10 &&
-            !file.originalname.toLowerCase().endsWith('.metis')
-          ) {
-            let error: Error = new Error(
-              `The file "${file.originalname}" was rejected because it did not have the .metis extension.`,
-            )
-
-            return handleMissionImportError(file, error)
-          }
         } catch (error: any) {
           // An error may occur due
           // to a syntax error with the JSON.
@@ -275,6 +247,33 @@ router.post(
           }
 
           error.message = errorMessage
+
+          return handleMissionImportError(file, error)
+        }
+
+        // If the file's schemaBuildNumber is 9
+        // or less and it is not a .cesar file,
+        // it is skipped.
+        if (
+          contents_JSON.schemaBuildNumber <= 9 &&
+          !file.originalname.toLowerCase().endsWith('.cesar')
+        ) {
+          let error: Error = new Error(
+            `The file "${file.originalname}" was rejected because it did not have the .cesar extension.`,
+          )
+
+          return handleMissionImportError(file, error)
+        }
+        // If the file's schemaBuildNumber is 10
+        // or greater and it is not a .metis file,
+        // it is skipped.
+        else if (
+          contents_JSON.schemaBuildNumber >= 10 &&
+          !file.originalname.toLowerCase().endsWith('.metis')
+        ) {
+          let error: Error = new Error(
+            `The file "${file.originalname}" was rejected because it did not have the .metis extension.`,
+          )
 
           return handleMissionImportError(file, error)
         }

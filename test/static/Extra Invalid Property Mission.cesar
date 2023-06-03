@@ -61,7 +61,7 @@
     {
       "nodeID": "1",
       "name": "Communications",
-      "color": "green",
+      "color": "#ffffff",
       "preExecutionText": "Communications has 0 available actions.",
       "depthPadding": 0,
       "executable": false,
@@ -132,7 +132,7 @@
     {
       "nodeID": "2",
       "name": "Cellular Network",
-      "color": "green",
+      "color": "#ffffff",
       "preExecutionText": "Cellular Network has 0 available actions.",
       "depthPadding": 0,
       "executable": false,
@@ -204,7 +204,7 @@
     {
       "nodeID": "5",
       "name": "Internet Provider",
-      "color": "green",
+      "color": "#ffffff",
       "preExecutionText": "Internet Provider has 0 available actions.",
       "depthPadding": 0,
       "executable": false,
@@ -275,7 +275,7 @@
     {
       "nodeID": "8",
       "name": "Instant Messaging",
-      "color": "green",
+      "color": "#ffffff",
       "preExecutionText": "Instant Messaging has 0 available actions.",
       "depthPadding": 0,
       "executable": false,
@@ -346,7 +346,7 @@
     {
       "nodeID": "11",
       "name": "File Sharing Service",
-      "color": "green",
+      "color": "#ffffff",
       "preExecutionText": "File Sharing Service has 0 available actions.",
       "depthPadding": 0,
       "executable": false,
@@ -417,7 +417,7 @@
     {
       "nodeID": "3",
       "name": "Callbank Cellular",
-      "color": "green",
+      "color": "#ffffff",
       "preExecutionText": "Callbank Cellular has 0 available actions.",
       "depthPadding": 0,
       "executable": false,
@@ -488,7 +488,7 @@
     {
       "nodeID": "6",
       "name": "Service Provider",
-      "color": "green",
+      "color": "#ffffff",
       "preExecutionText": "Service Provider has 0 available actions.",
       "depthPadding": 0,
       "executable": false,
@@ -529,7 +529,7 @@
     {
       "nodeID": "9",
       "name": "Service Provider",
-      "color": "green",
+      "color": "#ffffff",
       "preExecutionText": "Service Provider has 0 available actions.",
       "depthPadding": 0,
       "executable": false,
@@ -600,7 +600,7 @@
     {
       "nodeID": "12",
       "name": "Service Provider",
-      "color": "green",
+      "color": "#ffffff",
       "preExecutionText": "Service Provider has 0 available actions.",
       "depthPadding": 0,
       "executable": false,
@@ -671,7 +671,7 @@
     {
       "nodeID": "4",
       "name": "Cellular Towers",
-      "color": "green",
+      "color": "#ffffff",
       "preExecutionText": "Cellular Towers has 6 available actions.",
       "depthPadding": 0,
       "executable": true,
@@ -742,7 +742,7 @@
     {
       "nodeID": "7",
       "name": "Main Server",
-      "color": "green",
+      "color": "#ffffff",
       "preExecutionText": "Main Server has 6 available actions.",
       "depthPadding": 0,
       "executable": true,
@@ -813,7 +813,7 @@
     {
       "nodeID": "10",
       "name": "Main Server",
-      "color": "green",
+      "color": "#ffffff",
       "preExecutionText": "Main Server has 6 available actions.",
       "depthPadding": 0,
       "executable": true,
@@ -884,7 +884,7 @@
     {
       "nodeID": "13",
       "name": "Main Server",
-      "color": "green",
+      "color": "#ffffff",
       "preExecutionText": "Main Server has 6 available actions.",
       "depthPadding": 0,
       "executable": true,
@@ -955,7 +955,7 @@
     {
       "nodeID": "14",
       "name": "Air Defense",
-      "color": "pink",
+      "color": "#ffffff",
       "preExecutionText": "Air Defense has 0 available actions.",
       "depthPadding": 0,
       "executable": false,
@@ -1026,7 +1026,7 @@
     {
       "nodeID": "15",
       "name": "IADS Network",
-      "color": "pink",
+      "color": "#ffffff",
       "preExecutionText": "IADS Network has 0 available actions.",
       "depthPadding": 0,
       "executable": false,
@@ -1097,7 +1097,7 @@
     {
       "nodeID": "16",
       "name": "Individual IADS Sites",
-      "color": "pink",
+      "color": "#ffffff",
       "preExecutionText": "Individual IADS Sites has 0 available actions.",
       "depthPadding": 0,
       "executable": false,
@@ -1168,7 +1168,7 @@
     {
       "nodeID": "17",
       "name": "Launchers",
-      "color": "pink",
+      "color": "#ffffff",
       "preExecutionText": "Launchers has 6 available actions.",
       "depthPadding": 0,
       "executable": true,
@@ -1239,7 +1239,7 @@
     {
       "nodeID": "18",
       "name": "Radars",
-      "color": "pink",
+      "color": "#ffffff",
       "preExecutionText": "Radars has 6 available actions.",
       "depthPadding": 0,
       "executable": true,
@@ -1310,7 +1310,7 @@
     {
       "nodeID": "19",
       "name": "Infrastructure",
-      "color": "yellow",
+      "color": "#ffffff",
       "preExecutionText": "Infrastructure has 0 available actions.",
       "depthPadding": 0,
       "executable": false,
@@ -1381,7 +1381,7 @@
     {
       "nodeID": "20",
       "name": "Railroad System",
-      "color": "yellow",
+      "color": "#ffffff",
       "preExecutionText": "Railroad System has 0 available actions.",
       "depthPadding": 0,
       "executable": false,
@@ -1452,7 +1452,7 @@
     {
       "nodeID": "23",
       "name": "Electrical System",
-      "color": "yellow",
+      "color": "#ffffff",
       "preExecutionText": "Electrical System has 0 available actions.",
       "depthPadding": 0,
       "executable": false,
@@ -1523,7 +1523,7 @@
     {
       "nodeID": "25",
       "name": "Water System",
-      "color": "yellow",
+      "color": "#ffffff",
       "preExecutionText": "Water System has 0 available actions.",
       "depthPadding": 0,
       "executable": false,
@@ -1594,7 +1594,7 @@
     {
       "nodeID": "27",
       "name": "Road System",
-      "color": "yellow",
+      "color": "#ffffff",
       "preExecutionText": "Road System has 0 available actions.",
       "depthPadding": 0,
       "executable": false,
@@ -1665,7 +1665,7 @@
     {
       "nodeID": "21",
       "name": "Track Monitoring",
-      "color": "yellow",
+      "color": "#ffffff",
       "preExecutionText": "Track Monitoring has 6 available actions.",
       "depthPadding": 0,
       "executable": true,
@@ -1736,7 +1736,7 @@
     {
       "nodeID": "22",
       "name": "Track Switch System",
-      "color": "yellow",
+      "color": "#ffffff",
       "preExecutionText": "Track Switch System has 6 available actions.",
       "depthPadding": 0,
       "executable": true,
@@ -1807,7 +1807,7 @@
     {
       "nodeID": "24",
       "name": "Regional Service",
-      "color": "yellow",
+      "color": "#ffffff",
       "preExecutionText": "Regional Service has 6 available actions.",
       "depthPadding": 0,
       "executable": true,
@@ -1878,7 +1878,7 @@
     {
       "nodeID": "26",
       "name": "Valve System",
-      "color": "yellow",
+      "color": "#ffffff",
       "preExecutionText": "Valve System has 6 available actions.",
       "depthPadding": 0,
       "executable": true,
@@ -1949,7 +1949,7 @@
     {
       "nodeID": "28",
       "name": "Traffic Light System",
-      "color": "yellow",
+      "color": "#ffffff",
       "preExecutionText": "Traffic Light System has 6 available actions.",
       "depthPadding": 0,
       "executable": true,
@@ -2020,7 +2020,7 @@
     {
       "nodeID": "29",
       "name": "CCTV System",
-      "color": "yellow",
+      "color": "#ffffff",
       "preExecutionText": "CCTV System has 6 available actions.",
       "depthPadding": 0,
       "executable": true,
@@ -2091,7 +2091,7 @@
     {
       "nodeID": "30",
       "name": "Satellite Services",
-      "color": "blue",
+      "color": "#ffffff",
       "preExecutionText": "Satellite Services has 0 available actions.",
       "depthPadding": 0,
       "executable": false,
@@ -2162,7 +2162,7 @@
     {
       "nodeID": "31",
       "name": "Global Positioning",
-      "color": "blue",
+      "color": "#ffffff",
       "preExecutionText": "Global Positioning has 6 available actions.",
       "depthPadding": 0,
       "executable": true,
@@ -2233,7 +2233,7 @@
     {
       "nodeID": "32",
       "name": "Data Transfer",
-      "color": "blue",
+      "color": "#ffffff",
       "preExecutionText": "Data Transfer has 6 available actions.",
       "depthPadding": 0,
       "executable": true,
@@ -2304,7 +2304,7 @@
     {
       "nodeID": "33",
       "name": "Imagery Collection",
-      "color": "blue",
+      "color": "#ffffff",
       "preExecutionText": "Imagery Collection has 6 available actions.",
       "depthPadding": 0,
       "executable": true,
@@ -2375,7 +2375,7 @@
     {
       "nodeID": "34",
       "name": "Sensor Observation",
-      "color": "blue",
+      "color": "#ffffff",
       "preExecutionText": "Sensor Observation has 6 available actions.",
       "depthPadding": 0,
       "executable": true,
