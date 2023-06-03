@@ -1170,3 +1170,462 @@ describe('Request Query Validation', function () {
       })
   })
 })
+
+// Tests the schema validation functions that are
+// used to validate data that is trying to be sent
+// to the database to be stored.
+describe('Mission Schema Validation', function () {
+  chai.use(chaiHttp)
+
+  // Creates a session with a user because
+  // certain API routes require authentication
+  // for access
+  let agent: ChaiHttp.Agent = chai.request.agent(baseUrl)
+
+  // Stores all the missions that are in the
+  // database before the tests are run in this
+  // suite
+  let initialMissionIDArray: Array<string> = []
+
+  before(function (done) {
+    agent
+      .get('/api/v1/missions/')
+      .then(function (response: ChaiHttp.Response) {
+        expect(response).to.have.status(200)
+        // This sets the missionID that is used as a parameter
+        // within one of the tests of this suite.
+        missionID = response.body.missions[0].missionID
+
+        // Loops through the current missions and stores the current set
+        // of mission's IDs that are stored in the database so that after
+        // all the tests have run in this suite the missions that were
+        // created from the tests can be deleted.
+        // This is also an added security measure to help prevent
+        // deleting missions if the tests somehow access the "mdl"
+        // database instead of the "mdl-test" database.
+        response.body.missions.forEach((mission: any) => {
+          initialMissionIDArray.push(mission.missionID)
+        })
+      })
+      .catch(function (error) {
+        testLogger.error(error)
+      })
+
+    agent
+      .get('/api/v1/missions/environment/')
+      .then(function (response: ChaiHttp.Response) {
+        expect(response).to.have.status(200)
+        expect(response.body.environment).to.equal(process.env.environment)
+
+        if (response.body.environment === process.env.environment) {
+          agent
+            .post('/api/v1/users/login')
+            .send(userCredentials)
+            .then(function (response: ChaiHttp.Response) {
+              expect(response).to.have.status(200)
+              done()
+            })
+            .catch(function (error) {
+              testLogger.error(error)
+              done(error)
+            })
+        } else {
+          testLogger.error(
+            'Database is not using "mdl-test." Please make sure the test database is running.',
+          )
+          let error = new Error(
+            'Database is not using "mdl-test." Please make sure the test database is running.',
+          )
+          done(error)
+        }
+      })
+      .catch(function (error) {
+        testLogger.error(error)
+        done(error)
+      })
+  })
+
+  it('User should be logged in to be able to post missions to the database via the API', function (done) {
+    agent
+      .get('/api/v1/users/')
+      .then(function (response: ChaiHttp.Response) {
+        expect(response.body.currentUser).to.not.equal(null)
+        done()
+      })
+      .catch(function (error) {
+        testLogger.error(error)
+        done(error)
+      })
+  })
+
+  it('Creating a mission with a mission-node that has a color that is not a valid hex color code ("#fffffg") should result in an internal server error (500) response', function (done) {
+    testMission.mission.nodeData[0].color = '#fffffg'
+
+    agent
+      .post('/api/v1/missions/')
+      .set('Content-Type', 'application/json')
+      .send(testMission)
+      .then(function (response: ChaiHttp.Response) {
+        expect(response).to.have.status(500)
+        expect(response.error).to.not.equal(false)
+        expect(response.ok).to.equal(false)
+        done()
+      })
+      .catch(function (error: Error) {
+        testLogger.error(error)
+        done(error)
+      })
+  })
+
+  it('Creating a mission with a mission-node that has a color that is not a valid hex color code ("ffffff") should result in an internal server error (500) response', function (done) {
+    testMission.mission.nodeData[0].color = 'ffffff'
+
+    agent
+      .post('/api/v1/missions/')
+      .set('Content-Type', 'application/json')
+      .send(testMission)
+      .then(function (response: ChaiHttp.Response) {
+        expect(response).to.have.status(500)
+        expect(response.error).to.not.equal(false)
+        expect(response.ok).to.equal(false)
+        done()
+      })
+      .catch(function (error: Error) {
+        testLogger.error(error)
+        done(error)
+      })
+  })
+
+  it('Creating a mission with a mission-node that has a color that is not a valid hex color code ("#fffffff") should result in an internal server error (500) response', function (done) {
+    testMission.mission.nodeData[0].color = '#fffffff'
+
+    agent
+      .post('/api/v1/missions/')
+      .set('Content-Type', 'application/json')
+      .send(testMission)
+      .then(function (response: ChaiHttp.Response) {
+        expect(response).to.have.status(500)
+        expect(response.error).to.not.equal(false)
+        expect(response.ok).to.equal(false)
+        done()
+      })
+      .catch(function (error: Error) {
+        testLogger.error(error)
+        done(error)
+      })
+  })
+
+  it('Creating a mission with a mission-node that has a color that is not a valid hex color code ("white") should result in an internal server error (500) response', function (done) {
+    testMission.mission.nodeData[0].color = 'white'
+
+    agent
+      .post('/api/v1/missions/')
+      .set('Content-Type', 'application/json')
+      .send(testMission)
+      .then(function (response: ChaiHttp.Response) {
+        expect(response).to.have.status(500)
+        expect(response.error).to.not.equal(false)
+        expect(response.ok).to.equal(false)
+        done()
+      })
+      .catch(function (error: Error) {
+        testLogger.error(error)
+        done(error)
+      })
+  })
+
+  it('Creating a mission with a mission-node that has a color that is not a valid hex color code ("#white") should result in an internal server error (500) response', function (done) {
+    testMission.mission.nodeData[0].color = '#white'
+
+    agent
+      .post('/api/v1/missions/')
+      .set('Content-Type', 'application/json')
+      .send(testMission)
+      .then(function (response: ChaiHttp.Response) {
+        expect(response).to.have.status(500)
+        expect(response.error).to.not.equal(false)
+        expect(response.ok).to.equal(false)
+        done()
+      })
+      .catch(function (error: Error) {
+        testLogger.error(error)
+        done(error)
+      })
+  })
+
+  it('Creating a mission with a mission-node that has a color that is not a valid hex color code ("asfjsdjkf #ffffff sadlkfsld") should result in an internal server error (500) response', function (done) {
+    testMission.mission.nodeData[0].color = 'asfjsdjkf #ffffff sadlkfsld'
+
+    agent
+      .post('/api/v1/missions/')
+      .set('Content-Type', 'application/json')
+      .send(testMission)
+      .then(function (response: ChaiHttp.Response) {
+        expect(response).to.have.status(500)
+        expect(response.error).to.not.equal(false)
+        expect(response.ok).to.equal(false)
+        done()
+      })
+      .catch(function (error: Error) {
+        testLogger.error(error)
+        done(error)
+      })
+  })
+
+  it('Creating a mission with a mission-node that has a color that is not a valid hex color code ("asfjsdjkf#ffffffsadlkfsld") should result in an internal server error (500) response', function (done) {
+    testMission.mission.nodeData[0].color = 'asfjsdjkf#ffffffsadlkfsld'
+
+    agent
+      .post('/api/v1/missions/')
+      .set('Content-Type', 'application/json')
+      .send(testMission)
+      .then(function (response: ChaiHttp.Response) {
+        expect(response).to.have.status(500)
+        expect(response.error).to.not.equal(false)
+        expect(response.ok).to.equal(false)
+        done()
+      })
+      .catch(function (error: Error) {
+        testLogger.error(error)
+        done(error)
+      })
+  })
+
+  it('Creating a mission with a mission-node that has a color that is not a valid hex color code ("#6545169") should result in an internal server error (500) response', function (done) {
+    testMission.mission.nodeData[0].color = '#6545169'
+
+    agent
+      .post('/api/v1/missions/')
+      .set('Content-Type', 'application/json')
+      .send(testMission)
+      .then(function (response: ChaiHttp.Response) {
+        expect(response).to.have.status(500)
+        expect(response.error).to.not.equal(false)
+        expect(response.ok).to.equal(false)
+        done()
+      })
+      .catch(function (error: Error) {
+        testLogger.error(error)
+        done(error)
+      })
+  })
+
+  it('Creating a mission with a mission-node that has a color that is not a valid hex color code ("#abcdef99") should result in an internal server error (500) response', function (done) {
+    testMission.mission.nodeData[0].color = '#abcdef99'
+
+    agent
+      .post('/api/v1/missions/')
+      .set('Content-Type', 'application/json')
+      .send(testMission)
+      .then(function (response: ChaiHttp.Response) {
+        expect(response).to.have.status(500)
+        expect(response.error).to.not.equal(false)
+        expect(response.ok).to.equal(false)
+        done()
+      })
+      .catch(function (error: Error) {
+        testLogger.error(error)
+        done(error)
+      })
+  })
+
+  it('Creating a mission with a mission-node that has a color that is not a valid hex color code ("abcdef") should result in an internal server error (500) response', function (done) {
+    testMission.mission.nodeData[0].color = 'abcdef'
+
+    agent
+      .post('/api/v1/missions/')
+      .set('Content-Type', 'application/json')
+      .send(testMission)
+      .then(function (response: ChaiHttp.Response) {
+        expect(response).to.have.status(500)
+        expect(response.error).to.not.equal(false)
+        expect(response.ok).to.equal(false)
+        done()
+      })
+      .catch(function (error: Error) {
+        testLogger.error(error)
+        done(error)
+      })
+  })
+
+  it('Creating a mission with a mission-node that has a color that is not a valid hex color code ("fff") should result in an internal server error (500) response', function (done) {
+    testMission.mission.nodeData[0].color = 'fff'
+
+    agent
+      .post('/api/v1/missions/')
+      .set('Content-Type', 'application/json')
+      .send(testMission)
+      .then(function (response: ChaiHttp.Response) {
+        expect(response).to.have.status(500)
+        expect(response.error).to.not.equal(false)
+        expect(response.ok).to.equal(false)
+        done()
+      })
+      .catch(function (error: Error) {
+        testLogger.error(error)
+        done(error)
+      })
+  })
+
+  it('Creating a mission with a mission-node that has a color that is not a valid hex color code ("#fff") should result in an internal server error (500) response', function (done) {
+    testMission.mission.nodeData[0].color = '#fff'
+
+    agent
+      .post('/api/v1/missions/')
+      .set('Content-Type', 'application/json')
+      .send(testMission)
+      .then(function (response: ChaiHttp.Response) {
+        expect(response).to.have.status(500)
+        expect(response.error).to.not.equal(false)
+        expect(response.ok).to.equal(false)
+        done()
+      })
+      .catch(function (error: Error) {
+        testLogger.error(error)
+        done(error)
+      })
+  })
+
+  it('Creating a mission with a mission-node that has a color that is not a valid hex color code ("#*&@^%!") should result in an internal server error (500) response', function (done) {
+    testMission.mission.nodeData[0].color = '#*&@^%!'
+
+    agent
+      .post('/api/v1/missions/')
+      .set('Content-Type', 'application/json')
+      .send(testMission)
+      .then(function (response: ChaiHttp.Response) {
+        expect(response).to.have.status(500)
+        expect(response.error).to.not.equal(false)
+        expect(response.ok).to.equal(false)
+        done()
+      })
+      .catch(function (error: Error) {
+        testLogger.error(error)
+        done(error)
+      })
+  })
+
+  it('Creating a mission with a mission-node that has a color that is not a valid hex color code ("#+89496") should result in an internal server error (500) response', function (done) {
+    testMission.mission.nodeData[0].color = '#+89496'
+
+    agent
+      .post('/api/v1/missions/')
+      .set('Content-Type', 'application/json')
+      .send(testMission)
+      .then(function (response: ChaiHttp.Response) {
+        expect(response).to.have.status(500)
+        expect(response.error).to.not.equal(false)
+        expect(response.ok).to.equal(false)
+        done()
+      })
+      .catch(function (error: Error) {
+        testLogger.error(error)
+        done(error)
+      })
+  })
+
+  it('Creating a mission with a mission-node that has a color that is not a valid hex color code ("#89a96+") should result in an internal server error (500) response', function (done) {
+    testMission.mission.nodeData[0].color = '#89a96+'
+
+    agent
+      .post('/api/v1/missions/')
+      .set('Content-Type', 'application/json')
+      .send(testMission)
+      .then(function (response: ChaiHttp.Response) {
+        expect(response).to.have.status(500)
+        expect(response.error).to.not.equal(false)
+        expect(response.ok).to.equal(false)
+        done()
+      })
+      .catch(function (error: Error) {
+        testLogger.error(error)
+        done(error)
+      })
+  })
+
+  it('Creating a mission with a mission-node that has a color that is not a valid hex color code ("#8996+") should result in an internal server error (500) response', function (done) {
+    testMission.mission.nodeData[0].color = '#8996+'
+
+    agent
+      .post('/api/v1/missions/')
+      .set('Content-Type', 'application/json')
+      .send(testMission)
+      .then(function (response: ChaiHttp.Response) {
+        expect(response).to.have.status(500)
+        expect(response.error).to.not.equal(false)
+        expect(response.ok).to.equal(false)
+        done()
+      })
+      .catch(function (error: Error) {
+        testLogger.error(error)
+        done(error)
+      })
+  })
+
+  it('Creating a mission with a mission-node that has a color that is not a valid hex color code ("#896+") should result in an internal server error (500) response', function (done) {
+    testMission.mission.nodeData[0].color = '#896+'
+
+    agent
+      .post('/api/v1/missions/')
+      .set('Content-Type', 'application/json')
+      .send(testMission)
+      .then(function (response: ChaiHttp.Response) {
+        expect(response).to.have.status(500)
+        expect(response.error).to.not.equal(false)
+        expect(response.ok).to.equal(false)
+        done()
+      })
+      .catch(function (error: Error) {
+        testLogger.error(error)
+        done(error)
+      })
+  })
+
+  it('Creating a mission with a mission-node that has a color that is a valid hex color code ("#acde58") should result in a successful (200) response', function (done) {
+    testMission.mission.nodeData[0].color = '#acde58'
+
+    agent
+      .post('/api/v1/missions/')
+      .set('Content-Type', 'application/json')
+      .send(testMission)
+      .then(function (response: ChaiHttp.Response) {
+        expect(response).to.have.status(200)
+        expect(response.error).to.equal(false)
+        expect(response.ok).to.equal(true)
+        done()
+      })
+      .catch(function (error: Error) {
+        testLogger.error(error)
+        done(error)
+      })
+  })
+
+  after(function (done) {
+    // deletes all missions (except the missions that were
+    // in the database before the tests ran) in the test database
+    // that were created from the tests and then it closes
+    // the server and ends the session that was created in
+    // the before function.
+    agent
+      .get('/api/v1/missions/')
+      .then(function (response: ChaiHttp.Response) {
+        let missionArray: Array<any> = response.body.missions
+
+        for (let mission of missionArray) {
+          if (!initialMissionIDArray.includes(mission.missionID)) {
+            agent
+              .delete(`/api/v1/missions?missionID=${mission.missionID}`)
+              .end(function (error, response: ChaiHttp.Response) {
+                expect(response).to.have.status(200)
+                expect(error).to.equal(null)
+              })
+          }
+        }
+        done()
+      })
+      .catch(function (error) {
+        testLogger.error(error)
+        done(error)
+      })
+  })
+})
