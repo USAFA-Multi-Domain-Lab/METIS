@@ -199,7 +199,7 @@ export default function NodeActionAsset(props: {
     addAssetClassName += ' Disabled'
   }
 
-  if (assetOptions.length === 0) {
+  if (assetOptions.length === 0 && cancelAssetButtonIsDisplayed) {
     assetOptionsClassName += ' NoAssets'
     assetOptions.push(noAssetsText)
   }

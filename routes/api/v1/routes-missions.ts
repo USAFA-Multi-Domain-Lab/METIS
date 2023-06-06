@@ -534,15 +534,19 @@ router.put(
 router.put(
   '/',
   requireLogin,
-  validateRequestBodyKeys({
-    missionID: RequestBodyFilters.OBJECTID,
-    name: RequestBodyFilters.STRING,
-    versionNumber: RequestBodyFilters.NUMBER,
-    live: RequestBodyFilters.BOOLEAN,
-    initialResources: RequestBodyFilters.NUMBER,
-    nodeStructure: RequestBodyFilters.OBJECT,
-    nodeData: RequestBodyFilters.OBJECT,
-  }),
+  validateRequestBodyKeys(
+    {
+      missionID: RequestBodyFilters.OBJECTID,
+      live: RequestBodyFilters.BOOLEAN,
+    },
+    {
+      name: RequestBodyFilters.STRING,
+      versionNumber: RequestBodyFilters.NUMBER,
+      initialResources: RequestBodyFilters.NUMBER,
+      nodeStructure: RequestBodyFilters.OBJECT,
+      nodeData: RequestBodyFilters.OBJECT,
+    },
+  ),
   (request, response) => {
     let body: any = request.body
 

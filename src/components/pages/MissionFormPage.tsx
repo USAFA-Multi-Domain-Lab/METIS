@@ -3,7 +3,6 @@ import { useEffect, useState } from 'react'
 import {
   createMission,
   getMission,
-  getMissionNodeColorOptions,
   Mission,
   saveMission,
 } from '../../modules/missions'

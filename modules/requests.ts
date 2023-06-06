@@ -440,19 +440,12 @@ export const validateRequestBodyKeys = (
 
         // If a mission is being created/updated then the
         // structure of the response.body looks like this:
-        // body = { mission: { missionID: string, ... } }
+        // body = { mission: { missionID: string, ... } }.
         // Therefore logic is needed to see if body.mission
-        // is defined
-        if (request.body.mission) {
+        // is defined and the optional keys are being passed
+        // in the request
+        if (request.body.mission && key in request.body.mission) {
           try {
-            // If a key that is supposed to be in the request is not there
-            // then an error is thrown
-            if (request.body.mission && !(key in request.body.mission)) {
-              throw new Error(
-                `Bad Request_"${key}"-is-missing-in-the-body-of-the-request`,
-              )
-            }
-
             // Runs all the optional validator methods from the "RequestBodyFilter"
             // class that were passed in the request
             optionalValidator(request, key)
@@ -460,18 +453,12 @@ export const validateRequestBodyKeys = (
             // Handles either of the errors that have been thrown above
             errorsThrown.push(error)
           }
-        } else {
-          // If body.mission is undefined then the data
-          // being passed is in a JSON format
-          try {
-            // If a key that is supposed to be in the request is not there
-            // then an error is thrown
-            if (request.body && !(key in request.body)) {
-              throw new Error(
-                `Bad Request_"${key}"-is-missing-in-the-body-of-the-request`,
-              )
-            }
+        }
 
+        // If body.mission is undefined then the request.body needs
+        // to be validated and the optional keys are being passed
+        if (!request.body.mission && key in request.body) {
+          try {
             // Runs all the optional validator methods from the "RequestBodyFilter"
             // class that were passed in the request
             optionalValidator(request, key)

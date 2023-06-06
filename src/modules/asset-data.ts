@@ -2211,2128 +2211,2128 @@ export const assetData: AnyObject = {
       },
     },
   },
-  MDL: {
-    'Alpha Suite': {
-      ASCOT: {
-        Friendly: {
-          'Space': {
-            SAT_THAADS: {
-              Kill: {
-                label: 'SAT_THAADS: "kill"',
-                description: 'This kills the SAT_THAADS entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-            SAT_ISR: {
-              Kill: {
-                label: 'SAT_ISRL "kill"',
-                description: 'This kills the SAT_ISR entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-          },
-          'Cyber': {
-            'RED-DOOR': {
-              Kill: {
-                label: 'RED-DOOR: "kill"',
-                description: 'This kills the RED-DOOR entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-          },
-          'Air': {
-            'RPA-A': {
-              'Redirect RPA': {
-                label: 'RPA-A: "redirect RPA"',
-                description: 'This redirects the RPA-A entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-            'RPA-B': {
-              'Redirect RPA': {
-                label: 'RPA-B: "redirect RPA"',
-                description: 'This redirects the RPA-B entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-            'MQ-25': {
-              'Redirect RPA': {
-                label: 'MQ-25: "redirect RPA"',
-                description: 'This redirects the RPA entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-          },
-          'Land': {
-            'RESUPPLY': {
-              Kill: {
-                label: 'RESUPPLY: "kill"',
-                description: 'This will kill the resupply entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-            'THAADS-A': {
-              Kill: {
-                label: 'THAADS-A: "kill"',
-                description: 'This will kill the THAADS-A entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-            'THAADS-B': {
-              Kill: {
-                label: 'THAADS-B: "kill"',
-                description: 'This will kill the THAADS-B entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-            'THAADS-C': {
-              Kill: {
-                label: 'THAADS-C: "kill"',
-                description: 'This will kill the THAADS-C entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-            'THAADS ADOC': {
-              'Disable auto fire': {
-                label: 'THAADS ADOC: "disable auto fire"',
-                description:
-                  'This will disable auto fire for the THAADS ADOC entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-            'EZOHIGUMA-1': {
-              Kill: {
-                label: 'EZOHIGUMA-1: "kill"',
-                description: 'This will kill the EZOHIGUMA-1 entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-            'EZOHIGUMA-2': {
-              Kill: {
-                label: 'EZOHIGUMA-2: "kill"',
-                description: 'This will kill the EZOHIGUMA-2 entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-            'RPA-UPLINK': {
-              Kill: {
-                label: 'RPA-UPLINK: "kill"',
-                description: 'This will kill the RPA-UPLINK entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-            'LOGISTICS': {
-              Kill: {
-                label: 'LOGISTICS: "kill"',
-                description: 'This will kill the LOGISTICS entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-          },
-          'Surface': {},
-          'Sub-Surface': {},
-        },
-        Hostile: {
-          'Space': {
-            'PLA-SEARCH': {
-              Kill: {
-                label: 'PLA-SEARCH: "kill"',
-                description: 'This kills the PLA-SEARCH entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-          },
-          'Cyber': {},
-          'Air': {
-            'HAO-A': {
-              'Redirect HAO': {
-                label: 'HAO-A: "redirect HAO"',
-                description: 'This redirects the HAO-A entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-            'HAO-B': {
-              Kill: {
-                label: 'HAO-B: "redirect HAO"',
-                description: 'This redirects the HAO-B entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-            'HAO-C': {
-              Kill: {
-                label: 'HAO-C: "redirect HAO"',
-                description: 'This redirects the HAO-C entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-          },
-          'Land': {
-            'PLA ADOC': {
-              'Disable auto fire': {
-                label: 'PLA ADOC: "disable auto fire"',
-                description:
-                  'This will disable auto fire for the PLA ADOC entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-            'IADS_C-2-B': {
-              'Kill': {
-                label: 'IADS_C-2-B: "kill"',
-                description: 'This kills the IADS_C-2-B entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-              'Disable auto fire': {
-                label: 'IADS_C-2-B: "disable auto fire"',
-                description:
-                  'This will disable auto fire for the IADS_C-2-B entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-            'IADS_C-2-C': {
-              'Kill': {
-                label: 'IADS_C-2-C: "kill"',
-                description: 'This kills the IADS_C-2-C entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-              'Disable auto fire': {
-                label: 'IADS_C-2-C: "disable auto fire"',
-                description:
-                  'This will disable auto fire for the IADS_C-2-C entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-            'IADS_C-2-D': {
-              'Kill': {
-                label: 'IADS_C-2-D: "kill"',
-                description: 'This kills the IADS_C-2-D entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-              'Disable auto fire': {
-                label: 'IADS_C-2-D: "disable auto fire"',
-                description:
-                  'This will disable auto fire for the IADS_C-2-D entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-            'IADS_E-3-A': {
-              Kill: {
-                label: 'IADS_E-3-A: "kill"',
-                description: 'This kills the IADS_E-3-A entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-            'IADS_E-3-B': {
-              'Kill': {
-                label: 'IADS_E-3-B: "kill"',
-                description: 'This kills the IADS_E-3-B entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-              'Disable radar': {
-                label: 'IADS_E-3-B: "disable radar"',
-                description: 'This will disable the IADS_E-3-B radar entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-            'IADS_N-4-A': {
-              'Kill': {
-                label: 'IADS_N-4-A: "kill"',
-                description: 'This kills the IADS_N-4-A entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-              'Disable auto fire': {
-                label: 'IADS_N-4-A: "disable auto fire"',
-                description:
-                  'This will disable auto fire for the IADS_N-4-A entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-            'IADS_N-4-B': {
-              'Kill': {
-                label: 'IADS_N-4-B: "kill"',
-                description: 'This kills the IADS_N-4-B entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-              'Disable radar': {
-                label: 'IADS_N-4-B: "disable radar"',
-                description: 'This will disable the IADS_N-4-B radar entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-            'IADS_S-1-A': {
-              'Kill': {
-                label: 'IADS_S-1-A: "kill"',
-                description: 'This kills the IADS_S-1-A entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-              'Disable auto fire': {
-                label: 'IADS_S-1-A: "disable auto fire"',
-                description:
-                  'This will disable auto fire for the IADS_S-1-A entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-            'IADS_S-1-B': {
-              'Kill': {
-                label: 'IADS_S-1-B: "kill"',
-                description: 'This kills the IADS_S-1-B entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-              'Disable radar': {
-                label: 'IADS_S-1-B: "disable radar"',
-                description: 'This will disable the IADS_S-1-B radar entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-            'IADS_S-1-C': {
-              Kill: {
-                label: 'IADS_S-1-C: "kill"',
-                description: 'This kills the IADS_S-1-C entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-            'RUS-S300-A': {
-              Kill: {
-                label: 'RUS-S300-A: "kill"',
-                description: 'This kills the RUS-S300-A entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-            'RUS-S300-B': {
-              Kill: {
-                label: 'RUS-S300-B: "kill"',
-                description: 'This kills the RUS-S300-B entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-            'RUS-S300-C': {
-              Kill: {
-                label: 'RUS-S300-C: "kill"',
-                description: 'This kills the RUS-S300-C entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-            'INF-BN-A-10': {
-              Kill: {
-                label: 'INF-BN-A-10: "kill"',
-                description: 'This kills the INF-BN-A-10 entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-            'INF-BN-B-10': {
-              Kill: {
-                label: 'INF-BN-B-10: "kill"',
-                description: 'This kills the INF-BN-B-10 entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-            'INF-BN-C-10': {
-              Kill: {
-                label: 'INF-BN-C-10: "kill"',
-                description: 'This kills the INF-BN-C-10 entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-            'INF-BN-D-10': {
-              Kill: {
-                label: 'INF-BN-D-10: "kill"',
-                description: 'This kills the INF-BN-D-10 entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-            'INF-BN-E-10': {
-              Kill: {
-                label: 'INF-BN-E-10: "kill"',
-                description: 'This kills the INF-BN-E-10 entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-            'INF-BN-F-10': {
-              Kill: {
-                label: 'INF-BN-F-10: "kill"',
-                description: 'This kills the INF-BN-F-10 entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-            'INF-BN-G-10': {
-              Kill: {
-                label: 'INF-BN-G-10: "kill"',
-                description: 'This kills the INF-BN-G-10 entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-            'INF-CO-A-5': {
-              Kill: {
-                label: 'INF-CO-A-5: "kill"',
-                description: 'This kills the INF-CO-A-5 entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-            'INF-CO-B-5': {
-              Kill: {
-                label: 'INF-CO-B-5: "kill"',
-                description: 'This kills the INF-CO-B-5 entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-            'INF-CO-C-5': {
-              Kill: {
-                label: 'INF-CO-C-5: "kill"',
-                description: 'This kills the INF-CO-C-5 entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-            'INF-CO-D-5': {
-              Kill: {
-                label: 'INF-CO-D-5: "kill"',
-                description: 'This kills the INF-CO-D-5 entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-            'INF-CO-E-5': {
-              Kill: {
-                label: 'INF-CO-E-5: "kill"',
-                description: 'This kills the INF-CO-E-5 entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-            'INF-CO-F-5': {
-              Kill: {
-                label: 'INF-CO-F-5: "kill"',
-                description: 'This kills the INF-CO-F-5 entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-            'INF-CO-G-5': {
-              Kill: {
-                label: 'INF-CO-G-5: "kill"',
-                description: 'This kills the INF-CO-G-5 entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-            'INF-CO-H-5': {
-              Kill: {
-                label: 'INF-CO-H-5: "kill"',
-                description: 'This kills the INF-CO-H-5 entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-            'SOF-BN-A-8': {
-              Kill: {
-                label: 'SOF-BN-A-8: "kill"',
-                description: 'This kills the SOF-BN-A-8 entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-            'SOF-BN-B-8': {
-              Kill: {
-                label: 'SOF-BN-B-8: "kill"',
-                description: 'This kills the SOF-BN-B-8 entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-            'SOF-BN-C-8': {
-              Kill: {
-                label: 'SOF-BN-C-8: "kill"',
-                description: 'This kills the SOF-BN-C-8 entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-            'SOF-TM-A-3': {
-              Kill: {
-                label: 'SOF-TM-A-3: "kill"',
-                description: 'This kills the SOF-TM-A-3 entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-            'SOF-TM-B-3': {
-              Kill: {
-                label: 'SOF-TM-B-3: "kill"',
-                description: 'This kills the SOF-TM-B-3 entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-            'SOF-TM-C-3': {
-              Kill: {
-                label: 'SOF-TM-C-3: "kill"',
-                description: 'This kills the SOF-TM-C-3 entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-            'SOF-TM-D-3': {
-              Kill: {
-                label: 'SOF-TM-D-3: "kill"',
-                description: 'This kills the SOF-TM-D-3 entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-            'SOF-TM-E-3': {
-              Kill: {
-                label: 'SOF-TM-E-3: "kill"',
-                description: 'This kills the SOF-TM-E-3 entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-            'PLA-C2-HOK': {
-              Kill: {
-                label: 'PLA-C2-HOK: "kill"',
-                description: 'This kills the PLA-C2-HOK entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-          },
-          'Surface': {
-            'PLA-CVN': {
-              Kill: {
-                label: 'PLA-CVN: "kill"',
-                description: 'This kills the PLA-CVN entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-            'PLA-DDG-A': {
-              'Kill': {
-                label: 'PLA-DDG-A: "kill"',
-                description: 'This kills the PLA-DDG-A entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-              'Disable auto fire': {
-                label: 'PLA-DDG-A: "disable auto fire"',
-                description:
-                  'This will disable auto fire for the PLA-DDG-A entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-            'PLA-DDG-B': {
-              'Kill': {
-                label: 'PLA-DDG-B: "kill"',
-                description: 'This kills the PLA-DDG-B entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-              'Disable auto fire': {
-                label: 'PLA-DDG-B: "disable auto fire"',
-                description:
-                  'This will disable auto fire for the PLA-DDG-B entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-            'PLA-DDG-C': {
-              'Kill': {
-                label: 'PLA-DDG-C: "kill"',
-                description: 'This kills the PLA-DDG-C entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-              'Disable auto fire': {
-                label: 'PLA-DDG-C: "disable auto fire"',
-                description:
-                  'This will disable auto fire for the PLA-DDG-C entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-            'PLA-DDG-D': {
-              'Kill': {
-                label: 'PLA-DDG-D: "kill"',
-                description: 'This kills the PLA-DDG-D entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-              'Disable auto fire': {
-                label: 'PLA-DDG-D: "disable auto fire"',
-                description:
-                  'This will disable auto fire for the PLA-DDG-D entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-          },
-          'Sub-Surface': {
-            'PLA-SSN-A': {
-              Kill: {
-                label: 'PLA-SSN-A: "kill"',
-                description: 'This kills the PLA-SSN-A entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-            'PLA-SSN-B': {
-              Kill: {
-                label: 'PLA-SSN-B: "kill"',
-                description: 'This kills the PLA-SSN-B entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-          },
-        },
-        Neutral: {
-          'Space': { 'CBCN-SAT': {} },
-          'Cyber': {},
-          'Air': {},
-          'Land': {
-            'CBCN-NODE': {
-              Disable: {
-                label: 'CBCN-NODE: "disable"',
-                description: 'This disables the CBCN-NODE entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-            'CBCN-SERVER': {
-              Disable: {
-                label: 'CBCN-SERVER: "disable"',
-                description: 'This disables the CBCN-SERVER entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-            'CBCN001-139': {
-              Disable: {
-                label: 'CBCN001-139: "disable"',
-                description: 'This disables the CBCN001-139 entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-            'CBCN998': {
-              Disable: {
-                label: 'CBCN998: "disable"',
-                description: 'This disables the CBCN998 entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-            'CBCN999': {
-              Disable: {
-                label: 'CBCN999: "disable"',
-                description: 'This disables the CBCN999 entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-          },
-          'Surface': {},
-          'Sub-Surface': {},
-        },
-        Unknown: {
-          'Space': {},
-          'Cyber': {},
-          'Air': {},
-          'Land': {},
-          'Surface': {},
-          'Sub-Surface': {},
-        },
-      },
-      mIRC: {
-        'mIRC Server': {
-          EFFECTS: ['Shutdown Server', 'List all channels', 'List all users'],
-        },
-        'Channels': {
-          CJTF_H_COMMAND_A: {
-            'Spoof Channel': {
-              label: 'CJTF_H_COMMAND_A: "spoof channel"',
-              description: 'This spoofs the CJTF_H_COMMAND_A channel.',
-              scriptName: '',
-              originalPath: '',
-              args: {},
-            },
-          },
-          JFACC_OPS_A: {
-            'Spoof Channel': {
-              label: 'JFACC_OPS_A: "spoof channel"',
-              description: 'This spoofs the JFACC_OPS_A channel.',
-              scriptName: '',
-              originalPath: '',
-              args: {},
-            },
-          },
-          JFLCC_OPS_A: {
-            'Spoof Channel': {
-              label: 'JFLCC_OPS_A: "spoof channel"',
-              description: 'This spoofs the JFLCC_OPS_A channel.',
-              scriptName: '',
-              originalPath: '',
-              args: {},
-            },
-          },
-          JFMCC_OPS_A: {
-            'Spoof Channel': {
-              label: 'JFMCC_OPS_A: "spoof channel"',
-              description: 'This spoofs the JFMCC_OPS_A channel.',
-              scriptName: '',
-              originalPath: '',
-              args: {},
-            },
-          },
-          JFSOCC_OPS_A: {
-            'Spoof Channel': {
-              label: 'JFSOCC_OPS_A: "spoof channel"',
-              description: 'This spoofs the JFSOCC_OPS_A channel.',
-              scriptName: '',
-              originalPath: '',
-              args: {},
-            },
-          },
-          JFSCC_OPS_A: {
-            'Spoof Channel': {
-              label: 'JFSCC_OPS_A: "spoof channel"',
-              description: 'This spoofs the JFSCC_OPS_A channel.',
-              scriptName: '',
-              originalPath: '',
-              args: {},
-            },
-          },
-          JFCCC_OPS_A: {
-            'Spoof Channel': {
-              label: 'JFCCC_OPS_A: "spoof channel"',
-              description: 'This spoofs the JFCCC_OPS_A channel.',
-              scriptName: '',
-              originalPath: '',
-              args: {},
-            },
-          },
-          TEXT_2_SPEECH_A: {
-            'Spoof Channel': {
-              label: 'TEXT_2_SPEECH_A: "spoof channel"',
-              description: 'This spoofs the TEXT_2_SPEECH_A channel.',
-              scriptName: '',
-              originalPath: '',
-              args: {},
-            },
-          },
-          AUDIO_TRIGGER_A: {
-            'Spoof Channel': {
-              label: 'AUDIO_TRIGGER_A: "spoof channel"',
-              description: 'This spoofs the AUDIO_TRIGGER_A channel.',
-              scriptName: '',
-              originalPath: '',
-              args: {},
-            },
-          },
-          ALL_SOURCE_INTEL_A: {
-            'Spoof Channel': {
-              label: 'ALL_SOURCE_INTEL_A: "spoof channel"',
-              description: 'This spoofs the ALL_SOURCE_INTEL_A channel.',
-              scriptName: '',
-              originalPath: '',
-              args: {},
-            },
-          },
-          CESAR_A: {
-            'Spoof Channel': {
-              label: 'CESAR_A: "spoof channel"',
-              description: 'This spoofs the CESAR_A channel.',
-              scriptName: '',
-              originalPath: '',
-              args: {},
-            },
-          },
-          METIS_A: {
-            'Spoof Channel': {
-              label: 'METIS_A: "spoof channel"',
-              description: 'This spoofs the METIS_A channel.',
-              scriptName: '',
-              originalPath: '',
-              args: {},
-            },
-          },
-          AWACS_A: {
-            'Spoof Channel': {
-              label: 'AWACS_A: "spoof channel"',
-              description: 'This spoofs the AWACS_A channel.',
-              scriptName: '',
-              originalPath: '',
-              args: {},
-            },
-          },
-        },
-      },
-      Sonomarc: {
-        Frequencies: {
-          'BEIGE-41': {
-            'Jam Frequency': {
-              label: 'BEIGE-41: "jam frequency"',
-              description: 'This jams the BEIGE-41 frequency.',
-              scriptName: '',
-              originalPath: '',
-              args: {},
-            },
-          },
-          'CRIMMSON-28': {
-            'Jam Frequency': {
-              label: 'CRIMMSON-28: "jam frequency"',
-              description: 'This jams the CRIMMSON-28 frequency.',
-              scriptName: '',
-              originalPath: '',
-              args: {},
-            },
-          },
-          'VIOLET-26': {
-            'Jam Frequency': {
-              label: 'VIOLET-26: "jam frequency"',
-              description: 'This jams the VIOLET-26 frequency.',
-              scriptName: '',
-              originalPath: '',
-              args: {},
-            },
-          },
-          'TEAL-36': {
-            'Jam Frequency': {
-              label: 'TEAL-36: "jam frequency"',
-              description: 'This jams the TEAL-36 frequency.',
-              scriptName: '',
-              originalPath: '',
-              args: {},
-            },
-          },
-          'AMBER-38': {
-            'Jam Frequency': {
-              label: 'AMBER-38: "jam frequency"',
-              description: 'This jams the AMBER-38 frequency.',
-              scriptName: '',
-              originalPath: '',
-              args: {},
-            },
-          },
-          'COBALT-45': {
-            'Jam Frequency': {
-              label: 'COBALT-45: "jam frequency"',
-              description: 'This jams the COBALT-45 frequency.',
-              scriptName: '',
-              originalPath: '',
-              args: {},
-            },
-          },
-          'SAGE-32': {
-            'Jam Frequency': {
-              label: 'SAGE-32: "jam frequency"',
-              description: 'This jams the SAGE-32 frequency.',
-              scriptName: '',
-              originalPath: '',
-              args: {},
-            },
-          },
-          'SCARLETT-28': {
-            'Jam Frequency': {
-              label: 'SCARLETT-28: "jam frequency"',
-              description: 'This jams the SCARLETT-28 frequency.',
-              scriptName: '',
-              originalPath: '',
-              args: {},
-            },
-          },
-          'SIENNA-31': {
-            'Jam Frequency': {
-              label: 'SIENNA-31: "jam frequency"',
-              description: 'This jams the SIENNA-31 frequency.',
-              scriptName: '',
-              originalPath: '',
-              args: {},
-            },
-          },
-          'ROYAL-44': {
-            'Jam Frequency': {
-              label: 'ROYAL-44: "jam frequency"',
-              description: 'This jams the ROYAL-44 frequency.',
-              scriptName: '',
-              originalPath: '',
-              args: {},
-            },
-          },
-          'CIDER-23': {
-            'Jam Frequency': {
-              label: 'CIDER-23: "jam frequency"',
-              description: 'This jams the CIDER-23 frequency.',
-              scriptName: '',
-              originalPath: '',
-              args: {},
-            },
-          },
-          'PLUM-33': {
-            'Jam Frequency': {
-              label: 'PLUM-33: "jam frequency"',
-              description: 'This jams the PLUM-33 frequency.',
-              scriptName: '',
-              originalPath: '',
-              args: {},
-            },
-          },
-          'SAPPHIRE-24': {
-            'Jam Frequency': {
-              label: 'SAPPHIRE-24: "jam frequency"',
-              description: 'This jams the SAPPHIRE-24 frequency.',
-              scriptName: '',
-              originalPath: '',
-              args: {},
-            },
-          },
-          'PEWTER-35': {
-            'Jam Frequency': {
-              label: 'PEWTER-35: "jam frequency"',
-              description: 'This jams the PEWTER-35 frequency.',
-              scriptName: '',
-              originalPath: '',
-              args: {},
-            },
-          },
-          'LIME-30': {
-            'Jam Frequency': {
-              label: 'LIME-30: "jam frequency"',
-              description: 'This jams the LIME-30 frequency.',
-              scriptName: '',
-              originalPath: '',
-              args: {},
-            },
-          },
-          'HAZEL-47': {
-            'Jam Frequency': {
-              label: 'HAZEL-47: "jam frequency"',
-              description: 'This jams the HAZEL-47 frequency.',
-              scriptName: '',
-              originalPath: '',
-              args: {},
-            },
-          },
-          'YELLOW-16': {
-            'Jam Frequency': {
-              label: 'YELLOW-16: "jam frequency"',
-              description: 'This jams the YELLOW-16 frequency.',
-              scriptName: '',
-              originalPath: '',
-              args: {},
-            },
-          },
-          'RUBY-22': {
-            'Jam Frequency': {
-              label: 'RUBY-22: "jam frequency"',
-              description: 'This jams the RUBY-22 frequency.',
-              scriptName: '',
-              originalPath: '',
-              args: {},
-            },
-          },
-          'MOCHA-38': {
-            'Jam Frequency': {
-              label: 'MOCHA-38: "jam frequency"',
-              description: 'This jams the MOCHA-38 frequency.',
-              scriptName: '',
-              originalPath: '',
-              args: {},
-            },
-          },
-        },
-      },
-    },
-    'Omega Suite': {
-      ASCOT: {
-        Friendly: {
-          'Space': {
-            SAT_THAADS: {
-              Kill: {
-                label: 'SAT_THAADS: "kill"',
-                description: 'This kills the SAT_THAADS entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-            SAT_ISR: {
-              Kill: {
-                label: 'SAT_ISRL "kill"',
-                description: 'This kills the SAT_ISR entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-          },
-          'Cyber': {
-            'RED-DOOR': {
-              Kill: {
-                label: 'RED-DOOR: "kill"',
-                description: 'This kills the RED-DOOR entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-          },
-          'Air': {
-            'RPA-A': {
-              'Redirect RPA': {
-                label: 'RPA-A: "redirect RPA"',
-                description: 'This redirects the RPA-A entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-            'RPA-B': {
-              'Redirect RPA': {
-                label: 'RPA-B: "redirect RPA"',
-                description: 'This redirects the RPA-B entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-            'MQ-25': {
-              'Redirect RPA': {
-                label: 'MQ-25: "redirect RPA"',
-                description: 'This redirects the RPA entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-          },
-          'Land': {
-            'RESUPPLY': {
-              Kill: {
-                label: 'RESUPPLY: "kill"',
-                description: 'This will kill the resupply entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-            'THAADS-A': {
-              Kill: {
-                label: 'THAADS-A: "kill"',
-                description: 'This will kill the THAADS-A entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-            'THAADS-B': {
-              Kill: {
-                label: 'THAADS-B: "kill"',
-                description: 'This will kill the THAADS-B entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-            'THAADS-C': {
-              Kill: {
-                label: 'THAADS-C: "kill"',
-                description: 'This will kill the THAADS-C entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-            'THAADS ADOC': {
-              'Disable auto fire': {
-                label: 'THAADS ADOC: "disable auto fire"',
-                description:
-                  'This will disable auto fire for the THAADS ADOC entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-            'EZOHIGUMA-1': {
-              Kill: {
-                label: 'EZOHIGUMA-1: "kill"',
-                description: 'This will kill the EZOHIGUMA-1 entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-            'EZOHIGUMA-2': {
-              Kill: {
-                label: 'EZOHIGUMA-2: "kill"',
-                description: 'This will kill the EZOHIGUMA-2 entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-            'RPA-UPLINK': {
-              Kill: {
-                label: 'RPA-UPLINK: "kill"',
-                description: 'This will kill the RPA-UPLINK entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-            'LOGISTICS': {
-              Kill: {
-                label: 'LOGISTICS: "kill"',
-                description: 'This will kill the LOGISTICS entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-          },
-          'Surface': {},
-          'Sub-Surface': {},
-        },
-        Hostile: {
-          'Space': {
-            'PLA-SEARCH': {
-              Kill: {
-                label: 'PLA-SEARCH: "kill"',
-                description: 'This kills the PLA-SEARCH entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-          },
-          'Cyber': {},
-          'Air': {
-            'HAO-A': {
-              'Redirect HAO': {
-                label: 'HAO-A: "redirect HAO"',
-                description: 'This redirects the HAO-A entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-            'HAO-B': {
-              Kill: {
-                label: 'HAO-B: "redirect HAO"',
-                description: 'This redirects the HAO-B entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-            'HAO-C': {
-              Kill: {
-                label: 'HAO-C: "redirect HAO"',
-                description: 'This redirects the HAO-C entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-          },
-          'Land': {
-            'PLA ADOC': {
-              'Disable auto fire': {
-                label: 'PLA ADOC: "disable auto fire"',
-                description:
-                  'This will disable auto fire for the PLA ADOC entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-            'IADS_C-2-B': {
-              'Kill': {
-                label: 'IADS_C-2-B: "kill"',
-                description: 'This kills the IADS_C-2-B entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-              'Disable auto fire': {
-                label: 'IADS_C-2-B: "disable auto fire"',
-                description:
-                  'This will disable auto fire for the IADS_C-2-B entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-            'IADS_C-2-C': {
-              'Kill': {
-                label: 'IADS_C-2-C: "kill"',
-                description: 'This kills the IADS_C-2-C entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-              'Disable auto fire': {
-                label: 'IADS_C-2-C: "disable auto fire"',
-                description:
-                  'This will disable auto fire for the IADS_C-2-C entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-            'IADS_C-2-D': {
-              'Kill': {
-                label: 'IADS_C-2-D: "kill"',
-                description: 'This kills the IADS_C-2-D entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-              'Disable auto fire': {
-                label: 'IADS_C-2-D: "disable auto fire"',
-                description:
-                  'This will disable auto fire for the IADS_C-2-D entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-            'IADS_E-3-A': {
-              Kill: {
-                label: 'IADS_E-3-A: "kill"',
-                description: 'This kills the IADS_E-3-A entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-            'IADS_E-3-B': {
-              'Kill': {
-                label: 'IADS_E-3-B: "kill"',
-                description: 'This kills the IADS_E-3-B entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-              'Disable radar': {
-                label: 'IADS_E-3-B: "disable radar"',
-                description: 'This will disable the IADS_E-3-B radar entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-            'IADS_N-4-A': {
-              'Kill': {
-                label: 'IADS_N-4-A: "kill"',
-                description: 'This kills the IADS_N-4-A entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-              'Disable auto fire': {
-                label: 'IADS_N-4-A: "disable auto fire"',
-                description:
-                  'This will disable auto fire for the IADS_N-4-A entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-            'IADS_N-4-B': {
-              'Kill': {
-                label: 'IADS_N-4-B: "kill"',
-                description: 'This kills the IADS_N-4-B entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-              'Disable radar': {
-                label: 'IADS_N-4-B: "disable radar"',
-                description: 'This will disable the IADS_N-4-B radar entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-            'IADS_S-1-A': {
-              'Kill': {
-                label: 'IADS_S-1-A: "kill"',
-                description: 'This kills the IADS_S-1-A entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-              'Disable auto fire': {
-                label: 'IADS_S-1-A: "disable auto fire"',
-                description:
-                  'This will disable auto fire for the IADS_S-1-A entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-            'IADS_S-1-B': {
-              'Kill': {
-                label: 'IADS_S-1-B: "kill"',
-                description: 'This kills the IADS_S-1-B entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-              'Disable radar': {
-                label: 'IADS_S-1-B: "disable radar"',
-                description: 'This will disable the IADS_S-1-B radar entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-            'IADS_S-1-C': {
-              Kill: {
-                label: 'IADS_S-1-C: "kill"',
-                description: 'This kills the IADS_S-1-C entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-            'RUS-S300-A': {
-              Kill: {
-                label: 'RUS-S300-A: "kill"',
-                description: 'This kills the RUS-S300-A entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-            'RUS-S300-B': {
-              Kill: {
-                label: 'RUS-S300-B: "kill"',
-                description: 'This kills the RUS-S300-B entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-            'RUS-S300-C': {
-              Kill: {
-                label: 'RUS-S300-C: "kill"',
-                description: 'This kills the RUS-S300-C entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-            'INF-BN-A-10': {
-              Kill: {
-                label: 'INF-BN-A-10: "kill"',
-                description: 'This kills the INF-BN-A-10 entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-            'INF-BN-B-10': {
-              Kill: {
-                label: 'INF-BN-B-10: "kill"',
-                description: 'This kills the INF-BN-B-10 entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-            'INF-BN-C-10': {
-              Kill: {
-                label: 'INF-BN-C-10: "kill"',
-                description: 'This kills the INF-BN-C-10 entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-            'INF-BN-D-10': {
-              Kill: {
-                label: 'INF-BN-D-10: "kill"',
-                description: 'This kills the INF-BN-D-10 entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-            'INF-BN-E-10': {
-              Kill: {
-                label: 'INF-BN-E-10: "kill"',
-                description: 'This kills the INF-BN-E-10 entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-            'INF-BN-F-10': {
-              Kill: {
-                label: 'INF-BN-F-10: "kill"',
-                description: 'This kills the INF-BN-F-10 entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-            'INF-BN-G-10': {
-              Kill: {
-                label: 'INF-BN-G-10: "kill"',
-                description: 'This kills the INF-BN-G-10 entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-            'INF-CO-A-5': {
-              Kill: {
-                label: 'INF-CO-A-5: "kill"',
-                description: 'This kills the INF-CO-A-5 entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-            'INF-CO-B-5': {
-              Kill: {
-                label: 'INF-CO-B-5: "kill"',
-                description: 'This kills the INF-CO-B-5 entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-            'INF-CO-C-5': {
-              Kill: {
-                label: 'INF-CO-C-5: "kill"',
-                description: 'This kills the INF-CO-C-5 entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-            'INF-CO-D-5': {
-              Kill: {
-                label: 'INF-CO-D-5: "kill"',
-                description: 'This kills the INF-CO-D-5 entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-            'INF-CO-E-5': {
-              Kill: {
-                label: 'INF-CO-E-5: "kill"',
-                description: 'This kills the INF-CO-E-5 entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-            'INF-CO-F-5': {
-              Kill: {
-                label: 'INF-CO-F-5: "kill"',
-                description: 'This kills the INF-CO-F-5 entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-            'INF-CO-G-5': {
-              Kill: {
-                label: 'INF-CO-G-5: "kill"',
-                description: 'This kills the INF-CO-G-5 entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-            'INF-CO-H-5': {
-              Kill: {
-                label: 'INF-CO-H-5: "kill"',
-                description: 'This kills the INF-CO-H-5 entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-            'SOF-BN-A-8': {
-              Kill: {
-                label: 'SOF-BN-A-8: "kill"',
-                description: 'This kills the SOF-BN-A-8 entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-            'SOF-BN-B-8': {
-              Kill: {
-                label: 'SOF-BN-B-8: "kill"',
-                description: 'This kills the SOF-BN-B-8 entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-            'SOF-BN-C-8': {
-              Kill: {
-                label: 'SOF-BN-C-8: "kill"',
-                description: 'This kills the SOF-BN-C-8 entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-            'SOF-TM-A-3': {
-              Kill: {
-                label: 'SOF-TM-A-3: "kill"',
-                description: 'This kills the SOF-TM-A-3 entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-            'SOF-TM-B-3': {
-              Kill: {
-                label: 'SOF-TM-B-3: "kill"',
-                description: 'This kills the SOF-TM-B-3 entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-            'SOF-TM-C-3': {
-              Kill: {
-                label: 'SOF-TM-C-3: "kill"',
-                description: 'This kills the SOF-TM-C-3 entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-            'SOF-TM-D-3': {
-              Kill: {
-                label: 'SOF-TM-D-3: "kill"',
-                description: 'This kills the SOF-TM-D-3 entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-            'SOF-TM-E-3': {
-              Kill: {
-                label: 'SOF-TM-E-3: "kill"',
-                description: 'This kills the SOF-TM-E-3 entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-            'PLA-C2-HOK': {
-              Kill: {
-                label: 'PLA-C2-HOK: "kill"',
-                description: 'This kills the PLA-C2-HOK entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-          },
-          'Surface': {
-            'PLA-CVN': {
-              Kill: {
-                label: 'PLA-CVN: "kill"',
-                description: 'This kills the PLA-CVN entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-            'PLA-DDG-A': {
-              'Kill': {
-                label: 'PLA-DDG-A: "kill"',
-                description: 'This kills the PLA-DDG-A entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-              'Disable auto fire': {
-                label: 'PLA-DDG-A: "disable auto fire"',
-                description:
-                  'This will disable auto fire for the PLA-DDG-A entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-            'PLA-DDG-B': {
-              'Kill': {
-                label: 'PLA-DDG-B: "kill"',
-                description: 'This kills the PLA-DDG-B entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-              'Disable auto fire': {
-                label: 'PLA-DDG-B: "disable auto fire"',
-                description:
-                  'This will disable auto fire for the PLA-DDG-B entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-            'PLA-DDG-C': {
-              'Kill': {
-                label: 'PLA-DDG-C: "kill"',
-                description: 'This kills the PLA-DDG-C entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-              'Disable auto fire': {
-                label: 'PLA-DDG-C: "disable auto fire"',
-                description:
-                  'This will disable auto fire for the PLA-DDG-C entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-            'PLA-DDG-D': {
-              'Kill': {
-                label: 'PLA-DDG-D: "kill"',
-                description: 'This kills the PLA-DDG-D entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-              'Disable auto fire': {
-                label: 'PLA-DDG-D: "disable auto fire"',
-                description:
-                  'This will disable auto fire for the PLA-DDG-D entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-          },
-          'Sub-Surface': {
-            'PLA-SSN-A': {
-              Kill: {
-                label: 'PLA-SSN-A: "kill"',
-                description: 'This kills the PLA-SSN-A entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-            'PLA-SSN-B': {
-              Kill: {
-                label: 'PLA-SSN-B: "kill"',
-                description: 'This kills the PLA-SSN-B entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-          },
-        },
-        Neutral: {
-          'Space': { 'CBCN-SAT': {} },
-          'Cyber': {},
-          'Air': {},
-          'Land': {
-            'CBCN-NODE': {
-              Disable: {
-                label: 'CBCN-NODE: "disable"',
-                description: 'This disables the CBCN-NODE entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-            'CBCN-SERVER': {
-              Disable: {
-                label: 'CBCN-SERVER: "disable"',
-                description: 'This disables the CBCN-SERVER entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-            'CBCN001-139': {
-              Disable: {
-                label: 'CBCN001-139: "disable"',
-                description: 'This disables the CBCN001-139 entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-            'CBCN998': {
-              Disable: {
-                label: 'CBCN998: "disable"',
-                description: 'This disables the CBCN998 entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-            'CBCN999': {
-              Disable: {
-                label: 'CBCN999: "disable"',
-                description: 'This disables the CBCN999 entity.',
-                scriptName: '',
-                originalPath: '',
-                args: {},
-              },
-            },
-          },
-          'Surface': {},
-          'Sub-Surface': {},
-        },
-        Unknown: {
-          'Space': {},
-          'Cyber': {},
-          'Air': {},
-          'Land': {},
-          'Surface': {},
-          'Sub-Surface': {},
-        },
-      },
-      mIRC: {
-        'mIRC Server': {
-          EFFECTS: ['Shutdown Server', 'List all channels', 'List all users'],
-        },
-        'Channels': {
-          CJTF_H_COMMAND_A: {
-            'Spoof Channel': {
-              label: 'CJTF_H_COMMAND_A: "spoof channel"',
-              description: 'This spoofs the CJTF_H_COMMAND_A channel.',
-              scriptName: '',
-              originalPath: '',
-              args: {},
-            },
-          },
-          JFACC_OPS_A: {
-            'Spoof Channel': {
-              label: 'JFACC_OPS_A: "spoof channel"',
-              description: 'This spoofs the JFACC_OPS_A channel.',
-              scriptName: '',
-              originalPath: '',
-              args: {},
-            },
-          },
-          JFLCC_OPS_A: {
-            'Spoof Channel': {
-              label: 'JFLCC_OPS_A: "spoof channel"',
-              description: 'This spoofs the JFLCC_OPS_A channel.',
-              scriptName: '',
-              originalPath: '',
-              args: {},
-            },
-          },
-          JFMCC_OPS_A: {
-            'Spoof Channel': {
-              label: 'JFMCC_OPS_A: "spoof channel"',
-              description: 'This spoofs the JFMCC_OPS_A channel.',
-              scriptName: '',
-              originalPath: '',
-              args: {},
-            },
-          },
-          JFSOCC_OPS_A: {
-            'Spoof Channel': {
-              label: 'JFSOCC_OPS_A: "spoof channel"',
-              description: 'This spoofs the JFSOCC_OPS_A channel.',
-              scriptName: '',
-              originalPath: '',
-              args: {},
-            },
-          },
-          JFSCC_OPS_A: {
-            'Spoof Channel': {
-              label: 'JFSCC_OPS_A: "spoof channel"',
-              description: 'This spoofs the JFSCC_OPS_A channel.',
-              scriptName: '',
-              originalPath: '',
-              args: {},
-            },
-          },
-          JFCCC_OPS_A: {
-            'Spoof Channel': {
-              label: 'JFCCC_OPS_A: "spoof channel"',
-              description: 'This spoofs the JFCCC_OPS_A channel.',
-              scriptName: '',
-              originalPath: '',
-              args: {},
-            },
-          },
-          TEXT_2_SPEECH_A: {
-            'Spoof Channel': {
-              label: 'TEXT_2_SPEECH_A: "spoof channel"',
-              description: 'This spoofs the TEXT_2_SPEECH_A channel.',
-              scriptName: '',
-              originalPath: '',
-              args: {},
-            },
-          },
-          AUDIO_TRIGGER_A: {
-            'Spoof Channel': {
-              label: 'AUDIO_TRIGGER_A: "spoof channel"',
-              description: 'This spoofs the AUDIO_TRIGGER_A channel.',
-              scriptName: '',
-              originalPath: '',
-              args: {},
-            },
-          },
-          ALL_SOURCE_INTEL_A: {
-            'Spoof Channel': {
-              label: 'ALL_SOURCE_INTEL_A: "spoof channel"',
-              description: 'This spoofs the ALL_SOURCE_INTEL_A channel.',
-              scriptName: '',
-              originalPath: '',
-              args: {},
-            },
-          },
-          CESAR_A: {
-            'Spoof Channel': {
-              label: 'CESAR_A: "spoof channel"',
-              description: 'This spoofs the CESAR_A channel.',
-              scriptName: '',
-              originalPath: '',
-              args: {},
-            },
-          },
-          METIS_A: {
-            'Spoof Channel': {
-              label: 'METIS_A: "spoof channel"',
-              description: 'This spoofs the METIS_A channel.',
-              scriptName: '',
-              originalPath: '',
-              args: {},
-            },
-          },
-          AWACS_A: {
-            'Spoof Channel': {
-              label: 'AWACS_A: "spoof channel"',
-              description: 'This spoofs the AWACS_A channel.',
-              scriptName: '',
-              originalPath: '',
-              args: {},
-            },
-          },
-        },
-      },
-      Sonomarc: {
-        Frequencies: {
-          'BEIGE-41': {
-            'Jam Frequency': {
-              label: 'BEIGE-41: "jam frequency"',
-              description: 'This jams the BEIGE-41 frequency.',
-              scriptName: '',
-              originalPath: '',
-              args: {},
-            },
-          },
-          'CRIMMSON-28': {
-            'Jam Frequency': {
-              label: 'CRIMMSON-28: "jam frequency"',
-              description: 'This jams the CRIMMSON-28 frequency.',
-              scriptName: '',
-              originalPath: '',
-              args: {},
-            },
-          },
-          'VIOLET-26': {
-            'Jam Frequency': {
-              label: 'VIOLET-26: "jam frequency"',
-              description: 'This jams the VIOLET-26 frequency.',
-              scriptName: '',
-              originalPath: '',
-              args: {},
-            },
-          },
-          'TEAL-36': {
-            'Jam Frequency': {
-              label: 'TEAL-36: "jam frequency"',
-              description: 'This jams the TEAL-36 frequency.',
-              scriptName: '',
-              originalPath: '',
-              args: {},
-            },
-          },
-          'AMBER-38': {
-            'Jam Frequency': {
-              label: 'AMBER-38: "jam frequency"',
-              description: 'This jams the AMBER-38 frequency.',
-              scriptName: '',
-              originalPath: '',
-              args: {},
-            },
-          },
-          'COBALT-45': {
-            'Jam Frequency': {
-              label: 'COBALT-45: "jam frequency"',
-              description: 'This jams the COBALT-45 frequency.',
-              scriptName: '',
-              originalPath: '',
-              args: {},
-            },
-          },
-          'SAGE-32': {
-            'Jam Frequency': {
-              label: 'SAGE-32: "jam frequency"',
-              description: 'This jams the SAGE-32 frequency.',
-              scriptName: '',
-              originalPath: '',
-              args: {},
-            },
-          },
-          'SCARLETT-28': {
-            'Jam Frequency': {
-              label: 'SCARLETT-28: "jam frequency"',
-              description: 'This jams the SCARLETT-28 frequency.',
-              scriptName: '',
-              originalPath: '',
-              args: {},
-            },
-          },
-          'SIENNA-31': {
-            'Jam Frequency': {
-              label: 'SIENNA-31: "jam frequency"',
-              description: 'This jams the SIENNA-31 frequency.',
-              scriptName: '',
-              originalPath: '',
-              args: {},
-            },
-          },
-          'ROYAL-44': {
-            'Jam Frequency': {
-              label: 'ROYAL-44: "jam frequency"',
-              description: 'This jams the ROYAL-44 frequency.',
-              scriptName: '',
-              originalPath: '',
-              args: {},
-            },
-          },
-          'CIDER-23': {
-            'Jam Frequency': {
-              label: 'CIDER-23: "jam frequency"',
-              description: 'This jams the CIDER-23 frequency.',
-              scriptName: '',
-              originalPath: '',
-              args: {},
-            },
-          },
-          'PLUM-33': {
-            'Jam Frequency': {
-              label: 'PLUM-33: "jam frequency"',
-              description: 'This jams the PLUM-33 frequency.',
-              scriptName: '',
-              originalPath: '',
-              args: {},
-            },
-          },
-          'SAPPHIRE-24': {
-            'Jam Frequency': {
-              label: 'SAPPHIRE-24: "jam frequency"',
-              description: 'This jams the SAPPHIRE-24 frequency.',
-              scriptName: '',
-              originalPath: '',
-              args: {},
-            },
-          },
-          'PEWTER-35': {
-            'Jam Frequency': {
-              label: 'PEWTER-35: "jam frequency"',
-              description: 'This jams the PEWTER-35 frequency.',
-              scriptName: '',
-              originalPath: '',
-              args: {},
-            },
-          },
-          'LIME-30': {
-            'Jam Frequency': {
-              label: 'LIME-30: "jam frequency"',
-              description: 'This jams the LIME-30 frequency.',
-              scriptName: '',
-              originalPath: '',
-              args: {},
-            },
-          },
-          'HAZEL-47': {
-            'Jam Frequency': {
-              label: 'HAZEL-47: "jam frequency"',
-              description: 'This jams the HAZEL-47 frequency.',
-              scriptName: '',
-              originalPath: '',
-              args: {},
-            },
-          },
-          'YELLOW-16': {
-            'Jam Frequency': {
-              label: 'YELLOW-16: "jam frequency"',
-              description: 'This jams the YELLOW-16 frequency.',
-              scriptName: '',
-              originalPath: '',
-              args: {},
-            },
-          },
-          'RUBY-22': {
-            'Jam Frequency': {
-              label: 'RUBY-22: "jam frequency"',
-              description: 'This jams the RUBY-22 frequency.',
-              scriptName: '',
-              originalPath: '',
-              args: {},
-            },
-          },
-          'MOCHA-38': {
-            'Jam Frequency': {
-              label: 'MOCHA-38: "jam frequency"',
-              description: 'This jams the MOCHA-38 frequency.',
-              scriptName: '',
-              originalPath: '',
-              args: {},
-            },
-          },
-        },
-      },
-    },
-  },
+  // MDL: {
+  //   'Alpha Suite': {
+  //     ASCOT: {
+  //       Friendly: {
+  //         'Space': {
+  //           SAT_THAADS: {
+  //             Kill: {
+  //               label: 'SAT_THAADS: "kill"',
+  //               description: 'This kills the SAT_THAADS entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //           SAT_ISR: {
+  //             Kill: {
+  //               label: 'SAT_ISRL "kill"',
+  //               description: 'This kills the SAT_ISR entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //         },
+  //         'Cyber': {
+  //           'RED-DOOR': {
+  //             Kill: {
+  //               label: 'RED-DOOR: "kill"',
+  //               description: 'This kills the RED-DOOR entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //         },
+  //         'Air': {
+  //           'RPA-A': {
+  //             'Redirect RPA': {
+  //               label: 'RPA-A: "redirect RPA"',
+  //               description: 'This redirects the RPA-A entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //           'RPA-B': {
+  //             'Redirect RPA': {
+  //               label: 'RPA-B: "redirect RPA"',
+  //               description: 'This redirects the RPA-B entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //           'MQ-25': {
+  //             'Redirect RPA': {
+  //               label: 'MQ-25: "redirect RPA"',
+  //               description: 'This redirects the RPA entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //         },
+  //         'Land': {
+  //           'RESUPPLY': {
+  //             Kill: {
+  //               label: 'RESUPPLY: "kill"',
+  //               description: 'This will kill the resupply entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //           'THAADS-A': {
+  //             Kill: {
+  //               label: 'THAADS-A: "kill"',
+  //               description: 'This will kill the THAADS-A entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //           'THAADS-B': {
+  //             Kill: {
+  //               label: 'THAADS-B: "kill"',
+  //               description: 'This will kill the THAADS-B entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //           'THAADS-C': {
+  //             Kill: {
+  //               label: 'THAADS-C: "kill"',
+  //               description: 'This will kill the THAADS-C entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //           'THAADS ADOC': {
+  //             'Disable auto fire': {
+  //               label: 'THAADS ADOC: "disable auto fire"',
+  //               description:
+  //                 'This will disable auto fire for the THAADS ADOC entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //           'EZOHIGUMA-1': {
+  //             Kill: {
+  //               label: 'EZOHIGUMA-1: "kill"',
+  //               description: 'This will kill the EZOHIGUMA-1 entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //           'EZOHIGUMA-2': {
+  //             Kill: {
+  //               label: 'EZOHIGUMA-2: "kill"',
+  //               description: 'This will kill the EZOHIGUMA-2 entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //           'RPA-UPLINK': {
+  //             Kill: {
+  //               label: 'RPA-UPLINK: "kill"',
+  //               description: 'This will kill the RPA-UPLINK entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //           'LOGISTICS': {
+  //             Kill: {
+  //               label: 'LOGISTICS: "kill"',
+  //               description: 'This will kill the LOGISTICS entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //         },
+  //         'Surface': {},
+  //         'Sub-Surface': {},
+  //       },
+  //       Hostile: {
+  //         'Space': {
+  //           'PLA-SEARCH': {
+  //             Kill: {
+  //               label: 'PLA-SEARCH: "kill"',
+  //               description: 'This kills the PLA-SEARCH entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //         },
+  //         'Cyber': {},
+  //         'Air': {
+  //           'HAO-A': {
+  //             'Redirect HAO': {
+  //               label: 'HAO-A: "redirect HAO"',
+  //               description: 'This redirects the HAO-A entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //           'HAO-B': {
+  //             Kill: {
+  //               label: 'HAO-B: "redirect HAO"',
+  //               description: 'This redirects the HAO-B entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //           'HAO-C': {
+  //             Kill: {
+  //               label: 'HAO-C: "redirect HAO"',
+  //               description: 'This redirects the HAO-C entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //         },
+  //         'Land': {
+  //           'PLA ADOC': {
+  //             'Disable auto fire': {
+  //               label: 'PLA ADOC: "disable auto fire"',
+  //               description:
+  //                 'This will disable auto fire for the PLA ADOC entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //           'IADS_C-2-B': {
+  //             'Kill': {
+  //               label: 'IADS_C-2-B: "kill"',
+  //               description: 'This kills the IADS_C-2-B entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //             'Disable auto fire': {
+  //               label: 'IADS_C-2-B: "disable auto fire"',
+  //               description:
+  //                 'This will disable auto fire for the IADS_C-2-B entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //           'IADS_C-2-C': {
+  //             'Kill': {
+  //               label: 'IADS_C-2-C: "kill"',
+  //               description: 'This kills the IADS_C-2-C entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //             'Disable auto fire': {
+  //               label: 'IADS_C-2-C: "disable auto fire"',
+  //               description:
+  //                 'This will disable auto fire for the IADS_C-2-C entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //           'IADS_C-2-D': {
+  //             'Kill': {
+  //               label: 'IADS_C-2-D: "kill"',
+  //               description: 'This kills the IADS_C-2-D entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //             'Disable auto fire': {
+  //               label: 'IADS_C-2-D: "disable auto fire"',
+  //               description:
+  //                 'This will disable auto fire for the IADS_C-2-D entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //           'IADS_E-3-A': {
+  //             Kill: {
+  //               label: 'IADS_E-3-A: "kill"',
+  //               description: 'This kills the IADS_E-3-A entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //           'IADS_E-3-B': {
+  //             'Kill': {
+  //               label: 'IADS_E-3-B: "kill"',
+  //               description: 'This kills the IADS_E-3-B entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //             'Disable radar': {
+  //               label: 'IADS_E-3-B: "disable radar"',
+  //               description: 'This will disable the IADS_E-3-B radar entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //           'IADS_N-4-A': {
+  //             'Kill': {
+  //               label: 'IADS_N-4-A: "kill"',
+  //               description: 'This kills the IADS_N-4-A entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //             'Disable auto fire': {
+  //               label: 'IADS_N-4-A: "disable auto fire"',
+  //               description:
+  //                 'This will disable auto fire for the IADS_N-4-A entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //           'IADS_N-4-B': {
+  //             'Kill': {
+  //               label: 'IADS_N-4-B: "kill"',
+  //               description: 'This kills the IADS_N-4-B entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //             'Disable radar': {
+  //               label: 'IADS_N-4-B: "disable radar"',
+  //               description: 'This will disable the IADS_N-4-B radar entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //           'IADS_S-1-A': {
+  //             'Kill': {
+  //               label: 'IADS_S-1-A: "kill"',
+  //               description: 'This kills the IADS_S-1-A entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //             'Disable auto fire': {
+  //               label: 'IADS_S-1-A: "disable auto fire"',
+  //               description:
+  //                 'This will disable auto fire for the IADS_S-1-A entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //           'IADS_S-1-B': {
+  //             'Kill': {
+  //               label: 'IADS_S-1-B: "kill"',
+  //               description: 'This kills the IADS_S-1-B entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //             'Disable radar': {
+  //               label: 'IADS_S-1-B: "disable radar"',
+  //               description: 'This will disable the IADS_S-1-B radar entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //           'IADS_S-1-C': {
+  //             Kill: {
+  //               label: 'IADS_S-1-C: "kill"',
+  //               description: 'This kills the IADS_S-1-C entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //           'RUS-S300-A': {
+  //             Kill: {
+  //               label: 'RUS-S300-A: "kill"',
+  //               description: 'This kills the RUS-S300-A entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //           'RUS-S300-B': {
+  //             Kill: {
+  //               label: 'RUS-S300-B: "kill"',
+  //               description: 'This kills the RUS-S300-B entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //           'RUS-S300-C': {
+  //             Kill: {
+  //               label: 'RUS-S300-C: "kill"',
+  //               description: 'This kills the RUS-S300-C entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //           'INF-BN-A-10': {
+  //             Kill: {
+  //               label: 'INF-BN-A-10: "kill"',
+  //               description: 'This kills the INF-BN-A-10 entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //           'INF-BN-B-10': {
+  //             Kill: {
+  //               label: 'INF-BN-B-10: "kill"',
+  //               description: 'This kills the INF-BN-B-10 entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //           'INF-BN-C-10': {
+  //             Kill: {
+  //               label: 'INF-BN-C-10: "kill"',
+  //               description: 'This kills the INF-BN-C-10 entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //           'INF-BN-D-10': {
+  //             Kill: {
+  //               label: 'INF-BN-D-10: "kill"',
+  //               description: 'This kills the INF-BN-D-10 entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //           'INF-BN-E-10': {
+  //             Kill: {
+  //               label: 'INF-BN-E-10: "kill"',
+  //               description: 'This kills the INF-BN-E-10 entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //           'INF-BN-F-10': {
+  //             Kill: {
+  //               label: 'INF-BN-F-10: "kill"',
+  //               description: 'This kills the INF-BN-F-10 entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //           'INF-BN-G-10': {
+  //             Kill: {
+  //               label: 'INF-BN-G-10: "kill"',
+  //               description: 'This kills the INF-BN-G-10 entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //           'INF-CO-A-5': {
+  //             Kill: {
+  //               label: 'INF-CO-A-5: "kill"',
+  //               description: 'This kills the INF-CO-A-5 entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //           'INF-CO-B-5': {
+  //             Kill: {
+  //               label: 'INF-CO-B-5: "kill"',
+  //               description: 'This kills the INF-CO-B-5 entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //           'INF-CO-C-5': {
+  //             Kill: {
+  //               label: 'INF-CO-C-5: "kill"',
+  //               description: 'This kills the INF-CO-C-5 entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //           'INF-CO-D-5': {
+  //             Kill: {
+  //               label: 'INF-CO-D-5: "kill"',
+  //               description: 'This kills the INF-CO-D-5 entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //           'INF-CO-E-5': {
+  //             Kill: {
+  //               label: 'INF-CO-E-5: "kill"',
+  //               description: 'This kills the INF-CO-E-5 entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //           'INF-CO-F-5': {
+  //             Kill: {
+  //               label: 'INF-CO-F-5: "kill"',
+  //               description: 'This kills the INF-CO-F-5 entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //           'INF-CO-G-5': {
+  //             Kill: {
+  //               label: 'INF-CO-G-5: "kill"',
+  //               description: 'This kills the INF-CO-G-5 entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //           'INF-CO-H-5': {
+  //             Kill: {
+  //               label: 'INF-CO-H-5: "kill"',
+  //               description: 'This kills the INF-CO-H-5 entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //           'SOF-BN-A-8': {
+  //             Kill: {
+  //               label: 'SOF-BN-A-8: "kill"',
+  //               description: 'This kills the SOF-BN-A-8 entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //           'SOF-BN-B-8': {
+  //             Kill: {
+  //               label: 'SOF-BN-B-8: "kill"',
+  //               description: 'This kills the SOF-BN-B-8 entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //           'SOF-BN-C-8': {
+  //             Kill: {
+  //               label: 'SOF-BN-C-8: "kill"',
+  //               description: 'This kills the SOF-BN-C-8 entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //           'SOF-TM-A-3': {
+  //             Kill: {
+  //               label: 'SOF-TM-A-3: "kill"',
+  //               description: 'This kills the SOF-TM-A-3 entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //           'SOF-TM-B-3': {
+  //             Kill: {
+  //               label: 'SOF-TM-B-3: "kill"',
+  //               description: 'This kills the SOF-TM-B-3 entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //           'SOF-TM-C-3': {
+  //             Kill: {
+  //               label: 'SOF-TM-C-3: "kill"',
+  //               description: 'This kills the SOF-TM-C-3 entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //           'SOF-TM-D-3': {
+  //             Kill: {
+  //               label: 'SOF-TM-D-3: "kill"',
+  //               description: 'This kills the SOF-TM-D-3 entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //           'SOF-TM-E-3': {
+  //             Kill: {
+  //               label: 'SOF-TM-E-3: "kill"',
+  //               description: 'This kills the SOF-TM-E-3 entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //           'PLA-C2-HOK': {
+  //             Kill: {
+  //               label: 'PLA-C2-HOK: "kill"',
+  //               description: 'This kills the PLA-C2-HOK entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //         },
+  //         'Surface': {
+  //           'PLA-CVN': {
+  //             Kill: {
+  //               label: 'PLA-CVN: "kill"',
+  //               description: 'This kills the PLA-CVN entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //           'PLA-DDG-A': {
+  //             'Kill': {
+  //               label: 'PLA-DDG-A: "kill"',
+  //               description: 'This kills the PLA-DDG-A entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //             'Disable auto fire': {
+  //               label: 'PLA-DDG-A: "disable auto fire"',
+  //               description:
+  //                 'This will disable auto fire for the PLA-DDG-A entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //           'PLA-DDG-B': {
+  //             'Kill': {
+  //               label: 'PLA-DDG-B: "kill"',
+  //               description: 'This kills the PLA-DDG-B entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //             'Disable auto fire': {
+  //               label: 'PLA-DDG-B: "disable auto fire"',
+  //               description:
+  //                 'This will disable auto fire for the PLA-DDG-B entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //           'PLA-DDG-C': {
+  //             'Kill': {
+  //               label: 'PLA-DDG-C: "kill"',
+  //               description: 'This kills the PLA-DDG-C entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //             'Disable auto fire': {
+  //               label: 'PLA-DDG-C: "disable auto fire"',
+  //               description:
+  //                 'This will disable auto fire for the PLA-DDG-C entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //           'PLA-DDG-D': {
+  //             'Kill': {
+  //               label: 'PLA-DDG-D: "kill"',
+  //               description: 'This kills the PLA-DDG-D entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //             'Disable auto fire': {
+  //               label: 'PLA-DDG-D: "disable auto fire"',
+  //               description:
+  //                 'This will disable auto fire for the PLA-DDG-D entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //         },
+  //         'Sub-Surface': {
+  //           'PLA-SSN-A': {
+  //             Kill: {
+  //               label: 'PLA-SSN-A: "kill"',
+  //               description: 'This kills the PLA-SSN-A entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //           'PLA-SSN-B': {
+  //             Kill: {
+  //               label: 'PLA-SSN-B: "kill"',
+  //               description: 'This kills the PLA-SSN-B entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //         },
+  //       },
+  //       Neutral: {
+  //         'Space': { 'CBCN-SAT': {} },
+  //         'Cyber': {},
+  //         'Air': {},
+  //         'Land': {
+  //           'CBCN-NODE': {
+  //             Disable: {
+  //               label: 'CBCN-NODE: "disable"',
+  //               description: 'This disables the CBCN-NODE entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //           'CBCN-SERVER': {
+  //             Disable: {
+  //               label: 'CBCN-SERVER: "disable"',
+  //               description: 'This disables the CBCN-SERVER entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //           'CBCN001-139': {
+  //             Disable: {
+  //               label: 'CBCN001-139: "disable"',
+  //               description: 'This disables the CBCN001-139 entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //           'CBCN998': {
+  //             Disable: {
+  //               label: 'CBCN998: "disable"',
+  //               description: 'This disables the CBCN998 entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //           'CBCN999': {
+  //             Disable: {
+  //               label: 'CBCN999: "disable"',
+  //               description: 'This disables the CBCN999 entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //         },
+  //         'Surface': {},
+  //         'Sub-Surface': {},
+  //       },
+  //       Unknown: {
+  //         'Space': {},
+  //         'Cyber': {},
+  //         'Air': {},
+  //         'Land': {},
+  //         'Surface': {},
+  //         'Sub-Surface': {},
+  //       },
+  //     },
+  //     mIRC: {
+  //       'mIRC Server': {
+  //         EFFECTS: ['Shutdown Server', 'List all channels', 'List all users'],
+  //       },
+  //       'Channels': {
+  //         CJTF_H_COMMAND_A: {
+  //           'Spoof Channel': {
+  //             label: 'CJTF_H_COMMAND_A: "spoof channel"',
+  //             description: 'This spoofs the CJTF_H_COMMAND_A channel.',
+  //             scriptName: '',
+  //             originalPath: '',
+  //             args: {},
+  //           },
+  //         },
+  //         JFACC_OPS_A: {
+  //           'Spoof Channel': {
+  //             label: 'JFACC_OPS_A: "spoof channel"',
+  //             description: 'This spoofs the JFACC_OPS_A channel.',
+  //             scriptName: '',
+  //             originalPath: '',
+  //             args: {},
+  //           },
+  //         },
+  //         JFLCC_OPS_A: {
+  //           'Spoof Channel': {
+  //             label: 'JFLCC_OPS_A: "spoof channel"',
+  //             description: 'This spoofs the JFLCC_OPS_A channel.',
+  //             scriptName: '',
+  //             originalPath: '',
+  //             args: {},
+  //           },
+  //         },
+  //         JFMCC_OPS_A: {
+  //           'Spoof Channel': {
+  //             label: 'JFMCC_OPS_A: "spoof channel"',
+  //             description: 'This spoofs the JFMCC_OPS_A channel.',
+  //             scriptName: '',
+  //             originalPath: '',
+  //             args: {},
+  //           },
+  //         },
+  //         JFSOCC_OPS_A: {
+  //           'Spoof Channel': {
+  //             label: 'JFSOCC_OPS_A: "spoof channel"',
+  //             description: 'This spoofs the JFSOCC_OPS_A channel.',
+  //             scriptName: '',
+  //             originalPath: '',
+  //             args: {},
+  //           },
+  //         },
+  //         JFSCC_OPS_A: {
+  //           'Spoof Channel': {
+  //             label: 'JFSCC_OPS_A: "spoof channel"',
+  //             description: 'This spoofs the JFSCC_OPS_A channel.',
+  //             scriptName: '',
+  //             originalPath: '',
+  //             args: {},
+  //           },
+  //         },
+  //         JFCCC_OPS_A: {
+  //           'Spoof Channel': {
+  //             label: 'JFCCC_OPS_A: "spoof channel"',
+  //             description: 'This spoofs the JFCCC_OPS_A channel.',
+  //             scriptName: '',
+  //             originalPath: '',
+  //             args: {},
+  //           },
+  //         },
+  //         TEXT_2_SPEECH_A: {
+  //           'Spoof Channel': {
+  //             label: 'TEXT_2_SPEECH_A: "spoof channel"',
+  //             description: 'This spoofs the TEXT_2_SPEECH_A channel.',
+  //             scriptName: '',
+  //             originalPath: '',
+  //             args: {},
+  //           },
+  //         },
+  //         AUDIO_TRIGGER_A: {
+  //           'Spoof Channel': {
+  //             label: 'AUDIO_TRIGGER_A: "spoof channel"',
+  //             description: 'This spoofs the AUDIO_TRIGGER_A channel.',
+  //             scriptName: '',
+  //             originalPath: '',
+  //             args: {},
+  //           },
+  //         },
+  //         ALL_SOURCE_INTEL_A: {
+  //           'Spoof Channel': {
+  //             label: 'ALL_SOURCE_INTEL_A: "spoof channel"',
+  //             description: 'This spoofs the ALL_SOURCE_INTEL_A channel.',
+  //             scriptName: '',
+  //             originalPath: '',
+  //             args: {},
+  //           },
+  //         },
+  //         CESAR_A: {
+  //           'Spoof Channel': {
+  //             label: 'CESAR_A: "spoof channel"',
+  //             description: 'This spoofs the CESAR_A channel.',
+  //             scriptName: '',
+  //             originalPath: '',
+  //             args: {},
+  //           },
+  //         },
+  //         METIS_A: {
+  //           'Spoof Channel': {
+  //             label: 'METIS_A: "spoof channel"',
+  //             description: 'This spoofs the METIS_A channel.',
+  //             scriptName: '',
+  //             originalPath: '',
+  //             args: {},
+  //           },
+  //         },
+  //         AWACS_A: {
+  //           'Spoof Channel': {
+  //             label: 'AWACS_A: "spoof channel"',
+  //             description: 'This spoofs the AWACS_A channel.',
+  //             scriptName: '',
+  //             originalPath: '',
+  //             args: {},
+  //           },
+  //         },
+  //       },
+  //     },
+  //     Sonomarc: {
+  //       Frequencies: {
+  //         'BEIGE-41': {
+  //           'Jam Frequency': {
+  //             label: 'BEIGE-41: "jam frequency"',
+  //             description: 'This jams the BEIGE-41 frequency.',
+  //             scriptName: '',
+  //             originalPath: '',
+  //             args: {},
+  //           },
+  //         },
+  //         'CRIMMSON-28': {
+  //           'Jam Frequency': {
+  //             label: 'CRIMMSON-28: "jam frequency"',
+  //             description: 'This jams the CRIMMSON-28 frequency.',
+  //             scriptName: '',
+  //             originalPath: '',
+  //             args: {},
+  //           },
+  //         },
+  //         'VIOLET-26': {
+  //           'Jam Frequency': {
+  //             label: 'VIOLET-26: "jam frequency"',
+  //             description: 'This jams the VIOLET-26 frequency.',
+  //             scriptName: '',
+  //             originalPath: '',
+  //             args: {},
+  //           },
+  //         },
+  //         'TEAL-36': {
+  //           'Jam Frequency': {
+  //             label: 'TEAL-36: "jam frequency"',
+  //             description: 'This jams the TEAL-36 frequency.',
+  //             scriptName: '',
+  //             originalPath: '',
+  //             args: {},
+  //           },
+  //         },
+  //         'AMBER-38': {
+  //           'Jam Frequency': {
+  //             label: 'AMBER-38: "jam frequency"',
+  //             description: 'This jams the AMBER-38 frequency.',
+  //             scriptName: '',
+  //             originalPath: '',
+  //             args: {},
+  //           },
+  //         },
+  //         'COBALT-45': {
+  //           'Jam Frequency': {
+  //             label: 'COBALT-45: "jam frequency"',
+  //             description: 'This jams the COBALT-45 frequency.',
+  //             scriptName: '',
+  //             originalPath: '',
+  //             args: {},
+  //           },
+  //         },
+  //         'SAGE-32': {
+  //           'Jam Frequency': {
+  //             label: 'SAGE-32: "jam frequency"',
+  //             description: 'This jams the SAGE-32 frequency.',
+  //             scriptName: '',
+  //             originalPath: '',
+  //             args: {},
+  //           },
+  //         },
+  //         'SCARLETT-28': {
+  //           'Jam Frequency': {
+  //             label: 'SCARLETT-28: "jam frequency"',
+  //             description: 'This jams the SCARLETT-28 frequency.',
+  //             scriptName: '',
+  //             originalPath: '',
+  //             args: {},
+  //           },
+  //         },
+  //         'SIENNA-31': {
+  //           'Jam Frequency': {
+  //             label: 'SIENNA-31: "jam frequency"',
+  //             description: 'This jams the SIENNA-31 frequency.',
+  //             scriptName: '',
+  //             originalPath: '',
+  //             args: {},
+  //           },
+  //         },
+  //         'ROYAL-44': {
+  //           'Jam Frequency': {
+  //             label: 'ROYAL-44: "jam frequency"',
+  //             description: 'This jams the ROYAL-44 frequency.',
+  //             scriptName: '',
+  //             originalPath: '',
+  //             args: {},
+  //           },
+  //         },
+  //         'CIDER-23': {
+  //           'Jam Frequency': {
+  //             label: 'CIDER-23: "jam frequency"',
+  //             description: 'This jams the CIDER-23 frequency.',
+  //             scriptName: '',
+  //             originalPath: '',
+  //             args: {},
+  //           },
+  //         },
+  //         'PLUM-33': {
+  //           'Jam Frequency': {
+  //             label: 'PLUM-33: "jam frequency"',
+  //             description: 'This jams the PLUM-33 frequency.',
+  //             scriptName: '',
+  //             originalPath: '',
+  //             args: {},
+  //           },
+  //         },
+  //         'SAPPHIRE-24': {
+  //           'Jam Frequency': {
+  //             label: 'SAPPHIRE-24: "jam frequency"',
+  //             description: 'This jams the SAPPHIRE-24 frequency.',
+  //             scriptName: '',
+  //             originalPath: '',
+  //             args: {},
+  //           },
+  //         },
+  //         'PEWTER-35': {
+  //           'Jam Frequency': {
+  //             label: 'PEWTER-35: "jam frequency"',
+  //             description: 'This jams the PEWTER-35 frequency.',
+  //             scriptName: '',
+  //             originalPath: '',
+  //             args: {},
+  //           },
+  //         },
+  //         'LIME-30': {
+  //           'Jam Frequency': {
+  //             label: 'LIME-30: "jam frequency"',
+  //             description: 'This jams the LIME-30 frequency.',
+  //             scriptName: '',
+  //             originalPath: '',
+  //             args: {},
+  //           },
+  //         },
+  //         'HAZEL-47': {
+  //           'Jam Frequency': {
+  //             label: 'HAZEL-47: "jam frequency"',
+  //             description: 'This jams the HAZEL-47 frequency.',
+  //             scriptName: '',
+  //             originalPath: '',
+  //             args: {},
+  //           },
+  //         },
+  //         'YELLOW-16': {
+  //           'Jam Frequency': {
+  //             label: 'YELLOW-16: "jam frequency"',
+  //             description: 'This jams the YELLOW-16 frequency.',
+  //             scriptName: '',
+  //             originalPath: '',
+  //             args: {},
+  //           },
+  //         },
+  //         'RUBY-22': {
+  //           'Jam Frequency': {
+  //             label: 'RUBY-22: "jam frequency"',
+  //             description: 'This jams the RUBY-22 frequency.',
+  //             scriptName: '',
+  //             originalPath: '',
+  //             args: {},
+  //           },
+  //         },
+  //         'MOCHA-38': {
+  //           'Jam Frequency': {
+  //             label: 'MOCHA-38: "jam frequency"',
+  //             description: 'This jams the MOCHA-38 frequency.',
+  //             scriptName: '',
+  //             originalPath: '',
+  //             args: {},
+  //           },
+  //         },
+  //       },
+  //     },
+  //   },
+  //   'Omega Suite': {
+  //     ASCOT: {
+  //       Friendly: {
+  //         'Space': {
+  //           SAT_THAADS: {
+  //             Kill: {
+  //               label: 'SAT_THAADS: "kill"',
+  //               description: 'This kills the SAT_THAADS entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //           SAT_ISR: {
+  //             Kill: {
+  //               label: 'SAT_ISRL "kill"',
+  //               description: 'This kills the SAT_ISR entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //         },
+  //         'Cyber': {
+  //           'RED-DOOR': {
+  //             Kill: {
+  //               label: 'RED-DOOR: "kill"',
+  //               description: 'This kills the RED-DOOR entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //         },
+  //         'Air': {
+  //           'RPA-A': {
+  //             'Redirect RPA': {
+  //               label: 'RPA-A: "redirect RPA"',
+  //               description: 'This redirects the RPA-A entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //           'RPA-B': {
+  //             'Redirect RPA': {
+  //               label: 'RPA-B: "redirect RPA"',
+  //               description: 'This redirects the RPA-B entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //           'MQ-25': {
+  //             'Redirect RPA': {
+  //               label: 'MQ-25: "redirect RPA"',
+  //               description: 'This redirects the RPA entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //         },
+  //         'Land': {
+  //           'RESUPPLY': {
+  //             Kill: {
+  //               label: 'RESUPPLY: "kill"',
+  //               description: 'This will kill the resupply entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //           'THAADS-A': {
+  //             Kill: {
+  //               label: 'THAADS-A: "kill"',
+  //               description: 'This will kill the THAADS-A entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //           'THAADS-B': {
+  //             Kill: {
+  //               label: 'THAADS-B: "kill"',
+  //               description: 'This will kill the THAADS-B entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //           'THAADS-C': {
+  //             Kill: {
+  //               label: 'THAADS-C: "kill"',
+  //               description: 'This will kill the THAADS-C entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //           'THAADS ADOC': {
+  //             'Disable auto fire': {
+  //               label: 'THAADS ADOC: "disable auto fire"',
+  //               description:
+  //                 'This will disable auto fire for the THAADS ADOC entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //           'EZOHIGUMA-1': {
+  //             Kill: {
+  //               label: 'EZOHIGUMA-1: "kill"',
+  //               description: 'This will kill the EZOHIGUMA-1 entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //           'EZOHIGUMA-2': {
+  //             Kill: {
+  //               label: 'EZOHIGUMA-2: "kill"',
+  //               description: 'This will kill the EZOHIGUMA-2 entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //           'RPA-UPLINK': {
+  //             Kill: {
+  //               label: 'RPA-UPLINK: "kill"',
+  //               description: 'This will kill the RPA-UPLINK entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //           'LOGISTICS': {
+  //             Kill: {
+  //               label: 'LOGISTICS: "kill"',
+  //               description: 'This will kill the LOGISTICS entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //         },
+  //         'Surface': {},
+  //         'Sub-Surface': {},
+  //       },
+  //       Hostile: {
+  //         'Space': {
+  //           'PLA-SEARCH': {
+  //             Kill: {
+  //               label: 'PLA-SEARCH: "kill"',
+  //               description: 'This kills the PLA-SEARCH entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //         },
+  //         'Cyber': {},
+  //         'Air': {
+  //           'HAO-A': {
+  //             'Redirect HAO': {
+  //               label: 'HAO-A: "redirect HAO"',
+  //               description: 'This redirects the HAO-A entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //           'HAO-B': {
+  //             Kill: {
+  //               label: 'HAO-B: "redirect HAO"',
+  //               description: 'This redirects the HAO-B entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //           'HAO-C': {
+  //             Kill: {
+  //               label: 'HAO-C: "redirect HAO"',
+  //               description: 'This redirects the HAO-C entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //         },
+  //         'Land': {
+  //           'PLA ADOC': {
+  //             'Disable auto fire': {
+  //               label: 'PLA ADOC: "disable auto fire"',
+  //               description:
+  //                 'This will disable auto fire for the PLA ADOC entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //           'IADS_C-2-B': {
+  //             'Kill': {
+  //               label: 'IADS_C-2-B: "kill"',
+  //               description: 'This kills the IADS_C-2-B entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //             'Disable auto fire': {
+  //               label: 'IADS_C-2-B: "disable auto fire"',
+  //               description:
+  //                 'This will disable auto fire for the IADS_C-2-B entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //           'IADS_C-2-C': {
+  //             'Kill': {
+  //               label: 'IADS_C-2-C: "kill"',
+  //               description: 'This kills the IADS_C-2-C entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //             'Disable auto fire': {
+  //               label: 'IADS_C-2-C: "disable auto fire"',
+  //               description:
+  //                 'This will disable auto fire for the IADS_C-2-C entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //           'IADS_C-2-D': {
+  //             'Kill': {
+  //               label: 'IADS_C-2-D: "kill"',
+  //               description: 'This kills the IADS_C-2-D entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //             'Disable auto fire': {
+  //               label: 'IADS_C-2-D: "disable auto fire"',
+  //               description:
+  //                 'This will disable auto fire for the IADS_C-2-D entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //           'IADS_E-3-A': {
+  //             Kill: {
+  //               label: 'IADS_E-3-A: "kill"',
+  //               description: 'This kills the IADS_E-3-A entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //           'IADS_E-3-B': {
+  //             'Kill': {
+  //               label: 'IADS_E-3-B: "kill"',
+  //               description: 'This kills the IADS_E-3-B entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //             'Disable radar': {
+  //               label: 'IADS_E-3-B: "disable radar"',
+  //               description: 'This will disable the IADS_E-3-B radar entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //           'IADS_N-4-A': {
+  //             'Kill': {
+  //               label: 'IADS_N-4-A: "kill"',
+  //               description: 'This kills the IADS_N-4-A entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //             'Disable auto fire': {
+  //               label: 'IADS_N-4-A: "disable auto fire"',
+  //               description:
+  //                 'This will disable auto fire for the IADS_N-4-A entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //           'IADS_N-4-B': {
+  //             'Kill': {
+  //               label: 'IADS_N-4-B: "kill"',
+  //               description: 'This kills the IADS_N-4-B entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //             'Disable radar': {
+  //               label: 'IADS_N-4-B: "disable radar"',
+  //               description: 'This will disable the IADS_N-4-B radar entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //           'IADS_S-1-A': {
+  //             'Kill': {
+  //               label: 'IADS_S-1-A: "kill"',
+  //               description: 'This kills the IADS_S-1-A entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //             'Disable auto fire': {
+  //               label: 'IADS_S-1-A: "disable auto fire"',
+  //               description:
+  //                 'This will disable auto fire for the IADS_S-1-A entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //           'IADS_S-1-B': {
+  //             'Kill': {
+  //               label: 'IADS_S-1-B: "kill"',
+  //               description: 'This kills the IADS_S-1-B entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //             'Disable radar': {
+  //               label: 'IADS_S-1-B: "disable radar"',
+  //               description: 'This will disable the IADS_S-1-B radar entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //           'IADS_S-1-C': {
+  //             Kill: {
+  //               label: 'IADS_S-1-C: "kill"',
+  //               description: 'This kills the IADS_S-1-C entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //           'RUS-S300-A': {
+  //             Kill: {
+  //               label: 'RUS-S300-A: "kill"',
+  //               description: 'This kills the RUS-S300-A entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //           'RUS-S300-B': {
+  //             Kill: {
+  //               label: 'RUS-S300-B: "kill"',
+  //               description: 'This kills the RUS-S300-B entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //           'RUS-S300-C': {
+  //             Kill: {
+  //               label: 'RUS-S300-C: "kill"',
+  //               description: 'This kills the RUS-S300-C entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //           'INF-BN-A-10': {
+  //             Kill: {
+  //               label: 'INF-BN-A-10: "kill"',
+  //               description: 'This kills the INF-BN-A-10 entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //           'INF-BN-B-10': {
+  //             Kill: {
+  //               label: 'INF-BN-B-10: "kill"',
+  //               description: 'This kills the INF-BN-B-10 entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //           'INF-BN-C-10': {
+  //             Kill: {
+  //               label: 'INF-BN-C-10: "kill"',
+  //               description: 'This kills the INF-BN-C-10 entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //           'INF-BN-D-10': {
+  //             Kill: {
+  //               label: 'INF-BN-D-10: "kill"',
+  //               description: 'This kills the INF-BN-D-10 entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //           'INF-BN-E-10': {
+  //             Kill: {
+  //               label: 'INF-BN-E-10: "kill"',
+  //               description: 'This kills the INF-BN-E-10 entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //           'INF-BN-F-10': {
+  //             Kill: {
+  //               label: 'INF-BN-F-10: "kill"',
+  //               description: 'This kills the INF-BN-F-10 entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //           'INF-BN-G-10': {
+  //             Kill: {
+  //               label: 'INF-BN-G-10: "kill"',
+  //               description: 'This kills the INF-BN-G-10 entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //           'INF-CO-A-5': {
+  //             Kill: {
+  //               label: 'INF-CO-A-5: "kill"',
+  //               description: 'This kills the INF-CO-A-5 entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //           'INF-CO-B-5': {
+  //             Kill: {
+  //               label: 'INF-CO-B-5: "kill"',
+  //               description: 'This kills the INF-CO-B-5 entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //           'INF-CO-C-5': {
+  //             Kill: {
+  //               label: 'INF-CO-C-5: "kill"',
+  //               description: 'This kills the INF-CO-C-5 entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //           'INF-CO-D-5': {
+  //             Kill: {
+  //               label: 'INF-CO-D-5: "kill"',
+  //               description: 'This kills the INF-CO-D-5 entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //           'INF-CO-E-5': {
+  //             Kill: {
+  //               label: 'INF-CO-E-5: "kill"',
+  //               description: 'This kills the INF-CO-E-5 entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //           'INF-CO-F-5': {
+  //             Kill: {
+  //               label: 'INF-CO-F-5: "kill"',
+  //               description: 'This kills the INF-CO-F-5 entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //           'INF-CO-G-5': {
+  //             Kill: {
+  //               label: 'INF-CO-G-5: "kill"',
+  //               description: 'This kills the INF-CO-G-5 entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //           'INF-CO-H-5': {
+  //             Kill: {
+  //               label: 'INF-CO-H-5: "kill"',
+  //               description: 'This kills the INF-CO-H-5 entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //           'SOF-BN-A-8': {
+  //             Kill: {
+  //               label: 'SOF-BN-A-8: "kill"',
+  //               description: 'This kills the SOF-BN-A-8 entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //           'SOF-BN-B-8': {
+  //             Kill: {
+  //               label: 'SOF-BN-B-8: "kill"',
+  //               description: 'This kills the SOF-BN-B-8 entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //           'SOF-BN-C-8': {
+  //             Kill: {
+  //               label: 'SOF-BN-C-8: "kill"',
+  //               description: 'This kills the SOF-BN-C-8 entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //           'SOF-TM-A-3': {
+  //             Kill: {
+  //               label: 'SOF-TM-A-3: "kill"',
+  //               description: 'This kills the SOF-TM-A-3 entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //           'SOF-TM-B-3': {
+  //             Kill: {
+  //               label: 'SOF-TM-B-3: "kill"',
+  //               description: 'This kills the SOF-TM-B-3 entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //           'SOF-TM-C-3': {
+  //             Kill: {
+  //               label: 'SOF-TM-C-3: "kill"',
+  //               description: 'This kills the SOF-TM-C-3 entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //           'SOF-TM-D-3': {
+  //             Kill: {
+  //               label: 'SOF-TM-D-3: "kill"',
+  //               description: 'This kills the SOF-TM-D-3 entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //           'SOF-TM-E-3': {
+  //             Kill: {
+  //               label: 'SOF-TM-E-3: "kill"',
+  //               description: 'This kills the SOF-TM-E-3 entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //           'PLA-C2-HOK': {
+  //             Kill: {
+  //               label: 'PLA-C2-HOK: "kill"',
+  //               description: 'This kills the PLA-C2-HOK entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //         },
+  //         'Surface': {
+  //           'PLA-CVN': {
+  //             Kill: {
+  //               label: 'PLA-CVN: "kill"',
+  //               description: 'This kills the PLA-CVN entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //           'PLA-DDG-A': {
+  //             'Kill': {
+  //               label: 'PLA-DDG-A: "kill"',
+  //               description: 'This kills the PLA-DDG-A entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //             'Disable auto fire': {
+  //               label: 'PLA-DDG-A: "disable auto fire"',
+  //               description:
+  //                 'This will disable auto fire for the PLA-DDG-A entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //           'PLA-DDG-B': {
+  //             'Kill': {
+  //               label: 'PLA-DDG-B: "kill"',
+  //               description: 'This kills the PLA-DDG-B entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //             'Disable auto fire': {
+  //               label: 'PLA-DDG-B: "disable auto fire"',
+  //               description:
+  //                 'This will disable auto fire for the PLA-DDG-B entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //           'PLA-DDG-C': {
+  //             'Kill': {
+  //               label: 'PLA-DDG-C: "kill"',
+  //               description: 'This kills the PLA-DDG-C entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //             'Disable auto fire': {
+  //               label: 'PLA-DDG-C: "disable auto fire"',
+  //               description:
+  //                 'This will disable auto fire for the PLA-DDG-C entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //           'PLA-DDG-D': {
+  //             'Kill': {
+  //               label: 'PLA-DDG-D: "kill"',
+  //               description: 'This kills the PLA-DDG-D entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //             'Disable auto fire': {
+  //               label: 'PLA-DDG-D: "disable auto fire"',
+  //               description:
+  //                 'This will disable auto fire for the PLA-DDG-D entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //         },
+  //         'Sub-Surface': {
+  //           'PLA-SSN-A': {
+  //             Kill: {
+  //               label: 'PLA-SSN-A: "kill"',
+  //               description: 'This kills the PLA-SSN-A entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //           'PLA-SSN-B': {
+  //             Kill: {
+  //               label: 'PLA-SSN-B: "kill"',
+  //               description: 'This kills the PLA-SSN-B entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //         },
+  //       },
+  //       Neutral: {
+  //         'Space': { 'CBCN-SAT': {} },
+  //         'Cyber': {},
+  //         'Air': {},
+  //         'Land': {
+  //           'CBCN-NODE': {
+  //             Disable: {
+  //               label: 'CBCN-NODE: "disable"',
+  //               description: 'This disables the CBCN-NODE entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //           'CBCN-SERVER': {
+  //             Disable: {
+  //               label: 'CBCN-SERVER: "disable"',
+  //               description: 'This disables the CBCN-SERVER entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //           'CBCN001-139': {
+  //             Disable: {
+  //               label: 'CBCN001-139: "disable"',
+  //               description: 'This disables the CBCN001-139 entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //           'CBCN998': {
+  //             Disable: {
+  //               label: 'CBCN998: "disable"',
+  //               description: 'This disables the CBCN998 entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //           'CBCN999': {
+  //             Disable: {
+  //               label: 'CBCN999: "disable"',
+  //               description: 'This disables the CBCN999 entity.',
+  //               scriptName: '',
+  //               originalPath: '',
+  //               args: {},
+  //             },
+  //           },
+  //         },
+  //         'Surface': {},
+  //         'Sub-Surface': {},
+  //       },
+  //       Unknown: {
+  //         'Space': {},
+  //         'Cyber': {},
+  //         'Air': {},
+  //         'Land': {},
+  //         'Surface': {},
+  //         'Sub-Surface': {},
+  //       },
+  //     },
+  //     mIRC: {
+  //       'mIRC Server': {
+  //         EFFECTS: ['Shutdown Server', 'List all channels', 'List all users'],
+  //       },
+  //       'Channels': {
+  //         CJTF_H_COMMAND_A: {
+  //           'Spoof Channel': {
+  //             label: 'CJTF_H_COMMAND_A: "spoof channel"',
+  //             description: 'This spoofs the CJTF_H_COMMAND_A channel.',
+  //             scriptName: '',
+  //             originalPath: '',
+  //             args: {},
+  //           },
+  //         },
+  //         JFACC_OPS_A: {
+  //           'Spoof Channel': {
+  //             label: 'JFACC_OPS_A: "spoof channel"',
+  //             description: 'This spoofs the JFACC_OPS_A channel.',
+  //             scriptName: '',
+  //             originalPath: '',
+  //             args: {},
+  //           },
+  //         },
+  //         JFLCC_OPS_A: {
+  //           'Spoof Channel': {
+  //             label: 'JFLCC_OPS_A: "spoof channel"',
+  //             description: 'This spoofs the JFLCC_OPS_A channel.',
+  //             scriptName: '',
+  //             originalPath: '',
+  //             args: {},
+  //           },
+  //         },
+  //         JFMCC_OPS_A: {
+  //           'Spoof Channel': {
+  //             label: 'JFMCC_OPS_A: "spoof channel"',
+  //             description: 'This spoofs the JFMCC_OPS_A channel.',
+  //             scriptName: '',
+  //             originalPath: '',
+  //             args: {},
+  //           },
+  //         },
+  //         JFSOCC_OPS_A: {
+  //           'Spoof Channel': {
+  //             label: 'JFSOCC_OPS_A: "spoof channel"',
+  //             description: 'This spoofs the JFSOCC_OPS_A channel.',
+  //             scriptName: '',
+  //             originalPath: '',
+  //             args: {},
+  //           },
+  //         },
+  //         JFSCC_OPS_A: {
+  //           'Spoof Channel': {
+  //             label: 'JFSCC_OPS_A: "spoof channel"',
+  //             description: 'This spoofs the JFSCC_OPS_A channel.',
+  //             scriptName: '',
+  //             originalPath: '',
+  //             args: {},
+  //           },
+  //         },
+  //         JFCCC_OPS_A: {
+  //           'Spoof Channel': {
+  //             label: 'JFCCC_OPS_A: "spoof channel"',
+  //             description: 'This spoofs the JFCCC_OPS_A channel.',
+  //             scriptName: '',
+  //             originalPath: '',
+  //             args: {},
+  //           },
+  //         },
+  //         TEXT_2_SPEECH_A: {
+  //           'Spoof Channel': {
+  //             label: 'TEXT_2_SPEECH_A: "spoof channel"',
+  //             description: 'This spoofs the TEXT_2_SPEECH_A channel.',
+  //             scriptName: '',
+  //             originalPath: '',
+  //             args: {},
+  //           },
+  //         },
+  //         AUDIO_TRIGGER_A: {
+  //           'Spoof Channel': {
+  //             label: 'AUDIO_TRIGGER_A: "spoof channel"',
+  //             description: 'This spoofs the AUDIO_TRIGGER_A channel.',
+  //             scriptName: '',
+  //             originalPath: '',
+  //             args: {},
+  //           },
+  //         },
+  //         ALL_SOURCE_INTEL_A: {
+  //           'Spoof Channel': {
+  //             label: 'ALL_SOURCE_INTEL_A: "spoof channel"',
+  //             description: 'This spoofs the ALL_SOURCE_INTEL_A channel.',
+  //             scriptName: '',
+  //             originalPath: '',
+  //             args: {},
+  //           },
+  //         },
+  //         CESAR_A: {
+  //           'Spoof Channel': {
+  //             label: 'CESAR_A: "spoof channel"',
+  //             description: 'This spoofs the CESAR_A channel.',
+  //             scriptName: '',
+  //             originalPath: '',
+  //             args: {},
+  //           },
+  //         },
+  //         METIS_A: {
+  //           'Spoof Channel': {
+  //             label: 'METIS_A: "spoof channel"',
+  //             description: 'This spoofs the METIS_A channel.',
+  //             scriptName: '',
+  //             originalPath: '',
+  //             args: {},
+  //           },
+  //         },
+  //         AWACS_A: {
+  //           'Spoof Channel': {
+  //             label: 'AWACS_A: "spoof channel"',
+  //             description: 'This spoofs the AWACS_A channel.',
+  //             scriptName: '',
+  //             originalPath: '',
+  //             args: {},
+  //           },
+  //         },
+  //       },
+  //     },
+  //     Sonomarc: {
+  //       Frequencies: {
+  //         'BEIGE-41': {
+  //           'Jam Frequency': {
+  //             label: 'BEIGE-41: "jam frequency"',
+  //             description: 'This jams the BEIGE-41 frequency.',
+  //             scriptName: '',
+  //             originalPath: '',
+  //             args: {},
+  //           },
+  //         },
+  //         'CRIMMSON-28': {
+  //           'Jam Frequency': {
+  //             label: 'CRIMMSON-28: "jam frequency"',
+  //             description: 'This jams the CRIMMSON-28 frequency.',
+  //             scriptName: '',
+  //             originalPath: '',
+  //             args: {},
+  //           },
+  //         },
+  //         'VIOLET-26': {
+  //           'Jam Frequency': {
+  //             label: 'VIOLET-26: "jam frequency"',
+  //             description: 'This jams the VIOLET-26 frequency.',
+  //             scriptName: '',
+  //             originalPath: '',
+  //             args: {},
+  //           },
+  //         },
+  //         'TEAL-36': {
+  //           'Jam Frequency': {
+  //             label: 'TEAL-36: "jam frequency"',
+  //             description: 'This jams the TEAL-36 frequency.',
+  //             scriptName: '',
+  //             originalPath: '',
+  //             args: {},
+  //           },
+  //         },
+  //         'AMBER-38': {
+  //           'Jam Frequency': {
+  //             label: 'AMBER-38: "jam frequency"',
+  //             description: 'This jams the AMBER-38 frequency.',
+  //             scriptName: '',
+  //             originalPath: '',
+  //             args: {},
+  //           },
+  //         },
+  //         'COBALT-45': {
+  //           'Jam Frequency': {
+  //             label: 'COBALT-45: "jam frequency"',
+  //             description: 'This jams the COBALT-45 frequency.',
+  //             scriptName: '',
+  //             originalPath: '',
+  //             args: {},
+  //           },
+  //         },
+  //         'SAGE-32': {
+  //           'Jam Frequency': {
+  //             label: 'SAGE-32: "jam frequency"',
+  //             description: 'This jams the SAGE-32 frequency.',
+  //             scriptName: '',
+  //             originalPath: '',
+  //             args: {},
+  //           },
+  //         },
+  //         'SCARLETT-28': {
+  //           'Jam Frequency': {
+  //             label: 'SCARLETT-28: "jam frequency"',
+  //             description: 'This jams the SCARLETT-28 frequency.',
+  //             scriptName: '',
+  //             originalPath: '',
+  //             args: {},
+  //           },
+  //         },
+  //         'SIENNA-31': {
+  //           'Jam Frequency': {
+  //             label: 'SIENNA-31: "jam frequency"',
+  //             description: 'This jams the SIENNA-31 frequency.',
+  //             scriptName: '',
+  //             originalPath: '',
+  //             args: {},
+  //           },
+  //         },
+  //         'ROYAL-44': {
+  //           'Jam Frequency': {
+  //             label: 'ROYAL-44: "jam frequency"',
+  //             description: 'This jams the ROYAL-44 frequency.',
+  //             scriptName: '',
+  //             originalPath: '',
+  //             args: {},
+  //           },
+  //         },
+  //         'CIDER-23': {
+  //           'Jam Frequency': {
+  //             label: 'CIDER-23: "jam frequency"',
+  //             description: 'This jams the CIDER-23 frequency.',
+  //             scriptName: '',
+  //             originalPath: '',
+  //             args: {},
+  //           },
+  //         },
+  //         'PLUM-33': {
+  //           'Jam Frequency': {
+  //             label: 'PLUM-33: "jam frequency"',
+  //             description: 'This jams the PLUM-33 frequency.',
+  //             scriptName: '',
+  //             originalPath: '',
+  //             args: {},
+  //           },
+  //         },
+  //         'SAPPHIRE-24': {
+  //           'Jam Frequency': {
+  //             label: 'SAPPHIRE-24: "jam frequency"',
+  //             description: 'This jams the SAPPHIRE-24 frequency.',
+  //             scriptName: '',
+  //             originalPath: '',
+  //             args: {},
+  //           },
+  //         },
+  //         'PEWTER-35': {
+  //           'Jam Frequency': {
+  //             label: 'PEWTER-35: "jam frequency"',
+  //             description: 'This jams the PEWTER-35 frequency.',
+  //             scriptName: '',
+  //             originalPath: '',
+  //             args: {},
+  //           },
+  //         },
+  //         'LIME-30': {
+  //           'Jam Frequency': {
+  //             label: 'LIME-30: "jam frequency"',
+  //             description: 'This jams the LIME-30 frequency.',
+  //             scriptName: '',
+  //             originalPath: '',
+  //             args: {},
+  //           },
+  //         },
+  //         'HAZEL-47': {
+  //           'Jam Frequency': {
+  //             label: 'HAZEL-47: "jam frequency"',
+  //             description: 'This jams the HAZEL-47 frequency.',
+  //             scriptName: '',
+  //             originalPath: '',
+  //             args: {},
+  //           },
+  //         },
+  //         'YELLOW-16': {
+  //           'Jam Frequency': {
+  //             label: 'YELLOW-16: "jam frequency"',
+  //             description: 'This jams the YELLOW-16 frequency.',
+  //             scriptName: '',
+  //             originalPath: '',
+  //             args: {},
+  //           },
+  //         },
+  //         'RUBY-22': {
+  //           'Jam Frequency': {
+  //             label: 'RUBY-22: "jam frequency"',
+  //             description: 'This jams the RUBY-22 frequency.',
+  //             scriptName: '',
+  //             originalPath: '',
+  //             args: {},
+  //           },
+  //         },
+  //         'MOCHA-38': {
+  //           'Jam Frequency': {
+  //             label: 'MOCHA-38: "jam frequency"',
+  //             description: 'This jams the MOCHA-38 frequency.',
+  //             scriptName: '',
+  //             originalPath: '',
+  //             args: {},
+  //           },
+  //         },
+  //       },
+  //     },
+  //   },
+  // },
 }
