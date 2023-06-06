@@ -289,7 +289,7 @@ export default function MissionSelectionPage(
 
       page_elm.classList.remove('DropPending')
 
-      if (files.length > 0) {
+      if (files.length > 0 && appState.currentUser !== null) {
         importMissionFiles(files)
       }
     }
@@ -518,6 +518,7 @@ export default function MissionSelectionPage(
   let editMissionListClassName: string = 'MissionList'
   let missionNavPanelClassName: string = 'MissionNavPanel'
   let searchContainerClassName: string = 'Hidden'
+  let fileDropBoxClassName: string = 'Hidden'
   let displayLogin: boolean = true
   let displayLogout: boolean = false
 
@@ -531,6 +532,7 @@ export default function MissionSelectionPage(
     editMissionsContainerClassName += ' InstructorView'
     editMissionListClassName += ' InstructorView'
     missionNavPanelClassName += ' InstructorView'
+    fileDropBoxClassName += ' FileDropBox'
     displayLogin = false
     displayLogout = true
   }
@@ -561,7 +563,6 @@ export default function MissionSelectionPage(
         <MissionSelectionRow
           mission={mission}
           appActions={appActions}
-          // goToPage={appActions.goToPage}
           setMountHandled={setMountHandled}
           key={`MissionSelectionRow_${mission.missionID}`}
         />
@@ -580,7 +581,7 @@ export default function MissionSelectionPage(
       onDrop={handleFileDrop}
     >
       {/* { File Drop Box } */}
-      <div className={'FileDropBox'}>
+      <div className={fileDropBoxClassName}>
         <div className='UploadIcon'></div>
       </div>
       {/* { Navigation } */}

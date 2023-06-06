@@ -16,7 +16,7 @@ export enum EToggleLockState {
 interface IProps {
   initiallyActivated: boolean
   lockState: EToggleLockState
-  deliverValue: (activated: boolean) => void
+  deliverValue: (activated: boolean, revert: () => void) => void
 }
 
 interface IState {
@@ -52,20 +52,24 @@ export default class Toggle extends React.Component<IProps, IState> {
       case EToggleLockState.LockedActivation:
         if (!activated) {
           this.setState({ activated: true }, () =>
-            this.props.deliverValue(this.state.activated),
+            this.props.deliverValue(this.state.activated, this.revert),
           )
         }
         break
       case EToggleLockState.LockedDeactivation:
         if (activated) {
           this.setState({ activated: false }, () =>
-            this.props.deliverValue(this.state.activated),
+            this.props.deliverValue(this.state.activated, this.revert),
           )
         }
         break
       default:
         break
     }
+  }
+
+  revert = (): void => {
+    this.setState({ activated: !this.state.activated })
   }
 
   // inherited
@@ -81,7 +85,7 @@ export default class Toggle extends React.Component<IProps, IState> {
         onClick={() => {
           this.setState({ activated: !activated }, () => {
             if (lockState === EToggleLockState.Unlocked) {
-              this.props.deliverValue(this.state.activated)
+              this.props.deliverValue(this.state.activated, this.revert)
             }
           })
         }}
