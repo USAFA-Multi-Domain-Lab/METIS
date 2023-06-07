@@ -41,8 +41,6 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
   const [lastSelectedNode, setLastSelectedNode] = useState<MissionNode | null>(
     null,
   )
-  const [outputPanelIsDisplayed, setOutputPanelIsDisplayed] =
-    useState<boolean>(false)
   const [executeNodePathIsDisplayed, setExecuteNodePathIsDisplayed] =
     useState<boolean>(false)
   const [nodeActionsIsDisplayed, setNodeActionsIsDisplayed] =
@@ -117,7 +115,6 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
     // This will output to the console.
     const outputToConsole = (output: IConsoleOutput): void => {
       mission.outputToConsole(output)
-      setOutputPanelIsDisplayed(true)
     }
 
     /* -- RENDER -- */
@@ -374,13 +371,8 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
               panel2={{
                 ...ResizablePanel.defaultProps,
                 minSize: 400,
-                isOpen: outputPanelIsDisplayed,
-                render: () => (
-                  <OutputPanel
-                    mission={mission}
-                    setOutputPanelIsDisplayed={setOutputPanelIsDisplayed}
-                  />
-                ),
+                isOpen: true,
+                render: () => <OutputPanel mission={mission} />,
               }}
             />
           </div>

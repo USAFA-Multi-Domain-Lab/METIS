@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Mission, setLive } from '../../../modules/missions'
 import { EAjaxStatus } from '../../../modules/toolbox/ajax'
 import { AppActions } from '../../AppState'
-import { Detail, DetailNumber, DetailToggle } from '../form/Form'
+import { Detail, DetailBox, DetailNumber, DetailToggle } from '../form/Form'
 import './MissionEntry.scss'
 
 // This will render the basic editable
@@ -116,6 +116,12 @@ export default function MissionEntry(props: {
                 }
               }}
               key={`${mission.missionID}_initialResources`}
+            />
+            <DetailBox
+              label='Introduction Message'
+              initialValue={'Enter your overview message here.'}
+              deliverValue={(studentOverviewMessage: string) => {}}
+              key={`${mission.missionID}_studentOverviewMessage`}
             />
           </div>
         </div>

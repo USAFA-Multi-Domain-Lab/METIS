@@ -88,12 +88,9 @@
       .List {
         .items {
           .item {
-            .wrapper {
-              .title {
-                &.opened {
-                  color: $node-opened;
-                }
-              }
+            &.opened {
+              // transform: scale(0.85);
+              // filter: grayscale(0.4);
             }
           }
         }

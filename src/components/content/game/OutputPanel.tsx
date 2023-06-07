@@ -8,7 +8,6 @@ import Tooltip from '../communication/Tooltip'
 
 export interface IOutputPanel {
   mission: Mission
-  setOutputPanelIsDisplayed: (outputPanelIsDisplayed: boolean) => void
 }
 
 export interface IOutputPanel_S {}
@@ -167,23 +166,12 @@ export default class OutputPanel extends Component<
   render(): JSX.Element | null {
     let mission: Mission = this.props.mission
     let consoleOutputs: Array<IConsoleOutput> = mission.consoleOutputs
-    let setOutputPanelIsDisplayed = this.props.setOutputPanelIsDisplayed
-
-    const closeOutputWindow = () => {
-      setOutputPanelIsDisplayed(false)
-    }
 
     /* -- RENDER -- */
 
     return (
       <div className='OutputPanel'>
         <div className='BorderBox'>
-          <div className='Close'>
-            <div className='CloseButton' onClick={closeOutputWindow}>
-              x
-              <Tooltip description='Minimize terminal.' />
-            </div>
-          </div>
           <ul className='TextArea'>
             {consoleOutputs.map((consoleOutput: IConsoleOutput) => {
               return (
