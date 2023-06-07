@@ -112,16 +112,18 @@ function App(props: {
 
       appActions.beginLoading(AppState.defaultAppStateValues.loadingMessage)
 
-      getMissionNodeColorOptions((colorOptions: Array<string>) => {
-        appState.setMissionNodeColors(colorOptions)
-      })
-
       usersModule.retrieveCurrentUser(
         (currentUser: IUser | null) => {
           appState.setCurrentUser(currentUser)
           appState.setAppMountHandled(true)
           appActions.finishLoading()
           appActions.goToPage('MissionSelectionPage', {})
+
+          if (currentUser !== null) {
+            getMissionNodeColorOptions((colorOptions: Array<string>) => {
+              appState.setMissionNodeColors(colorOptions)
+            })
+          }
         },
         () => {
           appState.setErrorMessage('Failed to sync session.')

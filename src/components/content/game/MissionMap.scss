@@ -370,13 +370,13 @@
     z-index: $z-index-objective-map-pointers;
     border: 2px solid transparent;
     stroke: rgba($color-main, 1);
-    marker {
-      polygon,
-      circle {
-        fill: rgba($color-accent-light, 1);
-        stroke: none;
-      }
-    }
+    // marker {
+    //   polygon,
+    //   circle {
+    //     fill: rgba($color-accent-light, 1);
+    //     stroke: none;
+    //   }
+    // }
   }
 
   @media only screen and (max-width: 275px) {

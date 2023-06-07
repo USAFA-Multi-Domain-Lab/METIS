@@ -24,9 +24,9 @@ const userCredentials = {
   userID: 'admin',
   password: 'temppass',
 }
-const noNodeDataMission = {
+const createMissionWithNoNodeData = {
   mission: {
-    name: 'Updated No Node Data (To Delete)',
+    name: 'No Node Data Mission (To Delete)',
     versionNumber: 1,
     initialResources: 5,
     live: false,
@@ -83,10 +83,86 @@ const testMission = {
     schemaBuildNumber: 9,
   },
 }
-const incorrectUpdateTestMission = {
+const updateMissionWithNoMissionID = {
+  mission: {
+    name: 'Updated No Node Data (To Delete)',
+    versionNumber: 1,
+    initialResources: 5,
+    live: false,
+    nodeStructure: {
+      'e72aa13b-3d99-406a-a435-b0f5f2e31873': {},
+    },
+    nodeData: [
+      {
+        nodeID: 'e72aa13b-3d99-406a-a435-b0f5f2e31873',
+        name: 'Test Node',
+        color: '#ffffff',
+        description: 'This is a new node.',
+        preExecutionText: 'Node has not been executed.',
+        depthPadding: 0,
+        executable: false,
+        device: false,
+        actions: [
+          {
+            actionID: '5a3acf01-7ea6-48c5-bff8-155233dcf46c',
+            name: 'Destroy',
+            description: 'This will destroy.',
+            processTime: 3000,
+            successChance: 0.6,
+            resourceCost: 1,
+            postExecutionSuccessText:
+              'Destroy was performed successfully on Test Node.',
+            postExecutionFailureText:
+              'Destroy was performed unsuccessfully on Test Node.',
+            scripts: [],
+          },
+        ],
+      },
+    ],
+    schemaBuildNumber: 9,
+  },
+}
+const updateMissionWithNoNodeStructure = {
   mission: {
     missionID: '',
-    name: 'Updated No Node Data (To Delete)',
+    name: 'Update No Node Structure (To Delete)',
+    versionNumber: 1,
+    initialResources: 5,
+    live: false,
+    nodeData: [
+      {
+        nodeID: 'e72aa13b-3d99-406a-a435-b0f5f2e31873',
+        name: 'Test Node',
+        color: '#ffffff',
+        description: 'This is a new node.',
+        preExecutionText: 'Node has not been executed.',
+        depthPadding: 0,
+        executable: false,
+        device: false,
+        actions: [
+          {
+            actionID: '5a3acf01-7ea6-48c5-bff8-155233dcf46c',
+            name: 'Destroy',
+            description: 'This will destroy.',
+            processTime: 3000,
+            successChance: 0.6,
+            resourceCost: 1,
+            postExecutionSuccessText:
+              'Destroy was performed successfully on Test Node.',
+            postExecutionFailureText:
+              'Destroy was performed unsuccessfully on Test Node.',
+            scripts: [],
+          },
+        ],
+      },
+    ],
+    schemaBuildNumber: 9,
+  },
+}
+const updateMissionWithNoNodeData = {
+  mission: {
+    missionID: '',
+    name: 'No Node Data Mission (To Delete)',
     versionNumber: 1,
     initialResources: 5,
     live: false,
@@ -96,6 +172,7 @@ const incorrectUpdateTestMission = {
     schemaBuildNumber: 5,
   },
 }
+
 const correctUpdateTestMission = {
   mission: {
     missionID: '',
@@ -748,7 +825,7 @@ describe('API Mission Routes', function () {
     agent
       .post('/api/v1/missions/')
       .set('Content-Type', 'application/json')
-      .send(noNodeDataMission)
+      .send(createMissionWithNoNodeData)
       .then(function (response: ChaiHttp.Response) {
         expect(response).to.have.status(400)
         done()
@@ -814,16 +891,49 @@ describe('API Mission Routes', function () {
       })
   })
 
-  it('Updating a mission with (a) missing property/properties in the body of the response should return a bad (400) response', function (done) {
+  it('Updating a mission with (a) missing property/properties that is required (missionID) in the body of the response should return a bad (400) response', function (done) {
+    agent
+      .put('/api/v1/missions/')
+      .set('Content-Type', 'application/json')
+      .send(updateMissionWithNoMissionID)
+      .then(function (response: ChaiHttp.Response) {
+        expect(response).to.have.status(400)
+        done()
+      })
+      .catch(function (error) {
+        testLogger.error(error)
+        done(error)
+      })
+  })
+
+  it('Updating a mission where the nodeStructure is defined, but the nodeData is undefined in the body of the response should return an internal server error (500) response', function (done) {
     missionID = createdMissionIDArray[0]
-    incorrectUpdateTestMission.mission.missionID = missionID
+    updateMissionWithNoNodeData.mission.missionID = missionID
 
     agent
       .put('/api/v1/missions/')
       .set('Content-Type', 'application/json')
-      .send(incorrectUpdateTestMission)
+      .send(updateMissionWithNoNodeData)
       .then(function (response: ChaiHttp.Response) {
-        expect(response).to.have.status(400)
+        expect(response).to.have.status(500)
+        done()
+      })
+      .catch(function (error) {
+        testLogger.error(error)
+        done(error)
+      })
+  })
+
+  it('Updating a mission where the nodeData is defined, but the nodeStructure is undefined in the body of the response should return an internal server error (500) response', function (done) {
+    missionID = createdMissionIDArray[0]
+    updateMissionWithNoNodeStructure.mission.missionID = missionID
+
+    agent
+      .put('/api/v1/missions/')
+      .set('Content-Type', 'application/json')
+      .send(updateMissionWithNoNodeStructure)
+      .then(function (response: ChaiHttp.Response) {
+        expect(response).to.have.status(500)
         done()
       })
       .catch(function (error) {
@@ -987,7 +1097,7 @@ describe('Request Body Validation', function () {
       })
   })
 
-  it('Sending a request with all properties and their correct types results in a successful (200) response', function (done) {
+  it('Sending a request with all required body keys and their correct types results in a successful (200) response', function (done) {
     agent
       .post('/api/v1/test/request-body-filter-check/')
       .set('Content-Type', 'application/json')
@@ -1015,7 +1125,7 @@ describe('Request Body Validation', function () {
       })
   })
 
-  it('Sending a request with all properties and their types being incorrect results in a bad (400) response', function (done) {
+  it('Sending a request with all required body keys and their types being incorrect results in a bad (400) response', function (done) {
     agent
       .post('/api/v1/test/request-body-filter-check/')
       .set('Content-Type', 'application/json')
@@ -1043,7 +1153,7 @@ describe('Request Body Validation', function () {
       })
   })
 
-  it('Sending a request with a missing property results in a bad (400) request', function (done) {
+  it('Sending a request with a missing body key that is required results in a bad (400) request', function (done) {
     agent
       .post('/api/v1/test/request-body-filter-check/')
       .set('Content-Type', 'application/json')
@@ -1062,6 +1172,33 @@ describe('Request Body Validation', function () {
       })
       .then(function (response: ChaiHttp.Response) {
         expect(response).to.have.status(400)
+        done()
+      })
+      .catch(function (error) {
+        testLogger.error(error)
+        done(error)
+      })
+  })
+
+  it('Sending a request with a missing body key that is optional results in a successful (200) request', function (done) {
+    agent
+      .post('/api/v1/test/request-body-filter-check/')
+      .set('Content-Type', 'application/json')
+      .send({
+        STRING: STRING,
+        STRING_50_CHAR: STRING_50_CHAR,
+        STRING_128_CHAR: STRING_128_CHAR,
+        STRING_255_CHAR: STRING_255_CHAR,
+        STRING_256_CHAR: STRING_256_CHAR,
+        STRING_512_CHAR: STRING_512_CHAR,
+        STRING_1024_CHAR: STRING_1024_CHAR,
+        STRING_MEDIUMTEXT: STRING_MEDIUMTEXT,
+        NUMBER: NUMBER,
+        OBJECT: OBJECT,
+        OBJECTID: OBJECTID,
+      })
+      .then(function (response: ChaiHttp.Response) {
+        expect(response).to.have.status(200)
         done()
       })
       .catch(function (error) {

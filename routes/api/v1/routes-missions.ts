@@ -537,12 +537,12 @@ router.put(
   validateRequestBodyKeys(
     {
       missionID: RequestBodyFilters.OBJECTID,
-      live: RequestBodyFilters.BOOLEAN,
     },
     {
       name: RequestBodyFilters.STRING,
       versionNumber: RequestBodyFilters.NUMBER,
       initialResources: RequestBodyFilters.NUMBER,
+      live: RequestBodyFilters.BOOLEAN,
       nodeStructure: RequestBodyFilters.OBJECT,
       nodeData: RequestBodyFilters.OBJECT,
     },

@@ -532,7 +532,7 @@ export default function MissionSelectionPage(
     editMissionsContainerClassName += ' InstructorView'
     editMissionListClassName += ' InstructorView'
     missionNavPanelClassName += ' InstructorView'
-    fileDropBoxClassName += ' FileDropBox'
+    fileDropBoxClassName = 'FileDropBox'
     displayLogin = false
     displayLogout = true
   }

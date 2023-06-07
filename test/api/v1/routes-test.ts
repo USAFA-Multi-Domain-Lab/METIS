@@ -11,20 +11,22 @@ const router = express.Router()
 // middleware function
 router.post(
   '/request-body-filter-check/',
-  validateRequestBodyKeys({
-    STRING: RequestBodyFilters.STRING,
-    STRING_50_CHAR: RequestBodyFilters.STRING_50_CHAR,
-    STRING_128_CHAR: RequestBodyFilters.STRING_128_CHAR,
-    STRING_255_CHAR: RequestBodyFilters.STRING_255_CHAR,
-    STRING_256_CHAR: RequestBodyFilters.STRING_256_CHAR,
-    STRING_512_CHAR: RequestBodyFilters.STRING_512_CHAR,
-    STRING_1024_CHAR: RequestBodyFilters.STRING_1024_CHAR,
-    STRING_MEDIUMTEXT: RequestBodyFilters.STRING_MEDIUMTEXT,
-    NUMBER: RequestBodyFilters.NUMBER,
-    BOOLEAN: RequestBodyFilters.BOOLEAN,
-    OBJECT: RequestBodyFilters.OBJECT,
-    OBJECTID: RequestBodyFilters.OBJECTID,
-  }),
+  validateRequestBodyKeys(
+    {
+      STRING: RequestBodyFilters.STRING,
+      STRING_50_CHAR: RequestBodyFilters.STRING_50_CHAR,
+      STRING_128_CHAR: RequestBodyFilters.STRING_128_CHAR,
+      STRING_255_CHAR: RequestBodyFilters.STRING_255_CHAR,
+      STRING_256_CHAR: RequestBodyFilters.STRING_256_CHAR,
+      STRING_512_CHAR: RequestBodyFilters.STRING_512_CHAR,
+      STRING_1024_CHAR: RequestBodyFilters.STRING_1024_CHAR,
+      STRING_MEDIUMTEXT: RequestBodyFilters.STRING_MEDIUMTEXT,
+      NUMBER: RequestBodyFilters.NUMBER,
+      OBJECT: RequestBodyFilters.OBJECT,
+      OBJECTID: RequestBodyFilters.OBJECTID,
+    },
+    { BOOLEAN: RequestBodyFilters.BOOLEAN },
+  ),
   (request, response) => {
     return response.sendStatus(200)
   },

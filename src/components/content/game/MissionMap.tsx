@@ -68,6 +68,7 @@ export interface IMissionMappable {
   device: boolean
   color: string
   isOpen: boolean
+  childNodes: Array<MissionNode>
 }
 
 // represents a location on the mission map
@@ -98,8 +99,9 @@ const baseMapYScale: number = 110.0 /*px*/
 const baseGridPaddingX: number = 100.0 /*px*/
 const baseGridPaddingY: number = 20.0 /*px*/
 const selectedNodePaddingY: number = 40.0 /*px*/
-const pointerOriginOffset: number = 20 /*px*/
-const pointerArrowOffset: number = 30 /*px*/
+const pointerOriginOffset: number = 50 /*px*/
+const pointerStopOffset: number = 30 /*px*/
+// const pointerArrowOffset: number = 15 /*px*/
 const mapItemFontSize: number = 20 /*px*/
 // const mapCuttoff: number = 1600 /*px*/
 
@@ -1006,7 +1008,6 @@ export default class MissionMap extends React.Component<
     let loadingClassName: string = 'loading'
     let iconClassName: string = ''
     let buttonUniqueClassName: string = ''
-    let titleClassName: string = 'title'
 
     // This will shift the title line
     // height if the node is selected.
@@ -1020,10 +1021,6 @@ export default class MissionMap extends React.Component<
     // Logic to handle if the loading bar is displayed or not.
     if (!node.executing) {
       loadingClassName += ' hide'
-    }
-
-    if (node.isOpen) {
-      titleClassName += ' opened'
     }
 
     // Logic to handle nodes that are executable and nodes that
@@ -1049,11 +1046,10 @@ export default class MissionMap extends React.Component<
           style={{
             height: `${wrapperHeight - 5}px`,
             border: `2px solid ${node.color}`,
-            paddingTop: `${wrapperHeight * 0.03}px`,
           }}
         >
           <div
-            className={titleClassName}
+            className='title'
             style={{
               width: `calc(100% - ${titleWidthSubtrahend}px)`,
               fontSize: `${titleFontSize}px`,
@@ -1324,30 +1320,46 @@ export default class MissionMap extends React.Component<
         x1 += (mapXScale / 2) * mapScale
         x2 -= (mapXScale / 2) * mapScale - 0.001
         x1 -= (gridPaddingX - pointerOriginOffset) * mapScale
-        x2 += (gridPaddingX - pointerArrowOffset) * mapScale
+        x2 += (gridPaddingX + pointerStopOffset) * mapScale
+        // x2 += (gridPaddingX - pointerArrowOffset) * mapScale
 
         let key = `unlocks-${relationship.unlocks.nodeID}_prereq-${relationship.prerequisite.nodeID}`
-        let strokeWidth: number = 4 * mapScale
+        let startStrokeWidth: number = 4 * mapScale
+        let verticalLineStrokeWidth: number = 4 * mapScale
+        let endStrokeWidth: number = 4 * mapScale
         let includeOrigin = Math.abs(x1 - x2) > 1 || Math.abs(y1 - y2) > 1
         let includeVerticalLine: boolean = y1 != y2
+        let numberOfChildren: number =
+          relationship.prerequisite.childNodes.length
+
+        if (numberOfChildren > 1) {
+          endStrokeWidth = 5 * mapScale
+          verticalLineStrokeWidth = 5 * mapScale
+        } else if (numberOfChildren > 1 && mapScale < 0.28) {
+          endStrokeWidth = 6 * mapScale
+          startStrokeWidth = 3 * mapScale
+        } else if (numberOfChildren === 1) {
+          startStrokeWidth += 0.5
+          endStrokeWidth += 0.5
+        }
 
         return (
           <g key={key}>
             <line
               x1={x0}
               y1={y0}
-              x2={x1}
+              x2={x1 + 0.4}
               y2={y1}
-              strokeWidth={strokeWidth}
+              strokeWidth={startStrokeWidth}
               // markerStart={includeOrigin ? `url(#pointer-start)` : undefined}
             />
             {includeVerticalLine ? (
               <line
                 x1={x1}
-                y1={y1}
+                y1={y1 - 0.5}
                 x2={x1}
-                y2={y2}
-                strokeWidth={strokeWidth}
+                y2={y2 + 1}
+                strokeWidth={verticalLineStrokeWidth}
                 markerStart={includeOrigin ? `url(#pointer-start)` : undefined}
               />
             ) : null}
@@ -1356,7 +1368,7 @@ export default class MissionMap extends React.Component<
               y1={y2}
               x2={x2}
               y2={y2}
-              strokeWidth={strokeWidth}
+              strokeWidth={endStrokeWidth}
               // markerStart={includeOrigin ? `url(#pointer-start)` : undefined}
               markerEnd={`url(#pointer-end)`}
             />
@@ -1416,7 +1428,10 @@ export default class MissionMap extends React.Component<
             refY='3.5'
             orient='auto'
           >
-            <polygon points='0 0, 7 3.5, 0 7, 3.5 3.5' />
+            {/* 
+              The endpoint arrows
+              <polygon points='0 0, 7 3.5, 0 7, 3.5 3.5' /> 
+            */}
           </marker>
           <marker
             id={`pointer-start`}
@@ -1426,7 +1441,10 @@ export default class MissionMap extends React.Component<
             refY='4'
             orient='auto'
           >
-            <circle cx={4} cy={4} r={1.75} />
+            {/*
+              Junction points
+              <circle cx={4} cy={4} r={1.75} /> 
+             */}
           </marker>
         </defs>
         {pointers}
