@@ -1,0 +1,48 @@
+@import '../../../config.scss';
+
+.Assets {
+  .AssetInfo {
+    margin: 40px auto 20px;
+    text-align: center;
+    color: $color-accent;
+    font-size: 15px;
+  }
+
+  .AssetListTitle {
+    font-size: 12.5px;
+    margin: 30px 8% 8px;
+  }
+
+  .SelectedAssetListContainer {
+    margin: 0 8%;
+    padding: 11px 10px;
+    padding-right: 0;
+    border-top: 2px solid $color-main;
+    border-bottom: 2px solid $color-main;
+
+    .SelectedAssetList {
+      display: grid;
+      align-items: center;
+      grid-template-columns: auto 50px;
+      margin: 10px auto;
+
+      .SelectedAsset {
+        margin-right: 10px;
+        font-size: 14px;
+        color: $color-accent-light;
+        word-break: break-all;
+        line-break: strict;
+
+        &:hover {
+          cursor: default;
+        }
+      }
+
+      .Close {
+        padding: 0;
+        margin: 0;
+        user-select: none;
+      }
+    }
+  }
+}

@@ -1,34 +1,6 @@
 @import '../../config.scss';
 @import '../../util.scss';
 
-$background-bar: linear-gradient(
-    to right,
-    transparent 0%,
-    transparent 50%,
-    $background-main 50%,
-    $background-main 100%
-  ),
-  linear-gradient(
-    to bottom,
-    transparent 0%,
-    transparent calc(50% - 1.5px),
-    $color-main calc(50% - 1.5px),
-    $color-main calc(50% + 1.5px),
-    transparent calc(50% + 1.5px),
-    transparent 100%
-  );
-
-@keyframes mini-bar-circuit {
-  from {
-    transform: rotate(-90deg);
-    background: $background-bar;
-  }
-  to {
-    transform: rotate(270deg);
-    background: $background-bar;
-  }
-}
-
 .MissionFormPage {
   display: grid;
   overflow-x: hidden;
@@ -42,7 +14,7 @@ $background-bar: linear-gradient(
 
   .Navigation {
     display: grid;
-    grid-template-columns: auto 130px 130px 130px;
+    grid-template-columns: auto 130px 150px 130px;
   }
 
   .Content {
@@ -53,10 +25,34 @@ $background-bar: linear-gradient(
       height: 100%;
       width: unset;
       background-color: $background-alt2;
+
+      .List {
+        .items {
+          .item {
+            &.mapped-node {
+              background-color: $background-alt2;
+            }
+          }
+        }
+      }
     }
 
     .SidePanel {
       height: 100%;
+      scrollbar-color: $color-pointer-mark $background-alt2;
+
+      ::-webkit-scrollbar {
+        background: $background-alt2;
+      }
+
+      ::-webkit-scrollbar-thumb {
+        background-color: $color-pointer-mark;
+        -webkit-border-radius: 8px;
+        border-radius: 8px;
+        background-clip: content-box;
+        border: 4px solid transparent;
+        min-height: 50px;
+      }
 
       .BorderBox {
         overflow-x: hidden;
@@ -69,14 +65,14 @@ $background-bar: linear-gradient(
 
         .BoxTop {
           display: grid;
-          grid-template-columns: auto 30px 30px;
+          grid-template-columns: auto 50px 30px;
           box-sizing: border-box;
           position: sticky;
           top: 0;
           z-index: 1;
           margin: 0 0 -20px;
           height: 70px;
-          padding: 10px 27px 0;
+          padding: 5px 10px 0;
           background: linear-gradient(
             $background-alt2 0%,
             $background-alt2 80%,
@@ -94,352 +90,36 @@ $background-bar: linear-gradient(
             font-size: 0.8em;
             color: $color-error-alt;
           }
-
-          .MoreInformation {
-            margin-top: 4.5px;
-            transform: scale(0.77);
-            grid-column: 2 / 3;
-          }
-
-          .Close {
-            cursor: pointer;
-            user-select: none;
-            transform: scale(0.77);
-            grid-column: 3 / 4;
-            margin-top: 5px;
-            height: 20px;
-            font-size: 26px;
-
-            .Circle {
-              display: grid;
-              place-content: center;
-              margin: 0 auto;
-              border: 3px solid $color-main;
-              border-radius: 50%;
-              width: 28px;
-              height: 28px;
-              background-color: $background-alt1;
-
-              .X {
-                display: block;
-                height: 1em;
-                font-family: 'Arial', monospace;
-                font-size: 22px;
-                font-weight: bolder;
-                line-height: 0.82em;
-              }
-            }
-          }
-        }
-
-        .SidePanelSection {
-          margin: 20px 6.5% 40px;
-
-          &.NodeInfoContainer {
-            .ButtonContainer {
-              display: block;
-              min-width: 225px;
-              margin: 20px 8% 0;
-              text-align: right;
-              font-size: 0.85em;
-
-              .FormButton {
-                cursor: pointer;
-                margin: 5px 0 0;
-
-                .Text {
-                  color: $color-accent-light;
-                  font-weight: 400;
-                }
-
-                .RightBracket {
-                  color: $color-main;
-                }
-              }
-            }
-          }
-
-          &.NodeActionDetails {
-            border: 2px solid $color-main;
-            background-color: rgba($background-main, 0.65);
-
-            .ActionInfo {
-              margin: 0 auto;
-              padding-top: 25px;
-              text-align: center;
-              color: $color-accent;
-              font-size: 15px;
-            }
-
-            > .Label {
-              margin: 40px auto 0;
-              border-bottom: 2px solid $color-main;
-              width: 225px;
-              padding: 0 0 8px;
-              font-size: 12.5px;
-            }
-
-            .NodeAction {
-              margin: 20px 0;
-              padding: 20px 0 30px;
-              border-top: 2px solid $color-main;
-              border-bottom: 2px solid $color-main;
-
-              .Detail {
-                min-width: calc(225px - 20px);
-
-                .Field {
-                  background: none;
-                }
-              }
-
-              .Delete {
-                cursor: pointer;
-                user-select: none;
-                box-sizing: border-box;
-                margin: 20px 8% 0;
-                min-width: calc(225px - 20px);
-                padding: 15px 15px;
-                text-align: right;
-                color: $color-main;
-                font-size: 12.5px;
-                font-weight: 700;
-
-                span {
-                  color: $color-accent-light;
-                  font-weight: 400;
-                }
-              }
-
-              .NoActions {
-                margin: 30px auto 0;
-                width: calc(100% - 60px);
-                font-size: 0.85em;
-              }
-
-              .Delete {
-                &.Disabled {
-                  pointer-events: none;
-                  transform: scale(0.95);
-                  opacity: 0.65;
-                }
-              }
-            }
-
-            .SelectorContainer {
-              display: grid;
-              grid-template-columns: 1fr 1fr 1fr;
-              margin: 20px auto;
-              width: 225px;
-              text-align: center;
-              font-size: 14px;
-
-              .Previous,
-              .Next {
-                user-select: none;
-                &:hover {
-                  cursor: pointer;
-                  color: $terminal;
-                }
-              }
-
-              .CurrentActionDisplayed {
-                &:hover {
-                  cursor: default;
-                }
-              }
-            }
-          }
-
-          &.UserActions {
-            display: block;
-            text-align: center;
-
-            .Action {
-              width: 40px;
-              text-align: center;
-              margin: 0;
-            }
-
-            * {
-              transition: transform 250ms, opacity 250ms;
-            }
-          }
-        }
-
-        .Color {
-          .Field {
-            border-bottom: none;
-          }
-        }
-
-        .ColorFill {
-          cursor: pointer;
-          user-select: none;
-          box-sizing: border-box;
-          margin-top: 5px;
-          margin-bottom: 0;
-          border-bottom: 2px solid $color-main;
-          min-width: 225px;
-          padding: 15px 15px;
-          text-align: right;
-          color: $color-main;
-          font-size: 12.5px;
-          font-weight: 700;
-
-          span {
-            color: $color-accent-light;
-            font-weight: 400;
-          }
-        }
-
-        .Detail:last-child {
-          margin-bottom: 40px;
         }
       }
 
-      &.NodeStructuring {
-        .BorderBox {
-          overflow-y: hidden;
-          .Nodes {
-            overflow-x: auto;
-            overflow-y: auto;
-            margin: 0;
-            height: calc(100% - 33px);
-            padding: 0;
+      .SidePanelSection {
+        .ButtonContainer {
+          display: block;
+          min-width: 225px;
+          margin: 20px 8% 0;
+          text-align: right;
+          font-size: 0.85em;
 
-            .Padding {
-              height: 35px;
+          .FormButton {
+            user-select: none;
+            box-sizing: border-box;
+            min-width: calc(225px - 20px);
+            text-align: right;
+            color: $color-main;
+            margin: 40px 0 20px;
+            font-size: 12.5px;
+            width: 100%;
 
-              &.DropPending {
-                background-color: $background-main;
-              }
+            .Text {
+              cursor: pointer;
+              color: $color-accent-light;
+              font-weight: 400;
             }
 
-            .Node {
-              $indicator-translate-y: 7px;
-
-              width: fit-content;
-
-              // This will return the transform value
-              // for the indicator circle, placing
-              // it in the correct position.
-              @function getIndicatorCircleTransform($isExpanded) {
-                $indicator-translate: translate(0, $indicator-translate-y);
-
-                @if $isExpanded {
-                  @return $indicator-translate;
-                } @else {
-                  @return $indicator-translate rotate(-90deg);
-                }
-              }
-
-              .ParentNode {
-                user-select: none;
-                display: block;
-                padding: 0 0 0 20px;
-                font-size: 12px;
-                white-space: nowrap;
-                width: 100%;
-
-                .Top,
-                .Bottom {
-                  position: relative;
-                  z-index: 1;
-                  height: 0.175rem;
-                }
-
-                .Top {
-                  margin: 0 0 -0.175rem;
-                }
-
-                .Center {
-                  position: relative;
-                  z-index: 0;
-                  display: grid;
-                  grid-template-columns: 18px auto;
-                  margin: 0 0 -0.175rem;
-
-                  // * {
-                  //   pointer-events: none;
-                  // }
-
-                  .Indicator,
-                  .Name {
-                    height: 1.35rem;
-                    line-height: 1.3rem;
-                  }
-
-                  .Indicator {
-                    width: 12px;
-                    padding: 0 auto;
-                    height: 1.35rem;
-                    line-height: 1.3rem;
-
-                    &.isCollapsed {
-                      transform: rotate(-90deg);
-                    }
-
-                    &:hover {
-                      cursor: pointer;
-                    }
-                  }
-
-                  .Name:hover {
-                    cursor: grab;
-                  }
-
-                  &:hover {
-                    background-color: $background-main;
-                  }
-                }
-              }
-
-              .ChildNodes {
-                padding-left: 20px;
-              }
-
-              &.Ends {
-                .ParentNode {
-                  .Indicator {
-                    opacity: 0;
-                  }
-                }
-              }
-
-              &.DropPending {
-                &.DropPendingTop {
-                  > .ParentNode > .Top {
-                    margin-top: -0.0875rem;
-                    padding-bottom: 0.0875rem;
-                    background: linear-gradient(
-                      to top,
-                      transparent 0px,
-                      transparent 0.0875rem,
-                      $color-main 0.0875rem,
-                      $color-main 0.175rem
-                    );
-                  }
-                }
-
-                &.DropPendingCenter {
-                  background-color: $background-main;
-                }
-
-                &.DropPendingBottom {
-                  > .ParentNode > .Bottom {
-                    margin-bottom: -0.0875rem;
-                    padding-top: 0.0875rem;
-                    background: linear-gradient(
-                      to bottom,
-                      transparent 0px,
-                      transparent 0.0875rem,
-                      $color-main 0.0875rem,
-                      $color-main 0.175rem
-                    );
-                  }
-                }
-              }
+            .LeftBracket,
+            .RightBracket {
+              color: $color-main;
             }
           }
         }

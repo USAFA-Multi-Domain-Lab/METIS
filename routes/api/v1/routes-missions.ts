@@ -1,5 +1,5 @@
 //npm imports
-import express, { Express } from 'express'
+import express from 'express'
 import fs from 'fs'
 import path from 'path'
 import { v4 as generateHash } from 'uuid'
@@ -11,6 +11,12 @@ import { databaseLogger } from '../../../modules/logging'
 import { isLoggedIn, requireLogin } from '../../../user'
 import { APP_DIR } from '../../../config'
 import uploads from '../../../middleware/uploads'
+import { commandScripts } from '../../../action-execution'
+import validateRequestBodyKeys, {
+  RequestBodyFilters,
+  validateRequestQueryKeys,
+} from '../../../modules/requests'
+import { colorOptions } from '../../../modules/mission-node-colors'
 
 type MulterFile = Express.Multer.File
 
@@ -19,80 +25,77 @@ const router = express.Router()
 
 // -- POST | /api/v1/missions/ --
 // This will create a new mission.
-router.post('/', requireLogin, (request, response) => {
-  let body: any = request.body
+router.post(
+  '/',
+  requireLogin,
+  validateRequestBodyKeys({
+    name: RequestBodyFilters.STRING,
+    versionNumber: RequestBodyFilters.NUMBER,
+    live: RequestBodyFilters.BOOLEAN,
+    initialResources: RequestBodyFilters.NUMBER,
+    nodeStructure: RequestBodyFilters.OBJECT,
+    nodeData: RequestBodyFilters.OBJECT,
+  }),
+  (request, response) => {
+    let body: any = request.body
 
-  if ('mission' in body) {
     let missionData: any = body.mission
 
-    if (
-      'name' in missionData &&
-      'versionNumber' in missionData &&
-      'live' in missionData &&
-      'initialResources' in missionData &&
-      'nodeStructure' in missionData &&
-      'nodeData' in missionData
-    ) {
-      let name: any = missionData.name
-      let versionNumber: any = missionData.versionNumber
-      let live: any = missionData.live
-      let initialResources: any = missionData.initialResources
-      let nodeStructure: any = missionData.nodeStructure
-      let nodeData: any = missionData.nodeData
+    let name: any = missionData.name
+    let versionNumber: any = missionData.versionNumber
+    let live: any = missionData.live
+    let initialResources: any = missionData.initialResources
+    let nodeStructure: any = missionData.nodeStructure
+    let nodeData: any = missionData.nodeData
 
-      let mission = new MissionModel({
-        name,
-        versionNumber,
-        live,
-        initialResources,
-        nodeStructure,
-        nodeData,
-      })
+    let mission = new MissionModel({
+      name,
+      versionNumber,
+      live,
+      initialResources,
+      nodeStructure,
+      nodeData,
+    })
 
-      mission.save((error: Error) => {
-        if (error) {
-          databaseLogger.error('Failed to create mission:')
-          databaseLogger.error(error)
+    mission.save((error: Error) => {
+      if (error) {
+        databaseLogger.error('Failed to create mission:')
+        databaseLogger.error(error)
 
-          if (error.name === ERROR_BAD_DATA) {
-            return response.sendStatus(400)
-          } else {
-            return response.sendStatus(500)
-          }
+        if (error.name === ERROR_BAD_DATA) {
+          return response.sendStatus(400)
         } else {
-          databaseLogger.info(`New mission created named "${name}".`)
-
-          // Retrieves newly created mission
-          // to return in response. This is
-          // called again, one to call the
-          // queryForApiResponse function,
-          // and two, to ensure what's returned
-          // is what is in the database.
-          MissionModel.findOne({ missionID: mission.missionID })
-            .queryForApiResponse('findOne')
-            .exec((error: Error, mission: any) => {
-              // If something goes wrong, this is
-              // a server issue. If there was something
-              // the client did, an error would have
-              // already been thrown in the first query.
-              if (error || !mission) {
-                databaseLogger.error('Failed to retrieve newly created mission')
-                databaseLogger.error(error)
-                return response.sendStatus(500)
-              } else {
-                // Return updated mission to the user.
-                return response.send({ mission })
-              }
-            })
+          return response.sendStatus(500)
         }
-      })
-    } else {
-      return response.sendStatus(400)
-    }
-  } else {
-    return response.sendStatus(400)
-  }
-})
+      } else {
+        databaseLogger.info(`New mission created named "${name}".`)
+
+        // Retrieves newly created mission
+        // to return in response. This is
+        // called again, one to call the
+        // queryForApiResponse function,
+        // and two, to ensure what's returned
+        // is what is in the database.
+        MissionModel.findOne({ missionID: mission.missionID })
+          .queryForApiResponse('findOne')
+          .exec((error: Error, mission: any) => {
+            // If something goes wrong, this is
+            // a server issue. If there was something
+            // the client did, an error would have
+            // already been thrown in the first query.
+            if (error || !mission) {
+              databaseLogger.error('Failed to retrieve newly created mission')
+              databaseLogger.error(error)
+              return response.sendStatus(500)
+            } else {
+              // Return updated mission to the user.
+              return response.send({ mission })
+            }
+          })
+      }
+    })
+  },
+)
 
 // -- POST | /api/v1/missions/import/ --
 router.post(
@@ -189,14 +192,6 @@ router.post(
         let contents_string: string
         let contents_JSON: any
 
-        // If the file is not a .cesar file,
-        // it is skipped.
-        if (!file.originalname.toLowerCase().endsWith('.cesar')) {
-          let error: Error = new Error('File is not a .cesar file.')
-
-          return handleMissionImportError(file, error)
-        }
-
         // Reads files contents.
         try {
           contents_string = fs.readFileSync(file.path, {
@@ -204,7 +199,7 @@ router.post(
           })
         } catch (error: any) {
           error.message =
-            'Failed to read file. This file is either not actually a .cesar file or is corrupted.'
+            'Failed to read file. This file is either not actually a .cesar file, not actually a .metis file, or is corrupted.'
 
           return handleMissionImportError(file, error)
         }
@@ -252,6 +247,33 @@ router.post(
           }
 
           error.message = errorMessage
+
+          return handleMissionImportError(file, error)
+        }
+
+        // If the file's schemaBuildNumber is 9
+        // or less and it is not a .cesar file,
+        // it is skipped.
+        if (
+          contents_JSON.schemaBuildNumber <= 9 &&
+          !file.originalname.toLowerCase().endsWith('.cesar')
+        ) {
+          let error: Error = new Error(
+            `The file "${file.originalname}" was rejected because it did not have the .cesar extension.`,
+          )
+
+          return handleMissionImportError(file, error)
+        }
+        // If the file's schemaBuildNumber is 10
+        // or greater and it is not a .metis file,
+        // it is skipped.
+        else if (
+          contents_JSON.schemaBuildNumber >= 10 &&
+          !file.originalname.toLowerCase().endsWith('.metis')
+        ) {
+          let error: Error = new Error(
+            `The file "${file.originalname}" was rejected because it did not have the .metis extension.`,
+          )
 
           return handleMissionImportError(file, error)
         }
@@ -316,56 +338,63 @@ router.post(
 
 // -- GET | /api/v1/missions/ --
 // This will return all of the missions.
-router.get('/', (request, response) => {
-  let missionID = request.query.missionID
+router.get(
+  '/',
+  validateRequestQueryKeys({ missionID: 'objectId' }),
+  (request, response) => {
+    let missionID = request.query.missionID
 
-  if (missionID === undefined) {
-    let queries: any = {}
+    if (missionID === undefined) {
+      let queries: any = {}
 
-    if (!isLoggedIn(request)) {
-      queries.live = true
+      if (!isLoggedIn(request)) {
+        queries.live = true
+      }
+
+      MissionModel.find({ ...queries }, { nodeStructure: 0, nodeData: 0 })
+        .queryForApiResponse('find')
+        .exec((error: Error, missions: any) => {
+          if (error !== null || missions === null) {
+            databaseLogger.error('Failed to retrieve missions.')
+            databaseLogger.error(error)
+            return response.sendStatus(500)
+          } else {
+            databaseLogger.info('All missions retrieved.')
+            return response.json({ missions })
+          }
+        })
+    } else {
+      MissionModel.findOne({ missionID })
+        .queryForApiResponse('findOne')
+        .exec((error: Error, mission: any) => {
+          if (error !== null) {
+            databaseLogger.error(
+              `Failed to retrieve mission with ID "${missionID}".`,
+            )
+            databaseLogger.error(error)
+            return response.sendStatus(500)
+          } else if (mission === null) {
+            return response.sendStatus(404)
+          } else if (!mission.live && !isLoggedIn(request)) {
+            return response.sendStatus(401)
+          } else {
+            databaseLogger.info(`Mission with ID "${missionID}" retrieved.`)
+            return response.json({ mission })
+          }
+        })
     }
-
-    MissionModel.find({ ...queries }, { nodeStructure: 0, nodeData: 0 })
-      .queryForApiResponse('find')
-      .exec((error: Error, missions: any) => {
-        if (error !== null || missions === null) {
-          databaseLogger.error('Failed to retrieve missions.')
-          databaseLogger.error(error)
-          return response.sendStatus(500)
-        } else {
-          databaseLogger.info('All missions retrieved.')
-          return response.json({ missions })
-        }
-      })
-  } else {
-    MissionModel.findOne({ missionID })
-      .queryForApiResponse('findOne')
-      .exec((error: Error, mission: any) => {
-        if (error !== null) {
-          databaseLogger.error(
-            `Failed to retrieve mission with ID "${missionID}".`,
-          )
-          databaseLogger.error(error)
-          return response.sendStatus(500)
-        } else if (mission === null) {
-          return response.sendStatus(404)
-        } else if (!mission.live && !isLoggedIn(request)) {
-          return response.sendStatus(401)
-        } else {
-          databaseLogger.info(`Mission with ID "${missionID}" retrieved.`)
-          return response.json({ mission })
-        }
-      })
-  }
-})
+  },
+)
 
 // -- GET /api/v1/missions/export/
 // This will return all of the missions.
-router.get('/export/*', requireLogin, (request, response) => {
-  let missionID = request.query.missionID
+router.get(
+  '/export/*',
+  requireLogin,
+  validateRequestQueryKeys({ missionID: 'objectId' }),
+  (request, response) => {
+    let missionID = request.query.missionID
 
-  if (missionID !== undefined) {
     // Retrieve database info.
     InfoModel.findOne(
       { infoID: 'default' },
@@ -377,13 +406,12 @@ router.get('/export/*', requireLogin, (request, response) => {
           .queryForApiResponse('findOne')
           .exec(
             filterErrors_findOne('missions', response, (mission: any) => {
-              console.log(mission._doc)
               databaseLogger.info(`Mission with ID "${missionID}" retrieved.`)
 
               // Gather details for temporary file
               // that will be sent in the response.
               let tempSubfolderName: string = generateHash()
-              let tempFileName: string = `${mission.name}.cesar`
+              let tempFileName: string = `${mission.name}.metis`
               let tempFolderPath: string = path.join(
                 APP_DIR,
                 '/temp/missions/exports/',
@@ -424,133 +452,210 @@ router.get('/export/*', requireLogin, (request, response) => {
           )
       }),
     )
-  } else {
-    return response.sendStatus(400)
-  }
-})
+  },
+)
 
 // -- GET /api/v1/missions/environment/
 // This will return the environment of
 // the database that is currently in use.
-router.get('/environment/', (request, response) => {
-  response.send(process.env)
-})
+router.get(
+  '/environment/',
+  validateRequestQueryKeys({}),
+  (request, response) => {
+    response.send(process.env)
+  },
+)
+
+// -- GET /api/v1/missions/colors/
+// This will return all the available
+// color options that can be used to
+// style a mission-node.
+router.get(
+  '/colors/',
+  requireLogin,
+  validateRequestQueryKeys({}),
+  (request, response) => {
+    response.json({ colorOptions })
+  },
+)
+
+// -- PUT /api/v1/missions/handle-action-execution/
+// This handles the effect on an asset
+// after an action is executed successfully
+router.put(
+  '/handle-action-execution/',
+  requireLogin,
+  validateRequestBodyKeys({
+    missionID: RequestBodyFilters.OBJECTID,
+    nodeID: RequestBodyFilters.STRING,
+    actionID: RequestBodyFilters.STRING,
+  }),
+  (request, response) => {
+    let body: any = request.body
+
+    let missionID = body.missionID
+    let nodeID = body.nodeID
+    let actionID = body.actionID
+
+    MissionModel.findOne({ missionID }).exec((error: Error, mission: any) => {
+      // Handles errors.
+      if (error !== null) {
+        databaseLogger.error(
+          `### Failed to retrieve mission with ID "${missionID}".`,
+        )
+        databaseLogger.error(error)
+        return response.sendStatus(500)
+      }
+      // Handles mission not found.
+      else if (mission === null) {
+        return response.sendStatus(404)
+      }
+      // Handle proper mission retrieval.
+      else {
+        mission.nodeData.forEach((node: any) => {
+          if (node.nodeID === nodeID) {
+            node.actions.forEach((action: any) => {
+              if (action.actionID === actionID) {
+                for (let script of action.scripts) {
+                  commandScripts[script.scriptName](script.args)
+                }
+              }
+            })
+          }
+        })
+        return response.sendStatus(200)
+      }
+    })
+  },
+)
 
 // -- PUT | /api/v1/missions/ --
 // This will update the mission.
-router.put('/', requireLogin, (request, response) => {
-  let body: any = request.body
+router.put(
+  '/',
+  requireLogin,
+  validateRequestBodyKeys(
+    {
+      missionID: RequestBodyFilters.OBJECTID,
+    },
+    {
+      name: RequestBodyFilters.STRING,
+      versionNumber: RequestBodyFilters.NUMBER,
+      initialResources: RequestBodyFilters.NUMBER,
+      live: RequestBodyFilters.BOOLEAN,
+      nodeStructure: RequestBodyFilters.OBJECT,
+      nodeData: RequestBodyFilters.OBJECT,
+    },
+  ),
+  (request, response) => {
+    let body: any = request.body
 
-  // Mission is included in body.
-  if ('mission' in body) {
     let missionUpdates: any = body.mission
 
-    // Mission is an object and
-    // has a missionID property.
-    if (typeof missionUpdates === 'object' && 'missionID' in missionUpdates) {
-      let missionID: string = missionUpdates.missionID
+    let missionID: string = missionUpdates.missionID
 
-      // Original mission is retrieved.
-      MissionModel.findOne({ missionID }).exec((error: Error, mission: any) => {
-        // Handles errors.
-        if (error !== null) {
-          databaseLogger.error(
-            `### Failed to retrieve mission with ID "${missionID}".`,
-          )
-          databaseLogger.error(error)
-          return response.sendStatus(500)
+    // Original mission is retrieved.
+    MissionModel.findOne({ missionID }).exec((error: Error, mission: any) => {
+      // Handles errors.
+      if (error !== null) {
+        databaseLogger.error(
+          `### Failed to retrieve mission with ID "${missionID}".`,
+        )
+        databaseLogger.error(error)
+        return response.sendStatus(500)
+      }
+      // Handles mission not found.
+      else if (mission === null) {
+        return response.sendStatus(404)
+      }
+      // Handle proper mission retrieval.
+      else {
+        // Places all values found in
+        // missionUpdates and puts it in
+        // the retrieved mongoose document.
+        for (let key in missionUpdates) {
+          if (key !== '_id' && key !== 'missionID') {
+            mission[key] = missionUpdates[key]
+          }
         }
-        // Handles mission not found.
-        else if (mission === null) {
-          return response.sendStatus(404)
-        }
-        // Handle proper mission retrieval.
-        else {
-          // Places all values found in
-          // missionUpdates and puts it in
-          // the retrieved mongoose document.
-          for (let key in missionUpdates) {
-            if (key !== '_id' && key !== 'missionID') {
-              mission[key] = missionUpdates[key]
+
+        // Save the updated mission.
+        mission.save((error: Error) => {
+          // Handles errors.
+          if (error !== null) {
+            databaseLogger.error(
+              `### Failed to update mission with ID "${missionID}".`,
+            )
+            databaseLogger.error(error)
+
+            // If this error was a validation error,
+            // then it is a bad request.
+            if (error.message.includes('validation failed')) {
+              return response.sendStatus(400)
+            }
+            // Else it's a server error.
+            else {
+              return response.sendStatus(500)
             }
           }
+          // Handles successful save.
+          else {
+            // Retrieves newly updated mission
+            // to return in response. This is
+            // called again, one to call the
+            // queryForApiResponse function,
+            // and two, to ensure what's returned
+            // is what is in the database.
+            MissionModel.findOne({ missionID })
+              .queryForApiResponse('findOne')
+              .exec((error: Error, mission: any) => {
+                // If something goes wrong, this is
+                // a server issue. If there was something
+                // the client did, an error would have
+                // already been thrown in the first query.
+                if (error || !mission) {
+                  databaseLogger.error(
+                    'Failed to retrieve newly updated mission',
+                  )
+                  databaseLogger.error(error)
+                  return response.sendStatus(500)
+                } else {
+                  // Return updated mission to the user.
+                  return response.send({ mission })
+                }
+              })
+          }
+        })
+      }
+    })
 
-          // Save the updated mission.
-          mission.save((error: Error) => {
-            // Handles errors.
-            if (error !== null) {
-              databaseLogger.error(
-                `### Failed to update mission with ID "${missionID}".`,
-              )
-              databaseLogger.error(error)
-
-              // If this error was a validation error,
-              // then it is a bad request.
-              if (error.message.includes('validation failed')) {
-                return response.sendStatus(400)
-              }
-              // Else it's a server error.
-              else {
-                return response.sendStatus(500)
-              }
-            }
-            // Handles successful save.
-            else {
-              // Retrieves newly updated mission
-              // to return in response. This is
-              // called again, one to call the
-              // queryForApiResponse function,
-              // and two, to ensure what's returned
-              // is what is in the database.
-              MissionModel.findOne({ missionID })
-                .queryForApiResponse('findOne')
-                .exec((error: Error, mission: any) => {
-                  // If something goes wrong, this is
-                  // a server issue. If there was something
-                  // the client did, an error would have
-                  // already been thrown in the first query.
-                  if (error || !mission) {
-                    databaseLogger.error(
-                      'Failed to retrieve newly updated mission',
-                    )
-                    databaseLogger.error(error)
-                    return response.sendStatus(500)
-                  } else {
-                    // Return updated mission to the user.
-                    return response.send({ mission })
-                  }
-                })
-            }
-          })
-        }
-      })
-
-      // MissionModel.updateOne({ missionID }, mission, (error: any) => {
-      //   if (error !== null) {
-      //     databaseLogger.error(
-      //       `Failed to update mission with the ID "${missionID}".`,
-      //     )
-      //     databaseLogger.error(error)
-      //     return response.sendStatus(500)
-      //   } else {
-      //     databaseLogger.info(`Updated mission with the ID "${missionID}".`)
-      //     return response.sendStatus(200)
-      //   }
-      // })
-    } else {
-      return response.sendStatus(400)
-    }
-  } else {
-    return response.sendStatus(400)
-  }
-})
+    // MissionModel.updateOne({ missionID }, mission, (error: any) => {
+    //   if (error !== null) {
+    //     databaseLogger.error(
+    //       `Failed to update mission with the ID "${missionID}".`,
+    //     )
+    //     databaseLogger.error(error)
+    //     return response.sendStatus(500)
+    //   } else {
+    //     databaseLogger.info(`Updated mission with the ID "${missionID}".`)
+    //     return response.sendStatus(200)
+    //   }
+    // })
+  },
+)
 
 // -- PUT | /api/v1/missions/copy/ --
 // This will copy a mission.
-router.put('/copy/', requireLogin, (request, response) => {
-  let body: any = request.body
+router.put(
+  '/copy/',
+  requireLogin,
+  validateRequestBodyKeys({
+    copyName: RequestBodyFilters.STRING,
+    originalID: RequestBodyFilters.STRING,
+  }),
+  (request, response) => {
+    let body: any = request.body
 
-  if ('originalID' in body && 'copyName' in body) {
     let originalID: string = body.originalID
     let copyName: string = body.copyName
 
@@ -592,36 +697,31 @@ router.put('/copy/', requireLogin, (request, response) => {
         }
       },
     )
-  } else {
-    return response.sendStatus(400)
-  }
-})
+  },
+)
 
 // -- DELETE | /api/v1/missions/ --
 // This will delete a mission.
-router.delete('/', requireLogin, (request, response) => {
-  let query: any = request.query
+router.delete(
+  '/',
+  requireLogin,
+  validateRequestQueryKeys({ missionID: 'objectId' }),
+  (request, response) => {
+    let query: any = request.query
 
-  if ('missionID' in query) {
     let missionID: any = query.missionID
 
-    if (typeof missionID === 'string') {
-      MissionModel.updateOne({ missionID }, { deleted: true }, (error: any) => {
-        if (error !== null) {
-          databaseLogger.error('Failed to delete mission:')
-          databaseLogger.error(error)
-          return response.sendStatus(500)
-        } else {
-          databaseLogger.info(`Deleted mission with the ID "${missionID}".`)
-          return response.sendStatus(200)
-        }
-      })
-    } else {
-      return response.sendStatus(400)
-    }
-  } else {
-    return response.sendStatus(400)
-  }
-})
+    MissionModel.updateOne({ missionID }, { deleted: true }, (error: any) => {
+      if (error !== null) {
+        databaseLogger.error('Failed to delete mission:')
+        databaseLogger.error(error)
+        return response.sendStatus(500)
+      } else {
+        databaseLogger.info(`Deleted mission with the ID "${missionID}".`)
+        return response.sendStatus(200)
+      }
+    })
+  },
+)
 
 module.exports = router

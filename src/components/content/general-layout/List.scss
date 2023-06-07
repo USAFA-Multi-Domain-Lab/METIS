@@ -328,10 +328,10 @@
 }
 
 .List.pending-deletion {
-  background-color: $fail;
+  background-color: $terminal-fail;
 
   .list-header {
-    background-color: $fail;
+    background-color: $terminal-fail;
   }
 
   .item:not(.item-markdown) {
@@ -351,7 +351,7 @@
   }
   .previous-page,
   .next-page {
-    border-color: $fail;
+    border-color: $terminal-fail;
   }
 
   .ButtonSVG.cancel-pending-action {

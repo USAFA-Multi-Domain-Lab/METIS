@@ -24,6 +24,20 @@ body {
   font-family: monospace, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  scrollbar-color: $color-pointer-mark $background-main;
+
+  ::-webkit-scrollbar {
+    background: $background-main;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background-color: $color-pointer-mark;
+    -webkit-border-radius: 8px;
+    border-radius: 8px;
+    background-clip: content-box;
+    border: 4px solid transparent;
+    min-height: 50px;
+  }
 }
 
 code {
@@ -70,6 +84,8 @@ code {
 :disabled {
   cursor: default;
   opacity: 0.35;
+  user-select: none;
+  pointer-events: none;
 }
 
 .Hidden {

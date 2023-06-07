@@ -28,7 +28,7 @@ export enum ENodeDeleteMethod {
 // This is the raw node data returned
 // from the server used to create instances
 // of MissionNode in the Mission class.
-export interface IMissionNodeJson {
+export interface IMissionNodeJSON {
   nodeID: string
   name: string
   color: string
@@ -77,7 +77,7 @@ export class MissionNode implements IMissionMappable {
   _executionTimeEnd: number
 
   static default_name: string = 'Unnamed Node'
-  static default_color: string = 'default'
+  static default_color: string = '#ffffff'
   static default_description: string = 'Description text goes here.'
   static default_preExecutionText: string = 'Node has not been executed.'
   static default_depthPadding: number = 0
@@ -98,6 +98,7 @@ export class MissionNode implements IMissionMappable {
       1,
       'Enter your successful post-execution message here.',
       'Enter your failed post-execution message here.',
+      [],
     )
   }
 
@@ -372,6 +373,7 @@ export class MissionNode implements IMissionMappable {
         action.resourceCost,
         action.postExecutionSuccessText,
         action.postExecutionFailureText,
+        action.scripts,
       )
       actions.push(actionObject)
     }
@@ -727,6 +729,20 @@ export class MissionNodeCreator implements IMissionMappable {
   // Implementation requirement only.
   get device(): boolean {
     return false
+  }
+
+  // Implementation requirement only.
+  get color(): string {
+    return ''
+  }
+
+  // Implementation requirement only.
+  get isOpen(): boolean {
+    return false
+  }
+
+  get childNodes(): MissionNode[] {
+    return []
   }
 
   constructor(

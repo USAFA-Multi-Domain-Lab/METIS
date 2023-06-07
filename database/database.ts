@@ -150,7 +150,9 @@ export function ensureDefaultDataExists(
   callbackError: (error: Error) => void = () => {},
 ): void {
   ensureDefaultInfoExists(() =>
-    ensureDefaultUsersExists(() => ensureDefaultMissionsExists(callback)),
+    ensureDefaultUsersExists(() => {
+      ensureDefaultMissionsExists(callback)
+    }),
   )
 }
 

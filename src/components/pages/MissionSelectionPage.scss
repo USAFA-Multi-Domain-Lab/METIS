@@ -1,13 +1,15 @@
 @import '../../config.scss';
 
 .MissionSelectionPage {
-  margin: 0;
-  background: url('../../assets/images/landing-page-img.jpg');
-  background-size: 100% 100%;
+  display: grid;
+  align-content: space-between;
+  background: url('../../assets/images/landing-page-img.png');
+  background-size: 100% 120%;
   background-position: center;
   background-repeat: no-repeat;
-  box-shadow: inset 0 0 0 10000000000px RGBA(0, 72, 124, 0.5);
-  height: fit-content;
+  box-shadow: inset 100vw 0 0 0 RGBA(13, 26, 39, 0.4);
+  height: 100vh;
+  margin: 0;
 
   &.DropPending {
     .FileDropBox {
@@ -57,25 +59,24 @@
   }
 
   .Navigation {
+    display: grid;
+    place-content: space-between;
     grid-template-columns: auto 130px;
-    padding: 30px 30px 35px;
-    width: calc(100vw - 60px);
+    padding: 30px 0 35px;
+    width: 97%;
   }
 
   .MissionSelectionContent {
     -webkit-user-select: none;
     user-select: none;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    flex-flow: column;
-    height: calc(100vh - 147px);
+    display: grid;
+    place-items: center;
+    align-content: center;
 
     .MissionListContainer {
-      display: flex;
-      justify-content: center;
+      display: grid;
+      place-items: center;
       align-items: center;
-      flex-flow: column;
       text-align: left;
       width: 100%;
       margin: 0;
@@ -83,13 +84,14 @@
       .MissionList {
         background-color: black;
         border: 3px solid white;
-        border-radius: 15px;
+        border-bottom: none;
+        border-top-right-radius: 15px;
+        border-top-left-radius: 15px;
         margin: 0;
-        padding: 0;
+        padding: 6px 0;
         font-size: 1em;
-        max-height: 30vh;
-        overflow-y: scroll;
         width: 50%;
+        height: 262px;
 
         .MissionSelectionRows {
           .MissionSelectionRow {
@@ -126,26 +128,74 @@
         }
 
         .HeadingContainer {
-          position: sticky;
-          top: 0px;
+          display: grid;
+          align-items: center;
+          grid-template-columns: auto 60px;
           background-color: black;
-          width: 100%;
+          z-index: 10;
+          border-radius: 15px;
           overflow-x: hidden;
-          z-index: 50;
 
           .Heading {
-            width: fill;
             font-size: 1.1em;
             padding: 20px 0 20px 20px;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
           }
+
+          .ButtonSVG {
+            transform: scale(0.8);
+          }
+        }
+
+        .SearchContainer {
+          .SearchBar {
+            width: 50%;
+            margin: 0 20px 10px;
+            padding: 5px;
+            color: black;
+            font-family: 'monospace', sans-serif;
+
+            &:focus {
+              outline: none;
+            }
+          }
         }
 
         .NoMissions {
-          padding: 0 0 25px 20px;
+          padding: 15px 0 0 20px;
           font-size: 0.825em;
+        }
+      }
+
+      .MissionNavPanel {
+        display: grid;
+        grid-template-columns: 33% 33% 33%;
+        align-items: center;
+        width: calc(50% - 40px);
+        background-color: black;
+        border: 3px solid white;
+        border-top: none;
+        border-bottom-left-radius: 15px;
+        border-bottom-right-radius: 15px;
+        padding: 25px 20px 10px;
+        z-index: 10;
+
+        .PreviousMissionSetButton,
+        .NextMissionSetButton {
+          .Text:hover {
+            cursor: pointer;
+            color: $terminal;
+          }
+        }
+
+        .CurrentMissionSet {
+          text-align: center;
+        }
+
+        .NextMissionSetButton {
+          text-align: right;
         }
       }
     }
@@ -153,9 +203,9 @@
     .EditMissionsContainer {
       display: none;
 
-      justify-content: center;
+      place-content: center;
       align-items: center;
-      flex-flow: row wrap;
+      grid-template-columns: auto auto;
       width: 50%;
       height: auto;
       border: 3px solid white;
@@ -164,13 +214,14 @@
       border-top: none;
       border-bottom-right-radius: 15px;
       border-bottom-left-radius: 15px;
+      z-index: 10;
 
       .ButtonSVG {
         transform: scale(0.8);
       }
 
       &.InstructorView {
-        display: flex;
+        display: grid;
       }
     }
   }
@@ -190,6 +241,9 @@
       margin-right: auto;
       padding: 20px;
       font-size: 0.6em;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-user-drag: none;
 
       &:hover {
         opacity: 1;
@@ -203,11 +257,27 @@
       padding: 20px;
       text-align: right;
       font-size: 0.6em;
+      text-decoration: none;
+      -webkit-user-drag: none;
+
+      &:hover {
+        opacity: 1;
+      }
     }
   }
 
   @media only screen and (max-width: 1099px) {
     .MissionSelectionContent {
+      .MissionListContainer {
+        .MissionNavPanel {
+          &.InstructorView {
+            width: calc(75% - 40px);
+            border-bottom-left-radius: 0;
+            border-bottom-right-radius: 0;
+          }
+        }
+      }
+
       .EditMissionsContainer {
         &.InstructorView {
           width: 75%;
@@ -220,6 +290,14 @@
     .MissionSelectionContent {
       .MissionListContainer {
         width: 75%;
+
+        .MissionNavPanel {
+          &.InstructorView {
+            width: calc(75% - 40px);
+            border-bottom-left-radius: 0;
+            border-bottom-right-radius: 0;
+          }
+        }
       }
 
       .EditMissionsContainer {

@@ -66,6 +66,9 @@ export interface IMissionMappable {
   executable: boolean
   executionPercentCompleted: number
   device: boolean
+  color: string
+  isOpen: boolean
+  childNodes: Array<MissionNode>
 }
 
 // represents a location on the mission map
@@ -96,8 +99,9 @@ const baseMapYScale: number = 110.0 /*px*/
 const baseGridPaddingX: number = 100.0 /*px*/
 const baseGridPaddingY: number = 20.0 /*px*/
 const selectedNodePaddingY: number = 40.0 /*px*/
-const pointerOriginOffset: number = 20 /*px*/
-const pointerArrowOffset: number = 30 /*px*/
+const pointerOriginOffset: number = 50 /*px*/
+const pointerStopOffset: number = 30 /*px*/
+// const pointerArrowOffset: number = 15 /*px*/
 const mapItemFontSize: number = 20 /*px*/
 // const mapCuttoff: number = 1600 /*px*/
 
@@ -972,18 +976,20 @@ export default class MissionMap extends React.Component<
     let gridPaddingX: number = this.currentGridPaddingX
     let gridPaddingY: number = this.currentGridPaddingY
     let width: number = (mapXScale - gridPaddingX * 2) * mapScale
-    let height: number = (mapYScale - gridPaddingY * 2) * mapScale
-    let loadingHeight: number = height - 4
+    let wrapperHeight: number = (mapYScale - gridPaddingY * 2) * mapScale
+    let loadingHeight: number = wrapperHeight - 2
     let loadingMarginBottom: number = -loadingHeight
     let loadingWidth: number | null = executionPercentCompleted * (width - 4) // subtracted 4 from the width to account for the 2px border
     let titleWidthSubtrahend: number = width * 0.1
-    let titleLineHeight: number = height * 0.34
-    let buttonMarginTop = height * -0.175
-    let buttonMarginSides = height * 0.05
-    let buttonWidth: number = height * 0.575
-    let buttonHeight: number = height * 0.575
+    let titleLineHeight: number = wrapperHeight * 0.34
+    let buttonMarginTop = wrapperHeight * -0.175
+    let buttonMarginSides = wrapperHeight * 0.05
+    let buttonWidth: number = wrapperHeight * 0.575
+    let buttonHeight: number = wrapperHeight * 0.575
     let buttonFontSize: number = titleFontSize * 2
     let buttonLineHeight: number = buttonHeight * 0.9
+    let titleHeight: string = '100%'
+    let iconHeight: string = '100%'
     let loadingStyle: React.CSSProperties = {
       marginBottom: `${loadingMarginBottom}px`,
       height: `${loadingHeight}px`,
@@ -1007,6 +1013,9 @@ export default class MissionMap extends React.Component<
     // height if the node is selected.
     if (node.nodeID === selectedNode?.nodeID) {
       titleLineHeight *= 2
+      wrapperHeight *= 1.595
+      titleHeight = '50%'
+      iconHeight = '50%'
     }
 
     // Logic to handle if the loading bar is displayed or not.
@@ -1035,7 +1044,8 @@ export default class MissionMap extends React.Component<
         <div
           className='wrapper'
           style={{
-            height: `${height - 5}px`,
+            height: `${wrapperHeight - 5}px`,
+            border: `2px solid ${node.color}`,
           }}
         >
           <div
@@ -1044,22 +1054,26 @@ export default class MissionMap extends React.Component<
               width: `calc(100% - ${titleWidthSubtrahend}px)`,
               fontSize: `${titleFontSize}px`,
               lineHeight: `${titleLineHeight}px`,
+              height: `${titleHeight}`,
             }}
           >
             {node.name}
           </div>
-          <div className={iconClassName}></div>
+          <div
+            className={iconClassName}
+            style={{ height: `${iconHeight}` }}
+          ></div>
+          {buttons.map((button: IButtonSVG): JSX.Element | null => {
+            return (
+              <ButtonSVG
+                {...button}
+                style={{ ...button.style, ...buttonStyle }}
+                uniqueClassName={`${button.uniqueClassName} ${buttonUniqueClassName}`}
+                key={button.componentKey}
+              />
+            )
+          })}
         </div>
-        {buttons.map((button: IButtonSVG): JSX.Element | null => {
-          return (
-            <ButtonSVG
-              {...button}
-              style={{ ...button.style, ...buttonStyle }}
-              uniqueClassName={`${button.uniqueClassName} ${buttonUniqueClassName}`}
-              key={button.componentKey}
-            />
-          )
-        })}
       </>
     )
   }
@@ -1072,40 +1086,6 @@ export default class MissionMap extends React.Component<
     let className: string = ''
 
     let classNameExternalAddon: string = this.props.applyNodeClassName(node)
-
-    switch (node.color) {
-      case 'green':
-        className = 'green'
-        break
-      case 'pink':
-        className = 'pink'
-        break
-      case 'yellow':
-        className = 'yellow'
-        break
-      case 'blue':
-        className = 'blue'
-        break
-      case 'purple':
-        className = 'purple'
-        break
-      case 'red':
-        className = 'red'
-        break
-      case 'brown':
-        className = 'brown'
-        break
-      case 'orange':
-        className = 'orange'
-        break
-      default:
-        className = 'default'
-        break
-    }
-
-    if (node.executing) {
-      className += ' LoadingBar'
-    }
 
     if (node.executed && node.selectedAction?.succeeded) {
       className += ' succeeded'
@@ -1340,30 +1320,46 @@ export default class MissionMap extends React.Component<
         x1 += (mapXScale / 2) * mapScale
         x2 -= (mapXScale / 2) * mapScale - 0.001
         x1 -= (gridPaddingX - pointerOriginOffset) * mapScale
-        x2 += (gridPaddingX - pointerArrowOffset) * mapScale
+        x2 += (gridPaddingX + pointerStopOffset) * mapScale
+        // x2 += (gridPaddingX - pointerArrowOffset) * mapScale
 
         let key = `unlocks-${relationship.unlocks.nodeID}_prereq-${relationship.prerequisite.nodeID}`
-        let strokeWidth: number = 4 * mapScale
+        let startStrokeWidth: number = 4 * mapScale
+        let verticalLineStrokeWidth: number = 4 * mapScale
+        let endStrokeWidth: number = 4 * mapScale
         let includeOrigin = Math.abs(x1 - x2) > 1 || Math.abs(y1 - y2) > 1
         let includeVerticalLine: boolean = y1 != y2
+        let numberOfChildren: number =
+          relationship.prerequisite.childNodes.length
+
+        if (numberOfChildren > 1) {
+          endStrokeWidth = 5 * mapScale
+          verticalLineStrokeWidth = 5 * mapScale
+        } else if (numberOfChildren > 1 && mapScale < 0.28) {
+          endStrokeWidth = 6 * mapScale
+          startStrokeWidth = 3 * mapScale
+        } else if (numberOfChildren === 1) {
+          startStrokeWidth += 0.5
+          endStrokeWidth += 0.5
+        }
 
         return (
           <g key={key}>
             <line
               x1={x0}
               y1={y0}
-              x2={x1}
+              x2={x1 + 0.4}
               y2={y1}
-              strokeWidth={strokeWidth}
+              strokeWidth={startStrokeWidth}
               // markerStart={includeOrigin ? `url(#pointer-start)` : undefined}
             />
             {includeVerticalLine ? (
               <line
                 x1={x1}
-                y1={y1}
+                y1={y1 - 0.5}
                 x2={x1}
-                y2={y2}
-                strokeWidth={strokeWidth}
+                y2={y2 + 1}
+                strokeWidth={verticalLineStrokeWidth}
                 markerStart={includeOrigin ? `url(#pointer-start)` : undefined}
               />
             ) : null}
@@ -1372,7 +1368,7 @@ export default class MissionMap extends React.Component<
               y1={y2}
               x2={x2}
               y2={y2}
-              strokeWidth={strokeWidth}
+              strokeWidth={endStrokeWidth}
               // markerStart={includeOrigin ? `url(#pointer-start)` : undefined}
               markerEnd={`url(#pointer-end)`}
             />
@@ -1432,7 +1428,10 @@ export default class MissionMap extends React.Component<
             refY='3.5'
             orient='auto'
           >
-            <polygon points='0 0, 7 3.5, 0 7, 3.5 3.5' />
+            {/* 
+              The endpoint arrows
+              <polygon points='0 0, 7 3.5, 0 7, 3.5 3.5' /> 
+            */}
           </marker>
           <marker
             id={`pointer-start`}
@@ -1442,7 +1441,10 @@ export default class MissionMap extends React.Component<
             refY='4'
             orient='auto'
           >
-            <circle cx={4} cy={4} r={1.75} />
+            {/*
+              Junction points
+              <circle cx={4} cy={4} r={1.75} /> 
+             */}
           </marker>
         </defs>
         {pointers}

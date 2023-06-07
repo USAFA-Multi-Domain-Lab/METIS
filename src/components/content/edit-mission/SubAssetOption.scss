@@ -1,0 +1,22 @@
+@import '../../../config.scss';
+
+.SubAssetOption {
+  display: grid;
+  grid-column: 3 / 3;
+  width: 100%;
+  margin: 5px 0;
+
+  .SubAssetOptionText {
+    width: calc(100% - 10px);
+    margin: 5px auto 5px 10px;
+    color: $color-accent-light;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+
+    &:hover {
+      cursor: pointer;
+      color: $color-main;
+    }
+  }
+}

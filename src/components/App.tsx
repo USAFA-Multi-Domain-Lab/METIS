@@ -18,6 +18,7 @@ import {
 } from './content/communication/Tooltip'
 import Prompt from './content/communication/Prompt'
 import ChangelogPage from './pages/ChangelogPage'
+import { getMissionNodeColorOptions } from '../modules/missions'
 
 // Default props in every page.
 export interface IPage {
@@ -117,6 +118,12 @@ function App(props: {
           appState.setAppMountHandled(true)
           appActions.finishLoading()
           appActions.goToPage('MissionSelectionPage', {})
+
+          if (currentUser !== null) {
+            getMissionNodeColorOptions((colorOptions: Array<string>) => {
+              appState.setMissionNodeColors(colorOptions)
+            })
+          }
         },
         () => {
           appState.setErrorMessage('Failed to sync session.')
