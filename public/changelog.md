@@ -1,6 +1,6 @@
 # changelog
 
-# version-1.3 | 6-12-2023
+# version-1.3 | 6-14-2023
 
 - Created new asset feature where the instructors will be able to affect assets (upon successful execution only) within cyber city via the PLC API
 - Created a pagination design for the list of missions on the landing page
