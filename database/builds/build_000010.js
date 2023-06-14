@@ -1,7 +1,8 @@
 // This migration script is responsible
 // for changing the color property's
 // value at the node level of the
-// missions collection.
+// missions collection to use hexidecimal
+// values.
 
 let dbName = 'mdl'
 
