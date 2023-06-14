@@ -117,6 +117,7 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
     // This will output to the console.
     const outputToConsole = (output: IConsoleOutput): void => {
       mission.outputToConsole(output)
+      setOutputPanelIsDisplayed(true)
     }
 
     /* -- RENDER -- */
@@ -261,14 +262,11 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
                         // Logic to send the pre-execution text to the output panel
                         if (
                           selectedNode.preExecutionText !== '' &&
-                          selectedNode.preExecutionText !== null &&
-                          !selectedNode.selectedAction?.succeeded &&
-                          !selectedNode.executing
+                          selectedNode.preExecutionText !== null
                         ) {
                           let output: IConsoleOutput =
                             OutputPanel.renderPreExecutionOutput(selectedNode)
                           outputToConsole(output)
-                          setOutputPanelIsDisplayed(true)
                         }
 
                         // Logic that opens the next level of nodes
@@ -279,7 +277,6 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
                           !selectedNode.isOpen
                         ) {
                           selectedNode.open()
-                          selectedNode.color = ''
                         }
 
                         // Logic that displays the node action &&
@@ -325,15 +322,8 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
                       applyNodeClassName={(node: MissionNode) => {
                         let className: string = ''
 
-                        if (node.selectedAction) {
-                          if (node.executed && node.selectedAction.succeeded) {
-                            className += ' succeeded'
-                          } else if (
-                            node.executed &&
-                            !node.selectedAction.succeeded
-                          ) {
-                            className += ' failed'
-                          }
+                        if (node.isOpen) {
+                          className += ' opened'
                         }
 
                         return className
@@ -348,8 +338,7 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
                         if (
                           node !== null &&
                           !node.executed &&
-                          !node.executing &&
-                          node.description !== ''
+                          !node.executing
                         ) {
                           description = node.description
                         }
@@ -379,7 +368,7 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
                           description =
                             `* Time remaining: ${node.formatTimeRemaining(
                               false,
-                            )} \n` + `* Description: ${node.description}\n`
+                            )} \n` + `* Description: ${node.description}`
                         }
 
                         return description

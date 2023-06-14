@@ -1,5 +1,29 @@
 # changelog
 
+# version-1.3 | 6-14-2023
+
+- Created new asset feature where the instructors will be able to affect assets (upon successful execution only) within cyber city via the PLC API
+- Created a pagination design for the list of missions on the landing page
+- Created a search filter feature for the mission selection page, or landing page, so that a user can quickly find a specific mission by typing in its name
+- A list of assets can be saved to an individual mission
+- Created middleware functions that ensure data passed to the API is properly vetted, and any invalid data is rejected before that data is used in the database
+- Changed the validation function for the colors that are used for mission-nodes so that only hex color codes are stored in the database
+- Every mission-node’s background matches the background color of the Mission Map, and the border color can be changed by the instructor
+- Changed the logos and titles throughout the application from CESAR (Cyber Effects Simulator and Relay) to METIS (Modular Effects-Based Transmitter for Integrated Simulations)
+- Changed how the import/export file extension worked so that missions that are exported will have a ".metis" extension instead of a ".cesar" file extension and the import feature will only except files with a ".metis" extension moving forward
+- Changed the user interface for the border color selector in the edit mission page from text to color squares
+- Removed arrowheads and junction points that were displayed from a parent node to its child node(s)
+- Created a migration script to convert/update color properties from text strings to hex color codes
+- Created VS Code Debugger so that developers can find and fix bugs within the web application more efficiently and effectively
+- Created unit tests for every mission route on the API
+- Created unit tests for the middleware functions to make sure that the middleware functions properly validate the type of each piece of data being sent, that the correct data is being sent, and that there is not a single piece of data missing within the request sent to the API
+- Created additional tests for the import/export feature to make sure that only ".metis" files can be imported if the "schema build number" stored in the file equals 10 or more and ".cesar" files if the "schema build number" is 9 or less
+- Created tests for the color validation function to make sure that only hex color codes can be stored in the database and anything else returns an internal server error (500) response
+- Created a logging system for the asset feature when the PLC API is called
+- Created a logging system for the tests when they are being run
+- Minor design changes
+- Various optimizations and other minor bug fixes and improvements
+
 # version-1.2.3 | 4-17-2023
 
 - If a user is logged in and copies a mission from the game page, then a prompt will appear after it copies and give the user the option to stay in the current mission they just copied or go to the copied mission

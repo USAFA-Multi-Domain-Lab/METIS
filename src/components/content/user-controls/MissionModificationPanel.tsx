@@ -115,7 +115,7 @@ export default function MissionModificationPanel(props: {
   // This is called when a user requests
   // to toggle a mission between being live
   // and not being live.
-  const handleToggleLiveRequest = (live: boolean) => {
+  const handleToggleLiveRequest = (live: boolean, revert: () => void) => {
     let previousLiveState: boolean = mission.live
 
     mission.live = live
@@ -124,15 +124,11 @@ export default function MissionModificationPanel(props: {
       mission.missionID,
       live,
       () => {
-        if (live) {
-          appActions.notify(`${mission.name} was successfully turned on.`)
-          setLiveAjaxStatus(EAjaxStatus.Loaded)
-          handleSuccessfulToggleLive()
-        } else {
-          appActions.notify(`${mission.name} was successfully turned off.`)
-          setLiveAjaxStatus(EAjaxStatus.Loaded)
-          handleSuccessfulToggleLive()
-        }
+        appActions.notify(
+          `${mission.name} was successfully turned ${live ? 'on' : 'off'}.`,
+        )
+        setLiveAjaxStatus(EAjaxStatus.Loaded)
+        handleSuccessfulToggleLive()
       },
       () => {
         if (live) {
@@ -143,6 +139,7 @@ export default function MissionModificationPanel(props: {
           setLiveAjaxStatus(EAjaxStatus.Error)
         }
         mission.live = previousLiveState
+        revert()
       },
     )
     setLiveAjaxStatus(EAjaxStatus.Loading)
@@ -174,12 +171,12 @@ export default function MissionModificationPanel(props: {
       purpose: EMiniButtonSVGPurpose.Download,
       handleClick: () => {
         window.open(
-          `/api/v1/missions/export/${mission.name}.cesar?missionID=${mission.missionID}`,
+          `/api/v1/missions/export/${mission.name}.metis?missionID=${mission.missionID}`,
           '_blank',
         )
       },
       tooltipDescription:
-        'Export this mission as a .cesar file to your local system.',
+        'Export this mission as a .metis file to your local system.',
     }),
   }
 

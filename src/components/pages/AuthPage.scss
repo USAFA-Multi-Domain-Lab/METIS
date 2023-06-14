@@ -43,12 +43,12 @@
       background-repeat: no-repeat;
 
       .Heading {
-        background-image: url('../../assets/images/cesar-icon-white.png');
+        background-image: url('../../assets/images/metis_emblsem_white.png');
         background-size: contain;
         background-position: center;
         background-repeat: no-repeat;
         width: 200px;
-        height: 45px;
+        height: $nav-height;
         margin-right: 30px;
       }
     }

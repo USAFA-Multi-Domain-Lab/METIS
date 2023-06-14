@@ -89,6 +89,8 @@
       .Option.Selected {
         display: grid;
         grid-template-columns: auto 20px;
+        cursor: pointer;
+        user-select: none;
 
         .Indicator {
           display: inline-block;
@@ -100,17 +102,19 @@
         }
       }
 
-      .Option {
-        cursor: pointer;
-        user-select: none;
-        padding: 5px 0 5px;
+      .AllOptions {
+        .Option {
+          cursor: pointer;
+          user-select: none;
+          padding: 5px 0 5px;
 
-        &:first-child {
-          padding: 0;
-        }
+          &:first-child {
+            padding: 0;
+          }
 
-        &:nth-child(2) {
-          margin: 20px 0 0;
+          &:nth-child(2) {
+            margin: 20px 0 0;
+          }
         }
       }
 

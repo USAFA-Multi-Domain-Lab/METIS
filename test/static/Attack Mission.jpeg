@@ -67,7 +67,7 @@
     {
       "nodeID": "1",
       "name": "Communications",
-      "color": "green",
+      "color": "#ffffff",
       "preExecutionText": "",
       "depthPadding": 0,
       "executable": false,
@@ -88,7 +88,7 @@
     {
       "nodeID": "2",
       "name": "Cellular Network",
-      "color": "green",
+      "color": "#ffffff",
       "preExecutionText": "Cellular Network has not been executed.",
       "depthPadding": 0,
       "executable": false,
@@ -159,7 +159,7 @@
     {
       "nodeID": "5",
       "name": "Internet Provider",
-      "color": "green",
+      "color": "#ffffff",
       "preExecutionText": "Internet Provider has not been executed.",
       "depthPadding": 0,
       "executable": false,
@@ -230,7 +230,7 @@
     {
       "nodeID": "8",
       "name": "Instant Messaging",
-      "color": "green",
+      "color": "#ffffff",
       "preExecutionText": "Instant Messaging has not been executed.",
       "depthPadding": 0,
       "executable": false,
@@ -301,7 +301,7 @@
     {
       "nodeID": "11",
       "name": "File Sharing Service",
-      "color": "green",
+      "color": "#ffffff",
       "preExecutionText": "File Sharing Service has not been executed.",
       "depthPadding": 0,
       "executable": false,
@@ -372,7 +372,7 @@
     {
       "nodeID": "3",
       "name": "Callbank Cellular",
-      "color": "green",
+      "color": "#ffffff",
       "preExecutionText": "Callbank Cellular has not been executed.",
       "depthPadding": 0,
       "executable": false,
@@ -443,7 +443,7 @@
     {
       "nodeID": "6",
       "name": "Service Provider",
-      "color": "green",
+      "color": "#ffffff",
       "preExecutionText": "Service Provider has not been executed.",
       "depthPadding": 0,
       "executable": false,
@@ -484,7 +484,7 @@
     {
       "nodeID": "9",
       "name": "Service Provider",
-      "color": "green",
+      "color": "#ffffff",
       "preExecutionText": "Service Provider has not been executed.",
       "depthPadding": 0,
       "executable": false,
@@ -555,7 +555,7 @@
     {
       "nodeID": "12",
       "name": "Service Provider",
-      "color": "green",
+      "color": "#ffffff",
       "preExecutionText": "Service Provider has not been executed.",
       "depthPadding": 0,
       "executable": false,
@@ -626,7 +626,7 @@
     {
       "nodeID": "4",
       "name": "Cellular Towers",
-      "color": "green",
+      "color": "#ffffff",
       "preExecutionText": "Cellular Towers has not been executed.",
       "depthPadding": 0,
       "executable": true,
@@ -697,7 +697,7 @@
     {
       "nodeID": "7",
       "name": "Main Server",
-      "color": "green",
+      "color": "#ffffff",
       "preExecutionText": "Main Server has not been executed.",
       "depthPadding": 0,
       "executable": true,
@@ -768,7 +768,7 @@
     {
       "nodeID": "10",
       "name": "Main Server",
-      "color": "green",
+      "color": "#ffffff",
       "preExecutionText": "Main Server has not been executed.",
       "depthPadding": 0,
       "executable": true,
@@ -839,7 +839,7 @@
     {
       "nodeID": "13",
       "name": "Main Server",
-      "color": "green",
+      "color": "#ffffff",
       "preExecutionText": "Main Server has not been executed.",
       "depthPadding": 0,
       "executable": true,
@@ -910,7 +910,7 @@
     {
       "nodeID": "14",
       "name": "Air Defense",
-      "color": "pink",
+      "color": "#ffffff",
       "preExecutionText": "",
       "depthPadding": 0,
       "executable": false,
@@ -931,7 +931,7 @@
     {
       "nodeID": "15",
       "name": "IADS Network",
-      "color": "pink",
+      "color": "#ffffff",
       "preExecutionText": "IADS Network has not been executed.",
       "depthPadding": 0,
       "executable": false,
@@ -1002,7 +1002,7 @@
     {
       "nodeID": "16",
       "name": "Individual IADS Sites",
-      "color": "pink",
+      "color": "#ffffff",
       "preExecutionText": "Individual IADS Sites has not been executed.",
       "depthPadding": 0,
       "executable": false,
@@ -1073,7 +1073,7 @@
     {
       "nodeID": "17",
       "name": "Launchers",
-      "color": "pink",
+      "color": "#ffffff",
       "preExecutionText": "Launchers has not been executed.",
       "depthPadding": 0,
       "executable": true,
@@ -1144,7 +1144,7 @@
     {
       "nodeID": "18",
       "name": "Radars",
-      "color": "pink",
+      "color": "#ffffff",
       "preExecutionText": "Radars has not been executed.",
       "depthPadding": 0,
       "executable": true,
@@ -1215,7 +1215,7 @@
     {
       "nodeID": "19",
       "name": "Infrastructure",
-      "color": "yellow",
+      "color": "#ffffff",
       "preExecutionText": "",
       "depthPadding": 0,
       "executable": false,
@@ -1236,7 +1236,7 @@
     {
       "nodeID": "20",
       "name": "Railroad System",
-      "color": "yellow",
+      "color": "#ffffff",
       "preExecutionText": "Railroad System has not been executed.",
       "depthPadding": 0,
       "executable": false,
@@ -1307,7 +1307,7 @@
     {
       "nodeID": "23",
       "name": "Electrical System",
-      "color": "yellow",
+      "color": "#ffffff",
       "preExecutionText": "Electrical System has not been executed.",
       "depthPadding": 0,
       "executable": false,
@@ -1378,7 +1378,7 @@
     {
       "nodeID": "25",
       "name": "Water System",
-      "color": "yellow",
+      "color": "#ffffff",
       "preExecutionText": "Water System has not been executed.",
       "depthPadding": 0,
       "executable": false,
@@ -1449,7 +1449,7 @@
     {
       "nodeID": "27",
       "name": "Road System",
-      "color": "yellow",
+      "color": "#ffffff",
       "preExecutionText": "Road System has not been executed.",
       "depthPadding": 0,
       "executable": false,
@@ -1520,7 +1520,7 @@
     {
       "nodeID": "21",
       "name": "Track Monitoring",
-      "color": "yellow",
+      "color": "#ffffff",
       "preExecutionText": "Track Monitoring has not been executed.",
       "depthPadding": 0,
       "executable": true,
@@ -1591,7 +1591,7 @@
     {
       "nodeID": "22",
       "name": "Track Switch System",
-      "color": "yellow",
+      "color": "#ffffff",
       "preExecutionText": "Track Switch System has not been executed.",
       "depthPadding": 0,
       "executable": true,
@@ -1662,7 +1662,7 @@
     {
       "nodeID": "24",
       "name": "Regional Service",
-      "color": "yellow",
+      "color": "#ffffff",
       "preExecutionText": "Regional Service has not been executed.",
       "depthPadding": 0,
       "executable": true,
@@ -1733,7 +1733,7 @@
     {
       "nodeID": "26",
       "name": "Valve System",
-      "color": "yellow",
+      "color": "#ffffff",
       "preExecutionText": "Valve System has not been executed.",
       "depthPadding": 0,
       "executable": true,
@@ -1804,7 +1804,7 @@
     {
       "nodeID": "28",
       "name": "Traffic Light System",
-      "color": "yellow",
+      "color": "#ffffff",
       "preExecutionText": "Traffic Light System has not been executed.",
       "depthPadding": 0,
       "executable": true,
@@ -1875,7 +1875,7 @@
     {
       "nodeID": "29",
       "name": "CCTV System",
-      "color": "yellow",
+      "color": "#ffffff",
       "preExecutionText": "CCTV System has not been executed.",
       "depthPadding": 0,
       "executable": true,
@@ -1946,7 +1946,7 @@
     {
       "nodeID": "30",
       "name": "Satellite Services",
-      "color": "blue",
+      "color": "#ffffff",
       "preExecutionText": "",
       "depthPadding": 0,
       "executable": false,
@@ -1967,7 +1967,7 @@
     {
       "nodeID": "31",
       "name": "Global Positioning",
-      "color": "blue",
+      "color": "#ffffff",
       "preExecutionText": "No depending beeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee convinced in unfeeling he. Excellence she unaffected and too sentiments her. Rooms he doors there ye aware in by shall. Education remainder in so cordially. His remainder and own dejection daughters sportsmen. Is easy took he shed to kind.\n\nSaw yet kindness too replying whatever marianne. Old sentiments resolution admiration unaffected its mrs literature. Behaviour new set existence dashwoods. It satisfied to mr commanded consisted disposing engrossed. Tall snug do of till on easy. Form not calm new fail.\n\nHusbands ask repeated resolved but laughter debating. She end cordial visitor noisier fat subject general picture. Or if offering confined entrance no. Nay rapturous him see something residence. Highly talked do so vulgar. Her use behaved spirits and natural attempt say feeling. Exquisite mr incommode immediate he something ourselves it of. Law conduct yet chiefly beloved examine village proceed. ",
       "depthPadding": 0,
       "executable": true,
@@ -2278,7 +2278,7 @@
     {
       "nodeID": "32",
       "name": "Data Transfer",
-      "color": "blue",
+      "color": "#ffffff",
       "preExecutionText": "Data Transfer has not been executed.",
       "depthPadding": 0,
       "executable": true,
@@ -2349,7 +2349,7 @@
     {
       "nodeID": "33",
       "name": "Imagery Collection",
-      "color": "blue",
+      "color": "#ffffff",
       "preExecutionText": "Imagery Collection has not been executed.",
       "depthPadding": 0,
       "executable": true,
@@ -2420,7 +2420,7 @@
     {
       "nodeID": "34",
       "name": "Sensor Observation",
-      "color": "blue",
+      "color": "#ffffff",
       "preExecutionText": "Sensor Observation has not been executed.",
       "depthPadding": 0,
       "executable": true,
@@ -2491,7 +2491,7 @@
     {
       "nodeID": "eeb6f946-a9db-4026-a071-08cc479db35e",
       "name": "Cell",
-      "color": "brown",
+      "color": "#ffffff",
       "preExecutionText": "Node has not been executed.",
       "depthPadding": 0,
       "executable": false,
@@ -2501,7 +2501,7 @@
     {
       "nodeID": "52e0adc1-858b-4cc5-bd2c-837cbfad4514",
       "name": "Cell",
-      "color": "brown",
+      "color": "#ffffff",
       "preExecutionText": "Node has not been executed.",
       "depthPadding": 0,
       "executable": false,
@@ -2511,7 +2511,7 @@
     {
       "nodeID": "17e87d47-9884-4a08-97a1-a81727d1d74d",
       "name": "Cell",
-      "color": "brown",
+      "color": "#ffffff",
       "preExecutionText": "Node has not been executed.",
       "depthPadding": 0,
       "executable": false,
@@ -2521,7 +2521,7 @@
     {
       "nodeID": "b2b4451c-5acd-4251-81ec-038415a05aff",
       "name": "Cell",
-      "color": "brown",
+      "color": "#ffffff",
       "preExecutionText": "Node has not been executed.",
       "depthPadding": 0,
       "executable": false,
@@ -2531,7 +2531,7 @@
     {
       "nodeID": "30ad7557-c014-4129-9f2f-c66adfddb82d",
       "name": "Cell",
-      "color": "brown",
+      "color": "#ffffff",
       "preExecutionText": "Node has not been executed.",
       "depthPadding": 0,
       "executable": false,

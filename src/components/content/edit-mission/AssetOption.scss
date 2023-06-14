@@ -1,0 +1,75 @@
+@import '../../../config.scss';
+
+.AssetOption {
+  display: grid;
+  grid-template-columns: 18px 30px auto;
+  grid-template-rows: auto;
+  width: calc(100% - 20px);
+  padding: 10px;
+  user-select: none;
+
+  &.NoAssetOption {
+    grid-template-columns: auto;
+    padding-left: 20px;
+  }
+
+  .Indicator {
+    display: grid;
+    grid-column: 1 / 3;
+    grid-row: 1 / 1;
+    align-items: center;
+    width: 12px;
+    height: 20px;
+    transform: rotate(-90deg);
+
+    &.isExpanded {
+      transform: rotate(0deg);
+    }
+
+    &:hover {
+      cursor: pointer;
+    }
+  }
+
+  .Folder {
+    display: grid;
+    grid-column: 2 / 3;
+    grid-row: 1 / 1;
+    width: 20px;
+    height: 20px;
+  }
+
+  .File {
+    display: grid;
+    grid-column: 2 / 3;
+    grid-row: 1 / 1;
+    width: 25px;
+    height: 20px;
+  }
+
+  .AssetOptionText {
+    grid-column: 3 / 3;
+    grid-row: 1 / 2;
+    color: $color-accent-light;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+
+    &:hover {
+      cursor: pointer;
+      color: $color-main;
+    }
+
+    &.NoAssetOptionText {
+      grid-column: 1 / 1;
+      pointer-events: none;
+      user-select: none;
+      -webkit-user-select: none;
+
+      &:hover {
+        cursor: default;
+        color: $color-accent-light;
+      }
+    }
+  }
+}

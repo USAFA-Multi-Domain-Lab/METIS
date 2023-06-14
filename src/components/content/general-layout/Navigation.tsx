@@ -28,15 +28,17 @@ const Navigation = (props: INavigation): JSX.Element | null => {
         let text: string = link.text
         let key: string = link.key
         let visible: boolean = link.visible ?? true
-        let className: string = 'Link'
+        let className: string = 'LinkContainer'
 
         if (!visible) {
           className += ' Hidden'
         }
 
         return (
-          <div className={className} onClick={link.handleClick} key={key}>
-            {text}
+          <div className={className} key={`${key}-container`}>
+            <div className='Link' onClick={link.handleClick} key={key}>
+              {text}
+            </div>
           </div>
         )
       })}

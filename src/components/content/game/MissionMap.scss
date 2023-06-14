@@ -202,9 +202,14 @@
           display: none;
         }
 
+        &.mapped-node {
+          background-color: $background-main;
+        }
+
         &.item-markdown {
           margin-left: 0;
           margin-right: 0;
+          border: none;
         }
 
         .ActionPropertyDisplay {
@@ -216,7 +221,9 @@
           display: flex;
           justify-content: center;
           align-items: center;
+          flex-flow: row wrap;
           white-space: pre-line;
+          overflow: hidden;
 
           .score {
             display: inline-block;
@@ -228,19 +235,36 @@
             display: grid;
             align-items: center;
             color: $color-main;
-            height: 100%;
+            height: 50%;
             padding-top: auto;
             text-align: center;
+          }
+
+          .ButtonSVG {
+            font-size: unset;
+            position: relative;
+            border: unset;
+            border: 2px solid $color-main;
+            border-radius: 6px;
+            background-color: rgba($background-alt1, 0.9);
+            color: $color-main;
+
+            &.remove {
+              background-position: 50% 50%;
+              background-size: 70% 70%;
+              background-repeat: no-repeat;
+            }
           }
         }
 
         .executable {
+          display: flex;
+          justify-content: flex-end;
           background: url(../../../assets/images/icons/lightning.svg);
           background-size: 100% 100%;
           background-repeat: no-repeat;
           width: 15%;
-          height: 100%;
-          margin: 0 2%;
+          margin: 0 5%;
         }
 
         .device {
@@ -248,8 +272,7 @@
           background-size: 100% 100%;
           background-repeat: no-repeat;
           width: 15%;
-          height: 100%;
-          margin: 0 4%;
+          margin: 0 5%;
         }
 
         .properties {
@@ -258,9 +281,9 @@
 
         &.Selected {
           .title {
-            align-items: unset;
-            overflow: hidden;
             white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
           }
         }
 
@@ -272,55 +295,12 @@
           }
         }
 
-        &.green {
-          background-color: $node-green;
-        }
-
-        &.pink {
-          background-color: $node-pink;
-        }
-
-        &.yellow {
-          background-color: $node-yellow;
-        }
-
-        &.blue {
-          background-color: $node-blue;
-        }
-
-        &.brown {
-          background-color: $node-brown;
-        }
-
-        &.purple {
-          background-color: $node-purple;
-        }
-
-        &.red {
-          background-color: $node-red;
-        }
-
-        &.orange {
-          background-color: $node-orange;
-        }
-
-        &.default {
-          background-color: $background-alt1;
-        }
-
         &.succeeded {
-          background-color: $background-alt1;
-          border-color: $success;
+          background-color: $node-success;
         }
 
         &.failed {
-          background-color: $background-alt1;
-          border-color: $fail;
-        }
-
-        &.LoadingBar {
-          background-color: $background-alt1;
-          border-color: $color-main;
+          background-color: $node-fail;
         }
 
         @keyframes loading-animation {
@@ -358,22 +338,6 @@
           }
         }
 
-        .ButtonSVG {
-          font-size: unset;
-          position: relative;
-          border: unset;
-          border: 2px solid $color-main;
-          border-radius: 6px;
-          background-color: rgba($background-alt1, 0.9);
-          color: $color-main;
-
-          &.remove {
-            background-position: 50% 50%;
-            background-size: 70% 70%;
-            background-repeat: no-repeat;
-          }
-        }
-
         &.node-creator {
           background-color: $background-alt2;
           overflow: hidden;
@@ -406,17 +370,13 @@
     z-index: $z-index-objective-map-pointers;
     border: 2px solid transparent;
     stroke: rgba($color-main, 1);
-    marker {
-      polygon,
-      circle {
-        fill: rgba($color-accent-light, 1);
-        stroke: none;
-      }
-    }
-  }
-
-  @media only screen and (max-width: 768px) {
-    margin: 0 5px 0 0;
+    // marker {
+    //   polygon,
+    //   circle {
+    //     fill: rgba($color-accent-light, 1);
+    //     stroke: none;
+    //   }
+    // }
   }
 
   @media only screen and (max-width: 275px) {

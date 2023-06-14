@@ -10,7 +10,7 @@
     {
       "nodeID": "7e6e3ddd-53be-40b1-881e-945cd6891425",
       "name": "New Node",
-      "color": "default",
+      "color": "#ffffff",
       "preExecutionText": "Node has not been executed.",
       "depthPadding": 0,
       "executable": false,

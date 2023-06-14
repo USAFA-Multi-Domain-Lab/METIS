@@ -2,7 +2,7 @@
 
 ### purpose
 
-This is a mini game used by the United States Air Force Academy to educate cadets on cyber operations.
+This is a mini-game used by the United States Air Force Academy to educate cadets on cyber operations.
 
 ### production-set-up
 
@@ -10,7 +10,7 @@ This is a mini game used by the United States Air Force Academy to educate cadet
 - Have `mongod`, `mongosh`, and `mongodb-database-tools` installed.
 - Set up and run a Mongo server.
 - Create and configure an `environment.json`, reference the **environment-configuration** section for help.
-- Run `npm install` in project directory to install dependencies.
+- Run `npm `install` in the project directory to install dependencies.
 - Run `npm run build-react` to build React app into the static files
 - Run `npm run serve-prod` to run the production web server.
 
@@ -20,7 +20,7 @@ This is a mini game used by the United States Air Force Academy to educate cadet
 - Have `mongod`, `mongosh`, and `mongodb-database-tools` installed.
 - Set up and run a Mongo server.
 - Create and configure an `environment.json`, reference the **environment-configuration** section for help.
-- Run `npm install --also=dev` in project directory to install all packages, including development packages.
+- Run `npm install --`also=dev` in the project directory to install all packages, including development packages.
 - Run `npm run build-react` to build React app into the static files.
 - Run `npm run serve-dev` to run the development web server.
 - Run `npm run serve-react` to also run the React development server on a different port. This allows changes to the web app to be seen immediately without building.
@@ -28,7 +28,7 @@ This is a mini game used by the United States Air Force Academy to educate cadet
 
 ## environment-configuration
 
-To configure the app further, an `environment.json` and/or `environment-test.json` can be created in the project directory with a custom configuration. This configuration will overrite values defined in `config.ts`. Any values not provided will simply remain as their defaults. Make sure the Mongo configuration in the file works with the Mongo server you have running. An example for `environment.json` and `environment-test.json` is provided below.
+To configure the app further, an `environment.json` and/or `environment-test.json` can be created in the project directory with a custom configuration. This configuration will overwrite values defined in `config.ts`. Any values not provided will simply remain as their defaults. Make sure the Mongo configuration in the file works with the Mongo server you have running. An example for `environment.json` and `environment-test.json` is provided below.
 
 ---
 
@@ -41,7 +41,9 @@ environment.json
   "MONGO_PORT": "27017",
   "MONGO_DB": "mdl",
   "MONGO_USERNAME": "username",
-  "MONGO_PASSWORD": "password"
+  "MONGO_PASSWORD": "password",
+  "PLC_API_HOST": "https://your-plc-host-name-here.com",
+  "API_KEY": "api-key-for-plc"
 }
 ```
 

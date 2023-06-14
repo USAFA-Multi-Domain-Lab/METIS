@@ -31,6 +31,7 @@ export interface IAppStateValues {
   postLoadNotifications: Array<Notification>
   confirmation: IConfirmation | null
   prompt: IPrompt | null
+  missionNodeColors: Array<string>
 }
 
 export interface IAppStateSetters {
@@ -50,6 +51,7 @@ export interface IAppStateSetters {
   setPostLoadNotifications: (postLoadNotifications: Array<Notification>) => void
   setConfirmation: (confirmation: IConfirmation | null) => void
   setPrompt: (prompt: IPrompt | null) => void
+  setMissionNodeColors: (missionNodeColors: Array<string>) => void
 }
 
 // Options available when confirming
@@ -76,6 +78,7 @@ export interface IPromptOptions {
 export interface INotifyOptions {
   duration?: number | null
   buttons?: Array<IButtonText>
+  errorMessage?: boolean
 }
 
 /* -- CONSTANTS -- */
@@ -321,6 +324,7 @@ export default class AppState implements IAppStateValues, IAppStateValues {
   postLoadNotifications: Array<Notification>
   confirmation: IConfirmation | null
   prompt: IPrompt | null
+  missionNodeColors: Array<string>
 
   setForcedUpdateCounter: (forcedUpdateCounter: number) => void
   setCurrentUser: (user: IUser | null) => void
@@ -338,6 +342,7 @@ export default class AppState implements IAppStateValues, IAppStateValues {
   setPostLoadNotifications: (postLoadNotifications: Array<Notification>) => void
   setConfirmation: (confirmation: IConfirmation | null) => void
   setPrompt: (prompt: IPrompt | null) => void
+  setMissionNodeColors: (missionNodeColors: Array<string>) => void
 
   static get defaultAppStateValues(): IAppStateValues {
     return {
@@ -357,6 +362,7 @@ export default class AppState implements IAppStateValues, IAppStateValues {
       postLoadNotifications: [],
       confirmation: null,
       prompt: null,
+      missionNodeColors: [],
     }
   }
 
@@ -378,6 +384,7 @@ export default class AppState implements IAppStateValues, IAppStateValues {
       setPostLoadNotifications: (): void => {},
       setConfirmation: (): void => {},
       setPrompt: (): void => {},
+      setMissionNodeColors: (): void => {},
     }
   }
 
@@ -401,6 +408,7 @@ export default class AppState implements IAppStateValues, IAppStateValues {
     this.postLoadNotifications = appStateValues.postLoadNotifications
     this.confirmation = appStateValues.confirmation
     this.prompt = appStateValues.prompt
+    this.missionNodeColors = appStateValues.missionNodeColors
 
     this.setForcedUpdateCounter = appStateSetters.setForcedUpdateCounter
     this.setCurrentUser = appStateSetters.setCurrentUser
@@ -419,8 +427,8 @@ export default class AppState implements IAppStateValues, IAppStateValues {
     this.setPostLoadNotifications = appStateSetters.setPostLoadNotifications
     this.setConfirmation = appStateSetters.setConfirmation
     this.setPrompt = appStateSetters.setPrompt
+    this.setMissionNodeColors = appStateSetters.setMissionNodeColors
   }
-
   // This will create a new app
   // with the component class/function
   // passed, using a new instance of
@@ -474,6 +482,8 @@ export default class AppState implements IAppStateValues, IAppStateValues {
         'confirmation',
       )
       const [prompt, setPrompt] = useStore<IPrompt | null>('prompt')
+      const [missionNodeColors, setMissionNodeColors] =
+        useStore<Array<string>>('missionNodeColors')
 
       let appStateValues: IAppStateValues = {
         forcedUpdateCounter,
@@ -492,6 +502,7 @@ export default class AppState implements IAppStateValues, IAppStateValues {
         postLoadNotifications,
         confirmation,
         prompt,
+        missionNodeColors,
       }
       let appStateSetters: IAppStateSetters = {
         setForcedUpdateCounter,
@@ -510,6 +521,7 @@ export default class AppState implements IAppStateValues, IAppStateValues {
         setPostLoadNotifications,
         setConfirmation,
         setPrompt,
+        setMissionNodeColors,
       }
       let appState = new AppState(appStateValues, appStateSetters)
       appActions.appState = appState

@@ -18,7 +18,7 @@ declare module 'express-session' {
 
 /* -- config-variables | default-values -- */
 
-export let SCHEMA_BUILD_NUMBER: number = 8
+export let SCHEMA_BUILD_NUMBER: number = 10
 
 export let PORT: number = 8080
 
@@ -27,6 +27,8 @@ export let MONGO_HOST = 'localhost'
 export let MONGO_PORT = 27017
 export let MONGO_USERNAME: string | undefined
 export let MONGO_PASSWORD: string | undefined
+export let API_KEY: string = ''
+export let PLC_API_HOST: string = ''
 
 export const APP_DIR = path.join(__dirname)
 
@@ -65,6 +67,12 @@ if (fs.existsSync(environmentFilePath)) {
   }
   if ('MONGO_PASSWORD' in environmentData) {
     MONGO_PASSWORD = environmentData['MONGO_PASSWORD']
+  }
+  if ('API_KEY' in environmentData) {
+    API_KEY = environmentData['API_KEY']
+  }
+  if ('PLC_API_HOST' in environmentData) {
+    PLC_API_HOST = environmentData['PLC_API_HOST']
   }
 }
 
@@ -133,6 +141,8 @@ const defaultExports = {
   MONGO_DB,
   PORT,
   MONGO_HOST,
+  PLC_API_HOST,
+  API_KEY,
   configure,
 }
 

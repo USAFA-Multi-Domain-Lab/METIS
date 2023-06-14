@@ -1,5 +1,4 @@
-import { NextFunction } from 'express'
-import { Request, Response } from 'express-serve-static-core'
+import { Request, Response, NextFunction } from 'express-serve-static-core'
 
 // middleware that requires the user to be logged in
 export const requireLogin = (

@@ -1,0 +1,23 @@
+{
+  "name": "New Mission",
+  "versionNumber": 1,
+  "seed": "63e17bb2323d8dcb43539239",
+  "initialResources": 5,
+  "nodeStructure": {
+    "7e6e3ddd-53be-40b1-881e-945cd6891425": {}
+  },
+  "nodeData": [
+    {
+      "nodeID": "7e6e3ddd-53be-40b1-881e-945cd6891425",
+      "name": "New Node",
+      "color": "#ffffff",
+      "preExecutionText": "Node has not been executed.",
+      "depthPadding": 0,
+      "executable": false,
+      "device": false,
+      "actions": []
+    }
+  ],
+  "__v": 0,
+  "schemaBuildNumber": 4
+}

@@ -5,7 +5,7 @@ import axios, { AxiosError, AxiosResponse } from 'axios'
 import { AnyObject } from './toolbox/objects'
 import {
   ENodeTargetRelation,
-  IMissionNodeJson as IMissionNodeJSON,
+  IMissionNodeJSON as IMissionNodeJSON,
   MissionNode,
   MissionNodeCreator,
 } from './mission-nodes'
@@ -212,7 +212,7 @@ export class Mission {
 
   // This will determine the relationship
   // between nodes, parent to child and
-  // vise-versa.
+  // vice versa.
   _importNodeStructure(
     nodeStructure: AnyObject,
     rootNode: MissionNode = this.rootNode,
@@ -636,7 +636,7 @@ export function createMission(
     })
 }
 
-// This will import a .cesar file
+// This will import a .metis file
 // to the server to create a new
 // mission.
 export function importMissions(
@@ -729,6 +729,24 @@ export function getAllMissions(
     })
     .catch((error: AxiosError) => {
       console.error('Failed to retrieve missions.')
+      console.error(error)
+      callbackError(error)
+    })
+}
+
+export function getMissionNodeColorOptions(
+  callback: (colors: Array<string>) => void,
+  callbackError: (error: AxiosError) => void = () => {},
+): void {
+  axios
+    .get(`/api/v1/missions/colors/`)
+    .then((response: AxiosResponse<AnyObject>): void => {
+      let colorJSON = response.data.colorOptions
+
+      callback(colorJSON)
+    })
+    .catch((error: AxiosError) => {
+      console.error('Failed to retrieve the color options.')
       console.error(error)
       callbackError(error)
     })
