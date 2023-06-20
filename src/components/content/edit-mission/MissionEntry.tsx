@@ -119,9 +119,20 @@ export default function MissionEntry(props: {
             />
             <DetailBox
               label='Introduction Message'
-              initialValue={'Enter your overview message here.'}
-              deliverValue={(studentOverviewMessage: string) => {}}
-              key={`${mission.missionID}_studentOverviewMessage`}
+              initialValue={mission.introMessage}
+              deliverValue={(introMessage: string) => {
+                if (introMessage !== '') {
+                  mission.introMessage = introMessage
+                  removeMissionEmptyString('introMessage')
+                  handleChange()
+                } else {
+                  setMissionEmptyStringArray([
+                    ...missionEmptyStringArray,
+                    `missionID=${mission.missionID}_field=introMessage`,
+                  ])
+                }
+              }}
+              key={`${mission.missionID}_introMessage`}
             />
           </div>
         </div>

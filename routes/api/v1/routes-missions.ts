@@ -30,6 +30,7 @@ router.post(
   requireLogin,
   validateRequestBodyKeys({
     name: RequestBodyFilters.STRING,
+    introMessage: RequestBodyFilters.STRING,
     versionNumber: RequestBodyFilters.NUMBER,
     live: RequestBodyFilters.BOOLEAN,
     initialResources: RequestBodyFilters.NUMBER,
@@ -540,6 +541,7 @@ router.put(
     },
     {
       name: RequestBodyFilters.STRING,
+      introMessage: RequestBodyFilters.STRING,
       versionNumber: RequestBodyFilters.NUMBER,
       initialResources: RequestBodyFilters.NUMBER,
       live: RequestBodyFilters.BOOLEAN,

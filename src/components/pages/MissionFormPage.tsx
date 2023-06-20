@@ -74,7 +74,17 @@ export default function MissionFormPage(
 
       // Creating a new mission.
       if (missionID === null) {
-        let mission = new Mission('', 'New Mission', 1, false, 5, {}, [], '')
+        let mission = new Mission(
+          '',
+          'New Mission',
+          'Enter your overview message here.',
+          1,
+          false,
+          5,
+          {},
+          [],
+          '',
+        )
         existsInDatabase = false
         setMission(mission)
         setAreUnsavedChanges(true)

@@ -26,6 +26,7 @@ export enum EMissionCloneMethod {
 export interface IMissionJSON {
   missionID: string
   name: string
+  introMessage: string
   versionNumber: number
   live: boolean
   initialResources: number
@@ -47,6 +48,7 @@ export interface IMissionCloneOptions {
 export class Mission {
   missionID: string
   name: string
+  introMessage: string
   versionNumber: number
   live: boolean
   initialResources: number
@@ -153,6 +155,7 @@ export class Mission {
   constructor(
     missionID: string,
     name: string,
+    introMessage: string,
     versionNumber: number,
     live: boolean,
     initialResources: number,
@@ -163,6 +166,7 @@ export class Mission {
   ) {
     this.missionID = missionID
     this.name = name
+    this.introMessage = introMessage
     this.versionNumber = versionNumber
     this.live = live
     this.initialResources = initialResources
@@ -347,6 +351,7 @@ export class Mission {
     return {
       missionID: this.missionID,
       name: this.name,
+      introMessage: this.introMessage,
       versionNumber: this.versionNumber,
       live: this.live,
       initialResources: this.initialResources,
@@ -577,6 +582,7 @@ export class Mission {
         return new Mission(
           this.missionID,
           this.name,
+          this.introMessage,
           this.versionNumber,
           this.live,
           this.initialResources,
@@ -590,6 +596,7 @@ export class Mission {
         return new Mission(
           this.missionID,
           this.name,
+          this.introMessage,
           this.versionNumber,
           this.live,
           this.initialResources,
@@ -618,6 +625,7 @@ export function createMission(
       let mission = new Mission(
         missionJson.missionID,
         missionJson.name,
+        missionJson.introMessage,
         missionJson.versionNumber,
         missionJson.live,
         missionJson.initialResources,
@@ -699,6 +707,7 @@ export function getMission(
       let mission = new Mission(
         missionJson.missionID,
         missionJson.name,
+        missionJson.introMessage,
         missionJson.versionNumber,
         missionJson.live,
         missionJson.initialResources,
@@ -805,6 +814,7 @@ export function copyMission(
       let copy = new Mission(
         missionJson.missionID,
         missionJson.name,
+        missionJson.introMessage,
         missionJson.versionNumber,
         missionJson.live,
         missionJson.initialResources,

@@ -2,6 +2,7 @@
 
 export let attackMissionData = {
   name: 'Attack Mission',
+  introMessage: 'Enter your overview message here.',
   versionNumber: 1,
   live: true,
   initialResources: 5,
@@ -2119,6 +2120,7 @@ export let attackMissionData = {
 
 export let defensiveMissionData = {
   name: 'Defensive Mission',
+  introMessage: 'Enter your overview message here.',
   versionNumber: 1,
   live: true,
   initialResources: 10,
