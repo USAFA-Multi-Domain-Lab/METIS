@@ -5,6 +5,7 @@ export interface IUser {
   lastName: string
   userID: string
   type: string
+  role: string
 }
 
 export interface IUserExposed {
@@ -28,6 +29,7 @@ const retrieveCurrentUser = (
     .get('/api/v1/users/')
     .then((response: AxiosResponse) => {
       let currentUser = response.data.currentUser
+
       callback(currentUser)
     })
     .catch((error: AxiosError) => {

@@ -7,14 +7,29 @@ import { StatusError } from '../../../modules/error'
 const router = express.Router()
 
 // -- GET | / --
-// default route that renders the login and
-// home page
+// default route that looks for the  current user in
+// the session
 router.get('/', (request, response) => {
   let userID: string | undefined = request.session.userID
 
-  return response.json({
-    currentUser: userID ? { userID } : null,
-  })
+  if (userID !== undefined) {
+    userModel.findOne({ userID: userID }).exec((error: Error, user: any) => {
+      if (error) {
+        return response.sendStatus(500)
+      } else {
+        let userID = user.userID
+        let role = user.role
+
+        return response.json({
+          currentUser: { userID, role },
+        })
+      }
+    })
+  } else {
+    return response.json({
+      currentUser: null,
+    })
+  }
 })
 
 //post route for authenticating user trying to log in
@@ -52,4 +67,5 @@ router.post('/logout', (request, response, next) => {
     })
   }
 })
+
 module.exports = router

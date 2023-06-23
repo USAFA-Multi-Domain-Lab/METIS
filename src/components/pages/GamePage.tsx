@@ -97,20 +97,18 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
     // This will logout the current user.
     const logout = () =>
       appActions.logout({
-        returningPagePath: 'GamePage',
-        returningPageProps: {
-          missionID: mission.missionID,
-        },
+        returningPagePath: 'MissionSelectionPage',
+        returningPageProps: {},
       })
 
-    // This will switch to the auth page.
-    const login = () =>
-      appActions.goToPage('AuthPage', {
-        returningPagePath: 'GamePage',
-        returningPageProps: {
-          missionID: mission.missionID,
-        },
-      })
+    // // This will switch to the auth page.
+    // const login = () =>
+    //   appActions.goToPage('AuthPage', {
+    //     returningPagePath: 'GamePage',
+    //     returningPageProps: {
+    //       missionID: mission.missionID,
+    //     },
+    //   })
 
     // This will output to the console.
     const outputToConsole = (output: IConsoleOutput): void => {
@@ -174,12 +172,12 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
               },
               visible: true,
             },
-            {
-              text: 'Login',
-              key: 'login',
-              handleClick: login,
-              visible: displayLogin,
-            },
+            // {
+            //   text: 'Login',
+            //   key: 'login',
+            //   handleClick: login,
+            //   visible: displayLogin,
+            // },
             {
               text: 'Log out',
               key: 'log-out',

@@ -14,7 +14,7 @@ export interface IAuthPageSpecific {
 export interface IAuthPage extends IPage, IAuthPageSpecific {}
 
 // This will render a page where a user can
-// login to view the radar.
+// login.
 export default function AuthPage(props: IAuthPage): JSX.Element | null {
   let appState: AppState = props.appState
   let appActions: AppActions = props.appActions

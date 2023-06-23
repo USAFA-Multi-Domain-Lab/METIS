@@ -63,7 +63,7 @@ export default function MissionFormPage(
 
   // Equivalent of componentDidMount.
   useEffect(() => {
-    if (appState.currentUser === null) {
+    if (appState.currentUser && appState.currentUser.role !== 'admin') {
       appActions.goToPage('MissionSelectionPage', {})
       appActions.notify('Mission form page is not accessible to students.')
     }
@@ -327,10 +327,8 @@ export default function MissionFormPage(
     // This will logout the current user.
     const logout = () =>
       appActions.logout({
-        returningPagePath: 'GamePage',
-        returningPageProps: {
-          missionID: mission.missionID,
-        },
+        returningPagePath: 'MissionSelectionPage',
+        returningPageProps: {},
       })
 
     /* -- RENDER -- */

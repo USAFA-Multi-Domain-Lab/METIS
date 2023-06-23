@@ -249,6 +249,10 @@
       &:hover {
         opacity: 1;
       }
+
+      &.Disabled {
+        pointer-events: none;
+      }
     }
 
     .Credit {

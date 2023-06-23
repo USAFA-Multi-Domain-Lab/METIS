@@ -289,7 +289,11 @@ export default function MissionSelectionPage(
 
       page_elm.classList.remove('DropPending')
 
-      if (files.length > 0 && appState.currentUser !== null) {
+      if (
+        files.length > 0 &&
+        appState.currentUser &&
+        appState.currentUser.role === 'admin'
+      ) {
         importMissionFiles(files)
       }
     }
@@ -326,7 +330,11 @@ export default function MissionSelectionPage(
 
   // This will switch to the changelog
   // page.
-  const viewChangelog = (): void => appActions.goToPage('ChangelogPage', {})
+  const viewChangelog = (): void => {
+    if (appState.currentUser && appState.currentUser.role === 'admin') {
+      appActions.goToPage('ChangelogPage', {})
+    }
+  }
 
   // Toggles through the pages of missions.
   const showPreviousMissionSet = () => {
@@ -523,18 +531,22 @@ export default function MissionSelectionPage(
   let displayLogout: boolean = false
 
   let noMissionsClassName: string = 'NoMissions'
+  let versionClassName: string = 'Version Disabled'
 
   // Variables used for mission pagination
   let numberOfMissionsShown: number = 5
   let totalMissionSets: number = 1
 
-  if (appState.currentUser !== null) {
+  if (appState.currentUser) {
+    displayLogin = false
+    displayLogout = true
+  }
+
+  if (appState.currentUser && appState.currentUser.role === 'admin') {
     editMissionsContainerClassName += ' InstructorView'
     editMissionListClassName += ' InstructorView'
     missionNavPanelClassName += ' InstructorView'
     fileDropBoxClassName = 'FileDropBox'
-    displayLogin = false
-    displayLogout = true
   }
 
   if (displayedMissions.length > 0) {
@@ -553,6 +565,10 @@ export default function MissionSelectionPage(
     totalMissionSets = Math.ceil(
       allMissionsFromSearch.length / numberOfMissionsShown,
     )
+  }
+
+  if (appState.currentUser && appState.currentUser.role === 'admin') {
+    versionClassName = 'Version'
   }
 
   // This will iterate over the missions,
@@ -668,7 +684,11 @@ export default function MissionSelectionPage(
       </div>
 
       <div className='FooterContainer' draggable={false}>
-        <div className='Version' onClick={viewChangelog} draggable={false}>
+        <div
+          className={versionClassName}
+          onClick={viewChangelog}
+          draggable={false}
+        >
           v1.2.1
           <Tooltip description={'View changelog.'} />
         </div>

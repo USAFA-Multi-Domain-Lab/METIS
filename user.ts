@@ -15,8 +15,8 @@ export const requireLogin = (
 
 // This will return whether there is
 // a user in the session.
-export function isLoggedIn(request: Request): boolean {
-  return request.session.userID !== undefined
+export function isLoggedInAsAdmin(request: Request): boolean {
+  return request.session.userID === 'admin'
 }
 
 // middleware that requires the user to be logged in
@@ -39,5 +39,5 @@ export function isLoggedIn(request: Request): boolean {
 
 export default {
   requireLogin,
-  isLoggedIn,
+  isLoggedIn: isLoggedInAsAdmin,
 }

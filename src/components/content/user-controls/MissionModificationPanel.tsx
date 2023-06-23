@@ -177,10 +177,11 @@ export default function MissionModificationPanel(props: {
     }),
   }
 
-  let containerClassName: string = 'MissionModificationPanel'
+  let containerClassName: string = 'MissionModificationPanel hidden'
+  // console.log(currentUser.role)
 
-  if (currentUser === null) {
-    containerClassName += ' hidden'
+  if (currentUser && currentUser.role === 'admin') {
+    containerClassName = 'MissionModificationPanel'
   }
 
   // Logic that will lock the mission toggle while a request is being sent
