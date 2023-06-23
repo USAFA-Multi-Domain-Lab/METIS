@@ -68,6 +68,7 @@ export class Mission {
   _nodeCreationTarget: MissionNode | null
   _nodeCreators: Array<MissionNodeCreator>
   consoleOutputs: Array<IConsoleOutput>
+  _hasDisabledNodes: boolean
 
   // This will return the node
   // structure for the mission,
@@ -152,6 +153,14 @@ export class Mission {
     return this._nodeCreators
   }
 
+  get hasDisabledNodes(): boolean {
+    return this._hasDisabledNodes
+  }
+
+  set hasDisabledNodes(hasDisabledNodes: boolean) {
+    this._hasDisabledNodes = hasDisabledNodes
+  }
+
   constructor(
     missionID: string,
     name: string,
@@ -199,6 +208,7 @@ export class Mission {
     this._nodeCreationTarget = null
     this._nodeCreators = []
     this.consoleOutputs = []
+    this._hasDisabledNodes = false
 
     this._importNodeData(nodeData)
     this._importNodeStructure(nodeStructure, this.rootNode, expandAll)
@@ -607,6 +617,15 @@ export class Mission {
         )
         break
     }
+  }
+
+  // This will enable all nodes
+  // that have been disabled.
+  enableAllNodes = (): void => {
+    this.nodes.forEach((node: MissionNode) => {
+      node.highlighted = true
+    })
+    this.hasDisabledNodes = false
   }
 }
 

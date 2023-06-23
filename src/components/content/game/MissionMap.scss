@@ -351,6 +351,12 @@
             }
           }
         }
+
+        &.faded {
+          transform: scale(0.97);
+          filter: grayscale(0.75);
+          pointer-events: none;
+        }
       }
 
       .page-number {

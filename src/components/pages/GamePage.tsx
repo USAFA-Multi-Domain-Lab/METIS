@@ -228,10 +228,20 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
                       handleNodeSelection={(selectedNode: MissionNode) => {
                         setLastSelectedNode(selectedNode)
 
+                        // Logic that disables all nodes
+                        // except for the selected node.
+                        if (
+                          !nodeActionsIsDisplayed &&
+                          !executeNodePathIsDisplayed
+                        ) {
+                          selectedNode.disableOtherNodes()
+                        }
+
                         // Logic to send the pre-execution text to the output panel
                         if (
                           selectedNode.preExecutionText !== '' &&
-                          selectedNode.preExecutionText !== null
+                          selectedNode.preExecutionText !== null &&
+                          selectedNode.highlighted
                         ) {
                           let output: IConsoleOutput =
                             OutputPanel.renderPreExecutionOutput(selectedNode)
@@ -243,7 +253,8 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
                         if (
                           !selectedNode.executable &&
                           selectedNode.hasChildren &&
-                          !selectedNode.isOpen
+                          !selectedNode.isOpen &&
+                          selectedNode.highlighted
                         ) {
                           selectedNode.open()
                         }
@@ -256,7 +267,8 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
                           mission.resources > 0 &&
                           selectedNode.executable &&
                           !selectedNode.selectedAction?.succeeded &&
-                          !selectedNode.executing
+                          !selectedNode.executing &&
+                          selectedNode.highlighted
                         ) {
                           setNodeActionsIsDisplayed(true)
 
@@ -280,19 +292,29 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
                           mission.resources === 0 &&
                           selectedNode.executable &&
                           !selectedNode.selectedAction?.succeeded &&
-                          !selectedNode.executing
+                          !selectedNode.executing &&
+                          selectedNode.highlighted
                         ) {
                           appActions.notify(
                             `You have no more resources left to spend.`,
                             { duration: 3500 },
                           )
+                        } else {
+                          setNodeActionsIsDisplayed(false)
+                          setExecuteNodePathIsDisplayed(false)
                         }
                       }}
+                      handleNodePathExitRequest={mission.enableAllNodes}
+                      grayOutExitNodePathButton={!mission.hasDisabledNodes}
                       applyNodeClassName={(node: MissionNode) => {
                         let className: string = ''
 
                         if (node.isOpen) {
                           className += ' opened'
+                        }
+
+                        if (!node.highlighted) {
+                          className += ' faded'
                         }
 
                         return className

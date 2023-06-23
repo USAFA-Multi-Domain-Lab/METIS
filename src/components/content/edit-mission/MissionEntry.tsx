@@ -98,6 +98,24 @@ export default function MissionEntry(props: {
               }}
               key={`${mission.missionID}_name`}
             />
+            <DetailBox
+              label='Introduction Message'
+              initialValue={mission.introMessage}
+              emptyStringAllowed={true}
+              deliverValue={(introMessage: string) => {
+                if (introMessage !== '') {
+                  mission.introMessage = introMessage
+                  removeMissionEmptyString('introMessage')
+                  handleChange()
+                } else {
+                  setMissionEmptyStringArray([
+                    ...missionEmptyStringArray,
+                    `missionID=${mission.missionID}_field=introMessage`,
+                  ])
+                }
+              }}
+              key={`${mission.missionID}_introMessage`}
+            />
             <DetailToggle
               label={'Live'}
               initialValue={mission.live}
@@ -116,23 +134,6 @@ export default function MissionEntry(props: {
                 }
               }}
               key={`${mission.missionID}_initialResources`}
-            />
-            <DetailBox
-              label='Introduction Message'
-              initialValue={mission.introMessage}
-              deliverValue={(introMessage: string) => {
-                if (introMessage !== '') {
-                  mission.introMessage = introMessage
-                  removeMissionEmptyString('introMessage')
-                  handleChange()
-                } else {
-                  setMissionEmptyStringArray([
-                    ...missionEmptyStringArray,
-                    `missionID=${mission.missionID}_field=introMessage`,
-                  ])
-                }
-              }}
-              key={`${mission.missionID}_introMessage`}
             />
           </div>
         </div>

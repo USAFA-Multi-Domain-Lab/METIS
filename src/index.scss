@@ -17,7 +17,7 @@
 }
 
 body {
-  overflow-x: hidden;
+  overflow: hidden;
   min-height: 100vh;
   background-color: $background-main;
   margin: 0;
@@ -95,9 +95,10 @@ code {
 .Close {
   position: sticky;
   top: 0px;
-  margin-right: 20px;
+  display: grid;
+  justify-content: end;
+  width: 100%;
   padding: 10px 0 20px;
-  width: calc(100% - 20px);
   background: linear-gradient(
     $background-main 0%,
     $background-main 80%,
@@ -106,7 +107,6 @@ code {
 
   .CloseButton {
     position: relative;
-    left: calc(100% - 25px);
     border: 2px solid $color-main;
     border-radius: 50%;
     width: 22px;
