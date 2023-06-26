@@ -43,6 +43,7 @@ router.post(
     let missionData: any = body.mission
 
     let name: any = missionData.name
+    let introMessage: any = missionData.introMessage
     let versionNumber: any = missionData.versionNumber
     let live: any = missionData.live
     let initialResources: any = missionData.initialResources
@@ -51,6 +52,7 @@ router.post(
 
     let mission = new MissionModel({
       name,
+      introMessage,
       versionNumber,
       live,
       initialResources,
@@ -675,6 +677,7 @@ router.put(
         } else {
           let copy = new MissionModel({
             name: copyName,
+            introMessage: mission.introMessage,
             versionNumber: mission.versionNumber,
             live: mission.live,
             initialResources: mission.initialResources,
