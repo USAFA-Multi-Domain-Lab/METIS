@@ -129,13 +129,19 @@ export default function AuthPage(props: IAuthPage): JSX.Element | null {
     }
   }
 
-  const goBack = () => {
-    appActions.goToPage(props.returningPagePath, props.returningPageProps)
-  }
+  // const goBack = () => {
+  //   appActions.goToPage(props.returningPagePath, props.returningPageProps)
+  // }
 
   /* -- RENDER -- */
 
+  // let backButtonClassName: string = 'Button'
+
   let submitIsDisabled: boolean = !canSubmit() || isSubmitting
+
+  // if (appState.currentUser === null || appState.currentUser === undefined) {
+  //   backButtonClassName += ' Disabled'
+  // }
 
   return (
     <div className='AuthPage Page'>
@@ -163,9 +169,9 @@ export default function AuthPage(props: IAuthPage): JSX.Element | null {
             value='Login'
             disabled={submitIsDisabled}
           />
-          <div className='Button' onClick={goBack}>
+          {/* <div className={backButtonClassName} onClick={goBack}>
             Back
-          </div>
+          </div> */}
         </form>
       </div>
     </div>

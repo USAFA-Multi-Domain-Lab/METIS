@@ -4,7 +4,7 @@ import './MissionSelectionRow.scss'
 import { AppActions } from '../../AppState'
 import MissionModificationPanel from '../user-controls/MissionModificationPanel'
 import { useStore } from 'react-context-hook'
-import { IUser } from '../../../modules/users'
+import { IUser, userRoles } from '../../../modules/users'
 
 // This will render a row on the page
 // for the given mission.
@@ -27,15 +27,12 @@ export default function MissionSelectionRow(props: {
   // and stores it in a global state to be used on the GamePage
   // where the Mission Map renders
   const selectMission = () => {
-    if (
-      currentUser &&
-      (currentUser.role === 'admin' || currentUser.role === 'student')
-    ) {
+    let userRoleStringValues = Object.values(userRoles)
+
+    if (currentUser && userRoleStringValues.includes(currentUser.role)) {
       appActions.goToPage('GamePage', {
         missionID: mission.missionID,
       })
-    } else {
-      appActions.notify('You must be logged in to select a mission.')
     }
   }
 

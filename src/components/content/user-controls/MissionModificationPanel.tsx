@@ -11,7 +11,7 @@ import './MissionModificationPanel.scss'
 import { MiniButtonSVGPanel } from './MiniButtonSVGPanel'
 import { EMiniButtonSVGPurpose, MiniButtonSVG } from './MiniButtonSVG'
 import { useStore } from 'react-context-hook'
-import { IUser } from '../../../modules/users'
+import { IUser, permittedRoles } from '../../../modules/users'
 import { useState } from 'react'
 import { AppActions } from '../../AppState'
 
@@ -180,7 +180,7 @@ export default function MissionModificationPanel(props: {
   let containerClassName: string = 'MissionModificationPanel hidden'
   // console.log(currentUser.role)
 
-  if (currentUser && currentUser.role === 'admin') {
+  if (currentUser && permittedRoles.includes(currentUser.role)) {
     containerClassName = 'MissionModificationPanel'
   }
 

@@ -11,19 +11,11 @@ const router = express.Router()
 // the session
 router.get('/', (request, response) => {
   let userID: string | undefined = request.session.userID
+  let role: string | undefined = request.session.role
 
-  if (userID !== undefined) {
-    userModel.findOne({ userID: userID }).exec((error: Error, user: any) => {
-      if (error) {
-        return response.sendStatus(500)
-      } else {
-        let userID = user.userID
-        let role = user.role
-
-        return response.json({
-          currentUser: { userID, role },
-        })
-      }
+  if (userID !== undefined && role !== undefined) {
+    return response.json({
+      currentUser: { userID, role },
     })
   } else {
     return response.json({
@@ -43,6 +35,7 @@ router.post('/login', (request, response, next) => {
         } else {
           if (correct) {
             request.session.userID = user.userID
+            request.session.role = user.role
           }
           return response.json({
             currentUser: user,

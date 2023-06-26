@@ -1,11 +1,12 @@
 import axios, { AxiosResponse, AxiosError } from 'axios'
+import { AnyObject } from './toolbox/objects'
 
 export interface IUser {
   firstName: string
   lastName: string
   userID: string
-  type: string
   role: string
+  type: string
 }
 
 export interface IUserExposed {
@@ -14,6 +15,16 @@ export interface IUserExposed {
   userID: string
   password: string
 }
+
+// This is the list of user roles.
+export const userRoles: AnyObject = {
+  Student: 'student',
+  Admin: 'admin',
+}
+
+// This is used to determine which roles
+// can access certain routes.
+export const permittedRoles: string[] = [userRoles.Admin]
 
 // This loads the currently logged in user in the
 // session.

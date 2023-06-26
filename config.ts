@@ -13,6 +13,7 @@ import { expressLoggingHandler } from './modules/logging'
 declare module 'express-session' {
   export interface SessionData {
     userID: string
+    role: string
   }
 }
 

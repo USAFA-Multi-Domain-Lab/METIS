@@ -10,7 +10,7 @@ import { INotifyOptions } from '../../AppState'
 import { IConsoleOutput } from './ConsoleOutput'
 import OutputPanel from './OutputPanel'
 import { useStore } from 'react-context-hook'
-import { IUser } from '../../../modules/users'
+import { IUser, permittedRoles } from '../../../modules/users'
 
 /* -- INTERFACE(S) -- */
 
@@ -80,7 +80,7 @@ function Buttons(props: {
     additionalActionButtonClassName += ' Disabled'
   }
 
-  if (currentUser && currentUser.userID === 'admin') {
+  if (currentUser && permittedRoles.includes(currentUser.role)) {
     useAssets = true
   }
 

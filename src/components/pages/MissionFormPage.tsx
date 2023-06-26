@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import {
   createMission,
   getMission,
+  getMissionNodeColorOptions,
   Mission,
   saveMission,
 } from '../../modules/missions'
@@ -22,6 +23,7 @@ import {
 import MissionEntry from '../content/edit-mission/MissionEntry'
 import NodeEntry from '../content/edit-mission/NodeEntry'
 import NodeStructuring from '../content/edit-mission/NodeStructuring'
+import { permittedRoles } from '../../modules/users'
 
 export interface IMissionFormPage extends IPage {
   // If null, a new mission is being
@@ -63,9 +65,16 @@ export default function MissionFormPage(
 
   // Equivalent of componentDidMount.
   useEffect(() => {
-    if (appState.currentUser && appState.currentUser.role !== 'admin') {
+    if (
+      appState.currentUser &&
+      !permittedRoles.includes(appState.currentUser.role)
+    ) {
       appActions.goToPage('MissionSelectionPage', {})
       appActions.notify('Mission form page is not accessible to students.')
+    } else {
+      getMissionNodeColorOptions((colorOptions: Array<string>) => {
+        appState.setMissionNodeColors(colorOptions)
+      })
     }
 
     if (!mountHandled) {

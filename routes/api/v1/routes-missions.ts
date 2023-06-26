@@ -8,7 +8,7 @@ import { ERROR_BAD_DATA } from '../../../database/database'
 import InfoModel from '../../../database/models/model-info'
 import MissionModel from '../../../database/models/model-mission'
 import { databaseLogger } from '../../../modules/logging'
-import { isLoggedInAsAdmin, requireLogin } from '../../../user'
+import { hasPermittedRole, requireLogin } from '../../../user'
 import { APP_DIR } from '../../../config'
 import uploads from '../../../middleware/uploads'
 import { commandScripts } from '../../../action-execution'
@@ -43,6 +43,7 @@ router.post(
     let missionData: any = body.mission
 
     let name: any = missionData.name
+    let introMessage: any = missionData.introMessage
     let versionNumber: any = missionData.versionNumber
     let live: any = missionData.live
     let initialResources: any = missionData.initialResources
@@ -51,6 +52,7 @@ router.post(
 
     let mission = new MissionModel({
       name,
+      introMessage,
       versionNumber,
       live,
       initialResources,
@@ -348,7 +350,7 @@ router.get(
     if (missionID === undefined) {
       let queries: any = {}
 
-      if (!isLoggedInAsAdmin(request)) {
+      if (!hasPermittedRole(request)) {
         queries.live = true
       }
 
@@ -376,7 +378,7 @@ router.get(
             return response.sendStatus(500)
           } else if (mission === null) {
             return response.sendStatus(404)
-          } else if (!mission.live && !isLoggedInAsAdmin(request)) {
+          } else if (!mission.live && !hasPermittedRole(request)) {
             return response.sendStatus(401)
           } else {
             databaseLogger.info(`Mission with ID "${missionID}" retrieved.`)
@@ -675,6 +677,7 @@ router.put(
         } else {
           let copy = new MissionModel({
             name: copyName,
+            introMessage: mission.introMessage,
             versionNumber: mission.versionNumber,
             live: mission.live,
             initialResources: mission.initialResources,

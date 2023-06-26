@@ -12,6 +12,7 @@ import MissionSelectionRow from '../content/user-controls/MissionSelectionRow'
 import { ButtonText } from '../content/user-controls/ButtonText'
 import Notification from '../../modules/notifications'
 import Tooltip from '../content/communication/Tooltip'
+import { permittedRoles } from '../../modules/users'
 
 export interface IMissionSelectionPage extends IPage {}
 
@@ -292,7 +293,7 @@ export default function MissionSelectionPage(
       if (
         files.length > 0 &&
         appState.currentUser &&
-        appState.currentUser.role === 'admin'
+        permittedRoles.includes(appState.currentUser.role)
       ) {
         importMissionFiles(files)
       }
@@ -331,7 +332,10 @@ export default function MissionSelectionPage(
   // This will switch to the changelog
   // page.
   const viewChangelog = (): void => {
-    if (appState.currentUser && appState.currentUser.role === 'admin') {
+    if (
+      appState.currentUser &&
+      permittedRoles.includes(appState.currentUser.role)
+    ) {
       appActions.goToPage('ChangelogPage', {})
     }
   }
@@ -542,7 +546,10 @@ export default function MissionSelectionPage(
     displayLogout = true
   }
 
-  if (appState.currentUser && appState.currentUser.role === 'admin') {
+  if (
+    appState.currentUser &&
+    permittedRoles.includes(appState.currentUser.role)
+  ) {
     editMissionsContainerClassName += ' InstructorView'
     editMissionListClassName += ' InstructorView'
     missionNavPanelClassName += ' InstructorView'
@@ -567,7 +574,10 @@ export default function MissionSelectionPage(
     )
   }
 
-  if (appState.currentUser && appState.currentUser.role === 'admin') {
+  if (
+    appState.currentUser &&
+    permittedRoles.includes(appState.currentUser.role)
+  ) {
     versionClassName = 'Version'
   }
 
