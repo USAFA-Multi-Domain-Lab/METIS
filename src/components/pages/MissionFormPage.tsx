@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import {
   createMission,
   getMission,
+  getMissionNodeColorOptions,
   Mission,
   saveMission,
 } from '../../modules/missions'
@@ -66,6 +67,10 @@ export default function MissionFormPage(
     if (appState.currentUser === null) {
       appActions.goToPage('MissionSelectionPage', {})
       appActions.notify('Mission form page is not accessible to students.')
+    } else {
+      getMissionNodeColorOptions((colorOptions: Array<string>) => {
+        appState.setMissionNodeColors(colorOptions)
+      })
     }
 
     if (!mountHandled) {
