@@ -473,14 +473,9 @@ router.get(
 // This will return all the available
 // color options that can be used to
 // style a mission-node.
-router.get(
-  '/colors/',
-  requireLogin,
-  validateRequestQueryKeys({}),
-  (request, response) => {
-    response.json({ colorOptions })
-  },
-)
+router.get('/colors/', validateRequestQueryKeys({}), (request, response) => {
+  response.json({ colorOptions })
+})
 
 // -- PUT /api/v1/missions/handle-action-execution/
 // This handles the effect on an asset

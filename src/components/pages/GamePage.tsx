@@ -234,7 +234,7 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
                           !nodeActionsIsDisplayed &&
                           !executeNodePathIsDisplayed
                         ) {
-                          selectedNode.disableOtherNodes()
+                          // selectedNode.disableOtherNodes()
                         }
 
                         // Logic to send the pre-execution text to the output panel

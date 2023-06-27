@@ -67,13 +67,13 @@ export default function MissionFormPage(
     if (appState.currentUser === null) {
       appActions.goToPage('MissionSelectionPage', {})
       appActions.notify('Mission form page is not accessible to students.')
-    } else {
-      getMissionNodeColorOptions((colorOptions: Array<string>) => {
-        appState.setMissionNodeColors(colorOptions)
-      })
     }
 
     if (!mountHandled) {
+      getMissionNodeColorOptions((colorOptions: Array<string>) => {
+        appState.setMissionNodeColors(colorOptions)
+      })
+
       let existsInDatabase: boolean
       let missionID: string | null = props.missionID
 
