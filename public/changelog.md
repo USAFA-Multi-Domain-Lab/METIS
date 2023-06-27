@@ -1,5 +1,15 @@
 # changelog
 
+# version-1.3.1 | 6-28-2023
+
+- Created a feature for missions to have an introduction message that displays in the terminal on the game page when a user selects a mission to go through
+- Updated asset structure for cyber city to include effects for radar
+- Updated the README.md for more detailed instructions on setting up an environment to use METIS
+- Fixed bug with the color import feature
+- Fixed bug where the traffic lights would not turn on/off by zone using the asset feature
+- Minor design changes
+- Various optimizations and other minor bug fixes and improvements
+
 # version-1.3 | 6-14-2023
 
 - Created new asset feature where the instructors will be able to affect assets (upon successful execution only) within cyber city via the PLC API
