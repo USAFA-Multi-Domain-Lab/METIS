@@ -25,12 +25,12 @@
      inkscape:document-units="mm"
      showgrid="false"
      inkscape:zoom="10.665176"
-     inkscape:cx="2.4378406"
-     inkscape:cy="2.9066561"
+     inkscape:cx="-8.5324424"
+     inkscape:cy="2.9066562"
      inkscape:window-width="1647"
      inkscape:window-height="970"
      inkscape:window-x="20"
-     inkscape:window-y="37"
+     inkscape:window-y="25"
      inkscape:window-maximized="0"
      inkscape:current-layer="layer1" />
   <defs
@@ -58,11 +58,11 @@
      inkscape:groupmode="layer"
      id="layer1">
     <path
-       style="fill:#ffffff;fill-opacity:0;stroke:#ffffff;stroke-width:0.79375;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:80;stroke-dasharray:none;stroke-opacity:1;paint-order:fill markers stroke"
-       d="M 0.66145833,1.1258583 H 1.7197917 a 0.73079231,0.73079231 19.902787 0 1 0.4678418,0.1693821 l 0.387233,0.3226942 A 0.73079231,0.73079231 19.902787 0 0 3.0427083,1.7873167 H 5.6885417 A 0.26458333,0.26458333 45 0 1 5.953125,2.0519 l 0,2.8522084 A 0.26736966,0.26736966 134.69989 0 1 5.6885562,5.1714634 L 0.66144381,5.224128 A 0.26182604,0.26182604 44.699892 0 1 0.396875,4.9623164 l 0,-3.5718748 A 0.26458333,0.26458333 135 0 1 0.66145833,1.1258583 Z"
+       style="fill:#ffffff;fill-opacity:0;stroke:#ffffff;stroke-width:0.668322;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:80;stroke-dasharray:none;stroke-opacity:1;paint-order:fill markers stroke"
+       d="M 0.59874445,1.1292903 H 1.6929144 a 0.74445789,0.74445789 19.565418 0 1 0.4698224,0.1669768 l 0.40119,0.3263969 A 0.74445789,0.74445789 19.565418 0 0 3.0337492,1.7896408 H 5.7512556 A 0.26458333,0.26458333 45 0 1 6.0158389,2.0542241 V 4.9007693 A 0.26730322,0.26730322 134.70701 0 1 5.7512694,5.1680585 L 0.59873061,5.2207567 A 0.26189111,0.26189111 44.707011 0 1 0.33416112,4.9588793 l 0,-3.5650057 A 0.26458333,0.26458333 135 0 1 0.59874445,1.1292903 Z"
        id="path6025"
        sodipodi:nodetypes="ccccccc"
        inkscape:path-effect="#path-effect6076"
-       inkscape:original-d="m 0.396875,1.1258583 h 1.5875 l 0.79375,0.6614584 h 3.175 v 3.381375 l -5.55625,0.058208 z" />
+       inkscape:original-d="M 0.33416112,1.1292903 H 1.9574977 l 0.8116682,0.6603505 h 3.246673 v 3.3757118 l -5.68167778,0.05811 z" />
   </g>
 </svg>
