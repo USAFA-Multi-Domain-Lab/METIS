@@ -231,6 +231,15 @@ router.post(
             }
           }
         }
+
+        // -- BUILD 11 --
+        // This migration script is responsible
+        // for adding the introduction message
+        // property at the mission level of the
+        // missions collection.
+        if (schemaBuildNumber < 11) {
+          missionData.introMessage = 'Enter your overview message here.'
+        }
       }
 
       // This will be called when it is
