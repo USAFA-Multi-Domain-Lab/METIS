@@ -30,7 +30,7 @@ const NodeActions = (props: {
 
   /* -- COMPONENT STATE -- */
   const [displayActionList, setDisplayActionList] = useState<boolean>(false)
-  const [mountHandled, setMountHandled] = useState<boolean>(true)
+  const [mountHandled, setMountHandled] = useState<boolean>()
 
   /* -- COMPONENT EFFECT -- */
   useEffect(() => {
@@ -49,7 +49,7 @@ const NodeActions = (props: {
   /* -- COMPONENT FUNCTIONS -- */
 
   const revealOptions = () => {
-    if (displayActionList === false) {
+    if (!displayActionList) {
       setDisplayActionList(true)
       setMountHandled(false)
     } else {
@@ -145,9 +145,11 @@ const NodeActions = (props: {
   } else {
     return (
       <div className={nodeActionsClassName}>
-        <div className='x' onClick={handleCloseRequest}>
-          x
-          <Tooltip description='Close window.' />
+        <div className='Close'>
+          <div className='CloseButton' onClick={handleCloseRequest}>
+            x
+            <Tooltip description='Close window.' />
+          </div>
         </div>
         <div className='PromptDisplayText'>
           What you would like to do to {props.selectedNode?.name}?

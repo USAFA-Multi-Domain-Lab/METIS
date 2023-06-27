@@ -65,7 +65,8 @@
 
         .BoxTop {
           display: grid;
-          grid-template-columns: auto 50px 30px;
+          grid-template-columns: auto auto;
+          justify-content: end;
           box-sizing: border-box;
           position: sticky;
           top: 0;
@@ -83,6 +84,10 @@
             .ErrorMessage {
               @include hide();
             }
+          }
+
+          &.IsError {
+            justify-content: space-between;
           }
 
           .ErrorMessage {

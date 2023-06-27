@@ -41,8 +41,6 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
   const [lastSelectedNode, setLastSelectedNode] = useState<MissionNode | null>(
     null,
   )
-  const [outputPanelIsDisplayed, setOutputPanelIsDisplayed] =
-    useState<boolean>(false)
   const [executeNodePathIsDisplayed, setExecuteNodePathIsDisplayed] =
     useState<boolean>(false)
   const [nodeActionsIsDisplayed, setNodeActionsIsDisplayed] =
@@ -117,7 +115,6 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
     // This will output to the console.
     const outputToConsole = (output: IConsoleOutput): void => {
       mission.outputToConsole(output)
-      setOutputPanelIsDisplayed(true)
     }
 
     /* -- RENDER -- */
@@ -259,10 +256,20 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
                       handleNodeSelection={(selectedNode: MissionNode) => {
                         setLastSelectedNode(selectedNode)
 
+                        // Logic that disables all nodes
+                        // except for the selected node.
+                        if (
+                          !nodeActionsIsDisplayed &&
+                          !executeNodePathIsDisplayed
+                        ) {
+                          // selectedNode.disableOtherNodes()
+                        }
+
                         // Logic to send the pre-execution text to the output panel
                         if (
                           selectedNode.preExecutionText !== '' &&
-                          selectedNode.preExecutionText !== null
+                          selectedNode.preExecutionText !== null &&
+                          selectedNode.highlighted
                         ) {
                           let output: IConsoleOutput =
                             OutputPanel.renderPreExecutionOutput(selectedNode)
@@ -274,7 +281,8 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
                         if (
                           !selectedNode.executable &&
                           selectedNode.hasChildren &&
-                          !selectedNode.isOpen
+                          !selectedNode.isOpen &&
+                          selectedNode.highlighted
                         ) {
                           selectedNode.open()
                         }
@@ -287,7 +295,8 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
                           mission.resources > 0 &&
                           selectedNode.executable &&
                           !selectedNode.selectedAction?.succeeded &&
-                          !selectedNode.executing
+                          !selectedNode.executing &&
+                          selectedNode.highlighted
                         ) {
                           setNodeActionsIsDisplayed(true)
 
@@ -311,19 +320,29 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
                           mission.resources === 0 &&
                           selectedNode.executable &&
                           !selectedNode.selectedAction?.succeeded &&
-                          !selectedNode.executing
+                          !selectedNode.executing &&
+                          selectedNode.highlighted
                         ) {
                           appActions.notify(
                             `You have no more resources left to spend.`,
                             { duration: 3500 },
                           )
+                        } else {
+                          setNodeActionsIsDisplayed(false)
+                          setExecuteNodePathIsDisplayed(false)
                         }
                       }}
+                      handleNodePathExitRequest={mission.enableAllNodes}
+                      grayOutExitNodePathButton={!mission.hasDisabledNodes}
                       applyNodeClassName={(node: MissionNode) => {
                         let className: string = ''
 
                         if (node.isOpen) {
                           className += ' opened'
+                        }
+
+                        if (!node.highlighted) {
+                          className += ' faded'
                         }
 
                         return className
@@ -402,13 +421,8 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
               panel2={{
                 ...ResizablePanel.defaultProps,
                 minSize: 400,
-                isOpen: outputPanelIsDisplayed,
-                render: () => (
-                  <OutputPanel
-                    mission={mission}
-                    setOutputPanelIsDisplayed={setOutputPanelIsDisplayed}
-                  />
-                ),
+                isOpen: true,
+                render: () => <OutputPanel mission={mission} />,
               }}
             />
           </div>

@@ -276,6 +276,7 @@ export function DetailBox(props: {
         ref={field}
         onChange={(event: React.ChangeEvent<HTMLTextAreaElement>) => {
           resizeField()
+          setMountHandled(false)
           deliverValue(event.target.value)
 
           if (event.target.value !== '') {
@@ -285,6 +286,7 @@ export function DetailBox(props: {
         onBlur={(event: React.FocusEvent) => {
           let target: HTMLTextAreaElement = event.target as HTMLTextAreaElement
           resizeField()
+          setMountHandled(false)
 
           if (!emptyStringAllowed && target.value === '') {
             setIsEmptyString(true)

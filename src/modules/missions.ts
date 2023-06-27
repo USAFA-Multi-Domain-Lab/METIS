@@ -26,6 +26,7 @@ export enum EMissionCloneMethod {
 export interface IMissionJSON {
   missionID: string
   name: string
+  introMessage: string
   versionNumber: number
   live: boolean
   initialResources: number
@@ -47,6 +48,7 @@ export interface IMissionCloneOptions {
 export class Mission {
   missionID: string
   name: string
+  introMessage: string
   versionNumber: number
   live: boolean
   initialResources: number
@@ -66,6 +68,7 @@ export class Mission {
   _nodeCreationTarget: MissionNode | null
   _nodeCreators: Array<MissionNodeCreator>
   consoleOutputs: Array<IConsoleOutput>
+  _hasDisabledNodes: boolean
 
   // This will return the node
   // structure for the mission,
@@ -150,9 +153,18 @@ export class Mission {
     return this._nodeCreators
   }
 
+  get hasDisabledNodes(): boolean {
+    return this._hasDisabledNodes
+  }
+
+  set hasDisabledNodes(hasDisabledNodes: boolean) {
+    this._hasDisabledNodes = hasDisabledNodes
+  }
+
   constructor(
     missionID: string,
     name: string,
+    introMessage: string,
     versionNumber: number,
     live: boolean,
     initialResources: number,
@@ -163,6 +175,7 @@ export class Mission {
   ) {
     this.missionID = missionID
     this.name = name
+    this.introMessage = introMessage
     this.versionNumber = versionNumber
     this.live = live
     this.initialResources = initialResources
@@ -195,6 +208,7 @@ export class Mission {
     this._nodeCreationTarget = null
     this._nodeCreators = []
     this.consoleOutputs = []
+    this._hasDisabledNodes = false
 
     this._importNodeData(nodeData)
     this._importNodeStructure(nodeStructure, this.rootNode, expandAll)
@@ -347,6 +361,7 @@ export class Mission {
     return {
       missionID: this.missionID,
       name: this.name,
+      introMessage: this.introMessage,
       versionNumber: this.versionNumber,
       live: this.live,
       initialResources: this.initialResources,
@@ -577,6 +592,7 @@ export class Mission {
         return new Mission(
           this.missionID,
           this.name,
+          this.introMessage,
           this.versionNumber,
           this.live,
           this.initialResources,
@@ -590,6 +606,7 @@ export class Mission {
         return new Mission(
           this.missionID,
           this.name,
+          this.introMessage,
           this.versionNumber,
           this.live,
           this.initialResources,
@@ -600,6 +617,15 @@ export class Mission {
         )
         break
     }
+  }
+
+  // This will enable all nodes
+  // that have been disabled.
+  enableAllNodes = (): void => {
+    this.nodes.forEach((node: MissionNode) => {
+      node.highlighted = true
+    })
+    this.hasDisabledNodes = false
   }
 }
 
@@ -618,6 +644,7 @@ export function createMission(
       let mission = new Mission(
         missionJson.missionID,
         missionJson.name,
+        missionJson.introMessage,
         missionJson.versionNumber,
         missionJson.live,
         missionJson.initialResources,
@@ -699,6 +726,7 @@ export function getMission(
       let mission = new Mission(
         missionJson.missionID,
         missionJson.name,
+        missionJson.introMessage,
         missionJson.versionNumber,
         missionJson.live,
         missionJson.initialResources,
@@ -805,6 +833,7 @@ export function copyMission(
       let copy = new Mission(
         missionJson.missionID,
         missionJson.name,
+        missionJson.introMessage,
         missionJson.versionNumber,
         missionJson.live,
         missionJson.initialResources,

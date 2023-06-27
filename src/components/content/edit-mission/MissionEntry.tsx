@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Mission, setLive } from '../../../modules/missions'
 import { EAjaxStatus } from '../../../modules/toolbox/ajax'
 import { AppActions } from '../../AppState'
-import { Detail, DetailNumber, DetailToggle } from '../form/Form'
+import { Detail, DetailBox, DetailNumber, DetailToggle } from '../form/Form'
 import './MissionEntry.scss'
 
 // This will render the basic editable
@@ -97,6 +97,24 @@ export default function MissionEntry(props: {
                 }
               }}
               key={`${mission.missionID}_name`}
+            />
+            <DetailBox
+              label='Introduction Message'
+              initialValue={mission.introMessage}
+              emptyStringAllowed={true}
+              deliverValue={(introMessage: string) => {
+                if (introMessage !== '') {
+                  mission.introMessage = introMessage
+                  removeMissionEmptyString('introMessage')
+                  handleChange()
+                } else {
+                  setMissionEmptyStringArray([
+                    ...missionEmptyStringArray,
+                    `missionID=${mission.missionID}_field=introMessage`,
+                  ])
+                }
+              }}
+              key={`${mission.missionID}_introMessage`}
             />
             <DetailToggle
               label={'Live'}

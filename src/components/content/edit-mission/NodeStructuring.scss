@@ -5,9 +5,9 @@
     .BorderBox {
       .BoxTop {
         .MoreInformation {
-          grid-column: 2 / 3;
           transform: scale(0.77);
           margin-top: 6.25px;
+          grid-column: 1 / 2;
         }
 
         .Close {
@@ -16,7 +16,8 @@
             $background-alt2 80%,
             transparent 100%
           );
-          grid-column: 3 / 3;
+          grid-column: 2 / 2;
+          padding-bottom: 0;
 
           &.Disabled {
             margin: 0 30px;
@@ -31,8 +32,8 @@
         .Nodes {
           overflow-x: auto;
           overflow-y: auto;
-          margin: 0;
-          height: calc(100% - 33px);
+          margin: 20px 0 0;
+          height: calc(100% - 70px);
           padding: 0;
 
           .Padding {

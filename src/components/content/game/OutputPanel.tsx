@@ -4,11 +4,9 @@ import ConsoleOutput, { IConsoleOutput } from './ConsoleOutput'
 import { Component } from 'react'
 import { MissionNodeAction } from '../../../modules/mission-node-actions'
 import { Mission } from '../../../modules/missions'
-import Tooltip from '../communication/Tooltip'
 
 export interface IOutputPanel {
   mission: Mission
-  setOutputPanelIsDisplayed: (outputPanelIsDisplayed: boolean) => void
 }
 
 export interface IOutputPanel_S {}
@@ -24,6 +22,27 @@ export default class OutputPanel extends Component<
   constructor(props: IOutputPanel) {
     super(props)
     this.timerTimeStamp = null
+  }
+
+  // When the component mounts, the mission's
+  // intro message is output to the console.
+  componentDidMount(): void {
+    let mission: Mission = this.props.mission
+    let timeStamp: number = Date.now()
+    let key: string = `mission-${mission.missionID}_intro-message_${timeStamp}`
+
+    let renderInnerHTML = () => (
+      <div className='Text'>
+        <span className='LineCursor Intro'>
+          [{OutputPanel.formatDate(timeStamp)}] MDL@
+          {mission.name.replaceAll(' ', '-')}:{' '}
+        </span>
+        <span className='IntroMessage'>{mission.introMessage}</span>
+      </div>
+    )
+
+    let consoleOutput: IConsoleOutput = { key, renderInnerHTML }
+    mission.outputToConsole(consoleOutput)
   }
 
   static DATE_FORMAT: Intl.DateTimeFormat = new Intl.DateTimeFormat('en-GB', {
@@ -43,11 +62,11 @@ export default class OutputPanel extends Component<
     let key: string = `pre_execution_node-${selectedNode.nodeID}_${timeStamp}`
     let renderInnerHTML = () => (
       <div className='Text'>
-        <span className='line-cursor'>
+        <span className='LineCursor'>
           [{OutputPanel.formatDate(timeStamp)}] MDL@
           {selectedNode.name.replaceAll(' ', '-')}:{' '}
         </span>
-        <span className='default'>{selectedNode.preExecutionText}</span>
+        <span className='Default'>{selectedNode.preExecutionText}</span>
       </div>
     )
 
@@ -84,11 +103,11 @@ export default class OutputPanel extends Component<
 
       return (
         <div className='Text'>
-          <span className='line-cursor'>
+          <span className='LineCursor'>
             [{OutputPanel.formatDate(timeStamp)}] MDL@
             {nodeName.replaceAll(' ', '-')}:{' '}
           </span>
-          <span className='default'>
+          <span className='Default'>
             Started executing {nodeName}.<br></br>
           </span>
           <ul className='SelectedActionPropertyList'>
@@ -130,7 +149,7 @@ export default class OutputPanel extends Component<
     let key: string = `success_node-${executedNode.nodeID}_action-${executedAction.actionID}_${timeStamp}`
     let renderInnerHTML = () => (
       <div className='Text'>
-        <span className='line-cursor'>
+        <span className='LineCursor'>
           [{OutputPanel.formatDate(timeStamp)}] MDL@{nodeNameFormatted}:{' '}
         </span>
         <span className='succeeded'>
@@ -150,7 +169,7 @@ export default class OutputPanel extends Component<
     let key: string = `failure_node-${executedNode.nodeID}_action-${executedAction.actionID}_${timeStamp}`
     let renderInnerHTML = () => (
       <div className='Text'>
-        <span className='line-cursor'>
+        <span className='LineCursor'>
           [{OutputPanel.formatDate(timeStamp)}] MDL@
           {executedNode.name.replaceAll(' ', '-')}:{' '}
         </span>
@@ -167,23 +186,12 @@ export default class OutputPanel extends Component<
   render(): JSX.Element | null {
     let mission: Mission = this.props.mission
     let consoleOutputs: Array<IConsoleOutput> = mission.consoleOutputs
-    let setOutputPanelIsDisplayed = this.props.setOutputPanelIsDisplayed
-
-    const closeOutputWindow = () => {
-      setOutputPanelIsDisplayed(false)
-    }
 
     /* -- RENDER -- */
 
     return (
       <div className='OutputPanel'>
         <div className='BorderBox'>
-          <div className='Close'>
-            <div className='CloseButton' onClick={closeOutputWindow}>
-              x
-              <Tooltip description='Minimize terminal.' />
-            </div>
-          </div>
           <ul className='TextArea'>
             {consoleOutputs.map((consoleOutput: IConsoleOutput) => {
               return (

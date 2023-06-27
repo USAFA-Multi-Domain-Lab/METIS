@@ -84,6 +84,18 @@
     .MissionMap {
       width: 100%;
       height: 100%;
+
+      .ButtonSVGPanel {
+        .glue {
+          .ButtonSVG {
+            &.cancel {
+              padding-left: 0;
+              padding-top: 0.75px;
+              height: 37px;
+            }
+          }
+        }
+      }
     }
 
     .OutputPanel {
