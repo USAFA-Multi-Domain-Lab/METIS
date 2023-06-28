@@ -37,6 +37,9 @@
     grid-row: 1 / 1;
     width: 20px;
     height: 20px;
+    background: url('/assets/images/icons/folder.svg');
+    background-size: contain;
+    background-repeat: no-repeat;
   }
 
   .File {
@@ -45,6 +48,9 @@
     grid-row: 1 / 1;
     width: 25px;
     height: 20px;
+    background: url('/assets/images/icons/file.svg');
+    background-size: contain;
+    background-repeat: no-repeat;
   }
 
   .AssetOptionText {
