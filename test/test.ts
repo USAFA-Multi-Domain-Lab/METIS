@@ -227,6 +227,7 @@ const correctUpdateTestMission = {
     schemaBuildNumber: 9,
   },
 }
+const permittedUserRole = 'admin'
 
 before(function (done) {
   this.timeout(30000)
@@ -321,11 +322,11 @@ describe('Export/Import File Tests', function () {
       })
   })
 
-  it('User should be logged in to access the import and/or export API', function (done) {
+  it('User should be logged in as an admin to access the import and/or export API', function (done) {
     agent
       .get('/api/v1/users/')
       .then(function (response: ChaiHttp.Response) {
-        expect(response.body.currentUser).to.not.equal(null)
+        expect(response.body.currentUser.role).to.equal(permittedUserRole)
         done()
       })
       .catch(function (error) {
@@ -746,11 +747,11 @@ describe('API Mission Routes', function () {
       })
   })
 
-  it('User should be logged in to be able to post missions to the database via the API', function (done) {
+  it('User should be logged in as an admin to be able to post missions to the database via the API', function (done) {
     agent
       .get('/api/v1/users/')
       .then(function (response: ChaiHttp.Response) {
-        expect(response.body.currentUser).to.not.equal(null)
+        expect(response.body.currentUser.role).to.equal(permittedUserRole)
         done()
       })
       .catch(function (error) {
@@ -1388,11 +1389,11 @@ describe('Mission Schema Validation', function () {
       })
   })
 
-  it('User should be logged in to be able to post missions to the database via the API', function (done) {
+  it('User should be logged in as an admin to be able to access certain API routes', function (done) {
     agent
       .get('/api/v1/users/')
       .then(function (response: ChaiHttp.Response) {
-        expect(response.body.currentUser).to.not.equal(null)
+        expect(response.body.currentUser.role).to.equal(permittedUserRole)
         done()
       })
       .catch(function (error) {
