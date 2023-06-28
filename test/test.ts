@@ -27,6 +27,7 @@ const userCredentials = {
 const createMissionWithNoNodeData = {
   mission: {
     name: 'No Node Data Mission (To Delete)',
+    introMessage: 'This is a new mission.',
     versionNumber: 1,
     initialResources: 5,
     live: false,
@@ -39,6 +40,7 @@ const createMissionWithNoNodeData = {
 const testMission = {
   mission: {
     name: 'Test Mission (To Delete)',
+    introMessage: 'This is a new mission.',
     versionNumber: 1,
     live: false,
     initialResources: 5,
@@ -86,6 +88,7 @@ const testMission = {
 const updateMissionWithNoMissionID = {
   mission: {
     name: 'Updated No Node Data (To Delete)',
+    introMessage: 'This is a new mission.',
     versionNumber: 1,
     initialResources: 5,
     live: false,
@@ -126,6 +129,7 @@ const updateMissionWithNoNodeStructure = {
   mission: {
     missionID: '',
     name: 'Update No Node Structure (To Delete)',
+    introMessage: 'This is a new mission.',
     versionNumber: 1,
     initialResources: 5,
     live: false,
@@ -163,6 +167,7 @@ const updateMissionWithNoNodeData = {
   mission: {
     missionID: '',
     name: 'No Node Data Mission (To Delete)',
+    introMessage: 'This is a new mission.',
     versionNumber: 1,
     initialResources: 5,
     live: false,
@@ -177,6 +182,7 @@ const correctUpdateTestMission = {
   mission: {
     missionID: '',
     name: 'Updated Test Mission (To Delete)',
+    introMessage: 'This is a new mission.',
     versionNumber: 1,
     live: false,
     initialResources: 5,
