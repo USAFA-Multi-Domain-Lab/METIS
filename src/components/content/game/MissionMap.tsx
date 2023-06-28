@@ -855,9 +855,9 @@ export default class MissionMap extends React.Component<
       activeActions.push(availableActions.save)
     }
 
-    if (handleNodePathExitRequest !== null) {
-      activeActions.push(availableActions.exitNodePath)
-    }
+    // if (handleNodePathExitRequest !== null) {
+    //   activeActions.push(availableActions.exitNodePath)
+    // }
 
     if (mapScale === maxMapScale) {
       actionsUniqueClassName += ' map-is-zoomed-in'

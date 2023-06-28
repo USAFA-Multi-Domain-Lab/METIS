@@ -817,7 +817,7 @@ export function setLive(
     })
 }
 
-// This will delete the mission with
+// This will copy the mission with
 // the given missionID.
 export function copyMission(
   originalID: string,

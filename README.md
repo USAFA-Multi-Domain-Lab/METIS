@@ -1,4 +1,4 @@
-# CESAR (Cyber Effects Simulator and Relay)
+# METIS (Modular Effects-Based Transmitter for Integrated Simulations)
 
 ### purpose
 
@@ -6,21 +6,21 @@ This is a mini-game used by the United States Air Force Academy to educate cadet
 
 ### production-set-up
 
-- Have `node` (NodeJS) and `npm` (Node Package Manager) installed (`npm` installs with `node` typically).
-- Have `mongod`, `mongosh`, and `mongodb-database-tools` installed.
+- Install [NodeJS](https://nodejs.org/en/download) .
+- Install [MongoDB](https://www.mongodb.com/try/download/community), [MongoDB Shell](https://www.mongodb.com/try/download/shell), and [MongoDB Command Line Database Tools](https://www.mongodb.com/try/download/database-tools).
 - Set up and run a Mongo server.
 - Create and configure an `environment.json`, reference the **environment-configuration** section for help.
-- Run `npm `install` in the project directory to install dependencies.
+- Run `npm install` in the project directory to install dependencies.
 - Run `npm run build-react` to build React app into the static files
 - Run `npm run serve-prod` to run the production web server.
 
 ### development-set-up
 
-- Have `node` (NodeJS) and `npm` (Node Package Manager) installed (`npm` installs with `node` typically).
-- Have `mongod`, `mongosh`, and `mongodb-database-tools` installed.
+- Install [NodeJS](https://nodejs.org/en/download) .
+- Install [MongoDB](https://www.mongodb.com/try/download/community), [MongoDB Shell](https://www.mongodb.com/try/download/shell), and [MongoDB Command Line Database Tools](https://www.mongodb.com/try/download/database-tools).
 - Set up and run a Mongo server.
 - Create and configure an `environment.json`, reference the **environment-configuration** section for help.
-- Run `npm install --`also=dev` in the project directory to install all packages, including development packages.
+- Run `npm install --also=dev` in the project directory to install all packages, including development packages.
 - Run `npm run build-react` to build React app into the static files.
 - Run `npm run serve-dev` to run the development web server.
 - Run `npm run serve-react` to also run the React development server on a different port. This allows changes to the web app to be seen immediately without building.

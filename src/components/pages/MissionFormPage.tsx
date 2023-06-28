@@ -78,6 +78,10 @@ export default function MissionFormPage(
     }
 
     if (!mountHandled) {
+      getMissionNodeColorOptions((colorOptions: Array<string>) => {
+        appState.setMissionNodeColors(colorOptions)
+      })
+
       let existsInDatabase: boolean
       let missionID: string | null = props.missionID
 

@@ -161,14 +161,85 @@ router.post(
           handleMissionImportError(file, error)
         }
 
-        // BUILD 5
-        if (schemaBuildNumber === 4) {
+        // -- BUILD 5 --
+        // This migration script is responsible
+        // for adding the description property
+        // to the node level of the missions
+        // collection.
+
+        if (schemaBuildNumber < 5) {
           let nodeData = missionData.nodeData
 
-          // Adds a default description to all
-          // nodes.
           for (let nodeDatum of nodeData) {
-            nodeDatum.description = 'Description not set...'
+            if (!('description' in nodeDatum)) {
+              nodeDatum.description = 'Description not set...'
+            }
+          }
+        }
+
+        // -- BUILD 9
+        // This migration script is responsible
+        // for adding the scripts property
+        // to the action level of the missions
+        // collection.
+
+        if (schemaBuildNumber < 9) {
+          let nodeData = missionData.nodeData
+
+          for (let nodeDatum of nodeData) {
+            let actions: Array<any> = nodeDatum.actions
+
+            for (let action of actions) {
+              if (!('scripts' in action)) {
+                action.scripts = []
+              }
+            }
+          }
+        }
+
+        // -- BUILD 10 --
+        // This migration script is responsible
+        // for changing the color property's
+        // value at the node level of the
+        // missions collection to use hexidecimal
+        // values.
+
+        if (schemaBuildNumber < 10) {
+          let nodeData = missionData.nodeData
+
+          for (let nodeDatum of nodeData) {
+            let color = nodeDatum.color
+
+            if (color === 'default') {
+              nodeDatum.color = '#ffffff'
+            } else if (color === 'green') {
+              nodeDatum.color = '#65eb59'
+            } else if (color === 'pink') {
+              nodeDatum.color = '#fa39ac'
+            } else if (color === 'yellow') {
+              nodeDatum.color = '#f7e346'
+            } else if (color === 'blue') {
+              nodeDatum.color = '#34a1fb'
+            } else if (color === 'purple') {
+              nodeDatum.color = '#ae66d6'
+            } else if (color === 'red') {
+              nodeDatum.color = '#f9484f'
+            } else if (color === 'brown') {
+              nodeDatum.color = '#ac8750'
+            } else if (color === 'orange') {
+              nodeDatum.color = '#ffab50'
+            }
+          }
+        }
+
+        // -- BUILD 11 --
+        // This migration script is responsible
+        // for adding the introduction message
+        // property at the mission level of the
+        // missions collection.
+        if (schemaBuildNumber < 11) {
+          if (!('introMessage' in missionData)) {
+            missionData.introMessage = 'Enter your overview message here.'
           }
         }
       }
@@ -473,14 +544,9 @@ router.get(
 // This will return all the available
 // color options that can be used to
 // style a mission-node.
-router.get(
-  '/colors/',
-  requireLogin,
-  validateRequestQueryKeys({}),
-  (request, response) => {
-    response.json({ colorOptions })
-  },
-)
+router.get('/colors/', validateRequestQueryKeys({}), (request, response) => {
+  response.json({ colorOptions })
+})
 
 // -- PUT /api/v1/missions/handle-action-execution/
 // This handles the effect on an asset
