@@ -13,6 +13,7 @@ This is a mini-game used by the United States Air Force Academy to educate cadet
 - Run `npm install` in the project directory to install dependencies.
 - Run `npm run build-react` to build React app into the static files
 - Run `npm run serve-prod` to run the production web server.
+- To a login, a default user has been created with the usernmae `admin` and the password `temppass`.
 
 ### development-set-up
 
@@ -25,6 +26,7 @@ This is a mini-game used by the United States Air Force Academy to educate cadet
 - Run `npm run serve-dev` to run the development web server.
 - Run `npm run serve-react` to also run the React development server on a different port. This allows changes to the web app to be seen immediately without building.
 - Build React at any point to see changes on the actual web server.
+- To a login, a default user has been created with the usernmae `admin` and the password `temppass`.
 
 ## environment-configuration
 
