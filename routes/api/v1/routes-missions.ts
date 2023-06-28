@@ -238,7 +238,9 @@ router.post(
         // property at the mission level of the
         // missions collection.
         if (schemaBuildNumber < 11) {
-          missionData.introMessage = 'Enter your overview message here.'
+          if (!('introMessage' in missionData)) {
+            missionData.introMessage = 'Enter your overview message here.'
+          }
         }
       }
 
