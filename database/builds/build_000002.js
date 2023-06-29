@@ -2,7 +2,7 @@
 // for adding the depthPadding property
 // to the node level of the mission schema.
 
-let dbName = 'mdl'
+let dbName = 'metis'
 
 if (process.env.MONGO_DB) {
   dbName = process.env.MONGO_DB

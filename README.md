@@ -41,7 +41,7 @@ environment.json
   "PORT": 8080,
   "MONGO_HOST": "localhost",
   "MONGO_PORT": "27017",
-  "MONGO_DB": "mdl",
+  "MONGO_DB": "metis",
   "MONGO_USERNAME": "username",
   "MONGO_PASSWORD": "password",
   "PLC_API_HOST": "https://your-plc-host-name-here.com",
@@ -56,7 +56,7 @@ environment-test.json
   "PORT": 8081,
   "MONGO_HOST": "localhost",
   "MONGO_PORT": "27017",
-  "MONGO_DB": "mdl-test",
+  "MONGO_DB": "metis-test",
   "MONGO_USERNAME": "username",
   "MONGO_PASSWORD": "password"
 }

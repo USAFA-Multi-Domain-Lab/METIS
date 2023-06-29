@@ -2,7 +2,7 @@
 // adding default properties to existing
 // properties with empty strings.
 
-let dbName = 'mdl'
+let dbName = 'metis'
 
 if (process.env.MONGO_DB) {
   dbName = process.env.MONGO_DB
