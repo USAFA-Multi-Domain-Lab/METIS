@@ -18,6 +18,7 @@ import {
 } from './content/communication/Tooltip'
 import Prompt from './content/communication/Prompt'
 import ChangelogPage from './pages/ChangelogPage'
+import { MissionSession } from '../../modules/mission-control'
 
 // Default props in every page.
 export interface IPage {
@@ -50,6 +51,10 @@ function App(props: {
 }): JSX.Element | null {
   let appState = props.appState
   let appActions = props.appActions
+
+  let missionSession = new MissionSession('jdsf')
+
+  console.log(missionSession)
 
   /* -- COMPONENT STATE -- */
 
