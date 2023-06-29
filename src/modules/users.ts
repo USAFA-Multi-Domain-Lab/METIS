@@ -28,7 +28,7 @@ export const permittedRoles: string[] = [userRoles.Admin]
 
 // This loads the currently logged in user in the
 // session.
-const retrieveCurrentUser = (
+export const retrieveCurrentUser = (
   callback: (currentUser: IUser | null) => void = () => {
     /* does nothing if function is not passed */
   },
@@ -37,7 +37,7 @@ const retrieveCurrentUser = (
   },
 ): void => {
   axios
-    .get('/api/v1/users/')
+    .get('/api/v1/users/session')
     .then((response: AxiosResponse) => {
       let currentUser = response.data.currentUser
 
@@ -52,7 +52,7 @@ const retrieveCurrentUser = (
 
 // This will attempt to login in the user with the
 // given userID and password.
-const login = (
+export const login = (
   userID: string,
   password: string,
   callback: (correct: boolean, currentUser: IUser | null) => void = () => {
@@ -78,7 +78,7 @@ const login = (
 }
 
 // This will logout the user in the session.
-const logout = (
+export const logout = (
   callback: () => void = () => {
     /* does nothing if function is not passed */
   },
@@ -98,8 +98,110 @@ const logout = (
     })
 }
 
+// This will create a brand new user.
+export const createUser = (
+  user: IUser,
+  callback: (user: IUser) => void,
+  callbackError: (error: AxiosError) => void = () => {},
+): void => {
+  axios
+    .post(`/api/v1/users/`, { user: user })
+    .then((response: AxiosResponse<AnyObject>): void => {
+      let createdUser = response.data.user
+
+      callback(createdUser)
+    })
+    .catch((error: AxiosError) => {
+      console.error('Failed to create user.')
+      console.error(error)
+      callbackError(error)
+    })
+}
+
+// This will get all users.
+export const getAllUsers = (
+  callback: (users: IUser[]) => void,
+  callbackError: (error: AxiosError) => void = () => {},
+): void => {
+  axios
+    .get(`/api/v1/users/`)
+    .then((response: AxiosResponse<AnyObject>): void => {
+      let users = response.data.users
+
+      callback(users)
+    })
+    .catch((error: AxiosError) => {
+      console.error('Failed to get all users.')
+      console.error(error)
+      callbackError(error)
+    })
+}
+
+// This will get a user by their userID.
+export const getUser = (
+  userID: string,
+  callback: (user: IUser) => void,
+  callbackError: (error: AxiosError) => void = () => {},
+): void => {
+  axios
+    .get(`/api/v1/users?userID=${userID}`)
+    .then((response: AxiosResponse<AnyObject>): void => {
+      let user = response.data.user
+
+      callback(user)
+    })
+    .catch((error: AxiosError) => {
+      console.error('Failed to get user.')
+      console.error(error)
+      callbackError(error)
+    })
+}
+
+// This will update the given user to
+// the server.
+export const updateUser = (
+  user: IUser,
+  callback: (user: IUser) => void,
+  callbackError: (error: AxiosError) => void = () => {},
+): void => {
+  axios
+    .put(`/api/v1/users/`, { user: user })
+    .then((response: AxiosResponse<AnyObject>): void => {
+      let user = response.data.user
+
+      callback(user)
+    })
+    .catch((error: AxiosError) => {
+      console.error('Failed to update user.')
+      console.error(error)
+      callbackError(error)
+    })
+}
+
+// This will delete the user with
+// the given userID.
+export const deleteUser = (
+  userID: string,
+  callback: () => void,
+  callbackError: (error: AxiosError) => void = () => {},
+): void => {
+  axios
+    .delete(`/api/v1/users?userID=${userID}`)
+    .then(callback)
+    .catch((error: AxiosError) => {
+      console.error('Failed to delete user.')
+      console.error(error)
+      callbackError(error)
+    })
+}
+
 export default {
   retrieveCurrentUser,
   login,
   logout,
+  createUser,
+  getAllUsers,
+  getUser,
+  updateUser,
+  deleteUser,
 }

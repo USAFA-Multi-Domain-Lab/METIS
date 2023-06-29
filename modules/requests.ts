@@ -511,12 +511,12 @@ export const validateRequestQueryKeys = (bodyKeys: {}) => {
       // This is what the property's type will be
       let type: string = allTypes[index]
 
-      // The "missions" getter route is set up so that if the "missionID"
-      // is undefined then the query is set to "{}" and all the missions
-      // are returned for the MissionSelectionPage.
-      // Therefore, the "missionID" value is ignored so that the other
-      // GET routes that don't require "missionID" can be validated properly
-      if (key !== 'missionID') {
+      // The "missions" and "users" getter routes are set up so that if
+      // the "missionID" or "userID" is undefined then the query is set
+      // to "{}" and all the missions are returned for the MissionSelectionPage.
+      // Therefore, the "missionID" and "userID" values are ignored so that the other
+      // GET routes that don't require "missionID" and "userID" can be validated properly
+      if (key !== 'missionID' && key !== 'userID') {
         try {
           // If a key that is supposed to be in the request is not there
           // then an error is thrown
@@ -538,10 +538,10 @@ export const validateRequestQueryKeys = (bodyKeys: {}) => {
           // Handles either of the errors that have been thrown above
           errorsThrown.push(error)
         }
-      } else if (key === 'missionID' && key in query) {
-        // If the key is "missionID" then it is a special exception because
-        // this key needs to be allowed to be undefined so that all the missions
-        // can be returned and displayed on the MissionSelectionPage.
+      } else if ((key === 'missionID' || key === 'userID') && key in query) {
+        // If the key is "missionID" or "userID" then it is a special exception
+        // because this key needs to be allowed to be undefined so that all the
+        // missions can be returned and displayed on the MissionSelectionPage.
         // Since this key is allowed to be undefined that means only its type
         // needs to be validated
         try {

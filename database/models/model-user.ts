@@ -74,6 +74,48 @@ UserSchema.pre('save', function (next) {
   })
 })
 
+UserSchema.plugin((schema) => {
+  // This is responsible for removing
+  // excess properties from the mission
+  // data that should be hidden from the
+  // API and for hidding deleted missions.
+  schema.query.queryForApiResponse = function (
+    findFunctionName: 'find' | 'findOne',
+  ) {
+    // Get projection.
+    let projection = this.projection()
+
+    // Create if does not exist.
+    if (projection === undefined) {
+      projection = {}
+    }
+
+    // Remove all unneeded properties.
+    if (!('deleted' in projection)) {
+      projection['deleted'] = 0
+    }
+    if (!('_id' in projection)) {
+      projection['_id'] = 0
+    }
+    if (!('__v' in projection)) {
+      projection['__v'] = 0
+    }
+
+    // Set projection.
+    this.projection(projection)
+    // Hide deleted missions.
+    this.where({ deleted: false })
+
+    // Calls the appropriate find function.
+    switch (findFunctionName) {
+      case 'find':
+        return this.find()
+      case 'findOne':
+        return this.findOne()
+    }
+  }
+})
+
 const UserModel: any = mongoose.model('User', UserSchema)
 
 export default UserModel
