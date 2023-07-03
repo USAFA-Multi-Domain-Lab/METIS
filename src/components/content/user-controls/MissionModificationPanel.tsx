@@ -11,7 +11,7 @@ import './MissionModificationPanel.scss'
 import { MiniButtonSVGPanel } from './MiniButtonSVGPanel'
 import { EMiniButtonSVGPurpose, MiniButtonSVG } from './MiniButtonSVG'
 import { useStore } from 'react-context-hook'
-import { IUser, permittedRoles } from '../../../modules/users'
+import { User, permittedRoles } from '../../../modules/users'
 import { useState } from 'react'
 import { AppActions } from '../../AppState'
 
@@ -23,7 +23,7 @@ export default function MissionModificationPanel(props: {
   handleSuccessfulToggleLive: () => void
 }) {
   /* -- GLOBAL STATE -- */
-  const [currentUser] = useStore<IUser | null>('currentUser')
+  const [currentUser] = useStore<User | undefined>('currentUser')
 
   /* -- COMPONENT VARIABLES -- */
   let mission: Mission = props.mission

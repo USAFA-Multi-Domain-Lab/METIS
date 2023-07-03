@@ -2,26 +2,24 @@
 import express from 'express'
 import userModel from '../../../database/models/model-user'
 import { StatusError } from '../../../modules/error'
+import { User } from '../../../src/modules/users'
 
 //fields
 const router = express.Router()
 
-// -- GET | / --
-// default route that looks for the  current user in
-// the session
-router.get('/', (request, response) => {
-  let userID: string | undefined = request.session.userID
-  let role: string | undefined = request.session.role
+// -- GET | /session/ --
+// Returns the session for the user making the request.
+router.get('/session/', (request, response) => {
+  let session = request.session
 
-  if (userID !== undefined && role !== undefined) {
-    return response.json({
-      currentUser: { userID, role },
-    })
-  } else {
-    return response.json({
-      currentUser: null,
-    })
-  }
+  console.log(request.session.user)
+
+  return response.json({
+    user: session.user ? session.user.toJSON() : undefined,
+    missionSession: session.missionSession
+      ? session.missionSession.toJSON()
+      : undefined,
+  })
 })
 
 //post route for authenticating user trying to log in
@@ -34,11 +32,20 @@ router.post('/login', (request, response, next) => {
           return response.sendStatus(error.status ? error.status : 500)
         } else {
           if (correct) {
-            request.session.userID = user.userID
-            request.session.role = user.role
+            request.session.user = new User(
+              user.userID,
+              user.firstName,
+              user.lastName,
+              user.role,
+            )
           }
           return response.json({
-            currentUser: user,
+            user: request.session.user
+              ? request.session.user.toJSON()
+              : undefined,
+            missionSession: request.session.missionSession
+              ? request.session.missionSession.toJSON()
+              : undefined,
             correct,
           })
         }

@@ -10,7 +10,7 @@ import { INotifyOptions } from '../../AppState'
 import { IConsoleOutput } from './ConsoleOutput'
 import OutputPanel from './OutputPanel'
 import { useStore } from 'react-context-hook'
-import { IUser, permittedRoles } from '../../../modules/users'
+import { User, permittedRoles } from '../../../modules/users'
 
 /* -- INTERFACE(S) -- */
 
@@ -24,7 +24,7 @@ interface IExecuteNodePath {
 }
 
 interface IExecuteNodePath_S {
-  currentUser: IUser | null
+  currentUser: User | undefined
 }
 
 function Buttons(props: {
@@ -44,7 +44,7 @@ function Buttons(props: {
   let handleCloseRequest = props.handleCloseRequest
 
   /* -- GLOBAL STATE -- */
-  const [currentUser] = useStore<IUser | null>('currentUser')
+  const [currentUser] = useStore<User | undefined>('currentUser')
 
   /* -- COMPONENT FUNCTIONS -- */
   // Closes the execution prompt window.
@@ -56,7 +56,11 @@ function Buttons(props: {
     if (selectedAction.readyToExecute) {
       closeWindow()
       outputToConsole(OutputPanel.renderActionStartOutput(selectedAction))
-      selectedAction.execute(useAssets)
+      selectedAction.execute(
+        useAssets,
+        () => ExecuteNodePath.handleExecutionSuccess(selectedAction),
+        () => ExecuteNodePath.handleExecutionFailure(selectedAction),
+      )
     } else {
       notify(
         `The action you attempted to execute is not currently executable.`,

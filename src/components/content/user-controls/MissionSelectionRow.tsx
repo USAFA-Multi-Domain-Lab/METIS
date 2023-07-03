@@ -4,7 +4,7 @@ import './MissionSelectionRow.scss'
 import { AppActions } from '../../AppState'
 import MissionModificationPanel from '../user-controls/MissionModificationPanel'
 import { useStore } from 'react-context-hook'
-import { IUser, userRoles } from '../../../modules/users'
+import { User, userRoles } from '../../../modules/users'
 
 // This will render a row on the page
 // for the given mission.
@@ -14,7 +14,7 @@ export default function MissionSelectionRow(props: {
   setMountHandled: (mountHandled: boolean) => void
 }): JSX.Element | null {
   /* -- GLOBAL STATE -- */
-  const [currentUser] = useStore<IUser | null>('currentUser')
+  const [currentUser] = useStore<User | undefined>('currentUser')
 
   /* -- COMPONENT VARIABLES -- */
   let mission: Mission = props.mission

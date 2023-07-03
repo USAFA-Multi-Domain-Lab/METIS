@@ -1,5 +1,5 @@
 //npm imports
-import express from 'express'
+import express, { Request, Response } from 'express'
 import fs from 'fs'
 import path from 'path'
 import { v4 as generateHash } from 'uuid'
@@ -17,6 +17,11 @@ import validateRequestBodyKeys, {
   validateRequestQueryKeys,
 } from '../../../modules/requests'
 import { colorOptions } from '../../../modules/mission-node-colors'
+import { Mission } from '../../../src/modules/missions'
+import {
+  MissionControl,
+  ServerMissionSession,
+} from '../../../modules/mission-control'
 
 type MulterFile = Express.Multer.File
 
@@ -790,6 +795,66 @@ router.delete(
       } else {
         databaseLogger.info(`Deleted mission with the ID "${missionID}".`)
         return response.sendStatus(200)
+      }
+    })
+  },
+)
+
+// -- POST | /api/v1/missions/execution/start/ --
+// This will create a new mission session for a user to execute.
+router.post(
+  '/execution/start/',
+  requireLogin,
+  validateRequestBodyKeys({
+    missionID: RequestBodyFilters.OBJECTID,
+  }),
+  (request: Request, response: Response) => {
+    // Get data from the request body.
+    let body: any = request.body
+    let missionID: string = body.missionID
+
+    // Query for the mission with the given ID.
+    MissionModel.findOne({ missionID }, (error: any, missionData: any) => {
+      // Handles errors.
+      if (error !== null) {
+        databaseLogger.error(
+          `Failed to retrieve mission with the ID "${missionID}".`,
+        )
+        databaseLogger.error(error)
+        return response.sendStatus(500)
+      }
+      // Handle mission not found.
+      else if (missionData === null) {
+        return response.sendStatus(404)
+      }
+      // Handles session user not found.
+      else if (request.session.user === undefined) {
+        databaseLogger.error(
+          'Session exists, but a user was not found in the session.',
+        )
+        return response.sendStatus(500)
+      }
+      // Handle mission not live.
+      else if (!missionData.live) {
+        response.statusMessage = 'Mission is not live.'
+        return response.sendStatus(401)
+      }
+      // Handles successful query.
+      else {
+        let mission: Mission = new Mission(
+          missionData.missionID,
+          missionData.name,
+          missionData.introMessage,
+          missionData.versionNumber,
+          missionData.live,
+          missionData.initialResources,
+          missionData.nodeStructure,
+          missionData.nodeData,
+          missionData.seed,
+        )
+
+        // Start the mission.
+        MissionControl.startMission(request, mission)
       }
     })
   },

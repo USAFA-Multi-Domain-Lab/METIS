@@ -1,6 +1,5 @@
 import axios, { AxiosError } from 'axios'
 import { PRNG } from 'seedrandom'
-import ExecuteNodePath from '../components/content/game/ExecuteNodePath'
 import { MissionNode } from './mission-nodes'
 import { Mission } from './missions'
 import { AnyObject } from './toolbox/objects'
@@ -159,7 +158,12 @@ export class MissionNodeAction {
 
   // This will be called upon action
   // execution completion.
-  _handleExecutionEnd = (success: boolean, useAssets: boolean): void => {
+  _handleExecutionEnd = (
+    success: boolean,
+    useAssets: boolean,
+    handleSuccess: () => void,
+    handleFailure: () => void,
+  ): void => {
     let node: MissionNode = this.node
     let mission: Mission = node.mission
 
@@ -169,9 +173,9 @@ export class MissionNodeAction {
       if (node.hasChildren && !node.isOpen) {
         node.open()
       }
-      ExecuteNodePath.handleExecutionSuccess(this)
+      handleSuccess()
     } else if (!success) {
-      ExecuteNodePath.handleExecutionFailure(this)
+      handleFailure()
     }
 
     if (success && useAssets) {
@@ -184,7 +188,11 @@ export class MissionNodeAction {
   }
 
   // This will execute the action.
-  execute(useAssets: boolean): void {
+  execute(
+    useAssets: boolean,
+    handleSuccess: () => void,
+    handleFailure: () => void,
+  ): void {
     let node: MissionNode = this.node
     let mission: Mission = node.mission
     let resourceCost: number = this.resourceCost
@@ -201,7 +209,12 @@ export class MissionNodeAction {
 
     setTimeout(() => {
       this.updateWillSucceed()
-      this._handleExecutionEnd(willSucceed, useAssets)
+      this._handleExecutionEnd(
+        willSucceed,
+        useAssets,
+        handleSuccess,
+        handleFailure,
+      )
       this.updateWillSucceedArray()
     }, processTime)
   }

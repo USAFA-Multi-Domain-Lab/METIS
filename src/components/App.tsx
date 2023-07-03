@@ -1,7 +1,7 @@
 import './App.scss'
 import GamePage from './pages/GamePage'
 import AuthPage from './pages/AuthPage'
-import usersModule, { IUser } from '../modules/users'
+import usersModule, { User, retrieveSession } from '../modules/users'
 import { useEffect, useState } from 'react'
 import ServerErrorPage from './pages/ServerErrorPage'
 import LoadingPage from './pages/LoadingPage'
@@ -18,7 +18,8 @@ import {
 } from './content/communication/Tooltip'
 import Prompt from './content/communication/Prompt'
 import ChangelogPage from './pages/ChangelogPage'
-import { MissionSession } from '../../modules/mission-control'
+import { ServerMissionSession } from '../../modules/mission-control'
+import { ClientMissionSession } from '../modules/missions'
 
 // Default props in every page.
 export interface IPage {
@@ -51,10 +52,6 @@ function App(props: {
 }): JSX.Element | null {
   let appState = props.appState
   let appActions = props.appActions
-
-  let missionSession = new MissionSession('jdsf')
-
-  console.log(missionSession)
 
   /* -- COMPONENT STATE -- */
 
@@ -116,12 +113,15 @@ function App(props: {
 
       appActions.beginLoading(AppState.defaultAppStateValues.loadingMessage)
 
-      usersModule.retrieveCurrentUser(
-        (currentUser: IUser | null) => {
-          appState.setCurrentUser(currentUser)
+      retrieveSession(
+        (
+          user: User | undefined,
+          missionSession: ClientMissionSession | undefined,
+        ) => {
+          appState.setCurrentUser(user)
           appState.setAppMountHandled(true)
           appActions.finishLoading()
-          if (currentUser !== null) {
+          if (user !== undefined) {
             appActions.goToPage('MissionSelectionPage', {})
           } else {
             appActions.goToPage('AuthPage', {

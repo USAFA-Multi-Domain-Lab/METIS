@@ -21,9 +21,9 @@ export const requireLogin = (
   },
 ): void => {
   if (
-    request.session.role &&
+    request.session.user !== undefined &&
     options.permittedRoles &&
-    options.permittedRoles.includes(request.session.role)
+    options.permittedRoles.includes(request.session.user.role)
   ) {
     next()
   } else {
@@ -40,9 +40,9 @@ export function hasPermittedRole(
   },
 ): boolean {
   if (
-    request.session.role &&
+    request.session.user !== undefined &&
     options.permittedRoles &&
-    options.permittedRoles.includes(request.session.role)
+    options.permittedRoles.includes(request.session.user.role)
   ) {
     return true
   } else {

@@ -9,11 +9,14 @@ import database from './database/database'
 import mongoose from 'mongoose'
 import { sys } from 'typescript'
 import { expressLoggingHandler } from './modules/logging'
+import { User } from './src/modules/users'
+import { ServerMissionSession } from './modules/mission-control'
 
 declare module 'express-session' {
   export interface SessionData {
-    userID: string
-    role: string
+    sessionID: string
+    user: User
+    missionSession: ServerMissionSession
   }
 }
 
@@ -148,6 +151,3 @@ const defaultExports = {
 }
 
 export default defaultExports
-function multer(arg0: { dest: string }) {
-  throw new Error('Function not implemented.')
-}
