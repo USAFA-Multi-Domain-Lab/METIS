@@ -30,6 +30,7 @@ router.post(
   requireLogin,
   validateRequestBodyKeys({
     name: RequestBodyFilters.STRING,
+    introMessage: RequestBodyFilters.STRING,
     versionNumber: RequestBodyFilters.NUMBER,
     live: RequestBodyFilters.BOOLEAN,
     initialResources: RequestBodyFilters.NUMBER,
@@ -42,6 +43,7 @@ router.post(
     let missionData: any = body.mission
 
     let name: any = missionData.name
+    let introMessage: any = missionData.introMessage
     let versionNumber: any = missionData.versionNumber
     let live: any = missionData.live
     let initialResources: any = missionData.initialResources
@@ -50,6 +52,7 @@ router.post(
 
     let mission = new MissionModel({
       name,
+      introMessage,
       versionNumber,
       live,
       initialResources,
@@ -226,6 +229,17 @@ router.post(
             } else if (color === 'orange') {
               nodeDatum.color = '#ffab50'
             }
+          }
+        }
+
+        // -- BUILD 11 --
+        // This migration script is responsible
+        // for adding the introduction message
+        // property at the mission level of the
+        // missions collection.
+        if (schemaBuildNumber < 11) {
+          if (!('introMessage' in missionData)) {
+            missionData.introMessage = 'Enter your overview message here.'
           }
         }
       }
@@ -530,14 +544,9 @@ router.get(
 // This will return all the available
 // color options that can be used to
 // style a mission-node.
-router.get(
-  '/colors/',
-  requireLogin,
-  validateRequestQueryKeys({}),
-  (request, response) => {
-    response.json({ colorOptions })
-  },
-)
+router.get('/colors/', validateRequestQueryKeys({}), (request, response) => {
+  response.json({ colorOptions })
+})
 
 // -- PUT /api/v1/missions/handle-action-execution/
 // This handles the effect on an asset
@@ -600,6 +609,7 @@ router.put(
     },
     {
       name: RequestBodyFilters.STRING,
+      introMessage: RequestBodyFilters.STRING,
       versionNumber: RequestBodyFilters.NUMBER,
       initialResources: RequestBodyFilters.NUMBER,
       live: RequestBodyFilters.BOOLEAN,
@@ -733,6 +743,7 @@ router.put(
         } else {
           let copy = new MissionModel({
             name: copyName,
+            introMessage: mission.introMessage,
             versionNumber: mission.versionNumber,
             live: mission.live,
             initialResources: mission.initialResources,

@@ -3,7 +3,7 @@
 // in the nodeStructure. This fixes data
 // corruption created by a previous bug.
 
-let dbName = 'mdl'
+let dbName = 'metis'
 
 if (process.env.MONGO_DB) {
   dbName = process.env.MONGO_DB

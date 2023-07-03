@@ -1,5 +1,5 @@
-import mongoose, { Schema, Model } from 'mongoose'
-import bcrypt from 'bcrypt'
+import mongoose, { Schema } from 'mongoose'
+import bcryptjs from 'bcryptjs'
 import { StatusError } from '../../modules/error'
 
 const UserSchema = new Schema({
@@ -44,7 +44,7 @@ UserSchema.statics.authenticate = (
       }
 
       //if there is no error and user exists, the encrypted password provided is verified
-      bcrypt.compare(
+      bcryptjs.compare(
         request.body.password,
         user.password,
         (error: Error | undefined, same: boolean) => {
@@ -65,7 +65,7 @@ UserSchema.statics.authenticate = (
 
 //before a new user is saved, the password will be encrypted
 UserSchema.pre('save', function (next) {
-  bcrypt.hash(this.password, 10, (error: Error | undefined, hash: string) => {
+  bcryptjs.hash(this.password, 10, (error: Error | undefined, hash: string) => {
     if (error) {
       return next(error)
     }

@@ -32,10 +32,12 @@ interface IMissionMap {
   handleNodeDeletionRequest: ((node: MissionNode) => void) | null
   handleMapEditRequest: (() => void) | null
   handleMapSaveRequest: (() => void) | null
+  handleNodePathExitRequest: (() => void) | null
   allowCreationMode: boolean
   grayOutEditButton: boolean
   grayOutSaveButton: boolean
   grayOutDeselectNodeButton: boolean
+  grayOutExitNodePathButton: boolean
   grayOutAddNodeButton: boolean
   grayOutDeleteNodeButton: boolean
   elementRef: React.RefObject<HTMLDivElement>
@@ -160,10 +162,12 @@ export default class MissionMap extends React.Component<
     handleNodeDeletionRequest: null,
     handleMapEditRequest: null,
     handleMapSaveRequest: null,
+    handleNodePathExitRequest: null,
     allowCreationMode: false,
     grayOutEditButton: false,
     grayOutSaveButton: false,
     grayOutDeselectNodeButton: false,
+    grayOutExitNodePathButton: false,
     grayOutAddNodeButton: false,
     grayOutDeleteNodeButton: false,
     elementRef: React.createRef(),
@@ -762,10 +766,13 @@ export default class MissionMap extends React.Component<
     let mapScale: number = this.state.mapScale
     let handleMapEditRequest = this.props.handleMapEditRequest
     let handleMapSaveRequest = this.props.handleMapSaveRequest
+    let handleNodePathExitRequest = this.props.handleNodePathExitRequest
     let allowCreationMode: boolean = this.props.allowCreationMode
     let creationModeActive: boolean = this.creationModeActive
     let grayOutEditButton: boolean = this.props.grayOutEditButton
     let grayOutSaveButton: boolean = this.props.grayOutSaveButton
+    let grayOutExitNodePathButton: boolean =
+      this.props.grayOutExitNodePathButton
     let actionsUniqueClassName: string = 'map-actions'
 
     let availableActions = {
@@ -816,6 +823,17 @@ export default class MissionMap extends React.Component<
         tooltipDescription: 'Save changes.',
         disabled: grayOutSaveButton,
       }),
+      exitNodePath: new ButtonSVG({
+        ...ButtonSVG.defaultProps,
+        purpose: EButtonSVGPurpose.Cancel,
+        handleClick: () => {
+          if (handleNodePathExitRequest) {
+            handleNodePathExitRequest()
+          }
+        },
+        tooltipDescription: 'Exit the node path that has been highlighted.',
+        disabled: grayOutExitNodePathButton,
+      }),
     }
     let activeActions: ButtonSVG[] = []
 
@@ -836,6 +854,10 @@ export default class MissionMap extends React.Component<
     if (handleMapSaveRequest !== null) {
       activeActions.push(availableActions.save)
     }
+
+    // if (handleNodePathExitRequest !== null) {
+    //   activeActions.push(availableActions.exitNodePath)
+    // }
 
     if (mapScale === maxMapScale) {
       actionsUniqueClassName += ' map-is-zoomed-in'

@@ -75,6 +75,7 @@ export class MissionNode implements IMissionMappable {
   _expandedInMenu: boolean
   _executionTimeStart: number
   _executionTimeEnd: number
+  _highlighted: boolean
 
   static default_name: string = 'Unnamed Node'
   static default_color: string = '#ffffff'
@@ -317,6 +318,14 @@ export class MissionNode implements IMissionMappable {
     return Math.min(percentCompleted, 1)
   }
 
+  get highlighted(): boolean {
+    return this._highlighted
+  }
+
+  set highlighted(highlighted: boolean) {
+    this._highlighted = highlighted
+  }
+
   constructor(
     mission: Mission,
     nodeID: string,
@@ -353,6 +362,7 @@ export class MissionNode implements IMissionMappable {
     this._executingAction = null
     this._executionTimeStart = 0
     this._executionTimeEnd = 0
+    this._highlighted = true
 
     this.parseActionJSON(actionJSON)
   }
@@ -668,6 +678,77 @@ export class MissionNode implements IMissionMappable {
     this.executed = true
     this.executing = false
     this._executingAction = null
+  }
+
+  // This disables all nodes that are
+  // not part of the selected path.
+  disableOtherNodes(): void {
+    let allParentNodes: Array<string> = []
+    let allChildNodes: Array<string> = []
+    let allSiblingNodes: Array<string> = []
+    let currentNode: MissionNode | null = this
+
+    // A non-executable node must be opened,
+    // in the default state, and not the root
+    // node to be highlighted.
+    // Also, if a node is executable, it must
+    // be successfully executed to be
+    // highlighted.
+    if (
+      (this.isOpen && this.highlighted) ||
+      (this.executed && this.selectedAction?.succeeded)
+    ) {
+      // This will go up the tree and
+      // add all parent nodes to the
+      // allParentNodes array if the
+      // current node is not the root
+      // node.
+      while (
+        currentNode &&
+        currentNode.nodeID !== this.mission.rootNode.nodeID
+      ) {
+        allParentNodes.push(currentNode.nodeID)
+        currentNode = currentNode.parentNode
+      }
+
+      // After going up the tree this
+      // will go down the tree recursively
+      // and add all child nodes, their
+      // siblings, and their sibling's
+      // children to the allChildNodes
+      // and allSiblingNodes array.
+      let addChildrenAndSiblings = (node: MissionNode) => {
+        node.childNodes.forEach((childNode: MissionNode) => {
+          allChildNodes.push(childNode.nodeID)
+          childNode.siblings.forEach((siblingNode: MissionNode) => {
+            allSiblingNodes.push(siblingNode.nodeID)
+            addChildrenAndSiblings(siblingNode)
+          })
+          addChildrenAndSiblings(childNode)
+        })
+      }
+
+      addChildrenAndSiblings(this)
+
+      this.mission.nodes.forEach((node: MissionNode) => {
+        // This disables all the nodes
+        // that are not part of the
+        // selected path.
+        if (
+          !allParentNodes.includes(node.nodeID) &&
+          !allChildNodes.includes(node.nodeID) &&
+          !allSiblingNodes.includes(node.nodeID)
+        ) {
+          node.highlighted = false
+
+          if (!node.mission.hasDisabledNodes) {
+            node.mission.hasDisabledNodes = true
+          }
+        } else {
+          node.highlighted = true
+        }
+      })
+    }
   }
 }
 
