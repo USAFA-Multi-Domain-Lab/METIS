@@ -1,6 +1,6 @@
 # changelog
 
-# version-1.3.1 | 6-28-2023
+# version-1.3.1 | 7-3-2023
 
 - Created a feature for missions to have an introduction message that displays in the terminal on the game page when a user selects a mission to go through
 - Updated asset structure for cyber city to include effects for radar
