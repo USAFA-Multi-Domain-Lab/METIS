@@ -62,15 +62,15 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
   useEffect(() => {
     if (!mountHandled) {
       appActions.beginLoading('Launching mission...')
-      getMission(
-        props.missionID,
-        (mission: Mission) => {
+
+      Mission.launch(props.missionID)
+        .then((mission: Mission) => {
           appActions.finishLoading()
           setMission(mission)
           setMountHandled(true)
           loop()
-        },
-        (error: AxiosError) => {
+        })
+        .catch((error: AxiosError) => {
           if (error.response?.status === 401) {
             appActions.goToPage('MissionSelectionPage', {})
             appActions.notify(
@@ -81,8 +81,7 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
             appActions.handleServerError('Failed to load mission.')
             setMountHandled(true)
           }
-        },
-      )
+        })
     }
   }, [mountHandled])
 

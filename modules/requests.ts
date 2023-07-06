@@ -286,8 +286,8 @@ const invalidRequestBodyPropertyException = (
 }
 
 // Validates the type of keys that are passed in
-// the request query
-const validateTypeOfQueryKey = (
+// the request query or non-query parameters.
+const validateTypeOfParamKey = (
   type: string,
   query: AnyObject,
   key: string,
@@ -487,20 +487,20 @@ export const validateRequestBodyKeys = (
 // in the current express request the specified
 // keys and if the specified keys are the correct
 // type (i.e., missionID: "string")
-export const validateRequestQueryKeys = (bodyKeys: {}) => {
+export const validateRequestQueryKeys = (queryKeys: {}) => {
   return (request: Request, response: Response, next: NextFunction): void => {
     let query: AnyObject = Object(request.query)
 
     // Grabs all the required keys and what their
     // types should be
-    let allKeys: Array<string> = Object.keys(bodyKeys)
-    let allTypes: Array<string> = Object.values(bodyKeys)
+    let allKeys: Array<string> = Object.keys(queryKeys)
+    let allTypes: Array<string> = Object.values(queryKeys)
 
     // Will contain any errors that occur while validating
     let errorsThrown: Array<any> = []
 
     if (!query) {
-      bodyKeys = {}
+      queryKeys = {}
       allKeys = []
     }
 
@@ -533,7 +533,7 @@ export const validateRequestQueryKeys = (bodyKeys: {}) => {
         try {
           // Validates the type of keys that are passed in the request
           // query
-          validateTypeOfQueryKey(type, query, key)
+          validateTypeOfParamKey(type, query, key)
         } catch (error) {
           // Handles either of the errors that have been thrown above
           errorsThrown.push(error)
@@ -547,11 +547,71 @@ export const validateRequestQueryKeys = (bodyKeys: {}) => {
         try {
           // Validates the type of keys that are passed in the request
           // query
-          validateTypeOfQueryKey(type, query, key)
+          validateTypeOfParamKey(type, query, key)
         } catch (error) {
           // Handles either of the errors that have been thrown above
           errorsThrown.push(error)
         }
+      }
+    })
+
+    if (errorsThrown.length === 0) {
+      next()
+    } else {
+      response.status(400)
+      response.statusMessage = ''
+      errorsThrown.map((error: Error) => {
+        response.statusMessage += `_${error.message}`
+      })
+      response.send(response.statusMessage)
+    }
+  }
+}
+
+export const validateRequestParamKeys = (paramKeys: {}) => {
+  return (request: Request, response: Response, next: NextFunction): void => {
+    let params: AnyObject = Object(request.params)
+
+    // Grabs all the required keys and what their
+    // types should be
+    let allKeys: Array<string> = Object.keys(paramKeys)
+    let allTypes: Array<string> = Object.values(paramKeys)
+
+    // Will contain any errors that occur while validating
+    let errorsThrown: Array<any> = []
+
+    if (!params) {
+      paramKeys = {}
+      allKeys = []
+    }
+
+    // Loops through all the required keys that were passed
+    // and validates them to make sure the request
+    // being sent is correct
+    allKeys.forEach((key: string, index: number) => {
+      // This is what the property's type will be
+      let type: string = allTypes[index]
+
+      try {
+        // If a key that is supposed to be in the request is not there
+        // then an error is thrown
+        if (!(key in params)) {
+          throw new Error(
+            `Bad Request_"${key}"-is-missing-in-the-query-of-the-request`,
+          )
+        }
+      } catch (error) {
+        // Handles either of the errors that have been thrown above
+        errorsThrown.push(error)
+      }
+
+      try {
+        // Validates the type of keys that are passed in the request
+        // params
+        validateTypeOfParamKey(type, params, key)
+      } catch (error) {
+        // Handles either of the errors that have been thrown above
+        errorsThrown.push(error)
       }
     })
 

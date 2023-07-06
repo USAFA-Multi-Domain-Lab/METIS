@@ -3,6 +3,7 @@ import express from 'express'
 import userModel from '../../../database/models/model-user'
 import { StatusError } from '../../../modules/error'
 import { User } from '../../../src/modules/users'
+import MetisSession from '../../../session/session'
 
 //fields
 const router = express.Router()
@@ -10,44 +11,65 @@ const router = express.Router()
 // -- GET | /session/ --
 // Returns the session for the user making the request.
 router.get('/session/', (request, response) => {
-  let session = request.session
+  // Retrieve the session with the session
+  // ID stored in the request.
+  let session: MetisSession | undefined = MetisSession.get(
+    request.session.sessionID,
+  )
 
-  console.log(request.session.user)
-
-  return response.json({
-    user: session.user ? session.user.toJSON() : undefined,
-    missionSession: session.missionSession
-      ? session.missionSession.toJSON()
-      : undefined,
-  })
+  // If the session was not found, return
+  // an empty object.
+  if (session === undefined) {
+    return response.json({})
+  }
+  // Else, convert and return the session
+  // as JSON.
+  else {
+    return response.json(session.toJSON())
+  }
 })
 
 //post route for authenticating user trying to log in
 router.post('/login', (request, response, next) => {
+  // Check that the correct fields are present.
   if (request.body.userID && request.body.password) {
+    // Authenticate the user with the given
+    // userID and password.
     userModel.authenticate(
       request,
-      (error: StatusError, correct: boolean, user: any) => {
+      (error: StatusError, correct: boolean, userData: any) => {
+        // If there was an error, return the
+        // error as a response.
         if (error) {
           return response.sendStatus(error.status ? error.status : 500)
-        } else {
+        }
+        // Else, check if the username and password
+        // were correct.
+        else {
+          let json: any = { correct, session: {} }
+
+          // If correct, generate a new session.
           if (correct) {
-            request.session.user = new User(
-              user.userID,
-              user.firstName,
-              user.lastName,
-              user.role,
+            // Create a new user object.
+            let user: User = new User(
+              userData.userID,
+              userData.firstName,
+              userData.lastName,
+              userData.role,
             )
+
+            // Create a new session object.
+            let session: MetisSession = new MetisSession(user)
+
+            // Store the session ID in the express
+            // session.
+            request.session.sessionID = session.sessionID
+
+            // Store the session data in the response
+            // json.
+            json.session = session.toJSON()
           }
-          return response.json({
-            user: request.session.user
-              ? request.session.user.toJSON()
-              : undefined,
-            missionSession: request.session.missionSession
-              ? request.session.missionSession.toJSON()
-              : undefined,
-            correct,
-          })
+          return response.json(json)
         }
       },
     )
@@ -58,7 +80,12 @@ router.post('/login', (request, response, next) => {
 
 //route for logging out user
 router.post('/logout', (request, response, next) => {
+  // If session exists.
   if (request.session) {
+    // Destroy the METIS session.
+    MetisSession.destroy(request.session.sessionID)
+
+    // Then destroy the Express session.
     request.session.destroy((error) => {
       if (error) {
         return next(error)

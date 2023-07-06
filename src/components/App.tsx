@@ -1,7 +1,7 @@
 import './App.scss'
 import GamePage from './pages/GamePage'
 import AuthPage from './pages/AuthPage'
-import usersModule, { User, retrieveSession } from '../modules/users'
+import { User, retrieveSession } from '../modules/users'
 import { useEffect, useState } from 'react'
 import ServerErrorPage from './pages/ServerErrorPage'
 import LoadingPage from './pages/LoadingPage'
@@ -18,8 +18,7 @@ import {
 } from './content/communication/Tooltip'
 import Prompt from './content/communication/Prompt'
 import ChangelogPage from './pages/ChangelogPage'
-import { ServerMissionSession } from '../../modules/mission-control'
-import { ClientMissionSession } from '../modules/missions'
+import { Mission } from '../modules/missions'
 
 // Default props in every page.
 export interface IPage {
@@ -113,11 +112,10 @@ function App(props: {
 
       appActions.beginLoading(AppState.defaultAppStateValues.loadingMessage)
 
+      console.log(process.env)
+
       retrieveSession(
-        (
-          user: User | undefined,
-          missionSession: ClientMissionSession | undefined,
-        ) => {
+        (user: User | undefined, mission: Mission | undefined) => {
           appState.setCurrentUser(user)
           appState.setAppMountHandled(true)
           appActions.finishLoading()

@@ -14,6 +14,7 @@ import uploads from '../../../middleware/uploads'
 import { commandScripts } from '../../../action-execution'
 import validateRequestBodyKeys, {
   RequestBodyFilters,
+  validateRequestParamKeys as validateRequestParams,
   validateRequestQueryKeys,
 } from '../../../modules/requests'
 import { colorOptions } from '../../../modules/mission-node-colors'
@@ -21,7 +22,7 @@ import { Mission } from '../../../src/modules/missions'
 import {
   MissionControl,
   ServerMissionSession,
-} from '../../../modules/mission-control'
+} from '../../../session/mission-control'
 
 type MulterFile = Express.Multer.File
 
@@ -800,18 +801,17 @@ router.delete(
   },
 )
 
-// -- POST | /api/v1/missions/execution/start/ --
+// -- POST | /api/v1/missions/execute/launch/:missionID --
 // This will create a new mission session for a user to execute.
 router.post(
-  '/execution/start/',
+  '/execute/launch/:missionID',
   requireLogin,
-  validateRequestBodyKeys({
+  validateRequestParams({
     missionID: RequestBodyFilters.OBJECTID,
   }),
   (request: Request, response: Response) => {
-    // Get data from the request body.
-    let body: any = request.body
-    let missionID: string = body.missionID
+    // Get data from the request params.
+    let missionID: string = request.params.missionID
 
     // Query for the mission with the given ID.
     MissionModel.findOne({ missionID }, (error: any, missionData: any) => {
@@ -826,13 +826,6 @@ router.post(
       // Handle mission not found.
       else if (missionData === null) {
         return response.sendStatus(404)
-      }
-      // Handles session user not found.
-      else if (request.session.user === undefined) {
-        databaseLogger.error(
-          'Session exists, but a user was not found in the session.',
-        )
-        return response.sendStatus(500)
       }
       // Handle mission not live.
       else if (!missionData.live) {
@@ -853,8 +846,7 @@ router.post(
           missionData.seed,
         )
 
-        // Start the mission.
-        MissionControl.startMission(request, mission)
+        // MissionControl.launchMission(mission)
       }
     })
   },

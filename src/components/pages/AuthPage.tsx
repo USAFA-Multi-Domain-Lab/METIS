@@ -98,11 +98,11 @@ export default function AuthPage(props: IAuthPage): JSX.Element | null {
         usersModule.login(
           userID,
           password,
-          (correct: boolean, currentUser: User | undefined) => {
-            if (correct && currentUser !== null) {
+          (correct: boolean, user: User | undefined) => {
+            if (correct && user !== undefined) {
               setIsSubmitting(false)
               appActions.finishLoading()
-              appState.setCurrentUser(currentUser)
+              appState.setCurrentUser(user)
               appActions.goToPage(
                 props.returningPagePath,
                 props.returningPageProps,

@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express-serve-static-core'
 import { AnyObject } from './modules/toolbox/objects'
+import MetisSession from './session/session'
 
 interface ILoginOptions {
   permittedRoles?: string[]
@@ -20,10 +21,14 @@ export const requireLogin = (
     permittedRoles: [userRoles.Admin],
   },
 ): void => {
+  let session: MetisSession | undefined = MetisSession.get(
+    request.session.sessionID,
+  )
+
   if (
-    request.session.user !== undefined &&
-    options.permittedRoles &&
-    options.permittedRoles.includes(request.session.user.role)
+    session !== undefined &&
+    options.permittedRoles !== undefined &&
+    options.permittedRoles.includes(session.user.role)
   ) {
     next()
   } else {
@@ -39,15 +44,15 @@ export function hasPermittedRole(
     permittedRoles: [userRoles.Admin],
   },
 ): boolean {
-  if (
-    request.session.user !== undefined &&
-    options.permittedRoles &&
-    options.permittedRoles.includes(request.session.user.role)
-  ) {
-    return true
-  } else {
-    return false
-  }
+  let session: MetisSession | undefined = MetisSession.get(
+    request.session.sessionID,
+  )
+
+  return (
+    session !== undefined &&
+    options.permittedRoles !== undefined &&
+    options.permittedRoles.includes(session.user.role)
+  )
 }
 
 // middleware that requires the user to be logged in

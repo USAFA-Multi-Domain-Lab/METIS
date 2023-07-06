@@ -11,7 +11,7 @@ import {
 } from './mission-nodes'
 import { MissionNodeAction } from './mission-node-actions'
 import { IConsoleOutput } from '../components/content/game/ConsoleOutput'
-import { IUserJSON, User } from './users'
+import { IMetisSession, IMetisSessionJSON, IUserJSON, User } from './users'
 
 // This is the method that the clone
 // function in the Mission class uses
@@ -630,11 +630,21 @@ export class Mission {
   }
 
   /**
+   * The API endpoint for mission data on the METIS server.
+   */
+  public static API_URL: string = `/api/v1/missions`
+
+  /**
+   * The API endpoint for mission execution operations on the METIS server.
+   */
+  public static API_EXECUTE_URL: string = `${Mission.API_URL}/execute`
+
+  /**
    * Converts IMissionJSON into a Mission object.
    * @param {IMissionJson} json The json to be converted.
    * @returns {Mission} The Mission object.
    */
-  static fromJSON(json: IMissionJSON): any {
+  public static fromJSON(json: IMissionJSON): any {
     return new Mission(
       json.missionID,
       json.name,
@@ -647,6 +657,66 @@ export class Mission {
       json.seed,
     )
   }
+
+  /**
+   * Launches a mission.
+   * @param {string} missionID The ID of the mission to be launched.
+   */
+  public static async launch(missionID: string): Promise<Mission> {
+    // Return a new promise that will resolve
+    // into a new Mission object of the mission
+    // being launched.
+    return new Promise<Mission>(
+      (
+        resolve: (mission: Mission) => void,
+        reject: (error: AxiosError) => void,
+      ) => {
+        // Define the type of the response
+        // Axios is expected to return in
+        // the response of the API request.
+        type ExecuteMissionResponse = {
+          session: IMetisSessionJSON
+        }
+
+        // Call the API to execute the mission.
+        axios
+          .post<ExecuteMissionResponse>(
+            `${Mission.API_EXECUTE_URL}/launch/${missionID}`,
+          )
+          .then((response: AxiosResponse<ExecuteMissionResponse>) => {
+            // Session data should have been
+            // returned, retrieve the mission
+            // JSON inside.
+            let session: IMetisSessionJSON = response.data.session
+            let missionJson: IMissionJSON | undefined = session.mission
+
+            // Handle no mission returned.
+            if (missionJson === undefined) {
+              let error: AxiosError = new AxiosError(
+                `Mission with ID "${missionID}" not found.`,
+              )
+              console.error(error)
+              return reject(error)
+            }
+
+            // Convert the mission JSON into
+            // a new Mission object.
+            let mission: Mission = Mission.fromJSON(missionJson)
+
+            // Resolve the promise with the
+            // new Mission object.
+            return resolve(mission)
+          })
+          .catch((error: AxiosError) => {
+            console.error(
+              `Failed to execute mission with the ID "${missionID}".`,
+            )
+            console.error(error)
+            return reject(error)
+          })
+      },
+    )
+  }
 }
 
 /**
@@ -655,91 +725,6 @@ export class Mission {
 export interface IMissionSessionJSON {
   mission: IMissionJSON
   participants: Array<IUserJSON>
-}
-
-/**
- * This class represents an instance of a mission being executed by a group of participating users. This will control access to the mission instance as it is being executed by the participants.
- */
-export abstract class BaseMissionSession {
-  /**
-   * The mission being executed.
-   */
-  public readonly mission: Mission
-
-  /**
-   * The list of users participating in the mission.
-   */
-  private _participants: Array<User> = []
-
-  /**
-   * The list of users participating in the mission.
-   */
-  public get participants(): Array<User> {
-    return [...this._participants]
-  }
-
-  /**
-   * The ID of the mission being executed.
-   */
-  public get missionID(): string {
-    return this.mission.missionID
-  }
-
-  /**
-   * The IDs of the users participating in the mission.
-   */
-  public get participantIDs(): Array<string> {
-    return this.participants.map((participant: User) => participant.userID)
-  }
-
-  /**
-   * @param mission The mission being executed.
-   * @param initialParticipants An initial list of users participating in the mission.
-   */
-  public constructor(mission: Mission, initialParticipants: Array<User> = []) {
-    this.mission = mission
-    this._participants = initialParticipants
-  }
-
-  /**
-   * Verifies participation in a mission session.
-   * @param user The user to verify as a participant.
-   * @returns Whether the given user is a participant.
-   */
-  public isParticipant(user: User): boolean {
-    return this.participantIDs.includes(user.userID)
-  }
-
-  /**
-   * Converts the mission session to JSON.
-   * @returns {IMissionSessionJSON} The JSON representation of the mission session.
-   */
-  public toJSON(): IMissionSessionJSON {
-    return {
-      mission: this.mission.toJSON(),
-      participants: this.participants.map((participant: User) =>
-        participant.toJSON(),
-      ),
-    }
-  }
-}
-
-/**
- * This class represents a client-side instance of a mission being executed by a group of participating users. This will show details of who is executing the mission and what can be done to the mission.
- */
-export class ClientMissionSession extends BaseMissionSession {
-  /**
-   * Converts IMissionSessionJSON to a mission session object.
-   * @return {ClientMissionSession} The mission session object.
-   */
-  public static fromJSON(json: IMissionSessionJSON): ClientMissionSession {
-    return new ClientMissionSession(
-      Mission.fromJSON(json.mission),
-      json.participants.map((participant: IUserJSON) =>
-        User.fromJSON(participant),
-      ),
-    )
-  }
 }
 
 // This will create a brand new mission.

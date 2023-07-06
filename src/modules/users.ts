@@ -1,6 +1,6 @@
 import axios, { AxiosResponse, AxiosError } from 'axios'
 import { AnyObject } from './toolbox/objects'
-import { ClientMissionSession, IMissionSessionJSON } from './missions'
+import { IMissionJSON, IMissionSessionJSON, Mission } from './missions'
 
 /**
  * The JSON representation of a User object.
@@ -10,6 +10,19 @@ export interface IUserJSON {
   firstName: string
   lastName: string
   role: string
+}
+
+/**
+ * The JSON representation of a MetisSession object.
+ */
+export interface IMetisSessionJSON {
+  user: IUserJSON
+  mission?: IMissionJSON
+}
+
+export interface IMetisSession {
+  user: User
+  mission?: Mission
 }
 
 /**
@@ -83,7 +96,7 @@ export const permittedRoles: string[] = [userRoles.Admin]
 export const retrieveSession = (
   callback: (
     user: User | undefined,
-    missionSession: ClientMissionSession | undefined,
+    mission: Mission | undefined,
   ) => void = () => {
     /* does nothing if function is not passed */
   },
@@ -95,19 +108,18 @@ export const retrieveSession = (
     .get('/api/v1/users/session/')
     .then((response: AxiosResponse) => {
       let userJson: IUserJSON | undefined = response.data.user
-      let missionSessionJson: IMissionSessionJSON | undefined =
-        response.data.missionSession
+      let missionJson: IMissionJSON | undefined = response.data.mission
       let user: User | undefined = userJson
         ? User.fromJSON(userJson)
         : undefined
-      let missionSession: ClientMissionSession | undefined = missionSessionJson
-        ? ClientMissionSession.fromJSON(missionSessionJson)
+      let mission: Mission | undefined = missionJson
+        ? Mission.fromJSON(missionJson)
         : undefined
 
-      callback(user, missionSession)
+      callback(user, mission)
     })
     .catch((error: AxiosError) => {
-      console.log('Failed to retrieve current user.')
+      console.log('Failed to retrieve session.')
       console.error(error)
       callbackError(error)
     })
@@ -118,7 +130,11 @@ export const retrieveSession = (
 const login = (
   userID: string,
   password: string,
-  callback: (correct: boolean, currentUser: User | undefined) => void = () => {
+  callback: (
+    correct: boolean,
+    user: User | undefined,
+    mission: Mission | undefined,
+  ) => void = () => {
     /* does nothing if function is not passed */
   },
   callbackError: (error: AxiosError) => void = () => {
@@ -129,9 +145,16 @@ const login = (
     .post('/api/v1/users/login', { userID, password })
     .then((response: AxiosResponse) => {
       let correct: boolean = response.data.correct
-      let currentUser: User | undefined = response.data.currentUser
+      let userJson: IUserJSON | undefined = response.data.session.user
+      let missionJson: IMissionJSON | undefined = response.data.session.mission
+      let user: User | undefined = userJson
+        ? User.fromJSON(userJson)
+        : undefined
+      let mission: Mission | undefined = missionJson
+        ? Mission.fromJSON(missionJson)
+        : undefined
 
-      return callback(correct, currentUser)
+      callback(correct, user, mission)
     })
     .catch((error: AxiosError) => {
       console.log('Failed to login user.')
