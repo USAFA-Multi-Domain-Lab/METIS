@@ -2,6 +2,7 @@ import { v4 as generateHash } from 'uuid'
 import { Mission } from './missions'
 import { User } from './users'
 import { AxiosError } from 'axios'
+import context from './context'
 
 export interface IGameJSON {
   gameID: string
@@ -58,7 +59,11 @@ export default class Game {
         resolve: (game: Game) => void,
         reject: (error: AxiosError) => void,
       ): void => {
-        return resolve(new Game(generateHash(), mission, participants))
+        if (context === 'react') {
+        } else if (context === 'express') {
+          let game: Game = new Game(generateHash(), mission, participants)
+          return resolve(new Game(generateHash(), mission, participants))
+        }
       },
     )
   }

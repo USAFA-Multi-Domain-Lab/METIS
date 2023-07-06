@@ -1,5 +1,4 @@
 import express from 'express'
-
 import config from './config'
 import { expressLogger } from './modules/logging'
 

@@ -597,7 +597,7 @@ export const validateRequestParamKeys = (paramKeys: {}) => {
         // then an error is thrown
         if (!(key in params)) {
           throw new Error(
-            `Bad Request_"${key}"-is-missing-in-the-query-of-the-request`,
+            `Bad Request_"${key}"-is-missing-in-the-params-of-the-request`,
           )
         }
       } catch (error) {

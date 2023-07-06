@@ -112,8 +112,6 @@ function App(props: {
 
       appActions.beginLoading(AppState.defaultAppStateValues.loadingMessage)
 
-      console.log(process.env)
-
       retrieveSession(
         (user: User | undefined, mission: Mission | undefined) => {
           appState.setCurrentUser(user)
