@@ -72,7 +72,7 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
         },
         (error: AxiosError) => {
           if (error.response?.status === 401) {
-            appActions.goToPage('MissionSelectionPage', {})
+            appActions.goToPage('HomePage', {})
             appActions.notify(
               'Please select a different mission. The last-selected mission is not accesible to students.',
             )
@@ -97,18 +97,9 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
     // This will logout the current user.
     const logout = () =>
       appActions.logout({
-        returningPagePath: 'MissionSelectionPage',
+        returningPagePath: 'HomePage',
         returningPageProps: {},
       })
-
-    // // This will switch to the auth page.
-    // const login = () =>
-    //   appActions.goToPage('AuthPage', {
-    //     returningPagePath: 'GamePage',
-    //     returningPageProps: {
-    //       missionID: mission.missionID,
-    //     },
-    //   })
 
     // This will output to the console.
     const outputToConsole = (output: IConsoleOutput): void => {
@@ -165,19 +156,13 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
         <Navigation
           links={[
             {
-              text: 'Back to selection',
-              key: 'back-to-selection',
+              text: 'Back to home',
+              key: 'back-to-home',
               handleClick: () => {
-                appActions.goToPage('MissionSelectionPage', {})
+                appActions.goToPage('HomePage', {})
               },
               visible: true,
             },
-            // {
-            //   text: 'Login',
-            //   key: 'login',
-            //   handleClick: login,
-            //   visible: displayLogin,
-            // },
             {
               text: 'Log out',
               key: 'log-out',
@@ -185,9 +170,7 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
               visible: displayLogout,
             },
           ]}
-          brandingCallback={() =>
-            appActions.goToPage('MissionSelectionPage', {})
-          }
+          brandingCallback={() => appActions.goToPage('HomePage', {})}
           brandingTooltipDescription='Go home.'
         />
         {
@@ -234,7 +217,7 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
                   )
                 }}
                 handleSuccessfulDeletion={() => {
-                  appActions.goToPage('MissionSelectionPage', {})
+                  appActions.goToPage('HomePage', {})
                 }}
                 handleSuccessfulToggleLive={() => {}}
               />

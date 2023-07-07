@@ -10,7 +10,7 @@ import { INotifyOptions } from '../../AppState'
 import { IConsoleOutput } from './ConsoleOutput'
 import OutputPanel from './OutputPanel'
 import { useStore } from 'react-context-hook'
-import { IUser, permittedRoles } from '../../../modules/users'
+import { User, permittedRoles } from '../../../modules/users'
 
 /* -- INTERFACE(S) -- */
 
@@ -24,7 +24,7 @@ interface IExecuteNodePath {
 }
 
 interface IExecuteNodePath_S {
-  currentUser: IUser | null
+  currentUser: User | null
 }
 
 function Buttons(props: {
@@ -44,7 +44,7 @@ function Buttons(props: {
   let handleCloseRequest = props.handleCloseRequest
 
   /* -- GLOBAL STATE -- */
-  const [currentUser] = useStore<IUser | null>('currentUser')
+  const [currentUser] = useStore<User | null>('currentUser')
 
   /* -- COMPONENT FUNCTIONS -- */
   // Closes the execution prompt window.

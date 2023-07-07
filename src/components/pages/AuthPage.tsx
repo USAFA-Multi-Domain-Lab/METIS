@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import './AuthPage.scss'
-import usersModule, { IUser } from '../../modules/users'
+import usersModule, { User } from '../../modules/users'
 import { AxiosError } from 'axios'
 import { IPage } from '../App'
 import { AnyObject } from '../../modules/toolbox/objects'
@@ -98,7 +98,7 @@ export default function AuthPage(props: IAuthPage): JSX.Element | null {
         usersModule.login(
           userID,
           password,
-          (correct: boolean, currentUser: IUser | null) => {
+          (correct: boolean, currentUser: User | null) => {
             if (correct && currentUser !== null) {
               setIsSubmitting(false)
               appActions.finishLoading()

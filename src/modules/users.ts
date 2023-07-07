@@ -6,7 +6,6 @@ export interface IUser {
   lastName: string
   userID: string
   role: string
-  type: string
 }
 
 export interface IUserExposed {
@@ -26,10 +25,24 @@ export const userRoles: AnyObject = {
 // can access certain routes.
 export const permittedRoles: string[] = [userRoles.Admin]
 
+export class User {
+  public userID: string
+  public firstName: string
+  public lastName: string
+  public role: string
+
+  public constructor(user: IUser) {
+    this.userID = user.userID
+    this.firstName = user.firstName
+    this.lastName = user.lastName
+    this.role = user.role
+  }
+}
+
 // This loads the currently logged in user in the
 // session.
 export const retrieveCurrentUser = (
-  callback: (currentUser: IUser | null) => void = () => {
+  callback: (currentUser: User | null) => void = () => {
     /* does nothing if function is not passed */
   },
   callbackError: (error: AxiosError) => void = () => {
@@ -55,7 +68,7 @@ export const retrieveCurrentUser = (
 export const login = (
   userID: string,
   password: string,
-  callback: (correct: boolean, currentUser: IUser | null) => void = () => {
+  callback: (correct: boolean, currentUser: User | null) => void = () => {
     /* does nothing if function is not passed */
   },
   callbackError: (error: AxiosError) => void = () => {
@@ -66,7 +79,7 @@ export const login = (
     .post('/api/v1/users/login', { userID, password })
     .then((response: AxiosResponse) => {
       let correct: boolean = response.data.correct
-      let currentUser: IUser | null = response.data.currentUser
+      let currentUser: User | null = response.data.currentUser
 
       return callback(correct, currentUser)
     })
@@ -100,8 +113,8 @@ export const logout = (
 
 // This will create a brand new user.
 export const createUser = (
-  user: IUser,
-  callback: (user: IUser) => void,
+  user: User,
+  callback: (user: User) => void,
   callbackError: (error: AxiosError) => void = () => {},
 ): void => {
   axios
@@ -120,7 +133,7 @@ export const createUser = (
 
 // This will get all users.
 export const getAllUsers = (
-  callback: (users: IUser[]) => void,
+  callback: (users: User[]) => void,
   callbackError: (error: AxiosError) => void = () => {},
 ): void => {
   axios
@@ -140,7 +153,7 @@ export const getAllUsers = (
 // This will get a user by their userID.
 export const getUser = (
   userID: string,
-  callback: (user: IUser) => void,
+  callback: (user: User) => void,
   callbackError: (error: AxiosError) => void = () => {},
 ): void => {
   axios
@@ -160,8 +173,8 @@ export const getUser = (
 // This will update the given user to
 // the server.
 export const updateUser = (
-  user: IUser,
-  callback: (user: IUser) => void,
+  user: User,
+  callback: (user: User) => void,
   callbackError: (error: AxiosError) => void = () => {},
 ): void => {
   axios
@@ -196,6 +209,7 @@ export const deleteUser = (
 }
 
 export default {
+  User,
   retrieveCurrentUser,
   login,
   logout,

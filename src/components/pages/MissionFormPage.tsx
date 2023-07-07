@@ -69,7 +69,7 @@ export default function MissionFormPage(
       appState.currentUser &&
       !permittedRoles.includes(appState.currentUser.role)
     ) {
-      appActions.goToPage('MissionSelectionPage', {})
+      appActions.goToPage('HomePage', {})
       appActions.notify('Mission form page is not accessible to students.')
     } else {
       getMissionNodeColorOptions((colorOptions: Array<string>) => {
@@ -340,7 +340,7 @@ export default function MissionFormPage(
     // This will logout the current user.
     const logout = () =>
       appActions.logout({
-        returningPagePath: 'MissionSelectionPage',
+        returningPagePath: 'HomePage',
         returningPageProps: {},
       })
 
@@ -377,14 +377,14 @@ export default function MissionFormPage(
               text: 'Done',
               handleClick: () => {
                 if (!areUnsavedChanges) {
-                  appActions.goToPage('MissionSelectionPage', {})
+                  appActions.goToPage('HomePage', {})
                 } else {
                   appActions.confirm(
                     'You have unsaved changes. What do you want to do with them?',
                     (concludeAction: () => void) => {
                       save(
                         () => {
-                          appActions.goToPage('MissionSelectionPage', {})
+                          appActions.goToPage('HomePage', {})
                           concludeAction()
                         },
                         () => {
@@ -394,7 +394,7 @@ export default function MissionFormPage(
                     },
                     {
                       handleAlternate: (concludeAction: () => void) => {
-                        appActions.goToPage('MissionSelectionPage', {})
+                        appActions.goToPage('HomePage', {})
                         concludeAction()
                       },
                       pendingMessageUponConfirm: 'Saving...',
@@ -458,14 +458,14 @@ export default function MissionFormPage(
           ]}
           brandingCallback={() => {
             if (!areUnsavedChanges) {
-              appActions.goToPage('MissionSelectionPage', {})
+              appActions.goToPage('HomePage', {})
             } else {
               appActions.confirm(
                 'You have unsaved changes. What do you want to do with them?',
                 (concludeAction: () => void) => {
                   save(
                     () => {
-                      appActions.goToPage('MissionSelectionPage', {})
+                      appActions.goToPage('HomePage', {})
                       concludeAction()
                     },
                     () => {
@@ -475,7 +475,7 @@ export default function MissionFormPage(
                 },
                 {
                   handleAlternate: (concludeAction: () => void) => {
-                    appActions.goToPage('MissionSelectionPage', {})
+                    appActions.goToPage('HomePage', {})
                     concludeAction()
                   },
                   pendingMessageUponConfirm: 'Saving...',

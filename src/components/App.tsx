@@ -1,14 +1,14 @@
 import './App.scss'
 import GamePage from './pages/GamePage'
 import AuthPage from './pages/AuthPage'
-import usersModule, { IUser } from '../modules/users'
+import usersModule, { User } from '../modules/users'
 import { useEffect, useState } from 'react'
 import ServerErrorPage from './pages/ServerErrorPage'
 import LoadingPage from './pages/LoadingPage'
 import AppState, { AppActions } from './AppState'
 import Markdown, { MarkdownTheme } from './content/general-layout/Markdown'
 import MissionFormPage from './pages/MissionFormPage'
-import MissionSelectionPage from './pages/MissionSelectionPage'
+import HomePage from './pages/HomePage'
 import Notification from '../modules/notifications'
 import NotificationBubble from './content/communication/NotificationBubble'
 import Confirmation from './content/communication/Confirmation'
@@ -18,6 +18,7 @@ import {
 } from './content/communication/Tooltip'
 import Prompt from './content/communication/Prompt'
 import ChangelogPage from './pages/ChangelogPage'
+import UserFormPage from './pages/UserFormPage'
 
 // Default props in every page.
 export interface IPage {
@@ -112,15 +113,15 @@ function App(props: {
       appActions.beginLoading(AppState.defaultAppStateValues.loadingMessage)
 
       usersModule.retrieveCurrentUser(
-        (currentUser: IUser | null) => {
+        (currentUser: User | null) => {
           appState.setCurrentUser(currentUser)
           appState.setAppMountHandled(true)
           appActions.finishLoading()
           if (currentUser !== null) {
-            appActions.goToPage('MissionSelectionPage', {})
+            appActions.goToPage('HomePage', {})
           } else {
             appActions.goToPage('AuthPage', {
-              returningPagePath: 'MissionSelectionPage',
+              returningPagePath: 'HomePage',
               returningPageProps: {},
             })
           }
@@ -208,9 +209,10 @@ function App(props: {
 // -- PAGE REGISTRATION --
 
 registerPage('AuthPage', AuthPage)
-registerPage('MissionSelectionPage', MissionSelectionPage)
+registerPage('HomePage', HomePage)
 registerPage('GamePage', GamePage)
 registerPage('ChangelogPage', ChangelogPage)
 registerPage('MissionFormPage', MissionFormPage)
+registerPage('UserFormPage', UserFormPage)
 
 export default AppState.createAppWithState(App)

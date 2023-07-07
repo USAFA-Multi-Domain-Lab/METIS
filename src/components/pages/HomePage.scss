@@ -1,0 +1,137 @@
+@import '../../config.scss';
+
+.HomePage {
+  display: grid;
+  place-items: center;
+  align-content: space-between;
+  background: url('../../assets/images/landing-page-img.png');
+  background-size: 100% 120%;
+  background-position: center;
+  background-repeat: no-repeat;
+  box-shadow: inset 100vw 0 0 0 RGBA(13, 26, 39, 0.4);
+  min-height: 100vh;
+  margin: 0;
+
+  &.DropPending {
+    .FileDropBox {
+      opacity: 0.65;
+
+      .UploadIcon {
+        transform: scale(1);
+      }
+    }
+  }
+
+  &:not(.DropPending) {
+    .FileDropBox {
+      opacity: 0;
+
+      .UploadIcon {
+        transform: scale(0.65);
+      }
+    }
+  }
+
+  .FileDropBox {
+    pointer-events: none;
+    display: grid;
+    place-content: center;
+    box-sizing: border-box;
+    position: fixed;
+    z-index: $z-index-file-drop-box;
+    top: 0;
+    left: 0;
+    transition: opacity 175ms;
+    width: 100vw;
+    height: 100vh;
+    margin: 0;
+    padding: 0;
+    background: $color-accent;
+
+    .UploadIcon {
+      transition: transform 175ms;
+      width: 250px;
+      height: 250px;
+      background: url('/assets/images/icons/upload.svg');
+      background-size: contain;
+      background-position: center;
+      background-repeat: no-repeat;
+    }
+  }
+
+  .Navigation {
+    display: grid;
+    place-content: space-between;
+    grid-template-columns: auto 150px;
+    padding: 20px 0;
+  }
+
+  .EditContentRow {
+    display: none;
+
+    place-content: center;
+    align-items: center;
+    grid-template-columns: auto auto;
+    width: 50%;
+    box-sizing: border-box;
+    background-color: black;
+    border: 3px solid white;
+    border-top: none;
+    border-bottom-left-radius: 15px;
+    border-bottom-right-radius: 15px;
+    padding: 10px 0;
+
+    .ButtonSVG {
+      transform: scale(0.8);
+    }
+
+    &.InstructorView {
+      display: grid;
+    }
+  }
+
+  .FooterContainer {
+    display: grid;
+    width: 100%;
+    grid-template-columns: auto auto;
+
+    * {
+      opacity: 0.7;
+      width: -moz-fit-content;
+      width: fit-content;
+    }
+
+    .Version {
+      cursor: pointer;
+      margin-right: auto;
+      padding: 20px;
+      font-size: 0.6em;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-user-drag: none;
+
+      &:hover {
+        opacity: 1;
+      }
+
+      &.Disabled {
+        pointer-events: none;
+      }
+    }
+
+    .Credit {
+      -webkit-user-select: none;
+      user-select: none;
+      margin-left: auto;
+      padding: 20px;
+      text-align: right;
+      font-size: 0.6em;
+      text-decoration: none;
+      -webkit-user-drag: none;
+
+      &:hover {
+        opacity: 1;
+      }
+    }
+  }
+}

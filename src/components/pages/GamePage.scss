@@ -24,7 +24,11 @@
   padding: $page-vertical-padding $page-horizontal-padding;
 
   .Navigation {
-    grid-template-columns: auto 220px 130px;
+    grid-template-columns: auto 190px 120px;
+
+    .Branding {
+      margin: 0;
+    }
   }
 
   .Content {

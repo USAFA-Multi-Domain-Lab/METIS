@@ -513,7 +513,7 @@ export const validateRequestQueryKeys = (bodyKeys: {}) => {
 
       // The "missions" and "users" getter routes are set up so that if
       // the "missionID" or "userID" is undefined then the query is set
-      // to "{}" and all the missions are returned for the MissionSelectionPage.
+      // to "{}" and all the missions are returned for the HomePage.
       // Therefore, the "missionID" and "userID" values are ignored so that the other
       // GET routes that don't require "missionID" and "userID" can be validated properly
       if (key !== 'missionID' && key !== 'userID') {
@@ -541,7 +541,7 @@ export const validateRequestQueryKeys = (bodyKeys: {}) => {
       } else if ((key === 'missionID' || key === 'userID') && key in query) {
         // If the key is "missionID" or "userID" then it is a special exception
         // because this key needs to be allowed to be undefined so that all the
-        // missions can be returned and displayed on the MissionSelectionPage.
+        // missions can be returned and displayed on the HomePage.
         // Since this key is allowed to be undefined that means only its type
         // needs to be validated
         try {

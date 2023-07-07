@@ -1,7 +1,7 @@
 import React from 'react'
 import { useStore, withStore } from 'react-context-hook'
 import usersModule from '../modules/users'
-import { IUser } from '../modules/users'
+import { User } from '../modules/users'
 import { AnyObject } from 'mongoose'
 import Confirmation, {
   IConfirmation,
@@ -16,7 +16,7 @@ import { ButtonText, IButtonText } from './content/user-controls/ButtonText'
 
 export interface IAppStateValues {
   forcedUpdateCounter: number
-  currentUser: IUser | null
+  currentUser: User | null
   currentPagePath: string
   currentPageProps: AnyObject
   appMountHandled: boolean
@@ -36,7 +36,7 @@ export interface IAppStateValues {
 
 export interface IAppStateSetters {
   setForcedUpdateCounter: (forcedUpdateCounter: number) => void
-  setCurrentUser: (user: IUser | null) => void
+  setCurrentUser: (user: User | null) => void
   setCurrentPagePath: (currentPagePath: string) => void
   setCurrentPageProps: (currentPageProps: AnyObject) => void
   setAppMountHandled: (appMountHandled: boolean) => void
@@ -309,7 +309,7 @@ export class AppActions {
 // throught the application.
 export default class AppState implements IAppStateValues, IAppStateValues {
   forcedUpdateCounter: number
-  currentUser: IUser | null
+  currentUser: User | null
   currentPagePath: string
   currentPageProps: AnyObject
   appMountHandled: boolean
@@ -327,7 +327,7 @@ export default class AppState implements IAppStateValues, IAppStateValues {
   missionNodeColors: Array<string>
 
   setForcedUpdateCounter: (forcedUpdateCounter: number) => void
-  setCurrentUser: (user: IUser | null) => void
+  setCurrentUser: (user: User | null) => void
   setCurrentPagePath: (currentPagePath: string) => void
   setCurrentPageProps: (currentPageProps: AnyObject) => void
   setAppMountHandled: (appMountHandled: boolean) => void
@@ -450,9 +450,7 @@ export default class AppState implements IAppStateValues, IAppStateValues {
       const [forcedUpdateCounter, setForcedUpdateCounter] = useStore<number>(
         'forcedUpdateCounter',
       )
-      const [currentUser, setCurrentUser] = useStore<IUser | null>(
-        'currentUser',
-      )
+      const [currentUser, setCurrentUser] = useStore<User | null>('currentUser')
       const [currentPagePath, setCurrentPagePath] =
         useStore<string>('currentPagePath')
       const [currentPageProps, setCurrentPageProps] =

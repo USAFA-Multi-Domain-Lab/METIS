@@ -15,6 +15,10 @@
   .Navigation {
     display: grid;
     grid-template-columns: auto 130px 150px 130px;
+
+    .Branding {
+      margin: 0;
+    }
   }
 
   .Content {
