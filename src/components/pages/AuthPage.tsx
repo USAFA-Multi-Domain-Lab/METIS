@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import './AuthPage.scss'
-import usersModule, { User } from '../../modules/users'
+import usersModule, { IMetisSession, User } from '../../modules/users'
 import { AxiosError } from 'axios'
 import { IPage } from '../App'
 import { AnyObject } from '../../modules/toolbox/objects'
@@ -98,11 +98,11 @@ export default function AuthPage(props: IAuthPage): JSX.Element | null {
         usersModule.login(
           userID,
           password,
-          (correct: boolean, user: User | undefined) => {
-            if (correct && user !== undefined) {
+          (correct: boolean, session: IMetisSession) => {
+            if (correct && session.user !== undefined) {
               setIsSubmitting(false)
               appActions.finishLoading()
-              appState.setCurrentUser(user)
+              appState.setSession(session)
               appActions.goToPage(
                 props.returningPagePath,
                 props.returningPageProps,
@@ -138,10 +138,6 @@ export default function AuthPage(props: IAuthPage): JSX.Element | null {
   // let backButtonClassName: string = 'Button'
 
   let submitIsDisabled: boolean = !canSubmit() || isSubmitting
-
-  // if (appState.currentUser === null || appState.currentUser === undefined) {
-  //   backButtonClassName += ' Disabled'
-  // }
 
   return (
     <div className='AuthPage Page'>

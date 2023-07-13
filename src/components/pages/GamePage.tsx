@@ -19,10 +19,11 @@ import {
 } from '../content/general-layout/ResizablePanels'
 import { MissionNodeAction } from '../../modules/mission-node-actions'
 import { IConsoleOutput } from '../content/game/ConsoleOutput'
+import { Game } from '../../modules/games'
+import { useStore } from 'react-context-hook'
+import { IMetisSession } from '../../modules/users'
 
-export interface IGamePage extends IPage {
-  missionID: string
-}
+export interface IGamePage extends IPage {}
 
 // This is the number of times per
 // second that the game updates.
@@ -37,7 +38,6 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
   /* -- COMPONENT STATE -- */
 
   const [mountHandled, setMountHandled] = useState<boolean>(false)
-  const [mission, setMission] = useState<Mission | null>(null)
   const [lastSelectedNode, setLastSelectedNode] = useState<MissionNode | null>(
     null,
   )
@@ -45,6 +45,9 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
     useState<boolean>(false)
   const [nodeActionsIsDisplayed, setNodeActionsIsDisplayed] =
     useState<boolean>(false)
+
+  let session: IMetisSession = appState.session
+  let game: Game | undefined = session.game
 
   // This will loop the game,
   // updating at the given tick
@@ -61,27 +64,9 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
   // Equivalent of componentDidMount.
   useEffect(() => {
     if (!mountHandled) {
-      appActions.beginLoading('Launching mission...')
-
-      Mission.launch(props.missionID)
-        .then((mission: Mission) => {
-          appActions.finishLoading()
-          setMission(mission)
-          setMountHandled(true)
-          loop()
-        })
-        .catch((error: AxiosError) => {
-          if (error.response?.status === 401) {
-            appActions.goToPage('MissionSelectionPage', {})
-            appActions.notify(
-              'Please select a different mission. The last-selected mission is not accesible to students.',
-            )
-          } else {
-            appActions.finishLoading()
-            appActions.handleServerError('Failed to load mission.')
-            setMountHandled(true)
-          }
-        })
+      appActions.finishLoading()
+      setMountHandled(true)
+      loop()
     }
   }, [mountHandled])
 
@@ -92,341 +77,324 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
     }
   }, [])
 
-  if (mission !== null) {
-    // This will logout the current user.
-    const logout = () =>
-      appActions.logout({
-        returningPagePath: 'MissionSelectionPage',
-        returningPageProps: {},
-      })
+  // If the game is undefined,
+  // then render null.
+  if (game === undefined) {
+    return null
+  }
 
-    // // This will switch to the auth page.
-    // const login = () =>
-    //   appActions.goToPage('AuthPage', {
-    //     returningPagePath: 'GamePage',
-    //     returningPageProps: {
-    //       missionID: mission.missionID,
-    //     },
-    //   })
+  // Get the mission from the game,
+  // now that we know it is not undefined.
+  let mission: Mission = game.mission
 
-    // This will output to the console.
-    const outputToConsole = (output: IConsoleOutput): void => {
-      mission.outputToConsole(output)
-    }
+  // This will logout the current user.
+  const logout = () =>
+    appActions.logout({
+      returningPagePath: 'MissionSelectionPage',
+      returningPageProps: {},
+    })
 
-    /* -- RENDER -- */
+  // This will output to the console.
+  const outputToConsole = (output: IConsoleOutput): void => {
+    mission.outputToConsole(output)
+  }
 
-    let className: string = 'GamePage Page'
+  /* -- RENDER -- */
 
-    // Keeps track of if the user is logged in or not.
-    let displayLogin: boolean = appState.currentUser === null
-    let displayLogout: boolean = !displayLogin
+  let className: string = 'GamePage Page'
 
-    // Logic that lets the user visually grab their attention to show them that
-    // they don't have any more resources left to spend.
-    let resourcesClassName: string = 'Resources'
+  // Keeps track of if the user is logged in or not.
+  let displayLogin: boolean = appState.session.user === undefined
+  let displayLogout: boolean = !displayLogin
 
-    if (mission.resources <= 0) {
-      resourcesClassName += ' RedAlert'
-    }
+  // Logic that lets the user visually grab their attention to show them that
+  // they don't have any more resources left to spend.
+  let resourcesClassName: string = 'Resources'
 
-    // This will render the execute node path
-    // prompt if the user has selected a node
-    // and an action.
-    const renderExecuteNodePath = () => {
-      if (
-        lastSelectedNode !== null &&
-        lastSelectedNode.selectedAction !== null
-      ) {
-        return (
-          <ExecuteNodePath
-            selectedAction={lastSelectedNode.selectedAction}
-            isOpen={executeNodePathIsDisplayed}
-            outputToConsole={outputToConsole}
-            handleCloseRequest={() => setExecuteNodePathIsDisplayed(false)}
-            handleGoBackRequest={() => {
-              if (lastSelectedNode && lastSelectedNode.actions.length > 1) {
-                setExecuteNodePathIsDisplayed(false)
-                setNodeActionsIsDisplayed(true)
-              }
-            }}
-            notify={appActions.notify}
-          />
-        )
-      }
-    }
+  if (mission.resources <= 0) {
+    resourcesClassName += ' RedAlert'
+  }
 
-    return (
-      <div className={className}>
-        {
-          // -- navigation --
-        }
-        <Navigation
-          links={[
-            {
-              text: 'Back to selection',
-              key: 'back-to-selection',
-              handleClick: () => {
-                appActions.goToPage('MissionSelectionPage', {})
-              },
-              visible: true,
-            },
-            // {
-            //   text: 'Login',
-            //   key: 'login',
-            //   handleClick: login,
-            //   visible: displayLogin,
-            // },
-            {
-              text: 'Log out',
-              key: 'log-out',
-              handleClick: logout,
-              visible: displayLogout,
-            },
-          ]}
-          brandingCallback={() =>
-            appActions.goToPage('MissionSelectionPage', {})
-          }
-          brandingTooltipDescription='Go home.'
+  // This will render the execute node path
+  // prompt if the user has selected a node
+  // and an action.
+  const renderExecuteNodePath = () => {
+    if (lastSelectedNode !== null && lastSelectedNode.selectedAction !== null) {
+      return (
+        <ExecuteNodePath
+          selectedAction={lastSelectedNode.selectedAction}
+          isOpen={executeNodePathIsDisplayed}
+          outputToConsole={outputToConsole}
+          handleCloseRequest={() => setExecuteNodePathIsDisplayed(false)}
+          handleGoBackRequest={() => {
+            if (lastSelectedNode && lastSelectedNode.actions.length > 1) {
+              setExecuteNodePathIsDisplayed(false)
+              setNodeActionsIsDisplayed(true)
+            }
+          }}
+          notify={appActions.notify}
         />
-        {
-          // -- content --
-          <div className='Content'>
-            <div className='TopBar'>
-              <div className={resourcesClassName}>
-                Resources remaining: {mission.resources}
-              </div>
-              <MissionModificationPanel
-                mission={mission}
-                appActions={appActions}
-                handleSuccessfulCopy={(resultingMission: Mission) => {
-                  // This gives the user the option
-                  // to go to the mission they are
-                  // copying or return to the current
-                  // mission.
-                  appActions.confirm(
-                    'Would you like to go to the copied mission, or return to the current mission?',
-                    (concludeAction: () => void) => {
-                      // Return to the current mission
+      )
+    }
+  }
+
+  return (
+    <div className={className}>
+      {
+        // -- navigation --
+      }
+      <Navigation
+        links={[
+          {
+            text: 'Back to selection',
+            key: 'back-to-selection',
+            handleClick: () => {
+              appActions.goToPage('MissionSelectionPage', {})
+            },
+            visible: true,
+          },
+          // {
+          //   text: 'Login',
+          //   key: 'login',
+          //   handleClick: login,
+          //   visible: displayLogin,
+          // },
+          {
+            text: 'Log out',
+            key: 'log-out',
+            handleClick: logout,
+            visible: displayLogout,
+          },
+        ]}
+        brandingCallback={() => appActions.goToPage('MissionSelectionPage', {})}
+        brandingTooltipDescription='Go home.'
+      />
+      {
+        // -- content --
+        <div className='Content'>
+          <div className='TopBar'>
+            <div className={resourcesClassName}>
+              Resources remaining: {mission.resources}
+            </div>
+            <MissionModificationPanel
+              mission={mission}
+              appActions={appActions}
+              handleSuccessfulCopy={(resultingMission: Mission) => {
+                // This gives the user the option
+                // to go to the mission they are
+                // copying or return to the current
+                // mission.
+                appActions.confirm(
+                  'Would you like to go to the copied mission, or return to the current mission?',
+                  (concludeAction: () => void) => {
+                    // Return to the current mission
+                    setMountHandled(false)
+                    appActions.goToPage('GamePage', {
+                      missionID: mission.missionID,
+                    })
+                    appActions.finishLoading()
+                    concludeAction()
+                  },
+                  {
+                    handleAlternate: (concludeAction: () => void) => {
+                      // Go to the copied mission.
                       setMountHandled(false)
                       appActions.goToPage('GamePage', {
-                        missionID: mission.missionID,
+                        missionID: resultingMission.missionID,
                       })
                       appActions.finishLoading()
                       concludeAction()
                     },
-                    {
-                      handleAlternate: (concludeAction: () => void) => {
-                        // Go to the copied mission.
-                        setMountHandled(false)
-                        appActions.goToPage('GamePage', {
-                          missionID: resultingMission.missionID,
-                        })
-                        appActions.finishLoading()
-                        concludeAction()
-                      },
-                      pendingMessageUponConfirm: 'Launching mission...',
-                      pendingMessageUponAlternate: 'Launching mission...',
-                      buttonConfirmText: 'Current Mission',
-                      buttonAlternateText: 'Copied Mission',
-                    },
-                  )
-                }}
-                handleSuccessfulDeletion={() => {
-                  appActions.goToPage('MissionSelectionPage', {})
-                }}
-                handleSuccessfulToggleLive={() => {}}
-              />
-            </div>
-
-            <PanelSizeRelationship
-              sizingMode={EPanelSizingMode.Panel1_Auto__Panel2_Defined}
-              initialDefinedSize={400}
-              panel1={{
-                ...ResizablePanel.defaultProps,
-                minSize: 400,
-                render: () => (
-                  <>
-                    <MissionMap
-                      mission={mission}
-                      missionAjaxStatus={EAjaxStatus.Loaded}
-                      handleNodeSelection={(selectedNode: MissionNode) => {
-                        setLastSelectedNode(selectedNode)
-
-                        // Logic that disables all nodes
-                        // except for the selected node.
-                        if (
-                          !nodeActionsIsDisplayed &&
-                          !executeNodePathIsDisplayed
-                        ) {
-                          // selectedNode.disableOtherNodes()
-                        }
-
-                        // Logic to send the pre-execution text to the output panel
-                        if (
-                          selectedNode.preExecutionText !== '' &&
-                          selectedNode.preExecutionText !== null &&
-                          selectedNode.highlighted
-                        ) {
-                          let output: IConsoleOutput =
-                            OutputPanel.renderPreExecutionOutput(selectedNode)
-                          outputToConsole(output)
-                        }
-
-                        // Logic that opens the next level of nodes
-                        // (displays the selected node's child nodes)
-                        if (
-                          !selectedNode.executable &&
-                          selectedNode.hasChildren &&
-                          !selectedNode.isOpen &&
-                          selectedNode.highlighted
-                        ) {
-                          selectedNode.open()
-                        }
-
-                        // Logic that displays the node action &&
-                        // execute node path window prompts. It also
-                        // notifies the user if they click a node and
-                        // nothing happens.
-                        if (
-                          mission.resources > 0 &&
-                          selectedNode.executable &&
-                          !selectedNode.selectedAction?.succeeded &&
-                          !selectedNode.executing &&
-                          selectedNode.highlighted
-                        ) {
-                          setNodeActionsIsDisplayed(true)
-
-                          if (selectedNode.actions.length === 1) {
-                            selectedNode.selectedAction =
-                              selectedNode.actions[0]
-                            selectedNode.selectedAction.processTime =
-                              selectedNode.actions[0].processTime
-                            setNodeActionsIsDisplayed(false)
-
-                            if (selectedNode.selectedAction.readyToExecute) {
-                              setExecuteNodePathIsDisplayed(true)
-                            } else {
-                              appActions.notify(
-                                `You cannot execute this action because you do not have enough resources remaining.`,
-                                { duration: 3500 },
-                              )
-                            }
-                          }
-                        } else if (
-                          mission.resources === 0 &&
-                          selectedNode.executable &&
-                          !selectedNode.selectedAction?.succeeded &&
-                          !selectedNode.executing &&
-                          selectedNode.highlighted
-                        ) {
-                          appActions.notify(
-                            `You have no more resources left to spend.`,
-                            { duration: 3500 },
-                          )
-                        } else {
-                          setNodeActionsIsDisplayed(false)
-                          setExecuteNodePathIsDisplayed(false)
-                        }
-                      }}
-                      handleNodePathExitRequest={mission.enableAllNodes}
-                      grayOutExitNodePathButton={!mission.hasDisabledNodes}
-                      applyNodeClassName={(node: MissionNode) => {
-                        let className: string = ''
-
-                        if (node.isOpen) {
-                          className += ' opened'
-                        }
-
-                        if (!node.highlighted) {
-                          className += ' faded'
-                        }
-
-                        return className
-                      }}
-                      renderNodeTooltipDescription={(node: MissionNode) => {
-                        let description: string = ''
-                        let nodeActionDisplay = 'None selected'
-
-                        // This creates the tooltip hover over effect
-                        // that displays the description of the node
-                        // prior to being executed.
-                        if (
-                          node !== null &&
-                          !node.executed &&
-                          !node.executing
-                        ) {
-                          description = node.description
-                        }
-
-                        if (node.selectedAction !== null) {
-                          nodeActionDisplay = node.selectedAction.name
-                        }
-
-                        // This creates the tooltip hover over effect
-                        // that displays the description of the node
-                        // after it has been executed.
-                        if (node.executable && node.executed) {
-                          description =
-                            `* Action executed: "${node.selectedAction?.name}"\n` +
-                            `* Executed node in ${
-                              (node.selectedAction?.processTime as number) /
-                              1000
-                            } second(s)\n` +
-                            `* Chance of success: ${
-                              (node.selectedAction?.successChance as number) *
-                              100
-                            }%\n` +
-                            `* Resources used: ${node.selectedAction?.resourceCost} resource(s)`
-                        }
-
-                        if (node.executing) {
-                          description =
-                            `* Time remaining: ${node.formatTimeRemaining(
-                              false,
-                            )} \n` + `* Description: ${node.description}`
-                        }
-
-                        return description
-                      }}
-                    />
-                    <NodeActions
-                      isOpen={nodeActionsIsDisplayed}
-                      selectedNode={lastSelectedNode}
-                      handleActionSelectionRequest={(
-                        action: MissionNodeAction,
-                      ) => {
-                        setNodeActionsIsDisplayed(false)
-
-                        if (lastSelectedNode !== null) {
-                          lastSelectedNode.selectedAction = action
-                          if (lastSelectedNode.selectedAction !== null) {
-                            lastSelectedNode.selectedAction.processTime =
-                              action.processTime
-                          }
-                          setExecuteNodePathIsDisplayed(true)
-                        }
-                      }}
-                      handleCloseRequest={() =>
-                        setNodeActionsIsDisplayed(false)
-                      }
-                    />
-                    {renderExecuteNodePath()}
-                  </>
-                ),
+                    pendingMessageUponConfirm: 'Launching mission...',
+                    pendingMessageUponAlternate: 'Launching mission...',
+                    buttonConfirmText: 'Current Mission',
+                    buttonAlternateText: 'Copied Mission',
+                  },
+                )
               }}
-              panel2={{
-                ...ResizablePanel.defaultProps,
-                minSize: 400,
-                isOpen: true,
-                render: () => <OutputPanel mission={mission} />,
+              handleSuccessfulDeletion={() => {
+                appActions.goToPage('MissionSelectionPage', {})
               }}
+              handleSuccessfulToggleLive={() => {}}
             />
           </div>
-        }
-      </div>
-    )
-  } else {
-    return null
-  }
+
+          <PanelSizeRelationship
+            sizingMode={EPanelSizingMode.Panel1_Auto__Panel2_Defined}
+            initialDefinedSize={400}
+            panel1={{
+              ...ResizablePanel.defaultProps,
+              minSize: 400,
+              render: () => (
+                <>
+                  <MissionMap
+                    mission={mission}
+                    missionAjaxStatus={EAjaxStatus.Loaded}
+                    handleNodeSelection={(selectedNode: MissionNode) => {
+                      setLastSelectedNode(selectedNode)
+
+                      // Logic that disables all nodes
+                      // except for the selected node.
+                      if (
+                        !nodeActionsIsDisplayed &&
+                        !executeNodePathIsDisplayed
+                      ) {
+                        // selectedNode.disableOtherNodes()
+                      }
+
+                      // Logic to send the pre-execution text to the output panel
+                      if (
+                        selectedNode.preExecutionText !== '' &&
+                        selectedNode.preExecutionText !== null &&
+                        selectedNode.highlighted
+                      ) {
+                        let output: IConsoleOutput =
+                          OutputPanel.renderPreExecutionOutput(selectedNode)
+                        outputToConsole(output)
+                      }
+
+                      // Logic that opens the next level of nodes
+                      // (displays the selected node's child nodes)
+                      if (
+                        !selectedNode.executable &&
+                        selectedNode.hasChildren &&
+                        !selectedNode.isOpen &&
+                        selectedNode.highlighted
+                      ) {
+                        selectedNode.open()
+                      }
+
+                      // Logic that displays the node action &&
+                      // execute node path window prompts. It also
+                      // notifies the user if they click a node and
+                      // nothing happens.
+                      if (
+                        mission.resources > 0 &&
+                        selectedNode.executable &&
+                        !selectedNode.selectedAction?.succeeded &&
+                        !selectedNode.executing &&
+                        selectedNode.highlighted
+                      ) {
+                        setNodeActionsIsDisplayed(true)
+
+                        if (selectedNode.actions.length === 1) {
+                          selectedNode.selectedAction = selectedNode.actions[0]
+                          selectedNode.selectedAction.processTime =
+                            selectedNode.actions[0].processTime
+                          setNodeActionsIsDisplayed(false)
+
+                          if (selectedNode.selectedAction.readyToExecute) {
+                            setExecuteNodePathIsDisplayed(true)
+                          } else {
+                            appActions.notify(
+                              `You cannot execute this action because you do not have enough resources remaining.`,
+                              { duration: 3500 },
+                            )
+                          }
+                        }
+                      } else if (
+                        mission.resources === 0 &&
+                        selectedNode.executable &&
+                        !selectedNode.selectedAction?.succeeded &&
+                        !selectedNode.executing &&
+                        selectedNode.highlighted
+                      ) {
+                        appActions.notify(
+                          `You have no more resources left to spend.`,
+                          { duration: 3500 },
+                        )
+                      } else {
+                        setNodeActionsIsDisplayed(false)
+                        setExecuteNodePathIsDisplayed(false)
+                      }
+                    }}
+                    handleNodePathExitRequest={mission.enableAllNodes}
+                    grayOutExitNodePathButton={!mission.hasDisabledNodes}
+                    applyNodeClassName={(node: MissionNode) => {
+                      let className: string = ''
+
+                      if (node.isOpen) {
+                        className += ' opened'
+                      }
+
+                      if (!node.highlighted) {
+                        className += ' faded'
+                      }
+
+                      return className
+                    }}
+                    renderNodeTooltipDescription={(node: MissionNode) => {
+                      let description: string = ''
+                      let nodeActionDisplay = 'None selected'
+
+                      // This creates the tooltip hover over effect
+                      // that displays the description of the node
+                      // prior to being executed.
+                      if (node !== null && !node.executed && !node.executing) {
+                        description = node.description
+                      }
+
+                      if (node.selectedAction !== null) {
+                        nodeActionDisplay = node.selectedAction.name
+                      }
+
+                      // This creates the tooltip hover over effect
+                      // that displays the description of the node
+                      // after it has been executed.
+                      if (node.executable && node.executed) {
+                        description =
+                          `* Action executed: "${node.selectedAction?.name}"\n` +
+                          `* Executed node in ${
+                            (node.selectedAction?.processTime as number) / 1000
+                          } second(s)\n` +
+                          `* Chance of success: ${
+                            (node.selectedAction?.successChance as number) * 100
+                          }%\n` +
+                          `* Resources used: ${node.selectedAction?.resourceCost} resource(s)`
+                      }
+
+                      if (node.executing) {
+                        description =
+                          `* Time remaining: ${node.formatTimeRemaining(
+                            false,
+                          )} \n` + `* Description: ${node.description}`
+                      }
+
+                      return description
+                    }}
+                  />
+                  <NodeActions
+                    isOpen={nodeActionsIsDisplayed}
+                    selectedNode={lastSelectedNode}
+                    handleActionSelectionRequest={(
+                      action: MissionNodeAction,
+                    ) => {
+                      setNodeActionsIsDisplayed(false)
+
+                      if (lastSelectedNode !== null) {
+                        lastSelectedNode.selectedAction = action
+                        if (lastSelectedNode.selectedAction !== null) {
+                          lastSelectedNode.selectedAction.processTime =
+                            action.processTime
+                        }
+                        setExecuteNodePathIsDisplayed(true)
+                      }
+                    }}
+                    handleCloseRequest={() => setNodeActionsIsDisplayed(false)}
+                  />
+                  {renderExecuteNodePath()}
+                </>
+              ),
+            }}
+            panel2={{
+              ...ResizablePanel.defaultProps,
+              minSize: 400,
+              isOpen: true,
+              render: () => <OutputPanel mission={mission} />,
+            }}
+          />
+        </div>
+      }
+    </div>
+  )
 }

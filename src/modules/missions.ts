@@ -657,66 +657,6 @@ export class Mission {
       json.seed,
     )
   }
-
-  /**
-   * Launches a mission.
-   * @param {string} missionID The ID of the mission to be launched.
-   */
-  public static async launch(missionID: string): Promise<Mission> {
-    // Return a new promise that will resolve
-    // into a new Mission object of the mission
-    // being launched.
-    return new Promise<Mission>(
-      (
-        resolve: (mission: Mission) => void,
-        reject: (error: AxiosError) => void,
-      ) => {
-        // Define the type of the response
-        // Axios is expected to return in
-        // the response of the API request.
-        type ExecuteMissionResponse = {
-          session: IMetisSessionJSON
-        }
-
-        // Call the API to execute the mission.
-        axios
-          .post<ExecuteMissionResponse>(
-            `${Mission.API_EXECUTE_URL}/launch/${missionID}`,
-          )
-          .then((response: AxiosResponse<ExecuteMissionResponse>) => {
-            // Session data should have been
-            // returned, retrieve the mission
-            // JSON inside.
-            let session: IMetisSessionJSON = response.data.session
-            let missionJson: IMissionJSON | undefined = session.mission
-
-            // Handle no mission returned.
-            if (missionJson === undefined) {
-              let error: AxiosError = new AxiosError(
-                `Mission with ID "${missionID}" not found.`,
-              )
-              console.error(error)
-              return reject(error)
-            }
-
-            // Convert the mission JSON into
-            // a new Mission object.
-            let mission: Mission = Mission.fromJSON(missionJson)
-
-            // Resolve the promise with the
-            // new Mission object.
-            return resolve(mission)
-          })
-          .catch((error: AxiosError) => {
-            console.error(
-              `Failed to execute mission with the ID "${missionID}".`,
-            )
-            console.error(error)
-            return reject(error)
-          })
-      },
-    )
-  }
 }
 
 /**

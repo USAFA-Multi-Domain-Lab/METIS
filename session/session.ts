@@ -1,6 +1,6 @@
 import { v4 as generateHash } from 'uuid'
 import { IMetisSessionJSON, User } from '../src/modules/users'
-import { Mission } from '../src/modules/missions'
+import { Game } from '../src/modules/games'
 
 /**
  * Express sessions are limited in what they can store. This class expands the functionality of sessions in METIS.
@@ -31,21 +31,33 @@ export default class MetisSession {
   }
 
   /**
-   * A mission that the user is currently executing.
+   * A game that the user is currently playing.
    */
-  private _mission: Mission | undefined
+  private _game: Game | undefined
 
   /**
-   * A mission that the user is currently executing.
+   * A game that the user is currently playing.
    */
-  public get mission(): Mission | undefined {
-    return this._mission
+  public get game(): Game | undefined {
+    return this._game
   }
 
   public constructor(user: User) {
     this._sessionID = generateHash()
     this._user = user
     MetisSession.registry.set(this.sessionID, this)
+  }
+
+  public async joinGame(game: Game): Promise<void> {
+    return game.join(this.user).then(() => {
+      this._game = game
+    })
+  }
+
+  public async quitGame() {
+    if (this._game) {
+      this._game = undefined
+    }
   }
 
   /**
@@ -62,7 +74,7 @@ export default class MetisSession {
   public toJSON(): IMetisSessionJSON {
     return {
       user: this.user.toJSON(),
-      mission: this.mission ? this.mission.toJSON() : undefined,
+      game: this.game ? this.game.toJSON() : undefined,
     }
   }
 

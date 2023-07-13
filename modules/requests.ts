@@ -272,6 +272,8 @@ export class RequestBodyFilters {
       }
     }
   }
+
+  static ARRAY(request: Request, key: string) {}
 }
 
 // ------- INTERNAL FUNCTIONS ------- //

@@ -326,7 +326,7 @@ describe('Export/Import File Tests', function () {
     agent
       .get('/api/v1/users/')
       .then(function (response: ChaiHttp.Response) {
-        expect(response.body.currentUser.role).to.equal(permittedUserRole)
+        expect(response.body.session.user.role).to.equal(permittedUserRole)
         done()
       })
       .catch(function (error) {
@@ -751,7 +751,7 @@ describe('API Mission Routes', function () {
     agent
       .get('/api/v1/users/')
       .then(function (response: ChaiHttp.Response) {
-        expect(response.body.currentUser.role).to.equal(permittedUserRole)
+        expect(response.body.session.user.role).to.equal(permittedUserRole)
         done()
       })
       .catch(function (error) {
@@ -1393,7 +1393,7 @@ describe('Mission Schema Validation', function () {
     agent
       .get('/api/v1/users/')
       .then(function (response: ChaiHttp.Response) {
-        expect(response.body.currentUser.role).to.equal(permittedUserRole)
+        expect(response.body.session.user.role).to.equal(permittedUserRole)
         done()
       })
       .catch(function (error) {

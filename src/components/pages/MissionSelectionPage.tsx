@@ -292,8 +292,8 @@ export default function MissionSelectionPage(
 
       if (
         files.length > 0 &&
-        appState.currentUser &&
-        permittedRoles.includes(appState.currentUser.role)
+        appState.session.user &&
+        permittedRoles.includes(appState.session.user.role)
       ) {
         importMissionFiles(files)
       }
@@ -333,8 +333,8 @@ export default function MissionSelectionPage(
   // page.
   const viewChangelog = (): void => {
     if (
-      appState.currentUser &&
-      permittedRoles.includes(appState.currentUser.role)
+      appState.session.user &&
+      permittedRoles.includes(appState.session.user.role)
     ) {
       appActions.goToPage('ChangelogPage', {})
     }
@@ -541,14 +541,14 @@ export default function MissionSelectionPage(
   let numberOfMissionsShown: number = 5
   let totalMissionSets: number = 1
 
-  if (appState.currentUser) {
+  if (appState.session.user) {
     displayLogin = false
     displayLogout = true
   }
 
   if (
-    appState.currentUser &&
-    permittedRoles.includes(appState.currentUser.role)
+    appState.session.user &&
+    permittedRoles.includes(appState.session.user.role)
   ) {
     editMissionsContainerClassName += ' InstructorView'
     editMissionListClassName += ' InstructorView'
@@ -575,8 +575,8 @@ export default function MissionSelectionPage(
   }
 
   if (
-    appState.currentUser &&
-    permittedRoles.includes(appState.currentUser.role)
+    appState.session.user &&
+    permittedRoles.includes(appState.session.user.role)
   ) {
     versionClassName = 'Version'
   }

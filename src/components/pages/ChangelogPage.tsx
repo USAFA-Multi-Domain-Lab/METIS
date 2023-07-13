@@ -74,7 +74,7 @@ export default function IChangelogPage(
   /* -- RENDER -- */
 
   // Keeps track of if the user is logged in or not.
-  let displayLogin: boolean = appState.currentUser === null
+  let displayLogin: boolean = appState.session.user === undefined
   let displayLogout: boolean = !displayLogin
 
   return (

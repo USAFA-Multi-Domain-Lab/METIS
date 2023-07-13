@@ -9,6 +9,7 @@ interface ILoginOptions {
 // This is the list of user roles.
 export const userRoles: AnyObject = {
   Student: 'student',
+  Instructor: 'instructor',
   Admin: 'admin',
 }
 
@@ -33,6 +34,32 @@ export const requireLogin = (
     next()
   } else {
     response.sendStatus(401)
+  }
+}
+
+/**
+ * Express middleware requiring a the user in the session to be joined into a game.
+ * @param {Request} request An express request object.
+ * @param {Response} response An express response object.
+ * @param next {NextFunction} An express next function.
+ */
+export const requireInGame = (
+  request: Request,
+  response: Response,
+  next: NextFunction,
+): void => {
+  let session: MetisSession | undefined = MetisSession.get(
+    request.session.sessionID,
+  )
+
+  if (
+    session !== undefined &&
+    session.game !== undefined &&
+    session.game.isJoined(session.user)
+  ) {
+    next()
+  } else {
+    response.sendStatus(403)
   }
 }
 
@@ -75,5 +102,6 @@ export function hasPermittedRole(
 
 export default {
   requireLogin,
+  requireInGame,
   isLoggedIn: hasPermittedRole,
 }

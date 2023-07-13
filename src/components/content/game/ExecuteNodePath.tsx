@@ -10,7 +10,7 @@ import { INotifyOptions } from '../../AppState'
 import { IConsoleOutput } from './ConsoleOutput'
 import OutputPanel from './OutputPanel'
 import { useStore } from 'react-context-hook'
-import { User, permittedRoles } from '../../../modules/users'
+import { IMetisSession, User, permittedRoles } from '../../../modules/users'
 
 /* -- INTERFACE(S) -- */
 
@@ -23,9 +23,7 @@ interface IExecuteNodePath {
   handleGoBackRequest: () => void
 }
 
-interface IExecuteNodePath_S {
-  currentUser: User | undefined
-}
+interface IExecuteNodePath_S {}
 
 function Buttons(props: {
   selectedAction: MissionNodeAction
@@ -44,7 +42,7 @@ function Buttons(props: {
   let handleCloseRequest = props.handleCloseRequest
 
   /* -- GLOBAL STATE -- */
-  const [currentUser] = useStore<User | undefined>('currentUser')
+  const [session] = useStore<IMetisSession>('session')
 
   /* -- COMPONENT FUNCTIONS -- */
   // Closes the execution prompt window.
@@ -84,7 +82,7 @@ function Buttons(props: {
     additionalActionButtonClassName += ' Disabled'
   }
 
-  if (currentUser && permittedRoles.includes(currentUser.role)) {
+  if (session.user && permittedRoles.includes(session.user.role)) {
     useAssets = true
   }
 

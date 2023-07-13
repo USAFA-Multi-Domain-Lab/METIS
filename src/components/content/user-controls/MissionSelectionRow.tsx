@@ -4,7 +4,9 @@ import './MissionSelectionRow.scss'
 import { AppActions } from '../../AppState'
 import MissionModificationPanel from '../user-controls/MissionModificationPanel'
 import { useStore } from 'react-context-hook'
-import { User, userRoles } from '../../../modules/users'
+import { IMetisSession, User, userRoles } from '../../../modules/users'
+import { Game } from '../../../modules/games'
+import { AxiosError } from 'axios'
 
 // This will render a row on the page
 // for the given mission.
@@ -14,7 +16,7 @@ export default function MissionSelectionRow(props: {
   setMountHandled: (mountHandled: boolean) => void
 }): JSX.Element | null {
   /* -- GLOBAL STATE -- */
-  const [currentUser] = useStore<User | undefined>('currentUser')
+  const [session] = useStore<IMetisSession>('session')
 
   /* -- COMPONENT VARIABLES -- */
   let mission: Mission = props.mission
@@ -29,10 +31,26 @@ export default function MissionSelectionRow(props: {
   const selectMission = () => {
     let userRoleStringValues = Object.values(userRoles)
 
-    if (currentUser && userRoleStringValues.includes(currentUser.role)) {
-      appActions.goToPage('GamePage', {
-        missionID: mission.missionID,
-      })
+    if (session.user && userRoleStringValues.includes(session.user.role)) {
+      appActions.beginLoading('Launching mission...')
+
+      Game.launch(mission).then(
+        (game: Game) => {
+          session.game = game
+          appActions.goToPage('GamePage', {})
+        },
+        (error: AxiosError) => {
+          if (error.response?.status === 401) {
+            appActions.notify(
+              'Please select a different mission. This mission is unauthorized.',
+            )
+          } else {
+            appActions.finishLoading()
+            appActions.handleServerError('Failed to launch mission.')
+            setMountHandled(true)
+          }
+        },
+      )
     }
   }
 

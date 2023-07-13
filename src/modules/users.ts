@@ -1,6 +1,7 @@
 import axios, { AxiosResponse, AxiosError } from 'axios'
 import { AnyObject } from './toolbox/objects'
 import { IMissionJSON, IMissionSessionJSON, Mission } from './missions'
+import { Game, IGameJSON } from './games'
 
 /**
  * The JSON representation of a User object.
@@ -17,12 +18,12 @@ export interface IUserJSON {
  */
 export interface IMetisSessionJSON {
   user: IUserJSON
-  mission?: IMissionJSON
+  game?: IGameJSON
 }
 
 export interface IMetisSession {
-  user: User
-  mission?: Mission
+  user?: User
+  game?: Game
 }
 
 /**
@@ -73,6 +74,47 @@ export class User {
   static fromJSON(json: IUserJSON): any {
     return new User(json.userID, json.firstName, json.lastName, json.role)
   }
+
+  /**
+   * Fetches the current session of the logged in user from the server.
+   * @returns {Promise<IMetisSession>} A promise that resolves to the current session of the logged in user.
+   */
+  public static async fetchSession(): Promise<IMetisSession> {
+    return new Promise<IMetisSession>(
+      (
+        resolve: (session: IMetisSession) => void,
+        reject: (error: AxiosError) => void,
+      ) => {
+        // Send a request to fetch the session
+        // data via the API.
+        axios
+          .get<IMetisSessionJSON>('/api/v1/users/session/')
+          .then((response: AxiosResponse<IMetisSessionJSON>) => {
+            // Parse the response data.
+            let userJson: IUserJSON | undefined = response.data.user
+            let gameJson: IGameJSON | undefined = response.data.game
+            let user: User | undefined = userJson
+              ? User.fromJSON(userJson)
+              : undefined
+            let game: Game | undefined = gameJson
+              ? Game.fromJSON(gameJson)
+              : undefined
+            let session: IMetisSession = { user, game }
+
+            // Resolve the promise with the
+            // session returned.
+            resolve(session)
+          })
+          .catch((error: AxiosError) => {
+            // If request fails, reject the promise
+            // with the error given in the catch.
+            console.log('Failed to retrieve session.')
+            console.error(error)
+            reject(error)
+          })
+      },
+    )
+  }
 }
 
 export interface IUserExposed {
@@ -92,69 +134,29 @@ export const userRoles: AnyObject = {
 // can access certain routes.
 export const permittedRoles: string[] = [userRoles.Admin]
 
-// Retrieves information regarding the current session.
-export const retrieveSession = (
-  callback: (
-    user: User | undefined,
-    mission: Mission | undefined,
-  ) => void = () => {
-    /* does nothing if function is not passed */
-  },
-  callbackError: (error: AxiosError) => void = () => {
-    /* does nothing if function is not passed */
-  },
-): void => {
-  axios
-    .get('/api/v1/users/session/')
-    .then((response: AxiosResponse) => {
-      let userJson: IUserJSON | undefined = response.data.user
-      let missionJson: IMissionJSON | undefined = response.data.mission
-      let user: User | undefined = userJson
-        ? User.fromJSON(userJson)
-        : undefined
-      let mission: Mission | undefined = missionJson
-        ? Mission.fromJSON(missionJson)
-        : undefined
-
-      callback(user, mission)
-    })
-    .catch((error: AxiosError) => {
-      console.log('Failed to retrieve session.')
-      console.error(error)
-      callbackError(error)
-    })
-}
-
 // This will attempt to login in the user with the
 // given userID and password.
 const login = (
   userID: string,
   password: string,
-  callback: (
-    correct: boolean,
-    user: User | undefined,
-    mission: Mission | undefined,
-  ) => void = () => {
-    /* does nothing if function is not passed */
-  },
-  callbackError: (error: AxiosError) => void = () => {
-    /* does nothing if function is not passed */
-  },
+  callback: (correct: boolean, session: IMetisSession) => void,
+  callbackError: (error: AxiosError) => void = () => {},
 ) => {
   axios
     .post('/api/v1/users/login', { userID, password })
     .then((response: AxiosResponse) => {
       let correct: boolean = response.data.correct
       let userJson: IUserJSON | undefined = response.data.session.user
-      let missionJson: IMissionJSON | undefined = response.data.session.mission
+      let gameJson: IGameJSON | undefined = response.data.session.game
       let user: User | undefined = userJson
         ? User.fromJSON(userJson)
         : undefined
-      let mission: Mission | undefined = missionJson
-        ? Mission.fromJSON(missionJson)
+      let game: Game | undefined = gameJson
+        ? Game.fromJSON(gameJson)
         : undefined
+      let session: IMetisSession = { user, game }
 
-      callback(correct, user, mission)
+      callback(correct, session)
     })
     .catch((error: AxiosError) => {
       console.log('Failed to login user.')
@@ -175,7 +177,7 @@ const logout = (
   axios
     .post('/api/v1/users/logout')
     .then(() => {
-      retrieveSession(callback)
+      User.fetchSession().then(callback)
     })
     .catch((error: AxiosError) => {
       console.log('Failed to logout user.')
@@ -185,7 +187,6 @@ const logout = (
 }
 
 export default {
-  retrieveSession,
   login,
   logout,
 }

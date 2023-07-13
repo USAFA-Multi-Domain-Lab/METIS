@@ -11,7 +11,7 @@ import './MissionModificationPanel.scss'
 import { MiniButtonSVGPanel } from './MiniButtonSVGPanel'
 import { EMiniButtonSVGPurpose, MiniButtonSVG } from './MiniButtonSVG'
 import { useStore } from 'react-context-hook'
-import { User, permittedRoles } from '../../../modules/users'
+import { IMetisSession, User, permittedRoles } from '../../../modules/users'
 import { useState } from 'react'
 import { AppActions } from '../../AppState'
 
@@ -23,7 +23,7 @@ export default function MissionModificationPanel(props: {
   handleSuccessfulToggleLive: () => void
 }) {
   /* -- GLOBAL STATE -- */
-  const [currentUser] = useStore<User | undefined>('currentUser')
+  const [session] = useStore<IMetisSession>('session')
 
   /* -- COMPONENT VARIABLES -- */
   let mission: Mission = props.mission
@@ -181,9 +181,8 @@ export default function MissionModificationPanel(props: {
   }
 
   let containerClassName: string = 'MissionModificationPanel hidden'
-  // console.log(currentUser.role)
 
-  if (currentUser && permittedRoles.includes(currentUser.role)) {
+  if (session.user && permittedRoles.includes(session.user.role)) {
     containerClassName = 'MissionModificationPanel'
   }
 

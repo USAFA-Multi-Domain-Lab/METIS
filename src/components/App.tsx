@@ -1,7 +1,7 @@
 import './App.scss'
 import GamePage from './pages/GamePage'
 import AuthPage from './pages/AuthPage'
-import { User, retrieveSession } from '../modules/users'
+import { IMetisSession, User } from '../modules/users'
 import { useEffect, useState } from 'react'
 import ServerErrorPage from './pages/ServerErrorPage'
 import LoadingPage from './pages/LoadingPage'
@@ -112,18 +112,29 @@ function App(props: {
 
       appActions.beginLoading(AppState.defaultAppStateValues.loadingMessage)
 
-      retrieveSession(
-        (user: User | undefined, mission: Mission | undefined) => {
-          appState.setCurrentUser(user)
+      User.fetchSession().then(
+        (session: IMetisSession) => {
+          appState.setSession(session)
           appState.setAppMountHandled(true)
           appActions.finishLoading()
-          if (user !== undefined) {
-            appActions.goToPage('MissionSelectionPage', {})
-          } else {
+
+          // If no user data is present in the
+          // session, navigate to the auth page
+          // to have the visitor login.
+          if (session.user === undefined) {
             appActions.goToPage('AuthPage', {
               returningPagePath: 'MissionSelectionPage',
               returningPageProps: {},
             })
+          }
+          // Else if no game data is present in
+          // the session, navigate to the mission
+          // selection page to have the user launch
+          // a game.
+          else if (session.game === undefined) {
+            appActions.goToPage('MissionSelectionPage', {})
+          } else {
+            appActions.goToPage('GamePage', {})
           }
         },
         () => {

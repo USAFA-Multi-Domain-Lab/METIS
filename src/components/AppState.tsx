@@ -1,6 +1,6 @@
 import React from 'react'
 import { useStore, withStore } from 'react-context-hook'
-import usersModule from '../modules/users'
+import usersModule, { IMetisSession } from '../modules/users'
 import { User } from '../modules/users'
 import { AnyObject } from 'mongoose'
 import Confirmation, {
@@ -16,7 +16,7 @@ import { ButtonText, IButtonText } from './content/user-controls/ButtonText'
 
 export interface IAppStateValues {
   forcedUpdateCounter: number
-  currentUser: User | undefined
+  session: IMetisSession
   currentPagePath: string
   currentPageProps: AnyObject
   appMountHandled: boolean
@@ -36,7 +36,7 @@ export interface IAppStateValues {
 
 export interface IAppStateSetters {
   setForcedUpdateCounter: (forcedUpdateCounter: number) => void
-  setCurrentUser: (user: User | undefined) => void
+  setSession: (session: IMetisSession) => void
   setCurrentPagePath: (currentPagePath: string) => void
   setCurrentPageProps: (currentPageProps: AnyObject) => void
   setAppMountHandled: (appMountHandled: boolean) => void
@@ -111,22 +111,74 @@ export class AppActions {
     this.appState.setForcedUpdateCounter(this.appState.forcedUpdateCounter + 1)
   }
 
-  // This will go to a specific page
-  // passing the necessary props.
+  /**
+   * This will switch the currently rendered page to the requested page.
+   * @param pagePath The path of the page to go to.
+   * @param pageProps The props to pass to the destination page.
+   */
   goToPage = (pagePath: string, pageProps: AnyObject): void => {
-    this.appState.setLoadingMessage('Switching pages...')
-    this.appState.setPageSwitchMinTimeReached(false)
-    this.appState.setCurrentPagePath('')
-    this.appState.setCurrentPageProps(pageProps)
-    this.appState.setCurrentPagePath(pagePath)
+    // Actually switches the page. Called after any confirmations.
+    const switchPage = (): void => {
+      // Display to the user that the
+      // page is loading.
+      this.appState.setLoadingMessage('Switching pages...')
+      this.appState.setPageSwitchMinTimeReached(false)
 
-    setTimeout(() => {
-      this.appState.setPageSwitchMinTimeReached(true)
+      // Set the current page props and path.
+      this.appState.setCurrentPagePath('')
+      this.appState.setCurrentPageProps(pageProps)
+      this.appState.setCurrentPagePath(pagePath)
 
-      if (!this.appState.loading && this.appState.loadingMinTimeReached) {
-        this._handleLoadCompletion()
-      }
-    }, pageSwitchMinTime)
+      // If the page switch takes less than
+      // the minimum time, wait until the
+      // minimum time has passed before
+      // completing the page switch. This will
+      // make the page transition feel more
+      // smooth.
+      setTimeout(() => {
+        this.appState.setPageSwitchMinTimeReached(true)
+
+        if (!this.appState.loading && this.appState.loadingMinTimeReached) {
+          this._handleLoadCompletion()
+        }
+      }, pageSwitchMinTime)
+    }
+
+    // If the user is currently in a game,
+    // confirm they want to quit before switching
+    // the page.
+    if (
+      this.appState.currentPagePath === 'GamePage' &&
+      this.appState.session.user &&
+      this.appState.session.game
+    ) {
+      this.confirm(
+        'Are you sure you want to quit?',
+        (concludeAction: () => void) => {
+          if (this.appState.session.user && this.appState.session.game) {
+            this.appState.session.game
+              .quit(this.appState.session.user.userID)
+              .then(() => {
+                switchPage()
+                this.appState.setSession({
+                  ...this.appState.session,
+                  game: undefined,
+                })
+                concludeAction()
+              })
+              .catch((error: Error) => {
+                console.log(error)
+                this.handleServerError('Failed to quit game.')
+                concludeAction()
+              })
+          }
+        },
+      )
+    }
+    // Else, go ahead and switch the page.
+    else {
+      switchPage()
+    }
   }
 
   // This will set the loading message
@@ -293,7 +345,7 @@ export class AppActions {
 
     usersModule.logout(
       () => {
-        this.appState.setCurrentUser(undefined)
+        this.appState.setSession({})
         this.finishLoading()
         this.goToPage('AuthPage', authPageProps)
       },
@@ -309,7 +361,7 @@ export class AppActions {
 // throught the application.
 export default class AppState implements IAppStateValues, IAppStateValues {
   forcedUpdateCounter: number
-  currentUser: User | undefined
+  session: IMetisSession
   currentPagePath: string
   currentPageProps: AnyObject
   appMountHandled: boolean
@@ -327,7 +379,7 @@ export default class AppState implements IAppStateValues, IAppStateValues {
   missionNodeColors: Array<string>
 
   setForcedUpdateCounter: (forcedUpdateCounter: number) => void
-  setCurrentUser: (user: User | undefined) => void
+  setSession: (session: IMetisSession) => void
   setCurrentPagePath: (currentPagePath: string) => void
   setCurrentPageProps: (currentPageProps: AnyObject) => void
   setAppMountHandled: (appMountHandled: boolean) => void
@@ -347,7 +399,7 @@ export default class AppState implements IAppStateValues, IAppStateValues {
   static get defaultAppStateValues(): IAppStateValues {
     return {
       forcedUpdateCounter: 0,
-      currentUser: undefined,
+      session: {},
       currentPagePath: '',
       currentPageProps: {},
       appMountHandled: false,
@@ -370,7 +422,7 @@ export default class AppState implements IAppStateValues, IAppStateValues {
     return {
       setForcedUpdateCounter: () => {},
       setTooltipDescription: () => {},
-      setCurrentUser: (): void => {},
+      setSession: (): void => {},
       setCurrentPagePath: (): void => {},
       setCurrentPageProps: (): void => {},
       setAppMountHandled: (): void => {},
@@ -393,7 +445,7 @@ export default class AppState implements IAppStateValues, IAppStateValues {
     appStateSetters: IAppStateSetters,
   ) {
     this.forcedUpdateCounter = appStateValues.forcedUpdateCounter
-    this.currentUser = appStateValues.currentUser
+    this.session = appStateValues.session
     this.currentPagePath = appStateValues.currentPagePath
     this.currentPageProps = appStateValues.currentPageProps
     this.appMountHandled = appStateValues.appMountHandled
@@ -411,7 +463,7 @@ export default class AppState implements IAppStateValues, IAppStateValues {
     this.missionNodeColors = appStateValues.missionNodeColors
 
     this.setForcedUpdateCounter = appStateSetters.setForcedUpdateCounter
-    this.setCurrentUser = appStateSetters.setCurrentUser
+    this.setSession = appStateSetters.setSession
     this.setCurrentPagePath = appStateSetters.setCurrentPagePath
     this.setCurrentPageProps = appStateSetters.setCurrentPageProps
     this.setAppMountHandled = appStateSetters.setAppMountHandled
@@ -450,9 +502,7 @@ export default class AppState implements IAppStateValues, IAppStateValues {
       const [forcedUpdateCounter, setForcedUpdateCounter] = useStore<number>(
         'forcedUpdateCounter',
       )
-      const [currentUser, setCurrentUser] = useStore<User | undefined>(
-        'currentUser',
-      )
+      const [session, setSession] = useStore<IMetisSession>('session')
       const [currentPagePath, setCurrentPagePath] =
         useStore<string>('currentPagePath')
       const [currentPageProps, setCurrentPageProps] =
@@ -487,7 +537,7 @@ export default class AppState implements IAppStateValues, IAppStateValues {
 
       let appStateValues: IAppStateValues = {
         forcedUpdateCounter,
-        currentUser,
+        session,
         currentPagePath,
         currentPageProps,
         appMountHandled,
@@ -506,7 +556,7 @@ export default class AppState implements IAppStateValues, IAppStateValues {
       }
       let appStateSetters: IAppStateSetters = {
         setForcedUpdateCounter,
-        setCurrentUser,
+        setSession,
         setCurrentPagePath,
         setCurrentPageProps,
         setAppMountHandled,
