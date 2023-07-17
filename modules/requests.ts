@@ -1,6 +1,6 @@
 // ------- IMPORTS ------- //
 import { Request, Response, NextFunction } from 'express-serve-static-core'
-import { isObjectIdOrHexString, ObjectId } from 'mongoose'
+import { isObjectIdOrHexString } from 'mongoose'
 import { AnyObject } from './toolbox/objects'
 
 // ------- GLOBAL VARIABLES ------- //
@@ -38,238 +38,110 @@ let booleanValues: Array<string> = [
 export class RequestBodyFilters {
   // This filters a string included
   // in a request body.
-  static STRING(request: Request, key: string) {
-    if (request.body.mission) {
-      let value: string = request.body.mission[key]
-
-      if (typeof value !== 'string') {
-        throw new Error(invalidRequestBodyPropertyException(key, value))
-      }
-    } else {
-      let value: string = request.body[key]
-
-      if (typeof value !== 'string') {
-        throw new Error(invalidRequestBodyPropertyException(key, value))
-      }
+  static STRING(bodyKey: string, bodyValue: any) {
+    if (typeof bodyValue !== 'string') {
+      throw new Error(invalidRequestBodyPropertyException(bodyKey, bodyValue))
     }
   }
 
   // This filters a string included
   // in a request body, limiting it
   // to 50 characters.
-  static STRING_50_CHAR(request: Request, key: string) {
-    if (request.body.mission) {
-      let value: string = request.body.mission[key]
-
-      if (typeof value !== 'string' || value.length > 50) {
-        throw new Error(invalidRequestBodyPropertyException(key, value))
-      }
-    } else {
-      let value: string = request.body[key]
-
-      if (typeof value !== 'string' || value.length > 50) {
-        throw new Error(invalidRequestBodyPropertyException(key, value))
-      }
+  static STRING_50_CHAR(bodyKey: string, bodyValue: any) {
+    if (typeof bodyValue !== 'string' || bodyValue.length > 50) {
+      throw new Error(invalidRequestBodyPropertyException(bodyKey, bodyValue))
     }
   }
 
   // This filters a string included
   // in a request body, limiting it
   // to 128 characters.
-  static STRING_128_CHAR(request: Request, key: string) {
-    if (request.body.mission) {
-      let value: string = request.body.mission[key]
-
-      if (typeof value !== 'string' || value.length > 128) {
-        throw new Error(invalidRequestBodyPropertyException(key, value))
-      }
-    } else {
-      let value: string = request.body[key]
-
-      if (typeof value !== 'string' || value.length > 128) {
-        throw new Error(invalidRequestBodyPropertyException(key, value))
-      }
+  static STRING_128_CHAR(bodyKey: string, bodyValue: any) {
+    if (typeof bodyValue !== 'string' || bodyValue.length > 128) {
+      throw new Error(invalidRequestBodyPropertyException(bodyKey, bodyValue))
     }
   }
 
   // This filters a string included
   // in a request body, limiting it
   // to 255 characters.
-  static STRING_255_CHAR(request: Request, key: string) {
-    if (request.body.mission) {
-      let value: string = request.body.mission[key]
-
-      if (typeof value !== 'string' || value.length > 255) {
-        throw new Error(invalidRequestBodyPropertyException(key, value))
-      }
-    } else {
-      let value: string = request.body[key]
-
-      if (typeof value !== 'string' || value.length > 255) {
-        throw new Error(invalidRequestBodyPropertyException(key, value))
-      }
+  static STRING_255_CHAR(bodyKey: string, bodyValue: any) {
+    if (typeof bodyValue !== 'string' || bodyValue.length > 255) {
+      throw new Error(invalidRequestBodyPropertyException(bodyKey, bodyValue))
     }
   }
 
   // This filters a string included
   // in a request body, limiting it
   // to 256 characters.
-  static STRING_256_CHAR(request: Request, key: string) {
-    if (request.body.mission) {
-      let value: string = request.body.mission[key]
-
-      if (typeof value !== 'string' || value.length > 256) {
-        throw new Error(invalidRequestBodyPropertyException(key, value))
-      }
-    } else {
-      let value: string = request.body[key]
-
-      if (typeof value !== 'string' || value.length > 256) {
-        throw new Error(invalidRequestBodyPropertyException(key, value))
-      }
+  static STRING_256_CHAR(bodyKey: string, bodyValue: any) {
+    if (typeof bodyValue !== 'string' || bodyValue.length > 256) {
+      throw new Error(invalidRequestBodyPropertyException(bodyKey, bodyValue))
     }
   }
 
   // This filters a string included
   // in a request body, limiting it
   // to 512 characters.
-  static STRING_512_CHAR(request: Request, key: string) {
-    if (request.body.mission) {
-      let value: string = request.body.mission[key]
-
-      if (typeof value !== 'string' || value.length > 512) {
-        throw new Error(invalidRequestBodyPropertyException(key, value))
-      }
-    } else {
-      let value: string = request.body[key]
-
-      if (typeof value !== 'string' || value.length > 512) {
-        throw new Error(invalidRequestBodyPropertyException(key, value))
-      }
+  static STRING_512_CHAR(bodyKey: string, bodyValue: any) {
+    if (typeof bodyValue !== 'string' || bodyValue.length > 512) {
+      throw new Error(invalidRequestBodyPropertyException(bodyKey, bodyValue))
     }
   }
 
   // This filters a string included
   // in a request body, limiting it
   // to 1024 characters.
-  static STRING_1024_CHAR(request: Request, key: string) {
-    if (request.body.mission) {
-      let value: string = request.body.mission[key]
-
-      if (typeof value !== 'string' || value.length > 1024) {
-        throw new Error(invalidRequestBodyPropertyException(key, value))
-      }
-    } else {
-      let value: string = request.body[key]
-
-      if (typeof value !== 'string' || value.length > 1024) {
-        throw new Error(invalidRequestBodyPropertyException(key, value))
-      }
+  static STRING_1024_CHAR(bodyKey: string, bodyValue: any) {
+    if (typeof bodyValue !== 'string' || bodyValue.length > 1024) {
+      throw new Error(invalidRequestBodyPropertyException(bodyKey, bodyValue))
     }
   }
 
   // This filters a string included
   // in a request body, limiting it
   // to 16,777,215 characters.
-  static STRING_MEDIUMTEXT(request: Request, key: string) {
-    if (request.body.mission) {
-      let value: string = request.body.mission[key]
-
-      if (typeof value !== 'string' || value.length > 16777215) {
-        throw new Error(invalidRequestBodyPropertyException(key, value))
-      }
-    } else {
-      let value: string = request.body[key]
-
-      if (typeof value !== 'string' || value.length > 16777215) {
-        throw new Error(invalidRequestBodyPropertyException(key, value))
-      }
+  static STRING_MEDIUMTEXT(bodyKey: string, bodyValue: any) {
+    if (typeof bodyValue !== 'string' || bodyValue.length > 16777215) {
+      throw new Error(invalidRequestBodyPropertyException(bodyKey, bodyValue))
     }
   }
 
   // This filters a number included
   // in a request body.
-  static NUMBER(request: Request, key: string) {
-    if (request.body.mission) {
-      let value: number = request.body.mission[key]
-
-      if (typeof value !== 'number') {
-        throw new Error(invalidRequestBodyPropertyException(key, value))
-      }
-    } else {
-      let value: number = request.body[key]
-
-      if (typeof value !== 'number') {
-        throw new Error(invalidRequestBodyPropertyException(key, value))
-      }
+  static NUMBER(bodyKey: string, bodyValue: any) {
+    if (typeof bodyValue !== 'number' || isNaN(bodyValue)) {
+      throw new Error(invalidRequestBodyPropertyException(bodyKey, bodyValue))
     }
   }
 
   // This filters a boolean included
   // in a request body.
-  static BOOLEAN(request: Request, key: string) {
-    if (request.body.mission) {
-      let value: boolean | string | number = request.body.mission[key]
+  static BOOLEAN(bodyKey: string, bodyValue: any) {
+    if (typeof bodyValue === 'number' || typeof bodyValue === 'boolean') {
+      let valueAsStr: string = bodyValue.toString()
 
-      if (typeof value === 'number' || typeof value === 'boolean') {
-        let valueAsStr: string = value.toString()
-
-        if (!booleanValues.includes(valueAsStr)) {
-          throw invalidRequestBodyPropertyException(key, valueAsStr)
-        }
-      } else {
-        if (!booleanValues.includes(value)) {
-          throw new Error(invalidRequestBodyPropertyException(key, value))
-        }
+      if (!booleanValues.includes(valueAsStr)) {
+        throw invalidRequestBodyPropertyException(bodyKey, valueAsStr)
       }
-    } else {
-      let value: boolean | string | number = request.body[key]
-
-      if (typeof value === 'number' || typeof value === 'boolean') {
-        let valueAsStr: string = value.toString()
-
-        if (!booleanValues.includes(valueAsStr)) {
-          throw invalidRequestBodyPropertyException(key, valueAsStr)
-        }
-      } else {
-        if (!booleanValues.includes(value)) {
-          throw new Error(invalidRequestBodyPropertyException(key, value))
-        }
+    } else if (typeof bodyValue === 'string') {
+      if (!booleanValues.includes(bodyValue)) {
+        throw new Error(invalidRequestBodyPropertyException(bodyKey, bodyValue))
       }
     }
   }
 
   // This filters an object included
   // in a request body.
-  static OBJECT(request: Request, key: string) {
-    if (request.body.mission) {
-      let value: AnyObject = request.body.mission[key]
-
-      if (typeof value !== 'object') {
-        throw new Error(invalidRequestBodyPropertyException(key, value))
-      }
-    } else {
-      let value: AnyObject = request.body[key]
-
-      if (typeof value !== 'object') {
-        throw new Error(invalidRequestBodyPropertyException(key, value))
-      }
+  static OBJECT(bodyKey: string, bodyValue: any) {
+    if (typeof bodyValue !== 'object') {
+      throw new Error(invalidRequestBodyPropertyException(bodyKey, bodyValue))
     }
   }
 
-  static OBJECTID(request: Request, key: string) {
-    if (request.body.mission) {
-      let value: ObjectId = request.body.mission[key]
-
-      if (!isObjectIdOrHexString(value)) {
-        throw new Error(invalidRequestBodyPropertyException(key, value))
-      }
-    } else {
-      let value: ObjectId = request.body[key]
-
-      if (!isObjectIdOrHexString(value)) {
-        throw new Error(invalidRequestBodyPropertyException(key, value))
-      }
+  static OBJECTID(bodyKey: string, bodyValue: any) {
+    if (!isObjectIdOrHexString(bodyValue)) {
+      throw new Error(invalidRequestBodyPropertyException(bodyKey, bodyValue))
     }
   }
 }
@@ -344,166 +216,341 @@ const validateTypeOfQueryKey = (
   }
 }
 
-// ------- MIDDLEWARE FUNCTIONS ------- //
+// const validateRequiredBodyKeys = (
+//   request: Request,
+//   response: Response,
+//   bodyKey: string,
+//   bodyValue: any,
+//   requiredKey: string,
+//   allBodyKeys: Array<string>,
+//   allRequiredKeys: Array<string>,
+//   errorsThrown: Array<any>,
+//   requiredValue: ((bodyKey: string, bodyValue: any) => void) | AnyObject,
+// ) => {
+//   if (typeof requiredValue === 'object') {
+//     try {
+//       if (bodyKey !== requiredKey && !allBodyKeys.includes(requiredKey)) {
+//         // If a key that is supposed to be in the body of the request is not
+//         // there then an error is thrown
+//         throw new Error(
+//           `Bad Request_"${requiredKey}"-is-missing-in-the-body-of-the-request`,
+//         )
+//       } else if (bodyKey === requiredKey && allRequiredKeys.includes(bodyKey)) {
+//         // Since this is an object, it will recursively
+//         // call this function until the value is the
+//         // correct type of function
+//         validateRequestBodyKeys(request, response, bodyValue, requiredValue)
+//       } else {
+//         // Removes the key from the request body
+//         // ! delete request.body[bodyKey]
+//       }
+//     } catch (error) {
+//       // Handles either of the errors that have been thrown above
+//       errorsThrown.push(error)
+//     }
+//   } else if (typeof requiredValue === 'function') {
+//     try {
+//       // If a key that is supposed to be in the body of the request is not
+//       // there then an error is thrown
+//       if (bodyKey !== requiredKey && !allBodyKeys.includes(requiredKey)) {
+//         throw new Error(
+//           `Bad Request_"${requiredKey}"-is-missing-in-the-body-of-the-request`,
+//         )
+//       } else if (bodyKey === requiredKey && allRequiredKeys.includes(bodyKey)) {
+//         // Runs all the required validator methods from the "RequestBodyFilter"
+//         // class that were passed in the request
+//         requiredValue(bodyKey, bodyValue)
+//       } else {
+//         // Removes the key from the request body
+//         // ! delete request.body[bodyKey]
+//       }
+//     } catch (error) {
+//       // Handles either of the errors that have been thrown above
+//       errorsThrown.push(error)
+//     }
+//   } else {
+//     let error: Error = new Error(
+//       `Bad Request_${requiredKey}-has-a-value-that-is-not-the-correct-type-of-function-or-object`,
+//     )
+//     errorsThrown.push(error)
+//   }
+// }
 
-// Checks to see if the request body
-// in the current express post request
-// contains the specified keys and if the
-// specified keys are the correct type
+// const validateRequiredAndOptionalBodyKeys = (
+//   request: Request,
+//   response: Response,
+//   optionalBodyKeys: {},
+//   bodyKey: string,
+//   bodyValue: any,
+//   requiredKey: string,
+//   allBodyKeys: Array<string>,
+//   allRequiredKeys: Array<string>,
+//   errorsThrown: Array<any>,
+//   requiredValue: ((bodyKey: string, bodyValue: any) => void) | AnyObject,
+// ) => {
+//   // Grabs all the optional keys
+//   let allOptionalKeys: Array<string> = Object.keys(optionalBodyKeys)
+
+//   // Grab all the optional values which are validator
+//   // methods from in the "RequestBodyFilters" class
+//   let allOptionalValues: Array<
+//     (bodyKey: string, bodyValue: any) => void | AnyObject
+//   > = Object.values(optionalBodyKeys)
+
+//   // Loops through all the optional keys that were passed
+//   // and validates them to make sure the request
+//   // being sent is correct
+//   allOptionalKeys.forEach((optionalKey: string, optionalKeyIndex: number) => {
+//     let optionalValue: ((bodyKey: string, bodyValue: any) => void) | AnyObject =
+//       allOptionalValues[optionalKeyIndex]
+
+//     if (
+//       typeof requiredValue === 'object' ||
+//       typeof optionalValue === 'object'
+//     ) {
+//       try {
+//         if (bodyKey !== requiredKey && !allBodyKeys.includes(requiredKey)) {
+//           // If a key that is supposed to be in the body of the request is not
+//           // there then an error is thrown
+//           throw new Error(
+//             `Bad Request_"${requiredKey}"-is-missing-in-the-body-of-the-request`,
+//           )
+//         } else if (
+//           (bodyKey === requiredKey && allRequiredKeys.includes(bodyKey)) ||
+//           (bodyKey === optionalKey && allOptionalKeys.includes(bodyKey))
+//         ) {
+//           // Since this is an object, it will recursively
+//           // call this function until the value is the
+//           // correct type of function
+//           validateRequestBodyKeys(
+//             request,
+//             response,
+//             bodyValue,
+//             requiredValue,
+//             optionalValue,
+//           )
+//         } else {
+//           // Removes the key from the request body
+//           // ! delete request.body[bodyKey]
+//         }
+//       } catch (error) {
+//         // Handles either of the errors that have been thrown above
+//         errorsThrown.push(error)
+//       }
+//     } else if (
+//       typeof requiredValue === 'function' ||
+//       typeof optionalValue === 'function'
+//     ) {
+//       try {
+//         // If a key that is supposed to be in the body of the request is not
+//         // there then an error is thrown
+//         if (bodyKey !== requiredKey && !allBodyKeys.includes(requiredKey)) {
+//           throw new Error(
+//             `Bad Request_"${requiredKey}"-is-missing-in-the-body-of-the-request`,
+//           )
+//         } else if (
+//           bodyKey === requiredKey &&
+//           allRequiredKeys.includes(bodyKey)
+//         ) {
+//           // Runs all the required validator methods from the "RequestBodyFilter"
+//           // class that were passed in the request
+//           requiredValue(bodyKey, bodyValue)
+//         } else if (
+//           bodyKey === optionalKey &&
+//           allOptionalKeys.includes(bodyKey)
+//         ) {
+//           // Runs all the optional validator methods from the "RequestBodyFilter"
+//           // class that were passed in the request
+//           optionalValue(bodyKey, bodyValue)
+//         } else {
+//           // Removes the key from the request body
+//           // ! delete request.body[bodyKey]
+//         }
+//       } catch (error) {
+//         // Handles either of the errors that have been thrown above
+//         errorsThrown.push(error)
+//       }
+//     } else {
+//       let error: Error = new Error(
+//         `Bad Request_${requiredKey}-or-${optionalKey}-has-a-value-that-is-not-the-correct-type-of-function-or-object`,
+//       )
+//       errorsThrown.push(error)
+//     }
+//   })
+// }
+
+// Recursive function that checks to see
+// if the request body in the current
+// express post request contains the
+// specified keys and if the specified keys
+// are the correct type
 // (i.e., name: "string" or initialResources: "number")
-export const validateRequestBodyKeys = (
+const validateRequestBodyKeys = (
+  request: Request,
+  response: Response,
+  bodyKeysSent: {},
   requiredBodyKeys: {},
-  optionalBodyKeys?: {},
+  optionalBodyKeys: {} = {},
 ) => {
-  return (request: Request, response: Response, next: NextFunction): void => {
-    // Grabs all the required keys
-    let allRequiredKeys: Array<string> = Object.keys(requiredBodyKeys)
+  // Grabs all the keys that were passed
+  // in the body of the request
+  let allBodyKeys: Array<string> = Object.keys(bodyKeysSent)
 
-    // Grabs all the required values which are validator
-    // methods from in the "RequestBodyFilters" class
-    let requiredValidators: Array<(request: Request, key: string) => void> =
-      Object.values(requiredBodyKeys)
+  // Grabs all the values that were passed
+  // in the body of the request
+  let allBodyValues: Array<any> = Object.values(bodyKeysSent)
 
-    let errorsThrown: Array<any> = []
+  // Grabs all the required keys
+  let allRequiredKeys: Array<string> = Object.keys(requiredBodyKeys)
 
-    if (!request.body && !request.body.mission) {
-      requiredBodyKeys = {}
-      allRequiredKeys = []
-    }
+  // Grabs all the required values which are validator
+  // methods from in the "RequestBodyFilters" class
+  let allRequiredValues: Array<
+    (bodyKey: string, bodyValue: any) => void | AnyObject
+  > = Object.values(requiredBodyKeys)
+
+  // Grabs all the optional keys
+  let allOptionalKeys: Array<string> = Object.keys(optionalBodyKeys)
+
+  // Grab all the optional values which are validator
+  // methods from in the "RequestBodyFilters" class
+  let allOptionalValues: Array<
+    (bodyKey: string, bodyValue: any) => void | AnyObject
+  > = Object.values(optionalBodyKeys)
+
+  // Will contain any errors that occur while validating
+  // the request body
+  let errorsThrown: Array<any> = []
+
+  // Loops through all the body keys that were passed
+  // to use as a reference
+  allBodyKeys.forEach((bodyKey: string, bodyKeyIndex: number) => {
+    let bodyValue: any = allBodyValues[bodyKeyIndex]
 
     // Loops through all the required keys that were passed
     // and validates them to make sure the request
     // being sent is correct
-    allRequiredKeys.forEach((key: string, index: number) => {
-      let requiredValidator: (request: Request, key: string) => void =
-        requiredValidators[index]
-
-      // If a mission is being created/updated then the
-      // structure of the response.body looks like this:
-      // body = { mission: { missionID: string, ... } }
-      // Therefore logic is needed to see if body.mission
-      // is defined
-      if (request.body.mission) {
-        try {
-          // If a key that is supposed to be in the request is not there
-          // then an error is thrown
-          if (request.body.mission && !(key in request.body.mission)) {
-            throw new Error(
-              `Bad Request_"${key}"-is-missing-in-the-body-of-the-request`,
-            )
-          }
-
-          // Runs all the required validator methods from the "RequestBodyFilter"
-          // class that were passed in the request
-          requiredValidator(request, key)
-        } catch (error) {
-          // Handles either of the errors that have been thrown above
-          errorsThrown.push(error)
-        }
-      } else {
-        // If body.mission is undefined then the data
-        // being passed is in a JSON format
-        try {
-          // If a key that is supposed to be in the request is not there
-          // then an error is thrown
-          if (request.body && !(key in request.body)) {
-            throw new Error(
-              `Bad Request_"${key}"-is-missing-in-the-body-of-the-request`,
-            )
-          }
-
-          // Runs all the required validator methods from the "RequestBodyFilter"
-          // class that were passed in the request
-          requiredValidator(request, key)
-        } catch (error) {
-          // Handles either of the errors that have been thrown above
-          errorsThrown.push(error)
-        }
-      }
-    })
-
-    if (optionalBodyKeys) {
-      // Grabs all the optional keys
-      let allOptionalKeys: Array<string> = Object.keys(optionalBodyKeys)
-
-      // Grab all the optional values which are validator
-      // methods from in the "RequestBodyFilters" class
-      let optionalValidators: Array<(request: Request, key: string) => void> =
-        Object.values(optionalBodyKeys)
+    allRequiredKeys.forEach((requiredKey: string, requiredKeyIndex: number) => {
+      let requiredValue:
+        | ((bodyKey: string, bodyValue: any) => void)
+        | AnyObject = allRequiredValues[requiredKeyIndex]
 
       // Loops through all the optional keys that were passed
       // and validates them to make sure the request
       // being sent is correct
-      allOptionalKeys.forEach((key: string, index: number) => {
-        let optionalValidator: (request: Request, key: string) => void =
-          optionalValidators[index]
+      allOptionalKeys.forEach(
+        (optionalKey: string, optionalKeyIndex: number) => {
+          let optionalValue:
+            | ((bodyKey: string, bodyValue: any) => void)
+            | AnyObject = allOptionalValues[optionalKeyIndex]
 
-        // If a mission is being created/updated then the
-        // structure of the response.body looks like this:
-        // body = { mission: { missionID: string, ... } }.
-        // Therefore logic is needed to see if body.mission
-        // is defined and the optional keys are being passed
-        // in the request
-        if (request.body.mission && key in request.body.mission) {
-          try {
+          if (
+            bodyKey === requiredKey &&
+            allRequiredKeys.includes(bodyKey) &&
+            typeof requiredValue === 'object'
+          ) {
+            // Since this is an object, it will recursively
+            // call this function until the value is the
+            // correct type of function
+            validateRequestBodyKeys(request, response, bodyValue, requiredValue)
+          } else if (
+            bodyKey === optionalKey &&
+            allOptionalKeys.includes(bodyKey) &&
+            typeof optionalValue === 'object' &&
+            typeof requiredValue === 'object'
+          ) {
+            // Since this is an object, it will recursively
+            // call this function until the value is the
+            // correct type of function
+            validateRequestBodyKeys(
+              request,
+              response,
+              bodyValue,
+              requiredValue,
+              optionalValue,
+            )
+          } else if (
+            bodyKey === requiredKey &&
+            allRequiredKeys.includes(bodyKey) &&
+            typeof requiredValue === 'function'
+          ) {
+            // Runs all the required validator methods from the "RequestBodyFilter"
+            // class that were passed in the request
+            requiredValue(bodyKey, bodyValue)
+          } else if (
+            bodyKey === optionalKey &&
+            allOptionalKeys.includes(bodyKey) &&
+            typeof optionalValue === 'function'
+          ) {
             // Runs all the optional validator methods from the "RequestBodyFilter"
             // class that were passed in the request
-            optionalValidator(request, key)
-          } catch (error) {
-            // Handles either of the errors that have been thrown above
-            errorsThrown.push(error)
-          }
-        }
+            optionalValue(bodyKey, bodyValue)
+          } else {
+            // Removes the key from the request body
+            // ! delete request.body[bodyKey]
 
-        // If body.mission is undefined then the request.body needs
-        // to be validated and the optional keys are being passed
-        if (!request.body.mission && key in request.body) {
-          try {
-            // Runs all the optional validator methods from the "RequestBodyFilter"
-            // class that were passed in the request
-            optionalValidator(request, key)
-          } catch (error) {
-            // Handles either of the errors that have been thrown above
-            errorsThrown.push(error)
+            try {
+              if (
+                bodyKey !== requiredKey &&
+                !allBodyKeys.includes(requiredKey)
+              ) {
+                // If a key that is supposed to be in the body of the request is not
+                // there then an error is thrown
+                throw new Error(
+                  `Bad Request_"${requiredKey}"-is-missing-in-the-body-of-the-request`,
+                )
+              }
+            } catch (error) {
+              errorsThrown.push(error)
+            }
           }
-        }
-      })
-    }
+        },
+      )
+    })
+  })
 
-    if (errorsThrown.length === 0) {
-      next()
-    } else {
-      response.status(400)
-      response.statusMessage = ''
-      errorsThrown.map((error: Error) => {
-        response.statusMessage += `_${error.message}`
-      })
-      response.send(response.statusMessage)
-    }
+  if (errorsThrown.length > 0) {
+    response.status(400)
+    response.statusMessage = ''
+    errorsThrown.map((error: Error) => {
+      response.statusMessage += `_${error.message}`
+    })
   }
 }
 
-// Checks to see if the request query/queries
-// in the current express request the specified
-// keys and if the specified keys are the correct
-// type (i.e., missionID: "string")
-export const validateRequestQueryKeys = (bodyKeys: {}) => {
-  return (request: Request, response: Response, next: NextFunction): void => {
-    let query: AnyObject = Object(request.query)
+/**
+ * This function is used to validate the request query
+ * of an express request. It will check to see if the
+ * request query in the current express request the
+ * specified keys and if the specified keys are the
+ * correct type (i.e., missionID: "string")
+ * @param requiredQueryKeys The required keys and their types
+ * @param request The express request
+ * @param response The express response
+ * @param next The express next function
+ * @returns A middleware function that validates the request query
+ * of an express request
+ */
+const validateRequestQueryKeys = (
+  requiredQueryKeys: {},
+  request: Request,
+  response: Response,
+) => {
+  let query: any = request.query
+  let queryKeysSent: Array<string> = Object.keys(requiredQueryKeys)
 
-    // Grabs all the required keys and what their
-    // types should be
-    let allKeys: Array<string> = Object.keys(bodyKeys)
-    let allTypes: Array<string> = Object.values(bodyKeys)
+  // Grabs all the required keys and what their
+  // types should be
+  let allKeys: Array<string> = Object.keys(requiredQueryKeys)
+  let allTypes: Array<string> = Object.values(requiredQueryKeys)
 
-    // Will contain any errors that occur while validating
-    let errorsThrown: Array<any> = []
+  // Will contain any errors that occur while validating
+  let errorsThrown: Array<any> = []
 
-    if (!query) {
-      bodyKeys = {}
-      allKeys = []
-    }
-
+  if (queryKeysSent !== requiredQueryKeys) {
+    requiredQueryKeys = {}
+    allKeys = []
+  } else {
     // Loops through all the required keys that were passed
     // and validates them to make sure the request
     // being sent is correct
@@ -511,62 +558,80 @@ export const validateRequestQueryKeys = (bodyKeys: {}) => {
       // This is what the property's type will be
       let type: string = allTypes[index]
 
-      // The "missions" and "users" getter routes are set up so that if
-      // the "missionID" or "userID" is undefined then the query is set
-      // to "{}" and all the missions are returned for the HomePage.
-      // Therefore, the "missionID" and "userID" values are ignored so that the other
-      // GET routes that don't require "missionID" and "userID" can be validated properly
-      if (key !== 'missionID' && key !== 'userID') {
-        try {
-          // If a key that is supposed to be in the request is not there
-          // then an error is thrown
-          if (!(key in query)) {
-            throw new Error(
-              `Bad Request_"${key}"-is-missing-in-the-query-of-the-request`,
-            )
-          }
-        } catch (error) {
-          // Handles either of the errors that have been thrown above
-          errorsThrown.push(error)
+      try {
+        // If a key that is supposed to be in the request is not there
+        // then an error is thrown
+        if (!(key in query)) {
+          throw new Error(
+            `Bad Request_"${key}"-is-missing-in-the-query-of-the-request`,
+          )
         }
+      } catch (error) {
+        // Handles either of the errors that have been thrown above
+        errorsThrown.push(error)
+      }
 
-        try {
-          // Validates the type of keys that are passed in the request
-          // query
-          validateTypeOfQueryKey(type, query, key)
-        } catch (error) {
-          // Handles either of the errors that have been thrown above
-          errorsThrown.push(error)
-        }
-      } else if ((key === 'missionID' || key === 'userID') && key in query) {
-        // If the key is "missionID" or "userID" then it is a special exception
-        // because this key needs to be allowed to be undefined so that all the
-        // missions can be returned and displayed on the HomePage.
-        // Since this key is allowed to be undefined that means only its type
-        // needs to be validated
-        try {
-          // Validates the type of keys that are passed in the request
-          // query
-          validateTypeOfQueryKey(type, query, key)
-        } catch (error) {
-          // Handles either of the errors that have been thrown above
-          errorsThrown.push(error)
-        }
+      try {
+        // Validates the type of keys that are passed in the request
+        // query
+        validateTypeOfQueryKey(type, query, key)
+      } catch (error) {
+        // Handles either of the errors that have been thrown above
+        errorsThrown.push(error)
       }
     })
 
-    if (errorsThrown.length === 0) {
-      next()
-    } else {
+    if (errorsThrown.length > 0) {
       response.status(400)
       response.statusMessage = ''
       errorsThrown.map((error: Error) => {
         response.statusMessage += `_${error.message}`
       })
-      response.send(response.statusMessage)
     }
   }
 }
 
-export default validateRequestBodyKeys
-validateRequestQueryKeys
+// ------- MIDDLEWARE FUNCTION(S) ------- //
+
+/**
+ * This function is used to validate the request body and query
+ * of an express request. It will check to see if the request
+ * body/queries in the current express request the specified
+ * keys and if the specified keys are the correct type
+ * (i.e., missionID: "string")
+ * @param requiredStructures The required keys and their types
+ * @param optionalStructures The optional keys and their types
+ * @returns A middleware function that validates the request body and query
+ */
+export const defineRequests = (
+  requiredStructures: {
+    body: {}
+    query: {}
+    params: {}
+  },
+  optionalStructures?: {
+    body?: {}
+    query?: {}
+    params?: {}
+  },
+) => {
+  return (request: Request, response: Response, next: NextFunction): void => {
+    validateRequestQueryKeys(requiredStructures.query, request, response)
+
+    validateRequestBodyKeys(
+      request,
+      response,
+      request.body,
+      requiredStructures.body,
+      optionalStructures,
+    )
+
+    if (response.statusMessage) {
+      response.send(response.statusMessage)
+    } else {
+      next()
+    }
+  }
+}
+
+export default defineRequests

@@ -4,10 +4,7 @@ import { ERROR_BAD_DATA } from '../../../database/database'
 import UserModel from '../../../database/models/model-user'
 import { StatusError } from '../../../modules/error'
 import { databaseLogger } from '../../../modules/logging'
-import validateRequestBodyKeys, {
-  RequestBodyFilters,
-  validateRequestQueryKeys,
-} from '../../../modules/requests'
+import { RequestBodyFilters, defineRequests } from '../../../modules/requests'
 import { hasPermittedRole, requireLogin } from '../../../user'
 
 //fields
@@ -17,14 +14,26 @@ const router = express.Router()
 router.post(
   '/',
   requireLogin,
-  validateRequestBodyKeys(
+  defineRequests(
     {
-      userID: RequestBodyFilters.STRING_50_CHAR,
-      firstName: RequestBodyFilters.STRING_50_CHAR,
-      lastName: RequestBodyFilters.STRING_50_CHAR,
-      password: RequestBodyFilters.STRING_50_CHAR,
+      body: {
+        user: {
+          userID: RequestBodyFilters.STRING_50_CHAR,
+          firstName: RequestBodyFilters.STRING_50_CHAR,
+          lastName: RequestBodyFilters.STRING_50_CHAR,
+          password: RequestBodyFilters.STRING_50_CHAR,
+        },
+      },
+      query: {},
+      params: {},
     },
-    { role: RequestBodyFilters.STRING_50_CHAR },
+    {
+      body: {
+        user: {
+          role: RequestBodyFilters.STRING_50_CHAR,
+        },
+      },
+    },
   ),
   (request, response) => {
     let body: any = request.body
@@ -92,7 +101,13 @@ router.post(
 // query parameters
 router.get(
   '/',
-  validateRequestQueryKeys({ userID: 'string' }),
+  defineRequests({
+    body: {},
+    query: {
+      userID: 'string',
+    },
+    params: {},
+  }),
   (request, response) => {
     let userID = request.query.userID
 
@@ -155,15 +170,25 @@ router.get('/session', (request, response) => {
 router.put(
   '/',
   requireLogin,
-  validateRequestBodyKeys(
+  defineRequests(
     {
-      userID: RequestBodyFilters.STRING_50_CHAR,
+      body: {
+        user: {
+          userID: RequestBodyFilters.STRING_50_CHAR,
+        },
+      },
+      query: {},
+      params: {},
     },
     {
-      role: RequestBodyFilters.STRING_50_CHAR,
-      firstName: RequestBodyFilters.STRING_50_CHAR,
-      lastName: RequestBodyFilters.STRING_50_CHAR,
-      password: RequestBodyFilters.STRING_50_CHAR,
+      body: {
+        user: {
+          role: RequestBodyFilters.STRING_50_CHAR,
+          firstName: RequestBodyFilters.STRING_50_CHAR,
+          lastName: RequestBodyFilters.STRING_50_CHAR,
+          password: RequestBodyFilters.STRING_50_CHAR,
+        },
+      },
     },
   ),
   (request, response) => {
@@ -251,7 +276,13 @@ router.put(
 router.delete(
   '/',
   requireLogin,
-  validateRequestQueryKeys({ userID: 'string' }),
+  defineRequests({
+    body: {},
+    query: {
+      userID: 'string',
+    },
+    params: {},
+  }),
   (request, response) => {
     let query: any = request.query
 
@@ -273,9 +304,13 @@ router.delete(
 // post route for authenticating user trying to log in
 router.post(
   '/login',
-  validateRequestBodyKeys({
-    userID: RequestBodyFilters.STRING_50_CHAR,
-    password: RequestBodyFilters.STRING_50_CHAR,
+  defineRequests({
+    body: {
+      userID: RequestBodyFilters.STRING_50_CHAR,
+      password: RequestBodyFilters.STRING_50_CHAR,
+    },
+    query: {},
+    params: {},
   }),
   (request, response, next) => {
     UserModel.authenticate(

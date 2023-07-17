@@ -10,8 +10,9 @@ import Tooltip from '../content/communication/Tooltip'
 import {
   getAllUsers,
   User,
-  permittedRoles,
+  restrictedAccessRoles,
   userRoles,
+  fullAccessRoles,
 } from '../../modules/users'
 import List, { ESortByMethod } from '../content/general-layout/List'
 import MissionModificationPanel from '../content/user-controls/MissionModificationPanel'
@@ -75,7 +76,19 @@ export default function HomePage(props: IHomePage): JSX.Element | null {
     // This loads all the users from the database
     getAllUsers(
       (users: Array<User>) => {
-        setUsers(users)
+        if (currentUser && restrictedAccessRoles.includes(currentUser.role)) {
+          users.forEach((user: User) => {
+            if (user.role === userRoles.Student) {
+              setUsers((users) => [...users, user])
+            }
+          })
+        } else if (currentUser && fullAccessRoles.includes(currentUser.role)) {
+          users.forEach((user: User) => {
+            if (currentUser && user.userID !== currentUser.userID) {
+              setUsers((users) => [...users, user])
+            }
+          })
+        }
         appActions.finishLoading()
         callback()
       },
@@ -236,7 +249,7 @@ export default function HomePage(props: IHomePage): JSX.Element | null {
       if (
         files.length > 0 &&
         currentUser &&
-        permittedRoles.includes(currentUser.role)
+        restrictedAccessRoles.includes(currentUser.role)
       ) {
         importMissionFiles(files)
       }
@@ -303,14 +316,13 @@ export default function HomePage(props: IHomePage): JSX.Element | null {
   // This will switch to the changelog
   // page.
   const viewChangelog = (): void => {
-    if (currentUser && permittedRoles.includes(currentUser.role)) {
+    if (currentUser && restrictedAccessRoles.includes(currentUser.role)) {
       appActions.goToPage('ChangelogPage', {})
     }
   }
 
-  // This loads the mission in session from the database
-  // and stores it in a global state to be used on the GamePage
-  // where the Mission Map renders
+  // This will switch to the game page
+  // with the selected mission.
   const selectMission = (mission: Mission) => {
     let userRoleStringValues = Object.values(userRoles)
 
@@ -321,14 +333,22 @@ export default function HomePage(props: IHomePage): JSX.Element | null {
     }
   }
 
+  // This will switch to the user form
+  // page with the selected user.
   const selectUser = (user: User) => {
     let userRoleStringValues = Object.values(userRoles)
 
     if (currentUser && userRoleStringValues.includes(currentUser.role)) {
-      appActions.goToPage('UserFormPage', {
-        userID: user.userID,
-      })
+      // appActions.goToPage('UserFormPage', {
+      //   userID: user.userID,
+      // })
     }
+  }
+
+  const createUser = () => {
+    // appActions.goToPage('UserFormPage', {
+    //   userID: null,
+    // })
   }
 
   /* -- RENDER -- */
@@ -336,6 +356,7 @@ export default function HomePage(props: IHomePage): JSX.Element | null {
   // Class names used for styling based on the
   // current user's role.
   let selectionContentClassName: string = 'SelectionContent'
+  let userListContainer: string = 'Hidden'
   let editContentClassName: string = 'EditContentRow'
   let fileDropBoxClassName: string = 'Hidden'
   let displayLogout: boolean = false
@@ -345,40 +366,44 @@ export default function HomePage(props: IHomePage): JSX.Element | null {
     displayLogout = true
   }
 
-  if (currentUser && permittedRoles.includes(currentUser.role)) {
+  if (currentUser && restrictedAccessRoles.includes(currentUser.role)) {
     selectionContentClassName = 'SelectionContent-list InstructorView'
+    userListContainer = 'UserListContainer'
     editContentClassName += ' InstructorView'
     fileDropBoxClassName = 'FileDropBox'
     versionClassName = 'Version'
   }
 
-  if (currentUser && permittedRoles.includes(currentUser.role)) {
-    return (
-      <div
-        className='HomePage Page'
-        ref={page}
-        onDragOver={handleFileDragOver}
-        onDragLeave={handleFileDragLeave}
-        onDrop={handleFileDrop}
-      >
-        {/* { File Drop Box } */}
-        <div className={fileDropBoxClassName}>
-          <div className='UploadIcon'></div>
-        </div>
-        {/* { Navigation } */}
-        <Navigation
-          brandingCallback={null}
-          brandingTooltipDescription={null}
-          links={[
-            {
-              text: 'Log out',
-              handleClick: logout,
-              visible: displayLogout,
-              key: 'log-out',
-            },
-          ]}
-        />
-        {/* { Content } */}
+  return (
+    <div
+      className='HomePage Page'
+      ref={page}
+      onDragOver={handleFileDragOver}
+      onDragLeave={handleFileDragLeave}
+      onDrop={handleFileDrop}
+    >
+      {/* -- FILE DROP BOX -- */}
+      <div className={fileDropBoxClassName}>
+        <div className='UploadIcon'></div>
+      </div>
+
+      {/* -- NAVIGATION */}
+      <Navigation
+        brandingCallback={null}
+        brandingTooltipDescription={null}
+        links={[
+          {
+            text: 'Log out',
+            handleClick: logout,
+            visible: displayLogout,
+            key: 'log-out',
+          },
+        ]}
+      />
+      {/* -- CONTENT -- */}
+
+      {/* { Mission List } */}
+      <div className='MissionListContainer'>
         <List<Mission>
           headingText={'Select a mission:'}
           items={missions}
@@ -434,6 +459,9 @@ export default function HomePage(props: IHomePage): JSX.Element | null {
             hidden
           />
         </div>
+      </div>
+      {/* { User List } */}
+      <div className={userListContainer}>
         <List<User>
           headingText={'Select a user:'}
           items={users}
@@ -469,128 +497,33 @@ export default function HomePage(props: IHomePage): JSX.Element | null {
           }}
           listSpecificItemClassName={selectionContentClassName}
         />
-        <div className={editContentClassName}></div>
-
-        <div className='FooterContainer' draggable={false}>
-          <div
-            className={versionClassName}
-            onClick={viewChangelog}
-            draggable={false}
-          >
-            v1.3.1
-            <Tooltip description={'View changelog.'} />
-          </div>
-          <a
-            href='https://www.midjourney.com/'
-            className='Credit'
-            draggable={false}
-          >
-            Photo by Midjourney
-          </a>
-        </div>
-      </div>
-    )
-  } else {
-    return (
-      <div
-        className='HomePage Page'
-        ref={page}
-        onDragOver={handleFileDragOver}
-        onDragLeave={handleFileDragLeave}
-        onDrop={handleFileDrop}
-      >
-        {/* { File Drop Box } */}
-        <div className={fileDropBoxClassName}>
-          <div className='UploadIcon'></div>
-        </div>
-        {/* { Navigation } */}
-        <Navigation
-          brandingCallback={null}
-          brandingTooltipDescription={null}
-          links={[
-            {
-              text: 'Log out',
-              handleClick: logout,
-              visible: displayLogout,
-              key: 'log-out',
-            },
-          ]}
-        />
-        {/* { Content } */}
-        <List<Mission>
-          headingText={'Select a mission:'}
-          items={missions}
-          sortByMethods={[ESortByMethod.Name]}
-          nameProperty={'name'}
-          alwaysUseBlanks={true}
-          renderItemDisplay={(mission: Mission) => {
-            return (
-              <>
-                <div className='SelectionRow'>
-                  <div className='Text' onClick={() => selectMission(mission)}>
-                    {mission.name}
-                    <Tooltip description='Launch mission.' />
-                  </div>
-                  <MissionModificationPanel
-                    mission={mission}
-                    appActions={appActions}
-                    handleSuccessfulCopy={() => setMountHandled(false)}
-                    handleSuccessfulDeletion={() => setMountHandled(false)}
-                    handleSuccessfulToggleLive={() => {}}
-                  />
-                </div>
-              </>
-            )
-          }}
-          searchableProperties={['name']}
-          noItemsDisplay={
-            <div className='NoContent'>No missions available...</div>
-          }
-          ajaxStatus={EAjaxStatus.Loaded}
-          applyItemStyling={() => {
-            return {}
-          }}
-          listSpecificItemClassName={selectionContentClassName}
-        />
         <div className={editContentClassName}>
           <ButtonSVG
             purpose={EButtonSVGPurpose.Add}
-            handleClick={createMission}
-            tooltipDescription={'Create new mission'}
-            uniqueClassName={'NewMissionButton'}
+            handleClick={createUser}
+            tooltipDescription={'Create new user'}
           />
-          <ButtonSVG
-            purpose={EButtonSVGPurpose.Upload}
-            handleClick={handleMissionImportRequest}
-            tooltipDescription={'Import a .metis file from your local system.'}
-          />
-          <input
-            className='ImportMissionTrigger'
-            type='file'
-            ref={importMissionTrigger}
-            onChange={handleImportMissionTriggerChange}
-            hidden
-          />
-        </div>
-
-        <div className='FooterContainer' draggable={false}>
-          <div
-            className={versionClassName}
-            onClick={viewChangelog}
-            draggable={false}
-          >
-            v1.3.1
-            <Tooltip description={'View changelog.'} />
-          </div>
-          <a
-            href='https://www.midjourney.com/'
-            className='Credit'
-            draggable={false}
-          >
-            Photo by Midjourney
-          </a>
         </div>
       </div>
-    )
-  }
+
+      {/* -- FOOTER -- */}
+      <div className='FooterContainer' draggable={false}>
+        <div
+          className={versionClassName}
+          onClick={viewChangelog}
+          draggable={false}
+        >
+          v1.3.1
+          <Tooltip description={'View changelog.'} />
+        </div>
+        <a
+          href='https://www.midjourney.com/'
+          className='Credit'
+          draggable={false}
+        >
+          Photo by Midjourney
+        </a>
+      </div>
+    </div>
+  )
 }

@@ -12,10 +12,7 @@ import { hasPermittedRole, requireLogin } from '../../../user'
 import { APP_DIR } from '../../../config'
 import uploads from '../../../middleware/uploads'
 import { commandScripts } from '../../../action-execution'
-import validateRequestBodyKeys, {
-  RequestBodyFilters,
-  validateRequestQueryKeys,
-} from '../../../modules/requests'
+import { RequestBodyFilters, defineRequests } from '../../../modules/requests'
 import { colorOptions } from '../../../modules/mission-node-colors'
 
 type MulterFile = Express.Multer.File
@@ -28,14 +25,20 @@ const router = express.Router()
 router.post(
   '/',
   requireLogin,
-  validateRequestBodyKeys({
-    name: RequestBodyFilters.STRING,
-    introMessage: RequestBodyFilters.STRING,
-    versionNumber: RequestBodyFilters.NUMBER,
-    live: RequestBodyFilters.BOOLEAN,
-    initialResources: RequestBodyFilters.NUMBER,
-    nodeStructure: RequestBodyFilters.OBJECT,
-    nodeData: RequestBodyFilters.OBJECT,
+  defineRequests({
+    body: {
+      mission: {
+        name: RequestBodyFilters.STRING,
+        introMessage: RequestBodyFilters.STRING,
+        versionNumber: RequestBodyFilters.NUMBER,
+        live: RequestBodyFilters.BOOLEAN,
+        initialResources: RequestBodyFilters.NUMBER,
+        nodeStructure: RequestBodyFilters.OBJECT,
+        nodeData: RequestBodyFilters.OBJECT,
+      },
+    },
+    query: {},
+    params: {},
   }),
   (request, response) => {
     let body: any = request.body
@@ -414,7 +417,11 @@ router.post(
 // This will return all of the missions.
 router.get(
   '/',
-  validateRequestQueryKeys({ missionID: 'objectId' }),
+  defineRequests({
+    body: {},
+    query: { missionID: 'objectId' },
+    params: {},
+  }),
   (request, response) => {
     let missionID = request.query.missionID
 
@@ -465,7 +472,7 @@ router.get(
 router.get(
   '/export/*',
   requireLogin,
-  validateRequestQueryKeys({ missionID: 'objectId' }),
+  defineRequests({ body: {}, query: { missionID: 'objectId' }, params: {} }),
   (request, response) => {
     let missionID = request.query.missionID
 
@@ -534,7 +541,7 @@ router.get(
 // the database that is currently in use.
 router.get(
   '/environment/',
-  validateRequestQueryKeys({}),
+  defineRequests({ body: {}, query: {}, params: {} }),
   (request, response) => {
     response.send(process.env)
   },
@@ -544,9 +551,13 @@ router.get(
 // This will return all the available
 // color options that can be used to
 // style a mission-node.
-router.get('/colors/', validateRequestQueryKeys({}), (request, response) => {
-  response.json({ colorOptions })
-})
+router.get(
+  '/colors/',
+  defineRequests({ body: {}, query: {}, params: {} }),
+  (request, response) => {
+    response.json({ colorOptions })
+  },
+)
 
 // -- PUT /api/v1/missions/handle-action-execution/
 // This handles the effect on an asset
@@ -554,10 +565,16 @@ router.get('/colors/', validateRequestQueryKeys({}), (request, response) => {
 router.put(
   '/handle-action-execution/',
   requireLogin,
-  validateRequestBodyKeys({
-    missionID: RequestBodyFilters.OBJECTID,
-    nodeID: RequestBodyFilters.STRING,
-    actionID: RequestBodyFilters.STRING,
+  defineRequests({
+    body: {
+      mission: {
+        missionID: RequestBodyFilters.OBJECTID,
+        nodeID: RequestBodyFilters.STRING,
+        actionID: RequestBodyFilters.STRING,
+      },
+    },
+    query: {},
+    params: {},
   }),
   (request, response) => {
     let body: any = request.body
@@ -603,18 +620,28 @@ router.put(
 router.put(
   '/',
   requireLogin,
-  validateRequestBodyKeys(
+  defineRequests(
     {
-      missionID: RequestBodyFilters.OBJECTID,
+      body: {
+        mission: {
+          missionID: RequestBodyFilters.OBJECTID,
+        },
+      },
+      query: {},
+      params: {},
     },
     {
-      name: RequestBodyFilters.STRING,
-      introMessage: RequestBodyFilters.STRING,
-      versionNumber: RequestBodyFilters.NUMBER,
-      initialResources: RequestBodyFilters.NUMBER,
-      live: RequestBodyFilters.BOOLEAN,
-      nodeStructure: RequestBodyFilters.OBJECT,
-      nodeData: RequestBodyFilters.OBJECT,
+      body: {
+        mission: {
+          name: RequestBodyFilters.STRING,
+          introMessage: RequestBodyFilters.STRING,
+          versionNumber: RequestBodyFilters.NUMBER,
+          initialResources: RequestBodyFilters.NUMBER,
+          live: RequestBodyFilters.BOOLEAN,
+          nodeStructure: RequestBodyFilters.OBJECT,
+          nodeData: RequestBodyFilters.OBJECT,
+        },
+      },
     },
   ),
   (request, response) => {
@@ -719,9 +746,15 @@ router.put(
 router.put(
   '/copy/',
   requireLogin,
-  validateRequestBodyKeys({
-    copyName: RequestBodyFilters.STRING,
-    originalID: RequestBodyFilters.STRING,
+  defineRequests({
+    body: {
+      mission: {
+        copyName: RequestBodyFilters.STRING,
+        originalID: RequestBodyFilters.STRING,
+      },
+    },
+    query: {},
+    params: {},
   }),
   (request, response) => {
     let body: any = request.body
@@ -776,7 +809,7 @@ router.put(
 router.delete(
   '/',
   requireLogin,
-  validateRequestQueryKeys({ missionID: 'objectId' }),
+  defineRequests({ body: {}, query: { missionID: 'objectId' }, params: {} }),
   (request, response) => {
     let query: any = request.query
 

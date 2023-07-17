@@ -66,27 +66,34 @@
     padding: 20px 0;
   }
 
-  .EditContentRow {
-    display: none;
+  .MissionListContainer,
+  .UserListContainer {
+    display: grid;
+    place-items: center;
+    width: 100%;
 
-    place-content: center;
-    align-items: center;
-    grid-template-columns: auto auto;
-    width: 50%;
-    box-sizing: border-box;
-    background-color: black;
-    border: 3px solid white;
-    border-top: none;
-    border-bottom-left-radius: 15px;
-    border-bottom-right-radius: 15px;
-    padding: 10px 0;
+    .EditContentRow {
+      display: none;
 
-    .ButtonSVG {
-      transform: scale(0.8);
-    }
+      place-content: center;
+      align-items: center;
+      grid-template-columns: auto auto;
+      width: 50%;
+      box-sizing: border-box;
+      background-color: black;
+      border: 3px solid white;
+      border-top: none;
+      border-bottom-left-radius: 15px;
+      border-bottom-right-radius: 15px;
+      padding: 10px 0;
 
-    &.InstructorView {
-      display: grid;
+      .ButtonSVG {
+        transform: scale(0.8);
+      }
+
+      &.InstructorView {
+        display: grid;
+      }
     }
   }
 

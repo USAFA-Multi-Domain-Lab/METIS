@@ -1,0 +1,9 @@
+@import '../../config.scss';
+
+.UserFormPage {
+  .Navigation {
+    display: grid;
+    grid-template-columns: auto 125px 150px;
+    padding: 20px 0;
+  }
+}

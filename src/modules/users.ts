@@ -2,10 +2,10 @@ import axios, { AxiosResponse, AxiosError } from 'axios'
 import { AnyObject } from './toolbox/objects'
 
 export interface IUser {
-  firstName: string
-  lastName: string
   userID: string
   role: string
+  firstName: string
+  lastName: string
 }
 
 export interface IUserExposed {
@@ -18,12 +18,17 @@ export interface IUserExposed {
 // This is the list of user roles.
 export const userRoles: AnyObject = {
   Student: 'student',
+  Instructor: 'instructor',
   Admin: 'admin',
 }
 
 // This is used to determine which roles
 // can access certain routes.
-export const permittedRoles: string[] = [userRoles.Admin]
+export const restrictedAccessRoles: string[] = [
+  userRoles.Admin,
+  userRoles.Instructor,
+]
+export const fullAccessRoles: string[] = [userRoles.Admin]
 
 export class User {
   public userID: string
@@ -31,11 +36,16 @@ export class User {
   public lastName: string
   public role: string
 
-  public constructor(user: IUser) {
-    this.userID = user.userID
-    this.firstName = user.firstName
-    this.lastName = user.lastName
-    this.role = user.role
+  public constructor(
+    userID: string,
+    firstName: string,
+    lastName: string,
+    role: string,
+  ) {
+    this.userID = userID
+    this.firstName = firstName
+    this.lastName = lastName
+    this.role = role
   }
 }
 
@@ -120,7 +130,14 @@ export const createUser = (
   axios
     .post(`/api/v1/users/`, { user: user })
     .then((response: AxiosResponse<AnyObject>): void => {
-      let createdUser = response.data.user
+      let userJSON = response.data.user
+
+      let createdUser = new User(
+        userJSON.userID,
+        userJSON.firstName,
+        userJSON.lastName,
+        userJSON.role,
+      )
 
       callback(createdUser)
     })
@@ -172,20 +189,16 @@ export const getUser = (
 
 // This will update the given user to
 // the server.
-export const updateUser = (
+export const saveUser = (
   user: User,
-  callback: (user: User) => void,
+  callback: () => void,
   callbackError: (error: AxiosError) => void = () => {},
 ): void => {
   axios
     .put(`/api/v1/users/`, { user: user })
-    .then((response: AxiosResponse<AnyObject>): void => {
-      let user = response.data.user
-
-      callback(user)
-    })
+    .then(callback)
     .catch((error: AxiosError) => {
-      console.error('Failed to update user.')
+      console.error('Failed to save user.')
       console.error(error)
       callbackError(error)
     })
@@ -216,6 +229,6 @@ export default {
   createUser,
   getAllUsers,
   getUser,
-  updateUser,
+  updateUser: saveUser,
   deleteUser,
 }
