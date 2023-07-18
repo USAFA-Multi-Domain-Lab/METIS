@@ -9,7 +9,8 @@
   width: 100%;
   height: $nav-height;
   vertical-align: bottom;
-  background-color: $background-main;
+  box-shadow: $box-shadow-alt3;
+  border-bottom: 2px solid $color-main;
   z-index: 100;
 
   .Branding {

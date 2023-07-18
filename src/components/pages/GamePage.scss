@@ -1,17 +1,21 @@
 @import '../../config.scss';
 
 .GamePage {
-  $page-vertical-padding: 35px;
-  $page-horizontal-padding: 30px;
+  $page-padding-top: 0px;
+  $page-padding-bottom: 35px;
+  $page-horizontal-padding: 0px;
   $page-width: calc(100vw - #{$page-horizontal-padding * 2});
-  $page-height: calc(100vh - #{$page-vertical-padding * 2});
-  $page-row-1-height: 85px;
+  $page-height: calc(100vh - #{$page-padding-top + $page-padding-bottom});
+  $page-row-1-height: 95px;
   $page-row-2-height: calc(#{$page-height} - #{$page-row-1-height});
   $resource-n-action-height: 55px;
   $map-n-output-height: calc(
     #{$page-row-2-height} - #{$resource-n-action-height}
   );
   $node-action-width: 400px;
+  $content-horizontal-padding: 30px;
+  $content-vertical-padding: 0px;
+  $content-width: calc(#{$page-width} - #{$content-horizontal-padding * 2});
 
   overflow-x: hidden;
   overflow-y: hidden;
@@ -21,10 +25,20 @@
   grid-template-columns: $page-width;
   grid-template-rows: $page-row-1-height $page-row-2-height;
   margin: 0 auto;
-  padding: $page-vertical-padding $page-horizontal-padding;
+  padding: $page-padding-top $page-horizontal-padding $page-padding-bottom;
+  background: url('../../assets/images/landing-page-img.png');
+  background-size: 100% 120%;
+  background-position: center;
+  background-repeat: no-repeat;
+  box-shadow: $box-shadow-alt1;
 
   .Navigation {
+    $nav-vertical-padding: 10px;
+    $nav-horizontal-padding: 30px;
+
     grid-template-columns: auto 190px 120px;
+    width: calc($page-width - $nav-horizontal-padding * 2);
+    padding: $nav-vertical-padding $nav-horizontal-padding;
 
     .Branding {
       margin: 0;
@@ -36,8 +50,9 @@
 
     display: grid;
     grid-template-rows: $content-row-1-height auto;
-    width: 100%;
+    width: $content-width;
     height: $page-row-2-height;
+    padding: $content-vertical-padding $content-horizontal-padding;
 
     .TopBar {
       .Resources {
@@ -105,6 +120,7 @@
     .OutputPanel {
       width: 100%;
       height: 100%;
+      box-shadow: $box-shadow-alt2;
     }
     .NodeActions {
       position: relative;
@@ -116,9 +132,5 @@
       min-height: 320px;
       max-height: 60%;
     }
-  }
-
-  @media only screen and (max-width: 768px) {
-    padding: 10px;
   }
 }

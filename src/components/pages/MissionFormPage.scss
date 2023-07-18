@@ -2,19 +2,38 @@
 @import '../../util.scss';
 
 .MissionFormPage {
+  $page-width: 100vw;
+  $page-height: 100vh;
+  $page-row-1-height: 82px;
+  $page-row-3-height: 30px;
+  $page-row-2-height: calc(
+    $page-height - $page-row-1-height - $page-row-3-height
+  );
+
   display: grid;
+  align-content: space-between;
   overflow-x: hidden;
   overflow-y: hidden;
-  grid-template-rows: 85px calc(100vh - 85px - 70px);
+  grid-template-rows: $page-row-1-height $page-row-2-height $page-row-3-height;
   margin: 0 auto;
-  padding: 35px 30px;
   box-sizing: border-box;
-  width: 100vw;
-  height: 100vh;
+  width: $page-width;
+  height: $page-height;
+  background: url('../../assets/images/landing-page-img.png');
+  background-size: 100% 120%;
+  background-position: center;
+  background-repeat: no-repeat;
+  box-shadow: $box-shadow-alt5;
 
   .Navigation {
+    $nav-vertical-padding: 10px;
+    $nav-horizontal-padding: 30px;
+
     display: grid;
     grid-template-columns: auto 130px 150px 130px;
+    padding: $nav-vertical-padding $nav-horizontal-padding;
+    width: calc(#{$page-width} - #{$nav-horizontal-padding * 2});
+    box-shadow: $box-shadow-alt6;
 
     .Branding {
       margin: 0;
@@ -22,13 +41,18 @@
   }
 
   .Content {
+    $content-vertical-padding: 35px;
+    $content-horizontal-padding: 30px;
+
     margin: 0 auto;
-    height: 100%;
+    height: calc(100% - #{$content-vertical-padding * 2});
+    padding: $content-vertical-padding $content-horizontal-padding;
+    width: calc($page-width - #{$content-horizontal-padding * 2});
 
     .MissionMap {
       height: 100%;
       width: unset;
-      background-color: $background-alt2;
+      box-shadow: $box-shadow-alt4;
 
       .List {
         .items {
@@ -43,10 +67,10 @@
 
     .SidePanel {
       height: 100%;
-      scrollbar-color: $color-pointer-mark $background-alt2;
+      scrollbar-color: $color-pointer-mark $background-alt7;
 
       ::-webkit-scrollbar {
-        background: $background-alt2;
+        background: $background-alt7;
       }
 
       ::-webkit-scrollbar-thumb {
@@ -65,7 +89,7 @@
         border: 2px solid $color-main;
         height: 100%;
         padding: 0;
-        background-color: $background-alt2;
+        box-shadow: $box-shadow-alt6;
 
         .BoxTop {
           display: grid;
@@ -79,8 +103,8 @@
           height: 70px;
           padding: 5px 10px 0;
           background: linear-gradient(
-            $background-alt2 0%,
-            $background-alt2 80%,
+            $box-shadow-alt6 0%,
+            $box-shadow-alt6 80%,
             transparent 100%
           );
 
@@ -103,6 +127,12 @@
       }
 
       .SidePanelSection {
+        .Detail {
+          .Field {
+            box-shadow: $box-shadow-alt6;
+          }
+        }
+
         .ButtonContainer {
           display: block;
           min-width: 225px;
@@ -132,6 +162,32 @@
             }
           }
         }
+      }
+    }
+  }
+
+  .FooterContainer {
+    display: grid;
+    grid-template-columns: auto;
+    padding: 0 20px 20px;
+
+    * {
+      opacity: 0.7;
+      width: -moz-fit-content;
+      width: fit-content;
+    }
+
+    .Credit {
+      -webkit-user-select: none;
+      user-select: none;
+      margin-left: auto;
+      text-align: right;
+      font-size: 0.6em;
+      text-decoration: none;
+      -webkit-user-drag: none;
+
+      &:hover {
+        opacity: 1;
       }
     }
   }

@@ -440,9 +440,7 @@ export default function MissionFormPage(
 
     return (
       <div className={'MissionFormPage Page'}>
-        {
-          // -- navigation --
-        }
+        {/* -- NAVIGATION */}
         <Navigation
           links={[
             {
@@ -467,9 +465,8 @@ export default function MissionFormPage(
           brandingCallback={goHome}
           brandingTooltipDescription='Go home.'
         />
-        {
-          // -- content --
-        }
+
+        {/* -- CONTENT -- */}
         <div className='Content'>
           <PanelSizeRelationship
             panel1={{
@@ -565,6 +562,17 @@ export default function MissionFormPage(
             sizingMode={EPanelSizingMode.Panel1_Auto__Panel2_Defined}
             initialDefinedSize={330}
           />
+        </div>
+
+        {/* -- FOOTER -- */}
+        <div className='FooterContainer'>
+          <a
+            href='https://www.midjourney.com/'
+            className='Credit'
+            draggable={false}
+          >
+            Photo by Midjourney
+          </a>
         </div>
       </div>
     )
