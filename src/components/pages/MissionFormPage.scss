@@ -54,6 +54,12 @@
       width: unset;
       box-shadow: $box-shadow-alt4;
 
+      .ButtonSVGPanel {
+        .glue {
+          box-shadow: $box-shadow-alt6;
+        }
+      }
+
       .List {
         .items {
           .item {

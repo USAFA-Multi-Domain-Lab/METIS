@@ -106,6 +106,8 @@
 
       .ButtonSVGPanel {
         .glue {
+          box-shadow: $box-shadow-alt2;
+
           .ButtonSVG {
             &.cancel {
               padding-left: 0;
