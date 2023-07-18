@@ -109,8 +109,8 @@
           height: 70px;
           padding: 5px 10px 0;
           background: linear-gradient(
-            $box-shadow-alt6 0%,
-            $box-shadow-alt6 80%,
+            $background-alt7 0%,
+            $background-alt7 80%,
             transparent 100%
           );
 
@@ -133,12 +133,6 @@
       }
 
       .SidePanelSection {
-        .Detail {
-          .Field {
-            box-shadow: $box-shadow-alt6;
-          }
-        }
-
         .ButtonContainer {
           display: block;
           min-width: 225px;
