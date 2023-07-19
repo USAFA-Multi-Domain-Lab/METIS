@@ -354,7 +354,7 @@ describe('Export/Import File Tests', function () {
     agent
       .get(`/api/v1/missions/export/`)
       .then(function (response: ChaiHttp.Response) {
-        expect(response).to.have.status(404)
+        expect(response).to.have.status(400)
         done()
       })
       .catch(function (error) {
@@ -1104,7 +1104,7 @@ describe('Request Body Validation', function () {
       })
   })
 
-  it('Sending a request with all required body keys and their correct types results in a successful (200) response', function (done) {
+  it('Sending a request with all required and optional body keys and their correct types results in a successful (200) response', function (done) {
     agent
       .post('/api/v1/test/request-body-filter-check/')
       .set('Content-Type', 'application/json')

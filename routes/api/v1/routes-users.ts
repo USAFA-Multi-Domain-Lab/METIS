@@ -101,13 +101,20 @@ router.post(
 // query parameters
 router.get(
   '/',
-  defineRequests({
-    body: {},
-    query: {
-      userID: 'string',
+  defineRequests(
+    {
+      body: {},
+      query: {},
+      params: {},
     },
-    params: {},
-  }),
+    {
+      body: {},
+      query: {
+        userID: 'string',
+      },
+      params: {},
+    },
+  ),
   (request, response) => {
     let userID = request.query.userID
 

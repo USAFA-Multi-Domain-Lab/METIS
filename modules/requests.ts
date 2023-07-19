@@ -216,212 +216,83 @@ const validateTypeOfQueryKey = (
   }
 }
 
-// const validateRequiredBodyKeys = (
-//   request: Request,
-//   response: Response,
-//   bodyKey: string,
-//   bodyValue: any,
-//   requiredKey: string,
-//   allBodyKeys: Array<string>,
-//   allRequiredKeys: Array<string>,
-//   errorsThrown: Array<any>,
-//   requiredValue: ((bodyKey: string, bodyValue: any) => void) | AnyObject,
-// ) => {
-//   if (typeof requiredValue === 'object') {
-//     try {
-//       if (bodyKey !== requiredKey && !allBodyKeys.includes(requiredKey)) {
-//         // If a key that is supposed to be in the body of the request is not
-//         // there then an error is thrown
-//         throw new Error(
-//           `Bad Request_"${requiredKey}"-is-missing-in-the-body-of-the-request`,
-//         )
-//       } else if (bodyKey === requiredKey && allRequiredKeys.includes(bodyKey)) {
-//         // Since this is an object, it will recursively
-//         // call this function until the value is the
-//         // correct type of function
-//         validateRequestBodyKeys(request, response, bodyValue, requiredValue)
-//       } else {
-//         // Removes the key from the request body
-//         // ! delete request.body[bodyKey]
-//       }
-//     } catch (error) {
-//       // Handles either of the errors that have been thrown above
-//       errorsThrown.push(error)
-//     }
-//   } else if (typeof requiredValue === 'function') {
-//     try {
-//       // If a key that is supposed to be in the body of the request is not
-//       // there then an error is thrown
-//       if (bodyKey !== requiredKey && !allBodyKeys.includes(requiredKey)) {
-//         throw new Error(
-//           `Bad Request_"${requiredKey}"-is-missing-in-the-body-of-the-request`,
-//         )
-//       } else if (bodyKey === requiredKey && allRequiredKeys.includes(bodyKey)) {
-//         // Runs all the required validator methods from the "RequestBodyFilter"
-//         // class that were passed in the request
-//         requiredValue(bodyKey, bodyValue)
-//       } else {
-//         // Removes the key from the request body
-//         // ! delete request.body[bodyKey]
-//       }
-//     } catch (error) {
-//       // Handles either of the errors that have been thrown above
-//       errorsThrown.push(error)
-//     }
-//   } else {
-//     let error: Error = new Error(
-//       `Bad Request_${requiredKey}-has-a-value-that-is-not-the-correct-type-of-function-or-object`,
-//     )
-//     errorsThrown.push(error)
-//   }
-// }
-
-// const validateRequiredAndOptionalBodyKeys = (
-//   request: Request,
-//   response: Response,
-//   optionalBodyKeys: {},
-//   bodyKey: string,
-//   bodyValue: any,
-//   requiredKey: string,
-//   allBodyKeys: Array<string>,
-//   allRequiredKeys: Array<string>,
-//   errorsThrown: Array<any>,
-//   requiredValue: ((bodyKey: string, bodyValue: any) => void) | AnyObject,
-// ) => {
-//   // Grabs all the optional keys
-//   let allOptionalKeys: Array<string> = Object.keys(optionalBodyKeys)
-
-//   // Grab all the optional values which are validator
-//   // methods from in the "RequestBodyFilters" class
-//   let allOptionalValues: Array<
-//     (bodyKey: string, bodyValue: any) => void | AnyObject
-//   > = Object.values(optionalBodyKeys)
-
-//   // Loops through all the optional keys that were passed
-//   // and validates them to make sure the request
-//   // being sent is correct
-//   allOptionalKeys.forEach((optionalKey: string, optionalKeyIndex: number) => {
-//     let optionalValue: ((bodyKey: string, bodyValue: any) => void) | AnyObject =
-//       allOptionalValues[optionalKeyIndex]
-
-//     if (
-//       typeof requiredValue === 'object' ||
-//       typeof optionalValue === 'object'
-//     ) {
-//       try {
-//         if (bodyKey !== requiredKey && !allBodyKeys.includes(requiredKey)) {
-//           // If a key that is supposed to be in the body of the request is not
-//           // there then an error is thrown
-//           throw new Error(
-//             `Bad Request_"${requiredKey}"-is-missing-in-the-body-of-the-request`,
-//           )
-//         } else if (
-//           (bodyKey === requiredKey && allRequiredKeys.includes(bodyKey)) ||
-//           (bodyKey === optionalKey && allOptionalKeys.includes(bodyKey))
-//         ) {
-//           // Since this is an object, it will recursively
-//           // call this function until the value is the
-//           // correct type of function
-//           validateRequestBodyKeys(
-//             request,
-//             response,
-//             bodyValue,
-//             requiredValue,
-//             optionalValue,
-//           )
-//         } else {
-//           // Removes the key from the request body
-//           // ! delete request.body[bodyKey]
-//         }
-//       } catch (error) {
-//         // Handles either of the errors that have been thrown above
-//         errorsThrown.push(error)
-//       }
-//     } else if (
-//       typeof requiredValue === 'function' ||
-//       typeof optionalValue === 'function'
-//     ) {
-//       try {
-//         // If a key that is supposed to be in the body of the request is not
-//         // there then an error is thrown
-//         if (bodyKey !== requiredKey && !allBodyKeys.includes(requiredKey)) {
-//           throw new Error(
-//             `Bad Request_"${requiredKey}"-is-missing-in-the-body-of-the-request`,
-//           )
-//         } else if (
-//           bodyKey === requiredKey &&
-//           allRequiredKeys.includes(bodyKey)
-//         ) {
-//           // Runs all the required validator methods from the "RequestBodyFilter"
-//           // class that were passed in the request
-//           requiredValue(bodyKey, bodyValue)
-//         } else if (
-//           bodyKey === optionalKey &&
-//           allOptionalKeys.includes(bodyKey)
-//         ) {
-//           // Runs all the optional validator methods from the "RequestBodyFilter"
-//           // class that were passed in the request
-//           optionalValue(bodyKey, bodyValue)
-//         } else {
-//           // Removes the key from the request body
-//           // ! delete request.body[bodyKey]
-//         }
-//       } catch (error) {
-//         // Handles either of the errors that have been thrown above
-//         errorsThrown.push(error)
-//       }
-//     } else {
-//       let error: Error = new Error(
-//         `Bad Request_${requiredKey}-or-${optionalKey}-has-a-value-that-is-not-the-correct-type-of-function-or-object`,
-//       )
-//       errorsThrown.push(error)
-//     }
-//   })
-// }
-
-// Recursive function that checks to see
-// if the request body in the current
-// express post request contains the
-// specified keys and if the specified keys
-// are the correct type
-// (i.e., name: "string" or initialResources: "number")
-const validateRequestBodyKeys = (
+const validateRequiredBodyKeys = (
+  allBodyKeys: Array<string>,
+  allBodyValues: Array<any>,
+  allRequiredKeys: Array<string>,
+  allRequiredValues: Array<
+    (bodyKey: string, bodyValue: any) => void | AnyObject
+  >,
+  errorsThrown: Array<any>,
   request: Request,
   response: Response,
-  bodyKeysSent: {},
-  requiredBodyKeys: {},
-  optionalBodyKeys: {} = {},
 ) => {
-  // Grabs all the keys that were passed
-  // in the body of the request
-  let allBodyKeys: Array<string> = Object.keys(bodyKeysSent)
+  // Loops through all the body keys that were passed
+  // to use as a reference
+  allBodyKeys.forEach((bodyKey: string, bodyKeyIndex: number) => {
+    let bodyValue: any = allBodyValues[bodyKeyIndex]
 
-  // Grabs all the values that were passed
-  // in the body of the request
-  let allBodyValues: Array<any> = Object.values(bodyKeysSent)
+    // Loops through all the required keys that were passed
+    // and validates them to make sure the request
+    // being sent is correct
+    allRequiredKeys.forEach((requiredKey: string, requiredKeyIndex: number) => {
+      let requiredValue:
+        | ((bodyKey: string, bodyValue: any) => void)
+        | AnyObject = allRequiredValues[requiredKeyIndex]
 
-  // Grabs all the required keys
-  let allRequiredKeys: Array<string> = Object.keys(requiredBodyKeys)
+      // If a key that is supposed to be in the body of the request is not
+      // there then an error is thrown
+      if (!allBodyKeys.includes(requiredKey)) {
+        let error: any = new Error(
+          `Bad Request_"${requiredKey}"-is-missing-in-the-body-of-the-request`,
+        )
+        errorsThrown.push(error)
+      }
 
-  // Grabs all the required values which are validator
-  // methods from in the "RequestBodyFilters" class
-  let allRequiredValues: Array<
+      if (
+        bodyKey === requiredKey &&
+        allRequiredKeys.includes(bodyKey) &&
+        typeof requiredValue === 'object'
+      ) {
+        // Since this is an object, it will recursively
+        // call this function until the value is the
+        // correct type of function
+        validateRequestBodyKeys(request, response, bodyValue, requiredValue)
+      } else if (
+        bodyKey === requiredKey &&
+        allRequiredKeys.includes(bodyKey) &&
+        typeof requiredValue === 'function'
+      ) {
+        try {
+          // Runs all the required validator methods from the "RequestBodyFilter"
+          // class that were passed in the request
+          requiredValue(bodyKey, bodyValue)
+        } catch (error) {
+          errorsThrown.push(error)
+        }
+      } else {
+        // Removes the key from the request body
+        // ! delete request.body[bodyKey]
+      }
+    })
+  })
+}
+
+const validateOptionalBodyKeys = (
+  allBodyKeys: Array<string>,
+  allBodyValues: Array<any>,
+  allRequiredKeys: Array<string>,
+  allRequiredValues: Array<
     (bodyKey: string, bodyValue: any) => void | AnyObject
-  > = Object.values(requiredBodyKeys)
-
-  // Grabs all the optional keys
-  let allOptionalKeys: Array<string> = Object.keys(optionalBodyKeys)
-
-  // Grab all the optional values which are validator
-  // methods from in the "RequestBodyFilters" class
-  let allOptionalValues: Array<
+  >,
+  allOptionalKeys: Array<string>,
+  allOptionalValues: Array<
     (bodyKey: string, bodyValue: any) => void | AnyObject
-  > = Object.values(optionalBodyKeys)
-
-  // Will contain any errors that occur while validating
-  // the request body
-  let errorsThrown: Array<any> = []
-
+  >,
+  errorsThrown: Array<any>,
+  request: Request,
+  response: Response,
+) => {
   // Loops through all the body keys that were passed
   // to use as a reference
   allBodyKeys.forEach((bodyKey: string, bodyKeyIndex: number) => {
@@ -443,6 +314,15 @@ const validateRequestBodyKeys = (
           let optionalValue:
             | ((bodyKey: string, bodyValue: any) => void)
             | AnyObject = allOptionalValues[optionalKeyIndex]
+
+          // If a key that is supposed to be in the body of the request is not
+          // there then an error is thrown
+          if (!allBodyKeys.includes(requiredKey)) {
+            let error: any = new Error(
+              `Bad Request_"${requiredKey}"-is-missing-in-the-body-of-the-request`,
+            )
+            errorsThrown.push(error)
+          }
 
           if (
             bodyKey === requiredKey &&
@@ -474,40 +354,110 @@ const validateRequestBodyKeys = (
             allRequiredKeys.includes(bodyKey) &&
             typeof requiredValue === 'function'
           ) {
-            // Runs all the required validator methods from the "RequestBodyFilter"
-            // class that were passed in the request
-            requiredValue(bodyKey, bodyValue)
+            try {
+              // Runs all the required validator methods from the "RequestBodyFilter"
+              // class that were passed in the request
+              requiredValue(bodyKey, bodyValue)
+            } catch (error) {
+              errorsThrown.push(error)
+            }
           } else if (
             bodyKey === optionalKey &&
             allOptionalKeys.includes(bodyKey) &&
             typeof optionalValue === 'function'
           ) {
-            // Runs all the optional validator methods from the "RequestBodyFilter"
-            // class that were passed in the request
-            optionalValue(bodyKey, bodyValue)
-          } else {
-            // Removes the key from the request body
-            // ! delete request.body[bodyKey]
-
             try {
-              if (
-                bodyKey !== requiredKey &&
-                !allBodyKeys.includes(requiredKey)
-              ) {
-                // If a key that is supposed to be in the body of the request is not
-                // there then an error is thrown
-                throw new Error(
-                  `Bad Request_"${requiredKey}"-is-missing-in-the-body-of-the-request`,
-                )
-              }
+              // Runs all the optional validator methods from the "RequestBodyFilter"
+              // class that were passed in the request
+              optionalValue(bodyKey, bodyValue)
             } catch (error) {
               errorsThrown.push(error)
             }
+          } else {
+            // Removes the key from the request body
+            // ! delete request.body[bodyKey]
           }
         },
       )
     })
   })
+}
+
+/**
+ * Recursive function that checks to see
+ * if the request body in the current
+ * express post request contains the
+ * specified keys and if the specified keys
+ * are the correct type
+ * (i.e., name: "string" or initialResources: "number")
+ * @param request The express request
+ * @param response The express response
+ * @param bodyKeysSent The keys and values that were passed in the body of the request
+ * @param requiredBodyKeys The required keys and their types
+ * @param optionalBodyKeys The optional keys and their types
+ * @returns A middleware function that validates the request body
+ * of an express request
+ */
+const validateRequestBodyKeys = (
+  request: Request,
+  response: Response,
+  bodyKeysSent: {},
+  requiredBodyKeys: {},
+  optionalBodyKeys?: {},
+) => {
+  // Grabs all the keys that were passed
+  // in the body of the request
+  let allBodyKeys: Array<string> = Object.keys(bodyKeysSent)
+
+  // Grabs all the values that were passed
+  // in the body of the request
+  let allBodyValues: Array<any> = Object.values(bodyKeysSent)
+
+  // Grabs all the required keys
+  let allRequiredKeys: Array<string> = Object.keys(requiredBodyKeys)
+
+  // Grabs all the required values which are validator
+  // methods from in the "RequestBodyFilters" class
+  let allRequiredValues: Array<
+    (bodyKey: string, bodyValue: any) => void | AnyObject
+  > = Object.values(requiredBodyKeys)
+
+  // Will contain any errors that occur while validating
+  // the request body
+  let errorsThrown: Array<any> = []
+
+  if (optionalBodyKeys) {
+    // Grabs all the optional keys
+    let allOptionalKeys: Array<string> = Object.keys(optionalBodyKeys)
+
+    // Grab all the optional values which are validator
+    // methods from in the "RequestBodyFilters" class
+    let allOptionalValues: Array<
+      (bodyKey: string, bodyValue: any) => void | AnyObject
+    > = Object.values(optionalBodyKeys)
+
+    validateOptionalBodyKeys(
+      allBodyKeys,
+      allBodyValues,
+      allRequiredKeys,
+      allRequiredValues,
+      allOptionalKeys,
+      allOptionalValues,
+      errorsThrown,
+      request,
+      response,
+    )
+  } else {
+    validateRequiredBodyKeys(
+      allBodyKeys,
+      allBodyValues,
+      allRequiredKeys,
+      allRequiredValues,
+      errorsThrown,
+      request,
+      response,
+    )
+  }
 
   if (errorsThrown.length > 0) {
     response.status(400)
@@ -532,62 +482,88 @@ const validateRequestBodyKeys = (
  * of an express request
  */
 const validateRequestQueryKeys = (
-  requiredQueryKeys: {},
   request: Request,
   response: Response,
+  requiredQueryKeys: {},
+  optionalQueryKeys?: {},
 ) => {
   let query: any = request.query
-  let queryKeysSent: Array<string> = Object.keys(requiredQueryKeys)
 
   // Grabs all the required keys and what their
   // types should be
-  let allKeys: Array<string> = Object.keys(requiredQueryKeys)
-  let allTypes: Array<string> = Object.values(requiredQueryKeys)
+  let allRequiredKeys: Array<string> = Object.keys(requiredQueryKeys)
+  let allRequiredTypes: Array<string> = Object.values(requiredQueryKeys)
 
   // Will contain any errors that occur while validating
   let errorsThrown: Array<any> = []
 
-  if (queryKeysSent !== requiredQueryKeys) {
+  if (!query) {
     requiredQueryKeys = {}
-    allKeys = []
-  } else {
-    // Loops through all the required keys that were passed
+    allRequiredKeys = []
+  }
+
+  // Loops through all the required keys that were passed
+  // and validates them to make sure the request
+  // being sent is correct
+  allRequiredKeys.forEach((requiredKey: string, index: number) => {
+    // This is what the property's type will be
+    let requiredType: string = allRequiredTypes[index]
+
+    try {
+      // If a key that is supposed to be in the request is not there
+      // then an error is thrown
+      if (!(requiredKey in query)) {
+        throw new Error(
+          `Bad Request_"${requiredKey}"-is-missing-in-the-query-of-the-request`,
+        )
+      }
+    } catch (error) {
+      // Handles either of the errors that have been thrown above
+      errorsThrown.push(error)
+    }
+
+    try {
+      // Validates the type of keys that are passed in the request
+      // query
+      validateTypeOfQueryKey(requiredType, query, requiredKey)
+    } catch (error) {
+      // Handles either of the errors that have been thrown above
+      errorsThrown.push(error)
+    }
+  })
+
+  if (optionalQueryKeys) {
+    // Grabs all the optional keys and what their
+    // types should be
+    let allOptionalKeys: Array<string> = Object.keys(optionalQueryKeys)
+    let allOptionalTypes: Array<string> = Object.values(optionalQueryKeys)
+
+    // Loops through all the optional keys that were passed
     // and validates them to make sure the request
     // being sent is correct
-    allKeys.forEach((key: string, index: number) => {
+    allOptionalKeys.forEach((optionalKey: string, index: number) => {
       // This is what the property's type will be
-      let type: string = allTypes[index]
+      let optionalType: string = allOptionalTypes[index]
 
       try {
-        // If a key that is supposed to be in the request is not there
-        // then an error is thrown
-        if (!(key in query)) {
-          throw new Error(
-            `Bad Request_"${key}"-is-missing-in-the-query-of-the-request`,
-          )
+        if (optionalKey in query) {
+          // Validates the type of keys if they are passed in
+          // the request query
+          validateTypeOfQueryKey(optionalType, query, optionalKey)
         }
       } catch (error) {
         // Handles either of the errors that have been thrown above
         errorsThrown.push(error)
       }
-
-      try {
-        // Validates the type of keys that are passed in the request
-        // query
-        validateTypeOfQueryKey(type, query, key)
-      } catch (error) {
-        // Handles either of the errors that have been thrown above
-        errorsThrown.push(error)
-      }
     })
+  }
 
-    if (errorsThrown.length > 0) {
-      response.status(400)
-      response.statusMessage = ''
-      errorsThrown.map((error: Error) => {
-        response.statusMessage += `_${error.message}`
-      })
-    }
+  if (errorsThrown.length > 0) {
+    response.status(400)
+    response.statusMessage = ''
+    errorsThrown.map((error: Error) => {
+      response.statusMessage += `_${error.message}`
+    })
   }
 }
 
@@ -616,14 +592,19 @@ export const defineRequests = (
   },
 ) => {
   return (request: Request, response: Response, next: NextFunction): void => {
-    validateRequestQueryKeys(requiredStructures.query, request, response)
+    validateRequestQueryKeys(
+      request,
+      response,
+      requiredStructures.query,
+      optionalStructures?.query,
+    )
 
     validateRequestBodyKeys(
       request,
       response,
       request.body,
       requiredStructures.body,
-      optionalStructures,
+      optionalStructures ? optionalStructures.body : undefined,
     )
 
     if (response.statusMessage) {

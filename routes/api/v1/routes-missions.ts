@@ -14,6 +14,7 @@ import uploads from '../../../middleware/uploads'
 import { commandScripts } from '../../../action-execution'
 import { RequestBodyFilters, defineRequests } from '../../../modules/requests'
 import { colorOptions } from '../../../modules/mission-node-colors'
+import { assetData } from '../../../modules/asset-data'
 
 type MulterFile = Express.Multer.File
 
@@ -417,11 +418,18 @@ router.post(
 // This will return all of the missions.
 router.get(
   '/',
-  defineRequests({
-    body: {},
-    query: { missionID: 'objectId' },
-    params: {},
-  }),
+  defineRequests(
+    {
+      body: {},
+      query: {},
+      params: {},
+    },
+    {
+      body: {},
+      query: { missionID: 'objectId' },
+      params: {},
+    },
+  ),
   (request, response) => {
     let missionID = request.query.missionID
 
@@ -559,6 +567,20 @@ router.get(
   },
 )
 
+// -- GET /api/v1/missions/assets/
+// This will return all the available
+// assets that can be selected to be
+// affected by an action after it is
+// executed.
+router.get(
+  '/assets/',
+  requireLogin,
+  defineRequests({ body: {}, query: {}, params: {} }),
+  (request, response) => {
+    response.json({ assetData })
+  },
+)
+
 // -- PUT /api/v1/missions/handle-action-execution/
 // This handles the effect on an asset
 // after an action is executed successfully
@@ -567,11 +589,9 @@ router.put(
   requireLogin,
   defineRequests({
     body: {
-      mission: {
-        missionID: RequestBodyFilters.OBJECTID,
-        nodeID: RequestBodyFilters.STRING,
-        actionID: RequestBodyFilters.STRING,
-      },
+      missionID: RequestBodyFilters.OBJECTID,
+      nodeID: RequestBodyFilters.STRING,
+      actionID: RequestBodyFilters.STRING,
     },
     query: {},
     params: {},
@@ -748,10 +768,8 @@ router.put(
   requireLogin,
   defineRequests({
     body: {
-      mission: {
-        copyName: RequestBodyFilters.STRING,
-        originalID: RequestBodyFilters.STRING,
-      },
+      copyName: RequestBodyFilters.STRING,
+      originalID: RequestBodyFilters.OBJECTID,
     },
     query: {},
     params: {},
