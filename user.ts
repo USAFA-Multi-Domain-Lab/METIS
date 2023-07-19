@@ -31,6 +31,8 @@ export const requireLogin = (
     options.permittedRoles !== undefined &&
     options.permittedRoles.includes(session.user.role)
   ) {
+    response.locals.session = session
+    response.locals.user = session.user
     next()
   } else {
     response.sendStatus(401)
@@ -57,6 +59,9 @@ export const requireInGame = (
     session.game !== undefined &&
     session.game.isJoined(session.user)
   ) {
+    response.locals.session = session
+    response.locals.user = session.user
+    response.locals.game = session.game
     next()
   } else {
     response.sendStatus(403)

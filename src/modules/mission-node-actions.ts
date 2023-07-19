@@ -49,6 +49,7 @@ export class MissionNodeAction {
     return (
       resourceCost <= mission.resources &&
       node.executable &&
+      !node.executing &&
       !this.succeeded &&
       this._willSucceedArray.length !== 0
     )
@@ -73,7 +74,10 @@ export class MissionNodeAction {
   // Determines if a node succeeded or not
   // after it is executed
   get succeeded(): boolean | null {
-    return this.node.executed && this._willSucceed
+    return (
+      this.node.lastExecutedAction?.actionID === this.actionID &&
+      this.node.lastExecutionSucceeded
+    )
   }
 
   constructor(
@@ -121,25 +125,6 @@ export class MissionNodeAction {
     }
   }
 
-  // This will determine whether a
-  // node action succeeds or fails based
-  // on the success chance passed.
-  static determineDifferentSuccessOutcomes = (
-    totalExecutionAttempts: number,
-    successChance: number,
-    rng: PRNG,
-  ): Array<boolean> => {
-    let willSucceedArray: Array<boolean> = []
-    let willSucceed: boolean = false
-
-    for (let i = 0; i < totalExecutionAttempts && !willSucceed; i++) {
-      willSucceed = rng.double() <= successChance
-      willSucceedArray.push(willSucceed)
-    }
-
-    return willSucceedArray
-  }
-
   // After the node is executed, the willSucceed that was just used is
   // removed from the "willSucceedArray" so that if the user re-executes
   // they can potentially see a different result.
@@ -167,12 +152,9 @@ export class MissionNodeAction {
     let node: MissionNode = this.node
     let mission: Mission = node.mission
 
-    node.handleActionExecutionEnd()
+    node.handleActionExecutionEnd(success)
 
     if (success) {
-      if (node.hasChildren && !node.isOpen) {
-        node.open()
-      }
       handleSuccess()
     } else if (!success) {
       handleFailure()
@@ -217,6 +199,25 @@ export class MissionNodeAction {
       )
       this.updateWillSucceedArray()
     }, processTime)
+  }
+
+  // This will determine whether a
+  // node action succeeds or fails based
+  // on the success chance passed.
+  static determineDifferentSuccessOutcomes = (
+    totalExecutionAttempts: number,
+    successChance: number,
+    rng: PRNG,
+  ): Array<boolean> => {
+    let willSucceedArray: Array<boolean> = []
+    let willSucceed: boolean = false
+
+    for (let i = 0; i < totalExecutionAttempts && !willSucceed; i++) {
+      willSucceed = rng.double() <= successChance
+      willSucceedArray.push(willSucceed)
+    }
+
+    return willSucceedArray
   }
 }
 

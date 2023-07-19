@@ -3,6 +3,8 @@ import { IMissionJSON, Mission } from './missions'
 import { IUserJSON, User } from './users'
 import axios, { AxiosError, AxiosResponse } from 'axios'
 import context from './context'
+import { MissionNodeAction } from './mission-node-actions'
+import { MissionNode } from './mission-nodes'
 
 export interface IGameJSON {
   gameID: string
@@ -34,6 +36,14 @@ export class Game {
   }
 
   /**
+   * A map of actionIDs to actions compiled from those found in the mission being executed.
+   */
+  private actions: Map<string, MissionNodeAction> = new Map<
+    string,
+    MissionNodeAction
+  >()
+
+  /**
    * ** Note: Use the static method `launch` to create a new game with a new game ID. **
    */
   public constructor(
@@ -44,6 +54,22 @@ export class Game {
     this.gameID = gameID
     this.mission = mission
     this._participants = participants
+    this.mapActions()
+  }
+
+  /**
+   * Loops through all the nodes in the mission, and each action in a node, and maps the actionID to the action in the field "actions".
+   */
+  private mapActions(): void {
+    // Initialize the actions map.
+    this.actions = new Map<string, MissionNodeAction>()
+
+    // Loops through and maps each action.
+    this.mission.nodes.forEach((node) => {
+      node.actions.forEach((action) => {
+        this.actions.set(action.actionID, action)
+      })
+    })
   }
 
   /**
@@ -132,7 +158,120 @@ export class Game {
 
           // If the user is not in the game, then
           // we cannot remove them.
-          return reject(new AxiosError('User is not in the game.'))
+          let error: AxiosError = new AxiosError('User is not in the game.')
+          return reject(error)
+        }
+      },
+    )
+  }
+
+  /**
+   * Opens the given node, making its children visible.
+   * @param {nodeID} string The ID of the node to be opened.
+   * @returns {Promise<void>} A promise of the action being executed.
+   */
+  public async open(nodeID: string): Promise<void> {
+    return new Promise<void>(
+      (resolve: () => void, reject: (error: AxiosError) => void): void => {
+        // If the context is react, then we need
+        // to make a request to the server. The
+        // server needs to handle the opening of
+        // the node, not the client.
+        if (context === 'react') {
+          axios
+            .post<void>(`${Game.API_ENDPOINT}/execute/`, { nodeID })
+            .then(resolve)
+            .catch((error: AxiosError) => {
+              console.error('Failed to open node.')
+              console.error(error)
+              reject(error)
+            })
+        }
+        // If the context is express, then we need
+        // to execute the action here.
+        else if (context === 'express') {
+          // Find the node, given the ID.
+          let node: MissionNode | undefined = this.mission.nodes.get(nodeID)
+
+          // If the node is undefined, then reject
+          // with a 404 error.
+          if (node === undefined) {
+            let error: AxiosError = new AxiosError('Node not found.')
+            error.status = 404
+            return reject(error)
+          }
+
+          // If the node is executable, then reject
+          // with a 401 error.
+          if (node.openable) {
+            let error: AxiosError = new AxiosError('Node is not openable.')
+            error.status = 401
+            return reject(error)
+          }
+
+          // Open the node.
+          node.open()
+        }
+      },
+    )
+  }
+
+  /**
+   * Executes the given action on the corresponding node.
+   * @param {actionID} string The ID of the action to be executed.
+   * @returns {Promise<void>} A promise of the action being executed.
+   */
+  public async execute(actionID: string): Promise<void> {
+    return new Promise<void>(
+      (resolve: () => void, reject: (error: AxiosError) => void): void => {
+        // If the context is react, then we need
+        // to make a request to the server. The
+        // server needs to handle the execution of
+        // the action, not the client.
+        if (context === 'react') {
+          axios
+            .post<void>(`${Game.API_ENDPOINT}/execute/`, { actionID })
+            .then(resolve)
+            .catch((error: AxiosError) => {
+              console.error('Failed to execute action.')
+              console.error(error)
+              reject(error)
+            })
+        }
+        // If the context is express, then we need
+        // to execute the action here.
+        else if (context === 'express') {
+          // Find the action given the ID.
+          let action: MissionNodeAction | undefined = this.actions.get(actionID)
+
+          // If the action is undefined, then reject
+          // with a 404 error.
+          if (action === undefined) {
+            let error: AxiosError = new AxiosError('Action not found.')
+            error.status = 404
+            return reject(error)
+          }
+
+          // If the action is not executable, then
+          // reject with a 401 error.
+          if (!action.node.executable) {
+            let error: AxiosError = new AxiosError('Node is not executable.')
+            error.status = 401
+            return reject(error)
+          }
+
+          // If the node is not revealed, then
+          // reject with a 401 error.
+          if (action.node.revealed) {
+            let error: AxiosError = new AxiosError('Node is not revealed.')
+            error.status = 401
+            return reject(error)
+          }
+
+          // Execute the action.
+          action.execute(false, resolve, () => {
+            reject(new AxiosError('Failed to execute action.'))
+          })
         }
       },
     )
@@ -145,7 +284,7 @@ export class Game {
   public toJSON(): IGameJSON {
     return {
       gameID: this.gameID,
-      mission: this.mission.toJSON(),
+      mission: this.mission.toJSON(true),
       participants: this.participants.map((user: User) => user.toJSON()),
     }
   }

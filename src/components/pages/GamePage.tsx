@@ -10,7 +10,6 @@ import { IPage } from '../App'
 import { MissionNode } from '../../modules/mission-nodes'
 import AppState, { AppActions } from '../AppState'
 import Navigation from '../content/general-layout/Navigation'
-import { AxiosError } from 'axios'
 import MissionModificationPanel from '../content/user-controls/MissionModificationPanel'
 import {
   EPanelSizingMode,
@@ -20,8 +19,6 @@ import {
 import { MissionNodeAction } from '../../modules/mission-node-actions'
 import { IConsoleOutput } from '../content/game/ConsoleOutput'
 import { Game } from '../../modules/games'
-import { useStore } from 'react-context-hook'
-import { IMetisSession } from '../../modules/users'
 
 export interface IGamePage extends IPage {}
 
@@ -38,16 +35,44 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
   /* -- COMPONENT STATE -- */
 
   const [mountHandled, setMountHandled] = useState<boolean>(false)
-  const [lastSelectedNode, setLastSelectedNode] = useState<MissionNode | null>(
+  const [selectedNode, selectNode] = useState<MissionNode | null>(null)
+  const [selectedAction, selectAction] = useState<MissionNodeAction | null>(
     null,
   )
-  const [executeNodePathIsDisplayed, setExecuteNodePathIsDisplayed] =
-    useState<boolean>(false)
-  const [nodeActionsIsDisplayed, setNodeActionsIsDisplayed] =
-    useState<boolean>(false)
 
-  let session: IMetisSession = appState.session
-  let game: Game | undefined = session.game
+  // If the game in the session is
+  // undefined, log an error then render
+  // null.
+  if (appState.session.game === undefined) {
+    appActions.handleServerError('Game session was lost.')
+    return null
+  }
+
+  let game: Game = appState.session.game
+
+  // Get the mission from the game,
+  // now that we know it is not undefined.
+  let mission: Mission = game.mission
+
+  let className: string = 'GamePage Page'
+
+  // Keeps track of if the user is logged in or not.
+  let displayLogin: boolean = appState.session.user === undefined
+  let displayLogout: boolean = !displayLogin
+  let displayNodeActions: boolean =
+    selectedNode !== null && selectedAction === null
+  let displayExecuteNodePath: boolean =
+    selectedNode !== null && selectedAction !== null
+
+  // Logic that lets the user visually grab their attention to show them that
+  // they don't have any more resources left to spend.
+  let resourcesClassName: string = 'Resources'
+
+  if (mission.resources <= 0) {
+    resourcesClassName += ' RedAlert'
+  }
+
+  /* -- FUNCTIONS -- */
 
   // This will loop the game,
   // updating at the given tick
@@ -60,6 +85,95 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
       } catch (error) {}
     }, 1000 / GAME_TICK_RATE)
   }
+
+  // This will logout the current user.
+  const logout = () =>
+    appActions.logout({
+      returningPagePath: 'MissionSelectionPage',
+      returningPageProps: {},
+    })
+
+  // This will output to the console.
+  const outputToConsole = (output: IConsoleOutput): void => {
+    mission.outputToConsole(output)
+  }
+
+  /**
+   * Handles the selection of a node in the mission map by the user.
+   * @param {MissionNode} node The node that was selected.
+   */
+  const handleNodeSelection = (node: MissionNode): void => {
+    // Logic to send the pre-execution text to the output panel.
+    if (node.preExecutionText !== '' && node.preExecutionText !== null) {
+      let output: IConsoleOutput = OutputPanel.renderPreExecutionOutput(node)
+      outputToConsole(output)
+    }
+
+    // Logic that opens the next level of nodes
+    // (displays the selected node's child nodes)
+    if (node.openable) {
+      game.open(node.nodeID).catch(() => {
+        appActions.notify('Failed to open node.')
+      })
+    }
+    // If the node is ready to execute...
+    else if (node.readyToExecute) {
+      // If there are no more resources left
+      // to spend, notify the user.
+      if (mission.resources === 0) {
+        appActions.notify(`You have no more resources left to spend.`)
+      }
+      // If there is not enough resources to
+      // execute any actions, notify the user.
+      else if (
+        !node.actions
+          .map((action) => action.resourceCost <= mission.resources)
+          .includes(true)
+      ) {
+        appActions.notify(
+          `You do not have enough resources to execute any actions.`,
+        )
+      }
+      // Else, select the node.
+      else {
+        selectNode(node)
+
+        // If the node has only one action,
+        // preelect that action as well.
+        if (node.actions.length === 1) {
+          selectAction(node.actions[0])
+        }
+
+        // Force a state update.
+        appActions.forceUpdate()
+      }
+    }
+  }
+
+  // This will render the execute node path
+  // prompt if the user has selected a node
+  // and an action.
+  const renderExecuteNodePath = () => {
+    if (selectedNode !== null && selectedNode.selectedAction !== null) {
+      return (
+        <ExecuteNodePath
+          selectedAction={selectedNode.selectedAction}
+          isOpen={executeNodePathIsDisplayed}
+          outputToConsole={outputToConsole}
+          handleCloseRequest={() => setExecuteNodePathIsDisplayed(false)}
+          handleGoBackRequest={() => {
+            if (selectedNode && selectedNode.actions.length > 1) {
+              setExecuteNodePathIsDisplayed(false)
+              setNodeActionsIsDisplayed(true)
+            }
+          }}
+          notify={appActions.notify}
+        />
+      )
+    }
+  }
+
+  /* -- EFFECTS -- */
 
   // Equivalent of componentDidMount.
   useEffect(() => {
@@ -77,66 +191,7 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
     }
   }, [])
 
-  // If the game is undefined,
-  // then render null.
-  if (game === undefined) {
-    return null
-  }
-
-  // Get the mission from the game,
-  // now that we know it is not undefined.
-  let mission: Mission = game.mission
-
-  // This will logout the current user.
-  const logout = () =>
-    appActions.logout({
-      returningPagePath: 'MissionSelectionPage',
-      returningPageProps: {},
-    })
-
-  // This will output to the console.
-  const outputToConsole = (output: IConsoleOutput): void => {
-    mission.outputToConsole(output)
-  }
-
   /* -- RENDER -- */
-
-  let className: string = 'GamePage Page'
-
-  // Keeps track of if the user is logged in or not.
-  let displayLogin: boolean = appState.session.user === undefined
-  let displayLogout: boolean = !displayLogin
-
-  // Logic that lets the user visually grab their attention to show them that
-  // they don't have any more resources left to spend.
-  let resourcesClassName: string = 'Resources'
-
-  if (mission.resources <= 0) {
-    resourcesClassName += ' RedAlert'
-  }
-
-  // This will render the execute node path
-  // prompt if the user has selected a node
-  // and an action.
-  const renderExecuteNodePath = () => {
-    if (lastSelectedNode !== null && lastSelectedNode.selectedAction !== null) {
-      return (
-        <ExecuteNodePath
-          selectedAction={lastSelectedNode.selectedAction}
-          isOpen={executeNodePathIsDisplayed}
-          outputToConsole={outputToConsole}
-          handleCloseRequest={() => setExecuteNodePathIsDisplayed(false)}
-          handleGoBackRequest={() => {
-            if (lastSelectedNode && lastSelectedNode.actions.length > 1) {
-              setExecuteNodePathIsDisplayed(false)
-              setNodeActionsIsDisplayed(true)
-            }
-          }}
-          notify={appActions.notify}
-        />
-      )
-    }
-  }
 
   return (
     <div className={className}>
@@ -153,12 +208,6 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
             },
             visible: true,
           },
-          // {
-          //   text: 'Login',
-          //   key: 'login',
-          //   handleClick: login,
-          //   visible: displayLogin,
-          // },
           {
             text: 'Log out',
             key: 'log-out',
@@ -230,84 +279,7 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
                   <MissionMap
                     mission={mission}
                     missionAjaxStatus={EAjaxStatus.Loaded}
-                    handleNodeSelection={(selectedNode: MissionNode) => {
-                      setLastSelectedNode(selectedNode)
-
-                      // Logic that disables all nodes
-                      // except for the selected node.
-                      if (
-                        !nodeActionsIsDisplayed &&
-                        !executeNodePathIsDisplayed
-                      ) {
-                        // selectedNode.disableOtherNodes()
-                      }
-
-                      // Logic to send the pre-execution text to the output panel
-                      if (
-                        selectedNode.preExecutionText !== '' &&
-                        selectedNode.preExecutionText !== null &&
-                        selectedNode.highlighted
-                      ) {
-                        let output: IConsoleOutput =
-                          OutputPanel.renderPreExecutionOutput(selectedNode)
-                        outputToConsole(output)
-                      }
-
-                      // Logic that opens the next level of nodes
-                      // (displays the selected node's child nodes)
-                      if (
-                        !selectedNode.executable &&
-                        selectedNode.hasChildren &&
-                        !selectedNode.isOpen &&
-                        selectedNode.highlighted
-                      ) {
-                        selectedNode.open()
-                      }
-
-                      // Logic that displays the node action &&
-                      // execute node path window prompts. It also
-                      // notifies the user if they click a node and
-                      // nothing happens.
-                      if (
-                        mission.resources > 0 &&
-                        selectedNode.executable &&
-                        !selectedNode.selectedAction?.succeeded &&
-                        !selectedNode.executing &&
-                        selectedNode.highlighted
-                      ) {
-                        setNodeActionsIsDisplayed(true)
-
-                        if (selectedNode.actions.length === 1) {
-                          selectedNode.selectedAction = selectedNode.actions[0]
-                          selectedNode.selectedAction.processTime =
-                            selectedNode.actions[0].processTime
-                          setNodeActionsIsDisplayed(false)
-
-                          if (selectedNode.selectedAction.readyToExecute) {
-                            setExecuteNodePathIsDisplayed(true)
-                          } else {
-                            appActions.notify(
-                              `You cannot execute this action because you do not have enough resources remaining.`,
-                              { duration: 3500 },
-                            )
-                          }
-                        }
-                      } else if (
-                        mission.resources === 0 &&
-                        selectedNode.executable &&
-                        !selectedNode.selectedAction?.succeeded &&
-                        !selectedNode.executing &&
-                        selectedNode.highlighted
-                      ) {
-                        appActions.notify(
-                          `You have no more resources left to spend.`,
-                          { duration: 3500 },
-                        )
-                      } else {
-                        setNodeActionsIsDisplayed(false)
-                        setExecuteNodePathIsDisplayed(false)
-                      }
-                    }}
+                    handleNodeSelection={handleNodeSelection}
                     handleNodePathExitRequest={mission.enableAllNodes}
                     grayOutExitNodePathButton={!mission.hasDisabledNodes}
                     applyNodeClassName={(node: MissionNode) => {
@@ -365,16 +337,16 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
                   />
                   <NodeActions
                     isOpen={nodeActionsIsDisplayed}
-                    selectedNode={lastSelectedNode}
+                    selectedNode={selectedNode}
                     handleActionSelectionRequest={(
                       action: MissionNodeAction,
                     ) => {
                       setNodeActionsIsDisplayed(false)
 
-                      if (lastSelectedNode !== null) {
-                        lastSelectedNode.selectedAction = action
-                        if (lastSelectedNode.selectedAction !== null) {
-                          lastSelectedNode.selectedAction.processTime =
+                      if (selectedNode !== null) {
+                        selectedNode.selectedAction = action
+                        if (selectedNode.selectedAction !== null) {
+                          selectedNode.selectedAction.processTime =
                             action.processTime
                         }
                         setExecuteNodePathIsDisplayed(true)

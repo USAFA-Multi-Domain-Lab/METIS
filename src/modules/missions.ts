@@ -11,7 +11,7 @@ import {
 } from './mission-nodes'
 import { MissionNodeAction } from './mission-node-actions'
 import { IConsoleOutput } from '../components/content/game/ConsoleOutput'
-import { IMetisSession, IMetisSessionJSON, IUserJSON, User } from './users'
+import { IUserJSON } from './users'
 
 // This is the method that the clone
 // function in the Mission class uses
@@ -60,6 +60,7 @@ export class Mission {
   seed: string
   rng: PRNG
   rootNode: MissionNode
+
   lastOpenedNode: MissionNode | null
   _lastCreatedNode: MissionNode | null
   structureChangeKey: string
@@ -76,7 +77,7 @@ export class Mission {
   // updating it if the mission
   // has been modified.
   get nodeStructure(): AnyObject {
-    return this._exportNodeStructure()
+    return this._exportNodeStructure(false)
   }
 
   // This will return the node
@@ -84,7 +85,7 @@ export class Mission {
   // updating it if the mission
   // has been modified.
   get nodeData(): Array<IMissionNodeJSON> {
-    return this._exportNodeData()
+    return this._exportNodeData(false)
   }
 
   // Getter for _lastCreatedNode.
@@ -306,40 +307,59 @@ export class Mission {
     }
   }
 
-  // This will convert the data
-  // stored in this Mission object
-  // back into the nodeStructure JSON,
-  // supposedly for saving to the server.
-  // Nothing should be passed to this
-  // function upon initial call. This
-  // function is recursive, and the
-  // parameters are internally managed.
+  /**
+   * This will convert the data stored in this Mission object back into the node structure JSON, supposedly for saving to the server. Nothing should be passed to this function upon initial call. This function is recursive, and the parameters are internally managed.
+   * @param {boolean} excludeHidden Whether or not to exclude hidden nodes from the exported node structure. Defaults to false.
+   * @param {AnyObject} nodeStructure Ignore this. Do not pass a value. This is recursively used by the function itself.
+   * @param {MissionNode} rootNode  Ignore this. Do not pass a value. This is recursively used by the function itself.
+   * @returns {AnyObject} The node structure JSON.
+   */
   _exportNodeStructure(
+    excludeHidden: boolean,
     nodeStructure: AnyObject = {},
     rootNode: MissionNode = this.rootNode,
   ): AnyObject {
     let childNodes: Array<MissionNode> = rootNode.childNodes
 
-    for (let childNode of childNodes) {
-      if (childNode.hasChildren) {
-        nodeStructure[childNode.nodeID] = this._exportNodeStructure(
-          {},
-          childNode,
-        )
-      } else {
-        nodeStructure[childNode.nodeID] = {}
+    if (!excludeHidden || rootNode.isOpen) {
+      for (let childNode of childNodes) {
+        if (childNode.hasChildren) {
+          nodeStructure[childNode.nodeID] = this._exportNodeStructure(
+            excludeHidden,
+            {},
+            childNode,
+          )
+        } else {
+          nodeStructure[childNode.nodeID] = {}
+        }
       }
     }
 
     return nodeStructure
   }
 
-  // This will convert the data
-  // stored in this Mission object
-  // back into the nodeData JSON,
-  // supposedly for saving to the server.
-  _exportNodeData(): Array<IMissionNodeJSON> {
-    return Array.from(this.nodes.values()).map((node) => {
+  /**
+   * This will convert the data stored in this Mission object back into the nodeData JSON, supposedly for saving to the server.
+   * @param excludeHidden - If true, this will exclude nodes with a closed parent node.
+   * @returns {Array<IMissionNodeJSON>} - The nodeData JSON.
+   */
+  _exportNodeData(excludeHidden: boolean): Array<IMissionNodeJSON> {
+    // Create an array of the MissionNode
+    // objects from the nodes map.
+    let nodes: Array<MissionNode> = Array.from(this.nodes.values())
+
+    // If excludeHidden is true, filter
+    // out nodes with a closed parent node.
+    if (excludeHidden) {
+      nodes = nodes.filter(
+        (node: MissionNode) =>
+          node.parentNode === null || node.parentNode.isOpen,
+      )
+    }
+
+    // Convert the MissionNode objects
+    // into JSON and return the result.
+    return nodes.map((node) => {
       return {
         nodeID: node.nodeID,
         name: node.name,
@@ -358,7 +378,7 @@ export class Mission {
 
   // This will convert this mission into
   // JSON that can't sent to the server.
-  toJSON(): IMissionJSON {
+  toJSON(excludeHidden: boolean = false): IMissionJSON {
     return {
       missionID: this.missionID,
       name: this.name,
@@ -367,8 +387,8 @@ export class Mission {
       live: this.live,
       initialResources: this.initialResources,
       seed: this.seed,
-      nodeStructure: this.nodeStructure,
-      nodeData: this.nodeData,
+      nodeStructure: this._exportNodeStructure(excludeHidden),
+      nodeData: this._exportNodeData(excludeHidden),
     }
   }
 
@@ -611,8 +631,8 @@ export class Mission {
           this.versionNumber,
           this.live,
           this.initialResources,
-          this._exportNodeStructure(),
-          this._exportNodeData(),
+          this._exportNodeStructure(false),
+          this._exportNodeData(false),
           this.seed,
           options.expandAll === true,
         )

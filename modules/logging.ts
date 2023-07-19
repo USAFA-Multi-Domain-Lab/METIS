@@ -25,6 +25,30 @@ export const databaseLogger = winston.createLogger({
   ],
 })
 
+export const gameLogger = winston.createLogger({
+  level: 'info',
+  format: winston.format.combine(
+    winston.format.json(),
+    winston.format.timestamp(),
+    winston.format.errors({ stack: true }),
+  ),
+  defaultMeta: { service: 'user-service' },
+  transports: [
+    new winston.transports.File({
+      filename: './logs/game-error.log',
+      level: 'error',
+      format: winston.format.combine(
+        winston.format.json(),
+        winston.format.timestamp(),
+        winston.format.errors({ stack: true }),
+        winston.format.colorize(),
+        winston.format.prettyPrint(),
+      ),
+    }),
+    new winston.transports.File({ filename: './logs/game.log' }),
+  ],
+})
+
 export const expressLogger = winston.createLogger({
   level: 'info',
   format: winston.format.combine(
@@ -127,6 +151,7 @@ export const testLogger = winston.createLogger({
 
 export default {
   databaseLogger,
+  gameLogger,
   expressLogger,
   expressLoggingHandler,
   plcApiLogger,

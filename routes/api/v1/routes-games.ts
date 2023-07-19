@@ -6,10 +6,16 @@ import {
   userRoles,
 } from '../../../user'
 import MissionModel from '../../../database/models/model-mission'
-import { databaseLogger, expressLogger } from '../../../modules/logging'
+import {
+  databaseLogger,
+  expressLogger,
+  gameLogger,
+} from '../../../modules/logging'
 import { Mission } from '../../../src/modules/missions'
 import { Game } from '../../../src/modules/games'
 import MetisSession from '../../../session/session'
+import { AxiosError } from 'axios'
+import { User } from '../../../src/modules/users'
 
 const router = express.Router()
 
@@ -23,81 +29,54 @@ router.post(
     // Get data from the request body.
     let missionID: string = request.body.missionID
 
-    // Query for the mission with the given ID.
-    MissionModel.findOne({ missionID }, (error: any, missionData: any) => {
-      // Handles errors.
-      if (error !== null) {
-        databaseLogger.error(
-          `Failed to retrieve mission with the ID "${missionID}".`,
-        )
-        databaseLogger.error(error)
-        return response.sendStatus(500)
-      }
-      // Handle mission not found.
-      else if (missionData === null) {
-        return response.sendStatus(404)
-      }
-      // Handle mission not live.
-      else if (!missionData.live) {
-        response.statusMessage = 'Mission is not live.'
-        return response.sendStatus(401)
-      }
-      // Handles successful query.
-      else {
-        MissionModel.findOne({ missionID })
-          .lean()
-          .exec((error: Error, missionData: any) => {
-            if (error !== null) {
-              databaseLogger.error(
-                `Failed to retrieve mission with ID "${missionID}".`,
-              )
-              databaseLogger.error(error)
-              return response.sendStatus(500)
-            } else if (missionData === null) {
-              return response.sendStatus(404)
-            } else if (
-              !missionData.live &&
-              !hasPermittedRole(request, {
-                permittedRoles: [userRoles.Instructor, userRoles.Admin],
-              })
-            ) {
-              return response.sendStatus(401)
-            }
-
-            // Create a mission object from the
-            // request data.
-            let mission: Mission = Mission.fromJSON(missionData)
-
-            try {
-              // Launch the game.
-              Game.launch(mission).then((game: Game) => {
-                // Grab the session.
-                let session: MetisSession | undefined = MetisSession.get(
-                  request.session.sessionID,
-                )
-
-                // Verify the session was found.
-                if (session === undefined) {
-                  expressLogger.error(
-                    `Session with sessionID "${request.session.sessionID}" not found.`,
-                  )
-                  return response.sendStatus(401)
-                }
-
-                // Have the user in the session join
-                // the game.
-                session.joinGame(game).then(() => {
-                  return response.json(game.toJSON())
-                })
-              })
-            } catch (error: any) {
-              expressLogger.error('Failed to launch game.')
-              expressLogger.error(error)
-              return response.sendStatus(500)
-            }
+    // Query for mission.
+    MissionModel.findOne({ missionID })
+      .lean()
+      .exec((error: Error, missionData: any) => {
+        // Handle errors.
+        if (error !== null) {
+          databaseLogger.error(
+            `Failed to retrieve mission with ID "${missionID}".`,
+          )
+          databaseLogger.error(error)
+          return response.sendStatus(500)
+        }
+        // Handle mission not found.
+        else if (missionData === null) {
+          return response.sendStatus(404)
+        }
+        // Handle mission not live.
+        else if (
+          !missionData.live &&
+          !hasPermittedRole(request, {
+            permittedRoles: [userRoles.Instructor, userRoles.Admin],
           })
-      }
-    })
+        ) {
+          return response.sendStatus(401)
+        }
+
+        // Create a mission object from the
+        // request data.
+        let mission: Mission = Mission.fromJSON(missionData)
+
+        try {
+          // Launch the game.
+          Game.launch(mission).then((game: Game) => {
+            // Grab the session.
+            let session: MetisSession = response.locals.session
+
+            // Have the user in the session join
+            // the game.
+            session.joinGame(game).then(() => {
+              return response.json(game.toJSON())
+            })
+          })
+        } catch (error: any) {
+          gameLogger.error('Failed to launch game.')
+          gameLogger.error(error)
+          return response.sendStatus(500)
+        }
+      })
   },
 )
 
@@ -108,42 +87,76 @@ router.post(
   requireLogin,
   requireInGame,
   (request: Request, response: Response) => {
-    // Grab the session
-    let session: MetisSession | undefined = MetisSession.get(
-      request.session.sessionID,
-    )
-
-    // Verify the session was found.
-    if (session === undefined) {
-      expressLogger.error(
-        `Session with sessionID "${request.session.sessionID}" not found.`,
-      )
-      return response.sendStatus(500)
-    }
-
-    // Verify the session has a game.
-    if (session.game === undefined) {
-      expressLogger.error(
-        `Session with sessionID "${request.session.sessionID}" does not have a game.`,
-      )
-      return response.sendStatus(500)
-    }
-
-    // Grab the game.
-    let game: Game = session.game
+    // Grab the session, user, and game.
+    let session: MetisSession = response.locals.session
+    let user: User = response.locals.user
+    let game: Game = response.locals.game
 
     // Quit the game.
-    game.quit(session.user.userID).then(
+    game.quit(user.userID).then(
       () => {
-        if (session !== undefined) {
-          session.quitGame()
-        }
+        session.quitGame()
         return response.sendStatus(200)
       },
-      (error: Error) => {
-        console.error('Failed to quit game.')
-        console.error(error)
-        return response.sendStatus(500)
+      (error: AxiosError) => {
+        gameLogger.error('Failed to quit game.')
+        gameLogger.error(error)
+        return response.sendStatus(
+          error.status !== undefined ? error.status : 500,
+        )
+      },
+    )
+  },
+)
+
+// -- POST | /api/v1/games/open/ --
+// This will open a node, revealing the
+// child nodes.
+router.post(
+  '/open/',
+  requireLogin,
+  requireInGame,
+  (request: Request, response: Response) => {
+    // Grab the game and nodeID from the
+    // request.
+    let game: Game = response.locals.game
+    let nodeID: string = request.body.nodeID
+
+    // Open the node.
+    game.open(nodeID).then(
+      () => response.sendStatus(200),
+      (error: AxiosError) => {
+        gameLogger.error('Failed to open node.')
+        gameLogger.error(error)
+        return response.sendStatus(
+          error.status !== undefined ? error.status : 500,
+        )
+      },
+    )
+  },
+)
+
+// -- POST | /api/v1/games/execute/ --
+// This will execute an action on a node.
+router.post(
+  '/execute/',
+  requireLogin,
+  requireInGame,
+  (request: Request, response: Response) => {
+    // Grab the game and actionID from
+    // the request.
+    let game: Game = response.locals.game
+    let actionID: string = request.body.actionID
+
+    // Execute the action.
+    game.execute(actionID).then(
+      () => response.sendStatus(200),
+      (error: AxiosError) => {
+        gameLogger.error('Failed to execute action.')
+        gameLogger.error(error)
+        return response.sendStatus(
+          error.status !== undefined ? error.status : 500,
+        )
       },
     )
   },
