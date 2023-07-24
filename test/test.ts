@@ -1058,7 +1058,8 @@ describe('API Mission Routes', function () {
 })
 
 // Tests for the middleware function used to
-// validate the data used in POST and PUT requests
+// validate the data that is sent in the request
+// body of the API routes
 describe('Request Body Validation', function () {
   chai.use(chaiHttp)
 
@@ -1109,18 +1110,24 @@ describe('Request Body Validation', function () {
       .post('/api/v1/test/request-body-filter-check/')
       .set('Content-Type', 'application/json')
       .send({
-        STRING: STRING,
-        STRING_50_CHAR: STRING_50_CHAR,
-        STRING_128_CHAR: STRING_128_CHAR,
-        STRING_255_CHAR: STRING_255_CHAR,
-        STRING_256_CHAR: STRING_256_CHAR,
-        STRING_512_CHAR: STRING_512_CHAR,
-        STRING_1024_CHAR: STRING_1024_CHAR,
-        STRING_MEDIUMTEXT: STRING_MEDIUMTEXT,
-        NUMBER: NUMBER,
-        BOOLEAN: BOOLEAN,
-        OBJECT: OBJECT,
-        OBJECTID: OBJECTID,
+        bodyKeys: {
+          STRING: STRING,
+          STRING_50_CHAR: STRING_50_CHAR,
+          STRING_128_CHAR: STRING_128_CHAR,
+          STRING_255_CHAR: STRING_255_CHAR,
+          STRING_256_CHAR: STRING_256_CHAR,
+          STRING_512_CHAR: STRING_512_CHAR,
+          STRING_1024_CHAR: STRING_1024_CHAR,
+          STRING_MEDIUMTEXT: STRING_MEDIUMTEXT,
+          NUMBER: NUMBER,
+          BOOLEAN: BOOLEAN,
+          OBJECT: OBJECT,
+          OBJECTID: OBJECTID,
+        },
+        keys: {
+          STRING: STRING,
+          BOOLEAN: BOOLEAN,
+        },
       })
       .then(function (response: ChaiHttp.Response) {
         expect(response).to.have.status(200)
@@ -1132,23 +1139,29 @@ describe('Request Body Validation', function () {
       })
   })
 
-  it('Sending a request with all required body keys and their types being incorrect results in a bad (400) response', function (done) {
+  it('Sending a request with all required and optional body keys and their types being incorrect results in a bad (400) response', function (done) {
     agent
       .post('/api/v1/test/request-body-filter-check/')
       .set('Content-Type', 'application/json')
       .send({
-        STRING: NUMBER,
-        STRING_50_CHAR: STRING_128_CHAR,
-        STRING_128_CHAR: STRING_255_CHAR,
-        STRING_255_CHAR: STRING_256_CHAR,
-        STRING_256_CHAR: STRING_512_CHAR,
-        STRING_512_CHAR: STRING_1024_CHAR,
-        STRING_1024_CHAR: STRING_MEDIUMTEXT,
-        STRING_MEDIUMTEXT: NUMBER,
-        NUMBER: BOOLEAN,
-        BOOLEAN: STRING,
-        OBJECT: OBJECTID,
-        OBJECTID: OBJECT,
+        bodyKeys: {
+          STRING: NUMBER,
+          STRING_50_CHAR: STRING_128_CHAR,
+          STRING_128_CHAR: STRING_255_CHAR,
+          STRING_255_CHAR: STRING_256_CHAR,
+          STRING_256_CHAR: STRING_512_CHAR,
+          STRING_512_CHAR: STRING_1024_CHAR,
+          STRING_1024_CHAR: STRING_MEDIUMTEXT,
+          STRING_MEDIUMTEXT: NUMBER,
+          NUMBER: BOOLEAN,
+          BOOLEAN: STRING,
+          OBJECT: OBJECTID,
+          OBJECTID: OBJECT,
+        },
+        keys: {
+          STRING: BOOLEAN,
+          BOOLEAN: STRING,
+        },
       })
       .then(function (response: ChaiHttp.Response) {
         expect(response).to.have.status(400)
@@ -1160,22 +1173,28 @@ describe('Request Body Validation', function () {
       })
   })
 
-  it('Sending a request with a missing body key that is required results in a bad (400) request', function (done) {
+  it('Sending a request with a missing body key (OBJECTID) that is required results in a bad (400) request', function (done) {
     agent
       .post('/api/v1/test/request-body-filter-check/')
       .set('Content-Type', 'application/json')
       .send({
-        STRING: STRING,
-        STRING_50_CHAR: STRING_50_CHAR,
-        STRING_128_CHAR: STRING_128_CHAR,
-        STRING_255_CHAR: STRING_255_CHAR,
-        STRING_256_CHAR: STRING_256_CHAR,
-        STRING_512_CHAR: STRING_512_CHAR,
-        STRING_1024_CHAR: STRING_1024_CHAR,
-        STRING_MEDIUMTEXT: STRING_MEDIUMTEXT,
-        NUMBER: NUMBER,
-        BOOLEAN: BOOLEAN,
-        OBJECT: OBJECT,
+        bodyKeys: {
+          STRING: STRING,
+          STRING_50_CHAR: STRING_50_CHAR,
+          STRING_128_CHAR: STRING_128_CHAR,
+          STRING_255_CHAR: STRING_255_CHAR,
+          STRING_256_CHAR: STRING_256_CHAR,
+          STRING_512_CHAR: STRING_512_CHAR,
+          STRING_1024_CHAR: STRING_1024_CHAR,
+          STRING_MEDIUMTEXT: STRING_MEDIUMTEXT,
+          NUMBER: NUMBER,
+          BOOLEAN: BOOLEAN,
+          OBJECT: OBJECT,
+        },
+        keys: {
+          STRING: STRING,
+          BOOLEAN: BOOLEAN,
+        },
       })
       .then(function (response: ChaiHttp.Response) {
         expect(response).to.have.status(400)
@@ -1187,28 +1206,69 @@ describe('Request Body Validation', function () {
       })
   })
 
-  it('Sending a request with a missing body key that is optional results in a successful (200) request', function (done) {
+  it('Sending a request with a missing body key (BOOLEAN) that is optional results in a successful (200) request', function (done) {
     agent
       .post('/api/v1/test/request-body-filter-check/')
       .set('Content-Type', 'application/json')
       .send({
-        STRING: STRING,
-        STRING_50_CHAR: STRING_50_CHAR,
-        STRING_128_CHAR: STRING_128_CHAR,
-        STRING_255_CHAR: STRING_255_CHAR,
-        STRING_256_CHAR: STRING_256_CHAR,
-        STRING_512_CHAR: STRING_512_CHAR,
-        STRING_1024_CHAR: STRING_1024_CHAR,
-        STRING_MEDIUMTEXT: STRING_MEDIUMTEXT,
-        NUMBER: NUMBER,
-        OBJECT: OBJECT,
-        OBJECTID: OBJECTID,
+        bodyKeys: {
+          STRING: STRING,
+          STRING_50_CHAR: STRING_50_CHAR,
+          STRING_128_CHAR: STRING_128_CHAR,
+          STRING_255_CHAR: STRING_255_CHAR,
+          STRING_256_CHAR: STRING_256_CHAR,
+          STRING_512_CHAR: STRING_512_CHAR,
+          STRING_1024_CHAR: STRING_1024_CHAR,
+          STRING_MEDIUMTEXT: STRING_MEDIUMTEXT,
+          NUMBER: NUMBER,
+          OBJECT: OBJECT,
+          OBJECTID: OBJECTID,
+        },
+        keys: {
+          STRING: STRING,
+        },
       })
       .then(function (response: ChaiHttp.Response) {
         expect(response).to.have.status(200)
         done()
       })
       .catch(function (error) {
+        testLogger.error(error)
+        done(error)
+      })
+  })
+
+  it('Sending a request with additional body keys results in those additional body keys being removed from the request body', function (done) {
+    agent
+      .post('/api/v1/test/request-body-filter-check/')
+      .set('Content-Type', 'application/json')
+      .send({
+        bodyKeys: {
+          STRING: STRING,
+          STRING_50_CHAR: STRING_50_CHAR,
+          STRING_128_CHAR: STRING_128_CHAR,
+          STRING_255_CHAR: STRING_255_CHAR,
+          STRING_256_CHAR: STRING_256_CHAR,
+          STRING_512_CHAR: STRING_512_CHAR,
+          STRING_1024_CHAR: STRING_1024_CHAR,
+          STRING_MEDIUMTEXT: STRING_MEDIUMTEXT,
+          NUMBER: NUMBER,
+          BOOLEAN: BOOLEAN,
+          OBJECT: OBJECT,
+          OBJECTID: OBJECTID,
+          EXTRA_KEY: 'extra key',
+        },
+        keys: {
+          STRING: STRING,
+          BOOLEAN: BOOLEAN,
+        },
+      })
+      .then(function (response: ChaiHttp.Response) {
+        expect(response).to.have.status(200)
+        expect(response.body.bodyKeys.EXTRA_KEY).to.equal(undefined)
+        done()
+      })
+      .catch(function (error: Error) {
         testLogger.error(error)
         done(error)
       })
@@ -1216,7 +1276,8 @@ describe('Request Body Validation', function () {
 })
 
 // Tests for the middleware function used to
-// validate the data used in GET and DELETE requests
+// validate the data sent in the request query
+// of the API routes
 describe('Request Query Validation', function () {
   chai.use(chaiHttp)
 
@@ -1255,7 +1316,7 @@ describe('Request Query Validation', function () {
       })
   })
 
-  it('Sending a request with all properties and their correct types results in a successful (200) response', function (done) {
+  it('Sending a request with all required and optional query keys and their correct types results in a successful (200) response', function (done) {
     agent
       .get(`/api/v1/test/request-query-type-check/`)
       .query({
@@ -1275,7 +1336,7 @@ describe('Request Query Validation', function () {
       })
   })
 
-  it('Sending a request with all properties and their types being incorrect results in a bad (400) response', function (done) {
+  it('Sending a request with all required and optional query keys and their types being incorrect results in a bad (400) response', function (done) {
     agent
       .get(`/api/v1/test/request-query-type-check/`)
       .query({
@@ -1295,7 +1356,7 @@ describe('Request Query Validation', function () {
       })
   })
 
-  it('Sending a request with a missing property results in a bad (400) request', function (done) {
+  it('Sending a request with a missing query key that is required results in a bad (400) request', function (done) {
     agent
       .get(`/api/v1/test/request-query-type-check/`)
       .query({
@@ -1306,6 +1367,112 @@ describe('Request Query Validation', function () {
       })
       .then(function (response: ChaiHttp.Response) {
         expect(response).to.have.status(400)
+        done()
+      })
+      .catch(function (error: Error) {
+        testLogger.error(error)
+        done(error)
+      })
+  })
+
+  it('Sending a request with a missing query key (string) that is optional results in a successful (200) request', function (done) {
+    agent
+      .get(`/api/v1/test/request-query-type-check/`)
+      .query({
+        number: number,
+        integer: integer,
+        boolean: boolean,
+        objectId: objectId,
+      })
+      .then(function (response: ChaiHttp.Response) {
+        expect(response).to.have.status(200)
+        done()
+      })
+      .catch(function (error: Error) {
+        testLogger.error(error)
+        done(error)
+      })
+  })
+})
+
+// Tests for the middleware function used to
+// validate the data sent in the request params
+// of the API routes
+describe('Request Params Validation', function () {
+  chai.use(chaiHttp)
+
+  // Creates a session with a user because
+  // certain API routes require authentication
+  // for access
+  let agent: ChaiHttp.Agent = chai.request.agent(baseUrl)
+
+  let string: string = 'string'
+  let number: number = 3.5
+  let integer: number = 3
+  let boolean: boolean = true
+  let objectId: string = '643ea778c10a4de66a9448d0'
+
+  before(function (done) {
+    agent
+      .get('/api/v1/missions/environment/')
+      .then(function (response: ChaiHttp.Response) {
+        expect(response).to.have.status(200)
+        expect(response.body.environment).to.equal(process.env.environment)
+
+        if (response.body.environment === process.env.environment) {
+          done()
+        } else {
+          testLogger.error(
+            'Database is not using "mdl-test." Please make sure the test database is running.',
+          )
+          throw new Error(
+            'Database is not using "mdl-test." Please make sure the test database is running.',
+          )
+        }
+      })
+      .catch(function (error) {
+        testLogger.error(error)
+        done(error)
+      })
+  })
+
+  it('Sending a request with all params keys and their correct types results in a successful (200) response', function (done) {
+    agent
+      .get(
+        `/api/v1/test/request-params-type-check/${string}/${number}/${integer}/${boolean}/${objectId}`,
+      )
+      .then(function (response: ChaiHttp.Response) {
+        expect(response).to.have.status(200)
+        done()
+      })
+      .catch(function (error: Error) {
+        testLogger.error(error)
+        done(error)
+      })
+  })
+
+  it('Sending a request with all params keys and their types being incorrect results in a bad (400) response', function (done) {
+    agent
+      .get(
+        `/api/v1/test/request-params-type-check/${number}/${string}/${number}/${objectId}/${boolean}`,
+      )
+      .then(function (response: ChaiHttp.Response) {
+        expect(response).to.have.status(400)
+        done()
+      })
+      .catch(function (error: Error) {
+        testLogger.error(error)
+        done(error)
+      })
+  })
+
+  it('Sending a request with a missing params key (OBJECTID) results in a not found (404) request', function (done) {
+    agent
+      .get(
+        `/api/v1/test/request-params-type-check/${string}/${number}/${integer}/${boolean}`,
+      )
+      .then(function (response: ChaiHttp.Response) {
+        expect(response).to.have.status(404)
         done()
       })
       .catch(function (error: Error) {

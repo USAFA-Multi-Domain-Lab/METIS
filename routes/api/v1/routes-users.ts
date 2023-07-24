@@ -108,11 +108,9 @@ router.get(
       params: {},
     },
     {
-      body: {},
       query: {
         userID: 'string',
       },
-      params: {},
     },
   ),
   (request, response) => {

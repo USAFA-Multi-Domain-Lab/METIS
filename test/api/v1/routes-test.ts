@@ -11,25 +11,37 @@ router.post(
   defineRequests(
     {
       body: {
-        STRING: RequestBodyFilters.STRING,
-        STRING_50_CHAR: RequestBodyFilters.STRING_50_CHAR,
-        STRING_128_CHAR: RequestBodyFilters.STRING_128_CHAR,
-        STRING_255_CHAR: RequestBodyFilters.STRING_255_CHAR,
-        STRING_256_CHAR: RequestBodyFilters.STRING_256_CHAR,
-        STRING_512_CHAR: RequestBodyFilters.STRING_512_CHAR,
-        STRING_1024_CHAR: RequestBodyFilters.STRING_1024_CHAR,
-        STRING_MEDIUMTEXT: RequestBodyFilters.STRING_MEDIUMTEXT,
-        NUMBER: RequestBodyFilters.NUMBER,
-        OBJECT: RequestBodyFilters.OBJECT,
-        OBJECTID: RequestBodyFilters.OBJECTID,
+        bodyKeys: {
+          STRING: RequestBodyFilters.STRING,
+          STRING_50_CHAR: RequestBodyFilters.STRING_50_CHAR,
+          STRING_128_CHAR: RequestBodyFilters.STRING_128_CHAR,
+          STRING_255_CHAR: RequestBodyFilters.STRING_255_CHAR,
+          STRING_256_CHAR: RequestBodyFilters.STRING_256_CHAR,
+          STRING_512_CHAR: RequestBodyFilters.STRING_512_CHAR,
+          STRING_1024_CHAR: RequestBodyFilters.STRING_1024_CHAR,
+          STRING_MEDIUMTEXT: RequestBodyFilters.STRING_MEDIUMTEXT,
+          NUMBER: RequestBodyFilters.NUMBER,
+          OBJECT: RequestBodyFilters.OBJECT,
+          OBJECTID: RequestBodyFilters.OBJECTID,
+        },
+        keys: {
+          STRING: RequestBodyFilters.STRING,
+        },
       },
       query: {},
       params: {},
     },
-    { body: { BOOLEAN: RequestBodyFilters.BOOLEAN } },
+    {
+      body: {
+        bodyKeys: { BOOLEAN: RequestBodyFilters.BOOLEAN },
+        keys: { BOOLEAN: RequestBodyFilters.BOOLEAN },
+      },
+    },
   ),
   (request, response) => {
-    return response.sendStatus(200)
+    let body: any = request.body
+    let bodyKeys: any = body.bodyKeys
+    return response.send({ bodyKeys })
   },
 )
 
@@ -37,16 +49,38 @@ router.post(
 // middleware function
 router.get(
   '/request-query-type-check/',
+  defineRequests(
+    {
+      body: {},
+      query: {
+        number: 'number',
+        integer: 'integer',
+        boolean: 'boolean',
+        objectId: 'objectId',
+      },
+      params: {},
+    },
+    { query: { string: 'string' } },
+  ),
+  (request, response) => {
+    return response.sendStatus(200)
+  },
+)
+
+// GET route to test the params validation
+// middleware function
+router.get(
+  '/request-params-type-check/:string/:number/:integer/:boolean/:objectId',
   defineRequests({
     body: {},
-    query: {
+    query: {},
+    params: {
       string: 'string',
       number: 'number',
       integer: 'integer',
       boolean: 'boolean',
       objectId: 'objectId',
     },
-    params: {},
   }),
   (request, response) => {
     return response.sendStatus(200)

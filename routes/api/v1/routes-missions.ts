@@ -425,9 +425,7 @@ router.get(
       params: {},
     },
     {
-      body: {},
       query: { missionID: 'objectId' },
-      params: {},
     },
   ),
   (request, response) => {
