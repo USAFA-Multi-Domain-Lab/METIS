@@ -10,7 +10,7 @@ import chaiHttp from 'chai-http'
 
 // metis imports
 import { testLogger } from '../modules/logging'
-import { commandScripts } from '../action-execution'
+import { cyberCityCommandScripts } from '../action-execution'
 import { AnyObject } from '../modules/toolbox/objects'
 import { startServer } from '../server'
 
@@ -867,7 +867,7 @@ describe('API Mission Routes', function () {
     const TestCommandScript = (args: AnyObject) => {
       testVariable = 'successful'
     }
-    commandScripts['TestCommandScript'] = TestCommandScript
+    cyberCityCommandScripts['TestCommandScript'] = TestCommandScript
 
     missionID = createdMissionIDArray[0]
     correctUpdateTestMission.mission.missionID = missionID
