@@ -6,9 +6,9 @@ import { plcApiLogger } from './modules/logging'
 
 const httpsAgent = new https.Agent({ rejectUnauthorized: false })
 
-export function changeBankColor(data: { color: string }) {
+function changeBankColor(data: { color: string }) {
   axios
-    .put(`${config.PLC_API_HOST}/api/bank`, data, {
+    .put(`${config.CYBER_CITY_API_HOST}/api/bank`, data, {
       headers: {
         'api-key': `${config.API_KEY}`,
       },
@@ -19,14 +19,14 @@ export function changeBankColor(data: { color: string }) {
     })
 }
 
-export function changeTrafficLightColor(data: {
+function changeTrafficLightColor(data: {
   zone: string
   direction: string
   color: string
   power: string
 }) {
   axios
-    .put(`${config.PLC_API_HOST}/api/traffic`, data, {
+    .put(`${config.CYBER_CITY_API_HOST}/api/traffic`, data, {
       headers: {
         'api-key': `${config.API_KEY}`,
       },
@@ -37,9 +37,9 @@ export function changeTrafficLightColor(data: {
     })
 }
 
-export function changeGasState(data: { power: string; section?: string }) {
+function changeGasState(data: { power: string; section?: string }) {
   axios
-    .put(`${config.PLC_API_HOST}/api/gas`, data, {
+    .put(`${config.CYBER_CITY_API_HOST}/api/gas`, data, {
       headers: {
         'api-key': `${config.API_KEY}`,
       },
@@ -50,9 +50,9 @@ export function changeGasState(data: { power: string; section?: string }) {
     })
 }
 
-export function changeLightStripState(data: { power: string }) {
+function changeLightStripState(data: { power: string }) {
   axios
-    .put(`${config.PLC_API_HOST}/api/lstrip`, data, {
+    .put(`${config.CYBER_CITY_API_HOST}/api/lstrip`, data, {
       headers: {
         'api-key': `${config.API_KEY}`,
       },
@@ -63,79 +63,140 @@ export function changeLightStripState(data: { power: string }) {
     })
 }
 
-export function changeBuildingLightColor(data: {
-  building: string
-  power: string
+function changeBuildingLightColor(data: { building: string; power: string }) {
+  axios
+    .put(`${config.CYBER_CITY_API_HOST}/api/lights`, data, {
+      headers: {
+        'api-key': `${config.API_KEY}`,
+      },
+      httpsAgent: httpsAgent,
+    })
+    .catch((error: AxiosError) => {
+      plcApiLogger.error(error)
+    })
+}
+
+function changeRadarState(data: { power: string }) {
+  axios
+    .put(`${config.CYBER_CITY_API_HOST}/api/radar`, data, {
+      headers: {
+        'api-key': `${config.API_KEY}`,
+      },
+      httpsAgent: httpsAgent,
+    })
+    .catch((error: AxiosError) => {
+      plcApiLogger.error(error)
+    })
+}
+
+function changeRailSwitchState(data: { zone: string; direction: string }) {
+  axios
+    .put(`${config.CYBER_CITY_API_HOST}/api/railswitch`, data, {
+      headers: {
+        'api-key': `${config.API_KEY}`,
+      },
+      httpsAgent: httpsAgent,
+    })
+    .catch((error: AxiosError) => {
+      plcApiLogger.error(error)
+    })
+}
+
+function changeTrainState(data: { power: string }) {
+  axios
+    .put(`${config.CYBER_CITY_API_HOST}/api/train`, data, {
+      headers: {
+        'api-key': `${config.API_KEY}`,
+      },
+      httpsAgent: httpsAgent,
+    })
+    .catch((error: AxiosError) => {
+      plcApiLogger.error(error)
+    })
+}
+
+function changeWaterTowerColor(data: { color: string }) {
+  axios
+    .put(`${config.CYBER_CITY_API_HOST}/api/water`, data, {
+      headers: {
+        'api-key': `${config.API_KEY}`,
+      },
+      httpsAgent: httpsAgent,
+    })
+    .catch((error: AxiosError) => {
+      plcApiLogger.error(error)
+    })
+}
+
+function changeChengduGJ_2(data: {
+  asset: string
+  heading?: { unit: string; value: string }
+  altitude?: { unit: string; value: string }
+  kill?: {}
 }) {
-  axios
-    .put(`${config.PLC_API_HOST}/api/lights`, data, {
-      headers: {
-        'api-key': `${config.API_KEY}`,
-      },
-      httpsAgent: httpsAgent,
-    })
-    .catch((error: AxiosError) => {
-      plcApiLogger.error(error)
-    })
-}
+  if (data.heading) {
+    axios
+      .post(`${config.ASCOT_API_HOST}/${data.asset}/tasks/cancel-all/`, {
+        httpsAgent: httpsAgent,
+      })
+      .catch((error: AxiosError) => {
+        plcApiLogger.error(error)
+      })
 
-export function changeRadarState(data: { power: string }) {
-  axios
-    .put(`${config.PLC_API_HOST}/api/radar`, data, {
-      headers: {
-        'api-key': `${config.API_KEY}`,
-      },
-      httpsAgent: httpsAgent,
-    })
-    .catch((error: AxiosError) => {
-      plcApiLogger.error(error)
-    })
-}
+    axios
+      .patch(`${config.ASCOT_API_HOST}/${data.asset}/heading/`, data.heading, {
+        httpsAgent: httpsAgent,
+      })
+      .catch((error: AxiosError) => {
+        plcApiLogger.error(error)
+      })
+  }
 
-export function changeRailSwitchState(data: {
-  zone: string
-  direction: string
-}) {
-  axios
-    .put(`${config.PLC_API_HOST}/api/railswitch`, data, {
-      headers: {
-        'api-key': `${config.API_KEY}`,
-      },
-      httpsAgent: httpsAgent,
-    })
-    .catch((error: AxiosError) => {
-      plcApiLogger.error(error)
-    })
-}
+  if (data.altitude) {
+    axios
+      .post(`${config.ASCOT_API_HOST}/${data.asset}/tasks/cancel-all/`, {
+        httpsAgent: httpsAgent,
+      })
+      .catch((error: AxiosError) => {
+        plcApiLogger.error(error)
+      })
 
-export function changeTrainState(data: { power: string }) {
-  axios
-    .put(`${config.PLC_API_HOST}/api/train`, data, {
-      headers: {
-        'api-key': `${config.API_KEY}`,
-      },
-      httpsAgent: httpsAgent,
-    })
-    .catch((error: AxiosError) => {
-      plcApiLogger.error(error)
-    })
-}
+    axios
+      .patch(
+        `${config.ASCOT_API_HOST}/${data.asset}/altitude/`,
+        data.altitude,
+        {
+          httpsAgent: httpsAgent,
+        },
+      )
+      .catch((error: AxiosError) => {
+        plcApiLogger.error(error)
+      })
+  }
 
-export function changeWaterTowerColor(data: { color: string }) {
-  axios
-    .put(`${config.PLC_API_HOST}/api/water`, data, {
-      headers: {
-        'api-key': `${config.API_KEY}`,
-      },
-      httpsAgent: httpsAgent,
-    })
-    .catch((error: AxiosError) => {
-      plcApiLogger.error(error)
-    })
+  if (data.kill) {
+    axios
+      .post(`${config.ASCOT_API_HOST}/${data.asset}/tasks/cancel-all/`, {
+        httpsAgent: httpsAgent,
+      })
+      .catch((error: AxiosError) => {
+        plcApiLogger.error(error)
+      })
+
+    axios
+      .post(`${config.ASCOT_API_HOST}/${data.asset}/kill/`, data.kill, {
+        httpsAgent: httpsAgent,
+      })
+      .catch((error: AxiosError) => {
+        plcApiLogger.error(error)
+      })
+  }
 }
 
 // This is called in the routes-missions on the route "/api/v1/missions/handle-action-execution/"
-export const commandScripts: SingleTypeObject<(args: AnyObject) => void> = {
+export const cyberCityCommandScripts: SingleTypeObject<
+  (args: AnyObject) => void
+> = {
   BankColor: (args: AnyObject) => {
     let data: any = args
     changeBankColor(data)
@@ -174,6 +235,30 @@ export const commandScripts: SingleTypeObject<(args: AnyObject) => void> = {
   },
 }
 
+export const ascotCommandScripts: SingleTypeObject<(args: AnyObject) => void> =
+  {
+    ChengduGJ_2: (args: AnyObject) => {
+      let data: any = args
+
+      axios.get(`${config.ASCOT_API_HOST}?expand=name`).then((response) => {
+        let assetData: any = response.data
+        let assets: any = {}
+
+        for (let assetDatum of assetData) {
+          let name = assetDatum.name
+          let handle = assetDatum.handle
+
+          assets[name] = handle
+        }
+
+        data.assetName = assets[data.assetName]
+
+        changeChengduGJ_2(data)
+      })
+    },
+  }
+
 export default {
-  commandScripts,
+  cyberCityCommandScripts,
+  ascotCommandScripts,
 }
