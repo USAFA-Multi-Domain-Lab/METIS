@@ -265,6 +265,8 @@ export const ascotCommandScripts: SingleTypeObject<(args: AnyObject) => void> =
           // to be used for the API route
           data.asset = assets[data.asset]
 
+          console.log(data.asset)
+
           // Performs the action via the API
           changeChengduGJ_2(data)
         })
