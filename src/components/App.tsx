@@ -56,11 +56,72 @@ function App(props: {
 
   const [loadingMinTimeout, setLoadingMinTimeout] = useState<any>(undefined)
 
+  /* -- COMPONENT FUNCTIONS -- */
+
+  /**
+   * Stops the session sync from occurring. This is during mount.
+   */
+  let endSessionSync = (): void => {}
+
+  /**
+   * Continually syncs the session with the server (Once a second or longer if latent). Storing updated session data in the app state.
+   * @param initialCallback A callback made when the session is first synced. Every subsequent sync will not use this callback.
+   * @param initialCall Recursively used parameter used to determine if this is the first call to this function. This parameter should be ignored.
+   */
+  const syncSession = (
+    initialCallback: (
+      session: IMetisSession,
+      endSync: () => void,
+    ) => void = () => {},
+  ): void => {
+    let initialCall: boolean = true
+
+    // Used internally to track the when
+    // the initial call is made.
+    let sync = () => {
+      let preRequestTimestamp: number = Date.now()
+
+      // Fetch the current session from the server.
+      User.fetchSession()
+        .then((session: IMetisSession) => {
+          // Save the session in the state.
+          appState.setSession(session)
+
+          // If this is the initial call to this
+          // function, then call the initial
+          // callback.
+          if (initialCall) {
+            initialCallback(session, () => (sync = () => {}))
+            initialCall = false
+          }
+
+          // Determine the time until the next
+          // request.
+          let postRequestTimestamp = Date.now()
+          let timeElapsed = postRequestTimestamp - preRequestTimestamp
+          let timeUntilNextRequest = 1000 - timeElapsed
+
+          // Set a timeout to make the next
+          // request. If enough time has elapsed,
+          // this will be done immediately.
+          setTimeout(sync, timeUntilNextRequest)
+        })
+        .catch(() => {
+          appState.setErrorMessage('Failed to sync session.')
+          appState.setAppMountHandled(true)
+          appActions.finishLoading()
+        })
+    }
+
+    sync()
+  }
+
   /* -- COMPONENT HANDLERS -- */
 
-  // This will reposition the currently
-  // displayed tooltip based on the mouse
-  // position.
+  /**
+   * Recalculates and positions any tooltip being displayed in the DOM based on the current position of the mouse.
+   * @param event The mouse event that triggered the tooltip position to be recalculated.
+   */
   const positionTooltip = (event: MouseEvent): void => {
     let tooltips_elm: HTMLDivElement | null = appState.tooltips.current
 
@@ -112,37 +173,32 @@ function App(props: {
 
       appActions.beginLoading(AppState.defaultAppStateValues.loadingMessage)
 
-      User.fetchSession().then(
-        (session: IMetisSession) => {
-          appState.setSession(session)
-          appState.setAppMountHandled(true)
-          appActions.finishLoading()
+      syncSession((session: IMetisSession, endSync: () => void) => {
+        appState.setAppMountHandled(true)
 
-          // If no user data is present in the
-          // session, navigate to the auth page
-          // to have the visitor login.
-          if (session.user === undefined) {
-            appActions.goToPage('AuthPage', {
-              returningPagePath: 'MissionSelectionPage',
-              returningPageProps: {},
-            })
-          }
-          // Else if no game data is present in
-          // the session, navigate to the mission
-          // selection page to have the user launch
-          // a game.
-          else if (session.game === undefined) {
-            appActions.goToPage('MissionSelectionPage', {})
-          } else {
-            appActions.goToPage('GamePage', {})
-          }
-        },
-        () => {
-          appState.setErrorMessage('Failed to sync session.')
-          appState.setAppMountHandled(true)
-          appActions.finishLoading()
-        },
-      )
+        endSessionSync = endSync
+
+        appActions.finishLoading()
+
+        // If no user data is present in the
+        // session, navigate to the auth page
+        // to have the visitor login.
+        if (session.user === undefined) {
+          appActions.goToPage('AuthPage', {
+            returningPagePath: 'MissionSelectionPage',
+            returningPageProps: {},
+          })
+        }
+        // Else if no game data is present in
+        // the session, navigate to the mission
+        // selection page to have the user launch
+        // a game.
+        else if (session.game === undefined) {
+          appActions.goToPage('MissionSelectionPage', {})
+        } else {
+          appActions.goToPage('GamePage', {})
+        }
+      })
 
       document.addEventListener('mousemove', positionTooltip)
       document.addEventListener('drag', positionTooltip)
@@ -154,6 +210,13 @@ function App(props: {
       }
     }
   }, [appState.appMountHandled])
+
+  // Equivalent of componentWillUnmount.
+  useEffect(() => {
+    return () => {
+      endSessionSync()
+    }
+  }, [])
 
   /* -- PAGE PROPS CONSTRUCTION -- */
 

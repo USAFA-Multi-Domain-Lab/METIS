@@ -179,7 +179,7 @@ export class Game {
         // the node, not the client.
         if (context === 'react') {
           axios
-            .post<void>(`${Game.API_ENDPOINT}/execute/`, { nodeID })
+            .post<void>(`${Game.API_ENDPOINT}/open/`, { nodeID })
             .then(resolve)
             .catch((error: AxiosError) => {
               console.error('Failed to open node.')
@@ -203,7 +203,7 @@ export class Game {
 
           // If the node is executable, then reject
           // with a 401 error.
-          if (node.openable) {
+          if (!node.openable) {
             let error: AxiosError = new AxiosError('Node is not openable.')
             error.status = 401
             return reject(error)

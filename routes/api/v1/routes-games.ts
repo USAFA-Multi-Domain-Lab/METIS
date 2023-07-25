@@ -6,11 +6,7 @@ import {
   userRoles,
 } from '../../../user'
 import MissionModel from '../../../database/models/model-mission'
-import {
-  databaseLogger,
-  expressLogger,
-  gameLogger,
-} from '../../../modules/logging'
+import { databaseLogger, gameLogger } from '../../../modules/logging'
 import { Mission } from '../../../src/modules/missions'
 import { Game } from '../../../src/modules/games'
 import MetisSession from '../../../session/session'

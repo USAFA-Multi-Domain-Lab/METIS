@@ -117,7 +117,7 @@ export default function MissionFormPage(
             appActions.finishLoading()
             appActions.handleServerError('Failed to load mission.')
           },
-          { expandAllNodes: true },
+          { openAllNodes: true },
         )
         existsInDatabase = true
         setExistsInDatabase(existsInDatabase)

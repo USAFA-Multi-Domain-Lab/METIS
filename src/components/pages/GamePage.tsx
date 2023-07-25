@@ -19,6 +19,7 @@ import {
 import { MissionNodeAction } from '../../modules/mission-node-actions'
 import { IConsoleOutput } from '../content/game/ConsoleOutput'
 import { Game } from '../../modules/games'
+import { IMetisSession, User } from '../../modules/users'
 
 export interface IGamePage extends IPage {}
 
@@ -29,10 +30,12 @@ const GAME_TICK_RATE: number = 20
 // This will render a dashboard with a radar
 // on it, indicating air traffic passing by.
 export default function GamePage(props: IGamePage): JSX.Element | null {
+  /* -- PROPS -- */
+
   let appState: AppState = props.appState
   let appActions: AppActions = props.appActions
 
-  /* -- COMPONENT STATE -- */
+  /* -- STATE -- */
 
   const [mountHandled, setMountHandled] = useState<boolean>(false)
   const [selectedNode, selectNode] = useState<MissionNode | null>(null)
@@ -40,23 +43,13 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
     null,
   )
 
-  // If the game in the session is
-  // undefined, log an error then render
-  // null.
-  if (appState.session.game === undefined) {
-    appActions.handleServerError('Game session was lost.')
-    return null
-  }
+  /* -- VARIABLES -- */
 
-  let game: Game = appState.session.game
+  let game: Game
+  let mission: Mission
 
-  // Get the mission from the game,
-  // now that we know it is not undefined.
-  let mission: Mission = game.mission
-
-  let className: string = 'GamePage Page'
-
-  // Keeps track of if the user is logged in or not.
+  // Variables that determine whether or not
+  // to display various components.
   let displayLogin: boolean = appState.session.user === undefined
   let displayLogout: boolean = !displayLogin
   let displayNodeActions: boolean =
@@ -64,13 +57,9 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
   let displayExecuteNodePath: boolean =
     selectedNode !== null && selectedAction !== null
 
-  // Logic that lets the user visually grab their attention to show them that
-  // they don't have any more resources left to spend.
+  // Class names for various components.
+  let className: string = 'GamePage Page'
   let resourcesClassName: string = 'Resources'
-
-  if (mission.resources <= 0) {
-    resourcesClassName += ' RedAlert'
-  }
 
   /* -- FUNCTIONS -- */
 
@@ -150,6 +139,14 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
     }
   }
 
+  /**
+   * Clears the selected node and action.
+   */
+  const clearSelections = (): void => {
+    selectNode(null)
+    selectAction(null)
+  }
+
   // This will render the execute node path
   // prompt if the user has selected a node
   // and an action.
@@ -158,13 +155,12 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
       return (
         <ExecuteNodePath
           selectedAction={selectedNode.selectedAction}
-          isOpen={executeNodePathIsDisplayed}
+          isOpen={displayExecuteNodePath}
           outputToConsole={outputToConsole}
-          handleCloseRequest={() => setExecuteNodePathIsDisplayed(false)}
+          handleCloseRequest={clearSelections}
           handleGoBackRequest={() => {
-            if (selectedNode && selectedNode.actions.length > 1) {
-              setExecuteNodePathIsDisplayed(false)
-              setNodeActionsIsDisplayed(true)
+            if (selectedNode && selectedNode.actions.length === 1) {
+              clearSelections()
             }
           }}
           notify={appActions.notify}
@@ -191,8 +187,30 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
     }
   }, [])
 
+  /* -- PRE-RENDER-PROCESSING -- */
+
+  // If the game in the session is
+  // defined, initialize the game and
+  // mission variables.
+  if (appState.session.game !== undefined) {
+    game = appState.session.game
+    mission = game.mission
+  }
+  // Else throw an error and render null.
+  else {
+    appActions.handleServerError('Game session was lost.')
+    return null
+  }
+
+  // If the mission has no resources left,
+  // add the red alert class to the resources.
+  if (mission.resources <= 0) {
+    resourcesClassName += ' RedAlert'
+  }
+
   /* -- RENDER -- */
 
+  // Return the rendered component.
   return (
     <div className={className}>
       {
@@ -336,23 +354,10 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
                     }}
                   />
                   <NodeActions
-                    isOpen={nodeActionsIsDisplayed}
+                    isOpen={displayNodeActions}
                     selectedNode={selectedNode}
-                    handleActionSelectionRequest={(
-                      action: MissionNodeAction,
-                    ) => {
-                      setNodeActionsIsDisplayed(false)
-
-                      if (selectedNode !== null) {
-                        selectedNode.selectedAction = action
-                        if (selectedNode.selectedAction !== null) {
-                          selectedNode.selectedAction.processTime =
-                            action.processTime
-                        }
-                        setExecuteNodePathIsDisplayed(true)
-                      }
-                    }}
-                    handleCloseRequest={() => setNodeActionsIsDisplayed(false)}
+                    handleActionSelectionRequest={selectAction}
+                    handleCloseRequest={clearSelections}
                   />
                   {renderExecuteNodePath()}
                 </>

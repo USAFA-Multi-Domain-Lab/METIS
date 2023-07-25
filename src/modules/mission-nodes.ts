@@ -38,6 +38,7 @@ export interface IMissionNodeJSON {
   executable: boolean
   device: boolean
   actions: Array<IMissionNodeActionJSON>
+  isOpen?: boolean
 }
 
 // These are options that can be passed
@@ -48,9 +49,9 @@ export interface INodeDeleteOptions {
   deleteMethod?: ENodeDeleteMethod // Default "ENodeDeleteMethod.DeleteNodeAndChildren"
 }
 
-// This represents an individual node
-// for a student to execute within a
-// mission.
+/**
+ * This represents an individual node for a student to execute within a mission.
+ */
 export class MissionNode implements IMissionMappable {
   mission: Mission
   nodeID: string
@@ -89,6 +90,7 @@ export class MissionNode implements IMissionMappable {
   static default_actions: Array<IMissionNodeActionJSON> = []
   static default_mapX: number = 0
   static default_mapY: number = 0
+  static default_isOpen: boolean = false
 
   static createDefaultAction(node: MissionNode): MissionNodeAction {
     return new MissionNodeAction(
@@ -386,7 +388,22 @@ export class MissionNode implements IMissionMappable {
     this._highlighted = highlighted
   }
 
-  constructor(
+  /**
+   * @param {Mission} mission The mission that this node is a part of.
+   * @param {string} nodeID The ID for this node.
+   * @param {string} name The name for this node.
+   * @param {string} color The hexidecimal color for this node.
+   * @param {string} description The description for this node.
+   * @param {string} preExecutionText The text that will be logged to the console when this node is clicked.
+   * @param {number} depthPadding The amount of padding this node will have when rendered on the map. Each unit will shift the node over 1.
+   * @param {boolean} executable Whether this node can be executed with an action.
+   * @param {boolean} device Whether this node is considered a device. This should not be true if executable is false.
+   * @param {Array<IMissionNodeActionJSON>} actionJSON The JSON for the actions that this node will have.
+   * @param {number} mapX The X coordinate for this node on the map, defaults to MissionNode.default_mapX.
+   * @param {number} mapY The Y coordinate for this node on the map, defaults to MissionNode.default_mapY.
+   * @param {boolean} isOpen Whether this node is open, revealing its child nodes, defaults to MissionNode.default_isOpen.
+   */
+  public constructor(
     mission: Mission,
     nodeID: string,
     name: string,
@@ -399,6 +416,7 @@ export class MissionNode implements IMissionMappable {
     actionJSON: Array<IMissionNodeActionJSON>,
     mapX: number = MissionNode.default_mapX,
     mapY: number = MissionNode.default_mapY,
+    isOpen: boolean = MissionNode.default_isOpen,
   ) {
     this.mission = mission
     this.nodeID = nodeID
@@ -419,7 +437,7 @@ export class MissionNode implements IMissionMappable {
     this.mapX = mapX
     this.mapY = mapY
     this.depth = -1
-    this._isOpen = false
+    this._isOpen = isOpen
     this._expandedInMenu = true
     this._executingAction = null
     this._executionTimeStart = 0

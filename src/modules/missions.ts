@@ -41,7 +41,7 @@ export interface IMissionJSON {
 // how you want this mission to be cloned.
 export interface IMissionCloneOptions {
   method: EMissionCloneMethod
-  expandAll?: boolean
+  openAll?: boolean
 }
 
 // This represents a mission for a
@@ -173,7 +173,7 @@ export class Mission {
     nodeStructure: AnyObject,
     nodeData: Array<IMissionNodeJSON>,
     seed: string,
-    expandAll: boolean = false,
+    openAll: boolean = false,
   ) {
     this.missionID = missionID
     this.name = name
@@ -213,7 +213,7 @@ export class Mission {
     this._hasDisabledNodes = false
 
     this._importNodeData(nodeData)
-    this._importNodeStructure(nodeStructure, this.rootNode, expandAll)
+    this._importNodeStructure(nodeStructure, this.rootNode, openAll)
 
     if (this.nodes.size === 0) {
       this.spawnNewNode()
@@ -232,7 +232,7 @@ export class Mission {
   _importNodeStructure(
     nodeStructure: AnyObject,
     rootNode: MissionNode = this.rootNode,
-    expandAll: boolean = false,
+    openAll: boolean = false,
   ): MissionNode {
     let nodes: Map<string, MissionNode> = this.nodes
     let childNodes: Array<MissionNode> = []
@@ -246,12 +246,12 @@ export class Mission {
       let childNode: MissionNode | undefined = nodes.get(key)
 
       if (childNode !== undefined) {
-        childNodes.push(this._importNodeStructure(value, childNode, expandAll))
+        childNodes.push(this._importNodeStructure(value, childNode, openAll))
       }
     }
     rootNode.childNodes = childNodes
 
-    if (expandAll && rootNode.hasChildren) {
+    if (openAll && rootNode.hasChildren) {
       rootNode.open()
     }
 
@@ -297,6 +297,9 @@ export class Mission {
           nodeDatum.executable,
           nodeDatum.device,
           nodeDatum.actions,
+          MissionNode.default_mapX,
+          MissionNode.default_mapY,
+          nodeDatum.isOpen,
         )
 
         this.nodes.set(node.nodeID, node)
@@ -372,6 +375,7 @@ export class Mission {
         actions: node.actions.map((action: MissionNodeAction) =>
           action.toJSON(),
         ),
+        isOpen: node.isOpen,
       }
     })
   }
@@ -452,10 +456,10 @@ export class Mission {
       MissionNode.default_actions,
       MissionNode.default_mapX,
       MissionNode.default_mapY,
+      true,
     )
     node.parentNode = rootNode
     rootNode.childNodes.push(node)
-    rootNode.open()
     this.nodes.set(node.nodeID, node)
     this._lastCreatedNode = node
 
@@ -605,7 +609,7 @@ export class Mission {
   clone(
     options: IMissionCloneOptions = {
       method: EMissionCloneMethod.IncludeModifications,
-      expandAll: false,
+      openAll: false,
     },
   ): Mission {
     switch (options.method) {
@@ -620,7 +624,7 @@ export class Mission {
           this._originalNodeStructure,
           this._originalNodeData,
           this.seed,
-          options.expandAll === true,
+          options.openAll === true,
         )
         break
       case EMissionCloneMethod.IncludeModifications:
@@ -634,7 +638,7 @@ export class Mission {
           this._exportNodeStructure(false),
           this._exportNodeData(false),
           this.seed,
-          options.expandAll === true,
+          options.openAll === true,
         )
         break
     }
@@ -690,7 +694,7 @@ export interface IMissionSessionJSON {
 // This will create a brand new mission.
 export function createMission(
   mission: Mission,
-  expandAll: boolean,
+  openAll: boolean,
   callback: (mission: Mission) => void,
   callbackError: (error: AxiosError) => void = () => {},
 ): void {
@@ -709,7 +713,7 @@ export function createMission(
         missionJson.nodeStructure,
         missionJson.nodeData,
         missionJson.seed,
-        expandAll,
+        openAll,
       )
 
       callback(mission)
@@ -726,7 +730,7 @@ export function createMission(
 // mission.
 export function importMissions(
   files: FileList | Array<File>,
-  expandAll: boolean,
+  openAll: boolean,
   callback: (
     successfulImportCount: number,
     failedImportCount: number,
@@ -774,7 +778,7 @@ export function getMission(
   missionID: string,
   callback: (mission: Mission) => void,
   callbackError: (error: AxiosError) => void = () => {},
-  options: { expandAllNodes?: boolean } = {},
+  options: { openAllNodes?: boolean } = {},
 ): void {
   axios
     .get(`/api/v1/missions?missionID=${missionID}`)
@@ -791,7 +795,7 @@ export function getMission(
         missionJson.nodeStructure,
         missionJson.nodeData,
         missionJson.seed,
-        options.expandAllNodes === true,
+        options.openAllNodes === true,
       )
       callback(mission)
     })

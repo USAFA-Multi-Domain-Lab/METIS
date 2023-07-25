@@ -105,8 +105,9 @@ export class AppActions {
     this.appState.setPostLoadNotifications([])
   }
 
-  // This will force the component to
-  // rerender.
+  /**
+   * This will force the state of the entire app to update, causing a rerender, even if no actual changes to the state were made.
+   */
   forceUpdate = (): void => {
     this.appState.setForcedUpdateCounter(this.appState.forcedUpdateCounter + 1)
   }
