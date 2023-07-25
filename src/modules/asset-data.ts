@@ -2207,8 +2207,10 @@ export const assetData: AnyObject = {
             originalPath: '',
             args: {
               asset: 'CHENGDU GJ-2',
-              unit: 'deg',
-              value: 270,
+              heading: {
+                unit: 'deg',
+                value: 270,
+              },
             },
           },
         },
@@ -2221,8 +2223,10 @@ export const assetData: AnyObject = {
             originalPath: '',
             args: {
               asset: 'CHENGDU GJ-2',
-              unit: 'm',
-              value: 0,
+              altitude: {
+                unit: 'm',
+                value: 0,
+              },
             },
           },
         },
