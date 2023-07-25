@@ -2200,13 +2200,13 @@ export const assetData: AnyObject = {
       'CHENGDU GJ-2': {
         'change heading': {
           270: {
-            label: 'CHENGDU GJ-2: "change heading"',
+            label: 'CHENGDU GJ-2: "heading=270"',
             description:
               'This changes the heading of the CHENGDU GJ-2 entity to 270 degrees.',
             scriptName: 'ChengduGJ_2',
             originalPath: '',
             args: {
-              assetName: 'CHENGDU GJ-2',
+              asset: 'CHENGDU GJ-2',
               unit: 'deg',
               value: 270,
             },
@@ -2214,17 +2214,19 @@ export const assetData: AnyObject = {
         },
         'change altitude': {
           0: {
-            label: 'CHENGDU GJ-2: "change altitude"',
+            label: 'CHENGDU GJ-2: "altitude=0"',
             description:
               'This changes the altitude of the CHENGDU GJ-2 entity to 0 meters.',
             scriptName: 'ChengduGJ_2',
             originalPath: '',
             args: {
-              assetName: 'CHENGDU GJ-2',
+              asset: 'CHENGDU GJ-2',
               unit: 'm',
               value: 0,
             },
           },
+        },
+        'power': {
           kill: {
             label: 'CHENGDU GJ-2: "kill"',
             description: 'This kills the CHENGDU GJ-2 entity.',
