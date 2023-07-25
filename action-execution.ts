@@ -143,19 +143,20 @@ function changeChengduGJ_2(data: {
           httpsAgent: httpsAgent,
         },
       )
-      .catch((error: AxiosError) => {
-        plcApiLogger.error(error)
+      .then(() => {
+        // Sets the heading
+        axios
+          .patch(
+            `${config.ASCOT_API_HOST}/api/engen/v1/entities/${data.asset}/heading/`,
+            { heading: data.heading },
+            {
+              httpsAgent: httpsAgent,
+            },
+          )
+          .catch((error: AxiosError) => {
+            plcApiLogger.error(error)
+          })
       })
-
-    // Sets the heading
-    axios
-      .patch(
-        `${config.ASCOT_API_HOST}/api/engen/v1/entities/${data.asset}/heading/`,
-        { heading: data.heading },
-        {
-          httpsAgent: httpsAgent,
-        },
-      )
       .catch((error: AxiosError) => {
         plcApiLogger.error(error)
       })
@@ -170,19 +171,20 @@ function changeChengduGJ_2(data: {
           httpsAgent: httpsAgent,
         },
       )
-      .catch((error: AxiosError) => {
-        plcApiLogger.error(error)
+      .then(() => {
+        // Sets the altitude
+        axios
+          .patch(
+            `${config.ASCOT_API_HOST}/api/engen/v1/entities/${data.asset}/altitude/`,
+            { altitude: data.altitude },
+            {
+              httpsAgent: httpsAgent,
+            },
+          )
+          .catch((error: AxiosError) => {
+            plcApiLogger.error(error)
+          })
       })
-
-    // Sets the altitude
-    axios
-      .patch(
-        `${config.ASCOT_API_HOST}/api/engen/v1/entities/${data.asset}/altitude/`,
-        { altitude: data.altitude },
-        {
-          httpsAgent: httpsAgent,
-        },
-      )
       .catch((error: AxiosError) => {
         plcApiLogger.error(error)
       })
@@ -197,19 +199,20 @@ function changeChengduGJ_2(data: {
           httpsAgent: httpsAgent,
         },
       )
-      .catch((error: AxiosError) => {
-        plcApiLogger.error(error)
+      .then(() => {
+        // Kills the asset
+        axios
+          .post(
+            `${config.ASCOT_API_HOST}/api/engen/v1/entities/${data.asset}/kill/`,
+            { kill: data.kill },
+            {
+              httpsAgent: httpsAgent,
+            },
+          )
+          .catch((error: AxiosError) => {
+            plcApiLogger.error(error)
+          })
       })
-
-    // Kills the asset
-    axios
-      .post(
-        `${config.ASCOT_API_HOST}/api/engen/v1/entities/${data.asset}/kill/`,
-        { kill: data.kill },
-        {
-          httpsAgent: httpsAgent,
-        },
-      )
       .catch((error: AxiosError) => {
         plcApiLogger.error(error)
       })
