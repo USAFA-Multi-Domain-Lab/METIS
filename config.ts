@@ -27,8 +27,9 @@ export let MONGO_HOST = 'localhost'
 export let MONGO_PORT = 27017
 export let MONGO_USERNAME: string | undefined
 export let MONGO_PASSWORD: string | undefined
-export let API_KEY: string = ''
-export let PLC_API_HOST: string = ''
+export let CYBER_CITY_API_KEY: string = ''
+export let CYBER_CITY_API_HOST: string = ''
+export let ASCOT_API_HOST: string = ''
 
 export const APP_DIR = path.join(__dirname)
 
@@ -68,11 +69,14 @@ if (fs.existsSync(environmentFilePath)) {
   if ('MONGO_PASSWORD' in environmentData) {
     MONGO_PASSWORD = environmentData['MONGO_PASSWORD']
   }
-  if ('API_KEY' in environmentData) {
-    API_KEY = environmentData['API_KEY']
+  if ('CYBER_CITY_API_KEY' in environmentData) {
+    CYBER_CITY_API_KEY = environmentData['CYBER_CITY_API_KEY']
   }
-  if ('PLC_API_HOST' in environmentData) {
-    PLC_API_HOST = environmentData['PLC_API_HOST']
+  if ('CYBER_CITY_API_HOST' in environmentData) {
+    CYBER_CITY_API_HOST = environmentData['CYBER_CITY_API_HOST']
+  }
+  if ('ASCOT_API_HOST' in environmentData) {
+    ASCOT_API_HOST = environmentData['ASCOT_API_HOST']
   }
 }
 
@@ -141,8 +145,9 @@ const defaultExports = {
   MONGO_DB,
   PORT,
   MONGO_HOST,
-  PLC_API_HOST,
-  API_KEY,
+  CYBER_CITY_API_HOST,
+  ASCOT_API_HOST,
+  CYBER_CITY_API_KEY,
   configure,
 }
 
