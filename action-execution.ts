@@ -131,7 +131,7 @@ function changeWaterTowerColor(data: { color: string }) {
 function changeChengduGJ_2(data: {
   asset: string
   heading?: { unit: string; value: string }
-  altitude?: { altitude: { unit: string; value: string } }
+  altitude?: { unit: string; value: string }
   kill?: {}
 }) {
   if (data.heading) {
@@ -178,7 +178,7 @@ function changeChengduGJ_2(data: {
     axios
       .patch(
         `${config.ASCOT_API_HOST}/api/engen/v1/entities/${data.asset}/altitude/`,
-        data.altitude,
+        { altitude: data.altitude },
         {
           httpsAgent: httpsAgent,
         },
@@ -205,7 +205,7 @@ function changeChengduGJ_2(data: {
     axios
       .post(
         `${config.ASCOT_API_HOST}/api/engen/v1/entities/${data.asset}/kill/`,
-        data.kill,
+        { kill: data.kill },
         {
           httpsAgent: httpsAgent,
         },
