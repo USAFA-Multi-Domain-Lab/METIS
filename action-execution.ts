@@ -130,8 +130,8 @@ function changeWaterTowerColor(data: { color: string }) {
 
 function changeChengduGJ_2(data: {
   asset: string
-  heading?: { unit: string; value: string }
-  altitude?: { unit: string; value: string }
+  heading?: { heading: { unit: string; value: string } }
+  altitude?: { altitude: { unit: string; value: string } }
   kill?: {}
 }) {
   if (data.heading) {
