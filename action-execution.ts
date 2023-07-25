@@ -130,25 +130,32 @@ function changeWaterTowerColor(data: { color: string }) {
 
 function changeChengduGJ_2(data: {
   asset: string
-  heading?: { heading: { unit: string; value: string } }
+  heading?: { unit: string; value: string }
   altitude?: { altitude: { unit: string; value: string } }
   kill?: {}
 }) {
   if (data.heading) {
     // Cancels all current tasks
     axios
-      .post(`${config.ASCOT_API_HOST}/${data.asset}/tasks/cancel-all/`, {
-        httpsAgent: httpsAgent,
-      })
+      .post(
+        `${config.ASCOT_API_HOST}/api/engen/v1/entities/${data.asset}/tasks/cancel-all/`,
+        {
+          httpsAgent: httpsAgent,
+        },
+      )
       .catch((error: AxiosError) => {
         plcApiLogger.error(error)
       })
 
     // Sets the heading
     axios
-      .patch(`${config.ASCOT_API_HOST}/${data.asset}/heading/`, data.heading, {
-        httpsAgent: httpsAgent,
-      })
+      .patch(
+        `${config.ASCOT_API_HOST}/api/engen/v1/entities/${data.asset}/heading/`,
+        { heading: data.heading },
+        {
+          httpsAgent: httpsAgent,
+        },
+      )
       .catch((error: AxiosError) => {
         plcApiLogger.error(error)
       })
@@ -157,9 +164,12 @@ function changeChengduGJ_2(data: {
   if (data.altitude) {
     // Cancels all current tasks
     axios
-      .post(`${config.ASCOT_API_HOST}/${data.asset}/tasks/cancel-all/`, {
-        httpsAgent: httpsAgent,
-      })
+      .post(
+        `${config.ASCOT_API_HOST}/api/engen/v1/entities/${data.asset}/tasks/cancel-all/`,
+        {
+          httpsAgent: httpsAgent,
+        },
+      )
       .catch((error: AxiosError) => {
         plcApiLogger.error(error)
       })
@@ -167,7 +177,7 @@ function changeChengduGJ_2(data: {
     // Sets the altitude
     axios
       .patch(
-        `${config.ASCOT_API_HOST}/${data.asset}/altitude/`,
+        `${config.ASCOT_API_HOST}/api/engen/v1/entities/${data.asset}/altitude/`,
         data.altitude,
         {
           httpsAgent: httpsAgent,
@@ -181,18 +191,25 @@ function changeChengduGJ_2(data: {
   if (data.kill) {
     // Cancels all current tasks
     axios
-      .post(`${config.ASCOT_API_HOST}/${data.asset}/tasks/cancel-all/`, {
-        httpsAgent: httpsAgent,
-      })
+      .post(
+        `${config.ASCOT_API_HOST}/api/engen/v1/entities/${data.asset}/tasks/cancel-all/`,
+        {
+          httpsAgent: httpsAgent,
+        },
+      )
       .catch((error: AxiosError) => {
         plcApiLogger.error(error)
       })
 
     // Kills the asset
     axios
-      .post(`${config.ASCOT_API_HOST}/${data.asset}/kill/`, data.kill, {
-        httpsAgent: httpsAgent,
-      })
+      .post(
+        `${config.ASCOT_API_HOST}/api/engen/v1/entities/${data.asset}/kill/`,
+        data.kill,
+        {
+          httpsAgent: httpsAgent,
+        },
+      )
       .catch((error: AxiosError) => {
         plcApiLogger.error(error)
       })
@@ -248,7 +265,7 @@ export const ascotCommandScripts: SingleTypeObject<(args: AnyObject) => void> =
 
       // Grabs the asset handle and performs the action
       axios
-        .get(`${config.ASCOT_API_HOST}?expand=name`)
+        .get(`${config.ASCOT_API_HOST}/api/engen/v1/entities?expand=name`)
         .then((response) => {
           let assetData: any = response.data
           let assets: any = {}
