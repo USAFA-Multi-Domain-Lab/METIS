@@ -354,7 +354,7 @@ describe('Export/Import File Tests', function () {
     agent
       .get(`/api/v1/missions/export/`)
       .then(function (response: ChaiHttp.Response) {
-        expect(response).to.have.status(400)
+        expect(response).to.have.status(404)
         done()
       })
       .catch(function (error) {
@@ -789,9 +789,12 @@ describe('API Mission Routes', function () {
       })
   })
 
-  it('Getting a mission where the "missionID" is not of type "objectId" in the query of the response should return a bad (400) response', function (done) {
+  it('Getting a mission where the "missionID" is not of type "objectId" in the query of the request should return a bad (400) response', function (done) {
     agent
-      .get(`/api/v1/missions?missionID=${2}`)
+      .get(`/api/v1/missions`)
+      .query({
+        missionID: 2,
+      })
       .then(function (response: ChaiHttp.Response) {
         expect(response).to.have.status(400)
         done()
@@ -802,7 +805,7 @@ describe('API Mission Routes', function () {
       })
   })
 
-  it('Getting a mission with all the correct properties in the query of the response should result in a successful (200) response', function (done) {
+  it('Getting a mission with all the correct properties in the query of the request should result in a successful (200) response', function (done) {
     agent
       .get(`/api/v1/missions?missionID=${missionID}`)
       .then(function (response: ChaiHttp.Response) {
@@ -828,7 +831,7 @@ describe('API Mission Routes', function () {
       })
   })
 
-  it('Creating a mission with (a) missing property/properties in the body of the response should return a bad (400) response', function (done) {
+  it('Creating a mission with (a) missing property/properties in the body of the request should return a bad (400) response', function (done) {
     agent
       .post('/api/v1/missions/')
       .set('Content-Type', 'application/json')
@@ -843,7 +846,7 @@ describe('API Mission Routes', function () {
       })
   })
 
-  it('Creating a mission with all the correct properties in the body of the response should return a successful (200) response', function (done) {
+  it('Creating a mission with all the correct properties in the body of the request should return a successful (200) response', function (done) {
     agent
       .post('/api/v1/missions/')
       .set('Content-Type', 'application/json')
@@ -898,7 +901,7 @@ describe('API Mission Routes', function () {
       })
   })
 
-  it('Updating a mission with (a) missing property/properties that is required (missionID) in the body of the response should return a bad (400) response', function (done) {
+  it('Updating a mission with (a) missing property/properties that is required (missionID) in the body of the request should return a bad (400) response', function (done) {
     agent
       .put('/api/v1/missions/')
       .set('Content-Type', 'application/json')
@@ -913,7 +916,7 @@ describe('API Mission Routes', function () {
       })
   })
 
-  it('Updating a mission where the nodeStructure is defined, but the nodeData is undefined in the body of the response should return an internal server error (500) response', function (done) {
+  it('Updating a mission where the nodeStructure is defined, but the nodeData is undefined in the body of the request should return an internal server error (500) response', function (done) {
     missionID = createdMissionIDArray[0]
     updateMissionWithNoNodeData.mission.missionID = missionID
 
@@ -931,7 +934,7 @@ describe('API Mission Routes', function () {
       })
   })
 
-  it('Updating a mission where the nodeData is defined, but the nodeStructure is undefined in the body of the response should return an internal server error (500) response', function (done) {
+  it('Updating a mission where the nodeData is defined, but the nodeStructure is undefined in the body of the request should return an internal server error (500) response', function (done) {
     missionID = createdMissionIDArray[0]
     updateMissionWithNoNodeStructure.mission.missionID = missionID
 
@@ -949,7 +952,7 @@ describe('API Mission Routes', function () {
       })
   })
 
-  it('Updating a mission with all the correct properties in the body of the response should return a successful (200) response', function (done) {
+  it('Updating a mission with all the correct properties in the body of the request should return a successful (200) response', function (done) {
     missionID = createdMissionIDArray[0]
     correctUpdateTestMission.mission.missionID = missionID
 
@@ -967,7 +970,7 @@ describe('API Mission Routes', function () {
       })
   })
 
-  it('Copying a mission with (a) missing property/properties in the body of the response should return a bad (400) response', function (done) {
+  it('Copying a mission with (a) missing property/properties in the body of the request should return a bad (400) response', function (done) {
     agent
       .put('/api/v1/missions/copy/')
       .set('Content-Type', 'application/json')
@@ -982,7 +985,7 @@ describe('API Mission Routes', function () {
       })
   })
 
-  it('Copying a mission with all the correct properties in the body of the response should return a successful (200) response', function (done) {
+  it('Copying a mission with all the correct properties in the body of the request should return a successful (200) response', function (done) {
     missionID = createdMissionIDArray[0]
 
     agent
@@ -999,7 +1002,7 @@ describe('API Mission Routes', function () {
       })
   })
 
-  it('Deleting a mission with (a) missing property/properties in the query of the response should return a bad (400) response', function (done) {
+  it('Deleting a mission with (a) missing property/properties in the query of the request should return a bad (400) response', function (done) {
     agent
       .delete(`/api/v1/missions?missionID=${2}`)
       .then(function (response: ChaiHttp.Response) {
@@ -1012,7 +1015,7 @@ describe('API Mission Routes', function () {
       })
   })
 
-  it('Deleting a mission with all the correct properties in the query of the response should return a successful (200) response', function (done) {
+  it('Deleting a mission with all the correct properties in the query of the request should return a successful (200) response', function (done) {
     missionID = createdMissionIDArray[0]
 
     agent
@@ -1386,6 +1389,27 @@ describe('Request Query Validation', function () {
       })
       .then(function (response: ChaiHttp.Response) {
         expect(response).to.have.status(200)
+        done()
+      })
+      .catch(function (error: Error) {
+        testLogger.error(error)
+        done(error)
+      })
+  })
+
+  it('Sending a request with additional query keys results in those additional query keys being removed from the request query', function (done) {
+    agent
+      .get(`/api/v1/test/request-query-type-check/`)
+      .query({
+        number: number,
+        integer: integer,
+        boolean: boolean,
+        objectId: objectId,
+        extraKey: 'extra key',
+      })
+      .then(function (response: ChaiHttp.Response) {
+        expect(response).to.have.status(200)
+        expect(response.body.query.extraKey).to.equal(undefined)
         done()
       })
       .catch(function (error: Error) {

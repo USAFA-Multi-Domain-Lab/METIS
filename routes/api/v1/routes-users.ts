@@ -24,8 +24,6 @@ router.post(
           password: RequestBodyFilters.STRING_50_CHAR,
         },
       },
-      query: {},
-      params: {},
     },
     {
       body: {
@@ -103,9 +101,7 @@ router.get(
   '/',
   defineRequests(
     {
-      body: {},
       query: {},
-      params: {},
     },
     {
       query: {
@@ -155,7 +151,7 @@ router.get(
 // -- GET | /api/v1/users/session/ --
 // Route that looks for the current user in
 // the session
-router.get('/session', (request, response) => {
+router.get('/session', defineRequests({}), (request, response) => {
   let userID: string | undefined = request.session.userID
   let role: string | undefined = request.session.role
 
@@ -182,8 +178,6 @@ router.put(
           userID: RequestBodyFilters.STRING_50_CHAR,
         },
       },
-      query: {},
-      params: {},
     },
     {
       body: {
@@ -282,11 +276,9 @@ router.delete(
   '/',
   requireLogin,
   defineRequests({
-    body: {},
     query: {
       userID: 'string',
     },
-    params: {},
   }),
   (request, response) => {
     let query: any = request.query
@@ -314,8 +306,6 @@ router.post(
       userID: RequestBodyFilters.STRING_50_CHAR,
       password: RequestBodyFilters.STRING_50_CHAR,
     },
-    query: {},
-    params: {},
   }),
   (request, response, next) => {
     UserModel.authenticate(
@@ -339,7 +329,7 @@ router.post(
 )
 
 //route for logging out user
-router.post('/logout', (request, response, next) => {
+router.post('/logout', defineRequests({}), (request, response, next) => {
   if (request.session) {
     request.session.destroy((error) => {
       if (error) {

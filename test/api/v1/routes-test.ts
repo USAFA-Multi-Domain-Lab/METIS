@@ -28,8 +28,6 @@ router.post(
           STRING: RequestBodyFilters.STRING,
         },
       },
-      query: {},
-      params: {},
     },
     {
       body: {
@@ -51,19 +49,18 @@ router.get(
   '/request-query-type-check/',
   defineRequests(
     {
-      body: {},
       query: {
         number: 'number',
         integer: 'integer',
         boolean: 'boolean',
         objectId: 'objectId',
       },
-      params: {},
     },
     { query: { string: 'string' } },
   ),
   (request, response) => {
-    return response.sendStatus(200)
+    let query: any = request.query
+    return response.send({ query })
   },
 )
 
@@ -72,8 +69,6 @@ router.get(
 router.get(
   '/request-params-type-check/:string/:number/:integer/:boolean/:objectId',
   defineRequests({
-    body: {},
-    query: {},
     params: {
       string: 'string',
       number: 'number',
@@ -83,7 +78,8 @@ router.get(
     },
   }),
   (request, response) => {
-    return response.sendStatus(200)
+    let params: any = request.params
+    return response.send({ params })
   },
 )
 

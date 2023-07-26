@@ -41,8 +41,6 @@ router.post(
         nodeData: RequestBodyFilters.OBJECT,
       },
     },
-    query: {},
-    params: {},
   }),
   (request, response) => {
     let body: any = request.body
@@ -423,9 +421,7 @@ router.get(
   '/',
   defineRequests(
     {
-      body: {},
       query: {},
-      params: {},
     },
     {
       query: { missionID: 'objectId' },
@@ -481,7 +477,7 @@ router.get(
 router.get(
   '/export/*',
   requireLogin,
-  defineRequests({ body: {}, query: { missionID: 'objectId' }, params: {} }),
+  defineRequests({ query: { missionID: 'objectId' } }),
   (request, response) => {
     let missionID = request.query.missionID
 
@@ -548,25 +544,17 @@ router.get(
 // -- GET /api/v1/missions/environment/
 // This will return the environment of
 // the database that is currently in use.
-router.get(
-  '/environment/',
-  defineRequests({ body: {}, query: {}, params: {} }),
-  (request, response) => {
-    response.send(process.env)
-  },
-)
+router.get('/environment/', defineRequests({}), (request, response) => {
+  response.send(process.env)
+})
 
 // -- GET /api/v1/missions/colors/
 // This will return all the available
 // color options that can be used to
 // style a mission-node.
-router.get(
-  '/colors/',
-  defineRequests({ body: {}, query: {}, params: {} }),
-  (request, response) => {
-    response.json({ colorOptions })
-  },
-)
+router.get('/colors/', defineRequests({}), (request, response) => {
+  response.json({ colorOptions })
+})
 
 // -- GET /api/v1/missions/assets/
 // This will return all the available
@@ -576,7 +564,7 @@ router.get(
 router.get(
   '/assets/',
   requireLogin,
-  defineRequests({ body: {}, query: {}, params: {} }),
+  defineRequests({}),
   (request, response) => {
     response.json({ assetData })
   },
@@ -594,8 +582,6 @@ router.put(
       nodeID: RequestBodyFilters.STRING,
       actionID: RequestBodyFilters.STRING,
     },
-    query: {},
-    params: {},
   }),
   (request, response) => {
     let body: any = request.body
@@ -652,8 +638,6 @@ router.put(
           missionID: RequestBodyFilters.OBJECTID,
         },
       },
-      query: {},
-      params: {},
     },
     {
       body: {
@@ -776,8 +760,6 @@ router.put(
       copyName: RequestBodyFilters.STRING,
       originalID: RequestBodyFilters.OBJECTID,
     },
-    query: {},
-    params: {},
   }),
   (request, response) => {
     let body: any = request.body
@@ -832,7 +814,7 @@ router.put(
 router.delete(
   '/',
   requireLogin,
-  defineRequests({ body: {}, query: { missionID: 'objectId' }, params: {} }),
+  defineRequests({ query: { missionID: 'objectId' } }),
   (request, response) => {
     let query: any = request.query
 
