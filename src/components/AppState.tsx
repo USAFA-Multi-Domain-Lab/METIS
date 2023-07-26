@@ -10,7 +10,8 @@ import Prompt, { IPrompt } from './content/communication/Prompt'
 import Notification from '../modules/notifications'
 import { EAjaxStatus } from '../modules/toolbox/ajax'
 import { IAuthPageSpecific } from './pages/AuthPage'
-import { ButtonText, IButtonText } from './content/user-controls/ButtonText'
+import { IButtonText } from './content/user-controls/ButtonText'
+import { v4 as generateHash } from 'uuid'
 
 /* -- INTERFACES -- */
 
@@ -91,10 +92,12 @@ const pageSwitchMinTime = 500
 // These are actions that can be
 // enacted upon the app state.
 export class AppActions {
-  appState: AppState
+  public appState: AppState
+  private sessionSyncID: string = ''
 
   constructor(appState: AppState) {
     this.appState = appState
+    this.sessionSyncID = ''
   }
 
   _handleLoadCompletion = (): void => {
@@ -213,6 +216,65 @@ export class AppActions {
     ) {
       this._handleLoadCompletion()
     }
+  }
+
+  /**
+   * Continually syncs the session with the server (Once a second or longer if latent). Storing updated session data in the app state. Calling this a second time will immediately sync the session, cancelling any current sync, restarting the sync cycle.
+   * @param initialCallback A callback made when the session is first synced. Every subsequent sync will not use this callback.
+   */
+  syncSession = (
+    initialCallback: (session: IMetisSession) => void = () => {},
+  ): void => {
+    let initialCall: boolean = true
+
+    // Used internally to track the when
+    // the initial call is made.
+    let sync = (sessionSyncID: string) => {
+      // If the session sync ID has changed,
+      // abort.
+      if (sessionSyncID !== this.sessionSyncID) {
+        return
+      }
+
+      // Create a timestamp for before
+      // the request.
+      let preRequestTimestamp: number = Date.now()
+
+      // Fetch the current session from the server.
+      User.fetchSession()
+        .then((session: IMetisSession) => {
+          // Save the session in the state.
+          this.appState.setSession(session)
+
+          // If this is the initial call to this
+          // function, then call the initial
+          // callback.
+          if (initialCall) {
+            initialCallback(session)
+            initialCall = false
+          }
+          // Determine the time until the next
+          // request.
+          let postRequestTimestamp = Date.now()
+          let timeElapsed = postRequestTimestamp - preRequestTimestamp
+          let timeUntilNextRequest = 1000 - timeElapsed
+
+          // Set a timeout to make the next
+          // request. If enough time has elapsed,
+          // this will be done immediately.
+          window.setTimeout(() => sync(sessionSyncID), timeUntilNextRequest)
+        })
+        .catch((error: any) => {
+          console.error('Failed to sync session.')
+          console.error(error)
+          this.notify('Failed to sync session.')
+        })
+    }
+
+    // Generate a new session sync ID
+    // and call the sync function.
+    this.sessionSyncID = generateHash()
+    sync(this.sessionSyncID)
   }
 
   // This will navigate the user to the

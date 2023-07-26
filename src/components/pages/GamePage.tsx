@@ -91,7 +91,7 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
    * Handles the selection of a node in the mission map by the user.
    * @param {MissionNode} node The node that was selected.
    */
-  const handleNodeSelection = (node: MissionNode): void => {
+  const handleNodeSelection = async (node: MissionNode): Promise<void> => {
     // Logic to send the pre-execution text to the output panel.
     if (node.preExecutionText !== '' && node.preExecutionText !== null) {
       let output: IConsoleOutput = OutputPanel.renderPreExecutionOutput(node)
@@ -101,9 +101,12 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
     // Logic that opens the next level of nodes
     // (displays the selected node's child nodes)
     if (node.openable) {
-      game.open(node.nodeID).catch(() => {
+      try {
+        await game.open(node.nodeID)
+        appActions.syncSession()
+      } catch {
         appActions.notify('Failed to open node.')
-      })
+      }
     }
     // If the node is ready to execute...
     else if (node.readyToExecute) {

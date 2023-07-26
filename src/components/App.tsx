@@ -63,59 +63,6 @@ function App(props: {
    */
   let endSessionSync = (): void => {}
 
-  /**
-   * Continually syncs the session with the server (Once a second or longer if latent). Storing updated session data in the app state.
-   * @param initialCallback A callback made when the session is first synced. Every subsequent sync will not use this callback.
-   * @param initialCall Recursively used parameter used to determine if this is the first call to this function. This parameter should be ignored.
-   */
-  const syncSession = (
-    initialCallback: (
-      session: IMetisSession,
-      endSync: () => void,
-    ) => void = () => {},
-  ): void => {
-    let initialCall: boolean = true
-
-    // Used internally to track the when
-    // the initial call is made.
-    let sync = () => {
-      let preRequestTimestamp: number = Date.now()
-
-      // Fetch the current session from the server.
-      User.fetchSession()
-        .then((session: IMetisSession) => {
-          // Save the session in the state.
-          appState.setSession(session)
-
-          // If this is the initial call to this
-          // function, then call the initial
-          // callback.
-          if (initialCall) {
-            initialCallback(session, () => (sync = () => {}))
-            initialCall = false
-          }
-
-          // Determine the time until the next
-          // request.
-          let postRequestTimestamp = Date.now()
-          let timeElapsed = postRequestTimestamp - preRequestTimestamp
-          let timeUntilNextRequest = 1000 - timeElapsed
-
-          // Set a timeout to make the next
-          // request. If enough time has elapsed,
-          // this will be done immediately.
-          setTimeout(sync, timeUntilNextRequest)
-        })
-        .catch(() => {
-          appState.setErrorMessage('Failed to sync session.')
-          appState.setAppMountHandled(true)
-          appActions.finishLoading()
-        })
-    }
-
-    sync()
-  }
-
   /* -- COMPONENT HANDLERS -- */
 
   /**
@@ -173,10 +120,8 @@ function App(props: {
 
       appActions.beginLoading(AppState.defaultAppStateValues.loadingMessage)
 
-      syncSession((session: IMetisSession, endSync: () => void) => {
+      appActions.syncSession((session: IMetisSession) => {
         appState.setAppMountHandled(true)
-
-        endSessionSync = endSync
 
         appActions.finishLoading()
 
@@ -210,13 +155,6 @@ function App(props: {
       }
     }
   }, [appState.appMountHandled])
-
-  // Equivalent of componentWillUnmount.
-  useEffect(() => {
-    return () => {
-      endSessionSync()
-    }
-  }, [])
 
   /* -- PAGE PROPS CONSTRUCTION -- */
 
