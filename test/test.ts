@@ -1,4 +1,4 @@
-// file path (switches to the "mdl-test" database)
+// file path (switches to the "metis-test" database)
 process.env.environment = 'TEST'
 
 process.argv
@@ -10,7 +10,7 @@ import chaiHttp from 'chai-http'
 
 // metis imports
 import { testLogger } from '../modules/logging'
-import { commandScripts } from '../action-execution'
+import { cyberCityCommandScripts } from '../action-execution'
 import { AnyObject } from '../modules/toolbox/objects'
 import { startServer } from '../server'
 
@@ -265,8 +265,8 @@ describe('Export/Import File Tests', function () {
         // all the tests have run in this suite the missions that were
         // created from the tests can be deleted.
         // This is also an added security measure to help prevent
-        // deleting missions if the tests somehow access the "mdl"
-        // database instead of the "mdl-test" database.
+        // deleting missions if the tests somehow access the "metis"
+        // database instead of the "metis-test" database.
         response.body.missions.forEach((mission: any) => {
           initialMissionIDArray.push(mission.missionID)
         })
@@ -295,10 +295,10 @@ describe('Export/Import File Tests', function () {
             })
         } else {
           testLogger.error(
-            'Database is not using "mdl-test." Please make sure the test database is running.',
+            'Database is not using "metis-test." Please make sure the test database is running.',
           )
           let error = new Error(
-            'Database is not using "mdl-test." Please make sure the test database is running.',
+            'Database is not using "metis-test." Please make sure the test database is running.',
           )
           done(error)
         }
@@ -703,8 +703,8 @@ describe('API Mission Routes', function () {
         // all the tests have run in this suite the missions that were
         // created from the tests can be deleted.
         // This is also an added security measure to help prevent
-        // deleting missions if the tests somehow access the "mdl"
-        // database instead of the "mdl-test" database.
+        // deleting missions if the tests somehow access the "metis"
+        // database instead of the "metis-test" database.
         response.body.missions.forEach((mission: any) => {
           initialMissionIDArray.push(mission.missionID)
         })
@@ -733,10 +733,10 @@ describe('API Mission Routes', function () {
             })
         } else {
           testLogger.error(
-            'Database is not using "mdl-test." Please make sure the test database is running.',
+            'Database is not using "metis-test." Please make sure the test database is running.',
           )
           let error = new Error(
-            'Database is not using "mdl-test." Please make sure the test database is running.',
+            'Database is not using "metis-test." Please make sure the test database is running.',
           )
           done(error)
         }
@@ -868,7 +868,7 @@ describe('API Mission Routes', function () {
     const TestCommandScript = (args: AnyObject) => {
       testVariable = 'successful'
     }
-    commandScripts['TestCommandScript'] = TestCommandScript
+    cyberCityCommandScripts['TestCommandScript'] = TestCommandScript
 
     missionID = createdMissionIDArray[0]
     correctUpdateTestMission.mission.missionID = missionID
@@ -1092,10 +1092,10 @@ describe('Request Body Validation', function () {
           done()
         } else {
           testLogger.error(
-            'Database is not using "mdl-test." Please make sure the test database is running.',
+            'Database is not using "metis-test." Please make sure the test database is running.',
           )
           throw new Error(
-            'Database is not using "mdl-test." Please make sure the test database is running.',
+            'Database is not using "metis-test." Please make sure the test database is running.',
           )
         }
       })
@@ -1303,10 +1303,10 @@ describe('Request Query Validation', function () {
           done()
         } else {
           testLogger.error(
-            'Database is not using "mdl-test." Please make sure the test database is running.',
+            'Database is not using "metis-test." Please make sure the test database is running.',
           )
           throw new Error(
-            'Database is not using "mdl-test." Please make sure the test database is running.',
+            'Database is not using "metis-test." Please make sure the test database is running.',
           )
         }
       })
@@ -1512,8 +1512,8 @@ describe('Mission Schema Validation', function () {
         // all the tests have run in this suite the missions that were
         // created from the tests can be deleted.
         // This is also an added security measure to help prevent
-        // deleting missions if the tests somehow access the "mdl"
-        // database instead of the "mdl-test" database.
+        // deleting missions if the tests somehow access the "metis"
+        // database instead of the "metis-test" database.
         response.body.missions.forEach((mission: any) => {
           initialMissionIDArray.push(mission.missionID)
         })
@@ -1542,10 +1542,10 @@ describe('Mission Schema Validation', function () {
             })
         } else {
           testLogger.error(
-            'Database is not using "mdl-test." Please make sure the test database is running.',
+            'Database is not using "metis-test." Please make sure the test database is running.',
           )
           let error = new Error(
-            'Database is not using "mdl-test." Please make sure the test database is running.',
+            'Database is not using "metis-test." Please make sure the test database is running.',
           )
           done(error)
         }

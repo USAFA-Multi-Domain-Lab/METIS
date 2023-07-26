@@ -10,7 +10,7 @@ import {
   SCHEMA_BUILD_NUMBER,
 } from '../config'
 import { databaseLogger } from '../modules/logging'
-import { attackMissionData, defensiveMissionData } from './initial-mission-data'
+import { demoMissionData } from './initial-mission-data'
 import InfoModel from './models/model-info'
 import MissionModel from './models/model-mission'
 import UserModel from './models/model-user'
@@ -145,31 +145,16 @@ function ensureDefaultMissionsExists(
       callbackError(error)
     } else if (missions.length === 0) {
       databaseLogger.info('No missions were found.')
-      databaseLogger.info('Creating both missions...')
+      databaseLogger.info('Creating default missions...')
 
-      MissionModel.create(attackMissionData, (error: Error, mission: any) => {
+      MissionModel.create(demoMissionData, (error: Error, mission: any) => {
         if (error) {
-          databaseLogger.error(`Failed to create ${attackMissionData.name}.`)
+          databaseLogger.error(`Failed to create ${demoMissionData.name}.`)
           databaseLogger.error(error)
           callbackError(error)
         } else {
           databaseLogger.info(`${mission.name} has been created.`)
-
-          MissionModel.create(
-            defensiveMissionData,
-            (error: Error, mission: any) => {
-              if (error) {
-                databaseLogger.error(
-                  `Failed to create ${defensiveMissionData.name}.`,
-                )
-                databaseLogger.error(error)
-                callbackError(error)
-              } else {
-                databaseLogger.info(`${mission.name} has been created.`)
-                callback()
-              }
-            },
-          )
+          callback()
         }
       })
     } else {

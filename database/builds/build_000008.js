@@ -3,7 +3,7 @@
 // collection. This is because the name field
 // is no longer unique.
 
-let dbName = 'mdl'
+let dbName = 'metis'
 
 if (process.env.MONGO_DB) {
   dbName = process.env.MONGO_DB

@@ -11,7 +11,10 @@ import { databaseLogger } from '../../../modules/logging'
 import { hasPermittedRole, requireLogin } from '../../../user'
 import { APP_DIR } from '../../../config'
 import uploads from '../../../middleware/uploads'
-import { commandScripts } from '../../../action-execution'
+import {
+  ascotCommandScripts,
+  cyberCityCommandScripts,
+} from '../../../action-execution'
 import { RequestBodyFilters, defineRequests } from '../../../modules/requests'
 import { colorOptions } from '../../../modules/mission-node-colors'
 import { assetData } from '../../../modules/asset-data'
@@ -621,7 +624,11 @@ router.put(
             node.actions.forEach((action: any) => {
               if (action.actionID === actionID) {
                 for (let script of action.scripts) {
-                  commandScripts[script.scriptName](script.args)
+                  if (script.scriptName in cyberCityCommandScripts) {
+                    cyberCityCommandScripts[script.scriptName](script.args)
+                  } else {
+                    ascotCommandScripts[script.scriptName](script.args)
+                  }
                 }
               }
             })

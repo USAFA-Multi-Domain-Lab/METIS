@@ -4,7 +4,7 @@
 // missions collection to use hexidecimal
 // values.
 
-let dbName = 'mdl'
+let dbName = 'metis'
 
 if (process.env.MONGO_DB) {
   dbName = process.env.MONGO_DB
