@@ -7,14 +7,11 @@ import { filterErrors_findOne } from '../../../database/api-call-handlers'
 import { ERROR_BAD_DATA } from '../../../database/database'
 import InfoModel from '../../../database/models/model-info'
 import MissionModel from '../../../database/models/model-mission'
-import { databaseLogger } from '../../../modules/logging'
+import { databaseLogger, plcApiLogger } from '../../../modules/logging'
 import { hasPermittedRole, requireLogin } from '../../../user'
 import { APP_DIR } from '../../../config'
 import uploads from '../../../middleware/uploads'
-import {
-  ascotCommandScripts,
-  cyberCityCommandScripts,
-} from '../../../action-execution'
+import { AscotApi, cyberCityCommandScripts } from '../../../action-execution'
 import { RequestBodyFilters, defineRequests } from '../../../modules/requests'
 import { colorOptions } from '../../../modules/mission-node-colors'
 import { assetData } from '../../../modules/asset-data'
@@ -612,8 +609,12 @@ router.put(
                 for (let script of action.scripts) {
                   if (script.scriptName in cyberCityCommandScripts) {
                     cyberCityCommandScripts[script.scriptName](script.args)
+                  } else if (script.scriptName === 'ASCOT_DEMO') {
+                    AscotApi.affectEntity(script.args)
                   } else {
-                    ascotCommandScripts[script.scriptName](script.args)
+                    plcApiLogger.error(
+                      `No script found with the name ${script.scriptName}.`,
+                    )
                   }
                 }
               }

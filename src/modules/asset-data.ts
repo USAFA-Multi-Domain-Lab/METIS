@@ -2203,13 +2203,17 @@ export const assetData: AnyObject = {
             label: 'CHENGDU GJ-2: "heading=270"',
             description:
               'This changes the heading of the CHENGDU GJ-2 entity to 270 degrees.',
-            scriptName: 'ChengduGJ_2',
+            scriptName: 'ASCOT_DEMO',
             originalPath: '',
             args: {
-              asset: 'CHENGDU GJ-2',
-              heading: {
-                unit: 'deg',
-                value: 270,
+              entityName: 'CHENGDU GJ-2',
+              requestPath: 'heading',
+              requestMethod: 'PATCH',
+              requestData: {
+                heading: {
+                  unit: 'deg',
+                  value: 270,
+                },
               },
             },
           },
@@ -2219,13 +2223,17 @@ export const assetData: AnyObject = {
             label: 'CHENGDU GJ-2: "altitude=0"',
             description:
               'This changes the altitude of the CHENGDU GJ-2 entity to 0 meters.',
-            scriptName: 'ChengduGJ_2',
+            scriptName: 'ASCOT_DEMO',
             originalPath: '',
             args: {
-              asset: 'CHENGDU GJ-2',
-              altitude: {
-                unit: 'm',
-                value: 0,
+              entityName: 'CHENGDU GJ-2',
+              requestPath: 'altitude',
+              requestMethod: 'PATCH',
+              requestData: {
+                altitude: {
+                  unit: 'm',
+                  value: 0,
+                },
               },
             },
           },
@@ -2234,9 +2242,14 @@ export const assetData: AnyObject = {
           kill: {
             label: 'CHENGDU GJ-2: "kill"',
             description: 'This kills the CHENGDU GJ-2 entity.',
-            scriptName: 'ChengduGJ_2',
+            scriptName: 'ASCOT_DEMO',
             originalPath: '',
-            args: {},
+            args: {
+              entityName: 'CHENGDU GJ-2',
+              requestPath: 'kill',
+              requestMethod: 'POST',
+              requestData: {},
+            },
           },
         },
       },
