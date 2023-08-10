@@ -13,7 +13,7 @@ import { databaseLogger } from '../modules/logging'
 import { demoMissionData } from './initial-mission-data'
 import InfoModel from './models/model-info'
 import MissionModel from './models/model-mission'
-import UserModel from './models/model-user'
+import UserModel, { hashPassword } from './models/model-user'
 
 export const ERROR_BAD_DATA: string = 'BadDataError'
 
@@ -64,72 +64,80 @@ function ensureDefaultUsersExists(
   callback: () => void = () => {},
   callbackError: (error: Error) => void = () => {},
 ): void {
-  UserModel.findOne({ userID: 'admin' }).exec((error: Error, user: any) => {
-    if (error !== null) {
-      databaseLogger.error(
-        'Failed to query database for the default admin user:',
-      )
-      databaseLogger.error(error)
-      callbackError(error)
-    } else if (user === null) {
-      databaseLogger.info('Admin user not found.')
-      databaseLogger.info('Creating admin user...')
+  UserModel.findOne({ userID: 'admin' }).exec(
+    async (error: Error, user: any) => {
+      if (error !== null) {
+        databaseLogger.error(
+          'Failed to query database for the default admin user:',
+        )
+        databaseLogger.error(error)
+        callbackError(error)
+      } else if (user === null) {
+        databaseLogger.info('Admin user not found.')
+        databaseLogger.info('Creating admin user...')
 
-      const adminUserData = {
-        userID: 'admin',
-        role: 'admin',
-        firstName: 'N/A',
-        lastName: 'N/A',
-        password: 'temppass',
-      }
-
-      //creates and saves user
-      UserModel.create(adminUserData, (error: Error, adminUser: any) => {
-        if (error) {
-          databaseLogger.error('Failed to create admin user:')
-          databaseLogger.error(error)
-          callbackError(error)
-        } else {
-          databaseLogger.info('Admin user created:', adminUser.userID)
+        let adminUserData = {
+          userID: 'admin',
+          role: 'admin',
+          firstName: 'admin',
+          lastName: 'user',
+          password: 'temppass',
         }
-      })
-    }
-  })
 
-  UserModel.findOne({ userID: 'student1' }).exec((error: Error, user: any) => {
-    if (error !== null) {
-      databaseLogger.error(
-        'Failed to query database for the default student user:',
-      )
-      databaseLogger.error(error)
-      callbackError(error)
-    } else if (user === null) {
-      databaseLogger.info('Student user not found.')
-      databaseLogger.info('Creating student user...')
+        adminUserData.password = await hashPassword(adminUserData.password)
 
-      const studentUserData = {
-        userID: 'student1',
-        role: 'student',
-        firstName: 'N/A',
-        lastName: 'N/A',
-        password: 'password',
+        //creates and saves user
+        UserModel.create(adminUserData, (error: Error, adminUser: any) => {
+          if (error) {
+            databaseLogger.error('Failed to create admin user:')
+            databaseLogger.error(error)
+            callbackError(error)
+          } else {
+            databaseLogger.info('Admin user created:', adminUser.userID)
+          }
+        })
       }
+    },
+  )
 
-      //creates and saves user
-      UserModel.create(studentUserData, (error: Error, studentUser: any) => {
-        if (error) {
-          databaseLogger.error('Failed to create student user:')
-          databaseLogger.error(error)
-          callbackError(error)
-        } else {
-          databaseLogger.info('Student user created:', studentUser.userID)
-          callback()
+  UserModel.findOne({ userID: 'student1' }).exec(
+    async (error: Error, user: any) => {
+      if (error !== null) {
+        databaseLogger.error(
+          'Failed to query database for the default student user:',
+        )
+        databaseLogger.error(error)
+        callbackError(error)
+      } else if (user === null) {
+        databaseLogger.info('Student user not found.')
+        databaseLogger.info('Creating student user...')
+
+        let studentUserData = {
+          userID: 'student1',
+          role: 'student',
+          firstName: 'student',
+          lastName: 'user',
+          password: 'password',
         }
-      })
-    } else {
-      callback()
-    }
-  })
+
+        studentUserData.password = await hashPassword(studentUserData.password)
+
+        //creates and saves user
+        UserModel.create(studentUserData, (error: Error, studentUser: any) => {
+          if (error) {
+            databaseLogger.error('Failed to create student user:')
+            databaseLogger.error(error)
+            callbackError(error)
+          } else {
+            databaseLogger.info('Student user created:', studentUser.userID)
+            callback()
+          }
+        })
+      } else {
+        callback()
+      }
+    },
+  )
 }
 
 // Creates multiple missions, if they

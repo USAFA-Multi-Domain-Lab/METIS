@@ -8,6 +8,7 @@ interface ILoginOptions {
 // This is the list of user roles.
 export const userRoles: AnyObject = {
   Student: 'student',
+  Instructor: 'instructor',
   Admin: 'admin',
 }
 
@@ -17,7 +18,7 @@ export const requireLogin = (
   response: Response,
   next: NextFunction,
   options: ILoginOptions = {
-    permittedRoles: [userRoles.Admin],
+    permittedRoles: [userRoles.Admin, userRoles.Instructor],
   },
 ): void => {
   if (
@@ -36,7 +37,7 @@ export const requireLogin = (
 export function hasPermittedRole(
   request: Request,
   options: ILoginOptions = {
-    permittedRoles: [userRoles.Admin],
+    permittedRoles: [userRoles.Admin, userRoles.Instructor],
   },
 ): boolean {
   if (
@@ -70,5 +71,5 @@ export function hasPermittedRole(
 
 export default {
   requireLogin,
-  isLoggedIn: hasPermittedRole,
+  hasPermittedRole,
 }

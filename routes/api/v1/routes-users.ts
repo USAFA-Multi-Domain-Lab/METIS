@@ -1,7 +1,7 @@
 //npm imports
 import express from 'express'
 import { ERROR_BAD_DATA } from '../../../database/database'
-import UserModel from '../../../database/models/model-user'
+import UserModel, { hashPassword } from '../../../database/models/model-user'
 import { StatusError } from '../../../modules/error'
 import { databaseLogger } from '../../../modules/logging'
 import { RequestBodyFilters, defineRequests } from '../../../modules/requests'
@@ -21,7 +21,7 @@ router.post(
           userID: RequestBodyFilters.STRING_50_CHAR,
           firstName: RequestBodyFilters.STRING_50_CHAR,
           lastName: RequestBodyFilters.STRING_50_CHAR,
-          password: RequestBodyFilters.STRING_50_CHAR,
+          password: RequestBodyFilters.PASSWORD,
         },
       },
     },
@@ -33,7 +33,7 @@ router.post(
       },
     },
   ),
-  (request, response) => {
+  async (request, response) => {
     let body: any = request.body
 
     let userData: any = body.user
@@ -44,6 +44,10 @@ router.post(
     let lastName: any = userData.lastName
     let password: any = userData.password
 
+    if (password !== undefined) {
+      password = await hashPassword(password)
+    }
+
     let user = new UserModel({
       userID: userID,
       role: role,
@@ -52,7 +56,7 @@ router.post(
       password: password,
     })
 
-    user.save((error: Error) => {
+    user.save(async (error: Error) => {
       if (error) {
         databaseLogger.error('Failed to create user:')
         databaseLogger.error(error)
@@ -65,29 +69,34 @@ router.post(
       } else {
         databaseLogger.info(`New user created named "${userID}".`)
 
-        // Retrieves newly created user
-        // to return in response. This is
-        // called again, one to call the
-        // queryForApiResponse function,
-        // and two, to ensure what's returned
-        // is what is in the database.
-        UserModel.findOne({ userID: user.userID })
-          .queryForApiResponse('findOne')
-          .exec((error: Error, user: any) => {
-            // If something goes wrong, this is
-            // a server issue. If there was something
-            // the client did, an error would have
-            // already been thrown in the first query.
-            if (error || !user) {
-              databaseLogger.error('Failed to retrieve newly created user')
-              databaseLogger.error(error)
-              return response.sendStatus(500)
-            } else {
-              // Return updated user to the user in the
-              // current session.
-              return response.send({ user: user })
-            }
-          })
+        try {
+          // Retrieves newly created user
+          // to return in response. This is
+          // called again, one to call the
+          // queryForApiResponse function,
+          // and two, to ensure what's returned
+          // is what is in the database.
+          await UserModel.findOne({ userID: user.userID })
+            .queryForApiResponse('findOne')
+            .exec((error: Error, user: any) => {
+              // If something goes wrong, this is
+              // a server issue. If there was something
+              // the client did, an error would have
+              // already been thrown.
+              if (error || !user) {
+                databaseLogger.error('Failed to retrieve newly created user')
+                databaseLogger.error(error)
+                return response.sendStatus(500)
+              } else {
+                // Return updated user to the user in the
+                // current session.
+                return response.send({ user: user })
+              }
+            })
+        } catch (error) {
+          databaseLogger.error('Failed to retrieve newly created user')
+          databaseLogger.error(error)
+        }
       }
     })
   },
@@ -99,6 +108,7 @@ router.post(
 // query parameters
 router.get(
   '/',
+  requireLogin,
   defineRequests(
     {
       query: {},
@@ -109,41 +119,53 @@ router.get(
       },
     },
   ),
-  (request, response) => {
+  async (request, response) => {
     let userID = request.query.userID
 
     if (userID === undefined) {
       let queries: any = {}
 
-      UserModel.find({ ...queries }, { password: 0 })
-        .queryForApiResponse('find')
-        .exec((error: Error, users: any) => {
-          if (error !== null || users === null) {
-            databaseLogger.error('Failed to retrieve users.')
-            databaseLogger.error(error)
-            return response.sendStatus(500)
-          } else {
-            databaseLogger.info('All users retrieved.')
-            return response.json({ users: users })
-          }
-        })
+      try {
+        await UserModel.find({ ...queries })
+          .queryForApiResponse('find')
+          .exec((error: Error, users: any) => {
+            if (error !== null || users === null) {
+              databaseLogger.error('Failed to retrieve users.')
+              databaseLogger.error(error)
+              return response.sendStatus(500)
+            } else {
+              databaseLogger.info('All users retrieved.')
+              return response.json({ users: users })
+            }
+          })
+      } catch (error) {
+        databaseLogger.error('Failed to retrieve users.')
+        databaseLogger.error(error)
+      }
     } else {
-      UserModel.findOne({ userID }, { password: 0 })
-        .queryForApiResponse('findOne')
-        .exec((error: Error, user: any) => {
-          if (error !== null) {
-            databaseLogger.error(`Failed to retrieve user with ID "${userID}".`)
-            databaseLogger.error(error)
-            return response.sendStatus(500)
-          } else if (user === null) {
-            return response.sendStatus(404)
-          } else if (!hasPermittedRole(request)) {
-            return response.sendStatus(401)
-          } else {
-            databaseLogger.info(`User with ID "${userID}" retrieved.`)
-            return response.json({ user: user })
-          }
-        })
+      try {
+        await UserModel.findOne({ userID })
+          .queryForApiResponse('findOne')
+          .exec((error: Error, user: any) => {
+            if (error !== null) {
+              databaseLogger.error(
+                `Failed to retrieve user with ID "${userID}".`,
+              )
+              databaseLogger.error(error)
+              return response.sendStatus(500)
+            } else if (user === null) {
+              return response.sendStatus(404)
+            } else if (!hasPermittedRole(request)) {
+              return response.sendStatus(401)
+            } else {
+              databaseLogger.info(`User with ID "${userID}" retrieved.`)
+              return response.json({ user: user })
+            }
+          })
+      } catch (error) {
+        databaseLogger.error(`Failed to retrieve user with ID "${userID}".`)
+        databaseLogger.error(error)
+      }
     }
   },
 )
@@ -185,88 +207,107 @@ router.put(
           role: RequestBodyFilters.STRING_50_CHAR,
           firstName: RequestBodyFilters.STRING_50_CHAR,
           lastName: RequestBodyFilters.STRING_50_CHAR,
-          password: RequestBodyFilters.STRING_50_CHAR,
+          password: RequestBodyFilters.PASSWORD,
         },
       },
     },
   ),
-  (request, response) => {
+  async (request, response) => {
     let body: any = request.body
 
     let userUpdates: any = body.user
 
     let userID: string = userUpdates.userID
+    let password: string | undefined = userUpdates.password
 
-    // Original user is retrieved.
-    UserModel.findOne({ userID }).exec((error: Error, user: any) => {
-      // Handles errors.
-      if (error !== null) {
-        databaseLogger.error(`### Failed to retrieve user with ID "${userID}".`)
-        databaseLogger.error(error)
-        return response.sendStatus(500)
-      }
-      // Handles user not found.
-      else if (user === null) {
-        return response.sendStatus(404)
-      }
-      // Handle proper user retrieval.
-      else {
-        // Places all values found in
-        // userUpdates and puts it in
-        // the retrieved mongoose document.
-        for (let key in userUpdates) {
-          if (key !== '_id' && key !== 'missionID') {
-            user[key] = userUpdates[key]
-          }
+    if (password !== undefined) {
+      password = await hashPassword(password)
+    }
+
+    try {
+      // Original user is retrieved.
+      await UserModel.findOne({ userID }).exec((error: Error, user: any) => {
+        // Handles errors.
+        if (error !== null) {
+          databaseLogger.error(
+            `### Failed to retrieve user with ID "${userID}".`,
+          )
+          databaseLogger.error(error)
+          return response.sendStatus(500)
         }
-
-        // Save the updated user.
-        user.save((error: Error) => {
-          // Handles errors.
-          if (error !== null) {
-            databaseLogger.error(
-              `### Failed to update user with ID "${userID}".`,
-            )
-            databaseLogger.error(error)
-
-            // If this error was a validation error,
-            // then it is a bad request.
-            if (error.message.includes('validation failed')) {
-              return response.sendStatus(400)
+        // Handles user not found.
+        else if (user === null) {
+          return response.sendStatus(404)
+        }
+        // Handle proper user retrieval.
+        else {
+          // Places all values found in
+          // userUpdates and puts it in
+          // the retrieved mongoose document.
+          for (let key in userUpdates) {
+            if (key !== '_id' && key !== 'userID') {
+              user[key] = userUpdates[key]
             }
-            // Else it's a server error.
+          }
+
+          // Save the updated user.
+          user.save(async (error: Error) => {
+            // Handles errors.
+            if (error !== null) {
+              databaseLogger.error(
+                `### Failed to update user with ID "${userID}".`,
+              )
+              databaseLogger.error(error)
+
+              // If this error was a validation error,
+              // then it is a bad request.
+              if (error.message.includes('validation failed')) {
+                return response.sendStatus(400)
+              }
+              // Else it's a server error.
+              else {
+                return response.sendStatus(500)
+              }
+            }
+            // Handles successful save.
             else {
-              return response.sendStatus(500)
+              try {
+                // Retrieves newly updated user
+                // to return in response. This is
+                // called again, one to call the
+                // queryForApiResponse function,
+                // and two, to ensure what's returned
+                // is what is in the database.
+                await UserModel.findOne({ userID })
+                  .queryForApiResponse('findOne')
+                  .exec((error: Error, user: any) => {
+                    // If something goes wrong, this is
+                    // a server issue. If there was something
+                    // the client did, an error would have
+                    // already been thrown in the first query.
+                    if (error || !user) {
+                      databaseLogger.error(
+                        'Failed to retrieve newly updated user',
+                      )
+                      databaseLogger.error(error)
+                      return response.sendStatus(500)
+                    } else {
+                      // Return updated mission to the user.
+                      return response.send({ user: user })
+                    }
+                  })
+              } catch (error) {
+                databaseLogger.error('Failed to retrieve newly updated user')
+                databaseLogger.error(error)
+              }
             }
-          }
-          // Handles successful save.
-          else {
-            // Retrieves newly updated user
-            // to return in response. This is
-            // called again, one to call the
-            // queryForApiResponse function,
-            // and two, to ensure what's returned
-            // is what is in the database.
-            UserModel.findOne({ userID })
-              .queryForApiResponse('findOne')
-              .exec((error: Error, user: any) => {
-                // If something goes wrong, this is
-                // a server issue. If there was something
-                // the client did, an error would have
-                // already been thrown in the first query.
-                if (error || !user) {
-                  databaseLogger.error('Failed to retrieve newly updated user')
-                  databaseLogger.error(error)
-                  return response.sendStatus(500)
-                } else {
-                  // Return updated mission to the user.
-                  return response.send({ user: user })
-                }
-              })
-          }
-        })
-      }
-    })
+          })
+        }
+      })
+    } catch (error) {
+      databaseLogger.error(`Failed to update user with ID "${userID}".`)
+      databaseLogger.error(error)
+    }
   },
 )
 
@@ -280,21 +321,30 @@ router.delete(
       userID: 'string',
     },
   }),
-  (request, response) => {
+  async (request, response) => {
     let query: any = request.query
 
     let userID: any = query.userID
 
-    UserModel.updateOne({ userID: userID }, { deleted: true }, (error: any) => {
-      if (error !== null) {
-        databaseLogger.error('Failed to delete user:')
-        databaseLogger.error(error)
-        return response.sendStatus(500)
-      } else {
-        databaseLogger.info(`Deleted user with the ID "${userID}".`)
-        return response.sendStatus(200)
-      }
-    })
+    try {
+      await UserModel.updateOne(
+        { userID: userID },
+        { deleted: true },
+        (error: any) => {
+          if (error !== null) {
+            databaseLogger.error('Failed to delete user:')
+            databaseLogger.error(error)
+            return response.sendStatus(500)
+          } else {
+            databaseLogger.info(`Deleted user with the ID "${userID}".`)
+            return response.sendStatus(200)
+          }
+        },
+      )
+    } catch (error) {
+      databaseLogger.error('Failed to delete user:')
+      databaseLogger.error(error)
+    }
   },
 )
 
@@ -304,7 +354,7 @@ router.post(
   defineRequests({
     body: {
       userID: RequestBodyFilters.STRING_50_CHAR,
-      password: RequestBodyFilters.STRING_50_CHAR,
+      password: RequestBodyFilters.PASSWORD,
     },
   }),
   (request, response, next) => {

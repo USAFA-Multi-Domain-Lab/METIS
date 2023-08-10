@@ -139,8 +139,21 @@ export class RequestBodyFilters {
     }
   }
 
+  // This filters an ObjectID included
+  // in a request body.
   static OBJECTID(bodyKey: string, bodyValue: any) {
     if (!isObjectIdOrHexString(bodyValue)) {
+      throw new Error(invalidRequestBodyPropertyException(bodyKey, bodyValue))
+    }
+  }
+
+  // This filters a password included
+  // in a request body.
+  static PASSWORD(bodyKey: string, bodyValue: any) {
+    let passwordRegex: RegExp = /^([^\s]{8,50})$/
+    let passwordIsValid: boolean = passwordRegex.test(bodyValue)
+
+    if (typeof bodyValue !== 'string' || !passwordIsValid) {
       throw new Error(invalidRequestBodyPropertyException(bodyKey, bodyValue))
     }
   }

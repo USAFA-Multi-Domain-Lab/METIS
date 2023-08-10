@@ -1,6 +1,44 @@
 import mongoose, { Schema } from 'mongoose'
 import bcryptjs from 'bcryptjs'
 import { StatusError } from '../../modules/error'
+import { userRoles } from '../../user'
+import { databaseLogger } from '../../modules/logging'
+
+// Validator for user.userID.
+const validate_users_userID = (userID: string): boolean => {
+  let userExpression: RegExp = /^([a-zA-Z0-9-_.]{5,25})$/
+  let isValidUserID: boolean = userExpression.test(userID)
+
+  return isValidUserID
+}
+
+// Validator for user.firstName and user.lastName.
+const validate_users_name = (name: string): boolean => {
+  let nameExpression: RegExp = /^([a-zA-Z']{1,25})$/
+  let isValidName: boolean = nameExpression.test(name)
+
+  return isValidName
+}
+
+// Validator for user.role.
+const validate_users_role = (role: string): boolean => {
+  if (role === userRoles.Admin) {
+    return true
+  } else if (role === userRoles.Instructor) {
+    return true
+  } else if (role === userRoles.Student) {
+    return true
+  } else {
+    return false
+  }
+}
+
+const validator_users_password = (password: string): boolean => {
+  let passwordExpression: RegExp = /^\$2[ayb]\$.{56}$/
+  let isValidPassword: boolean = passwordExpression.test(password)
+
+  return isValidPassword
+}
 
 const UserSchema = new Schema({
   userID: {
@@ -8,26 +46,45 @@ const UserSchema = new Schema({
     unique: true,
     required: true,
     trim: true,
+    validate: validate_users_userID,
   },
   role: {
     type: String,
     required: false,
+    validate: validate_users_role,
   },
   firstName: {
     type: String,
     required: true,
     trim: true,
+    validate: validate_users_name,
   },
   lastName: {
     type: String,
     required: true,
     trim: true,
+    validate: validate_users_name,
   },
   password: {
     type: String,
     required: true,
+    validate: validator_users_password,
   },
 })
+
+//hashes password before saving to database
+export const hashPassword = async (password: string): Promise<string> => {
+  return new Promise<string>(async (resolve, reject): Promise<void> => {
+    try {
+      let hashedPassword: string = await bcryptjs.hash(password, 10)
+      resolve(hashedPassword)
+    } catch (error) {
+      databaseLogger.error('Failed to hash password:')
+      databaseLogger.error(error)
+      reject(error)
+    }
+  })
+}
 
 //authenticates user making a request is in the database
 UserSchema.statics.authenticate = (
@@ -63,22 +120,11 @@ UserSchema.statics.authenticate = (
   )
 }
 
-//before a new user is saved, the password will be encrypted
-UserSchema.pre('save', function (next) {
-  bcryptjs.hash(this.password, 10, (error: Error | undefined, hash: string) => {
-    if (error) {
-      return next(error)
-    }
-    this.password = hash
-    next()
-  })
-})
-
 UserSchema.plugin((schema) => {
   // This is responsible for removing
-  // excess properties from the mission
+  // excess properties from the user
   // data that should be hidden from the
-  // API and for hidding deleted missions.
+  // API and for hidding deleted users.
   schema.query.queryForApiResponse = function (
     findFunctionName: 'find' | 'findOne',
   ) {
@@ -100,10 +146,13 @@ UserSchema.plugin((schema) => {
     if (!('__v' in projection)) {
       projection['__v'] = 0
     }
+    if (!('password' in projection)) {
+      projection['password'] = 0
+    }
 
     // Set projection.
     this.projection(projection)
-    // Hide deleted missions.
+    // Hide deleted users.
     this.where({ deleted: false })
 
     // Calls the appropriate find function.
