@@ -339,16 +339,16 @@ export default function HomePage(props: IHomePage): JSX.Element | null {
     let userRoleStringValues = Object.values(userRoles)
 
     if (currentUser && userRoleStringValues.includes(currentUser.role)) {
-      // appActions.goToPage('UserFormPage', {
-      //   userID: user.userID,
-      // })
+      appActions.goToPage('UserFormPage', {
+        userID: user.userID,
+      })
     }
   }
 
   const createUser = () => {
-    // appActions.goToPage('UserFormPage', {
-    //   userID: null,
-    // })
+    appActions.goToPage('UserFormPage', {
+      userID: null,
+    })
   }
 
   /* -- RENDER -- */

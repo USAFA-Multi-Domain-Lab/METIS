@@ -6,20 +6,29 @@ export interface IUser {
   role: string
   firstName: string
   lastName: string
+  password?: string
 }
 
-export interface IUserExposed {
-  firstName: string
-  lastName: string
-  userID: string
-  password: string
-}
+// export interface IUserExposed {
+//   userID: string
+//   role: string
+//   password: string
+//   firstName: string
+//   lastName: string
+// }
 
 // This is the list of user roles.
-export const userRoles: AnyObject = {
+export const userRoles = {
   Student: 'student',
   Instructor: 'instructor',
   Admin: 'admin',
+}
+
+export const defaultUserProps = {
+  userID: 'UserID',
+  firstName: 'First',
+  lastName: 'Last',
+  role: 'Select a role',
 }
 
 // This is used to determine which roles
@@ -36,6 +45,37 @@ export class User {
   public lastName: string
   public role: string
 
+  public password1: string | undefined
+  public password2: string | undefined
+
+  private _passwordIsRequired: boolean
+
+  /**
+   * @returns {boolean} Whether the two passwords match.
+   */
+  public get passwordsMatch(): boolean {
+    return this.password1 === this.password2
+  }
+
+  /**
+   * @returns {boolean} Whether the password is required.
+   */
+  public set passwordIsRequired(required: boolean) {
+    this._passwordIsRequired = required
+  }
+
+  /**
+   * @returns {boolean} Whether the password is required.
+   * @description This is used to determine whether the
+   * password is required when saving the user.
+   * If the user is being created, then the password
+   * is required. If the user is being updated, then
+   * the password is not required.
+   */
+  public get passwordIsRequired(): boolean {
+    return this._passwordIsRequired
+  }
+
   public constructor(
     userID: string,
     firstName: string,
@@ -46,6 +86,84 @@ export class User {
     this.firstName = firstName
     this.lastName = lastName
     this.role = role
+    this._passwordIsRequired = false
+  }
+
+  public static defaultUser: User = new User(
+    defaultUserProps.userID,
+    defaultUserProps.firstName,
+    defaultUserProps.lastName,
+    defaultUserProps.role,
+  )
+
+  public get canSave(): boolean {
+    // userID cannot be the default value
+    let updatedUserID: boolean = this.userID !== defaultUserProps.userID
+    // firstName cannot be the default value
+    let updatedFirstName: boolean =
+      this.firstName !== defaultUserProps.firstName
+    // lastName cannot be the default value
+    let updatedLastName: boolean = this.lastName !== defaultUserProps.lastName
+    // role cannot be the default value
+    let updatedRole: boolean = this.role !== defaultUserProps.role
+    // passwords must match
+    let passwordsMatch: boolean = this.passwordsMatch
+    // password must be entered if required
+    let passwordEntered: boolean = this.password1 !== undefined
+    // there must be some kind of input for the password
+    let requiredPasswordIsMissing: boolean =
+      this._passwordIsRequired && !passwordEntered
+
+    // Returns true if all conditions pass.
+    return (
+      updatedUserID &&
+      updatedFirstName &&
+      updatedLastName &&
+      updatedRole &&
+      passwordsMatch &&
+      !requiredPasswordIsMissing
+    )
+  }
+
+  public toJSON(): IUser {
+    // Construct JSON object to send to server.
+    let JSON: IUser = {
+      userID: this.userID,
+      firstName: this.firstName,
+      lastName: this.lastName,
+      role: this.role,
+    }
+
+    // Only add password if it is required.
+    if (this.password1 !== undefined) {
+      JSON.password = this.password1
+    }
+
+    return JSON
+  }
+
+  public importJSON(JSON: IUser): void {
+    // Set properties with JSON.
+    this.userID = JSON.userID
+    this.firstName = JSON.firstName
+    this.lastName = JSON.lastName
+    this.role = JSON.role
+  }
+
+  /**
+   * Creates a new User object from the given JSON.
+   * @param {IUser} JSON The JSON from which to create a User object.
+   * @returns {User} A new User object.
+   */
+  public static fromJSON(JSON: IUser): User {
+    // Create new user object.
+    let user: User = User.defaultUser
+
+    // Import JSON into the new user object.
+    user.importJSON(JSON)
+
+    // Return the new user object.
+    return user
   }
 }
 
@@ -68,7 +186,6 @@ export const retrieveCurrentUser = (
     })
     .catch((error: AxiosError) => {
       console.log('Failed to retrieve current user.')
-      console.error(error)
       callbackError(error)
     })
 }
@@ -95,7 +212,6 @@ export const login = (
     })
     .catch((error: AxiosError) => {
       console.log('Failed to login user.')
-      console.error(error)
       callbackError(error)
     })
 }
@@ -116,7 +232,6 @@ export const logout = (
     })
     .catch((error: AxiosError) => {
       console.log('Failed to logout user.')
-      console.error(error)
       callbackError(error)
     })
 }
@@ -131,19 +246,11 @@ export const createUser = (
     .post(`/api/v1/users/`, { user: user })
     .then((response: AxiosResponse<AnyObject>): void => {
       let userJSON = response.data.user
-
-      let createdUser = new User(
-        userJSON.userID,
-        userJSON.firstName,
-        userJSON.lastName,
-        userJSON.role,
-      )
-
+      let createdUser: User = User.fromJSON(userJSON)
       callback(createdUser)
     })
     .catch((error: AxiosError) => {
       console.error('Failed to create user.')
-      console.error(error)
       callbackError(error)
     })
 }
@@ -162,7 +269,6 @@ export const getAllUsers = (
     })
     .catch((error: AxiosError) => {
       console.error('Failed to get all users.')
-      console.error(error)
       callbackError(error)
     })
 }
@@ -176,13 +282,12 @@ export const getUser = (
   axios
     .get(`/api/v1/users?userID=${userID}`)
     .then((response: AxiosResponse<AnyObject>): void => {
-      let user = response.data.user
-
+      let userJSON = response.data.user
+      let user: User = User.fromJSON(userJSON)
       callback(user)
     })
     .catch((error: AxiosError) => {
       console.error('Failed to get user.')
-      console.error(error)
       callbackError(error)
     })
 }
@@ -195,11 +300,10 @@ export const saveUser = (
   callbackError: (error: AxiosError) => void = () => {},
 ): void => {
   axios
-    .put(`/api/v1/users/`, { user: user })
+    .put(`/api/v1/users/`, { user: user.toJSON() })
     .then(callback)
     .catch((error: AxiosError) => {
       console.error('Failed to save user.')
-      console.error(error)
       callbackError(error)
     })
 }
@@ -216,7 +320,6 @@ export const deleteUser = (
     .then(callback)
     .catch((error: AxiosError) => {
       console.error('Failed to delete user.')
-      console.error(error)
       callbackError(error)
     })
 }
@@ -229,6 +332,6 @@ export default {
   createUser,
   getAllUsers,
   getUser,
-  updateUser: saveUser,
+  saveUser,
   deleteUser,
 }

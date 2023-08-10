@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
-import { useStore } from 'react-context-hook'
 import {
   createUser,
+  defaultUserProps,
   getUser,
   restrictedAccessRoles,
   saveUser,
@@ -22,15 +22,16 @@ export default function UserFormPage(props: IUserFormPage): JSX.Element | null {
   let appState: AppState = props.appState
   let appActions: AppActions = props.appActions
 
-  /* -- GLOBAL STATE -- */
-  const [currentUser] = useStore<User>('currentUser')
-
   /* -- COMPONENT STATE -- */
   const [mountHandled, setMountHandled] = useState<boolean>(false)
   const [existsInDatabase, setExistsInDatabase] = useState<boolean>(false)
   const [user, setUser] = useState<User | null>(null)
   const [areUnsavedChanges, setAreUnsavedChanges] = useState<boolean>(false)
   const [forcedUpdateCounter, setForcedUpdateCounter] = useState<number>(0)
+  const [userEmptyStringArray, setUserEmptyStringArray] = useState<
+    Array<string>
+  >([])
+  const [isDefaultUser, setIsDefaultUser] = useState<boolean>(false)
 
   /* -- COMPONENT EFFECTS -- */
 
@@ -53,10 +54,17 @@ export default function UserFormPage(props: IUserFormPage): JSX.Element | null {
 
       // Creating a new user.
       if (userID === null) {
-        let user = new User('', '', '', 'student')
+        let user: User = new User(
+          defaultUserProps.userID,
+          defaultUserProps.firstName,
+          defaultUserProps.lastName,
+          defaultUserProps.role,
+        )
+        user.passwordIsRequired = true
         existsInDatabase = false
         setUser(user)
-        setAreUnsavedChanges(true)
+        setIsDefaultUser(true)
+        setAreUnsavedChanges(false)
         setMountHandled(true)
       }
       // Editing an existing user.
@@ -184,6 +192,23 @@ export default function UserFormPage(props: IUserFormPage): JSX.Element | null {
     }
 
     /* -- RENDER -- */
+
+    let isEmptyString: boolean = userEmptyStringArray.length > 0
+
+    // This will gray out the save button
+    // if there are no unsaved changes or
+    // if there are empty strings or if
+    // the user does not have permission
+    // to save.
+    let grayOutSaveButton: boolean =
+      !areUnsavedChanges || isEmptyString || !user.canSave
+
+    let saveButtonClassName: string = 'Button'
+
+    if (grayOutSaveButton) {
+      saveButtonClassName += ' Disabled'
+    }
+
     return (
       <div className='UserFormPage Page'>
         {/* -- NAVIGATION -- */}
@@ -207,7 +232,31 @@ export default function UserFormPage(props: IUserFormPage): JSX.Element | null {
         />
 
         {/* -- CONTENT -- */}
-        <UserEntry user={user} handleChange={handleChange} />
+        <div className='Content'>
+          <UserEntry
+            user={user}
+            isDefaultUser={isDefaultUser}
+            userEmptyStringArray={userEmptyStringArray}
+            setUserEmptyStringArray={setUserEmptyStringArray}
+            handleChange={handleChange}
+          />
+          <div className='ButtonContainer'>
+            <div className={saveButtonClassName} onClick={() => save()}>
+              Save
+            </div>
+          </div>
+        </div>
+
+        {/* -- FOOTER -- */}
+        <div className='FooterContainer'>
+          <a
+            href='https://www.midjourney.com/'
+            className='Credit'
+            draggable={false}
+          >
+            Photo by Midjourney
+          </a>
+        </div>
       </div>
     )
   } else {

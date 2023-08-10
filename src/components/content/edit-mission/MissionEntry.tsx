@@ -27,6 +27,12 @@ export default function MissionEntry(props: {
   const [liveAjaxStatus, setLiveAjaxStatus] = useState<EAjaxStatus>(
     EAjaxStatus.NotLoaded,
   )
+  const [deliverNameError, setDeliverNameError] = useState<boolean>(false)
+  const [deliverIntroMessageError, setDeliverIntroMessageError] =
+    useState<boolean>(false)
+  const [errorMessage, setErrorMessage] = useState<string>(
+    'At least one character is required here.',
+  )
 
   /* -- COMPONENT FUNCTIONS -- */
   const removeMissionEmptyString = (field: string) => {
@@ -73,6 +79,8 @@ export default function MissionEntry(props: {
     setLiveAjaxStatus(EAjaxStatus.Loading)
   }
 
+  /* -- RENDER -- */
+
   if (active) {
     return (
       <div className='MissionEntry SidePanel'>
@@ -88,32 +96,39 @@ export default function MissionEntry(props: {
                 if (name !== '') {
                   mission.name = name
                   removeMissionEmptyString('name')
+                  setDeliverNameError(false)
                   handleChange()
                 } else {
+                  setDeliverNameError(true)
                   setMissionEmptyStringArray([
                     ...missionEmptyStringArray,
                     `missionID=${mission.missionID}_field=name`,
                   ])
                 }
               }}
+              deliverError={deliverNameError}
+              deliverErrorMessage={errorMessage}
               key={`${mission.missionID}_name`}
             />
             <DetailBox
               label='Introduction Message'
               initialValue={mission.introMessage}
-              emptyStringAllowed={true}
               deliverValue={(introMessage: string) => {
                 if (introMessage !== '') {
                   mission.introMessage = introMessage
                   removeMissionEmptyString('introMessage')
+                  setDeliverIntroMessageError(false)
                   handleChange()
                 } else {
+                  setDeliverIntroMessageError(true)
                   setMissionEmptyStringArray([
                     ...missionEmptyStringArray,
                     `missionID=${mission.missionID}_field=introMessage`,
                   ])
                 }
               }}
+              deliverError={deliverIntroMessageError}
+              deliverErrorMessage={errorMessage}
               key={`${mission.missionID}_introMessage`}
             />
             <DetailToggle

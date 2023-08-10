@@ -1,0 +1,21 @@
+@import '../../../config.scss';
+
+.UserEntry {
+  width: 100%;
+
+  .UserIDContainer,
+  .RoleContainer {
+    margin: 20px 8% 0;
+
+    .Title {
+      font-size: 14px;
+    }
+
+    .UserID,
+    .Role {
+      color: $color-accent-light;
+      margin: 5px 0 0;
+      font-size: 14px;
+    }
+  }
+}

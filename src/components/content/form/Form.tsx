@@ -7,14 +7,14 @@ import inputs from '../../../modules/toolbox/inputs'
 import './Form.scss'
 import Toggle, { EToggleLockState } from '../user-controls/Toggle'
 import Tooltip from '../communication/Tooltip'
-import { To } from 'react-router'
 import { AnyObject } from '../../../modules/toolbox/objects'
 
 interface IDetail {
   label: string
   initialValue: string
-  emptyStringAllowed?: boolean
   deliverValue: (value: string) => void
+  deliverError?: boolean
+  deliverErrorMessage?: string
 }
 
 interface IDetail_S {}
@@ -22,7 +22,7 @@ interface IDetail_S {}
 // field for entering information.
 export class Detail extends React.Component<IDetail, IDetail_S> {
   field: React.RefObject<HTMLInputElement> = React.createRef()
-  state = { isEmptyString: false }
+  state = { displayError: false, errorMessage: '' }
 
   // inherited
   componentDidMount(): void {
@@ -32,30 +32,32 @@ export class Detail extends React.Component<IDetail, IDetail_S> {
     if (fieldElement) {
       fieldElement.value = initialValue
     }
+  }
 
-    if (this.props.emptyStringAllowed && initialValue === '') {
-      this.setState({ isEmptyString: false })
-    } else if (!this.props.emptyStringAllowed && initialValue === '') {
-      this.setState({ isEmptyString: true })
+  componentDidUpdate(prevProps: Readonly<IDetail>): void {
+    if (prevProps.deliverError !== this.props.deliverError) {
+      this.setState({ displayError: this.props.deliverError })
+      this.setState({ errorMessage: this.props.deliverErrorMessage })
+    } else if (
+      prevProps.deliverErrorMessage !== this.props.deliverErrorMessage
+    ) {
+      this.setState({ errorMessage: this.props.deliverErrorMessage })
     }
   }
 
   // inherited
   render(): JSX.Element | null {
     let label: string = this.props.label
-    let emptyStringAllowed: boolean | undefined = this.props.emptyStringAllowed
     let deliverValue = this.props.deliverValue
+    let displayError: boolean = this.state.displayError
     let fieldErrorClassName: string = 'FieldErrorMessage hide'
     let labelClassName: string = 'Label'
-    let fieldClassName: string = 'Field'
+    let fieldClassName: string = 'Field FieldBox'
 
-    if (!emptyStringAllowed && this.state.isEmptyString) {
+    if (displayError) {
       fieldClassName += ' Error'
       labelClassName += ' Error'
       fieldErrorClassName = 'FieldErrorMessage'
-    } else if (emptyStringAllowed) {
-      fieldClassName = 'Field FieldBox'
-      labelClassName = 'Label'
     }
 
     return (
@@ -67,24 +69,12 @@ export class Detail extends React.Component<IDetail, IDetail_S> {
           ref={this.field}
           onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
             deliverValue(event.target.value)
-
-            if (event.target.value !== '') {
-              this.setState({ isEmptyString: false })
-            }
           }}
           onBlur={(event: React.FocusEvent) => {
-            let target: HTMLInputElement = event.target as HTMLInputElement
-
-            if (!emptyStringAllowed && target.value === '') {
-              this.setState({ isEmptyString: true })
-            } else if (emptyStringAllowed && target.value === '') {
-              this.setState({ isEmptyString: false })
-            }
+            // let target: HTMLInputElement = event.target as HTMLInputElement
           }}
         />
-        <div className={fieldErrorClassName}>
-          At least one character is required here.
-        </div>
+        <div className={fieldErrorClassName}>{this.state.errorMessage}</div>
       </div>
     )
   }
@@ -194,7 +184,8 @@ export function DetailNumber(props: {
 export function DetailBox(props: {
   label: string
   initialValue: string
-  emptyStringAllowed?: boolean
+  deliverError?: boolean
+  deliverErrorMessage?: string
   disabled?: boolean
   deliverValue: (value: string) => void
 }): JSX.Element | null {
@@ -202,17 +193,22 @@ export function DetailBox(props: {
 
   const field = useRef<HTMLTextAreaElement>(null)
   const [mountHandled, setMountHandled] = useState<boolean>(false)
-  const [isEmptyString, setIsEmptyString] = useState<boolean>(false)
+  const [didUpdate, setDidUpdate] = useState<boolean>(false)
+  const [displayError, setDisplayError] = useState<boolean>(false)
+  const [errorMessage, setErrorMessage] = useState<string>('')
 
   let label: string = props.label
   let initialValue: string = props.initialValue
-  let emptyStringAllowed: boolean | undefined = props.emptyStringAllowed
+  let deliverError = props.deliverError
+  let deliverErrorMessage = props.deliverErrorMessage
   let disabled: boolean = props.disabled === true
   let deliverValue = props.deliverValue
   let className: string = 'Detail DetailBox'
   let fieldClassName: string = 'Field FieldBox'
   let labelClassName: string = 'Label'
   let fieldErrorClassName: string = 'FieldErrorMessage hide'
+
+  /* -- COMPONENT EFFECTS -- */
 
   // Called when a change is made in the
   // in the field element. This will resize
@@ -244,30 +240,37 @@ export function DetailBox(props: {
         new ResizeObserver(() => resizeField()).observe(fieldElement)
       }
 
-      if (emptyStringAllowed && initialValue === '') {
-        setIsEmptyString(false)
-      } else if (!emptyStringAllowed && initialValue === '') {
-        setIsEmptyString(true)
-      }
-
       setMountHandled(true)
     }
   }, [mountHandled])
+
+  // Equivalent of componentDidUpdate.
+  useEffect(() => {
+    if (didUpdate) {
+      if (deliverError && deliverErrorMessage) {
+        if (deliverError !== displayError) {
+          setDisplayError(deliverError)
+          setErrorMessage(deliverErrorMessage)
+        } else if (deliverErrorMessage !== errorMessage) {
+          setErrorMessage(deliverErrorMessage)
+        }
+      }
+      setDidUpdate(false)
+    }
+  }, [!didUpdate])
+
+  /* -- RENDER -- */
 
   if (disabled) {
     className += ' Disabled'
   }
 
-  if (!emptyStringAllowed && isEmptyString) {
+  if (displayError) {
     fieldClassName += ' Error'
     labelClassName += ' Error'
     fieldErrorClassName = 'FieldErrorMessage'
-  } else if (emptyStringAllowed) {
-    fieldClassName = 'Field FieldBox'
-    labelClassName = 'Label'
   }
 
-  // render
   return (
     <div className={className}>
       <div className={labelClassName}>{`${label}:`}</div>
@@ -277,25 +280,15 @@ export function DetailBox(props: {
         onChange={(event: React.ChangeEvent<HTMLTextAreaElement>) => {
           resizeField()
           deliverValue(event.target.value)
-
-          if (event.target.value !== '') {
-            setIsEmptyString(false)
-          }
+          setDidUpdate(true)
         }}
         onBlur={(event: React.FocusEvent) => {
-          let target: HTMLTextAreaElement = event.target as HTMLTextAreaElement
+          // let target: HTMLTextAreaElement = event.target as HTMLTextAreaElement
           resizeField()
-
-          if (!emptyStringAllowed && target.value === '') {
-            setIsEmptyString(true)
-          } else if (emptyStringAllowed && target.value === '') {
-            setIsEmptyString(false)
-          }
+          setDidUpdate(true)
         }}
       />
-      <div className={fieldErrorClassName}>
-        At least one character is required here.
-      </div>
+      <div className={fieldErrorClassName}>{errorMessage}</div>
     </div>
   )
 }
