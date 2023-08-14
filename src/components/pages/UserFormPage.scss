@@ -3,8 +3,8 @@
 .UserFormPage {
   $page-width: 100vw;
   $page-height: 100vh;
-  $page-row-1-height: 102px;
-  $page-row-3-height: 30px;
+  $page-row-1-height: 82px;
+  $page-row-3-height: 12px;
   $page-row-2-height: calc(
     $page-height - $page-row-1-height - $page-row-3-height
   );
@@ -28,7 +28,7 @@
   .Navigation {
     display: grid;
     grid-template-columns: auto 125px 150px;
-    padding: 20px 0;
+    padding: 15px 0;
     box-shadow: $box-shadow-alt6;
   }
 
@@ -41,7 +41,7 @@
     box-shadow: $box-shadow-alt5;
     border: 2px solid $color-main;
     border-radius: 10px;
-    padding: 20px 0;
+    padding: 5px 0;
 
     .ButtonContainer {
       display: grid;

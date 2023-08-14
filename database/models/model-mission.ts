@@ -1,5 +1,4 @@
 import mongoose, { Schema } from 'mongoose'
-import { colorOptions } from '../../modules/mission-node-colors'
 import { ERROR_BAD_DATA } from '../database'
 
 let ObjectId = mongoose.Types.ObjectId

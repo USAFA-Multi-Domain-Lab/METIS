@@ -327,23 +327,16 @@ router.delete(
     let userID: any = query.userID
 
     try {
-      await UserModel.updateOne(
-        { userID: userID },
-        { deleted: true },
-        (error: any) => {
-          if (error !== null) {
-            databaseLogger.error('Failed to delete user:')
-            databaseLogger.error(error)
-            return response.sendStatus(500)
-          } else {
-            databaseLogger.info(`Deleted user with the ID "${userID}".`)
-            return response.sendStatus(200)
-          }
-        },
-      )
+      await UserModel.updateOne({ userID: userID }, { deleted: true })
+        .exec()
+        .then(() => {
+          databaseLogger.info(`Deleted user with the ID "${userID}".`)
+          return response.sendStatus(200)
+        })
     } catch (error) {
-      databaseLogger.error('Failed to delete user:')
+      databaseLogger.error(`Failed to delete user:`)
       databaseLogger.error(error)
+      return response.sendStatus(500)
     }
   },
 )

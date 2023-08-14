@@ -21,6 +21,7 @@ import {
   ButtonSVG,
   EButtonSVGPurpose,
 } from '../content/user-controls/ButtonSVG'
+import UserModificationPanel from '../content/user-controls/UserModificationPanel'
 
 export interface IHomePage extends IPage {}
 
@@ -73,31 +74,42 @@ export default function HomePage(props: IHomePage): JSX.Element | null {
       },
     )
 
-    // This loads all the users from the database
-    getAllUsers(
-      (users: Array<User>) => {
-        if (currentUser && restrictedAccessRoles.includes(currentUser.role)) {
-          users.forEach((user: User) => {
-            if (user.role === userRoles.Student) {
-              setUsers((users) => [...users, user])
-            }
-          })
-        } else if (currentUser && fullAccessRoles.includes(currentUser.role)) {
-          users.forEach((user: User) => {
-            if (currentUser && user.userID !== currentUser.userID) {
-              setUsers((users) => [...users, user])
-            }
-          })
-        }
-        appActions.finishLoading()
-        callback()
-      },
-      (error: Error) => {
-        appActions.handleServerError('Failed to retrieve users.')
-        appActions.finishLoading()
-        callbackError(error)
-      },
-    )
+    if (currentUser && restrictedAccessRoles.includes(currentUser.role)) {
+      // This loads all the users from the database
+      getAllUsers(
+        (retrievedUsers: Array<User>) => {
+          let filteredUsers: Array<User> = []
+
+          if (currentUser && restrictedAccessRoles.includes(currentUser.role)) {
+            retrievedUsers.forEach((user: User) => {
+              if (user.role === userRoles.Student) {
+                filteredUsers.push(user)
+              }
+            })
+            setUsers(filteredUsers)
+          } else if (
+            currentUser &&
+            fullAccessRoles.includes(currentUser.role)
+          ) {
+            retrievedUsers.forEach((user: User) => {
+              if (currentUser && user.userID !== currentUser.userID) {
+                filteredUsers.push(user)
+              }
+            })
+            setUsers(filteredUsers)
+          }
+          appActions.finishLoading()
+          callback()
+        },
+        (error: Error) => {
+          appActions.handleServerError('Failed to retrieve users.')
+          appActions.finishLoading()
+          callbackError(error)
+        },
+      )
+    } else {
+      appActions.finishLoading()
+    }
   }
 
   // This will logout the current user.
@@ -476,13 +488,11 @@ export default function HomePage(props: IHomePage): JSX.Element | null {
                     {user.userID}
                     <Tooltip description='Select user.' />
                   </div>
-                  {/* <MissionModificationPanel
-                  mission={user}
-                  appActions={appActions}
-                  handleSuccessfulCopy={() => setMountHandled(false)}
-                  handleSuccessfulDeletion={() => setMountHandled(false)}
-                  handleSuccessfulToggleLive={() => {}}
-                /> */}
+                  <UserModificationPanel
+                    user={user}
+                    appActions={appActions}
+                    handleSuccessfulDeletion={() => setMountHandled(false)}
+                  />
                 </div>
               </>
             )

@@ -4,6 +4,8 @@ import { StatusError } from '../../modules/error'
 import { userRoles } from '../../user'
 import { databaseLogger } from '../../modules/logging'
 
+let ObjectId = mongoose.Types.ObjectId
+
 // Validator for user.userID.
 const validate_users_userID = (userID: string): boolean => {
   let userExpression: RegExp = /^([a-zA-Z0-9-_.]{5,25})$/
@@ -40,37 +42,46 @@ const validator_users_password = (password: string): boolean => {
   return isValidPassword
 }
 
-const UserSchema = new Schema({
-  userID: {
-    type: String,
-    unique: true,
-    required: true,
-    trim: true,
-    validate: validate_users_userID,
+const UserSchema = new Schema(
+  {
+    userID: {
+      type: String,
+      unique: true,
+      required: true,
+      trim: true,
+      validate: validate_users_userID,
+    },
+    role: {
+      type: String,
+      required: false,
+      validate: validate_users_role,
+    },
+    firstName: {
+      type: String,
+      required: true,
+      trim: true,
+      validate: validate_users_name,
+    },
+    lastName: {
+      type: String,
+      required: true,
+      trim: true,
+      validate: validate_users_name,
+    },
+    password: {
+      type: String,
+      required: true,
+      validate: validator_users_password,
+    },
+    _id: { type: ObjectId, required: false, auto: true },
+    deleted: { type: Boolean, required: true, default: false },
   },
-  role: {
-    type: String,
-    required: false,
-    validate: validate_users_role,
+  {
+    _id: false,
+    strict: 'throw',
+    minimize: false,
   },
-  firstName: {
-    type: String,
-    required: true,
-    trim: true,
-    validate: validate_users_name,
-  },
-  lastName: {
-    type: String,
-    required: true,
-    trim: true,
-    validate: validate_users_name,
-  },
-  password: {
-    type: String,
-    required: true,
-    validate: validator_users_password,
-  },
-})
+)
 
 //hashes password before saving to database
 export const hashPassword = async (password: string): Promise<string> => {

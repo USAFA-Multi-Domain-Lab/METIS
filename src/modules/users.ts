@@ -9,14 +9,6 @@ export interface IUser {
   password?: string
 }
 
-// export interface IUserExposed {
-//   userID: string
-//   role: string
-//   password: string
-//   firstName: string
-//   lastName: string
-// }
-
 // This is the list of user roles.
 export const userRoles = {
   Student: 'student',
