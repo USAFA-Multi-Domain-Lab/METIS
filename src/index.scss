@@ -24,10 +24,10 @@ body {
   font-family: monospace, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  scrollbar-color: $color-pointer-mark $background-main;
+  scrollbar-color: $color-pointer-mark $background-alt9;
 
   ::-webkit-scrollbar {
-    background: $background-main;
+    background: $background-alt9;
   }
 
   ::-webkit-scrollbar-thumb {
@@ -100,8 +100,8 @@ code {
   width: 100%;
   padding: 10px 0 20px;
   background: linear-gradient(
-    $background-main 0%,
-    $background-main 80%,
+    $background-alt8 0%,
+    $background-alt8 80%,
     transparent 100%
   );
 

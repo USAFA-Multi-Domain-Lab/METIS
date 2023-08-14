@@ -22,7 +22,7 @@ interface IDetail_S {}
 // field for entering information.
 export class Detail extends React.Component<IDetail, IDetail_S> {
   field: React.RefObject<HTMLInputElement> = React.createRef()
-  state = { displayError: false, errorMessage: '' }
+  allowAbilityToDisplayError: boolean = false
 
   // inherited
   componentDidMount(): void {
@@ -34,22 +34,12 @@ export class Detail extends React.Component<IDetail, IDetail_S> {
     }
   }
 
-  componentDidUpdate(prevProps: Readonly<IDetail>): void {
-    if (prevProps.deliverError !== this.props.deliverError) {
-      this.setState({ displayError: this.props.deliverError })
-      this.setState({ errorMessage: this.props.deliverErrorMessage })
-    } else if (
-      prevProps.deliverErrorMessage !== this.props.deliverErrorMessage
-    ) {
-      this.setState({ errorMessage: this.props.deliverErrorMessage })
-    }
-  }
-
   // inherited
   render(): JSX.Element | null {
     let label: string = this.props.label
     let deliverValue = this.props.deliverValue
-    let displayError: boolean = this.state.displayError
+    let displayError: boolean = this.props.deliverError || false
+    let errorMessage: string = this.props.deliverErrorMessage || ''
     let fieldErrorClassName: string = 'FieldErrorMessage hide'
     let labelClassName: string = 'Label'
     let fieldClassName: string = 'Field FieldBox'
@@ -71,10 +61,10 @@ export class Detail extends React.Component<IDetail, IDetail_S> {
             deliverValue(event.target.value)
           }}
           onBlur={(event: React.FocusEvent) => {
-            // let target: HTMLInputElement = event.target as HTMLInputElement
+            let target: HTMLInputElement = event.target as HTMLInputElement
           }}
         />
-        <div className={fieldErrorClassName}>{this.state.errorMessage}</div>
+        <div className={fieldErrorClassName}>{errorMessage}</div>
       </div>
     )
   }
@@ -193,14 +183,11 @@ export function DetailBox(props: {
 
   const field = useRef<HTMLTextAreaElement>(null)
   const [mountHandled, setMountHandled] = useState<boolean>(false)
-  const [didUpdate, setDidUpdate] = useState<boolean>(false)
-  const [displayError, setDisplayError] = useState<boolean>(false)
-  const [errorMessage, setErrorMessage] = useState<string>('')
 
   let label: string = props.label
   let initialValue: string = props.initialValue
-  let deliverError = props.deliverError
-  let deliverErrorMessage = props.deliverErrorMessage
+  let displayError: boolean = props.deliverError || false
+  let errorMessage: string = props.deliverErrorMessage || ''
   let disabled: boolean = props.disabled === true
   let deliverValue = props.deliverValue
   let className: string = 'Detail DetailBox'
@@ -244,21 +231,6 @@ export function DetailBox(props: {
     }
   }, [mountHandled])
 
-  // Equivalent of componentDidUpdate.
-  useEffect(() => {
-    if (didUpdate) {
-      if (deliverError && deliverErrorMessage) {
-        if (deliverError !== displayError) {
-          setDisplayError(deliverError)
-          setErrorMessage(deliverErrorMessage)
-        } else if (deliverErrorMessage !== errorMessage) {
-          setErrorMessage(deliverErrorMessage)
-        }
-      }
-      setDidUpdate(false)
-    }
-  }, [!didUpdate])
-
   /* -- RENDER -- */
 
   if (disabled) {
@@ -280,12 +252,10 @@ export function DetailBox(props: {
         onChange={(event: React.ChangeEvent<HTMLTextAreaElement>) => {
           resizeField()
           deliverValue(event.target.value)
-          setDidUpdate(true)
         }}
         onBlur={(event: React.FocusEvent) => {
           // let target: HTMLTextAreaElement = event.target as HTMLTextAreaElement
           resizeField()
-          setDidUpdate(true)
         }}
       />
       <div className={fieldErrorClassName}>{errorMessage}</div>

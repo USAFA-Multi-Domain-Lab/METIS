@@ -8,44 +8,45 @@
   width: 350px;
   height: fit-content;
   border: 2px solid $color-main;
-  padding: 0 15px 25px 20px;
-  background-color: $background-main;
+  box-shadow: $box-shadow-alt2;
+  padding-bottom: 15px;
 
   .Close {
-    width: 100%;
+    width: calc(100% - 10px);
     margin: 0;
-    padding-bottom: 10px;
+    padding: 10px 10px 10px 0;
   }
 
   .PromptDisplayText {
     font-size: 0.95em;
     margin: 5px 0;
     height: fit-content;
+    margin: 0 15px 25px 20px;
   }
 
   .NoActions {
     color: $terminal-red;
     margin: 0;
-    padding: 0;
+    margin: 0 15px 25px 20px;
   }
 
   .NodeActionDefault {
     width: 75%;
-    margin: 20px 0 1px 0;
-    background-color: $background-alt2;
+    margin: 20px 15px 1px 20px;
+    box-shadow: $box-shadow-alt2;
     border: 2px solid $color-main;
     vertical-align: center;
 
     &.NodeActionDefault:hover {
       cursor: pointer;
-      background-color: black;
+      background-color: $background-alt2;
     }
 
     .DefaultText {
       display: grid;
       align-items: center;
       grid-template-columns: auto 40px;
-      padding: 5px 0 5px 10px;
+      margin: 5px 0 5px 10px;
       color: $color-accent-light;
       height: auto;
       user-select: none;
@@ -75,26 +76,15 @@
     grid-template-columns: 100%;
     place-content: start;
     width: 75%;
-    margin: 0;
     border: 2px solid $color-main;
-    background-color: $background-alt2;
+    box-shadow: $box-shadow-alt2;
     height: auto;
     max-height: 140px;
     overflow-y: auto;
-    scrollbar-color: $color-pointer-mark $background-alt2;
+    margin: 0 15px 0 20px;
 
     &::-webkit-scrollbar {
-      background: $background-alt2;
       width: 15px;
-    }
-
-    &::-webkit-scrollbar-thumb {
-      background-color: $color-pointer-mark;
-      -webkit-border-radius: 8px;
-      border-radius: 8px;
-      background-clip: content-box;
-      border: 4px solid transparent;
-      min-height: 50px;
     }
 
     .NodeActionContainer {
@@ -120,7 +110,8 @@
 
       &:hover {
         cursor: pointer;
-        background-color: black;
+        box-shadow: none;
+        background-color: $background-alt2;
       }
     }
   }

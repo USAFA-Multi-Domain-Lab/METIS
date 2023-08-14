@@ -64,7 +64,7 @@ export default function UserEntry(props: {
 
   let listOfRoles: string[] = [userRoles.Student]
 
-  if (fullAccessRoles.includes(currentUser.role)) {
+  if (currentUser && fullAccessRoles.includes(currentUser.role)) {
     listOfRoles.push(userRoles.Instructor)
   }
 
@@ -178,13 +178,20 @@ export default function UserEntry(props: {
               } else {
                 forceUpdate()
               }
-            } else if (password === '') {
+            }
+
+            if (password === '') {
               setDeliverPassword1Error(true)
+              setPassword1ErrorMessage(
+                'At least one character is required here.',
+              )
               setUserEmptyStringArray([
                 ...userEmptyStringArray,
                 `field=password1`,
               ])
-            } else {
+            }
+
+            if (!passwordIsValid && password !== '') {
               setDeliverPassword1Error(true)
               setPassword1ErrorMessage(
                 'Password must be between 8 and 50 characters and cannot contain spaces.',
@@ -211,17 +218,29 @@ export default function UserEntry(props: {
               } else {
                 forceUpdate()
               }
-            } else if (password === '') {
-              setDeliverPassword2Error(true)
-              setUserEmptyStringArray([
-                ...userEmptyStringArray,
-                `field=password2`,
-              ])
-            } else {
+            }
+
+            if (!passwordIsValid && password !== '') {
               setDeliverPassword2Error(true)
               setPassword2ErrorMessage(
                 'Password must be between 8 and 50 characters and cannot contain spaces.',
               )
+            }
+
+            if (password === '') {
+              setDeliverPassword2Error(true)
+              setPassword2ErrorMessage(
+                'At least one character is required here.',
+              )
+              setUserEmptyStringArray([
+                ...userEmptyStringArray,
+                `field=password2`,
+              ])
+            }
+
+            if (passwordIsValid && password !== '' && !user.passwordsMatch) {
+              setDeliverPassword2Error(true)
+              setPassword2ErrorMessage('Passwords must match.')
             }
           }}
           deliverError={deliverPassword2Error}
@@ -244,7 +263,7 @@ export default function UserEntry(props: {
           label='First Name'
           initialValue={user.firstName}
           deliverValue={(firstName: string) => {
-            if (firstName !== user.firstName && firstName !== '') {
+            if (firstName !== '') {
               user.firstName = firstName
               removeUserEmptyString('firstName')
               setDeliverFirstNameError(false)
@@ -264,7 +283,7 @@ export default function UserEntry(props: {
           label='Last Name'
           initialValue={user.lastName}
           deliverValue={(lastName: string) => {
-            if (lastName !== user.lastName && lastName !== '') {
+            if (lastName !== '') {
               user.lastName = lastName
               removeUserEmptyString('lastName')
               setDeliverLastNameError(false)
