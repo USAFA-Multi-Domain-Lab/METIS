@@ -292,8 +292,7 @@ export default function MissionSelectionPage(
 
       if (
         files.length > 0 &&
-        appState.session.user &&
-        permittedRoles.includes(appState.session.user.role)
+        permittedRoles.includes(appState.session?.user.role ?? 'NOT_LOGGED_IN')
       ) {
         importMissionFiles(files)
       }
@@ -333,8 +332,7 @@ export default function MissionSelectionPage(
   // page.
   const viewChangelog = (): void => {
     if (
-      appState.session.user &&
-      permittedRoles.includes(appState.session.user.role)
+      permittedRoles.includes(appState.session?.user.role ?? 'NOT_LOGGED_IN')
     ) {
       appActions.goToPage('ChangelogPage', {})
     }
@@ -531,8 +529,8 @@ export default function MissionSelectionPage(
   let missionNavPanelClassName: string = 'MissionNavPanel'
   let searchContainerClassName: string = 'Hidden'
   let fileDropBoxClassName: string = 'Hidden'
-  let displayLogin: boolean = true
-  let displayLogout: boolean = false
+  let displayLogin: boolean = appState.session === null
+  let displayLogout: boolean = !displayLogin
 
   let noMissionsClassName: string = 'NoMissions'
   let versionClassName: string = 'Version Disabled'
@@ -541,15 +539,7 @@ export default function MissionSelectionPage(
   let numberOfMissionsShown: number = 5
   let totalMissionSets: number = 1
 
-  if (appState.session.user) {
-    displayLogin = false
-    displayLogout = true
-  }
-
-  if (
-    appState.session.user &&
-    permittedRoles.includes(appState.session.user.role)
-  ) {
+  if (permittedRoles.includes(appState.session?.user.role ?? 'NOT_LOGGED_IN')) {
     editMissionsContainerClassName += ' InstructorView'
     editMissionListClassName += ' InstructorView'
     missionNavPanelClassName += ' InstructorView'
@@ -574,10 +564,7 @@ export default function MissionSelectionPage(
     )
   }
 
-  if (
-    appState.session.user &&
-    permittedRoles.includes(appState.session.user.role)
-  ) {
+  if (permittedRoles.includes(appState.session?.user.role ?? 'NOT_LOGGED_IN')) {
     versionClassName = 'Version'
   }
 

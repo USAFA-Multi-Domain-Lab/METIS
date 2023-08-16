@@ -20,7 +20,7 @@ router.get('/session/', (request, response) => {
   // If the session was not found, return
   // an empty object.
   if (session === undefined) {
-    return response.json({})
+    return response.json(null)
   }
   // Else, convert and return the session
   // as JSON.
@@ -46,7 +46,7 @@ router.post('/login', (request, response, next) => {
         // Else, check if the username and password
         // were correct.
         else {
-          let json: any = { correct, session: {} }
+          let json: any = { correct, session: null }
 
           // If correct, generate a new session.
           if (correct) {

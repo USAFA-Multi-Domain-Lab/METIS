@@ -16,15 +16,15 @@ export interface IUserJSON {
 /**
  * The JSON representation of a MetisSession object.
  */
-export interface IMetisSessionJSON {
+export type TMetisSessionJSON = {
   user: IUserJSON
-  game?: IGameJSON
-}
+  inGame: boolean
+} | null
 
-export interface IMetisSession {
-  user?: User
-  game?: Game
-}
+export type TMetisSession = {
+  user: User
+  inGame: boolean
+} | null
 
 /**
  * Represents a user using METIS.
@@ -67,39 +67,46 @@ export class User {
   }
 
   /**
+   * The API endpoint for managing users.
+   */
+  public static readonly API_ENDPOINT: string = '/api/v1/users'
+
+  /**
    * Converts IMissionJSON into a Mission object.
    * @param {IMissionJson} json The json to be converted.
    * @returns {Mission} The Mission object.
    */
-  static fromJSON(json: IUserJSON): any {
+  public static fromJSON(json: IUserJSON): any {
     return new User(json.userID, json.firstName, json.lastName, json.role)
   }
 
   /**
    * Fetches the current session of the logged in user from the server.
-   * @returns {Promise<IMetisSession>} A promise that resolves to the current session of the logged in user.
+   * @returns {Promise<TMetisSession>} A promise that resolves to the current session of the logged in user.
    */
-  public static async fetchSession(): Promise<IMetisSession> {
-    return new Promise<IMetisSession>(
+  public static async fetchSession(): Promise<TMetisSession> {
+    return new Promise<TMetisSession>(
       (
-        resolve: (session: IMetisSession) => void,
+        resolve: (session: TMetisSession) => void,
         reject: (error: AxiosError) => void,
       ) => {
         // Send a request to fetch the session
         // data via the API.
         axios
-          .get<IMetisSessionJSON>('/api/v1/users/session/')
-          .then((response: AxiosResponse<IMetisSessionJSON>) => {
+          .get<TMetisSessionJSON>(`${User.API_ENDPOINT}/session`)
+          .then((response: AxiosResponse<TMetisSessionJSON>) => {
             // Parse the response data.
-            let userJson: IUserJSON | undefined = response.data.user
-            let gameJson: IGameJSON | undefined = response.data.game
-            let user: User | undefined = userJson
-              ? User.fromJSON(userJson)
-              : undefined
-            let game: Game | undefined = gameJson
-              ? Game.fromJSON(gameJson)
-              : undefined
-            let session: IMetisSession = { user, game }
+            let sessionJson: TMetisSessionJSON = response.data
+            let session: TMetisSession = null
+
+            // If the session JSON is not null,
+            // parse the date.
+            if (sessionJson !== null) {
+              session = {
+                user: User.fromJSON(sessionJson.user),
+                inGame: sessionJson.inGame,
+              }
+            }
 
             // Resolve the promise with the
             // session returned.
@@ -109,6 +116,42 @@ export class User {
             // If request fails, reject the promise
             // with the error given in the catch.
             console.log('Failed to retrieve session.')
+            console.error(error)
+            reject(error)
+          })
+      },
+    )
+  }
+
+  // This will attempt to login in the user with the
+  // given userID and password.
+  public static async login(
+    userID: string,
+    password: string,
+  ): Promise<{ correct: boolean; session: TMetisSession }> {
+    return new Promise<{ correct: boolean; session: TMetisSession }>(
+      (resolve, reject) => {
+        axios
+          .post(`${User.API_ENDPOINT}/login`, { userID, password })
+          .then((response: AxiosResponse) => {
+            // Parse the response data.
+            let correct: boolean = response.data.correct
+            let sessionJson: TMetisSessionJSON = response.data.session
+            let session: TMetisSession = null
+
+            // If the session JSON is not null,
+            // parse the date.
+            if (sessionJson !== null) {
+              session = {
+                user: User.fromJSON(sessionJson.user),
+                inGame: sessionJson.inGame,
+              }
+            }
+
+            resolve({ correct, session })
+          })
+          .catch((error: AxiosError) => {
+            console.log('Failed to login user.')
             console.error(error)
             reject(error)
           })
@@ -134,39 +177,8 @@ export const userRoles: AnyObject = {
 // can access certain routes.
 export const permittedRoles: string[] = [userRoles.Admin]
 
-// This will attempt to login in the user with the
-// given userID and password.
-const login = (
-  userID: string,
-  password: string,
-  callback: (correct: boolean, session: IMetisSession) => void,
-  callbackError: (error: AxiosError) => void = () => {},
-) => {
-  axios
-    .post('/api/v1/users/login', { userID, password })
-    .then((response: AxiosResponse) => {
-      let correct: boolean = response.data.correct
-      let userJson: IUserJSON | undefined = response.data.session.user
-      let gameJson: IGameJSON | undefined = response.data.session.game
-      let user: User | undefined = userJson
-        ? User.fromJSON(userJson)
-        : undefined
-      let game: Game | undefined = gameJson
-        ? Game.fromJSON(gameJson)
-        : undefined
-      let session: IMetisSession = { user, game }
-
-      callback(correct, session)
-    })
-    .catch((error: AxiosError) => {
-      console.log('Failed to login user.')
-      console.error(error)
-      callbackError(error)
-    })
-}
-
 // This will logout the user in the session.
-const logout = (
+export const logout = (
   callback: () => void = () => {
     /* does nothing if function is not passed */
   },
@@ -187,6 +199,5 @@ const logout = (
 }
 
 export default {
-  login,
   logout,
 }

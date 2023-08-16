@@ -1,7 +1,7 @@
 import './App.scss'
 import GamePage from './pages/GamePage'
 import AuthPage from './pages/AuthPage'
-import { IMetisSession, User } from '../modules/users'
+import { TMetisSession, User } from '../modules/users'
 import { useEffect, useState } from 'react'
 import ServerErrorPage from './pages/ServerErrorPage'
 import LoadingPage from './pages/LoadingPage'
@@ -18,7 +18,8 @@ import {
 } from './content/communication/Tooltip'
 import Prompt from './content/communication/Prompt'
 import ChangelogPage from './pages/ChangelogPage'
-import { Mission } from '../modules/missions'
+import { ServerConnection } from '../modules/server-connect'
+import { useStore } from 'react-context-hook'
 
 // Default props in every page.
 export interface IPage {
@@ -57,13 +58,6 @@ function App(props: {
   const [loadingMinTimeout, setLoadingMinTimeout] = useState<any>(undefined)
 
   /* -- COMPONENT FUNCTIONS -- */
-
-  /**
-   * Stops the session sync from occurring. This is during mount.
-   */
-  let endSessionSync = (): void => {}
-
-  /* -- COMPONENT HANDLERS -- */
 
   /**
    * Recalculates and positions any tooltip being displayed in the DOM based on the current position of the mouse.
@@ -114,47 +108,74 @@ function App(props: {
   // will load the user in the session to see if a
   // login is necessary.
   useEffect(() => {
-    if (!appState.appMountHandled) {
-      let tooltips_elm: HTMLDivElement | null | undefined =
-        appState.tooltips.current
+    async function componentDidMount(): Promise<void> {
+      try {
+        // Display default loading message to
+        // the user.
+        appActions.beginLoading(AppState.defaultAppStateValues.loadingMessage)
 
-      appActions.beginLoading(AppState.defaultAppStateValues.loadingMessage)
+        // Add global event listeners.
+        document.addEventListener('mousemove', positionTooltip)
+        document.addEventListener('drag', positionTooltip)
 
-      appActions.syncSession((session: IMetisSession) => {
-        appState.setAppMountHandled(true)
+        // Initialize tooltips.
+        let tooltips_elm: HTMLDivElement | null | undefined =
+          appState.tooltips.current
 
-        appActions.finishLoading()
+        if (tooltips_elm !== null) {
+          tooltips_elm.id = ''
+          tooltips_elm.style.visibility = 'hidden'
+          appState.setTooltipDescription('')
+        }
 
-        // If no user data is present in the
-        // session, navigate to the auth page
-        // to have the visitor login.
-        if (session.user === undefined) {
+        // Sync session.
+        let session: TMetisSession = await appActions.syncSession()
+
+        // If there is no established session,
+        // navigate to the auth page to have
+        // the visitor login.
+        if (session === null) {
           appActions.goToPage('AuthPage', {
             returningPagePath: 'MissionSelectionPage',
             returningPageProps: {},
           })
         }
-        // Else if no game data is present in
-        // the session, navigate to the mission
-        // selection page to have the user launch
-        // a game.
-        else if (session.game === undefined) {
-          appActions.goToPage('MissionSelectionPage', {})
-        } else {
-          appActions.goToPage('GamePage', {})
+        // Else establish a web socket connection
+        // with the server.
+        else {
+          let server: ServerConnection = await appActions.connectToServer()
+
+          // If the sessioned user is in a game,
+          // then switch to the game page.
+          if (session.inGame) {
+            appActions.goToPage('GamePage', {})
+          }
+          // Else, go to the mission selection
+          // page.
+          else {
+            appActions.goToPage('MissionSelectionPage', {})
+          }
         }
-      })
 
-      document.addEventListener('mousemove', positionTooltip)
-      document.addEventListener('drag', positionTooltip)
-
-      if (tooltips_elm !== null) {
-        tooltips_elm.id = ''
-        tooltips_elm.style.visibility = 'hidden'
-        appState.setTooltipDescription('')
+        // Open the app up for use by the user.
+        appState.setAppMountHandled(true)
+        appActions.finishLoading()
+      } catch (error: any) {
+        console.error('Failed to handle app mount:')
+        console.error(error)
+        appActions.handleServerError('App initialization failed.')
       }
     }
+
+    if (!appState.appMountHandled) {
+      componentDidMount()
+    }
   }, [appState.appMountHandled])
+
+  // Equivalent of componentWillUnmount.
+  useEffect(() => {
+    return () => {}
+  }, [])
 
   /* -- PAGE PROPS CONSTRUCTION -- */
 

@@ -66,8 +66,7 @@ export default function MissionFormPage(
   // Equivalent of componentDidMount.
   useEffect(() => {
     if (
-      appState.session.user &&
-      !permittedRoles.includes(appState.session.user.role)
+      !permittedRoles.includes(appState.session?.user.role ?? 'NOT_LOGGED_IN')
     ) {
       appActions.goToPage('MissionSelectionPage', {})
       appActions.notify('Mission form page is not accessible to students.')

@@ -19,9 +19,11 @@ import {
 import { MissionNodeAction } from '../../modules/mission-node-actions'
 import { IConsoleOutput } from '../content/game/ConsoleOutput'
 import { Game } from '../../modules/games'
-import { IMetisSession, User } from '../../modules/users'
+import { TMetisSession, User } from '../../modules/users'
 
-export interface IGamePage extends IPage {}
+export interface IGamePage extends IPage {
+  game: Game
+}
 
 // This is the number of times per
 // second that the game updates.
@@ -34,6 +36,8 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
 
   let appState: AppState = props.appState
   let appActions: AppActions = props.appActions
+  let game: Game = props.game
+  let mission: Mission = game.mission
 
   /* -- STATE -- */
 
@@ -45,13 +49,8 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
 
   /* -- VARIABLES -- */
 
-  let game: Game
-  let mission: Mission
-
   // Variables that determine whether or not
   // to display various components.
-  let displayLogin: boolean = appState.session.user === undefined
-  let displayLogout: boolean = !displayLogin
   let displayNodeActions: boolean =
     selectedNode !== null && selectedAction === null
   let displayExecuteNodePath: boolean =
@@ -75,14 +74,20 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
     }, 1000 / GAME_TICK_RATE)
   }
 
-  // This will logout the current user.
+  /**
+   * This will log the current user
+   * out, destroying the session.
+   */
   const logout = () =>
     appActions.logout({
       returningPagePath: 'MissionSelectionPage',
       returningPageProps: {},
     })
 
-  // This will output to the console.
+  /**
+   * Outputs to the in-browser console.
+   * @param {IConsoleOutput} output The output.
+   */
   const outputToConsole = (output: IConsoleOutput): void => {
     mission.outputToConsole(output)
   }
@@ -177,9 +182,10 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
   // Equivalent of componentDidMount.
   useEffect(() => {
     if (!mountHandled) {
-      appActions.finishLoading()
-      setMountHandled(true)
-      loop()
+      // appActions.finishLoading()
+      // setMountHandled(true)
+      // loop()
+      appActions.beginLoading('Connecting to game...')
     }
   }, [mountHandled])
 
@@ -191,19 +197,6 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
   }, [])
 
   /* -- PRE-RENDER-PROCESSING -- */
-
-  // If the game in the session is
-  // defined, initialize the game and
-  // mission variables.
-  if (appState.session.game !== undefined) {
-    game = appState.session.game
-    mission = game.mission
-  }
-  // Else throw an error and render null.
-  else {
-    appActions.handleServerError('Game session was lost.')
-    return null
-  }
 
   // If the mission has no resources left,
   // add the red alert class to the resources.
@@ -233,7 +226,7 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
             text: 'Log out',
             key: 'log-out',
             handleClick: logout,
-            visible: displayLogout,
+            visible: true,
           },
         ]}
         brandingCallback={() => appActions.goToPage('MissionSelectionPage', {})}

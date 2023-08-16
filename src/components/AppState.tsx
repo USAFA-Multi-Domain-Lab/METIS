@@ -1,6 +1,6 @@
 import React from 'react'
 import { useStore, withStore } from 'react-context-hook'
-import usersModule, { IMetisSession } from '../modules/users'
+import usersModule, { TMetisSession } from '../modules/users'
 import { User } from '../modules/users'
 import { AnyObject } from 'mongoose'
 import Confirmation, {
@@ -11,13 +11,14 @@ import Notification from '../modules/notifications'
 import { EAjaxStatus } from '../modules/toolbox/ajax'
 import { IAuthPageSpecific } from './pages/AuthPage'
 import { IButtonText } from './content/user-controls/ButtonText'
-import { v4 as generateHash } from 'uuid'
+import { ServerConnection } from '../modules/server-connect'
 
 /* -- INTERFACES -- */
 
 export interface IAppStateValues {
   forcedUpdateCounter: number
-  session: IMetisSession
+  server: ServerConnection | null
+  session: TMetisSession
   currentPagePath: string
   currentPageProps: AnyObject
   appMountHandled: boolean
@@ -37,7 +38,8 @@ export interface IAppStateValues {
 
 export interface IAppStateSetters {
   setForcedUpdateCounter: (forcedUpdateCounter: number) => void
-  setSession: (session: IMetisSession) => void
+  setServer: (server: ServerConnection | null) => void
+  setSession: (session: TMetisSession) => void
   setCurrentPagePath: (currentPagePath: string) => void
   setCurrentPageProps: (currentPageProps: AnyObject) => void
   setAppMountHandled: (appMountHandled: boolean) => void
@@ -84,8 +86,8 @@ export interface INotifyOptions {
 
 /* -- CONSTANTS -- */
 
-const loadingMinTime = 500
-const pageSwitchMinTime = 500
+const LOADING_MIN_TIME = 500
+const PAGE_SWITCH_MIN_TIME = 500
 
 /* -- CLASSES -- */
 
@@ -93,14 +95,12 @@ const pageSwitchMinTime = 500
 // enacted upon the app state.
 export class AppActions {
   public appState: AppState
-  private sessionSyncID: string = ''
 
-  constructor(appState: AppState) {
+  public constructor(appState: AppState) {
     this.appState = appState
-    this.sessionSyncID = ''
   }
 
-  _handleLoadCompletion = (): void => {
+  private handleLoadCompletion = (): void => {
     for (let notification of this.appState.postLoadNotifications) {
       this.appState.notifications.push(notification)
       notification.startExpirationTimer()
@@ -111,7 +111,7 @@ export class AppActions {
   /**
    * This will force the state of the entire app to update, causing a rerender, even if no actual changes to the state were made.
    */
-  forceUpdate = (): void => {
+  public forceUpdate = (): void => {
     this.appState.setForcedUpdateCounter(this.appState.forcedUpdateCounter + 1)
   }
 
@@ -120,9 +120,9 @@ export class AppActions {
    * @param pagePath The path of the page to go to.
    * @param pageProps The props to pass to the destination page.
    */
-  goToPage = (pagePath: string, pageProps: AnyObject): void => {
+  public goToPage = (pagePath: string, pageProps: AnyObject): void => {
     // Actually switches the page. Called after any confirmations.
-    const switchPage = (): void => {
+    const realizePageSwitch = (): void => {
       // Display to the user that the
       // page is loading.
       this.appState.setLoadingMessage('Switching pages...')
@@ -143,9 +143,9 @@ export class AppActions {
         this.appState.setPageSwitchMinTimeReached(true)
 
         if (!this.appState.loading && this.appState.loadingMinTimeReached) {
-          this._handleLoadCompletion()
+          this.handleLoadCompletion()
         }
-      }, pageSwitchMinTime)
+      }, PAGE_SWITCH_MIN_TIME)
     }
 
     // If the user is currently in a game,
@@ -153,35 +153,34 @@ export class AppActions {
     // the page.
     if (
       this.appState.currentPagePath === 'GamePage' &&
-      this.appState.session.user &&
-      this.appState.session.game
+      this.appState.session?.inGame
     ) {
       this.confirm(
         'Are you sure you want to quit?',
         (concludeAction: () => void) => {
-          if (this.appState.session.user && this.appState.session.game) {
-            this.appState.session.game
-              .quit(this.appState.session.user.userID)
-              .then(() => {
-                switchPage()
-                this.appState.setSession({
-                  ...this.appState.session,
-                  game: undefined,
-                })
-                concludeAction()
-              })
-              .catch((error: Error) => {
-                console.log(error)
-                this.handleServerError('Failed to quit game.')
-                concludeAction()
-              })
+          if (this.appState.session?.inGame) {
+            // this.appState.session.game
+            //   .quit(this.appState.session.user.userID)
+            //   .then(() => {
+            //     switchPage()
+            //     this.appState.setSession({
+            //       ...this.appState.session,
+            //       game: undefined,
+            //     })
+            //     concludeAction()
+            //   })
+            //   .catch((error: Error) => {
+            //     console.log(error)
+            //     this.handleServerError('Failed to quit game.')
+            //     concludeAction()
+            //   })
           }
         },
       )
     }
     // Else, go ahead and switch the page.
     else {
-      switchPage()
+      realizePageSwitch()
     }
   }
 
@@ -190,7 +189,7 @@ export class AppActions {
   // user to the loading page until the
   // loading has been ended by the finishLoading
   // function.
-  beginLoading = (loadingMessage: string): void => {
+  public beginLoading = (loadingMessage: string): void => {
     this.appState.setLoading(true)
     this.appState.setLoadingMessage(loadingMessage)
     this.appState.setLoadingMinTimeReached(false)
@@ -198,95 +197,80 @@ export class AppActions {
       this.appState.setLoadingMinTimeReached(true)
 
       if (!this.appState.loading && this.appState.pageSwitchMinTimeReached) {
-        this._handleLoadCompletion()
+        this.handleLoadCompletion()
       }
-    }, loadingMinTime)
+    }, LOADING_MIN_TIME)
   }
 
   // This will end the loading process
   // started by the beginLoading function,
   // bringing the user to the current page
   // set in the global state.
-  finishLoading = (): void => {
+  public finishLoading = (): void => {
     this.appState.setLoading(false)
 
     if (
       this.appState.loadingMinTimeReached &&
       this.appState.pageSwitchMinTimeReached
     ) {
-      this._handleLoadCompletion()
+      this.handleLoadCompletion()
     }
   }
 
   /**
-   * Continually syncs the session with the server (Once a second or longer if latent). Storing updated session data in the app state. Calling this a second time will immediately sync the session, cancelling any current sync, restarting the sync cycle.
-   * @param initialCallback A callback made when the session is first synced. Every subsequent sync will not use this callback.
+   * Fetches the current session and stores the result in the global state variable "session", returning a promise for the session as well.
+   * @return {Promise<TMetisSession>} The promise of the session.
    */
-  syncSession = (
-    initialCallback: (session: IMetisSession) => void = () => {},
-  ): void => {
-    let initialCall: boolean = true
-
-    // Used internally to track the when
-    // the initial call is made.
-    let sync = (sessionSyncID: string) => {
-      // If the session sync ID has changed,
-      // abort.
-      if (sessionSyncID !== this.sessionSyncID) {
-        return
+  public syncSession = async (): Promise<TMetisSession> => {
+    return new Promise<TMetisSession>(async (resolve, reject) => {
+      try {
+        let session: TMetisSession = await User.fetchSession()
+        this.appState.setSession(session)
+        resolve(session)
+      } catch (error: any) {
+        this.handleServerError('Failed to sync session.')
+        reject(error)
       }
+    })
+  }
 
-      // Create a timestamp for before
-      // the request.
-      let preRequestTimestamp: number = Date.now()
-
-      // Fetch the current session from the server.
-      User.fetchSession()
-        .then((session: IMetisSession) => {
-          // Save the session in the state.
-          this.appState.setSession(session)
-
-          // If this is the initial call to this
-          // function, then call the initial
-          // callback.
-          if (initialCall) {
-            initialCallback(session)
-            initialCall = false
-          }
-          // Determine the time until the next
-          // request.
-          let postRequestTimestamp = Date.now()
-          let timeElapsed = postRequestTimestamp - preRequestTimestamp
-          let timeUntilNextRequest = 1000 - timeElapsed
-
-          // Set a timeout to make the next
-          // request. If enough time has elapsed,
-          // this will be done immediately.
-          window.setTimeout(() => sync(sessionSyncID), timeUntilNextRequest)
-        })
-        .catch((error: any) => {
-          console.error('Failed to sync session.')
-          console.error(error)
-          this.notify('Failed to sync session.')
-        })
-    }
-
-    // Generate a new session sync ID
-    // and call the sync function.
-    this.sessionSyncID = generateHash()
-    sync(this.sessionSyncID)
+  /**
+   * Establish a web socket connection with the server. The new server connection will be stored in the global state variable "server".
+   * @returns {Promise<ServerConnection>} The promise of the server connection.
+   */
+  public connectToServer = async (): Promise<ServerConnection> => {
+    return new Promise<ServerConnection>(async (resolve, reject) => {
+      let server: ServerConnection = new ServerConnection({
+        on: {
+          open: () => {
+            console.log('Server connection opened.')
+          },
+          close: () => {
+            console.log('Server connection closed.')
+          },
+          error: ({ error }) => {
+            console.log(error)
+          },
+        },
+      })
+      this.appState.setServer(server)
+      resolve(server)
+    })
   }
 
   // This will navigate the user to the
   // server error page, displaying the
   // given message.
-  handleServerError = (errorMessage: string): void => {
+  public handleServerError = (errorMessage: string): void => {
     this.appState.setErrorMessage(errorMessage)
   }
 
   // This can be called to the notify
   // the user of something.
-  notify = (message: string, options: INotifyOptions = {}): Notification => {
+  public notify = (
+    message: string,
+    options: INotifyOptions = {},
+  ): Notification => {
     let onLoadingPage: boolean =
       this.appState.loading ||
       !this.appState.loadingMinTimeReached ||
@@ -329,7 +313,7 @@ export class AppActions {
   // must be called by the handleConfirmation
   // callback function to make the confirm
   // box disappear.
-  confirm = (
+  public confirm = (
     message: string,
     handleConfirmation: (concludeAction: () => void, entry: string) => void,
     options: IConfirmOptions = {},
@@ -388,7 +372,7 @@ export class AppActions {
 
   // This will pop up a prompt box
   // to inform the user of a something.
-  prompt = (message: string, options: IPromptOptions = {}): void => {
+  public prompt = (message: string, options: IPromptOptions = {}): void => {
     let prompt: IPrompt = {
       active: true,
       promptMessage: message,
@@ -401,14 +385,27 @@ export class AppActions {
     this.appState.setPrompt(prompt)
   }
 
-  // This will logout the current user from
-  // the session.
-  logout = (authPageProps: IAuthPageSpecific) => {
+  /**
+   * This will logout the current user from the session, closing the connection with the server as well. Afterwards, the user will be navigated to the auth page.
+   * @param {IAuthPageSpecific} authPageProps The props to pass to the auth page.
+   */
+  public logout = (authPageProps: IAuthPageSpecific) => {
+    // Notify the user of logout.
     this.beginLoading('Signing out...')
 
+    // If connected to the server via web
+    // socket, disconnect now.
+    if (this.appState.server !== null) {
+      this.appState.server.disconnect()
+      this.appState.setServer(null)
+    }
+
+    // Make request to logout.
     usersModule.logout(
       () => {
-        this.appState.setSession({})
+        // Clear session and navigate to
+        // the auth page.
+        this.appState.setSession(null)
         this.finishLoading()
         this.goToPage('AuthPage', authPageProps)
       },
@@ -424,7 +421,8 @@ export class AppActions {
 // throught the application.
 export default class AppState implements IAppStateValues, IAppStateValues {
   forcedUpdateCounter: number
-  session: IMetisSession
+  server: ServerConnection | null
+  session: TMetisSession
   currentPagePath: string
   currentPageProps: AnyObject
   appMountHandled: boolean
@@ -442,7 +440,8 @@ export default class AppState implements IAppStateValues, IAppStateValues {
   missionNodeColors: Array<string>
 
   setForcedUpdateCounter: (forcedUpdateCounter: number) => void
-  setSession: (session: IMetisSession) => void
+  setServer: (server: ServerConnection | null) => void
+  setSession: (session: TMetisSession) => void
   setCurrentPagePath: (currentPagePath: string) => void
   setCurrentPageProps: (currentPageProps: AnyObject) => void
   setAppMountHandled: (appMountHandled: boolean) => void
@@ -462,7 +461,8 @@ export default class AppState implements IAppStateValues, IAppStateValues {
   static get defaultAppStateValues(): IAppStateValues {
     return {
       forcedUpdateCounter: 0,
-      session: {},
+      server: null,
+      session: null,
       currentPagePath: '',
       currentPageProps: {},
       appMountHandled: false,
@@ -485,6 +485,7 @@ export default class AppState implements IAppStateValues, IAppStateValues {
     return {
       setForcedUpdateCounter: () => {},
       setTooltipDescription: () => {},
+      setServer: (): void => {},
       setSession: (): void => {},
       setCurrentPagePath: (): void => {},
       setCurrentPageProps: (): void => {},
@@ -508,6 +509,7 @@ export default class AppState implements IAppStateValues, IAppStateValues {
     appStateSetters: IAppStateSetters,
   ) {
     this.forcedUpdateCounter = appStateValues.forcedUpdateCounter
+    this.server = appStateValues.server
     this.session = appStateValues.session
     this.currentPagePath = appStateValues.currentPagePath
     this.currentPageProps = appStateValues.currentPageProps
@@ -526,6 +528,7 @@ export default class AppState implements IAppStateValues, IAppStateValues {
     this.missionNodeColors = appStateValues.missionNodeColors
 
     this.setForcedUpdateCounter = appStateSetters.setForcedUpdateCounter
+    this.setServer = appStateSetters.setServer
     this.setSession = appStateSetters.setSession
     this.setCurrentPagePath = appStateSetters.setCurrentPagePath
     this.setCurrentPageProps = appStateSetters.setCurrentPageProps
@@ -565,7 +568,8 @@ export default class AppState implements IAppStateValues, IAppStateValues {
       const [forcedUpdateCounter, setForcedUpdateCounter] = useStore<number>(
         'forcedUpdateCounter',
       )
-      const [session, setSession] = useStore<IMetisSession>('session')
+      const [server, setServer] = useStore<ServerConnection | null>('server')
+      const [session, setSession] = useStore<TMetisSession>('session')
       const [currentPagePath, setCurrentPagePath] =
         useStore<string>('currentPagePath')
       const [currentPageProps, setCurrentPageProps] =
@@ -600,6 +604,7 @@ export default class AppState implements IAppStateValues, IAppStateValues {
 
       let appStateValues: IAppStateValues = {
         forcedUpdateCounter,
+        server,
         session,
         currentPagePath,
         currentPageProps,
@@ -619,6 +624,7 @@ export default class AppState implements IAppStateValues, IAppStateValues {
       }
       let appStateSetters: IAppStateSetters = {
         setForcedUpdateCounter,
+        setServer,
         setSession,
         setCurrentPagePath,
         setCurrentPageProps,

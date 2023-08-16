@@ -4,7 +4,7 @@ import './MissionSelectionRow.scss'
 import { AppActions } from '../../AppState'
 import MissionModificationPanel from '../user-controls/MissionModificationPanel'
 import { useStore } from 'react-context-hook'
-import { IMetisSession, User, userRoles } from '../../../modules/users'
+import { TMetisSession, User, userRoles } from '../../../modules/users'
 import { Game } from '../../../modules/games'
 import { AxiosError } from 'axios'
 
@@ -16,7 +16,7 @@ export default function MissionSelectionRow(props: {
   setMountHandled: (mountHandled: boolean) => void
 }): JSX.Element | null {
   /* -- GLOBAL STATE -- */
-  const [session] = useStore<IMetisSession>('session')
+  const [session] = useStore<TMetisSession>('session')
 
   /* -- COMPONENT VARIABLES -- */
   let mission: Mission = props.mission
@@ -31,13 +31,19 @@ export default function MissionSelectionRow(props: {
   const selectMission = () => {
     let userRoleStringValues = Object.values(userRoles)
 
-    if (session.user && userRoleStringValues.includes(session.user.role)) {
+    if (userRoleStringValues.includes(session?.user.role)) {
       appActions.beginLoading('Launching mission...')
 
       Game.launch(mission).then(
         (game: Game) => {
-          session.game = game
-          appActions.goToPage('GamePage', {})
+          // Update the session with inGame as
+          // true.
+          if (session !== null) {
+            session.inGame = true
+          }
+          // Go to the game page with the new
+          // game.
+          appActions.goToPage('GamePage', { game })
         },
         (error: AxiosError) => {
           if (error.response?.status === 401) {

@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import './AuthPage.scss'
-import usersModule, { IMetisSession, User } from '../../modules/users'
+import usersModule, { TMetisSession, User } from '../../modules/users'
 import { AxiosError } from 'axios'
 import { IPage } from '../App'
 import { AnyObject } from '../../modules/toolbox/objects'
@@ -71,7 +71,7 @@ export default function AuthPage(props: IAuthPage): JSX.Element | null {
   }
 
   // This is called when the form is submitted.
-  const handleSubmit = (event: React.FormEvent): void => {
+  const handleSubmit = async (event: React.FormEvent): Promise<void> => {
     event.preventDefault()
 
     let elm_userIDField: HTMLInputElement | null = userIDField.current
@@ -95,32 +95,28 @@ export default function AuthPage(props: IAuthPage): JSX.Element | null {
           appActions.finishLoading()
         }
 
-        usersModule.login(
-          userID,
-          password,
-          (correct: boolean, session: IMetisSession) => {
-            if (correct && session.user !== undefined) {
-              setIsSubmitting(false)
-              appActions.finishLoading()
-              appState.setSession(session)
-              appActions.goToPage(
-                props.returningPagePath,
-                props.returningPageProps,
-              )
-            } else {
-              handleLoginError('Incorrect username or password.')
-            }
-          },
-          (error: AxiosError) => {
-            if (error.response?.status === 400) {
-              handleLoginError('400 Bad request.')
-            } else {
-              handleLoginError(
-                'Something went wrong on our end. Please try again later.',
-              )
-            }
-          },
-        )
+        // Login.
+        try {
+          let { correct, session } = await User.login(userID, password)
+
+          // If correct and a session was returned,
+          // then login was successful.
+          if (correct && session !== null) {
+            setIsSubmitting(false)
+            appState.setSession(session)
+            appActions.connectToServer()
+            appActions.goToPage(
+              props.returningPagePath,
+              props.returningPageProps,
+            )
+          } else {
+            handleLoginError('Incorrect username or password.')
+          }
+        } catch (error: any) {
+          handleLoginError(
+            'Something went wrong on our end. Please try again later.',
+          )
+        }
       } else {
         setErrorMessage('Please fill all fields.')
       }

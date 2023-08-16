@@ -2,6 +2,7 @@ import express from 'express'
 import config from './config'
 import { expressLogger } from './modules/logging'
 
+// Initialize app.
 const app = express()
 
 // Runs the express server.
@@ -27,8 +28,7 @@ export function startServer(callback: () => void = () => {}): void {
         response.status(404)
         response.render('error/v-not-found')
       })
-
-      app.use('*', indexRoute)
+      app.use('/', indexRoute)
 
       // page not found handling
       app.use((request: any, response: any) => {

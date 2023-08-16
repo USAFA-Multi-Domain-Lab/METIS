@@ -1,6 +1,8 @@
 import { v4 as generateHash } from 'uuid'
-import { IMetisSessionJSON, User } from '../src/modules/users'
+import { TMetisSessionJSON, User } from '../src/modules/users'
 import { Game } from '../src/modules/games'
+import { WebSocket } from 'ws'
+import ClientConnection from '../modules/client-connect'
 
 /**
  * Express sessions are limited in what they can store. This class expands the functionality of sessions in METIS.
@@ -16,6 +18,30 @@ export default class MetisSession {
    */
   public get sessionID(): string {
     return this._sessionID
+  }
+
+  /**
+   * The client connection for this session, if any.
+   */
+  private _client: ClientConnection | null
+
+  /**
+   * The client connection for this session, if any.
+   */
+  public get client(): ClientConnection | null {
+    return this._client
+  }
+
+  /**
+   * The client connection for this session, if any.
+   */
+  public set client(client: ClientConnection | null) {
+    if (client !== null && client.session.sessionID !== this.sessionID) {
+      throw new Error(
+        'Cannot set client to a client connection with a different session ID.',
+      )
+    }
+    this._client = client
   }
 
   /**
@@ -42,9 +68,33 @@ export default class MetisSession {
     return this._game
   }
 
+  /**
+   * Whether the session has been destroyed.
+   */
+  private _destroyed: boolean
+
+  /**
+   * Whether the session has been destroyed.
+   */
+  public get destroyed(): boolean {
+    return this._destroyed
+  }
+
+  /**
+   * Whether the session has an associated connection.
+   */
+  public get hasClientConnection(): boolean {
+    return this.client !== null
+  }
+
+  /**
+   * @param {User} user The user associated with the session.
+   */
   public constructor(user: User) {
     this._sessionID = generateHash()
     this._user = user
+    this._client = null
+    this._destroyed = false
     MetisSession.registry.set(this.sessionID, this)
   }
 
@@ -65,16 +115,17 @@ export default class MetisSession {
    */
   public destroy(): void {
     MetisSession.registry.delete(this.sessionID)
+    this._destroyed = true
   }
 
   /**
    * Converts the session object to JSON to send to the client.
-   * @returns {IMetisSessionJSON} The JSON representation of the session object.
+   * @returns {TMetisSessionJSON} The JSON representation of the session object.
    */
-  public toJSON(): IMetisSessionJSON {
+  public toJSON(): TMetisSessionJSON {
     return {
       user: this.user.toJSON(),
-      game: this.game ? this.game.toJSON() : undefined,
+      inGame: this.game !== undefined,
     }
   }
 
@@ -101,8 +152,9 @@ export default class MetisSession {
    * Destroys the session associated with the given session ID.
    */
   public static destroy(sessionID: string | undefined): void {
-    if (sessionID !== undefined) {
-      MetisSession.registry.delete(sessionID)
+    let session: MetisSession | undefined = MetisSession.get(sessionID)
+    if (session !== undefined) {
+      session.destroy()
     }
   }
 }

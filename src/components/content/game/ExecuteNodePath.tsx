@@ -10,7 +10,7 @@ import { INotifyOptions } from '../../AppState'
 import { IConsoleOutput } from './ConsoleOutput'
 import OutputPanel from './OutputPanel'
 import { useStore } from 'react-context-hook'
-import { IMetisSession, User, permittedRoles } from '../../../modules/users'
+import { TMetisSession, User, permittedRoles } from '../../../modules/users'
 
 /* -- INTERFACE(S) -- */
 
@@ -42,7 +42,7 @@ function Buttons(props: {
   let handleCloseRequest = props.handleCloseRequest
 
   /* -- GLOBAL STATE -- */
-  const [session] = useStore<IMetisSession>('session')
+  const [session] = useStore<TMetisSession>('session')
 
   /* -- COMPONENT FUNCTIONS -- */
   // Closes the execution prompt window.
@@ -82,7 +82,7 @@ function Buttons(props: {
     additionalActionButtonClassName += ' Disabled'
   }
 
-  if (session.user && permittedRoles.includes(session.user.role)) {
+  if (permittedRoles.includes(session?.user.role ?? 'NOT_LOGGED_IN')) {
     useAssets = true
   }
 
