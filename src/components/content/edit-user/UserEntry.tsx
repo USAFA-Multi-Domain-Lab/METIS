@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useStore } from 'react-context-hook'
 import { fullAccessRoles, User, userRoles } from '../../../modules/users'
 import { Detail, DetailDropDown } from '../form/Form'
@@ -39,12 +39,26 @@ export default function UserEntry(props: {
   const [generalErrorMessage, setGeneralErrorMessage] = useState<string>(
     'At least one character is required here.',
   )
+  const [usernameErrorMessage, setUsernameErrorMessage] = useState<string>(
+    'At least one character is required here.',
+  )
   const [password1ErrorMessage, setPassword1ErrorMessage] = useState<string>(
     'At least one character is required here.',
   )
   const [password2ErrorMessage, setPassword2ErrorMessage] = useState<string>(
     'At least one character is required here.',
   )
+  const [usernameClassName, setUsernameClassName] = useState<string>('')
+  const [createFirstNameClassName, setCreateFirstNameClassName] =
+    useState<string>('')
+  const [createLastNameClassName, setCreateLastNameClassName] =
+    useState<string>('')
+  const [password1ClassName, setPassword1ClassName] = useState<string>('')
+  const [password2ClassName, setPassword2ClassName] = useState<string>('')
+  const [updateFirstNameClassName, setUpdateFirstNameClassName] =
+    useState<string>('')
+  const [updateLastNameClassName, setUpdateLastNameClassName] =
+    useState<string>('')
 
   /* -- COMPONENT FUNCTIONS -- */
 
@@ -75,22 +89,40 @@ export default function UserEntry(props: {
           label='Username'
           initialValue={user.userID}
           deliverValue={(userID: string) => {
-            if (userID !== '') {
+            let userIDRegex: RegExp = new RegExp(/^([a-zA-Z0-9-_.]{5,25})$/)
+            let userIDIsValid: boolean = userIDRegex.test(userID)
+
+            if (userID !== '' && userIDIsValid) {
               user.userID = userID
               removeUserEmptyString('userID')
               setDeliverUsernameError(false)
+              setUsernameClassName('Correct')
               if (user.canSave) {
                 handleChange()
               } else {
                 forceUpdate()
               }
-            } else {
+            }
+
+            if (userID === '' && !userIDIsValid) {
               setDeliverUsernameError(true)
               setUserEmptyStringArray([...userEmptyStringArray, `field=userID`])
+              setUsernameErrorMessage(
+                'At least one character is required here.',
+              )
+            }
+
+            if (userID !== '' && !userIDIsValid) {
+              setDeliverUsernameError(true)
+              setUsernameErrorMessage(
+                'Usernames must be between 5 and 25 characters long and can only contain letters, numbers, and the following special characters: - _ .',
+              )
             }
           }}
           deliverError={deliverUsernameError}
-          deliverErrorMessage={generalErrorMessage}
+          deliverErrorMessage={usernameErrorMessage}
+          uniqueLabelClassName={usernameClassName}
+          uniqueInputClassName={usernameClassName}
         />
         <DetailDropDown<string>
           label='Role'
@@ -122,6 +154,7 @@ export default function UserEntry(props: {
               user.firstName = firstName
               removeUserEmptyString('firstName')
               setDeliverFirstNameError(false)
+              setCreateFirstNameClassName('Correct')
               if (user.canSave) {
                 handleChange()
               } else {
@@ -137,6 +170,8 @@ export default function UserEntry(props: {
           }}
           deliverError={deliverFirstNameError}
           deliverErrorMessage={generalErrorMessage}
+          uniqueLabelClassName={createFirstNameClassName}
+          uniqueInputClassName={createFirstNameClassName}
         />
         <Detail
           label='Last Name'
@@ -146,6 +181,7 @@ export default function UserEntry(props: {
               user.lastName = lastName
               removeUserEmptyString('lastName')
               setDeliverLastNameError(false)
+              setCreateLastNameClassName('Correct')
               if (user.canSave) {
                 handleChange()
               } else {
@@ -161,6 +197,8 @@ export default function UserEntry(props: {
           }}
           deliverError={deliverLastNameError}
           deliverErrorMessage={generalErrorMessage}
+          uniqueLabelClassName={createLastNameClassName}
+          uniqueInputClassName={createLastNameClassName}
         />
         <Detail
           label='Password'
@@ -173,6 +211,7 @@ export default function UserEntry(props: {
               user.password1 = password
               removeUserEmptyString('password1')
               setDeliverPassword1Error(false)
+              setPassword1ClassName('Correct')
               if (user.canSave) {
                 handleChange()
               } else {
@@ -200,6 +239,8 @@ export default function UserEntry(props: {
           }}
           deliverError={deliverPassword1Error}
           deliverErrorMessage={password1ErrorMessage}
+          uniqueLabelClassName={password1ClassName}
+          uniqueInputClassName={password1ClassName}
         />
 
         <Detail
@@ -213,6 +254,7 @@ export default function UserEntry(props: {
               user.password2 = password
               removeUserEmptyString('password2')
               setDeliverPassword2Error(false)
+              setPassword2ClassName('Correct')
               if (user.canSave) {
                 handleChange()
               } else {
@@ -245,6 +287,8 @@ export default function UserEntry(props: {
           }}
           deliverError={deliverPassword2Error}
           deliverErrorMessage={password2ErrorMessage}
+          uniqueLabelClassName={password2ClassName}
+          uniqueInputClassName={password2ClassName}
         />
       </div>
     )
@@ -267,6 +311,7 @@ export default function UserEntry(props: {
               user.firstName = firstName
               removeUserEmptyString('firstName')
               setDeliverFirstNameError(false)
+              setUpdateFirstNameClassName('Correct')
               handleChange()
             } else {
               setDeliverFirstNameError(true)
@@ -278,6 +323,8 @@ export default function UserEntry(props: {
           }}
           deliverError={deliverFirstNameError}
           deliverErrorMessage={generalErrorMessage}
+          uniqueLabelClassName={updateFirstNameClassName}
+          uniqueInputClassName={updateFirstNameClassName}
         />
         <Detail
           label='Last Name'
@@ -287,6 +334,7 @@ export default function UserEntry(props: {
               user.lastName = lastName
               removeUserEmptyString('lastName')
               setDeliverLastNameError(false)
+              setUpdateLastNameClassName('Correct')
               handleChange()
             } else {
               setDeliverLastNameError(true)
@@ -298,6 +346,8 @@ export default function UserEntry(props: {
           }}
           deliverError={deliverLastNameError}
           deliverErrorMessage={generalErrorMessage}
+          uniqueLabelClassName={updateLastNameClassName}
+          uniqueInputClassName={updateLastNameClassName}
         />
       </div>
     )

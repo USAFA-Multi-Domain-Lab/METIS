@@ -91,7 +91,6 @@
         .BoxTop {
           display: grid;
           grid-template-columns: auto auto;
-          justify-content: end;
           box-sizing: border-box;
           position: sticky;
           top: 0;
@@ -111,14 +110,11 @@
             }
           }
 
-          &.IsError {
-            justify-content: space-between;
-          }
-
           .ErrorMessage {
             margin: 10px 0 0;
             font-size: 0.8em;
             color: $color-error-alt;
+            width: 97%;
           }
         }
       }

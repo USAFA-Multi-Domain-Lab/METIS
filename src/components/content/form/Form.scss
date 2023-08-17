@@ -20,6 +20,10 @@
     width: 100%;
     font-size: 12.5px;
 
+    &.Correct {
+      color: $color-correct;
+    }
+
     &.Error {
       color: $color-error-alt;
     }
@@ -39,6 +43,12 @@
     box-shadow: $box-shadow-alt6;
     color: $color-accent-light;
     font-size: 14px;
+
+    &.Correct {
+      border-top: 2px solid $color-correct;
+      border-bottom: 2px solid $color-correct;
+      color: $color-correct;
+    }
 
     &.Error {
       border-top: 2px solid $color-error-alt;

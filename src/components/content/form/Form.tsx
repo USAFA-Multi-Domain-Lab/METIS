@@ -15,6 +15,8 @@ interface IDetail {
   deliverValue: (value: string) => void
   deliverError?: boolean
   deliverErrorMessage?: string
+  uniqueLabelClassName?: string
+  uniqueInputClassName?: string
 }
 
 interface IDetail_S {}
@@ -38,8 +40,18 @@ export class Detail extends React.Component<IDetail, IDetail_S> {
   render(): JSX.Element | null {
     let label: string = this.props.label
     let deliverValue = this.props.deliverValue
-    let displayError: boolean = this.props.deliverError || false
-    let errorMessage: string = this.props.deliverErrorMessage || ''
+    let displayError: boolean = this.props.deliverError
+      ? this.props.deliverError
+      : false
+    let errorMessage: string = this.props.deliverErrorMessage
+      ? this.props.deliverErrorMessage
+      : ''
+    let uniqueLabelClassName: string = this.props.uniqueLabelClassName
+      ? this.props.uniqueLabelClassName
+      : ''
+    let uniqueInputClassName: string = this.props.uniqueInputClassName
+      ? this.props.uniqueInputClassName
+      : ''
     let fieldErrorClassName: string = 'FieldErrorMessage hide'
     let labelClassName: string = 'Label'
     let fieldClassName: string = 'Field FieldBox'
@@ -52,9 +64,11 @@ export class Detail extends React.Component<IDetail, IDetail_S> {
 
     return (
       <div className='Detail'>
-        <div className={labelClassName}>{`${label}:`}</div>
+        <div
+          className={labelClassName + ' ' + uniqueLabelClassName}
+        >{`${label}:`}</div>
         <input
-          className={fieldClassName}
+          className={fieldClassName + ' ' + uniqueInputClassName}
           type='text'
           ref={this.field}
           onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
@@ -177,6 +191,8 @@ export function DetailBox(props: {
   deliverError?: boolean
   deliverErrorMessage?: string
   disabled?: boolean
+  uniqueLabelClassName?: string
+  uniqueInputClassName?: string
   deliverValue: (value: string) => void
 }): JSX.Element | null {
   const fieldOffsetHeight: number = 3
@@ -186,8 +202,16 @@ export function DetailBox(props: {
 
   let label: string = props.label
   let initialValue: string = props.initialValue
-  let displayError: boolean = props.deliverError || false
-  let errorMessage: string = props.deliverErrorMessage || ''
+  let displayError: boolean = props.deliverError ? props.deliverError : false
+  let errorMessage: string = props.deliverErrorMessage
+    ? props.deliverErrorMessage
+    : ''
+  let uniqueLabelClassName: string = props.uniqueLabelClassName
+    ? props.uniqueLabelClassName
+    : ''
+  let uniqueInputClassName: string = props.uniqueInputClassName
+    ? props.uniqueInputClassName
+    : ''
   let disabled: boolean = props.disabled === true
   let deliverValue = props.deliverValue
   let className: string = 'Detail DetailBox'
@@ -245,9 +269,11 @@ export function DetailBox(props: {
 
   return (
     <div className={className}>
-      <div className={labelClassName}>{`${label}:`}</div>
+      <div
+        className={labelClassName + ' ' + uniqueLabelClassName}
+      >{`${label}:`}</div>
       <textarea
-        className={fieldClassName}
+        className={fieldClassName + ' ' + uniqueInputClassName}
         ref={field}
         onChange={(event: React.ChangeEvent<HTMLTextAreaElement>) => {
           resizeField()
