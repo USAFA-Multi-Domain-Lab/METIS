@@ -1,8 +1,12 @@
 # changelog
 
-# version-1.3.2 | 7-25-2023
+# version-1.3.3 | 7-25-2023
 
 - Integrated with ASCOT
+
+# version-1.3.2 | 7-7-2023
+
+- Updated default missions that are generated when METIS is first set up
 
 # version-1.3.1 | 7-3-2023
 
