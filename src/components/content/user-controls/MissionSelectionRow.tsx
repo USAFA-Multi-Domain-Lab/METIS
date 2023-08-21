@@ -13,7 +13,7 @@ import { AxiosError } from 'axios'
 export default function MissionSelectionRow(props: {
   mission: Mission
   appActions: AppActions
-  setMountHandled: (mountHandled: boolean) => void
+  remountPage: () => void
 }): JSX.Element | null {
   /* -- GLOBAL STATE -- */
   const [session] = useStore<TMetisSession>('session')
@@ -21,7 +21,7 @@ export default function MissionSelectionRow(props: {
   /* -- COMPONENT VARIABLES -- */
   let mission: Mission = props.mission
   let appActions: AppActions = props.appActions
-  let setMountHandled = props.setMountHandled
+  let setMountHandled = props.remountPage
 
   /* -- COMPONENT FUNCTIONS -- */
 
@@ -52,8 +52,8 @@ export default function MissionSelectionRow(props: {
             )
           } else {
             appActions.finishLoading()
-            appActions.handleServerError('Failed to launch mission.')
-            setMountHandled(true)
+            appActions.handleError('Failed to launch mission.')
+            props.remountPage()
           }
         },
       )
@@ -69,8 +69,8 @@ export default function MissionSelectionRow(props: {
       <MissionModificationPanel
         mission={mission}
         appActions={appActions}
-        handleSuccessfulCopy={() => setMountHandled(false)}
-        handleSuccessfulDeletion={() => setMountHandled(false)}
+        handleSuccessfulCopy={props.remountPage}
+        handleSuccessfulDeletion={props.remountPage}
         handleSuccessfulToggleLive={() => {}}
       />
     </div>

@@ -114,7 +114,7 @@ export default function MissionFormPage(
           },
           () => {
             appActions.finishLoading()
-            appActions.handleServerError('Failed to load mission.')
+            appActions.handleError('Failed to load mission.')
           },
           { openAllNodes: true },
         )

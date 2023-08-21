@@ -1,37 +1,13 @@
-/**
- * An error thrown in the ServerConnection class.
- */
-export class ServerConnectionError {}
+import {
+  IServerDataTypes,
+  TServerData,
+  TServerMethod,
+} from 'src/modules/connect/data'
 
 /**
- * Represents the types of data sent from the server to the client over a web socket.
+ * Represents a handler in a server connection for a client-emitted event.
  */
-export interface IServerDataTypes {
-  open: {
-    method: 'open'
-  }
-  close: {
-    method: 'close'
-  }
-  error: {
-    method: 'error'
-    error: ServerConnectionError
-  }
-  join: {
-    method: 'join'
-    gameID: string
-  }
-}
-
-/**
- * Represents a type of event that occurs on the server that is sent to the client over a web socket.
- */
-export type TServerMethod = keyof IServerDataTypes
-
-export type TServerData<TMethod extends TServerMethod> =
-  IServerDataTypes[TMethod]
-
-export type TClientHandler<TMethod extends TServerMethod> = (
+export type TServerHandler<TMethod extends TServerMethod> = (
   data: TServerData<TMethod>,
 ) => void
 
@@ -39,9 +15,17 @@ export type TClientHandler<TMethod extends TServerMethod> = (
  * Represents options that can be passed when constructing a new server connection.
  */
 export interface IServerConnectionOptions {
+  /**
+   * Listeners for handling various events.
+   */
   on?: {
-    [T in TServerMethod]?: TClientHandler<T>
+    [T in TServerMethod]?: TServerHandler<T>
   }
+  /**
+   * Whether to disconnect existing connections in order to establish this connection. Defaults to false.
+   * @WIP
+   */
+  disconnectExisting?: boolean
 }
 
 /**
@@ -62,7 +46,16 @@ export class ServerConnection {
    * @param {IServerConnectionOptions} options Options for the server connection.
    */
   public constructor(options: IServerConnectionOptions = {}) {
-    this.socket = new WebSocket(ServerConnection.SOCKET_URL)
+    let url: string = ServerConnection.SOCKET_URL
+
+    // Add disconnectExisting query if
+    // requested.
+    if (options.disconnectExisting) {
+      url += '?disconnectExisting=true'
+    }
+
+    // Create a new web socket connection.
+    this.socket = new WebSocket(url)
 
     // Add event listeners passed in
     // options.
@@ -76,13 +69,13 @@ export class ServerConnection {
   /**
    * Adds a listener for a specific server event method.
    * @param {TServerMethod} method The event method that will be handled. The handler will only be called if the method matches what is sent by the server in a web socket message, except for 'open', 'close', and 'error' events, which are called upon their respective web socket events.
-   * @param {TClientHandler<TServerEvent>} handler The handler that will be called upon the event being triggered.
+   * @param {TServerHandler<TServerEvent>} handler The handler that will be called upon the event being triggered.
    * @returns {ServerConnection} The server connection instance, allowing the chaining of class method calls.
    */
   public addEventListener<
     TMethod extends TServerMethod,
     TData extends IServerDataTypes[TMethod],
-  >(method: TMethod, handler: TClientHandler<TMethod>): ServerConnection {
+  >(method: TMethod, handler: TServerHandler<TMethod>): ServerConnection {
     // Add a the correct event listener to
     // socket based on the method passed.
     switch (method) {

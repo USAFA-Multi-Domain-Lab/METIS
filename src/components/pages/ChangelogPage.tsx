@@ -37,7 +37,7 @@ export default function IChangelogPage(
           appActions.finishLoading()
         },
         (error: Error) => {
-          appActions.handleServerError('Failed to retrieve changelog.')
+          appActions.handleError('Failed to retrieve changelog.')
           appActions.finishLoading()
         },
       )

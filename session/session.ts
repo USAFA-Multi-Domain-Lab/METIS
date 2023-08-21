@@ -1,23 +1,21 @@
-import { v4 as generateHash } from 'uuid'
 import { TMetisSessionJSON, User } from '../src/modules/users'
 import { Game } from '../src/modules/games'
-import { WebSocket } from 'ws'
-import ClientConnection from '../modules/client-connect'
+import ClientConnection from '../src/modules/connect/client-connect'
 
 /**
  * Express sessions are limited in what they can store. This class expands the functionality of sessions in METIS.
  */
 export default class MetisSession {
   /**
-   * The ID of the session. This is used to retrieve the Session object from the registry.
+   * The ID of the user for the given session. This is used to retrieve the Session object from the registry.
    */
-  private _sessionID: string
+  private _userID: string
 
   /**
-   * The ID of the session. This is used to retrieve the Session object from the registry.
+   * The ID of the user for the given session. This is used to retrieve the Session object from the registry.
    */
-  public get sessionID(): string {
-    return this._sessionID
+  public get userID(): string {
+    return this._userID
   }
 
   /**
@@ -36,9 +34,9 @@ export default class MetisSession {
    * The client connection for this session, if any.
    */
   public set client(client: ClientConnection | null) {
-    if (client !== null && client.session.sessionID !== this.sessionID) {
+    if (client !== null && client.session.userID !== this.userID) {
       throw new Error(
-        'Cannot set client to a client connection with a different session ID.',
+        'Cannot set client to a client connection with a different user ID.',
       )
     }
     this._client = client
@@ -91,11 +89,19 @@ export default class MetisSession {
    * @param {User} user The user associated with the session.
    */
   public constructor(user: User) {
-    this._sessionID = generateHash()
+    this._userID = user.userID
     this._user = user
     this._client = null
     this._destroyed = false
-    MetisSession.registry.set(this.sessionID, this)
+
+    // Throw an error is a session already
+    // exists for the given user.
+    if (MetisSession.registry.has(this.userID)) {
+      throw new Error('A session already exists for the given user.')
+    }
+
+    // Store the session in the registry.
+    MetisSession.registry.set(this.userID, this)
   }
 
   public async joinGame(game: Game): Promise<void> {
@@ -114,7 +120,7 @@ export default class MetisSession {
    * Destroys the session.
    */
   public destroy(): void {
-    MetisSession.registry.delete(this.sessionID)
+    MetisSession.registry.delete(this.userID)
     this._destroyed = true
   }
 
@@ -138,21 +144,21 @@ export default class MetisSession {
   >()
 
   /**
-   * @returns the session associated with the given session ID.
+   * @returns the session associated with the given user ID.
    */
-  public static get(sessionID: string | undefined): MetisSession | undefined {
-    if (sessionID === undefined) {
+  public static get(userID: string | undefined): MetisSession | undefined {
+    if (userID === undefined) {
       return undefined
     } else {
-      return MetisSession.registry.get(sessionID)
+      return MetisSession.registry.get(userID)
     }
   }
 
   /**
-   * Destroys the session associated with the given session ID.
+   * Destroys the session associated with the given user ID.
    */
-  public static destroy(sessionID: string | undefined): void {
-    let session: MetisSession | undefined = MetisSession.get(sessionID)
+  public static destroy(userID: string | undefined): void {
+    let session: MetisSession | undefined = MetisSession.get(userID)
     if (session !== undefined) {
       session.destroy()
     }

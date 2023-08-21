@@ -9,7 +9,7 @@ import {
   MissionNode,
   MissionNodeCreator,
 } from './mission-nodes'
-import { MissionNodeAction } from './mission-node-actions'
+import { MissionNodeAction } from 'src/modules/mission-node-actions'
 import { IConsoleOutput } from '../components/content/game/ConsoleOutput'
 import { IUserJSON } from './users'
 

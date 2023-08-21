@@ -12,11 +12,9 @@ import { sys } from 'typescript'
 import { expressLoggingHandler } from './modules/logging'
 const defaults = require('./defaults')
 
-/* -- express-session-definition -- */
-
 declare module 'express-session' {
   export interface SessionData {
-    sessionID: string
+    userID: string
   }
 }
 

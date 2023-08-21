@@ -13,6 +13,7 @@ import { ButtonText } from '../content/user-controls/ButtonText'
 import Notification from '../../modules/notifications'
 import Tooltip from '../content/communication/Tooltip'
 import { permittedRoles } from '../../modules/users'
+import { useMountHandler } from '../../modules/hooks'
 
 export interface IMissionSelectionPage extends IPage {}
 
@@ -30,7 +31,6 @@ export default function MissionSelectionPage(
 
   /* -- COMPONENT STATE -- */
 
-  const [mountHandled, setMountHandled] = useState<boolean>(false)
   const [missions, setMissions] = useState<Array<Mission>>([])
   const [displayedMissions, setDisplayedMissions] = useState<Array<Mission>>([])
   const [allMissionsFromSearch, setAllMissionsFromSearch] = useState<
@@ -43,14 +43,9 @@ export default function MissionSelectionPage(
 
   /* -- COMPONENT EFFECTS -- */
 
-  // Equivalent of componentDidMount.
-  useEffect(() => {
-    if (!mountHandled) {
-      const handleLoadCompletion = () => setMountHandled(true)
-
-      loadMissions(handleLoadCompletion, handleLoadCompletion)
-    }
-  }, [mountHandled])
+  const [mountHandled, remount] = useMountHandler((done) =>
+    loadMissions(done, done),
+  )
 
   // This will reset the mission list to what
   // it was when the page loaded initially.
@@ -102,7 +97,7 @@ export default function MissionSelectionPage(
         callback()
       },
       (error: Error) => {
-        appActions.handleServerError('Failed to retrieve mission.')
+        appActions.handleError('Failed to retrieve mission.')
         appActions.finishLoading()
         callbackError(error)
       },
@@ -173,7 +168,6 @@ export default function MissionSelectionPage(
               duration: null,
               buttons: [
                 {
-                  ...ButtonText.defaultProps,
                   text: 'View errors',
                   handleClick: () => {
                     let prompt: string = ''
@@ -576,7 +570,7 @@ export default function MissionSelectionPage(
         <MissionSelectionRow
           mission={mission}
           appActions={appActions}
-          setMountHandled={setMountHandled}
+          remountPage={remount}
           key={`MissionSelectionRow_${mission.missionID}`}
         />
       ),

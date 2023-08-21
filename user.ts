@@ -23,7 +23,7 @@ export const requireLogin = (
   },
 ): void => {
   let session: MetisSession | undefined = MetisSession.get(
-    request.session.sessionID,
+    request.session.userID,
   )
 
   if (
@@ -51,7 +51,7 @@ export const requireInGame = (
   next: NextFunction,
 ): void => {
   let session: MetisSession | undefined = MetisSession.get(
-    request.session.sessionID,
+    request.session.userID,
   )
 
   if (
@@ -77,7 +77,7 @@ export function hasPermittedRole(
   },
 ): boolean {
   let session: MetisSession | undefined = MetisSession.get(
-    request.session.sessionID,
+    request.session.userID,
   )
 
   return (

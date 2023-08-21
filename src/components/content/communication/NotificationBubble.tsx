@@ -2,12 +2,19 @@ import './NotificationBubble.scss'
 import Notification from '../../../modules/notifications'
 import Markdown, { MarkdownTheme } from '../general-layout/Markdown'
 import { ButtonText, IButtonText } from '../user-controls/ButtonText'
+import { useListComponent } from 'src/modules/hooks'
 
 // This will brand the app with the
 // logo.
 const NotificationBubble = (props: {
   notification: Notification
 }): JSX.Element => {
+  let Buttons = useListComponent(
+    ButtonText,
+    props.notification.buttons,
+    'componentKey',
+  )
+
   let notification: Notification = props.notification
   let containerClassName: string = 'NotificationBubble'
   let buttonsClassName: string = 'Buttons'
@@ -34,9 +41,7 @@ const NotificationBubble = (props: {
         x
       </div>
       <div className={buttonsClassName}>
-        {notification.buttons.map((button: IButtonText) => {
-          return <ButtonText {...button} />
-        })}
+        <Buttons />
       </div>
     </div>
   )

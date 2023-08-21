@@ -113,9 +113,16 @@ export default function AuthPage(props: IAuthPage): JSX.Element | null {
             handleLoginError('Incorrect username or password.')
           }
         } catch (error: any) {
-          handleLoginError(
-            'Something went wrong on our end. Please try again later.',
-          )
+          // Handles duplicate logins.
+          if (error.response?.status === 409) {
+            handleLoginError(
+              'Account is already logged in on another device or browser.',
+            )
+          } else {
+            handleLoginError(
+              'Something went wrong on our end. Please try again later.',
+            )
+          }
         }
       } else {
         setErrorMessage('Please fill all fields.')

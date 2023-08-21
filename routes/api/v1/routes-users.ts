@@ -14,7 +14,7 @@ router.get('/session/', (request, response) => {
   // Retrieve the session with the session
   // ID stored in the request.
   let session: MetisSession | undefined = MetisSession.get(
-    request.session.sessionID,
+    request.session.userID,
   )
 
   // If the session was not found, return
@@ -58,16 +58,22 @@ router.post('/login', (request, response, next) => {
               userData.role,
             )
 
-            // Create a new session object.
-            let session: MetisSession = new MetisSession(user)
+            try {
+              // Attempt to create a new session object.
+              let session: MetisSession = new MetisSession(user)
 
-            // Store the session ID in the express
-            // session.
-            request.session.sessionID = session.sessionID
+              // Store the session ID in the express
+              // session.
+              request.session.userID = session.userID
 
-            // Store the session data in the response
-            // json.
-            json.session = session.toJSON()
+              // Store the session data in the response
+              // json.
+              json.session = session.toJSON()
+            } catch (error) {
+              // Session is already created for the given
+              // user.
+              return response.sendStatus(409)
+            }
           }
           return response.json(json)
         }
@@ -83,7 +89,7 @@ router.post('/logout', (request, response, next) => {
   // If session exists.
   if (request.session) {
     // Destroy the METIS session.
-    MetisSession.destroy(request.session.sessionID)
+    MetisSession.destroy(request.session.userID)
 
     // Then destroy the Express session.
     request.session.destroy((error) => {

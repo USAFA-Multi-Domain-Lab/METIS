@@ -3,7 +3,7 @@ import GamePage from './pages/GamePage'
 import AuthPage from './pages/AuthPage'
 import { TMetisSession, User } from '../modules/users'
 import { useEffect, useState } from 'react'
-import ServerErrorPage from './pages/ServerErrorPage'
+import ErrorPage from './pages/ErrorPage'
 import LoadingPage from './pages/LoadingPage'
 import AppState, { AppActions } from './AppState'
 import Markdown, { MarkdownTheme } from './content/general-layout/Markdown'
@@ -18,14 +18,36 @@ import {
 } from './content/communication/Tooltip'
 import Prompt from './content/communication/Prompt'
 import ChangelogPage from './pages/ChangelogPage'
-import { ServerConnection } from '../modules/server-connect'
-import { useStore } from 'react-context-hook'
+import { ServerConnection } from '../modules/connect/server-connect'
+import { IButtonText } from './content/user-controls/ButtonText'
 
-// Default props in every page.
+/**
+ * Props that every page accepts. Extend this to include more.
+ */
 export interface IPage {
   appState: AppState
   appActions: AppActions
 }
+
+export type TAppErrorNotifyMethod = 'bubble' | 'page'
+
+/**
+ * An error that is resolved either via a notification bubble or a message on the error page. Default is page.
+ */
+export type TAppError = {
+  message: string
+  notifyMethod?: TAppErrorNotifyMethod // Default is page.
+  solutions?: Array<IButtonText> // Only used when handled with error page.
+} & (
+  | {
+      notifyMethod?: 'bubble'
+      solutions: never
+    }
+  | {
+      notifyMethod?: 'page'
+      solutions?: Array<IButtonText>
+    }
+)
 
 // This is a registry of all pages
 // in the system for use.
@@ -163,7 +185,7 @@ function App(props: {
       } catch (error: any) {
         console.error('Failed to handle app mount:')
         console.error(error)
-        appActions.handleServerError('App initialization failed.')
+        appActions.handleError('App initialization failed.')
       }
     }
 
@@ -200,8 +222,8 @@ function App(props: {
     }
   }
 
-  if (appState.errorMessage !== null) {
-    className += ' ServerError'
+  if (appState.error !== null) {
+    className += ' Error'
   } else if (
     appState.loading ||
     !appState.loadingMinTimeReached ||
@@ -232,7 +254,7 @@ function App(props: {
         <Confirmation {...appState.confirmation} />
       ) : null}
       {appState.prompt !== null ? <Prompt {...appState.prompt} /> : null}
-      <ServerErrorPage {...pageProps} />
+      <ErrorPage {...pageProps} />
       <LoadingPage {...pageProps} />
       {renderCurrentPage()}
     </div>
