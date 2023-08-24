@@ -67,6 +67,7 @@ export default function MissionFormPage(
   useEffect(() => {
     if (
       appState.currentUser &&
+      appState.currentUser.role &&
       !restrictedAccessRoles.includes(appState.currentUser.role)
     ) {
       appActions.goToPage('HomePage', {})

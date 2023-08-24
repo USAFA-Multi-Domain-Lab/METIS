@@ -29,18 +29,20 @@ export default function UserModificationPanel(props: {
         concludeAction()
         appActions.beginLoading('Deleting user...')
 
-        deleteUser(
-          user.userID,
-          () => {
-            appActions.finishLoading()
-            appActions.notify(`Successfully deleted ${user.userID}.`)
-            handleSuccessfulDeletion()
-          },
-          () => {
-            appActions.finishLoading()
-            appActions.notify(`Failed to delete ${user.userID}.`)
-          },
-        )
+        if (user.userID) {
+          deleteUser(
+            user.userID,
+            () => {
+              appActions.finishLoading()
+              appActions.notify(`Successfully deleted ${user.userID}.`)
+              handleSuccessfulDeletion()
+            },
+            () => {
+              appActions.finishLoading()
+              appActions.notify(`Failed to delete ${user.userID}.`)
+            },
+          )
+        }
       },
       {
         pendingMessageUponConfirm: 'Deleting...',
@@ -61,7 +63,11 @@ export default function UserModificationPanel(props: {
 
   let containerClassName: string = 'UserModificationPanel hidden'
 
-  if (currentUser && restrictedAccessRoles.includes(currentUser.role)) {
+  if (
+    currentUser &&
+    currentUser.role &&
+    restrictedAccessRoles.includes(currentUser.role)
+  ) {
     containerClassName = 'UserModificationPanel'
   }
 

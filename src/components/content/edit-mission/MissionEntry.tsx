@@ -106,8 +106,10 @@ export default function MissionEntry(props: {
                   ])
                 }
               }}
-              deliverError={deliverNameError}
-              deliverErrorMessage={errorMessage}
+              options={{
+                deliverError: deliverNameError,
+                deliverErrorMessage: errorMessage,
+              }}
               key={`${mission.missionID}_name`}
             />
             <DetailBox
@@ -127,8 +129,10 @@ export default function MissionEntry(props: {
                   ])
                 }
               }}
-              deliverError={deliverIntroMessageError}
-              deliverErrorMessage={errorMessage}
+              options={{
+                deliverError: deliverIntroMessageError,
+                deliverErrorMessage: errorMessage,
+              }}
               key={`${mission.missionID}_introMessage`}
             />
             <DetailToggle

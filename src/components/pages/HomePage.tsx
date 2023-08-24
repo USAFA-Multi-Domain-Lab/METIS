@@ -74,13 +74,21 @@ export default function HomePage(props: IHomePage): JSX.Element | null {
       },
     )
 
-    if (currentUser && restrictedAccessRoles.includes(currentUser.role)) {
+    if (
+      currentUser &&
+      currentUser.role &&
+      restrictedAccessRoles.includes(currentUser.role)
+    ) {
       // This loads all the users from the database
       getAllUsers(
         (retrievedUsers: Array<User>) => {
           let filteredUsers: Array<User> = []
 
-          if (currentUser && restrictedAccessRoles.includes(currentUser.role)) {
+          if (
+            currentUser &&
+            currentUser.role &&
+            restrictedAccessRoles.includes(currentUser.role)
+          ) {
             retrievedUsers.forEach((user: User) => {
               if (user.role === userRoles.Student) {
                 filteredUsers.push(user)
@@ -89,6 +97,7 @@ export default function HomePage(props: IHomePage): JSX.Element | null {
             setUsers(filteredUsers)
           } else if (
             currentUser &&
+            currentUser.role &&
             fullAccessRoles.includes(currentUser.role)
           ) {
             retrievedUsers.forEach((user: User) => {
@@ -261,6 +270,7 @@ export default function HomePage(props: IHomePage): JSX.Element | null {
       if (
         files.length > 0 &&
         currentUser &&
+        currentUser.role &&
         restrictedAccessRoles.includes(currentUser.role)
       ) {
         importMissionFiles(files)
@@ -328,7 +338,11 @@ export default function HomePage(props: IHomePage): JSX.Element | null {
   // This will switch to the changelog
   // page.
   const viewChangelog = (): void => {
-    if (currentUser && restrictedAccessRoles.includes(currentUser.role)) {
+    if (
+      currentUser &&
+      currentUser.role &&
+      restrictedAccessRoles.includes(currentUser.role)
+    ) {
       appActions.goToPage('ChangelogPage', {})
     }
   }
@@ -338,7 +352,11 @@ export default function HomePage(props: IHomePage): JSX.Element | null {
   const selectMission = (mission: Mission) => {
     let userRoleStringValues = Object.values(userRoles)
 
-    if (currentUser && userRoleStringValues.includes(currentUser.role)) {
+    if (
+      currentUser &&
+      currentUser.role &&
+      userRoleStringValues.includes(currentUser.role)
+    ) {
       appActions.goToPage('GamePage', {
         missionID: mission.missionID,
       })
@@ -350,7 +368,11 @@ export default function HomePage(props: IHomePage): JSX.Element | null {
   const selectUser = (user: User) => {
     let userRoleStringValues = Object.values(userRoles)
 
-    if (currentUser && userRoleStringValues.includes(currentUser.role)) {
+    if (
+      currentUser &&
+      currentUser.role &&
+      userRoleStringValues.includes(currentUser.role)
+    ) {
       appActions.goToPage('UserFormPage', {
         userID: user.userID,
       })
@@ -378,7 +400,11 @@ export default function HomePage(props: IHomePage): JSX.Element | null {
     displayLogout = true
   }
 
-  if (currentUser && restrictedAccessRoles.includes(currentUser.role)) {
+  if (
+    currentUser &&
+    currentUser.role &&
+    restrictedAccessRoles.includes(currentUser.role)
+  ) {
     selectionContentClassName = 'SelectionContent-list InstructorView'
     userListContainer = 'UserListContainer'
     editContentClassName += ' InstructorView'

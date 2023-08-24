@@ -82,6 +82,7 @@ function ensureDefaultUsersExists(
           firstName: 'admin',
           lastName: 'user',
           password: 'temppass',
+          needsPasswordReset: false,
         }
 
         adminUserData.password = await hashPassword(adminUserData.password)
@@ -117,6 +118,7 @@ function ensureDefaultUsersExists(
           role: 'student',
           firstName: 'student',
           lastName: 'user',
+          needsPasswordReset: false,
           password: 'password',
         }
 

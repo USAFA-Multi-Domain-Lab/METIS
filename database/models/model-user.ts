@@ -73,6 +73,7 @@ const UserSchema = new Schema(
       required: true,
       validate: validator_users_password,
     },
+    needsPasswordReset: { type: Boolean, required: true },
     _id: { type: ObjectId, required: false, auto: true },
     deleted: { type: Boolean, required: true, default: false },
   },

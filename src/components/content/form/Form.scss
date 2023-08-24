@@ -54,6 +54,14 @@
       border-top: 2px solid $color-error-alt;
       border-bottom: 2px solid $color-error-alt;
       color: $color-error-alt;
+
+      &::placeholder {
+        color: $color-error-alt;
+      }
+    }
+
+    &::placeholder {
+      color: $color-main;
     }
   }
 
@@ -109,6 +117,15 @@
 
         .Text {
           color: $color-accent-light;
+
+          &.Correct {
+            color: $color-correct;
+          }
+
+          &.DefaultValue {
+            color: $color-main;
+            opacity: 0.775;
+          }
         }
       }
 

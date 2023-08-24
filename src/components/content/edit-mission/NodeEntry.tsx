@@ -162,14 +162,15 @@ export default function NodeEntry(props: {
                   setMountHandled(false)
                 }
               }}
-              deliverError={deliverNameError}
-              deliverErrorMessage={errorMessage}
+              options={{
+                deliverError: deliverNameError,
+                deliverErrorMessage: errorMessage,
+              }}
               key={`${node.nodeID}_name`}
             />
             <DetailDropDown<string>
               label={'Color'}
               options={colorOptions}
-              uniqueClassName={'Color'}
               currentValue={`Choose a color`}
               isExpanded={true}
               uniqueDropDownStyling={{}}
@@ -198,6 +199,9 @@ export default function NodeEntry(props: {
 
                   handleChange()
                 }
+              }}
+              optional={{
+                uniqueClassName: 'Color',
               }}
               key={`${node.nodeID}_color`}
             />
@@ -252,8 +256,10 @@ export default function NodeEntry(props: {
                   setMountHandled(false)
                 }
               }}
-              deliverError={deliverDescriptionError}
-              deliverErrorMessage={errorMessage}
+              options={{
+                deliverError: deliverDescriptionError,
+                deliverErrorMessage: errorMessage,
+              }}
               key={`${node.nodeID}_description`}
             />
             <DetailBox

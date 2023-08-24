@@ -103,10 +103,14 @@ export default function AuthPage(props: IAuthPage): JSX.Element | null {
               setIsSubmitting(false)
               appActions.finishLoading()
               appState.setCurrentUser(currentUser)
-              appActions.goToPage(
-                props.returningPagePath,
-                props.returningPageProps,
-              )
+
+              if (currentUser.needsPasswordReset) {
+                appActions.goToPage('UserResetPage', {
+                  user: currentUser,
+                })
+              } else {
+                appActions.goToPage('HomePage', {})
+              }
             } else {
               handleLoginError('Incorrect username or password.')
             }

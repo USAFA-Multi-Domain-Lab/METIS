@@ -80,7 +80,11 @@ function Buttons(props: {
     additionalActionButtonClassName += ' Disabled'
   }
 
-  if (currentUser && restrictedAccessRoles.includes(currentUser.role)) {
+  if (
+    currentUser &&
+    currentUser.role &&
+    restrictedAccessRoles.includes(currentUser.role)
+  ) {
     useAssets = true
   }
 

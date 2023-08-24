@@ -2,10 +2,11 @@ import axios, { AxiosResponse, AxiosError } from 'axios'
 import { AnyObject } from './toolbox/objects'
 
 export interface IUser {
-  userID: string
-  role: string
-  firstName: string
-  lastName: string
+  userID: string | null
+  role: string | null
+  firstName: string | null
+  lastName: string | null
+  needsPasswordReset: boolean
   password?: string
 }
 
@@ -17,10 +18,11 @@ export const userRoles = {
 }
 
 export const defaultUserProps = {
-  userID: 'UserID',
-  firstName: 'First',
-  lastName: 'Last',
-  role: 'Select a role',
+  userID: null,
+  firstName: null,
+  lastName: null,
+  role: null,
+  needsPasswordReset: false,
 }
 
 // This is used to determine which roles
@@ -32,10 +34,11 @@ export const restrictedAccessRoles: string[] = [
 export const fullAccessRoles: string[] = [userRoles.Admin]
 
 export class User {
-  public userID: string
-  public firstName: string
-  public lastName: string
-  public role: string
+  public userID: string | null
+  public firstName: string | null
+  public lastName: string | null
+  public role: string | null
+  public needsPasswordReset: boolean
 
   public password1: string | undefined
   public password2: string | undefined
@@ -69,15 +72,17 @@ export class User {
   }
 
   public constructor(
-    userID: string,
-    firstName: string,
-    lastName: string,
-    role: string,
+    userID: string | null,
+    firstName: string | null,
+    lastName: string | null,
+    role: string | null,
+    needsPasswordReset: boolean,
   ) {
     this.userID = userID
     this.firstName = firstName
     this.lastName = lastName
     this.role = role
+    this.needsPasswordReset = needsPasswordReset
     this._passwordIsRequired = false
   }
 
@@ -86,6 +91,7 @@ export class User {
     defaultUserProps.firstName,
     defaultUserProps.lastName,
     defaultUserProps.role,
+    defaultUserProps.needsPasswordReset,
   )
 
   public get canSave(): boolean {
@@ -102,6 +108,9 @@ export class User {
     let passwordsMatch: boolean = this.passwordsMatch
     // password must be entered if required
     let passwordEntered: boolean = this.password1 !== undefined
+    // passwords cannot be empty string
+    let password1IsEmptyString: boolean = this.password1 === ''
+    let password2IsEmptyString: boolean = this.password2 === ''
     // there must be some kind of input for the password
     let requiredPasswordIsMissing: boolean =
       this._passwordIsRequired && !passwordEntered
@@ -113,7 +122,9 @@ export class User {
       updatedLastName &&
       updatedRole &&
       passwordsMatch &&
-      !requiredPasswordIsMissing
+      !requiredPasswordIsMissing &&
+      !password1IsEmptyString &&
+      !password2IsEmptyString
     )
   }
 
@@ -124,6 +135,7 @@ export class User {
       firstName: this.firstName,
       lastName: this.lastName,
       role: this.role,
+      needsPasswordReset: this.needsPasswordReset,
     }
 
     // Only add password if it is required.
@@ -140,6 +152,7 @@ export class User {
     this.firstName = JSON.firstName
     this.lastName = JSON.lastName
     this.role = JSON.role
+    this.needsPasswordReset = JSON.needsPasswordReset
   }
 
   /**

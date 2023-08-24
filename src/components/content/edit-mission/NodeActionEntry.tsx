@@ -98,8 +98,10 @@ export default function NodeActionEntry(props: {
               setMountHandled(false)
             }
           }}
-          deliverError={deliverNameError}
-          deliverErrorMessage={errorMessage}
+          options={{
+            deliverError: deliverNameError,
+            deliverErrorMessage: errorMessage,
+          }}
           key={`${action.actionID}_name`}
         />
         <DetailBox
@@ -121,8 +123,10 @@ export default function NodeActionEntry(props: {
               setMountHandled(false)
             }
           }}
-          deliverError={deliverDescriptionError}
-          deliverErrorMessage={errorMessage}
+          options={{
+            deliverError: deliverDescriptionError,
+            deliverErrorMessage: errorMessage,
+          }}
           key={`${action.actionID}_description`}
         />
         <DetailNumber
@@ -130,9 +134,11 @@ export default function NodeActionEntry(props: {
           initialValue={parseFloat(
             `${(action.successChance * 100.0).toFixed(2)}`,
           )}
-          minimum={0}
-          maximum={100}
-          unit='%'
+          options={{
+            minimum: 0,
+            maximum: 100,
+            unit: '%',
+          }}
           deliverValue={(successChancePercentage: number | null) => {
             if (successChancePercentage !== null) {
               action.successChance = successChancePercentage / 100.0
@@ -145,9 +151,11 @@ export default function NodeActionEntry(props: {
         <DetailNumber
           label='Process Time'
           initialValue={action.processTime / 1000}
-          minimum={0}
-          maximum={3600}
-          unit='s'
+          options={{
+            minimum: 0,
+            maximum: 3600,
+            unit: 's',
+          }}
           deliverValue={(timeCost: number | null) => {
             if (timeCost !== null) {
               action.processTime = timeCost * 1000
@@ -188,8 +196,10 @@ export default function NodeActionEntry(props: {
               setMountHandled(false)
             }
           }}
-          deliverError={deliverPostExecutionSuccessTextError}
-          deliverErrorMessage={errorMessage}
+          options={{
+            deliverError: deliverPostExecutionSuccessTextError,
+            deliverErrorMessage: errorMessage,
+          }}
           key={`${action.actionID}_postExecutionSuccessText`}
         />
         <DetailBox
@@ -211,8 +221,10 @@ export default function NodeActionEntry(props: {
               setMountHandled(false)
             }
           }}
-          deliverError={deliverPostExecutionFailureTextError}
-          deliverErrorMessage={errorMessage}
+          options={{
+            deliverError: deliverPostExecutionFailureTextError,
+            deliverErrorMessage: errorMessage,
+          }}
           key={`${action.actionID}_postExecutionFailureText`}
         />
         <NodeActionAssets

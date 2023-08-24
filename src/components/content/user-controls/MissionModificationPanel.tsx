@@ -182,7 +182,11 @@ export default function MissionModificationPanel(props: {
 
   let containerClassName: string = 'MissionModificationPanel hidden'
 
-  if (currentUser && restrictedAccessRoles.includes(currentUser.role)) {
+  if (
+    currentUser &&
+    currentUser.role &&
+    restrictedAccessRoles.includes(currentUser.role)
+  ) {
     containerClassName = 'MissionModificationPanel'
   }
 

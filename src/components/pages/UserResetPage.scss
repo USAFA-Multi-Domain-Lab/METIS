@@ -1,6 +1,6 @@
 @import '../../config.scss';
 
-.UserFormPage {
+.UserResetPage {
   $page-width: 100vw;
   $page-height: 100vh;
   // $page-row-1-height: 82px;
@@ -27,7 +27,7 @@
 
   .Navigation {
     display: grid;
-    grid-template-columns: auto 125px 150px;
+    grid-template-columns: auto 150px;
     padding: 15px 0;
     box-shadow: $box-shadow-alt7;
   }
@@ -43,6 +43,25 @@
     border-radius: 10px;
     padding: 5px 0;
     margin: 50px 0;
+
+    .ResetUserEntry {
+      width: 100%;
+
+      .UserIDContainer {
+        margin: 20px 8% 0;
+
+        .Title {
+          font-size: 14px;
+          margin-right: 15px;
+        }
+
+        .UserID {
+          color: $color-accent-light;
+          margin: 5px 0 0;
+          font-size: 14px;
+        }
+      }
+    }
 
     .ButtonContainer {
       display: grid;

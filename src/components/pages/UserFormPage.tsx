@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useStore } from 'react-context-hook'
 import {
   createUser,
   defaultUserProps,
@@ -8,8 +9,9 @@ import {
   User,
 } from '../../modules/users'
 import { IPage } from '../App'
-import AppState, { AppActions } from '../AppState'
-import UserEntry from '../content/edit-user/UserEntry'
+import { AppActions } from '../AppState'
+import CreateUserEntry from '../content/edit-user/CreateUserEntry'
+import EditUserEntry from '../content/edit-user/EditUserEntry'
 import Navigation from '../content/general-layout/Navigation'
 import './UserFormPage.scss'
 
@@ -18,9 +20,18 @@ export interface IUserFormPage extends IPage {
   userID: string | null
 }
 
+export enum EUserFormPurpose {
+  Create,
+  Update,
+}
+
 export default function UserFormPage(props: IUserFormPage): JSX.Element | null {
-  let appState: AppState = props.appState
   let appActions: AppActions = props.appActions
+  let userFormPurpose: EUserFormPurpose = EUserFormPurpose.Create
+  let isDefaultUser: boolean = false
+
+  /* -- GLOBAL STATE -- */
+  const [currentUser] = useStore<User>('currentUser')
 
   /* -- COMPONENT STATE -- */
   const [mountHandled, setMountHandled] = useState<boolean>(false)
@@ -31,7 +42,6 @@ export default function UserFormPage(props: IUserFormPage): JSX.Element | null {
   const [userEmptyStringArray, setUserEmptyStringArray] = useState<
     Array<string>
   >([])
-  const [isDefaultUser, setIsDefaultUser] = useState<boolean>(false)
 
   /* -- COMPONENT EFFECTS -- */
 
@@ -41,9 +51,10 @@ export default function UserFormPage(props: IUserFormPage): JSX.Element | null {
     // If the user is not logged in, then
     // redirect them to the login page.
     if (
-      !appState.currentUser ||
-      (appState.currentUser &&
-        !restrictedAccessRoles.includes(appState.currentUser.role))
+      currentUser === null ||
+      (currentUser &&
+        currentUser.role &&
+        !restrictedAccessRoles.includes(currentUser.role))
     ) {
       appActions.goToPage('AuthPage', {})
     }
@@ -59,11 +70,12 @@ export default function UserFormPage(props: IUserFormPage): JSX.Element | null {
           defaultUserProps.firstName,
           defaultUserProps.lastName,
           defaultUserProps.role,
+          defaultUserProps.needsPasswordReset,
         )
         user.passwordIsRequired = true
         existsInDatabase = false
         setUser(user)
-        setIsDefaultUser(true)
+        isDefaultUser = true
         setAreUnsavedChanges(false)
         setMountHandled(true)
       }
@@ -93,8 +105,9 @@ export default function UserFormPage(props: IUserFormPage): JSX.Element | null {
 
   if (
     user !== null &&
-    appState.currentUser &&
-    restrictedAccessRoles.includes(appState.currentUser.role)
+    currentUser &&
+    currentUser.role &&
+    restrictedAccessRoles.includes(currentUser.role)
   ) {
     /* -- COMPONENT FUNCTIONS -- */
 
@@ -209,6 +222,40 @@ export default function UserFormPage(props: IUserFormPage): JSX.Element | null {
       saveButtonClassName += ' Disabled'
     }
 
+    if (user === defaultUserProps) {
+      isDefaultUser = true
+    }
+
+    if (isDefaultUser && user.passwordIsRequired) {
+      userFormPurpose = EUserFormPurpose.Create
+    } else if (!isDefaultUser && !user.passwordIsRequired) {
+      userFormPurpose = EUserFormPurpose.Update
+    }
+
+    const renderUserEntry = (): JSX.Element | null => {
+      if (userFormPurpose === EUserFormPurpose.Create) {
+        return (
+          <CreateUserEntry
+            user={user}
+            userEmptyStringArray={userEmptyStringArray}
+            setUserEmptyStringArray={setUserEmptyStringArray}
+            handleChange={handleChange}
+          />
+        )
+      } else if (userFormPurpose === EUserFormPurpose.Update) {
+        return (
+          <EditUserEntry
+            user={user}
+            userEmptyStringArray={userEmptyStringArray}
+            setUserEmptyStringArray={setUserEmptyStringArray}
+            handleChange={handleChange}
+          />
+        )
+      } else {
+        return null
+      }
+    }
+
     return (
       <div className='UserFormPage Page'>
         {/* -- NAVIGATION -- */}
@@ -233,13 +280,7 @@ export default function UserFormPage(props: IUserFormPage): JSX.Element | null {
 
         {/* -- CONTENT -- */}
         <div className='Content'>
-          <UserEntry
-            user={user}
-            isDefaultUser={isDefaultUser}
-            userEmptyStringArray={userEmptyStringArray}
-            setUserEmptyStringArray={setUserEmptyStringArray}
-            handleChange={handleChange}
-          />
+          {renderUserEntry()}
           <div className='ButtonContainer'>
             <div className={saveButtonClassName} onClick={() => save()}>
               Save

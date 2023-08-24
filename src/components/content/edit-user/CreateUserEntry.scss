@@ -1,6 +1,6 @@
 @import '../../../config.scss';
 
-.UserEntry {
+.CreateUserEntry {
   width: 100%;
 
   .DetailDropDown {
@@ -25,19 +25,24 @@
     }
   }
 
-  .UserIDContainer,
-  .RoleContainer {
+  .NeedsPasswordResetContainer {
+    display: grid;
+    grid-template-columns: auto auto;
+    justify-content: flex-start;
+    align-items: center;
     margin: 20px 8% 0;
 
     .Title {
       font-size: 14px;
+      margin-right: 15px;
     }
 
-    .UserID,
-    .Role {
+    .Toggle {
       color: $color-accent-light;
       margin: 5px 0 0;
       font-size: 14px;
+      transform: scale(0.9);
+      margin: 0;
     }
   }
 }

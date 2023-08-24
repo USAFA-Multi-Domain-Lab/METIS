@@ -19,6 +19,7 @@ import {
 import Prompt from './content/communication/Prompt'
 import ChangelogPage from './pages/ChangelogPage'
 import UserFormPage from './pages/UserFormPage'
+import UserResetPage from './pages/UserResetPage'
 
 // Default props in every page.
 export interface IPage {
@@ -118,12 +119,15 @@ function App(props: {
           appState.setAppMountHandled(true)
           appActions.finishLoading()
           if (currentUser !== null) {
-            appActions.goToPage('HomePage', {})
+            if (currentUser.needsPasswordReset) {
+              appActions.goToPage('UserResetPage', {
+                user: currentUser,
+              })
+            } else {
+              appActions.goToPage('HomePage', {})
+            }
           } else {
-            appActions.goToPage('AuthPage', {
-              returningPagePath: 'HomePage',
-              returningPageProps: {},
-            })
+            appActions.goToPage('AuthPage', {})
           }
         },
         () => {
@@ -214,5 +218,6 @@ registerPage('GamePage', GamePage)
 registerPage('ChangelogPage', ChangelogPage)
 registerPage('MissionFormPage', MissionFormPage)
 registerPage('UserFormPage', UserFormPage)
+registerPage('UserResetPage', UserResetPage)
 
 export default AppState.createAppWithState(App)

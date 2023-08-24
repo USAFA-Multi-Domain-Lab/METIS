@@ -22,6 +22,7 @@ router.post(
           firstName: RequestBodyFilters.STRING_50_CHAR,
           lastName: RequestBodyFilters.STRING_50_CHAR,
           password: RequestBodyFilters.PASSWORD,
+          needsPasswordReset: RequestBodyFilters.BOOLEAN,
         },
       },
     },
@@ -43,6 +44,7 @@ router.post(
     let firstName: any = userData.firstName
     let lastName: any = userData.lastName
     let password: any = userData.password
+    let needsPasswordReset: any = userData.needsPasswordReset
 
     if (password !== undefined) {
       password = await hashPassword(password)
@@ -54,6 +56,7 @@ router.post(
       firstName: firstName,
       lastName: lastName,
       password: password,
+      needsPasswordReset: needsPasswordReset,
     })
 
     user.save(async (error: Error) => {
@@ -208,6 +211,7 @@ router.put(
           firstName: RequestBodyFilters.STRING_50_CHAR,
           lastName: RequestBodyFilters.STRING_50_CHAR,
           password: RequestBodyFilters.PASSWORD,
+          needsPasswordReset: RequestBodyFilters.BOOLEAN,
         },
       },
     },
