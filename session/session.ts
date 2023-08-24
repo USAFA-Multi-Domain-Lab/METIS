@@ -1,6 +1,8 @@
 import { TMetisSessionJSON, User } from '../src/modules/users'
 import { Game } from '../src/modules/games'
 import ClientConnection from '../src/modules/connect/client-connect'
+import MissionModel from 'database/models/model-mission'
+import { databaseLogger } from 'modules/logging'
 
 /**
  * Express sessions are limited in what they can store. This class expands the functionality of sessions in METIS.
@@ -39,6 +41,8 @@ export default class MetisSession {
         'Cannot set client to a client connection with a different user ID.',
       )
     }
+
+    // Set client.
     this._client = client
   }
 
@@ -52,18 +56,6 @@ export default class MetisSession {
    */
   public get user(): User {
     return this._user
-  }
-
-  /**
-   * A game that the user is currently playing.
-   */
-  private _game: Game | undefined
-
-  /**
-   * A game that the user is currently playing.
-   */
-  public get game(): Game | undefined {
-    return this._game
   }
 
   /**
@@ -86,6 +78,13 @@ export default class MetisSession {
   }
 
   /**
+   * Whether the user is in a game.
+   */
+  public get inGame(): boolean {
+    return true
+  }
+
+  /**
    * @param {User} user The user associated with the session.
    */
   public constructor(user: User) {
@@ -104,18 +103,6 @@ export default class MetisSession {
     MetisSession.registry.set(this.userID, this)
   }
 
-  public async joinGame(game: Game): Promise<void> {
-    return game.join(this.user).then(() => {
-      this._game = game
-    })
-  }
-
-  public async quitGame() {
-    if (this._game) {
-      this._game = undefined
-    }
-  }
-
   /**
    * Destroys the session.
    */
@@ -131,7 +118,7 @@ export default class MetisSession {
   public toJSON(): TMetisSessionJSON {
     return {
       user: this.user.toJSON(),
-      inGame: this.game !== undefined,
+      inGame: false,
     }
   }
 

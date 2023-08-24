@@ -251,15 +251,18 @@ export class AppActions {
     return new Promise<ServerConnection>(async (resolve, reject) => {
       let server: ServerConnection = new ServerConnection({
         on: {
-          open: () => {
+          'open': () => {
             console.log('Server connection opened.')
             this.appState.setServer(server)
             resolve(server)
           },
-          close: () => {
+          'close': () => {
             console.log('Server connection closed.')
           },
-          error: ({ code, message }) => {
+          'connection-loss': () => {
+            this.handleError('Lost connection to server.')
+          },
+          'error': ({ code, message }) => {
             console.error(`Server Connection Error (${code}):\n${message}`)
 
             if (code === ServerEmittedError.CODE_DUPLICATE_CLIENT) {

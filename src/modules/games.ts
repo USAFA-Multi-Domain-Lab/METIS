@@ -5,6 +5,9 @@ import axios, { AxiosError, AxiosResponse } from 'axios'
 import context from './context'
 import { MissionNodeAction } from './mission-node-actions'
 import { MissionNode } from './mission-nodes'
+import ServerConnection from './connect/server-connect'
+import { register } from 'ts-node'
+import ClientConnection from './connect/client-connect'
 
 export interface IGameJSON {
   gameID: string
@@ -12,7 +15,10 @@ export interface IGameJSON {
   participants: Array<IUserJSON>
 }
 
-export class Game {
+/**
+ * Base class for a games. Represents a game being played by participating students in METIS.
+ */
+export abstract class Game<TParticpant extends { userID: string }> {
   /**
    * The ID of the game.
    */
@@ -26,12 +32,12 @@ export class Game {
   /**
    * The participants of the game executing the mission.
    */
-  private _participants: Array<User>
+  private _participants: Array<TParticpant>
 
   /**
    * The participants of the game executing the mission.
    */
-  public get participants(): Array<User> {
+  public get participants(): Array<TParticpant> {
     return [...this._participants]
   }
 
@@ -49,7 +55,7 @@ export class Game {
   public constructor(
     gameID: string,
     mission: Mission,
-    participants: Array<User>,
+    participants: Array<TParticpant>,
   ) {
     this.gameID = gameID
     this.mission = mission
@@ -77,47 +83,13 @@ export class Game {
    * @param {User} participant The participant to check.
    * @returns Whether the given participant is joined into the game.
    */
-  public isJoined(participant: User): boolean {
+  public isJoined(participant: TParticpant): boolean {
     for (let user of this._participants) {
       if (user.userID === participant.userID) {
         return true
       }
     }
     return false
-  }
-
-  /**
-   * Has the given participant join the game.
-   * @param participant {User} The participant joining the game.
-   */
-  public join(participant: User): Promise<void> {
-    return new Promise<void>(
-      (resolve: () => void, reject: (error: AxiosError) => void): void => {
-        // If the context is react, then we need
-        // to make a request to the server. The
-        // server needs to handle the joining of
-        // the game, not the client.
-        if (context === 'react') {
-          throw new Error('Client-side joining of a game is not yet supported.')
-        }
-        // If the context is express, then we need
-        // to join the game here.
-        else if (context === 'express') {
-          for (let user of this._participants) {
-            // If the user is already in the game, then
-            // we cannot add them again.
-            if (user.userID === participant.userID) {
-              return reject(new AxiosError('User is already in the game.'))
-            }
-          }
-        }
-
-        // Add the participant to the game
-        // and resolve the promise.
-        this._participants.push(participant)
-        return resolve()
-      },
-    )
   }
 
   /**
@@ -150,7 +122,7 @@ export class Game {
             // we can remove them.
             if (user.userID === participantID) {
               this._participants = this._participants.filter(
-                (user: User) => user.userID !== participantID,
+                (user: TParticpant) => user.userID !== participantID,
               )
               return resolve()
             }
@@ -281,64 +253,249 @@ export class Game {
    * Converts the Game object to JSON.
    * @returns {IGameJSON} A JSON representation of the game.
    */
+  public abstract toJSON(): IGameJSON
+
+  public static API_ENDPOINT: string = '/api/v1/games'
+}
+
+/**
+ * Server instance for games. Handles server-side logic for a game with participating clients. Communicates with clients to conduct game.
+ */
+export class GameServer extends Game<ClientConnection> {
+  /**
+   * Whether the game has been destroyed.
+   */
+  private _destroyed: boolean
+
+  /**
+   * Whether the game has been destroyed.
+   */
+  public get destroyed(): boolean {
+    return this._destroyed
+  }
+
+  public constructor(
+    gameID: string,
+    mission: Mission,
+    participants: Array<ClientConnection>,
+  ) {
+    super(gameID, mission, participants)
+    this._destroyed = false
+    this.register()
+  }
+
+  // Implemented
   public toJSON(): IGameJSON {
     return {
       gameID: this.gameID,
       mission: this.mission.toJSON(true),
-      participants: this.participants.map((user: User) => user.toJSON()),
+      participants: this.participants.map((client: ClientConnection) =>
+        client.user.toJSON(),
+      ),
     }
   }
 
-  public static API_ENDPOINT: string = '/api/v1/games'
+  /**
+   * Adds this game into the registry, indexing it with its game ID.
+   */
+  private register(): void {
+    GameServer.registry.set(this.gameID, this)
+  }
 
   /**
-   * Converts IGameJSON into a Game object.
-   * @param {IGameJSON} json The json to be converted.
-   * @returns {Game} The Game object.
+   * Removes this game from the registry.
    */
-  public static fromJSON(json: IGameJSON): Game {
+  private unregister(): void {
+    GameServer.registry.delete(this.gameID)
+  }
+
+  /**
+   * Destroys the game.
+   */
+  public destroy(): void {
+    this.unregister()
+    this._destroyed = true
+  }
+
+  /**
+   * Has the given participant join the game. Establishes listeners to handle events emitted by the participant's web socket connection.
+   */
+  public join(participant: ClientConnection): void {
+    // Add participant to the participant list.
+    this.participants.push(participant)
+
+    // Add game-specific listeners.
+    this.addListeners(participant)
+  }
+
+  /**
+   * Creates game-specific listeners for the given particpant.
+   */
+  private addListeners(participant: ClientConnection): void {
+    // todo: add listeners
+  }
+
+  /**
+   * A registry of all games currently launched.
+   */
+  private static registry: Map<string, GameServer> = new Map<
+    string,
+    GameServer
+  >()
+
+  /**
+   * Launches a new game with a new game ID.
+   * @param {string} mission  The ID of the mission being executed in the game.
+   * @returns {Promise<string>} A promise of the game ID for the newly launched game.
+   */
+  public static async launch(mission: Mission): Promise<string> {
+    return new Promise<string>(
+      (
+        resolve: (gameID: string) => void,
+        reject: (error: AxiosError) => void,
+      ): void => {
+        let game: GameServer = new GameServer(generateHash(), mission, [])
+        return resolve(game.gameID)
+      },
+    )
+  }
+
+  /**
+   * @returns the game associated with the given game ID.
+   */
+  public static get(gameID: string | undefined): GameServer | undefined {
+    if (gameID === undefined) {
+      return undefined
+    } else {
+      return GameServer.registry.get(gameID)
+    }
+  }
+
+  /**
+   * Destroys the session associated with the given user ID.
+   */
+  public static destroy(userID: string | undefined): void {
+    let game: GameServer | undefined = GameServer.get(userID)
+
+    if (game !== undefined) {
+      game.destroy()
+    }
+  }
+}
+
+/**
+ * Client instance for games. Handles client-side logic for games. Communicates with server to conduct game.
+ */
+export class GameClient extends Game<User> {
+  /**
+   * The server connection used to communicate with the server.
+   */
+  protected server: ServerConnection
+
+  public constructor(
+    gameID: string,
+    mission: Mission,
+    participants: Array<User>,
+    server: ServerConnection,
+  ) {
+    super(gameID, mission, participants)
+    this.server = server
+  }
+
+  // Implemented
+  public toJSON(): IGameJSON {
+    return {
+      gameID: this.gameID,
+      mission: this.mission.toJSON(true),
+      participants: this.participants.map((user) => user.toJSON()),
+    }
+  }
+
+  /**
+   * Converts IGameJSON into a GameClient object.
+   * @param {IGameJSON} json The json to be converted.
+   * @param {ServerConnection} server The server connection used to communicate with the server.
+   * @returns {GameClient} The GameClient object.
+   */
+  public static fromJSON(
+    json: IGameJSON,
+    server: ServerConnection,
+  ): GameClient {
     let mission: Mission = Mission.fromJSON(json.mission)
     let participants: Array<User> = json.participants.map(
       (userJSON: IUserJSON) => User.fromJSON(userJSON),
     )
-    return new Game(json.gameID, mission, participants)
+    return new GameClient(json.gameID, mission, participants, server)
   }
 
   /**
    * Launches a new game with a new game ID.
-   * @param mission {Mission} The mission being executed in the game.
-   * @returns {Promise<Game>} A promise of a new game with a new game ID. The mission in the game will be a different instance than the mission passed.
+   * @param {string} missionID  The ID of the mission being executed in the game.
+   * @returns {Promise<string>} A promise of the game ID for the newly launched game.
    */
-  public static async launch(mission: Mission): Promise<Game> {
-    return new Promise<Game>(
-      (
-        resolve: (game: Game) => void,
-        reject: (error: AxiosError) => void,
-      ): void => {
-        // If the context is react, then we need
-        // to make a request to the server. The
-        // server needs to generate the game, not
-        // the client.
-        if (context === 'react') {
-          axios
-            .post<IGameJSON>(`${Game.API_ENDPOINT}/launch/`, {
-              missionID: mission.missionID,
-            })
-            .then((response: AxiosResponse<IGameJSON>) => {
-              let game: Game = Game.fromJSON(response.data)
-              return resolve(game)
-            })
-            .catch((error: AxiosError) => {
-              console.error('Failed to launch mission.')
-              console.error(error)
-              return reject(error)
-            })
+  public static async launch(missionID: string): Promise<string> {
+    return new Promise<string>(
+      async (
+        resolve: (game: string) => void,
+        reject: (error: any) => void,
+      ): Promise<void> => {
+        try {
+          // Call API to launch new game with
+          // the mission ID. Await the generated
+          // game ID.
+          let { gameID } = (
+            await axios.post<{ gameID: string }>(
+              `${Game.API_ENDPOINT}/launch/`,
+              {
+                missionID,
+              },
+            )
+          ).data
+          return resolve(gameID)
+        } catch (error) {
+          console.error('Failed to launch game.')
+          console.error(error)
+          return reject(error)
         }
-        // If the context is express, then we need
-        // to generate the new game here.
-        else if (context === 'express') {
-          let game: Game = new Game(generateHash(), mission, [])
+      },
+    )
+  }
+
+  /**
+   * Request to join the game with the given game ID.
+   * @param {string} gameID The ID of the game to join.
+   * @returns {Promise<GameClient>} A promise of the game client object.
+   */
+  public static async join(
+    gameID: string,
+    server: ServerConnection,
+  ): Promise<GameClient> {
+    return new Promise<GameClient>(
+      async (
+        resolve: (game: GameClient) => void,
+        reject: (error: any) => void,
+      ): Promise<void> => {
+        try {
+          // Call API to join the game with
+          // the given game ID. Await the
+          // game JSON.
+          let gameJSON: IGameJSON = (
+            await axios.post<IGameJSON>(`${Game.API_ENDPOINT}/join/`, {
+              gameID,
+            })
+          ).data
+
+          // Convert the game JSON into a
+          // GameClient object.
+          let game: GameClient = GameClient.fromJSON(gameJSON, server)
+
+          // Resolve the promise with the
+          // game object.
           return resolve(game)
+        } catch (error) {
+          console.error('Failed to join game.')
+          console.error(error)
+          return reject(error)
         }
       },
     )

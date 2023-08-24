@@ -5,7 +5,7 @@ import { useDefaultProps, useListComponent } from 'src/modules/hooks'
 
 export interface IErrorPage extends IPage {}
 
-// This will render a page that displays a server
+// This will render a page that displays a
 // error that has occured.
 export default function ErrorPage({
   appState,

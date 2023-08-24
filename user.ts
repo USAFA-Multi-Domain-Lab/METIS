@@ -40,12 +40,12 @@ export const requireLogin = (
 }
 
 /**
- * Express middleware requiring a the user in the session to be joined into a game.
+ * Express middleware requiring that the user in the session be connected to the web socket server.
  * @param {Request} request An express request object.
  * @param {Response} response An express response object.
  * @param next {NextFunction} An express next function.
  */
-export const requireInGame = (
+export const requireConnection = (
   request: Request,
   response: Response,
   next: NextFunction,
@@ -54,19 +54,43 @@ export const requireInGame = (
     request.session.userID,
   )
 
-  if (
-    session !== undefined &&
-    session.game !== undefined &&
-    session.game.isJoined(session.user)
-  ) {
+  if (session !== undefined && session.hasClientConnection) {
     response.locals.session = session
-    response.locals.user = session.user
-    response.locals.game = session.game
+    response.locals.client = session.client
     next()
   } else {
     response.sendStatus(403)
   }
 }
+//
+// /**
+//  * Express middleware requiring that the user in the session to be joined into a game.
+//  * @param {Request} request An express request object.
+//  * @param {Response} response An express response object.
+//  * @param next {NextFunction} An express next function.
+//  */
+// export const requireInGame = (
+//   request: Request,
+//   response: Response,
+//   next: NextFunction,
+// ): void => {
+//   let session: MetisSession | undefined = MetisSession.get(
+//     request.session.userID,
+//   )
+//
+//   if (
+//     session !== undefined &&
+//     session.game !== undefined &&
+//     session.game.isJoined(session.user)
+//   ) {
+//     response.locals.session = session
+//     response.locals.user = session.user
+//     response.locals.game = session.game
+//     next()
+//   } else {
+//     response.sendStatus(403)
+//   }
+// }
 
 // This will return whether there is
 // a user in the session.
@@ -107,6 +131,5 @@ export function hasPermittedRole(
 
 export default {
   requireLogin,
-  requireInGame,
   isLoggedIn: hasPermittedRole,
 }

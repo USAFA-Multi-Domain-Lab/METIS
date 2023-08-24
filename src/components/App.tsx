@@ -35,13 +35,16 @@ export type TAppErrorNotifyMethod = 'bubble' | 'page'
  * An error that is resolved either via a notification bubble or a message on the error page. Default is page.
  */
 export type TAppError = {
+  /**
+   * The error message to display.
+   */
   message: string
   notifyMethod?: TAppErrorNotifyMethod // Default is page.
   solutions?: Array<IButtonText> // Only used when handled with error page.
 } & (
   | {
       notifyMethod?: 'bubble'
-      solutions: never
+      solutions?: never
     }
   | {
       notifyMethod?: 'page'

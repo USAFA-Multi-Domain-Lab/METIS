@@ -59,21 +59,36 @@ export class ServerEmittedError extends WSEmittedError {
   /**
    * Code for an unknown error.
    */
-  public static readonly CODE_UNKNOWN: number = 100
+  public static readonly CODE_UNKNOWN: number = 10000
   /**
    * Code for invalid data being sent to the server from the client given the method.
    */
-  public static readonly CODE_INVALID_DATA: number = 101
+  public static readonly CODE_INVALID_DATA: number = 10001
   /**
    * Code for the same client attempting a second connection to the server when another connection for that user already exists.
    */
-  public static readonly CODE_DUPLICATE_CLIENT: number = 102
+  public static readonly CODE_DUPLICATE_CLIENT: number = 10002
+  /**
+   * Code for a client requesting to join a game that cannot be found.
+   */
+  public static readonly CODE_GAME_NOT_FOUND: number = 20000
+  /**
+   * Code for a client requesting to join a game when they are already in a game.
+   */
+  public static readonly CODE_DOUBLE_JOIN: number = 20001
+  /**
+   * Code for a client request failing due to a server-side general error.
+   */
+  public static readonly CODE_SERVER_ERROR: number = 30000
 
   public static readonly DEFAULT_MESSAGES: { [code: number]: string } = {
     [ServerEmittedError.CODE_UNKNOWN]: 'An unknown error occurred.',
     [ServerEmittedError.CODE_INVALID_DATA]: 'Data sent was invalid.',
     [ServerEmittedError.CODE_DUPLICATE_CLIENT]:
       'You are already connected via another tab.',
+    [ServerEmittedError.CODE_GAME_NOT_FOUND]: 'Game not found.',
+    [ServerEmittedError.CODE_DOUBLE_JOIN]: 'You are already in a game.',
+    [ServerEmittedError.CODE_SERVER_ERROR]: 'Server error.',
   }
 
   /**

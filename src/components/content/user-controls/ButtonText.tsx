@@ -21,16 +21,8 @@ export interface IButtonText {
 // A button with normal text
 // that performs a given action.
 export function ButtonText(props: IButtonText): JSX.Element | null {
-  // Assign default props to
+  // Extract props. Assign default props to
   // props passed as needed.
-  useDefaultProps(props, {
-    tooltipDescription: null,
-    uniqueClassName: '',
-    style: {},
-    disabled: false,
-  })
-
-  // Extract props.
   let {
     text,
     handleClick,
@@ -39,12 +31,17 @@ export function ButtonText(props: IButtonText): JSX.Element | null {
     uniqueClassName,
     style,
     disabled,
-  } = props
+  } = useDefaultProps(props, {
+    tooltipDescription: null,
+    uniqueClassName: '',
+    style: {},
+    disabled: false,
+  })
 
   // Create class name.
-  let className: string = `ButtonText ${disabled ? ' Disabled ' : ' '}${
-    uniqueClassName ?? ''
-  }`
+  let className: string = `ButtonText ${
+    disabled ? ' Disabled ' : ' '
+  }${uniqueClassName}`
 
   // Render.
   return (
@@ -58,6 +55,18 @@ export function ButtonText(props: IButtonText): JSX.Element | null {
       <span className='Text'>{text}</span>
       <span className='Bracket RightBracket'>{']'}</span>
       {tooltipDescription ? <Tooltip description={tooltipDescription} /> : null}
+    </div>
+  )
+}
+
+function SomeComponent() {
+  return (
+    <div>
+      <ButtonText
+        text={'Click me'}
+        handleClick={() => {}}
+        componentKey={'key'}
+      />
     </div>
   )
 }

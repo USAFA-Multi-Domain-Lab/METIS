@@ -7,6 +7,7 @@ import {
   TClientMethod,
 } from 'src/modules/connect/data'
 import { ServerEmittedError } from './errors'
+import { User } from '../users'
 
 export type TClientHandler<TMethod extends TClientMethod> = (
   data: TClientData<TMethod>,
@@ -30,7 +31,13 @@ export interface IClientConnectionOptions {
  * Extracts event type from on the close event listener function.
  */
 type WSCloseEvent = Parameters<
-  Parameters<typeof WebSocket.prototype.addEventListener>[1]
+  NonNullable<typeof WebSocket.prototype.onclose>
+>[0]
+/**
+ * Extracts event type from on the message event listener function.
+ */
+type WSMessageEvent = Parameters<
+  NonNullable<typeof WebSocket.prototype.onmessage>
 >[0]
 
 /**
@@ -53,7 +60,27 @@ export class ClientConnection {
     return this._session
   }
 
-  protected onCloseListeners: Array<TClientHandler<'close'>> = []
+  /**
+   * The user in the session.
+   */
+  public get user(): User {
+    return this.session.user
+  }
+
+  /**
+   * The userID for the user in the session.
+   */
+  public get userID(): string {
+    return this.session.userID
+  }
+
+  /**
+   * Storage for all listeners, in the order they get added.
+   */
+  protected listeners: Map<TClientMethod, TClientHandler<any>> = new Map<
+    TClientMethod,
+    TClientHandler<any>
+  >()
 
   /**
    * @param {WebSocket} socket The web socket connection itself.
@@ -101,15 +128,18 @@ export class ClientConnection {
 
     // Prepare the socket for use.
     this.prepareSocket()
+
+    // Add default listeners.
+    this.addDefaultListeners()
   }
 
   /**
    * Prepares the socket for use.
    */
   private prepareSocket(): void {
-    // Add a close event listener to
-    // the socket.
+    // Add event listeners to the socket.
     this.socket.addEventListener('close', this.onClose)
+    this.socket.addEventListener('message', this.onMessage)
   }
 
   /**
@@ -131,40 +161,23 @@ export class ClientConnection {
     TMethod extends TClientMethod,
     TData extends IClientDataTypes[TMethod],
   >(method: TMethod, handler: TClientHandler<TMethod>): ClientConnection {
-    // Add a the correct event listener to
-    // socket based on the method passed.
-    switch (method) {
-      case 'close':
-        // Add a close event listener to
-        // the list of close listeners.
-        this.onCloseListeners.push(handler as TClientHandler<'close'>)
-        break
-      default:
-        // Add a message event listener to
-        // the socket.
-        this.socket.addEventListener('message', (event) => {
-          // If the data passed is not a string,
-          // throw an error.
-          if (typeof event.data !== 'string') {
-            this.sendError(
-              new ServerEmittedError(
-                ServerEmittedError.CODE_INVALID_DATA,
-                'The data passed was not a string.',
-              ),
-            )
-            return
-          }
-
-          // Parse the data.
-          let data: TData = JSON.parse(event.data)
-
-          // Only call the handler if the method matches.
-          if (data.method === method) {
-            handler(data)
-          }
-        })
-    }
+    // Push the new listener to the array of listeners.
+    this.listeners.set(method, handler)
+    // Return this.
     return this
+  }
+
+  /**
+   * Adds default listeners for the client connection.
+   */
+  protected addDefaultListeners(): void {
+    // Add a listener for the 'request-launch' event.
+    this.addEventListener('request-launch', (data) => {
+      // Extract data.
+      let { requestID, missionID } = data
+
+      // If the session has a game, reject the request.
+    })
   }
 
   /**
@@ -175,15 +188,49 @@ export class ClientConnection {
   }
 
   /**
-   * Handler for when the web socket connection is closed. Calls all closed listeners stored in the object.
+   * Handler for when the web socket connection is closed. Calls all "close" listeners stored in "listeners".
    * @param {WSCloseEvent} event The close event.
    */
   private onClose = (event: WSCloseEvent): void => {
-    // Run all on-close listeners.
-    this.onCloseListeners.forEach((listener) => listener({ method: 'close' }))
+    // Pre-create data object, since
+    // it will not vary.
+    let closeData: TServerData<'close'> = { method: 'close' }
 
-    // Remove the client from the session.
-    this.session.client = null
+    // Loop though listeners.
+    for (let [method, listener] of this.listeners) {
+      // Call any "close" listeners.
+      if (method === 'close') {
+        listener(closeData)
+      }
+    }
+  }
+
+  /**
+   * Handler for when the web socket connection is opened. Calls all matching listeners stored in "listeners".
+   * @param {WSCloseEvent} event The message event.
+   */
+  private onMessage = (event: WSMessageEvent): void => {
+    for (let [method, listener] of this.listeners) {
+      // If the data passed is not a string,
+      // throw an error.
+      if (typeof event.data !== 'string') {
+        this.sendError(
+          new ServerEmittedError(
+            ServerEmittedError.CODE_INVALID_DATA,
+            'The data passed was not a string.',
+          ),
+        )
+        return
+      }
+
+      // Parse the data.
+      let data = JSON.parse(event.data)
+
+      // Only call the handler if the method matches.
+      if (data.method === method) {
+        listener(data)
+      }
+    }
   }
 }
 
