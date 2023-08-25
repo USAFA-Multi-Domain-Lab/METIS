@@ -23,7 +23,10 @@ interface IDetail {
   }
 }
 
-interface IDetail_S {}
+interface IDetail_S {
+  inputType: string
+  displayPasswordText: string
+}
 
 /**
  * This will render a detail for
@@ -43,7 +46,17 @@ interface IDetail_S {}
  */
 export class Detail extends React.Component<IDetail, IDetail_S> {
   field: React.RefObject<HTMLInputElement> = React.createRef()
-  allowAbilityToDisplayError: boolean = false
+
+  constructor(props: IDetail, state: IDetail_S) {
+    super(props)
+
+    this.state = {
+      inputType: this.props.options?.inputType
+        ? this.props.options.inputType
+        : 'text',
+      displayPasswordText: 'show',
+    }
+  }
 
   // inherited
   componentDidMount(): void {
@@ -52,6 +65,16 @@ export class Detail extends React.Component<IDetail, IDetail_S> {
 
     if (initialValue && fieldElement) {
       fieldElement.value = initialValue
+    }
+  }
+
+  togglePasswordDisplay(): void {
+    if (this.state.inputType === 'password') {
+      this.setState({ inputType: 'text' })
+      this.setState({ displayPasswordText: 'hide' })
+    } else {
+      this.setState({ inputType: 'password' })
+      this.setState({ displayPasswordText: 'show' })
     }
   }
 
@@ -71,13 +94,16 @@ export class Detail extends React.Component<IDetail, IDetail_S> {
     let uniqueInputClassName: string = this.props.options?.uniqueInputClassName
       ? this.props.options.uniqueInputClassName
       : ''
-    let inputType: string = this.props.options?.inputType
+    let inputTypePassed: string = this.props.options?.inputType
       ? this.props.options.inputType
       : 'text'
     let placeholder: string | undefined = this.props.options?.placeholder
     let fieldErrorClassName: string = 'FieldErrorMessage hide'
     let labelClassName: string = 'Label'
     let fieldClassName: string = 'Field FieldBox'
+    let inputContainerClassName: string = 'InputContainer'
+    let togglePasswordContainerClassName: string =
+      'TogglePasswordDisplayContainer Hidden'
 
     if (displayError) {
       fieldClassName += ' Error'
@@ -85,23 +111,42 @@ export class Detail extends React.Component<IDetail, IDetail_S> {
       fieldErrorClassName = 'FieldErrorMessage'
     }
 
+    if (inputTypePassed === 'password') {
+      togglePasswordContainerClassName = 'TogglePasswordDisplayContainer'
+      inputContainerClassName += ' Password'
+    }
+
     return (
       <div className='Detail'>
         <div
           className={labelClassName + ' ' + uniqueLabelClassName}
         >{`${label}:`}</div>
-        <input
-          className={fieldClassName + ' ' + uniqueInputClassName}
-          type={inputType}
-          ref={this.field}
-          placeholder={placeholder}
-          onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-            deliverValue(event.target.value)
-          }}
-          onBlur={(event: React.FocusEvent) => {
-            let target: HTMLInputElement = event.target as HTMLInputElement
-          }}
-        />
+        <div className={inputContainerClassName}>
+          <input
+            className={fieldClassName + ' ' + uniqueInputClassName}
+            type={this.state.inputType}
+            ref={this.field}
+            placeholder={placeholder}
+            onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+              deliverValue(event.target.value)
+            }}
+            // onBlur={(event: React.FocusEvent) => {
+            //   let target: HTMLInputElement = event.target as HTMLInputElement
+            // }}
+          />
+          <input
+            className={
+              togglePasswordContainerClassName +
+              ' ' +
+              fieldClassName +
+              ' ' +
+              uniqueInputClassName
+            }
+            onClick={() => this.togglePasswordDisplay()}
+            type='button'
+            value={this.state.displayPasswordText}
+          />
+        </div>
         <div className={fieldErrorClassName}>{errorMessage}</div>
       </div>
     )

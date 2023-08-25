@@ -38,6 +38,15 @@
     padding: 11px 10px 11px;
   }
 
+  .InputContainer {
+    display: grid;
+    grid-template-columns: auto;
+
+    &.Password {
+      grid-template-columns: auto 55px;
+    }
+  }
+
   .Field {
     @include fieldDimensions();
     box-shadow: $box-shadow-alt6;
@@ -63,6 +72,14 @@
     &::placeholder {
       color: $color-main;
     }
+  }
+
+  .TogglePasswordDisplayContainer {
+    @include fieldDimensions();
+    display: grid;
+    justify-content: flex-end;
+    cursor: pointer;
+    user-select: none;
   }
 
   &.DetailNumber {

@@ -389,6 +389,7 @@ export default function HomePage(props: IHomePage): JSX.Element | null {
 
   // Class names used for styling based on the
   // current user's role.
+  let contentClassName: string = 'Content'
   let selectionContentClassName: string = 'SelectionContent'
   let userListContainer: string = 'Hidden'
   let editContentClassName: string = 'EditContentRow'
@@ -405,6 +406,7 @@ export default function HomePage(props: IHomePage): JSX.Element | null {
     currentUser.role &&
     restrictedAccessRoles.includes(currentUser.role)
   ) {
+    contentClassName += ' InstructorView'
     selectionContentClassName = 'SelectionContent-list InstructorView'
     userListContainer = 'UserListContainer'
     editContentClassName += ' InstructorView'
@@ -439,106 +441,112 @@ export default function HomePage(props: IHomePage): JSX.Element | null {
         ]}
       />
       {/* -- CONTENT -- */}
-
-      {/* { Mission List } */}
-      <div className='MissionListContainer'>
-        <List<Mission>
-          headingText={'Select a mission:'}
-          items={missions}
-          sortByMethods={[ESortByMethod.Name]}
-          nameProperty={'name'}
-          alwaysUseBlanks={true}
-          renderItemDisplay={(mission: Mission) => {
-            return (
-              <>
-                <div className='SelectionRow'>
-                  <div className='Text' onClick={() => selectMission(mission)}>
-                    {mission.name}
-                    <Tooltip description='Launch mission.' />
+      <div className={contentClassName}>
+        {/* { Mission List } */}
+        <div className='MissionListContainer'>
+          <List<Mission>
+            headingText={'Select a mission:'}
+            items={missions}
+            sortByMethods={[ESortByMethod.Name]}
+            nameProperty={'name'}
+            alwaysUseBlanks={true}
+            renderItemDisplay={(mission: Mission) => {
+              return (
+                <>
+                  <div className='SelectionRow'>
+                    <div
+                      className='Text'
+                      onClick={() => selectMission(mission)}
+                    >
+                      {mission.name}
+                      <Tooltip description='Launch mission.' />
+                    </div>
+                    <MissionModificationPanel
+                      mission={mission}
+                      appActions={appActions}
+                      handleSuccessfulCopy={() => setMountHandled(false)}
+                      handleSuccessfulDeletion={() => setMountHandled(false)}
+                      handleSuccessfulToggleLive={() => {}}
+                    />
                   </div>
-                  <MissionModificationPanel
-                    mission={mission}
-                    appActions={appActions}
-                    handleSuccessfulCopy={() => setMountHandled(false)}
-                    handleSuccessfulDeletion={() => setMountHandled(false)}
-                    handleSuccessfulToggleLive={() => {}}
-                  />
-                </div>
-              </>
-            )
-          }}
-          searchableProperties={['name']}
-          noItemsDisplay={
-            <div className='NoContent'>No missions available...</div>
-          }
-          ajaxStatus={EAjaxStatus.Loaded}
-          applyItemStyling={() => {
-            return {}
-          }}
-          listSpecificItemClassName={selectionContentClassName}
-        />
-        <div className={editContentClassName}>
-          <ButtonSVG
-            purpose={EButtonSVGPurpose.Add}
-            handleClick={createMission}
-            tooltipDescription={'Create new mission'}
-            uniqueClassName={'NewMissionButton'}
+                </>
+              )
+            }}
+            searchableProperties={['name']}
+            noItemsDisplay={
+              <div className='NoContent'>No missions available...</div>
+            }
+            ajaxStatus={EAjaxStatus.Loaded}
+            applyItemStyling={() => {
+              return {}
+            }}
+            listSpecificItemClassName={selectionContentClassName}
           />
-          <ButtonSVG
-            purpose={EButtonSVGPurpose.Upload}
-            handleClick={handleMissionImportRequest}
-            tooltipDescription={'Import a .metis file from your local system.'}
-          />
-          <input
-            className='ImportMissionTrigger'
-            type='file'
-            ref={importMissionTrigger}
-            onChange={handleImportMissionTriggerChange}
-            hidden
-          />
+          <div className={editContentClassName}>
+            <ButtonSVG
+              purpose={EButtonSVGPurpose.Add}
+              handleClick={createMission}
+              tooltipDescription={'Create new mission'}
+              uniqueClassName={'NewMissionButton'}
+            />
+            <ButtonSVG
+              purpose={EButtonSVGPurpose.Upload}
+              handleClick={handleMissionImportRequest}
+              tooltipDescription={
+                'Import a .metis file from your local system.'
+              }
+            />
+            <input
+              className='ImportMissionTrigger'
+              type='file'
+              ref={importMissionTrigger}
+              onChange={handleImportMissionTriggerChange}
+              hidden
+            />
+          </div>
         </div>
-      </div>
-      {/* { User List } */}
-      <div className={userListContainer}>
-        <List<User>
-          headingText={'Select a user:'}
-          items={users}
-          sortByMethods={[ESortByMethod.Name]}
-          nameProperty={'name'}
-          alwaysUseBlanks={true}
-          renderItemDisplay={(user: User) => {
-            return (
-              <>
-                <div className='SelectionRow'>
-                  <div className='Text' onClick={() => selectUser(user)}>
-                    {user.userID}
-                    <Tooltip description='Select user.' />
+        {/* { User List } */}
+        <div className={userListContainer}>
+          <List<User>
+            headingText={'Select a user:'}
+            items={users}
+            sortByMethods={[ESortByMethod.Name]}
+            nameProperty={'name'}
+            alwaysUseBlanks={true}
+            renderItemDisplay={(user: User) => {
+              return (
+                <>
+                  <div className='SelectionRow'>
+                    <div className='Text' onClick={() => selectUser(user)}>
+                      {user.userID}
+                      <Tooltip description='Select user.' />
+                    </div>
+                    <UserModificationPanel
+                      user={user}
+                      appActions={appActions}
+                      handleSuccessfulDeletion={() => setMountHandled(false)}
+                    />
                   </div>
-                  <UserModificationPanel
-                    user={user}
-                    appActions={appActions}
-                    handleSuccessfulDeletion={() => setMountHandled(false)}
-                  />
-                </div>
-              </>
-            )
-          }}
-          searchableProperties={['userID']}
-          noItemsDisplay={
-            <div className='NoContent'>No users available...</div>
-          }
-          ajaxStatus={EAjaxStatus.Loaded}
-          applyItemStyling={() => {
-            return {}
-          }}
-          listSpecificItemClassName={selectionContentClassName}
-        />
-        <div className={editContentClassName}>
-          <ButtonSVG
-            purpose={EButtonSVGPurpose.Add}
-            handleClick={createUser}
-            tooltipDescription={'Create new user'}
+                </>
+              )
+            }}
+            searchableProperties={['userID']}
+            noItemsDisplay={
+              <div className='NoContent'>No users available...</div>
+            }
+            ajaxStatus={EAjaxStatus.Loaded}
+            applyItemStyling={() => {
+              return {}
+            }}
+            listSpecificItemClassName={selectionContentClassName}
           />
+          <div className={editContentClassName}>
+            <ButtonSVG
+              purpose={EButtonSVGPurpose.Add}
+              handleClick={createUser}
+              tooltipDescription={'Create new user'}
+            />
+          </div>
         </div>
       </div>
 
