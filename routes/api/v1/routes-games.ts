@@ -8,10 +8,7 @@ import {
 import MissionModel from '../../../database/models/model-mission'
 import { databaseLogger, gameLogger } from '../../../modules/logging'
 import { Mission } from '../../../src/modules/missions'
-import { Game, GameServer, IGameJSON } from '../../../src/modules/games'
-import MetisSession from '../../../session/session'
-import { AxiosError } from 'axios'
-import { User } from '../../../src/modules/users'
+import { GameServer, IGameJSON } from '../../../src/modules/games'
 import ClientConnection from 'src/modules/connect/client-connect'
 
 const router = express.Router()
@@ -21,7 +18,7 @@ const router = express.Router()
 // to execute a mission.
 router.post(
   '/launch/',
-  requireLogin,
+  requireLogin(),
   (request: Request, response: Response) => {
     // Get data from the request body.
     let missionID: string = request.body.missionID

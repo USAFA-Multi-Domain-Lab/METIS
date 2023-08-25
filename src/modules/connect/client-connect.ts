@@ -5,6 +5,8 @@ import {
   TServerData,
   TClientData,
   TClientMethod,
+  TServerMethod,
+  IServerDataTypes,
 } from 'src/modules/connect/data'
 import { ServerEmittedError } from './errors'
 import { User } from '../users'
@@ -108,7 +110,7 @@ export class ClientConnection {
       // emmitting a duplicate client error
       // and disconnecting.
       else {
-        this.sendError(
+        this.emitError(
           new ServerEmittedError(ServerEmittedError.CODE_DUPLICATE_CLIENT),
         )
         this.disconnect()
@@ -143,10 +145,23 @@ export class ClientConnection {
   }
 
   /**
-   * Sends an error to the client.
-   * @param {ServerEmittedError} error The error to send to the client.
+   * Emits an event to the client.
+   * @param {TMethod} method The method of the event to emit.
+   * @param {TPayload} payload The payload of the event to emit.
    */
-  public sendError(error: ServerEmittedError): void {
+  public emit<
+    TMethod extends TServerMethod,
+    TPayload extends Omit<IServerDataTypes[TMethod], 'method'>,
+  >(method: TMethod, payload: TPayload): void {
+    // Send payload.
+    this.socket.send(JSON.stringify(payload))
+  }
+
+  /**
+   * Emits an error to the client.
+   * @param {ServerEmittedError} error The error to emit to the client.
+   */
+  public emitError(error: ServerEmittedError): void {
     let payload: TServerData<'error'> = error.toJSON()
     this.socket.send(JSON.stringify(payload))
   }
@@ -157,10 +172,10 @@ export class ClientConnection {
    * @param {TClientHandler<TServerEvent>} handler The handler that will be called upon the event being triggered.
    * @returns {ClientConnection} The client connection instance, allowing the chaining of class method calls.
    */
-  public addEventListener<
-    TMethod extends TClientMethod,
-    TData extends IClientDataTypes[TMethod],
-  >(method: TMethod, handler: TClientHandler<TMethod>): ClientConnection {
+  public addEventListener<TMethod extends TClientMethod>(
+    method: TMethod,
+    handler: TClientHandler<TMethod>,
+  ): ClientConnection {
     // Push the new listener to the array of listeners.
     this.listeners.set(method, handler)
     // Return this.
@@ -171,13 +186,7 @@ export class ClientConnection {
    * Adds default listeners for the client connection.
    */
   protected addDefaultListeners(): void {
-    // Add a listener for the 'request-launch' event.
-    this.addEventListener('request-launch', (data) => {
-      // Extract data.
-      let { requestID, missionID } = data
-
-      // If the session has a game, reject the request.
-    })
+    // None to add currently...
   }
 
   /**
@@ -203,6 +212,9 @@ export class ClientConnection {
         listener(closeData)
       }
     }
+
+    // Remove the client from the session.
+    this.session.client = null
   }
 
   /**
@@ -214,11 +226,10 @@ export class ClientConnection {
       // If the data passed is not a string,
       // throw an error.
       if (typeof event.data !== 'string') {
-        this.sendError(
-          new ServerEmittedError(
-            ServerEmittedError.CODE_INVALID_DATA,
-            'The data passed was not a string.',
-          ),
+        this.emitError(
+          new ServerEmittedError(ServerEmittedError.CODE_INVALID_DATA, {
+            message: 'The data passed was not a string.',
+          }),
         )
         return
       }

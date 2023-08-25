@@ -18,11 +18,11 @@ import {
 } from '../content/general-layout/ResizablePanels'
 import { MissionNodeAction } from '../../modules/mission-node-actions'
 import { IConsoleOutput } from '../content/game/ConsoleOutput'
-import { Game } from '../../modules/games'
+import { GameClient } from '../../modules/games'
 import { TMetisSession, User } from '../../modules/users'
 
 export interface IGamePage extends IPage {
-  game: Game
+  game: GameClient
 }
 
 // This is the number of times per
@@ -36,7 +36,7 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
 
   let appState: AppState = props.appState
   let appActions: AppActions = props.appActions
-  let game: Game = props.game
+  let game: GameClient = props.game
   let mission: Mission = game.mission
 
   /* -- STATE -- */
@@ -106,12 +106,7 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
     // Logic that opens the next level of nodes
     // (displays the selected node's child nodes)
     if (node.openable) {
-      try {
-        await game.open(node.nodeID)
-        appActions.syncSession()
-      } catch {
-        appActions.notify('Failed to open node.')
-      }
+      game.openNode(node.nodeID)
     }
     // If the node is ready to execute...
     else if (node.readyToExecute) {
@@ -182,10 +177,9 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
   // Equivalent of componentDidMount.
   useEffect(() => {
     if (!mountHandled) {
-      // appActions.finishLoading()
-      // setMountHandled(true)
-      // loop()
-      appActions.beginLoading('Connecting to game...')
+      appActions.finishLoading()
+      setMountHandled(true)
+      loop()
     }
   }, [mountHandled])
 
@@ -238,6 +232,8 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
           <div className='TopBar'>
             <div className={resourcesClassName}>
               Resources remaining: {mission.resources}
+              <span style={{ display: 'inline-block', width: '40px' }}></span>
+              Game ID: {game.gameID}
             </div>
             <MissionModificationPanel
               mission={mission}

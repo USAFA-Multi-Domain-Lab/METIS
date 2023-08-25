@@ -14,30 +14,33 @@ export const userRoles: AnyObject = {
 }
 
 // middleware that requires the user to be logged in
-export const requireLogin = (
-  request: Request,
-  response: Response,
-  next: NextFunction,
-  options: ILoginOptions = {
-    permittedRoles: [userRoles.Admin],
-  },
-): void => {
-  let session: MetisSession | undefined = MetisSession.get(
-    request.session.userID,
-  )
+export const requireLogin =
+  (
+    options: ILoginOptions = {
+      permittedRoles: [
+        userRoles.Student,
+        userRoles.Instructor,
+        userRoles.Admin,
+      ],
+    },
+  ) =>
+  (request: Request, response: Response, next: NextFunction): void => {
+    let session: MetisSession | undefined = MetisSession.get(
+      request.session.userID,
+    )
 
-  if (
-    session !== undefined &&
-    options.permittedRoles !== undefined &&
-    options.permittedRoles.includes(session.user.role)
-  ) {
-    response.locals.session = session
-    response.locals.user = session.user
-    next()
-  } else {
-    response.sendStatus(401)
+    if (
+      session !== undefined &&
+      options.permittedRoles !== undefined &&
+      options.permittedRoles.includes(session.user.role)
+    ) {
+      response.locals.session = session
+      response.locals.user = session.user
+      next()
+    } else {
+      response.sendStatus(401)
+    }
   }
-}
 
 /**
  * Express middleware requiring that the user in the session be connected to the web socket server.

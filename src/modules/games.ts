@@ -6,8 +6,9 @@ import context from './context'
 import { MissionNodeAction } from './mission-node-actions'
 import { MissionNode } from './mission-nodes'
 import ServerConnection from './connect/server-connect'
-import { register } from 'ts-node'
 import ClientConnection from './connect/client-connect'
+import { IClientDataTypes, TServerData } from './connect/data'
+import { ServerEmittedError } from './connect/errors'
 
 export interface IGameJSON {
   gameID: string
@@ -32,7 +33,7 @@ export abstract class Game<TParticpant extends { userID: string }> {
   /**
    * The participants of the game executing the mission.
    */
-  private _participants: Array<TParticpant>
+  protected _participants: Array<TParticpant>
 
   /**
    * The participants of the game executing the mission.
@@ -132,57 +133,6 @@ export abstract class Game<TParticpant extends { userID: string }> {
           // we cannot remove them.
           let error: AxiosError = new AxiosError('User is not in the game.')
           return reject(error)
-        }
-      },
-    )
-  }
-
-  /**
-   * Opens the given node, making its children visible.
-   * @param {nodeID} string The ID of the node to be opened.
-   * @returns {Promise<void>} A promise of the action being executed.
-   */
-  public async open(nodeID: string): Promise<void> {
-    return new Promise<void>(
-      (resolve: () => void, reject: (error: AxiosError) => void): void => {
-        // If the context is react, then we need
-        // to make a request to the server. The
-        // server needs to handle the opening of
-        // the node, not the client.
-        if (context === 'react') {
-          axios
-            .post<void>(`${Game.API_ENDPOINT}/open/`, { nodeID })
-            .then(resolve)
-            .catch((error: AxiosError) => {
-              console.error('Failed to open node.')
-              console.error(error)
-              reject(error)
-            })
-        }
-        // If the context is express, then we need
-        // to execute the action here.
-        else if (context === 'express') {
-          // Find the node, given the ID.
-          let node: MissionNode | undefined = this.mission.nodes.get(nodeID)
-
-          // If the node is undefined, then reject
-          // with a 404 error.
-          if (node === undefined) {
-            let error: AxiosError = new AxiosError('Node not found.')
-            error.status = 404
-            return reject(error)
-          }
-
-          // If the node is executable, then reject
-          // with a 401 error.
-          if (!node.openable) {
-            let error: AxiosError = new AxiosError('Node is not openable.')
-            error.status = 401
-            return reject(error)
-          }
-
-          // Open the node.
-          node.open()
         }
       },
     )
@@ -322,7 +272,7 @@ export class GameServer extends Game<ClientConnection> {
    */
   public join(participant: ClientConnection): void {
     // Add participant to the participant list.
-    this.participants.push(participant)
+    this._participants.push(participant)
 
     // Add game-specific listeners.
     this.addListeners(participant)
@@ -332,7 +282,9 @@ export class GameServer extends Game<ClientConnection> {
    * Creates game-specific listeners for the given particpant.
    */
   private addListeners(participant: ClientConnection): void {
-    // todo: add listeners
+    participant.addEventListener('request-open-node', (data) =>
+      this.onRequestOpen(participant, data),
+    )
   }
 
   /**
@@ -381,6 +333,56 @@ export class GameServer extends Game<ClientConnection> {
       game.destroy()
     }
   }
+
+  /**
+   * Called when a participant requests to open a node.
+   */
+  public onRequestOpen = (
+    participant: ClientConnection,
+    request: IClientDataTypes['request-open-node'],
+  ): void => {
+    let mission: Mission = this.mission
+    let { nodeID } = request
+
+    // Find the node, given the ID.
+    let node: MissionNode | undefined = mission.nodes.get(nodeID)
+
+    // If the node is undefined, then reject
+    // with a 404 error.
+    if (node === undefined) {
+      // Emit error.
+      participant.emitError(
+        new ServerEmittedError(ServerEmittedError.CODE_NODE_NOT_FOUND, {
+          request,
+        }),
+      )
+    }
+    // Else if the node is executable, then reject
+    // with a 401 error.
+    else if (!node.openable) {
+      // Emit error.
+      participant.emitError(
+        new ServerEmittedError(ServerEmittedError.CODE_NODE_NOT_OPENABLE, {
+          request,
+        }),
+      )
+    }
+    // Else open the node.
+    else {
+      node.open()
+
+      // Emit open event.
+      for (let participant of this.participants) {
+        participant.emit('node-opened', {
+          method: 'node-opened',
+          nodeID,
+          childNodes: node.childNodes.map((node) => node.toJSON()),
+          request,
+          requesterID: participant.userID,
+        })
+      }
+    }
+  }
 }
 
 /**
@@ -392,6 +394,7 @@ export class GameClient extends Game<User> {
    */
   protected server: ServerConnection
 
+  // todo: Between the time the client joins and this object is constructed, there is possibility that changes have been made in the game. This should be handled.
   public constructor(
     gameID: string,
     mission: Mission,
@@ -400,6 +403,14 @@ export class GameClient extends Game<User> {
   ) {
     super(gameID, mission, participants)
     this.server = server
+    this.addListeners()
+  }
+
+  /**
+   * Creates game-specific listeners for the given particpant.
+   */
+  private addListeners(): void {
+    this.server.addEventListener('node-opened', this.onNodeOpened)
   }
 
   // Implemented
@@ -409,6 +420,53 @@ export class GameClient extends Game<User> {
       mission: this.mission.toJSON(true),
       participants: this.participants.map((user) => user.toJSON()),
     }
+  }
+
+  /**
+   * Opens a node.
+   * @param {string} nodeID The ID of the node to be opened.
+   */
+  public openNode(nodeID: string): void {
+    let server: ServerConnection = this.server
+
+    // Throw error if the node is not in
+    // the mission associated with this
+    // game.
+    if (!this.mission.nodes.has(nodeID)) {
+      throw Error('Node was not found in the mission.')
+    }
+
+    // Emit a request to open the node.
+    server.emit('request-open-node', {
+      method: 'request-open-node',
+      requestID: ServerConnection.generateRequestID(),
+      nodeID: nodeID,
+    })
+  }
+
+  /**
+   * Handles when a node has been opened.
+   * @param {TServerData<'node-opened'>} data The data sent from the server.
+   */
+  private onNodeOpened = (data: TServerData<'node-opened'>): void => {
+    // Extract data.
+    let { nodeID, childNodes } = data
+
+    // Find the node, given the ID.
+    let node: MissionNode | undefined = this.mission.nodes.get(nodeID)
+
+    // Handle node not found.
+    if (node === undefined) {
+      throw new Error(
+        `Event "node-opened" was triggered, but the node with the given nodeID ("${nodeID}") could not be found.`,
+      )
+    }
+
+    // Populate nodes.
+    node.populateChildNodes(childNodes)
+
+    // Open the node.
+    node.open()
   }
 
   /**
@@ -480,7 +538,7 @@ export class GameClient extends Game<User> {
           // the given game ID. Await the
           // game JSON.
           let gameJSON: IGameJSON = (
-            await axios.post<IGameJSON>(`${Game.API_ENDPOINT}/join/`, {
+            await axios.put<IGameJSON>(`${Game.API_ENDPOINT}/join/`, {
               gameID,
             })
           ).data

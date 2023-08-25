@@ -362,22 +362,7 @@ export class Mission {
 
     // Convert the MissionNode objects
     // into JSON and return the result.
-    return nodes.map((node) => {
-      return {
-        nodeID: node.nodeID,
-        name: node.name,
-        color: node.color,
-        description: node.description,
-        preExecutionText: node.preExecutionText,
-        depthPadding: node.depthPadding,
-        executable: node.executable,
-        device: node.device,
-        actions: node.actions.map((action: MissionNodeAction) =>
-          action.toJSON(),
-        ),
-        isOpen: node.isOpen,
-      }
-    })
+    return nodes.map((node) => node.toJSON())
   }
 
   // This will convert this mission into

@@ -19,10 +19,6 @@ import validateRequestBodyKeys, {
 } from '../../../modules/requests'
 import { colorOptions } from '../../../modules/mission-node-colors'
 import { Mission } from '../../../src/modules/missions'
-import {
-  MissionControl,
-  ServerMissionSession,
-} from '../../../session/mission-control'
 
 type MulterFile = Express.Multer.File
 
@@ -33,7 +29,7 @@ const router = express.Router()
 // This will create a new mission.
 router.post(
   '/',
-  requireLogin,
+  requireLogin(),
   validateRequestBodyKeys({
     name: RequestBodyFilters.STRING,
     introMessage: RequestBodyFilters.STRING,
@@ -109,7 +105,7 @@ router.post(
 // -- POST | /api/v1/missions/import/ --
 router.post(
   '/import/',
-  requireLogin,
+  requireLogin(),
   uploads.array('files', 12),
   (request, response) => {
     // Verifies files were included
@@ -470,7 +466,7 @@ router.get(
 // This will return all of the missions.
 router.get(
   '/export/*',
-  requireLogin,
+  requireLogin(),
   validateRequestQueryKeys({ missionID: 'objectId' }),
   (request, response) => {
     let missionID = request.query.missionID
@@ -559,7 +555,7 @@ router.get('/colors/', validateRequestQueryKeys({}), (request, response) => {
 // after an action is executed successfully
 router.put(
   '/handle-action-execution/',
-  requireLogin,
+  requireLogin(),
   validateRequestBodyKeys({
     missionID: RequestBodyFilters.OBJECTID,
     nodeID: RequestBodyFilters.STRING,
@@ -608,7 +604,7 @@ router.put(
 // This will update the mission.
 router.put(
   '/',
-  requireLogin,
+  requireLogin(),
   validateRequestBodyKeys(
     {
       missionID: RequestBodyFilters.OBJECTID,
@@ -724,7 +720,7 @@ router.put(
 // This will copy a mission.
 router.put(
   '/copy/',
-  requireLogin,
+  requireLogin(),
   validateRequestBodyKeys({
     copyName: RequestBodyFilters.STRING,
     originalID: RequestBodyFilters.STRING,
@@ -781,7 +777,7 @@ router.put(
 // This will delete a mission.
 router.delete(
   '/',
-  requireLogin,
+  requireLogin(),
   validateRequestQueryKeys({ missionID: 'objectId' }),
   (request, response) => {
     let query: any = request.query
@@ -805,7 +801,7 @@ router.delete(
 // This will create a new mission session for a user to execute.
 router.post(
   '/execute/launch/:missionID',
-  requireLogin,
+  requireLogin(),
   validateRequestParams({
     missionID: RequestBodyFilters.OBJECTID,
   }),

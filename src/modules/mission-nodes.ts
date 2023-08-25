@@ -447,6 +447,21 @@ export class MissionNode implements IMissionMappable {
     this.parseActionJSON(actionJSON)
   }
 
+  public toJSON(): IMissionNodeJSON {
+    return {
+      nodeID: this.nodeID,
+      name: this.name,
+      color: this.color,
+      description: this.description,
+      preExecutionText: this.preExecutionText,
+      depthPadding: this.depthPadding,
+      executable: this.executable,
+      device: this.device,
+      actions: this.actions.map((action: MissionNodeAction) => action.toJSON()),
+      isOpen: this.isOpen,
+    }
+  }
+
   // This will turn the action JSON
   // into new MissionNodeAction objects.
   parseActionJSON(actionJSON: Array<IMissionNodeActionJSON>): void {
@@ -636,6 +651,68 @@ export class MissionNode implements IMissionMappable {
       childNode.open()
     }
     this._handleStructureChange()
+  }
+
+  /**
+   * Populates previously omitted child nodes with the JSON passed.
+   * @param {Array<IMissionNodeJSON>} childNodesJSON The child nodes to populate. This likely comes from a "node-opened" server emitted event.
+   * @returns {Array<MissionNode>} The new array of child nodes.
+   */
+  public populateChildNodes(
+    childNodesJSON: Array<IMissionNodeJSON>,
+  ): Array<MissionNode> {
+    // If child nodes are already set,
+    // throw an error.
+    if (this.childNodes.length > 0) {
+      throw new Error('Child nodes are already populated.')
+    }
+
+    // Generate child nodes.
+    let childNodes: Array<MissionNode> = childNodesJSON.map((childNodeJSON) => {
+      // Put together default data.
+      let defaultNodeData = {
+        name: MissionNode.default_name,
+        color: MissionNode.default_color,
+        description: MissionNode.default_description,
+        preExecutionText: MissionNode.default_preExecutionText,
+        depthPadding: MissionNode.default_depthPadding,
+        executable: MissionNode.default_executable,
+        device: MissionNode.default_device,
+        actions: MissionNode.default_actions,
+      }
+
+      // Consolidate default data and data passed.
+      childNodeJSON = { ...defaultNodeData, ...childNodeJSON }
+
+      // Create a new node.
+      let childNode: MissionNode = new MissionNode(
+        this.mission,
+        childNodeJSON.nodeID,
+        childNodeJSON.name,
+        childNodeJSON.color,
+        childNodeJSON.description,
+        childNodeJSON.preExecutionText,
+        childNodeJSON.depthPadding,
+        childNodeJSON.executable,
+        childNodeJSON.device,
+        childNodeJSON.actions,
+        MissionNode.default_mapX,
+        MissionNode.default_mapY,
+        childNodeJSON.isOpen,
+      )
+
+      // Set the node in the missions.
+      this.mission.nodes.set(childNode.nodeID, childNode)
+
+      // Return node
+      return childNode
+    })
+
+    // Set child nodes.
+    this.childNodes = childNodes
+
+    // Return the child nodes.
+    return childNodes
   }
 
   // This will color all descendant

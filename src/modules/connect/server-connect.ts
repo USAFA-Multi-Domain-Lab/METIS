@@ -1,9 +1,12 @@
 import {
+  IClientDataTypes,
   IServerDataTypes,
+  TClientMethod,
   TServerData,
   TServerMethod,
 } from 'src/modules/connect/data'
 import { ServerEmittedError } from './errors'
+import { v4 as generateHash } from 'uuid'
 
 /**
  * Represents a handler in a server connection for a client-emitted event.
@@ -36,7 +39,8 @@ export class ServerConnection {
   /**
    * The end point for establishing a web socket connection.
    */
-  public static readonly SOCKET_URL = `ws://${window.location.host}/connect`
+  public static readonly SOCKET_URL =
+    typeof window !== 'undefined' ? `ws://${window.location.host}/connect` : '/'
 
   /**
    * The web socket connection itself.
@@ -91,6 +95,19 @@ export class ServerConnection {
     this.socket.addEventListener('open', this.onOpen)
     this.socket.addEventListener('close', this.onClose)
     this.socket.addEventListener('message', this.onMessage)
+  }
+
+  /**
+   * Emits an event to the server.
+   * @param {TMethod} method The method of the event to emit.
+   * @param {TPayload} payload The payload of the event to emit.
+   */
+  public emit<
+    TMethod extends TClientMethod,
+    TPayload extends Omit<IClientDataTypes[TMethod], 'method'>,
+  >(method: TMethod, payload: TPayload): void {
+    // Send payload.
+    this.socket.send(JSON.stringify(payload))
   }
 
   /**
@@ -200,6 +217,13 @@ export class ServerConnection {
         listener(data)
       }
     }
+  }
+
+  /**
+   * Generates a new request ID for a request to the server.
+   */
+  public static generateRequestID(): any {
+    return `request_${generateHash()}`
   }
 }
 

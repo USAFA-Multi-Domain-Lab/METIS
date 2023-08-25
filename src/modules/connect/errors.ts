@@ -24,11 +24,30 @@ export abstract class WSEmittedError {
   }
 }
 
+export interface IServerEmittedErrorOptions {
+  /**
+   * The message for this error given to the client, describing the error the occurred in more detail than what is provided by the error code. Defaults to the default error message for the given code.
+   */
+  message?: string
+  /**
+   * The request that caused the error, if any.
+   */
+  request?: TServerData<'error'>['request']
+}
+
 /**
  * An error sent in the ClientConnection class from the server to the client.
  */
 export class ServerEmittedError extends WSEmittedError {
-  public constructor(code: number, message?: string) {
+  /**
+   * The request that caused the error, if any.
+   */
+  public request?: TServerData<'error'>['request']
+
+  public constructor(code: number, options: IServerEmittedErrorOptions = {}) {
+    // Extract options.
+    let { message, request } = options
+
     // Grab default message for the code
     // passed if no message is provided.
     if (message === undefined) {
@@ -42,6 +61,7 @@ export class ServerEmittedError extends WSEmittedError {
       }
     }
     super(code, message)
+    this.request = request
   }
 
   /**
@@ -53,6 +73,7 @@ export class ServerEmittedError extends WSEmittedError {
       method: 'error',
       code: this.code,
       message: this.message,
+      request: this.request,
     }
   }
 
@@ -69,13 +90,13 @@ export class ServerEmittedError extends WSEmittedError {
    */
   public static readonly CODE_DUPLICATE_CLIENT: number = 10002
   /**
-   * Code for a client requesting to join a game that cannot be found.
+   * Code for a client requesting to open a node that cannot be found.
    */
-  public static readonly CODE_GAME_NOT_FOUND: number = 20000
+  public static readonly CODE_NODE_NOT_FOUND: number = 20000
   /**
-   * Code for a client requesting to join a game when they are already in a game.
+   * Code for a client requesting to open a node that cannot be opened.
    */
-  public static readonly CODE_DOUBLE_JOIN: number = 20001
+  public static readonly CODE_NODE_NOT_OPENABLE: number = 20001
   /**
    * Code for a client request failing due to a server-side general error.
    */
@@ -86,8 +107,8 @@ export class ServerEmittedError extends WSEmittedError {
     [ServerEmittedError.CODE_INVALID_DATA]: 'Data sent was invalid.',
     [ServerEmittedError.CODE_DUPLICATE_CLIENT]:
       'You are already connected via another tab.',
-    [ServerEmittedError.CODE_GAME_NOT_FOUND]: 'Game not found.',
-    [ServerEmittedError.CODE_DOUBLE_JOIN]: 'You are already in a game.',
+    [ServerEmittedError.CODE_NODE_NOT_FOUND]: 'Node not found.',
+    [ServerEmittedError.CODE_NODE_NOT_OPENABLE]: 'Node not openable.',
     [ServerEmittedError.CODE_SERVER_ERROR]: 'Server error.',
   }
 
@@ -97,8 +118,12 @@ export class ServerEmittedError extends WSEmittedError {
    * @returns {ServerEmittedError} The new ServerEmittedError object.
    * @throws {Error} If the JSON data is invalid.
    */
-  public static fromJSON(json: TServerData<'error'>): ServerEmittedError {
-    return new ServerEmittedError(json.code, json.message)
+  public static fromJSON({
+    code,
+    message,
+    request,
+  }: TServerData<'error'>): ServerEmittedError {
+    return new ServerEmittedError(code, { message, request })
   }
 }
 
@@ -125,7 +150,7 @@ export class ClientEmittedError extends WSEmittedError {
    * @throws {Error} If the JSON data is invalid.
    */
   public static fromJSON(json: TClientData<'error'>): ClientEmittedError {
-    return new ServerEmittedError(json.code, json.message)
+    return new ClientEmittedError(json.code, json.message)
   }
 }
 

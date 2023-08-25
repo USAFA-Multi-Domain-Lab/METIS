@@ -1,4 +1,5 @@
 import { IGameJSON } from '../games'
+import { IMissionNodeJSON } from '../mission-nodes'
 
 /**
  * Represents the types of data sent from the server to the client over a web socket.
@@ -22,10 +23,12 @@ export interface IServerDataTypes {
       requestID: string
     }
   }
-  'response-join': {
-    method: 'response-launch'
-    requestID: string
-    game: IGameJSON
+  'node-opened': {
+    method: 'node-opened'
+    nodeID: string
+    childNodes: Array<IMissionNodeJSON>
+    request: IClientDataTypes['request-open-node']
+    requesterID: string
   }
 }
 /**
@@ -48,10 +51,10 @@ export interface IClientDataTypes {
     code: number
     message: string
   }
-  'request-launch': {
-    method: 'request-launch'
+  'request-open-node': {
+    method: 'request-open-node'
     requestID: string
-    missionID: string
+    nodeID: string
   }
 }
 
