@@ -155,7 +155,6 @@ export default class ExecuteNodePath extends React.Component<
     let selectedAction: MissionNodeAction = this.props.selectedAction
     let isOpen: boolean = this.props.isOpen
 
-    console.log(isOpen)
     // Logic to disable the execute button once a user is out of tokens.
     let className: string = 'ExecuteNodePath'
 

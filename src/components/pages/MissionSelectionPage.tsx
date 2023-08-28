@@ -600,6 +600,9 @@ export default function MissionSelectionPage(
     versionClassName = 'Version'
   }
 
+  /**
+   * ! TEMPORARY
+   */
   const manuallyJoin = useCallback(async (event: React.FormEvent) => {
     event.preventDefault()
     let target: HTMLFormElement = event.target as HTMLFormElement

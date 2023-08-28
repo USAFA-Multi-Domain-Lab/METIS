@@ -362,13 +362,13 @@ export class GameServer extends Game<ClientConnection> {
     }
     // If the node is not revealed, then
     // emit an error.
-    // if (action.node.revealed) {
-    //   return participant.emitError(
-    //     new ServerEmittedError(ServerEmittedError.CODE_NODE_NOT_REVEALED, {
-    //       request,
-    //     }),
-    //   )
-    // }
+    if (!action.node.revealed) {
+      return participant.emitError(
+        new ServerEmittedError(ServerEmittedError.CODE_NODE_NOT_REVEALED, {
+          request,
+        }),
+      )
+    }
 
     // Get nodeID.
     let nodeID: string = action.node.nodeID

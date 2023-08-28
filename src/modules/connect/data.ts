@@ -1,4 +1,3 @@
-import { IGameJSON } from '../games'
 import { IMissionNodeJSON } from '../mission-nodes'
 
 /**
@@ -46,6 +45,7 @@ export interface IServerDataTypes {
     requesterID: string
   }
 }
+
 /**
  * Represents a type of event that occurs on the server that is sent to the client over a web socket.
  */
