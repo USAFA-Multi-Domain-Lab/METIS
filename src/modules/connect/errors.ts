@@ -98,6 +98,18 @@ export class ServerEmittedError extends WSEmittedError {
    */
   public static readonly CODE_NODE_NOT_OPENABLE: number = 20001
   /**
+   * Code for a client requesting to execute an action that cannot be found.
+   */
+  public static readonly CODE_ACTION_NOT_FOUND: number = 20002
+  /**
+   * Code for a client requesting to execute an action on a node that is not executable.
+   */
+  public static readonly CODE_NODE_NOT_EXECUTABLE: number = 20003
+  /**
+   * Code for a client requesting to execute an action on a node that is not yet revealed.
+   */
+  public static readonly CODE_NODE_NOT_REVEALED: number = 20004
+  /**
    * Code for a client request failing due to a server-side general error.
    */
   public static readonly CODE_SERVER_ERROR: number = 30000
@@ -109,6 +121,9 @@ export class ServerEmittedError extends WSEmittedError {
       'You are already connected via another tab.',
     [ServerEmittedError.CODE_NODE_NOT_FOUND]: 'Node not found.',
     [ServerEmittedError.CODE_NODE_NOT_OPENABLE]: 'Node not openable.',
+    [ServerEmittedError.CODE_ACTION_NOT_FOUND]: 'Action not found.',
+    [ServerEmittedError.CODE_NODE_NOT_EXECUTABLE]: 'Node not executable.',
+    [ServerEmittedError.CODE_NODE_NOT_REVEALED]: 'Node not revealed.',
     [ServerEmittedError.CODE_SERVER_ERROR]: 'Server error.',
   }
 

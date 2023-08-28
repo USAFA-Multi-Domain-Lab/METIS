@@ -45,7 +45,7 @@ export abstract class Game<TParticpant extends { userID: string }> {
   /**
    * A map of actionIDs to actions compiled from those found in the mission being executed.
    */
-  private actions: Map<string, MissionNodeAction> = new Map<
+  protected actions: Map<string, MissionNodeAction> = new Map<
     string,
     MissionNodeAction
   >()
@@ -67,7 +67,7 @@ export abstract class Game<TParticpant extends { userID: string }> {
   /**
    * Loops through all the nodes in the mission, and each action in a node, and maps the actionID to the action in the field "actions".
    */
-  private mapActions(): void {
+  protected mapActions(): void {
     // Initialize the actions map.
     this.actions = new Map<string, MissionNodeAction>()
 
@@ -133,67 +133,6 @@ export abstract class Game<TParticpant extends { userID: string }> {
           // we cannot remove them.
           let error: AxiosError = new AxiosError('User is not in the game.')
           return reject(error)
-        }
-      },
-    )
-  }
-
-  /**
-   * Executes the given action on the corresponding node.
-   * @param {actionID} string The ID of the action to be executed.
-   * @returns {Promise<void>} A promise of the action being executed.
-   */
-  public async execute(actionID: string): Promise<void> {
-    return new Promise<void>(
-      (resolve: () => void, reject: (error: AxiosError) => void): void => {
-        // If the context is react, then we need
-        // to make a request to the server. The
-        // server needs to handle the execution of
-        // the action, not the client.
-        if (context === 'react') {
-          axios
-            .post<void>(`${Game.API_ENDPOINT}/execute/`, { actionID })
-            .then(resolve)
-            .catch((error: AxiosError) => {
-              console.error('Failed to execute action.')
-              console.error(error)
-              reject(error)
-            })
-        }
-        // If the context is express, then we need
-        // to execute the action here.
-        else if (context === 'express') {
-          // Find the action given the ID.
-          let action: MissionNodeAction | undefined = this.actions.get(actionID)
-
-          // If the action is undefined, then reject
-          // with a 404 error.
-          if (action === undefined) {
-            let error: AxiosError = new AxiosError('Action not found.')
-            error.status = 404
-            return reject(error)
-          }
-
-          // If the action is not executable, then
-          // reject with a 401 error.
-          if (!action.node.executable) {
-            let error: AxiosError = new AxiosError('Node is not executable.')
-            error.status = 401
-            return reject(error)
-          }
-
-          // If the node is not revealed, then
-          // reject with a 401 error.
-          if (action.node.revealed) {
-            let error: AxiosError = new AxiosError('Node is not revealed.')
-            error.status = 401
-            return reject(error)
-          }
-
-          // Execute the action.
-          action.execute(false, resolve, () => {
-            reject(new AxiosError('Failed to execute action.'))
-          })
         }
       },
     )
@@ -283,7 +222,10 @@ export class GameServer extends Game<ClientConnection> {
    */
   private addListeners(participant: ClientConnection): void {
     participant.addEventListener('request-open-node', (data) =>
-      this.onRequestOpen(participant, data),
+      this.onRequestOpenNode(participant, data),
+    )
+    participant.addEventListener('request-execute-action', (data) =>
+      this.onRequestExecuteAction(participant, data),
     )
   }
 
@@ -337,50 +279,144 @@ export class GameServer extends Game<ClientConnection> {
   /**
    * Called when a participant requests to open a node.
    */
-  public onRequestOpen = (
+  public onRequestOpenNode = (
     participant: ClientConnection,
     request: IClientDataTypes['request-open-node'],
   ): void => {
+    // Organize data.
     let mission: Mission = this.mission
     let { nodeID } = request
 
     // Find the node, given the ID.
     let node: MissionNode | undefined = mission.nodes.get(nodeID)
 
-    // If the node is undefined, then reject
-    // with a 404 error.
+    // If the node is undefined, then emit
+    // an error.
     if (node === undefined) {
-      // Emit error.
-      participant.emitError(
+      return participant.emitError(
         new ServerEmittedError(ServerEmittedError.CODE_NODE_NOT_FOUND, {
           request,
         }),
       )
     }
-    // Else if the node is executable, then reject
-    // with a 401 error.
-    else if (!node.openable) {
-      // Emit error.
-      participant.emitError(
+    // If the node is executable, then emit
+    // an error.
+    if (!node.openable) {
+      return participant.emitError(
         new ServerEmittedError(ServerEmittedError.CODE_NODE_NOT_OPENABLE, {
           request,
         }),
       )
     }
-    // Else open the node.
-    else {
-      node.open()
 
-      // Emit open event.
-      for (let participant of this.participants) {
-        participant.emit('node-opened', {
-          method: 'node-opened',
-          nodeID,
-          childNodes: node.childNodes.map((node) => node.toJSON()),
+    // Open the node.
+    node.open()
+
+    // Construct open event payload.
+    let payload: TServerData<'node-opened'> = {
+      method: 'node-opened',
+      nodeID,
+      revealedChildNodes: node.childNodes.map((node) => node.toJSON()),
+      request,
+      requesterID: participant.userID,
+    }
+
+    // Emit open event.
+    for (let participant of this.participants) {
+      participant.emit('node-opened', payload)
+    }
+  }
+
+  /**
+   * Called when a participant requests to execute an action on a node.
+   */
+  public onRequestExecuteAction = async (
+    participant: ClientConnection,
+    request: IClientDataTypes['request-execute-action'],
+  ): Promise<void> => {
+    console.log('request-execute-action')
+
+    // Extract request data.
+    let { actionID } = request
+
+    // Find the action given the ID.
+    let action: MissionNodeAction | undefined = this.actions.get(actionID)
+
+    // If the action is undefined, then emit
+    // an error.
+    if (action === undefined) {
+      return participant.emitError(
+        new ServerEmittedError(ServerEmittedError.CODE_ACTION_NOT_FOUND, {
           request,
-          requesterID: participant.userID,
-        })
-      }
+        }),
+      )
+    }
+    // If the action is not executable, then
+    // emit an error.
+    if (!action.node.executable) {
+      return participant.emitError(
+        new ServerEmittedError(ServerEmittedError.CODE_NODE_NOT_EXECUTABLE, {
+          request,
+        }),
+      )
+    }
+    // If the node is not revealed, then
+    // emit an error.
+    // if (action.node.revealed) {
+    //   return participant.emitError(
+    //     new ServerEmittedError(ServerEmittedError.CODE_NODE_NOT_REVEALED, {
+    //       request,
+    //     }),
+    //   )
+    // }
+
+    // Get nodeID.
+    let nodeID: string = action.node.nodeID
+
+    // Determine expected completion time.
+    let expectedCompletionTime: number = Date.now() + action.processTime
+
+    // Construct payload for action execution
+    // initiated event.
+    let initiationPayload: TServerData<'action-execution-initiated'> = {
+      method: 'action-execution-initiated',
+      actionID,
+      expectedCompletionTime,
+      request,
+    }
+
+    // Emit action execution initiated event
+    // to each participant.
+    for (let participant of this.participants) {
+      participant.emit('action-execution-initiated', initiationPayload)
+    }
+
+    // Execute the action, awaiting result.
+    let { success: successful } = await action.execute({ enactEffects: false })
+
+    // Construct payload for action execution
+    // completed event.
+    let completionPayload: TServerData<'action-execution-completed'> = {
+      method: 'action-execution-completed',
+      actionID,
+      nodeID,
+      successful,
+      request,
+      requesterID: participant.userID,
+    }
+
+    // Add child nodes if the action was
+    // successful.
+    if (successful) {
+      completionPayload.revealedChildNodes = action.node.childNodes.map(
+        (node) => node.toJSON(),
+      )
+    }
+
+    // Emit the action execution completed
+    // event to each participant.
+    for (let participant of this.participants) {
+      participant.emit('action-execution-completed', completionPayload)
     }
   }
 }
@@ -411,6 +447,14 @@ export class GameClient extends Game<User> {
    */
   private addListeners(): void {
     this.server.addEventListener('node-opened', this.onNodeOpened)
+    this.server.addEventListener(
+      'action-execution-initiated',
+      this.onActionExecutionInitiated,
+    )
+    this.server.addEventListener(
+      'action-execution-completed',
+      this.onActionExecutionCompleted,
+    )
   }
 
   // Implemented
@@ -445,12 +489,34 @@ export class GameClient extends Game<User> {
   }
 
   /**
+   * Executes an action.
+   * @param {string} actionID The ID of the action to be executed.
+   */
+  public executeAction(actionID: string): void {
+    let server: ServerConnection = this.server
+
+    // Throw error if the action is not in
+    // the mission associated with this
+    // game.
+    if (!this.actions.has(actionID)) {
+      throw Error('Action was not found in the mission.')
+    }
+
+    // Emit a request to execute the action.
+    server.emit('request-execute-action', {
+      method: 'request-execute-action',
+      requestID: ServerConnection.generateRequestID(),
+      actionID: actionID,
+    })
+  }
+
+  /**
    * Handles when a node has been opened.
    * @param {TServerData<'node-opened'>} data The data sent from the server.
    */
   private onNodeOpened = (data: TServerData<'node-opened'>): void => {
     // Extract data.
-    let { nodeID, childNodes } = data
+    let { nodeID, revealedChildNodes: childNodes } = data
 
     // Find the node, given the ID.
     let node: MissionNode | undefined = this.mission.nodes.get(nodeID)
@@ -465,8 +531,71 @@ export class GameClient extends Game<User> {
     // Populate nodes.
     node.populateChildNodes(childNodes)
 
+    // Remap actions.
+    this.mapActions()
+
     // Open the node.
     node.open()
+  }
+
+  /**
+   * Handles when action execution has been initiated.
+   * @param {TServerData<'action-execution-initiated'>} data The data sent from the server.'
+   */
+  private onActionExecutionInitiated = (
+    data: TServerData<'action-execution-initiated'>,
+  ): void => {
+    console.log('request-execution-initiated')
+    // Extract data.
+    let { actionID, expectedCompletionTime } = data
+
+    // Find the action, given the ID.
+    let action: MissionNodeAction | undefined = this.actions.get(actionID)
+
+    // Handle action not found.
+    if (action === undefined) {
+      throw new Error(
+        `Event "action-execution-initiated" was triggered, but the action with the given actionID ("${actionID}") could not be found.`,
+      )
+    }
+
+    // Log to the console for now.
+    console.log('Action execution initiated.')
+  }
+
+  /**
+   * Handles when action execution has been completed.
+   */
+  private onActionExecutionCompleted = (
+    data: TServerData<'action-execution-completed'>,
+  ): void => {
+    console.log('request-execution-completed')
+    // Extract data.
+    let { actionID, successful, revealedChildNodes } = data
+
+    // Find the action, given the ID.
+    let action: MissionNodeAction | undefined = this.actions.get(actionID)
+
+    // Handle action not found.
+    if (action === undefined) {
+      throw new Error(
+        `Event "action-execution-initiated" was triggered, but the action with the given actionID ("${actionID}") could not be found.`,
+      )
+    }
+
+    // Extract node from action.
+    let node: MissionNode = action.node
+
+    // Handle action execution end.
+    node._lastExecutedAction = action
+    node._lastExecutionSucceeded = successful
+    node._lastExecutionFailed = !successful
+
+    // Populate child nodes.
+    if (revealedChildNodes !== undefined) {
+      node._isOpen = true
+      node.populateChildNodes(revealedChildNodes)
+    }
   }
 
   /**

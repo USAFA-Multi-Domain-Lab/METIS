@@ -24,6 +24,16 @@ export interface IMissionNodeActionJSON {
   scripts: Array<IScript>
 }
 
+/**
+ * Options for when a node is executed.
+ */
+export interface IActionExecutionOptions {
+  /**
+   * Whether or not to enact effects when executing the action.
+   */
+  enactEffects: boolean
+}
+
 export class MissionNodeAction {
   node: MissionNode
   actionID: string
@@ -145,7 +155,7 @@ export class MissionNodeAction {
   // execution completion.
   _handleExecutionEnd = (
     success: boolean,
-    useAssets: boolean,
+    enactEffects: boolean,
     handleSuccess: () => void,
     handleFailure: () => void,
   ): void => {
@@ -160,7 +170,7 @@ export class MissionNodeAction {
       handleFailure()
     }
 
-    if (success && useAssets) {
+    if (success && enactEffects) {
       handleSuccessfulActionExecution(
         mission.missionID,
         node.nodeID,
@@ -169,36 +179,40 @@ export class MissionNodeAction {
     }
   }
 
-  // This will execute the action.
-  execute(
-    useAssets: boolean,
-    handleSuccess: () => void,
-    handleFailure: () => void,
-  ): void {
-    let node: MissionNode = this.node
-    let mission: Mission = node.mission
-    let resourceCost: number = this.resourceCost
-    let processTime: number = this.processTime
-    let willSucceed: boolean = this.willSucceedArray[0]
+  /**
+   * Executes the action with the given options.
+   * @param {IActionExecutionOptions} options The options for executing the action.
+   * @returns {Promise<{ success: boolean }>} A promise that resolves with whether or not the action succeeded. Resolves once the action is completed. Promise shouldn't need a catch.
+   */
+  public execute({
+    enactEffects,
+  }: IActionExecutionOptions): Promise<{ success: boolean }> {
+    return new Promise<{ success: boolean }>((resolve) => {
+      let node: MissionNode = this.node
+      let mission: Mission = node.mission
+      let resourceCost: number = this.resourceCost
+      let processTime: number = this.processTime
+      let willSucceed: boolean = this.willSucceedArray[0]
 
-    if (!this.readyToExecute) {
-      throw Error('This action cannot currently be executed.')
-    }
+      if (!this.readyToExecute) {
+        throw Error('This action cannot currently be executed.')
+      }
 
-    mission.resources -= resourceCost
+      mission.resources -= resourceCost
 
-    node.handleActionExecutionStart(this)
+      node.handleActionExecutionStart(this)
 
-    setTimeout(() => {
-      this.updateWillSucceed()
-      this._handleExecutionEnd(
-        willSucceed,
-        useAssets,
-        handleSuccess,
-        handleFailure,
-      )
-      this.updateWillSucceedArray()
-    }, processTime)
+      setTimeout(() => {
+        this.updateWillSucceed()
+        this._handleExecutionEnd(
+          willSucceed,
+          enactEffects,
+          () => resolve({ success: true }),
+          () => resolve({ success: false }),
+        )
+        this.updateWillSucceedArray()
+      }, processTime)
+    })
   }
 
   // This will determine whether a

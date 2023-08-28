@@ -26,8 +26,23 @@ export interface IServerDataTypes {
   'node-opened': {
     method: 'node-opened'
     nodeID: string
-    childNodes: Array<IMissionNodeJSON>
+    revealedChildNodes: Array<IMissionNodeJSON>
     request: IClientDataTypes['request-open-node']
+    requesterID: string
+  }
+  'action-execution-initiated': {
+    method: 'action-execution-initiated'
+    actionID: string
+    expectedCompletionTime: number
+    request: IClientDataTypes['request-execute-action']
+  }
+  'action-execution-completed': {
+    method: 'action-execution-completed'
+    actionID: string
+    nodeID: string
+    successful: boolean
+    revealedChildNodes?: Array<IMissionNodeJSON>
+    request: IClientDataTypes['request-execute-action']
     requesterID: string
   }
 }
@@ -55,6 +70,11 @@ export interface IClientDataTypes {
     method: 'request-open-node'
     requestID: string
     nodeID: string
+  }
+  'request-execute-action': {
+    method: 'request-execute-action'
+    requestID: string
+    actionID: string
   }
 }
 

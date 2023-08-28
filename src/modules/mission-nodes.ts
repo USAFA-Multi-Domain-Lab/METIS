@@ -68,9 +68,12 @@ export class MissionNode implements IMissionMappable {
   selectedAction: MissionNodeAction | null
   private _executingAction: MissionNodeAction | null
   private _executing: boolean
-  private _lastExecutedAction: MissionNodeAction | null
-  private _lastExecutionSucceeded: boolean
-  private _lastExecutionFailed: boolean
+  // ! TEMPORARILY PUBLIC FOR TESTING
+  public _lastExecutedAction: MissionNodeAction | null
+  // ! TEMPORARILY PUBLIC FOR TESTING
+  public _lastExecutionSucceeded: boolean
+  // ! TEMPORARILY PUBLIC FOR TESTING
+  public _lastExecutionFailed: boolean
   mapX: number
   mapY: number
   depth: number

@@ -108,6 +108,7 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
     if (node.openable) {
       game.openNode(node.nodeID)
     }
+
     // If the node is ready to execute...
     else if (node.readyToExecute) {
       // If there are no more resources left
@@ -154,12 +155,17 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
   // prompt if the user has selected a node
   // and an action.
   const renderExecuteNodePath = () => {
-    if (selectedNode !== null && selectedNode.selectedAction !== null) {
+    if (selectedNode !== null && selectedAction !== null) {
       return (
         <ExecuteNodePath
-          selectedAction={selectedNode.selectedAction}
+          selectedAction={selectedAction}
           isOpen={displayExecuteNodePath}
           outputToConsole={outputToConsole}
+          handleExecutionRequest={() => {
+            if (selectedAction) {
+              game.executeAction(selectedAction.actionID)
+            }
+          }}
           handleCloseRequest={clearSelections}
           handleGoBackRequest={() => {
             if (selectedNode && selectedNode.actions.length === 1) {

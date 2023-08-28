@@ -19,6 +19,7 @@ interface IExecuteNodePath {
   selectedAction: MissionNodeAction
   notify: (message: string, options: INotifyOptions) => Notification
   outputToConsole: (output: IConsoleOutput) => void
+  handleExecutionRequest: () => void
   handleCloseRequest: () => void
   handleGoBackRequest: () => void
 }
@@ -27,6 +28,7 @@ interface IExecuteNodePath_S {}
 
 function Buttons(props: {
   selectedAction: MissionNodeAction
+  handleExecutionRequest: () => void
   handleGoBackRequest: () => void
   handleCloseRequest: () => void
   outputToConsole: (output: IConsoleOutput) => void
@@ -36,6 +38,7 @@ function Buttons(props: {
   let selectedAction: MissionNodeAction = props.selectedAction
   let selectedNode: MissionNode = selectedAction.node
   let mission: Mission = selectedNode.mission
+  let handleExecutionRequest = props.handleExecutionRequest
   let handleGoBackRequest = props.handleGoBackRequest
   let notify = props.notify
   let outputToConsole = props.outputToConsole
@@ -54,11 +57,7 @@ function Buttons(props: {
     if (selectedAction.readyToExecute) {
       closeWindow()
       outputToConsole(OutputPanel.renderActionStartOutput(selectedAction))
-      selectedAction.execute(
-        useAssets,
-        () => ExecuteNodePath.handleExecutionSuccess(selectedAction),
-        () => ExecuteNodePath.handleExecutionFailure(selectedAction),
-      )
+      handleExecutionRequest()
     } else {
       notify(
         `The action you attempted to execute is not currently executable.`,
@@ -156,6 +155,7 @@ export default class ExecuteNodePath extends React.Component<
     let selectedAction: MissionNodeAction = this.props.selectedAction
     let isOpen: boolean = this.props.isOpen
 
+    console.log(isOpen)
     // Logic to disable the execute button once a user is out of tokens.
     let className: string = 'ExecuteNodePath'
 
@@ -182,6 +182,7 @@ export default class ExecuteNodePath extends React.Component<
         <ActionPropertyDisplay selectedNode={selectedNode} />
         <Buttons
           selectedAction={this.selectedAction}
+          handleExecutionRequest={this.props.handleExecutionRequest}
           handleGoBackRequest={this.props.handleGoBackRequest}
           handleCloseRequest={this.props.handleCloseRequest}
           outputToConsole={this.props.outputToConsole}
