@@ -1,7 +1,7 @@
 import React from 'react'
 import { useStore, withStore } from 'react-context-hook'
-import usersModule from '../modules/users'
-import { IUser } from '../modules/users'
+import usersModule, { TMetisSession } from '../modules/users'
+import { User } from '../modules/users'
 import { AnyObject } from 'mongoose'
 import Confirmation, {
   IConfirmation,
@@ -10,13 +10,20 @@ import Prompt, { IPrompt } from './content/communication/Prompt'
 import Notification from '../modules/notifications'
 import { EAjaxStatus } from '../modules/toolbox/ajax'
 import { IAuthPageSpecific } from './pages/AuthPage'
-import { ButtonText, IButtonText } from './content/user-controls/ButtonText'
+import { IButtonText } from './content/user-controls/ButtonText'
+import {
+  IServerConnectionOptions,
+  ServerConnection,
+} from '../modules/connect/server-connect'
+import { ServerEmittedError } from 'src/modules/connect/errors'
+import { TAppError, TAppErrorNotifyMethod } from './App'
 
 /* -- INTERFACES -- */
 
 export interface IAppStateValues {
   forcedUpdateCounter: number
-  currentUser: IUser | null
+  server: ServerConnection | null
+  session: TMetisSession
   currentPagePath: string
   currentPageProps: AnyObject
   appMountHandled: boolean
@@ -24,7 +31,7 @@ export interface IAppStateValues {
   loadingMessage: string
   loadingMinTimeReached: boolean
   pageSwitchMinTimeReached: boolean
-  errorMessage: string | null
+  error: TAppError | null
   tooltips: React.RefObject<HTMLDivElement>
   tooltipDescription: string
   notifications: Array<Notification>
@@ -36,7 +43,8 @@ export interface IAppStateValues {
 
 export interface IAppStateSetters {
   setForcedUpdateCounter: (forcedUpdateCounter: number) => void
-  setCurrentUser: (user: IUser | null) => void
+  setServer: (server: ServerConnection | null) => void
+  setSession: (session: TMetisSession) => void
   setCurrentPagePath: (currentPagePath: string) => void
   setCurrentPageProps: (currentPageProps: AnyObject) => void
   setAppMountHandled: (appMountHandled: boolean) => void
@@ -44,7 +52,7 @@ export interface IAppStateSetters {
   setLoadingMessage: (loadingMessage: string) => void
   setLoadingMinTimeReached: (loadingMinTimeReached: boolean) => void
   setPageSwitchMinTimeReached: (pageSwitchMinTimeReached: boolean) => void
-  setErrorMessage: (errorMessage: string | null) => void
+  setError: (error: TAppError | null) => void
   setTooltips: (tooltips: React.RefObject<HTMLDivElement>) => void
   setTooltipDescription: (tooltipDescription: string) => void
   setNotifications: (notifications: Array<Notification>) => void
@@ -83,21 +91,21 @@ export interface INotifyOptions {
 
 /* -- CONSTANTS -- */
 
-const loadingMinTime = 500
-const pageSwitchMinTime = 500
+const LOADING_MIN_TIME = 500
+const PAGE_SWITCH_MIN_TIME = 500
 
 /* -- CLASSES -- */
 
 // These are actions that can be
 // enacted upon the app state.
 export class AppActions {
-  appState: AppState
+  public appState: AppState
 
-  constructor(appState: AppState) {
+  public constructor(appState: AppState) {
     this.appState = appState
   }
 
-  _handleLoadCompletion = (): void => {
+  private handleLoadCompletion = (): void => {
     for (let notification of this.appState.postLoadNotifications) {
       this.appState.notifications.push(notification)
       notification.startExpirationTimer()
@@ -105,28 +113,80 @@ export class AppActions {
     this.appState.setPostLoadNotifications([])
   }
 
-  // This will force the component to
-  // rerender.
-  forceUpdate = (): void => {
+  /**
+   * This will force the state of the entire app to update, causing a rerender, even if no actual changes to the state were made.
+   */
+  public forceUpdate = (): void => {
     this.appState.setForcedUpdateCounter(this.appState.forcedUpdateCounter + 1)
   }
 
-  // This will go to a specific page
-  // passing the necessary props.
-  goToPage = (pagePath: string, pageProps: AnyObject): void => {
-    this.appState.setLoadingMessage('Switching pages...')
-    this.appState.setPageSwitchMinTimeReached(false)
-    this.appState.setCurrentPagePath('')
-    this.appState.setCurrentPageProps(pageProps)
-    this.appState.setCurrentPagePath(pagePath)
+  /**
+   * This will switch the currently rendered page to the requested page.
+   * @param pagePath The path of the page to go to.
+   * @param pageProps The props to pass to the destination page.
+   */
+  public goToPage = (pagePath: string, pageProps: AnyObject): void => {
+    // Actually switches the page. Called after any confirmations.
+    const realizePageSwitch = (): void => {
+      // Display to the user that the
+      // page is loading.
+      this.appState.setLoadingMessage('Switching pages...')
+      this.appState.setPageSwitchMinTimeReached(false)
 
-    setTimeout(() => {
-      this.appState.setPageSwitchMinTimeReached(true)
+      // Set the current page props and path.
+      this.appState.setCurrentPagePath('')
+      this.appState.setCurrentPageProps(pageProps)
+      this.appState.setCurrentPagePath(pagePath)
 
-      if (!this.appState.loading && this.appState.loadingMinTimeReached) {
-        this._handleLoadCompletion()
-      }
-    }, pageSwitchMinTime)
+      // If the page switch takes less than
+      // the minimum time, wait until the
+      // minimum time has passed before
+      // completing the page switch. This will
+      // make the page transition feel more
+      // smooth.
+      setTimeout(() => {
+        this.appState.setPageSwitchMinTimeReached(true)
+
+        if (!this.appState.loading && this.appState.loadingMinTimeReached) {
+          this.handleLoadCompletion()
+        }
+      }, PAGE_SWITCH_MIN_TIME)
+    }
+
+    // If the user is currently in a game,
+    // confirm they want to quit before switching
+    // the page.
+    if (
+      this.appState.currentPagePath === 'GamePage' &&
+      this.appState.session?.inGame
+    ) {
+      this.confirm(
+        'Are you sure you want to quit?',
+        (concludeAction: () => void) => {
+          if (this.appState.session?.inGame) {
+            // this.appState.session.game
+            //   .quit(this.appState.session.user.userID)
+            //   .then(() => {
+            //     switchPage()
+            //     this.appState.setSession({
+            //       ...this.appState.session,
+            //       game: undefined,
+            //     })
+            //     concludeAction()
+            //   })
+            //   .catch((error: Error) => {
+            //     console.log(error)
+            //     this.handleServerError('Failed to quit game.')
+            //     concludeAction()
+            //   })
+          }
+        },
+      )
+    }
+    // Else, go ahead and switch the page.
+    else {
+      realizePageSwitch()
+    }
   }
 
   // This will set the loading message
@@ -134,7 +194,7 @@ export class AppActions {
   // user to the loading page until the
   // loading has been ended by the finishLoading
   // function.
-  beginLoading = (loadingMessage: string): void => {
+  public beginLoading = (loadingMessage: string): void => {
     this.appState.setLoading(true)
     this.appState.setLoadingMessage(loadingMessage)
     this.appState.setLoadingMinTimeReached(false)
@@ -142,36 +202,141 @@ export class AppActions {
       this.appState.setLoadingMinTimeReached(true)
 
       if (!this.appState.loading && this.appState.pageSwitchMinTimeReached) {
-        this._handleLoadCompletion()
+        this.handleLoadCompletion()
       }
-    }, loadingMinTime)
+    }, LOADING_MIN_TIME)
   }
 
   // This will end the loading process
   // started by the beginLoading function,
   // bringing the user to the current page
   // set in the global state.
-  finishLoading = (): void => {
+  public finishLoading = (): void => {
     this.appState.setLoading(false)
 
     if (
       this.appState.loadingMinTimeReached &&
       this.appState.pageSwitchMinTimeReached
     ) {
-      this._handleLoadCompletion()
+      this.handleLoadCompletion()
     }
   }
 
-  // This will navigate the user to the
-  // server error page, displaying the
-  // given message.
-  handleServerError = (errorMessage: string): void => {
-    this.appState.setErrorMessage(errorMessage)
+  /**
+   * Fetches the current session and stores the result in the global state variable "session", returning a promise for the session as well.
+   * @return {Promise<TMetisSession>} The promise of the session.
+   */
+  public syncSession = async (): Promise<TMetisSession> => {
+    return new Promise<TMetisSession>(async (resolve, reject) => {
+      try {
+        let session: TMetisSession = await User.fetchSession()
+        this.appState.setSession(session)
+        resolve(session)
+      } catch (error: any) {
+        this.handleError('Failed to sync session.')
+        reject(error)
+      }
+    })
+  }
+
+  /**
+   * Establish a web socket connection with the server. The new server connection will be stored in the global state variable "server".
+   * @returns {Promise<ServerConnection>} The promise of the server connection.
+   */
+  public connectToServer = async (
+    options: {
+      disconnectExisting?: boolean
+    } = {},
+  ): Promise<ServerConnection> => {
+    return new Promise<ServerConnection>(async (resolve, reject) => {
+      let server: ServerConnection = new ServerConnection({
+        on: {
+          'open': () => {
+            console.log('Server connection opened.')
+            this.appState.setServer(server)
+            resolve(server)
+          },
+          'close': () => {
+            console.log('Server connection closed.')
+          },
+          'connection-loss': () => {
+            this.handleError('Lost connection to server.')
+          },
+          'error': ({ code, message }) => {
+            console.error(`Server Connection Error (${code}):\n${message}`)
+
+            if (code === ServerEmittedError.CODE_DUPLICATE_CLIENT) {
+              this.handleError({
+                message,
+                // solutions: [
+                //   {
+                //     text: 'Force Connect',
+                //     handleClick: () => {
+                //       this.confirm(
+                //         'Force connecting will disconnect the current connection to the server. Any unsaved changes may be lost. Do you wish to proceed?',
+                //         async (concludeAction) => {
+                //           let server: ServerConnection =
+                //             await this.connectToServer({
+                //               disconnectExisting: true,
+                //             })
+                //           concludeAction()
+                //           resolve(server)
+                //         },
+                //         {
+                //           buttonConfirmText: 'Proceed',
+                //           pendingMessageUponConfirm: 'Force connecting...',
+                //         },
+                //       )
+                //     },
+                //     componentKey: 'force-connect',
+                //   },
+                // ],
+              })
+            }
+          },
+        },
+        disconnectExisting: options.disconnectExisting ?? false,
+      })
+    })
+  }
+
+  /**
+   * Handles an error passed. How it is handled is dependent on the value of the 'notifyMethod' property. By default, if none is selected, 'page' will be chosen as the notify method, which will navigate to the error page. A string can also be passed for quicker error handling.
+   * @param {TAppError | string} error The error to handle. Strings will be converted to a TAppError object with default properties selected.
+   */
+  public handleError = (error: TAppError | string): void => {
+    // Converts strings passed to TAppError
+    // objects.
+    if (typeof error === 'string') {
+      error = { message: error }
+    }
+
+    // Parse notify method.
+    let notifyMethod: TAppErrorNotifyMethod = error.notifyMethod ?? 'page'
+
+    // Handle error accordingly.
+    switch (notifyMethod) {
+      // If notify via page, set the error
+      // in the app state, which will trigger
+      // the app renderer to render the error
+      // page instead of the current page.
+      case 'page':
+        this.appState.setError(error)
+        break
+      // If notify via bubble, notify the
+      // user with a bubble notification.
+      case 'bubble':
+        this.notify(error.message, { errorMessage: true })
+        break
+    }
   }
 
   // This can be called to the notify
   // the user of something.
-  notify = (message: string, options: INotifyOptions = {}): Notification => {
+  public notify = (
+    message: string,
+    options: INotifyOptions = {},
+  ): Notification => {
     let onLoadingPage: boolean =
       this.appState.loading ||
       !this.appState.loadingMinTimeReached ||
@@ -214,7 +379,7 @@ export class AppActions {
   // must be called by the handleConfirmation
   // callback function to make the confirm
   // box disappear.
-  confirm = (
+  public confirm = (
     message: string,
     handleConfirmation: (concludeAction: () => void, entry: string) => void,
     options: IConfirmOptions = {},
@@ -273,7 +438,7 @@ export class AppActions {
 
   // This will pop up a prompt box
   // to inform the user of a something.
-  prompt = (message: string, options: IPromptOptions = {}): void => {
+  public prompt = (message: string, options: IPromptOptions = {}): void => {
     let prompt: IPrompt = {
       active: true,
       promptMessage: message,
@@ -286,20 +451,33 @@ export class AppActions {
     this.appState.setPrompt(prompt)
   }
 
-  // This will logout the current user from
-  // the session.
-  logout = (authPageProps: IAuthPageSpecific) => {
+  /**
+   * This will logout the current user from the session, closing the connection with the server as well. Afterwards, the user will be navigated to the auth page.
+   * @param {IAuthPageSpecific} authPageProps The props to pass to the auth page.
+   */
+  public logout = (authPageProps: IAuthPageSpecific) => {
+    // Notify the user of logout.
     this.beginLoading('Signing out...')
 
+    // If connected to the server via web
+    // socket, disconnect now.
+    if (this.appState.server !== null) {
+      this.appState.server.disconnect()
+      this.appState.setServer(null)
+    }
+
+    // Make request to logout.
     usersModule.logout(
       () => {
-        this.appState.setCurrentUser(null)
+        // Clear session and navigate to
+        // the auth page.
+        this.appState.setSession(null)
         this.finishLoading()
         this.goToPage('AuthPage', authPageProps)
       },
       (error: Error) => {
         this.finishLoading()
-        this.handleServerError('Failed to logout.')
+        this.handleError('Failed to logout.')
       },
     )
   }
@@ -309,7 +487,8 @@ export class AppActions {
 // throught the application.
 export default class AppState implements IAppStateValues, IAppStateValues {
   forcedUpdateCounter: number
-  currentUser: IUser | null
+  server: ServerConnection | null
+  session: TMetisSession
   currentPagePath: string
   currentPageProps: AnyObject
   appMountHandled: boolean
@@ -317,7 +496,7 @@ export default class AppState implements IAppStateValues, IAppStateValues {
   loadingMessage: string
   loadingMinTimeReached: boolean
   pageSwitchMinTimeReached: boolean
-  errorMessage: string | null
+  error: TAppError | null
   tooltips: React.RefObject<HTMLDivElement>
   tooltipDescription: string
   notifications: Notification[]
@@ -327,7 +506,8 @@ export default class AppState implements IAppStateValues, IAppStateValues {
   missionNodeColors: Array<string>
 
   setForcedUpdateCounter: (forcedUpdateCounter: number) => void
-  setCurrentUser: (user: IUser | null) => void
+  setServer: (server: ServerConnection | null) => void
+  setSession: (session: TMetisSession) => void
   setCurrentPagePath: (currentPagePath: string) => void
   setCurrentPageProps: (currentPageProps: AnyObject) => void
   setAppMountHandled: (appMountHandled: boolean) => void
@@ -335,7 +515,7 @@ export default class AppState implements IAppStateValues, IAppStateValues {
   setLoadingMessage: (loadingMessage: string) => void
   setLoadingMinTimeReached: (loadingMinTimeReached: boolean) => void
   setPageSwitchMinTimeReached: (pageSwitchMinTimeReached: boolean) => void
-  setErrorMessage: (errorMessage: string | null) => void
+  setError: (error: TAppError | null) => void
   setTooltips: (tooltips: React.RefObject<HTMLDivElement>) => void
   setTooltipDescription: (tooltipDescription: string) => void
   setNotifications: (notifications: Notification[]) => void
@@ -347,7 +527,8 @@ export default class AppState implements IAppStateValues, IAppStateValues {
   static get defaultAppStateValues(): IAppStateValues {
     return {
       forcedUpdateCounter: 0,
-      currentUser: null,
+      server: null,
+      session: null,
       currentPagePath: '',
       currentPageProps: {},
       appMountHandled: false,
@@ -355,7 +536,7 @@ export default class AppState implements IAppStateValues, IAppStateValues {
       loadingMessage: 'Initializing application...',
       loadingMinTimeReached: false,
       pageSwitchMinTimeReached: true,
-      errorMessage: null,
+      error: null,
       tooltips: React.createRef(),
       tooltipDescription: '',
       notifications: [],
@@ -370,7 +551,8 @@ export default class AppState implements IAppStateValues, IAppStateValues {
     return {
       setForcedUpdateCounter: () => {},
       setTooltipDescription: () => {},
-      setCurrentUser: (): void => {},
+      setServer: (): void => {},
+      setSession: (): void => {},
       setCurrentPagePath: (): void => {},
       setCurrentPageProps: (): void => {},
       setAppMountHandled: (): void => {},
@@ -378,7 +560,7 @@ export default class AppState implements IAppStateValues, IAppStateValues {
       setLoadingMessage: () => {},
       setLoadingMinTimeReached: (): void => {},
       setPageSwitchMinTimeReached: (): void => {},
-      setErrorMessage: (): void => {},
+      setError: (): void => {},
       setTooltips: (): void => {},
       setNotifications: (): void => {},
       setPostLoadNotifications: (): void => {},
@@ -393,7 +575,8 @@ export default class AppState implements IAppStateValues, IAppStateValues {
     appStateSetters: IAppStateSetters,
   ) {
     this.forcedUpdateCounter = appStateValues.forcedUpdateCounter
-    this.currentUser = appStateValues.currentUser
+    this.server = appStateValues.server
+    this.session = appStateValues.session
     this.currentPagePath = appStateValues.currentPagePath
     this.currentPageProps = appStateValues.currentPageProps
     this.appMountHandled = appStateValues.appMountHandled
@@ -401,7 +584,7 @@ export default class AppState implements IAppStateValues, IAppStateValues {
     this.loadingMessage = appStateValues.loadingMessage
     this.loadingMinTimeReached = appStateValues.loadingMinTimeReached
     this.pageSwitchMinTimeReached = appStateValues.pageSwitchMinTimeReached
-    this.errorMessage = appStateValues.errorMessage
+    this.error = appStateValues.error
     this.tooltips = appStateValues.tooltips
     this.tooltipDescription = appStateValues.tooltipDescription
     this.notifications = appStateValues.notifications
@@ -411,7 +594,8 @@ export default class AppState implements IAppStateValues, IAppStateValues {
     this.missionNodeColors = appStateValues.missionNodeColors
 
     this.setForcedUpdateCounter = appStateSetters.setForcedUpdateCounter
-    this.setCurrentUser = appStateSetters.setCurrentUser
+    this.setServer = appStateSetters.setServer
+    this.setSession = appStateSetters.setSession
     this.setCurrentPagePath = appStateSetters.setCurrentPagePath
     this.setCurrentPageProps = appStateSetters.setCurrentPageProps
     this.setAppMountHandled = appStateSetters.setAppMountHandled
@@ -420,7 +604,7 @@ export default class AppState implements IAppStateValues, IAppStateValues {
     this.setLoadingMinTimeReached = appStateSetters.setLoadingMinTimeReached
     this.setPageSwitchMinTimeReached =
       appStateSetters.setPageSwitchMinTimeReached
-    this.setErrorMessage = appStateSetters.setErrorMessage
+    this.setError = appStateSetters.setError
     this.setTooltips = appStateSetters.setTooltips
     this.setTooltipDescription = appStateSetters.setTooltipDescription
     this.setNotifications = appStateSetters.setNotifications
@@ -450,9 +634,8 @@ export default class AppState implements IAppStateValues, IAppStateValues {
       const [forcedUpdateCounter, setForcedUpdateCounter] = useStore<number>(
         'forcedUpdateCounter',
       )
-      const [currentUser, setCurrentUser] = useStore<IUser | null>(
-        'currentUser',
-      )
+      const [server, setServer] = useStore<ServerConnection | null>('server')
+      const [session, setSession] = useStore<TMetisSession>('session')
       const [currentPagePath, setCurrentPagePath] =
         useStore<string>('currentPagePath')
       const [currentPageProps, setCurrentPageProps] =
@@ -466,9 +649,7 @@ export default class AppState implements IAppStateValues, IAppStateValues {
         useStore<boolean>('loadingMinTimeReached')
       const [pageSwitchMinTimeReached, setPageSwitchMinTimeReached] =
         useStore<boolean>('pageSwitchMinTimeReached')
-      const [errorMessage, setErrorMessage] = useStore<string | null>(
-        'errorMessage',
-      )
+      const [error, setError] = useStore<TAppError | null>('error')
       const [tooltips, setTooltips] =
         useStore<React.RefObject<HTMLDivElement>>('tooltips')
       const [tooltipDescription, setTooltipDescription] =
@@ -487,7 +668,8 @@ export default class AppState implements IAppStateValues, IAppStateValues {
 
       let appStateValues: IAppStateValues = {
         forcedUpdateCounter,
-        currentUser,
+        server,
+        session,
         currentPagePath,
         currentPageProps,
         appMountHandled,
@@ -495,7 +677,7 @@ export default class AppState implements IAppStateValues, IAppStateValues {
         loadingMessage,
         loadingMinTimeReached,
         pageSwitchMinTimeReached,
-        errorMessage,
+        error,
         tooltips,
         tooltipDescription,
         notifications,
@@ -506,7 +688,8 @@ export default class AppState implements IAppStateValues, IAppStateValues {
       }
       let appStateSetters: IAppStateSetters = {
         setForcedUpdateCounter,
-        setCurrentUser,
+        setServer,
+        setSession,
         setCurrentPagePath,
         setCurrentPageProps,
         setAppMountHandled,
@@ -514,7 +697,7 @@ export default class AppState implements IAppStateValues, IAppStateValues {
         setLoadingMessage,
         setLoadingMinTimeReached,
         setPageSwitchMinTimeReached,
-        setErrorMessage,
+        setError,
         setTooltips,
         setTooltipDescription,
         setNotifications,

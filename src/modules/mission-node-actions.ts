@@ -1,6 +1,5 @@
 import axios, { AxiosError } from 'axios'
 import { PRNG } from 'seedrandom'
-import ExecuteNodePath from '../components/content/game/ExecuteNodePath'
 import { MissionNode } from './mission-nodes'
 import { Mission } from './missions'
 import { AnyObject } from './toolbox/objects'
@@ -23,6 +22,16 @@ export interface IMissionNodeActionJSON {
   postExecutionSuccessText: string
   postExecutionFailureText: string
   scripts: Array<IScript>
+}
+
+/**
+ * Options for when a node is executed.
+ */
+export interface IActionExecutionOptions {
+  /**
+   * Whether or not to enact effects when executing the action.
+   */
+  enactEffects: boolean
 }
 
 export class MissionNodeAction {
@@ -50,6 +59,7 @@ export class MissionNodeAction {
     return (
       resourceCost <= mission.resources &&
       node.executable &&
+      !node.executing &&
       !this.succeeded &&
       this._willSucceedArray.length !== 0
     )
@@ -74,7 +84,10 @@ export class MissionNodeAction {
   // Determines if a node succeeded or not
   // after it is executed
   get succeeded(): boolean | null {
-    return this.node.executed && this._willSucceed
+    return (
+      this.node.lastExecutedAction?.actionID === this.actionID &&
+      this.node.lastExecutionSucceeded
+    )
   }
 
   constructor(
@@ -122,25 +135,6 @@ export class MissionNodeAction {
     }
   }
 
-  // This will determine whether a
-  // node action succeeds or fails based
-  // on the success chance passed.
-  static determineDifferentSuccessOutcomes = (
-    totalExecutionAttempts: number,
-    successChance: number,
-    rng: PRNG,
-  ): Array<boolean> => {
-    let willSucceedArray: Array<boolean> = []
-    let willSucceed: boolean = false
-
-    for (let i = 0; i < totalExecutionAttempts && !willSucceed; i++) {
-      willSucceed = rng.double() <= successChance
-      willSucceedArray.push(willSucceed)
-    }
-
-    return willSucceedArray
-  }
-
   // After the node is executed, the willSucceed that was just used is
   // removed from the "willSucceedArray" so that if the user re-executes
   // they can potentially see a different result.
@@ -159,22 +153,24 @@ export class MissionNodeAction {
 
   // This will be called upon action
   // execution completion.
-  _handleExecutionEnd = (success: boolean, useAssets: boolean): void => {
+  _handleExecutionEnd = (
+    success: boolean,
+    enactEffects: boolean,
+    handleSuccess: () => void,
+    handleFailure: () => void,
+  ): void => {
     let node: MissionNode = this.node
     let mission: Mission = node.mission
 
-    node.handleActionExecutionEnd()
+    node.handleActionExecutionEnd(success)
 
     if (success) {
-      if (node.hasChildren && !node.isOpen) {
-        node.open()
-      }
-      ExecuteNodePath.handleExecutionSuccess(this)
+      handleSuccess()
     } else if (!success) {
-      ExecuteNodePath.handleExecutionFailure(this)
+      handleFailure()
     }
 
-    if (success && useAssets) {
+    if (success && enactEffects) {
       handleSuccessfulActionExecution(
         mission.missionID,
         node.nodeID,
@@ -183,27 +179,59 @@ export class MissionNodeAction {
     }
   }
 
-  // This will execute the action.
-  execute(useAssets: boolean): void {
-    let node: MissionNode = this.node
-    let mission: Mission = node.mission
-    let resourceCost: number = this.resourceCost
-    let processTime: number = this.processTime
-    let willSucceed: boolean = this.willSucceedArray[0]
+  /**
+   * Executes the action with the given options.
+   * @param {IActionExecutionOptions} options The options for executing the action.
+   * @returns {Promise<{ success: boolean }>} A promise that resolves with whether or not the action succeeded. Resolves once the action is completed. Promise shouldn't need a catch.
+   */
+  public execute({
+    enactEffects,
+  }: IActionExecutionOptions): Promise<{ success: boolean }> {
+    return new Promise<{ success: boolean }>((resolve) => {
+      let node: MissionNode = this.node
+      let mission: Mission = node.mission
+      let resourceCost: number = this.resourceCost
+      let processTime: number = this.processTime
+      let willSucceed: boolean = this.willSucceedArray[0]
 
-    if (!this.readyToExecute) {
-      throw Error('This action cannot currently be executed.')
+      if (!this.readyToExecute) {
+        throw Error('This action cannot currently be executed.')
+      }
+
+      mission.resources -= resourceCost
+
+      node.handleActionExecutionStart(this)
+
+      setTimeout(() => {
+        this.updateWillSucceed()
+        this._handleExecutionEnd(
+          willSucceed,
+          enactEffects,
+          () => resolve({ success: true }),
+          () => resolve({ success: false }),
+        )
+        this.updateWillSucceedArray()
+      }, processTime)
+    })
+  }
+
+  // This will determine whether a
+  // node action succeeds or fails based
+  // on the success chance passed.
+  static determineDifferentSuccessOutcomes = (
+    totalExecutionAttempts: number,
+    successChance: number,
+    rng: PRNG,
+  ): Array<boolean> => {
+    let willSucceedArray: Array<boolean> = []
+    let willSucceed: boolean = false
+
+    for (let i = 0; i < totalExecutionAttempts && !willSucceed; i++) {
+      willSucceed = rng.double() <= successChance
+      willSucceedArray.push(willSucceed)
     }
 
-    mission.resources -= resourceCost
-
-    node.handleActionExecutionStart(this)
-
-    setTimeout(() => {
-      this.updateWillSucceed()
-      this._handleExecutionEnd(willSucceed, useAssets)
-      this.updateWillSucceedArray()
-    }, processTime)
+    return willSucceedArray
   }
 }
 

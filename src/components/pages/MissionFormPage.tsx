@@ -23,6 +23,7 @@ import {
 import MissionEntry from '../content/edit-mission/MissionEntry'
 import NodeEntry from '../content/edit-mission/NodeEntry'
 import NodeStructuring from '../content/edit-mission/NodeStructuring'
+import { permittedRoles } from '../../modules/users'
 
 export interface IMissionFormPage extends IPage {
   // If null, a new mission is being
@@ -64,9 +65,15 @@ export default function MissionFormPage(
 
   // Equivalent of componentDidMount.
   useEffect(() => {
-    if (appState.currentUser === null) {
+    if (
+      !permittedRoles.includes(appState.session?.user.role ?? 'NOT_LOGGED_IN')
+    ) {
       appActions.goToPage('MissionSelectionPage', {})
       appActions.notify('Mission form page is not accessible to students.')
+    } else {
+      getMissionNodeColorOptions((colorOptions: Array<string>) => {
+        appState.setMissionNodeColors(colorOptions)
+      })
     }
 
     if (!mountHandled) {
@@ -107,9 +114,9 @@ export default function MissionFormPage(
           },
           () => {
             appActions.finishLoading()
-            appActions.handleServerError('Failed to load mission.')
+            appActions.handleError('Failed to load mission.')
           },
-          { expandAllNodes: true },
+          { openAllNodes: true },
         )
         existsInDatabase = true
         setExistsInDatabase(existsInDatabase)
@@ -332,10 +339,8 @@ export default function MissionFormPage(
     // This will logout the current user.
     const logout = () =>
       appActions.logout({
-        returningPagePath: 'GamePage',
-        returningPageProps: {
-          missionID: mission.missionID,
-        },
+        returningPagePath: 'MissionSelectionPage',
+        returningPageProps: {},
       })
 
     /* -- RENDER -- */

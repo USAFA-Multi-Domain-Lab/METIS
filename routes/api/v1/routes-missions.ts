@@ -1,5 +1,5 @@
 //npm imports
-import express from 'express'
+import express, { Request, Response } from 'express'
 import fs from 'fs'
 import path from 'path'
 import { v4 as generateHash } from 'uuid'
@@ -8,15 +8,17 @@ import { ERROR_BAD_DATA } from '../../../database/database'
 import InfoModel from '../../../database/models/model-info'
 import MissionModel from '../../../database/models/model-mission'
 import { databaseLogger } from '../../../modules/logging'
-import { isLoggedIn, requireLogin } from '../../../user'
+import { hasPermittedRole, requireLogin } from '../../../user'
 import { APP_DIR } from '../../../config'
 import uploads from '../../../middleware/uploads'
 import { commandScripts } from '../../../action-execution'
 import validateRequestBodyKeys, {
   RequestBodyFilters,
+  validateRequestParamKeys as validateRequestParams,
   validateRequestQueryKeys,
 } from '../../../modules/requests'
 import { colorOptions } from '../../../modules/mission-node-colors'
+import { Mission } from '../../../src/modules/missions'
 
 type MulterFile = Express.Multer.File
 
@@ -27,7 +29,7 @@ const router = express.Router()
 // This will create a new mission.
 router.post(
   '/',
-  requireLogin,
+  requireLogin(),
   validateRequestBodyKeys({
     name: RequestBodyFilters.STRING,
     introMessage: RequestBodyFilters.STRING,
@@ -103,7 +105,7 @@ router.post(
 // -- POST | /api/v1/missions/import/ --
 router.post(
   '/import/',
-  requireLogin,
+  requireLogin(),
   uploads.array('files', 12),
   (request, response) => {
     // Verifies files were included
@@ -421,7 +423,7 @@ router.get(
     if (missionID === undefined) {
       let queries: any = {}
 
-      if (!isLoggedIn(request)) {
+      if (!hasPermittedRole(request)) {
         queries.live = true
       }
 
@@ -449,7 +451,7 @@ router.get(
             return response.sendStatus(500)
           } else if (mission === null) {
             return response.sendStatus(404)
-          } else if (!mission.live && !isLoggedIn(request)) {
+          } else if (!mission.live && !hasPermittedRole(request)) {
             return response.sendStatus(401)
           } else {
             databaseLogger.info(`Mission with ID "${missionID}" retrieved.`)
@@ -464,7 +466,7 @@ router.get(
 // This will return all of the missions.
 router.get(
   '/export/*',
-  requireLogin,
+  requireLogin(),
   validateRequestQueryKeys({ missionID: 'objectId' }),
   (request, response) => {
     let missionID = request.query.missionID
@@ -553,7 +555,7 @@ router.get('/colors/', validateRequestQueryKeys({}), (request, response) => {
 // after an action is executed successfully
 router.put(
   '/handle-action-execution/',
-  requireLogin,
+  requireLogin(),
   validateRequestBodyKeys({
     missionID: RequestBodyFilters.OBJECTID,
     nodeID: RequestBodyFilters.STRING,
@@ -602,7 +604,7 @@ router.put(
 // This will update the mission.
 router.put(
   '/',
-  requireLogin,
+  requireLogin(),
   validateRequestBodyKeys(
     {
       missionID: RequestBodyFilters.OBJECTID,
@@ -718,7 +720,7 @@ router.put(
 // This will copy a mission.
 router.put(
   '/copy/',
-  requireLogin,
+  requireLogin(),
   validateRequestBodyKeys({
     copyName: RequestBodyFilters.STRING,
     originalID: RequestBodyFilters.STRING,
@@ -775,7 +777,7 @@ router.put(
 // This will delete a mission.
 router.delete(
   '/',
-  requireLogin,
+  requireLogin(),
   validateRequestQueryKeys({ missionID: 'objectId' }),
   (request, response) => {
     let query: any = request.query
@@ -790,6 +792,57 @@ router.delete(
       } else {
         databaseLogger.info(`Deleted mission with the ID "${missionID}".`)
         return response.sendStatus(200)
+      }
+    })
+  },
+)
+
+// -- POST | /api/v1/missions/execute/launch/:missionID --
+// This will create a new mission session for a user to execute.
+router.post(
+  '/execute/launch/:missionID',
+  requireLogin(),
+  validateRequestParams({
+    missionID: RequestBodyFilters.OBJECTID,
+  }),
+  (request: Request, response: Response) => {
+    // Get data from the request params.
+    let missionID: string = request.params.missionID
+
+    // Query for the mission with the given ID.
+    MissionModel.findOne({ missionID }, (error: any, missionData: any) => {
+      // Handles errors.
+      if (error !== null) {
+        databaseLogger.error(
+          `Failed to retrieve mission with the ID "${missionID}".`,
+        )
+        databaseLogger.error(error)
+        return response.sendStatus(500)
+      }
+      // Handle mission not found.
+      else if (missionData === null) {
+        return response.sendStatus(404)
+      }
+      // Handle mission not live.
+      else if (!missionData.live) {
+        response.statusMessage = 'Mission is not live.'
+        return response.sendStatus(401)
+      }
+      // Handles successful query.
+      else {
+        let mission: Mission = new Mission(
+          missionData.missionID,
+          missionData.name,
+          missionData.introMessage,
+          missionData.versionNumber,
+          missionData.live,
+          missionData.initialResources,
+          missionData.nodeStructure,
+          missionData.nodeData,
+          missionData.seed,
+        )
+
+        // MissionControl.launchMission(mission)
       }
     })
   },

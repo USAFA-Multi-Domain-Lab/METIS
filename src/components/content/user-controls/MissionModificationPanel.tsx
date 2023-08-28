@@ -11,7 +11,7 @@ import './MissionModificationPanel.scss'
 import { MiniButtonSVGPanel } from './MiniButtonSVGPanel'
 import { EMiniButtonSVGPurpose, MiniButtonSVG } from './MiniButtonSVG'
 import { useStore } from 'react-context-hook'
-import { IUser } from '../../../modules/users'
+import { TMetisSession, User, permittedRoles } from '../../../modules/users'
 import { useState } from 'react'
 import { AppActions } from '../../AppState'
 
@@ -23,7 +23,7 @@ export default function MissionModificationPanel(props: {
   handleSuccessfulToggleLive: () => void
 }) {
   /* -- GLOBAL STATE -- */
-  const [currentUser] = useStore<IUser | null>('currentUser')
+  const [session] = useStore<TMetisSession>('session')
 
   /* -- COMPONENT VARIABLES -- */
   let mission: Mission = props.mission
@@ -180,10 +180,10 @@ export default function MissionModificationPanel(props: {
     }),
   }
 
-  let containerClassName: string = 'MissionModificationPanel'
+  let containerClassName: string = 'MissionModificationPanel hidden'
 
-  if (currentUser === null) {
-    containerClassName += ' hidden'
+  if (permittedRoles.includes(session?.user.role ?? 'NOT_LOGGED_IN')) {
+    containerClassName = 'MissionModificationPanel'
   }
 
   // Logic that will lock the mission toggle while a request is being sent

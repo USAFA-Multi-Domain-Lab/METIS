@@ -1,6 +1,6 @@
 @import '../../config.scss';
 
-.ServerErrorPage {
+.ErrorPage {
   position: absolute;
   top: 0;
   left: 0;
@@ -13,26 +13,16 @@
   background-color: $background-main;
   text-align: center;
 
-  .ErrorMessage {
+  .Message {
     margin-top: 40px;
     font-size: 17px;
   }
 
-  .Refresh {
-    -webkit-user-select: none;
-    user-select: none;
-    cursor: pointer;
-    display: inline-block;
-    margin-top: 30px;
-    padding: 0 0 15px;
-    text-decoration: none;
+  .Buttons {
+    margin: 25px 0 0;
 
-    &:hover {
-      border-bottom: 2px solid $color-accent;
-    }
-
-    &:visited {
-      color: $color-main;
+    .ButtonText {
+      margin: 4px;
     }
   }
 }

@@ -11,7 +11,7 @@ import { getChangelog } from '../../modules/info'
 export interface IChangelogPage extends IPage {}
 
 // This will render a page where a user can
-// login to view the radar.
+// view all the changes made to the application.
 export default function IChangelogPage(
   props: IChangelogPage,
 ): JSX.Element | null {
@@ -37,7 +37,7 @@ export default function IChangelogPage(
           appActions.finishLoading()
         },
         (error: Error) => {
-          appActions.handleServerError('Failed to retrieve changelog.')
+          appActions.handleError('Failed to retrieve changelog.')
           appActions.finishLoading()
         },
       )
@@ -64,17 +64,17 @@ export default function IChangelogPage(
       returningPageProps: {},
     })
 
-  // This will switch to the auth page.
-  const login = () =>
-    appActions.goToPage('AuthPage', {
-      returningPagePath: 'ChangelogPage',
-      returningPageProps: {},
-    })
+  // // This will switch to the auth page.
+  // const login = () =>
+  //   appActions.goToPage('AuthPage', {
+  //     returningPagePath: 'ChangelogPage',
+  //     returningPageProps: {},
+  //   })
 
   /* -- RENDER -- */
 
   // Keeps track of if the user is logged in or not.
-  let displayLogin: boolean = appState.currentUser === null
+  let displayLogin: boolean = appState.session === null
   let displayLogout: boolean = !displayLogin
 
   return (
@@ -89,12 +89,12 @@ export default function IChangelogPage(
             },
             visible: true,
           },
-          {
-            text: 'Login',
-            key: 'login',
-            handleClick: login,
-            visible: displayLogin,
-          },
+          // {
+          //   text: 'Login',
+          //   key: 'login',
+          //   handleClick: login,
+          //   visible: displayLogin,
+          // },
           {
             text: 'Log out',
             key: 'log-out',

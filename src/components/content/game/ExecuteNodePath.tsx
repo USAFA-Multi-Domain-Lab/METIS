@@ -10,7 +10,7 @@ import { INotifyOptions } from '../../AppState'
 import { IConsoleOutput } from './ConsoleOutput'
 import OutputPanel from './OutputPanel'
 import { useStore } from 'react-context-hook'
-import { IUser } from '../../../modules/users'
+import { TMetisSession, User, permittedRoles } from '../../../modules/users'
 
 /* -- INTERFACE(S) -- */
 
@@ -19,16 +19,16 @@ interface IExecuteNodePath {
   selectedAction: MissionNodeAction
   notify: (message: string, options: INotifyOptions) => Notification
   outputToConsole: (output: IConsoleOutput) => void
+  handleExecutionRequest: () => void
   handleCloseRequest: () => void
   handleGoBackRequest: () => void
 }
 
-interface IExecuteNodePath_S {
-  currentUser: IUser | null
-}
+interface IExecuteNodePath_S {}
 
 function Buttons(props: {
   selectedAction: MissionNodeAction
+  handleExecutionRequest: () => void
   handleGoBackRequest: () => void
   handleCloseRequest: () => void
   outputToConsole: (output: IConsoleOutput) => void
@@ -38,13 +38,14 @@ function Buttons(props: {
   let selectedAction: MissionNodeAction = props.selectedAction
   let selectedNode: MissionNode = selectedAction.node
   let mission: Mission = selectedNode.mission
+  let handleExecutionRequest = props.handleExecutionRequest
   let handleGoBackRequest = props.handleGoBackRequest
   let notify = props.notify
   let outputToConsole = props.outputToConsole
   let handleCloseRequest = props.handleCloseRequest
 
   /* -- GLOBAL STATE -- */
-  const [currentUser] = useStore<IUser | null>('currentUser')
+  const [session] = useStore<TMetisSession>('session')
 
   /* -- COMPONENT FUNCTIONS -- */
   // Closes the execution prompt window.
@@ -56,7 +57,7 @@ function Buttons(props: {
     if (selectedAction.readyToExecute) {
       closeWindow()
       outputToConsole(OutputPanel.renderActionStartOutput(selectedAction))
-      selectedAction.execute(useAssets)
+      handleExecutionRequest()
     } else {
       notify(
         `The action you attempted to execute is not currently executable.`,
@@ -80,7 +81,7 @@ function Buttons(props: {
     additionalActionButtonClassName += ' Disabled'
   }
 
-  if (currentUser && currentUser.userID === 'admin') {
+  if (permittedRoles.includes(session?.user.role ?? 'NOT_LOGGED_IN')) {
     useAssets = true
   }
 
@@ -180,6 +181,7 @@ export default class ExecuteNodePath extends React.Component<
         <ActionPropertyDisplay selectedNode={selectedNode} />
         <Buttons
           selectedAction={this.selectedAction}
+          handleExecutionRequest={this.props.handleExecutionRequest}
           handleGoBackRequest={this.props.handleGoBackRequest}
           handleCloseRequest={this.props.handleCloseRequest}
           outputToConsole={this.props.outputToConsole}

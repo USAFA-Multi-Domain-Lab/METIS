@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import './AuthPage.scss'
-import usersModule, { IUser } from '../../modules/users'
+import usersModule, { TMetisSession, User } from '../../modules/users'
 import { AxiosError } from 'axios'
 import { IPage } from '../App'
 import { AnyObject } from '../../modules/toolbox/objects'
@@ -14,7 +14,7 @@ export interface IAuthPageSpecific {
 export interface IAuthPage extends IPage, IAuthPageSpecific {}
 
 // This will render a page where a user can
-// login to view the radar.
+// login.
 export default function AuthPage(props: IAuthPage): JSX.Element | null {
   let appState: AppState = props.appState
   let appActions: AppActions = props.appActions
@@ -71,7 +71,7 @@ export default function AuthPage(props: IAuthPage): JSX.Element | null {
   }
 
   // This is called when the form is submitted.
-  const handleSubmit = (event: React.FormEvent): void => {
+  const handleSubmit = async (event: React.FormEvent): Promise<void> => {
     event.preventDefault()
 
     let elm_userIDField: HTMLInputElement | null = userIDField.current
@@ -95,32 +95,35 @@ export default function AuthPage(props: IAuthPage): JSX.Element | null {
           appActions.finishLoading()
         }
 
-        usersModule.login(
-          userID,
-          password,
-          (correct: boolean, currentUser: IUser | null) => {
-            if (correct && currentUser !== null) {
-              setIsSubmitting(false)
-              appActions.finishLoading()
-              appState.setCurrentUser(currentUser)
-              appActions.goToPage(
-                props.returningPagePath,
-                props.returningPageProps,
-              )
-            } else {
-              handleLoginError('Incorrect username or password.')
-            }
-          },
-          (error: AxiosError) => {
-            if (error.response?.status === 400) {
-              handleLoginError('400 Bad request.')
-            } else {
-              handleLoginError(
-                'Something went wrong on our end. Please try again later.',
-              )
-            }
-          },
-        )
+        // Login.
+        try {
+          let { correct, session } = await User.login(userID, password)
+
+          // If correct and a session was returned,
+          // then login was successful.
+          if (correct && session !== null) {
+            setIsSubmitting(false)
+            appState.setSession(session)
+            appActions.connectToServer()
+            appActions.goToPage(
+              props.returningPagePath,
+              props.returningPageProps,
+            )
+          } else {
+            handleLoginError('Incorrect username or password.')
+          }
+        } catch (error: any) {
+          // Handles duplicate logins.
+          if (error.response?.status === 409) {
+            handleLoginError(
+              'Account is already logged in on another device or browser.',
+            )
+          } else {
+            handleLoginError(
+              'Something went wrong on our end. Please try again later.',
+            )
+          }
+        }
       } else {
         setErrorMessage('Please fill all fields.')
       }
@@ -129,11 +132,13 @@ export default function AuthPage(props: IAuthPage): JSX.Element | null {
     }
   }
 
-  const goBack = () => {
-    appActions.goToPage(props.returningPagePath, props.returningPageProps)
-  }
+  // const goBack = () => {
+  //   appActions.goToPage(props.returningPagePath, props.returningPageProps)
+  // }
 
   /* -- RENDER -- */
+
+  // let backButtonClassName: string = 'Button'
 
   let submitIsDisabled: boolean = !canSubmit() || isSubmitting
 
@@ -163,9 +168,9 @@ export default function AuthPage(props: IAuthPage): JSX.Element | null {
             value='Login'
             disabled={submitIsDisabled}
           />
-          <div className='Button' onClick={goBack}>
+          {/* <div className={backButtonClassName} onClick={goBack}>
             Back
-          </div>
+          </div> */}
         </form>
       </div>
     </div>

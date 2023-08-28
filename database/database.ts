@@ -66,7 +66,9 @@ function ensureDefaultUsersExists(
 ): void {
   UserModel.findOne({ userID: 'admin' }).exec((error: Error, user: any) => {
     if (error !== null) {
-      databaseLogger.error('Failed to query database for the default user:')
+      databaseLogger.error(
+        'Failed to query database for the default admin user:',
+      )
       databaseLogger.error(error)
       callbackError(error)
     } else if (user === null) {
@@ -75,6 +77,7 @@ function ensureDefaultUsersExists(
 
       const adminUserData = {
         userID: 'admin',
+        role: 'admin',
         firstName: 'N/A',
         lastName: 'N/A',
         password: 'temppass',
@@ -88,6 +91,38 @@ function ensureDefaultUsersExists(
           callbackError(error)
         } else {
           databaseLogger.info('Admin user created:', adminUser.userID)
+        }
+      })
+    }
+  })
+
+  UserModel.findOne({ userID: 'student1' }).exec((error: Error, user: any) => {
+    if (error !== null) {
+      databaseLogger.error(
+        'Failed to query database for the default student user:',
+      )
+      databaseLogger.error(error)
+      callbackError(error)
+    } else if (user === null) {
+      databaseLogger.info('Student user not found.')
+      databaseLogger.info('Creating student user...')
+
+      const studentUserData = {
+        userID: 'student1',
+        role: 'student',
+        firstName: 'N/A',
+        lastName: 'N/A',
+        password: 'password',
+      }
+
+      //creates and saves user
+      UserModel.create(studentUserData, (error: Error, studentUser: any) => {
+        if (error) {
+          databaseLogger.error('Failed to create student user:')
+          databaseLogger.error(error)
+          callbackError(error)
+        } else {
+          databaseLogger.info('Student user created:', studentUser.userID)
           callback()
         }
       })

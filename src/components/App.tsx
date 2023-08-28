@@ -1,9 +1,9 @@
 import './App.scss'
 import GamePage from './pages/GamePage'
 import AuthPage from './pages/AuthPage'
-import usersModule, { IUser } from '../modules/users'
+import { TMetisSession, User } from '../modules/users'
 import { useEffect, useState } from 'react'
-import ServerErrorPage from './pages/ServerErrorPage'
+import ErrorPage from './pages/ErrorPage'
 import LoadingPage from './pages/LoadingPage'
 import AppState, { AppActions } from './AppState'
 import Markdown, { MarkdownTheme } from './content/general-layout/Markdown'
@@ -18,12 +18,39 @@ import {
 } from './content/communication/Tooltip'
 import Prompt from './content/communication/Prompt'
 import ChangelogPage from './pages/ChangelogPage'
+import { ServerConnection } from '../modules/connect/server-connect'
+import { IButtonText } from './content/user-controls/ButtonText'
 
-// Default props in every page.
+/**
+ * Props that every page accepts. Extend this to include more.
+ */
 export interface IPage {
   appState: AppState
   appActions: AppActions
 }
+
+export type TAppErrorNotifyMethod = 'bubble' | 'page'
+
+/**
+ * An error that is resolved either via a notification bubble or a message on the error page. Default is page.
+ */
+export type TAppError = {
+  /**
+   * The error message to display.
+   */
+  message: string
+  notifyMethod?: TAppErrorNotifyMethod // Default is page.
+  solutions?: Array<IButtonText> // Only used when handled with error page.
+} & (
+  | {
+      notifyMethod?: 'bubble'
+      solutions?: never
+    }
+  | {
+      notifyMethod?: 'page'
+      solutions?: Array<IButtonText>
+    }
+)
 
 // This is a registry of all pages
 // in the system for use.
@@ -55,11 +82,12 @@ function App(props: {
 
   const [loadingMinTimeout, setLoadingMinTimeout] = useState<any>(undefined)
 
-  /* -- COMPONENT HANDLERS -- */
+  /* -- COMPONENT FUNCTIONS -- */
 
-  // This will reposition the currently
-  // displayed tooltip based on the mouse
-  // position.
+  /**
+   * Recalculates and positions any tooltip being displayed in the DOM based on the current position of the mouse.
+   * @param event The mouse event that triggered the tooltip position to be recalculated.
+   */
   const positionTooltip = (event: MouseEvent): void => {
     let tooltips_elm: HTMLDivElement | null = appState.tooltips.current
 
@@ -105,36 +133,74 @@ function App(props: {
   // will load the user in the session to see if a
   // login is necessary.
   useEffect(() => {
-    if (!appState.appMountHandled) {
-      let tooltips_elm: HTMLDivElement | null | undefined =
-        appState.tooltips.current
+    async function componentDidMount(): Promise<void> {
+      try {
+        // Display default loading message to
+        // the user.
+        appActions.beginLoading(AppState.defaultAppStateValues.loadingMessage)
 
-      appActions.beginLoading(AppState.defaultAppStateValues.loadingMessage)
+        // Add global event listeners.
+        document.addEventListener('mousemove', positionTooltip)
+        document.addEventListener('drag', positionTooltip)
 
-      usersModule.retrieveCurrentUser(
-        (currentUser: IUser | null) => {
-          appState.setCurrentUser(currentUser)
-          appState.setAppMountHandled(true)
-          appActions.finishLoading()
-          appActions.goToPage('MissionSelectionPage', {})
-        },
-        () => {
-          appState.setErrorMessage('Failed to sync session.')
-          appState.setAppMountHandled(true)
-          appActions.finishLoading()
-        },
-      )
+        // Initialize tooltips.
+        let tooltips_elm: HTMLDivElement | null | undefined =
+          appState.tooltips.current
 
-      document.addEventListener('mousemove', positionTooltip)
-      document.addEventListener('drag', positionTooltip)
+        if (tooltips_elm !== null) {
+          tooltips_elm.id = ''
+          tooltips_elm.style.visibility = 'hidden'
+          appState.setTooltipDescription('')
+        }
 
-      if (tooltips_elm !== null) {
-        tooltips_elm.id = ''
-        tooltips_elm.style.visibility = 'hidden'
-        appState.setTooltipDescription('')
+        // Sync session.
+        let session: TMetisSession = await appActions.syncSession()
+
+        // If there is no established session,
+        // navigate to the auth page to have
+        // the visitor login.
+        if (session === null) {
+          appActions.goToPage('AuthPage', {
+            returningPagePath: 'MissionSelectionPage',
+            returningPageProps: {},
+          })
+        }
+        // Else establish a web socket connection
+        // with the server.
+        else {
+          let server: ServerConnection = await appActions.connectToServer()
+
+          // If the sessioned user is in a game,
+          // then switch to the game page.
+          if (session.inGame) {
+            appActions.goToPage('GamePage', {})
+          }
+          // Else, go to the mission selection
+          // page.
+          else {
+            appActions.goToPage('MissionSelectionPage', {})
+          }
+        }
+
+        // Open the app up for use by the user.
+        appState.setAppMountHandled(true)
+        appActions.finishLoading()
+      } catch (error: any) {
+        console.error('Failed to handle app mount:')
+        console.error(error)
+        appActions.handleError('App initialization failed.')
       }
     }
+
+    if (!appState.appMountHandled) {
+      componentDidMount()
+    }
   }, [appState.appMountHandled])
+
+  // Equivalent of componentWillUnmount.
+  useEffect(() => {
+    return () => {}
+  }, [])
 
   /* -- PAGE PROPS CONSTRUCTION -- */
 
@@ -159,8 +225,8 @@ function App(props: {
     }
   }
 
-  if (appState.errorMessage !== null) {
-    className += ' ServerError'
+  if (appState.error !== null) {
+    className += ' Error'
   } else if (
     appState.loading ||
     !appState.loadingMinTimeReached ||
@@ -191,7 +257,7 @@ function App(props: {
         <Confirmation {...appState.confirmation} />
       ) : null}
       {appState.prompt !== null ? <Prompt {...appState.prompt} /> : null}
-      <ServerErrorPage {...pageProps} />
+      <ErrorPage {...pageProps} />
       <LoadingPage {...pageProps} />
       {renderCurrentPage()}
     </div>

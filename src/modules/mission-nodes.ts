@@ -38,6 +38,7 @@ export interface IMissionNodeJSON {
   executable: boolean
   device: boolean
   actions: Array<IMissionNodeActionJSON>
+  isOpen?: boolean
 }
 
 // These are options that can be passed
@@ -48,9 +49,9 @@ export interface INodeDeleteOptions {
   deleteMethod?: ENodeDeleteMethod // Default "ENodeDeleteMethod.DeleteNodeAndChildren"
 }
 
-// This represents an individual node
-// for a student to execute within a
-// mission.
+/**
+ * This represents an individual node for a student to execute within a mission.
+ */
 export class MissionNode implements IMissionMappable {
   mission: Mission
   nodeID: string
@@ -65,9 +66,14 @@ export class MissionNode implements IMissionMappable {
   _depthPadding: number
   actions: Array<MissionNodeAction> = []
   selectedAction: MissionNodeAction | null
-  _executingAction: MissionNodeAction | null
-  executed: boolean
-  executing: boolean
+  private _executingAction: MissionNodeAction | null
+  private _executing: boolean
+  // ! TEMPORARILY PUBLIC FOR TESTING
+  public _lastExecutedAction: MissionNodeAction | null
+  // ! TEMPORARILY PUBLIC FOR TESTING
+  public _lastExecutionSucceeded: boolean
+  // ! TEMPORARILY PUBLIC FOR TESTING
+  public _lastExecutionFailed: boolean
   mapX: number
   mapY: number
   depth: number
@@ -87,6 +93,7 @@ export class MissionNode implements IMissionMappable {
   static default_actions: Array<IMissionNodeActionJSON> = []
   static default_mapX: number = 0
   static default_mapY: number = 0
+  static default_isOpen: boolean = false
 
   static createDefaultAction(node: MissionNode): MissionNodeAction {
     return new MissionNodeAction(
@@ -101,6 +108,53 @@ export class MissionNode implements IMissionMappable {
       'Enter your failed post-execution message here.',
       [],
     )
+  }
+
+  /**
+   * Whether this node is ready to be executed upon by an action.
+   */
+  public get readyToExecute(): boolean {
+    return (
+      this.executable &&
+      this.actions.length > 0 &&
+      !this.executing &&
+      !this.lastExecutionSucceeded
+    )
+  }
+
+  /**
+   * The action last executed upon this node.
+   */
+  public get lastExecutedAction(): MissionNodeAction | null {
+    return this._lastExecutedAction
+  }
+
+  /**
+   * Whether an action is currently executing upon this node.
+   */
+  public get executing(): boolean {
+    return this._executing
+  }
+
+  /**
+   * Whether the last execution of this node was successful.
+   */
+  public get lastExecutionSucceeded(): boolean {
+    return this._lastExecutionSucceeded
+  }
+
+  /**
+   * Whether the last execution of this node failed.
+   */
+  public get lastExecutionFailed(): boolean {
+    return this._lastExecutionFailed
+  }
+
+  /**
+   * Whether this node has had an action executed upon it yet.
+   */
+  public get executed(): boolean {
+    return this._lastExecutedAction !== null
   }
 
   // Getter for _depthPadding.
@@ -221,6 +275,17 @@ export class MissionNode implements IMissionMappable {
     return !this._isOpen
   }
 
+  get revealed(): boolean {
+    return this.parentNode === null || this.parentNode.isOpen
+  }
+
+  /**
+   * @returns {boolean} Whether or not this node is can be opened using the "open" function.
+   */
+  get openable(): boolean {
+    return !this.executable && !this.isOpen
+  }
+
   get expandedInMenu(): boolean {
     return this._expandedInMenu
   }
@@ -326,7 +391,22 @@ export class MissionNode implements IMissionMappable {
     this._highlighted = highlighted
   }
 
-  constructor(
+  /**
+   * @param {Mission} mission The mission that this node is a part of.
+   * @param {string} nodeID The ID for this node.
+   * @param {string} name The name for this node.
+   * @param {string} color The hexidecimal color for this node.
+   * @param {string} description The description for this node.
+   * @param {string} preExecutionText The text that will be logged to the console when this node is clicked.
+   * @param {number} depthPadding The amount of padding this node will have when rendered on the map. Each unit will shift the node over 1.
+   * @param {boolean} executable Whether this node can be executed with an action.
+   * @param {boolean} device Whether this node is considered a device. This should not be true if executable is false.
+   * @param {Array<IMissionNodeActionJSON>} actionJSON The JSON for the actions that this node will have.
+   * @param {number} mapX The X coordinate for this node on the map, defaults to MissionNode.default_mapX.
+   * @param {number} mapY The Y coordinate for this node on the map, defaults to MissionNode.default_mapY.
+   * @param {boolean} isOpen Whether this node is open, revealing its child nodes, defaults to MissionNode.default_isOpen.
+   */
+  public constructor(
     mission: Mission,
     nodeID: string,
     name: string,
@@ -339,6 +419,7 @@ export class MissionNode implements IMissionMappable {
     actionJSON: Array<IMissionNodeActionJSON>,
     mapX: number = MissionNode.default_mapX,
     mapY: number = MissionNode.default_mapY,
+    isOpen: boolean = MissionNode.default_isOpen,
   ) {
     this.mission = mission
     this.nodeID = nodeID
@@ -352,12 +433,14 @@ export class MissionNode implements IMissionMappable {
     this.executable = executable
     this.device = device
     this.selectedAction = null
-    this.executed = false
-    this.executing = false
+    this._executing = false
+    this._lastExecutedAction = null
+    this._lastExecutionSucceeded = false
+    this._lastExecutionFailed = false
     this.mapX = mapX
     this.mapY = mapY
     this.depth = -1
-    this._isOpen = false
+    this._isOpen = isOpen
     this._expandedInMenu = true
     this._executingAction = null
     this._executionTimeStart = 0
@@ -365,6 +448,21 @@ export class MissionNode implements IMissionMappable {
     this._highlighted = true
 
     this.parseActionJSON(actionJSON)
+  }
+
+  public toJSON(): IMissionNodeJSON {
+    return {
+      nodeID: this.nodeID,
+      name: this.name,
+      color: this.color,
+      description: this.description,
+      preExecutionText: this.preExecutionText,
+      depthPadding: this.depthPadding,
+      executable: this.executable,
+      device: this.device,
+      actions: this.actions.map((action: MissionNodeAction) => action.toJSON()),
+      isOpen: this.isOpen,
+    }
   }
 
   // This will turn the action JSON
@@ -397,17 +495,23 @@ export class MissionNode implements IMissionMappable {
     this.mission.handleStructureChange()
   }
 
-  // This will open the node.
-  open(): void {
-    this._isOpen = true
-    this.mission.lastOpenedNode = this
-    this._handleStructureChange()
-  }
-
-  // This will close the node.
-  close(): void {
-    this._isOpen = false
-    this._handleStructureChange()
+  /**
+   * Opens the node revealing its children.
+   * @throws {Error} - If the node is executable.
+   */
+  public open(): void {
+    // If the node is not executable,
+    // open the node.
+    if (this.openable) {
+      this._isOpen = true
+      this.mission.lastOpenedNode = this
+      this._handleStructureChange()
+    }
+    // If the node is not openable,
+    // throw an error.
+    else {
+      throw new Error('This node is not openable.')
+    }
   }
 
   // This will toggle the expandedInMenu
@@ -552,6 +656,68 @@ export class MissionNode implements IMissionMappable {
     this._handleStructureChange()
   }
 
+  /**
+   * Populates previously omitted child nodes with the JSON passed.
+   * @param {Array<IMissionNodeJSON>} childNodesJSON The child nodes to populate. This likely comes from a "node-opened" server emitted event.
+   * @returns {Array<MissionNode>} The new array of child nodes.
+   */
+  public populateChildNodes(
+    childNodesJSON: Array<IMissionNodeJSON>,
+  ): Array<MissionNode> {
+    // If child nodes are already set,
+    // throw an error.
+    if (this.childNodes.length > 0) {
+      throw new Error('Child nodes are already populated.')
+    }
+
+    // Generate child nodes.
+    let childNodes: Array<MissionNode> = childNodesJSON.map((childNodeJSON) => {
+      // Put together default data.
+      let defaultNodeData = {
+        name: MissionNode.default_name,
+        color: MissionNode.default_color,
+        description: MissionNode.default_description,
+        preExecutionText: MissionNode.default_preExecutionText,
+        depthPadding: MissionNode.default_depthPadding,
+        executable: MissionNode.default_executable,
+        device: MissionNode.default_device,
+        actions: MissionNode.default_actions,
+      }
+
+      // Consolidate default data and data passed.
+      childNodeJSON = { ...defaultNodeData, ...childNodeJSON }
+
+      // Create a new node.
+      let childNode: MissionNode = new MissionNode(
+        this.mission,
+        childNodeJSON.nodeID,
+        childNodeJSON.name,
+        childNodeJSON.color,
+        childNodeJSON.description,
+        childNodeJSON.preExecutionText,
+        childNodeJSON.depthPadding,
+        childNodeJSON.executable,
+        childNodeJSON.device,
+        childNodeJSON.actions,
+        MissionNode.default_mapX,
+        MissionNode.default_mapY,
+        childNodeJSON.isOpen,
+      )
+
+      // Set the node in the missions.
+      this.mission.nodes.set(childNode.nodeID, childNode)
+
+      // Return node
+      return childNode
+    })
+
+    // Set child nodes.
+    this.childNodes = childNodes
+
+    // Return the child nodes.
+    return childNodes
+  }
+
   // This will color all descendant
   // nodes the same color as this
   // node.
@@ -658,7 +824,7 @@ export class MissionNode implements IMissionMappable {
       )
     }
 
-    this.executing = true
+    this._executing = true
     this._executingAction = action
     this._executionTimeStart = Date.now()
     this._executionTimeEnd = this._executionTimeStart + action.processTime
@@ -666,7 +832,7 @@ export class MissionNode implements IMissionMappable {
 
   // This is called when an action in
   // this node has finished executing.
-  handleActionExecutionEnd(): void {
+  handleActionExecutionEnd(success: boolean): void {
     let executingAction: MissionNodeAction | null = this.executingAction
 
     if (executingAction === null) {
@@ -675,80 +841,12 @@ export class MissionNode implements IMissionMappable {
       )
     }
 
-    this.executed = true
-    this.executing = false
+    this._executing = false
     this._executingAction = null
-  }
-
-  // This disables all nodes that are
-  // not part of the selected path.
-  disableOtherNodes(): void {
-    let allParentNodes: Array<string> = []
-    let allChildNodes: Array<string> = []
-    let allSiblingNodes: Array<string> = []
-    let currentNode: MissionNode | null = this
-
-    // A non-executable node must be opened,
-    // in the default state, and not the root
-    // node to be highlighted.
-    // Also, if a node is executable, it must
-    // be successfully executed to be
-    // highlighted.
-    if (
-      (this.isOpen && this.highlighted) ||
-      (this.executed && this.selectedAction?.succeeded)
-    ) {
-      // This will go up the tree and
-      // add all parent nodes to the
-      // allParentNodes array if the
-      // current node is not the root
-      // node.
-      while (
-        currentNode &&
-        currentNode.nodeID !== this.mission.rootNode.nodeID
-      ) {
-        allParentNodes.push(currentNode.nodeID)
-        currentNode = currentNode.parentNode
-      }
-
-      // After going up the tree this
-      // will go down the tree recursively
-      // and add all child nodes, their
-      // siblings, and their sibling's
-      // children to the allChildNodes
-      // and allSiblingNodes array.
-      let addChildrenAndSiblings = (node: MissionNode) => {
-        node.childNodes.forEach((childNode: MissionNode) => {
-          allChildNodes.push(childNode.nodeID)
-          childNode.siblings.forEach((siblingNode: MissionNode) => {
-            allSiblingNodes.push(siblingNode.nodeID)
-            addChildrenAndSiblings(siblingNode)
-          })
-          addChildrenAndSiblings(childNode)
-        })
-      }
-
-      addChildrenAndSiblings(this)
-
-      this.mission.nodes.forEach((node: MissionNode) => {
-        // This disables all the nodes
-        // that are not part of the
-        // selected path.
-        if (
-          !allParentNodes.includes(node.nodeID) &&
-          !allChildNodes.includes(node.nodeID) &&
-          !allSiblingNodes.includes(node.nodeID)
-        ) {
-          node.highlighted = false
-
-          if (!node.mission.hasDisabledNodes) {
-            node.mission.hasDisabledNodes = true
-          }
-        } else {
-          node.highlighted = true
-        }
-      })
-    }
+    this._lastExecutedAction = executingAction
+    this._lastExecutionSucceeded = success
+    this._lastExecutionFailed = !success
+    this._isOpen = true
   }
 }
 

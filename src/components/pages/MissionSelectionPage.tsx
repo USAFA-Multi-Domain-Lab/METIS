@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { getAllMissions, importMissions, Mission } from '../../modules/missions'
 import { IPage } from '../App'
 import './MissionSelectionPage.scss'
@@ -9,9 +9,11 @@ import {
 import AppState, { AppActions } from '../AppState'
 import Navigation from '../content/general-layout/Navigation'
 import MissionSelectionRow from '../content/user-controls/MissionSelectionRow'
-import { ButtonText } from '../content/user-controls/ButtonText'
 import Notification from '../../modules/notifications'
 import Tooltip from '../content/communication/Tooltip'
+import { permittedRoles } from '../../modules/users'
+import { useMountHandler } from '../../modules/hooks'
+import { GameClient } from 'src/modules/games'
 
 export interface IMissionSelectionPage extends IPage {}
 
@@ -29,7 +31,6 @@ export default function MissionSelectionPage(
 
   /* -- COMPONENT STATE -- */
 
-  const [mountHandled, setMountHandled] = useState<boolean>(false)
   const [missions, setMissions] = useState<Array<Mission>>([])
   const [displayedMissions, setDisplayedMissions] = useState<Array<Mission>>([])
   const [allMissionsFromSearch, setAllMissionsFromSearch] = useState<
@@ -42,14 +43,9 @@ export default function MissionSelectionPage(
 
   /* -- COMPONENT EFFECTS -- */
 
-  // Equivalent of componentDidMount.
-  useEffect(() => {
-    if (!mountHandled) {
-      const handleLoadCompletion = () => setMountHandled(true)
-
-      loadMissions(handleLoadCompletion, handleLoadCompletion)
-    }
-  }, [mountHandled])
+  const [mountHandled, remount] = useMountHandler((done) =>
+    loadMissions(done, done),
+  )
 
   // This will reset the mission list to what
   // it was when the page loaded initially.
@@ -101,7 +97,7 @@ export default function MissionSelectionPage(
         callback()
       },
       (error: Error) => {
-        appActions.handleServerError('Failed to retrieve mission.')
+        appActions.handleError('Failed to retrieve mission.')
         appActions.finishLoading()
         callbackError(error)
       },
@@ -172,7 +168,6 @@ export default function MissionSelectionPage(
               duration: null,
               buttons: [
                 {
-                  ...ButtonText.defaultProps,
                   text: 'View errors',
                   handleClick: () => {
                     let prompt: string = ''
@@ -289,7 +284,10 @@ export default function MissionSelectionPage(
 
       page_elm.classList.remove('DropPending')
 
-      if (files.length > 0 && appState.currentUser !== null) {
+      if (
+        files.length > 0 &&
+        permittedRoles.includes(appState.session?.user.role ?? 'NOT_LOGGED_IN')
+      ) {
         importMissionFiles(files)
       }
     }
@@ -326,7 +324,13 @@ export default function MissionSelectionPage(
 
   // This will switch to the changelog
   // page.
-  const viewChangelog = (): void => appActions.goToPage('ChangelogPage', {})
+  const viewChangelog = (): void => {
+    if (
+      permittedRoles.includes(appState.session?.user.role ?? 'NOT_LOGGED_IN')
+    ) {
+      appActions.goToPage('ChangelogPage', {})
+    }
+  }
 
   // Toggles through the pages of missions.
   const showPreviousMissionSet = () => {
@@ -511,7 +515,45 @@ export default function MissionSelectionPage(
     setDisplayedMissions(displayedSearchMissions)
   }
 
-  /* -- RENDER -- */
+  /**
+   * Callback for when a mission is selected.
+   */
+  const handleMissionSelection = useCallback(
+    async (mission: Mission) => {
+      let { server } = appState
+
+      if (server !== null) {
+        try {
+          // Notify user of mission launch.
+          appActions.beginLoading('Launching mission...')
+          // Launch game from mission ID, awaiting
+          // the promised game ID.
+          let gameID: string = await GameClient.launch(mission.missionID)
+          // Notify user of mission join.
+          appActions.beginLoading('Joining mission...')
+          // Join game from new game ID, awaiting
+          // the promised game client.
+          let game: GameClient = await GameClient.join(gameID, server)
+          // Go to the game page with the new
+          // game client.
+          appActions.goToPage('GamePage', { game })
+        } catch (error) {
+          appActions.handleError({
+            message: 'Failed to launch mission. Contact system administrator.',
+            notifyMethod: 'page',
+          })
+        }
+      } else {
+        appActions.handleError({
+          message: 'No server connection. Contact system administrator',
+          notifyMethod: 'bubble',
+        })
+      }
+    },
+    [appActions, appState.server],
+  )
+
+  /* -- PRE-RENDER PROCESSING -- */
 
   // Keeps track of if the user is logged in or not.
   let editMissionsContainerClassName: string = 'EditMissionsContainer'
@@ -519,22 +561,21 @@ export default function MissionSelectionPage(
   let missionNavPanelClassName: string = 'MissionNavPanel'
   let searchContainerClassName: string = 'Hidden'
   let fileDropBoxClassName: string = 'Hidden'
-  let displayLogin: boolean = true
-  let displayLogout: boolean = false
+  let displayLogin: boolean = appState.session === null
+  let displayLogout: boolean = !displayLogin
 
   let noMissionsClassName: string = 'NoMissions'
+  let versionClassName: string = 'Version Disabled'
 
   // Variables used for mission pagination
   let numberOfMissionsShown: number = 5
   let totalMissionSets: number = 1
 
-  if (appState.currentUser !== null) {
+  if (permittedRoles.includes(appState.session?.user.role ?? 'NOT_LOGGED_IN')) {
     editMissionsContainerClassName += ' InstructorView'
     editMissionListClassName += ' InstructorView'
     missionNavPanelClassName += ' InstructorView'
     fileDropBoxClassName = 'FileDropBox'
-    displayLogin = false
-    displayLogout = true
   }
 
   if (displayedMissions.length > 0) {
@@ -555,22 +596,52 @@ export default function MissionSelectionPage(
     )
   }
 
-  // This will iterate over the missions,
-  // and render all the rows for the list.
-  const renderMissionSelectionRows = (): JSX.Element[] => {
+  if (permittedRoles.includes(appState.session?.user.role ?? 'NOT_LOGGED_IN')) {
+    versionClassName = 'Version'
+  }
+
+  /**
+   * ! TEMPORARY
+   */
+  const manuallyJoin = useCallback(async (event: React.FormEvent) => {
+    event.preventDefault()
+    let target: HTMLFormElement = event.target as HTMLFormElement
+
+    let gameIDElement: HTMLInputElement | null =
+      target.querySelector('.game-id')
+    console.log(target)
+
+    if (gameIDElement && appState.server) {
+      let gameID: string = gameIDElement.value
+
+      console.log(gameID)
+      let game: GameClient = await GameClient.join(gameID, appState.server)
+
+      console.log(game)
+      appActions.goToPage('GamePage', { game })
+    }
+  }, [])
+
+  /* -- INTERNAL COMPONENTS -- */
+
+  // Renders out missions for the list.
+  const MissionSelectionRows = useCallback((): JSX.Element | null => {
     let missionSelectionRows: JSX.Element[] = displayedMissions.map(
       (mission: Mission) => (
         <MissionSelectionRow
           mission={mission}
+          handleSelection={() => handleMissionSelection(mission)}
           appActions={appActions}
-          setMountHandled={setMountHandled}
+          remountPage={remount}
           key={`MissionSelectionRow_${mission.missionID}`}
         />
       ),
     )
 
-    return missionSelectionRows
-  }
+    return <div className='MissionSelectionRows'>{missionSelectionRows}</div>
+  }, [displayedMissions, handleMissionSelection, appActions, remount])
+
+  /* -- RENDER -- */
 
   return (
     <div
@@ -624,9 +695,7 @@ export default function MissionSelectionPage(
                 ref={inputFocusRef}
               />
             </div>
-            <div className='MissionSelectionRows'>
-              {renderMissionSelectionRows()}
-            </div>
+            <MissionSelectionRows />
             <div className={noMissionsClassName}>No missions available...</div>
           </div>
           <div className={missionNavPanelClassName}>
@@ -665,6 +734,13 @@ export default function MissionSelectionPage(
             hidden
           />
         </div>
+      </div>
+
+      <div className='ManualJoin'>
+        <form onSubmit={manuallyJoin}>
+          <input className='game-id' type='text' name='gameID' />
+          <input type='submit' value='Join' />
+        </form>
       </div>
 
       <div className='FooterContainer' draggable={false}>

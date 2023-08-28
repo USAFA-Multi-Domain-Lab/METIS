@@ -227,6 +227,15 @@
     }
   }
 
+  .ManualJoin {
+    color: black;
+    text-align: center;
+
+    input {
+      color: black;
+    }
+  }
+
   .FooterContainer {
     display: grid;
     grid-template-columns: auto auto;
@@ -248,6 +257,10 @@
 
       &:hover {
         opacity: 1;
+      }
+
+      &.Disabled {
+        pointer-events: none;
       }
     }
 

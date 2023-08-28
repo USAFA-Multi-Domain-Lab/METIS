@@ -1,4 +1,5 @@
 import express, { Express } from 'express'
+import expressWs from 'express-ws'
 import session from 'express-session'
 import path from 'path'
 import fs from 'fs'
@@ -9,6 +10,7 @@ import database from './database/database'
 import mongoose from 'mongoose'
 import { sys } from 'typescript'
 import { expressLoggingHandler } from './modules/logging'
+const defaults = require('./defaults')
 
 declare module 'express-session' {
   export interface SessionData {
@@ -20,15 +22,15 @@ declare module 'express-session' {
 
 export let SCHEMA_BUILD_NUMBER: number = 11
 
-export let PORT: number = 8080
+export let PORT: number = defaults.PORT
 
-export let MONGO_DB: string = 'metis'
-export let MONGO_HOST = 'localhost'
-export let MONGO_PORT = 27017
+export let MONGO_DB: string = defaults.MONGO_DB
+export let MONGO_HOST = defaults.MONGO_HOST
+export let MONGO_PORT = defaults.MONGO_PORT
 export let MONGO_USERNAME: string | undefined
 export let MONGO_PASSWORD: string | undefined
-export let API_KEY: string = ''
-export let PLC_API_HOST: string = ''
+export let API_KEY: string = defaults.API_KEY
+export let PLC_API_HOST: string = defaults.PLC_API_HOST
 
 export const APP_DIR = path.join(__dirname)
 
@@ -86,6 +88,9 @@ export function configure(
   callbackError: (error: Error) => void = () => {},
 ): void {
   let connection: mongoose.Connection | null
+
+  // Web socket setup.
+  expressWs(app)
 
   // Logger setup.
   app.use(expressLoggingHandler)
@@ -147,6 +152,3 @@ const defaultExports = {
 }
 
 export default defaultExports
-function multer(arg0: { dest: string }) {
-  throw new Error('Function not implemented.')
-}

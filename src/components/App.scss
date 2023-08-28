@@ -5,14 +5,14 @@
   min-width: 100vw;
   min-height: 100vh;
 
-  &.ServerError {
-    .Page:not(.ServerErrorPage) {
+  &.Error {
+    .Page:not(.ErrorPage) {
       @extend .hidden;
     }
   }
 
-  &:not(.ServerError) {
-    .Page.ServerErrorPage {
+  &:not(.Error) {
+    .Page.ErrorPage {
       @extend .hidden;
     }
   }

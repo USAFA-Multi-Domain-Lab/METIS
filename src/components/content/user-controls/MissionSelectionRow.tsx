@@ -3,40 +3,42 @@ import Tooltip from '../communication/Tooltip'
 import './MissionSelectionRow.scss'
 import { AppActions } from '../../AppState'
 import MissionModificationPanel from '../user-controls/MissionModificationPanel'
+import { useStore } from 'react-context-hook'
+import { TMetisSession, User, userRoles } from '../../../modules/users'
+import { Game, GameClient } from '../../../modules/games'
+import { AxiosError } from 'axios'
+import ServerConnection from 'src/modules/connect/server-connect'
 
 // This will render a row on the page
 // for the given mission.
 export default function MissionSelectionRow(props: {
   mission: Mission
+  handleSelection: () => void
   appActions: AppActions
-  setMountHandled: (mountHandled: boolean) => void
+  remountPage: () => void
 }): JSX.Element | null {
+  /* -- GLOBAL STATE -- */
+
+  const [session] = useStore<TMetisSession>('session')
+  const [server] = useStore<ServerConnection | null>('server')
+
   /* -- COMPONENT VARIABLES -- */
-  let mission: Mission = props.mission
-  let appActions: AppActions = props.appActions
-  let setMountHandled = props.setMountHandled
 
-  /* -- COMPONENT FUNCTIONS -- */
+  let { mission, handleSelection, appActions, remountPage } = props
 
-  // This loads the mission in session from the database
-  // and stores it in a global state to be used on the GamePage
-  // where the Mission Map renders
-  const selectMission = () =>
-    appActions.goToPage('GamePage', {
-      missionID: mission.missionID,
-    })
+  /* -- RENDER -- */
 
   return (
     <div className='MissionSelectionRow'>
-      <div className='MissionName' onClick={selectMission}>
+      <div className='MissionName' onClick={handleSelection}>
         {mission.name}
         <Tooltip description='Launch mission.' />
       </div>
       <MissionModificationPanel
         mission={mission}
         appActions={appActions}
-        handleSuccessfulCopy={() => setMountHandled(false)}
-        handleSuccessfulDeletion={() => setMountHandled(false)}
+        handleSuccessfulCopy={remountPage}
+        handleSuccessfulDeletion={remountPage}
         handleSuccessfulToggleLive={() => {}}
       />
     </div>

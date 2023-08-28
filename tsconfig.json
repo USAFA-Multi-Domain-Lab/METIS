@@ -3,6 +3,7 @@
     "target": "ES2017",
     "module": "commonjs",
     "lib": ["dom", "dom.iterable", "esnext"],
+    "rootDirs": ["modules/"],
     "allowJs": false,
     "skipLibCheck": true,
     "esModuleInterop": true,
@@ -12,9 +13,9 @@
     "noFallthroughCasesInSwitch": true,
     "moduleResolution": "node",
     "resolveJsonModule": true,
-    "isolatedModules": true,
+    "isolatedModules": false,
     "noEmit": true,
-    "jsx": "react-jsx"
-  },
-  "include": ["src"]
+    "jsx": "react-jsx",
+    "baseUrl": "."
+  }
 }
