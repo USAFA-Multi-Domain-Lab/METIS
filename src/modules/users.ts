@@ -195,9 +195,17 @@ export class User {
     needsPasswordReset: false,
   }
   /**
+   * All available roles in METIS.
+   */
+  public static readonly AVAIABLE_ROLES: TUserRole[] = [
+    'student',
+    'instructor',
+    'admin',
+  ]
+  /**
    * The roles that have restricted access to certain pages.
    */
-  private static readonly RESTRICTED_ACCESS_ROLES: TUserRole[] = [
+  public static readonly RESTRICTED_ACCESS_ROLES: TUserRole[] = [
     'instructor',
     'admin',
   ]

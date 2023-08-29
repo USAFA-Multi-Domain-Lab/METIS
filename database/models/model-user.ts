@@ -1,8 +1,8 @@
 import mongoose, { Schema } from 'mongoose'
 import bcryptjs from 'bcryptjs'
 import { StatusError } from '../../modules/error'
-import { userRoles } from '../../user'
 import { databaseLogger } from '../../modules/logging'
+import { User } from '../../src/modules/users'
 
 let ObjectId = mongoose.Types.ObjectId
 
@@ -24,15 +24,7 @@ const validate_users_name = (name: string): boolean => {
 
 // Validator for user.role.
 const validate_users_role = (role: string): boolean => {
-  if (role === userRoles.Admin) {
-    return true
-  } else if (role === userRoles.Instructor) {
-    return true
-  } else if (role === userRoles.Student) {
-    return true
-  } else {
-    return false
-  }
+  return (User.AVAIABLE_ROLES as Array<string>).includes(role)
 }
 
 const validator_users_password = (password: string): boolean => {

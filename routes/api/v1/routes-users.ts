@@ -3,11 +3,11 @@ import express, { Request, Response } from 'express'
 import { StatusError } from '../../../modules/error'
 import { User } from '../../../src/modules/users'
 import MetisSession from '../../../session/session'
-import defineRequests, { RequestBodyFilters } from 'modules/requests'
-import UserModel, { hashPassword } from 'database/models/model-user'
-import { hasPermittedRole, requireLogin } from 'user'
+import defineRequests, { RequestBodyFilters } from '../../../modules/requests'
+import UserModel, { hashPassword } from '../../../database/models/model-user'
+import { requireLogin } from '../../../user'
 import { ERROR_BAD_DATA } from '../../../database/database'
-import { databaseLogger } from 'modules/logging'
+import { databaseLogger } from '../../../modules/logging'
 
 //fields
 const router = express.Router()

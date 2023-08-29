@@ -139,7 +139,7 @@ export class AscotApi {
   /**
    * The host of the ASCOT API retrieved from the config.
    */
-  public static readonly API_HOST: string = config.ASCOT_API_HOST
+  public static readonly API_HOST?: string = config.ASCOT_API_HOST
 
   /**
    * The endpoint for accessing and managing the entities in ASCOT via the API.
