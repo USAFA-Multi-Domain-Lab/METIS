@@ -11,6 +11,9 @@ export interface INavLink {
   text: string
   key: string
   handleClick: () => void
+  /**
+   * Whether or not the link is currently visible. Defaults to true.
+   */
   visible?: boolean
 }
 

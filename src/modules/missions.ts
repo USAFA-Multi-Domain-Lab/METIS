@@ -641,19 +641,19 @@ export class Mission {
   /**
    * The API endpoint for mission data on the METIS server.
    */
-  public static API_URL: string = `/api/v1/missions`
+  public static API_ENDPOINT: string = `/api/v1/missions`
 
   /**
    * The API endpoint for mission execution operations on the METIS server.
    */
-  public static API_EXECUTE_URL: string = `${Mission.API_URL}/execute`
+  public static API_EXECUTE_URL: string = `${Mission.API_ENDPOINT}/execute`
 
   /**
    * Converts IMissionJSON into a Mission object.
    * @param {IMissionJson} json The json to be converted.
    * @returns {Mission} The Mission object.
    */
-  public static fromJSON(json: IMissionJSON): any {
+  public static fromJSON(json: IMissionJSON): Mission {
     return new Mission(
       json.missionID,
       json.name,
@@ -665,6 +665,25 @@ export class Mission {
       json.nodeData,
       json.seed,
     )
+  }
+
+  /**
+   * Calls the API to fetch all missions available.
+   * @returns {Promise<Array<Mission>>} A promise that resolves to an array of Mission objects.
+   */
+  public static async fetchAll(): Promise<Array<Mission>> {
+    return new Promise<Array<Mission>>(async (resolve, reject) => {
+      try {
+        let { data: missionsJSON } = await axios.get<Array<IMissionJSON>>(
+          Mission.API_ENDPOINT,
+        )
+        resolve(missionsJSON.map(Mission.fromJSON))
+      } catch (error) {
+        console.error('Failed to fetch missions.')
+        console.error(error)
+        reject(error)
+      }
+    })
   }
 }
 
@@ -791,24 +810,6 @@ export function getMission(
     })
 }
 
-export function getAllMissions(
-  callback: (missions: Array<Mission>) => void,
-  callbackError: (error: AxiosError) => void = () => {},
-): void {
-  axios
-    .get(`/api/v1/missions/`)
-    .then((response: AxiosResponse<AnyObject>): void => {
-      let missionsJson = response.data.missions
-
-      callback(missionsJson)
-    })
-    .catch((error: AxiosError) => {
-      console.error('Failed to retrieve missions.')
-      console.error(error)
-      callbackError(error)
-    })
-}
-
 export function getMissionNodeColorOptions(
   callback: (colors: Array<string>) => void,
   callbackError: (error: AxiosError) => void = () => {},
@@ -920,7 +921,6 @@ export default {
   Mission,
   createMission,
   getMission,
-  getAllMissions,
   saveMission,
   setLive,
   deleteMission,

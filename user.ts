@@ -1,27 +1,16 @@
 import { Request, Response, NextFunction } from 'express-serve-static-core'
-import { AnyObject } from './modules/toolbox/objects'
 import MetisSession from './session/session'
+import { TUserRole } from 'src/modules/users'
 
 interface ILoginOptions {
-  permittedRoles?: string[]
-}
-
-// This is the list of user roles.
-export const userRoles: AnyObject = {
-  Student: 'student',
-  Instructor: 'instructor',
-  Admin: 'admin',
+  permittedRoles?: Array<TUserRole>
 }
 
 // middleware that requires the user to be logged in
 export const requireLogin =
   (
     options: ILoginOptions = {
-      permittedRoles: [
-        userRoles.Student,
-        userRoles.Instructor,
-        userRoles.Admin,
-      ],
+      permittedRoles: ['student', 'instructor', 'admin'],
     },
   ) =>
   (request: Request, response: Response, next: NextFunction): void => {
@@ -99,19 +88,13 @@ export const requireConnection = (
 // a user in the session.
 export function hasPermittedRole(
   request: Request,
-  options: ILoginOptions = {
-    permittedRoles: [userRoles.Admin, userRoles.Instructor],
-  },
+  permittedRoles: Array<TUserRole>,
 ): boolean {
   let session: MetisSession | undefined = MetisSession.get(
     request.session.userID,
   )
 
-  return (
-    session !== undefined &&
-    options.permittedRoles !== undefined &&
-    options.permittedRoles.includes(session.user.role)
-  )
+  return session !== undefined && permittedRoles.includes(session.user.role)
 }
 
 // middleware that requires the user to be logged in

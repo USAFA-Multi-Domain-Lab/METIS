@@ -33,25 +33,10 @@ export interface IUserJSONExposed {
   password: string
 }
 
-// This is the list of user roles.
-export const userRoles = {
-  Student: 'student',
-  Instructor: 'instructor',
-  Admin: 'admin',
-}
-
 /**
  * All possible user roles in METIS.
  */
 export type TUserRole = 'student' | 'instructor' | 'admin'
-
-// This is used to determine which roles
-// can access certain routes.
-export const restrictedAccessRoles: string[] = [
-  userRoles.Admin,
-  userRoles.Instructor,
-]
-export const fullAccessRoles: string[] = [userRoles.Admin]
 
 /**
  * Represents a user using METIS.
@@ -94,37 +79,6 @@ export class User {
     return this._passwordIsRequired
   }
 
-  /**
-   * @param {IUserJSON} json The user JSON from which to create the user. Any ommitted values will be set to the default properties defined in User.DEFAULT_PROPERTIES.
-   */
-  public constructor(
-    {
-      userID,
-      firstName,
-      lastName,
-      role,
-      needsPasswordReset,
-    }: Partial<IUserJSON> = User.DEFAULT_PROPERTIES,
-  ) {
-    this.userID = userID ?? User.DEFAULT_PROPERTIES.userID
-    this.firstName = firstName ?? User.DEFAULT_PROPERTIES.firstName
-    this.lastName = lastName ?? User.DEFAULT_PROPERTIES.lastName
-    this.role = role ?? User.DEFAULT_PROPERTIES.role
-    this.needsPasswordReset = needsPasswordReset ?? false
-    this._passwordIsRequired = false
-  }
-
-  /**
-   * Default properties set when creating a new user.
-   */
-  public static readonly DEFAULT_PROPERTIES: IUserJSON = {
-    userID: '',
-    firstName: '',
-    lastName: '',
-    role: 'student',
-    needsPasswordReset: false,
-  }
-
   public get canSave(): boolean {
     // userID cannot be the default value
     let updatedUserID: boolean = this.userID !== User.DEFAULT_PROPERTIES.userID
@@ -158,6 +112,40 @@ export class User {
       !password1IsEmptyString &&
       !password2IsEmptyString
     )
+  }
+
+  /**
+   * @returns {boolean} Whether the user has restricted access.
+   */
+  public get hasRestrictedAccess(): boolean {
+    return User.RESTRICTED_ACCESS_ROLES.includes(this.role)
+  }
+
+  /**
+   * @returns {boolean} Whether the user has full access.
+   */
+  public get hasFullAccess(): boolean {
+    return User.FULL_ACCESS_ROLES.includes(this.role)
+  }
+
+  /**
+   * @param {IUserJSON} json The user JSON from which to create the user. Any ommitted values will be set to the default properties defined in User.DEFAULT_PROPERTIES.
+   */
+  public constructor(
+    {
+      userID,
+      firstName,
+      lastName,
+      role,
+      needsPasswordReset,
+    }: Partial<IUserJSON> = User.DEFAULT_PROPERTIES,
+  ) {
+    this.userID = userID ?? User.DEFAULT_PROPERTIES.userID
+    this.firstName = firstName ?? User.DEFAULT_PROPERTIES.firstName
+    this.lastName = lastName ?? User.DEFAULT_PROPERTIES.lastName
+    this.role = role ?? User.DEFAULT_PROPERTIES.role
+    this.needsPasswordReset = needsPasswordReset ?? false
+    this._passwordIsRequired = false
   }
 
   /**
@@ -195,6 +183,28 @@ export class User {
    * The API endpoint for managing users.
    */
   public static readonly API_ENDPOINT: string = '/api/v1/users'
+
+  /**
+   * Default properties set when creating a new user.
+   */
+  public static readonly DEFAULT_PROPERTIES: IUserJSON = {
+    userID: '',
+    firstName: '',
+    lastName: '',
+    role: 'student',
+    needsPasswordReset: false,
+  }
+  /**
+   * The roles that have restricted access to certain pages.
+   */
+  private static readonly RESTRICTED_ACCESS_ROLES: TUserRole[] = [
+    'instructor',
+    'admin',
+  ]
+  /**
+   * The roles that have full access to all pages.
+   */
+  public static readonly FULL_ACCESS_ROLES: string[] = ['admin']
 
   /**
    * Fetches the current session of the logged in user from the server.
@@ -274,6 +284,29 @@ export class User {
       },
     )
   }
+
+  /**
+   * Calls the API to fetch all users available.
+   * @returns {Promise<Array<User>>} A promise that resolves to an array of User objects.
+   */
+  public static async fetchAll(): Promise<Array<User>> {
+    return new Promise<Array<User>>(async (resolve, reject) => {
+      try {
+        // Retrieve data from API.
+        let { data: usersJSON } = await axios.get<Array<IUserJSON>>(
+          User.API_ENDPOINT,
+        )
+        // Convert JSON to User objects.
+        let users: Array<User> = usersJSON.map((userJSON) => new User(userJSON))
+        // Resolve
+        resolve(users)
+      } catch (error) {
+        console.error('Failed to fetch missions.')
+        console.error(error)
+        reject(error)
+      }
+    })
+  }
 }
 
 // This will logout the user in the session.
@@ -311,24 +344,6 @@ export const createUser = (
     })
     .catch((error: AxiosError) => {
       console.error('Failed to create user.')
-      callbackError(error)
-    })
-}
-
-// This will get all users.
-export const getAllUsers = (
-  callback: (users: User[]) => void,
-  callbackError: (error: AxiosError) => void = () => {},
-): void => {
-  axios
-    .get(`/api/v1/users/`)
-    .then((response: AxiosResponse<AnyObject>): void => {
-      let users = response.data.users
-
-      callback(users)
-    })
-    .catch((error: AxiosError) => {
-      console.error('Failed to get all users.')
       callbackError(error)
     })
 }
@@ -387,7 +402,6 @@ export const deleteUser = (
 export default {
   logout,
   createUser,
-  getAllUsers,
   getUser,
   saveUser,
   deleteUser,

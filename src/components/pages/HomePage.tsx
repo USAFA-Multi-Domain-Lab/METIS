@@ -1,5 +1,5 @@
-import React, { useEffect, useRef, useState } from 'react'
-import { getAllMissions, importMissions, Mission } from '../../modules/missions'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
+import { importMissions, Mission } from '../../modules/missions'
 import { IPage } from '../App'
 import './HomePage.scss'
 import AppState, { AppActions } from '../AppState'
@@ -7,13 +7,7 @@ import Navigation from '../content/general-layout/Navigation'
 import { ButtonText } from '../content/user-controls/ButtonText'
 import Notification from '../../modules/notifications'
 import Tooltip from '../content/communication/Tooltip'
-import {
-  getAllUsers,
-  User,
-  restrictedAccessRoles,
-  userRoles,
-  fullAccessRoles,
-} from '../../modules/users'
+import { User } from '../../modules/users'
 import List, { ESortByMethod } from '../content/general-layout/List'
 import MissionModificationPanel from '../content/user-controls/MissionModificationPanel'
 import { EAjaxStatus } from '../../modules/toolbox/ajax'
@@ -22,103 +16,103 @@ import {
   EButtonSVGPurpose,
 } from '../content/user-controls/ButtonSVG'
 import UserModificationPanel from '../content/user-controls/UserModificationPanel'
+import { useMountHandler, useRequireSession } from 'src/modules/hooks'
+import { GameClient } from 'src/modules/games'
+import ServerConnection from 'src/modules/connect/server-connect'
 
 export interface IHomePage extends IPage {}
 
 export default function HomePage(props: IHomePage): JSX.Element | null {
-  let appState: AppState = props.appState
-  let appActions: AppActions = props.appActions
-  let currentUser: User | null = appState.currentUser
+  /* -- COMPONENT PROPERTIES -- */
+
+  const appState: AppState = props.appState
+  const appActions: AppActions = props.appActions
+
+  // Extract values from the app state.
+  const { server } = appState
+  const { beginLoading, finishLoading, goToPage, handleError } = appActions
 
   /* -- COMPONENT REFS -- */
+
   const page = useRef<HTMLDivElement>(null)
   const importMissionTrigger = useRef<HTMLInputElement>(null)
 
   /* -- COMPONENT STATE -- */
-  const [mountHandled, setMountHandled] = useState<boolean>(false)
+
   const [missions, setMissions] = useState<Array<Mission>>([])
   const [users, setUsers] = useState<Array<User>>([])
 
   /* -- COMPONENT EFFECTS -- */
-  // Equivalent of componentDidMount.
-  useEffect(() => {
-    if (!mountHandled) {
-      const handleLoadCompletion = () => setMountHandled(true)
 
-      loadContent(handleLoadCompletion, handleLoadCompletion)
-    }
-  }, [mountHandled])
+  const [mountHandled, remount] = useMountHandler(async (done) => {
+    await loadMissions()
+    await loadUsers()
+    appActions.finishLoading()
+    done()
+  })
+
+  // Require session for page.
+  const [session] = useRequireSession(appState, appActions)
+
+  /* -- SESSION-SPECIFIC LOGIC -- */
+
+  // Return null if the mount has
+  // not been handled or if the
+  // session is null.
+  if (!mountHandled || session === null) {
+    return null
+  }
+
+  let { user: currentUser } = session
 
   /* -- COMPONENT FUNCTIONS -- */
 
-  // This loads the content displayed in the
-  // lists that are used for selection.
-  const loadContent = (
-    callback: () => void = () => {},
-    callbackError: (error: Error) => void = () => {},
-  ) => {
-    appActions.beginLoading('Retrieving content...')
-
-    // This loads the mission in session from the database
-    // and stores it in a global state to be used on the GamePage
-    // where the Mission Map renders
-    getAllMissions(
-      (missions: Array<Mission>) => {
-        setMissions(missions)
-        callback()
-      },
-      (error: Error) => {
-        appActions.handleServerError('Failed to retrieve mission.')
+  /**
+   * This loads the missions into the state for display and selection.
+   */
+  const loadMissions = async (): Promise<void> => {
+    return new Promise<void>(async (resolve, reject) => {
+      try {
+        // Begin loading.
+        appActions.beginLoading('Retrieving missions...')
+        // Fetch missions from API and store
+        // them in the state.
+        setMissions(await Mission.fetchAll())
+        // Finish loading if not mounted.
+        if (!mountHandled) {
+          appActions.finishLoading()
+        }
+        resolve()
+      } catch (error) {
+        appActions.handleError('Failed to retrieve missions.')
         appActions.finishLoading()
-        callbackError(error)
-      },
-    )
+        reject(error)
+      }
+    })
+  }
 
-    if (
-      currentUser &&
-      currentUser.role &&
-      restrictedAccessRoles.includes(currentUser.role)
-    ) {
-      // This loads all the users from the database
-      getAllUsers(
-        (retrievedUsers: Array<User>) => {
-          let filteredUsers: Array<User> = []
-
-          if (
-            currentUser &&
-            currentUser.role &&
-            restrictedAccessRoles.includes(currentUser.role)
-          ) {
-            retrievedUsers.forEach((user: User) => {
-              if (user.role === userRoles.Student) {
-                filteredUsers.push(user)
-              }
-            })
-            setUsers(filteredUsers)
-          } else if (
-            currentUser &&
-            currentUser.role &&
-            fullAccessRoles.includes(currentUser.role)
-          ) {
-            retrievedUsers.forEach((user: User) => {
-              if (currentUser && user.userID !== currentUser.userID) {
-                filteredUsers.push(user)
-              }
-            })
-            setUsers(filteredUsers)
-          }
+  /**
+   * This loads the users into the state for display and selection.
+   */
+  const loadUsers = async (): Promise<void> => {
+    return new Promise<void>(async (resolve, reject) => {
+      try {
+        // Begin loading.
+        appActions.beginLoading('Retrieving users...')
+        // Fetch users from API and store
+        // them in the state.
+        setUsers(await User.fetchAll())
+        // Finish loading if not mounted.
+        if (!mountHandled) {
           appActions.finishLoading()
-          callback()
-        },
-        (error: Error) => {
-          appActions.handleServerError('Failed to retrieve users.')
-          appActions.finishLoading()
-          callbackError(error)
-        },
-      )
-    } else {
-      appActions.finishLoading()
-    }
+        }
+        resolve()
+      } catch (error) {
+        appActions.handleError('Failed to retrieve users.')
+        appActions.finishLoading()
+        reject(error)
+      }
+    })
   }
 
   // This will logout the current user.
@@ -178,7 +172,6 @@ export default function HomePage(props: IHomePage): JSX.Element | null {
               duration: null,
               buttons: [
                 {
-                  ...ButtonText.defaultProps,
                   text: 'View errors',
                   handleClick: () => {
                     let prompt: string = ''
@@ -212,7 +205,7 @@ export default function HomePage(props: IHomePage): JSX.Element | null {
 
       // Reloads missions now that all files
       // have been processed.
-      loadContent(loadMissionsCallback, loadMissionsCallback)
+      loadMissions()
     }
 
     // Switch to load screen.
@@ -267,12 +260,7 @@ export default function HomePage(props: IHomePage): JSX.Element | null {
 
       page_elm.classList.remove('DropPending')
 
-      if (
-        files.length > 0 &&
-        currentUser &&
-        currentUser.role &&
-        restrictedAccessRoles.includes(currentUser.role)
-      ) {
+      if (files.length > 0 && currentUser.hasRestrictedAccess) {
         importMissionFiles(files)
       }
     }
@@ -338,41 +326,51 @@ export default function HomePage(props: IHomePage): JSX.Element | null {
   // This will switch to the changelog
   // page.
   const viewChangelog = (): void => {
-    if (
-      currentUser &&
-      currentUser.role &&
-      restrictedAccessRoles.includes(currentUser.role)
-    ) {
+    if (currentUser.hasRestrictedAccess) {
       appActions.goToPage('ChangelogPage', {})
     }
   }
 
-  // This will switch to the game page
-  // with the selected mission.
-  const selectMission = (mission: Mission) => {
-    let userRoleStringValues = Object.values(userRoles)
-
-    if (
-      currentUser &&
-      currentUser.role &&
-      userRoleStringValues.includes(currentUser.role)
-    ) {
-      appActions.goToPage('GamePage', {
-        missionID: mission.missionID,
-      })
-    }
-  }
+  /**
+   * Callback for when a mission is selected.
+   */
+  const handleMissionSelection = useCallback(
+    async (mission: Mission) => {
+      if (server !== null) {
+        try {
+          // Notify user of mission launch.
+          beginLoading('Launching mission...')
+          // Launch game from mission ID, awaiting
+          // the promised game ID.
+          let gameID: string = await GameClient.launch(mission.missionID)
+          // Notify user of mission join.
+          beginLoading('Joining mission...')
+          // Join game from new game ID, awaiting
+          // the promised game client.
+          let game: GameClient = await GameClient.join(gameID, server)
+          // Go to the game page with the new
+          // game client.
+          goToPage('GamePage', { game })
+        } catch (error) {
+          handleError({
+            message: 'Failed to launch mission. Contact system administrator.',
+            notifyMethod: 'page',
+          })
+        }
+      } else {
+        handleError({
+          message: 'No server connection. Contact system administrator',
+          notifyMethod: 'bubble',
+        })
+      }
+    },
+    [appActions, server],
+  )
 
   // This will switch to the user form
   // page with the selected user.
   const selectUser = (user: User) => {
-    let userRoleStringValues = Object.values(userRoles)
-
-    if (
-      currentUser &&
-      currentUser.role &&
-      userRoleStringValues.includes(currentUser.role)
-    ) {
+    if (currentUser.hasRestrictedAccess) {
       appActions.goToPage('UserFormPage', {
         userID: user.userID,
       })
@@ -385,7 +383,7 @@ export default function HomePage(props: IHomePage): JSX.Element | null {
     })
   }
 
-  /* -- RENDER -- */
+  /* -- PRE-RENDER PROCESSING -- */
 
   // Class names used for styling based on the
   // current user's role.
@@ -394,18 +392,9 @@ export default function HomePage(props: IHomePage): JSX.Element | null {
   let userListContainer: string = 'Hidden'
   let editContentClassName: string = 'EditContentRow'
   let fileDropBoxClassName: string = 'Hidden'
-  let displayLogout: boolean = false
   let versionClassName: string = 'Version Disabled'
 
-  if (currentUser) {
-    displayLogout = true
-  }
-
-  if (
-    currentUser &&
-    currentUser.role &&
-    restrictedAccessRoles.includes(currentUser.role)
-  ) {
+  if (currentUser.hasRestrictedAccess) {
     contentClassName += ' InstructorView'
     selectionContentClassName = 'SelectionContent-list InstructorView'
     userListContainer = 'UserListContainer'
@@ -414,9 +403,11 @@ export default function HomePage(props: IHomePage): JSX.Element | null {
     versionClassName = 'Version'
   }
 
+  /* -- RENDER -- */
+
   return (
     <div
-      className='HomePage Page'
+      className='HomePage Page FullView'
       ref={page}
       onDragOver={handleFileDragOver}
       onDragLeave={handleFileDragLeave}
@@ -435,7 +426,6 @@ export default function HomePage(props: IHomePage): JSX.Element | null {
           {
             text: 'Log out',
             handleClick: logout,
-            visible: displayLogout,
             key: 'log-out',
           },
         ]}
@@ -456,7 +446,7 @@ export default function HomePage(props: IHomePage): JSX.Element | null {
                   <div className='SelectionRow'>
                     <div
                       className='Text'
-                      onClick={() => selectMission(mission)}
+                      onClick={() => handleMissionSelection(mission)}
                     >
                       {mission.name}
                       <Tooltip description='Launch mission.' />
@@ -464,8 +454,8 @@ export default function HomePage(props: IHomePage): JSX.Element | null {
                     <MissionModificationPanel
                       mission={mission}
                       appActions={appActions}
-                      handleSuccessfulCopy={() => setMountHandled(false)}
-                      handleSuccessfulDeletion={() => setMountHandled(false)}
+                      handleSuccessfulCopy={remount}
+                      handleSuccessfulDeletion={remount}
                       handleSuccessfulToggleLive={() => {}}
                     />
                   </div>
@@ -524,7 +514,7 @@ export default function HomePage(props: IHomePage): JSX.Element | null {
                     <UserModificationPanel
                       user={user}
                       appActions={appActions}
-                      handleSuccessfulDeletion={() => setMountHandled(false)}
+                      handleSuccessfulDeletion={remount}
                     />
                   </div>
                 </>

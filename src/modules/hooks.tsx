@@ -2,6 +2,8 @@ import { AnyObject } from 'mongoose'
 import React from 'react'
 import { useCallback, useEffect, useState } from 'react'
 import { ButtonText } from 'src/components/content/user-controls/ButtonText'
+import { TMetisSession } from './users'
+import AppState, { AppActions } from 'src/components/AppState'
 
 /**
  * Creates a handler that will be called when the component mounts.
@@ -24,6 +26,28 @@ export function useMountHandler(
   }, [])
 
   return [mountHandled, remount]
+}
+
+/**
+ * Requires that a session be present in the application state. If no session is present, the user will be redirected to the AuthPage.
+ * @param appState An AppState object for the current state of the application.
+ * @param appActions An AppActions object for actions to perform on the application globally.
+ */
+export function useRequireSession(
+  appState: AppState,
+  appActions: AppActions,
+): [TMetisSession] {
+  useEffect(() => {
+    if (appState.session === null) {
+      appActions.goToPage('AuthPage', {
+        returningPagePath: 'HomePage',
+        returningPageProps: {},
+      })
+    }
+  }, [appState.session === null])
+
+  // Return session.
+  return [appState.session]
 }
 
 /**
