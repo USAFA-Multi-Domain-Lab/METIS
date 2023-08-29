@@ -100,7 +100,7 @@ export const requireConnection = (
 export function hasPermittedRole(
   request: Request,
   options: ILoginOptions = {
-    permittedRoles: [userRoles.Admin],
+    permittedRoles: [userRoles.Admin, userRoles.Instructor],
   },
 ): boolean {
   let session: MetisSession | undefined = MetisSession.get(
@@ -134,5 +134,5 @@ export function hasPermittedRole(
 
 export default {
   requireLogin,
-  isLoggedIn: hasPermittedRole,
+  hasPermittedRole,
 }

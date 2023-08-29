@@ -11,7 +11,7 @@ import './MissionModificationPanel.scss'
 import { MiniButtonSVGPanel } from './MiniButtonSVGPanel'
 import { EMiniButtonSVGPurpose, MiniButtonSVG } from './MiniButtonSVG'
 import { useStore } from 'react-context-hook'
-import { TMetisSession, User, permittedRoles } from '../../../modules/users'
+import { TMetisSession } from '../../../modules/users'
 import { useState } from 'react'
 import { AppActions } from '../../AppState'
 
@@ -180,10 +180,10 @@ export default function MissionModificationPanel(props: {
     }),
   }
 
-  let containerClassName: string = 'MissionModificationPanel hidden'
+  let containerClassName: string = 'MissionModificationPanel'
 
-  if (permittedRoles.includes(session?.user.role ?? 'NOT_LOGGED_IN')) {
-    containerClassName = 'MissionModificationPanel'
+  if (session?.user.role === 'student') {
+    containerClassName += ' hidden'
   }
 
   // Logic that will lock the mission toggle while a request is being sent

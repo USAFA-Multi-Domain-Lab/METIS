@@ -1,0 +1,85 @@
+@import '../../config.scss';
+
+.UserFormPage {
+  $page-width: 100vw;
+  $page-height: 100vh;
+  // $page-row-1-height: 82px;
+  // $page-row-3-height: 12px;
+  // $page-row-2-height: calc(
+  //   $page-height - $page-row-1-height - $page-row-3-height
+  // );
+
+  display: grid;
+  place-items: center;
+  align-content: space-between;
+  overflow-x: hidden;
+  overflow-y: auto;
+  // grid-template-rows: $page-row-1-height $page-row-2-height $page-row-3-height;
+  margin: 0 auto;
+  box-sizing: border-box;
+  width: $page-width;
+  height: $page-height;
+  background: url('../../assets/images/landing-page-img.png');
+  background-size: 100% 120%;
+  background-position: center;
+  background-repeat: no-repeat;
+  box-shadow: $box-shadow-alt5;
+
+  .Navigation {
+    display: grid;
+    grid-template-columns: auto 125px 150px;
+    padding: 15px 0;
+    box-shadow: $box-shadow-alt7;
+  }
+
+  .Content {
+    display: grid;
+    place-items: center;
+    align-items: center;
+    width: 100%;
+    max-width: 800px;
+    box-shadow: $box-shadow-alt5;
+    border: 2px solid $color-main;
+    border-radius: 10px;
+    padding: 5px 0;
+    margin: 50px 0;
+
+    .ButtonContainer {
+      display: grid;
+      justify-content: flex-start;
+      width: calc(100% - 16%);
+      margin: 20px 8% 0;
+
+      .Button {
+        margin: 5px 10px 20px 0;
+      }
+    }
+  }
+
+  .FooterContainer {
+    display: grid;
+    grid-template-columns: auto;
+    padding: 0 20px 20px;
+    width: calc(100% - 40px);
+
+    * {
+      opacity: 0.7;
+      width: -moz-fit-content;
+      width: fit-content;
+    }
+
+    .Credit {
+      -webkit-user-select: none;
+      user-select: none;
+      margin-left: auto;
+      text-align: right;
+      font-size: 0.6em;
+      text-decoration: none;
+      -webkit-user-drag: none;
+
+      &:hover {
+        opacity: 1;
+      }
+    }
+  }
+}

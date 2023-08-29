@@ -10,7 +10,7 @@ import { INotifyOptions } from '../../AppState'
 import { IConsoleOutput } from './ConsoleOutput'
 import OutputPanel from './OutputPanel'
 import { useStore } from 'react-context-hook'
-import { TMetisSession, User, permittedRoles } from '../../../modules/users'
+import { TMetisSession } from '../../../modules/users'
 
 /* -- INTERFACE(S) -- */
 
@@ -35,14 +35,18 @@ function Buttons(props: {
   notify: (message: string, options: INotifyOptions) => Notification
 }): JSX.Element | null {
   /* -- COMPONENT VARIABLES -- */
-  let selectedAction: MissionNodeAction = props.selectedAction
-  let selectedNode: MissionNode = selectedAction.node
-  let mission: Mission = selectedNode.mission
-  let handleExecutionRequest = props.handleExecutionRequest
-  let handleGoBackRequest = props.handleGoBackRequest
-  let notify = props.notify
-  let outputToConsole = props.outputToConsole
-  let handleCloseRequest = props.handleCloseRequest
+
+  // Extract props.
+  let {
+    selectedAction,
+    handleExecutionRequest,
+    handleGoBackRequest,
+    handleCloseRequest,
+    outputToConsole,
+    notify,
+  } = props
+
+  let { node: selectedNode } = selectedAction
 
   /* -- GLOBAL STATE -- */
   const [session] = useStore<TMetisSession>('session')
@@ -71,7 +75,6 @@ function Buttons(props: {
   let executionButtonClassName: string = 'Button ExecutionButton'
   let additionalActionButtonClassName: string = 'Button AdditionalActionButton'
   let displayTooltip: boolean = false
-  let useAssets: boolean = false
 
   if (!selectedAction.readyToExecute) {
     executionButtonClassName += ' Disabled'
@@ -79,10 +82,6 @@ function Buttons(props: {
   }
   if (selectedNode.actions.length === 1) {
     additionalActionButtonClassName += ' Disabled'
-  }
-
-  if (permittedRoles.includes(session?.user.role ?? 'NOT_LOGGED_IN')) {
-    useAssets = true
   }
 
   return (

@@ -23,7 +23,7 @@ import {
 import MissionEntry from '../content/edit-mission/MissionEntry'
 import NodeEntry from '../content/edit-mission/NodeEntry'
 import NodeStructuring from '../content/edit-mission/NodeStructuring'
-import { permittedRoles } from '../../modules/users'
+import { User } from 'src/modules/users'
 
 export interface IMissionFormPage extends IPage {
   // If null, a new mission is being
@@ -65,17 +65,6 @@ export default function MissionFormPage(
 
   // Equivalent of componentDidMount.
   useEffect(() => {
-    if (
-      !permittedRoles.includes(appState.session?.user.role ?? 'NOT_LOGGED_IN')
-    ) {
-      appActions.goToPage('MissionSelectionPage', {})
-      appActions.notify('Mission form page is not accessible to students.')
-    } else {
-      getMissionNodeColorOptions((colorOptions: Array<string>) => {
-        appState.setMissionNodeColors(colorOptions)
-      })
-    }
-
     if (!mountHandled) {
       getMissionNodeColorOptions((colorOptions: Array<string>) => {
         appState.setMissionNodeColors(colorOptions)
@@ -336,12 +325,84 @@ export default function MissionFormPage(
       return onValid()
     }
 
+    // This will redirect the user to the
+    // home page.
+    const goHome = (): void => {
+      if (!areUnsavedChanges) {
+        appActions.goToPage('HomePage', {})
+      } else {
+        appActions.confirm(
+          'You have unsaved changes. What do you want to do with them?',
+          (concludeAction: () => void) => {
+            save(
+              () => {
+                appActions.goToPage('HomePage', {})
+                concludeAction()
+              },
+              () => {
+                concludeAction()
+              },
+            )
+          },
+          {
+            handleAlternate: (concludeAction: () => void) => {
+              appActions.goToPage('HomePage', {})
+              concludeAction()
+            },
+            pendingMessageUponConfirm: 'Saving...',
+            pendingMessageUponAlternate: 'Discarding...',
+            buttonConfirmText: 'Save',
+            buttonAlternateText: 'Discard',
+          },
+        )
+      }
+    }
+
     // This will logout the current user.
     const logout = () =>
       appActions.logout({
-        returningPagePath: 'MissionSelectionPage',
+        returningPagePath: 'HomePage',
         returningPageProps: {},
       })
+
+    // This will redirect the user to the
+    // game page.
+    const goToGamePage = (): void => {
+      if (!areUnsavedChanges) {
+        appActions.goToPage('GamePage', {
+          missionID: mission.missionID,
+        })
+      } else {
+        appActions.confirm(
+          'You have unsaved changes. What do you want to do with them?',
+          (concludeAction: () => void) => {
+            save(
+              () => {
+                appActions.goToPage('GamePage', {
+                  missionID: mission.missionID,
+                })
+                concludeAction()
+              },
+              () => {
+                concludeAction()
+              },
+            )
+          },
+          {
+            handleAlternate: (concludeAction: () => void) => {
+              appActions.goToPage('GamePage', {
+                missionID: mission.missionID,
+              })
+              concludeAction()
+            },
+            pendingMessageUponConfirm: 'Saving...',
+            pendingMessageUponAlternate: 'Discarding...',
+            buttonConfirmText: 'Save',
+            buttonAlternateText: 'Discard',
+          },
+        )
+      }
+    }
 
     /* -- RENDER -- */
 
@@ -367,84 +428,18 @@ export default function MissionFormPage(
 
     return (
       <div className={'MissionFormPage Page'}>
-        {
-          // -- navigation --
-        }
+        {/* -- NAVIGATION */}
         <Navigation
           links={[
             {
               text: 'Done',
-              handleClick: () => {
-                if (!areUnsavedChanges) {
-                  appActions.goToPage('MissionSelectionPage', {})
-                } else {
-                  appActions.confirm(
-                    'You have unsaved changes. What do you want to do with them?',
-                    (concludeAction: () => void) => {
-                      save(
-                        () => {
-                          appActions.goToPage('MissionSelectionPage', {})
-                          concludeAction()
-                        },
-                        () => {
-                          concludeAction()
-                        },
-                      )
-                    },
-                    {
-                      handleAlternate: (concludeAction: () => void) => {
-                        appActions.goToPage('MissionSelectionPage', {})
-                        concludeAction()
-                      },
-                      pendingMessageUponConfirm: 'Saving...',
-                      pendingMessageUponAlternate: 'Discarding...',
-                      buttonConfirmText: 'Save',
-                      buttonAlternateText: 'Discard',
-                    },
-                  )
-                }
-              },
+              handleClick: goHome,
               visible: true,
               key: 'done',
             },
             {
               text: 'Play test',
-              handleClick: () => {
-                if (!areUnsavedChanges) {
-                  appActions.goToPage('GamePage', {
-                    missionID: mission.missionID,
-                  })
-                } else {
-                  appActions.confirm(
-                    'You have unsaved changes. What do you want to do with them?',
-                    (concludeAction: () => void) => {
-                      save(
-                        () => {
-                          appActions.goToPage('GamePage', {
-                            missionID: mission.missionID,
-                          })
-                          concludeAction()
-                        },
-                        () => {
-                          concludeAction()
-                        },
-                      )
-                    },
-                    {
-                      handleAlternate: (concludeAction: () => void) => {
-                        appActions.goToPage('GamePage', {
-                          missionID: mission.missionID,
-                        })
-                        concludeAction()
-                      },
-                      pendingMessageUponConfirm: 'Saving...',
-                      pendingMessageUponAlternate: 'Discarding...',
-                      buttonConfirmText: 'Save',
-                      buttonAlternateText: 'Discard',
-                    },
-                  )
-                }
-              },
+              handleClick: goToGamePage,
               visible: true,
               key: 'play-test',
             },
@@ -455,41 +450,11 @@ export default function MissionFormPage(
               key: 'log-out',
             },
           ]}
-          brandingCallback={() => {
-            if (!areUnsavedChanges) {
-              appActions.goToPage('MissionSelectionPage', {})
-            } else {
-              appActions.confirm(
-                'You have unsaved changes. What do you want to do with them?',
-                (concludeAction: () => void) => {
-                  save(
-                    () => {
-                      appActions.goToPage('MissionSelectionPage', {})
-                      concludeAction()
-                    },
-                    () => {
-                      concludeAction()
-                    },
-                  )
-                },
-                {
-                  handleAlternate: (concludeAction: () => void) => {
-                    appActions.goToPage('MissionSelectionPage', {})
-                    concludeAction()
-                  },
-                  pendingMessageUponConfirm: 'Saving...',
-                  pendingMessageUponAlternate: 'Discarding...',
-                  buttonConfirmText: 'Save',
-                  buttonAlternateText: 'Discard',
-                },
-              )
-            }
-          }}
+          brandingCallback={goHome}
           brandingTooltipDescription='Go home.'
         />
-        {
-          // -- content --
-        }
+
+        {/* -- CONTENT -- */}
         <div className='Content'>
           <PanelSizeRelationship
             panel1={{
@@ -585,6 +550,17 @@ export default function MissionFormPage(
             sizingMode={EPanelSizingMode.Panel1_Auto__Panel2_Defined}
             initialDefinedSize={330}
           />
+        </div>
+
+        {/* -- FOOTER -- */}
+        <div className='FooterContainer'>
+          <a
+            href='https://www.midjourney.com/'
+            className='Credit'
+            draggable={false}
+          >
+            Photo by Midjourney
+          </a>
         </div>
       </div>
     )

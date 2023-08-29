@@ -54,7 +54,7 @@ export default function IChangelogPage(
   // This will go back to the mission
   // selection page.
   const goBack = () => {
-    appActions.goToPage('MissionSelectionPage', {})
+    appActions.goToPage('HomePage', {})
   }
 
   // This will logout the current user.
@@ -63,13 +63,6 @@ export default function IChangelogPage(
       returningPagePath: 'ChangelogPage',
       returningPageProps: {},
     })
-
-  // // This will switch to the auth page.
-  // const login = () =>
-  //   appActions.goToPage('AuthPage', {
-  //     returningPagePath: 'ChangelogPage',
-  //     returningPageProps: {},
-  //   })
 
   /* -- RENDER -- */
 
@@ -82,19 +75,13 @@ export default function IChangelogPage(
       <Navigation
         links={[
           {
-            text: 'Back to selection',
-            key: 'back-to-selection',
+            text: 'Back to home',
+            key: 'back-to-home',
             handleClick: () => {
-              appActions.goToPage('MissionSelectionPage', {})
+              appActions.goToPage('HomePage', {})
             },
             visible: true,
           },
-          // {
-          //   text: 'Login',
-          //   key: 'login',
-          //   handleClick: login,
-          //   visible: displayLogin,
-          // },
           {
             text: 'Log out',
             key: 'log-out',
@@ -102,7 +89,7 @@ export default function IChangelogPage(
             visible: displayLogout,
           },
         ]}
-        brandingCallback={() => appActions.goToPage('MissionSelectionPage', {})}
+        brandingCallback={() => appActions.goToPage('HomePage', {})}
         brandingTooltipDescription='Go home.'
       />
       <div className='Changelog'>

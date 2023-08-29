@@ -10,14 +10,24 @@ import chaiHttp from 'chai-http'
 
 // metis imports
 import { testLogger } from '../modules/logging'
-import { commandScripts } from '../action-execution'
+import { cyberCityCommandScripts } from '../action-execution'
 import { AnyObject } from '../modules/toolbox/objects'
 import { startServer } from '../server'
+import { userRoles } from '../user'
+import MissionModel from '../database/models/model-mission'
+import UserModel, { hashPassword } from '../database/models/model-user'
 
 // global fields
 let missionID: string
+let userID: string
+let missionName: string
 let PORT: string = require('../config').PORT
 const baseUrl = `localhost:${PORT}`
+let MONGO_DB: string = require('../config').MONGO_DB
+const MONGO_TEST_DB: string = 'metis-test'
+const permittedRoles: string[] = [userRoles.Admin, userRoles.Instructor]
+const permittedUserRole = userRoles.Admin
+let agent: ChaiHttp.Agent
 
 // json
 const userCredentials = {
@@ -177,7 +187,6 @@ const updateMissionWithNoNodeData = {
     schemaBuildNumber: 5,
   },
 }
-
 const correctUpdateTestMission = {
   mission: {
     missionID: '',
@@ -227,8 +236,34 @@ const correctUpdateTestMission = {
     schemaBuildNumber: 9,
   },
 }
-const permittedUserRole = 'admin'
+const correctUser = {
+  user: {
+    userID: 'test23',
+    role: 'student',
+    firstName: 'Test',
+    lastName: 'User',
+    password: 'password',
+  },
+}
+const newCorrectUser = {
+  user: {
+    userID: 'test24',
+    role: 'student',
+    firstName: 'Test',
+    lastName: 'User',
+    password: 'password',
+  },
+}
+const userWithNoPassword = {
+  user: {
+    userID: 'test23',
+    role: 'student',
+    firstName: 'Test',
+    lastName: 'User',
+  },
+}
 
+// Starts the test server
 before(function (done) {
   this.timeout(30000)
 
@@ -238,77 +273,51 @@ before(function (done) {
   })
 })
 
-// Tests for the export/import mission feature
-describe('Export/Import File Tests', function () {
+// Sets up the test environment
+before(function (done) {
   chai.use(chaiHttp)
 
   // Creates a session with a user because
   // certain API routes require authentication
   // for access
-  let agent: ChaiHttp.Agent = chai.request.agent(baseUrl)
+  agent = chai.request.agent(baseUrl)
 
-  // Stores all the missions that get created
-  // in this suite
-  let initialMissionIDArray: Array<string> = []
-
-  before(function (done) {
+  // Checks to make sure the correct database is being used
+  if (MONGO_DB === MONGO_TEST_DB) {
+    // Creates a session with a user because
+    // certain API routes require authentication
+    // for access
     agent
-      .get('/api/v1/missions/')
-      .then(function (response: ChaiHttp.Response) {
-        expect(response).to.have.status(200)
-        // This sets the missionID that is used as a parameter
-        // within one of the tests of this suite.
-        missionID = response.body.missions[0].missionID
-
-        // Loops through the current missions and stores the current set
-        // of mission's IDs that are stored in the database so that after
-        // all the tests have run in this suite the missions that were
-        // created from the tests can be deleted.
-        // This is also an added security measure to help prevent
-        // deleting missions if the tests somehow access the "metis"
-        // database instead of the "metis-test" database.
-        response.body.missions.forEach((mission: any) => {
-          initialMissionIDArray.push(mission.missionID)
+      .post('/api/v1/users/login')
+      .send(userCredentials)
+      .then(function () {
+        MissionModel.find({}).exec((error: any, missions: any) => {
+          if (error) {
+            testLogger.error(error)
+            done(error)
+          } else {
+            missionID = missions[0].missionID
+            missionName = missions[0].name
+            done()
+          }
         })
-      })
-      .catch(function (error) {
-        testLogger.error(error)
-      })
-
-    agent
-      .get('/api/v1/missions/environment/')
-      .then(function (response: ChaiHttp.Response) {
-        expect(response).to.have.status(200)
-        expect(response.body.environment).to.equal(process.env.environment)
-
-        if (response.body.environment === process.env.environment) {
-          agent
-            .post('/api/v1/users/login')
-            .send(userCredentials)
-            .then(function (response: ChaiHttp.Response) {
-              expect(response).to.have.status(200)
-              done()
-            })
-            .catch(function (error) {
-              testLogger.error(error)
-              done(error)
-            })
-        } else {
-          testLogger.error(
-            'Database is not using "metis-test." Please make sure the test database is running.',
-          )
-          let error = new Error(
-            'Database is not using "metis-test." Please make sure the test database is running.',
-          )
-          done(error)
-        }
       })
       .catch(function (error) {
         testLogger.error(error)
         done(error)
       })
-  })
+  } else {
+    let error = new Error(
+      'Database is not using "metis-test." Please make sure the test database is running.',
+    )
+    testLogger.error(error)
+    done(error)
+    process.exit(1)
+  }
+})
 
+// Tests for the export/import mission feature
+describe('Export/Import File Tests', function () {
   it('Calling the missions route on the API should return a successful (200) response', function (done) {
     agent
       .get('/api/v1/missions/')
@@ -324,7 +333,7 @@ describe('Export/Import File Tests', function () {
 
   it('User should be logged in as an admin to access the import and/or export API', function (done) {
     agent
-      .get('/api/v1/users/')
+      .get('/api/v1/users/session')
       .then(function (response: ChaiHttp.Response) {
         expect(response.body.session.user.role).to.equal(permittedUserRole)
         done()
@@ -335,11 +344,9 @@ describe('Export/Import File Tests', function () {
       })
   })
 
-  it('Calling export route on the API should return a successful (200) response', function (done) {
+  it('Calling the export route with the correct name and missionID should return a successful (200) response', function (done) {
     agent
-      .get(
-        `/api/v1/missions/export/Attack%20Mission.cesar?missionID=${missionID}`,
-      )
+      .get(`/api/v1/missions/export/${missionName}?missionID=${missionID}`)
       .then(function (response: ChaiHttp.Response) {
         expect(response).to.have.status(200)
         done()
@@ -640,116 +647,17 @@ describe('Export/Import File Tests', function () {
         done(error)
       })
   })
-
-  after(function (done) {
-    // deletes all missions (except the missions that were
-    // in the database before the tests ran) in the test database
-    // that were created from the tests and then it closes
-    // the server and ends the session that was created in
-    // the before function.
-    agent
-      .get('/api/v1/missions/')
-      .then(function (response: ChaiHttp.Response) {
-        let missionArray: Array<any> = response.body.missions
-
-        for (let mission of missionArray) {
-          if (!initialMissionIDArray.includes(mission.missionID)) {
-            agent
-              .delete(`/api/v1/missions?missionID=${mission.missionID}`)
-              .end(function (error, response: ChaiHttp.Response) {
-                expect(response).to.have.status(200)
-                expect(error).to.equal(null)
-              })
-          }
-        }
-        done()
-      })
-      .catch(function (error) {
-        testLogger.error(error)
-        done(error)
-      })
-  })
 })
 
 // Tests for each mission route
 describe('API Mission Routes', function () {
-  chai.use(chaiHttp)
-
-  // Creates a session with a user because
-  // certain API routes require authentication
-  // for access
-  let agent: ChaiHttp.Agent = chai.request.agent(baseUrl)
-
-  // Stores all the missions that are in the
-  // database before the tests are run in this
-  // suite
-  let initialMissionIDArray: Array<string> = []
-
-  // Stores all the missions that get created
-  // in this suite
+  // Stores all the missions that were in
+  // the database before the tests were run
   let createdMissionIDArray: Array<string> = []
-
-  before(function (done) {
-    agent
-      .get('/api/v1/missions/')
-      .then(function (response: ChaiHttp.Response) {
-        expect(response).to.have.status(200)
-        // This sets the missionID that is used as a parameter
-        // within one of the tests of this suite.
-        missionID = response.body.missions[0].missionID
-
-        // Loops through the current missions and stores the current set
-        // of mission's IDs that are stored in the database so that after
-        // all the tests have run in this suite the missions that were
-        // created from the tests can be deleted.
-        // This is also an added security measure to help prevent
-        // deleting missions if the tests somehow access the "metis"
-        // database instead of the "metis-test" database.
-        response.body.missions.forEach((mission: any) => {
-          initialMissionIDArray.push(mission.missionID)
-        })
-      })
-      .catch(function (error) {
-        testLogger.error(error)
-      })
-
-    agent
-      .get('/api/v1/missions/environment/')
-      .then(function (response: ChaiHttp.Response) {
-        expect(response).to.have.status(200)
-        expect(response.body.environment).to.equal(process.env.environment)
-
-        if (response.body.environment === process.env.environment) {
-          agent
-            .post('/api/v1/users/login')
-            .send(userCredentials)
-            .then(function (response: ChaiHttp.Response) {
-              expect(response).to.have.status(200)
-              done()
-            })
-            .catch(function (error) {
-              testLogger.error(error)
-              done(error)
-            })
-        } else {
-          testLogger.error(
-            'Database is not using "metis-test." Please make sure the test database is running.',
-          )
-          let error = new Error(
-            'Database is not using "metis-test." Please make sure the test database is running.',
-          )
-          done(error)
-        }
-      })
-      .catch(function (error) {
-        testLogger.error(error)
-        done(error)
-      })
-  })
 
   it('User should be logged in as an admin to be able to post missions to the database via the API', function (done) {
     agent
-      .get('/api/v1/users/')
+      .get('/api/v1/users/session')
       .then(function (response: ChaiHttp.Response) {
         expect(response.body.session.user.role).to.equal(permittedUserRole)
         done()
@@ -789,9 +697,12 @@ describe('API Mission Routes', function () {
       })
   })
 
-  it('Getting a mission where the "missionID" is not of type "objectId" in the query of the response should return a bad (400) response', function (done) {
+  it('Getting a mission where the "missionID" is not of type "objectId" in the query of the request should return a bad (400) response', function (done) {
     agent
-      .get(`/api/v1/missions?missionID=${2}`)
+      .get(`/api/v1/missions`)
+      .query({
+        missionID: 2,
+      })
       .then(function (response: ChaiHttp.Response) {
         expect(response).to.have.status(400)
         done()
@@ -802,7 +713,7 @@ describe('API Mission Routes', function () {
       })
   })
 
-  it('Getting a mission with all the correct properties in the query of the response should result in a successful (200) response', function (done) {
+  it('Getting a mission with all the correct properties in the query of the request should result in a successful (200) response', function (done) {
     agent
       .get(`/api/v1/missions?missionID=${missionID}`)
       .then(function (response: ChaiHttp.Response) {
@@ -828,7 +739,7 @@ describe('API Mission Routes', function () {
       })
   })
 
-  it('Creating a mission with (a) missing property/properties in the body of the response should return a bad (400) response', function (done) {
+  it('Creating a mission with (a) missing property/properties in the body of the request should return a bad (400) response', function (done) {
     agent
       .post('/api/v1/missions/')
       .set('Content-Type', 'application/json')
@@ -843,7 +754,7 @@ describe('API Mission Routes', function () {
       })
   })
 
-  it('Creating a mission with all the correct properties in the body of the response should return a successful (200) response', function (done) {
+  it('Creating a mission with all the correct properties in the body of the request should return a successful (200) response', function (done) {
     agent
       .post('/api/v1/missions/')
       .set('Content-Type', 'application/json')
@@ -868,7 +779,7 @@ describe('API Mission Routes', function () {
     const TestCommandScript = (args: AnyObject) => {
       testVariable = 'successful'
     }
-    commandScripts['TestCommandScript'] = TestCommandScript
+    cyberCityCommandScripts['TestCommandScript'] = TestCommandScript
 
     missionID = createdMissionIDArray[0]
     correctUpdateTestMission.mission.missionID = missionID
@@ -898,7 +809,7 @@ describe('API Mission Routes', function () {
       })
   })
 
-  it('Updating a mission with (a) missing property/properties that is required (missionID) in the body of the response should return a bad (400) response', function (done) {
+  it('Updating a mission with (a) missing property/properties that is required (missionID) in the body of the request should return a bad (400) response', function (done) {
     agent
       .put('/api/v1/missions/')
       .set('Content-Type', 'application/json')
@@ -913,7 +824,7 @@ describe('API Mission Routes', function () {
       })
   })
 
-  it('Updating a mission where the nodeStructure is defined, but the nodeData is undefined in the body of the response should return an internal server error (500) response', function (done) {
+  it('Updating a mission where the nodeStructure is defined, but the nodeData is undefined in the body of the request should return an internal server error (500) response', function (done) {
     missionID = createdMissionIDArray[0]
     updateMissionWithNoNodeData.mission.missionID = missionID
 
@@ -931,7 +842,7 @@ describe('API Mission Routes', function () {
       })
   })
 
-  it('Updating a mission where the nodeData is defined, but the nodeStructure is undefined in the body of the response should return an internal server error (500) response', function (done) {
+  it('Updating a mission where the nodeData is defined, but the nodeStructure is undefined in the body of the request should return an internal server error (500) response', function (done) {
     missionID = createdMissionIDArray[0]
     updateMissionWithNoNodeStructure.mission.missionID = missionID
 
@@ -949,7 +860,7 @@ describe('API Mission Routes', function () {
       })
   })
 
-  it('Updating a mission with all the correct properties in the body of the response should return a successful (200) response', function (done) {
+  it('Updating a mission with all the correct properties in the body of the request should return a successful (200) response', function (done) {
     missionID = createdMissionIDArray[0]
     correctUpdateTestMission.mission.missionID = missionID
 
@@ -967,7 +878,7 @@ describe('API Mission Routes', function () {
       })
   })
 
-  it('Copying a mission with (a) missing property/properties in the body of the response should return a bad (400) response', function (done) {
+  it('Copying a mission with (a) missing property/properties in the body of the request should return a bad (400) response', function (done) {
     agent
       .put('/api/v1/missions/copy/')
       .set('Content-Type', 'application/json')
@@ -982,7 +893,7 @@ describe('API Mission Routes', function () {
       })
   })
 
-  it('Copying a mission with all the correct properties in the body of the response should return a successful (200) response', function (done) {
+  it('Copying a mission with all the correct properties in the body of the request should return a successful (200) response', function (done) {
     missionID = createdMissionIDArray[0]
 
     agent
@@ -999,7 +910,7 @@ describe('API Mission Routes', function () {
       })
   })
 
-  it('Deleting a mission with (a) missing property/properties in the query of the response should return a bad (400) response', function (done) {
+  it('Deleting a mission with the wrong type for the missionID in the query of the request should return a bad (400) response', function (done) {
     agent
       .delete(`/api/v1/missions?missionID=${2}`)
       .then(function (response: ChaiHttp.Response) {
@@ -1012,7 +923,7 @@ describe('API Mission Routes', function () {
       })
   })
 
-  it('Deleting a mission with all the correct properties in the query of the response should return a successful (200) response', function (done) {
+  it('Deleting a mission with all the correct properties in the query of the request should return a successful (200) response', function (done) {
     missionID = createdMissionIDArray[0]
 
     agent
@@ -1026,47 +937,12 @@ describe('API Mission Routes', function () {
         done(error)
       })
   })
-
-  after(function (done) {
-    // deletes all missions (except the missions that were
-    // in the database before the tests ran) in the test database
-    // that were created from the tests and then it closes
-    // the server and ends the session that was created in
-    // the before function.
-    agent
-      .get('/api/v1/missions/')
-      .then(function (response: ChaiHttp.Response) {
-        let missionArray: Array<any> = response.body.missions
-
-        for (let mission of missionArray) {
-          if (!initialMissionIDArray.includes(mission.missionID)) {
-            agent
-              .delete(`/api/v1/missions?missionID=${mission.missionID}`)
-              .end(function (error, response: ChaiHttp.Response) {
-                expect(response).to.have.status(200)
-                expect(error).to.equal(null)
-              })
-          }
-        }
-        done()
-      })
-      .catch(function (error) {
-        testLogger.error(error)
-        done(error)
-      })
-  })
 })
 
 // Tests for the middleware function used to
-// validate the data used in POST and PUT requests
+// validate the data that is sent in the request
+// body of the API routes
 describe('Request Body Validation', function () {
-  chai.use(chaiHttp)
-
-  // Creates a session with a user because
-  // certain API routes require authentication
-  // for access
-  let agent: ChaiHttp.Agent = chai.request.agent(baseUrl)
-
   let STRING = '*'
   let STRING_50_CHAR = '*'.repeat(50)
   let STRING_128_CHAR = '*'.repeat(128)
@@ -1080,47 +956,29 @@ describe('Request Body Validation', function () {
   let OBJECT = { string: 'string' }
   let OBJECTID = '643ea778c10a4de66a9448d0'
 
-  before(function (done) {
-    agent
-      .get('/api/v1/missions/environment/')
-      .then(function (response: ChaiHttp.Response) {
-        expect(response).to.have.status(200)
-        expect(response.body.environment).to.equal(process.env.environment)
-
-        if (response.body.environment === process.env.environment) {
-          done()
-        } else {
-          testLogger.error(
-            'Database is not using "metis-test." Please make sure the test database is running.',
-          )
-          throw new Error(
-            'Database is not using "metis-test." Please make sure the test database is running.',
-          )
-        }
-      })
-      .catch(function (error) {
-        testLogger.error(error)
-        done(error)
-      })
-  })
-
-  it('Sending a request with all required body keys and their correct types results in a successful (200) response', function (done) {
+  it('Sending a request with all required and optional body keys and their correct types results in a successful (200) response', function (done) {
     agent
       .post('/api/v1/test/request-body-filter-check/')
       .set('Content-Type', 'application/json')
       .send({
-        STRING: STRING,
-        STRING_50_CHAR: STRING_50_CHAR,
-        STRING_128_CHAR: STRING_128_CHAR,
-        STRING_255_CHAR: STRING_255_CHAR,
-        STRING_256_CHAR: STRING_256_CHAR,
-        STRING_512_CHAR: STRING_512_CHAR,
-        STRING_1024_CHAR: STRING_1024_CHAR,
-        STRING_MEDIUMTEXT: STRING_MEDIUMTEXT,
-        NUMBER: NUMBER,
-        BOOLEAN: BOOLEAN,
-        OBJECT: OBJECT,
-        OBJECTID: OBJECTID,
+        bodyKeys: {
+          STRING: STRING,
+          STRING_50_CHAR: STRING_50_CHAR,
+          STRING_128_CHAR: STRING_128_CHAR,
+          STRING_255_CHAR: STRING_255_CHAR,
+          STRING_256_CHAR: STRING_256_CHAR,
+          STRING_512_CHAR: STRING_512_CHAR,
+          STRING_1024_CHAR: STRING_1024_CHAR,
+          STRING_MEDIUMTEXT: STRING_MEDIUMTEXT,
+          NUMBER: NUMBER,
+          BOOLEAN: BOOLEAN,
+          OBJECT: OBJECT,
+          OBJECTID: OBJECTID,
+        },
+        keys: {
+          STRING: STRING,
+          BOOLEAN: BOOLEAN,
+        },
       })
       .then(function (response: ChaiHttp.Response) {
         expect(response).to.have.status(200)
@@ -1132,23 +990,29 @@ describe('Request Body Validation', function () {
       })
   })
 
-  it('Sending a request with all required body keys and their types being incorrect results in a bad (400) response', function (done) {
+  it('Sending a request with all required and optional body keys and their types being incorrect results in a bad (400) response', function (done) {
     agent
       .post('/api/v1/test/request-body-filter-check/')
       .set('Content-Type', 'application/json')
       .send({
-        STRING: NUMBER,
-        STRING_50_CHAR: STRING_128_CHAR,
-        STRING_128_CHAR: STRING_255_CHAR,
-        STRING_255_CHAR: STRING_256_CHAR,
-        STRING_256_CHAR: STRING_512_CHAR,
-        STRING_512_CHAR: STRING_1024_CHAR,
-        STRING_1024_CHAR: STRING_MEDIUMTEXT,
-        STRING_MEDIUMTEXT: NUMBER,
-        NUMBER: BOOLEAN,
-        BOOLEAN: STRING,
-        OBJECT: OBJECTID,
-        OBJECTID: OBJECT,
+        bodyKeys: {
+          STRING: NUMBER,
+          STRING_50_CHAR: STRING_128_CHAR,
+          STRING_128_CHAR: STRING_255_CHAR,
+          STRING_255_CHAR: STRING_256_CHAR,
+          STRING_256_CHAR: STRING_512_CHAR,
+          STRING_512_CHAR: STRING_1024_CHAR,
+          STRING_1024_CHAR: STRING_MEDIUMTEXT,
+          STRING_MEDIUMTEXT: NUMBER,
+          NUMBER: BOOLEAN,
+          BOOLEAN: STRING,
+          OBJECT: OBJECTID,
+          OBJECTID: OBJECT,
+        },
+        keys: {
+          STRING: BOOLEAN,
+          BOOLEAN: STRING,
+        },
       })
       .then(function (response: ChaiHttp.Response) {
         expect(response).to.have.status(400)
@@ -1160,22 +1024,28 @@ describe('Request Body Validation', function () {
       })
   })
 
-  it('Sending a request with a missing body key that is required results in a bad (400) request', function (done) {
+  it('Sending a request with a missing body key (OBJECTID) that is required results in a bad (400) request', function (done) {
     agent
       .post('/api/v1/test/request-body-filter-check/')
       .set('Content-Type', 'application/json')
       .send({
-        STRING: STRING,
-        STRING_50_CHAR: STRING_50_CHAR,
-        STRING_128_CHAR: STRING_128_CHAR,
-        STRING_255_CHAR: STRING_255_CHAR,
-        STRING_256_CHAR: STRING_256_CHAR,
-        STRING_512_CHAR: STRING_512_CHAR,
-        STRING_1024_CHAR: STRING_1024_CHAR,
-        STRING_MEDIUMTEXT: STRING_MEDIUMTEXT,
-        NUMBER: NUMBER,
-        BOOLEAN: BOOLEAN,
-        OBJECT: OBJECT,
+        bodyKeys: {
+          STRING: STRING,
+          STRING_50_CHAR: STRING_50_CHAR,
+          STRING_128_CHAR: STRING_128_CHAR,
+          STRING_255_CHAR: STRING_255_CHAR,
+          STRING_256_CHAR: STRING_256_CHAR,
+          STRING_512_CHAR: STRING_512_CHAR,
+          STRING_1024_CHAR: STRING_1024_CHAR,
+          STRING_MEDIUMTEXT: STRING_MEDIUMTEXT,
+          NUMBER: NUMBER,
+          BOOLEAN: BOOLEAN,
+          OBJECT: OBJECT,
+        },
+        keys: {
+          STRING: STRING,
+          BOOLEAN: BOOLEAN,
+        },
       })
       .then(function (response: ChaiHttp.Response) {
         expect(response).to.have.status(400)
@@ -1187,28 +1057,69 @@ describe('Request Body Validation', function () {
       })
   })
 
-  it('Sending a request with a missing body key that is optional results in a successful (200) request', function (done) {
+  it('Sending a request with a missing body key (BOOLEAN) that is optional results in a successful (200) request', function (done) {
     agent
       .post('/api/v1/test/request-body-filter-check/')
       .set('Content-Type', 'application/json')
       .send({
-        STRING: STRING,
-        STRING_50_CHAR: STRING_50_CHAR,
-        STRING_128_CHAR: STRING_128_CHAR,
-        STRING_255_CHAR: STRING_255_CHAR,
-        STRING_256_CHAR: STRING_256_CHAR,
-        STRING_512_CHAR: STRING_512_CHAR,
-        STRING_1024_CHAR: STRING_1024_CHAR,
-        STRING_MEDIUMTEXT: STRING_MEDIUMTEXT,
-        NUMBER: NUMBER,
-        OBJECT: OBJECT,
-        OBJECTID: OBJECTID,
+        bodyKeys: {
+          STRING: STRING,
+          STRING_50_CHAR: STRING_50_CHAR,
+          STRING_128_CHAR: STRING_128_CHAR,
+          STRING_255_CHAR: STRING_255_CHAR,
+          STRING_256_CHAR: STRING_256_CHAR,
+          STRING_512_CHAR: STRING_512_CHAR,
+          STRING_1024_CHAR: STRING_1024_CHAR,
+          STRING_MEDIUMTEXT: STRING_MEDIUMTEXT,
+          NUMBER: NUMBER,
+          OBJECT: OBJECT,
+          OBJECTID: OBJECTID,
+        },
+        keys: {
+          STRING: STRING,
+        },
       })
       .then(function (response: ChaiHttp.Response) {
         expect(response).to.have.status(200)
         done()
       })
       .catch(function (error) {
+        testLogger.error(error)
+        done(error)
+      })
+  })
+
+  it('Sending a request with additional body keys results in those additional body keys being removed from the request body', function (done) {
+    agent
+      .post('/api/v1/test/request-body-filter-check/')
+      .set('Content-Type', 'application/json')
+      .send({
+        bodyKeys: {
+          STRING: STRING,
+          STRING_50_CHAR: STRING_50_CHAR,
+          STRING_128_CHAR: STRING_128_CHAR,
+          STRING_255_CHAR: STRING_255_CHAR,
+          STRING_256_CHAR: STRING_256_CHAR,
+          STRING_512_CHAR: STRING_512_CHAR,
+          STRING_1024_CHAR: STRING_1024_CHAR,
+          STRING_MEDIUMTEXT: STRING_MEDIUMTEXT,
+          NUMBER: NUMBER,
+          BOOLEAN: BOOLEAN,
+          OBJECT: OBJECT,
+          OBJECTID: OBJECTID,
+          EXTRA_KEY: 'extra key',
+        },
+        keys: {
+          STRING: STRING,
+          BOOLEAN: BOOLEAN,
+        },
+      })
+      .then(function (response: ChaiHttp.Response) {
+        expect(response).to.have.status(200)
+        expect(response.body.bodyKeys.EXTRA_KEY).to.equal(undefined)
+        done()
+      })
+      .catch(function (error: Error) {
         testLogger.error(error)
         done(error)
       })
@@ -1216,46 +1127,16 @@ describe('Request Body Validation', function () {
 })
 
 // Tests for the middleware function used to
-// validate the data used in GET and DELETE requests
+// validate the data sent in the request query
+// of the API routes
 describe('Request Query Validation', function () {
-  chai.use(chaiHttp)
-
-  // Creates a session with a user because
-  // certain API routes require authentication
-  // for access
-  let agent: ChaiHttp.Agent = chai.request.agent(baseUrl)
-
   let string: string = 'string'
   let number: number = 3.5
   let integer: number = 3
   let boolean: boolean = true
   let objectId: string = '643ea778c10a4de66a9448d0'
 
-  before(function (done) {
-    agent
-      .get('/api/v1/missions/environment/')
-      .then(function (response: ChaiHttp.Response) {
-        expect(response).to.have.status(200)
-        expect(response.body.environment).to.equal(process.env.environment)
-
-        if (response.body.environment === process.env.environment) {
-          done()
-        } else {
-          testLogger.error(
-            'Database is not using "metis-test." Please make sure the test database is running.',
-          )
-          throw new Error(
-            'Database is not using "metis-test." Please make sure the test database is running.',
-          )
-        }
-      })
-      .catch(function (error) {
-        testLogger.error(error)
-        done(error)
-      })
-  })
-
-  it('Sending a request with all properties and their correct types results in a successful (200) response', function (done) {
+  it('Sending a request with all required and optional query keys and their correct types results in a successful (200) response', function (done) {
     agent
       .get(`/api/v1/test/request-query-type-check/`)
       .query({
@@ -1275,7 +1156,7 @@ describe('Request Query Validation', function () {
       })
   })
 
-  it('Sending a request with all properties and their types being incorrect results in a bad (400) response', function (done) {
+  it('Sending a request with all required and optional query keys and their types being incorrect results in a bad (400) response', function (done) {
     agent
       .get(`/api/v1/test/request-query-type-check/`)
       .query({
@@ -1295,7 +1176,7 @@ describe('Request Query Validation', function () {
       })
   })
 
-  it('Sending a request with a missing property results in a bad (400) request', function (done) {
+  it('Sending a request with a missing query key that is required results in a bad (400) request', function (done) {
     agent
       .get(`/api/v1/test/request-query-type-check/`)
       .query({
@@ -1313,85 +1194,111 @@ describe('Request Query Validation', function () {
         done(error)
       })
   })
-})
 
-// Tests the schema validation functions that are
-// used to validate data that is trying to be sent
-// to the database to be stored.
-describe('Mission Schema Validation', function () {
-  chai.use(chaiHttp)
-
-  // Creates a session with a user because
-  // certain API routes require authentication
-  // for access
-  let agent: ChaiHttp.Agent = chai.request.agent(baseUrl)
-
-  // Stores all the missions that are in the
-  // database before the tests are run in this
-  // suite
-  let initialMissionIDArray: Array<string> = []
-
-  before(function (done) {
+  it('Sending a request with a missing query key (string) that is optional results in a successful (200) request', function (done) {
     agent
-      .get('/api/v1/missions/')
+      .get(`/api/v1/test/request-query-type-check/`)
+      .query({
+        number: number,
+        integer: integer,
+        boolean: boolean,
+        objectId: objectId,
+      })
       .then(function (response: ChaiHttp.Response) {
         expect(response).to.have.status(200)
-        // This sets the missionID that is used as a parameter
-        // within one of the tests of this suite.
-        missionID = response.body.missions[0].missionID
-
-        // Loops through the current missions and stores the current set
-        // of mission's IDs that are stored in the database so that after
-        // all the tests have run in this suite the missions that were
-        // created from the tests can be deleted.
-        // This is also an added security measure to help prevent
-        // deleting missions if the tests somehow access the "metis"
-        // database instead of the "metis-test" database.
-        response.body.missions.forEach((mission: any) => {
-          initialMissionIDArray.push(mission.missionID)
-        })
+        done()
       })
-      .catch(function (error) {
-        testLogger.error(error)
-      })
-
-    agent
-      .get('/api/v1/missions/environment/')
-      .then(function (response: ChaiHttp.Response) {
-        expect(response).to.have.status(200)
-        expect(response.body.environment).to.equal(process.env.environment)
-
-        if (response.body.environment === process.env.environment) {
-          agent
-            .post('/api/v1/users/login')
-            .send(userCredentials)
-            .then(function (response: ChaiHttp.Response) {
-              expect(response).to.have.status(200)
-              done()
-            })
-            .catch(function (error) {
-              testLogger.error(error)
-              done(error)
-            })
-        } else {
-          testLogger.error(
-            'Database is not using "metis-test." Please make sure the test database is running.',
-          )
-          let error = new Error(
-            'Database is not using "metis-test." Please make sure the test database is running.',
-          )
-          done(error)
-        }
-      })
-      .catch(function (error) {
+      .catch(function (error: Error) {
         testLogger.error(error)
         done(error)
       })
   })
 
+  it('Sending a request with additional query keys results in those additional query keys being removed from the request query', function (done) {
+    agent
+      .get(`/api/v1/test/request-query-type-check/`)
+      .query({
+        number: number,
+        integer: integer,
+        boolean: boolean,
+        objectId: objectId,
+        extraKey: 'extra key',
+      })
+      .then(function (response: ChaiHttp.Response) {
+        expect(response).to.have.status(200)
+        expect(response.body.query.extraKey).to.equal(undefined)
+        done()
+      })
+      .catch(function (error: Error) {
+        testLogger.error(error)
+        done(error)
+      })
+  })
+})
+
+// Tests for the middleware function used to
+// validate the data sent in the request params
+// of the API routes
+describe('Request Params Validation', function () {
+  let string: string = 'string'
+  let number: number = 3.5
+  let integer: number = 3
+  let boolean: boolean = true
+  let objectId: string = '643ea778c10a4de66a9448d0'
+
+  it('Sending a request with all params keys and their correct types results in a successful (200) response', function (done) {
+    agent
+      .get(
+        `/api/v1/test/request-params-type-check/${string}/${number}/${integer}/${boolean}/${objectId}`,
+      )
+      .then(function (response: ChaiHttp.Response) {
+        expect(response).to.have.status(200)
+        done()
+      })
+      .catch(function (error: Error) {
+        testLogger.error(error)
+        done(error)
+      })
+  })
+
+  it('Sending a request with all params keys and their types being incorrect results in a bad (400) response', function (done) {
+    agent
+      .get(
+        `/api/v1/test/request-params-type-check/${number}/${string}/${number}/${objectId}/${boolean}`,
+      )
+      .then(function (response: ChaiHttp.Response) {
+        expect(response).to.have.status(400)
+        done()
+      })
+      .catch(function (error: Error) {
+        testLogger.error(error)
+        done(error)
+      })
+  })
+
+  it('Sending a request with a missing params key (OBJECTID) results in a not found (404) request', function (done) {
+    agent
+      .get(
+        `/api/v1/test/request-params-type-check/${string}/${number}/${integer}/${boolean}`,
+      )
+      .then(function (response: ChaiHttp.Response) {
+        expect(response).to.have.status(404)
+        done()
+      })
+      .catch(function (error: Error) {
+        testLogger.error(error)
+        done(error)
+      })
+  })
+})
+
+// Tests the mission schema validation functions that are
+// used to validate data that is trying to be sent
+// to the database to be stored.
+describe('Mission Schema Validation', function () {
   it('User should be logged in as an admin to be able to access certain API routes', function (done) {
     agent
-      .get('/api/v1/users/')
+      .get('/api/v1/users/session')
       .then(function (response: ChaiHttp.Response) {
         expect(response.body.session.user.role).to.equal(permittedUserRole)
         done()
@@ -1743,33 +1650,247 @@ describe('Mission Schema Validation', function () {
         done(error)
       })
   })
+})
 
-  after(function (done) {
-    // deletes all missions (except the missions that were
-    // in the database before the tests ran) in the test database
-    // that were created from the tests and then it closes
-    // the server and ends the session that was created in
-    // the before function.
-    agent
-      .get('/api/v1/missions/')
-      .then(function (response: ChaiHttp.Response) {
-        let missionArray: Array<any> = response.body.missions
-
-        for (let mission of missionArray) {
-          if (!initialMissionIDArray.includes(mission.missionID)) {
-            agent
-              .delete(`/api/v1/missions?missionID=${mission.missionID}`)
-              .end(function (error, response: ChaiHttp.Response) {
-                expect(response).to.have.status(200)
-                expect(error).to.equal(null)
-              })
-          }
-        }
-        done()
-      })
-      .catch(function (error) {
-        testLogger.error(error)
-        done(error)
-      })
+// Tests for each of the API routes that are used
+// to access the user data in the database
+describe('User API Routes', function () {
+  it('User should be logged in as an admin to be able to create users via the API', async function () {
+    try {
+      await agent
+        .get('/api/v1/users/session')
+        .then(function (response: ChaiHttp.Response) {
+          return expect(response.body.currentUser.role).to.equal(
+            permittedUserRole,
+          )
+        })
+        .catch(function (error) {
+          testLogger.error(error)
+          return error
+        })
+    } catch (error) {
+      testLogger.error(error)
+      return error
+    }
   })
+
+  it('Creating a user with (a) missing property/properties in the body of the request should return a bad (400) response', async function () {
+    try {
+      await agent
+        .post('/api/v1/users/')
+        .set('Content-Type', 'application/json')
+        .send(userWithNoPassword)
+        .then(function (response: ChaiHttp.Response) {
+          return expect(response).to.have.status(400)
+        })
+        .catch(function (error) {
+          testLogger.error(error)
+          return error
+        })
+    } catch (error) {
+      testLogger.error(error)
+      return error
+    }
+  })
+
+  it('Creating a user with all the correct properties in the body of the request should return a successful (200) response', async function () {
+    try {
+      await agent
+        .post('/api/v1/users/')
+        .set('Content-Type', 'application/json')
+        .send(correctUser)
+        .then(function (response: ChaiHttp.Response) {
+          return expect(response).to.have.status(200)
+        })
+        .catch(function (error: Error) {
+          testLogger.error(error)
+          return error
+        })
+    } catch (error) {
+      testLogger.error(error)
+      return error
+    }
+  })
+
+  it(`Updating a user's first and last name should return a successful (200) response`, async function () {
+    correctUser.user.firstName = 'updatedFirstName'
+    correctUser.user.lastName = 'updatedLastName'
+
+    try {
+      await agent
+        .put('/api/v1/users/')
+        .set('Content-Type', 'application/json')
+        .send(correctUser)
+        .then(function (response: ChaiHttp.Response) {
+          let user: any = response.body.user
+          expect(user.firstName).to.equal('updatedFirstName')
+          expect(user.lastName).to.equal('updatedLastName')
+          return expect(response).to.have.status(200)
+        })
+        .catch(function (error) {
+          testLogger.error(error)
+          return error
+        })
+    } catch (error) {
+      testLogger.error(error)
+    }
+  })
+
+  it('Deleting a mission with all the correct properties in the query of the request should return a successful (200) response', async function () {
+    try {
+      await agent
+        .delete(`/api/v1/users?userID=${correctUser.user.userID}`)
+        .then(function (response: ChaiHttp.Response) {
+          return expect(response).to.have.status(200)
+        })
+        .catch(function (error) {
+          testLogger.error(error)
+          return error
+        })
+    } catch (error) {
+      testLogger.error(error)
+      return error
+    }
+  })
+})
+
+// Tests the user schema validation functions that are
+// used to validate data that is trying to be sent
+// to the database to be stored.
+describe('User Schema Validation', function () {
+  // Regex for a bcrypt hashed password
+  let hashedPasswordExpression: RegExp = /^\$2[ayb]\$.{56}$/
+  let hashedPassword: string = ''
+
+  it('Creating a user with all the correct properties should save the user to the database', async function () {
+    let user = new UserModel(newCorrectUser.user)
+
+    try {
+      user.password = await hashPassword(user.password)
+    } catch (error) {
+      testLogger.error(error)
+    }
+
+    try {
+      let retreivedUser = await UserModel.create({ user }).exec()
+      retreivedUser.should.have
+        .property('userID')
+        .equal(newCorrectUser.user.userID)
+      retreivedUser.should.have
+        .property('firstName')
+        .equal(newCorrectUser.user.firstName)
+      retreivedUser.should.have
+        .property('lastName')
+        .equal(newCorrectUser.user.lastName)
+
+      hashedPassword = retreivedUser.password
+      let isHashedPassword: boolean = hashedPasswordExpression.test(
+        retreivedUser.password,
+      )
+      return expect(isHashedPassword).to.equal(true)
+    } catch (error) {
+      testLogger.error(error)
+      return error
+    }
+  })
+
+  it('Querying for the newly created user should return the correct user', async function () {
+    try {
+      let user = await UserModel.findOne({
+        userID: newCorrectUser.user.userID,
+      }).exec()
+
+      user.should.have.property('userID').equal(newCorrectUser.user.userID)
+      user.should.have
+        .property('firstName')
+        .equal(newCorrectUser.user.firstName)
+      user.should.have.property('lastName').equal(newCorrectUser.user.lastName)
+      let isHashedPassword: boolean = hashedPasswordExpression.test(
+        user.password,
+      )
+      expect(isHashedPassword).to.equal(true)
+      return expect(user.password).to.equal(hashedPassword)
+    } catch (error) {
+      testLogger.error(error)
+      return error
+    }
+  })
+
+  it('Updating a user should not hash the password again', async function () {
+    try {
+      let updatedUser = await UserModel.updateOne(
+        {
+          userID: newCorrectUser.user.userID,
+        },
+        { firstName: 'updatedFirstName', lastName: 'updatedLastName' },
+      ).exec()
+
+      updatedUser.should.have
+        .property('userID')
+        .equal(newCorrectUser.user.userID)
+      updatedUser.should.have.property('firstName').equal('updatedFirstName')
+      updatedUser.should.have.property('lastName').equal('updatedLastName')
+      let isHashedPassword: boolean = hashedPasswordExpression.test(
+        updatedUser.password,
+      )
+      expect(isHashedPassword).to.equal(true)
+      return expect(updatedUser.password).to.equal(hashedPassword)
+    } catch (error) {
+      testLogger.error(error)
+      return error
+    }
+  })
+
+  it('Querying for the updated user should return the correct user', async function () {
+    try {
+      let user = await UserModel.findOne({
+        userID: newCorrectUser.user.userID,
+      }).exec()
+
+      user.should.have.property('userID').equal(newCorrectUser.user.userID)
+      user.should.have.property('firstName').equal('updatedFirstName')
+      user.should.have.property('lastName').equal('updatedLastName')
+      let isHashedPassword: boolean = hashedPasswordExpression.test(
+        user.password,
+      )
+      expect(isHashedPassword).to.equal(true)
+      return expect(user.password).to.equal(hashedPassword)
+    } catch (error) {
+      testLogger.error(error)
+      return error
+    }
+  })
+})
+
+// Deletes all the data that was created from the tests.
+after(async function () {
+  // Deletes all missions in the test database
+  await MissionModel.deleteMany({}).exec((error: any) => {
+    if (error) {
+      testLogger.error(error)
+    }
+  })
+
+  // Deletes all users in the test database
+  await UserModel.deleteMany({}).exec((error: any) => {
+    if (error) {
+      testLogger.error(error)
+    }
+  })
+
+  try {
+    let missions = await MissionModel.find({}).exec()
+    missions.should.have.length(0)
+  } catch (error) {
+    testLogger.error(error)
+    return error
+  }
+
+  try {
+    let users = await UserModel.find({}).exec()
+    return users.should.have.length(0)
+  } catch (error) {
+    testLogger.error(error)
+    return error
+  }
 })

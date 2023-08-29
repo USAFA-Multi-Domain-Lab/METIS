@@ -234,142 +234,142 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
       />
       {
         // -- content --
-        <div className='Content'>
-          <div className='TopBar'>
-            <div className={resourcesClassName}>
-              Resources remaining: {mission.resources}
-              <span style={{ display: 'inline-block', width: '40px' }}></span>
-              Game ID: {game.gameID}
-            </div>
-            <MissionModificationPanel
-              mission={mission}
-              appActions={appActions}
-              handleSuccessfulCopy={(resultingMission: Mission) => {
-                // This gives the user the option
-                // to go to the mission they are
-                // copying or return to the current
-                // mission.
-                appActions.confirm(
-                  'Would you like to go to the copied mission, or return to the current mission?',
-                  (concludeAction: () => void) => {
-                    // Return to the current mission
+      }
+      <div className='Content'>
+        <div className='TopBar'>
+          <div className={resourcesClassName}>
+            Resources remaining: {mission.resources}
+            <span style={{ display: 'inline-block', width: '40px' }}></span>
+            Game ID: {game.gameID}
+          </div>
+          <MissionModificationPanel
+            mission={mission}
+            appActions={appActions}
+            handleSuccessfulCopy={(resultingMission: Mission) => {
+              // This gives the user the option
+              // to go to the mission they are
+              // copying or return to the current
+              // mission.
+              appActions.confirm(
+                'Would you like to go to the copied mission, or return to the current mission?',
+                (concludeAction: () => void) => {
+                  // Return to the current mission
+                  setMountHandled(false)
+                  appActions.goToPage('GamePage', {
+                    missionID: mission.missionID,
+                  })
+                  appActions.finishLoading()
+                  concludeAction()
+                },
+                {
+                  handleAlternate: (concludeAction: () => void) => {
+                    // Go to the copied mission.
                     setMountHandled(false)
                     appActions.goToPage('GamePage', {
-                      missionID: mission.missionID,
+                      missionID: resultingMission.missionID,
                     })
                     appActions.finishLoading()
                     concludeAction()
                   },
-                  {
-                    handleAlternate: (concludeAction: () => void) => {
-                      // Go to the copied mission.
-                      setMountHandled(false)
-                      appActions.goToPage('GamePage', {
-                        missionID: resultingMission.missionID,
-                      })
-                      appActions.finishLoading()
-                      concludeAction()
-                    },
-                    pendingMessageUponConfirm: 'Launching mission...',
-                    pendingMessageUponAlternate: 'Launching mission...',
-                    buttonConfirmText: 'Current Mission',
-                    buttonAlternateText: 'Copied Mission',
-                  },
-                )
-              }}
-              handleSuccessfulDeletion={() => {
-                appActions.goToPage('MissionSelectionPage', {})
-              }}
-              handleSuccessfulToggleLive={() => {}}
-            />
-          </div>
-
-          <PanelSizeRelationship
-            sizingMode={EPanelSizingMode.Panel1_Auto__Panel2_Defined}
-            initialDefinedSize={400}
-            panel1={{
-              ...ResizablePanel.defaultProps,
-              minSize: 400,
-              render: () => (
-                <>
-                  <MissionMap
-                    mission={mission}
-                    missionAjaxStatus={EAjaxStatus.Loaded}
-                    handleNodeSelection={handleNodeSelection}
-                    handleNodePathExitRequest={mission.enableAllNodes}
-                    grayOutExitNodePathButton={!mission.hasDisabledNodes}
-                    applyNodeClassName={(node: MissionNode) => {
-                      let className: string = ''
-
-                      if (node.isOpen) {
-                        className += ' opened'
-                      }
-
-                      if (!node.highlighted) {
-                        className += ' faded'
-                      }
-
-                      return className
-                    }}
-                    renderNodeTooltipDescription={(node: MissionNode) => {
-                      let description: string = ''
-                      let nodeActionDisplay = 'None selected'
-
-                      // This creates the tooltip hover over effect
-                      // that displays the description of the node
-                      // prior to being executed.
-                      if (node !== null && !node.executed && !node.executing) {
-                        description = node.description
-                      }
-
-                      if (node.selectedAction !== null) {
-                        nodeActionDisplay = node.selectedAction.name
-                      }
-
-                      // This creates the tooltip hover over effect
-                      // that displays the description of the node
-                      // after it has been executed.
-                      if (node.executable && node.executed) {
-                        description =
-                          `* Action executed: "${node.selectedAction?.name}"\n` +
-                          `* Executed node in ${
-                            (node.selectedAction?.processTime as number) / 1000
-                          } second(s)\n` +
-                          `* Chance of success: ${
-                            (node.selectedAction?.successChance as number) * 100
-                          }%\n` +
-                          `* Resources used: ${node.selectedAction?.resourceCost} resource(s)`
-                      }
-
-                      if (node.executing) {
-                        description =
-                          `* Time remaining: ${node.formatTimeRemaining(
-                            false,
-                          )} \n` + `* Description: ${node.description}`
-                      }
-
-                      return description
-                    }}
-                  />
-                  <NodeActions
-                    isOpen={displayNodeActions}
-                    selectedNode={selectedNode}
-                    handleActionSelectionRequest={selectAction}
-                    handleCloseRequest={clearSelections}
-                  />
-                  {renderExecuteNodePath()}
-                </>
-              ),
+                  pendingMessageUponConfirm: 'Launching mission...',
+                  pendingMessageUponAlternate: 'Launching mission...',
+                  buttonConfirmText: 'Current Mission',
+                  buttonAlternateText: 'Copied Mission',
+                },
+              )
             }}
-            panel2={{
-              ...ResizablePanel.defaultProps,
-              minSize: 400,
-              isOpen: true,
-              render: () => <OutputPanel mission={mission} />,
+            handleSuccessfulDeletion={() => {
+              appActions.goToPage('MissionSelectionPage', {})
             }}
+            handleSuccessfulToggleLive={() => {}}
           />
         </div>
-      }
+
+        <PanelSizeRelationship
+          sizingMode={EPanelSizingMode.Panel1_Auto__Panel2_Defined}
+          initialDefinedSize={400}
+          panel1={{
+            ...ResizablePanel.defaultProps,
+            minSize: 400,
+            render: () => (
+              <>
+                <MissionMap
+                  mission={mission}
+                  missionAjaxStatus={EAjaxStatus.Loaded}
+                  handleNodeSelection={handleNodeSelection}
+                  handleNodePathExitRequest={mission.enableAllNodes}
+                  grayOutExitNodePathButton={!mission.hasDisabledNodes}
+                  applyNodeClassName={(node: MissionNode) => {
+                    let className: string = ''
+
+                    if (node.isOpen) {
+                      className += ' opened'
+                    }
+
+                    if (!node.highlighted) {
+                      className += ' faded'
+                    }
+
+                    return className
+                  }}
+                  renderNodeTooltipDescription={(node: MissionNode) => {
+                    let description: string = ''
+                    let nodeActionDisplay = 'None selected'
+
+                    // This creates the tooltip hover over effect
+                    // that displays the description of the node
+                    // prior to being executed.
+                    if (node !== null && !node.executed && !node.executing) {
+                      description = node.description
+                    }
+
+                    if (node.selectedAction !== null) {
+                      nodeActionDisplay = node.selectedAction.name
+                    }
+
+                    // This creates the tooltip hover over effect
+                    // that displays the description of the node
+                    // after it has been executed.
+                    if (node.executable && node.executed) {
+                      description =
+                        `* Action executed: "${node.selectedAction?.name}"\n` +
+                        `* Executed node in ${
+                          (node.selectedAction?.processTime as number) / 1000
+                        } second(s)\n` +
+                        `* Chance of success: ${
+                          (node.selectedAction?.successChance as number) * 100
+                        }%\n` +
+                        `* Resources used: ${node.selectedAction?.resourceCost} resource(s)`
+                    }
+
+                    if (node.executing) {
+                      description =
+                        `* Time remaining: ${node.formatTimeRemaining(
+                          false,
+                        )} \n` + `* Description: ${node.description}`
+                    }
+
+                    return description
+                  }}
+                />
+                <NodeActions
+                  isOpen={displayNodeActions}
+                  selectedNode={selectedNode}
+                  handleActionSelectionRequest={selectAction}
+                  handleCloseRequest={clearSelections}
+                />
+                {renderExecuteNodePath()}
+              </>
+            ),
+          }}
+          panel2={{
+            ...ResizablePanel.defaultProps,
+            minSize: 400,
+            isOpen: true,
+            render: () => <OutputPanel mission={mission} />,
+          }}
+        />
+      </div>
     </div>
   )
 }

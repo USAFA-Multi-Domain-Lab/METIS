@@ -11,6 +11,7 @@
   &.NoAssetOption {
     grid-template-columns: auto;
     padding-left: 20px;
+    width: calc(100% - 30px);
   }
 
   .Indicator {

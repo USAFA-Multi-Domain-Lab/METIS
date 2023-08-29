@@ -1,14 +1,14 @@
 import './App.scss'
 import GamePage from './pages/GamePage'
 import AuthPage from './pages/AuthPage'
-import { TMetisSession, User } from '../modules/users'
+import { TMetisSession } from '../modules/users'
 import { useEffect, useState } from 'react'
 import ErrorPage from './pages/ErrorPage'
 import LoadingPage from './pages/LoadingPage'
 import AppState, { AppActions } from './AppState'
 import Markdown, { MarkdownTheme } from './content/general-layout/Markdown'
 import MissionFormPage from './pages/MissionFormPage'
-import MissionSelectionPage from './pages/MissionSelectionPage'
+import HomePage from './pages/HomePage'
 import Notification from '../modules/notifications'
 import NotificationBubble from './content/communication/NotificationBubble'
 import Confirmation from './content/communication/Confirmation'
@@ -20,6 +20,8 @@ import Prompt from './content/communication/Prompt'
 import ChangelogPage from './pages/ChangelogPage'
 import { ServerConnection } from '../modules/connect/server-connect'
 import { IButtonText } from './content/user-controls/ButtonText'
+import UserFormPage from './pages/UserFormPage'
+import UserResetPage from './pages/UserResetPage'
 
 /**
  * Props that every page accepts. Extend this to include more.
@@ -161,24 +163,32 @@ function App(props: {
         // the visitor login.
         if (session === null) {
           appActions.goToPage('AuthPage', {
-            returningPagePath: 'MissionSelectionPage',
+            returningPagePath: 'HomePage',
             returningPageProps: {},
           })
         }
         // Else establish a web socket connection
         // with the server.
         else {
-          let server: ServerConnection = await appActions.connectToServer()
+          // Connect to the server.
+          await appActions.connectToServer()
 
-          // If the sessioned user is in a game,
+          // If the sessioned user needs a password
+          // reset, then navigate to the user
+          // reset page.
+          if (session.user.needsPasswordReset) {
+            appActions.goToPage('UserResetPage', {
+              user: session.user,
+            })
+          }
+          // Else, if the sessioned user is in a game,
           // then switch to the game page.
-          if (session.inGame) {
+          else if (session.inGame) {
             appActions.goToPage('GamePage', {})
           }
-          // Else, go to the mission selection
-          // page.
+          // Else, go to the home page.
           else {
-            appActions.goToPage('MissionSelectionPage', {})
+            appActions.goToPage('HomePage', {})
           }
         }
 
@@ -196,11 +206,6 @@ function App(props: {
       componentDidMount()
     }
   }, [appState.appMountHandled])
-
-  // Equivalent of componentWillUnmount.
-  useEffect(() => {
-    return () => {}
-  }, [])
 
   /* -- PAGE PROPS CONSTRUCTION -- */
 
@@ -267,9 +272,11 @@ function App(props: {
 // -- PAGE REGISTRATION --
 
 registerPage('AuthPage', AuthPage)
-registerPage('MissionSelectionPage', MissionSelectionPage)
+registerPage('HomePage', HomePage)
 registerPage('GamePage', GamePage)
 registerPage('ChangelogPage', ChangelogPage)
 registerPage('MissionFormPage', MissionFormPage)
+registerPage('UserFormPage', UserFormPage)
+registerPage('UserResetPage', UserResetPage)
 
 export default AppState.createAppWithState(App)

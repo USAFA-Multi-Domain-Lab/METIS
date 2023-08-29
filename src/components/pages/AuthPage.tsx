@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import './AuthPage.scss'
-import usersModule, { TMetisSession, User } from '../../modules/users'
+import usersModule, { User } from '../../modules/users'
 import { AxiosError } from 'axios'
 import { IPage } from '../App'
 import { AnyObject } from '../../modules/toolbox/objects'
@@ -105,10 +105,18 @@ export default function AuthPage(props: IAuthPage): JSX.Element | null {
             setIsSubmitting(false)
             appState.setSession(session)
             appActions.connectToServer()
-            appActions.goToPage(
-              props.returningPagePath,
-              props.returningPageProps,
-            )
+
+            // If the user needs a password reset,
+            // then navigate to the user reset page.
+            if (session.user.needsPasswordReset) {
+              appActions.goToPage('UserResetPage', {
+                user: session.user,
+              })
+            }
+            // Else, go to the home page.
+            else {
+              appActions.goToPage('HomePage', {})
+            }
           } else {
             handleLoginError('Incorrect username or password.')
           }
@@ -132,13 +140,7 @@ export default function AuthPage(props: IAuthPage): JSX.Element | null {
     }
   }
 
-  // const goBack = () => {
-  //   appActions.goToPage(props.returningPagePath, props.returningPageProps)
-  // }
-
   /* -- RENDER -- */
-
-  // let backButtonClassName: string = 'Button'
 
   let submitIsDisabled: boolean = !canSubmit() || isSubmitting
 
@@ -168,9 +170,6 @@ export default function AuthPage(props: IAuthPage): JSX.Element | null {
             value='Login'
             disabled={submitIsDisabled}
           />
-          {/* <div className={backButtonClassName} onClick={goBack}>
-            Back
-          </div> */}
         </form>
       </div>
     </div>

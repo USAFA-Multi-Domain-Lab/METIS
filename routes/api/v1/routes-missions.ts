@@ -7,18 +7,19 @@ import { filterErrors_findOne } from '../../../database/api-call-handlers'
 import { ERROR_BAD_DATA } from '../../../database/database'
 import InfoModel from '../../../database/models/model-info'
 import MissionModel from '../../../database/models/model-mission'
-import { databaseLogger } from '../../../modules/logging'
-import { hasPermittedRole, requireLogin } from '../../../user'
+import { databaseLogger, plcApiLogger } from '../../../modules/logging'
+import {
+  hasPermittedRole as hasPermittedRole,
+  requireLogin,
+} from '../../../user'
 import { APP_DIR } from '../../../config'
 import uploads from '../../../middleware/uploads'
-import { commandScripts } from '../../../action-execution'
-import validateRequestBodyKeys, {
-  RequestBodyFilters,
-  validateRequestParamKeys as validateRequestParams,
-  validateRequestQueryKeys,
-} from '../../../modules/requests'
-import { colorOptions } from '../../../modules/mission-node-colors'
+import validateRequestBodyKeys from '../../../modules/requests'
 import { Mission } from '../../../src/modules/missions'
+import { AscotApi, cyberCityCommandScripts } from '../../../action-execution'
+import { RequestBodyFilters, defineRequests } from '../../../modules/requests'
+import { colorOptions } from '../../../modules/mission-node-colors'
+import { assetData } from '../../../modules/asset-data'
 
 type MulterFile = Express.Multer.File
 
@@ -29,17 +30,21 @@ const router = express.Router()
 // This will create a new mission.
 router.post(
   '/',
-  requireLogin(),
-  validateRequestBodyKeys({
-    name: RequestBodyFilters.STRING,
-    introMessage: RequestBodyFilters.STRING,
-    versionNumber: RequestBodyFilters.NUMBER,
-    live: RequestBodyFilters.BOOLEAN,
-    initialResources: RequestBodyFilters.NUMBER,
-    nodeStructure: RequestBodyFilters.OBJECT,
-    nodeData: RequestBodyFilters.OBJECT,
+  requireLogin({ permittedRoles: ['instructor', 'admin'] }),
+  defineRequests({
+    body: {
+      mission: {
+        name: RequestBodyFilters.STRING,
+        introMessage: RequestBodyFilters.STRING,
+        versionNumber: RequestBodyFilters.NUMBER,
+        live: RequestBodyFilters.BOOLEAN,
+        initialResources: RequestBodyFilters.NUMBER,
+        nodeStructure: RequestBodyFilters.OBJECT,
+        nodeData: RequestBodyFilters.OBJECT,
+      },
+    },
   }),
-  (request, response) => {
+  (request: Request, response: Response) => {
     let body: any = request.body
 
     let missionData: any = body.mission
@@ -105,7 +110,7 @@ router.post(
 // -- POST | /api/v1/missions/import/ --
 router.post(
   '/import/',
-  requireLogin(),
+  requireLogin({ permittedRoles: ['instructor', 'admin'] }),
   uploads.array('files', 12),
   (request, response) => {
     // Verifies files were included
@@ -416,14 +421,21 @@ router.post(
 // This will return all of the missions.
 router.get(
   '/',
-  validateRequestQueryKeys({ missionID: 'objectId' }),
+  defineRequests(
+    {
+      query: {},
+    },
+    {
+      query: { missionID: 'objectId' },
+    },
+  ),
   (request, response) => {
     let missionID = request.query.missionID
 
     if (missionID === undefined) {
       let queries: any = {}
 
-      if (!hasPermittedRole(request)) {
+      if (!hasPermittedRole(request, ['instructor', 'admin'])) {
         queries.live = true
       }
 
@@ -451,7 +463,10 @@ router.get(
             return response.sendStatus(500)
           } else if (mission === null) {
             return response.sendStatus(404)
-          } else if (!mission.live && !hasPermittedRole(request)) {
+          } else if (
+            !mission.live &&
+            !hasPermittedRole(request, ['instructor', 'admin'])
+          ) {
             return response.sendStatus(401)
           } else {
             databaseLogger.info(`Mission with ID "${missionID}" retrieved.`)
@@ -466,8 +481,8 @@ router.get(
 // This will return all of the missions.
 router.get(
   '/export/*',
-  requireLogin(),
-  validateRequestQueryKeys({ missionID: 'objectId' }),
+  requireLogin({ permittedRoles: ['instructor', 'admin'] }),
+  defineRequests({ query: { missionID: 'objectId' } }),
   (request, response) => {
     let missionID = request.query.missionID
 
@@ -534,32 +549,45 @@ router.get(
 // -- GET /api/v1/missions/environment/
 // This will return the environment of
 // the database that is currently in use.
-router.get(
-  '/environment/',
-  validateRequestQueryKeys({}),
-  (request, response) => {
-    response.send(process.env)
-  },
-)
+router.get('/environment/', defineRequests({}), (request, response) => {
+  response.send(process.env)
+})
 
 // -- GET /api/v1/missions/colors/
 // This will return all the available
 // color options that can be used to
 // style a mission-node.
-router.get('/colors/', validateRequestQueryKeys({}), (request, response) => {
+router.get('/colors/', defineRequests({}), (request, response) => {
   response.json({ colorOptions })
 })
+
+// -- GET /api/v1/missions/assets/
+// This will return all the available
+// assets that can be selected to be
+// affected by an action after it is
+// executed.
+router.get(
+  '/assets/',
+  requireLogin({ permittedRoles: ['instructor', 'admin'] }),
+  defineRequests({}),
+  (request, response) => {
+    response.json({ assetData })
+  },
+)
 
 // -- PUT /api/v1/missions/handle-action-execution/
 // This handles the effect on an asset
 // after an action is executed successfully
+// ! DEPRECATED
 router.put(
   '/handle-action-execution/',
   requireLogin(),
-  validateRequestBodyKeys({
-    missionID: RequestBodyFilters.OBJECTID,
-    nodeID: RequestBodyFilters.STRING,
-    actionID: RequestBodyFilters.STRING,
+  defineRequests({
+    body: {
+      missionID: RequestBodyFilters.OBJECTID,
+      nodeID: RequestBodyFilters.STRING,
+      actionID: RequestBodyFilters.STRING,
+    },
   }),
   (request, response) => {
     let body: any = request.body
@@ -588,7 +616,15 @@ router.put(
             node.actions.forEach((action: any) => {
               if (action.actionID === actionID) {
                 for (let script of action.scripts) {
-                  commandScripts[script.scriptName](script.args)
+                  if (script.scriptName in cyberCityCommandScripts) {
+                    cyberCityCommandScripts[script.scriptName](script.args)
+                  } else if (script.scriptName === 'ASCOT_DEMO') {
+                    AscotApi.affectEntity(script.args)
+                  } else {
+                    plcApiLogger.error(
+                      `No script found with the name ${script.scriptName}.`,
+                    )
+                  }
                 }
               }
             })
@@ -604,19 +640,27 @@ router.put(
 // This will update the mission.
 router.put(
   '/',
-  requireLogin(),
-  validateRequestBodyKeys(
+  requireLogin({ permittedRoles: ['instructor', 'admin'] }),
+  defineRequests(
     {
-      missionID: RequestBodyFilters.OBJECTID,
+      body: {
+        mission: {
+          missionID: RequestBodyFilters.OBJECTID,
+        },
+      },
     },
     {
-      name: RequestBodyFilters.STRING,
-      introMessage: RequestBodyFilters.STRING,
-      versionNumber: RequestBodyFilters.NUMBER,
-      initialResources: RequestBodyFilters.NUMBER,
-      live: RequestBodyFilters.BOOLEAN,
-      nodeStructure: RequestBodyFilters.OBJECT,
-      nodeData: RequestBodyFilters.OBJECT,
+      body: {
+        mission: {
+          name: RequestBodyFilters.STRING,
+          introMessage: RequestBodyFilters.STRING,
+          versionNumber: RequestBodyFilters.NUMBER,
+          initialResources: RequestBodyFilters.NUMBER,
+          live: RequestBodyFilters.BOOLEAN,
+          nodeStructure: RequestBodyFilters.OBJECT,
+          nodeData: RequestBodyFilters.OBJECT,
+        },
+      },
     },
   ),
   (request, response) => {
@@ -720,10 +764,12 @@ router.put(
 // This will copy a mission.
 router.put(
   '/copy/',
-  requireLogin(),
-  validateRequestBodyKeys({
-    copyName: RequestBodyFilters.STRING,
-    originalID: RequestBodyFilters.STRING,
+  requireLogin({ permittedRoles: ['instructor', 'admin'] }),
+  defineRequests({
+    body: {
+      copyName: RequestBodyFilters.STRING,
+      originalID: RequestBodyFilters.OBJECTID,
+    },
   }),
   (request, response) => {
     let body: any = request.body
@@ -777,8 +823,8 @@ router.put(
 // This will delete a mission.
 router.delete(
   '/',
-  requireLogin(),
-  validateRequestQueryKeys({ missionID: 'objectId' }),
+  requireLogin({ permittedRoles: ['instructor', 'admin'] }),
+  defineRequests({ query: { missionID: 'objectId' } }),
   (request, response) => {
     let query: any = request.query
 
@@ -792,57 +838,6 @@ router.delete(
       } else {
         databaseLogger.info(`Deleted mission with the ID "${missionID}".`)
         return response.sendStatus(200)
-      }
-    })
-  },
-)
-
-// -- POST | /api/v1/missions/execute/launch/:missionID --
-// This will create a new mission session for a user to execute.
-router.post(
-  '/execute/launch/:missionID',
-  requireLogin(),
-  validateRequestParams({
-    missionID: RequestBodyFilters.OBJECTID,
-  }),
-  (request: Request, response: Response) => {
-    // Get data from the request params.
-    let missionID: string = request.params.missionID
-
-    // Query for the mission with the given ID.
-    MissionModel.findOne({ missionID }, (error: any, missionData: any) => {
-      // Handles errors.
-      if (error !== null) {
-        databaseLogger.error(
-          `Failed to retrieve mission with the ID "${missionID}".`,
-        )
-        databaseLogger.error(error)
-        return response.sendStatus(500)
-      }
-      // Handle mission not found.
-      else if (missionData === null) {
-        return response.sendStatus(404)
-      }
-      // Handle mission not live.
-      else if (!missionData.live) {
-        response.statusMessage = 'Mission is not live.'
-        return response.sendStatus(401)
-      }
-      // Handles successful query.
-      else {
-        let mission: Mission = new Mission(
-          missionData.missionID,
-          missionData.name,
-          missionData.introMessage,
-          missionData.versionNumber,
-          missionData.live,
-          missionData.initialResources,
-          missionData.nodeStructure,
-          missionData.nodeData,
-          missionData.seed,
-        )
-
-        // MissionControl.launchMission(mission)
       }
     })
   },

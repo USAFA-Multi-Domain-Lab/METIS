@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { MissionNodeAction } from '../../../modules/mission-node-actions'
 import { MissionNode } from '../../../modules/mission-nodes'
 import { AnyObject } from '../../../modules/toolbox/objects'
@@ -29,6 +30,22 @@ export default function NodeActionEntry(props: {
   let handleChange = props.handleChange
   let deleteActionClassName: string = 'FormButton DeleteAction'
   let nodeActionClassName: string = 'NodeActionEntry'
+
+  /* -- COMPONENT STATE -- */
+  const [deliverNameError, setDeliverNameError] = useState<boolean>(false)
+  const [deliverDescriptionError, setDeliverDescriptionError] =
+    useState<boolean>(false)
+  const [
+    deliverPostExecutionSuccessTextError,
+    setDeliverPostExecutionSuccessTextError,
+  ] = useState<boolean>(false)
+  const [
+    deliverPostExecutionFailureTextError,
+    setDeliverPostExecutionFailureTextError,
+  ] = useState<boolean>(false)
+  const [errorMessage, setErrorMessage] = useState<string>(
+    'At least one character is required here.',
+  )
 
   /* -- COMPONENT FUNCTIONS -- */
   const removeActionEmptyString = (field: string) => {
@@ -69,15 +86,21 @@ export default function NodeActionEntry(props: {
             if (name !== '') {
               action.name = name
               removeActionEmptyString('name')
+              setDeliverNameError(false)
               setMountHandled(false)
               handleChange()
             } else {
+              setDeliverNameError(true)
               setActionEmptyStringArray([
                 ...actionEmptyStringArray,
                 `actionID=${action.actionID}_field=name`,
               ])
               setMountHandled(false)
             }
+          }}
+          options={{
+            deliverError: deliverNameError,
+            deliverErrorMessage: errorMessage,
           }}
           key={`${action.actionID}_name`}
         />
@@ -88,15 +111,21 @@ export default function NodeActionEntry(props: {
             if (description !== '') {
               action.description = description
               removeActionEmptyString('description')
+              setDeliverDescriptionError(false)
               setMountHandled(false)
               handleChange()
             } else {
+              setDeliverDescriptionError(true)
               setActionEmptyStringArray([
                 ...actionEmptyStringArray,
                 `actionID=${action.actionID}_field=description`,
               ])
               setMountHandled(false)
             }
+          }}
+          options={{
+            deliverError: deliverDescriptionError,
+            deliverErrorMessage: errorMessage,
           }}
           key={`${action.actionID}_description`}
         />
@@ -105,9 +134,11 @@ export default function NodeActionEntry(props: {
           initialValue={parseFloat(
             `${(action.successChance * 100.0).toFixed(2)}`,
           )}
-          minimum={0}
-          maximum={100}
-          unit='%'
+          options={{
+            minimum: 0,
+            maximum: 100,
+            unit: '%',
+          }}
           deliverValue={(successChancePercentage: number | null) => {
             if (successChancePercentage !== null) {
               action.successChance = successChancePercentage / 100.0
@@ -120,9 +151,11 @@ export default function NodeActionEntry(props: {
         <DetailNumber
           label='Process Time'
           initialValue={action.processTime / 1000}
-          minimum={0}
-          maximum={3600}
-          unit='s'
+          options={{
+            minimum: 0,
+            maximum: 3600,
+            unit: 's',
+          }}
           deliverValue={(timeCost: number | null) => {
             if (timeCost !== null) {
               action.processTime = timeCost * 1000
@@ -151,15 +184,21 @@ export default function NodeActionEntry(props: {
             if (postExecutionSuccessText !== '') {
               action.postExecutionSuccessText = postExecutionSuccessText
               removeActionEmptyString('postExecutionSuccessText')
+              setDeliverPostExecutionSuccessTextError(false)
               setMountHandled(false)
               handleChange()
             } else {
+              setDeliverPostExecutionSuccessTextError(true)
               setActionEmptyStringArray([
                 ...actionEmptyStringArray,
                 `actionID=${action.actionID}_field=postExecutionSuccessText`,
               ])
               setMountHandled(false)
             }
+          }}
+          options={{
+            deliverError: deliverPostExecutionSuccessTextError,
+            deliverErrorMessage: errorMessage,
           }}
           key={`${action.actionID}_postExecutionSuccessText`}
         />
@@ -170,15 +209,21 @@ export default function NodeActionEntry(props: {
             if (postExecutionFailureText !== '') {
               action.postExecutionFailureText = postExecutionFailureText
               removeActionEmptyString('postExecutionFailureText')
+              setDeliverPostExecutionFailureTextError(false)
               setMountHandled(false)
               handleChange()
             } else {
+              setDeliverPostExecutionFailureTextError(true)
               setActionEmptyStringArray([
                 ...actionEmptyStringArray,
                 `actionID=${action.actionID}_field=postExecutionFailureText`,
               ])
               setMountHandled(false)
             }
+          }}
+          options={{
+            deliverError: deliverPostExecutionFailureTextError,
+            deliverErrorMessage: errorMessage,
           }}
           key={`${action.actionID}_postExecutionFailureText`}
         />

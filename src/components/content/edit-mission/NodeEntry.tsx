@@ -53,6 +53,12 @@ export default function NodeEntry(props: {
 
   /* -- COMPONENT STATE -- */
   const [mountHandled, setMountHandled] = useState<boolean>()
+  const [deliverNameError, setDeliverNameError] = useState<boolean>(false)
+  const [deliverDescriptionError, setDeliverDescriptionError] =
+    useState<boolean>(false)
+  const [errorMessage, setErrorMessage] = useState<string>(
+    'At least one character is required here.',
+  )
 
   /* -- COMPONENT EFFECTS -- */
 
@@ -144,9 +150,11 @@ export default function NodeEntry(props: {
                 if (node !== null && name !== '') {
                   node.name = name
                   removeNodeEmptyString('name')
+                  setDeliverNameError(false)
                   setMountHandled(false)
                   handleChange()
-                } else if (node !== null) {
+                } else if (node !== null && name === '') {
+                  setDeliverNameError(true)
                   setNodeEmptyStringArray([
                     ...nodeEmptyStringArray,
                     `nodeID=${node.nodeID}_field=name`,
@@ -154,12 +162,15 @@ export default function NodeEntry(props: {
                   setMountHandled(false)
                 }
               }}
+              options={{
+                deliverError: deliverNameError,
+                deliverErrorMessage: errorMessage,
+              }}
               key={`${node.nodeID}_name`}
             />
             <DetailDropDown<string>
               label={'Color'}
               options={colorOptions}
-              uniqueClassName={'Color'}
               currentValue={`Choose a color`}
               isExpanded={true}
               uniqueDropDownStyling={{}}
@@ -188,6 +199,9 @@ export default function NodeEntry(props: {
 
                   handleChange()
                 }
+              }}
+              optional={{
+                uniqueClassName: 'Color',
               }}
               key={`${node.nodeID}_color`}
             />
@@ -230,9 +244,11 @@ export default function NodeEntry(props: {
                 ) {
                   node.description = description
                   removeNodeEmptyString('description')
+                  setDeliverDescriptionError(false)
                   setMountHandled(false)
                   handleChange()
-                } else if (node !== null) {
+                } else if (node !== null && description === '') {
+                  setDeliverDescriptionError(true)
                   setNodeEmptyStringArray([
                     ...nodeEmptyStringArray,
                     `nodeID=${node.nodeID}_field=description`,
@@ -240,12 +256,15 @@ export default function NodeEntry(props: {
                   setMountHandled(false)
                 }
               }}
+              options={{
+                deliverError: deliverDescriptionError,
+                deliverErrorMessage: errorMessage,
+              }}
               key={`${node.nodeID}_description`}
             />
             <DetailBox
               label='Pre-Execution Text (optional)'
               initialValue={node.preExecutionText}
-              emptyStringAllowed={true}
               deliverValue={(preExecutionText: string) => {
                 if (node !== null) {
                   node.preExecutionText = preExecutionText

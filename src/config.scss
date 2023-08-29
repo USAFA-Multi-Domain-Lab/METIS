@@ -8,6 +8,18 @@ $background-alt2: #333347;
 $background-alt3: #420002;
 $background-alt4: #231d20;
 $background-alt5: #616060;
+$background-alt6: #d6d0c9;
+$background-alt7: #272736;
+$background-alt8: #0d1a27;
+$background-alt9: #0d1a27e6;
+$box-shadow-main: inset 100vw 0 0 0 RGBA(13, 26, 39, 0.4);
+$box-shadow-alt1: inset 100vw 0 0 0 RGBA(13, 26, 39, 0.8);
+$box-shadow-alt2: inset 100vw 0 0 0 RGBA(13, 26, 39, 0.9);
+$box-shadow-alt3: inset 100vw 0 0 0 RGBA(13, 26, 39, 1);
+$box-shadow-alt4: inset 100vw 0 0 0 rgba(39, 39, 54, 0.25);
+$box-shadow-alt5: inset 100vw 0 0 0 rgba(39, 39, 54, 0.8);
+$box-shadow-alt6: inset 100vw 0 0 0 rgba(39, 39, 54, 0.9);
+$box-shadow-alt7: inset 100vw 0 0 0 rgba(39, 39, 54, 1);
 $background-color-negative: #dfdfff;
 $color-accent: #5fc9be;
 $color-accent-light: #b6fff8;
@@ -16,6 +28,8 @@ $color-pointer-mark: #b5b5b5;
 $color-error: $color-main;
 $color-error-faded: $color-main;
 $color-error-alt: #ff84a3;
+$color-correct: #6ce5b0;
+
 // MDL application color scheme
 // Terminal color schemes
 $terminal: #3bfce8;
@@ -73,4 +87,4 @@ $z-index-confirmation: 100;
 $z-index-tooltips: 250;
 
 // navigation height
-$nav-height: 60px;
+$nav-height: 50px;

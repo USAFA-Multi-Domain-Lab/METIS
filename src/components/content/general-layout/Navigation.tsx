@@ -1,6 +1,5 @@
 import Branding from './Branding'
 import './Navigation.scss'
-import { v4 as generateHash } from 'uuid'
 
 export interface INavigation {
   links: Array<INavLink>

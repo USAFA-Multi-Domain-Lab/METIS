@@ -20,6 +20,10 @@
     width: 100%;
     font-size: 12.5px;
 
+    &.Correct {
+      color: $color-correct;
+    }
+
     &.Error {
       color: $color-error-alt;
     }
@@ -34,17 +38,48 @@
     padding: 11px 10px 11px;
   }
 
+  .InputContainer {
+    display: grid;
+    grid-template-columns: auto;
+
+    &.Password {
+      grid-template-columns: auto 55px;
+    }
+  }
+
   .Field {
     @include fieldDimensions();
-    background-color: $background-alt2;
+    box-shadow: $box-shadow-alt6;
     color: $color-accent-light;
     font-size: 14px;
+
+    &.Correct {
+      border-top: 2px solid $color-correct;
+      border-bottom: 2px solid $color-correct;
+      color: $color-correct;
+    }
 
     &.Error {
       border-top: 2px solid $color-error-alt;
       border-bottom: 2px solid $color-error-alt;
       color: $color-error-alt;
+
+      &::placeholder {
+        color: $color-error-alt;
+      }
     }
+
+    &::placeholder {
+      color: $color-main;
+    }
+  }
+
+  .TogglePasswordDisplayContainer {
+    @include fieldDimensions();
+    display: grid;
+    justify-content: flex-end;
+    cursor: pointer;
+    user-select: none;
   }
 
   &.DetailNumber {
@@ -99,6 +134,15 @@
 
         .Text {
           color: $color-accent-light;
+
+          &.Correct {
+            color: $color-correct;
+          }
+
+          &.DefaultValue {
+            color: $color-main;
+            opacity: 0.775;
+          }
         }
       }
 

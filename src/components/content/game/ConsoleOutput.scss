@@ -2,11 +2,12 @@
 
 .ConsoleOutput {
   .Text {
+    display: block;
     padding: 15px 0;
     font-size: 0.75em;
     list-style-type: none;
     word-wrap: break-word;
-    line-break: strict;
+    white-space: pre-line;
 
     .SelectedActionPropertyList {
       padding: 15px 0 0 15px;

@@ -1,4 +1,4 @@
-import axios, { AxiosError } from 'axios'
+import axios, { AxiosError, AxiosResponse } from 'axios'
 import { PRNG } from 'seedrandom'
 import { MissionNode } from './mission-nodes'
 import { Mission } from './missions'
@@ -252,4 +252,26 @@ export function handleSuccessfulActionExecution(
     })
 }
 
-export default { MissionNodeAction, handleSuccessfulActionExecution }
+export function getAssetData(
+  callback: (assets: Array<AnyObject>) => void,
+  callbackError: (error: AxiosError) => void,
+): void {
+  axios
+    .get(`/api/v1/missions/assets`)
+    .then((response: AxiosResponse<AnyObject>) => {
+      let assets = response.data.assetData
+
+      callback(assets)
+    })
+    .catch((error: AxiosError) => {
+      console.error('Failed to retrieve assets.')
+      console.error(error)
+      callbackError(error)
+    })
+}
+
+export default {
+  MissionNodeAction,
+  handleSuccessfulActionExecution,
+  getAssetData,
+}
