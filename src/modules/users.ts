@@ -14,6 +14,16 @@ export interface IUserJSON {
 }
 
 /**
+ * Options for creating new User objects.
+ */
+export interface IUserOptions {
+  /**
+   * Whether the password is required when saving. Defaults to false.
+   */
+  passwordIsRequired?: boolean
+}
+
+/**
  * The JSON representation of a MetisSession object.
  */
 export type TMetisSessionJSON = {
@@ -129,23 +139,19 @@ export class User {
   }
 
   /**
-   * @param {IUserJSON} json The user JSON from which to create the user. Any ommitted values will be set to the default properties defined in User.DEFAULT_PROPERTIES.
+   * @param {IUserJSON} data The user data from which to create the user. Any ommitted values will be set to the default properties defined in User.DEFAULT_PROPERTIES.
+   * @param {IUserOptions} options Options for creating the user.
    */
   public constructor(
-    {
-      userID,
-      firstName,
-      lastName,
-      role,
-      needsPasswordReset,
-    }: Partial<IUserJSON> = User.DEFAULT_PROPERTIES,
+    data: Partial<IUserJSON> = User.DEFAULT_PROPERTIES,
+    options: IUserOptions = {},
   ) {
-    this.userID = userID ?? User.DEFAULT_PROPERTIES.userID
-    this.firstName = firstName ?? User.DEFAULT_PROPERTIES.firstName
-    this.lastName = lastName ?? User.DEFAULT_PROPERTIES.lastName
-    this.role = role ?? User.DEFAULT_PROPERTIES.role
-    this.needsPasswordReset = needsPasswordReset ?? false
-    this._passwordIsRequired = false
+    this.userID = data.userID ?? User.DEFAULT_PROPERTIES.userID
+    this.firstName = data.firstName ?? User.DEFAULT_PROPERTIES.firstName
+    this.lastName = data.lastName ?? User.DEFAULT_PROPERTIES.lastName
+    this.role = data.role ?? User.DEFAULT_PROPERTIES.role
+    this.needsPasswordReset = data.needsPasswordReset ?? false
+    this._passwordIsRequired = options.passwordIsRequired ?? false
   }
 
   /**
@@ -214,6 +220,53 @@ export class User {
    */
   public static readonly FULL_ACCESS_ROLES: string[] = ['admin']
 
+  /**
+   * Calls the API to fetch one user by their user ID.
+   * @param {string} userID The user ID of the user to fetch.
+   * @returns {Promise<User>} A promise that resolves to a User object.
+   */
+  public static async fetchOne(userID: string): Promise<User> {
+    return new Promise<User>(async (resolve, reject) => {
+      try {
+        // Retrieve data from API.
+        let { data: userJSON } = await axios.get<IUserJSON>(
+          `${User.API_ENDPOINT}`,
+          { params: { userID } },
+        )
+        // Convert JSON to User object.
+        let user: User = new User(userJSON)
+        // Resolve
+        resolve(user)
+      } catch (error) {
+        console.error('Failed to fetch user.')
+        console.error(error)
+        reject(error)
+      }
+    })
+  }
+
+  /**
+   * Calls the API to fetch all users available.
+   * @returns {Promise<Array<User>>} A promise that resolves to an array of User objects.
+   */
+  public static async fetchAll(): Promise<Array<User>> {
+    return new Promise<Array<User>>(async (resolve, reject) => {
+      try {
+        // Retrieve data from API.
+        let { data: usersJSON } = await axios.get<Array<IUserJSON>>(
+          User.API_ENDPOINT,
+        )
+        // Convert JSON to User objects.
+        let users: Array<User> = usersJSON.map((userJSON) => new User(userJSON))
+        // Resolve
+        resolve(users)
+      } catch (error) {
+        console.error('Failed to fetch missions.')
+        console.error(error)
+        reject(error)
+      }
+    })
+  }
   /**
    * Fetches the current session of the logged in user from the server.
    * @returns {Promise<TMetisSession>} A promise that resolves to the current session of the logged in user.
@@ -292,29 +345,6 @@ export class User {
       },
     )
   }
-
-  /**
-   * Calls the API to fetch all users available.
-   * @returns {Promise<Array<User>>} A promise that resolves to an array of User objects.
-   */
-  public static async fetchAll(): Promise<Array<User>> {
-    return new Promise<Array<User>>(async (resolve, reject) => {
-      try {
-        // Retrieve data from API.
-        let { data: usersJSON } = await axios.get<Array<IUserJSON>>(
-          User.API_ENDPOINT,
-        )
-        // Convert JSON to User objects.
-        let users: Array<User> = usersJSON.map((userJSON) => new User(userJSON))
-        // Resolve
-        resolve(users)
-      } catch (error) {
-        console.error('Failed to fetch missions.')
-        console.error(error)
-        reject(error)
-      }
-    })
-  }
 }
 
 // This will logout the user in the session.
@@ -356,25 +386,6 @@ export const createUser = (
     })
 }
 
-// This will get a user by their userID.
-export const getUser = (
-  userID: string,
-  callback: (user: User) => void,
-  callbackError: (error: AxiosError) => void = () => {},
-): void => {
-  axios
-    .get(`/api/v1/users?userID=${userID}`)
-    .then((response: AxiosResponse<AnyObject>): void => {
-      let userJSON = response.data.user
-      let user: User = new User(userJSON)
-      callback(user)
-    })
-    .catch((error: AxiosError) => {
-      console.error('Failed to get user.')
-      callbackError(error)
-    })
-}
-
 // This will update the given user to
 // the server.
 export const saveUser = (
@@ -410,7 +421,6 @@ export const deleteUser = (
 export default {
   logout,
   createUser,
-  getUser,
   saveUser,
   deleteUser,
 }

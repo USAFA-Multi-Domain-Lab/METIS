@@ -36,6 +36,24 @@ export interface IMissionJSON {
   nodeData: Array<IMissionNodeJSON>
 }
 
+/**
+ * Options when fetching a mission.
+ */
+export interface IMissionFetchOptions {
+  /**
+   * Whether or not to open all nodes of the new Mission object. Defaults to false.
+   */
+  openAllNodes?: boolean
+}
+
+/**
+ * JSON representation of BaseMissionSession class.
+ */
+export interface IMissionSessionJSON {
+  mission: IMissionJSON
+  participants: Array<IUserJSON>
+}
+
 // This is a config that can be passed
 // when cloning a mission to configure
 // how you want this mission to be cloned.
@@ -668,6 +686,46 @@ export class Mission {
   }
 
   /**
+   * Calls the API to fetch one mission by its mission ID.
+   * @param {string} missionID The ID of the mission to fetch.
+   * @param {object} options Options for the fetch operation.
+   * @returns {Promise<Mission>} A promise that resolves to a Mission object.
+   */
+  public static async fetchOne(
+    missionID: string,
+    options: { openAllNodes?: boolean } = {},
+  ): Promise<Mission> {
+    return new Promise<Mission>(async (resolve, reject) => {
+      try {
+        // Retrieve data from API.
+        let { data: missionJSON } = await axios.get<IMissionJSON>(
+          `${Mission.API_ENDPOINT}`,
+          { params: { missionID } },
+        )
+        // Convert JSON to Mission object.
+        let mission: Mission = new Mission(
+          missionJSON.missionID,
+          missionJSON.name,
+          missionJSON.introMessage,
+          missionJSON.versionNumber,
+          missionJSON.live,
+          missionJSON.initialResources,
+          missionJSON.nodeStructure,
+          missionJSON.nodeData,
+          missionJSON.seed,
+          options.openAllNodes === true,
+        )
+        // Resolve
+        resolve(mission)
+      } catch (error) {
+        console.error('Failed to fetch mission.')
+        console.error(error)
+        reject(error)
+      }
+    })
+  }
+
+  /**
    * Calls the API to fetch all missions available.
    * @returns {Promise<Array<Mission>>} A promise that resolves to an array of Mission objects.
    */
@@ -677,7 +735,13 @@ export class Mission {
         let { data: missionsJSON } = await axios.get<Array<IMissionJSON>>(
           Mission.API_ENDPOINT,
         )
-        resolve(missionsJSON.map(Mission.fromJSON))
+        resolve(
+          missionsJSON.map((missionJSON) => {
+            missionJSON.nodeData = []
+            missionJSON.nodeStructure = {}
+            return Mission.fromJSON(missionJSON)
+          }),
+        )
       } catch (error) {
         console.error('Failed to fetch missions.')
         console.error(error)
@@ -685,14 +749,6 @@ export class Mission {
       }
     })
   }
-}
-
-/**
- * JSON representation of BaseMissionSession class.
- */
-export interface IMissionSessionJSON {
-  mission: IMissionJSON
-  participants: Array<IUserJSON>
 }
 
 // This will create a brand new mission.
@@ -805,24 +861,6 @@ export function getMission(
     })
     .catch((error: AxiosError) => {
       console.error('Failed to retrieve mission.')
-      console.error(error)
-      callbackError(error)
-    })
-}
-
-export function getMissionNodeColorOptions(
-  callback: (colors: Array<string>) => void,
-  callbackError: (error: AxiosError) => void = () => {},
-): void {
-  axios
-    .get(`/api/v1/missions/colors/`)
-    .then((response: AxiosResponse<AnyObject>): void => {
-      let colorJSON = response.data.colorOptions
-
-      callback(colorJSON)
-    })
-    .catch((error: AxiosError) => {
-      console.error('Failed to retrieve the color options.')
       console.error(error)
       callbackError(error)
     })

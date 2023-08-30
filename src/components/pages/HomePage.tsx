@@ -42,28 +42,7 @@ export default function HomePage(props: IHomePage): JSX.Element | null {
   const [missions, setMissions] = useState<Array<Mission>>([])
   const [users, setUsers] = useState<Array<User>>([])
 
-  /* -- COMPONENT EFFECTS -- */
-
-  const [mountHandled, remount] = useMountHandler(async (done) => {
-    await loadMissions()
-    await loadUsers()
-    appActions.finishLoading()
-    done()
-  })
-
-  // Require session for page.
-  const [session] = useRequireSession(appState, appActions)
-
-  /* -- SESSION-SPECIFIC LOGIC -- */
-
-  // Return null if the mount has
-  // not been handled or if the
-  // session is null.
-  if (!mountHandled || session === null) {
-    return null
-  }
-
-  let { user: currentUser } = session
+  /* -- COMPONENT FUNCTIONS -- */
 
   /* -- COMPONENT FUNCTIONS -- */
 
@@ -114,6 +93,31 @@ export default function HomePage(props: IHomePage): JSX.Element | null {
       }
     })
   }
+
+  /* -- COMPONENT EFFECTS -- */
+
+  const [mountHandled, remount] = useMountHandler(async (done) => {
+    await loadMissions()
+    await loadUsers()
+    appActions.finishLoading()
+    done()
+  })
+
+  // Require session for page.
+  const [session] = useRequireSession(appState, appActions)
+
+  /* -- SESSION-SPECIFIC LOGIC -- */
+
+  // Return null if the mount has
+  // not been handled or if the
+  // session is null.
+  if (!mountHandled || session === null) {
+    return null
+  }
+
+  let { user: currentUser } = session
+
+  /* -- COMPONENT FUNCTIONS (CONTINUED) -- */
 
   // This will logout the current user.
   const logout = () =>
@@ -205,7 +209,7 @@ export default function HomePage(props: IHomePage): JSX.Element | null {
 
       // Reloads missions now that all files
       // have been processed.
-      loadMissions()
+      loadMissions().then(loadMissionsCallback).catch(loadMissionsCallback)
     }
 
     // Switch to load screen.
@@ -334,38 +338,35 @@ export default function HomePage(props: IHomePage): JSX.Element | null {
   /**
    * Callback for when a mission is selected.
    */
-  const handleMissionSelection = useCallback(
-    async (mission: Mission) => {
-      if (server !== null) {
-        try {
-          // Notify user of mission launch.
-          beginLoading('Launching mission...')
-          // Launch game from mission ID, awaiting
-          // the promised game ID.
-          let gameID: string = await GameClient.launch(mission.missionID)
-          // Notify user of mission join.
-          beginLoading('Joining mission...')
-          // Join game from new game ID, awaiting
-          // the promised game client.
-          let game: GameClient = await GameClient.join(gameID, server)
-          // Go to the game page with the new
-          // game client.
-          goToPage('GamePage', { game })
-        } catch (error) {
-          handleError({
-            message: 'Failed to launch mission. Contact system administrator.',
-            notifyMethod: 'page',
-          })
-        }
-      } else {
+  const handleMissionSelection = async (mission: Mission) => {
+    if (server !== null) {
+      try {
+        // Notify user of mission launch.
+        beginLoading('Launching mission...')
+        // Launch game from mission ID, awaiting
+        // the promised game ID.
+        let gameID: string = await GameClient.launch(mission.missionID)
+        // Notify user of mission join.
+        beginLoading('Joining mission...')
+        // Join game from new game ID, awaiting
+        // the promised game client.
+        let game: GameClient = await GameClient.join(gameID, server)
+        // Go to the game page with the new
+        // game client.
+        goToPage('GamePage', { game })
+      } catch (error) {
         handleError({
-          message: 'No server connection. Contact system administrator',
-          notifyMethod: 'bubble',
+          message: 'Failed to launch mission. Contact system administrator.',
+          notifyMethod: 'page',
         })
       }
-    },
-    [appActions, server],
-  )
+    } else {
+      handleError({
+        message: 'No server connection. Contact system administrator',
+        notifyMethod: 'bubble',
+      })
+    }
+  }
 
   // This will switch to the user form
   // page with the selected user.

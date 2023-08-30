@@ -22,6 +22,7 @@ import { ServerConnection } from '../modules/connect/server-connect'
 import { IButtonText } from './content/user-controls/ButtonText'
 import UserFormPage from './pages/UserFormPage'
 import UserResetPage from './pages/UserResetPage'
+import { MissionNode } from 'src/modules/mission-nodes'
 
 /**
  * Props that every page accepts. Extend this to include more.
@@ -79,6 +80,10 @@ function App(props: {
 }): JSX.Element | null {
   let appState = props.appState
   let appActions = props.appActions
+
+  // Extract app state properties.
+  let { session } = appState
+  let { beginLoading, finishLoading, handleError, notify } = appActions
 
   /* -- COMPONENT STATE -- */
 
@@ -206,6 +211,22 @@ function App(props: {
       componentDidMount()
     }
   }, [appState.appMountHandled])
+
+  // This is called to handle logins.
+  useEffect(() => {
+    async function effect(): Promise<void> {
+      if (session === null) {
+        appState.setMissionNodeColors([])
+      } else {
+        try {
+          appState.setMissionNodeColors(await MissionNode.fetchColors())
+        } catch {
+          appActions.handleError('Failed to load post-login data.')
+        }
+      }
+    }
+    effect()
+  }, [session === null])
 
   /* -- PAGE PROPS CONSTRUCTION -- */
 

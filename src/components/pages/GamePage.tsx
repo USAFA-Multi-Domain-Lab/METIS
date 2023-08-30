@@ -218,7 +218,7 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
             text: 'Back to selection',
             key: 'back-to-selection',
             handleClick: () => {
-              appActions.goToPage('MissionSelectionPage', {})
+              appActions.goToPage('HomePage', {})
             },
             visible: true,
           },
@@ -229,7 +229,7 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
             visible: true,
           },
         ]}
-        brandingCallback={() => appActions.goToPage('MissionSelectionPage', {})}
+        brandingCallback={() => appActions.goToPage('HomePage', {})}
         brandingTooltipDescription='Go home.'
       />
       {

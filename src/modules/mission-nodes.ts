@@ -10,6 +10,7 @@ import {
 } from './mission-node-actions'
 import { IMissionMappable } from '../components/content/game/MissionMap'
 import { v4 as generateHash } from 'uuid'
+import axios from 'axios'
 
 export enum ENodeTargetRelation {
   ParentOfTargetAndChildren,
@@ -847,6 +848,25 @@ export class MissionNode implements IMissionMappable {
     this._lastExecutionSucceeded = success
     this._lastExecutionFailed = !success
     this._isOpen = true
+  }
+
+  /**
+   * Fetches available colors for nodes.
+   * @returns {Promise<Array<string>>} A promise that resolves to the available colors.
+   */
+  public static async fetchColors(): Promise<Array<string>> {
+    return new Promise<Array<string>>(async (resolve, reject) => {
+      try {
+        let { data: colors } = await axios.get<Array<string>>(
+          `${Mission.API_ENDPOINT}/colors/`,
+        )
+        resolve(colors)
+      } catch (error) {
+        console.error('Failed to retrieve the color options.')
+        console.error(error)
+        reject(error)
+      }
+    })
   }
 }
 

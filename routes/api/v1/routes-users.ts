@@ -128,7 +128,7 @@ router.get(
               return response.sendStatus(500)
             } else {
               databaseLogger.info('All users retrieved.')
-              return response.json({ users: users })
+              return response.json(users)
             }
           })
       } catch (error) {
@@ -150,7 +150,7 @@ router.get(
               return response.sendStatus(404)
             } else {
               databaseLogger.info(`User with ID "${userID}" retrieved.`)
-              return response.json({ user: user })
+              return response.json(user)
             }
           })
       } catch (error) {

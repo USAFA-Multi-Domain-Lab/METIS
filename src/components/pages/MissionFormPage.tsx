@@ -1,12 +1,6 @@
 import { useBeforeunload } from 'react-beforeunload'
 import { useEffect, useState } from 'react'
-import {
-  createMission,
-  getMission,
-  getMissionNodeColorOptions,
-  Mission,
-  saveMission,
-} from '../../modules/missions'
+import { createMission, Mission, saveMission } from '../../modules/missions'
 import { EAjaxStatus } from '../../modules/toolbox/ajax'
 import MissionMap from '../content/game/MissionMap'
 import './MissionFormPage.scss'
@@ -24,6 +18,7 @@ import MissionEntry from '../content/edit-mission/MissionEntry'
 import NodeEntry from '../content/edit-mission/NodeEntry'
 import NodeStructuring from '../content/edit-mission/NodeStructuring'
 import { User } from 'src/modules/users'
+import { useMountHandler } from 'src/modules/hooks'
 
 export interface IMissionFormPage extends IPage {
   // If null, a new mission is being
@@ -40,9 +35,11 @@ export default function MissionFormPage(
   let appState: AppState = props.appState
   let appActions: AppActions = props.appActions
 
+  // Extract app state.
+  const { beginLoading, finishLoading, handleError, notify } = appActions
+
   /* -- COMPONENT STATE -- */
 
-  const [mountHandled, setMountHandled] = useState<boolean>()
   const [forcedUpdateCounter, setForcedUpdateCounter] = useState<number>(0)
   const [mission, setMission] = useState<Mission | null>(null)
   const [areUnsavedChanges, setAreUnsavedChanges] = useState<boolean>(false)
@@ -63,56 +60,27 @@ export default function MissionFormPage(
 
   /* -- COMPONENT EFFECTS -- */
 
-  // Equivalent of componentDidMount.
-  useEffect(() => {
-    if (!mountHandled) {
-      getMissionNodeColorOptions((colorOptions: Array<string>) => {
-        appState.setMissionNodeColors(colorOptions)
-      })
+  const [mountHandled, remount] = useMountHandler(async (done) => {
+    let missionID: string | null = props.missionID
+    let existsInDatabase: boolean = missionID !== null
 
-      let existsInDatabase: boolean
-      let missionID: string | null = props.missionID
-
-      // Creating a new mission.
-      if (missionID === null) {
-        let mission = new Mission(
-          '',
-          'New Mission',
-          'Enter your overview message here.',
-          1,
-          false,
-          5,
-          {},
-          [],
-          '',
-        )
-        existsInDatabase = false
-        setMission(mission)
-        setAreUnsavedChanges(true)
-        setMountHandled(true)
-      }
-      // Editing an existing mission.
-      else {
-        appActions.beginLoading('Loading mission...')
-
-        getMission(
-          missionID,
-          (mission: Mission) => {
-            setMission(mission)
-            appActions.finishLoading()
-          },
-          () => {
-            appActions.finishLoading()
-            appActions.handleError('Failed to load mission.')
-          },
-          { openAllNodes: true },
-        )
-        existsInDatabase = true
-        setExistsInDatabase(existsInDatabase)
-        setMountHandled(true)
+    // Handle the editing of an existing user.
+    if (existsInDatabase) {
+      try {
+        beginLoading('Loading user...')
+        setMission(await Mission.fetchOne(missionID!))
+      } catch {
+        handleError('Failed to load mission.')
       }
     }
-  }, [mountHandled])
+
+    // Finish loading.
+    finishLoading()
+    // Update existsInDatabase state.
+    setExistsInDatabase(existsInDatabase)
+    // Mark mount as handled.
+    done()
+  })
 
   // Guards against refreshing or navigating away
   // with unsaved changes.

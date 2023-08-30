@@ -448,7 +448,7 @@ router.get(
             return response.sendStatus(500)
           } else {
             databaseLogger.info('All missions retrieved.')
-            return response.json({ missions })
+            return response.json(missions)
           }
         })
     } else {
@@ -470,7 +470,7 @@ router.get(
             return response.sendStatus(401)
           } else {
             databaseLogger.info(`Mission with ID "${missionID}" retrieved.`)
-            return response.json({ mission })
+            return response.json(mission)
           }
         })
     }
@@ -558,7 +558,7 @@ router.get('/environment/', defineRequests({}), (request, response) => {
 // color options that can be used to
 // style a mission-node.
 router.get('/colors/', defineRequests({}), (request, response) => {
-  response.json({ colorOptions })
+  response.json(colorOptions)
 })
 
 // -- GET /api/v1/missions/assets/

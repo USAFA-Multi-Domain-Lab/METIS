@@ -3,7 +3,6 @@ import {
   hasPermittedRole,
   requireConnection,
   requireLogin,
-  userRoles,
 } from '../../../user'
 import MissionModel from '../../../database/models/model-mission'
 import { databaseLogger, gameLogger } from '../../../modules/logging'
@@ -42,9 +41,7 @@ router.post(
         // Handle mission not live.
         else if (
           !missionData.live &&
-          !hasPermittedRole(request, {
-            permittedRoles: [userRoles.Instructor, userRoles.Admin],
-          })
+          !hasPermittedRole(request, ['instructor', 'admin'])
         ) {
           return response.sendStatus(401)
         }

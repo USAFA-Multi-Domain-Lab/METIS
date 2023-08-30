@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useStore } from 'react-context-hook'
-import { fullAccessRoles, User, userRoles } from '../../../modules/users'
+import { TMetisSession, TUserRole, User } from '../../../modules/users'
 import { Detail, DetailDropDown } from '../form/Form'
 import Toggle from '../user-controls/Toggle'
 import './CreateUserEntry.scss'
@@ -20,18 +20,22 @@ export default function CreateUserEntry(props: {
   setUserEmptyStringArray: (userEmptyString: Array<string>) => void
   handleChange: () => void
 }): JSX.Element | null {
+  /* -- COMPONENT PROPERTIES -- */
+
   let user: User = props.user
   let userEmptyStringArray: Array<string> = props.userEmptyStringArray
   let setUserEmptyStringArray = props.setUserEmptyStringArray
   let handleChange = props.handleChange
 
   /* -- GLOBAL STATE -- */
-  const [currentUser] = useStore<User>('currentUser')
+
+  const [session] = useStore<TMetisSession>('session')
   const [forcedUpdateCounter, setForcedUpdateCounter] = useStore<number>(
     'forcedUpdateCounter',
   )
 
   /* -- COMPONENT STATE -- */
+
   const [deliverUsernameError, setDeliverUsernameError] =
     useState<boolean>(false)
   const [deliverFirstNameError, setDeliverFirstNameError] =
@@ -65,6 +69,16 @@ export default function CreateUserEntry(props: {
   const [selectedRoleClassName, setSelectedRoleClassName] =
     useState<string>('DefaultValue')
 
+  /* -- SESSION-SPECIFIC LOGIC -- */
+
+  // Require session.
+  if (session === null) {
+    return null
+  }
+
+  // Extract properties from session.
+  let { user: currentUser } = session
+
   /* -- COMPONENT FUNCTIONS -- */
 
   const forceUpdate = () => {
@@ -79,24 +93,22 @@ export default function CreateUserEntry(props: {
     })
   }
 
-  /* -- RENDER -- */
+  /* -- PRE-RENDER PROCESSING -- */
 
   let passwordLabel: string = 'Password'
   let confirmPasswordLabel: string = 'Confirm Password'
-  let listOfRoles: string[] = [userRoles.Student]
+  let listOfRoles: Array<TUserRole> = ['student']
 
-  if (
-    currentUser &&
-    currentUser.role &&
-    fullAccessRoles.includes(currentUser.role)
-  ) {
-    listOfRoles.push(userRoles.Instructor)
+  if (currentUser.hasFullAccess) {
+    listOfRoles.push('instructor')
   }
 
   if (user.needsPasswordReset) {
     passwordLabel = 'Temporary Password'
     confirmPasswordLabel = 'Confirm Temporary Password'
   }
+
+  /* -- RENDER -- */
 
   return (
     <div className='CreateUserEntry'>
@@ -140,20 +152,20 @@ export default function CreateUserEntry(props: {
           placeholder: 'Enter a username here...',
         }}
       />
-      <DetailDropDown<string>
+      <DetailDropDown<TUserRole>
         label='Role'
         options={listOfRoles}
         currentValue={user.role}
         isExpanded={false}
         uniqueDropDownStyling={{}}
-        uniqueOptionStyling={(role: string) => {
+        uniqueOptionStyling={(role: TUserRole) => {
           return {}
         }}
-        renderOptionClassName={(role: string) => {
+        renderOptionClassName={(role: TUserRole) => {
           return ''
         }}
-        renderDisplayName={(role: string) => role}
-        deliverValue={(role: string) => {
+        renderDisplayName={(role: TUserRole) => role}
+        deliverValue={(role: TUserRole) => {
           user.role = role
           setRoleClassName('Correct')
           setSelectedRoleClassName('Correct')

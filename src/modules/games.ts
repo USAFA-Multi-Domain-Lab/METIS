@@ -610,7 +610,7 @@ export class GameClient extends Game<User> {
   ): GameClient {
     let mission: Mission = Mission.fromJSON(json.mission)
     let participants: Array<User> = json.participants.map(
-      (userJSON: IUserJSON) => User.fromJSON(userJSON),
+      (userJSON) => new User(userJSON),
     )
     return new GameClient(json.gameID, mission, participants, server)
   }
