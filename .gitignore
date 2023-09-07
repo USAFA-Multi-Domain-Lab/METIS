@@ -1,13 +1,16 @@
 
 # packages
 /node_modules
+/server/node_modules
+/client/node_modules
+/shared/node_modules
 npm-debug.log*
 /coverage
 /.nyc_output
 /.nyc_output/processinfo
 
 # react
-/build
+/client/build
 
 # env
 .DS_Store
@@ -21,11 +24,11 @@ environment-test.json
 .vscode
 
 # log
-/logs
+/server/logs
 *.log
 
 # temp
-/temp
+/server/temp
 
 # backup
-/database/backups
+/server/database/backups

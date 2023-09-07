@@ -9,6 +9,18 @@
       {
         "label": "off"
       }
+    ],
+    "compat-api/css": [
+      "default",
+      {
+        "ignore": [
+          "width: fit-content",
+          "user-select",
+          "height: fit-content",
+          "user-select: all",
+          "scrollbar-color"
+        ]
+      }
     ]
   }
 }

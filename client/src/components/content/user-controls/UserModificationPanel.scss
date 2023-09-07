@@ -1,0 +1,14 @@
+@import '~assets/styles/config.scss';
+
+.UserModificationPanel {
+  display: flex;
+  box-sizing: border-box;
+  margin-top: -40px;
+  margin-left: auto;
+  justify-content: flex-end;
+  align-items: center;
+  flex-flow: row wrap;
+  width: fit-content;
+  height: 40px;
+  padding-right: 15px;
+}

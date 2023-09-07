@@ -1,0 +1,207 @@
+@import '~assets/styles/config.scss';
+
+.Detail {
+  margin: 20px 8% 0;
+  min-width: 225px;
+
+  .FieldErrorMessage {
+    font-size: 0.7em;
+    color: $color-error-alt;
+    margin-top: 5px;
+
+    &.hide {
+      display: none;
+    }
+  }
+
+  .Label {
+    user-select: none;
+    margin: 11px 0 0;
+    width: 100%;
+    font-size: 12.5px;
+
+    &.Correct {
+      color: $color-correct;
+    }
+
+    &.Error {
+      color: $color-error-alt;
+    }
+  }
+
+  @mixin fieldDimensions() {
+    box-sizing: border-box;
+    margin: 8px 0 0;
+    border-top: 2px solid $color-main;
+    border-bottom: 2px solid $color-main;
+    width: 100%;
+    padding: 11px 10px 11px;
+  }
+
+  .InputContainer {
+    display: grid;
+    grid-template-columns: auto;
+
+    &.Password {
+      grid-template-columns: auto 55px;
+    }
+  }
+
+  .Field {
+    @include fieldDimensions();
+    box-shadow: $box-shadow-alt6;
+    color: $color-accent-light;
+    font-size: 14px;
+
+    &.Correct {
+      border-top: 2px solid $color-correct;
+      border-bottom: 2px solid $color-correct;
+      color: $color-correct;
+    }
+
+    &.Error {
+      border-top: 2px solid $color-error-alt;
+      border-bottom: 2px solid $color-error-alt;
+      color: $color-error-alt;
+
+      &::placeholder {
+        color: $color-error-alt;
+      }
+    }
+
+    &::placeholder {
+      color: $color-main;
+    }
+  }
+
+  .TogglePasswordDisplayContainer {
+    @include fieldDimensions();
+    display: grid;
+    justify-content: flex-end;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  &.DetailNumber {
+    .Unit {
+      pointer-events: none;
+      @include fieldDimensions();
+      margin-bottom: -51px;
+      border-color: transparent;
+      height: 43px;
+      padding-right: 15px;
+      text-align: right;
+      font-size: 14px;
+      font-weight: bold;
+    }
+  }
+
+  &.DetailBox {
+    .Field {
+      overflow-y: hidden;
+      resize: none;
+
+      &.Error {
+        border-top: 2px solid $color-error-alt;
+        border-bottom: 2px solid $color-error-alt;
+        color: $color-error-alt;
+      }
+    }
+
+    .FieldErrorMessage {
+      font-size: 0.7em;
+      color: $color-error-alt;
+      margin-top: 5px;
+
+      &.hide {
+        display: none;
+      }
+    }
+  }
+
+  &.DetailDropDown {
+    .Field {
+      .Option.Selected {
+        display: grid;
+        grid-template-columns: auto 20px;
+        cursor: pointer;
+        user-select: none;
+
+        .Indicator {
+          display: inline-block;
+          font-size: 16px;
+        }
+
+        .Text {
+          color: $color-accent-light;
+
+          &.Correct {
+            color: $color-correct;
+          }
+
+          &.DefaultValue {
+            color: $color-main;
+            opacity: 0.775;
+          }
+        }
+      }
+
+      .AllOptions {
+        .Option {
+          cursor: pointer;
+          user-select: none;
+          padding: 5px 0 5px;
+
+          &:first-child {
+            padding: 0;
+          }
+
+          &:nth-child(2) {
+            margin: 20px 0 0;
+          }
+        }
+      }
+
+      &.IsCollapsed {
+        .Option.Selected {
+          .Indicator {
+            transform: scale(1.25, 0.75);
+          }
+        }
+
+        .Option:not(.Selected) {
+          display: none;
+        }
+      }
+
+      &.IsExpanded {
+        .Option.Selected {
+          .Indicator {
+            transform: scale(1.25, -0.75);
+          }
+        }
+      }
+    }
+  }
+
+  &.DetailBox {
+    * {
+      transition: transform 250ms, opacity 250ms;
+    }
+
+    .Field {
+      overflow-y: hidden;
+      resize: none;
+    }
+
+    &.Disabled {
+      pointer-events: none;
+      opacity: unset;
+
+      * {
+        transform: scale(0.8);
+        opacity: 0.65;
+      }
+    }
+  }
+}

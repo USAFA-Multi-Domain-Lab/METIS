@@ -1,0 +1,29 @@
+@import '~assets/styles/config.scss';
+
+.ChangelogPage {
+  $page-padding-top: 0px;
+  $page-padding-bottom: 35px;
+  $page-horizontal-padding: 0px;
+  $page-width: calc(100vw - #{$page-horizontal-padding * 2});
+  width: $page-width;
+  padding: $page-padding-top $page-horizontal-padding $page-padding-bottom;
+  box-shadow: $box-shadow-alt1;
+
+  .Navigation {
+    $nav-vertical-padding: 10px;
+    $nav-horizontal-padding: 30px;
+
+    grid-template-columns: auto 160px 130px;
+    width: calc($page-width - $nav-horizontal-padding * 2);
+    padding: $nav-vertical-padding $nav-horizontal-padding;
+    margin: 0 0 65px;
+  }
+
+  .Changelog {
+    margin: 0 55px 0;
+    padding: 25px 40px;
+    border: 3px solid $color-main;
+    border-radius: 15px;
+    background-color: $color-negative;
+  }
+}

@@ -1,0 +1,43 @@
+{
+  "name": "metis-server",
+  "version": "2.0.0",
+  "description": "",
+  "main": "start.ts",
+  "scripts": {
+    "start": "ts-node -r tsconfig-paths/register start"
+  },
+  "author": "Jordan M. Stokes",
+  "license": "ISC",
+  "dependencies": {
+    "@types/bcryptjs": "^2.4.2",
+    "@types/cookie-parser": "^1.4.3",
+    "@types/cors": "^2.8.13",
+    "@types/dateformat": "^3.0.1",
+    "@types/express": "^4.17.17",
+    "@types/express-session": "^1.17.7",
+    "@types/express-winston": "^4.0.0",
+    "@types/express-ws": "^3.0.1",
+    "@types/multer": "^1.4.7",
+    "@types/node": "^20.5.7",
+    "@types/typescript": "^2.0.0",
+    "@types/uuid": "^9.0.2",
+    "@types/winston": "^2.4.4",
+    "bcryptjs": "^2.4.3",
+    "connect-mongo": "^4.6.0",
+    "cookie-parser": "^1.4.6",
+    "cors": "^2.8.5",
+    "dateformat": "^3.0.3",
+    "express": "^4.18.2",
+    "express-session": "^1.17.3",
+    "express-winston": "^4.2.0",
+    "express-ws": "^5.0.2",
+    "metis": "file:../shared",
+    "mongoose": "^6.11.2",
+    "multer": "^1.4.5-lts.1",
+    "pug": "^3.0.2",
+    "tsconfig-paths": "^4.2.0",
+    "typescript": "^5.2.2",
+    "uuid": "^9.0.0",
+    "winston": "^3.10.0"
+  }
+}

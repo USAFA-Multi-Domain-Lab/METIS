@@ -1,0 +1,81 @@
+@import '~assets/styles/config.scss';
+
+.ExecuteNodePath {
+  box-sizing: border-box;
+  z-index: 100;
+  width: 350px;
+  margin: 0 auto;
+  border: 2px solid $color-main;
+  height: fit-content;
+  box-shadow: $box-shadow-alt2;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-bottom: 15px;
+
+  .PromptDisplayText {
+    font-size: 0.95em;
+    margin: 5px 15px 10px 20px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    list-style-type: none;
+    height: fit-content;
+
+    @media only screen and (max-width: 655px) {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  }
+
+  .Close {
+    width: calc(100% - 10px);
+    margin: 0;
+    padding: 10px 10px 10px 0;
+  }
+
+  .Buttons {
+    display: grid;
+    grid-template-columns: auto auto;
+    place-content: start;
+    margin: 0 15px 0 20px;
+
+    .Button {
+      text-align: center;
+      margin: 0 15px 15px 0;
+      color: $color-accent-light;
+      box-shadow: $box-shadow-alt2;
+      padding: 5px;
+      border: 2px solid $color-main;
+      border-radius: 4px;
+      height: fit-content;
+      width: fit-content;
+
+      &:hover {
+        cursor: pointer;
+        box-shadow: none;
+        background-color: $background-alt2;
+      }
+
+      &.Disabled:hover {
+        cursor: default;
+        box-shadow: $box-shadow-alt2;
+        color: $color-accent-light;
+      }
+
+      @media only screen and (max-width: 655px) {
+        width: auto;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+    }
+
+    .ExecutionButton {
+      &:hover {
+        color: $terminal-red;
+        box-shadow: none;
+        background-color: $color-negative;
+      }
+    }
+  }
+}

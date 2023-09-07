@@ -1,0 +1,100 @@
+@import '~assets/styles/config.scss';
+
+.MiniButtonSVG {
+  $border-radius: 15px;
+  display: inline-block;
+  -webkit-user-select: none;
+  user-select: none;
+  cursor: pointer;
+  transition: 500ms transform, 500ms background-size, 500ms background-position,
+    500ms opacity;
+  margin: 0 5px;
+  border: 3px solid $color-main;
+  border-radius: $border-radius;
+  width: 40px;
+  height: 38px;
+  padding-left: 0.75px;
+  font-size: 28px;
+  line-height: 36px;
+  font-weight: 700;
+  vertical-align: top;
+  text-align: center;
+
+  &.cancel:hover,
+  &.add:hover,
+  &.edit:hover,
+  &.remove:hover,
+  &.down:hover,
+  &.reorder:hover,
+  &.zoom-in:hover,
+  &.zoom-out:hover,
+  &.save:hover,
+  &.copy:hover,
+  &.upload:hover,
+  &.download:hover {
+    filter: invert(68%) sepia(94%) saturate(322%) hue-rotate(117deg)
+      brightness(200%) contrast(98%);
+  }
+
+  @mixin background($url, $background-position: center) {
+    background: url($url);
+    background-repeat: no-repeat;
+    background-size: 65% 65%;
+    background-position: $background-position;
+    width: 1em;
+    height: 1em;
+    border: none;
+  }
+
+  &.cancel {
+  }
+
+  &.add {
+  }
+
+  &.edit {
+    @include background('../../../assets/images/icons/edit.svg');
+  }
+
+  &.remove {
+    @include background('../../../assets/images/icons/remove.svg');
+  }
+
+  &.down {
+    @include background('../../../assets/images/icons/down.svg');
+  }
+
+  &.reorder {
+    @include background('../../../assets/images/icons/reorder.svg');
+  }
+
+  &.zoom-in {
+    @include background('../../../assets/images/icons/zoom-in.svg');
+  }
+
+  &.zoom-out {
+    @include background('../../../assets/images/icons/zoom-out.svg');
+  }
+
+  &.save {
+    @include background('../../../assets/images/icons/save.svg');
+  }
+
+  &.copy {
+    @include background('../../../assets/images/icons/copy.svg');
+  }
+
+  &.upload {
+    @include background(
+      '../../../assets/images/icons/upload.svg',
+      $background-position: center 75%
+    );
+  }
+
+  &.download {
+    @include background(
+      $url: '../../../assets/images/icons/download.svg',
+      $background-position: center 75%
+    );
+  }
+}

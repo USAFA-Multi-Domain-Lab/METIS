@@ -1,0 +1,33 @@
+@import '~assets/styles/config.scss';
+
+.ConsoleOutput {
+  .Text {
+    display: block;
+    padding: 15px 0;
+    font-size: 0.75em;
+    list-style-type: none;
+    word-wrap: break-word;
+    white-space: pre-line;
+
+    .SelectedActionPropertyList {
+      padding: 15px 0 0 15px;
+      .SelectedActionProperty {
+        list-style: none;
+        text-decoration: none;
+        margin: -3px auto;
+      }
+    }
+
+    .LineCursor {
+      color: $terminal;
+    }
+
+    .succeeded {
+      color: $terminal-success;
+    }
+
+    .failed {
+      color: $terminal-fail;
+    }
+  }
+}

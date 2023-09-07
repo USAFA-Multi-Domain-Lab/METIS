@@ -1,0 +1,44 @@
+@import '~assets/styles/config.scss';
+
+.ActionPropertyDisplay {
+  border: 2px solid $border-color-main;
+  border-radius: 10px;
+  font-size: 14px;
+  margin: 20px 15px 20px 20px;
+
+  .TimeToExecute,
+  .ChosenNodeAction,
+  .SuccessChance,
+  .ResourceCost,
+  .Description {
+    margin: 10px 0;
+    padding: 0 5px;
+    color: $terminal;
+
+    span {
+      color: $terminal;
+      text-decoration: underline;
+    }
+  }
+}
+
+.hide {
+  display: none;
+}
+
+@media only screen and (max-width: 655px) {
+  .ActionPropertyDisplay {
+    padding-left: 5px;
+    .TimeToExecute,
+    .ChosenNodeAction,
+    .SuccessChance,
+    .ResourceCost,
+    .Description {
+      margin: 5px 0 0 5px;
+      padding: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  }
+}

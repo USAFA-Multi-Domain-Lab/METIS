@@ -1,0 +1,40 @@
+@import '~assets/styles/config.scss';
+
+.Navigation {
+  position: sticky;
+  top: 0;
+  display: grid;
+  grid-template-columns: auto 130px;
+  margin: 0 auto;
+  width: 100%;
+  height: $nav-height;
+  vertical-align: bottom;
+  box-shadow: $box-shadow-alt3;
+  border-bottom: 2px solid $color-main;
+  z-index: 100;
+
+  .Branding {
+    background-position-x: 0;
+    margin-left: 30px;
+  }
+
+  .LinkContainer {
+    display: grid;
+    place-items: center;
+    align-items: center;
+
+    .Link {
+      -webkit-user-select: none;
+      user-select: none;
+      transition: opacity 175ms;
+      padding: 10px;
+
+      &:hover {
+        cursor: pointer;
+        border: 2px solid $color-accent;
+        border-radius: 5px;
+        margin: 0 10px;
+      }
+    }
+  }
+}
