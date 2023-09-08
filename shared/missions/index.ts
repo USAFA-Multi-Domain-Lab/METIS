@@ -1,15 +1,15 @@
-import { Counter } from 'metis/toolbox/numbers'
+import { Counter } from '../toolbox/numbers'
 import seedrandom, { PRNG } from 'seedrandom'
 import { v4 as generateHash } from 'uuid'
 import axios, { AxiosError, AxiosResponse } from 'axios'
-import { AnyObject } from 'metis/toolbox/objects'
+import { AnyObject } from '../toolbox/objects'
 import MissionNode, {
   ENodeTargetRelation,
   IMissionNodeJSON as IMissionNodeJSON,
   MissionNodeCreator,
-} from 'metis/missions/nodes'
-import { IConsoleOutput } from 'metis/console'
-import { IUserJSON } from 'metis/users'
+} from '../missions/nodes'
+import { IConsoleOutput } from '../console'
+import { IUserJSON } from '../users'
 
 // This is the method that the clone
 // function in the Mission class uses

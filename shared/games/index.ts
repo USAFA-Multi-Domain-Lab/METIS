@@ -1,7 +1,7 @@
-import Mission, { IMissionJSON } from 'metis/missions'
-import { IUserJSON } from 'metis/users'
-import context from 'metis/context'
-import MissionNodeAction from 'metis/missions/actions'
+import Mission, { IMissionJSON } from '../missions'
+import { IUserJSON } from '../users'
+import context from '../context'
+import MissionNodeAction from '../missions/actions'
 import axios, { AxiosError } from 'axios'
 
 export interface IGameJSON {

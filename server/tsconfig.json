@@ -5,7 +5,8 @@
     "paths": {
       "*": ["node_modules/*"],
       "metis/server": ["index.ts"],
-      "metis/server/*": ["*"]
+      "metis/server/*": ["*"],
+      "metis/*": ["../shared/*"]
     }
   }
 }

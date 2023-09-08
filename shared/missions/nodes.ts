@@ -3,11 +3,9 @@
 // function to describe the
 // purpose of the target
 
-import Mission from 'metis/missions'
-import MissionNodeAction, {
-  IMissionNodeActionJSON,
-} from 'metis/missions/actions'
-import { IMissionMappable } from 'metis/missions'
+import Mission from '../missions'
+import MissionNodeAction, { IMissionNodeActionJSON } from '../missions/actions'
+import { IMissionMappable } from '../missions'
 import { v4 as generateHash } from 'uuid'
 import axios from 'axios'
 

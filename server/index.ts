@@ -283,7 +283,7 @@ export default class MetisServer {
       expressApp.use(express.json())
 
       // links the file path to css and resource files
-      expressApp.use(express.static('build'))
+      expressApp.use(express.static(path.resolve(__dirname, '../client/build')))
 
       // This will do clean up when the application
       // terminates.

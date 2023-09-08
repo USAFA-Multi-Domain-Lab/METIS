@@ -1,6 +1,6 @@
 import User from 'metis/users'
 import ClientConnection from 'metis/server/connect/clients'
-import { TMetisSessionJSON } from 'metis/session'
+import { TMetisSessionJSON } from 'metis/sessions'
 
 /**
  * Express sessions are limited in what they can store. This class expands the functionality of sessions in METIS.

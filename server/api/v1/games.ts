@@ -1,4 +1,4 @@
-import express, { Request, Response } from 'express'
+import { Request, Response } from 'express'
 import expressWs from 'express-ws'
 import {
   hasPermittedRole,

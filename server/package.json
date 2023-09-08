@@ -31,7 +31,6 @@
     "express-session": "^1.17.3",
     "express-winston": "^4.2.0",
     "express-ws": "^5.0.2",
-    "metis": "file:../shared",
     "mongoose": "^6.11.2",
     "multer": "^1.4.5-lts.1",
     "pug": "^3.0.2",
