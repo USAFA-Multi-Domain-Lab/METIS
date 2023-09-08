@@ -34,7 +34,7 @@ export interface IUserJSONExposed {
 /**
  * All possible user roles in METIS.
  */
-export type TUserRole = 'student' | 'instructor' | 'admin'
+export type TUserRole = 'Select a role' | 'student' | 'instructor' | 'admin'
 
 /**
  * Represents a user using METIS.
@@ -185,7 +185,7 @@ export default class User {
     userID: '',
     firstName: '',
     lastName: '',
-    role: 'student',
+    role: 'Select a role',
     needsPasswordReset: false,
   }
   /**

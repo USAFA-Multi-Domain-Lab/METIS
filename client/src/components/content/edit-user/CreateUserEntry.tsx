@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { TMetisSession } from '../../../../../shared/sessions'
 import User, { TUserRole } from '../../../../../shared/users'
 import { Detail, DetailDropDown } from '../form/Form'
 import Toggle from '../user-controls/Toggle'
@@ -32,7 +31,6 @@ export default function CreateUserEntry(props: {
 
   const globalContext = useGlobalContext()
   const [session] = globalContext.session
-  const { forceUpdate } = globalContext.actions
 
   /* -- COMPONENT STATE -- */
 
@@ -120,11 +118,7 @@ export default function CreateUserEntry(props: {
             removeUserEmptyString('userID')
             setDeliverUsernameError(false)
             setUsernameClassName('Correct')
-            if (user.canSave) {
-              handleChange()
-            } else {
-              forceUpdate()
-            }
+            handleChange()
           }
 
           if (userID === '' && !userIDIsValid) {
@@ -165,11 +159,7 @@ export default function CreateUserEntry(props: {
           user.role = role
           setRoleClassName('Correct')
           setSelectedRoleClassName('Correct')
-          if (user.canSave) {
-            handleChange()
-          } else {
-            forceUpdate()
-          }
+          handleChange()
         }}
         optional={{
           uniqueLabelClassName: roleClassName,
@@ -186,11 +176,7 @@ export default function CreateUserEntry(props: {
             removeUserEmptyString('firstName')
             setDeliverFirstNameError(false)
             setCreateFirstNameClassName('Correct')
-            if (user.canSave) {
-              handleChange()
-            } else {
-              forceUpdate()
-            }
+            handleChange()
           } else {
             setDeliverFirstNameError(true)
             setUserEmptyStringArray([
@@ -216,11 +202,7 @@ export default function CreateUserEntry(props: {
             removeUserEmptyString('lastName')
             setDeliverLastNameError(false)
             setCreateLastNameClassName('Correct')
-            if (user.canSave) {
-              handleChange()
-            } else {
-              forceUpdate()
-            }
+            handleChange()
           } else {
             setDeliverLastNameError(true)
             setUserEmptyStringArray([...userEmptyStringArray, `field=lastName`])
@@ -246,11 +228,7 @@ export default function CreateUserEntry(props: {
             removeUserEmptyString('password1')
             setDeliverPassword1Error(false)
             setPassword1ClassName('Correct')
-            if (user.canSave) {
-              handleChange()
-            } else {
-              forceUpdate()
-            }
+            handleChange()
           }
 
           if (password === '') {
@@ -304,11 +282,7 @@ export default function CreateUserEntry(props: {
             removeUserEmptyString('password2')
             setDeliverPassword2Error(false)
             setPassword2ClassName('Correct')
-            if (user.canSave) {
-              handleChange()
-            } else {
-              forceUpdate()
-            }
+            handleChange()
           }
 
           if (!passwordIsValid && password !== '') {

@@ -9,6 +9,30 @@ import Toggle, { EToggleLockState } from '../user-controls/Toggle'
 import Tooltip from '../communication/Tooltip'
 import { AnyObject } from '../../../../../shared/toolbox/objects'
 
+type TInput =
+  | 'button'
+  | 'checkbox'
+  | 'color'
+  | 'date'
+  | 'datetime-local'
+  | 'email'
+  | 'file'
+  | 'hidden'
+  | 'image'
+  | 'month'
+  | 'number'
+  | 'password'
+  | 'radio'
+  | 'range'
+  | 'reset'
+  | 'search'
+  | 'submit'
+  | 'tel'
+  | 'text'
+  | 'time'
+  | 'url'
+  | 'week'
+
 interface IDetail {
   label: string
   initialValue: string | null
@@ -18,7 +42,7 @@ interface IDetail {
     deliverErrorMessage?: string // defaults to ''
     uniqueLabelClassName?: string // defaults to ''
     uniqueInputClassName?: string // defaults to ''
-    inputType?: string // defaults to 'text'
+    inputType?: TInput // defaults to 'text'
     placeholder?: string // defaults to undefined
   }
 }
@@ -145,6 +169,7 @@ export class Detail extends React.Component<IDetail, IDetail_S> {
             onClick={() => this.togglePasswordDisplay()}
             type='button'
             value={this.state.displayPasswordText}
+            disabled={inputTypePassed !== 'password'}
           />
         </div>
         <div className={fieldErrorClassName}>{errorMessage}</div>
