@@ -2,12 +2,12 @@
   "extends": "../tsconfig.base.json",
   "compilerOptions": {
     "jsx": "react-jsx",
-    "baseUrl": "./src",
-    "paths": {
-      "*": ["../node_modules/*"],
-      "metis/client/*": ["*"],
-      "metis/*": ["../../shared/*"]
-    }
+    "baseUrl": "."
+    // "paths": {
+    //   "*": ["../node_modules/*"],
+    //   "src/*": ["*"],
+    //   "metis/*": ["../../shared/*"]
+    // }
   },
-  "include": ["src", "../shared", "../server/effects/effect-data.ts"]
+  "include": ["src", "src/setupProxy.js"]
 }

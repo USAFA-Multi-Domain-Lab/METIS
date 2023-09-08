@@ -1,9 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react'
 import './AuthPage.scss'
-import User from 'metis/users'
+import User from '../../../../shared/users'
 import { IPage } from '../App'
-import { AnyObject } from 'metis/toolbox/objects'
-import { useGlobalContext } from 'metis/client/context'
+import { AnyObject } from '../../../../shared/toolbox/objects'
+import { useGlobalContext } from 'src/context'
 
 export interface IAuthPageSpecific {
   returningPagePath: string

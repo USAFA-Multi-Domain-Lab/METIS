@@ -1,8 +1,10 @@
-import MissionNodeAction, { IScript } from 'metis/missions/actions'
+import MissionNodeAction, {
+  IScript,
+} from '../../../../../shared/missions/actions'
 import './NodeActionAsset.scss'
 import Tooltip from '../communication/Tooltip'
 import { useState } from 'react'
-import { AnyObject } from 'metis/toolbox/objects'
+import { AnyObject } from '../../../../../shared/toolbox/objects'
 import AssetOption from './AssetOption'
 
 const assetData = {}

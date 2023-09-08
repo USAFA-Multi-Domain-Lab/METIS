@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import User from 'metis/users'
+import User from '../../../../../shared/users'
 import { Detail } from '../form/Form'
 import './EditUserEntry.scss'
 

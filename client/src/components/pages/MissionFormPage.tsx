@@ -1,12 +1,17 @@
 import { useBeforeunload } from 'react-beforeunload'
 import { useState } from 'react'
-import Mission, { createMission, saveMission } from 'metis/missions'
-import { EAjaxStatus } from 'metis/toolbox/ajax'
+import Mission, {
+  createMission,
+  saveMission,
+} from '../../../../shared/missions'
+import { EAjaxStatus } from '../../../../shared/toolbox/ajax'
 import MissionMap from '../content/game/MissionMap'
 import './MissionFormPage.scss'
 import { IPage } from '../App'
-import MissionNode, { ENodeDeleteMethod } from 'metis/missions/nodes'
-import MissionNodeAction from 'metis/missions/actions'
+import MissionNode, {
+  ENodeDeleteMethod,
+} from '../../../../shared/missions/nodes'
+import MissionNodeAction from '../../../../shared/missions/actions'
 import Navigation from '../content/general-layout/Navigation'
 import {
   EPanelSizingMode,
@@ -16,9 +21,8 @@ import {
 import MissionEntry from '../content/edit-mission/MissionEntry'
 import NodeEntry from '../content/edit-mission/NodeEntry'
 import NodeStructuring from '../content/edit-mission/NodeStructuring'
-import User from 'metis/users'
-import { useMountHandler } from 'metis/client/toolbox/hooks'
-import { useGlobalContext } from 'metis/client/context'
+import { useMountHandler } from 'src/toolbox/hooks'
+import { useGlobalContext } from 'src/context'
 
 export interface IMissionFormPage extends IPage {
   // If null, a new mission is being

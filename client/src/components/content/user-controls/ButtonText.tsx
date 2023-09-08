@@ -1,7 +1,7 @@
 import React from 'react'
 import Tooltip from '../communication/Tooltip'
 import './ButtonText.scss'
-import { useDefaultProps } from 'metis/client/toolbox/hooks'
+import { useDefaultProps } from 'src/toolbox/hooks'
 
 /* -- interfaces -- */
 

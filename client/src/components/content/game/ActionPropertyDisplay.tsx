@@ -1,5 +1,5 @@
 import './ActionPropertyDisplay.scss'
-import MissionNode from 'metis/missions/nodes'
+import MissionNode from '../../../../../shared/missions/nodes'
 
 const ActionPropertyDisplay = (props: {
   selectedNode: MissionNode | null | undefined

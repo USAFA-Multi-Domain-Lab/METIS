@@ -1,10 +1,10 @@
 import { useState } from 'react'
-import User, { saveUser } from 'metis/users'
+import User, { saveUser } from '../../../../shared/users'
 import { IPage } from '../App'
 import { Detail } from '../content/form/Form'
 import Navigation from '../content/general-layout/Navigation'
 import './UserResetPage.scss'
-import { useGlobalContext } from 'metis/client/context'
+import { useGlobalContext } from 'src/context'
 
 export interface IUserResetPage extends IPage {
   user: User

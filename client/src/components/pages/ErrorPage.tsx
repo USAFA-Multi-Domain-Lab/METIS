@@ -1,8 +1,8 @@
 import { IPage, TAppError } from '../App'
 import './ErrorPage.scss'
 import { ButtonText, IButtonText } from '../content/user-controls/ButtonText'
-import { useDefaultProps, useListComponent } from 'metis/client/toolbox/hooks'
-import { useGlobalContext } from 'metis/client/context'
+import { useDefaultProps, useListComponent } from 'src/toolbox/hooks'
+import { useGlobalContext } from 'src/context'
 
 export interface IErrorPage extends IPage {}
 

@@ -1,10 +1,10 @@
 import { useState } from 'react'
-import { TMetisSession } from 'metis/sessions'
-import User, { TUserRole } from 'metis/users'
+import { TMetisSession } from '../../../../../shared/sessions'
+import User, { TUserRole } from '../../../../../shared/users'
 import { Detail, DetailDropDown } from '../form/Form'
 import Toggle from '../user-controls/Toggle'
 import './CreateUserEntry.scss'
-import { useGlobalContext } from 'metis/client/context'
+import { useGlobalContext } from 'src/context'
 
 /**
  * This will render the forms for creating a new user.

@@ -1,10 +1,12 @@
 import { useState } from 'react'
-import MissionNode, { ENodeTargetRelation } from 'metis/missions/nodes'
-import Mission from 'metis/missions'
+import MissionNode, {
+  ENodeTargetRelation,
+} from '../../../../../shared/missions/nodes'
+import Mission from '../../../../../shared/missions'
 import MoreInformation from '../communication/MoreInformation'
 import Tooltip from '../communication/Tooltip'
 import './NodeStructuring.scss'
-import { useGlobalContext } from 'metis/client/context'
+import { useGlobalContext } from 'src/context'
 
 // This is a enum used to describe
 // the locations that one node can

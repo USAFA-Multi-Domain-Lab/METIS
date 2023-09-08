@@ -1,6 +1,6 @@
 import './LoadingPage.scss'
 import { IPage } from '../App'
-import { useGlobalContext } from 'metis/client/context'
+import { useGlobalContext } from 'src/context'
 
 export interface ILoadingPage extends IPage {}
 

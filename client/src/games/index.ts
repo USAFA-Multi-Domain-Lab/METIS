@@ -1,11 +1,11 @@
 import axios from 'axios'
-import Game, { IGameJSON } from 'metis/games'
-import User from 'metis/users'
-import ServerConnection from 'metis/client/connect/server'
-import Mission from 'metis/missions'
-import MissionNode from 'metis/missions/nodes'
-import MissionNodeAction from 'metis/missions/actions'
-import { TServerData } from 'metis/connect/data'
+import Game, { IGameJSON } from '../../../shared/games'
+import User from '../../../shared/users'
+import ServerConnection from 'src/connect/server'
+import Mission from '../../../shared/missions'
+import MissionNode from '../../../shared/missions/nodes'
+import MissionNodeAction from '../../../shared/missions/actions'
+import { TServerData } from '../../../shared/connect/data'
 
 /**
  * Client instance for games. Handles client-side logic for games. Communicates with server to conduct game.

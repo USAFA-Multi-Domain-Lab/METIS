@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react'
-import Mission, { getMission } from 'metis/missions'
-import { EAjaxStatus } from 'metis/toolbox/ajax'
+import Mission from '../../../../shared/missions'
+import { EAjaxStatus } from '../../../../shared/toolbox/ajax'
 import MissionMap from '../content/game/MissionMap'
 import OutputPanel from '../content/game/OutputPanel'
 import './GamePage.scss'
 import ExecuteNodePath from '../content/game/ExecuteNodePath'
 import NodeActions from '../content/game/NodeActions'
 import { IPage } from '../App'
-import MissionNode from 'metis/missions/nodes'
+import MissionNode from '../../../../shared/missions/nodes'
 import Navigation from '../content/general-layout/Navigation'
 import MissionModificationPanel from '../content/user-controls/MissionModificationPanel'
 import {
@@ -15,10 +15,11 @@ import {
   PanelSizeRelationship,
   ResizablePanel,
 } from '../content/general-layout/ResizablePanels'
-import MissionNodeAction from 'metis/missions/actions'
-import { IConsoleOutput } from 'metis/client/components/content/game/ConsoleOutput'
-import GameClient from 'metis/client/games'
-import { useGlobalContext } from 'metis/client/context'
+import MissionNodeAction from '../../../../shared/missions/actions'
+import { IConsoleOutput } from 'src/components/content/game/ConsoleOutput'
+import GameClient from 'src/games'
+import { useGlobalContext } from 'src/context'
+import { useMountHandler } from 'src/toolbox/hooks'
 
 export interface IGamePage extends IPage {
   game: GameClient
@@ -44,7 +45,6 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
 
   /* -- STATE -- */
 
-  const [mountHandled, setMountHandled] = useState<boolean>(false)
   const [selectedNode, selectNode] = useState<MissionNode | null>(null)
   const [selectedAction, selectAction] = useState<MissionNodeAction | null>(
     null,
@@ -171,14 +171,11 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
 
   /* -- EFFECTS -- */
 
-  // Equivalent of componentDidMount.
-  useEffect(() => {
-    if (!mountHandled) {
-      finishLoading()
-      setMountHandled(true)
-      loop()
-    }
-  }, [mountHandled])
+  useMountHandler((done) => {
+    finishLoading()
+    loop()
+    done()
+  })
 
   // Equivalent of componentWillUnmount.
   useEffect(() => {
@@ -237,46 +234,6 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
             <span style={{ display: 'inline-block', width: '40px' }}></span>
             Game ID: {game.gameID}
           </div>
-          <MissionModificationPanel
-            mission={mission}
-            handleSuccessfulCopy={(resultingMission: Mission) => {
-              // This gives the user the option
-              // to go to the mission they are
-              // copying or return to the current
-              // mission.
-              confirm(
-                'Would you like to go to the copied mission, or return to the current mission?',
-                (concludeAction: () => void) => {
-                  // Return to the current mission
-                  setMountHandled(false)
-                  goToPage('GamePage', {
-                    missionID: mission.missionID,
-                  })
-                  finishLoading()
-                  concludeAction()
-                },
-                {
-                  handleAlternate: (concludeAction: () => void) => {
-                    // Go to the copied mission.
-                    setMountHandled(false)
-                    goToPage('GamePage', {
-                      missionID: resultingMission.missionID,
-                    })
-                    finishLoading()
-                    concludeAction()
-                  },
-                  pendingMessageUponConfirm: 'Launching mission...',
-                  pendingMessageUponAlternate: 'Launching mission...',
-                  buttonConfirmText: 'Current Mission',
-                  buttonAlternateText: 'Copied Mission',
-                },
-              )
-            }}
-            handleSuccessfulDeletion={() => {
-              goToPage('MissionSelectionPage', {})
-            }}
-            handleSuccessfulToggleLive={() => {}}
-          />
         </div>
 
         <PanelSizeRelationship

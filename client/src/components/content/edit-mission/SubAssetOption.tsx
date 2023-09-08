@@ -1,5 +1,5 @@
-import { IScript } from 'metis/missions/actions'
-import { AnyObject } from 'metis/toolbox/objects'
+import { IScript } from '../../../../../shared/missions/actions'
+import { AnyObject } from '../../../../../shared/toolbox/objects'
 import Tooltip from '../communication/Tooltip'
 import './SubAssetOption.scss'
 

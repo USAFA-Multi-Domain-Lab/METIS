@@ -1,9 +1,9 @@
 import './OutputPanel.scss'
-import MissionNode from 'metis/missions/nodes'
+import MissionNode from '../../../../../shared/missions/nodes'
 import ConsoleOutput, { IConsoleOutput } from './ConsoleOutput'
 import { Component } from 'react'
-import MissionNodeAction from 'metis/missions/actions'
-import Mission from 'metis/missions'
+import MissionNodeAction from '../../../../../shared/missions/actions'
+import Mission from '../../../../../shared/missions'
 
 export interface IOutputPanel {
   mission: Mission

@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
 import './NodeActions.scss'
-import MissionNode from 'metis/missions/nodes'
-import MissionNodeAction from 'metis/missions/actions'
+import MissionNode from '../../../../../shared/missions/nodes'
+import MissionNodeAction from '../../../../../shared/missions/actions'
 import Tooltip from '../communication/Tooltip'
-import strings from 'metis/toolbox/strings'
-import Mission from 'metis/missions'
+import strings from '../../../../../shared/toolbox/strings'
+import Mission from '../../../../../shared/missions'
 
 const NodeActions = (props: {
   isOpen: boolean

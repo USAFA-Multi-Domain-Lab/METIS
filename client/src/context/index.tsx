@@ -1,21 +1,22 @@
 import React, { ReactNode, useState } from 'react'
-import ServerConnection from 'metis/client/connect/server'
-import { TMetisSession } from 'metis/sessions'
-import { AnyObject } from 'metis/toolbox/objects'
-import { TAppError, TAppErrorNotifyMethod } from 'metis/client/components/App'
-import Notification from 'metis/client/notifications'
+import ServerConnection from 'src/connect/server'
+import { TMetisSession } from '../../../shared/sessions'
+import ObjectToolbox, { AnyObject } from '../../../shared/toolbox/objects'
+import { TAppError, TAppErrorNotifyMethod } from 'src/components/App'
+import Notification from 'src/notifications'
 import Confirmation, {
   IConfirmation,
-} from 'metis/client/components/content/communication/Confirmation'
-import Prompt, {
-  IPrompt,
-} from 'metis/client/components/content/communication/Prompt'
-import User, { logout } from 'metis/users'
-import { ServerEmittedError } from 'metis/connect/errors'
-import { IButtonText } from 'metis/client/components/content/user-controls/ButtonText'
-import { EAjaxStatus } from 'metis/toolbox/ajax'
-import { IAuthPageSpecific } from 'metis/client/components/pages/AuthPage'
+} from 'src/components/content/communication/Confirmation'
+import Prompt, { IPrompt } from 'src/components/content/communication/Prompt'
+import User, { logout } from '../../../shared/users'
+import { ServerEmittedError } from '../../../shared/connect/errors'
+import { IButtonText } from 'src/components/content/user-controls/ButtonText'
+import { EAjaxStatus } from '../../../shared/toolbox/ajax'
+import { IAuthPageSpecific } from 'src/components/pages/AuthPage'
 
+/**
+ * The values available in the global context.
+ */
 export type TGlobalContextValues = {
   forcedUpdateCounter: number
   server: ServerConnection | null
@@ -37,6 +38,10 @@ export type TGlobalContextValues = {
   missionNodeColors: Array<string>
 }
 
+/**
+ * The actions available in the global context via
+ * the actions property.
+ */
 export type TGlobalContextActions = {
   /**
    * This will force the state of the entire app to update, causing
@@ -122,6 +127,10 @@ export type TGlobalContextActions = {
   logout: (authPageProps: IAuthPageSpecific) => void
 }
 
+/**
+ * The value of the global context passed
+ * to consumers.
+ */
 export type TGlobalContext = {
   [key in keyof TGlobalContextValues]: [
     TGlobalContextValues[key],
@@ -129,6 +138,9 @@ export type TGlobalContext = {
   ]
 } & { actions: TGlobalContextActions }
 
+/**
+ * Represents any key used in the global context.
+ */
 export type TGlobalContextProperty = keyof TGlobalContextValues
 
 /**
@@ -164,57 +176,98 @@ export interface INotifyOptions {
   errorMessage?: boolean
 }
 
-function createDefault<TValue>(
-  value: TValue,
-): [TValue, React.Dispatch<React.SetStateAction<TValue>>] {
-  return [value, () => {}]
+/**
+ * The default values of the global context state.
+ */
+const GLOBAL_CONTEXT_VALUES_DEFAULT: TGlobalContextValues = {
+  forcedUpdateCounter: 0,
+  server: null,
+  session: null,
+  currentPagePath: '',
+  currentPageProps: {},
+  appMountHandled: false,
+  loading: true,
+  loadingMessage: 'Initializing application...',
+  loadingMinTimeReached: false,
+  pageSwitchMinTimeReached: true,
+  error: null,
+  tooltips: React.createRef(),
+  tooltipDescription: '',
+  notifications: [],
+  postLoadNotifications: [],
+  confirmation: null,
+  prompt: null,
+  missionNodeColors: [],
 }
 
-const GLOBAL_DEFAULT_CONTEXT: TGlobalContext = {
-  forcedUpdateCounter: createDefault(0),
-  server: createDefault<ServerConnection | null>(null),
-  session: createDefault<TMetisSession>(null),
-  currentPagePath: createDefault(''),
-  currentPageProps: createDefault({}),
-  appMountHandled: createDefault(false),
-  loading: createDefault(true),
-  loadingMessage: createDefault('Initializing application...'),
-  loadingMinTimeReached: createDefault(false),
-  pageSwitchMinTimeReached: createDefault(true),
-  error: createDefault<TAppError | null>(null),
-  tooltips: createDefault(React.createRef()),
-  tooltipDescription: createDefault(''),
-  notifications: createDefault<Array<Notification>>([]),
-  postLoadNotifications: createDefault<Array<Notification>>([]),
-  confirmation: createDefault<IConfirmation | null>(null),
-  prompt: createDefault<IPrompt | null>(null),
-  missionNodeColors: createDefault<Array<string>>([]),
-  actions: undefined as any,
-}
-const LOADING_MIN_TIME = 500
-const PAGE_SWITCH_MIN_TIME = 500
-
-const GlobalReactContext: React.Context<TGlobalContext> = React.createContext(
-  GLOBAL_DEFAULT_CONTEXT,
+/**
+ * The default value of the global context passed in the
+ * provider.
+ */
+const globalContextDefault: TGlobalContext = ObjectToolbox.map(
+  GLOBAL_CONTEXT_VALUES_DEFAULT,
+  (key: string, value: any) => {
+    return [value, () => {}]
+  },
 )
 
+/**
+ * The React context used for the global context. This is obfuscated
+ * and managed by the GlobalContext class exposed as the default export.
+ */
+const globalReactContext: React.Context<TGlobalContext> =
+  React.createContext(globalContextDefault)
+
+/**
+ * Used as a hook in the GlobalContextProvider component to populate the context with the state before supplying it to consumers.
+ * @param context The global context to define, should contain only default values that will be overwritten by what is stored in the state.
+ */
 const useGlobalContextDefinition = (context: TGlobalContext) => {
+  /* -- CONSTANTS -- */
+
+  const LOADING_MIN_TIME = 500
+  const PAGE_SWITCH_MIN_TIME = 500
+
   /* -- CONTEXT STATE DEFINITION -- */
+
+  const [globalState, setGlobalState] = useState<any>(
+    GLOBAL_CONTEXT_VALUES_DEFAULT,
+  )
 
   // Loop through context and define
   // the state for each value except
   // actions.
   for (let key in context) {
+    type TValue = [any, React.Dispatch<React.SetStateAction<any>>]
+
     // Skip actions.
     if (key === 'actions') {
-      return
+      continue
     }
     // Determine default state, call
     // useState, then store the result
     // from react in the context.
     let contextAsAny: any = context
-    let defaultState: any = (context as any)[key]
-    contextAsAny[key] = useState(defaultState)
+
+    contextAsAny[key] = [
+      globalState[key],
+      (arg1: any | ((prevState: any) => any)) => {
+        let previousState: any = globalState[key]
+        let updatedState: any
+
+        if (typeof arg1 === 'function') {
+          updatedState = arg1(previousState)
+        } else {
+          updatedState = arg1
+        }
+        setGlobalState((previousGlobalState: any) => {
+          return {
+            ...previousGlobalState,
+            [key]: updatedState,
+          }
+        })
+      },
+    ] as TValue
   }
 
   /* -- CONTEXT STATE EXTRACTION -- */
@@ -333,7 +386,7 @@ const useGlobalContextDefinition = (context: TGlobalContext) => {
     beginLoading: (loadingMessage?: string) => {
       setLoading(true)
       setLoadingMessage(
-        loadingMessage ?? GLOBAL_DEFAULT_CONTEXT.loadingMessage[0],
+        loadingMessage ?? globalContextDefault.loadingMessage[0],
       )
       setLoadingMinTimeReached(false)
       setTimeout(() => {
@@ -583,16 +636,21 @@ const useGlobalContextDefinition = (context: TGlobalContext) => {
   }
 }
 
+/**
+ * The provider to be used in the root component of METIS.
+ * @param { children: ReactNode } props Props containing the children to wrap in the provider.
+ * @returns {JSX.Element} The JSX of the provider wrapping the children passed.
+ */
 const GlobalContextProvider = function GlobalContextProvider(props: {
   children: ReactNode
-}) {
+}): JSX.Element {
   // Extract props.
   const { children } = props
 
   // Initialize context with the default
   // values.
   let context: TGlobalContext = {
-    ...GLOBAL_DEFAULT_CONTEXT,
+    ...globalContextDefault,
   }
 
   // Use the context definition to load
@@ -604,18 +662,37 @@ const GlobalContextProvider = function GlobalContextProvider(props: {
   // wrapping the children dependent on
   // the context.
   return (
-    <GlobalReactContext.Provider value={context}>
+    <globalReactContext.Provider value={context}>
       {children}
-    </GlobalReactContext.Provider>
+    </globalReactContext.Provider>
   )
 }
 
-const GlobalContext = {
-  Provider: GlobalContextProvider,
-}
-
+/**
+ * Used as a hook in function components as a consumer of the global context.
+ * @returns {TGlobalContext} The value of the global context.
+ */
 export function useGlobalContext(): TGlobalContext {
-  return React.useContext<TGlobalContext>(GlobalReactContext)
+  return React.useContext<TGlobalContext>(globalReactContext)
 }
 
-export default GlobalContext
+/**
+ * The global context management system for METIS.
+ */
+export default class GlobalContext {
+  /**
+   * The provider to be used in the root component of METIS.
+   * @param { children: ReactNode } props Props containing the children to wrap in the provider.
+   * @returns {JSX.Element} The JSX of the provider wrapping the children passed.
+   */
+  public static Provider = GlobalContextProvider
+  /**
+   * The consumer to be used in any component that needs to consume the global context.
+   */
+  public static Consumer = globalReactContext.Consumer
+  /**
+   * Used as a hook in function components as a consumer of the global context.
+   * @returns {TGlobalContext} The value of the global context.
+   */
+  public static useGlobalContext = useGlobalContext
+}

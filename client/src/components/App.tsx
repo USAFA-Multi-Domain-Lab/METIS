@@ -1,7 +1,7 @@
 import './App.scss'
 import GamePage from './pages/GamePage'
 import AuthPage from './pages/AuthPage'
-import { TMetisSession } from 'metis/sessions'
+import { TMetisSession } from '../../../shared/sessions'
 import { useEffect } from 'react'
 import ErrorPage from './pages/ErrorPage'
 import LoadingPage from './pages/LoadingPage'
@@ -20,8 +20,8 @@ import ChangelogPage from './pages/ChangelogPage'
 import { IButtonText } from './content/user-controls/ButtonText'
 import UserFormPage from './pages/UserFormPage'
 import UserResetPage from './pages/UserResetPage'
-import MissionNode from 'metis/missions/nodes'
-import { useGlobalContext } from 'metis/client/context'
+import MissionNode from '../../../shared/missions/nodes'
+import { useGlobalContext } from 'src/context'
 
 /**
  * Props that every page accepts. Extend this to include more.

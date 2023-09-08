@@ -3,11 +3,11 @@
 
 import React from 'react'
 import { useEffect, useRef, useState } from 'react'
-import inputs from 'metis/toolbox/inputs'
+import inputs from 'src/toolbox/inputs'
 import './Form.scss'
 import Toggle, { EToggleLockState } from '../user-controls/Toggle'
 import Tooltip from '../communication/Tooltip'
-import { AnyObject } from 'metis/toolbox/objects'
+import { AnyObject } from '../../../../../shared/toolbox/objects'
 
 interface IDetail {
   label: string

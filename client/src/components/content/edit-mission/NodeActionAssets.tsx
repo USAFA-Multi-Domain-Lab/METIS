@@ -1,4 +1,6 @@
-import MissionNodeAction, { IScript } from 'metis/missions/actions'
+import MissionNodeAction, {
+  IScript,
+} from '../../../../../shared/missions/actions'
 import Tooltip from '../communication/Tooltip'
 import NodeActionAsset from './NodeActionAsset'
 import './NodeActionAssets.scss'

@@ -2,7 +2,7 @@
 
 import './List.scss'
 import React from 'react'
-import { EAjaxStatus } from 'metis/toolbox/ajax'
+import { EAjaxStatus } from '../../../../../shared/toolbox/ajax'
 import Tooltip from '../communication/Tooltip'
 
 /* -- enumerations -- */

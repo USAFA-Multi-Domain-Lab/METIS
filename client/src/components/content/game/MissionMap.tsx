@@ -3,21 +3,21 @@
 import './MissionMap.scss'
 import React from 'react'
 import List from '../general-layout/List'
-import strings from 'metis/toolbox/strings'
-import { EAjaxStatus } from 'metis/toolbox/ajax'
+import strings from '../../../../../shared/toolbox/strings'
+import { EAjaxStatus } from '../../../../../shared/toolbox/ajax'
 import MoreInformation from '../communication/MoreInformation'
-import Mission from 'metis/missions'
+import Mission from '../../../../../shared/missions'
 import MissionNode, {
   ENodeTargetRelation,
   MissionNodeCreator,
-} from 'metis/missions/nodes'
+} from '../../../../../shared/missions/nodes'
 import {
   ButtonSVG,
   EButtonSVGPurpose,
   IButtonSVG,
 } from '../user-controls/ButtonSVG'
 import { ButtonSVGPanel } from '../user-controls/ButtonSVGPanel'
-import { SingleTypeObject } from 'metis/toolbox/objects'
+import { SingleTypeObject } from '../../../../../shared/toolbox/objects'
 
 /* -- interfaces -- */
 

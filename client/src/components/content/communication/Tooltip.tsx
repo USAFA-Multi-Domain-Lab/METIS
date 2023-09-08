@@ -1,4 +1,4 @@
-import { useGlobalContext } from 'metis/client/context'
+import { useGlobalContext } from 'src/context'
 import React from 'react'
 import { v4 as uuid } from 'uuid'
 

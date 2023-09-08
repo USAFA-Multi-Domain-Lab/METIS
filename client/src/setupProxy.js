@@ -2,7 +2,7 @@ const { createProxyMiddleware } = require('http-proxy-middleware')
 const fs = require('fs')
 
 // Get default enviornment variable values.
-const defaults = require('../defaults')
+const defaults = require('../../defaults')
 
 // Define the port for the METIS server
 // based on the default value.

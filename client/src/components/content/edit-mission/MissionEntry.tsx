@@ -1,9 +1,9 @@
 import { useState } from 'react'
-import Mission, { setLive } from 'metis/missions'
-import { EAjaxStatus } from 'metis/toolbox/ajax'
+import Mission, { setLive } from '../../../../../shared/missions'
+import { EAjaxStatus } from '../../../../../shared/toolbox/ajax'
 import { Detail, DetailBox, DetailNumber, DetailToggle } from '../form/Form'
 import './MissionEntry.scss'
-import { useGlobalContext } from 'metis/client/context'
+import { useGlobalContext } from 'src/context'
 
 // This will render the basic editable
 // details of the mission itself.

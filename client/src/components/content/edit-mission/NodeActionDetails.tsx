@@ -1,9 +1,9 @@
-import MissionNodeAction from 'metis/missions/actions'
-import MissionNode from 'metis/missions/nodes'
+import MissionNodeAction from '../../../../../shared/missions/actions'
+import MissionNode from '../../../../../shared/missions/nodes'
 import { ButtonSVG, EButtonSVGPurpose } from '../user-controls/ButtonSVG'
 import NodeActionEntry from './NodeActionEntry'
 import './NodeActionDetails.scss'
-import { useGlobalContext } from 'metis/client/context'
+import { useGlobalContext } from 'src/context'
 
 export default function NodeActionDetails(props: {
   node: MissionNode

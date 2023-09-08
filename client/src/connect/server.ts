@@ -4,8 +4,8 @@ import {
   TClientMethod,
   TServerData,
   TServerMethod,
-} from 'metis/connect/data'
-import { ServerEmittedError } from 'metis/connect/errors'
+} from '../../../shared/connect/data'
+import { ServerEmittedError } from '../../../shared/connect/errors'
 import { v4 as generateHash } from 'uuid'
 
 /**

@@ -1,13 +1,16 @@
-import Mission, { copyMission, deleteMission, setLive } from 'metis/missions'
-import { EAjaxStatus } from 'metis/toolbox/ajax'
+import Mission, {
+  copyMission,
+  deleteMission,
+  setLive,
+} from '../../../../../shared/missions'
+import { EAjaxStatus } from '../../../../../shared/toolbox/ajax'
 import Toggle, { EToggleLockState } from '../user-controls/Toggle'
 import Tooltip from '../communication/Tooltip'
 import './MissionModificationPanel.scss'
 import { MiniButtonSVGPanel } from './MiniButtonSVGPanel'
 import { EMiniButtonSVGPurpose, MiniButtonSVG } from './MiniButtonSVG'
-import { TMetisSession } from 'metis/sessions'
 import { useState } from 'react'
-import { useGlobalContext } from 'metis/client/context'
+import { useGlobalContext } from 'src/context'
 
 export default function MissionModificationPanel(props: {
   mission: Mission

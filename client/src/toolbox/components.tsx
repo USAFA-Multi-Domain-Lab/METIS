@@ -1,4 +1,4 @@
-import { TMetisSession } from 'metis/sessions'
+import { TMetisSession } from '../../../shared/sessions'
 
 /**
  * Options that can be passed to the render function.

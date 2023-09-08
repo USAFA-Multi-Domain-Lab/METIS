@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
-import MissionNodeAction from 'metis/missions/actions'
-import MissionNode from 'metis/missions/nodes'
-import Mission from 'metis/missions'
+import MissionNodeAction from '../../../../../shared/missions/actions'
+import MissionNode from '../../../../../shared/missions/nodes'
+import Mission from '../../../../../shared/missions'
 import Tooltip from '../communication/Tooltip'
 import {
   Detail,
@@ -13,7 +13,7 @@ import {
 import { EToggleLockState } from '../user-controls/Toggle'
 import NodeActionDetails from './NodeActionDetails'
 import './NodeEntry.scss'
-import { useGlobalContext } from 'metis/client/context'
+import { useGlobalContext } from 'src/context'
 
 // This will render a form where
 // a given node can be edited.

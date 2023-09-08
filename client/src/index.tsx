@@ -1,14 +1,15 @@
 import React from 'react'
-import ReactDOM from 'react-dom'
+import ReactDOM from 'react-dom/client'
 import './index.scss'
 import App from './components/App'
-import GlobalContext from 'metis/client/context'
+import GlobalContext from 'src/context'
 
-ReactDOM.render(
+const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement)
+
+root.render(
   <React.StrictMode>
     <GlobalContext.Provider>
       <App />
     </GlobalContext.Provider>
   </React.StrictMode>,
-  document.getElementById('root'),
 )

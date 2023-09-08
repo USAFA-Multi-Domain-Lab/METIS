@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react'
-import User, { createUser, saveUser } from 'metis/users'
+import User, { createUser, saveUser } from '../../../../shared/users'
 import { IPage } from '../App'
 import CreateUserEntry from '../content/edit-user/CreateUserEntry'
 import EditUserEntry from '../content/edit-user/EditUserEntry'
 import Navigation from '../content/general-layout/Navigation'
 import './UserFormPage.scss'
-import { useMountHandler, useRequireSession } from 'metis/client/toolbox/hooks'
-import { useGlobalContext } from 'metis/client/context'
+import { useMountHandler, useRequireSession } from 'src/toolbox/hooks'
+import { useGlobalContext } from 'src/context'
 
 export interface IUserFormPage extends IPage {
   // If this is null, then a new user is being created.

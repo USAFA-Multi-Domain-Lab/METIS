@@ -2,7 +2,7 @@ import React from 'react'
 import AjaxStatusDisplay from './AjaxStatusDisplay'
 import Markdown, { MarkdownTheme } from '../general-layout/Markdown'
 import './Confirmation.scss'
-import { EAjaxStatus } from 'metis/toolbox/ajax'
+import { EAjaxStatus } from '../../../../../shared/toolbox/ajax'
 
 export interface IConfirmation {
   active: boolean

@@ -1,22 +1,22 @@
 import React, { useRef, useState } from 'react'
-import Mission, { importMissions } from 'metis/missions'
+import Mission, { importMissions } from '../../../../shared/missions'
 import { IPage } from '../App'
 import './HomePage.scss'
 import Navigation from '../content/general-layout/Navigation'
 import Notification from '../../notifications'
 import Tooltip from '../content/communication/Tooltip'
-import User from 'metis/users'
+import User from '../../../../shared/users'
 import List, { ESortByMethod } from '../content/general-layout/List'
 import MissionModificationPanel from '../content/user-controls/MissionModificationPanel'
-import { EAjaxStatus } from 'metis/toolbox/ajax'
+import { EAjaxStatus } from '../../../../shared/toolbox/ajax'
 import {
   ButtonSVG,
   EButtonSVGPurpose,
 } from '../content/user-controls/ButtonSVG'
 import UserModificationPanel from '../content/user-controls/UserModificationPanel'
-import { useMountHandler, useRequireSession } from 'metis/client/toolbox/hooks'
-import GameClient from 'metis/client/games'
-import { useGlobalContext } from 'metis/client/context'
+import { useMountHandler, useRequireSession } from 'src/toolbox/hooks'
+import GameClient from 'src/games'
+import { useGlobalContext } from 'src/context'
 
 export interface IHomePage extends IPage {}
 
@@ -133,7 +133,6 @@ export default function HomePage(props: IHomePage): JSX.Element | null {
       fileName: string
       errorMessage: string
     }> = []
-    let contents_JSON: any
 
     // This is called when a file
     // import is processed, whether
@@ -176,13 +175,14 @@ export default function HomePage(props: IHomePage): JSX.Element | null {
                   handleClick: () => {
                     let prompt: string = ''
 
-                    for (let errorMessage of invalidContentsErrorMessages) {
-                      prompt += `**${errorMessage.fileName}**\n`
-                      prompt += `\`\`\`\n`
-                      prompt += `${errorMessage.errorMessage}\n`
-                      prompt += `\`\`\`\n`
-                    }
-
+                    invalidContentsErrorMessages.forEach(
+                      ({ errorMessage, fileName }) => {
+                        prompt += `**${fileName}**\n`
+                        prompt += `\`\`\`\n`
+                        prompt += `${errorMessage}\n`
+                        prompt += `\`\`\`\n`
+                      },
+                    )
                     notification.dismiss()
                     createPrompt(prompt)
                   },
@@ -195,11 +195,11 @@ export default function HomePage(props: IHomePage): JSX.Element | null {
         // Notifies of invalid files
         // rejected from being uploaded.
         if (invalidFileExtensionCount > 0) {
-          notify(
-            `${invalidFileExtensionCount} of the files uploaded did not have the .metis extension and therefore ${
-              invalidFileExtensionCount === 1 ? 'was' : 'were'
-            } rejected.`,
-          )
+          // notify(
+          //   `${invalidFileExtensionCount} of the files uploaded did not have the .metis extension and therefore ${
+          //     invalidFileExtensionCount === 1 ? 'was' : 'were'
+          //   } rejected.`,
+          // )
         }
       }
 
@@ -210,7 +210,7 @@ export default function HomePage(props: IHomePage): JSX.Element | null {
 
     // Switch to load screen.
     beginLoading(
-      `Importing ${files.length} file${files.length === 1 ? '' : 's'}...`,
+      '', //`Importing ${files.length} file${files.length === 1 ? '' : 's'}...`,
     )
 
     // Iterates over files for upload.

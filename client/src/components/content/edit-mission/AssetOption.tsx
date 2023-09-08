@@ -1,11 +1,13 @@
 import { useState } from 'react'
 
-import MissionNodeAction, { IScript } from 'metis/missions/actions'
-import { AnyObject } from 'metis/toolbox/objects'
+import MissionNodeAction, {
+  IScript,
+} from '../../../../../shared/missions/actions'
+import { AnyObject } from '../../../../../shared/toolbox/objects'
 import Tooltip from '../communication/Tooltip'
 import './AssetOption.scss'
 import SubAssetOption from './SubAssetOption'
-import { useGlobalContext } from 'metis/client/context'
+import { useGlobalContext } from 'src/context'
 
 export default function AssetOption(props: {
   action: MissionNodeAction

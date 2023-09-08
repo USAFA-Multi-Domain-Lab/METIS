@@ -1,6 +1,6 @@
 import React from 'react'
 import { useCallback, useEffect, useState } from 'react'
-import { TMetisSession } from 'metis/sessions'
+import { TMetisSession } from '../../../shared/sessions'
 import { useGlobalContext } from '../context'
 
 /**

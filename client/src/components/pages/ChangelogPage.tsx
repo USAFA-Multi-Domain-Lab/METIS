@@ -5,9 +5,9 @@ import Navigation from '../content/general-layout/Navigation'
 import Markdown, {
   MarkdownTheme as EMarkdownTheme,
 } from '../content/general-layout/Markdown'
-import Info from 'metis/client/info'
-import { useGlobalContext } from 'metis/client/context'
-import { useMountHandler, useRequireSession } from 'metis/client/toolbox/hooks'
+import Info from 'src/info'
+import { useGlobalContext } from 'src/context'
+import { useMountHandler, useRequireSession } from 'src/toolbox/hooks'
 
 export interface IChangelogPage extends IPage {}
 

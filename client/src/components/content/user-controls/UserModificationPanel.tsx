@@ -1,9 +1,9 @@
-import User, { deleteUser } from 'metis/users'
-import { TMetisSession } from 'metis/sessions'
+import User, { deleteUser } from '../../../../../shared/users'
+import { TMetisSession } from '../../../../../shared/sessions'
 import { EMiniButtonSVGPurpose, MiniButtonSVG } from './MiniButtonSVG'
 import { MiniButtonSVGPanel } from './MiniButtonSVGPanel'
 import './UserModificationPanel.scss'
-import { useGlobalContext } from 'metis/client/context'
+import { useGlobalContext } from 'src/context'
 
 export default function UserModificationPanel(props: {
   user: User

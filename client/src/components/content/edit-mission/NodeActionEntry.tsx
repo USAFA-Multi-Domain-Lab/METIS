@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import MissionNodeAction from 'metis/missions/actions'
-import MissionNode from 'metis/missions/nodes'
+import MissionNodeAction from '../../../../../shared/missions/actions'
+import MissionNode from '../../../../../shared/missions/nodes'
 import Tooltip from '../communication/Tooltip'
 import { Detail, DetailBox, DetailNumber } from '../form/Form'
 import NodeActionAssets from './NodeActionAssets'
