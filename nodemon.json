@@ -1,3 +1,0 @@
-{
-  "ignore": ["*.tsx", "*.scss", "/database/backups/**"]
-}

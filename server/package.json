@@ -4,7 +4,8 @@
   "description": "",
   "main": "start.ts",
   "scripts": {
-    "start": "ts-node -r tsconfig-paths/register start"
+    "start": "ts-node -r tsconfig-paths/register start",
+    "dev": "nodemon --exec 'ts-node' -r tsconfig-paths/register start"
   },
   "author": "Jordan M. Stokes",
   "license": "ISC",
