@@ -110,24 +110,22 @@ export default function CreateUserEntry(props: {
         label='Username'
         initialValue={user.userID}
         deliverValue={(userID: string) => {
-          let userIDRegex: RegExp = new RegExp(/^([a-zA-Z0-9-_.]{5,25})$/)
-          let userIDIsValid: boolean = userIDRegex.test(userID)
+          user.userID = userID
 
-          if (userID !== '' && userIDIsValid) {
-            user.userID = userID
+          if (userID !== '' && user.hasValidUsername) {
             removeUserEmptyString('userID')
             setDeliverUsernameError(false)
             setUsernameClassName('Correct')
             handleChange()
           }
 
-          if (userID === '' && !userIDIsValid) {
+          if (userID === '' && !user.hasValidUsername) {
             setDeliverUsernameError(true)
             setUserEmptyStringArray([...userEmptyStringArray, `field=userID`])
             setUsernameErrorMessage('At least one character is required here.')
           }
 
-          if (userID !== '' && !userIDIsValid) {
+          if (userID !== '' && !user.hasValidUsername) {
             setDeliverUsernameError(true)
             setUsernameErrorMessage(
               'Usernames must be between 5 and 25 characters long and can only contain letters, numbers, and the following special characters: - _ .',
@@ -220,11 +218,9 @@ export default function CreateUserEntry(props: {
         label={passwordLabel}
         initialValue={null}
         deliverValue={(password: string) => {
-          let passwordRegex: RegExp = new RegExp(/^([^\s]{8,50})$/)
-          let passwordIsValid: boolean = passwordRegex.test(password)
           user.password1 = password
 
-          if (passwordIsValid && password !== '') {
+          if (user.hasValidPassword1 && password !== '') {
             removeUserEmptyString('password1')
             setDeliverPassword1Error(false)
             setPassword1ClassName('Correct')
@@ -240,7 +236,7 @@ export default function CreateUserEntry(props: {
             ])
           }
 
-          if (!passwordIsValid && password !== '') {
+          if (!user.hasValidPassword1 && password !== '') {
             setDeliverPassword1Error(true)
             setPassword1ErrorMessage(
               'Password must be between 8 and 50 characters and cannot contain spaces.',
@@ -274,18 +270,16 @@ export default function CreateUserEntry(props: {
         label={confirmPasswordLabel}
         initialValue={null}
         deliverValue={(password: string) => {
-          let passwordRegex: RegExp = new RegExp(/^([^\s]{8,50})$/)
-          let passwordIsValid: boolean = passwordRegex.test(password)
           user.password2 = password
 
-          if (passwordIsValid && password !== '') {
+          if (user.hasValidPassword2 && password !== '') {
             removeUserEmptyString('password2')
             setDeliverPassword2Error(false)
             setPassword2ClassName('Correct')
             handleChange()
           }
 
-          if (!passwordIsValid && password !== '') {
+          if (!user.hasValidPassword2 && password !== '') {
             setDeliverPassword2Error(true)
             setPassword2ErrorMessage(
               'Password must be between 8 and 50 characters and cannot contain spaces.',
@@ -301,7 +295,11 @@ export default function CreateUserEntry(props: {
             ])
           }
 
-          if (passwordIsValid && password !== '' && !user.passwordsMatch) {
+          if (
+            user.hasValidPassword2 &&
+            password !== '' &&
+            !user.passwordsMatch
+          ) {
             setDeliverPassword2Error(true)
             setPassword2ErrorMessage('Passwords must match.')
           }

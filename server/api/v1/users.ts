@@ -46,7 +46,7 @@ const routerMap: TMetisRouterMap = (router: expressWs.Router, done) => {
       let { userID, password } = userData
 
       if (password !== undefined) {
-        password = await hashPassword(password)
+        userData.password = await hashPassword(password)
       }
 
       let user = new UserModel(userData)

@@ -47,8 +47,6 @@ export default function HomePage(props: IHomePage): JSX.Element | null {
 
   /* -- COMPONENT FUNCTIONS -- */
 
-  /* -- COMPONENT FUNCTIONS -- */
-
   /**
    * This loads the missions into the state for display and selection.
    */
@@ -384,34 +382,24 @@ export default function HomePage(props: IHomePage): JSX.Element | null {
 
   // Class names used for styling based on the
   // current user's role.
-  let contentClassName: string = 'Content'
-  let selectionContentClassName: string = 'SelectionContent'
-  let userListContainer: string = 'Hidden'
-  let editContentClassName: string = 'EditContentRow'
-  let fileDropBoxClassName: string = 'Hidden'
-  let versionClassName: string = 'Version Disabled'
+  let homePageClassName: string = 'HomePage Page FullView'
 
   if (currentUser.hasRestrictedAccess) {
-    contentClassName += ' InstructorView'
-    selectionContentClassName = 'SelectionContent-list InstructorView'
-    userListContainer = 'UserListContainer'
-    editContentClassName += ' InstructorView'
-    fileDropBoxClassName = 'FileDropBox'
-    versionClassName = 'Version'
+    homePageClassName += ' InstructorView'
   }
 
   /* -- RENDER -- */
 
   return (
     <div
-      className='HomePage Page FullView'
+      className={homePageClassName}
       ref={page}
       onDragOver={handleFileDragOver}
       onDragLeave={handleFileDragLeave}
       onDrop={handleFileDrop}
     >
       {/* -- FILE DROP BOX -- */}
-      <div className={fileDropBoxClassName}>
+      <div className='FileDropBox'>
         <div className='UploadIcon'></div>
       </div>
 
@@ -432,7 +420,7 @@ export default function HomePage(props: IHomePage): JSX.Element | null {
         ]}
       />
       {/* -- CONTENT -- */}
-      <div className={contentClassName}>
+      <div className='Content'>
         {/* { Mission List } */}
         <div className='MissionListContainer'>
           <List<Mission>
@@ -470,9 +458,9 @@ export default function HomePage(props: IHomePage): JSX.Element | null {
             applyItemStyling={() => {
               return {}
             }}
-            listSpecificItemClassName={selectionContentClassName}
+            listSpecificItemClassName='AltDesign1'
           />
-          <div className={editContentClassName}>
+          <div className='EditContentRow'>
             <ButtonSVG
               purpose={EButtonSVGPurpose.Add}
               handleClick={createMission}
@@ -496,7 +484,7 @@ export default function HomePage(props: IHomePage): JSX.Element | null {
           </div>
         </div>
         {/* { User List } */}
-        <div className={userListContainer}>
+        <div className='UserListContainer'>
           <List<User>
             headingText={'Select a user:'}
             items={users}
@@ -527,9 +515,9 @@ export default function HomePage(props: IHomePage): JSX.Element | null {
             applyItemStyling={() => {
               return {}
             }}
-            listSpecificItemClassName={selectionContentClassName}
+            listSpecificItemClassName='AltDesign1'
           />
-          <div className={editContentClassName}>
+          <div className='EditContentRow'>
             <ButtonSVG
               purpose={EButtonSVGPurpose.Add}
               handleClick={createUser}
@@ -541,11 +529,7 @@ export default function HomePage(props: IHomePage): JSX.Element | null {
 
       {/* -- FOOTER -- */}
       <div className='FooterContainer' draggable={false}>
-        <div
-          className={versionClassName}
-          onClick={viewChangelog}
-          draggable={false}
-        >
+        <div className='Version' onClick={viewChangelog} draggable={false}>
           v1.3.1
           <Tooltip description={'View changelog.'} />
         </div>

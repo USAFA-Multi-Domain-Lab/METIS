@@ -313,7 +313,7 @@
     }
   }
 
-  &.SelectionContent-list {
+  &.AltDesign1-list {
     -webkit-user-select: none;
     user-select: none;
     display: grid;
@@ -326,13 +326,6 @@
     height: 401px;
     padding: 0;
     overflow: hidden;
-
-    &.InstructorView-list {
-      width: 50%;
-      border-bottom-left-radius: 0;
-      border-bottom-right-radius: 0;
-      margin-bottom: 0;
-    }
 
     .top {
       display: grid;

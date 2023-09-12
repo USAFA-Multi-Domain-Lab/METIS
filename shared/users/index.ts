@@ -77,6 +77,33 @@ export default class User {
     return this._passwordIsRequired
   }
 
+  /**
+   * This makes sure the username meets
+   * the correct criteria.
+   */
+  public get hasValidUsername(): boolean {
+    let userIDRegex: RegExp = new RegExp(/^([a-zA-Z0-9-_.]{5,25})$/)
+    return userIDRegex.test(this.userID)
+  }
+
+  /**
+   * This makes sure password 1 meets
+   * the correct criteria.
+   */
+  public get hasValidPassword1(): boolean {
+    let passwordRegex: RegExp = new RegExp(/^([^\s]{8,50})$/)
+    return this.password1 ? passwordRegex.test(this.password1) : false
+  }
+
+  /**
+   * This makes sure password 2 meets
+   * the correct criteria.
+   */
+  public get hasValidPassword2(): boolean {
+    let passwordRegex: RegExp = new RegExp(/^([^\s]{8,50})$/)
+    return this.password2 ? passwordRegex.test(this.password2) : false
+  }
+
   public get canSave(): boolean {
     // userID cannot be the default value
     let updatedUserID: boolean = this.userID !== User.DEFAULT_PROPERTIES.userID
@@ -108,7 +135,10 @@ export default class User {
       passwordsMatch &&
       !requiredPasswordIsMissing &&
       !password1IsEmptyString &&
-      !password2IsEmptyString
+      !password2IsEmptyString &&
+      this.hasValidUsername &&
+      this.hasValidPassword1 &&
+      this.hasValidPassword2
     )
   }
 

@@ -112,9 +112,7 @@ export default function AuthPage(props: IAuthPage): JSX.Element | null {
             // If the user needs a password reset,
             // then navigate to the user reset page.
             if (session.user.needsPasswordReset) {
-              goToPage('UserResetPage', {
-                user: session.user,
-              })
+              goToPage('UserResetPage', {})
             }
             // Else, go to the home page.
             else {

@@ -5,26 +5,22 @@ import { Detail } from '../content/form/Form'
 import Navigation from '../content/general-layout/Navigation'
 import './UserResetPage.scss'
 import { useGlobalContext } from 'src/context'
+import { useMountHandler } from 'src/toolbox/hooks'
+import { log } from 'console'
 
-export interface IUserResetPage extends IPage {
-  user: User
-}
+export interface IUserResetPage extends IPage {}
 
 /**
  * This page allows the user to reset their password.
- * @param props
- * @param props.user The user that needs to reset their password.
  * @returns A JSX element that describes the component.
  */
-export default function UserResetPage(
-  props: IUserResetPage,
-): JSX.Element | null {
-  const user: User = props.user
-
+export default function UserResetPage(): JSX.Element | null {
   /* -- GLOBAL CONTEXT -- */
 
   const globalContext = useGlobalContext()
-  const { forceUpdate, notify, goToPage, logout } = globalContext.actions
+  const { forceUpdate, notify, goToPage, logout, finishLoading } =
+    globalContext.actions
+  const [session] = globalContext.session
 
   /* -- COMPONENT STATE -- */
 
@@ -49,6 +45,23 @@ export default function UserResetPage(
   const [oldPasswordClassName, setOldPasswordClassName] = useState<string>('')
   const [password1ClassName, setPassword1ClassName] = useState<string>('')
   const [password2ClassName, setPassword2ClassName] = useState<string>('')
+
+  /* -- COMPONENT EFFECTS -- */
+
+  const [mountHandled, remount] = useMountHandler(async (done) => {
+    finishLoading()
+    done()
+  })
+
+  /* -- SESSION-SPECIFIC LOGIC -- */
+
+  // Require session.
+  if (session === null) {
+    return null
+  }
+
+  // Extract properties from session.
+  const { user: user } = session
 
   /* -- COMPONENT FUNCTIONS -- */
 
@@ -144,15 +157,24 @@ export default function UserResetPage(
               let passwordRegex: RegExp = new RegExp(/^([^\s]{8,50})$/)
               let passwordIsValid: boolean = passwordRegex.test(password)
 
-              if (passwordIsValid && password !== '') {
+              if (
+                passwordIsValid &&
+                password === user.password1 &&
+                password !== ''
+              ) {
                 removeUserEmptyString('old-password')
                 setDeliverOldPasswordError(false)
                 setOldPasswordClassName('Correct')
-                if (user.canSave) {
-                  handleChange()
-                } else {
-                  forceUpdate()
-                }
+                handleChange()
+              }
+
+              if (
+                passwordIsValid &&
+                password !== user.password1 &&
+                password !== ''
+              ) {
+                setDeliverOldPasswordError(true)
+                setOldPasswordErrorMessage('Incorrect password.')
               }
 
               if (password === '') {
@@ -187,19 +209,13 @@ export default function UserResetPage(
             label='New Password'
             initialValue={null}
             deliverValue={(password: string) => {
-              let passwordRegex: RegExp = new RegExp(/^([^\s]{8,50})$/)
-              let passwordIsValid: boolean = passwordRegex.test(password)
               user.password1 = password
 
-              if (passwordIsValid && password !== '') {
+              if (user.hasValidPassword1 && password !== '') {
                 removeUserEmptyString('password1')
                 setDeliverPassword1Error(false)
                 setPassword1ClassName('Correct')
-                if (user.canSave) {
-                  handleChange()
-                } else {
-                  forceUpdate()
-                }
+                handleChange()
               }
 
               if (password === '') {
@@ -213,7 +229,7 @@ export default function UserResetPage(
                 ])
               }
 
-              if (!passwordIsValid && password !== '') {
+              if (!user.hasValidPassword1 && password !== '') {
                 setDeliverPassword1Error(true)
                 setPassword1ErrorMessage(
                   'Password must be between 8 and 50 characters and cannot contain spaces.',
@@ -247,22 +263,16 @@ export default function UserResetPage(
             label='Confirm New Password'
             initialValue={null}
             deliverValue={(password: string) => {
-              let passwordRegex: RegExp = new RegExp(/^([^\s]{8,50})$/)
-              let passwordIsValid: boolean = passwordRegex.test(password)
               user.password2 = password
 
-              if (passwordIsValid && password !== '') {
+              if (user.hasValidPassword2 && password !== '') {
                 removeUserEmptyString('password2')
                 setDeliverPassword2Error(false)
                 setPassword2ClassName('Correct')
-                if (user.canSave) {
-                  handleChange()
-                } else {
-                  forceUpdate()
-                }
+                handleChange()
               }
 
-              if (!passwordIsValid && password !== '') {
+              if (!user.hasValidPassword2 && password !== '') {
                 setDeliverPassword2Error(true)
                 setPassword2ErrorMessage(
                   'Password must be between 8 and 50 characters and cannot contain spaces.',
@@ -280,7 +290,11 @@ export default function UserResetPage(
                 ])
               }
 
-              if (passwordIsValid && password !== '' && !user.passwordsMatch) {
+              if (
+                user.hasValidPassword2 &&
+                password !== '' &&
+                !user.passwordsMatch
+              ) {
                 setDeliverPassword2Error(true)
                 setPassword2ErrorMessage('Passwords must match.')
               }
