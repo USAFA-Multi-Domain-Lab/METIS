@@ -2,7 +2,7 @@
 // for adding the deleted property
 // to the missions collection.
 
-let dbName = 'mdl'
+let dbName = 'metis'
 
 if (process.env.MONGO_DB) {
   dbName = process.env.MONGO_DB

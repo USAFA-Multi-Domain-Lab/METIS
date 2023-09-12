@@ -3,7 +3,7 @@
 // to the node level of the missions
 // collection.
 
-let dbName = 'mdl'
+let dbName = 'metis'
 
 if (process.env.MONGO_DB) {
   dbName = process.env.MONGO_DB

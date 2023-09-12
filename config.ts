@@ -22,7 +22,7 @@ export let SCHEMA_BUILD_NUMBER: number = 11
 
 export let PORT: number = 8080
 
-export let MONGO_DB: string = 'mdl'
+export let MONGO_DB: string = 'metis'
 export let MONGO_HOST = 'localhost'
 export let MONGO_PORT = 27017
 export let MONGO_USERNAME: string | undefined
@@ -40,7 +40,7 @@ export let environmentFilePath: string = './environment.json'
 // changes the environment for when the unit tests are being run
 if (process.env.environment === 'TEST') {
   environmentFilePath = './environment-test.json'
-  MONGO_DB = 'mdl-test'
+  MONGO_DB = 'metis-test'
 }
 
 if (fs.existsSync(environmentFilePath)) {
