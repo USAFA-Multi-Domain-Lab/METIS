@@ -2,7 +2,7 @@ import './OutputPanel.scss'
 import MissionNode from '../../../../../shared/missions/nodes'
 import ConsoleOutput, { IConsoleOutput } from './ConsoleOutput'
 import { Component } from 'react'
-import MissionNodeAction from '../../../../../shared/missions/actions'
+import MissionAction from '../../../../../shared/missions/actions'
 import Mission from '../../../../../shared/missions'
 
 export interface IOutputPanel {
@@ -74,7 +74,7 @@ export default class OutputPanel extends Component<
   }
 
   static renderActionStartOutput(
-    executingAction: MissionNodeAction,
+    executingAction: MissionAction,
   ): IConsoleOutput {
     let done: boolean = false
     let timeStamp: number = Date.now()
@@ -140,7 +140,7 @@ export default class OutputPanel extends Component<
   }
 
   static renderExecutionSuccessOutput(
-    executedAction: MissionNodeAction,
+    executedAction: MissionAction,
   ): IConsoleOutput {
     let timeStamp: number = Date.now()
     let executedNode: MissionNode = executedAction.node
@@ -162,7 +162,7 @@ export default class OutputPanel extends Component<
   }
 
   static renderExecutionFailureOutput(
-    executedAction: MissionNodeAction,
+    executedAction: MissionAction,
   ): IConsoleOutput {
     let timeStamp: number = Date.now()
     let executedNode: MissionNode = executedAction.node

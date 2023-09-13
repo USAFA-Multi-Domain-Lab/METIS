@@ -15,7 +15,7 @@ import {
   PanelSizeRelationship,
   ResizablePanel,
 } from '../content/general-layout/ResizablePanels'
-import MissionNodeAction from '../../../../shared/missions/actions'
+import MissionAction from '../../../../shared/missions/actions'
 import { IConsoleOutput } from 'src/components/content/game/ConsoleOutput'
 import GameClient from 'src/games'
 import { useGlobalContext } from 'src/context'
@@ -46,9 +46,7 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
   /* -- STATE -- */
 
   const [selectedNode, selectNode] = useState<MissionNode | null>(null)
-  const [selectedAction, selectAction] = useState<MissionNodeAction | null>(
-    null,
-  )
+  const [selectedAction, selectAction] = useState<MissionAction | null>(null)
 
   /* -- VARIABLES -- */
 

@@ -138,7 +138,8 @@ export default class User {
     this.firstName = data.firstName ?? User.DEFAULT_PROPERTIES.firstName
     this.lastName = data.lastName ?? User.DEFAULT_PROPERTIES.lastName
     this.role = data.role ?? User.DEFAULT_PROPERTIES.role
-    this.needsPasswordReset = data.needsPasswordReset ?? false
+    this.needsPasswordReset =
+      data.needsPasswordReset ?? User.DEFAULT_PROPERTIES.needsPasswordReset
     this._passwordIsRequired = options.passwordIsRequired ?? false
   }
 

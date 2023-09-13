@@ -1,7 +1,7 @@
 import React from 'react'
 import './ExecuteNodePath.scss'
 import MissionNode from '../../../../../shared/missions/nodes'
-import MissionNodeAction from '../../../../../shared/missions/actions'
+import MissionAction from '../../../../../shared/missions/actions'
 import ActionPropertyDisplay from './ActionPropertyDisplay'
 import Mission from '../../../../../shared/missions'
 import Notification from '../../../notifications'
@@ -14,7 +14,7 @@ import OutputPanel from './OutputPanel'
 
 interface IExecuteNodePath {
   isOpen: boolean
-  selectedAction: MissionNodeAction
+  selectedAction: MissionAction
   notify: (message: string, options: INotifyOptions) => Notification
   outputToConsole: (output: IConsoleOutput) => void
   handleExecutionRequest: () => void
@@ -25,7 +25,7 @@ interface IExecuteNodePath {
 interface IExecuteNodePath_S {}
 
 function Buttons(props: {
-  selectedAction: MissionNodeAction
+  selectedAction: MissionAction
   handleExecutionRequest: () => void
   handleGoBackRequest: () => void
   handleCloseRequest: () => void
@@ -108,7 +108,7 @@ export default class ExecuteNodePath extends React.Component<
   // This is called when an executed action
   // has finished executing and the result
   // was a success.
-  static handleExecutionSuccess(action: MissionNodeAction): void {
+  static handleExecutionSuccess(action: MissionAction): void {
     let node: MissionNode = action.node
     let mission: Mission = node.mission
 
@@ -118,13 +118,13 @@ export default class ExecuteNodePath extends React.Component<
   // This is called when an executed action
   // has finished executing and the result
   // was a failure.
-  static handleExecutionFailure(action: MissionNodeAction): void {
+  static handleExecutionFailure(action: MissionAction): void {
     let mission: Mission = action.node.mission
 
     mission.outputToConsole(OutputPanel.renderExecutionFailureOutput(action))
   }
 
-  get selectedAction(): MissionNodeAction {
+  get selectedAction(): MissionAction {
     return this.props.selectedAction
   }
 
@@ -147,7 +147,7 @@ export default class ExecuteNodePath extends React.Component<
 
   render(): JSX.Element | null {
     let selectedNode: MissionNode = this.selectedNode
-    let selectedAction: MissionNodeAction = this.props.selectedAction
+    let selectedAction: MissionAction = this.props.selectedAction
     let isOpen: boolean = this.props.isOpen
 
     // Logic to disable the execute button once a user is out of tokens.

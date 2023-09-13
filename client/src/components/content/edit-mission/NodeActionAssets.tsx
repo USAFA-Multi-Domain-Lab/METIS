@@ -1,6 +1,4 @@
-import MissionNodeAction, {
-  IScript,
-} from '../../../../../shared/missions/actions'
+import MissionAction, { IScript } from '../../../../../shared/missions/actions'
 import Tooltip from '../communication/Tooltip'
 import NodeActionAsset from './NodeActionAsset'
 import './NodeActionAssets.scss'
@@ -8,12 +6,12 @@ import './NodeActionAssets.scss'
 // This will render the list of assets
 // that the user previously selected
 export default function NodeActionAssets(props: {
-  action: MissionNodeAction
+  action: MissionAction
   isEmptyString: boolean
   handleChange: () => void
 }): JSX.Element | null {
   /* -- COMPONENT VARIABLES -- */
-  let action: MissionNodeAction = props.action
+  let action: MissionAction = props.action
   let isEmptyString: boolean = props.isEmptyString
   let handleChange = props.handleChange
 

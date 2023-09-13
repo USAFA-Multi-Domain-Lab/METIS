@@ -14,7 +14,7 @@ import {
 } from '../../middleware/users'
 import uploads from '../../middleware/uploads'
 import { RequestBodyFilters, defineRequests } from '../../middleware/requests'
-import { colorOptions } from '../../missions/nodes'
+import MissionNode from '../../missions/nodes'
 import { assetData } from '../../effects/effect-data'
 import MetisServer from 'metis/server'
 import { TMetisRouterMap } from 'metis/server/http/router'
@@ -559,7 +559,7 @@ export const routerMap: TMetisRouterMap = (
   // color options that can be used to
   // style a mission-node.
   router.get('/colors/', defineRequests({}), (request, response) => {
-    response.json(colorOptions)
+    response.json(MissionNode.COLOR_OPTIONS)
   })
 
   // -- GET /api/v1/missions/assets/

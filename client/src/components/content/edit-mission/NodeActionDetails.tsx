@@ -1,4 +1,4 @@
-import MissionNodeAction from '../../../../../shared/missions/actions'
+import MissionAction from '../../../../../shared/missions/actions'
 import MissionNode from '../../../../../shared/missions/nodes'
 import { ButtonSVG, EButtonSVGPurpose } from '../user-controls/ButtonSVG'
 import NodeActionEntry from './NodeActionEntry'
@@ -139,7 +139,7 @@ export default function NodeActionDetails(props: {
             purpose={EButtonSVGPurpose.Add}
             handleClick={() => {
               if (node !== null) {
-                let action: MissionNodeAction =
+                let action: MissionAction =
                   MissionNode.createDefaultAction(node)
                 node.actions.push(action)
                 handleChange()

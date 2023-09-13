@@ -1,8 +1,73 @@
-import axios, { AxiosError, AxiosResponse } from 'axios'
-import { PRNG } from 'seedrandom'
-import MissionNode from 'metis/missions/nodes'
-import Mission from 'metis/missions'
 import { AnyObject } from 'metis/toolbox/objects'
+import { v4 as generateHash } from 'uuid'
+import { IMissionNode } from './nodes'
+import { IMission } from '.'
+
+/**
+ * Interface of the abstract MissionAction class.
+ * @note Any public, non-static properties and functions of the MissionAction class
+ * must first be defined here for them to be accessible to the Mission and
+ * MissionNode classes.
+ */
+export interface IMissionAction {
+  /**
+   * The node on which the action is being executed.
+   */
+  node: IMissionNode
+  /**
+   * The mission of which the action is a part.
+   */
+  mission: IMission
+  /**
+   * The ID of the action.
+   */
+  actionID: string
+  /**
+   * The name of the action.
+   */
+  name: string
+  /**
+   * The description of the action.
+   */
+  description: string
+  /**
+   * The amount of time it takes to execute the action.
+   */
+  processTime: number
+  /**
+   * The chance that the action will succeed.
+   */
+  successChance: number
+  /**
+   * The chance that the action will fail (1 - successChance).
+   */
+  failureChance: number
+  /**
+   * The amount of resources the action will be subtracted from that available to the executor of the action.
+   */
+  resourceCost: number
+  /**
+   * Whether or not this action is currently being executed.
+   */
+  executing: boolean
+  /**
+   * Text printed to the console after the action is executed successfully.
+   */
+  postExecutionSuccessText: string
+  /**
+   * Text printed to the console after the action is executed unsuccessfully.
+   */
+  postExecutionFailureText: string
+  /**
+   * Effects that are performed when the action is executed successfully.
+   */
+  scripts: Array<IScript>
+  /**
+   * Converts the action to JSON.
+   * @returns {IMissionActionJSON} the JSON for the action.
+   */
+  toJSON: () => IMissionActionJSON
+}
 
 export interface IScript {
   label: string
@@ -12,7 +77,10 @@ export interface IScript {
   args: AnyObject
 }
 
-export interface IMissionNodeActionJSON {
+/**
+ * Plain JSON representation of a MissionAction object.
+ */
+export interface IMissionActionJSON {
   actionID: string
   name: string
   description: string
@@ -25,103 +93,84 @@ export interface IMissionNodeActionJSON {
 }
 
 /**
- * Options for when a node is executed.
+ * Options for creating a mission action.
  */
-export interface IActionExecutionOptions {
+export interface IMissionActionOptions {}
+
+/**
+ * An action that can be executed on a mission node, causing a certain effect.
+ */
+export default abstract class MissionAction<
+  TMission extends IMission,
+  TMissionNode extends IMissionNode,
+> implements IMissionAction
+{
+  // Inherited
+  public node: TMissionNode
+  // Inherited
+  public actionID: string
+  // Inherited
+  public name: string
+  // Inherited
+  public description: string
+  // Inherited
+  public processTime: number
+  // Inherited
+  public successChance: number
+  // Inherited
+  public resourceCost: number
+  // Inherited
+  public postExecutionSuccessText: string
+  // Inherited
+  public postExecutionFailureText: string
+  // Inherited
+  public scripts: Array<IScript>
+
+  // Inherited
+  public get failureChance(): number {
+    return 1 - this.successChance
+  }
+
+  // Inherited
+  public get executing(): boolean {
+    return this.node.executing
+  }
+
+  // Inherited
+  public get mission(): TMission {
+    return this.node.mission as TMission
+  }
+
   /**
-   * Whether or not to enact effects when executing the action.
+   * @param {TMissionNode} node The node on which the action is being executed.
+   * @param {IMissionActionJSON} data The action data from which to create the action. Any ommitted values will be set to the default properties defined in MissionAction.DEFAULT_PROPERTIES.
    */
-  enactEffects: boolean
-}
-
-export default class MissionNodeAction {
-  node: MissionNode
-  actionID: string
-  name: string
-  description: string
-  processTime: number
-  successChance: number
-  resourceCost: number
-  postExecutionSuccessText: string
-  postExecutionFailureText: string
-  scripts: Array<IScript>
-  _willSucceedArray: Array<boolean>
-  _willSucceed: boolean | null
-
-  // This will be called if all the
-  // necessary conditions are met to
-  // execute a node action.
-  get readyToExecute(): boolean {
-    let node: MissionNode = this.node
-    let mission: Mission = node.mission
-    let resourceCost: number = this.resourceCost
-
-    return (
-      resourceCost <= mission.resources &&
-      node.executable &&
-      !node.executing &&
-      !this.succeeded &&
-      this._willSucceedArray.length !== 0
-    )
-  }
-
-  // Getter for _willSucceedArray
-  get willSucceedArray(): Array<boolean> {
-    return this._willSucceedArray
-  }
-
-  // Getter for _willSucceed
-  get willSucceed(): boolean | null {
-    return this._willSucceed
-  }
-
-  // Gets the total amount of attempts
-  // that a user can have to execute a node
-  get totalPossibleExecutionAttempts(): number {
-    return Math.floor(this.node.mission.initialResources / this.resourceCost)
-  }
-
-  // Determines if a node succeeded or not
-  // after it is executed
-  get succeeded(): boolean | null {
-    return (
-      this.node.lastExecutedAction?.actionID === this.actionID &&
-      this.node.lastExecutionSucceeded
-    )
-  }
-
-  constructor(
-    node: MissionNode,
-    actionID: string,
-    name: string,
-    description: string,
-    processTime: number,
-    successChance: number,
-    resourceCost: number,
-    postExecutionSuccessText: string,
-    postExecutionFailureText: string,
-    scripts: Array<IScript>,
+  public constructor(
+    node: TMissionNode,
+    data: Partial<IMissionActionJSON> = MissionAction.DEFAULT_PROPERTIES,
   ) {
     this.node = node
-    this.actionID = actionID
-    this.name = name
-    this.description = description
-    this.processTime = processTime
-    this.successChance = successChance
-    this.resourceCost = resourceCost
-    this.postExecutionSuccessText = postExecutionSuccessText
-    this.postExecutionFailureText = postExecutionFailureText
-    this.scripts = scripts
-    this._willSucceedArray =
-      MissionNodeAction.determineDifferentSuccessOutcomes(
-        this.totalPossibleExecutionAttempts,
-        successChance,
-        node.mission.rng,
-      )
-    this._willSucceed = null
+    this.actionID = data.actionID ?? MissionAction.DEFAULT_PROPERTIES.actionID
+    this.name = data.name ?? MissionAction.DEFAULT_PROPERTIES.name
+    this.description =
+      data.description ?? MissionAction.DEFAULT_PROPERTIES.description
+    this.processTime =
+      data.processTime ?? MissionAction.DEFAULT_PROPERTIES.processTime
+    this.successChance =
+      data.successChance ?? MissionAction.DEFAULT_PROPERTIES.successChance
+    this.resourceCost =
+      data.resourceCost ?? MissionAction.DEFAULT_PROPERTIES.resourceCost
+    this.postExecutionSuccessText =
+      data.postExecutionSuccessText ??
+      MissionAction.DEFAULT_PROPERTIES.postExecutionSuccessText
+    this.postExecutionFailureText =
+      data.postExecutionFailureText ??
+      MissionAction.DEFAULT_PROPERTIES.postExecutionFailureText
+    this.scripts = data.scripts ?? MissionAction.DEFAULT_PROPERTIES.scripts
   }
 
-  toJSON(): IMissionNodeActionJSON {
+  // inherited
+  public toJSON(): IMissionActionJSON {
     return {
       actionID: this.actionID,
       name: this.name,
@@ -135,137 +184,20 @@ export default class MissionNodeAction {
     }
   }
 
-  // After the node is executed, the willSucceed that was just used is
-  // removed from the "willSucceedArray" so that if the user re-executes
-  // they can potentially see a different result.
-  updateWillSucceedArray(): Array<boolean> {
-    this._willSucceedArray.shift()
-
-    return this._willSucceedArray
-  }
-
-  // This updates the "willSucceed" property for re-execution purposes
-  updateWillSucceed(): boolean {
-    this._willSucceed = this._willSucceedArray[0]
-
-    return this._willSucceed
-  }
-
-  // This will be called upon action
-  // execution completion.
-  _handleExecutionEnd = (
-    success: boolean,
-    enactEffects: boolean,
-    handleSuccess: () => void,
-    handleFailure: () => void,
-  ): void => {
-    let node: MissionNode = this.node
-    let mission: Mission = node.mission
-
-    node.handleActionExecutionEnd(success)
-
-    if (success) {
-      handleSuccess()
-    } else if (!success) {
-      handleFailure()
-    }
-
-    if (success && enactEffects) {
-      handleSuccessfulActionExecution(
-        mission.missionID,
-        node.nodeID,
-        this.actionID,
-      )
-    }
-  }
-
   /**
-   * Executes the action with the given options.
-   * @param {IActionExecutionOptions} options The options for executing the action.
-   * @returns {Promise<{ success: boolean }>} A promise that resolves with whether or not the action succeeded. Resolves once the action is completed. Promise shouldn't need a catch.
+   * Default properties set when creating a new MissionAction object.
    */
-  public execute({
-    enactEffects,
-  }: IActionExecutionOptions): Promise<{ success: boolean }> {
-    return new Promise<{ success: boolean }>((resolve) => {
-      let node: MissionNode = this.node
-      let mission: Mission = node.mission
-      let resourceCost: number = this.resourceCost
-      let processTime: number = this.processTime
-      let willSucceed: boolean = this.willSucceedArray[0]
-
-      if (!this.readyToExecute) {
-        throw Error('This action cannot currently be executed.')
-      }
-
-      mission.resources -= resourceCost
-
-      node.handleActionExecutionStart(this)
-
-      setTimeout(() => {
-        this.updateWillSucceed()
-        this._handleExecutionEnd(
-          willSucceed,
-          enactEffects,
-          () => resolve({ success: true }),
-          () => resolve({ success: false }),
-        )
-        this.updateWillSucceedArray()
-      }, processTime)
-    })
+  public static readonly DEFAULT_PROPERTIES: IMissionActionJSON = {
+    actionID: generateHash(),
+    name: 'New Action',
+    description: 'Enter your description here.',
+    processTime: 5000,
+    successChance: 0.5,
+    resourceCost: 1,
+    postExecutionSuccessText:
+      'Enter your successful post-execution message here.',
+    postExecutionFailureText:
+      'Enter your unsuccessful post-execution message here.',
+    scripts: [],
   }
-
-  // This will determine whether a
-  // node action succeeds or fails based
-  // on the success chance passed.
-  static determineDifferentSuccessOutcomes = (
-    totalExecutionAttempts: number,
-    successChance: number,
-    rng: PRNG,
-  ): Array<boolean> => {
-    let willSucceedArray: Array<boolean> = []
-    let willSucceed: boolean = false
-
-    for (let i = 0; i < totalExecutionAttempts && !willSucceed; i++) {
-      willSucceed = rng.double() <= successChance
-      willSucceedArray.push(willSucceed)
-    }
-
-    return willSucceedArray
-  }
-}
-
-export function handleSuccessfulActionExecution(
-  missionID: string,
-  nodeID: string,
-  actionID: string,
-): void {
-  axios
-    .put(`/api/v1/missions/handle-action-execution/`, {
-      missionID: missionID,
-      nodeID: nodeID,
-      actionID: actionID,
-    })
-    .catch((error: AxiosError) => {
-      console.error('Failed to handle successful action execution.')
-      console.error(error)
-    })
-}
-
-export function getAssetData(
-  callback: (assets: Array<AnyObject>) => void,
-  callbackError: (error: AxiosError) => void,
-): void {
-  axios
-    .get(`/api/v1/missions/assets`)
-    .then((response: AxiosResponse<AnyObject>) => {
-      let assets = response.data.assetData
-
-      callback(assets)
-    })
-    .catch((error: AxiosError) => {
-      console.error('Failed to retrieve assets.')
-      console.error(error)
-      callbackError(error)
-    })
 }

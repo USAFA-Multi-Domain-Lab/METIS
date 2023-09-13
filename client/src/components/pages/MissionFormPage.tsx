@@ -11,7 +11,7 @@ import { IPage } from '../App'
 import MissionNode, {
   ENodeDeleteMethod,
 } from '../../../../shared/missions/nodes'
-import MissionNodeAction from '../../../../shared/missions/actions'
+import MissionAction from '../../../../shared/missions/actions'
 import Navigation from '../content/general-layout/Navigation'
 import {
   EPanelSizingMode,
@@ -209,7 +209,7 @@ export default function MissionFormPage(
         // one action to choose from. If the selected node doesn't
         // have at least one action then it will auto-generate one
         // for that node.
-        let newActionArray: Array<MissionNodeAction> = [
+        let newActionArray: Array<MissionAction> = [
           MissionNode.createDefaultAction(selectedNode),
         ]
         selectedNode.actions = newActionArray

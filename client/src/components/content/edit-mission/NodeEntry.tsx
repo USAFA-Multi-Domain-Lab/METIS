@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import MissionNodeAction from '../../../../../shared/missions/actions'
+import MissionAction from '../../../../../shared/missions/actions'
 import MissionNode from '../../../../../shared/missions/nodes'
 import Mission from '../../../../../shared/missions'
 import Tooltip from '../communication/Tooltip'
@@ -301,7 +301,7 @@ export default function NodeEntry(props: {
                     // selected node does not have at least one
                     // action then it will auto-generate one for
                     // that node.
-                    let newActionArray: Array<MissionNodeAction> = [
+                    let newActionArray: Array<MissionAction> = [
                       MissionNode.createDefaultAction(node),
                     ]
                     node.actions = newActionArray

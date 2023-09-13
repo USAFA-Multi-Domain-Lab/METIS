@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import MissionNodeAction from '../../../../../shared/missions/actions'
+import MissionAction from '../../../../../shared/missions/actions'
 import MissionNode from '../../../../../shared/missions/nodes'
 import Tooltip from '../communication/Tooltip'
 import { Detail, DetailBox, DetailNumber } from '../form/Form'
@@ -9,7 +9,7 @@ import './NodeActionEntry.scss'
 // This will render an action
 // available to a node.
 export default function NodeActionEntry(props: {
-  action: MissionNodeAction
+  action: MissionAction
   displayedAction: number
   isEmptyString: boolean
   actionEmptyStringArray: Array<string>
@@ -18,7 +18,7 @@ export default function NodeActionEntry(props: {
   setMountHandled: (mountHandled: boolean) => void
   handleChange: () => void
 }): JSX.Element | null {
-  let action: MissionNodeAction = props.action
+  let action: MissionAction = props.action
   let node: MissionNode = action.node
   let displayedAction: number = props.displayedAction
   let isEmptyString: boolean = props.isEmptyString

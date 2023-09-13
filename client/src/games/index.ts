@@ -4,7 +4,7 @@ import User from '../../../shared/users'
 import ServerConnection from 'src/connect/server'
 import Mission from '../../../shared/missions'
 import MissionNode from '../../../shared/missions/nodes'
-import MissionNodeAction from '../../../shared/missions/actions'
+import MissionAction from '../../../shared/missions/actions'
 import { TServerData } from '../../../shared/connect/data'
 
 /**
@@ -136,7 +136,7 @@ export default class GameClient extends Game<User> {
     let { actionID, expectedCompletionTime } = data
 
     // Find the action, given the ID.
-    let action: MissionNodeAction | undefined = this.actions.get(actionID)
+    let action: MissionAction | undefined = this.actions.get(actionID)
 
     // Handle action not found.
     if (action === undefined) {
@@ -160,7 +160,7 @@ export default class GameClient extends Game<User> {
     let { actionID, successful, revealedChildNodes } = data
 
     // Find the action, given the ID.
-    let action: MissionNodeAction | undefined = this.actions.get(actionID)
+    let action: MissionAction | undefined = this.actions.get(actionID)
 
     // Handle action not found.
     if (action === undefined) {

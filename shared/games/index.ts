@@ -1,7 +1,8 @@
-import Mission, { IMissionJSON } from '../missions'
-import { IUserJSON } from '../users'
-import context from '../context'
-import MissionNodeAction from '../missions/actions'
+import context from 'metis/context'
+import { IUserJSON } from 'metis/users'
+import { IMission, IMissionJSON } from 'metis/missions'
+import { IMissionAction } from 'metis/missions/actions'
+import { IMissionNode } from 'metis/missions/nodes'
 import axios, { AxiosError } from 'axios'
 
 export interface IGameJSON {
@@ -13,7 +14,12 @@ export interface IGameJSON {
 /**
  * Base class for a games. Represents a game being played by participating students in METIS.
  */
-export default abstract class Game<TParticpant extends { userID: string }> {
+export default abstract class Game<
+  TParticpant extends { userID: string },
+  TMission extends IMission,
+  TMissionNode extends IMissionNode,
+  TMissionAction extends IMissionAction,
+> {
   /**
    * The ID of the game.
    */
@@ -22,7 +28,7 @@ export default abstract class Game<TParticpant extends { userID: string }> {
   /**
    * The mission being executed by the participants.
    */
-  public readonly mission: Mission
+  public readonly mission: TMission
 
   /**
    * The participants of the game executing the mission.
@@ -39,9 +45,9 @@ export default abstract class Game<TParticpant extends { userID: string }> {
   /**
    * A map of actionIDs to actions compiled from those found in the mission being executed.
    */
-  protected actions: Map<string, MissionNodeAction> = new Map<
+  protected actions: Map<string, TMissionAction> = new Map<
     string,
-    MissionNodeAction
+    TMissionAction
   >()
 
   /**
@@ -49,7 +55,7 @@ export default abstract class Game<TParticpant extends { userID: string }> {
    */
   public constructor(
     gameID: string,
-    mission: Mission,
+    mission: TMission,
     participants: Array<TParticpant>,
   ) {
     this.gameID = gameID
@@ -61,17 +67,18 @@ export default abstract class Game<TParticpant extends { userID: string }> {
   /**
    * Loops through all the nodes in the mission, and each action in a node, and maps the actionID to the action in the field "actions".
    */
-  protected mapActions(): void {
-    // Initialize the actions map.
-    this.actions = new Map<string, MissionNodeAction>()
-
-    // Loops through and maps each action.
-    this.mission.nodes.forEach((node) => {
-      node.actions.forEach((action) => {
-        this.actions.set(action.actionID, action)
-      })
-    })
-  }
+  protected abstract mapActions(): void
+  //   {
+  //     // Initialize the actions map.
+  //     this.actions = new Map<string, TMissionAction>()
+  //
+  //     // Loops through and maps each action.
+  //     this.mission.nodes.forEach((node) => {
+  //       node.actions.forEach((action) => {
+  //         this.actions.set(action.actionID, action)
+  //       })
+  //     })
+  //   }
 
   /**
    * Checks if the given participant is currently in the game.

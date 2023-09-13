@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import './NodeActions.scss'
 import MissionNode from '../../../../../shared/missions/nodes'
-import MissionNodeAction from '../../../../../shared/missions/actions'
+import MissionAction from '../../../../../shared/missions/actions'
 import Tooltip from '../communication/Tooltip'
 import strings from '../../../../../shared/toolbox/strings'
 import Mission from '../../../../../shared/missions'
@@ -9,12 +9,12 @@ import Mission from '../../../../../shared/missions'
 const NodeActions = (props: {
   isOpen: boolean
   selectedNode: MissionNode | null | undefined
-  handleActionSelectionRequest: (action: MissionNodeAction) => void
+  handleActionSelectionRequest: (action: MissionAction) => void
   handleCloseRequest: () => void
 }) => {
   let isOpen: boolean = props.isOpen
   let selectedNode: MissionNode | null | undefined = props.selectedNode
-  let handleActionSelectionRequest = (action: MissionNodeAction) => {
+  let handleActionSelectionRequest = (action: MissionAction) => {
     if (action.readyToExecute) {
       setDisplayActionList(false)
       props.handleActionSelectionRequest(action)
@@ -99,7 +99,7 @@ const NodeActions = (props: {
           </div>
         </div>
         <div className={nodeActionListClassName} ref={scrollRef}>
-          {selectedNode.actions.map((action: MissionNodeAction) => {
+          {selectedNode.actions.map((action: MissionAction) => {
             let mission: Mission = action.node.mission
             let nodeActionContainerClassName: string = 'NodeActionContainer'
 
