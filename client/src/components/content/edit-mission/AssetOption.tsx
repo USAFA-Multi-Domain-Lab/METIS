@@ -1,14 +1,15 @@
 import { useState } from 'react'
 
-import MissionAction, { IScript } from '../../../../../shared/missions/actions'
 import { AnyObject } from '../../../../../shared/toolbox/objects'
 import Tooltip from '../communication/Tooltip'
 import './AssetOption.scss'
 import SubAssetOption from './SubAssetOption'
 import { useGlobalContext } from 'src/context'
+import ClientMissionAction from 'src/missions/actions'
+import { IScript } from '../../../../../shared/missions/actions'
 
 export default function AssetOption(props: {
-  action: MissionAction
+  action: ClientMissionAction
   assetOption: string
   assetPath: Array<string>
   assets: AnyObject
@@ -16,7 +17,7 @@ export default function AssetOption(props: {
   setSelectedScript: (selectedScript: IScript) => void
 }): JSX.Element | null {
   /* -- COMPONENT VARIABLES -- */
-  let action: MissionAction = props.action
+  let action: ClientMissionAction = props.action
   let assetOption: string = props.assetOption
   let assetPath: Array<string> = props.assetPath
   let assets: AnyObject = props.assets

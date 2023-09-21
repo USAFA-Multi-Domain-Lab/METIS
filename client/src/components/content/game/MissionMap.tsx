@@ -6,11 +6,6 @@ import List from '../general-layout/List'
 import strings from '../../../../../shared/toolbox/strings'
 import { EAjaxStatus } from '../../../../../shared/toolbox/ajax'
 import MoreInformation from '../communication/MoreInformation'
-import Mission from '../../../../../shared/missions'
-import MissionNode, {
-  ENodeTargetRelation,
-  MissionNodeCreator,
-} from '../../../../../shared/missions/nodes'
 import {
   ButtonSVG,
   EButtonSVGPurpose,
@@ -18,17 +13,22 @@ import {
 } from '../user-controls/ButtonSVG'
 import { ButtonSVGPanel } from '../user-controls/ButtonSVGPanel'
 import { SingleTypeObject } from '../../../../../shared/toolbox/objects'
+import ClientMission from 'src/missions'
+import ClientMissionNode, { ENodeTargetRelation } from 'src/missions/nodes'
+import NodeCreator from 'src/missions/nodes/creator'
+import ClientActionExecution from 'src/missions/actions/executions'
+import ArrayToolbox from '../../../../../shared/toolbox/arrays'
 
 /* -- interfaces -- */
 
 interface IMissionMap {
-  mission: Mission
+  mission: ClientMission
   missionAjaxStatus: EAjaxStatus
-  selectedNode: MissionNode | null
-  handleNodeSelection: (node: MissionNode) => void
-  handleNodeCreation: (node: MissionNode) => void
+  selectedNode: ClientMissionNode | null
+  handleNodeSelection: (node: ClientMissionNode) => void
+  handleNodeCreation: (node: ClientMissionNode) => void
   handleNodeDeselection: (() => void) | null
-  handleNodeDeletionRequest: ((node: MissionNode) => void) | null
+  handleNodeDeletionRequest: ((node: ClientMissionNode) => void) | null
   handleMapEditRequest: (() => void) | null
   handleMapSaveRequest: (() => void) | null
   handleNodePathExitRequest: (() => void) | null
@@ -40,16 +40,16 @@ interface IMissionMap {
   grayOutAddNodeButton: boolean
   grayOutDeleteNodeButton: boolean
   elementRef: React.RefObject<HTMLDivElement>
-  applyNodeClassName: (node: MissionNode) => string
-  renderNodeTooltipDescription: (node: MissionNode) => string
+  applyNodeClassName: (node: ClientMissionNode) => string
+  renderNodeTooltipDescription: (node: ClientMissionNode) => string
 }
 
 interface IMissionMap_S {
-  visibleNodes: Array<MissionNode>
+  visibleNodes: Array<ClientMissionNode>
   mainRelationships: Array<MissionNodeRelationship>
   nodeCreatorRelationships: Array<MissionNodeRelationship>
   lastStructureChangeKey: string
-  lastExpandedNode: MissionNode | null
+  lastExpandedNode: ClientMissionNode | null
   navigationIsActive: boolean
   mapOffsetX: number
   mapOffsetY: number
@@ -63,13 +63,13 @@ export interface IMissionMappable {
   mapX: number
   mapY: number
   depth: number
+  execution: ClientActionExecution | null
   executing: boolean
   executable: boolean
-  executionPercentCompleted: number
   device: boolean
   color: string
   isOpen: boolean
-  childNodes: Array<MissionNode>
+  childNodes: Array<ClientMissionNode>
 }
 
 // represents a location on the mission map
@@ -137,7 +137,7 @@ export default class MissionMap extends React.Component<
   // takes an already mapped node, and
   // renders its tooltip.
   static renderMappedNodeTooltipDescription_default = (
-    node: MissionNode,
+    node: ClientMissionNode,
   ): string => {
     let nodeTitle: string = node.name
     let nodeTypeInfo: string = ''
@@ -183,7 +183,7 @@ export default class MissionMap extends React.Component<
 
   // inherited
   get defaultState(): IMissionMap_S {
-    let mission: Mission = this.props.mission
+    let mission: ClientMission = this.props.mission
 
     return {
       visibleNodes: [],
@@ -250,13 +250,13 @@ export default class MissionMap extends React.Component<
 
   // inherited
   componentDidMount(): void {
-    let mission: Mission = this.props.mission
+    let mission: ClientMission = this.props.mission
     let map: HTMLDivElement | null = this.map.current
 
     window.addEventListener('wheel', this.preventMapZoomInterference, {
       passive: false,
     })
-    mission.addStructureChangeHandler(this.forceUpdate)
+    mission.addStructureListener(this.forceUpdate)
 
     if (map !== null) {
       new ResizeObserver(this.forceUpdate).observe(map)
@@ -267,10 +267,10 @@ export default class MissionMap extends React.Component<
 
   // inherited
   componentWillUnmount(): void {
-    let mission: Mission = this.props.mission
+    let mission: ClientMission = this.props.mission
 
     window.removeEventListener('wheel', this.preventMapZoomInterference)
-    mission.removeStructureChangeHandler(this.forceUpdate)
+    mission.removeStructureListener(this.forceUpdate)
   }
 
   /* -- functions | state-purposed -- */
@@ -292,8 +292,8 @@ export default class MissionMap extends React.Component<
     }
 
     if (previousProps.mission !== this.props.mission) {
-      previousProps.mission.removeStructureChangeHandler(this.forceUpdate)
-      this.props.mission.addStructureChangeHandler(this.forceUpdate)
+      previousProps.mission.removeStructureListener(this.forceUpdate)
+      this.props.mission.addStructureListener(this.forceUpdate)
     }
 
     if (this.state.nodeDepth < this.props.mission.depth) {
@@ -348,7 +348,7 @@ export default class MissionMap extends React.Component<
 
   // returns whether this node is linked with any
   // other node in the state
-  nodeHasMappedRelationship(node: MissionNode): boolean {
+  nodeHasMappedRelationship(node: ClientMissionNode): boolean {
     let relationships: MissionNodeRelationship[] = this.state.mainRelationships
     for (let relationship of relationships) {
       if (
@@ -364,7 +364,7 @@ export default class MissionMap extends React.Component<
   // This updates all relationships for
   // the mission.
   updateAllRelationships = (): void => {
-    let mission: Mission = this.props.mission
+    let mission: ClientMission = this.props.mission
 
     this.updateMainRelationships()
     this.updateNodeCreatorRelationships()
@@ -378,15 +378,16 @@ export default class MissionMap extends React.Component<
   // when rendering the pointers, these values
   // are at the ready.
   updateMainRelationships = (
-    parentNode: MissionNode = this.props.mission.rootNode,
-    visibleNodes: Array<MissionNode> = [],
+    parentNode: ClientMissionNode = this.props.mission.rootNode,
+    visibleNodes: Array<ClientMissionNode> = [],
     relationships: Array<MissionNodeRelationship> = [],
   ): void => {
-    let mission: Mission = this.props.mission
-    let rootNode: MissionNode = mission.rootNode
-    let nodeCreationTarget: MissionNode | null = mission.nodeCreationTarget
+    let mission: ClientMission = this.props.mission
+    let rootNode: ClientMissionNode = mission.rootNode
+    let nodeCreationTarget: ClientMissionNode | null =
+      mission.nodeCreationTarget
 
-    let childNodes: Array<MissionNode> = parentNode.childNodes
+    let childNodes: Array<ClientMissionNode> = parentNode.childNodes
 
     for (let childNode of childNodes) {
       if (
@@ -422,14 +423,15 @@ export default class MissionMap extends React.Component<
   // in the mission.
   updateNodeCreatorRelationships = (): void => {
     let relationships: Array<MissionNodeRelationship> = []
-    let mission: Mission = this.props.mission
-    let rootNode: MissionNode = mission.rootNode
-    let nodeCreationTarget: MissionNode | null = mission.nodeCreationTarget
-    let nodeCreators: Array<MissionNodeCreator> = mission.nodeCreators
-    let previousSiblingOfTargetCreator: MissionNodeCreator | undefined
-    let followingSiblingOfTargetCreator: MissionNodeCreator | undefined
-    let parentOfTargetOnlyCreator: MissionNodeCreator | undefined
-    let betweenTargetAndChildrenCreator: MissionNodeCreator | undefined
+    let mission: ClientMission = this.props.mission
+    let rootNode: ClientMissionNode = mission.rootNode
+    let nodeCreationTarget: ClientMissionNode | null =
+      mission.nodeCreationTarget
+    let nodeCreators: Array<NodeCreator> = mission.nodeCreators
+    let previousSiblingOfTargetCreator: NodeCreator | undefined
+    let followingSiblingOfTargetCreator: NodeCreator | undefined
+    let parentOfTargetOnlyCreator: NodeCreator | undefined
+    let betweenTargetAndChildrenCreator: NodeCreator | undefined
 
     if (nodeCreationTarget !== null) {
       for (let nodeCreator of nodeCreators) {
@@ -506,7 +508,7 @@ export default class MissionMap extends React.Component<
   // This will reveal new nodes that have
   // been just unlocked.
   revealNewNodes = (): void => {
-    let mission: Mission = this.props.mission
+    let mission: ClientMission = this.props.mission
     let map: HTMLDivElement | null = this.map.current
     let mapScale: number = this.state.mapScale
     let mapOffsetX: number = this.state.mapOffsetX
@@ -544,7 +546,7 @@ export default class MissionMap extends React.Component<
   // that have been newly generated in a
   // node.
   revealNewNodeCreators = (): void => {
-    let mission: Mission = this.props.mission
+    let mission: ClientMission = this.props.mission
     let map: HTMLDivElement | null = this.map.current
     let mapScale: number = this.state.mapScale
     let mapOffsetX: number = this.state.mapOffsetX
@@ -710,8 +712,9 @@ export default class MissionMap extends React.Component<
   }
 
   // This is called when a node is selected.
-  handleNodeSelection = (newlySelectedNode: MissionNode) => {
-    let currentlySelectedNode: MissionNode | null = this.props.selectedNode
+  handleNodeSelection = (newlySelectedNode: ClientMissionNode) => {
+    let currentlySelectedNode: ClientMissionNode | null =
+      this.props.selectedNode
     let allowCreationMode: boolean = this.props.allowCreationMode
 
     if (
@@ -731,29 +734,24 @@ export default class MissionMap extends React.Component<
 
   // This is called when a node is requested to
   // be created.
-  handleNodeCreationRequest = (nodeCreator: MissionNodeCreator): void => {
-    let node: MissionNode = nodeCreator.create()
+  handleNodeCreationRequest = (nodeCreator: NodeCreator): void => {
+    let node: ClientMissionNode = nodeCreator.create()
     this.props.handleNodeCreation(node)
   }
 
   // This is called to reveal the node creators
   // for the selectedNode.
   activateNodeCreation = (): void => {
-    let selectedNode: MissionNode | null = this.props.selectedNode
+    let mission: ClientMission = this.props.mission
+    let selectedNode: ClientMissionNode | null = this.props.selectedNode
 
-    if (selectedNode !== null) {
-      selectedNode.generateNodeCreators()
-    }
+    mission.nodeCreationTarget = selectedNode
   }
 
   // This is called to hide the node creators
   // for the selectedNode.
   deactivateNodeCreation = (): void => {
-    let selectedNode: MissionNode | null = this.props.selectedNode
-
-    if (selectedNode !== null) {
-      selectedNode.destroyNodeCreators()
-    }
+    this.props.mission.nodeCreationTarget = null
   }
 
   /* -- functions | render -- */
@@ -906,7 +904,7 @@ export default class MissionMap extends React.Component<
   // rendering it with the correct position
   // and scale on the map.
   applyNodeStyling = (node: IMissionMappable) => {
-    let selectedNode: MissionNode | null = this.props.selectedNode
+    let selectedNode: ClientMissionNode | null = this.props.selectedNode
     let styling: React.CSSProperties = {}
     let map: HTMLDivElement | null = this.map.current
 
@@ -988,8 +986,8 @@ export default class MissionMap extends React.Component<
     node: IMissionMappable,
     buttons: Array<IButtonSVG> = [],
   ): JSX.Element => {
-    let selectedNode: MissionNode | null = this.props.selectedNode
-    let executionPercentCompleted: number = node.executionPercentCompleted
+    let selectedNode: ClientMissionNode | null = this.props.selectedNode
+    let execution: ClientActionExecution | null = node.execution
     let mapScale: number = this.state.mapScale
     let titleFontSize: number = mapItemFontSize * mapScale
     let mapXScale: number = this.currentMapXScale
@@ -1000,7 +998,9 @@ export default class MissionMap extends React.Component<
     let wrapperHeight: number = (mapYScale - gridPaddingY * 2) * mapScale
     let loadingHeight: number = wrapperHeight - 2
     let loadingMarginBottom: number = -loadingHeight
-    let loadingWidth: number | null = executionPercentCompleted * (width - 4) // subtracted 4 from the width to account for the 2px border
+    let loadingWidth: number | null = execution
+      ? execution.completionPercentage * (width - 4)
+      : 0 // subtracted 4 from the width to account for the 2px border
     let titleWidthSubtrahend: number = width * 0.1
     let titleLineHeight: number = wrapperHeight * 0.34
     let buttonMarginTop = wrapperHeight * -0.175
@@ -1101,16 +1101,16 @@ export default class MissionMap extends React.Component<
 
   // applys an addon class name to the node
   // passed from the mapped node list.
-  applyMappedNodeClassName = (node: MissionNode) => {
-    let selectedNode: MissionNode | null = this.props.selectedNode
+  applyMappedNodeClassName = (node: ClientMissionNode) => {
+    let selectedNode: ClientMissionNode | null = this.props.selectedNode
 
     let className: string = ''
 
     let classNameExternalAddon: string = this.props.applyNodeClassName(node)
 
-    if (node.executed && node.selectedAction?.succeeded) {
+    if (node.executionState === 'successful') {
       className += ' succeeded'
-    } else if (node.executed && !node.selectedAction?.succeeded) {
+    } else if (node.executionState === 'failure') {
       className += ' failed'
     }
 
@@ -1127,9 +1127,9 @@ export default class MissionMap extends React.Component<
 
   // This will constructor the buttons
   // available for a given node.
-  constructNodeButtons(node: MissionNode): Array<IButtonSVG> {
-    let mission: Mission = this.props.mission
-    let selectedNode: MissionNode | null = this.props.selectedNode
+  constructNodeButtons(node: ClientMissionNode): Array<IButtonSVG> {
+    let mission: ClientMission = this.props.mission
+    let selectedNode: ClientMissionNode | null = this.props.selectedNode
     let allowCreationMode: boolean = this.props.allowCreationMode
     let grayOutDeselectNodeButton: boolean =
       this.props.grayOutDeselectNodeButton
@@ -1208,9 +1208,9 @@ export default class MissionMap extends React.Component<
   // This renders the list of nodes in the
   // mission.
   renderNodes(): JSX.Element | null {
-    let mission: Mission = this.props.mission
+    let mission: ClientMission = this.props.mission
     let missionAjaxStatus: EAjaxStatus = this.props.missionAjaxStatus
-    let visibleNodes: Array<MissionNode> = this.state.visibleNodes
+    let visibleNodes: Array<ClientMissionNode> = this.state.visibleNodes
     let map: HTMLDivElement | null = this.map.current
     let listStyling: React.CSSProperties = {}
 
@@ -1221,10 +1221,10 @@ export default class MissionMap extends React.Component<
     }
 
     return (
-      <List<MissionNode>
+      <List<ClientMissionNode>
         items={visibleNodes}
         itemsPerPage={null}
-        renderItemDisplay={(node: MissionNode) =>
+        renderItemDisplay={(node: ClientMissionNode) =>
           this.renderNodeDisplay(node, this.constructNodeButtons(node))
         }
         searchableProperties={['nodeID']}
@@ -1249,7 +1249,7 @@ export default class MissionMap extends React.Component<
   // This renders the node creators list,
   // if node creation is active.
   renderNodeCreators(): JSX.Element | null {
-    let mission: Mission = this.props.mission
+    let mission: ClientMission = this.props.mission
     let missionAjaxStatus: EAjaxStatus = this.props.missionAjaxStatus
     let map: HTMLDivElement | null = this.map.current
     let listStyling: React.CSSProperties = {}
@@ -1262,7 +1262,7 @@ export default class MissionMap extends React.Component<
 
     if (mission.nodeCreationTarget !== null) {
       return (
-        <List<MissionNodeCreator>
+        <List<NodeCreator>
           items={mission.nodeCreators}
           itemsPerPage={null}
           renderItemDisplay={this.renderNodeDisplay}
@@ -1403,7 +1403,7 @@ export default class MissionMap extends React.Component<
   // renders all the pointers that mark the
   // progression of the nodes in the mission.
   renderPointers(): JSX.Element | null {
-    let mission: Mission = this.props.mission
+    let mission: ClientMission = this.props.mission
     let pointers: Array<JSX.Element | null> = []
     let map: HTMLDivElement | null = this.map.current
     let relationships: MissionNodeRelationship[] = [
@@ -1473,7 +1473,7 @@ export default class MissionMap extends React.Component<
     )
   }
 
-  // inherited
+  // Overridden
   render(): JSX.Element {
     let navigationIsActive: boolean = this.state.navigationIsActive
     let creationModeActive: boolean = this.creationModeActive

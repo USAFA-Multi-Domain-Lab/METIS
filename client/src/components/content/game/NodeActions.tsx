@@ -1,57 +1,81 @@
-import { useEffect, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import './NodeActions.scss'
-import MissionNode from '../../../../../shared/missions/nodes'
-import MissionAction from '../../../../../shared/missions/actions'
+import ClientMissionNode from 'src/missions/nodes'
+import ClientMissionAction from 'src/missions/actions'
 import Tooltip from '../communication/Tooltip'
 import strings from '../../../../../shared/toolbox/strings'
-import Mission from '../../../../../shared/missions'
+import GameClient from 'src/games'
+import { useMountHandler } from 'src/toolbox/hooks'
+import MapToolbox from '../../../../../shared/toolbox/maps'
 
-const NodeActions = (props: {
+export type TNodeActions = {
   isOpen: boolean
-  selectedNode: MissionNode | null | undefined
-  handleActionSelectionRequest: (action: MissionAction) => void
+  node: ClientMissionNode
+  game: GameClient
+  handleActionSelectionRequest: (action: ClientMissionAction) => void
   handleCloseRequest: () => void
-}) => {
-  let isOpen: boolean = props.isOpen
-  let selectedNode: MissionNode | null | undefined = props.selectedNode
-  let handleActionSelectionRequest = (action: MissionAction) => {
-    if (action.readyToExecute) {
-      setDisplayActionList(false)
-      props.handleActionSelectionRequest(action)
-    }
-  }
-  let handleCloseRequest = () => {
-    setDisplayActionList(false)
-    props.handleCloseRequest()
-  }
+}
 
-  /* -- COMPONENT REF -- */
+/**
+ * Prompt for a game participant to select an action to execute on a node.
+ */
+export default function NodeActions({
+  isOpen,
+  node,
+  game,
+  handleActionSelectionRequest,
+  handleCloseRequest,
+}: TNodeActions) {
+  /* -- REFS -- */
+
   const scrollRef = useRef<HTMLDivElement>(null)
 
-  /* -- COMPONENT STATE -- */
+  /* -- STATE -- */
+
   const [displayActionList, setDisplayActionList] = useState<boolean>(false)
-  const [mountHandled, setMountHandled] = useState<boolean>()
 
-  /* -- COMPONENT EFFECT -- */
-  useEffect(() => {
-    if (!mountHandled) {
-      let scrollRefElement: HTMLDivElement | null = scrollRef.current
+  /* -- EFFECTS -- */
 
-      if (scrollRefElement !== null) {
-        scrollRefElement.children[0].scrollIntoView({
-          behavior: 'auto',
-        })
-      }
-      setMountHandled(true)
+  // Handle component mount.
+  const [_, remount] = useMountHandler((done) => {
+    let scrollRefElement: HTMLDivElement | null = scrollRef.current
+
+    if (scrollRefElement !== null && scrollRefElement.children.length > 0) {
+      scrollRefElement.children[0].scrollIntoView({
+        behavior: 'auto',
+      })
     }
-  }, [mountHandled])
+    done()
+  })
 
-  /* -- COMPONENT FUNCTIONS -- */
+  /* -- HANDLERS -- */
 
+  /**
+   * Handles an action being selected for execution.
+   * @param action The action selected by the user.
+   */
+  const select = (action: ClientMissionAction) => {
+    if (game.readyToExecute(action)) {
+      setDisplayActionList(false)
+      handleActionSelectionRequest(action)
+    }
+  }
+
+  /**
+   * Handles a request to close the prompt window.
+   */
+  const close = () => {
+    setDisplayActionList(false)
+    handleCloseRequest()
+  }
+
+  /**
+   * Toggles drop down of actions to choose from.
+   */
   const revealOptions = () => {
     if (!displayActionList) {
       setDisplayActionList(true)
-      setMountHandled(false)
+      remount()
     } else {
       setDisplayActionList(false)
     }
@@ -77,18 +101,55 @@ const NodeActions = (props: {
     ArrowDownClassName += ' Hidden'
   }
 
-  if (selectedNode && selectedNode.actions.length > 0) {
+  const nodeActionItems = MapToolbox.mapToArray(
+    node.actions,
+    (action: ClientMissionAction) => {
+      let nodeActionContainerClassName: string = 'NodeActionContainer'
+
+      if (action.resourceCost > game.resources) {
+        nodeActionContainerClassName += ' Disabled'
+      }
+
+      return (
+        <div className={nodeActionContainerClassName} key={action.actionID}>
+          <div
+            className='NodeAction'
+            key={action.actionID}
+            onClick={() => select(action)}
+          >
+            <Tooltip
+              description={
+                `**Time to execute:** ${
+                  (action.processTime as number) / 1000
+                } second(s)\n` +
+                `**Chance of success:** ${
+                  (action.successChance as number) * 100
+                }%\n` +
+                `**Resource cost:** ${
+                  action.resourceCost as number
+                } resource(s)\n` +
+                `**Description:** ${strings.limit(action.description, 160)}`
+              }
+            />
+            {action.name}
+          </div>
+        </div>
+      )
+    },
+  )
+
+  if (node.actions.size) {
     return (
       <div className={nodeActionsClassName}>
         <div className='Close'>
-          <div className='CloseButton' onClick={handleCloseRequest}>
+          <div className='CloseButton' onClick={close}>
             x
             <Tooltip description='Close window.' />
           </div>
         </div>
 
         <div className='PromptDisplayText'>
-          What you would like to do to {props.selectedNode?.name}?
+          What you would like to do to {node.name}?
         </div>
 
         <div className='NodeActionDefault' onClick={revealOptions}>
@@ -99,46 +160,7 @@ const NodeActions = (props: {
           </div>
         </div>
         <div className={nodeActionListClassName} ref={scrollRef}>
-          {selectedNode.actions.map((action: MissionAction) => {
-            let mission: Mission = action.node.mission
-            let nodeActionContainerClassName: string = 'NodeActionContainer'
-
-            if (action.resourceCost > mission.resources) {
-              nodeActionContainerClassName += ' Disabled'
-            }
-
-            return (
-              <div
-                className={nodeActionContainerClassName}
-                key={action.actionID}
-              >
-                <div
-                  className='NodeAction'
-                  key={action.actionID}
-                  onClick={() => handleActionSelectionRequest(action)}
-                >
-                  <Tooltip
-                    description={
-                      `**Time to execute:** ${
-                        (action.processTime as number) / 1000
-                      } second(s)\n` +
-                      `**Chance of success:** ${
-                        (action.successChance as number) * 100
-                      }%\n` +
-                      `**Resource cost:** ${
-                        action.resourceCost as number
-                      } resource(s)\n` +
-                      `**Description:** ${strings.limit(
-                        action.description,
-                        160,
-                      )}`
-                    }
-                  />
-                  {action.name}
-                </div>
-              </div>
-            )
-          })}
+          {nodeActionItems}
         </div>
       </div>
     )
@@ -146,13 +168,13 @@ const NodeActions = (props: {
     return (
       <div className={nodeActionsClassName}>
         <div className='Close'>
-          <div className='CloseButton' onClick={handleCloseRequest}>
+          <div className='CloseButton' onClick={close}>
             x
             <Tooltip description='Close window.' />
           </div>
         </div>
         <div className='PromptDisplayText'>
-          What you would like to do to {props.selectedNode?.name}?
+          What you would like to do to {node.name}?
         </div>
         <div className='NoActions'>
           No actions exist for this node. Contact your instructor for further
@@ -163,4 +185,4 @@ const NodeActions = (props: {
   }
 }
 
-export default NodeActions
+let html: string = 'This is a link: Enjoy your link <a></a> Next line. <br />'

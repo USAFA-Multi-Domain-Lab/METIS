@@ -20,6 +20,15 @@ export default function ErrorPage({}: IErrorPage): JSX.Element | null {
   // Resolve button props from solutions passed in error object.
   let solutions = error.solutions ?? []
 
+  /* -- HANDLER FUNCTIONS -- */
+
+  /**
+   * Refreshes the page.
+   */
+  const refresh = (): void => {
+    window.location.href = '/'
+  }
+
   /* -- RENDER -- */
 
   // Create a list component to render
@@ -32,7 +41,7 @@ export default function ErrorPage({}: IErrorPage): JSX.Element | null {
       <div className='Buttons'>
         <ButtonText
           text={'Refresh'}
-          handleClick={() => (window.location.href = '/')}
+          handleClick={refresh}
           componentKey={'refresh-8327hkj239f'}
           key={'refresh-8327hkj239f'}
         />

@@ -1,4 +1,5 @@
-import MissionAction, { IScript } from '../../../../../shared/missions/actions'
+import { IScript } from '../../../../../shared/missions/actions'
+import ClientMissionAction from 'src/missions/actions'
 import './NodeActionAsset.scss'
 import Tooltip from '../communication/Tooltip'
 import { useState } from 'react'
@@ -10,12 +11,12 @@ const assetData = {}
 // This will render an asset
 // drop down to a action.
 export default function NodeActionAsset(props: {
-  action: MissionAction
+  action: ClientMissionAction
   isEmptyString: boolean
   handleChange: () => void
 }): JSX.Element | null {
   /* -- COMPONENT VARIABLES -- */
-  let action: MissionAction = props.action
+  let action: ClientMissionAction = props.action
   let isEmptyString: boolean = props.isEmptyString
   let handleChange = props.handleChange
   let assets: AnyObject = assetData

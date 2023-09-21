@@ -1,8 +1,4 @@
-import Mission, {
-  copyMission,
-  deleteMission,
-  setLive,
-} from '../../../../../shared/missions'
+import ClientMission from 'src/missions'
 import { EAjaxStatus } from '../../../../../shared/toolbox/ajax'
 import Toggle, { EToggleLockState } from '../user-controls/Toggle'
 import Tooltip from '../communication/Tooltip'
@@ -13,8 +9,8 @@ import { useState } from 'react'
 import { useGlobalContext } from 'src/context'
 
 export default function MissionModificationPanel(props: {
-  mission: Mission
-  handleSuccessfulCopy: (resultingMission: Mission) => void
+  mission: ClientMission
+  handleSuccessfulCopy: (resultingMission: ClientMission) => void
   handleSuccessfulDeletion: () => void
   handleSuccessfulToggleLive: () => void
 }) {
@@ -28,7 +24,7 @@ export default function MissionModificationPanel(props: {
 
   /* -- COMPONENT VARIABLES -- */
 
-  let mission: Mission = props.mission
+  let mission: ClientMission = props.mission
   let currentActions: MiniButtonSVG[] = []
   let handleSuccessfulDeletion = props.handleSuccessfulDeletion
   let handleSuccessfulCopy = props.handleSuccessfulCopy
@@ -55,25 +51,21 @@ export default function MissionModificationPanel(props: {
   const handleDeleteRequest = () => {
     confirm(
       'Are you sure you want to delete this mission?',
-      (concludeAction: () => void) => {
-        concludeAction()
-        beginLoading('Deleting mission...')
-
-        deleteMission(
-          mission.missionID,
-          () => {
-            finishLoading()
-            notify(`Successfully deleted ${mission.name}.`)
-            handleSuccessfulDeletion()
-          },
-          () => {
-            finishLoading()
-            notify(`Failed to delete ${mission.name}.`)
-          },
-        )
+      async (concludeAction: () => void) => {
+        try {
+          beginLoading('Deleting mission...')
+          concludeAction()
+          await ClientMission.delete(mission.missionID)
+          finishLoading()
+          notify(`Successfully deleted "${mission.name}".`)
+          handleSuccessfulDeletion()
+        } catch (error) {
+          finishLoading()
+          notify(`Failed to delete "${mission.name}".`)
+        }
       },
       {
-        pendingMessageUponConfirm: 'Deleting...',
+        pendingMessageUponConfirm: 'Deleting mission...',
       },
     )
   }
@@ -83,32 +75,27 @@ export default function MissionModificationPanel(props: {
   const handleCopyRequest = () => {
     confirm(
       'Enter the name of the new mission.',
-      (concludeAction: () => void, entry: string) => {
-        beginLoading('Copying mission...')
-
-        copyMission(
-          mission.missionID,
-          entry,
-          (resultingMission: Mission) => {
-            // -----------------------------------------------
-            // finishes loading inside this function.
-            // This function can be found in GamePage.tsx
-            handleSuccessfulCopy(resultingMission)
-            // -----------------------------------------------
-            notify(`Successfully copied ${mission.name}.`)
-          },
-          () => {
-            finishLoading()
-            notify(`Failed to copy ${mission.name}.`)
-          },
-        )
-        concludeAction()
+      async (concludeAction: () => void, entry: string) => {
+        try {
+          beginLoading('Copying mission...')
+          concludeAction()
+          let resultingMission = await ClientMission.copy(
+            mission.missionID,
+            entry,
+          )
+          finishLoading()
+          notify(`Successfully copied "${mission.name}".`)
+          handleSuccessfulCopy(resultingMission)
+        } catch (error) {
+          finishLoading()
+          notify(`Failed to copy "${mission.name}".`)
+        }
       },
       {
         requireEntry: true,
         entryLabel: 'Name',
         buttonConfirmText: 'Copy',
-        pendingMessageUponConfirm: 'Copying...',
+        pendingMessageUponConfirm: 'Copying mission...',
       },
     )
   }
@@ -116,34 +103,39 @@ export default function MissionModificationPanel(props: {
   // This is called when a user requests
   // to toggle a mission between being live
   // and not being live.
-  const handleToggleLiveRequest = (live: boolean, revert: () => void) => {
+  const handleToggleLiveRequest = async (live: boolean, revert: () => void) => {
+    // Track previous live state in case of error.
     let previousLiveState: boolean = mission.live
 
-    mission.live = live
+    try {
+      // Update state.
+      mission.live = live
+      setLiveAjaxStatus(EAjaxStatus.Loading)
 
-    setLive(
-      mission.missionID,
-      live,
-      () => {
-        notify(
-          `${mission.name} was successfully turned ${live ? 'on' : 'off'}.`,
-        )
+      // Make the request to the server.
+      await ClientMission.setLive(mission.missionID, live)
+
+      // Notify the user of success.
+      if (live) {
+        notify(`${mission.name} is now live.`)
         setLiveAjaxStatus(EAjaxStatus.Loaded)
-        handleSuccessfulToggleLive()
-      },
-      () => {
-        if (live) {
-          notify(`${mission.name} failed to turn on.`)
-          setLiveAjaxStatus(EAjaxStatus.Error)
-        } else {
-          notify(`${mission.name} failed to turn off.`)
-          setLiveAjaxStatus(EAjaxStatus.Error)
-        }
-        mission.live = previousLiveState
-        revert()
-      },
-    )
-    setLiveAjaxStatus(EAjaxStatus.Loading)
+      } else {
+        notify(`${mission.name} is now no longer live.`)
+        setLiveAjaxStatus(EAjaxStatus.Loaded)
+      }
+    } catch (error) {
+      // Notify user of error.
+      if (live) {
+        notify(`Failed to make \"${mission.name}\"  go live.`)
+        setLiveAjaxStatus(EAjaxStatus.Error)
+      } else {
+        notify(`Failed to make \"${mission.name}\" no longer live.`)
+        setLiveAjaxStatus(EAjaxStatus.Error)
+      }
+      // Revert mission.live to the previous state.
+      mission.live = previousLiveState
+      revert()
+    }
   }
 
   // -- RENDER --

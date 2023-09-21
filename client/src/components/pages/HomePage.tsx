@@ -1,5 +1,4 @@
 import React, { useRef, useState } from 'react'
-import Mission, { importMissions } from '../../../../shared/missions'
 import { IPage } from '../App'
 import './HomePage.scss'
 import Navigation from '../content/general-layout/Navigation'
@@ -17,6 +16,8 @@ import UserModificationPanel from '../content/user-controls/UserModificationPane
 import { useMountHandler, useRequireSession } from 'src/toolbox/hooks'
 import GameClient from 'src/games'
 import { useGlobalContext } from 'src/context'
+import ClientMission from 'src/missions'
+import { AxiosError } from 'axios'
 
 export interface IHomePage extends IPage {}
 
@@ -42,7 +43,7 @@ export default function HomePage(props: IHomePage): JSX.Element | null {
 
   /* -- COMPONENT STATE -- */
 
-  const [missions, setMissions] = useState<Array<Mission>>([])
+  const [missions, setMissions] = useState<Array<ClientMission>>([])
   const [users, setUsers] = useState<Array<User>>([])
 
   /* -- COMPONENT FUNCTIONS -- */
@@ -59,7 +60,7 @@ export default function HomePage(props: IHomePage): JSX.Element | null {
         beginLoading('Retrieving missions...')
         // Fetch missions from API and store
         // them in the state.
-        setMissions(await Mission.fetchAll())
+        setMissions(await ClientMission.fetchAll())
         // Finish loading if not mounted.
         if (!mountHandled) {
           finishLoading()
@@ -123,7 +124,7 @@ export default function HomePage(props: IHomePage): JSX.Element | null {
   /* -- COMPONENT FUNCTIONS (CONTINUED) -- */
 
   // This will import files as missions.
-  const importMissionFiles = (files: FileList) => {
+  const importMissionFiles = async (files: FileList) => {
     let validFiles: Array<File> = []
     let successfulImportCount = 0
     let invalidContentsCount = 0
@@ -229,24 +230,22 @@ export default function HomePage(props: IHomePage): JSX.Element | null {
       }
     }
 
-    importMissions(
-      validFiles,
-      false,
-      (
-        successCount: number,
-        failureCount: number,
-        errorMessages: Array<{ fileName: string; errorMessage: string }>,
-      ) => {
-        successfulImportCount += successCount
-        invalidContentsCount += failureCount
+    // Import the files.
+    ClientMission.import(validFiles)
+      .then(({ successfulImportCount, failedImportCount, errorMessages }) => {
+        // Update counts and error messages
+        // based on the result.
+        successfulImportCount += successfulImportCount
+        invalidContentsCount += failedImportCount
         invalidContentsErrorMessages = errorMessages
         handleFileImportCompletion()
-      },
-      (error: Error) => {
-        serverErrorFailureCount += validFiles.length
-        handleFileImportCompletion()
-      },
-    )
+      })
+      .catch((error) => {
+        if (error instanceof AxiosError) {
+          serverErrorFailureCount += validFiles.length
+          handleFileImportCompletion()
+        }
+      })
   }
 
   // This is a file is dropped onto the page.
@@ -334,7 +333,7 @@ export default function HomePage(props: IHomePage): JSX.Element | null {
   /**
    * Callback for when a mission is selected.
    */
-  const handleMissionSelection = async (mission: Mission) => {
+  const handleMissionSelection = async (mission: ClientMission) => {
     if (server !== null) {
       try {
         // Notify user of mission launch.
@@ -352,7 +351,7 @@ export default function HomePage(props: IHomePage): JSX.Element | null {
         goToPage('GamePage', { game })
       } catch (error) {
         handleError({
-          message: 'Failed to launch mission. Contact system administrator.',
+          message: 'Failed to launch game. Contact system administrator.',
           notifyMethod: 'page',
         })
       }
@@ -435,13 +434,13 @@ export default function HomePage(props: IHomePage): JSX.Element | null {
       <div className={contentClassName}>
         {/* { Mission List } */}
         <div className='MissionListContainer'>
-          <List<Mission>
+          <List<ClientMission>
             headingText={'Select a mission:'}
             items={missions}
             sortByMethods={[ESortByMethod.Name]}
             nameProperty={'name'}
             alwaysUseBlanks={true}
-            renderItemDisplay={(mission: Mission) => {
+            renderItemDisplay={(mission: ClientMission) => {
               return (
                 <>
                   <div className='SelectionRow'>

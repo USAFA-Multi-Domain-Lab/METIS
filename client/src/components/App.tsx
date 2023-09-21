@@ -20,7 +20,7 @@ import ChangelogPage from './pages/ChangelogPage'
 import { IButtonText } from './content/user-controls/ButtonText'
 import UserFormPage from './pages/UserFormPage'
 import UserResetPage from './pages/UserResetPage'
-import MissionNode from '../../../shared/missions/nodes'
+import ClientMissionNode from 'src/missions/nodes'
 import { useGlobalContext } from 'src/context'
 
 /**
@@ -229,7 +229,7 @@ function App(props: {}): JSX.Element | null {
         setMissionNodeColors([])
       } else {
         try {
-          setMissionNodeColors(await MissionNode.fetchColors())
+          setMissionNodeColors(await ClientMissionNode.fetchColors())
         } catch {
           handleError('Failed to load post-login data.')
         }

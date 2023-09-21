@@ -1,7 +1,7 @@
 import { AnyObject } from 'metis/toolbox/objects'
 import { v4 as generateHash } from 'uuid'
-import { IMissionNode } from './nodes'
-import { IMission } from '.'
+import { IMissionNode } from '../nodes'
+import { IMission } from '..'
 
 /**
  * Interface of the abstract MissionAction class.
@@ -107,22 +107,31 @@ export default abstract class MissionAction<
 {
   // Inherited
   public node: TMissionNode
+
   // Inherited
   public actionID: string
+
   // Inherited
   public name: string
+
   // Inherited
   public description: string
+
   // Inherited
   public processTime: number
+
   // Inherited
   public successChance: number
+
   // Inherited
   public resourceCost: number
+
   // Inherited
   public postExecutionSuccessText: string
+
   // Inherited
   public postExecutionFailureText: string
+
   // Inherited
   public scripts: Array<IScript>
 
@@ -133,7 +142,7 @@ export default abstract class MissionAction<
 
   // Inherited
   public get executing(): boolean {
-    return this.node.executing
+    return this.node.executionState === 'executing'
   }
 
   // Inherited

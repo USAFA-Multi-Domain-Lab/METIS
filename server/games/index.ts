@@ -3,19 +3,30 @@ import ClientConnection from 'metis/server/connect/clients'
 import { v4 as generateHash } from 'uuid'
 import { IClientDataTypes, TServerData } from 'metis/connect/data'
 import { ServerEmittedError } from 'metis/connect/errors'
-import MissionServer from 'metis/server/missions'
-import MissionNodeServer from 'metis/server/missions/nodes'
-import MissionActionServer from 'metis/server/missions/actions'
+import ServerMission from 'metis/server/missions'
+import ServerMissionNode from 'metis/server/missions/nodes'
+import ServerMissionAction from 'metis/server/missions/actions'
+import ServerActionExecution from '../missions/actions/executions'
 
 /**
  * Server instance for games. Handles server-side logic for a game with participating clients. Communicates with clients to conduct game.
  */
 export default class GameServer extends Game<
   ClientConnection,
-  MissionServer,
-  MissionNodeServer,
-  MissionActionServer
+  ServerMission,
+  ServerMissionNode,
+  ServerMissionAction
 > {
+  /**
+   * The resources available to the participants.
+   */
+  protected _resources: number
+
+  // Inherited
+  public get resources(): number {
+    return this._resources
+  }
+
   /**
    * Whether the game has been destroyed.
    */
@@ -30,10 +41,11 @@ export default class GameServer extends Game<
 
   public constructor(
     gameID: string,
-    mission: MissionServer,
+    mission: ServerMission,
     participants: Array<ClientConnection>,
   ) {
     super(gameID, mission, participants)
+    this._resources = mission.initialResources
     this._destroyed = false
     this.register()
   }
@@ -42,17 +54,21 @@ export default class GameServer extends Game<
   public toJSON(): IGameJSON {
     return {
       gameID: this.gameID,
-      mission: this.mission.toJSON({ revealedOnly: true }),
+      mission: this.mission.toJSON({
+        revealedOnly: true,
+        includeGameData: true,
+      }),
       participants: this.participants.map((client: ClientConnection) =>
         client.user.toJSON(),
       ),
+      resources: this.resources,
     }
   }
 
   // Implemented
   protected mapActions(): void {
     // Initialize the actions map.
-    this.actions = new Map<string, MissionActionServer>()
+    this.actions = new Map<string, ServerMissionAction>()
 
     // Loops through and maps each action.
     this.mission.nodes.forEach((node) => {
@@ -120,7 +136,7 @@ export default class GameServer extends Game<
    * @param {string} mission  The ID of the mission being executed in the game.
    * @returns {Promise<string>} A promise of the game ID for the newly launched game.
    */
-  public static async launch(mission: MissionServer): Promise<string> {
+  public static async launch(mission: ServerMission): Promise<string> {
     return new Promise<string>((resolve: (gameID: string) => void): void => {
       let game: GameServer = new GameServer(generateHash(), mission, [])
       return resolve(game.gameID)
@@ -157,11 +173,11 @@ export default class GameServer extends Game<
     request: IClientDataTypes['request-open-node'],
   ): void => {
     // Organize data.
-    let mission: MissionServer = this.mission
+    let mission: ServerMission = this.mission
     let { nodeID } = request
 
     // Find the node, given the ID.
-    let node: MissionNodeServer | undefined = mission.nodes.get(nodeID)
+    let node: ServerMissionNode | undefined = mission.nodes.get(nodeID)
 
     // If the node is undefined, then emit
     // an error.
@@ -189,7 +205,9 @@ export default class GameServer extends Game<
     let payload: TServerData<'node-opened'> = {
       method: 'node-opened',
       nodeID,
-      revealedChildNodes: node.childNodes.map((node) => node.toJSON()),
+      revealedChildNodes: node.childNodes.map((node) =>
+        node.toJSON({ includeGameData: true }),
+      ),
       request,
       requesterID: participant.userID,
     }
@@ -207,13 +225,11 @@ export default class GameServer extends Game<
     participant: ClientConnection,
     request: IClientDataTypes['request-execute-action'],
   ): Promise<void> => {
-    console.log('request-execute-action')
-
     // Extract request data.
     let { actionID } = request
 
     // Find the action given the ID.
-    let action: MissionActionServer | undefined = this.actions.get(actionID)
+    let action: ServerMissionAction | undefined = this.actions.get(actionID)
 
     // If the action is undefined, then emit
     // an error.
@@ -243,19 +259,15 @@ export default class GameServer extends Game<
       )
     }
 
-    // Get nodeID.
-    let nodeID: string = action.node.nodeID
-
     // Execute the action, awaiting result.
-    let { successful } = await action.execute({
+    let outcome = await action.execute({
       enactEffects: false,
-      onInit: (completionTime: number) => {
+      onInit: (execution: ServerActionExecution) => {
         // Construct payload for action execution
         // initiated event.
         let initiationPayload: TServerData<'action-execution-initiated'> = {
           method: 'action-execution-initiated',
-          actionID,
-          expectedCompletionTime: completionTime,
+          execution: execution.toJSON(),
           request,
         }
 
@@ -271,18 +283,16 @@ export default class GameServer extends Game<
     // completed event.
     let completionPayload: TServerData<'action-execution-completed'> = {
       method: 'action-execution-completed',
-      actionID,
-      nodeID,
-      successful,
+      outcome: outcome.toJSON(),
       request,
       requesterID: participant.userID,
     }
 
     // Add child nodes if the action was
     // successful.
-    if (successful) {
+    if (outcome.successful) {
       completionPayload.revealedChildNodes = action.node.childNodes.map(
-        (node) => node.toJSON(),
+        (node) => node.toJSON({ includeGameData: true }),
       )
     }
 

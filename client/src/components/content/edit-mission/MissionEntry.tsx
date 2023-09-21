@@ -1,5 +1,5 @@
+import ClientMission from 'src/missions'
 import { useState } from 'react'
-import Mission, { setLive } from '../../../../../shared/missions'
 import { EAjaxStatus } from '../../../../../shared/toolbox/ajax'
 import { Detail, DetailBox, DetailNumber, DetailToggle } from '../form/Form'
 import './MissionEntry.scss'
@@ -9,7 +9,7 @@ import { useGlobalContext } from 'src/context'
 // details of the mission itself.
 export default function MissionEntry(props: {
   active: boolean
-  mission: Mission
+  mission: ClientMission
   missionEmptyStringArray: Array<string>
   setMissionEmptyStringArray: (missionEmptyString: Array<string>) => void
   handleChange: () => void
@@ -17,7 +17,7 @@ export default function MissionEntry(props: {
   /* -- PROPS -- */
 
   let active: boolean = props.active
-  let mission: Mission = props.mission
+  let mission: ClientMission = props.mission
   let missionEmptyStringArray: Array<string> = props.missionEmptyStringArray
   let setMissionEmptyStringArray: (missionEmptyString: Array<string>) => void =
     props.setMissionEmptyStringArray
@@ -55,35 +55,38 @@ export default function MissionEntry(props: {
   // This is called when a user requests
   // to toggle a mission between being live
   // and not being live.
-  const handleToggleLiveRequest = (live: boolean) => {
+  const handleToggleLiveRequest = async (live: boolean) => {
+    // Track previous live state in case of error.
     let previousLiveState: boolean = mission.live
 
-    mission.live = live
+    try {
+      // Update state.
+      mission.live = live
+      setLiveAjaxStatus(EAjaxStatus.Loading)
 
-    setLive(
-      mission.missionID,
-      live,
-      () => {
-        if (live) {
-          notify(`${mission.name} was successfully turned on.`)
-          setLiveAjaxStatus(EAjaxStatus.Loaded)
-        } else {
-          notify(`${mission.name} was successfully turned off.`)
-          setLiveAjaxStatus(EAjaxStatus.Loaded)
-        }
-      },
-      () => {
-        if (live) {
-          notify(`${mission.name} failed to turn on.`)
-          setLiveAjaxStatus(EAjaxStatus.Error)
-        } else {
-          notify(`${mission.name} failed to turn off.`)
-          setLiveAjaxStatus(EAjaxStatus.Error)
-        }
-        mission.live = previousLiveState
-      },
-    )
-    setLiveAjaxStatus(EAjaxStatus.Loading)
+      // Make the request to the server.
+      await ClientMission.setLive(mission.missionID, live)
+
+      // Notify the user of success.
+      if (live) {
+        notify(`${mission.name} is now live.`)
+        setLiveAjaxStatus(EAjaxStatus.Loaded)
+      } else {
+        notify(`${mission.name} is now no longer live.`)
+        setLiveAjaxStatus(EAjaxStatus.Loaded)
+      }
+    } catch (error) {
+      // Notify user of error.
+      if (live) {
+        notify(`Failed to make \"${mission.name}\"  go live.`)
+        setLiveAjaxStatus(EAjaxStatus.Error)
+      } else {
+        notify(`Failed to make \"${mission.name}\" no longer live.`)
+        setLiveAjaxStatus(EAjaxStatus.Error)
+      }
+      // Revert mission.live to the previous state.
+      mission.live = previousLiveState
+    }
   }
 
   /* -- RENDER -- */

@@ -2,30 +2,61 @@ import axios from 'axios'
 import Game, { IGameJSON } from '../../../shared/games'
 import User from '../../../shared/users'
 import ServerConnection from 'src/connect/server'
-import Mission from '../../../shared/missions'
-import MissionNode from '../../../shared/missions/nodes'
-import MissionAction from '../../../shared/missions/actions'
-import { TServerData } from '../../../shared/connect/data'
+import { IServerDataTypes, TServerData } from '../../../shared/connect/data'
+import ClientMission from 'src/missions'
+import ClientMissionNode from 'src/missions/nodes'
+import ClientMissionAction from 'src/missions/actions'
+import { TActionExecutionJSON } from '../../../shared/missions/actions/executions'
 
 /**
  * Client instance for games. Handles client-side logic for games. Communicates with server to conduct game.
  */
-export default class GameClient extends Game<User> {
+export default class GameClient extends Game<
+  User,
+  ClientMission,
+  ClientMissionNode,
+  ClientMissionAction
+> {
   /**
    * The server connection used to communicate with the server.
    */
   protected server: ServerConnection
 
+  /**
+   * The resources available to the participants.
+   */
+  protected _resources: number
+
+  // inherited
+  public get resources(): number {
+    return this._resources
+  }
+
   // todo: Between the time the client joins and this object is constructed, there is possibility that changes have been made in the game. This should be handled.
-  public constructor(
-    gameID: string,
-    mission: Mission,
-    participants: Array<User>,
-    server: ServerConnection,
-  ) {
+  public constructor(data: IGameJSON, server: ServerConnection) {
+    let gameID: string = data.gameID
+    let mission: ClientMission = new ClientMission(data.mission)
+    let participants: Array<User> = data.participants.map(
+      (userData) => new User(userData),
+    )
+
     super(gameID, mission, participants)
     this.server = server
+    this._resources = data.resources
     this.addListeners()
+  }
+
+  // Implemented
+  protected mapActions(): void {
+    // Initialize the actions map.
+    this.actions = new Map<string, ClientMissionAction>()
+
+    // Loops through and maps each action.
+    this.mission.nodes.forEach((node) => {
+      node.actions.forEach((action) => {
+        this.actions.set(action.actionID, action)
+      })
+    })
   }
 
   /**
@@ -47,8 +78,9 @@ export default class GameClient extends Game<User> {
   public toJSON(): IGameJSON {
     return {
       gameID: this.gameID,
-      mission: this.mission.toJSON(true),
+      mission: this.mission.toJSON({ revealedOnly: true }),
       participants: this.participants.map((user) => user.toJSON()),
+      resources: this.resources,
     }
   }
 
@@ -102,10 +134,10 @@ export default class GameClient extends Game<User> {
    */
   private onNodeOpened = (data: TServerData<'node-opened'>): void => {
     // Extract data.
-    let { nodeID, revealedChildNodes: childNodes } = data
+    let { nodeID, revealedChildNodes } = data
 
     // Find the node, given the ID.
-    let node: MissionNode | undefined = this.mission.nodes.get(nodeID)
+    let node: ClientMissionNode | undefined = this.mission.nodes.get(nodeID)
 
     // Handle node not found.
     if (node === undefined) {
@@ -114,14 +146,14 @@ export default class GameClient extends Game<User> {
       )
     }
 
-    // Populate nodes.
-    node.populateChildNodes(childNodes)
-
-    // Remap actions.
-    this.mapActions()
-
-    // Open the node.
-    node.open()
+    // Open node, if there are revealed
+    // child nodes.
+    if (revealedChildNodes !== undefined) {
+      node.open({ revealedChildNodes })
+      // Remap actions, since new actions
+      // may have been populated.
+      this.mapActions()
+    }
   }
 
   /**
@@ -129,14 +161,15 @@ export default class GameClient extends Game<User> {
    * @param {TServerData<'action-execution-initiated'>} data The data sent from the server.'
    */
   private onActionExecutionInitiated = (
-    data: TServerData<'action-execution-initiated'>,
+    data: IServerDataTypes['action-execution-initiated'],
   ): void => {
-    console.log('request-execution-initiated')
     // Extract data.
-    let { actionID, expectedCompletionTime } = data
+    let executionData: NonNullable<TActionExecutionJSON> = data.execution
+    let actionID: string = executionData.actionID
 
-    // Find the action, given the ID.
-    let action: MissionAction | undefined = this.actions.get(actionID)
+    // Find the action and node, given the action ID.
+    let action: ClientMissionAction | undefined = this.actions.get(actionID)
+    let node: ClientMissionNode
 
     // Handle action not found.
     if (action === undefined) {
@@ -144,9 +177,16 @@ export default class GameClient extends Game<User> {
         `Event "action-execution-initiated" was triggered, but the action with the given actionID ("${actionID}") could not be found.`,
       )
     }
+    // Handle action found.
+    else {
+      node = action.node
+    }
 
-    // Log to the console for now.
-    console.log('Action execution initiated.')
+    // Handle execution on the node.
+    node.handleExecution(executionData)
+
+    // Deduct resources from pool.
+    this._resources -= action.resourceCost
   }
 
   /**
@@ -155,12 +195,12 @@ export default class GameClient extends Game<User> {
   private onActionExecutionCompleted = (
     data: TServerData<'action-execution-completed'>,
   ): void => {
-    console.log('request-execution-completed')
     // Extract data.
-    let { actionID, successful, revealedChildNodes } = data
+    let { outcome, revealedChildNodes } = data
+    let { actionID } = outcome
 
-    // Find the action, given the ID.
-    let action: MissionAction | undefined = this.actions.get(actionID)
+    // Find the action given the action ID.
+    let action: ClientMissionAction | undefined = this.actions.get(actionID)
 
     // Handle action not found.
     if (action === undefined) {
@@ -169,36 +209,19 @@ export default class GameClient extends Game<User> {
       )
     }
 
-    // Extract node from action.
-    let node: MissionNode = action.node
+    // Get the action's node.
+    let node: ClientMissionNode = action.node
 
-    // Handle action execution end.
-    node._lastExecutedAction = action
-    node._lastExecutionSucceeded = successful
-    node._lastExecutionFailed = !successful
+    // Generate an outcome object.
 
-    // Populate child nodes.
+    // Handle outcome on the node.
+    node.handleOutcome(outcome, { revealedChildNodes })
+
+    // Remap actions if there are revealed nodes, since
+    // those revealed nodes may contain new actions.
     if (revealedChildNodes !== undefined) {
-      node._isOpen = true
-      node.populateChildNodes(revealedChildNodes)
+      this.mapActions()
     }
-  }
-
-  /**
-   * Converts IGameJSON into a GameClient object.
-   * @param {IGameJSON} json The json to be converted.
-   * @param {ServerConnection} server The server connection used to communicate with the server.
-   * @returns {GameClient} The GameClient object.
-   */
-  public static fromJSON(
-    json: IGameJSON,
-    server: ServerConnection,
-  ): GameClient {
-    let mission: Mission = Mission.fromJSON(json.mission)
-    let participants: Array<User> = json.participants.map(
-      (userJSON) => new User(userJSON),
-    )
-    return new GameClient(json.gameID, mission, participants, server)
   }
 
   /**
@@ -209,7 +232,7 @@ export default class GameClient extends Game<User> {
   public static async launch(missionID: string): Promise<string> {
     return new Promise<string>(
       async (
-        resolve: (game: string) => void,
+        resolve: (gameID: string) => void,
         reject: (error: any) => void,
       ): Promise<void> => {
         try {
@@ -260,7 +283,7 @@ export default class GameClient extends Game<User> {
 
           // Convert the game JSON into a
           // GameClient object.
-          let game: GameClient = GameClient.fromJSON(gameJSON, server)
+          let game: GameClient = new GameClient(gameJSON, server)
 
           // Resolve the promise with the
           // game object.

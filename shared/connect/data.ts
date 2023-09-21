@@ -1,4 +1,6 @@
-import { IMissionNodeJSON } from '../mission-nodes'
+import { IActionOutcomeJSON } from 'metis/missions/actions/outcomes'
+import { TMissionNodeJSON } from '../missions/nodes'
+import { TActionExecutionJSON } from 'metis/missions/actions/executions'
 
 /**
  * Represents the types of data sent from the server to the client over a web socket.
@@ -25,22 +27,19 @@ export interface IServerDataTypes {
   'node-opened': {
     method: 'node-opened'
     nodeID: string
-    revealedChildNodes: Array<IMissionNodeJSON>
+    revealedChildNodes: Array<TMissionNodeJSON>
     request: IClientDataTypes['request-open-node']
     requesterID: string
   }
   'action-execution-initiated': {
     method: 'action-execution-initiated'
-    actionID: string
-    expectedCompletionTime: number
+    execution: NonNullable<TActionExecutionJSON>
     request: IClientDataTypes['request-execute-action']
   }
   'action-execution-completed': {
     method: 'action-execution-completed'
-    actionID: string
-    nodeID: string
-    successful: boolean
-    revealedChildNodes?: Array<IMissionNodeJSON>
+    outcome: IActionOutcomeJSON
+    revealedChildNodes?: Array<TMissionNodeJSON>
     request: IClientDataTypes['request-execute-action']
     requesterID: string
   }

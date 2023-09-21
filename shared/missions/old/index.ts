@@ -5,7 +5,7 @@ import axios, { AxiosError, AxiosResponse } from 'axios'
 import { AnyObject } from 'metis/toolbox/objects'
 import MissionNode, {
   ENodeTargetRelation,
-  IMissionNodeJSON as IMissionNodeJSON,
+  IMissionNodeJSON,
   MissionNodeCreator,
 } from 'metis/missions/old/nodes'
 import { IConsoleOutput } from 'metis/console'

@@ -1,38 +1,157 @@
-import MissionNode from 'metis/missions/nodes'
-import MissionServer from '.'
+import MissionNode, { IHandleOutcomeOptions } from 'metis/missions/nodes'
+import ServerMission from '.'
 import { IMissionActionJSON } from 'metis/missions/actions'
-import MissionActionServer from './actions'
+import ServerMissionAction from './actions'
+import { ServerRealizedOutcome } from './actions/outcomes'
+import ServerActionExecution from './actions/executions'
+import { IActionOutcomeJSON } from 'metis/missions/actions/outcomes'
+import { TActionExecutionJSON } from 'metis/missions/actions/executions'
 
 /**
  * Class for managing mission nodes on a game server.
  */
-export default class MissionNodeServer extends MissionNode<
-  MissionServer,
-  MissionNodeServer,
-  MissionActionServer
+export default class ServerMissionNode extends MissionNode<
+  ServerMission,
+  ServerMissionNode,
+  ServerMissionAction,
+  ServerActionExecution,
+  ServerRealizedOutcome
 > {
-  // inherited
+  // Implemented
   protected parseActionData(
-    data: IMissionActionJSON[],
-  ): Array<MissionActionServer> {
-    return data.map(
-      (actionData: IMissionActionJSON): MissionActionServer =>
-        new MissionActionServer(this, actionData),
-    )
+    data: Array<IMissionActionJSON>,
+  ): Map<string, ServerMissionAction> {
+    let actions: Map<string, ServerMissionAction> = new Map<
+      string,
+      ServerMissionAction
+    >()
+    data.forEach((datum) => {
+      let action: ServerMissionAction = new ServerMissionAction(this, datum)
+      actions.set(action.actionID, action)
+    })
+    return actions
   }
 
-  // inherited
+  // Implemented
+  protected parseExecutionData(
+    data: TActionExecutionJSON,
+  ): ServerActionExecution | null {
+    // If data is null return null.
+    if (data === null) {
+      return null
+    }
+
+    // Get action for the ID passed.
+    let action: ServerMissionAction | undefined = this.actions.get(
+      data.actionID,
+    )
+
+    // Handle undefined action.
+    if (action === undefined) {
+      throw new Error('Action not found for given execution datum.')
+    }
+
+    // Return new execution object.
+    return new ServerActionExecution(action, data.start, data.end)
+  }
+
+  // Implemented
+  protected parseOutcomeData(
+    data: Array<IActionOutcomeJSON>,
+  ): Array<ServerRealizedOutcome> {
+    // Map JSON to an Array of outcome objects.
+    return data.map((datum: IActionOutcomeJSON) => {
+      // Get action for ID passed.
+      let action: ServerMissionAction | undefined = this.actions.get(
+        datum.actionID,
+      )
+
+      // Handle undefined action.
+      if (action === undefined) {
+        throw new Error('Action not found for given outcome datum.')
+      }
+
+      // Return new outcome object.
+      return new ServerRealizedOutcome(action, datum.successful)
+    })
+  }
+
+  // Implemented
   public open(): Promise<void> {
     return new Promise<void>(
       (resolve: () => void, reject: (error: Error) => void) => {
         if (this.openable) {
-          this._isOpen = true
+          this.opened = true
           resolve()
         } else {
           reject(new Error('Node is not openable.'))
         }
       },
     )
+  }
+
+  // Implemented
+  public handleExecution(
+    data: NonNullable<TActionExecutionJSON>,
+  ): ServerActionExecution {
+    // Get the action action being executed.
+    let { actionID } = data
+    let action = this.actions.get(actionID)
+
+    // Throw an error if action is undefined.
+    if (action === undefined) {
+      throw new Error(
+        'Action not found for given the action ID in the execution data.',
+      )
+    }
+    // Throw an error if not executable.
+    if (!this.executable) {
+      throw new Error('Cannot handle execution: Node is not executable.')
+    }
+    // Throw an error if non ready to execute.
+    if (!this.readyToExecute) {
+      throw new Error('Cannot handle execution: Node is not ready to execute.')
+    }
+
+    // Generate and set the node's execution.
+    this._execution = new ServerActionExecution(action, data.start, data.end)
+
+    // Return execution.
+    return this._execution
+  }
+
+  // Implemented
+  public handleOutcome(data: IActionOutcomeJSON): ServerRealizedOutcome {
+    // Get the action for the outcome.
+    let action: ServerMissionAction | undefined = this.actions.get(
+      data.actionID,
+    )
+
+    // Throw an error if action is undefined.
+    if (action === undefined) {
+      throw new Error(
+        'Action not found for given the action ID in the outcome data.',
+      )
+    }
+    // Throw an error if the execution state is not executed.
+    if (this.executionState !== 'executing') {
+      throw new Error('Cannot handle outcome: Node is not executing.')
+    }
+
+    // Generate outcome.
+    let outcome: ServerRealizedOutcome = new ServerRealizedOutcome(
+      action,
+      data.successful,
+    )
+
+    // Add to list of outcomes.
+    this._outcomes.push(outcome)
+
+    // Remove execution.
+    this._execution = null
+
+    // Return outcome.
+    return outcome
   }
 
   /**

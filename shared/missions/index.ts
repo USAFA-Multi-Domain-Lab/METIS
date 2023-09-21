@@ -1,10 +1,11 @@
 import { v4 as generateHash } from 'uuid'
-import { AnyObject } from 'metis/toolbox/objects'
+import { AnyObject } from '../toolbox/objects'
 import MissionNode, {
   IMissionNode,
-  IMissionNodeJSON,
+  TMissionNodeJSON,
   TMissionNodeOptions,
 } from './nodes'
+import context from '../context'
 
 /**
  * Interface of the abstract Mission class.
@@ -52,16 +53,16 @@ export interface IMission {
   /**
    * Converts the mission to JSON.
    * @param {TMissionJsonOptions} options The options for converting the mission to JSON.
-   * @returns {IMissionNodeJSON} the JSON for the mission.
+   * @returns {TMissionNodeJSON} the JSON for the mission.
    */
   toJSON: () => IMissionJSON
   /**
    * This will spawn a new node in the mission with the given data and options. Any data or options not provided will be set to default values.
-   * @param {Partial<IMissionNodeJSON>} data The data for the node.
+   * @param {Partial<TMissionNodeJSON>} data The data for the node.
    * @param {TMissionNodeOptions} options The options for creating the node.
    */
   spawnNode(
-    data?: Partial<IMissionNodeJSON>,
+    data?: Partial<TMissionNodeJSON>,
     options?: TMissionNodeOptions<IMissionNode>,
   ): IMissionNode
 }
@@ -78,13 +79,19 @@ export interface IMissionJSON {
   initialResources: number
   seed: string
   nodeStructure: AnyObject
-  nodeData: Array<IMissionNodeJSON>
+  nodeData: Array<TMissionNodeJSON>
 }
 
 /**
  * Options for creating a Mission object.
  */
-export type TMissionOptions = {}
+export type TMissionOptions = {
+  /**
+   * Whether or not to force open all nodes.
+   * @default false
+   */
+  openAll?: boolean
+}
 
 /**
  * Options for Mission.toJSON.
@@ -92,8 +99,14 @@ export type TMissionOptions = {}
 export type TMissionJsonOptions = {
   /**
    * Whether or not to exclude non-revealed nodes from the generated JSON.
+   * @default false
    */
   revealedOnly?: boolean
+  /**
+   * Whether or not to include game-specific data in the generated JSON.
+   * @default false
+   */
+  includeGameData?: boolean
 }
 
 /**
@@ -121,13 +134,13 @@ export type TNodeImportOptions = {
 /**
  * Return type for Mission.exportNodes.
  */
-export type TExportedNodes<TMissionNode extends IMissionNode> = {
-  nodeData: Array<IMissionNodeJSON>
+export type TExportedNodes = {
+  nodeData: Array<TMissionNodeJSON>
   nodeStructure: AnyObject
 }
 
 /**
- * Options for Mission.exportNodes.
+ * Options for the Mission.exportNodes method.
  */
 type TExportNodesOptions = {
   /**
@@ -135,6 +148,11 @@ type TExportNodesOptions = {
    * @default false
    */
   revealedOnly?: boolean
+  /**
+   * Whether or not to include game-specific data in the export.
+   * @default false
+   */
+  includeGameData?: boolean
 }
 
 /**
@@ -147,6 +165,11 @@ export interface ISpawnNodeOptions<TMissionNode extends IMissionNode>
    * @default true
    */
   addToNodeMap?: boolean
+  /**
+   * Whether or not to add newly generated node to the root node's children.
+   * @default true
+   */
+  makeChildOfRoot?: boolean
 }
 
 /**
@@ -183,11 +206,11 @@ export default abstract class Mission<TMissionNode extends IMissionNode>
   // Inherited
   public seed: string
   // Inherited
-  public rootNode: TMissionNode | null
+  public rootNode: TMissionNode
   /**
    * The original raw data for the nodes in the mission, before any changes.
    */
-  protected originalNodeData: Array<IMissionNodeJSON>
+  protected originalNodeData: Array<TMissionNodeJSON>
   /**
    * The original tree structure of the mission nodes, before any changes.
    */
@@ -215,15 +238,20 @@ export default abstract class Mission<TMissionNode extends IMissionNode>
       data.nodeStructure ?? Mission.DEFAULT_PROPERTIES.nodeStructure
     this.originalNodeData = data.nodeData ?? Mission.DEFAULT_PROPERTIES.nodeData
     this.nodes = new Map<string, TMissionNode>()
-    this.rootNode = null
+    this.rootNode = this.createRootNode()
+
+    // Parse options.
+    let { openAll = false } = options
 
     // Import nodes into the mission.
-    this.importNodes(this.originalNodeData, this.originalNodeStructure)
+    this.importNodes(this.originalNodeData, this.originalNodeStructure, {
+      openAll,
+    })
   }
 
   // Inherited
   public toJSON(options: TMissionJsonOptions = {}): IMissionJSON {
-    let { revealedOnly = false } = options
+    let { revealedOnly = false, includeGameData = false } = options
     return {
       missionID: this.missionID,
       name: this.name,
@@ -232,54 +260,63 @@ export default abstract class Mission<TMissionNode extends IMissionNode>
       live: this.live,
       initialResources: this.initialResources,
       seed: this.seed,
-      ...this.exportNodes({ revealedOnly }),
+      ...this.exportNodes({ revealedOnly, includeGameData }),
     }
   }
 
   /**
+   * Creates a new node that is the root node of the mission structure. This node is not added to the mission's nodes map, as it is really a pseudo-node.
+   */
+  protected abstract createRootNode(): TMissionNode
+
+  /**
    * This will import raw node data into the mission, creating MissionNode objects from it, and mapping the relationships found in the structure.
-   * @param {Array<IMissionNodeJSON>} nodeData The raw node data to import. Upon success, the originalNodeData property will be updated to this value.
+   * @param {Array<TMissionNodeJSON>} nodeData The raw node data to import. Upon success, the originalNodeData property will be updated to this value.
    * @param {AnyObject} nodeStructure The raw node structure to import. Upon success, the originalNodeStructure property will be updated to this value.
    */
   protected importNodes(
-    nodeData: Array<IMissionNodeJSON>,
+    nodeData: Array<TMissionNodeJSON>,
     nodeStructure: AnyObject,
     options: TNodeImportOptions = {},
   ): void {
-    let nodes: Map<string, TMissionNode> = new Map<string, TMissionNode>()
-    let rootNode: TMissionNode = this.spawnNode(Mission.ROOT_NODE_PROPERTIES, {
+    // Reinitialize relevant object properties.
+    this.nodes = new Map<string, TMissionNode>()
+    this.rootNode = this.spawnNode(Mission.ROOT_NODE_PROPERTIES, {
       addToNodeMap: false,
     })
+    this.originalNodeData = nodeData
+    this.originalNodeStructure = nodeStructure
 
     try {
       // Loop through data, spawn new nodes,
       // and add them to the nodes map.
       for (let nodeDatum of nodeData) {
-        let node: TMissionNode = this.spawnNode(nodeDatum, {})
-        nodes.set(node.nodeID, node)
+        this.spawnNode(nodeDatum, {})
       }
       // Map relationships between nodes.
-      Mission.mapRelationships(nodes, nodeStructure, rootNode, options)
+      Mission.mapRelationships(
+        this.nodes,
+        nodeStructure,
+        this.rootNode,
+        options,
+      )
     } catch (error) {
-      console.error('Node data/structure passed is invalid.')
+      if (context === 'react') {
+        console.error('Node data/structure passed is invalid.')
+      }
       throw error
     }
 
-    // Update object properties to imported values.
-    this.originalNodeData = nodeData
-    this.originalNodeStructure = nodeStructure
-    this.nodes = nodes
-    this.rootNode = rootNode
+    // Open root node.
+    this.rootNode.open()
   }
 
   /**
    * Exports the nodes map into its raw data and structure.
-   * @returns {Object} The exported node data and structure.
+   * @param {TExportNodesOptions} options Options for exporting the nodes.
    * @returns {TExportedNodes<TMissionNode>} The exported node data and structure.
    */
-  protected exportNodes(
-    options: TExportNodesOptions = {},
-  ): TExportedNodes<TMissionNode> {
+  protected exportNodes(options: TExportNodesOptions = {}): TExportedNodes {
     // Get root node.
     let rootNode: TMissionNode | null = this.rootNode
 
@@ -289,13 +326,13 @@ export default abstract class Mission<TMissionNode extends IMissionNode>
     }
 
     // Extract options.
-    let { revealedOnly = false } = options
+    let { revealedOnly = false, includeGameData = false } = options
 
     // Create an array of the MissionNode
     // objects from the nodes map.
     let nodes: Array<TMissionNode> = Array.from(this.nodes.values())
     // Predefine the node data and structure.
-    let nodeData: Array<IMissionNodeJSON> = []
+    let nodeData: Array<TMissionNodeJSON> = []
     let nodeStructure: AnyObject = {}
 
     // Apply filter if revealedOnly flag
@@ -305,7 +342,9 @@ export default abstract class Mission<TMissionNode extends IMissionNode>
     }
 
     // Construct node data.
-    nodeData = nodes.map((node: TMissionNode) => node.toJSON())
+    nodeData = nodes.map((node: TMissionNode) =>
+      node.toJSON({ includeGameData }),
+    )
 
     // Construct node structure.
     nodeStructure = Mission.determineNodeStructure(rootNode, { revealedOnly })
@@ -316,7 +355,7 @@ export default abstract class Mission<TMissionNode extends IMissionNode>
 
   // Inherited
   public abstract spawnNode(
-    data?: Partial<IMissionNodeJSON>,
+    data?: Partial<TMissionNodeJSON>,
     options?: ISpawnNodeOptions<TMissionNode>,
   ): TMissionNode
 
@@ -337,7 +376,7 @@ export default abstract class Mission<TMissionNode extends IMissionNode>
   /**
    * The default properties for the root node of a Mission.
    */
-  public static readonly ROOT_NODE_PROPERTIES: IMissionNodeJSON = {
+  public static readonly ROOT_NODE_PROPERTIES: TMissionNodeJSON = {
     nodeID: 'ROOT',
     name: 'ROOT',
     color: '#000000',
@@ -356,15 +395,14 @@ export default abstract class Mission<TMissionNode extends IMissionNode>
    * @param {AnyObject} nodeStructure The node structure from which to map the relationships.
    * @param {TMissionNode} rootNode The root node of the structure. This root node should not be defined in the node map, nor in the node structure.
    * @param {TMapRelationshipOptions} options Options for mapping the relationships.
-   * @returns {void}
    */
-  protected static mapRelationships = (
-    nodes: Map<string, IMissionNode>,
+  protected static mapRelationships = <TMissionNode extends IMissionNode>(
+    nodes: Map<string, TMissionNode>,
     nodeStructure: AnyObject,
-    rootNode: IMissionNode,
+    rootNode: TMissionNode,
     options: TMapRelationshipOptions = {},
   ) => {
-    let childNodes: Array<IMissionNode> = []
+    let childNodes: Array<TMissionNode> = []
     let childNodeKeyValuePairs: Array<[string, AnyObject]> = Object.keys(
       nodeStructure,
     ).map((key: string) => [key, nodeStructure[key]])
@@ -374,7 +412,7 @@ export default abstract class Mission<TMissionNode extends IMissionNode>
     for (let childNodeKeyValuePair of childNodeKeyValuePairs) {
       let key: string = childNodeKeyValuePair[0]
       let value: AnyObject = childNodeKeyValuePair[1]
-      let childNode: IMissionNode | undefined = nodes.get(key)
+      let childNode: TMissionNode | undefined = nodes.get(key)
 
       if (childNode !== undefined) {
         childNodes.push(this.mapRelationships(nodes, value, childNode, options))
@@ -395,12 +433,12 @@ export default abstract class Mission<TMissionNode extends IMissionNode>
 
   /**
    * Determines the node structure found in the root node passed.
-   * @param {IMissionNode} rootNode The root node from which to determine the node structure.
+   * @param {TMissionNode} rootNode The root node from which to determine the node structure.
    * @param {TDetermineNodeStructureOptions} options Options for determining the node structure.
    * @returns {AnyObject} The raw node structure.
    */
-  protected static determineNodeStructure(
-    rootNode: IMissionNode,
+  protected static determineNodeStructure<TMissionNode extends IMissionNode>(
+    rootNode: TMissionNode,
     options: TDetermineNodeStructureOptions = {},
   ): AnyObject {
     // Parse options.
@@ -412,10 +450,11 @@ export default abstract class Mission<TMissionNode extends IMissionNode>
      * @param {AnyObject} nodeCursorStructure The structure of the current node being processed.
      */
     const operation = (
-      nodeCursor: IMissionNode = rootNode,
+      nodeCursor: TMissionNode = rootNode,
       nodeCursorStructure: AnyObject = {},
     ): AnyObject => {
-      let childNodes: Array<IMissionNode> = nodeCursor.childNodes
+      let childNodes: Array<TMissionNode> =
+        nodeCursor.childNodes as Array<TMissionNode>
 
       if (!revealedOnly || nodeCursor.isOpen) {
         for (let childNode of childNodes) {
