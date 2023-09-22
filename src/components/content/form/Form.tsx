@@ -7,8 +7,9 @@ import inputs from '../../../modules/toolbox/inputs'
 import './Form.scss'
 import Toggle, { EToggleLockState } from '../user-controls/Toggle'
 import Tooltip from '../communication/Tooltip'
-import { To } from 'react-router'
 import { AnyObject } from '../../../modules/toolbox/objects'
+import ReactQuill from 'react-quill'
+import 'react-quill/dist/quill.snow.css'
 
 interface IDetail {
   label: string
@@ -198,11 +199,9 @@ export function DetailBox(props: {
   disabled?: boolean
   deliverValue: (value: string) => void
 }): JSX.Element | null {
-  const fieldOffsetHeight: number = 3
-
-  const field = useRef<HTMLTextAreaElement>(null)
-  const [mountHandled, setMountHandled] = useState<boolean>(false)
+  /* -- COMPONENT STATE -- */
   const [isEmptyString, setIsEmptyString] = useState<boolean>(false)
+  const [value, setValue] = useState<string>('')
 
   let label: string = props.label
   let initialValue: string = props.initialValue
@@ -214,45 +213,13 @@ export function DetailBox(props: {
   let labelClassName: string = 'Label'
   let fieldErrorClassName: string = 'FieldErrorMessage hide'
 
-  // Called when a change is made in the
-  // in the field element. This will resize
-  // the field based on the height of the
-  // content.
-  const resizeField = (): void => {
-    let fieldElement: HTMLTextAreaElement | null = field.current
+  /* -- RENDER -- */
 
-    if (fieldElement) {
-      fieldElement.style.height = '1px'
-      fieldElement.style.height = `${
-        fieldOffsetHeight + fieldElement.scrollHeight
-      }px`
-    }
+  let reactQuillModules = {
+    toolbar: {
+      container: [['link'], ['clean']],
+    },
   }
-
-  // Equivalent of componentDidMount.
-  useEffect(() => {
-    if (!mountHandled) {
-      let fieldElement: HTMLTextAreaElement | null = field.current
-
-      if (fieldElement) {
-        fieldElement.value = initialValue
-        fieldElement.style.height = '1px'
-        fieldElement.style.height = `${
-          fieldOffsetHeight + fieldElement.scrollHeight
-        }px`
-
-        new ResizeObserver(() => resizeField()).observe(fieldElement)
-      }
-
-      if (emptyStringAllowed && initialValue === '') {
-        setIsEmptyString(false)
-      } else if (!emptyStringAllowed && initialValue === '') {
-        setIsEmptyString(true)
-      }
-
-      setMountHandled(true)
-    }
-  }, [mountHandled])
 
   if (disabled) {
     className += ' Disabled'
@@ -267,30 +234,34 @@ export function DetailBox(props: {
     labelClassName = 'Label'
   }
 
-  // render
   return (
     <div className={className}>
       <div className={labelClassName}>{`${label}:`}</div>
-      <textarea
+      <ReactQuill
+        bounds={'.DetailBox'}
         className={fieldClassName}
-        ref={field}
-        onChange={(event: React.ChangeEvent<HTMLTextAreaElement>) => {
-          resizeField()
-          setMountHandled(false)
-          deliverValue(event.target.value)
+        modules={reactQuillModules}
+        value={initialValue}
+        placeholder='Enter text here...'
+        theme='snow'
+        onChange={(value: string) => {
+          deliverValue(value)
 
-          if (event.target.value !== '') {
+          if (value !== '<p><br></p>') {
             setIsEmptyString(false)
+            setValue(value)
           }
         }}
-        onBlur={(event: React.FocusEvent) => {
-          let target: HTMLTextAreaElement = event.target as HTMLTextAreaElement
-          resizeField()
-          setMountHandled(false)
+        onBlur={(
+          previousSelection: ReactQuill.Range,
+          source: any,
+          editor: ReactQuill.UnprivilegedEditor,
+        ) => {
+          let value: string = editor.getHTML()
 
-          if (!emptyStringAllowed && target.value === '') {
+          if (!emptyStringAllowed && value === '<p><br></p>') {
             setIsEmptyString(true)
-          } else if (emptyStringAllowed && target.value === '') {
+          } else if (emptyStringAllowed && value === '<p><br></p>') {
             setIsEmptyString(false)
           }
         }}
@@ -318,7 +289,6 @@ export function DetailDropDown<TOption>(props: {
   renderDisplayName: (option: TOption) => string
   deliverValue: (value: TOption) => void
 }): JSX.Element | null {
-  const field = useRef<HTMLTextAreaElement>(null)
   const [mountHandled, setMountHandled] = useState<boolean>(false)
   const [expanded, setExpanded] = useState<boolean>(false)
 

@@ -4,7 +4,6 @@ import { AppActions } from '../../AppState'
 import { ButtonSVG, EButtonSVGPurpose } from '../user-controls/ButtonSVG'
 import NodeActionEntry from './NodeActionEntry'
 import './NodeActionDetails.scss'
-import { AnyObject } from '../../../modules/toolbox/objects'
 
 export default function NodeActionDetails(props: {
   node: MissionNode
@@ -12,8 +11,8 @@ export default function NodeActionDetails(props: {
   isEmptyString: boolean
   displayedAction: number
   actionEmptyStringArray: Array<string>
-  setActionEmptyStringArray: (actionEmptyStringArray: Array<string>) => void
   setDisplayedAction: (displayedAction: number) => void
+  setActionEmptyStringArray: (actionEmptyStringArray: Array<string>) => void
   setMountHandled: (mountHandled: boolean) => void
   handleChange: () => void
 }): JSX.Element | null {
@@ -22,8 +21,8 @@ export default function NodeActionDetails(props: {
   let isEmptyString: boolean = props.isEmptyString
   let displayedAction: number = props.displayedAction
   let actionEmptyStringArray: Array<string> = props.actionEmptyStringArray
-  let setActionEmptyStringArray = props.setActionEmptyStringArray
   let setDisplayedAction = props.setDisplayedAction
+  let setActionEmptyStringArray = props.setActionEmptyStringArray
   let setMountHandled = props.setMountHandled
   let handleChange = props.handleChange
   let totalActions: number | undefined = node.actions.length
@@ -113,8 +112,9 @@ export default function NodeActionDetails(props: {
             action={node.actions[displayedAction]}
             isEmptyString={isEmptyString}
             displayedAction={displayedAction}
-            setDisplayedAction={setDisplayedAction}
             actionEmptyStringArray={actionEmptyStringArray}
+            appActions={appActions}
+            setDisplayedAction={setDisplayedAction}
             setActionEmptyStringArray={setActionEmptyStringArray}
             setMountHandled={setMountHandled}
             handleChange={handleChange}

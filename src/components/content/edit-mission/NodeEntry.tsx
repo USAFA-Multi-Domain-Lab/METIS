@@ -220,25 +220,27 @@ export default function NodeEntry(props: {
               </div>
             </div>
             <DetailBox
-              label='Description'
+              label='Description (optional)'
               initialValue={node.description}
+              emptyStringAllowed={true}
               deliverValue={(description: string) => {
                 if (
-                  node !== null &&
-                  description !== '' &&
-                  description !== null
+                  node !== null
+                  // description !== '<p><br></p>' &&
+                  // description !== null
                 ) {
                   node.description = description
-                  removeNodeEmptyString('description')
-                  setMountHandled(false)
                   handleChange()
-                } else if (node !== null) {
-                  setNodeEmptyStringArray([
-                    ...nodeEmptyStringArray,
-                    `nodeID=${node.nodeID}_field=description`,
-                  ])
-                  setMountHandled(false)
+                  // removeNodeEmptyString('description')
+                  // setMountHandled(false)
                 }
+                // else if (node !== null) {
+                //   setNodeEmptyStringArray([
+                //     ...nodeEmptyStringArray,
+                //     `nodeID=${node.nodeID}_field=description`,
+                //   ])
+                //   setMountHandled(false)
+                // }
               }}
               key={`${node.nodeID}_description`}
             />

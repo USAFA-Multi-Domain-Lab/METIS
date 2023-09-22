@@ -19,8 +19,7 @@ export default function MissionEntry(props: {
   let mission: Mission = props.mission
   let appActions: AppActions = props.appActions
   let missionEmptyStringArray: Array<string> = props.missionEmptyStringArray
-  let setMissionEmptyStringArray: (missionEmptyString: Array<string>) => void =
-    props.setMissionEmptyStringArray
+  let setMissionEmptyStringArray = props.setMissionEmptyStringArray
   let handleChange = props.handleChange
 
   /* -- COMPONENT STATE -- */
@@ -99,20 +98,21 @@ export default function MissionEntry(props: {
               key={`${mission.missionID}_name`}
             />
             <DetailBox
-              label='Introduction Message'
+              label='Introduction Message (optional)'
               initialValue={mission.introMessage}
               emptyStringAllowed={true}
               deliverValue={(introMessage: string) => {
-                if (introMessage !== '') {
-                  mission.introMessage = introMessage
-                  removeMissionEmptyString('introMessage')
-                  handleChange()
-                } else {
-                  setMissionEmptyStringArray([
-                    ...missionEmptyStringArray,
-                    `missionID=${mission.missionID}_field=introMessage`,
-                  ])
-                }
+                mission.introMessage = introMessage
+                handleChange()
+
+                // if (introMessage !== '<p><br></p>') {
+                //   removeMissionEmptyString('introMessage')
+                // } else {
+                //   setMissionEmptyStringArray([
+                //     ...missionEmptyStringArray,
+                //     `missionID=${mission.missionID}_field=introMessage`,
+                //   ])
+                // }
               }}
               key={`${mission.missionID}_introMessage`}
             />

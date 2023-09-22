@@ -6,34 +6,23 @@
   font-size: 14px;
   margin: 20px auto;
 
-  .TimeToExecute,
-  .ChosenNodeAction,
-  .SuccessChance,
-  .ResourceCost,
-  .Description {
+  .ActionProperty {
     margin: 10px 0;
     padding: 0 5px;
     color: $terminal;
 
-    span {
+    span,
+    .RichTextOutputBox p {
       color: $terminal;
-      text-decoration: underline;
     }
   }
-}
-
-.hide {
-  display: none;
 }
 
 @media only screen and (max-width: 655px) {
   .ActionPropertyDisplay {
     padding-left: 5px;
-    .TimeToExecute,
-    .ChosenNodeAction,
-    .SuccessChance,
-    .ResourceCost,
-    .Description {
+
+    .ActionProperty {
       margin: 5px 0 0 5px;
       padding: 0;
       white-space: nowrap;

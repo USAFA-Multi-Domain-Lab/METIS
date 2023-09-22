@@ -1,0 +1,27 @@
+@import '../../../config.scss';
+
+.RichTextOutputBox {
+  display: inline;
+
+  // ! Alternative design
+  // display: inline-block;
+
+  p:first-child {
+    display: inline;
+    list-style-type: none;
+    word-wrap: break-word;
+    white-space: pre-line;
+
+    // ! Alternative design
+    // margin-top: 5px;
+  }
+
+  p,
+  a {
+    margin: 0;
+  }
+
+  a {
+    color: $terminal-blue;
+  }
+}

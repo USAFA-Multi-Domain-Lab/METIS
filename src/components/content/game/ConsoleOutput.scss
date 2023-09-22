@@ -2,7 +2,7 @@
 
 .ConsoleOutput {
   .Text {
-    padding: 15px 0;
+    padding: 12px 0;
     font-size: 0.75em;
     list-style-type: none;
     word-wrap: break-word;
@@ -10,6 +10,7 @@
 
     .SelectedActionPropertyList {
       padding: 15px 0 0 15px;
+
       .SelectedActionProperty {
         list-style: none;
         text-decoration: none;
@@ -21,11 +22,11 @@
       color: $terminal;
     }
 
-    .succeeded {
+    .Succeeded p {
       color: $terminal-success;
     }
 
-    .failed {
+    .Failed p {
       color: $terminal-fail;
     }
   }

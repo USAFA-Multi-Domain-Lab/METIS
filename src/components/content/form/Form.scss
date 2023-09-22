@@ -63,13 +63,93 @@
 
   &.DetailBox {
     .Field {
-      overflow-y: hidden;
-      resize: none;
+      border: none;
+      padding: 0;
+
+      .ql-toolbar {
+        border: 2px solid $color-main;
+
+        .ql-formats {
+          button {
+            &:hover {
+              border: 2px solid $color-accent-light;
+            }
+
+            svg {
+              line,
+              path,
+              rect {
+                stroke: $color-main;
+              }
+            }
+          }
+        }
+      }
+
+      .ql-container {
+        font-family: monospace, sans-serif;
+        border: 2px solid $color-main;
+
+        .ql-editor {
+          p {
+            color: $color-accent-light;
+          }
+
+          a {
+            color: $color-accent-light;
+          }
+
+          &.ql-blank::before {
+            color: $color-accent-light;
+          }
+        }
+
+        .ql-tooltip {
+          border-radius: 5px;
+          box-shadow: none;
+          background-color: $background-alt1;
+          border: 2px solid $color-main;
+          color: $color-main;
+          font-family: 'monospace', sans-serif;
+
+          input {
+            color: $color-main;
+            border-radius: 5px;
+            background-color: $background-alt1;
+            border: 2px solid $color-main;
+
+            &:focus {
+              outline: none;
+            }
+          }
+
+          .ql-preview {
+            color: $color-accent-light;
+            text-decoration: underline;
+          }
+
+          .ql-action,
+          .ql-remove {
+            color: $color-main;
+          }
+        }
+      }
 
       &.Error {
-        border-top: 2px solid $color-error-alt;
-        border-bottom: 2px solid $color-error-alt;
-        color: $color-error-alt;
+        .ql-toolbar {
+          border: 2px solid $color-error-alt;
+        }
+
+        .ql-container {
+          border: 2px solid $color-error-alt;
+          border-top: none;
+
+          .ql-editor {
+            &.ql-blank::before {
+              color: $color-error-alt;
+            }
+          }
+        }
       }
     }
 

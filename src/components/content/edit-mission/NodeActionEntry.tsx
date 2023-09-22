@@ -1,6 +1,6 @@
 import { MissionNodeAction } from '../../../modules/mission-node-actions'
 import { MissionNode } from '../../../modules/mission-nodes'
-import { AnyObject } from '../../../modules/toolbox/objects'
+import { AppActions } from '../../AppState'
 import Tooltip from '../communication/Tooltip'
 import { Detail, DetailBox, DetailNumber } from '../form/Form'
 import NodeActionAssets from './NodeActionAssets'
@@ -13,6 +13,7 @@ export default function NodeActionEntry(props: {
   displayedAction: number
   isEmptyString: boolean
   actionEmptyStringArray: Array<string>
+  appActions: AppActions
   setDisplayedAction: (displayedAction: number) => void
   setActionEmptyStringArray: (actionEmptyStringArray: Array<string>) => void
   setMountHandled: (mountHandled: boolean) => void
@@ -23,9 +24,10 @@ export default function NodeActionEntry(props: {
   let displayedAction: number = props.displayedAction
   let isEmptyString: boolean = props.isEmptyString
   let actionEmptyStringArray: Array<string> = props.actionEmptyStringArray
+  let appActions: AppActions = props.appActions
   let setDisplayedAction = props.setDisplayedAction
   let setActionEmptyStringArray = props.setActionEmptyStringArray
-  let setMountHandled: (mountHandled: boolean) => void = props.setMountHandled
+  let setMountHandled = props.setMountHandled
   let handleChange = props.handleChange
   let deleteActionClassName: string = 'FormButton DeleteAction'
   let nodeActionClassName: string = 'NodeActionEntry'
@@ -85,8 +87,9 @@ export default function NodeActionEntry(props: {
           label='Description'
           initialValue={action.description}
           deliverValue={(description: string) => {
-            if (description !== '') {
-              action.description = description
+            action.description = description
+
+            if (description !== '<p><br></p>') {
               removeActionEmptyString('description')
               setMountHandled(false)
               handleChange()
@@ -148,8 +151,9 @@ export default function NodeActionEntry(props: {
           label='Post-Execution Success Text'
           initialValue={action.postExecutionSuccessText}
           deliverValue={(postExecutionSuccessText: string) => {
-            if (postExecutionSuccessText !== '') {
-              action.postExecutionSuccessText = postExecutionSuccessText
+            action.postExecutionSuccessText = postExecutionSuccessText
+
+            if (postExecutionSuccessText !== '<p><br></p>') {
               removeActionEmptyString('postExecutionSuccessText')
               setMountHandled(false)
               handleChange()
@@ -167,8 +171,9 @@ export default function NodeActionEntry(props: {
           label='Post-Execution Failure Text'
           initialValue={action.postExecutionFailureText}
           deliverValue={(postExecutionFailureText: string) => {
-            if (postExecutionFailureText !== '') {
-              action.postExecutionFailureText = postExecutionFailureText
+            action.postExecutionFailureText = postExecutionFailureText
+
+            if (postExecutionFailureText !== '<p><br></p>') {
               removeActionEmptyString('postExecutionFailureText')
               setMountHandled(false)
               handleChange()

@@ -260,7 +260,7 @@ export default class MissionMap extends React.Component<
     mission.addStructureChangeHandler(this.forceUpdate)
 
     if (map !== null) {
-      new ResizeObserver(this.forceUpdate).observe(map)
+      new ResizeObserver(() => this.forceUpdate).observe(map)
     }
 
     this.updateAllRelationships()

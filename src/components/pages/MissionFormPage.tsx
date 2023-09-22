@@ -548,10 +548,10 @@ export default function MissionFormPage(
                       node={selectedNode}
                       appActions={appActions}
                       displayedAction={displayedAction}
-                      setDisplayedAction={setDisplayedAction}
                       nodeEmptyStringArray={nodeEmptyStringArray}
-                      setNodeEmptyStringArray={setNodeEmptyStringArray}
                       actionEmptyStringArray={actionEmptyStringArray}
+                      setDisplayedAction={setDisplayedAction}
+                      setNodeEmptyStringArray={setNodeEmptyStringArray}
                       setActionEmptyStringArray={setActionEmptyStringArray}
                       handleChange={handleChange}
                       handleAddRequest={handleNodeAddRequest}

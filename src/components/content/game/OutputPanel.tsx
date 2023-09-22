@@ -4,6 +4,7 @@ import ConsoleOutput, { IConsoleOutput } from './ConsoleOutput'
 import { Component } from 'react'
 import { MissionNodeAction } from '../../../modules/mission-node-actions'
 import { Mission } from '../../../modules/missions'
+import RichTextOutputBox from '../communication/RichTextOutputBox'
 
 export interface IOutputPanel {
   mission: Mission
@@ -33,11 +34,11 @@ export default class OutputPanel extends Component<
 
     let renderInnerHTML = () => (
       <div className='Text'>
-        <span className='LineCursor Intro'>
+        <span className='LineCursor'>
           [{OutputPanel.formatDate(timeStamp)}] MDL@
           {mission.name.replaceAll(' ', '-')}:{' '}
         </span>
-        <span className='IntroMessage'>{mission.introMessage}</span>
+        <RichTextOutputBox Element={mission.introMessage} />
       </div>
     )
 
@@ -66,7 +67,7 @@ export default class OutputPanel extends Component<
           [{OutputPanel.formatDate(timeStamp)}] MDL@
           {selectedNode.name.replaceAll(' ', '-')}:{' '}
         </span>
-        <span className='Default'>{selectedNode.preExecutionText}</span>
+        <RichTextOutputBox Element={selectedNode.preExecutionText} />
       </div>
     )
 
@@ -107,28 +108,34 @@ export default class OutputPanel extends Component<
             [{OutputPanel.formatDate(timeStamp)}] MDL@
             {nodeName.replaceAll(' ', '-')}:{' '}
           </span>
-          <span className='Default'>
-            Started executing {nodeName}.<br></br>
-          </span>
+          <RichTextOutputBox Element={`Started executing ${nodeName}.`} />
           <ul className='SelectedActionPropertyList'>
             <li className='SelectedActionProperty'>
-              Action selected: {actionName}
+              <RichTextOutputBox Element={`Action selected: ${actionName}`} />
             </li>
             <br></br>
             <li className='SelectedActionProperty'>
-              Time to execute: {processTimeFormatted}
+              <RichTextOutputBox
+                Element={`Time to execute: ${processTimeFormatted}`}
+              />
             </li>
             <br></br>
             <li className='SelectedActionProperty'>
-              Chance of success: {successChanceFormatted}
+              <RichTextOutputBox
+                Element={`Chance of success: ${successChanceFormatted}`}
+              />
             </li>
             <br></br>
             <li className='SelectedActionProperty'>
-              Resource cost: {resourceCostFormatted}
+              <RichTextOutputBox
+                Element={`Resource cost: ${resourceCostFormatted}`}
+              />
             </li>
             <br></br>
             <li className='SelectedActionProperty'>
-              Time remaining: {timeRemainingFormatted}
+              <RichTextOutputBox
+                Element={`Time remaining: ${timeRemainingFormatted}`}
+              />
             </li>
             <br></br>
           </ul>
@@ -152,8 +159,10 @@ export default class OutputPanel extends Component<
         <span className='LineCursor'>
           [{OutputPanel.formatDate(timeStamp)}] MDL@{nodeNameFormatted}:{' '}
         </span>
-        <span className='succeeded'>
-          {executedAction.postExecutionSuccessText}
+        <span className='Succeeded'>
+          <RichTextOutputBox
+            Element={executedAction.postExecutionSuccessText}
+          />
         </span>
       </div>
     )
@@ -173,8 +182,10 @@ export default class OutputPanel extends Component<
           [{OutputPanel.formatDate(timeStamp)}] MDL@
           {executedNode.name.replaceAll(' ', '-')}:{' '}
         </span>
-        <span className='failed'>
-          {executedAction.postExecutionFailureText}
+        <span className='Failed'>
+          <RichTextOutputBox
+            Element={executedAction.postExecutionFailureText}
+          />
         </span>
       </div>
     )
