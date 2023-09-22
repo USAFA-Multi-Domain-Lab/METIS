@@ -47,7 +47,11 @@ export default function EditUserEntry(props: {
   }
 
   return (
-    <div className='EditUserEntry'>
+    <form
+      className='EditUserEntry'
+      onSubmit={(event) => event.preventDefault()}
+      autoComplete='off'
+    >
       <div className='UserIDContainer'>
         <div className='Title'>User ID:</div>
         <div className='UserID'>{user.userID}</div>
@@ -105,6 +109,6 @@ export default function EditUserEntry(props: {
           placeholder: 'Enter a last name here...',
         }}
       />
-    </div>
+    </form>
   )
 }

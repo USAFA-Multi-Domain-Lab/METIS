@@ -199,6 +199,12 @@ export default class ClientMission extends Mission<ClientMissionNode> {
     this._nodeCreators = []
     this.lastOpenedNode = null
 
+    // If there is no existing nodes,
+    // create one.
+    if (this.nodes.size === 0) {
+      this.spawnNode()
+    }
+
     // Mark as initialized.
     this.structureInitialized = true
 
@@ -317,50 +323,44 @@ export default class ClientMission extends Mission<ClientMissionNode> {
       depth++
     }
 
-    // If the parentNode is expanded, then
-    // child nodes could effect the positioning
-    // of sibling nodes, and the children should
-    // be accounted for.
-    if (parentNode.isOpen) {
-      let childNodes = parentNode.childNodes
+    let childNodes = parentNode.childNodes
 
-      // If the nodeCreationTarget is a child of the
-      // parentNode, the positioning is offset to account
-      // for the node creators that must be rendered.
-      for (let childNode of childNodes) {
-        if (nodeCreationTarget?.nodeID === childNode.nodeID) {
-          depth += 1
-        }
+    // If the nodeCreationTarget is a child of the
+    // parentNode, the positioning is offset to account
+    // for the node creators that must be rendered.
+    for (let childNode of childNodes) {
+      if (nodeCreationTarget?.nodeID === childNode.nodeID) {
+        depth += 1
+      }
+    }
+
+    // The childNodes should then be examined
+    // by recursively calling this function.
+    childNodes.forEach((childNode: ClientMissionNode, index: number) => {
+      if (index > 0) {
+        rowCount.increment()
       }
 
-      // The childNodes should then be examined
-      // by recursively calling this function.
-      childNodes.forEach((childNode: ClientMissionNode, index: number) => {
-        if (index > 0) {
-          rowCount.increment()
-        }
+      // If the nodeCreationTarget is this childNode,
+      // the positioning is offset to account for the
+      // node creators that must be rendered.
+      if (nodeCreationTarget?.nodeID === childNode.nodeID) {
+        rowCount.increment()
+      }
 
-        // If the nodeCreationTarget is this childNode,
-        // the positioning is offset to account for the
-        // node creators that must be rendered.
-        if (nodeCreationTarget?.nodeID === childNode.nodeID) {
-          rowCount.increment()
-        }
+      this.positionNodes(
+        childNode,
+        depth + 1 + childNode.depthPadding,
+        rowCount,
+      )
 
-        this.positionNodes(
-          childNode,
-          depth + 1 + childNode.depthPadding,
-          rowCount,
-        )
-
-        // If the nodeCreationTarget is this childNode,
-        // the positioning is offset to account for the
-        // node creators that must be rendered.
-        if (nodeCreationTarget?.nodeID === childNode.nodeID) {
-          rowCount.increment()
-        }
-      })
-    }
+      // If the nodeCreationTarget is this childNode,
+      // the positioning is offset to account for the
+      // node creators that must be rendered.
+      if (nodeCreationTarget?.nodeID === childNode.nodeID) {
+        rowCount.increment()
+      }
+    })
 
     // This will increase the mission depth
     // if a node is found with a greater depth
@@ -466,9 +466,10 @@ export default class ClientMission extends Mission<ClientMissionNode> {
             this.toJSON(),
           )
           // Update the temporary client-generated
-          // mission ID with the server-generated
-          // mission ID.
+          // mission ID and seed with the server-generated
+          // mission ID and seed.
           this.missionID = data.missionID
+          this.seed = data.seed
           // Update existsOnServer to true.
           this._existsOnServer = true
         }
@@ -630,7 +631,8 @@ export default class ClientMission extends Mission<ClientMissionNode> {
     return new Promise<void>(async (resolve, reject) => {
       try {
         await axios.put(ClientMission.API_ENDPOINT, {
-          mission: { missionID, live },
+          missionID,
+          live,
         })
         resolve()
       } catch (error) {

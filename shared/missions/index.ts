@@ -247,6 +247,11 @@ export default abstract class Mission<TMissionNode extends IMissionNode>
     this.importNodes(this.originalNodeData, this.originalNodeStructure, {
       openAll,
     })
+
+    // If root node is not open, open it.
+    if (!this.rootNode.isOpen) {
+      this.rootNode.open()
+    }
   }
 
   // Inherited
@@ -281,9 +286,6 @@ export default abstract class Mission<TMissionNode extends IMissionNode>
   ): void {
     // Reinitialize relevant object properties.
     this.nodes = new Map<string, TMissionNode>()
-    this.rootNode = this.spawnNode(Mission.ROOT_NODE_PROPERTIES, {
-      addToNodeMap: false,
-    })
     this.originalNodeData = nodeData
     this.originalNodeStructure = nodeStructure
 
@@ -306,9 +308,6 @@ export default abstract class Mission<TMissionNode extends IMissionNode>
       }
       throw error
     }
-
-    // Open root node.
-    this.rootNode.open()
   }
 
   /**
@@ -362,16 +361,18 @@ export default abstract class Mission<TMissionNode extends IMissionNode>
   /**
    * The default properties for a Mission object.
    */
-  public static readonly DEFAULT_PROPERTIES: IMissionJSON = {
-    missionID: generateHash(),
-    name: 'New Mission',
-    introMessage: 'Welcome to your new mission!',
-    versionNumber: 1,
-    live: false,
-    initialResources: 100,
-    seed: generateHash(),
-    nodeStructure: {},
-    nodeData: [],
+  public static get DEFAULT_PROPERTIES(): IMissionJSON {
+    return {
+      missionID: generateHash(),
+      name: 'New Mission',
+      introMessage: 'Welcome to your new mission!',
+      versionNumber: 1,
+      live: false,
+      initialResources: 100,
+      seed: generateHash(),
+      nodeStructure: {},
+      nodeData: [],
+    }
   }
   /**
    * The default properties for the root node of a Mission.
@@ -420,8 +421,10 @@ export default abstract class Mission<TMissionNode extends IMissionNode>
     }
     rootNode.childNodes = childNodes
 
-    if (openAll && rootNode.hasChildren) {
-      rootNode.open()
+    if (openAll) {
+      if (rootNode.openable) {
+        rootNode.open()
+      }
     }
 
     for (let childNode of childNodes) {

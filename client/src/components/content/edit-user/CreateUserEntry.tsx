@@ -107,7 +107,11 @@ export default function CreateUserEntry(props: {
   /* -- RENDER -- */
 
   return (
-    <div className='CreateUserEntry'>
+    <form
+      className='CreateUserEntry'
+      onSubmit={(event) => event.preventDefault()}
+      autoComplete='off'
+    >
       <Detail
         label='Username'
         initialValue={user.userID}
@@ -351,6 +355,6 @@ export default function CreateUserEntry(props: {
           }}
         />
       </div>
-    </div>
+    </form>
   )
 }

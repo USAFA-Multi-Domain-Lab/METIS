@@ -117,10 +117,10 @@ export default function MissionModificationPanel(props: {
 
       // Notify the user of success.
       if (live) {
-        notify(`${mission.name} is now live.`)
+        notify(`"${mission.name}" is now live.`)
         setLiveAjaxStatus(EAjaxStatus.Loaded)
       } else {
-        notify(`${mission.name} is now no longer live.`)
+        notify(`"${mission.name}" is now no longer live.`)
         setLiveAjaxStatus(EAjaxStatus.Loaded)
       }
     } catch (error) {

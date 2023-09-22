@@ -69,13 +69,12 @@ export default function MissionFormPage(
 
   useMountHandler(async (done) => {
     let missionID: string | null = props.missionID
-    let existsInDatabase: boolean = missionID !== null
 
     // Handle the editing of an existing user.
-    if (existsInDatabase) {
+    if (missionID !== null) {
       try {
         beginLoading('Loading mission...')
-        setMission(await ClientMission.fetchOne(missionID!))
+        setMission(await ClientMission.fetchOne(missionID, { openAll: true }))
       } catch {
         handleError('Failed to load mission.')
       }

@@ -61,10 +61,8 @@ export default function HomePage(props: IHomePage): JSX.Element | null {
         // Fetch missions from API and store
         // them in the state.
         setMissions(await ClientMission.fetchAll())
-        // Finish loading if not mounted.
-        if (!mountHandled) {
-          finishLoading()
-        }
+        // Finish loading and resolve.
+        finishLoading()
         resolve()
       } catch (error) {
         handleError('Failed to retrieve missions.')
@@ -85,10 +83,8 @@ export default function HomePage(props: IHomePage): JSX.Element | null {
         // Fetch users from API and store
         // them in the state.
         setUsers(await User.fetchAll())
-        // Finish loading if not mounted.
-        if (!mountHandled) {
-          finishLoading()
-        }
+        // Finish loading and resolve.
+        finishLoading()
         resolve()
       } catch (error) {
         handleError('Failed to retrieve users.')

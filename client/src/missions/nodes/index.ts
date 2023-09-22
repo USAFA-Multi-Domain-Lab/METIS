@@ -1,10 +1,8 @@
 import { IMissionMappable } from 'src/components/content/game/MissionMap'
 import ClientMission from '..'
 import { IMissionActionJSON } from '../../../../shared/missions/actions'
-import IActionExecution, {
-  TActionExecutionJSON,
-} from '../../../../shared/missions/actions/executions'
-import IActionOutcomeJSON from '../../../../shared/missions/actions/outcomes'
+import { TActionExecutionJSON } from '../../../../shared/missions/actions/executions'
+import { IActionOutcomeJSON } from '../../../../shared/missions/actions/outcomes'
 import MissionNode, {
   TMissionNodeJSON,
   INodeOpenOptions,
@@ -353,9 +351,6 @@ export default class ClientMissionNode
 
         this.childNodes = [target]
         target.parentNode = this
-
-        this.open()
-
         break
       case ENodeTargetRelation.ParentOfTargetAndChildren:
         // TODO
@@ -370,13 +365,6 @@ export default class ClientMissionNode
           childNode.parentNode = this
         }
         this.childNodes = childNodes
-
-        target.open()
-
-        if (childNodes.length > 0) {
-          this.open()
-        }
-
         break
       case ENodeTargetRelation.ChildOfTarget:
         target.childNodes.push(this)

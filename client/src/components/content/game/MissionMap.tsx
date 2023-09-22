@@ -404,9 +404,7 @@ export default class MissionMap extends React.Component<
       }
       visibleNodes.push(childNode)
 
-      if (childNode.isOpen) {
-        this.updateMainRelationships(childNode, visibleNodes, relationships)
-      }
+      this.updateMainRelationships(childNode, visibleNodes, relationships)
     }
 
     if (parentNode.nodeID === rootNode.nodeID) {

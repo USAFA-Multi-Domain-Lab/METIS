@@ -126,22 +126,34 @@ export interface IMissionNode {
   followingSibling: IMissionNode | null
   /**
    * Converts the node to JSON.
-   * @returns {TMissionNodeJSON} the JSON for the node.
+   * @param options Options for exporting the node to JSON.
+   * @returns the JSON for the node.
    */
-  toJSON: (...args: any) => TMissionNodeJSON
+  toJSON: (options?: TNodeJsonOptions) => TMissionNodeJSON
   /**
    * Opens the node.
-   * @returns {Promise<void>} a promise that resolves when the node opening has been fulfilled.
+   * @param options Options for opening the node.
+   * @returns a promise that resolves when the node opening has been fulfilled.
    */
-  open: (...args: any) => Promise<void>
+  open: (options?: INodeOpenOptions) => Promise<void>
   /**
    * Handles an exection of an action performed on the node.
+   * @param data The execution data to handle.
+   * @returns The generated execution object.
    */
-  handleExecution: (...args: any) => IActionExecution
+  handleExecution: (
+    execution: NonNullable<TActionExecutionJSON>,
+  ) => IActionExecution
   /**
    * Handles an outcome of an action performed on the node.
+   * @param data The outcome data to handle.
+   * @param options Options for handling the outcome.
+   * @returns The generated outcome object.
    */
-  handleOutcome: (...args: any) => IActionOutcome
+  handleOutcome: (
+    data: IActionOutcomeJSON,
+    options?: IHandleOutcomeOptions,
+  ) => IActionOutcome
 }
 
 /**
@@ -495,10 +507,6 @@ export default abstract class MissionNode<
     data: Array<IActionOutcomeJSON>,
   ): Array<TActionOutcome>
 
-  /**
-   * @param options Options for exporting the node to JSON.
-   * @returns the JSON for the node.
-   */
   // Implemented
   public toJSON(options: TNodeJsonOptions = {}): TMissionNodeJSON {
     let { includeGameData = false } = options
@@ -550,25 +558,14 @@ export default abstract class MissionNode<
     return json
   }
 
-  /**
-   * @param options Options for opening the node.
-   * @returns a promise that resolves when the node opening has been fulfilled.
-   */
   // Implemented
   public abstract open(options?: INodeOpenOptions): Promise<void>
 
-  /**
-   * @param outcome The execution to handle.
-   */
   // Implemented
   public abstract handleExecution(
     data: NonNullable<TActionExecutionJSON>,
   ): TActionExecution
 
-  /**
-   * @param outcome The outcome to handle.
-   * @param options Options for handling the outcome.
-   */
   // Implemented
   public abstract handleOutcome(
     data: IActionOutcomeJSON,
@@ -578,19 +575,21 @@ export default abstract class MissionNode<
   /**
    * The default properties for a MissionNode object.
    */
-  public static readonly DEFAULT_PROPERTIES: Required<TMissionNodeJSON> = {
-    nodeID: generateHash(),
-    name: 'Unnamed Node',
-    color: '#ffffff',
-    description: 'Description text goes here.',
-    preExecutionText: 'Node has not been executed.',
-    depthPadding: 0,
-    executable: false,
-    device: false,
-    actions: [],
-    opened: false,
-    executionState: 'unexecuted',
-    execution: null,
-    outcomes: [],
+  public static get DEFAULT_PROPERTIES(): Required<TMissionNodeJSON> {
+    return {
+      nodeID: generateHash(),
+      name: 'Unnamed Node',
+      color: '#ffffff',
+      description: 'Description text goes here.',
+      preExecutionText: 'Node has not been executed.',
+      depthPadding: 0,
+      executable: false,
+      device: false,
+      actions: [],
+      opened: false,
+      executionState: 'unexecuted',
+      execution: null,
+      outcomes: [],
+    }
   }
 }

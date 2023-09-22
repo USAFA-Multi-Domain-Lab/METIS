@@ -196,17 +196,19 @@ export default abstract class MissionAction<
   /**
    * Default properties set when creating a new MissionAction object.
    */
-  public static readonly DEFAULT_PROPERTIES: IMissionActionJSON = {
-    actionID: generateHash(),
-    name: 'New Action',
-    description: 'Enter your description here.',
-    processTime: 5000,
-    successChance: 0.5,
-    resourceCost: 1,
-    postExecutionSuccessText:
-      'Enter your successful post-execution message here.',
-    postExecutionFailureText:
-      'Enter your unsuccessful post-execution message here.',
-    scripts: [],
+  public static get DEFAULT_PROPERTIES(): IMissionActionJSON {
+    return {
+      actionID: generateHash(),
+      name: 'New Action',
+      description: 'Enter your description here.',
+      processTime: 5000,
+      successChance: 0.5,
+      resourceCost: 1,
+      postExecutionSuccessText:
+        'Enter your successful post-execution message here.',
+      postExecutionFailureText:
+        'Enter your unsuccessful post-execution message here.',
+      scripts: [],
+    }
   }
 }
