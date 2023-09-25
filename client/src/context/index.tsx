@@ -13,28 +13,28 @@ import { ServerEmittedError } from '../../../shared/connect/errors'
 import { IButtonText } from 'src/components/content/user-controls/ButtonText'
 import { EAjaxStatus } from '../../../shared/toolbox/ajax'
 import { IAuthPageSpecific } from 'src/components/pages/AuthPage'
+import { useMountHandler, useUnmountHandler } from 'src/toolbox/hooks'
+import StringsToolbox from '../../../shared/toolbox/strings'
 
 /**
  * The values available in the global context.
  */
 export type TGlobalContextValues = {
-  forcedUpdateCounter: number
   server: ServerConnection | null
   session: TMetisSession
-  currentPagePath: string
-  currentPageProps: AnyObject
-  appMountHandled: boolean
-  loading: boolean
-  loadingMessage: string
-  loadingMinTimeReached: boolean
-  pageSwitchMinTimeReached: boolean
-  error: TAppError | null
+  currentPagePath: string // todo: make readonly
+  currentPageProps: AnyObject // todo: make readonly
+  appMountHandled: boolean // todo: make readonly
+  loading: boolean // todo: make readonly
+  loadingMessage: string // todo: make readonly
+  loadingMinTimeReached: boolean // todo: make readonly
+  pageSwitchMinTimeReached: boolean // todo: privatize
+  error: TAppError | null // todo: readonly
   tooltips: React.RefObject<HTMLDivElement>
   tooltipDescription: string
-  notifications: Array<Notification>
-  postLoadNotifications: Array<Notification>
-  confirmation: IConfirmation | null
-  prompt: IPrompt | null
+  notifications: Array<Notification> // todo: readonly/immutable
+  confirmation: IConfirmation | null // todo: readonly
+  prompt: IPrompt | null // todo: readonly
   missionNodeColors: Array<string>
 }
 
@@ -53,7 +53,7 @@ export type TGlobalContextActions = {
    * @param pagePath The path of the page to go to.
    * @param pageProps The props to pass to the destination page.
    */
-  goToPage: (pagePath: string, pageProps: AnyObject) => void
+  navigateTo: (pagePath: string, pageProps: AnyObject) => void
   /**
    * This switching the user to the loading page until
    * the loading has been ended by the finishLoading
@@ -177,10 +177,17 @@ export interface INotifyOptions {
 }
 
 /**
+ * Middleware that is run during navigation between pages.
+ * @note If `next` is not called, the navigation will be aborted.
+ * @param to The destination of the navigation event.
+ * @param next Proceed to the next navigation middleware.
+ */
+export type TNavigationMiddleware = (to: string, next: () => void) => void
+
+/**
  * The default values of the global context state.
  */
 const GLOBAL_CONTEXT_VALUES_DEFAULT: TGlobalContextValues = {
-  forcedUpdateCounter: 0,
   server: null,
   session: null,
   currentPagePath: '',
@@ -194,7 +201,6 @@ const GLOBAL_CONTEXT_VALUES_DEFAULT: TGlobalContextValues = {
   tooltips: React.createRef(),
   tooltipDescription: '',
   notifications: [],
-  postLoadNotifications: [],
   confirmation: null,
   prompt: null,
   missionNodeColors: [],
@@ -217,6 +223,14 @@ const globalContextDefault: TGlobalContext = ObjectToolbox.map(
  */
 const globalReactContext: React.Context<TGlobalContext> =
   React.createContext(globalContextDefault)
+
+/**
+ * Cache of middleware used for navigation events.
+ */
+const navigationMiddleware: Map<string, TNavigationMiddleware> = new Map<
+  string,
+  TNavigationMiddleware
+>()
 
 /**
  * Used as a hook in the GlobalContextProvider component to populate the context with the state before supplying it to consumers.
@@ -274,8 +288,6 @@ const useGlobalContextDefinition = (context: TGlobalContext) => {
 
   // ! IMPORTANT - Context actions cannot be extracted yet because they are not defined until further below.
 
-  const [forcedUpdateCounter, setForcedUpdateCounter] =
-    context.forcedUpdateCounter
   const [server, setServer] = context.server
   const [session, setSession] = context.session
   const [currentPagePath, setCurrentPagePath] = context.currentPagePath
@@ -291,11 +303,16 @@ const useGlobalContextDefinition = (context: TGlobalContext) => {
   const [tooltips, setTooltips] = context.tooltips
   const [tooltipDescription, setTooltipDescription] = context.tooltipDescription
   const [notifications, setNotifications] = context.notifications
-  const [postLoadNotifications, setPostLoadNotifications] =
-    context.postLoadNotifications
   const [confirmation, setConfirmation] = context.confirmation
   const [prompt, setPrompt] = context.prompt
   const [missionNodeColors, setMissionNodeColors] = context.missionNodeColors
+
+  /* -- PRIVATE STATE -- */
+
+  const [forcedUpdateCounter, setForcedUpdateCounter] = useState<number>(0)
+  const [postLoadNotifications, setPostLoadNotifications] = useState<
+    Notification[]
+  >([])
 
   /* -- LOCAL FUNCTIONS -- */
 
@@ -317,9 +334,7 @@ const useGlobalContextDefinition = (context: TGlobalContext) => {
     forceUpdate: () => {
       setForcedUpdateCounter(forcedUpdateCounter + 1)
     },
-    goToPage: (pagePath: string, pageProps: AnyObject) => {
-      const { confirm } = context.actions
-
+    navigateTo: (pagePath: string, pageProps: AnyObject) => {
       // Actually switches the page. Called after any confirmations.
       const realizePageSwitch = (): void => {
         // Display to the user that the
@@ -347,35 +362,33 @@ const useGlobalContextDefinition = (context: TGlobalContext) => {
         }, PAGE_SWITCH_MIN_TIME)
       }
 
-      // If the user is currently in a game,
-      // confirm they want to quit before switching
-      // the page.
-      if (currentPagePath === 'GamePage' && session?.gameID) {
-        confirm(
-          'Are you sure you want to quit?',
-          (concludeAction: () => void) => {
-            if (session?.gameID) {
-              // session.game
-              //   .quit(session.user.userID)
-              //   .then(() => {
-              //     switchPage()
-              //     setSession({
-              //       ...session,
-              //       game: undefined,
-              //     })
-              //     concludeAction()
-              //   })
-              //   .catch((error: Error) => {
-              //     console.log(error)
-              //     this.handleServerError('Failed to quit game.')
-              //     concludeAction()
-              //   })
-            }
-          },
-        )
+      // Create an array from navigation middleware.
+      const middlewares: TNavigationMiddleware[] = Array.from(
+        navigationMiddleware.values(),
+      )
+
+      // Cursor for tracking which middleware to
+      // call next.
+      let cursor: number = 0
+
+      // A function for determining which middleware to
+      // call next.
+      const next = () => {
+        // See if end is reached.
+        if (cursor + 1 === middlewares.length) {
+          // Call realizePageSwitch.
+          realizePageSwitch()
+        }
+        // Else call next middleware.
+        else {
+          cursor++
+          middlewares[cursor](pagePath, next)
+        }
       }
-      // Else, go ahead and switch the page.
-      else {
+
+      if (middlewares.length > 0) {
+        middlewares[0](pagePath, next)
+      } else {
         realizePageSwitch()
       }
     },
@@ -605,7 +618,7 @@ const useGlobalContextDefinition = (context: TGlobalContext) => {
     },
     logout: (authPageProps: IAuthPageSpecific) => {
       // Extract context actions.
-      const { beginLoading, finishLoading, handleError, goToPage } =
+      const { beginLoading, finishLoading, handleError, navigateTo } =
         context.actions
 
       // Notify the user of logout.
@@ -625,7 +638,7 @@ const useGlobalContextDefinition = (context: TGlobalContext) => {
           // the auth page.
           setSession(null)
           finishLoading()
-          goToPage('AuthPage', authPageProps)
+          navigateTo('AuthPage', authPageProps)
         },
         (error: Error) => {
           finishLoading()
@@ -674,6 +687,24 @@ const GlobalContextProvider = function GlobalContextProvider(props: {
  */
 export function useGlobalContext(): TGlobalContext {
   return React.useContext<TGlobalContext>(globalReactContext)
+}
+
+/**
+ * Defines middleware for whenever a navigation event is created.
+ * @param middleware The navigation middleware.
+ */
+export function useNavigationMiddleware(
+  middleware: TNavigationMiddleware,
+): void {
+  const [key] = useState<string>(StringsToolbox.generateRandomID())
+
+  useMountHandler((done) => {
+    navigationMiddleware.set(key, middleware)
+  })
+
+  useUnmountHandler(() => {
+    navigationMiddleware.delete(key)
+  })
 }
 
 /**

@@ -1,27 +1,29 @@
-function toTitleFormat(toFormat: string): string {
-  while (toFormat.startsWith(' ')) {
-    toFormat = toFormat.substr(1, toFormat.length)
-  }
-  while (toFormat.endsWith(' ')) {
-    toFormat = toFormat.substr(0, toFormat.length - 1)
-  }
-  while (toFormat.includes(' ')) {
-    toFormat = toFormat.replace(' ', '-')
-  }
-  return toFormat.toLowerCase()
-}
+import { v4 as generateHash } from 'uuid'
 
-export function limit(toLimit: string, maxCharacters: number) {
-  if (toLimit.length > maxCharacters) {
-    toLimit = toLimit.substr(0, maxCharacters - 3)
-    toLimit += '...'
+/**
+ * Utility functions for working with strings.
+ */
+export default class StringsToolbox {
+  /**
+   * Limits the given string to the given number of characters.
+   * @note Three extra characters are cut at the end of the result to include an elipsis.
+   * @param toLimit The string to limit.
+   * @param maxCharacters The number of characters to limit it to.
+   * @returns The resulting string.
+   */
+  public static limit(toLimit: string, maxCharacters: number) {
+    if (toLimit.length > maxCharacters) {
+      toLimit = toLimit.substr(0, maxCharacters - 3)
+      toLimit += '...'
+    }
+    return toLimit
   }
-  return toLimit
-}
 
-const defaultExports = {
-  toTitleFormat,
-  limit,
+  /**
+   * Generates a random hash that can be used as a unique ID.
+   * @returns The random hash.
+   */
+  public static generateRandomID(): string {
+    return generateHash()
+  }
 }
-
-export default defaultExports

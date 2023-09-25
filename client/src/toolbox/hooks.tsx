@@ -4,9 +4,18 @@ import { TMetisSession } from '../../../shared/sessions'
 import { useGlobalContext } from '../context'
 
 /**
+ * The callback for the useEffect hook.
+ */
+type EffectsCallback = Parameters<typeof useEffect>[0]
+/**
+ * The return type for the useEffect hook callback.
+ */
+type EffectsCallbackReturned = ReturnType<EffectsCallback>
+
+/**
  * Creates a handler that will be called when the component mounts.
- * @param {(done: () => void) => void} handler The handler to call when the component mounts. Done will be passed to the handler, which should be called when the handler is done processing the mount.
- * @returns {[boolean, () => void]} A tuple containing a boolean indicating whether the mount has been handled and a function that can be called to remount the component.
+ * @param handler The handler to call when the component mounts. Done will be passed to the handler, which should be called when the handler is done processing the mount.
+ * @returns A tuple containing a boolean indicating whether the mount has been handled and a function that can be called to remount the component.
  */
 export function useMountHandler(
   handler: (done: () => void) => void,
@@ -27,16 +36,26 @@ export function useMountHandler(
 }
 
 /**
+ * Creates a handler that will be called when the component unmounts.
+ * @param handler The handler that is called upon unmount.
+ */
+export function useUnmountHandler(handler: () => void): void {
+  useEffect(() => {
+    return handler
+  }, [])
+}
+
+/**
  * Requires that a session be present in the application state. If no session is present, the user will be redirected to the AuthPage.
  */
 export function useRequireSession(): [TMetisSession] {
   const globalContext = useGlobalContext()
   const [session] = globalContext.session
-  const { goToPage } = globalContext.actions
+  const { navigateTo } = globalContext.actions
 
   useEffect(() => {
     if (session === null) {
-      goToPage('AuthPage', {
+      navigateTo('AuthPage', {
         returningPagePath: 'HomePage',
         returningPageProps: {},
       })

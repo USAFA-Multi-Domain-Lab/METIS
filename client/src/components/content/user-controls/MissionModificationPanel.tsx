@@ -19,7 +19,7 @@ export default function MissionModificationPanel(props: {
   const globalContext = useGlobalContext()
 
   const [session] = globalContext.session
-  const { goToPage, notify, confirm, beginLoading, finishLoading } =
+  const { navigateTo, notify, confirm, beginLoading, finishLoading } =
     globalContext.actions
 
   /* -- COMPONENT VARIABLES -- */
@@ -41,7 +41,7 @@ export default function MissionModificationPanel(props: {
   // This is called when a user requests
   // to edit the mission.
   const handleEditRequest = () => {
-    goToPage('MissionFormPage', {
+    navigateTo('MissionFormPage', {
       missionID: mission.missionID,
     })
   }

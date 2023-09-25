@@ -5,8 +5,8 @@ import ExecuteNodePath from '../content/game/ExecuteNodePath'
 import { IPage } from '../App'
 import { IConsoleOutput } from 'src/components/content/game/ConsoleOutput'
 import GameClient from 'src/games'
-import { useGlobalContext } from 'src/context'
-import { useMountHandler } from 'src/toolbox/hooks'
+import { useGlobalContext, useNavigationMiddleware } from 'src/context'
+import { useMountHandler, useUnmountHandler } from 'src/toolbox/hooks'
 import ClientMission from 'src/missions'
 import ClientMissionNode from 'src/missions/nodes'
 import ClientMissionAction from 'src/missions/actions'
@@ -40,8 +40,15 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
   /* -- GLOBAL CONTEXT -- */
 
   const globalContext = useGlobalContext()
-  const { goToPage, finishLoading, notify, logout, forceUpdate, confirm } =
-    globalContext.actions
+  const {
+    navigateTo,
+    finishLoading,
+    notify,
+    logout,
+    forceUpdate,
+    confirm,
+    handleError,
+  } = globalContext.actions
 
   /* -- STATE -- */
 
@@ -49,6 +56,34 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
   const [selectedAction, selectAction] = useState<ClientMissionAction | null>(
     null,
   )
+
+  /* -- EFFECTS -- */
+
+  // Add navigation middleware to properly
+  // quit the game before the user navigates
+  // away.
+  useNavigationMiddleware((to: string, next) => {
+    confirm(
+      'Are you sure you want to quit?',
+      async (concludeAction: () => void) => {
+        try {
+          await game.quit()
+          concludeAction()
+          next()
+        } catch (error) {
+          handleError({
+            message: 'Failed to quit game.',
+            notifyMethod: 'bubble',
+          })
+          concludeAction()
+        }
+      },
+      {
+        buttonConfirmText: 'Yes',
+        buttonCancelText: 'No',
+      },
+    )
+  })
 
   /* -- VARIABLES -- */
 
@@ -232,7 +267,7 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
             text: 'Back to selection',
             key: 'back-to-selection',
             handleClick: () => {
-              goToPage('HomePage', {})
+              navigateTo('HomePage', {})
             },
             visible: true,
           },
@@ -247,7 +282,7 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
             visible: true,
           },
         ]}
-        brandingCallback={() => goToPage('HomePage', {})}
+        brandingCallback={() => navigateTo('HomePage', {})}
         brandingTooltipDescription='Go home.'
       />
       {

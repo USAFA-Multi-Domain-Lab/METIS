@@ -18,7 +18,7 @@ export default function AuthPage(props: IAuthPage): JSX.Element | null {
   /* -- GLOBAL CONTEXT -- */
 
   const globalContext = useGlobalContext()
-  const { beginLoading, finishLoading, goToPage, connectToServer } =
+  const { beginLoading, finishLoading, navigateTo, connectToServer } =
     globalContext.actions
   const [_, setSession] = globalContext.session
 
@@ -112,13 +112,13 @@ export default function AuthPage(props: IAuthPage): JSX.Element | null {
             // If the user needs a password reset,
             // then navigate to the user reset page.
             if (session.user.needsPasswordReset) {
-              goToPage('UserResetPage', {
+              navigateTo('UserResetPage', {
                 user: session.user,
               })
             }
             // Else, go to the home page.
             else {
-              goToPage('HomePage', {})
+              navigateTo('HomePage', {})
             }
           } else {
             handleLoginError('Incorrect username or password.')

@@ -13,7 +13,7 @@ import {
 import MissionEntry from '../content/edit-mission/MissionEntry'
 import NodeEntry from '../content/edit-mission/NodeEntry'
 import NodeStructuring from '../content/edit-mission/NodeStructuring'
-import { useMountHandler } from 'src/toolbox/hooks'
+import { useMountHandler, useUnmountHandler } from 'src/toolbox/hooks'
 import { useGlobalContext } from 'src/context'
 import ClientMission from 'src/missions'
 import ClientMissionNode, { ENodeDeleteMethod } from 'src/missions/nodes'
@@ -39,7 +39,7 @@ export default function MissionFormPage(
     finishLoading,
     handleError,
     notify,
-    goToPage,
+    navigateTo,
     confirm,
     logout,
   } = globalContext.actions
@@ -285,18 +285,18 @@ export default function MissionFormPage(
   // home page.
   const goHome = (): void => {
     if (!areUnsavedChanges) {
-      goToPage('HomePage', {})
+      navigateTo('HomePage', {})
     } else {
       confirm(
         'You have unsaved changes. What do you want to do with them?',
         async (concludeAction: () => void) => {
           await save().catch(() => {})
-          goToPage('HomePage', {})
+          navigateTo('HomePage', {})
           concludeAction()
         },
         {
           handleAlternate: (concludeAction: () => void) => {
-            goToPage('HomePage', {})
+            navigateTo('HomePage', {})
             concludeAction()
           },
           pendingMessageUponConfirm: 'Saving...',
@@ -312,7 +312,7 @@ export default function MissionFormPage(
   // game page.
   const goToGamePage = (): void => {
     if (!areUnsavedChanges) {
-      goToPage('GamePage', {
+      navigateTo('GamePage', {
         missionID: mission.missionID,
       })
     } else {
@@ -320,12 +320,12 @@ export default function MissionFormPage(
         'You have unsaved changes. What do you want to do with them?',
         async (concludeAction: () => void) => {
           await save().catch(() => {})
-          goToPage('GamePage', {})
+          navigateTo('GamePage', {})
           concludeAction()
         },
         {
           handleAlternate: (concludeAction: () => void) => {
-            goToPage('GamePage', {
+            navigateTo('GamePage', {
               missionID: mission.missionID,
             })
             concludeAction()

@@ -98,7 +98,7 @@ function App(props: {}): JSX.Element | null {
     finishLoading,
     handleError,
     syncSession,
-    goToPage,
+    navigateTo,
     connectToServer,
   } = globalContext.actions
 
@@ -179,7 +179,7 @@ function App(props: {}): JSX.Element | null {
         // navigate to the auth page to have
         // the visitor login.
         if (session === null) {
-          goToPage('AuthPage', {
+          navigateTo('AuthPage', {
             returningPagePath: 'HomePage',
             returningPageProps: {},
           })
@@ -194,7 +194,7 @@ function App(props: {}): JSX.Element | null {
           // reset, then navigate to the user
           // reset page.
           if (session.user.needsPasswordReset) {
-            goToPage('UserResetPage', {
+            navigateTo('UserResetPage', {
               user: session.user,
             })
           }
@@ -202,11 +202,11 @@ function App(props: {}): JSX.Element | null {
           // then switch to the game page.
           else if (session.gameID !== null) {
             let game: GameClient = await GameClient.fetch(server)
-            goToPage('GamePage', { game })
+            navigateTo('GamePage', { game })
           }
           // Else, go to the home page.
           else {
-            goToPage('HomePage', {})
+            navigateTo('HomePage', {})
           }
         }
 

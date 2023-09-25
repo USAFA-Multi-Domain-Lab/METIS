@@ -3,7 +3,7 @@ import './NodeActions.scss'
 import ClientMissionNode from 'src/missions/nodes'
 import ClientMissionAction from 'src/missions/actions'
 import Tooltip from '../communication/Tooltip'
-import strings from '../../../../../shared/toolbox/strings'
+import StringsToolbox from '../../../../../shared/toolbox/strings'
 import GameClient from 'src/games'
 import { useMountHandler } from 'src/toolbox/hooks'
 import MapToolbox from '../../../../../shared/toolbox/maps'
@@ -128,7 +128,10 @@ export default function NodeActions({
                 `**Resource cost:** ${
                   action.resourceCost as number
                 } resource(s)\n` +
-                `**Description:** ${strings.limit(action.description, 160)}`
+                `**Description:** ${StringsToolbox.limit(
+                  action.description,
+                  160,
+                )}`
               }
             />
             {action.name}

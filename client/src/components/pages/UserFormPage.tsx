@@ -28,7 +28,7 @@ export default function UserFormPage(props: IUserFormPage): JSX.Element | null {
     finishLoading,
     handleError,
     notify,
-    goToPage,
+    navigateTo,
     confirm,
     logout,
   } = globalContext.actions
@@ -130,14 +130,14 @@ export default function UserFormPage(props: IUserFormPage): JSX.Element | null {
   // home page.
   const goHome = (): void => {
     if (!areUnsavedChanges) {
-      goToPage('HomePage', {})
+      navigateTo('HomePage', {})
     } else {
       confirm(
         'You have unsaved changes. What do you want to do with them?',
         (concludeAction: () => void) => {
           save(
             () => {
-              goToPage('HomePage', {})
+              navigateTo('HomePage', {})
               concludeAction()
             },
             () => {
@@ -147,7 +147,7 @@ export default function UserFormPage(props: IUserFormPage): JSX.Element | null {
         },
         {
           handleAlternate: (concludeAction: () => void) => {
-            goToPage('HomePage', {})
+            navigateTo('HomePage', {})
             concludeAction()
           },
           pendingMessageUponConfirm: 'Saving...',

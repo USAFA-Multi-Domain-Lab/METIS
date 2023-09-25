@@ -24,7 +24,7 @@ export default function UserResetPage(
   /* -- GLOBAL CONTEXT -- */
 
   const globalContext = useGlobalContext()
-  const { forceUpdate, notify, goToPage, logout } = globalContext.actions
+  const { forceUpdate, notify, navigateTo, logout } = globalContext.actions
 
   /* -- COMPONENT STATE -- */
 
@@ -65,7 +65,7 @@ export default function UserResetPage(
         user,
         () => {
           notify('User successfully saved.')
-          goToPage('HomePage', {})
+          navigateTo('HomePage', {})
           callback()
         },
         (error: Error) => {

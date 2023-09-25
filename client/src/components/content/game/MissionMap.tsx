@@ -3,7 +3,7 @@
 import './MissionMap.scss'
 import React from 'react'
 import List from '../general-layout/List'
-import strings from '../../../../../shared/toolbox/strings'
+import StringsToolbox from '../../../../../shared/toolbox/strings'
 import { EAjaxStatus } from '../../../../../shared/toolbox/ajax'
 import MoreInformation from '../communication/MoreInformation'
 import {
@@ -17,7 +17,6 @@ import ClientMission from 'src/missions'
 import ClientMissionNode, { ENodeTargetRelation } from 'src/missions/nodes'
 import NodeCreator from 'src/missions/nodes/creator'
 import ClientActionExecution from 'src/missions/actions/executions'
-import ArrayToolbox from '../../../../../shared/toolbox/arrays'
 
 /* -- interfaces -- */
 
@@ -147,7 +146,7 @@ export default class MissionMap extends React.Component<
     // Prompt construction.
     prompt = '##### View this node.'
 
-    return `#### ${nodeTitle}\n${strings.limit(
+    return `#### ${nodeTitle}\n${StringsToolbox.limit(
       node.name, // ! This should be description
       160,
     )}\n${nodeTypeInfo}${scoreInfo}\n${prompt}`

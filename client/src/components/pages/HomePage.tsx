@@ -29,7 +29,7 @@ export default function HomePage(props: IHomePage): JSX.Element | null {
   const {
     beginLoading,
     finishLoading,
-    goToPage,
+    navigateTo,
     handleError,
     notify,
     logout,
@@ -316,13 +316,13 @@ export default function HomePage(props: IHomePage): JSX.Element | null {
   // This will start the process for
   // creating a new mission.
   const createMission = (): void =>
-    goToPage('MissionFormPage', { missionID: null })
+    navigateTo('MissionFormPage', { missionID: null })
 
   // This will switch to the changelog
   // page.
   const viewChangelog = (): void => {
     if (currentUser.hasRestrictedAccess) {
-      goToPage('ChangelogPage', {})
+      navigateTo('ChangelogPage', {})
     }
   }
 
@@ -347,7 +347,7 @@ export default function HomePage(props: IHomePage): JSX.Element | null {
         session.gameID = game.gameID
         // Go to the game page with the new
         // game client.
-        goToPage('GamePage', { game })
+        navigateTo('GamePage', { game })
       } catch (error) {
         handleError({
           message: 'Failed to launch game. Contact system administrator.',
@@ -366,14 +366,14 @@ export default function HomePage(props: IHomePage): JSX.Element | null {
   // page with the selected user.
   const selectUser = (user: User) => {
     if (currentUser.hasRestrictedAccess) {
-      goToPage('UserFormPage', {
+      navigateTo('UserFormPage', {
         userID: user.userID,
       })
     }
   }
 
   const createUser = () => {
-    goToPage('UserFormPage', {
+    navigateTo('UserFormPage', {
       userID: null,
     })
   }
