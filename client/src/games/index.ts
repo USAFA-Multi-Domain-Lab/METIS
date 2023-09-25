@@ -74,6 +74,17 @@ export default class GameClient extends Game<
     )
   }
 
+  /**
+   * Removes game-specific listeners for the given particpant.
+   */
+  private removeListeners(): void {
+    this.server.clearEventListeners([
+      'node-opened',
+      'action-execution-initiated',
+      'action-execution-completed',
+    ])
+  }
+
   // Implemented
   public toJSON(): IGameJSON {
     return {
@@ -126,6 +137,34 @@ export default class GameClient extends Game<
       requestID: ServerConnection.generateRequestID(),
       actionID: actionID,
     })
+  }
+
+  /**
+   * Request to quit the game.
+   * @returns A promise that resolves when the game is quitted.
+   */
+  public async quit(): Promise<void> {
+    return new Promise<void>(
+      async (
+        resolve: () => void,
+        reject: (error: any) => void,
+      ): Promise<void> => {
+        try {
+          // Call API to quit the game.
+          await axios.delete(`${Game.API_ENDPOINT}/quit/`)
+
+          // Remove listeners.
+          this.removeListeners()
+
+          // Resolve the promise.
+          return resolve()
+        } catch (error) {
+          console.error('Failed to join game.')
+          console.error(error)
+          return reject(error)
+        }
+      },
+    )
   }
 
   /**
@@ -225,6 +264,42 @@ export default class GameClient extends Game<
   }
 
   /**
+   * Fetches the currently joined game for the user.
+   * @note Only call this if the user has joined a game. Otherwise a 404 error will occur.
+   * @param server The current connection to the server.
+   * @returns A promise of the game client for the currently joined game.
+   */
+  public static async fetch(server: ServerConnection): Promise<GameClient> {
+    return new Promise<GameClient>(
+      async (
+        resolve: (game: GameClient) => void,
+        reject: (error: any) => void,
+      ): Promise<void> => {
+        try {
+          // Call API to join the game with
+          // the given game ID. Await the
+          // game JSON.
+          let gameJSON: IGameJSON = (
+            await axios.get<IGameJSON>(Game.API_ENDPOINT)
+          ).data
+
+          // Convert the game JSON into a
+          // GameClient object.
+          let game: GameClient = new GameClient(gameJSON, server)
+
+          // Resolve the promise with the
+          // game object.
+          return resolve(game)
+        } catch (error) {
+          console.error('Failed to fetch game client.')
+          console.error(error)
+          return reject(error)
+        }
+      },
+    )
+  }
+
+  /**
    * Launches a new game with a new game ID.
    * @param {string} missionID  The ID of the mission being executed in the game.
    * @returns {Promise<string>} A promise of the game ID for the newly launched game.
@@ -259,8 +334,9 @@ export default class GameClient extends Game<
 
   /**
    * Request to join the game with the given game ID.
-   * @param {string} gameID The ID of the game to join.
-   * @returns {Promise<GameClient>} A promise of the game client object.
+   * @param gameID The ID of the game to join.
+   * @param server The current connection to the server.
+   * @returns A promise of the game client object.
    */
   public static async join(
     gameID: string,

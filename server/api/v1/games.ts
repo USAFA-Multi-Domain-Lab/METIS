@@ -3,6 +3,7 @@ import expressWs from 'express-ws'
 import {
   hasPermittedRole,
   requireConnection,
+  requireInGame,
   requireLogin,
 } from '../../middleware/users'
 import MissionModel from 'metis/server/database/models/missions'
@@ -11,8 +12,34 @@ import GameServer from 'metis/server/games'
 import ClientConnection from 'metis/server/connect/clients'
 import { IMissionJSON } from 'metis/missions'
 import ServerMission from 'metis/server/missions'
+import MetisSession from 'metis/server/sessions'
 
 const routerMap = (router: expressWs.Router, done: () => void) => {
+  // -- GET | /api/v1/games/ --
+  // Returns the current game data for the game
+  // in the session.
+  router.get('/', requireConnection, (request, response) => {
+    // Get the client and the session.
+    let client: ClientConnection = response.locals.client
+    let session: MetisSession = response.locals.session
+
+    // If the session is not in a game, forbidden.
+    if (session.gameID === null) {
+      return response.sendStatus(403)
+    }
+
+    // Get the game.
+    let game: GameServer | undefined = GameServer.get(session.gameID)
+
+    // If undefined, return server error.
+    if (game === undefined) {
+      return response.sendStatus(500)
+    }
+
+    // Return the game as JSON.
+    return response.json(game.toJSON())
+  })
+
   // -- POST | /api/v1/games/launch/ --
   // This will create a new game for a user
   // to execute a mission.
@@ -51,8 +78,10 @@ const routerMap = (router: expressWs.Router, done: () => void) => {
             // Create mission.
             let mission: ServerMission = new ServerMission(missionData)
             // Launch the game.
-            let gameID = await GameServer.launch(mission)
-            return response.json({ gameID })
+            let game: GameServer = GameServer.launch(mission)
+            // Return the ID of the newly launched game
+            // as JSON.
+            return response.json({ gameID: game.gameID })
           } catch (error: any) {
             gameLogger.error('Failed to launch game.')
             gameLogger.error(error)
@@ -68,7 +97,7 @@ const routerMap = (router: expressWs.Router, done: () => void) => {
     // Get data from the request body.
     let { gameID } = request.body
 
-    // Get the session.
+    // Get the client connection.
     let client: ClientConnection = response.locals.client
 
     // Get the game.
@@ -88,85 +117,21 @@ const routerMap = (router: expressWs.Router, done: () => void) => {
 
   // // -- POST | /api/v1/games/quit/ --
   // // This will quit a currently joined game.
-  // router.post(
-  //   '/quit/',
-  //   requireLogin,
-  //   requireInGame,
-  //   (request: Request, response: Response) => {
-  //     // Grab the session, user, and game.
-  //     let session: MetisSession = response.locals.session
-  //     let user: User = response.locals.user
-  //     let game: Game = response.locals.game
-  //
-  //     // Quit the game.
-  //     game.quit(user.userID).then(
-  //       () => {
-  //         session.quitGame()
-  //         return response.sendStatus(200)
-  //       },
-  //       (error: AxiosError) => {
-  //         gameLogger.error('Failed to quit game.')
-  //         gameLogger.error(error)
-  //         return response.sendStatus(
-  //           error.status !== undefined ? error.status : 500,
-  //         )
-  //       },
-  //     )
-  //   },
-  // )
-  //
-  // // -- POST | /api/v1/games/open/ --
-  // // This will open a node, revealing the
-  // // child nodes.
-  // router.post(
-  //   '/open/',
-  //   requireLogin,
-  //   requireInGame,
-  //   (request: Request, response: Response) => {
-  //     // Grab the game and nodeID from the
-  //     // request.
-  //     let game: Game = response.locals.game
-  //     let nodeID: string = request.body.nodeID
-  //
-  //     // Open the node.
-  //     game.open(nodeID).then(
-  //       () => response.sendStatus(200),
-  //       (error: AxiosError) => {
-  //         gameLogger.error('Failed to open node.')
-  //         gameLogger.error(error)
-  //         return response.sendStatus(
-  //           error.status !== undefined ? error.status : 500,
-  //         )
-  //       },
-  //     )
-  //   },
-  // )
-  //
-  // // -- POST | /api/v1/games/execute/ --
-  // // This will execute an action on a node.
-  // router.post(
-  //   '/execute/',
-  //   requireLogin,
-  //   requireInGame,
-  //   (request: Request, response: Response) => {
-  //     // Grab the game and actionID from
-  //     // the request.
-  //     let game: Game = response.locals.game
-  //     let actionID: string = request.body.actionID
-  //
-  //     // Execute the action.
-  //     game.execute(actionID).then(
-  //       () => response.sendStatus(200),
-  //       (error: AxiosError) => {
-  //         gameLogger.error('Failed to execute action.')
-  //         gameLogger.error(error)
-  //         return response.sendStatus(
-  //           error.status !== undefined ? error.status : 500,
-  //         )
-  //       },
-  //     )
-  //   },
-  // )
+  router.delete(
+    '/quit/',
+    requireInGame,
+    (request: Request, response: Response) => {
+      // Grab the session, user, and game.
+      let session: MetisSession = response.locals.session
+      let game: GameServer = response.locals.game
+
+      // Quit the game.
+      game.quit(session.userID)
+
+      // Return 200
+      return response.sendStatus(200)
+    },
+  )
 
   done()
 }

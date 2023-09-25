@@ -22,6 +22,8 @@ import UserFormPage from './pages/UserFormPage'
 import UserResetPage from './pages/UserResetPage'
 import ClientMissionNode from 'src/missions/nodes'
 import { useGlobalContext } from 'src/context'
+import GameClient from 'src/games'
+import ServerConnection from 'src/connect/server'
 
 /**
  * Props that every page accepts. Extend this to include more.
@@ -186,7 +188,7 @@ function App(props: {}): JSX.Element | null {
         // with the server.
         else {
           // Connect to the server.
-          await connectToServer()
+          let server: ServerConnection = await connectToServer()
 
           // If the sessioned user needs a password
           // reset, then navigate to the user
@@ -198,8 +200,9 @@ function App(props: {}): JSX.Element | null {
           }
           // Else, if the sessioned user is in a game,
           // then switch to the game page.
-          else if (session.inGame) {
-            goToPage('GamePage', {})
+          else if (session.gameID !== null) {
+            let game: GameClient = await GameClient.fetch(server)
+            goToPage('GamePage', { game })
           }
           // Else, go to the home page.
           else {

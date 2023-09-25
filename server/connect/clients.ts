@@ -78,10 +78,7 @@ export default class ClientConnection {
   /**
    * Storage for all listeners, in the order they get added.
    */
-  protected listeners: Map<TClientMethod, TClientHandler<any>> = new Map<
-    TClientMethod,
-    TClientHandler<any>
-  >()
+  protected listeners: [TClientMethod, TClientHandler<any>][] = []
 
   /**
    * @param {WebSocket} socket The web socket connection itself.
@@ -176,9 +173,44 @@ export default class ClientConnection {
     handler: TClientHandler<TMethod>,
   ): ClientConnection {
     // Push the new listener to the array of listeners.
-    this.listeners.set(method, handler)
+    this.listeners.push([method, handler])
     // Return this.
     return this
+  }
+
+  /**
+   * Clears event listeners from the connection.
+   * @param filter A list of handler types to remove. Any handler matching any type in the filter will be cleared.
+   * If this is undefined, all handlers will be removed from the connection.
+   * @returns The number of matching event listeners removed.
+   */
+  public clearEventListeners(filter?: TClientMethod[]): number {
+    // Initialize removal count.
+    let removalCount: number = 0
+
+    // If no filter...
+    if (filter === undefined) {
+      // Get the number of event listeners currently
+      // existing.
+      removalCount = this.listeners.length
+
+      // Reinitialize listeners.
+      this.listeners = []
+    } else {
+      // Filter out listeners using the filter
+      // passed.
+      this.listeners = this.listeners.filter(([method]) => {
+        if (filter.includes(method)) {
+          removalCount++
+          return false
+        } else {
+          return true
+        }
+      })
+    }
+
+    // Return final removal count.
+    return removalCount
   }
 
   /**

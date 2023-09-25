@@ -109,6 +109,60 @@ export default class GameServer extends Game<
 
     // Add game-specific listeners.
     this.addListeners(participant)
+
+    // Call join handler in the session of
+    // the new participant.
+    participant.session.handleJoin(this.gameID)
+  }
+
+  /**
+   * Handles a new connection by an existing participant.
+   * @param newConnection The new connection for a participant of the game.
+   * @returns True if connection was replaced, false if the participant wasn't found.
+   */
+  public handleConnectionChange(newConnection: ClientConnection): boolean {
+    this._participants.forEach(
+      (participant: ClientConnection, index: number) => {
+        if (participant.userID === newConnection.userID) {
+          // Update index in participants with the new
+          // connection.
+          this._participants[index] = newConnection
+
+          // Add game-specific listeners to the new
+          // connection.
+          this.addListeners(newConnection)
+
+          // Return true.
+          return true
+        }
+      },
+    )
+
+    // Return false if the participant wasn't found.
+    return false
+  }
+
+  /**
+   * Has the given participant quit the game. Removes any game listeners for the user.
+   * @param quitterID The ID of the participant quiting the game.
+   */
+  public quit(quitterID: string): void {
+    // Find the participant in the list.
+    this._participants.forEach(
+      (participant: ClientConnection, index: number) => {
+        if (participant.userID === quitterID) {
+          // Remove the participant from the list.
+          this._participants.splice(index, 1)
+
+          // Remove game-specific listeners.
+          this.removeListeners(participant)
+
+          // Call quit handler in the session of
+          // the determined participant.
+          participant.session.handleQuit()
+        }
+      },
+    )
   }
 
   /**
@@ -124,6 +178,18 @@ export default class GameServer extends Game<
   }
 
   /**
+   * Removes game-specific listeners for the given participant.
+   */
+  private removeListeners(participant: ClientConnection): void {
+    console.log(
+      participant.clearEventListeners([
+        'request-open-node',
+        'request-execute-action',
+      ]),
+    )
+  }
+
+  /**
    * A registry of all games currently launched.
    */
   private static registry: Map<string, GameServer> = new Map<
@@ -133,15 +199,17 @@ export default class GameServer extends Game<
 
   /**
    * Launches a new game with a new game ID.
-   * @param {string} mission  The ID of the mission being executed in the game.
-   * @returns {Promise<string>} A promise of the game ID for the newly launched game.
+   * @param mission The mission from which to launch a game.
+   * @returns A promise of the game server for the newly launched game.
    */
-  public static async launch(mission: ServerMission): Promise<string> {
-    return new Promise<string>((resolve: (gameID: string) => void): void => {
-      let game: GameServer = new GameServer(generateHash(), mission, [])
-      return resolve(game.gameID)
-    })
+  public static launch(mission: ServerMission): GameServer {
+    return new GameServer(generateHash(), mission, [])
   }
+
+  /**
+   * Quits the game for the given participant.
+   */
+  public static quit(participant: ClientConnection): void {}
 
   /**
    * @returns the game associated with the given game ID.
@@ -263,6 +331,9 @@ export default class GameServer extends Game<
     let outcome = await action.execute({
       enactEffects: false,
       onInit: (execution: ServerActionExecution) => {
+        // Deduct action cost from resource pool.
+        this._resources -= action!.resourceCost
+
         // Construct payload for action execution
         // initiated event.
         let initiationPayload: TServerData<'action-execution-initiated'> = {

@@ -278,9 +278,11 @@ export default class User {
             // If the session JSON is not null,
             // parse the date.
             if (sessionJson !== null) {
+              const { user: userData, gameID } = sessionJson
+
               session = {
-                user: new User(sessionJson.user),
-                inGame: sessionJson.inGame,
+                user: new User(userData),
+                gameID: gameID,
               }
             }
 
@@ -318,9 +320,11 @@ export default class User {
             // If the session JSON is not null,
             // parse the date.
             if (sessionJson !== null) {
+              const { user: userData, gameID } = sessionJson
+
               session = {
-                user: new User(sessionJson.user),
-                inGame: sessionJson.inGame,
+                user: new User(userData),
+                gameID: gameID,
               }
             }
 

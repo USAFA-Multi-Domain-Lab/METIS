@@ -350,11 +350,11 @@ const useGlobalContextDefinition = (context: TGlobalContext) => {
       // If the user is currently in a game,
       // confirm they want to quit before switching
       // the page.
-      if (currentPagePath === 'GamePage' && session?.inGame) {
+      if (currentPagePath === 'GamePage' && session?.gameID) {
         confirm(
           'Are you sure you want to quit?',
           (concludeAction: () => void) => {
-            if (session?.inGame) {
+            if (session?.gameID) {
               // session.game
               //   .quit(session.user.userID)
               //   .then(() => {

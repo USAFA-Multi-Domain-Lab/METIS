@@ -57,6 +57,17 @@ export default class MetisSession {
   }
 
   /**
+   * The ID of t he game the user is currently in, if any.
+   */
+  private _gameID: string | null
+  /**
+   * The ID of t he game the user is currently in, if any.
+   */
+  public get gameID(): string | null {
+    return this._gameID
+  }
+
+  /**
    * Whether the session has been destroyed.
    */
   private _destroyed: boolean
@@ -79,7 +90,7 @@ export default class MetisSession {
    * Whether the user is in a game.
    */
   public get inGame(): boolean {
-    return true
+    return this.gameID !== null
   }
 
   /**
@@ -89,6 +100,7 @@ export default class MetisSession {
     this._userID = user.userID
     this._user = user
     this._client = null
+    this._gameID = null
     this._destroyed = false
 
     // Throw an error is a session already
@@ -102,6 +114,17 @@ export default class MetisSession {
   }
 
   /**
+   * Converts the session object to JSON to send to the client.
+   * @returns {TMetisSessionJSON} The JSON representation of the session object.
+   */
+  public toJSON(): TMetisSessionJSON {
+    return {
+      user: this.user.toJSON(),
+      gameID: this.gameID,
+    }
+  }
+
+  /**
    * Destroys the session.
    */
   public destroy(): void {
@@ -110,14 +133,18 @@ export default class MetisSession {
   }
 
   /**
-   * Converts the session object to JSON to send to the client.
-   * @returns {TMetisSessionJSON} The JSON representation of the session object.
+   * Handles when the user joins a game.
+   * @param gameID The ID of the joined game.
    */
-  public toJSON(): TMetisSessionJSON {
-    return {
-      user: this.user.toJSON(),
-      inGame: false,
-    }
+  public handleJoin(gameID: string): void {
+    this._gameID = gameID
+  }
+
+  /**
+   * Handles when the user quits a game.
+   */
+  public handleQuit(): void {
+    this._gameID = null
   }
 
   /**

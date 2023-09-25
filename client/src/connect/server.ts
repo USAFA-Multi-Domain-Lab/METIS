@@ -55,10 +55,8 @@ export class ServerConnection {
   /**
    * Storage for all listeners, in the order they get added.
    */
-  protected listeners: Map<TServerMethod, TServerHandler<any>> = new Map<
-    TServerMethod,
-    TServerHandler<any>
-  >()
+
+  protected listeners: [TServerMethod, TServerHandler<any>][] = []
 
   /**
    * @param {IServerConnectionOptions} options Options for the server connection.
@@ -121,9 +119,44 @@ export class ServerConnection {
     TData extends IServerDataTypes[TMethod],
   >(method: TMethod, handler: TServerHandler<TMethod>): ServerConnection {
     // Push the new listener to the array of listeners.
-    this.listeners.set(method, handler)
+    this.listeners.push([method, handler])
     // Return this.
     return this
+  }
+
+  /**
+   * Clears event listeners from the connection.
+   * @param filter A list of handler types to remove. Any handler matching any type in the filter will be cleared.
+   * If this is undefined, all handlers will be removed from the connection.
+   * @returns The number of matching event listeners removed.
+   */
+  public clearEventListeners(filter?: TServerMethod[]): number {
+    // Initialize removal count.
+    let removalCount: number = 0
+
+    // If no filter...
+    if (filter === undefined) {
+      // Get the number of event listeners currently
+      // existing.
+      removalCount = this.listeners.length
+
+      // Reinitialize listeners.
+      this.listeners = []
+    } else {
+      // Filter out listeners using the filter
+      // passed.
+      this.listeners = this.listeners.filter(([method]) => {
+        if (filter.includes(method)) {
+          removalCount++
+          return false
+        } else {
+          return true
+        }
+      })
+    }
+
+    // Return final removal count.
+    return removalCount
   }
 
   /**

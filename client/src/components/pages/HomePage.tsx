@@ -342,6 +342,9 @@ export default function HomePage(props: IHomePage): JSX.Element | null {
         // Join game from new game ID, awaiting
         // the promised game client.
         let game: GameClient = await GameClient.join(gameID, server)
+        // Update session data to include new
+        // game ID.
+        session.gameID = game.gameID
         // Go to the game page with the new
         // game client.
         goToPage('GamePage', { game })
