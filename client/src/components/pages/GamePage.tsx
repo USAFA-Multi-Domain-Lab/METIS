@@ -238,12 +238,11 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
     done()
   })
 
-  // Equivalent of componentWillUnmount.
-  useEffect(() => {
-    return () => {
-      loop = () => {}
-    }
-  }, [])
+  useUnmountHandler(() => {
+    // Make loop function an empty function so that
+    // the loop is broken the next time it is called.
+    loop = () => {}
+  })
 
   /* -- PRE-RENDER-PROCESSING -- */
 
