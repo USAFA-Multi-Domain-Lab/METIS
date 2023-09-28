@@ -32,15 +32,23 @@ export default class OutputPanel extends Component<
     let timeStamp: number = Date.now()
     let key: string = `mission-${mission.missionID}_intro-message_${timeStamp}`
 
-    let renderInnerHTML = () => (
-      <div className='Text'>
-        <span className='LineCursor'>
-          [{OutputPanel.formatDate(timeStamp)}] MDL@
-          {mission.name.replaceAll(' ', '-')}:{' '}
-        </span>
-        <RichTextOutputBox Element={mission.introMessage} />
-      </div>
-    )
+    let renderInnerHTML = () => {
+      let textClassName: string = 'Text'
+
+      if (mission.introMessage === '<p><br></p>') {
+        textClassName += ' Hidden'
+      }
+
+      return (
+        <div className={textClassName}>
+          <span className='LineCursor'>
+            [{OutputPanel.formatDate(timeStamp)}] MDL@
+            {mission.name.replaceAll(' ', '-')}:{' '}
+          </span>
+          <RichTextOutputBox Element={mission.introMessage} />
+        </div>
+      )
+    }
 
     let consoleOutput: IConsoleOutput = { key, renderInnerHTML }
     mission.outputToConsole(consoleOutput)
