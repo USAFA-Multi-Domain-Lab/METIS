@@ -1,10 +1,22 @@
 import { Component } from 'react'
 import './RichTextOutputBox.scss'
 
+/**
+ * The properties for the RichTextOutputBox component.
+ * @interface IRichTextOutputBox
+ * @property {string} Element The HTML element (wrapped in a string) to be displayed.
+ */
 export interface IRichTextOutputBox {
+  /**
+   * The HTML element (wrapped in a string) to be displayed.
+   */
   Element: string
 }
 
+/**
+ * The state for the RichTextOutputBox component.
+ * @interface IRichTextOutputBox_S
+ */
 export interface IRichTextOutputBox_S {}
 
 /**
