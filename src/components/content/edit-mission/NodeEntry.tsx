@@ -223,6 +223,7 @@ export default function NodeEntry(props: {
               label='Description (optional)'
               initialValue={node.description}
               emptyStringAllowed={true}
+              elementBoundary='.BorderBox'
               deliverValue={(description: string) => {
                 if (
                   node !== null
@@ -248,6 +249,7 @@ export default function NodeEntry(props: {
               label='Pre-Execution Text (optional)'
               initialValue={node.preExecutionText}
               emptyStringAllowed={true}
+              elementBoundary='.BorderBox'
               deliverValue={(preExecutionText: string) => {
                 if (node !== null) {
                   node.preExecutionText = preExecutionText

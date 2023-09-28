@@ -86,9 +86,11 @@ export default function NodeActionEntry(props: {
         <DetailBox
           label='Description'
           initialValue={action.description}
+          elementBoundary='.BorderBox'
           deliverValue={(description: string) => {
             action.description = description
 
+            // Equivalent to an empty string.
             if (description !== '<p><br></p>') {
               removeActionEmptyString('description')
               setMountHandled(false)
@@ -150,9 +152,11 @@ export default function NodeActionEntry(props: {
         <DetailBox
           label='Post-Execution Success Text'
           initialValue={action.postExecutionSuccessText}
+          elementBoundary='.BorderBox'
           deliverValue={(postExecutionSuccessText: string) => {
             action.postExecutionSuccessText = postExecutionSuccessText
 
+            // Equivalent to an empty string.
             if (postExecutionSuccessText !== '<p><br></p>') {
               removeActionEmptyString('postExecutionSuccessText')
               setMountHandled(false)
@@ -170,9 +174,11 @@ export default function NodeActionEntry(props: {
         <DetailBox
           label='Post-Execution Failure Text'
           initialValue={action.postExecutionFailureText}
+          elementBoundary='.BorderBox'
           deliverValue={(postExecutionFailureText: string) => {
             action.postExecutionFailureText = postExecutionFailureText
 
+            // Equivalent to an empty string.
             if (postExecutionFailureText !== '<p><br></p>') {
               removeActionEmptyString('postExecutionFailureText')
               setMountHandled(false)

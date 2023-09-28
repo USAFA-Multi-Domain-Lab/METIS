@@ -101,6 +101,7 @@ export default function MissionEntry(props: {
               label='Introduction Message (optional)'
               initialValue={mission.introMessage}
               emptyStringAllowed={true}
+              elementBoundary='.BorderBox'
               deliverValue={(introMessage: string) => {
                 mission.introMessage = introMessage
                 handleChange()

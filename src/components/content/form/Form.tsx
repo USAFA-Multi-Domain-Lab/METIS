@@ -197,6 +197,7 @@ export function DetailBox(props: {
   initialValue: string
   emptyStringAllowed?: boolean
   disabled?: boolean
+  elementBoundary?: string
   deliverValue: (value: string) => void
 }): JSX.Element | null {
   /* -- COMPONENT STATE -- */
@@ -207,6 +208,7 @@ export function DetailBox(props: {
   let initialValue: string = props.initialValue
   let emptyStringAllowed: boolean | undefined = props.emptyStringAllowed
   let disabled: boolean = props.disabled === true
+  let elementBoundary: string | undefined = props.elementBoundary
   let deliverValue = props.deliverValue
   let className: string = 'Detail DetailBox'
   let fieldClassName: string = 'Field FieldBox'
@@ -217,7 +219,7 @@ export function DetailBox(props: {
 
   let reactQuillModules = {
     toolbar: {
-      container: [['link'], ['clean']],
+      container: [['bold', 'italic', 'underline', 'link'], ['clean']],
     },
   }
 
@@ -238,7 +240,7 @@ export function DetailBox(props: {
     <div className={className}>
       <div className={labelClassName}>{`${label}:`}</div>
       <ReactQuill
-        bounds={'.DetailBox'}
+        bounds={elementBoundary}
         className={fieldClassName}
         modules={reactQuillModules}
         value={initialValue}
@@ -247,6 +249,7 @@ export function DetailBox(props: {
         onChange={(value: string) => {
           deliverValue(value)
 
+          // Equivalent to an empty string.
           if (value !== '<p><br></p>') {
             setIsEmptyString(false)
             setValue(value)

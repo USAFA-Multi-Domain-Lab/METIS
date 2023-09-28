@@ -15,6 +15,10 @@
     .RichTextOutputBox p {
       color: $terminal;
     }
+
+    .RichTextOutputBox {
+      display: inline;
+    }
   }
 }
 

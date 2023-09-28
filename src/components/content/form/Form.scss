@@ -1,4 +1,5 @@
 @import '../../../config.scss';
+@import '../../../util.scss';
 
 .Detail {
   margin: 20px 8% 0;
@@ -10,7 +11,7 @@
     margin-top: 5px;
 
     &.hide {
-      display: none;
+      @include hide();
     }
   }
 
@@ -62,8 +63,23 @@
   }
 
   &.DetailBox {
+    * {
+      transition: transform 250ms, opacity 250ms;
+    }
+
+    &.Disabled {
+      pointer-events: none;
+      opacity: unset;
+
+      * {
+        transform: scale(0.8);
+        opacity: 0.65;
+      }
+    }
+
     .Field {
       border: none;
+      resize: none;
       padding: 0;
 
       .ql-toolbar {
@@ -91,29 +107,37 @@
         border: 2px solid $color-main;
 
         .ql-editor {
-          p {
+          * {
             color: $color-accent-light;
+
+            &::before,
+            &::after {
+              color: $color-accent-light;
+            }
           }
 
           a {
-            color: $color-accent-light;
+            color: $terminal-blue;
           }
 
           &.ql-blank::before {
-            color: $color-accent-light;
+            color: $color-main;
           }
         }
 
         .ql-tooltip {
+          color: $color-main;
           border-radius: 5px;
           box-shadow: none;
           background-color: $background-alt1;
           border: 2px solid $color-main;
-          color: $color-main;
-          font-family: 'monospace', sans-serif;
+
+          * {
+            color: $color-main;
+            font-family: 'monospace', sans-serif;
+          }
 
           input {
-            color: $color-main;
             border-radius: 5px;
             background-color: $background-alt1;
             border: 2px solid $color-main;
@@ -124,13 +148,8 @@
           }
 
           .ql-preview {
-            color: $color-accent-light;
+            color: $terminal-blue;
             text-decoration: underline;
-          }
-
-          .ql-action,
-          .ql-remove {
-            color: $color-main;
           }
         }
       }
@@ -216,27 +235,6 @@
             transform: scale(1.25, -0.75);
           }
         }
-      }
-    }
-  }
-
-  &.DetailBox {
-    * {
-      transition: transform 250ms, opacity 250ms;
-    }
-
-    .Field {
-      overflow-y: hidden;
-      resize: none;
-    }
-
-    &.Disabled {
-      pointer-events: none;
-      opacity: unset;
-
-      * {
-        transform: scale(0.8);
-        opacity: 0.65;
       }
     }
   }
