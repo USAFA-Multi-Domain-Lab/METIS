@@ -98,22 +98,21 @@ export default function MissionEntry(props: {
               key={`${mission.missionID}_name`}
             />
             <DetailBox
-              label='Introduction Message (optional)'
+              label='Introduction Message'
               initialValue={mission.introMessage}
-              emptyStringAllowed={true}
               elementBoundary='.BorderBox'
               deliverValue={(introMessage: string) => {
                 mission.introMessage = introMessage
-                handleChange()
 
-                // if (introMessage !== '<p><br></p>') {
-                //   removeMissionEmptyString('introMessage')
-                // } else {
-                //   setMissionEmptyStringArray([
-                //     ...missionEmptyStringArray,
-                //     `missionID=${mission.missionID}_field=introMessage`,
-                //   ])
-                // }
+                if (introMessage !== '<p><br></p>') {
+                  removeMissionEmptyString('introMessage')
+                  handleChange()
+                } else {
+                  setMissionEmptyStringArray([
+                    ...missionEmptyStringArray,
+                    `missionID=${mission.missionID}_field=introMessage`,
+                  ])
+                }
               }}
               key={`${mission.missionID}_introMessage`}
             />

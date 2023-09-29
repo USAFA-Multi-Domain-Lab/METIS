@@ -380,14 +380,32 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
                               (node.selectedAction?.successChance as number) *
                               100
                             }%\n` +
-                            `* Resources used: ${node.selectedAction?.resourceCost} resource(s)`
+                            `* Resources used: ${node.selectedAction?.resourceCost} resource(s) \n` +
+                            `* Description: ${node.selectedAction?.description}`
                         }
 
-                        if (node.executing) {
+                        // This creates the tooltip hover over effect
+                        // that displays the description of the node
+                        // while it is executing.
+                        if (
+                          node.executing &&
+                          node.description !== '<p><br></p>'
+                        ) {
                           description =
                             `* Time remaining: ${node.formatTimeRemaining(
                               false,
                             )} \n` + `* Description: ${node.description}`
+                        }
+                        // If the node is executing and the description is empty,
+                        // then the description will be replaced with the time
+                        // remaining only.
+                        else if (
+                          node.executing &&
+                          node.description === '<p><br></p>'
+                        ) {
+                          description = `* Time remaining: ${node.formatTimeRemaining(
+                            false,
+                          )}`
                         }
 
                         return description

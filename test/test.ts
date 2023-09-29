@@ -177,7 +177,6 @@ const updateMissionWithNoNodeData = {
     schemaBuildNumber: 5,
   },
 }
-
 const correctUpdateTestMission = {
   mission: {
     missionID: '',
@@ -1735,6 +1734,97 @@ describe('Mission Schema Validation', function () {
         expect(response).to.have.status(200)
         expect(response.error).to.equal(false)
         expect(response.ok).to.equal(true)
+        done()
+      })
+      .catch(function (error: Error) {
+        testLogger.error(error)
+        done(error)
+      })
+  })
+
+  it('Creating a mission with HTMl tags that are not allowed ("<script></script>") in the mission should result in those tags being removed from the mission', function (done) {
+    testMission.mission.introMessage =
+      "<p><strong>Enter</strong> <em>your</em> <u>overview</u> <a href='https://google.com' rel='noopener noreferrer' target='_blank'>message</a> here.</p>   <head><script>function consoleLog() {console.log('Successful script execution.')} consoleLog()</script></head>"
+    testMission.mission.nodeData[0].preExecutionText =
+      "<p>Node has not been executed.</p> <div href='https://google.com>Google</div>'"
+
+    agent
+      .post('/api/v1/missions/')
+      .set('Content-Type', 'application/json')
+      .send(testMission)
+      .then(function (response: ChaiHttp.Response) {
+        expect(response).to.have.status(200)
+        expect(response.error).to.equal(false)
+        expect(response.body.mission.introMessage).to.equal(
+          '<p><strong>Enter</strong> <em>your</em> <u>overview</u> <a href="https://google.com" rel="noopener noreferrer" target="_blank">message</a> here.</p>   ',
+        )
+        expect(response.body.mission.nodeData[0].preExecutionText).to.equal(
+          '<p>Node has not been executed.</p> ',
+        )
+        done()
+      })
+      .catch(function (error: Error) {
+        testLogger.error(error)
+        done(error)
+      })
+  })
+
+  it('Creating a mission with HTMl tags that are not allowed ("<style></style>") in the mission should result in those tags being removed from the mission', function (done) {
+    testMission.mission.introMessage =
+      "<p><strong>Enter</strong> <em>your</em> <u>overview</u> <a href='https://google.com' rel='noopener noreferrer' target='_blank'>message</a> here.</p>   <style>.Content {font-size: 25px;}</style>"
+
+    agent
+      .post('/api/v1/missions/')
+      .set('Content-Type', 'application/json')
+      .send(testMission)
+      .then(function (response: ChaiHttp.Response) {
+        expect(response).to.have.status(200)
+        expect(response.error).to.equal(false)
+        expect(response.body.mission.introMessage).to.equal(
+          '<p><strong>Enter</strong> <em>your</em> <u>overview</u> <a href="https://google.com" rel="noopener noreferrer" target="_blank">message</a> here.</p>   ',
+        )
+        done()
+      })
+      .catch(function (error: Error) {
+        testLogger.error(error)
+        done(error)
+      })
+  })
+
+  it('Creating a mission with HTMl tags that are not allowed ("<iframe></iframe>") in the mission should result in those tags being removed from the mission', function (done) {
+    testMission.mission.introMessage = `<p><strong>Enter</strong> <em>your</em> <u>overview</u> <a href='https://google.com' rel='noopener noreferrer' target='_blank'>message</a> here.</p>   <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d13026964.31028058!2d-106.25408262379291!3d37.1429207037123!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x54eab584e432360b%3A0x1c3bb99243deb742!2sUnited%20States!5e0!3m2!1sen!2sus!4v1695930378392!5m2!1sen!2sus" width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>`
+
+    agent
+      .post('/api/v1/missions/')
+      .set('Content-Type', 'application/json')
+      .send(testMission)
+      .then(function (response: ChaiHttp.Response) {
+        expect(response).to.have.status(200)
+        expect(response.error).to.equal(false)
+        expect(response.body.mission.introMessage).to.equal(
+          '<p><strong>Enter</strong> <em>your</em> <u>overview</u> <a href="https://google.com" rel="noopener noreferrer" target="_blank">message</a> here.</p>   ',
+        )
+        done()
+      })
+      .catch(function (error: Error) {
+        testLogger.error(error)
+        done(error)
+      })
+  })
+
+  it('Creating a mission with HTMl tags that are not allowed ("<input />") in the mission should result in those tags being removed from the mission', function (done) {
+    testMission.mission.introMessage = `<p><strong>Enter</strong> <em>your</em> <u>overview</u> <a href='https://google.com' rel='noopener noreferrer' target='_blank'>message</a> here.</p>   <input type="text" id="fname" name="fname" value="John">`
+
+    agent
+      .post('/api/v1/missions/')
+      .set('Content-Type', 'application/json')
+      .send(testMission)
+      .then(function (response: ChaiHttp.Response) {
+        expect(response).to.have.status(200)
+        expect(response.error).to.equal(false)
+        expect(response.body.mission.introMessage).to.equal(
+          '<p><strong>Enter</strong> <em>your</em> <u>overview</u> <a href="https://google.com" rel="noopener noreferrer" target="_blank">message</a> here.</p>   ',
+        )
         done()
       })
       .catch(function (error: Error) {

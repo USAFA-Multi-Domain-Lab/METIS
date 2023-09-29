@@ -18,6 +18,11 @@
 
     .RichTextOutputBox {
       display: inline;
+      line-height: 20px;
+
+      p:first-child {
+        display: inline;
+      }
     }
   }
 }

@@ -32,23 +32,15 @@ export default class OutputPanel extends Component<
     let timeStamp: number = Date.now()
     let key: string = `mission-${mission.missionID}_intro-message_${timeStamp}`
 
-    let renderInnerHTML = () => {
-      let textClassName: string = 'Text'
-
-      if (mission.introMessage === '<p><br></p>') {
-        textClassName += ' Hidden'
-      }
-
-      return (
-        <div className={textClassName}>
-          <span className='LineCursor'>
-            [{OutputPanel.formatDate(timeStamp)}] MDL@
-            {mission.name.replaceAll(' ', '-')}:{' '}
-          </span>
-          <RichTextOutputBox Element={mission.introMessage} />
-        </div>
-      )
-    }
+    let renderInnerHTML = () => (
+      <div className='Text'>
+        <span className='LineCursor'>
+          [{OutputPanel.formatDate(timeStamp)}] MDL@
+          {mission.name.replaceAll(' ', '-')}:{' '}
+        </span>
+        <RichTextOutputBox Element={mission.introMessage} />
+      </div>
+    )
 
     let consoleOutput: IConsoleOutput = { key, renderInnerHTML }
     mission.outputToConsole(consoleOutput)
@@ -69,15 +61,23 @@ export default class OutputPanel extends Component<
   static renderPreExecutionOutput(selectedNode: MissionNode): IConsoleOutput {
     let timeStamp: number = Date.now()
     let key: string = `pre_execution_node-${selectedNode.nodeID}_${timeStamp}`
-    let renderInnerHTML = () => (
-      <div className='Text'>
-        <span className='LineCursor'>
-          [{OutputPanel.formatDate(timeStamp)}] MDL@
-          {selectedNode.name.replaceAll(' ', '-')}:{' '}
-        </span>
-        <RichTextOutputBox Element={selectedNode.preExecutionText} />
-      </div>
-    )
+    let renderInnerHTML = () => {
+      let textClassName: string = 'Text'
+
+      if (selectedNode.preExecutionText === '<p><br></p>') {
+        textClassName += ' Hidden'
+      }
+
+      return (
+        <div className={textClassName}>
+          <span className='LineCursor'>
+            [{OutputPanel.formatDate(timeStamp)}] MDL@
+            {selectedNode.name.replaceAll(' ', '-')}:{' '}
+          </span>
+          <RichTextOutputBox Element={selectedNode.preExecutionText} />
+        </div>
+      )
+    }
 
     return { key, renderInnerHTML }
   }
