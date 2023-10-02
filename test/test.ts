@@ -1744,9 +1744,9 @@ describe('Mission Schema Validation', function () {
 
   it('Creating a mission with HTMl tags that are not allowed ("<script></script>") in the mission should result in those tags being removed from the mission', function (done) {
     testMission.mission.introMessage =
-      "<p><strong>Enter</strong> <em>your</em> <u>overview</u> <a href='https://google.com' rel='noopener noreferrer' target='_blank'>message</a> here.</p>   <head><script>function consoleLog() {console.log('Successful script execution.')} consoleLog()</script></head>"
+      "<p><strong>Enter</strong> <em>your</em> <u>overview</u> <a href='https://google.com' rel='noopener noreferrer' target='_blank'>message</a> here.</p><script>function consoleLog() {console.log('Successful script execution.')} consoleLog()</script>"
     testMission.mission.nodeData[0].preExecutionText =
-      "<p>Node has not been executed.</p> <div href='https://google.com>Google</div>'"
+      "<p>Node has not been executed.</p> <p href='https://google.com>Google</p>'"
 
     agent
       .post('/api/v1/missions/')
@@ -1756,7 +1756,7 @@ describe('Mission Schema Validation', function () {
         expect(response).to.have.status(200)
         expect(response.error).to.equal(false)
         expect(response.body.mission.introMessage).to.equal(
-          '<p><strong>Enter</strong> <em>your</em> <u>overview</u> <a href="https://google.com" rel="noopener noreferrer" target="_blank">message</a> here.</p>   ',
+          '<p><strong>Enter</strong> <em>your</em> <u>overview</u> <a href="https://google.com" rel="noopener noreferrer" target="_blank">message</a> here.</p>',
         )
         expect(response.body.mission.nodeData[0].preExecutionText).to.equal(
           '<p>Node has not been executed.</p> ',
