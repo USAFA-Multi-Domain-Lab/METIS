@@ -35,7 +35,7 @@ router.post(
     live: RequestBodyFilters.BOOLEAN,
     initialResources: RequestBodyFilters.NUMBER,
     nodeStructure: RequestBodyFilters.OBJECT,
-    nodeData: RequestBodyFilters.OBJECT,
+    nodeData: RequestBodyFilters.ARRAY,
   }),
   (request, response) => {
     let body: any = request.body
@@ -622,7 +622,7 @@ router.put(
       initialResources: RequestBodyFilters.NUMBER,
       live: RequestBodyFilters.BOOLEAN,
       nodeStructure: RequestBodyFilters.OBJECT,
-      nodeData: RequestBodyFilters.OBJECT,
+      nodeData: RequestBodyFilters.ARRAY,
     },
   ),
   (request, response) => {

@@ -24,6 +24,7 @@ router.post(
       NUMBER: RequestBodyFilters.NUMBER,
       OBJECT: RequestBodyFilters.OBJECT,
       OBJECTID: RequestBodyFilters.OBJECTID,
+      ARRAY: RequestBodyFilters.ARRAY,
     },
     { BOOLEAN: RequestBodyFilters.BOOLEAN },
   ),
@@ -41,6 +42,7 @@ router.get(
     number: 'number',
     integer: 'integer',
     boolean: 'boolean',
+    object: 'object',
     objectId: 'objectId',
   }),
   (request, response) => {

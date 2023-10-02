@@ -245,13 +245,13 @@ export class RequestBodyFilters {
     if (request.body.mission) {
       let value: AnyObject = request.body.mission[key]
 
-      if (typeof value !== 'object') {
+      if (typeof value !== 'object' || Array.isArray(value)) {
         throw new Error(invalidRequestBodyPropertyException(key, value))
       }
     } else {
       let value: AnyObject = request.body[key]
 
-      if (typeof value !== 'object') {
+      if (typeof value !== 'object' || Array.isArray(value)) {
         throw new Error(invalidRequestBodyPropertyException(key, value))
       }
     }
@@ -268,6 +268,22 @@ export class RequestBodyFilters {
       let value: ObjectId = request.body[key]
 
       if (!isObjectIdOrHexString(value)) {
+        throw new Error(invalidRequestBodyPropertyException(key, value))
+      }
+    }
+  }
+
+  static ARRAY(request: Request, key: string) {
+    if (request.body.mission) {
+      let value: any[] = request.body.mission[key]
+
+      if (!Array.isArray(value)) {
+        throw new Error(invalidRequestBodyPropertyException(key, value))
+      }
+    } else {
+      let value: any[] = request.body[key]
+
+      if (!Array.isArray(value)) {
         throw new Error(invalidRequestBodyPropertyException(key, value))
       }
     }
@@ -329,6 +345,15 @@ const validateTypeOfQueryKey = (
   // sent via the API route is the right type
   if (type === 'boolean') {
     if (!booleanValues.includes(query[key])) {
+      throw new Error(errorMessage)
+    }
+  }
+
+  // If the property's type from the query in the request is an
+  // object then this validates to make sure the property being
+  // sent via the API route is the right type
+  if (type === 'object') {
+    if (typeof query[key] !== 'object' || Array.isArray(query[key])) {
       throw new Error(errorMessage)
     }
   }

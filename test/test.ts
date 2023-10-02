@@ -1065,18 +1065,19 @@ describe('Request Body Validation', function () {
   // for access
   let agent: ChaiHttp.Agent = chai.request.agent(baseUrl)
 
-  let STRING = '*'
-  let STRING_50_CHAR = '*'.repeat(50)
-  let STRING_128_CHAR = '*'.repeat(128)
-  let STRING_255_CHAR = '*'.repeat(255)
-  let STRING_256_CHAR = '*'.repeat(256)
-  let STRING_512_CHAR = '*'.repeat(512)
-  let STRING_1024_CHAR = '*'.repeat(1024)
-  let STRING_MEDIUMTEXT = '*'.repeat(10000)
-  let NUMBER = 2
-  let BOOLEAN = true
-  let OBJECT = { string: 'string' }
-  let OBJECTID = '643ea778c10a4de66a9448d0'
+  let STRING: string = '*'
+  let STRING_50_CHAR: string = '*'.repeat(50)
+  let STRING_128_CHAR: string = '*'.repeat(128)
+  let STRING_255_CHAR: string = '*'.repeat(255)
+  let STRING_256_CHAR: string = '*'.repeat(256)
+  let STRING_512_CHAR: string = '*'.repeat(512)
+  let STRING_1024_CHAR: string = '*'.repeat(1024)
+  let STRING_MEDIUMTEXT: string = '*'.repeat(10000)
+  let NUMBER: number = 2
+  let BOOLEAN: boolean = true
+  let OBJECT: object = { string: 'string' }
+  let OBJECTID: string = '643ea778c10a4de66a9448d0'
+  let ARRAY: any[] = ['string', 2, true, { string: 'string' }]
 
   before(function (done) {
     agent
@@ -1119,6 +1120,7 @@ describe('Request Body Validation', function () {
         BOOLEAN: BOOLEAN,
         OBJECT: OBJECT,
         OBJECTID: OBJECTID,
+        ARRAY: ARRAY,
       })
       .then(function (response: ChaiHttp.Response) {
         expect(response).to.have.status(200)
@@ -1147,6 +1149,7 @@ describe('Request Body Validation', function () {
         BOOLEAN: STRING,
         OBJECT: OBJECTID,
         OBJECTID: OBJECT,
+        ARRAY: BOOLEAN,
       })
       .then(function (response: ChaiHttp.Response) {
         expect(response).to.have.status(400)
@@ -1158,7 +1161,7 @@ describe('Request Body Validation', function () {
       })
   })
 
-  it('Sending a request with a missing body key that is required results in a bad (400) request', function (done) {
+  it('Sending a request with a missing body key ("OBJECTID") that is required results in a bad (400) request', function (done) {
     agent
       .post('/api/v1/test/request-body-filter-check/')
       .set('Content-Type', 'application/json')
@@ -1174,6 +1177,7 @@ describe('Request Body Validation', function () {
         NUMBER: NUMBER,
         BOOLEAN: BOOLEAN,
         OBJECT: OBJECT,
+        ARRAY: ARRAY,
       })
       .then(function (response: ChaiHttp.Response) {
         expect(response).to.have.status(400)
@@ -1201,6 +1205,7 @@ describe('Request Body Validation', function () {
         NUMBER: NUMBER,
         OBJECT: OBJECT,
         OBJECTID: OBJECTID,
+        ARRAY: ARRAY,
       })
       .then(function (response: ChaiHttp.Response) {
         expect(response).to.have.status(200)
@@ -1227,6 +1232,7 @@ describe('Request Query Validation', function () {
   let number: number = 3.5
   let integer: number = 3
   let boolean: boolean = true
+  let object: object = { string: 'string' }
   let objectId: string = '643ea778c10a4de66a9448d0'
 
   before(function (done) {
@@ -1261,6 +1267,7 @@ describe('Request Query Validation', function () {
         number: number,
         integer: integer,
         boolean: boolean,
+        object: object,
         objectId: objectId,
       })
       .then(function (response: ChaiHttp.Response) {
@@ -1281,6 +1288,7 @@ describe('Request Query Validation', function () {
         number: string,
         integer: number,
         boolean: objectId,
+        object: string,
         objectId: boolean,
       })
       .then(function (response: ChaiHttp.Response) {
@@ -1293,7 +1301,7 @@ describe('Request Query Validation', function () {
       })
   })
 
-  it('Sending a request with a missing property results in a bad (400) request', function (done) {
+  it('Sending a request with a missing property ("objectId") results in a bad (400) request', function (done) {
     agent
       .get(`/api/v1/test/request-query-type-check/`)
       .query({
@@ -1301,6 +1309,7 @@ describe('Request Query Validation', function () {
         number: number,
         integer: integer,
         boolean: boolean,
+        object: object,
       })
       .then(function (response: ChaiHttp.Response) {
         expect(response).to.have.status(400)
