@@ -398,6 +398,19 @@ const validateRequiredBodyKeysOnly = (
     (bodyKey: string, bodyValue: any) => void | AnyObject
   > = Object.values(requiredBodyKeys)
 
+  // Grabs the current body location
+  let currentBodyLocation: any = request.body
+
+  // Updates the current location in the body
+  // of the request
+  bodyPath.forEach((bodyPathKey: string) => {
+    if (!currentBodyLocation) {
+      currentBodyLocation = request.body[bodyPathKey]
+    } else {
+      currentBodyLocation = currentBodyLocation[bodyPathKey]
+    }
+  })
+
   // Will contain any errors that occur while validating
   // the request body
   let errorsThrown: Array<any> = []
@@ -456,7 +469,10 @@ const validateRequiredBodyKeysOnly = (
         } catch (error) {
           errorsThrown.push(error)
         }
-      } else if (!allRequiredKeys.includes(bodyKey)) {
+      } else if (
+        !allRequiredKeys.includes(bodyKey) &&
+        currentBodyLocation.hasOwnProperty(bodyKey)
+      ) {
         deleteExtraData(request.body, bodyPath, bodyKey)
       }
     })
