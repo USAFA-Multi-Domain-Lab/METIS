@@ -134,7 +134,7 @@ export class RequestBodyFilters {
   // This filters an object included
   // in a request body.
   static OBJECT(bodyKey: string, bodyValue: any) {
-    if (typeof bodyValue !== 'object') {
+    if (typeof bodyValue !== 'object' || Array.isArray(bodyValue)) {
       throw new Error(invalidRequestBodyPropertyException(bodyKey, bodyValue))
     }
   }
@@ -154,6 +154,12 @@ export class RequestBodyFilters {
     let passwordIsValid: boolean = passwordRegex.test(bodyValue)
 
     if (typeof bodyValue !== 'string' || !passwordIsValid) {
+      throw new Error(invalidRequestBodyPropertyException(bodyKey, bodyValue))
+    }
+  }
+
+  static ARRAY(bodyKey: string, bodyValue: any) {
+    if (!Array.isArray(bodyValue)) {
       throw new Error(invalidRequestBodyPropertyException(bodyKey, bodyValue))
     }
   }
@@ -226,6 +232,15 @@ const validateTypeOfQueryKey = (
   // sent via the API route is the right type
   if (type === 'boolean') {
     if (!booleanValues.includes(query[key])) {
+      throw new Error(errorMessage)
+    }
+  }
+
+  // If the property's type from the query in the request is an
+  // object then this validates to make sure the property being
+  // sent via the API route is the right type
+  if (type === 'object') {
+    if (typeof query[key] !== 'object' || Array.isArray(query[key])) {
       throw new Error(errorMessage)
     }
   }
@@ -506,6 +521,19 @@ const validateAllBodyKeys = (
     (bodyKey: string, bodyValue: any) => void | AnyObject
   > = Object.values(optionalBodyKeys)
 
+  // Grabs the current body location
+  let currentBodyLocation: any
+
+  // Updates the current location in the body
+  // of the request
+  bodyPath.forEach((bodyPathKey: string) => {
+    if (!currentBodyLocation) {
+      currentBodyLocation = request.body[bodyPathKey]
+    } else {
+      currentBodyLocation = currentBodyLocation[bodyPathKey]
+    }
+  })
+
   // Will contain any errors that occur while validating
   // the request body
   let errorsThrown: Array<any> = []
@@ -592,7 +620,8 @@ const validateAllBodyKeys = (
                 }
               } else if (
                 !allRequiredKeys.includes(bodyKey) &&
-                !allOptionalKeys.includes(bodyKey)
+                !allOptionalKeys.includes(bodyKey) &&
+                currentBodyLocation.hasOwnProperty(bodyKey)
               ) {
                 deleteExtraData(request.body, bodyPath, bodyKey)
               }
@@ -642,7 +671,10 @@ const validateAllBodyKeys = (
             } catch (error) {
               errorsThrown.push(error)
             }
-          } else if (!allOptionalKeys.includes(bodyKey)) {
+          } else if (
+            !allOptionalKeys.includes(bodyKey) &&
+            currentBodyLocation.hasOwnProperty(bodyKey)
+          ) {
             deleteExtraData(request.body, bodyPath, bodyKey)
           }
         },
@@ -758,7 +790,8 @@ const validateRequestQueryKeys = (
             }
           } else if (
             !allRequiredKeys.includes(queryKey) &&
-            !allOptionalKeys.includes(queryKey)
+            !allOptionalKeys.includes(queryKey) &&
+            query.hasOwnProperty(queryKey)
           ) {
             deleteExtraData(request, queryPath, queryKey)
           }
@@ -788,7 +821,10 @@ const validateRequestQueryKeys = (
             // Handles either of the errors that have been thrown above
             errorsThrown.push(error)
           }
-        } else if (!allOptionalKeys.includes(queryKey)) {
+        } else if (
+          !allOptionalKeys.includes(queryKey) &&
+          query.hasOwnProperty(queryKey)
+        ) {
           deleteExtraData(request, queryPath, queryKey)
         }
       })
@@ -826,7 +862,10 @@ const validateRequestQueryKeys = (
             // Handles either of the errors that have been thrown above
             errorsThrown.push(error)
           }
-        } else if (!allRequiredKeys.includes(queryKey)) {
+        } else if (
+          !allRequiredKeys.includes(queryKey) &&
+          query.hasOwnProperty(queryKey)
+        ) {
           deleteExtraData(request, queryPath, queryKey)
         }
       })

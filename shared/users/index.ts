@@ -279,7 +279,7 @@ export default class User {
         // Resolve
         resolve(users)
       } catch (error) {
-        console.error('Failed to fetch missions.')
+        console.error('Failed to fetch users.')
         console.error(error)
         reject(error)
       }
