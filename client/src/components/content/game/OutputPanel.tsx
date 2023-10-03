@@ -1,12 +1,12 @@
 import './OutputPanel.scss'
-import MissionNode from '../../../../../shared/missions/nodes'
 import ConsoleOutput, { IConsoleOutput } from './ConsoleOutput'
 import { Component } from 'react'
-import MissionNodeAction from '../../../../../shared/missions/actions'
-import Mission from '../../../../../shared/missions'
+import ClientMission from 'src/missions'
+import ClientMissionNode from 'src/missions/nodes'
+import ClientMissionAction from 'src/missions/actions'
 
 export interface IOutputPanel {
-  mission: Mission
+  mission: ClientMission
 }
 
 export interface IOutputPanel_S {}
@@ -27,7 +27,7 @@ export default class OutputPanel extends Component<
   // When the component mounts, the mission's
   // intro message is output to the console.
   componentDidMount(): void {
-    let mission: Mission = this.props.mission
+    let mission: ClientMission = this.props.mission
     let timeStamp: number = Date.now()
     let key: string = `mission-${mission.missionID}_intro-message_${timeStamp}`
 
@@ -42,7 +42,8 @@ export default class OutputPanel extends Component<
     )
 
     let consoleOutput: IConsoleOutput = { key, renderInnerHTML }
-    mission.outputToConsole(consoleOutput)
+    // todo: Fix this
+    // mission.outputToConsole(consoleOutput)
   }
 
   static DATE_FORMAT: Intl.DateTimeFormat = new Intl.DateTimeFormat('en-GB', {
@@ -57,7 +58,9 @@ export default class OutputPanel extends Component<
     return OutputPanel.DATE_FORMAT.format(date)
   }
 
-  static renderPreExecutionOutput(selectedNode: MissionNode): IConsoleOutput {
+  static renderPreExecutionOutput(
+    selectedNode: ClientMissionNode,
+  ): IConsoleOutput {
     let timeStamp: number = Date.now()
     let key: string = `pre_execution_node-${selectedNode.nodeID}_${timeStamp}`
     let renderInnerHTML = () => (
@@ -74,11 +77,11 @@ export default class OutputPanel extends Component<
   }
 
   static renderActionStartOutput(
-    executingAction: MissionNodeAction,
+    executingAction: ClientMissionAction,
   ): IConsoleOutput {
     let done: boolean = false
     let timeStamp: number = Date.now()
-    let executingNode: MissionNode = executingAction.node
+    let executingNode: ClientMissionNode = executingAction.node
     let nodeName: string = executingNode.name
     let actionName: string = executingAction.name
     let processTime: number = executingAction.processTime
@@ -92,7 +95,9 @@ export default class OutputPanel extends Component<
 
     let renderInnerHTML = () => {
       if (!done) {
-        timeRemainingFormatted = executingNode.formatTimeRemaining(true)
+        // todo: Fix this
+        // timeRemainingFormatted = executingNode.formatTimeRemaining(true)
+        timeRemainingFormatted = ''
 
         if (timeRemainingFormatted === 'Done.') {
           done = true
@@ -140,10 +145,10 @@ export default class OutputPanel extends Component<
   }
 
   static renderExecutionSuccessOutput(
-    executedAction: MissionNodeAction,
+    executedAction: ClientMissionAction,
   ): IConsoleOutput {
     let timeStamp: number = Date.now()
-    let executedNode: MissionNode = executedAction.node
+    let executedNode: ClientMissionNode = executedAction.node
     let nodeName: string = executedNode.name
     let nodeNameFormatted: string = nodeName.replaceAll(' ', '-')
     let key: string = `success_node-${executedNode.nodeID}_action-${executedAction.actionID}_${timeStamp}`
@@ -162,10 +167,10 @@ export default class OutputPanel extends Component<
   }
 
   static renderExecutionFailureOutput(
-    executedAction: MissionNodeAction,
+    executedAction: ClientMissionAction,
   ): IConsoleOutput {
     let timeStamp: number = Date.now()
-    let executedNode: MissionNode = executedAction.node
+    let executedNode: ClientMissionNode = executedAction.node
     let key: string = `failure_node-${executedNode.nodeID}_action-${executedAction.actionID}_${timeStamp}`
     let renderInnerHTML = () => (
       <div className='Text'>
@@ -184,8 +189,9 @@ export default class OutputPanel extends Component<
 
   // inherited
   render(): JSX.Element | null {
-    let mission: Mission = this.props.mission
-    let consoleOutputs: Array<IConsoleOutput> = mission.consoleOutputs
+    let mission: ClientMission = this.props.mission
+    // todo: Fix this
+    // let consoleOutputs: Array<IConsoleOutput> = mission.consoleOutputs
 
     /* -- RENDER -- */
 
@@ -193,11 +199,12 @@ export default class OutputPanel extends Component<
       <div className='OutputPanel'>
         <div className='BorderBox'>
           <ul className='TextArea'>
-            {consoleOutputs.map((consoleOutput: IConsoleOutput) => {
+            {/* // todo: Fix this */}
+            {/* {consoleOutputs.map((consoleOutput: IConsoleOutput) => {
               return (
                 <ConsoleOutput output={consoleOutput} key={consoleOutput.key} />
               )
-            })}
+            })} */}
           </ul>
         </div>
       </div>

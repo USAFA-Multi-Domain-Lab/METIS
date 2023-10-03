@@ -1,25 +1,25 @@
 import { useEffect, useState } from 'react'
-import Mission from '../../../../shared/missions'
-import { EAjaxStatus } from '../../../../shared/toolbox/ajax'
-import MissionMap from '../content/game/MissionMap'
 import OutputPanel from '../content/game/OutputPanel'
 import './GamePage.scss'
 import ExecuteNodePath from '../content/game/ExecuteNodePath'
-import NodeActions from '../content/game/NodeActions'
 import { IPage } from '../App'
-import MissionNode from '../../../../shared/missions/nodes'
+import { IConsoleOutput } from 'src/components/content/game/ConsoleOutput'
+import GameClient from 'src/games'
+import { useGlobalContext } from 'src/context'
+import { useMountHandler } from 'src/toolbox/hooks'
+import ClientMission from 'src/missions'
+import ClientMissionNode from 'src/missions/nodes'
+import ClientMissionAction from 'src/missions/actions'
+import MapToolbox from '../../../../shared/toolbox/maps'
 import Navigation from '../content/general-layout/Navigation'
-import MissionModificationPanel from '../content/user-controls/MissionModificationPanel'
 import {
   EPanelSizingMode,
   PanelSizeRelationship,
   ResizablePanel,
 } from '../content/general-layout/ResizablePanels'
-import MissionNodeAction from '../../../../shared/missions/actions'
-import { IConsoleOutput } from 'src/components/content/game/ConsoleOutput'
-import GameClient from 'src/games'
-import { useGlobalContext } from 'src/context'
-import { useMountHandler } from 'src/toolbox/hooks'
+import MissionMap from '../content/game/MissionMap'
+import { EAjaxStatus } from '../../../../shared/toolbox/ajax'
+import NodeActions from '../content/game/NodeActions'
 
 export interface IGamePage extends IPage {
   game: GameClient
@@ -35,7 +35,7 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
   /* -- PROPS -- */
 
   let game: GameClient = props.game
-  let mission: Mission = game.mission
+  let mission: ClientMission = game.mission
 
   /* -- GLOBAL CONTEXT -- */
 
@@ -45,8 +45,8 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
 
   /* -- STATE -- */
 
-  const [selectedNode, selectNode] = useState<MissionNode | null>(null)
-  const [selectedAction, selectAction] = useState<MissionNodeAction | null>(
+  const [selectedNode, selectNode] = useState<ClientMissionNode | null>(null)
+  const [selectedAction, selectAction] = useState<ClientMissionAction | null>(
     null,
   )
 
@@ -82,14 +82,16 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
    * @param {IConsoleOutput} output The output.
    */
   const outputToConsole = (output: IConsoleOutput): void => {
-    mission.outputToConsole(output)
+    // mission.outputToConsole(output)
   }
 
   /**
    * Handles the selection of a node in the mission map by the user.
-   * @param {MissionNode} node The node that was selected.
+   * @param {ClientMissionNode} node The node that was selected.
    */
-  const handleNodeSelection = async (node: MissionNode): Promise<void> => {
+  const handleNodeSelection = async (
+    node: ClientMissionNode,
+  ): Promise<void> => {
     // Logic to send the pre-execution text to the output panel.
     if (node.preExecutionText !== '' && node.preExecutionText !== null) {
       let output: IConsoleOutput = OutputPanel.renderPreExecutionOutput(node)
@@ -106,15 +108,16 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
     else if (node.readyToExecute) {
       // If there are no more resources left
       // to spend, notify the user.
-      if (mission.resources === 0) {
+      if (game.resources === 0) {
         notify(`You have no more resources left to spend.`)
       }
       // If there is not enough resources to
       // execute any actions, notify the user.
       else if (
-        !node.actions
-          .map((action) => action.resourceCost <= mission.resources)
-          .includes(true)
+        !MapToolbox.mapToArray(
+          node.actions,
+          (action) => action.resourceCost <= game.resources,
+        ).includes(true)
       ) {
         notify(`You do not have enough resources to execute any actions.`)
       }
@@ -123,9 +126,9 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
         selectNode(node)
 
         // If the node has only one action,
-        // preelect that action as well.
-        if (node.actions.length === 1) {
-          selectAction(node.actions[0])
+        // preselect that action as well.
+        if (node.actions.size === 1) {
+          selectAction(Array.from(node.actions.values())[0])
         }
 
         // Force a state update.
@@ -142,15 +145,37 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
     selectAction(null)
   }
 
-  // This will render the execute node path
-  // prompt if the user has selected a node
-  // and an action.
-  const renderExecuteNodePath = () => {
+  /**
+   * Renders the `NodeActions` prompt componenent conditionally based
+   * on whether there is a selected node.
+   */
+  const renderNodeActions = (): JSX.Element | null => {
+    if (selectedNode !== null) {
+      return (
+        <NodeActions
+          isOpen={displayNodeActions}
+          node={selectedNode}
+          game={game}
+          handleActionSelectionRequest={selectAction}
+          handleCloseRequest={clearSelections}
+        />
+      )
+    } else {
+      return null
+    }
+  }
+
+  /**
+   * Renders the `ExecuteNodePath` prompt componenent conditionally based
+   * on whether there is a selected node and action.
+   */
+  const renderExecuteNodePath = (): JSX.Element | null => {
     if (selectedNode !== null && selectedAction !== null) {
       return (
         <ExecuteNodePath
-          selectedAction={selectedAction}
           isOpen={displayExecuteNodePath}
+          action={selectedAction}
+          game={game}
           outputToConsole={outputToConsole}
           handleExecutionRequest={() => {
             if (selectedAction) {
@@ -159,13 +184,14 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
           }}
           handleCloseRequest={clearSelections}
           handleGoBackRequest={() => {
-            if (selectedNode && selectedNode.actions.length === 1) {
+            if (selectedNode && selectedNode.actions.size === 1) {
               clearSelections()
             }
           }}
-          notify={notify}
         />
       )
+    } else {
+      return null
     }
   }
 
@@ -188,7 +214,7 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
 
   // If the mission has no resources left,
   // add the red alert class to the resources.
-  if (mission.resources <= 0) {
+  if (game.resources <= 0) {
     resourcesClassName += ' RedAlert'
   }
 
@@ -230,7 +256,7 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
       <div className='Content'>
         <div className='TopBar'>
           <div className={resourcesClassName}>
-            Resources remaining: {mission.resources}
+            Resources remaining: {game.resources}
             <span style={{ display: 'inline-block', width: '40px' }}></span>
             Game ID: {game.gameID}
           </div>
@@ -248,67 +274,51 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
                   mission={mission}
                   missionAjaxStatus={EAjaxStatus.Loaded}
                   handleNodeSelection={handleNodeSelection}
-                  handleNodePathExitRequest={mission.enableAllNodes}
-                  grayOutExitNodePathButton={!mission.hasDisabledNodes}
-                  applyNodeClassName={(node: MissionNode) => {
+                  // handleNodePathExitRequest={mission.enableAllNodes}
+                  // grayOutExitNodePathButton={!mission.hasDisabledNodes}
+                  applyNodeClassName={(node: ClientMissionNode) => {
                     let className: string = ''
 
                     if (node.isOpen) {
                       className += ' opened'
                     }
 
-                    if (!node.highlighted) {
-                      className += ' faded'
-                    }
+                    // if (!node.highlighted) {
+                    //   className += ' faded'
+                    // }
 
                     return className
                   }}
-                  renderNodeTooltipDescription={(node: MissionNode) => {
-                    let description: string = ''
-                    let nodeActionDisplay = 'None selected'
+                  renderNodeTooltipDescription={(node: ClientMissionNode) => {
+                    let description: string = node.description
 
-                    // This creates the tooltip hover over effect
-                    // that displays the description of the node
-                    // prior to being executed.
-                    if (node !== null && !node.executed && !node.executing) {
-                      description = node.description
-                    }
+                    //
+                    //                     // This creates the tooltip hover over effect
+                    //                     // that displays the description of the node
+                    //                     // after it has been executed.
+                    //                     if (node.executable && node.executed) {
+                    //                       description =
+                    //                         `* Action executed: "${node.selectedAction?.name}"\n` +
+                    //                         `* Executed node in ${
+                    //                           (node.selectedAction?.processTime as number) / 1000
+                    //                         } second(s)\n` +
+                    //                         `* Chance of success: ${
+                    //                           (node.selectedAction?.successChance as number) * 100
+                    //                         }%\n` +
+                    //                         `* Resources used: ${node.selectedAction?.resourceCost} resource(s)`
+                    //                     }
 
-                    if (node.selectedAction !== null) {
-                      nodeActionDisplay = node.selectedAction.name
-                    }
-
-                    // This creates the tooltip hover over effect
-                    // that displays the description of the node
-                    // after it has been executed.
-                    if (node.executable && node.executed) {
-                      description =
-                        `* Action executed: "${node.selectedAction?.name}"\n` +
-                        `* Executed node in ${
-                          (node.selectedAction?.processTime as number) / 1000
-                        } second(s)\n` +
-                        `* Chance of success: ${
-                          (node.selectedAction?.successChance as number) * 100
-                        }%\n` +
-                        `* Resources used: ${node.selectedAction?.resourceCost} resource(s)`
-                    }
-
-                    if (node.executing) {
-                      description =
-                        `* Time remaining: ${node.formatTimeRemaining(
-                          false,
-                        )} \n` + `* Description: ${node.description}`
-                    }
+                    // if (node.executionState === 'executing') {
+                    //   description =
+                    //     `* Time remaining: ${node.formatTimeRemaining(
+                    //       false,
+                    //     )} \n` + `* Description: ${node.description}`
+                    // }
 
                     return description
                   }}
                 />
-                <NodeActions
-                  isOpen={displayNodeActions}
-                  selectedNode={selectedNode}
-                  handleActionSelectionRequest={selectAction}
-                  handleCloseRequest={clearSelections}
-                />
+                {renderNodeActions()}
                 {renderExecuteNodePath()}
               </>
             ),

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
-import MissionNodeAction from '../../../../../shared/missions/actions'
-import MissionNode from '../../../../../shared/missions/nodes'
-import Mission from '../../../../../shared/missions'
+import ClientMissionNode from 'src/missions/nodes'
+import ClientMissionAction from 'src/missions/actions'
+import ClientMission from 'src/missions'
 import Tooltip from '../communication/Tooltip'
 import {
   Detail,
@@ -18,7 +18,7 @@ import { useGlobalContext } from 'src/context'
 // This will render a form where
 // a given node can be edited.
 export default function NodeEntry(props: {
-  node: MissionNode | null
+  node: ClientMissionNode | null
   displayedAction: number
   nodeEmptyStringArray: Array<string>
   actionEmptyStringArray: Array<string>
@@ -31,7 +31,7 @@ export default function NodeEntry(props: {
   handleCloseRequest: () => void
 }): JSX.Element | null {
   /* -- COMPONENT VARIABLES -- */
-  let node: MissionNode | null = props.node
+  let node: ClientMissionNode | null = props.node
   let displayedAction: number = props.displayedAction
   let nodeEmptyStringArray: Array<string> = props.nodeEmptyStringArray
   let actionEmptyStringArray: Array<string> = props.actionEmptyStringArray
@@ -100,7 +100,7 @@ export default function NodeEntry(props: {
   let toggleErrorMessage: string | undefined = undefined
 
   if (node !== null) {
-    let mission: Mission = node.mission
+    let mission: ClientMission = node.mission
 
     if (isEmptyString) {
       closeClassName += ' Disabled'
@@ -295,20 +295,19 @@ export default function NodeEntry(props: {
                 if (node !== null) {
                   node.executable = executable
 
-                  if (executable && node.actions.length === 0) {
+                  if (executable && node.actions.size === 0) {
                     // Checks to make sure the selected node has
                     // at least one action to choose from. If the
                     // selected node does not have at least one
                     // action then it will auto-generate one for
                     // that node.
-                    let newActionArray: Array<MissionNodeAction> = [
-                      MissionNode.createDefaultAction(node),
-                    ]
-                    node.actions = newActionArray
+                    let newAction: ClientMissionAction =
+                      new ClientMissionAction(node)
+
+                    node.actions.set(newAction.actionID, newAction)
 
                     notify(
                       `Auto-generated an action for ${node.name} because it is an executable node with no actions to execute.`,
-                      { duration: 10000 },
                     )
                   }
                 }

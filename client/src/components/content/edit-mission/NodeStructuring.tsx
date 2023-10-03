@@ -1,8 +1,6 @@
 import { useState } from 'react'
-import MissionNode, {
-  ENodeTargetRelation,
-} from '../../../../../shared/missions/nodes'
-import Mission from '../../../../../shared/missions'
+import ClientMission from 'src/missions'
+import ClientMissionNode, { ENodeTargetRelation } from 'src/missions/nodes'
 import MoreInformation from '../communication/MoreInformation'
 import Tooltip from '../communication/Tooltip'
 import './NodeStructuring.scss'
@@ -24,20 +22,20 @@ enum ENodeDropLocation {
 // can be defined.
 export default function NodeStructuring(props: {
   active: boolean
-  mission: Mission
+  mission: ClientMission
   handleChange: () => void
   handleCloseRequest: () => void
 }): JSX.Element | null {
   let active: boolean = props.active
-  let mission: Mission = props.mission
+  let mission: ClientMission = props.mission
   let handleChange = props.handleChange
   let handleCloseRequest = props.handleCloseRequest
-  let rootNode: MissionNode = mission.rootNode
+  let rootNode: ClientMissionNode = mission.rootNode
 
   const globalContext = useGlobalContext()
   const { forceUpdate } = globalContext.actions
-  const [nodeGrabbed, grabNode] = useState<MissionNode | null>(null)
-  const [nodePendingDrop, pendDrop] = useState<MissionNode | null>(null)
+  const [nodeGrabbed, grabNode] = useState<ClientMissionNode | null>(null)
+  const [nodePendingDrop, pendDrop] = useState<ClientMissionNode | null>(null)
   const [dropLocation, setDropLocation] = useState<ENodeDropLocation>(
     ENodeDropLocation.Center,
   )
@@ -107,10 +105,10 @@ export default function NodeStructuring(props: {
   // structuring for the given node
   // name.
   const Node = (props: {
-    node: MissionNode
+    node: ClientMissionNode
     disableDropPending?: boolean
   }): JSX.Element | null => {
-    let node: MissionNode = props.node
+    let node: ClientMissionNode = props.node
     let disableDropPending: boolean = props.disableDropPending === true
 
     /* -- COMPONENT FUNCTIONS -- */
@@ -159,7 +157,7 @@ export default function NodeStructuring(props: {
           }}
           onDrop={(event: React.DragEvent) => {
             if (nodePendingDrop !== null) {
-              let target: MissionNode = nodePendingDrop
+              let target: ClientMissionNode = nodePendingDrop
               let targetRelation: ENodeTargetRelation
 
               switch (dropLocation) {
@@ -266,7 +264,7 @@ export default function NodeStructuring(props: {
         </div>
         {node.expandedInMenu ? (
           <div className='ChildNodes'>
-            {node.childNodes.map((childNode: MissionNode) => (
+            {node.childNodes.map((childNode: ClientMissionNode) => (
               <Node
                 node={childNode}
                 disableDropPending={disableDropPending}
@@ -283,7 +281,7 @@ export default function NodeStructuring(props: {
   // node structuring.
   const renderNodes = (): JSX.Element | null => {
     let nodeElements: Array<JSX.Element | null> = rootNode.childNodes.map(
-      (childNode: MissionNode) => (
+      (childNode: ClientMissionNode) => (
         <Node node={childNode} key={childNode.nodeID} />
       ),
     )

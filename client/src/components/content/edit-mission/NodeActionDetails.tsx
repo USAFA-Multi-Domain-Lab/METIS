@@ -1,12 +1,12 @@
-import MissionNodeAction from '../../../../../shared/missions/actions'
-import MissionNode from '../../../../../shared/missions/nodes'
+import ClientMissionNode from 'src/missions/nodes'
+import ClientMissionAction from 'src/missions/actions'
 import { ButtonSVG, EButtonSVGPurpose } from '../user-controls/ButtonSVG'
 import NodeActionEntry from './NodeActionEntry'
 import './NodeActionDetails.scss'
 import { useGlobalContext } from 'src/context'
 
 export default function NodeActionDetails(props: {
-  node: MissionNode
+  node: ClientMissionNode
   isEmptyString: boolean
   displayedAction: number
   actionEmptyStringArray: Array<string>
@@ -15,7 +15,7 @@ export default function NodeActionDetails(props: {
   setMountHandled: (mountHandled: boolean) => void
   handleChange: () => void
 }): JSX.Element | null {
-  let node: MissionNode = props.node
+  let node: ClientMissionNode = props.node
   let isEmptyString: boolean = props.isEmptyString
   let displayedAction: number = props.displayedAction
   let actionEmptyStringArray: Array<string> = props.actionEmptyStringArray
@@ -23,7 +23,7 @@ export default function NodeActionDetails(props: {
   let setDisplayedAction = props.setDisplayedAction
   let setMountHandled = props.setMountHandled
   let handleChange = props.handleChange
-  let totalActions: number | undefined = node.actions.length
+  let totalActions: number | undefined = node.actions.size
   let actionKey: string = ''
   let addNewActionClassName: string = 'Action add'
   let selectorContainerClassName: string = 'SelectorContainer'
@@ -37,7 +37,7 @@ export default function NodeActionDetails(props: {
 
   const displayNextAction = () => {
     if (node.actions !== undefined) {
-      let lastAction: number = node.actions.length - 1
+      let lastAction: number = node.actions.size - 1
 
       if (!isEmptyString) {
         if (displayedAction === lastAction) {
@@ -60,7 +60,7 @@ export default function NodeActionDetails(props: {
   const displayPreviousAction = () => {
     if (!isEmptyString) {
       if (displayedAction === 0 && node.actions !== undefined) {
-        setDisplayedAction(node.actions.length - 1)
+        setDisplayedAction(node.actions.size - 1)
       } else {
         setDisplayedAction(displayedAction - 1)
       }
@@ -77,11 +77,7 @@ export default function NodeActionDetails(props: {
 
   // Logic that hides the buttons that select which action is being
   // displayed because there is 1 action or less for the selected node.
-  if (
-    node.actions.length === 0 ||
-    node.actions.length === 1 ||
-    node.actions[0] === undefined
-  ) {
+  if (node.actions.size <= 1) {
     actionKey = 'no_action_id_to_choose_from'
     selectorContainerClassName += ' Hidden'
   }
@@ -89,9 +85,9 @@ export default function NodeActionDetails(props: {
   // Logic that keeps the app from crashing by making the key for the
   // individual action that is being displayed under the action(s) section
   // change dynamically.
-  if (node.actions.length > 0) {
-    actionKey = node.actions[displayedAction].actionID
-  } else if (node.actions.length <= 0) {
+  if (node.actions.size > 1) {
+    actionKey = Array.from(node.actions.keys())[displayedAction]
+  } else if (node.actions.size <= 0) {
     actionKey = 'no_action_id_to_choose_from'
   }
 
@@ -112,7 +108,7 @@ export default function NodeActionDetails(props: {
             </div>
           </div>
           <NodeActionEntry
-            action={node.actions[displayedAction]}
+            action={Array.from(node.actions.values())[displayedAction]}
             isEmptyString={isEmptyString}
             displayedAction={displayedAction}
             setDisplayedAction={setDisplayedAction}
@@ -139,9 +135,8 @@ export default function NodeActionDetails(props: {
             purpose={EButtonSVGPurpose.Add}
             handleClick={() => {
               if (node !== null) {
-                let action: MissionNodeAction =
-                  MissionNode.createDefaultAction(node)
-                node.actions.push(action)
+                let action: ClientMissionAction = new ClientMissionAction(node)
+                node.actions.set(action.actionID, action)
                 handleChange()
               }
             }}

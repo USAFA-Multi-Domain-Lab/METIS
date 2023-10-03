@@ -1,31 +1,31 @@
-import { WebSocket } from "ws";
+import { WebSocket } from 'ws'
 import {
   TServerData,
   TClientData,
   TClientMethod,
   TServerMethod,
   IServerDataTypes,
-} from "metis/connect/data";
-import { ServerEmittedError } from "metis/connect/errors";
-import User from "metis/users";
-import MetisSession from "metis/server/sessions";
+} from 'metis/connect/data'
+import { ServerEmittedError } from 'metis/connect/errors'
+import User from 'metis/users'
+import MetisSession from 'metis/server/sessions'
 
 export type TClientHandler<TMethod extends TClientMethod> = (
-  data: TClientData<TMethod>
-) => void;
+  data: TClientData<TMethod>,
+) => void
 
 /**
  * Represents options that can be passed when constructing a new client connection.
  */
 export interface IClientConnectionOptions {
   on?: {
-    [T in TClientMethod]?: TClientHandler<T>;
-  };
+    [T in TClientMethod]?: TClientHandler<T>
+  }
   /**
    * Whether to disconnect existing connections for the given session.
    * @WIP
    */
-  disconnectExisting?: boolean;
+  disconnectExisting?: boolean
 }
 
 /**
@@ -33,13 +33,13 @@ export interface IClientConnectionOptions {
  */
 type WSCloseEvent = Parameters<
   NonNullable<typeof WebSocket.prototype.onclose>
->[0];
+>[0]
 /**
  * Extracts event type from on the message event listener function.
  */
 type WSMessageEvent = Parameters<
   NonNullable<typeof WebSocket.prototype.onmessage>
->[0];
+>[0]
 
 /**
  * METIS web-socket-based, client connection.
@@ -49,30 +49,30 @@ export default class ClientConnection {
   /**
    * The web socket connection itself.
    */
-  protected socket: WebSocket;
+  protected socket: WebSocket
   /**
    * The session associated with this client.
    */
-  protected _session: MetisSession;
+  protected _session: MetisSession
   /**
    * The session associated with this client.
    */
   public get session(): MetisSession {
-    return this._session;
+    return this._session
   }
 
   /**
    * The user in the session.
    */
   public get user(): User {
-    return this.session.user;
+    return this.session.user
   }
 
   /**
    * The userID for the user in the session.
    */
   public get userID(): string {
-    return this.session.userID;
+    return this.session.userID
   }
 
   /**
@@ -81,7 +81,7 @@ export default class ClientConnection {
   protected listeners: Map<TClientMethod, TClientHandler<any>> = new Map<
     TClientMethod,
     TClientHandler<any>
-  >();
+  >()
 
   /**
    * @param {WebSocket} socket The web socket connection itself.
@@ -90,12 +90,12 @@ export default class ClientConnection {
   public constructor(
     socket: WebSocket,
     session: MetisSession,
-    options: IClientConnectionOptions = {}
+    options: IClientConnectionOptions = {},
   ) {
-    this.socket = socket;
-    this._session = session;
+    this.socket = socket
+    this._session = session
 
-    let { disconnectExisting = false } = options;
+    let { disconnectExisting = false } = options
 
     // If session already contains a client,
     // handle conflict.
@@ -103,35 +103,35 @@ export default class ClientConnection {
       // If disconnectExisting was opted,
       // disconnect the existing client.
       if (disconnectExisting) {
-        session.client.disconnect();
+        session.client.disconnect()
       }
       // Else, reject new connection by
       // emmitting a duplicate client error
       // and disconnecting.
       else {
         this.emitError(
-          new ServerEmittedError(ServerEmittedError.CODE_DUPLICATE_CLIENT)
-        );
-        this.disconnect();
-        throw Error("The session passed already has a client.");
+          new ServerEmittedError(ServerEmittedError.CODE_DUPLICATE_CLIENT),
+        )
+        this.disconnect()
+        throw Error('The session passed already has a client.')
       }
     }
 
-    session.client = this;
+    session.client = this
 
     // Add event listeners passed in
     // options.
     if (options.on !== undefined) {
       for (let [key, value] of Object.entries(options.on) as any) {
-        this.addEventListener(key, value);
+        this.addEventListener(key, value)
       }
     }
 
     // Prepare the socket for use.
-    this.prepareSocket();
+    this.prepareSocket()
 
     // Add default listeners.
-    this.addDefaultListeners();
+    this.addDefaultListeners()
   }
 
   /**
@@ -139,8 +139,8 @@ export default class ClientConnection {
    */
   private prepareSocket(): void {
     // Add event listeners to the socket.
-    this.socket.addEventListener("close", this.onClose);
-    this.socket.addEventListener("message", this.onMessage);
+    this.socket.addEventListener('close', this.onClose)
+    this.socket.addEventListener('message', this.onMessage)
   }
 
   /**
@@ -150,10 +150,10 @@ export default class ClientConnection {
    */
   public emit<
     TMethod extends TServerMethod,
-    TPayload extends Omit<IServerDataTypes[TMethod], "method">
+    TPayload extends Omit<IServerDataTypes[TMethod], 'method'>,
   >(method: TMethod, payload: TPayload): void {
     // Send payload.
-    this.socket.send(JSON.stringify(payload));
+    this.socket.send(JSON.stringify(payload))
   }
 
   /**
@@ -161,8 +161,8 @@ export default class ClientConnection {
    * @param {ServerEmittedError} error The error to emit to the client.
    */
   public emitError(error: ServerEmittedError): void {
-    let payload: TServerData<"error"> = error.toJSON();
-    this.socket.send(JSON.stringify(payload));
+    let payload: TServerData<'error'> = error.toJSON()
+    this.socket.send(JSON.stringify(payload))
   }
 
   /**
@@ -173,12 +173,12 @@ export default class ClientConnection {
    */
   public addEventListener<TMethod extends TClientMethod>(
     method: TMethod,
-    handler: TClientHandler<TMethod>
+    handler: TClientHandler<TMethod>,
   ): ClientConnection {
     // Push the new listener to the array of listeners.
-    this.listeners.set(method, handler);
+    this.listeners.set(method, handler)
     // Return this.
-    return this;
+    return this
   }
 
   /**
@@ -191,8 +191,8 @@ export default class ClientConnection {
   /**
    * Disconnects from the server, closing the web socket connection.
    */
-  public disconnect(): void {
-    this.socket.close();
+  protected disconnect(): void {
+    this.socket.close()
   }
 
   /**
@@ -202,19 +202,19 @@ export default class ClientConnection {
   private onClose = (event: WSCloseEvent): void => {
     // Pre-create data object, since
     // it will not vary.
-    let closeData: TServerData<"close"> = { method: "close" };
+    let closeData: TServerData<'close'> = { method: 'close' }
 
     // Loop though listeners.
     for (let [method, listener] of this.listeners) {
       // Call any "close" listeners.
-      if (method === "close") {
-        listener(closeData);
+      if (method === 'close') {
+        listener(closeData)
       }
     }
 
-    // Remove the client from the session.
-    this.session.client = null;
-  };
+    // Clear client from session.
+    this.session.client = null
+  }
 
   /**
    * Handler for when the web socket connection is opened. Calls all matching listeners stored in "listeners".
@@ -224,22 +224,22 @@ export default class ClientConnection {
     for (let [method, listener] of this.listeners) {
       // If the data passed is not a string,
       // throw an error.
-      if (typeof event.data !== "string") {
+      if (typeof event.data !== 'string') {
         this.emitError(
           new ServerEmittedError(ServerEmittedError.CODE_INVALID_DATA, {
-            message: "The data passed was not a string.",
-          })
-        );
-        return;
+            message: 'The data passed was not a string.',
+          }),
+        )
+        return
       }
 
       // Parse the data.
-      let data = JSON.parse(event.data);
+      let data = JSON.parse(event.data)
 
       // Only call the handler if the method matches.
       if (data.method === method) {
-        listener(data);
+        listener(data)
       }
     }
-  };
+  }
 }

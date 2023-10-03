@@ -1,4 +1,4 @@
-import express, { Request, Response } from 'express'
+import { Request, Response } from 'express'
 import expressWs from 'express-ws'
 import fs from 'fs'
 import path from 'path'
@@ -14,10 +14,11 @@ import {
 } from '../../middleware/users'
 import uploads from '../../middleware/uploads'
 import { RequestBodyFilters, defineRequests } from '../../middleware/requests'
-import { colorOptions } from '../../missions/nodes'
+import MissionNode from '../../missions/nodes'
 import { assetData } from '../../effects/effect-data'
 import MetisServer from 'metis/server'
 import { TMetisRouterMap } from 'metis/server/http/router'
+import { IMissionJSON } from 'metis/missions'
 
 type MulterFile = Express.Multer.File
 
@@ -32,29 +33,25 @@ export const routerMap: TMetisRouterMap = (
     requireLogin({ permittedRoles: ['instructor', 'admin'] }),
     defineRequests({
       body: {
-        mission: {
-          name: RequestBodyFilters.STRING,
-          introMessage: RequestBodyFilters.STRING,
-          versionNumber: RequestBodyFilters.NUMBER,
-          live: RequestBodyFilters.BOOLEAN,
-          initialResources: RequestBodyFilters.NUMBER,
-          nodeStructure: RequestBodyFilters.OBJECT,
-          nodeData: RequestBodyFilters.OBJECT,
-        },
+        name: RequestBodyFilters.STRING,
+        introMessage: RequestBodyFilters.STRING,
+        versionNumber: RequestBodyFilters.NUMBER,
+        live: RequestBodyFilters.BOOLEAN,
+        initialResources: RequestBodyFilters.NUMBER,
+        nodeStructure: RequestBodyFilters.OBJECT,
+        nodeData: RequestBodyFilters.OBJECT,
       },
     }),
     (request: Request, response: Response) => {
-      let body: any = request.body
-
-      let missionData: any = body.mission
-
-      let name: any = missionData.name
-      let introMessage: any = missionData.introMessage
-      let versionNumber: any = missionData.versionNumber
-      let live: any = missionData.live
-      let initialResources: any = missionData.initialResources
-      let nodeStructure: any = missionData.nodeStructure
-      let nodeData: any = missionData.nodeData
+      let {
+        name,
+        introMessage,
+        versionNumber,
+        live,
+        initialResources,
+        nodeStructure,
+        nodeData,
+      } = request.body as IMissionJSON
 
       let mission = new MissionModel({
         name,
@@ -98,7 +95,7 @@ export const routerMap: TMetisRouterMap = (
                 return response.sendStatus(500)
               } else {
                 // Return updated mission to the user.
-                return response.send({ mission })
+                return response.send(mission)
               }
             })
         }
@@ -559,7 +556,7 @@ export const routerMap: TMetisRouterMap = (
   // color options that can be used to
   // style a mission-node.
   router.get('/colors/', defineRequests({}), (request, response) => {
-    response.json(colorOptions)
+    response.json(MissionNode.COLOR_OPTIONS)
   })
 
   // -- GET /api/v1/missions/assets/
@@ -645,29 +642,23 @@ export const routerMap: TMetisRouterMap = (
     defineRequests(
       {
         body: {
-          mission: {
-            missionID: RequestBodyFilters.OBJECTID,
-          },
+          missionID: RequestBodyFilters.OBJECTID,
         },
       },
       {
         body: {
-          mission: {
-            name: RequestBodyFilters.STRING,
-            introMessage: RequestBodyFilters.STRING,
-            versionNumber: RequestBodyFilters.NUMBER,
-            initialResources: RequestBodyFilters.NUMBER,
-            live: RequestBodyFilters.BOOLEAN,
-            nodeStructure: RequestBodyFilters.OBJECT,
-            nodeData: RequestBodyFilters.OBJECT,
-          },
+          name: RequestBodyFilters.STRING,
+          introMessage: RequestBodyFilters.STRING,
+          versionNumber: RequestBodyFilters.NUMBER,
+          initialResources: RequestBodyFilters.NUMBER,
+          live: RequestBodyFilters.BOOLEAN,
+          nodeStructure: RequestBodyFilters.OBJECT,
+          nodeData: RequestBodyFilters.OBJECT,
         },
       },
     ),
     (request, response) => {
-      let body: any = request.body
-
-      let missionUpdates: any = body.mission
+      let missionUpdates: any = request.body
 
       let missionID: string = missionUpdates.missionID
 
@@ -738,7 +729,7 @@ export const routerMap: TMetisRouterMap = (
                     return response.sendStatus(500)
                   } else {
                     // Return updated mission to the user.
-                    return response.send({ mission })
+                    return response.json(mission)
                   }
                 })
             }

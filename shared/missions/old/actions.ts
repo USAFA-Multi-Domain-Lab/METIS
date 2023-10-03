@@ -1,8 +1,9 @@
 import axios, { AxiosError, AxiosResponse } from 'axios'
 import { PRNG } from 'seedrandom'
-import MissionNode from 'metis/missions/nodes'
-import Mission from 'metis/missions'
+import MissionNode from 'metis/missions/old/nodes'
+import Mission from 'metis/missions/old'
 import { AnyObject } from 'metis/toolbox/objects'
+import { v4 as generateHash } from 'uuid'
 
 export interface IScript {
   label: string
@@ -10,18 +11,6 @@ export interface IScript {
   scriptName: string
   originalPath: string
   args: AnyObject
-}
-
-export interface IMissionNodeActionJSON {
-  actionID: string
-  name: string
-  description: string
-  processTime: number
-  successChance: number
-  resourceCost: number
-  postExecutionSuccessText: string
-  postExecutionFailureText: string
-  scripts: Array<IScript>
 }
 
 /**
@@ -34,7 +23,7 @@ export interface IActionExecutionOptions {
   enactEffects: boolean
 }
 
-export default class MissionNodeAction {
+export default class MissionAction {
   node: MissionNode
   actionID: string
   name: string
@@ -112,16 +101,15 @@ export default class MissionNodeAction {
     this.postExecutionSuccessText = postExecutionSuccessText
     this.postExecutionFailureText = postExecutionFailureText
     this.scripts = scripts
-    this._willSucceedArray =
-      MissionNodeAction.determineDifferentSuccessOutcomes(
-        this.totalPossibleExecutionAttempts,
-        successChance,
-        node.mission.rng,
-      )
+    this._willSucceedArray = MissionAction.determineDifferentSuccessOutcomes(
+      this.totalPossibleExecutionAttempts,
+      successChance,
+      node.mission.rng,
+    )
     this._willSucceed = null
   }
 
-  toJSON(): IMissionNodeActionJSON {
+  toJSON(): IMissionActionJSON {
     return {
       actionID: this.actionID,
       name: this.name,
@@ -269,3 +257,23 @@ export function getAssetData(
       callbackError(error)
     })
 }
+
+/**
+ * Plain JSON representation of a MissionAction object.
+ */
+export interface IMissionActionJSON {
+  actionID: string
+  name: string
+  description: string
+  processTime: number
+  successChance: number
+  resourceCost: number
+  postExecutionSuccessText: string
+  postExecutionFailureText: string
+  scripts: Array<IScript>
+}
+
+/**
+ * Options for creating a mission action.
+ */
+export type TMissionActionOptions = {}

@@ -1,32 +1,165 @@
-// This is an enum used by the
-// MissionNode move
-// function to describe the
-// purpose of the target
-
-import Mission from '../missions'
-import MissionNodeAction, { IMissionNodeActionJSON } from '../missions/actions'
-import { IMissionMappable } from '../missions'
+import { IMissionAction, IMissionActionJSON } from './actions'
+import { IMission } from '.'
 import { v4 as generateHash } from 'uuid'
-import axios from 'axios'
+import MapToolbox from '../toolbox/maps'
+import IActionOutcome from './actions/outcomes'
+import IActionExecution, { TActionExecutionJSON } from './actions/executions'
+import { IActionOutcomeJSON } from './actions/outcomes'
+import ArrayToolbox from '../toolbox/arrays'
 
-export enum ENodeTargetRelation {
-  ParentOfTargetAndChildren,
-  ParentOfTargetOnly,
-  ChildOfTarget,
-  BetweenTargetAndChildren,
-  PreviousSiblingOfTarget,
-  FollowingSiblingOfTarget,
+/**
+ * Interface of the abstract MissionNode class.
+ * @note Any public, non-static properties and functions of the MissionNode class
+ * must first be defined here for them to be accessible to the Mission and
+ * MissionAction classes.
+ */
+export interface IMissionNode {
+  /**
+   * The mission of which the node is a part.
+   */
+  mission: IMission
+  /**
+   * The ID for the node.
+   */
+  nodeID: string
+  /**
+   * The name for the node.
+   */
+  name: string
+  /**
+   * The color for the node used as a border in the mission map.
+   */
+  color: string
+  /**
+   * The description for the node.
+   */
+  description: string
+  /**
+   * The text outputted to the console when the node is clicked on.
+   */
+  preExecutionText: string
+  /**
+   * Whether an action can be executed on the node.
+   */
+  executable: boolean
+  /**
+   * Whether or not this node is a device.
+   */
+  device: boolean
+  /**
+   * The execution state of the node.
+   */
+  executionState: TNodeExecutionState
+  /**
+   * Whether or not this node is ready to be executed upon by an action.
+   */
+  readyToExecute: boolean
+  /**
+   * Whether an action is currently being executed on the node.
+   */
+  executing: boolean
+  /**
+   * Whether an action has been executed on the node.
+   */
+  executed: boolean
+  /**
+   * Whether or not this node is open. True if a non-executable node has been opened, or if
+   * an executable node has been successfully executed.
+   */
+  isOpen: boolean
+  /**
+   * Whether or not this node is can be opened using the "open" function.
+   */
+  openable: boolean
+  /**
+   * Whether or not this node has been (or at least is expected to be) revealed to the player.
+   */
+  revealed: boolean
+  /**
+   * The amount of visual padding to apply to the left of the node in the tree.
+   */
+  depthPadding: number
+  /**
+   * The actions that can be performed on the node.
+   * @note Mapped by action ID.
+   */
+  actions: Map<string, IMissionAction>
+  /**
+   * The current execution in process on the node by an action.
+   */
+  get execution(): IActionExecution | null
+  /**
+   * The outcomes of the actions that are performed on the node.
+   */
+  get outcomes(): Array<IActionOutcome>
+  /**
+   * The parent of this node in the tree structure.
+   */
+  parentNode: IMissionNode | null
+  /**
+   * The children of this node in the tree structure.
+   */
+  childNodes: Array<IMissionNode>
+  /**
+   * Whether or not this nodes has child nodes.
+   */
+  hasChildren: boolean
+  /**
+   * Whether or not this node has siblings.
+   */
+  hasSiblings: boolean
+  /**
+   * The siblings of this node.
+   */
+  siblings: Array<IMissionNode>
+  /**
+   * The children of the parent of this node (Essentially siblings plus self).
+   */
+  childrenOfParent: Array<IMissionNode>
+  /**
+   * The sibling, if any, ordered before this node in the structure.
+   */
+  previousSibling: IMissionNode | null
+  /**
+   * The sibling, if any, ordered after this node in the structure.
+   */
+  followingSibling: IMissionNode | null
+  /**
+   * Converts the node to JSON.
+   * @param options Options for exporting the node to JSON.
+   * @returns the JSON for the node.
+   */
+  toJSON: (options?: TNodeJsonOptions) => TMissionNodeJSON
+  /**
+   * Opens the node.
+   * @param options Options for opening the node.
+   * @returns a promise that resolves when the node opening has been fulfilled.
+   */
+  open: (options?: INodeOpenOptions) => Promise<void>
+  /**
+   * Handles an exection of an action performed on the node.
+   * @param data The execution data to handle.
+   * @returns The generated execution object.
+   */
+  handleExecution: (
+    execution: NonNullable<TActionExecutionJSON>,
+  ) => IActionExecution
+  /**
+   * Handles an outcome of an action performed on the node.
+   * @param data The outcome data to handle.
+   * @param options Options for handling the outcome.
+   * @returns The generated outcome object.
+   */
+  handleOutcome: (
+    data: IActionOutcomeJSON,
+    options?: IHandleOutcomeOptions,
+  ) => IActionOutcome
 }
 
-export enum ENodeDeleteMethod {
-  DeleteNodeAndChildren,
-  DeleteNodeAndShiftChildren,
-}
-
-// This is the raw node data returned
-// from the server used to create instances
-// of MissionNode in the Mission class.
-export interface IMissionNodeJSON {
+/**
+ * Game-agnostic JSON data for a MissionNode object.
+ */
+export interface IMissionNodeBaseJSON {
   nodeID: string
   name: string
   color: string
@@ -35,421 +168,351 @@ export interface IMissionNodeJSON {
   depthPadding: number
   executable: boolean
   device: boolean
-  actions: Array<IMissionNodeActionJSON>
-  isOpen?: boolean
-}
-
-// These are options that can be passed
-// when deleting a node with the delete
-// function.
-export interface INodeDeleteOptions {
-  calledByParentDelete?: boolean // Default "false"
-  deleteMethod?: ENodeDeleteMethod // Default "ENodeDeleteMethod.DeleteNodeAndChildren"
+  actions: Array<IMissionActionJSON>
 }
 
 /**
- * This represents an individual node for a student to execute within a mission.
+ * Game-specific JSON data for a MissionNode object.
  */
-export default class MissionNode implements IMissionMappable {
-  mission: Mission
-  nodeID: string
-  name: string
-  parentNode: MissionNode | null
-  childNodes: Array<MissionNode>
-  color: string
-  description: string
-  preExecutionText: string
-  executable: boolean
-  device: boolean
-  _depthPadding: number
-  actions: Array<MissionNodeAction> = []
-  selectedAction: MissionNodeAction | null
-  private _executingAction: MissionNodeAction | null
-  private _executing: boolean
-  // ! TEMPORARILY PUBLIC FOR TESTING
-  public _lastExecutedAction: MissionNodeAction | null
-  // ! TEMPORARILY PUBLIC FOR TESTING
-  public _lastExecutionSucceeded: boolean
-  // ! TEMPORARILY PUBLIC FOR TESTING
-  public _lastExecutionFailed: boolean
-  mapX: number
-  mapY: number
-  depth: number
-  _isOpen: boolean
-  _expandedInMenu: boolean
-  _executionTimeStart: number
-  _executionTimeEnd: number
-  _highlighted: boolean
+export interface IMissionNodeGameJSON {
+  opened: boolean
+  executionState: TNodeExecutionState
+  execution: TActionExecutionJSON | null
+  outcomes: Array<IActionOutcomeJSON>
+}
 
-  static default_name: string = 'Unnamed Node'
-  static default_color: string = '#ffffff'
-  static default_description: string = 'Description text goes here.'
-  static default_preExecutionText: string = 'Node has not been executed.'
-  static default_depthPadding: number = 0
-  static default_executable: boolean = false
-  static default_device: boolean = false
-  static default_actions: Array<IMissionNodeActionJSON> = []
-  static default_mapX: number = 0
-  static default_mapY: number = 0
-  static default_isOpen: boolean = false
+/**
+ * Plain JSON representation of a MissionNode object.
+ * Type built from IMissionNodeBaseJSON and IMissionNodeGameJSON,
+ * with all properties from IMissionNodeGameJSON being partial.
+ */
+export type TMissionNodeJSON = IMissionNodeBaseJSON &
+  Partial<IMissionNodeGameJSON>
 
-  static createDefaultAction(node: MissionNode): MissionNodeAction {
-    return new MissionNodeAction(
-      node,
-      generateHash(),
-      'New Action',
-      'Enter your description here.',
-      5000,
-      0.5,
-      1,
-      'Enter your successful post-execution message here.',
-      'Enter your failed post-execution message here.',
-      [],
-    )
+/**
+ * Options for MissionNode.toJSON method.
+ */
+export type TNodeJsonOptions = {
+  /**
+   * Whether to include game-specific data in the JSON export.
+   * @default false
+   */
+  includeGameData?: boolean
+}
+
+/**
+ * Options for creating a MissionNode object.
+ */
+export type TMissionNodeOptions<TRelative extends IMissionNode> = {
+  /**
+   * The node of which this node is a child.
+   * @default null
+   */
+  parentNode?: TRelative | null
+  /**
+   * The child nodes of this node.
+   * @default []
+   */
+  childNodes?: Array<TRelative>
+}
+
+/**
+ * Possible states for the execution of a node.
+ */
+export type TNodeExecutionState =
+  | 'unexecuted'
+  | 'executing'
+  | 'successful'
+  | 'failure'
+
+/**
+ * Options for the `MissionNode.open` method.
+ */
+export interface INodeOpenOptions {}
+
+/**
+ * Options for the `MissionNode.handleOutcome` method.
+ */
+export interface IHandleOutcomeOptions {}
+
+/**
+ * This represents an individual node in a mission.
+ */
+export default abstract class MissionNode<
+  TMission extends IMission,
+  TRelativeNode extends IMissionNode,
+  TMissionAction extends IMissionAction,
+  TActionExecution extends IActionExecution,
+  TActionOutcome extends IActionOutcome,
+> implements IMissionNode
+{
+  // Implemented
+  public mission: TMission
+
+  // Implemented
+  public nodeID: string
+
+  // Implemented
+  public name: string
+
+  // Implemented
+  public color: string
+
+  // Implemented
+  public description: string
+
+  // Implemented
+  public preExecutionText: string
+
+  // Implemented
+  public executable: boolean
+
+  // Implemented
+  public device: boolean
+
+  // Implemented
+  public get executionState(): TNodeExecutionState {
+    let execution: TActionExecution | null = this.execution
+    let outcomes: Array<TActionOutcome> = this.outcomes
+
+    // Check for 'unexecuted' state.
+    if (execution === null && outcomes.length === 0) {
+      return 'unexecuted'
+    } else if (execution !== null) {
+      return 'executing'
+    } else {
+      return ArrayToolbox.lastOf(outcomes).successful ? 'successful' : 'failure'
+    }
   }
 
-  /**
-   * Whether this node is ready to be executed upon by an action.
-   */
+  // Implemented
   public get readyToExecute(): boolean {
     return (
       this.executable &&
-      this.actions.length > 0 &&
-      !this.executing &&
-      !this.lastExecutionSucceeded
+      this.actions.size > 0 &&
+      (this.executionState === 'unexecuted' ||
+        this.executionState === 'failure')
     )
   }
 
-  /**
-   * The action last executed upon this node.
-   */
-  public get lastExecutedAction(): MissionNodeAction | null {
-    return this._lastExecutedAction
-  }
-
-  /**
-   * Whether an action is currently executing upon this node.
-   */
+  // Implemented
   public get executing(): boolean {
-    return this._executing
+    return this.execution !== null
   }
 
-  /**
-   * Whether the last execution of this node was successful.
-   */
-  public get lastExecutionSucceeded(): boolean {
-    return this._lastExecutionSucceeded
-  }
-
-  /**
-   * Whether the last execution of this node failed.
-   */
-  public get lastExecutionFailed(): boolean {
-    return this._lastExecutionFailed
-  }
-
-  /**
-   * Whether this node has had an action executed upon it yet.
-   */
+  // Implemented
   public get executed(): boolean {
-    return this._lastExecutedAction !== null
+    return this.outcomes.length > 0
   }
 
-  // Getter for _depthPadding.
-  get depthPadding(): number {
-    return this._depthPadding
+  /**
+   * Whether or not this node was manually opened.
+   * @note Only applicable to non-executable nodes.
+   */
+  protected opened: boolean
+
+  // Implemented
+  public depthPadding: number
+
+  // Implemented
+  public actions: Map<string, TMissionAction>
+
+  /**
+   * The current execution in process on the node by an action.
+   */
+  protected _execution: TActionExecution | null
+  // Implemented
+  public get execution(): TActionExecution | null {
+    return this._execution
   }
 
-  // Setter for _depthPadding.
-  set depthPadding(depthPadding: number) {
-    this._depthPadding = depthPadding
-    this._handleStructureChange()
+  /**
+   * The outcomes of the actions that are performed on the node.
+   */
+  protected _outcomes: Array<TActionOutcome>
+  // Inherited
+  public get outcomes(): Array<TActionOutcome> {
+    return [...this._outcomes]
   }
 
-  // Getter for _executingAction.
-  get executingAction(): MissionNodeAction | null {
-    return this._executingAction
-  }
+  // Implemented
+  public parentNode: TRelativeNode | null
 
-  get descendantDepth(): number {
-    let deepestDescendant: MissionNode = this
+  // Implemented
+  public childNodes: Array<TRelativeNode>
 
-    while (deepestDescendant.childNodes.length > 0) {
-      deepestDescendant = deepestDescendant.childNodes[0]
-    }
-
-    return deepestDescendant.depth
-  }
-
-  get descendantMaxY(): number {
-    let deepestLowestDescendant: MissionNode = this
-
-    while (deepestLowestDescendant.childNodes.length > 0) {
-      deepestLowestDescendant =
-        deepestLowestDescendant.childNodes[
-          deepestLowestDescendant.childNodes.length - 1
-        ]
-    }
-
-    return deepestLowestDescendant.mapY
-  }
-
-  // This will return whether this node
-  // has children or not.
-  get hasChildren(): boolean {
+  // Implemented
+  public get hasChildren(): boolean {
     return this.childNodes.length > 0
   }
 
-  // This will return whether this node
-  // has siblings or not.
-  get hasSiblings(): boolean {
+  // Implemented
+  public get hasSiblings(): boolean {
     return this.childrenOfParent.length > 1
   }
 
-  get siblings(): Array<MissionNode> {
-    let siblings: Array<MissionNode> = []
+  // Implemented
+  public get siblings(): Array<TRelativeNode> {
+    let siblings: Array<TRelativeNode> = []
 
     if (this.parentNode !== null) {
-      let childrenOfParent: Array<MissionNode> = this.parentNode.childNodes
+      let childrenOfParent: Array<TRelativeNode> = this.parentNode
+        .childNodes as TRelativeNode[]
 
       siblings = childrenOfParent.filter(
-        (childOfParent: MissionNode) => childOfParent.nodeID !== this.nodeID,
+        (childOfParent: TRelativeNode) => childOfParent.nodeID !== this.nodeID,
       )
     }
 
     return siblings
   }
 
-  get childrenOfParent(): Array<MissionNode> {
-    let childrenOfParent: Array<MissionNode> = [this]
+  // Implemented
+  public get childrenOfParent(): Array<TRelativeNode> {
+    let childrenOfParent: Array<TRelativeNode> = []
 
     if (this.parentNode !== null) {
-      childrenOfParent = this.parentNode.childNodes
+      childrenOfParent = this.parentNode.childNodes as TRelativeNode[]
     }
 
     return childrenOfParent
   }
 
-  get previousSibling(): MissionNode | null {
-    let previousSibling: MissionNode | null = null
+  // Implemented
+  public get previousSibling(): TRelativeNode | null {
+    let previousSibling: TRelativeNode | null = null
 
     if (this.parentNode !== null) {
-      let childrenOfParent: Array<MissionNode> = this.parentNode.childNodes
+      let childrenOfParent: Array<TRelativeNode> = this.parentNode
+        .childNodes as TRelativeNode[]
 
-      childrenOfParent.forEach((childOfParent: MissionNode, index: number) => {
-        if (childOfParent.nodeID === this.nodeID && index > 0) {
-          previousSibling = childrenOfParent[index - 1]
-        }
-      })
+      childrenOfParent.forEach(
+        (childOfParent: TRelativeNode, index: number) => {
+          if (childOfParent.nodeID === this.nodeID && index > 0) {
+            previousSibling = childrenOfParent[index - 1]
+          }
+        },
+      )
     }
 
     return previousSibling
   }
 
-  get followingSibling(): MissionNode | null {
-    let followingSibling: MissionNode | null = null
+  // Implemented
+  public get followingSibling(): TRelativeNode | null {
+    let followingSibling: TRelativeNode | null = null
 
     if (this.parentNode !== null) {
-      let childrenOfParent: Array<MissionNode> = this.parentNode.childNodes
+      let childrenOfParent: Array<TRelativeNode> = this.parentNode
+        .childNodes as TRelativeNode[]
 
-      childrenOfParent.forEach((childOfParent: MissionNode, index: number) => {
-        if (
-          childOfParent.nodeID === this.nodeID &&
-          index + 1 < childrenOfParent.length
-        ) {
-          followingSibling = childrenOfParent[index + 1]
-        }
-      })
+      childrenOfParent.forEach(
+        (childOfParent: TRelativeNode, index: number) => {
+          if (
+            childOfParent.nodeID === this.nodeID &&
+            index + 1 < childrenOfParent.length
+          ) {
+            followingSibling = childrenOfParent[index + 1]
+          }
+        },
+      )
     }
 
     return followingSibling
   }
 
-  get isOpen(): boolean {
-    return this._isOpen
+  // Implemented
+  public get isOpen(): boolean {
+    return this.opened || this.executionState === 'successful'
   }
 
-  get isClosed(): boolean {
-    return !this._isOpen
+  // Implemented
+  public get openable(): boolean {
+    return !this.executable && !this.isOpen
   }
 
-  get revealed(): boolean {
+  // Implemented
+  public get revealed(): boolean {
     return this.parentNode === null || this.parentNode.isOpen
   }
 
   /**
-   * @returns {boolean} Whether or not this node is can be opened using the "open" function.
+   * @param {TMission} mission The mission of which the node is a part.
+   * @param {TMissionNodeJSON} data The node data from which to create the node. Any ommitted values will be set to the default properties defined in MissionNode.DEFAULT_PROPERTIES.
+   * @param {TMissionNodeOptions<TMission>} options The options for creating the node.
    */
-  get openable(): boolean {
-    return !this.executable && !this.isOpen
-  }
+  public constructor(
+    mission: TMission,
+    data: Partial<TMissionNodeJSON> = MissionNode.DEFAULT_PROPERTIES,
+    options: TMissionNodeOptions<TRelativeNode> = {},
+  ) {
+    // Set properties from data.
+    this.mission = mission
+    this.nodeID = data.nodeID ?? MissionNode.DEFAULT_PROPERTIES.nodeID
+    this.name = data.name ?? MissionNode.DEFAULT_PROPERTIES.name
+    this.color = data.color ?? MissionNode.DEFAULT_PROPERTIES.color
+    this.description =
+      data.description ?? MissionNode.DEFAULT_PROPERTIES.description
+    this.preExecutionText =
+      data.preExecutionText ?? MissionNode.DEFAULT_PROPERTIES.preExecutionText
+    this.executable =
+      data.executable ?? MissionNode.DEFAULT_PROPERTIES.executable
+    this.device = data.device ?? MissionNode.DEFAULT_PROPERTIES.device
+    this.depthPadding =
+      data.depthPadding ?? MissionNode.DEFAULT_PROPERTIES.depthPadding
+    this.actions = this.parseActionData(
+      data.actions ?? MissionNode.DEFAULT_PROPERTIES.actions,
+    )
+    this.opened = data.opened ?? MissionNode.DEFAULT_PROPERTIES.opened
+    this._execution = this.parseExecutionData(
+      data.execution !== undefined
+        ? data.execution
+        : MissionNode.DEFAULT_PROPERTIES.execution,
+    )
+    this._outcomes = this.parseOutcomeData(
+      data.outcomes ?? MissionNode.DEFAULT_PROPERTIES.outcomes,
+    )
 
-  get expandedInMenu(): boolean {
-    return this._expandedInMenu
-  }
-
-  get collapsedInMenu(): boolean {
-    return !this._expandedInMenu
-  }
-
-  get actionIsExecuting(): boolean {
-    return this.executingAction !== null
-  }
-
-  get executionTimeRemaining(): number {
-    let executionTimeEnd: number = this._executionTimeEnd
-    let now: number = Date.now()
-
-    if (executionTimeEnd < now) {
-      return 0
-    } else {
-      return executionTimeEnd - now
-    }
-  }
-
-  get executionSecondsRemaining(): number {
-    let executionTimeEnd: number = this._executionTimeEnd
-    let now: number = Date.now()
-    let timeRemaining: number = executionTimeEnd - now
-
-    if (executionTimeEnd < now) {
-      return 0
-    } else if (timeRemaining > 0 && timeRemaining < 1000) {
-      return 1
-    } else {
-      return Math.floor(timeRemaining / 1000)
-    }
-  }
-
-  get executionDuration(): number {
-    let executionTimeEnd: number = this._executionTimeEnd
-    let executionTimeStart: number = this._executionTimeStart
-
-    return executionTimeEnd - executionTimeStart
-  }
-
-  formatTimeRemaining(includeMilliseconds: boolean): string {
-    let executionTimeRemainingFormatted: string = ''
-    let executionTimeRemaining: number = includeMilliseconds
-      ? this.executionTimeRemaining
-      : this.executionSecondsRemaining * 1000
-    let minutes: number = Math.floor(executionTimeRemaining / 1000 / 60)
-    let seconds: number = Math.floor((executionTimeRemaining / 1000) % 60)
-    let milliseconds: number = executionTimeRemaining % 1000
-
-    if (executionTimeRemaining === 0) {
-      return 'Done.'
-    }
-
-    if (minutes < 10) {
-      executionTimeRemainingFormatted += '0'
-    }
-    executionTimeRemainingFormatted += `${minutes}:`
-
-    if (seconds < 10) {
-      executionTimeRemainingFormatted += '0'
-    }
-    executionTimeRemainingFormatted += `${seconds}`
-
-    if (includeMilliseconds) {
-      executionTimeRemainingFormatted += ':'
-
-      if (milliseconds < 100) {
-        executionTimeRemainingFormatted += '0'
-      }
-      if (milliseconds < 10) {
-        executionTimeRemainingFormatted += '0'
-      }
-
-      executionTimeRemainingFormatted += `${milliseconds}`
-    }
-
-    return executionTimeRemainingFormatted
-  }
-
-  get executionPercentCompleted(): number {
-    let executionDuration: number = this.executionDuration
-    let executionTimeEnd: number = this._executionTimeEnd
-    let now: number = Date.now()
-    let percentRemaining: number = (executionTimeEnd - now) / executionDuration
-    let percentCompleted: number = 1 - percentRemaining
-
-    if (percentCompleted === Infinity) {
-      percentCompleted = 0
-    }
-
-    return Math.min(percentCompleted, 1)
-  }
-
-  get highlighted(): boolean {
-    return this._highlighted
-  }
-
-  set highlighted(highlighted: boolean) {
-    this._highlighted = highlighted
+    // Set properties from options.
+    this.parentNode = options.parentNode ?? null
+    this.childNodes = options.childNodes ?? []
   }
 
   /**
-   * @param {Mission} mission The mission that this node is a part of.
-   * @param {string} nodeID The ID for this node.
-   * @param {string} name The name for this node.
-   * @param {string} color The hexidecimal color for this node.
-   * @param {string} description The description for this node.
-   * @param {string} preExecutionText The text that will be logged to the console when this node is clicked.
-   * @param {number} depthPadding The amount of padding this node will have when rendered on the map. Each unit will shift the node over 1.
-   * @param {boolean} executable Whether this node can be executed with an action.
-   * @param {boolean} device Whether this node is considered a device. This should not be true if executable is false.
-   * @param {Array<IMissionNodeActionJSON>} actionJSON The JSON for the actions that this node will have.
-   * @param {number} mapX The X coordinate for this node on the map, defaults to MissionNode.default_mapX.
-   * @param {number} mapY The Y coordinate for this node on the map, defaults to MissionNode.default_mapY.
-   * @param {boolean} isOpen Whether this node is open, revealing its child nodes, defaults to MissionNode.default_isOpen.
+   * Parses the action data into MissionAction objects.
+   * @param {Array<IMissionActionJSON>} data The action data to parse.
+   * @returns {Array<MissionAction>} The parsed action data.
    */
-  public constructor(
-    mission: Mission,
-    nodeID: string,
-    name: string,
-    color: string,
-    description: string,
-    preExecutionText: string,
-    depthPadding: number,
-    executable: boolean,
-    device: boolean,
-    actionJSON: Array<IMissionNodeActionJSON>,
-    mapX: number = MissionNode.default_mapX,
-    mapY: number = MissionNode.default_mapY,
-    isOpen: boolean = MissionNode.default_isOpen,
-  ) {
-    this.mission = mission
-    this.nodeID = nodeID
-    this.name = name
-    this.parentNode = null
-    this.childNodes = []
-    this.color = color
-    this.description = description
-    this.preExecutionText = preExecutionText
-    this._depthPadding = depthPadding
-    this.executable = executable
-    this.device = device
-    this.selectedAction = null
-    this._executing = false
-    this._lastExecutedAction = null
-    this._lastExecutionSucceeded = false
-    this._lastExecutionFailed = false
-    this.mapX = mapX
-    this.mapY = mapY
-    this.depth = -1
-    this._isOpen = isOpen
-    this._expandedInMenu = true
-    this._executingAction = null
-    this._executionTimeStart = 0
-    this._executionTimeEnd = 0
-    this._highlighted = true
+  protected abstract parseActionData(
+    data: Array<IMissionActionJSON>,
+  ): Map<string, TMissionAction>
 
-    this.parseActionJSON(actionJSON)
-  }
+  /**
+   * Parses the execution data into a execution object of the
+   * type passed in TActionExecution.
+   * @param {Array<IActionExecutionJSON>} data The outcome data to parse.
+   * @returns {Array<TActionExecution>} The parsed outcome data.
+   */
+  protected abstract parseExecutionData(
+    data: TActionExecutionJSON,
+  ): TActionExecution | null
 
-  public toJSON(): IMissionNodeJSON {
-    return {
+  /**
+   * Parses the outcome data into the outcome objects of the
+   * type passed in TActionOutcome.
+   * @param {Array<IActionOutcomeJSON>} data The outcome data to parse.
+   * @returns {Array<TActionOutcome>} The parsed outcome data.
+   */
+  protected abstract parseOutcomeData(
+    data: Array<IActionOutcomeJSON>,
+  ): Array<TActionOutcome>
+
+  // Implemented
+  public toJSON(options: TNodeJsonOptions = {}): TMissionNodeJSON {
+    let { includeGameData = false } = options
+
+    // Construct base JSON.
+    let json: TMissionNodeJSON = {
       nodeID: this.nodeID,
       name: this.name,
       color: this.color,
@@ -458,543 +521,75 @@ export default class MissionNode implements IMissionMappable {
       depthPadding: this.depthPadding,
       executable: this.executable,
       device: this.device,
-      actions: this.actions.map((action: MissionNodeAction) => action.toJSON()),
-      isOpen: this.isOpen,
+      actions: MapToolbox.mapToArray(this.actions, (action) => action.toJSON()),
     }
-  }
 
-  // This will turn the action JSON
-  // into new MissionNodeAction objects.
-  parseActionJSON(actionJSON: Array<IMissionNodeActionJSON>): void {
-    let actions = []
+    // Include game data if includeGameData
+    // flag was set.
+    if (includeGameData) {
+      // Construct execution JSON.
+      let executionJSON: TActionExecutionJSON | null = null
 
-    for (let action of actionJSON) {
-      let actionObject: MissionNodeAction = new MissionNodeAction(
-        this,
-        action.actionID,
-        action.name,
-        action.description,
-        action.processTime,
-        action.successChance,
-        action.resourceCost,
-        action.postExecutionSuccessText,
-        action.postExecutionFailureText,
-        action.scripts,
+      if (this.execution !== null) {
+        executionJSON = this.execution.toJSON()
+      }
+
+      // Construct outcome JSON.
+      let outcomeJSON: Array<IActionOutcomeJSON> = this.outcomes.map(
+        (outcome) => outcome.toJSON(),
       )
-      actions.push(actionObject)
+
+      // Construct game-specific JSON.
+      let gameJSON: IMissionNodeGameJSON = {
+        opened: this.opened,
+        executionState: this.executionState,
+        execution: executionJSON,
+        outcomes: outcomeJSON,
+      }
+
+      // Join game-specific JSON with base JSON.
+      json = {
+        ...json,
+        ...gameJSON,
+      }
     }
 
-    this.actions = actions
+    // Return finalized JSON.
+    return json
   }
 
-  // This is called when a change
-  // is made to the node structure.
-  _handleStructureChange(): void {
-    this.mission.handleStructureChange()
-  }
+  // Implemented
+  public abstract open(options?: INodeOpenOptions): Promise<void>
+
+  // Implemented
+  public abstract handleExecution(
+    data: NonNullable<TActionExecutionJSON>,
+  ): TActionExecution
+
+  // Implemented
+  public abstract handleOutcome(
+    data: IActionOutcomeJSON,
+    options?: IHandleOutcomeOptions,
+  ): TActionOutcome
 
   /**
-   * Opens the node revealing its children.
-   * @throws {Error} - If the node is executable.
+   * The default properties for a MissionNode object.
    */
-  public open(): void {
-    // If the node is not executable,
-    // open the node.
-    if (this.openable) {
-      this._isOpen = true
-      this.mission.lastOpenedNode = this
-      this._handleStructureChange()
+  public static get DEFAULT_PROPERTIES(): Required<TMissionNodeJSON> {
+    return {
+      nodeID: generateHash(),
+      name: 'Unnamed Node',
+      color: '#ffffff',
+      description: 'Description text goes here.',
+      preExecutionText: 'Node has not been executed.',
+      depthPadding: 0,
+      executable: false,
+      device: false,
+      actions: [],
+      opened: false,
+      executionState: 'unexecuted',
+      execution: null,
+      outcomes: [],
     }
-    // If the node is not openable,
-    // throw an error.
-    else {
-      throw new Error('This node is not openable.')
-    }
-  }
-
-  // This will toggle the expandedInMenu
-  // property. Also pizza is delicious.
-  // Especially if it's from 600, or as
-  // Jacob likes to call it, Pinthouse.
-  toggleMenuExpansion(): void {
-    this._expandedInMenu = !this._expandedInMenu
-  }
-
-  // This will move this reference to
-  // a new location relative to the target
-  // and relation this target has to the
-  // destination.
-  move(target: MissionNode, targetRelation: ENodeTargetRelation): void {
-    let rootNode: MissionNode = this.mission.rootNode
-    let parentNode: MissionNode | null = this.parentNode
-    let newParentNode: MissionNode | null = target.parentNode
-    let newParentNodeChildNodes: Array<MissionNode> = []
-
-    // This makes sure that the target
-    // isn't being moved inside or beside
-    // itself.
-    let x: MissionNode | null = target
-
-    while (x !== null && x.nodeID !== rootNode.nodeID) {
-      if (this.nodeID === x.nodeID) {
-        return
-      }
-
-      x = x.parentNode
-    }
-
-    // This will remove the nodes
-    // current position in the structure.
-    if (parentNode !== null) {
-      let siblings: MissionNode[] = parentNode.childNodes
-
-      for (let index: number = 0; index < siblings.length; index++) {
-        let sibling = siblings[index]
-
-        if (this.nodeID === sibling.nodeID) {
-          siblings.splice(index, 1)
-        }
-      }
-    }
-
-    // This will move the target based on
-    // its relation to this node.
-    switch (targetRelation) {
-      case ENodeTargetRelation.ParentOfTargetOnly:
-        this.parentNode = target.parentNode
-        let targetAndTargetSiblings: Array<MissionNode> =
-          target.childrenOfParent
-
-        if (target.parentNode !== null) {
-          for (
-            let index: number = 0;
-            index < targetAndTargetSiblings.length;
-            index++
-          ) {
-            let sibling = targetAndTargetSiblings[index]
-
-            if (target.nodeID === sibling.nodeID) {
-              targetAndTargetSiblings[index] = this
-            }
-          }
-
-          target.parentNode.childNodes = targetAndTargetSiblings
-        }
-
-        this.childNodes = [target]
-        target.parentNode = this
-
-        this.open()
-
-        break
-      case ENodeTargetRelation.ParentOfTargetAndChildren:
-        // TODO
-        break
-      case ENodeTargetRelation.BetweenTargetAndChildren:
-        let childNodes: Array<MissionNode> = target.childNodes
-
-        target.childNodes = [this]
-        this.parentNode = target
-
-        for (let childNode of childNodes) {
-          childNode.parentNode = this
-        }
-        this.childNodes = childNodes
-
-        target.open()
-
-        if (childNodes.length > 0) {
-          this.open()
-        }
-
-        break
-      case ENodeTargetRelation.ChildOfTarget:
-        target.childNodes.push(this)
-        this.parentNode = target
-        break
-      case ENodeTargetRelation.PreviousSiblingOfTarget:
-        if (newParentNode !== null) {
-          newParentNode.childNodes.forEach((childNode: MissionNode) => {
-            if (childNode.nodeID === target.nodeID) {
-              newParentNodeChildNodes.push(this)
-              this.parentNode = newParentNode
-            }
-
-            newParentNodeChildNodes.push(childNode)
-          })
-
-          newParentNode.childNodes = newParentNodeChildNodes
-        }
-        break
-      case ENodeTargetRelation.FollowingSiblingOfTarget:
-        if (newParentNode !== null) {
-          newParentNode.childNodes.forEach((childNode: MissionNode) => {
-            newParentNodeChildNodes.push(childNode)
-
-            if (childNode.nodeID === target.nodeID) {
-              newParentNodeChildNodes.push(this)
-              this.parentNode = newParentNode
-            }
-          })
-
-          newParentNode.childNodes = newParentNodeChildNodes
-        }
-        break
-    }
-
-    this._handleStructureChange()
-  }
-
-  // This will open all child nodes
-  // of this node if possible.
-  openChildNodes(): void {
-    for (let childNode of this.childNodes) {
-      childNode.open()
-    }
-    this._handleStructureChange()
-  }
-
-  /**
-   * Populates previously omitted child nodes with the JSON passed.
-   * @param {Array<IMissionNodeJSON>} childNodesJSON The child nodes to populate. This likely comes from a "node-opened" server emitted event.
-   * @returns {Array<MissionNode>} The new array of child nodes.
-   */
-  public populateChildNodes(
-    childNodesJSON: Array<IMissionNodeJSON>,
-  ): Array<MissionNode> {
-    // If child nodes are already set,
-    // throw an error.
-    if (this.childNodes.length > 0) {
-      throw new Error('Child nodes are already populated.')
-    }
-
-    // Generate child nodes.
-    let childNodes: Array<MissionNode> = childNodesJSON.map((childNodeJSON) => {
-      // Put together default data.
-      let defaultNodeData = {
-        name: MissionNode.default_name,
-        color: MissionNode.default_color,
-        description: MissionNode.default_description,
-        preExecutionText: MissionNode.default_preExecutionText,
-        depthPadding: MissionNode.default_depthPadding,
-        executable: MissionNode.default_executable,
-        device: MissionNode.default_device,
-        actions: MissionNode.default_actions,
-      }
-
-      // Consolidate default data and data passed.
-      childNodeJSON = { ...defaultNodeData, ...childNodeJSON }
-
-      // Create a new node.
-      let childNode: MissionNode = new MissionNode(
-        this.mission,
-        childNodeJSON.nodeID,
-        childNodeJSON.name,
-        childNodeJSON.color,
-        childNodeJSON.description,
-        childNodeJSON.preExecutionText,
-        childNodeJSON.depthPadding,
-        childNodeJSON.executable,
-        childNodeJSON.device,
-        childNodeJSON.actions,
-        MissionNode.default_mapX,
-        MissionNode.default_mapY,
-        childNodeJSON.isOpen,
-      )
-
-      // Set the node in the missions.
-      this.mission.nodes.set(childNode.nodeID, childNode)
-
-      // Return node
-      return childNode
-    })
-
-    // Set child nodes.
-    this.childNodes = childNodes
-
-    // Return the child nodes.
-    return childNodes
-  }
-
-  // This will color all descendant
-  // nodes the same color as this
-  // node.
-  applyColorFill(): void {
-    for (let childNode of this.childNodes) {
-      childNode.color = this.color
-      childNode.applyColorFill()
-    }
-  }
-
-  // This will reveal the node creators,
-  // allowing a node to be created adjacent
-  // to it if the mission is tied to a map.
-  generateNodeCreators(): void {
-    this.mission.nodeCreationTarget = this
-  }
-
-  // This will hide any revealed node
-  // creators, restoring the view
-  // to only the node structure.
-  destroyNodeCreators(): void {
-    this.mission.nodeCreationTarget = null
-  }
-
-  // This will delete a node given the
-  // options passed by the caller.
-  delete(
-    options: INodeDeleteOptions = {
-      calledByParentDelete: false,
-      deleteMethod: ENodeDeleteMethod.DeleteNodeAndChildren,
-    },
-  ): void {
-    let calledByParentDelete: boolean = options.calledByParentDelete === true
-    let deleteMethod: ENodeDeleteMethod = options.deleteMethod
-      ? options.deleteMethod
-      : ENodeDeleteMethod.DeleteNodeAndChildren
-
-    switch (deleteMethod) {
-      case ENodeDeleteMethod.DeleteNodeAndChildren:
-        let childNodes: Array<MissionNode> = [...this.childNodes]
-
-        for (let childNode of childNodes) {
-          let childOptions: INodeDeleteOptions = {
-            ...options,
-            calledByParentDelete: true,
-          }
-          childNode.delete(childOptions)
-        }
-
-        this.childrenOfParent.splice(this.childrenOfParent.indexOf(this), 1)
-        this.mission.nodes.delete(this.nodeID)
-        break
-      case ENodeDeleteMethod.DeleteNodeAndShiftChildren:
-        let parentOfThis: MissionNode | null = this.parentNode
-        let childrenofThis: Array<MissionNode> = [...this.childNodes]
-
-        childrenofThis.forEach((childNode: MissionNode) => {
-          if (parentOfThis !== null) {
-            parentOfThis.childNodes.splice(
-              parentOfThis.childNodes.indexOf(this),
-              0,
-              childNode,
-            )
-            childNode.parentNode = parentOfThis
-          }
-        })
-
-        if (parentOfThis !== null) {
-          parentOfThis.childNodes.splice(
-            parentOfThis.childNodes.indexOf(this),
-            1,
-          )
-          this.mission.nodes.delete(this.nodeID)
-          this.mission.handleStructureChange()
-        }
-        break
-    }
-
-    if (calledByParentDelete !== true) {
-      // Structure change is handled as long
-      // as one node exists. If not, a new
-      // node is created. Creating this node
-      // will handle the structure change for
-      // us.
-      if (this.mission.nodes.size > 0) {
-        this._handleStructureChange()
-      } else {
-        this.mission.spawnNewNode()
-      }
-    }
-  }
-
-  // This is called when an action in
-  // this node is executed.
-  handleActionExecutionStart(action: MissionNodeAction): void {
-    if (!this.actions.includes(action)) {
-      throw new Error(
-        `Action ${action.actionID} is not a valid action for this node.`,
-      )
-    }
-    if (this.executing) {
-      throw new Error(
-        `Node is already executing an action. Cannot execute another action.`,
-      )
-    }
-
-    this._executing = true
-    this._executingAction = action
-    this._executionTimeStart = Date.now()
-    this._executionTimeEnd = this._executionTimeStart + action.processTime
-  }
-
-  // This is called when an action in
-  // this node has finished executing.
-  handleActionExecutionEnd(success: boolean): void {
-    let executingAction: MissionNodeAction | null = this.executingAction
-
-    if (executingAction === null) {
-      throw new Error(
-        `No action is currently executing on this node. Cannot end execution.`,
-      )
-    }
-
-    this._executing = false
-    this._executingAction = null
-    this._lastExecutedAction = executingAction
-    this._lastExecutionSucceeded = success
-    this._lastExecutionFailed = !success
-    this._isOpen = true
-  }
-
-  /**
-   * Fetches available colors for nodes.
-   * @returns {Promise<Array<string>>} A promise that resolves to the available colors.
-   */
-  public static async fetchColors(): Promise<Array<string>> {
-    return new Promise<Array<string>>(async (resolve, reject) => {
-      try {
-        let { data: colors } = await axios.get<Array<string>>(
-          `${Mission.API_ENDPOINT}/colors/`,
-        )
-        resolve(colors)
-      } catch (error) {
-        console.error('Failed to retrieve the color options.')
-        console.error(error)
-        reject(error)
-      }
-    })
-  }
-}
-
-// This represents a node that, when triggered,
-// will spawn a new node in a mission in a specific
-// location.
-export class MissionNodeCreator implements IMissionMappable {
-  _nodeID: string
-  _name: string
-  _mission: Mission
-  _creationTarget: MissionNode
-  _creationTargetRelation: ENodeTargetRelation
-  mapX: number
-  mapY: number
-  depth: number
-  executionPercentCompleted: number = 0
-  _createdNode: MissionNode | null = null
-
-  // Getter for _nodeID.
-  get nodeID(): string {
-    return this._nodeID
-  }
-
-  // Getter for _name.
-  get name(): string {
-    return this._name
-  }
-
-  // Getter for _mission.
-  get mission(): Mission {
-    return this._mission
-  }
-
-  // Getter for _creationTarget.
-  get creationTarget(): MissionNode {
-    return this._creationTarget
-  }
-
-  // Getter for _creationTargetRelation.
-  get creationTargetRelation(): ENodeTargetRelation {
-    return this._creationTargetRelation
-  }
-
-  // Getter for _createdNode.
-  get createdNode(): MissionNode | null {
-    return this._createdNode
-  }
-
-  // Implementation requirement only.
-  get executable(): boolean {
-    return false
-  }
-
-  // Implementation requirement only.
-  get executing(): boolean {
-    return false
-  }
-
-  // Implementation requirement only.
-  get device(): boolean {
-    return false
-  }
-
-  // Implementation requirement only.
-  get color(): string {
-    return ''
-  }
-
-  // Implementation requirement only.
-  get isOpen(): boolean {
-    return false
-  }
-
-  get childNodes(): MissionNode[] {
-    return []
-  }
-
-  constructor(
-    mission: Mission,
-    creationTarget: MissionNode,
-    creationTargetRelation: ENodeTargetRelation,
-    mapX: number,
-    mapY: number,
-  ) {
-    let relationTitle: string = ''
-
-    switch (creationTargetRelation) {
-      case ENodeTargetRelation.ParentOfTargetAndChildren:
-        relationTitle = 'parent-of-target-and-children'
-        break
-      case ENodeTargetRelation.ParentOfTargetOnly:
-        relationTitle = 'parent-of-target-only'
-        break
-      case ENodeTargetRelation.BetweenTargetAndChildren:
-        relationTitle = 'between-target-and-children'
-        break
-      case ENodeTargetRelation.ChildOfTarget:
-        relationTitle = 'child-of-target'
-        break
-      case ENodeTargetRelation.PreviousSiblingOfTarget:
-        relationTitle = 'previous-sibling-of-target'
-        break
-      case ENodeTargetRelation.FollowingSiblingOfTarget:
-        relationTitle = 'following-sibling-of-target'
-        break
-    }
-
-    this._nodeID = `node-creator_with-${creationTarget.nodeID}-as-${relationTitle}`
-    this._name = '+'
-    this._mission = mission
-    this.mapX = mapX
-    this.mapY = mapY
-    this.depth = -1
-    this._creationTarget = creationTarget
-    this._creationTargetRelation = creationTargetRelation
-  }
-
-  // This is called to create the
-  // new node.
-  create(): MissionNode {
-    if (this.createdNode !== null) {
-      console.error(new Error("Can't create node. Node is already created."))
-    }
-
-    let node: MissionNode = this.mission.spawnNewNode()
-
-    // node.color = this.creationTarget.color
-    node.move(this.creationTarget, this.creationTargetRelation)
-    this._createdNode = this.createdNode
-    this.mission.nodeCreationTarget = null
-
-    return node
   }
 }

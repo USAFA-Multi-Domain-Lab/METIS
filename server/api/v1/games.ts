@@ -7,9 +7,10 @@ import {
 } from '../../middleware/users'
 import MissionModel from 'metis/server/database/models/missions'
 import { databaseLogger, gameLogger } from 'metis/server/logging'
-import Mission from 'metis/missions'
 import GameServer from 'metis/server/games'
 import ClientConnection from 'metis/server/connect/clients'
+import { IMissionJSON } from 'metis/missions'
+import ServerMission from 'metis/server/missions'
 
 const routerMap = (router: expressWs.Router, done: () => void) => {
   // -- POST | /api/v1/games/launch/ --
@@ -25,7 +26,7 @@ const routerMap = (router: expressWs.Router, done: () => void) => {
       // Query for mission.
       MissionModel.findOne({ missionID })
         .lean()
-        .exec(async (error: Error, missionData: any) => {
+        .exec(async (error: Error, missionData: IMissionJSON) => {
           // Handle errors.
           if (error !== null) {
             databaseLogger.error(
@@ -46,11 +47,9 @@ const routerMap = (router: expressWs.Router, done: () => void) => {
             return response.sendStatus(401)
           }
 
-          // Create a mission object from the
-          // request data.
-          let mission: Mission = Mission.fromJSON(missionData)
-
           try {
+            // Create mission.
+            let mission: ServerMission = new ServerMission(missionData)
             // Launch the game.
             let gameID = await GameServer.launch(mission)
             return response.json({ gameID })

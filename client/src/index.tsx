@@ -7,9 +7,7 @@ import GlobalContext from 'src/context'
 const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement)
 
 root.render(
-  <React.StrictMode>
-    <GlobalContext.Provider>
-      <App />
-    </GlobalContext.Provider>
-  </React.StrictMode>,
+  <GlobalContext.Provider>
+    <App />
+  </GlobalContext.Provider>,
 )

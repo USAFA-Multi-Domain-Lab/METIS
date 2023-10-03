@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import MissionNodeAction from '../../../../../shared/missions/actions'
-import MissionNode from '../../../../../shared/missions/nodes'
+import ClientMissionNode from 'src/missions/nodes'
+import ClientMissionAction from 'src/missions/actions'
 import Tooltip from '../communication/Tooltip'
 import { Detail, DetailBox, DetailNumber } from '../form/Form'
 import NodeActionAssets from './NodeActionAssets'
@@ -9,7 +9,7 @@ import './NodeActionEntry.scss'
 // This will render an action
 // available to a node.
 export default function NodeActionEntry(props: {
-  action: MissionNodeAction
+  action: ClientMissionAction
   displayedAction: number
   isEmptyString: boolean
   actionEmptyStringArray: Array<string>
@@ -18,8 +18,8 @@ export default function NodeActionEntry(props: {
   setMountHandled: (mountHandled: boolean) => void
   handleChange: () => void
 }): JSX.Element | null {
-  let action: MissionNodeAction = props.action
-  let node: MissionNode = action.node
+  let action: ClientMissionAction = props.action
+  let node: ClientMissionNode = action.node
   let displayedAction: number = props.displayedAction
   let isEmptyString: boolean = props.isEmptyString
   let actionEmptyStringArray: Array<string> = props.actionEmptyStringArray
@@ -56,21 +56,15 @@ export default function NodeActionEntry(props: {
   }
 
   const handleDeleteRequest = () => {
-    if (action === node.actions[0]) {
-      node.actions.shift()
-      setDisplayedAction(0)
-    } else if (node.actions.length > 1) {
-      node.actions.splice(node.actions.indexOf(action), 1)
-      setDisplayedAction(displayedAction - 1)
-    }
-
+    node.actions.delete(action.actionID)
+    setDisplayedAction(Math.max(displayedAction - 1, 0))
     setActionEmptyStringArray([])
     handleChange()
   }
 
   /* -- RENDER -- */
 
-  if (node.actions.length === 1) {
+  if (node.actions.size === 1) {
     deleteActionClassName += ' Disabled'
     nodeActionClassName += ' DisableBottomBorder'
   }

@@ -1,52 +1,50 @@
-import React from 'react'
 import './ExecuteNodePath.scss'
-import MissionNode from '../../../../../shared/missions/nodes'
-import MissionNodeAction from '../../../../../shared/missions/actions'
+import ClientMissionAction from 'src/missions/actions'
 import ActionPropertyDisplay from './ActionPropertyDisplay'
-import Mission from '../../../../../shared/missions'
-import Notification from '../../../notifications'
 import Tooltip from '../communication/Tooltip'
-import { INotifyOptions } from 'src/context'
+import { useGlobalContext } from 'src/context'
 import { IConsoleOutput } from './ConsoleOutput'
 import OutputPanel from './OutputPanel'
+import GameClient from 'src/games'
 
 /* -- INTERFACE(S) -- */
 
-interface IExecuteNodePath {
+/**
+ * Describes props passed into `ExecuteNodePath` component.
+ */
+type TExecuteNodePath = {
   isOpen: boolean
-  selectedAction: MissionNodeAction
-  notify: (message: string, options: INotifyOptions) => Notification
+  action: ClientMissionAction
+  game: GameClient
   outputToConsole: (output: IConsoleOutput) => void
   handleExecutionRequest: () => void
   handleCloseRequest: () => void
   handleGoBackRequest: () => void
 }
 
-interface IExecuteNodePath_S {}
+/**
+ * Buttons for the `ExecuteNodePath` component.
+ */
+function Buttons(props: TExecuteNodePath): JSX.Element | null {
+  /* -- PROPS -- */
 
-function Buttons(props: {
-  selectedAction: MissionNodeAction
-  handleExecutionRequest: () => void
-  handleGoBackRequest: () => void
-  handleCloseRequest: () => void
-  outputToConsole: (output: IConsoleOutput) => void
-  notify: (message: string, options: INotifyOptions) => Notification
-}): JSX.Element | null {
-  /* -- COMPONENT VARIABLES -- */
-
-  // Extract props.
   let {
-    selectedAction,
+    action,
+    game,
     handleExecutionRequest,
     handleGoBackRequest,
     handleCloseRequest,
     outputToConsole,
-    notify,
   } = props
 
-  let { node: selectedNode } = selectedAction
+  let { node: selectedNode } = action
 
-  /* -- COMPONENT FUNCTIONS -- */
+  /* -- GLOBAL CONTEXT -- */
+
+  const globalContext = useGlobalContext()
+  const { notify } = globalContext.actions
+
+  /* -- FUNCTIONS -- */
 
   // Closes the execution prompt window.
   const closeWindow = () => {
@@ -54,9 +52,9 @@ function Buttons(props: {
   }
 
   const execute = () => {
-    if (selectedAction.readyToExecute) {
+    if (game.readyToExecute(action)) {
       closeWindow()
-      outputToConsole(OutputPanel.renderActionStartOutput(selectedAction))
+      outputToConsole(OutputPanel.renderActionStartOutput(action))
       handleExecutionRequest()
     } else {
       notify(
@@ -72,11 +70,11 @@ function Buttons(props: {
   let additionalActionButtonClassName: string = 'Button AdditionalActionButton'
   let displayTooltip: boolean = false
 
-  if (!selectedAction.readyToExecute) {
+  if (!game.readyToExecute(action)) {
     executionButtonClassName += ' Disabled'
     displayTooltip = true
   }
-  if (selectedNode.actions.length === 1) {
+  if (selectedNode.actions.size === 1) {
     additionalActionButtonClassName += ' Disabled'
   }
 
@@ -101,88 +99,41 @@ function Buttons(props: {
   )
 }
 
-export default class ExecuteNodePath extends React.Component<
-  IExecuteNodePath,
-  IExecuteNodePath_S
-> {
-  // This is called when an executed action
-  // has finished executing and the result
-  // was a success.
-  static handleExecutionSuccess(action: MissionNodeAction): void {
-    let node: MissionNode = action.node
-    let mission: Mission = node.mission
+/**
+ * Prompt modal for executing an action on a node.
+ */
+export default function ExecuteNodePath(
+  props: TExecuteNodePath,
+): JSX.Element | null {
+  /* -- PROPS -- */
 
-    mission.outputToConsole(OutputPanel.renderExecutionSuccessOutput(action))
+  let { isOpen, action, handleCloseRequest } = props
+  let node = action.node
+
+  /* -- PRE-RENDER PROCESSING -- */
+
+  let className: string = 'ExecuteNodePath'
+
+  // Logic to disable the execute button once a user is out of tokens.
+  if (!isOpen) {
+    className += ' Hidden'
   }
 
-  // This is called when an executed action
-  // has finished executing and the result
-  // was a failure.
-  static handleExecutionFailure(action: MissionNodeAction): void {
-    let mission: Mission = action.node.mission
+  /* -- RENDER -- */
 
-    mission.outputToConsole(OutputPanel.renderExecutionFailureOutput(action))
-  }
-
-  get selectedAction(): MissionNodeAction {
-    return this.props.selectedAction
-  }
-
-  get selectedNode(): MissionNode {
-    return this.props.selectedAction.node
-  }
-
-  get mission(): Mission {
-    return this.selectedNode.mission
-  }
-
-  componentDidMount(): void {}
-
-  componentWillUnmount(): void {}
-
-  // Closes the execution prompt window.
-  closeWindow = () => {
-    this.props.handleCloseRequest()
-  }
-
-  render(): JSX.Element | null {
-    let selectedNode: MissionNode = this.selectedNode
-    let selectedAction: MissionNodeAction = this.props.selectedAction
-    let isOpen: boolean = this.props.isOpen
-
-    // Logic to disable the execute button once a user is out of tokens.
-    let className: string = 'ExecuteNodePath'
-
-    /* -- COMPONENT VARIABLES -- */
-    let actionName: string = selectedAction.name
-
-    /* -- RENDER -- */
-
-    if (!isOpen) {
-      className += ' Hidden'
-    }
-
-    return (
-      <div className={className}>
-        <div className='Close'>
-          <div className='CloseButton' onClick={this.closeWindow}>
-            x
-            <Tooltip description='Close window.' />
-          </div>
+  return (
+    <div className={className}>
+      <div className='Close'>
+        <div className='CloseButton' onClick={handleCloseRequest}>
+          x
+          <Tooltip description='Close window.' />
         </div>
-        <div className='PromptDisplayText'>
-          Do you want to {actionName.toLowerCase()} {selectedNode.name}?
-        </div>
-        <ActionPropertyDisplay selectedNode={selectedNode} />
-        <Buttons
-          selectedAction={this.selectedAction}
-          handleExecutionRequest={this.props.handleExecutionRequest}
-          handleGoBackRequest={this.props.handleGoBackRequest}
-          handleCloseRequest={this.props.handleCloseRequest}
-          outputToConsole={this.props.outputToConsole}
-          notify={this.props.notify}
-        />
       </div>
-    )
-  }
+      <div className='PromptDisplayText'>
+        Do you want to {action.name.toLowerCase()} {node.name}?
+      </div>
+      <ActionPropertyDisplay action={action} />
+      <Buttons {...props} />
+    </div>
+  )
 }
