@@ -14,7 +14,7 @@ import uploads from '../../../middleware/uploads'
 import { AscotApi, cyberCityCommandScripts } from '../../../action-execution'
 import validateRequestBodyKeys, {
   RequestBodyFilters,
-  validateRequestQueryKeys,
+  defineRequests,
 } from '../../../modules/requests'
 import { colorOptions } from '../../../modules/mission-node-colors'
 
@@ -28,14 +28,18 @@ const router = express.Router()
 router.post(
   '/',
   requireLogin,
-  validateRequestBodyKeys({
-    name: RequestBodyFilters.STRING,
-    introMessage: RequestBodyFilters.STRING,
-    versionNumber: RequestBodyFilters.NUMBER,
-    live: RequestBodyFilters.BOOLEAN,
-    initialResources: RequestBodyFilters.NUMBER,
-    nodeStructure: RequestBodyFilters.OBJECT,
-    nodeData: RequestBodyFilters.ARRAY,
+  defineRequests({
+    body: {
+      mission: {
+        name: RequestBodyFilters.STRING,
+        introMessage: RequestBodyFilters.STRING,
+        versionNumber: RequestBodyFilters.NUMBER,
+        live: RequestBodyFilters.BOOLEAN,
+        initialResources: RequestBodyFilters.NUMBER,
+        nodeStructure: RequestBodyFilters.OBJECT,
+        nodeData: RequestBodyFilters.ARRAY,
+      },
+    },
   }),
   (request, response) => {
     let body: any = request.body
@@ -414,7 +418,14 @@ router.post(
 // This will return all of the missions.
 router.get(
   '/',
-  validateRequestQueryKeys({ missionID: 'objectId' }),
+  defineRequests(
+    {
+      query: {},
+    },
+    {
+      query: { missionID: 'objectId' },
+    },
+  ),
   (request, response) => {
     let missionID = request.query.missionID
 
@@ -465,7 +476,7 @@ router.get(
 router.get(
   '/export/*',
   requireLogin,
-  validateRequestQueryKeys({ missionID: 'objectId' }),
+  defineRequests({ query: { missionID: 'objectId' } }),
   (request, response) => {
     let missionID = request.query.missionID
 
@@ -532,19 +543,15 @@ router.get(
 // -- GET /api/v1/missions/environment/
 // This will return the environment of
 // the database that is currently in use.
-router.get(
-  '/environment/',
-  validateRequestQueryKeys({}),
-  (request, response) => {
-    response.send(process.env)
-  },
-)
+router.get('/environment/', defineRequests({}), (request, response) => {
+  response.send(process.env)
+})
 
 // -- GET /api/v1/missions/colors/
 // This will return all the available
 // color options that can be used to
 // style a mission-node.
-router.get('/colors/', validateRequestQueryKeys({}), (request, response) => {
+router.get('/colors/', defineRequests({}), (request, response) => {
   response.json({ colorOptions })
 })
 
@@ -554,10 +561,12 @@ router.get('/colors/', validateRequestQueryKeys({}), (request, response) => {
 router.put(
   '/handle-action-execution/',
   requireLogin,
-  validateRequestBodyKeys({
-    missionID: RequestBodyFilters.OBJECTID,
-    nodeID: RequestBodyFilters.STRING,
-    actionID: RequestBodyFilters.STRING,
+  defineRequests({
+    body: {
+      missionID: RequestBodyFilters.OBJECTID,
+      nodeID: RequestBodyFilters.STRING,
+      actionID: RequestBodyFilters.STRING,
+    },
   }),
   (request, response) => {
     let body: any = request.body
@@ -611,18 +620,26 @@ router.put(
 router.put(
   '/',
   requireLogin,
-  validateRequestBodyKeys(
+  defineRequests(
     {
-      missionID: RequestBodyFilters.OBJECTID,
+      body: {
+        mission: {
+          missionID: RequestBodyFilters.OBJECTID,
+        },
+      },
     },
     {
-      name: RequestBodyFilters.STRING,
-      introMessage: RequestBodyFilters.STRING,
-      versionNumber: RequestBodyFilters.NUMBER,
-      initialResources: RequestBodyFilters.NUMBER,
-      live: RequestBodyFilters.BOOLEAN,
-      nodeStructure: RequestBodyFilters.OBJECT,
-      nodeData: RequestBodyFilters.ARRAY,
+      body: {
+        mission: {
+          name: RequestBodyFilters.STRING,
+          introMessage: RequestBodyFilters.STRING,
+          versionNumber: RequestBodyFilters.NUMBER,
+          initialResources: RequestBodyFilters.NUMBER,
+          live: RequestBodyFilters.BOOLEAN,
+          nodeStructure: RequestBodyFilters.OBJECT,
+          nodeData: RequestBodyFilters.ARRAY,
+        },
+      },
     },
   ),
   (request, response) => {
@@ -727,9 +744,11 @@ router.put(
 router.put(
   '/copy/',
   requireLogin,
-  validateRequestBodyKeys({
-    copyName: RequestBodyFilters.STRING,
-    originalID: RequestBodyFilters.STRING,
+  defineRequests({
+    body: {
+      copyName: RequestBodyFilters.STRING,
+      originalID: RequestBodyFilters.OBJECTID,
+    },
   }),
   (request, response) => {
     let body: any = request.body
@@ -784,7 +803,7 @@ router.put(
 router.delete(
   '/',
   requireLogin,
-  validateRequestQueryKeys({ missionID: 'objectId' }),
+  defineRequests({ query: { missionID: 'objectId' } }),
   (request, response) => {
     let query: any = request.query
 
