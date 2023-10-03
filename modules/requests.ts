@@ -336,27 +336,36 @@ const deleteExtraData = (
   requestPath: string[],
   requestKey: string,
 ) => {
-  // This is the end of the path of the body
-  let lastBodyPathKey: string = requestPath[requestPath.length - 1]
+  if (requestPath.length > 0) {
+    // This is the end of the path of the body
+    let lastBodyPathKey: string = requestPath[requestPath.length - 1]
 
-  // Loops through the body path and finds the
-  // location of the key that needs to be removed
-  requestPath.forEach((requestPathKey: string) => {
-    if (
-      requestStartingPoint[requestPathKey] &&
-      requestPathKey === lastBodyPathKey
-    ) {
-      let nextLayer: any = requestStartingPoint[requestPathKey]
-      requestStartingPoint = nextLayer
+    // Loops through the body path and finds the
+    // location of the key that needs to be removed
+    requestPath.forEach((requestPathKey: string) => {
+      if (
+        requestStartingPoint[requestPathKey] &&
+        requestPathKey === lastBodyPathKey
+      ) {
+        let nextLayer: any = requestStartingPoint[requestPathKey]
+        requestStartingPoint = nextLayer
 
-      let endOfPathKeys: Array<string> = Object.keys(requestStartingPoint)
-      endOfPathKeys.forEach((endOfPathKey: string) => {
-        if (endOfPathKey === requestKey) {
-          delete requestStartingPoint[endOfPathKey]
-        }
-      })
-    }
-  })
+        let endOfPathKeys: Array<string> = Object.keys(requestStartingPoint)
+        endOfPathKeys.forEach((endOfPathKey: string) => {
+          if (endOfPathKey === requestKey) {
+            delete requestStartingPoint[endOfPathKey]
+          }
+        })
+      }
+    })
+  } else {
+    let endOfPathKeys: Array<string> = Object.keys(requestStartingPoint)
+    endOfPathKeys.forEach((endOfPathKey: string) => {
+      if (endOfPathKey === requestKey) {
+        delete requestStartingPoint[endOfPathKey]
+      }
+    })
+  }
 }
 
 /**
@@ -538,7 +547,7 @@ const validateAllBodyKeys = (
   > = Object.values(optionalBodyKeys)
 
   // Grabs the current body location
-  let currentBodyLocation: any
+  let currentBodyLocation: any = request.body
 
   // Updates the current location in the body
   // of the request
@@ -713,9 +722,9 @@ const validateAllBodyKeys = (
  * specified keys sent in the query of the current
  * express request are the correct type.
  * (i.e., key: "string")
- * @param requiredQueryKeys The required keys and their types
  * @param request The express request
  * @param response The express response
+ * @param requiredQueryKeys The required keys and their types
  * @returns A middleware function that validates the request query
  * of an express request
  */
