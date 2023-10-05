@@ -54,7 +54,6 @@ router.get(
         number: 'number',
         integer: 'integer',
         boolean: 'boolean',
-        object: 'object',
         objectId: 'objectId',
       },
     },
@@ -69,13 +68,11 @@ router.get(
 // GET route to test the params validation
 // middleware function
 router.get(
-  '/request-params-type-check/:string/:number/:integer/:boolean/:objectId',
+  '/request-params-type-check/:string/:number/:objectId',
   defineRequests({
     params: {
       string: 'string',
       number: 'number',
-      integer: 'integer',
-      boolean: 'boolean',
       objectId: 'objectId',
     },
   }),

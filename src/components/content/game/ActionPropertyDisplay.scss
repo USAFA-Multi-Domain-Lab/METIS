@@ -12,6 +12,7 @@
     color: $terminal;
 
     span,
+    .RichTextOutputBox,
     .RichTextOutputBox p {
       color: $terminal;
     }
