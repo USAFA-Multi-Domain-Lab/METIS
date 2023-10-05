@@ -407,6 +407,7 @@ const validateTypeOfParamsKey = (
  * @param response The express response
  * @param requiredBodyKeys The required keys and their types
  * @param optionalBodyKeys The optional keys and their types
+ * @param sanitizedObject The sanitized object (recursive purposes only)
  * @returns A body with the sanitized keys and values
  */
 const validateBodyKeys = (
@@ -415,15 +416,16 @@ const validateBodyKeys = (
   body: AnyObject,
   requiredBodyKeys: {},
   optionalBodyKeys: {},
+  recursiveParentKey?: string,
   sanitizedObject: AnyObject = {},
 ): AnyObject => {
-  // This loop checks to see if the required keys
-  // are in the request body of the current express
-  // request and if the required keys are the correct
-  // type. There is a possibility of nested objects
-  // in the request body, so this function is recursive.
-  for (let [requiredKey, requiredValue] of Object.entries(requiredBodyKeys)) {
-    try {
+  try {
+    // This loop checks to see if the required keys
+    // are in the request body of the current express
+    // request and if the required keys are the correct
+    // type. There is a possibility of nested objects
+    // in the request body, so this function is recursive.
+    for (let [requiredKey, requiredValue] of Object.entries(requiredBodyKeys)) {
       // This is the value of the current key in the
       // request body
       let bodyValue: any = body[requiredKey]
@@ -432,7 +434,9 @@ const validateBodyKeys = (
       // body then an error is thrown
       if (!(requiredKey in body)) {
         throw new Error(
-          `Bad Request_"${requiredKey}"-is-missing-in-the-body-of-the-request`,
+          recursiveParentKey
+            ? `Bad_Request_"${recursiveParentKey}.${requiredKey}"-is-missing-in-the-body-of-the-request`
+            : `Bad_Request_"${requiredKey}"-is-missing-in-the-body-of-the-request`,
         )
       }
 
@@ -462,21 +466,17 @@ const validateBodyKeys = (
           bodyValue,
           requiredValue as AnyObject,
           {},
+          requiredKey,
         )
       }
-    } catch (error: any) {
-      response.statusMessage = error
-      response.status(400)
     }
-  }
 
-  // This loop checks to see if the optional keys
-  // are in the request body of the current express
-  // request and if the optional keys are the correct
-  // type. There is a possibility of nested objects
-  // in the request body, so this function is recursive.
-  for (let [optionalKey, optionalValue] of Object.entries(optionalBodyKeys)) {
-    try {
+    // This loop checks to see if the optional keys
+    // are in the request body of the current express
+    // request and if the optional keys are the correct
+    // type. There is a possibility of nested objects
+    // in the request body, so this function is recursive.
+    for (let [optionalKey, optionalValue] of Object.entries(optionalBodyKeys)) {
       if (optionalKey in body) {
         // This is the value of the current key in the
         // request body
@@ -513,14 +513,15 @@ const validateBodyKeys = (
             bodyValue,
             {},
             optionalValue as AnyObject,
+            undefined,
             sanitizedObject[optionalKey],
           )
         }
       }
-    } catch (error: any) {
-      response.statusMessage = error
-      response.status(400)
     }
+  } catch (error: any) {
+    response.statusMessage = error
+    response.status(400)
   }
 
   return sanitizedObject
@@ -535,6 +536,7 @@ const validateBodyKeys = (
  * @param request The express request
  * @param response The express response
  * @param requiredQueryKeys The required keys and their types
+ * @param optionalQueryKeys The optional keys and their types
  * @returns A query with the sanitized keys and values
  */
 const validateQueryKeys = (
@@ -546,12 +548,12 @@ const validateQueryKeys = (
   let query: any = request.query
   let sanitizedObject: AnyObject = {}
 
-  // This loop checks to see if the required keys
-  // are in the query of the current express
-  // request and if the required keys are the correct
-  // type.
-  for (let [requiredKey, requiredType] of Object.entries(requiredQueryKeys)) {
-    try {
+  try {
+    // This loop checks to see if the required keys
+    // are in the query of the current express
+    // request and if the required keys are the correct
+    // type.
+    for (let [requiredKey, requiredType] of Object.entries(requiredQueryKeys)) {
       // If the current required key is not in the query
       // then an error is thrown
       if (!(requiredKey in query)) {
@@ -576,19 +578,16 @@ const validateQueryKeys = (
       if (validation === null) {
         sanitizedObject[requiredKey] = query[requiredKey]
       }
-    } catch (error: any) {
-      response.statusMessage = error
-      response.status(400)
     }
-  }
 
-  // This loop checks to see if the optional keys
-  // are in the query of the current express
-  // request and if the optional keys are the correct
-  // type.
-  if (optionalQueryKeys) {
-    for (let [optionalKey, optionalType] of Object.entries(optionalQueryKeys)) {
-      try {
+    // This loop checks to see if the optional keys
+    // are in the query of the current express
+    // request and if the optional keys are the correct
+    // type.
+    if (optionalQueryKeys) {
+      for (let [optionalKey, optionalType] of Object.entries(
+        optionalQueryKeys,
+      )) {
         if (optionalKey in query) {
           // If the current optional key is in the query
           // then the validator function is called to validate
@@ -607,11 +606,11 @@ const validateQueryKeys = (
             sanitizedObject[optionalKey] = query[optionalKey]
           }
         }
-      } catch (error: any) {
-        response.statusMessage = error
-        response.status(400)
       }
     }
+  } catch (error: any) {
+    response.statusMessage = error
+    response.status(400)
   }
 
   return sanitizedObject
@@ -636,12 +635,14 @@ const validateParamKeys = (
   let params: any = request.params
   let sanitizedObject: AnyObject = {}
 
-  // This loop checks to see if the required keys
-  // are in the params of the current express
-  // request and if the required keys are the correct
-  // type.
-  for (let [requiredKey, requiredType] of Object.entries(requiredParamsKeys)) {
-    try {
+  try {
+    // This loop checks to see if the required keys
+    // are in the params of the current express
+    // request and if the required keys are the correct
+    // type.
+    for (let [requiredKey, requiredType] of Object.entries(
+      requiredParamsKeys,
+    )) {
       // If the current required key is not in the params
       // then an error is thrown
       if (!(requiredKey in params)) {
@@ -666,10 +667,10 @@ const validateParamKeys = (
       if (validation === null) {
         sanitizedObject[requiredKey] = params[requiredKey]
       }
-    } catch (error: any) {
-      response.statusMessage = error
-      response.status(400)
     }
+  } catch (error: any) {
+    response.statusMessage = error
+    response.status(400)
   }
 
   return sanitizedObject

@@ -82,7 +82,7 @@ export default function MissionFormPage(
         let mission = new Mission(
           '',
           'New Mission',
-          'Enter your overview message here.',
+          '<p>Enter your overview message here.</p>',
           1,
           false,
           5,

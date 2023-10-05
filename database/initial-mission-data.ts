@@ -2,7 +2,7 @@
 
 export let demoMissionData = {
   name: 'METIS > ASCOT 7 DEMO',
-  introMessage: 'Welcome to the METIS > ASCOT 7 DEMO',
+  introMessage: '<p>Welcome to the METIS > ASCOT 7 DEMO</p>',
   versionNumber: 1,
   seed: '6499bf5b8214651c898d125f',
   initialResources: 100,

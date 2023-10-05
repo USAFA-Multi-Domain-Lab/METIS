@@ -79,8 +79,8 @@ export class MissionNode implements IMissionMappable {
 
   static default_name: string = 'Unnamed Node'
   static default_color: string = '#ffffff'
-  static default_description: string = 'Description text goes here.'
-  static default_preExecutionText: string = 'Node has not been executed.'
+  static default_description: string = '<p>Description text goes here.</p>'
+  static default_preExecutionText: string = '<p>Node has not been executed.</p>'
   static default_depthPadding: number = 0
   static default_executable: boolean = false
   static default_device: boolean = false
@@ -93,12 +93,12 @@ export class MissionNode implements IMissionMappable {
       node,
       generateHash(),
       'New Action',
-      'Enter your description here.',
+      '<p>Enter your description here.</p>',
       5000,
       0.5,
       1,
-      'Enter your successful post-execution message here.',
-      'Enter your failed post-execution message here.',
+      '<p>Enter your successful post-execution message here.</p>',
+      '<p>Enter your failed post-execution message here.</p>',
       [],
     )
   }

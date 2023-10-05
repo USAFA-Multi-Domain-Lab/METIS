@@ -12,10 +12,7 @@ import { isLoggedIn, requireLogin } from '../../../user'
 import { APP_DIR } from '../../../config'
 import uploads from '../../../middleware/uploads'
 import { AscotApi, cyberCityCommandScripts } from '../../../action-execution'
-import validateRequestBodyKeys, {
-  RequestBodyFilters,
-  defineRequests,
-} from '../../../modules/requests'
+import { RequestBodyFilters, defineRequests } from '../../../modules/requests'
 import { colorOptions } from '../../../modules/mission-node-colors'
 
 type MulterFile = Express.Multer.File
@@ -191,7 +188,7 @@ router.post(
           let nodeData = missionData.nodeData
 
           for (let nodeDatum of nodeData) {
-            let actions: Array<any> = nodeDatum.actions
+            let actions: any[] = nodeDatum.actions
 
             for (let action of actions) {
               if (!('scripts' in action)) {
@@ -244,6 +241,29 @@ router.post(
         if (schemaBuildNumber < 11) {
           if (!('introMessage' in missionData)) {
             missionData.introMessage = 'Enter your overview message here.'
+          }
+        }
+
+        // -- BUILD 12 --
+        // This migration script is responsible
+        // for updating all the properties that
+        // are allowed to have rich text to
+        // be wrapped in "p" tags.
+        if (schemaBuildNumber < 12) {
+          missionData.introMessage = `<p>${missionData.introMessage}</p>`
+
+          let nodeData = missionData.nodeData
+
+          for (let nodeDatum of nodeData) {
+            nodeDatum.description = `<p>${nodeDatum.description}</p>`
+            nodeDatum.preExecutionText = `<p>${nodeDatum.preExecutionText}</p>`
+
+            let actions: any[] = nodeDatum.actions
+            for (let action of actions) {
+              action.description = `<p>${action.description}</p>`
+              action.postExecutionSuccessText = `<p>${action.postExecutionSuccessText}</p>`
+              action.postExecutionFailureText = `<p>${action.postExecutionFailureText}</p>`
+            }
           }
         }
       }
