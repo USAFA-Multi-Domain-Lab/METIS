@@ -1,5 +1,13 @@
 # changelog
 
+# version-1.3.4 | 10-6-2023
+
+- Created a rich text editor in the Mission Form Page (Edit Mission Page) so that hyperlinks can be used and text can be emboldened, underlined, or italicized
+- Created HTML sanitization so that the HTML being saved to the database is sanitized to prevent cross-site scripting (XSS) and other malicious attacks
+- Created logic for the output panel (terminal) in the Game Page to be able to read and display the rich text (i.e., hyperlinks) correctly
+- Restructured the middleware functions that are used to validate data being sent to the database in the body, query, and params of a request via the API
+- Various optimizations, bug fixes, and design changes to provide a better user experience
+
 # version-1.3.3 | 7-25-2023
 
 - Integrated with ASCOT
