@@ -778,7 +778,7 @@ describe('API Mission Routes', function () {
       })
   })
 
-  it('Updating a mission with (a) missing property/properties that is required (missionID) in the body of the request should return a bad (400) response', function (done) {
+  it('Updating a mission with (a) missing property/properties that is required ("missionID") in the body of the request should return a bad (400) response', function (done) {
     agent
       .put('/api/v1/missions/')
       .set('Content-Type', 'application/json')
