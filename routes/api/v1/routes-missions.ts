@@ -12,7 +12,10 @@ import { isLoggedIn, requireLogin } from '../../../user'
 import { APP_DIR } from '../../../config'
 import uploads from '../../../middleware/uploads'
 import { AscotApi, cyberCityCommandScripts } from '../../../action-execution'
-import { RequestBodyFilters, defineRequests } from '../../../modules/requests'
+import {
+  RequestBodyFilters,
+  defineRequests,
+} from '../../../middleware/requests'
 import { colorOptions } from '../../../modules/mission-node-colors'
 
 type MulterFile = Express.Multer.File

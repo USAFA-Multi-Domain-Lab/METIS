@@ -1,7 +1,7 @@
 // ------- IMPORTS ------- //
 import { Request, Response, NextFunction } from 'express-serve-static-core'
 import { isObjectIdOrHexString } from 'mongoose'
-import { AnyObject } from './toolbox/objects'
+import { AnyObject } from '../modules/toolbox/objects'
 
 // ------- GLOBAL VARIABLES ------- //
 
@@ -463,11 +463,17 @@ const validateBodyKeys = (
     // function is called recursively to validate the
     // nested object
     else if (typeof requiredValue === 'object') {
+      // Build next recursive parent key.
+      let nextRecursiveParentKey: string =
+        recursiveParentKey === undefined
+          ? requiredKey
+          : `${recursiveParentKey}.${requiredKey}`
+
       sanitizedObject[requiredKey] = validateBodyKeys(
         bodyValue,
         requiredValue as AnyObject,
         {},
-        requiredKey,
+        nextRecursiveParentKey,
       )
     }
   }
@@ -699,61 +705,39 @@ export const defineRequests = (
   },
 ) => {
   return (request: Request, response: Response, next: NextFunction): void => {
-    if (requiredStructures.query) {
-      try {
+    try {
+      if (requiredStructures.query) {
         let sanitizedQuery: AnyObject = validateQueryKeys(
           request.query,
           requiredStructures.query,
           optionalStructures ? optionalStructures.query : undefined,
         )
         request.query = sanitizedQuery
-      } catch (error: any) {
-        response.statusMessage = error
-        response.status(400)
-      }
-    } else if (requiredStructures.params) {
-      try {
+      } else if (requiredStructures.params) {
         let sanitizedParams: AnyObject = validateParamKeys(
           request.params,
           requiredStructures.params,
         )
         request.params = sanitizedParams
-      } catch (error: any) {
-        response.statusMessage = error
-        response.status(400)
+      } else if (requiredStructures.body) {
+        let sanitizedBody: AnyObject = validateBodyKeys(
+          request.body,
+          requiredStructures.body,
+          optionalStructures?.body ?? {},
+        )
+        request.body = sanitizedBody
       }
-    } else if (requiredStructures.body) {
-      if (optionalStructures && optionalStructures.body) {
-        try {
-          let sanitizedBody: AnyObject = validateBodyKeys(
-            request.body,
-            requiredStructures.body,
-            optionalStructures.body,
-          )
-          request.body = sanitizedBody
-        } catch (error: any) {
-          response.statusMessage = error
-          response.status(400)
-        }
-      } else {
-        try {
-          let sanitizedBody: AnyObject = validateBodyKeys(
-            request.body,
-            requiredStructures.body,
-            {},
-          )
-          request.body = sanitizedBody
-        } catch (error: any) {
-          response.statusMessage = error
-          response.status(400)
-        }
-      }
-    }
 
-    if (response.statusCode === 400) {
-      response.send(response.statusMessage)
-    } else {
+      // After all validation, call the next middleware
+      // function.
       next()
+    } catch (error: any) {
+      // If an error is thrown by any of the validation
+      // checks, then mark the response as a bad request
+      // and store the error message in the response.
+      response.statusMessage = error.message
+      response.status(400)
+      response.send()
     }
   }
 }

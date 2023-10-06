@@ -13,7 +13,10 @@ use(dbName)
 
 print('Migrating mission data to updated schema...')
 
-let cursor_missions = db.missions.find({}, { missionID: 1, nodeData: 1 })
+let cursor_missions = db.missions.find(
+  {},
+  { missionID: 1, introMessage: 1, nodeData: 1 },
+)
 
 while (cursor_missions.hasNext()) {
   let mission = cursor_missions.next()

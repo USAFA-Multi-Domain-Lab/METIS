@@ -1,5 +1,8 @@
 import express from 'express'
-import { RequestBodyFilters, defineRequests } from '../../../modules/requests'
+import {
+  RequestBodyFilters,
+  defineRequests,
+} from '../../../middleware/requests'
 
 //fields
 const router = express.Router()
