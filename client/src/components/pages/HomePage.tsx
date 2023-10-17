@@ -93,16 +93,22 @@ export default function HomePage(props: IHomePage): JSX.Element | null {
   }
 
   /* -- COMPONENT EFFECTS -- */
+  // Require session for page.
+  const [session] = useRequireSession()
 
   const [mountHandled, remount] = useMountHandler(async (done) => {
     await loadMissions()
-    await loadUsers()
+
+    // The current user in the session
+    // must have restricted access to
+    // view the users.
+    if (session?.user.hasRestrictedAccess) {
+      await loadUsers()
+    }
+
     finishLoading()
     done()
   })
-
-  // Require session for page.
-  const [session] = useRequireSession()
 
   /* -- SESSION-SPECIFIC LOGIC -- */
 
