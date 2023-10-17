@@ -5,6 +5,7 @@ import routerMap_info from 'metis/server/api/v1/info'
 import routerMap_users from 'metis/server/api/v1/users'
 import routerMap_missions from 'metis/server/api/v1/missions'
 import routerMap_games from 'metis/server/api/v1/games'
+import routerMap_tests from 'metis/server/tests/api/v1/routes-test'
 import routerMap_connect from 'metis/server/connect'
 
 let { ENVIRONMENT_FILE_PATH: environmentFilePath } = MetisServer
@@ -14,6 +15,7 @@ let serverOptions: IMetisServerOptions = {}
 if (process.env.environment === 'TEST') {
   environmentFilePath = './environment-test.json'
   serverOptions.mongoDB = 'metis-test'
+  serverOptions.port = 8081
 }
 
 console.log('Reading enviroment.json file...')
@@ -36,14 +38,17 @@ if (fs.existsSync(environmentFilePath)) {
 console.log('Starting METIS...')
 
 // Create METIS server.
-let server: MetisServer = new MetisServer(serverOptions)
+export let server: MetisServer = new MetisServer(serverOptions)
 
 // Add routers.
 server.addRouter(new MetisRouter('/api/v1/info/', routerMap_info))
 server.addRouter(new MetisRouter('/api/v1/users/', routerMap_users))
 server.addRouter(new MetisRouter('/api/v1/missions/', routerMap_missions))
 server.addRouter(new MetisRouter('/api/v1/games/', routerMap_games))
+server.addRouter(new MetisRouter('/api/v1/test/', routerMap_tests))
 server.addRouter(new MetisRouter('/connect', routerMap_connect))
 
 // Start server.
 server.serve()
+
+export default { server }
