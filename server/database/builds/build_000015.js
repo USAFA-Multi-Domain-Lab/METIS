@@ -1,6 +1,6 @@
 // This migration script is responsible
-// for adding the deleted property for all
-// admin users.
+// for adding the password reset property for
+// all users.
 
 let dbName = 'metis'
 
@@ -17,11 +17,11 @@ let cursor_users = db.users.find({}, { userID: 1 })
 while (cursor_users.hasNext()) {
   let user = cursor_users.next()
 
-  user.deleted = false
+  user.needsPasswordReset = false
 
   db.users.updateOne({ userID: user.userID }, { $set: user })
 }
 
 print('Updating schema build number...')
 
-db.infos.updateOne({ infoID: 'default' }, { $set: { schemaBuildNumber: 14 } })
+db.infos.updateOne({ infoID: 'default' }, { $set: { schemaBuildNumber: 15 } })

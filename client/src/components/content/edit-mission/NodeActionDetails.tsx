@@ -5,23 +5,56 @@ import NodeActionEntry from './NodeActionEntry'
 import './NodeActionDetails.scss'
 import { useGlobalContext } from 'src/context'
 
+/**
+ * This will render the details of the action(s) available to a node.
+ */
 export default function NodeActionDetails(props: {
+  /**
+   * The mission-node to be edited.
+   */
   node: ClientMissionNode
+  /**
+   * A boolean that will be used to determine if the
+   * field has been left empty.
+   */
   isEmptyString: boolean
+  /**
+   * The current action being displayed. This is used for
+   * pagination purposes.
+   */
   displayedAction: number
-  actionEmptyStringArray: Array<string>
-  setActionEmptyStringArray: (actionEmptyStringArray: Array<string>) => void
+  /**
+   * An array that will be used to determine if a
+   * field has been left empty.
+   */
+  actionEmptyStringArray: string[]
+  /**
+   * A function that will be used to set the state of
+   * the actionEmptyStringArray.
+   */
+  setActionEmptyStringArray: (actionEmptyStringArray: string[]) => void
+  /**
+   * A function that will be used to update the
+   * action that is being displayed.
+   */
   setDisplayedAction: (displayedAction: number) => void
-  setMountHandled: (mountHandled: boolean) => void
+  /**
+   * Remounts the component.
+   */
+  remount: () => void
+  /**
+   * A function that will be used to notify the parent
+   * component that this component has changed.
+   */
   handleChange: () => void
 }): JSX.Element | null {
   let node: ClientMissionNode = props.node
   let isEmptyString: boolean = props.isEmptyString
   let displayedAction: number = props.displayedAction
-  let actionEmptyStringArray: Array<string> = props.actionEmptyStringArray
+  let actionEmptyStringArray: string[] = props.actionEmptyStringArray
   let setActionEmptyStringArray = props.setActionEmptyStringArray
   let setDisplayedAction = props.setDisplayedAction
-  let setMountHandled = props.setMountHandled
+  let remount = props.remount
   let handleChange = props.handleChange
   let totalActions: number | undefined = node.actions.size
   let actionKey: string = ''
@@ -42,10 +75,10 @@ export default function NodeActionDetails(props: {
       if (!isEmptyString) {
         if (displayedAction === lastAction) {
           setDisplayedAction(0)
-          setMountHandled(false)
+          remount()
         } else {
           setDisplayedAction(displayedAction + 1)
-          setMountHandled(false)
+          remount()
         }
         setActionEmptyStringArray([])
       } else {
@@ -114,7 +147,7 @@ export default function NodeActionDetails(props: {
             setDisplayedAction={setDisplayedAction}
             actionEmptyStringArray={actionEmptyStringArray}
             setActionEmptyStringArray={setActionEmptyStringArray}
-            setMountHandled={setMountHandled}
+            remount={remount}
             handleChange={handleChange}
             key={actionKey}
           />

@@ -1,0 +1,18 @@
+@import 'src/assets/styles/config.scss';
+
+.RichTextOutputBox {
+  p:first-child {
+    word-wrap: break-word;
+    white-space: pre-line;
+    margin-top: 5px;
+  }
+
+  p,
+  a {
+    margin: 0;
+  }
+
+  a {
+    color: $terminal-blue;
+  }
+}

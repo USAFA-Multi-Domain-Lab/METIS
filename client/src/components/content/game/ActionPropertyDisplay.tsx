@@ -1,27 +1,27 @@
 import ClientMissionAction from 'src/missions/actions'
 import './ActionPropertyDisplay.scss'
+import RichTextOutputBox from 'src/components/content/communication/RichTextOutputBox'
 
 const ActionPropertyDisplay = (props: { action: ClientMissionAction }) => {
   let { action } = props
 
   return (
     <ul className='ActionPropertyDisplay'>
-      <li className='ChosenNodeAction'>
-        <span>Action selected:</span> {action.name as string}
+      <li className='ActionProperty ChosenNodeAction'>
+        Action selected: {action.name}
       </li>
-      <li className='TimeToExecute'>
-        <span>Time to execute:</span> {(action.processTime as number) / 1000}{' '}
-        second(s)
+      <li className='ActionProperty TimeToExecute'>
+        Time to execute: {action.processTime / 1000} second(s)
       </li>
-      <li className='SuccessChance'>
-        <span>Chance of success:</span> {(action.successChance as number) * 100}
-        %
+      <li className='ActionProperty SuccessChance'>
+        Chance of success: {action.successChance * 100}%
       </li>
-      <li className='ResourceCost'>
-        <span>Resource cost:</span> {action.resourceCost} resource(s)
+      <li className='ActionProperty ResourceCost'>
+        Resource cost: {action.resourceCost} resource(s)
       </li>
-      <li className='Description'>
-        <span>Description:</span> {action.description}
+      <li className='ActionProperty Description'>
+        <span>Description: </span>
+        <RichTextOutputBox Element={action.description} />
       </li>
     </ul>
   )

@@ -292,27 +292,44 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
                   renderNodeTooltipDescription={(node: ClientMissionNode) => {
                     let description: string = node.description
 
-                    //
-                    //                     // This creates the tooltip hover over effect
-                    //                     // that displays the description of the node
-                    //                     // after it has been executed.
-                    //                     if (node.executable && node.executed) {
-                    //                       description =
-                    //                         `* Action executed: "${node.selectedAction?.name}"\n` +
-                    //                         `* Executed node in ${
-                    //                           (node.selectedAction?.processTime as number) / 1000
-                    //                         } second(s)\n` +
-                    //                         `* Chance of success: ${
-                    //                           (node.selectedAction?.successChance as number) * 100
-                    //                         }%\n` +
-                    //                         `* Resources used: ${node.selectedAction?.resourceCost} resource(s)`
-                    //                     }
+                    // // This creates the tooltip hover over effect
+                    // // that displays the description of the node
+                    // // after it has been executed.
+                    // if (node.executable && node.executed) {
+                    //   description =
+                    //     `* Action executed: "${node.selectedAction?.name}"\n` +
+                    //     `* Executed node in ${
+                    //       (node.selectedAction?.processTime as number) / 1000
+                    //     } second(s)\n` +
+                    //     `* Chance of success: ${
+                    //       (node.selectedAction?.successChance as number) * 100
+                    //     }%\n` +
+                    //     `* Resources used: ${node.selectedAction?.resourceCost} resource(s) \n` +
+                    //     `* Description: ${node.selectedAction?.description}`
+                    // }
 
-                    // if (node.executionState === 'executing') {
+                    // // This creates the tooltip hover over effect
+                    // // that displays the description of the node
+                    // // while it is executing.
+                    // if (
+                    //   node.executionState === 'executing' &&
+                    //   node.description !== '<p><br></p>'
+                    // ) {
                     //   description =
                     //     `* Time remaining: ${node.formatTimeRemaining(
                     //       false,
                     //     )} \n` + `* Description: ${node.description}`
+                    // }
+                    // // If the node is executing and the description is empty,
+                    // // then the description will be replaced with the time
+                    // // remaining only.
+                    // else if (
+                    //   node.executionState === 'executing' &&
+                    //   node.description === '<p><br></p>'
+                    // ) {
+                    //   description = `* Time remaining: ${node.formatTimeRemaining(
+                    //     false,
+                    //   )}`
                     // }
 
                     return description

@@ -20,13 +20,17 @@ import ClientMissionNode, { ENodeDeleteMethod } from 'src/missions/nodes'
 import ClientMissionAction from 'src/missions/actions'
 
 export interface IMissionFormPage extends IPage {
-  // If null, a new mission is being
-  // created.
+  /**
+   * The ID of the mission to be edited. If null,
+   * a new mission is being created.
+   */
   missionID: string | null
 }
 
-// This will render a dashboard with a radar
-// on it, indicating air traffic passing by.
+/**
+ * This will render page that allows the user to
+ * edit a mission.
+ */
 export default function MissionFormPage(
   props: IMissionFormPage,
 ): JSX.Element | null {
@@ -70,7 +74,7 @@ export default function MissionFormPage(
   useMountHandler(async (done) => {
     let missionID: string | null = props.missionID
 
-    // Handle the editing of an existing user.
+    // Handle the editing of an existing mission.
     if (missionID !== null) {
       try {
         beginLoading('Loading mission...')
@@ -455,10 +459,10 @@ export default function MissionFormPage(
                   <NodeEntry
                     node={selectedNode}
                     displayedAction={displayedAction}
-                    setDisplayedAction={setDisplayedAction}
                     nodeEmptyStringArray={nodeEmptyStringArray}
-                    setNodeEmptyStringArray={setNodeEmptyStringArray}
                     actionEmptyStringArray={actionEmptyStringArray}
+                    setDisplayedAction={setDisplayedAction}
+                    setNodeEmptyStringArray={setNodeEmptyStringArray}
                     setActionEmptyStringArray={setActionEmptyStringArray}
                     handleChange={handleChange}
                     handleAddRequest={handleNodeAddRequest}

@@ -102,7 +102,8 @@ export default class Tooltip extends React.Component<ITooltip, ITooltip_S> {
       if (
         parentIsHoveredOver &&
         !this.isCurrentTooltipID &&
-        this.props.description !== ''
+        this.props.description !== '' &&
+        this.props.description !== '<p><br></p>'
       ) {
         this.showTooltip(this.tooltipID, this.props.description)
       } else if (!parentIsHoveredOver && this.isCurrentTooltipID) {

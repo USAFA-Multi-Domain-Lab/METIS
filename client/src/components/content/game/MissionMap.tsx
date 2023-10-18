@@ -17,7 +17,6 @@ import ClientMission from 'src/missions'
 import ClientMissionNode, { ENodeTargetRelation } from 'src/missions/nodes'
 import NodeCreator from 'src/missions/nodes/creator'
 import ClientActionExecution from 'src/missions/actions/executions'
-import ArrayToolbox from '../../../../../shared/toolbox/arrays'
 
 /* -- interfaces -- */
 

@@ -1,5 +1,6 @@
 import mongoose, { Schema } from 'mongoose'
 import MetisDatabase from 'metis/server/database'
+import SanitizedHTML from 'metis/server/database/schema-types/type-html'
 
 let ObjectId = mongoose.Types.ObjectId
 
@@ -215,7 +216,7 @@ export const MissionSchema: Schema = new Schema(
     _id: { type: ObjectId, required: false, auto: true },
     missionID: { type: ObjectId, required: true, unique: true, auto: true },
     name: { type: String, required: true },
-    introMessage: { type: String, required: true },
+    introMessage: { type: SanitizedHTML, required: true },
     versionNumber: { type: Number, required: true },
     live: { type: Boolean, required: true, default: false },
     seed: { type: ObjectId, required: true, auto: true },
@@ -240,8 +241,12 @@ export const MissionSchema: Schema = new Schema(
             required: true,
             validate: validate_missions_nodeData_color,
           },
-          description: { type: String, required: true },
-          preExecutionText: { type: String, required: false, default: '' },
+          description: { type: SanitizedHTML, required: true },
+          preExecutionText: {
+            type: SanitizedHTML,
+            required: false,
+            default: '',
+          },
           depthPadding: {
             type: Number,
             required: true,
@@ -258,7 +263,7 @@ export const MissionSchema: Schema = new Schema(
                   required: true,
                 },
                 name: { type: String, required: true },
-                description: { type: String, required: true },
+                description: { type: SanitizedHTML, required: true },
                 processTime: {
                   type: Number,
                   required: true,
@@ -274,8 +279,14 @@ export const MissionSchema: Schema = new Schema(
                   required: true,
                   validate: validate_mission_nodeData_actions_resourceCost,
                 },
-                postExecutionSuccessText: { type: String, required: true },
-                postExecutionFailureText: { type: String, required: true },
+                postExecutionSuccessText: {
+                  type: SanitizedHTML,
+                  required: true,
+                },
+                postExecutionFailureText: {
+                  type: SanitizedHTML,
+                  required: true,
+                },
                 scripts: {
                   type: [
                     {

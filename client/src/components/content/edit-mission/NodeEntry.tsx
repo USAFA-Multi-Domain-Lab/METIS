@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import ClientMissionNode from 'src/missions/nodes'
 import ClientMissionAction from 'src/missions/actions'
 import ClientMission from 'src/missions'
@@ -14,20 +14,69 @@ import { EToggleLockState } from '../user-controls/Toggle'
 import NodeActionDetails from './NodeActionDetails'
 import './NodeEntry.scss'
 import { useGlobalContext } from 'src/context'
+import { useMountHandler } from 'src/toolbox/hooks'
 
-// This will render a form where
-// a given node can be edited.
+/**
+ * This will render the entry fields for a mission-node
+ * within the MissionFormPage component.
+ */
 export default function NodeEntry(props: {
+  /**
+   * The mission-node to be edited.
+   */
   node: ClientMissionNode | null
+  /**
+   * The current action being displayed. This is used for
+   * pagination purposes. ***This is passed down to the
+   * NodeActionDetails component.***
+   */
   displayedAction: number
+  /**
+   * An array of strings that will be used to determine
+   * if a field has been left empty.
+   */
   nodeEmptyStringArray: Array<string>
+  /**
+   * An array of strings that will be used to determine
+   * if a field has been left empty. ***This is passed down
+   * to the NodeActionDetails component.***
+   */
   actionEmptyStringArray: Array<string>
+  /**
+   * A function that will set the current action being
+   * displayed. ***This is passed down to the
+   * NodeActionDetails component.***
+   */
   setDisplayedAction: (displayedAction: number) => void
+  /**
+   * A function that will set the array of strings that
+   * will be used to determine if a field has been left empty.
+   */
   setNodeEmptyStringArray: (nodeEmptyStringArray: Array<string>) => void
+  /**
+   * A function that will set the array of strings that
+   * will be used to determine if a field has been left empty.
+   * ***This is passed down to the NodeActionDetails component.***
+   */
   setActionEmptyStringArray: (actionEmptyStringArray: Array<string>) => void
+  /**
+   * A function that will be called when a change has been made.
+   */
   handleChange: () => void
+  /**
+   * A function that will be called when the user wants to
+   * add a new mission-node.
+   */
   handleAddRequest: () => void
+  /**
+   * A function that will be called when the user wants to
+   * delete a mission-node.
+   */
   handleDeleteRequest: () => void
+  /**
+   * A function that will be called when the user wants to
+   * close the mission-node side panel.
+   */
   handleCloseRequest: () => void
 }): JSX.Element | null {
   /* -- COMPONENT VARIABLES -- */
@@ -53,22 +102,16 @@ export default function NodeEntry(props: {
 
   /* -- COMPONENT STATE -- */
 
-  const [mountHandled, setMountHandled] = useState<boolean>()
   const [deliverNameError, setDeliverNameError] = useState<boolean>(false)
-  const [deliverDescriptionError, setDeliverDescriptionError] =
-    useState<boolean>(false)
   const [errorMessage, setErrorMessage] = useState<string>(
     'At least one character is required here.',
   )
 
   /* -- COMPONENT EFFECTS -- */
 
-  // Equivalent of componentDidMount.
-  useEffect(() => {
-    if (!mountHandled) {
-      setMountHandled(true)
-    }
-  }, [mountHandled])
+  const [mountHandled, remount] = useMountHandler(async (done) => {
+    done()
+  })
 
   /* -- COMPONENT FUNCTIONS -- */
 
@@ -102,6 +145,9 @@ export default function NodeEntry(props: {
   if (node !== null) {
     let mission: ClientMission = node.mission
 
+    // If any of the fields are empty then this will
+    // disable the close button and display an error
+    // message.
     if (isEmptyString) {
       closeClassName += ' Disabled'
       toggleErrorMessage =
@@ -133,7 +179,7 @@ export default function NodeEntry(props: {
                     { duration: null, errorMessage: true },
                   )
                 }
-                setMountHandled(false)
+                remount()
               }}
               key={'close-node-side-panel'}
             >
@@ -152,7 +198,7 @@ export default function NodeEntry(props: {
                   node.name = name
                   removeNodeEmptyString('name')
                   setDeliverNameError(false)
-                  setMountHandled(false)
+                  remount()
                   handleChange()
                 } else if (node !== null && name === '') {
                   setDeliverNameError(true)
@@ -160,7 +206,7 @@ export default function NodeEntry(props: {
                     ...nodeEmptyStringArray,
                     `nodeID=${node.nodeID}_field=name`,
                   ])
-                  setMountHandled(false)
+                  remount()
                 }
               }}
               options={{
@@ -235,31 +281,17 @@ export default function NodeEntry(props: {
               </div>
             </div>
             <DetailBox
-              label='Description'
+              label='Description (optional)'
               initialValue={node.description}
               deliverValue={(description: string) => {
-                if (
-                  node !== null &&
-                  description !== '' &&
-                  description !== null
-                ) {
+                if (node !== null) {
                   node.description = description
-                  removeNodeEmptyString('description')
-                  setDeliverDescriptionError(false)
-                  setMountHandled(false)
                   handleChange()
-                } else if (node !== null && description === '') {
-                  setDeliverDescriptionError(true)
-                  setNodeEmptyStringArray([
-                    ...nodeEmptyStringArray,
-                    `nodeID=${node.nodeID}_field=description`,
-                  ])
-                  setMountHandled(false)
                 }
               }}
               options={{
-                deliverError: deliverDescriptionError,
-                deliverErrorMessage: errorMessage,
+                emptyStringAllowed: true,
+                elementBoundary: '.BorderBox',
               }}
               key={`${node.nodeID}_description`}
             />
@@ -271,6 +303,10 @@ export default function NodeEntry(props: {
                   node.preExecutionText = preExecutionText
                   handleChange()
                 }
+              }}
+              options={{
+                emptyStringAllowed: true,
+                elementBoundary: '.BorderBox',
               }}
               key={`${node.nodeID}_preExecutionText`}
             />
@@ -315,6 +351,7 @@ export default function NodeEntry(props: {
                 handleChange()
               }}
               lockState={
+                // Locks the toggle if there are empty fields.
                 !isEmptyString
                   ? EToggleLockState.Unlocked
                   : isEmptyString && node.executable
@@ -330,6 +367,7 @@ export default function NodeEntry(props: {
               initialValue={node.device}
               errorMessage={toggleErrorMessage}
               lockState={
+                // Locks the toggle if there are empty fields.
                 !isEmptyString && node.executable
                   ? EToggleLockState.Unlocked
                   : isEmptyString && node.executable && node.device
@@ -370,7 +408,7 @@ export default function NodeEntry(props: {
             actionEmptyStringArray={actionEmptyStringArray}
             setActionEmptyStringArray={setActionEmptyStringArray}
             setDisplayedAction={setDisplayedAction}
-            setMountHandled={setMountHandled}
+            remount={remount}
             handleChange={handleChange}
           />
         </div>

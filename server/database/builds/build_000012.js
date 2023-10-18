@@ -1,6 +1,7 @@
 // This migration script is responsible
-// for adding the role property for all
-// admin users.
+// for updating all the properties that
+// are allowed to have rich text to
+// be wrapped in "p" tags.
 
 let dbName = 'metis'
 
@@ -10,17 +11,34 @@ if (process.env.MONGO_DB) {
 
 use(dbName)
 
-print('Migrating user data to updated schema...')
+print('Migrating mission data to updated schema...')
 
-let userID = 'admin'
-let cursor_users = db.users.find({}, { userID: userID })
+let cursor_missions = db.missions.find(
+  {},
+  { missionID: 1, introMessage: 1, nodeData: 1 },
+)
 
-while (cursor_users.hasNext()) {
-  let user = cursor_users.next()
+while (cursor_missions.hasNext()) {
+  let mission = cursor_missions.next()
+  mission.introMessage = '<p>' + mission.introMessage + '</p>'
 
-  user.role = 'admin'
+  let nodeData = mission.nodeData
 
-  db.users.updateOne({}, { $set: { role: user.role } })
+  for (let nodeDatum of nodeData) {
+    nodeDatum.description = '<p>' + nodeDatum.description + '</p>'
+    nodeDatum.preExecutionText = '<p>' + nodeDatum.preExecutionText + '</p>'
+
+    let actions = nodeDatum.actions
+    for (let action of actions) {
+      action.description = '<p>' + action.description + '</p>'
+      action.postExecutionSuccessText =
+        '<p>' + action.postExecutionSuccessText + '</p>'
+      action.postExecutionFailureText =
+        '<p>' + action.postExecutionFailureText + '</p>'
+    }
+  }
+
+  db.missions.updateOne({ missionID: mission.missionID }, { $set: mission })
 }
 
 print('Updating schema build number...')

@@ -8,6 +8,8 @@ import './Form.scss'
 import Toggle, { EToggleLockState } from '../user-controls/Toggle'
 import Tooltip from '../communication/Tooltip'
 import { AnyObject } from '../../../../../shared/toolbox/objects'
+import ReactQuill from 'react-quill'
+import 'react-quill/dist/quill.snow.css'
 
 type TInput =
   | 'button'
@@ -302,35 +304,34 @@ export function DetailNumber(props: {
  * @param options.disabled The boolean that determines if the detail should be disabled. Defaults to false.
  * @param options.uniqueLabelClassName The unique class name for the label. Defaults to ''.
  * @param options.uniqueInputClassName The unique class name for the input. Defaults to ''.
- * @param options.placeholder The placeholder for the input. Defaults to ''.
+ * @param options.placeholder The placeholder for the input. Defaults to undefined.
+ * @param options.emptyStringAllowed The boolean that determines if the detail should allow empty strings. Defaults to false.
+ * @param options.elementBoundary The element boundary for the detail. Defaults to undefined.
  * @returns A JSX Element for the detail.
  */
 export function DetailBox(props: {
   label: string
-  initialValue: string | null
+  initialValue: string
   deliverValue: (value: string) => void
   options?: {
-    deliverError?: boolean // default false
-    deliverErrorMessage?: string // default ''
+    // deliverError?: boolean // default false
+    // deliverErrorMessage?: string // default ''
     disabled?: boolean // default false
     uniqueLabelClassName?: string // default ''
     uniqueInputClassName?: string // default ''
-    placeholder?: string // default ''
+    placeholder?: string
+    emptyStringAllowed?: boolean // default false
+    elementBoundary?: string
   }
 }): JSX.Element | null {
-  const fieldOffsetHeight: number = 3
-
-  const field = useRef<HTMLTextAreaElement>(null)
-  const [mountHandled, setMountHandled] = useState<boolean>(false)
-
   let label: string = props.label
-  let initialValue: string | null = props.initialValue
-  let displayError: boolean = props.options?.deliverError
-    ? props.options.deliverError
-    : false
-  let errorMessage: string = props.options?.deliverErrorMessage
-    ? props.options?.deliverErrorMessage
-    : ''
+  let initialValue: string = props.initialValue
+  // let displayError: boolean = props.options?.deliverError
+  //   ? props.options.deliverError
+  //   : false
+  // let errorMessage: string = props.options?.deliverErrorMessage
+  //   ? props.options?.deliverErrorMessage
+  //   : ''
   let uniqueLabelClassName: string = props.options?.uniqueLabelClassName
     ? props.options.uniqueLabelClassName
     : ''
@@ -339,58 +340,43 @@ export function DetailBox(props: {
     : ''
   let disabled: boolean = props.options?.disabled === true
   let placeholder: string | undefined = props.options?.placeholder
+  let emptyStringAllowed: boolean = props.options?.emptyStringAllowed || false
+  let elementBoundary: string | undefined = props.options?.elementBoundary
   let deliverValue = props.deliverValue
   let className: string = 'Detail DetailBox'
   let fieldClassName: string = 'Field FieldBox'
   let labelClassName: string = 'Label'
   let fieldErrorClassName: string = 'FieldErrorMessage hide'
 
-  /* -- COMPONENT EFFECTS -- */
-
-  // Called when a change is made in the
-  // in the field element. This will resize
-  // the field based on the height of the
-  // content.
-  const resizeField = (): void => {
-    let fieldElement: HTMLTextAreaElement | null = field.current
-
-    if (fieldElement) {
-      fieldElement.style.height = '1px'
-      fieldElement.style.height = `${
-        fieldOffsetHeight + fieldElement.scrollHeight
-      }px`
-    }
-  }
-
-  // Equivalent of componentDidMount.
-  useEffect(() => {
-    if (!mountHandled) {
-      let fieldElement: HTMLTextAreaElement | null = field.current
-
-      if (fieldElement && initialValue) {
-        fieldElement.value = initialValue
-        fieldElement.style.height = '1px'
-        fieldElement.style.height = `${
-          fieldOffsetHeight + fieldElement.scrollHeight
-        }px`
-
-        new ResizeObserver(() => resizeField()).observe(fieldElement)
-      }
-
-      setMountHandled(true)
-    }
-  }, [mountHandled])
+  /* -- COMPONENT STATE -- */
+  const [isEmptyString, setIsEmptyString] = useState<boolean>(false)
+  const [value, setValue] = useState<string>('')
 
   /* -- RENDER -- */
+
+  let reactQuillModules = {
+    toolbar: {
+      container: [['bold', 'italic', 'underline', 'link'], ['clean']],
+    },
+  }
 
   if (disabled) {
     className += ' Disabled'
   }
 
-  if (displayError) {
+  // if (displayError) {
+  //   fieldClassName += ' Error'
+  //   labelClassName += ' Error'
+  //   fieldErrorClassName = 'FieldErrorMessage'
+  // }
+
+  if (!emptyStringAllowed && isEmptyString) {
     fieldClassName += ' Error'
     labelClassName += ' Error'
     fieldErrorClassName = 'FieldErrorMessage'
+  } else if (emptyStringAllowed) {
+    fieldClassName = 'Field FieldBox'
+    labelClassName = 'Label'
   }
 
   return (
@@ -398,20 +384,39 @@ export function DetailBox(props: {
       <div
         className={labelClassName + ' ' + uniqueLabelClassName}
       >{`${label}:`}</div>
-      <textarea
+      <ReactQuill
+        bounds={elementBoundary}
         className={fieldClassName + ' ' + uniqueInputClassName}
-        ref={field}
-        placeholder={placeholder}
-        onChange={(event: React.ChangeEvent<HTMLTextAreaElement>) => {
-          resizeField()
-          deliverValue(event.target.value)
+        modules={reactQuillModules}
+        value={initialValue}
+        placeholder='Enter text here...'
+        theme='snow'
+        onChange={(value: string) => {
+          deliverValue(value)
+
+          // Equivalent to an empty string.
+          if (value !== '<p><br></p>') {
+            setIsEmptyString(false)
+            setValue(value)
+          }
         }}
-        onBlur={(event: React.FocusEvent) => {
-          // let target: HTMLTextAreaElement = event.target as HTMLTextAreaElement
-          resizeField()
+        onBlur={(
+          previousSelection: ReactQuill.Range,
+          source: any,
+          editor: ReactQuill.UnprivilegedEditor,
+        ) => {
+          let value: string = editor.getHTML()
+
+          if (!emptyStringAllowed && value === '<p><br></p>') {
+            setIsEmptyString(true)
+          } else if (emptyStringAllowed && value === '<p><br></p>') {
+            setIsEmptyString(false)
+          }
         }}
       />
-      <div className={fieldErrorClassName}>{errorMessage}</div>
+      <div className={fieldErrorClassName}>
+        At least one character is required here.
+      </div>
     </div>
   )
 }

@@ -365,7 +365,7 @@ export default abstract class Mission<TMissionNode extends IMissionNode>
     return {
       missionID: generateHash(),
       name: 'New Mission',
-      introMessage: 'Welcome to your new mission!',
+      introMessage: '<p>Welcome to your new mission!</p>',
       versionNumber: 1,
       live: false,
       initialResources: 100,

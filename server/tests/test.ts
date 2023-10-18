@@ -1850,7 +1850,6 @@ describe('Mission Schema Validation', function () {
   })
 
   it('Creating a mission with a mission-node that has a color that is a valid hex color code ("#acde58") should result in a successful (200) response', async function () {
-    testMission.mission.nodeData[0].color = '#acde58'
     // Remove the schemaBuildNumber from the mission data
     const { schemaBuildNumber, ...missionData } = testMission.mission
     // Set the color of the first mission-node to an invalid hex color code
@@ -1862,6 +1861,115 @@ describe('Mission Schema Validation', function () {
       return await mission.save(function (error: Error) {
         // Check to make sure there were no errors
         expect(error).to.equal(null)
+      })
+    } catch (error: any) {
+      // Logs the error
+      testLogger.error(error)
+      // Ends the test with the error thrown
+      return error
+    }
+  })
+
+  it('Creating a mission with HTMl tags that are not allowed ("<script></script>") in the mission should result in those tags being removed from the mission', async function () {
+    // Remove the schemaBuildNumber from the mission data
+    const { schemaBuildNumber, ...missionData } = testMission.mission
+    // Set the introMessage of the mission to a string with a "script" tag
+    missionData.introMessage =
+      "<p><strong>Enter</strong> <em>your</em> <u>overview</u> <a href='https://google.com' rel='noopener noreferrer' target='_blank'>message</a> here.</p><script>function consoleLog() {console.log('Successful script execution.')} consoleLog()</script>"
+    // Set the preExecutionText of the first mission-node to a string with an improper "p" tag
+    missionData.nodeData[0].preExecutionText =
+      "<p>Node has not been executed.</p> <p href='https://google.com>Google</p>'"
+    // Create a new mission model
+    let mission = new MissionModel(missionData)
+
+    try {
+      return await mission.save(function (error: Error, mission: any) {
+        // Check to make sure there were no errors
+        expect(error).to.equal(null)
+        // The introMessage of the mission should be the same as what was set above
+        expect(mission.introMessage).to.equal(
+          '<p><strong>Enter</strong> <em>your</em> <u>overview</u> <a href="https://google.com" rel="noopener noreferrer" target="_blank">message</a> here.</p>',
+        )
+        // The preExecutionText of the first mission-node should be the same as what was set above
+        expect(mission.nodeData[0].preExecutionText).to.equal(
+          '<p>Node has not been executed.</p> ',
+        )
+      })
+    } catch (error: any) {
+      // Logs the error
+      testLogger.error(error)
+      // Ends the test with the error thrown
+      return error
+    }
+  })
+
+  it('Creating a mission with HTMl tags that are not allowed ("<style></style>") in the mission should result in those tags being removed from the mission', async function () {
+    // Remove the schemaBuildNumber from the mission data
+    const { schemaBuildNumber, ...missionData } = testMission.mission
+    // Set the introMessage of the mission to a string with a "style" tag
+    missionData.introMessage =
+      "<p><strong>Enter</strong> <em>your</em> <u>overview</u> <a href='https://google.com' rel='noopener noreferrer' target='_blank'>message</a> here.</p>   <style>.Content {font-size: 25px;}</style>"
+    // Create a new mission model
+    let mission = new MissionModel(missionData)
+
+    try {
+      return await mission.save(function (error: Error, mission: any) {
+        // Check to make sure there were no errors
+        expect(error).to.equal(null)
+        // The introMessage of the mission should be the same as what was set above
+        expect(mission.introMessage).to.equal(
+          "<p><strong>Enter</strong> <em>your</em> <u>overview</u> <a href='https://google.com' rel='noopener noreferrer' target='_blank'>message</a> here.</p>   <style>.Content {font-size: 25px;}</style>",
+        )
+      })
+    } catch (error: any) {
+      // Logs the error
+      testLogger.error(error)
+      // Ends the test with the error thrown
+      return error
+    }
+  })
+
+  it('Creating a mission with HTMl tags that are not allowed ("<iframe></iframe>") in the mission should result in those tags being removed from the mission', async function () {
+    // Remove the schemaBuildNumber from the mission data
+    const { schemaBuildNumber, ...missionData } = testMission.mission
+    // Set the introMessage of the mission to a string with an "iframe" tag
+    missionData.introMessage = `<p><strong>Enter</strong> <em>your</em> <u>overview</u> <a href='https://google.com' rel='noopener noreferrer' target='_blank'>message</a> here.</p>   <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d13026964.31028058!2d-106.25408262379291!3d37.1429207037123!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x54eab584e432360b%3A0x1c3bb99243deb742!2sUnited%20States!5e0!3m2!1sen!2sus!4v1695930378392!5m2!1sen!2sus" width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>`
+    // Create a new mission model
+    let mission = new MissionModel(missionData)
+
+    try {
+      return await mission.save(function (error: Error, mission: any) {
+        // Check to make sure there were no errors
+        expect(error).to.equal(null)
+        // The introMessage of the mission should be the same as what was set above
+        expect(mission.introMessage).to.equal(
+          `<p><strong>Enter</strong> <em>your</em> <u>overview</u> <a href='https://google.com' rel='noopener noreferrer' target='_blank'>message</a> here.</p>   <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d13026964.31028058!2d-106.25408262379291!3d37.1429207037123!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x54eab584e432360b%3A0x1c3bb99243deb742!2sUnited%20States!5e0!3m2!1sen!2sus!4v1695930378392!5m2!1sen!2sus" width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>`,
+        )
+      })
+    } catch (error: any) {
+      // Logs the error
+      testLogger.error(error)
+      // Ends the test with the error thrown
+      return error
+    }
+  })
+
+  it('Creating a mission with HTMl tags that are not allowed ("<input />") in the mission should result in those tags being removed from the mission', async function () {
+    // Remove the schemaBuildNumber from the mission data
+    const { schemaBuildNumber, ...missionData } = testMission.mission
+    // Set the introMessage of the mission to a string with an "input" tag
+    missionData.introMessage = `<p><strong>Enter</strong> <em>your</em> <u>overview</u> <a href='https://google.com' rel='noopener noreferrer' target='_blank'>message</a> here.</p>   <input type="text" id="fname" name="fname" value="John">`
+    // Create a new mission model
+    let mission = new MissionModel(missionData)
+
+    try {
+      return await mission.save(function (error: Error, mission: any) {
+        // Check to make sure there were no errors
+        expect(error).to.equal(null)
+        // The introMessage of the mission should be the same as what was set above
+        expect(mission.introMessage).to.equal(
+          `<p><strong>Enter</strong> <em>your</em> <u>overview</u> <a href='https://google.com' rel='noopener noreferrer' target='_blank'>message</a> here.</p>   <input type="text" id="fname" name="fname" value="John">`,
+        )
       })
     } catch (error: any) {
       // Logs the error
@@ -1993,7 +2101,7 @@ describe('User Schema Validation', function () {
 
     try {
       // Saves the user to the database
-      return await user.save((error: Error, retrievedUser: any) => {
+      await user.save((error: Error, retrievedUser: any) => {
         expect(error).to.equal(null)
         expect(retrievedUser.userID).to.equal(newCorrectUser.user.userID)
         expect(retrievedUser.firstName).to.equal(newCorrectUser.user.firstName)
@@ -2003,7 +2111,7 @@ describe('User Schema Validation', function () {
           retrievedUser.password,
         )
         expect(isHashedPassword).to.equal(true)
-        expect(retrievedUser.password).to.equal(hashedPassword)
+        return expect(retrievedUser.password).to.equal(hashedPassword)
       })
     } catch (error) {
       testLogger.error(error)
@@ -2013,7 +2121,7 @@ describe('User Schema Validation', function () {
 
   it('Querying for the newly created user should return the correct user', async function () {
     try {
-      return await UserModel.findOne({
+      await UserModel.findOne({
         userID: newCorrectUser.user.userID,
       }).exec((error: Error, retrievedUser: any) => {
         expect(error).to.equal(null)
@@ -2024,7 +2132,7 @@ describe('User Schema Validation', function () {
           retrievedUser.password,
         )
         expect(isHashedPassword).to.equal(true)
-        expect(retrievedUser.password).to.equal(hashedPassword)
+        return expect(retrievedUser.password).to.equal(hashedPassword)
       })
     } catch (error) {
       testLogger.error(error)

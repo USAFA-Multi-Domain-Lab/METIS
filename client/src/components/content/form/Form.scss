@@ -1,4 +1,5 @@
 @import 'src/assets/styles/config.scss';
+@import '/src/assets/styles/util.scss';
 
 .Detail {
   margin: 20px 8% 0;
@@ -10,7 +11,7 @@
     margin-top: 5px;
 
     &.hide {
-      display: none;
+      @include hide();
     }
   }
 
@@ -96,14 +97,112 @@
   }
 
   &.DetailBox {
+    * {
+      transition: transform 250ms, opacity 250ms;
+    }
+
+    &.Disabled {
+      pointer-events: none;
+      opacity: unset;
+
+      * {
+        transform: scale(0.8);
+        opacity: 0.65;
+      }
+    }
+
     .Field {
-      overflow-y: hidden;
+      border: none;
       resize: none;
+      padding: 0;
+
+      .ql-toolbar {
+        border: 2px solid $color-main;
+
+        .ql-formats {
+          button {
+            &:hover {
+              border: 2px solid $color-accent-light;
+            }
+
+            svg {
+              line,
+              path,
+              rect {
+                stroke: $color-main;
+              }
+            }
+          }
+        }
+      }
+
+      .ql-container {
+        font-family: monospace, sans-serif;
+        border: 2px solid $color-main;
+
+        .ql-editor {
+          * {
+            color: $color-accent-light;
+
+            &::before,
+            &::after {
+              color: $color-accent-light;
+            }
+          }
+
+          a {
+            color: $terminal-blue;
+          }
+
+          &.ql-blank::before {
+            color: $color-main;
+          }
+        }
+
+        .ql-tooltip {
+          color: $color-main;
+          border-radius: 5px;
+          box-shadow: none;
+          background-color: $background-alt1;
+          border: 2px solid $color-main;
+
+          * {
+            color: $color-main;
+            font-family: 'monospace', sans-serif;
+          }
+
+          input {
+            border-radius: 5px;
+            background-color: $background-alt1;
+            border: 2px solid $color-main;
+
+            &:focus {
+              outline: none;
+            }
+          }
+
+          .ql-preview {
+            color: $terminal-blue;
+            text-decoration: underline;
+          }
+        }
+      }
 
       &.Error {
-        border-top: 2px solid $color-error-alt;
-        border-bottom: 2px solid $color-error-alt;
-        color: $color-error-alt;
+        .ql-toolbar {
+          border: 2px solid $color-error-alt;
+        }
+
+        .ql-container {
+          border: 2px solid $color-error-alt;
+          border-top: none;
+
+          .ql-editor {
+            &.ql-blank::before {
+              color: $color-error-alt;
+            }
+          }
+        }
       }
     }
 
@@ -113,7 +212,7 @@
       margin-top: 5px;
 
       &.hide {
-        display: none;
+        @include hide();
       }
     }
   }
@@ -179,27 +278,6 @@
             transform: scale(1.25, -0.75);
           }
         }
-      }
-    }
-  }
-
-  &.DetailBox {
-    * {
-      transition: transform 250ms, opacity 250ms;
-    }
-
-    .Field {
-      overflow-y: hidden;
-      resize: none;
-    }
-
-    &.Disabled {
-      pointer-events: none;
-      opacity: unset;
-
-      * {
-        transform: scale(0.8);
-        opacity: 0.65;
       }
     }
   }

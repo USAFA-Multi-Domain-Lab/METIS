@@ -5,13 +5,32 @@ import { Detail, DetailBox, DetailNumber, DetailToggle } from '../form/Form'
 import './MissionEntry.scss'
 import { useGlobalContext } from 'src/context'
 
-// This will render the basic editable
-// details of the mission itself.
+/**
+ * This will render the basic editable details of the mission itself.
+ */
 export default function MissionEntry(props: {
+  /**
+   * Whether or not this component is active.
+   */
   active: boolean
+  /**
+   * The mission to be edited.
+   */
   mission: ClientMission
+  /**
+   * An array of empty strings that will be used to
+   * track which fields are empty.
+   */
   missionEmptyStringArray: Array<string>
+  /**
+   * A function that will be used to set the
+   * missionEmptyStringArray.
+   */
   setMissionEmptyStringArray: (missionEmptyString: Array<string>) => void
+  /**
+   * A function that will be used to notify the parent
+   * component that this component has changed.
+   */
   handleChange: () => void
 }): JSX.Element | null {
   /* -- PROPS -- */
@@ -34,8 +53,6 @@ export default function MissionEntry(props: {
     EAjaxStatus.NotLoaded,
   )
   const [deliverNameError, setDeliverNameError] = useState<boolean>(false)
-  const [deliverIntroMessageError, setDeliverIntroMessageError] =
-    useState<boolean>(false)
   const [errorMessage, setErrorMessage] = useState<string>(
     'At least one character is required here.',
   )
@@ -126,13 +143,12 @@ export default function MissionEntry(props: {
               label='Introduction Message'
               initialValue={mission.introMessage}
               deliverValue={(introMessage: string) => {
-                if (introMessage !== '') {
-                  mission.introMessage = introMessage
+                mission.introMessage = introMessage
+
+                if (introMessage !== '<p><br></p>') {
                   removeMissionEmptyString('introMessage')
-                  setDeliverIntroMessageError(false)
                   handleChange()
                 } else {
-                  setDeliverIntroMessageError(true)
                   setMissionEmptyStringArray([
                     ...missionEmptyStringArray,
                     `missionID=${mission.missionID}_field=introMessage`,
@@ -140,11 +156,11 @@ export default function MissionEntry(props: {
                 }
               }}
               options={{
-                deliverError: deliverIntroMessageError,
-                deliverErrorMessage: errorMessage,
+                elementBoundary: '.BorderBox',
               }}
               key={`${mission.missionID}_introMessage`}
             />
+
             <DetailToggle
               label={'Live'}
               initialValue={mission.live}

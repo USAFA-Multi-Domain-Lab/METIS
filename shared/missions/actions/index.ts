@@ -200,14 +200,14 @@ export default abstract class MissionAction<
     return {
       actionID: generateHash(),
       name: 'New Action',
-      description: 'Enter your description here.',
+      description: '<p>Enter your description here.</p>',
       processTime: 5000,
       successChance: 0.5,
       resourceCost: 1,
       postExecutionSuccessText:
-        'Enter your successful post-execution message here.',
+        '<p>Enter your successful post-execution message here.</p>',
       postExecutionFailureText:
-        'Enter your unsuccessful post-execution message here.',
+        '<p>Enter your unsuccessful post-execution message here.</p>',
       scripts: [],
     }
   }

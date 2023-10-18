@@ -8,14 +8,48 @@ import './NodeActionEntry.scss'
 
 // This will render an action
 // available to a node.
+
+/**
+ * This will render the entry fields for an action
+ * as a part of the NodeActionDetails component.
+ */
 export default function NodeActionEntry(props: {
+  /**
+   * The mission-node-action to be edited.
+   */
   action: ClientMissionAction
+  /**
+   * The current action being displayed. This is used for
+   * pagination purposes.
+   */
   displayedAction: number
+  /**
+   * A boolean that will be used to determine if a
+   * field has been left empty.
+   */
   isEmptyString: boolean
+  /**
+   * An array of strings that will be used to determine
+   * if a field has been left empty.
+   */
   actionEmptyStringArray: Array<string>
+  /**
+   * A function that will set the current action being
+   * displayed.
+   */
   setDisplayedAction: (displayedAction: number) => void
+  /**
+   * A function that will set the array of strings that
+   * will be used to determine if a field has been left empty.
+   */
   setActionEmptyStringArray: (actionEmptyStringArray: Array<string>) => void
-  setMountHandled: (mountHandled: boolean) => void
+  /**
+   * Remounts the component.
+   */
+  remount: () => void
+  /**
+   * A function that will be called when a change has been made.
+   */
   handleChange: () => void
 }): JSX.Element | null {
   let action: ClientMissionAction = props.action
@@ -25,23 +59,13 @@ export default function NodeActionEntry(props: {
   let actionEmptyStringArray: Array<string> = props.actionEmptyStringArray
   let setDisplayedAction = props.setDisplayedAction
   let setActionEmptyStringArray = props.setActionEmptyStringArray
-  let setMountHandled: (mountHandled: boolean) => void = props.setMountHandled
+  let remount = props.remount
   let handleChange = props.handleChange
   let deleteActionClassName: string = 'FormButton DeleteAction'
   let nodeActionClassName: string = 'NodeActionEntry'
 
   /* -- COMPONENT STATE -- */
   const [deliverNameError, setDeliverNameError] = useState<boolean>(false)
-  const [deliverDescriptionError, setDeliverDescriptionError] =
-    useState<boolean>(false)
-  const [
-    deliverPostExecutionSuccessTextError,
-    setDeliverPostExecutionSuccessTextError,
-  ] = useState<boolean>(false)
-  const [
-    deliverPostExecutionFailureTextError,
-    setDeliverPostExecutionFailureTextError,
-  ] = useState<boolean>(false)
   const [errorMessage, setErrorMessage] = useState<string>(
     'At least one character is required here.',
   )
@@ -80,7 +104,7 @@ export default function NodeActionEntry(props: {
               action.name = name
               removeActionEmptyString('name')
               setDeliverNameError(false)
-              setMountHandled(false)
+              remount()
               handleChange()
             } else {
               setDeliverNameError(true)
@@ -88,7 +112,7 @@ export default function NodeActionEntry(props: {
                 ...actionEmptyStringArray,
                 `actionID=${action.actionID}_field=name`,
               ])
-              setMountHandled(false)
+              remount()
             }
           }}
           options={{
@@ -101,24 +125,23 @@ export default function NodeActionEntry(props: {
           label='Description'
           initialValue={action.description}
           deliverValue={(description: string) => {
-            if (description !== '') {
-              action.description = description
+            action.description = description
+
+            // Equivalent to an empty string.
+            if (description !== '<p><br></p>') {
               removeActionEmptyString('description')
-              setDeliverDescriptionError(false)
-              setMountHandled(false)
+              remount()
               handleChange()
             } else {
-              setDeliverDescriptionError(true)
               setActionEmptyStringArray([
                 ...actionEmptyStringArray,
                 `actionID=${action.actionID}_field=description`,
               ])
-              setMountHandled(false)
+              remount()
             }
           }}
           options={{
-            deliverError: deliverDescriptionError,
-            deliverErrorMessage: errorMessage,
+            elementBoundary: '.BorderBox',
           }}
           key={`${action.actionID}_description`}
         />
@@ -174,24 +197,23 @@ export default function NodeActionEntry(props: {
           label='Post-Execution Success Text'
           initialValue={action.postExecutionSuccessText}
           deliverValue={(postExecutionSuccessText: string) => {
-            if (postExecutionSuccessText !== '') {
-              action.postExecutionSuccessText = postExecutionSuccessText
+            action.postExecutionSuccessText = postExecutionSuccessText
+
+            // Equivalent to an empty string.
+            if (postExecutionSuccessText !== '<p><br></p>') {
               removeActionEmptyString('postExecutionSuccessText')
-              setDeliverPostExecutionSuccessTextError(false)
-              setMountHandled(false)
+              remount()
               handleChange()
             } else {
-              setDeliverPostExecutionSuccessTextError(true)
               setActionEmptyStringArray([
                 ...actionEmptyStringArray,
                 `actionID=${action.actionID}_field=postExecutionSuccessText`,
               ])
-              setMountHandled(false)
+              remount()
             }
           }}
           options={{
-            deliverError: deliverPostExecutionSuccessTextError,
-            deliverErrorMessage: errorMessage,
+            elementBoundary: '.BorderBox',
           }}
           key={`${action.actionID}_postExecutionSuccessText`}
         />
@@ -199,24 +221,23 @@ export default function NodeActionEntry(props: {
           label='Post-Execution Failure Text'
           initialValue={action.postExecutionFailureText}
           deliverValue={(postExecutionFailureText: string) => {
-            if (postExecutionFailureText !== '') {
-              action.postExecutionFailureText = postExecutionFailureText
+            action.postExecutionFailureText = postExecutionFailureText
+
+            // Equivalent to an empty string.
+            if (postExecutionFailureText !== '<p><br></p>') {
               removeActionEmptyString('postExecutionFailureText')
-              setDeliverPostExecutionFailureTextError(false)
-              setMountHandled(false)
+              remount()
               handleChange()
             } else {
-              setDeliverPostExecutionFailureTextError(true)
               setActionEmptyStringArray([
                 ...actionEmptyStringArray,
                 `actionID=${action.actionID}_field=postExecutionFailureText`,
               ])
-              setMountHandled(false)
+              remount()
             }
           }}
           options={{
-            deliverError: deliverPostExecutionFailureTextError,
-            deliverErrorMessage: errorMessage,
+            elementBoundary: '.BorderBox',
           }}
           key={`${action.actionID}_postExecutionFailureText`}
         />
