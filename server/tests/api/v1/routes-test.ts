@@ -1,4 +1,3 @@
-import express from 'express'
 import {
   RequestBodyFilters,
   defineRequests,
@@ -73,13 +72,11 @@ export const routerMap: TMetisRouterMap = (
   // GET route to test the params validation
   // middleware function
   router.get(
-    '/request-params-type-check/:string/:number/:integer/:boolean/:objectId',
+    '/request-params-type-check/:string/:number/:objectId',
     defineRequests({
       params: {
         string: 'string',
         number: 'number',
-        integer: 'integer',
-        boolean: 'boolean',
         objectId: 'objectId',
       },
     }),

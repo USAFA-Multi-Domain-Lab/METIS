@@ -501,7 +501,7 @@ export const routerMap: TMetisRouterMap = (
   // -- GET /api/v1/missions/export/
   // This will return all of the missions.
   router.get(
-    '/export/*',
+    '/export/*', // The "*" is to ensure the downloaded file includes the mission's name and the .metis extension.
     requireLogin({ permittedRoles: ['instructor', 'admin'] }),
     defineRequests({ query: { missionID: 'objectId' } }),
     (request, response) => {

@@ -1,5 +1,6 @@
 const { createProxyMiddleware } = require('http-proxy-middleware')
 const fs = require('fs')
+const path = require('path')
 
 // Get default enviornment variable values.
 const defaults = require('../../defaults')
@@ -8,21 +9,31 @@ const defaults = require('../../defaults')
 // based on the default value.
 let METIS_SERVER_PORT = defaults.PORT
 
-let environmentFilePath = '../../environment.json'
+// Resolve the path to the environment file.
+let environmentFilePath = path.resolve(
+  __dirname,
+  '../../server/environment.json',
+)
 
 // Check if the environment file exists.
 if (fs.existsSync(environmentFilePath)) {
-  // Read the environment file.
-  let environmentData = fs.readFileSync(environmentFilePath, 'utf8')
+  try {
+    // Read the environment file.
+    let environmentData = fs.readFileSync(environmentFilePath, 'utf8')
 
-  // Parse the environment file into
-  // a JSON object.
-  environmentData = JSON.parse(environmentData)
+    // Parse the environment file into
+    // a JSON object.
+    environmentData = JSON.parse(environmentData)
 
-  // Grab the port from the environment
-  // data if it exists.
-  if ('PORT' in environmentData) {
-    METIS_SERVER_PORT = environmentData['PORT']
+    // Grab the port from the environment
+    // data if it exists.
+    if ('port' in environmentData) {
+      METIS_SERVER_PORT = environmentData['port']
+    }
+  } catch (error) {
+    console.error('Error parsing environment file.')
+    console.error(error)
+    process.exit(1)
   }
 }
 

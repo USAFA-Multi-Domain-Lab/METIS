@@ -2,7 +2,7 @@
 
 export let demoMissionData = {
   name: 'METIS > ASCOT 7 DEMO',
-  introMessage: '<p>Welcome to the METIS > ASCOT 7 DEMO</p>',
+  introMessage: '<p>Welcome to the METIS &gt; ASCOT 7 DEMO</p>',
   versionNumber: 1,
   seed: '6499bf5b8214651c898d125f',
   initialResources: 100,
@@ -82,7 +82,7 @@ export let demoMissionData = {
       color: '#52b1ff',
       description: '<p>U.S. Central Command</p>',
       preExecutionText:
-        '<p>*** CONNECTION ESTABLISHED ***\nSYS MESSAGE: Welcome to the unified combatant commands cyberspace effects services interface system.</p>',
+        '<p>*** CONNECTION ESTABLISHED *** SYS MESSAGE: Welcome to the unified combatant commands cyberspace effects services interface system.</p>',
       depthPadding: 0,
       executable: false,
       device: false,
@@ -94,7 +94,7 @@ export let demoMissionData = {
       color: '#52b1ff',
       description: '<p>U.S. Africa Command</p>',
       preExecutionText:
-        '<p>*** CONNECTION ESTABLISHED ***\nSYS MESSAGE: Welcome to the unified combatant commands cyberspace effects services interface system.</p>',
+        '<p>*** CONNECTION ESTABLISHED *** SYS MESSAGE: Welcome to the unified combatant commands cyberspace effects services interface system.</p>',
       depthPadding: 0,
       executable: false,
       device: false,
@@ -106,7 +106,7 @@ export let demoMissionData = {
       color: '#52b1ff',
       description: '<p>U.S. European Command</p>',
       preExecutionText:
-        '<p>*** CONNECTION ESTABLISHED ***\nSYS MESSAGE: Welcome to the unified combatant commands cyberspace effects services interface system.</p>',
+        '<p>*** CONNECTION ESTABLISHED *** SYS MESSAGE: Welcome to the unified combatant commands cyberspace effects services interface system.</p>',
       depthPadding: 0,
       executable: false,
       device: false,
@@ -118,7 +118,7 @@ export let demoMissionData = {
       color: '#52b1ff',
       description: '<p>U.S. Northern Command</p>',
       preExecutionText:
-        '<p>*** CONNECTION ESTABLISHED ***\nSYS MESSAGE: Welcome to the unified combatant commands cyberspace effects services interface system.</p>',
+        '<p>*** CONNECTION ESTABLISHED *** SYS MESSAGE: Welcome to the unified combatant commands cyberspace effects services interface system.</p>',
       depthPadding: 0,
       executable: false,
       device: false,
@@ -130,7 +130,7 @@ export let demoMissionData = {
       color: '#52b1ff',
       description: '<p>U.S. Indo-Pacific Command</p>',
       preExecutionText:
-        "<p>*** CONNECTION ESTABLISHED ***\nSYS MESSAGE: Welcome to the unified combatant command's cyberspace effects services interface system.\n\nMISSION: U.S. Indo-Pacific Command will implement a combat credible deterrence strategy capable of denying our adversaries sustained air and sea dominance by focusing on posturing the Joint Force to win before fighting, while being ready to fight and win, if required.</p>",
+        "<p>*** CONNECTION ESTABLISHED *** SYS MESSAGE: Welcome to the unified combatant command's cyberspace effects services interface system. MISSION: U.S. Indo-Pacific Command will implement a combat credible deterrence strategy capable of denying our adversaries sustained air and sea dominance by focusing on posturing the Joint Force to win before fighting, while being ready to fight and win, if required.</p>",
       depthPadding: 0,
       executable: false,
       device: false,
@@ -142,7 +142,7 @@ export let demoMissionData = {
       color: '#52b1ff',
       description: '<p>U.S. Southern Command</p>',
       preExecutionText:
-        '<p>*** CONNECTION ESTABLISHED ***\nSYS MESSAGE: Welcome to the unified combatant commands cyberspace effects services interface system.</p>',
+        '<p>*** CONNECTION ESTABLISHED *** SYS MESSAGE: Welcome to the unified combatant commands cyberspace effects services interface system.</p>',
       depthPadding: 0,
       executable: false,
       device: false,
@@ -154,7 +154,7 @@ export let demoMissionData = {
       color: '#52b1ff',
       description: '<p>U.S. Space Command</p>',
       preExecutionText:
-        '<p>*** CONNECTION ESTABLISHED ***\nSYS MESSAGE: Welcome to the unified combatant commands cyberspace effects services interface system.</p>',
+        '<p>*** CONNECTION ESTABLISHED *** SYS MESSAGE: Welcome to the unified combatant commands cyberspace effects services interface system.</p>',
       depthPadding: 0,
       executable: false,
       device: false,
@@ -261,7 +261,7 @@ export let demoMissionData = {
           successChance: 1,
           resourceCost: 0,
           postExecutionSuccessText:
-            "<p>*** RUNNING COMPILE SCRIPT. . . . . . [] ***\n\nSYS MESSAGE: Compiling list of Xi’an Satellite Control Center subordinate ground control stations (GCS).\n系统消息：正在整理西安卫星控制中心下属地面控制站（GCS）列表。\nXìtǒng xiāoxī: Zhèngzài zhěnglǐ xī'ān wèixīng kòngzhì zhōngxīn xiàshǔ dìmiàn kòngzhì zhàn (GCS) lièbiǎo.</p>",
+            "<p>*** RUNNING COMPILE SCRIPT. . . . . . [] *** SYS MESSAGE: Compiling list of Xi’an Satellite Control Center subordinate ground control stations (GCS). 系统消息：正在整理西安卫星控制中心下属地面控制站（GCS）列表。 Xìtǒng xiāoxī: Zhèngzài zhěnglǐ xī'ān wèixīng kòngzhì zhōngxīn xiàshǔ dìmiàn kòngzhì zhàn (GCS) lièbiǎo.</p>",
           postExecutionFailureText: '<p>Error: 1025845</p>',
           scripts: [],
         },
@@ -286,7 +286,7 @@ export let demoMissionData = {
           successChance: 1,
           resourceCost: 0,
           postExecutionSuccessText:
-            '<p>*** RUNNING COMPILE SCRIPT. . . . . . [] ***\nSYS MESSAGE: List of available access points has been generated.</p>',
+            '<p>*** RUNNING COMPILE SCRIPT. . . . . . [] *** SYS MESSAGE: List of available access points has been generated.</p>',
           postExecutionFailureText: '<p>Error: 1025845</p>',
           scripts: [],
         },
@@ -310,7 +310,7 @@ export let demoMissionData = {
           successChance: 1,
           resourceCost: 10,
           postExecutionSuccessText:
-            '<p>/// BRUTE FORCE CRACK SUCCESSFUL ///\nSYS MESSAGE: List compiled of currently connected terrestrial based assets.</p>',
+            '<p>/// BRUTE FORCE CRACK SUCCESSFUL /// SYS MESSAGE: List compiled of currently connected terrestrial based assets.</p>',
           postExecutionFailureText:
             '<p>Error: 1025845 *** NETWORK ACCESS BLOCKED ***</p>',
           scripts: [],
@@ -335,7 +335,7 @@ export let demoMissionData = {
           successChance: 1,
           resourceCost: 10,
           postExecutionSuccessText:
-            '<p>/// BRUTE FORCE CRACK SUCCESSFUL ///\nSYS MESSAGE: List compiled of currently connected terrestrial based assets.</p>',
+            '<p>/// BRUTE FORCE CRACK SUCCESSFUL /// SYS MESSAGE: List compiled of currently connected terrestrial based assets.</p>',
           postExecutionFailureText:
             '<p>Error: 1025845 *** NETWORK ACCESS BLOCKED ***</p>',
           scripts: [],
@@ -360,7 +360,7 @@ export let demoMissionData = {
           successChance: 1,
           resourceCost: 10,
           postExecutionSuccessText:
-            '<p>/// BRUTE FORCE CRACK SUCCESSFUL ///\nSYS MESSAGE: List compiled of currently connected terrestrial based assets.</p>',
+            '<p>/// BRUTE FORCE CRACK SUCCESSFUL /// SYS MESSAGE: List compiled of currently connected terrestrial based assets.</p>',
           postExecutionFailureText:
             '<p>Error: 1025845 *** NETWORK ACCESS BLOCKED ***</p>',
           scripts: [],
@@ -385,7 +385,7 @@ export let demoMissionData = {
           successChance: 1,
           resourceCost: 10,
           postExecutionSuccessText:
-            '<p>/// BRUTE FORCE CRACK SUCCESSFUL ///\nSYS MESSAGE: List compiled of currently connected terrestrial based assets.</p>',
+            '<p>/// BRUTE FORCE CRACK SUCCESSFUL /// SYS MESSAGE: List compiled of currently connected terrestrial based assets.</p>',
           postExecutionFailureText:
             '<p>Error: 1025845 *** NETWORK ACCESS BLOCKED ***</p>',
           scripts: [],
@@ -411,7 +411,7 @@ export let demoMissionData = {
           successChance: 1,
           resourceCost: 10,
           postExecutionSuccessText:
-            '<p>/// ACCESS SCRIPT SUCCESSFUL ///\nSYS MESSAGE: List compiled of currently connected terrestrial based assets.\n/// 访问脚本成功 ///\n系统消息：当前连接的地面资产的列表。\n/// Fǎngwèn jiǎoběn chénggōng///\nxìtǒng xiāoxī: Dāngqián liánjiē dì dìmiàn zīchǎn dì lièbiǎo.</p>',
+            '<p>/// ACCESS SCRIPT SUCCESSFUL /// SYS MESSAGE: List compiled of currently connected terrestrial based assets. /// 访问脚本成功 /// 系统消息：当前连接的地面资产的列表。 /// Fǎngwèn jiǎoběn chénggōng/// xìtǒng xiāoxī: Dāngqián liánjiē dì dìmiàn zīchǎn dì lièbiǎo.</p>',
           postExecutionFailureText:
             '<p>Error: 1025845 *** NETWORK ACCESS BLOCKED ***</p>',
           scripts: [],
@@ -436,7 +436,7 @@ export let demoMissionData = {
           successChance: 1,
           resourceCost: 10,
           postExecutionSuccessText:
-            '<p>/// BRUTE FORCE CRACK SUCCESSFUL ///\nSYS MESSAGE: List compiled of currently connected terrestrial based assets.</p>',
+            '<p>/// BRUTE FORCE CRACK SUCCESSFUL /// SYS MESSAGE: List compiled of currently connected terrestrial based assets.</p>',
           postExecutionFailureText:
             '<p>Error: 1025845 *** NETWORK ACCESS BLOCKED ***</p>',
           scripts: [],
@@ -449,7 +449,7 @@ export let demoMissionData = {
       color: '#52b1ff',
       description: '<p>JB-7-4</p>',
       preExecutionText:
-        '<p>Satellite: YAOGAN-23 (SAR) Two Line Element Set (TLE): \n1 40305U 14071A   23186.44045114  .00010456  00000-0  35544-3 0  9998\n2 40305  97.6540 150.2916 0001821 103.7780 256.3663 15.30655096478928</p>',
+        '<p>Satellite: YAOGAN-23 (SAR) Two Line Element Set (TLE): 1 40305U 14071A 23186.44045114 .00010456 00000-0 35544-3 0 9998 2 40305 97.6540 150.2916 0001821 103.7780 256.3663 15.30655096478928</p>',
       depthPadding: 0,
       executable: true,
       device: false,
@@ -475,7 +475,7 @@ export let demoMissionData = {
       color: '#52b1ff',
       description: '<p>Unknown</p>',
       preExecutionText:
-        '<p>Satellite: YAOGAN-35 (ELINT) - Two Line Element Set (TLE): \n1 53522U 22100A   23185.93674371  .00000372  00000-0  15955-4 0  9992\n2 53522  35.0016 357.2127 0015138 230.2255 129.7127 15.25075460 48723</p>',
+        '<p>Satellite: YAOGAN-35 (ELINT) - Two Line Element Set (TLE): 1 53522U 22100A 23185.93674371 .00000372 00000-0 15955-4 0 9992 2 53522 35.0016 357.2127 0015138 230.2255 129.7127 15.25075460 48723</p>',
       depthPadding: 0,
       executable: true,
       device: false,
@@ -501,7 +501,7 @@ export let demoMissionData = {
       color: '#52b1ff',
       description: '<p>Unknown</p>',
       preExecutionText:
-        '<p>YAOGAN-36 (Data) - Two Line Element Set (TLE): \n1 54372U 22160A   23186.55133669  .00108949  00000-0  42295-2 0  9995\n2 54372  34.9942 281.0301 0008014  20.3153 357.7082 15.24733845 33602</p>',
+        '<p>YAOGAN-36 (Data) - Two Line Element Set (TLE): 1 54372U 22160A 23186.55133669 .00108949 00000-0 42295-2 0 9995 2 54372 34.9942 281.0301 0008014 20.3153 357.7082 15.24733845 33602</p>',
       depthPadding: 0,
       executable: true,
       device: false,
@@ -514,7 +514,7 @@ export let demoMissionData = {
           successChance: 1,
           resourceCost: 1,
           postExecutionSuccessText:
-            '<p>Currently Connected: Chengdu GJ-2 (Wing Loong 2) - SPEED: 320 km/h - ALTITUDE: 28k MSL - LOCATION: 43° 30.1647′ N, 141° 05.6799′ E\n目前连接：成都 GJ-2（翼龙 2） - 速度：320 km/h - 海拔：28k MSL - 位置：43°30.1647′N，141°05.6799′E\nMùqián liánjiē: Chéngdū GJ-2(yì lóng 2) - sùdù:320 Km/h - hǎibá:28K MSL - wèizhì:43°30.1647′N,141°05.6799′E</p>',
+            '<p>Currently Connected: Chengdu GJ-2 (Wing Loong 2) - SPEED: 320 km/h - ALTITUDE: 28k MSL - LOCATION: 43° 30.1647′ N, 141° 05.6799′ E 目前连接：成都 GJ-2（翼龙 2） - 速度：320 km/h - 海拔：28k MSL - 位置：43°30.1647′N，141°05.6799′E Mùqián liánjiē: Chéngdū GJ-2(yì lóng 2) - sùdù:320 Km/h - hǎibá:28K MSL - wèizhì:43°30.1647′N,141°05.6799′E</p>',
           postExecutionFailureText:
             '<p>Error: 10295456 *** ACCESS BLOCKED ***</p>',
           scripts: [],
@@ -540,7 +540,7 @@ export let demoMissionData = {
           successChance: 1,
           resourceCost: 5,
           postExecutionSuccessText:
-            '<p>/// Access gained to UAV on-board systems. ///\n/// 获得无人机机载系统的访问权限。 ///\n/// Huòdé wú rén jī jī zǎi xìtǒng de fǎngwèn quánxiàn. ///</p>',
+            '<p>/// Access gained to UAV on-board systems. /// /// 获得无人机机载系统的访问权限。 /// /// Huòdé wú rén jī jī zǎi xìtǒng de fǎngwèn quánxiàn. ///</p>',
           postExecutionFailureText:
             '<p>Error: 10295456 *** Air Vehicle has rejected command. ***</p>',
           scripts: [],
@@ -641,7 +641,7 @@ export let demoMissionData = {
           successChance: 1,
           resourceCost: 1,
           postExecutionSuccessText:
-            '<p>/// DESTRUCTION WARNING ///\nSYS MESSAGE: Forcing loss-of-link protocol will result in UAV self-destruction.\n*** CONFIRM ACTION ***\n/// 破坏警告 ///\n系统消息：强制使用链路丢失协议将导致无人机自毁。\n*** 确认操作 ***\n/// Pòhuài jǐnggào///\nxìtǒng xiāoxī: Qiángzhì shǐyòng liàn lù diūshī xiéyì jiāng dǎozhì wú rén jī zì huǐ.\n*** Quèrèn cāozuò***</p>',
+            '<p>/// DESTRUCTION WARNING /// SYS MESSAGE: Forcing loss-of-link protocol will result in UAV self-destruction. *** CONFIRM ACTION *** /// 破坏警告 /// 系统消息：强制使用链路丢失协议将导致无人机自毁。 *** 确认操作 *** /// Pòhuài jǐnggào/// xìtǒng xiāoxī: Qiángzhì shǐyòng liàn lù diūshī xiéyì jiāng dǎozhì wú rén jī zì huǐ. *** Quèrèn cāozuò***</p>',
           postExecutionFailureText:
             '<p>Error: 10295456 *** Air Vehicle has rejected command. ***</p>',
           scripts: [],
@@ -666,7 +666,7 @@ export let demoMissionData = {
           successChance: 1,
           resourceCost: 1,
           postExecutionSuccessText:
-            '<p>/// UAV HAS RECIEVED SELF-DESTRUCTION COMMAND ///\nSYS MESSAGE: Connection to UAV (Chengdu GJ-2) has terminated.\n/// 无人机已收到自毁命令 ///\n系统消息：与无人机（成都 GJ-2）的连接已终止。\n/// Wú rén jī yǐ shōu dào zì huǐ mìnglìng///\nxìtǒng xiāoxī: Yǔ wú rén jī (chéngdū GJ-2) de liánjiē yǐ zhōngzhǐ.</p>',
+            '<p>/// UAV HAS RECIEVED SELF-DESTRUCTION COMMAND /// SYS MESSAGE: Connection to UAV (Chengdu GJ-2) has terminated. /// 无人机已收到自毁命令 /// 系统消息：与无人机（成都 GJ-2）的连接已终止。 /// Wú rén jī yǐ shōu dào zì huǐ mìnglìng/// xìtǒng xiāoxī: Yǔ wú rén jī (chéngdū GJ-2) de liánjiē yǐ zhōngzhǐ.</p>',
           postExecutionFailureText:
             '<p>Error: 10295456 *** Air Vehicle has rejected command. ***</p>',
           scripts: [],
