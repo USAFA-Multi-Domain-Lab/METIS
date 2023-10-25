@@ -15,6 +15,8 @@ const Branding = (props: {
 
   return (
     <div className={className} onClick={props.goHome ? props.goHome : () => {}}>
+      <div className='Emblem'></div>
+      <div className='Logo'></div>
       {props.tooltipDescription ? (
         <Tooltip description={props.tooltipDescription} />
       ) : null}

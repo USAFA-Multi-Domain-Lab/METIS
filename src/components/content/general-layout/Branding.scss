@@ -1,16 +1,29 @@
 @import '../../../config.scss';
 
 .Branding {
-  background-image: url('../../../assets/images/metis_emblsem_white.png');
-  background-size: contain;
-  background-position: center;
-  background-repeat: no-repeat;
+  display: grid;
+  grid-template-columns: 65px 135px;
   width: 200px;
-  height: $nav-height;
+  padding: 0;
   cursor: pointer;
   user-select: none;
-  display: inline-block;
-  padding: 0;
+
+  @mixin branding-img($image) {
+    background-image: url($image);
+    background-size: contain;
+    background-position: center;
+    background-repeat: no-repeat;
+    height: $nav-height;
+  }
+
+  .Emblem {
+    @include branding-img('../../../assets/images/new_metis_emblem.png');
+    margin-right: 15px;
+  }
+
+  .Logo {
+    @include branding-img('../../../assets/images/new_metis_logo.png');
+  }
 
   &.Disabled {
     cursor: default;

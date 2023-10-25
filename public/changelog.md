@@ -1,5 +1,9 @@
 # changelog
 
+# version-1.3.5 | 10-25-2023
+
+- Updated branding throughout the whole web application to use the new emblem and logo created for METIS
+
 # version-1.3.4 | 10-6-2023
 
 - Created a rich text editor in the Mission Form Page (Edit Mission Page) so that hyperlinks can be used and text can be emboldened, underlined, or italicized
