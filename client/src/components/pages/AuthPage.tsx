@@ -4,6 +4,7 @@ import User from '../../../../shared/users'
 import { IPage } from '../App'
 import { AnyObject } from '../../../../shared/toolbox/objects'
 import { useGlobalContext } from 'src/context'
+import Branding from '../content/general-layout/Branding'
 
 export interface IAuthPageSpecific {
   returningPagePath: string
@@ -149,9 +150,7 @@ export default function AuthPage(props: IAuthPage): JSX.Element | null {
     <div className='AuthPage Page'>
       <div className='Login'>
         <div className='ErrorMessage'>{errorMessage}</div>
-        <div className='Header'>
-          <div className='Heading'></div>
-        </div>
+        <Branding goHome={null} tooltipDescription={''} />
         <form className='Form' onChange={handleChange} onSubmit={handleSubmit}>
           <input
             className='UserID Field'
