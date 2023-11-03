@@ -1,25 +1,19 @@
 import { useState } from 'react'
-import User from '../../../../../shared/users'
 import { Detail } from '../form/Form'
 import './EditUserEntry.scss'
+import ClientUser from 'src/users'
 
 /**
  * This will render the forms for editing a new user.
- * @param props
- * @param props.user The user object to be rendered.
- * @param props.userEmptyStringArray An array that will contain the fields that are empty.
- * @param props.setUserEmptyStringArray A function that will add the empty fields to the array.
- * @param props.handleChange Tracks if there have been changes made that need to be saved.
- * @returns JSX.Element | null
  */
 export default function EditUserEntry(props: {
-  user: User
-  userEmptyStringArray: Array<string>
-  setUserEmptyStringArray: (userEmptyString: Array<string>) => void
+  user: ClientUser
+  userEmptyStringArray: string[]
+  setUserEmptyStringArray: (userEmptyString: string[]) => void
   handleChange: () => void
 }): JSX.Element | null {
-  let user: User = props.user
-  let userEmptyStringArray: Array<string> = props.userEmptyStringArray
+  let user: ClientUser = props.user
+  let userEmptyStringArray: string[] = props.userEmptyStringArray
   let setUserEmptyStringArray = props.setUserEmptyStringArray
   let handleChange = props.handleChange
 
@@ -28,9 +22,8 @@ export default function EditUserEntry(props: {
     useState<boolean>(false)
   const [deliverLastNameError, setDeliverLastNameError] =
     useState<boolean>(false)
-  const [generalErrorMessage, setGeneralErrorMessage] = useState<string>(
-    'At least one character is required here.',
-  )
+  const [firstNameErrorMessage, setFirstNameErrorMessage] = useState<string>('')
+  const [lastNameErrorMessage, setLastNameErrorMessage] = useState<string>('')
   const [updateFirstNameClassName, setUpdateFirstNameClassName] =
     useState<string>('')
   const [updateLastNameClassName, setUpdateLastNameClassName] =
@@ -58,20 +51,35 @@ export default function EditUserEntry(props: {
       </div>
       <div className='RoleContainer'>
         <div className='Title'>Role:</div>
-        <div className='Role'>{user.role}</div>
+        <div className='Role'>{user.role.name}</div>
       </div>
       <Detail
         label='First Name'
         initialValue={user.firstName}
         deliverValue={(firstName: string) => {
-          if (firstName !== '') {
-            user.firstName = firstName
+          user.firstName = firstName
+
+          if (firstName !== '' && user.hasValidFirstName) {
             removeUserEmptyString('firstName')
             setDeliverFirstNameError(false)
             setUpdateFirstNameClassName('Correct')
             handleChange()
-          } else {
+          }
+
+          if (firstName === '') {
             setDeliverFirstNameError(true)
+            setFirstNameErrorMessage('At least one character is required here.')
+            setUserEmptyStringArray([
+              ...userEmptyStringArray,
+              `field=firstName`,
+            ])
+          }
+
+          if (!user.hasValidFirstName && firstName !== '') {
+            setDeliverFirstNameError(true)
+            setFirstNameErrorMessage(
+              'First names must be between 1 and 50 characters long and can only contain letters.',
+            )
             setUserEmptyStringArray([
               ...userEmptyStringArray,
               `field=firstName`,
@@ -80,7 +88,7 @@ export default function EditUserEntry(props: {
         }}
         options={{
           deliverError: deliverFirstNameError,
-          deliverErrorMessage: generalErrorMessage,
+          deliverErrorMessage: firstNameErrorMessage,
           uniqueLabelClassName: updateFirstNameClassName,
           uniqueInputClassName: updateFirstNameClassName,
           placeholder: 'Enter a first name here...',
@@ -90,20 +98,32 @@ export default function EditUserEntry(props: {
         label='Last Name'
         initialValue={user.lastName}
         deliverValue={(lastName: string) => {
-          if (lastName !== '') {
-            user.lastName = lastName
+          user.lastName = lastName
+
+          if (lastName !== '' && user.hasValidLastName) {
             removeUserEmptyString('lastName')
             setDeliverLastNameError(false)
             setUpdateLastNameClassName('Correct')
             handleChange()
-          } else {
+          }
+
+          if (lastName === '') {
             setDeliverLastNameError(true)
+            setLastNameErrorMessage('At least one character is required here.')
+            setUserEmptyStringArray([...userEmptyStringArray, `field=lastName`])
+          }
+
+          if (!user.hasValidLastName && lastName !== '') {
+            setDeliverLastNameError(true)
+            setLastNameErrorMessage(
+              'Last names must be between 1 and 50 characters long and can only contain letters.',
+            )
             setUserEmptyStringArray([...userEmptyStringArray, `field=lastName`])
           }
         }}
         options={{
           deliverError: deliverLastNameError,
-          deliverErrorMessage: generalErrorMessage,
+          deliverErrorMessage: lastNameErrorMessage,
           uniqueLabelClassName: updateLastNameClassName,
           uniqueInputClassName: updateLastNameClassName,
           placeholder: 'Enter a last name here...',

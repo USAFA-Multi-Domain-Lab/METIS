@@ -1,12 +1,11 @@
-import User, { deleteUser } from '../../../../../shared/users'
-import { TMetisSession } from '../../../../../shared/sessions'
+import ClientUser from 'src/users'
 import { EMiniButtonSVGPurpose, MiniButtonSVG } from './MiniButtonSVG'
 import { MiniButtonSVGPanel } from './MiniButtonSVGPanel'
 import './UserModificationPanel.scss'
 import { useGlobalContext } from 'src/context'
 
 export default function UserModificationPanel(props: {
-  user: User
+  user: ClientUser
   handleSuccessfulDeletion: () => void
 }): JSX.Element | null {
   /* -- GLOBAL CONTEXT -- */
@@ -18,7 +17,7 @@ export default function UserModificationPanel(props: {
 
   /* -- COMPONENT VARIABLES -- */
 
-  let user: User = props.user
+  let user: ClientUser = props.user
   let currentActions: MiniButtonSVG[] = []
   let handleSuccessfulDeletion = props.handleSuccessfulDeletion
 
@@ -39,23 +38,20 @@ export default function UserModificationPanel(props: {
   const handleDeleteRequest = () => {
     confirm(
       'Are you sure you want to delete this user?',
-      (concludeAction: () => void) => {
+      async (concludeAction: () => void) => {
         concludeAction()
         beginLoading('Deleting user...')
 
         if (user.userID) {
-          deleteUser(
-            user.userID,
-            () => {
-              finishLoading()
-              notify(`Successfully deleted ${user.userID}.`)
-              handleSuccessfulDeletion()
-            },
-            () => {
-              finishLoading()
-              notify(`Failed to delete ${user.userID}.`)
-            },
-          )
+          try {
+            await ClientUser.delete(user.userID)
+            finishLoading()
+            notify(`Successfully deleted ${user.userID}.`)
+            handleSuccessfulDeletion()
+          } catch (error: any) {
+            finishLoading()
+            notify(`Failed to delete ${user.userID}.`)
+          }
         }
       },
       {

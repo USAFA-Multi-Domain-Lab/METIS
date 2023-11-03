@@ -9,6 +9,7 @@ import {
 import { ServerEmittedError } from 'metis/connect/errors'
 import User from 'metis/users'
 import MetisSession from 'metis/server/sessions'
+import ServerUser from '../users'
 
 export type TClientHandler<TMethod extends TClientMethod> = (
   data: TClientData<TMethod>,
@@ -64,7 +65,7 @@ export default class ClientConnection {
   /**
    * The user in the session.
    */
-  public get user(): User {
+  public get user(): ServerUser {
     return this.session.user
   }
 

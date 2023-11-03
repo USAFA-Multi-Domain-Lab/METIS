@@ -8,10 +8,7 @@ import MetisDatabase from 'metis/server/database'
 import InfoModel from 'metis/server/database/models/info'
 import MissionModel from 'metis/server/database/models/missions'
 import { databaseLogger, plcApiLogger } from 'metis/server/logging'
-import {
-  hasPermittedRole as hasPermittedRole,
-  requireLogin,
-} from '../../middleware/users'
+import { hasAuthorization } from '../../middleware/users'
 import uploads from '../../middleware/uploads'
 import { RequestBodyFilters, defineRequests } from '../../middleware/requests'
 import MissionNode from '../../missions/nodes'
@@ -30,7 +27,7 @@ export const routerMap: TMetisRouterMap = (
   // This will create a new mission.
   router.post(
     '/',
-    requireLogin({ permittedRoles: ['instructor', 'admin'] }),
+    hasAuthorization(['WRITE']),
     defineRequests({
       body: {
         name: RequestBodyFilters.STRING,
@@ -106,7 +103,7 @@ export const routerMap: TMetisRouterMap = (
   // -- POST | /api/v1/missions/import/ --
   router.post(
     '/import/',
-    requireLogin({ permittedRoles: ['instructor', 'admin'] }),
+    hasAuthorization(['WRITE']),
     uploads.array('files', 12),
     (request, response) => {
       // Verifies files were included
@@ -442,6 +439,7 @@ export const routerMap: TMetisRouterMap = (
   // This will return all of the missions.
   router.get(
     '/',
+    hasAuthorization(['READ']),
     defineRequests(
       {
         query: {},
@@ -456,7 +454,7 @@ export const routerMap: TMetisRouterMap = (
       if (missionID === undefined) {
         let queries: any = {}
 
-        if (!hasPermittedRole(request, ['instructor', 'admin'])) {
+        if (!hasAuthorization(['WRITE'])) {
           queries.live = true
         }
 
@@ -484,10 +482,7 @@ export const routerMap: TMetisRouterMap = (
               return response.sendStatus(500)
             } else if (mission === null) {
               return response.sendStatus(404)
-            } else if (
-              !mission.live &&
-              !hasPermittedRole(request, ['instructor', 'admin'])
-            ) {
+            } else if (!mission.live && !hasAuthorization(['WRITE'])) {
               return response.sendStatus(401)
             } else {
               databaseLogger.info(`Mission with ID "${missionID}" retrieved.`)
@@ -502,7 +497,7 @@ export const routerMap: TMetisRouterMap = (
   // This will return all of the missions.
   router.get(
     '/export/*', // The "*" is to ensure the downloaded file includes the mission's name and the .metis extension.
-    requireLogin({ permittedRoles: ['instructor', 'admin'] }),
+    hasAuthorization(['READ']),
     defineRequests({ query: { missionID: 'objectId' } }),
     (request, response) => {
       let missionID = request.query.missionID
@@ -589,7 +584,7 @@ export const routerMap: TMetisRouterMap = (
   // executed.
   router.get(
     '/assets/',
-    requireLogin({ permittedRoles: ['instructor', 'admin'] }),
+    hasAuthorization(['READ']),
     defineRequests({}),
     (request, response) => {
       response.json({ assetData })
@@ -602,7 +597,7 @@ export const routerMap: TMetisRouterMap = (
   // ! DEPRECATED
   router.put(
     '/handle-action-execution/',
-    requireLogin(),
+    hasAuthorization([]),
     defineRequests({
       body: {
         missionID: RequestBodyFilters.OBJECTID,
@@ -661,7 +656,7 @@ export const routerMap: TMetisRouterMap = (
   // This will update the mission.
   router.put(
     '/',
-    requireLogin({ permittedRoles: ['instructor', 'admin'] }),
+    hasAuthorization(['WRITE']),
     defineRequests(
       {
         body: {
@@ -779,7 +774,7 @@ export const routerMap: TMetisRouterMap = (
   // This will copy a mission.
   router.put(
     '/copy/',
-    requireLogin({ permittedRoles: ['instructor', 'admin'] }),
+    hasAuthorization(['WRITE']),
     defineRequests({
       body: {
         copyName: RequestBodyFilters.STRING,
@@ -838,7 +833,7 @@ export const routerMap: TMetisRouterMap = (
   // This will delete a mission.
   router.delete(
     '/',
-    requireLogin({ permittedRoles: ['instructor', 'admin'] }),
+    hasAuthorization(['DELETE']),
     defineRequests({ query: { missionID: 'objectId' } }),
     (request, response) => {
       let query: any = request.query

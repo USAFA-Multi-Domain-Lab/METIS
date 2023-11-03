@@ -5,8 +5,15 @@ import { databaseLogger } from 'metis/server/logging'
 import { demoMissionData } from 'metis/server/database/initial-mission-data'
 import InfoModel from 'metis/server/database/models/info'
 import MissionModel from 'metis/server/database/models/missions'
-import UserModel, { hashPassword } from 'metis/server/database/models/users'
+import UserModel, {
+  hashPassword,
+} from 'metis/server/database/models/users/users'
 import MetisServer from 'metis/server'
+import {
+  studentUserData,
+  instructorUserData,
+  adminUserData,
+} from './initial-user-data'
 
 /**
  * Represents a connection to the Metis database.
@@ -200,7 +207,7 @@ export default class MetisDatabase {
    */
   private async ensureDefaultUsersExists(): Promise<void> {
     return new Promise<void>((resolve, reject) => {
-      let awaitingResolve: number = 2
+      let awaitingResolve: number = 3
 
       function resolveOne() {
         // Subtract from awaitingResolve.
@@ -213,95 +220,123 @@ export default class MetisDatabase {
         }
       }
 
-      // Check for admin user.
-      UserModel.findOne({ userID: 'admin' }).exec(
-        async (error: Error, user: any) => {
-          if (error !== null) {
-            databaseLogger.error(
-              'Failed to query database for the default admin user:',
-            )
-            databaseLogger.error(error)
-            reject(error)
-          } else if (user === null) {
-            databaseLogger.info('Admin user not found.')
-            databaseLogger.info('Creating admin user...')
+      // Check if student user exists.
+      UserModel.findOne({
+        userID: 'student1',
+      }).exec(async (error: Error, studentUser: any) => {
+        if (error !== null) {
+          databaseLogger.error('Failed to query database for student user:')
+          databaseLogger.error(error)
+          reject(error)
+        } else if (studentUser === null) {
+          databaseLogger.info('Student user not found.')
+          databaseLogger.info('Creating student user...')
 
-            let adminUserData = {
-              userID: 'admin',
-              role: 'admin',
-              firstName: 'admin',
-              lastName: 'user',
-              password: 'temppass',
-              needsPasswordReset: false,
-            }
-
-            adminUserData.password = await hashPassword(adminUserData.password)
-
-            //creates and saves user
-            UserModel.create(adminUserData, (error: Error, adminUser: any) => {
-              if (error) {
-                databaseLogger.error('Failed to create admin user:')
-                databaseLogger.error(error)
-                reject(error)
-              } else {
-                databaseLogger.info('Admin user created:', adminUser.userID)
-                resolveOne()
-              }
-            })
-          } else {
-            resolveOne()
-          }
-        },
-      )
-
-      // Check for student user.
-      UserModel.findOne({ userID: 'student1' }).exec(
-        async (error: Error, user: any) => {
-          if (error !== null) {
-            databaseLogger.error(
-              'Failed to query database for the default student user:',
-            )
-            databaseLogger.error(error)
-            reject(error)
-          } else if (user === null) {
-            databaseLogger.info('Student user not found.')
-            databaseLogger.info('Creating student user...')
-
-            let studentUserData = {
-              userID: 'student1',
-              role: 'student',
-              firstName: 'student',
-              lastName: 'user',
-              needsPasswordReset: false,
-              password: 'password',
-            }
-
+          if (studentUserData.password) {
+            // Hash student user password.
             studentUserData.password = await hashPassword(
               studentUserData.password,
             )
-
-            //creates and saves user
-            UserModel.create(
-              studentUserData,
-              (error: Error, studentUser: any) => {
-                if (error) {
-                  databaseLogger.error('Failed to create student user:')
-                  databaseLogger.error(error)
-                  reject(error)
-                } else {
-                  databaseLogger.info(
-                    'Student user created:',
-                    studentUser.userID,
-                  )
-                  resolveOne()
-                }
-              },
-            )
-          } else {
-            resolveOne()
           }
-        },
-      )
+
+          // Create student user.
+          UserModel.create(
+            studentUserData,
+            (error: Error, studentUser: any) => {
+              if (error) {
+                databaseLogger.error(
+                  'Failed to create student user in the database:',
+                )
+                databaseLogger.error(error)
+                reject(error)
+              } else {
+                databaseLogger.info('Student user created:', studentUser.userID)
+                resolveOne()
+              }
+            },
+          )
+        } else {
+          resolveOne()
+        }
+      })
+
+      // Check if instructor user exists.
+      UserModel.findOne({
+        userID: 'instructor1',
+      }).exec(async (error: Error, instructorUser: any) => {
+        if (error !== null) {
+          databaseLogger.error('Failed to query database for instructor user:')
+          databaseLogger.error(error)
+          reject(error)
+        } else if (instructorUser === null) {
+          databaseLogger.info('Instructor user not found.')
+          databaseLogger.info('Creating instructor user...')
+
+          if (instructorUserData.password) {
+            // Hash instructor user password.
+            instructorUserData.password = await hashPassword(
+              instructorUserData.password,
+            )
+          }
+
+          // Create instructor user.
+          UserModel.create(
+            instructorUserData,
+            (error: Error, instructorUser: any) => {
+              if (error) {
+                databaseLogger.error(
+                  'Failed to create instructor user in the database:',
+                )
+                databaseLogger.error(error)
+                reject(error)
+              } else {
+                databaseLogger.info(
+                  'Instructor user created:',
+                  instructorUser.userID,
+                )
+                resolveOne()
+              }
+            },
+          )
+        } else {
+          resolveOne()
+        }
+      })
+
+      // Check if admin user exists.
+      UserModel.findOne({
+        userID: 'admin',
+      }).exec(async (error: Error, adminUser: any) => {
+        if (error !== null) {
+          databaseLogger.error('Failed to query database for admin user:')
+          databaseLogger.error(error)
+          reject(error)
+        } else if (adminUser === null) {
+          databaseLogger.info('Admin user not found.')
+          databaseLogger.info('Creating admin user...')
+
+          if (adminUserData.password) {
+            // Hash admin user password.
+            adminUserData.password = await hashPassword(adminUserData.password)
+          }
+
+          // Create admin user.
+          UserModel.create(adminUserData, (error: Error, adminUser: any) => {
+            if (error) {
+              databaseLogger.error(
+                'Failed to create admin user in the database:',
+              )
+              databaseLogger.error(error)
+              reject(error)
+            } else {
+              databaseLogger.info('Admin user created:', adminUser.userID)
+              resolveOne()
+            }
+          })
+        } else {
+          resolveOne()
+        }
+      })
 
       // Set a timeout to reject the promise.
       setTimeout(() => {

@@ -8,11 +8,14 @@ import Confirmation, {
   IConfirmation,
 } from 'src/components/content/communication/Confirmation'
 import Prompt, { IPrompt } from 'src/components/content/communication/Prompt'
-import User, { logout } from '../../../shared/users'
 import { ServerEmittedError } from '../../../shared/connect/errors'
 import { IButtonText } from 'src/components/content/user-controls/ButtonText'
 import { EAjaxStatus } from '../../../shared/toolbox/ajax'
 import { IAuthPageSpecific } from 'src/components/pages/AuthPage'
+import ClientUser from 'src/users'
+import UserPermission, {
+  TUserPermissionID,
+} from '../../../shared/users/permissions'
 
 /**
  * The values available in the global context.
@@ -20,7 +23,7 @@ import { IAuthPageSpecific } from 'src/components/pages/AuthPage'
 export type TGlobalContextValues = {
   forcedUpdateCounter: number
   server: ServerConnection | null
-  session: TMetisSession
+  session: TMetisSession<ClientUser>
   currentPagePath: string
   currentPageProps: AnyObject
   appMountHandled: boolean
@@ -71,9 +74,9 @@ export type TGlobalContextActions = {
   /**
    * Fetches the current session and stores the result in the global state
    * variable "session", returning a promise for the session as well.
-   * @return {Promise<TMetisSession>} The promise of the session.
+   * @return {Promise<TMetisSession<ClientUser>>} The promise of the session.
    */
-  syncSession: () => Promise<TMetisSession>
+  syncSession: () => Promise<TMetisSession<ClientUser>>
   /**
    * Establish a web socket connection with the server. The new server
    * connection will be stored in the global state variable "server".
@@ -125,6 +128,13 @@ export type TGlobalContextActions = {
    * @param {IAuthPageSpecific} authPageProps The props to pass to the auth page.
    */
   logout: (authPageProps: IAuthPageSpecific) => void
+  /**
+   * This will check to see if the user in session has the permission to perform
+   * the requested action.
+   * @param {TUserPermissionID[]} requiredPermissions The required permissions to check.
+   * @returns {boolean} Whether or not the user has the required permission.
+   */
+  isAuthorized: (requiredPermissions: TUserPermissionID[]) => boolean
 }
 
 /**
@@ -404,12 +414,13 @@ const useGlobalContextDefinition = (context: TGlobalContext) => {
         handleLoadCompletion()
       }
     },
-    syncSession: async (): Promise<TMetisSession> => {
+    syncSession: async (): Promise<TMetisSession<ClientUser>> => {
       const { handleError } = context.actions
 
-      return new Promise<TMetisSession>(async (resolve, reject) => {
+      return new Promise<TMetisSession<ClientUser>>(async (resolve, reject) => {
         try {
-          let session: TMetisSession = await User.fetchSession()
+          let session: TMetisSession<ClientUser> =
+            await ClientUser.fetchSession()
           setSession(session)
           resolve(session)
         } catch (error: any) {
@@ -603,7 +614,7 @@ const useGlobalContextDefinition = (context: TGlobalContext) => {
 
       setPrompt(prompt)
     },
-    logout: (authPageProps: IAuthPageSpecific) => {
+    logout: async (authPageProps: IAuthPageSpecific) => {
       // Extract context actions.
       const { beginLoading, finishLoading, handleError, goToPage } =
         context.actions
@@ -617,21 +628,50 @@ const useGlobalContextDefinition = (context: TGlobalContext) => {
         server.disconnect()
         setServer(null)
       }
+      try {
+        await ClientUser.logout()
+        setSession(null)
+        finishLoading()
+        goToPage('AuthPage', authPageProps)
+      } catch (error: any) {
+        finishLoading()
+        handleError('Failed to logout.')
+      }
+    },
+    isAuthorized: (requiredPermissions: TUserPermissionID[]): boolean => {
+      // Current METIS session.
+      if (session) {
+        // Current user in session.
+        let { user: currentUser } = session
+        // What the current user is allowed
+        // to do based on their role.
+        let { permissions: rolePermissions } = currentUser.role
+        // What the current user is allowed
+        // to do based on their specific
+        // permissions.
+        let { expressPermissions } = currentUser
+        // Check if the user has the required
+        // permissions.
+        let roleHasRequiredPermissions: boolean = UserPermission.hasPermissions(
+          rolePermissions,
+          requiredPermissions,
+        )
+        // Check to see if the user has been
+        // given specific permissions that
+        // override their role permissions.
+        let userHasSpecificPermissions: boolean = UserPermission.hasPermissions(
+          expressPermissions,
+          requiredPermissions,
+        )
 
-      // Make request to logout.
-      logout(
-        () => {
-          // Clear session and navigate to
-          // the auth page.
-          setSession(null)
-          finishLoading()
-          goToPage('AuthPage', authPageProps)
-        },
-        (error: Error) => {
-          finishLoading()
-          handleError('Failed to logout.')
-        },
-      )
+        if (roleHasRequiredPermissions || userHasSpecificPermissions) {
+          return true
+        } else {
+          return false
+        }
+      } else {
+        return false
+      }
     },
   }
 }

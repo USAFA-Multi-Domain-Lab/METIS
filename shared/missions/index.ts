@@ -1,10 +1,6 @@
 import { v4 as generateHash } from 'uuid'
 import { AnyObject } from '../toolbox/objects'
-import MissionNode, {
-  IMissionNode,
-  TMissionNodeJSON,
-  TMissionNodeOptions,
-} from './nodes'
+import { IMissionNode, TMissionNodeJSON, TMissionNodeOptions } from './nodes'
 import context from '../context'
 
 /**
@@ -79,7 +75,7 @@ export interface IMissionJSON {
   initialResources: number
   seed: string
   nodeStructure: AnyObject
-  nodeData: Array<TMissionNodeJSON>
+  nodeData: TMissionNodeJSON[]
 }
 
 /**

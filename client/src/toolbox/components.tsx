@@ -1,3 +1,4 @@
+import ClientUser from 'src/users'
 import { TMetisSession } from '../../../shared/sessions'
 
 /**
@@ -6,7 +7,7 @@ import { TMetisSession } from '../../../shared/sessions'
 type IRendererOptions = {
   requirements: {
     mountHandled?: boolean
-    session?: TMetisSession
+    session?: TMetisSession<ClientUser>
   }
 }
 

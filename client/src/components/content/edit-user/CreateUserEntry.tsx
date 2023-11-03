@@ -1,29 +1,27 @@
-import { useState } from 'react'
-import User, { TUserRole } from '../../../../../shared/users'
+import { useEffect, useState } from 'react'
 import { Detail, DetailDropDown } from '../form/Form'
 import Toggle from '../user-controls/Toggle'
 import './CreateUserEntry.scss'
 import { useGlobalContext } from 'src/context'
+import ClientUser from 'src/users'
+import UserRole from '../../../../../shared/users/roles'
 
 /**
  * This will render the forms for creating a new user.
- * @param props
- * @param props.user The user object to be rendered.
- * @param props.userEmptyStringArray An array that will contain the fields that are empty.
- * @param props.setUserEmptyStringArray A function that will add the empty fields to the array.
- * @param props.handleChange Tracks if there have been changes made that need to be saved.
- * @returns JSX.Element | null
  */
 export default function CreateUserEntry(props: {
-  user: User
-  userEmptyStringArray: Array<string>
-  setUserEmptyStringArray: (userEmptyString: Array<string>) => void
+  user: ClientUser
+  userEmptyStringArray: string[]
+  usernameAlreadyExists: boolean
+  setUserEmptyStringArray: (userEmptyString: string[]) => void
   handleChange: () => void
 }): JSX.Element | null {
   /* -- COMPONENT PROPERTIES -- */
 
-  let user: User = props.user
-  let userEmptyStringArray: Array<string> = props.userEmptyStringArray
+  let user: ClientUser = props.user
+  let userEmptyStringArray: string[] = props.userEmptyStringArray
+  let usernameAlreadyExists: boolean = props.usernameAlreadyExists
+  let duplicateUsernameErrorMessage: string = 'Username already exists.'
   let setUserEmptyStringArray = props.setUserEmptyStringArray
   let handleChange = props.handleChange
 
@@ -31,6 +29,7 @@ export default function CreateUserEntry(props: {
 
   const globalContext = useGlobalContext()
   const [session] = globalContext.session
+  const { isAuthorized } = globalContext.actions
 
   /* -- COMPONENT STATE -- */
 
@@ -44,10 +43,13 @@ export default function CreateUserEntry(props: {
     useState<boolean>(false)
   const [deliverPassword2Error, setDeliverPassword2Error] =
     useState<boolean>(false)
-  const [generalErrorMessage, setGeneralErrorMessage] = useState<string>(
+  const [usernameErrorMessage, setUsernameErrorMessage] = useState<string>(
     'At least one character is required here.',
   )
-  const [usernameErrorMessage, setUsernameErrorMessage] = useState<string>(
+  const [firstNameErrorMessage, setFirstNameErrorMessage] = useState<string>(
+    'At least one character is required here.',
+  )
+  const [lastNameErrorMessage, setLastNameErrorMessage] = useState<string>(
     'At least one character is required here.',
   )
   const [password1ErrorMessage, setPassword1ErrorMessage] = useState<string>(
@@ -66,6 +68,16 @@ export default function CreateUserEntry(props: {
   const [roleClassName, setRoleClassName] = useState<string>('')
   const [selectedRoleClassName, setSelectedRoleClassName] =
     useState<string>('DefaultValue')
+
+  /* -- COMPONENT EFFECTS -- */
+
+  useEffect(() => {
+    // If the user has entered a username, check to see if it already exists.
+    if (usernameAlreadyExists) {
+      setUsernameErrorMessage(duplicateUsernameErrorMessage)
+      setDeliverUsernameError(true)
+    }
+  }, [usernameAlreadyExists])
 
   /* -- SESSION-SPECIFIC LOGIC -- */
 
@@ -91,10 +103,23 @@ export default function CreateUserEntry(props: {
 
   let passwordLabel: string = 'Password'
   let confirmPasswordLabel: string = 'Confirm Password'
-  let listOfRoles: Array<TUserRole> = ['student']
 
-  if (currentUser.hasFullAccess) {
-    listOfRoles.push('instructor')
+  // Default list of roles to select from.
+  let listOfRoles: UserRole[] = [UserRole.AVAILABLE_ROLES.student]
+
+  // If the current user in session has
+  // proper authorization and their role
+  // is an admin, then they are allowed
+  // to create users with any role.
+  if (
+    isAuthorized(['READ', 'WRITE', 'DELETE']) &&
+    currentUser.role.id === 'admin'
+  ) {
+    listOfRoles = [
+      UserRole.AVAILABLE_ROLES.student,
+      UserRole.AVAILABLE_ROLES.instructor,
+      UserRole.AVAILABLE_ROLES.admin,
+    ]
   }
 
   if (user.needsPasswordReset) {
@@ -144,20 +169,20 @@ export default function CreateUserEntry(props: {
           placeholder: 'Enter a username here...',
         }}
       />
-      <DetailDropDown<TUserRole>
+      <DetailDropDown<UserRole>
         label='Role'
         options={listOfRoles}
         currentValue={user.role}
         isExpanded={false}
         uniqueDropDownStyling={{}}
-        uniqueOptionStyling={(role: TUserRole) => {
+        uniqueOptionStyling={(role: UserRole) => {
           return {}
         }}
-        renderOptionClassName={(role: TUserRole) => {
+        renderOptionClassName={(role: UserRole) => {
           return ''
         }}
-        renderDisplayName={(role: TUserRole) => role}
-        deliverValue={(role: TUserRole) => {
+        renderDisplayName={(role: UserRole) => role.name}
+        deliverValue={(role: UserRole) => {
           user.role = role
           setRoleClassName('Correct')
           setSelectedRoleClassName('Correct')
@@ -173,14 +198,29 @@ export default function CreateUserEntry(props: {
         label='First Name'
         initialValue={user.firstName}
         deliverValue={(firstName: string) => {
-          if (firstName !== '') {
-            user.firstName = firstName
+          user.firstName = firstName
+
+          if (firstName !== '' && user.hasValidFirstName) {
             removeUserEmptyString('firstName')
             setDeliverFirstNameError(false)
             setCreateFirstNameClassName('Correct')
             handleChange()
-          } else {
+          }
+
+          if (firstName === '') {
             setDeliverFirstNameError(true)
+            setFirstNameErrorMessage('At least one character is required here.')
+            setUserEmptyStringArray([
+              ...userEmptyStringArray,
+              `field=firstName`,
+            ])
+          }
+
+          if (!user.hasValidFirstName && firstName !== '') {
+            setDeliverFirstNameError(true)
+            setFirstNameErrorMessage(
+              'First names must be between 1 and 50 characters long and can only contain letters.',
+            )
             setUserEmptyStringArray([
               ...userEmptyStringArray,
               `field=firstName`,
@@ -189,7 +229,7 @@ export default function CreateUserEntry(props: {
         }}
         options={{
           deliverError: deliverFirstNameError,
-          deliverErrorMessage: generalErrorMessage,
+          deliverErrorMessage: firstNameErrorMessage,
           uniqueLabelClassName: createFirstNameClassName,
           uniqueInputClassName: createFirstNameClassName,
           placeholder: 'Enter a first name here...',
@@ -199,20 +239,32 @@ export default function CreateUserEntry(props: {
         label='Last Name'
         initialValue={user.lastName}
         deliverValue={(lastName: string) => {
-          if (lastName !== '') {
-            user.lastName = lastName
+          user.lastName = lastName
+
+          if (lastName !== '' && user.hasValidLastName) {
             removeUserEmptyString('lastName')
             setDeliverLastNameError(false)
             setCreateLastNameClassName('Correct')
             handleChange()
-          } else {
+          }
+
+          if (lastName === '') {
             setDeliverLastNameError(true)
+            setLastNameErrorMessage('At least one character is required here.')
+            setUserEmptyStringArray([...userEmptyStringArray, `field=lastName`])
+          }
+
+          if (!user.hasValidLastName && lastName !== '') {
+            setDeliverLastNameError(true)
+            setLastNameErrorMessage(
+              'Last names must be between 1 and 50 characters long and can only contain letters.',
+            )
             setUserEmptyStringArray([...userEmptyStringArray, `field=lastName`])
           }
         }}
         options={{
           deliverError: deliverLastNameError,
-          deliverErrorMessage: generalErrorMessage,
+          deliverErrorMessage: lastNameErrorMessage,
           uniqueLabelClassName: createLastNameClassName,
           uniqueInputClassName: createLastNameClassName,
           placeholder: 'Enter a last name here...',

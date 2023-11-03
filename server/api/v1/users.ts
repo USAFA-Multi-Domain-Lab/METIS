@@ -1,48 +1,45 @@
 //npm imports
-import { Request, Response, Router as ExpressRouter } from 'express'
+import { NextFunction, Request, Response } from 'express'
 import expressWs from 'express-ws'
 import { StatusError } from 'metis/server/http'
-import User from 'metis/users'
 import MetisSession from 'metis/server/sessions'
 import defineRequests, {
   RequestBodyFilters,
 } from 'metis/server/middleware/requests'
-import UserModel, { hashPassword } from 'metis/server/database/models/users'
-import { requireLogin } from 'metis/server/middleware/users'
+import UserModel, {
+  hashPassword,
+} from 'metis/server/database/models/users/users'
+import {
+  hasAuthorization,
+  validateUserRoles,
+} from 'metis/server/middleware/users'
 import MetisDatabase from 'metis/server/database'
 import { databaseLogger } from '../../logging'
 import { TMetisRouterMap } from 'metis/server/http/router'
+import ServerUser from 'metis/server/users'
 
 const routerMap: TMetisRouterMap = (router: expressWs.Router, done) => {
   // -- POST | /api/v1/users/ --
   router.post(
     '/',
-    requireLogin({ permittedRoles: ['admin'] }),
-    defineRequests(
-      {
-        body: {
-          user: {
-            userID: RequestBodyFilters.STRING_50_CHAR,
-            firstName: RequestBodyFilters.STRING_50_CHAR,
-            lastName: RequestBodyFilters.STRING_50_CHAR,
-            password: RequestBodyFilters.PASSWORD,
-            needsPasswordReset: RequestBodyFilters.BOOLEAN,
-          },
+    hasAuthorization(['WRITE']),
+    defineRequests({
+      body: {
+        user: {
+          userID: RequestBodyFilters.USER_ID,
+          role: RequestBodyFilters.ROLE,
+          expressPermissions: RequestBodyFilters.ARRAY,
+          firstName: RequestBodyFilters.NAME,
+          lastName: RequestBodyFilters.NAME,
+          password: RequestBodyFilters.PASSWORD,
+          needsPasswordReset: RequestBodyFilters.BOOLEAN,
         },
       },
-      {
-        body: {
-          user: {
-            role: RequestBodyFilters.STRING_50_CHAR,
-          },
-        },
-      },
-    ),
-    async (request, response) => {
-      let body: any = request.body
-
-      let userData: any = body.user
-
+    }),
+    validateUserRoles,
+    async (request: Request, response: Response) => {
+      let { body } = request
+      let { user: userData } = body
       let { userID, password } = userData
 
       if (password !== undefined) {
@@ -58,6 +55,8 @@ const routerMap: TMetisRouterMap = (router: expressWs.Router, done) => {
 
           if (error.name === MetisDatabase.ERROR_BAD_DATA) {
             return response.sendStatus(400)
+          } else if (error.message.includes('duplicate key error')) {
+            return response.sendStatus(409)
           } else {
             return response.sendStatus(500)
           }
@@ -103,7 +102,7 @@ const routerMap: TMetisRouterMap = (router: expressWs.Router, done) => {
   // query parameters
   router.get(
     '/',
-    requireLogin({ permittedRoles: ['instructor', 'admin'] }),
+    hasAuthorization(['READ']),
     defineRequests(
       {
         query: {},
@@ -115,7 +114,12 @@ const routerMap: TMetisRouterMap = (router: expressWs.Router, done) => {
       },
     ),
     async (request: Request, response: Response) => {
-      let userID = request.query.userID
+      let { query } = request
+      let { userID } = query
+
+      let session: MetisSession | undefined = MetisSession.get(
+        request.session.userID,
+      )
 
       if (userID === undefined) {
         let queries: any = {}
@@ -123,6 +127,7 @@ const routerMap: TMetisRouterMap = (router: expressWs.Router, done) => {
         try {
           await UserModel.find({ ...queries })
             .queryForApiResponse('find')
+            .queryForApiResponseWithSpecificUsers(session?.user)
             .exec((error: Error, users: any) => {
               if (error !== null || users === null) {
                 databaseLogger.error('Failed to retrieve users.')
@@ -163,9 +168,9 @@ const routerMap: TMetisRouterMap = (router: expressWs.Router, done) => {
     },
   )
 
-  // -- GET | /session/ --
+  // -- GET | /api/v1/users/session/ --
   // Returns the session for the user making the request.
-  router.get('/session/', (request, response) => {
+  router.get('/session/', (request: Request, response: Response) => {
     // Retrieve the session with the session
     // ID stored in the request.
     let session: MetisSession | undefined = MetisSession.get(
@@ -188,37 +193,36 @@ const routerMap: TMetisRouterMap = (router: expressWs.Router, done) => {
   // This will update the user
   router.put(
     '/',
-    requireLogin({ permittedRoles: ['admin'] }),
+    hasAuthorization(['WRITE']),
     defineRequests(
       {
         body: {
           user: {
-            userID: RequestBodyFilters.STRING_50_CHAR,
+            userID: RequestBodyFilters.USER_ID,
           },
         },
       },
       {
         body: {
           user: {
-            role: RequestBodyFilters.STRING_50_CHAR,
-            firstName: RequestBodyFilters.STRING_50_CHAR,
-            lastName: RequestBodyFilters.STRING_50_CHAR,
+            role: RequestBodyFilters.ROLE,
+            expressPermissions: RequestBodyFilters.ARRAY,
+            firstName: RequestBodyFilters.NAME,
+            lastName: RequestBodyFilters.NAME,
             password: RequestBodyFilters.PASSWORD,
             needsPasswordReset: RequestBodyFilters.BOOLEAN,
           },
         },
       },
     ),
+    validateUserRoles,
     async (request: Request, response: Response) => {
-      let body: any = request.body
-
-      let userUpdates: any = body.user
-
-      let userID: string = userUpdates.userID
-      let password: string | undefined = userUpdates.password
+      let { body } = request
+      let { user: userUpdates } = body
+      let { userID, password } = userUpdates
 
       if (password !== undefined) {
-        password = await hashPassword(password)
+        userUpdates.password = await hashPassword(password)
       }
 
       try {
@@ -308,20 +312,126 @@ const routerMap: TMetisRouterMap = (router: expressWs.Router, done) => {
     },
   )
 
+  // -- PUT | /api/v1/users/reset-password --
+  // This will reset the user's password
+  router.put(
+    '/reset-password',
+    hasAuthorization([]),
+    defineRequests({
+      body: {
+        userID: RequestBodyFilters.USER_ID,
+        password: RequestBodyFilters.PASSWORD,
+        needsPasswordReset: RequestBodyFilters.BOOLEAN,
+      },
+    }),
+    async (request: Request, response: Response) => {
+      let { body } = request
+      let { userID, password } = body
+
+      if (password !== undefined) {
+        body.password = await hashPassword(password)
+      }
+
+      try {
+        // Original user is retrieved.
+        await UserModel.findOne({ userID }).exec((error: Error, user: any) => {
+          // Handles errors.
+          if (error !== null) {
+            databaseLogger.error(
+              `### Failed to retrieve user with ID "${userID}".`,
+            )
+            databaseLogger.error(error)
+            return response.sendStatus(500)
+          }
+          // Handles user not found.
+          else if (user === null) {
+            return response.sendStatus(404)
+          }
+          // Handle proper user retrieval.
+          else {
+            // Places all values found in
+            // userUpdates and puts it in
+            // the retrieved mongoose document.
+            for (let key in body) {
+              if (key !== '_id' && key !== 'userID') {
+                user[key] = body[key]
+              }
+            }
+
+            // Save the updated user.
+            user.save(async (error: Error) => {
+              // Handles errors.
+              if (error !== null) {
+                databaseLogger.error(
+                  `### Failed to update user with ID "${userID}".`,
+                )
+                databaseLogger.error(error)
+
+                // If this error was a validation error,
+                // then it is a bad request.
+                if (error.message.includes('validation failed')) {
+                  return response.sendStatus(400)
+                }
+                // Else it's a server error.
+                else {
+                  return response.sendStatus(500)
+                }
+              }
+              // Handles successful save.
+              else {
+                try {
+                  // Retrieves newly updated user
+                  // to return in response. This is
+                  // called again, one to call the
+                  // queryForApiResponse function,
+                  // and two, to ensure what's returned
+                  // is what is in the database.
+                  await UserModel.findOne({ userID })
+                    .queryForApiResponse('findOne')
+                    .exec((error: Error, user: any) => {
+                      // If something goes wrong, this is
+                      // a server issue. If there was something
+                      // the client did, an error would have
+                      // already been thrown in the first query.
+                      if (error || !user) {
+                        databaseLogger.error(
+                          'Failed to retrieve newly updated user',
+                        )
+                        databaseLogger.error(error)
+                        return response.sendStatus(500)
+                      } else {
+                        // Return updated mission to the user.
+                        return response.send({ user: user })
+                      }
+                    })
+                } catch (error) {
+                  databaseLogger.error('Failed to retrieve newly updated user')
+                  databaseLogger.error(error)
+                }
+              }
+            })
+          }
+        })
+      } catch (error) {
+        databaseLogger.error(`Failed to update user with ID "${userID}".`)
+        databaseLogger.error(error)
+      }
+    },
+  )
+
   // -- DELETE | /api/v1/users/ --
   // This will delete a user.
   router.delete(
     '/',
-    requireLogin({ permittedRoles: ['admin'] }),
+    hasAuthorization(['DELETE']),
     defineRequests({
       query: {
         userID: 'string',
       },
     }),
     async (request: Request, response: Response) => {
-      let query: any = request.query
-
-      let userID: any = query.userID
+      let { query } = request
+      let { userID } = query
 
       try {
         await UserModel.updateOne({ userID: userID }, { deleted: true })
@@ -343,11 +453,11 @@ const routerMap: TMetisRouterMap = (router: expressWs.Router, done) => {
     '/login',
     defineRequests({
       body: {
-        userID: RequestBodyFilters.STRING_50_CHAR,
+        userID: RequestBodyFilters.USER_ID,
         password: RequestBodyFilters.PASSWORD,
       },
     }),
-    (request, response) => {
+    (request: Request, response: Response) => {
       UserModel.authenticate(
         request,
         (error: StatusError, correct: boolean, userData: any) => {
@@ -364,7 +474,7 @@ const routerMap: TMetisRouterMap = (router: expressWs.Router, done) => {
             // If correct, generate a new session.
             if (correct) {
               // Create a new user object.
-              let user: User = new User(userData)
+              let user: ServerUser = new ServerUser(userData)
 
               try {
                 // Attempt to create a new session object.
@@ -390,22 +500,25 @@ const routerMap: TMetisRouterMap = (router: expressWs.Router, done) => {
     },
   )
 
-  //route for logging out user
-  router.post('/logout', (request, response, next) => {
-    // If session exists.
-    if (request.session) {
-      // Destroy the METIS session.
-      MetisSession.destroy(request.session.userID)
+  // route for logging out user
+  router.post(
+    '/logout',
+    (request: Request, response: Response, next: NextFunction) => {
+      // If session exists.
+      if (request.session) {
+        // Destroy the METIS session.
+        MetisSession.destroy(request.session.userID)
 
-      // Then destroy the Express session.
-      request.session.destroy((error) => {
-        if (error) {
-          return next(error)
-        }
-        return response.sendStatus(200)
-      })
-    }
-  })
+        // Then destroy the Express session.
+        request.session.destroy((error) => {
+          if (error) {
+            return next(error)
+          }
+          return response.sendStatus(200)
+        })
+      }
+    },
+  )
 
   done()
 }

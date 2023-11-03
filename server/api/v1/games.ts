@@ -1,10 +1,6 @@
 import { Request, Response } from 'express'
 import expressWs from 'express-ws'
-import {
-  hasPermittedRole,
-  requireConnection,
-  requireLogin,
-} from '../../middleware/users'
+import { hasAuthorization, requireConnection } from '../../middleware/users'
 import MissionModel from 'metis/server/database/models/missions'
 import { databaseLogger, gameLogger } from 'metis/server/logging'
 import GameServer from 'metis/server/games'
@@ -18,7 +14,7 @@ const routerMap = (router: expressWs.Router, done: () => void) => {
   // to execute a mission.
   router.post(
     '/launch/',
-    requireLogin(),
+    hasAuthorization([]),
     (request: Request, response: Response) => {
       // Get data from the request body.
       let missionID: string = request.body.missionID
@@ -42,7 +38,7 @@ const routerMap = (router: expressWs.Router, done: () => void) => {
           // Handle mission not live.
           else if (
             !missionData.live &&
-            !hasPermittedRole(request, ['instructor', 'admin'])
+            !hasAuthorization(['READ', 'WRITE', 'DELETE'])
           ) {
             return response.sendStatus(401)
           }

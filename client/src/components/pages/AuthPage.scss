@@ -27,10 +27,24 @@
       margin: 0 auto 0;
       width: 300px;
 
-      .Heading {
-        grid-column: 1 / 3;
+      .Detail {
         margin: 0;
-        font-size: 19px;
+        padding-right: 25px;
+
+        .Field {
+          margin: 0 0 25px;
+          border: none;
+          border-bottom: 2px solid $color-accent;
+          padding: 10px 10px 11px;
+          outline: none;
+          font-size: 14px;
+          box-shadow: none;
+          color: $color-main;
+
+          &::placeholder {
+            opacity: 0.775;
+          }
+        }
       }
 
       .AlternateOption {

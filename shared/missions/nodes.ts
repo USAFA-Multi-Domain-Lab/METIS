@@ -91,7 +91,7 @@ export interface IMissionNode {
   /**
    * The outcomes of the actions that are performed on the node.
    */
-  get outcomes(): Array<IActionOutcome>
+  get outcomes(): IActionOutcome[]
   /**
    * The parent of this node in the tree structure.
    */
@@ -99,7 +99,7 @@ export interface IMissionNode {
   /**
    * The children of this node in the tree structure.
    */
-  childNodes: Array<IMissionNode>
+  childNodes: IMissionNode[]
   /**
    * Whether or not this nodes has child nodes.
    */
@@ -111,11 +111,11 @@ export interface IMissionNode {
   /**
    * The siblings of this node.
    */
-  siblings: Array<IMissionNode>
+  siblings: IMissionNode[]
   /**
    * The children of the parent of this node (Essentially siblings plus self).
    */
-  childrenOfParent: Array<IMissionNode>
+  childrenOfParent: IMissionNode[]
   /**
    * The sibling, if any, ordered before this node in the structure.
    */
@@ -168,7 +168,7 @@ export interface IMissionNodeBaseJSON {
   depthPadding: number
   executable: boolean
   device: boolean
-  actions: Array<IMissionActionJSON>
+  actions: IMissionActionJSON[]
 }
 
 /**
@@ -178,7 +178,7 @@ export interface IMissionNodeGameJSON {
   opened: boolean
   executionState: TNodeExecutionState
   execution: TActionExecutionJSON | null
-  outcomes: Array<IActionOutcomeJSON>
+  outcomes: IActionOutcomeJSON[]
 }
 
 /**
@@ -213,7 +213,7 @@ export type TMissionNodeOptions<TRelative extends IMissionNode> = {
    * The child nodes of this node.
    * @default []
    */
-  childNodes?: Array<TRelative>
+  childNodes?: TRelative[]
 }
 
 /**
@@ -273,7 +273,7 @@ export default abstract class MissionNode<
   // Implemented
   public get executionState(): TNodeExecutionState {
     let execution: TActionExecution | null = this.execution
-    let outcomes: Array<TActionOutcome> = this.outcomes
+    let outcomes: TActionOutcome[] = this.outcomes
 
     // Check for 'unexecuted' state.
     if (execution === null && outcomes.length === 0) {
@@ -329,9 +329,9 @@ export default abstract class MissionNode<
   /**
    * The outcomes of the actions that are performed on the node.
    */
-  protected _outcomes: Array<TActionOutcome>
+  protected _outcomes: TActionOutcome[]
   // Inherited
-  public get outcomes(): Array<TActionOutcome> {
+  public get outcomes(): TActionOutcome[] {
     return [...this._outcomes]
   }
 
@@ -339,7 +339,7 @@ export default abstract class MissionNode<
   public parentNode: TRelativeNode | null
 
   // Implemented
-  public childNodes: Array<TRelativeNode>
+  public childNodes: TRelativeNode[]
 
   // Implemented
   public get hasChildren(): boolean {
@@ -352,11 +352,11 @@ export default abstract class MissionNode<
   }
 
   // Implemented
-  public get siblings(): Array<TRelativeNode> {
-    let siblings: Array<TRelativeNode> = []
+  public get siblings(): TRelativeNode[] {
+    let siblings: TRelativeNode[] = []
 
     if (this.parentNode !== null) {
-      let childrenOfParent: Array<TRelativeNode> = this.parentNode
+      let childrenOfParent: TRelativeNode[] = this.parentNode
         .childNodes as TRelativeNode[]
 
       siblings = childrenOfParent.filter(
@@ -368,8 +368,8 @@ export default abstract class MissionNode<
   }
 
   // Implemented
-  public get childrenOfParent(): Array<TRelativeNode> {
-    let childrenOfParent: Array<TRelativeNode> = []
+  public get childrenOfParent(): TRelativeNode[] {
+    let childrenOfParent: TRelativeNode[] = []
 
     if (this.parentNode !== null) {
       childrenOfParent = this.parentNode.childNodes as TRelativeNode[]
@@ -383,7 +383,7 @@ export default abstract class MissionNode<
     let previousSibling: TRelativeNode | null = null
 
     if (this.parentNode !== null) {
-      let childrenOfParent: Array<TRelativeNode> = this.parentNode
+      let childrenOfParent: TRelativeNode[] = this.parentNode
         .childNodes as TRelativeNode[]
 
       childrenOfParent.forEach(
@@ -403,7 +403,7 @@ export default abstract class MissionNode<
     let followingSibling: TRelativeNode | null = null
 
     if (this.parentNode !== null) {
-      let childrenOfParent: Array<TRelativeNode> = this.parentNode
+      let childrenOfParent: TRelativeNode[] = this.parentNode
         .childNodes as TRelativeNode[]
 
       childrenOfParent.forEach(
@@ -480,18 +480,18 @@ export default abstract class MissionNode<
 
   /**
    * Parses the action data into MissionAction objects.
-   * @param {Array<IMissionActionJSON>} data The action data to parse.
-   * @returns {Array<MissionAction>} The parsed action data.
+   * @param {IMissionActionJSON[]} data The action data to parse.
+   * @returns {MissionAction[]} The parsed action data.
    */
   protected abstract parseActionData(
-    data: Array<IMissionActionJSON>,
+    data: IMissionActionJSON[],
   ): Map<string, TMissionAction>
 
   /**
    * Parses the execution data into a execution object of the
    * type passed in TActionExecution.
-   * @param {Array<IActionExecutionJSON>} data The outcome data to parse.
-   * @returns {Array<TActionExecution>} The parsed outcome data.
+   * @param {IActionExecutionJSON[]} data The outcome data to parse.
+   * @returns {TActionExecution[]} The parsed outcome data.
    */
   protected abstract parseExecutionData(
     data: TActionExecutionJSON,
@@ -500,12 +500,12 @@ export default abstract class MissionNode<
   /**
    * Parses the outcome data into the outcome objects of the
    * type passed in TActionOutcome.
-   * @param {Array<IActionOutcomeJSON>} data The outcome data to parse.
-   * @returns {Array<TActionOutcome>} The parsed outcome data.
+   * @param {IActionOutcomeJSON[]} data The outcome data to parse.
+   * @returns {TActionOutcome[]} The parsed outcome data.
    */
   protected abstract parseOutcomeData(
-    data: Array<IActionOutcomeJSON>,
-  ): Array<TActionOutcome>
+    data: IActionOutcomeJSON[],
+  ): TActionOutcome[]
 
   // Implemented
   public toJSON(options: TNodeJsonOptions = {}): TMissionNodeJSON {
@@ -535,8 +535,8 @@ export default abstract class MissionNode<
       }
 
       // Construct outcome JSON.
-      let outcomeJSON: Array<IActionOutcomeJSON> = this.outcomes.map(
-        (outcome) => outcome.toJSON(),
+      let outcomeJSON: IActionOutcomeJSON[] = this.outcomes.map((outcome) =>
+        outcome.toJSON(),
       )
 
       // Construct game-specific JSON.

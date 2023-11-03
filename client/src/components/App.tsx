@@ -22,6 +22,7 @@ import UserFormPage from './pages/UserFormPage'
 import UserResetPage from './pages/UserResetPage'
 import ClientMissionNode from 'src/missions/nodes'
 import { useGlobalContext } from 'src/context'
+import ClientUser from 'src/users'
 
 /**
  * Props that every page accepts. Extend this to include more.
@@ -171,7 +172,7 @@ function App(props: {}): JSX.Element | null {
         }
 
         // Sync session.
-        let session: TMetisSession = await syncSession()
+        let session: TMetisSession<ClientUser> = await syncSession()
 
         // If there is no established session,
         // navigate to the auth page to have

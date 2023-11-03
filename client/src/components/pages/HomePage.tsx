@@ -4,7 +4,6 @@ import './HomePage.scss'
 import Navigation from '../content/general-layout/Navigation'
 import Notification from '../../notifications'
 import Tooltip from '../content/communication/Tooltip'
-import User from '../../../../shared/users'
 import List, { ESortByMethod } from '../content/general-layout/List'
 import MissionModificationPanel from '../content/user-controls/MissionModificationPanel'
 import { EAjaxStatus } from '../../../../shared/toolbox/ajax'
@@ -18,9 +17,19 @@ import GameClient from 'src/games'
 import { useGlobalContext } from 'src/context'
 import ClientMission from 'src/missions'
 import { AxiosError } from 'axios'
+import ClientUser from 'src/users'
+import UserPermission from '../../../../shared/users/permissions'
 
 export interface IHomePage extends IPage {}
 
+/**
+ * This will render the home page.
+ * @note This is the first page
+ * that the user will see when they log in. It will display
+ * a list of missions that the user can select from to play.
+ * It will also display a list of users that the user can
+ * select from to edit if they have proper permissions.
+ */
 export default function HomePage(props: IHomePage): JSX.Element | null {
   /* -- GLOBAL CONTEXT -- */
 
@@ -34,6 +43,7 @@ export default function HomePage(props: IHomePage): JSX.Element | null {
     notify,
     logout,
     createPrompt,
+    isAuthorized,
   } = globalContext.actions
 
   /* -- COMPONENT REFS -- */
@@ -43,8 +53,8 @@ export default function HomePage(props: IHomePage): JSX.Element | null {
 
   /* -- COMPONENT STATE -- */
 
-  const [missions, setMissions] = useState<Array<ClientMission>>([])
-  const [users, setUsers] = useState<Array<User>>([])
+  const [missions, setMissions] = useState<ClientMission[]>([])
+  const [users, setUsers] = useState<ClientUser[]>([])
 
   /* -- COMPONENT FUNCTIONS -- */
 
@@ -80,7 +90,7 @@ export default function HomePage(props: IHomePage): JSX.Element | null {
         beginLoading('Retrieving users...')
         // Fetch users from API and store
         // them in the state.
-        setUsers(await User.fetchAll())
+        setUsers(await ClientUser.fetchAll())
         // Finish loading and resolve.
         finishLoading()
         resolve()
@@ -92,18 +102,62 @@ export default function HomePage(props: IHomePage): JSX.Element | null {
     })
   }
 
+  /**
+   * This sorts the users by their user ID.
+   * @note If the first character is a letter it will sort the users alphabetically.
+   * @note If the first character is a number it will sort the users numerically.
+   * @note If the first character is a letter and the last character is a number it will sort the users by length.
+   * @example sortedArray = ['1', '2', '3', 'a', 'b', 'c', 'a1', 'a2', 'a3', 'b1', 'b2', 'b3', 'c1', 'c2', 'c3']
+   */
+  const sortUsers = async (): Promise<void> => {
+    return new Promise<void>((resolve, reject) => {
+      try {
+        // Sort users by their user ID.
+        setUsers((users) => {
+          return users.sort((a: ClientUser, b: ClientUser) => {
+            // Compares the first character of the user ID
+            // so that it can be sorted alphabetically or
+            // numerically. It also compares the length of
+            // the user ID to properly sort userID's that
+            // start with a letter and end with a number.
+            // (i.e., [ student1, ... student9, student10 ])
+            if (
+              a.userID[0] <= b.userID[0] &&
+              a.userID.length <= b.userID.length
+            ) {
+              return -1
+            } else if (
+              a.userID[0] >= b.userID[0] &&
+              a.userID.length >= b.userID.length
+            ) {
+              return 1
+            } else {
+              return 0
+            }
+          })
+        })
+        resolve()
+      } catch (error) {
+        reject(error)
+      }
+    })
+  }
+
   /* -- COMPONENT EFFECTS -- */
   // Require session for page.
   const [session] = useRequireSession()
 
   const [mountHandled, remount] = useMountHandler(async (done) => {
-    await loadMissions()
+    if (isAuthorized(['READ'])) {
+      await loadMissions()
+    }
 
     // The current user in the session
     // must have restricted access to
     // view the users.
-    if (session?.user.hasRestrictedAccess) {
+    if (isAuthorized(['READ', 'WRITE', 'DELETE'])) {
       await loadUsers()
+      await sortUsers()
     }
 
     finishLoading()
@@ -118,8 +172,6 @@ export default function HomePage(props: IHomePage): JSX.Element | null {
   if (!mountHandled || session === null) {
     return null
   }
-
-  let { user: currentUser } = session
 
   /* -- COMPONENT FUNCTIONS (CONTINUED) -- */
 
@@ -259,7 +311,7 @@ export default function HomePage(props: IHomePage): JSX.Element | null {
 
       page_elm.classList.remove('DropPending')
 
-      if (files.length > 0 && currentUser.hasRestrictedAccess) {
+      if (files.length > 0 && isAuthorized(['WRITE'])) {
         importMissionFiles(files)
       }
     }
@@ -319,13 +371,16 @@ export default function HomePage(props: IHomePage): JSX.Element | null {
 
   // This will start the process for
   // creating a new mission.
-  const createMission = (): void =>
-    goToPage('MissionFormPage', { missionID: null })
+  const createMission = (): void => {
+    if (isAuthorized(['WRITE'])) {
+      goToPage('MissionFormPage', { missionID: null })
+    }
+  }
 
   // This will switch to the changelog
   // page.
   const viewChangelog = (): void => {
-    if (currentUser.hasRestrictedAccess) {
+    if (isAuthorized(['READ', 'WRITE', 'DELETE'])) {
       goToPage('ChangelogPage', {})
     }
   }
@@ -365,18 +420,22 @@ export default function HomePage(props: IHomePage): JSX.Element | null {
 
   // This will switch to the user form
   // page with the selected user.
-  const selectUser = (user: User) => {
-    if (currentUser.hasRestrictedAccess) {
+  const selectUser = (user: ClientUser) => {
+    if (isAuthorized(['READ', 'WRITE'])) {
       goToPage('UserFormPage', {
         userID: user.userID,
       })
     }
   }
 
+  // This will switch to the user form
+  // page with a new user.
   const createUser = () => {
-    goToPage('UserFormPage', {
-      userID: null,
-    })
+    if (isAuthorized(['WRITE'])) {
+      goToPage('UserFormPage', {
+        userID: null,
+      })
+    }
   }
 
   /* -- PRE-RENDER PROCESSING -- */
@@ -385,7 +444,7 @@ export default function HomePage(props: IHomePage): JSX.Element | null {
   // current user's role.
   let homePageClassName: string = 'HomePage Page FullView'
 
-  if (currentUser.hasRestrictedAccess) {
+  if (isAuthorized(['READ', 'WRITE', 'DELETE'])) {
     homePageClassName += ' InstructorView'
   }
 
@@ -486,13 +545,13 @@ export default function HomePage(props: IHomePage): JSX.Element | null {
         </div>
         {/* { User List } */}
         <div className='UserListContainer'>
-          <List<User>
+          <List<ClientUser>
             headingText={'Select a user:'}
             items={users}
             sortByMethods={[ESortByMethod.Name]}
             nameProperty={'name'}
             alwaysUseBlanks={true}
-            renderItemDisplay={(user: User) => {
+            renderItemDisplay={(user: ClientUser) => {
               return (
                 <>
                   <div className='SelectionRow'>
@@ -531,7 +590,7 @@ export default function HomePage(props: IHomePage): JSX.Element | null {
       {/* -- FOOTER -- */}
       <div className='FooterContainer' draggable={false}>
         <div className='Version' onClick={viewChangelog} draggable={false}>
-          v1.3.1
+          v1.3.5
           <Tooltip description={'View changelog.'} />
         </div>
         <a

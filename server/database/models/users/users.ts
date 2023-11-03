@@ -1,8 +1,11 @@
 import mongoose, { Schema } from 'mongoose'
 import bcryptjs from 'bcryptjs'
-import { StatusError } from '../../http'
-import { databaseLogger } from '../../logging'
-import User from 'metis/users'
+import { StatusError } from '../../../http'
+import { databaseLogger } from '../../../logging'
+import Role from '../../schema-types/user-role'
+import UserRole, { IUserRoleJSON } from 'metis/users/roles'
+import UserPermission, { IUserPermissionJSON } from 'metis/users/permissions'
+import Permission from '../../schema-types/user-permission'
 
 let ObjectId = mongoose.Types.ObjectId
 
@@ -14,6 +17,32 @@ const validate_users_userID = (userID: string): boolean => {
   return isValidUserID
 }
 
+// Validator for user.role.
+const validate_users_role = (role: IUserRoleJSON): boolean => {
+  return UserRole.isValidRoleID(role.id)
+}
+
+// Validator for user.expressPermissions.
+const validate_users_expressPermissions = (
+  expressPermissions: IUserPermissionJSON[],
+): boolean => {
+  // Contains whether each permission is valid.
+  let validExpressPermissions: IUserPermissionJSON[] = []
+
+  // Loops through each permission and checks if it is valid.
+  expressPermissions.forEach((permission: IUserPermissionJSON) => {
+    // If it is valid, it is added to the array.
+    if (UserPermission.isValidPermissionID(permission.id)) {
+      validExpressPermissions.push(permission)
+    }
+  })
+
+  // If the valid express permissions array matches the
+  // express permissions array that was passed, then all
+  // permissions are valid.
+  return validExpressPermissions.length === expressPermissions.length
+}
+
 // Validator for user.firstName and user.lastName.
 const validate_users_name = (name: string): boolean => {
   let nameExpression: RegExp = /^([a-zA-Z']{1,25})$/
@@ -22,12 +51,10 @@ const validate_users_name = (name: string): boolean => {
   return isValidName
 }
 
-// Validator for user.role.
-const validate_users_role = (role: string): boolean => {
-  return (User.AVAIABLE_ROLES as Array<string>).includes(role)
-}
-
 const validator_users_password = (password: string): boolean => {
+  // This is an expression to validate a hashed password.
+  // This is not for validating the password that the user
+  // submits.
   let passwordExpression: RegExp = /^\$2[ayb]\$.{56}$/
   let isValidPassword: boolean = passwordExpression.test(password)
 
@@ -44,9 +71,14 @@ const UserSchema = new Schema(
       validate: validate_users_userID,
     },
     role: {
-      type: String,
-      required: false,
+      type: Role,
+      required: true,
       validate: validate_users_role,
+    },
+    expressPermissions: {
+      type: [Permission],
+      required: true,
+      validate: validate_users_expressPermissions,
     },
     firstName: {
       type: String,
@@ -166,6 +198,43 @@ UserSchema.plugin((schema) => {
       case 'findOne':
         return this.findOne()
     }
+  }
+})
+
+UserSchema.plugin((schema) => {
+  // This is responsible for hiding
+  // specific users based on the
+  // current session's user and their
+  // role.
+  schema.query.queryForApiResponseWithSpecificUsers = function (user: any) {
+    // Get projection.
+    let projection = this.projection()
+
+    // Create if does not exist.
+    if (projection === undefined) {
+      projection = {}
+    }
+
+    // Set projection.
+    this.projection(projection)
+    // Hide deleted users.
+    this.where({ deleted: false })
+    // Hide current user in session.
+    this.where({ userID: { $ne: user.userID } })
+    // If the user is an instructor, only show students.
+    if (user.role === 'instructor') {
+      this.where({ role: { $eq: 'student' } })
+    }
+    // If the user is a student, hide all users.
+    if (user.role === 'student') {
+      this.where({ userID: { $eq: null } })
+    }
+    // If the user is not an admin, hide all admins.
+    if (user.role !== 'admin') {
+      this.where({ role: { $ne: 'admin' } })
+    }
+
+    return this
   }
 })
 

@@ -1,6 +1,6 @@
-import User from 'metis/users'
 import ClientConnection from 'metis/server/connect/clients'
 import { TMetisSessionJSON } from 'metis/sessions'
+import ServerUser from '../users'
 
 /**
  * Express sessions are limited in what they can store. This class expands the functionality of sessions in METIS.
@@ -9,12 +9,12 @@ export default class MetisSession {
   /**
    * The ID of the user for the given session. This is used to retrieve the Session object from the registry.
    */
-  private _userID: string
+  private _userID: ServerUser['userID']
 
   /**
    * The ID of the user for the given session. This is used to retrieve the Session object from the registry.
    */
-  public get userID(): string {
+  public get userID(): ServerUser['userID'] {
     return this._userID
   }
 
@@ -47,12 +47,12 @@ export default class MetisSession {
   /**
    * The user associated with the session.
    */
-  private _user: User
+  private _user: ServerUser
 
   /**
    * The user associated with the session.
    */
-  public get user(): User {
+  public get user(): ServerUser {
     return this._user
   }
 
@@ -83,9 +83,9 @@ export default class MetisSession {
   }
 
   /**
-   * @param {User} user The user associated with the session.
+   * @param {ServerUser} user The user associated with the session.
    */
-  public constructor(user: User) {
+  public constructor(user: ServerUser) {
     this._userID = user.userID
     this._user = user
     this._client = null
@@ -131,7 +131,9 @@ export default class MetisSession {
   /**
    * @returns the session associated with the given user ID.
    */
-  public static get(userID: string | undefined): MetisSession | undefined {
+  public static get(
+    userID: ServerUser['userID'] | undefined,
+  ): MetisSession | undefined {
     if (userID === undefined) {
       return undefined
     } else {
@@ -142,7 +144,7 @@ export default class MetisSession {
   /**
    * Destroys the session associated with the given user ID.
    */
-  public static destroy(userID: string | undefined): void {
+  public static destroy(userID: ServerUser['userID'] | undefined): void {
     let session: MetisSession | undefined = MetisSession.get(userID)
     if (session !== undefined) {
       session.destroy()

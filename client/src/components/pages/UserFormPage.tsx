@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import User, { createUser, saveUser } from '../../../../shared/users'
 import { IPage } from '../App'
 import CreateUserEntry from '../content/edit-user/CreateUserEntry'
 import EditUserEntry from '../content/edit-user/EditUserEntry'
@@ -7,6 +6,8 @@ import Navigation from '../content/general-layout/Navigation'
 import './UserFormPage.scss'
 import { useMountHandler, useRequireSession } from 'src/toolbox/hooks'
 import { useGlobalContext } from 'src/context'
+import { AxiosError } from 'axios'
+import ClientUser from 'src/users'
 
 export interface IUserFormPage extends IPage {
   // If this is null, then a new user is being created.
@@ -31,18 +32,21 @@ export default function UserFormPage(props: IUserFormPage): JSX.Element | null {
     goToPage,
     confirm,
     logout,
+    isAuthorized,
   } = globalContext.actions
 
   /* -- COMPONENT STATE -- */
   const [existsInDatabase, setExistsInDatabase] = useState<boolean>(false)
-  const [user, setUser] = useState<User>(
-    new User({}, { passwordIsRequired: true }),
+  const [user, setUser] = useState<ClientUser>(
+    new ClientUser({}, { passwordIsRequired: true }),
   )
   const [areUnsavedChanges, setAreUnsavedChanges] = useState<boolean>(false)
   const [forcedUpdateCounter, setForcedUpdateCounter] = useState<number>(0)
   const [userEmptyStringArray, setUserEmptyStringArray] = useState<
     Array<string>
   >([])
+  const [usernameAlreadyExists, setUsernameAlreadyExists] =
+    useState<boolean>(false)
 
   /* -- COMPONENT EFFECTS -- */
 
@@ -54,7 +58,7 @@ export default function UserFormPage(props: IUserFormPage): JSX.Element | null {
     if (existsInDatabase) {
       try {
         beginLoading('Loading user...')
-        setUser(await User.fetchOne(userID!))
+        setUser(await ClientUser.fetchOne(userID!))
       } catch {
         handleError('Failed to load user.')
       }
@@ -76,52 +80,48 @@ export default function UserFormPage(props: IUserFormPage): JSX.Element | null {
   // Require session, mount to be handled,
   // and for the current user to have
   // restricted access.
-  if (session === null || !mountHandled || !session.user.hasRestrictedAccess) {
+  if (
+    session === null ||
+    !mountHandled ||
+    !isAuthorized(['READ', 'WRITE', 'DELETE'])
+  ) {
     return null
   }
-
-  // Extract properties from session.
-  let { user: currentUser } = session
 
   /* -- COMPONENT FUNCTIONS -- */
 
   // This is called to save any changes
   // made.
-  const save = (
-    callback: () => void = () => {},
-    callbackError: (error: Error) => void = () => {},
-  ): void => {
+  const save = async (): Promise<void> => {
     if (areUnsavedChanges) {
       setAreUnsavedChanges(false)
+      setUsernameAlreadyExists(false)
 
-      if (!existsInDatabase) {
-        createUser(
-          user,
-          (resultingUser: User) => {
-            notify('User successfully saved.')
-            setUser(resultingUser)
-            setExistsInDatabase(true)
-            callback()
-          },
-          (error: Error) => {
-            notify('User failed to save')
-            setAreUnsavedChanges(true)
-            callbackError(error)
-          },
-        )
-      } else {
-        saveUser(
-          user,
-          () => {
-            notify('User successfully saved.')
-            callback()
-          },
-          (error: Error) => {
+      if (!existsInDatabase && isAuthorized(['WRITE'])) {
+        try {
+          let resultingUser = await ClientUser.create(user)
+          notify('User successfully saved.')
+          setUser(resultingUser)
+          setExistsInDatabase(true)
+        } catch (error: any) {
+          if (error instanceof AxiosError && error.response?.status === 409) {
+            notify(
+              'This username already exists. Try using a different username.',
+            )
+            setUsernameAlreadyExists(true)
+          } else {
             notify('User failed to save.')
-            setAreUnsavedChanges(true)
-            callbackError(error)
-          },
-        )
+          }
+          setAreUnsavedChanges(true)
+        }
+      } else if (existsInDatabase && isAuthorized(['WRITE'])) {
+        try {
+          await ClientUser.update(user)
+          notify('User successfully saved.')
+        } catch (error: any) {
+          notify('User failed to save.')
+          setAreUnsavedChanges(true)
+        }
       }
     }
   }
@@ -134,16 +134,14 @@ export default function UserFormPage(props: IUserFormPage): JSX.Element | null {
     } else {
       confirm(
         'You have unsaved changes. What do you want to do with them?',
-        (concludeAction: () => void) => {
-          save(
-            () => {
-              goToPage('HomePage', {})
-              concludeAction()
-            },
-            () => {
-              concludeAction()
-            },
-          )
+        async (concludeAction: () => void) => {
+          try {
+            await save()
+            goToPage('HomePage', {})
+            concludeAction()
+          } catch (error: any) {
+            concludeAction()
+          }
         },
         {
           handleAlternate: (concludeAction: () => void) => {
@@ -207,6 +205,7 @@ export default function UserFormPage(props: IUserFormPage): JSX.Element | null {
         <CreateUserEntry
           user={user}
           userEmptyStringArray={userEmptyStringArray}
+          usernameAlreadyExists={usernameAlreadyExists}
           setUserEmptyStringArray={setUserEmptyStringArray}
           handleChange={handleChange}
         />

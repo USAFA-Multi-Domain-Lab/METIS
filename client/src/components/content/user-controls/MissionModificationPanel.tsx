@@ -19,8 +19,14 @@ export default function MissionModificationPanel(props: {
   const globalContext = useGlobalContext()
 
   const [session] = globalContext.session
-  const { goToPage, notify, confirm, beginLoading, finishLoading } =
-    globalContext.actions
+  const {
+    goToPage,
+    notify,
+    confirm,
+    beginLoading,
+    finishLoading,
+    isAuthorized,
+  } = globalContext.actions
 
   /* -- COMPONENT VARIABLES -- */
 
@@ -173,10 +179,10 @@ export default function MissionModificationPanel(props: {
     }),
   }
 
-  let containerClassName: string = 'MissionModificationPanel'
+  let containerClassName: string = 'Hidden'
 
-  if (session?.user.role === 'student') {
-    containerClassName += ' hidden'
+  if (isAuthorized(['READ', 'WRITE', 'DELETE'])) {
+    containerClassName = 'MissionModificationPanel'
   }
 
   // Logic that will lock the mission toggle while a request is being sent

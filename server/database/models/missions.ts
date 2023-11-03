@@ -1,6 +1,6 @@
 import mongoose, { Schema } from 'mongoose'
 import MetisDatabase from 'metis/server/database'
-import SanitizedHTML from 'metis/server/database/schema-types/type-html'
+import SanitizedHTML from 'metis/server/database/schema-types/html'
 
 let ObjectId = mongoose.Types.ObjectId
 

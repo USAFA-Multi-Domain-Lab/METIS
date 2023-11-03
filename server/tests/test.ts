@@ -10,10 +10,13 @@ import chaiHttp from 'chai-http'
 
 // metis imports
 import { testLogger } from '../logging'
-import { TUserRole } from 'metis/users'
+import UserRole, { TUserRoleID } from 'metis/users/roles'
 import MissionModel from 'metis/server/database/models/missions'
-import UserModel, { hashPassword } from 'metis/server/database/models/users'
+import UserModel, {
+  hashPassword,
+} from 'metis/server/database/models/users/users'
 import MetisServer from 'metis/server'
+import { IUserJSON } from 'metis/users'
 
 // global fields
 let missionID: string
@@ -23,7 +26,7 @@ let PORT: number = server.port
 let MONGO_DB: string = server.mongoDB
 const baseUrl = `localhost:${PORT}`
 const MONGO_TEST_DB: string = 'metis-test'
-const permittedUserRole: TUserRole = 'admin'
+const permittedUserRole: TUserRoleID = UserRole.AVAILABLE_ROLES.admin.id
 let agent: ChaiHttp.Agent
 
 // json
@@ -221,30 +224,33 @@ const correctUpdateTestMission = {
   ],
   schemaBuildNumber: 9,
 }
-const correctUser = {
+const correctUser: { user: IUserJSON } = {
   user: {
     userID: 'test23',
-    role: 'student',
+    role: UserRole.AVAILABLE_ROLES.student,
+    expressPermissions: [],
     firstName: 'Test',
     lastName: 'User',
     needsPasswordReset: false,
     password: 'password',
   },
 }
-let newCorrectUser = {
+let newCorrectUser: { user: IUserJSON } = {
   user: {
     userID: 'test24',
-    role: 'student',
+    role: UserRole.AVAILABLE_ROLES.student,
+    expressPermissions: [],
     firstName: 'Test',
     lastName: 'User',
     needsPasswordReset: false,
     password: 'password',
   },
 }
-const userWithNoPassword = {
+const userWithNoPassword: { user: IUserJSON } = {
   user: {
     userID: 'test23',
-    role: 'student',
+    role: UserRole.AVAILABLE_ROLES.student,
+    expressPermissions: [],
     firstName: 'Test',
     lastName: 'User',
     needsPasswordReset: false,
@@ -312,7 +318,7 @@ describe('Export/Import File Tests', function () {
   it('User should be logged in as an admin to access the import and/or export API', async function () {
     try {
       let response = await agent.get('/api/v1/users/session')
-      expect(response.body.user.role).to.equal(permittedUserRole)
+      expect(response.body.user.role.id).to.equal(permittedUserRole)
     } catch (error: any) {
       testLogger.error(error)
       throw error
@@ -619,7 +625,7 @@ describe('API Mission Routes', function () {
     try {
       let response = await agent.get('/api/v1/users/session')
 
-      expect(response.body.user.role).to.equal(permittedUserRole)
+      expect(response.body.user.role.id).to.equal(permittedUserRole)
     } catch (error: any) {
       testLogger.error(error)
       throw error
@@ -1802,7 +1808,7 @@ describe('User API Routes', function () {
     try {
       let response = await agent.get('/api/v1/users/session')
 
-      expect(response.body.user.role).to.equal(permittedUserRole)
+      expect(response.body.user.role.id).to.equal(permittedUserRole)
     } catch (error: any) {
       testLogger.error(error)
       throw error

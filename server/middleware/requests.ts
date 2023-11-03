@@ -2,7 +2,7 @@
 import { Request, Response, NextFunction } from 'express-serve-static-core'
 import { isObjectIdOrHexString } from 'mongoose'
 import { AnyObject } from 'metis/toolbox/objects'
-import User from '../../shared/users'
+import UserRole, { IUserRoleJSON } from 'metis/users/roles'
 
 // ------- GLOBAL VARIABLES ------- //
 
@@ -233,8 +233,12 @@ export class RequestBodyFilters {
     }
   }
 
-  // This filters a username included
-  // in a request body.
+  /**
+   * This filters a username included in a request body.
+   * @param bodyKey The key of the property in the request body
+   * @param bodyValue The value of the property in the request body
+   * @throws An error message or null
+   */
   static USER_ID(bodyKey: string, bodyValue: any) {
     let usernameRegex: RegExp = /^([a-zA-Z0-9-_.]{5,25})$/
     let usernameIsValid: boolean = usernameRegex.test(bodyValue)
@@ -244,8 +248,12 @@ export class RequestBodyFilters {
     }
   }
 
-  // This filters a password included
-  // in a request body.
+  /**
+   * This filters a password included in a request body.
+   * @param bodyKey The key of the property in the request body
+   * @param bodyValue The value of the property in the request body
+   * @throws An error message or null
+   */
   static PASSWORD(bodyKey: string, bodyValue: any) {
     let passwordRegex: RegExp = /^([^\s]{8,50})$/
     let passwordIsValid: boolean = passwordRegex.test(bodyValue)
@@ -255,8 +263,12 @@ export class RequestBodyFilters {
     }
   }
 
-  // This filters a name included
-  // in a request body.
+  /**
+   * This filters a name included in a request body.
+   * @param bodyKey The key of the property in the request body
+   * @param bodyValue The value of the property in the request body
+   * @throws An error message or null
+   */
   static NAME(bodyKey: string, bodyValue: any) {
     let nameRegex: RegExp = /^([a-zA-Z']{1,25})$/
     let nameIsValid: boolean = nameRegex.test(bodyValue)
@@ -266,10 +278,14 @@ export class RequestBodyFilters {
     }
   }
 
-  // This filters a role included
-  // in a request body.
-  static ROLE(bodyKey: string, bodyValue: any) {
-    if (!User.AVAILABLE_ROLES.includes(bodyValue)) {
+  /**
+   * This filters a role included in a request body.
+   * @param bodyKey The key of the property in the request body
+   * @param bodyValue The value of the property in the request body
+   * @throws An error message or null
+   */
+  static ROLE(bodyKey: string, bodyValue: IUserRoleJSON) {
+    if (!UserRole.isValidRoleID(bodyValue.id)) {
       throw new Error(invalidRequestBodyPropertyException(bodyKey, bodyValue))
     }
   }

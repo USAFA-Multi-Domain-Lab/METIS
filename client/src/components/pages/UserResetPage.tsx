@@ -1,18 +1,16 @@
 import { useState } from 'react'
-import User, { saveUser } from '../../../../shared/users'
 import { IPage } from '../App'
 import { Detail } from '../content/form/Form'
 import Navigation from '../content/general-layout/Navigation'
 import './UserResetPage.scss'
 import { useGlobalContext } from 'src/context'
 import { useMountHandler } from 'src/toolbox/hooks'
-import { log } from 'console'
+import ClientUser from 'src/users'
 
 export interface IUserResetPage extends IPage {}
 
 /**
  * This page allows the user to reset their password.
- * @returns A JSX element that describes the component.
  */
 export default function UserResetPage(): JSX.Element | null {
   /* -- GLOBAL CONTEXT -- */
@@ -28,27 +26,24 @@ export default function UserResetPage(): JSX.Element | null {
   const [userEmptyStringArray, setUserEmptyStringArray] = useState<
     Array<string>
   >([])
-  const [deliverOldPasswordError, setDeliverOldPasswordError] =
-    useState<boolean>(false)
   const [deliverPassword1Error, setDeliverPassword1Error] =
     useState<boolean>(false)
   const [deliverPassword2Error, setDeliverPassword2Error] =
     useState<boolean>(false)
-  const [oldPasswordErrorMessage, setOldPasswordErrorMessage] =
-    useState<string>('At least one character is required here.')
   const [password1ErrorMessage, setPassword1ErrorMessage] = useState<string>(
     'At least one character is required here.',
   )
   const [password2ErrorMessage, setPassword2ErrorMessage] = useState<string>(
     'At least one character is required here.',
   )
-  const [oldPasswordClassName, setOldPasswordClassName] = useState<string>('')
   const [password1ClassName, setPassword1ClassName] = useState<string>('')
   const [password2ClassName, setPassword2ClassName] = useState<string>('')
 
   /* -- COMPONENT EFFECTS -- */
 
-  const [mountHandled, remount] = useMountHandler(async (done) => {
+  // Equivalent to componentDidMount().
+  const [mountHandled] = useMountHandler(async (done) => {
+    // Finish loading.
     finishLoading()
     done()
   })
@@ -61,32 +56,24 @@ export default function UserResetPage(): JSX.Element | null {
   }
 
   // Extract properties from session.
-  const { user: user } = session
+  const { user } = session
 
   /* -- COMPONENT FUNCTIONS -- */
 
   // This is called to save any changes
   // made.
-  const save = (
-    callback: () => void = () => {},
-    callbackError: (error: Error) => void = () => {},
-  ): void => {
+  const save = async (): Promise<void> => {
     if (areUnsavedChanges) {
       setAreUnsavedChanges(false)
 
-      saveUser(
-        user,
-        () => {
-          notify('User successfully saved.')
-          goToPage('HomePage', {})
-          callback()
-        },
-        (error: Error) => {
-          notify('User failed to save.')
-          setAreUnsavedChanges(true)
-          callbackError(error)
-        },
-      )
+      try {
+        await ClientUser.resetPassword(user)
+        notify('User successfully saved.')
+        goToPage('HomePage', {})
+      } catch (error: any) {
+        notify('User failed to save.')
+        setAreUnsavedChanges(true)
+      }
     }
   }
 
@@ -150,61 +137,6 @@ export default function UserResetPage(): JSX.Element | null {
             <div className='Title'>User ID:</div>
             <div className='UserID'>{user.userID}</div>
           </div>
-          <Detail
-            label='Old Password'
-            initialValue={null}
-            deliverValue={(password: string) => {
-              let passwordRegex: RegExp = new RegExp(/^([^\s]{8,50})$/)
-              let passwordIsValid: boolean = passwordRegex.test(password)
-
-              if (
-                passwordIsValid &&
-                password === user.password1 &&
-                password !== ''
-              ) {
-                removeUserEmptyString('old-password')
-                setDeliverOldPasswordError(false)
-                setOldPasswordClassName('Correct')
-                handleChange()
-              }
-
-              if (
-                passwordIsValid &&
-                password !== user.password1 &&
-                password !== ''
-              ) {
-                setDeliverOldPasswordError(true)
-                setOldPasswordErrorMessage('Incorrect password.')
-              }
-
-              if (password === '') {
-                setDeliverOldPasswordError(true)
-                setOldPasswordErrorMessage(
-                  'At least one character is required here.',
-                )
-                setUserEmptyStringArray([
-                  ...userEmptyStringArray,
-                  `field=old-password`,
-                ])
-              }
-
-              if (!passwordIsValid && password !== '') {
-                setDeliverOldPasswordError(true)
-                setOldPasswordErrorMessage(
-                  'Password must be between 8 and 50 characters and cannot contain spaces.',
-                )
-              }
-            }}
-            options={{
-              deliverError: deliverOldPasswordError,
-              deliverErrorMessage: oldPasswordErrorMessage,
-              uniqueLabelClassName: oldPasswordClassName,
-              uniqueInputClassName: oldPasswordClassName,
-              inputType: 'password',
-              placeholder: 'Enter your old password here...',
-            }}
-          />
-
           <Detail
             label='New Password'
             initialValue={null}

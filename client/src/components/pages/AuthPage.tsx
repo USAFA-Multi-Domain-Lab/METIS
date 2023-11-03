@@ -1,10 +1,11 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useState } from 'react'
 import './AuthPage.scss'
-import User from '../../../../shared/users'
 import { IPage } from '../App'
 import { AnyObject } from '../../../../shared/toolbox/objects'
 import { useGlobalContext } from 'src/context'
 import Branding from '../content/general-layout/Branding'
+import { Detail } from '../content/form/Form'
+import ClientUser from 'src/users'
 
 export interface IAuthPageSpecific {
   returningPagePath: string
@@ -23,30 +24,13 @@ export default function AuthPage(props: IAuthPage): JSX.Element | null {
     globalContext.actions
   const [_, setSession] = globalContext.session
 
-  /* -- COMPONENT REFS -- */
-
-  const userIDField = useRef<HTMLInputElement>(null)
-  const passwordField = useRef<HTMLInputElement>(null)
-
   /* -- COMPONENT STATE -- */
 
-  const [mountHandled, setMountHandled] = useState<boolean>(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
   const [forcedUpdateCounter, setForcedUpdateCounter] = useState<number>(0)
-
-  /* -- COMPONENT EFFECTS -- */
-
-  // Equivalent of componentDidMount.
-  useEffect(() => {
-    if (!mountHandled) {
-      let userIDField_elm: HTMLInputElement | null = userIDField.current
-
-      if (userIDField_elm) {
-        userIDField_elm.focus()
-      }
-    }
-  }, [mountHandled])
+  const [userID, setUserID] = useState<string | null>(null)
+  const [password, setPassword] = useState<string | null>(null)
 
   /* -- COMPONENT FUNCTIONS -- */
 
@@ -58,11 +42,11 @@ export default function AuthPage(props: IAuthPage): JSX.Element | null {
   // Called to check if the form can be
   // submit.
   const canSubmit = (): boolean => {
-    let elm_userIDField: HTMLInputElement | null = userIDField.current
-    let elm_passwordField: HTMLInputElement | null = passwordField.current
+    let elm_userIDField: string | null = userID
+    let elm_passwordField: string | null = password
     if (elm_userIDField && elm_passwordField) {
-      let userID: string = elm_userIDField.value
-      let password: string = elm_passwordField.value
+      let userID: string = elm_userIDField
+      let password: string = elm_passwordField
       return userID.length > 0 && password.length > 0
     }
     return false
@@ -78,12 +62,12 @@ export default function AuthPage(props: IAuthPage): JSX.Element | null {
   const handleSubmit = async (event: React.FormEvent): Promise<void> => {
     event.preventDefault()
 
-    let elm_userIDField: HTMLInputElement | null = userIDField.current
-    let elm_passwordField: HTMLInputElement | null = passwordField.current
+    let elm_userIDField: string | null = userID
+    let elm_passwordField: string | null = password
 
     if (elm_userIDField && elm_passwordField) {
-      let userID: string = elm_userIDField.value
-      let password: string = elm_passwordField.value
+      let userID: string = elm_userIDField
+      let password: string = elm_passwordField
 
       if (userID.length > 0 && password.length > 0) {
         setIsSubmitting(true)
@@ -101,7 +85,7 @@ export default function AuthPage(props: IAuthPage): JSX.Element | null {
 
         // Login.
         try {
-          let { correct, session } = await User.login(userID, password)
+          let { correct, session } = await ClientUser.login(userID, password)
 
           // If correct and a session was returned,
           // then login was successful.
@@ -152,17 +136,28 @@ export default function AuthPage(props: IAuthPage): JSX.Element | null {
         <div className='ErrorMessage'>{errorMessage}</div>
         <Branding goHome={null} tooltipDescription={''} />
         <form className='Form' onChange={handleChange} onSubmit={handleSubmit}>
-          <input
-            className='UserID Field'
-            type='text'
-            placeholder='Username'
-            ref={userIDField}
+          <Detail
+            label={'Username'}
+            initialValue={null}
+            deliverValue={(username: string) => {
+              setUserID(username)
+            }}
+            options={{
+              uniqueLabelClassName: 'Hidden',
+              placeholder: 'Username',
+            }}
           />
-          <input
-            className='Password Field'
-            type='password'
-            placeholder='Password'
-            ref={passwordField}
+          <Detail
+            label={'Password'}
+            initialValue={null}
+            deliverValue={(password: string) => {
+              setPassword(password)
+            }}
+            options={{
+              uniqueLabelClassName: 'Hidden',
+              inputType: 'password',
+              placeholder: 'Password',
+            }}
           />
           <input
             className='Submit Button'

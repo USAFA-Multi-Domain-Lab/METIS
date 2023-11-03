@@ -1,18 +1,18 @@
 import axios from 'axios'
 import Game, { IGameJSON } from '../../../shared/games'
-import User from '../../../shared/users'
 import ServerConnection from 'src/connect/server'
 import { IServerDataTypes, TServerData } from '../../../shared/connect/data'
 import ClientMission from 'src/missions'
 import ClientMissionNode from 'src/missions/nodes'
 import ClientMissionAction from 'src/missions/actions'
 import { TActionExecutionJSON } from '../../../shared/missions/actions/executions'
+import ClientUser from 'src/users'
 
 /**
  * Client instance for games. Handles client-side logic for games. Communicates with server to conduct game.
  */
 export default class GameClient extends Game<
-  User,
+  ClientUser,
   ClientMission,
   ClientMissionNode,
   ClientMissionAction
@@ -36,8 +36,8 @@ export default class GameClient extends Game<
   public constructor(data: IGameJSON, server: ServerConnection) {
     let gameID: string = data.gameID
     let mission: ClientMission = new ClientMission(data.mission)
-    let participants: Array<User> = data.participants.map(
-      (userData) => new User(userData),
+    let participants: ClientUser[] = data.participants.map(
+      (userData) => new ClientUser(userData),
     )
 
     super(gameID, mission, participants)
@@ -79,7 +79,9 @@ export default class GameClient extends Game<
     return {
       gameID: this.gameID,
       mission: this.mission.toJSON({ revealedOnly: true }),
-      participants: this.participants.map((user) => user.toJSON()),
+      participants: this.participants.map((user) =>
+        user.toJSON({ password: user.password1 }),
+      ),
       resources: this.resources,
     }
   }

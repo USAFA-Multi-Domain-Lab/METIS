@@ -2,6 +2,7 @@ import React from 'react'
 import { useCallback, useEffect, useState } from 'react'
 import { TMetisSession } from '../../../shared/sessions'
 import { useGlobalContext } from '../context'
+import ClientUser from 'src/users'
 
 /**
  * Creates a handler that will be called when the component mounts.
@@ -29,7 +30,7 @@ export function useMountHandler(
 /**
  * Requires that a session be present in the application state. If no session is present, the user will be redirected to the AuthPage.
  */
-export function useRequireSession(): [TMetisSession] {
+export function useRequireSession(): [TMetisSession<ClientUser>] {
   const globalContext = useGlobalContext()
   const [session] = globalContext.session
   const { goToPage } = globalContext.actions
