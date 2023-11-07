@@ -173,6 +173,7 @@ function App(props: {}): JSX.Element | null {
         }
 
         // Sync session.
+        beginLoading('Syncing session...')
         let session: TMetisSession = await syncSession()
 
         // If there is no established session,
@@ -188,6 +189,7 @@ function App(props: {}): JSX.Element | null {
         // with the server.
         else {
           // Connect to the server.
+          beginLoading('Connecting to server...')
           let server: ServerConnection = await connectToServer()
 
           // If the sessioned user needs a password

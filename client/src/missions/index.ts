@@ -97,6 +97,7 @@ export default class ClientMission extends Mission<ClientMissionNode> {
    * Whether the structure of the mission has been initialized.
    */
   protected structureInitialized: boolean = false
+
   /**
    * Listener functions that are called when the structure changes.
    */

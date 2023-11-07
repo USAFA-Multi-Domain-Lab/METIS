@@ -20,6 +20,7 @@ import StringsToolbox from '../../../shared/toolbox/strings'
  * The values available in the global context.
  */
 export type TGlobalContextValues = {
+  forcedUpdateCounter: number
   server: ServerConnection | null
   session: TMetisSession
   currentPagePath: string // todo: make readonly
@@ -188,6 +189,7 @@ export type TNavigationMiddleware = (to: string, next: () => void) => void
  * The default values of the global context state.
  */
 const GLOBAL_CONTEXT_VALUES_DEFAULT: TGlobalContextValues = {
+  forcedUpdateCounter: 0,
   server: null,
   session: null,
   currentPagePath: '',
@@ -288,6 +290,8 @@ const useGlobalContextDefinition = (context: TGlobalContext) => {
 
   // ! IMPORTANT - Context actions cannot be extracted yet because they are not defined until further below.
 
+  const [forcedUpdateCounter, setForcedUpdateCounter] =
+    context.forcedUpdateCounter
   const [server, setServer] = context.server
   const [session, setSession] = context.session
   const [currentPagePath, setCurrentPagePath] = context.currentPagePath
@@ -309,10 +313,11 @@ const useGlobalContextDefinition = (context: TGlobalContext) => {
 
   /* -- PRIVATE STATE -- */
 
-  const [forcedUpdateCounter, setForcedUpdateCounter] = useState<number>(0)
   const [postLoadNotifications, setPostLoadNotifications] = useState<
     Notification[]
   >([])
+  const [initialConnectionFailed, setInitialConnectionFailed] =
+    useState<boolean>(false)
 
   /* -- LOCAL FUNCTIONS -- */
 
@@ -417,7 +422,7 @@ const useGlobalContextDefinition = (context: TGlobalContext) => {
         handleLoadCompletion()
       }
     },
-    syncSession: async (): Promise<TMetisSession> => {
+    syncSession: (): Promise<TMetisSession> => {
       const { handleError } = context.actions
 
       return new Promise<TMetisSession>(async (resolve, reject) => {
@@ -431,30 +436,29 @@ const useGlobalContextDefinition = (context: TGlobalContext) => {
         }
       })
     },
-    connectToServer: async (
+    connectToServer: (
       options: {
         disconnectExisting?: boolean
       } = {},
     ): Promise<ServerConnection> => {
-      const { handleError } = context.actions
+      const { handleError, beginLoading } = context.actions
 
       return new Promise<ServerConnection>(async (resolve, reject) => {
         let server: ServerConnection = new ServerConnection({
           on: {
-            'open': () => {
-              console.log('Server connection opened.')
+            'connection-success': () => {
               setServer(server)
               resolve(server)
             },
-            'close': () => {
-              console.log('Server connection closed.')
+            'reconnection-success': () => {
+              setServer(server)
             },
-            'connection-loss': () => {
-              handleError('Lost connection to server.')
+            'connection-failure': () => {
+              beginLoading(
+                'Failed to connect to server. Retrying until connection is established...',
+              )
             },
             'error': ({ code, message }) => {
-              console.error(`Server Connection Error (${code}):\n${message}`)
-
               if (code === ServerEmittedError.CODE_DUPLICATE_CLIENT) {
                 handleError({
                   message,

@@ -129,6 +129,8 @@ export default class ClientConnection {
 
     // Add default listeners.
     this.addDefaultListeners()
+
+    // setTimeout(() => this.socket.close(), 5000)
   }
 
   /**
@@ -234,7 +236,9 @@ export default class ClientConnection {
   private onClose = (event: WSCloseEvent): void => {
     // Pre-create data object, since
     // it will not vary.
-    let closeData: TServerData<'close'> = { method: 'close' }
+    let closeData: TServerData<'connection-closed'> = {
+      method: 'connection-closed',
+    }
 
     // Loop though listeners.
     for (let [method, listener] of this.listeners) {

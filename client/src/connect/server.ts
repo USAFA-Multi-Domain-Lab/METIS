@@ -37,15 +37,9 @@ export interface IServerConnectionOptions {
  */
 export class ServerConnection {
   /**
-   * The end point for establishing a web socket connection.
-   */
-  public static readonly SOCKET_URL =
-    typeof window !== 'undefined' ? `ws://${window.location.host}/connect` : '/'
-
-  /**
    * The web socket connection itself.
    */
-  protected socket: WebSocket
+  public socket: WebSocket
 
   /**
    * Tracks whether the connection should be open, regardless of if it is.
@@ -53,16 +47,58 @@ export class ServerConnection {
   protected shouldBeConnected: boolean = false
 
   /**
+   * The timestamp for when the connection was last opened.
+   */
+  protected lastOpened: number | null = null
+
+  /**
+   * The timestamp for when the connection was last closed.
+   */
+  protected lastClosed: number | null = null
+
+  /**
+   * The ready state of the web socket connection.
+   */
+  public get readyState(): number {
+    return this.socket.readyState
+  }
+
+  /**
    * Storage for all listeners, in the order they get added.
    */
-
   protected listeners: [TServerMethod, TServerHandler<any>][] = []
 
   /**
    * @param {IServerConnectionOptions} options Options for the server connection.
    */
   public constructor(options: IServerConnectionOptions = {}) {
-    let url: string = ServerConnection.SOCKET_URL
+    // Establish web socket connection given options passed.
+    this.socket = this.createSocket(options)
+
+    // Add event listeners passed in options.
+    if (options.on !== undefined) {
+      for (let [key, value] of Object.entries(options.on) as any) {
+        this.addEventListener(key, value)
+      }
+    }
+
+    // Add default listeners.
+    this.addDefaultListeners()
+
+    // Prepare socket for use.
+    this.prepareSocket()
+  }
+
+  /**
+   * Creates a web socket connection with the server.
+   */
+  private createSocket(
+    options: IServerConnectionOptions,
+    bad: boolean = false,
+  ): WebSocket {
+    let url: string = bad
+      ? ServerConnection.SOCKET_URL_BAD
+      : ServerConnection.SOCKET_URL
 
     // Add disconnectExisting query if
     // requested.
@@ -71,18 +107,13 @@ export class ServerConnection {
     }
 
     // Create a new web socket connection.
-    this.socket = new WebSocket(url)
+    let socket: WebSocket = new WebSocket(url)
 
-    // Add event listeners passed in
-    // options.
-    if (options.on !== undefined) {
-      for (let [key, value] of Object.entries(options.on) as any) {
-        this.addEventListener(key, value)
-      }
-    }
+    // Set `shouldBeConnected` to true.
+    this.shouldBeConnected = true
 
-    // Prepare socket for use.
-    this.prepareSocket()
+    // Return the socket connection.
+    return socket
   }
 
   /**
@@ -93,6 +124,28 @@ export class ServerConnection {
     this.socket.addEventListener('open', this.onOpen)
     this.socket.addEventListener('close', this.onClose)
     this.socket.addEventListener('message', this.onMessage)
+    this.socket.addEventListener('error', this.onSocketError)
+  }
+
+  /**
+   * Attempts to reconnect after a connection loss.
+   */
+  public reconnect(): void {
+    // Create new socket connection.
+    this.socket = this.createSocket({ disconnectExisting: true })
+
+    // Prepare new socket connection.
+    this.prepareSocket()
+  }
+
+  reconnectBad = (): void => {
+    // Create new socket connection.
+    this.socket = new WebSocket(ServerConnection.SOCKET_URL_BAD)
+
+    // Prepare new socket connection.
+    this.prepareSocket()
+
+    // this.reconnectBad = this.reconnect
   }
 
   /**
@@ -104,6 +157,7 @@ export class ServerConnection {
     TMethod extends TClientMethod,
     TPayload extends Omit<IClientDataTypes[TMethod], 'method'>,
   >(method: TMethod, payload: TPayload): void {
+    console.log(this.lastOpened, this.lastClosed)
     // Send payload.
     this.socket.send(JSON.stringify(payload))
   }
@@ -122,6 +176,48 @@ export class ServerConnection {
     this.listeners.push([method, handler])
     // Return this.
     return this
+  }
+
+  /**
+   * Adds default listeners for the server connection.
+   */
+  protected addDefaultListeners(): void {
+    this.addEventListener('connection-success', () => {
+      // Log event.
+      console.log('Server connection opened.')
+    })
+    this.addEventListener('reconnection-success', () => {
+      // Log event.
+      console.log('Server connection reopened.')
+    })
+    this.addEventListener('connection-closed', () => {
+      // Log event.
+      console.log('Server connection closed.')
+    })
+    this.addEventListener('connection-loss', () => {
+      // Log event.
+      console.log('Server connection lost.')
+      // Wait duration of `RECONNECT_COOLDOWN` before attempting
+      // to reconnect.
+      setTimeout(() => this.reconnect(), ServerConnection.RECONNECT_COOLDOWN)
+    })
+    this.addEventListener('connection-failure', () => {
+      // Log event.
+      console.log('Server connection failed.')
+      // Wait duration of `RECONNECT_COOLDOWN` before attempting
+      // to reconnect.
+      setTimeout(() => this.reconnect(), ServerConnection.RECONNECT_COOLDOWN)
+    })
+    this.addEventListener('reconnection-failure', () => {
+      // Log event.
+      console.log('Server reconnection failed.')
+      // Wait duration of `RECONNECT_COOLDOWN` before attempting
+      // to reconnect.
+      setTimeout(() => this.reconnect(), ServerConnection.RECONNECT_COOLDOWN)
+    })
+    this.addEventListener('error', ({ code, message }) => {
+      console.error(`Server Connection Error (${code}):\n${message}`)
+    })
   }
 
   /**
@@ -172,18 +268,22 @@ export class ServerConnection {
    * @param {Event} event The open event.
    */
   private onOpen = (event: Event): void => {
-    // Pre-create data object since
-    // they will not vary.
-    let data: TServerData<'open'> = { method: 'open' }
+    // Gather details.
+    let wasOpenedBefore: boolean = this.lastOpened !== null
 
-    // Set shouldBeConnected to true.
-    this.shouldBeConnected = true
+    // Update `lastOpened`.
+    this.lastOpened = Date.now()
+
+    // Determine method.
+    let determinedMethod: TServerMethod = wasOpenedBefore
+      ? 'reconnection-success'
+      : 'connection-success'
 
     // Loop through listeners and call
     // any with the method 'open'.
     for (let [method, listener] of this.listeners) {
-      if (method === 'open') {
-        listener(data)
+      if (method === determinedMethod) {
+        listener({ method })
       }
     }
   }
@@ -193,30 +293,46 @@ export class ServerConnection {
    * @param {CloseEvent} event The close event.
    */
   private onClose = (event: CloseEvent): void => {
-    // Pre-create all data objects since
-    // they will not vary.
-    let closeData: TServerData<'close'> = { method: 'close' }
-    let connectionLossData: TServerData<'connection-loss'> = {
-      method: 'connection-loss',
+    // Gather information.
+    let shouldBeOpen: boolean = this.shouldBeConnected
+    let wasOnceOpened: boolean = this.lastOpened !== null
+    let wasOnceClosed: boolean = this.lastClosed !== null
+    let wasOpenUntilNow: boolean =
+      this.lastOpened !== null &&
+      (this.lastClosed === null || this.lastClosed < this.lastOpened)
+
+    // Determine event type.
+    let isConnectionClosedEvent: boolean = !shouldBeOpen
+    let isConnectionFailureEvent: boolean =
+      shouldBeOpen && !wasOpenUntilNow && !wasOnceOpened
+    let isConnectionLossEvent: boolean = shouldBeOpen && wasOpenUntilNow
+    let isReconnectionFailureEvent: boolean =
+      shouldBeOpen && !wasOpenUntilNow && wasOnceClosed
+
+    // Determine method.
+    let determinedMethod: TServerMethod
+
+    if (isConnectionClosedEvent) {
+      determinedMethod = 'connection-closed'
+    } else if (isConnectionFailureEvent) {
+      determinedMethod = 'connection-failure'
+    } else if (isConnectionLossEvent) {
+      determinedMethod = 'connection-loss'
+    } else if (isReconnectionFailureEvent) {
+      determinedMethod = 'reconnection-failure'
+    } else {
+      throw new Error('Unknown close event type.')
     }
+
+    // Update lastClosed.
+    this.lastClosed = Date.now()
 
     // Loop though listeners.
     for (let [method, listener] of this.listeners) {
-      // Call any connection loss listeners
-      // if the closing of the connection
-      // was unprompted.
-      if (method === 'connection-loss' && this.shouldBeConnected) {
-        listener(connectionLossData)
-      }
-    }
-
-    // Loop though listeners again.
-    for (let [method, listener] of this.listeners) {
-      // Call any regular close listeners,
-      // after all connection-loss listeners
-      // have been run.
-      if (method === 'close') {
-        listener(closeData)
+      // Call any handlers that match the determined
+      // method.
+      if (method === determinedMethod) {
+        listener({ method: determinedMethod })
       }
     }
   }
@@ -251,6 +367,52 @@ export class ServerConnection {
       }
     }
   }
+
+  /**
+   * Handler for when a socket-specific error occurs. This is different from a server-emitted error, which
+   * is handled in `onMessage`.
+   */
+  private onSocketError = (event: Event): void => {
+    let isClosed: boolean =
+      this.socket.readyState === WebSocket.CLOSED ||
+      this.socket.readyState === WebSocket.CLOSING
+    let neverOpened: boolean = this.lastOpened === null
+    let shouldHaveOpened: boolean = this.shouldBeConnected
+
+    // If the connection is closed, never opened,
+    // but should have opened, call any connection
+    // failure listeners.
+    if (isClosed && neverOpened && shouldHaveOpened) {
+      // Pre-create data object since
+      // they will not vary.
+      let data: TServerData<'connection-failure'> = {
+        method: 'connection-failure',
+      }
+
+      // Loop though listeners.
+      for (let [method, listener] of this.listeners) {
+        // Call any connection loss listeners
+        // if the closing of the connection
+        // was unprompted.
+        if (method === 'connection-failure') {
+          listener(data)
+        }
+      }
+    }
+  }
+
+  /**
+   * The end point for establishing a web socket connection.
+   */
+  public static readonly SOCKET_URL =
+    typeof window !== 'undefined' ? `ws://${window.location.host}/connect` : '/'
+
+  public static SOCKET_URL_BAD = 'ws://localhost:8085/connect'
+
+  /**
+   * The amount of time to wait before attempting to reconnect to the server.
+   */
+  public static readonly RECONNECT_COOLDOWN: number = 1000
 
   /**
    * Generates a new request ID for a request to the server.

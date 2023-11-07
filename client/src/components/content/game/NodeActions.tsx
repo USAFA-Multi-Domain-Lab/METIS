@@ -9,6 +9,9 @@ import { useMountHandler } from 'src/toolbox/hooks'
 import MapToolbox from '../../../../../shared/toolbox/maps'
 
 export type TNodeActions = {
+  /**
+   * Whether or not the prompt is open.
+   */
   isOpen: boolean
   node: ClientMissionNode
   game: GameClient
@@ -16,6 +19,7 @@ export type TNodeActions = {
   handleCloseRequest: () => void
 }
 
+// todo: Some description.
 /**
  * Prompt for a game participant to select an action to execute on a node.
  */
@@ -187,5 +191,3 @@ export default function NodeActions({
     )
   }
 }
-
-let html: string = 'This is a link: Enjoy your link <a></a> Next line. <br />'
