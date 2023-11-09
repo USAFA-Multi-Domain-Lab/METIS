@@ -79,8 +79,8 @@ export class MissionNode implements IMissionMappable {
 
   static default_name: string = 'Unnamed Node'
   static default_color: string = '#ffffff'
-  static default_description: string = '<p>Description text goes here.</p>'
-  static default_preExecutionText: string = '<p>Node has not been executed.</p>'
+  static default_description: string = '<p><br></p>'
+  static default_preExecutionText: string = '<p><br></p>'
   static default_depthPadding: number = 0
   static default_executable: boolean = false
   static default_device: boolean = false

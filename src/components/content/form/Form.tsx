@@ -217,11 +217,20 @@ export function DetailBox(props: {
 
   /* -- RENDER -- */
 
-  let reactQuillModules = {
+  const reactQuillModules = {
     toolbar: {
-      container: [['bold', 'italic', 'underline', 'link'], ['clean']],
+      container: [
+        [{ list: 'ordered' }, { list: 'bullet' }],
+        ['bold', 'italic', 'underline', 'link'],
+        ['clean'],
+      ],
+    },
+    clipboard: {
+      matchVisual: false,
     },
   }
+
+  const reactQuillFormats = ['bold', 'italic', 'underline', 'link', 'list']
 
   if (disabled) {
     className += ' Disabled'
@@ -243,6 +252,7 @@ export function DetailBox(props: {
         bounds={elementBoundary}
         className={fieldClassName}
         modules={reactQuillModules}
+        formats={reactQuillFormats}
         value={initialValue}
         placeholder='Enter text here...'
         theme='snow'

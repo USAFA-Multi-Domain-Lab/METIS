@@ -349,7 +349,6 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
                       }}
                       renderNodeTooltipDescription={(node: MissionNode) => {
                         let description: string = ''
-                        let nodeActionDisplay = 'None selected'
 
                         // This creates the tooltip hover over effect
                         // that displays the description of the node
@@ -360,10 +359,6 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
                           !node.executing
                         ) {
                           description = node.description
-                        }
-
-                        if (node.selectedAction !== null) {
-                          nodeActionDisplay = node.selectedAction.name
                         }
 
                         // This creates the tooltip hover over effect
