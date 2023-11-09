@@ -154,6 +154,11 @@
             color: $terminal-blue;
           }
 
+          ul,
+          ol {
+            padding: 0;
+          }
+
           &.ql-blank::before {
             color: $color-main;
           }

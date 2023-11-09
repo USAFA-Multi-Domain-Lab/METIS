@@ -1,5 +1,5 @@
 // This migration script is responsible
-// for adding the deleted property for all
+// for adding the role property for all
 // admin users.
 
 let dbName = 'metis'
@@ -12,16 +12,19 @@ use(dbName)
 
 print('Migrating user data to updated schema...')
 
-let cursor_users = db.users.find({}, { userID: 1 })
+let cursor_users = db.users.find({}, { userID: 1, role: 1 })
 
 while (cursor_users.hasNext()) {
   let user = cursor_users.next()
+  let userID = 'admin'
 
-  user.deleted = false
+  if (user.userID !== userID) {
+    user.role = 'admin'
+  }
 
-  db.users.updateOne({ userID: user.userID }, { $set: user })
+  db.users.updateOne({}, { $set: { role: user.role } })
 }
 
 print('Updating schema build number...')
 
-db.infos.updateOne({ infoID: 'default' }, { $set: { schemaBuildNumber: 14 } })
+db.infos.updateOne({ infoID: 'default' }, { $set: { schemaBuildNumber: 13 } })

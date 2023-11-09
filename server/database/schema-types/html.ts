@@ -27,7 +27,7 @@ export class SanitizedHTML extends mongoose.SchemaType {
   cast(val: string): string | any {
     try {
       let sanitizedHTML = DOMPurify.sanitize(val, {
-        ALLOWED_TAGS: ['a', 'br', 'p', 'strong', 'em', 'u'],
+        ALLOWED_TAGS: ['a', 'br', 'p', 'strong', 'em', 'u', 'ul', 'ol', 'li'],
         ALLOWED_ATTR: ['href', 'rel', 'target'],
         FORBID_TAGS: ['script', 'style', 'iframe'],
       })

@@ -1,6 +1,8 @@
-// This migration script is responsible
-// for adding the role property for all
-// admin users.
+// This migration script is responsible for
+// removing default text from existing
+// properties with default text.
+// (i.e. '<p>No description set...</p>',
+// '<p>Description text goes here.</p>')
 
 let dbName = 'metis'
 
@@ -10,19 +12,38 @@ if (process.env.MONGO_DB) {
 
 use(dbName)
 
-print('Migrating user data to updated schema...')
+print('Migrating mission data to updated schema...')
 
-let cursor_users = db.users.find({}, { userID: 1, role: 1 })
+// Get missions from database.
+let cursor_missions = db.missions.find({}, { missionID: 1, nodeData: 1 })
 
-while (cursor_users.hasNext()) {
-  let user = cursor_users.next()
-  let userID = 'admin'
+// Loop through missions.
+while (cursor_missions.hasNext()) {
+  let mission = cursor_missions.next()
+  let nodeData = mission.nodeData
 
-  if (user.userID !== userID) {
-    user.role = 'admin'
+  // Loop through nodeData.
+  for (let nodeDatum of nodeData) {
+    // If the description has default text, set it to an empty string.
+    if (
+      nodeDatum.description === '<p>No description set...</p>' ||
+      nodeDatum.description === '<p>Description text goes here.</p>' ||
+      nodeDatum.description === '<p>Description not set...</p>'
+    ) {
+      nodeDatum.description = '<p><br></p>'
+    }
+
+    // If the pre-execution text has default text, set it to an empty string.
+    if (
+      nodeDatum.preExecutionText === '<p>No pre-execution text set...</p>' ||
+      nodeDatum.preExecutionText === '<p>Node has not been executed.</p>'
+    ) {
+      nodeDatum.preExecutionText = '<p><br></p>'
+    }
   }
 
-  db.users.updateOne({}, { $set: { role: user.role } })
+  // Update mission in database.
+  db.missions.updateOne({ missionID: mission.missionID }, { $set: mission })
 }
 
 print('Updating schema build number...')

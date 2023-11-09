@@ -22,11 +22,11 @@
       color: $terminal;
     }
 
-    .Succeeded p {
+    .Succeeded * {
       color: $terminal-success;
     }
 
-    .Failed p {
+    .Failed * {
       color: $terminal-fail;
     }
   }

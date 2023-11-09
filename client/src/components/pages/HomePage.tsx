@@ -590,7 +590,7 @@ export default function HomePage(props: IHomePage): JSX.Element | null {
       {/* -- FOOTER -- */}
       <div className='FooterContainer' draggable={false}>
         <div className='Version' onClick={viewChangelog} draggable={false}>
-          v1.3.5
+          v1.3.6
           <Tooltip description={'View changelog.'} />
         </div>
         <a

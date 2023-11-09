@@ -314,8 +314,6 @@ export function DetailBox(props: {
   initialValue: string
   deliverValue: (value: string) => void
   options?: {
-    // deliverError?: boolean // default false
-    // deliverErrorMessage?: string // default ''
     disabled?: boolean // default false
     uniqueLabelClassName?: string // default ''
     uniqueInputClassName?: string // default ''
@@ -326,12 +324,6 @@ export function DetailBox(props: {
 }): JSX.Element | null {
   let label: string = props.label
   let initialValue: string = props.initialValue
-  // let displayError: boolean = props.options?.deliverError
-  //   ? props.options.deliverError
-  //   : false
-  // let errorMessage: string = props.options?.deliverErrorMessage
-  //   ? props.options?.deliverErrorMessage
-  //   : ''
   let uniqueLabelClassName: string = props.options?.uniqueLabelClassName
     ? props.options.uniqueLabelClassName
     : ''
@@ -339,7 +331,8 @@ export function DetailBox(props: {
     ? props.options.uniqueInputClassName
     : ''
   let disabled: boolean = props.options?.disabled === true
-  let placeholder: string | undefined = props.options?.placeholder
+  let placeholder: string | undefined =
+    props.options?.placeholder || 'Enter text here...'
   let emptyStringAllowed: boolean = props.options?.emptyStringAllowed || false
   let elementBoundary: string | undefined = props.options?.elementBoundary
   let deliverValue = props.deliverValue
@@ -354,21 +347,24 @@ export function DetailBox(props: {
 
   /* -- RENDER -- */
 
-  let reactQuillModules = {
+  const reactQuillModules = {
     toolbar: {
-      container: [['bold', 'italic', 'underline', 'link'], ['clean']],
+      container: [
+        [{ list: 'ordered' }, { list: 'bullet' }],
+        ['bold', 'italic', 'underline', 'link'],
+        ['clean'],
+      ],
+    },
+    clipboard: {
+      matchVisual: false,
     },
   }
+
+  const reactQuillFormats = ['bold', 'italic', 'underline', 'link', 'list']
 
   if (disabled) {
     className += ' Disabled'
   }
-
-  // if (displayError) {
-  //   fieldClassName += ' Error'
-  //   labelClassName += ' Error'
-  //   fieldErrorClassName = 'FieldErrorMessage'
-  // }
 
   if (!emptyStringAllowed && isEmptyString) {
     fieldClassName += ' Error'
@@ -388,8 +384,9 @@ export function DetailBox(props: {
         bounds={elementBoundary}
         className={fieldClassName + ' ' + uniqueInputClassName}
         modules={reactQuillModules}
+        formats={reactQuillFormats}
         value={initialValue}
-        placeholder='Enter text here...'
+        placeholder={placeholder}
         theme='snow'
         onChange={(value: string) => {
           deliverValue(value)

@@ -1,5 +1,10 @@
 # changelog
 
+# version-1.3.6 | 11-9-2023
+
+- Fixed styling issue with text displayed in the terminal (output panel) on the game page
+- New mission-node's descriptions no longer have default text since the property is optional and can be saved to the database as an empty string
+
 # version-1.3.5 | 10-25-2023
 
 - Updated branding throughout the whole web application to use the new emblem and logo created for METIS

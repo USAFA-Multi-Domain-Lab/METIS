@@ -378,8 +378,8 @@ export default abstract class Mission<TMissionNode extends IMissionNode>
     name: 'ROOT',
     color: '#000000',
     description:
-      'Invisible node that is the root of all other nodes in the structure.',
-    preExecutionText: 'N/A',
+      '<p>Invisible node that is the root of all other nodes in the structure.</p>',
+    preExecutionText: '<p><br></p>',
     depthPadding: 0,
     executable: false,
     device: false,

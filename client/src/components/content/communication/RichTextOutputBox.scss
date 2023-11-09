@@ -15,4 +15,13 @@
   a {
     color: $terminal-blue;
   }
+
+  ul {
+    list-style-type: disc;
+  }
+
+  ul,
+  ol {
+    padding-left: 15px;
+  }
 }
