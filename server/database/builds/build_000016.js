@@ -24,4 +24,4 @@ while (cursor_users.hasNext()) {
 
 print('Updating schema build number...')
 
-db.infos.updateOne({ infoID: 'default' }, { $set: { schemaBuildNumber: 15 } })
+db.infos.updateOne({ infoID: 'default' }, { $set: { schemaBuildNumber: 16 } })
