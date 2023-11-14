@@ -42,11 +42,7 @@ export default function AuthPage(props: IAuthPage): JSX.Element | null {
   // Called to check if the form can be
   // submit.
   const canSubmit = (): boolean => {
-    let elm_userIDField: string | null = userID
-    let elm_passwordField: string | null = password
-    if (elm_userIDField && elm_passwordField) {
-      let userID: string = elm_userIDField
-      let password: string = elm_passwordField
+    if (userID && password) {
       return userID.length > 0 && password.length > 0
     }
     return false
@@ -62,13 +58,7 @@ export default function AuthPage(props: IAuthPage): JSX.Element | null {
   const handleSubmit = async (event: React.FormEvent): Promise<void> => {
     event.preventDefault()
 
-    let elm_userIDField: string | null = userID
-    let elm_passwordField: string | null = password
-
-    if (elm_userIDField && elm_passwordField) {
-      let userID: string = elm_userIDField
-      let password: string = elm_passwordField
-
+    if (userID && password) {
       if (userID.length > 0 && password.length > 0) {
         setIsSubmitting(true)
         beginLoading('Logging in...')

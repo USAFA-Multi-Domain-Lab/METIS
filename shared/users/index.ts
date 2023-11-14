@@ -1,10 +1,158 @@
-import UserPermission, { IUserPermissionJSON } from './permissions'
-import UserRole, { IUserRoleJSON } from './roles'
+import { TMetisSession } from 'metis/sessions'
+import UserPermission, {
+  TUserPermission,
+  TUserPermissionID,
+} from './permissions'
+import UserRole, { TUserRole } from './roles'
 
 /**
- * Interface used for the abstract User class.
+ * Represents a user using METIS.
  */
-export interface IUser extends IUserJSON {
+export default abstract class User implements TUser {
+  public userID: TUser['userID']
+  public role: TUser['role']
+  public expressPermissions: TUser['expressPermissions']
+  public firstName: TUser['firstName']
+  public lastName: TUser['lastName']
+  public needsPasswordReset: TUser['needsPasswordReset']
+  public password?: TUser['password']
+  /**
+   * @deprecated ***This is no longer supported and will be removed in the future.***
+   * @returns {boolean} Whether the user has restricted access.
+   */
+  public hasRestrictedAccess: TUser['hasRestrictedAccess']
+  /**
+   * @deprecated ***This is no longer supported and will be removed in the future.***
+   * @returns {boolean} Whether the user has full access.
+   */
+  public hasFullAccess: TUser['hasFullAccess']
+
+  /**
+   * @param {TUserJSON} data The user data from which to create the user. Any ommitted values will be set to the default properties defined in User.DEFAULT_PROPERTIES.
+   * @param {TUserOptions} options Options for creating the user.
+   */
+  public constructor(
+    data: Partial<TUserJSON> = User.DEFAULT_PROPERTIES,
+    options: TUserOptions = {},
+  ) {
+    this.userID = data.userID ?? User.DEFAULT_PROPERTIES.userID
+    this.role = UserRole.get(data.roleID ?? UserRole.DEFAULT_ID)
+    this.firstName = data.firstName ?? User.DEFAULT_PROPERTIES.firstName
+    this.lastName = data.lastName ?? User.DEFAULT_PROPERTIES.lastName
+    this.needsPasswordReset =
+      data.needsPasswordReset ?? User.DEFAULT_PROPERTIES.needsPasswordReset
+    this.expressPermissions = UserPermission.get(
+      data.expressPermissionIDs ?? User.DEFAULT_PROPERTIES.expressPermissionIDs,
+    )
+
+    this.hasRestrictedAccess = UserRole.RESTRICTED_ACCESS_ROLES.includes(
+      this.role.name,
+    )
+    this.hasFullAccess = UserRole.FULL_ACCESS_ROLES.includes(this.role.name)
+  }
+
+  /**
+   * Converts the User object to JSON.
+   * @param {TUserOptions} options Options for converting the user to JSON.
+   * @returns {TUserJSON} A JSON representation of the user.
+   */
+  public toJSON(options: TUserOptions = {}): TUserJSON {
+    // Construct JSON object to send to server.
+    let JSON: TUserJSON = {
+      userID: this.userID,
+      firstName: this.firstName,
+      lastName: this.lastName,
+      roleID: this.role.id,
+      needsPasswordReset: this.needsPasswordReset,
+      expressPermissionIDs: this.expressPermissions.map(
+        (permission: UserPermission) => permission.id,
+      ),
+      password: this.password,
+    }
+
+    return JSON
+  }
+
+  public static isAuthorized = (
+    session: TMetisSession<TUser> | undefined,
+    requiredPermissions: TUserPermissionID[],
+  ): boolean => {
+    // Current METIS session.
+    if (session) {
+      // Current user in session.
+      let { user: currentUser } = session
+      // What the current user is allowed
+      // to do based on their role.
+      let { permissions: rolePermissions } = currentUser.role
+      // What the current user is allowed
+      // to do based on their specific
+      // permissions.
+      let { expressPermissions } = currentUser
+      // Check if the user has the required
+      // permissions.
+      let roleHasRequiredPermissions: boolean = UserPermission.hasPermissions(
+        rolePermissions,
+        requiredPermissions,
+      )
+      // Check to see if the user has been
+      // given specific permissions that
+      // override their role permissions.
+      let userHasSpecificPermissions: boolean = UserPermission.hasPermissions(
+        expressPermissions,
+        requiredPermissions,
+      )
+
+      // If the current user in the
+      // session has the revoked
+      // access role, they are not
+      // authorized to perform any
+      // actions.
+      if (currentUser.role.id === 'revokedAccess') {
+        return false
+      }
+      // If the current user in session has a role
+      // with the required permission(s), or if the
+      // user has been given specific permissions
+      // that override their role permissions, then
+      // they are authorized to perform the action.
+      else if (roleHasRequiredPermissions || userHasSpecificPermissions) {
+        return true
+      }
+      // If neither of the above are true, then the
+      // current user in session should not be
+      // authorized to perform the action.
+      else {
+        return false
+      }
+    }
+    // If there is no session, the user is not
+    // authorized to perform the action.
+    else {
+      return false
+    }
+  }
+
+  /**
+   * Default properties set when creating a new user.
+   */
+  public static get DEFAULT_PROPERTIES(): TUserJSON {
+    return {
+      userID: '',
+      firstName: '',
+      lastName: '',
+      roleID: UserRole.DEFAULT_ID,
+      needsPasswordReset: false,
+      expressPermissionIDs: [],
+    }
+  }
+}
+
+/* ------------------------------ USER TYPES ------------------------------ */
+
+/**
+ * Type used for the abstract User class.
+ */
+export type TUser = Omit<TUserJSON, 'roleID' | 'expressPermissionIDs'> & {
   /**
    * The user's role.
    */
@@ -25,28 +173,28 @@ export interface IUser extends IUserJSON {
   hasFullAccess: boolean
   /**
    * Converts the User object to JSON.
-   * @returns {IUserJSON} A JSON representation of the user.
+   * @returns {TUserJSON} A JSON representation of the user.
    */
-  toJSON(options?: TUserJSONOptions): IUserJSON
+  toJSON(options?: TUserOptions): TUserJSON
 }
 
 /**
  * The JSON representation of a User object.
  */
-export interface IUserJSON {
+export type TUserJSON = {
   /**
    * The user's ID.
    */
   userID: string
   /**
-   * JSON representation of the user's role.
+   * The user's role ID.
    */
-  role: IUserRoleJSON
+  roleID: TUserRole['id']
   /**
-   * Specific express permissions assigned
+   * Specific express permission IDs assigned
    * to the user.
    */
-  expressPermissions: IUserPermissionJSON[]
+  expressPermissionIDs: TUserPermission['id'][]
   /**
    * The user's first name.
    */
@@ -68,14 +216,7 @@ export interface IUserJSON {
 /**
  * Options for creating new User objects.
  */
-export interface IUserOptions {}
-
-/**
- * Options for creating new User objects.
- */
-export type TUserJSONOptions = {
-  password?: IUserJSON['password']
-}
+export type TUserOptions = {}
 
 // todo: remove
 // ! export interface IUserJSONExposed {
@@ -84,103 +225,3 @@ export type TUserJSONOptions = {
 // !  userID: string
 // !   password: string
 // ! }
-
-/**
- * Represents a user using METIS.
- */
-export default abstract class User implements IUser {
-  public userID: IUser['userID']
-  public role: IUser['role']
-  public expressPermissions: IUser['expressPermissions']
-  public firstName: IUser['firstName']
-  public lastName: IUser['lastName']
-  public needsPasswordReset: IUser['needsPasswordReset']
-  /**
-   * @deprecated ***This is no longer supported and will be removed in the future.***
-   * @returns {boolean} Whether the user has restricted access.
-   */
-  public hasRestrictedAccess: IUser['hasRestrictedAccess']
-  /**
-   * @deprecated ***This is no longer supported and will be removed in the future.***
-   * @returns {boolean} Whether the user has full access.
-   */
-  public hasFullAccess: IUser['hasFullAccess']
-
-  /**
-   * @param {IUserJSON} data The user data from which to create the user. Any ommitted values will be set to the default properties defined in User.DEFAULT_PROPERTIES.
-   * @param {IUserOptions} options Options for creating the user.
-   */
-  public constructor(
-    data: Partial<IUserJSON> = User.DEFAULT_PROPERTIES,
-    options: IUserOptions = {},
-  ) {
-    this.userID = data.userID ?? User.DEFAULT_PROPERTIES.userID
-    this.role = this.parseUserRoleData(data.role ?? UserRole.DEFAULT_PROPERTIES)
-    this.firstName = data.firstName ?? User.DEFAULT_PROPERTIES.firstName
-    this.lastName = data.lastName ?? User.DEFAULT_PROPERTIES.lastName
-    this.needsPasswordReset =
-      data.needsPasswordReset ?? User.DEFAULT_PROPERTIES.needsPasswordReset
-    this.expressPermissions = this.parseUserPermissionData(
-      data.expressPermissions ?? User.DEFAULT_PROPERTIES.expressPermissions,
-    )
-
-    this.hasRestrictedAccess = UserRole.RESTRICTED_ACCESS_ROLES.includes(
-      this.role.name,
-    )
-    this.hasFullAccess = UserRole.FULL_ACCESS_ROLES.includes(this.role.name)
-  }
-
-  /**
-   * Parses the user role data into UserRole objects.
-   * @param {IUserRoleJSON} data The user role data to parse.
-   * @returns {UserRole} The parsed user role data.
-   */
-  protected abstract parseUserRoleData(data: IUserRoleJSON): UserRole
-
-  /**
-   * Parses the user permission data into UserPermission objects.
-   * @param {IUserPermissionJSON[]} data The user permission data to parse.
-   * @returns {UserPermission} The parsed user permission data.
-   */
-  protected abstract parseUserPermissionData(
-    data: IUserPermissionJSON[],
-  ): UserPermission[]
-
-  /**
-   * Converts the User object to JSON.
-   * @returns {IUserJSON} A JSON representation of the user.
-   */
-  public toJSON(options: TUserJSONOptions = {}): IUserJSON {
-    // Construct JSON object to send to server.
-    let JSON: IUserJSON = {
-      userID: this.userID,
-      firstName: this.firstName,
-      lastName: this.lastName,
-      role: this.role.toJSON(),
-      needsPasswordReset: this.needsPasswordReset,
-      expressPermissions: this.expressPermissions.map(
-        (permission: UserPermission) => permission.toJSON(),
-      ),
-    }
-
-    if (options.password !== undefined) {
-      JSON.password = options.password
-    }
-
-    return JSON
-  }
-
-  /**
-   * Default properties set when creating a new user.
-   */
-  public static get DEFAULT_PROPERTIES(): IUserJSON {
-    return {
-      userID: '',
-      firstName: '',
-      lastName: '',
-      role: UserRole.DEFAULT_PROPERTIES,
-      needsPasswordReset: false,
-      expressPermissions: [],
-    }
-  }
-}

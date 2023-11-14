@@ -1,8 +1,4 @@
-import User, { IUserJSON, IUserOptions } from 'metis/users'
-import UserPermission, { IUserPermissionJSON } from 'metis/users/permissions'
-import UserRole, { IUserRoleJSON } from 'metis/users/roles'
-
-export type TServerUserOptions = IUserOptions & {}
+import User, { TUserJSON, TUserOptions } from 'metis/users'
 
 /**
  * Class for managing users on the server.
@@ -10,35 +6,18 @@ export type TServerUserOptions = IUserOptions & {}
  */
 export default class ServerUser extends User {
   /**
-   * @param {IUserJSON} data The user data from which to create the user. Any ommitted values will be set to the default properties defined in User.DEFAULT_PROPERTIES.
+   * @param {TUserJSON} data The user data from which to create the user. Any ommitted values will be set to the default properties defined in User.DEFAULT_PROPERTIES.
    * @param {TServerUserOptions} options Options for creating the user.
    */
-  public constructor(data: IUserJSON, options: TServerUserOptions = {}) {
+  public constructor(data: TUserJSON, options: TServerUserOptions = {}) {
     // Initialize base properties.
     super(data, options)
   }
-
-  // Implemented abstract method
-  protected parseUserRoleData(data: IUserRoleJSON): UserRole {
-    return new UserRole(
-      data.id,
-      UserRole.AVAILABLE_ROLES[data.id].name,
-      UserRole.AVAILABLE_ROLES[data.id].description,
-      UserRole.AVAILABLE_ROLES[data.id].permissions,
-    )
-  }
-
-  // Implemented abstract method
-  protected parseUserPermissionData(
-    data: IUserPermissionJSON[],
-  ): UserPermission[] {
-    return data.map(
-      (datum) =>
-        new UserPermission(
-          datum.id,
-          UserPermission.AVAILABLE_PERMISSIONS[datum.id].name,
-          UserPermission.AVAILABLE_PERMISSIONS[datum.id].description,
-        ),
-    )
-  }
 }
+
+/* ------------------------------ SERVER USER TYPES ------------------------------ */
+
+/**
+ * Options for creating a new Server User object.
+ */
+export type TServerUserOptions = TUserOptions & {}

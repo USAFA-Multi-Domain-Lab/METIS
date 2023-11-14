@@ -3,7 +3,7 @@
 # version-1.3.6 | 11-9-2023
 
 - Fixed styling issue with text displayed in the terminal (output panel) on the game page
-- New mission-node's descriptions no longer have default text since the property is optional and can be saved to the database as an empty string
+- A new mission-node's description and pre-execution text no longer have default text since the properties are optional and can be saved to the database as empty strings
 
 # version-1.3.5 | 10-25-2023
 

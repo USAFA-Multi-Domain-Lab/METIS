@@ -8,6 +8,7 @@ import { useMountHandler, useRequireSession } from 'src/toolbox/hooks'
 import { useGlobalContext } from 'src/context'
 import { AxiosError } from 'axios'
 import ClientUser from 'src/users'
+import User from '../../../../shared/users'
 
 export interface IUserFormPage extends IPage {
   // If this is null, then a new user is being created.
@@ -32,7 +33,6 @@ export default function UserFormPage(props: IUserFormPage): JSX.Element | null {
     goToPage,
     confirm,
     logout,
-    isAuthorized,
   } = globalContext.actions
 
   /* -- COMPONENT STATE -- */
@@ -83,7 +83,7 @@ export default function UserFormPage(props: IUserFormPage): JSX.Element | null {
   if (
     session === null ||
     !mountHandled ||
-    !isAuthorized(['READ', 'WRITE', 'DELETE'])
+    !User.isAuthorized(session, ['READ', 'WRITE', 'DELETE'])
   ) {
     return null
   }
@@ -97,11 +97,14 @@ export default function UserFormPage(props: IUserFormPage): JSX.Element | null {
       setAreUnsavedChanges(false)
       setUsernameAlreadyExists(false)
 
-      if (!existsInDatabase && isAuthorized(['WRITE'])) {
+      if (!existsInDatabase && User.isAuthorized(session, ['WRITE'])) {
         try {
-          let resultingUser = await ClientUser.create(user)
+          let currentUserID: string = user.userID
+          beginLoading('Creating user...')
+          await ClientUser.create(user)
+          setUser(await ClientUser.fetchOne(currentUserID!))
           notify('User successfully saved.')
-          setUser(resultingUser)
+          finishLoading()
           setExistsInDatabase(true)
         } catch (error: any) {
           if (error instanceof AxiosError && error.response?.status === 409) {
@@ -110,16 +113,21 @@ export default function UserFormPage(props: IUserFormPage): JSX.Element | null {
             )
             setUsernameAlreadyExists(true)
           } else {
-            notify('User failed to save.')
+            notify('User failed to save.', { errorMessage: true })
           }
+          finishLoading()
           setAreUnsavedChanges(true)
         }
-      } else if (existsInDatabase && isAuthorized(['WRITE'])) {
+      } else if (existsInDatabase && User.isAuthorized(session, ['WRITE'])) {
         try {
+          beginLoading('Updating user...')
           await ClientUser.update(user)
+          setUser(await ClientUser.fetchOne(user.userID!))
           notify('User successfully saved.')
+          finishLoading()
         } catch (error: any) {
           notify('User failed to save.')
+          finishLoading()
           setAreUnsavedChanges(true)
         }
       }

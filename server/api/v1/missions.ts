@@ -8,7 +8,7 @@ import MetisDatabase from 'metis/server/database'
 import InfoModel from 'metis/server/database/models/info'
 import MissionModel from 'metis/server/database/models/missions'
 import { databaseLogger, plcApiLogger } from 'metis/server/logging'
-import { hasAuthorization } from '../../middleware/users'
+import { authorized } from '../../middleware/users'
 import uploads from '../../middleware/uploads'
 import { RequestBodyFilters, defineRequests } from '../../middleware/requests'
 import MissionNode from '../../missions/nodes'
@@ -16,6 +16,7 @@ import { assetData } from '../../effects/effect-data'
 import MetisServer from 'metis/server'
 import { TMetisRouterMap } from 'metis/server/http/router'
 import { IMissionJSON } from 'metis/missions'
+import User from 'metis/users'
 
 type MulterFile = Express.Multer.File
 
@@ -27,7 +28,7 @@ export const routerMap: TMetisRouterMap = (
   // This will create a new mission.
   router.post(
     '/',
-    hasAuthorization(['WRITE']),
+    authorized(['WRITE']),
     defineRequests({
       body: {
         name: RequestBodyFilters.STRING,
@@ -103,7 +104,7 @@ export const routerMap: TMetisRouterMap = (
   // -- POST | /api/v1/missions/import/ --
   router.post(
     '/import/',
-    hasAuthorization(['WRITE']),
+    authorized(['WRITE']),
     uploads.array('files', 12),
     (request, response) => {
       // Verifies files were included
@@ -472,7 +473,7 @@ export const routerMap: TMetisRouterMap = (
   // This will return all of the missions.
   router.get(
     '/',
-    hasAuthorization(['READ']),
+    authorized(['READ']),
     defineRequests(
       {
         query: {},
@@ -483,11 +484,13 @@ export const routerMap: TMetisRouterMap = (
     ),
     (request, response) => {
       let missionID = request.query.missionID
+      // Grab the session.
+      let session: any = response.locals.session
 
       if (missionID === undefined) {
         let queries: any = {}
 
-        if (!hasAuthorization(['WRITE'])) {
+        if (!User.isAuthorized(session, ['WRITE'])) {
           queries.live = true
         }
 
@@ -515,7 +518,10 @@ export const routerMap: TMetisRouterMap = (
               return response.sendStatus(500)
             } else if (mission === null) {
               return response.sendStatus(404)
-            } else if (!mission.live && !hasAuthorization(['WRITE'])) {
+            } else if (
+              !mission.live &&
+              !User.isAuthorized(session, ['WRITE'])
+            ) {
               return response.sendStatus(401)
             } else {
               databaseLogger.info(`Mission with ID "${missionID}" retrieved.`)
@@ -530,7 +536,7 @@ export const routerMap: TMetisRouterMap = (
   // This will return all of the missions.
   router.get(
     '/export/*', // The "*" is to ensure the downloaded file includes the mission's name and the .metis extension.
-    hasAuthorization(['READ']),
+    authorized(['READ']),
     defineRequests({ query: { missionID: 'objectId' } }),
     (request, response) => {
       let missionID = request.query.missionID
@@ -617,7 +623,7 @@ export const routerMap: TMetisRouterMap = (
   // executed.
   router.get(
     '/assets/',
-    hasAuthorization(['READ']),
+    authorized(['READ']),
     defineRequests({}),
     (request, response) => {
       response.json({ assetData })
@@ -630,7 +636,7 @@ export const routerMap: TMetisRouterMap = (
   // ! DEPRECATED
   router.put(
     '/handle-action-execution/',
-    hasAuthorization([]),
+    authorized([]),
     defineRequests({
       body: {
         missionID: RequestBodyFilters.OBJECTID,
@@ -689,7 +695,7 @@ export const routerMap: TMetisRouterMap = (
   // This will update the mission.
   router.put(
     '/',
-    hasAuthorization(['WRITE']),
+    authorized(['WRITE']),
     defineRequests(
       {
         body: {
@@ -807,7 +813,7 @@ export const routerMap: TMetisRouterMap = (
   // This will copy a mission.
   router.put(
     '/copy/',
-    hasAuthorization(['WRITE']),
+    authorized(['WRITE']),
     defineRequests({
       body: {
         copyName: RequestBodyFilters.STRING,
@@ -866,7 +872,7 @@ export const routerMap: TMetisRouterMap = (
   // This will delete a mission.
   router.delete(
     '/',
-    hasAuthorization(['DELETE']),
+    authorized(['DELETE']),
     defineRequests({ query: { missionID: 'objectId' } }),
     (request, response) => {
       let query: any = request.query

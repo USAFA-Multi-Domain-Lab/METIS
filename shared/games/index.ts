@@ -1,5 +1,5 @@
 import context from '../context'
-import { IUserJSON } from '../users'
+import { TUserJSON } from '../users'
 import { IMission, IMissionJSON } from 'metis/missions'
 import { IMissionAction } from '../missions/actions'
 import axios, { AxiosError } from 'axios'
@@ -8,7 +8,7 @@ import { IMissionNode } from '../missions/nodes'
 export interface IGameJSON {
   gameID: string
   mission: IMissionJSON
-  participants: Array<IUserJSON>
+  participants: TUserJSON[]
   resources: number
 }
 
@@ -34,12 +34,12 @@ export default abstract class Game<
   /**
    * The participants of the game executing the mission.
    */
-  protected _participants: Array<TParticpant>
+  protected _participants: TParticpant[]
 
   /**
    * The participants of the game executing the mission.
    */
-  public get participants(): Array<TParticpant> {
+  public get participants(): TParticpant[] {
     return [...this._participants]
   }
 
@@ -71,7 +71,7 @@ export default abstract class Game<
   public constructor(
     gameID: string,
     mission: TMission,
-    participants: Array<TParticpant>,
+    participants: TParticpant[],
   ) {
     this.gameID = gameID
     this.mission = mission

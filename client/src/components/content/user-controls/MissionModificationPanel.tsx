@@ -7,6 +7,7 @@ import { MiniButtonSVGPanel } from './MiniButtonSVGPanel'
 import { EMiniButtonSVGPurpose, MiniButtonSVG } from './MiniButtonSVG'
 import { useState } from 'react'
 import { useGlobalContext } from 'src/context'
+import User from '../../../../../shared/users'
 
 export default function MissionModificationPanel(props: {
   mission: ClientMission
@@ -19,14 +20,8 @@ export default function MissionModificationPanel(props: {
   const globalContext = useGlobalContext()
 
   const [session] = globalContext.session
-  const {
-    goToPage,
-    notify,
-    confirm,
-    beginLoading,
-    finishLoading,
-    isAuthorized,
-  } = globalContext.actions
+  const { goToPage, notify, confirm, beginLoading, finishLoading } =
+    globalContext.actions
 
   /* -- COMPONENT VARIABLES -- */
 
@@ -126,7 +121,7 @@ export default function MissionModificationPanel(props: {
         notify(`"${mission.name}" is now live.`)
         setLiveAjaxStatus(EAjaxStatus.Loaded)
       } else {
-        notify(`"${mission.name}" is now no longer live.`)
+        notify(`"${mission.name}" is no longer live.`)
         setLiveAjaxStatus(EAjaxStatus.Loaded)
       }
     } catch (error) {
@@ -181,7 +176,7 @@ export default function MissionModificationPanel(props: {
 
   let containerClassName: string = 'Hidden'
 
-  if (isAuthorized(['READ', 'WRITE', 'DELETE'])) {
+  if (User.isAuthorized(session, ['READ', 'WRITE', 'DELETE'])) {
     containerClassName = 'MissionModificationPanel'
   }
 

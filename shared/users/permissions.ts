@@ -1,54 +1,31 @@
 /**
- * Interface used for the abstract UserPermission class.
- */
-export interface IUserPermission extends IUserPermissionJSON {
-  /**
-   * The user permission's name.
-   */
-  name: TPermissionName
-  /**
-   * The user permission's description.
-   */
-  description: string
-  /**
-   * Converts the UserPermission object to JSON.
-   */
-  toJSON(): IUserPermissionJSON
-}
-
-/**
- * The JSON representation of a UserPermission object.
- */
-export interface IUserPermissionJSON {
-  /**
-   * The user permission's ID.
-   */
-  id: TUserPermissionID
-}
-
-const userPermissionNames = ['Read', 'Write', 'Delete'] as const
-export type TPermissionName = (typeof userPermissionNames)[number]
-
-const userPermissionIDs = ['READ', 'WRITE', 'DELETE'] as const
-export type TUserPermissionID = (typeof userPermissionIDs)[number]
-export type TUserPermissions = { [key in TUserPermissionID]: UserPermission }
-
-/**
  * Represents any permission that can be assigned to a user.
  */
-export default class UserPermission implements IUserPermission {
-  public readonly id: IUserPermission['id']
-  public readonly name: IUserPermission['name']
-  public readonly description: IUserPermission['description']
+export default class UserPermission implements TUserPermission {
+  public readonly id: TUserPermission['id']
+  public readonly name: TUserPermission['name']
+  public readonly description: TUserPermission['description']
 
   public constructor(
-    id: IUserPermission['id'],
-    name: IUserPermission['name'],
-    description: IUserPermission['description'],
+    id: TUserPermission['id'],
+    name: TUserPermission['name'],
+    description: TUserPermission['description'],
   ) {
     this.id = id
     this.name = name
     this.description = description
+  }
+
+  /**
+   * Gets the user permission objects from the given permission IDs.
+   * @param {TUserPermission['id'][]} permissionIDs The permission IDs used to get the user permission objects.
+   * @returns {UserPermission} A user permission object.
+   */
+  public static get(permissionIDs: TUserPermission['id'][]): UserPermission[] {
+    return permissionIDs.map(
+      (permissionID: TUserPermission['id']) =>
+        UserPermission.AVAILABLE_PERMISSIONS[permissionID],
+    )
   }
 
   /**
@@ -91,23 +68,6 @@ export default class UserPermission implements IUserPermission {
   }
 
   /**
-   * Converts the UserPermission object to JSON.
-   * @returns {IUserPermissionJSON} The JSON representation of the UserPermission object.
-   */
-  public toJSON(): IUserPermissionJSON {
-    return {
-      id: this.id,
-    }
-  }
-
-  /**
-   * Default properties for a UserPermission object.
-   */
-  public static DEFAULT_PROPERTIES: IUserPermissionJSON = {
-    id: 'READ',
-  }
-
-  /**
    * All available user permissions in METIS.
    */
   public static readonly AVAILABLE_PERMISSIONS: TUserPermissions = {
@@ -124,3 +84,30 @@ export default class UserPermission implements IUserPermission {
     ),
   }
 }
+
+/* ------------------------------ USER PERMISSION TYPES ------------------------------ */
+
+/**
+ * Type used for the abstract UserPermission class.
+ */
+export type TUserPermission = {
+  /**
+   * The user permission's ID.
+   */
+  id: TUserPermissionID
+  /**
+   * The user permission's name.
+   */
+  name: TPermissionName
+  /**
+   * The user permission's description.
+   */
+  description: string
+}
+
+const userPermissionNames = ['Read', 'Write', 'Delete'] as const
+export type TPermissionName = (typeof userPermissionNames)[number]
+
+const userPermissionIDs = ['READ', 'WRITE', 'DELETE'] as const
+export type TUserPermissionID = (typeof userPermissionIDs)[number]
+export type TUserPermissions = { [key in TUserPermissionID]: UserPermission }

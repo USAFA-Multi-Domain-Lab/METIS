@@ -1,5 +1,5 @@
 import { databaseLogger } from 'metis/server/logging'
-import { IUserRoleJSON, TUserRoleID } from 'metis/users/roles'
+import UserRole, { TUserRole } from 'metis/users/roles'
 import mongoose from 'mongoose'
 
 /**
@@ -19,33 +19,20 @@ export class Role extends mongoose.SchemaType {
 
   /**
    * This is called when a value is passed to the constructor.
-   * @param {IUserRoleJSON | TUserRoleID} role The value passed to the constructor.
-   * @returns {any} A user role or an error.
-   * @note The role parameter that is passed to this function
-   * varies depending on the context. When a user is being created
-   * or updated, the role parameter is a JSON object (IUserRoleJSON).
-   * However, when a user is being queried, the role parameter is a
-   * string (TUserRoleID).
+   * @param {TUserRole['id']} roleID The value passed to the constructor.
+   * @returns {any} A user role ID or an error.
    */
-  cast(role: IUserRoleJSON | TUserRoleID): any {
-    // This is a list of all possible roles that a user can have.
-    let possibleRoles: TUserRoleID[] = ['student', 'instructor', 'admin']
-
-    // If a query is being performed, the role parameter
-    // will be a string. This checks if the role parameter
-    // is a string and converts it to a JSON object if it is.
-    if (typeof role === 'string') {
-      role = {
-        id: role,
-      }
-    }
+  public cast(roleID: TUserRole['id']): TUserRole['id'] {
+    // Checks to make sure the role ID that's passed
+    // is valid.
+    let isValidRoleID: boolean = UserRole.isValidRoleID(roleID)
 
     // Checks if the role parameter is a valid role.
-    if (possibleRoles.includes(role.id)) {
-      return role
+    if (isValidRoleID) {
+      return roleID
     } else {
-      databaseLogger.error(`Invalid user role: ${role}`)
-      throw new Error(`Invalid user role: ${role}`)
+      databaseLogger.error(`Invalid user role ID: ${roleID}`)
+      throw new Error(`Invalid user role ID: ${roleID}`)
     }
   }
 }

@@ -1,29 +1,16 @@
 import axios, { AxiosError, AxiosResponse } from 'axios'
-import User, { IUser, IUserJSON, IUserOptions } from '../../../shared/users'
+import User, { TUser, TUserJSON, TUserOptions } from '../../../shared/users'
 import { TMetisSessionJSON } from '../../../shared/sessions'
 import { TMetisSession } from '../../../shared/sessions'
-import UserRole, { IUserRoleJSON } from '../../../shared/users/roles'
-import UserPermission, {
-  IUserPermissionJSON,
-} from '../../../shared/users/permissions'
-
-/**
- * Options for creating new Client User objects.
- */
-export type TClientUserOptions = IUserOptions & {
-  /**
-   * Whether the password is required when saving. Defaults to false.
-   */
-  passwordIsRequired?: boolean
-}
+import UserRole from '../../../shared/users/roles'
 
 /**
  * Class for managing users on the client.
  * @extends {User}
  */
 export default class ClientUser extends User {
-  public password1: IUser['password']
-  public password2: IUser['password']
+  public password1: TUser['password']
+  public password2: TUser['password']
 
   private _passwordIsRequired: boolean
 
@@ -136,7 +123,7 @@ export default class ClientUser extends User {
     let updatedLastName: boolean =
       this.lastName !== User.DEFAULT_PROPERTIES.lastName
     // role cannot be the default value
-    let updatedRole: boolean = this.role !== User.DEFAULT_PROPERTIES.role
+    let updatedRole: boolean = this.role.id !== User.DEFAULT_PROPERTIES.roleID
     // passwords must match
     let passwordsMatch: boolean = this.passwordsMatch
     // password must be entered if required
@@ -168,11 +155,11 @@ export default class ClientUser extends User {
   }
 
   /**
-   * @param {IUserJSON} data The user data from which to create the user. Any ommitted values will be set to the default properties defined in User.DEFAULT_PROPERTIES.
+   * @param {TUserJSON} data The user data from which to create the user. Any ommitted values will be set to the default properties defined in User.DEFAULT_PROPERTIES.
    * @param {TClientUserOptions} options Options for creating the user.
    */
   public constructor(
-    data: Partial<IUserJSON> = User.DEFAULT_PROPERTIES,
+    data: Partial<TUserJSON> = User.DEFAULT_PROPERTIES,
     options: TClientUserOptions = {},
   ) {
     // Initialize base properties.
@@ -182,28 +169,32 @@ export default class ClientUser extends User {
     this._passwordIsRequired = options.passwordIsRequired ?? false
   }
 
-  // Implemented abstract method
-  protected parseUserRoleData(data: IUserRoleJSON): UserRole {
-    return new UserRole(
-      data.id,
-      UserRole.AVAILABLE_ROLES[data.id].name,
-      UserRole.AVAILABLE_ROLES[data.id].description,
-      UserRole.AVAILABLE_ROLES[data.id].permissions,
-    )
-  }
+  // Overridden abstract method
+  public toJSON(options: TClientUserOptions = {}): TUserJSON {
+    // Extract the passwordIsRequired option.
+    let { passwordIsRequired } = options
 
-  // Implemented abstract method
-  protected parseUserPermissionData(
-    data: IUserPermissionJSON[],
-  ): UserPermission[] {
-    return data.map(
-      (datum) =>
-        new UserPermission(
-          datum.id,
-          UserPermission.AVAILABLE_PERMISSIONS[datum.id].name,
-          UserPermission.AVAILABLE_PERMISSIONS[datum.id].description,
-        ),
-    )
+    // Grab the JSON properties from the base class.
+    let JSON = super.toJSON(options)
+
+    // If the password is required then a new user
+    // is being created and the password must be
+    // set. If the password is required and the
+    // passwords match, then the password is set.
+    if (passwordIsRequired && this.passwordsMatch) {
+      JSON.password = this.password1
+    }
+    // If the password is not required, then the
+    // user is being updated and the password
+    // does not need to be set. If the password
+    // is required and the passwords do not match,
+    // then an error is thrown.
+    else if (passwordIsRequired && !this.passwordsMatch) {
+      throw new Error('Passwords do not match.')
+    }
+
+    // Return the overridden JSON.
+    return JSON
   }
 
   /**
@@ -220,7 +211,7 @@ export default class ClientUser extends User {
     return new Promise<ClientUser>(async (resolve, reject) => {
       try {
         // Retrieve data from API.
-        let { data: userJSON } = await axios.get<IUserJSON>(
+        let { data: userJSON } = await axios.get<TUserJSON>(
           `${ClientUser.API_ENDPOINT}`,
           { params: { userID } },
         )
@@ -244,7 +235,7 @@ export default class ClientUser extends User {
     return new Promise<ClientUser[]>(async (resolve, reject) => {
       try {
         // Retrieve data from API.
-        let { data: usersJSON } = await axios.get<IUserJSON[]>(
+        let { data: usersJSON } = await axios.get<TUserJSON[]>(
           ClientUser.API_ENDPOINT,
         )
         // Convert JSON to Client User objects.
@@ -314,7 +305,7 @@ export default class ClientUser extends User {
    * A promise that resolves to an object containing whether the login was correct and the session of the logged in user.
    */
   public static async login(
-    userID: IUser['userID'],
+    userID: TUser['userID'],
     password: string,
   ): Promise<{
     correct: boolean
@@ -372,16 +363,16 @@ export default class ClientUser extends User {
 
   /**
    * Calls the API to create a new user.
-   * @param {ClientUser} user The user to create.
+   * @param {ClientUser} clientUser The user to create.
    * @returns {Promise<ClientUser>} A promise that resolves to the created user.
    */
-  public static async create(user: ClientUser): Promise<ClientUser> {
+  public static async create(clientUser: ClientUser): Promise<ClientUser> {
     return new Promise<ClientUser>(async (resolve, reject) => {
       try {
         // Retrieve data from API.
-        let { data: userJSON } = await axios.post<IUserJSON>(
+        let { data: userJSON } = await axios.post<TUserJSON>(
           ClientUser.API_ENDPOINT,
-          { user: user.toJSON({ password: user.password1 }) },
+          { user: clientUser.toJSON({ passwordIsRequired: true }) },
         )
         // Convert JSON to Client User object.
         let createdUser: ClientUser = new ClientUser(userJSON)
@@ -397,16 +388,16 @@ export default class ClientUser extends User {
 
   /**
    * Calls the API to update the user.
-   * @param {ClientUser} user The user to update.
+   * @param {ClientUser} clientUser The user to update.
    * @returns {Promise<ClientUser>} A promise that resolves to the updated user.
    */
-  public static async update(user: ClientUser): Promise<ClientUser> {
+  public static async update(clientUser: ClientUser): Promise<ClientUser> {
     return new Promise<ClientUser>(async (resolve, reject) => {
       try {
         // Retrieve data from API.
-        let { data: userJSON } = await axios.put<IUserJSON>(
+        let { data: userJSON } = await axios.put<TUserJSON>(
           ClientUser.API_ENDPOINT,
-          { user: user.toJSON({ password: user.password1 }) },
+          { user: clientUser.toJSON({ passwordIsRequired: false }) },
         )
         // Convert JSON to Client User object.
         let updatedUser: ClientUser = new ClientUser(userJSON)
@@ -444,10 +435,10 @@ export default class ClientUser extends User {
 
   /**
    * Calls the API to delete the user.
-   * @param {IUser['userID']} userID The user ID of the user to delete.
+   * @param {TUser['userID']} userID The user ID of the user to delete.
    * @returns {Promise<void>} A promise that resolves when the user is deleted.
    */
-  public static async delete(userID: IUser['userID']): Promise<void> {
+  public static async delete(userID: TUser['userID']): Promise<void> {
     return new Promise<void>((resolve, reject) => {
       axios
         .delete(`${ClientUser.API_ENDPOINT}?userID=${userID}`)
@@ -459,4 +450,16 @@ export default class ClientUser extends User {
         })
     })
   }
+}
+
+/* ------------------------------ CLIENT USER TYPES ------------------------------ */
+
+/**
+ * Options for creating a new Client User objects.
+ */
+export type TClientUserOptions = TUserOptions & {
+  /**
+   * Whether the password is required when saving. Defaults to false.
+   */
+  passwordIsRequired?: boolean
 }

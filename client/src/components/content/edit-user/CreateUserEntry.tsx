@@ -5,6 +5,7 @@ import './CreateUserEntry.scss'
 import { useGlobalContext } from 'src/context'
 import ClientUser from 'src/users'
 import UserRole from '../../../../../shared/users/roles'
+import User from '../../../../../shared/users'
 
 /**
  * This will render the forms for creating a new user.
@@ -29,7 +30,6 @@ export default function CreateUserEntry(props: {
 
   const globalContext = useGlobalContext()
   const [session] = globalContext.session
-  const { isAuthorized } = globalContext.actions
 
   /* -- COMPONENT STATE -- */
 
@@ -112,13 +112,14 @@ export default function CreateUserEntry(props: {
   // is an admin, then they are allowed
   // to create users with any role.
   if (
-    isAuthorized(['READ', 'WRITE', 'DELETE']) &&
+    User.isAuthorized(session, ['READ', 'WRITE', 'DELETE']) &&
     currentUser.role.id === 'admin'
   ) {
     listOfRoles = [
       UserRole.AVAILABLE_ROLES.student,
       UserRole.AVAILABLE_ROLES.instructor,
       UserRole.AVAILABLE_ROLES.admin,
+      UserRole.AVAILABLE_ROLES.revokedAccess,
     ]
   }
 

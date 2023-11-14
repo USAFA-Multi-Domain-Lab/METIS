@@ -16,11 +16,10 @@ import UserModel, {
   hashPassword,
 } from 'metis/server/database/models/users/users'
 import MetisServer from 'metis/server'
-import { IUserJSON } from 'metis/users'
+import { TUserJSON } from 'metis/users'
 
 // global fields
 let missionID: string
-let missionName: string
 let server: MetisServer = require('../start').server
 let PORT: number = server.port
 let MONGO_DB: string = server.mongoDB
@@ -224,33 +223,33 @@ const correctUpdateTestMission = {
   ],
   schemaBuildNumber: 9,
 }
-const correctUser: { user: IUserJSON } = {
+const correctUser: { user: TUserJSON } = {
   user: {
     userID: 'test23',
-    role: UserRole.AVAILABLE_ROLES.student,
-    expressPermissions: [],
+    roleID: UserRole.AVAILABLE_ROLES.student.id,
+    expressPermissionIDs: [],
     firstName: 'Test',
     lastName: 'User',
     needsPasswordReset: false,
     password: 'password',
   },
 }
-let newCorrectUser: { user: IUserJSON } = {
+let newCorrectUser: { user: TUserJSON } = {
   user: {
     userID: 'test24',
-    role: UserRole.AVAILABLE_ROLES.student,
-    expressPermissions: [],
+    roleID: UserRole.AVAILABLE_ROLES.student.id,
+    expressPermissionIDs: [],
     firstName: 'Test',
     lastName: 'User',
     needsPasswordReset: false,
     password: 'password',
   },
 }
-const userWithNoPassword: { user: IUserJSON } = {
+const userWithNoPassword: { user: TUserJSON } = {
   user: {
     userID: 'test23',
-    role: UserRole.AVAILABLE_ROLES.student,
-    expressPermissions: [],
+    roleID: UserRole.AVAILABLE_ROLES.student.id,
+    expressPermissionIDs: [],
     firstName: 'Test',
     lastName: 'User',
     needsPasswordReset: false,
@@ -283,7 +282,6 @@ before(async function () {
       let missionResponse = await agent.get('/api/v1/missions/')
       expect(missionResponse).to.have.status(200)
       missionID = missionResponse.body[0].missionID
-      missionName = missionResponse.body[0].name
     } else {
       throw new Error(
         'Database is not using "metis-test." Please make sure the test database is running.',
@@ -318,7 +316,7 @@ describe('Export/Import File Tests', function () {
   it('User should be logged in as an admin to access the import and/or export API', async function () {
     try {
       let response = await agent.get('/api/v1/users/session')
-      expect(response.body.user.role.id).to.equal(permittedUserRole)
+      expect(response.body.user.roleID).to.equal(permittedUserRole)
     } catch (error: any) {
       testLogger.error(error)
       throw error
@@ -625,7 +623,7 @@ describe('API Mission Routes', function () {
     try {
       let response = await agent.get('/api/v1/users/session')
 
-      expect(response.body.user.role.id).to.equal(permittedUserRole)
+      expect(response.body.user.roleID).to.equal(permittedUserRole)
     } catch (error: any) {
       testLogger.error(error)
       throw error
@@ -1808,7 +1806,7 @@ describe('User API Routes', function () {
     try {
       let response = await agent.get('/api/v1/users/session')
 
-      expect(response.body.user.role.id).to.equal(permittedUserRole)
+      expect(response.body.user.roleID).to.equal(permittedUserRole)
     } catch (error: any) {
       testLogger.error(error)
       throw error
@@ -1901,6 +1899,7 @@ describe('User Schema Validation', function () {
       let savedUser = await user.save()
 
       expect(savedUser.userID).to.equal(newCorrectUser.user.userID)
+      expect(savedUser.roleID).to.equal(newCorrectUser.user.roleID)
       expect(savedUser.firstName).to.equal(newCorrectUser.user.firstName)
       expect(savedUser.lastName).to.equal(newCorrectUser.user.lastName)
       hashedPassword = savedUser.password
@@ -1922,6 +1921,7 @@ describe('User Schema Validation', function () {
       }).exec()
 
       expect(retrievedUser.userID).to.equal(newCorrectUser.user.userID)
+      expect(retrievedUser.roleID).to.equal(newCorrectUser.user.roleID)
       expect(retrievedUser.firstName).to.equal(newCorrectUser.user.firstName)
       expect(retrievedUser.lastName).to.equal(newCorrectUser.user.lastName)
       let isHashedPassword: boolean = hashedPasswordExpression.test(
@@ -1963,6 +1963,7 @@ describe('User Schema Validation', function () {
       }).exec()
 
       expect(retrievedUser.userID).to.equal(newCorrectUser.user.userID)
+      expect(retrievedUser.roleID).to.equal(newCorrectUser.user.roleID)
       expect(retrievedUser.firstName).to.equal('updatedFirstName')
       expect(retrievedUser.lastName).to.equal('updatedLastName')
       let isHashedPassword: boolean = hashedPasswordExpression.test(

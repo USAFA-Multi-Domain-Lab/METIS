@@ -1,12 +1,14 @@
 import { Request, Response } from 'express'
 import expressWs from 'express-ws'
-import { hasAuthorization, requireConnection } from '../../middleware/users'
+import { authorized, requireConnection } from '../../middleware/users'
 import MissionModel from 'metis/server/database/models/missions'
 import { databaseLogger, gameLogger } from 'metis/server/logging'
 import GameServer from 'metis/server/games'
 import ClientConnection from 'metis/server/connect/clients'
 import { IMissionJSON } from 'metis/missions'
 import ServerMission from 'metis/server/missions'
+import User from 'metis/users'
+import MetisSession from 'metis/server/sessions'
 
 const routerMap = (router: expressWs.Router, done: () => void) => {
   // -- POST | /api/v1/games/launch/ --
@@ -14,10 +16,12 @@ const routerMap = (router: expressWs.Router, done: () => void) => {
   // to execute a mission.
   router.post(
     '/launch/',
-    hasAuthorization([]),
+    authorized([]),
     (request: Request, response: Response) => {
       // Get data from the request body.
       let missionID: string = request.body.missionID
+      // Grab the session.
+      let session: MetisSession = response.locals.session
 
       // Query for mission.
       MissionModel.findOne({ missionID })
@@ -38,7 +42,7 @@ const routerMap = (router: expressWs.Router, done: () => void) => {
           // Handle mission not live.
           else if (
             !missionData.live &&
-            !hasAuthorization(['READ', 'WRITE', 'DELETE'])
+            !User.isAuthorized(session, ['READ', 'WRITE', 'DELETE'])
           ) {
             return response.sendStatus(401)
           }

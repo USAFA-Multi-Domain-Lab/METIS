@@ -1,5 +1,5 @@
 import { databaseLogger } from 'metis/server/logging'
-import { IUserPermissionJSON, TUserPermissionID } from 'metis/users/permissions'
+import UserPermission, { TUserPermission } from 'metis/users/permissions'
 import mongoose from 'mongoose'
 
 /**
@@ -19,33 +19,21 @@ export class Permission extends mongoose.SchemaType {
 
   /**
    * This is called when a value is passed to the constructor.
-   * @param {IUserPermissionJSON | TUserPermissionID} permission The value passed to the constructor.
-   * @returns {IUserPermissionJSON | TUserPermissionID} A user permission or an error.
-   * @note The permission parameter that is passed to this function
-   * varies depending on the context. When a user is being created
-   * or updated, the permission parameter is a JSON object (IUserPermissionJSON).
-   * However, when a user is being queried, the permission parameter is a
-   * string (TUserPermissionID).
+   * @param {TUserPermission['id']} permissionID The value passed to the constructor.
+   * @returns {TUserPermission['id']} A user permission ID or an error.
    */
-  cast(permission: IUserPermissionJSON | TUserPermissionID): any {
-    // This is a list of all possible permissions that a user can have.
-    let possiblePermissions: TUserPermissionID[] = ['READ', 'WRITE', 'DELETE']
-
-    // If a query is being performed, the permission parameter
-    // will be a string. This checks if the permission parameter
-    // is a string and converts it to a JSON object if it is.
-    if (typeof permission === 'string') {
-      permission = {
-        id: permission,
-      }
-    }
+  public cast(permissionID: TUserPermission['id']): TUserPermission['id'] {
+    // Checks to make sure the permission ID that's passed
+    // is valid.
+    let isValidPermissionID: boolean =
+      UserPermission.isValidPermissionID(permissionID)
 
     // Checks if the permission parameter is a valid permission.
-    if (possiblePermissions.includes(permission.id)) {
-      return permission
+    if (isValidPermissionID) {
+      return permissionID
     } else {
-      databaseLogger.error(`Invalid user permission: ${permission.id}`)
-      throw new Error(`Invalid user permission: ${permission.id}`)
+      databaseLogger.error(`Invalid user permission ID: ${permissionID}`)
+      throw new Error(`Invalid user permission ID: ${permissionID}`)
     }
   }
 }

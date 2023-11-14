@@ -84,13 +84,15 @@ export const requireConnection = (
 //   }
 // }
 
-export const hasAuthorization =
+export const authorized =
   (requiredPermissions: TUserPermissionID[]) =>
   (request: Request, response: Response, next: NextFunction): void => {
     let session: MetisSession | undefined = MetisSession.get(
       request.session.userID,
     )
 
+    // If there is a session, then the user is
+    // logged in.
     if (session) {
       let roleHasRequiredPermissions: boolean = false
       let userHasSpecificPermissions: boolean = false
@@ -111,14 +113,34 @@ export const hasAuthorization =
         requiredPermissions,
       )
 
-      if (roleHasRequiredPermissions || userHasSpecificPermissions) {
-        response.locals.session = session
-        response.locals.user = session?.user
-        next()
-      } else {
+      // If the current user in the
+      // session has the revoked
+      // access role, they are not
+      // authorized to perform any
+      // actions.
+      if (session.user.role.id === 'revokedAccess') {
         response.sendStatus(401)
       }
-    } else {
+      // If the current user in session has a role
+      // with the required permission(s), or if the
+      // user has been given specific permissions
+      // that override their role permissions, then
+      // they are authorized to perform the action.
+      else if (roleHasRequiredPermissions || userHasSpecificPermissions) {
+        response.locals.session = session
+        response.locals.user = session.user
+        next()
+      }
+      // If neither of the above are true, then the
+      // current user in session should not be
+      // authorized to perform the action.
+      else {
+        response.sendStatus(401)
+      }
+    }
+    // If there is no session, the user is not
+    // authorized to perform the action.
+    else {
       response.sendStatus(401)
     }
   }
@@ -144,6 +166,7 @@ export const hasAuthorization =
 /**
  * Validates the user in session and ensures they have the correct permissions to
  * create or update another user.
+ * @deprecated
  */
 export const validateUserRoles = (
   request: Request,
@@ -158,16 +181,17 @@ export const validateUserRoles = (
   let { user } = request.body
 
   // If the user is an instructor, they can only create students.
-  if (session?.user.role.id === 'instructor' && user.role.id !== 'student') {
+  if (session?.user.role.id === 'instructor' && user.roleID !== 'student') {
     response.sendStatus(403)
   }
   // If the user is an admin, they can only create instructors,
   // students, or admins.
   else if (
     session?.user.role.id === 'admin' &&
-    user.role.id !== 'instructor' &&
-    user.role.id !== 'student' &&
-    user.role.id !== 'admin'
+    user.roleID !== 'instructor' &&
+    user.roleID !== 'student' &&
+    user.roleID !== 'admin' &&
+    user.roleID !== 'revokedAccess'
   ) {
     response.sendStatus(403)
   }
@@ -187,6 +211,6 @@ export const validateUserRoles = (
 
 export default {
   // requireLogin,
-  hasAuthorization,
+  authorized,
   validateUserRoles,
 }

@@ -1,58 +1,19 @@
 import UserPermission from './permissions'
 
 /**
- * Interface used for the abstract UserRole class.
- */
-export interface IUserRole extends IUserRoleJSON {
-  /**
-   * The user role's name.
-   */
-  name: TUserRoleName
-  /**
-   * The user role's description.
-   */
-  description: string
-  /**
-   * The user role's permissions.
-   */
-  permissions: UserPermission[]
-  /**
-   * Converts the UserRole object to JSON.
-   */
-  toJSON(): IUserRoleJSON
-}
-
-/**
- * The JSON representation of a UserRole object.
- */
-export interface IUserRoleJSON {
-  /**
-   * The user role's ID.
-   */
-  id: TUserRoleID
-}
-
-const roleNames = ['Select a role', 'student', 'instructor', 'admin'] as const
-export type TUserRoleName = (typeof roleNames)[number]
-
-const roleIDs = ['default', 'student', 'instructor', 'admin'] as const
-export type TUserRoleID = (typeof roleIDs)[number]
-export type TUserRoles = { [key in TUserRoleID]: UserRole }
-
-/**
  * Represents the role of a user using METIS.
  */
-export default class UserRole implements IUserRole {
-  public readonly id: IUserRole['id']
-  public readonly name: IUserRole['name']
-  public readonly description: IUserRole['description']
-  public readonly permissions: IUserRole['permissions']
+export default class UserRole implements TUserRole {
+  public readonly id: TUserRole['id']
+  public readonly name: TUserRole['name']
+  public readonly description: TUserRole['description']
+  public readonly permissions: TUserRole['permissions']
 
   public constructor(
-    id: IUserRole['id'],
-    name: IUserRole['name'],
-    description: IUserRole['description'],
-    permissions: IUserRole['permissions'],
+    id: TUserRole['id'],
+    name: TUserRole['name'],
+    description: TUserRole['description'],
+    permissions: TUserRole['permissions'],
   ) {
     this.id = id
     this.name = name
@@ -61,11 +22,18 @@ export default class UserRole implements IUserRole {
   }
 
   /**
-   * Default properties for a new UserRole object.
+   * Gets the user role object from the given role ID.
+   * @param {TUserRole['id']} roleID The role ID used to get the user role object.
+   * @returns {UserRole} A user role object.
    */
-  public static readonly DEFAULT_PROPERTIES: IUserRoleJSON = {
-    id: 'default',
+  public static get(roleID: TUserRole['id']): UserRole {
+    return UserRole.AVAILABLE_ROLES[roleID]
   }
+
+  /**
+   * The default role ID.
+   */
+  public static readonly DEFAULT_ID: TUserRole['id'] = 'default'
 
   /**
    * All available roles in METIS.
@@ -103,6 +71,12 @@ export default class UserRole implements IUserRole {
         UserPermission.AVAILABLE_PERMISSIONS.DELETE,
       ],
     ),
+    revokedAccess: new UserRole(
+      'revokedAccess',
+      'revoked access',
+      'This role is for users whose access has been revoked.',
+      [],
+    ),
   }
 
   /**
@@ -110,17 +84,9 @@ export default class UserRole implements IUserRole {
    * @param {TUserRoleID} roleID The role ID to check.
    */
   public static isValidRoleID(roleID: TUserRoleID): boolean {
-    return roleIDs.includes(roleID)
-  }
-
-  /**
-   * Converts the UserRole object to JSON.
-   * @returns {IUserRoleJSON} The JSON representation of the UserRole object.
-   */
-  public toJSON(): IUserRoleJSON {
-    return {
-      id: this.id,
-    }
+    return (
+      roleIDs.includes(roleID) && roleID !== this.AVAILABLE_ROLES.default.id
+    )
   }
 
   /**
@@ -137,3 +103,46 @@ export default class UserRole implements IUserRole {
    */
   public static readonly FULL_ACCESS_ROLES: TUserRoleName[] = ['admin']
 }
+
+/* ------------------------------ USER ROLE TYPES ------------------------------ */
+
+/**
+ * Type used for the abstract UserRole class.
+ */
+export type TUserRole = {
+  /**
+   * The user role's ID.
+   */
+  id: TUserRoleID
+  /**
+   * The user role's name.
+   */
+  name: TUserRoleName
+  /**
+   * The user role's description.
+   */
+  description: string
+  /**
+   * The user role's permissions.
+   */
+  permissions: UserPermission[]
+}
+
+const roleNames = [
+  'Select a role',
+  'student',
+  'instructor',
+  'admin',
+  'revoked access',
+] as const
+export type TUserRoleName = (typeof roleNames)[number]
+
+const roleIDs = [
+  'default',
+  'student',
+  'instructor',
+  'admin',
+  'revokedAccess',
+] as const
+export type TUserRoleID = (typeof roleIDs)[number]
+export type TUserRoles = { [key in TUserRoleID]: UserRole }

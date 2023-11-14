@@ -3,9 +3,10 @@ import bcryptjs from 'bcryptjs'
 import { StatusError } from '../../../http'
 import { databaseLogger } from '../../../logging'
 import Role from '../../schema-types/user-role'
-import UserRole, { IUserRoleJSON } from 'metis/users/roles'
-import UserPermission, { IUserPermissionJSON } from 'metis/users/permissions'
+import UserRole, { TUserRole } from 'metis/users/roles'
+import UserPermission, { TUserPermission } from 'metis/users/permissions'
 import Permission from '../../schema-types/user-permission'
+import { TUser } from 'metis/users'
 
 let ObjectId = mongoose.Types.ObjectId
 
@@ -17,30 +18,30 @@ const validate_users_userID = (userID: string): boolean => {
   return isValidUserID
 }
 
-// Validator for user.role.
-const validate_users_role = (role: IUserRoleJSON): boolean => {
-  return UserRole.isValidRoleID(role.id)
+// Validator for user.roleID.
+const validate_users_roleID = (roleID: TUserRole['id']): boolean => {
+  return UserRole.isValidRoleID(roleID)
 }
 
-// Validator for user.expressPermissions.
-const validate_users_expressPermissions = (
-  expressPermissions: IUserPermissionJSON[],
+// Validator for user.expressPermissionIDs.
+const validate_users_expressPermissionIDs = (
+  expressPermissionIDs: TUserPermission['id'][],
 ): boolean => {
   // Contains whether each permission is valid.
-  let validExpressPermissions: IUserPermissionJSON[] = []
+  let validExpressPermissionIDs: TUserPermission['id'][] = []
 
   // Loops through each permission and checks if it is valid.
-  expressPermissions.forEach((permission: IUserPermissionJSON) => {
+  expressPermissionIDs.forEach((permissionID: TUserPermission['id']) => {
     // If it is valid, it is added to the array.
-    if (UserPermission.isValidPermissionID(permission.id)) {
-      validExpressPermissions.push(permission)
+    if (UserPermission.isValidPermissionID(permissionID)) {
+      validExpressPermissionIDs.push(permissionID)
     }
   })
 
   // If the valid express permissions array matches the
   // express permissions array that was passed, then all
   // permissions are valid.
-  return validExpressPermissions.length === expressPermissions.length
+  return validExpressPermissionIDs.length === expressPermissionIDs.length
 }
 
 // Validator for user.firstName and user.lastName.
@@ -70,15 +71,15 @@ const UserSchema = new Schema(
       trim: true,
       validate: validate_users_userID,
     },
-    role: {
+    roleID: {
       type: Role,
       required: true,
-      validate: validate_users_role,
+      validate: validate_users_roleID,
     },
-    expressPermissions: {
+    expressPermissionIDs: {
       type: [Permission],
       required: true,
-      validate: validate_users_expressPermissions,
+      validate: validate_users_expressPermissionIDs,
     },
     firstName: {
       type: String,
@@ -202,11 +203,15 @@ UserSchema.plugin((schema) => {
 })
 
 UserSchema.plugin((schema) => {
-  // This is responsible for hiding
-  // specific users based on the
-  // current session's user and their
-  // role.
-  schema.query.queryForApiResponseWithSpecificUsers = function (user: any) {
+  /**
+   * This is responsible for hiding specific users based on the
+   * current session's user and their role.
+   * @param {TUser} user The current session's user.
+   * @returns {mongoose.Query} A mongoose query.
+   * @deprecated
+   */
+  // todo: remove deprecated function
+  schema.query.queryForApiResponseWithSpecificUsers = function (user: TUser) {
     // Get projection.
     let projection = this.projection()
 
@@ -222,16 +227,18 @@ UserSchema.plugin((schema) => {
     // Hide current user in session.
     this.where({ userID: { $ne: user.userID } })
     // If the user is an instructor, only show students.
-    if (user.role === 'instructor') {
-      this.where({ role: { $eq: 'student' } })
+    if (user.role.id === 'instructor') {
+      this.where({ roleID: { $eq: 'student' } })
     }
-    // If the user is a student, hide all users.
-    if (user.role === 'student') {
-      this.where({ userID: { $eq: null } })
+    // If the user is a student, do not return any users.
+    if (user.role.id === 'student') {
+      this.where({ userID: { $eq: '' } })
     }
-    // If the user is not an admin, hide all admins.
-    if (user.role !== 'admin') {
-      this.where({ role: { $ne: 'admin' } })
+    // If the user is not an admin, hide all admins and
+    // revoked access users.
+    if (user.role.id !== 'admin') {
+      this.where({ roleID: { $ne: 'admin' } })
+      this.where({ roleID: { $ne: 'revokedAccess' } })
     }
 
     return this

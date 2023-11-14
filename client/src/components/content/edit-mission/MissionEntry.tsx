@@ -89,7 +89,7 @@ export default function MissionEntry(props: {
         notify(`"${mission.name}" is now live.`)
         setLiveAjaxStatus(EAjaxStatus.Loaded)
       } else {
-        notify(`"${mission.name}" is now no longer live.`)
+        notify(`"${mission.name}" is no longer live.`)
         setLiveAjaxStatus(EAjaxStatus.Loaded)
       }
     } catch (error) {

@@ -79,9 +79,7 @@ export default class GameClient extends Game<
     return {
       gameID: this.gameID,
       mission: this.mission.toJSON({ revealedOnly: true }),
-      participants: this.participants.map((user) =>
-        user.toJSON({ password: user.password1 }),
-      ),
+      participants: this.participants.map((user) => user.toJSON()),
       resources: this.resources,
     }
   }

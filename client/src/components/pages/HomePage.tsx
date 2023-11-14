@@ -19,6 +19,7 @@ import ClientMission from 'src/missions'
 import { AxiosError } from 'axios'
 import ClientUser from 'src/users'
 import UserPermission from '../../../../shared/users/permissions'
+import User from '../../../../shared/users'
 
 export interface IHomePage extends IPage {}
 
@@ -43,7 +44,6 @@ export default function HomePage(props: IHomePage): JSX.Element | null {
     notify,
     logout,
     createPrompt,
-    isAuthorized,
   } = globalContext.actions
 
   /* -- COMPONENT REFS -- */
@@ -148,14 +148,14 @@ export default function HomePage(props: IHomePage): JSX.Element | null {
   const [session] = useRequireSession()
 
   const [mountHandled, remount] = useMountHandler(async (done) => {
-    if (isAuthorized(['READ'])) {
+    if (User.isAuthorized(session, ['READ'])) {
       await loadMissions()
     }
 
     // The current user in the session
     // must have restricted access to
     // view the users.
-    if (isAuthorized(['READ', 'WRITE', 'DELETE'])) {
+    if (User.isAuthorized(session, ['READ', 'WRITE', 'DELETE'])) {
       await loadUsers()
       await sortUsers()
     }
@@ -311,7 +311,7 @@ export default function HomePage(props: IHomePage): JSX.Element | null {
 
       page_elm.classList.remove('DropPending')
 
-      if (files.length > 0 && isAuthorized(['WRITE'])) {
+      if (files.length > 0 && User.isAuthorized(session, ['WRITE'])) {
         importMissionFiles(files)
       }
     }
@@ -372,7 +372,7 @@ export default function HomePage(props: IHomePage): JSX.Element | null {
   // This will start the process for
   // creating a new mission.
   const createMission = (): void => {
-    if (isAuthorized(['WRITE'])) {
+    if (User.isAuthorized(session, ['WRITE'])) {
       goToPage('MissionFormPage', { missionID: null })
     }
   }
@@ -380,7 +380,7 @@ export default function HomePage(props: IHomePage): JSX.Element | null {
   // This will switch to the changelog
   // page.
   const viewChangelog = (): void => {
-    if (isAuthorized(['READ', 'WRITE', 'DELETE'])) {
+    if (User.isAuthorized(session, ['READ', 'WRITE', 'DELETE'])) {
       goToPage('ChangelogPage', {})
     }
   }
@@ -421,7 +421,7 @@ export default function HomePage(props: IHomePage): JSX.Element | null {
   // This will switch to the user form
   // page with the selected user.
   const selectUser = (user: ClientUser) => {
-    if (isAuthorized(['READ', 'WRITE'])) {
+    if (User.isAuthorized(session, ['READ', 'WRITE'])) {
       goToPage('UserFormPage', {
         userID: user.userID,
       })
@@ -431,7 +431,7 @@ export default function HomePage(props: IHomePage): JSX.Element | null {
   // This will switch to the user form
   // page with a new user.
   const createUser = () => {
-    if (isAuthorized(['WRITE'])) {
+    if (User.isAuthorized(session, ['WRITE'])) {
       goToPage('UserFormPage', {
         userID: null,
       })
@@ -444,7 +444,7 @@ export default function HomePage(props: IHomePage): JSX.Element | null {
   // current user's role.
   let homePageClassName: string = 'HomePage Page FullView'
 
-  if (isAuthorized(['READ', 'WRITE', 'DELETE'])) {
+  if (User.isAuthorized(session, ['READ', 'WRITE', 'DELETE'])) {
     homePageClassName += ' InstructorView'
   }
 

@@ -2,7 +2,7 @@
 import { Request, Response, NextFunction } from 'express-serve-static-core'
 import { isObjectIdOrHexString } from 'mongoose'
 import { AnyObject } from 'metis/toolbox/objects'
-import UserRole, { IUserRoleJSON } from 'metis/users/roles'
+import UserRole, { TUserRole } from 'metis/users/roles'
 
 // ------- GLOBAL VARIABLES ------- //
 
@@ -284,8 +284,8 @@ export class RequestBodyFilters {
    * @param bodyValue The value of the property in the request body
    * @throws An error message or null
    */
-  static ROLE(bodyKey: string, bodyValue: IUserRoleJSON) {
-    if (!UserRole.isValidRoleID(bodyValue.id)) {
+  static ROLE(bodyKey: string, bodyValue: TUserRole['id']) {
+    if (!UserRole.isValidRoleID(bodyValue)) {
       throw new Error(invalidRequestBodyPropertyException(bodyKey, bodyValue))
     }
   }

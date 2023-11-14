@@ -9,10 +9,7 @@ import defineRequests, {
 import UserModel, {
   hashPassword,
 } from 'metis/server/database/models/users/users'
-import {
-  hasAuthorization,
-  validateUserRoles,
-} from 'metis/server/middleware/users'
+import { authorized, validateUserRoles } from 'metis/server/middleware/users'
 import MetisDatabase from 'metis/server/database'
 import { databaseLogger } from '../../logging'
 import { TMetisRouterMap } from 'metis/server/http/router'
@@ -22,13 +19,14 @@ const routerMap: TMetisRouterMap = (router: expressWs.Router, done) => {
   // -- POST | /api/v1/users/ --
   router.post(
     '/',
-    hasAuthorization(['WRITE']),
+    authorized(['WRITE']),
+    validateUserRoles,
     defineRequests({
       body: {
         user: {
           userID: RequestBodyFilters.USER_ID,
-          role: RequestBodyFilters.ROLE,
-          expressPermissions: RequestBodyFilters.ARRAY,
+          roleID: RequestBodyFilters.ROLE,
+          expressPermissionIDs: RequestBodyFilters.ARRAY,
           firstName: RequestBodyFilters.NAME,
           lastName: RequestBodyFilters.NAME,
           password: RequestBodyFilters.PASSWORD,
@@ -36,7 +34,7 @@ const routerMap: TMetisRouterMap = (router: expressWs.Router, done) => {
         },
       },
     }),
-    validateUserRoles,
+
     async (request: Request, response: Response) => {
       let { body } = request
       let { user: userData } = body
@@ -102,7 +100,7 @@ const routerMap: TMetisRouterMap = (router: expressWs.Router, done) => {
   // query parameters
   router.get(
     '/',
-    hasAuthorization(['READ']),
+    authorized(['READ', 'WRITE', 'DELETE']),
     defineRequests(
       {
         query: {},
@@ -127,7 +125,7 @@ const routerMap: TMetisRouterMap = (router: expressWs.Router, done) => {
         try {
           await UserModel.find({ ...queries })
             .queryForApiResponse('find')
-            .queryForApiResponseWithSpecificUsers(session?.user)
+            .queryForApiResponseWithSpecificUsers(session?.user) // todo: remove deprecated function
             .exec((error: Error, users: any) => {
               if (error !== null || users === null) {
                 databaseLogger.error('Failed to retrieve users.')
@@ -193,7 +191,8 @@ const routerMap: TMetisRouterMap = (router: expressWs.Router, done) => {
   // This will update the user
   router.put(
     '/',
-    hasAuthorization(['WRITE']),
+    authorized(['WRITE']),
+    validateUserRoles,
     defineRequests(
       {
         body: {
@@ -205,8 +204,8 @@ const routerMap: TMetisRouterMap = (router: expressWs.Router, done) => {
       {
         body: {
           user: {
-            role: RequestBodyFilters.ROLE,
-            expressPermissions: RequestBodyFilters.ARRAY,
+            roleID: RequestBodyFilters.ROLE,
+            expressPermissionIDs: RequestBodyFilters.ARRAY,
             firstName: RequestBodyFilters.NAME,
             lastName: RequestBodyFilters.NAME,
             password: RequestBodyFilters.PASSWORD,
@@ -215,7 +214,6 @@ const routerMap: TMetisRouterMap = (router: expressWs.Router, done) => {
         },
       },
     ),
-    validateUserRoles,
     async (request: Request, response: Response) => {
       let { body } = request
       let { user: userUpdates } = body
@@ -316,7 +314,7 @@ const routerMap: TMetisRouterMap = (router: expressWs.Router, done) => {
   // This will reset the user's password
   router.put(
     '/reset-password',
-    hasAuthorization([]),
+    authorized([]),
     defineRequests({
       body: {
         userID: RequestBodyFilters.USER_ID,
@@ -423,7 +421,7 @@ const routerMap: TMetisRouterMap = (router: expressWs.Router, done) => {
   // This will delete a user.
   router.delete(
     '/',
-    hasAuthorization(['DELETE']),
+    authorized(['DELETE']),
     defineRequests({
       query: {
         userID: 'string',

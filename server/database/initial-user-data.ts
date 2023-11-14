@@ -1,58 +1,32 @@
-import { IUserJSON } from 'metis/users'
-import { IUserPermissionJSON } from 'metis/users/permissions'
-import { IUserRoleJSON } from 'metis/users/roles'
+import { TUserJSON } from 'metis/users'
 
-// Default user permissions.
-export const permissionData: IUserPermissionJSON[] = [
-  {
-    id: 'READ',
-  },
-  {
-    id: 'WRITE',
-  },
-  {
-    id: 'DELETE',
-  },
-]
-// Default user roles.
-export const roleData: IUserRoleJSON[] = [
-  {
-    id: 'student',
-  },
-  {
-    id: 'instructor',
-  },
-  {
-    id: 'admin',
-  },
-]
 // Default student user data.
-export let studentUserData: IUserJSON = {
+export const studentUserData: TUserJSON = {
   userID: 'student1',
-  role: roleData[0],
+  roleID: 'student',
   firstName: 'student',
   lastName: 'user',
   needsPasswordReset: false,
-  expressPermissions: [],
+  expressPermissionIDs: [],
   password: 'password',
 }
 // Default instructor user data.
-export let instructorUserData: IUserJSON = {
+export const instructorUserData: TUserJSON = {
   userID: 'instructor1',
-  role: roleData[1],
+  roleID: 'instructor',
   firstName: 'instructor',
   lastName: 'user',
   needsPasswordReset: false,
-  expressPermissions: [],
+  expressPermissionIDs: [],
   password: 'password',
 }
 // Default admin user data.
-export let adminUserData: IUserJSON = {
+export const adminUserData: TUserJSON = {
   userID: 'admin',
-  role: roleData[2],
+  roleID: 'admin',
   firstName: 'admin',
   lastName: 'user',
   needsPasswordReset: false,
-  expressPermissions: [],
+  expressPermissionIDs: [],
   password: 'temppass',
 }

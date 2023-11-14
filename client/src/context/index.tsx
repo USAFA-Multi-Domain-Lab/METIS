@@ -134,6 +134,7 @@ export type TGlobalContextActions = {
    * @param {TUserPermissionID[]} requiredPermissions The required permissions to check.
    * @returns {boolean} Whether or not the user has the required permission.
    */
+  // todo: remove
   isAuthorized: (requiredPermissions: TUserPermissionID[]) => boolean
 }
 
@@ -638,6 +639,7 @@ const useGlobalContextDefinition = (context: TGlobalContext) => {
         handleError('Failed to logout.')
       }
     },
+    // todo: remove
     isAuthorized: (requiredPermissions: TUserPermissionID[]): boolean => {
       // Current METIS session.
       if (session) {
@@ -664,12 +666,32 @@ const useGlobalContextDefinition = (context: TGlobalContext) => {
           requiredPermissions,
         )
 
-        if (roleHasRequiredPermissions || userHasSpecificPermissions) {
-          return true
-        } else {
+        // If the current user in the
+        // session has the revoked
+        // access role, they are not
+        // authorized to perform any
+        // actions.
+        if (currentUser.role.id === 'revokedAccess') {
           return false
         }
-      } else {
+        // If the current user in session has a role
+        // with the required permission(s), or if the
+        // user has been given specific permissions
+        // that override their role permissions, then
+        // they are authorized to perform the action.
+        else if (roleHasRequiredPermissions || userHasSpecificPermissions) {
+          return true
+        }
+        // If neither of the above are true, then the
+        // current user in session should not be
+        // authorized to perform the action.
+        else {
+          return false
+        }
+      }
+      // If there is no session, the user is not
+      // authorized to perform the action.
+      else {
         return false
       }
     },
