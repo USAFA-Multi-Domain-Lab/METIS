@@ -1,0 +1,23 @@
+@import 'src/assets/styles/config.scss';
+
+.ConnectionStatus {
+  position: fixed;
+  bottom: 0;
+  left: 50vw;
+  transform: translateX(-50%);
+  border-radius: 18px 18px 0 0;
+  padding: 10px 25px 8px;
+  background-color: $background-main;
+
+  &.Inactive {
+    display: none;
+  }
+
+  &.Red {
+    background-color: $color-error-alt2;
+  }
+
+  &.Green {
+    background-color: $color-correct-alt;
+  }
+}

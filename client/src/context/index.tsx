@@ -15,6 +15,7 @@ import { EAjaxStatus } from '../../../shared/toolbox/ajax'
 import { IAuthPageSpecific } from 'src/components/pages/AuthPage'
 import { useMountHandler, useUnmountHandler } from 'src/toolbox/hooks'
 import StringsToolbox from '../../../shared/toolbox/strings'
+import { message as connectionStatusMessage } from 'src/components/content/communication/ConnectionStatus'
 
 /**
  * The values available in the global context.
@@ -207,6 +208,12 @@ const GLOBAL_CONTEXT_VALUES_DEFAULT: TGlobalContextValues = {
   prompt: null,
   missionNodeColors: [],
 }
+
+/**
+ * Delay in milliseconds before the message is cleared after the connection
+ * has been reopened.
+ */
+const CONNECT_MESSAGE_CLEAR_DELAY = 3000
 
 /**
  * The default value of the global context passed in the
@@ -451,12 +458,34 @@ const useGlobalContextDefinition = (context: TGlobalContext) => {
               resolve(server)
             },
             'reconnection-success': () => {
+              // Update server with updated connection object.
               setServer(server)
+              // Update status message.
+              connectionStatusMessage.value = {
+                message: 'Connection reestablished.',
+                color: 'Green',
+              }
+              // Set a timeout to clear the message.
+              setTimeout(() => {
+                // If the connection status is open, then
+                // clear the message.
+                if (server.status === 'open') {
+                  connectionStatusMessage.value = null
+                }
+              }, CONNECT_MESSAGE_CLEAR_DELAY)
             },
             'connection-failure': () => {
+              // Update loading message to reflect connection failure.
               beginLoading(
                 'Failed to connect to server. Retrying until connection is established...',
               )
+            },
+            'connection-loss': () => {
+              // Update status message.
+              connectionStatusMessage.value = {
+                message: 'Connection dropped. Attempting to reconnect...',
+                color: 'Red',
+              }
             },
             'error': ({ code, message }) => {
               if (code === ServerEmittedError.CODE_DUPLICATE_CLIENT) {

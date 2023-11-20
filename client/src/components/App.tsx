@@ -24,6 +24,7 @@ import ClientMissionNode from 'src/missions/nodes'
 import { useGlobalContext } from 'src/context'
 import GameClient from 'src/games'
 import ServerConnection from 'src/connect/server'
+import ConnectionStatus from './content/communication/ConnectionStatus'
 
 /**
  * Props that every page accepts. Extend this to include more.
@@ -78,6 +79,7 @@ function App(props: {}): JSX.Element | null {
   const globalContext = useGlobalContext()
 
   const [session] = globalContext.session
+  const [server] = globalContext.server
   const [tooltips] = globalContext.tooltips
   const [tooltipDescription, setTooltipDescription] =
     globalContext.tooltipDescription
@@ -292,6 +294,7 @@ function App(props: {}): JSX.Element | null {
       {prompt !== null ? <Prompt {...prompt} /> : null}
       <ErrorPage {...pageProps} />
       <LoadingPage {...pageProps} />
+      <ConnectionStatus />
       {renderCurrentPage()}
     </div>
   )

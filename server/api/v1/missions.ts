@@ -7,7 +7,7 @@ import { filterErrors_findOne } from 'metis/server/database/api-call-handlers'
 import MetisDatabase from 'metis/server/database'
 import InfoModel from 'metis/server/database/models/info'
 import MissionModel from 'metis/server/database/models/missions'
-import { databaseLogger, plcApiLogger } from 'metis/server/logging'
+import { databaseLogger } from 'metis/server/logging'
 import {
   hasPermittedRole as hasPermittedRole,
   requireLogin,

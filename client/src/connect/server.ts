@@ -2,6 +2,7 @@ import {
   IClientDataTypes,
   IServerDataTypes,
   TClientMethod,
+  TServerConnectionStatus,
   TServerData,
   TServerMethod,
 } from '../../../shared/connect/data'
@@ -9,33 +10,9 @@ import { ServerEmittedError } from '../../../shared/connect/errors'
 import { v4 as generateHash } from 'uuid'
 
 /**
- * Represents a handler in a server connection for a client-emitted event.
- */
-export type TServerHandler<TMethod extends TServerMethod> = (
-  data: TServerData<TMethod>,
-) => void
-
-/**
- * Represents options that can be passed when constructing a new server connection.
- */
-export interface IServerConnectionOptions {
-  /**
-   * Listeners for handling various events.
-   */
-  on?: {
-    [T in TServerMethod]?: TServerHandler<T>
-  }
-  /**
-   * Whether to disconnect existing connections in order to establish this connection. Defaults to false.
-   * @WIP
-   */
-  disconnectExisting?: boolean
-}
-
-/**
  * METIS web-socket-based, server connection.
  */
-export class ServerConnection {
+export default class ServerConnection {
   /**
    * The web socket connection itself.
    */
@@ -49,18 +26,41 @@ export class ServerConnection {
   /**
    * The timestamp for when the connection was last opened.
    */
-  protected lastOpened: number | null = null
+  protected _lastOpened: number | null = null
+  /**
+   * The timestamp for when the connection was last opened.
+   */
+  public get lastOpened(): number | null {
+    return this._lastOpened
+  }
 
   /**
    * The timestamp for when the connection was last closed.
    */
-  protected lastClosed: number | null = null
+  protected _lastClosed: number | null = null
+  /**
+   * The timestamp for when the connection was last closed.
+   */
+  public get lastClosed(): number | null {
+    return this._lastClosed
+  }
 
   /**
    * The ready state of the web socket connection.
    */
   public get readyState(): number {
     return this.socket.readyState
+  }
+
+  /**
+   * The status of the connection.
+   */
+  private _status: TServerConnectionStatus = 'connecting'
+  /**
+   * The status of the connection.
+   */
+  public get status(): TServerConnectionStatus {
+    return this._status
   }
 
   /**
@@ -157,7 +157,7 @@ export class ServerConnection {
     TMethod extends TClientMethod,
     TPayload extends Omit<IClientDataTypes[TMethod], 'method'>,
   >(method: TMethod, payload: TPayload): void {
-    console.log(this.lastOpened, this.lastClosed)
+    console.log(this._lastOpened, this._lastClosed)
     // Send payload.
     this.socket.send(JSON.stringify(payload))
   }
@@ -269,21 +269,30 @@ export class ServerConnection {
    */
   private onOpen = (event: Event): void => {
     // Gather details.
-    let wasOpenedBefore: boolean = this.lastOpened !== null
+    let wasOpenedBefore: boolean = this._lastOpened !== null
 
-    // Update `lastOpened`.
-    this.lastOpened = Date.now()
+    // Update `lastOpened` and status.
+    this._lastOpened = Date.now()
+    this._status = 'open'
 
     // Determine method.
     let determinedMethod: TServerMethod = wasOpenedBefore
       ? 'reconnection-success'
       : 'connection-success'
 
-    // Loop through listeners and call
-    // any with the method 'open'.
+    // Loop through listeners.
     for (let [method, listener] of this.listeners) {
+      // Call any with the method 'open'.
       if (method === determinedMethod) {
         listener({ method })
+      }
+      // Call any handlers that match the 'connection-change'
+      // method.
+      if (method === 'connection-change') {
+        listener({
+          method: 'connection-change',
+          status: this.status,
+        })
       }
     }
   }
@@ -292,14 +301,14 @@ export class ServerConnection {
    * Handler for when the web socket connection is closed. Calls all "close" and "connection-loss" listeners stored in "listeners".
    * @param {CloseEvent} event The close event.
    */
-  private onClose = (event: CloseEvent): void => {
+  private onClose = (): void => {
     // Gather information.
     let shouldBeOpen: boolean = this.shouldBeConnected
-    let wasOnceOpened: boolean = this.lastOpened !== null
-    let wasOnceClosed: boolean = this.lastClosed !== null
+    let wasOnceOpened: boolean = this._lastOpened !== null
+    let wasOnceClosed: boolean = this._lastClosed !== null
     let wasOpenUntilNow: boolean =
-      this.lastOpened !== null &&
-      (this.lastClosed === null || this.lastClosed < this.lastOpened)
+      this._lastOpened !== null &&
+      (this._lastClosed === null || this._lastClosed < this._lastOpened)
 
     // Determine event type.
     let isConnectionClosedEvent: boolean = !shouldBeOpen
@@ -309,23 +318,27 @@ export class ServerConnection {
     let isReconnectionFailureEvent: boolean =
       shouldBeOpen && !wasOpenUntilNow && wasOnceClosed
 
-    // Determine method.
+    // Determine method and update status.
     let determinedMethod: TServerMethod
 
     if (isConnectionClosedEvent) {
       determinedMethod = 'connection-closed'
+      this._status = 'closed'
     } else if (isConnectionFailureEvent) {
       determinedMethod = 'connection-failure'
+      this._status = 'connecting'
     } else if (isConnectionLossEvent) {
       determinedMethod = 'connection-loss'
+      this._status = 'connecting'
     } else if (isReconnectionFailureEvent) {
       determinedMethod = 'reconnection-failure'
+      this._status = 'connecting'
     } else {
       throw new Error('Unknown close event type.')
     }
 
     // Update lastClosed.
-    this.lastClosed = Date.now()
+    this._lastClosed = Date.now()
 
     // Loop though listeners.
     for (let [method, listener] of this.listeners) {
@@ -333,6 +346,14 @@ export class ServerConnection {
       // method.
       if (method === determinedMethod) {
         listener({ method: determinedMethod })
+      }
+      // Call any handlers that match the 'connection-change'
+      // method.
+      if (method === 'connection-change') {
+        listener({
+          method: 'connection-change',
+          status: this.status,
+        })
       }
     }
   }
@@ -376,28 +397,10 @@ export class ServerConnection {
     let isClosed: boolean =
       this.socket.readyState === WebSocket.CLOSED ||
       this.socket.readyState === WebSocket.CLOSING
-    let neverOpened: boolean = this.lastOpened === null
-    let shouldHaveOpened: boolean = this.shouldBeConnected
 
-    // If the connection is closed, never opened,
-    // but should have opened, call any connection
-    // failure listeners.
-    if (isClosed && neverOpened && shouldHaveOpened) {
-      // Pre-create data object since
-      // they will not vary.
-      let data: TServerData<'connection-failure'> = {
-        method: 'connection-failure',
-      }
-
-      // Loop though listeners.
-      for (let [method, listener] of this.listeners) {
-        // Call any connection loss listeners
-        // if the closing of the connection
-        // was unprompted.
-        if (method === 'connection-failure') {
-          listener(data)
-        }
-      }
+    // If the socket is closed, call the `onClose` handler.
+    if (isClosed) {
+      this.onClose()
     }
   }
 
@@ -422,4 +425,28 @@ export class ServerConnection {
   }
 }
 
-export default ServerConnection
+/* -- types -- */
+
+/**
+ * Represents a handler in a server connection for a client-emitted event.
+ */
+export type TServerHandler<TMethod extends TServerMethod> = (
+  data: TServerData<TMethod>,
+) => void
+
+/**
+ * Represents options that can be passed when constructing a new server connection.
+ */
+export interface IServerConnectionOptions {
+  /**
+   * Listeners for handling various events.
+   */
+  on?: {
+    [T in TServerMethod]?: TServerHandler<T>
+  }
+  /**
+   * Whether to disconnect existing connections in order to establish this connection. Defaults to false.
+   * @WIP
+   */
+  disconnectExisting?: boolean
+}

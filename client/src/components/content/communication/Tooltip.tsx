@@ -155,7 +155,7 @@ function TooltipLogic(props: { tooltip: Tooltip }): JSX.Element | null {
     if (tooltips_elm !== null) {
       tooltips_elm.id = tooltipID
       tooltips_elm.style.visibility = 'visible'
-
+      
       setTooltipDescription(description)
     }
   }

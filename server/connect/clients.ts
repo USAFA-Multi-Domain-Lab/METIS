@@ -130,7 +130,7 @@ export default class ClientConnection {
     // Add default listeners.
     this.addDefaultListeners()
 
-    // setTimeout(() => this.socket.close(), 5000)
+    setTimeout(() => this.socket.close(), 10000)
   }
 
   /**

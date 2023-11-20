@@ -44,6 +44,13 @@ export interface IServerDataTypes {
     method: 'reconnection-failure'
   }
   /**
+   * Occurs during any change in the connection status of the client.
+   */
+  'connection-change': {
+    method: 'connection-change'
+    status: TServerConnectionStatus
+  }
+  /**
    * Occurs when the server intenionally emits an error to client.
    */
   'error': {
@@ -92,6 +99,11 @@ export type TServerMethod = keyof IServerDataTypes
 
 export type TServerData<TMethod extends TServerMethod> =
   IServerDataTypes[TMethod]
+
+/**
+ * Represents the status of a server connection.
+ */
+export type TServerConnectionStatus = 'open' | 'closed' | 'connecting'
 
 /**
  * Represents the types of data sent from the client to the server over a web socket during various events.
