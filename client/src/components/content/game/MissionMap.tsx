@@ -39,7 +39,7 @@ interface IMissionMap {
   grayOutAddNodeButton: boolean
   grayOutDeleteNodeButton: boolean
   elementRef: React.RefObject<HTMLDivElement>
-  applyNodeClassName: (node: ClientMissionNode) => string
+  applyNodeClassList: (node: ClientMissionNode) => string[]
   renderNodeTooltipDescription: (node: ClientMissionNode) => string
 }
 
@@ -68,6 +68,8 @@ export interface IMissionMappable {
   device: boolean
   color: string
   isOpen: boolean
+  pendingOpen: boolean
+  pendingExecInit: boolean
   childNodes: Array<ClientMissionNode>
 }
 
@@ -169,7 +171,7 @@ export default class MissionMap extends React.Component<
     grayOutAddNodeButton: false,
     grayOutDeleteNodeButton: false,
     elementRef: React.createRef(),
-    applyNodeClassName: () => '',
+    applyNodeClassList: () => '',
     renderNodeTooltipDescription:
       MissionMap.renderMappedNodeTooltipDescription_default,
   }
@@ -993,11 +995,11 @@ export default class MissionMap extends React.Component<
     let gridPaddingY: number = this.currentGridPaddingY
     let width: number = (mapXScale - gridPaddingX * 2) * mapScale
     let wrapperHeight: number = (mapYScale - gridPaddingY * 2) * mapScale
-    let loadingHeight: number = wrapperHeight - 2
-    let loadingMarginBottom: number = -loadingHeight
-    let loadingWidth: number | null = execution
-      ? execution.completionPercentage * (width - 4)
-      : 0 // subtracted 4 from the width to account for the 2px border
+    let progressBarHeight: number = wrapperHeight - 2
+    let progressBarMarginLeft: number = 2
+    let progressBarMarginBottom: number = -progressBarHeight
+    let progressBarWidthOffset: number = -4
+    let progressBarWidth: number | null = width + progressBarWidthOffset
     let titleWidthSubtrahend: number = width * 0.1
     let titleLineHeight: number = wrapperHeight * 0.34
     let buttonMarginTop = wrapperHeight * -0.175
@@ -1008,23 +1010,9 @@ export default class MissionMap extends React.Component<
     let buttonLineHeight: number = buttonHeight * 0.9
     let titleHeight: string = '100%'
     let iconHeight: string = '100%'
-    let loadingStyle: React.CSSProperties = {
-      marginBottom: `${loadingMarginBottom}px`,
-      height: `${loadingHeight}px`,
-      width: `${loadingWidth}px`,
-    }
-    let buttonStyle: React.CSSProperties = {
-      marginTop: ``,
-      margin: `${buttonMarginTop}px ${buttonMarginSides}px 0`,
-      width: `${buttonWidth}px`,
-      height: `${buttonHeight}px`,
-      fontSize: `${buttonFontSize}px`,
-      lineHeight: `${buttonLineHeight}px`,
-    }
 
     // Dynamic Class Names
-    let loadingClassName: string = 'loading'
-    let iconClassName: string = ''
+    let progressBarClassName: string = 'ProgressBar'
     let buttonUniqueClassName: string = ''
 
     // This will shift the title line
@@ -1036,26 +1024,44 @@ export default class MissionMap extends React.Component<
       iconHeight = '50%'
     }
 
-    // Logic to handle if the loading bar is displayed or not.
-    if (!node.executing) {
-      loadingClassName += ' hide'
+    // Logic to show icon if needed.
+    if (
+      node.device ||
+      node.executable ||
+      node.pendingOpen ||
+      node.pendingExecInit
+    ) {
+      titleWidthSubtrahend += width * 0.15
     }
 
-    // Logic to handle nodes that are executable and nodes that
-    // are devices.
-    if (node.device && node.executable) {
-      iconClassName = 'device'
-      titleWidthSubtrahend += width * 0.15
-    } else if (node.executable && !node.device) {
-      iconClassName = 'executable'
-      titleWidthSubtrahend += width * 0.15
+    // If the node is currently being executed,
+    // multipy the width by the completion percentage
+    // of the execution.
+    if (execution) {
+      progressBarWidth *= execution.completionPercentage
+    }
+
+    // Determine styles.
+    let progressBarStyle: React.CSSProperties = {
+      marginLeft: `${progressBarMarginLeft}px`,
+      marginBottom: `${progressBarMarginBottom}px`,
+      height: `${progressBarHeight}px`,
+      width: `${progressBarWidth}px`,
+    }
+    let buttonStyle: React.CSSProperties = {
+      marginTop: ``,
+      margin: `${buttonMarginTop}px ${buttonMarginSides}px 0`,
+      width: `${buttonWidth}px`,
+      height: `${buttonHeight}px`,
+      fontSize: `${buttonFontSize}px`,
+      lineHeight: `${buttonLineHeight}px`,
     }
 
     return (
       <>
         <div
-          className={loadingClassName}
-          style={loadingStyle}
+          className={progressBarClassName}
+          style={progressBarStyle}
           onClick={() => {}}
           ref={this.props.elementRef}
         ></div>
@@ -1077,10 +1083,7 @@ export default class MissionMap extends React.Component<
           >
             {node.name}
           </div>
-          <div
-            className={iconClassName}
-            style={{ height: `${iconHeight}` }}
-          ></div>
+          <div className={'Icon'} style={{ height: `${iconHeight}` }}></div>
           {buttons.map((button: IButtonSVG): JSX.Element | null => {
             return (
               <ButtonSVG
@@ -1096,30 +1099,59 @@ export default class MissionMap extends React.Component<
     )
   }
 
-  // applys an addon class name to the node
-  // passed from the mapped node list.
-  applyMappedNodeClassName = (node: ClientMissionNode) => {
+  /**
+   * Apply an addon class name to the node passed from the mapped node list.
+   * @param node The node to apply the class name to.
+   * @returns the class name to apply to the node.
+   */
+  private applyMappedNodeClassList = (node: ClientMissionNode): string => {
+    // Gather information.
+    let classList: string[] = []
     let selectedNode: ClientMissionNode | null = this.props.selectedNode
 
-    let className: string = ''
+    // Apply device class name.
+    if (node.device) {
+      classList.push('Device')
+    }
 
-    let classNameExternalAddon: string = this.props.applyNodeClassName(node)
+    // Apply executable class name.
+    if (node.executable) {
+      classList.push('Executable')
+    }
 
+    // Apply success/failure class name.
     if (node.executionState === 'successful') {
-      className += ' succeeded'
+      classList.push('Succeeded')
     } else if (node.executionState === 'failure') {
-      className += ' failed'
+      classList.push('Failed')
     }
 
-    if (classNameExternalAddon.length > 0) {
-      className += ` ${classNameExternalAddon}`
-    }
+    // Push class names returned from `applyNodeClassList`.
+    classList.push(...this.props.applyNodeClassList(node))
 
+    // If selected, push the 'Selected' class name.
     if (node.nodeID === selectedNode?.nodeID) {
-      className += ' Selected'
+      classList.push('Selected')
     }
 
-    return className
+    // If the node is pending open, push the 'PendingOpen' class name.
+    if (node.pendingOpen) {
+      classList.push('PendingOpen')
+    }
+
+    // If the node is pending execution initiation, push the 'PendingExecInit'
+    // class name.
+    if (node.pendingExecInit) {
+      classList.push('PendingExecInit')
+    }
+
+    // If the node is currently being executed, push the 'Executing' class name.
+    if (node.executing) {
+      classList.push('Executing')
+    }
+
+    // Return class list joined.
+    return classList.join(' ')
   }
 
   // This will constructor the buttons
@@ -1230,7 +1262,7 @@ export default class MissionMap extends React.Component<
         renderTooltipDescription={this.props.renderNodeTooltipDescription}
         ajaxStatus={missionAjaxStatus}
         listSpecificItemClassName={'mapped-node'}
-        applyClassNameAddon={this.applyMappedNodeClassName}
+        applyClassNameAddon={this.applyMappedNodeClassList}
         listStyling={listStyling}
         applyElementID={(node: IMissionMappable) =>
           `mapped-node_${node.nodeID}`

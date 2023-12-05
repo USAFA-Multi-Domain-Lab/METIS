@@ -1,17 +1,12 @@
 import { WebSocket } from 'ws'
-import {
-  TServerData,
-  TClientData,
-  TClientMethod,
-  TServerMethod,
-  IServerDataTypes,
-} from 'metis/connect/data'
+import { TClientEvents, TServerEvents } from 'metis/connect/data'
+import { TClientMethod, TServerMethod } from 'metis/connect/data'
 import { ServerEmittedError } from 'metis/connect/errors'
 import User from 'metis/users'
 import MetisSession from 'metis/server/sessions'
 
 export type TClientHandler<TMethod extends TClientMethod> = (
-  data: TClientData<TMethod>,
+  data: TClientEvents[TMethod],
 ) => void
 
 /**
@@ -147,7 +142,7 @@ export default class ClientConnection {
    */
   public emit<
     TMethod extends TServerMethod,
-    TPayload extends Omit<IServerDataTypes[TMethod], 'method'>,
+    TPayload extends Omit<TServerEvents[TMethod], 'method'>,
   >(method: TMethod, payload: TPayload): void {
     // Send payload.
     this.socket.send(JSON.stringify(payload))
@@ -158,8 +153,7 @@ export default class ClientConnection {
    * @param {ServerEmittedError} error The error to emit to the client.
    */
   public emitError(error: ServerEmittedError): void {
-    ;``
-    let payload: TServerData<'error'> = error.toJSON()
+    let payload: TServerEvents['error'] = error.toJSON()
     this.socket.send(JSON.stringify(payload))
   }
 
@@ -235,15 +229,16 @@ export default class ClientConnection {
   private onClose = (event: WSCloseEvent): void => {
     // Pre-create data object, since
     // it will not vary.
-    let closeData: TServerData<'connection-closed'> = {
+    let serverEvent: TServerEvents['connection-closed'] = {
       method: 'connection-closed',
+      data: {},
     }
 
     // Loop though listeners.
     for (let [method, listener] of this.listeners) {
       // Call any "close" listeners.
       if (method === 'close') {
-        listener(closeData)
+        listener(serverEvent)
       }
     }
 
@@ -256,22 +251,23 @@ export default class ClientConnection {
    * @param {WSCloseEvent} event The message event.
    */
   private onMessage = (event: WSMessageEvent): void => {
+    // If the data passed is not a string,
+    // throw an error.
+    if (typeof event.data !== 'string') {
+      this.emitError(
+        new ServerEmittedError(ServerEmittedError.CODE_INVALID_DATA, {
+          message: 'The data passed was not a string.',
+        }),
+      )
+      return
+    }
+
+    // Parse the data.
+    let data = JSON.parse(event.data)
+
+    // Call any listeners matching the method found in the
+    // data.
     for (let [method, listener] of this.listeners) {
-      // If the data passed is not a string,
-      // throw an error.
-      if (typeof event.data !== 'string') {
-        this.emitError(
-          new ServerEmittedError(ServerEmittedError.CODE_INVALID_DATA, {
-            message: 'The data passed was not a string.',
-          }),
-        )
-        return
-      }
-
-      // Parse the data.
-      let data = JSON.parse(event.data)
-
-      // Only call the handler if the method matches.
       if (data.method === method) {
         listener(data)
       }

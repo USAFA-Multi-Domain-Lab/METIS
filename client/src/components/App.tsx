@@ -23,7 +23,7 @@ import UserResetPage from './pages/UserResetPage'
 import ClientMissionNode from 'src/missions/nodes'
 import { useGlobalContext } from 'src/context'
 import GameClient from 'src/games'
-import ServerConnection from 'src/connect/server'
+import ServerConnection from 'src/connect/servers'
 import ConnectionStatus from './content/communication/ConnectionStatus'
 
 /**

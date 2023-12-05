@@ -257,20 +257,10 @@
           }
         }
 
-        .executable {
+        .Icon {
           display: flex;
           justify-content: flex-end;
-          background: url(../../../assets/images/icons/lightning.svg);
-          background-size: 100% 100%;
-          background-repeat: no-repeat;
-          width: 15%;
-          margin: 0 5%;
-        }
-
-        .device {
-          background: url(../../../assets/images/icons/device.svg);
-          background-size: 100% 100%;
-          background-repeat: no-repeat;
+          align-items: center;
           width: 15%;
           margin: 0 5%;
         }
@@ -287,20 +277,68 @@
           }
         }
 
-        &.scoreless {
-          .wrapper {
-            .score {
-              display: none;
-            }
+        &.Executable {
+          .Icon {
+            background: url(../../../assets/images/icons/lightning.svg);
+            background-size: 100% 100%;
+            background-repeat: no-repeat;
           }
         }
 
-        &.succeeded {
+        &.Device {
+          .Icon {
+            background: url(../../../assets/images/icons/device.svg);
+            background-size: 100% 100%;
+            background-repeat: no-repeat;
+          }
+        }
+
+        &.Succeeded {
           background-color: $node-success;
         }
 
-        &.failed {
+        &.Failed {
           background-color: $node-fail;
+        }
+
+        &.PendingOpen {
+          @keyframes rotate {
+            from {
+              transform: rotate(0deg);
+            }
+            to {
+              transform: rotate(360deg);
+            }
+          }
+
+          .Icon {
+            background: url(../../../assets/images/icons/pending.png);
+            background-size: contain;
+            background-position: center;
+            background-repeat: no-repeat;
+            animation-name: rotate;
+            animation-duration: 1s;
+            animation-timing-function: linear;
+            animation-iteration-count: infinite;
+          }
+        }
+
+        &.PendingExecInit,
+        &.Executing {
+          .ProgressBar {
+            display: block;
+          }
+        }
+
+        &.PendingExecInit {
+          .ProgressBar {
+            filter: hue-rotate(180deg);
+            opacity: 0.25;
+            animation-duration: 1500ms;
+          }
+        }
+
+        &.Executing {
         }
 
         @keyframes loading-animation {
@@ -312,7 +350,8 @@
           }
         }
 
-        .loading {
+        .ProgressBar {
+          display: none;
           background-image: linear-gradient(
             -45deg,
             $loading-1 25%,
@@ -329,13 +368,6 @@
           animation-duration: 0.75s;
           animation-timing-function: linear;
           animation-iteration-count: infinite;
-
-          &.hide {
-            display: none;
-            opacity: 0;
-            position: absolute;
-            left: -200vw;
-          }
         }
 
         &.node-creator {

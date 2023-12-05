@@ -310,18 +310,18 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
                   handleNodeSelection={handleNodeSelection}
                   // handleNodePathExitRequest={mission.enableAllNodes}
                   // grayOutExitNodePathButton={!mission.hasDisabledNodes}
-                  applyNodeClassName={(node: ClientMissionNode) => {
-                    let className: string = ''
+                  applyNodeClassList={(node: ClientMissionNode) => {
+                    let classList: string[] = []
 
                     if (node.isOpen) {
-                      className += ' opened'
+                      classList.push('Opened')
                     }
 
                     // if (!node.highlighted) {
                     //   className += ' faded'
                     // }
 
-                    return className
+                    return classList
                   }}
                   renderNodeTooltipDescription={(node: ClientMissionNode) => {
                     let description: string = node.description

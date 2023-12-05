@@ -75,6 +75,16 @@ export default class NodeCreator implements IMissionMappable {
     return false
   }
 
+  // Implementation requirement only.
+  public get pendingOpen(): boolean {
+    return false
+  }
+
+  // Implementation requirement only.
+  public get pendingExecInit(): boolean {
+    return false
+  }
+
   get childNodes(): ClientMissionNode[] {
     return []
   }

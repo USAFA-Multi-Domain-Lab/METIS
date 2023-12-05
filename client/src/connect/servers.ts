@@ -1,13 +1,18 @@
 import {
-  IClientDataTypes,
-  IServerDataTypes,
-  TClientMethod,
+  TGenericClientEvents,
+  TGenericClientMethod,
+  TRequestEvents,
+  TRequestMethod,
   TServerConnectionStatus,
-  TServerData,
+  TServerEvents,
   TServerMethod,
+  TResponseEvents,
+  TResponseMethod,
+  TAnyResponseEvent,
 } from '../../../shared/connect/data'
 import { ServerEmittedError } from '../../../shared/connect/errors'
 import { v4 as generateHash } from 'uuid'
+import { SingleTypeObject } from '../../../shared/toolbox/objects'
 
 /**
  * METIS web-socket-based, server connection.
@@ -67,6 +72,14 @@ export default class ServerConnection {
    * Storage for all listeners, in the order they get added.
    */
   protected listeners: [TServerMethod, TServerHandler<any>][] = []
+
+  /**
+   * A map of request IDs to response listeners. These listeners will be called
+   * anytime an event is received from the server with the corresponding request ID.
+   */
+  protected responseListeners: SingleTypeObject<
+    TServerResponseListener<TResponseMethod>
+  > = {}
 
   /**
    * @param {IServerConnectionOptions} options Options for the server connection.
@@ -149,17 +162,41 @@ export default class ServerConnection {
   }
 
   /**
-   * Emits an event to the server.
-   * @param {TMethod} method The method of the event to emit.
-   * @param {TPayload} payload The payload of the event to emit.
+   * Emits a generic event to the server.
+   * @param method The method of the event to emit.
+   * @param data The payload of the event to emit.
    */
   public emit<
-    TMethod extends TClientMethod,
-    TPayload extends Omit<IClientDataTypes[TMethod], 'method'>,
-  >(method: TMethod, payload: TPayload): void {
-    console.log(this._lastOpened, this._lastClosed)
+    TMethod extends TGenericClientMethod,
+    TData extends TGenericClientEvents[TMethod]['data'],
+  >(method: TMethod, data: TData): void {
     // Send payload.
-    this.socket.send(JSON.stringify(payload))
+    this.socket.send(JSON.stringify({ method, data }))
+  }
+
+  /**
+   * Emits a request event to the server.
+   * @param method The method of the event to emit.
+   * @param payload The payload of the event to emit.
+   * @param options Options for the request.
+   */
+  public request<
+    TMethod extends TRequestMethod,
+    TPayload extends TRequestEvents[TMethod]['data'],
+  >(method: TMethod, data: TPayload, options: TWsRequestOptions = {}): void {
+    // Parse options.
+    const { onResponse } = options
+
+    // Generate request ID.
+    let requestId: string = ServerConnection.generateRequestID()
+
+    // Add response listener if provided.
+    if (onResponse !== undefined) {
+      this.responseListeners[requestId] = onResponse
+    }
+
+    // Send payload.
+    this.socket.send(JSON.stringify({ method, requestId, data }))
   }
 
   /**
@@ -168,10 +205,10 @@ export default class ServerConnection {
    * @param {TServerHandler<TServerEvent>} handler The handler that will be called upon the event being triggered.
    * @returns {ServerConnection} The server connection instance, allowing the chaining of class method calls.
    */
-  public addEventListener<
-    TMethod extends TServerMethod,
-    TData extends IServerDataTypes[TMethod],
-  >(method: TMethod, handler: TServerHandler<TMethod>): ServerConnection {
+  public addEventListener<TMethod extends TServerMethod>(
+    method: TMethod,
+    handler: TServerHandler<TMethod>,
+  ): ServerConnection {
     // Push the new listener to the array of listeners.
     this.listeners.push([method, handler])
     // Return this.
@@ -360,31 +397,53 @@ export default class ServerConnection {
 
   /**
    * Handler for when the web socket connection is opened. Calls all matching listeners stored in "listeners".
-   * @param {MessageEvent} event The message event.
+   * @param {MessageEvent} e The message event.
    */
-  private onMessage = (event: MessageEvent): void => {
+  private onMessage = (e: MessageEvent): void => {
+    // Parse the data.
+    let event: any = JSON.parse(e.data)
+
+    // Handle errors before calling
+    // individual listeners.
+    if (event.method === 'error') {
+      // Create new server emitted error
+      // object.
+      let error: ServerEmittedError = ServerEmittedError.fromJSON(event)
+
+      // If the error is a duplicate client
+      // issue, mark shouldBeConnected as
+      // false.
+      if (error.code === ServerEmittedError.CODE_DUPLICATE_CLIENT) {
+        this.shouldBeConnected = false
+      }
+    }
+
+    // Call any listeners that match the method of the message.
     for (let [method, listener] of this.listeners) {
-      // Parse the data.
-      let data = JSON.parse(event.data)
+      if (event.method === method) {
+        listener(event)
+      }
+    }
 
-      // Handle errors before calling
-      // individual listeners.
-      if (data.method === 'error') {
-        // Create new server emitted error
-        // object.
-        let error: ServerEmittedError = ServerEmittedError.fromJSON(data)
+    // If the message contains a request...
+    if (event.request !== undefined) {
+      // Grab request.
+      let request: TAnyResponseEvent['request'] = event.request
+      // Grab response listener.
+      let responseListener:
+        | TServerResponseListener<TResponseMethod>
+        | undefined = this.responseListeners[request.event.requestId]
 
-        // If the error is a duplicate client
-        // issue, mark shouldBeConnected as
-        // false.
-        if (error.code === ServerEmittedError.CODE_DUPLICATE_CLIENT) {
-          this.shouldBeConnected = false
-        }
+      // If the listener is present, call it.
+      if (responseListener !== undefined) {
+        responseListener(event)
       }
 
-      // Only call the handler if the method matches.
-      if (data.method === method) {
-        listener(data)
+      // If the request was fulfilled with this response,
+      // remove the listener. Otherwise, leave it for the
+      // next response.
+      if (request.fulfilled) {
+        delete this.responseListeners[request.event.requestId]
       }
     }
   }
@@ -420,7 +479,7 @@ export default class ServerConnection {
   /**
    * Generates a new request ID for a request to the server.
    */
-  public static generateRequestID(): any {
+  private static generateRequestID(): any {
     return `request_${generateHash()}`
   }
 }
@@ -431,7 +490,14 @@ export default class ServerConnection {
  * Represents a handler in a server connection for a client-emitted event.
  */
 export type TServerHandler<TMethod extends TServerMethod> = (
-  data: TServerData<TMethod>,
+  event: TServerEvents[TMethod],
+) => void
+
+/**
+ * Represents a listener for a response to a request.
+ */
+export type TServerResponseListener<TMethod extends TResponseMethod> = (
+  event: TResponseEvents[TMethod],
 ) => void
 
 /**
@@ -449,4 +515,17 @@ export interface IServerConnectionOptions {
    * @WIP
    */
   disconnectExisting?: boolean
+}
+
+/**
+ * Options for the `ServerConnection.request` method.
+ */
+export type TWsRequestOptions = {
+  /**
+   * Handler for response events sent by the server concerning the request.
+   * @param method The method of the server event.
+   * @param data The data sent by the server.
+   * @note May be multiple responses depending on the type of request.
+   */
+  onResponse?: TServerResponseListener<TResponseMethod>
 }

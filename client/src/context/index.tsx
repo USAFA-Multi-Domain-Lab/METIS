@@ -1,5 +1,5 @@
 import React, { ReactNode, useState } from 'react'
-import ServerConnection from 'src/connect/server'
+import ServerConnection from 'src/connect/servers'
 import { TMetisSession } from '../../../shared/sessions'
 import ObjectToolbox, { AnyObject } from '../../../shared/toolbox/objects'
 import { TAppError, TAppErrorNotifyMethod } from 'src/components/App'
@@ -460,19 +460,24 @@ const useGlobalContextDefinition = (context: TGlobalContext) => {
             'reconnection-success': () => {
               // Update server with updated connection object.
               setServer(server)
-              // Update status message.
-              connectionStatusMessage.value = {
-                message: 'Connection reestablished.',
-                color: 'Green',
-              }
-              // Set a timeout to clear the message.
-              setTimeout(() => {
-                // If the connection status is open, then
-                // clear the message.
-                if (server.status === 'open') {
-                  connectionStatusMessage.value = null
+              // If a message was displayed to the user notifying
+              // of connection loss, then show a message notifying
+              // of reconnection.
+              if (connectionStatusMessage.value?.color === 'Red') {
+                // Update status message.
+                connectionStatusMessage.value = {
+                  message: 'Connection reestablished.',
+                  color: 'Green',
                 }
-              }, CONNECT_MESSAGE_CLEAR_DELAY)
+                // Set a timeout to clear the message.
+                setTimeout(() => {
+                  // If the connection status is open, then
+                  // clear the message.
+                  if (server.status === 'open') {
+                    connectionStatusMessage.value = null
+                  }
+                }, CONNECT_MESSAGE_CLEAR_DELAY)
+              }
             },
             'connection-failure': () => {
               // Update loading message to reflect connection failure.
@@ -481,11 +486,19 @@ const useGlobalContextDefinition = (context: TGlobalContext) => {
               )
             },
             'connection-loss': () => {
-              // Update status message.
-              connectionStatusMessage.value = {
-                message: 'Connection dropped. Attempting to reconnect...',
-                color: 'Red',
-              }
+              // Wait three seconds, then display a connection
+              // loss message.
+              setTimeout(() => {
+                // If the connection status is still not open,
+                // then display a connection loss message.
+                if (server.status !== 'open') {
+                  // Update status message.
+                  connectionStatusMessage.value = {
+                    message: 'Connection dropped. Attempting to reconnect...',
+                    color: 'Red',
+                  }
+                }
+              }, 3000)
             },
             'error': ({ code, message }) => {
               if (code === ServerEmittedError.CODE_DUPLICATE_CLIENT) {

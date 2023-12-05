@@ -1,12 +1,12 @@
 import Game, { IGameJSON } from 'metis/games'
 import ClientConnection from 'metis/server/connect/clients'
 import { v4 as generateHash } from 'uuid'
-import { IClientDataTypes, TServerData } from 'metis/connect/data'
 import { ServerEmittedError } from 'metis/connect/errors'
 import ServerMission from 'metis/server/missions'
 import ServerMissionNode from 'metis/server/missions/nodes'
 import ServerMissionAction from 'metis/server/missions/actions'
 import ServerActionExecution from '../missions/actions/executions'
+import { TClientEvents, TServerEvents } from 'metis/connect/data'
 
 /**
  * Server instance for games. Handles server-side logic for a game with participating clients. Communicates with clients to conduct game.
@@ -181,12 +181,10 @@ export default class GameServer extends Game<
    * Removes game-specific listeners for the given participant.
    */
   private removeListeners(participant: ClientConnection): void {
-    console.log(
-      participant.clearEventListeners([
-        'request-open-node',
-        'request-execute-action',
-      ]),
-    )
+    participant.clearEventListeners([
+      'request-open-node',
+      'request-execute-action',
+    ])
   }
 
   /**
@@ -235,14 +233,16 @@ export default class GameServer extends Game<
 
   /**
    * Called when a participant requests to open a node.
+   * @param participant The participant requesting to open a node.
+   * @param event The event emitted by the participant.
    */
   public onRequestOpenNode = (
     participant: ClientConnection,
-    request: IClientDataTypes['request-open-node'],
+    event: TClientEvents['request-open-node'],
   ): void => {
     // Organize data.
     let mission: ServerMission = this.mission
-    let { nodeID } = request
+    let { nodeID } = event.data
 
     // Find the node, given the ID.
     let node: ServerMissionNode | undefined = mission.nodes.get(nodeID)
@@ -252,7 +252,7 @@ export default class GameServer extends Game<
     if (node === undefined) {
       return participant.emitError(
         new ServerEmittedError(ServerEmittedError.CODE_NODE_NOT_FOUND, {
-          request,
+          request: event,
         }),
       )
     }
@@ -261,7 +261,7 @@ export default class GameServer extends Game<
     if (!node.openable) {
       return participant.emitError(
         new ServerEmittedError(ServerEmittedError.CODE_NODE_NOT_OPENABLE, {
-          request,
+          request: event,
         }),
       )
     }
@@ -270,107 +270,128 @@ export default class GameServer extends Game<
     node.open()
 
     // Construct open event payload.
-    let payload: TServerData<'node-opened'> = {
+    let payload: TServerEvents['node-opened'] = {
       method: 'node-opened',
-      nodeID,
-      revealedChildNodes: node.childNodes.map((node) =>
-        node.toJSON({ includeGameData: true }),
-      ),
-      request,
-      requesterID: participant.userID,
+      data: {
+        nodeID,
+        revealedChildNodes: node.childNodes.map((node) =>
+          node.toJSON({ includeGameData: true }),
+        ),
+      },
+      request: { event, requesterId: participant.userID, fulfilled: true },
     }
 
-    // Emit open event.
-    for (let participant of this.participants) {
-      participant.emit('node-opened', payload)
-    }
+    setTimeout(() => {
+      // Emit open event.
+      for (let participant of this.participants) {
+        participant.emit('node-opened', payload)
+      }
+    }, 2000)
   }
 
   /**
    * Called when a participant requests to execute an action on a node.
+   * @param participant The participant requesting to execute an action.
+   * @param event The event emitted by the participant.
+   * @resolves When the action has been executed or a client error is found.
    */
   public onRequestExecuteAction = async (
     participant: ClientConnection,
-    request: IClientDataTypes['request-execute-action'],
+    event: TClientEvents['request-execute-action'],
   ): Promise<void> => {
-    // Extract request data.
-    let { actionID } = request
+    setTimeout(async () => {
+      // Extract request data.
+      let { actionID } = event.data
 
-    // Find the action given the ID.
-    let action: ServerMissionAction | undefined = this.actions.get(actionID)
+      // Find the action given the ID.
+      let action: ServerMissionAction | undefined = this.actions.get(actionID)
 
-    // If the action is undefined, then emit
-    // an error.
-    if (action === undefined) {
-      return participant.emitError(
-        new ServerEmittedError(ServerEmittedError.CODE_ACTION_NOT_FOUND, {
-          request,
-        }),
-      )
-    }
-    // If the action is not executable, then
-    // emit an error.
-    if (!action.node.executable) {
-      return participant.emitError(
-        new ServerEmittedError(ServerEmittedError.CODE_NODE_NOT_EXECUTABLE, {
-          request,
-        }),
-      )
-    }
-    // If the node is not revealed, then
-    // emit an error.
-    if (!action.node.revealed) {
-      return participant.emitError(
-        new ServerEmittedError(ServerEmittedError.CODE_NODE_NOT_REVEALED, {
-          request,
-        }),
-      )
-    }
+      // If the action is undefined, then emit
+      // an error.
+      if (action === undefined) {
+        return participant.emitError(
+          new ServerEmittedError(ServerEmittedError.CODE_ACTION_NOT_FOUND, {
+            request: event,
+          }),
+        )
+      }
+      // If the action is not executable, then
+      // emit an error.
+      if (!action.node.executable) {
+        return participant.emitError(
+          new ServerEmittedError(ServerEmittedError.CODE_NODE_NOT_EXECUTABLE, {
+            request: event,
+          }),
+        )
+      }
+      // If the node is not revealed, then
+      // emit an error.
+      if (!action.node.revealed) {
+        return participant.emitError(
+          new ServerEmittedError(ServerEmittedError.CODE_NODE_NOT_REVEALED, {
+            request: event,
+          }),
+        )
+      }
 
-    // Execute the action, awaiting result.
-    let outcome = await action.execute({
-      enactEffects: false,
-      onInit: (execution: ServerActionExecution) => {
-        // Deduct action cost from resource pool.
-        this._resources -= action!.resourceCost
+      // Execute the action, awaiting result.
+      let outcome = await action.execute({
+        enactEffects: false,
+        onInit: (execution: ServerActionExecution) => {
+          // Deduct action cost from resource pool.
+          this._resources -= action!.resourceCost
 
-        // Construct payload for action execution
-        // initiated event.
-        let initiationPayload: TServerData<'action-execution-initiated'> = {
-          method: 'action-execution-initiated',
-          execution: execution.toJSON(),
-          request,
-        }
+          // Construct payload for action execution
+          // initiated event.
+          let initiationPayload: TServerEvents['action-execution-initiated'] = {
+            method: 'action-execution-initiated',
+            data: {
+              execution: execution.toJSON(),
+            },
+            request: {
+              event,
+              requesterId: participant.userID,
+              fulfilled: false,
+            },
+          }
 
-        // Emit action execution initiated event
-        // to each participant.
+          // Emit action execution initiated event
+          // to each participant.
+          for (let participant of this.participants) {
+            participant.emit('action-execution-initiated', initiationPayload)
+          }
+        },
+      })
+
+      // Construct payload for action execution
+      // completed event.
+      let completionPayload: TServerEvents['action-execution-completed'] = {
+        method: 'action-execution-completed',
+        data: {
+          outcome: outcome.toJSON(),
+        },
+        request: {
+          event,
+          requesterId: participant.userID,
+          fulfilled: true,
+        },
+      }
+
+      // Add child nodes if the action was
+      // successful.
+      if (outcome.successful) {
+        completionPayload.data.revealedChildNodes = action.node.childNodes.map(
+          (node) => node.toJSON({ includeGameData: true }),
+        )
+      }
+
+      setTimeout(() => {
+        // Emit the action execution completed
+        // event to each participant.
         for (let participant of this.participants) {
-          participant.emit('action-execution-initiated', initiationPayload)
+          participant.emit('action-execution-completed', completionPayload)
         }
-      },
-    })
-
-    // Construct payload for action execution
-    // completed event.
-    let completionPayload: TServerData<'action-execution-completed'> = {
-      method: 'action-execution-completed',
-      outcome: outcome.toJSON(),
-      request,
-      requesterID: participant.userID,
-    }
-
-    // Add child nodes if the action was
-    // successful.
-    if (outcome.successful) {
-      completionPayload.revealedChildNodes = action.node.childNodes.map(
-        (node) => node.toJSON({ includeGameData: true }),
-      )
-    }
-
-    // Emit the action execution completed
-    // event to each participant.
-    for (let participant of this.participants) {
-      participant.emit('action-execution-completed', completionPayload)
-    }
+      }, 2000)
+    }, 2000)
   }
 }

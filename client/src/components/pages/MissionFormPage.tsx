@@ -13,7 +13,7 @@ import {
 import MissionEntry from '../content/edit-mission/MissionEntry'
 import NodeEntry from '../content/edit-mission/NodeEntry'
 import NodeStructuring from '../content/edit-mission/NodeStructuring'
-import { useMountHandler, useUnmountHandler } from 'src/toolbox/hooks'
+import { useMountHandler } from 'src/toolbox/hooks'
 import { useGlobalContext } from 'src/context'
 import ClientMission from 'src/missions'
 import ClientMissionNode, { ENodeDeleteMethod } from 'src/missions/nodes'
@@ -431,7 +431,6 @@ export default function MissionFormPage(
                 grayOutDeselectNodeButton={grayOutDeselectNodeButton}
                 grayOutAddNodeButton={grayOutAddNodeButton}
                 grayOutDeleteNodeButton={grayOutDeleteNodeButton}
-                applyNodeClassName={(node: ClientMissionNode) => ''}
                 renderNodeTooltipDescription={(node: ClientMissionNode) => ''}
               />
             ),

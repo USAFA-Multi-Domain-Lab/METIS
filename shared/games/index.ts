@@ -1,8 +1,6 @@
-import context from '../context'
 import { IUserJSON } from '../users'
 import { IMission, IMissionJSON } from 'metis/missions'
 import { IMissionAction } from '../missions/actions'
-import axios, { AxiosError } from 'axios'
 import { IMissionNode } from '../missions/nodes'
 
 export interface IGameJSON {

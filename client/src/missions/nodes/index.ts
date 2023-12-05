@@ -93,6 +93,50 @@ export default class ClientMissionNode
   public depth: number
 
   /**
+   * Whether the node is pending an "node-opened" event from the server.
+   * This is used when the client requests to open a node, but the server
+   * has not yet responded.
+   */
+  private _pendingOpen: boolean = false
+  /**
+   * Whether the node is pending an "node-opened" event from the server.
+   * @note This is used when the client requests to open a node, but the server
+   * has not yet responded.
+   * @throws In setter if the node is not openable.
+   */
+  public get pendingOpen(): boolean {
+    return this._pendingOpen
+  }
+  public set pendingOpen(value: boolean) {
+    if (!this.openable && value === true) {
+      throw new Error('Cannot set pending open: Node is not openable.')
+    }
+    this._pendingOpen = value
+  }
+
+  /**
+   * Whether the node is pending an "action-execution-initiated" event from the server.
+   * @note This is used when the client requests to execute an action, but the server
+   * has not yet responded.
+   */
+  private _pendingExecInit: boolean = false
+  /**
+   * Whether the node is pending an "action-execution-initiated" event from the server.
+   * @node This is used when the client requests to execute an action, but the server
+   * has not yet responded.
+   * @throws In setter if the node is not executable.
+   */
+  public get pendingExecInit(): boolean {
+    return this._pendingExecInit
+  }
+  public set pendingExecInit(value: boolean) {
+    if (!this.executable && value === true) {
+      throw new Error('Cannot set pending execution: Node is not executable.')
+    }
+    this._pendingExecInit = value
+  }
+
+  /**
    * Whether the node is expanded in the `NodeStructuring` component.
    */
   private _expandedInMenu: boolean = false
@@ -198,8 +242,12 @@ export default class ClientMissionNode
         }
         // Handle structure change.
         this.mission.handleStructureChange()
+
         // Resolve.
         resolve()
+
+        // Set pending open to false.
+        this._pendingOpen = false
       } else {
         throw new Error('Node is not openable.')
       }
@@ -231,6 +279,9 @@ export default class ClientMissionNode
 
     // Generate and set the node's execution.
     this._execution = new ClientActionExecution(action, data.start, data.end)
+
+    // Set "_pendingExecInit" to false.
+    this._pendingExecInit = false
 
     // Return execution.
     return this._execution
