@@ -1,189 +1,190 @@
 import { useGlobalContext } from 'src/context'
-import React from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { v4 as uuid } from 'uuid'
-
-/* -- INTERFACES -- */
-
-interface ITooltip {
-  description: string
-}
-interface ITooltip_S {}
+import { useMountHandler } from 'src/toolbox/hooks'
 
 /* -- CONSTANTS -- */
 
 export const tooltipsOffsetX = 50 /*px*/
 export const tooltipsOffsetY = 35 /*px*/
 
-/* -- CLASSES -- */
+/**
+ * This is a tooltip component that can be rendered in the child of an element so that when that element
+ * is hovered over, a tooltip is displayed with a given description.
+ * @param props.description The description to display in the tooltip.
+ * @returns {JSX.Element} The tooltip component.
+ */
+export default function Tooltip(props: { description: string }): JSX.Element {
+  /* -- COMPONENT PROPERTIES -- */
 
-// This is a tooltip component that
-// can be rendered in the child of
-// an element so that when that element
-// is hovered over, a tooltip is displayed
-// with a given description.
-export default class Tooltip extends React.Component<ITooltip, ITooltip_S> {
-  tooltipID: string = uuid()
-  rootElement: React.RefObject<HTMLDivElement> = React.createRef()
+  // Extract the description from the props.
+  let { description } = props
+  // The delay in milliseconds before the tooltip is displayed.
+  const tooltipDelay: number = 333 /*ms*/
 
-  // This returns the tooltip ID
-  // for the tooltip that is currently
-  // being displayed by the application
-  // to the user.
-  getCurrentTooltipID: () => string | null = () => null
+  /* -- GLOBAL CONTEXT -- */
 
-  // This returns whether this tooltip
-  // is the tooltip that is currently
-  // being displayed to the user.
-  get isCurrentTooltipID(): boolean {
-    return this.getCurrentTooltipID() === this.tooltipID
-  }
-
-  // This will set the tooltip with the ID
-  // passed as the curerrent tooltip to
-  // display to the user, with the description
-  // passed.
-  showTooltip: (tooltipID: string, description: string) => void = () => {}
-
-  // This will clear the current tooltip
-  // being displayed, hiding it from view.
-  hideTooltip: () => void = () => {}
-
-  // This is called when the target element
-  // that triggers this tooltip is no longer
-  // hovered over.
-  handleMouseLeave = () => {
-    this.hideTooltip()
-  }
-
-  // inherited
-  componentDidMount(): void {
-    let tooltip: HTMLDivElement | null = this.rootElement.current
-    let parent: HTMLElement | null | undefined = tooltip?.parentElement
-
-    if (tooltip && parent) {
-      parent.addEventListener('mouseleave', this.handleMouseLeave)
-      parent.addEventListener('mousemove', this.confirmTooltipVisibility)
-    }
-  }
-
-  // inherited
-  componentWillUnmount(): void {
-    let tooltip: HTMLDivElement | null = this.rootElement.current
-    let parent: HTMLElement | null | undefined = tooltip?.parentElement
-
-    if (tooltip && parent) {
-      parent.removeEventListener('mouseleave', this.handleMouseLeave)
-      parent.removeEventListener('mousemove', this.confirmTooltipVisibility)
-      if (this.isCurrentTooltipID) {
-        this.hideTooltip()
-      }
-    }
-  }
-
-  // inherited
-  componentDidUpdate(previousProps: ITooltip, previousState: ITooltip_S): void {
-    if (this.props.description !== previousProps.description) {
-      this.showTooltip(this.tooltipID, this.props.description)
-    }
-    this.confirmTooltipVisibility()
-  }
-
-  // This is the tooltip render logic.
-  // This will, based on the mouse position,
-  // determine whether to display a tooltip,
-  // which tooltip to display, and when to
-  // not display a tooltip at all.
-  confirmTooltipVisibility = (): void => {
-    let tooltip: HTMLDivElement | null = this.rootElement.current
-    let parent: HTMLElement | null | undefined = tooltip?.parentElement
-
-    if (tooltip && parent) {
-      let parentIsHoveredOver: boolean = parent.matches(':hover')
-      if (
-        parentIsHoveredOver &&
-        !this.isCurrentTooltipID &&
-        this.props.description !== '' &&
-        this.props.description !== '<p><br></p>'
-      ) {
-        this.showTooltip(this.tooltipID, this.props.description)
-      } else if (!parentIsHoveredOver && this.isCurrentTooltipID) {
-        this.hideTooltip()
-      }
-    }
-  }
-
-  // inherited
-  render() {
-    return (
-      <div className='Tooltip' ref={this.rootElement}>
-        <TooltipLogic tooltip={this} />
-      </div>
-    )
-  }
-}
-
-function TooltipLogic(props: { tooltip: Tooltip }): JSX.Element | null {
   const globalContext = useGlobalContext()
+  const [tooltip] = globalContext.tooltip
+  const [tooltipDescription, setTooltipDescription] =
+    globalContext.tooltipDescription
 
-  const [tooltips] = globalContext.tooltips
-  const [_, setTooltipDescription] = globalContext.tooltipDescription
+  /* -- COMPONENT REFS -- */
 
-  let tooltip: Tooltip = props.tooltip
+  const rootElement = useRef<HTMLDivElement | null>(null)
 
-  // This will get the ID of the
-  // current tooltip being displayed,
-  // or null if none is being displayed.
-  const getCurrentTooltipID = (): string | null => {
-    let tooltips_elm: HTMLDivElement | null = tooltips.current
-    let currentTooltipID: string | null = null
+  /* -- COMPONENT STATE -- */
 
-    if (
-      tooltips_elm !== null &&
-      tooltips_elm.id &&
-      tooltips_elm.id.length > 0
-    ) {
-      currentTooltipID = tooltips_elm.id
+  const [tooltipId] = useState<string>(uuid())
+
+  /* -- COMPONENT EFFECTS -- */
+
+  // This will handle the mount of the
+  // component.
+  useMountHandler((done) => {
+    // This will grab the current tooltip root element
+    let root_elm: HTMLDivElement | null = rootElement.current
+    // This will grab the parent of the root tooltip element
+    let parent: HTMLElement | null | undefined = root_elm?.parentElement
+
+    if (root_elm && parent) {
+      // This will add the event listeners
+      // to the parent element.
+      parent.addEventListener('mouseleave', hideTooltip)
+      parent.addEventListener('mousemove', confirmTooltipVisibility)
     }
 
-    return currentTooltipID
-  }
+    console.log('Tooltip mounted.')
 
-  // This will show the tooltip with
-  // the given ID and description.
-  const showTooltip = (tooltipID: string, description: string): void => {
-    let tooltips_elm: HTMLDivElement | null | undefined = tooltips.current
+    done()
+  })
 
-    if (tooltips_elm !== null) {
-      tooltips_elm.id = tooltipID
-      tooltips_elm.style.visibility = 'visible'
+  // This will handle the unmount of the
+  // component.
+  useEffect(() => {
+    return () => {
+      // When the component unmounts, hide
+      // the tooltip if it is being displayed.
+      hideTooltip()
 
+      // This will grab the current tooltip root element
+      let root_elm: HTMLDivElement | null = rootElement.current
+      // This will grab the parent of the root tooltip element
+      let parent: HTMLElement | null | undefined = root_elm?.parentElement
+
+      // This will remove the event listeners
+      // from the parent element.
+      if (root_elm && parent) {
+        parent.removeEventListener('mouseleave', hideTooltip)
+        parent.removeEventListener('mousemove', confirmTooltipVisibility)
+      }
+    }
+  }, [])
+
+  // This will handle the update of the
+  // component.
+  useEffect(() => {
+    // This will grab the current tooltip root element
+    let root_elm: HTMLDivElement | null = rootElement.current
+    // This will grab the parent of the root tooltip element
+    let parent: HTMLElement | null | undefined = root_elm?.parentElement
+
+    if (root_elm && parent) {
+      // This will remove the event listeners
+      // from the parent element.
+      parent.removeEventListener('mouseleave', hideTooltip)
+      parent.removeEventListener('mousemove', confirmTooltipVisibility)
+
+      // This will add the event listeners
+      // to the parent element.
+      parent.addEventListener('mouseleave', hideTooltip)
+      parent.addEventListener('mousemove', confirmTooltipVisibility)
+
+      // This will confirm whether the tooltip
+      // should be visible or not.
+      confirmTooltipVisibility()
+    }
+  }, [description])
+
+  /* -- COMPONENT FUNCTIONS -- */
+
+  /**
+   * This will show the tooltip with the given description.
+   */
+  const showTooltip = (): void => {
+    // This will grab the current tooltip element that is being displayed.
+    let tooltip_elm: HTMLDivElement | null | undefined = tooltip.current
+
+    // If the tooltip element is found, then
+    // show the tooltip.
+    if (tooltip_elm) {
+      // This will set the tooltip element's opacity
+      // to 1 so that it is visible.
+      tooltip_elm.style.opacity = '1'
+      // This will set the tooltip element's transition
+      // to the tooltip delay so that it will fade in
+      // after the delay.
+      tooltip_elm.style.transition = `opacity ${tooltipDelay}ms`
+      // This will set the tooltip description to the
+      // description passed to the component.
       setTooltipDescription(description)
     }
   }
 
-  // This will hide the tooltip
-  // currently being displayed, if
-  // any.
+  /**
+   * This will hide the tooltip.
+   */
   const hideTooltip = (): void => {
-    let tooltips_elm: HTMLDivElement | null | undefined = tooltips.current
+    // This will grab the current tooltip element that is being displayed.
+    let tooltip_elm: HTMLDivElement | null | undefined = tooltip.current
 
-    if (tooltips_elm !== null) {
-      tooltips_elm.id = ''
-      tooltips_elm.style.visibility = 'hidden'
-
+    // If the tooltip element is found, then
+    // hide the tooltip.
+    if (tooltip_elm) {
+      // This will set the tooltip element's opacity
+      // to 0 so that it is not visible.
+      tooltip_elm.style.opacity = '0'
+      // This will set the tooltip element's transition
+      // to 0ms so that it will not fade out.
+      tooltip_elm.style.transition = 'opacity 0ms'
+      // This will set the tooltip description to an
+      // empty string.
       setTooltipDescription('')
     }
   }
 
-  return (
-    <div className='TooltipLogic'>
-      {((): null => {
-        tooltip.getCurrentTooltipID = getCurrentTooltipID
-        tooltip.showTooltip = showTooltip
-        tooltip.hideTooltip = hideTooltip
+  /**
+   * This will confirm whether the tooltip should be visible or not.
+   */
+  const confirmTooltipVisibility = (): void => {
+    // This will grab the current tooltip root element
+    let root_elm: HTMLDivElement | null = rootElement.current
+    // This will grab the parent of the root tooltip element
+    let parent: HTMLElement | null | undefined = root_elm?.parentElement
+    // This is a list of empty strings which are not valid.
+    let emptyStrings: string[] = ['', '<p><br></p>']
 
-        return null
-      })()}
-    </div>
+    if (parent) {
+      // Checks to see if the parent of the root tooltip element
+      // is being hovered over.
+      let parentIsHoveredOver: boolean = parent.matches(':hover')
+
+      // If the parent is being hovered over, and the
+      // description is not empty, show the tooltip.
+      if (parentIsHoveredOver && !emptyStrings.includes(description)) {
+        showTooltip()
+      }
+      // If the parent is not being hovered over, then
+      // hide the tooltip.
+      else if (!parentIsHoveredOver) {
+        hideTooltip()
+      }
+    }
+  }
+
+  /* -- RENDER -- */
+
+  return (
+    <div className={`TooltipLocation_${tooltipId}`} ref={rootElement}></div>
   )
 }

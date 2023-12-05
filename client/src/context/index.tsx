@@ -10,12 +10,8 @@ import Confirmation, {
 import Prompt, { IPrompt } from 'src/components/content/communication/Prompt'
 import { ServerEmittedError } from '../../../shared/connect/errors'
 import { IButtonText } from 'src/components/content/user-controls/ButtonText'
-import { EAjaxStatus } from '../../../shared/toolbox/ajax'
 import { IAuthPageSpecific } from 'src/components/pages/AuthPage'
 import ClientUser from 'src/users'
-import UserPermission, {
-  TUserPermissionID,
-} from '../../../shared/users/permissions'
 
 /**
  * The values available in the global context.
@@ -32,13 +28,13 @@ export type TGlobalContextValues = {
   loadingMinTimeReached: boolean
   pageSwitchMinTimeReached: boolean
   error: TAppError | null
-  tooltips: React.RefObject<HTMLDivElement>
+  tooltip: React.RefObject<HTMLDivElement>
   tooltipDescription: string
-  notifications: Array<Notification>
-  postLoadNotifications: Array<Notification>
+  notifications: Notification[]
+  postLoadNotifications: Notification[]
   confirmation: IConfirmation | null
   prompt: IPrompt | null
-  missionNodeColors: Array<string>
+  missionNodeColors: string[]
 }
 
 /**
@@ -128,14 +124,6 @@ export type TGlobalContextActions = {
    * @param {IAuthPageSpecific} authPageProps The props to pass to the auth page.
    */
   logout: (authPageProps: IAuthPageSpecific) => void
-  /**
-   * This will check to see if the user in session has the permission to perform
-   * the requested action.
-   * @param {TUserPermissionID[]} requiredPermissions The required permissions to check.
-   * @returns {boolean} Whether or not the user has the required permission.
-   */
-  // todo: remove
-  isAuthorized: (requiredPermissions: TUserPermissionID[]) => boolean
 }
 
 /**
@@ -183,7 +171,7 @@ export interface IPromptOptions {
  */
 export interface INotifyOptions {
   duration?: number | null
-  buttons?: Array<IButtonText>
+  buttons?: IButtonText[]
   errorMessage?: boolean
 }
 
@@ -202,7 +190,7 @@ const GLOBAL_CONTEXT_VALUES_DEFAULT: TGlobalContextValues = {
   loadingMinTimeReached: false,
   pageSwitchMinTimeReached: true,
   error: null,
-  tooltips: React.createRef(),
+  tooltip: React.createRef<HTMLDivElement>(),
   tooltipDescription: '',
   notifications: [],
   postLoadNotifications: [],
@@ -299,7 +287,7 @@ const useGlobalContextDefinition = (context: TGlobalContext) => {
   const [pageSwitchMinTimeReached, setPageSwitchMinTimeReached] =
     context.pageSwitchMinTimeReached
   const [error, setError] = context.error
-  const [tooltips, setTooltips] = context.tooltips
+  const [tooltip, setTooltip] = context.tooltip
   const [tooltipDescription, setTooltipDescription] = context.tooltipDescription
   const [notifications, setNotifications] = context.notifications
   const [postLoadNotifications, setPostLoadNotifications] =
@@ -553,14 +541,14 @@ const useGlobalContextDefinition = (context: TGlobalContext) => {
       options: IConfirmOptions = {},
     ): void => {
       let confirmation: IConfirmation = {
-        confirmAjaxStatus: EAjaxStatus.NotLoaded,
-        alternateAjaxStatus: EAjaxStatus.NotLoaded,
+        confirmAjaxStatus: 'NotLoaded',
+        alternateAjaxStatus: 'NotLoaded',
         active: true,
         confirmationMessage: message,
         handleConfirmation: (entry: string) => {
           setConfirmation({
             ...confirmation,
-            confirmAjaxStatus: EAjaxStatus.Loading,
+            confirmAjaxStatus: 'Loading',
           })
           handleConfirmation(() => {
             setConfirmation(null)
@@ -571,7 +559,7 @@ const useGlobalContextDefinition = (context: TGlobalContext) => {
               if (options.handleAlternate) {
                 setConfirmation({
                   ...confirmation,
-                  alternateAjaxStatus: EAjaxStatus.Loading,
+                  alternateAjaxStatus: 'Loading',
                 })
                 options.handleAlternate(() => {
                   setConfirmation(null)
@@ -637,62 +625,6 @@ const useGlobalContextDefinition = (context: TGlobalContext) => {
       } catch (error: any) {
         finishLoading()
         handleError('Failed to logout.')
-      }
-    },
-    // todo: remove
-    isAuthorized: (requiredPermissions: TUserPermissionID[]): boolean => {
-      // Current METIS session.
-      if (session) {
-        // Current user in session.
-        let { user: currentUser } = session
-        // What the current user is allowed
-        // to do based on their role.
-        let { permissions: rolePermissions } = currentUser.role
-        // What the current user is allowed
-        // to do based on their specific
-        // permissions.
-        let { expressPermissions } = currentUser
-        // Check if the user has the required
-        // permissions.
-        let roleHasRequiredPermissions: boolean = UserPermission.hasPermissions(
-          rolePermissions,
-          requiredPermissions,
-        )
-        // Check to see if the user has been
-        // given specific permissions that
-        // override their role permissions.
-        let userHasSpecificPermissions: boolean = UserPermission.hasPermissions(
-          expressPermissions,
-          requiredPermissions,
-        )
-
-        // If the current user in the
-        // session has the revoked
-        // access role, they are not
-        // authorized to perform any
-        // actions.
-        if (currentUser.role.id === 'revokedAccess') {
-          return false
-        }
-        // If the current user in session has a role
-        // with the required permission(s), or if the
-        // user has been given specific permissions
-        // that override their role permissions, then
-        // they are authorized to perform the action.
-        else if (roleHasRequiredPermissions || userHasSpecificPermissions) {
-          return true
-        }
-        // If neither of the above are true, then the
-        // current user in session should not be
-        // authorized to perform the action.
-        else {
-          return false
-        }
-      }
-      // If there is no session, the user is not
-      // authorized to perform the action.
-      else {
-        return false
       }
     },
   }

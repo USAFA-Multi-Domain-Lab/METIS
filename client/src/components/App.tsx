@@ -40,7 +40,7 @@ export type TAppError = {
    */
   message: string
   notifyMethod?: TAppErrorNotifyMethod // Default is page.
-  solutions?: Array<IButtonText> // Only used when handled with error page.
+  solutions?: IButtonText[] // Only used when handled with error page.
 } & (
   | {
       notifyMethod?: 'bubble'
@@ -48,7 +48,7 @@ export type TAppError = {
     }
   | {
       notifyMethod?: 'page'
-      solutions?: Array<IButtonText>
+      solutions?: IButtonText[]
     }
 )
 
@@ -77,10 +77,10 @@ function App(props: {}): JSX.Element | null {
   const globalContext = useGlobalContext()
 
   const [session] = globalContext.session
-  const [tooltips] = globalContext.tooltips
+  const [appMountHandled, setAppMountHandled] = globalContext.appMountHandled
+  const [tooltip, setTooltip] = globalContext.tooltip
   const [tooltipDescription, setTooltipDescription] =
     globalContext.tooltipDescription
-  const [appMountHandled, setAppMountHandled] = globalContext.appMountHandled
   const [_, setMissionNodeColors] = globalContext.missionNodeColors
   const [loading] = globalContext.loading
   const [loadingMinTimeReached] = globalContext.loadingMinTimeReached
@@ -90,6 +90,7 @@ function App(props: {}): JSX.Element | null {
   const [currentPagePath] = globalContext.currentPagePath
   const [currentPageProps] = globalContext.currentPageProps
   const [error] = globalContext.error
+
   const [prompt] = globalContext.prompt
 
   const {
@@ -108,41 +109,41 @@ function App(props: {}): JSX.Element | null {
    * @param event The mouse event that triggered the tooltip position to be recalculated.
    */
   const positionTooltip = (event: MouseEvent): void => {
-    let tooltips_elm: HTMLDivElement | null = tooltips.current
+    let tooltip_elm: HTMLDivElement | null = tooltip.current
 
-    if (tooltips_elm) {
+    if (tooltip_elm) {
       let pageWidth = window.innerWidth - 25
       let pageHeight = window.innerHeight - 25
-      let tooltipsWidth: number = tooltips_elm.clientWidth
-      let tooltipsHeight: number = tooltips_elm.clientHeight
+      let tooltipWidth: number = tooltip_elm.clientWidth
+      let tooltipHeight: number = tooltip_elm.clientHeight
       let mouseX: number = event.pageX
       let mouseY: number = event.pageY
       let scrollY: number = window.scrollY
-      let tooltipsDestinationX: number = pageWidth / 2 - tooltipsWidth / 2
+      let tooltipsDestinationX: number = pageWidth / 2 - tooltipWidth / 2
       let tooltipsDestinationY: number = mouseY // scrollY + pageHeight / 2
 
       // -- tooltip destination x --
 
       while (tooltipsDestinationX > mouseX) {
-        tooltipsDestinationX -= tooltipsWidth
+        tooltipsDestinationX -= tooltipWidth
       }
-      while (tooltipsDestinationX + tooltipsWidth < mouseX) {
-        tooltipsDestinationX += tooltipsWidth
+      while (tooltipsDestinationX + tooltipWidth < mouseX) {
+        tooltipsDestinationX += tooltipWidth
       }
       if (tooltipsDestinationX < tooltipsOffsetX) {
         tooltipsDestinationX = tooltipsOffsetX
       }
-      if (tooltipsDestinationX > pageWidth - tooltipsWidth - tooltipsOffsetX) {
-        tooltipsDestinationX = pageWidth - tooltipsWidth - tooltipsOffsetX
+      if (tooltipsDestinationX > pageWidth - tooltipWidth - tooltipsOffsetX) {
+        tooltipsDestinationX = pageWidth - tooltipWidth - tooltipsOffsetX
       }
 
-      if (mouseY - scrollY > pageHeight - tooltipsHeight - tooltipsOffsetY) {
-        tooltipsDestinationY -= tooltipsHeight + tooltipsOffsetY
+      if (mouseY - scrollY > pageHeight - tooltipHeight - tooltipsOffsetY) {
+        tooltipsDestinationY -= tooltipHeight + tooltipsOffsetY
       } else {
         tooltipsDestinationY += tooltipsOffsetY
       }
 
-      tooltips_elm.style.transform = `translate(${tooltipsDestinationX}px, ${tooltipsDestinationY}px)`
+      tooltip_elm.style.transform = `translate(${tooltipsDestinationX}px, ${tooltipsDestinationY}px)`
     }
   }
 
@@ -163,11 +164,11 @@ function App(props: {}): JSX.Element | null {
         document.addEventListener('drag', positionTooltip)
 
         // Initialize tooltips.
-        let tooltips_elm: HTMLDivElement | null | undefined = tooltips.current
+        let tooltip_elm: HTMLDivElement | null = tooltip.current
 
-        if (tooltips_elm !== null) {
-          tooltips_elm.id = ''
-          tooltips_elm.style.visibility = 'hidden'
+        if (tooltip_elm) {
+          tooltip_elm.style.opacity = '0'
+          tooltip_elm.style.transition = 'opacity 0ms'
           setTooltipDescription('')
         }
 
@@ -249,7 +250,9 @@ function App(props: {}): JSX.Element | null {
 
   let className: string = 'App'
 
-  // This will render the current page.
+  /**
+   * Renders the current page.
+   */
   const renderCurrentPage = (): JSX.Element | null => {
     let Page = pageRegistry.get(currentPagePath)
 
@@ -268,7 +271,7 @@ function App(props: {}): JSX.Element | null {
 
   return (
     <div className={className} key={'App'}>
-      <div className='tooltips' ref={tooltips}>
+      <div className='Tooltip' ref={tooltip}>
         <Markdown
           markdown={tooltipDescription}
           theme={MarkdownTheme.ThemeSecondary}
