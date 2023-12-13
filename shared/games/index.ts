@@ -1,14 +1,14 @@
 import context from '../context'
-import { TUserJSON } from '../users'
-import { IMission, IMissionJSON } from 'metis/missions'
-import { IMissionAction } from '../missions/actions'
+import { TCommonUserJson as TUserJson } from '../users'
+import { TCommonMission, IMissionJson as IMissionJson } from 'metis/missions'
+import { TCommonMissionAction } from '../missions/actions'
 import axios, { AxiosError } from 'axios'
-import { IMissionNode } from '../missions/nodes'
+import { TCommonMissionNode } from '../missions/nodes'
 
-export interface IGameJSON {
+export interface IGameJson {
   gameID: string
-  mission: IMissionJSON
-  participants: TUserJSON[]
+  mission: IMissionJson
+  participants: TUserJson[]
   resources: number
 }
 
@@ -17,9 +17,9 @@ export interface IGameJSON {
  */
 export default abstract class Game<
   TParticpant extends { userID: string },
-  TMission extends IMission,
-  TMissionNode extends IMissionNode,
-  TMissionAction extends IMissionAction,
+  TMission extends TCommonMission,
+  TMissionNode extends TCommonMissionNode,
+  TMissionAction extends TCommonMissionAction,
 > {
   /**
    * The ID of the game.
@@ -145,9 +145,9 @@ export default abstract class Game<
 
   /**
    * Converts the Game object to JSON.
-   * @returns {IGameJSON} A JSON representation of the game.
+   * @returns {IGameJson} A JSON representation of the game.
    */
-  public abstract toJSON(): IGameJSON
+  public abstract toJson(): IGameJson
 
   public static API_ENDPOINT: string = '/api/v1/games'
 }

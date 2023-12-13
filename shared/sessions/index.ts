@@ -1,10 +1,10 @@
-import { TUserJSON } from 'metis/users'
+import { TCommonUserJson } from 'metis/users'
 
 /**
  * The JSON representation of a MetisSession object.
  */
 export type TMetisSessionJSON = {
-  user: TUserJSON
+  user: TCommonUserJson
   inGame: boolean
 } | null
 

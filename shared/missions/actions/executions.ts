@@ -1,5 +1,5 @@
-import { IMissionAction } from '.'
-import { IMissionNode } from '../nodes'
+import { TCommonMissionAction } from '.'
+import { TCommonMissionNode } from '../nodes'
 
 /**
  * The JSON representation of an action execution.
@@ -30,11 +30,11 @@ export default interface IActionExecution {
   /**
    * The action executed.
    */
-  action: IMissionAction
+  action: TCommonMissionAction
   /**
    * The node upon which the action executed.
    */
-  node: IMissionNode
+  node: TCommonMissionNode
   /**
    * The ID of the action executed.
    */
@@ -54,5 +54,5 @@ export default interface IActionExecution {
   /**
    * Converts the action execution to JSON.
    */
-  toJSON: () => TActionExecutionJSON
+  toJson: () => TActionExecutionJSON
 }

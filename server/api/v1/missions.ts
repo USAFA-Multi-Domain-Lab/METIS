@@ -12,11 +12,10 @@ import { authorized } from '../../middleware/users'
 import uploads from '../../middleware/uploads'
 import { RequestBodyFilters, defineRequests } from '../../middleware/requests'
 import MissionNode from '../../missions/nodes'
-import { assetData } from '../../effects/effect-data'
+import { effectData } from '../../effects/effect-data'
 import MetisServer from 'metis/server'
 import { TMetisRouterMap } from 'metis/server/http/router'
-import { IMissionJSON } from 'metis/missions'
-import User from 'metis/users'
+import { IMissionJson } from 'metis/missions'
 
 type MulterFile = Express.Multer.File
 
@@ -49,7 +48,7 @@ export const routerMap: TMetisRouterMap = (
         initialResources,
         nodeStructure,
         nodeData,
-      } = request.body as IMissionJSON
+      } = request.body as IMissionJson
 
       let mission = new MissionModel({
         name,
@@ -490,7 +489,7 @@ export const routerMap: TMetisRouterMap = (
       if (missionID === undefined) {
         let queries: any = {}
 
-        if (!User.isAuthorized(session, ['WRITE'])) {
+        if (!session?.user.isAuthorized(['WRITE'])) {
           queries.live = true
         }
 
@@ -520,7 +519,7 @@ export const routerMap: TMetisRouterMap = (
               return response.sendStatus(404)
             } else if (
               !mission.live &&
-              !User.isAuthorized(session, ['WRITE'])
+              !session?.user.isAuthorized(['WRITE'])
             ) {
               return response.sendStatus(401)
             } else {
@@ -616,17 +615,18 @@ export const routerMap: TMetisRouterMap = (
     response.json(MissionNode.COLOR_OPTIONS)
   })
 
-  // -- GET /api/v1/missions/assets/
+  // -- GET /api/v1/missions/effects/
   // This will return all the available
-  // assets that can be selected to be
+  // effects that can be selected to be
   // affected by an action after it is
   // executed.
+  // todo: remove
   router.get(
-    '/assets/',
-    authorized(['READ']),
+    '/effects/',
+    authorized(['READ', 'WRITE', 'DELETE']),
     defineRequests({}),
     (request, response) => {
-      response.json({ assetData })
+      response.json({ effectData })
     },
   )
 

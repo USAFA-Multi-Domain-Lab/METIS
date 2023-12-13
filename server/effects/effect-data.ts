@@ -1,6 +1,6 @@
 import { AnyObject } from 'metis/toolbox/objects'
 
-export const assetData: AnyObject = {
+export const effectData: AnyObject = {
   cyber_city: {
     bank: {
       color: {

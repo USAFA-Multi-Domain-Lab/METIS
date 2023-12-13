@@ -1,7 +1,7 @@
-import { TUserJSON } from 'metis/users'
+import { TCommonUserJson } from 'metis/users'
 
 // Default student user data.
-export const studentUserData: TUserJSON = {
+export const studentUserData: TCommonUserJson = {
   userID: 'student1',
   roleID: 'student',
   firstName: 'student',
@@ -11,7 +11,7 @@ export const studentUserData: TUserJSON = {
   password: 'password',
 }
 // Default instructor user data.
-export const instructorUserData: TUserJSON = {
+export const instructorUserData: TCommonUserJson = {
   userID: 'instructor1',
   roleID: 'instructor',
   firstName: 'instructor',
@@ -21,7 +21,7 @@ export const instructorUserData: TUserJSON = {
   password: 'password',
 }
 // Default admin user data.
-export const adminUserData: TUserJSON = {
+export const adminUserData: TCommonUserJson = {
   userID: 'admin',
   roleID: 'admin',
   firstName: 'admin',

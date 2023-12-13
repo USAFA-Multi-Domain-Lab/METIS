@@ -8,17 +8,13 @@ import { useMountHandler, useRequireSession } from 'src/toolbox/hooks'
 import { useGlobalContext } from 'src/context'
 import { AxiosError } from 'axios'
 import ClientUser from 'src/users'
-import User from '../../../../shared/users'
 
 export interface IUserFormPage extends IPage {
   // If this is null, then a new user is being created.
   userID: string | null
 }
 
-export enum EUserFormPurpose {
-  Create,
-  Update,
-}
+export type TUserFormPurpose = 'Create' | 'Update'
 
 export default function UserFormPage(props: IUserFormPage): JSX.Element | null {
   /* -- GLOBAL CONTEXT -- */
@@ -50,15 +46,20 @@ export default function UserFormPage(props: IUserFormPage): JSX.Element | null {
 
   /* -- COMPONENT EFFECTS -- */
 
+  // This will handle the mount of the
+  // component.
   const [mountHandled] = useMountHandler(async (done) => {
     let userID: string | null = props.userID
     let existsInDatabase: boolean = userID !== null
 
     // Handle the editing of an existing user.
-    if (existsInDatabase) {
+    if (
+      existsInDatabase &&
+      currentUser.isAuthorized(['READ', 'WRITE', 'DELETE'])
+    ) {
       try {
         beginLoading('Loading user...')
-        setUser(await ClientUser.fetchOne(userID!))
+        setUser(await ClientUser.fetchOne(userID as string))
       } catch {
         handleError('Failed to load user.')
       }
@@ -72,19 +73,17 @@ export default function UserFormPage(props: IUserFormPage): JSX.Element | null {
     done()
   })
 
+  /* -- SESSION-SPECIFIC LOGIC -- */
+
   // Require session.
   const [session] = useRequireSession()
 
-  /* -- SESSION-SPECIFIC LOGIC -- */
+  // Grab the current user from the session.
+  const { user: currentUser } = session
 
-  // Require session, mount to be handled,
-  // and for the current user to have
-  // restricted access.
-  if (
-    session === null ||
-    !mountHandled ||
-    !User.isAuthorized(session, ['READ', 'WRITE', 'DELETE'])
-  ) {
+  // Require mount to be handled for
+  // component to render.
+  if (!mountHandled) {
     return null
   }
 
@@ -97,12 +96,12 @@ export default function UserFormPage(props: IUserFormPage): JSX.Element | null {
       setAreUnsavedChanges(false)
       setUsernameAlreadyExists(false)
 
-      if (!existsInDatabase && User.isAuthorized(session, ['WRITE'])) {
+      if (!existsInDatabase && currentUser.isAuthorized('WRITE')) {
         try {
           let currentUserID: string = user.userID
           beginLoading('Creating user...')
           await ClientUser.create(user)
-          setUser(await ClientUser.fetchOne(currentUserID!))
+          setUser(await ClientUser.fetchOne(currentUserID))
           notify('User successfully saved.')
           finishLoading()
           setExistsInDatabase(true)
@@ -118,11 +117,11 @@ export default function UserFormPage(props: IUserFormPage): JSX.Element | null {
           finishLoading()
           setAreUnsavedChanges(true)
         }
-      } else if (existsInDatabase && User.isAuthorized(session, ['WRITE'])) {
+      } else if (existsInDatabase && currentUser.isAuthorized('WRITE')) {
         try {
           beginLoading('Updating user...')
           await ClientUser.update(user)
-          setUser(await ClientUser.fetchOne(user.userID!))
+          setUser(await ClientUser.fetchOne(user.userID))
           notify('User successfully saved.')
           finishLoading()
         } catch (error: any) {
@@ -180,7 +179,7 @@ export default function UserFormPage(props: IUserFormPage): JSX.Element | null {
   /* -- RENDER -- */
 
   let isEmptyString: boolean = userEmptyStringArray.length > 0
-  let userFormPurpose: EUserFormPurpose
+  let userFormPurpose: TUserFormPurpose
 
   // This will gray out the save button
   // if there are no unsaved changes or
@@ -198,27 +197,35 @@ export default function UserFormPage(props: IUserFormPage): JSX.Element | null {
 
   // Determine user form purpose.
   if (!existsInDatabase && user.passwordIsRequired) {
-    userFormPurpose = EUserFormPurpose.Create
+    userFormPurpose = 'Create'
   } else if (existsInDatabase && !user.passwordIsRequired) {
-    userFormPurpose = EUserFormPurpose.Update
+    userFormPurpose = 'Update'
   } else {
     throw new Error(
       `Purpose for form page could not be determined.\nExists in database: "${existsInDatabase}"\nPassword is required: "${user.passwordIsRequired}"`,
     )
   }
 
+  // Require mount to be handled and for
+  // the current user to have restricted
+  // access.
+  if (!mountHandled || !currentUser.isAuthorized(['READ', 'WRITE', 'DELETE'])) {
+    return null
+  }
+
   const renderUserEntry = (): JSX.Element | null => {
-    if (userFormPurpose === EUserFormPurpose.Create) {
+    if (userFormPurpose === 'Create') {
       return (
         <CreateUserEntry
           user={user}
           userEmptyStringArray={userEmptyStringArray}
           usernameAlreadyExists={usernameAlreadyExists}
+          session={session}
           setUserEmptyStringArray={setUserEmptyStringArray}
           handleChange={handleChange}
         />
       )
-    } else if (userFormPurpose === EUserFormPurpose.Update) {
+    } else if (userFormPurpose === 'Update') {
       return (
         <EditUserEntry
           user={user}

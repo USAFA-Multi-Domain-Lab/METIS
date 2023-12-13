@@ -6,9 +6,6 @@ import { Detail, DetailBox, DetailNumber } from '../form/Form'
 import NodeActionAssets from './NodeActionAssets'
 import './NodeActionEntry.scss'
 
-// This will render an action
-// available to a node.
-
 /**
  * This will render the entry fields for an action
  * as a part of the NodeActionDetails component.

@@ -61,7 +61,7 @@ export default class ClientActionExecution implements IActionExecution {
   }
 
   // Implemented
-  public toJSON(): TActionExecutionJSON {
+  public toJson(): TActionExecutionJSON {
     return {
       actionID: this.actionID,
       nodeID: this.nodeID,

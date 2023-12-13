@@ -1,5 +1,5 @@
 import axios from 'axios'
-import Game, { IGameJSON } from '../../../shared/games'
+import Game, { IGameJson } from '../../../shared/games'
 import ServerConnection from 'src/connect/server'
 import { IServerDataTypes, TServerData } from '../../../shared/connect/data'
 import ClientMission from 'src/missions'
@@ -33,7 +33,7 @@ export default class GameClient extends Game<
   }
 
   // todo: Between the time the client joins and this object is constructed, there is possibility that changes have been made in the game. This should be handled.
-  public constructor(data: IGameJSON, server: ServerConnection) {
+  public constructor(data: IGameJson, server: ServerConnection) {
     let gameID: string = data.gameID
     let mission: ClientMission = new ClientMission(data.mission)
     let participants: ClientUser[] = data.participants.map(
@@ -75,11 +75,11 @@ export default class GameClient extends Game<
   }
 
   // Implemented
-  public toJSON(): IGameJSON {
+  public toJson(): IGameJson {
     return {
       gameID: this.gameID,
-      mission: this.mission.toJSON({ revealedOnly: true }),
-      participants: this.participants.map((user) => user.toJSON()),
+      mission: this.mission.toJson({ revealedOnly: true }),
+      participants: this.participants.map((user) => user.toJson()),
       resources: this.resources,
     }
   }
@@ -275,8 +275,8 @@ export default class GameClient extends Game<
           // Call API to join the game with
           // the given game ID. Await the
           // game JSON.
-          let gameJSON: IGameJSON = (
-            await axios.put<IGameJSON>(`${Game.API_ENDPOINT}/join/`, {
+          let gameJSON: IGameJson = (
+            await axios.put<IGameJson>(`${Game.API_ENDPOINT}/join/`, {
               gameID,
             })
           ).data

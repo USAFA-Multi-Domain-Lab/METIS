@@ -1,4 +1,4 @@
-import Game, { IGameJSON } from 'metis/games'
+import Game, { IGameJson } from 'metis/games'
 import ClientConnection from 'metis/server/connect/clients'
 import { v4 as generateHash } from 'uuid'
 import { IClientDataTypes, TServerData } from 'metis/connect/data'
@@ -51,15 +51,15 @@ export default class GameServer extends Game<
   }
 
   // Implemented
-  public toJSON(): IGameJSON {
+  public toJson(): IGameJson {
     return {
       gameID: this.gameID,
-      mission: this.mission.toJSON({
+      mission: this.mission.toJson({
         revealedOnly: true,
         includeGameData: true,
       }),
       participants: this.participants.map((client: ClientConnection) =>
-        client.user.toJSON(),
+        client.user.toJson(),
       ),
       resources: this.resources,
     }
@@ -206,7 +206,7 @@ export default class GameServer extends Game<
       method: 'node-opened',
       nodeID,
       revealedChildNodes: node.childNodes.map((node) =>
-        node.toJSON({ includeGameData: true }),
+        node.toJson({ includeGameData: true }),
       ),
       request,
       requesterID: participant.userID,
@@ -267,7 +267,7 @@ export default class GameServer extends Game<
         // initiated event.
         let initiationPayload: TServerData<'action-execution-initiated'> = {
           method: 'action-execution-initiated',
-          execution: execution.toJSON(),
+          execution: execution.toJson(),
           request,
         }
 
@@ -283,7 +283,7 @@ export default class GameServer extends Game<
     // completed event.
     let completionPayload: TServerData<'action-execution-completed'> = {
       method: 'action-execution-completed',
-      outcome: outcome.toJSON(),
+      outcome: outcome.toJson(),
       request,
       requesterID: participant.userID,
     }
@@ -292,7 +292,7 @@ export default class GameServer extends Game<
     // successful.
     if (outcome.successful) {
       completionPayload.revealedChildNodes = action.node.childNodes.map(
-        (node) => node.toJSON({ includeGameData: true }),
+        (node) => node.toJson({ includeGameData: true }),
       )
     }
 

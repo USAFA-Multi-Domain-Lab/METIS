@@ -31,16 +31,27 @@ export default class UserPermission implements TUserPermission {
   /**
    * Checks whether the user has the given permissions.
    * @param {UserPermission[]} userPermissions The user's permissions.
-   * @param {TUserPermissionID[]} requiredPermissionIDs The required permission IDs.
+   * @param {TUserPermissionID | TUserPermissionID[]} requiredPermissionIDs The required permission ID(s).
    * @returns {boolean} Whether the user has the given permissions.
+   * @note A single permission ID can be passed in as a string, or multiple permission IDs can be passed in as an array of strings.
+   * @example // Check if the user has the 'createUser' permission:
+   * UserPermission.hasPermissions(userPermissions, 'createUser')
+   * @example // Check if the user has the 'createUser' and 'deleteUser' permissions:
+   * UserPermission.hasPermissions(userPermissions, ['createUser', 'deleteUser'])
    */
   public static hasPermissions(
     userPermissions: UserPermission[],
-    requiredPermissionIDs: TUserPermissionID[],
+    requiredPermissionIDs: TUserPermissionID | TUserPermissionID[],
   ): boolean {
     // This will contain all of the required permissions
     // that the user has.
     let requiredPermissionsInUser: TUserPermissionID[] = []
+
+    // If the required permission IDs is not an array,
+    // then make it an array.
+    if (!Array.isArray(requiredPermissionIDs)) {
+      requiredPermissionIDs = [requiredPermissionIDs]
+    }
 
     // Loop through the user's permissions to check if
     // the user has all of the required permissions.

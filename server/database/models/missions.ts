@@ -1,6 +1,7 @@
 import mongoose, { Schema } from 'mongoose'
 import MetisDatabase from 'metis/server/database'
 import SanitizedHTML from 'metis/server/database/schema-types/html'
+import { TCommonEffectJson } from 'metis/missions/actions/effects'
 
 let ObjectId = mongoose.Types.ObjectId
 
@@ -209,6 +210,18 @@ const validate_mission_nodeData_actions_resourceCost = (
   return nonNegativeInteger
 }
 
+/**
+ * Validator for targetEnvironment.effects.
+ * @param {TCommonEffectJson[]} effects The effects to validate.
+ * @returns {boolean} Whether the effects are valid.
+ */
+const validate_mission_nodeData_actions_effects = (
+  effects: TCommonEffectJson[],
+): boolean => {
+  // todo: implement validation
+  return true
+}
+
 /* -- SCHEMA -- */
 
 export const MissionSchema: Schema = new Schema(
@@ -287,6 +300,7 @@ export const MissionSchema: Schema = new Schema(
                   type: SanitizedHTML,
                   required: true,
                 },
+                // todo: remove scripts (deprecated)
                 scripts: {
                   type: [
                     {
@@ -298,6 +312,24 @@ export const MissionSchema: Schema = new Schema(
                     },
                   ],
                   required: true,
+                },
+                effects: {
+                  type: [
+                    {
+                      id: { type: String, required: true },
+                      name: { type: String, required: true },
+                      description: { type: String, required: true },
+                      targetId: { type: String, required: true },
+                      args: {
+                        entityName: { type: String, required: true },
+                        requestPath: { type: String, required: true },
+                        requestMethod: { type: String, required: true },
+                        requestData: { type: Object, required: true },
+                      },
+                    },
+                  ],
+                  required: true,
+                  validate: validate_mission_nodeData_actions_effects,
                 },
               },
             ],
@@ -316,6 +348,8 @@ export const MissionSchema: Schema = new Schema(
   },
 )
 
+/* -- SCHEMA METHODS -- */
+
 // Called before a save is made
 // to the database.
 MissionSchema.pre('save', function (next) {
@@ -328,11 +362,13 @@ MissionSchema.pre('update', function (next) {
   validate_missions(this, next)
 })
 
+/* -- SCHEMA PLUGINS -- */
+
 MissionSchema.plugin((schema) => {
   // This is responsible for removing
   // excess properties from the mission
   // data that should be hidden from the
-  // API and for hidding deleted missions.
+  // API and for hiding deleted missions.
   schema.query.queryForApiResponse = function (
     findFunctionName: 'find' | 'findOne',
   ) {
@@ -380,6 +416,7 @@ MissionSchema.plugin((schema) => {
   }
 })
 
-const MissionModel: any = mongoose.model('Mission', MissionSchema)
+/* -- MODEL -- */
 
+const MissionModel: any = mongoose.model('Mission', MissionSchema)
 export default MissionModel

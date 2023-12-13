@@ -1,6 +1,6 @@
 import ClientMission from 'src/missions'
 import { useState } from 'react'
-import { EAjaxStatus } from '../../../../../shared/toolbox/ajax'
+import { TAjaxStatus } from '../../../../../shared/toolbox/ajax'
 import { Detail, DetailBox, DetailNumber, DetailToggle } from '../form/Form'
 import './MissionEntry.scss'
 import { useGlobalContext } from 'src/context'
@@ -49,9 +49,7 @@ export default function MissionEntry(props: {
 
   /* -- COMPONENT STATE -- */
 
-  const [liveAjaxStatus, setLiveAjaxStatus] = useState<EAjaxStatus>(
-    EAjaxStatus.NotLoaded,
-  )
+  const [liveAjaxStatus, setLiveAjaxStatus] = useState<TAjaxStatus>('NotLoaded')
   const [deliverNameError, setDeliverNameError] = useState<boolean>(false)
   const [errorMessage, setErrorMessage] = useState<string>(
     'At least one character is required here.',
@@ -79,7 +77,7 @@ export default function MissionEntry(props: {
     try {
       // Update state.
       mission.live = live
-      setLiveAjaxStatus(EAjaxStatus.Loading)
+      setLiveAjaxStatus('Loading')
 
       // Make the request to the server.
       await ClientMission.setLive(mission.missionID, live)
@@ -87,19 +85,19 @@ export default function MissionEntry(props: {
       // Notify the user of success.
       if (live) {
         notify(`"${mission.name}" is now live.`)
-        setLiveAjaxStatus(EAjaxStatus.Loaded)
+        setLiveAjaxStatus('Loaded')
       } else {
         notify(`"${mission.name}" is no longer live.`)
-        setLiveAjaxStatus(EAjaxStatus.Loaded)
+        setLiveAjaxStatus('Loaded')
       }
     } catch (error) {
       // Notify user of error.
       if (live) {
         notify(`Failed to make \"${mission.name}\"  go live.`)
-        setLiveAjaxStatus(EAjaxStatus.Error)
+        setLiveAjaxStatus('Error')
       } else {
         notify(`Failed to make \"${mission.name}\" no longer live.`)
-        setLiveAjaxStatus(EAjaxStatus.Error)
+        setLiveAjaxStatus('Error')
       }
       // Revert mission.live to the previous state.
       mission.live = previousLiveState

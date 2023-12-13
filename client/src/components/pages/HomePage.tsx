@@ -6,7 +6,6 @@ import Notification from '../../notifications'
 import Tooltip from '../content/communication/Tooltip'
 import List, { ESortByMethod } from '../content/general-layout/List'
 import MissionModificationPanel from '../content/user-controls/MissionModificationPanel'
-import { EAjaxStatus } from '../../../../shared/toolbox/ajax'
 import {
   ButtonSVG,
   EButtonSVGPurpose,
@@ -18,8 +17,6 @@ import { useGlobalContext } from 'src/context'
 import ClientMission from 'src/missions'
 import { AxiosError } from 'axios'
 import ClientUser from 'src/users'
-import UserPermission from '../../../../shared/users/permissions'
-import User from '../../../../shared/users'
 
 export interface IHomePage extends IPage {}
 
@@ -55,6 +52,30 @@ export default function HomePage(props: IHomePage): JSX.Element | null {
 
   const [missions, setMissions] = useState<ClientMission[]>([])
   const [users, setUsers] = useState<ClientUser[]>([])
+
+  /* -- COMPONENT EFFECTS -- */
+  // Require session for page.
+  const [session] = useRequireSession()
+
+  // Grab the current user from the session.
+  let { user: currentUser } = session
+
+  const [mountHandled, remount] = useMountHandler(async (done) => {
+    if (currentUser.isAuthorized('READ')) {
+      await loadMissions()
+    }
+
+    // The current user in the session
+    // must have restricted access to
+    // view the users.
+    if (currentUser.isAuthorized(['READ', 'WRITE', 'DELETE'])) {
+      await loadUsers()
+      await sortUsers()
+    }
+
+    finishLoading()
+    done()
+  })
 
   /* -- COMPONENT FUNCTIONS -- */
 
@@ -142,38 +163,6 @@ export default function HomePage(props: IHomePage): JSX.Element | null {
       }
     })
   }
-
-  /* -- COMPONENT EFFECTS -- */
-  // Require session for page.
-  const [session] = useRequireSession()
-
-  const [mountHandled, remount] = useMountHandler(async (done) => {
-    if (User.isAuthorized(session, ['READ'])) {
-      await loadMissions()
-    }
-
-    // The current user in the session
-    // must have restricted access to
-    // view the users.
-    if (User.isAuthorized(session, ['READ', 'WRITE', 'DELETE'])) {
-      await loadUsers()
-      await sortUsers()
-    }
-
-    finishLoading()
-    done()
-  })
-
-  /* -- SESSION-SPECIFIC LOGIC -- */
-
-  // Return null if the mount has
-  // not been handled or if the
-  // session is null.
-  if (!mountHandled || session === null) {
-    return null
-  }
-
-  /* -- COMPONENT FUNCTIONS (CONTINUED) -- */
 
   // This will import files as missions.
   const importMissionFiles = async (files: FileList) => {
@@ -311,7 +300,7 @@ export default function HomePage(props: IHomePage): JSX.Element | null {
 
       page_elm.classList.remove('DropPending')
 
-      if (files.length > 0 && User.isAuthorized(session, ['WRITE'])) {
+      if (files.length > 0 && currentUser.isAuthorized('WRITE')) {
         importMissionFiles(files)
       }
     }
@@ -372,7 +361,7 @@ export default function HomePage(props: IHomePage): JSX.Element | null {
   // This will start the process for
   // creating a new mission.
   const createMission = (): void => {
-    if (User.isAuthorized(session, ['WRITE'])) {
+    if (currentUser.isAuthorized('WRITE')) {
       goToPage('MissionFormPage', { missionID: null })
     }
   }
@@ -380,7 +369,7 @@ export default function HomePage(props: IHomePage): JSX.Element | null {
   // This will switch to the changelog
   // page.
   const viewChangelog = (): void => {
-    if (User.isAuthorized(session, ['READ', 'WRITE', 'DELETE'])) {
+    if (currentUser.isAuthorized(['READ', 'WRITE', 'DELETE'])) {
       goToPage('ChangelogPage', {})
     }
   }
@@ -421,7 +410,7 @@ export default function HomePage(props: IHomePage): JSX.Element | null {
   // This will switch to the user form
   // page with the selected user.
   const selectUser = (user: ClientUser) => {
-    if (User.isAuthorized(session, ['READ', 'WRITE'])) {
+    if (currentUser.isAuthorized(['READ', 'WRITE'])) {
       goToPage('UserFormPage', {
         userID: user.userID,
       })
@@ -431,7 +420,7 @@ export default function HomePage(props: IHomePage): JSX.Element | null {
   // This will switch to the user form
   // page with a new user.
   const createUser = () => {
-    if (User.isAuthorized(session, ['WRITE'])) {
+    if (currentUser.isAuthorized('WRITE')) {
       goToPage('UserFormPage', {
         userID: null,
       })
@@ -444,8 +433,14 @@ export default function HomePage(props: IHomePage): JSX.Element | null {
   // current user's role.
   let homePageClassName: string = 'HomePage Page FullView'
 
-  if (User.isAuthorized(session, ['READ', 'WRITE', 'DELETE'])) {
+  if (currentUser.isAuthorized(['READ', 'WRITE', 'DELETE'])) {
     homePageClassName += ' InstructorView'
+  }
+
+  // Require mount to be handled for
+  // component to render.
+  if (!mountHandled) {
+    return null
   }
 
   /* -- RENDER -- */
@@ -502,9 +497,9 @@ export default function HomePage(props: IHomePage): JSX.Element | null {
                     </div>
                     <MissionModificationPanel
                       mission={mission}
+                      session={session}
                       handleSuccessfulCopy={remount}
                       handleSuccessfulDeletion={remount}
-                      handleSuccessfulToggleLive={() => {}}
                     />
                   </div>
                 </>
@@ -514,7 +509,7 @@ export default function HomePage(props: IHomePage): JSX.Element | null {
             noItemsDisplay={
               <div className='NoContent'>No missions available...</div>
             }
-            ajaxStatus={EAjaxStatus.Loaded}
+            ajaxStatus={'Loaded'}
             applyItemStyling={() => {
               return {}
             }}
@@ -571,7 +566,7 @@ export default function HomePage(props: IHomePage): JSX.Element | null {
             noItemsDisplay={
               <div className='NoContent'>No users available...</div>
             }
-            ajaxStatus={EAjaxStatus.Loaded}
+            ajaxStatus={'Loaded'}
             applyItemStyling={() => {
               return {}
             }}

@@ -1,5 +1,5 @@
 import ClientMission from 'src/missions'
-import { EAjaxStatus } from '../../../../../shared/toolbox/ajax'
+import { TAjaxStatus } from '../../../../../shared/toolbox/ajax'
 import Toggle, { EToggleLockState } from '../user-controls/Toggle'
 import Tooltip from '../communication/Tooltip'
 import './MissionModificationPanel.scss'
@@ -7,35 +7,36 @@ import { MiniButtonSVGPanel } from './MiniButtonSVGPanel'
 import { EMiniButtonSVGPurpose, MiniButtonSVG } from './MiniButtonSVG'
 import { useState } from 'react'
 import { useGlobalContext } from 'src/context'
-import User from '../../../../../shared/users'
+import { TMetisSession } from '../../../../../shared/sessions'
+import ClientUser from 'src/users'
 
 export default function MissionModificationPanel(props: {
   mission: ClientMission
+  session: NonNullable<TMetisSession<ClientUser>>
   handleSuccessfulCopy: (resultingMission: ClientMission) => void
   handleSuccessfulDeletion: () => void
-  handleSuccessfulToggleLive: () => void
 }) {
   /* -- GLOBAL CONTEXT -- */
 
   const globalContext = useGlobalContext()
 
-  const [session] = globalContext.session
   const { goToPage, notify, confirm, beginLoading, finishLoading } =
     globalContext.actions
 
   /* -- COMPONENT VARIABLES -- */
 
   let mission: ClientMission = props.mission
+  let session: NonNullable<TMetisSession<ClientUser>> = props.session
   let currentActions: MiniButtonSVG[] = []
   let handleSuccessfulDeletion = props.handleSuccessfulDeletion
   let handleSuccessfulCopy = props.handleSuccessfulCopy
-  let handleSuccessfulToggleLive = props.handleSuccessfulToggleLive
+
+  // Grab the current user from the session.
+  let { user: currentUser } = session
 
   /* -- COMPONENT STATE -- */
 
-  const [liveAjaxStatus, setLiveAjaxStatus] = useState<EAjaxStatus>(
-    EAjaxStatus.NotLoaded,
-  )
+  const [liveAjaxStatus, setLiveAjaxStatus] = useState<TAjaxStatus>('NotLoaded')
 
   /* -- COMPONENT FUNCTIONS -- */
 
@@ -111,7 +112,7 @@ export default function MissionModificationPanel(props: {
     try {
       // Update state.
       mission.live = live
-      setLiveAjaxStatus(EAjaxStatus.Loading)
+      setLiveAjaxStatus('Loading')
 
       // Make the request to the server.
       await ClientMission.setLive(mission.missionID, live)
@@ -119,19 +120,19 @@ export default function MissionModificationPanel(props: {
       // Notify the user of success.
       if (live) {
         notify(`"${mission.name}" is now live.`)
-        setLiveAjaxStatus(EAjaxStatus.Loaded)
+        setLiveAjaxStatus('Loaded')
       } else {
         notify(`"${mission.name}" is no longer live.`)
-        setLiveAjaxStatus(EAjaxStatus.Loaded)
+        setLiveAjaxStatus('Loaded')
       }
     } catch (error) {
       // Notify user of error.
       if (live) {
         notify(`Failed to make \"${mission.name}\"  go live.`)
-        setLiveAjaxStatus(EAjaxStatus.Error)
+        setLiveAjaxStatus('Error')
       } else {
         notify(`Failed to make \"${mission.name}\" no longer live.`)
-        setLiveAjaxStatus(EAjaxStatus.Error)
+        setLiveAjaxStatus('Error')
       }
       // Revert mission.live to the previous state.
       mission.live = previousLiveState
@@ -176,16 +177,16 @@ export default function MissionModificationPanel(props: {
 
   let containerClassName: string = 'Hidden'
 
-  if (User.isAuthorized(session, ['READ', 'WRITE', 'DELETE'])) {
+  if (currentUser.isAuthorized(['READ', 'WRITE', 'DELETE'])) {
     containerClassName = 'MissionModificationPanel'
   }
 
   // Logic that will lock the mission toggle while a request is being sent
   // to set the mission.live paramter
   let lockLiveToggle: EToggleLockState = EToggleLockState.Unlocked
-  if (liveAjaxStatus === EAjaxStatus.Loading && mission.live) {
+  if (liveAjaxStatus === 'Loading' && mission.live) {
     lockLiveToggle = EToggleLockState.LockedActivation
-  } else if (liveAjaxStatus === EAjaxStatus.Loading && !mission.live) {
+  } else if (liveAjaxStatus === 'Loading' && !mission.live) {
     lockLiveToggle = EToggleLockState.LockedDeactivation
   } else {
     lockLiveToggle = EToggleLockState.Unlocked

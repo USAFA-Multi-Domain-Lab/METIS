@@ -1,8 +1,17 @@
 import ClientMission from '..'
 import MissionAction from '../../../../shared/missions/actions'
+import { TCommonEffectJson } from '../../../../shared/missions/actions/effects'
 import ClientMissionNode from '../nodes'
+import { ClientEffect } from './effects'
 
 export default class ClientMissionAction extends MissionAction<
   ClientMission,
-  ClientMissionNode
-> {}
+  ClientMissionNode,
+  ClientEffect
+> {
+  public parseEffects(data: TCommonEffectJson[]): ClientEffect[] {
+    return data.map((datum: TCommonEffectJson) => new ClientEffect(this, datum))
+  }
+}
+
+/* ------------------------------ CLIENT ACTION TYPES ------------------------------ */

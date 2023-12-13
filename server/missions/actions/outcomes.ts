@@ -41,7 +41,7 @@ export class ServerPotentialOutcome implements IActionOutcome {
    * @returns {ServerRealizedOutcome} The realized outcome.
    */
   public realize(): ServerRealizedOutcome {
-    return this.node.handleOutcome(this.toJSON())
+    return this.node.handleOutcome(this.toJson())
   }
 
   /**
@@ -55,7 +55,7 @@ export class ServerPotentialOutcome implements IActionOutcome {
   }
 
   // Inherited
-  public toJSON(): IActionOutcomeJSON {
+  public toJson(): IActionOutcomeJSON {
     return {
       actionID: this.actionID,
       nodeID: this.nodeID,
@@ -108,7 +108,7 @@ export class ServerRealizedOutcome implements IActionOutcome {
   }
 
   // Inherited
-  public toJSON(): IActionOutcomeJSON {
+  public toJson(): IActionOutcomeJSON {
     return {
       actionID: this.actionID,
       nodeID: this.nodeID,

@@ -15,9 +15,9 @@ export default class Info {
           '/api/v1/info/changelog/',
         )
         resolve(changelog)
-      } catch (error) {
+      } catch (error: any) {
         if (error instanceof AxiosError && error.response !== undefined) {
-          console.error(`${error.response.status}) Failed to get changelog:`)
+          console.error(`${error.response.status} Failed to get changelog:`)
         } else {
           console.error('Failed to get changelog:')
         }

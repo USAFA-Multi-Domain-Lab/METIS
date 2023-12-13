@@ -39,7 +39,7 @@ export default class ServerActionExecution implements IActionExecution {
   }
 
   // Implemented
-  public toJSON(): NonNullable<TActionExecutionJSON> {
+  public toJson(): NonNullable<TActionExecutionJSON> {
     return {
       actionID: this.actionID,
       nodeID: this.nodeID,

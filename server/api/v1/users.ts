@@ -6,9 +6,7 @@ import MetisSession from 'metis/server/sessions'
 import defineRequests, {
   RequestBodyFilters,
 } from 'metis/server/middleware/requests'
-import UserModel, {
-  hashPassword,
-} from 'metis/server/database/models/users/users'
+import UserModel, { hashPassword } from 'metis/server/database/models/users'
 import { authorized, validateUserRoles } from 'metis/server/middleware/users'
 import MetisDatabase from 'metis/server/database'
 import { databaseLogger } from '../../logging'

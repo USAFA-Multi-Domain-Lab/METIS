@@ -1,6 +1,1 @@
-export enum EAjaxStatus {
-  NotLoaded,
-  Loading,
-  Loaded,
-  Error,
-}
+export type TAjaxStatus = 'NotLoaded' | 'Loading' | 'Loaded' | 'Error'

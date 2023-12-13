@@ -18,7 +18,6 @@ import {
   ResizablePanel,
 } from '../content/general-layout/ResizablePanels'
 import MissionMap from '../content/game/MissionMap'
-import { EAjaxStatus } from '../../../../shared/toolbox/ajax'
 import NodeActions from '../content/game/NodeActions'
 
 export interface IGamePage extends IPage {
@@ -62,6 +61,12 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
   // Class names for various components.
   let className: string = 'GamePage Page'
   let resourcesClassName: string = 'Resources'
+
+  // Dynamic (default) sizing of the output panel.
+  let panel2DefaultSize: number = 400
+
+  // The current aspect ratio of the window.
+  let currentAspectRatio: number = window.innerWidth / window.innerHeight
 
   /* -- FUNCTIONS -- */
 
@@ -184,8 +189,9 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
           }}
           handleCloseRequest={clearSelections}
           handleGoBackRequest={() => {
-            if (selectedNode && selectedNode.actions.size === 1) {
-              clearSelections()
+            if (selectedNode && selectedNode.actions.size > 1) {
+              selectNode(selectedNode)
+              selectAction(null)
             }
           }}
         />
@@ -216,6 +222,14 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
   // add the red alert class to the resources.
   if (game.resources <= 0) {
     resourcesClassName += ' RedAlert'
+  }
+
+  // If the aspect ratio is greater than or equal to 16:9,
+  // and the window width is greater than or equal to 1850px,
+  // then the default size of the output panel will be 40%
+  // of the width of the window.
+  if (currentAspectRatio >= 16 / 9 && window.innerWidth >= 1850) {
+    panel2DefaultSize = window.innerWidth * 0.4
   }
 
   /* -- RENDER -- */
@@ -264,7 +278,7 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
 
         <PanelSizeRelationship
           sizingMode={EPanelSizingMode.Panel1_Auto__Panel2_Defined}
-          initialDefinedSize={400}
+          initialDefinedSize={panel2DefaultSize}
           panel1={{
             ...ResizablePanel.defaultProps,
             minSize: 400,
@@ -272,7 +286,7 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
               <>
                 <MissionMap
                   mission={mission}
-                  missionAjaxStatus={EAjaxStatus.Loaded}
+                  missionAjaxStatus={'Loaded'}
                   handleNodeSelection={handleNodeSelection}
                   // handleNodePathExitRequest={mission.enableAllNodes}
                   // grayOutExitNodePathButton={!mission.hasDisabledNodes}

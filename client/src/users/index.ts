@@ -1,5 +1,9 @@
 import axios, { AxiosError, AxiosResponse } from 'axios'
-import User, { TUser, TUserJSON, TUserOptions } from '../../../shared/users'
+import User, {
+  TCommonUser,
+  TCommonUserJson,
+  TUserOptions,
+} from '../../../shared/users'
 import { TMetisSessionJSON } from '../../../shared/sessions'
 import { TMetisSession } from '../../../shared/sessions'
 import UserRole from '../../../shared/users/roles'
@@ -9,8 +13,8 @@ import UserRole from '../../../shared/users/roles'
  * @extends {User}
  */
 export default class ClientUser extends User {
-  public password1: TUser['password']
-  public password2: TUser['password']
+  public password1: TCommonUser['password']
+  public password2: TCommonUser['password']
 
   private _passwordIsRequired: boolean
 
@@ -155,11 +159,11 @@ export default class ClientUser extends User {
   }
 
   /**
-   * @param {TUserJSON} data The user data from which to create the user. Any ommitted values will be set to the default properties defined in User.DEFAULT_PROPERTIES.
+   * @param {TCommonUserJson} data The user data from which to create the user. Any ommitted values will be set to the default properties defined in User.DEFAULT_PROPERTIES.
    * @param {TClientUserOptions} options Options for creating the user.
    */
   public constructor(
-    data: Partial<TUserJSON> = User.DEFAULT_PROPERTIES,
+    data: Partial<TCommonUserJson> = User.DEFAULT_PROPERTIES,
     options: TClientUserOptions = {},
   ) {
     // Initialize base properties.
@@ -170,19 +174,19 @@ export default class ClientUser extends User {
   }
 
   // Overridden abstract method
-  public toJSON(options: TClientUserOptions = {}): TUserJSON {
+  public toJson(options: TClientUserOptions = {}): TCommonUserJson {
     // Extract the passwordIsRequired option.
     let { passwordIsRequired } = options
 
     // Grab the JSON properties from the base class.
-    let JSON = super.toJSON(options)
+    let json = super.toJson(options)
 
     // If the password is required then a new user
     // is being created and the password must be
     // set. If the password is required and the
     // passwords match, then the password is set.
     if (passwordIsRequired && this.passwordsMatch) {
-      JSON.password = this.password1
+      json.password = this.password1
     }
     // If the password is not required, then the
     // user is being updated and the password
@@ -194,7 +198,7 @@ export default class ClientUser extends User {
     }
 
     // Return the overridden JSON.
-    return JSON
+    return json
   }
 
   /**
@@ -211,7 +215,7 @@ export default class ClientUser extends User {
     return new Promise<ClientUser>(async (resolve, reject) => {
       try {
         // Retrieve data from API.
-        let { data: userJSON } = await axios.get<TUserJSON>(
+        let { data: userJSON } = await axios.get<TCommonUserJson>(
           `${ClientUser.API_ENDPOINT}`,
           { params: { userID } },
         )
@@ -235,7 +239,7 @@ export default class ClientUser extends User {
     return new Promise<ClientUser[]>(async (resolve, reject) => {
       try {
         // Retrieve data from API.
-        let { data: usersJSON } = await axios.get<TUserJSON[]>(
+        let { data: usersJSON } = await axios.get<TCommonUserJson[]>(
           ClientUser.API_ENDPOINT,
         )
         // Convert JSON to Client User objects.
@@ -305,7 +309,7 @@ export default class ClientUser extends User {
    * A promise that resolves to an object containing whether the login was correct and the session of the logged in user.
    */
   public static async login(
-    userID: TUser['userID'],
+    userID: TCommonUser['userID'],
     password: string,
   ): Promise<{
     correct: boolean
@@ -370,9 +374,9 @@ export default class ClientUser extends User {
     return new Promise<ClientUser>(async (resolve, reject) => {
       try {
         // Retrieve data from API.
-        let { data: userJSON } = await axios.post<TUserJSON>(
+        let { data: userJSON } = await axios.post<TCommonUserJson>(
           ClientUser.API_ENDPOINT,
-          { user: clientUser.toJSON({ passwordIsRequired: true }) },
+          { user: clientUser.toJson({ passwordIsRequired: true }) },
         )
         // Convert JSON to Client User object.
         let createdUser: ClientUser = new ClientUser(userJSON)
@@ -395,9 +399,9 @@ export default class ClientUser extends User {
     return new Promise<ClientUser>(async (resolve, reject) => {
       try {
         // Retrieve data from API.
-        let { data: userJSON } = await axios.put<TUserJSON>(
+        let { data: userJSON } = await axios.put<TCommonUserJson>(
           ClientUser.API_ENDPOINT,
-          { user: clientUser.toJSON({ passwordIsRequired: false }) },
+          { user: clientUser.toJson({ passwordIsRequired: false }) },
         )
         // Convert JSON to Client User object.
         let updatedUser: ClientUser = new ClientUser(userJSON)
@@ -435,10 +439,10 @@ export default class ClientUser extends User {
 
   /**
    * Calls the API to delete the user.
-   * @param {TUser['userID']} userID The user ID of the user to delete.
+   * @param {TCommonUser['userID']} userID The user ID of the user to delete.
    * @returns {Promise<void>} A promise that resolves when the user is deleted.
    */
-  public static async delete(userID: TUser['userID']): Promise<void> {
+  public static async delete(userID: TCommonUser['userID']): Promise<void> {
     return new Promise<void>((resolve, reject) => {
       axios
         .delete(`${ClientUser.API_ENDPOINT}?userID=${userID}`)
@@ -455,7 +459,7 @@ export default class ClientUser extends User {
 /* ------------------------------ CLIENT USER TYPES ------------------------------ */
 
 /**
- * Options for creating a new Client User objects.
+ * Options for creating a new Client User object.
  */
 export type TClientUserOptions = TUserOptions & {
   /**

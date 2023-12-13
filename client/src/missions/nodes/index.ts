@@ -1,10 +1,10 @@
 import { IMissionMappable } from 'src/components/content/game/MissionMap'
 import ClientMission from '..'
-import { IMissionActionJSON } from '../../../../shared/missions/actions'
+import { TCommonMissionActionJson } from '../../../../shared/missions/actions'
 import { TActionExecutionJSON } from '../../../../shared/missions/actions/executions'
 import { IActionOutcomeJSON } from '../../../../shared/missions/actions/outcomes'
 import MissionNode, {
-  TMissionNodeJSON,
+  TMissionNodeJson,
   INodeOpenOptions,
   TMissionNodeOptions,
   IHandleOutcomeOptions,
@@ -13,64 +13,6 @@ import ClientMissionAction from '../actions'
 import ClientActionExecution from '../actions/executions'
 import ClientActionOutcome from '../actions/outcomes'
 import axios from 'axios'
-
-/**
- * Options for the ClientMissionNode.open method.
- */
-export interface INodeClientOpenOptions extends INodeOpenOptions {
-  /**
-   * The child node data with which to populate the now open node.
-   * @note Fails if the node already has children.
-   * @default undefined
-   */
-  revealedChildNodes?: Array<TMissionNodeJSON>
-}
-
-/**
- * Options for the `ClientMissionNode.handleOutcome` method.
- */
-export interface IClientHandleOutcomeOptions extends IHandleOutcomeOptions {
-  /**
-   * The child node data with which to populate the now open node.
-   * @note Unused if the node already has children or if the outcome was a failure.
-   * @default undefined
-   */
-  revealedChildNodes?: Array<TMissionNodeJSON>
-}
-
-/**
- * The relation of the target node to the node being added.
- */
-export enum ENodeTargetRelation {
-  ParentOfTargetAndChildren,
-  ParentOfTargetOnly,
-  ChildOfTarget,
-  BetweenTargetAndChildren,
-  PreviousSiblingOfTarget,
-  FollowingSiblingOfTarget,
-}
-
-/**
- * Method for deleting a node.
- */
-export enum ENodeDeleteMethod {
-  /**
-   * Deletes the node and all of its children.
-   */
-  DeleteNodeAndChildren,
-  /**
-   * Deletes the node and transfers its children to the node's parent.
-   */
-  DeleteNodeAndShiftChildren,
-}
-
-/**
- * Options for ClientMissionNode.delete.
- */
-export interface INodeDeleteOptions {
-  calledByParentDelete?: boolean // Default "false"
-  deleteMethod?: ENodeDeleteMethod // Default "ENodeDeleteMethod.DeleteNodeAndChildren"
-}
 
 /**
  * Class for managing mission nodes on the client.
@@ -113,7 +55,7 @@ export default class ClientMissionNode
 
   public constructor(
     mission: ClientMission,
-    data: Partial<TMissionNodeJSON> = MissionNode.DEFAULT_PROPERTIES,
+    data: Partial<TMissionNodeJson> = MissionNode.DEFAULT_PROPERTIES,
     options: TMissionNodeOptions<ClientMissionNode> = {},
   ) {
     super(mission, data, options)
@@ -125,7 +67,7 @@ export default class ClientMissionNode
 
   // Implemented
   protected parseActionData(
-    data: IMissionActionJSON[],
+    data: TCommonMissionActionJson[],
   ): Map<string, ClientMissionAction> {
     let actions: Map<string, ClientMissionAction> = new Map<
       string,
@@ -485,10 +427,10 @@ export default class ClientMissionNode
 
   /**
    * Populates the children of the node, if not already populated.
-   * @param {Array<TMissionNodeJSON>} data The child node data with which to populate the node.
+   * @param {Array<TMissionNodeJson>} data The child node data with which to populate the node.
    */
   protected populateChildNodes(
-    data: Array<TMissionNodeJSON>,
+    data: Array<TMissionNodeJson>,
   ): Array<ClientMissionNode> {
     // If child nodes are already set,
     // throw an error.
@@ -547,4 +489,64 @@ export default class ClientMissionNode
       }
     })
   }
+}
+
+/* ------------------------------ CLIENT NODE TYPES ------------------------------ */
+
+/**
+ * Options for the ClientMissionNode.open method.
+ */
+export interface INodeClientOpenOptions extends INodeOpenOptions {
+  /**
+   * The child node data with which to populate the now open node.
+   * @note Fails if the node already has children.
+   * @default undefined
+   */
+  revealedChildNodes?: Array<TMissionNodeJson>
+}
+
+/**
+ * Options for the `ClientMissionNode.handleOutcome` method.
+ */
+export interface IClientHandleOutcomeOptions extends IHandleOutcomeOptions {
+  /**
+   * The child node data with which to populate the now open node.
+   * @note Unused if the node already has children or if the outcome was a failure.
+   * @default undefined
+   */
+  revealedChildNodes?: Array<TMissionNodeJson>
+}
+
+/**
+ * The relation of the target node to the node being added.
+ */
+export enum ENodeTargetRelation {
+  ParentOfTargetAndChildren,
+  ParentOfTargetOnly,
+  ChildOfTarget,
+  BetweenTargetAndChildren,
+  PreviousSiblingOfTarget,
+  FollowingSiblingOfTarget,
+}
+
+/**
+ * Method for deleting a node.
+ */
+export enum ENodeDeleteMethod {
+  /**
+   * Deletes the node and all of its children.
+   */
+  DeleteNodeAndChildren,
+  /**
+   * Deletes the node and transfers its children to the node's parent.
+   */
+  DeleteNodeAndShiftChildren,
+}
+
+/**
+ * Options for ClientMissionNode.delete.
+ */
+export interface INodeDeleteOptions {
+  calledByParentDelete?: boolean // Default "false"
+  deleteMethod?: ENodeDeleteMethod // Default "ENodeDeleteMethod.DeleteNodeAndChildren"
 }

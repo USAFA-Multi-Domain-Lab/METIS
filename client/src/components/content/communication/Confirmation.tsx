@@ -2,15 +2,15 @@ import React from 'react'
 import AjaxStatusDisplay from './AjaxStatusDisplay'
 import Markdown, { MarkdownTheme } from '../general-layout/Markdown'
 import './Confirmation.scss'
-import { EAjaxStatus } from '../../../../../shared/toolbox/ajax'
+import { TAjaxStatus } from '../../../../../shared/toolbox/ajax'
 
 export interface IConfirmation {
   active: boolean
   confirmationMessage: string
   pendingMessageUponConfirm: string
   pendingMessageUponAlternate: string
-  confirmAjaxStatus: EAjaxStatus
-  alternateAjaxStatus: EAjaxStatus
+  confirmAjaxStatus: TAjaxStatus
+  alternateAjaxStatus: TAjaxStatus
   handleConfirmation: (entry: string) => void
   handleAlternate: ((entry: string) => void) | null
   handleCancelation: () => void
@@ -53,8 +53,8 @@ export default class Confirmation extends React.Component<
 
   // inherited
   render(): JSX.Element | null {
-    let confirmAjaxStatus: EAjaxStatus = this.props.confirmAjaxStatus
-    let alternateAjaxStatus: EAjaxStatus = this.props.alternateAjaxStatus
+    let confirmAjaxStatus: TAjaxStatus = this.props.confirmAjaxStatus
+    let alternateAjaxStatus: TAjaxStatus = this.props.alternateAjaxStatus
     let active: boolean = this.props.active
     let handleAlternate = this.props.handleAlternate
     let confirmationMessage: string = this.props.confirmationMessage
@@ -72,27 +72,24 @@ export default class Confirmation extends React.Component<
     let confirmationClassName: string = `Confirmation${
       active ? ' active' : ''
     }${
-      confirmAjaxStatus === EAjaxStatus.Loading ||
-      alternateAjaxStatus === EAjaxStatus.Loading
+      confirmAjaxStatus === 'Loading' || alternateAjaxStatus === 'Loading'
         ? ' pending'
         : ''
     }`
     let messageClassName: string = `message${
-      confirmAjaxStatus === EAjaxStatus.Loading ||
-      alternateAjaxStatus === EAjaxStatus.Loading
+      confirmAjaxStatus === 'Loading' || alternateAjaxStatus === 'Loading'
         ? ' hidden'
         : ''
     }`
     let entryClassName: string = `entry${
       !requireEntry ||
-      confirmAjaxStatus === EAjaxStatus.Loading ||
-      alternateAjaxStatus === EAjaxStatus.Loading
+      confirmAjaxStatus === 'Loading' ||
+      alternateAjaxStatus === 'Loading'
         ? ' hidden'
         : ''
     }`
     let actionsClassName: string = `actions${
-      confirmAjaxStatus === EAjaxStatus.Loading ||
-      alternateAjaxStatus === EAjaxStatus.Loading
+      confirmAjaxStatus === 'Loading' || alternateAjaxStatus === 'Loading'
         ? ' hidden'
         : ''
     }`

@@ -1,5 +1,5 @@
 import { IActionOutcomeJSON } from 'metis/missions/actions/outcomes'
-import { TMissionNodeJSON } from '../missions/nodes'
+import { TMissionNodeJson } from '../missions/nodes'
 import { TActionExecutionJSON } from 'metis/missions/actions/executions'
 
 /**
@@ -27,7 +27,7 @@ export interface IServerDataTypes {
   'node-opened': {
     method: 'node-opened'
     nodeID: string
-    revealedChildNodes: Array<TMissionNodeJSON>
+    revealedChildNodes: Array<TMissionNodeJson>
     request: IClientDataTypes['request-open-node']
     requesterID: string
   }
@@ -39,7 +39,7 @@ export interface IServerDataTypes {
   'action-execution-completed': {
     method: 'action-execution-completed'
     outcome: IActionOutcomeJSON
-    revealedChildNodes?: Array<TMissionNodeJSON>
+    revealedChildNodes?: Array<TMissionNodeJson>
     request: IClientDataTypes['request-execute-action']
     requesterID: string
   }

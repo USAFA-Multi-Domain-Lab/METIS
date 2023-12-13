@@ -12,11 +12,9 @@ import chaiHttp from 'chai-http'
 import { testLogger } from '../logging'
 import UserRole, { TUserRoleID } from 'metis/users/roles'
 import MissionModel from 'metis/server/database/models/missions'
-import UserModel, {
-  hashPassword,
-} from 'metis/server/database/models/users/users'
+import UserModel, { hashPassword } from 'metis/server/database/models/users'
 import MetisServer from 'metis/server'
-import { TUserJSON } from 'metis/users'
+import { TCommonUserJson } from 'metis/users'
 
 // global fields
 let missionID: string
@@ -223,7 +221,7 @@ const correctUpdateTestMission = {
   ],
   schemaBuildNumber: 9,
 }
-const correctUser: { user: TUserJSON } = {
+const correctUser: { user: TCommonUserJson } = {
   user: {
     userID: 'test23',
     roleID: UserRole.AVAILABLE_ROLES.student.id,
@@ -234,7 +232,7 @@ const correctUser: { user: TUserJSON } = {
     password: 'password',
   },
 }
-let newCorrectUser: { user: TUserJSON } = {
+let newCorrectUser: { user: TCommonUserJson } = {
   user: {
     userID: 'test24',
     roleID: UserRole.AVAILABLE_ROLES.student.id,
@@ -245,7 +243,7 @@ let newCorrectUser: { user: TUserJSON } = {
     password: 'password',
   },
 }
-const userWithNoPassword: { user: TUserJSON } = {
+const userWithNoPassword: { user: TCommonUserJson } = {
   user: {
     userID: 'test23',
     roleID: UserRole.AVAILABLE_ROLES.student.id,

@@ -1,277 +1,51 @@
-import { IMissionAction, IMissionActionJSON } from './actions'
-import { IMission } from '.'
+import { TCommonMissionAction, TCommonMissionActionJson } from './actions'
+import { TCommonMission } from '.'
 import { v4 as generateHash } from 'uuid'
 import MapToolbox from '../toolbox/maps'
 import IActionOutcome from './actions/outcomes'
-import IActionExecution, { TActionExecutionJSON } from './actions/executions'
-import { IActionOutcomeJSON } from './actions/outcomes'
+import IActionExecution, {
+  TActionExecutionJSON as TActionExecutionJson,
+} from './actions/executions'
+import { IActionOutcomeJSON as IActionOutcomeJson } from './actions/outcomes'
 import ArrayToolbox from '../toolbox/arrays'
-
-/**
- * Interface of the abstract MissionNode class.
- * @note Any public, non-static properties and functions of the MissionNode class
- * must first be defined here for them to be accessible to the Mission and
- * MissionAction classes.
- */
-export interface IMissionNode {
-  /**
-   * The mission of which the node is a part.
-   */
-  mission: IMission
-  /**
-   * The ID for the node.
-   */
-  nodeID: string
-  /**
-   * The name for the node.
-   */
-  name: string
-  /**
-   * The color for the node used as a border in the mission map.
-   */
-  color: string
-  /**
-   * The description for the node.
-   */
-  description: string
-  /**
-   * The text outputted to the console when the node is clicked on.
-   */
-  preExecutionText: string
-  /**
-   * Whether an action can be executed on the node.
-   */
-  executable: boolean
-  /**
-   * Whether or not this node is a device.
-   */
-  device: boolean
-  /**
-   * The execution state of the node.
-   */
-  executionState: TNodeExecutionState
-  /**
-   * Whether or not this node is ready to be executed upon by an action.
-   */
-  readyToExecute: boolean
-  /**
-   * Whether an action is currently being executed on the node.
-   */
-  executing: boolean
-  /**
-   * Whether an action has been executed on the node.
-   */
-  executed: boolean
-  /**
-   * Whether or not this node is open. True if a non-executable node has been opened, or if
-   * an executable node has been successfully executed.
-   */
-  isOpen: boolean
-  /**
-   * Whether or not this node is can be opened using the "open" function.
-   */
-  openable: boolean
-  /**
-   * Whether or not this node has been (or at least is expected to be) revealed to the player.
-   */
-  revealed: boolean
-  /**
-   * The amount of visual padding to apply to the left of the node in the tree.
-   */
-  depthPadding: number
-  /**
-   * The actions that can be performed on the node.
-   * @note Mapped by action ID.
-   */
-  actions: Map<string, IMissionAction>
-  /**
-   * The current execution in process on the node by an action.
-   */
-  get execution(): IActionExecution | null
-  /**
-   * The outcomes of the actions that are performed on the node.
-   */
-  get outcomes(): IActionOutcome[]
-  /**
-   * The parent of this node in the tree structure.
-   */
-  parentNode: IMissionNode | null
-  /**
-   * The children of this node in the tree structure.
-   */
-  childNodes: IMissionNode[]
-  /**
-   * Whether or not this nodes has child nodes.
-   */
-  hasChildren: boolean
-  /**
-   * Whether or not this node has siblings.
-   */
-  hasSiblings: boolean
-  /**
-   * The siblings of this node.
-   */
-  siblings: IMissionNode[]
-  /**
-   * The children of the parent of this node (Essentially siblings plus self).
-   */
-  childrenOfParent: IMissionNode[]
-  /**
-   * The sibling, if any, ordered before this node in the structure.
-   */
-  previousSibling: IMissionNode | null
-  /**
-   * The sibling, if any, ordered after this node in the structure.
-   */
-  followingSibling: IMissionNode | null
-  /**
-   * Converts the node to JSON.
-   * @param options Options for exporting the node to JSON.
-   * @returns the JSON for the node.
-   */
-  toJSON: (options?: TNodeJsonOptions) => TMissionNodeJSON
-  /**
-   * Opens the node.
-   * @param options Options for opening the node.
-   * @returns a promise that resolves when the node opening has been fulfilled.
-   */
-  open: (options?: INodeOpenOptions) => Promise<void>
-  /**
-   * Handles an exection of an action performed on the node.
-   * @param data The execution data to handle.
-   * @returns The generated execution object.
-   */
-  handleExecution: (
-    execution: NonNullable<TActionExecutionJSON>,
-  ) => IActionExecution
-  /**
-   * Handles an outcome of an action performed on the node.
-   * @param data The outcome data to handle.
-   * @param options Options for handling the outcome.
-   * @returns The generated outcome object.
-   */
-  handleOutcome: (
-    data: IActionOutcomeJSON,
-    options?: IHandleOutcomeOptions,
-  ) => IActionOutcome
-}
-
-/**
- * Game-agnostic JSON data for a MissionNode object.
- */
-export interface IMissionNodeBaseJSON {
-  nodeID: string
-  name: string
-  color: string
-  description: string
-  preExecutionText: string
-  depthPadding: number
-  executable: boolean
-  device: boolean
-  actions: IMissionActionJSON[]
-}
-
-/**
- * Game-specific JSON data for a MissionNode object.
- */
-export interface IMissionNodeGameJSON {
-  opened: boolean
-  executionState: TNodeExecutionState
-  execution: TActionExecutionJSON | null
-  outcomes: IActionOutcomeJSON[]
-}
-
-/**
- * Plain JSON representation of a MissionNode object.
- * Type built from IMissionNodeBaseJSON and IMissionNodeGameJSON,
- * with all properties from IMissionNodeGameJSON being partial.
- */
-export type TMissionNodeJSON = IMissionNodeBaseJSON &
-  Partial<IMissionNodeGameJSON>
-
-/**
- * Options for MissionNode.toJSON method.
- */
-export type TNodeJsonOptions = {
-  /**
-   * Whether to include game-specific data in the JSON export.
-   * @default false
-   */
-  includeGameData?: boolean
-}
-
-/**
- * Options for creating a MissionNode object.
- */
-export type TMissionNodeOptions<TRelative extends IMissionNode> = {
-  /**
-   * The node of which this node is a child.
-   * @default null
-   */
-  parentNode?: TRelative | null
-  /**
-   * The child nodes of this node.
-   * @default []
-   */
-  childNodes?: TRelative[]
-}
-
-/**
- * Possible states for the execution of a node.
- */
-export type TNodeExecutionState =
-  | 'unexecuted'
-  | 'executing'
-  | 'successful'
-  | 'failure'
-
-/**
- * Options for the `MissionNode.open` method.
- */
-export interface INodeOpenOptions {}
-
-/**
- * Options for the `MissionNode.handleOutcome` method.
- */
-export interface IHandleOutcomeOptions {}
 
 /**
  * This represents an individual node in a mission.
  */
 export default abstract class MissionNode<
-  TMission extends IMission,
-  TRelativeNode extends IMissionNode,
-  TMissionAction extends IMissionAction,
+  TMission extends TCommonMission,
+  TRelativeNode extends TCommonMissionNode,
+  TMissionAction extends TCommonMissionAction,
   TActionExecution extends IActionExecution,
   TActionOutcome extends IActionOutcome,
-> implements IMissionNode
+> implements TCommonMissionNode
 {
   // Implemented
   public mission: TMission
 
   // Implemented
-  public nodeID: string
+  public nodeID: TCommonMissionNode['nodeID']
 
   // Implemented
-  public name: string
+  public name: TCommonMissionNode['name']
 
   // Implemented
-  public color: string
+  public color: TCommonMissionNode['color']
 
   // Implemented
-  public description: string
+  public description: TCommonMissionNode['description']
 
   // Implemented
-  public preExecutionText: string
+  public preExecutionText: TCommonMissionNode['preExecutionText']
 
   // Implemented
-  public executable: boolean
+  public executable: TCommonMissionNode['executable']
 
   // Implemented
-  public device: boolean
+  public device: TCommonMissionNode['device']
 
   // Implemented
-  public get executionState(): TNodeExecutionState {
+  public get executionState(): TCommonMissionNode['executionState'] {
     let execution: TActionExecution | null = this.execution
     let outcomes: TActionOutcome[] = this.outcomes
 
@@ -286,7 +60,7 @@ export default abstract class MissionNode<
   }
 
   // Implemented
-  public get readyToExecute(): boolean {
+  public get readyToExecute(): TCommonMissionNode['readyToExecute'] {
     return (
       this.executable &&
       this.actions.size > 0 &&
@@ -296,12 +70,12 @@ export default abstract class MissionNode<
   }
 
   // Implemented
-  public get executing(): boolean {
+  public get executing(): TCommonMissionNode['executing'] {
     return this.execution !== null
   }
 
   // Implemented
-  public get executed(): boolean {
+  public get executed(): TCommonMissionNode['executed'] {
     return this.outcomes.length > 0
   }
 
@@ -312,7 +86,7 @@ export default abstract class MissionNode<
   protected opened: boolean
 
   // Implemented
-  public depthPadding: number
+  public depthPadding: TCommonMissionNode['depthPadding']
 
   // Implemented
   public actions: Map<string, TMissionAction>
@@ -342,12 +116,12 @@ export default abstract class MissionNode<
   public childNodes: TRelativeNode[]
 
   // Implemented
-  public get hasChildren(): boolean {
+  public get hasChildren(): TCommonMissionNode['hasChildren'] {
     return this.childNodes.length > 0
   }
 
   // Implemented
-  public get hasSiblings(): boolean {
+  public get hasSiblings(): TCommonMissionNode['hasSiblings'] {
     return this.childrenOfParent.length > 1
   }
 
@@ -422,28 +196,28 @@ export default abstract class MissionNode<
   }
 
   // Implemented
-  public get isOpen(): boolean {
+  public get isOpen(): TCommonMissionNode['isOpen'] {
     return this.opened || this.executionState === 'successful'
   }
 
   // Implemented
-  public get openable(): boolean {
+  public get openable(): TCommonMissionNode['openable'] {
     return !this.executable && !this.isOpen
   }
 
   // Implemented
-  public get revealed(): boolean {
+  public get revealed(): TCommonMissionNode['revealed'] {
     return this.parentNode === null || this.parentNode.isOpen
   }
 
   /**
    * @param {TMission} mission The mission of which the node is a part.
-   * @param {TMissionNodeJSON} data The node data from which to create the node. Any ommitted values will be set to the default properties defined in MissionNode.DEFAULT_PROPERTIES.
+   * @param {TMissionNodeJson} data The node data from which to create the node. Any ommitted values will be set to the default properties defined in MissionNode.DEFAULT_PROPERTIES.
    * @param {TMissionNodeOptions<TMission>} options The options for creating the node.
    */
   public constructor(
     mission: TMission,
-    data: Partial<TMissionNodeJSON> = MissionNode.DEFAULT_PROPERTIES,
+    data: Partial<TMissionNodeJson> = MissionNode.DEFAULT_PROPERTIES,
     options: TMissionNodeOptions<TRelativeNode> = {},
   ) {
     // Set properties from data.
@@ -480,11 +254,11 @@ export default abstract class MissionNode<
 
   /**
    * Parses the action data into MissionAction objects.
-   * @param {IMissionActionJSON[]} data The action data to parse.
+   * @param {TCommonMissionActionJson[]} data The action data to parse.
    * @returns {MissionAction[]} The parsed action data.
    */
   protected abstract parseActionData(
-    data: IMissionActionJSON[],
+    data: TCommonMissionActionJson[],
   ): Map<string, TMissionAction>
 
   /**
@@ -494,25 +268,25 @@ export default abstract class MissionNode<
    * @returns {TActionExecution[]} The parsed outcome data.
    */
   protected abstract parseExecutionData(
-    data: TActionExecutionJSON,
+    data: TActionExecutionJson,
   ): TActionExecution | null
 
   /**
    * Parses the outcome data into the outcome objects of the
    * type passed in TActionOutcome.
-   * @param {IActionOutcomeJSON[]} data The outcome data to parse.
+   * @param {IActionOutcomeJson[]} data The outcome data to parse.
    * @returns {TActionOutcome[]} The parsed outcome data.
    */
   protected abstract parseOutcomeData(
-    data: IActionOutcomeJSON[],
+    data: IActionOutcomeJson[],
   ): TActionOutcome[]
 
   // Implemented
-  public toJSON(options: TNodeJsonOptions = {}): TMissionNodeJSON {
+  public toJson(options: TNodeJsonOptions = {}): TMissionNodeJson {
     let { includeGameData = false } = options
 
     // Construct base JSON.
-    let json: TMissionNodeJSON = {
+    let json: TMissionNodeJson = {
       nodeID: this.nodeID,
       name: this.name,
       color: this.color,
@@ -521,36 +295,38 @@ export default abstract class MissionNode<
       depthPadding: this.depthPadding,
       executable: this.executable,
       device: this.device,
-      actions: MapToolbox.mapToArray(this.actions, (action) => action.toJSON()),
+      actions: MapToolbox.mapToArray(this.actions, (action: TMissionAction) =>
+        action.toJson(),
+      ),
     }
 
     // Include game data if includeGameData
     // flag was set.
     if (includeGameData) {
       // Construct execution JSON.
-      let executionJSON: TActionExecutionJSON | null = null
+      let executionJson: TActionExecutionJson | null = null
 
       if (this.execution !== null) {
-        executionJSON = this.execution.toJSON()
+        executionJson = this.execution.toJson()
       }
 
       // Construct outcome JSON.
-      let outcomeJSON: IActionOutcomeJSON[] = this.outcomes.map((outcome) =>
-        outcome.toJSON(),
+      let outcomeJSON: IActionOutcomeJson[] = this.outcomes.map((outcome) =>
+        outcome.toJson(),
       )
 
       // Construct game-specific JSON.
-      let gameJSON: IMissionNodeGameJSON = {
+      let gameJson: IMissionNodeGameJson = {
         opened: this.opened,
         executionState: this.executionState,
-        execution: executionJSON,
+        execution: executionJson,
         outcomes: outcomeJSON,
       }
 
       // Join game-specific JSON with base JSON.
       json = {
         ...json,
-        ...gameJSON,
+        ...gameJson,
       }
     }
 
@@ -563,19 +339,19 @@ export default abstract class MissionNode<
 
   // Implemented
   public abstract handleExecution(
-    data: NonNullable<TActionExecutionJSON>,
+    data: NonNullable<TActionExecutionJson>,
   ): TActionExecution
 
   // Implemented
   public abstract handleOutcome(
-    data: IActionOutcomeJSON,
+    data: IActionOutcomeJson,
     options?: IHandleOutcomeOptions,
   ): TActionOutcome
 
   /**
    * The default properties for a MissionNode object.
    */
-  public static get DEFAULT_PROPERTIES(): Required<TMissionNodeJSON> {
+  public static get DEFAULT_PROPERTIES(): Required<TMissionNodeJson> {
     return {
       nodeID: generateHash(),
       name: 'Unnamed Node',
@@ -593,3 +369,260 @@ export default abstract class MissionNode<
     }
   }
 }
+
+/* ------------------------------ NODE TYPES ------------------------------ */
+
+/**
+ * Interface of the abstract MissionNode class.
+ * @note Any public, non-static properties and functions of the MissionNode class
+ * must first be defined here for them to be accessible to the Mission and
+ * MissionAction classes.
+ */
+export interface TCommonMissionNode {
+  /**
+   * The mission of which the node is a part.
+   */
+  mission: TCommonMission
+  /**
+   * The ID for the node.
+   */
+  nodeID: string
+  /**
+   * The name for the node.
+   */
+  name: string
+  /**
+   * The color for the node used as a border in the mission map.
+   */
+  color: string
+  /**
+   * The description for the node.
+   */
+  description: string
+  /**
+   * The text outputted to the console when the node is clicked on.
+   */
+  preExecutionText: string
+  /**
+   * Whether an action can be executed on the node.
+   */
+  executable: boolean
+  /**
+   * Whether or not this node is a device.
+   */
+  device: boolean
+  /**
+   * The execution state of the node.
+   */
+  executionState: TNodeExecutionState
+  /**
+   * Whether or not this node is ready to be executed upon by an action.
+   */
+  readyToExecute: boolean
+  /**
+   * Whether an action is currently being executed on the node.
+   */
+  executing: boolean
+  /**
+   * Whether an action has been executed on the node.
+   */
+  executed: boolean
+  /**
+   * The amount of visual padding to apply to the left of the node in the tree.
+   */
+  depthPadding: number
+  /**
+   * The actions that can be performed on the node.
+   * @note Mapped by action ID.
+   */
+  actions: Map<string, TCommonMissionAction>
+  /**
+   * The current execution in process on the node by an action.
+   */
+  get execution(): IActionExecution | null
+  /**
+   * The outcomes of the actions that are performed on the node.
+   */
+  get outcomes(): IActionOutcome[]
+  /**
+   * The parent of this node in the tree structure.
+   */
+  parentNode: TCommonMissionNode | null
+  /**
+   * The children of this node in the tree structure.
+   */
+  childNodes: TCommonMissionNode[]
+  /**
+   * Whether or not this nodes has child nodes.
+   */
+  hasChildren: boolean
+  /**
+   * Whether or not this node has siblings.
+   */
+  hasSiblings: boolean
+  /**
+   * The siblings of this node.
+   */
+  siblings: TCommonMissionNode[]
+  /**
+   * The children of the parent of this node (Essentially siblings plus self).
+   */
+  childrenOfParent: TCommonMissionNode[]
+  /**
+   * The sibling, if any, ordered before this node in the structure.
+   */
+  previousSibling: TCommonMissionNode | null
+  /**
+   * The sibling, if any, ordered after this node in the structure.
+   */
+  followingSibling: TCommonMissionNode | null
+  /**
+   * Whether or not this node is open. True if a non-executable node has been opened, or if
+   * an executable node has been successfully executed.
+   */
+  isOpen: boolean
+  /**
+   * Whether or not this node is can be opened using the "open" function.
+   */
+  openable: boolean
+  /**
+   * Whether or not this node has been (or at least is expected to be) revealed to the player.
+   */
+  revealed: boolean
+  /**
+   * Converts the node to JSON.
+   * @param options Options for exporting the node to JSON.
+   * @returns the JSON for the node.
+   */
+  toJson: (options?: TNodeJsonOptions) => TMissionNodeJson
+  /**
+   * Opens the node.
+   * @param options Options for opening the node.
+   * @returns a promise that resolves when the node opening has been fulfilled.
+   */
+  open: (options?: INodeOpenOptions) => Promise<void>
+  /**
+   * Handles an exection of an action performed on the node.
+   * @param data The execution data to handle.
+   * @returns The generated execution object.
+   */
+  handleExecution: (
+    execution: NonNullable<TActionExecutionJson>,
+  ) => IActionExecution
+  /**
+   * Handles an outcome of an action performed on the node.
+   * @param data The outcome data to handle.
+   * @param options Options for handling the outcome.
+   * @returns The generated outcome object.
+   */
+  handleOutcome: (
+    data: IActionOutcomeJson,
+    options?: IHandleOutcomeOptions,
+  ) => IActionOutcome
+}
+
+/**
+ * Game-agnostic JSON data for a MissionNode object.
+ */
+export interface TCommonMissionNodeJson {
+  /**
+   * The ID for the node.
+   */
+  nodeID: string
+  /**
+   * The name for the node.
+   */
+  name: string
+  /**
+   * The color for the node used as a border in the mission map.
+   */
+  color: string
+  /**
+   * The description for the node.
+   */
+  description: string
+  /**
+   * The text outputted to the console when the node is clicked on.
+   */
+  preExecutionText: string
+  /**
+   * Whether an action can be executed on the node.
+   */
+  executable: boolean
+  /**
+   * Whether or not this node is a device.
+   */
+  device: boolean
+  /**
+   * The amount of visual padding to apply to the left of the node in the tree.
+   */
+  depthPadding: number
+  /**
+   * The actions that can be performed on the node.
+   */
+  actions: TCommonMissionActionJson[]
+}
+
+/**
+ * Game-specific JSON data for a MissionNode object.
+ */
+export interface IMissionNodeGameJson {
+  opened: boolean
+  executionState: TNodeExecutionState
+  execution: TActionExecutionJson | null
+  outcomes: IActionOutcomeJson[]
+}
+
+/**
+ * Plain JSON representation of a MissionNode object.
+ * Type built from TCommonMissionNodeJson and IMissionNodeGameJSON,
+ * with all properties from IMissionNodeGameJSON being partial.
+ */
+export type TMissionNodeJson = TCommonMissionNodeJson &
+  Partial<IMissionNodeGameJson>
+
+/**
+ * Options for MissionNode.toJSON method.
+ */
+export type TNodeJsonOptions = {
+  /**
+   * Whether to include game-specific data in the JSON export.
+   * @default false
+   */
+  includeGameData?: boolean
+}
+
+/**
+ * Options for creating a MissionNode object.
+ */
+export type TMissionNodeOptions<TRelative extends TCommonMissionNode> = {
+  /**
+   * The node of which this node is a child.
+   * @default null
+   */
+  parentNode?: TRelative | null
+  /**
+   * The child nodes of this node.
+   * @default []
+   */
+  childNodes?: TRelative[]
+}
+
+/**
+ * Possible states for the execution of a node.
+ */
+export type TNodeExecutionState =
+  | 'unexecuted'
+  | 'executing'
+  | 'successful'
+  | 'failure'
+
+/**
+ * Options for the `MissionNode.open` method.
+ */
+export interface INodeOpenOptions {}
+
+/**
+ * Options for the `MissionNode.handleOutcome` method.
+ */
+export interface IHandleOutcomeOptions {}

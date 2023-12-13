@@ -5,9 +5,8 @@ import MissionModel from 'metis/server/database/models/missions'
 import { databaseLogger, gameLogger } from 'metis/server/logging'
 import GameServer from 'metis/server/games'
 import ClientConnection from 'metis/server/connect/clients'
-import { IMissionJSON } from 'metis/missions'
+import { IMissionJson } from 'metis/missions'
 import ServerMission from 'metis/server/missions'
-import User from 'metis/users'
 import MetisSession from 'metis/server/sessions'
 
 const routerMap = (router: expressWs.Router, done: () => void) => {
@@ -26,7 +25,7 @@ const routerMap = (router: expressWs.Router, done: () => void) => {
       // Query for mission.
       MissionModel.findOne({ missionID })
         .lean()
-        .exec(async (error: Error, missionData: IMissionJSON) => {
+        .exec(async (error: Error, missionData: IMissionJson) => {
           // Handle errors.
           if (error !== null) {
             databaseLogger.error(
@@ -42,7 +41,7 @@ const routerMap = (router: expressWs.Router, done: () => void) => {
           // Handle mission not live.
           else if (
             !missionData.live &&
-            !User.isAuthorized(session, ['READ', 'WRITE', 'DELETE'])
+            !session?.user.isAuthorized(['READ', 'WRITE', 'DELETE'])
           ) {
             return response.sendStatus(401)
           }
@@ -83,7 +82,7 @@ const routerMap = (router: expressWs.Router, done: () => void) => {
     game.join(client)
 
     // Return the game as JSON.
-    return response.json(game.toJSON())
+    return response.json(game.toJson())
   })
 
   // // -- POST | /api/v1/games/quit/ --

@@ -1,59 +1,14 @@
 import axios, { AxiosResponse } from 'axios'
 import Mission, {
-  IMissionJSON,
+  IMissionJson,
   ISpawnNodeOptions,
   TMissionOptions,
 } from '../../../shared/missions'
-import { TMissionNodeJSON } from '../../../shared/missions/nodes'
+import { TMissionNodeJson } from '../../../shared/missions/nodes'
 import ClientMissionNode, { ENodeTargetRelation } from './nodes'
 import { v4 as generateHash } from 'uuid'
 import { Counter } from '../../../shared/toolbox/numbers'
 import NodeCreator from './nodes/creator'
-
-/**
- * Options for the creation of a ClientMission object.
- */
-export type TClientMissionOptions = TMissionOptions & {
-  /**
-   * Whether the data already exists on the server.
-   * @default false
-   */
-  existsOnServer?: boolean
-}
-
-/**
- * Options for the creation of a ClientMission object when the mission is known to exist on the server.
- */
-export type TExistingClientMissionOptions = TClientMissionOptions & {
-  /**
-   * Overrides the existsOnServer option from `TClientMissionOptions` to true.
-   * @default true
-   */
-  existsOnServer?: true
-}
-
-/**
- * Results of a mission import via the ClientMission.importMissions method.
- */
-export type TMissionImportResult = {
-  /**
-   * The number of missions successfully imported.
-   */
-  successfulImportCount: number
-  /**
-   * The number of missions that failed to import.
-   */
-  failedImportCount: number
-  /**
-   * The error messages and file names for the missions that failed to import.
-   */
-  errorMessages: Array<{ fileName: string; errorMessage: string }>
-}
-
-/**
- * A function that handles a change in the mission's structure.
- */
-export type TStructureChangeListener = (structureChangeKey: string) => void
 
 /**
  * Class for managing missions on the client.
@@ -180,7 +135,7 @@ export default class ClientMission extends Mission<ClientMissionNode> {
   public lastOpenedNode: ClientMissionNode | null
 
   public constructor(
-    data: Partial<IMissionJSON> = {},
+    data: Partial<IMissionJson> = {},
     options: TClientMissionOptions = {},
   ) {
     // Initialize base properties.
@@ -415,7 +370,7 @@ export default class ClientMission extends Mission<ClientMissionNode> {
 
   // Implemented
   public spawnNode(
-    data: Partial<TMissionNodeJSON> = {},
+    data: Partial<TMissionNodeJson> = {},
     options: ISpawnNodeOptions<ClientMissionNode> = {},
   ): ClientMissionNode {
     let { addToNodeMap = true, makeChildOfRoot = true } = options
@@ -461,9 +416,9 @@ export default class ClientMission extends Mission<ClientMissionNode> {
         // Create a new mission if it doesn't
         // exist already.
         if (!this.existsOnServer) {
-          let { data } = await axios.post<any, AxiosResponse<IMissionJSON>>(
+          let { data } = await axios.post<any, AxiosResponse<IMissionJson>>(
             ClientMission.API_ENDPOINT,
-            this.toJSON(),
+            this.toJson(),
           )
           // Update the temporary client-generated
           // mission ID and seed with the server-generated
@@ -475,7 +430,7 @@ export default class ClientMission extends Mission<ClientMissionNode> {
         }
         // Update the mission if it does exist.
         else {
-          await axios.put(ClientMission.API_ENDPOINT, this.toJSON())
+          await axios.put(ClientMission.API_ENDPOINT, this.toJson())
         }
         resolve()
       } catch (error) {
@@ -542,7 +497,7 @@ export default class ClientMission extends Mission<ClientMissionNode> {
   ): Promise<ClientMission> {
     return new Promise<ClientMission>(async (resolve, reject) => {
       try {
-        let { data } = await axios.put<any, AxiosResponse<IMissionJSON>>(
+        let { data } = await axios.put<any, AxiosResponse<IMissionJson>>(
           `${ClientMission.API_ENDPOINT}/copy/`,
           {
             originalID,
@@ -574,7 +529,7 @@ export default class ClientMission extends Mission<ClientMissionNode> {
     return new Promise<ClientMission>(async (resolve, reject) => {
       try {
         // Retrieve data from API.
-        let { data } = await axios.get<IMissionJSON>(
+        let { data } = await axios.get<IMissionJson>(
           ClientMission.API_ENDPOINT,
           { params: { missionID } },
         )
@@ -595,14 +550,14 @@ export default class ClientMission extends Mission<ClientMissionNode> {
   /**
    * Calls the API to fetch all missions available.
    * @param {TMissionOptions} options Options for the creation of the Mission objects returned.
-   * @returns {Promise<Array<ClientMission>>} A promise that resolves to an array of Mission objects.
+   * @returns {Promise<ClientMission[]>} A promise that resolves to an array of Mission objects.
    */
   public static async fetchAll(
     options: TExistingClientMissionOptions = {},
-  ): Promise<Array<ClientMission>> {
-    return new Promise<Array<ClientMission>>(async (resolve, reject) => {
+  ): Promise<ClientMission[]> {
+    return new Promise<ClientMission[]>(async (resolve, reject) => {
       try {
-        let { data } = await axios.get<Array<IMissionJSON>>(
+        let { data } = await axios.get<IMissionJson[]>(
           ClientMission.API_ENDPOINT,
         )
         // Update options.
@@ -665,3 +620,50 @@ export default class ClientMission extends Mission<ClientMissionNode> {
     })
   }
 }
+
+/* ------------------------------ CLIENT MISSION TYPES ------------------------------ */
+
+/**
+ * Options for the creation of a ClientMission object.
+ */
+export type TClientMissionOptions = TMissionOptions & {
+  /**
+   * Whether the data already exists on the server.
+   * @default false
+   */
+  existsOnServer?: boolean
+}
+
+/**
+ * Options for the creation of a ClientMission object when the mission is known to exist on the server.
+ */
+export type TExistingClientMissionOptions = TClientMissionOptions & {
+  /**
+   * Overrides the existsOnServer option from `TClientMissionOptions` to true.
+   * @default true
+   */
+  existsOnServer?: true
+}
+
+/**
+ * Results of a mission import via the ClientMission.importMissions method.
+ */
+export type TMissionImportResult = {
+  /**
+   * The number of missions successfully imported.
+   */
+  successfulImportCount: number
+  /**
+   * The number of missions that failed to import.
+   */
+  failedImportCount: number
+  /**
+   * The error messages and file names for the missions that failed to import.
+   */
+  errorMessages: Array<{ fileName: string; errorMessage: string }>
+}
+
+/**
+ * A function that handles a change in the mission's structure.
+ */
+export type TStructureChangeListener = (structureChangeKey: string) => void

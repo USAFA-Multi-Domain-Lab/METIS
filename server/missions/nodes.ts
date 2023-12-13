@@ -1,6 +1,6 @@
-import MissionNode, { IHandleOutcomeOptions } from 'metis/missions/nodes'
+import MissionNode from 'metis/missions/nodes'
 import ServerMission from '.'
-import { IMissionActionJSON } from 'metis/missions/actions'
+import { TCommonMissionActionJson } from 'metis/missions/actions'
 import ServerMissionAction from './actions'
 import { ServerRealizedOutcome } from './actions/outcomes'
 import ServerActionExecution from './actions/executions'
@@ -19,7 +19,7 @@ export default class ServerMissionNode extends MissionNode<
 > {
   // Implemented
   protected parseActionData(
-    data: Array<IMissionActionJSON>,
+    data: Array<TCommonMissionActionJson>,
   ): Map<string, ServerMissionAction> {
     let actions: Map<string, ServerMissionAction> = new Map<
       string,
@@ -240,3 +240,5 @@ export default class ServerMissionNode extends MissionNode<
     '#331f00',
   ]
 }
+
+/* ------------------------------ SERVER NODE TYPES ------------------------------ */

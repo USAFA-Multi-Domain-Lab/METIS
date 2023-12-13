@@ -1,4 +1,4 @@
-import User, { TUserJSON, TUserOptions } from 'metis/users'
+import User, { TCommonUserJson, TUserOptions } from 'metis/users'
 
 /**
  * Class for managing users on the server.
@@ -6,10 +6,10 @@ import User, { TUserJSON, TUserOptions } from 'metis/users'
  */
 export default class ServerUser extends User {
   /**
-   * @param {TUserJSON} data The user data from which to create the user. Any ommitted values will be set to the default properties defined in User.DEFAULT_PROPERTIES.
+   * @param {TCommonUserJson} data The user data from which to create the user. Any ommitted values will be set to the default properties defined in User.DEFAULT_PROPERTIES.
    * @param {TServerUserOptions} options Options for creating the user.
    */
-  public constructor(data: TUserJSON, options: TServerUserOptions = {}) {
+  public constructor(data: TCommonUserJson, options: TServerUserOptions = {}) {
     // Initialize base properties.
     super(data, options)
   }

@@ -2,10 +2,9 @@ import { useEffect, useState } from 'react'
 import { Detail, DetailDropDown } from '../form/Form'
 import Toggle from '../user-controls/Toggle'
 import './CreateUserEntry.scss'
-import { useGlobalContext } from 'src/context'
 import ClientUser from 'src/users'
 import UserRole from '../../../../../shared/users/roles'
-import User from '../../../../../shared/users'
+import { TMetisSession } from '../../../../../shared/sessions'
 
 /**
  * This will render the forms for creating a new user.
@@ -14,6 +13,7 @@ export default function CreateUserEntry(props: {
   user: ClientUser
   userEmptyStringArray: string[]
   usernameAlreadyExists: boolean
+  session: NonNullable<TMetisSession<ClientUser>>
   setUserEmptyStringArray: (userEmptyString: string[]) => void
   handleChange: () => void
 }): JSX.Element | null {
@@ -22,14 +22,10 @@ export default function CreateUserEntry(props: {
   let user: ClientUser = props.user
   let userEmptyStringArray: string[] = props.userEmptyStringArray
   let usernameAlreadyExists: boolean = props.usernameAlreadyExists
+  let session: TMetisSession<ClientUser> = props.session
   let duplicateUsernameErrorMessage: string = 'Username already exists.'
   let setUserEmptyStringArray = props.setUserEmptyStringArray
   let handleChange = props.handleChange
-
-  /* -- GLOBAL CONTEXT -- */
-
-  const globalContext = useGlobalContext()
-  const [session] = globalContext.session
 
   /* -- COMPONENT STATE -- */
 
@@ -79,16 +75,6 @@ export default function CreateUserEntry(props: {
     }
   }, [usernameAlreadyExists])
 
-  /* -- SESSION-SPECIFIC LOGIC -- */
-
-  // Require session.
-  if (session === null) {
-    return null
-  }
-
-  // Extract properties from session.
-  let { user: currentUser } = session
-
   /* -- COMPONENT FUNCTIONS -- */
 
   const removeUserEmptyString = (field: string) => {
@@ -101,6 +87,9 @@ export default function CreateUserEntry(props: {
 
   /* -- PRE-RENDER PROCESSING -- */
 
+  // Grab the current user from the session.
+  let { user: currentUser } = session
+
   let passwordLabel: string = 'Password'
   let confirmPasswordLabel: string = 'Confirm Password'
 
@@ -112,7 +101,7 @@ export default function CreateUserEntry(props: {
   // is an admin, then they are allowed
   // to create users with any role.
   if (
-    User.isAuthorized(session, ['READ', 'WRITE', 'DELETE']) &&
+    currentUser.isAuthorized(['READ', 'WRITE', 'DELETE']) &&
     currentUser.role.id === 'admin'
   ) {
     listOfRoles = [

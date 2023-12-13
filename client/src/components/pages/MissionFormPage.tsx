@@ -1,6 +1,5 @@
 import { useBeforeunload } from 'react-beforeunload'
 import { useState } from 'react'
-import { EAjaxStatus } from '../../../../shared/toolbox/ajax'
 import MissionMap from '../content/game/MissionMap'
 import './MissionFormPage.scss'
 import { IPage } from '../App'
@@ -354,6 +353,8 @@ export default function MissionFormPage(
   let grayOutDeselectNodeButton: boolean = isEmptyString
   let grayOutAddNodeButton: boolean = isEmptyString
   let grayOutDeleteNodeButton: boolean = mission.nodes.size < 2
+  let panel2DefaultSize: number = 330
+  let currentAspectRatio: number = window.innerWidth / window.innerHeight
 
   if (!isEmptyString) {
     for (let notification of notifications) {
@@ -363,6 +364,14 @@ export default function MissionFormPage(
         }, 2000)
       }
     }
+  }
+
+  // If the aspect ratio is greater than or equal to 16:9,
+  // and the window width is greater than or equal to 1850px,
+  // then the default size of the output panel will be 40%
+  // of the width of the window.
+  if (currentAspectRatio >= 16 / 9 && window.innerWidth >= 1850) {
+    panel2DefaultSize = window.innerWidth * 0.4
   }
 
   return (
@@ -406,7 +415,7 @@ export default function MissionFormPage(
             render: () => (
               <MissionMap
                 mission={mission}
-                missionAjaxStatus={EAjaxStatus.Loaded}
+                missionAjaxStatus={'Loaded'}
                 selectedNode={selectedNode}
                 allowCreationMode={true}
                 handleNodeSelection={(node: ClientMissionNode) => {
@@ -489,7 +498,7 @@ export default function MissionFormPage(
             },
           }}
           sizingMode={EPanelSizingMode.Panel1_Auto__Panel2_Defined}
-          initialDefinedSize={330}
+          initialDefinedSize={panel2DefaultSize}
         />
       </div>
 

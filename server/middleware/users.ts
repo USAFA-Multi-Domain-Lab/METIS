@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express-serve-static-core'
 import MetisSession from '../sessions'
-import UserPermission, { TUserPermissionID } from 'metis/users/permissions'
+import { TUserPermissionID } from 'metis/users/permissions'
 
 // interface ILoginOptions {
 //   permittedRoles?: Array<TUserRole>
@@ -87,6 +87,7 @@ export const requireConnection = (
 export const authorized =
   (requiredPermissions: TUserPermissionID[]) =>
   (request: Request, response: Response, next: NextFunction): void => {
+    // Get the current session.
     let session: MetisSession | undefined = MetisSession.get(
       request.session.userID,
     )
@@ -94,47 +95,16 @@ export const authorized =
     // If there is a session, then the user is
     // logged in.
     if (session) {
-      let roleHasRequiredPermissions: boolean = false
-      let userHasSpecificPermissions: boolean = false
-      let { permissions: rolePermissions } = session.user.role
-      let { expressPermissions } = session.user
+      // Get the current user in session.
+      const { user: currentUser } = session
 
-      // Check if the user has the required
-      // permissions.
-      roleHasRequiredPermissions = UserPermission.hasPermissions(
-        rolePermissions,
-        requiredPermissions,
-      )
-      // Check to see if the user has been
-      // given specific permissions that
-      // override their role permissions.
-      userHasSpecificPermissions = UserPermission.hasPermissions(
-        expressPermissions,
-        requiredPermissions,
-      )
-
-      // If the current user in the
-      // session has the revoked
-      // access role, they are not
-      // authorized to perform any
-      // actions.
-      if (session.user.role.id === 'revokedAccess') {
-        response.sendStatus(401)
-      }
-      // If the current user in session has a role
-      // with the required permission(s), or if the
-      // user has been given specific permissions
-      // that override their role permissions, then
-      // they are authorized to perform the action.
-      else if (roleHasRequiredPermissions || userHasSpecificPermissions) {
+      // If the current user in the session has authorization
+      // then the next function is called.
+      if (currentUser.isAuthorized(requiredPermissions)) {
         response.locals.session = session
-        response.locals.user = session.user
+        response.locals.user = session?.user
         next()
-      }
-      // If neither of the above are true, then the
-      // current user in session should not be
-      // authorized to perform the action.
-      else {
+      } else {
         response.sendStatus(401)
       }
     }
@@ -142,6 +112,60 @@ export const authorized =
     // authorized to perform the action.
     else {
       response.sendStatus(401)
+    }
+
+    // todo: remove
+    {
+      // // If there is a session, then the user is
+      // // logged in.
+      // if (session) {
+      //   let roleHasRequiredPermissions: boolean = false
+      //   let userHasSpecificPermissions: boolean = false
+      //   let { permissions: rolePermissions } = session.user.role
+      //   let { expressPermissions } = session.user
+      //   // Check if the user has the required
+      //   // permissions.
+      //   roleHasRequiredPermissions = UserPermission.hasPermissions(
+      //     rolePermissions,
+      //     requiredPermissions,
+      //   )
+      //   // Check to see if the user has been
+      //   // given specific permissions that
+      //   // override their role permissions.
+      //   userHasSpecificPermissions = UserPermission.hasPermissions(
+      //     expressPermissions,
+      //     requiredPermissions,
+      //   )
+      //   // If the current user in the
+      //   // session has the revoked
+      //   // access role, they are not
+      //   // authorized to perform any
+      //   // actions.
+      //   if (session.user.role.id === 'revokedAccess') {
+      //     response.sendStatus(401)
+      //   }
+      //   // If the current user in session has a role
+      //   // with the required permission(s), or if the
+      //   // user has been given specific permissions
+      //   // that override their role permissions, then
+      //   // they are authorized to perform the action.
+      //   else if (roleHasRequiredPermissions || userHasSpecificPermissions) {
+      //     response.locals.session = session
+      //     response.locals.user = session.user
+      //     next()
+      //   }
+      //   // If neither of the above are true, then the
+      //   // current user in session should not be
+      //   // authorized to perform the action.
+      //   else {
+      //     response.sendStatus(401)
+      //   }
+      // }
+      // // If there is no session, the user is not
+      // // authorized to perform the action.
+      // else {
+      //   response.sendStatus(401)
+      // }
     }
   }
 

@@ -54,8 +54,6 @@ export default function Tooltip(props: { description: string }): JSX.Element {
       parent.addEventListener('mousemove', confirmTooltipVisibility)
     }
 
-    console.log('Tooltip mounted.')
-
     done()
   })
 

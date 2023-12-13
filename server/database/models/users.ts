@@ -1,14 +1,17 @@
 import mongoose, { Schema } from 'mongoose'
 import bcryptjs from 'bcryptjs'
-import { StatusError } from '../../../http'
-import { databaseLogger } from '../../../logging'
-import Role from '../../schema-types/user-role'
+import { StatusError } from '../../http'
+import { databaseLogger } from '../../logging'
+import Role from '../schema-types/user-role'
 import UserRole, { TUserRole } from 'metis/users/roles'
 import UserPermission, { TUserPermission } from 'metis/users/permissions'
-import Permission from '../../schema-types/user-permission'
-import { TUser } from 'metis/users'
+import Permission from '../schema-types/user-permission'
+import { TCommonUser } from 'metis/users'
+import { Request } from 'express'
 
 let ObjectId = mongoose.Types.ObjectId
+
+/* -- SCHEMA VALIDATORS -- */
 
 // Validator for user.userID.
 const validate_users_userID = (userID: string): boolean => {
@@ -62,6 +65,8 @@ const validator_users_password = (password: string): boolean => {
   return isValidPassword
 }
 
+/* -- SCHEMA -- */
+
 const UserSchema = new Schema(
   {
     userID: {
@@ -93,12 +98,12 @@ const UserSchema = new Schema(
       trim: true,
       validate: validate_users_name,
     },
+    needsPasswordReset: { type: Boolean, required: true },
     password: {
       type: String,
       required: true,
       validate: validator_users_password,
     },
-    needsPasswordReset: { type: Boolean, required: true },
     _id: { type: ObjectId, required: false, auto: true },
     deleted: { type: Boolean, required: true, default: false },
   },
@@ -109,7 +114,13 @@ const UserSchema = new Schema(
   },
 )
 
-//hashes password before saving to database
+/* -- SCHEMA METHODS -- */
+
+/**
+ * Hashes a password for storage in the database.
+ * @param {string} password The password to hash.
+ * @returns {Promise<string>} A promise that resolves to the hashed password.
+ */
 export const hashPassword = async (password: string): Promise<string> => {
   return new Promise<string>(async (resolve, reject): Promise<void> => {
     try {
@@ -123,12 +134,12 @@ export const hashPassword = async (password: string): Promise<string> => {
   })
 }
 
-//authenticates user making a request is in the database
+// Authenticates a user based on the request.
 UserSchema.statics.authenticate = (
-  request,
+  request: Request,
   callback: (error: StatusError | null, correct: boolean, user: any) => void,
-) => {
-  //searches for user based on email provided
+): void => {
+  // Searches for user based on email provided
   UserModel.findOne({ userID: request.body.userID }).exec(
     (error: Error, user: any) => {
       if (error) {
@@ -137,7 +148,7 @@ UserSchema.statics.authenticate = (
         return callback(null, false, null)
       }
 
-      //if there is no error and user exists, the encrypted password provided is verified
+      // If there is no error and user exists, the encrypted password provided is verified
       bcryptjs.compare(
         request.body.password,
         user.password,
@@ -157,11 +168,13 @@ UserSchema.statics.authenticate = (
   )
 }
 
+/* -- SCHEMA PLUGINS -- */
+
 UserSchema.plugin((schema) => {
   // This is responsible for removing
   // excess properties from the user
   // data that should be hidden from the
-  // API and for hidding deleted users.
+  // API and for hiding deleted users.
   schema.query.queryForApiResponse = function (
     findFunctionName: 'find' | 'findOne',
   ) {
@@ -206,12 +219,14 @@ UserSchema.plugin((schema) => {
   /**
    * This is responsible for hiding specific users based on the
    * current session's user and their role.
-   * @param {TUser} user The current session's user.
+   * @param {TCommonUser} user The current session's user.
    * @returns {mongoose.Query} A mongoose query.
    * @deprecated
    */
   // todo: remove deprecated function
-  schema.query.queryForApiResponseWithSpecificUsers = function (user: TUser) {
+  schema.query.queryForApiResponseWithSpecificUsers = function (
+    user: TCommonUser,
+  ) {
     // Get projection.
     let projection = this.projection()
 
@@ -245,6 +260,7 @@ UserSchema.plugin((schema) => {
   }
 })
 
-const UserModel: any = mongoose.model('User', UserSchema)
+/* -- MODEL -- */
 
+const UserModel: any = mongoose.model('User', UserSchema)
 export default UserModel

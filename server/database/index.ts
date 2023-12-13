@@ -5,9 +5,7 @@ import { databaseLogger } from 'metis/server/logging'
 import { demoMissionData } from 'metis/server/database/initial-mission-data'
 import InfoModel from 'metis/server/database/models/info'
 import MissionModel from 'metis/server/database/models/missions'
-import UserModel, {
-  hashPassword,
-} from 'metis/server/database/models/users/users'
+import UserModel, { hashPassword } from 'metis/server/database/models/users'
 import MetisServer from 'metis/server'
 import {
   studentUserData,

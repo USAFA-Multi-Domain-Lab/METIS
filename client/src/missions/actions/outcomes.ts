@@ -35,7 +35,7 @@ export default class ClientActionOutcome implements IActionOutcome {
   }
 
   // Implemented
-  public toJSON(): IActionOutcomeJSON {
+  public toJson(): IActionOutcomeJSON {
     return {
       actionID: this.actionID,
       nodeID: this.nodeID,

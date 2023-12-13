@@ -2,7 +2,7 @@
 
 import './List.scss'
 import React from 'react'
-import { EAjaxStatus } from '../../../../../shared/toolbox/ajax'
+import { TAjaxStatus } from '../../../../../shared/toolbox/ajax'
 import Tooltip from '../communication/Tooltip'
 
 /* -- enumerations -- */
@@ -84,7 +84,7 @@ interface IList_P<TList> {
   // from the back-end, the status for the
   // ajax call is passed here to display
   // "loading..." to the user
-  ajaxStatus: EAjaxStatus
+  ajaxStatus: TAjaxStatus
   // unique identifier for the list for CSS
   // purposes
   listSpecificItemClassName: string
@@ -577,7 +577,7 @@ export default class List<TList extends object> extends React.Component<
     let itemElements: JSX.Element[] = []
     let items: TList[] = this.props.items
     let itemsFiltered: TList[] = this.state.itemsFiltered
-    let ajaxStatus: EAjaxStatus = this.props.ajaxStatus
+    let ajaxStatus: TAjaxStatus = this.props.ajaxStatus
     let itemsPerPage: number | null = this.props.itemsPerPage
     let availableProperties: IListItemProperty[] =
       this.props.availableProperties
@@ -593,10 +593,7 @@ export default class List<TList extends object> extends React.Component<
       itemsPerPage,
       itemsFiltered.length,
     )
-    if (
-      ajaxStatus === EAjaxStatus.NotLoaded ||
-      ajaxStatus === EAjaxStatus.Loaded
-    ) {
+    if (ajaxStatus === 'NotLoaded' || ajaxStatus === 'Loaded') {
       if (items.length === 0 && noItemsDisplay) {
         if (rendersStatusAsItem) {
           itemElements.push(
@@ -728,13 +725,13 @@ export default class List<TList extends object> extends React.Component<
         }
       }
     } else {
-      if (ajaxStatus === EAjaxStatus.Loading && rendersStatusAsItem) {
+      if (ajaxStatus === 'Loading' && rendersStatusAsItem) {
         itemElements.push(
           <div className='item item-status' key={'item-status'}>
             loading...
           </div>,
         )
-      } else if (ajaxStatus === EAjaxStatus.Error && rendersStatusAsItem) {
+      } else if (ajaxStatus === 'Error' && rendersStatusAsItem) {
         itemElements.push(
           <div className='item item-status' key={'item-status'}>
             error loading
@@ -764,7 +761,7 @@ export default class List<TList extends object> extends React.Component<
     // let actions: IAction_P[] = this.props.actions
     let clickable: boolean = this.props.handleSelection !== null
     let grabbable: boolean = this.props.handleGrab !== null
-    let ajaxStatus: EAjaxStatus = this.props.ajaxStatus
+    let ajaxStatus: TAjaxStatus = this.props.ajaxStatus
     let listStyling: React.CSSProperties = this.props.listStyling
     let listSpecificItemClassName: string | null =
       this.props.listSpecificItemClassName
@@ -826,9 +823,9 @@ export default class List<TList extends object> extends React.Component<
         nextPageClassName += ' disabled'
       }
     }
-    if (ajaxStatus === EAjaxStatus.Loading) {
+    if (ajaxStatus === 'Loading') {
       listClassName += ' loading'
-    } else if (ajaxStatus === EAjaxStatus.Error) {
+    } else if (ajaxStatus === 'Error') {
       listClassName += ' error'
     }
 

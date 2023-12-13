@@ -1,11 +1,11 @@
 import React from 'react'
-import { EAjaxStatus } from '../../../../../shared/toolbox/ajax'
+import { TAjaxStatus } from '../../../../../shared/toolbox/ajax'
 import './AjaxStatusDisplay.scss'
 
 // -- interfaces --
 
 interface IProps {
-  status: EAjaxStatus
+  status: TAjaxStatus
   pendingMessage: string
   style: React.CSSProperties
   inline: boolean
@@ -28,27 +28,27 @@ export default class AjaxStatusDisplay extends React.Component<IProps, IState> {
   // -- functions | render --
 
   render() {
-    let status: EAjaxStatus = this.props.status
+    let status: TAjaxStatus = this.props.status
     let pendingMessage: string = this.props.pendingMessage
     let content: JSX.Element = <div></div>
     let className: string = 'AjaxStatusDisplay'
     let style: React.CSSProperties = this.props.style
     className += !this.props.inline ? '' : ' inline'
     switch (status) {
-      case EAjaxStatus.NotLoaded:
+      case 'NotLoaded':
         content = <div className='status inactive hidden' style={style}></div>
         break
-      case EAjaxStatus.Loading:
+      case 'Loading':
         content = (
           <div className='status pending' style={style}>
             {pendingMessage}
           </div>
         )
         break
-      case EAjaxStatus.Loaded:
+      case 'Loaded':
         content = <div className='status loaded hidden' style={style}></div>
         break
-      case EAjaxStatus.Error:
+      case 'Error':
         content = (
           <div className='status error' style={style}>
             server-error | 500

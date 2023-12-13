@@ -4,7 +4,7 @@ import './MissionMap.scss'
 import React from 'react'
 import List from '../general-layout/List'
 import strings from '../../../../../shared/toolbox/strings'
-import { EAjaxStatus } from '../../../../../shared/toolbox/ajax'
+import { TAjaxStatus } from '../../../../../shared/toolbox/ajax'
 import MoreInformation from '../communication/MoreInformation'
 import {
   ButtonSVG,
@@ -22,7 +22,7 @@ import ClientActionExecution from 'src/missions/actions/executions'
 
 interface IMissionMap {
   mission: ClientMission
-  missionAjaxStatus: EAjaxStatus
+  missionAjaxStatus: TAjaxStatus
   selectedNode: ClientMissionNode | null
   handleNodeSelection: (node: ClientMissionNode) => void
   handleNodeCreation: (node: ClientMissionNode) => void
@@ -1206,7 +1206,7 @@ export default class MissionMap extends React.Component<
   // mission.
   renderNodes(): JSX.Element | null {
     let mission: ClientMission = this.props.mission
-    let missionAjaxStatus: EAjaxStatus = this.props.missionAjaxStatus
+    let missionAjaxStatus: TAjaxStatus = this.props.missionAjaxStatus
     let visibleNodes: Array<ClientMissionNode> = this.state.visibleNodes
     let map: HTMLDivElement | null = this.map.current
     let listStyling: React.CSSProperties = {}
@@ -1247,7 +1247,7 @@ export default class MissionMap extends React.Component<
   // if node creation is active.
   renderNodeCreators(): JSX.Element | null {
     let mission: ClientMission = this.props.mission
-    let missionAjaxStatus: EAjaxStatus = this.props.missionAjaxStatus
+    let missionAjaxStatus: TAjaxStatus = this.props.missionAjaxStatus
     let map: HTMLDivElement | null = this.map.current
     let listStyling: React.CSSProperties = {}
 

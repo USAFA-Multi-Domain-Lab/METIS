@@ -115,7 +115,7 @@ export default class MetisSession {
    */
   public toJSON(): TMetisSessionJSON {
     return {
-      user: this.user.toJSON(),
+      user: this.user.toJson(),
       inGame: false,
     }
   }

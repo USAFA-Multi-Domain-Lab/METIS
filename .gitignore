@@ -8,6 +8,8 @@ npm-debug.log*
 /coverage
 /.nyc_output
 /.nyc_output/processinfo
+/env-packages
+/metis-env-library
 
 # react
 /client/build

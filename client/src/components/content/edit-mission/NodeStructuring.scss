@@ -5,15 +5,21 @@
     .BorderBox {
       .BoxTop {
         .MoreInformation {
-          transform: scale(0.77);
+          display: grid;
+          justify-content: end;
+          width: calc(100% - 8px);
           margin-top: 6.25px;
           grid-column: 1 / 2;
+
+          .circle {
+            transform: scale(0.77);
+          }
         }
 
         .Close {
           background: linear-gradient(
-            $background-alt2 0%,
-            $background-alt2 80%,
+            $background-alt7 0%,
+            $background-alt7 80%,
             transparent 100%
           );
           grid-column: 2 / 2;
@@ -29,6 +35,11 @@
     &.NodeStructuring {
       .BorderBox {
         overflow-y: hidden;
+
+        .BoxTop {
+          grid-template-columns: 1fr 26px;
+        }
+
         .Nodes {
           overflow-x: auto;
           overflow-y: auto;
