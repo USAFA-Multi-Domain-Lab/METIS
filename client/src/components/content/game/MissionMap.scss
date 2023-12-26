@@ -176,7 +176,6 @@
         overflow: visible;
         z-index: $z-index-objective-map-item;
         box-sizing: border-box;
-        transition: 250ms opacity;
         margin: 0;
         border: none;
         border-radius: 0;
@@ -192,25 +191,6 @@
         font-size: 13.5px;
         line-height: 13.5px;
         letter-spacing: normal;
-
-        &.disabled {
-          pointer-events: none;
-          opacity: 0.5;
-        }
-
-        &.no-items {
-          display: none;
-        }
-
-        &.mapped-node {
-          background-color: $background-main;
-        }
-
-        &.item-markdown {
-          margin-left: 0;
-          margin-right: 0;
-          border: none;
-        }
 
         .ActionPropertyDisplay {
           position: absolute;
@@ -269,6 +249,26 @@
           display: none;
         }
 
+        &.PendingOpen,
+        &.PendingExecInit {
+          pointer-events: none;
+          opacity: 0.35;
+        }
+
+        &.no-items {
+          display: none;
+        }
+
+        &.mapped-node {
+          background-color: $background-main;
+        }
+
+        &.item-markdown {
+          margin-left: 0;
+          margin-right: 0;
+          border: none;
+        }
+
         &.Selected {
           .title {
             white-space: nowrap;
@@ -302,28 +302,27 @@
         }
 
         &.PendingOpen {
-          @keyframes rotate {
-            from {
-              transform: rotate(0deg);
-            }
-            to {
-              transform: rotate(360deg);
-            }
-          }
-
-          .Icon {
-            background: url(../../../assets/images/icons/pending.png);
-            background-size: contain;
-            background-position: center;
-            background-repeat: no-repeat;
-            animation-name: rotate;
-            animation-duration: 1s;
-            animation-timing-function: linear;
-            animation-iteration-count: infinite;
-          }
+          //           @keyframes rotate {
+          //             from {
+          //               transform: rotate(0deg);
+          //             }
+          //             to {
+          //               transform: rotate(360deg);
+          //             }
+          //           }
+          //
+          //           .Icon {
+          //             background: url(../../../assets/images/icons/pending.png);
+          //             background-size: contain;
+          //             background-position: center;
+          //             background-repeat: no-repeat;
+          //             animation-name: rotate;
+          //             animation-duration: 1s;
+          //             animation-timing-function: linear;
+          //             animation-iteration-count: infinite;
+          //           }
         }
 
-        &.PendingExecInit,
         &.Executing {
           .ProgressBar {
             display: block;
@@ -331,11 +330,6 @@
         }
 
         &.PendingExecInit {
-          .ProgressBar {
-            filter: hue-rotate(180deg);
-            opacity: 0.25;
-            animation-duration: 1500ms;
-          }
         }
 
         &.Executing {

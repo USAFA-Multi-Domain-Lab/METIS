@@ -102,7 +102,7 @@ const baseGridPaddingX: number = 100.0 /*px*/
 const baseGridPaddingY: number = 20.0 /*px*/
 const selectedNodePaddingY: number = 40.0 /*px*/
 const pointerOriginOffset: number = 50 /*px*/
-const pointerStopOffset: number = 30 /*px*/
+const pointerStopOffset: number = 0 /*px*/
 // const pointerArrowOffset: number = 15 /*px*/
 const mapItemFontSize: number = 20 /*px*/
 // const mapCuttoff: number = 1600 /*px*/
@@ -1025,12 +1025,7 @@ export default class MissionMap extends React.Component<
     }
 
     // Logic to show icon if needed.
-    if (
-      node.device ||
-      node.executable ||
-      node.pendingOpen ||
-      node.pendingExecInit
-    ) {
+    if (node.device || node.executable) {
       titleWidthSubtrahend += width * 0.15
     }
 
