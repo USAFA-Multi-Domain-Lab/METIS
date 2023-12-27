@@ -636,6 +636,7 @@ export default class MissionMap extends React.Component<
     // }
 
     let map: HTMLDivElement | null = this.map.current
+
     if (map) {
       let mapBounds: DOMRect = map.getBoundingClientRect()
       let currentMapScale: number = this.state.mapScale
@@ -644,7 +645,7 @@ export default class MissionMap extends React.Component<
       let updatedMapOffsetX: number = currentMapOffsetX
       let updatedMapOffsetY: number = currentMapOffsetY
       let delta: number = event.deltaY ? event.deltaY : event.deltaX * 2.5
-      let updatedMapScale: number = currentMapScale + delta * 0.001
+      let updatedMapScale: number = currentMapScale + delta * 0.001 * -1
 
       updatedMapScale = Math.min(
         Math.max(minMapScale, updatedMapScale),
@@ -654,6 +655,7 @@ export default class MissionMap extends React.Component<
       if (currentMapScale === updatedMapScale) {
         return
       }
+
       let currentCursorMapCoordinates: IMapCoordinates =
         MissionMap.getMapCoordinates(
           event.clientX,
@@ -678,6 +680,7 @@ export default class MissionMap extends React.Component<
         updatedCursorMapCoordinates.y - currentCursorMapCoordinates.y
       updatedMapOffsetX += differenceX
       updatedMapOffsetY += differenceY
+
       this.setState({
         mapScale: updatedMapScale,
         mapOffsetX: updatedMapOffsetX,
