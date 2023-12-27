@@ -101,7 +101,7 @@ const baseMapYScale: number = 110.0 /*px*/
 const baseGridPaddingX: number = 100.0 /*px*/
 const baseGridPaddingY: number = 20.0 /*px*/
 const selectedNodePaddingY: number = 40.0 /*px*/
-const pointerOriginOffset: number = 50 /*px*/
+// const pointerOriginOffset: number = 50 /*px*/
 const pointerStopOffset: number = 0 /*px*/
 // const pointerArrowOffset: number = 15 /*px*/
 const mapItemFontSize: number = 20 /*px*/
@@ -1364,7 +1364,6 @@ export default class MissionMap extends React.Component<
 
         x1 += (mapXScale / 2) * mapScale
         x2 -= (mapXScale / 2) * mapScale - 0.001
-        x1 -= (gridPaddingX - pointerOriginOffset) * mapScale
         x2 += (gridPaddingX + pointerStopOffset) * mapScale
         // x2 += (gridPaddingX - pointerArrowOffset) * mapScale
 

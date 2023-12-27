@@ -397,7 +397,6 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
             </div>
           </div>
         </div>
-
         <PanelSizeRelationship
           sizingMode={EPanelSizingMode.Panel1_Auto__Panel2_Defined}
           initialDefinedSize={400}
