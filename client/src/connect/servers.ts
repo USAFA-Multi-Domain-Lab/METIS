@@ -82,6 +82,31 @@ export default class ServerConnection {
   > = {}
 
   /**
+   * A list of data for requests that have yet to be fulfilled.
+   */
+  private _unfulfilledRequests: TUnfulfilledReqData[] = []
+  /**
+   * A list of data for requests that have yet to be fulfilled.
+   */
+  public get unfulfilledRequests(): TUnfulfilledReqData[] {
+    return [...this._unfulfilledRequests]
+  }
+
+  /**
+   * The number of requests that have yet to be fulfilled.
+   */
+  public get unfulfilledReqCount(): number {
+    return this._unfulfilledRequests.length
+  }
+
+  /**
+   * Whether there are any unfulfilled requests.
+   */
+  public get hasUnfulfilledRequests(): boolean {
+    return this.unfulfilledReqCount > 0
+  }
+
+  /**
    * @param {IServerConnectionOptions} options Options for the server connection.
    */
   public constructor(options: IServerConnectionOptions = {}) {
@@ -178,12 +203,18 @@ export default class ServerConnection {
    * Emits a request event to the server.
    * @param method The method of the event to emit.
    * @param payload The payload of the event to emit.
+   * @param statusMessage The status message to display until the request is fulfilled.
    * @param options Options for the request.
    */
   public request<
     TMethod extends TRequestMethod,
     TPayload extends TRequestEvents[TMethod]['data'],
-  >(method: TMethod, data: TPayload, options: TWsRequestOptions = {}): void {
+  >(
+    method: TMethod,
+    data: TPayload,
+    statusMessage: string,
+    options: TWsRequestOptions = {},
+  ): void {
     // Parse options.
     const { onResponse } = options
 
@@ -194,6 +225,13 @@ export default class ServerConnection {
     if (onResponse !== undefined) {
       this.responseListeners[requestId] = onResponse
     }
+
+    // Add request ID to unfulfilled requests.
+    this._unfulfilledRequests.push({
+      id: requestId,
+      timestamp: Date.now(),
+      statusMessage,
+    })
 
     // Send payload.
     this.socket.send(JSON.stringify({ method, requestId, data }))
@@ -440,10 +478,13 @@ export default class ServerConnection {
       }
 
       // If the request was fulfilled with this response,
-      // remove the listener. Otherwise, leave it for the
-      // next response.
+      // remove the listener and remove the ID from the unfulfilled
+      // request list. Otherwise, maintain things for the next response.
       if (request.fulfilled) {
         delete this.responseListeners[request.event.requestId]
+        this._unfulfilledRequests = this._unfulfilledRequests.filter(
+          ({ id }) => id !== request.event.requestId,
+        )
       }
     }
   }
@@ -528,4 +569,22 @@ export type TWsRequestOptions = {
    * @note May be multiple responses depending on the type of request.
    */
   onResponse?: TServerResponseListener<TResponseMethod>
+}
+
+/**
+ * Data cached for an unfulfilled request.
+ */
+type TUnfulfilledReqData = {
+  /**
+   * The ID of the request.
+   */
+  id: string
+  /**
+   * The timestamp for when the request was made.
+   */
+  timestamp: number
+  /**
+   * The status message to display until the request is fulfilled.
+   */
+  statusMessage: string
 }

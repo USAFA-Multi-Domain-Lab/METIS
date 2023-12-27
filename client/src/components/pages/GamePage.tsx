@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import OutputPanel from '../content/game/OutputPanel'
 import './GamePage.scss'
 import ExecuteNodePath from '../content/game/ExecuteNodePath'
@@ -20,6 +20,7 @@ import {
 import MissionMap from '../content/game/MissionMap'
 import { EAjaxStatus } from '../../../../shared/toolbox/ajax'
 import NodeActions from '../content/game/NodeActions'
+import { TServerConnectionStatus } from '../../../../shared/connect/data'
 
 export interface IGamePage extends IPage {
   game: GameClient
@@ -49,6 +50,7 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
     confirm,
     handleError,
   } = globalContext.actions
+  const [server] = globalContext.server
 
   /* -- STATE -- */
 
@@ -87,6 +89,11 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
 
   /* -- VARIABLES -- */
 
+  let status: TServerConnectionStatus = server?.status ?? 'closed'
+  let statusMessage: string = ''
+  let overflowConnectionMessage: string = ''
+  let overflowStatusMessages: Array<{ key: string; text: string }> = []
+
   // Variables that determine whether or not
   // to display various components.
   let displayNodeActions: boolean =
@@ -95,8 +102,12 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
     selectedNode !== null && selectedAction !== null
 
   // Class names for various components.
-  let className: string = 'GamePage Page'
-  let resourcesClassName: string = 'Resources'
+  let rootClassList: string[] = ['GamePage', 'Page']
+  let resourcesClassList: string[] = ['Resources']
+  let statusClassList: string[] = ['Status']
+  let overflowCountClassList: string[] = ['OverflowCount', 'Hidden']
+  let overflowClassList: string[] = ['Overflow']
+  let pendingTasksClassList: string[] = ['PendingTasks', 'Hidden']
 
   /* -- FUNCTIONS -- */
 
@@ -249,14 +260,81 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
   // If the mission has no resources left,
   // add the red alert class to the resources.
   if (game.resources <= 0) {
-    resourcesClassName += ' RedAlert'
+    resourcesClassList.push('RedAlert')
+  }
+
+  // If a server connection is present...
+  if (server) {
+    switch (status) {
+      // Add class name and set status message based on the
+      // server connection status.
+      case 'open':
+        statusMessage = 'Connected.'
+        statusClassList.push('Open')
+        overflowConnectionMessage =
+          'The client is properly connected to the server.'
+        break
+      case 'closed':
+        statusMessage = 'Not Connected.'
+        statusClassList.push('Closed')
+        overflowConnectionMessage =
+          'The client is not connected to the server. Data between the server and the client cannot be exchanged.'
+        break
+      case 'connecting':
+        statusMessage = 'Connection dropped. Attempting to reconnect.'
+        statusClassList.push('Connecting')
+        overflowConnectionMessage =
+          'The connection from the client to the server has dropped. The client is attempting to reconnect to the server now.'
+        break
+    }
+
+    // If the server connection has unfulfilled requests, add the
+    // 'Pending' class to the status element.)
+    if (status === 'open' && server.hasUnfulfilledRequests) {
+      statusClassList.push('Pending')
+
+      // Get the request data.
+      let unfulfilledRequests = server.unfulfilledRequests
+
+      // Get the last request and overwrite the status message with it.
+      statusMessage =
+        unfulfilledRequests[unfulfilledRequests.length - 1].statusMessage
+
+      // Construct the overflow status messages.
+      overflowStatusMessages = unfulfilledRequests.map((request) => ({
+        key: request.id,
+        text: request.statusMessage,
+      }))
+
+      // If there are overflow messages, filter
+      // out the hidden class name from the pending tasks
+      // element.
+      if (overflowStatusMessages.length > 0) {
+        pendingTasksClassList = pendingTasksClassList.filter(
+          (cls) => cls !== 'Hidden',
+        )
+      }
+      // If there is more than one overflow message, filter
+      // out the hidden class name from the overflow count
+      // element.
+      if (overflowStatusMessages.length > 1) {
+        overflowCountClassList = overflowCountClassList.filter(
+          (cls) => cls !== 'Hidden',
+        )
+      }
+    }
+  }
+  // If no server connection, add the 'Closed' class to the status element.
+  else {
+    statusClassList.push('Closed')
+    statusMessage = 'Connection dropped. Attempting to reconnect.'
   }
 
   /* -- RENDER -- */
 
   // Return the rendered component.
   return (
-    <div className={className}>
+    <div className={rootClassList.join(' ')}>
       {
         // -- navigation --
       }
@@ -289,10 +367,34 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
       }
       <div className='Content'>
         <div className='TopBar'>
-          <div className={resourcesClassName}>
+          <div className={resourcesClassList.join(' ')}>
             Resources remaining: {game.resources}
-            <span style={{ display: 'inline-block', width: '40px' }}></span>
-            Game ID: {game.gameID}
+          </div>
+          <div className={statusClassList.join(' ')}>
+            <div className='Message'>
+              {statusMessage}{' '}
+              <span className={overflowCountClassList.join(' ')}>
+                +{overflowStatusMessages.length - 1}
+              </span>
+            </div>
+            <div className='Indicator'></div>
+            <div className={overflowClassList.join(' ')}>
+              <div className='Connection'>
+                <div className='Heading'>Connection Status:</div>
+                <div className='Status'>{status}</div>
+                <div className='Message'>{overflowConnectionMessage}</div>
+              </div>
+              <div className={pendingTasksClassList.join(' ')}>
+                <div className='Heading'>Pending Tasks:</div>
+                <ul className='Messages'>
+                  {overflowStatusMessages.map((statusMessage) => (
+                    <li key={statusMessage.key} className='Message'>
+                      {statusMessage.text}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
           </div>
         </div>
 

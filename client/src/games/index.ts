@@ -121,9 +121,13 @@ export default class GameClient extends Game<
     node.pendingOpen = true
 
     // Emit a request to open the node.
-    server.request('request-open-node', {
-      nodeID,
-    })
+    server.request(
+      'request-open-node',
+      {
+        nodeID,
+      },
+      `Opening "${node.name}".`,
+    )
   }
 
   /**
@@ -152,9 +156,13 @@ export default class GameClient extends Game<
     action.node.pendingExecInit = true
 
     // Emit a request to execute the action.
-    server.request('request-execute-action', {
-      actionID,
-    })
+    server.request(
+      'request-execute-action',
+      {
+        actionID,
+      },
+      `Executing "${action.name}" on "${action.node.name}".`,
+    )
   }
 
   /**
