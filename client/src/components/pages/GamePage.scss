@@ -93,8 +93,8 @@
         & > .Message,
         .Indicator {
           margin: 9px;
-          height: 22px;
-          line-height: 22px;
+          height: 20px;
+          line-height: 20px;
         }
 
         // Non-overflow messages only.
@@ -104,7 +104,7 @@
 
         .Indicator {
           box-sizing: border-box;
-          width: 22px;
+          width: 20px;
         }
 
         .Overflow {
