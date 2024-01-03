@@ -1,5 +1,13 @@
 # changelog
 
+# version-1.3.8 | 1-3-2023
+
+- Fixed issue where actions within a mission that had a resource cost of 0 would result in an infinite amount of attempts to execute causing the app to break once that mission was selected
+
+# version-1.3.7 | 12-6-2023
+
+- Raised the memory limit for the JSON parser on the server from 100kb to 10mb
+
 # version-1.3.6 | 11-9-2023
 
 - Fixed styling issue with text displayed in the terminal (output panel) on the game page

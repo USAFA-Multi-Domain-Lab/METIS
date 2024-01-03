@@ -669,7 +669,7 @@ export default function MissionSelectionPage(
 
       <div className='FooterContainer' draggable={false}>
         <div className='Version' onClick={viewChangelog} draggable={false}>
-          v1.3.6
+          v1.3.8
           <Tooltip description={'View changelog.'} />
         </div>
         <a

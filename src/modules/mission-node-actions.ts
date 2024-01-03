@@ -22,7 +22,7 @@ export interface IMissionNodeActionJSON {
   resourceCost: number
   postExecutionSuccessText: string
   postExecutionFailureText: string
-  scripts: Array<IScript>
+  scripts: IScript[]
 }
 
 export class MissionNodeAction {
@@ -35,8 +35,8 @@ export class MissionNodeAction {
   resourceCost: number
   postExecutionSuccessText: string
   postExecutionFailureText: string
-  scripts: Array<IScript>
-  _willSucceedArray: Array<boolean>
+  scripts: IScript[]
+  _willSucceedArray: boolean[]
   _willSucceed: boolean | null
 
   // This will be called if all the
@@ -56,7 +56,7 @@ export class MissionNodeAction {
   }
 
   // Getter for _willSucceedArray
-  get willSucceedArray(): Array<boolean> {
+  get willSucceedArray(): boolean[] {
     return this._willSucceedArray
   }
 
@@ -68,7 +68,29 @@ export class MissionNodeAction {
   // Gets the total amount of attempts
   // that a user can have to execute a node
   get totalPossibleExecutionAttempts(): number {
-    return Math.floor(this.node.mission.initialResources / this.resourceCost)
+    let amountOfAttempts: number = 0
+
+    // If the resource cost is 0, then the user
+    // can execute the action up to the max amount
+    // of attempts.
+    if (this.resourceCost === 0) {
+      amountOfAttempts = this.MAX_EXECUTION_ATTEMPTS
+    }
+    // If the initial resources is greater than 0,
+    // then the amount of attempts is calculated
+    // based on the initial resources divided by
+    // the resource cost.
+    else if (this.node.mission.initialResources > 0) {
+      amountOfAttempts = Math.floor(
+        this.node.mission.initialResources / this.resourceCost,
+      )
+    }
+
+    // The amount of attempts cannot exceed the
+    // max amount of attempts.
+    amountOfAttempts = Math.min(amountOfAttempts, this.MAX_EXECUTION_ATTEMPTS)
+
+    return amountOfAttempts
   }
 
   // Determines if a node succeeded or not
@@ -87,7 +109,7 @@ export class MissionNodeAction {
     resourceCost: number,
     postExecutionSuccessText: string,
     postExecutionFailureText: string,
-    scripts: Array<IScript>,
+    scripts: IScript[],
   ) {
     this.node = node
     this.actionID = actionID
@@ -108,7 +130,7 @@ export class MissionNodeAction {
     this._willSucceed = null
   }
 
-  toJSON(): IMissionNodeActionJSON {
+  public toJSON(): IMissionNodeActionJSON {
     return {
       actionID: this.actionID,
       name: this.name,
@@ -122,36 +144,17 @@ export class MissionNodeAction {
     }
   }
 
-  // This will determine whether a
-  // node action succeeds or fails based
-  // on the success chance passed.
-  static determineDifferentSuccessOutcomes = (
-    totalExecutionAttempts: number,
-    successChance: number,
-    rng: PRNG,
-  ): Array<boolean> => {
-    let willSucceedArray: Array<boolean> = []
-    let willSucceed: boolean = false
-
-    for (let i = 0; i < totalExecutionAttempts && !willSucceed; i++) {
-      willSucceed = rng.double() <= successChance
-      willSucceedArray.push(willSucceed)
-    }
-
-    return willSucceedArray
-  }
-
   // After the node is executed, the willSucceed that was just used is
   // removed from the "willSucceedArray" so that if the user re-executes
   // they can potentially see a different result.
-  updateWillSucceedArray(): Array<boolean> {
+  public updateWillSucceedArray(): boolean[] {
     this._willSucceedArray.shift()
 
     return this._willSucceedArray
   }
 
   // This updates the "willSucceed" property for re-execution purposes
-  updateWillSucceed(): boolean {
+  public updateWillSucceed(): boolean {
     this._willSucceed = this._willSucceedArray[0]
 
     return this._willSucceed
@@ -159,7 +162,10 @@ export class MissionNodeAction {
 
   // This will be called upon action
   // execution completion.
-  _handleExecutionEnd = (success: boolean, useAssets: boolean): void => {
+  private _handleExecutionEnd = (
+    success: boolean,
+    useAssets: boolean,
+  ): void => {
     let node: MissionNode = this.node
     let mission: Mission = node.mission
 
@@ -184,7 +190,7 @@ export class MissionNodeAction {
   }
 
   // This will execute the action.
-  execute(useAssets: boolean): void {
+  public execute(useAssets: boolean): void {
     let node: MissionNode = this.node
     let mission: Mission = node.mission
     let resourceCost: number = this.resourceCost
@@ -205,8 +211,39 @@ export class MissionNodeAction {
       this.updateWillSucceedArray()
     }, processTime)
   }
+
+  // This is the max amount of attempts
+  // that a user can have to execute an
+  // action.
+  public readonly MAX_EXECUTION_ATTEMPTS = 64
+
+  // This will determine whether a
+  // node action succeeds or fails based
+  // on the success chance passed.
+  private static determineDifferentSuccessOutcomes = (
+    totalExecutionAttempts: number,
+    successChance: number,
+    rng: PRNG,
+  ): boolean[] => {
+    let willSucceedArray: boolean[] = []
+    let willSucceed: boolean = false
+
+    for (let i = 0; i < totalExecutionAttempts && !willSucceed; i++) {
+      willSucceed = rng.double() <= successChance
+      willSucceedArray.push(willSucceed)
+    }
+
+    return willSucceedArray
+  }
 }
 
+/**
+ * This will handle successful action execution.
+ * @param missionID The mission's ID
+ * @param nodeID The node's ID
+ * @param actionID The action's ID
+ * @deprecated
+ */
 export function handleSuccessfulActionExecution(
   missionID: string,
   nodeID: string,
