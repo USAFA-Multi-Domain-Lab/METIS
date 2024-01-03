@@ -15,8 +15,10 @@ export default function ({
    */
   const sceneStyle = useMemo((): React.CSSProperties => {
     return {
-      transform: `translate(${cameraPosition.x}em, ${cameraPosition.y}em)`,
-      fontSize: `${cameraZoom.x}px`,
+      // Scene panning.
+      transform: `translate(${-cameraPosition.x}em, ${-cameraPosition.y}em)`,
+      // Scene zoom.
+      fontSize: `${1 / cameraZoom.x}px`,
     }
   }, [cameraPosition.toString(), cameraZoom.toString()])
 
@@ -24,6 +26,7 @@ export default function ({
 
   return (
     <div className='Scene' style={sceneStyle}>
+      {/* The objects present in the scene. */}
       {children}
     </div>
   )

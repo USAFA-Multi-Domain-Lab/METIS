@@ -1,18 +1,20 @@
 @import '../../../../../assets/styles/config.scss';
 
 .Grid {
-  &.NodeGrid {
-    width: 20000px;
-    height: 20000px;
+  $grid-line-width: 0.0015em;
 
+  width: 20000px;
+  height: 20000px;
+
+  &.NodeGrid {
     // Grid when horizontal lines are not wanted,
     // which is the default.
     &:not(.HorizontalEnabled) {
       background: linear-gradient(
         to right,
-        $map-grid-color 0 0.5px,
-        transparent 2px calc(100% - 0.5px),
-        $map-grid-color calc(100% - 0.5px) 100%
+        $map-grid-color 0 $grid-line-width,
+        transparent 2px calc(100% - #{$grid-line-width}),
+        $map-grid-color calc(100% - #{$grid-line-width}) 100%
       );
       background-size: 2em 1em;
       background-position: center;
@@ -25,15 +27,15 @@
       // Draw grid.
       background: linear-gradient(
           to right,
-          $map-grid-color 0 0.5px,
-          transparent 2px calc(100% - 0.5px),
-          $map-grid-color calc(100% - 0.5px) 100%
+          $map-grid-color 0 $grid-line-width,
+          transparent 2px calc(100% - #{$grid-line-width}),
+          $map-grid-color calc(100% - #{$grid-line-width}) 100%
         ),
         linear-gradient(
           to bottom,
-          $map-grid-color 0 0.5px,
-          transparent 2px calc(100% - 0.5px),
-          $map-grid-color calc(100% - 0.5px) 100%
+          $map-grid-color 0 $grid-line-width,
+          transparent 2px calc(100% - #{$grid-line-width}),
+          $map-grid-color calc(100% - #{$grid-line-width}) 100%
         );
       background-size: 2em 1em;
       background-position: center;
@@ -42,21 +44,18 @@
   }
 
   &.EmGrid {
-    width: 20000px;
-    height: 20000px;
-
     // Draw grid.
     background: linear-gradient(
         to right,
-        $map-grid-color 0 0.5px,
-        transparent 2px calc(100% - 0.5px),
-        $map-grid-color calc(100% - 0.5px) 100%
+        $map-grid-color 0 $grid-line-width,
+        transparent 2px calc(100% - #{$grid-line-width}),
+        $map-grid-color calc(100% - #{$grid-line-width}) 100%
       ),
       linear-gradient(
         to bottom,
-        $map-grid-color 0 0.5px,
-        transparent 2px calc(100% - 0.5px),
-        $map-grid-color calc(100% - 0.5px) 100%
+        $map-grid-color 0 $grid-line-width,
+        transparent 2px calc(100% - #{$grid-line-width}),
+        $map-grid-color calc(100% - #{$grid-line-width}) 100%
       );
     background-size: 1em 1em;
     background-position: center;

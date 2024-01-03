@@ -1,12 +1,13 @@
 import './PanController.scss'
 import { useMemo, useState } from 'react'
-import { Vector2D } from '../../../../../../../shared/toolbox/space'
+import { Vector1D, Vector2D } from '../../../../../../../shared/toolbox/space'
 
 /**
  * Controls panning of the `MissionMap` component.
  */
 export default function PanController({
   cameraPosition,
+  cameraZoom,
 }: TPanController): JSX.Element | null {
   /* -- state -- */
 
@@ -37,8 +38,14 @@ export default function PanController({
    */
   function onMouseMove(event: React.MouseEvent<HTMLDivElement>) {
     if (panningIsActive) {
-      // Translate the camera position by the mouse movement.
-      cameraPosition.translate(event.movementX / 64, event.movementY / 64)
+      // Determine the camera delta from the mouse movement
+      // and scale it by the current zoom level.
+      let cameraDelta = new Vector2D(
+        -event.movementX,
+        -event.movementY,
+      ).scaleBy(cameraZoom)
+
+      cameraPosition.translateBy(cameraDelta)
     }
   }
 
@@ -66,18 +73,8 @@ export type TPanController = {
    * The current camera position.
    */
   cameraPosition: Vector2D
+  /**
+   * The current camera zoom.
+   */
+  cameraZoom: Vector1D
 }
-
-//   /**
-//    * A CSS rule that translates an element with the vector.
-//    */
-//   public get cssTranslation(): string {
-//     return `translate(${this._x}em, ${this._y}em)`
-//   }
-//
-//   /**
-//    * A CSS rule that scales an element with the vector.
-//    */
-//   public get cssScale(): string {
-//     return `scale(${this._x}, ${this._y})`
-//   }

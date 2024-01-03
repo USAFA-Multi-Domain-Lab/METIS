@@ -1,27 +1,29 @@
 @import '../../../../../assets/styles/config.scss';
 @import '../mixins.scss';
 
-.MissionNode {
-  // Enable pointer events for nodes,
-  // since they can be interacted with.
-  pointer-events: all;
+.Scene {
+  .MissionNode {
+    // Enable pointer events for nodes,
+    // since they can be interacted with.
+    pointer-events: all;
 
-  background-color: blue;
-  width: 1.6em;
-  height: 0.8em;
+    background-color: blue;
+    width: 1.6em;
+    height: 0.8em;
 
-  .Title {
-    // Define constants.
-    $border-width: 0.1em;
+    .Title {
+      // Define constants.
+      $border-width: 0.1em;
 
-    // Position the title.
-    @include center-nest-origin-y;
-    top: 50%;
-    left: $border-width;
+      // Position the title.
+      @include center-nest-origin-y;
+      top: 50%;
+      left: $border-width;
 
-    // Size the title.
-    width: calc(75% - (#{$border-width} * 2));
-    height: unset;
-    padding: 0.2em 0.4em;
+      // Size the title.
+      width: calc(75% - (#{$border-width} * 2));
+      height: unset;
+      padding: 0.2em 0.4em;
+    }
   }
 }
