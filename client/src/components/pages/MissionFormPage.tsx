@@ -1,7 +1,5 @@
 import { useBeforeunload } from 'react-beforeunload'
 import { useState } from 'react'
-import { EAjaxStatus } from '../../../../shared/toolbox/ajax'
-import MissionMap from '../content/game/MissionMap'
 import './MissionFormPage.scss'
 import { IPage } from '../App'
 import Navigation from '../content/general-layout/Navigation'
@@ -18,6 +16,7 @@ import { useGlobalContext } from 'src/context'
 import ClientMission from 'src/missions'
 import ClientMissionNode, { ENodeDeleteMethod } from 'src/missions/nodes'
 import ClientMissionAction from 'src/missions/actions'
+import MissionMap2 from '../content/game/mission-map'
 
 export interface IMissionFormPage extends IPage {
   // If null, a new mission is being
@@ -74,7 +73,8 @@ export default function MissionFormPage(
     if (missionID !== null) {
       try {
         beginLoading('Loading mission...')
-        setMission(await ClientMission.fetchOne(missionID, { openAll: true }))
+        let mission = await ClientMission.fetchOne(missionID, { openAll: true })
+        setMission(mission)
       } catch {
         handleError('Failed to load mission.')
       }
@@ -163,7 +163,7 @@ export default function MissionFormPage(
   // notified here.
   const ensureOneNodeExists = (): void => {
     if (
-      mission.nodes.size === 1 &&
+      mission.nodes.length === 1 &&
       mission.lastCreatedNode?.nodeID ===
         Array.from(mission.nodes.values())[0].nodeID
     ) {
@@ -349,7 +349,7 @@ export default function MissionFormPage(
   let grayOutEditButton: boolean = nodeStructuringIsActive || isEmptyString
   let grayOutDeselectNodeButton: boolean = isEmptyString
   let grayOutAddNodeButton: boolean = isEmptyString
-  let grayOutDeleteNodeButton: boolean = mission.nodes.size < 2
+  let grayOutDeleteNodeButton: boolean = mission.nodes.length < 2
 
   if (!isEmptyString) {
     for (let notification of notifications) {
@@ -400,39 +400,40 @@ export default function MissionFormPage(
             ...ResizablePanel.defaultProps,
             minSize: 330,
             render: () => (
-              <MissionMap
-                mission={mission}
-                missionAjaxStatus={EAjaxStatus.Loaded}
-                selectedNode={selectedNode}
-                allowCreationMode={true}
-                handleNodeSelection={(node: ClientMissionNode) => {
-                  validateNodeSelectionChange(() => {
-                    selectNode(node)
-                    ensureOneActionExistsIfExecutable()
-                  })
-                }}
-                handleNodeCreation={(node: ClientMissionNode) => {
-                  setSelectedNode(node)
-                  handleChange()
-                }}
-                handleNodeDeselection={() => {
-                  validateNodeSelectionChange(() => {
-                    selectNode(null)
-                  })
-                }}
-                handleNodeDeletionRequest={handleNodeDeleteRequest}
-                handleMapEditRequest={() => {
-                  selectNode(null)
-                  activateNodeStructuring(true)
-                }}
-                handleMapSaveRequest={save}
-                grayOutEditButton={grayOutEditButton}
-                grayOutSaveButton={grayOutSaveButton}
-                grayOutDeselectNodeButton={grayOutDeselectNodeButton}
-                grayOutAddNodeButton={grayOutAddNodeButton}
-                grayOutDeleteNodeButton={grayOutDeleteNodeButton}
-                renderNodeTooltipDescription={(node: ClientMissionNode) => ''}
-              />
+              <MissionMap2 mission={mission} />
+              // <MissionMap
+              //   mission={mission}
+              //   missionAjaxStatus={EAjaxStatus.Loaded}
+              //   selectedNode={selectedNode}
+              //   allowCreationMode={true}
+              //   handleNodeSelection={(node: ClientMissionNode) => {
+              //     validateNodeSelectionChange(() => {
+              //       selectNode(node)
+              //       ensureOneActionExistsIfExecutable()
+              //     })
+              //   }}
+              //   handleNodeCreation={(node: ClientMissionNode) => {
+              //     setSelectedNode(node)
+              //     handleChange()
+              //   }}
+              //   handleNodeDeselection={() => {
+              //     validateNodeSelectionChange(() => {
+              //       selectNode(null)
+              //     })
+              //   }}
+              //   handleNodeDeletionRequest={handleNodeDeleteRequest}
+              //   handleMapEditRequest={() => {
+              //     selectNode(null)
+              //     activateNodeStructuring(true)
+              //   }}
+              //   handleMapSaveRequest={save}
+              //   grayOutEditButton={grayOutEditButton}
+              //   grayOutSaveButton={grayOutSaveButton}
+              //   grayOutDeselectNodeButton={grayOutDeselectNodeButton}
+              //   grayOutAddNodeButton={grayOutAddNodeButton}
+              //   grayOutDeleteNodeButton={grayOutDeleteNodeButton}
+              //   renderNodeTooltipDescription={(node: ClientMissionNode) => ''}
+              // />
             ),
           }}
           panel2={{

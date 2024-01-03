@@ -111,7 +111,7 @@ export default function NodeEntry(props: {
     }
 
     // Logic to disable the delete node button
-    if (mission.nodes.size < 2) {
+    if (mission.nodes.length < 2) {
       deleteNodeClassName += ' Disabled'
     }
 

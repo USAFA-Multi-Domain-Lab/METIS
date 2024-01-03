@@ -2,7 +2,10 @@
   "name": "metis",
   "version": "2.0.0",
   "private": true,
-  "dependencies": {},
+  "dependencies": {
+    "@types/memoize-one": "^5.1.2",
+    "memoize-one": "^6.0.0"
+  },
   "scripts": {},
   "prettier": {
     "tabWidth": 2,

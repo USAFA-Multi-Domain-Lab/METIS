@@ -135,16 +135,3 @@ export function useListComponent<
     [Component, propsList, keyFrom],
   )
 }
-
-/**
- * Creates a forceUpdate function that can be
- * used to force a component to update.
- * @returns The function.
- */
-export function useForcedUpdates() {
-  // Arbitrary low-memory state for forcing updates.
-  const [x, setX] = useState<number>(0)
-
-  // Return the forceUpdate function.
-  return () => setX(x + 1)
-}

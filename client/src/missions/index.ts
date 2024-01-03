@@ -9,6 +9,7 @@ import ClientMissionNode, { ENodeTargetRelation } from './nodes'
 import { v4 as generateHash } from 'uuid'
 import { Counter } from '../../../shared/toolbox/numbers'
 import NodeCreator from './nodes/creator'
+import { Vector2D } from '../../../shared/toolbox/space'
 
 /**
  * Options for the creation of a ClientMission object.
@@ -128,8 +129,7 @@ export default class ClientMission extends Mission<ClientMissionNode> {
           this,
           nodeCreationTarget,
           ENodeTargetRelation.ParentOfTargetOnly,
-          0,
-          0,
+          new Vector2D(0, 0),
         ),
       )
       this._nodeCreators.push(
@@ -137,8 +137,7 @@ export default class ClientMission extends Mission<ClientMissionNode> {
           this,
           nodeCreationTarget,
           ENodeTargetRelation.BetweenTargetAndChildren,
-          0,
-          0,
+          new Vector2D(0, 0),
         ),
       )
       this._nodeCreators.push(
@@ -146,8 +145,7 @@ export default class ClientMission extends Mission<ClientMissionNode> {
           this,
           nodeCreationTarget,
           ENodeTargetRelation.PreviousSiblingOfTarget,
-          0,
-          0,
+          new Vector2D(0, 0),
         ),
       )
       this._nodeCreators.push(
@@ -155,8 +153,7 @@ export default class ClientMission extends Mission<ClientMissionNode> {
           this,
           nodeCreationTarget,
           ENodeTargetRelation.FollowingSiblingOfTarget,
-          0,
-          0,
+          new Vector2D(0, 0),
         ),
       )
     }
@@ -202,7 +199,7 @@ export default class ClientMission extends Mission<ClientMissionNode> {
 
     // If there is no existing nodes,
     // create one.
-    if (this.nodes.size === 0) {
+    if (this.nodes.length === 0) {
       this.spawnNode()
     }
 
@@ -306,8 +303,7 @@ export default class ClientMission extends Mission<ClientMissionNode> {
     // included in the nodeData for the
     //  missionRender so that it displays.
     if (parentNode.nodeID !== this.rootNode.nodeID) {
-      parentNode.mapX = depth
-      parentNode.mapY = rowCount.count
+      parentNode.position.set(depth * 2, rowCount.count)
     }
     // Else the depth of the mission is reset
     // for recalculation.
@@ -385,28 +381,23 @@ export default class ClientMission extends Mission<ClientMissionNode> {
       for (let nodeCreator of nodeCreators) {
         switch (nodeCreator.creationTargetRelation) {
           case ENodeTargetRelation.ParentOfTargetAndChildren:
-            nodeCreator.mapX = nodeCreationTarget.mapX - 2
-            nodeCreator.mapY = nodeCreationTarget.mapY
+            nodeCreator.position.translateX(-2)
             nodeCreator.depth = nodeCreationTarget.depth - 2
             break
           case ENodeTargetRelation.ParentOfTargetOnly:
-            nodeCreator.mapX = nodeCreationTarget.mapX - 1
-            nodeCreator.mapY = nodeCreationTarget.mapY
+            nodeCreator.position.translateX(-1)
             nodeCreator.depth = nodeCreationTarget.depth - 1
             break
           case ENodeTargetRelation.BetweenTargetAndChildren:
-            nodeCreator.mapX = nodeCreationTarget.mapX + 1
-            nodeCreator.mapY = nodeCreationTarget.mapY
+            nodeCreator.position.translateX(1)
             nodeCreator.depth = nodeCreationTarget.depth + 1
             break
           case ENodeTargetRelation.PreviousSiblingOfTarget:
-            nodeCreator.mapX = nodeCreationTarget.mapX
-            nodeCreator.mapY = nodeCreationTarget.mapY - 1
+            nodeCreator.position.translateY(-1)
             nodeCreator.depth = nodeCreationTarget.depth
             break
           case ENodeTargetRelation.FollowingSiblingOfTarget:
-            nodeCreator.mapX = nodeCreationTarget.mapX
-            nodeCreator.mapY = nodeCreationTarget.mapY + 1
+            nodeCreator.position.translateY(1)
             nodeCreator.depth = nodeCreationTarget.depth
             break
         }
@@ -437,7 +428,7 @@ export default class ClientMission extends Mission<ClientMissionNode> {
     // Handle addToNodeMap option.
     if (addToNodeMap) {
       // Add the node to the node map.
-      this.nodes.set(node.nodeID, node)
+      this.nodes.push(node)
     }
 
     // Set last created node.

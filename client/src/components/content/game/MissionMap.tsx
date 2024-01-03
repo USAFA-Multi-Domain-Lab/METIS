@@ -1,4 +1,4 @@
-// -- imports --
+/* -- imports -- */
 
 import './MissionMap.scss'
 import React from 'react'
@@ -17,67 +17,8 @@ import ClientMission from 'src/missions'
 import ClientMissionNode, { ENodeTargetRelation } from 'src/missions/nodes'
 import NodeCreator from 'src/missions/nodes/creator'
 import ClientActionExecution from 'src/missions/actions/executions'
-
-/* -- interfaces -- */
-
-interface IMissionMap {
-  mission: ClientMission
-  missionAjaxStatus: EAjaxStatus
-  selectedNode: ClientMissionNode | null
-  handleNodeSelection: (node: ClientMissionNode) => void
-  handleNodeCreation: (node: ClientMissionNode) => void
-  handleNodeDeselection: (() => void) | null
-  handleNodeDeletionRequest: ((node: ClientMissionNode) => void) | null
-  handleMapEditRequest: (() => void) | null
-  handleMapSaveRequest: (() => void) | null
-  handleNodePathExitRequest: (() => void) | null
-  allowCreationMode: boolean
-  grayOutEditButton: boolean
-  grayOutSaveButton: boolean
-  grayOutDeselectNodeButton: boolean
-  grayOutExitNodePathButton: boolean
-  grayOutAddNodeButton: boolean
-  grayOutDeleteNodeButton: boolean
-  elementRef: React.RefObject<HTMLDivElement>
-  applyNodeClassList: (node: ClientMissionNode) => string[]
-  renderNodeTooltipDescription: (node: ClientMissionNode) => string
-}
-
-interface IMissionMap_S {
-  visibleNodes: Array<ClientMissionNode>
-  mainRelationships: Array<MissionNodeRelationship>
-  nodeCreatorRelationships: Array<MissionNodeRelationship>
-  lastStructureChangeKey: string
-  lastExpandedNode: ClientMissionNode | null
-  navigationIsActive: boolean
-  mapOffsetX: number
-  mapOffsetY: number
-  mapScale: number
-  nodeDepth: number
-}
-
-export interface IMissionMappable {
-  nodeID: string
-  name: string
-  mapX: number
-  mapY: number
-  depth: number
-  execution: ClientActionExecution | null
-  executing: boolean
-  executable: boolean
-  device: boolean
-  color: string
-  isOpen: boolean
-  pendingOpen: boolean
-  pendingExecInit: boolean
-  childNodes: Array<ClientMissionNode>
-}
-
-// represents a location on the mission map
-interface IMapCoordinates {
-  x: number
-  y: number
-}
+import memoize from 'memoize-one'
+import { Vector2D } from '../../../../../shared/toolbox/space'
 
 // represents a relationship between two
 // nodes
@@ -91,157 +32,50 @@ class MissionNodeRelationship {
   }
 }
 
-/* -- constants -- */
-
-const defaultMapScale: number = 0.5
-const maxMapScale: number = 2.0
-const minMapScale: number = 0.25
-const baseMapXScale: number = 440.0 /*px*/
-const baseMapYScale: number = 110.0 /*px*/
-const baseGridPaddingX: number = 100.0 /*px*/
-const baseGridPaddingY: number = 20.0 /*px*/
-const selectedNodePaddingY: number = 40.0 /*px*/
-// const pointerOriginOffset: number = 50 /*px*/
-const pointerStopOffset: number = 0 /*px*/
-// const pointerArrowOffset: number = 15 /*px*/
-const mapItemFontSize: number = 20 /*px*/
-// const mapCuttoff: number = 1600 /*px*/
-
 /* -- components -- */
 
 export default class MissionMap extends React.Component<
-  IMissionMap,
-  IMissionMap_S
+  TMissionMap,
+  TMissionMap_S
 > {
-  /* -- static -- */
+  /* -- properties -- */
 
-  // gets the coordinates on the map where
-  // the cursor currently is, accounts for
-  // the mapScale and the offset from panning.
-  static getMapCoordinates(
-    clientX: number,
-    clientY: number,
-    mapBounds: DOMRect,
-    mapUnscaledOffsetX: number,
-    mapUnscaledOffsetY: number,
-    mapScale: number,
-  ): IMapCoordinates {
-    let mapOffsetX = mapUnscaledOffsetX * mapScale
-    let mapOffsetY = mapUnscaledOffsetY * mapScale
-    let mapCoordinates: IMapCoordinates = {
-      x: (clientX - mapOffsetX - mapBounds.x) / mapScale,
-      y: (clientY - mapOffsetY - mapBounds.y) / mapScale,
-    }
-    return mapCoordinates
-  }
+  /**
+   * Ref for the root mission map element.
+   */
+  private rootRef: React.RefObject<HTMLDivElement> = React.createRef()
 
-  // takes an already mapped node, and
-  // renders its tooltip.
-  static renderMappedNodeTooltipDescription_default = (
-    node: ClientMissionNode,
-  ): string => {
-    let nodeTitle: string = node.name
-    let nodeTypeInfo: string = ''
-    let scoreInfo: string = ''
-    let prompt: string = ''
-
-    // Prompt construction.
-    prompt = '##### View this node.'
-
-    return `#### ${nodeTitle}\n${StringsToolbox.limit(
-      node.name, // ! This should be description
-      160,
-    )}\n${nodeTypeInfo}${scoreInfo}\n${prompt}`
-  }
-
-  // inherited
-  static defaultProps = {
-    selectedNode: null,
-    handleNodeCreation: () => {},
-    handleNodeDeselection: null,
-    handleNodeDeletionRequest: null,
-    handleMapEditRequest: null,
-    handleMapSaveRequest: null,
-    handleNodePathExitRequest: null,
-    allowCreationMode: false,
-    grayOutEditButton: false,
-    grayOutSaveButton: false,
-    grayOutDeselectNodeButton: false,
-    grayOutExitNodePathButton: false,
-    grayOutAddNodeButton: false,
-    grayOutDeleteNodeButton: false,
-    elementRef: React.createRef(),
-    applyNodeClassList: () => '',
-    renderNodeTooltipDescription:
-      MissionMap.renderMappedNodeTooltipDescription_default,
-  }
-
-  /* -- fields -- */
-
-  map: React.RefObject<HTMLDivElement> = React.createRef()
-
-  /* -- getters -- */
-
-  // inherited
-  get defaultState(): IMissionMap_S {
+  /**
+   * The default state for the component.
+   */
+  public get defaultState(): TMissionMap_S {
     let mission: ClientMission = this.props.mission
 
     return {
-      visibleNodes: [],
+      nodes: [],
       mainRelationships: [],
       nodeCreatorRelationships: [],
       lastStructureChangeKey: mission.structureChangeKey,
       lastExpandedNode: mission.lastOpenedNode,
-      navigationIsActive: false,
-      mapOffsetX: baseGridPaddingX / 2,
-      mapOffsetY: baseMapYScale * 2,
-      mapScale: defaultMapScale,
+      panningIsActive: false,
+      mapOffsetX: MissionMap.BASE_GRID_PADDING_X / 2,
+      mapOffsetY: MissionMap.BASE_MAP_Y_SCALE * 2,
+      mapScale: MissionMap.DEFAULT_MAP_SCALE,
       nodeDepth: mission.depth,
     }
   }
 
-  // This is the map x scale after considering
-  // the current state.
-  get currentMapXScale(): number {
-    let currentMapXScale: number = baseMapXScale
-
-    return currentMapXScale
-  }
-
-  // This is the map y scale after considering
-  // the current state.
-  get currentMapYScale(): number {
-    let currentMapYScale: number = baseMapYScale
-
-    return currentMapYScale
-  }
-
-  // This is the grid padding after considering
-  // the current state.
-  get currentGridPaddingX(): number {
-    let currentGridPaddingX: number = baseGridPaddingX
-
-    return currentGridPaddingX
-  }
-
-  // This is the grid padding after considering
-  // the current state.
-  get currentGridPaddingY(): number {
-    let currentGridPaddingY: number = baseGridPaddingY
-
-    return currentGridPaddingY
-  }
-
-  // This is whether creation mode is active,
-  // and if nodes are pending to be added by
-  // the user.
-  get creationModeActive(): boolean {
+  /**
+   * Whether creation mode is active, and if nodes are
+   * pending to be added by the user.
+   */
+  private get creationModeActive(): boolean {
     return this.props.mission.nodeCreationTarget !== null
   }
 
   /* -- initialize -- */
 
-  constructor(props: IMissionMap) {
+  public constructor(props: TMissionMap) {
     super(props)
 
     this.state = {
@@ -249,10 +83,10 @@ export default class MissionMap extends React.Component<
     }
   }
 
-  // inherited
-  componentDidMount(): void {
+  // Overridden
+  public componentDidMount(): void {
     let mission: ClientMission = this.props.mission
-    let map: HTMLDivElement | null = this.map.current
+    let map: HTMLDivElement | null = this.rootRef.current
 
     window.addEventListener('wheel', this.preventMapZoomInterference, {
       passive: false,
@@ -266,20 +100,73 @@ export default class MissionMap extends React.Component<
     this.updateAllRelationships()
   }
 
-  // inherited
-  componentWillUnmount(): void {
+  // Overridden
+  public componentWillUnmount(): void {
     let mission: ClientMission = this.props.mission
 
     window.removeEventListener('wheel', this.preventMapZoomInterference)
     mission.removeStructureListener(this.forceUpdate)
   }
 
+  /* -- functions | memoized -- */
+
+  /**
+   * Applies view culling to nodes so that nodes that
+   * are not visible are not rendered.
+   * @param nodes The nodes to cull.
+   * @param boundsX The x position of the map element bounds in the DOM.
+   * @param boundsY The y position of the map element bounds in the DOM.
+   * @param boundsWidth The width of the map element bounds in the DOM.
+   * @param boundsHeight The height of the map element bounds in the DOM.
+   * @param scale The scale of the map in the state.
+   * @param offsetX The offset x of the map in the state.
+   * @param offsetY The offset y of the map in the state.
+   * @memoized
+   */
+  private cullNodes = memoize(
+    (
+      nodes: ClientMissionNode[],
+      boundsX: number,
+      boundsY: number,
+      boundsWidth: number,
+      boundsHeight: number,
+      scale: number,
+      offsetX: number,
+      offsetY: number,
+    ): ClientMissionNode[] => {
+      // Gather details.
+      let culledNodes: ClientMissionNode[] = []
+      // The bounds of the map in cell units.
+      let cellBounds: DOMRect = new DOMRect(
+        (boundsX - offsetX) / MissionMap.BASE_MAP_X_SCALE,
+        (boundsY - offsetY) / MissionMap.BASE_MAP_Y_SCALE,
+        boundsWidth / MissionMap.BASE_MAP_X_SCALE / scale,
+        boundsHeight / MissionMap.BASE_MAP_Y_SCALE / scale,
+      )
+
+      console.log(
+        'cellBounds:',
+        cellBounds.x,
+        cellBounds.y,
+        cellBounds.width,
+        cellBounds.height,
+      )
+
+      console.log(
+        'first-node:',
+        this.props.mission.rootNode.childNodes[0].position.x,
+        this.props.mission.rootNode.childNodes[0].position.y,
+      )
+      return nodes
+    },
+  )
+
   /* -- functions | state-purposed -- */
 
-  // inherited
-  componentDidUpdate(
-    previousProps: IMissionMap,
-    previousState: IMissionMap_S,
+  // Overridden
+  public componentDidUpdate(
+    previousProps: TMissionMap,
+    previousState: TMissionMap_S,
   ): void {
     if (
       previousProps.mission !== this.props.mission ||
@@ -304,8 +191,9 @@ export default class MissionMap extends React.Component<
     }
   }
 
-  // inherited
-  forceUpdate = () => super.forceUpdate()
+  // Overridden
+  // This is done to use forceUpdate easily in callbacks.
+  public forceUpdate = () => super.forceUpdate()
 
   // This will pan the offset to a new
   // value gradually.
@@ -410,7 +298,7 @@ export default class MissionMap extends React.Component<
 
     if (parentNode.nodeID === rootNode.nodeID) {
       this.setState({
-        visibleNodes,
+        nodes: visibleNodes,
         mainRelationships: relationships,
       })
     }
@@ -508,12 +396,12 @@ export default class MissionMap extends React.Component<
   // been just unlocked.
   revealNewNodes = (): void => {
     let mission: ClientMission = this.props.mission
-    let map: HTMLDivElement | null = this.map.current
+    let map: HTMLDivElement | null = this.rootRef.current
     let mapScale: number = this.state.mapScale
     let mapOffsetX: number = this.state.mapOffsetX
     let mapOffsetY: number = this.state.mapOffsetY
-    let mapXScale: number = this.currentMapXScale
-    let gridPaddingX: number = this.currentGridPaddingX
+    let mapXScale: number = MissionMap.BASE_MAP_X_SCALE
+    let gridPaddingX: number = MissionMap.BASE_GRID_PADDING_X
 
     if (
       this.state.lastExpandedNode !== mission.lastOpenedNode &&
@@ -546,12 +434,12 @@ export default class MissionMap extends React.Component<
   // node.
   revealNewNodeCreators = (): void => {
     let mission: ClientMission = this.props.mission
-    let map: HTMLDivElement | null = this.map.current
+    let map: HTMLDivElement | null = this.rootRef.current
     let mapScale: number = this.state.mapScale
     let mapOffsetX: number = this.state.mapOffsetX
     let mapOffsetY: number = this.state.mapOffsetY
-    let mapXScale: number = this.currentMapXScale
-    let gridPaddingX: number = this.currentGridPaddingX
+    let mapXScale: number = MissionMap.BASE_MAP_X_SCALE
+    let gridPaddingX: number = MissionMap.BASE_GRID_PADDING_X
 
     if (map) {
       let greatestNodeCreatorDepth: number = -1
@@ -584,7 +472,7 @@ export default class MissionMap extends React.Component<
   // This prevents map zoom interference from
   // document scrolling.
   preventMapZoomInterference = (event: WheelEvent): void => {
-    let map: HTMLDivElement | null = this.map.current
+    let map: HTMLDivElement | null = this.rootRef.current
     if (
       map?.parentElement?.querySelector('.MissionMap:hover') &&
       event.shiftKey
@@ -596,10 +484,10 @@ export default class MissionMap extends React.Component<
   // called when there is mouse movement inside the
   // map bounds. used to pan when mouse is held down.
   handleMapMouseMovement = (event: React.MouseEvent<HTMLDivElement>): void => {
-    let navigationIsActive: boolean = this.state.navigationIsActive
+    let navigationIsActive: boolean = this.state.panningIsActive
 
     if (navigationIsActive) {
-      let map: HTMLDivElement | null = this.map.current
+      let map: HTMLDivElement | null = this.rootRef.current
 
       if (map) {
         let mapScale: number = this.state.mapScale
@@ -613,7 +501,7 @@ export default class MissionMap extends React.Component<
         // mapOffsetY = Math.min(mapOffsetY, mapCuttoff)
         // mapOffsetY = Math.max(mapOffsetY, -mapCuttoff)
 
-        this.setState((previousState: IMissionMap_S) => {
+        this.setState((previousState: TMissionMap_S) => {
           return {
             mapOffsetX,
             mapOffsetY,
@@ -635,7 +523,7 @@ export default class MissionMap extends React.Component<
     //   return
     // }
 
-    let map: HTMLDivElement | null = this.map.current
+    let map: HTMLDivElement | null = this.rootRef.current
 
     if (map) {
       let mapBounds: DOMRect = map.getBoundingClientRect()
@@ -648,8 +536,8 @@ export default class MissionMap extends React.Component<
       let updatedMapScale: number = currentMapScale + delta * 0.001 * -1
 
       updatedMapScale = Math.min(
-        Math.max(minMapScale, updatedMapScale),
-        maxMapScale,
+        Math.max(MissionMap.MIN_MAP_SCALE, updatedMapScale),
+        MissionMap.MAX_MAP_SCALE,
       )
 
       if (currentMapScale === updatedMapScale) {
@@ -692,24 +580,30 @@ export default class MissionMap extends React.Component<
   // called when the zoom in button is clicked.
   handleZoomInRequest = (): void => {
     let mapScale: number = this.state.mapScale
-    if (mapScale < defaultMapScale) {
+    if (mapScale < MissionMap.DEFAULT_MAP_SCALE) {
       mapScale += 0.125
     } else {
       mapScale += 0.25
     }
-    mapScale = Math.min(Math.max(minMapScale, mapScale), maxMapScale)
+    mapScale = Math.min(
+      Math.max(MissionMap.MIN_MAP_SCALE, mapScale),
+      MissionMap.MAX_MAP_SCALE,
+    )
     this.setState({ mapScale })
   }
 
   // called when the zoom in button is clicked.
   handleZoomOutRequest = (): void => {
     let mapScale: number = this.state.mapScale
-    if (mapScale > defaultMapScale) {
+    if (mapScale > MissionMap.DEFAULT_MAP_SCALE) {
       mapScale -= 0.25
     } else {
       mapScale -= 0.125
     }
-    mapScale = Math.min(Math.max(minMapScale, mapScale), maxMapScale)
+    mapScale = Math.min(
+      Math.max(MissionMap.MIN_MAP_SCALE, mapScale),
+      MissionMap.MAX_MAP_SCALE,
+    )
     this.setState({ mapScale })
   }
 
@@ -858,11 +752,11 @@ export default class MissionMap extends React.Component<
     //   activeActions.push(availableActions.exitNodePath)
     // }
 
-    if (mapScale === maxMapScale) {
+    if (mapScale === MissionMap.MAX_MAP_SCALE) {
       actionsUniqueClassName += ' map-is-zoomed-in'
     }
 
-    if (mapScale === minMapScale) {
+    if (mapScale === MissionMap.MIN_MAP_SCALE) {
       actionsUniqueClassName += ' map-is-zoomed-out'
     }
 
@@ -908,21 +802,21 @@ export default class MissionMap extends React.Component<
   applyNodeStyling = (node: IMissionMappable) => {
     let selectedNode: ClientMissionNode | null = this.props.selectedNode
     let styling: React.CSSProperties = {}
-    let map: HTMLDivElement | null = this.map.current
+    let map: HTMLDivElement | null = this.rootRef.current
 
     if (map) {
       let mapScale: number = this.state.mapScale
       let mapBounds: DOMRect = map.getBoundingClientRect()
-      let mapXScale: number = this.currentMapXScale
-      let mapYScale: number = this.currentMapYScale
-      let gridPaddingX: number = this.currentGridPaddingX
-      let gridPaddingY: number = this.currentGridPaddingY
+      let mapXScale: number = MissionMap.BASE_MAP_X_SCALE
+      let mapYScale: number = MissionMap.BASE_MAP_Y_SCALE
+      let gridPaddingX: number = MissionMap.BASE_GRID_PADDING_X
+      let gridPaddingY: number = MissionMap.BASE_GRID_PADDING_Y
       let mapOffsetX: number = this.state.mapOffsetX
       let mapOffsetY: number = this.state.mapOffsetY
       let offsetX: number = mapOffsetX
       let offsetY: number = mapOffsetY
-      let nodeX: number = node.mapX
-      let nodeY: number = node.mapY
+      let nodeX: number = node.position.x
+      let nodeY: number = node.position.y
       let x: number = offsetX
       let y: number = offsetY
 
@@ -959,8 +853,8 @@ export default class MissionMap extends React.Component<
         styling_height -= gridPaddingY * 2
       }
 
-      let styling_fontSize: number = mapItemFontSize
-      let styling_lineHeight: number = mapItemFontSize
+      let styling_fontSize: number = MissionMap.MAP_ITEM_FONT_SIZE
+      let styling_lineHeight: number = MissionMap.MAP_ITEM_FONT_SIZE
       let styling_marginTop: number = -styling_height
 
       styling_top *= mapScale
@@ -991,11 +885,11 @@ export default class MissionMap extends React.Component<
     let selectedNode: ClientMissionNode | null = this.props.selectedNode
     let execution: ClientActionExecution | null = node.execution
     let mapScale: number = this.state.mapScale
-    let titleFontSize: number = mapItemFontSize * mapScale
-    let mapXScale: number = this.currentMapXScale
-    let mapYScale: number = this.currentMapYScale
-    let gridPaddingX: number = this.currentGridPaddingX
-    let gridPaddingY: number = this.currentGridPaddingY
+    let titleFontSize: number = MissionMap.MAP_ITEM_FONT_SIZE * mapScale
+    let mapXScale: number = MissionMap.BASE_MAP_X_SCALE
+    let mapYScale: number = MissionMap.BASE_MAP_Y_SCALE
+    let gridPaddingX: number = MissionMap.BASE_GRID_PADDING_X
+    let gridPaddingY: number = MissionMap.BASE_GRID_PADDING_Y
     let width: number = (mapXScale - gridPaddingX * 2) * mapScale
     let wrapperHeight: number = (mapYScale - gridPaddingY * 2) * mapScale
     let progressBarHeight: number = wrapperHeight - 2
@@ -1237,19 +1131,38 @@ export default class MissionMap extends React.Component<
   renderNodes(): JSX.Element | null {
     let mission: ClientMission = this.props.mission
     let missionAjaxStatus: EAjaxStatus = this.props.missionAjaxStatus
-    let visibleNodes: Array<ClientMissionNode> = this.state.visibleNodes
-    let map: HTMLDivElement | null = this.map.current
+    let { nodes, mapScale, mapOffsetX, mapOffsetY } = this.state
+    let culledNodes: Array<ClientMissionNode> = nodes
+    let map: HTMLDivElement | null = this.rootRef.current
     let listStyling: React.CSSProperties = {}
 
+    // If map is found in the DOM.
     if (map) {
+      // Get map bounds.
       let mapBounds: DOMRect = map.getBoundingClientRect()
+
+      // Apply list margin styling.
       listStyling.marginBottom = `-${mapBounds.height}px`
-      listStyling.top = `4.5px`
+
+      // Cull nodes.
+      this.cullNodes(
+        culledNodes,
+        mapBounds.x,
+        mapBounds.y,
+        mapBounds.width,
+        mapBounds.height,
+        mapScale,
+        mapOffsetX,
+        mapOffsetY,
+      )
     }
+
+    // Apply list top styling.
+    listStyling.top = `4.5px`
 
     return (
       <List<ClientMissionNode>
-        items={visibleNodes}
+        items={culledNodes}
         itemsPerPage={null}
         renderItemDisplay={(node: ClientMissionNode) =>
           this.renderNodeDisplay(node, this.constructNodeButtons(node))
@@ -1278,7 +1191,7 @@ export default class MissionMap extends React.Component<
   renderNodeCreators(): JSX.Element | null {
     let mission: ClientMission = this.props.mission
     let missionAjaxStatus: EAjaxStatus = this.props.missionAjaxStatus
-    let map: HTMLDivElement | null = this.map.current
+    let map: HTMLDivElement | null = this.rootRef.current
     let listStyling: React.CSSProperties = {}
 
     if (map) {
@@ -1318,20 +1231,20 @@ export default class MissionMap extends React.Component<
   // renders a pointer that marks the progression
   // from one node to another.
   renderPointer(relationship: MissionNodeRelationship): JSX.Element | null {
-    let map: HTMLDivElement | null = this.map.current
+    let map: HTMLDivElement | null = this.rootRef.current
 
     if (map) {
       let mapScale: number = this.state.mapScale
       let mapBounds: DOMRect = map.getBoundingClientRect()
-      let mapXScale: number = this.currentMapXScale
-      let mapYScale: number = this.currentMapYScale
-      let gridPaddingX: number = this.currentGridPaddingX
+      let mapXScale: number = MissionMap.BASE_MAP_X_SCALE
+      let mapYScale: number = MissionMap.BASE_MAP_Y_SCALE
+      let gridPaddingX: number = MissionMap.BASE_GRID_PADDING_Y
       let mapOffsetX: number = this.state.mapOffsetX
       let mapOffsetY: number = this.state.mapOffsetY
-      let prerequisiteX: number | null = relationship.prerequisite.mapX
-      let prerequisiteY: number | null = relationship.prerequisite.mapY
-      let unlocksX: number | null = relationship.unlocks.mapX
-      let unlocksY: number | null = relationship.unlocks.mapY
+      let prerequisiteX: number | null = relationship.prerequisite.position.x
+      let prerequisiteY: number | null = relationship.prerequisite.position.y
+      let unlocksX: number | null = relationship.unlocks.position.x
+      let unlocksY: number | null = relationship.unlocks.position.y
 
       if (
         prerequisiteX !== null &&
@@ -1367,7 +1280,7 @@ export default class MissionMap extends React.Component<
 
         x1 += (mapXScale / 2) * mapScale
         x2 -= (mapXScale / 2) * mapScale - 0.001
-        x2 += (gridPaddingX + pointerStopOffset) * mapScale
+        x2 += gridPaddingX * mapScale
         // x2 += (gridPaddingX - pointerArrowOffset) * mapScale
 
         let key = `unlocks-${relationship.unlocks.nodeID}_prereq-${relationship.prerequisite.nodeID}`
@@ -1431,7 +1344,7 @@ export default class MissionMap extends React.Component<
   renderPointers(): JSX.Element | null {
     let mission: ClientMission = this.props.mission
     let pointers: Array<JSX.Element | null> = []
-    let map: HTMLDivElement | null = this.map.current
+    let map: HTMLDivElement | null = this.rootRef.current
     let relationships: MissionNodeRelationship[] = [
       ...this.state.mainRelationships,
       ...this.state.nodeCreatorRelationships,
@@ -1500,11 +1413,11 @@ export default class MissionMap extends React.Component<
   }
 
   // Overridden
-  render(): JSX.Element {
-    let navigationIsActive: boolean = this.state.navigationIsActive
+  public render(): JSX.Element {
+    let navigationIsActive: boolean = this.state.panningIsActive
     let creationModeActive: boolean = this.creationModeActive
     let mapScale: number = this.state.mapScale
-    let map: HTMLDivElement | null = this.map.current
+    let map: HTMLDivElement | null = this.rootRef.current
     let mapStyling: React.CSSProperties = {}
     let mapNavigationStyling: React.CSSProperties = {}
     let mapActionPanelStyling: React.CSSProperties = {}
@@ -1515,8 +1428,8 @@ export default class MissionMap extends React.Component<
 
     if (map) {
       let mapBounds: DOMRect = map.getBoundingClientRect()
-      let mapXScale: number = this.currentMapXScale
-      let mapYScale: number = this.currentMapYScale
+      let mapXScale: number = MissionMap.BASE_MAP_X_SCALE
+      let mapYScale: number = MissionMap.BASE_MAP_Y_SCALE
       let mapOffsetX = this.state.mapOffsetX
       let mapOffsetY = this.state.mapOffsetY
 
@@ -1544,7 +1457,7 @@ export default class MissionMap extends React.Component<
     return (
       <div
         className={mapClassName}
-        ref={this.map}
+        ref={this.rootRef}
         onDragOver={(event: React.DragEvent<HTMLDivElement>) => {
           event.preventDefault()
         }}
@@ -1564,13 +1477,13 @@ export default class MissionMap extends React.Component<
             event.preventDefault()
           }}
           onMouseDown={() => {
-            this.setState({ navigationIsActive: true })
+            this.setState({ panningIsActive: true })
           }}
           onMouseUp={() => {
-            this.setState({ navigationIsActive: false })
+            this.setState({ panningIsActive: false })
           }}
           onMouseLeave={() => {
-            this.setState({ navigationIsActive: false })
+            this.setState({ panningIsActive: false })
           }}
           onContextMenu={(event: React.MouseEvent) => {
             event.preventDefault()
@@ -1599,4 +1512,219 @@ export default class MissionMap extends React.Component<
       </div>
     )
   }
+
+  /**
+   * The map scale set when the map is first rendered.
+   */
+  public static readonly DEFAULT_MAP_SCALE: number = 0.5
+
+  /**
+   * The maximum map scale permitted.
+   */
+  public static readonly MAX_MAP_SCALE: number = 2.0
+
+  /**
+   * The minimum map scale permitted.
+   */
+  public static readonly MIN_MAP_SCALE: number = 0.25
+
+  /**
+   * The width in pixels of a grid space on the map when the scale is 1.0.
+   */
+  public static readonly BASE_MAP_X_SCALE: number = 440.0 /*px*/
+
+  /**
+   * The height in pixels of a grid space on the map when the scale is 1.0.
+   */
+  public static readonly BASE_MAP_Y_SCALE: number = 110.0 /*px*/
+
+  /**
+   * The width in pixels of the padding on the left and right of a grid space on
+   * the map when the scale is 1.0.
+   */
+  public static readonly BASE_GRID_PADDING_X: number = 100.0 /*px*/
+
+  /**
+   * The height in pixels of the padding on the top and bottom of a grid space on
+   * the map when the scale is 1.0.
+   */
+  public static readonly BASE_GRID_PADDING_Y: number = 20.0 /*px*/
+
+  /**
+   * The height in pixels of the padding on the top and bottom of a grid space on the map when the scale is 1.0 and a node is selected.
+   */
+  public static readonly SELECTED_NODE_PADDING_Y: number = 40.0 /*px*/
+
+  /**
+   * The font size in pixels of the text on the map when the scale is 1.0.
+   */
+  public static readonly MAP_ITEM_FONT_SIZE: number = 20 /*px*/
+
+  /* -- static -- */
+
+  /**
+   * @param clientX The value of clientX of the window.
+   * @param clientY The value of clientY of the window.
+   * @param mapBounds The bounds of the map element in the DOM.
+   * @param mapUnscaledOffsetX The X offset due to panning before taking scale into account.
+   * @param mapUnscaledOffsetY The Y offset due to panning before taking scale into account.
+   * @param mapScale The scale of the map.
+   * @returns The coordinates on the map where the cursor currently is, accounts for the mapScale and the offset from panning.
+   */
+  private static getMapCoordinates(
+    clientX: number,
+    clientY: number,
+    mapBounds: DOMRect,
+    mapUnscaledOffsetX: number,
+    mapUnscaledOffsetY: number,
+    mapScale: number,
+  ): IMapCoordinates {
+    let mapOffsetX = mapUnscaledOffsetX * mapScale
+    let mapOffsetY = mapUnscaledOffsetY * mapScale
+    let mapCoordinates: IMapCoordinates = {
+      x: (clientX - mapOffsetX - mapBounds.x) / mapScale,
+      y: (clientY - mapOffsetY - mapBounds.y) / mapScale,
+    }
+    return mapCoordinates
+  }
+
+  /**
+   * Renders the tooltip description for a mapped node.
+   */
+  private static renderMappedNodeTooltipDescription_default = (
+    node: ClientMissionNode,
+  ): string => {
+    let nodeTitle: string = node.name
+    let nodeTypeInfo: string = ''
+    let scoreInfo: string = ''
+    let prompt: string = ''
+
+    // Prompt construction.
+    prompt = '##### View this node.'
+
+    return `#### ${nodeTitle}\n${StringsToolbox.limit(
+      node.name, // ! This should be description
+      160,
+    )}\n${nodeTypeInfo}${scoreInfo}\n${prompt}`
+  }
+
+  // Overridden
+  public static defaultProps = {
+    selectedNode: null,
+    handleNodeCreation: () => {},
+    handleNodeDeselection: null,
+    handleNodeDeletionRequest: null,
+    handleMapEditRequest: null,
+    handleMapSaveRequest: null,
+    handleNodePathExitRequest: null,
+    allowCreationMode: false,
+    grayOutEditButton: false,
+    grayOutSaveButton: false,
+    grayOutDeselectNodeButton: false,
+    grayOutExitNodePathButton: false,
+    grayOutAddNodeButton: false,
+    grayOutDeleteNodeButton: false,
+    elementRef: React.createRef(),
+    applyNodeClassList: () => '',
+    renderNodeTooltipDescription:
+      MissionMap.renderMappedNodeTooltipDescription_default,
+  }
+}
+
+/* -- types -- */
+
+/**
+ * Props for `MissionMap`.
+ */
+export type TMissionMap = {
+  mission: ClientMission
+  missionAjaxStatus: EAjaxStatus
+  selectedNode: ClientMissionNode | null
+  handleNodeSelection: (node: ClientMissionNode) => void
+  handleNodeCreation: (node: ClientMissionNode) => void
+  handleNodeDeselection: (() => void) | null
+  handleNodeDeletionRequest: ((node: ClientMissionNode) => void) | null
+  handleMapEditRequest: (() => void) | null
+  handleMapSaveRequest: (() => void) | null
+  handleNodePathExitRequest: (() => void) | null
+  allowCreationMode: boolean
+  grayOutEditButton: boolean
+  grayOutSaveButton: boolean
+  grayOutDeselectNodeButton: boolean
+  grayOutExitNodePathButton: boolean
+  grayOutAddNodeButton: boolean
+  grayOutDeleteNodeButton: boolean
+  elementRef: React.RefObject<HTMLDivElement>
+  applyNodeClassList: (node: ClientMissionNode) => string[]
+  renderNodeTooltipDescription: (node: ClientMissionNode) => string
+}
+
+/**
+ * State for `MissionMap`.
+ */
+export type TMissionMap_S = {
+  /**
+   * The nodes found in the mission passed in props.
+   */
+  nodes: Array<ClientMissionNode>
+  /**
+   * Relationships between nodes in the mission.
+   */
+  mainRelationships: Array<MissionNodeRelationship>
+  /**
+   * Relationships between node creators and nodes in the mission.
+   */
+  nodeCreatorRelationships: Array<MissionNodeRelationship>
+  /**
+   * The key of the last structure change in the mission. Used to
+   * track when the structure of the mission has changed, triggering
+   * a recalculation of the relationships between nodes.
+   */
+  lastStructureChangeKey: string
+  /**
+   * The last node that was expanded by the user.
+   */
+  lastExpandedNode: ClientMissionNode | null
+  /**
+   * Whether or not the map is currently being panned.
+   */
+  panningIsActive: boolean
+  /**
+   * The X offset due to panning.
+   */
+  mapOffsetX: number
+  /**
+   * The Y offset due to panning.
+   */
+  mapOffsetY: number
+  /**
+   * The scale of the map due to zooming in and out by the user.
+   */
+  mapScale: number
+  /**
+   * The depth of the nodes being rendered.
+   */
+  nodeDepth: number
+}
+
+export interface IMissionMappable {
+  nodeID: string
+  name: string
+  position: Vector2D
+  depth: number
+  execution: ClientActionExecution | null
+  executing: boolean
+  executable: boolean
+  device: boolean
+  color: string
+  isOpen: boolean
+  pendingOpen: boolean
+  pendingExecInit: boolean
+  childNodes: Array<ClientMissionNode>
+}
+
+// represents a location on the mission map
+interface IMapCoordinates {
+  x: number
+  y: number
 }

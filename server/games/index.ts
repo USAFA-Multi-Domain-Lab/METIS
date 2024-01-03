@@ -245,7 +245,7 @@ export default class GameServer extends Game<
     let { nodeID } = event.data
 
     // Find the node, given the ID.
-    let node: ServerMissionNode | undefined = mission.nodes.get(nodeID)
+    let node: ServerMissionNode | undefined = mission.getNode(nodeID)
 
     // If the node is undefined, then emit
     // an error.

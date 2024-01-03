@@ -13,6 +13,7 @@ import ClientMissionAction from '../actions'
 import ClientActionExecution from '../actions/executions'
 import ClientActionOutcome from '../actions/outcomes'
 import axios from 'axios'
+import { Vector2D } from '../../../../shared/toolbox/space'
 
 /**
  * Options for the ClientMissionNode.open method.
@@ -86,9 +87,7 @@ export default class ClientMissionNode
   implements IMissionMappable
 {
   // Implemented
-  public mapX: number
-  // Implemented
-  public mapY: number
+  public position: Vector2D
   // Implemented
   public depth: number
 
@@ -162,8 +161,7 @@ export default class ClientMissionNode
   ) {
     super(mission, data, options)
 
-    this.mapX = 0
-    this.mapY = 0
+    this.position = new Vector2D(0, 0)
     this.depth = -1
   }
 
@@ -492,7 +490,9 @@ export default class ClientMissionNode
         }
 
         this.childrenOfParent.splice(this.childrenOfParent.indexOf(this), 1)
-        this.mission.nodes.delete(this.nodeID)
+        this.mission.nodes = this.mission.nodes.filter(
+          (node) => node.nodeID !== this.nodeID,
+        )
         break
       case ENodeDeleteMethod.DeleteNodeAndShiftChildren:
         let parentOfThis: ClientMissionNode | null = this.parentNode
@@ -514,7 +514,9 @@ export default class ClientMissionNode
             parentOfThis.childNodes.indexOf(this),
             1,
           )
-          this.mission.nodes.delete(this.nodeID)
+          this.mission.nodes = this.mission.nodes.filter(
+            (node) => node.nodeID !== this.nodeID,
+          )
           this.mission.handleStructureChange()
         }
         break
@@ -526,7 +528,7 @@ export default class ClientMissionNode
       // node is created. Creating this node
       // will handle the structure change for
       // us.
-      if (this.mission.nodes.size > 0) {
+      if (this.mission.nodes.length > 0) {
         this.mission.handleStructureChange()
       } else {
         this.mission.spawnNode()
@@ -555,8 +557,8 @@ export default class ClientMissionNode
         datum,
       )
 
-      // Set the node in the missions.
-      this.mission.nodes.set(childNode.nodeID, childNode)
+      // Add the node into the mission.
+      this.mission.nodes.push(childNode)
 
       // Return node
       return childNode

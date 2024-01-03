@@ -2,6 +2,7 @@ import ClientMission from '..'
 import ClientMissionNode, { ENodeTargetRelation } from '.'
 import { IMissionMappable } from 'src/components/content/game/MissionMap'
 import ClientActionExecution from '../actions/executions'
+import { Vector2D } from '../../../../shared/toolbox/space'
 
 /**
  * Represents a node that, when triggerred,
@@ -14,8 +15,7 @@ export default class NodeCreator implements IMissionMappable {
   _mission: ClientMission
   _creationTarget: ClientMissionNode
   _creationTargetRelation: ENodeTargetRelation
-  mapX: number
-  mapY: number
+  position: Vector2D
   depth: number
   execution: ClientActionExecution | null
   _createdNode: ClientMissionNode | null = null
@@ -93,8 +93,7 @@ export default class NodeCreator implements IMissionMappable {
     mission: ClientMission,
     creationTarget: ClientMissionNode,
     creationTargetRelation: ENodeTargetRelation,
-    mapX: number,
-    mapY: number,
+    position: Vector2D,
   ) {
     let relationTitle: string = ''
 
@@ -122,8 +121,7 @@ export default class NodeCreator implements IMissionMappable {
     this._nodeID = `node-creator_with-${creationTarget.nodeID}-as-${relationTitle}`
     this._name = '+'
     this._mission = mission
-    this.mapX = mapX
-    this.mapY = mapY
+    this.position = position
     this.depth = -1
     this.execution = null
     this._creationTarget = creationTarget

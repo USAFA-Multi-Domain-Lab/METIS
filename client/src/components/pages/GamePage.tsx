@@ -17,7 +17,8 @@ import {
   PanelSizeRelationship,
   ResizablePanel,
 } from '../content/general-layout/ResizablePanels'
-import MissionMap from '../content/game/MissionMap'
+// import MissionMap from '../content/game/MissionMap'
+import MissionMap2 from '../content/game/mission-map'
 import { EAjaxStatus } from '../../../../shared/toolbox/ajax'
 import NodeActions from '../content/game/NodeActions'
 import { TServerConnectionStatus } from '../../../../shared/connect/data'
@@ -405,7 +406,7 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
             minSize: 400,
             render: () => (
               <>
-                <MissionMap
+                {/* <MissionMap
                   mission={mission}
                   missionAjaxStatus={EAjaxStatus.Loaded}
                   handleNodeSelection={handleNodeSelection}
@@ -452,7 +453,8 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
 
                     return description
                   }}
-                />
+                /> */}
+                <MissionMap2 mission={mission} />
                 {renderNodeActions()}
                 {renderExecuteNodePath()}
               </>

@@ -103,7 +103,7 @@ export default class GameClient extends Game<
    */
   public openNode(nodeID: string): void {
     let server: ServerConnection = this.server
-    let node: ClientMissionNode | undefined = this.mission.nodes.get(nodeID)
+    let node: ClientMissionNode | undefined = this.mission.getNode(nodeID)
 
     // Throw error if the node is not in
     // the mission associated with this
@@ -202,7 +202,7 @@ export default class GameClient extends Game<
     let { nodeID, revealedChildNodes } = event.data
 
     // Find the node, given the ID.
-    let node: ClientMissionNode | undefined = this.mission.nodes.get(nodeID)
+    let node: ClientMissionNode | undefined = this.mission.getNode(nodeID)
 
     // Handle node not found.
     if (node === undefined) {

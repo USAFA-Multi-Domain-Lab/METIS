@@ -6,6 +6,7 @@ import MissionNode, {
   TMissionNodeOptions,
 } from './nodes'
 import context from '../context'
+import memoize from 'memoize-one'
 
 /**
  * Interface of the abstract Mission class.
@@ -45,7 +46,10 @@ export interface IMission {
   /**
    * A map of nodeIDs to nodes.
    */
-  nodes: Map<string, IMissionNode>
+  nodes: IMissionNode[]
+  /**
+   * Converts nodes into an array.
+   */
   /**
    * The root node of the mission. If the mission nodes have not been imported, this will be null.
    */
@@ -65,6 +69,11 @@ export interface IMission {
     data?: Partial<TMissionNodeJSON>,
     options?: TMissionNodeOptions<IMissionNode>,
   ): IMissionNode
+  /**
+   * @param nodeId The ID of the node to get.
+   * @returns The node found for the given ID (`undefined` if not found).
+   */
+  getNode: (nodeId: string) => IMissionNode | undefined
 }
 
 /**
@@ -202,7 +211,7 @@ export default abstract class Mission<TMissionNode extends IMissionNode>
   // Inherited
   public initialResources: number
   // Inherited
-  public nodes: Map<string, TMissionNode>
+  public nodes: TMissionNode[]
   // Inherited
   public seed: string
   // Inherited
@@ -237,7 +246,7 @@ export default abstract class Mission<TMissionNode extends IMissionNode>
     this.originalNodeStructure =
       data.nodeStructure ?? Mission.DEFAULT_PROPERTIES.nodeStructure
     this.originalNodeData = data.nodeData ?? Mission.DEFAULT_PROPERTIES.nodeData
-    this.nodes = new Map<string, TMissionNode>()
+    this.nodes = []
     this.rootNode = this.createRootNode()
 
     // Parse options.
@@ -285,7 +294,6 @@ export default abstract class Mission<TMissionNode extends IMissionNode>
     options: TNodeImportOptions = {},
   ): void {
     // Reinitialize relevant object properties.
-    this.nodes = new Map<string, TMissionNode>()
     this.originalNodeData = nodeData
     this.originalNodeStructure = nodeStructure
 
@@ -295,13 +303,20 @@ export default abstract class Mission<TMissionNode extends IMissionNode>
       for (let nodeDatum of nodeData) {
         this.spawnNode(nodeDatum, {})
       }
+
+      // Create a node map to pass to the mapRelationships function.
+      let nodeMap = new Map<string, TMissionNode>()
+
+      // Add nodes to the node map.
+      for (let node of this.nodes) {
+        nodeMap.set(node.nodeID, node)
+      }
+
       // Map relationships between nodes.
-      Mission.mapRelationships(
-        this.nodes,
-        nodeStructure,
-        this.rootNode,
-        options,
-      )
+      Mission.mapRelationships(nodeMap, nodeStructure, this.rootNode, options)
+
+      // Convert nodes map to array.
+      this.nodes = Array.from(nodeMap.values())
     } catch (error) {
       if (context === 'react') {
         console.error('Node data/structure passed is invalid.')
@@ -329,7 +344,7 @@ export default abstract class Mission<TMissionNode extends IMissionNode>
 
     // Create an array of the MissionNode
     // objects from the nodes map.
-    let nodes: Array<TMissionNode> = Array.from(this.nodes.values())
+    let nodes: Array<TMissionNode> = this.nodes
     // Predefine the node data and structure.
     let nodeData: Array<TMissionNodeJSON> = []
     let nodeStructure: AnyObject = {}
@@ -358,6 +373,16 @@ export default abstract class Mission<TMissionNode extends IMissionNode>
     options?: ISpawnNodeOptions<TMissionNode>,
   ): TMissionNode
 
+  // Inherited
+  public getNode(nodeID: string): TMissionNode | undefined {
+    for (let node of this.nodes) {
+      if (node.nodeID === nodeID) {
+        return node
+      }
+    }
+    return undefined
+  }
+
   /**
    * The default properties for a Mission object.
    */
@@ -374,6 +399,7 @@ export default abstract class Mission<TMissionNode extends IMissionNode>
       nodeData: [],
     }
   }
+
   /**
    * The default properties for the root node of a Mission.
    */
