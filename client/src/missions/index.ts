@@ -287,14 +287,22 @@ export default class ClientMission extends Mission<ClientMissionNode> {
    * @param parentNode Recursively used. Don't pass anything.
    * @param depth Recursively used. Don't pass anything.
    * @param rowCount Recursively used. Don't pass anything.
-   * @returns {Mission} The mission.
+   * @returns Subcalls of this recursive function will return results used for
+   * further position calculations. The final return can be ignored.
    */
   protected positionNodes = (
     parentNode: ClientMissionNode = this.rootNode,
     depth: number = -1,
     rowCount: Counter = new Counter(0),
-  ): ClientMission => {
+    extraLines: Counter = new Counter(0),
+    rowMostLinesFound: Counter = new Counter(0),
+  ): void => {
     let nodeCreationTarget: ClientMissionNode | null = this.nodeCreationTarget
+
+    let yOffset: number =
+      extraLines.count *
+      ClientMissionNode.LINE_HEIGHT *
+      ClientMissionNode.FONT_SIZE
 
     // If the parent node isn't the rootNode,
     // then this function was recursively
@@ -303,7 +311,10 @@ export default class ClientMission extends Mission<ClientMissionNode> {
     // included in the nodeData for the
     //  missionRender so that it displays.
     if (parentNode.nodeID !== this.rootNode.nodeID) {
-      parentNode.position.set(depth * 2, rowCount.count)
+      parentNode.position.set(
+        depth * ClientMissionNode.COLUMN_WIDTH,
+        rowCount.count * ClientMissionNode.ROW_HEIGHT + yOffset,
+      )
     }
     // Else the depth of the mission is reset
     // for recalculation.
@@ -311,6 +322,7 @@ export default class ClientMission extends Mission<ClientMissionNode> {
       this._depth = -1
     }
 
+    // Set the depth of the parent node.
     parentNode.depth = depth
 
     // If the nodeCreationTarget is this parentNode,
@@ -331,11 +343,24 @@ export default class ClientMission extends Mission<ClientMissionNode> {
       }
     }
 
+    // Set the most lines found for the row
+    // to the row count of this node, unless
+    // the previous value is greater.
+    rowMostLinesFound.count = Math.max(
+      rowMostLinesFound.count,
+      parentNode.nameLineCount,
+    )
+
     // The childNodes should then be examined
     // by recursively calling this function.
     childNodes.forEach((childNode: ClientMissionNode, index: number) => {
       if (index > 0) {
         rowCount.increment()
+        extraLines.count += Math.max(
+          0,
+          rowMostLinesFound.count - ClientMissionNode.DEFAULT_NAME_LINE_COUNT,
+        )
+        rowMostLinesFound.count = 0
       }
 
       // If the nodeCreationTarget is this childNode,
@@ -345,10 +370,13 @@ export default class ClientMission extends Mission<ClientMissionNode> {
         rowCount.increment()
       }
 
+      // Position the child node.
       this.positionNodes(
         childNode,
         depth + 1 + childNode.depthPadding,
         rowCount,
+        extraLines,
+        rowMostLinesFound,
       )
 
       // If the nodeCreationTarget is this childNode,
@@ -365,8 +393,6 @@ export default class ClientMission extends Mission<ClientMissionNode> {
     if (this._depth < depth) {
       this._depth = depth
     }
-
-    return this
   }
 
   /**

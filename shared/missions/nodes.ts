@@ -450,6 +450,8 @@ export default abstract class MissionNode<
     this.mission = mission
     this.nodeID = data.nodeID ?? MissionNode.DEFAULT_PROPERTIES.nodeID
     this.name = data.name ?? MissionNode.DEFAULT_PROPERTIES.name
+    // todo: Remove this comment.
+    // this.name += ' ' + this.name
     this.color = data.color ?? MissionNode.DEFAULT_PROPERTIES.color
     this.description =
       data.description ?? MissionNode.DEFAULT_PROPERTIES.description

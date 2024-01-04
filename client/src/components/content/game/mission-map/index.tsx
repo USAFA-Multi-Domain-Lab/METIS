@@ -7,6 +7,9 @@ import PanController from './ui/PanController'
 import { v4 as generateHash } from 'uuid'
 import Scene from './Scene'
 import Grid from './objects/Grid'
+import Hud from './ui/Hud'
+
+/* -- constants -- */
 
 /**
  * The default, starting x coordinate of the camera.
@@ -40,6 +43,8 @@ export const MAP_EM_GRID_ENABLED = false
  * Whether the mission map node grid is enabled.
  */
 export const MAP_NODE_GRID_ENABLED = true
+
+/* -- components -- */
 
 /**
  * The heart of METIS, a 2D map of the mission displaying nodes
@@ -174,28 +179,19 @@ export default function MissionMap2({
         <Grid type={'node'} enabled={MAP_NODE_GRID_ENABLED} />
         {nodesJsx}
       </Scene>
+      <Hud />
     </div>
   )
 }
 
-/**
- * Props for `MissionMap2`.
- */
-export type TMissionMap2 = {
-  /**
-   * The mission to display on the map.
-   */
-  mission: ClientMission
-}
+/* -- functions -- */
 
 /**
- * @param clientX The value of clientX of the window.
- * @param clientY The value of clientY of the window.
  * @param mapBounds The bounds of the map element in the DOM.
- * @param mapUnscaledOffsetX The X offset due to panning before taking scale into account.
- * @param mapUnscaledOffsetY The Y offset due to panning before taking scale into account.
- * @param mapScale The scale of the map.
- * @returns The coordinates on the map where the cursor currently is, accounts for the mapScale and the offset from panning.
+ * @param clientMouseCoords The clientX and clientY of the window.
+ * @param cameraPosition The position of the camera on the map.
+ * @param cameraZoom The zoom level of the camera on the map.
+ * @returns The coordinates on the map where the cursor currently is, accounts for the camera position and zooming.
  */
 function getSceneMouseCoords(
   mapBounds: DOMRect,
@@ -223,4 +219,16 @@ function getSceneMouseCoords(
 
   // Return the result.
   return sceneMouseCoords
+}
+
+/* -- types -- */
+
+/**
+ * Props for `MissionMap2`.
+ */
+export type TMissionMap2 = {
+  /**
+   * The mission to display on the map.
+   */
+  mission: ClientMission
 }

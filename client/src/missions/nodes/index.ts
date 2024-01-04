@@ -154,6 +154,81 @@ export default class ClientMissionNode
     return !this._expandedInMenu
   }
 
+  /**
+   * The required number of lines needed to display the node's name
+   * on the mission map.
+   */
+  public get nameLineCount(): number {
+    // Get and trim the name of the node.
+    let name: string = this.name.trim()
+
+    // Reduce any multiple spaces to a single space
+    // since the browser will do this during render.
+    name = name.replace(/ {2,}/g, ' ')
+
+    // Split the name into words.
+    let words: Array<string> = name.split(' ')
+
+    // Define various other variables.
+    let lineCount: number = 1
+    let charactersPerLine: number = ClientMissionNode.CHARACTERS_PER_LINE
+    let lineCursor: string = ''
+
+    if (name === 'Service Provider') {
+      console.log()
+    }
+    // Loop through each word.
+    for (let word of words) {
+      // If the word is too long for one line,
+      // break the word down into multiple lines.
+      if (word.length > charactersPerLine) {
+        // Determine the number of lines the word
+        // will take up.
+        let wordLineCount: number = Math.ceil(word.length / charactersPerLine)
+        // Determine the number of lines that need
+        // to be added to the overall line count.
+        let newLinesNeeded: number = wordLineCount
+        // Decrease by one if the current line is
+        // empty, since this one can be used for
+        // the first line of the word.
+        if (lineCursor.length === 0) {
+          newLinesNeeded--
+        }
+        // Set the line cursor to the last line
+        // of the word.
+        lineCursor = word.slice(charactersPerLine * (wordLineCount - 1)) + ' '
+        // Increase the line count by the number
+        // of lines needing to be added.
+        lineCount += newLinesNeeded
+      }
+      // Else if the word plus the characters already on the line
+      // exceeds the number of characters allowed per line...
+      else if (word.length + lineCursor.length > charactersPerLine) {
+        // Start a new line of words.
+        lineCount++
+        lineCursor = word + ' '
+      }
+      // Else include the word on the current line.
+      else {
+        lineCursor += word + ' '
+      }
+    }
+
+    // Return the calculated number of lines.
+    return lineCount
+  }
+
+  /**
+   * The height needed to display the name of the node on the mission map.
+   */
+  public get nameNeededHeight(): number {
+    return (
+      ClientMissionNode.LINE_HEIGHT *
+      ClientMissionNode.FONT_SIZE *
+      this.nameLineCount
+    )
+  }
+
   public constructor(
     mission: ClientMission,
     data: Partial<TMissionNodeJSON> = MissionNode.DEFAULT_PROPERTIES,
@@ -578,9 +653,60 @@ export default class ClientMissionNode
     this._expandedInMenu = !this._expandedInMenu
   }
 
-  /* -- API -- */
+  /* -- static -- */
 
-  /* -- API | READ -- */
+  /**
+   * The relative width of the node on the mission map.
+   */
+  public static readonly WIDTH = 2.25 //em
+  /**
+   * The relative width of a column of nodes on the mission map.
+   */
+  public static readonly COLUMN_WIDTH = 3 //em
+  /**
+   * The relative height of a row of nodes on the mission map.
+   */
+  public static readonly ROW_HEIGHT = 1.25 //em
+  /**
+   * The size of the font for the node name on the mission map.
+   */
+  public static readonly FONT_SIZE = 0.15 //em
+  /**
+   * The ratio of the font height to the font width.
+   */
+  public static readonly FONT_RATIO = 1.6592592593
+  /**
+   * The line height of the node name on the mission map.
+   */
+  public static readonly LINE_HEIGHT = 0.19 / ClientMissionNode.FONT_SIZE //em
+  /**
+   * The default number of lines of text to display for the node
+   * name on the mission map.
+   */
+  public static readonly DEFAULT_NAME_LINE_COUNT = 2
+  /**
+   * The default height needed to display the node name on the mission map.
+   */
+  public static readonly DEFAULT_NAME_NEEDED_HEIGHT =
+    ClientMissionNode.LINE_HEIGHT *
+    ClientMissionNode.FONT_SIZE *
+    ClientMissionNode.DEFAULT_NAME_LINE_COUNT
+  /**
+   * The excess height used to display the node name on the mission map.
+   */
+
+  /**
+   * The width of the node's name relative to the node's width.
+   */
+  public static readonly NAME_WIDTH_RATIO = 0.7
+  /**
+   * The number of characters that can fit on a single line of the node's name.
+   */
+  public static readonly CHARACTERS_PER_LINE = Math.floor(
+    ((ClientMissionNode.WIDTH * ClientMissionNode.NAME_WIDTH_RATIO) /
+      ClientMissionNode.FONT_SIZE) *
+      ClientMissionNode.FONT_RATIO,
+  )
 
   /**
    * Fetches available colors for nodes.

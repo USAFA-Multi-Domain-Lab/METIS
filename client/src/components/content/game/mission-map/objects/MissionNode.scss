@@ -3,13 +3,28 @@
 
 .Scene {
   .MissionNode {
+    // Set box-sizing to content-box to
+    // help with font size calculations
+    // in JS.
+    box-sizing: content-box;
+
     // Enable pointer events for nodes,
     // since they can be interacted with.
     pointer-events: all;
 
-    background-color: blue;
-    width: 1.6em;
-    height: 0.8em;
+    // Make the origin of the scene object the
+    // top center of the node.
+    transform: translate(-50%, 0);
+
+    // Default color, overridden by the
+    // color of the node iteself in the
+    // mission.
+    border-color: $color-main;
+    border-width: min(2px, 0.075em);
+    border-style: solid;
+
+    padding: 0.15em 0;
+    background-color: $background-main;
 
     .Title {
       // Define constants.
@@ -21,9 +36,10 @@
       left: $border-width;
 
       // Size the title.
-      width: calc(75% - (#{$border-width} * 2));
+      margin: 0 2.5%;
       height: unset;
-      padding: 0.2em 0.4em;
+
+      word-break: break-word;
     }
   }
 }
