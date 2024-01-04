@@ -8,17 +8,18 @@ import { v4 as generateHash } from 'uuid'
 import Scene from './Scene'
 import Grid from './objects/Grid'
 import Hud from './ui/Hud'
+import ClientMissionNode from 'src/missions/nodes'
 
 /* -- constants -- */
 
 /**
  * The default, starting x coordinate of the camera.
  */
-const DEFAULT_CAMERA_X = -1.5
+const DEFAULT_CAMERA_X = ClientMissionNode.COLUMN_WIDTH / -2 - 1
 /**
  * The default, starting y coordinate of the camera.
  */
-const DEFAULT_CAMERA_Y = -1.5
+const DEFAULT_CAMERA_Y = ClientMissionNode.ROW_HEIGHT / -2 - 1
 /**
  * The default, starting zoom level of the camera.
  */

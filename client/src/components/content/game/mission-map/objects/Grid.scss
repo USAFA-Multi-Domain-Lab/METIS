@@ -7,45 +7,19 @@
   height: 20000px;
 
   &.NodeGrid {
-    // Grid when horizontal lines are not wanted,
-    // which is the default.
-    &:not(.HorizontalEnabled) {
-      background: linear-gradient(
-        to right,
-        $map-grid-color 0 $grid-line-width,
-        transparent 2px calc(100% - #{$grid-line-width}),
-        $map-grid-color calc(100% - #{$grid-line-width}) 100%
-      );
-      background-size: 2em 1em;
-      background-position: center;
-      background-repeat: repeat;
-    }
-
-    // Grid when horizontal lines are wanted,
-    // which is the exception.
-    &.HorizontalEnabled {
-      // Draw grid.
-      background: linear-gradient(
-          to right,
-          $map-grid-color 0 $grid-line-width,
-          transparent 2px calc(100% - #{$grid-line-width}),
-          $map-grid-color calc(100% - #{$grid-line-width}) 100%
-        ),
-        linear-gradient(
-          to bottom,
-          $map-grid-color 0 $grid-line-width,
-          transparent 2px calc(100% - #{$grid-line-width}),
-          $map-grid-color calc(100% - #{$grid-line-width}) 100%
-        );
-      background-size: 2em 1em;
-      background-position: center;
-      background-repeat: repeat;
-    }
+    background-image: linear-gradient(
+      to right,
+      $map-grid-color 0 $grid-line-width,
+      transparent 2px calc(100% - #{$grid-line-width}),
+      $map-grid-color calc(100% - #{$grid-line-width}) 100%
+    );
+    background-position: center;
+    background-repeat: repeat;
   }
 
   &.EmGrid {
     // Draw grid.
-    background: linear-gradient(
+    background-image: linear-gradient(
         to right,
         $map-grid-color 0 $grid-line-width,
         transparent 2px calc(100% - #{$grid-line-width}),
@@ -57,7 +31,6 @@
         transparent 2px calc(100% - #{$grid-line-width}),
         $map-grid-color calc(100% - #{$grid-line-width}) 100%
       );
-    background-size: 1em 1em;
     background-position: center;
     background-repeat: repeat;
   }
