@@ -23,20 +23,20 @@
     border-width: min(2px, 0.075em);
     border-style: solid;
 
+    // Add a transition to the background for
+    // when the text comes in and out of view.
+    transition: background-color 0.3s ease-in-out;
+
     padding: 0.15em 0;
     background-color: $background-main;
 
-    .Title {
-      // Define constants.
-      $border-width: 0.1em;
-
-      // Position the title.
+    .Name {
+      // Position the name.
       @include center-nest-origin-y;
       top: 50%;
-      left: $border-width;
+      left: 2.5%;
 
-      // Size the title.
-      margin: 0 2.5%;
+      // Let height be automatic.
       height: unset;
 
       word-break: break-word;

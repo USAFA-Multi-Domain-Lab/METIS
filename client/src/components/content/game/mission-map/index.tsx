@@ -2,7 +2,7 @@ import ClientMission from 'src/missions'
 import './index.scss'
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { Vector1D, Vector2D } from '../../../../../../shared/toolbox/space'
-import MissionNode from './objects/MissionNode'
+import MissionNode, { MAX_NODE_NAME_ZOOM } from './objects/MissionNode'
 import PanController from './ui/PanController'
 import { v4 as generateHash } from 'uuid'
 import Scene from './Scene'
@@ -125,7 +125,7 @@ export default function MissionMap2({
 
     // Get the position of the mouse in the scene
     // before the zoom.
-    let prevSceneMouseCoords: Vector2D = getSceneMouseCoords(
+    let prevSceneMouseCoords: Vector2D = calcSceneMouseCoords(
       mapBounds,
       clientMouseCoords,
       cameraPosition,
@@ -139,7 +139,7 @@ export default function MissionMap2({
 
     // Get the position of the mouse in the scene
     // after the zoom.
-    let newSceneMouseCoords: Vector2D = getSceneMouseCoords(
+    let newSceneMouseCoords: Vector2D = calcSceneMouseCoords(
       mapBounds,
       clientMouseCoords,
       cameraPosition,
@@ -166,9 +166,20 @@ export default function MissionMap2({
    */
   const nodesJsx = useMemo((): JSX.Element[] => {
     return mission.nodes.map((node) => {
-      return <MissionNode key={node.nodeID} node={node} />
+      return (
+        <MissionNode key={node.nodeID} node={node} cameraZoom={cameraZoom} />
+      )
     })
-  }, [mission.structureChangeKey, cameraPosition.toString()])
+  }, [
+    // Change in the node structure of
+    // the mission.
+    mission.structureChangeKey,
+    // Change in camera position.
+    cameraPosition.toString(),
+    // Whether the camera zoom crosses the threshold where
+    // the node names should be displayed/hidden.
+    cameraZoom.x > MAX_NODE_NAME_ZOOM,
+  ])
 
   // Render root JSX.
   return (
@@ -194,7 +205,7 @@ export default function MissionMap2({
  * @param cameraZoom The zoom level of the camera on the map.
  * @returns The coordinates on the map where the cursor currently is, accounts for the camera position and zooming.
  */
-function getSceneMouseCoords(
+function calcSceneMouseCoords(
   mapBounds: DOMRect,
   clientMouseCoords: Vector2D,
   cameraPosition: Vector2D,

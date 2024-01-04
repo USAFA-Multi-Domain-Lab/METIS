@@ -218,17 +218,6 @@ export default class ClientMissionNode
     return lineCount
   }
 
-  /**
-   * The height needed to display the name of the node on the mission map.
-   */
-  public get nameNeededHeight(): number {
-    return (
-      ClientMissionNode.LINE_HEIGHT *
-      ClientMissionNode.FONT_SIZE *
-      this.nameLineCount
-    )
-  }
-
   public constructor(
     mission: ClientMission,
     data: Partial<TMissionNodeJSON> = MissionNode.DEFAULT_PROPERTIES,

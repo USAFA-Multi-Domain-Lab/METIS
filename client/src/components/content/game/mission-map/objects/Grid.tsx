@@ -40,7 +40,6 @@ export default function Grid({
    * The inline styles for the root element.
    */
   const rootStyle = useMemo((): React.CSSProperties => {
-    // Gather details.
     let backgroundWidth: number = 1
 
     // If the grid is a node grid, set the background width to the
@@ -49,7 +48,6 @@ export default function Grid({
       backgroundWidth = ClientMissionNode.COLUMN_WIDTH
     }
 
-    // Return the styles.
     return {
       backgroundSize: `${backgroundWidth}em 1em`,
     }
