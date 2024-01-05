@@ -16,11 +16,34 @@
     height: 100%;
     border: 2px solid $color-main;
 
+    // Default font-size for HUD elements.
+    font-size: 16px;
+
     * {
       // Enable pointer events for all children
       // to allow interfacing with the UI elements
       // themselves.
       pointer-events: auto;
+    }
+
+    .Title {
+      user-select: none;
+      box-sizing: border-box;
+      opacity: 0.95;
+      overflow: hidden;
+      border: 2px solid $color-main;
+      border-top: none;
+      margin: 0 auto;
+      width: fit-content;
+      max-width: 65%;
+      padding: 0.75em;
+      background-color: $background-alt1;
+      font-size: 1em;
+      font-weight: bold;
+      line-height: 1em;
+      letter-spacing: 0.04em;
+      white-space: nowrap;
+      text-overflow: ellipsis;
     }
   }
 }

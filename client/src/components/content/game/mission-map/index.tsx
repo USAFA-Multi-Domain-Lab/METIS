@@ -191,7 +191,7 @@ export default function MissionMap2({
         <Grid type={'node'} enabled={MAP_NODE_GRID_ENABLED} />
         {nodesJsx}
       </Scene>
-      <Hud />
+      <Hud mission={mission} />
     </div>
   )
 }
