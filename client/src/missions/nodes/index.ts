@@ -14,6 +14,7 @@ import ClientActionExecution from '../actions/executions'
 import ClientActionOutcome from '../actions/outcomes'
 import axios from 'axios'
 import { Vector2D } from '../../../../shared/toolbox/space'
+import memoizeOne from 'memoize-one'
 
 /**
  * Options for the ClientMissionNode.open method.
@@ -155,13 +156,12 @@ export default class ClientMissionNode
   }
 
   /**
-   * The required number of lines needed to display the node's name
-   * on the mission map.
+   * Memoized function for computing the value of `nameLineCount`.
+   * @param name The name for which to compute the line count.
+   * @returns The number of lines needed to display the name.
+   * @memoized
    */
-  public get nameLineCount(): number {
-    // Get and trim the name of the node.
-    let name: string = this.name.trim()
-
+  private computeNameLineCount = memoizeOne((name: string) => {
     // Reduce any multiple spaces to a single space
     // since the browser will do this during render.
     name = name.replace(/ {2,}/g, ' ')
@@ -174,9 +174,6 @@ export default class ClientMissionNode
     let charactersPerLine: number = ClientMissionNode.CHARACTERS_PER_LINE
     let lineCursor: string = ''
 
-    if (name === 'Service Provider') {
-      console.log()
-    }
     // Loop through each word.
     for (let word of words) {
       // If the word is too long for one line,
@@ -189,7 +186,7 @@ export default class ClientMissionNode
         // to be added to the overall line count.
         let newLinesNeeded: number = wordLineCount
         // Decrease by one if the current line is
-        // empty, since this one can be used for
+        // empty, since this line can be used for
         // the first line of the word.
         if (lineCursor.length === 0) {
           newLinesNeeded--
@@ -216,6 +213,41 @@ export default class ClientMissionNode
 
     // Return the calculated number of lines.
     return lineCount
+  })
+  /**
+   * The required number of lines needed to display the node's name
+   * on the mission map.
+   */
+  public get nameLineCount(): number {
+    return this.computeNameLineCount(this.name)
+  }
+
+  /**
+   * The height needed to display the node's name on the mission map.
+   */
+  public get nameNeededHeight(): number {
+    return (
+      ClientMissionNode.LINE_HEIGHT *
+      ClientMissionNode.FONT_SIZE *
+      this.nameLineCount
+    )
+  }
+
+  /**
+   * The height of the node's name on the mission map.
+   */
+  public get nameHeight(): number {
+    return Math.max(
+      ClientMissionNode.DEFAULT_NAME_NEEDED_HEIGHT,
+      this.nameNeededHeight,
+    )
+  }
+
+  /**
+   * The height of the node on the mission map.
+   */
+  public get height(): number {
+    return ClientMissionNode.VERTICAL_PADDING + this.nameHeight
   }
 
   public constructor(
@@ -645,9 +677,13 @@ export default class ClientMissionNode
   /* -- static -- */
 
   /**
-   * The relative width of the node on the mission map.
+   * The relative width of a node on the mission map.
    */
   public static readonly WIDTH = 2.25 //em
+  /**
+   * The vertical padding of a node on the mission map.
+   */
+  public static readonly VERTICAL_PADDING = 0.15 //em
   /**
    * The relative width of a column of nodes on the mission map.
    */

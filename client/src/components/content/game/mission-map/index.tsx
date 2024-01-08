@@ -9,6 +9,7 @@ import Scene from './Scene'
 import Grid from './objects/Grid'
 import Hud from './ui/Hud'
 import ClientMissionNode from 'src/missions/nodes'
+import Line from './objects/Line'
 
 /* -- constants -- */
 
@@ -161,6 +162,16 @@ export default function MissionMap2({
   /* -- render -- */
 
   /**
+   * The JSX for the relationship lines drawn between nodes.
+   * @memoized
+   */
+  const linesJsx = useMemo((): JSX.Element[] => {
+    return mission.relationshipLines.map((lineData) => {
+      return <Line {...lineData} />
+    })
+  }, [mission.structureChangeKey])
+
+  /**
    * The JSX for the node objects rendered in the scene.
    * @memoized
    */
@@ -189,6 +200,7 @@ export default function MissionMap2({
         {/* Scene objects */}
         <Grid type={'em'} enabled={MAP_EM_GRID_ENABLED} />
         <Grid type={'node'} enabled={MAP_NODE_GRID_ENABLED} />
+        {linesJsx}
         {nodesJsx}
       </Scene>
       <Hud mission={mission} />

@@ -23,3 +23,8 @@ export default class ObjectToolbox {
     }, {})
   }
 }
+
+/**
+ * The following type with a string key included.
+ */
+export type TWithKey<T> = T & { key: string }

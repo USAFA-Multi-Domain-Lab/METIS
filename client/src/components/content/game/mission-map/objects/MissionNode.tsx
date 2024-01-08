@@ -22,13 +22,6 @@ export default function MissionNode({
   /* -- computed -- */
 
   /**
-   * The number of lines in the node name.
-   */
-  const nameLineCount = useMemo((): number => {
-    return node.nameLineCount
-  }, [node.name])
-
-  /**
    * The inline styles for the root element.
    * @memoized
    */
@@ -36,7 +29,7 @@ export default function MissionNode({
     let neededHeight: number =
       ClientMissionNode.LINE_HEIGHT *
       ClientMissionNode.FONT_SIZE *
-      nameLineCount
+      node.nameLineCount
     let x: number = node.position.x
     let y: number = node.position.y
     let width: number = ClientMissionNode.WIDTH
@@ -44,6 +37,7 @@ export default function MissionNode({
       ClientMissionNode.DEFAULT_NAME_NEEDED_HEIGHT,
       neededHeight,
     )
+    let verticalPadding: number = ClientMissionNode.VERTICAL_PADDING
     // Undefined will default to the background
     // color defined already in the CSS.
     let backgroundColor: string | undefined = undefined
@@ -59,6 +53,7 @@ export default function MissionNode({
       top: `${y}em`,
       width: `${width}em`,
       height: `${height}em`,
+      padding: `${verticalPadding}em 0`,
       borderColor: node.color,
       backgroundColor,
     }
@@ -67,11 +62,13 @@ export default function MissionNode({
     // Node position changes.
     node.position.toString(),
     // Number of lines in the node name changes.
-    nameLineCount,
+    node.nameLineCount,
     // The threshold for when the camera zooms
     // out too far to display the node name
     // changes.
     cameraZoom.x > MAX_NODE_NAME_ZOOM,
+    // The node's color changes.
+    node.color,
   ])
 
   /**

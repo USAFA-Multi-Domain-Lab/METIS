@@ -1,0 +1,10 @@
+@import '../../../../../assets/styles/config.scss';
+@import '../mixins.scss';
+
+.Line {
+  background-color: $color-main;
+
+  // Make the line have a top-left origin so that
+  // it's positioned based on its starting position.
+  @include uncentered-origin;
+}

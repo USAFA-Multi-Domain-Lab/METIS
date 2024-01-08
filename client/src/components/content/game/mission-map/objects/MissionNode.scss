@@ -14,7 +14,7 @@
 
     // Make the origin of the scene object the
     // top center of the node.
-    transform: translate(-50%, 0);
+    transform: translate(-50%, -0%);
 
     // Default color, overridden by the
     // color of the node iteself in the
@@ -27,12 +27,11 @@
     // when the text comes in and out of view.
     transition: background-color 0.3s ease-in-out;
 
-    padding: 0.15em 0;
     background-color: $background-main;
 
     .Name {
       // Position the name.
-      @include center-nest-origin-y;
+      @include center-origin-y;
       top: 50%;
       left: 2.5%;
 

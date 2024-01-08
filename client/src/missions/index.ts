@@ -10,6 +10,8 @@ import { v4 as generateHash } from 'uuid'
 import { Counter } from '../../../shared/toolbox/numbers'
 import NodeCreator from './nodes/creator'
 import { Vector2D } from '../../../shared/toolbox/space'
+import { TLine_P } from 'src/components/content/game/mission-map/objects/Line'
+import { TWithKey } from '../../../shared/toolbox/objects'
 
 /**
  * Options for the creation of a ClientMission object.
@@ -177,6 +179,12 @@ export default class ClientMission extends Mission<ClientMissionNode> {
    */
   public lastOpenedNode: ClientMissionNode | null
 
+  /**
+   * The lines used to draw relationships between nodes on a mission map.
+   * @note Calculated in `ClientMissionNode.drawRelationshipLines`.
+   */
+  public relationshipLines: TWithKey<TLine_P>[]
+
   public constructor(
     data: Partial<IMissionJSON> = {},
     options: TClientMissionOptions = {},
@@ -195,6 +203,7 @@ export default class ClientMission extends Mission<ClientMissionNode> {
     this.lastCreatedNode = null
     this._nodeCreationTarget = null
     this._nodeCreators = []
+    this.relationshipLines = []
     this.lastOpenedNode = null
 
     // If there is no existing nodes,
@@ -244,6 +253,10 @@ export default class ClientMission extends Mission<ClientMissionNode> {
     if (this.nodeCreationTarget !== null) {
       this.positionNodeCreators()
     }
+
+    // Draw the relationship lines
+    // between nodes.
+    this.drawRelationshipLines()
 
     // Call listener functions so that
     // external componenets can respond
@@ -429,6 +442,114 @@ export default class ClientMission extends Mission<ClientMissionNode> {
         }
       }
     }
+  }
+
+  /**
+   * Draws the relationship lines between nodes on the mission map
+   * and caches them in the `relationshipLines` property.
+   */
+  protected drawRelationshipLines(): void {
+    // The relationship lines drawn.
+    let relationshipLines: TWithKey<TLine_P>[] = []
+    // Define the distance between the edge of a
+    // node and the edge of the column.
+    let columnEdgeDistance: number =
+      (ClientMissionNode.COLUMN_WIDTH - ClientMissionNode.WIDTH) / 2
+
+    // Recursive algorithm used to determine the
+    // relationship lines between nodes.
+    const algorithm = (parent: ClientMissionNode = this.rootNode) => {
+      // Get details.
+      const halfDefaultNodeHeight: number =
+        ClientMissionNode.DEFAULT_NAME_NEEDED_HEIGHT / 2 +
+        ClientMissionNode.VERTICAL_PADDING
+      let children: ClientMissionNode[] = parent.childNodes
+      let childCount: number = children.length
+
+      // If the parent is not the invisible root node
+      // in the mission and the parent has children,
+      // then a relationship line should be drawn
+      // between the parent and the edge of the
+      // column.
+      if (parent !== this.rootNode && childCount > 0) {
+        // Clone the parent node's position then translate
+        // the start position to the middle of the right edge of
+        // the parent node.
+        let parentToMidStart: Vector2D = parent.position
+          .clone()
+          .translateX(ClientMissionNode.WIDTH / 2)
+          .translateY(halfDefaultNodeHeight)
+
+        // Push a new line.
+        relationshipLines.push({
+          key: `parent-to-middle_${parent.nodeID}`,
+          direction: 'horizontal',
+          start: parentToMidStart,
+          // The length of the line is the distance
+          // between the edge of the parent node and
+          // the edge of the column.
+          length: columnEdgeDistance,
+        })
+
+        // If there is more than one node, create a vertcial line
+        // down the middle of the edge of the column to connect to
+        // each child node.
+        if (childCount > 1) {
+          // Determine the start position of the vertical line.
+          let downMidStart = parentToMidStart
+            .clone()
+            .translateX(columnEdgeDistance)
+          let lastChildY: number =
+            children[childCount - 1].position.y + halfDefaultNodeHeight
+          let downMidLength: number = lastChildY - downMidStart.y
+
+          relationshipLines.push({
+            key: `down-middle_${parent.nodeID}`,
+            direction: 'vertical',
+            start: downMidStart,
+            length: downMidLength,
+          })
+        }
+
+        // Iterate through the children.
+        for (let child of children) {
+          // Draw a line from the edge of the column to the
+          // middle of the left edge of the child node.
+
+          // First, clone the child node's position then
+          // translate the start position to the column edge.
+          let midToChildStart: Vector2D = child.position
+            .clone()
+            .translateX(-ClientMissionNode.WIDTH / 2 - columnEdgeDistance)
+            .translateY(halfDefaultNodeHeight)
+
+          // Push the new line.
+          relationshipLines.push({
+            key: `middle-to-child_${child.nodeID}`,
+            direction: 'horizontal',
+            start: midToChildStart,
+            // The length of the line is the distance
+            // between the edge of the column and
+            // the edge of the child node.
+            length: columnEdgeDistance,
+          })
+        }
+      }
+
+      // Iterate through the child nodes.
+      for (let child of parent.childNodes) {
+        // Call recursively the algorithm with
+        // the child.
+        algorithm(child)
+      }
+    }
+
+    // Run the algorithm.
+    algorithm()
+
+    // Set the relationship lines in the mission to
+    // those determined by the algorithm.
+    this.relationshipLines = relationshipLines
   }
 
   // Implemented
