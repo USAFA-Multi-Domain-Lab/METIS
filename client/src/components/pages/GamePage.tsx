@@ -136,9 +136,7 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
    * Handles the selection of a node in the mission map by the user.
    * @param {ClientMissionNode} node The node that was selected.
    */
-  const handleNodeSelection = async (
-    node: ClientMissionNode,
-  ): Promise<void> => {
+  const onNodeSelect = async (node: ClientMissionNode): Promise<void> => {
     // Logic to send the pre-execution text to the output panel.
     if (node.preExecutionText !== '' && node.preExecutionText !== null) {
       let output: IConsoleOutput = OutputPanel.renderPreExecutionOutput(node)
@@ -454,7 +452,7 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
                     return description
                   }}
                 /> */}
-                <MissionMap2 mission={mission} />
+                <MissionMap2 mission={mission} onNodeSelect={onNodeSelect} />
                 {renderNodeActions()}
                 {renderExecuteNodePath()}
               </>

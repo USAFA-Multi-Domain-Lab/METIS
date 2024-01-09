@@ -2,7 +2,7 @@ import ClientMission from 'src/missions'
 import './index.scss'
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Vector1D, Vector2D } from '../../../../../../shared/toolbox/space'
-import MissionNode, { MAX_NODE_NAME_ZOOM } from './objects/MissionNode'
+import MissionNode, { MAX_NODE_CONTENT_ZOOM } from './objects/MissionNode'
 import PanController from './ui/PanController'
 import { v4 as generateHash } from 'uuid'
 import Scene from './Scene'
@@ -96,6 +96,7 @@ export const MAP_NODE_GRID_ENABLED = true
  */
 export default function MissionMap2({
   mission,
+  onNodeSelect,
 }: TMissionMap2): JSX.Element | null {
   /* -- refs -- */
 
@@ -225,8 +226,19 @@ export default function MissionMap2({
    */
   const nodesJsx = useMemo((): JSX.Element[] => {
     return mission.nodes.map((node) => {
+      // Construct the onSelect callback for
+      // the specific node using the generic
+      // onNodeSelect callback passed in props.
+      let onSelect = onNodeSelect ? () => onNodeSelect(node) : undefined
+
+      // Return the JSX for the node.
       return (
-        <MissionNode key={node.nodeID} node={node} cameraZoom={cameraZoom} />
+        <MissionNode
+          key={node.nodeID}
+          node={node}
+          cameraZoom={cameraZoom}
+          onSelect={onSelect}
+        />
       )
     })
   }, [
@@ -237,7 +249,7 @@ export default function MissionMap2({
     cameraPosition.toString(),
     // Whether the camera zoom crosses the threshold where
     // the node names should be displayed/hidden.
-    cameraZoom.x > MAX_NODE_NAME_ZOOM,
+    cameraZoom.x > MAX_NODE_CONTENT_ZOOM,
   ])
 
   /**
@@ -402,4 +414,9 @@ export type TMissionMap2 = {
    * The mission to display on the map.
    */
   mission: ClientMission
+  /**
+   * Handles when a node is selected.
+   * @default undefined
+   */
+  onNodeSelect?: (node: ClientMissionNode) => void
 }

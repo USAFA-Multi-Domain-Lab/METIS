@@ -2,7 +2,13 @@ import { useMemo } from 'react'
 import { Vector1D, Vector2D } from '../../../../../../shared/toolbox/space'
 import './Scene.scss'
 
-export default function ({
+/**
+ * A scene/world containing scene objects that can
+ * be displayed on the `MissionMap` component. The
+ * camera position and zoom are applied to the scene
+ * to navigate around the scene.
+ */
+export default function Scene({
   cameraPosition,
   cameraZoom,
   children,

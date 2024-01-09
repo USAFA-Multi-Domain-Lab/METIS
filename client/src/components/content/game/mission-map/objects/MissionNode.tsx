@@ -6,9 +6,9 @@ import { Vector1D } from '../../../../../../../shared/toolbox/space'
 /* -- constants -- */
 
 /**
- * The maximum zoom level where the node's name will be displayed.
+ * The maximum zoom level where the node's content will be displayed.
  */
-export const MAX_NODE_NAME_ZOOM = 1 / 30 // [numerator]em = [denominator]px
+export const MAX_NODE_CONTENT_ZOOM = 1 / 30 // [numerator]em = [denominator]px
 
 /* -- components -- */
 
@@ -45,7 +45,7 @@ export default function MissionNode({
 
     // If the camera is zoomed out too far,
     // make the background color the node's color.
-    if (cameraZoom.x > MAX_NODE_NAME_ZOOM) {
+    if (cameraZoom.x > MAX_NODE_CONTENT_ZOOM) {
       backgroundColor = node.color
     }
 
@@ -59,7 +59,7 @@ export default function MissionNode({
       backgroundColor,
     }
   }, [
-    // ! Updates when:
+    // ! Recomputes when:
     // Node position changes.
     node.position.toString(),
     // Number of lines in the node name changes.
@@ -67,7 +67,7 @@ export default function MissionNode({
     // The threshold for when the camera zooms
     // out too far to display the node name
     // changes.
-    cameraZoom.x > MAX_NODE_NAME_ZOOM,
+    cameraZoom.x > MAX_NODE_CONTENT_ZOOM,
     // The node's color changes.
     node.color,
   ])
@@ -111,7 +111,15 @@ export default function MissionNode({
     }
 
     return classList.join(' ')
-  }, [onSelect, node.executable, node.device])
+  }, [
+    // ! Recomputes when:
+    // The node's selection handler changes.
+    onSelect,
+    // The node's executable status changes.
+    node.executable,
+    // The node's device status changes.
+    node.device,
+  ])
 
   /**
    * The class for the node's name.
@@ -121,12 +129,17 @@ export default function MissionNode({
 
     // Add the hidden class if the camera is
     // zoomed out too far.
-    if (cameraZoom.x > MAX_NODE_NAME_ZOOM) {
+    if (cameraZoom.x > MAX_NODE_CONTENT_ZOOM) {
       classList.push('Hidden')
     }
 
     return classList.join(' ')
-  }, [cameraZoom.x > MAX_NODE_NAME_ZOOM])
+  }, [
+    // ! Recomputes when:
+    // The camera zoom reaches the node
+    // content max.
+    cameraZoom.x > MAX_NODE_CONTENT_ZOOM,
+  ])
 
   /**
    * The class for the node's icon.
@@ -136,18 +149,24 @@ export default function MissionNode({
 
     // Add the hidden class if the camera is
     // zoomed out too far.
-    if (cameraZoom.x > MAX_NODE_NAME_ZOOM) {
+    if (cameraZoom.x > MAX_NODE_CONTENT_ZOOM) {
       classList.push('Hidden')
     }
 
     return classList.join(' ')
-  }, [cameraZoom.x > MAX_NODE_NAME_ZOOM])
+  }, [
+    // ! Recomputes when:
+    // The camera zoom reaches the node
+    // content max.
+    cameraZoom.x > MAX_NODE_CONTENT_ZOOM,
+  ])
 
   /* -- render -- */
 
   // Ensure the node selection handler is defined.
   onSelect = onSelect ?? (() => {})
 
+  // Render root JSX.
   return (
     <div
       key={node.nodeID}
