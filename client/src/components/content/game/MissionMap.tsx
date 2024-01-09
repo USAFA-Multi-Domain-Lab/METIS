@@ -764,7 +764,6 @@ export default class MissionMap extends React.Component<
       return (
         <ButtonSVGPanel
           buttons={activeActions}
-          linkBack={null}
           styling={styling}
           uniqueClassName={actionsUniqueClassName}
         />

@@ -1,14 +1,14 @@
 @import '../../../../../assets/styles/config.scss';
+@import '../mixins.scss';
 
 .MissionMap2 {
   .Hud {
     // Disable pointer events for root element
     // to prevent interference with interfacing
-    // with the mission map via the mouse.
+    // with overlapped elements via the mouse.
     pointer-events: none;
-
     box-sizing: border-box;
-    position: absolute;
+    position: relative;
     z-index: $z-map-hud;
     top: 0;
     left: 0;
@@ -26,14 +26,23 @@
       pointer-events: auto;
     }
 
+    > * {
+      position: absolute;
+    }
+
     .Title {
+      // Position the title at the top
+      // center of the HUD.
+      @include center-origin-x;
+      left: 50%;
+      top: 0;
+
       user-select: none;
       box-sizing: border-box;
       opacity: 0.95;
       overflow: hidden;
       border: 2px solid $color-main;
       border-top: none;
-      margin: 0 auto;
       width: fit-content;
       max-width: 65%;
       padding: 0.75em;
@@ -44,6 +53,44 @@
       letter-spacing: 0.04em;
       white-space: nowrap;
       text-overflow: ellipsis;
+    }
+
+    .ButtonSVGPanel {
+      // Remove top rule set in base ButtonSVGPanel
+      // styles.
+      top: unset;
+
+      // Position the SVG panel at the bottom
+      // center of the HUD.
+      @include center-origin-x;
+      left: 50%;
+      bottom: 0;
+
+      &.map-is-zoomed-in {
+        .ButtonSVG.zoom-in {
+          pointer-events: none;
+          opacity: 0.5;
+        }
+      }
+
+      &.map-is-zoomed-out {
+        .ButtonSVG.zoom-out {
+          pointer-events: none;
+          opacity: 0.5;
+        }
+      }
+
+      .glue {
+        transition: 250ms background-color;
+        border: 2px solid $color-main;
+        border-bottom: none;
+        border-radius: 0;
+
+        .ButtonSVG {
+          display: inline-block;
+          margin: 0 10px;
+        }
+      }
     }
   }
 }

@@ -15,33 +15,37 @@ export default function Line({
    */
   const rootStyle = useMemo((): React.CSSProperties => {
     // Gather details.
-    let lineThickness: number = 0.05
+    let lineThickness: number = 0.05 //em
+    let halfLineThickness: number = lineThickness / 2 //em
+    let minLineThickness: number = 2 //px
+    let halfMinLineThickness: number = minLineThickness / 2 //px
     let x: number = start.x
     let y: number = start.y
-    let w: number
-    let h: number
     let style: React.CSSProperties = {}
 
     // Calculate the positioning and sizing based
     // on the direction of the line.
     switch (direction) {
       case 'horizontal':
-        // Perform calculations.
-        y -= lineThickness / 2
-        w = length
-        h = lineThickness
+        // Offset y by half the line thickness
+        // to center the line.
+        y -= halfLineThickness
         // Add sizing styles.
-        style.width = `${w}em`
-        style.height = `max(${h}em, 2px)`
+        style.width = `${length}em`
+        style.height = `max(${lineThickness}em, ${minLineThickness}px)`
         break
       case 'vertical':
-        // Perform calculations.
-        x -= lineThickness / 2
-        w = lineThickness
-        h = length
+        // Offset x by half the line thickness
+        // to center the line.
+        x -= halfLineThickness
         // Add sizing styles.
-        style.width = `max(${w}em, 2px)`
-        style.height = `${h}em`
+        style.width = `max(${lineThickness}em, ${minLineThickness}px)`
+        style.height = `${length}em`
+        // Add slight margin and padding to connect
+        // any intersecting  horizontal and vertical
+        // lines seamlessly.
+        style.marginTop = `min(-${halfLineThickness}em, -${halfMinLineThickness}px)`
+        style.padding = `max(${halfLineThickness}em, ${halfMinLineThickness}px) 0`
         break
     }
 

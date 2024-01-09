@@ -4,7 +4,6 @@ import './ButtonSVGPanel.scss'
 
 export interface IMiniButtonSVGPanel {
   buttons: MiniButtonSVG[]
-  linkBack: JSX.Element | null
   styling: React.CSSProperties
   uniqueClassName: string
 }
@@ -27,7 +26,6 @@ export class MiniButtonSVGPanel extends React.Component<
         style={this.props.styling}
       >
         <div className='glue'>
-          {this.props.linkBack}
           {this.props.buttons.map((button: MiniButtonSVG) => {
             return button.render()
           })}

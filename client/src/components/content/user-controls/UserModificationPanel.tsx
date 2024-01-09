@@ -87,7 +87,7 @@ export default function UserModificationPanel(props: {
 
   return (
     <div className={containerClassName}>
-      <MiniButtonSVGPanel buttons={currentActions} linkBack={null} />
+      <MiniButtonSVGPanel buttons={currentActions} />
     </div>
   )
 }

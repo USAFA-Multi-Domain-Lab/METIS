@@ -3,6 +3,7 @@
 
 .Line {
   background-color: $color-main;
+  box-sizing: content-box;
 
   // Make the line have a top-left origin so that
   // it's positioned based on its starting position.

@@ -2,6 +2,10 @@
 @import './mixins.scss';
 
 .Scene {
+  // Disable pointer events for root element
+  // to prevent interference with interfacing
+  // with overlapped elements via the mouse.
+  pointer-events: none;
   position: relative;
   z-index: $z-map-scene;
 

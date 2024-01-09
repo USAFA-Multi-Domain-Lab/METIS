@@ -199,7 +199,7 @@ export default function MissionModificationPanel(props: {
 
   return (
     <div className={containerClassName}>
-      <MiniButtonSVGPanel buttons={currentActions} linkBack={null} />
+      <MiniButtonSVGPanel buttons={currentActions} />
       <div className='ToggleContainer'>
         <Toggle
           initiallyActivated={mission.live}
