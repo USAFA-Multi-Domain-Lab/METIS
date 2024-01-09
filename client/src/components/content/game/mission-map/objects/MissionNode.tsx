@@ -16,8 +16,9 @@ export const MAX_NODE_NAME_ZOOM = 1 / 30 // [numerator]em = [denominator]px
  * An object representing a node on the mission map.
  */
 export default function MissionNode({
-  cameraZoom,
   node,
+  cameraZoom,
+  onSelect,
 }: TMissionNode_P): JSX.Element | null {
   /* -- computed -- */
 
@@ -88,7 +89,32 @@ export default function MissionNode({
   }, undefined)
 
   /**
-   * The inline class for the node's name.
+   * The class for the root element.
+   */
+  const rootClassName = useMemo((): string => {
+    let classList = ['MissionNode']
+
+    // Add the selectable class if the node has
+    // a selection handler.
+    if (onSelect) {
+      classList.push('Selectable')
+    }
+    // Add the executable class if the node is
+    // executable.
+    if (node.executable) {
+      classList.push('Executable')
+    }
+    // Add the device class if the node is a
+    // device.
+    if (node.device) {
+      classList.push('Device')
+    }
+
+    return classList.join(' ')
+  }, [onSelect, node.executable, node.device])
+
+  /**
+   * The class for the node's name.
    */
   const nameClassName = useMemo((): string => {
     let classList = ['Name', 'Text']
@@ -102,13 +128,37 @@ export default function MissionNode({
     return classList.join(' ')
   }, [cameraZoom.x > MAX_NODE_NAME_ZOOM])
 
+  /**
+   * The class for the node's icon.
+   */
+  const iconClassName = useMemo((): string => {
+    let classList = ['Icon']
+
+    // Add the hidden class if the camera is
+    // zoomed out too far.
+    if (cameraZoom.x > MAX_NODE_NAME_ZOOM) {
+      classList.push('Hidden')
+    }
+
+    return classList.join(' ')
+  }, [cameraZoom.x > MAX_NODE_NAME_ZOOM])
+
   /* -- render -- */
 
+  // Ensure the node selection handler is defined.
+  onSelect = onSelect ?? (() => {})
+
   return (
-    <div key={node.nodeID} className='MissionNode' style={rootStyle}>
+    <div
+      key={node.nodeID}
+      className={rootClassName}
+      style={rootStyle}
+      onClick={onSelect}
+    >
       <div className={nameClassName} style={nameStyle}>
         {node.name}
       </div>
+      <div className={iconClassName}></div>
     </div>
   )
 }
@@ -118,11 +168,16 @@ export default function MissionNode({
  */
 export type TMissionNode_P = {
   /**
+   * The node to display.
+   */
+  node: ClientMissionNode
+  /**
    * The current camera zoom.
    */
   cameraZoom: Vector1D
   /**
-   * The node to display.
+   * Handler for when the node is selected.
+   * @default () => {}
    */
-  node: ClientMissionNode
+  onSelect?: () => void
 }

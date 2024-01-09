@@ -29,6 +29,29 @@
 
     background-color: $background-main;
 
+    &.Selectable {
+      // Change the cursor to pointer if
+      // the node can be selected.
+      cursor: pointer;
+    }
+
+    &.Executable {
+      .Icon {
+        // If the node is executable, show the
+        // lightning icon.
+        background-image: url(../../../../../assets/images/icons/lightning.svg);
+      }
+    }
+
+    &.Device {
+      .Icon {
+        // If the node is a device, show the
+        // device icon. This will overwrite the
+        // lightning icon.
+        background-image: url(../../../../../assets/images/icons/device.svg);
+      }
+    }
+
     .Name {
       // Position the name.
       @include center-origin-y;
@@ -39,6 +62,24 @@
       height: unset;
 
       word-break: break-word;
+    }
+
+    .Icon {
+      // Position the icon.
+      @include center-origin-y;
+      top: 50%;
+      right: 6.5%;
+
+      // Let height be automatic.
+      height: 100%;
+
+      // Make the icon 15% of the width of the
+      // node.
+      width: 12%;
+
+      background-size: contain;
+      background-position: center;
+      background-repeat: no-repeat;
     }
   }
 }

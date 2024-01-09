@@ -81,12 +81,12 @@ export const CAMERA_ZOOM_STAGES: number[] = ((): number[] => {
 /**
  * Whether the mission map EM grid is enabled.
  */
-export const MAP_EM_GRID_ENABLED = true
+export const MAP_EM_GRID_ENABLED = false
 
 /**
  * Whether the mission map node grid is enabled.
  */
-export const MAP_NODE_GRID_ENABLED = false
+export const MAP_NODE_GRID_ENABLED = true
 
 /* -- components -- */
 
