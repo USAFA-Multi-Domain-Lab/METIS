@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useEffect, useMemo } from 'react'
 import ClientMissionNode from 'src/missions/nodes'
 import './MissionNode.scss'
 import { Vector1D } from '../../../../../../../shared/toolbox/space'
@@ -20,13 +20,15 @@ export default function MissionNode({
   cameraZoom,
   onSelect,
 }: TMissionNode_P): JSX.Element | null {
+  /* -- effects -- */
+
   /* -- computed -- */
 
   /**
    * The inline styles for the root element.
    * @memoized
    */
-  const rootStyle = useMemo((): React.CSSProperties => {
+  const rootStyle = ((): React.CSSProperties => {
     let neededHeight: number =
       ClientMissionNode.LINE_HEIGHT *
       ClientMissionNode.FONT_SIZE *
@@ -58,25 +60,13 @@ export default function MissionNode({
       borderColor: node.color,
       backgroundColor,
     }
-  }, [
-    // ! Recomputes when:
-    // Node position changes.
-    node.position.toString(),
-    // Number of lines in the node name changes.
-    node.nameLineCount,
-    // The threshold for when the camera zooms
-    // out too far to display the node name
-    // changes.
-    cameraZoom.x > MAX_NODE_CONTENT_ZOOM,
-    // The node's color changes.
-    node.color,
-  ])
+  })()
 
   /**
    * The inline styles for the node's name.
    * @memoized
    */
-  const nameStyle = useMemo((): React.CSSProperties => {
+  const nameStyle = ((): React.CSSProperties => {
     let width: number = ClientMissionNode.NAME_WIDTH_RATIO * 100
     let fontSize: number = ClientMissionNode.FONT_SIZE
     let lineHeight: number = ClientMissionNode.LINE_HEIGHT
@@ -86,12 +76,12 @@ export default function MissionNode({
       fontSize: `${fontSize}em`,
       lineHeight: `${lineHeight}em`,
     }
-  }, undefined)
+  })()
 
   /**
    * The class for the root element.
    */
-  const rootClassName = useMemo((): string => {
+  const rootClassName = ((): string => {
     let classList = ['MissionNode']
 
     // Add the selectable class if the node has
@@ -111,20 +101,12 @@ export default function MissionNode({
     }
 
     return classList.join(' ')
-  }, [
-    // ! Recomputes when:
-    // The node's selection handler changes.
-    onSelect,
-    // The node's executable status changes.
-    node.executable,
-    // The node's device status changes.
-    node.device,
-  ])
+  })()
 
   /**
    * The class for the node's name.
    */
-  const nameClassName = useMemo((): string => {
+  const nameClassName = ((): string => {
     let classList = ['Name', 'Text']
 
     // Add the hidden class if the camera is
@@ -134,17 +116,12 @@ export default function MissionNode({
     }
 
     return classList.join(' ')
-  }, [
-    // ! Recomputes when:
-    // The camera zoom reaches the node
-    // content max.
-    cameraZoom.x > MAX_NODE_CONTENT_ZOOM,
-  ])
+  })()
 
   /**
    * The class for the node's icon.
    */
-  const iconClassName = useMemo((): string => {
+  const iconClassName = ((): string => {
     let classList = ['Icon']
 
     // Add the hidden class if the camera is
@@ -154,12 +131,7 @@ export default function MissionNode({
     }
 
     return classList.join(' ')
-  }, [
-    // ! Recomputes when:
-    // The camera zoom reaches the node
-    // content max.
-    cameraZoom.x > MAX_NODE_CONTENT_ZOOM,
-  ])
+  })()
 
   /* -- render -- */
 

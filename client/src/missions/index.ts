@@ -300,6 +300,8 @@ export default class ClientMission extends Mission<ClientMissionNode> {
    * @param parentNode Recursively used. Don't pass anything.
    * @param depth Recursively used. Don't pass anything.
    * @param rowCount Recursively used. Don't pass anything.
+   * @param extraLines Recursively used. Don't pass anything.
+   * @param rowMostLinesFound Recursively used. Don't pass anything.
    * @returns Subcalls of this recursive function will return results used for
    * further position calculations. The final return can be ignored.
    */

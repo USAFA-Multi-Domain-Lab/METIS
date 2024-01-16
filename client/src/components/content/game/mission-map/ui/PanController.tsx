@@ -1,6 +1,7 @@
 import './PanController.scss'
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import { Vector1D, Vector2D } from '../../../../../../../shared/toolbox/space'
+import { compute } from 'src/toolbox/'
 
 /**
  * Controls panning of the `MissionMap` component.
@@ -8,6 +9,7 @@ import { Vector1D, Vector2D } from '../../../../../../../shared/toolbox/space'
 export default function PanController({
   cameraPosition,
   cameraZoom,
+  onPan,
 }: TPanController): JSX.Element | null {
   /* -- state -- */
 
@@ -18,7 +20,7 @@ export default function PanController({
   /**
    * The inline class for the pan controller element.
    */
-  const panControllerClassName = useMemo((): string => {
+  const panControllerClassName = compute((): string => {
     let classList = ['PanController']
 
     // Add the active class if panning is active.
@@ -29,7 +31,7 @@ export default function PanController({
     }
 
     return classList.join(' ')
-  }, [panningIsActive])
+  })
 
   /* -- functions -- */
 
@@ -46,6 +48,9 @@ export default function PanController({
       ).scaleBy(cameraZoom)
 
       cameraPosition.translateBy(cameraDelta)
+
+      // Call the onPan callback if it exists.
+      if (onPan) onPan()
     }
   }
 
@@ -77,4 +82,8 @@ export type TPanController = {
    * The current camera zoom.
    */
   cameraZoom: Vector1D
+  /**
+   * Optional callback for when the user pans the map.
+   */
+  onPan?: () => void
 }

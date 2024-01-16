@@ -85,6 +85,13 @@ export type TServerMethod = keyof TServerEvents
  */
 export type TGenericServerEvents = {
   /**
+   * Occurs when any activity occurs with the connection to the server.
+   * @note Includes emitted events to and from the server, connection changes, and errors.
+   * @note This will be the last in the call chain, and will be handled after all other event types
+   * by the connection.
+   */
+  'activity': TConnectEvent<'activity'>
+  /**
    * Occurs when the client is successful in its initial connection to the server.
    */
   'connection-success': TConnectEvent<'connection-success'>

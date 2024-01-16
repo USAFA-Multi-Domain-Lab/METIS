@@ -11,6 +11,8 @@ import Hud from './ui/Hud'
 import ClientMissionNode from 'src/missions/nodes'
 import Line from './objects/Line'
 import { ButtonSVG, EButtonSVGPurpose } from '../../user-controls/ButtonSVG'
+import Overlay from './ui/overlay'
+import { compute } from 'src/toolbox'
 
 /* -- constants -- */
 
@@ -47,7 +49,7 @@ export const CAMERA_ZOOM_STAGE_COUNT = 8
 /**
  * The zoom level stages between the min and max zoom levels.
  */
-export const CAMERA_ZOOM_STAGES: number[] = ((): number[] => {
+export const CAMERA_ZOOM_STAGES: number[] = compute((): number[] => {
   // Results
   let stages: number[] = []
   // Get the reciprocal of the min and max zoom levels.
@@ -76,7 +78,7 @@ export const CAMERA_ZOOM_STAGES: number[] = ((): number[] => {
 
   // Return results.
   return stages
-})()
+})
 
 /**
  * Whether the mission map EM grid is enabled.
@@ -96,8 +98,17 @@ export const MAP_NODE_GRID_ENABLED = true
  */
 export default function MissionMap2({
   mission,
+  overlayContent,
   onNodeSelect,
 }: TMissionMap2): JSX.Element | null {
+  /* -- variables -- */
+
+  /**
+   * Whether to disable the zooming functionality of the map
+   * via the mouse wheel or track pad.
+   */
+  const disableZoom: boolean = !!overlayContent
+
   /* -- refs -- */
 
   /**
@@ -105,7 +116,13 @@ export default function MissionMap2({
    */
   const rootRef: React.RefObject<HTMLDivElement> = useRef<HTMLDivElement>(null)
 
+  /**
+   * Ref for the scene element of the mission map.
+   */
+  const sceneRef: React.RefObject<HTMLDivElement> = useRef<HTMLDivElement>(null)
+
   /* -- state -- */
+
   /**
    * Counter that is incremented whenever the component
    * needs to be re-rendered.
@@ -115,9 +132,9 @@ export default function MissionMap2({
   /**
    * Force the component to re-render.
    */
-  function forceUpdate(): void {
+  const forceUpdate = useCallback(() => {
     setForcedUpdateTracker(generateHash())
-  }
+  }, [])
 
   /**
    * The position to display the camera at. Changed by panning.
@@ -134,7 +151,7 @@ export default function MissionMap2({
     new Vector1D(DEFAULT_CAMERA_ZOOM, { onChange: () => forceUpdate() }),
   )
 
-  /* -- hooks (continued) -- */
+  /* -- hooks -- */
 
   // Add a structure change listener to the mission
   // passed in props anytime a new mission object
@@ -148,65 +165,82 @@ export default function MissionMap2({
   /**
    * Handles a mouse wheel event on the map.
    */
-  const onWheel = useCallback(
-    (event: React.WheelEvent<HTMLDivElement>): void => {
-      event.preventDefault()
+  const onWheel = (event: React.WheelEvent<HTMLDivElement>): void => {
+    // If zooming is disabled, abort.
+    if (disableZoom) return
 
-      // Get root element.
-      let rootElm: HTMLDivElement | null = rootRef.current
+    // Prevent default behavior.
+    event.preventDefault()
 
-      // If the root element doesn't exist, warn
-      // and abort.
-      if (!rootElm) {
-        console.warn('Could not access root element for MissionMap.')
-        return
-      }
+    // Get root element.
+    let rootElm: HTMLDivElement | null = rootRef.current
 
-      // Gather details.
-      let delta: number = event.deltaY ? event.deltaY : event.deltaX * 2.5
-      let clientMouseCoords: Vector2D = new Vector2D(
-        event.clientX,
-        event.clientY,
-      )
-      let mapBounds: DOMRect = rootElm.getBoundingClientRect()
-      let deltaZoom = delta * 0.000075
+    // If the root element doesn't exist, warn
+    // and abort.
+    if (!rootElm) {
+      console.warn('Could not access root element for MissionMap.')
+      return
+    }
 
-      // Get the position of the mouse in the scene
-      // before the zoom.
-      let prevSceneMouseCoords: Vector2D = calcSceneMouseCoords(
-        mapBounds,
-        clientMouseCoords,
-        cameraPosition,
-        cameraZoom,
-      )
+    // Gather details.
+    let delta: number = event.deltaY ? event.deltaY : event.deltaX * 2.5
+    let clientMouseCoords: Vector2D = new Vector2D(event.clientX, event.clientY)
+    let mapBounds: DOMRect = rootElm.getBoundingClientRect()
+    let deltaZoom = delta * 0.000075
 
-      // Translate the camera zoom by the determined
-      // delta zoom, then clamp it to the min and max
-      // zoom levels.
-      cameraZoom.translate(deltaZoom).clamp(MIN_CAMERA_ZOOM, MAX_CAMERA_ZOOM)
+    // Get the position of the mouse in the scene
+    // before the zoom.
+    let prevSceneMouseCoords: Vector2D = calcSceneMouseCoords(
+      mapBounds,
+      clientMouseCoords,
+      cameraPosition,
+      cameraZoom,
+    )
 
-      // Get the position of the mouse in the scene
-      // after the zoom.
-      let newSceneMouseCoords: Vector2D = calcSceneMouseCoords(
-        mapBounds,
-        clientMouseCoords,
-        cameraPosition,
-        cameraZoom,
-      )
+    // Translate the camera zoom by the determined
+    // delta zoom, then clamp it to the min and max
+    // zoom levels.
+    cameraZoom.translate(deltaZoom).clamp(MIN_CAMERA_ZOOM, MAX_CAMERA_ZOOM)
 
-      // Determine the difference between the mouse
-      // position before and after the zoom.
-      let difference: Vector2D = Vector2D.difference(
-        prevSceneMouseCoords,
-        newSceneMouseCoords,
-      )
+    // Get the position of the mouse in the scene
+    // after the zoom.
+    let newSceneMouseCoords: Vector2D = calcSceneMouseCoords(
+      mapBounds,
+      clientMouseCoords,
+      cameraPosition,
+      cameraZoom,
+    )
 
-      // Translate the camera position by the difference
-      // in mouse position.
-      cameraPosition.translateBy(difference)
-    },
-    [],
-  )
+    // Determine the difference between the mouse
+    // position before and after the zoom.
+    let difference: Vector2D = Vector2D.difference(
+      prevSceneMouseCoords,
+      newSceneMouseCoords,
+    )
+
+    // Translate the camera position by the difference
+    // in mouse position.
+    cameraPosition.translateBy(difference)
+
+    // Pre-transform the scene to make the zoom
+    // feel snappier.
+    if (!sceneRef.current) return
+    sceneRef.current.style.transform = `translate(${-cameraPosition.x}em, ${-cameraPosition.y}em)`
+    sceneRef.current.style.fontSize = `${1 / cameraZoom.x}px`
+  }
+
+  /**
+   * Pre-translates the scene to the camera position in the
+   * state. This makes the panning appear snappier.
+   */
+  const preTranslateScene = (): void => {
+    // If the scene element exists, pre translate it.
+    if (sceneRef.current) {
+      // Set the scene element's position to the
+      // negative of the camera position.
+      sceneRef.current.style.transform = `translate(${-cameraPosition.x}em, ${-cameraPosition.y}em)`
+    }
+  }
 
   /* -- render -- */
 
@@ -245,8 +279,6 @@ export default function MissionMap2({
     // Change in the node structure of
     // the mission.
     mission.structureChangeKey,
-    // Change in camera position.
-    cameraPosition.toString(),
     // Whether the camera zoom crosses the threshold where
     // the node names should be displayed/hidden.
     cameraZoom.x > MAX_NODE_CONTENT_ZOOM,
@@ -254,31 +286,10 @@ export default function MissionMap2({
 
   /**
    * The data for the buttons displayed on the HUD.
-   * @memoized
    */
-  const buttons = useMemo((): ButtonSVG[] => {
+  const buttons = compute((): ButtonSVG[] => {
     let zoomInStages: number[] = [...CAMERA_ZOOM_STAGES].reverse()
     let zoomOutStages: number[] = [...CAMERA_ZOOM_STAGES]
-
-    /**
-     * Gets the center of the map in scene coordinates.
-     */
-    const calcSceneCoordsAtMapCenter = (): Vector2D => {
-      // Get bounds of map.
-      let mapBounds: DOMRect | undefined =
-        rootRef.current?.getBoundingClientRect()
-
-      // If the root element doesn't exist, warn
-      // and abort.
-      if (!mapBounds) {
-        throw new Error('Could not access root element for MissionMap.')
-      }
-
-      // Return the center of the map.
-      return new Vector2D(mapBounds.width / 2, mapBounds.height / 2)
-        .scaleBy(cameraZoom)
-        .translateBy(cameraPosition)
-    }
 
     // Return buttons.
     return [
@@ -286,10 +297,6 @@ export default function MissionMap2({
         ...ButtonSVG.defaultProps,
         purpose: EButtonSVGPurpose.ZoomIn,
         handleClick: () => {
-          // Get the position in the scene centered
-          // on the map before the zoom.
-          let sceneCenterBefore: Vector2D = calcSceneCoordsAtMapCenter()
-
           // Loop through the zoom in stages and
           // set the camera zoom to the first stage
           // that is less than the current zoom.
@@ -299,18 +306,6 @@ export default function MissionMap2({
               break
             }
           }
-
-          // Get the position in the scene centered
-          // on the map after the zoom.
-          let sceneCenterAfter: Vector2D = calcSceneCoordsAtMapCenter()
-
-          // Translate the camera position by the difference
-          // in the scene center position. This will make the
-          // zoom zoom out from the center of the map instead
-          // of the top-left corner.
-          cameraPosition.translateBy(
-            Vector2D.difference(sceneCenterBefore, sceneCenterAfter),
-          )
         },
         tooltipDescription:
           'Zoom in. \n*Scrolling on the map will also zoom in and out.*',
@@ -319,10 +314,6 @@ export default function MissionMap2({
         ...ButtonSVG.defaultProps,
         purpose: EButtonSVGPurpose.ZoomOut,
         handleClick: () => {
-          // Get the position in the scene centered
-          // on the map before the zoom.
-          let sceneCenterBefore: Vector2D = calcSceneCoordsAtMapCenter()
-
           // Loop through the zoom out stages and
           // set the camera zoom to the first stage
           // that is greater than the current zoom.
@@ -332,30 +323,38 @@ export default function MissionMap2({
               break
             }
           }
-
-          // Get the position in the scene centered
-          // on the map after the zoom.
-          let sceneCenterAfter: Vector2D = calcSceneCoordsAtMapCenter()
-
-          // Translate the camera position by the difference
-          // in the scene center position. This will make the
-          // zoom zoom out from the center of the map instead
-          // of the top-left corner.
-          cameraPosition.translateBy(
-            Vector2D.difference(sceneCenterBefore, sceneCenterAfter),
-          )
         },
         tooltipDescription:
           'Zoom out. \n*Scrolling on the map will also zoom in and out.*',
       }),
     ]
-  }, undefined)
+  })
+
+  /**
+   * JSX for an overlay that is displayed only if content is
+   * passed in the props for the map.
+   */
+  const overlayJsx = compute((): JSX.Element | null => {
+    // If there is no overlay content, return null.
+    if (!overlayContent) return null
+
+    // Otherwise, render the overlay.
+    return <Overlay>{overlayContent}</Overlay>
+  })
 
   // Render root JSX.
   return (
     <div className='MissionMap2' ref={rootRef} onWheel={onWheel}>
-      <PanController cameraPosition={cameraPosition} cameraZoom={cameraZoom} />
-      <Scene cameraPosition={cameraPosition} cameraZoom={cameraZoom}>
+      <PanController
+        cameraPosition={cameraPosition}
+        cameraZoom={cameraZoom}
+        onPan={preTranslateScene}
+      />
+      <Scene
+        cameraPosition={cameraPosition}
+        cameraZoom={cameraZoom}
+        ref={sceneRef}
+      >
         {/* Scene objects */}
         <Grid type={'em'} enabled={MAP_EM_GRID_ENABLED} />
         <Grid type={'node'} enabled={MAP_NODE_GRID_ENABLED} />
@@ -363,6 +362,7 @@ export default function MissionMap2({
         {nodesJsx}
       </Scene>
       <Hud mission={mission} buttons={buttons} />
+      {overlayJsx}
     </div>
   )
 }
@@ -414,6 +414,12 @@ export type TMissionMap2 = {
    * The mission to display on the map.
    */
   mission: ClientMission
+  /**
+   * Content to display in the overlay.
+   * @note If undefined, the overlay will not be displayed.
+   * @default undefined
+   */
+  overlayContent?: React.ReactNode
   /**
    * Handles when a node is selected.
    * @default undefined

@@ -68,10 +68,12 @@ export default class ServerConnection {
     return this._status
   }
 
+  // todo: Switch back to `protected` once the
+  // todo: testing is done.
   /**
    * Storage for all listeners, in the order they get added.
    */
-  protected listeners: [TServerMethod, TServerHandler<any>][] = []
+  public listeners: [TServerMethod, TServerHandler<any>][] = []
 
   /**
    * A map of request IDs to response listeners. These listeners will be called
@@ -176,16 +178,6 @@ export default class ServerConnection {
     this.prepareSocket()
   }
 
-  reconnectBad = (): void => {
-    // Create new socket connection.
-    this.socket = new WebSocket(ServerConnection.SOCKET_URL_BAD)
-
-    // Prepare new socket connection.
-    this.prepareSocket()
-
-    // this.reconnectBad = this.reconnect
-  }
-
   /**
    * Emits a generic event to the server.
    * @param method The method of the event to emit.
@@ -197,6 +189,8 @@ export default class ServerConnection {
   >(method: TMethod, data: TData): void {
     // Send payload.
     this.socket.send(JSON.stringify({ method, data }))
+    // Handle activity.
+    this.onActivity()
   }
 
   /**
@@ -235,6 +229,9 @@ export default class ServerConnection {
 
     // Send payload.
     this.socket.send(JSON.stringify({ method, requestId, data }))
+
+    // Handle activity.
+    this.onActivity()
   }
 
   /**
@@ -249,6 +246,21 @@ export default class ServerConnection {
   ): ServerConnection {
     // Push the new listener to the array of listeners.
     this.listeners.push([method, handler])
+    // Return this.
+    return this
+  }
+
+  /**
+   * Adds a listener for a specific server event method.
+   * @param {TServerMethod} method The event method that will be handled. The handler will only be called if the method matches what is sent by the server in a web socket message, except for 'open', 'close', and 'error' events, which are called upon their respective web socket events.
+   * @param {TServerHandler<TServerEvent>} handler The handler that will be called upon the event being triggered.
+   * @returns {ServerConnection} The server connection instance, allowing the chaining of class method calls.
+   */
+  public removeEventListener(
+    handler: TServerHandler<TServerMethod>,
+  ): ServerConnection {
+    // Filter out the handler.
+    this.listeners = this.listeners.filter(([, h]) => h !== handler)
     // Return this.
     return this
   }
@@ -339,6 +351,19 @@ export default class ServerConnection {
   }
 
   /**
+   * Handles any activity on the connection by calling
+   * any activity listeners.
+   */
+  public onActivity(): void {
+    // Call any listeners that match with the method 'activity'.
+    for (let [method, listener] of this.listeners) {
+      if (method === 'activity') {
+        listener({ method: 'activity' })
+      }
+    }
+  }
+
+  /**
    * Handler for when the web socket connection is opened. Calls all "open" listeners stored in "listeners".
    * @param {Event} event The open event.
    */
@@ -370,6 +395,9 @@ export default class ServerConnection {
         })
       }
     }
+
+    // Handle activity.
+    this.onActivity()
   }
 
   /**
@@ -431,6 +459,9 @@ export default class ServerConnection {
         })
       }
     }
+
+    // Handle activity.
+    this.onActivity()
   }
 
   /**
@@ -487,6 +518,9 @@ export default class ServerConnection {
         )
       }
     }
+
+    // Handle activity.
+    this.onActivity()
   }
 
   /**
@@ -502,6 +536,9 @@ export default class ServerConnection {
     if (isClosed) {
       this.onClose()
     }
+
+    // Handle activity.
+    this.onActivity()
   }
 
   /**
@@ -574,7 +611,7 @@ export type TWsRequestOptions = {
 /**
  * Data cached for an unfulfilled request.
  */
-type TUnfulfilledReqData = {
+export type TUnfulfilledReqData = {
   /**
    * The ID of the request.
    */

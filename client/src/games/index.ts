@@ -60,7 +60,7 @@ export default class GameClient extends Game<
   }
 
   /**
-   * Creates game-specific listeners for the given particpant.
+   * Creates game-specific listeners.
    */
   private addListeners(): void {
     this.server.addEventListener('node-opened', this.onNodeOpened)
@@ -75,7 +75,7 @@ export default class GameClient extends Game<
   }
 
   /**
-   * Removes game-specific listeners for the given particpant.
+   * Removes game-specific listeners.
    */
   private removeListeners(): void {
     this.server.clearEventListeners([

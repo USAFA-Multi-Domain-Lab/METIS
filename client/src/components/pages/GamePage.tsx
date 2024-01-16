@@ -1,15 +1,13 @@
+import './GamePage.scss'
 import { useState } from 'react'
 import OutputPanel from '../content/game/OutputPanel'
-import './GamePage.scss'
-import ExecuteNodePath from '../content/game/ExecuteNodePath'
 import { IPage } from '../App'
 import { IConsoleOutput } from 'src/components/content/game/ConsoleOutput'
 import GameClient from 'src/games'
 import { useGlobalContext, useNavigationMiddleware } from 'src/context'
-import { useMountHandler, useUnmountHandler } from 'src/toolbox/hooks'
+import { useMountHandler } from 'src/toolbox/hooks'
 import ClientMission from 'src/missions'
 import ClientMissionNode from 'src/missions/nodes'
-import ClientMissionAction from 'src/missions/actions'
 import MapToolbox from '../../../../shared/toolbox/maps'
 import Navigation from '../content/general-layout/Navigation'
 import {
@@ -17,50 +15,32 @@ import {
   PanelSizeRelationship,
   ResizablePanel,
 } from '../content/general-layout/ResizablePanels'
-// import MissionMap from '../content/game/MissionMap'
 import MissionMap2 from '../content/game/mission-map'
-import { EAjaxStatus } from '../../../../shared/toolbox/ajax'
-import NodeActions from '../content/game/NodeActions'
-import { TServerConnectionStatus } from '../../../../shared/connect/data'
-
-export interface IGamePage extends IPage {
-  game: GameClient
-}
-
-// This is the number of times per
-// second that the game updates.
-const GAME_TICK_RATE: number = 20
+import ActionExecModal from '../content/game/mission-map/ui/overlay/modals/ActionExecModal'
+import StatusBar from '../content/game/StatusBar'
+import { compute } from 'src/toolbox'
 
 // This will render a dashboard with a radar
 // on it, indicating air traffic passing by.
 export default function GamePage(props: IGamePage): JSX.Element | null {
-  /* -- PROPS -- */
+  /* -- props -- */
 
   let game: GameClient = props.game
   let mission: ClientMission = game.mission
 
-  /* -- GLOBAL CONTEXT -- */
+  /* -- global-context -- */
 
   const globalContext = useGlobalContext()
-  const {
-    navigateTo,
-    finishLoading,
-    notify,
-    logout,
-    forceUpdate,
-    confirm,
-    handleError,
-  } = globalContext.actions
-  const [server] = globalContext.server
+  const { navigateTo, finishLoading, notify, logout, confirm, handleError } =
+    globalContext.actions
 
-  /* -- STATE -- */
+  /* -- state -- */
 
-  const [selectedNode, selectNode] = useState<ClientMissionNode | null>(null)
-  const [selectedAction, selectAction] = useState<ClientMissionAction | null>(
+  const [nodeToExecute, setNodeToExecute] = useState<ClientMissionNode | null>(
     null,
   )
 
-  /* -- EFFECTS -- */
+  /* -- effects -- */
 
   // Add navigation middleware to properly
   // quit the game before the user navigates
@@ -88,41 +68,13 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
     )
   })
 
-  /* -- VARIABLES -- */
-
-  let status: TServerConnectionStatus = server?.status ?? 'closed'
-  let statusMessage: string = ''
-  let overflowConnectionMessage: string = ''
-  let overflowStatusMessages: Array<{ key: string; text: string }> = []
-
-  // Variables that determine whether or not
-  // to display various components.
-  let displayNodeActions: boolean =
-    selectedNode !== null && selectedAction === null
-  let displayExecuteNodePath: boolean =
-    selectedNode !== null && selectedAction !== null
+  /* -- variables -- */
 
   // Class names for various components.
   let rootClassList: string[] = ['GamePage', 'Page']
   let resourcesClassList: string[] = ['Resources']
-  let statusClassList: string[] = ['Status']
-  let overflowCountClassList: string[] = ['OverflowCount', 'Hidden']
-  let overflowClassList: string[] = ['Overflow']
-  let pendingTasksClassList: string[] = ['PendingTasks', 'Hidden']
 
-  /* -- FUNCTIONS -- */
-
-  // This will loop the game,
-  // updating at the given tick
-  // rate.
-  let loop: () => void = () => {
-    setTimeout(() => {
-      try {
-        forceUpdate()
-        loop()
-      } catch (error) {}
-    }, 1000 / GAME_TICK_RATE)
-  }
+  /* -- functions -- */
 
   /**
    * Outputs to the in-browser console.
@@ -168,93 +120,19 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
       }
       // Else, select the node.
       else {
-        selectNode(node)
-
-        // If the node has only one action,
-        // preselect that action as well.
-        if (node.actions.size === 1) {
-          selectAction(Array.from(node.actions.values())[0])
-        }
-
-        // Force a state update.
-        forceUpdate()
+        setNodeToExecute(node)
       }
     }
   }
 
-  /**
-   * Clears the selected node and action.
-   */
-  const clearSelections = (): void => {
-    selectNode(null)
-    selectAction(null)
-  }
-
-  /**
-   * Renders the `NodeActions` prompt componenent conditionally based
-   * on whether there is a selected node.
-   */
-  const renderNodeActions = (): JSX.Element | null => {
-    if (selectedNode !== null) {
-      return (
-        <NodeActions
-          isOpen={displayNodeActions}
-          node={selectedNode}
-          game={game}
-          handleActionSelectionRequest={selectAction}
-          handleCloseRequest={clearSelections}
-        />
-      )
-    } else {
-      return null
-    }
-  }
-
-  /**
-   * Renders the `ExecuteNodePath` prompt componenent conditionally based
-   * on whether there is a selected node and action.
-   */
-  const renderExecuteNodePath = (): JSX.Element | null => {
-    if (selectedNode !== null && selectedAction !== null) {
-      return (
-        <ExecuteNodePath
-          isOpen={displayExecuteNodePath}
-          action={selectedAction}
-          game={game}
-          outputToConsole={outputToConsole}
-          handleExecutionRequest={() => {
-            if (selectedAction) {
-              game.executeAction(selectedAction.actionID)
-            }
-          }}
-          handleCloseRequest={clearSelections}
-          handleGoBackRequest={() => {
-            if (selectedNode && selectedNode.actions.size === 1) {
-              clearSelections()
-            }
-          }}
-        />
-      )
-    } else {
-      return null
-    }
-  }
-
-  /* -- EFFECTS -- */
+  /* -- effects -- */
 
   useMountHandler((done) => {
     finishLoading()
-    loop()
     done()
   })
 
-  useUnmountHandler(() => {
-    // Make loop function an empty function so that
-    // the loop is broken the next time it is called.
-    loop = () => {}
-  })
-
-  /* -- PRE-RENDER-PROCESSING -- */
+  /* -- pre-rendering-processing -- */
 
   // If the mission has no resources left,
   // add the red alert class to the resources.
@@ -262,74 +140,26 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
     resourcesClassList.push('RedAlert')
   }
 
-  // If a server connection is present...
-  if (server) {
-    switch (status) {
-      // Add class name and set status message based on the
-      // server connection status.
-      case 'open':
-        statusMessage = 'Connected.'
-        statusClassList.push('Open')
-        overflowConnectionMessage =
-          'The client is properly connected to the server.'
-        break
-      case 'closed':
-        statusMessage = 'Not Connected.'
-        statusClassList.push('Closed')
-        overflowConnectionMessage =
-          'The client is not connected to the server. Data between the server and the client cannot be exchanged.'
-        break
-      case 'connecting':
-        statusMessage = 'Connection dropped. Attempting to reconnect.'
-        statusClassList.push('Connecting')
-        overflowConnectionMessage =
-          'The connection from the client to the server has dropped. The client is attempting to reconnect to the server now.'
-        break
+  /* -- render -- */
+
+  const overlayContent = compute((): JSX.Element | undefined => {
+    // If there is a selected node and not
+    // a selected action, render a prompt to
+    // select an action for the node.
+    if (nodeToExecute) {
+      return (
+        <ActionExecModal
+          node={nodeToExecute}
+          game={game}
+          close={() => setNodeToExecute(null)}
+        />
+      )
     }
-
-    // If the server connection has unfulfilled requests, add the
-    // 'Pending' class to the status element.)
-    if (status === 'open' && server.hasUnfulfilledRequests) {
-      statusClassList.push('Pending')
-
-      // Get the request data.
-      let unfulfilledRequests = server.unfulfilledRequests
-
-      // Get the last request and overwrite the status message with it.
-      statusMessage =
-        unfulfilledRequests[unfulfilledRequests.length - 1].statusMessage
-
-      // Construct the overflow status messages.
-      overflowStatusMessages = unfulfilledRequests.map((request) => ({
-        key: request.id,
-        text: request.statusMessage,
-      }))
-
-      // If there are overflow messages, filter
-      // out the hidden class name from the pending tasks
-      // element.
-      if (overflowStatusMessages.length > 0) {
-        pendingTasksClassList = pendingTasksClassList.filter(
-          (cls) => cls !== 'Hidden',
-        )
-      }
-      // If there is more than one overflow message, filter
-      // out the hidden class name from the overflow count
-      // element.
-      if (overflowStatusMessages.length > 1) {
-        overflowCountClassList = overflowCountClassList.filter(
-          (cls) => cls !== 'Hidden',
-        )
-      }
+    // Else, don't render any overlay content.
+    else {
+      return undefined
     }
-  }
-  // If no server connection, add the 'Closed' class to the status element.
-  else {
-    statusClassList.push('Closed')
-    statusMessage = 'Connection dropped. Attempting to reconnect.'
-  }
-
-  /* -- RENDER -- */
+  })
 
   // Return the rendered component.
   return (
@@ -369,32 +199,7 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
           <div className={resourcesClassList.join(' ')}>
             Resources remaining: {game.resources}
           </div>
-          <div className={statusClassList.join(' ')}>
-            <div className='Message'>
-              {statusMessage}{' '}
-              <span className={overflowCountClassList.join(' ')}>
-                +{overflowStatusMessages.length - 1}
-              </span>
-            </div>
-            <div className='Indicator'></div>
-            <div className={overflowClassList.join(' ')}>
-              <div className='Connection'>
-                <div className='Heading'>Connection Status:</div>
-                <div className='Status'>{status}</div>
-                <div className='Message'>{overflowConnectionMessage}</div>
-              </div>
-              <div className={pendingTasksClassList.join(' ')}>
-                <div className='Heading'>Pending Tasks:</div>
-                <ul className='Messages'>
-                  {overflowStatusMessages.map((statusMessage) => (
-                    <li key={statusMessage.key} className='Message'>
-                      {statusMessage.text}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-          </div>
+          <StatusBar />
         </div>
         <PanelSizeRelationship
           sizingMode={EPanelSizingMode.Panel1_Auto__Panel2_Defined}
@@ -452,9 +257,13 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
                     return description
                   }}
                 /> */}
-                <MissionMap2 mission={mission} onNodeSelect={onNodeSelect} />
-                {renderNodeActions()}
-                {renderExecuteNodePath()}
+                <MissionMap2
+                  mission={mission}
+                  onNodeSelect={onNodeSelect}
+                  overlayContent={overlayContent}
+                />
+                {/* {renderNodeActions()}
+                {renderExecuteNodePath()} */}
               </>
             ),
           }}
@@ -468,4 +277,16 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
       </div>
     </div>
   )
+}
+
+/* -- types -- */
+
+/**
+ * Prop type for `GamePage`.
+ */
+export interface IGamePage extends IPage {
+  /**
+   * The game client to use on the page.
+   */
+  game: GameClient
 }

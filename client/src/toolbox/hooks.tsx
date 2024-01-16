@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useRef } from 'react'
 import { useCallback, useEffect, useState } from 'react'
 import { TMetisSession } from '../../../shared/sessions'
 import { useGlobalContext } from '../context'
@@ -38,11 +38,19 @@ export function useMountHandler(
 /**
  * Creates a handler that will be called when the component unmounts.
  * @param handler The handler that is called upon unmount.
+ * @returns Whether the component will unmount, changes after handler is called.
  */
-export function useUnmountHandler(handler: () => void): void {
+export function useUnmountHandler(handler: () => void): boolean {
+  const unmounted = useRef<boolean>(false)
+
   useEffect(() => {
-    return handler
+    return () => {
+      handler()
+      unmounted.current = true
+    }
   }, [])
+
+  return unmounted.current
 }
 
 /**

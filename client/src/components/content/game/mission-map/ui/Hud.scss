@@ -8,7 +8,7 @@
     // with overlapped elements via the mouse.
     pointer-events: none;
     box-sizing: border-box;
-    position: relative;
+    position: absolute;
     z-index: $z-map-hud;
     top: 0;
     left: 0;
