@@ -3,7 +3,7 @@ import { v4 as generateHash } from 'uuid'
 /**
  * Utility functions for working with strings.
  */
-export default class StringsToolbox {
+export default class StringToolbox {
   /**
    * Limits the given string to the given number of characters.
    * @note Three extra characters are cut at the end of the result to include an elipsis.
@@ -25,5 +25,12 @@ export default class StringsToolbox {
    */
   public static generateRandomID(): string {
     return generateHash()
+  }
+
+  /**
+   * Capitalizes the first letter of the given string.
+   */
+  public static capitalize(str: string): string {
+    return str.charAt(0).toUpperCase() + str.slice(1)
   }
 }

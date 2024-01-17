@@ -297,13 +297,13 @@
         &.PendingOpen {
         }
 
+        &.PendingExecInit {
+        }
+
         &.Executing {
           .ProgressBar {
             display: block;
           }
-        }
-
-        &.PendingExecInit {
         }
 
         &.Executing {

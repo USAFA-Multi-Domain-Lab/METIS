@@ -1,9 +1,9 @@
 import './StatusBar.scss'
 
 import { TServerConnectionStatus } from '../../../../../shared/connect/data'
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useGlobalContext } from 'src/context'
-import { useUnmountHandler } from 'src/toolbox/hooks'
+import { useEventListener, useUnmountHandler } from 'src/toolbox/hooks'
 import { TUnfulfilledReqData } from 'src/connect/servers'
 
 /**
@@ -35,31 +35,14 @@ export default function StatusBar({}: TStatusBar_P): JSX.Element | null {
     TUnfulfilledReqData[]
   >(server?.unfulfilledRequests ?? [])
 
-  /**
-   * Updates state values when the server connection
-   * emits an activity event.
-   */
-  const onConnectionActivity = useRef(() => {
+  // Register an event listener to update the status
+  // and unfulfilled requests when the server connection
+  // emits an activity event.
+  useEventListener(server, 'activity', () => {
     if (server) {
       setStatus(server.status)
       setUnfulfilledRequests(server.unfulfilledRequests)
     }
-  })
-
-  /* -- effect -- */
-
-  // Register activity listener on change in the
-  // server connection object.
-  useEffect(() => {
-    if (server) {
-      server.removeEventListener(onConnectionActivity.current)
-      server.addEventListener('activity', onConnectionActivity.current)
-    }
-  }, [server])
-
-  // Remove activity listener on unmount.
-  useUnmountHandler(() => {
-    if (server) server.removeEventListener(onConnectionActivity.current)
   })
 
   /* -- pre-processing -- */

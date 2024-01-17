@@ -117,9 +117,6 @@ export default class GameClient extends Game<
       throw Error('Node is not openable.')
     }
 
-    // Set pending state on the node.
-    node.pendingOpen = true
-
     // Emit a request to open the node.
     server.request(
       'request-open-node',
@@ -128,6 +125,9 @@ export default class GameClient extends Game<
       },
       `Opening "${node.name}".`,
     )
+
+    // Handle request within node.
+    node.handleRequestMade('request-open-node')
   }
 
   /**
@@ -152,9 +152,6 @@ export default class GameClient extends Game<
       throw Error('Node is not executable.')
     }
 
-    // Set pending state on the node.
-    action.node.pendingExecInit = true
-
     // Emit a request to execute the action.
     server.request(
       'request-execute-action',
@@ -163,6 +160,9 @@ export default class GameClient extends Game<
       },
       `Executing "${action.name}" on "${action.node.name}".`,
     )
+
+    // Handle request within node.
+    action.node.handleRequestMade('request-execute-action')
   }
 
   /**

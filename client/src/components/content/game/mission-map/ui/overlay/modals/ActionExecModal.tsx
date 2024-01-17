@@ -1,9 +1,9 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import './ActionExecModal.scss'
 import ClientMissionNode from 'src/missions/nodes'
 import ClientMissionAction from 'src/missions/actions'
 import Tooltip from '../../../../../communication/Tooltip'
-import StringsToolbox from '../../../../../../../../../shared/toolbox/strings'
+import StringToolbox from '../../../../../../../../../shared/toolbox/strings'
 import GameClient from 'src/games'
 import { useMountHandler } from 'src/toolbox/hooks'
 import MapToolbox from '../../../../../../../../../shared/toolbox/maps'
@@ -247,7 +247,7 @@ function Option({ game, action, select }: TOption_P) {
             (action.successChance as number) * 100
           }%\n` +
           `**Resource cost:** ${action.resourceCost as number} resource(s)\n` +
-          `**Description:** ${StringsToolbox.limit(action.description, 160)}`
+          `**Description:** ${StringToolbox.limit(action.description, 160)}`
         }
       />
       {action.name}

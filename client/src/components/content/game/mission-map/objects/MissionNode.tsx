@@ -1,7 +1,11 @@
-import { useEffect, useMemo } from 'react'
 import ClientMissionNode from 'src/missions/nodes'
 import './MissionNode.scss'
 import { Vector1D } from '../../../../../../../shared/toolbox/space'
+import StringToolbox from '../../../../../../../shared/toolbox/strings'
+import { compute } from 'src/toolbox'
+import { useState } from 'react'
+import { TNodeExecutionState } from '../../../../../../../shared/missions/nodes'
+import { useEventListener, useInlineStyling } from 'src/toolbox/hooks'
 
 /* -- constants -- */
 
@@ -20,7 +24,47 @@ export default function MissionNode({
   cameraZoom,
   onSelect,
 }: TMissionNode_P): JSX.Element | null {
+  /* -- state -- */
+
+  /**
+   * The execution state of the node.
+   */
+  const [executionState, setExecutionState] = useState<TNodeExecutionState>(
+    node.executionState,
+  )
+  /**
+   * Whether the node is pending to be opened.
+   */
+  const [pendingOpen, setPendingOpen] = useState<boolean>(node.pendingOpen)
+  /**
+   * Whether the node is pending execution initiation.
+   */
+  const [pendingExecInit, setPendingExecInit] = useState<boolean>(
+    node.pendingExecInit,
+  )
+  /**
+   * The initial progress shown on the progress bar,
+   * helping account for latency.
+   */
+  const [initialProgress, setInitialProgress] = useState<number>(0)
+
   /* -- effects -- */
+
+  // Register an event listener to handle activity
+  // on the node.
+  useEventListener(node, 'activity', () => {
+    // Update the state with details stored in
+    // the node object.
+    setPendingOpen(node.pendingOpen)
+    setPendingExecInit(node.pendingExecInit)
+    setExecutionState(node.executionState)
+
+    // If node is executing, update the initial
+    // progress.
+    if (node.executing) {
+      setInitialProgress(Date.now() - node.execution!.start)
+    }
+  })
 
   /* -- computed -- */
 
@@ -28,7 +72,7 @@ export default function MissionNode({
    * The inline styles for the root element.
    * @memoized
    */
-  const rootStyle = ((): React.CSSProperties => {
+  const rootStyle: React.CSSProperties = compute(() => {
     let neededHeight: number =
       ClientMissionNode.LINE_HEIGHT *
       ClientMissionNode.FONT_SIZE *
@@ -60,13 +104,28 @@ export default function MissionNode({
       borderColor: node.color,
       backgroundColor,
     }
-  })()
+  })
+
+  /**
+   * The inline styles for the progress bar.
+   */
+  const progressBarStyle = useInlineStyling((style) => {
+    // If the node is executing, animate
+    // the progress bar.
+    if (node.executing) {
+      let duration = node.execution!.duration
+
+      style.animation = 'loading-animation 750ms linear 0ms infinite'
+      style.animation += ', '
+      style.animation += `progress-animation ${duration}ms linear -${initialProgress}ms 1 normal forwards`
+    }
+  })
 
   /**
    * The inline styles for the node's name.
    * @memoized
    */
-  const nameStyle = ((): React.CSSProperties => {
+  const nameStyle: React.CSSProperties = compute(() => {
     let width: number = ClientMissionNode.NAME_WIDTH_RATIO * 100
     let fontSize: number = ClientMissionNode.FONT_SIZE
     let lineHeight: number = ClientMissionNode.LINE_HEIGHT
@@ -76,12 +135,12 @@ export default function MissionNode({
       fontSize: `${fontSize}em`,
       lineHeight: `${lineHeight}em`,
     }
-  })()
+  })
 
   /**
    * The class for the root element.
    */
-  const rootClassName = ((): string => {
+  const rootClassName: string = compute(() => {
     let classList = ['MissionNode']
 
     // Add the selectable class if the node has
@@ -99,14 +158,26 @@ export default function MissionNode({
     if (node.device) {
       classList.push('Device')
     }
+    // Add pending open class if the node is
+    // pending to be opened.
+    if (pendingOpen) {
+      classList.push('PendingOpen')
+    }
+    // Add pending execution initiation class if the node
+    // is pending execution initiation.
+    if (pendingExecInit) {
+      classList.push('PendingExecInit')
+    }
+    // Add the execution state class.
+    classList.push(StringToolbox.capitalize(executionState))
 
     return classList.join(' ')
-  })()
+  })
 
   /**
    * The class for the node's name.
    */
-  const nameClassName = ((): string => {
+  const nameClassName: string = compute(() => {
     let classList = ['Name', 'Text']
 
     // Add the hidden class if the camera is
@@ -116,12 +187,12 @@ export default function MissionNode({
     }
 
     return classList.join(' ')
-  })()
+  })
 
   /**
    * The class for the node's icon.
    */
-  const iconClassName = ((): string => {
+  const iconClassName: string = compute((): string => {
     let classList = ['Icon']
 
     // Add the hidden class if the camera is
@@ -131,7 +202,7 @@ export default function MissionNode({
     }
 
     return classList.join(' ')
-  })()
+  })
 
   /* -- render -- */
 
@@ -146,6 +217,7 @@ export default function MissionNode({
       style={rootStyle}
       onClick={onSelect}
     >
+      <div className='ProgressBar' style={progressBarStyle}></div>
       <div className={nameClassName} style={nameStyle}>
         {node.name}
       </div>

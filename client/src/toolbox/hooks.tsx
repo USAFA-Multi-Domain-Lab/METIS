@@ -143,3 +143,69 @@ export function useListComponent<
     [Component, propsList, keyFrom],
   )
 }
+
+/**
+ * Automatically adds and removes an event listener to the given
+ * target.
+ *
+ * The event listener will be automatically added to a
+ * new target if the target changes, and the event listener will
+ * be automatically removed from the old target also. The listener
+ * will be automatically removed from the target when the component
+ * unmounts.
+ * @param target The target to add the event listener to.
+ * @param methods The event type to listen for.
+ * @param callback The callback to call when the event is fired.
+ */
+export function useEventListener<TEventMethod extends string>(
+  target: TEventListenerTarget<TEventMethod> | null,
+  methods: TEventMethod | TEventMethod[],
+  callback: () => void,
+): void {
+  /**
+   * Cached callback function.
+   */
+  const listener = useCallback(() => {
+    callback()
+  }, [target])
+
+  /* -- effect -- */
+
+  // Register the event listener, reregistering
+  // if the callback ever changes.
+  useEffect(() => {
+    // Convert methods to an array, if
+    // not already..
+    methods = Array.isArray(methods) ? methods : [methods]
+
+    // Add listener to the new target.
+    for (let method of methods) target?.addEventListener(method, listener)
+
+    // Return clean up function for
+    // removing the listener when done.
+    return () => {
+      target?.removeEventListener(listener)
+    }
+  }, [listener])
+}
+
+/**
+ * Creates CSS inline styling that can be used in a JSX element.
+ * @param construct A function that will be called with the styling object as an argument.
+ * The function should modify the styling object to add styling properties.
+ * @param initialStyle The initial styling before any styling is added by the construct function.
+ * @returns The resulting inline styling.
+ */
+export function useInlineStyling(
+  construct: (style: React.CSSProperties) => void,
+  initialStyle: React.CSSProperties = {},
+): React.CSSProperties {
+  let style: React.CSSProperties = { ...initialStyle }
+  construct(style)
+  return style
+}
+
+export type TEventListenerTarget<TEventMethod extends string> = {
+  addEventListener: (eventName: TEventMethod, handler: () => void) => any
+  removeEventListener: (handler: () => void) => any
+}

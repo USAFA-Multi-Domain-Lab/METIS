@@ -15,6 +15,7 @@ import ClientActionOutcome from '../actions/outcomes'
 import axios from 'axios'
 import { Vector2D } from '../../../../shared/toolbox/space'
 import memoizeOne from 'memoize-one'
+import { TRequestMethod } from '../../../../shared/connect/data'
 
 /**
  * Options for the ClientMissionNode.open method.
@@ -93,6 +94,11 @@ export default class ClientMissionNode
   public depth: number
 
   /**
+   * Listeners for node events.
+   */
+  private listeners: Array<[TMissionNodeEvent, () => void]> = []
+
+  /**
    * Whether the node is pending an "node-opened" event from the server.
    * This is used when the client requests to open a node, but the server
    * has not yet responded.
@@ -106,12 +112,6 @@ export default class ClientMissionNode
    */
   public get pendingOpen(): boolean {
     return this._pendingOpen
-  }
-  public set pendingOpen(value: boolean) {
-    if (!this.openable && value === true) {
-      throw new Error('Cannot set pending open: Node is not openable.')
-    }
-    this._pendingOpen = value
   }
 
   /**
@@ -129,13 +129,6 @@ export default class ClientMissionNode
   public get pendingExecInit(): boolean {
     return this._pendingExecInit
   }
-  public set pendingExecInit(value: boolean) {
-    if (!this.executable && value === true) {
-      throw new Error('Cannot set pending execution: Node is not executable.')
-    }
-    this._pendingExecInit = value
-  }
-
   /**
    * Whether the node is expanded in the `NodeStructuring` component.
    */
@@ -317,6 +310,41 @@ export default class ClientMissionNode
     })
   }
 
+  /**
+   * Calls the callbacks of listeners for the given node event.
+   * @param event The event emitted.
+   */
+  protected emitEvent(event: TMissionNodeEvent): void {
+    // Call any matching listener callbacks
+    // or any activity listener callbacks.
+    for (let [listenerEvent, listenerCallback] of this.listeners) {
+      if (listenerEvent === event || listenerEvent === 'activity') {
+        listenerCallback()
+      }
+    }
+  }
+
+  /**
+   * Adds a listener for a node event.
+   * @param event The event for which to listen.
+   * @param callback The callback to call when the event is triggered.
+   */
+  public addEventListener(
+    event: TMissionNodeEvent,
+    callback: () => void,
+  ): void {
+    this.listeners.push([event, callback])
+  }
+
+  /**
+   * Removes a listener for a node event.
+   * @param callback The callback used for the listener.
+   */
+  public removeEventListener(callback: () => void): void {
+    // Filter out listener.
+    this.listeners = this.listeners.filter(([, h]) => h !== callback)
+  }
+
   // Implemented
   public open(options: INodeClientOpenOptions = {}): Promise<void> {
     // Parse options.
@@ -342,10 +370,32 @@ export default class ClientMissionNode
 
         // Set pending open to false.
         this._pendingOpen = false
+
+        // Emit event.
+        this.emitEvent('open')
       } else {
         throw new Error('Node is not openable.')
       }
     })
+  }
+
+  /**
+   * Handles node-specific, server-connection events that occur in-game.
+   * @param method The method of the request event.
+   */
+  public handleRequestMade(method: TRequestMethod): void {
+    // Handle method accordingly.
+    switch (method) {
+      case 'request-open-node':
+        this._pendingOpen = true
+        break
+      case 'request-execute-action':
+        this._pendingExecInit = true
+        break
+    }
+
+    // Emit 'request-made' event.
+    this.emitEvent('request-made')
   }
 
   // Implemented
@@ -376,6 +426,9 @@ export default class ClientMissionNode
 
     // Set "_pendingExecInit" to false.
     this._pendingExecInit = false
+
+    // Handle node event.
+    this.emitEvent('exec-state-change')
 
     // Return execution.
     return this._execution
@@ -424,6 +477,9 @@ export default class ClientMissionNode
       // Handle structure change.
       this.mission.handleStructureChange()
     }
+
+    // Handle node event.
+    this.emitEvent('exec-state-change')
 
     // Return outcome.
     return outcome
@@ -752,3 +808,24 @@ export default class ClientMissionNode
     })
   }
 }
+
+/**
+ * An event that occurs on a node, which can be listened for.
+ * @option 'activity'
+ * Triggered when any other event occurs.
+ * @option 'exec-state-change'
+ * Triggered when the following occurs:
+ * - An execution is initiated on the server.
+ * - An execution outcome is received from the server.
+ * @option 'request-made'
+ * Triggered when the following occurs:
+ * - A node is requested to be opened by the client and is awaiting a response from the server.
+ * - An action is requested to be executed by the client and is awaiting a response from the server.
+ * @option 'open'
+ * Triggered when the node is opened.
+ */
+export type TMissionNodeEvent =
+  | 'activity'
+  | 'request-made'
+  | 'exec-state-change'
+  | 'open'

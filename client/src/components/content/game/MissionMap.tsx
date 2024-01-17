@@ -3,7 +3,7 @@
 import './MissionMap.scss'
 import React from 'react'
 import List from '../general-layout/List'
-import StringsToolbox from '../../../../../shared/toolbox/strings'
+import StringToolbox from '../../../../../shared/toolbox/strings'
 import { EAjaxStatus } from '../../../../../shared/toolbox/ajax'
 import MoreInformation from '../communication/MoreInformation'
 import {
@@ -1013,7 +1013,7 @@ export default class MissionMap extends React.Component<
     // Apply success/failure class name.
     if (node.executionState === 'successful') {
       classList.push('Succeeded')
-    } else if (node.executionState === 'failure') {
+    } else if (node.executionState === 'failed') {
       classList.push('Failed')
     }
 
@@ -1601,7 +1601,7 @@ export default class MissionMap extends React.Component<
     // Prompt construction.
     prompt = '##### View this node.'
 
-    return `#### ${nodeTitle}\n${StringsToolbox.limit(
+    return `#### ${nodeTitle}\n${StringToolbox.limit(
       node.name, // ! This should be description
       160,
     )}\n${nodeTypeInfo}${scoreInfo}\n${prompt}`

@@ -223,7 +223,7 @@ export type TNodeExecutionState =
   | 'unexecuted'
   | 'executing'
   | 'successful'
-  | 'failure'
+  | 'failed'
 
 /**
  * Options for the `MissionNode.open` method.
@@ -281,7 +281,7 @@ export default abstract class MissionNode<
     } else if (execution !== null) {
       return 'executing'
     } else {
-      return ArrayToolbox.lastOf(outcomes).successful ? 'successful' : 'failure'
+      return ArrayToolbox.lastOf(outcomes).successful ? 'successful' : 'failed'
     }
   }
 
@@ -290,8 +290,7 @@ export default abstract class MissionNode<
     return (
       this.executable &&
       this.actions.size > 0 &&
-      (this.executionState === 'unexecuted' ||
-        this.executionState === 'failure')
+      (this.executionState === 'unexecuted' || this.executionState === 'failed')
     )
   }
 

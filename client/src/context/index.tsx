@@ -14,7 +14,7 @@ import { IButtonText } from 'src/components/content/user-controls/ButtonText'
 import { EAjaxStatus } from '../../../shared/toolbox/ajax'
 import { IAuthPageSpecific } from 'src/components/pages/AuthPage'
 import { useMountHandler, useUnmountHandler } from 'src/toolbox/hooks'
-import StringsToolbox from '../../../shared/toolbox/strings'
+import StringToolbox from '../../../shared/toolbox/strings'
 import { message as connectionStatusMessage } from 'src/components/content/communication/ConnectionStatus'
 
 /**
@@ -742,7 +742,7 @@ export function useGlobalContext(): TGlobalContext {
 export function useNavigationMiddleware(
   middleware: TNavigationMiddleware,
 ): void {
-  const [key] = useState<string>(StringsToolbox.generateRandomID())
+  const [key] = useState<string>(StringToolbox.generateRandomID())
 
   useMountHandler((done) => {
     navigationMiddleware.set(key, middleware)
