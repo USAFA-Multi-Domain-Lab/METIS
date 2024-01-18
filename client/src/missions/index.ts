@@ -14,51 +14,6 @@ import { TLine_P } from 'src/components/content/game/mission-map/objects/Line'
 import { TWithKey } from '../../../shared/toolbox/objects'
 
 /**
- * Options for the creation of a ClientMission object.
- */
-export type TClientMissionOptions = TMissionOptions & {
-  /**
-   * Whether the data already exists on the server.
-   * @default false
-   */
-  existsOnServer?: boolean
-}
-
-/**
- * Options for the creation of a ClientMission object when the mission is known to exist on the server.
- */
-export type TExistingClientMissionOptions = TClientMissionOptions & {
-  /**
-   * Overrides the existsOnServer option from `TClientMissionOptions` to true.
-   * @default true
-   */
-  existsOnServer?: true
-}
-
-/**
- * Results of a mission import via the ClientMission.importMissions method.
- */
-export type TMissionImportResult = {
-  /**
-   * The number of missions successfully imported.
-   */
-  successfulImportCount: number
-  /**
-   * The number of missions that failed to import.
-   */
-  failedImportCount: number
-  /**
-   * The error messages and file names for the missions that failed to import.
-   */
-  errorMessages: Array<{ fileName: string; errorMessage: string }>
-}
-
-/**
- * A function that handles a change in the mission's structure.
- */
-export type TStructureChangeListener = (structureChangeKey: string) => void
-
-/**
  * Class for managing missions on the client.
  * @extends {Mission<ClientMissionNode>}
  */
@@ -102,9 +57,9 @@ export default class ClientMission extends Mission<ClientMissionNode> {
   protected structureInitialized: boolean = false
 
   /**
-   * Listener functions that are called when the structure changes.
+   * Listeners for mission events.
    */
-  protected structureListeners: Array<TStructureChangeListener>
+  private listeners: Array<[TMissionEvent, () => void]> = []
 
   /**
    * The last created node for the mission.
@@ -199,7 +154,6 @@ export default class ClientMission extends Mission<ClientMissionNode> {
     this._existsOnServer = existsOnServer
     this._depth = -1
     this._structureChangeKey = generateHash()
-    this.structureListeners = []
     this.lastCreatedNode = null
     this._nodeCreationTarget = null
     this._nodeCreators = []
@@ -258,40 +212,40 @@ export default class ClientMission extends Mission<ClientMissionNode> {
     // between nodes.
     this.drawRelationshipLines()
 
-    // Call listener functions so that
-    // external componenets can respond
-    // to the structure change.
-    for (let listener of this.structureListeners) {
-      listener(this.structureChangeKey)
+    // Emit the structure change event.
+    this.emitEvent('structure-change')
+  }
+
+  /**
+   * Calls the callbacks of listeners for the given mission event.
+   * @param event The event emitted.
+   */
+  protected emitEvent(event: TMissionEvent): void {
+    // Call any matching listener callbacks
+    // or any activity listener callbacks.
+    for (let [listenerEvent, listenerCallback] of this.listeners) {
+      if (listenerEvent === event || listenerEvent === 'activity') {
+        listenerCallback()
+      }
     }
   }
 
   /**
-   * Adds a listener function that is called when a change has been
-   * made to the structure of the mission.
-   * @param listener The listener function.
+   * Adds a listener for a mission event.
+   * @param event The event for which to listen.
+   * @param callback The callback to call when the event is triggered.
    */
-  public addStructureListener(
-    listener: (structureChangeKey: string) => void,
-  ): void {
-    this.structureListeners.push(listener)
+  public addEventListener(event: TMissionEvent, callback: () => void): void {
+    this.listeners.push([event, callback])
   }
 
   /**
-   *  Removes an existing structure listener.
-   * @param listener The listener to remove.
+   * Removes a listener for a mission event.
+   * @param callback The callback used for the listener.
    */
-  public removeStructureListener(
-    listener: (structureChangeKey: string) => void,
-  ): void {
-    this.structureListeners.splice(this.structureListeners.indexOf(listener), 1)
-  }
-
-  /**
-   * Clears any and all structure listeners currently active.
-   */
-  public clearStructureListeners(): void {
-    this.structureListeners = []
+  public removeEventListener(callback: () => void): void {
+    // Filter out listener.
+    this.listeners = this.listeners.filter(([, h]) => h !== callback)
   }
 
   /**
@@ -806,3 +760,58 @@ export default class ClientMission extends Mission<ClientMissionNode> {
     })
   }
 }
+
+/**
+ * Options for the creation of a ClientMission object.
+ */
+export type TClientMissionOptions = TMissionOptions & {
+  /**
+   * Whether the data already exists on the server.
+   * @default false
+   */
+  existsOnServer?: boolean
+}
+
+/**
+ * Options for the creation of a ClientMission object when the mission is known to exist on the server.
+ */
+export type TExistingClientMissionOptions = TClientMissionOptions & {
+  /**
+   * Overrides the existsOnServer option from `TClientMissionOptions` to true.
+   * @default true
+   */
+  existsOnServer?: true
+}
+
+/**
+ * Results of a mission import via the ClientMission.importMissions method.
+ */
+export type TMissionImportResult = {
+  /**
+   * The number of missions successfully imported.
+   */
+  successfulImportCount: number
+  /**
+   * The number of missions that failed to import.
+   */
+  failedImportCount: number
+  /**
+   * The error messages and file names for the missions that failed to import.
+   */
+  errorMessages: Array<{ fileName: string; errorMessage: string }>
+}
+
+/**
+ * A function that handles a change in the mission's structure.
+ */
+export type TStructureChangeListener = (structureChangeKey: string) => void
+
+/**
+ * An event that occurs on a node, which can be listened for.
+ * @option 'activity'
+ * Triggered when any other event occurs.
+ * @option 'structure-change'
+ * Triggered when the structure of the mission, including the nodes and actions
+ * that make up the mission, change.
+ */
+export type TMissionEvent = 'activity' | 'structure-change'

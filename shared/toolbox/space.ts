@@ -280,6 +280,14 @@ export class Vector2D {
   }
 
   /**
+   * @returns Whether the vector is located where the vector passed is located (Checks for equality in position).
+   * @note If `Vector3D` is passed, the `z` coordinate is ignored.
+   */
+  public locatedAt(vector: Vector2D | Vector3D): boolean {
+    return this.x === vector.x && this.y === vector.y
+  }
+
+  /**
    * Gets the difference between two vectors.
    * @param vectorA The vector from which to subtract.
    * @param vectorB The vector with which to subtract.

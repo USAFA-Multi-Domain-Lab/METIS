@@ -91,7 +91,7 @@ export default class MissionMap extends React.Component<
     window.addEventListener('wheel', this.preventMapZoomInterference, {
       passive: false,
     })
-    mission.addStructureListener(this.forceUpdate)
+    mission.addEventListener('structure-change', this.forceUpdate)
 
     if (map !== null) {
       new ResizeObserver(this.forceUpdate).observe(map)
@@ -105,7 +105,7 @@ export default class MissionMap extends React.Component<
     let mission: ClientMission = this.props.mission
 
     window.removeEventListener('wheel', this.preventMapZoomInterference)
-    mission.removeStructureListener(this.forceUpdate)
+    mission.removeEventListener(this.forceUpdate)
   }
 
   /* -- functions | memoized -- */
@@ -180,8 +180,8 @@ export default class MissionMap extends React.Component<
     }
 
     if (previousProps.mission !== this.props.mission) {
-      previousProps.mission.removeStructureListener(this.forceUpdate)
-      this.props.mission.addStructureListener(this.forceUpdate)
+      previousProps.mission.removeEventListener(this.forceUpdate)
+      this.props.mission.addEventListener('structure-change', this.forceUpdate)
     }
 
     if (this.state.nodeDepth < this.props.mission.depth) {

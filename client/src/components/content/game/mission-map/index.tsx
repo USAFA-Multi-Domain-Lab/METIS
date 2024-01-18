@@ -1,6 +1,6 @@
 import ClientMission from 'src/missions'
 import './index.scss'
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import React, { useCallback, useMemo, useRef, useState } from 'react'
 import { Vector1D, Vector2D } from '../../../../../../shared/toolbox/space'
 import MissionNode, { MAX_NODE_CONTENT_ZOOM } from './objects/MissionNode'
 import PanController from './ui/PanController'
@@ -13,6 +13,7 @@ import Line from './objects/Line'
 import { ButtonSVG, EButtonSVGPurpose } from '../../user-controls/ButtonSVG'
 import Overlay from './ui/overlay'
 import { compute } from 'src/toolbox'
+import { useEventListener } from 'src/toolbox/hooks'
 
 /* -- constants -- */
 
@@ -130,6 +131,13 @@ export default function MissionMap2({
   const [_, setForcedUpdateTracker] = useState<string>('initial')
 
   /**
+   * The current structure change key for the mission.
+   */
+  const [structureChangeKey, setStructureChangeKey] = useState<string>(
+    mission.structureChangeKey,
+  )
+
+  /**
    * Force the component to re-render.
    */
   const forceUpdate = useCallback(() => {
@@ -153,12 +161,47 @@ export default function MissionMap2({
 
   /* -- hooks -- */
 
-  // Add a structure change listener to the mission
-  // passed in props anytime a new mission object
-  // is passed.
-  useEffect(() => {
-    mission.addStructureListener(() => forceUpdate())
-  }, [mission])
+  // Create an event listener to handle when the mission
+  // structure changes by forcing a state update.
+  useEventListener(mission, 'structure-change', () => {
+    // Update the structure change key.
+    setStructureChangeKey(mission.structureChangeKey)
+
+    // If new nodes were revealed...
+    if (
+      rootRef.current &&
+      mission.lastOpenedNode &&
+      mission.lastOpenedNode.hasChildren
+    ) {
+      // Grab the map bounds.
+      let mapBounds: DOMRect = rootRef.current.getBoundingClientRect()
+      // Get the camera position x in terms of
+      // of nodes.
+      let viewNodeX =
+        (cameraPosition.x - ClientMissionNode.COLUMN_WIDTH / 2) /
+        ClientMissionNode.COLUMN_WIDTH
+      // Get the width of the what's visible in the
+      // scene in terms of nodes.
+      let sceneNodeW =
+        (mapBounds.width * cameraZoom.x) / ClientMissionNode.COLUMN_WIDTH
+      // Get the x position of the right-portion of what's
+      // visible in the scene in terms of nodes.
+      let sceneNodeX2 = viewNodeX + sceneNodeW
+      // Get the span of what's visible in the scene in terms
+      // of nodes.
+      let nodeDifference = mission.lastOpenedNode.depth + 1 - sceneNodeX2
+      // Convert difference to EM units.
+      let emDifference = nodeDifference * ClientMissionNode.COLUMN_WIDTH
+
+      // If there is a positive difference, translate.
+      if (emDifference > 0) {
+        // Get the destination.
+        let destination = cameraPosition.clone().translateX(emDifference)
+        // Pan smoothly to the destination.
+        panSmoothly(destination)
+      }
+    }
+  })
 
   /* -- functions -- */
 
@@ -240,6 +283,36 @@ export default function MissionMap2({
       // negative of the camera position.
       sceneRef.current.style.transform = `translate(${-cameraPosition.x}em, ${-cameraPosition.y}em)`
     }
+  }
+
+  const panSmoothly = (destination: Vector2D): void => {
+    // Determine the difference between the camera
+    // position and the destination.
+    let difference = Vector2D.difference(destination, cameraPosition)
+    // Determine the change in position that
+    // must occur this frame in the transition.
+    let delta = difference.scaleByFactor(0.1)
+
+    // Enforce cuttoff points so that the transition
+    // doesn't exponentially slow down with no end.
+    if (Math.abs(delta.x) < 0.003) {
+      cameraPosition.x = destination.x
+    }
+    if (Math.abs(delta.y) < 0.003) {
+      cameraPosition.y = destination.y
+    }
+
+    // If the camera is at the destination, end
+    // the loop.
+    if (cameraPosition.locatedAt(destination)) {
+      return
+    }
+
+    // Translate by delta.
+    cameraPosition.translateBy(delta)
+
+    // Set a timeout for the next frame.
+    setTimeout(() => panSmoothly(destination), 5)
   }
 
   /* -- render -- */
