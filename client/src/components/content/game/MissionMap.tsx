@@ -14,7 +14,7 @@ import {
 import { ButtonSVGPanel } from '../user-controls/ButtonSVGPanel'
 import { SingleTypeObject } from '../../../../../shared/toolbox/objects'
 import ClientMission from 'src/missions'
-import ClientMissionNode, { ENodeTargetRelation } from 'src/missions/nodes'
+import ClientMissionNode from 'src/missions/nodes'
 import NodeCreator from 'src/missions/nodes/creator'
 import ClientActionExecution from 'src/missions/actions/executions'
 import memoize from 'memoize-one'
@@ -23,10 +23,10 @@ import { Vector2D } from '../../../../../shared/toolbox/space'
 // represents a relationship between two
 // nodes
 class MissionNodeRelationship {
-  prerequisite: IMissionMappable
-  unlocks: IMissionMappable
+  prerequisite: TMissionMappable
+  unlocks: TMissionMappable
 
-  constructor(prerequisite: IMissionMappable, unlocks: IMissionMappable) {
+  constructor(prerequisite: TMissionMappable, unlocks: TMissionMappable) {
     this.prerequisite = prerequisite
     this.unlocks = unlocks
   }
@@ -70,7 +70,8 @@ export default class MissionMap extends React.Component<
    * pending to be added by the user.
    */
   private get creationModeActive(): boolean {
-    return this.props.mission.nodeCreationTarget !== null
+    // return this.props.mission.nodeCreationTarget !== null
+    return false
   }
 
   /* -- initialize -- */
@@ -273,28 +274,28 @@ export default class MissionMap extends React.Component<
   ): void => {
     let mission: ClientMission = this.props.mission
     let rootNode: ClientMissionNode = mission.rootNode
-    let nodeCreationTarget: ClientMissionNode | null =
-      mission.nodeCreationTarget
+    let nodeCreationTarget: ClientMissionNode | null = null
+    // mission.nodeCreationTarget
 
     let childNodes: Array<ClientMissionNode> = parentNode.childNodes
 
-    for (let childNode of childNodes) {
-      if (
-        parentNode.nodeID !== rootNode.nodeID &&
-        parentNode.nodeID !== nodeCreationTarget?.nodeID &&
-        // parentNode.nodeID !== nodeCreationTarget?.parentNode?.nodeID &&
-        childNode.nodeID !== nodeCreationTarget?.nodeID
-      ) {
-        let relationship: MissionNodeRelationship = new MissionNodeRelationship(
-          parentNode,
-          childNode,
-        )
-        relationships.push(relationship)
-      }
-      visibleNodes.push(childNode)
-
-      this.updateMainRelationships(childNode, visibleNodes, relationships)
-    }
+    //     for (let childNode of childNodes) {
+    //       if (
+    //         parentNode.nodeID !== rootNode.nodeID &&
+    //         parentNode.nodeID !== nodeCreationTarget?.nodeID &&
+    //         // parentNode.nodeID !== nodeCreationTarget?.parentNode?.nodeID &&
+    //         childNode.nodeID !== nodeCreationTarget?.nodeID
+    //       ) {
+    //         let relationship: MissionNodeRelationship = new MissionNodeRelationship(
+    //           parentNode,
+    //           childNode,
+    //         )
+    //         relationships.push(relationship)
+    //       }
+    //       visibleNodes.push(childNode)
+    //
+    //       this.updateMainRelationships(childNode, visibleNodes, relationships)
+    //     }
 
     if (parentNode.nodeID === rootNode.nodeID) {
       this.setState({
@@ -312,80 +313,80 @@ export default class MissionMap extends React.Component<
     let relationships: Array<MissionNodeRelationship> = []
     let mission: ClientMission = this.props.mission
     let rootNode: ClientMissionNode = mission.rootNode
-    let nodeCreationTarget: ClientMissionNode | null =
-      mission.nodeCreationTarget
+    // let nodeCreationTarget: ClientMissionNode | null =
+    //   mission.nodeCreationTarget
     let nodeCreators: Array<NodeCreator> = mission.nodeCreators
     let previousSiblingOfTargetCreator: NodeCreator | undefined
     let followingSiblingOfTargetCreator: NodeCreator | undefined
     let parentOfTargetOnlyCreator: NodeCreator | undefined
     let betweenTargetAndChildrenCreator: NodeCreator | undefined
 
-    if (nodeCreationTarget !== null) {
-      for (let nodeCreator of nodeCreators) {
-        switch (nodeCreator.creationTargetRelation) {
-          case ENodeTargetRelation.PreviousSiblingOfTarget:
-            previousSiblingOfTargetCreator = nodeCreator
-            break
-          case ENodeTargetRelation.FollowingSiblingOfTarget:
-            followingSiblingOfTargetCreator = nodeCreator
-            break
-          case ENodeTargetRelation.ParentOfTargetOnly:
-            parentOfTargetOnlyCreator = nodeCreator
-            break
-          case ENodeTargetRelation.BetweenTargetAndChildren:
-            betweenTargetAndChildrenCreator = nodeCreator
-            break
-        }
-      }
-
-      if (
-        previousSiblingOfTargetCreator &&
-        followingSiblingOfTargetCreator &&
-        parentOfTargetOnlyCreator &&
-        betweenTargetAndChildrenCreator
-      ) {
-        if (
-          nodeCreationTarget.parentNode &&
-          nodeCreationTarget.parentNode.nodeID !== rootNode.nodeID
-        ) {
-          relationships.push(
-            new MissionNodeRelationship(
-              nodeCreationTarget.parentNode,
-              parentOfTargetOnlyCreator,
-            ),
-          )
-          relationships.push(
-            new MissionNodeRelationship(
-              nodeCreationTarget.parentNode,
-              previousSiblingOfTargetCreator,
-            ),
-          )
-          relationships.push(
-            new MissionNodeRelationship(
-              nodeCreationTarget.parentNode,
-              followingSiblingOfTargetCreator,
-            ),
-          )
-        }
-        relationships.push(
-          new MissionNodeRelationship(
-            parentOfTargetOnlyCreator,
-            nodeCreationTarget,
-          ),
-        )
-        relationships.push(
-          new MissionNodeRelationship(
-            nodeCreationTarget,
-            betweenTargetAndChildrenCreator,
-          ),
-        )
-        for (let child of nodeCreationTarget.childNodes) {
-          relationships.push(
-            new MissionNodeRelationship(betweenTargetAndChildrenCreator, child),
-          )
-        }
-      }
-    }
+    //     if (nodeCreationTarget !== null) {
+    //       for (let nodeCreator of nodeCreators) {
+    //         switch (nodeCreator.creationTargetRelation) {
+    //           case ENodeTargetRelation.PreviousSiblingOfTarget:
+    //             previousSiblingOfTargetCreator = nodeCreator
+    //             break
+    //           case ENodeTargetRelation.FollowingSiblingOfTarget:
+    //             followingSiblingOfTargetCreator = nodeCreator
+    //             break
+    //           case ENodeTargetRelation.ParentOfTargetOnly:
+    //             parentOfTargetOnlyCreator = nodeCreator
+    //             break
+    //           case ENodeTargetRelation.BetweenTargetAndChildren:
+    //             betweenTargetAndChildrenCreator = nodeCreator
+    //             break
+    //         }
+    //       }
+    //
+    //       if (
+    //         previousSiblingOfTargetCreator &&
+    //         followingSiblingOfTargetCreator &&
+    //         parentOfTargetOnlyCreator &&
+    //         betweenTargetAndChildrenCreator
+    //       ) {
+    //         if (
+    //           nodeCreationTarget.parentNode &&
+    //           nodeCreationTarget.parentNode.nodeID !== rootNode.nodeID
+    //         ) {
+    //           relationships.push(
+    //             new MissionNodeRelationship(
+    //               nodeCreationTarget.parentNode,
+    //               parentOfTargetOnlyCreator,
+    //             ),
+    //           )
+    //           relationships.push(
+    //             new MissionNodeRelationship(
+    //               nodeCreationTarget.parentNode,
+    //               previousSiblingOfTargetCreator,
+    //             ),
+    //           )
+    //           relationships.push(
+    //             new MissionNodeRelationship(
+    //               nodeCreationTarget.parentNode,
+    //               followingSiblingOfTargetCreator,
+    //             ),
+    //           )
+    //         }
+    //         relationships.push(
+    //           new MissionNodeRelationship(
+    //             parentOfTargetOnlyCreator,
+    //             nodeCreationTarget,
+    //           ),
+    //         )
+    //         relationships.push(
+    //           new MissionNodeRelationship(
+    //             nodeCreationTarget,
+    //             betweenTargetAndChildrenCreator,
+    //           ),
+    //         )
+    //         for (let child of nodeCreationTarget.childNodes) {
+    //           relationships.push(
+    //             new MissionNodeRelationship(betweenTargetAndChildrenCreator, child),
+    //           )
+    //         }
+    //       }
+    //     }
 
     this.setState({
       nodeCreatorRelationships: relationships,
@@ -641,13 +642,13 @@ export default class MissionMap extends React.Component<
     let mission: ClientMission = this.props.mission
     let selectedNode: ClientMissionNode | null = this.props.selectedNode
 
-    mission.nodeCreationTarget = selectedNode
+    // mission.nodeCreationTarget = selectedNode
   }
 
   // This is called to hide the node creators
   // for the selectedNode.
   deactivateNodeCreation = (): void => {
-    this.props.mission.nodeCreationTarget = null
+    // this.props.mission.nodeCreationTarget = null
   }
 
   /* -- functions | render -- */
@@ -672,14 +673,14 @@ export default class MissionMap extends React.Component<
       zoomIn: new ButtonSVG({
         ...ButtonSVG.defaultProps,
         purpose: EButtonSVGPurpose.ZoomIn,
-        handleClick: this.handleZoomInRequest,
+        onClick: this.handleZoomInRequest,
         tooltipDescription:
           'Zoom in. \n*[Scroll] on the map will also zoom in and out.*',
       }),
       zoomOut: new ButtonSVG({
         ...ButtonSVG.defaultProps,
         purpose: EButtonSVGPurpose.ZoomOut,
-        handleClick: this.handleZoomOutRequest,
+        onClick: this.handleZoomOutRequest,
         tooltipDescription:
           'Zoom out. \n*[Scroll] on the map will also zoom in and out.*',
       }),
@@ -701,14 +702,14 @@ export default class MissionMap extends React.Component<
       edit: new ButtonSVG({
         ...ButtonSVG.defaultProps,
         purpose: EButtonSVGPurpose.Reorder,
-        handleClick: handleMapEditRequest ? handleMapEditRequest : () => {},
+        onClick: handleMapEditRequest ? handleMapEditRequest : () => {},
         tooltipDescription: 'Edit the structure and order of nodes.',
         disabled: grayOutEditButton,
       }),
       save: new ButtonSVG({
         ...ButtonSVG.defaultProps,
         purpose: EButtonSVGPurpose.Save,
-        handleClick: () => {
+        onClick: () => {
           if (handleMapSaveRequest) {
             handleMapSaveRequest()
           }
@@ -719,7 +720,7 @@ export default class MissionMap extends React.Component<
       exitNodePath: new ButtonSVG({
         ...ButtonSVG.defaultProps,
         purpose: EButtonSVGPurpose.Cancel,
-        handleClick: () => {
+        onClick: () => {
           if (handleNodePathExitRequest) {
             handleNodePathExitRequest()
           }
@@ -798,7 +799,7 @@ export default class MissionMap extends React.Component<
   // This will apply the styling to a node,
   // rendering it with the correct position
   // and scale on the map.
-  applyNodeStyling = (node: IMissionMappable) => {
+  applyNodeStyling = (node: TMissionMappable) => {
     let selectedNode: ClientMissionNode | null = this.props.selectedNode
     let styling: React.CSSProperties = {}
     let map: HTMLDivElement | null = this.rootRef.current
@@ -878,7 +879,7 @@ export default class MissionMap extends React.Component<
 
   // This will create the display text for a node.
   renderNodeDisplay = (
-    node: IMissionMappable,
+    node: TMissionMappable,
     buttons: Array<IButtonSVG> = [],
   ): JSX.Element => {
     let selectedNode: ClientMissionNode | null = this.props.selectedNode
@@ -1066,7 +1067,7 @@ export default class MissionMap extends React.Component<
         componentKey: 'node-button-deselect',
         tooltipDescription: 'Deselect this node (Closes panel view also).',
         disabled: grayOutDeselectNodeButton,
-        handleClick: () => {
+        onClick: () => {
           if (handleNodeDeselection !== null) {
             handleNodeDeselection()
           }
@@ -1078,7 +1079,7 @@ export default class MissionMap extends React.Component<
         componentKey: 'node-button-add',
         tooltipDescription: 'Create an adjacent node on the map.',
         disabled: grayOutAddNodeButton,
-        handleClick: this.activateNodeCreation,
+        onClick: this.activateNodeCreation,
       },
       add_cancel: {
         ...ButtonSVG.defaultProps,
@@ -1086,7 +1087,7 @@ export default class MissionMap extends React.Component<
         componentKey: 'node-button-add-cancel',
         tooltipDescription: 'Cancel node creation.',
         disabled: grayOutAddNodeButton,
-        handleClick: this.deactivateNodeCreation,
+        onClick: this.deactivateNodeCreation,
       },
       remove: {
         ...ButtonSVG.defaultProps,
@@ -1094,7 +1095,7 @@ export default class MissionMap extends React.Component<
         componentKey: 'node-button-remove',
         tooltipDescription: 'Delete this node.',
         disabled: grayOutDeleteNodeButton,
-        handleClick: () => {
+        onClick: () => {
           if (handleNodeDeletionRequest !== null) {
             handleNodeDeletionRequest(node)
           }
@@ -1174,7 +1175,7 @@ export default class MissionMap extends React.Component<
         listSpecificItemClassName={'mapped-node'}
         applyClassNameAddon={this.applyMappedNodeClassList}
         listStyling={listStyling}
-        applyElementID={(node: IMissionMappable) =>
+        applyElementID={(node: TMissionMappable) =>
           `mapped-node_${node.nodeID}`
         }
         // -- NODE POSITIONING --
@@ -1199,32 +1200,32 @@ export default class MissionMap extends React.Component<
       listStyling.bottom = `15px`
     }
 
-    if (mission.nodeCreationTarget !== null) {
-      return (
-        <List<NodeCreator>
-          items={mission.nodeCreators}
-          itemsPerPage={null}
-          renderItemDisplay={this.renderNodeDisplay}
-          searchableProperties={['nodeID']}
-          noItemsDisplay={null}
-          handleSelection={this.handleNodeCreationRequest}
-          renderTooltipDescription={() => 'Create a node here.'}
-          ajaxStatus={missionAjaxStatus}
-          listSpecificItemClassName={'node-creator'}
-          // applyClassNameAddon={}
-          applyElementID={(node: IMissionMappable) =>
-            `node-creator_${node.nodeID}`
-          }
-          listStyling={listStyling}
-          // -- NODE POSITIONING --
-          applyItemStyling={this.applyNodeStyling}
-          headingText={mission.name}
-          alwaysUseBlanks={false}
-        />
-      )
-    } else {
-      return null
-    }
+    // if (mission.nodeCreationTarget !== null) {
+    //   return (
+    //     <List<NodeCreator>
+    //       items={mission.nodeCreators}
+    //       itemsPerPage={null}
+    //       renderItemDisplay={this.renderNodeDisplay}
+    //       searchableProperties={['nodeID']}
+    //       noItemsDisplay={null}
+    //       handleSelection={this.handleNodeCreationRequest}
+    //       renderTooltipDescription={() => 'Create a node here.'}
+    //       ajaxStatus={missionAjaxStatus}
+    //       listSpecificItemClassName={'node-creator'}
+    //       // applyClassNameAddon={}
+    //       applyElementID={(node: IMissionMappable) =>
+    //         `node-creator_${node.nodeID}`
+    //       }
+    //       listStyling={listStyling}
+    //       // -- NODE POSITIONING --
+    //       applyItemStyling={this.applyNodeStyling}
+    //       headingText={mission.name}
+    //       alwaysUseBlanks={false}
+    //     />
+    //   )
+    // } else {
+    return null
+    // }
   }
 
   // renders a pointer that marks the progression
@@ -1365,11 +1366,11 @@ export default class MissionMap extends React.Component<
       mapPointerStyling.height = `${mapBounds.height}px`
       mapPointerViewBox = `0 0 ${mapBounds.width} ${mapBounds.height}`
 
-      if (mission.nodeCreationTarget === null) {
-        mapPointerStyling.bottom = `16px`
-      } else {
-        mapPointerStyling.bottom = `35px`
-      }
+      // if (mission.nodeCreationTarget === null) {
+      //   mapPointerStyling.bottom = `16px`
+      // } else {
+      //   mapPointerStyling.bottom = `35px`
+      // }
     }
 
     return (
@@ -1706,7 +1707,7 @@ export type TMissionMap_S = {
   nodeDepth: number
 }
 
-export interface IMissionMappable {
+export interface TMissionMappable {
   nodeID: string
   name: string
   position: Vector2D

@@ -101,6 +101,14 @@ export interface IMissionNode {
    */
   childNodes: Array<IMissionNode>
   /**
+   * The first child node of this node.
+   */
+  get firstChildNode(): IMissionNode | null
+  /**
+   * The last child node of this node.
+   */
+  get lastChildNode(): IMissionNode | null
+  /**
    * Whether or not this nodes has child nodes.
    */
   hasChildren: boolean
@@ -339,6 +347,18 @@ export default abstract class MissionNode<
 
   // Implemented
   public childNodes: Array<TRelativeNode>
+
+  // Implemented
+  public get firstChildNode(): TRelativeNode | null {
+    return this.childNodes.length > 0 ? this.childNodes[0] : null
+  }
+
+  // Implemented
+  public get lastChildNode(): TRelativeNode | null {
+    return this.childNodes.length > 0
+      ? this.childNodes[this.childNodes.length - 1]
+      : null
+  }
 
   // Implemented
   public get hasChildren(): boolean {

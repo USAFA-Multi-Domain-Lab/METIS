@@ -125,11 +125,12 @@
       // Position the name.
       @include center-origin-y;
       top: 50%;
-      left: 2.5%;
+      left: 5%;
 
       // Let height be automatic.
       height: unset;
 
+      text-align: left;
       word-break: break-word;
     }
 
@@ -149,6 +150,29 @@
       background-size: contain;
       background-position: center;
       background-repeat: no-repeat;
+    }
+
+    .Buttons {
+      bottom: 0;
+      display: flex;
+      align-items: start;
+      justify-content: center;
+      column-gap: 0.1em;
+
+      .ButtonSVG {
+        position: unset;
+        margin: 0;
+        width: 0.325em;
+        height: 0.325em;
+        font-size: unset;
+        border: min(1px, 0.075em) solid $color-main;
+        border-radius: 0;
+        background-color: rgba($background-alt1, 0.9);
+        background-position: 50% 50%;
+        background-size: 60%;
+        background-repeat: no-repeat;
+        color: $color-main;
+      }
     }
   }
 }

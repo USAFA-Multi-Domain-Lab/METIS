@@ -26,8 +26,12 @@ export enum EButtonSVGPurpose {
 // Interface for props for ButtonSVG component.
 export interface IButtonSVG {
   purpose: EButtonSVGPurpose
-  handleClick: (event: React.MouseEvent) => void
-  handleCopy: (event: React.ClipboardEvent) => void
+  /**
+   * Handles the click event for the button.
+   * @param event The click event.
+   */
+  onClick: (event: React.MouseEvent) => void
+  onCopy: (event: React.ClipboardEvent) => void
   tooltipDescription: string | null
   componentKey: string | undefined
   uniqueClassName: string
@@ -42,7 +46,7 @@ export interface IButtonSVG {
 // clicked calls back to cause an action
 export class ButtonSVG extends React.Component<IButtonSVG, {}> {
   static defaultProps = {
-    handleCopy: () => {},
+    onCopy: () => {},
     tooltipDescription: null,
     componentKey: undefined,
     uniqueClassName: '',
@@ -86,18 +90,6 @@ export class ButtonSVG extends React.Component<IButtonSVG, {}> {
     }
   }
 
-  // html content for various buttons
-  static getButtonInnerHTML(purpose: EButtonSVGPurpose): string | JSX.Element {
-    switch (purpose) {
-      case EButtonSVGPurpose.Cancel:
-        return 'x'
-      case EButtonSVGPurpose.Add:
-        return '+'
-      default:
-        return ''
-    }
-  }
-
   // inherited
   render(): JSX.Element | null {
     let purpose: EButtonSVGPurpose = this.props.purpose
@@ -109,17 +101,15 @@ export class ButtonSVG extends React.Component<IButtonSVG, {}> {
     let className: string = `${ButtonSVG.getButtonClassName(purpose)}${
       disabled ? ' Disabled ' : ' '
     }${uniqueClassName}`
-    let innerHTML: string | JSX.Element = ButtonSVG.getButtonInnerHTML(purpose)
 
     return (
       <div
         className={className}
         style={style}
         key={key ? key : className}
-        onClick={this.props.handleClick}
-        onCopy={this.props.handleCopy}
+        onClick={this.props.onClick}
+        onCopy={this.props.onCopy}
       >
-        {innerHTML}
         {tooltipDescription ? (
           <Tooltip description={tooltipDescription} />
         ) : null}

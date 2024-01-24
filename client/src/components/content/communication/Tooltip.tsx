@@ -1,6 +1,7 @@
 import { useGlobalContext } from 'src/context'
 import React from 'react'
 import { v4 as uuid } from 'uuid'
+import './Tooltip.scss'
 
 /* -- INTERFACES -- */
 
@@ -155,7 +156,7 @@ function TooltipLogic(props: { tooltip: Tooltip }): JSX.Element | null {
     if (tooltips_elm !== null) {
       tooltips_elm.id = tooltipID
       tooltips_elm.style.visibility = 'visible'
-      
+
       setTooltipDescription(description)
     }
   }

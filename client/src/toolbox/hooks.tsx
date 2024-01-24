@@ -161,13 +161,14 @@ export function useEventListener<TEventMethod extends string>(
   target: TEventListenerTarget<TEventMethod> | null,
   methods: TEventMethod | TEventMethod[],
   callback: () => void,
+  dependencies: React.DependencyList = [],
 ): void {
   /**
    * Cached callback function.
    */
   const listener = useCallback(() => {
     callback()
-  }, [target])
+  }, [target, ...dependencies])
 
   /* -- effect -- */
 

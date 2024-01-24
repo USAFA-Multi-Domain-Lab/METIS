@@ -133,7 +133,7 @@ export default function NodeActionDetails(props: {
         <div className='UserActions SidePanelSection'>
           <ButtonSVG
             purpose={EButtonSVGPurpose.Add}
-            handleClick={() => {
+            onClick={() => {
               if (node !== null) {
                 let action: ClientMissionAction = new ClientMissionAction(node)
                 node.actions.set(action.actionID, action)

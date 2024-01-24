@@ -2,7 +2,10 @@ import ClientMission from 'src/missions'
 import './index.scss'
 import React, { useCallback, useMemo, useRef, useState } from 'react'
 import { Vector1D, Vector2D } from '../../../../../../shared/toolbox/space'
-import MissionNode, { MAX_NODE_CONTENT_ZOOM } from './objects/MissionNode'
+import MissionNode, {
+  MAX_NODE_CONTENT_ZOOM,
+  TNodeButton,
+} from './objects/MissionNode'
 import PanController from './ui/PanController'
 import { v4 as generateHash } from 'uuid'
 import Scene from './Scene'
@@ -14,6 +17,8 @@ import { ButtonSVG, EButtonSVGPurpose } from '../../user-controls/ButtonSVG'
 import Overlay from './ui/overlay'
 import { compute } from 'src/toolbox'
 import { useEventListener } from 'src/toolbox/hooks'
+import MissionNodeCreator from './objects/MissionNodeCreator'
+import NodeCreator from 'src/missions/nodes/creator'
 
 /* -- constants -- */
 
@@ -100,7 +105,9 @@ export const MAP_NODE_GRID_ENABLED = true
 export default function MissionMap2({
   mission,
   overlayContent,
+  customButtons = [],
   onNodeSelect,
+  applyNodeTooltip,
 }: TMissionMap2): JSX.Element | null {
   /* -- variables -- */
 
@@ -135,6 +142,13 @@ export default function MissionMap2({
    */
   const [structureChangeKey, setStructureChangeKey] = useState<string>(
     mission.structureChangeKey,
+  )
+
+  /**
+   * The currently selected node in the mission.
+   */
+  const [selectedNode, setSelectedNode] = useState<ClientMissionNode | null>(
+    mission.selectedNode,
   )
 
   /**
@@ -201,6 +215,12 @@ export default function MissionMap2({
         panSmoothly(destination)
       }
     }
+  })
+
+  // Create an event listener to handle when a node
+  // has been selected/deselected.
+  useEventListener(mission, 'node-selection', () => {
+    setSelectedNode(mission.selectedNode)
   })
 
   /* -- functions -- */
@@ -315,47 +335,7 @@ export default function MissionMap2({
     setTimeout(() => panSmoothly(destination), 5)
   }
 
-  /* -- render -- */
-
-  /**
-   * The JSX for the relationship lines drawn between nodes.
-   * @memoized
-   */
-  const linesJsx = useMemo((): JSX.Element[] => {
-    return mission.relationshipLines.map((lineData) => {
-      return <Line {...lineData} />
-    })
-  }, [mission.structureChangeKey])
-
-  /**
-   * The JSX for the node objects rendered in the scene.
-   * @memoized
-   */
-  const nodesJsx = useMemo((): JSX.Element[] => {
-    return mission.nodes.map((node) => {
-      // Construct the onSelect callback for
-      // the specific node using the generic
-      // onNodeSelect callback passed in props.
-      let onSelect = onNodeSelect ? () => onNodeSelect(node) : undefined
-
-      // Return the JSX for the node.
-      return (
-        <MissionNode
-          key={node.nodeID}
-          node={node}
-          cameraZoom={cameraZoom}
-          onSelect={onSelect}
-        />
-      )
-    })
-  }, [
-    // Change in the node structure of
-    // the mission.
-    mission.structureChangeKey,
-    // Whether the camera zoom crosses the threshold where
-    // the node names should be displayed/hidden.
-    cameraZoom.x > MAX_NODE_CONTENT_ZOOM,
-  ])
+  /* -- computed -- */
 
   /**
    * The data for the buttons displayed on the HUD.
@@ -369,7 +349,7 @@ export default function MissionMap2({
       new ButtonSVG({
         ...ButtonSVG.defaultProps,
         purpose: EButtonSVGPurpose.ZoomIn,
-        handleClick: () => {
+        onClick: () => {
           // Loop through the zoom in stages and
           // set the camera zoom to the first stage
           // that is less than the current zoom.
@@ -386,7 +366,7 @@ export default function MissionMap2({
       new ButtonSVG({
         ...ButtonSVG.defaultProps,
         purpose: EButtonSVGPurpose.ZoomOut,
-        handleClick: () => {
+        onClick: () => {
           // Loop through the zoom out stages and
           // set the camera zoom to the first stage
           // that is greater than the current zoom.
@@ -400,8 +380,105 @@ export default function MissionMap2({
         tooltipDescription:
           'Zoom out. \n*Scrolling on the map will also zoom in and out.*',
       }),
+      // Add custom buttons.
+      ...customButtons,
     ]
   })
+
+  /**
+   * The class name for the root element.
+   */
+  const rootClassName: string = compute(() => {
+    let classList = ['MissionMap2']
+
+    // Add the creation mode class if the mission
+    // is in creation mode.
+    if (mission.creationMode) {
+      classList.push('CreationMode')
+    }
+
+    return classList.join(' ')
+  })
+
+  /* -- render -- */
+
+  /**
+   * The JSX for the relationship lines drawn between nodes.
+   * @memoized
+   */
+  const linesJsx = useMemo((): JSX.Element[] => {
+    return mission.relationshipLines.map((lineData) => {
+      return <Line {...lineData} />
+    })
+  }, [
+    // ! Recomputes when:
+    // The mission changes.
+    mission,
+    // Change in the node structure of
+    // the mission.
+    structureChangeKey,
+  ])
+
+  /**
+   * The JSX for the node objects rendered in the scene.
+   * @memoized
+   */
+  const nodesJsx = useMemo((): JSX.Element[] => {
+    return mission.nodes.map((node) => {
+      // Construct the onSelect callback for
+      // the specific node using the generic
+      // onNodeSelect callback passed in props.
+      let onSelect = onNodeSelect ? () => onNodeSelect(node) : undefined
+      let applyTooltip = applyNodeTooltip
+        ? () => applyNodeTooltip(node)
+        : undefined
+
+      // Return the JSX for the node.
+      return (
+        <MissionNode
+          key={node.nodeID}
+          node={node}
+          cameraZoom={cameraZoom}
+          onSelect={onSelect}
+          applyTooltip={applyTooltip}
+        />
+      )
+    })
+  }, [
+    // ! Recomputes when:
+    // The mission changes.
+    mission,
+    // Change in the node structure of
+    // the mission.
+    structureChangeKey,
+    // Whether the camera zoom crosses the threshold where
+    // the node names should be displayed/hidden.
+    cameraZoom.x > MAX_NODE_CONTENT_ZOOM,
+    // The custom buttons change.
+    customButtons,
+  ])
+
+  /**
+   * The JSX for the node creator objects rendered in the scene.
+   * @memoized
+   */
+  const nodeCreatorsJsx = useMemo((): JSX.Element[] => {
+    return mission.nodeCreators.map((creator) => (
+      <MissionNodeCreator key={creator.nodeID} creator={creator} />
+    ))
+  }, [
+    // ! Recomputes when:
+    // The mission changes.
+    mission,
+    // Change in the node structure of
+    // the mission.
+    structureChangeKey,
+    // Whether the camera zoom crosses the threshold where
+    // the node names should be displayed/hidden.
+    cameraZoom.x > MAX_NODE_CONTENT_ZOOM,
+    // The custom buttons change.
+    customButtons,
+  ])
 
   /**
    * JSX for an overlay that is displayed only if content is
@@ -417,7 +494,7 @@ export default function MissionMap2({
 
   // Render root JSX.
   return (
-    <div className='MissionMap2' ref={rootRef} onWheel={onWheel}>
+    <div className={rootClassName} ref={rootRef} onWheel={onWheel}>
       <PanController
         cameraPosition={cameraPosition}
         cameraZoom={cameraZoom}
@@ -433,6 +510,7 @@ export default function MissionMap2({
         <Grid type={'node'} enabled={MAP_NODE_GRID_ENABLED} />
         {linesJsx}
         {nodesJsx}
+        {nodeCreatorsJsx}
       </Scene>
       <Hud mission={mission} buttons={buttons} />
       {overlayJsx}
@@ -488,6 +566,12 @@ export type TMissionMap2 = {
    */
   mission: ClientMission
   /**
+   * Custom buttons to display in the button panel alongside
+   * the default buttons.
+   * @default []
+   */
+  customButtons?: ButtonSVG[]
+  /**
    * Content to display in the overlay.
    * @note If undefined, the overlay will not be displayed.
    * @default undefined
@@ -495,7 +579,15 @@ export type TMissionMap2 = {
   overlayContent?: React.ReactNode
   /**
    * Handles when a node is selected.
+   * @param node The node that was selected.
    * @default undefined
    */
   onNodeSelect?: (node: ClientMissionNode) => void
+  /**
+   * Applies a tooltip to the given node.
+   * @param node The node to apply the tooltip to.
+   * @returns The tooltip description to display.
+   * @default undefined
+   */
+  applyNodeTooltip?: (node: ClientMissionNode) => string
 }

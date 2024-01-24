@@ -15,17 +15,19 @@
   height: 38px;
   padding-left: 0.75px;
   background-color: $background-alt1;
-  font-size: 28px;
-  line-height: 36px;
-  font-weight: 700;
-  vertical-align: top;
-  text-align: center;
+
+  &.add {
+    background: url('/assets/images/icons/add.svg'), $background-alt1;
+    background-position: 11.5px 10.5px;
+    background-size: 17px 17px;
+    background-repeat: no-repeat;
+  }
 
   &.cancel {
-    transition: 500ms transform;
-    font-family: 'Calibri';
-    font-weight: 700;
-    line-height: 34.5px;
+    background: url('/assets/images/icons/cancel.svg'), $background-alt1;
+    background-position: 11.5px 10.5px;
+    background-size: 17px 17px;
+    background-repeat: no-repeat;
   }
 
   &.edit {

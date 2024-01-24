@@ -11,12 +11,18 @@ import {
 import MissionEntry from '../content/edit-mission/MissionEntry'
 import NodeEntry from '../content/edit-mission/NodeEntry'
 import NodeStructuring from '../content/edit-mission/NodeStructuring'
-import { useMountHandler } from 'src/toolbox/hooks'
+import { useEventListener, useMountHandler } from 'src/toolbox/hooks'
 import { useGlobalContext } from 'src/context'
 import ClientMission from 'src/missions'
 import ClientMissionNode, { ENodeDeleteMethod } from 'src/missions/nodes'
 import ClientMissionAction from 'src/missions/actions'
 import MissionMap2 from '../content/game/mission-map'
+import {
+  ButtonSVG,
+  EButtonSVGPurpose,
+} from '../content/user-controls/ButtonSVG'
+import { SingleTypeObject } from '../../../../shared/toolbox/objects'
+import { TNodeButton } from '../content/game/mission-map/objects/MissionNode'
 
 export interface IMissionFormPage extends IPage {
   // If null, a new mission is being
@@ -94,6 +100,105 @@ export default function MissionFormPage(
     }
   })
 
+  // Add event listener to watch for node selection
+  // changes, updating the state accordingly.
+  useEventListener(
+    mission,
+    ['node-selection', 'structure-change'],
+    () => {
+      // Get previous and next selections.
+      let prevSelection: ClientMissionNode | null = selectedNode
+      let nextSelection: ClientMissionNode | null = mission.selectedNode
+
+      // Clear previous buttons.
+      if (prevSelection) {
+        prevSelection.buttons = []
+      }
+
+      // If the next selection is a node, then add the buttons.
+      if (nextSelection) {
+        // Define potential buttons.
+        const availableNodeButtons: SingleTypeObject<TNodeButton> = {
+          deselect: {
+            ...ButtonSVG.defaultProps,
+            purpose: EButtonSVGPurpose.Cancel,
+            componentKey: 'node-button-deselect',
+            tooltipDescription: 'Deselect this node (Closes panel view also).',
+            disabled: grayOutDeselectNodeButton,
+            onClick: () => {
+              validateNodeSelectionChange(() => {
+                mission.deselectNode()
+              })
+            },
+          },
+          add: {
+            ...ButtonSVG.defaultProps,
+            purpose: EButtonSVGPurpose.Add,
+            componentKey: 'node-button-add',
+            tooltipDescription: 'Create an adjacent node on the map.',
+            disabled: grayOutAddNodeButton,
+            onClick: () => {
+              mission.creationMode = true
+            },
+          },
+          add_cancel: {
+            ...ButtonSVG.defaultProps,
+            purpose: EButtonSVGPurpose.Cancel,
+            componentKey: 'node-button-add-cancel',
+            tooltipDescription: 'Cancel node creation.',
+            disabled: grayOutAddNodeButton,
+            onClick: () => (mission.creationMode = false),
+          },
+          remove: {
+            ...ButtonSVG.defaultProps,
+            purpose: EButtonSVGPurpose.Remove,
+            componentKey: 'node-button-remove',
+            tooltipDescription: 'Delete this node.',
+            disabled: grayOutDeleteNodeButton,
+            onClick: (_, node) => {
+              handleNodeDeleteRequest(node)
+            },
+          },
+        }
+
+        // Define the buttons that will actually be used.
+        const activeNodeButtons = []
+
+        // If not in creation mode, then add deselect, add, and
+        // remove buttons.
+        if (!mission.creationMode) {
+          activeNodeButtons.push(
+            availableNodeButtons.deselect,
+            availableNodeButtons.add,
+            availableNodeButtons.remove,
+          )
+        }
+        // Else, add a cancel button for adding a node.
+        else {
+          activeNodeButtons.push(availableNodeButtons.add_cancel)
+        }
+
+        // Set the buttons on the next selection.
+        nextSelection.buttons = activeNodeButtons
+      }
+
+      // Update state.
+      setSelectedNode(nextSelection)
+      setDisplayedAction(0)
+      activateNodeStructuring(false)
+      setMissionEmptyStringArray([])
+      setNodeEmptyStringArray([])
+      setActionEmptyStringArray([])
+    },
+    [selectedNode],
+  )
+  // Add event listener to watch for when a new
+  // node is spawned in the mission.
+  useEventListener(mission, 'spawn-node', () => {
+    // Mark unsaved changes as true.
+    setAreUnsavedChanges(true)
+  })
+
   let missionDetailsIsActive: boolean =
     selectedNode === null && !nodeStructuringIsActive
 
@@ -108,26 +213,7 @@ export default function MissionFormPage(
   // made that would require saving.
   const handleChange = (): void => {
     setAreUnsavedChanges(true)
-
-    if (mission.nodeCreationTarget !== null && selectedNode !== null) {
-      mission.nodeCreationTarget = null
-    }
-
     forceUpdate()
-  }
-
-  // This will select or unselect a node
-  const selectNode = (node: ClientMissionNode | null) => {
-    if (selectedNode !== null) {
-      mission.nodeCreationTarget = null
-    }
-
-    setSelectedNode(node)
-    setDisplayedAction(0)
-    activateNodeStructuring(false)
-    setMissionEmptyStringArray([])
-    setNodeEmptyStringArray([])
-    setActionEmptyStringArray([])
   }
 
   /**
@@ -197,32 +283,48 @@ export default function MissionFormPage(
     }
   }
 
+  /**
+   * Handler for when a node is selected.
+   * @param node The selected node.
+   */
+  let onNodeSelect = (node: ClientMissionNode) => {
+    if (node !== selectedNode) {
+      validateNodeSelectionChange(() => {
+        // Select the node.
+        mission.selectNode(node)
+
+        // Create an action, if necessary.
+        ensureOneActionExistsIfExecutable()
+      })
+    }
+  }
+
   // This is called when a node is
   // requested to be deleted.
-  const handleNodeDeleteRequest = (): void => {
-    if (selectedNode !== null) {
-      if (selectedNode.hasChildren) {
+  const handleNodeDeleteRequest = (node: ClientMissionNode): void => {
+    if (node !== null) {
+      if (node.hasChildren) {
         confirm(
           `**Note: This node has children** \n` +
-            `Please confirm if you would like to delete "${selectedNode.name}" only or "${selectedNode.name}" and all of it's children.`,
+            `Please confirm if you would like to delete "${node.name}" only or "${node.name}" and all of it's children.`,
           (concludeAction: () => void) => {
-            selectedNode.delete({
+            node.delete({
               deleteMethod: ENodeDeleteMethod.DeleteNodeAndChildren,
             })
             handleChange()
             activateNodeStructuring(false)
-            selectNode(null)
+            mission.deselectNode()
             ensureOneNodeExists()
             concludeAction()
           },
           {
             handleAlternate: (concludeAction: () => void) => {
-              selectedNode.delete({
+              node.delete({
                 deleteMethod: ENodeDeleteMethod.DeleteNodeAndShiftChildren,
               })
               handleChange()
               activateNodeStructuring(false)
-              selectNode(null)
+              mission.deselectNode()
               ensureOneNodeExists()
               concludeAction()
             },
@@ -234,10 +336,10 @@ export default function MissionFormPage(
         confirm(
           'Please confirm the deletion of this node.',
           (concludeAction: () => void) => {
-            selectedNode.delete()
+            node.delete()
             handleChange()
             activateNodeStructuring(false)
-            selectNode(null)
+            mission.deselectNode()
             ensureOneNodeExists()
             concludeAction()
           },
@@ -250,9 +352,7 @@ export default function MissionFormPage(
    * Handler for when the user requests to add a new node.
    */
   const handleNodeAddRequest = (): void => {
-    if (selectedNode !== null) {
-      mission.nodeCreationTarget = selectedNode
-    }
+    mission.creationMode = true
   }
 
   // This verifies that node selection
@@ -351,6 +451,27 @@ export default function MissionFormPage(
   let grayOutAddNodeButton: boolean = isEmptyString
   let grayOutDeleteNodeButton: boolean = mission.nodes.length < 2
 
+  // Create the custom form-related buttons for the map.
+  const mapCustomButtons = [
+    new ButtonSVG({
+      ...ButtonSVG.defaultProps,
+      purpose: EButtonSVGPurpose.Reorder,
+      onClick: () => {
+        mission.deselectNode()
+        activateNodeStructuring(true)
+      },
+      tooltipDescription: 'Edit the structure and order of nodes.',
+      disabled: grayOutEditButton,
+    }),
+    new ButtonSVG({
+      ...ButtonSVG.defaultProps,
+      purpose: EButtonSVGPurpose.Save,
+      onClick: save,
+      tooltipDescription: 'Save changes.',
+      disabled: grayOutSaveButton,
+    }),
+  ]
+
   if (!isEmptyString) {
     for (let notification of notifications) {
       if (notification.errorMessage) {
@@ -400,7 +521,11 @@ export default function MissionFormPage(
             ...ResizablePanel.defaultProps,
             minSize: 330,
             render: () => (
-              <MissionMap2 mission={mission} />
+              <MissionMap2
+                mission={mission}
+                customButtons={mapCustomButtons}
+                onNodeSelect={onNodeSelect}
+              />
               // <MissionMap
               //   mission={mission}
               //   missionAjaxStatus={EAjaxStatus.Loaded}
@@ -462,10 +587,12 @@ export default function MissionFormPage(
                     setActionEmptyStringArray={setActionEmptyStringArray}
                     handleChange={handleChange}
                     handleAddRequest={handleNodeAddRequest}
-                    handleDeleteRequest={handleNodeDeleteRequest}
+                    handleDeleteRequest={() =>
+                      handleNodeDeleteRequest(selectedNode)
+                    }
                     handleCloseRequest={() => {
                       validateNodeSelectionChange(() => {
-                        selectNode(null)
+                        mission.deselectNode()
                       })
                     }}
                   />

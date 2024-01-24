@@ -12,6 +12,7 @@ import NodeCreator from './nodes/creator'
 import { Vector2D } from '../../../shared/toolbox/space'
 import { TLine_P } from 'src/components/content/game/mission-map/objects/Line'
 import { TWithKey } from '../../../shared/toolbox/objects'
+import { TMissionMappable } from 'src/components/content/game/MissionMap'
 
 /**
  * Class for managing missions on the client.
@@ -59,64 +60,75 @@ export default class ClientMission extends Mission<ClientMissionNode> {
   /**
    * Listeners for mission events.
    */
-  private listeners: Array<[TMissionEvent, () => void]> = []
+  private listeners: Array<[TMissionEvent, () => void]>
+
+  /**
+   * The currently selected node in the mission.
+   * @note Used in the form for editing.
+   */
+  private _selectedNode: ClientMissionNode | null = null
+  /**
+   * The currently selected node in the mission.
+   * @note Used in the form for editing.
+   */
+  public get selectedNode(): ClientMissionNode | null {
+    return this._selectedNode
+  }
+
+  /**
+   * The target node for creating a new node.
+   */
+  public get creationTarget(): ClientMissionNode | null {
+    return this.creationMode ? this.selectedNode : null
+  }
+
+  /**
+   * Whether creation mode is enabled for the selected node.
+   */
+  private _creationMode: boolean = false
+  /**
+   * Whether creation mode is enabled for the selected node.
+   * @note Does nothing if there is no selected node.
+   * @note Used in the form for editing.
+   */
+  public get creationMode(): boolean {
+    return this._creationMode
+  }
+  /**
+   * Whether creation mode is enabled for the selected node.
+   * @note Does nothing if there is no selected node.
+   * @note Used in the form for editing.
+   */
+  public set creationMode(value) {
+    // Get the selected node.
+    let selectedNode: ClientMissionNode | null = this._selectedNode
+
+    // If there is no selected node, do nothing.
+    if (selectedNode === null) {
+      console.warn('Cannot set creation mode when there is no selected node.')
+      return
+    }
+
+    // Update the creation mode.
+    this._creationMode = value
+
+    // Determine node creators.
+    this._nodeCreators = value
+      ? [
+          new NodeCreator(this, ENodeTargetRelation.ParentOfTargetOnly),
+          new NodeCreator(this, ENodeTargetRelation.BetweenTargetAndChildren),
+          new NodeCreator(this, ENodeTargetRelation.PreviousSiblingOfTarget),
+          new NodeCreator(this, ENodeTargetRelation.FollowingSiblingOfTarget),
+        ]
+      : []
+
+    this.handleStructureChange()
+  }
 
   /**
    * The last created node for the mission.
    */
   public lastCreatedNode: ClientMissionNode | null
-
-  /**
-   * Cache for tracking a node, around which a new node will be created.
-   */
-  protected _nodeCreationTarget: ClientMissionNode | null
-  /**
-   * Cache for tracking a node, around which a new node will be created.
-   */
-  public get nodeCreationTarget(): ClientMissionNode | null {
-    return this._nodeCreationTarget
-  }
-  public set nodeCreationTarget(nodeCreationTarget: ClientMissionNode | null) {
-    this._nodeCreationTarget = nodeCreationTarget
-    this._nodeCreators = []
-
-    if (nodeCreationTarget !== null) {
-      this._nodeCreators.push(
-        new NodeCreator(
-          this,
-          nodeCreationTarget,
-          ENodeTargetRelation.ParentOfTargetOnly,
-          new Vector2D(0, 0),
-        ),
-      )
-      this._nodeCreators.push(
-        new NodeCreator(
-          this,
-          nodeCreationTarget,
-          ENodeTargetRelation.BetweenTargetAndChildren,
-          new Vector2D(0, 0),
-        ),
-      )
-      this._nodeCreators.push(
-        new NodeCreator(
-          this,
-          nodeCreationTarget,
-          ENodeTargetRelation.PreviousSiblingOfTarget,
-          new Vector2D(0, 0),
-        ),
-      )
-      this._nodeCreators.push(
-        new NodeCreator(
-          this,
-          nodeCreationTarget,
-          ENodeTargetRelation.FollowingSiblingOfTarget,
-          new Vector2D(0, 0),
-        ),
-      )
-    }
-
-    this.handleStructureChange()
-  }
 
   /**
    * Cache for tracking possible locations for creating a new node based on the node creation target.
@@ -155,7 +167,8 @@ export default class ClientMission extends Mission<ClientMissionNode> {
     this._depth = -1
     this._structureChangeKey = generateHash()
     this.lastCreatedNode = null
-    this._nodeCreationTarget = null
+    this.listeners = []
+    this._selectedNode = null
     this._nodeCreators = []
     this.relationshipLines = []
     this.lastOpenedNode = null
@@ -204,7 +217,7 @@ export default class ClientMission extends Mission<ClientMissionNode> {
     // to ensure their current positions
     // reflect all the changes that have
     // been made.
-    if (this.nodeCreationTarget !== null) {
+    if (this.creationMode) {
       this.positionNodeCreators()
     }
 
@@ -266,7 +279,11 @@ export default class ClientMission extends Mission<ClientMissionNode> {
     extraLines: Counter = new Counter(0),
     rowMostLinesFound: Counter = new Counter(0),
   ): void => {
-    let nodeCreationTarget: ClientMissionNode | null = this.nodeCreationTarget
+    let nodeCreationTarget: ClientMissionNode | null = null
+
+    // If creation mode is enabled, set the
+    // nodeCreationTarget to the selected node.
+    if (this.creationMode) nodeCreationTarget = this.selectedNode!
 
     let yOffset: number =
       extraLines.count *
@@ -369,33 +386,16 @@ export default class ClientMission extends Mission<ClientMissionNode> {
    * values that correspond with the current state of the mission.
    */
   protected positionNodeCreators = (): void => {
-    let nodeCreationTarget: ClientMissionNode | null = this.nodeCreationTarget
+    let nodeCreationTarget: ClientMissionNode | null = null
     let nodeCreators: Array<NodeCreator> = this.nodeCreators
+
+    // If creation mode is enabled, set the
+    // nodeCreationTarget to the selected node.
+    if (this.creationMode) nodeCreationTarget = this.selectedNode!
 
     if (nodeCreationTarget !== null) {
       for (let nodeCreator of nodeCreators) {
-        switch (nodeCreator.creationTargetRelation) {
-          case ENodeTargetRelation.ParentOfTargetAndChildren:
-            nodeCreator.position.translateX(-2)
-            nodeCreator.depth = nodeCreationTarget.depth - 2
-            break
-          case ENodeTargetRelation.ParentOfTargetOnly:
-            nodeCreator.position.translateX(-1)
-            nodeCreator.depth = nodeCreationTarget.depth - 1
-            break
-          case ENodeTargetRelation.BetweenTargetAndChildren:
-            nodeCreator.position.translateX(1)
-            nodeCreator.depth = nodeCreationTarget.depth + 1
-            break
-          case ENodeTargetRelation.PreviousSiblingOfTarget:
-            nodeCreator.position.translateY(-1)
-            nodeCreator.depth = nodeCreationTarget.depth
-            break
-          case ENodeTargetRelation.FollowingSiblingOfTarget:
-            nodeCreator.position.translateY(1)
-            nodeCreator.depth = nodeCreationTarget.depth
-            break
-        }
+        nodeCreator.syncPosition()
       }
     }
   }
@@ -411,15 +411,21 @@ export default class ClientMission extends Mission<ClientMissionNode> {
     // node and the edge of the column.
     let columnEdgeDistance: number =
       (ClientMissionNode.COLUMN_WIDTH - ClientMissionNode.WIDTH) / 2
+    // Get half the default node height.
+    const halfDefaultNodeHeight: number =
+      ClientMissionNode.DEFAULT_NAME_NEEDED_HEIGHT / 2 +
+      ClientMissionNode.VERTICAL_PADDING
+    let creationTarget: ClientMissionNode | null = this.creationTarget
+    let nodeCreators: NodeCreator[] = this.nodeCreators
 
     // Recursive algorithm used to determine the
-    // relationship lines between nodes.
-    const algorithm = (parent: ClientMissionNode = this.rootNode) => {
+    // relationship lines between nodes. Does not
+    // draw the lines between node creators and nodes.
+    const baseAlgorithm = (parent: ClientMissionNode = this.rootNode) => {
       // Get details.
-      const halfDefaultNodeHeight: number =
-        ClientMissionNode.DEFAULT_NAME_NEEDED_HEIGHT / 2 +
-        ClientMissionNode.VERTICAL_PADDING
       let children: ClientMissionNode[] = parent.childNodes
+      let firstChild: ClientMissionNode | null = parent.firstChildNode
+      let lastChild: ClientMissionNode | null = parent.lastChildNode
       let childCount: number = children.length
 
       // If the parent is not the invisible root node
@@ -428,6 +434,8 @@ export default class ClientMission extends Mission<ClientMissionNode> {
       // between the parent and the edge of the
       // column.
       if (parent !== this.rootNode && childCount > 0) {
+        // ! line-draw-start
+
         // Clone the parent node's position then translate
         // the start position to the middle of the right edge of
         // the parent node.
@@ -447,18 +455,94 @@ export default class ClientMission extends Mission<ClientMissionNode> {
           length: columnEdgeDistance,
         })
 
-        // If there is more than one node, create a vertcial line
-        // down the middle of the edge of the column to connect to
-        // each child node.
-        if (childCount > 1) {
+        // ! line-draw-end
+
+        // ! math-start
+
+        // Define the min and max y values
+        // for the children of this parent node.
+        let childMinY: number = parent.position.y
+        let childMaxY: number = parent.position.y
+
+        // If there is a first child, calculate
+        // the min y value.
+        if (firstChild) {
+          // Set the min y value to the first child's
+          // y position.
+          childMinY = firstChild.position.y
+
+          // If the firstChild is the creation target,
+          // the min y value may need to be offset to
+          // account for a previous sibling node creator.
+          if (firstChild === creationTarget) {
+            for (let creator of nodeCreators) {
+              if (
+                creator.targetRelation ===
+                ENodeTargetRelation.PreviousSiblingOfTarget
+              ) {
+                childMinY = Math.min(childMinY, creator.position.y)
+              }
+            }
+          }
+        }
+
+        // If there is a last child, calculate
+        // the max y value.
+        if (lastChild) {
+          // Set the max y value to the last child's
+          // y position.
+          childMaxY = lastChild.position.y
+
+          // If the lastChild is the creation target,
+          // the max y value may need to be offset to
+          // account for a following sibling node creator.
+          if (lastChild === creationTarget) {
+            for (let creator of nodeCreators) {
+              if (
+                creator.targetRelation ===
+                ENodeTargetRelation.FollowingSiblingOfTarget
+              ) {
+                childMaxY = Math.max(childMaxY, creator.position.y)
+              }
+            }
+          }
+        }
+
+        // ! math-end
+
+        // ! line-draw-start
+
+        // If the child min y value is not equal to
+        // the child max y value, then a vertical
+        // line should be drawn between the min and
+        // max y values.
+        if (childMinY !== childMaxY) {
           // Determine the start position of the vertical line.
           let downMidStart = parentToMidStart
+            // First clone the parent to mid
+            // start position.
             .clone()
+            // Then translate to the edge of
+            // the column.
             .translateX(columnEdgeDistance)
-          let lastChildY: number =
-            children[childCount - 1].position.y + halfDefaultNodeHeight
-          let downMidLength: number = lastChildY - downMidStart.y
+          // Then set the y position to the
+          // min y value.
+          downMidStart.y = childMinY
+          // Then translate down by half the
+          // default node height.
+          downMidStart.translateY(halfDefaultNodeHeight)
 
+          // Determine the length of the vertical line.
+          let downMidLength: number = childMaxY - childMinY
+
+          // If the parent node is the node creation target,
+          // the vertical line should be offset to account
+          // for a node creator between the parent and child.
+          if (creationTarget?.nodeID === parent.nodeID) {
+            downMidStart.translateX(ClientMissionNode.COLUMN_WIDTH)
+          }
+
+          // Push a new line.
           relationshipLines.push({
             key: `down-middle_${parent.nodeID}`,
             direction: 'vertical',
@@ -467,28 +551,57 @@ export default class ClientMission extends Mission<ClientMissionNode> {
           })
         }
 
+        // ! line-draw-end
+
         // Iterate through the children.
         for (let child of children) {
-          // Draw a line from the edge of the column to the
-          // middle of the left edge of the child node.
+          // ! line-draw-start
 
-          // First, clone the child node's position then
-          // translate the start position to the column edge.
-          let midToChildStart: Vector2D = child.position
+          // Draw a line from the right edge of the parent column
+          // to the middle-y of the left edge of the child node.
+
+          // Define the start position.
+          let midToChildStart: Vector2D = parentToMidStart
+            // First clone the parent to mid
+            // start position.
             .clone()
-            .translateX(-ClientMissionNode.WIDTH / 2 - columnEdgeDistance)
-            .translateY(halfDefaultNodeHeight)
+            // Then translate to the edge of
+            // the column.
+            .translateX(columnEdgeDistance)
+          // Then set the y position to the
+          // child y value.
+          midToChildStart.y = child.position.y
+          // Then translate down by half the
+          // default node height.
+          midToChildStart.translateY(halfDefaultNodeHeight)
+          // If the parent node is the node creation target,
+          // the start position should be offset to account
+          // for a node creator between the parent and child.
+          if (creationTarget?.nodeID === parent.nodeID) {
+            midToChildStart.translateX(ClientMissionNode.COLUMN_WIDTH)
+          }
+
+          // Define the end position.
+          let midToChildEnd: Vector2D = child.position
+            // First clone the child's position.
+            .clone()
+            // Then translate to the left edge of the node,
+            // and down by half the default node height.
+            .translate(-ClientMissionNode.WIDTH / 2, halfDefaultNodeHeight)
+
+          // Determine the length of the from the difference
+          // between the x values of the start and end positions.
+          let midToChildLength: number = midToChildEnd.x - midToChildStart.x
 
           // Push the new line.
           relationshipLines.push({
             key: `middle-to-child_${child.nodeID}`,
             direction: 'horizontal',
             start: midToChildStart,
-            // The length of the line is the distance
-            // between the edge of the column and
-            // the edge of the child node.
-            length: columnEdgeDistance,
+            length: midToChildLength,
           })
+
+          // ! line-draw-end
         }
       }
 
@@ -496,16 +609,169 @@ export default class ClientMission extends Mission<ClientMissionNode> {
       for (let child of parent.childNodes) {
         // Call recursively the algorithm with
         // the child.
-        algorithm(child)
+        baseAlgorithm(child)
       }
     }
 
     // Run the algorithm.
-    algorithm()
+    baseAlgorithm()
+
+    // If the mission is in creation mode, add
+    // the relationship lines for the node creators.
+    if (this.creationMode && creationTarget) {
+      // Loop through creators.
+      for (let creator of this.nodeCreators) {
+        // Gather details.
+        let relation: ENodeTargetRelation = creator.targetRelation
+        let relationIsSibling: boolean =
+          relation === ENodeTargetRelation.PreviousSiblingOfTarget ||
+          relation === ENodeTargetRelation.FollowingSiblingOfTarget
+
+        // ! line-draw-start
+
+        // If the relation is a parent-only relationship, and the
+        // target's parent is the root node, draw a line from the
+        // creator to the target.
+        if (
+          relation === ENodeTargetRelation.ParentOfTargetOnly &&
+          creationTarget.parentNode === this.rootNode
+        ) {
+          // Define start position.
+          let start: Vector2D = creator.position
+            // First clone the creator's position.
+            .clone()
+            // Then translate to the edge of the creator,
+            // and down by half the default node height.
+            .translate(ClientMissionNode.WIDTH / 2, halfDefaultNodeHeight)
+          // Define length of line.
+          let length: number = columnEdgeDistance * 2
+
+          // Push a new line.
+          relationshipLines.push({
+            key: `creator-to-target_${creator.nodeID}`,
+            direction: 'horizontal',
+            start,
+            length,
+          })
+        }
+
+        // ! line-draw-end
+
+        // ! line-draw-start
+
+        // If the relation is a between-target-and-children
+        // relationship, then draw a line from the target
+        // to the creator.
+        if (relation === ENodeTargetRelation.BetweenTargetAndChildren) {
+          // Define start position.
+          let start: Vector2D = creationTarget.position
+            // First clone the target's position.
+            .clone()
+            // Then translate to the edge of the node,
+            // and down by half the default node height.
+            .translate(ClientMissionNode.WIDTH / 2, halfDefaultNodeHeight)
+          // Define length of line.
+          let length: number = columnEdgeDistance
+
+          // If the target has children, the line should be
+          // longer to account for the children.
+          if (creationTarget.hasChildren) {
+            length += ClientMissionNode.COLUMN_WIDTH
+          }
+          // Else, add the edge distance to connect it
+          // with the creator, only.
+          else {
+            length += columnEdgeDistance
+          }
+
+          // Push a new line.
+          relationshipLines.push({
+            key: `target-to-creator_${creator.nodeID}`,
+            direction: 'horizontal',
+            start,
+            length,
+          })
+        }
+
+        // ! line-draw-end
+
+        // ! line-draw-start
+
+        // If the relation is a sibling relationship, the target has
+        // a parent, which is not the root node, draw a line
+        // from the target's parent to the creator.
+        if (
+          relationIsSibling &&
+          creationTarget.parentNode &&
+          creationTarget.parentNode !== this.rootNode
+        ) {
+          // Define start position.
+          let start: Vector2D = creationTarget.parentNode.position
+            // First clone the target-parent's position.
+            .clone()
+            // Then translate to the right edge of the column.
+            .translateX(ClientMissionNode.COLUMN_WIDTH / 2)
+          // Set the y position to the creator's y position.
+          start.y = creator.position.y
+          // Then translate down by half the default node height.
+          start.translateY(halfDefaultNodeHeight)
+
+          // Define end position.
+          let end: Vector2D = creator.position
+            // First clone the creator's position.
+            .clone()
+            // Then translate to the edge of the creator,
+            // and down by half the default node height.
+            .translate(ClientMissionNode.WIDTH / 2, halfDefaultNodeHeight)
+
+          // Define length of line by the difference
+          // between the x values of the start and end
+          // positions.
+          let length: number = end.x - start.x
+
+          // Push a new line.
+          relationshipLines.push({
+            key: `parent-to-creator_${creator.nodeID}`,
+            direction: 'horizontal',
+            start,
+            length,
+          })
+        }
+
+        // ! line-draw-end
+      }
+    }
 
     // Set the relationship lines in the mission to
     // those determined by the algorithm.
     this.relationshipLines = relationshipLines
+  }
+
+  /**
+   * Selects a node in the mission. Used in the form for editing.
+   */
+  public selectNode(node: ClientMissionNode): void {
+    // Handle foreign node.
+    if (node.mission !== this)
+      throw new Error('Cannot select node from another mission.')
+    // Disable creation mode.
+    if (this.creationMode) this.creationMode = false
+    // Select node.
+    this._selectedNode = node
+    // Emit event.
+    this.emitEvent('node-selection')
+  }
+
+  /**
+   * Deselects the currently selected node in the mission. Used in the form for editing.
+   */
+  public deselectNode(): void {
+    // Disable creation mode.
+    if (this.creationMode) this.creationMode = false
+    // Deslect node.
+    this._selectedNode = null
+    // Emit event.
+    this.emitEvent('node-selection')
   }
 
   // Implemented
@@ -539,6 +805,12 @@ export default class ClientMission extends Mission<ClientMissionNode> {
 
     // Handle structure change.
     this.handleStructureChange()
+
+    // Emit spawn node event if the structure
+    // has been initialized.
+    if (this.structureInitialized) {
+      this.emitEvent('spawn-node')
+    }
 
     // Return the node.
     return node
@@ -813,5 +1085,13 @@ export type TStructureChangeListener = (structureChangeKey: string) => void
  * @option 'structure-change'
  * Triggered when the structure of the mission, including the nodes and actions
  * that make up the mission, change.
+ * @option 'node-selection'
+ * Triggered when a node is selected or deselected.
+ * @option 'spawn-node'
+ * Triggered when a node is spawned after initialization.
  */
-export type TMissionEvent = 'activity' | 'structure-change'
+export type TMissionEvent =
+  | 'activity'
+  | 'structure-change'
+  | 'node-selection'
+  | 'spawn-node'

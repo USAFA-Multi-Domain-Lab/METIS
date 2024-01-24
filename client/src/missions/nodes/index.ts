@@ -1,4 +1,4 @@
-import { IMissionMappable } from 'src/components/content/game/MissionMap'
+import { TMissionMappable } from 'src/components/content/game/MissionMap'
 import ClientMission from '..'
 import { IMissionActionJSON } from '../../../../shared/missions/actions'
 import { TActionExecutionJSON } from '../../../../shared/missions/actions/executions'
@@ -16,6 +16,7 @@ import axios from 'axios'
 import { Vector2D } from '../../../../shared/toolbox/space'
 import memoizeOne from 'memoize-one'
 import { TRequestMethod } from '../../../../shared/connect/data'
+import { TNodeButton } from 'src/components/content/game/mission-map/objects/MissionNode'
 
 /**
  * Options for the ClientMissionNode.open method.
@@ -45,12 +46,12 @@ export interface IClientHandleOutcomeOptions extends IHandleOutcomeOptions {
  * The relation of the target node to the node being added.
  */
 export enum ENodeTargetRelation {
-  ParentOfTargetAndChildren,
-  ParentOfTargetOnly,
-  ChildOfTarget,
-  BetweenTargetAndChildren,
-  PreviousSiblingOfTarget,
-  FollowingSiblingOfTarget,
+  ParentOfTargetAndChildren = 'parent-of-target-and-children',
+  ParentOfTargetOnly = 'parent-of-target-only',
+  ChildOfTarget = 'child-of-target',
+  BetweenTargetAndChildren = 'between-target-and-children',
+  PreviousSiblingOfTarget = 'previous-sibling-of-target',
+  FollowingSiblingOfTarget = 'following-sibling-of-target',
 }
 
 /**
@@ -86,7 +87,7 @@ export default class ClientMissionNode
     ClientActionExecution,
     ClientActionOutcome
   >
-  implements IMissionMappable
+  implements TMissionMappable
 {
   // Implemented
   public position: Vector2D
@@ -243,6 +244,21 @@ export default class ClientMissionNode
     return ClientMissionNode.VERTICAL_PADDING + this.nameHeight
   }
 
+  /**
+   * Buttons to manage this specific node on a mission map.
+   */
+  private _buttons: TNodeButton[]
+  /**
+   * Buttons to manage this specific node on a mission map.
+   */
+  public get buttons(): TNodeButton[] {
+    return [...this._buttons]
+  }
+  public set buttons(value: TNodeButton[]) {
+    this._buttons = value
+    this.emitEvent('set-buttons')
+  }
+
   public constructor(
     mission: ClientMission,
     data: Partial<TMissionNodeJSON> = MissionNode.DEFAULT_PROPERTIES,
@@ -252,6 +268,7 @@ export default class ClientMissionNode
 
     this.position = new Vector2D(0, 0)
     this.depth = -1
+    this._buttons = []
   }
 
   // Implemented
@@ -749,6 +766,10 @@ export default class ClientMissionNode
    */
   public static readonly ROW_HEIGHT = 1.25 //em
   /**
+   * The height of the buttons for a node on the mission map.
+   */
+  public static readonly BUTTONS_HEIGHT = 0.425 //em
+  /**
    * The size of the font for the node name on the mission map.
    */
   public static readonly FONT_SIZE = 0.15 //em
@@ -779,7 +800,7 @@ export default class ClientMissionNode
   /**
    * The width of the node's name relative to the node's width.
    */
-  public static readonly NAME_WIDTH_RATIO = 0.7
+  public static readonly NAME_WIDTH_RATIO = 0.675
   /**
    * The number of characters that can fit on a single line of the node's name.
    */
@@ -823,9 +844,12 @@ export default class ClientMissionNode
  * - An action is requested to be executed by the client and is awaiting a response from the server.
  * @option 'open'
  * Triggered when the node is opened.
+ * @option 'set-buttons'
+ * Triggered when the buttons for the node are set.
  */
 export type TMissionNodeEvent =
   | 'activity'
   | 'request-made'
   | 'exec-state-change'
   | 'open'
+  | 'set-buttons'

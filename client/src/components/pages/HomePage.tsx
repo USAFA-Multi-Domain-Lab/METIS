@@ -473,13 +473,13 @@ export default function HomePage(props: IHomePage): JSX.Element | null {
           <div className={editContentClassName}>
             <ButtonSVG
               purpose={EButtonSVGPurpose.Add}
-              handleClick={createMission}
+              onClick={createMission}
               tooltipDescription={'Create new mission'}
               uniqueClassName={'NewMissionButton'}
             />
             <ButtonSVG
               purpose={EButtonSVGPurpose.Upload}
-              handleClick={handleMissionImportRequest}
+              onClick={handleMissionImportRequest}
               tooltipDescription={
                 'Import a .metis file from your local system.'
               }
@@ -530,7 +530,7 @@ export default function HomePage(props: IHomePage): JSX.Element | null {
           <div className={editContentClassName}>
             <ButtonSVG
               purpose={EButtonSVGPurpose.Add}
-              handleClick={createUser}
+              onClick={createUser}
               tooltipDescription={'Create new user'}
             />
           </div>

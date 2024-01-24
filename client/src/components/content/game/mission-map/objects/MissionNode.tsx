@@ -6,6 +6,11 @@ import { compute } from 'src/toolbox'
 import { useState } from 'react'
 import { TNodeExecutionState } from '../../../../../../../shared/missions/nodes'
 import { useEventListener, useInlineStyling } from 'src/toolbox/hooks'
+import {
+  ButtonSVG,
+  IButtonSVG,
+} from 'src/components/content/user-controls/ButtonSVG'
+import Tooltip from 'src/components/content/communication/Tooltip'
 
 /* -- constants -- */
 
@@ -23,6 +28,7 @@ export default function MissionNode({
   node,
   cameraZoom,
   onSelect,
+  applyTooltip = () => node.description,
 }: TMissionNode_P): JSX.Element | null {
   /* -- state -- */
 
@@ -47,6 +53,10 @@ export default function MissionNode({
    * helping account for latency.
    */
   const [initialProgress, setInitialProgress] = useState<number>(0)
+  /**
+   * The buttons to display on the node.
+   */
+  const [buttons, setButtons] = useState<TNodeButton[]>(node.buttons)
 
   /* -- effects -- */
 
@@ -58,6 +68,7 @@ export default function MissionNode({
     setPendingOpen(node.pendingOpen)
     setPendingExecInit(node.pendingExecInit)
     setExecutionState(node.executionState)
+    setButtons(node.buttons)
 
     // If node is executing, update the initial
     // progress.
@@ -95,6 +106,12 @@ export default function MissionNode({
       backgroundColor = node.color
     }
 
+    // If there are buttons to display, add height
+    // for them.
+    if (buttons.length > 0) {
+      height += ClientMissionNode.BUTTONS_HEIGHT
+    }
+
     return {
       left: `${x}em`,
       top: `${y}em`,
@@ -122,19 +139,43 @@ export default function MissionNode({
   })
 
   /**
+   * The inline styles for the node's primary content.
+   */
+  const primaryContentStyle = useInlineStyling((style) => {
+    // If there are buttons, change the height
+    // of the primary content to account for them.
+    if (buttons.length > 0) {
+      style.height = `calc(100% - ${ClientMissionNode.BUTTONS_HEIGHT}em)`
+    }
+  })
+
+  /**
    * The inline styles for the node's name.
    * @memoized
    */
   const nameStyle: React.CSSProperties = compute(() => {
-    let width: number = ClientMissionNode.NAME_WIDTH_RATIO * 100
+    let width: number = 90
     let fontSize: number = ClientMissionNode.FONT_SIZE
     let lineHeight: number = ClientMissionNode.LINE_HEIGHT
+
+    // If the node is executable, make the
+    // width smaller.
+    if (node.executable) {
+      width = ClientMissionNode.NAME_WIDTH_RATIO * 100
+    }
 
     return {
       width: `${width}%`,
       fontSize: `${fontSize}em`,
       lineHeight: `${lineHeight}em`,
     }
+  })
+
+  /**
+   * The inline styles for the node's buttons.
+   */
+  const buttonsStyle = useInlineStyling((style) => {}, {
+    height: `${ClientMissionNode.BUTTONS_HEIGHT}em`,
   })
 
   /**
@@ -204,10 +245,58 @@ export default function MissionNode({
     return classList.join(' ')
   })
 
+  /**
+   * The class for the node's buttons.
+   */
+  const buttonsClassName: string = compute(() => {
+    let classList = ['Buttons']
+
+    // Hide the buttons if there are none
+    // provided.
+    if (buttons.length === 0) {
+      classList.push('Hidden')
+    }
+
+    return classList.join(' ')
+  })
+
   /* -- render -- */
 
   // Ensure the node selection handler is defined.
   onSelect = onSelect ?? (() => {})
+
+  /**
+   * The JSX for the buttons.
+   */
+  const buttonsJsx: JSX.Element[] = compute(() => {
+    return buttons.map((button: TNodeButton): JSX.Element => {
+      return (
+        <ButtonSVG
+          {...button}
+          onClick={(event: React.MouseEvent) => {
+            button.onClick(event, node)
+          }}
+          key={button.componentKey}
+        />
+      )
+    })
+  })
+
+  /**
+   * The JSX for the toopltip.
+   */
+  const tooltipJsx: JSX.Element | null = compute(() => {
+    // If there are no buttons, add a tooltip
+    // to the node.
+    if (buttons.length === 0) {
+      return <Tooltip description={applyTooltip()} />
+    }
+    // Else, do not add a tooltip, since the tooltips
+    // for the buttons will conflict.
+    else {
+      return null
+    }
+  })
 
   // Render root JSX.
   return (
@@ -218,10 +307,16 @@ export default function MissionNode({
       onClick={onSelect}
     >
       <div className='ProgressBar' style={progressBarStyle}></div>
-      <div className={nameClassName} style={nameStyle}>
-        {node.name}
+      <div className='PrimaryContent' style={primaryContentStyle}>
+        <div className={nameClassName} style={nameStyle}>
+          {node.name}
+        </div>
+        <div className={iconClassName}></div>
       </div>
-      <div className={iconClassName}></div>
+      <div className={buttonsClassName} style={buttonsStyle}>
+        {buttonsJsx}
+      </div>
+      {tooltipJsx}
     </div>
   )
 }
@@ -243,4 +338,22 @@ export type TMissionNode_P = {
    * @default () => {}
    */
   onSelect?: () => void
+  /**
+   * Applies a tooltip to the node.
+   * @default () => node.description
+   */
+  applyTooltip?: () => string
+}
+
+/**
+ * Button SVG type for node-specific buttons.
+ */
+export type TNodeButton = Omit<IButtonSVG, 'onClick'> & {
+  // Overridden
+  /**
+   * Handles when the button is clicked.
+   * @param event The click event.
+   * @param node The node associated with the button.
+   */
+  onClick: (event: React.MouseEvent, node: ClientMissionNode) => void
 }
