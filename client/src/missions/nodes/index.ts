@@ -94,6 +94,18 @@ export default class ClientMissionNode
   // Implemented
   public depth: number
 
+  // Overridden
+  public get depthPadding(): number {
+    return this._depthPadding
+  }
+  // Overriden
+  public set depthPadding(value: number) {
+    // Set value.
+    this._depthPadding = value
+    // Handle structure change.
+    this.mission.handleStructureChange()
+  }
+
   /**
    * Listeners for node events.
    */

@@ -78,7 +78,8 @@ export interface IMissionNode {
   /**
    * The amount of visual padding to apply to the left of the node in the tree.
    */
-  depthPadding: number
+  get depthPadding(): number
+  set depthPadding(value: number)
   /**
    * The actions that can be performed on the node.
    * @note Mapped by action ID.
@@ -318,8 +319,18 @@ export default abstract class MissionNode<
    */
   protected opened: boolean
 
+  /**
+   * Cache for the depth padding of the node.
+   */
+  protected _depthPadding: number
   // Implemented
-  public depthPadding: number
+  public get depthPadding(): number {
+    return this._depthPadding
+  }
+  // Implemented
+  public set depthPadding(value: number) {
+    this._depthPadding = value
+  }
 
   // Implemented
   public actions: Map<string, TMissionAction>
@@ -477,7 +488,7 @@ export default abstract class MissionNode<
     this.executable =
       data.executable ?? MissionNode.DEFAULT_PROPERTIES.executable
     this.device = data.device ?? MissionNode.DEFAULT_PROPERTIES.device
-    this.depthPadding =
+    this._depthPadding =
       data.depthPadding ?? MissionNode.DEFAULT_PROPERTIES.depthPadding
     this.actions = this.parseActionData(
       data.actions ?? MissionNode.DEFAULT_PROPERTIES.actions,
