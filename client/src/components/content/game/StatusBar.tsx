@@ -78,7 +78,7 @@ export default function StatusBar({}: TStatusBar_P): JSX.Element | null {
       statusBarClasses.push('Pending')
 
       // Get the last request and overwrite the status message with it.
-      statusMessage = `Tasks pending...`
+      statusMessage = `Tasks pending.`
 
       // Show the overflow count.
       overflowCountClasses = overflowCountClasses.filter(
