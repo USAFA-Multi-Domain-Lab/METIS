@@ -1,9 +1,9 @@
 import './StatusBar.scss'
 
 import { TServerConnectionStatus } from '../../../../../shared/connect/data'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useState } from 'react'
 import { useGlobalContext } from 'src/context'
-import { useEventListener, useUnmountHandler } from 'src/toolbox/hooks'
+import { useEventListener } from 'src/toolbox/hooks'
 import { TUnfulfilledReqData } from 'src/connect/servers'
 
 /**
@@ -53,7 +53,7 @@ export default function StatusBar({}: TStatusBar_P): JSX.Element | null {
       // Add class name and set status message based on the
       // server connection status.
       case 'open':
-        statusMessage = 'Connected.'
+        statusMessage = 'Idle Connection.'
         statusBarClasses.push('Open')
         overflowConnectionMessage =
           'The client is properly connected to the server.'
@@ -78,8 +78,12 @@ export default function StatusBar({}: TStatusBar_P): JSX.Element | null {
       statusBarClasses.push('Pending')
 
       // Get the last request and overwrite the status message with it.
-      statusMessage =
-        unfulfilledRequests[unfulfilledRequests.length - 1].statusMessage
+      statusMessage = `Tasks pending...`
+
+      // Show the overflow count.
+      overflowCountClasses = overflowCountClasses.filter(
+        (cls) => cls !== 'Hidden',
+      )
 
       // Construct the overflow status messages.
       overflowStatusMessages = unfulfilledRequests.map((request) => ({
@@ -92,14 +96,6 @@ export default function StatusBar({}: TStatusBar_P): JSX.Element | null {
       // element.
       if (overflowStatusMessages.length > 0) {
         pendingTasksClasses = pendingTasksClasses.filter(
-          (cls) => cls !== 'Hidden',
-        )
-      }
-      // If there is more than one overflow message, filter
-      // out the hidden class name from the overflow count
-      // element.
-      if (overflowStatusMessages.length > 1) {
-        overflowCountClasses = overflowCountClasses.filter(
           (cls) => cls !== 'Hidden',
         )
       }
@@ -119,7 +115,7 @@ export default function StatusBar({}: TStatusBar_P): JSX.Element | null {
       <div className='Message'>
         {statusMessage}{' '}
         <span className={overflowCountClasses.join(' ')}>
-          +{overflowStatusMessages.length - 1}
+          {`(${overflowStatusMessages.length})`}
         </span>
       </div>
       <div className='Indicator'></div>

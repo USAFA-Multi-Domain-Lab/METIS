@@ -6,7 +6,6 @@ import { TServerEvents } from '../../../shared/connect/data'
 import ClientMission from 'src/missions'
 import ClientMissionNode from 'src/missions/nodes'
 import ClientMissionAction from 'src/missions/actions'
-import { TActionExecutionJSON } from '../../../shared/missions/actions/executions'
 
 /**
  * Client instance for games. Handles client-side logic for games. Communicates with server to conduct game.
