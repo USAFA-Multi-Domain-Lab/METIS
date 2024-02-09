@@ -7,8 +7,8 @@
         .MoreInformation {
           display: grid;
           justify-content: end;
-          width: calc(100% - 8px);
           margin-top: 6.25px;
+          width: 100%;
           grid-column: 1 / 2;
 
           .circle {
@@ -23,7 +23,7 @@
             transparent 100%
           );
           grid-column: 2 / 2;
-          padding-bottom: 0;
+          padding: 10px 0 0;
 
           &.Disabled {
             margin: 0 30px;
@@ -37,7 +37,7 @@
         overflow-y: hidden;
 
         .BoxTop {
-          grid-template-columns: 1fr 26px;
+          grid-template-columns: 1fr 46px;
         }
 
         .Nodes {

@@ -1,11 +1,10 @@
 import axios, { AxiosRequestConfig } from 'axios'
-import {
+import TargetEnvironment, {
   RequestMethod,
   TCommonTargetEnvironmentJson,
-  TargetEnvironment,
 } from '../../../shared/target-environments'
 import { AnyObject } from '../../../shared/toolbox/objects'
-import { ClientTarget } from './targets'
+import ClientTarget from './targets'
 import { TCommonTargetJson } from '../../../shared/target-environments/targets'
 
 /**
@@ -19,35 +18,36 @@ export class ClientTargetEnvironment extends TargetEnvironment<ClientTarget> {
     })
   }
 
-  /**
-   * Makes a request to the environment where the target is located.
-   */
-  public static async makeRequest(
-    requestMethod: RequestMethod,
-    url: string,
-    data?: AnyObject | undefined,
-    config?: AxiosRequestConfig<AnyObject> | undefined,
-  ) {
-    try {
-      switch (requestMethod) {
-        case 'POST':
-          return await axios.post(url, data, config)
-        case 'GET':
-          return await axios.get(url, config)
-        case 'PUT':
-          return await axios.put(url, data, config)
-        case 'PATCH':
-          return await axios.patch(url, data, config)
-        case 'DELETE':
-          return await axios.delete(url, config)
-        default:
-          throw new Error('No valid request method specified.')
-      }
-    } catch (error: any) {
-      console.error('Failed to make request to the target environment.')
-      console.error(error)
-    }
-  }
+  // todo: remove (target-environment)
+  // /**
+  //  * Makes a request to the environment where the target is located.
+  //  */
+  // public static async makeRequest(
+  //   requestMethod: RequestMethod,
+  //   url: string,
+  //   data?: AnyObject | undefined,
+  //   config?: AxiosRequestConfig<AnyObject> | undefined,
+  // ) {
+  //   try {
+  //     switch (requestMethod) {
+  //       case 'POST':
+  //         return await axios.post(url, data, config)
+  //       case 'GET':
+  //         return await axios.get(url, config)
+  //       case 'PUT':
+  //         return await axios.put(url, data, config)
+  //       case 'PATCH':
+  //         return await axios.patch(url, data, config)
+  //       case 'DELETE':
+  //         return await axios.delete(url, config)
+  //       default:
+  //         throw new Error('No valid request method specified.')
+  //     }
+  //   } catch (error: any) {
+  //     console.error('Failed to make request to the target environment.')
+  //     console.error(error)
+  //   }
+  // }
 
   /**
    * The API endpoint for managing target environments.

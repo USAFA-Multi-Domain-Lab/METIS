@@ -28,6 +28,11 @@
     &.Error {
       color: $color-error-alt;
     }
+
+    .Required {
+      color: $color-error-alt;
+      font-size: 0.95em;
+    }
   }
 
   @mixin fieldDimensions() {
@@ -233,6 +238,7 @@
         .Indicator {
           display: inline-block;
           font-size: 16px;
+          text-align: end;
         }
 
         .Text {
@@ -253,14 +259,10 @@
         .Option {
           cursor: pointer;
           user-select: none;
-          padding: 5px 0 5px;
+          padding: 6px 0;
 
           &:first-child {
-            padding: 0;
-          }
-
-          &:nth-child(2) {
-            margin: 20px 0 0;
+            margin: 10px 0 0;
           }
         }
       }

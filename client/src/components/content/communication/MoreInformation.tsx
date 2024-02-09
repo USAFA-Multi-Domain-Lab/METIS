@@ -29,8 +29,8 @@ export default class MoreInformation extends React.Component<Props, State> {
       <div className='MoreInformation'>
         <div className='circle'>
           <div className='question-mark'>?</div>
+          <Tooltip description={tooltipDescription} />
         </div>
-        <Tooltip description={tooltipDescription} />
       </div>
     )
   }

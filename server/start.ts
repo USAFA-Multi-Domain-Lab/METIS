@@ -6,7 +6,10 @@ import routerMap_users from 'metis/server/api/v1/users'
 import routerMap_missions from 'metis/server/api/v1/missions'
 import routerMap_games from 'metis/server/api/v1/games'
 import routerMap_tests from 'metis/server/tests/api/v1/routes-test'
+import routerMap_targetEnvironments from 'metis/server/api/v1/target-environments'
 import routerMap_connect from 'metis/server/connect'
+import ServerTargetEnvironment from './target-environments'
+import path from 'path'
 
 let { ENVIRONMENT_FILE_PATH: environmentFilePath } = MetisServer
 let serverOptions: IMetisServerOptions = {}
@@ -37,6 +40,12 @@ if (fs.existsSync(environmentFilePath)) {
 
 console.log('Starting METIS...')
 
+// todo: remove (target-environments)
+// // Get the target environment directory.
+// let targetEnvDir: string = path.join(__dirname, '../integration/target-env')
+// // Fetch all target environments.
+// console.log(ServerTargetEnvironment.scan(targetEnvDir, []))
+
 // Create METIS server.
 export let server: MetisServer = new MetisServer(serverOptions)
 
@@ -46,6 +55,9 @@ server.addRouter(new MetisRouter('/api/v1/users/', routerMap_users))
 server.addRouter(new MetisRouter('/api/v1/missions/', routerMap_missions))
 server.addRouter(new MetisRouter('/api/v1/games/', routerMap_games))
 server.addRouter(new MetisRouter('/api/v1/test/', routerMap_tests))
+server.addRouter(
+  new MetisRouter('/api/v1/target-environments/', routerMap_targetEnvironments),
+)
 server.addRouter(new MetisRouter('/connect', routerMap_connect))
 
 // Start server.

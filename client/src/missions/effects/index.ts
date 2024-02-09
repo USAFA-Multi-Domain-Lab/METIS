@@ -1,11 +1,11 @@
 import { AxiosRequestConfig } from 'axios'
-import ClientMissionAction from '.'
-import { Effect } from '../../../../shared/missions/actions/effects'
+import ClientMissionAction from '../actions'
+import Effect from '../../../../shared/missions/effects'
 import { AnyObject } from '../../../../shared/toolbox/objects'
 // todo: fix https
 // import https from 'https'
 import { ClientTargetEnvironment } from 'src/target-environments'
-import { ClientTarget } from 'src/target-environments/targets'
+import ClientTarget from 'src/target-environments/targets'
 
 // todo: fix https
 // /**
@@ -50,35 +50,36 @@ export class ClientEffect extends Effect<
     }
   }
 
-  /**
-   * Affects the target via the API given the provided arguments.
-   */
-  public execute = async (): Promise<void> => {
-    // Parse arguments into variables.
-    let { entityName, requestPath, requestMethod, requestData } = this.args
-    // URL to which the request will be made.
-    let url: string = `${this.url}/${requestPath}/`
-    // Configuration for the request.
-    let config: AxiosRequestConfig<AnyObject> = {
-      // todo: fix https
-      // httpsAgent: httpsAgent,
-    }
+  // todo: remove (target-environment)
+  // /**
+  //  * Affects the target via the API given the provided arguments.
+  //  */
+  // public execute = async (): Promise<void> => {
+  //   // Parse arguments into variables.
+  //   let { entityName, requestPath, requestMethod, requestData } = this.args
+  //   // URL to which the request will be made.
+  //   let url: string = `${this.url}/${requestPath}/`
+  //   // Configuration for the request.
+  //   let config: AxiosRequestConfig<AnyObject> = {
+  //     // todo: fix https
+  //     // httpsAgent: httpsAgent,
+  //   }
 
-    try {
-      // Makes the request to the API
-      // to affect the entity with the given
-      // method, path, and data.
-      await ClientTargetEnvironment.makeRequest(
-        requestMethod,
-        url,
-        requestData,
-        config,
-      )
-    } catch (error: any) {
-      console.log('Failed to execute effect.')
-      console.log(error)
-    }
-  }
+  //   try {
+  //     // Makes the request to the API
+  //     // to affect the entity with the given
+  //     // method, path, and data.
+  //     await ClientTargetEnvironment.makeRequest(
+  //       requestMethod,
+  //       url,
+  //       requestData,
+  //       config,
+  //     )
+  //   } catch (error: any) {
+  //     console.log('Failed to execute effect.')
+  //     console.log(error)
+  //   }
+  // }
 }
 
 /* ------------------------------ CLIENT EFFECT TYPES ------------------------------ */

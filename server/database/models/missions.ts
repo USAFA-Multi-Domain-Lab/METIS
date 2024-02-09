@@ -1,7 +1,7 @@
 import mongoose, { Schema } from 'mongoose'
 import MetisDatabase from 'metis/server/database'
 import SanitizedHTML from 'metis/server/database/schema-types/html'
-import { TCommonEffectJson } from 'metis/missions/actions/effects'
+import { TCommonEffectJson } from 'metis/missions/effects'
 
 let ObjectId = mongoose.Types.ObjectId
 

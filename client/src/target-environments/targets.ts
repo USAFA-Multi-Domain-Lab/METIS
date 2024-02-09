@@ -1,16 +1,15 @@
 import axios from 'axios'
 import { ClientTargetEnvironment } from '.'
-import {
+import Target, {
   TCommonTarget,
   TCommonTargetJson,
-  Target,
 } from '../../../shared/target-environments/targets'
 
 /**
  * Class representing a target within a target environment
  * on the client-side.
  */
-export class ClientTarget extends Target<ClientTargetEnvironment> {
+export default class ClientTarget extends Target<ClientTargetEnvironment> {
   /**
    * The API endpoint for TargetEnvironment Objects.
    */

@@ -170,8 +170,11 @@ export default function MissionEntry(props: {
             <DetailNumber
               label='Initial Resources'
               initialValue={mission.initialResources}
-              deliverValue={(initialResources: number | null) => {
-                if (initialResources !== null) {
+              deliverValue={(initialResources: number | null | undefined) => {
+                if (
+                  initialResources !== null &&
+                  initialResources !== undefined
+                ) {
                   mission.initialResources = initialResources
                   handleChange()
                 }

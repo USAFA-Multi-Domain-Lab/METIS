@@ -1,9 +1,9 @@
 import MissionNode from 'metis/missions/nodes'
-import ServerMission from '.'
+import ServerMission from '..'
 import { TCommonMissionActionJson } from 'metis/missions/actions'
-import ServerMissionAction from './actions'
-import { ServerRealizedOutcome } from './actions/outcomes'
-import ServerActionExecution from './actions/executions'
+import ServerMissionAction from '../actions'
+import { ServerRealizedOutcome } from '../actions/outcomes'
+import ServerActionExecution from '../actions/executions'
 import { IActionOutcomeJSON } from 'metis/missions/actions/outcomes'
 import { TActionExecutionJSON } from 'metis/missions/actions/executions'
 
@@ -240,5 +240,3 @@ export default class ServerMissionNode extends MissionNode<
     '#331f00',
   ]
 }
-
-/* ------------------------------ SERVER NODE TYPES ------------------------------ */

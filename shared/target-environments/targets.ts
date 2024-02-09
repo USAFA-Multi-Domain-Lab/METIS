@@ -1,10 +1,10 @@
-import axios from 'axios'
-import { TCommonTargetEnvironment, TargetEnvironment } from '.'
+import { AnyObject } from 'metis/toolbox/objects'
+import { TCommonTargetEnvironment } from '.'
 
 /**
  * This is an entity that can be found in a target environment.
  */
-export abstract class Target<
+export default abstract class Target<
   TTargetEnvironment extends TCommonTargetEnvironment,
 > implements TCommonTarget
 {

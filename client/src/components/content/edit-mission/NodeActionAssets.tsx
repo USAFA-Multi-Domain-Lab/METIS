@@ -1,8 +1,9 @@
 import { IScript } from '../../../../../shared/missions/actions'
 import ClientMissionAction from 'src/missions/actions'
 import Tooltip from '../communication/Tooltip'
-import NodeActionAsset from './NodeActionAsset'
+// import NodeActionAsset from './NodeActionAsset'
 import './NodeActionAssets.scss'
+import Effects from './Effects'
 
 // This will render the list of assets
 // that the user previously selected
@@ -36,63 +37,63 @@ export default function NodeActionAssets(props: {
     removeAssetButtonClassName += ' Disabled'
   }
 
-  if (action.scripts.length > 0) {
-    return (
-      <div className='Assets'>
-        <h5 className='AssetInfo'>Asset(s):</h5>
-        <div className='AssetListTitle'>Assets that will be affected:</div>
-        <div className='SelectedAssetListContainer'>
-          {action.scripts.map((script: IScript, index: number) => {
-            let args = Object.values(script.args).join(', ')
+  // if (action.scripts.length > 0) {
+  //   return (
+  //     <div className='Assets'>
+  //       <h5 className='AssetInfo'>Asset(s):</h5>
+  //       <div className='AssetListTitle'>Assets that will be affected:</div>
+  //       <div className='SelectedAssetListContainer'>
+  //         {action.scripts.map((script: IScript, index: number) => {
+  //           let args = Object.values(script.args).join(', ')
 
-            return (
-              <div
-                className='SelectedAssetList'
-                key={`action-${action.actionID}_commandScript-${script}_index-${index}`}
-              >
-                <div className='SelectedAsset'>
-                  {script.label}{' '}
-                  <Tooltip
-                    description={
-                      `* Label: ${script.label}\n` +
-                      `* Description: ${script.description}\n` +
-                      `* Script: ${script.scriptName}(${args})\n` +
-                      `* Orginal asset path: ${script.originalPath}`
-                    }
-                  />
-                </div>
-                <div className='Close'>
-                  <div
-                    className={removeAssetButtonClassName}
-                    onClick={() => removeScript(script)}
-                  >
-                    x
-                    <Tooltip description='Remove asset.' />
-                  </div>
-                </div>
-              </div>
-            )
-          })}
-        </div>
+  //           return (
+  //             <div
+  //               className='SelectedAssetList'
+  //               key={`action-${action.actionID}_commandScript-${script}_index-${index}`}
+  //             >
+  //               <div className='SelectedAsset'>
+  //                 {script.label}{' '}
+  //                 <Tooltip
+  //                   description={
+  //                     `* Label: ${script.label}\n` +
+  //                     `* Description: ${script.description}\n` +
+  //                     `* Script: ${script.scriptName}(${args})\n` +
+  //                     `* Orginal asset path: ${script.originalPath}`
+  //                   }
+  //                 />
+  //               </div>
+  //               <div className='Close'>
+  //                 <div
+  //                   className={removeAssetButtonClassName}
+  //                   onClick={() => removeScript(script)}
+  //                 >
+  //                   x
+  //                   <Tooltip description='Remove asset.' />
+  //                 </div>
+  //               </div>
+  //             </div>
+  //           )
+  //         })}
+  //       </div>
 
-        <NodeActionAsset
-          action={action}
-          isEmptyString={isEmptyString}
-          handleChange={handleChange}
-        />
-      </div>
-    )
-  } else if (action.scripts.length === 0) {
-    return (
-      <div className='Assets'>
-        <NodeActionAsset
-          action={action}
-          isEmptyString={isEmptyString}
-          handleChange={handleChange}
-        />
-      </div>
-    )
-  } else {
-    return null
-  }
+  //       {/* <NodeActionAsset
+  //         action={action}
+  //         isEmptyString={isEmptyString}
+  //         handleChange={handleChange}
+  //       /> */}
+  //     </div>
+  //   )
+  // } else if (action.scripts.length === 0) {
+  //   return (
+  //     <div className='Assets'>
+  //       {/* <NodeActionAsset
+  //         action={action}
+  //         isEmptyString={isEmptyString}
+  //         handleChange={handleChange}
+  //       /> */}
+  //     </div>
+  //   )
+  // } else {
+  return null
+  // }
 }

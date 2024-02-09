@@ -313,8 +313,12 @@ export default function NodeEntry(props: {
             <DetailNumber
               label='Depth Padding'
               initialValue={node.depthPadding}
-              deliverValue={(depthPadding: number | null) => {
-                if (node !== null && depthPadding !== null) {
+              deliverValue={(depthPadding: number | null | undefined) => {
+                if (
+                  node !== null &&
+                  depthPadding !== null &&
+                  depthPadding !== undefined
+                ) {
                   node.depthPadding = depthPadding
                   handleChange()
                 }
@@ -324,9 +328,6 @@ export default function NodeEntry(props: {
             <DetailToggle
               label={'Executable'}
               initialValue={node.executable}
-              errorMessage={
-                'The button above is locked until there are no empty fields.'
-              }
               deliverValue={(executable: boolean) => {
                 if (node !== null) {
                   node.executable = executable
@@ -360,12 +361,15 @@ export default function NodeEntry(props: {
                   ? EToggleLockState.LockedDeactivation
                   : EToggleLockState.Unlocked
               }
+              options={{
+                errorMessage:
+                  'The button above is locked until there are no empty fields.',
+              }}
               key={`${node.nodeID}_executable`}
             />
             <DetailToggle
               label={'Device'}
               initialValue={node.device}
-              errorMessage={toggleErrorMessage}
               lockState={
                 // Locks the toggle if there are empty fields.
                 !isEmptyString && node.executable
@@ -381,6 +385,9 @@ export default function NodeEntry(props: {
                   node.device = device
                   handleChange()
                 }
+              }}
+              options={{
+                errorMessage: toggleErrorMessage,
               }}
               key={`${node.nodeID}_device`}
             />

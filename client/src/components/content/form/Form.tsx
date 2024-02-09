@@ -11,33 +11,9 @@ import { AnyObject } from '../../../../../shared/toolbox/objects'
 import ReactQuill from 'react-quill'
 import 'react-quill/dist/quill.snow.css'
 
-type TInput =
-  | 'button'
-  | 'checkbox'
-  | 'color'
-  | 'date'
-  | 'datetime-local'
-  | 'email'
-  | 'file'
-  | 'hidden'
-  | 'image'
-  | 'month'
-  | 'number'
-  | 'password'
-  | 'radio'
-  | 'range'
-  | 'reset'
-  | 'search'
-  | 'submit'
-  | 'tel'
-  | 'text'
-  | 'time'
-  | 'url'
-  | 'week'
-
 interface IDetail {
   label: string
-  initialValue: string | null
+  initialValue: string | null | undefined
   deliverValue: (value: string) => void
   options?: {
     deliverError?: boolean // defaults to false
@@ -46,6 +22,8 @@ interface IDetail {
     uniqueInputClassName?: string // defaults to ''
     inputType?: TInput // defaults to 'text'
     placeholder?: string // defaults to undefined
+    clearField?: boolean // defaults to false
+    displayRequiredIcon?: boolean // defaults to false
   }
 }
 
@@ -68,6 +46,8 @@ interface IDetail_S {
  * @param options.uniqueInputClassName The unique class name for the input. Defaults to ''.
  * @param options.inputType The type of input to render (i.e., text, password, etc.). Defaults to text.
  * @param options.placeholder The placeholder for the input. Defaults to undefined.
+ * @param options.clearField The boolean that determines if the detail should clear the field. Defaults to false.
+ * @param options.displayRequiredIcon The boolean that determines if the detail should display a required icon. Defaults to false.
  * @returns A JSX Element for the detail.
  */
 export class Detail extends React.Component<IDetail, IDetail_S> {
@@ -86,7 +66,7 @@ export class Detail extends React.Component<IDetail, IDetail_S> {
 
   // inherited
   componentDidMount(): void {
-    let initialValue: string | null = this.props.initialValue
+    let initialValue: string | null | undefined = this.props.initialValue
     let fieldElement: HTMLInputElement | null = this.field.current
 
     if (initialValue && fieldElement) {
@@ -123,13 +103,22 @@ export class Detail extends React.Component<IDetail, IDetail_S> {
     let inputTypePassed: string = this.props.options?.inputType
       ? this.props.options.inputType
       : 'text'
-    let placeholder: string | undefined = this.props.options?.placeholder
+    let placeholder: string | undefined =
+      this.props.options?.placeholder || 'Enter text...'
+    let clearField: boolean = this.props.options?.clearField || false
+    let displayRequiredIcon: boolean =
+      this.props.options?.displayRequiredIcon || false
+
+    /* -- PRE-RENDER PROCESSING -- */
+
+    // Default class names
     let fieldErrorClassName: string = 'FieldErrorMessage hide'
     let labelClassName: string = 'Label'
     let fieldClassName: string = 'Field FieldBox'
     let inputContainerClassName: string = 'InputContainer'
     let togglePasswordContainerClassName: string =
       'TogglePasswordDisplayContainer Hidden'
+    let requiredIconClassName: string = 'Required'
 
     if (displayError) {
       fieldClassName += ' Error'
@@ -142,11 +131,29 @@ export class Detail extends React.Component<IDetail, IDetail_S> {
       inputContainerClassName += ' Password'
     }
 
+    // If a boolean that is equivalent
+    // to true is passed, then the
+    // field will be cleared, or reset.
+    if (clearField && this.field.current) {
+      this.field.current.value = ''
+    }
+
+    // If a boolean that is equivalent
+    // to true is passed, then the
+    // field will display a required
+    // icon.
+    if (displayRequiredIcon === undefined || !displayRequiredIcon) {
+      requiredIconClassName += ' Hidden'
+    }
+
+    /* -- RENDER -- */
+
     return (
       <div className='Detail'>
-        <div
-          className={labelClassName + ' ' + uniqueLabelClassName}
-        >{`${label}:`}</div>
+        <div className={labelClassName + ' ' + uniqueLabelClassName}>
+          {`${label}`}
+          <sup className={requiredIconClassName}> *</sup>
+        </div>
         <div className={inputContainerClassName}>
           <input
             className={fieldClassName + ' ' + uniqueInputClassName}
@@ -192,38 +199,54 @@ export class Detail extends React.Component<IDetail, IDetail_S> {
  * @param options.maximum The maximum value allowed for the detail. Defaults to null.
  * @param options.integersOnly The boolean that determines if the detail should only allow integers. Defaults to false.
  * @param options.unit The unit to display after the detail. Defaults to ''.
+ * @param options.placeholder The placeholder for the input. Defaults to 'Enter a number...'.
+ * @param options.emptyValueAllowed The boolean that determines if the detail should allow empty values. Defaults to false.
+ * @param options.clearField The boolean that determines if the detail should clear the field. Defaults to false.
+ * @param options.uniqueLabelClassName The unique class name for the label. Defaults to ''.
+ * @param options.displayRequiredIcon The boolean that determines if the detail should display a required icon. Defaults to false.
  * @returns A JSX Element for the detail.
  */
 export function DetailNumber(props: {
   label: string
-  initialValue: number
-  deliverValue: (value: number | null) => void
+  initialValue: number | null | undefined
+  deliverValue: (value: number | null | undefined) => void
   options?: {
     minimum?: number // default null
     maximum?: number // default null
     integersOnly?: boolean // default false
     unit?: string // default ''
+    placeholder?: string // default 'Enter a number...'
+    emptyValueAllowed?: boolean // default false
+    clearField?: boolean // default false
+    uniqueLabelClassName?: string // default ''
+    displayRequiredIcon?: boolean // default false
   }
 }): JSX.Element | null {
   const field = useRef<HTMLInputElement>(null)
   const [mountHandled, setMountHandled] = useState<boolean>(false)
 
   let label: string = props.label
-  let initialValue: number = props.initialValue
+  let initialValue: number | null | undefined = props.initialValue
   let minimum: number | null =
     props.options?.minimum !== undefined ? props.options.minimum : null
   let maximum: number | null =
     props.options?.maximum !== undefined ? props.options.maximum : null
   let integersOnly: boolean = props.options?.integersOnly || false
   let unit: string = props.options?.unit || ''
+  let placeholder: string = props.options?.placeholder || 'Enter a number...'
+  let emptyValueAllowed: boolean = props.options?.emptyValueAllowed || false
+  let clearField: boolean = props.options?.clearField || false
+  let uniqueLabelClassName: string = props.options?.uniqueLabelClassName || ''
+  let displayRequiredIcon: boolean = props.options?.displayRequiredIcon || false
   let deliverValue = props.deliverValue
 
+  /* -- COMPONENT EFFECTS -- */
   // Equivalent of componentDidMount.
   useEffect(() => {
     if (!mountHandled) {
       let fieldElement: HTMLInputElement | null = field.current
 
-      if (fieldElement) {
+      if (fieldElement && initialValue) {
         fieldElement.value = `${initialValue}`
       }
 
@@ -231,15 +254,40 @@ export function DetailNumber(props: {
     }
   }, [mountHandled])
 
-  // render
+  /* -- PRE-RENDER PROCESSING -- */
+
+  // Default class names
+  let labelClassName: string = 'Label'
+  let requiredIconClassName: string = 'Required'
+
+  // If a boolean that is equivalent
+  // to true is passed, then the
+  // field will be cleared, or reset.
+  if (clearField && field.current) {
+    field.current.value = ''
+  }
+
+  // If a boolean that is equivalent
+  // to true is passed, then the
+  // field will display a required
+  // icon.
+  if (displayRequiredIcon === undefined || !displayRequiredIcon) {
+    requiredIconClassName += ' Hidden'
+  }
+
+  /* -- RENDER -- */
   return (
     <div className='Detail DetailNumber'>
-      <div className='Label'>{`${label}:`}</div>
+      <div className={labelClassName + ' ' + uniqueLabelClassName}>
+        {`${label}`}
+        <sup className={requiredIconClassName}> *</sup>
+      </div>
       <div className='Unit'>{unit}</div>
       <input
         className='Field'
         type='text'
         ref={field}
+        placeholder={placeholder}
         onKeyDown={(event: React.KeyboardEvent<HTMLInputElement>) => {
           inputs.enforceNumbericCharsOnly(event)
           if (integersOnly) {
@@ -267,7 +315,7 @@ export function DetailNumber(props: {
         }}
         onBlur={(event: React.FocusEvent) => {
           let target: HTMLInputElement = event.target as HTMLInputElement
-          let value: number | null
+          let value: number | null | undefined
 
           value = parseInt(target.value)
           value = isNaN(value) ? null : value
@@ -282,9 +330,10 @@ export function DetailNumber(props: {
             }
           }
 
-          target.value = `${value}`
-
-          deliverValue(value)
+          if (!emptyValueAllowed) {
+            target.value = `${value}`
+            deliverValue(value)
+          }
         }}
       />
     </div>
@@ -307,11 +356,13 @@ export function DetailNumber(props: {
  * @param options.placeholder The placeholder for the input. Defaults to undefined.
  * @param options.emptyStringAllowed The boolean that determines if the detail should allow empty strings. Defaults to false.
  * @param options.elementBoundary The element boundary for the detail. Defaults to undefined.
+ * @param options.clearField The boolean that determines if the detail should clear the field. Defaults to false.
+ * @param options.displayRequiredIcon The boolean that determines if the detail should display a required icon. Defaults to false.
  * @returns A JSX Element for the detail.
  */
 export function DetailBox(props: {
   label: string
-  initialValue: string
+  initialValue: string | undefined
   deliverValue: (value: string) => void
   options?: {
     disabled?: boolean // default false
@@ -320,10 +371,12 @@ export function DetailBox(props: {
     placeholder?: string
     emptyStringAllowed?: boolean // default false
     elementBoundary?: string
+    clearField?: boolean // default false
+    displayRequiredIcon?: boolean // default false
   }
 }): JSX.Element | null {
   let label: string = props.label
-  let initialValue: string = props.initialValue
+  let initialValue: string | undefined = props.initialValue
   let uniqueLabelClassName: string = props.options?.uniqueLabelClassName
     ? props.options.uniqueLabelClassName
     : ''
@@ -335,17 +388,33 @@ export function DetailBox(props: {
     props.options?.placeholder || 'Enter text here...'
   let emptyStringAllowed: boolean = props.options?.emptyStringAllowed || false
   let elementBoundary: string | undefined = props.options?.elementBoundary
+  let clearField: boolean = props.options?.clearField || false
+  let displayRequiredIcon: boolean = props.options?.displayRequiredIcon || false
   let deliverValue = props.deliverValue
+
+  /* -- COMPONENT STATE -- */
+  const [isEmptyString, setIsEmptyString] = useState<boolean>(false)
+  const [_, setValue] = useState<string>('')
+
+  /* -- COMPONENT EFFECTS -- */
+  useEffect(() => {
+    // If a boolean that is equivalent
+    // to true is passed, then the
+    // field will be cleared, or reset.
+    if (clearField) {
+      setValue('')
+      deliverValue('')
+    }
+  }, [clearField])
+
+  /* -- PRE-RENDER PROCESSING -- */
+
+  // Default class names
   let className: string = 'Detail DetailBox'
   let fieldClassName: string = 'Field FieldBox'
   let labelClassName: string = 'Label'
   let fieldErrorClassName: string = 'FieldErrorMessage hide'
-
-  /* -- COMPONENT STATE -- */
-  const [isEmptyString, setIsEmptyString] = useState<boolean>(false)
-  const [value, setValue] = useState<string>('')
-
-  /* -- RENDER -- */
+  let requiredIconClassName: string = 'Required'
 
   const reactQuillModules = {
     toolbar: {
@@ -375,11 +444,22 @@ export function DetailBox(props: {
     labelClassName = 'Label'
   }
 
+  // If a boolean that is equivalent
+  // to true is passed, then the
+  // field will display a required
+  // icon.
+  if (displayRequiredIcon === undefined || !displayRequiredIcon) {
+    requiredIconClassName += ' Hidden'
+  }
+
+  /* -- RENDER -- */
+
   return (
     <div className={className}>
-      <div
-        className={labelClassName + ' ' + uniqueLabelClassName}
-      >{`${label}:`}</div>
+      <div className={labelClassName + ' ' + uniqueLabelClassName}>
+        {`${label}`}
+        <sup className={requiredIconClassName}> *</sup>
+      </div>
       <ReactQuill
         bounds={elementBoundary}
         className={fieldClassName + ' ' + uniqueInputClassName}
@@ -392,7 +472,10 @@ export function DetailBox(props: {
           deliverValue(value)
 
           // Equivalent to an empty string.
-          if (value !== '<p><br></p>') {
+          if (!emptyStringAllowed && value !== '<p><br></p>') {
+            setIsEmptyString(false)
+            setValue(value)
+          } else if (emptyStringAllowed && value === '<p><br></p>') {
             setIsEmptyString(false)
             setValue(value)
           }
@@ -436,11 +519,12 @@ export function DetailBox(props: {
  * @param props.optional.uniqueLabelClassName The unique class name for the label. Defaults to ''.
  * @param props.optional.uniqueFieldClassName The unique class name for the field. Defaults to ''.
  * @param props.optional.uniqueCurrentValueClassName The unique class name for the current value. Defaults to ''.
+ * @param props.optional.clearField The boolean that determines if the detail should clear the field. Defaults to false.
  * @returns A JSX Element for the detail.
  */
 export function DetailDropDown<TOption>(props: {
   label: string
-  options: Array<TOption>
+  options: TOption[]
   currentValue: TOption | null | undefined
   isExpanded: boolean
   uniqueDropDownStyling: AnyObject
@@ -453,13 +537,13 @@ export function DetailDropDown<TOption>(props: {
     uniqueLabelClassName?: string
     uniqueFieldClassName?: string
     uniqueCurrentValueClassName?: string
+    clearField?: boolean
+    displayRequiredIcon?: boolean
   }
 }): JSX.Element | null {
-  const [mountHandled, setMountHandled] = useState<boolean>(false)
-  const [expanded, setExpanded] = useState<boolean>(false)
-
+  /* -- COMPONENT VARIABLES -- */
   let label: string = props.label
-  let options: Array<TOption> = props.options
+  let options: TOption[] = props.options
   let currentValue: TOption | null | undefined = props.currentValue
   let isExpanded: boolean = props.isExpanded
   let uniqueDropDownStyling: AnyObject = props.uniqueDropDownStyling
@@ -477,22 +561,34 @@ export function DetailDropDown<TOption>(props: {
     ?.uniqueCurrentValueClassName
     ? props.optional.uniqueCurrentValueClassName
     : ''
+  let clearField: boolean = props.optional?.clearField || false
+  let displayRequiredIcon: boolean =
+    props.optional?.displayRequiredIcon || false
   let renderOptionClassName = props.renderOptionClassName
   let renderDisplayName = props.renderDisplayName
   let deliverValue = props.deliverValue
+
+  /* -- COMPONENT STATE -- */
+  const [expanded, setExpanded] = useState<boolean>(false)
+
+  /* -- COMPONENT EFFECTS -- */
+  useEffect(() => {
+    if (clearField) {
+      setExpanded(false)
+      currentValue = null
+    }
+  }, [clearField])
+
+  /* -- PRE-RENDER PROCESSING -- */
+
+  // Default class names
   let className: string = `Detail DetailDropDown ${uniqueClassName}`
   let fieldClassName: string = 'Field FieldDropDown'
   let allOptionsClassName: string = 'AllOptions'
   let optionClassName: string = 'Option'
   let labelClassName: string = 'Label'
   let currentValueClassName: string = 'Text'
-
-  // Equivalent of componentDidMount.
-  useEffect(() => {
-    if (!mountHandled) {
-      setMountHandled(true)
-    }
-  }, [mountHandled])
+  let requiredIconClassName: string = 'Required'
 
   if (expanded) {
     fieldClassName += ' IsExpanded'
@@ -501,13 +597,22 @@ export function DetailDropDown<TOption>(props: {
     allOptionsClassName += 'Hidden'
   }
 
+  // If a boolean that is equivalent
+  // to true is passed, then the
+  // field will display a required
+  // icon.
+  if (displayRequiredIcon === undefined || !displayRequiredIcon) {
+    requiredIconClassName += ' Hidden'
+  }
+
+  /* -- RENDER -- */
   if (currentValue) {
-    // render
     return (
       <div className={className} style={uniqueDropDownStyling}>
-        <div
-          className={labelClassName + ' ' + uniqueLabelClassName}
-        >{`${label}:`}</div>
+        <div className={labelClassName + ' ' + uniqueLabelClassName}>
+          {`${label}`}
+          <sup className={requiredIconClassName}> *</sup>
+        </div>
         <div className={fieldClassName + ' ' + uniqueFieldClassName}>
           <div
             className='Option Selected'
@@ -592,23 +697,46 @@ export function DetailDropDown<TOption>(props: {
 }
 
 export interface IDetailToggle_P {
-  // marks the form detail
+  /**
+   * Marks the form detail.
+   */
   label: string
-  // the default value for the input field
+  /**
+   * The default value for the input field.
+   */
   initialValue: boolean
-  // The toggle lock state of the toggle.
-  // (See Toggle.tsx)
+  /**
+   * The toggle lock state of the toggle.
+   * (See Toggle.tsx)
+   */
   lockState: EToggleLockState
-  // the description displayed when hovered over
+  /**
+   * The description displayed when hovered over.
+   */
   tooltipDescription: string
-  // class name to apply to the root element
+  /**
+   * Class name to apply to the root element.
+   */
   uniqueClassName: string
-  // if an error message is needed then this is the
-  // message that will be displayed
-  errorMessage?: string
-  // delivers what the user inputs so that
-  // the parent component can track it
+  /**
+   * Delivers what the user inputs so that
+   * the parent component can track it.
+   * @param value The value to deliver.
+   */
   deliverValue: (value: boolean) => void
+  /**
+   * The options available for the detail.
+   */
+  options?: {
+    /** If an error message is needed then this is the
+     * message that will be displayed
+     */
+    errorMessage?: string
+    /**
+     * Determines if the detail should display a required icon. Defaults to false.
+     */
+    displayRequiredIcon?: boolean
+  }
 }
 
 interface IDetailToggle_S {}
@@ -640,6 +768,16 @@ export class DetailToggle extends React.Component<
 
   componentDidMount(): void {}
 
+  componentDidUpdate(
+    prevProps: Readonly<IDetailToggle_P>,
+    prevState: Readonly<IDetailToggle_S>,
+    snapshot?: any,
+  ): void {
+    if (prevProps.initialValue !== this.props.initialValue) {
+      this.forceUpdate()
+    }
+  }
+
   /* -- functions | render -- */
 
   // inherited
@@ -650,9 +788,16 @@ export class DetailToggle extends React.Component<
     let tooltipDescription: string = this.props.tooltipDescription
     let hideTooltip: boolean = tooltipDescription.length === 0
     let uniqueClassName: string = this.props.uniqueClassName
-    let errorMessage: string | undefined = this.props.errorMessage
+    let errorMessage: string | undefined = this.props.options?.errorMessage
+    let displayRequiredIcon: boolean | undefined =
+      this.props.options?.displayRequiredIcon
+
+    /* -- PRE-RENDER PROCESSING -- */
+
+    // Default class names
     let containerClassName: string = 'Detail DetailToggle'
     let fieldErrorClassName: string = 'FieldErrorMessage hide'
+    let requiredIconClassName: string = 'Required'
 
     if (uniqueClassName.length > 0) {
       containerClassName += ` ${uniqueClassName}`
@@ -667,9 +812,18 @@ export class DetailToggle extends React.Component<
       fieldErrorClassName = 'FieldErrorMessage'
     }
 
+    if (displayRequiredIcon === undefined || !displayRequiredIcon) {
+      requiredIconClassName += ' Hidden'
+    }
+
+    /* -- RENDER -- */
+
     return (
       <div className={containerClassName}>
-        <label className='Label'>{label}</label>
+        <label className='Label'>
+          {label}
+          <sup className={requiredIconClassName}> *</sup>
+        </label>
         <div className='Field'>
           <Toggle
             initiallyActivated={initialValue}
@@ -683,3 +837,32 @@ export class DetailToggle extends React.Component<
     )
   }
 }
+
+/* ---------------------------- TYPES FOR FORMS ---------------------------- */
+
+/**
+ * Input types for the Detail component.
+ */
+type TInput =
+  | 'button'
+  | 'checkbox'
+  | 'color'
+  | 'date'
+  | 'datetime-local'
+  | 'email'
+  | 'file'
+  | 'hidden'
+  | 'image'
+  | 'month'
+  | 'number'
+  | 'password'
+  | 'radio'
+  | 'range'
+  | 'reset'
+  | 'search'
+  | 'submit'
+  | 'tel'
+  | 'text'
+  | 'time'
+  | 'url'
+  | 'week'

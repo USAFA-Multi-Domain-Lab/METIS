@@ -1,8 +1,8 @@
 import ClientMission from '..'
 import MissionAction from '../../../../shared/missions/actions'
-import { TCommonEffectJson } from '../../../../shared/missions/actions/effects'
+import { TCommonEffectJson } from '../../../../shared/missions/effects'
 import ClientMissionNode from '../nodes'
-import { ClientEffect } from './effects'
+import { ClientEffect } from '../effects'
 
 export default class ClientMissionAction extends MissionAction<
   ClientMission,

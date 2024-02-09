@@ -42,17 +42,18 @@ const validate_targetEnvironment_description = (
   return true
 }
 
-/**
- * Validator for targetEnvironment.host.
- * @param {TCommonTargetEnvironmentJson['host']} host The host to validate.
- * @returns {boolean} Whether the host is valid.
- */
-const validate_targetEnvironment_host = (
-  host: TCommonTargetEnvironmentJson['host'],
-): boolean => {
-  // todo: implement validation
-  return true
-}
+// todo: remove (target-environment)
+// /**
+//  * Validator for targetEnvironment.host.
+//  * @param {TCommonTargetEnvironmentJson['host']} host The host to validate.
+//  * @returns {boolean} Whether the host is valid.
+//  */
+// const validate_targetEnvironment_host = (
+//   host: TCommonTargetEnvironmentJson['host'],
+// ): boolean => {
+//   // todo: implement validation
+//   return true
+// }
 
 /* -- SCHEMA -- */
 
@@ -75,11 +76,12 @@ const TargetEnvironmentSchema = new Schema(
       required: true,
       validate: validate_targetEnvironment_description,
     },
-    host: {
-      type: String,
-      required: true,
-      validate: validate_targetEnvironment_host,
-    },
+    // todo: remove (target-environment)
+    // host: {
+    //   type: String,
+    //   required: true,
+    //   validate: validate_targetEnvironment_host,
+    // },
     targets: {
       type: [TargetModel.schema],
       required: true,

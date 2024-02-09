@@ -3,7 +3,7 @@ import { TCommonTarget, TCommonTargetJson } from './targets'
 /**
  * This is the environment in which the target(s) exist.
  */
-export abstract class TargetEnvironment<TTarget extends TCommonTarget>
+export default abstract class TargetEnvironment<TTarget extends TCommonTarget>
   implements TCommonTargetEnvironment
 {
   // Inherited
@@ -15,11 +15,13 @@ export abstract class TargetEnvironment<TTarget extends TCommonTarget>
   // Inherited
   public description: TCommonTargetEnvironment['description']
 
-  // Inherited
-  public host: TCommonTargetEnvironment['host']
+  // todo: remove (target-environment)
+  // // Inherited
+  // public host: TCommonTargetEnvironment['host']
 
-  // Inherited
-  public apiKey: TCommonTargetEnvironment['apiKey']
+  // todo: remove (target-environment)
+  // // Inherited
+  // public apiKey: TCommonTargetEnvironment['apiKey']
 
   // Inherited
   public targets: TTarget[]
@@ -36,7 +38,8 @@ export abstract class TargetEnvironment<TTarget extends TCommonTarget>
     this.name = data.name ?? TargetEnvironment.DEFAULT_PROPERTIES.name
     this.description =
       data.description ?? TargetEnvironment.DEFAULT_PROPERTIES.description
-    this.host = data.host ?? TargetEnvironment.DEFAULT_PROPERTIES.host
+    // todo: remove (target-environment)
+    // this.host = data.host ?? TargetEnvironment.DEFAULT_PROPERTIES.host
     this.targets = this.parseTargets(
       data.targets ?? TargetEnvironment.DEFAULT_PROPERTIES.targets,
     )
@@ -62,7 +65,8 @@ export abstract class TargetEnvironment<TTarget extends TCommonTarget>
       id: this.id,
       name: this.name,
       description: this.description,
-      host: this.host,
+      // todo: remove (target-environment)
+      // host: this.host,
       targets: this.targets.map((target: TCommonTarget) => target.toJson()),
     }
   }
@@ -75,7 +79,8 @@ export abstract class TargetEnvironment<TTarget extends TCommonTarget>
       id: '',
       name: '',
       description: '',
-      host: '',
+      // todo: remove (target-environment)
+      // host: '',
       targets: [],
     }
 }
@@ -113,14 +118,18 @@ export interface TCommonTargetEnvironment {
    * Describes what the target environment is.
    */
   description: string
-  /**
-   * The host of the environment.
-   */
-  host: string
-  /**
-   * The API key for the environment.
-   */
-  apiKey: string | undefined
+
+  // todo: remove (target-environment)
+  // /**
+  //  * The host of the environment.
+  //  */
+  // host: string
+  // todo: remove (target-environment)
+  // /**
+  //  * The API key for the environment.
+  //  */
+  // apiKey: string | undefined
+
   /**
    * The targets in the environment.
    */
@@ -149,10 +158,13 @@ export interface TCommonTargetEnvironmentJson {
    * Describes what the target environment is.
    */
   description: string
-  /**
-   * The host of the environment.
-   */
-  host: string
+
+  // todo: remove (target-environment)
+  // /**
+  //  * The host of the environment.
+  //  */
+  // host: string
+
   /**
    * The JSON representation of the targets in
    * the environment.

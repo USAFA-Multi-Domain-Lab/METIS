@@ -2,7 +2,7 @@ import { AnyObject } from 'metis/toolbox/objects'
 import { v4 as generateHash } from 'uuid'
 import { TCommonMissionNode } from '../nodes'
 import { TCommonMission } from '..'
-import { TCommonEffect, TCommonEffectJson } from '../actions/effects'
+import { TCommonEffect, TCommonEffectJson } from '../effects'
 
 /**
  * An action that can be executed on a mission node, causing a certain effect.

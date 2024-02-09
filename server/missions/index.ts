@@ -64,5 +64,3 @@ export default class ServerMission extends Mission<ServerMissionNode> {
     return node
   }
 }
-
-/* ------------------------------ SERVER MISSION TYPES ------------------------------ */

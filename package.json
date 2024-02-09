@@ -2,7 +2,6 @@
   "name": "metis",
   "version": "2.0.0",
   "private": true,
-  "dependencies": {},
   "scripts": {},
   "prettier": {
     "tabWidth": 2,

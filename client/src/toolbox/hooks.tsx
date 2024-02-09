@@ -1,7 +1,7 @@
 import React from 'react'
 import { useCallback, useEffect, useState } from 'react'
 import { TMetisSession } from '../../../shared/sessions'
-import { useGlobalContext } from '../context'
+import { TGlobalContext, useGlobalContext } from '../context'
 import ClientUser from 'src/users'
 
 /**
@@ -30,9 +30,11 @@ export function useMountHandler(
 /**
  * Requires that a session be present in the application state. If no session is present, the user will be redirected to the AuthPage.
  */
-export function useRequireSession(): [TMetisSession<ClientUser>] {
+export function useRequireSession(): [NonNullable<TMetisSession<ClientUser>>] {
   const globalContext = useGlobalContext()
   const [session] = globalContext.session
+  // todo: remove (require session)
+  // const session = null
   const { goToPage } = globalContext.actions
 
   useEffect(() => {
@@ -44,9 +46,48 @@ export function useRequireSession(): [TMetisSession<ClientUser>] {
     }
   }, [session === null])
 
+  if (session === null) {
+    throw new SessionRequiredError()
+  }
+
   // Return session.
   return [session]
 }
+
+// todo: remove (require session)
+// /**
+//  * This is a wrapper for a component that requires a session to be present in the application state.
+//  * @param component The child component to render if a session is present.
+//  * @param options.redirect If true, the user will be redirected to the AuthPage if no session is present.
+//  */
+// export function ComponentRequiresSession<TProps extends {}>(
+//   component: (
+//     props: TProps,
+//     session: NonNullable<TMetisSession<ClientUser>>,
+//   ) => JSX.Element | null,
+//   options?: { redirect?: boolean },
+// ): (props: TProps) => JSX.Element | null {
+//   return (props: TProps): JSX.Element | null => {
+//     const globalContext = useGlobalContext()
+//     const [session] = globalContext.session
+//     const { goToPage } = globalContext.actions
+
+//     useEffect(() => {
+//       if (session === null && options?.redirect) {
+//         goToPage('AuthPage', {
+//           returningPagePath: 'HomePage',
+//           returningPageProps: {},
+//         })
+//       }
+//     }, [session === null])
+
+//     if (session === null) {
+//       return null
+//     } else {
+//       return component(props, session)
+//     }
+//   }
+// }
 
 /**
  * Takes in a components props and an object defining default props. If any property of default props is undefined for the corresponding value in props, the default value will be assigned in props.
@@ -116,4 +157,14 @@ export function useListComponent<
     ),
     [Component, propsList, keyFrom],
   )
+}
+
+/**
+ * Error that is thrown when the `useRequireSession` hook is used
+ * and no session is present.
+ */
+export class SessionRequiredError extends Error {
+  constructor() {
+    super('Session is required.')
+  }
 }

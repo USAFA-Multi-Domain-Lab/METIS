@@ -8,8 +8,6 @@ npm-debug.log*
 /coverage
 /.nyc_output
 /.nyc_output/processinfo
-/env-packages
-/metis-env-library
 
 # react
 /client/build
@@ -24,6 +22,9 @@ npm-debug.log*
 environment.json
 environment-test.json
 .vscode
+/integration/target-env/**
+!/integration/target-env/.gitkeep
+/integration/library/node_modules
 
 # log
 /server/logs

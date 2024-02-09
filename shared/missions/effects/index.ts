@@ -1,20 +1,19 @@
-import {
+import Target, {
   TCommonTarget,
   TCommonTargetJson,
-  Target,
 } from '../../target-environments/targets'
 import {
   RequestMethod,
   TCommonTargetEnvironment,
 } from '../../target-environments'
 import { AnyObject } from '../../toolbox/objects'
-import { TCommonMissionAction } from '.'
+import { TCommonMissionAction } from '../actions'
 import { TAjaxStatus } from '../../toolbox/ajax'
 
 /**
  * An effect that can be applied to a target.
  */
-export abstract class Effect<
+export default abstract class Effect<
   TMissionAction extends TCommonMissionAction,
   TTargetEnvironment extends TCommonTargetEnvironment,
 > implements TCommonEffect
@@ -90,13 +89,14 @@ export abstract class Effect<
     this._targetAjaxStatus = 'NotLoaded'
   }
 
-  /**
-   * The URL of the target.
-   * @returns {string} The URL of the target.
-   */
-  public get url(): string {
-    return this.target.targetEnvironment.host
-  }
+  // todo: remove (target-environment)
+  // /**
+  //  * The URL of the target.
+  //  * @returns {string} The URL of the target.
+  //  */
+  // public get url(): string {
+  //   return this.target.targetEnvironment.host
+  // }
 
   /**
    * Creates a new Effect Object.

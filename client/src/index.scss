@@ -98,13 +98,14 @@ code {
   top: 0px;
   display: grid;
   justify-content: end;
-  width: 100%;
-  padding: 10px 0 20px;
+  width: calc(100% - 20px);
+  padding: 15px 0 20px;
   background: linear-gradient(
     $background-alt8 0%,
     $background-alt8 80%,
     transparent 100%
   );
+  z-index: 2;
 
   .CloseButton {
     position: relative;

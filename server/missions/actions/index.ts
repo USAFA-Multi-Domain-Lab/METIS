@@ -7,8 +7,8 @@ import IActionExecution, {
   TActionExecutionJSON,
 } from 'metis/missions/actions/executions'
 import ServerActionExecution from './executions'
-import { TCommonEffectJson } from 'metis/missions/actions/effects'
-import { ServerEffect } from './effects'
+import { TCommonEffectJson } from 'metis/missions/effects'
+import ServerEffect from '../effects'
 
 /**
  * Class for managing mission actions on the server.
