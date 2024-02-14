@@ -166,6 +166,10 @@
 
           &.ql-blank::before {
             color: $color-main;
+            opacity: 0.775;
+            font-style: normal;
+            font-family: 'monospace', sans-serif;
+            font-size: 14px;
           }
         }
 

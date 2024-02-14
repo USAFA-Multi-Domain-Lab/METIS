@@ -142,7 +142,6 @@ export default function NodeActionDetails(props: {
           </div>
           <NodeActionEntry
             action={Array.from(node.actions.values())[displayedAction]}
-            isEmptyString={isEmptyString}
             displayedAction={displayedAction}
             setDisplayedAction={setDisplayedAction}
             actionEmptyStringArray={actionEmptyStringArray}

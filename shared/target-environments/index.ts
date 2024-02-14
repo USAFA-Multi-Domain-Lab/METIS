@@ -15,14 +15,6 @@ export default abstract class TargetEnvironment<TTarget extends TCommonTarget>
   // Inherited
   public description: TCommonTargetEnvironment['description']
 
-  // todo: remove (target-environment)
-  // // Inherited
-  // public host: TCommonTargetEnvironment['host']
-
-  // todo: remove (target-environment)
-  // // Inherited
-  // public apiKey: TCommonTargetEnvironment['apiKey']
-
   // Inherited
   public targets: TTarget[]
 
@@ -38,8 +30,6 @@ export default abstract class TargetEnvironment<TTarget extends TCommonTarget>
     this.name = data.name ?? TargetEnvironment.DEFAULT_PROPERTIES.name
     this.description =
       data.description ?? TargetEnvironment.DEFAULT_PROPERTIES.description
-    // todo: remove (target-environment)
-    // this.host = data.host ?? TargetEnvironment.DEFAULT_PROPERTIES.host
     this.targets = this.parseTargets(
       data.targets ?? TargetEnvironment.DEFAULT_PROPERTIES.targets,
     )
@@ -65,8 +55,6 @@ export default abstract class TargetEnvironment<TTarget extends TCommonTarget>
       id: this.id,
       name: this.name,
       description: this.description,
-      // todo: remove (target-environment)
-      // host: this.host,
       targets: this.targets.map((target: TCommonTarget) => target.toJson()),
     }
   }
@@ -79,18 +67,11 @@ export default abstract class TargetEnvironment<TTarget extends TCommonTarget>
       id: '',
       name: '',
       description: '',
-      // todo: remove (target-environment)
-      // host: '',
       targets: [],
     }
 }
 
 /* ------------------------------ TARGET ENVIRONMENT TYPES ------------------------------ */
-
-/**
- * The available request methods for the effects API.
- */
-export type RequestMethod = 'POST' | 'GET' | 'PUT' | 'PATCH' | 'DELETE'
 
 /**
  * Options for creating a new TargetEnvironment object.
@@ -118,18 +99,6 @@ export interface TCommonTargetEnvironment {
    * Describes what the target environment is.
    */
   description: string
-
-  // todo: remove (target-environment)
-  // /**
-  //  * The host of the environment.
-  //  */
-  // host: string
-  // todo: remove (target-environment)
-  // /**
-  //  * The API key for the environment.
-  //  */
-  // apiKey: string | undefined
-
   /**
    * The targets in the environment.
    */
@@ -158,13 +127,6 @@ export interface TCommonTargetEnvironmentJson {
    * Describes what the target environment is.
    */
   description: string
-
-  // todo: remove (target-environment)
-  // /**
-  //  * The host of the environment.
-  //  */
-  // host: string
-
   /**
    * The JSON representation of the targets in
    * the environment.

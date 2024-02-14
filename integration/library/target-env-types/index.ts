@@ -113,7 +113,7 @@ type TTargetDropdownArg = {
    * The default value for the argument.
    * @default { id: 'default', name: 'Select an option' }
    */
-  default?: Array<{
+  default?: {
     /**
      * The ID of the option.
      */
@@ -122,7 +122,7 @@ type TTargetDropdownArg = {
      * The option's name. This is displayed to the user.
      */
     name: string
-  }>
+  }
 }
 
 /**

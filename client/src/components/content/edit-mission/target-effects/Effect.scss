@@ -1,0 +1,26 @@
+@import 'src/assets/styles/config.scss';
+
+.Effect {
+  h3 {
+    text-align: center;
+  }
+
+  .Submit {
+    margin: 20px 8% 0;
+    scale: 0.9;
+  }
+
+  .EffectNameContainer,
+  .EffectDescriptionContainer {
+    display: grid;
+    align-items: center;
+    grid-template-columns: auto 60px;
+    width: 84%;
+    margin: 10px 8%;
+
+    .EffectName,
+    .EffectDescription {
+      font-size: 0.9em;
+    }
+  }
+}

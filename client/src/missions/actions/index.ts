@@ -4,6 +4,9 @@ import { TCommonEffectJson } from '../../../../shared/missions/effects'
 import ClientMissionNode from '../nodes'
 import { ClientEffect } from '../effects'
 
+/**
+ * Class representing a mission action on the client-side.
+ */
 export default class ClientMissionAction extends MissionAction<
   ClientMission,
   ClientMissionNode,

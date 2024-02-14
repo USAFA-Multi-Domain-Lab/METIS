@@ -1,0 +1,28 @@
+@import 'src/assets/styles/config.scss';
+
+.Grouping {
+  margin: 20px 0 0;
+  padding: 0 0 30px;
+  border: 2px solid $color-main;
+
+  .Detail {
+    min-width: calc(205px - 16%);
+
+    &.DetailToggle {
+      display: grid;
+      align-items: center;
+      grid-template-columns: auto 60px;
+      margin-top: 30px;
+
+      .Label {
+        margin: 0;
+      }
+
+      .Field {
+        border: none;
+        padding: 0;
+        margin: 0 0 0 15px;
+      }
+    }
+  }
+}

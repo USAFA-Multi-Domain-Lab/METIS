@@ -2,10 +2,7 @@ import Target, {
   TCommonTarget,
   TCommonTargetJson,
 } from '../../target-environments/targets'
-import {
-  RequestMethod,
-  TCommonTargetEnvironment,
-} from '../../target-environments'
+import { TCommonTargetEnvironment } from '../../target-environments'
 import { AnyObject } from '../../toolbox/objects'
 import { TCommonMissionAction } from '../actions'
 import { TAjaxStatus } from '../../toolbox/ajax'
@@ -89,15 +86,6 @@ export default abstract class Effect<
     this._targetAjaxStatus = 'NotLoaded'
   }
 
-  // todo: remove (target-environment)
-  // /**
-  //  * The URL of the target.
-  //  * @returns {string} The URL of the target.
-  //  */
-  // public get url(): string {
-  //   return this.target.targetEnvironment.host
-  // }
-
   /**
    * Creates a new Effect Object.
    * @param {TMissionAction} action The action to which the effect belongs.
@@ -156,12 +144,7 @@ export default abstract class Effect<
     name: '',
     description: '',
     targetId: Target.DEFAULT_PROPERTIES.id,
-    args: {
-      entityName: '',
-      requestPath: '',
-      requestMethod: 'GET',
-      requestData: {},
-    },
+    args: {},
   }
 }
 
@@ -204,7 +187,7 @@ export interface TCommonEffect {
   /**
    * The arguments used to affect an entity via the effects API.
    */
-  args: TEffectArgs
+  args: AnyObject
   /**
    * Converts the Effect Object to JSON.
    */
@@ -234,27 +217,5 @@ export interface TCommonEffectJson {
   /**
    * The arguments used to affect an entity via the effects API.
    */
-  args: TEffectArgs
-}
-
-/**
- * The arguments used to affect an entity in the effects API.
- */
-export type TEffectArgs = {
-  /**
-   * The name of the entity to affect.
-   */
-  entityName: string
-  /**
-   * The path to the entity to affect.
-   */
-  requestPath: string
-  /**
-   * The request method to use.
-   */
-  requestMethod: RequestMethod
-  /**
-   * The data to send with the request.
-   */
-  requestData: AnyObject
+  args: AnyObject
 }

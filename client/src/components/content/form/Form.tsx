@@ -151,7 +151,7 @@ export class Detail extends React.Component<IDetail, IDetail_S> {
     return (
       <div className='Detail'>
         <div className={labelClassName + ' ' + uniqueLabelClassName}>
-          {`${label}`}
+          {`${label}:`}
           <sup className={requiredIconClassName}> *</sup>
         </div>
         <div className={inputContainerClassName}>
@@ -279,7 +279,7 @@ export function DetailNumber(props: {
   return (
     <div className='Detail DetailNumber'>
       <div className={labelClassName + ' ' + uniqueLabelClassName}>
-        {`${label}`}
+        {`${label}:`}
         <sup className={requiredIconClassName}> *</sup>
       </div>
       <div className='Unit'>{unit}</div>
@@ -394,7 +394,6 @@ export function DetailBox(props: {
 
   /* -- COMPONENT STATE -- */
   const [isEmptyString, setIsEmptyString] = useState<boolean>(false)
-  const [_, setValue] = useState<string>('')
 
   /* -- COMPONENT EFFECTS -- */
   useEffect(() => {
@@ -402,7 +401,6 @@ export function DetailBox(props: {
     // to true is passed, then the
     // field will be cleared, or reset.
     if (clearField) {
-      setValue('')
       deliverValue('')
     }
   }, [clearField])
@@ -457,7 +455,7 @@ export function DetailBox(props: {
   return (
     <div className={className}>
       <div className={labelClassName + ' ' + uniqueLabelClassName}>
-        {`${label}`}
+        {`${label}:`}
         <sup className={requiredIconClassName}> *</sup>
       </div>
       <ReactQuill
@@ -474,10 +472,8 @@ export function DetailBox(props: {
           // Equivalent to an empty string.
           if (!emptyStringAllowed && value !== '<p><br></p>') {
             setIsEmptyString(false)
-            setValue(value)
-          } else if (emptyStringAllowed && value === '<p><br></p>') {
-            setIsEmptyString(false)
-            setValue(value)
+          } else if (!emptyStringAllowed && value === '<p><br></p>') {
+            setIsEmptyString(true)
           }
         }}
         onBlur={(
@@ -610,7 +606,7 @@ export function DetailDropDown<TOption>(props: {
     return (
       <div className={className} style={uniqueDropDownStyling}>
         <div className={labelClassName + ' ' + uniqueLabelClassName}>
-          {`${label}`}
+          {`${label}:`}
           <sup className={requiredIconClassName}> *</sup>
         </div>
         <div className={fieldClassName + ' ' + uniqueFieldClassName}>

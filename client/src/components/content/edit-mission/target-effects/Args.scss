@@ -1,0 +1,17 @@
+@import 'src/assets/styles/config.scss';
+
+.Args {
+  display: grid;
+  align-items: center;
+  width: 100%;
+
+  .ArgsForm {
+    margin: 20px 8% 0;
+
+    .ListTitle {
+      margin: 15px 0 20px;
+      font-weight: bold;
+      text-decoration: underline;
+    }
+  }
+}
