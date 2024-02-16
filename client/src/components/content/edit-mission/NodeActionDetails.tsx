@@ -4,70 +4,83 @@ import { ButtonSVG, EButtonSVGPurpose } from '../user-controls/ButtonSVG'
 import NodeActionEntry from './NodeActionEntry'
 import './NodeActionDetails.scss'
 import { useGlobalContext } from 'src/context'
+import { compute } from 'src/toolbox'
 
 /**
  * This will render the details of the action(s) available to a node.
  */
-export default function NodeActionDetails(props: {
-  /**
-   * The mission-node to be edited.
-   */
-  node: ClientMissionNode
-  /**
-   * A boolean that will be used to determine if the
-   * field has been left empty.
-   */
-  isEmptyString: boolean
-  /**
-   * The current action being displayed. This is used for
-   * pagination purposes.
-   */
-  displayedAction: number
-  /**
-   * An array that will be used to determine if a
-   * field has been left empty.
-   */
-  actionEmptyStringArray: string[]
-  /**
-   * A function that will be used to set the state of
-   * the actionEmptyStringArray.
-   */
-  setActionEmptyStringArray: (actionEmptyStringArray: string[]) => void
-  /**
-   * A function that will be used to update the
-   * action that is being displayed.
-   */
-  setDisplayedAction: (displayedAction: number) => void
-  /**
-   * Remounts the component.
-   */
-  remount: () => void
-  /**
-   * A function that will be used to notify the parent
-   * component that this component has changed.
-   */
-  handleChange: () => void
-}): JSX.Element | null {
-  let node: ClientMissionNode = props.node
-  let isEmptyString: boolean = props.isEmptyString
-  let displayedAction: number = props.displayedAction
-  let actionEmptyStringArray: string[] = props.actionEmptyStringArray
-  let setActionEmptyStringArray = props.setActionEmptyStringArray
-  let setDisplayedAction = props.setDisplayedAction
-  let remount = props.remount
-  let handleChange = props.handleChange
-  let totalActions: number | undefined = node.actions.size
-  let actionKey: string = ''
-  let addNewActionClassName: string = 'Action add'
-  let selectorContainerClassName: string = 'SelectorContainer'
+export default function NodeActionDetails(
+  props: TNodeActionDetails,
+): JSX.Element | null {
+  /* -- PROPS -- */
+  const {
+    node,
+    isEmptyString,
+    displayedAction,
+    actionEmptyStringArray,
+    setActionEmptyStringArray,
+    setDisplayedAction,
+    remount,
+    handleChange,
+  } = props
 
   /* -- GLOBAL CONTEXT -- */
-
   const globalContext = useGlobalContext()
   const { notify } = globalContext.actions
 
-  /* -- COMPONENT FUNCTIONS -- */
+  /* -- COMPUTED -- */
 
+  /**
+   * The total number of actions available to the node.
+   */
+  const totalActions: number | undefined = compute(() => {
+    return node.actions.size
+  })
+  /**
+   * The key for the action that is being displayed.
+   */
+  const actionKey: string = compute(() => {
+    // Default value.
+    let actionKey: string = ''
+
+    // Logic that hides the buttons that select which action is being
+    // displayed because there is 1 action or less for the selected node.
+    if (node.actions.size <= 1) {
+      actionKey = 'no_action_id_to_choose_from'
+    }
+
+    // Logic that keeps the app from crashing by making the key for the
+    // individual action that is being displayed under the action(s) section
+    // change dynamically.
+    if (node.actions.size > 1) {
+      actionKey = Array.from(node.actions.keys())[displayedAction]
+    }
+
+    // Return the key.
+    return actionKey
+  })
+  /**
+   * The class name for the selector container.
+   */
+  const selectorContainerClassName: string = compute(() => {
+    // Create a default list of class names.
+    let classList: string[] = ['SelectorContainer']
+
+    // Logic that hides the buttons that select which action is being
+    // displayed because there is 1 action or less for the selected node.
+    if (node.actions.size <= 1) {
+      classList.push('Hidden')
+    }
+
+    // Combine the class names into a single string.
+    return classList.join(' ')
+  })
+
+  /* -- FUNCTIONS -- */
+
+  /**
+   * Display the next action in the list of actions.
+   */
   const displayNextAction = () => {
     if (node.actions !== undefined) {
       let lastAction: number = node.actions.size - 1
@@ -90,6 +103,9 @@ export default function NodeActionDetails(props: {
     }
   }
 
+  /**
+   * Display the previous action in the list of actions.
+   */
   const displayPreviousAction = () => {
     if (!isEmptyString) {
       if (displayedAction === 0 && node.actions !== undefined) {
@@ -107,22 +123,6 @@ export default function NodeActionDetails(props: {
   }
 
   /* -- RENDER -- */
-
-  // Logic that hides the buttons that select which action is being
-  // displayed because there is 1 action or less for the selected node.
-  if (node.actions.size <= 1) {
-    actionKey = 'no_action_id_to_choose_from'
-    selectorContainerClassName += ' Hidden'
-  }
-
-  // Logic that keeps the app from crashing by making the key for the
-  // individual action that is being displayed under the action(s) section
-  // change dynamically.
-  if (node.actions.size > 1) {
-    actionKey = Array.from(node.actions.keys())[displayedAction]
-  } else if (node.actions.size <= 0) {
-    actionKey = 'no_action_id_to_choose_from'
-  }
 
   if (node.executable) {
     return (
@@ -173,7 +173,7 @@ export default function NodeActionDetails(props: {
               }
             }}
             tooltipDescription={'Add a new action to this node.'}
-            uniqueClassName={addNewActionClassName}
+            uniqueClassName={'Action add'}
           />
         </div>
       </>
@@ -181,4 +181,50 @@ export default function NodeActionDetails(props: {
   } else {
     return null
   }
+}
+
+/* ---------------------------- TYPES FOR NODE ACTION DETAILS ---------------------------- */
+
+/**
+ * Props for NodeActionDetails component.
+ */
+export type TNodeActionDetails = {
+  /**
+   * The mission-node to be edited.
+   */
+  node: ClientMissionNode
+  /**
+   * A boolean that will be used to determine if the
+   * field has been left empty.
+   */
+  isEmptyString: boolean
+  /**
+   * The current action being displayed. This is used for
+   * pagination purposes.
+   */
+  displayedAction: number
+  /**
+   * An array that will be used to determine if a
+   * field has been left empty.
+   */
+  actionEmptyStringArray: string[]
+  /**
+   * A function that will be used to set the state of
+   * the actionEmptyStringArray.
+   */
+  setActionEmptyStringArray: (actionEmptyStringArray: string[]) => void
+  /**
+   * A function that will be used to update the
+   * action that is being displayed.
+   */
+  setDisplayedAction: (displayedAction: number) => void
+  /**
+   * Remounts the component.
+   */
+  remount: () => void
+  /**
+   * A function that will be used to notify the parent
+   * component that this component has changed.
+   */
+  handleChange: () => void
 }

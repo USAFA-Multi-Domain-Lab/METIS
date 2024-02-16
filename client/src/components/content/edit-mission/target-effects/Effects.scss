@@ -12,6 +12,16 @@
     padding: 0;
     margin: 0 8% 50px;
 
+    .EffectContainer {
+      display: grid;
+      align-items: center;
+      grid-template-columns: auto 40px 60px;
+
+      .Effect {
+        user-select: none;
+      }
+    }
+
     .NoEffects {
       font-size: 0.9em;
     }

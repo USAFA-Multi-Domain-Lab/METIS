@@ -15,111 +15,134 @@ import NodeActionDetails from './NodeActionDetails'
 import './NodeEntry.scss'
 import { useGlobalContext } from 'src/context'
 import { useMountHandler } from 'src/toolbox/hooks'
+import { compute } from 'src/toolbox'
 
 /**
  * This will render the entry fields for a mission-node
  * within the MissionFormPage component.
  */
-export default function NodeEntry(props: {
-  /**
-   * The mission-node to be edited.
-   */
-  node: ClientMissionNode | null
-  /**
-   * The current action being displayed. This is used for
-   * pagination purposes. ***This is passed down to the
-   * NodeActionDetails component.***
-   */
-  displayedAction: number
-  /**
-   * An array of strings that will be used to determine
-   * if a field has been left empty.
-   */
-  nodeEmptyStringArray: Array<string>
-  /**
-   * An array of strings that will be used to determine
-   * if a field has been left empty. ***This is passed down
-   * to the NodeActionDetails component.***
-   */
-  actionEmptyStringArray: Array<string>
-  /**
-   * A function that will set the current action being
-   * displayed. ***This is passed down to the
-   * NodeActionDetails component.***
-   */
-  setDisplayedAction: (displayedAction: number) => void
-  /**
-   * A function that will set the array of strings that
-   * will be used to determine if a field has been left empty.
-   */
-  setNodeEmptyStringArray: (nodeEmptyStringArray: Array<string>) => void
-  /**
-   * A function that will set the array of strings that
-   * will be used to determine if a field has been left empty.
-   * ***This is passed down to the NodeActionDetails component.***
-   */
-  setActionEmptyStringArray: (actionEmptyStringArray: Array<string>) => void
-  /**
-   * A function that will be called when a change has been made.
-   */
-  handleChange: () => void
-  /**
-   * A function that will be called when the user wants to
-   * add a new mission-node.
-   */
-  handleAddRequest: () => void
-  /**
-   * A function that will be called when the user wants to
-   * delete a mission-node.
-   */
-  handleDeleteRequest: () => void
-  /**
-   * A function that will be called when the user wants to
-   * close the mission-node side panel.
-   */
-  handleCloseRequest: () => void
-}): JSX.Element | null {
-  /* -- COMPONENT VARIABLES -- */
-  let node: ClientMissionNode | null = props.node
-  let displayedAction: number = props.displayedAction
-  let nodeEmptyStringArray: Array<string> = props.nodeEmptyStringArray
-  let actionEmptyStringArray: Array<string> = props.actionEmptyStringArray
-  let setDisplayedAction = props.setDisplayedAction
-  let setNodeEmptyStringArray = props.setNodeEmptyStringArray
-  let setActionEmptyStringArray = props.setActionEmptyStringArray
-  let handleChange = props.handleChange
-  let handleAddNodeRequest = props.handleAddRequest
-  let handleDeleteRequest = props.handleDeleteRequest
-  let handleCloseRequest = props.handleCloseRequest
-  let isEmptyString: boolean =
-    nodeEmptyStringArray.length > 0 || actionEmptyStringArray.length > 0
+export default function NodeEntry(props: TNodeEntryProps): JSX.Element | null {
+  /* -- PROPS -- */
+  const {
+    node,
+    displayedAction,
+    nodeEmptyStringArray,
+    actionEmptyStringArray,
+    setDisplayedAction,
+    setNodeEmptyStringArray,
+    setActionEmptyStringArray,
+    handleChange,
+    handleAddRequest: handleAddNodeRequest,
+    handleDeleteRequest,
+    handleCloseRequest,
+  } = props
 
   /* -- GLOBAL CONTEXT -- */
-
   const globalContext = useGlobalContext()
   const [colorOptions] = globalContext.missionNodeColors
   const { notify } = globalContext.actions
 
-  /* -- COMPONENT STATE -- */
-
+  /* -- STATE -- */
   const [deliverNameError, setDeliverNameError] = useState<boolean>(false)
   const [errorMessage, setErrorMessage] = useState<string>(
     'At least one character is required here.',
   )
 
-  /* -- COMPONENT EFFECTS -- */
+  /* -- COMPUTED -- */
+
+  /**
+   * If the node has at least one empty field.
+   */
+  const isEmptyString: boolean = compute(() => {
+    return nodeEmptyStringArray.length > 0 || actionEmptyStringArray.length > 0
+  })
+  /**
+   * The class name for the top of the box.
+   */
+  const boxTopClassName: string = compute(() => {
+    // Create a default list of class names.
+    let classList: string[] = ['BoxTop']
+
+    // If there is at least one empty field, add the error class.
+    if (isEmptyString) {
+      classList.push('IsError')
+    }
+
+    // Combine the class names into a single string.
+    return classList.join(' ')
+  })
+  /**
+   * The class name for the close button.
+   */
+  const closeClassName: string = compute(() => {
+    // Create a default list of class names.
+    let classList: string[] = ['Close']
+
+    // If there is at least one empty field, add the disabled class.
+    if (isEmptyString) {
+      classList.push('Disabled')
+    }
+
+    // Combine the class names into a single string.
+    return classList.join(' ')
+  })
+  /**
+   * The class name for the delete node button.
+   */
+  const deleteNodeClassName: string = compute(() => {
+    // Create a default list of class names.
+    let classList: string[] = ['FormButton', 'DeleteNode']
+
+    // If the mission has only one node, add the disabled class.
+    if (node && node.mission.nodes.size < 2) {
+      classList.push('Disabled')
+    }
+
+    // Combine the class names into a single string.
+    return classList.join(' ')
+  })
+  /**
+   * The class name for the add node button.
+   */
+  const addNodeClassName: string = compute(() => {
+    // Create a default list of class names.
+    let classList: string[] = ['FormButton', 'AddNode']
+
+    // If there is at least one empty field, add the disabled class.
+    if (isEmptyString) {
+      classList.push('Disabled')
+    }
+
+    // Combine the class names into a single string.
+    return classList.join(' ')
+  })
+  /**
+   * The error message for the close button.
+   */
+  const toggleErrorMessage: string | undefined = compute(() => {
+    if (isEmptyString) {
+      return 'The button above is locked until there are no empty fields.'
+    } else {
+      return undefined
+    }
+  })
+
+  /* -- EFFECTS -- */
 
   const [mountHandled, remount] = useMountHandler(async (done) => {
     done()
   })
 
-  /* -- COMPONENT FUNCTIONS -- */
+  /* -- FUNCTIONS -- */
 
-  // If a field that was previously left empty
-  // meets the requirements then this will remove
-  // the key that was stored when the field was empty
-  // which will let the user know that the field has
-  // met its requirements when the state updates.
+  /**
+   * If a field that was previously left empty meets the
+   * requirements then this will remove the key that was
+   * stored when the field was empty which will let the
+   * user know that the field has met its requirements
+   * when the state updates.
+   * @param field The field that was previously left empty.
+   */
   const removeNodeEmptyString = (field: string) => {
     nodeEmptyStringArray.map((nodeEmptyString: string, index: number) => {
       if (
@@ -133,34 +156,7 @@ export default function NodeEntry(props: {
 
   /* -- RENDER -- */
 
-  // Default class names
-  let boxTopClassName: string = 'BoxTop'
-  let closeClassName: string = 'Close'
-  let deleteNodeClassName: string = 'FormButton DeleteNode'
-  let addNodeClassName: string = 'FormButton AddNode'
-
-  // Default error message
-  let toggleErrorMessage: string | undefined = undefined
-
   if (node !== null) {
-    let mission: ClientMission = node.mission
-
-    // If any of the fields are empty then this will
-    // disable the close button and display an error
-    // message.
-    if (isEmptyString) {
-      closeClassName += ' Disabled'
-      toggleErrorMessage =
-        'The button above is locked until there are no empty fields.'
-      boxTopClassName += ' IsError'
-      addNodeClassName += ' Disabled'
-    }
-
-    // Logic to disable the delete node button
-    if (mission.nodes.size < 2) {
-      deleteNodeClassName += ' Disabled'
-    }
-
     return (
       <div className='NodeEntry SidePanel'>
         <div className='BorderBox'>
@@ -424,4 +420,67 @@ export default function NodeEntry(props: {
   } else {
     return null
   }
+}
+
+/* ---------------------------- TYPES FOR NODE ENTRY ---------------------------- */
+
+// The props for the NodeEntry component.
+export type TNodeEntryProps = {
+  /**
+   * The mission-node to be edited.
+   */
+  node: ClientMissionNode | null
+  /**
+   * The current action being displayed. This is used for
+   * pagination purposes. ***This is passed down to the
+   * NodeActionDetails component.***
+   */
+  displayedAction: number
+  /**
+   * An array of strings that will be used to determine
+   * if a field has been left empty.
+   */
+  nodeEmptyStringArray: Array<string>
+  /**
+   * An array of strings that will be used to determine
+   * if a field has been left empty. ***This is passed down
+   * to the NodeActionDetails component.***
+   */
+  actionEmptyStringArray: Array<string>
+  /**
+   * A function that will set the current action being
+   * displayed. ***This is passed down to the
+   * NodeActionDetails component.***
+   */
+  setDisplayedAction: (displayedAction: number) => void
+  /**
+   * A function that will set the array of strings that
+   * will be used to determine if a field has been left empty.
+   */
+  setNodeEmptyStringArray: (nodeEmptyStringArray: Array<string>) => void
+  /**
+   * A function that will set the array of strings that
+   * will be used to determine if a field has been left empty.
+   * ***This is passed down to the NodeActionDetails component.***
+   */
+  setActionEmptyStringArray: (actionEmptyStringArray: Array<string>) => void
+  /**
+   * A function that will be called when a change has been made.
+   */
+  handleChange: () => void
+  /**
+   * A function that will be called when the user wants to
+   * add a new mission-node.
+   */
+  handleAddRequest: () => void
+  /**
+   * A function that will be called when the user wants to
+   * delete a mission-node.
+   */
+  handleDeleteRequest: () => void
+  /**
+   * A function that will be called when the user wants to
+   * close the mission-node side panel.
+   */
+  handleCloseRequest: () => void
 }

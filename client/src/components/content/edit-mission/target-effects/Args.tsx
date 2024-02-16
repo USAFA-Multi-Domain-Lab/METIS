@@ -12,10 +12,15 @@ import ClientTarget from 'src/target-environments/targets'
 import { ClientTargetEnvironment } from 'src/target-environments'
 import ArgGroupings from './ArgGroupings'
 import ClientMissionAction from 'src/missions/actions'
+import { useGlobalContext } from 'src/context'
 
 export default function Args(props: TArgs): JSX.Element | null {
   /* -- PROPS -- */
-  const { action, effect } = props
+  const { action, effect, setClearForm } = props
+
+  /* -- GLOBAL CONTEXT -- */
+
+  const { forceUpdate } = useGlobalContext().actions
 
   /* -- STATE -- */
   const [defaultDropDownValue] = useState<undefined>(undefined)
@@ -24,28 +29,18 @@ export default function Args(props: TArgs): JSX.Element | null {
   const [defaultBooleanValue] = useState<boolean>(false)
   const [effectArgs] = useState<AnyObject>({})
   const [reqPropertiesNotFilledOut] = useState<string[]>([])
-  const [dropdownFieldKey, setDropdownFieldKey] = useState<string>(
-    `arg-field-dropdown_${generateHash()}`,
-  )
-  const [numberFieldKey, setNumberFieldKey] = useState<string>(
-    `arg-field-number_${generateHash()}`,
-  )
-  const [stringFieldKey, setStringFieldKey] = useState<string>(
-    `arg-field-string_${generateHash()}`,
-  )
-  const [mediumStringFieldKey, setMediumStringFieldKey] = useState<string>(
-    `arg-field-medium-string_${generateHash()}`,
-  )
-  const [booleanFieldKey, setBooleanFieldKey] = useState<string>(
-    `arg-field-boolean_${generateHash()}`,
-  )
+  const [dropDownKey, setDropDownKey] = useState<string>(generateHash())
+  const [numberKey, setNumberKey] = useState<string>(generateHash())
+  const [stringKey, setStringKey] = useState<string>(generateHash())
+  const [mediumStringKey, setMediumStringKey] = useState<string>(generateHash())
+  const [booleanKey, setBooleanKey] = useState<string>(generateHash())
 
   /* -- COMPUTED -- */
   /**
    * The selected target's arguments.
    */
   const args: TTargetArg[] = compute(() => {
-    return effect.target?.args || []
+    return effect.selectedTarget?.args || []
   })
   /**
    * The selected target.
@@ -104,7 +99,7 @@ export default function Args(props: TArgs): JSX.Element | null {
     return Object.entries(groupings)
   })
   /**
-   * Class names for the save button.
+   * Class name for the save button.
    */
   const saveButtonClassName: string = compute(() => {
     // Create a default list of class names.
@@ -138,7 +133,7 @@ export default function Args(props: TArgs): JSX.Element | null {
     return classList.join(' ')
   })
   /**
-   * Class names for the clear form button.
+   * Class name for the clear form button.
    */
   const clearFormButtonClassName: string = compute(() => {
     // Create a default list of class names.
@@ -155,15 +150,10 @@ export default function Args(props: TArgs): JSX.Element | null {
 
     // If all of the arguments are default values then
     // disable the clear form button.
-    if (args.every((arg: TTargetArg) => effectArgs[arg.id] === arg.default)) {
-      classList.push('Disabled')
-    }
-
-    // If all of the arguments are default values then
-    // disable the clear form button.
     if (
       args.every(
         (arg: TTargetArg) =>
+          effectArgs[arg.id] === arg.default ||
           effectArgs[arg.id] === defaultDropDownValue ||
           effectArgs[arg.id] === defaultNumberValue ||
           effectArgs[arg.id] === defaultStringValue ||
@@ -179,8 +169,11 @@ export default function Args(props: TArgs): JSX.Element | null {
 
   /* -- EFFECTS -- */
   useEffect(() => {
-    clearForm()
-  }, [target])
+    if (effect.newEffect) {
+      // Reset the arguments that are stored in the state component.
+      resetArgProperties()
+    }
+  }, [effect])
 
   /* -- FUNCTIONS -- */
 
@@ -332,26 +325,31 @@ export default function Args(props: TArgs): JSX.Element | null {
         // selected option to the default option.
         if (arg.type === 'dropdown') {
           effectArgs[arg.id] = arg.default || defaultDropDownValue
+          effect.args[arg.id] = arg.default || defaultDropDownValue
         }
         // If the argument is a number then reset its
         // value to the default value.
         else if (arg.type === 'number') {
           effectArgs[arg.id] = arg.default || defaultNumberValue
+          effect.args[arg.id] = arg.default || defaultNumberValue
         }
         // If the argument is a string then reset its
         // value to the default value.
         else if (arg.type === 'string') {
           effectArgs[arg.id] = arg.default || defaultStringValue
+          effect.args[arg.id] = arg.default || defaultStringValue
         }
         // If the argument is a medium-string then reset its
         // value to the default value.
         else if (arg.type === 'medium-string') {
           effectArgs[arg.id] = arg.default || defaultStringValue
+          effect.args[arg.id] = arg.default || defaultStringValue
         }
         // If the argument is a boolean then reset its
         // value to the default value.
         else if (arg.type === 'boolean') {
           effectArgs[arg.id] = arg.default || defaultBooleanValue
+          effect.args[arg.id] = arg.default || defaultBooleanValue
         }
 
         // If the argument is required then add the argument
@@ -366,7 +364,7 @@ export default function Args(props: TArgs): JSX.Element | null {
   /**
    * Handles the creation of the effect.
    */
-  const createEffect = () => {
+  const saveEffect = () => {
     // Grab the entries of the effect's arguments.
     let argEntries: [string, any][] = Object.entries(effectArgs)
     // Filter out the arguments that are not filled out.
@@ -385,30 +383,32 @@ export default function Args(props: TArgs): JSX.Element | null {
         effect.args[key] = value
     })
 
+    // todo: remove
     // // Execute the effect.
     // effect.target.script(effect.args)
 
-    action.effects.push(effect)
+    // Add the effect to the action's effects list
+    // if it is not already in the list.
+    if (!action.effects.includes(effect)) {
+      action.effects.push(effect)
+      forceUpdate()
+    }
 
-    // Clear the form and reset the arguments.
-    clearForm()
+    // Reset the arguments that are stored in the state component.
+    resetArgProperties()
+    // Reset the form.
+    setClearForm(true)
   }
 
   /**
    * Handles clearing the form and resetting the arguments.
    */
-  const clearForm = () => {
+  const resetArgProperties = () => {
     // Reset the arguments that are stored in the state component.
     resetEffectArgs()
 
     // Iterate through the selected target's arguments.
     args.forEach((arg: TTargetArg) => {
-      // If the argument is a dropdown then reset its
-      // selected option to the default option.
-      if (arg.type === 'dropdown') {
-        arg.selected = defaultDropDownValue
-      }
-
       // If the argument has dependencies then
       // update them to reflect the reset.
       if (arg.optionalParams?.dependencies) {
@@ -417,59 +417,53 @@ export default function Args(props: TArgs): JSX.Element | null {
     })
 
     // Update the form keys so that the fields will re-render.
-    setDropdownFieldKey(`arg-field-dropdown_${generateHash()}`)
-    setNumberFieldKey(`arg-field-number_${generateHash()}`)
-    setStringFieldKey(`arg-field-string_${generateHash()}`)
-    setMediumStringFieldKey(`arg-field-medium-string_${generateHash()}`)
-    setBooleanFieldKey(`arg-field-boolean_${generateHash()}`)
+    setDropDownKey(generateHash())
+    setNumberKey(generateHash())
+    setStringKey(generateHash())
+    setMediumStringKey(generateHash())
+    setBooleanKey(generateHash())
   }
 
   /* -- RENDER -- */
   // If a target is selected and it has arguments
   // then render the arguments.
-  if (groupingEntries.length > 0) {
+  if (groupingEntries.length > 0 && target) {
     return (
       <div className='Args'>
-        {/* -- ARGUMENT FORM -- */}
-        <form
-          className='ArgsForm'
-          onSubmit={(e) => {
-            e.preventDefault()
-            clearForm()
-          }}
-        >
-          <p className='ListTitle'>Arguments:</p>
-
-          {/* -- GROUPINGS -- */}
-          {groupingEntries.map(([groupingId, grouping]) => {
-            return (
-              <ArgGroupings
-                grouping={grouping}
-                dropdownFieldKey={dropdownFieldKey}
-                numberFieldKey={numberFieldKey}
-                stringFieldKey={stringFieldKey}
-                mediumStringFieldKey={mediumStringFieldKey}
-                booleanFieldKey={booleanFieldKey}
-                defaultDropDownValue={defaultDropDownValue}
-                defaultNumberValue={defaultNumberValue}
-                defaultStringValue={defaultStringValue}
-                defaultBooleanValue={defaultBooleanValue}
-                effectArgs={effectArgs}
-                reqPropertiesNotFilledOut={reqPropertiesNotFilledOut}
-                updateArg={updateArg}
-                key={`grouping-${groupingId}`}
-              />
-            )
-          })}
-        </form>
+        <div className='ArgsTitle'>Arguments:</div>
+        {/* -- GROUPINGS -- */}
+        {groupingEntries.map(([groupingId, grouping]) => {
+          return (
+            <ArgGroupings
+              effect={effect}
+              grouping={grouping}
+              dropDownKey={dropDownKey}
+              numberKey={numberKey}
+              stringKey={stringKey}
+              mediumStringKey={mediumStringKey}
+              booleanKey={booleanKey}
+              defaultDropDownValue={defaultDropDownValue}
+              defaultNumberValue={defaultNumberValue}
+              defaultStringValue={defaultStringValue}
+              defaultBooleanValue={defaultBooleanValue}
+              effectArgs={effectArgs}
+              reqPropertiesNotFilledOut={reqPropertiesNotFilledOut}
+              updateArg={updateArg}
+              key={`grouping-${groupingId}`}
+            />
+          )
+        })}
 
         {/* -- BUTTONS -- */}
         <div className='ButtonContainer'>
-          <div className={clearFormButtonClassName} onClick={clearForm}>
-            Clear Form
+          <div
+            className={clearFormButtonClassName}
+            onClick={resetArgProperties}
+          >
+            Clear Arguments
           </div>
-          <div className={saveButtonClassName} onClick={createEffect}>
-            Create
+          <div className={saveButtonClassName} onClick={saveEffect}>
+            Save
           </div>
         </div>
       </div>
@@ -493,4 +487,8 @@ export type TArgs = {
    * The effect to apply to the target.
    */
   effect: ClientEffect
+  /**
+   * Function to change the clear form value.
+   */
+  setClearForm: (value: boolean) => void
 }

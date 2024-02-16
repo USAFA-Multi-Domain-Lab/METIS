@@ -1,49 +1,50 @@
 @import 'src/assets/styles/config.scss';
 
-.TargetEnvironments {
-  margin: 50px 0 0;
-  width: 100%;
+// todo: remove
+// .TargetEnvironments {
+//   margin: 50px 0 0;
+//   width: 100%;
 
-  &.Selected {
-    margin: 0;
-  }
+//   &.Selected {
+//     margin: 0;
+//   }
 
-  .ListTitle {
-    margin: 0 8% 20px;
-    font-weight: bold;
-    text-decoration: underline;
-  }
+//   .ListTitle {
+//     margin: 0 8% 20px;
+//     font-weight: bold;
+//     text-decoration: underline;
+//   }
 
-  .TargetEnvironmentList,
-  .TargetEnvironmentContainer {
-    width: 84%;
-    margin: 10px 8%;
+//   .TargetEnvironmentList,
+//   .TargetEnvironmentContainer {
+//     width: 84%;
+//     margin: 10px 8%;
 
-    .TargetEnvironment {
-      margin: 10px 0 0;
-      font-size: 0.9em;
-      cursor: pointer;
-      user-select: none;
+//     .TargetEnvironment {
+//       margin: 10px 0 0;
+//       font-size: 0.9em;
+//       cursor: pointer;
+//       user-select: none;
 
-      &:hover {
-        color: $terminal;
-      }
+//       &:hover {
+//         color: $terminal;
+//       }
 
-      &.Selected {
-        font-size: 0.9em;
+//       &.Selected {
+//         font-size: 0.9em;
 
-        &:hover {
-          color: unset;
-          pointer-events: none;
-          cursor: default;
-        }
-      }
-    }
-  }
+//         &:hover {
+//           color: unset;
+//           pointer-events: none;
+//           cursor: default;
+//         }
+//       }
+//     }
+//   }
 
-  .TargetEnvironmentContainer {
-    display: grid;
-    align-items: center;
-    grid-template-columns: auto 60px;
-  }
-}
+//   .TargetEnvironmentContainer {
+//     display: grid;
+//     align-items: center;
+//     grid-template-columns: auto 60px;
+//   }
+// }

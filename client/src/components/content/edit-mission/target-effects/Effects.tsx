@@ -8,6 +8,11 @@ import { AnyObject } from '../../../../../../shared/toolbox/objects'
 import ClientMissionAction from 'src/missions/actions'
 import Effect from './Effect'
 import { v4 as generateHash } from 'uuid'
+import {
+  EMiniButtonSVGPurpose,
+  MiniButtonSVG,
+} from '../../user-controls/MiniButtonSVG'
+import { useGlobalContext } from 'src/context'
 
 /**
  * Affects the bank in Rancho Cucamonga.
@@ -220,7 +225,6 @@ const targetEnvironments: ClientTargetEnvironment[] = [
             display: false,
             groupingId: 'heading',
             type: 'dropdown',
-            selected: undefined,
             options: [
               {
                 id: 'deg',
@@ -989,7 +993,6 @@ const targetEnvironments: ClientTargetEnvironment[] = [
             required: true,
             display: true,
             type: 'dropdown',
-            selected: undefined,
             options: [
               {
                 id: 'blue',
@@ -1034,12 +1037,15 @@ export default function Effects(props: TEffects): JSX.Element | null {
   /* -- PROPS -- */
   const { action } = props
 
+  /* -- GLOBAL CONTEXT -- */
+  const { forceUpdate } = useGlobalContext().actions
+
   /* -- STATE -- */
   const [displayNewEffect, setDisplayNewEffect] = useState<boolean>(false)
   const [selectedEffect, setSelectedEffect] = useState<ClientEffect>(
     new ClientEffect(action, { id: generateHash() }),
   )
-  const [clearForms, setClearForms] = useState<boolean>(false)
+  const [clearForm, setClearForm] = useState<boolean>(false)
 
   /* -- COMPUTED -- */
 
@@ -1077,101 +1083,90 @@ export default function Effects(props: TEffects): JSX.Element | null {
 
   /* -- EFFECTS -- */
   useEffect(() => {
-    if (clearForms) {
+    if (clearForm) {
+      // Hide the new effect form.
       setDisplayNewEffect(false)
+      // Reset the selected effect.
       setSelectedEffect(new ClientEffect(action, { id: generateHash() }))
-      setClearForms(false)
+      // Reset the clear form state.
+      setClearForm(false)
     }
-  }, [clearForms])
+  }, [clearForm])
+
+  /* -- FUNCTIONS -- */
+
+  /**
+   * Render the effects.
+   */
+  const renderEffects = () => {
+    if (action.effects.length > 0) {
+      return action.effects.map((effect: ClientEffect) => {
+        return (
+          <div className='EffectContainer' key={`effect-${effect.id}`}>
+            <div className='Effect'>
+              {effect.name}
+              <Tooltip description={effect.description} />
+            </div>
+            <MiniButtonSVG
+              purpose={EMiniButtonSVGPurpose.Edit}
+              handleClick={() => {
+                effect.newEffect = false
+                setSelectedEffect(effect)
+                setDisplayNewEffect(true)
+              }}
+              tooltipDescription={`Edit the effect`}
+            />
+            <MiniButtonSVG
+              purpose={EMiniButtonSVGPurpose.Remove}
+              handleClick={() => {
+                action.effects.splice(action.effects.indexOf(effect), 1)
+                forceUpdate()
+              }}
+              tooltipDescription={`Delete the effect`}
+            />
+          </div>
+        )
+      })
+    } else {
+      return <div className='NoEffects'>No Effects...</div>
+    }
+  }
 
   /* -- RENDER -- */
 
-  if (action.effects.length > 0) {
-    return (
-      <div className='Effects'>
-        <h3>Current Effects:</h3>
-        <div className='EffectsList'>
-          {action.effects.map((effect: ClientEffect) => {
-            return (
-              <div
-                className='Effect'
-                key={`effect-${effect.id}`}
-                onClick={() => setSelectedEffect(effect)}
-              >
-                {effect.name}
-                <Tooltip description={effect.description} />
-              </div>
-            )
-          })}
+  return (
+    <div className='Effects'>
+      <h3>Effects:</h3>
+      <div className='EffectsList'>{renderEffects()}</div>
+      <Effect
+        action={action}
+        effect={selectedEffect}
+        targetEnvironments={targetEnvironments}
+        display={displayNewEffect}
+        setClearForm={setClearForm}
+      />
+      <div className='ButtonContainer'>
+        <div className={addButtonClassName}>
+          <span className='Text' onClick={() => setDisplayNewEffect(true)}>
+            <span className='LeftBracket'>[</span> Add Effect{' '}
+            <span className='RightBracket'>]</span>
+            <Tooltip
+              description={
+                `* Click to add target effects and link them to this action.\n` +
+                `* **Note:** Target effects only happen when an action is successfully executed.`
+              }
+            />
+          </span>
         </div>
-        <Effect
-          action={action}
-          effect={selectedEffect}
-          targetEnvironments={targetEnvironments}
-          display={displayNewEffect}
-          clearForm={clearForms}
-        />
-        <div className='ButtonContainer'>
-          <div className={addButtonClassName}>
-            <span className='Text' onClick={() => setDisplayNewEffect(true)}>
-              <span className='LeftBracket'>[</span> Add Effect{' '}
-              <span className='RightBracket'>]</span>
-              <Tooltip
-                description={
-                  `* Click to add target effects and link them to this action.\n` +
-                  `* **Note:** Target effects only happen when an action is successfully executed.`
-                }
-              />
-            </span>
-          </div>
-          <div className={cancelButtonClassName}>
-            <span className='Text' onClick={() => setClearForms(true)}>
-              <span className='LeftBracket'>[</span> Cancel{' '}
-              <span className='RightBracket'>]</span>
-            </span>
-          </div>
+        <div className={cancelButtonClassName}>
+          <span className='Text' onClick={() => setClearForm(true)}>
+            <span className='LeftBracket'>[</span> Cancel{' '}
+            <span className='RightBracket'>]</span>
+          </span>
         </div>
       </div>
-    )
-  } else if (action.effects.length === 0) {
-    return (
-      <div className='Effects'>
-        <h3>Current Effects:</h3>
-        <div className='EffectsList'>
-          <div className='NoEffects'>No Effects...</div>
-        </div>
-        <Effect
-          action={action}
-          effect={selectedEffect}
-          targetEnvironments={targetEnvironments}
-          display={displayNewEffect}
-          clearForm={clearForms}
-        />
-        <div className='ButtonContainer'>
-          <div className={addButtonClassName}>
-            <span className='Text' onClick={() => setDisplayNewEffect(true)}>
-              <span className='LeftBracket'>[</span> Add Effect{' '}
-              <span className='RightBracket'>]</span>
-              <Tooltip
-                description={
-                  `* Click to add target effects and link them to this action.\n` +
-                  `* **Note:** Target effects only happen when an action is successfully executed.`
-                }
-              />
-            </span>
-          </div>
-          <div className={cancelButtonClassName}>
-            <span className='Text' onClick={() => setClearForms(true)}>
-              <span className='LeftBracket'>[</span> Cancel{' '}
-              <span className='RightBracket'>]</span>
-            </span>
-          </div>
-        </div>
-      </div>
-    )
-  } else {
-    return null
-  }
+    </div>
+  )
 }
 
 /* ---------------------------- TYPES FOR EFFECTS ---------------------------- */

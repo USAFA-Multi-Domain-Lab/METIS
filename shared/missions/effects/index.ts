@@ -142,7 +142,7 @@ export default abstract class Effect<
   public static readonly DEFAULT_PROPERTIES: Required<TCommonEffectJson> = {
     id: '',
     name: '',
-    description: '',
+    description: '<p><br></p>',
     targetId: Target.DEFAULT_PROPERTIES.id,
     args: {},
   }

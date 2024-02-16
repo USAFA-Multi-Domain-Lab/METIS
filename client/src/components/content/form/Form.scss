@@ -28,11 +28,6 @@
     &.Error {
       color: $color-error-alt;
     }
-
-    .Required {
-      color: $color-error-alt;
-      font-size: 0.95em;
-    }
   }
 
   @mixin fieldDimensions() {

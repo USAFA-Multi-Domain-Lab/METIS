@@ -11,16 +11,18 @@ import { useGlobalContext } from 'src/context'
 import { useState } from 'react'
 import { AnyObject } from '../../../../../../shared/toolbox/objects'
 import './ArgGroupings.scss'
+import { ClientEffect } from 'src/missions/effects'
 
 export default function ArgGroupings(props: TArgGroupings): JSX.Element | null {
   /* -- PROPS -- */
   const {
+    effect,
     grouping,
-    dropdownFieldKey,
-    numberFieldKey,
-    stringFieldKey,
-    mediumStringFieldKey,
-    booleanFieldKey,
+    dropDownKey,
+    numberKey,
+    stringKey,
+    mediumStringKey,
+    booleanKey,
     defaultDropDownValue,
     defaultNumberValue,
     defaultStringValue,
@@ -93,6 +95,30 @@ export default function ArgGroupings(props: TArgGroupings): JSX.Element | null {
 
             return classList.join(' ')
           })
+          const dropDownValue: TTargetArgDropdownOption | undefined = compute(
+            () => {
+              let value: TTargetArgDropdownOption | undefined = undefined
+
+              if (arg.type === 'dropdown') {
+                if (effectArgs[arg.id]) {
+                  value = arg.options.find(
+                    (option: TTargetArgDropdownOption) =>
+                      option.id === effectArgs[arg.id],
+                  )
+                } else if (
+                  effectArgs[arg.id] === undefined &&
+                  effect.args[arg.id]
+                ) {
+                  value = arg.options.find(
+                    (option: TTargetArgDropdownOption) =>
+                      option.id === effect.args[arg.id],
+                  )
+                }
+              }
+
+              return value
+            },
+          )
 
           // If the argument type is "dropdown" and it is required
           // then render the dropdown.
@@ -100,13 +126,13 @@ export default function ArgGroupings(props: TArgGroupings): JSX.Element | null {
             return (
               <div
                 className={`${argFieldClassName} Dropdown`}
-                key={`arg-${arg.id}_form-${arg.type}_type-${arg.type}-container`}
+                key={`arg-${arg.id}_type-${arg.type}-container_${dropDownKey}`}
               >
                 <DetailDropDown<TTargetArgDropdownOption>
                   label={arg.name}
                   options={arg.options}
                   currentValue={
-                    arg.selected || arg.default || defaultDropDownValue
+                    dropDownValue || arg.default || defaultDropDownValue
                   }
                   isExpanded={isExpanded}
                   uniqueDropDownStyling={{}}
@@ -120,8 +146,6 @@ export default function ArgGroupings(props: TArgGroupings): JSX.Element | null {
                     option.name
                   }
                   deliverValue={(option: TTargetArgDropdownOption) => {
-                    // Set the selected option.
-                    arg.selected = option
                     // Add the argument to the list of arguments.
                     effectArgs[arg.id] = option.id
                     // Remove the argument ID from the list of
@@ -146,10 +170,7 @@ export default function ArgGroupings(props: TArgGroupings): JSX.Element | null {
                     // Display the changes.
                     forceUpdate()
                   }}
-                  optional={{
-                    displayRequiredIcon: arg.required,
-                  }}
-                  key={dropdownFieldKey}
+                  key={`arg-${arg.id}_type-${arg.type}_field-${dropDownKey}`}
                 />
               </div>
             )
@@ -160,11 +181,13 @@ export default function ArgGroupings(props: TArgGroupings): JSX.Element | null {
             return (
               <div
                 className={`${argFieldClassName} Number`}
-                key={`arg-${arg.id}_form-${arg.type}_type-${arg.type}-container`}
+                key={`arg-${arg.id}_type-${arg.type}-container_${numberKey}`}
               >
                 <DetailNumber
                   label={arg.name}
-                  initialValue={arg.default || defaultNumberValue}
+                  initialValue={
+                    effect.args[arg.id] || arg.default || defaultNumberValue
+                  }
                   deliverValue={(value: number | null | undefined) => {
                     // Add the argument to the list of arguments.
                     effectArgs[arg.id] = value
@@ -199,7 +222,7 @@ export default function ArgGroupings(props: TArgGroupings): JSX.Element | null {
                     emptyValueAllowed: true,
                     placeholder: arg.required ? 'Required' : 'Optional',
                   }}
-                  key={numberFieldKey}
+                  key={`arg-${arg.id}_type-${arg.type}_field-${numberKey}`}
                 />
               </div>
             )
@@ -210,11 +233,13 @@ export default function ArgGroupings(props: TArgGroupings): JSX.Element | null {
             return (
               <div
                 className={`${argFieldClassName} String`}
-                key={`arg-${arg.id}_form-${arg.type}_type-${arg.type}-container`}
+                key={`arg-${arg.id}_type-${arg.type}-container_${stringKey}`}
               >
                 <Detail
                   label={arg.name}
-                  initialValue={arg.default || defaultStringValue}
+                  initialValue={
+                    effect.args[arg.id] || arg.default || defaultStringValue
+                  }
                   deliverValue={(value: string) => {
                     // Add the argument to the list of arguments.
                     effectArgs[arg.id] = value
@@ -239,7 +264,7 @@ export default function ArgGroupings(props: TArgGroupings): JSX.Element | null {
                   options={{
                     placeholder: arg.required ? 'Required' : 'Optional',
                   }}
-                  key={stringFieldKey}
+                  key={`arg-${arg.id}_type-${arg.type}_field-${stringKey}`}
                 />
               </div>
             )
@@ -250,12 +275,12 @@ export default function ArgGroupings(props: TArgGroupings): JSX.Element | null {
             return (
               <div
                 className={`${argFieldClassName} MediumString`}
-                key={`arg-${arg.id}_form-${arg.type}_type-${arg.type}-container`}
+                key={`arg-${arg.id}_type-${arg.type}-container_${mediumStringKey}`}
               >
                 <DetailBox
                   label={arg.name}
                   initialValue={
-                    effectArgs[arg.id] || arg.default || defaultStringValue
+                    effect.args[arg.id] || arg.default || defaultStringValue
                   }
                   deliverValue={(value: string) => {
                     // Add the argument to the list of arguments.
@@ -282,7 +307,7 @@ export default function ArgGroupings(props: TArgGroupings): JSX.Element | null {
                     emptyStringAllowed: true,
                     placeholder: arg.required ? 'Required' : 'Optional',
                   }}
-                  key={mediumStringFieldKey}
+                  key={`arg-${arg.id}_type-${arg.type}_field-${mediumStringKey}`}
                 />
               </div>
             )
@@ -293,11 +318,13 @@ export default function ArgGroupings(props: TArgGroupings): JSX.Element | null {
             return (
               <div
                 className={`${argFieldClassName} Boolean`}
-                key={`arg-${arg.id}_form-${arg.type}_type-${arg.type}-container`}
+                key={`arg-${arg.id}_type-${arg.type}-container_${booleanKey}`}
               >
                 <DetailToggle
                   label={arg.name}
-                  initialValue={arg.default || defaultBooleanValue}
+                  initialValue={
+                    effect.args[arg.id] || arg.default || defaultBooleanValue
+                  }
                   deliverValue={(value: boolean) => {
                     // Add the argument to the list of arguments.
                     effectArgs[arg.id] = value
@@ -307,10 +334,7 @@ export default function ArgGroupings(props: TArgGroupings): JSX.Element | null {
                     // Display the changes.
                     forceUpdate()
                   }}
-                  options={{
-                    displayRequiredIcon: arg.required,
-                  }}
-                  key={booleanFieldKey}
+                  key={`arg-${arg.id}_type-${arg.type}_field-${booleanKey}`}
                 />
               </div>
             )
@@ -330,29 +354,33 @@ export default function ArgGroupings(props: TArgGroupings): JSX.Element | null {
  */
 export type TArgGroupings = {
   /**
+   * The effect to which the arguments belong.
+   */
+  effect: ClientEffect
+  /**
    * The grouping of arguments to display.
    */
   grouping: TTargetArg[]
   /**
    * The key for the dropdown field.
    */
-  dropdownFieldKey: string
+  dropDownKey: string
   /**
    * The key for the number field.
    */
-  numberFieldKey: string
+  numberKey: string
   /**
    * The key for the string field.
    */
-  stringFieldKey: string
+  stringKey: string
   /**
    * The key for the medium string field.
    */
-  mediumStringFieldKey: string
+  mediumStringKey: string
   /**
    * The key for the boolean field.
    */
-  booleanFieldKey: string
+  booleanKey: string
   /**
    * The default value for the dropdown argument.
    */

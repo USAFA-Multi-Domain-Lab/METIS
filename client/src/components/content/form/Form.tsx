@@ -30,6 +30,7 @@ interface IDetail {
 interface IDetail_S {
   inputType: string
   displayPasswordText: string
+  currentValue: string | null | undefined
 }
 
 /**
@@ -61,6 +62,7 @@ export class Detail extends React.Component<IDetail, IDetail_S> {
         ? this.props.options.inputType
         : 'text',
       displayPasswordText: 'show',
+      currentValue: this.props.initialValue,
     }
   }
 
@@ -71,6 +73,16 @@ export class Detail extends React.Component<IDetail, IDetail_S> {
 
     if (initialValue && fieldElement) {
       fieldElement.value = initialValue
+    }
+  }
+
+  componentDidUpdate(
+    prevProps: Readonly<IDetail>,
+    prevState: Readonly<IDetail_S>,
+    snapshot?: any,
+  ): void {
+    if (prevProps.initialValue !== this.props.initialValue) {
+      this.setState({ currentValue: this.props.initialValue })
     }
   }
 
@@ -108,6 +120,7 @@ export class Detail extends React.Component<IDetail, IDetail_S> {
     let clearField: boolean = this.props.options?.clearField || false
     let displayRequiredIcon: boolean =
       this.props.options?.displayRequiredIcon || false
+    let currentValue: string | null | undefined = this.state.currentValue || ''
 
     /* -- PRE-RENDER PROCESSING -- */
 
@@ -159,8 +172,10 @@ export class Detail extends React.Component<IDetail, IDetail_S> {
             className={fieldClassName + ' ' + uniqueInputClassName}
             type={this.state.inputType}
             ref={this.field}
+            value={currentValue}
             placeholder={placeholder}
             onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+              this.setState({ currentValue: event.target.value })
               deliverValue(event.target.value)
             }}
             // onBlur={(event: React.FocusEvent) => {
@@ -534,7 +549,6 @@ export function DetailDropDown<TOption>(props: {
     uniqueFieldClassName?: string
     uniqueCurrentValueClassName?: string
     clearField?: boolean
-    displayRequiredIcon?: boolean
   }
 }): JSX.Element | null {
   /* -- COMPONENT VARIABLES -- */
@@ -558,8 +572,6 @@ export function DetailDropDown<TOption>(props: {
     ? props.optional.uniqueCurrentValueClassName
     : ''
   let clearField: boolean = props.optional?.clearField || false
-  let displayRequiredIcon: boolean =
-    props.optional?.displayRequiredIcon || false
   let renderOptionClassName = props.renderOptionClassName
   let renderDisplayName = props.renderDisplayName
   let deliverValue = props.deliverValue
@@ -584,7 +596,6 @@ export function DetailDropDown<TOption>(props: {
   let optionClassName: string = 'Option'
   let labelClassName: string = 'Label'
   let currentValueClassName: string = 'Text'
-  let requiredIconClassName: string = 'Required'
 
   if (expanded) {
     fieldClassName += ' IsExpanded'
@@ -593,21 +604,12 @@ export function DetailDropDown<TOption>(props: {
     allOptionsClassName += 'Hidden'
   }
 
-  // If a boolean that is equivalent
-  // to true is passed, then the
-  // field will display a required
-  // icon.
-  if (displayRequiredIcon === undefined || !displayRequiredIcon) {
-    requiredIconClassName += ' Hidden'
-  }
-
   /* -- RENDER -- */
   if (currentValue) {
     return (
       <div className={className} style={uniqueDropDownStyling}>
         <div className={labelClassName + ' ' + uniqueLabelClassName}>
           {`${label}:`}
-          <sup className={requiredIconClassName}> *</sup>
         </div>
         <div className={fieldClassName + ' ' + uniqueFieldClassName}>
           <div
@@ -728,10 +730,6 @@ export interface IDetailToggle_P {
      * message that will be displayed
      */
     errorMessage?: string
-    /**
-     * Determines if the detail should display a required icon. Defaults to false.
-     */
-    displayRequiredIcon?: boolean
   }
 }
 
@@ -785,15 +783,12 @@ export class DetailToggle extends React.Component<
     let hideTooltip: boolean = tooltipDescription.length === 0
     let uniqueClassName: string = this.props.uniqueClassName
     let errorMessage: string | undefined = this.props.options?.errorMessage
-    let displayRequiredIcon: boolean | undefined =
-      this.props.options?.displayRequiredIcon
 
     /* -- PRE-RENDER PROCESSING -- */
 
     // Default class names
     let containerClassName: string = 'Detail DetailToggle'
     let fieldErrorClassName: string = 'FieldErrorMessage hide'
-    let requiredIconClassName: string = 'Required'
 
     if (uniqueClassName.length > 0) {
       containerClassName += ` ${uniqueClassName}`
@@ -808,18 +803,11 @@ export class DetailToggle extends React.Component<
       fieldErrorClassName = 'FieldErrorMessage'
     }
 
-    if (displayRequiredIcon === undefined || !displayRequiredIcon) {
-      requiredIconClassName += ' Hidden'
-    }
-
     /* -- RENDER -- */
 
     return (
       <div className={containerClassName}>
-        <label className='Label'>
-          {label}
-          <sup className={requiredIconClassName}> *</sup>
-        </label>
+        <label className='Label'>{label}</label>
         <div className='Field'>
           <Toggle
             initiallyActivated={initialValue}

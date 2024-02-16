@@ -92,11 +92,6 @@ type TTargetDropdownArg = {
    */
   type: 'dropdown'
   /**
-   * The option selected.
-   * @note **This is for display purposes only.** The value of this property is not used in the API request.
-   */
-  selected: undefined
-  /**
    * The options for the argument.
    */
   options: Array<{

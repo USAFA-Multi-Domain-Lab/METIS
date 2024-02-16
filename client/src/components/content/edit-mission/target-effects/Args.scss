@@ -4,14 +4,21 @@
   display: grid;
   align-items: center;
   width: 100%;
+  margin: 10px 0 0;
 
-  .ArgsForm {
-    margin: 20px 8% 0;
-
-    .ListTitle {
-      margin: 15px 0 20px;
-      font-weight: bold;
-      text-decoration: underline;
-    }
+  .ArgsTitle {
+    margin: 10px 8% 0;
+    font-size: 0.78em;
   }
+
+  // todo: remove
+  // .ArgsForm {
+  //   margin: 20px 8% 0;
+
+  //   .ListTitle {
+  //     margin: 15px 0 20px;
+  //     font-weight: bold;
+  //     text-decoration: underline;
+  //   }
+  // }
 }
