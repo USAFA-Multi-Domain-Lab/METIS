@@ -1,10 +1,10 @@
-import ClientMissionAction from '../actions'
+import { ClientTargetEnvironment } from 'src/target-environments'
+import ClientTarget from 'src/target-environments/targets'
 import Effect, {
   TCommonEffectJson,
   TEffectOptions,
 } from '../../../../shared/missions/effects'
-import { ClientTargetEnvironment } from 'src/target-environments'
-import ClientTarget from 'src/target-environments/targets'
+import ClientMissionAction from '../actions'
 
 /**
  * Class representing an effect on the client-side that can be
@@ -72,11 +72,6 @@ export class ClientEffect extends Effect<
     }
   }
 
-  /**
-   * Whether the effect is new or already exists.
-   */
-  public newEffect: boolean
-
   // Implemented
   public constructor(
     action: ClientMissionAction,
@@ -89,9 +84,6 @@ export class ClientEffect extends Effect<
     // Initialize the selected target environment and target.
     this._selectedTargetEnv = null
     this._selectedTarget = null
-
-    // Initialize the new effect status.
-    this.newEffect = true
   }
 
   // Implemented

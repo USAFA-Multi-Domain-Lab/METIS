@@ -1,27 +1,28 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
+import ClientMissionAction from 'src/missions/actions'
+import { ClientEffect } from 'src/missions/effects'
+import { ClientTargetEnvironment } from 'src/target-environments'
+import ClientTarget from 'src/target-environments/targets'
+import { compute } from 'src/toolbox'
+import { v4 as generateHash } from 'uuid'
+import { TTargetArg } from '../../../../../../shared/target-environments/targets'
 import {
   AnyObject,
   SingleTypeObject,
 } from '../../../../../../shared/toolbox/objects'
-import { v4 as generateHash } from 'uuid'
-import './Args.scss'
-import { ClientEffect } from 'src/missions/effects'
-import { TTargetArg } from '../../../../../../shared/target-environments/targets'
-import { compute } from 'src/toolbox'
-import ClientTarget from 'src/target-environments/targets'
-import { ClientTargetEnvironment } from 'src/target-environments'
 import ArgGroupings from './ArgGroupings'
-import ClientMissionAction from 'src/missions/actions'
-import { useGlobalContext } from 'src/context'
+import './Args.scss'
 
-export default function Args(props: TArgs): JSX.Element | null {
-  /* -- PROPS -- */
-  const { action, effect, setClearForm } = props
-
-  /* -- GLOBAL CONTEXT -- */
-
-  const { forceUpdate } = useGlobalContext().actions
-
+/**
+ * Groups arguments together and renders them.
+ */
+export default function Args({
+  action,
+  effect,
+  isEmptyString,
+  areDefaultValues,
+  setSelectedEffect,
+}: TArgs_P): JSX.Element | null {
   /* -- STATE -- */
   const [defaultDropDownValue] = useState<undefined>(undefined)
   const [defaultNumberValue] = useState<null>(null)
@@ -101,21 +102,18 @@ export default function Args(props: TArgs): JSX.Element | null {
   /**
    * Class name for the save button.
    */
-  const saveButtonClassName: string = compute(() => {
+  const submitButtonClassName: string = compute(() => {
     // Create a default list of class names.
     let classList: string[] = ['Button']
 
     // If there are required properties that are not filled out ||
-    // If the effect has no arguments ||
-    // If the selected target is null ||
-    // If the target environment is null ||
-    // If the selected target has no arguments
+    // If there is an empty string ||
+    // If there are default values,
     // then disable the save button.
     if (
       reqPropertiesNotFilledOut.length > 0 ||
-      target === null ||
-      targetEnv === null ||
-      args.length === 0
+      isEmptyString ||
+      areDefaultValues
     ) {
       // Disable the save button.
       classList.push('Disabled')
@@ -132,48 +130,6 @@ export default function Args(props: TArgs): JSX.Element | null {
 
     return classList.join(' ')
   })
-  /**
-   * Class name for the clear form button.
-   */
-  const clearFormButtonClassName: string = compute(() => {
-    // Create a default list of class names.
-    let classList: string[] = ['Button']
-
-    // If the selected target is null ||
-    // If the target environment is null ||
-    // If the selected target has no arguments
-    // then disable the clear form button.
-    if (target === null || targetEnv === null || args.length === 0) {
-      // Disable the clear form button.
-      classList.push('Disabled')
-    }
-
-    // If all of the arguments are default values then
-    // disable the clear form button.
-    if (
-      args.every(
-        (arg: TTargetArg) =>
-          effectArgs[arg.id] === arg.default ||
-          effectArgs[arg.id] === defaultDropDownValue ||
-          effectArgs[arg.id] === defaultNumberValue ||
-          effectArgs[arg.id] === defaultStringValue ||
-          effectArgs[arg.id] === defaultBooleanValue,
-      )
-    ) {
-      classList.push('Disabled')
-    }
-
-    // Return the class names as a single string.
-    return classList.join(' ')
-  })
-
-  /* -- EFFECTS -- */
-  useEffect(() => {
-    if (effect.newEffect) {
-      // Reset the arguments that are stored in the state component.
-      resetArgProperties()
-    }
-  }, [effect])
 
   /* -- FUNCTIONS -- */
 
@@ -364,7 +320,7 @@ export default function Args(props: TArgs): JSX.Element | null {
   /**
    * Handles the creation of the effect.
    */
-  const saveEffect = () => {
+  const submitEffect = () => {
     // Grab the entries of the effect's arguments.
     let argEntries: [string, any][] = Object.entries(effectArgs)
     // Filter out the arguments that are not filled out.
@@ -387,17 +343,13 @@ export default function Args(props: TArgs): JSX.Element | null {
     // // Execute the effect.
     // effect.target.script(effect.args)
 
-    // Add the effect to the action's effects list
-    // if it is not already in the list.
-    if (!action.effects.includes(effect)) {
-      action.effects.push(effect)
-      forceUpdate()
-    }
+    // Add the effect to the action's effects list.
+    action.effects.push(effect)
 
     // Reset the arguments that are stored in the state component.
     resetArgProperties()
-    // Reset the form.
-    setClearForm(true)
+    // Set the selected effect to null.
+    setSelectedEffect(null)
   }
 
   /**
@@ -456,14 +408,8 @@ export default function Args(props: TArgs): JSX.Element | null {
 
         {/* -- BUTTONS -- */}
         <div className='ButtonContainer'>
-          <div
-            className={clearFormButtonClassName}
-            onClick={resetArgProperties}
-          >
-            Clear Arguments
-          </div>
-          <div className={saveButtonClassName} onClick={saveEffect}>
-            Save
+          <div className={submitButtonClassName} onClick={submitEffect}>
+            Submit
           </div>
         </div>
       </div>
@@ -473,12 +419,12 @@ export default function Args(props: TArgs): JSX.Element | null {
   }
 }
 
-/* ------------------------------ PROPS ------------------------------ */
+/* ---------------------------- TYPES FOR ARGS ---------------------------- */
 
 /**
  * Props for Args component.
  */
-export type TArgs = {
+export type TArgs_P = {
   /**
    * The action to execute.
    */
@@ -488,7 +434,15 @@ export type TArgs = {
    */
   effect: ClientEffect
   /**
-   * Function to change the clear form value.
+   * A boolean that will determine if a field has been left empty.
    */
-  setClearForm: (value: boolean) => void
+  isEmptyString: boolean
+  /**
+   * A boolean that will determine if a field has default values.
+   */
+  areDefaultValues: boolean
+  /**
+   * A function that will set the selected effect.
+   */
+  setSelectedEffect: (effect: ClientEffect | null) => void
 }

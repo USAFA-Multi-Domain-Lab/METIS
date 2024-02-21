@@ -1,11 +1,12 @@
+import { v4 as generateHash } from 'uuid'
+import { TCommonTargetEnvironment } from '../../target-environments'
 import Target, {
   TCommonTarget,
   TCommonTargetJson,
 } from '../../target-environments/targets'
-import { TCommonTargetEnvironment } from '../../target-environments'
+import { TAjaxStatus } from '../../toolbox/ajax'
 import { AnyObject } from '../../toolbox/objects'
 import { TCommonMissionAction } from '../actions'
-import { TAjaxStatus } from '../../toolbox/ajax'
 
 /**
  * An effect that can be applied to a target.
@@ -140,9 +141,9 @@ export default abstract class Effect<
    * The default properties of the Effect.
    */
   public static readonly DEFAULT_PROPERTIES: Required<TCommonEffectJson> = {
-    id: '',
-    name: '',
-    description: '<p><br></p>',
+    id: generateHash(),
+    name: undefined,
+    description: undefined,
     targetId: Target.DEFAULT_PROPERTIES.id,
     args: {},
   }
@@ -179,11 +180,11 @@ export interface TCommonEffect {
   /**
    * The name of the effect.
    */
-  name: string
+  name: string | undefined
   /**
    * Descibes what the effect does.
    */
-  description: string
+  description: string | undefined
   /**
    * The arguments used to affect an entity via the effects API.
    */
@@ -205,11 +206,11 @@ export interface TCommonEffectJson {
   /**
    * The name of the effect.
    */
-  name: string
+  name: string | undefined
   /**
    * Descibes what the effect does.
    */
-  description: string
+  description: string | undefined
   /**
    * The ID of the target to which the effect will be applied.
    */

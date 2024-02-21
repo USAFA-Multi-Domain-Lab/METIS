@@ -13,20 +13,8 @@
     min-width: calc(205px - 16%);
 
     &.DetailToggle {
-      display: grid;
-      align-items: center;
-      grid-template-columns: auto 60px;
-      margin-top: 30px;
-
-      .Label {
-        margin: 0;
-      }
-
-      .Field {
-        border: none;
-        padding: 0;
-        margin: 0 0 0 15px;
-      }
+      border: none;
+      margin: 20px 8% -10px;
     }
   }
 }

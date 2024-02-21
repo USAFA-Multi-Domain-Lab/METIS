@@ -1,9 +1,9 @@
 /* -- imports -- */
 
-import './List.scss'
 import React from 'react'
 import { TAjaxStatus } from '../../../../../shared/toolbox/ajax'
 import Tooltip from '../communication/Tooltip'
+import './List.scss'
 
 /* -- enumerations -- */
 

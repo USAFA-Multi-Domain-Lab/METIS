@@ -1,4 +1,5 @@
 @import 'src/assets/styles/config.scss';
+@import 'src/assets/styles/util.scss';
 
 .List {
   display: inline-block;
@@ -443,6 +444,60 @@
         margin-top: 10px;
         background-color: transparent;
         color: white;
+      }
+    }
+  }
+
+  &.AltDesign2-list {
+    background: none;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    border-radius: unset;
+    border-bottom: 2px solid $color-main;
+
+    .top {
+      grid-template-columns: auto;
+      border-bottom: 2px solid $color-main;
+      padding-bottom: 8px;
+      margin-bottom: 11px;
+
+      .previous-page,
+      .next-page {
+        @include hide;
+      }
+
+      .list-header {
+        margin: 0;
+        padding: 0;
+        background: none;
+
+        .list-heading {
+          font-size: 0.78em;
+          font-weight: normal;
+          background: none;
+          padding: 0;
+        }
+      }
+    }
+
+    .filtering {
+      @include hide;
+    }
+
+    .items {
+      .item {
+        background: none;
+        border: none;
+        padding: 0;
+        margin: 10px;
+        border-radius: unset;
+        min-height: unset;
+        font-size: 0.78em;
+      }
+
+      .page-number {
+        @include hide;
       }
     }
   }

@@ -89,13 +89,12 @@
 
         .BoxTop {
           display: grid;
-          grid-template-columns: auto auto;
           box-sizing: border-box;
           position: sticky;
           top: 0;
           z-index: 1;
           margin: 0 0 -20px;
-          height: 70px;
+          height: 80px;
           padding: 5px 0 0 10px;
           background: linear-gradient(
             $background-alt7 0%,
@@ -109,11 +108,36 @@
             }
           }
 
-          .ErrorMessage {
-            margin: 10px 0 0;
+          &.IsError {
+            .Path {
+              @include hide();
+            }
+          }
+
+          .BackButton {
+            margin-left: 8%;
+            font-size: 2.5em;
+
+            .BackArrow {
+              width: 1em;
+
+              &:hover {
+                cursor: pointer;
+                color: $terminal;
+              }
+            }
+          }
+
+          .ErrorMessage,
+          .Path {
+            margin: 20px 0 0;
             font-size: 0.8em;
             color: $color-error-alt;
             width: 97%;
+          }
+
+          .Path {
+            color: $color-main;
           }
         }
       }

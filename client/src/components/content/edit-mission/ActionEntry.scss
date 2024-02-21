@@ -1,0 +1,58 @@
+@import 'src/assets/styles/config.scss';
+
+.ActionEntry {
+  &.SidePanel {
+    .BorderBox {
+      .BoxTop {
+        grid-template-columns: auto 70% auto;
+
+        .Close {
+          background: linear-gradient(
+            $background-alt7 0%,
+            $background-alt7 80%,
+            transparent 100%
+          );
+          grid-column: 3 / 3;
+          padding: 15px 0 0;
+          min-width: 28px;
+        }
+      }
+
+      .SidePanelSection {
+        margin: 20px 6.5% 40px;
+
+        .AltDesign2-list {
+          background: none;
+          margin: 20px 8% 0;
+          padding: 0;
+          width: 84%;
+          border-bottom: unset;
+
+          .items {
+            .item {
+              width: calc(100% - 20px);
+              max-width: unset;
+
+              .EffectRow {
+                display: grid;
+                align-items: center;
+                grid-template-columns: auto 80px;
+                width: 100%;
+              }
+            }
+          }
+        }
+
+        .NewEffect {
+          .ButtonContainer {
+            .AddEffect {
+              border-bottom: 2px solid $color-main;
+              margin: 20px 0 0;
+              padding: 0 0 15px;
+            }
+          }
+        }
+      }
+    }
+  }
+}

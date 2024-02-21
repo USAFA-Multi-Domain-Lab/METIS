@@ -1,5 +1,9 @@
+import { useState } from 'react'
+import { useGlobalContext } from 'src/context'
+import { ClientEffect } from 'src/missions/effects'
 import { compute } from 'src/toolbox'
 import { TTargetArg } from '../../../../../../shared/target-environments/targets'
+import { AnyObject } from '../../../../../../shared/toolbox/objects'
 import {
   Detail,
   DetailBox,
@@ -7,31 +11,27 @@ import {
   DetailNumber,
   DetailToggle,
 } from '../../form/Form'
-import { useGlobalContext } from 'src/context'
-import { useState } from 'react'
-import { AnyObject } from '../../../../../../shared/toolbox/objects'
 import './ArgGroupings.scss'
-import { ClientEffect } from 'src/missions/effects'
 
-export default function ArgGroupings(props: TArgGroupings): JSX.Element | null {
-  /* -- PROPS -- */
-  const {
-    effect,
-    grouping,
-    dropDownKey,
-    numberKey,
-    stringKey,
-    mediumStringKey,
-    booleanKey,
-    defaultDropDownValue,
-    defaultNumberValue,
-    defaultStringValue,
-    defaultBooleanValue,
-    effectArgs,
-    reqPropertiesNotFilledOut,
-    updateArg,
-  } = props
-
+/**
+ * Renders all the argument fields for a grouping of arguments.
+ */
+export default function ArgGroupings({
+  effect,
+  grouping,
+  dropDownKey,
+  numberKey,
+  stringKey,
+  mediumStringKey,
+  booleanKey,
+  defaultDropDownValue,
+  defaultNumberValue,
+  defaultStringValue,
+  defaultBooleanValue,
+  effectArgs,
+  reqPropertiesNotFilledOut,
+  updateArg,
+}: TArgGroupings_P): JSX.Element | null {
   /* -- GLOBAL CONTEXT -- */
   const { forceUpdate } = useGlobalContext().actions
 
@@ -304,8 +304,9 @@ export default function ArgGroupings(props: TArgGroupings): JSX.Element | null {
                     forceUpdate()
                   }}
                   options={{
-                    emptyStringAllowed: true,
+                    emptyStringAllowed: arg.required,
                     placeholder: arg.required ? 'Required' : 'Optional',
+                    elementBoundary: '.BorderBox',
                   }}
                   key={`arg-${arg.id}_type-${arg.type}_field-${mediumStringKey}`}
                 />
@@ -347,12 +348,26 @@ export default function ArgGroupings(props: TArgGroupings): JSX.Element | null {
   }
 }
 
-/* ------------------------------ PROPS ------------------------------ */
+/* ---------------------------- TYPES FOR ARG GROUPINGS ---------------------------- */
+
+/**
+ * The dropdown argument type for a target.
+ */
+export type TTargetArgDropdownOption = {
+  /**
+   * The ID of the option.
+   */
+  id: string
+  /**
+   * The name of the option.
+   */
+  name: string
+}
 
 /**
  * The props for the ArgGroupings component.
  */
-export type TArgGroupings = {
+export type TArgGroupings_P = {
   /**
    * The effect to which the arguments belong.
    */
@@ -409,20 +424,4 @@ export type TArgGroupings = {
    * The function to update the argument properties and its dependencies.
    */
   updateArg: (arg: TTargetArg) => void
-}
-
-/* ------------------------------ TYPES ------------------------------ */
-
-/**
- * The dropdown argument type for a target.
- */
-export type TTargetArgDropdownOption = {
-  /**
-   * The ID of the option.
-   */
-  id: string
-  /**
-   * The name of the option.
-   */
-  name: string
 }

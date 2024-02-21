@@ -1,7 +1,7 @@
-import { useState } from 'react'
-import ClientMissionNode from 'src/missions/nodes'
+import { useGlobalContext } from 'src/context'
 import ClientMissionAction from 'src/missions/actions'
-import ClientMission from 'src/missions'
+import ClientMissionNode from 'src/missions/nodes'
+import { compute } from 'src/toolbox'
 import Tooltip from '../communication/Tooltip'
 import {
   Detail,
@@ -10,52 +10,36 @@ import {
   DetailNumber,
   DetailToggle,
 } from '../form/Form'
+import List, { ESortByMethod } from '../general-layout/List'
+import {
+  EMiniButtonSVGPurpose,
+  MiniButtonSVG,
+} from '../user-controls/MiniButtonSVG'
+import { MiniButtonSVGPanel } from '../user-controls/MiniButtonSVGPanel'
 import { EToggleLockState } from '../user-controls/Toggle'
-import NodeActionDetails from './NodeActionDetails'
 import './NodeEntry.scss'
-import { useGlobalContext } from 'src/context'
-import { useMountHandler } from 'src/toolbox/hooks'
-import { compute } from 'src/toolbox'
 
 /**
  * This will render the entry fields for a mission-node
  * within the MissionFormPage component.
  */
-export default function NodeEntry(props: TNodeEntryProps): JSX.Element | null {
-  /* -- PROPS -- */
-  const {
-    node,
-    displayedAction,
-    nodeEmptyStringArray,
-    actionEmptyStringArray,
-    setDisplayedAction,
-    setNodeEmptyStringArray,
-    setActionEmptyStringArray,
-    handleChange,
-    handleAddRequest: handleAddNodeRequest,
-    handleDeleteRequest,
-    handleCloseRequest,
-  } = props
-
+export default function NodeEntry({
+  node,
+  isEmptyString,
+  nodeEmptyStringArray,
+  setNodeEmptyStringArray,
+  setSelectedAction,
+  handleChange,
+  handleAddRequest,
+  handleDeleteRequest,
+  handleCloseRequest,
+}: TNodeEntry_P): JSX.Element | null {
   /* -- GLOBAL CONTEXT -- */
   const globalContext = useGlobalContext()
   const [colorOptions] = globalContext.missionNodeColors
   const { notify } = globalContext.actions
 
-  /* -- STATE -- */
-  const [deliverNameError, setDeliverNameError] = useState<boolean>(false)
-  const [errorMessage, setErrorMessage] = useState<string>(
-    'At least one character is required here.',
-  )
-
   /* -- COMPUTED -- */
-
-  /**
-   * If the node has at least one empty field.
-   */
-  const isEmptyString: boolean = compute(() => {
-    return nodeEmptyStringArray.length > 0 || actionEmptyStringArray.length > 0
-  })
   /**
    * The class name for the top of the box.
    */
@@ -126,11 +110,45 @@ export default function NodeEntry(props: TNodeEntryProps): JSX.Element | null {
       return undefined
     }
   })
+  /**
+   * The class name for the list of actions.
+   */
+  const actionClassName: string = compute(() => {
+    // Create a default list of class names.
+    let classList: string[] = ['AltDesign2']
 
-  /* -- EFFECTS -- */
+    // If there is at least one empty field, add the error class.
+    if (isEmptyString) {
+      classList.unshift('Disabled')
+    }
 
-  const [mountHandled, remount] = useMountHandler(async (done) => {
-    done()
+    // If the node is not executable then hide the list of actions.
+    if (node && !node.executable) {
+      classList.unshift('Hidden')
+    }
+
+    // Combine the class names into a single string.
+    return classList.join(' ')
+  })
+  /**
+   * The class name for the new action container.
+   */
+  const newActionClassName: string = compute(() => {
+    // Create a default list of class names.
+    let classList: string[] = ['NewAction']
+
+    // If there is at least one empty field, add the disabled class.
+    if (isEmptyString) {
+      classList.push('Disabled')
+    }
+
+    // If the node is not executable then hide the add action container.
+    if (node && !node.executable) {
+      classList.push('Hidden')
+    }
+
+    // Combine the class names into a single string.
+    return classList.join(' ')
   })
 
   /* -- FUNCTIONS -- */
@@ -154,16 +172,39 @@ export default function NodeEntry(props: TNodeEntryProps): JSX.Element | null {
     })
   }
 
+  /**
+   * This handles deleting an action from the selected node.
+   */
+  const handleDeleteActionRequest = (action: ClientMissionAction) => {
+    if (node !== null) {
+      node.actions.delete(action.actionID)
+      setSelectedAction(null)
+      handleChange()
+    }
+  }
+
+  /**
+   * This handles editing an action from the selected node.
+   */
+  const handleEditActionRequest = (action: ClientMissionAction) => {
+    setSelectedAction(action)
+  }
+
   /* -- RENDER -- */
 
   if (node !== null) {
     return (
       <div className='NodeEntry SidePanel'>
         <div className='BorderBox'>
+          {/* -- TOP OF BOX -- */}
           <div className={boxTopClassName}>
+            <div className='BackButton'>
+              <div className='BackArrow Disabled'>&#8592;</div>
+            </div>
             <div className='ErrorMessage'>
               Fix all errors before closing panel.
             </div>
+            <div className='Path'>Location: Mission/Node</div>
             <div
               className={closeClassName}
               onClick={() => {
@@ -175,7 +216,6 @@ export default function NodeEntry(props: TNodeEntryProps): JSX.Element | null {
                     { duration: null, errorMessage: true },
                   )
                 }
-                remount()
               }}
               key={'close-node-side-panel'}
             >
@@ -185,6 +225,8 @@ export default function NodeEntry(props: TNodeEntryProps): JSX.Element | null {
               </div>
             </div>
           </div>
+
+          {/* -- MAIN CONTENT -- */}
           <div className='SidePanelSection'>
             <Detail
               label='Name'
@@ -193,21 +235,13 @@ export default function NodeEntry(props: TNodeEntryProps): JSX.Element | null {
                 if (node !== null && name !== '') {
                   node.name = name
                   removeNodeEmptyString('name')
-                  setDeliverNameError(false)
-                  remount()
                   handleChange()
                 } else if (node !== null && name === '') {
-                  setDeliverNameError(true)
                   setNodeEmptyStringArray([
                     ...nodeEmptyStringArray,
                     `nodeID=${node.nodeID}_field=name`,
                   ])
-                  remount()
                 }
-              }}
-              options={{
-                deliverError: deliverNameError,
-                deliverErrorMessage: errorMessage,
               }}
               key={`${node.nodeID}_name`}
             />
@@ -387,9 +421,98 @@ export default function NodeEntry(props: TNodeEntryProps): JSX.Element | null {
               }}
               key={`${node.nodeID}_device`}
             />
+
+            {/* -- ACTIONS -- */}
+            <List<ClientMissionAction>
+              items={Array.from(node.actions.values())}
+              renderItemDisplay={(action: ClientMissionAction) => {
+                /* -- COMPUTED -- */
+                /**
+                 * The buttons for the action list.
+                 */
+                const actionButtons = compute(() => {
+                  // Create a default list of buttons.
+                  let buttons: MiniButtonSVG[] = []
+
+                  // If the action is available then add the edit and remove buttons.
+                  let availableMiniActions = {
+                    edit: new MiniButtonSVG({
+                      ...MiniButtonSVG.defaultProps,
+                      purpose: EMiniButtonSVGPurpose.Edit,
+                      handleClick: () => handleEditActionRequest(action),
+                      tooltipDescription: 'Edit action.',
+                    }),
+                    remove: new MiniButtonSVG({
+                      ...MiniButtonSVG.defaultProps,
+                      purpose: EMiniButtonSVGPurpose.Remove,
+                      handleClick: () => handleDeleteActionRequest(action),
+                      tooltipDescription: 'Remove action.',
+                    }),
+                  }
+
+                  // Add the buttons to the list.
+                  buttons.push(availableMiniActions.edit)
+                  buttons.push(availableMiniActions.remove)
+
+                  // Return the buttons.
+                  return buttons
+                })
+
+                return (
+                  <div
+                    className='ActionRow'
+                    key={`action-row-${action.actionID}`}
+                  >
+                    <div className='Action'>{action.name}</div>
+                    <MiniButtonSVGPanel
+                      buttons={actionButtons}
+                      linkBack={null}
+                    />
+                  </div>
+                )
+              }}
+              headingText={'Actions:'}
+              sortByMethods={[ESortByMethod.Name]}
+              nameProperty={'name'}
+              alwaysUseBlanks={false}
+              searchableProperties={['actionID']}
+              noItemsDisplay={
+                <div className='NoContent'>No actions available...</div>
+              }
+              ajaxStatus={'Loaded'}
+              applyItemStyling={() => {
+                return {}
+              }}
+              itemsPerPage={null}
+              listSpecificItemClassName={actionClassName}
+            />
+
+            {/* -- NEW ACTION BUTTON -- */}
+            <div className={newActionClassName}>
+              <div className='ButtonContainer'>
+                <div
+                  className='FormButton AddAction'
+                  onClick={() => {
+                    let newAction: ClientMissionAction =
+                      new ClientMissionAction(node)
+                    setSelectedAction(newAction)
+                    node.actions.set(newAction.actionID, newAction)
+                    handleChange()
+                  }}
+                >
+                  <span className='Text'>
+                    <span className='LeftBracket'>[</span> New Action{' '}
+                    <span className='RightBracket'>]</span>
+                    <Tooltip description='Create a new action.' />
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* -- BUTTON(S) -- */}
             <div className='ButtonContainer'>
               <div className={addNodeClassName}>
-                <span className='Text' onClick={handleAddNodeRequest}>
+                <span className='Text' onClick={handleAddRequest}>
                   <span className='LeftBracket'>[</span> Add adjacent node{' '}
                   <span className='RightBracket'>]</span>
                   <Tooltip description='Add one or multiple nodes adjacent to this node.' />
@@ -404,16 +527,6 @@ export default function NodeEntry(props: TNodeEntryProps): JSX.Element | null {
               </div>
             </div>
           </div>
-          <NodeActionDetails
-            node={node}
-            isEmptyString={isEmptyString}
-            displayedAction={displayedAction}
-            actionEmptyStringArray={actionEmptyStringArray}
-            setActionEmptyStringArray={setActionEmptyStringArray}
-            setDisplayedAction={setDisplayedAction}
-            remount={remount}
-            handleChange={handleChange}
-          />
         </div>
       </div>
     )
@@ -425,45 +538,29 @@ export default function NodeEntry(props: TNodeEntryProps): JSX.Element | null {
 /* ---------------------------- TYPES FOR NODE ENTRY ---------------------------- */
 
 // The props for the NodeEntry component.
-export type TNodeEntryProps = {
+export type TNodeEntry_P = {
   /**
    * The mission-node to be edited.
    */
   node: ClientMissionNode | null
   /**
-   * The current action being displayed. This is used for
-   * pagination purposes. ***This is passed down to the
-   * NodeActionDetails component.***
+   * A boolean that will determine if a field has been left empty.
    */
-  displayedAction: number
+  isEmptyString: boolean
   /**
    * An array of strings that will be used to determine
    * if a field has been left empty.
    */
-  nodeEmptyStringArray: Array<string>
-  /**
-   * An array of strings that will be used to determine
-   * if a field has been left empty. ***This is passed down
-   * to the NodeActionDetails component.***
-   */
-  actionEmptyStringArray: Array<string>
-  /**
-   * A function that will set the current action being
-   * displayed. ***This is passed down to the
-   * NodeActionDetails component.***
-   */
-  setDisplayedAction: (displayedAction: number) => void
+  nodeEmptyStringArray: string[]
   /**
    * A function that will set the array of strings that
    * will be used to determine if a field has been left empty.
    */
-  setNodeEmptyStringArray: (nodeEmptyStringArray: Array<string>) => void
+  setNodeEmptyStringArray: (nodeEmptyStringArray: string[]) => void
   /**
-   * A function that will set the array of strings that
-   * will be used to determine if a field has been left empty.
-   * ***This is passed down to the NodeActionDetails component.***
+   * A function that will set the action that is selected.
    */
-  setActionEmptyStringArray: (actionEmptyStringArray: Array<string>) => void
+  setSelectedAction: (action: ClientMissionAction | null) => void
   /**
    * A function that will be called when a change has been made.
    */

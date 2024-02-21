@@ -139,6 +139,7 @@
       .ql-container {
         font-family: monospace, sans-serif;
         border: 2px solid $color-main;
+        border-top: none;
 
         .ql-editor {
           * {
@@ -285,6 +286,25 @@
           }
         }
       }
+    }
+  }
+
+  &.DetailToggle {
+    display: grid;
+    align-items: center;
+    grid-template-columns: auto 60px;
+    @include fieldDimensions();
+    margin: 20px 8% 0;
+    width: 84%;
+
+    .Label {
+      margin: 0;
+    }
+
+    .Field {
+      border: none;
+      padding: 0;
+      margin: 0 0 0 15px;
     }
   }
 }

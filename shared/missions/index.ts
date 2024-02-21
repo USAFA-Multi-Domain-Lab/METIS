@@ -1,11 +1,11 @@
 import { v4 as generateHash } from 'uuid'
+import context from '../context'
 import { AnyObject } from '../toolbox/objects'
 import {
   TCommonMissionNode,
   TMissionNodeJson,
   TMissionNodeOptions,
 } from './nodes'
-import context from '../context'
 
 /**
  * This represents a mission for a student to complete.

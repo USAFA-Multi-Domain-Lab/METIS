@@ -4,7 +4,18 @@
   &.SidePanel {
     .BorderBox {
       .BoxTop {
-        height: 20px;
+        grid-template-columns: auto 70% auto;
+
+        .Path {
+          $resizeablePanelMinWidth: 330px;
+          $border-width: 2px;
+          $padding: 10px;
+
+          min-width: calc(
+            #{$resizeablePanelMinWidth} - #{$border-width * 2} - #{$padding}
+          );
+          grid-column: 2 / 3;
+        }
       }
 
       .SidePanelSection {

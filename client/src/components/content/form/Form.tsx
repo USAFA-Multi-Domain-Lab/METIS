@@ -1,15 +1,14 @@
 // This will render a detail for
 // a form, with a label and a text
 
-import React from 'react'
-import { useEffect, useRef, useState } from 'react'
-import inputs from 'src/toolbox/inputs'
-import './Form.scss'
-import Toggle, { EToggleLockState } from '../user-controls/Toggle'
-import Tooltip from '../communication/Tooltip'
-import { AnyObject } from '../../../../../shared/toolbox/objects'
+import React, { useEffect, useRef, useState } from 'react'
 import ReactQuill from 'react-quill'
 import 'react-quill/dist/quill.snow.css'
+import inputs from 'src/toolbox/inputs'
+import { AnyObject } from '../../../../../shared/toolbox/objects'
+import Tooltip from '../communication/Tooltip'
+import Toggle, { EToggleLockState } from '../user-controls/Toggle'
+import './Form.scss'
 
 interface IDetail {
   label: string
@@ -24,6 +23,7 @@ interface IDetail {
     placeholder?: string // defaults to undefined
     clearField?: boolean // defaults to false
     displayRequiredIcon?: boolean // defaults to false
+    emptyStringAllowed?: boolean // defaults to false
   }
 }
 
@@ -31,6 +31,7 @@ interface IDetail_S {
   inputType: string
   displayPasswordText: string
   currentValue: string | null | undefined
+  displayError: boolean
 }
 
 /**
@@ -42,13 +43,14 @@ interface IDetail_S {
  * @param deliverValue The function to deliver the value.
  * @param options The options available for the detail.
  * @param options.deliverError The boolean that determines if the detail should display an error. Defaults to false.
- * @param options.deliverErrorMessage The error message to display. Defaults to ''.
+ * @param options.deliverErrorMessage The error message to display. Defaults to 'At least one character is required here.'.
  * @param options.uniqueLabelClassName The unique class name for the label. Defaults to ''.
  * @param options.uniqueInputClassName The unique class name for the input. Defaults to ''.
  * @param options.inputType The type of input to render (i.e., text, password, etc.). Defaults to text.
  * @param options.placeholder The placeholder for the input. Defaults to undefined.
  * @param options.clearField The boolean that determines if the detail should clear the field. Defaults to false.
  * @param options.displayRequiredIcon The boolean that determines if the detail should display a required icon. Defaults to false.
+ * @param options.emptyStringAllowed The boolean that determines if the detail should allow empty strings. Defaults to false.
  * @returns A JSX Element for the detail.
  */
 export class Detail extends React.Component<IDetail, IDetail_S> {
@@ -63,6 +65,7 @@ export class Detail extends React.Component<IDetail, IDetail_S> {
         : 'text',
       displayPasswordText: 'show',
       currentValue: this.props.initialValue,
+      displayError: false,
     }
   }
 
@@ -100,12 +103,10 @@ export class Detail extends React.Component<IDetail, IDetail_S> {
   render(): JSX.Element | null {
     let label: string = this.props.label
     let deliverValue = this.props.deliverValue
-    let displayError: boolean = this.props.options?.deliverError
-      ? this.props.options.deliverError
-      : false
+    let deliverError: boolean = this.props.options?.deliverError || false
     let errorMessage: string = this.props.options?.deliverErrorMessage
       ? this.props.options.deliverErrorMessage
-      : ''
+      : 'At least one character is required here.'
     let uniqueLabelClassName: string = this.props.options?.uniqueLabelClassName
       ? this.props.options.uniqueLabelClassName
       : ''
@@ -120,7 +121,10 @@ export class Detail extends React.Component<IDetail, IDetail_S> {
     let clearField: boolean = this.props.options?.clearField || false
     let displayRequiredIcon: boolean =
       this.props.options?.displayRequiredIcon || false
+    let emptyStringAllowed: boolean =
+      this.props.options?.emptyStringAllowed || false
     let currentValue: string | null | undefined = this.state.currentValue || ''
+    let displayError: boolean = this.state.displayError
 
     /* -- PRE-RENDER PROCESSING -- */
 
@@ -133,7 +137,10 @@ export class Detail extends React.Component<IDetail, IDetail_S> {
       'TogglePasswordDisplayContainer Hidden'
     let requiredIconClassName: string = 'Required'
 
-    if (displayError) {
+    // If empty strings are not allowed
+    // and the field is empty or in a default
+    // state, then display an error.
+    if (!emptyStringAllowed && (displayError || deliverError)) {
       fieldClassName += ' Error'
       labelClassName += ' Error'
       fieldErrorClassName = 'FieldErrorMessage'
@@ -177,10 +184,49 @@ export class Detail extends React.Component<IDetail, IDetail_S> {
             onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
               this.setState({ currentValue: event.target.value })
               deliverValue(event.target.value)
+
+              // If empty strings are not allowed
+              // and the field is empty or in a default
+              // state, then display an error.
+              if (!emptyStringAllowed) {
+                if (
+                  event.target.value === '' ||
+                  event.target.value === null ||
+                  event.target.value === undefined
+                ) {
+                  this.setState({ displayError: true })
+                }
+                // If empty strings are not allowed
+                // and the field is not empty or in a default
+                // state, then do not display an error.
+                else {
+                  this.setState({ displayError: false })
+                }
+              }
+              // If empty strings are allowed then never
+              // display an error.
+              else {
+                this.setState({ displayError: false })
+              }
             }}
-            // onBlur={(event: React.FocusEvent) => {
-            //   let target: HTMLInputElement = event.target as HTMLInputElement
-            // }}
+            onBlur={(event: React.FocusEvent) => {
+              let target: HTMLInputElement = event.target as HTMLInputElement
+              let value: string | null | undefined = target.value
+
+              // If empty strings are not allowed
+              // and the field is empty or in a default
+              // state, then display an error.
+              if (!emptyStringAllowed) {
+                if (value === '' || value === null || value === undefined) {
+                  this.setState({ displayError: true })
+                }
+              }
+              // If empty strings are allowed then never
+              // display an error.
+              else {
+                this.setState({ displayError: false })
+              }
+            }}
           />
           <input
             className={
@@ -484,11 +530,28 @@ export function DetailBox(props: {
         onChange={(value: string) => {
           deliverValue(value)
 
-          // Equivalent to an empty string.
-          if (!emptyStringAllowed && value !== '<p><br></p>') {
+          // If empty strings are not allowed
+          // and the field is empty or in a default
+          // state, then display an error.
+          if (!emptyStringAllowed) {
+            if (
+              value === '<p><br></p>' ||
+              value === null ||
+              value === undefined
+            ) {
+              setIsEmptyString(true)
+            }
+            // If empty strings are not allowed
+            // and the field is not empty or in a default
+            // state, then do not display an error.
+            else {
+              setIsEmptyString(false)
+            }
+          }
+          // If empty strings are allowed then never
+          // display an error.
+          else {
             setIsEmptyString(false)
-          } else if (!emptyStringAllowed && value === '<p><br></p>') {
-            setIsEmptyString(true)
           }
         }}
         onBlur={(
@@ -498,9 +561,21 @@ export function DetailBox(props: {
         ) => {
           let value: string = editor.getHTML()
 
-          if (!emptyStringAllowed && value === '<p><br></p>') {
-            setIsEmptyString(true)
-          } else if (emptyStringAllowed && value === '<p><br></p>') {
+          // If empty strings are not allowed
+          // and the field is empty or in a default
+          // state, then display an error.
+          if (!emptyStringAllowed) {
+            if (
+              value === '<p><br></p>' ||
+              value === null ||
+              value === undefined
+            ) {
+              setIsEmptyString(true)
+            }
+          }
+          // If empty strings are allowed then never
+          // display an error.
+          else {
             setIsEmptyString(false)
           }
         }}

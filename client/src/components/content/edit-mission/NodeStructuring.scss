@@ -4,6 +4,8 @@
   &.SidePanel {
     .BorderBox {
       .BoxTop {
+        grid-template-columns: auto auto;
+
         .MoreInformation {
           display: grid;
           justify-content: end;
