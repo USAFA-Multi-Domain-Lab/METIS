@@ -4,18 +4,18 @@
   &.SidePanel {
     .BorderBox {
       .BoxTop {
-        grid-template-columns: auto 70% auto;
+        grid-template-columns: 50px auto;
 
-        .Close {
-          background: linear-gradient(
-            $background-alt7 0%,
-            $background-alt7 80%,
-            transparent 100%
-          );
-          grid-column: 3 / 3;
-          padding: 15px 0 0;
-          min-width: 28px;
-        }
+        // .Close {
+        //   background: linear-gradient(
+        //     $background-alt7 0%,
+        //     $background-alt7 80%,
+        //     transparent 100%
+        //   );
+        //   grid-column: 3 / 3;
+        //   padding: 15px 0 0;
+        //   min-width: 28px;
+        // }
       }
 
       .SidePanelSection {

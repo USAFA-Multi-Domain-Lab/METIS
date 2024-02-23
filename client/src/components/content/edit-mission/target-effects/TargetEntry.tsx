@@ -1,9 +1,8 @@
-import { useState } from 'react'
 import { useGlobalContext } from 'src/context'
 import ClientMissionAction from 'src/missions/actions'
 import { ClientEffect } from 'src/missions/effects'
+import { ClientTargetEnvironment } from 'src/target-environments'
 import ClientTarget from 'src/target-environments/targets'
-import { compute } from 'src/toolbox'
 import { DetailDropDown } from '../../form/Form'
 import Args from './Args'
 import './TargetEntry.scss'
@@ -14,34 +13,26 @@ import './TargetEntry.scss'
 export default function TargetEntry({
   action,
   effect,
-  targets,
+  selectedTargetEnv,
+  selectedTarget,
   isEmptyString,
   areDefaultValues,
+  targets,
+  setSelectedTarget,
   setSelectedEffect,
 }: TTargetEntry_P) {
   /* -- GLOBAL CONTEXT -- */
   const { forceUpdate } = useGlobalContext().actions
 
-  /* -- STATE -- */
-  const [isExpanded] = useState<boolean>(false)
-
-  /* -- COMPUTED -- */
-  /**
-   * Set the selected target.
-   */
-  const selectedTarget: ClientTarget | null = compute(() => {
-    return effect.selectedTarget
-  })
-
   /* -- RENDER -- */
-  if (targets.length > 0 && effect.selectedTargetEnv) {
+  if (targets.length > 0 && selectedTargetEnv) {
     return (
       <div className='TargetEntry'>
         <DetailDropDown<ClientTarget>
           label='Target'
           options={targets}
           currentValue={selectedTarget}
-          isExpanded={isExpanded}
+          isExpanded={false}
           uniqueDropDownStyling={{}}
           uniqueOptionStyling={(target: ClientTarget) => {
             return {}
@@ -53,13 +44,15 @@ export default function TargetEntry({
             return target.name
           }}
           deliverValue={(target: ClientTarget) => {
-            effect.selectedTarget = target
+            effect.target = target
+            setSelectedTarget(target)
             forceUpdate()
           }}
         />
         <Args
           action={action}
           effect={effect}
+          target={selectedTarget}
           isEmptyString={isEmptyString}
           areDefaultValues={areDefaultValues}
           setSelectedEffect={setSelectedEffect}
@@ -86,6 +79,14 @@ export type TTargetEntry_P = {
    */
   effect: ClientEffect
   /**
+   * The selected target environment.
+   */
+  selectedTargetEnv: ClientTargetEnvironment | null
+  /**
+   * The selected target.
+   */
+  selectedTarget: ClientTarget | null
+  /**
    * A boolean that will determine if a field has been left empty.
    */
   isEmptyString: boolean
@@ -97,6 +98,10 @@ export type TTargetEntry_P = {
    * List of targets to apply effects to.
    */
   targets: ClientTarget[]
+  /**
+   * A function that will set the selected target.
+   */
+  setSelectedTarget: (target: ClientTarget | null) => void
   /**
    * A function that will set the selected effect.
    */

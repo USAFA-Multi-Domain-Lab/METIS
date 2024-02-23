@@ -14,76 +14,14 @@ export class ClientEffect extends Effect<
   ClientMissionAction,
   ClientTargetEnvironment
 > {
-  /**
-   * The target environment containing a list of targets to which the effect can be applied.
-   * @note Initially this is null, but it will be set when the user selects a target environment
-   * via the target-effect interface.
-   */
-  protected _selectedTargetEnv: ClientTargetEnvironment | null
-  /**
-   * The target environment containing a list of targets to which the effect can be applied.
-   * @note Initially this is null, but it will be set when the user selects a target environment
-   * via the target-effect interface.
-   */
-  public get selectedTargetEnv(): ClientTargetEnvironment | null {
-    return this._selectedTargetEnv
-  }
-  /**
-   * The target environment containing a list of targets to which the effect can be applied.
-   * @note Initially this is null, but it will be set when the user selects a target environment
-   * via the target-effect interface.
-   */
-  public set selectedTargetEnv(targetEnv: ClientTargetEnvironment | null) {
-    // Only set the target environment if it is a ClientTargetEnvironment object.
-    if (targetEnv instanceof ClientTargetEnvironment) {
-      this._selectedTargetEnv = targetEnv
-    }
-    // Otherwise, set the target environment to null.
-    else {
-      this._selectedTargetEnv = null
-    }
-  }
-
-  /**
-   * The target to which the effect will be applied.
-   * @note Initially this is null, but it will be set when the user selects a target via the target-effect interface.
-   */
-  protected _selectedTarget: ClientTarget | null
-  /**
-   * The target to which the effect will be applied.
-   * @note Initially this is null, but it will be set when the user selects a target via the target-effect interface.
-   */
-  public get selectedTarget(): ClientTarget | null {
-    return this._selectedTarget
-  }
-  /**
-   * The target to which the effect will be applied.
-   * @note Initially this is null, but it will be set when the user selects a target via the target-effect interface.
-   */
-  public set selectedTarget(target: ClientTarget | null) {
-    // Only set the target if it is a ClientTarget object.
-    if (target instanceof ClientTarget) {
-      this._selectedTarget = target
-      this._target = target
-    }
-    // Otherwise, set the target to null.
-    else {
-      this._selectedTarget = null
-    }
-  }
-
   // Implemented
   public constructor(
     action: ClientMissionAction,
-    data: Partial<TCommonEffectJson> = Effect.DEFAULT_PROPERTIES,
+    data: Partial<TCommonEffectJson> = ClientEffect.DEFAULT_PROPERTIES,
     options: TClientEffectOptions = {},
   ) {
     // Initialize base properties.
     super(action, data, options)
-
-    // Initialize the selected target environment and target.
-    this._selectedTargetEnv = null
-    this._selectedTarget = null
   }
 
   // Implemented

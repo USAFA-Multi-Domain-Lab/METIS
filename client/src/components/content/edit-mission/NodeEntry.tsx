@@ -25,14 +25,15 @@ import './NodeEntry.scss'
  */
 export default function NodeEntry({
   node,
+  missionPath,
   isEmptyString,
   nodeEmptyStringArray,
   setNodeEmptyStringArray,
+  selectNode,
   setSelectedAction,
   handleChange,
   handleAddRequest,
   handleDeleteRequest,
-  handleCloseRequest,
 }: TNodeEntry_P): JSX.Element | null {
   /* -- GLOBAL CONTEXT -- */
   const globalContext = useGlobalContext()
@@ -50,21 +51,6 @@ export default function NodeEntry({
     // If there is at least one empty field, add the error class.
     if (isEmptyString) {
       classList.push('IsError')
-    }
-
-    // Combine the class names into a single string.
-    return classList.join(' ')
-  })
-  /**
-   * The class name for the close button.
-   */
-  const closeClassName: string = compute(() => {
-    // Create a default list of class names.
-    let classList: string[] = ['Close']
-
-    // If there is at least one empty field, add the disabled class.
-    if (isEmptyString) {
-      classList.push('Disabled')
     }
 
     // Combine the class names into a single string.
@@ -179,6 +165,7 @@ export default function NodeEntry({
     if (node !== null) {
       node.actions.delete(action.actionID)
       setSelectedAction(null)
+      missionPath.pop()
       handleChange()
     }
   }
@@ -188,6 +175,7 @@ export default function NodeEntry({
    */
   const handleEditActionRequest = (action: ClientMissionAction) => {
     setSelectedAction(action)
+    missionPath.push(action.name)
   }
 
   /* -- RENDER -- */
@@ -199,31 +187,20 @@ export default function NodeEntry({
           {/* -- TOP OF BOX -- */}
           <div className={boxTopClassName}>
             <div className='BackButton'>
-              <div className='BackArrow Disabled'>&#8592;</div>
+              <div
+                className='BackArrow'
+                onClick={() => {
+                  missionPath.pop()
+                  selectNode(null)
+                }}
+              >
+                &#8592;
+              </div>
             </div>
             <div className='ErrorMessage'>
               Fix all errors before closing panel.
             </div>
-            <div className='Path'>Location: Mission/Node</div>
-            <div
-              className={closeClassName}
-              onClick={() => {
-                if (!isEmptyString) {
-                  handleCloseRequest()
-                } else if (node !== null) {
-                  notify(
-                    `**Error:** The node called "${node.name.toLowerCase()}" has at least one field that was left empty. These fields must contain at least one character.`,
-                    { duration: null, errorMessage: true },
-                  )
-                }
-              }}
-              key={'close-node-side-panel'}
-            >
-              <div className='CloseButton'>
-                x
-                <Tooltip description='Close panel.' />
-              </div>
-            </div>
+            <div className='Path'>Location: {missionPath.join('/')}</div>
           </div>
 
           {/* -- MAIN CONTENT -- */}
@@ -497,6 +474,7 @@ export default function NodeEntry({
                       new ClientMissionAction(node)
                     setSelectedAction(newAction)
                     node.actions.set(newAction.actionID, newAction)
+                    missionPath.push(newAction.name)
                     handleChange()
                   }}
                 >
@@ -544,6 +522,11 @@ export type TNodeEntry_P = {
    */
   node: ClientMissionNode | null
   /**
+   * The path showing the user's location in the side panel.
+   * @note This will help the user understand what they are editing.
+   */
+  missionPath: string[]
+  /**
    * A boolean that will determine if a field has been left empty.
    */
   isEmptyString: boolean
@@ -557,6 +540,10 @@ export type TNodeEntry_P = {
    * will be used to determine if a field has been left empty.
    */
   setNodeEmptyStringArray: (nodeEmptyStringArray: string[]) => void
+  /**
+   * A function that will set the node that is selected.
+   */
+  selectNode: (node: ClientMissionNode | null) => void
   /**
    * A function that will set the action that is selected.
    */
@@ -575,9 +562,4 @@ export type TNodeEntry_P = {
    * delete a mission-node.
    */
   handleDeleteRequest: () => void
-  /**
-   * A function that will be called when the user wants to
-   * close the mission-node side panel.
-   */
-  handleCloseRequest: () => void
 }

@@ -37,18 +37,35 @@ export default abstract class Effect<
    * already been loaded. Otherwise, it will be the ID
    * of the target.
    */
-  protected _target: Target<TTargetEnvironment> | TCommonTargetJson['id']
+  protected _target:
+    | Target<TTargetEnvironment>
+    | TCommonTargetJson['id']
+    | undefined
   /**
    * The target to which the effect will be applied.
    * @note If the data has not been loaded, this will throw
    * an error.
    */
-  public get target(): Target<TTargetEnvironment> {
-    if (!(this._target instanceof Target)) {
+  public get target(): Target<TTargetEnvironment> | undefined {
+    if (!(this._target instanceof Target) && this._target !== undefined) {
       throw new Error('Target data for this effect has not been populated.')
     }
 
     return this._target
+  }
+  /**
+   * The target to which the effect will be applied.
+   * @note Setting this will cause the target data to be reloaded.
+   */
+  public set target(
+    target: Target<TTargetEnvironment> | TCommonTargetJson['id'] | undefined,
+  ) {
+    if (target instanceof Target || target === undefined) {
+      this._target = target
+    } else {
+      this._target = target
+      this._targetAjaxStatus = 'NotLoaded'
+    }
   }
 
   /**
@@ -66,16 +83,22 @@ export default abstract class Effect<
    * The ID of the target to which the effect will be applied.
    */
   public get targetId(): TCommonTargetJson['id'] {
-    let target: Target<TTargetEnvironment> | TCommonTargetJson['id'] =
-      this._target
+    let target:
+      | Target<TTargetEnvironment>
+      | TCommonTargetJson['id']
+      | undefined = this._target
 
     // If the target is a Target Object, return its ID.
     if (target instanceof Target) {
       return target.id
     }
-    // Otherwise, the target is an ID, so return it.
-    else {
+    // Or if the target is an ID, return it.
+    else if (typeof target === 'string') {
       return target
+    }
+    // Otherwise, the target is undefined, so return an empty string.
+    else {
+      return ''
     }
   }
   /**
@@ -132,7 +155,7 @@ export default abstract class Effect<
       id: this.id,
       name: this.name,
       description: this.description,
-      targetId: this.target.id,
+      targetId: this.target ? this.target.id : this.targetId,
       args: this.args,
     }
   }
@@ -144,7 +167,7 @@ export default abstract class Effect<
     id: generateHash(),
     name: undefined,
     description: undefined,
-    targetId: Target.DEFAULT_PROPERTIES.id,
+    targetId: undefined,
     args: {},
   }
 }
@@ -172,7 +195,7 @@ export interface TCommonEffect {
   /**
    * The target to which the effect will be applied.
    */
-  target: TCommonTarget
+  target: TCommonTarget | undefined
   /**
    * The ID of the effect.
    */
@@ -214,7 +237,7 @@ export interface TCommonEffectJson {
   /**
    * The ID of the target to which the effect will be applied.
    */
-  targetId: TCommonTargetJson['id']
+  targetId: TCommonTargetJson['id'] | undefined
   /**
    * The arguments used to affect an entity via the effects API.
    */

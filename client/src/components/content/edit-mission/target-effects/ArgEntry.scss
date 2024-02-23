@@ -1,0 +1,12 @@
+@import 'src/assets/styles/config.scss';
+
+.ArgEntry {
+  &.Boolean {
+    .Detail {
+      &.DetailToggle {
+        border: none;
+        margin: 20px 8% -10px;
+      }
+    }
+  }
+}

@@ -14,13 +14,13 @@ import TargetEnvEntry from './TargetEnvEntry'
 export default function EffectEntry({
   action,
   effect,
+  missionPath,
   targetEnvironments,
   isEmptyString,
   areDefaultValues,
   effectEmptyStringArray,
   setEffectEmptyStringArray,
   setSelectedEffect,
-  handleCloseRequest,
   handleChange,
 }: TEffectEntry_P): JSX.Element | null {
   /* -- GLOBAL CONTEXT -- */
@@ -37,21 +37,6 @@ export default function EffectEntry({
     // If there is at least one empty field, add the error class.
     if (isEmptyString) {
       classList.push('IsError')
-    }
-
-    // Combine the class names into a single string.
-    return classList.join(' ')
-  })
-  /**
-   * The class name for the close button.
-   */
-  const closeClassName: string = compute(() => {
-    // Create a default list of class names.
-    let classList: string[] = ['Close']
-
-    // If there is at least one empty field, add the disabled class.
-    if (isEmptyString || areDefaultValues) {
-      classList.push('Disabled')
     }
 
     // Combine the class names into a single string.
@@ -136,17 +121,7 @@ export default function EffectEntry({
           <div className='ErrorMessage'>
             Fix all errors before closing panel.
           </div>
-          <div className='Path'>Location: Mission/Node/Action/Effect</div>
-          <div
-            className={closeClassName}
-            onClick={handleCloseRequest}
-            key={'close-node-side-panel'}
-          >
-            <div className='CloseButton'>
-              x
-              <Tooltip description='Close panel.' />
-            </div>
-          </div>
+          <div className='Path'>Location: {missionPath.join('/')}</div>
         </div>
 
         {/* -- MAIN CONTENT -- */}
@@ -175,7 +150,16 @@ export default function EffectEntry({
             initialValue={effect.description}
             deliverValue={(description: string) => {
               effect.description = description
-              forceUpdate()
+
+              if (description !== '<p><br></p>') {
+                removeEffectEmptyString('description')
+                handleChange()
+              } else {
+                setEffectEmptyStringArray([
+                  ...effectEmptyStringArray,
+                  `effectID=${effect.id}_field=description`,
+                ])
+              }
             }}
             options={{
               placeholder: 'Required',
@@ -221,6 +205,11 @@ export type TEffectEntry_P = {
    */
   effect: ClientEffect
   /**
+   * The path showing the user's location in the side panel.
+   * @note This will help the user understand what they are editing.
+   */
+  missionPath: string[]
+  /**
    * List of target environments to apply effects to.
    */
   targetEnvironments: ClientTargetEnvironment[]
@@ -246,10 +235,6 @@ export type TEffectEntry_P = {
    * A function that will set the selected effect.
    */
   setSelectedEffect: (effect: ClientEffect | null) => void
-  /**
-   * A function that will be called when the close button is clicked.
-   */
-  handleCloseRequest: () => void
   /**
    * A function that will be called when a change has been made.
    */

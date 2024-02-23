@@ -18,6 +18,7 @@ import './ActionEntry.scss'
  */
 export default function ActionEntry({
   action,
+  missionPath,
   isEmptyString,
   areDefaultValues,
   actionEmptyStringArray,
@@ -25,7 +26,6 @@ export default function ActionEntry({
   setSelectedAction,
   setSelectedEffect,
   handleChange,
-  handleCloseRequest,
 }: TActionEntry_P): JSX.Element | null {
   /* -- COMPUTED -- */
 
@@ -43,21 +43,6 @@ export default function ActionEntry({
     // If there is at least one empty field, add the error class.
     if (isEmptyString || areDefaultValues) {
       classList.push('IsError')
-    }
-
-    // Combine the class names into a single string.
-    return classList.join(' ')
-  })
-  /**
-   * The class name for the close button.
-   */
-  const closeClassName: string = compute(() => {
-    // Create a default list of class names.
-    let classList: string[] = ['Close']
-
-    // If there is at least one empty field, add the disabled class.
-    if (isEmptyString || areDefaultValues) {
-      classList.push('Disabled')
     }
 
     // Combine the class names into a single string.
@@ -158,6 +143,9 @@ export default function ActionEntry({
    * Handles the request to edit an effect.
    */
   const handleEditEffectRequest = (effect: ClientEffect) => {
+    // Update the mission path.
+    missionPath.push(effect.name || 'New Effect')
+    // Set the selected effect.
     setSelectedEffect(effect)
   }
 
@@ -167,6 +155,12 @@ export default function ActionEntry({
   const handleDeleteEffectRequest = (effect: ClientEffect) => {
     // Remove the effect from the action.
     action.effects.splice(action.effects.indexOf(effect), 1)
+    // Reset the effectEmptyStringArray.
+    setActionEmptyStringArray([])
+    // Reset the selected effect.
+    setSelectedEffect(null)
+    // Update the mission path.
+    missionPath.pop()
     // Allow the user to save the changes.
     handleChange()
   }
@@ -182,7 +176,10 @@ export default function ActionEntry({
             <div className='BackButton'>
               <div
                 className={backButtonClassName}
-                onClick={() => setSelectedAction(null)}
+                onClick={() => {
+                  missionPath.pop()
+                  setSelectedAction(null)
+                }}
               >
                 &#8592;
                 <Tooltip description='Go back.' />
@@ -191,17 +188,7 @@ export default function ActionEntry({
             <div className='ErrorMessage'>
               Fix all errors before closing panel.
             </div>
-            <div className='Path'>Location: Mission/Node/Action</div>
-            <div
-              className={closeClassName}
-              onClick={handleCloseRequest}
-              key={'close-node-side-panel'}
-            >
-              <div className='CloseButton'>
-                x
-                <Tooltip description='Close panel.' />
-              </div>
-            </div>
+            <div className='Path'>Location: {missionPath.join('/')}</div>
           </div>
 
           {/* -- MAIN CONTENT -- */}
@@ -411,6 +398,7 @@ export default function ActionEntry({
                 <div
                   className='FormButton AddEffect'
                   onClick={() => {
+                    missionPath.push('New Effect')
                     setSelectedEffect(new ClientEffect(action))
                   }}
                 >
@@ -456,6 +444,11 @@ export type TActionEntry_P = {
    */
   action: ClientMissionAction
   /**
+   * The path showing the user's location in the side panel.
+   * @note This will help the user understand what they are editing.
+   */
+  missionPath: string[]
+  /**
    * A boolean that will determine if a field has been left empty.
    */
   isEmptyString: boolean
@@ -485,8 +478,4 @@ export type TActionEntry_P = {
    * A function that will be called when a change has been made.
    */
   handleChange: () => void
-  /**
-   * A function that will be called when the close button is clicked.
-   */
-  handleCloseRequest: () => void
 }

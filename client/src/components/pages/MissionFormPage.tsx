@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useBeforeunload } from 'react-beforeunload'
 import { useGlobalContext } from 'src/context'
 import ClientMission from 'src/missions'
@@ -6,6 +6,7 @@ import ClientMissionAction from 'src/missions/actions'
 import { ClientEffect } from 'src/missions/effects'
 import ClientMissionNode, { ENodeDeleteMethod } from 'src/missions/nodes'
 import { ClientTargetEnvironment } from 'src/target-environments'
+import ClientTarget from 'src/target-environments/targets'
 import { compute } from 'src/toolbox'
 import { useMountHandler } from 'src/toolbox/hooks'
 import { AnyObject } from '../../../../shared/toolbox/objects'
@@ -24,6 +25,7 @@ import {
 } from '../content/general-layout/ResizablePanels'
 import './MissionFormPage.scss'
 
+/* -- TARGET SCRIPTS -- */
 /**
  * Affects the bank in Rancho Cucamonga.
  * @param args All the necessary arguments to execute the request.
@@ -54,7 +56,6 @@ const affectBank = async (args: AnyObject): Promise<void> => {
     throw new Error(error)
   }
 }
-
 /**
  * Affects traffic lights in Rancho Cucamonga.
  * @param args All the necessary arguments to execute the request.
@@ -110,7 +111,6 @@ const affectTraffic = async (args: AnyObject): Promise<void> => {
     throw new Error(error)
   }
 }
-
 /**
  * Affects a flying entity in ASCOT.
  * @param args All the necessary arguments to execute the request.
@@ -196,849 +196,852 @@ const affectFlyingEntity = async (args: AnyObject): Promise<void> => {
   }
 }
 
-const targetEnvironments: ClientTargetEnvironment[] = [
-  new ClientTargetEnvironment({
-    id: 'ascot',
-    name: 'ASCOT',
-    description:
-      'Advanced Simulation Combat Operations Trainer (ASCOT) is a high-fidelity environment generator designed for military instructors needing real-time, interactive, multi-platform simulation.',
-    targets: [
-      {
-        targetEnvironmentId: 'ascot',
-        id: 'flyingEntity',
-        name: 'Flying Entity',
-        description: 'A flying entity in ASCOT.',
-        script: affectFlyingEntity,
-        args: [
-          {
-            id: 'entityName',
-            name: 'Entity Name',
-            required: true,
-            display: true,
-            type: 'string',
-          },
-          {
-            id: 'heading',
-            name: 'Change Heading',
-            required: false,
-            display: true,
-            groupingId: 'heading',
-            type: 'boolean',
-            optionalParams: {
-              dependencies: ['unit'],
-            },
-          },
-          {
-            id: 'unit',
-            name: 'Heading Unit',
-            required: false,
-            display: false,
-            groupingId: 'heading',
-            type: 'dropdown',
-            options: [
-              {
-                id: 'deg',
-                name: 'Degrees',
-              },
-              {
-                id: 'rad',
-                name: 'Radians',
-              },
-            ],
-            optionalParams: {
-              dependencies: ['value'],
-            },
-          },
-          {
-            id: 'value',
-            name: 'Heading Value',
-            required: false,
-            display: false,
-            groupingId: 'heading',
-            type: 'number',
-          },
-          {
-            id: 'changeAltitude',
-            name: 'Change Altitude',
-            required: false,
-            display: true,
-            groupingId: 'changeAltitude',
-            type: 'boolean',
-            optionalParams: {
-              dependencies: ['altitude'],
-            },
-          },
-          {
-            id: 'altitude',
-            name: 'Altitude Value',
-            required: false,
-            display: false,
-            groupingId: 'changeAltitude',
-            type: 'number',
-            min: 0,
-            max: 10000,
-            unit: 'm',
-          },
-          {
-            id: 'kill',
-            name: 'Kill the Target',
-            required: false,
-            display: true,
-            type: 'boolean',
-          },
+/* -- TARGET ENVIRONMENTS -- */
+let ascot: ClientTargetEnvironment = new ClientTargetEnvironment({
+  id: 'ascot',
+  name: 'ASCOT',
+  description:
+    'Advanced Simulation Combat Operations Trainer (ASCOT) is a high-fidelity environment generator designed for military instructors needing real-time, interactive, multi-platform simulation.',
+  targets: [],
+})
+let ranchoCucamonga: ClientTargetEnvironment = new ClientTargetEnvironment({
+  id: 'ranchoCucamonga',
+  name: 'Rancho Cucamonga',
+  description:
+    'Rancho Cucamonga is a scale model of a city used for educating students on network security.',
+  targets: [],
+})
+
+/* -- TARGETS -- */
+let flyingEntity: ClientTarget = new ClientTarget(ascot, {
+  targetEnvironmentId: 'ascot',
+  id: 'flyingEntity',
+  name: 'Flying Entity',
+  description: 'A flying entity in ASCOT.',
+  script: affectFlyingEntity,
+  args: [
+    {
+      id: 'entityName',
+      name: 'Entity Name',
+      required: true,
+      display: true,
+      type: 'string',
+    },
+    {
+      id: 'heading',
+      name: 'Change Heading',
+      required: false,
+      display: true,
+      groupingId: 'heading',
+      type: 'boolean',
+      optionalParams: {
+        dependencies: ['unit'],
+      },
+    },
+    {
+      id: 'unit',
+      name: 'Heading Unit',
+      required: false,
+      display: false,
+      groupingId: 'heading',
+      type: 'dropdown',
+      options: [
+        {
+          id: 'deg',
+          name: 'Degrees',
+        },
+        {
+          id: 'rad',
+          name: 'Radians',
+        },
+      ],
+      optionalParams: {
+        dependencies: ['value'],
+      },
+    },
+    {
+      id: 'value',
+      name: 'Heading Value',
+      required: false,
+      display: false,
+      groupingId: 'heading',
+      type: 'number',
+    },
+    {
+      id: 'changeAltitude',
+      name: 'Change Altitude',
+      required: false,
+      display: true,
+      groupingId: 'changeAltitude',
+      type: 'boolean',
+      optionalParams: {
+        dependencies: ['altitude'],
+      },
+    },
+    {
+      id: 'altitude',
+      name: 'Altitude Value',
+      required: false,
+      display: false,
+      groupingId: 'changeAltitude',
+      type: 'number',
+      min: 0,
+      max: 10000,
+      unit: 'm',
+    },
+    {
+      id: 'kill',
+      name: 'Kill the Target',
+      required: false,
+      display: true,
+      type: 'boolean',
+    },
+  ],
+})
+let trafficLights: ClientTarget = new ClientTarget(ranchoCucamonga, {
+  targetEnvironmentId: 'ranchoCucamonga',
+  id: 'traffic',
+  name: 'Traffic Lights',
+  description:
+    'The traffic lights are located in all four zones (industrial, commercial, residential, and military) within Rancho Cucamonga and are used to control traffic.',
+  script: affectTraffic,
+  args: [
+    {
+      id: 'commercial',
+      name: 'Commercial',
+      required: false,
+      display: true,
+      type: 'boolean',
+      optionalParams: {
+        dependencies: [
+          'commercialNorth',
+          'commercialSouth',
+          'commercialEast',
+          'commercialWest',
         ],
       },
-    ],
-  }),
-  new ClientTargetEnvironment({
-    id: 'ranchoCucamonga',
-    name: 'Rancho Cucamonga',
-    description:
-      'Rancho Cucamonga is a scale model of a city used for educating students on network security.',
-    targets: [
-      {
-        targetEnvironmentId: 'ranchoCucamonga',
-        id: 'traffic',
-        name: 'Traffic Lights',
-        description:
-          'The traffic lights are located in all four zones (industrial, commercial, residential, and military) within Rancho Cucamonga and are used to control traffic.',
-        script: affectTraffic,
-        args: [
-          {
-            id: 'commercial',
-            name: 'Commercial',
-            required: false,
-            display: true,
-            type: 'boolean',
-            optionalParams: {
-              dependencies: [
-                'commercialNorth',
-                'commercialSouth',
-                'commercialEast',
-                'commercialWest',
-              ],
-            },
-          },
-          {
-            id: 'commercialNorth',
-            name: 'North - Commercial',
-            required: false,
-            display: false,
-            groupingId: 'commercialNorth',
-            type: 'boolean',
-            optionalParams: {
-              dependencies: [
-                'commercialNorthGreen',
-                'commercialNorthYellow',
-                'commercialNorthRed',
-              ],
-            },
-          },
-          {
-            id: 'commercialNorthGreen',
-            name: 'Green',
-            required: false,
-            display: false,
-            groupingId: 'commercialNorth',
-            type: 'boolean',
-          },
-          {
-            id: 'commercialNorthYellow',
-            name: 'Yellow',
-            required: false,
-            display: false,
-            groupingId: 'commercialNorth',
-            type: 'boolean',
-          },
-          {
-            id: 'commercialNorthRed',
-            name: 'Red',
-            required: false,
-            display: false,
-            groupingId: 'commercialNorth',
-            type: 'boolean',
-          },
-          {
-            id: 'commercialSouth',
-            name: 'South - Commercial',
-            required: false,
-            display: false,
-            groupingId: 'commercialSouth',
-            type: 'boolean',
-            optionalParams: {
-              dependencies: [
-                'commercialSouthGreen',
-                'commercialSouthYellow',
-                'commercialSouthRed',
-              ],
-            },
-          },
-          {
-            id: 'commercialSouthGreen',
-            name: 'Green',
-            required: false,
-            display: false,
-            groupingId: 'commercialSouth',
-            type: 'boolean',
-          },
-          {
-            id: 'commercialSouthYellow',
-            name: 'Yellow',
-            required: false,
-            display: false,
-            groupingId: 'commercialSouth',
-            type: 'boolean',
-          },
-          {
-            id: 'commercialSouthRed',
-            name: 'Red',
-            required: false,
-            display: false,
-            groupingId: 'commercialSouth',
-            type: 'boolean',
-          },
-          {
-            id: 'commercialEast',
-            name: 'East - Commercial',
-            required: false,
-            display: false,
-            groupingId: 'commercialEast',
-            type: 'boolean',
-            optionalParams: {
-              dependencies: [
-                'commercialEastGreen',
-                'commercialEastYellow',
-                'commercialEastRed',
-              ],
-            },
-          },
-          {
-            id: 'commercialEastGreen',
-            name: 'Green',
-            required: false,
-            display: false,
-            groupingId: 'commercialEast',
-            type: 'boolean',
-          },
-          {
-            id: 'commercialEastYellow',
-            name: 'Yellow',
-            required: false,
-            display: false,
-            groupingId: 'commercialEast',
-            type: 'boolean',
-          },
-          {
-            id: 'commercialEastRed',
-            name: 'Red',
-            required: false,
-            display: false,
-            groupingId: 'commercialEast',
-            type: 'boolean',
-          },
-          {
-            id: 'commercialWest',
-            name: 'West - Commercial',
-            required: false,
-            display: false,
-            groupingId: 'commercialWest',
-            type: 'boolean',
-            optionalParams: {
-              dependencies: [
-                'commercialWestGreen',
-                'commercialWestYellow',
-                'commercialWestRed',
-              ],
-            },
-          },
-          {
-            id: 'commercialWestGreen',
-            name: 'Green',
-            required: false,
-            display: false,
-            groupingId: 'commercialWest',
-            type: 'boolean',
-          },
-          {
-            id: 'commercialWestYellow',
-            name: 'Yellow',
-            required: false,
-            display: false,
-            groupingId: 'commercialWest',
-            type: 'boolean',
-          },
-          {
-            id: 'commercialWestRed',
-            name: 'Red',
-            required: false,
-            display: false,
-            groupingId: 'commercialWest',
-            type: 'boolean',
-          },
-          {
-            id: 'industrial',
-            name: 'Industrial',
-            required: false,
-            display: true,
-            type: 'boolean',
-            optionalParams: {
-              dependencies: [
-                'industrialNorth',
-                'industrialSouth',
-                'industrialEast',
-                'industrialWest',
-              ],
-            },
-          },
-          {
-            id: 'industrialNorth',
-            name: 'North - Industrial',
-            required: false,
-            display: false,
-            groupingId: 'industrialNorth',
-            type: 'boolean',
-            optionalParams: {
-              dependencies: [
-                'industrialNorthGreen',
-                'industrialNorthYellow',
-                'industrialNorthRed',
-              ],
-            },
-          },
-          {
-            id: 'industrialNorthGreen',
-            name: 'Green',
-            required: false,
-            display: false,
-            groupingId: 'industrialNorth',
-            type: 'boolean',
-          },
-          {
-            id: 'industrialNorthYellow',
-            name: 'Yellow',
-            required: false,
-            display: false,
-            groupingId: 'industrialNorth',
-            type: 'boolean',
-          },
-          {
-            id: 'industrialNorthRed',
-            name: 'Red',
-            required: false,
-            display: false,
-            groupingId: 'industrialNorth',
-            type: 'boolean',
-          },
-          {
-            id: 'industrialSouth',
-            name: 'South - Industrial',
-            required: false,
-            display: false,
-            groupingId: 'industrialSouth',
-            type: 'boolean',
-            optionalParams: {
-              dependencies: [
-                'industrialSouthGreen',
-                'industrialSouthYellow',
-                'industrialSouthRed',
-              ],
-            },
-          },
-          {
-            id: 'industrialSouthGreen',
-            name: 'Green',
-            required: false,
-            display: false,
-            groupingId: 'industrialSouth',
-            type: 'boolean',
-          },
-          {
-            id: 'industrialSouthYellow',
-            name: 'Yellow',
-            required: false,
-            display: false,
-            groupingId: 'industrialSouth',
-            type: 'boolean',
-          },
-          {
-            id: 'industrialSouthRed',
-            name: 'Red',
-            required: false,
-            display: false,
-            groupingId: 'industrialSouth',
-            type: 'boolean',
-          },
-          {
-            id: 'industrialEast',
-            name: 'East - Industrial',
-            required: false,
-            display: false,
-            type: 'boolean',
-            groupingId: 'industrialEast',
-            optionalParams: {
-              dependencies: [
-                'industrialEastGreen',
-                'industrialEastYellow',
-                'industrialEastRed',
-              ],
-            },
-          },
-          {
-            id: 'industrialEastGreen',
-            name: 'Green',
-            required: false,
-            display: false,
-            groupingId: 'industrialEast',
-            type: 'boolean',
-          },
-          {
-            id: 'industrialEastYellow',
-            name: 'Yellow',
-            required: false,
-            display: false,
-            groupingId: 'industrialEast',
-            type: 'boolean',
-          },
-          {
-            id: 'industrialEastRed',
-            name: 'Red',
-            required: false,
-            display: false,
-            groupingId: 'industrialEast',
-            type: 'boolean',
-          },
-          {
-            id: 'industrialWest',
-            name: 'West - Industrial',
-            required: false,
-            display: false,
-            groupingId: 'industrialWest',
-            type: 'boolean',
-            optionalParams: {
-              dependencies: [
-                'industrialWestGreen',
-                'industrialWestYellow',
-                'industrialWestRed',
-              ],
-            },
-          },
-          {
-            id: 'industrialWestGreen',
-            name: 'Green',
-            required: false,
-            display: false,
-            groupingId: 'industrialWest',
-            type: 'boolean',
-          },
-          {
-            id: 'industrialWestYellow',
-            name: 'Yellow',
-            required: false,
-            display: false,
-            groupingId: 'industrialWest',
-            type: 'boolean',
-          },
-          {
-            id: 'industrialWestRed',
-            name: 'Red',
-            required: false,
-            display: false,
-            groupingId: 'industrialWest',
-            type: 'boolean',
-          },
-          {
-            id: 'residential',
-            name: 'Residential',
-            required: false,
-            display: true,
-            type: 'boolean',
-            optionalParams: {
-              dependencies: [
-                'residentialNorth',
-                'residentialSouth',
-                'residentialEast',
-                'residentialWest',
-              ],
-            },
-          },
-          {
-            id: 'residentialNorth',
-            name: 'North - Residential',
-            required: false,
-            display: false,
-            groupingId: 'residentialNorth',
-            type: 'boolean',
-            optionalParams: {
-              dependencies: [
-                'residentialNorthGreen',
-                'residentialNorthYellow',
-                'residentialNorthRed',
-              ],
-            },
-          },
-          {
-            id: 'residentialNorthGreen',
-            name: 'Green',
-            required: false,
-            display: false,
-            groupingId: 'residentialNorth',
-            type: 'boolean',
-          },
-          {
-            id: 'residentialNorthYellow',
-            name: 'Yellow',
-            required: false,
-            display: false,
-            groupingId: 'residentialNorth',
-            type: 'boolean',
-          },
-          {
-            id: 'residentialNorthRed',
-            name: 'Red',
-            required: false,
-            display: false,
-            groupingId: 'residentialNorth',
-            type: 'boolean',
-          },
-          {
-            id: 'residentialSouth',
-            name: 'South - Residential',
-            required: false,
-            display: false,
-            groupingId: 'residentialSouth',
-            type: 'boolean',
-            optionalParams: {
-              dependencies: [
-                'residentialSouthGreen',
-                'residentialSouthYellow',
-                'residentialSouthRed',
-              ],
-            },
-          },
-          {
-            id: 'residentialSouthGreen',
-            name: 'Green',
-            required: false,
-            display: false,
-            groupingId: 'residentialSouth',
-            type: 'boolean',
-          },
-          {
-            id: 'residentialSouthYellow',
-            name: 'Yellow',
-            required: false,
-            display: false,
-            groupingId: 'residentialSouth',
-            type: 'boolean',
-          },
-          {
-            id: 'residentialSouthRed',
-            name: 'Red',
-            required: false,
-            display: false,
-            groupingId: 'residentialSouth',
-            type: 'boolean',
-          },
-          {
-            id: 'residentialEast',
-            name: 'East - Residential',
-            required: false,
-            display: false,
-            groupingId: 'residentialEast',
-            type: 'boolean',
-            optionalParams: {
-              dependencies: [
-                'residentialEastGreen',
-                'residentialEastYellow',
-                'residentialEastRed',
-              ],
-            },
-          },
-          {
-            id: 'residentialEastGreen',
-            name: 'Green',
-            required: false,
-            display: false,
-            groupingId: 'residentialEast',
-            type: 'boolean',
-          },
-          {
-            id: 'residentialEastYellow',
-            name: 'Yellow',
-            required: false,
-            display: false,
-            groupingId: 'residentialEast',
-            type: 'boolean',
-          },
-          {
-            id: 'residentialEastRed',
-            name: 'Red',
-            required: false,
-            display: false,
-            groupingId: 'residentialEast',
-            type: 'boolean',
-          },
-          {
-            id: 'residentialWest',
-            name: 'West - Residential',
-            required: false,
-            display: false,
-            groupingId: 'residentialWest',
-            type: 'boolean',
-            optionalParams: {
-              dependencies: [
-                'residentialWestGreen',
-                'residentialWestYellow',
-                'residentialWestRed',
-              ],
-            },
-          },
-          {
-            id: 'residentialWestGreen',
-            name: 'Green',
-            required: false,
-            display: false,
-            groupingId: 'residentialWest',
-            type: 'boolean',
-          },
-          {
-            id: 'residentialWestYellow',
-            name: 'Yellow',
-            required: false,
-            display: false,
-            groupingId: 'residentialWest',
-            type: 'boolean',
-          },
-          {
-            id: 'residentialWestRed',
-            name: 'Red',
-            required: false,
-            display: false,
-            groupingId: 'residentialWest',
-            type: 'boolean',
-          },
-          {
-            id: 'military',
-            name: 'Military',
-            required: false,
-            display: true,
-            type: 'boolean',
-            optionalParams: {
-              dependencies: [
-                'militaryNorth',
-                'militarySouth',
-                'militaryEast',
-                'militaryWest',
-              ],
-            },
-          },
-          {
-            id: 'militaryNorth',
-            name: 'North - Military',
-            required: false,
-            display: false,
-            groupingId: 'militaryNorth',
-            type: 'boolean',
-            optionalParams: {
-              dependencies: [
-                'militaryNorthGreen',
-                'militaryNorthYellow',
-                'militaryNorthRed',
-              ],
-            },
-          },
-          {
-            id: 'militaryNorthGreen',
-            name: 'Green',
-            required: false,
-            display: false,
-            groupingId: 'militaryNorth',
-            type: 'boolean',
-          },
-          {
-            id: 'militaryNorthYellow',
-            name: 'Yellow',
-            required: false,
-            display: false,
-            groupingId: 'militaryNorth',
-            type: 'boolean',
-          },
-          {
-            id: 'militaryNorthRed',
-            name: 'Red',
-            required: false,
-            display: false,
-            groupingId: 'militaryNorth',
-            type: 'boolean',
-          },
-          {
-            id: 'militarySouth',
-            name: 'South - Military',
-            required: false,
-            display: false,
-            groupingId: 'militarySouth',
-            type: 'boolean',
-            optionalParams: {
-              dependencies: [
-                'militarySouthGreen',
-                'militarySouthYellow',
-                'militarySouthRed',
-              ],
-            },
-          },
-          {
-            id: 'militarySouthGreen',
-            name: 'Green',
-            required: false,
-            display: false,
-            groupingId: 'militarySouth',
-            type: 'boolean',
-          },
-          {
-            id: 'militarySouthYellow',
-            name: 'Yellow',
-            required: false,
-            display: false,
-            groupingId: 'militarySouth',
-            type: 'boolean',
-          },
-          {
-            id: 'militarySouthRed',
-            name: 'Red',
-            required: false,
-            display: false,
-            groupingId: 'militarySouth',
-            type: 'boolean',
-          },
-          {
-            id: 'militaryEast',
-            name: 'East - Military',
-            required: false,
-            display: false,
-            groupingId: 'militaryEast',
-            type: 'boolean',
-            optionalParams: {
-              dependencies: [
-                'militaryEastGreen',
-                'militaryEastYellow',
-                'militaryEastRed',
-              ],
-            },
-          },
-          {
-            id: 'militaryEastGreen',
-            name: 'Green',
-            required: false,
-            display: false,
-            groupingId: 'militaryEast',
-            type: 'boolean',
-          },
-          {
-            id: 'militaryEastYellow',
-            name: 'Yellow',
-            required: false,
-            display: false,
-            groupingId: 'militaryEast',
-            type: 'boolean',
-          },
-          {
-            id: 'militaryEastRed',
-            name: 'Red',
-            required: false,
-            display: false,
-            groupingId: 'militaryEast',
-            type: 'boolean',
-          },
-          {
-            id: 'militaryWest',
-            name: 'West - Military',
-            required: false,
-            display: false,
-            groupingId: 'militaryWest',
-            type: 'boolean',
-            optionalParams: {
-              dependencies: [
-                'militaryWestGreen',
-                'militaryWestYellow',
-                'militaryWestRed',
-              ],
-            },
-          },
-          {
-            id: 'militaryWestGreen',
-            name: 'Green',
-            required: false,
-            display: false,
-            groupingId: 'militaryWest',
-            type: 'boolean',
-          },
-          {
-            id: 'militaryWestYellow',
-            name: 'Yellow',
-            required: false,
-            display: false,
-            groupingId: 'militaryWest',
-            type: 'boolean',
-          },
-          {
-            id: 'militaryWestRed',
-            name: 'Red',
-            required: false,
-            display: false,
-            groupingId: 'militaryWest',
-            type: 'boolean',
-          },
+    },
+    {
+      id: 'commercialNorth',
+      name: 'North - Commercial',
+      required: false,
+      display: false,
+      groupingId: 'commercialNorth',
+      type: 'boolean',
+      optionalParams: {
+        dependencies: [
+          'commercialNorthGreen',
+          'commercialNorthYellow',
+          'commercialNorthRed',
         ],
       },
-      {
-        targetEnvironmentId: 'ranchoCucamonga',
-        id: 'bank',
-        name: 'Bank',
-        description: 'The bank is a building found within Rancho Cucamonga.',
-        script: affectBank,
-        args: [
-          {
-            id: 'color',
-            name: 'Color',
-            required: true,
-            display: true,
-            type: 'dropdown',
-            options: [
-              {
-                id: 'blue',
-                name: 'Blue',
-              },
-              {
-                id: 'green',
-                name: 'Green',
-              },
-              {
-                id: 'off',
-                name: 'Off',
-              },
-              {
-                id: 'purple',
-                name: 'Purple',
-              },
-              {
-                id: 'red',
-                name: 'Red',
-              },
-              {
-                id: 'white',
-                name: 'White',
-              },
-              {
-                id: 'yellow',
-                name: 'Yellow',
-              },
-            ],
-          },
+    },
+    {
+      id: 'commercialNorthGreen',
+      name: 'Green',
+      required: false,
+      display: false,
+      groupingId: 'commercialNorth',
+      type: 'boolean',
+    },
+    {
+      id: 'commercialNorthYellow',
+      name: 'Yellow',
+      required: false,
+      display: false,
+      groupingId: 'commercialNorth',
+      type: 'boolean',
+    },
+    {
+      id: 'commercialNorthRed',
+      name: 'Red',
+      required: false,
+      display: false,
+      groupingId: 'commercialNorth',
+      type: 'boolean',
+    },
+    {
+      id: 'commercialSouth',
+      name: 'South - Commercial',
+      required: false,
+      display: false,
+      groupingId: 'commercialSouth',
+      type: 'boolean',
+      optionalParams: {
+        dependencies: [
+          'commercialSouthGreen',
+          'commercialSouthYellow',
+          'commercialSouthRed',
         ],
       },
-    ],
-  }),
-]
+    },
+    {
+      id: 'commercialSouthGreen',
+      name: 'Green',
+      required: false,
+      display: false,
+      groupingId: 'commercialSouth',
+      type: 'boolean',
+    },
+    {
+      id: 'commercialSouthYellow',
+      name: 'Yellow',
+      required: false,
+      display: false,
+      groupingId: 'commercialSouth',
+      type: 'boolean',
+    },
+    {
+      id: 'commercialSouthRed',
+      name: 'Red',
+      required: false,
+      display: false,
+      groupingId: 'commercialSouth',
+      type: 'boolean',
+    },
+    {
+      id: 'commercialEast',
+      name: 'East - Commercial',
+      required: false,
+      display: false,
+      groupingId: 'commercialEast',
+      type: 'boolean',
+      optionalParams: {
+        dependencies: [
+          'commercialEastGreen',
+          'commercialEastYellow',
+          'commercialEastRed',
+        ],
+      },
+    },
+    {
+      id: 'commercialEastGreen',
+      name: 'Green',
+      required: false,
+      display: false,
+      groupingId: 'commercialEast',
+      type: 'boolean',
+    },
+    {
+      id: 'commercialEastYellow',
+      name: 'Yellow',
+      required: false,
+      display: false,
+      groupingId: 'commercialEast',
+      type: 'boolean',
+    },
+    {
+      id: 'commercialEastRed',
+      name: 'Red',
+      required: false,
+      display: false,
+      groupingId: 'commercialEast',
+      type: 'boolean',
+    },
+    {
+      id: 'commercialWest',
+      name: 'West - Commercial',
+      required: false,
+      display: false,
+      groupingId: 'commercialWest',
+      type: 'boolean',
+      optionalParams: {
+        dependencies: [
+          'commercialWestGreen',
+          'commercialWestYellow',
+          'commercialWestRed',
+        ],
+      },
+    },
+    {
+      id: 'commercialWestGreen',
+      name: 'Green',
+      required: false,
+      display: false,
+      groupingId: 'commercialWest',
+      type: 'boolean',
+    },
+    {
+      id: 'commercialWestYellow',
+      name: 'Yellow',
+      required: false,
+      display: false,
+      groupingId: 'commercialWest',
+      type: 'boolean',
+    },
+    {
+      id: 'commercialWestRed',
+      name: 'Red',
+      required: false,
+      display: false,
+      groupingId: 'commercialWest',
+      type: 'boolean',
+    },
+    {
+      id: 'industrial',
+      name: 'Industrial',
+      required: false,
+      display: true,
+      type: 'boolean',
+      optionalParams: {
+        dependencies: [
+          'industrialNorth',
+          'industrialSouth',
+          'industrialEast',
+          'industrialWest',
+        ],
+      },
+    },
+    {
+      id: 'industrialNorth',
+      name: 'North - Industrial',
+      required: false,
+      display: false,
+      groupingId: 'industrialNorth',
+      type: 'boolean',
+      optionalParams: {
+        dependencies: [
+          'industrialNorthGreen',
+          'industrialNorthYellow',
+          'industrialNorthRed',
+        ],
+      },
+    },
+    {
+      id: 'industrialNorthGreen',
+      name: 'Green',
+      required: false,
+      display: false,
+      groupingId: 'industrialNorth',
+      type: 'boolean',
+    },
+    {
+      id: 'industrialNorthYellow',
+      name: 'Yellow',
+      required: false,
+      display: false,
+      groupingId: 'industrialNorth',
+      type: 'boolean',
+    },
+    {
+      id: 'industrialNorthRed',
+      name: 'Red',
+      required: false,
+      display: false,
+      groupingId: 'industrialNorth',
+      type: 'boolean',
+    },
+    {
+      id: 'industrialSouth',
+      name: 'South - Industrial',
+      required: false,
+      display: false,
+      groupingId: 'industrialSouth',
+      type: 'boolean',
+      optionalParams: {
+        dependencies: [
+          'industrialSouthGreen',
+          'industrialSouthYellow',
+          'industrialSouthRed',
+        ],
+      },
+    },
+    {
+      id: 'industrialSouthGreen',
+      name: 'Green',
+      required: false,
+      display: false,
+      groupingId: 'industrialSouth',
+      type: 'boolean',
+    },
+    {
+      id: 'industrialSouthYellow',
+      name: 'Yellow',
+      required: false,
+      display: false,
+      groupingId: 'industrialSouth',
+      type: 'boolean',
+    },
+    {
+      id: 'industrialSouthRed',
+      name: 'Red',
+      required: false,
+      display: false,
+      groupingId: 'industrialSouth',
+      type: 'boolean',
+    },
+    {
+      id: 'industrialEast',
+      name: 'East - Industrial',
+      required: false,
+      display: false,
+      type: 'boolean',
+      groupingId: 'industrialEast',
+      optionalParams: {
+        dependencies: [
+          'industrialEastGreen',
+          'industrialEastYellow',
+          'industrialEastRed',
+        ],
+      },
+    },
+    {
+      id: 'industrialEastGreen',
+      name: 'Green',
+      required: false,
+      display: false,
+      groupingId: 'industrialEast',
+      type: 'boolean',
+    },
+    {
+      id: 'industrialEastYellow',
+      name: 'Yellow',
+      required: false,
+      display: false,
+      groupingId: 'industrialEast',
+      type: 'boolean',
+    },
+    {
+      id: 'industrialEastRed',
+      name: 'Red',
+      required: false,
+      display: false,
+      groupingId: 'industrialEast',
+      type: 'boolean',
+    },
+    {
+      id: 'industrialWest',
+      name: 'West - Industrial',
+      required: false,
+      display: false,
+      groupingId: 'industrialWest',
+      type: 'boolean',
+      optionalParams: {
+        dependencies: [
+          'industrialWestGreen',
+          'industrialWestYellow',
+          'industrialWestRed',
+        ],
+      },
+    },
+    {
+      id: 'industrialWestGreen',
+      name: 'Green',
+      required: false,
+      display: false,
+      groupingId: 'industrialWest',
+      type: 'boolean',
+    },
+    {
+      id: 'industrialWestYellow',
+      name: 'Yellow',
+      required: false,
+      display: false,
+      groupingId: 'industrialWest',
+      type: 'boolean',
+    },
+    {
+      id: 'industrialWestRed',
+      name: 'Red',
+      required: false,
+      display: false,
+      groupingId: 'industrialWest',
+      type: 'boolean',
+    },
+    {
+      id: 'residential',
+      name: 'Residential',
+      required: false,
+      display: true,
+      type: 'boolean',
+      optionalParams: {
+        dependencies: [
+          'residentialNorth',
+          'residentialSouth',
+          'residentialEast',
+          'residentialWest',
+        ],
+      },
+    },
+    {
+      id: 'residentialNorth',
+      name: 'North - Residential',
+      required: false,
+      display: false,
+      groupingId: 'residentialNorth',
+      type: 'boolean',
+      optionalParams: {
+        dependencies: [
+          'residentialNorthGreen',
+          'residentialNorthYellow',
+          'residentialNorthRed',
+        ],
+      },
+    },
+    {
+      id: 'residentialNorthGreen',
+      name: 'Green',
+      required: false,
+      display: false,
+      groupingId: 'residentialNorth',
+      type: 'boolean',
+    },
+    {
+      id: 'residentialNorthYellow',
+      name: 'Yellow',
+      required: false,
+      display: false,
+      groupingId: 'residentialNorth',
+      type: 'boolean',
+    },
+    {
+      id: 'residentialNorthRed',
+      name: 'Red',
+      required: false,
+      display: false,
+      groupingId: 'residentialNorth',
+      type: 'boolean',
+    },
+    {
+      id: 'residentialSouth',
+      name: 'South - Residential',
+      required: false,
+      display: false,
+      groupingId: 'residentialSouth',
+      type: 'boolean',
+      optionalParams: {
+        dependencies: [
+          'residentialSouthGreen',
+          'residentialSouthYellow',
+          'residentialSouthRed',
+        ],
+      },
+    },
+    {
+      id: 'residentialSouthGreen',
+      name: 'Green',
+      required: false,
+      display: false,
+      groupingId: 'residentialSouth',
+      type: 'boolean',
+    },
+    {
+      id: 'residentialSouthYellow',
+      name: 'Yellow',
+      required: false,
+      display: false,
+      groupingId: 'residentialSouth',
+      type: 'boolean',
+    },
+    {
+      id: 'residentialSouthRed',
+      name: 'Red',
+      required: false,
+      display: false,
+      groupingId: 'residentialSouth',
+      type: 'boolean',
+    },
+    {
+      id: 'residentialEast',
+      name: 'East - Residential',
+      required: false,
+      display: false,
+      groupingId: 'residentialEast',
+      type: 'boolean',
+      optionalParams: {
+        dependencies: [
+          'residentialEastGreen',
+          'residentialEastYellow',
+          'residentialEastRed',
+        ],
+      },
+    },
+    {
+      id: 'residentialEastGreen',
+      name: 'Green',
+      required: false,
+      display: false,
+      groupingId: 'residentialEast',
+      type: 'boolean',
+    },
+    {
+      id: 'residentialEastYellow',
+      name: 'Yellow',
+      required: false,
+      display: false,
+      groupingId: 'residentialEast',
+      type: 'boolean',
+    },
+    {
+      id: 'residentialEastRed',
+      name: 'Red',
+      required: false,
+      display: false,
+      groupingId: 'residentialEast',
+      type: 'boolean',
+    },
+    {
+      id: 'residentialWest',
+      name: 'West - Residential',
+      required: false,
+      display: false,
+      groupingId: 'residentialWest',
+      type: 'boolean',
+      optionalParams: {
+        dependencies: [
+          'residentialWestGreen',
+          'residentialWestYellow',
+          'residentialWestRed',
+        ],
+      },
+    },
+    {
+      id: 'residentialWestGreen',
+      name: 'Green',
+      required: false,
+      display: false,
+      groupingId: 'residentialWest',
+      type: 'boolean',
+    },
+    {
+      id: 'residentialWestYellow',
+      name: 'Yellow',
+      required: false,
+      display: false,
+      groupingId: 'residentialWest',
+      type: 'boolean',
+    },
+    {
+      id: 'residentialWestRed',
+      name: 'Red',
+      required: false,
+      display: false,
+      groupingId: 'residentialWest',
+      type: 'boolean',
+    },
+    {
+      id: 'military',
+      name: 'Military',
+      required: false,
+      display: true,
+      type: 'boolean',
+      optionalParams: {
+        dependencies: [
+          'militaryNorth',
+          'militarySouth',
+          'militaryEast',
+          'militaryWest',
+        ],
+      },
+    },
+    {
+      id: 'militaryNorth',
+      name: 'North - Military',
+      required: false,
+      display: false,
+      groupingId: 'militaryNorth',
+      type: 'boolean',
+      optionalParams: {
+        dependencies: [
+          'militaryNorthGreen',
+          'militaryNorthYellow',
+          'militaryNorthRed',
+        ],
+      },
+    },
+    {
+      id: 'militaryNorthGreen',
+      name: 'Green',
+      required: false,
+      display: false,
+      groupingId: 'militaryNorth',
+      type: 'boolean',
+    },
+    {
+      id: 'militaryNorthYellow',
+      name: 'Yellow',
+      required: false,
+      display: false,
+      groupingId: 'militaryNorth',
+      type: 'boolean',
+    },
+    {
+      id: 'militaryNorthRed',
+      name: 'Red',
+      required: false,
+      display: false,
+      groupingId: 'militaryNorth',
+      type: 'boolean',
+    },
+    {
+      id: 'militarySouth',
+      name: 'South - Military',
+      required: false,
+      display: false,
+      groupingId: 'militarySouth',
+      type: 'boolean',
+      optionalParams: {
+        dependencies: [
+          'militarySouthGreen',
+          'militarySouthYellow',
+          'militarySouthRed',
+        ],
+      },
+    },
+    {
+      id: 'militarySouthGreen',
+      name: 'Green',
+      required: false,
+      display: false,
+      groupingId: 'militarySouth',
+      type: 'boolean',
+    },
+    {
+      id: 'militarySouthYellow',
+      name: 'Yellow',
+      required: false,
+      display: false,
+      groupingId: 'militarySouth',
+      type: 'boolean',
+    },
+    {
+      id: 'militarySouthRed',
+      name: 'Red',
+      required: false,
+      display: false,
+      groupingId: 'militarySouth',
+      type: 'boolean',
+    },
+    {
+      id: 'militaryEast',
+      name: 'East - Military',
+      required: false,
+      display: false,
+      groupingId: 'militaryEast',
+      type: 'boolean',
+      optionalParams: {
+        dependencies: [
+          'militaryEastGreen',
+          'militaryEastYellow',
+          'militaryEastRed',
+        ],
+      },
+    },
+    {
+      id: 'militaryEastGreen',
+      name: 'Green',
+      required: false,
+      display: false,
+      groupingId: 'militaryEast',
+      type: 'boolean',
+    },
+    {
+      id: 'militaryEastYellow',
+      name: 'Yellow',
+      required: false,
+      display: false,
+      groupingId: 'militaryEast',
+      type: 'boolean',
+    },
+    {
+      id: 'militaryEastRed',
+      name: 'Red',
+      required: false,
+      display: false,
+      groupingId: 'militaryEast',
+      type: 'boolean',
+    },
+    {
+      id: 'militaryWest',
+      name: 'West - Military',
+      required: false,
+      display: false,
+      groupingId: 'militaryWest',
+      type: 'boolean',
+      optionalParams: {
+        dependencies: [
+          'militaryWestGreen',
+          'militaryWestYellow',
+          'militaryWestRed',
+        ],
+      },
+    },
+    {
+      id: 'militaryWestGreen',
+      name: 'Green',
+      required: false,
+      display: false,
+      groupingId: 'militaryWest',
+      type: 'boolean',
+    },
+    {
+      id: 'militaryWestYellow',
+      name: 'Yellow',
+      required: false,
+      display: false,
+      groupingId: 'militaryWest',
+      type: 'boolean',
+    },
+    {
+      id: 'militaryWestRed',
+      name: 'Red',
+      required: false,
+      display: false,
+      groupingId: 'militaryWest',
+      type: 'boolean',
+    },
+  ],
+})
+let bank: ClientTarget = new ClientTarget(ranchoCucamonga, {
+  targetEnvironmentId: 'ranchoCucamonga',
+  id: 'bank',
+  name: 'Bank',
+  description: 'The bank is a building found within Rancho Cucamonga.',
+  script: affectBank,
+  args: [
+    {
+      id: 'color',
+      name: 'Color',
+      required: true,
+      display: true,
+      type: 'dropdown',
+      options: [
+        {
+          id: 'blue',
+          name: 'Blue',
+        },
+        {
+          id: 'green',
+          name: 'Green',
+        },
+        {
+          id: 'off',
+          name: 'Off',
+        },
+        {
+          id: 'purple',
+          name: 'Purple',
+        },
+        {
+          id: 'red',
+          name: 'Red',
+        },
+        {
+          id: 'white',
+          name: 'White',
+        },
+        {
+          id: 'yellow',
+          name: 'Yellow',
+        },
+      ],
+    },
+  ],
+})
+
+ascot.targets.push(flyingEntity)
+ranchoCucamonga.targets.push(trafficLights, bank)
+const targetEnvironments: ClientTargetEnvironment[] = [ascot, ranchoCucamonga]
 
 /**
  * This will render page that allows the user to
@@ -1085,6 +1088,7 @@ export default function MissionFormPage(
   const [effectEmptyStringArray, setEffectEmptyStringArray] = useState<
     string[]
   >([])
+  const [missionPath, setMissionPath] = useState<string[]>([mission.name])
 
   /* -- COMPUTED -- */
   /**
@@ -1149,8 +1153,7 @@ export default function MissionFormPage(
         selectedEffect.name === ClientEffect.DEFAULT_PROPERTIES.name ||
         selectedEffect.description ===
           ClientEffect.DEFAULT_PROPERTIES.description ||
-        selectedEffect.selectedTargetEnv === null ||
-        selectedEffect.selectedTarget === null
+        selectedEffect.target === undefined
       ) {
         effectHasDefaultValues = true
       }
@@ -1244,6 +1247,50 @@ export default function MissionFormPage(
     }
   })
 
+  // If the selected node changes, then the mission
+  // path is updated and it will reset the selected
+  // action and effect.
+  useEffect(() => {
+    if (selectedNode === null) {
+      setMissionPath([mission.name])
+    } else {
+      setMissionPath([mission.name, selectedNode.name])
+    }
+    setSelectedAction(null)
+    setSelectedEffect(null)
+  }, [selectedNode])
+
+  // If the selected action changes, then the mission
+  // path will be updated and it will reset the selected
+  // effect.
+  useEffect(() => {
+    if (selectedNode && selectedAction === null) {
+      setMissionPath([mission.name, selectedNode.name])
+    } else if (selectedNode && selectedAction) {
+      setMissionPath([mission.name, selectedNode.name, selectedAction.name])
+    } else if (selectedNode === null) {
+      setMissionPath([mission.name])
+    }
+    setSelectedEffect(null)
+  }, [selectedAction])
+
+  // If the selected effect changes, then the mission
+  // path will be updated.
+  useEffect(() => {
+    if (selectedNode && selectedAction && selectedEffect) {
+      setMissionPath([
+        mission.name,
+        selectedNode.name,
+        selectedAction.name,
+        selectedEffect.name || 'New Effect',
+      ])
+    } else if (selectedNode && selectedAction) {
+      setMissionPath([mission.name, selectedNode.name, selectedAction.name])
+    } else if (selectedNode === null) {
+      setMissionPath([mission.name])
+    }
+  }, [selectedEffect])
+
   /* -- FUNCTIONS -- */
 
   // This is called when a change is
@@ -1262,6 +1309,10 @@ export default function MissionFormPage(
   const selectNode = (node: ClientMissionNode | null) => {
     if (selectedNode !== null) {
       mission.nodeCreationTarget = null
+    }
+
+    if (node) {
+      missionPath.push(node.name)
     }
 
     setSelectedNode(node)
@@ -1504,17 +1555,6 @@ export default function MissionFormPage(
     }
   }
 
-  /**
-   * This will handle closing the side panel.
-   */
-  const handleCloseSidePanel = (): void => {
-    validateNodeSelectionChange(() => {
-      selectNode(null)
-      setSelectedAction(null)
-      setSelectedEffect(null)
-    })
-  }
-
   /* -- PRE-RENDER PROCESSING -- */
 
   // If all fields are filled in, then make sure
@@ -1588,7 +1628,6 @@ export default function MissionFormPage(
                 handleNodeDeselection={() => {
                   validateNodeSelectionChange(() => {
                     selectNode(null)
-                    setSelectedAction(null)
                   })
                 }}
                 handleNodeDeletionRequest={handleNodeDeleteRequest}
@@ -1616,6 +1655,7 @@ export default function MissionFormPage(
                   <MissionEntry
                     active={missionDetailsIsActive}
                     mission={mission}
+                    missionPath={missionPath}
                     missionEmptyStringArray={missionEmptyStringArray}
                     setMissionEmptyStringArray={setMissionEmptyStringArray}
                     handleChange={handleChange}
@@ -1629,14 +1669,15 @@ export default function MissionFormPage(
                 return (
                   <NodeEntry
                     node={selectedNode}
+                    missionPath={missionPath}
                     isEmptyString={isEmptyString}
                     nodeEmptyStringArray={nodeEmptyStringArray}
                     setNodeEmptyStringArray={setNodeEmptyStringArray}
+                    selectNode={selectNode}
                     setSelectedAction={setSelectedAction}
                     handleChange={handleChange}
                     handleAddRequest={handleNodeAddRequest}
                     handleDeleteRequest={handleNodeDeleteRequest}
-                    handleCloseRequest={handleCloseSidePanel}
                   />
                 )
               } else if (
@@ -1647,6 +1688,7 @@ export default function MissionFormPage(
                 return (
                   <ActionEntry
                     action={selectedAction}
+                    missionPath={missionPath}
                     isEmptyString={isEmptyString}
                     areDefaultValues={areDefaultValues}
                     actionEmptyStringArray={actionEmptyStringArray}
@@ -1654,7 +1696,6 @@ export default function MissionFormPage(
                     setSelectedAction={setSelectedAction}
                     setSelectedEffect={setSelectedEffect}
                     handleChange={handleChange}
-                    handleCloseRequest={handleCloseSidePanel}
                   />
                 )
               } else if (selectedNode && selectedAction && selectedEffect) {
@@ -1662,13 +1703,13 @@ export default function MissionFormPage(
                   <EffectEntry
                     action={selectedAction}
                     effect={selectedEffect}
+                    missionPath={missionPath}
                     targetEnvironments={targetEnvironments}
                     isEmptyString={isEmptyString}
                     areDefaultValues={areDefaultValues}
                     effectEmptyStringArray={effectEmptyStringArray}
                     setEffectEmptyStringArray={setEffectEmptyStringArray}
                     setSelectedEffect={setSelectedEffect}
-                    handleCloseRequest={handleCloseSidePanel}
                     handleChange={handleChange}
                   />
                 )

@@ -3,7 +3,7 @@ import { useGlobalContext } from 'src/context'
 import ClientMissionAction from 'src/missions/actions'
 import { ClientEffect } from 'src/missions/effects'
 import { ClientTargetEnvironment } from 'src/target-environments'
-import { compute } from 'src/toolbox'
+import ClientTarget from 'src/target-environments/targets'
 import { DetailDropDown } from '../../form/Form'
 import TargetEntry from './TargetEntry'
 import './TargetEnvEntry.scss'
@@ -23,15 +23,13 @@ export default function TargetEnvEntry({
   const { forceUpdate } = useGlobalContext().actions
 
   /* -- STATE -- */
-  const [isExpanded] = useState<boolean>(false)
-
-  /* -- COMPUTED -- */
-  /**
-   * The selected target environment.
-   */
-  const selectedTargetEnv: ClientTargetEnvironment | null = compute(() => {
-    return effect.selectedTargetEnv
-  })
+  const [selectedTargetEnv, setSelectedTargetEnv] =
+    useState<ClientTargetEnvironment | null>(
+      effect.target ? effect.target.targetEnvironment : null,
+    )
+  const [selectedTarget, setSelectedTarget] = useState<ClientTarget | null>(
+    effect.target ? effect.target : null,
+  )
 
   /* -- RENDER -- */
 
@@ -41,7 +39,7 @@ export default function TargetEnvEntry({
         label='Target Environment'
         options={targetEnvironments}
         currentValue={selectedTargetEnv}
-        isExpanded={isExpanded}
+        isExpanded={false}
         uniqueDropDownStyling={{}}
         uniqueOptionStyling={(targetEnvironment: ClientTargetEnvironment) => {
           return {}
@@ -53,17 +51,21 @@ export default function TargetEnvEntry({
           return targetEnvironment.name
         }}
         deliverValue={(targetEnvironment: ClientTargetEnvironment) => {
-          effect.selectedTargetEnv = targetEnvironment
-          effect.selectedTarget = null
+          setSelectedTargetEnv(targetEnvironment)
+          setSelectedTarget(null)
+          effect.target = undefined
           forceUpdate()
         }}
       />
       <TargetEntry
         action={action}
         effect={effect}
+        selectedTargetEnv={selectedTargetEnv}
+        selectedTarget={selectedTarget}
         targets={selectedTargetEnv?.targets ?? []}
         isEmptyString={isEmptyString}
         areDefaultValues={areDefaultValues}
+        setSelectedTarget={setSelectedTarget}
         setSelectedEffect={setSelectedEffect}
       />
     </div>

@@ -1,16 +1,11 @@
 import { useState } from 'react'
 import ClientMissionAction from 'src/missions/actions'
 import { ClientEffect } from 'src/missions/effects'
-import { ClientTargetEnvironment } from 'src/target-environments'
 import ClientTarget from 'src/target-environments/targets'
 import { compute } from 'src/toolbox'
-import { v4 as generateHash } from 'uuid'
 import { TTargetArg } from '../../../../../../shared/target-environments/targets'
-import {
-  AnyObject,
-  SingleTypeObject,
-} from '../../../../../../shared/toolbox/objects'
-import ArgGroupings from './ArgGroupings'
+import { SingleTypeObject } from '../../../../../../shared/toolbox/objects'
+import ArgEntry from './ArgEntry'
 import './Args.scss'
 
 /**
@@ -19,41 +14,20 @@ import './Args.scss'
 export default function Args({
   action,
   effect,
+  target,
   isEmptyString,
   areDefaultValues,
   setSelectedEffect,
 }: TArgs_P): JSX.Element | null {
   /* -- STATE -- */
-  const [defaultDropDownValue] = useState<undefined>(undefined)
-  const [defaultNumberValue] = useState<null>(null)
-  const [defaultStringValue] = useState<string>('')
-  const [defaultBooleanValue] = useState<boolean>(false)
-  const [effectArgs] = useState<AnyObject>({})
   const [reqPropertiesNotFilledOut] = useState<string[]>([])
-  const [dropDownKey, setDropDownKey] = useState<string>(generateHash())
-  const [numberKey, setNumberKey] = useState<string>(generateHash())
-  const [stringKey, setStringKey] = useState<string>(generateHash())
-  const [mediumStringKey, setMediumStringKey] = useState<string>(generateHash())
-  const [booleanKey, setBooleanKey] = useState<string>(generateHash())
 
   /* -- COMPUTED -- */
   /**
    * The selected target's arguments.
    */
   const args: TTargetArg[] = compute(() => {
-    return effect.selectedTarget?.args || []
-  })
-  /**
-   * The selected target.
-   */
-  const target: ClientTarget | null = compute(() => {
-    return effect.selectedTarget
-  })
-  /**
-   * The selected target environment.
-   */
-  const targetEnv: ClientTargetEnvironment | null = compute(() => {
-    return effect.selectedTargetEnv
+    return target?.args || []
   })
   /**
    * The object to store the arguments in groupings.
@@ -102,13 +76,18 @@ export default function Args({
   /**
    * Class name for the save button.
    */
-  const submitButtonClassName: string = compute(() => {
+  const CreateButtonClassName: string = compute(() => {
     // Create a default list of class names.
     let classList: string[] = ['Button']
 
-    // If there are required properties that are not filled out ||
-    // If there is an empty string ||
-    // If there are default values,
+    // If the effect is not new then hide the save button.
+    if (action.effects.includes(effect)) {
+      classList = ['Button', 'Hidden']
+    }
+
+    // If there are required properties not filled out ||
+    // If there is an empty field ||
+    // If there are default values...
     // then disable the save button.
     if (
       reqPropertiesNotFilledOut.length > 0 ||
@@ -116,7 +95,7 @@ export default function Args({
       areDefaultValues
     ) {
       // Disable the save button.
-      classList.push('Disabled')
+      classList = ['Button', 'Disabled']
     }
 
     // Iterate through the selected target's arguments.
@@ -124,7 +103,7 @@ export default function Args({
       // If the argument is required and it is not filled out
       // then disable the save button.
       if (arg.required && reqPropertiesNotFilledOut.includes(arg.id)) {
-        classList.push('Disabled')
+        // classList = ['Button', 'Disabled']
       }
     })
 
@@ -134,246 +113,39 @@ export default function Args({
   /* -- FUNCTIONS -- */
 
   /**
-   * Recusive function that updates the argument's dependencies
-   * depending on the argument's type and value.
-   * @param arg The argument to update.
-   * @param dependencies The list of dependencies.
+   * Handles the submission of the effect.
    */
-  const updateArgDependencies = (arg: TTargetArg, dependencies: string[]) => {
-    // Iterate through the dependencies.
-    dependencies.forEach((dependency: string) => {
-      // Grab the selected target's arguments.
-      let dependencyArg: TTargetArg | undefined = args.find(
-        (arg: TTargetArg) => arg.id === dependency,
-      )
-
-      if (dependencyArg) {
-        // If the argument is a dropdown then continue.
-        if (arg.type === 'dropdown') {
-          // If the argument's value equals a default value
-          // or the argument's value doesn't exist then
-          // hide the dependency argument.
-          if (
-            effectArgs[arg.id] === arg.default ||
-            effectArgs[arg.id] === defaultDropDownValue ||
-            effectArgs[arg.id] === undefined
-          ) {
-            // Hide the dependency argument.
-            dependencyArg.display = false
-          }
-          // Otherwise, display the dependency argument.
-          else {
-            dependencyArg.display = true
-          }
-        }
-        // If the argument is a number then continue.
-        else if (arg.type === 'number') {
-          // If the argument's value equals a default value
-          // or the argument's value doesn't exist then
-          // hide the dependency argument.
-          if (
-            effectArgs[arg.id] === arg.default ||
-            effectArgs[arg.id] === defaultNumberValue ||
-            effectArgs[arg.id] === undefined
-          ) {
-            dependencyArg.display = false
-          }
-          // Otherwise, display the dependency argument.
-          else {
-            dependencyArg.display = true
-          }
-        }
-        // If the argument is a string then continue.
-        else if (arg.type === 'string') {
-          // If the argument's value equals a default value
-          // or the argument's value doesn't exist then
-          // hide the dependency argument.
-          if (
-            effectArgs[arg.id] === arg.default ||
-            effectArgs[arg.id] === defaultStringValue ||
-            effectArgs[arg.id] === undefined
-          ) {
-            dependencyArg.display = false
-          }
-          // Otherwise, display the dependency argument.
-          else {
-            dependencyArg.display = true
-          }
-        }
-        // If the argument is a medium-string then continue.
-        else if (arg.type === 'medium-string') {
-          // If the argument's value equals a default value
-          // or the argument's value doesn't exist then
-          // hide the dependency argument.
-          if (
-            effectArgs[arg.id] === arg.default ||
-            effectArgs[arg.id] === defaultStringValue ||
-            effectArgs[arg.id] === undefined
-          ) {
-            dependencyArg.display = false
-          }
-          // Otherwise, display the dependency argument.
-          else {
-            dependencyArg.display = true
-          }
-        }
-        // If the argument is a boolean then continue.
-        else if (arg.type === 'boolean') {
-          // If the argument's value equals a default value
-          // or the argument's value doesn't exist then
-          // hide the dependency argument.
-          if (
-            effectArgs[arg.id] === arg.default ||
-            effectArgs[arg.id] === defaultBooleanValue ||
-            effectArgs[arg.id] === undefined
-          ) {
-            dependencyArg.display = false
-          }
-          // Otherwise, display the dependency argument.
-          else {
-            dependencyArg.display = true
-          }
-        }
-
-        if (dependencyArg.optionalParams?.dependencies) {
-          // If the dependency argument has dependencies then
-          // update the dependency argument's dependencies.
-          updateArgDependencies(
-            dependencyArg,
-            dependencyArg.optionalParams.dependencies,
-          )
-        }
-      }
-    })
-  }
-
-  /**
-   * Updates the argument's properties and its dependencies depending
-   * on the argument's type and value.
-   * @param arg The argument to update.
-   */
-  const updateArg = (arg: TTargetArg) => {
-    if (reqPropertiesNotFilledOut.includes(arg.id)) {
-      // Remove the argument ID from the list of
-      // arguments that are not filled out.
-      reqPropertiesNotFilledOut.splice(
-        reqPropertiesNotFilledOut.indexOf(arg.id),
-        1,
-      )
-    }
-
-    // If the argument has dependencies then
-    // the dependencies are now required.
-    if (arg.optionalParams?.dependencies) {
-      updateArgDependencies(arg, arg.optionalParams.dependencies)
-    }
-  }
-
-  /**
-   * Resets the arguments that are stored in the state component.
-   */
-  const resetEffectArgs = () => {
-    // If the selected target has arguments then reset the arguments.
-    if (args.length > 0) {
-      // Iterate through the selected target's arguments.
-      args.forEach((arg: TTargetArg) => {
-        // If the argument is a dropdown then reset its
-        // selected option to the default option.
-        if (arg.type === 'dropdown') {
-          effectArgs[arg.id] = arg.default || defaultDropDownValue
-          effect.args[arg.id] = arg.default || defaultDropDownValue
-        }
-        // If the argument is a number then reset its
-        // value to the default value.
-        else if (arg.type === 'number') {
-          effectArgs[arg.id] = arg.default || defaultNumberValue
-          effect.args[arg.id] = arg.default || defaultNumberValue
-        }
-        // If the argument is a string then reset its
-        // value to the default value.
-        else if (arg.type === 'string') {
-          effectArgs[arg.id] = arg.default || defaultStringValue
-          effect.args[arg.id] = arg.default || defaultStringValue
-        }
-        // If the argument is a medium-string then reset its
-        // value to the default value.
-        else if (arg.type === 'medium-string') {
-          effectArgs[arg.id] = arg.default || defaultStringValue
-          effect.args[arg.id] = arg.default || defaultStringValue
-        }
-        // If the argument is a boolean then reset its
-        // value to the default value.
-        else if (arg.type === 'boolean') {
-          effectArgs[arg.id] = arg.default || defaultBooleanValue
-          effect.args[arg.id] = arg.default || defaultBooleanValue
-        }
-
-        // If the argument is required then add the argument
-        // ID to the list of arguments that are not filled out.
-        if (arg.required) {
-          reqPropertiesNotFilledOut.push(arg.id)
-        }
-      })
-    }
-  }
-
-  /**
-   * Handles the creation of the effect.
-   */
-  const submitEffect = () => {
-    // Grab the entries of the effect's arguments.
-    let argEntries: [string, any][] = Object.entries(effectArgs)
-    // Filter out the arguments that are not filled out.
-    // Only the arguments that are filled out will be executed.
-    argEntries.forEach(([key, value]) => {
-      // If the value is not undefined, null, or the default value
-      // then add the argument to the effect's arguments.
-      if (
-        value !== undefined &&
-        value !== null &&
-        value !== defaultDropDownValue &&
-        value !== defaultNumberValue &&
-        value !== defaultStringValue &&
-        value !== defaultBooleanValue
-      )
-        effect.args[key] = value
-    })
+  const createEffect = () => {
+    // // Grab the entries of the effect's arguments.
+    // let argEntries: [string, any][] = Object.entries(effectArgs)
+    // // Filter out the arguments that are not filled out.
+    // // Only the arguments that are filled out will be executed.
+    // argEntries.forEach(([key, value]) => {
+    //   // If the value is not undefined, null, or the default value
+    //   // then add the argument to the effect's arguments.
+    //   if (
+    //     value !== undefined &&
+    //     value !== null &&
+    //     value !== defaultDropDownValue &&
+    //     value !== defaultNumberValue &&
+    //     value !== defaultStringValue &&
+    //     value !== defaultBooleanValue
+    //   )
+    //     effect.args[key] = value
+    // })
 
     // todo: remove
     // // Execute the effect.
     // effect.target.script(effect.args)
 
+    // if (!action.effects.includes(effect)) {
     // Add the effect to the action's effects list.
     action.effects.push(effect)
+    // handleChange()
+    // }
 
-    // Reset the arguments that are stored in the state component.
-    resetArgProperties()
     // Set the selected effect to null.
     setSelectedEffect(null)
-  }
-
-  /**
-   * Handles clearing the form and resetting the arguments.
-   */
-  const resetArgProperties = () => {
-    // Reset the arguments that are stored in the state component.
-    resetEffectArgs()
-
-    // Iterate through the selected target's arguments.
-    args.forEach((arg: TTargetArg) => {
-      // If the argument has dependencies then
-      // update them to reflect the reset.
-      if (arg.optionalParams?.dependencies) {
-        updateArgDependencies(arg, arg.optionalParams.dependencies)
-      }
-    })
-
-    // Update the form keys so that the fields will re-render.
-    setDropDownKey(generateHash())
-    setNumberKey(generateHash())
-    setStringKey(generateHash())
-    setMediumStringKey(generateHash())
-    setBooleanKey(generateHash())
   }
 
   /* -- RENDER -- */
@@ -383,33 +155,68 @@ export default function Args({
     return (
       <div className='Args'>
         <div className='ArgsTitle'>Arguments:</div>
+
         {/* -- GROUPINGS -- */}
         {groupingEntries.map(([groupingId, grouping]) => {
+          /* -- COMPUTED -- */
+          /**
+           * Boolean to determine if at least one argument
+           * in the grouping is displayed.
+           */
+          const oneGroupingIsDisplayed: boolean = compute(() => {
+            // Set the default boolean to false.
+            let oneGroupingIsDisplayed: boolean = false
+
+            // Iterate through the grouping.
+            grouping.forEach((arg: TTargetArg) => {
+              // If the argument is displayed then set the
+              // boolean to true.
+              if (arg.display) {
+                oneGroupingIsDisplayed = true
+              }
+            })
+
+            return oneGroupingIsDisplayed
+          })
+          /**
+           * Class name for the grouping.
+           */
+          const groupingClassName: string = compute(() => {
+            // Create a default list of class names.
+            let classList: string[] = ['Grouping']
+
+            // If no arguments in the grouping are displayed
+            // then hide the grouping.
+            if (!oneGroupingIsDisplayed) {
+              classList.push('Hidden')
+            }
+
+            return classList.join(' ')
+          })
+
+          /* -- RENDER -- */
           return (
-            <ArgGroupings
-              effect={effect}
-              grouping={grouping}
-              dropDownKey={dropDownKey}
-              numberKey={numberKey}
-              stringKey={stringKey}
-              mediumStringKey={mediumStringKey}
-              booleanKey={booleanKey}
-              defaultDropDownValue={defaultDropDownValue}
-              defaultNumberValue={defaultNumberValue}
-              defaultStringValue={defaultStringValue}
-              defaultBooleanValue={defaultBooleanValue}
-              effectArgs={effectArgs}
-              reqPropertiesNotFilledOut={reqPropertiesNotFilledOut}
-              updateArg={updateArg}
-              key={`grouping-${groupingId}`}
-            />
+            <div className={groupingClassName} key={`grouping-${groupingId}`}>
+              {grouping.map((arg: TTargetArg) => {
+                return (
+                  <ArgEntry
+                    action={action}
+                    effect={effect}
+                    args={args}
+                    arg={arg}
+                    reqPropertiesNotFilledOut={reqPropertiesNotFilledOut}
+                    key={arg.id}
+                  />
+                )
+              })}
+            </div>
           )
         })}
 
         {/* -- BUTTONS -- */}
         <div className='ButtonContainer'>
-          <div className={submitButtonClassName} onClick={submitEffect}>
-            Submit
+          <div className={CreateButtonClassName} onClick={createEffect}>
+            Create Effect
           </div>
         </div>
       </div>
@@ -433,6 +240,10 @@ export type TArgs_P = {
    * The effect to apply to the target.
    */
   effect: ClientEffect
+  /**
+   * The selected target.
+   */
+  target: ClientTarget | null
   /**
    * A boolean that will determine if a field has been left empty.
    */

@@ -11,6 +11,7 @@ import './MissionEntry.scss'
 export default function MissionEntry({
   active,
   mission,
+  missionPath,
   missionEmptyStringArray,
   setMissionEmptyStringArray,
   handleChange,
@@ -89,7 +90,10 @@ export default function MissionEntry({
           {/* -- TOP OF BOX -- */}
           <div className='BoxTop'>
             <div className='ErrorMessage Hidden'></div>
-            <div className='Path'>Location: Mission</div>
+            <div className='BackButton'>
+              <div className='BackArrow Disabled'>&#8592;</div>
+            </div>
+            <div className='Path'>Location: {missionPath.join('/')}</div>
           </div>
 
           {/* -- MAIN CONTENT -- */}
@@ -175,6 +179,11 @@ export type TMissionEntry_P = {
    * The mission to be edited.
    */
   mission: ClientMission
+  /**
+   * The path showing the user's location in the side panel.
+   * @note This will help the user understand what they are editing.
+   */
+  missionPath: string[]
   /**
    * An array of empty strings that will be used to
    * track which fields are empty.
