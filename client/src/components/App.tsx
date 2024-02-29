@@ -1,28 +1,28 @@
-import './App.scss'
-import GamePage from './pages/GamePage'
-import AuthPage from './pages/AuthPage'
-import { TMetisSession } from '../../../shared/sessions'
 import { useEffect } from 'react'
-import ErrorPage from './pages/ErrorPage'
-import LoadingPage from './pages/LoadingPage'
-import Markdown, { MarkdownTheme } from './content/general-layout/Markdown'
-import MissionFormPage from './pages/MissionFormPage'
-import HomePage from './pages/HomePage'
+import { useGlobalContext } from 'src/context'
+import ClientMissionNode from 'src/missions/nodes'
+import ClientUser from 'src/users'
+import { TMetisSession } from '../../../shared/sessions'
 import Notification from '../notifications'
-import NotificationBubble from './content/communication/NotificationBubble'
+import './App.scss'
 import Confirmation from './content/communication/Confirmation'
+import NotificationBubble from './content/communication/NotificationBubble'
+import Prompt from './content/communication/Prompt'
 import {
   tooltipsOffsetX,
   tooltipsOffsetY,
 } from './content/communication/Tooltip'
-import Prompt from './content/communication/Prompt'
-import ChangelogPage from './pages/ChangelogPage'
+import Markdown, { MarkdownTheme } from './content/general-layout/Markdown'
 import { IButtonText } from './content/user-controls/ButtonText'
+import AuthPage from './pages/AuthPage'
+import ChangelogPage from './pages/ChangelogPage'
+import ErrorPage from './pages/ErrorPage'
+import GamePage from './pages/GamePage'
+import HomePage from './pages/HomePage'
+import LoadingPage from './pages/LoadingPage'
+import MissionFormPage from './pages/MissionFormPage'
 import UserFormPage from './pages/UserFormPage'
 import UserResetPage from './pages/UserResetPage'
-import ClientMissionNode from 'src/missions/nodes'
-import { useGlobalContext } from 'src/context'
-import ClientUser from 'src/users'
 
 /**
  * Props that every page accepts. Extend this to include more.
@@ -205,7 +205,12 @@ function App(props: {}): JSX.Element | null {
           }
           // Else, go to the home page.
           else {
-            goToPage('HomePage', {})
+            // goToPage('HomePage', {})
+
+            // Temporary: Go to the mission form page.
+            goToPage('MissionFormPage', {
+              missionID: '65455185656e2806a9ae2f07',
+            })
           }
         }
 

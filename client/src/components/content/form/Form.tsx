@@ -1,68 +1,26 @@
-// This will render a detail for
-// a form, with a label and a text
-
 import React, { useEffect, useRef, useState } from 'react'
 import ReactQuill from 'react-quill'
 import 'react-quill/dist/quill.snow.css'
+import { compute } from 'src/toolbox'
 import inputs from 'src/toolbox/inputs'
 import { AnyObject } from '../../../../../shared/toolbox/objects'
 import Tooltip from '../communication/Tooltip'
 import Toggle, { EToggleLockState } from '../user-controls/Toggle'
 import './Form.scss'
 
-interface IDetail {
-  label: string
-  initialValue: string | null | undefined
-  deliverValue: (value: string) => void
-  options?: {
-    deliverError?: boolean // defaults to false
-    deliverErrorMessage?: string // defaults to ''
-    uniqueLabelClassName?: string // defaults to ''
-    uniqueInputClassName?: string // defaults to ''
-    inputType?: TInput // defaults to 'text'
-    placeholder?: string // defaults to undefined
-    clearField?: boolean // defaults to false
-    displayRequiredIcon?: boolean // defaults to false
-    emptyStringAllowed?: boolean // defaults to false
-  }
-}
-
-interface IDetail_S {
-  inputType: string
-  displayPasswordText: string
-  currentValue: string | null | undefined
-  displayError: boolean
-}
-
 /**
  * This will render a detail for
  * a form, with a label and a text
  * field for entering information.
- * @param label The label for the detail.
- * @param initialValue The initial value for the detail.
- * @param deliverValue The function to deliver the value.
- * @param options The options available for the detail.
- * @param options.deliverError The boolean that determines if the detail should display an error. Defaults to false.
- * @param options.deliverErrorMessage The error message to display. Defaults to 'At least one character is required here.'.
- * @param options.uniqueLabelClassName The unique class name for the label. Defaults to ''.
- * @param options.uniqueInputClassName The unique class name for the input. Defaults to ''.
- * @param options.inputType The type of input to render (i.e., text, password, etc.). Defaults to text.
- * @param options.placeholder The placeholder for the input. Defaults to undefined.
- * @param options.clearField The boolean that determines if the detail should clear the field. Defaults to false.
- * @param options.displayRequiredIcon The boolean that determines if the detail should display a required icon. Defaults to false.
- * @param options.emptyStringAllowed The boolean that determines if the detail should allow empty strings. Defaults to false.
- * @returns A JSX Element for the detail.
  */
-export class Detail extends React.Component<IDetail, IDetail_S> {
+export class Detail extends React.Component<TDetail_P, TDetail_S> {
   field: React.RefObject<HTMLInputElement> = React.createRef()
 
-  constructor(props: IDetail, state: IDetail_S) {
+  constructor(props: TDetail_P, state: TDetail_S) {
     super(props)
 
     this.state = {
-      inputType: this.props.options?.inputType
-        ? this.props.options.inputType
-        : 'text',
+      inputType: this.props.options?.inputType || 'text',
       displayPasswordText: 'show',
       currentValue: this.props.initialValue,
       displayError: false,
@@ -80,8 +38,8 @@ export class Detail extends React.Component<IDetail, IDetail_S> {
   }
 
   componentDidUpdate(
-    prevProps: Readonly<IDetail>,
-    prevState: Readonly<IDetail_S>,
+    prevProps: Readonly<TDetail_P>,
+    prevState: Readonly<TDetail_S>,
     snapshot?: any,
   ): void {
     if (prevProps.initialValue !== this.props.initialValue) {
@@ -104,18 +62,12 @@ export class Detail extends React.Component<IDetail, IDetail_S> {
     let label: string = this.props.label
     let deliverValue = this.props.deliverValue
     let deliverError: boolean = this.props.options?.deliverError || false
-    let errorMessage: string = this.props.options?.deliverErrorMessage
-      ? this.props.options.deliverErrorMessage
-      : 'At least one character is required here.'
-    let uniqueLabelClassName: string = this.props.options?.uniqueLabelClassName
-      ? this.props.options.uniqueLabelClassName
-      : ''
-    let uniqueInputClassName: string = this.props.options?.uniqueInputClassName
-      ? this.props.options.uniqueInputClassName
-      : ''
-    let inputTypePassed: string = this.props.options?.inputType
-      ? this.props.options.inputType
-      : 'text'
+    let errorMessage: string = this.props.options?.deliverErrorMessage || ''
+    let uniqueLabelClassName: string =
+      this.props.options?.uniqueLabelClassName || ''
+    let uniqueInputClassName: string =
+      this.props.options?.uniqueInputClassName || ''
+    let inputTypePassed: string = this.props.options?.inputType || 'text'
     let placeholder: string | undefined =
       this.props.options?.placeholder || 'Enter text...'
     let clearField: boolean = this.props.options?.clearField || false
@@ -125,6 +77,8 @@ export class Detail extends React.Component<IDetail, IDetail_S> {
       this.props.options?.emptyStringAllowed || false
     let currentValue: string | null | undefined = this.state.currentValue || ''
     let displayError: boolean = this.state.displayError
+    let displayOptionalText: boolean =
+      this.props.options?.displayOptionalText || false
 
     /* -- PRE-RENDER PROCESSING -- */
 
@@ -135,7 +89,9 @@ export class Detail extends React.Component<IDetail, IDetail_S> {
     let inputContainerClassName: string = 'InputContainer'
     let togglePasswordContainerClassName: string =
       'TogglePasswordDisplayContainer Hidden'
-    let requiredIconClassName: string = 'Required'
+    let optionalClassName: string = displayOptionalText
+      ? 'Optional'
+      : 'Optional Hidden'
 
     // If empty strings are not allowed
     // and the field is empty or in a default
@@ -158,21 +114,15 @@ export class Detail extends React.Component<IDetail, IDetail_S> {
       this.field.current.value = ''
     }
 
-    // If a boolean that is equivalent
-    // to true is passed, then the
-    // field will display a required
-    // icon.
-    if (displayRequiredIcon === undefined || !displayRequiredIcon) {
-      requiredIconClassName += ' Hidden'
-    }
-
     /* -- RENDER -- */
 
     return (
       <div className='Detail'>
-        <div className={labelClassName + ' ' + uniqueLabelClassName}>
-          {`${label}:`}
-          <sup className={requiredIconClassName}> *</sup>
+        <div className='TitleContainer'>
+          <div
+            className={labelClassName + ' ' + uniqueLabelClassName}
+          >{`${label}:`}</div>
+          <div className={optionalClassName}>optional</div>
         </div>
         <div className={inputContainerClassName}>
           <input
@@ -264,7 +214,7 @@ export class Detail extends React.Component<IDetail, IDetail_S> {
  * @param options.emptyValueAllowed The boolean that determines if the detail should allow empty values. Defaults to false.
  * @param options.clearField The boolean that determines if the detail should clear the field. Defaults to false.
  * @param options.uniqueLabelClassName The unique class name for the label. Defaults to ''.
- * @param options.displayRequiredIcon The boolean that determines if the detail should display a required icon. Defaults to false.
+ * @param options.displayOptionalText The boolean that determines if the detail should display optional text. Defaults to false.
  * @returns A JSX Element for the detail.
  */
 export function DetailNumber(props: {
@@ -280,7 +230,7 @@ export function DetailNumber(props: {
     emptyValueAllowed?: boolean // default false
     clearField?: boolean // default false
     uniqueLabelClassName?: string // default ''
-    displayRequiredIcon?: boolean // default false
+    displayOptionalText?: boolean // default false
   }
 }): JSX.Element | null {
   const field = useRef<HTMLInputElement>(null)
@@ -298,7 +248,7 @@ export function DetailNumber(props: {
   let emptyValueAllowed: boolean = props.options?.emptyValueAllowed || false
   let clearField: boolean = props.options?.clearField || false
   let uniqueLabelClassName: string = props.options?.uniqueLabelClassName || ''
-  let displayRequiredIcon: boolean = props.options?.displayRequiredIcon || false
+  let displayOptionalText: boolean = props.options?.displayOptionalText || false
   let deliverValue = props.deliverValue
 
   /* -- COMPONENT EFFECTS -- */
@@ -319,7 +269,9 @@ export function DetailNumber(props: {
 
   // Default class names
   let labelClassName: string = 'Label'
-  let requiredIconClassName: string = 'Required'
+  let optionalClassName: string = displayOptionalText
+    ? 'Optional'
+    : 'Optional Hidden'
 
   // If a boolean that is equivalent
   // to true is passed, then the
@@ -328,20 +280,14 @@ export function DetailNumber(props: {
     field.current.value = ''
   }
 
-  // If a boolean that is equivalent
-  // to true is passed, then the
-  // field will display a required
-  // icon.
-  if (displayRequiredIcon === undefined || !displayRequiredIcon) {
-    requiredIconClassName += ' Hidden'
-  }
-
   /* -- RENDER -- */
   return (
     <div className='Detail DetailNumber'>
-      <div className={labelClassName + ' ' + uniqueLabelClassName}>
-        {`${label}:`}
-        <sup className={requiredIconClassName}> *</sup>
+      <div className='TitleContainer'>
+        <div
+          className={labelClassName + ' ' + uniqueLabelClassName}
+        >{`${label}:`}</div>
+        <div className={optionalClassName}>optional</div>
       </div>
       <div className='Unit'>{unit}</div>
       <input
@@ -418,7 +364,7 @@ export function DetailNumber(props: {
  * @param options.emptyStringAllowed The boolean that determines if the detail should allow empty strings. Defaults to false.
  * @param options.elementBoundary The element boundary for the detail. Defaults to undefined.
  * @param options.clearField The boolean that determines if the detail should clear the field. Defaults to false.
- * @param options.displayRequiredIcon The boolean that determines if the detail should display a required icon. Defaults to false.
+ * @param options.displayOptionalText The boolean that determines if the detail should display optional text. Defaults to false.
  * @returns A JSX Element for the detail.
  */
 export function DetailBox(props: {
@@ -433,7 +379,7 @@ export function DetailBox(props: {
     emptyStringAllowed?: boolean // default false
     elementBoundary?: string
     clearField?: boolean // default false
-    displayRequiredIcon?: boolean // default false
+    displayOptionalText?: boolean // default false
   }
 }): JSX.Element | null {
   let label: string = props.label
@@ -446,11 +392,11 @@ export function DetailBox(props: {
     : ''
   let disabled: boolean = props.options?.disabled === true
   let placeholder: string | undefined =
-    props.options?.placeholder || 'Enter text here...'
+    props.options?.placeholder || 'Enter text...'
   let emptyStringAllowed: boolean = props.options?.emptyStringAllowed || false
   let elementBoundary: string | undefined = props.options?.elementBoundary
   let clearField: boolean = props.options?.clearField || false
-  let displayRequiredIcon: boolean = props.options?.displayRequiredIcon || false
+  let displayOptionalText: boolean = props.options?.displayOptionalText || false
   let deliverValue = props.deliverValue
 
   /* -- COMPONENT STATE -- */
@@ -473,7 +419,9 @@ export function DetailBox(props: {
   let fieldClassName: string = 'Field FieldBox'
   let labelClassName: string = 'Label'
   let fieldErrorClassName: string = 'FieldErrorMessage hide'
-  let requiredIconClassName: string = 'Required'
+  let optionalClassName: string = displayOptionalText
+    ? 'Optional'
+    : 'Optional Hidden'
 
   const reactQuillModules = {
     toolbar: {
@@ -503,21 +451,15 @@ export function DetailBox(props: {
     labelClassName = 'Label'
   }
 
-  // If a boolean that is equivalent
-  // to true is passed, then the
-  // field will display a required
-  // icon.
-  if (displayRequiredIcon === undefined || !displayRequiredIcon) {
-    requiredIconClassName += ' Hidden'
-  }
-
   /* -- RENDER -- */
 
   return (
     <div className={className}>
-      <div className={labelClassName + ' ' + uniqueLabelClassName}>
-        {`${label}:`}
-        <sup className={requiredIconClassName}> *</sup>
+      <div className='TitleContainer'>
+        <div
+          className={labelClassName + ' ' + uniqueLabelClassName}
+        >{`${label}:`}</div>
+        <div className={optionalClassName}>optional</div>
       </div>
       <ReactQuill
         bounds={elementBoundary}
@@ -592,69 +534,152 @@ export function DetailBox(props: {
  * a form, with a label and a drop
  * down box for selecting from various
  * options.
- * @param props.label The label for the detail.
- * @param props.options The options available for the detail.
- * @param props.currentValue The current value for the detail.
- * @param props.isExpanded The boolean that determines if the detail is expanded.
- * @param props.uniqueDropDownStyling The unique styling for the drop down.
- * @param props.uniqueOptionStyling The unique styling for the options.
- * @param props.renderOptionClassName The function to render the class name for the option.
- * @param props.renderDisplayName The function to render the display name for the option.
- * @param props.deliverValue The function to deliver the value.
- * @param props.optional.uniqueClassName The unique class name for the detail. Defaults to ''.
- * @param props.optional.uniqueLabelClassName The unique class name for the label. Defaults to ''.
- * @param props.optional.uniqueFieldClassName The unique class name for the field. Defaults to ''.
- * @param props.optional.uniqueCurrentValueClassName The unique class name for the current value. Defaults to ''.
- * @param props.optional.clearField The boolean that determines if the detail should clear the field. Defaults to false.
- * @returns A JSX Element for the detail.
  */
-export function DetailDropDown<TOption>(props: {
-  label: string
-  options: TOption[]
-  currentValue: TOption | null | undefined
-  isExpanded: boolean
-  uniqueDropDownStyling: AnyObject
-  uniqueOptionStyling: (option: TOption) => AnyObject
-  renderOptionClassName: (option: TOption) => string
-  renderDisplayName: (option: TOption) => string
-  deliverValue: (value: TOption) => void
-  optional?: {
-    uniqueClassName?: string
-    uniqueLabelClassName?: string
-    uniqueFieldClassName?: string
-    uniqueCurrentValueClassName?: string
-    clearField?: boolean
-  }
-}): JSX.Element | null {
-  /* -- COMPONENT VARIABLES -- */
-  let label: string = props.label
-  let options: TOption[] = props.options
-  let currentValue: TOption | null | undefined = props.currentValue
-  let isExpanded: boolean = props.isExpanded
-  let uniqueDropDownStyling: AnyObject = props.uniqueDropDownStyling
-  let uniqueOptionStyling = props.uniqueOptionStyling
-  let uniqueClassName: string = props.optional?.uniqueClassName
-    ? props.optional.uniqueClassName
-    : ''
-  let uniqueLabelClassName: string = props.optional?.uniqueLabelClassName
-    ? props.optional.uniqueLabelClassName
-    : ''
-  let uniqueFieldClassName: string = props.optional?.uniqueFieldClassName
-    ? props.optional.uniqueFieldClassName
-    : ''
-  let uniqueCurrentValueClassName: string = props.optional
-    ?.uniqueCurrentValueClassName
-    ? props.optional.uniqueCurrentValueClassName
-    : ''
-  let clearField: boolean = props.optional?.clearField || false
-  let renderOptionClassName = props.renderOptionClassName
-  let renderDisplayName = props.renderDisplayName
-  let deliverValue = props.deliverValue
-
-  /* -- COMPONENT STATE -- */
+export function DetailDropDown<TOption>({
+  label,
+  options,
+  currentValue,
+  isExpanded,
+  renderDisplayName,
+  deliverValue,
+  // Optional Properties
+  uniqueDropDownStyling = {},
+  uniqueClassName,
+  uniqueLabelClassName,
+  uniqueFieldClassName,
+  uniqueCurrentValueClassName,
+  clearField = false,
+  defaultValue = undefined,
+  displayOptionalText = false,
+  uniqueOptionStyling = (option: TOption) => {
+    return {}
+  },
+  renderOptionClassName = (option: TOption) => {
+    return ''
+  },
+}: TDetailDropDown_P<TOption>): JSX.Element | null {
+  /* -- STATE -- */
   const [expanded, setExpanded] = useState<boolean>(false)
 
-  /* -- COMPONENT EFFECTS -- */
+  /* -- COMPUTED -- */
+  /**
+   * The class name for the detail.
+   */
+  const className: string = compute(() => {
+    // Default class names
+    let classList: string[] = ['Detail', 'DetailDropDown']
+
+    // If a unique class name is passed
+    // then add it to the list of class names.
+    if (uniqueClassName) {
+      classList.push(uniqueClassName)
+    }
+
+    // Return the list of class names as one string.
+    return classList.join(' ')
+  })
+  /**
+   * The class name for the field.
+   */
+  const fieldClassName: string = compute(() => {
+    // Default class names
+    let classList: string[] = ['Field', 'FieldDropDown']
+
+    // If a unique class name is passed
+    // then add it to the list of class names.
+    if (uniqueFieldClassName) {
+      classList.push(uniqueFieldClassName)
+    }
+
+    // If the detail is expanded then add
+    // the expanded class name
+    if (expanded) {
+      classList.push('IsExpanded')
+    }
+    // Otherwise add the collapsed class name.
+    else {
+      classList.push('IsCollapsed')
+    }
+
+    // Return the list of class names as one string.
+    return classList.join(' ')
+  })
+  /**
+   * The class name for all options.
+   */
+  const allOptionsClassName: string = compute(() => {
+    // Default class names
+    let classList: string[] = ['AllOptions']
+
+    // If the detail is collapsed
+    // then hide the options.
+    if (!expanded) {
+      classList.push('Hidden')
+    }
+
+    // Return the list of class names as one string.
+    return classList.join(' ')
+  })
+  /**
+   * The class name for the label.
+   */
+  const labelClassName: string = compute(() => {
+    // Default class names
+    let classList: string[] = ['Label']
+
+    // If a unique class name is passed
+    // then add it to the list of class names.
+    if (uniqueLabelClassName) {
+      classList.push(uniqueLabelClassName)
+    }
+
+    // Return the list of class names as one string.
+    return classList.join(' ')
+  })
+  /**
+   * The class name for the current value.
+   */
+  const currentValueClassName: string = compute(() => {
+    // Default class names
+    let classList: string[] = ['Text']
+
+    // If a unique class name is passed
+    // then add it to the list of class names.
+    if (uniqueCurrentValueClassName) {
+      classList.push(uniqueCurrentValueClassName)
+    }
+
+    // Return the list of class names as one string.
+    return classList.join(' ')
+  })
+  /**
+   * The value displayed.
+   */
+  const valueDisplayed: string = compute(() => {
+    // If the current value is not null
+    // or undefined then display it.
+    if (currentValue) {
+      return renderDisplayName(currentValue)
+    }
+    // If the current value is null or undefined
+    // and a default value is passed then display
+    // the default value.
+    else if (defaultValue) {
+      return renderDisplayName(defaultValue)
+    }
+    // If the current value is null or undefined
+    // and a default value is not passed then display
+    // a message that indicates that an option should
+    // be selected.
+    else {
+      return 'Select an option'
+    }
+  })
+  const optionalClassName: string = compute(() => {
+    return displayOptionalText ? 'Optional' : 'Optional Hidden'
+  })
+
+  /* -- EFFECTS -- */
   useEffect(() => {
     if (clearField) {
       setExpanded(false)
@@ -662,95 +687,31 @@ export function DetailDropDown<TOption>(props: {
     }
   }, [clearField])
 
-  /* -- PRE-RENDER PROCESSING -- */
-
-  // Default class names
-  let className: string = `Detail DetailDropDown ${uniqueClassName}`
-  let fieldClassName: string = 'Field FieldDropDown'
-  let allOptionsClassName: string = 'AllOptions'
-  let optionClassName: string = 'Option'
-  let labelClassName: string = 'Label'
-  let currentValueClassName: string = 'Text'
-
-  if (expanded) {
-    fieldClassName += ' IsExpanded'
-  } else {
-    fieldClassName += ' IsCollapsed'
-    allOptionsClassName += 'Hidden'
-  }
-
   /* -- RENDER -- */
-  if (currentValue) {
+  if (options.length > 0) {
     return (
       <div className={className} style={uniqueDropDownStyling}>
-        <div className={labelClassName + ' ' + uniqueLabelClassName}>
-          {`${label}:`}
+        <div className='TitleContainer'>
+          <div className={labelClassName}>{`${label}:`}</div>
+          <div className={optionalClassName}>optional</div>
         </div>
-        <div className={fieldClassName + ' ' + uniqueFieldClassName}>
+        <div className={fieldClassName}>
           <div
             className='Option Selected'
             onClick={() => {
               setExpanded(!expanded)
             }}
           >
-            <div
-              className={
-                currentValueClassName + ' ' + uniqueCurrentValueClassName
-              }
-            >
-              {renderDisplayName(currentValue)}
-            </div>
+            <div className={currentValueClassName}>{valueDisplayed}</div>
             <div className='Indicator'>v</div>
           </div>
           <div className={allOptionsClassName}>
-            {options.map((option: TOption) => {
+            {options.map((option: TOption, index: number) => {
               return (
                 <div
                   className={`Option ${renderOptionClassName(option)}`}
                   style={uniqueOptionStyling(option)}
-                  key={`option_${renderDisplayName(option)}`}
-                  onClick={() => {
-                    deliverValue(option)
-                    setExpanded(isExpanded)
-                  }}
-                >
-                  {renderDisplayName(option)}
-                </div>
-              )
-            })}
-          </div>
-        </div>
-      </div>
-    )
-  } else if (currentValue === null || currentValue === undefined) {
-    return (
-      <div className={className} style={uniqueDropDownStyling}>
-        <div
-          className={labelClassName + ' ' + uniqueLabelClassName}
-        >{`${label}:`}</div>
-        <div className={fieldClassName + ' ' + uniqueFieldClassName}>
-          <div
-            className='Option Selected'
-            onClick={() => {
-              setExpanded(!expanded)
-            }}
-          >
-            <div
-              className={
-                currentValueClassName + ' ' + uniqueCurrentValueClassName
-              }
-            >
-              Select an option
-            </div>
-            <div className='Indicator'>v</div>
-          </div>
-          <div className={allOptionsClassName}>
-            {options.map((option: TOption) => {
-              return (
-                <div
-                  className={optionClassName}
-                  style={uniqueOptionStyling(option)}
-                  key={`option_${renderDisplayName(option)}`}
+                  key={`option_${renderDisplayName(option)}_${index}`}
                   onClick={() => {
                     deliverValue(option)
                     setExpanded(isExpanded)
@@ -769,52 +730,11 @@ export function DetailDropDown<TOption>(props: {
   }
 }
 
-export interface IDetailToggle_P {
-  /**
-   * Marks the form detail.
-   */
-  label: string
-  /**
-   * The default value for the input field.
-   */
-  initialValue: boolean
-  /**
-   * The toggle lock state of the toggle.
-   * (See Toggle.tsx)
-   */
-  lockState: EToggleLockState
-  /**
-   * The description displayed when hovered over.
-   */
-  tooltipDescription: string
-  /**
-   * Class name to apply to the root element.
-   */
-  uniqueClassName: string
-  /**
-   * Delivers what the user inputs so that
-   * the parent component can track it.
-   * @param value The value to deliver.
-   */
-  deliverValue: (value: boolean) => void
-  /**
-   * The options available for the detail.
-   */
-  options?: {
-    /** If an error message is needed then this is the
-     * message that will be displayed
-     */
-    errorMessage?: string
-  }
-}
-
-interface IDetailToggle_S {}
-
 // A field in a form that consists of a label
 // and an on/off toggle.
 export class DetailToggle extends React.Component<
-  IDetailToggle_P,
-  IDetailToggle_S
+  TDetailToggle_P,
+  TDetailToggle_S
 > {
   /* -- static-fields -- */
 
@@ -838,8 +758,8 @@ export class DetailToggle extends React.Component<
   componentDidMount(): void {}
 
   componentDidUpdate(
-    prevProps: Readonly<IDetailToggle_P>,
-    prevState: Readonly<IDetailToggle_S>,
+    prevProps: Readonly<TDetailToggle_P>,
+    prevState: Readonly<TDetailToggle_S>,
     snapshot?: any,
   ): void {
     if (prevProps.initialValue !== this.props.initialValue) {
@@ -858,12 +778,17 @@ export class DetailToggle extends React.Component<
     let hideTooltip: boolean = tooltipDescription.length === 0
     let uniqueClassName: string = this.props.uniqueClassName
     let errorMessage: string | undefined = this.props.options?.errorMessage
+    let displayOptionalText: boolean =
+      this.props.options?.displayOptionalText || false
 
     /* -- PRE-RENDER PROCESSING -- */
 
     // Default class names
     let containerClassName: string = 'Detail DetailToggle'
     let fieldErrorClassName: string = 'FieldErrorMessage hide'
+    let optionalClassName: string = displayOptionalText
+      ? 'Optional'
+      : 'Optional Hidden'
 
     if (uniqueClassName.length > 0) {
       containerClassName += ` ${uniqueClassName}`
@@ -882,7 +807,10 @@ export class DetailToggle extends React.Component<
 
     return (
       <div className={containerClassName}>
-        <label className='Label'>{label}</label>
+        <div className='TitleContainer'>
+          <div className='Label'>{label}</div>
+          <div className={optionalClassName}>optional</div>
+        </div>
         <div className='Field'>
           <Toggle
             initiallyActivated={initialValue}
@@ -925,3 +853,233 @@ type TInput =
   | 'time'
   | 'url'
   | 'week'
+
+/**
+ * The properties for the Detail component.
+ */
+type TDetail_P = {
+  /**
+   * The label for the detail.
+   */
+  label: string
+  /**
+   * The initial value for the detail.
+   */
+  initialValue: string | null | undefined
+  /**
+   * The function to deliver the value.
+   */
+  deliverValue: (value: string) => void
+  /**
+   * The options available for the detail.
+   */
+  options?: {
+    /**
+     * The boolean that determines if the detail should display an error.
+     * @default false
+     */
+    deliverError?: boolean
+    /**
+     * The error message to display if the detail has an error.
+     * @default 'At least one character is required here.'
+     */
+    deliverErrorMessage?: string
+    /**
+     * The unique class name for the label.
+     * @default ''
+     */
+    uniqueLabelClassName?: string
+    /**
+     * The unique class name for the input.
+     * @default ''
+     */
+    uniqueInputClassName?: string
+    /**
+     * The type of input to render (i.e., text, password, etc.).
+     * @default 'text'
+     */
+    inputType?: TInput
+    /**
+     * The placeholder for the input.
+     * @default 'Enter text...'
+     */
+    placeholder?: string
+    /**
+     * The boolean that determines if the detail should clear the field.
+     * @default false
+     */
+    clearField?: boolean
+    /**
+     * The boolean that determines if the detail should display a required icon.
+     * @default false
+     */
+    displayRequiredIcon?: boolean
+    /**
+     * The boolean that determines if the detail should allow empty strings.
+     * @default false
+     */
+    emptyStringAllowed?: boolean
+    /**
+     * A boolean that will determine whether or not to show that the field
+     * is optional.
+     * @default false
+     */
+    displayOptionalText?: boolean
+  }
+}
+
+/**
+ * The state for the Detail component.
+ */
+type TDetail_S = {
+  /**
+   * The type of input to render (i.e., text, password, etc.).
+   */
+  inputType: TInput
+  /**
+   * The text to display for the password.
+   */
+  displayPasswordText: string
+  /**
+   * The current value for the detail.
+   */
+  currentValue: string | null | undefined
+  /**
+   * The boolean that determines if the detail should display an error.
+   */
+  displayError: boolean
+}
+
+/**
+ * The properties for the DetailDropDown component.
+ */
+type TDetailDropDown_P<TOption> = {
+  /**
+   * The label for the detail.
+   */
+  label: string
+  /**
+   * The options available for the detail.
+   */
+  options: TOption[]
+  /**
+   * The current value for the detail.
+   */
+  currentValue: TOption | null | undefined
+  /**
+   * The boolean that determines if the detail is expanded.
+   */
+  isExpanded: boolean
+  /**
+   * The function to render the display name for the option.
+   */
+  renderDisplayName: (option: TOption) => string
+  /**
+   * The function to deliver the value.
+   */
+  deliverValue: (value: TOption) => void
+  /**
+   * The unique styling for the drop down.
+   * @default {}
+   */
+  uniqueDropDownStyling?: AnyObject
+  /**
+   * The unique class name for the detail.
+   * @default ''
+   */
+  uniqueClassName?: string
+  /**
+   * The unique class name for the label.
+   * @default ''
+   */
+  uniqueLabelClassName?: string
+  /**
+   * The unique class name for the field.
+   * @default ''
+   */
+  uniqueFieldClassName?: string
+  /**
+   * The unique class name for the current value.
+   * @default ''
+   */
+  uniqueCurrentValueClassName?: string
+  /**
+   * The boolean that determines if the detail should clear the field.
+   * @default false
+   */
+  clearField?: boolean
+  /**
+   * The default value for the detail.
+   * @default undefined
+   */
+  defaultValue?: TOption
+  /**
+   * A boolean that will determine whether or not to show that the field
+   * is optional.
+   * @default false
+   */
+  displayOptionalText?: boolean
+  /**
+   * The unique styling for the options.
+   * @default (option: TOption) => { return {} }
+   */
+  uniqueOptionStyling?: (option: TOption) => AnyObject
+  /**
+   * The function to render the class name for the option.
+   * @default (option: TOption) => { return '' }
+   */
+  renderOptionClassName?: (option: TOption) => string
+}
+
+/**
+ * The properties for the DetailToggle component.
+ */
+export type TDetailToggle_P = {
+  /**
+   * Marks the form detail.
+   */
+  label: string
+  /**
+   * The default value for the input field.
+   */
+  initialValue: boolean
+  /**
+   * The toggle lock state of the toggle.
+   * (See Toggle.tsx)
+   */
+  lockState: EToggleLockState
+  /**
+   * The description displayed when hovered over.
+   */
+  tooltipDescription: string
+  /**
+   * Class name to apply to the root element.
+   */
+  uniqueClassName: string
+  /**
+   * Delivers what the user inputs so that
+   * the parent component can track it.
+   * @param value The value to deliver.
+   */
+  deliverValue: (value: boolean) => void
+  /**
+   * The options available for the detail.
+   */
+  options?: {
+    /** If an error message is needed then this is the
+     * message that will be displayed
+     */
+    errorMessage?: string
+    /**
+     * A boolean that will determine whether or not to show that the field
+     * is optional.
+     * @default false
+     */
+    displayOptionalText?: boolean
+  }
+}
+
+/**
+ * The state for the DetailToggle component.
+ */
+type TDetailToggle_S = {}

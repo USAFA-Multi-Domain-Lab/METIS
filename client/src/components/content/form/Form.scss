@@ -15,18 +15,30 @@
     }
   }
 
-  .Label {
-    user-select: none;
+  .TitleContainer {
+    display: grid;
+    grid-template-columns: auto 60px;
+    align-items: center;
     margin: 11px 0 0;
-    width: 100%;
-    font-size: 12.5px;
 
-    &.Correct {
-      color: $color-correct;
+    .Label {
+      user-select: none;
+      width: 100%;
+      font-size: 12.5px;
+
+      &.Correct {
+        color: $color-correct;
+      }
+
+      &.Error {
+        color: $color-error-alt;
+      }
     }
 
-    &.Error {
-      color: $color-error-alt;
+    .Optional {
+      font-size: 0.69em;
+      font-style: italic;
+      color: $color-pointer-mark;
     }
   }
 
@@ -36,7 +48,7 @@
     border-top: 2px solid $color-main;
     border-bottom: 2px solid $color-main;
     width: 100%;
-    padding: 11px 10px 11px;
+    padding: 11px 10px;
   }
 
   .InputContainer {
@@ -297,7 +309,8 @@
     margin: 20px 8% 0;
     width: 84%;
 
-    .Label {
+    .TitleContainer {
+      grid-template-columns: auto;
       margin: 0;
     }
 

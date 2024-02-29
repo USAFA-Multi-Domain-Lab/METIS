@@ -92,10 +92,12 @@
           box-sizing: border-box;
           position: sticky;
           top: 0;
+          display: grid;
+          align-items: center;
           z-index: 1;
           margin: 0 0 -20px;
           height: 80px;
-          padding: 5px 0 0 10px;
+          padding: 5px 0 15px 10px;
           background: linear-gradient(
             $background-alt7 0%,
             $background-alt7 80%,
@@ -114,30 +116,45 @@
             }
           }
 
-          .BackButton {
-            margin-left: 8%;
-            font-size: 2.5em;
+          &.New {
+            grid-template-columns: 50px auto 60px;
+          }
 
-            .BackArrow {
-              width: 1em;
-
-              &:hover {
-                cursor: pointer;
-                color: $terminal;
-              }
-            }
+          .BackContainer {
+            margin: 0 8%;
           }
 
           .ErrorMessage,
           .Path {
-            margin: 20px 0 0;
-            font-size: 0.8em;
+            margin: 0;
+            font-size: 0.75em;
             color: $color-error-alt;
             width: 97%;
+            max-height: 50px;
+            display: block;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            word-break: break-all;
           }
 
           .Path {
             color: $color-main;
+
+            .Position {
+              color: $color-pointer-mark;
+
+              .PositionText {
+                font-style: italic;
+                color: $terminal;
+
+                &:hover {
+                  cursor: pointer;
+                }
+              }
+            }
           }
         }
       }

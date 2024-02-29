@@ -2,6 +2,7 @@ import ClientMissionAction from 'src/missions/actions'
 import { ClientEffect } from 'src/missions/effects'
 import ClientMissionNode from 'src/missions/nodes'
 import { compute } from 'src/toolbox'
+import { v4 as generateHash } from 'uuid'
 import Tooltip from '../communication/Tooltip'
 import { Detail, DetailBox, DetailNumber } from '../form/Form'
 import List, { ESortByMethod } from '../general-layout/List'
@@ -23,6 +24,8 @@ export default function ActionEntry({
   areDefaultValues,
   actionEmptyStringArray,
   setActionEmptyStringArray,
+  setMissionPath,
+  selectNode,
   setSelectedAction,
   setSelectedEffect,
   handleChange,
@@ -98,7 +101,7 @@ export default function ActionEntry({
    */
   const backButtonClassName: string = compute(() => {
     // Create a default list of class names.
-    let classList: string[] = ['BackArrow']
+    let classList: string[] = ['BackButton']
 
     // If there is at least one empty field, add the disabled class.
     if (isEmptyString || areDefaultValues) {
@@ -107,6 +110,18 @@ export default function ActionEntry({
 
     // Combine the class names into a single string.
     return classList.join(' ')
+  })
+  /**
+   * The name of the mission.
+   */
+  const missionName: string = compute(() => {
+    return action.node.mission.name
+  })
+  /**
+   * The name of the node.
+   */
+  const nodeName: string = compute(() => {
+    return action.node.name
   })
 
   /* -- FUNCTIONS -- */
@@ -153,16 +168,32 @@ export default function ActionEntry({
    * Handles the request to delete an effect.
    */
   const handleDeleteEffectRequest = (effect: ClientEffect) => {
-    // Remove the effect from the action.
-    action.effects.splice(action.effects.indexOf(effect), 1)
-    // Reset the effectEmptyStringArray.
-    setActionEmptyStringArray([])
-    // Reset the selected effect.
-    setSelectedEffect(null)
-    // Update the mission path.
-    missionPath.pop()
+    // Filter out the effect from the action.
+    action.effects = action.effects.filter(
+      (actionEffect: ClientEffect) => actionEffect.id !== effect.id,
+    )
     // Allow the user to save the changes.
     handleChange()
+  }
+
+  /**
+   * This will handle the click event for the path position.
+   * @param index The index of the path position that was clicked.
+   */
+  const handlePathPositionClick = (index: number) => {
+    // If the index is 0 then take the user
+    // back to the mission entry.
+    if (index === 0) {
+      selectNode(null)
+      setSelectedAction(null)
+      setSelectedEffect(null)
+    }
+    // If the index is 1 then take the user
+    // back to the node entry.
+    else if (index === 1) {
+      setSelectedAction(null)
+      setSelectedEffect(null)
+    }
   }
 
   /* -- RENDER -- */
@@ -173,7 +204,7 @@ export default function ActionEntry({
         <div className='BorderBox'>
           {/* -- TOP OF BOX -- */}
           <div className={boxTopClassName}>
-            <div className='BackButton'>
+            <div className='BackContainer'>
               <div
                 className={backButtonClassName}
                 onClick={() => {
@@ -181,14 +212,29 @@ export default function ActionEntry({
                   setSelectedAction(null)
                 }}
               >
-                &#8592;
+                &lt;
                 <Tooltip description='Go back.' />
               </div>
             </div>
             <div className='ErrorMessage'>
               Fix all errors before closing panel.
             </div>
-            <div className='Path'>Location: {missionPath.join('/')}</div>
+            <div className='Path'>
+              Location:{' '}
+              {missionPath.map((position: string, index: number) => {
+                return (
+                  <span className='Position' key={`position-${index}`}>
+                    <span
+                      className='PositionText'
+                      onClick={() => handlePathPositionClick(index)}
+                    >
+                      {position}
+                    </span>{' '}
+                    {index === missionPath.length - 1 ? '' : ' > '}
+                  </span>
+                )
+              })}
+            </div>
           </div>
 
           {/* -- MAIN CONTENT -- */}
@@ -199,6 +245,7 @@ export default function ActionEntry({
               deliverValue={(name: string) => {
                 if (name !== '') {
                   action.name = name
+                  setMissionPath([missionName, nodeName, name])
                   removeActionEmptyString('name')
                   handleChange()
                 } else {
@@ -368,7 +415,10 @@ export default function ActionEntry({
 
                 return (
                   <div className='EffectRow' key={`effect-row-${effect.id}`}>
-                    <div className='Effect'>{effect.name}</div>
+                    <div className='Effect'>
+                      {effect.name}
+                      <Tooltip description={effect.description ?? ''} />
+                    </div>
                     <MiniButtonSVGPanel
                       buttons={actionButtons}
                       linkBack={null}
@@ -397,10 +447,14 @@ export default function ActionEntry({
               <div className='ButtonContainer'>
                 <div
                   className='FormButton AddEffect'
-                  onClick={() => {
-                    missionPath.push('New Effect')
-                    setSelectedEffect(new ClientEffect(action))
-                  }}
+                  onClick={() =>
+                    setSelectedEffect(
+                      new ClientEffect(action, {
+                        id: generateHash(),
+                        args: {},
+                      }),
+                    )
+                  }
                 >
                   <span className='Text'>
                     <span className='LeftBracket'>[</span> New Effect{' '}
@@ -466,6 +520,14 @@ export type TActionEntry_P = {
    * will be used to determine if a field has been left empty.
    */
   setActionEmptyStringArray: (actionEmptyStringArray: string[]) => void
+  /**
+   * A function that will set the mission path.
+   */
+  setMissionPath: (missionPath: string[]) => void
+  /**
+   * A function that will set the node that is selected.
+   */
+  selectNode: (node: ClientMissionNode | null) => void
   /**
    * A function that will set the action that is selected.
    */

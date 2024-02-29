@@ -1,4 +1,5 @@
 import { useGlobalContext } from 'src/context'
+import ClientMission from 'src/missions'
 import ClientMissionAction from 'src/missions/actions'
 import ClientMissionNode from 'src/missions/nodes'
 import { compute } from 'src/toolbox'
@@ -29,6 +30,7 @@ export default function NodeEntry({
   isEmptyString,
   nodeEmptyStringArray,
   setNodeEmptyStringArray,
+  setMissionPath,
   selectNode,
   setSelectedAction,
   handleChange,
@@ -136,6 +138,12 @@ export default function NodeEntry({
     // Combine the class names into a single string.
     return classList.join(' ')
   })
+  /**
+   * The name of the mission.
+   */
+  const missionName: string = compute(() => {
+    return node?.mission.name ?? ClientMission.DEFAULT_PROPERTIES.name
+  })
 
   /* -- FUNCTIONS -- */
 
@@ -164,8 +172,6 @@ export default function NodeEntry({
   const handleDeleteActionRequest = (action: ClientMissionAction) => {
     if (node !== null) {
       node.actions.delete(action.actionID)
-      setSelectedAction(null)
-      missionPath.pop()
       handleChange()
     }
   }
@@ -178,6 +184,18 @@ export default function NodeEntry({
     missionPath.push(action.name)
   }
 
+  /**
+   * This will handle the click event for the path position.
+   * @param index The index of the path position that was clicked.
+   */
+  const handlePathPositionClick = (index: number) => {
+    // If the index is 0 then take the user
+    // back to the mission entry.
+    if (index === 0) {
+      selectNode(null)
+    }
+  }
+
   /* -- RENDER -- */
 
   if (node !== null) {
@@ -186,21 +204,37 @@ export default function NodeEntry({
         <div className='BorderBox'>
           {/* -- TOP OF BOX -- */}
           <div className={boxTopClassName}>
-            <div className='BackButton'>
+            <div className='BackContainer'>
               <div
-                className='BackArrow'
+                className='BackButton'
                 onClick={() => {
                   missionPath.pop()
                   selectNode(null)
                 }}
               >
-                &#8592;
+                &lt;
+                <Tooltip description='Go back.' />
               </div>
             </div>
             <div className='ErrorMessage'>
               Fix all errors before closing panel.
             </div>
-            <div className='Path'>Location: {missionPath.join('/')}</div>
+            <div className='Path'>
+              Location:{' '}
+              {missionPath.map((position: string, index: number) => {
+                return (
+                  <span className='Position' key={`position-${index}`}>
+                    <span
+                      className='PositionText'
+                      onClick={() => handlePathPositionClick(index)}
+                    >
+                      {position}
+                    </span>{' '}
+                    {index === missionPath.length - 1 ? '' : ' > '}
+                  </span>
+                )
+              })}
+            </div>
           </div>
 
           {/* -- MAIN CONTENT -- */}
@@ -211,6 +245,7 @@ export default function NodeEntry({
               deliverValue={(name: string) => {
                 if (node !== null && name !== '') {
                   node.name = name
+                  setMissionPath([missionName, name])
                   removeNodeEmptyString('name')
                   handleChange()
                 } else if (node !== null && name === '') {
@@ -227,7 +262,15 @@ export default function NodeEntry({
               options={colorOptions}
               currentValue={`Choose a color`}
               isExpanded={true}
-              uniqueDropDownStyling={{}}
+              renderDisplayName={(color) => color}
+              deliverValue={(color: string) => {
+                if (node !== null) {
+                  node.color = color
+
+                  handleChange()
+                }
+              }}
+              uniqueClassName='Color'
               uniqueOptionStyling={(color) => {
                 if (node && node.color === color) {
                   return {
@@ -242,20 +285,6 @@ export default function NodeEntry({
                     backgroundColor: `${color}`,
                   }
                 }
-              }}
-              renderOptionClassName={(color) => {
-                return ''
-              }}
-              renderDisplayName={(color) => color}
-              deliverValue={(color: string) => {
-                if (node !== null) {
-                  node.color = color
-
-                  handleChange()
-                }
-              }}
-              optional={{
-                uniqueClassName: 'Color',
               }}
               key={`${node.nodeID}_color`}
             />
@@ -440,7 +469,10 @@ export default function NodeEntry({
                     className='ActionRow'
                     key={`action-row-${action.actionID}`}
                   >
-                    <div className='Action'>{action.name}</div>
+                    <div className='Action'>
+                      {action.name}{' '}
+                      <Tooltip description={action.description ?? ''} />
+                    </div>
                     <MiniButtonSVGPanel
                       buttons={actionButtons}
                       linkBack={null}
@@ -540,6 +572,10 @@ export type TNodeEntry_P = {
    * will be used to determine if a field has been left empty.
    */
   setNodeEmptyStringArray: (nodeEmptyStringArray: string[]) => void
+  /**
+   * A function that will set the mission path.
+   */
+  setMissionPath: (missionPath: string[]) => void
   /**
    * A function that will set the node that is selected.
    */

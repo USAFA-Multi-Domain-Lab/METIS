@@ -14,6 +14,7 @@ export default function MissionEntry({
   missionPath,
   missionEmptyStringArray,
   setMissionEmptyStringArray,
+  setMissionPath,
   handleChange,
 }: TMissionEntry_P): JSX.Element | null {
   /* -- GLOBAL CONTEXT -- */
@@ -90,10 +91,20 @@ export default function MissionEntry({
           {/* -- TOP OF BOX -- */}
           <div className='BoxTop'>
             <div className='ErrorMessage Hidden'></div>
-            <div className='BackButton'>
-              <div className='BackArrow Disabled'>&#8592;</div>
+            <div className='BackContainer'>
+              <div className='BackButton Disabled'>&lt;</div>
             </div>
-            <div className='Path'>Location: {missionPath.join('/')}</div>
+            <div className='Path'>
+              Location:{' '}
+              {missionPath.map((position: string, index: number) => {
+                return (
+                  <span className='Position' key={`position-${index}`}>
+                    <span className='PositionText'>{position}</span>{' '}
+                    {index === missionPath.length - 1 ? '' : ' > '}
+                  </span>
+                )
+              })}
+            </div>
           </div>
 
           {/* -- MAIN CONTENT -- */}
@@ -104,6 +115,7 @@ export default function MissionEntry({
               deliverValue={(name: string) => {
                 if (name !== '') {
                   mission.name = name
+                  setMissionPath([mission.name])
                   removeMissionEmptyString('name')
                   handleChange()
                 } else {
@@ -194,6 +206,10 @@ export type TMissionEntry_P = {
    * missionEmptyStringArray.
    */
   setMissionEmptyStringArray: (missionEmptyString: string[]) => void
+  /**
+   * A function that will set the mission path.
+   */
+  setMissionPath: (missionPath: string[]) => void
   /**
    * A function that will be used to notify the parent
    * component that this component has changed.

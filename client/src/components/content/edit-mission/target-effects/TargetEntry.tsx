@@ -20,6 +20,7 @@ export default function TargetEntry({
   targets,
   setSelectedTarget,
   setSelectedEffect,
+  handleChange,
 }: TTargetEntry_P) {
   /* -- GLOBAL CONTEXT -- */
   const { forceUpdate } = useGlobalContext().actions
@@ -33,13 +34,6 @@ export default function TargetEntry({
           options={targets}
           currentValue={selectedTarget}
           isExpanded={false}
-          uniqueDropDownStyling={{}}
-          uniqueOptionStyling={(target: ClientTarget) => {
-            return {}
-          }}
-          renderOptionClassName={(target: ClientTarget) => {
-            return ''
-          }}
           renderDisplayName={(target: ClientTarget) => {
             return target.name
           }}
@@ -56,6 +50,7 @@ export default function TargetEntry({
           isEmptyString={isEmptyString}
           areDefaultValues={areDefaultValues}
           setSelectedEffect={setSelectedEffect}
+          handleChange={handleChange}
         />
       </div>
     )
@@ -106,4 +101,8 @@ export type TTargetEntry_P = {
    * A function that will set the selected effect.
    */
   setSelectedEffect: (effect: ClientEffect | null) => void
+  /**
+   * A function that will be called when a change has been made.
+   */
+  handleChange: () => void
 }

@@ -1,6 +1,6 @@
-import { useGlobalContext } from 'src/context'
 import ClientMissionAction from 'src/missions/actions'
 import { ClientEffect } from 'src/missions/effects'
+import ClientMissionNode from 'src/missions/nodes'
 import { ClientTargetEnvironment } from 'src/target-environments'
 import { compute } from 'src/toolbox'
 import Tooltip from '../../communication/Tooltip'
@@ -20,12 +20,12 @@ export default function EffectEntry({
   areDefaultValues,
   effectEmptyStringArray,
   setEffectEmptyStringArray,
+  setMissionPath,
+  selectNode,
+  setSelectedAction,
   setSelectedEffect,
   handleChange,
 }: TEffectEntry_P): JSX.Element | null {
-  /* -- GLOBAL CONTEXT -- */
-  const { forceUpdate } = useGlobalContext().actions
-
   /* -- COMPUTED -- */
   /**
    * The class name for the top of the box.
@@ -39,6 +39,10 @@ export default function EffectEntry({
       classList.push('IsError')
     }
 
+    if (!action.effects.includes(effect)) {
+      classList.push('New')
+    }
+
     // Combine the class names into a single string.
     return classList.join(' ')
   })
@@ -47,25 +51,74 @@ export default function EffectEntry({
    */
   const backButtonClassName: string = compute(() => {
     // Create a default list of class names.
-    let classList: string[] = ['BackArrow']
+    let classList: string[] = ['BackButton']
 
-    // If there is at least one empty field, add the disabled class.
-    if (isEmptyString || areDefaultValues) {
-      classList.push('Disabled')
+    // If the effect is new then hide the back button.
+    if (!action.effects.includes(effect)) {
+      classList.push('Hidden')
     }
 
     // Combine the class names into a single string.
     return classList.join(' ')
   })
   /**
-   * The text for the effect button.
+   * The class name for the close button.
    */
-  const effectButtonText: string = compute(() => {
+  const closeButtonClassName: string = compute(() => {
+    // Create a default list of class names.
+    let classList: string[] = ['Close']
+
+    // If the effect is new then hide the close button.
     if (action.effects.includes(effect)) {
-      return 'Delete Effect'
-    } else {
-      return 'Cancel'
+      classList.push('Hidden')
     }
+
+    // Combine the class names into a single string.
+    return classList.join(' ')
+  })
+  /**
+   * The class name for the delete button.
+   */
+  const deleteButtonClassName: string = compute(() => {
+    let classList: string[] = ['FormButton DeleteEffect']
+
+    if (!action.effects.includes(effect)) {
+      classList.push('Hidden')
+    }
+
+    return classList.join(' ')
+  })
+  /**
+   * The name of the mission.
+   */
+  const missionName: string = compute(() => {
+    return action.node.mission.name
+  })
+  /**
+   * The name of the node.
+   */
+  const nodeName: string = compute(() => {
+    return action.node.name
+  })
+  /**
+   * The name of the action.
+   */
+  const actionName: string = compute(() => {
+    return action.name
+  })
+  /**
+   * The class name for the mission path.
+   */
+  const pathClassName: string = compute(() => {
+    // Create a default list of class names.
+    let classList: string[] = ['Path']
+
+    if (!action.effects.includes(effect)) {
+      classList.push('Disabled')
+    }
+
+    // Combine the class names into a single string.
+    return classList.join(' ')
   })
 
   /* -- FUNCTIONS -- */
@@ -103,25 +156,74 @@ export default function EffectEntry({
     }
   }
 
+  /**
+   * This will handle the click event for the path position.
+   * @param index The index of the path position that was clicked.
+   */
+  const handlePathPositionClick = (index: number) => {
+    // If the index is 0 then take the user
+    // back to the mission entry.
+    if (index === 0) {
+      selectNode(null)
+      setSelectedAction(null)
+      setSelectedEffect(null)
+    }
+    // If the index is 1 then take the user
+    // back to the node entry.
+    else if (index === 1) {
+      setSelectedAction(null)
+      setSelectedEffect(null)
+    }
+    // If the index is 2 then take the user
+    // back to the action entry.
+    else if (index === 2) {
+      setSelectedEffect(null)
+    }
+  }
+
   /* -- RENDER -- */
   return (
     <div className='EffectEntry SidePanel'>
       <div className='BorderBox'>
         {/* -- TOP OF BOX -- */}
         <div className={boxTopClassName}>
-          <div className='BackButton'>
+          <div className='BackContainer'>
             <div
               className={backButtonClassName}
               onClick={() => setSelectedEffect(null)}
             >
-              &#8592;
+              &lt;
               <Tooltip description='Go back.' />
             </div>
           </div>
           <div className='ErrorMessage'>
             Fix all errors before closing panel.
           </div>
-          <div className='Path'>Location: {missionPath.join('/')}</div>
+          <div className={pathClassName}>
+            Location:{' '}
+            {missionPath.map((position: string, index: number) => {
+              return (
+                <span className='Position' key={`position-${index}`}>
+                  <span
+                    className='PositionText'
+                    onClick={() => handlePathPositionClick(index)}
+                  >
+                    {position}
+                  </span>{' '}
+                  {index === missionPath.length - 1 ? '' : ' > '}
+                </span>
+              )
+            })}
+          </div>
+          <div
+            className={closeButtonClassName}
+            onClick={() => setSelectedEffect(null)}
+          >
+            <div className='CloseButton'>
+              x
+              <Tooltip description='Cancel' />
+            </div>
+          </div>
         </div>
 
         {/* -- MAIN CONTENT -- */}
@@ -132,6 +234,7 @@ export default function EffectEntry({
             deliverValue={(name: string) => {
               if (name !== '') {
                 effect.name = name
+                setMissionPath([missionName, nodeName, actionName, name])
                 removeEffectEmptyString('name')
                 handleChange()
               } else {
@@ -142,7 +245,7 @@ export default function EffectEntry({
               }
             }}
             options={{
-              placeholder: 'Required',
+              placeholder: 'Enter name...',
             }}
           />
           <DetailBox
@@ -162,7 +265,7 @@ export default function EffectEntry({
               }
             }}
             options={{
-              placeholder: 'Required',
+              placeholder: 'Enter description...',
               elementBoundary: '.BorderBox',
             }}
           />
@@ -173,12 +276,13 @@ export default function EffectEntry({
             isEmptyString={isEmptyString}
             areDefaultValues={areDefaultValues}
             setSelectedEffect={setSelectedEffect}
+            handleChange={handleChange}
           />
           {/* -- BUTTON(S) -- */}
           <div className='ButtonContainer'>
-            <div className='FormButton DeleteEffect'>
+            <div className={deleteButtonClassName}>
               <span className='Text' onClick={handleDeleteEffectRequest}>
-                <span className='LeftBracket'>[</span> {effectButtonText}{' '}
+                <span className='LeftBracket'>[</span> Delete Effect{' '}
                 <span className='RightBracket'>]</span>
                 <Tooltip description='Delete this effect.' />
               </span>
@@ -231,6 +335,18 @@ export type TEffectEntry_P = {
    * will be used to determine if a field has been left empty.
    */
   setEffectEmptyStringArray: (effectEmptyStringArray: string[]) => void
+  /**
+   * A function that will set the mission path.
+   */
+  setMissionPath: (missionPath: string[]) => void
+  /**
+   * A function that will set the node that is selected.
+   */
+  selectNode: (node: ClientMissionNode | null) => void
+  /**
+   * A function that will set the action that is selected.
+   */
+  setSelectedAction: (action: ClientMissionAction | null) => void
   /**
    * A function that will set the selected effect.
    */

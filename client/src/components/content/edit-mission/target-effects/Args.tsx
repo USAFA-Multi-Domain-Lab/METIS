@@ -1,10 +1,13 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import ClientMissionAction from 'src/missions/actions'
 import { ClientEffect } from 'src/missions/effects'
 import ClientTarget from 'src/target-environments/targets'
 import { compute } from 'src/toolbox'
 import { TTargetArg } from '../../../../../../shared/target-environments/targets'
-import { SingleTypeObject } from '../../../../../../shared/toolbox/objects'
+import {
+  AnyObject,
+  SingleTypeObject,
+} from '../../../../../../shared/toolbox/objects'
 import ArgEntry from './ArgEntry'
 import './Args.scss'
 
@@ -18,9 +21,12 @@ export default function Args({
   isEmptyString,
   areDefaultValues,
   setSelectedEffect,
+  handleChange,
 }: TArgs_P): JSX.Element | null {
   /* -- STATE -- */
+  const [effectArgs] = useState<AnyObject>({})
   const [reqPropertiesNotFilledOut] = useState<string[]>([])
+  const [argDependencies, setArgDependencies] = useState<string[]>([])
 
   /* -- COMPUTED -- */
   /**
@@ -76,81 +82,55 @@ export default function Args({
   /**
    * Class name for the save button.
    */
-  const CreateButtonClassName: string = compute(() => {
+  const createButtonClassName: string = compute(() => {
     // Create a default list of class names.
     let classList: string[] = ['Button']
 
     // If the effect is not new then hide the save button.
     if (action.effects.includes(effect)) {
       classList = ['Button', 'Hidden']
-    }
-
-    // If there are required properties not filled out ||
-    // If there is an empty field ||
-    // If there are default values...
-    // then disable the save button.
-    if (
-      reqPropertiesNotFilledOut.length > 0 ||
-      isEmptyString ||
-      areDefaultValues
-    ) {
-      // Disable the save button.
-      classList = ['Button', 'Disabled']
-    }
-
-    // Iterate through the selected target's arguments.
-    args.forEach((arg: TTargetArg) => {
-      // If the argument is required and it is not filled out
+    } else {
+      // If there are required properties not filled out ||
+      // If there is an empty field ||
+      // If there are default values...
       // then disable the save button.
-      if (arg.required && reqPropertiesNotFilledOut.includes(arg.id)) {
-        // classList = ['Button', 'Disabled']
+      if (
+        reqPropertiesNotFilledOut.length > 0 ||
+        isEmptyString ||
+        areDefaultValues
+      ) {
+        // Disable the save button.
+        classList = ['Button', 'Disabled']
       }
-    })
+    }
 
     return classList.join(' ')
   })
 
+  /* -- EFFECTS -- */
+  // When the effect or target changes, update the
+  // argument dependencies.
+  useEffect(() => {
+    setArgDependencies([])
+  }, [effect, target])
+
   /* -- FUNCTIONS -- */
 
   /**
-   * Handles the submission of the effect.
+   * Handles creating the effect.
    */
   const createEffect = () => {
-    // // Grab the entries of the effect's arguments.
-    // let argEntries: [string, any][] = Object.entries(effectArgs)
-    // // Filter out the arguments that are not filled out.
-    // // Only the arguments that are filled out will be executed.
-    // argEntries.forEach(([key, value]) => {
-    //   // If the value is not undefined, null, or the default value
-    //   // then add the argument to the effect's arguments.
-    //   if (
-    //     value !== undefined &&
-    //     value !== null &&
-    //     value !== defaultDropDownValue &&
-    //     value !== defaultNumberValue &&
-    //     value !== defaultStringValue &&
-    //     value !== defaultBooleanValue
-    //   )
-    //     effect.args[key] = value
-    // })
-
-    // todo: remove
-    // // Execute the effect.
-    // effect.target.script(effect.args)
-
-    // if (!action.effects.includes(effect)) {
-    // Add the effect to the action's effects list.
+    // Add the effect to the action.
     action.effects.push(effect)
-    // handleChange()
-    // }
-
+    // Handle the update to the mission.
+    handleChange()
     // Set the selected effect to null.
     setSelectedEffect(null)
   }
 
   /* -- RENDER -- */
-  // If a target is selected and it has arguments
-  // then render the arguments.
+  // If the grouping entries are not empty and a target
+  // is selected then render the arguments.
   if (groupingEntries.length > 0 && target) {
     return (
       <div className='Args'>
@@ -204,7 +184,9 @@ export default function Args({
                     effect={effect}
                     args={args}
                     arg={arg}
+                    effectArgs={effectArgs}
                     reqPropertiesNotFilledOut={reqPropertiesNotFilledOut}
+                    argDependencies={argDependencies}
                     key={arg.id}
                   />
                 )
@@ -215,7 +197,7 @@ export default function Args({
 
         {/* -- BUTTONS -- */}
         <div className='ButtonContainer'>
-          <div className={CreateButtonClassName} onClick={createEffect}>
+          <div className={createButtonClassName} onClick={createEffect}>
             Create Effect
           </div>
         </div>
@@ -256,4 +238,8 @@ export type TArgs_P = {
    * A function that will set the selected effect.
    */
   setSelectedEffect: (effect: ClientEffect | null) => void
+  /**
+   * A function that will be called when a change has been made.
+   */
+  handleChange: () => void
 }

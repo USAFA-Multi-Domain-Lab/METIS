@@ -323,7 +323,7 @@ let trafficLights: ClientTarget = new ClientTarget(ranchoCucamonga, {
     },
     {
       id: 'commercialNorth',
-      name: 'North - Commercial',
+      name: 'Commercial - North',
       required: false,
       display: false,
       groupingId: 'commercialNorth',
@@ -362,7 +362,7 @@ let trafficLights: ClientTarget = new ClientTarget(ranchoCucamonga, {
     },
     {
       id: 'commercialSouth',
-      name: 'South - Commercial',
+      name: 'Commercial - South',
       required: false,
       display: false,
       groupingId: 'commercialSouth',
@@ -401,7 +401,7 @@ let trafficLights: ClientTarget = new ClientTarget(ranchoCucamonga, {
     },
     {
       id: 'commercialEast',
-      name: 'East - Commercial',
+      name: 'Commercial - East',
       required: false,
       display: false,
       groupingId: 'commercialEast',
@@ -440,7 +440,7 @@ let trafficLights: ClientTarget = new ClientTarget(ranchoCucamonga, {
     },
     {
       id: 'commercialWest',
-      name: 'West - Commercial',
+      name: 'Commercial - West',
       required: false,
       display: false,
       groupingId: 'commercialWest',
@@ -494,7 +494,7 @@ let trafficLights: ClientTarget = new ClientTarget(ranchoCucamonga, {
     },
     {
       id: 'industrialNorth',
-      name: 'North - Industrial',
+      name: 'Industrial - North',
       required: false,
       display: false,
       groupingId: 'industrialNorth',
@@ -533,7 +533,7 @@ let trafficLights: ClientTarget = new ClientTarget(ranchoCucamonga, {
     },
     {
       id: 'industrialSouth',
-      name: 'South - Industrial',
+      name: 'Industrial - South',
       required: false,
       display: false,
       groupingId: 'industrialSouth',
@@ -572,7 +572,7 @@ let trafficLights: ClientTarget = new ClientTarget(ranchoCucamonga, {
     },
     {
       id: 'industrialEast',
-      name: 'East - Industrial',
+      name: 'Industrial - East',
       required: false,
       display: false,
       type: 'boolean',
@@ -611,7 +611,7 @@ let trafficLights: ClientTarget = new ClientTarget(ranchoCucamonga, {
     },
     {
       id: 'industrialWest',
-      name: 'West - Industrial',
+      name: 'Industrial - West',
       required: false,
       display: false,
       groupingId: 'industrialWest',
@@ -665,7 +665,7 @@ let trafficLights: ClientTarget = new ClientTarget(ranchoCucamonga, {
     },
     {
       id: 'residentialNorth',
-      name: 'North - Residential',
+      name: 'Residential - North',
       required: false,
       display: false,
       groupingId: 'residentialNorth',
@@ -704,7 +704,7 @@ let trafficLights: ClientTarget = new ClientTarget(ranchoCucamonga, {
     },
     {
       id: 'residentialSouth',
-      name: 'South - Residential',
+      name: 'Residential - South',
       required: false,
       display: false,
       groupingId: 'residentialSouth',
@@ -743,7 +743,7 @@ let trafficLights: ClientTarget = new ClientTarget(ranchoCucamonga, {
     },
     {
       id: 'residentialEast',
-      name: 'East - Residential',
+      name: 'Residential - East',
       required: false,
       display: false,
       groupingId: 'residentialEast',
@@ -782,7 +782,7 @@ let trafficLights: ClientTarget = new ClientTarget(ranchoCucamonga, {
     },
     {
       id: 'residentialWest',
-      name: 'West - Residential',
+      name: 'Residential - West',
       required: false,
       display: false,
       groupingId: 'residentialWest',
@@ -836,7 +836,7 @@ let trafficLights: ClientTarget = new ClientTarget(ranchoCucamonga, {
     },
     {
       id: 'militaryNorth',
-      name: 'North - Military',
+      name: 'Military - North',
       required: false,
       display: false,
       groupingId: 'militaryNorth',
@@ -875,7 +875,7 @@ let trafficLights: ClientTarget = new ClientTarget(ranchoCucamonga, {
     },
     {
       id: 'militarySouth',
-      name: 'South - Military',
+      name: 'Military - South',
       required: false,
       display: false,
       groupingId: 'militarySouth',
@@ -914,7 +914,7 @@ let trafficLights: ClientTarget = new ClientTarget(ranchoCucamonga, {
     },
     {
       id: 'militaryEast',
-      name: 'East - Military',
+      name: 'Military - East',
       required: false,
       display: false,
       groupingId: 'militaryEast',
@@ -953,7 +953,7 @@ let trafficLights: ClientTarget = new ClientTarget(ranchoCucamonga, {
     },
     {
       id: 'militaryWest',
-      name: 'West - Military',
+      name: 'Military - West',
       required: false,
       display: false,
       groupingId: 'militaryWest',
@@ -1088,7 +1088,7 @@ export default function MissionFormPage(
   const [effectEmptyStringArray, setEffectEmptyStringArray] = useState<
     string[]
   >([])
-  const [missionPath, setMissionPath] = useState<string[]>([mission.name])
+  const [missionPath, setMissionPath] = useState<string[]>([])
 
   /* -- COMPUTED -- */
   /**
@@ -1122,12 +1122,14 @@ export default function MissionFormPage(
       mission.name === ClientMission.DEFAULT_PROPERTIES.name ||
       mission.introMessage === ClientMission.DEFAULT_PROPERTIES.introMessage
     ) {
+      // todo: remove comment after updating the mission class
       // missionHasDefaultValues = true
     }
 
     // Check if the selected node has default values.
     if (selectedNode) {
       if (selectedNode.name === ClientMissionNode.DEFAULT_PROPERTIES.name) {
+        // todo: remove comment after updating the node class
         // nodeHasDefaultValues = true
       }
     }
@@ -1143,6 +1145,7 @@ export default function MissionFormPage(
         selectedAction.postExecutionFailureText ===
           ClientMissionAction.DEFAULT_PROPERTIES.postExecutionFailureText
       ) {
+        // todo: remove comment after updating the action class
         // actionHasDefaultValues = true
       }
     }
@@ -1227,7 +1230,11 @@ export default function MissionFormPage(
     if (missionID !== null) {
       try {
         beginLoading('Loading mission...')
-        setMission(await ClientMission.fetchOne(missionID, { openAll: true }))
+        let mission: ClientMission = await ClientMission.fetchOne(missionID, {
+          openAll: true,
+        })
+        setMission(mission)
+        setMissionPath([mission.name])
       } catch {
         handleError('Failed to load mission.')
       }
@@ -1271,6 +1278,7 @@ export default function MissionFormPage(
     } else if (selectedNode === null) {
       setMissionPath([mission.name])
     }
+
     setSelectedEffect(null)
   }, [selectedAction])
 
@@ -1282,7 +1290,7 @@ export default function MissionFormPage(
         mission.name,
         selectedNode.name,
         selectedAction.name,
-        selectedEffect.name || 'New Effect',
+        selectedEffect.name || '',
       ])
     } else if (selectedNode && selectedAction) {
       setMissionPath([mission.name, selectedNode.name, selectedAction.name])
@@ -1658,6 +1666,7 @@ export default function MissionFormPage(
                     missionPath={missionPath}
                     missionEmptyStringArray={missionEmptyStringArray}
                     setMissionEmptyStringArray={setMissionEmptyStringArray}
+                    setMissionPath={setMissionPath}
                     handleChange={handleChange}
                   />
                 )
@@ -1673,6 +1682,7 @@ export default function MissionFormPage(
                     isEmptyString={isEmptyString}
                     nodeEmptyStringArray={nodeEmptyStringArray}
                     setNodeEmptyStringArray={setNodeEmptyStringArray}
+                    setMissionPath={setMissionPath}
                     selectNode={selectNode}
                     setSelectedAction={setSelectedAction}
                     handleChange={handleChange}
@@ -1693,6 +1703,8 @@ export default function MissionFormPage(
                     areDefaultValues={areDefaultValues}
                     actionEmptyStringArray={actionEmptyStringArray}
                     setActionEmptyStringArray={setActionEmptyStringArray}
+                    setMissionPath={setMissionPath}
+                    selectNode={selectNode}
                     setSelectedAction={setSelectedAction}
                     setSelectedEffect={setSelectedEffect}
                     handleChange={handleChange}
@@ -1709,6 +1721,9 @@ export default function MissionFormPage(
                     areDefaultValues={areDefaultValues}
                     effectEmptyStringArray={effectEmptyStringArray}
                     setEffectEmptyStringArray={setEffectEmptyStringArray}
+                    setMissionPath={setMissionPath}
+                    selectNode={selectNode}
+                    setSelectedAction={setSelectedAction}
                     setSelectedEffect={setSelectedEffect}
                     handleChange={handleChange}
                   />

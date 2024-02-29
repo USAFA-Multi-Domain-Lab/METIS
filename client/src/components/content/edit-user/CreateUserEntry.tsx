@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react'
+import ClientUser from 'src/users'
+import { TMetisSession } from '../../../../../shared/sessions'
+import UserRole from '../../../../../shared/users/roles'
 import { Detail, DetailDropDown } from '../form/Form'
 import Toggle from '../user-controls/Toggle'
 import './CreateUserEntry.scss'
-import ClientUser from 'src/users'
-import UserRole from '../../../../../shared/users/roles'
-import { TMetisSession } from '../../../../../shared/sessions'
 
 /**
  * This will render the forms for creating a new user.
@@ -164,13 +164,6 @@ export default function CreateUserEntry(props: {
         options={listOfRoles}
         currentValue={user.role}
         isExpanded={false}
-        uniqueDropDownStyling={{}}
-        uniqueOptionStyling={(role: UserRole) => {
-          return {}
-        }}
-        renderOptionClassName={(role: UserRole) => {
-          return ''
-        }}
         renderDisplayName={(role: UserRole) => role.name}
         deliverValue={(role: UserRole) => {
           user.role = role
@@ -178,11 +171,9 @@ export default function CreateUserEntry(props: {
           setSelectedRoleClassName('Correct')
           handleChange()
         }}
-        optional={{
-          uniqueLabelClassName: roleClassName,
-          uniqueFieldClassName: roleClassName,
-          uniqueCurrentValueClassName: selectedRoleClassName,
-        }}
+        uniqueLabelClassName={roleClassName}
+        uniqueFieldClassName={roleClassName}
+        uniqueCurrentValueClassName={selectedRoleClassName}
       />
       <Detail
         label='First Name'

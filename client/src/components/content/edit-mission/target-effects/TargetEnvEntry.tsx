@@ -18,6 +18,7 @@ export default function TargetEnvEntry({
   isEmptyString,
   areDefaultValues,
   setSelectedEffect,
+  handleChange,
 }: TTargetEnvEntry_P): JSX.Element | null {
   /* -- GLOBAL CONTEXT -- */
   const { forceUpdate } = useGlobalContext().actions
@@ -40,13 +41,6 @@ export default function TargetEnvEntry({
         options={targetEnvironments}
         currentValue={selectedTargetEnv}
         isExpanded={false}
-        uniqueDropDownStyling={{}}
-        uniqueOptionStyling={(targetEnvironment: ClientTargetEnvironment) => {
-          return {}
-        }}
-        renderOptionClassName={(targetEnvironment: ClientTargetEnvironment) => {
-          return 'TargetEnvironment'
-        }}
         renderDisplayName={(targetEnvironment: ClientTargetEnvironment) => {
           return targetEnvironment.name
         }}
@@ -67,6 +61,7 @@ export default function TargetEnvEntry({
         areDefaultValues={areDefaultValues}
         setSelectedTarget={setSelectedTarget}
         setSelectedEffect={setSelectedEffect}
+        handleChange={handleChange}
       />
     </div>
   )
@@ -102,4 +97,8 @@ export type TTargetEnvEntry_P = {
    * A function that will set the selected effect.
    */
   setSelectedEffect: (effect: ClientEffect | null) => void
+  /**
+   * A function that will be called when a change has been made.
+   */
+  handleChange: () => void
 }

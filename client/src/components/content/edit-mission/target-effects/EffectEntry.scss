@@ -6,16 +6,15 @@
       .BoxTop {
         grid-template-columns: 50px auto;
 
-        // .Close {
-        //   background: linear-gradient(
-        //     $background-alt7 0%,
-        //     $background-alt7 80%,
-        //     transparent 100%
-        //   );
-        //   grid-column: 3 / 3;
-        //   padding: 15px 0 0;
-        //   min-width: 28px;
-        // }
+        .Close {
+          background: linear-gradient(
+            $background-alt7 0%,
+            $background-alt7 80%,
+            transparent 100%
+          );
+          min-width: 28px;
+          padding: 20px 0;
+        }
       }
 
       .SidePanelSection {

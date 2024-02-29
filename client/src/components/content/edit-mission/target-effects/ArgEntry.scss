@@ -1,11 +1,16 @@
 @import 'src/assets/styles/config.scss';
 
 .ArgEntry {
+  .Detail {
+    min-width: 187px;
+  }
+
   &.Boolean {
     .Detail {
       &.DetailToggle {
         border: none;
-        margin: 20px 8% -10px;
+        margin: 20px 8% 0;
+        padding: 11px 0;
       }
     }
   }
