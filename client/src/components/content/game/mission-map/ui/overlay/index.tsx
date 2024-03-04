@@ -1,5 +1,9 @@
 import './index.scss'
 
+/**
+ * An overlay to display on top of the mission map.
+ * @note Useful for displaying modals.
+ */
 export default function Overlay({ children }: TOverlay): JSX.Element | null {
   /* -- computed -- */
 

@@ -1,5 +1,4 @@
 import User, { deleteUser } from '../../../../../shared/users'
-import { TMetisSession } from '../../../../../shared/sessions'
 import { EMiniButtonSVGPurpose, MiniButtonSVG } from './MiniButtonSVG'
 import { MiniButtonSVGPanel } from './MiniButtonSVGPanel'
 import './UserModificationPanel.scss'

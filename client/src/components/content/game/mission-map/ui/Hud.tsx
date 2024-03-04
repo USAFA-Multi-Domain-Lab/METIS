@@ -2,7 +2,6 @@ import ClientMission from 'src/missions'
 import './Hud.scss'
 import { ButtonSVGPanel } from 'src/components/content/user-controls/ButtonSVGPanel'
 import { ButtonSVG } from 'src/components/content/user-controls/ButtonSVG'
-import { useMemo } from 'react'
 import { compute } from 'src/toolbox/'
 
 /**

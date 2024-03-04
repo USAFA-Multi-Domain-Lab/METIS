@@ -2,6 +2,9 @@ import { useMemo } from 'react'
 import { Vector2D } from '../../../../../../../shared/toolbox/space'
 import './Line.scss'
 
+/**
+ * A plain line graphic to render on a mission map scene.
+ */
 export default function Line({
   direction,
   start,

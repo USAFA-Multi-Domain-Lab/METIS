@@ -1,24 +1,24 @@
-import './GamePage.scss'
 import { useState } from 'react'
-import OutputPanel from '../content/game/OutputPanel'
-import { IPage } from '../App'
 import { IConsoleOutput } from 'src/components/content/game/ConsoleOutput'
-import GameClient from 'src/games'
 import { useGlobalContext, useNavigationMiddleware } from 'src/context'
-import { useMountHandler } from 'src/toolbox/hooks'
+import GameClient from 'src/games'
 import ClientMission from 'src/missions'
 import ClientMissionNode from 'src/missions/nodes'
+import { compute } from 'src/toolbox'
+import { useMountHandler } from 'src/toolbox/hooks'
 import MapToolbox from '../../../../shared/toolbox/maps'
+import { IPage } from '../App'
+import OutputPanel from '../content/game/OutputPanel'
+import StatusBar from '../content/game/StatusBar'
+import MissionMap from '../content/game/mission-map'
+import ActionExecModal from '../content/game/mission-map/ui/overlay/modals/ActionExecModal'
 import Navigation from '../content/general-layout/Navigation'
 import {
   EPanelSizingMode,
   PanelSizeRelationship,
   ResizablePanel,
 } from '../content/general-layout/ResizablePanels'
-import MissionMap2 from '../content/game/mission-map'
-import ActionExecModal from '../content/game/mission-map/ui/overlay/modals/ActionExecModal'
-import StatusBar from '../content/game/StatusBar'
-import { compute } from 'src/toolbox'
+import './GamePage.scss'
 
 // This will render a dashboard with a radar
 // on it, indicating air traffic passing by.
@@ -27,6 +27,8 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
 
   let game: GameClient = props.game
   let mission: ClientMission = game.mission
+
+  console.log(game.gameID)
 
   /* -- global-context -- */
 
@@ -257,7 +259,7 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
                     return description
                   }}
                 /> */}
-                <MissionMap2
+                <MissionMap
                   mission={mission}
                   onNodeSelect={onNodeSelect}
                   overlayContent={overlayContent}

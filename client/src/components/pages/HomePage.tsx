@@ -1,23 +1,23 @@
+import { AxiosError } from 'axios'
 import React, { useRef, useState } from 'react'
-import { IPage } from '../App'
-import './HomePage.scss'
-import Navigation from '../content/general-layout/Navigation'
-import Notification from '../../notifications'
-import Tooltip from '../content/communication/Tooltip'
-import User from '../../../../shared/users'
-import List, { ESortByMethod } from '../content/general-layout/List'
-import MissionModificationPanel from '../content/user-controls/MissionModificationPanel'
+import { useGlobalContext } from 'src/context'
+import GameClient from 'src/games'
+import ClientMission from 'src/missions'
+import { useMountHandler, useRequireSession } from 'src/toolbox/hooks'
 import { EAjaxStatus } from '../../../../shared/toolbox/ajax'
+import User from '../../../../shared/users'
+import Notification from '../../notifications'
+import { IPage } from '../App'
+import Tooltip from '../content/communication/Tooltip'
+import List, { ESortByMethod } from '../content/general-layout/List'
+import Navigation from '../content/general-layout/Navigation'
 import {
   ButtonSVG,
   EButtonSVGPurpose,
 } from '../content/user-controls/ButtonSVG'
+import MissionModificationPanel from '../content/user-controls/MissionModificationPanel'
 import UserModificationPanel from '../content/user-controls/UserModificationPanel'
-import { useMountHandler, useRequireSession } from 'src/toolbox/hooks'
-import GameClient from 'src/games'
-import { useGlobalContext } from 'src/context'
-import ClientMission from 'src/missions'
-import { AxiosError } from 'axios'
+import './HomePage.scss'
 
 export interface IHomePage extends IPage {}
 
@@ -82,7 +82,7 @@ export default function HomePage(props: IHomePage): JSX.Element | null {
         beginLoading('Retrieving users...')
         // Fetch users from API and store
         // them in the state.
-        setUsers(await User.fetchAll())
+        // setUsers(await User.fetchAll())
         // Finish loading and resolve.
         finishLoading()
         resolve()
@@ -535,6 +535,22 @@ export default function HomePage(props: IHomePage): JSX.Element | null {
             />
           </div>
         </div>
+      </div>
+      <div className='Join'>
+        <label style={{ paddingRight: '1em' }}>Jacob Don't Forget:</label>
+        <input
+          style={{ color: 'black' }}
+          type='text'
+          onKeyUp={async (event) => {
+            if (event.key === 'Enter') {
+              let game = await GameClient.join(
+                (event.target as HTMLInputElement).value,
+                server!,
+              )
+              navigateTo('GamePage', { game })
+            }
+          }}
+        />
       </div>
 
       {/* -- FOOTER -- */}

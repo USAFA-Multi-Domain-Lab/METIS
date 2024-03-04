@@ -7,7 +7,7 @@ import Markdown, {
 } from '../content/general-layout/Markdown'
 import Info from 'src/info'
 import { useGlobalContext } from 'src/context'
-import { useMountHandler, useRequireSession } from 'src/toolbox/hooks'
+import { useMountHandler } from 'src/toolbox/hooks'
 
 export interface IChangelogPage extends IPage {}
 

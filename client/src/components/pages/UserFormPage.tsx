@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import User, { createUser, saveUser } from '../../../../shared/users'
 import { IPage } from '../App'
 import CreateUserEntry from '../content/edit-user/CreateUserEntry'

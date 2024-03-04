@@ -1,7 +1,7 @@
 import { IPage, TAppError } from '../App'
 import './ErrorPage.scss'
-import { ButtonText, IButtonText } from '../content/user-controls/ButtonText'
-import { useDefaultProps, useListComponent } from 'src/toolbox/hooks'
+import { ButtonText } from '../content/user-controls/ButtonText'
+import { useListComponent } from 'src/toolbox/hooks'
 import { useGlobalContext } from 'src/context'
 
 export interface IErrorPage extends IPage {}

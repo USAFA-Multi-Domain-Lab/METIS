@@ -2,10 +2,7 @@ import ClientMission from 'src/missions'
 import './index.scss'
 import React, { useCallback, useMemo, useRef, useState } from 'react'
 import { Vector1D, Vector2D } from '../../../../../../shared/toolbox/space'
-import MissionNode, {
-  MAX_NODE_CONTENT_ZOOM,
-  TNodeButton,
-} from './objects/MissionNode'
+import MissionNode, { MAX_NODE_CONTENT_ZOOM } from './objects/MissionNode'
 import PanController from './ui/PanController'
 import { v4 as generateHash } from 'uuid'
 import Scene from './Scene'
@@ -18,7 +15,6 @@ import Overlay from './ui/overlay'
 import { compute } from 'src/toolbox'
 import { useEventListener } from 'src/toolbox/hooks'
 import MissionNodeCreator from './objects/MissionNodeCreator'
-import NodeCreator from 'src/missions/nodes/creator'
 
 /* -- constants -- */
 
@@ -102,13 +98,13 @@ export const MAP_NODE_GRID_ENABLED = true
  * The heart of METIS, a 2D map of the mission displaying nodes
  * in relation to each other.
  */
-export default function MissionMap2({
+export default function MissionMap({
   mission,
   overlayContent,
   customButtons = [],
   onNodeSelect,
   applyNodeTooltip,
-}: TMissionMap2): JSX.Element | null {
+}: TMissionMap): JSX.Element | null {
   /* -- variables -- */
 
   /**
@@ -305,6 +301,10 @@ export default function MissionMap2({
     }
   }
 
+  /**
+   * Pans the camera gradually to the given destination.
+   * @param destination The destination for the panning.
+   */
   const panSmoothly = (destination: Vector2D): void => {
     // Determine the difference between the camera
     // position and the destination.
@@ -389,7 +389,7 @@ export default function MissionMap2({
    * The class name for the root element.
    */
   const rootClassName: string = compute(() => {
-    let classList = ['MissionMap2']
+    let classList = ['MissionMap']
 
     // Add the creation mode class if the mission
     // is in creation mode.
@@ -558,9 +558,9 @@ function calcSceneMouseCoords(
 /* -- types -- */
 
 /**
- * Props for `MissionMap2`.
+ * Props for `MissionMap`.
  */
-export type TMissionMap2 = {
+export type TMissionMap = {
   /**
    * The mission to display on the map.
    */

@@ -1,4 +1,3 @@
-import { TMissionMappable } from 'src/components/content/game/MissionMap'
 import ClientMission from '..'
 import { IMissionActionJSON } from '../../../../shared/missions/actions'
 import { TActionExecutionJSON } from '../../../../shared/missions/actions/executions'
@@ -79,16 +78,13 @@ export interface INodeDeleteOptions {
 /**
  * Class for managing mission nodes on the client.
  */
-export default class ClientMissionNode
-  extends MissionNode<
-    ClientMission,
-    ClientMissionNode,
-    ClientMissionAction,
-    ClientActionExecution,
-    ClientActionOutcome
-  >
-  implements TMissionMappable
-{
+export default class ClientMissionNode extends MissionNode<
+  ClientMission,
+  ClientMissionNode,
+  ClientMissionAction,
+  ClientActionExecution,
+  ClientActionOutcome
+> {
   // Implemented
   public position: Vector2D
   // Implemented

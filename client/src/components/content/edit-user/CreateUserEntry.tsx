@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { TMetisSession } from '../../../../../shared/sessions'
 import User, { TUserRole } from '../../../../../shared/users'
 import { Detail, DetailDropDown } from '../form/Form'
 import Toggle from '../user-controls/Toggle'

@@ -1,16 +1,14 @@
 import ClientMission from '..'
 import ClientMissionNode, { ENodeTargetRelation } from '.'
-import { TMissionMappable } from 'src/components/content/game/MissionMap'
 import ClientActionExecution from '../actions/executions'
 import { Vector2D } from '../../../../shared/toolbox/space'
-import { v4 as generateHash } from 'uuid'
 
 /**
  * Represents a node that, when triggerred,
  * will spawn a new node in a mission in a
  * specific location.
  */
-export default class NodeCreator implements TMissionMappable {
+export default class NodeCreator {
   // Implemented
   public get nodeID(): string {
     let creationTarget: ClientMissionNode | null = this.creationTarget

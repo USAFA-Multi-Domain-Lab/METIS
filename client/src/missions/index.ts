@@ -12,7 +12,6 @@ import NodeCreator from './nodes/creator'
 import { Vector2D } from '../../../shared/toolbox/space'
 import { TLine_P } from 'src/components/content/game/mission-map/objects/Line'
 import { TWithKey } from '../../../shared/toolbox/objects'
-import { TMissionMappable } from 'src/components/content/game/MissionMap'
 
 /**
  * Class for managing missions on the client.

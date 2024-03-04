@@ -1,6 +1,6 @@
-import { useMemo } from 'react'
 import './Grid.scss'
 import ClientMissionNode from 'src/missions/nodes'
+import { compute } from 'src/toolbox'
 
 /**
  * A mission map scene object that displays a grid outlining the
@@ -15,7 +15,7 @@ export default function Grid({
   /**
    * The inline class for the root element.
    */
-  const rootClassName = useMemo((): string => {
+  const rootClassName = compute((): string => {
     let classList = ['Grid']
 
     // Add the type class.
@@ -34,12 +34,12 @@ export default function Grid({
     }
 
     return classList.join(' ')
-  }, [enabled])
+  })
 
   /**
    * The inline styles for the root element.
    */
-  const rootStyle = useMemo((): React.CSSProperties => {
+  const rootStyle = compute((): React.CSSProperties => {
     let backgroundWidth: number = 1
 
     // If the grid is a node grid, set the background width to the
@@ -51,7 +51,7 @@ export default function Grid({
     return {
       backgroundSize: `${backgroundWidth}em 1em`,
     }
-  }, [type])
+  })
 
   /* -- render -- */
 

@@ -16,7 +16,7 @@ import { useGlobalContext } from 'src/context'
 import ClientMission from 'src/missions'
 import ClientMissionNode, { ENodeDeleteMethod } from 'src/missions/nodes'
 import ClientMissionAction from 'src/missions/actions'
-import MissionMap2 from '../content/game/mission-map'
+import MissionMap from '../content/game/mission-map'
 import {
   ButtonSVG,
   EButtonSVGPurpose,
@@ -521,7 +521,7 @@ export default function MissionFormPage(
             ...ResizablePanel.defaultProps,
             minSize: 330,
             render: () => (
-              <MissionMap2
+              <MissionMap
                 mission={mission}
                 customButtons={mapCustomButtons}
                 onNodeSelect={onNodeSelect}
