@@ -1,17 +1,18 @@
 import React, { ReactNode, useState } from 'react'
-import ServerConnection from 'src/connect/server'
-import { TMetisSession } from '../../../shared/sessions'
-import ObjectToolbox, { AnyObject } from '../../../shared/toolbox/objects'
 import { TAppError, TAppErrorNotifyMethod } from 'src/components/App'
-import Notification from 'src/notifications'
 import Confirmation, {
   IConfirmation,
 } from 'src/components/content/communication/Confirmation'
 import Prompt, { IPrompt } from 'src/components/content/communication/Prompt'
-import { ServerEmittedError } from '../../../shared/connect/errors'
 import { IButtonText } from 'src/components/content/user-controls/ButtonText'
 import { IAuthPageSpecific } from 'src/components/pages/AuthPage'
+import ServerConnection from 'src/connect/server'
+import Notification from 'src/notifications'
+import { ClientTargetEnvironment } from 'src/target-environments'
 import ClientUser from 'src/users'
+import { ServerEmittedError } from '../../../shared/connect/errors'
+import { TMetisSession } from '../../../shared/sessions'
+import ObjectToolbox, { AnyObject } from '../../../shared/toolbox/objects'
 
 /**
  * The values available in the global context.
@@ -35,6 +36,7 @@ export type TGlobalContextValues = {
   confirmation: IConfirmation | null
   prompt: IPrompt | null
   missionNodeColors: string[]
+  targetEnvironments: ClientTargetEnvironment[]
 }
 
 /**
@@ -197,6 +199,7 @@ const GLOBAL_CONTEXT_VALUES_DEFAULT: TGlobalContextValues = {
   confirmation: null,
   prompt: null,
   missionNodeColors: [],
+  targetEnvironments: [],
 }
 
 /**
@@ -295,6 +298,7 @@ const useGlobalContextDefinition = (context: TGlobalContext) => {
   const [confirmation, setConfirmation] = context.confirmation
   const [prompt, setPrompt] = context.prompt
   const [missionNodeColors, setMissionNodeColors] = context.missionNodeColors
+  const [targetEnvironments, setTargetEnvironments] = context.targetEnvironments
 
   /* -- LOCAL FUNCTIONS -- */
 

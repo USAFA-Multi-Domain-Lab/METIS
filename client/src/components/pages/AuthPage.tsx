@@ -1,11 +1,11 @@
 import React, { useState } from 'react'
-import './AuthPage.scss'
-import { IPage } from '../App'
-import { AnyObject } from '../../../../shared/toolbox/objects'
 import { useGlobalContext } from 'src/context'
-import Branding from '../content/general-layout/Branding'
-import { Detail } from '../content/form/Form'
 import ClientUser from 'src/users'
+import { AnyObject } from '../../../../shared/toolbox/objects'
+import { IPage } from '../App'
+import { Detail } from '../content/form/Form'
+import Branding from '../content/general-layout/Branding'
+import './AuthPage.scss'
 
 export interface IAuthPageSpecific {
   returningPagePath: string
@@ -135,6 +135,7 @@ export default function AuthPage(props: IAuthPage): JSX.Element | null {
             options={{
               uniqueLabelClassName: 'Hidden',
               placeholder: 'Username',
+              emptyStringAllowed: true,
             }}
           />
           <Detail
@@ -147,6 +148,7 @@ export default function AuthPage(props: IAuthPage): JSX.Element | null {
               uniqueLabelClassName: 'Hidden',
               inputType: 'password',
               placeholder: 'Password',
+              emptyStringAllowed: true,
             }}
           />
           <input

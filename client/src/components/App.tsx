@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { useGlobalContext } from 'src/context'
 import ClientMissionNode from 'src/missions/nodes'
+import { ClientTargetEnvironment } from 'src/target-environments'
 import ClientUser from 'src/users'
 import { TMetisSession } from '../../../shared/sessions'
 import Notification from '../notifications'
@@ -82,6 +83,8 @@ function App(props: {}): JSX.Element | null {
   const [tooltipDescription, setTooltipDescription] =
     globalContext.tooltipDescription
   const [_, setMissionNodeColors] = globalContext.missionNodeColors
+  const [targetEnvironments, setTargetEnvironments] =
+    globalContext.targetEnvironments
   const [loading] = globalContext.loading
   const [loadingMinTimeReached] = globalContext.loadingMinTimeReached
   const [pageSwitchMinTimeReached] = globalContext.pageSwitchMinTimeReached
@@ -234,9 +237,11 @@ function App(props: {}): JSX.Element | null {
     async function effect(): Promise<void> {
       if (session === null) {
         setMissionNodeColors([])
+        setTargetEnvironments([])
       } else {
         try {
           setMissionNodeColors(await ClientMissionNode.fetchColors())
+          setTargetEnvironments(await ClientTargetEnvironment.fetchAll())
         } catch {
           handleError('Failed to load post-login data.')
         }

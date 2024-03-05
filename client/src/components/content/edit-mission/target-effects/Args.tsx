@@ -86,21 +86,21 @@ export default function Args({
     // Create a default list of class names.
     let classList: string[] = ['Button']
 
-    // If the effect is not new then hide the save button.
+    // If the effect is not new then hide the create button.
     if (action.effects.includes(effect)) {
-      classList = ['Button', 'Hidden']
+      classList.push('Hidden')
     } else {
       // If there are required properties not filled out ||
       // If there is an empty field ||
       // If there are default values...
-      // then disable the save button.
+      // then disable the create button.
       if (
         reqPropertiesNotFilledOut.length > 0 ||
         isEmptyString ||
         areDefaultValues
       ) {
-        // Disable the save button.
-        classList = ['Button', 'Disabled']
+        // Disable the create button.
+        classList.push('Disabled')
       }
     }
 
