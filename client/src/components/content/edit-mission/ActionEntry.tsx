@@ -25,7 +25,6 @@ export default function ActionEntry({
   actionEmptyStringArray,
   setActionEmptyStringArray,
   setMissionPath,
-  selectNode,
   setSelectedAction,
   setSelectedEffect,
   handleChange,
@@ -183,8 +182,8 @@ export default function ActionEntry({
   const handlePathPositionClick = (index: number) => {
     // If the index is 0 then take the user
     // back to the mission entry.
-    if (index === 0) {
-      selectNode(null)
+    if (index === 0 && node !== null) {
+      node.mission.deselectNode()
       setSelectedAction(null)
       setSelectedEffect(null)
     }
@@ -419,10 +418,7 @@ export default function ActionEntry({
                       {effect.name}
                       <Tooltip description={effect.description ?? ''} />
                     </div>
-                    <MiniButtonSVGPanel
-                      buttons={actionButtons}
-                      linkBack={null}
-                    />
+                    <MiniButtonSVGPanel buttons={actionButtons} />
                   </div>
                 )
               }}
@@ -524,10 +520,6 @@ export type TActionEntry_P = {
    * A function that will set the mission path.
    */
   setMissionPath: (missionPath: string[]) => void
-  /**
-   * A function that will set the node that is selected.
-   */
-  selectNode: (node: ClientMissionNode | null) => void
   /**
    * A function that will set the action that is selected.
    */

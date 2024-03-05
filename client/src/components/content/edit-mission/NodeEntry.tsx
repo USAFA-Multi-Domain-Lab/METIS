@@ -31,7 +31,6 @@ export default function NodeEntry({
   nodeEmptyStringArray,
   setNodeEmptyStringArray,
   setMissionPath,
-  selectNode,
   setSelectedAction,
   handleChange,
   handleAddRequest,
@@ -66,7 +65,7 @@ export default function NodeEntry({
     let classList: string[] = ['FormButton', 'DeleteNode']
 
     // If the mission has only one node, add the disabled class.
-    if (node && node.mission.nodes.size < 2) {
+    if (node && node.mission.nodes.length < 2) {
       classList.push('Disabled')
     }
 
@@ -191,8 +190,8 @@ export default function NodeEntry({
   const handlePathPositionClick = (index: number) => {
     // If the index is 0 then take the user
     // back to the mission entry.
-    if (index === 0) {
-      selectNode(null)
+    if (index === 0 && node !== null) {
+      node.mission.deselectNode()
     }
   }
 
@@ -209,7 +208,9 @@ export default function NodeEntry({
                 className='BackButton'
                 onClick={() => {
                   missionPath.pop()
-                  selectNode(null)
+                  if (node !== null) {
+                    node.mission.deselectNode()
+                  }
                 }}
               >
                 &lt;
@@ -573,10 +574,6 @@ export type TNodeEntry_P = {
    * A function that will set the mission path.
    */
   setMissionPath: (missionPath: string[]) => void
-  /**
-   * A function that will set the node that is selected.
-   */
-  selectNode: (node: ClientMissionNode | null) => void
   /**
    * A function that will set the action that is selected.
    */

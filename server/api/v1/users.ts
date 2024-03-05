@@ -1,24 +1,23 @@
 //npm imports
 import { NextFunction, Request, Response } from 'express'
 import expressWs from 'express-ws'
+import MetisDatabase from 'metis/server/database'
+import UserModel, { hashPassword } from 'metis/server/database/models/users'
 import { StatusError } from 'metis/server/http'
-import MetisSession from 'metis/server/sessions'
+import { TMetisRouterMap } from 'metis/server/http/router'
 import defineRequests, {
   RequestBodyFilters,
 } from 'metis/server/middleware/requests'
-import UserModel, { hashPassword } from 'metis/server/database/models/users'
-import { authorized, validateUserRoles } from 'metis/server/middleware/users'
-import MetisDatabase from 'metis/server/database'
-import { databaseLogger } from '../../logging'
-import { TMetisRouterMap } from 'metis/server/http/router'
+import { auth } from 'metis/server/middleware/users'
+import MetisSession from 'metis/server/sessions'
 import ServerUser from 'metis/server/users'
+import { databaseLogger } from '../../logging'
 
 const routerMap: TMetisRouterMap = (router: expressWs.Router, done) => {
   // -- POST | /api/v1/users/ --
   router.post(
     '/',
-    authorized(['WRITE']),
-    validateUserRoles,
+    auth({ permissions: ['WRITE'] }),
     defineRequests({
       body: {
         user: {
@@ -98,7 +97,7 @@ const routerMap: TMetisRouterMap = (router: expressWs.Router, done) => {
   // query parameters
   router.get(
     '/',
-    authorized(['READ', 'WRITE', 'DELETE']),
+    auth({ permissions: ['READ', 'WRITE', 'DELETE'] }),
     defineRequests(
       {
         query: {},
@@ -189,8 +188,7 @@ const routerMap: TMetisRouterMap = (router: expressWs.Router, done) => {
   // This will update the user
   router.put(
     '/',
-    authorized(['WRITE']),
-    validateUserRoles,
+    auth({ permissions: ['WRITE'] }),
     defineRequests(
       {
         body: {
@@ -312,7 +310,7 @@ const routerMap: TMetisRouterMap = (router: expressWs.Router, done) => {
   // This will reset the user's password
   router.put(
     '/reset-password',
-    authorized([]),
+    auth({ permissions: [] }),
     defineRequests({
       body: {
         userID: RequestBodyFilters.USER_ID,
@@ -419,7 +417,7 @@ const routerMap: TMetisRouterMap = (router: expressWs.Router, done) => {
   // This will delete a user.
   router.delete(
     '/',
-    authorized(['DELETE']),
+    auth({ permissions: ['DELETE'] }),
     defineRequests({
       query: {
         userID: 'string',

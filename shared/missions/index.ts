@@ -45,7 +45,7 @@ export default abstract class Mission<TMissionNode extends TCommonMissionNode>
    * @param options The options for creating the mission.
    */
   public constructor(
-    data: Partial<TMissionJson> = Mission.DEFAULT_PROPERTIES,
+    data: Partial<TCommonMissionJson> = Mission.DEFAULT_PROPERTIES,
     options: TMissionOptions = {},
   ) {
     this.missionID = data.missionID ?? Mission.DEFAULT_PROPERTIES.missionID
@@ -79,7 +79,7 @@ export default abstract class Mission<TMissionNode extends TCommonMissionNode>
   }
 
   // Inherited
-  public toJson(options: TMissionJsonOptions = {}): TMissionJson {
+  public toJson(options: TMissionJsonOptions = {}): TCommonMissionJson {
     let { revealedOnly = false, includeGameData = false } = options
     return {
       missionID: this.missionID,
@@ -201,7 +201,7 @@ export default abstract class Mission<TMissionNode extends TCommonMissionNode>
   /**
    * The default properties for a Mission object.
    */
-  public static get DEFAULT_PROPERTIES(): TMissionJson {
+  public static get DEFAULT_PROPERTIES(): TCommonMissionJson {
     return {
       missionID: generateHash(),
       name: 'New Mission',
@@ -370,7 +370,7 @@ export interface TCommonMission {
    * @param {TMissionJsonOptions} options The options for converting the mission to JSON.
    * @returns {TMissionNodeJson} the JSON for the mission.
    */
-  toJson: (options?: TMissionJsonOptions) => TMissionJson
+  toJson: (options?: TMissionJsonOptions) => TCommonMissionJson
   /**
    * This will spawn a new node in the mission with the given data and options. Any data or options not provided will be set to default values.
    * @param {Partial<TMissionNodeJson>} data The data for the node.
@@ -385,7 +385,7 @@ export interface TCommonMission {
 /**
  * Plain JSON representation of a MissionNode object.
  */
-export interface TMissionJson {
+export interface TCommonMissionJson {
   missionID: string
   name: string
   introMessage: string

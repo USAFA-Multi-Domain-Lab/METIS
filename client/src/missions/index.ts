@@ -3,7 +3,7 @@ import { TLine_P } from 'src/components/content/game/mission-map/objects/Line'
 import { v4 as generateHash } from 'uuid'
 import Mission, {
   ISpawnNodeOptions,
-  TMissionJson,
+  TCommonMissionJson,
   TMissionOptions,
 } from '../../../shared/missions'
 import { TMissionNodeJson } from '../../../shared/missions/nodes'
@@ -152,7 +152,7 @@ export default class ClientMission extends Mission<ClientMissionNode> {
   public relationshipLines: TWithKey<TLine_P>[]
 
   public constructor(
-    data: Partial<TMissionJson> = {},
+    data: Partial<TCommonMissionJson> = {},
     options: TClientMissionOptions = {},
   ) {
     // Initialize base properties.
@@ -827,10 +827,10 @@ export default class ClientMission extends Mission<ClientMissionNode> {
         // Create a new mission if it doesn't
         // exist already.
         if (!this.existsOnServer) {
-          let { data } = await axios.post<any, AxiosResponse<TMissionJson>>(
-            ClientMission.API_ENDPOINT,
-            this.toJson(),
-          )
+          let { data } = await axios.post<
+            any,
+            AxiosResponse<TCommonMissionJson>
+          >(ClientMission.API_ENDPOINT, this.toJson())
           // Update the temporary client-generated
           // mission ID and seed with the server-generated
           // mission ID and seed.
@@ -908,7 +908,7 @@ export default class ClientMission extends Mission<ClientMissionNode> {
   ): Promise<ClientMission> {
     return new Promise<ClientMission>(async (resolve, reject) => {
       try {
-        let { data } = await axios.put<any, AxiosResponse<TMissionJson>>(
+        let { data } = await axios.put<any, AxiosResponse<TCommonMissionJson>>(
           `${ClientMission.API_ENDPOINT}/copy/`,
           {
             originalID,
@@ -940,7 +940,7 @@ export default class ClientMission extends Mission<ClientMissionNode> {
     return new Promise<ClientMission>(async (resolve, reject) => {
       try {
         // Retrieve data from API.
-        let { data } = await axios.get<TMissionJson>(
+        let { data } = await axios.get<TCommonMissionJson>(
           ClientMission.API_ENDPOINT,
           { params: { missionID } },
         )
@@ -968,7 +968,7 @@ export default class ClientMission extends Mission<ClientMissionNode> {
   ): Promise<ClientMission[]> {
     return new Promise<ClientMission[]>(async (resolve, reject) => {
       try {
-        let { data } = await axios.get<TMissionJson[]>(
+        let { data } = await axios.get<TCommonMissionJson[]>(
           ClientMission.API_ENDPOINT,
         )
         // Update options.

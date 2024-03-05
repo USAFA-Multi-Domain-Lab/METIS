@@ -1,6 +1,5 @@
 import ClientMissionAction from 'src/missions/actions'
 import { ClientEffect } from 'src/missions/effects'
-import ClientMissionNode from 'src/missions/nodes'
 import { ClientTargetEnvironment } from 'src/target-environments'
 import { compute } from 'src/toolbox'
 import Tooltip from '../../communication/Tooltip'
@@ -21,7 +20,6 @@ export default function EffectEntry({
   effectEmptyStringArray,
   setEffectEmptyStringArray,
   setMissionPath,
-  selectNode,
   setSelectedAction,
   setSelectedEffect,
   handleChange,
@@ -164,7 +162,7 @@ export default function EffectEntry({
     // If the index is 0 then take the user
     // back to the mission entry.
     if (index === 0) {
-      selectNode(null)
+      action.mission.deselectNode()
       setSelectedAction(null)
       setSelectedEffect(null)
     }
@@ -339,10 +337,6 @@ export type TEffectEntry_P = {
    * A function that will set the mission path.
    */
   setMissionPath: (missionPath: string[]) => void
-  /**
-   * A function that will set the node that is selected.
-   */
-  selectNode: (node: ClientMissionNode | null) => void
   /**
    * A function that will set the action that is selected.
    */

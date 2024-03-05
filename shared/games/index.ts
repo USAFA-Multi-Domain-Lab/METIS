@@ -1,11 +1,11 @@
-import { TCommonMission, TMissionJson } from 'metis/missions'
+import { TCommonMission, TCommonMissionJson } from 'metis/missions'
 import { TCommonMissionAction } from '../missions/actions'
 import { TCommonMissionNode } from '../missions/nodes'
 import { TCommonUserJson as TUserJson } from '../users'
 
 export interface IGameJson {
   gameID: string
-  mission: TMissionJson
+  mission: TCommonMissionJson
   participants: TUserJson[]
   resources: number
 }

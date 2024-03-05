@@ -14,7 +14,7 @@ import { v4 as generateHash } from 'uuid'
 import { effectData } from '../../effects/effect-data'
 import { RequestBodyFilters, defineRequests } from '../../middleware/requests'
 import uploads from '../../middleware/uploads'
-import { authorized } from '../../middleware/users'
+import { auth } from '../../middleware/users'
 import MissionNode from '../../missions/nodes'
 
 type MulterFile = Express.Multer.File
@@ -27,7 +27,7 @@ export const routerMap: TMetisRouterMap = (
   // This will create a new mission.
   router.post(
     '/',
-    authorized(['WRITE']),
+    auth({ permissions: ['WRITE'] }),
     defineRequests({
       body: {
         name: RequestBodyFilters.STRING,
@@ -103,7 +103,7 @@ export const routerMap: TMetisRouterMap = (
   // -- POST | /api/v1/missions/import/ --
   router.post(
     '/import/',
-    authorized(['WRITE']),
+    auth({ permissions: ['WRITE'] }),
     uploads.array('files', 12),
     (request, response) => {
       // Verifies files were included
@@ -472,7 +472,7 @@ export const routerMap: TMetisRouterMap = (
   // This will return all of the missions.
   router.get(
     '/',
-    authorized(['READ']),
+    auth({ permissions: ['READ'] }),
     defineRequests(
       {
         query: {},
@@ -535,7 +535,7 @@ export const routerMap: TMetisRouterMap = (
   // This will return all of the missions.
   router.get(
     '/export/*', // The "*" is to ensure the downloaded file includes the mission's name and the .metis extension.
-    authorized(['READ']),
+    auth({ permissions: ['READ'] }),
     defineRequests({ query: { missionID: 'objectId' } }),
     (request, response) => {
       let missionID = request.query.missionID
@@ -623,7 +623,7 @@ export const routerMap: TMetisRouterMap = (
   // todo: remove
   router.get(
     '/effects/',
-    authorized(['READ', 'WRITE', 'DELETE']),
+    auth({ permissions: ['READ', 'WRITE', 'DELETE'] }),
     defineRequests({}),
     (request, response) => {
       response.json({ effectData })
@@ -636,7 +636,7 @@ export const routerMap: TMetisRouterMap = (
   // ! DEPRECATED
   router.put(
     '/handle-action-execution/',
-    authorized([]),
+    auth({}),
     defineRequests({
       body: {
         missionID: RequestBodyFilters.OBJECTID,
@@ -695,7 +695,7 @@ export const routerMap: TMetisRouterMap = (
   // This will update the mission.
   router.put(
     '/',
-    authorized(['WRITE']),
+    auth({ permissions: ['WRITE'] }),
     defineRequests(
       {
         body: {
@@ -813,7 +813,7 @@ export const routerMap: TMetisRouterMap = (
   // This will copy a mission.
   router.put(
     '/copy/',
-    authorized(['WRITE']),
+    auth({ permissions: ['WRITE'] }),
     defineRequests({
       body: {
         copyName: RequestBodyFilters.STRING,
@@ -872,7 +872,7 @@ export const routerMap: TMetisRouterMap = (
   // This will delete a mission.
   router.delete(
     '/',
-    authorized(['DELETE']),
+    auth({ permissions: ['DELETE'] }),
     defineRequests({ query: { missionID: 'objectId' } }),
     (request, response) => {
       let query: any = request.query
