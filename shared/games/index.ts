@@ -1,13 +1,11 @@
-import context from '../context'
-import { TCommonUserJson as TUserJson } from '../users'
-import { TCommonMission, IMissionJson as IMissionJson } from 'metis/missions'
+import { TCommonMission, TMissionJson } from 'metis/missions'
 import { TCommonMissionAction } from '../missions/actions'
-import axios, { AxiosError } from 'axios'
 import { TCommonMissionNode } from '../missions/nodes'
+import { TCommonUserJson as TUserJson } from '../users'
 
 export interface IGameJson {
   gameID: string
-  mission: IMissionJson
+  mission: TMissionJson
   participants: TUserJson[]
   resources: number
 }
@@ -99,53 +97,8 @@ export default abstract class Game<
   }
 
   /**
-   * Has the given participant quit the game.
-   * @param participantID {string} The ID of the participant quitting the game.
-   * @returns {Promise<void>} A promise of the game quitting.
-   */
-  public async quit(participantID: string): Promise<void> {
-    return new Promise<void>(
-      (resolve: () => void, reject: (error: AxiosError) => void): void => {
-        // If the context is react, then we need
-        // to make a request to the server. The
-        // server needs to handle the quitting of
-        // the game, not the client.
-        if (context === 'react') {
-          axios
-            .post<void>(`${Game.API_ENDPOINT}/quit/`)
-            .then(resolve)
-            .catch((error: AxiosError) => {
-              console.error('Failed to quit game.')
-              console.error(error)
-              reject(error)
-            })
-        }
-        // If the context is express, then we need
-        // to quit the game here.
-        else if (context === 'express') {
-          for (let user of this._participants) {
-            // If the user is in the game, then
-            // we can remove them.
-            if (user.userID === participantID) {
-              this._participants = this._participants.filter(
-                (user: TParticpant) => user.userID !== participantID,
-              )
-              return resolve()
-            }
-          }
-
-          // If the user is not in the game, then
-          // we cannot remove them.
-          let error: AxiosError = new AxiosError('User is not in the game.')
-          return reject(error)
-        }
-      },
-    )
-  }
-
-  /**
    * Converts the Game object to JSON.
-   * @returns {IGameJson} A JSON representation of the game.
+   * @returns A JSON representation of the game.
    */
   public abstract toJson(): IGameJson
 

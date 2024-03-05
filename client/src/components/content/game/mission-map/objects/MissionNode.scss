@@ -1,0 +1,178 @@
+@import '../../../../../assets/styles/config.scss';
+@import '../mixins.scss';
+
+.Scene {
+  .MissionNode {
+    $text-fade-transition: background-color 300ms ease-in-out;
+    $pending-transition: opacity 200ms ease-in-out;
+
+    // Set box-sizing to content-box to
+    // help with font size calculations
+    // in JS.
+    box-sizing: content-box;
+
+    // Enable pointer events for nodes,
+    // since they can be interacted with.
+    pointer-events: all;
+
+    // Make the origin of the scene object the
+    // top center of the node.
+    transform: translate(-50%, -0%);
+
+    // Default color, overridden by the
+    // color of the node iteself in the
+    // mission.
+    border-color: $color-main;
+    border-width: min(2px, 0.075em);
+    border-style: solid;
+
+    // Add a transition to the background for
+    // when the text comes in and out of view.
+    transition: $text-fade-transition;
+
+    background-color: $background-main;
+
+    &.Selectable {
+      // Change the cursor to pointer if
+      // the node can be selected.
+      cursor: pointer;
+    }
+
+    &.Executable {
+      .Icon {
+        // If the node is executable, show the
+        // lightning icon.
+        background-image: url(../../../../../assets/images/icons/lightning.svg);
+      }
+    }
+
+    &.Device {
+      .Icon {
+        // If the node is a device, show the
+        // device icon. This will overwrite the
+        // lightning icon.
+        background-image: url(../../../../../assets/images/icons/device.svg);
+      }
+    }
+
+    &.Executing {
+      .ProgressBar {
+        // If the node is executing, show the
+        // progress bar.
+        display: block;
+      }
+    }
+
+    &.Successful {
+      background-color: $node-success;
+    }
+
+    &.Failed {
+      background-color: $node-fail;
+    }
+
+    &.PendingOpen,
+    &.PendingExecInit {
+      pointer-events: none;
+      opacity: 0.35;
+    }
+
+    // Add a transition out of the pending
+    // open state.
+    &:not(.PendingOpen):not(.PendingExecInit):not(.Executing) {
+      transition: $text-fade-transition, $pending-transition;
+    }
+
+    .ProgressBar {
+      // Animation to give the progress bar a conveyor
+      // belt effect.
+      @keyframes loading-animation {
+        from {
+          background-position-x: 0;
+        }
+        to {
+          background-position-x: 40px;
+        }
+      }
+
+      @keyframes progress-animation {
+        from {
+          width: 0%;
+        }
+        to {
+          width: 100%;
+        }
+      }
+
+      // Hide the progress bar by default.
+      display: none;
+
+      background-image: linear-gradient(
+        -45deg,
+        $loading-1 25%,
+        $loading-2 25%,
+        $loading-2 50%,
+        $loading-1 50%,
+        $loading-1 75%,
+        $loading-2 75%,
+        $loading-2 100%,
+        $loading-1 100%
+      );
+      background-size: 40px 40px;
+    }
+
+    .Name {
+      // Position the name.
+      @include center-origin-y;
+      top: 50%;
+      left: 5%;
+
+      // Let height be automatic.
+      height: unset;
+
+      text-align: left;
+      word-break: break-word;
+    }
+
+    .Icon {
+      // Position the icon.
+      @include center-origin-y;
+      top: 50%;
+      right: 6.5%;
+
+      // Let height be automatic.
+      height: 100%;
+
+      // Make the icon 15% of the width of the
+      // node.
+      width: 12%;
+
+      background-size: contain;
+      background-position: center;
+      background-repeat: no-repeat;
+    }
+
+    .Buttons {
+      bottom: 0;
+      display: flex;
+      align-items: start;
+      justify-content: center;
+      column-gap: 0.1em;
+
+      .ButtonSVG {
+        position: unset;
+        margin: 0;
+        width: 0.325em;
+        height: 0.325em;
+        font-size: unset;
+        border: min(1px, 0.075em) solid $color-main;
+        border-radius: 0;
+        background-color: rgba($background-alt1, 0.9);
+        background-position: 50% 50%;
+        background-size: 60%;
+        background-repeat: no-repeat;
+        color: $color-main;
+      }
+    }
+  }
+}

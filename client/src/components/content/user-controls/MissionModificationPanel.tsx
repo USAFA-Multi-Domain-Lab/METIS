@@ -1,14 +1,14 @@
-import ClientMission from 'src/missions'
-import { TAjaxStatus } from '../../../../../shared/toolbox/ajax'
-import Toggle, { EToggleLockState } from '../user-controls/Toggle'
-import Tooltip from '../communication/Tooltip'
-import './MissionModificationPanel.scss'
-import { MiniButtonSVGPanel } from './MiniButtonSVGPanel'
-import { EMiniButtonSVGPurpose, MiniButtonSVG } from './MiniButtonSVG'
 import { useState } from 'react'
 import { useGlobalContext } from 'src/context'
-import { TMetisSession } from '../../../../../shared/sessions'
+import ClientMission from 'src/missions'
 import ClientUser from 'src/users'
+import { TMetisSession } from '../../../../../shared/sessions'
+import { TAjaxStatus } from '../../../../../shared/toolbox/ajax'
+import Tooltip from '../communication/Tooltip'
+import Toggle, { EToggleLockState } from '../user-controls/Toggle'
+import { EMiniButtonSVGPurpose, MiniButtonSVG } from './MiniButtonSVG'
+import { MiniButtonSVGPanel } from './MiniButtonSVGPanel'
+import './MissionModificationPanel.scss'
 
 export default function MissionModificationPanel(props: {
   mission: ClientMission
@@ -20,7 +20,7 @@ export default function MissionModificationPanel(props: {
 
   const globalContext = useGlobalContext()
 
-  const { goToPage, notify, confirm, beginLoading, finishLoading } =
+  const { navigateTo, notify, confirm, beginLoading, finishLoading } =
     globalContext.actions
 
   /* -- COMPONENT VARIABLES -- */
@@ -43,7 +43,7 @@ export default function MissionModificationPanel(props: {
   // This is called when a user requests
   // to edit the mission.
   const handleEditRequest = () => {
-    goToPage('MissionFormPage', {
+    navigateTo('MissionFormPage', {
       missionID: mission.missionID,
     })
   }
@@ -201,7 +201,7 @@ export default function MissionModificationPanel(props: {
 
   return (
     <div className={containerClassName}>
-      <MiniButtonSVGPanel buttons={currentActions} linkBack={null} />
+      <MiniButtonSVGPanel buttons={currentActions} />
       <div className='ToggleContainer'>
         <Toggle
           initiallyActivated={mission.live}

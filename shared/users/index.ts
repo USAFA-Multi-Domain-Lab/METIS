@@ -1,4 +1,3 @@
-import { TMetisSession } from 'metis/sessions'
 import UserPermission, {
   TUserPermission,
   TUserPermissionID,
@@ -141,15 +140,13 @@ export default abstract class User implements TCommonUser {
   /**
    * Default properties set when creating a new user.
    */
-  public static get DEFAULT_PROPERTIES(): TCommonUserJson {
-    return {
-      userID: '',
-      firstName: '',
-      lastName: '',
-      roleID: UserRole.DEFAULT_ID,
-      needsPasswordReset: false,
-      expressPermissionIDs: [],
-    }
+  public static readonly DEFAULT_PROPERTIES: TCommonUserJson = {
+    userID: '',
+    firstName: '',
+    lastName: '',
+    roleID: UserRole.DEFAULT_ID,
+    needsPasswordReset: false,
+    expressPermissionIDs: [],
   }
 }
 

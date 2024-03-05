@@ -1,86 +1,264 @@
-import { IActionOutcomeJSON } from 'metis/missions/actions/outcomes'
-import { TMissionNodeJson } from '../missions/nodes'
 import { TActionExecutionJSON } from 'metis/missions/actions/executions'
+import { IActionOutcomeJSON } from 'metis/missions/actions/outcomes'
+import { TCommonMissionNodeJson } from '../missions/nodes'
 
 /**
- * Represents the types of data sent from the server to the client over a web socket.
+ * Represents the status of a server connection.
  */
-export interface IServerDataTypes {
-  'open': {
-    method: 'open'
-  }
-  'close': {
-    method: 'close'
-  }
-  'connection-loss': {
-    method: 'connection-loss'
-  }
-  'error': {
-    method: 'error'
-    code: number
-    message: string
-    request?: {
-      method: TClientMethod
-      requestID: string
-    }
-  }
-  'node-opened': {
-    method: 'node-opened'
-    nodeID: string
-    revealedChildNodes: Array<TMissionNodeJson>
-    request: IClientDataTypes['request-open-node']
-    requesterID: string
-  }
-  'action-execution-initiated': {
-    method: 'action-execution-initiated'
-    execution: NonNullable<TActionExecutionJSON>
-    request: IClientDataTypes['request-execute-action']
-  }
-  'action-execution-completed': {
-    method: 'action-execution-completed'
-    outcome: IActionOutcomeJSON
-    revealedChildNodes?: Array<TMissionNodeJson>
-    request: IClientDataTypes['request-execute-action']
-    requesterID: string
+export type TServerConnectionStatus = 'open' | 'closed' | 'connecting'
+
+/**
+ * Represents an event emitted by the client or server over a web socket connection.
+ */
+export interface TConnectEvent<TMethod extends string, TData extends {} = {}> {
+  method: TMethod
+  data: TData
+}
+
+/**
+ * Represents an event emitted by the client that expects a response by the server.
+ */
+export interface TRequestEvent<TMethod extends string, TData extends {} = {}>
+  extends TConnectEvent<TMethod, TData> {
+  requestId: string
+}
+
+/**
+ * Represents an event emitted by the server in response to a request by the client.
+ */
+export interface TResponseEvent<
+  TMethod extends string,
+  TData extends {},
+  TReqEvent extends TRequestEvent<string, {}>,
+> extends TConnectEvent<TMethod, TData> {
+  request: {
+    event: TReqEvent
+    requesterId: string
+    fulfilled: boolean
   }
 }
+
+/**
+ * Represents any event emitted by the server in response to a request by the client.
+ */
+export type TAnyResponseEvent = TResponseEvent<
+  string,
+  {},
+  TRequestEvent<string, {}>
+>
+
+/**
+ * Represents a type of generic event that occurs on the client that is sent to the server over a web
+ * socket.
+ */
+export type TGenericClientMethod = keyof TGenericClientEvents
+
+/**
+ * Represents a type of event that occurs on the client that is sent to the server over a web
+ * socket as a request, expecting a response.
+ */
+export type TRequestMethod = keyof TRequestEvents
+
+/**
+ * Represents the type of any event that occurs on the client that is sent to the server over a web socket.
+ */
+export type TClientMethod = keyof TClientEvents
+
+/**
+ * Represents a type of generic event that occurs on the server that is sent to the client over a web socket.
+ */
+export type TGenericServerMethod = keyof TGenericServerEvents
+
+/**
+ * Represents a type of event that occurs on the server that is sent to the client over a web socket as a response
+ * to a request.
+ */
+export type TResponseMethod = keyof TResponseEvents
 
 /**
  * Represents a type of event that occurs on the server that is sent to the client over a web socket.
  */
-export type TServerMethod = keyof IServerDataTypes
-
-export type TServerData<TMethod extends TServerMethod> =
-  IServerDataTypes[TMethod]
+export type TServerMethod = keyof TServerEvents
 
 /**
- * Represents the types of data sent from the client to the server over a web socket during various events.
+ * General WS events emitted by the server, or caused due to a change in the connection with the server.
  */
-export interface IClientDataTypes {
-  'close': {
-    method: 'close'
-  }
+export type TGenericServerEvents = {
+  /**
+   * Occurs when any activity occurs with the connection to the server.
+   * @note Includes emitted events to and from the server, connection changes, and errors.
+   * @note This will be the last in the call chain, and will be handled after all other event types
+   * by the connection.
+   */
+  'activity': TConnectEvent<'activity'>
+  /**
+   * Occurs when the client is successful in its initial connection to the server.
+   */
+  'connection-success': TConnectEvent<'connection-success'>
+  /**
+   * Occurs when the connection with the server is closed purposefully.
+   */
+  'connection-closed': TConnectEvent<'connection-closed'>
+  /**
+   * Occurs when the client loses connection to the server unexpectedly.
+   */
+  'connection-loss': TConnectEvent<'connection-loss'>
+  /**
+   * Occurs when the client fails to connect to the server.
+   */
+  'connection-failure': TConnectEvent<'connection-failure'>
+  /**
+   * Occurs when the client successfully reconnects to the server.
+   */
+  'reconnection-success': TConnectEvent<'reconnection-success'>
+  /**
+   * Occurs when the client fails to reconnect to the server.
+   */
+  'reconnection-failure': TConnectEvent<'reconnection-failure'>
+  /**
+   * Occurs during any change in the connection status of the client.
+   */
+  'connection-change': TConnectEvent<
+    'connection-change',
+    {
+      /**
+       * The new status of the connection, after the change.
+       */
+      status: TServerConnectionStatus
+    }
+  >
+  /**
+   * Occurs when the server intenionally emits an error to client.
+   */
   'error': {
+    /**
+     * The event method (Always "error").
+     */
     method: 'error'
+    /**
+     * The error code (See shared/connect/errors.ts).
+     */
     code: number
+    /**
+     * The message explaining the error.
+     */
     message: string
-  }
-  'request-open-node': {
-    method: 'request-open-node'
-    requestID: string
-    nodeID: string
-  }
-  'request-execute-action': {
-    method: 'request-execute-action'
-    requestID: string
-    actionID: string
+    /**
+     * The request that caused the error, if any.
+     */
+    request?: TRequestEvent<TClientMethod>
   }
 }
 
 /**
- * Represents the type of event that occurs on the client that is sent to the server over a web socket.
+ * WS events emitted by the server as a response to a request made by the client.
  */
-export type TClientMethod = keyof IClientDataTypes
+export type TResponseEvents = {
+  /**
+   * Occurs when a node has been opened on the server.
+   */
+  'node-opened': TResponseEvent<
+    'node-opened',
+    {
+      /**
+       * The node that was opened.
+       */
+      nodeID: string
+      /**
+       * The nodes that were revealed as a result of opening the node.
+       */
+      revealedChildNodes: Array<TCommonMissionNodeJson>
+    },
+    TClientEvents['request-open-node']
+  >
+  /**
+   * Occurs when the execution of an action is initiated on the server.
+   */
+  'action-execution-initiated': TResponseEvent<
+    'action-execution-initiated',
+    {
+      /**
+       * The action that was executed.
+       */
+      execution: NonNullable<TActionExecutionJSON>
+    },
+    TClientEvents['request-execute-action']
+  >
+  /**
+   * Occurs when the execution of an action has finished on the server.
+   */
+  'action-execution-completed': TResponseEvent<
+    'action-execution-completed',
+    {
+      /**
+       * The outcome of the action being executed.
+       */
+      outcome: IActionOutcomeJSON
+      /**
+       * The nodes that were revealed as a result of executing the action.
+       */
+      revealedChildNodes?: Array<TCommonMissionNodeJson>
+    },
+    TClientEvents['request-execute-action']
+  >
+}
 
-export type TClientData<TMethod extends TClientMethod> =
-  IClientDataTypes[TMethod]
+/**
+ * All WS events emitted by the server, or caused due to a change in the connection with the server.
+ */
+export type TServerEvents = TGenericServerEvents & TResponseEvents
+
+/**
+ * General WS events emitted by the client, or caused due to a change in the connection with the client.
+ */
+export type TGenericClientEvents = {
+  /**
+   * Occurs when the connection to the client is closed.
+   */
+  close: TConnectEvent<'close'>
+  /**
+   * Occurs when the client emits an error.
+   */
+  error: {
+    /**
+     * The event method (Always "error").
+     */
+    method: 'error'
+    /**
+     * The error code (See shared/connect/errors.ts).
+     */
+    code: number
+    /**
+     * The message explaining the error.
+     */
+    message: string
+    data: {}
+  }
+}
+
+/**
+ * WS events emitted by the client as a request to the server, expecting a response or responses of some kind.
+ */
+export type TRequestEvents = {
+  /**
+   * Occurs when the client requests to open a node.
+   */
+  'request-open-node': TRequestEvent<'request-open-node', { nodeID: string }>
+  /**
+   * Occurs when the client requests to execute an action.
+   */
+  'request-execute-action': TRequestEvent<
+    'request-execute-action',
+    {
+      /**
+       * The ID of the action to execute.
+       */
+      actionID: string
+    }
+  >
+}
+
+/**
+ * WS events emitted by the client, or caused due to a change in the connection with the client.
+ */
+export type TClientEvents = TGenericClientEvents & TRequestEvents

@@ -473,10 +473,7 @@ export default function NodeEntry({
                       {action.name}{' '}
                       <Tooltip description={action.description ?? ''} />
                     </div>
-                    <MiniButtonSVGPanel
-                      buttons={actionButtons}
-                      linkBack={null}
-                    />
+                    <MiniButtonSVGPanel buttons={actionButtons} />
                   </div>
                 )
               }}

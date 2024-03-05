@@ -1,0 +1,165 @@
+@import 'src/assets/styles/config.scss';
+
+.MissionMap {
+  .Overlay {
+    .ActionExecModal {
+      box-sizing: border-box;
+      overflow-x: hidden;
+      display: grid;
+      grid-template-columns: auto 2.5em;
+      row-gap: 1.25em;
+      width: 25em;
+      height: fit-content;
+      max-height: 90%;
+      border: 2px solid $color-main;
+      padding: 1.5em;
+      box-shadow: $box-shadow-alt2;
+
+      .Heading {
+        user-select: none;
+
+        .NodeName {
+          // font-size: 0.95em;
+          // padding: 0 0.5em;
+          line-height: 1.5em;
+        }
+
+        .DropDownLabel {
+          margin: 1em 0 0;
+          font-size: 0.8em;
+        }
+      }
+
+      .Close {
+        background: none;
+        padding: 0;
+      }
+
+      .NoActions {
+        display: none;
+        color: $terminal-red;
+        margin: 0;
+        margin: 0 15px 25px 20px;
+      }
+
+      .DropDown {
+        user-select: none;
+
+        // Hide options if the drop down is
+        // collapsed.
+        &.Collapsed {
+          .Selection {
+            .Arrow {
+              transform: rotate(180deg);
+            }
+          }
+          .Options {
+            display: none;
+          }
+        }
+
+        // Disable the drop down if there are
+        // less than two options.
+        &.Disabled {
+          pointer-events: none;
+          opacity: 0.5;
+        }
+
+        .Selection {
+          cursor: pointer;
+          display: grid;
+          grid-template-columns: 1fr auto;
+          border: 2px solid $color-main;
+          padding: 0.7em 0.9em;
+          box-shadow: $box-shadow-alt2;
+          color: $color-accent-light;
+
+          &:hover {
+            background-color: $background-alt2;
+          }
+
+          .Arrow {
+            color: $color-accent-light;
+            font-size: 2em;
+            height: 0.5em;
+            line-height: 1em;
+          }
+        }
+
+        .Options {
+          cursor: pointer;
+          border: 2px solid $color-main;
+          box-shadow: $box-shadow-alt2;
+          height: auto;
+          max-height: 140px;
+          overflow-y: auto;
+
+          &::-webkit-scrollbar {
+            width: 15px;
+          }
+
+          .Option {
+            padding: 0.5em 0.9em;
+            color: $color-accent-light;
+            list-style-type: none;
+            text-decoration: none;
+
+            &.Disabled {
+              pointer-events: none;
+              user-select: none;
+            }
+
+            &:hover {
+              box-shadow: none;
+              background-color: $background-alt2;
+            }
+          }
+        }
+      }
+
+      .ActionPropertyDisplay {
+        border: 2px solid $border-color-main;
+        border-radius: 10px;
+        font-size: 14px;
+        margin: 0;
+        padding: 15px;
+        padding-left: 30px;
+
+        .Property {
+          margin: 10px 0;
+          padding: 0 5px;
+          color: $terminal;
+
+          span {
+            color: $terminal;
+            text-decoration: underline;
+          }
+        }
+
+        @media only screen and (max-width: 655px) {
+          & {
+            padding-left: 5px;
+
+            .Property {
+              margin: 5px 0 0 5px;
+              padding: 0;
+              white-space: nowrap;
+              overflow: hidden;
+              text-overflow: ellipsis;
+            }
+          }
+        }
+      }
+
+      .Buttons {
+        .Button {
+          margin: 0;
+        }
+      }
+
+      > :not(.Heading):not(.Close) {
+        grid-column: span 2;
+      }
+    }
+  }
+}

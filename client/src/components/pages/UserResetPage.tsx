@@ -1,11 +1,11 @@
 import { useState } from 'react'
+import { useGlobalContext } from 'src/context'
+import { useMountHandler } from 'src/toolbox/hooks'
+import ClientUser from 'src/users'
 import { IPage } from '../App'
 import { Detail } from '../content/form/Form'
 import Navigation from '../content/general-layout/Navigation'
 import './UserResetPage.scss'
-import { useGlobalContext } from 'src/context'
-import { useMountHandler } from 'src/toolbox/hooks'
-import ClientUser from 'src/users'
 
 export interface IUserResetPage extends IPage {}
 
@@ -16,7 +16,7 @@ export default function UserResetPage(): JSX.Element | null {
   /* -- GLOBAL CONTEXT -- */
 
   const globalContext = useGlobalContext()
-  const { forceUpdate, notify, goToPage, logout, finishLoading } =
+  const { forceUpdate, notify, navigateTo, logout, finishLoading } =
     globalContext.actions
   const [session] = globalContext.session
 
@@ -69,7 +69,7 @@ export default function UserResetPage(): JSX.Element | null {
       try {
         await ClientUser.resetPassword(user)
         notify('User successfully saved.')
-        goToPage('HomePage', {})
+        navigateTo('HomePage', {})
       } catch (error: any) {
         notify('User failed to save.')
         setAreUnsavedChanges(true)

@@ -1,22 +1,22 @@
-import React, { useRef, useState } from 'react'
+import { AxiosError } from 'axios'
+import { useRef, useState } from 'react'
+import { useGlobalContext } from 'src/context'
+import GameClient from 'src/games'
+import ClientMission from 'src/missions'
+import Notification from 'src/notifications'
+import { useMountHandler, useRequireSession } from 'src/toolbox/hooks'
+import ClientUser from 'src/users'
 import { IPage } from '../App'
-import './HomePage.scss'
-import Navigation from '../content/general-layout/Navigation'
-import Notification from '../../notifications'
 import Tooltip from '../content/communication/Tooltip'
 import List, { ESortByMethod } from '../content/general-layout/List'
-import MissionModificationPanel from '../content/user-controls/MissionModificationPanel'
+import Navigation from '../content/general-layout/Navigation'
 import {
   ButtonSVG,
   EButtonSVGPurpose,
 } from '../content/user-controls/ButtonSVG'
+import MissionModificationPanel from '../content/user-controls/MissionModificationPanel'
 import UserModificationPanel from '../content/user-controls/UserModificationPanel'
-import { useMountHandler, useRequireSession } from 'src/toolbox/hooks'
-import GameClient from 'src/games'
-import { useGlobalContext } from 'src/context'
-import ClientMission from 'src/missions'
-import { AxiosError } from 'axios'
-import ClientUser from 'src/users'
+import './HomePage.scss'
 
 export interface IHomePage extends IPage {}
 
@@ -36,7 +36,7 @@ export default function HomePage(props: IHomePage): JSX.Element | null {
   const {
     beginLoading,
     finishLoading,
-    goToPage,
+    navigateTo,
     handleError,
     notify,
     logout,
@@ -362,7 +362,7 @@ export default function HomePage(props: IHomePage): JSX.Element | null {
   // creating a new mission.
   const createMission = (): void => {
     if (currentUser.isAuthorized('WRITE')) {
-      goToPage('MissionFormPage', { missionID: null })
+      navigateTo('MissionFormPage', { missionID: null })
     }
   }
 
@@ -370,7 +370,7 @@ export default function HomePage(props: IHomePage): JSX.Element | null {
   // page.
   const viewChangelog = (): void => {
     if (currentUser.isAuthorized(['READ', 'WRITE', 'DELETE'])) {
-      goToPage('ChangelogPage', {})
+      navigateTo('ChangelogPage', {})
     }
   }
 
@@ -390,9 +390,12 @@ export default function HomePage(props: IHomePage): JSX.Element | null {
         // Join game from new game ID, awaiting
         // the promised game client.
         let game: GameClient = await GameClient.join(gameID, server)
+        // Update session data to include new
+        // game ID.
+        session.gameID = game.gameID
         // Go to the game page with the new
         // game client.
-        goToPage('GamePage', { game })
+        navigateTo('GamePage', { game })
       } catch (error) {
         handleError({
           message: 'Failed to launch game. Contact system administrator.',
@@ -411,7 +414,7 @@ export default function HomePage(props: IHomePage): JSX.Element | null {
   // page with the selected user.
   const selectUser = (user: ClientUser) => {
     if (currentUser.isAuthorized(['READ', 'WRITE'])) {
-      goToPage('UserFormPage', {
+      navigateTo('UserFormPage', {
         userID: user.userID,
       })
     }
@@ -421,7 +424,7 @@ export default function HomePage(props: IHomePage): JSX.Element | null {
   // page with a new user.
   const createUser = () => {
     if (currentUser.isAuthorized('WRITE')) {
-      goToPage('UserFormPage', {
+      navigateTo('UserFormPage', {
         userID: null,
       })
     }
@@ -518,13 +521,13 @@ export default function HomePage(props: IHomePage): JSX.Element | null {
           <div className='EditContentRow'>
             <ButtonSVG
               purpose={EButtonSVGPurpose.Add}
-              handleClick={createMission}
+              onClick={createMission}
               tooltipDescription={'Create new mission'}
               uniqueClassName={'NewMissionButton'}
             />
             <ButtonSVG
               purpose={EButtonSVGPurpose.Upload}
-              handleClick={handleMissionImportRequest}
+              onClick={handleMissionImportRequest}
               tooltipDescription={
                 'Import a .metis file from your local system.'
               }
@@ -575,11 +578,27 @@ export default function HomePage(props: IHomePage): JSX.Element | null {
           <div className='EditContentRow'>
             <ButtonSVG
               purpose={EButtonSVGPurpose.Add}
-              handleClick={createUser}
+              onClick={createUser}
               tooltipDescription={'Create new user'}
             />
           </div>
         </div>
+      </div>
+      <div className='Join'>
+        <label style={{ paddingRight: '1em' }}>Jacob Don't Forget:</label>
+        <input
+          style={{ color: 'black' }}
+          type='text'
+          onKeyUp={async (event) => {
+            if (event.key === 'Enter') {
+              let game = await GameClient.join(
+                (event.target as HTMLInputElement).value,
+                server!,
+              )
+              navigateTo('GamePage', { game })
+            }
+          }}
+        />
       </div>
 
       {/* -- FOOTER -- */}

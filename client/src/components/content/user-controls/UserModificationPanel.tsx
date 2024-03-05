@@ -1,8 +1,8 @@
+import { useGlobalContext } from 'src/context'
 import ClientUser from 'src/users'
 import { EMiniButtonSVGPurpose, MiniButtonSVG } from './MiniButtonSVG'
 import { MiniButtonSVGPanel } from './MiniButtonSVGPanel'
 import './UserModificationPanel.scss'
-import { useGlobalContext } from 'src/context'
 
 export default function UserModificationPanel(props: {
   user: ClientUser
@@ -83,7 +83,7 @@ export default function UserModificationPanel(props: {
 
   return (
     <div className={containerClassName}>
-      <MiniButtonSVGPanel buttons={currentActions} linkBack={null} />
+      <MiniButtonSVGPanel buttons={currentActions} />
     </div>
   )
 }

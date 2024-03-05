@@ -55,6 +55,10 @@
     padding: $content-vertical-padding $content-horizontal-padding;
 
     .TopBar {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.8em;
+
       .Resources {
         box-sizing: border-box;
         align-items: center;
@@ -124,6 +128,7 @@
       height: 100%;
       box-shadow: $box-shadow-alt2;
     }
+
     .NodeActions {
       position: relative;
       max-height: 310px;

@@ -8,21 +8,23 @@ import ClientMissionNode, { ENodeDeleteMethod } from 'src/missions/nodes'
 import { ClientTargetEnvironment } from 'src/target-environments'
 import ClientTarget from 'src/target-environments/targets'
 import { compute } from 'src/toolbox'
-import { useMountHandler } from 'src/toolbox/hooks'
-import { AnyObject } from '../../../../shared/toolbox/objects'
+import { useEventListener, useMountHandler } from 'src/toolbox/hooks'
+import { AnyObject, SingleTypeObject } from '../../../../shared/toolbox/objects'
 import { IPage } from '../App'
 import ActionEntry from '../content/edit-mission/ActionEntry'
 import MissionEntry from '../content/edit-mission/MissionEntry'
 import NodeEntry from '../content/edit-mission/NodeEntry'
 import NodeStructuring from '../content/edit-mission/NodeStructuring'
 import EffectEntry from '../content/edit-mission/target-effects/EffectEntry'
-import MissionMap from '../content/game/MissionMap'
+import MissionMap from '../content/game/mission-map'
+import { TNodeButton } from '../content/game/mission-map/objects/MissionNode'
 import Navigation from '../content/general-layout/Navigation'
 import {
   EPanelSizingMode,
   PanelSizeRelationship,
   ResizablePanel,
 } from '../content/general-layout/ResizablePanels'
+import { ButtonSVG, EButtonSVGPurpose } from '../content/user-controls/ButtonSVG'
 import './MissionFormPage.scss'
 
 /* -- TARGET SCRIPTS -- */
@@ -1058,7 +1060,7 @@ export default function MissionFormPage(
     finishLoading,
     handleError,
     notify,
-    goToPage,
+    navigateTo,
     confirm,
     logout,
     forceUpdate,
@@ -1202,7 +1204,7 @@ export default function MissionFormPage(
   /**
    * Determines whether or not to gray out the delete node button.
    */
-  const grayOutDeleteNodeButton: boolean = compute(() => mission.nodes.size < 2)
+  const grayOutDeleteNodeButton: boolean = compute(() => mission.nodes.length < 2)
   /**
    * Default size of the output panel.
    */
@@ -1266,6 +1268,112 @@ export default function MissionFormPage(
     setSelectedAction(null)
     setSelectedEffect(null)
   }, [selectedNode])
+  
+  // Add event listener to watch for node selection
+  // changes, updating the state accordingly.
+  useEventListener(
+    mission,
+    ['node-selection', 'structure-change'],
+    () => {
+      // Get previous and next selections.
+      let prevSelection: ClientMissionNode | null = selectedNode
+      let nextSelection: ClientMissionNode | null = mission.selectedNode
+
+      // Clear previous buttons.
+      if (prevSelection) {
+        prevSelection.buttons = []
+      }
+
+      // If the next selection is a node, then add the buttons.
+      if (nextSelection) {
+        // Define potential buttons.
+        const availableNodeButtons: SingleTypeObject<TNodeButton> = {
+          deselect: {
+            ...ButtonSVG.defaultProps,
+            purpose: EButtonSVGPurpose.Cancel,
+            componentKey: 'node-button-deselect',
+            tooltipDescription: 'Deselect this node (Closes panel view also).',
+            disabled: grayOutDeselectNodeButton,
+            onClick: () => {
+              validateNodeSelectionChange(() => {
+                mission.deselectNode()
+              })
+            },
+          },
+          add: {
+            ...ButtonSVG.defaultProps,
+            purpose: EButtonSVGPurpose.Add,
+            componentKey: 'node-button-add',
+            tooltipDescription: 'Create an adjacent node on the map.',
+            disabled: grayOutAddNodeButton,
+            onClick: () => {
+              mission.creationMode = true
+            },
+          },
+          add_cancel: {
+            ...ButtonSVG.defaultProps,
+            purpose: EButtonSVGPurpose.Cancel,
+            componentKey: 'node-button-add-cancel',
+            tooltipDescription: 'Cancel node creation.',
+            disabled: grayOutAddNodeButton,
+            onClick: () => (mission.creationMode = false),
+          },
+          remove: {
+            ...ButtonSVG.defaultProps,
+            purpose: EButtonSVGPurpose.Remove,
+            componentKey: 'node-button-remove',
+            tooltipDescription: 'Delete this node.',
+            disabled: grayOutDeleteNodeButton,
+            onClick: (_, node) => {
+              handleNodeDeleteRequest(node)
+            },
+          },
+        }
+
+        // Define the buttons that will actually be used.
+        const activeNodeButtons = []
+
+        // If not in creation mode, then add deselect, add, and
+        // remove buttons.
+        if (!mission.creationMode) {
+          activeNodeButtons.push(
+            availableNodeButtons.deselect,
+            availableNodeButtons.add,
+            availableNodeButtons.remove,
+          )
+        }
+        // Else, add a cancel button for adding a node.
+        else {
+          activeNodeButtons.push(availableNodeButtons.add_cancel)
+        }
+
+        // Set the buttons on the next selection.
+        nextSelection.buttons = activeNodeButtons
+      }
+
+      // Update state.
+      setSelectedNode(nextSelection)
+      activateNodeStructuring(false)
+      setMissionEmptyStringArray([])
+      setNodeEmptyStringArray([])
+      setActionEmptyStringArray([])
+      setEffectEmptyStringArray([])
+
+      // If a node is currently selected,
+      // push the name to the mission path.
+      if(selectedNode) {
+        missionPath.push(selectedNode.name)
+      }
+    },
+    [selectedNode],
+  )
+
+  // Add event listener to watch for when a new
+  // node is spawned in the mission.
+  useEventListener(mission, 'spawn-node', () => {
+    // Mark unsaved changes as true.
+    setAreUnsavedChanges(true)
+  })
 
   // If the selected action changes, then the mission
   // path will be updated and it will reset the selected
@@ -1305,30 +1413,7 @@ export default function MissionFormPage(
   // made that would require saving.
   const handleChange = (): void => {
     setAreUnsavedChanges(true)
-
-    if (mission.nodeCreationTarget !== null && selectedNode !== null) {
-      mission.nodeCreationTarget = null
-    }
-
     forceUpdate()
-  }
-
-  // This will select or unselect a node
-  const selectNode = (node: ClientMissionNode | null) => {
-    if (selectedNode !== null) {
-      mission.nodeCreationTarget = null
-    }
-
-    if (node) {
-      missionPath.push(node.name)
-    }
-
-    setSelectedNode(node)
-    activateNodeStructuring(false)
-    setMissionEmptyStringArray([])
-    setNodeEmptyStringArray([])
-    setActionEmptyStringArray([])
-    setEffectEmptyStringArray([])
   }
 
   /**
@@ -1364,7 +1449,7 @@ export default function MissionFormPage(
   // notified here.
   const ensureOneNodeExists = (): void => {
     if (
-      mission.nodes.size === 1 &&
+      mission.nodes.length === 1 &&
       mission.lastCreatedNode?.nodeID ===
         Array.from(mission.nodes.values())[0].nodeID
     ) {
@@ -1398,32 +1483,48 @@ export default function MissionFormPage(
     }
   }
 
+  /**
+   * Handler for when a node is selected.
+   * @param node The selected node.
+   */
+  let onNodeSelect = (node: ClientMissionNode) => {
+    if (node !== selectedNode) {
+      validateNodeSelectionChange(() => {
+        // Select the node.
+        mission.selectNode(node)
+
+        // Create an action, if necessary.
+        ensureOneActionExistsIfExecutable()
+      })
+    }
+  }
+
   // This is called when a node is
   // requested to be deleted.
-  const handleNodeDeleteRequest = (): void => {
-    if (selectedNode !== null) {
-      if (selectedNode.hasChildren) {
+  const handleNodeDeleteRequest = (node: ClientMissionNode): void => {
+    if (node !== null) {
+      if (node.hasChildren) {
         confirm(
           `**Note: This node has children** \n` +
-            `Please confirm if you would like to delete "${selectedNode.name}" only or "${selectedNode.name}" and all of it's children.`,
+            `Please confirm if you would like to delete "${node.name}" only or "${node.name}" and all of it's children.`,
           (concludeAction: () => void) => {
-            selectedNode.delete({
+            node.delete({
               deleteMethod: ENodeDeleteMethod.DeleteNodeAndChildren,
             })
             handleChange()
             activateNodeStructuring(false)
-            selectNode(null)
+            mission.deselectNode()
             ensureOneNodeExists()
             concludeAction()
           },
           {
             handleAlternate: (concludeAction: () => void) => {
-              selectedNode.delete({
+              node.delete({
                 deleteMethod: ENodeDeleteMethod.DeleteNodeAndShiftChildren,
               })
               handleChange()
               activateNodeStructuring(false)
-              selectNode(null)
+              mission.deselectNode()
               ensureOneNodeExists()
               concludeAction()
             },
@@ -1435,10 +1536,10 @@ export default function MissionFormPage(
         confirm(
           'Please confirm the deletion of this node.',
           (concludeAction: () => void) => {
-            selectedNode.delete()
+            node.delete()
             handleChange()
             activateNodeStructuring(false)
-            selectNode(null)
+            mission.deselectNode()
             ensureOneNodeExists()
             concludeAction()
           },
@@ -1451,9 +1552,7 @@ export default function MissionFormPage(
    * Handler for when the user requests to add a new node.
    */
   const handleNodeAddRequest = (): void => {
-    if (selectedNode !== null) {
-      mission.nodeCreationTarget = selectedNode
-    }
+    mission.creationMode = true
   }
 
   // This verifies that node selection
@@ -1509,18 +1608,18 @@ export default function MissionFormPage(
   // home page.
   const goHome = (): void => {
     if (!areUnsavedChanges) {
-      goToPage('HomePage', {})
+      navigateTo('HomePage', {})
     } else {
       confirm(
         'You have unsaved changes. What do you want to do with them?',
         async (concludeAction: () => void) => {
           await save().catch(() => {})
-          goToPage('HomePage', {})
+          navigateTo('HomePage', {})
           concludeAction()
         },
         {
           handleAlternate: (concludeAction: () => void) => {
-            goToPage('HomePage', {})
+            navigateTo('HomePage', {})
             concludeAction()
           },
           pendingMessageUponConfirm: 'Saving...',
@@ -1536,7 +1635,7 @@ export default function MissionFormPage(
   // game page.
   const goToGamePage = (): void => {
     if (!areUnsavedChanges) {
-      goToPage('GamePage', {
+      navigateTo('GamePage', {
         missionID: mission.missionID,
       })
     } else {
@@ -1544,12 +1643,12 @@ export default function MissionFormPage(
         'You have unsaved changes. What do you want to do with them?',
         async (concludeAction: () => void) => {
           await save().catch(() => {})
-          goToPage('GamePage', {})
+          navigateTo('GamePage', {})
           concludeAction()
         },
         {
           handleAlternate: (concludeAction: () => void) => {
-            goToPage('GamePage', {
+            navigateTo('GamePage', {
               missionID: mission.missionID,
             })
             concludeAction()
@@ -1564,6 +1663,27 @@ export default function MissionFormPage(
   }
 
   /* -- PRE-RENDER PROCESSING -- */
+
+// Create the custom form-related buttons for the map.
+  const mapCustomButtons = [
+    new ButtonSVG({
+      ...ButtonSVG.defaultProps,
+      purpose: EButtonSVGPurpose.Reorder,
+      onClick: () => {
+        mission.deselectNode()
+        activateNodeStructuring(true)
+      },
+      tooltipDescription: 'Edit the structure and order of nodes.',
+      disabled: grayOutEditButton,
+    }),
+    new ButtonSVG({
+      ...ButtonSVG.defaultProps,
+      purpose: EButtonSVGPurpose.Save,
+      onClick: save,
+      tooltipDescription: 'Save changes.',
+      disabled: grayOutSaveButton,
+    }),
+  ]
 
   // If all fields are filled in, then make sure
   // any notifications are dismissed after 2 seconds.
@@ -1620,37 +1740,8 @@ export default function MissionFormPage(
             render: () => (
               <MissionMap
                 mission={mission}
-                missionAjaxStatus={'Loaded'}
-                selectedNode={selectedNode}
-                allowCreationMode={true}
-                handleNodeSelection={(node: ClientMissionNode) => {
-                  validateNodeSelectionChange(() => {
-                    selectNode(node)
-                    ensureOneActionExistsIfExecutable()
-                  })
-                }}
-                handleNodeCreation={(node: ClientMissionNode) => {
-                  setSelectedNode(node)
-                  handleChange()
-                }}
-                handleNodeDeselection={() => {
-                  validateNodeSelectionChange(() => {
-                    selectNode(null)
-                  })
-                }}
-                handleNodeDeletionRequest={handleNodeDeleteRequest}
-                handleMapEditRequest={() => {
-                  selectNode(null)
-                  activateNodeStructuring(true)
-                }}
-                handleMapSaveRequest={save}
-                grayOutEditButton={grayOutEditButton}
-                grayOutSaveButton={grayOutSaveButton}
-                grayOutDeselectNodeButton={grayOutDeselectNodeButton}
-                grayOutAddNodeButton={grayOutAddNodeButton}
-                grayOutDeleteNodeButton={grayOutDeleteNodeButton}
-                applyNodeClassName={(node: ClientMissionNode) => ''}
-                renderNodeTooltipDescription={(node: ClientMissionNode) => ''}
+                customButtons={mapCustomButtons}
+                onNodeSelect={onNodeSelect}
               />
             ),
           }}
@@ -1683,11 +1774,12 @@ export default function MissionFormPage(
                     nodeEmptyStringArray={nodeEmptyStringArray}
                     setNodeEmptyStringArray={setNodeEmptyStringArray}
                     setMissionPath={setMissionPath}
-                    selectNode={selectNode}
                     setSelectedAction={setSelectedAction}
                     handleChange={handleChange}
                     handleAddRequest={handleNodeAddRequest}
-                    handleDeleteRequest={handleNodeDeleteRequest}
+                    handleDeleteRequest={() =>
+                      handleNodeDeleteRequest(selectedNode)
+                    }
                   />
                 )
               } else if (
@@ -1704,7 +1796,6 @@ export default function MissionFormPage(
                     actionEmptyStringArray={actionEmptyStringArray}
                     setActionEmptyStringArray={setActionEmptyStringArray}
                     setMissionPath={setMissionPath}
-                    selectNode={selectNode}
                     setSelectedAction={setSelectedAction}
                     setSelectedEffect={setSelectedEffect}
                     handleChange={handleChange}
@@ -1722,7 +1813,6 @@ export default function MissionFormPage(
                     effectEmptyStringArray={effectEmptyStringArray}
                     setEffectEmptyStringArray={setEffectEmptyStringArray}
                     setMissionPath={setMissionPath}
-                    selectNode={selectNode}
                     setSelectedAction={setSelectedAction}
                     setSelectedEffect={setSelectedEffect}
                     handleChange={handleChange}

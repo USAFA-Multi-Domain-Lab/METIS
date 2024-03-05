@@ -1,21 +1,21 @@
 import { Request, Response } from 'express'
 import expressWs from 'express-ws'
 import fs from 'fs'
-import path from 'path'
-import { v4 as generateHash } from 'uuid'
-import { filterErrors_findOne } from 'metis/server/database/api-call-handlers'
+import { TCommonMissionJson } from 'metis/missions'
+import MetisServer from 'metis/server'
 import MetisDatabase from 'metis/server/database'
+import { filterErrors_findOne } from 'metis/server/database/api-call-handlers'
 import InfoModel from 'metis/server/database/models/info'
 import MissionModel from 'metis/server/database/models/missions'
-import { databaseLogger, plcApiLogger } from 'metis/server/logging'
-import { authorized } from '../../middleware/users'
-import uploads from '../../middleware/uploads'
-import { RequestBodyFilters, defineRequests } from '../../middleware/requests'
-import MissionNode from '../../missions/nodes'
-import { effectData } from '../../effects/effect-data'
-import MetisServer from 'metis/server'
 import { TMetisRouterMap } from 'metis/server/http/router'
-import { IMissionJson } from 'metis/missions'
+import { databaseLogger } from 'metis/server/logging'
+import path from 'path'
+import { v4 as generateHash } from 'uuid'
+import { effectData } from '../../effects/effect-data'
+import { RequestBodyFilters, defineRequests } from '../../middleware/requests'
+import uploads from '../../middleware/uploads'
+import { authorized } from '../../middleware/users'
+import MissionNode from '../../missions/nodes'
 
 type MulterFile = Express.Multer.File
 
@@ -48,7 +48,7 @@ export const routerMap: TMetisRouterMap = (
         initialResources,
         nodeStructure,
         nodeData,
-      } = request.body as IMissionJson
+      } = request.body as TCommonMissionJson
 
       let mission = new MissionModel({
         name,

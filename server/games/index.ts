@@ -1,11 +1,11 @@
+import { TClientEvents, TServerEvents } from 'metis/connect/data'
+import { ServerEmittedError } from 'metis/connect/errors'
 import Game, { IGameJson } from 'metis/games'
 import ClientConnection from 'metis/server/connect/clients'
-import { v4 as generateHash } from 'uuid'
-import { IClientDataTypes, TServerData } from 'metis/connect/data'
-import { ServerEmittedError } from 'metis/connect/errors'
 import ServerMission from 'metis/server/missions'
-import ServerMissionNode from 'metis/server/missions/nodes'
 import ServerMissionAction from 'metis/server/missions/actions'
+import ServerMissionNode from 'metis/server/missions/nodes'
+import { v4 as generateHash } from 'uuid'
 import ServerActionExecution from '../missions/actions/executions'
 
 /**
@@ -109,6 +109,60 @@ export default class GameServer extends Game<
 
     // Add game-specific listeners.
     this.addListeners(participant)
+
+    // Call join handler in the session of
+    // the new participant.
+    participant.session.handleJoin(this.gameID)
+  }
+
+  /**
+   * Handles a new connection by an existing participant.
+   * @param newConnection The new connection for a participant of the game.
+   * @returns True if connection was replaced, false if the participant wasn't found.
+   */
+  public handleConnectionChange(newConnection: ClientConnection): boolean {
+    this._participants.forEach(
+      (participant: ClientConnection, index: number) => {
+        if (participant.userID === newConnection.userID) {
+          // Update index in participants with the new
+          // connection.
+          this._participants[index] = newConnection
+
+          // Add game-specific listeners to the new
+          // connection.
+          this.addListeners(newConnection)
+
+          // Return true.
+          return true
+        }
+      },
+    )
+
+    // Return false if the participant wasn't found.
+    return false
+  }
+
+  /**
+   * Has the given participant quit the game. Removes any game listeners for the user.
+   * @param quitterID The ID of the participant quiting the game.
+   */
+  public quit(quitterID: string): void {
+    // Find the participant in the list.
+    this._participants.forEach(
+      (participant: ClientConnection, index: number) => {
+        if (participant.userID === quitterID) {
+          // Remove the participant from the list.
+          this._participants.splice(index, 1)
+
+          // Remove game-specific listeners.
+          this.removeListeners(participant)
+
+          // Call quit handler in the session of
+          // the determined participant.
+          participant.session.handleQuit()
+        }
+      },
+    )
   }
 
   /**
@@ -124,6 +178,16 @@ export default class GameServer extends Game<
   }
 
   /**
+   * Removes game-specific listeners for the given participant.
+   */
+  private removeListeners(participant: ClientConnection): void {
+    participant.clearEventListeners([
+      'request-open-node',
+      'request-execute-action',
+    ])
+  }
+
+  /**
    * A registry of all games currently launched.
    */
   private static registry: Map<string, GameServer> = new Map<
@@ -133,15 +197,17 @@ export default class GameServer extends Game<
 
   /**
    * Launches a new game with a new game ID.
-   * @param {string} mission  The ID of the mission being executed in the game.
-   * @returns {Promise<string>} A promise of the game ID for the newly launched game.
+   * @param mission The mission from which to launch a game.
+   * @returns A promise of the game server for the newly launched game.
    */
-  public static async launch(mission: ServerMission): Promise<string> {
-    return new Promise<string>((resolve: (gameID: string) => void): void => {
-      let game: GameServer = new GameServer(generateHash(), mission, [])
-      return resolve(game.gameID)
-    })
+  public static launch(mission: ServerMission): GameServer {
+    return new GameServer(generateHash(), mission, [])
   }
+
+  /**
+   * Quits the game for the given participant.
+   */
+  public static quit(participant: ClientConnection): void {}
 
   /**
    * @returns the game associated with the given game ID.
@@ -167,24 +233,26 @@ export default class GameServer extends Game<
 
   /**
    * Called when a participant requests to open a node.
+   * @param participant The participant requesting to open a node.
+   * @param event The event emitted by the participant.
    */
   public onRequestOpenNode = (
     participant: ClientConnection,
-    request: IClientDataTypes['request-open-node'],
+    event: TClientEvents['request-open-node'],
   ): void => {
     // Organize data.
     let mission: ServerMission = this.mission
-    let { nodeID } = request
+    let { nodeID } = event.data
 
     // Find the node, given the ID.
-    let node: ServerMissionNode | undefined = mission.nodes.get(nodeID)
+    let node: ServerMissionNode | undefined = mission.getNode(nodeID)
 
     // If the node is undefined, then emit
     // an error.
     if (node === undefined) {
       return participant.emitError(
         new ServerEmittedError(ServerEmittedError.CODE_NODE_NOT_FOUND, {
-          request,
+          request: event,
         }),
       )
     }
@@ -193,7 +261,7 @@ export default class GameServer extends Game<
     if (!node.openable) {
       return participant.emitError(
         new ServerEmittedError(ServerEmittedError.CODE_NODE_NOT_OPENABLE, {
-          request,
+          request: event,
         }),
       )
     }
@@ -202,14 +270,15 @@ export default class GameServer extends Game<
     node.open()
 
     // Construct open event payload.
-    let payload: TServerData<'node-opened'> = {
+    let payload: TServerEvents['node-opened'] = {
       method: 'node-opened',
-      nodeID,
-      revealedChildNodes: node.childNodes.map((node) =>
-        node.toJson({ includeGameData: true }),
-      ),
-      request,
-      requesterID: participant.userID,
+      data: {
+        nodeID,
+        revealedChildNodes: node.childNodes.map((node) =>
+          node.toJson({ includeGameData: true }),
+        ),
+      },
+      request: { event, requesterId: participant.userID, fulfilled: true },
     }
 
     // Emit open event.
@@ -220,13 +289,16 @@ export default class GameServer extends Game<
 
   /**
    * Called when a participant requests to execute an action on a node.
+   * @param participant The participant requesting to execute an action.
+   * @param event The event emitted by the participant.
+   * @resolves When the action has been executed or a client error is found.
    */
   public onRequestExecuteAction = async (
     participant: ClientConnection,
-    request: IClientDataTypes['request-execute-action'],
+    event: TClientEvents['request-execute-action'],
   ): Promise<void> => {
     // Extract request data.
-    let { actionID } = request
+    let { actionID } = event.data
 
     // Find the action given the ID.
     let action: ServerMissionAction | undefined = this.actions.get(actionID)
@@ -236,7 +308,7 @@ export default class GameServer extends Game<
     if (action === undefined) {
       return participant.emitError(
         new ServerEmittedError(ServerEmittedError.CODE_ACTION_NOT_FOUND, {
-          request,
+          request: event,
         }),
       )
     }
@@ -245,7 +317,7 @@ export default class GameServer extends Game<
     if (!action.node.executable) {
       return participant.emitError(
         new ServerEmittedError(ServerEmittedError.CODE_NODE_NOT_EXECUTABLE, {
-          request,
+          request: event,
         }),
       )
     }
@@ -254,7 +326,7 @@ export default class GameServer extends Game<
     if (!action.node.revealed) {
       return participant.emitError(
         new ServerEmittedError(ServerEmittedError.CODE_NODE_NOT_REVEALED, {
-          request,
+          request: event,
         }),
       )
     }
@@ -263,12 +335,21 @@ export default class GameServer extends Game<
     let outcome = await action.execute({
       enactEffects: false,
       onInit: (execution: ServerActionExecution) => {
+        // Deduct action cost from resource pool.
+        this._resources -= action!.resourceCost
+
         // Construct payload for action execution
         // initiated event.
-        let initiationPayload: TServerData<'action-execution-initiated'> = {
+        let initiationPayload: TServerEvents['action-execution-initiated'] = {
           method: 'action-execution-initiated',
-          execution: execution.toJson(),
-          request,
+          data: {
+            execution: execution.toJson(),
+          },
+          request: {
+            event,
+            requesterId: participant.userID,
+            fulfilled: false,
+          },
         }
 
         // Emit action execution initiated event
@@ -281,17 +362,22 @@ export default class GameServer extends Game<
 
     // Construct payload for action execution
     // completed event.
-    let completionPayload: TServerData<'action-execution-completed'> = {
+    let completionPayload: TServerEvents['action-execution-completed'] = {
       method: 'action-execution-completed',
-      outcome: outcome.toJson(),
-      request,
-      requesterID: participant.userID,
+      data: {
+        outcome: outcome.toJson(),
+      },
+      request: {
+        event,
+        requesterId: participant.userID,
+        fulfilled: true,
+      },
     }
 
     // Add child nodes if the action was
     // successful.
     if (outcome.successful) {
-      completionPayload.revealedChildNodes = action.node.childNodes.map(
+      completionPayload.data.revealedChildNodes = action.node.childNodes.map(
         (node) => node.toJson({ includeGameData: true }),
       )
     }

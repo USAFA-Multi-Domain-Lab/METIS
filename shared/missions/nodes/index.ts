@@ -1,13 +1,14 @@
-import { TCommonMissionAction, TCommonMissionActionJson } from '../actions'
-import { TCommonMission } from '..'
 import { v4 as generateHash } from 'uuid'
+import { TCommonMission } from '..'
+import ArrayToolbox from '../../toolbox/arrays'
 import MapToolbox from '../../toolbox/maps'
-import IActionOutcome from '../actions/outcomes'
+import { TCommonMissionAction, TCommonMissionActionJson } from '../actions'
 import IActionExecution, {
   TActionExecutionJSON as TActionExecutionJson,
 } from '../actions/executions'
-import { IActionOutcomeJSON as IActionOutcomeJson } from '../actions/outcomes'
-import ArrayToolbox from '../../toolbox/arrays'
+import IActionOutcome, {
+  IActionOutcomeJSON as IActionOutcomeJson,
+} from '../actions/outcomes'
 
 /**
  * This represents an individual node in a mission.
@@ -55,7 +56,7 @@ export default abstract class MissionNode<
     } else if (execution !== null) {
       return 'executing'
     } else {
-      return ArrayToolbox.lastOf(outcomes).successful ? 'successful' : 'failure'
+      return ArrayToolbox.lastOf(outcomes).successful ? 'successful' : 'failed'
     }
   }
 
@@ -64,8 +65,7 @@ export default abstract class MissionNode<
     return (
       this.executable &&
       this.actions.size > 0 &&
-      (this.executionState === 'unexecuted' ||
-        this.executionState === 'failure')
+      (this.executionState === 'unexecuted' || this.executionState === 'failed')
     )
   }
 
@@ -85,8 +85,18 @@ export default abstract class MissionNode<
    */
   protected opened: boolean
 
+  /**
+   * Cache for the depth padding of the node.
+   */
+  protected _depthPadding: number
   // Implemented
-  public depthPadding: TCommonMissionNode['depthPadding']
+  public get depthPadding(): number {
+    return this._depthPadding
+  }
+  // Implemented
+  public set depthPadding(value: number) {
+    this._depthPadding = value
+  }
 
   // Implemented
   public actions: Map<string, TMissionAction>
@@ -232,7 +242,7 @@ export default abstract class MissionNode<
     this.executable =
       data.executable ?? MissionNode.DEFAULT_PROPERTIES.executable
     this.device = data.device ?? MissionNode.DEFAULT_PROPERTIES.device
-    this.depthPadding =
+    this._depthPadding =
       data.depthPadding ?? MissionNode.DEFAULT_PROPERTIES.depthPadding
     this.actions = this.parseActionData(
       data.actions ?? MissionNode.DEFAULT_PROPERTIES.actions,
@@ -250,6 +260,12 @@ export default abstract class MissionNode<
     // Set properties from options.
     this.parentNode = options.parentNode ?? null
     this.childNodes = options.childNodes ?? []
+  }
+  get firstChildNode(): any {
+    throw new Error('Method not implemented.')
+  }
+  get lastChildNode(): any {
+    throw new Error('Method not implemented.')
   }
 
   /**
@@ -430,7 +446,8 @@ export interface TCommonMissionNode {
   /**
    * The amount of visual padding to apply to the left of the node in the tree.
    */
-  depthPadding: number
+  get depthPadding(): number
+  set depthPadding(value: number)
   /**
    * The actions that can be performed on the node.
    * @note Mapped by action ID.
@@ -615,7 +632,7 @@ export type TNodeExecutionState =
   | 'unexecuted'
   | 'executing'
   | 'successful'
-  | 'failure'
+  | 'failed'
 
 /**
  * Options for the `MissionNode.open` method.

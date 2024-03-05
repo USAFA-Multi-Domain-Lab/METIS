@@ -57,7 +57,7 @@ export default class ServerMission extends Mission<ServerMissionNode> {
     // Handle addToNodeMap option.
     if (addToNodeMap) {
       // Add the node to the node map.
-      this.nodes.set(node.nodeID, node)
+      this.nodes.push(node)
     }
 
     // Return the node.

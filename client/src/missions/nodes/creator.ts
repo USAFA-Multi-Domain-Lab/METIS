@@ -1,29 +1,42 @@
 import ClientMission from '..'
 import ClientMissionNode, { ENodeTargetRelation } from '.'
-import { IMissionMappable } from 'src/components/content/game/MissionMap'
 import ClientActionExecution from '../actions/executions'
+import { Vector2D } from '../../../../shared/toolbox/space'
 
 /**
  * Represents a node that, when triggerred,
  * will spawn a new node in a mission in a
  * specific location.
  */
-export default class NodeCreator implements IMissionMappable {
-  _nodeID: string
+export default class NodeCreator {
+  // Implemented
+  public get nodeID(): string {
+    let creationTarget: ClientMissionNode | null = this.creationTarget
+
+    if (creationTarget) {
+      return `node-creator_with-${creationTarget.nodeID}-as-${this.targetRelation}`
+    } else {
+      return `node-creator_with-no-target-as-${this.targetRelation}`
+    }
+  }
+
   _name: string
   _mission: ClientMission
-  _creationTarget: ClientMissionNode
-  _creationTargetRelation: ENodeTargetRelation
-  mapX: number
-  mapY: number
+
+  /**
+   * The relation of the creator to the creation target.
+   */
+  _targetRelation: ENodeTargetRelation
+  /**
+   * The relation of the creator to the creation target.
+   */
+  public get targetRelation(): ENodeTargetRelation {
+    return this._targetRelation
+  }
+
+  position: Vector2D
   depth: number
   execution: ClientActionExecution | null
-  _createdNode: ClientMissionNode | null = null
-
-  // Getter for _nodeID.
-  get nodeID(): string {
-    return this._nodeID
-  }
 
   // Getter for _name.
   get name(): string {
@@ -35,104 +48,141 @@ export default class NodeCreator implements IMissionMappable {
     return this._mission
   }
 
-  // Getter for _creationTarget.
-  get creationTarget(): ClientMissionNode {
-    return this._creationTarget
+  /**
+   * The target for creation. Same as the one in mission.
+   */
+  public get creationTarget(): ClientMissionNode | null {
+    return this.mission.creationTarget
   }
 
-  // Getter for _creationTargetRelation.
-  get creationTargetRelation(): ENodeTargetRelation {
-    return this._creationTargetRelation
-  }
-
-  // Getter for _createdNode.
-  get createdNode(): ClientMissionNode | null {
+  /**
+   * The node created by this creator, if any.
+   */
+  private _createdNode: ClientMissionNode | null = null
+  /**
+   * The node created by this creator, if any.
+   */
+  public get createdNode(): ClientMissionNode | null {
     return this._createdNode
   }
 
-  // Implementation requirement only.
+  // Implemented
   get executable(): boolean {
     return false
   }
 
-  // Implementation requirement only.
+  // Implemented
   get executing(): boolean {
     return false
   }
 
-  // Implementation requirement only.
+  // Implemented
   get device(): boolean {
     return false
   }
 
-  // Implementation requirement only.
+  // Implemented
   get color(): string {
     return ''
   }
 
-  // Implementation requirement only.
+  // Implemented
   get isOpen(): boolean {
     return false
   }
 
-  get childNodes(): ClientMissionNode[] {
+  // Implemented
+  public get pendingOpen(): boolean {
+    return false
+  }
+
+  // Implemented
+  public get pendingExecInit(): boolean {
+    return false
+  }
+
+  // Implemented
+  public get childNodes(): ClientMissionNode[] {
     return []
   }
 
-  constructor(
+  public constructor(
     mission: ClientMission,
-    creationTarget: ClientMissionNode,
-    creationTargetRelation: ENodeTargetRelation,
-    mapX: number,
-    mapY: number,
+    targetRelation: ENodeTargetRelation,
   ) {
-    let relationTitle: string = ''
-
-    switch (creationTargetRelation) {
-      case ENodeTargetRelation.ParentOfTargetAndChildren:
-        relationTitle = 'parent-of-target-and-children'
-        break
-      case ENodeTargetRelation.ParentOfTargetOnly:
-        relationTitle = 'parent-of-target-only'
-        break
-      case ENodeTargetRelation.BetweenTargetAndChildren:
-        relationTitle = 'between-target-and-children'
-        break
-      case ENodeTargetRelation.ChildOfTarget:
-        relationTitle = 'child-of-target'
-        break
-      case ENodeTargetRelation.PreviousSiblingOfTarget:
-        relationTitle = 'previous-sibling-of-target'
-        break
-      case ENodeTargetRelation.FollowingSiblingOfTarget:
-        relationTitle = 'following-sibling-of-target'
-        break
-    }
-
-    this._nodeID = `node-creator_with-${creationTarget.nodeID}-as-${relationTitle}`
     this._name = '+'
     this._mission = mission
-    this.mapX = mapX
-    this.mapY = mapY
+    this.position = new Vector2D(0, 0)
     this.depth = -1
     this.execution = null
-    this._creationTarget = creationTarget
-    this._creationTargetRelation = creationTargetRelation
+    this._targetRelation = targetRelation
+
+    // Sync position.
+    this.syncPosition()
+  }
+
+  /**
+   * Calculates and sets the position of the creator
+   * based on the position of the creation target and
+   * its relation to it.
+   */
+  public syncPosition(): void {
+    // Grab details.
+    let relation: ENodeTargetRelation = this.targetRelation
+    let target: ClientMissionNode | null = this.creationTarget
+
+    // If there is no target, set position to 0,0
+    // and depth to -1, then return.
+    if (target === null) {
+      this.position = new Vector2D(0, 0)
+      this.depth = -1
+      return
+    }
+
+    // Initialize position and depth.
+    this.position = target.position.clone()
+    this.depth = target.depth
+
+    // Shift position and depth based on relation.
+    switch (relation) {
+      case ENodeTargetRelation.ParentOfTargetAndChildren:
+        this.position.translateX(-2 * ClientMissionNode.COLUMN_WIDTH)
+        this.depth -= 2
+        break
+      case ENodeTargetRelation.ParentOfTargetOnly:
+        this.position.translateX(-1 * ClientMissionNode.COLUMN_WIDTH)
+        this.depth -= 1
+        break
+      case ENodeTargetRelation.BetweenTargetAndChildren:
+        this.position.translateX(1 * ClientMissionNode.COLUMN_WIDTH)
+        this.depth += 1
+        break
+      case ENodeTargetRelation.PreviousSiblingOfTarget:
+        this.position.translateY(-1 * ClientMissionNode.ROW_HEIGHT)
+        break
+      case ENodeTargetRelation.FollowingSiblingOfTarget:
+        this.position.translateY(1 * ClientMissionNode.ROW_HEIGHT)
+        break
+    }
   }
 
   // This is called to create the
   // new node.
-  create(): ClientMissionNode {
+  public create(): ClientMissionNode {
     if (this.createdNode !== null) {
-      console.error(new Error("Can't create node. Node is already created."))
+      throw new Error("Can't create node. Node is already created.")
+    }
+    if (this.creationTarget === null) {
+      throw new Error("Can't create node. No creation target.")
     }
 
     let node: ClientMissionNode = this.mission.spawnNode()
 
     // node.color = this.creationTarget.color
-    node.move(this.creationTarget, this.creationTargetRelation)
+    node.move(this.creationTarget, this.targetRelation)
     this._createdNode = this.createdNode
-    this.mission.nodeCreationTarget = null
+    this.mission.creationMode = false
+    this.mission.deselectNode()
 
     return node
   }

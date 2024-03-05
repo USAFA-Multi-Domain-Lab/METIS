@@ -1,39 +1,85 @@
-import { IMissionMappable } from 'src/components/content/game/MissionMap'
+import axios from 'axios'
+import memoizeOne from 'memoize-one'
+import { TNodeButton } from 'src/components/content/game/mission-map/objects/MissionNode'
 import ClientMission from '..'
+import { TRequestMethod } from '../../../../shared/connect/data'
 import { TCommonMissionActionJson } from '../../../../shared/missions/actions'
 import { TActionExecutionJSON } from '../../../../shared/missions/actions/executions'
 import { IActionOutcomeJSON } from '../../../../shared/missions/actions/outcomes'
 import MissionNode, {
-  TMissionNodeJson,
-  INodeOpenOptions,
-  TMissionNodeOptions,
   IHandleOutcomeOptions,
+  INodeOpenOptions,
+  TMissionNodeJson,
+  TMissionNodeOptions,
 } from '../../../../shared/missions/nodes'
+import { Vector2D } from '../../../../shared/toolbox/space'
 import ClientMissionAction from '../actions'
 import ClientActionExecution from '../actions/executions'
 import ClientActionOutcome from '../actions/outcomes'
-import axios from 'axios'
 
 /**
  * Class for managing mission nodes on the client.
  */
-export default class ClientMissionNode
-  extends MissionNode<
-    ClientMission,
-    ClientMissionNode,
-    ClientMissionAction,
-    ClientActionExecution,
-    ClientActionOutcome
-  >
-  implements IMissionMappable
-{
+export default class ClientMissionNode extends MissionNode<
+  ClientMission,
+  ClientMissionNode,
+  ClientMissionAction,
+  ClientActionExecution,
+  ClientActionOutcome
+> {
   // Implemented
-  public mapX: number
-  // Implemented
-  public mapY: number
+  public position: Vector2D
   // Implemented
   public depth: number
 
+  // Overridden
+  public get depthPadding(): number {
+    return this._depthPadding
+  }
+  // Overriden
+  public set depthPadding(value: number) {
+    // Set value.
+    this._depthPadding = value
+    // Handle structure change.
+    this.mission.handleStructureChange()
+  }
+
+  /**
+   * Listeners for node events.
+   */
+  private listeners: Array<[TMissionNodeEvent, () => void]> = []
+
+  /**
+   * Whether the node is pending an "node-opened" event from the server.
+   * This is used when the client requests to open a node, but the server
+   * has not yet responded.
+   */
+  private _pendingOpen: boolean = false
+  /**
+   * Whether the node is pending an "node-opened" event from the server.
+   * @note This is used when the client requests to open a node, but the server
+   * has not yet responded.
+   * @throws In setter if the node is not openable.
+   */
+  public get pendingOpen(): boolean {
+    return this._pendingOpen
+  }
+
+  /**
+   * Whether the node is pending an "action-execution-initiated" event from the server.
+   * @note This is used when the client requests to execute an action, but the server
+   * has not yet responded.
+   */
+  private _pendingExecInit: boolean = false
+  /**
+   * Whether the node is pending an "action-execution-initiated" event from the server.
+   * @node This is used when the client requests to execute an action, but the server
+   * has not yet responded.
+   * @throws In setter if the node is not executable.
+   */
+  public get pendingExecInit(): boolean {
+    return this._pendingExecInit
+  }
   /**
    * Whether the node is expanded in the `NodeStructuring` component.
    */
@@ -53,6 +99,116 @@ export default class ClientMissionNode
     return !this._expandedInMenu
   }
 
+  /**
+   * Memoized function for computing the value of `nameLineCount`.
+   * @param name The name for which to compute the line count.
+   * @returns The number of lines needed to display the name.
+   * @memoized
+   */
+  private computeNameLineCount = memoizeOne((name: string) => {
+    // Reduce any multiple spaces to a single space
+    // since the browser will do this during render.
+    name = name.replace(/ {2,}/g, ' ')
+
+    // Split the name into words.
+    let words: Array<string> = name.split(' ')
+
+    // Define various other variables.
+    let lineCount: number = 1
+    let charactersPerLine: number = ClientMissionNode.CHARACTERS_PER_LINE
+    let lineCursor: string = ''
+
+    // Loop through each word.
+    for (let word of words) {
+      // If the word is too long for one line,
+      // break the word down into multiple lines.
+      if (word.length > charactersPerLine) {
+        // Determine the number of lines the word
+        // will take up.
+        let wordLineCount: number = Math.ceil(word.length / charactersPerLine)
+        // Determine the number of lines that need
+        // to be added to the overall line count.
+        let newLinesNeeded: number = wordLineCount
+        // Decrease by one if the current line is
+        // empty, since this line can be used for
+        // the first line of the word.
+        if (lineCursor.length === 0) {
+          newLinesNeeded--
+        }
+        // Set the line cursor to the last line
+        // of the word.
+        lineCursor = word.slice(charactersPerLine * (wordLineCount - 1)) + ' '
+        // Increase the line count by the number
+        // of lines needing to be added.
+        lineCount += newLinesNeeded
+      }
+      // Else if the word plus the characters already on the line
+      // exceeds the number of characters allowed per line...
+      else if (word.length + lineCursor.length > charactersPerLine) {
+        // Start a new line of words.
+        lineCount++
+        lineCursor = word + ' '
+      }
+      // Else include the word on the current line.
+      else {
+        lineCursor += word + ' '
+      }
+    }
+
+    // Return the calculated number of lines.
+    return lineCount
+  })
+  /**
+   * The required number of lines needed to display the node's name
+   * on the mission map.
+   */
+  public get nameLineCount(): number {
+    return this.computeNameLineCount(this.name)
+  }
+
+  /**
+   * The height needed to display the node's name on the mission map.
+   */
+  public get nameNeededHeight(): number {
+    return (
+      ClientMissionNode.LINE_HEIGHT *
+      ClientMissionNode.FONT_SIZE *
+      this.nameLineCount
+    )
+  }
+
+  /**
+   * The height of the node's name on the mission map.
+   */
+  public get nameHeight(): number {
+    return Math.max(
+      ClientMissionNode.DEFAULT_NAME_NEEDED_HEIGHT,
+      this.nameNeededHeight,
+    )
+  }
+
+  /**
+   * The height of the node on the mission map.
+   */
+  public get height(): number {
+    return ClientMissionNode.VERTICAL_PADDING + this.nameHeight
+  }
+
+  /**
+   * Buttons to manage this specific node on a mission map.
+   */
+  private _buttons: TNodeButton[]
+  /**
+   * Buttons to manage this specific node on a mission map.
+   */
+  public get buttons(): TNodeButton[] {
+    return [...this._buttons]
+  }
+  public set buttons(value: TNodeButton[]) {
+    this._buttons = value
+    this.emitEvent('set-buttons')
+  }
+
   public constructor(
     mission: ClientMission,
     data: Partial<TMissionNodeJson> = MissionNode.DEFAULT_PROPERTIES,
@@ -60,9 +216,9 @@ export default class ClientMissionNode
   ) {
     super(mission, data, options)
 
-    this.mapX = 0
-    this.mapY = 0
+    this.position = new Vector2D(0, 0)
     this.depth = -1
+    this._buttons = []
   }
 
   // Implemented
@@ -121,6 +277,41 @@ export default class ClientMissionNode
     })
   }
 
+  /**
+   * Calls the callbacks of listeners for the given node event.
+   * @param event The event emitted.
+   */
+  protected emitEvent(event: TMissionNodeEvent): void {
+    // Call any matching listener callbacks
+    // or any activity listener callbacks.
+    for (let [listenerEvent, listenerCallback] of this.listeners) {
+      if (listenerEvent === event || listenerEvent === 'activity') {
+        listenerCallback()
+      }
+    }
+  }
+
+  /**
+   * Adds a listener for a node event.
+   * @param event The event for which to listen.
+   * @param callback The callback to call when the event is triggered.
+   */
+  public addEventListener(
+    event: TMissionNodeEvent,
+    callback: () => void,
+  ): void {
+    this.listeners.push([event, callback])
+  }
+
+  /**
+   * Removes a listener for a node event.
+   * @param callback The callback used for the listener.
+   */
+  public removeEventListener(callback: () => void): void {
+    // Filter out listener.
+    this.listeners = this.listeners.filter(([, h]) => h !== callback)
+  }
+
   // Implemented
   public open(options: INodeClientOpenOptions = {}): Promise<void> {
     // Parse options.
@@ -140,12 +331,38 @@ export default class ClientMissionNode
         }
         // Handle structure change.
         this.mission.handleStructureChange()
+
         // Resolve.
         resolve()
+
+        // Set pending open to false.
+        this._pendingOpen = false
+
+        // Emit event.
+        this.emitEvent('open')
       } else {
         throw new Error('Node is not openable.')
       }
     })
+  }
+
+  /**
+   * Handles node-specific, server-connection events that occur in-game.
+   * @param method The method of the request event.
+   */
+  public handleRequestMade(method: TRequestMethod): void {
+    // Handle method accordingly.
+    switch (method) {
+      case 'request-open-node':
+        this._pendingOpen = true
+        break
+      case 'request-execute-action':
+        this._pendingExecInit = true
+        break
+    }
+
+    // Emit 'request-made' event.
+    this.emitEvent('request-made')
   }
 
   // Implemented
@@ -173,6 +390,12 @@ export default class ClientMissionNode
 
     // Generate and set the node's execution.
     this._execution = new ClientActionExecution(action, data.start, data.end)
+
+    // Set "_pendingExecInit" to false.
+    this._pendingExecInit = false
+
+    // Handle node event.
+    this.emitEvent('exec-state-change')
 
     // Return execution.
     return this._execution
@@ -221,6 +444,9 @@ export default class ClientMissionNode
       // Handle structure change.
       this.mission.handleStructureChange()
     }
+
+    // Handle node event.
+    this.emitEvent('exec-state-change')
 
     // Return outcome.
     return outcome
@@ -383,7 +609,9 @@ export default class ClientMissionNode
         }
 
         this.childrenOfParent.splice(this.childrenOfParent.indexOf(this), 1)
-        this.mission.nodes.delete(this.nodeID)
+        this.mission.nodes = this.mission.nodes.filter(
+          (node) => node.nodeID !== this.nodeID,
+        )
         break
       case ENodeDeleteMethod.DeleteNodeAndShiftChildren:
         let parentOfThis: ClientMissionNode | null = this.parentNode
@@ -405,7 +633,9 @@ export default class ClientMissionNode
             parentOfThis.childNodes.indexOf(this),
             1,
           )
-          this.mission.nodes.delete(this.nodeID)
+          this.mission.nodes = this.mission.nodes.filter(
+            (node) => node.nodeID !== this.nodeID,
+          )
           this.mission.handleStructureChange()
         }
         break
@@ -417,7 +647,7 @@ export default class ClientMissionNode
       // node is created. Creating this node
       // will handle the structure change for
       // us.
-      if (this.mission.nodes.size > 0) {
+      if (this.mission.nodes.length > 0) {
         this.mission.handleStructureChange()
       } else {
         this.mission.spawnNode()
@@ -446,8 +676,8 @@ export default class ClientMissionNode
         datum,
       )
 
-      // Set the node in the missions.
-      this.mission.nodes.set(childNode.nodeID, childNode)
+      // Add the node into the mission.
+      this.mission.nodes.push(childNode)
 
       // Return node
       return childNode
@@ -467,9 +697,68 @@ export default class ClientMissionNode
     this._expandedInMenu = !this._expandedInMenu
   }
 
-  /* -- API -- */
+  /* -- static -- */
 
-  /* -- API | READ -- */
+  /**
+   * The relative width of a node on the mission map.
+   */
+  public static readonly WIDTH = 2.25 //em
+  /**
+   * The vertical padding of a node on the mission map.
+   */
+  public static readonly VERTICAL_PADDING = 0.15 //em
+  /**
+   * The relative width of a column of nodes on the mission map.
+   */
+  public static readonly COLUMN_WIDTH = 3 //em
+  /**
+   * The relative height of a row of nodes on the mission map.
+   */
+  public static readonly ROW_HEIGHT = 1.25 //em
+  /**
+   * The height of the buttons for a node on the mission map.
+   */
+  public static readonly BUTTONS_HEIGHT = 0.425 //em
+  /**
+   * The size of the font for the node name on the mission map.
+   */
+  public static readonly FONT_SIZE = 0.15 //em
+  /**
+   * The ratio of the font height to the font width.
+   */
+  public static readonly FONT_RATIO = 1.6592592593
+  /**
+   * The line height of the node name on the mission map.
+   */
+  public static readonly LINE_HEIGHT = 0.19 / ClientMissionNode.FONT_SIZE //em
+  /**
+   * The default number of lines of text to display for the node
+   * name on the mission map.
+   */
+  public static readonly DEFAULT_NAME_LINE_COUNT = 2
+  /**
+   * The default height needed to display the node name on the mission map.
+   */
+  public static readonly DEFAULT_NAME_NEEDED_HEIGHT =
+    ClientMissionNode.LINE_HEIGHT *
+    ClientMissionNode.FONT_SIZE *
+    ClientMissionNode.DEFAULT_NAME_LINE_COUNT
+  /**
+   * The excess height used to display the node name on the mission map.
+   */
+
+  /**
+   * The width of the node's name relative to the node's width.
+   */
+  public static readonly NAME_WIDTH_RATIO = 0.675
+  /**
+   * The number of characters that can fit on a single line of the node's name.
+   */
+  public static readonly CHARACTERS_PER_LINE = Math.floor(
+    ((ClientMissionNode.WIDTH * ClientMissionNode.NAME_WIDTH_RATIO) /
+      ClientMissionNode.FONT_SIZE) *
+      ClientMissionNode.FONT_RATIO,
+  )
 
   /**
    * Fetches available colors for nodes.
@@ -550,3 +839,26 @@ export interface INodeDeleteOptions {
   calledByParentDelete?: boolean // Default "false"
   deleteMethod?: ENodeDeleteMethod // Default "ENodeDeleteMethod.DeleteNodeAndChildren"
 }
+/**
+ * An event that occurs on a node, which can be listened for.
+ * @option 'activity'
+ * Triggered when any other event occurs.
+ * @option 'exec-state-change'
+ * Triggered when the following occurs:
+ * - An execution is initiated on the server.
+ * - An execution outcome is received from the server.
+ * @option 'request-made'
+ * Triggered when the following occurs:
+ * - A node is requested to be opened by the client and is awaiting a response from the server.
+ * - An action is requested to be executed by the client and is awaiting a response from the server.
+ * @option 'open'
+ * Triggered when the node is opened.
+ * @option 'set-buttons'
+ * Triggered when the buttons for the node are set.
+ */
+export type TMissionNodeEvent =
+  | 'activity'
+  | 'request-made'
+  | 'exec-state-change'
+  | 'open'
+  | 'set-buttons'

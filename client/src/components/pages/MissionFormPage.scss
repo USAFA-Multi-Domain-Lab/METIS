@@ -47,11 +47,11 @@
     margin: 0 auto;
     height: calc(100% - #{$content-vertical-padding * 2});
     padding: $content-vertical-padding $content-horizontal-padding;
-    width: calc($page-width - #{$content-horizontal-padding * 2});
+    width: calc(#{$page-width} - #{$content-horizontal-padding * 2});
 
     .MissionMap {
       height: 100%;
-      width: unset;
+      width: auto;
       box-shadow: $box-shadow-alt4;
 
       .ButtonSVGPanel {

@@ -1,0 +1,36 @@
+@import '../../mixins.scss';
+@import '../../../../../../assets/styles/config.scss';
+
+.MissionMap {
+  .Overlay {
+    box-sizing: border-box;
+    position: absolute;
+    z-index: $z-map-overlay;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba($background-alt8, 0.5);
+    border: 2px solid $color-main;
+
+    // Default font-size for HUD elements
+    // should be the root font-size.
+    font-size: 1rem;
+
+    &.Inactive {
+      // Hide if not active.
+      display: none;
+    }
+
+    > * {
+      position: absolute;
+    }
+
+    .MapModal {
+      // Center modals.
+      @include center-origin;
+      top: 50%;
+      left: 50%;
+    }
+  }
+}

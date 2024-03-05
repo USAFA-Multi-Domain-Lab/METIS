@@ -1,7 +1,8 @@
-import { useGlobalContext } from 'src/context'
 import { useEffect, useRef, useState } from 'react'
-import { v4 as uuid } from 'uuid'
+import { useGlobalContext } from 'src/context'
 import { useMountHandler } from 'src/toolbox/hooks'
+import { v4 as uuid } from 'uuid'
+import './Tooltip.scss'
 
 /* -- CONSTANTS -- */
 

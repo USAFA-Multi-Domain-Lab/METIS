@@ -1,12 +1,11 @@
 import axios from 'axios'
-import Game, { IGameJson } from '../../../shared/games'
-import ServerConnection from 'src/connect/server'
-import { IServerDataTypes, TServerData } from '../../../shared/connect/data'
+import ServerConnection from 'src/connect/servers'
 import ClientMission from 'src/missions'
-import ClientMissionNode from 'src/missions/nodes'
 import ClientMissionAction from 'src/missions/actions'
-import { TActionExecutionJSON } from '../../../shared/missions/actions/executions'
+import ClientMissionNode from 'src/missions/nodes'
 import ClientUser from 'src/users'
+import { TServerEvents } from '../../../shared/connect/data'
+import Game, { IGameJson } from '../../../shared/games'
 
 /**
  * Client instance for games. Handles client-side logic for games. Communicates with server to conduct game.
@@ -60,7 +59,7 @@ export default class GameClient extends Game<
   }
 
   /**
-   * Creates game-specific listeners for the given particpant.
+   * Creates game-specific listeners.
    */
   private addListeners(): void {
     this.server.addEventListener('node-opened', this.onNodeOpened)
@@ -72,6 +71,17 @@ export default class GameClient extends Game<
       'action-execution-completed',
       this.onActionExecutionCompleted,
     )
+  }
+
+  /**
+   * Removes game-specific listeners.
+   */
+  private removeListeners(): void {
+    this.server.clearEventListeners([
+      'node-opened',
+      'action-execution-initiated',
+      'action-execution-completed',
+    ])
   }
 
   // Implemented
@@ -87,57 +97,111 @@ export default class GameClient extends Game<
   /**
    * Opens a node.
    * @param {string} nodeID The ID of the node to be opened.
+   * @throws If the node is not in the mission associated with this game.
+   * @throws If the node is not openable.
    */
   public openNode(nodeID: string): void {
     let server: ServerConnection = this.server
+    let node: ClientMissionNode | undefined = this.mission.getNode(nodeID)
 
     // Throw error if the node is not in
     // the mission associated with this
     // game.
-    if (!this.mission.nodes.has(nodeID)) {
+    if (node === undefined) {
       throw Error('Node was not found in the mission.')
+    }
+    // If the node is not openable, throw
+    // an error.
+    if (!node.openable) {
+      throw Error('Node is not openable.')
     }
 
     // Emit a request to open the node.
-    server.emit('request-open-node', {
-      method: 'request-open-node',
-      requestID: ServerConnection.generateRequestID(),
-      nodeID: nodeID,
-    })
+    server.request(
+      'request-open-node',
+      {
+        nodeID,
+      },
+      `Opening "${node.name}".`,
+    )
+
+    // Handle request within node.
+    node.handleRequestMade('request-open-node')
   }
 
   /**
    * Executes an action.
-   * @param {string} actionID The ID of the action to be executed.
+   * @param actionID The ID of the action to be executed.
+   * @throws If the action is not in the mission associated with this game.
+   * @throws If the action's node is not executable.
    */
   public executeAction(actionID: string): void {
     let server: ServerConnection = this.server
+    let action: ClientMissionAction | undefined = this.actions.get(actionID)
 
     // Throw error if the action is not in
     // the mission associated with this
     // game.
-    if (!this.actions.has(actionID)) {
+    if (action === undefined) {
       throw Error('Action was not found in the mission.')
+    }
+    // If the action is not executable, throw
+    // an error.
+    if (!action.node.executable) {
+      throw Error('Node is not executable.')
     }
 
     // Emit a request to execute the action.
-    server.emit('request-execute-action', {
-      method: 'request-execute-action',
-      requestID: ServerConnection.generateRequestID(),
-      actionID: actionID,
-    })
+    server.request(
+      'request-execute-action',
+      {
+        actionID,
+      },
+      `Executing "${action.name}" on "${action.node.name}".`,
+    )
+
+    // Handle request within node.
+    action.node.handleRequestMade('request-execute-action')
+  }
+
+  /**
+   * Request to quit the game.
+   * @returns A promise that resolves when the game is quitted.
+   */
+  public async quit(): Promise<void> {
+    return new Promise<void>(
+      async (
+        resolve: () => void,
+        reject: (error: any) => void,
+      ): Promise<void> => {
+        try {
+          // Call API to quit the game.
+          await axios.delete(`${Game.API_ENDPOINT}/quit/`)
+
+          // Remove listeners.
+          this.removeListeners()
+
+          // Resolve the promise.
+          return resolve()
+        } catch (error) {
+          console.error('Failed to join game.')
+          console.error(error)
+          return reject(error)
+        }
+      },
+    )
   }
 
   /**
    * Handles when a node has been opened.
-   * @param {TServerData<'node-opened'>} data The data sent from the server.
+   * @param event The event emitted by the server.
    */
-  private onNodeOpened = (data: TServerData<'node-opened'>): void => {
+  private onNodeOpened = (event: TServerEvents['node-opened']): void => {
     // Extract data.
-    let { nodeID, revealedChildNodes } = data
+    let { nodeID, revealedChildNodes } = event.data
 
     // Find the node, given the ID.
-    let node: ClientMissionNode | undefined = this.mission.nodes.get(nodeID)
+    let node: ClientMissionNode | undefined = this.mission.getNode(nodeID)
 
     // Handle node not found.
     if (node === undefined) {
@@ -158,14 +222,14 @@ export default class GameClient extends Game<
 
   /**
    * Handles when action execution has been initiated.
-   * @param {TServerData<'action-execution-initiated'>} data The data sent from the server.'
+   * @param event The event emitted by the server.'
    */
   private onActionExecutionInitiated = (
-    data: IServerDataTypes['action-execution-initiated'],
+    event: TServerEvents['action-execution-initiated'],
   ): void => {
     // Extract data.
-    let executionData: NonNullable<TActionExecutionJSON> = data.execution
-    let actionID: string = executionData.actionID
+    let { execution: executionData } = event.data
+    let { actionID } = executionData
 
     // Find the action and node, given the action ID.
     let action: ClientMissionAction | undefined = this.actions.get(actionID)
@@ -191,12 +255,13 @@ export default class GameClient extends Game<
 
   /**
    * Handles when action execution has been completed.
+   * @param event The event emitted by the server.
    */
   private onActionExecutionCompleted = (
-    data: TServerData<'action-execution-completed'>,
+    event: TServerEvents['action-execution-completed'],
   ): void => {
     // Extract data.
-    let { outcome, revealedChildNodes } = data
+    let { outcome, revealedChildNodes } = event.data
     let { actionID } = outcome
 
     // Find the action given the action ID.
@@ -222,6 +287,42 @@ export default class GameClient extends Game<
     if (revealedChildNodes !== undefined) {
       this.mapActions()
     }
+  }
+
+  /**
+   * Fetches the currently joined game for the user.
+   * @note Only call this if the user has joined a game. Otherwise a 404 error will occur.
+   * @param server The current connection to the server.
+   * @returns A promise of the game client for the currently joined game.
+   */
+  public static async fetch(server: ServerConnection): Promise<GameClient> {
+    return new Promise<GameClient>(
+      async (
+        resolve: (game: GameClient) => void,
+        reject: (error: any) => void,
+      ): Promise<void> => {
+        try {
+          // Call API to join the game with
+          // the given game ID. Await the
+          // game JSON.
+          let gameJSON: IGameJson = (
+            await axios.get<IGameJson>(Game.API_ENDPOINT)
+          ).data
+
+          // Convert the game JSON into a
+          // GameClient object.
+          let game: GameClient = new GameClient(gameJSON, server)
+
+          // Resolve the promise with the
+          // game object.
+          return resolve(game)
+        } catch (error) {
+          console.error('Failed to fetch game client.')
+          console.error(error)
+          return reject(error)
+        }
+      },
+    )
   }
 
   /**
@@ -259,8 +360,9 @@ export default class GameClient extends Game<
 
   /**
    * Request to join the game with the given game ID.
-   * @param {string} gameID The ID of the game to join.
-   * @returns {Promise<GameClient>} A promise of the game client object.
+   * @param gameID The ID of the game to join.
+   * @param server The current connection to the server.
+   * @returns A promise of the game client object.
    */
   public static async join(
     gameID: string,

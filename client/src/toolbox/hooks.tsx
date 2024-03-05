@@ -1,13 +1,21 @@
-import React from 'react'
-import { useCallback, useEffect, useState } from 'react'
-import { TMetisSession } from '../../../shared/sessions'
-import { TGlobalContext, useGlobalContext } from '../context'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import ClientUser from 'src/users'
+import { TMetisSession } from '../../../shared/sessions'
+import { useGlobalContext } from '../context'
+
+/**
+ * The callback for the useEffect hook.
+ */
+type EffectsCallback = Parameters<typeof useEffect>[0]
+/**
+ * The return type for the useEffect hook callback.
+ */
+type EffectsCallbackReturned = ReturnType<EffectsCallback>
 
 /**
  * Creates a handler that will be called when the component mounts.
- * @param {(done: () => void) => void} handler The handler to call when the component mounts. Done will be passed to the handler, which should be called when the handler is done processing the mount.
- * @returns {[boolean, () => void]} A tuple containing a boolean indicating whether the mount has been handled and a function that can be called to remount the component.
+ * @param handler The handler to call when the component mounts. Done will be passed to the handler, which should be called when the handler is done processing the mount.
+ * @returns A tuple containing a boolean indicating whether the mount has been handled and a function that can be called to remount the component.
  */
 export function useMountHandler(
   handler: (done: () => void) => void,
@@ -28,6 +36,24 @@ export function useMountHandler(
 }
 
 /**
+ * Creates a handler that will be called when the component unmounts.
+ * @param handler The handler that is called upon unmount.
+ * @returns Whether the component will unmount, changes after handler is called.
+ */
+export function useUnmountHandler(handler: () => void): boolean {
+  const unmounted = useRef<boolean>(false)
+
+  useEffect(() => {
+    return () => {
+      handler()
+      unmounted.current = true
+    }
+  }, [])
+
+  return unmounted.current
+}
+
+/**
  * Requires that a session be present in the application state. If no session is present, the user will be redirected to the AuthPage.
  */
 export function useRequireSession(): [NonNullable<TMetisSession<ClientUser>>] {
@@ -35,11 +61,11 @@ export function useRequireSession(): [NonNullable<TMetisSession<ClientUser>>] {
   const [session] = globalContext.session
   // todo: remove (require session)
   // const session = null
-  const { goToPage } = globalContext.actions
+  const { navigateTo } = globalContext.actions
 
   useEffect(() => {
     if (session === null) {
-      goToPage('AuthPage', {
+      navigateTo('AuthPage', {
         returningPagePath: 'HomePage',
         returningPageProps: {},
       })
@@ -53,41 +79,6 @@ export function useRequireSession(): [NonNullable<TMetisSession<ClientUser>>] {
   // Return session.
   return [session]
 }
-
-// todo: remove (require session)
-// /**
-//  * This is a wrapper for a component that requires a session to be present in the application state.
-//  * @param component The child component to render if a session is present.
-//  * @param options.redirect If true, the user will be redirected to the AuthPage if no session is present.
-//  */
-// export function ComponentRequiresSession<TProps extends {}>(
-//   component: (
-//     props: TProps,
-//     session: NonNullable<TMetisSession<ClientUser>>,
-//   ) => JSX.Element | null,
-//   options?: { redirect?: boolean },
-// ): (props: TProps) => JSX.Element | null {
-//   return (props: TProps): JSX.Element | null => {
-//     const globalContext = useGlobalContext()
-//     const [session] = globalContext.session
-//     const { goToPage } = globalContext.actions
-
-//     useEffect(() => {
-//       if (session === null && options?.redirect) {
-//         goToPage('AuthPage', {
-//           returningPagePath: 'HomePage',
-//           returningPageProps: {},
-//         })
-//       }
-//     }, [session === null])
-
-//     if (session === null) {
-//       return null
-//     } else {
-//       return component(props, session)
-//     }
-//   }
-// }
 
 /**
  * Takes in a components props and an object defining default props. If any property of default props is undefined for the corresponding value in props, the default value will be assigned in props.
@@ -157,6 +148,73 @@ export function useListComponent<
     ),
     [Component, propsList, keyFrom],
   )
+}
+
+/**
+ * Automatically adds and removes an event listener to the given
+ * target.
+ *
+ * The event listener will be automatically added to a
+ * new target if the target changes, and the event listener will
+ * be automatically removed from the old target also. The listener
+ * will be automatically removed from the target when the component
+ * unmounts.
+ * @param target The target to add the event listener to.
+ * @param methods The event type to listen for.
+ * @param callback The callback to call when the event is fired.
+ */
+export function useEventListener<TEventMethod extends string>(
+  target: TEventListenerTarget<TEventMethod> | null,
+  methods: TEventMethod | TEventMethod[],
+  callback: () => void,
+  dependencies: React.DependencyList = [],
+): void {
+  /**
+   * Cached callback function.
+   */
+  const listener = useCallback(() => {
+    callback()
+  }, [target, ...dependencies])
+
+  /* -- effect -- */
+
+  // Register the event listener, reregistering
+  // if the callback ever changes.
+  useEffect(() => {
+    // Convert methods to an array, if
+    // not already..
+    methods = Array.isArray(methods) ? methods : [methods]
+
+    // Add listener to the new target.
+    for (let method of methods) target?.addEventListener(method, listener)
+
+    // Return clean up function for
+    // removing the listener when done.
+    return () => {
+      target?.removeEventListener(listener)
+    }
+  }, [listener])
+}
+
+/**
+ * Creates CSS inline styling that can be used in a JSX element.
+ * @param construct A function that will be called with the styling object as an argument.
+ * The function should modify the styling object to add styling properties.
+ * @param initialStyle The initial styling before any styling is added by the construct function.
+ * @returns The resulting inline styling.
+ */
+export function useInlineStyling(
+  construct: (style: React.CSSProperties) => void,
+  initialStyle: React.CSSProperties = {},
+): React.CSSProperties {
+  let style: React.CSSProperties = { ...initialStyle }
+  construct(style)
+  return style
+}
+
+export type TEventListenerTarget<TEventMethod extends string> = {
+  addEventListener: (eventName: TEventMethod, handler: () => void) => any
+  removeEventListener: (handler: () => void) => any
 }
 
 /**

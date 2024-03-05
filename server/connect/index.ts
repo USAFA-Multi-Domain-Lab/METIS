@@ -4,6 +4,7 @@ import MetisSession from 'metis/server/sessions'
 import ClientConnection from 'metis/server/connect/clients'
 import { TMetisRouterMap } from 'metis/server/http/router'
 import expressWs from 'express-ws'
+import GameServer from '../games'
 
 const routerMap: TMetisRouterMap = (
   router: expressWs.Router,
@@ -29,7 +30,22 @@ const routerMap: TMetisRouterMap = (
 
     // Create a client connection object
     // with the socket and session.
-    new ClientConnection(socket, session, { disconnectExisting })
+    let connection = new ClientConnection(socket, session, {
+      disconnectExisting,
+    })
+
+    // If the session indicates that the user is
+    // currently in a game, find the game and update
+    // the connection for that participant.
+    if (session.gameID !== null) {
+      // Get the game.
+      let game = GameServer.get(session.gameID)
+
+      // If the game exists, update the connection.
+      if (game !== undefined) {
+        game.handleConnectionChange(connection)
+      }
+    }
   })
 
   done()

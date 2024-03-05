@@ -1,11 +1,14 @@
 import { useEffect } from 'react'
+import ServerConnection from 'src/connect/servers'
 import { useGlobalContext } from 'src/context'
+import GameClient from 'src/games'
 import ClientMissionNode from 'src/missions/nodes'
 import ClientUser from 'src/users'
 import { TMetisSession } from '../../../shared/sessions'
 import Notification from '../notifications'
 import './App.scss'
 import Confirmation from './content/communication/Confirmation'
+import ConnectionStatus from './content/communication/ConnectionStatus'
 import NotificationBubble from './content/communication/NotificationBubble'
 import Prompt from './content/communication/Prompt'
 import {
@@ -78,7 +81,8 @@ function App(props: {}): JSX.Element | null {
 
   const [session] = globalContext.session
   const [appMountHandled, setAppMountHandled] = globalContext.appMountHandled
-  const [tooltip, setTooltip] = globalContext.tooltip
+  const [server] = globalContext.server
+  const [tooltip] = globalContext.tooltip
   const [tooltipDescription, setTooltipDescription] =
     globalContext.tooltipDescription
   const [_, setMissionNodeColors] = globalContext.missionNodeColors
@@ -98,7 +102,7 @@ function App(props: {}): JSX.Element | null {
     finishLoading,
     handleError,
     syncSession,
-    goToPage,
+    navigateTo,
     connectToServer,
   } = globalContext.actions
 
@@ -173,13 +177,14 @@ function App(props: {}): JSX.Element | null {
         }
 
         // Sync session.
+        beginLoading('Syncing session...')
         let session: TMetisSession<ClientUser> = await syncSession()
 
         // If there is no established session,
         // navigate to the auth page to have
         // the visitor login.
         if (session === null) {
-          goToPage('AuthPage', {
+          navigateTo('AuthPage', {
             returningPagePath: 'HomePage',
             returningPageProps: {},
           })
@@ -188,29 +193,26 @@ function App(props: {}): JSX.Element | null {
         // with the server.
         else {
           // Connect to the server.
-          await connectToServer()
+          beginLoading('Connecting to server...')
+          let server: ServerConnection = await connectToServer()
 
           // If the sessioned user needs a password
           // reset, then navigate to the user
           // reset page.
           if (session.user.needsPasswordReset) {
-            goToPage('UserResetPage', {
+            navigateTo('UserResetPage', {
               user: session.user,
             })
           }
           // Else, if the sessioned user is in a game,
           // then switch to the game page.
-          else if (session.inGame) {
-            goToPage('GamePage', {})
+          else if (session.gameID !== null) {
+            let game: GameClient = await GameClient.fetch(server)
+            navigateTo('GamePage', { game })
           }
           // Else, go to the home page.
           else {
-            // goToPage('HomePage', {})
-
-            // Temporary: Go to the mission form page.
-            goToPage('MissionFormPage', {
-              missionID: '65455185656e2806a9ae2f07',
-            })
+            navigateTo('HomePage', {})
           }
         }
 
@@ -296,6 +298,7 @@ function App(props: {}): JSX.Element | null {
       {prompt !== null ? <Prompt {...prompt} /> : null}
       <ErrorPage {...pageProps} />
       <LoadingPage {...pageProps} />
+      <ConnectionStatus />
       {renderCurrentPage()}
     </div>
   )

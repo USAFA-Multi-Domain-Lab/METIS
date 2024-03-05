@@ -1,4 +1,9 @@
-import { TServerData, TClientData } from 'metis/connect/data'
+import {
+  TClientEvents,
+  TClientMethod,
+  TRequestEvent,
+  TServerEvents,
+} from './data'
 
 /**
  * An abstract class representing an error sent in a web socket connection from one party to another.
@@ -32,7 +37,7 @@ export interface IServerEmittedErrorOptions {
   /**
    * The request that caused the error, if any.
    */
-  request?: TServerData<'error'>['request']
+  request?: TRequestEvent<TClientMethod>
 }
 
 /**
@@ -42,7 +47,7 @@ export class ServerEmittedError extends WSEmittedError {
   /**
    * The request that caused the error, if any.
    */
-  public request?: TServerData<'error'>['request']
+  public request?: TRequestEvent<TClientMethod>
 
   public constructor(code: number, options: IServerEmittedErrorOptions = {}) {
     // Extract options.
@@ -68,7 +73,7 @@ export class ServerEmittedError extends WSEmittedError {
    * Converts this error to a JSON payload.
    * @returns {TServerData<'error'>} The JSON representation of this error.
    */
-  public toJSON(): TServerData<'error'> {
+  public toJSON(): TServerEvents['error'] {
     return {
       method: 'error',
       code: this.code,
@@ -137,7 +142,7 @@ export class ServerEmittedError extends WSEmittedError {
     code,
     message,
     request,
-  }: TServerData<'error'>): ServerEmittedError {
+  }: TServerEvents['error']): ServerEmittedError {
     return new ServerEmittedError(code, { message, request })
   }
 }
@@ -150,22 +155,26 @@ export class ClientEmittedError extends WSEmittedError {
    * Converts this error to a JSON payload.
    * @returns {TClientData<'error'>} The JSON representation of this error.
    */
-  public toJSON(): TClientData<'error'> {
+  public toJSON(): TClientEvents['error'] {
     return {
       method: 'error',
       code: this.code,
       message: this.message,
+      data: {},
     }
   }
 
   /**
    * Converts JSON data to a new ClientEmittedError object.
-   * @param {TClientData<'error'>} json The JSON to convert.
-   * @returns {ClientEmittedError} The new ClientEmittedError object.
-   * @throws {Error} If the JSON data is invalid.
+   * @param json The JSON to convert.
+   * @returns The new ClientEmittedError object.
+   * @throws If the JSON data is invalid.
    */
-  public static fromJSON(json: TClientData<'error'>): ClientEmittedError {
-    return new ClientEmittedError(json.code, json.message)
+  public static fromJSON({
+    code,
+    message,
+  }: TClientEvents['error']): ClientEmittedError {
+    return new ClientEmittedError(code, message)
   }
 }
 

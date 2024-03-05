@@ -1,0 +1,99 @@
+import { useMemo } from 'react'
+import { Vector2D } from '../../../../../../../shared/toolbox/space'
+import './Line.scss'
+
+/**
+ * A plain line graphic to render on a mission map scene.
+ */
+export default function Line({
+  direction,
+  start,
+  length,
+}: TLine_P): JSX.Element | null {
+  /* -- computed -- */
+
+  /**
+   * The inline styles for the root element.
+   * @memoized
+   */
+  const rootStyle = useMemo((): React.CSSProperties => {
+    // Gather details.
+    let lineThickness: number = 0.05 //em
+    let halfLineThickness: number = lineThickness / 2 //em
+    let minLineThickness: number = 2 //px
+    let halfMinLineThickness: number = minLineThickness / 2 //px
+    let x: number = start.x
+    let y: number = start.y
+    let style: React.CSSProperties = {}
+
+    // Calculate the positioning and sizing based
+    // on the direction of the line.
+    switch (direction) {
+      case 'horizontal':
+        // Offset y by half the line thickness
+        // to center the line.
+        y -= halfLineThickness
+        // Add sizing styles.
+        style.width = `${length}em`
+        style.height = `max(${lineThickness}em, ${minLineThickness}px)`
+        break
+      case 'vertical':
+        // Offset x by half the line thickness
+        // to center the line.
+        x -= halfLineThickness
+        // Add sizing styles.
+        style.width = `max(${lineThickness}em, ${minLineThickness}px)`
+        style.height = `${length}em`
+        // Add slight margin and padding to connect
+        // any intersecting  horizontal and vertical
+        // lines seamlessly.
+        style.marginTop = `min(-${halfLineThickness}em, -${halfMinLineThickness}px)`
+        style.padding = `max(${halfLineThickness}em, ${halfMinLineThickness}px) 0`
+        break
+    }
+
+    // Add the positioning styles
+    style.left = `${x}em`
+    style.top = `${y}em`
+
+    // Return the style.
+    return style
+  }, [
+    // ! Recomputes when:
+    // The direction changes.
+    direction,
+    // The starting position changes.
+    start.toString(),
+    // The length changes.
+    length,
+  ])
+
+  /* -- render -- */
+
+  return <div className='Line' style={rootStyle}></div>
+}
+
+/**
+ * Props for `Line` component.
+ */
+export type TLine_P = {
+  /**
+   * The direction of the line.
+   */
+  direction: TLineDirection
+  /**
+   * The start position of the line.
+   */
+  start: Vector2D
+  /**
+   * The length of the line.
+   */
+  length: number
+}
+
+/**
+ * The direction of a line.
+ * @option 'horizontal' The line only travels horizontally.
+ * @option 'vertical' The line only travels vertically.
+ */
+export type TLineDirection = 'horizontal' | 'vertical'

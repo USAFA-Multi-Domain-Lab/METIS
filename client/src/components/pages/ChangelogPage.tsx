@@ -18,7 +18,7 @@ export default function IChangelogPage({}: IChangelogPage): JSX.Element | null {
 
   const globalContext = useGlobalContext()
   const [session] = globalContext.session
-  const { beginLoading, finishLoading, handleError, goToPage, logout } =
+  const { beginLoading, finishLoading, handleError, navigateTo, logout } =
     globalContext.actions
 
   /* -- COMPONENT STATE -- */
@@ -57,7 +57,7 @@ export default function IChangelogPage({}: IChangelogPage): JSX.Element | null {
             text: 'Back to home',
             key: 'back-to-home',
             handleClick: () => {
-              goToPage('HomePage', {})
+              navigateTo('HomePage', {})
             },
             visible: true,
           },
@@ -72,7 +72,7 @@ export default function IChangelogPage({}: IChangelogPage): JSX.Element | null {
             visible: displayLogout,
           },
         ]}
-        brandingCallback={() => goToPage('HomePage', {})}
+        brandingCallback={() => navigateTo('HomePage', {})}
         brandingTooltipDescription='Go home.'
       />
       <div className='Changelog'>

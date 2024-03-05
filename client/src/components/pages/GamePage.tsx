@@ -1,86 +1,90 @@
-import { useEffect, useState } from 'react'
-import OutputPanel from '../content/game/OutputPanel'
-import './GamePage.scss'
-import ExecuteNodePath from '../content/game/ExecuteNodePath'
-import { IPage } from '../App'
+import { useState } from 'react'
 import { IConsoleOutput } from 'src/components/content/game/ConsoleOutput'
+import { useGlobalContext, useNavigationMiddleware } from 'src/context'
 import GameClient from 'src/games'
-import { useGlobalContext } from 'src/context'
-import { useMountHandler } from 'src/toolbox/hooks'
 import ClientMission from 'src/missions'
 import ClientMissionNode from 'src/missions/nodes'
-import ClientMissionAction from 'src/missions/actions'
+import { compute } from 'src/toolbox'
+import { useMountHandler } from 'src/toolbox/hooks'
 import MapToolbox from '../../../../shared/toolbox/maps'
+import { IPage } from '../App'
+import OutputPanel from '../content/game/OutputPanel'
+import StatusBar from '../content/game/StatusBar'
+import MissionMap from '../content/game/mission-map'
+import ActionExecModal from '../content/game/mission-map/ui/overlay/modals/ActionExecModal'
 import Navigation from '../content/general-layout/Navigation'
 import {
   EPanelSizingMode,
   PanelSizeRelationship,
   ResizablePanel,
 } from '../content/general-layout/ResizablePanels'
-import MissionMap from '../content/game/MissionMap'
-import NodeActions from '../content/game/NodeActions'
+import './GamePage.scss'
 
 export interface IGamePage extends IPage {
   game: GameClient
 }
 
-// This is the number of times per
-// second that the game updates.
-const GAME_TICK_RATE: number = 20
-
 // This will render a dashboard with a radar
 // on it, indicating air traffic passing by.
 export default function GamePage(props: IGamePage): JSX.Element | null {
-  /* -- PROPS -- */
+  /* -- props -- */
 
   let game: GameClient = props.game
   let mission: ClientMission = game.mission
 
-  /* -- GLOBAL CONTEXT -- */
+  console.log(game.gameID)
+
+  /* -- global-context -- */
 
   const globalContext = useGlobalContext()
-  const { goToPage, finishLoading, notify, logout, forceUpdate, confirm } =
+  const { navigateTo, finishLoading, notify, logout, confirm, handleError } =
     globalContext.actions
 
-  /* -- STATE -- */
+  /* -- state -- */
 
-  const [selectedNode, selectNode] = useState<ClientMissionNode | null>(null)
-  const [selectedAction, selectAction] = useState<ClientMissionAction | null>(
+  const [nodeToExecute, setNodeToExecute] = useState<ClientMissionNode | null>(
     null,
   )
 
-  /* -- VARIABLES -- */
+  /* -- effects -- */
 
-  // Variables that determine whether or not
-  // to display various components.
-  let displayNodeActions: boolean =
-    selectedNode !== null && selectedAction === null
-  let displayExecuteNodePath: boolean =
-    selectedNode !== null && selectedAction !== null
+  // Add navigation middleware to properly
+  // quit the game before the user navigates
+  // away.
+  useNavigationMiddleware((to: string, next) => {
+    confirm(
+      'Are you sure you want to quit?',
+      async (concludeAction: () => void) => {
+        try {
+          await game.quit()
+          concludeAction()
+          next()
+        } catch (error) {
+          handleError({
+            message: 'Failed to quit game.',
+            notifyMethod: 'bubble',
+          })
+          concludeAction()
+        }
+      },
+      {
+        buttonConfirmText: 'Yes',
+        buttonCancelText: 'No',
+      },
+    )
+  })
+
+  /* -- variables -- */
 
   // Class names for various components.
-  let className: string = 'GamePage Page'
-  let resourcesClassName: string = 'Resources'
-
+  let rootClassList: string[] = ['GamePage', 'Page']
+  let resourcesClassList: string[] = ['Resources']
   // Dynamic (default) sizing of the output panel.
   let panel2DefaultSize: number = 400
-
   // The current aspect ratio of the window.
   let currentAspectRatio: number = window.innerWidth / window.innerHeight
 
-  /* -- FUNCTIONS -- */
-
-  // This will loop the game,
-  // updating at the given tick
-  // rate.
-  let loop: () => void = () => {
-    setTimeout(() => {
-      try {
-        forceUpdate()
-        loop()
-      } catch (error) {}
-    }, 1000 / GAME_TICK_RATE)
-  }
+  /* -- functions -- */
 
   /**
    * Outputs to the in-browser console.
@@ -94,9 +98,7 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
    * Handles the selection of a node in the mission map by the user.
    * @param {ClientMissionNode} node The node that was selected.
    */
-  const handleNodeSelection = async (
-    node: ClientMissionNode,
-  ): Promise<void> => {
+  const onNodeSelect = async (node: ClientMissionNode): Promise<void> => {
     // Logic to send the pre-execution text to the output panel.
     if (node.preExecutionText !== '' && node.preExecutionText !== null) {
       let output: IConsoleOutput = OutputPanel.renderPreExecutionOutput(node)
@@ -128,100 +130,24 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
       }
       // Else, select the node.
       else {
-        selectNode(node)
-
-        // If the node has only one action,
-        // preselect that action as well.
-        if (node.actions.size === 1) {
-          selectAction(Array.from(node.actions.values())[0])
-        }
-
-        // Force a state update.
-        forceUpdate()
+        setNodeToExecute(node)
       }
     }
   }
 
-  /**
-   * Clears the selected node and action.
-   */
-  const clearSelections = (): void => {
-    selectNode(null)
-    selectAction(null)
-  }
-
-  /**
-   * Renders the `NodeActions` prompt componenent conditionally based
-   * on whether there is a selected node.
-   */
-  const renderNodeActions = (): JSX.Element | null => {
-    if (selectedNode !== null) {
-      return (
-        <NodeActions
-          isOpen={displayNodeActions}
-          node={selectedNode}
-          game={game}
-          handleActionSelectionRequest={selectAction}
-          handleCloseRequest={clearSelections}
-        />
-      )
-    } else {
-      return null
-    }
-  }
-
-  /**
-   * Renders the `ExecuteNodePath` prompt componenent conditionally based
-   * on whether there is a selected node and action.
-   */
-  const renderExecuteNodePath = (): JSX.Element | null => {
-    if (selectedNode !== null && selectedAction !== null) {
-      return (
-        <ExecuteNodePath
-          isOpen={displayExecuteNodePath}
-          action={selectedAction}
-          game={game}
-          outputToConsole={outputToConsole}
-          handleExecutionRequest={() => {
-            if (selectedAction) {
-              game.executeAction(selectedAction.actionID)
-            }
-          }}
-          handleCloseRequest={clearSelections}
-          handleGoBackRequest={() => {
-            if (selectedNode && selectedNode.actions.size > 1) {
-              selectNode(selectedNode)
-              selectAction(null)
-            }
-          }}
-        />
-      )
-    } else {
-      return null
-    }
-  }
-
-  /* -- EFFECTS -- */
+  /* -- effects -- */
 
   useMountHandler((done) => {
     finishLoading()
-    loop()
     done()
   })
 
-  // Equivalent of componentWillUnmount.
-  useEffect(() => {
-    return () => {
-      loop = () => {}
-    }
-  }, [])
-
-  /* -- PRE-RENDER-PROCESSING -- */
+  /* -- pre-rendering-processing -- */
 
   // If the mission has no resources left,
   // add the red alert class to the resources.
   if (game.resources <= 0) {
-    resourcesClassName += ' RedAlert'
+    resourcesClassList.push('RedAlert')
   }
 
   // If the aspect ratio is greater than or equal to 16:9,
@@ -232,11 +158,30 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
     panel2DefaultSize = window.innerWidth * 0.4
   }
 
-  /* -- RENDER -- */
+  /* -- render -- */
+
+  const overlayContent = compute((): JSX.Element | undefined => {
+    // If there is a selected node and not
+    // a selected action, render a prompt to
+    // select an action for the node.
+    if (nodeToExecute) {
+      return (
+        <ActionExecModal
+          node={nodeToExecute}
+          game={game}
+          close={() => setNodeToExecute(null)}
+        />
+      )
+    }
+    // Else, don't render any overlay content.
+    else {
+      return undefined
+    }
+  })
 
   // Return the rendered component.
   return (
-    <div className={className}>
+    <div className={rootClassList.join(' ')}>
       {
         // -- navigation --
       }
@@ -246,7 +191,7 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
             text: 'Back to selection',
             key: 'back-to-selection',
             handleClick: () => {
-              goToPage('HomePage', {})
+              navigateTo('HomePage', {})
             },
             visible: true,
           },
@@ -261,7 +206,7 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
             visible: true,
           },
         ]}
-        brandingCallback={() => goToPage('HomePage', {})}
+        brandingCallback={() => navigateTo('HomePage', {})}
         brandingTooltipDescription='Go home.'
       />
       {
@@ -269,13 +214,11 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
       }
       <div className='Content'>
         <div className='TopBar'>
-          <div className={resourcesClassName}>
+          <div className={resourcesClassList.join(' ')}>
             Resources remaining: {game.resources}
-            <span style={{ display: 'inline-block', width: '40px' }}></span>
-            Game ID: {game.gameID}
           </div>
+          <StatusBar />
         </div>
-
         <PanelSizeRelationship
           sizingMode={EPanelSizingMode.Panel1_Auto__Panel2_Defined}
           initialDefinedSize={panel2DefaultSize}
@@ -283,75 +226,11 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
             ...ResizablePanel.defaultProps,
             minSize: 400,
             render: () => (
-              <>
-                <MissionMap
-                  mission={mission}
-                  missionAjaxStatus={'Loaded'}
-                  handleNodeSelection={handleNodeSelection}
-                  // handleNodePathExitRequest={mission.enableAllNodes}
-                  // grayOutExitNodePathButton={!mission.hasDisabledNodes}
-                  applyNodeClassName={(node: ClientMissionNode) => {
-                    let className: string = ''
-
-                    if (node.isOpen) {
-                      className += ' opened'
-                    }
-
-                    // if (!node.highlighted) {
-                    //   className += ' faded'
-                    // }
-
-                    return className
-                  }}
-                  renderNodeTooltipDescription={(node: ClientMissionNode) => {
-                    let description: string = node.description
-
-                    // // This creates the tooltip hover over effect
-                    // // that displays the description of the node
-                    // // after it has been executed.
-                    // if (node.executable && node.executed) {
-                    //   description =
-                    //     `* Action executed: "${node.selectedAction?.name}"\n` +
-                    //     `* Executed node in ${
-                    //       (node.selectedAction?.processTime as number) / 1000
-                    //     } second(s)\n` +
-                    //     `* Chance of success: ${
-                    //       (node.selectedAction?.successChance as number) * 100
-                    //     }%\n` +
-                    //     `* Resources used: ${node.selectedAction?.resourceCost} resource(s) \n` +
-                    //     `* Description: ${node.selectedAction?.description}`
-                    // }
-
-                    // // This creates the tooltip hover over effect
-                    // // that displays the description of the node
-                    // // while it is executing.
-                    // if (
-                    //   node.executionState === 'executing' &&
-                    //   node.description !== '<p><br></p>'
-                    // ) {
-                    //   description =
-                    //     `* Time remaining: ${node.formatTimeRemaining(
-                    //       false,
-                    //     )} \n` + `* Description: ${node.description}`
-                    // }
-                    // // If the node is executing and the description is empty,
-                    // // then the description will be replaced with the time
-                    // // remaining only.
-                    // else if (
-                    //   node.executionState === 'executing' &&
-                    //   node.description === '<p><br></p>'
-                    // ) {
-                    //   description = `* Time remaining: ${node.formatTimeRemaining(
-                    //     false,
-                    //   )}`
-                    // }
-
-                    return description
-                  }}
-                />
-                {renderNodeActions()}
-                {renderExecuteNodePath()}
-              </>
+              <MissionMap
+                mission={mission}
+                onNodeSelect={onNodeSelect}
+                overlayContent={overlayContent}
+              />
             ),
           }}
           panel2={{
@@ -364,4 +243,16 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
       </div>
     </div>
   )
+}
+
+/* -- types -- */
+
+/**
+ * Prop type for `GamePage`.
+ */
+export interface IGamePage extends IPage {
+  /**
+   * The game client to use on the page.
+   */
+  game: GameClient
 }

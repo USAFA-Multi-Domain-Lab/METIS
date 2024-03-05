@@ -1,0 +1,29 @@
+// Makes object in the scene have a
+// origin with a centered x. This helps center
+// positioning along the x-axis
+// (Useful in conjunction with "left: 50%" to center nested-objects).
+@mixin center-origin-x {
+  transform: translateX(-50%);
+}
+
+// Makes object in the scene have a
+// origin with a centered y. This helps center
+// positioning along the y-axis
+// (Useful in conjunction with "top: 50%" to center nested-objects).
+@mixin center-origin-y {
+  transform: translateY(-50%);
+}
+
+// Makes an object in the scene have a
+// origin with a centered x and y. This helps center
+// positioning along the x and y-axis
+// (Useful in conjunction with "left: 50%" and "top: 50%" to center nested-objects).
+@mixin center-origin {
+  transform: translate(-50%, -50%);
+}
+
+// Makes an object in the scene have a
+// no center origin.
+@mixin uncentered-origin {
+  transform: unset;
+}

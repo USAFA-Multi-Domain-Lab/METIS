@@ -1,13 +1,13 @@
+import { AxiosError } from 'axios'
 import { useState } from 'react'
+import { useGlobalContext } from 'src/context'
+import { useMountHandler, useRequireSession } from 'src/toolbox/hooks'
+import ClientUser from 'src/users'
 import { IPage } from '../App'
 import CreateUserEntry from '../content/edit-user/CreateUserEntry'
 import EditUserEntry from '../content/edit-user/EditUserEntry'
 import Navigation from '../content/general-layout/Navigation'
 import './UserFormPage.scss'
-import { useMountHandler, useRequireSession } from 'src/toolbox/hooks'
-import { useGlobalContext } from 'src/context'
-import { AxiosError } from 'axios'
-import ClientUser from 'src/users'
 
 export interface IUserFormPage extends IPage {
   // If this is null, then a new user is being created.
@@ -26,7 +26,7 @@ export default function UserFormPage(props: IUserFormPage): JSX.Element | null {
     finishLoading,
     handleError,
     notify,
-    goToPage,
+    navigateTo,
     confirm,
     logout,
   } = globalContext.actions
@@ -137,14 +137,14 @@ export default function UserFormPage(props: IUserFormPage): JSX.Element | null {
   // home page.
   const goHome = (): void => {
     if (!areUnsavedChanges) {
-      goToPage('HomePage', {})
+      navigateTo('HomePage', {})
     } else {
       confirm(
         'You have unsaved changes. What do you want to do with them?',
         async (concludeAction: () => void) => {
           try {
             await save()
-            goToPage('HomePage', {})
+            navigateTo('HomePage', {})
             concludeAction()
           } catch (error: any) {
             concludeAction()
@@ -152,7 +152,7 @@ export default function UserFormPage(props: IUserFormPage): JSX.Element | null {
         },
         {
           handleAlternate: (concludeAction: () => void) => {
-            goToPage('HomePage', {})
+            navigateTo('HomePage', {})
             concludeAction()
           },
           pendingMessageUponConfirm: 'Saving...',

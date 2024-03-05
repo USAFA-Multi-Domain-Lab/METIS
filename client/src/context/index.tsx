@@ -1,17 +1,20 @@
 import React, { ReactNode, useState } from 'react'
-import ServerConnection from 'src/connect/server'
-import { TMetisSession } from '../../../shared/sessions'
-import ObjectToolbox, { AnyObject } from '../../../shared/toolbox/objects'
 import { TAppError, TAppErrorNotifyMethod } from 'src/components/App'
-import Notification from 'src/notifications'
 import Confirmation, {
   IConfirmation,
 } from 'src/components/content/communication/Confirmation'
+import { message as connectionStatusMessage } from 'src/components/content/communication/ConnectionStatus'
 import Prompt, { IPrompt } from 'src/components/content/communication/Prompt'
-import { ServerEmittedError } from '../../../shared/connect/errors'
 import { IButtonText } from 'src/components/content/user-controls/ButtonText'
 import { IAuthPageSpecific } from 'src/components/pages/AuthPage'
+import ServerConnection from 'src/connect/servers'
+import Notification from 'src/notifications'
+import { useMountHandler, useUnmountHandler } from 'src/toolbox/hooks'
 import ClientUser from 'src/users'
+import { ServerEmittedError } from '../../../shared/connect/errors'
+import { TMetisSession } from '../../../shared/sessions'
+import ObjectToolbox, { AnyObject } from '../../../shared/toolbox/objects'
+import StringToolbox from '../../../shared/toolbox/strings'
 
 /**
  * The values available in the global context.
@@ -31,7 +34,6 @@ export type TGlobalContextValues = {
   tooltip: React.RefObject<HTMLDivElement>
   tooltipDescription: string
   notifications: Notification[]
-  postLoadNotifications: Notification[]
   confirmation: IConfirmation | null
   prompt: IPrompt | null
   missionNodeColors: string[]
@@ -52,7 +54,7 @@ export type TGlobalContextActions = {
    * @param pagePath The path of the page to go to.
    * @param pageProps The props to pass to the destination page.
    */
-  goToPage: (pagePath: string, pageProps: AnyObject) => void
+  navigateTo: (pagePath: string, pageProps: AnyObject) => void
   /**
    * This switching the user to the loading page until
    * the loading has been ended by the finishLoading
@@ -176,6 +178,14 @@ export interface INotifyOptions {
 }
 
 /**
+ * Middleware that is run during navigation between pages.
+ * @note If `next` is not called, the navigation will be aborted.
+ * @param to The destination of the navigation event.
+ * @param next Proceed to the next navigation middleware.
+ */
+export type TNavigationMiddleware = (to: string, next: () => void) => void
+
+/**
  * The default values of the global context state.
  */
 const GLOBAL_CONTEXT_VALUES_DEFAULT: TGlobalContextValues = {
@@ -193,11 +203,16 @@ const GLOBAL_CONTEXT_VALUES_DEFAULT: TGlobalContextValues = {
   tooltip: React.createRef<HTMLDivElement>(),
   tooltipDescription: '',
   notifications: [],
-  postLoadNotifications: [],
   confirmation: null,
   prompt: null,
   missionNodeColors: [],
 }
+
+/**
+ * Delay in milliseconds before the message is cleared after the connection
+ * has been reopened.
+ */
+const CONNECT_MESSAGE_CLEAR_DELAY = 3000
 
 /**
  * The default value of the global context passed in the
@@ -216,6 +231,14 @@ const globalContextDefault: TGlobalContext = ObjectToolbox.map(
  */
 const globalReactContext: React.Context<TGlobalContext> =
   React.createContext(globalContextDefault)
+
+/**
+ * Cache of middleware used for navigation events.
+ */
+const navigationMiddleware: Map<string, TNavigationMiddleware> = new Map<
+  string,
+  TNavigationMiddleware
+>()
 
 /**
  * Used as a hook in the GlobalContextProvider component to populate the context with the state before supplying it to consumers.
@@ -290,11 +313,17 @@ const useGlobalContextDefinition = (context: TGlobalContext) => {
   const [tooltip, setTooltip] = context.tooltip
   const [tooltipDescription, setTooltipDescription] = context.tooltipDescription
   const [notifications, setNotifications] = context.notifications
-  const [postLoadNotifications, setPostLoadNotifications] =
-    context.postLoadNotifications
   const [confirmation, setConfirmation] = context.confirmation
   const [prompt, setPrompt] = context.prompt
   const [missionNodeColors, setMissionNodeColors] = context.missionNodeColors
+
+  /* -- PRIVATE STATE -- */
+
+  const [postLoadNotifications, setPostLoadNotifications] = useState<
+    Notification[]
+  >([])
+  const [initialConnectionFailed, setInitialConnectionFailed] =
+    useState<boolean>(false)
 
   /* -- LOCAL FUNCTIONS -- */
 
@@ -316,9 +345,7 @@ const useGlobalContextDefinition = (context: TGlobalContext) => {
     forceUpdate: () => {
       setForcedUpdateCounter(forcedUpdateCounter + 1)
     },
-    goToPage: (pagePath: string, pageProps: AnyObject) => {
-      const { confirm } = context.actions
-
+    navigateTo: (pagePath: string, pageProps: AnyObject) => {
       // Actually switches the page. Called after any confirmations.
       const realizePageSwitch = (): void => {
         // Display to the user that the
@@ -346,35 +373,33 @@ const useGlobalContextDefinition = (context: TGlobalContext) => {
         }, PAGE_SWITCH_MIN_TIME)
       }
 
-      // If the user is currently in a game,
-      // confirm they want to quit before switching
-      // the page.
-      if (currentPagePath === 'GamePage' && session?.inGame) {
-        confirm(
-          'Are you sure you want to quit?',
-          (concludeAction: () => void) => {
-            if (session?.inGame) {
-              // session.game
-              //   .quit(session.user.userID)
-              //   .then(() => {
-              //     switchPage()
-              //     setSession({
-              //       ...session,
-              //       game: undefined,
-              //     })
-              //     concludeAction()
-              //   })
-              //   .catch((error: Error) => {
-              //     console.log(error)
-              //     this.handleServerError('Failed to quit game.')
-              //     concludeAction()
-              //   })
-            }
-          },
-        )
+      // Create an array from navigation middleware.
+      const middlewares: TNavigationMiddleware[] = Array.from(
+        navigationMiddleware.values(),
+      )
+
+      // Cursor for tracking which middleware to
+      // call next.
+      let cursor: number = 0
+
+      // A function for determining which middleware to
+      // call next.
+      const next = () => {
+        // See if end is reached.
+        if (cursor + 1 === middlewares.length) {
+          // Call realizePageSwitch.
+          realizePageSwitch()
+        }
+        // Else call next middleware.
+        else {
+          cursor++
+          middlewares[cursor](pagePath, next)
+        }
       }
-      // Else, go ahead and switch the page.
-      else {
+
+      if (middlewares.length > 0) {
+        middlewares[0](pagePath, next)
+      } else {
         realizePageSwitch()
       }
     },
@@ -418,30 +443,64 @@ const useGlobalContextDefinition = (context: TGlobalContext) => {
         }
       })
     },
-    connectToServer: async (
+    connectToServer: (
       options: {
         disconnectExisting?: boolean
       } = {},
     ): Promise<ServerConnection> => {
-      const { handleError } = context.actions
+      const { handleError, beginLoading } = context.actions
 
       return new Promise<ServerConnection>(async (resolve, reject) => {
         let server: ServerConnection = new ServerConnection({
           on: {
-            'open': () => {
-              console.log('Server connection opened.')
+            'connection-success': () => {
               setServer(server)
               resolve(server)
             },
-            'close': () => {
-              console.log('Server connection closed.')
+            'reconnection-success': () => {
+              // Update server with updated connection object.
+              setServer(server)
+              // If a message was displayed to the user notifying
+              // of connection loss, then show a message notifying
+              // of reconnection.
+              if (connectionStatusMessage.value?.color === 'Red') {
+                // Update status message.
+                connectionStatusMessage.value = {
+                  message: 'Connection reestablished.',
+                  color: 'Green',
+                }
+                // Set a timeout to clear the message.
+                setTimeout(() => {
+                  // If the connection status is open, then
+                  // clear the message.
+                  if (server.status === 'open') {
+                    connectionStatusMessage.value = null
+                  }
+                }, CONNECT_MESSAGE_CLEAR_DELAY)
+              }
+            },
+            'connection-failure': () => {
+              // Update loading message to reflect connection failure.
+              beginLoading(
+                'Failed to connect to server. Retrying until connection is established...',
+              )
             },
             'connection-loss': () => {
-              handleError('Lost connection to server.')
+              // Wait three seconds, then display a connection
+              // loss message.
+              setTimeout(() => {
+                // If the connection status is still not open,
+                // then display a connection loss message.
+                if (server.status !== 'open') {
+                  // Update status message.
+                  connectionStatusMessage.value = {
+                    message: 'Connection dropped. Attempting to reconnect...',
+                    color: 'Red',
+                  }
+                }
+              }, 3000)
             },
             'error': ({ code, message }) => {
-              console.error(`Server Connection Error (${code}):\n${message}`)
-
               if (code === ServerEmittedError.CODE_DUPLICATE_CLIENT) {
                 handleError({
                   message,
@@ -605,7 +664,7 @@ const useGlobalContextDefinition = (context: TGlobalContext) => {
     },
     logout: async (authPageProps: IAuthPageSpecific) => {
       // Extract context actions.
-      const { beginLoading, finishLoading, handleError, goToPage } =
+      const { beginLoading, finishLoading, handleError, navigateTo } =
         context.actions
 
       // Notify the user of logout.
@@ -617,11 +676,12 @@ const useGlobalContextDefinition = (context: TGlobalContext) => {
         server.disconnect()
         setServer(null)
       }
+
       try {
         await ClientUser.logout()
         setSession(null)
         finishLoading()
-        goToPage('AuthPage', authPageProps)
+        navigateTo('AuthPage', authPageProps)
       } catch (error: any) {
         finishLoading()
         handleError('Failed to logout.')
@@ -668,6 +728,24 @@ const GlobalContextProvider = function GlobalContextProvider(props: {
  */
 export function useGlobalContext(): TGlobalContext {
   return React.useContext<TGlobalContext>(globalReactContext)
+}
+
+/**
+ * Defines middleware for whenever a navigation event is created.
+ * @param middleware The navigation middleware.
+ */
+export function useNavigationMiddleware(
+  middleware: TNavigationMiddleware,
+): void {
+  const [key] = useState<string>(StringToolbox.generateRandomID())
+
+  useMountHandler((done) => {
+    navigationMiddleware.set(key, middleware)
+  })
+
+  useUnmountHandler(() => {
+    navigationMiddleware.delete(key)
+  })
 }
 
 /**
