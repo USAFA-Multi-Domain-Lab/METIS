@@ -1,9 +1,10 @@
-import TargetEnvironment from 'metis/target-environments'
-import ServerTarget from './targets'
-import { TCommonTargetJson } from 'metis/target-environments/targets'
-import { AnyObject } from 'metis/toolbox/objects'
-import path from 'path'
 import fs from 'fs'
+import TargetEnvironment, {
+  TCommonTargetEnvJson,
+} from 'metis/target-environments'
+import { TCommonTargetJson } from 'metis/target-environments/targets'
+import path from 'path'
+import ServerTarget from './targets'
 
 export default class ServerTargetEnvironment extends TargetEnvironment<ServerTarget> {
   // Implemented
@@ -16,11 +17,14 @@ export default class ServerTargetEnvironment extends TargetEnvironment<ServerTar
   /**
    * Grabs the target environments from the provided directory.
    * @param directory The directory to search.
+   * @param targetEnvironmentJson The target environment JSON.
+   * @param targetJson The target JSON.
    */
   public static scan(
     directory: string,
-    targetEnvironmentJson: AnyObject[],
-  ): ServerTargetEnvironment[] {
+    targetEnvironmentJson: TCommonTargetEnvJson[] = [],
+    targetJson: TCommonTargetJson[] = [],
+  ): TCommonTargetEnvJson[] {
     // The blacklisted files.
     let blackListedFiles: string[] = [
       path.join(directory, '.DS_Store'),
@@ -37,10 +41,17 @@ export default class ServerTargetEnvironment extends TargetEnvironment<ServerTar
 
       // Iterate over the files in the directory.
       directoryFiles.forEach((file: string) => {
-        // If the file is a typescript file, add it to the list of target environment files.
+        // If the file is a typescript file, it's an index file,
+        // and it's directory does not include an '@' symbol, then
+        // add it to the list of target environment files.
+        // Note: The '@' symbol is only used to denote that the
+        // directory is a target directory.
+        // Note: Index files are used for target environments only.
         if (
           fs.lstatSync(path.join(directory, file)).isFile() &&
-          file.endsWith('.ts')
+          file.endsWith('.ts') &&
+          file === 'index.ts' &&
+          !directory.includes('@')
         ) {
           // Grab the default export from the file.
           let exportDefault: any = require(path.join(directory, file)).default
@@ -49,27 +60,79 @@ export default class ServerTargetEnvironment extends TargetEnvironment<ServerTar
           if (
             exportDefault.id &&
             exportDefault.name &&
-            exportDefault.description &&
-            exportDefault.targets
+            exportDefault.description
           ) {
             // Add the target environment JSON.
             targetEnvironmentJson.push(exportDefault)
           }
-        } else {
+        }
+        // If the file is a typescript file, it's not an index file,
+        // and it's directory includes an '@' symbol, then add it to
+        // the list of target files.
+        // Note: The '@' symbol is only used to denote that the
+        // directory is a target directory.
+        // Note: Index files are used for target environments only.
+        else if (
+          fs.lstatSync(path.join(directory, file)).isFile() &&
+          file.endsWith('.ts') &&
+          file !== 'index.ts' &&
+          directory.includes('@')
+        ) {
+          // Grab the default export from the file.
+          let exportDefault: any = require(path.join(directory, file)).default
+
+          // If the default export has an id, a target environment id, a name,
+          // a description, a script, and args, then it is a target.
+          if (
+            exportDefault.id &&
+            exportDefault.targetEnvId &&
+            exportDefault.name &&
+            exportDefault.description &&
+            exportDefault.script &&
+            exportDefault.args
+          ) {
+            // Add the target JSON.
+            targetJson.push(exportDefault)
+          }
+        }
+        // Otherwise, the file is a directory.
+        else {
           // If the file is a directory, recursively search for typescript files.
-          this.scan(path.join(directory, file), targetEnvironmentJson)
+          this.scan(
+            path.join(directory, file),
+            targetEnvironmentJson,
+            targetJson,
+          )
         }
       })
     }
 
-    // Create the target environments.
-    let targetEnvironments: ServerTargetEnvironment[] =
-      targetEnvironmentJson.map(
-        (targetEnvironment: AnyObject) =>
-          new ServerTargetEnvironment(targetEnvironment),
-      )
+    // Add the targets to the target environments.
+    targetJson.forEach((target: any) => {
+      // Find the target environment that the target belongs to.
+      let targetEnvironment: TCommonTargetEnvJson | undefined =
+        targetEnvironmentJson.find(
+          (targetEnvironment: TCommonTargetEnvJson) => {
+            return targetEnvironment.id === target.targetEnvId
+          },
+        )
+
+      // If the target environment is found, add the target to it.
+      if (targetEnvironment) {
+        // If the target environment does not have targets, then create an array.
+        if (!targetEnvironment.targets) {
+          targetEnvironment.targets = []
+        }
+
+        // Delete the target environment ID from the target.
+        // Note: The target environment ID is not needed on the client.
+        delete target.targetEnvId
+        // Add the target to the target environment.
+        targetEnvironment.targets.push(target)
+      }
+    })
 
     // Return the target environments.
-    return targetEnvironments
+    return targetEnvironmentJson
   }
 }

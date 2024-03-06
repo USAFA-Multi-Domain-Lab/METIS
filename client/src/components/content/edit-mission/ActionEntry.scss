@@ -5,6 +5,16 @@
     .BorderBox {
       .BoxTop {
         grid-template-columns: 50px auto;
+
+        .Close {
+          background: linear-gradient(
+            $background-alt7 0%,
+            $background-alt7 80%,
+            transparent 100%
+          );
+          min-width: 28px;
+          padding: 20px 0;
+        }
       }
 
       .SidePanelSection {

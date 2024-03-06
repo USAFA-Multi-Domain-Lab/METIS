@@ -27,27 +27,33 @@ export class ClientEffect extends Effect<
   // Implemented
   public async populateTargetData(targetId: string): Promise<void> {
     try {
-      // Update the target ajax status.
-      this._targetAjaxStatus = 'Loading'
-      // Load the target data.
-      let target: ClientTarget = await ClientTarget.fetchOne(targetId)
-      // If the target ID doesn't match the target
-      // ID associated with the effect, throw an error.
-      if (target.id !== targetId) {
-        throw new Error(
-          `The target "${target.name}" with the ID "${target.id}" does not match the target ID "${targetId}" associated with the effect "${this.name}".`,
-        )
+      // Fetch all target environments.
+      let targetEnvironments: ClientTargetEnvironment[] =
+        await ClientTargetEnvironment.fetchAll()
+
+      // Initialize the target.
+      let target: ClientTarget | undefined
+
+      // Iterate through the target environments to find the target.
+      targetEnvironments.forEach(
+        (targetEnvironment: ClientTargetEnvironment) => {
+          // Get the target associated with the target ID.
+          target = targetEnvironment.targets.find(
+            (target: ClientTarget) => target.id === targetId,
+          )
+        },
+      )
+
+      // If the target is not found, throw an error.
+      if (!target) {
+        throw new Error(`Target with ID "${targetId}" not found.`)
       }
 
       // Populate the target data.
       this._target = target
-      // Update the target ajax status.
-      this._targetAjaxStatus = 'Loaded'
     } catch (error: any) {
-      // Update the target ajax status.
-      this._targetAjaxStatus = 'Error'
       // Log the error.
-      console.error('Error loading target data for effect.', error)
+      console.error('Error loading target data for effect.\n', error)
       // Throw the error.
       throw error
     }

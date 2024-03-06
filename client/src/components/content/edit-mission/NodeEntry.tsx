@@ -3,6 +3,7 @@ import ClientMission from 'src/missions'
 import ClientMissionAction from 'src/missions/actions'
 import ClientMissionNode from 'src/missions/nodes'
 import { compute } from 'src/toolbox'
+import { v4 as generateHash } from 'uuid'
 import Tooltip from '../communication/Tooltip'
 import {
   Detail,
@@ -143,6 +144,21 @@ export default function NodeEntry({
   const missionName: string = compute(() => {
     return node?.mission.name ?? ClientMission.DEFAULT_PROPERTIES.name
   })
+  /**
+   * The class name for the remove action button.
+   */
+  const removeActionClassName: string = compute(() => {
+    // Create a default list of class names.
+    let classList: string[] = ['']
+
+    // If there is only one action then add the disabled class.
+    if (node && node.actions.size < 2) {
+      classList.push('Disabled')
+    }
+
+    // Combine the class names into a single string.
+    return classList.join(' ')
+  })
 
   /* -- FUNCTIONS -- */
 
@@ -180,7 +196,7 @@ export default function NodeEntry({
    */
   const handleEditActionRequest = (action: ClientMissionAction) => {
     setSelectedAction(action)
-    missionPath.push(action.name)
+    missionPath.push(action.name ?? '')
   }
 
   /**
@@ -262,7 +278,7 @@ export default function NodeEntry({
               label={'Color'}
               options={colorOptions}
               currentValue={`Choose a color`}
-              isExpanded={true}
+              isExpanded={false}
               renderDisplayName={(color) => color}
               deliverValue={(color: string) => {
                 if (node !== null) {
@@ -318,7 +334,7 @@ export default function NodeEntry({
               </div>
             </div>
             <DetailBox
-              label='Description (optional)'
+              label='Description'
               initialValue={node.description}
               deliverValue={(description: string) => {
                 if (node !== null) {
@@ -329,11 +345,12 @@ export default function NodeEntry({
               options={{
                 emptyStringAllowed: true,
                 elementBoundary: '.BorderBox',
+                displayOptionalText: true,
               }}
               key={`${node.nodeID}_description`}
             />
             <DetailBox
-              label='Pre-Execution Text (optional)'
+              label='Pre-Execution Text'
               initialValue={node.preExecutionText}
               deliverValue={(preExecutionText: string) => {
                 if (node !== null) {
@@ -344,6 +361,7 @@ export default function NodeEntry({
               options={{
                 emptyStringAllowed: true,
                 elementBoundary: '.BorderBox',
+                displayOptionalText: true,
               }}
               key={`${node.nodeID}_preExecutionText`}
             />
@@ -454,6 +472,7 @@ export default function NodeEntry({
                       purpose: EMiniButtonSVGPurpose.Remove,
                       handleClick: () => handleDeleteActionRequest(action),
                       tooltipDescription: 'Remove action.',
+                      uniqueClassName: removeActionClassName,
                     }),
                   }
 
@@ -500,12 +519,11 @@ export default function NodeEntry({
                 <div
                   className='FormButton AddAction'
                   onClick={() => {
-                    let newAction: ClientMissionAction =
-                      new ClientMissionAction(node)
-                    setSelectedAction(newAction)
-                    node.actions.set(newAction.actionID, newAction)
-                    missionPath.push(newAction.name)
-                    handleChange()
+                    setSelectedAction(
+                      new ClientMissionAction(node, {
+                        actionID: generateHash(),
+                      }),
+                    )
                   }}
                 >
                   <span className='Text'>

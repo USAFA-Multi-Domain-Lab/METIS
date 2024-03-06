@@ -47,6 +47,12 @@ export default function ActionEntry({
       classList.push('IsError')
     }
 
+    // If the action is new then add the "New" class name,
+    // to properly display the close button.
+    if (!node.actions.has(action.actionID)) {
+      classList.push('New')
+    }
+
     // Combine the class names into a single string.
     return classList.join(' ')
   })
@@ -60,6 +66,11 @@ export default function ActionEntry({
     // If there is only one action then disable the delete button.
     if (node.actions.size === 1) {
       classList.push('Disabled')
+    }
+
+    // If the action is new then hide the delete button.
+    if (!node.actions.has(action.actionID)) {
+      classList.push('Hidden')
     }
 
     // Combine the class names into a single string.
@@ -88,7 +99,11 @@ export default function ActionEntry({
     let classList: string[] = ['AltDesign2']
 
     // If there is at least one empty field, add the error class.
-    if (isEmptyString || areDefaultValues) {
+    if (
+      isEmptyString ||
+      areDefaultValues
+      // !node.actions.has(action.actionID)
+    ) {
       classList.unshift('Disabled')
     }
 
@@ -107,6 +122,26 @@ export default function ActionEntry({
       classList.push('Disabled')
     }
 
+    // If the action is new then hide the back button.
+    if (!node.actions.has(action.actionID)) {
+      classList.push('Hidden')
+    }
+
+    // Combine the class names into a single string.
+    return classList.join(' ')
+  })
+  /**
+   * The class name for the close button.
+   */
+  const closeButtonClassName: string = compute(() => {
+    // Create a default list of class names.
+    let classList: string[] = ['Close']
+
+    // If the action is not new then hide the close button.
+    if (node.actions.has(action.actionID)) {
+      classList.push('Hidden')
+    }
+
     // Combine the class names into a single string.
     return classList.join(' ')
   })
@@ -121,6 +156,70 @@ export default function ActionEntry({
    */
   const nodeName: string = compute(() => {
     return action.node.name
+  })
+  /**
+   * The chance that the action will succeed.
+   */
+  const successChance: number | undefined = compute(() => {
+    // If the success chance is available, return it as a percentage.
+    if (action.successChance) {
+      return parseFloat(`${(action.successChance * 100.0).toFixed(2)}`)
+    }
+    // Otherwise, return the success chance.
+    else {
+      return action.successChance
+    }
+  })
+  /**
+   * The amount of time it takes to execute the action.
+   */
+  const processTime: number | undefined = compute(() => {
+    // If the process time is available, convert it to seconds.
+    if (action.processTime) {
+      return action.processTime / 1000
+    }
+    // Otherwise, return the process time.
+    else {
+      return action.processTime
+    }
+  })
+  /**
+   * The class name for the mission path.
+   */
+  const pathClassName: string = compute(() => {
+    // Create a default list of class names.
+    let classList: string[] = ['Path']
+
+    // If the action is new then disable the path
+    // to keep the user from navigating away.
+    if (!node.actions.has(action.actionID)) {
+      classList.push('Disabled')
+    }
+
+    // Combine the class names into a single string.
+    return classList.join(' ')
+  })
+  /**
+   * The class name for the create button.
+   */
+  const createButtonClassName: string = compute(() => {
+    // Create a default list of class names.
+    let classList: string[] = ['Button']
+
+    // If the action is not new then hide the create button.
+    if (node.actions.has(action.actionID)) {
+      classList.push('Hidden')
+    } else {
+      // If there is an empty field ||
+      // If there are default values...
+      // then disable the create button.
+      if (isEmptyString || areDefaultValues) {
+        // Disable the create button.
+        classList.push('Disabled')
+      }
+    }
+
+    return classList.join(' ')
   })
 
   /* -- FUNCTIONS -- */
@@ -195,6 +294,14 @@ export default function ActionEntry({
     }
   }
 
+  /**
+   * Handles creating the action.
+   */
+  const createAction = () => {
+    node.actions.set(action.actionID, action)
+    handleChange()
+  }
+
   /* -- RENDER -- */
 
   if (node.executable) {
@@ -206,10 +313,7 @@ export default function ActionEntry({
             <div className='BackContainer'>
               <div
                 className={backButtonClassName}
-                onClick={() => {
-                  missionPath.pop()
-                  setSelectedAction(null)
-                }}
+                onClick={() => setSelectedAction(null)}
               >
                 &lt;
                 <Tooltip description='Go back.' />
@@ -218,7 +322,7 @@ export default function ActionEntry({
             <div className='ErrorMessage'>
               Fix all errors before closing panel.
             </div>
-            <div className='Path'>
+            <div className={pathClassName}>
               Location:{' '}
               {missionPath.map((position: string, index: number) => {
                 return (
@@ -233,6 +337,15 @@ export default function ActionEntry({
                   </span>
                 )
               })}
+            </div>
+            <div
+              className={closeButtonClassName}
+              onClick={() => setSelectedAction(null)}
+            >
+              <div className='CloseButton'>
+                x
+                <Tooltip description='Cancel' />
+              </div>
             </div>
           </div>
 
@@ -253,6 +366,11 @@ export default function ActionEntry({
                     `actionID=${action.actionID}_field=name`,
                   ])
                 }
+              }}
+              options={{
+                placeholder: 'Enter name...',
+                deliverError: isEmptyString,
+                deliverErrorMessage: 'At least one character is required here.',
               }}
               key={`${action.actionID}_name`}
             />
@@ -275,14 +393,13 @@ export default function ActionEntry({
               }}
               options={{
                 elementBoundary: '.BorderBox',
+                placeholder: 'Enter description...',
               }}
               key={`${action.actionID}_description`}
             />
             <DetailNumber
               label='Success Chance'
-              initialValue={parseFloat(
-                `${(action.successChance * 100.0).toFixed(2)}`,
-              )}
+              initialValue={successChance}
               options={{
                 minimum: 0,
                 maximum: 100,
@@ -304,7 +421,7 @@ export default function ActionEntry({
             />
             <DetailNumber
               label='Process Time'
-              initialValue={action.processTime / 1000}
+              initialValue={processTime}
               options={{
                 minimum: 0,
                 maximum: 3600,
@@ -472,6 +589,9 @@ export default function ActionEntry({
                   <span className='RightBracket'>]</span>
                   <Tooltip description='Delete this action from the node.' />
                 </span>
+              </div>
+              <div className={createButtonClassName} onClick={createAction}>
+                Create Action
               </div>
             </div>
           </div>

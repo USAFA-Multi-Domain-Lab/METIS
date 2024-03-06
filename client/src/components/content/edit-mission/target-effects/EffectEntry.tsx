@@ -37,6 +37,8 @@ export default function EffectEntry({
       classList.push('IsError')
     }
 
+    // If the effect is new then add the "New" class name,
+    // to properly display the close button.
     if (!action.effects.includes(effect)) {
       classList.push('New')
     }
@@ -102,7 +104,11 @@ export default function EffectEntry({
    * The name of the action.
    */
   const actionName: string = compute(() => {
-    return action.name
+    if (action.name) {
+      return action.name
+    } else {
+      return ''
+    }
   })
   /**
    * The class name for the mission path.
@@ -188,7 +194,10 @@ export default function EffectEntry({
           <div className='BackContainer'>
             <div
               className={backButtonClassName}
-              onClick={() => setSelectedEffect(null)}
+              onClick={() => {
+                setSelectedEffect(null)
+                setEffectEmptyStringArray([])
+              }}
             >
               &lt;
               <Tooltip description='Go back.' />

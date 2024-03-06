@@ -135,6 +135,7 @@ export default function AuthPage(props: IAuthPage): JSX.Element | null {
             options={{
               uniqueLabelClassName: 'Hidden',
               placeholder: 'Username',
+              emptyStringAllowed: true,
             }}
           />
           <Detail
@@ -147,6 +148,7 @@ export default function AuthPage(props: IAuthPage): JSX.Element | null {
               uniqueLabelClassName: 'Hidden',
               inputType: 'password',
               placeholder: 'Password',
+              emptyStringAllowed: true,
             }}
           />
           <input
