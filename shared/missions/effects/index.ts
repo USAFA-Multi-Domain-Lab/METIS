@@ -1,5 +1,5 @@
 import { v4 as generateHash } from 'uuid'
-import { TCommonTargetEnvironment } from '../../target-environments'
+import { TCommonTargetEnv } from '../../target-environments'
 import Target, {
   TCommonTarget,
   TCommonTargetJson,
@@ -13,7 +13,7 @@ import { TCommonMissionAction } from '../actions'
  */
 export default abstract class Effect<
   TMissionAction extends TCommonMissionAction,
-  TTargetEnvironment extends TCommonTargetEnvironment,
+  TTargetEnvironment extends TCommonTargetEnv,
 > implements TCommonEffect
 {
   // Inherited

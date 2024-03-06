@@ -1,25 +1,38 @@
-import { TMetisRouterMap } from 'metis/server/http/router'
 import expressWs from 'express-ws'
-import { Request, Response } from 'express'
+import { TMetisRouterMap } from 'metis/server/http/router'
+import defineRequests from 'metis/server/middleware/requests'
+import { authorized } from 'metis/server/middleware/users'
+import ServerTargetEnvironment from 'metis/server/target-environments'
+import { TCommonTargetEnvJson } from 'metis/target-environments'
+import path from 'path'
 
 export const routerMap: TMetisRouterMap = (
   router: expressWs.Router,
   done: () => void,
 ) => {
-  // -- POST | /api/v1/target-environments/ --
-  // This will create a new target environment.
-
   // -- GET | /api/v1/target-environments/ --
   // This will get all target environments.
+  router.get(
+    '/',
+    authorized(['READ']),
+    defineRequests({
+      query: {},
+    }),
+    (request, response) => {
+      // The directory where the target environments are located.
+      let targetEnvDir: string = path.join(
+        __dirname,
+        '../../../integration/target-env',
+      )
 
-  // -- GET | /api/v1/target-environments/targets/ --
-  // This will get all targets.
+      // Get the target environments.
+      let targetEnvJson: TCommonTargetEnvJson[] =
+        ServerTargetEnvironment.scan(targetEnvDir)
 
-  // -- PUT | /api/v1/target-environments/ --
-  // This will update a target environment.
-
-  // -- DELETE | /api/v1/target-environments/ --
-  // This will delete a target environment.
+      // Send the target environments to the client.
+      return response.json(targetEnvJson)
+    },
+  )
 
   done()
 }

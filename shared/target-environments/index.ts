@@ -4,27 +4,27 @@ import { TCommonTarget, TCommonTargetJson } from './targets'
  * This is the environment in which the target(s) exist.
  */
 export default abstract class TargetEnvironment<TTarget extends TCommonTarget>
-  implements TCommonTargetEnvironment
+  implements TCommonTargetEnv
 {
   // Inherited
-  public id: TCommonTargetEnvironment['id']
+  public id: TCommonTargetEnv['id']
 
   // Inherited
-  public name: TCommonTargetEnvironment['name']
+  public name: TCommonTargetEnv['name']
 
   // Inherited
-  public description: TCommonTargetEnvironment['description']
+  public description: TCommonTargetEnv['description']
 
   // Inherited
   public targets: TTarget[]
 
   /**
    * Creates a new TargetEnvironment Object.
-   * @param {TCommonTargetEnvironmentJson} data The data to use to create the TargetEnvironment.
+   * @param {TCommonTargetEnvJson} data The data to use to create the TargetEnvironment.
    */
   public constructor(
-    data: Partial<TCommonTargetEnvironmentJson> = TargetEnvironment.DEFAULT_PROPERTIES,
-    options: TTargetEnvironmentOptions = {},
+    data: Partial<TCommonTargetEnvJson> = TargetEnvironment.DEFAULT_PROPERTIES,
+    options: TTargetEnvOptions = {},
   ) {
     this.id = data.id ?? TargetEnvironment.DEFAULT_PROPERTIES.id
     this.name = data.name ?? TargetEnvironment.DEFAULT_PROPERTIES.name
@@ -44,12 +44,10 @@ export default abstract class TargetEnvironment<TTarget extends TCommonTarget>
 
   /**
    * Converts the TargetEnvironment Object to JSON.
-   * @param {TTargetEnvironmentJsonOptions} options Options for converting the TargetEnvironment to JSON.
-   * @returns {TCommonTargetEnvironmentJson} A JSON representation of the TargetEnvironment.
+   * @param {TTargetEnvJsonOptions} options Options for converting the TargetEnvironment to JSON.
+   * @returns {TCommonTargetEnvJson} A JSON representation of the TargetEnvironment.
    */
-  public toJson(
-    options: TTargetEnvironmentJsonOptions = {},
-  ): TCommonTargetEnvironmentJson {
+  public toJson(options: TTargetEnvJsonOptions = {}): TCommonTargetEnvJson {
     // Construct JSON object to send to the server.
     return {
       id: this.id,
@@ -62,13 +60,12 @@ export default abstract class TargetEnvironment<TTarget extends TCommonTarget>
   /**
    * The default properties of the TargetEnvironment.
    */
-  public static readonly DEFAULT_PROPERTIES: Required<TCommonTargetEnvironmentJson> =
-    {
-      id: '',
-      name: '',
-      description: '',
-      targets: [],
-    }
+  public static readonly DEFAULT_PROPERTIES: Required<TCommonTargetEnvJson> = {
+    id: '',
+    name: '',
+    description: '',
+    targets: [],
+  }
 }
 
 /* ------------------------------ TARGET ENVIRONMENT TYPES ------------------------------ */
@@ -76,17 +73,17 @@ export default abstract class TargetEnvironment<TTarget extends TCommonTarget>
 /**
  * Options for creating a new TargetEnvironment object.
  */
-export type TTargetEnvironmentOptions = {}
+export type TTargetEnvOptions = {}
 
 /**
  * Options for the TargetEnvironment.toJson() method.
  */
-export type TTargetEnvironmentJsonOptions = {}
+export type TTargetEnvJsonOptions = {}
 
 /**
  * Type used for the Target Environment class.
  */
-export interface TCommonTargetEnvironment {
+export interface TCommonTargetEnv {
   /**
    * The ID of the target environment.
    */
@@ -106,15 +103,13 @@ export interface TCommonTargetEnvironment {
   /**
    * Converts the TargetEnvironment Object to JSON.
    */
-  toJson: (
-    options?: TTargetEnvironmentJsonOptions,
-  ) => TCommonTargetEnvironmentJson
+  toJson: (options?: TTargetEnvJsonOptions) => TCommonTargetEnvJson
 }
 
 /**
  * The JSON representation of a TargetEnvironment object.
  */
-export interface TCommonTargetEnvironmentJson {
+export interface TCommonTargetEnvJson {
   /**
    * The ID of the target environment.
    */

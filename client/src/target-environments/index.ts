@@ -1,6 +1,6 @@
 import axios from 'axios'
 import TargetEnvironment, {
-  TCommonTargetEnvironmentJson,
+  TCommonTargetEnvJson,
 } from '../../../shared/target-environments'
 import { TCommonTargetJson } from '../../../shared/target-environments/targets'
 import ClientTarget from './targets'
@@ -28,15 +28,14 @@ export class ClientTargetEnvironment extends TargetEnvironment<ClientTarget> {
   public static async fetchAll(): Promise<ClientTargetEnvironment[]> {
     try {
       // Fetch the target environments from the API.
-      let response = await axios.get<TCommonTargetEnvironmentJson[]>(
+      let response = await axios.get<TCommonTargetEnvJson[]>(
         `${ClientTargetEnvironment.API_ENDPOINT}`,
       )
       // Parse the response data.
-      let data: TCommonTargetEnvironmentJson[] = response.data
+      let data: TCommonTargetEnvJson[] = response.data
       // Create an array of ClientTargetEnvironment Objects.
       let targetEnvironments: ClientTargetEnvironment[] = data.map(
-        (datum: TCommonTargetEnvironmentJson) =>
-          new ClientTargetEnvironment(datum),
+        (datum: TCommonTargetEnvJson) => new ClientTargetEnvironment(datum),
       )
       // Return the array of ClientTargetEnvironment Objects.
       return targetEnvironments

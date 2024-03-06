@@ -21,6 +21,36 @@ export type TTargetEnv = {
 /* ---------------------------------- TARGET TYPES -------------------------------------- */
 
 /**
+ * Represents a target.
+ */
+export type TTarget = {
+  /**
+   * The ID of the target.
+   */
+  id: string
+  /**
+   * The ID of the target environment.
+   */
+  targetEnvId: string
+  /**
+   * The target's name. This is displayed to the user.
+   */
+  name: string
+  /**
+   * Describes what the target is. This is displayed to the user.
+   */
+  description: string
+  /**
+   * The function used to execute an effect on the target.
+   */
+  script: Function
+  /**
+   * The arguments used for the target-effect interface and the target-effect API.
+   */
+  args: TTargetArg[]
+}
+
+/**
  * The common arguments used for the target-effect interface and the target-effect API.
  */
 type TTargetArgCommon = {
@@ -176,29 +206,3 @@ type TTargetArg = TTargetArgCommon &
     | TTargetMedCharStringArg
     | TTargetDropdownArg
   )
-
-/**
- * Represents a target.
- */
-export type TTarget = {
-  /**
-   * The ID of the target.
-   */
-  id: string
-  /**
-   * The target's name. This is displayed to the user.
-   */
-  name: string
-  /**
-   * Describes what the target is. This is displayed to the user.
-   */
-  description: string
-  /**
-   * The function used to execute an effect on the target.
-   */
-  script: Function
-  /**
-   * The arguments used for the target-effect interface and the target-effect API.
-   */
-  args: TTargetArg[]
-}

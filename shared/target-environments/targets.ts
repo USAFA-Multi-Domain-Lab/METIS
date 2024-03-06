@@ -1,10 +1,10 @@
-import { TCommonTargetEnvironment } from '.'
+import { TCommonTargetEnv } from '.'
 
 /**
  * This is an entity that can be found in a target environment.
  */
 export default abstract class Target<
-  TTargetEnvironment extends TCommonTargetEnvironment,
+  TTargetEnvironment extends TCommonTargetEnv,
 > implements TCommonTarget
 {
   // Inherited
@@ -50,7 +50,6 @@ export default abstract class Target<
   public toJson(options: TTargetJsonOptions = {}): TCommonTargetJson {
     // Construct JSON object to send to the server.
     return {
-      targetEnvironmentId: this.targetEnvironment.id,
       id: this.id,
       name: this.name,
       description: this.description,
@@ -63,7 +62,6 @@ export default abstract class Target<
    * The default properties of the Target.
    */
   public static readonly DEFAULT_PROPERTIES: Required<TCommonTargetJson> = {
-    targetEnvironmentId: '',
     id: '',
     name: '',
     description: '',
@@ -91,7 +89,7 @@ export interface TCommonTarget {
   /**
    * The environment in which the target exists.
    */
-  targetEnvironment: TCommonTargetEnvironment
+  targetEnvironment: TCommonTargetEnv
   /**
    * The ID of the target.
    */
@@ -122,10 +120,6 @@ export interface TCommonTarget {
  * The JSON representation of a Target Object.
  */
 export interface TCommonTargetJson {
-  /**
-   * The ID of the target environment.
-   */
-  targetEnvironmentId: TCommonTargetEnvironment['id']
   /**
    * The ID of the target.
    */

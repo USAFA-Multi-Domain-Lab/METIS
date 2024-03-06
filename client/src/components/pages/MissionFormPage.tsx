@@ -5,6 +5,7 @@ import ClientMission from 'src/missions'
 import ClientMissionAction from 'src/missions/actions'
 import { ClientEffect } from 'src/missions/effects'
 import ClientMissionNode, { ENodeDeleteMethod } from 'src/missions/nodes'
+import { ClientTargetEnvironment } from 'src/target-environments'
 import { compute } from 'src/toolbox'
 import { useMountHandler } from 'src/toolbox/hooks'
 import MissionAction from '../../../../shared/missions/actions'
@@ -33,7 +34,6 @@ export default function MissionFormPage(
   /* -- GLOBAL CONTEXT -- */
   const globalContext = useGlobalContext()
   const [notifications] = globalContext.notifications
-  const [targetEnvironments] = globalContext.targetEnvironments
   const {
     beginLoading,
     finishLoading,
@@ -70,6 +70,9 @@ export default function MissionFormPage(
     string[]
   >([])
   const [missionPath, setMissionPath] = useState<string[]>([])
+  const [targetEnvironments, setTargetEnvironments] = useState<
+    ClientTargetEnvironment[]
+  >([])
 
   /* -- COMPUTED -- */
   /**
@@ -221,6 +224,7 @@ export default function MissionFormPage(
         })
         setMission(mission)
         setMissionPath([mission.name])
+        setTargetEnvironments(await ClientTargetEnvironment.fetchAll())
       } catch {
         handleError('Failed to load mission.')
       }
