@@ -126,6 +126,18 @@ export default abstract class MissionNode<
   public childNodes: TRelativeNode[]
 
   // Implemented
+  public get firstChildNode(): TRelativeNode | null {
+    return this.childNodes.length > 0 ? this.childNodes[0] : null
+  }
+
+  // Implemented
+  public get lastChildNode(): TRelativeNode | null {
+    return this.childNodes.length > 0
+      ? this.childNodes[this.childNodes.length - 1]
+      : null
+  }
+
+  // Implemented
   public get hasChildren(): TCommonMissionNode['hasChildren'] {
     return this.childNodes.length > 0
   }
@@ -260,12 +272,6 @@ export default abstract class MissionNode<
     // Set properties from options.
     this.parentNode = options.parentNode ?? null
     this.childNodes = options.childNodes ?? []
-  }
-  get firstChildNode(): any {
-    throw new Error('Method not implemented.')
-  }
-  get lastChildNode(): any {
-    throw new Error('Method not implemented.')
   }
 
   /**

@@ -1,7 +1,7 @@
 // -- script-imports --
 
-import React from 'react'
 import parse from 'marked'
+import React from 'react'
 import './Markdown.scss'
 
 // -- style-imports --
@@ -144,9 +144,11 @@ export default class Markdown extends React.Component<
     let root: HTMLDivElement | null = this.root.current
     if (root) {
       let markdown: string = this.props.markdown
+
       let lineDivider: string = this.props.lineDivider
       let html: string = Markdown.parseHtml(markdown, lineDivider)
       root.innerHTML = html
+
       // post-render
       let anchorElements: NodeListOf<HTMLAnchorElement> =
         root.querySelectorAll('a')

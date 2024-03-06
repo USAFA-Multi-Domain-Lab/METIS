@@ -31,7 +31,7 @@ export type TGlobalContextValues = {
   loadingMinTimeReached: boolean
   pageSwitchMinTimeReached: boolean
   error: TAppError | null
-  tooltip: React.RefObject<HTMLDivElement>
+  tooltips: React.RefObject<HTMLDivElement>
   tooltipDescription: string
   notifications: Notification[]
   confirmation: IConfirmation | null
@@ -200,7 +200,7 @@ const GLOBAL_CONTEXT_VALUES_DEFAULT: TGlobalContextValues = {
   loadingMinTimeReached: false,
   pageSwitchMinTimeReached: true,
   error: null,
-  tooltip: React.createRef<HTMLDivElement>(),
+  tooltips: React.createRef<HTMLDivElement>(),
   tooltipDescription: '',
   notifications: [],
   confirmation: null,
@@ -310,7 +310,7 @@ const useGlobalContextDefinition = (context: TGlobalContext) => {
   const [pageSwitchMinTimeReached, setPageSwitchMinTimeReached] =
     context.pageSwitchMinTimeReached
   const [error, setError] = context.error
-  const [tooltip, setTooltip] = context.tooltip
+  const [tooltips, setTooltips] = context.tooltips
   const [tooltipDescription, setTooltipDescription] = context.tooltipDescription
   const [notifications, setNotifications] = context.notifications
   const [confirmation, setConfirmation] = context.confirmation

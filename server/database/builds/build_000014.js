@@ -1,6 +1,7 @@
 // This migration script is responsible
-// for adding the role property for all
-// admin users.
+// for adding the roleID property, setting all
+// users without a roleID to 'admin'. It also
+// removes the old role property, if present.
 
 let dbName = 'metis'
 
@@ -12,17 +13,24 @@ use(dbName)
 
 print('Migrating user data to updated schema...')
 
-let cursor_users = db.users.find({}, { userID: 1, role: 1 })
+// Query for all users.
+let cursor_users = db.users.find({}, { userID: 1, roleID: 1 })
 
+// Loop through users.
 while (cursor_users.hasNext()) {
   let user = cursor_users.next()
-  let userID = 'admin'
 
-  if (user.userID !== userID) {
-    user.role = 'admin'
+  // If the user has no roleID, set it to 'admin'.
+  if (!user.roleID) {
+    user.roleID = 'admin'
   }
 
-  db.users.updateOne({}, { $set: { role: user.role } })
+  // Update the user with the new roleID,
+  // clearing the role property.
+  db.users.updateOne(
+    { userID: user.userID },
+    { $unset: { role: 1 }, $set: { roleID: user.roleID } },
+  )
 }
 
 print('Updating schema build number...')

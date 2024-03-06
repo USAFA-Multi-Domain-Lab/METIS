@@ -1,11 +1,10 @@
 import axios, { AxiosError, AxiosResponse } from 'axios'
+import { TMetisSession, TMetisSessionJSON } from '../../../shared/sessions'
 import User, {
   TCommonUser,
   TCommonUserJson,
   TUserOptions,
 } from '../../../shared/users'
-import { TMetisSessionJSON } from '../../../shared/sessions'
-import { TMetisSession } from '../../../shared/sessions'
 import UserRole from '../../../shared/users/roles'
 
 /**
@@ -279,7 +278,7 @@ export default class ClientUser extends User {
             if (sessionJson !== null) {
               session = {
                 user: new ClientUser(sessionJson.user),
-                inGame: sessionJson.inGame,
+                gameID: sessionJson.gameID,
               }
             }
 
@@ -332,7 +331,7 @@ export default class ClientUser extends User {
           if (sessionJson !== null) {
             session = {
               user: new ClientUser(sessionJson.user),
-              inGame: sessionJson.inGame,
+              gameID: sessionJson.gameID,
             }
           }
 

@@ -1,7 +1,6 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef } from 'react'
 import { useGlobalContext } from 'src/context'
 import { useMountHandler } from 'src/toolbox/hooks'
-import { v4 as uuid } from 'uuid'
 import './Tooltip.scss'
 
 /* -- CONSTANTS -- */
@@ -26,17 +25,13 @@ export default function Tooltip(props: { description: string }): JSX.Element {
   /* -- GLOBAL CONTEXT -- */
 
   const globalContext = useGlobalContext()
-  const [tooltip] = globalContext.tooltip
+  const [tooltips] = globalContext.tooltips
   const [tooltipDescription, setTooltipDescription] =
     globalContext.tooltipDescription
 
   /* -- COMPONENT REFS -- */
 
   const rootElement = useRef<HTMLDivElement | null>(null)
-
-  /* -- COMPONENT STATE -- */
-
-  const [tooltipId] = useState<string>(uuid())
 
   /* -- COMPONENT EFFECTS -- */
 
@@ -112,7 +107,7 @@ export default function Tooltip(props: { description: string }): JSX.Element {
    */
   const showTooltip = (): void => {
     // This will grab the current tooltip element that is being displayed.
-    let tooltip_elm: HTMLDivElement | null | undefined = tooltip.current
+    let tooltip_elm: HTMLDivElement | null | undefined = tooltips.current
 
     // If the tooltip element is found, then
     // show the tooltip.
@@ -135,7 +130,7 @@ export default function Tooltip(props: { description: string }): JSX.Element {
    */
   const hideTooltip = (): void => {
     // This will grab the current tooltip element that is being displayed.
-    let tooltip_elm: HTMLDivElement | null | undefined = tooltip.current
+    let tooltip_elm: HTMLDivElement | null | undefined = tooltips.current
 
     // If the tooltip element is found, then
     // hide the tooltip.
@@ -183,7 +178,5 @@ export default function Tooltip(props: { description: string }): JSX.Element {
 
   /* -- RENDER -- */
 
-  return (
-    <div className={`TooltipLocation_${tooltipId}`} ref={rootElement}></div>
-  )
+  return <div className='Tooltip' ref={rootElement}></div>
 }

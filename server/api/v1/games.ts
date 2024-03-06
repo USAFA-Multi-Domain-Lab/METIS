@@ -92,7 +92,7 @@ const routerMap = (router: expressWs.Router, done: () => void) => {
   // This will join an existing game.
   router.put(
     '/join/',
-    auth({ authentication: 'session' }),
+    auth({ authentication: 'ws-connection' }),
     (request, response) => {
       // Get data from the request body.
       let { gameID } = request.body

@@ -82,7 +82,7 @@ function App(props: {}): JSX.Element | null {
   const [session] = globalContext.session
   const [appMountHandled, setAppMountHandled] = globalContext.appMountHandled
   const [server] = globalContext.server
-  const [tooltip] = globalContext.tooltip
+  const [tooltips] = globalContext.tooltips
   const [tooltipDescription, setTooltipDescription] =
     globalContext.tooltipDescription
   const [_, setMissionNodeColors] = globalContext.missionNodeColors
@@ -113,7 +113,7 @@ function App(props: {}): JSX.Element | null {
    * @param event The mouse event that triggered the tooltip position to be recalculated.
    */
   const positionTooltip = (event: MouseEvent): void => {
-    let tooltip_elm: HTMLDivElement | null = tooltip.current
+    let tooltip_elm: HTMLDivElement | null = tooltips.current
 
     if (tooltip_elm) {
       let pageWidth = window.innerWidth - 25
@@ -168,7 +168,7 @@ function App(props: {}): JSX.Element | null {
         document.addEventListener('drag', positionTooltip)
 
         // Initialize tooltips.
-        let tooltip_elm: HTMLDivElement | null = tooltip.current
+        let tooltip_elm: HTMLDivElement | null = tooltips.current
 
         if (tooltip_elm) {
           tooltip_elm.style.opacity = '0'
@@ -278,7 +278,7 @@ function App(props: {}): JSX.Element | null {
 
   return (
     <div className={className} key={'App'}>
-      <div className='Tooltip' ref={tooltip}>
+      <div className='Tooltips' ref={tooltips}>
         <Markdown
           markdown={tooltipDescription}
           theme={MarkdownTheme.ThemeSecondary}
