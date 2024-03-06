@@ -1,7 +1,7 @@
 import expressWs from 'express-ws'
 import { TMetisRouterMap } from 'metis/server/http/router'
 import defineRequests from 'metis/server/middleware/requests'
-import { authorized } from 'metis/server/middleware/users'
+import { auth } from 'metis/server/middleware/users'
 import ServerTargetEnvironment from 'metis/server/target-environments'
 import { TCommonTargetEnvJson } from 'metis/target-environments'
 import path from 'path'
@@ -14,7 +14,7 @@ export const routerMap: TMetisRouterMap = (
   // This will get all target environments.
   router.get(
     '/',
-    authorized(['READ']),
+    auth({ permissions: ['READ'] }),
     defineRequests({
       query: {},
     }),
