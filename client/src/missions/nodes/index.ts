@@ -7,7 +7,7 @@ import { TCommonMissionActionJson } from '../../../../shared/missions/actions'
 import { TActionExecutionJSON } from '../../../../shared/missions/actions/executions'
 import { IActionOutcomeJSON } from '../../../../shared/missions/actions/outcomes'
 import MissionNode, {
-  IHandleOutcomeOptions,
+  ILoadOutcomeOptions,
   INodeOpenOptions,
   TMissionNodeJson,
   TMissionNodeOptions,
@@ -366,7 +366,7 @@ export default class ClientMissionNode extends MissionNode<
   }
 
   // Implemented
-  public handleExecution(
+  public loadExecution(
     data: NonNullable<TActionExecutionJSON>,
   ): ClientActionExecution {
     // Get the action action being executed.
@@ -402,9 +402,9 @@ export default class ClientMissionNode extends MissionNode<
   }
 
   // Implemented
-  public handleOutcome(
+  public loadOutcome(
     data: IActionOutcomeJSON,
-    options: IClientHandleOutcomeOptions = {},
+    options: IClientLoadOutcomeOptions = {},
   ): ClientActionOutcome {
     // Parse data and options.
     const { actionID, successful } = data
@@ -795,9 +795,9 @@ export interface INodeClientOpenOptions extends INodeOpenOptions {
 }
 
 /**
- * Options for the `ClientMissionNode.handleOutcome` method.
+ * Options for the `ClientMissionNode.loadOutcome` method.
  */
-export interface IClientHandleOutcomeOptions extends IHandleOutcomeOptions {
+export interface IClientLoadOutcomeOptions extends ILoadOutcomeOptions {
   /**
    * The child node data with which to populate the now open node.
    * @note Unused if the node already has children or if the outcome was a failure.

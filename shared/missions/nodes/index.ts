@@ -360,14 +360,14 @@ export default abstract class MissionNode<
   public abstract open(options?: INodeOpenOptions): Promise<void>
 
   // Implemented
-  public abstract handleExecution(
+  public abstract loadExecution(
     data: NonNullable<TActionExecutionJson>,
   ): TActionExecution
 
   // Implemented
-  public abstract handleOutcome(
+  public abstract loadOutcome(
     data: IActionOutcomeJson,
-    options?: IHandleOutcomeOptions,
+    options?: ILoadOutcomeOptions,
   ): TActionOutcome
 
   /**
@@ -525,22 +525,24 @@ export interface TCommonMissionNode {
    */
   open: (options?: INodeOpenOptions) => Promise<void>
   /**
-   * Handles an exection of an action performed on the node.
-   * @param data The execution data to handle.
+   * Loads the execution JSON into the node, returning a new
+   * execution object.
+   * @param data The execution data to load.
    * @returns The generated execution object.
    */
-  handleExecution: (
+  loadExecution: (
     execution: NonNullable<TActionExecutionJson>,
   ) => IActionExecution
   /**
-   * Handles an outcome of an action performed on the node.
-   * @param data The outcome data to handle.
-   * @param options Options for handling the outcome.
+   * Loads the execution JSON into the node, returning a new
+   * execution object..
+   * @param data The outcome data to load.
+   * @param options Options for loading the outcome.
    * @returns The generated outcome object.
    */
-  handleOutcome: (
+  loadOutcome: (
     data: IActionOutcomeJson,
-    options?: IHandleOutcomeOptions,
+    options?: ILoadOutcomeOptions,
   ) => IActionOutcome
 }
 
@@ -646,6 +648,6 @@ export type TNodeExecutionState =
 export interface INodeOpenOptions {}
 
 /**
- * Options for the `MissionNode.handleOutcome` method.
+ * Options for the `MissionNode.loadOutcome` method.
  */
-export interface IHandleOutcomeOptions {}
+export interface ILoadOutcomeOptions {}

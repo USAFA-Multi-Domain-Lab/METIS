@@ -1,8 +1,9 @@
-import IActionOutcome from 'metis/missions/actions/outcomes'
+import IActionOutcome, {
+  IActionOutcomeJSON,
+} from 'metis/missions/actions/outcomes'
+import { PRNG } from 'seedrandom'
 import ServerMissionAction from '.'
 import ServerMissionNode from '../nodes'
-import { PRNG } from 'seedrandom'
-import { IActionOutcomeJSON } from 'metis/missions/actions/outcomes'
 
 /**
  * An outcome for the execution of an action via the Mission.execute method.
@@ -41,7 +42,7 @@ export class ServerPotentialOutcome implements IActionOutcome {
    * @returns {ServerRealizedOutcome} The realized outcome.
    */
   public realize(): ServerRealizedOutcome {
-    return this.node.handleOutcome(this.toJson())
+    return this.node.loadOutcome(this.toJson())
   }
 
   /**

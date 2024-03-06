@@ -247,7 +247,7 @@ export default class GameClient extends Game<
     }
 
     // Handle execution on the node.
-    node.handleExecution(executionData)
+    node.loadExecution(executionData)
 
     // Deduct resources from pool.
     this._resources -= action.resourceCost
@@ -280,7 +280,7 @@ export default class GameClient extends Game<
     // Generate an outcome object.
 
     // Handle outcome on the node.
-    node.handleOutcome(outcome, { revealedChildNodes })
+    node.loadOutcome(outcome, { revealedChildNodes })
 
     // Remap actions if there are revealed nodes, since
     // those revealed nodes may contain new actions.

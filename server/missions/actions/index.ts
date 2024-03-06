@@ -1,14 +1,14 @@
-import ServerMission from '..'
-import ServerMissionNode from '../nodes'
 import MissionAction, { TCommonMissionActionJson } from 'metis/missions/actions'
-import Queue from 'metis/toolbox/queue'
-import { ServerPotentialOutcome, ServerRealizedOutcome } from './outcomes'
 import IActionExecution, {
   TActionExecutionJSON,
 } from 'metis/missions/actions/executions'
-import ServerActionExecution from './executions'
 import { TCommonEffectJson } from 'metis/missions/effects'
+import Queue from 'metis/toolbox/queue'
+import ServerMission from '..'
 import ServerEffect from '../effects'
+import ServerMissionNode from '../nodes'
+import ServerActionExecution from './executions'
+import { ServerPotentialOutcome, ServerRealizedOutcome } from './outcomes'
 
 /**
  * Class for managing mission actions on the server.
@@ -74,8 +74,8 @@ export default class ServerMissionAction extends MissionAction<
         end,
       }
 
-      // Handle execution.
-      let execution = this.node.handleExecution(executionData)
+      // Load execution.
+      let execution = this.node.loadExecution(executionData)
 
       // Grab next outcome for the action.
       let potentialOutcome: ServerPotentialOutcome | undefined =

@@ -91,7 +91,7 @@ export default class ServerMissionNode extends MissionNode<
   }
 
   // Implemented
-  public handleExecution(
+  public loadExecution(
     data: NonNullable<TActionExecutionJSON>,
   ): ServerActionExecution {
     // Get the action action being executed.
@@ -121,7 +121,7 @@ export default class ServerMissionNode extends MissionNode<
   }
 
   // Implemented
-  public handleOutcome(data: IActionOutcomeJSON): ServerRealizedOutcome {
+  public loadOutcome(data: IActionOutcomeJSON): ServerRealizedOutcome {
     // Get the action for the outcome.
     let action: ServerMissionAction | undefined = this.actions.get(
       data.actionID,
