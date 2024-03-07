@@ -16,8 +16,11 @@ export class GameInfo {
 
   /**
    * The accessiblity of the game to students.
+   * @option 'public' The game is accessible to all students.
+   * @option 'id-required' The game is accessible to students with the game ID.
+   * @option 'invite-only' The game is accessible to students with an invite.
    */
-  public accessibility: 'public' | 'private'
+  public accessibility: 'public' | 'id-required' | 'invite-only'
 
   /**
    * Whether students will be auto-assigned to their roles.
@@ -63,6 +66,10 @@ export class GameInfo {
     return {
       gameID: this.gameID,
       missionID: this.missionID,
+      accessibility: this.accessibility,
+      autoAssign: this.autoAssign,
+      resourcesEnabled: this.resourcesEnabled,
+      effectsEnabled: this.effectsEnabled,
     }
   }
 
@@ -95,30 +102,35 @@ export type TGameInfoOptions = {}
 export type TGameInfoJson = {
   /**
    * The unique identifier for the game.
+   * @default StringToolbox.generateRandomID()
    */
   gameID: string
   /**
    * The unique identifier for the mission being executed in the game.
+   * @default StringToolbox.generateRandomID()
    */
   missionID: string
   /**
    * The accessiblity of the game to students.
+   * @option 'public' The game is accessible to all students.
+   * @option 'id-required' The game is accessible to students with the game ID.
+   * @option 'invite-only' The game is accessible to students with an invite.
    * @default 'public'
    */
-  accessibility?: 'public' | 'private'
+  accessibility: 'public' | 'id-required' | 'invite-only'
   /**
    * Whether students will be auto-assigned to their roles.
    * @default true
    */
-  autoAssign?: boolean
+  autoAssign: boolean
   /**
    * Whether resources will be enabled in the game.
    * @default true
    */
-  resourcesEnabled?: boolean
+  resourcesEnabled: boolean
   /**
    * Whether effects will be enabled in the game.
    * @default true
    */
-  effectsEnabled?: boolean
+  effectsEnabled: boolean
 }
