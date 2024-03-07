@@ -190,7 +190,7 @@ export const routerMap: TMetisRouterMap = (
             let nodeData = missionData.nodeData
 
             for (let nodeDatum of nodeData) {
-              let actions: Array<any> = nodeDatum.actions
+              let actions: any[] = nodeDatum.actions
 
               for (let action of actions) {
                 if (!('scripts' in action)) {
@@ -298,6 +298,33 @@ export const routerMap: TMetisRouterMap = (
                   '<p>Node has not been executed.</p>'
               ) {
                 nodeDatum.preExecutionText = '<p><br></p>'
+              }
+            }
+          }
+
+          // -- BUILD 17 --
+          // This migration script is responsible
+          // for removing scripts from actions stored
+          // in a mission and adding a new property
+          // to actions called "effects."
+          if (schemaBuildNumber < 17) {
+            // Grab the nodeData.
+            let nodeData = missionData.nodeData
+
+            // Loop through nodeData.
+            for (let nodeDatum of nodeData) {
+              // Grab the actions.
+              let actions: any[] = nodeDatum.actions
+
+              // Loop through actions.
+              for (let action of actions) {
+                // If the action doesn't have effects,
+                // set it to an empty array.
+                if (!('effects' in action)) {
+                  action.effects = []
+                }
+                // Remove the scripts from the action.
+                delete action.scripts
               }
             }
           }
@@ -620,74 +647,13 @@ export const routerMap: TMetisRouterMap = (
   // effects that can be selected to be
   // affected by an action after it is
   // executed.
-  // todo: remove
+  // todo: remove (v1 effects)
   router.get(
     '/effects/',
     auth({ permissions: ['READ', 'WRITE', 'DELETE'] }),
     defineRequests({}),
     (request, response) => {
       response.json({ effectData })
-    },
-  )
-
-  // -- PUT /api/v1/missions/handle-action-execution/
-  // This handles the effect on an asset
-  // after an action is executed successfully
-  // ! DEPRECATED
-  router.put(
-    '/handle-action-execution/',
-    auth({}),
-    defineRequests({
-      body: {
-        missionID: RequestBodyFilters.OBJECTID,
-        nodeID: RequestBodyFilters.STRING,
-        actionID: RequestBodyFilters.STRING,
-      },
-    }),
-    (request, response) => {
-      let body: any = request.body
-
-      let missionID = body.missionID
-      let nodeID = body.nodeID
-      let actionID = body.actionID
-
-      MissionModel.findOne({ missionID }).exec((error: Error, mission: any) => {
-        // Handles errors.
-        if (error !== null) {
-          databaseLogger.error(
-            `### Failed to retrieve mission with ID "${missionID}".`,
-          )
-          databaseLogger.error(error)
-          return response.sendStatus(500)
-        }
-        // Handles mission not found.
-        else if (mission === null) {
-          return response.sendStatus(404)
-        }
-        // Handle proper mission retrieval.
-        else {
-          mission.nodeData.forEach((node: any) => {
-            if (node.nodeID === nodeID) {
-              node.actions.forEach((action: any) => {
-                if (action.actionID === actionID) {
-                  for (let script of action.scripts) {
-                    // if (script.scriptName in cyberCityCommandScripts) {
-                    //   cyberCityCommandScripts[script.scriptName](script.args)
-                    // } else if (script.scriptName === 'ASCOT_DEMO') {
-                    //   AscotApi.affectEntity(script.args)
-                    // } else {
-                    //   plcApiLogger.error(
-                    //     `No script found with the name ${script.scriptName}.`,
-                    //   )
-                    // }
-                  }
-                }
-              })
-            }
-          })
-          return response.sendStatus(200)
-        }
-      })
     },
   )
 
@@ -794,6 +760,7 @@ export const routerMap: TMetisRouterMap = (
         }
       })
 
+      // todo: ???
       // MissionModel.updateOne({ missionID }, mission, (error: any) => {
       //   if (error !== null) {
       //     databaseLogger.error(

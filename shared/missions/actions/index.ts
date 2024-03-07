@@ -1,8 +1,7 @@
-import { AnyObject } from 'metis/toolbox/objects'
 import { v4 as generateHash } from 'uuid'
-import { TCommonMissionNode } from '../nodes'
 import { TCommonMission } from '..'
 import { TCommonEffect, TCommonEffectJson } from '../effects'
+import { TCommonMissionNode } from '../nodes'
 
 /**
  * An action that can be executed on a mission node, causing a certain effect.
@@ -39,12 +38,6 @@ export default abstract class MissionAction<
 
   // Inherited
   public postExecutionFailureText: TCommonMissionAction['postExecutionFailureText']
-
-  // Inherited
-  /**
-   * @deprecated
-   */
-  public scripts: TCommonMissionAction['scripts']
 
   // Inherited
   public effects: TEffect[]
@@ -89,7 +82,6 @@ export default abstract class MissionAction<
     this.postExecutionFailureText =
       data.postExecutionFailureText ??
       MissionAction.DEFAULT_PROPERTIES.postExecutionFailureText
-    this.scripts = data.scripts ?? MissionAction.DEFAULT_PROPERTIES.scripts
     this.effects = this.parseEffects(
       data.effects ?? MissionAction.DEFAULT_PROPERTIES.effects,
     )
@@ -113,7 +105,6 @@ export default abstract class MissionAction<
       resourceCost: this.resourceCost,
       postExecutionSuccessText: this.postExecutionSuccessText,
       postExecutionFailureText: this.postExecutionFailureText,
-      scripts: this.scripts,
       effects: this.effects.map((effect) => effect.toJson()),
     }
   }
@@ -133,7 +124,6 @@ export default abstract class MissionAction<
         '<p>Enter your successful post-execution message here.</p>',
       postExecutionFailureText:
         '<p>Enter your unsuccessful post-execution message here.</p>',
-      scripts: [],
       effects: [],
     }
   }
@@ -195,11 +185,6 @@ export interface TCommonMissionAction {
    */
   postExecutionFailureText: string
   /**
-   * Effects that are performed when the action is executed successfully.
-   * @deprecated
-   */
-  scripts: IScript[]
-  /**
    * The effects that can be applied to the targets.
    */
   effects: TCommonEffect[]
@@ -220,18 +205,6 @@ export interface TCommonMissionAction {
    * @returns {TCommonMissionActionJson} the JSON for the action.
    */
   toJson: (options?: TMissionActionJsonOtions) => TCommonMissionActionJson
-}
-
-/**
- * Interface for the scripts that are used to affect targets.
- * @deprecated
- */
-export interface IScript {
-  label: string
-  description: string
-  scriptName: string
-  originalPath: string
-  args: AnyObject
 }
 
 /**
@@ -270,11 +243,6 @@ export interface TCommonMissionActionJson {
    * Text printed to the console after the action is executed unsuccessfully.
    */
   postExecutionFailureText: string
-  /**
-   * Effects that are performed when the action is executed successfully.
-   * @deprecated
-   */
-  scripts: IScript[]
   /**
    * The effects that can be applied to the targets (JSON).
    */
