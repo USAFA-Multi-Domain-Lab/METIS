@@ -1,16 +1,16 @@
-import ClientMissionNode from 'src/missions/nodes'
-import './MissionNode.scss'
-import { Vector1D } from '../../../../../../../shared/toolbox/space'
-import StringToolbox from '../../../../../../../shared/toolbox/strings'
-import { compute } from 'src/toolbox'
 import { useState } from 'react'
-import { TNodeExecutionState } from '../../../../../../../shared/missions/nodes'
-import { useEventListener, useInlineStyling } from 'src/toolbox/hooks'
+import Tooltip from 'src/components/content/communication/Tooltip'
 import {
   ButtonSVG,
   IButtonSVG,
 } from 'src/components/content/user-controls/ButtonSVG'
-import Tooltip from 'src/components/content/communication/Tooltip'
+import ClientMissionNode from 'src/missions/nodes'
+import { compute } from 'src/toolbox'
+import { useEventListener, useInlineStyling } from 'src/toolbox/hooks'
+import { TNodeExecutionState } from '../../../../../../../shared/missions/nodes'
+import { Vector1D } from '../../../../../../../shared/toolbox/space'
+import StringToolbox from '../../../../../../../shared/toolbox/strings'
+import './MissionNode.scss'
 
 /* -- constants -- */
 
@@ -28,7 +28,7 @@ export default function MissionNode({
   node,
   cameraZoom,
   onSelect,
-  applyTooltip = () => node.description,
+  applyTooltip = () => '',
 }: TMissionNode_P): JSX.Element | null {
   /* -- state -- */
 

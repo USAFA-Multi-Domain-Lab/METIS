@@ -128,28 +128,22 @@ export default function AuthPage(props: IAuthPage): JSX.Element | null {
         <form className='Form' onChange={handleChange} onSubmit={handleSubmit}>
           <Detail
             label={'Username'}
-            initialValue={null}
+            currentValue={undefined}
             deliverValue={(username: string) => {
               setUserID(username)
             }}
-            options={{
-              uniqueLabelClassName: 'Hidden',
-              placeholder: 'Username',
-              emptyStringAllowed: true,
-            }}
+            uniqueLabelClassName='Hidden'
+            placeholder='Username'
           />
           <Detail
             label={'Password'}
-            initialValue={null}
+            currentValue={undefined}
             deliverValue={(password: string) => {
               setPassword(password)
             }}
-            options={{
-              uniqueLabelClassName: 'Hidden',
-              inputType: 'password',
-              placeholder: 'Password',
-              emptyStringAllowed: true,
-            }}
+            uniqueLabelClassName='Hidden'
+            inputType='password'
+            placeholder='Password'
           />
           <input
             className='Submit Button'

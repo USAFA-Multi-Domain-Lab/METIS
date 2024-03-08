@@ -15,21 +15,21 @@ export default function TargetEnvEntry({
   action,
   effect,
   targetEnvironments,
-  isEmptyString,
-  areDefaultValues,
-  setSelectedEffect,
-  handleChange,
 }: TTargetEnvEntry_P): JSX.Element | null {
   /* -- GLOBAL CONTEXT -- */
   const { forceUpdate } = useGlobalContext().actions
 
   /* -- STATE -- */
   const [selectedTargetEnv, setSelectedTargetEnv] =
-    useState<ClientTargetEnvironment | null>(
-      effect.target ? effect.target.targetEnvironment : null,
+    useState<ClientTargetEnvironment>(
+      effect.targetEnvironment.id === 'metis-target-env-default'
+        ? new ClientTargetEnvironment()
+        : effect.targetEnvironment,
     )
-  const [selectedTarget, setSelectedTarget] = useState<ClientTarget | null>(
-    effect.target ? effect.target : null,
+  const [selectedTarget, setSelectedTarget] = useState<ClientTarget>(
+    effect.target.id === 'metis-target-default'
+      ? new ClientTarget(selectedTargetEnv)
+      : effect.target,
   )
 
   /* -- RENDER -- */
@@ -45,9 +45,13 @@ export default function TargetEnvEntry({
           return targetEnvironment.name
         }}
         deliverValue={(targetEnvironment: ClientTargetEnvironment) => {
+          // Update the target environment stored in the state.
           setSelectedTargetEnv(targetEnvironment)
-          setSelectedTarget(null)
-          effect.target = undefined
+          // Reset the target stored in the state to the default value.
+          setSelectedTarget(new ClientTarget(targetEnvironment))
+          // Reset the target to the default value.
+          effect.target = new ClientTarget(targetEnvironment)
+          // Display the changes.
           forceUpdate()
         }}
       />
@@ -56,12 +60,8 @@ export default function TargetEnvEntry({
         effect={effect}
         selectedTargetEnv={selectedTargetEnv}
         selectedTarget={selectedTarget}
-        targets={selectedTargetEnv?.targets ?? []}
-        isEmptyString={isEmptyString}
-        areDefaultValues={areDefaultValues}
+        targets={selectedTargetEnv.targets}
         setSelectedTarget={setSelectedTarget}
-        setSelectedEffect={setSelectedEffect}
-        handleChange={handleChange}
       />
     </div>
   )
@@ -85,20 +85,4 @@ export type TTargetEnvEntry_P = {
    * List of target environments to apply effects to.
    */
   targetEnvironments: ClientTargetEnvironment[]
-  /**
-   * A boolean that will determine if a field has been left empty.
-   */
-  isEmptyString: boolean
-  /**
-   * A boolean that will determine if a field has default values.
-   */
-  areDefaultValues: boolean
-  /**
-   * A function that will set the selected effect.
-   */
-  setSelectedEffect: (effect: ClientEffect | null) => void
-  /**
-   * A function that will be called when a change has been made.
-   */
-  handleChange: () => void
 }

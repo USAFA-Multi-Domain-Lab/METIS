@@ -36,6 +36,15 @@ export default function ArgEntry({
   const [defaultStringValue] = useState<string>('')
   const [defaultMediumStringValue] = useState<string>('<p><br></p>')
   const [defaultBooleanValue] = useState<boolean>(false)
+  const [prevNumberArgValue] = useState<number | undefined>(
+    effect.args[arg.id] || arg.default,
+  )
+  const [previousStringArgValue] = useState<string | undefined>(
+    effect.args[arg.id] || arg.default,
+  )
+  const [previousMediumStringArgValue] = useState<string | undefined>(
+    effect.args[arg.id] || arg.default,
+  )
 
   /* -- COMPUTED -- */
   /**
@@ -55,36 +64,27 @@ export default function ArgEntry({
   /**
    * The drop down value that is selected.
    */
-  const dropDownValue: TTargetArgDropdownOption | undefined = compute(() => {
+  const dropDownValue: TArgDropdownOption | undefined = compute(() => {
     // Initialize the value
-    let value: TTargetArgDropdownOption | undefined = defaultDropDownValue
+    let value: TArgDropdownOption | undefined = defaultDropDownValue
 
-    // If the argument is a dropdown and the effect already
-    // exists within the action, then it already has defined
-    // arguments.
-    if (action.effects.includes(effect) && arg.type === 'dropdown') {
-      // If the argument in the state is undefined then
-      // the value needs to show the defined value.
-      if (effectArgs[arg.id] === undefined) {
+    // If the argument is a dropdown...
+    if (arg.type === 'dropdown') {
+      // ...and the argument's value in the effect is defined,
+      // then use the effect's argument value.
+      if (effect.args[arg.id]) {
         value = arg.options.find((option) => option.id === effect.args[arg.id])
       }
-      // Otherwise, the argument's value has been
-      // updated/changed so use the updated value.
-      else {
-        value = arg.options.find((option) => option.id === effectArgs[arg.id])
-      }
-    }
-    // If the argument is a dropdown and the effect doesn't
-    // exist within the action, then the effect's arguments
-    // are undefined.
-    else if (arg.type === 'dropdown' && !action.effects.includes(effect)) {
-      // If the argument's value in the state is undefined
-      // then use the default value.
-      if (effectArgs[arg.id] === undefined && arg.default) {
+      // Otherwise, if the argument's value in the
+      // state is undefined, the argument's value in
+      // the effect is undefined, and the argument has
+      // a default value, then use the default value.
+      else if (!effectArgs[arg.id] && !effect.args[arg.id] && arg.default) {
         value = arg.default
       }
-      // Otherwise, the argument's value has been updated/changed
-      // so use the updated value.
+      // Otherwise, use the argument's value in the state.
+      // At the very least, the argument's value in the state
+      // will be the default drop down value (undefined).
       else {
         value = arg.options.find((option) => option.id === effectArgs[arg.id])
       }
@@ -101,32 +101,24 @@ export default function ArgEntry({
     // state's effect argument value.
     let value: number | null | undefined = effectArgs[arg.id]
 
-    // If the argument is a number and the effect already
-    // exists within the action, then it already has defined
-    // arguments.
-    if (action.effects.includes(effect) && arg.type === 'number') {
-      // If the argument in the state is undefined then
-      // the value needs to show the defined value.
-      if (effectArgs[arg.id] === undefined) {
+    // If the argument is a number...
+    if (arg.type === 'number') {
+      // ...and the argument's value in the effect
+      // is defined, then use the effect's argument
+      // value.
+      if (effect.args[arg.id]) {
         value = effect.args[arg.id]
       }
-      // Otherwise, the argument's value has been
-      // updated/changed so use the updated value.
-      else {
-        value = effectArgs[arg.id]
-      }
-    }
-    // If the argument is a number and the effect doesn't
-    // exist within the action, then the effect's arguments
-    // are undefined.
-    else if (arg.type === 'number' && !action.effects.includes(effect)) {
-      // If the argument's value in the state is undefined
-      // then use the default value.
-      if (effectArgs[arg.id] === undefined && arg.default) {
+      // Otherwise, if the argument's value in the
+      // state is undefined, the argument's value in
+      // the effect is undefined, and the argument has
+      // a default value, then use the default value.
+      else if (!effectArgs[arg.id] && !effect.args[arg.id] && arg.default) {
         value = arg.default
       }
-      // Otherwise, the argument's value has been updated/changed
-      // so use the updated value.
+      // Otherwise, use the argument's value in the state.
+      // At the very least, the argument's value in the state
+      // will be the default number value (null).
       else {
         value = effectArgs[arg.id]
       }
@@ -143,32 +135,24 @@ export default function ArgEntry({
     // state's effect argument value.
     let value: string | undefined = effectArgs[arg.id]
 
-    // If the argument is a string and the effect already
-    // exists within the action, then it already has defined
-    // arguments.
-    if (action.effects.includes(effect) && arg.type === 'string') {
-      // If the argument in the state is undefined then
-      // the value needs to show the defined value.
-      if (effectArgs[arg.id] === undefined) {
+    // If the argument is a string...
+    if (arg.type === 'string') {
+      // ...and the argument's value in the effect
+      // is defined, then use the effect's argument
+      // value.
+      if (effect.args[arg.id]) {
         value = effect.args[arg.id]
       }
-      // Otherwise, the argument's value has been
-      // updated/changed so use the updated value.
-      else {
-        value = effectArgs[arg.id]
-      }
-    }
-    // If the argument is a string and the effect doesn't
-    // exist within the action, then the effect's arguments
-    // are undefined.
-    else if (arg.type === 'string' && !action.effects.includes(effect)) {
-      // If the argument's value in the state is undefined
-      // then use the default value.
-      if (effectArgs[arg.id] === undefined && arg.default) {
+      // Otherwise, if the argument's value in the
+      // state is undefined, the argument's value in
+      // the effect is undefined, and the argument has
+      // a default value, then use the default value.
+      else if (!effectArgs[arg.id] && !effect.args[arg.id] && arg.default) {
         value = arg.default
       }
-      // Otherwise, the argument's value has been updated/changed
-      // so use the updated value.
+      // Otherwise, use the argument's value in the state.
+      // At the very least, the argument's value in the state
+      // will be the default string value (an empty string).
       else {
         value = effectArgs[arg.id]
       }
@@ -185,32 +169,24 @@ export default function ArgEntry({
     // state's effect argument value.
     let value: string | undefined = effectArgs[arg.id]
 
-    // If the argument is a medium string and the effect already
-    // exists within the action, then it already has defined
-    // arguments.
-    if (action.effects.includes(effect) && arg.type === 'medium-string') {
-      // If the argument in the state is undefined then
-      // the value needs to show the defined value.
-      if (effectArgs[arg.id] === undefined) {
+    // If the argument is a medium string...
+    if (arg.type === 'medium-string') {
+      // ...and the argument's value in the effect
+      // is defined, then use the effect's argument
+      // value.
+      if (effect.args[arg.id]) {
         value = effect.args[arg.id]
       }
-      // Otherwise, the argument's value has been
-      // updated/changed so use the updated value.
-      else {
-        value = effectArgs[arg.id]
-      }
-    }
-    // If the argument is a medium string and the effect doesn't
-    // exist within the action, then the effect's arguments
-    // are undefined.
-    else if (arg.type === 'medium-string' && !action.effects.includes(effect)) {
-      // If the argument's value in the state is undefined
-      // then use the default value.
-      if (effectArgs[arg.id] === undefined && arg.default) {
+      // Otherwise, if the argument's value in the
+      // state is undefined, the argument's value in
+      // the effect is undefined, and the argument has
+      // a default value, then use the default value.
+      else if (!effectArgs[arg.id] && !effect.args[arg.id] && arg.default) {
         value = arg.default
       }
-      // Otherwise, the argument's value has been updated/changed
-      // so use the updated value.
+      // Otherwise, use the argument's value in the state.
+      // At the very least, the argument's value in the state
+      // will be the default medium string value (an empty string).
       else {
         value = effectArgs[arg.id]
       }
@@ -227,32 +203,24 @@ export default function ArgEntry({
     // state's effect argument value.
     let value: boolean | undefined = effectArgs[arg.id]
 
-    // If the argument is a boolean and the effect already
-    // exists within the action, then it already has defined
-    // arguments.
-    if (action.effects.includes(effect) && arg.type === 'boolean') {
-      // If the argument in the state is undefined then
-      // the value needs to show the defined value.
-      if (effectArgs[arg.id] === undefined) {
+    // If the argument is a boolean...
+    if (arg.type === 'boolean') {
+      // ...and the argument's value in the effect
+      // is defined, then use the effect's argument
+      // value.
+      if (effect.args[arg.id]) {
         value = effect.args[arg.id]
       }
-      // Otherwise, the argument's value has been
-      // updated/changed so use the updated value.
-      else {
-        value = effectArgs[arg.id]
-      }
-    }
-    // If the argument is a boolean and the effect doesn't
-    // exist within the action, then the effect's arguments
-    // are undefined.
-    else if (arg.type === 'boolean' && !action.effects.includes(effect)) {
-      // If the argument's value in the state is undefined
-      // then use the default value.
-      if (effectArgs[arg.id] === undefined && arg.default) {
+      // Otherwise, if the argument's value in the
+      // state is undefined, the argument's value in
+      // the effect is undefined, and the argument has
+      // a default value, then use the default value.
+      else if (!effectArgs[arg.id] && !effect.args[arg.id] && arg.default) {
         value = arg.default
       }
-      // Otherwise, the argument's value has been updated/changed
-      // so use the updated value.
+      // Otherwise, use the argument's value in the state.
+      // At the very least, the argument's value in the state
+      // will be the default boolean value (false).
       else {
         value = effectArgs[arg.id]
       }
@@ -772,13 +740,13 @@ export default function ArgEntry({
         className={`${argFieldClassName} Dropdown`}
         key={`arg-${arg.id}_type-${arg.type}_container`}
       >
-        <DetailDropDown<TTargetArgDropdownOption>
+        <DetailDropDown<TArgDropdownOption>
           label={arg.name}
           options={arg.options}
           currentValue={dropDownValue}
           isExpanded={false}
-          renderDisplayName={(option: TTargetArgDropdownOption) => option.name}
-          deliverValue={(option: TTargetArgDropdownOption) => {
+          renderDisplayName={(option: TArgDropdownOption) => option.name}
+          deliverValue={(option: TArgDropdownOption) => {
             // Add the argument to the list of arguments.
             effectArgs[arg.id] = option.id
             // Update the argument based on the value.
@@ -807,6 +775,7 @@ export default function ArgEntry({
         <DetailNumber
           label={arg.name}
           initialValue={numberValue}
+          // ! previousValue={prevNumberArgValue}
           deliverValue={(value: number | null | undefined) => {
             // Add the argument to the list of arguments.
             effectArgs[arg.id] = value
@@ -814,12 +783,7 @@ export default function ArgEntry({
             updateArg()
             // If the value is null or undefined then the
             // argument is not filled out.
-            if (
-              value === arg.default ||
-              value === defaultNumberValue ||
-              value === null ||
-              value === undefined
-            ) {
+            if (value === arg.default || !value) {
               // Reset the argument to the default value.
               effectArgs[arg.id] = arg.default || defaultNumberValue
             }
@@ -828,7 +792,6 @@ export default function ArgEntry({
             minimum: arg.min,
             maximum: arg.max,
             unit: arg.unit,
-            emptyValueAllowed: true,
             displayOptionalText: displayOptionalText,
           }}
           key={`arg-${arg.id}_type-${arg.type}-field`}
@@ -846,7 +809,8 @@ export default function ArgEntry({
       >
         <Detail
           label={arg.name}
-          initialValue={stringValue}
+          currentValue={stringValue}
+          previousValue={previousStringArgValue}
           deliverValue={(value: string) => {
             // Add the argument to the list of arguments.
             effectArgs[arg.id] = value
@@ -859,10 +823,7 @@ export default function ArgEntry({
               effectArgs[arg.id] = arg.default || defaultStringValue
             }
           }}
-          options={{
-            emptyStringAllowed: arg.required,
-            displayOptionalText: displayOptionalText,
-          }}
+          displayOptionalText={displayOptionalText}
           key={`arg-${arg.id}_type-${arg.type}-field`}
         />
       </div>
@@ -879,6 +840,7 @@ export default function ArgEntry({
         <DetailBox
           label={arg.name}
           initialValue={mediumStringValue}
+          // ! previousValue={previousMediumStringArgValue}
           deliverValue={(value: string) => {
             // Add the argument to the list of arguments.
             effectArgs[arg.id] = value
@@ -892,7 +854,6 @@ export default function ArgEntry({
             }
           }}
           options={{
-            emptyStringAllowed: arg.required,
             elementBoundary: '.BorderBox',
             displayOptionalText: displayOptionalText,
           }}
@@ -932,7 +893,7 @@ export default function ArgEntry({
 /**
  * The dropdown argument type for a target.
  */
-export type TTargetArgDropdownOption = {
+export type TArgDropdownOption = {
   /**
    * The ID of the option.
    */

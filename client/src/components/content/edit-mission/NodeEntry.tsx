@@ -1,9 +1,9 @@
+import { useState } from 'react'
 import { useGlobalContext } from 'src/context'
 import ClientMission from 'src/missions'
 import ClientMissionAction from 'src/missions/actions'
 import ClientMissionNode from 'src/missions/nodes'
 import { compute } from 'src/toolbox'
-import { v4 as generateHash } from 'uuid'
 import Tooltip from '../communication/Tooltip'
 import {
   Detail,
@@ -28,9 +28,6 @@ import './NodeEntry.scss'
 export default function NodeEntry({
   node,
   missionPath,
-  isEmptyString,
-  nodeEmptyStringArray,
-  setNodeEmptyStringArray,
   setMissionPath,
   setSelectedAction,
   handleChange,
@@ -42,17 +39,58 @@ export default function NodeEntry({
   const [colorOptions] = globalContext.missionNodeColors
   const { notify } = globalContext.actions
 
+  /* -- STATE -- */
+  const [nodeName] = useState<string>(
+    node?.name ?? ClientMissionNode.DEFAULT_PROPERTIES.name,
+  )
+
   /* -- COMPUTED -- */
   /**
-   * The class name for the top of the box.
+   * The name of the mission.
    */
-  const boxTopClassName: string = compute(() => {
+  const missionName: string = compute(
+    () => node?.mission.name ?? ClientMission.DEFAULT_PROPERTIES.name,
+  )
+  /**
+   * The class name for the list of actions.
+   */
+  const actionClassName: string = compute(() => {
     // Create a default list of class names.
-    let classList: string[] = ['BoxTop']
+    let classList: string[] = ['AltDesign2']
 
-    // If there is at least one empty field, add the error class.
-    if (isEmptyString) {
-      classList.push('IsError')
+    // If the node is not executable then hide the list of actions.
+    if (!node?.executable) {
+      classList.unshift('Hidden')
+    }
+
+    // Combine the class names into a single string.
+    return classList.join(' ')
+  })
+  /**
+   * The class name for the new action container.
+   */
+  const newActionClassName: string = compute(() => {
+    // Create a default list of class names.
+    let classList: string[] = ['NewAction']
+
+    // If the node is not executable then hide the add action container.
+    if (node && !node.executable) {
+      classList.push('Hidden')
+    }
+
+    // Combine the class names into a single string.
+    return classList.join(' ')
+  })
+  /**
+   * The class name for the remove action button.
+   */
+  const removeActionClassName: string = compute(() => {
+    // Create a default list of class names.
+    let classList: string[] = ['']
+
+    // If there is only one action then add the disabled class.
+    if (node && node.actions.size < 2) {
+      classList.push('Disabled')
     }
 
     // Combine the class names into a single string.
@@ -73,119 +111,14 @@ export default function NodeEntry({
     // Combine the class names into a single string.
     return classList.join(' ')
   })
-  /**
-   * The class name for the add node button.
-   */
-  const addNodeClassName: string = compute(() => {
-    // Create a default list of class names.
-    let classList: string[] = ['FormButton', 'AddNode']
-
-    // If there is at least one empty field, add the disabled class.
-    if (isEmptyString) {
-      classList.push('Disabled')
-    }
-
-    // Combine the class names into a single string.
-    return classList.join(' ')
-  })
-  /**
-   * The error message for the close button.
-   */
-  const toggleErrorMessage: string | undefined = compute(() => {
-    if (isEmptyString) {
-      return 'The button above is locked until there are no empty fields.'
-    } else {
-      return undefined
-    }
-  })
-  /**
-   * The class name for the list of actions.
-   */
-  const actionClassName: string = compute(() => {
-    // Create a default list of class names.
-    let classList: string[] = ['AltDesign2']
-
-    // If there is at least one empty field, add the error class.
-    if (isEmptyString) {
-      classList.unshift('Disabled')
-    }
-
-    // If the node is not executable then hide the list of actions.
-    if (node && !node.executable) {
-      classList.unshift('Hidden')
-    }
-
-    // Combine the class names into a single string.
-    return classList.join(' ')
-  })
-  /**
-   * The class name for the new action container.
-   */
-  const newActionClassName: string = compute(() => {
-    // Create a default list of class names.
-    let classList: string[] = ['NewAction']
-
-    // If there is at least one empty field, add the disabled class.
-    if (isEmptyString) {
-      classList.push('Disabled')
-    }
-
-    // If the node is not executable then hide the add action container.
-    if (node && !node.executable) {
-      classList.push('Hidden')
-    }
-
-    // Combine the class names into a single string.
-    return classList.join(' ')
-  })
-  /**
-   * The name of the mission.
-   */
-  const missionName: string = compute(() => {
-    return node?.mission.name ?? ClientMission.DEFAULT_PROPERTIES.name
-  })
-  /**
-   * The class name for the remove action button.
-   */
-  const removeActionClassName: string = compute(() => {
-    // Create a default list of class names.
-    let classList: string[] = ['']
-
-    // If there is only one action then add the disabled class.
-    if (node && node.actions.size < 2) {
-      classList.push('Disabled')
-    }
-
-    // Combine the class names into a single string.
-    return classList.join(' ')
-  })
 
   /* -- FUNCTIONS -- */
-
-  /**
-   * If a field that was previously left empty meets the
-   * requirements then this will remove the key that was
-   * stored when the field was empty which will let the
-   * user know that the field has met its requirements
-   * when the state updates.
-   * @param field The field that was previously left empty.
-   */
-  const removeNodeEmptyString = (field: string) => {
-    nodeEmptyStringArray.map((nodeEmptyString: string, index: number) => {
-      if (
-        node !== null &&
-        nodeEmptyString === `nodeID=${node.nodeID}_field=${field}`
-      ) {
-        nodeEmptyStringArray.splice(index, 1)
-      }
-    })
-  }
 
   /**
    * This handles deleting an action from the selected node.
    */
   const handleDeleteActionRequest = (action: ClientMissionAction) => {
-    if (node !== null) {
+    if (node) {
       node.actions.delete(action.actionID)
       handleChange()
     }
@@ -196,7 +129,7 @@ export default function NodeEntry({
    */
   const handleEditActionRequest = (action: ClientMissionAction) => {
     setSelectedAction(action)
-    missionPath.push(action.name ?? '')
+    missionPath.push(action.name)
   }
 
   /**
@@ -206,35 +139,47 @@ export default function NodeEntry({
   const handlePathPositionClick = (index: number) => {
     // If the index is 0 then take the user
     // back to the mission entry.
-    if (index === 0 && node !== null) {
+    if (node && index === 0) {
       node.mission.deselectNode()
+    }
+  }
+
+  /**
+   * Handles creating a new action.
+   */
+  const createAction = () => {
+    // If the node is available then create a new action.
+    if (node) {
+      // Create a new action object.
+      let newAction: ClientMissionAction = new ClientMissionAction(node)
+      // Update the action stored in the state.
+      setSelectedAction(newAction)
+      // Add the action to the node.
+      node.actions.set(newAction.actionID, newAction)
+      // Allow the user to save the changes.
+      handleChange()
     }
   }
 
   /* -- RENDER -- */
 
-  if (node !== null) {
+  if (node) {
     return (
       <div className='NodeEntry SidePanel'>
         <div className='BorderBox'>
           {/* -- TOP OF BOX -- */}
-          <div className={boxTopClassName}>
+          <div className='BoxTop'>
             <div className='BackContainer'>
               <div
                 className='BackButton'
                 onClick={() => {
                   missionPath.pop()
-                  if (node !== null) {
-                    node.mission.deselectNode()
-                  }
+                  node.mission.deselectNode()
                 }}
               >
                 &lt;
                 <Tooltip description='Go back.' />
               </div>
-            </div>
-            <div className='ErrorMessage'>
-              Fix all errors before closing panel.
             </div>
             <div className='Path'>
               Location:{' '}
@@ -258,19 +203,12 @@ export default function NodeEntry({
           <div className='SidePanelSection'>
             <Detail
               label='Name'
-              initialValue={node.name}
+              currentValue={node.name}
+              previousValue={nodeName}
               deliverValue={(name: string) => {
-                if (node !== null && name !== '') {
-                  node.name = name
-                  setMissionPath([missionName, name])
-                  removeNodeEmptyString('name')
-                  handleChange()
-                } else if (node !== null && name === '') {
-                  setNodeEmptyStringArray([
-                    ...nodeEmptyStringArray,
-                    `nodeID=${node.nodeID}_field=name`,
-                  ])
-                }
+                node.name = name
+                setMissionPath([missionName, name])
+                handleChange()
               }}
               key={`${node.nodeID}_name`}
             />
@@ -281,15 +219,12 @@ export default function NodeEntry({
               isExpanded={false}
               renderDisplayName={(color) => color}
               deliverValue={(color: string) => {
-                if (node !== null) {
-                  node.color = color
-
-                  handleChange()
-                }
+                node.color = color
+                handleChange()
               }}
               uniqueClassName='Color'
               uniqueOptionStyling={(color) => {
-                if (node && node.color === color) {
+                if (node.color === color) {
                   return {
                     backgroundColor: `${color}`,
                     width: '65%',
@@ -319,10 +254,8 @@ export default function NodeEntry({
                 <div
                   className='ColorFill Detail FormButton'
                   onClick={() => {
-                    if (node !== null) {
-                      node.applyColorFill()
-                      handleChange()
-                    }
+                    node.applyColorFill()
+                    handleChange()
                   }}
                 >
                   <span className='Text'>
@@ -337,10 +270,8 @@ export default function NodeEntry({
               label='Description'
               initialValue={node.description}
               deliverValue={(description: string) => {
-                if (node !== null) {
-                  node.description = description
-                  handleChange()
-                }
+                node.description = description
+                handleChange()
               }}
               options={{
                 emptyStringAllowed: true,
@@ -353,10 +284,8 @@ export default function NodeEntry({
               label='Pre-Execution Text'
               initialValue={node.preExecutionText}
               deliverValue={(preExecutionText: string) => {
-                if (node !== null) {
-                  node.preExecutionText = preExecutionText
-                  handleChange()
-                }
+                node.preExecutionText = preExecutionText
+                handleChange()
               }}
               options={{
                 emptyStringAllowed: true,
@@ -369,11 +298,7 @@ export default function NodeEntry({
               label='Depth Padding'
               initialValue={node.depthPadding}
               deliverValue={(depthPadding: number | null | undefined) => {
-                if (
-                  node !== null &&
-                  depthPadding !== null &&
-                  depthPadding !== undefined
-                ) {
+                if (depthPadding) {
                   node.depthPadding = depthPadding
                   handleChange()
                 }
@@ -384,41 +309,26 @@ export default function NodeEntry({
               label={'Executable'}
               initialValue={node.executable}
               deliverValue={(executable: boolean) => {
-                if (node !== null) {
-                  node.executable = executable
+                node.executable = executable
 
-                  if (executable && node.actions.size === 0) {
-                    // Checks to make sure the selected node has
-                    // at least one action to choose from. If the
-                    // selected node does not have at least one
-                    // action then it will auto-generate one for
-                    // that node.
-                    let newAction: ClientMissionAction =
-                      new ClientMissionAction(node)
+                if (executable && node.actions.size === 0) {
+                  // Checks to make sure the selected node has
+                  // at least one action to choose from. If the
+                  // selected node does not have at least one
+                  // action then it will auto-generate one for
+                  // that node.
+                  let newAction: ClientMissionAction = new ClientMissionAction(
+                    node,
+                  )
 
-                    node.actions.set(newAction.actionID, newAction)
+                  node.actions.set(newAction.actionID, newAction)
 
-                    notify(
-                      `Auto-generated an action for ${node.name} because it is an executable node with no actions to execute.`,
-                    )
-                  }
+                  notify(
+                    `Auto-generated an action for ${node.name} because it is an executable node with no actions to execute.`,
+                  )
                 }
 
                 handleChange()
-              }}
-              lockState={
-                // Locks the toggle if there are empty fields.
-                !isEmptyString
-                  ? EToggleLockState.Unlocked
-                  : isEmptyString && node.executable
-                  ? EToggleLockState.LockedActivation
-                  : isEmptyString && !node.executable
-                  ? EToggleLockState.LockedDeactivation
-                  : EToggleLockState.Unlocked
-              }
-              options={{
-                errorMessage:
-                  'The button above is locked until there are no empty fields.',
               }}
               key={`${node.nodeID}_executable`}
             />
@@ -426,23 +336,18 @@ export default function NodeEntry({
               label={'Device'}
               initialValue={node.device}
               lockState={
-                // Locks the toggle if there are empty fields.
-                !isEmptyString && node.executable
+                // Locks the toggle if the node is not executable.
+                node.executable
                   ? EToggleLockState.Unlocked
-                  : isEmptyString && node.executable && node.device
+                  : node.executable && node.device
                   ? EToggleLockState.LockedActivation
-                  : isEmptyString && node.executable && !node.device
+                  : node.executable && !node.device
                   ? EToggleLockState.LockedDeactivation
                   : EToggleLockState.LockedDeactivation
               }
               deliverValue={(device: boolean) => {
-                if (node !== null) {
-                  node.device = device
-                  handleChange()
-                }
-              }}
-              options={{
-                errorMessage: toggleErrorMessage,
+                node.device = device
+                handleChange()
               }}
               key={`${node.nodeID}_device`}
             />
@@ -516,16 +421,7 @@ export default function NodeEntry({
             {/* -- NEW ACTION BUTTON -- */}
             <div className={newActionClassName}>
               <div className='ButtonContainer'>
-                <div
-                  className='FormButton AddAction'
-                  onClick={() => {
-                    setSelectedAction(
-                      new ClientMissionAction(node, {
-                        actionID: generateHash(),
-                      }),
-                    )
-                  }}
-                >
+                <div className='FormButton AddAction' onClick={createAction}>
                   <span className='Text'>
                     <span className='LeftBracket'>[</span> New Action{' '}
                     <span className='RightBracket'>]</span>
@@ -537,7 +433,7 @@ export default function NodeEntry({
 
             {/* -- BUTTON(S) -- */}
             <div className='ButtonContainer'>
-              <div className={addNodeClassName}>
+              <div className='FormButton AddNode'>
                 <span className='Text' onClick={handleAddRequest}>
                   <span className='LeftBracket'>[</span> Add adjacent node{' '}
                   <span className='RightBracket'>]</span>
@@ -574,20 +470,6 @@ export type TNodeEntry_P = {
    * @note This will help the user understand what they are editing.
    */
   missionPath: string[]
-  /**
-   * A boolean that will determine if a field has been left empty.
-   */
-  isEmptyString: boolean
-  /**
-   * An array of strings that will be used to determine
-   * if a field has been left empty.
-   */
-  nodeEmptyStringArray: string[]
-  /**
-   * A function that will set the array of strings that
-   * will be used to determine if a field has been left empty.
-   */
-  setNodeEmptyStringArray: (nodeEmptyStringArray: string[]) => void
   /**
    * A function that will set the mission path.
    */

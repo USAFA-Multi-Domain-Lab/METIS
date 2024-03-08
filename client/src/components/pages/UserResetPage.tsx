@@ -139,7 +139,7 @@ export default function UserResetPage(): JSX.Element | null {
           </div>
           <Detail
             label='New Password'
-            initialValue={null}
+            currentValue={undefined}
             deliverValue={(password: string) => {
               user.password1 = password
 
@@ -181,19 +181,18 @@ export default function UserResetPage(): JSX.Element | null {
                 setPassword2ClassName('Correct')
               }
             }}
-            options={{
-              deliverError: deliverPassword1Error,
-              deliverErrorMessage: password1ErrorMessage,
-              uniqueLabelClassName: password1ClassName,
-              uniqueInputClassName: password1ClassName,
-              inputType: 'password',
-              placeholder: 'Enter a new password here...',
-            }}
+            emptyStringAllowed={false}
+            deliverError={deliverPassword1Error}
+            errorMessage={password1ErrorMessage}
+            uniqueLabelClassName={password1ClassName}
+            uniqueInputClassName={password1ClassName}
+            inputType='password'
+            placeholder='Enter a new password here...'
           />
 
           <Detail
             label='Confirm New Password'
-            initialValue={null}
+            currentValue={undefined}
             deliverValue={(password: string) => {
               user.password2 = password
 
@@ -231,14 +230,13 @@ export default function UserResetPage(): JSX.Element | null {
                 setPassword2ErrorMessage('Passwords must match.')
               }
             }}
-            options={{
-              deliverError: deliverPassword2Error,
-              deliverErrorMessage: password2ErrorMessage,
-              uniqueLabelClassName: password2ClassName,
-              uniqueInputClassName: password2ClassName,
-              inputType: 'password',
-              placeholder: 'Confirm your new password here...',
-            }}
+            emptyStringAllowed={false}
+            deliverError={deliverPassword2Error}
+            errorMessage={password2ErrorMessage}
+            uniqueLabelClassName={password2ClassName}
+            uniqueInputClassName={password2ClassName}
+            inputType='password'
+            placeholder='Confirm your new password here...'
           />
         </div>
 

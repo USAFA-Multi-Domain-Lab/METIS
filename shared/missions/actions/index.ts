@@ -116,7 +116,7 @@ export default abstract class MissionAction<
     return {
       actionID: generateHash(),
       name: 'New Action',
-      description: '<p>Enter your description here.</p>',
+      description: '<p><br></p>',
       processTime: 5000,
       successChance: 0.5,
       resourceCost: 1,

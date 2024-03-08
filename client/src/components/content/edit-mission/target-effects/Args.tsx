@@ -18,10 +18,6 @@ export default function Args({
   action,
   effect,
   target,
-  isEmptyString,
-  areDefaultValues,
-  setSelectedEffect,
-  handleChange,
 }: TArgs_P): JSX.Element | null {
   /* -- STATE -- */
   const [effectArgs] = useState<AnyObject>({})
@@ -79,33 +75,6 @@ export default function Args({
   const groupingEntries: [string, TTargetArg[]][] = compute(() => {
     return Object.entries(groupings)
   })
-  /**
-   * Class name for the save button.
-   */
-  const createButtonClassName: string = compute(() => {
-    // Create a default list of class names.
-    let classList: string[] = ['Button']
-
-    // If the effect is not new then hide the create button.
-    if (action.effects.includes(effect)) {
-      classList.push('Hidden')
-    } else {
-      // If there are required properties not filled out ||
-      // If there is an empty field ||
-      // If there are default values...
-      // then disable the create button.
-      if (
-        reqPropertiesNotFilledOut.length > 0 ||
-        isEmptyString ||
-        areDefaultValues
-      ) {
-        // Disable the create button.
-        classList.push('Disabled')
-      }
-    }
-
-    return classList.join(' ')
-  })
 
   /* -- EFFECTS -- */
   // When the effect or target changes, update the
@@ -113,20 +82,6 @@ export default function Args({
   useEffect(() => {
     setArgDependencies([])
   }, [effect, target])
-
-  /* -- FUNCTIONS -- */
-
-  /**
-   * Handles creating the effect.
-   */
-  const createEffect = () => {
-    // Add the effect to the action.
-    action.effects.push(effect)
-    // Handle the update to the mission.
-    handleChange()
-    // Set the selected effect to null.
-    setSelectedEffect(null)
-  }
 
   /* -- RENDER -- */
   // If the grouping entries are not empty and a target
@@ -194,13 +149,6 @@ export default function Args({
             </div>
           )
         })}
-
-        {/* -- BUTTONS -- */}
-        <div className='ButtonContainer'>
-          <div className={createButtonClassName} onClick={createEffect}>
-            Create Effect
-          </div>
-        </div>
       </div>
     )
   } else {
@@ -226,20 +174,4 @@ export type TArgs_P = {
    * The selected target.
    */
   target: ClientTarget | null
-  /**
-   * A boolean that will determine if a field has been left empty.
-   */
-  isEmptyString: boolean
-  /**
-   * A boolean that will determine if a field has default values.
-   */
-  areDefaultValues: boolean
-  /**
-   * A function that will set the selected effect.
-   */
-  setSelectedEffect: (effect: ClientEffect | null) => void
-  /**
-   * A function that will be called when a change has been made.
-   */
-  handleChange: () => void
 }

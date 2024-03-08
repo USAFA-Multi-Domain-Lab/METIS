@@ -4,7 +4,6 @@ import Target, {
   TCommonTarget,
   TCommonTargetJson,
 } from '../../target-environments/targets'
-import { TAjaxStatus } from '../../toolbox/ajax'
 import { AnyObject } from '../../toolbox/objects'
 import { TCommonMissionAction } from '../actions'
 
@@ -37,17 +36,14 @@ export default abstract class Effect<
    * already been loaded. Otherwise, it will be the ID
    * of the target.
    */
-  protected _target:
-    | Target<TTargetEnvironment>
-    | TCommonTargetJson['id']
-    | undefined
+  protected _target: Target<TTargetEnvironment> | TCommonTargetJson['id']
   /**
    * The target to which the effect will be applied.
    * @note If the data has not been loaded, this will throw
    * an error.
    */
-  public get target(): Target<TTargetEnvironment> | undefined {
-    if (!(this._target instanceof Target) && this._target !== undefined) {
+  public get target(): Target<TTargetEnvironment> {
+    if (!(this._target instanceof Target)) {
       throw new Error('Target data for this effect has not been populated.')
     }
 
@@ -58,47 +54,29 @@ export default abstract class Effect<
    * @note Setting this will cause the target data to be reloaded.
    */
   public set target(
-    target: Target<TTargetEnvironment> | TCommonTargetJson['id'] | undefined,
+    target: Target<TTargetEnvironment> | TCommonTargetJson['id'],
   ) {
-    if (target instanceof Target || target === undefined) {
+    if (target instanceof Target) {
       this._target = target
     } else {
       this._target = target
-      this._targetAjaxStatus = 'NotLoaded'
     }
-  }
-
-  /**
-   * The status related to whether the associated target has been loaded.
-   */
-  protected _targetAjaxStatus: TAjaxStatus
-  /**
-   * The status related to whether the associated target has been loaded.
-   */
-  public get targetAjaxStatus(): TAjaxStatus {
-    return this._targetAjaxStatus
   }
 
   /**
    * The ID of the target to which the effect will be applied.
    */
   public get targetId(): TCommonTargetJson['id'] {
-    let target:
-      | Target<TTargetEnvironment>
-      | TCommonTargetJson['id']
-      | undefined = this._target
+    let target: Target<TTargetEnvironment> | TCommonTargetJson['id'] =
+      this._target
 
     // If the target is a Target Object, return its ID.
     if (target instanceof Target) {
       return target.id
     }
-    // Or if the target is an ID, return it.
-    else if (typeof target === 'string') {
-      return target
-    }
-    // Otherwise, the target is undefined, so return an empty string.
+    // Otherwise, the target is an ID.
     else {
-      return ''
+      return target
     }
   }
   /**
@@ -107,7 +85,27 @@ export default abstract class Effect<
    */
   public set targetId(targetId: TCommonTargetJson['id']) {
     this._target = targetId
-    this._targetAjaxStatus = 'NotLoaded'
+  }
+
+  /**
+   * The environment in which the target exists.
+   */
+  public get targetEnvironment(): TTargetEnvironment {
+    return this.target.targetEnvironment
+  }
+
+  /**
+   * The node on which the action is being executed.
+   */
+  public get node(): TCommonMissionAction['node'] {
+    return this.action.node
+  }
+
+  /**
+   * The mission of which the action is a part.
+   */
+  public get mission(): TCommonMissionAction['mission'] {
+    return this.action.mission
   }
 
   /**
@@ -126,9 +124,6 @@ export default abstract class Effect<
     this.description = data.description ?? Effect.DEFAULT_PROPERTIES.description
     this._target = data.targetId ?? Effect.DEFAULT_PROPERTIES.targetId
     this.args = data.args ?? Effect.DEFAULT_PROPERTIES.args
-
-    // Initialize target ajax status.
-    this._targetAjaxStatus = 'NotLoaded'
 
     // If the target data has been provided, load it.
     if (data.targetId) {
@@ -165,9 +160,9 @@ export default abstract class Effect<
    */
   public static readonly DEFAULT_PROPERTIES: Required<TCommonEffectJson> = {
     id: generateHash(),
-    name: undefined,
-    description: undefined,
-    targetId: undefined,
+    name: 'New Effect',
+    description: '<p><br></p>',
+    targetId: Target.DEFAULT_PROPERTIES.id,
     args: {},
   }
 }
@@ -195,7 +190,7 @@ export interface TCommonEffect {
   /**
    * The target to which the effect will be applied.
    */
-  target: TCommonTarget | undefined
+  target: TCommonTarget
   /**
    * The ID of the effect.
    */
@@ -203,11 +198,11 @@ export interface TCommonEffect {
   /**
    * The name of the effect.
    */
-  name: string | undefined
+  name: string
   /**
    * Descibes what the effect does.
    */
-  description: string | undefined
+  description: string
   /**
    * The arguments used to affect an entity via the effects API.
    */
@@ -229,15 +224,15 @@ export interface TCommonEffectJson {
   /**
    * The name of the effect.
    */
-  name: string | undefined
+  name: string
   /**
    * Descibes what the effect does.
    */
-  description: string | undefined
+  description: string
   /**
    * The ID of the target to which the effect will be applied.
    */
-  targetId: TCommonTargetJson['id'] | undefined
+  targetId: TCommonTargetJson['id']
   /**
    * The arguments used to affect an entity via the effects API.
    */

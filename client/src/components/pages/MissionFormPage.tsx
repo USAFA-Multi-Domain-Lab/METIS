@@ -8,7 +8,6 @@ import ClientMissionNode, { ENodeDeleteMethod } from 'src/missions/nodes'
 import { ClientTargetEnvironment } from 'src/target-environments'
 import { compute } from 'src/toolbox'
 import { useEventListener, useMountHandler } from 'src/toolbox/hooks'
-import MissionAction from '../../../../shared/missions/actions'
 import { SingleTypeObject } from '../../../../shared/toolbox/objects'
 import { IPage } from '../App'
 import ActionEntry from '../content/edit-mission/ActionEntry'
@@ -39,7 +38,6 @@ export default function MissionFormPage(
 ): JSX.Element | null {
   /* -- GLOBAL CONTEXT -- */
   const globalContext = useGlobalContext()
-  const [notifications] = globalContext.notifications
   const {
     beginLoading,
     finishLoading,
@@ -54,6 +52,7 @@ export default function MissionFormPage(
   /* -- STATE -- */
 
   const [mission, setMission] = useState<ClientMission>(new ClientMission())
+  const [missionName, setMissionName] = useState<string>(mission.name)
   const [areUnsavedChanges, setAreUnsavedChanges] = useState<boolean>(false)
   const [selectedNode, setSelectedNode] = useState<ClientMissionNode | null>(
     null,
@@ -65,16 +64,6 @@ export default function MissionFormPage(
   )
   const [nodeStructuringIsActive, activateNodeStructuring] =
     useState<boolean>(false)
-  const [missionEmptyStringArray, setMissionEmptyStringArray] = useState<
-    string[]
-  >([])
-  const [nodeEmptyStringArray, setNodeEmptyStringArray] = useState<string[]>([])
-  const [actionEmptyStringArray, setActionEmptyStringArray] = useState<
-    string[]
-  >([])
-  const [effectEmptyStringArray, setEffectEmptyStringArray] = useState<
-    string[]
-  >([])
   const [missionPath, setMissionPath] = useState<string[]>([])
   const [targetEnvironments, setTargetEnvironments] = useState<
     ClientTargetEnvironment[]
@@ -86,119 +75,6 @@ export default function MissionFormPage(
    */
   const missionDetailsIsActive: boolean = compute(
     () => selectedNode === null && !nodeStructuringIsActive,
-  )
-  /**
-   * Determines if any of the fields are empty.
-   */
-  const isEmptyString: boolean = compute(
-    () =>
-      missionEmptyStringArray.length > 0 ||
-      nodeEmptyStringArray.length > 0 ||
-      actionEmptyStringArray.length > 0 ||
-      effectEmptyStringArray.length > 0,
-  )
-  /**
-   * This determines if there are any of the properties are default values.
-   */
-  const areDefaultValues: boolean = compute(() => {
-    let areDefaultValues: boolean = false
-    let missionHasDefaultValues: boolean = false
-    let nodeHasDefaultValues: boolean = false
-    let actionHasDefaultValues: boolean = false
-    let effectHasDefaultValues: boolean = false
-
-    // Check if the mission has default values.
-    if (
-      mission.name === ClientMission.DEFAULT_PROPERTIES.name ||
-      mission.introMessage === ClientMission.DEFAULT_PROPERTIES.introMessage
-    ) {
-      // todo: remove comment after updating the mission class
-      // missionHasDefaultValues = true
-    }
-
-    // Check if the selected node has default values.
-    if (selectedNode) {
-      if (selectedNode.name === ClientMissionNode.DEFAULT_PROPERTIES.name) {
-        // todo: remove comment after updating the node class
-        // nodeHasDefaultValues = true
-      }
-    }
-
-    // Check if the selected action has default values.
-    if (selectedAction) {
-      if (
-        selectedAction.name === MissionAction.DEFAULT_PROPERTIES.name ||
-        selectedAction.description ===
-          MissionAction.DEFAULT_PROPERTIES.description ||
-        selectedAction.successChance ===
-          MissionAction.DEFAULT_PROPERTIES.successChance ||
-        selectedAction.processTime ===
-          MissionAction.DEFAULT_PROPERTIES.processTime ||
-        selectedAction.resourceCost ===
-          MissionAction.DEFAULT_PROPERTIES.resourceCost ||
-        selectedAction.postExecutionSuccessText ===
-          MissionAction.DEFAULT_PROPERTIES.postExecutionSuccessText ||
-        selectedAction.postExecutionFailureText ===
-          MissionAction.DEFAULT_PROPERTIES.postExecutionFailureText
-      ) {
-        // todo: remove comment after updating the action class
-        // actionHasDefaultValues = true
-      }
-    }
-
-    // Check if the selected effect has default values.
-    if (selectedEffect) {
-      if (
-        selectedEffect.name === undefined ||
-        selectedEffect.description === undefined ||
-        selectedEffect.target === undefined
-      ) {
-        effectHasDefaultValues = true
-      }
-    }
-
-    // If any of the properties have default values,
-    // then set areDefaultValues to true.
-    if (
-      missionHasDefaultValues ||
-      nodeHasDefaultValues ||
-      actionHasDefaultValues ||
-      effectHasDefaultValues
-    ) {
-      areDefaultValues = true
-    }
-
-    return areDefaultValues
-  })
-  /**
-   * Determines whether or not to gray out the save button.
-   */
-  const grayOutSaveButton: boolean = compute(
-    () => !areUnsavedChanges || isEmptyString || areDefaultValues,
-  )
-  /**
-   * Determines whether or not to gray out the edit button.
-   */
-  const grayOutEditButton: boolean = compute(
-    () => nodeStructuringIsActive || isEmptyString || areDefaultValues,
-  )
-  /**
-   * Determines whether or not to gray out the deselect node button.
-   */
-  const grayOutDeselectNodeButton: boolean = compute(
-    () => isEmptyString || areDefaultValues,
-  )
-  /**
-   * Determines whether or not to gray out the add node button.
-   */
-  const grayOutAddNodeButton: boolean = compute(
-    () => isEmptyString || areDefaultValues,
-  )
-  /**
-   * Determines whether or not to gray out the delete node button.
-   */
-  const grayOutDeleteNodeButton: boolean = compute(
-    () => mission.nodes.length < 2,
   )
   /**
    * Default size of the output panel.
@@ -232,6 +108,7 @@ export default function MissionFormPage(
         })
         setMission(mission)
         setMissionPath([mission.name])
+        setMissionName(mission.name)
         setTargetEnvironments(await ClientTargetEnvironment.fetchAll())
       } catch {
         handleError('Failed to load mission.')
@@ -252,18 +129,46 @@ export default function MissionFormPage(
     }
   })
 
-  // If the selected node changes, then the mission
-  // path is updated and it will reset the selected
-  // action and effect.
+  // Updates the mission path when the selected
+  // node, action, or effect changes.
   useEffect(() => {
-    if (selectedNode === null) {
+    // If there is no selected node, action, or effect,
+    // then set the mission path to the mission name.
+    if (!selectedNode && !selectedAction && !selectedEffect) {
       setMissionPath([mission.name])
-    } else {
+    }
+    // If there is a selected node, but no selected action
+    // or effect, then set the mission path to the mission
+    // name and the selected node name.
+    else if (selectedNode && !selectedAction && !selectedEffect) {
       setMissionPath([mission.name, selectedNode.name])
     }
-    setSelectedAction(null)
+    // If there is a selected node and action, but no
+    // selected effect, then set the mission path to the
+    // mission name, the selected node name, and the
+    // selected action name.
+    else if (selectedNode && selectedAction && !selectedEffect) {
+      setMissionPath([mission.name, selectedNode.name, selectedAction.name])
+    }
+    // If there is a selected node, action, and effect,
+    // then set the mission path to the mission name, the
+    // selected node name, the selected action name, and
+    // the selected effect name.
+    else if (selectedNode && selectedAction && selectedEffect) {
+      setMissionPath([
+        mission.name,
+        selectedNode.name,
+        selectedAction.name,
+        selectedEffect.name,
+      ])
+    }
+  }, [selectedNode, selectedAction, selectedEffect])
+
+  // When the selected action changes, ensure that
+  // the selected effect is null.
+  useEffect(() => {
     setSelectedEffect(null)
-  }, [selectedNode])
+  }, [selectedAction])
 
   // Add event listener to watch for node selection
   // changes, updating the state accordingly.
@@ -289,19 +194,13 @@ export default function MissionFormPage(
             purpose: EButtonSVGPurpose.Cancel,
             componentKey: 'node-button-deselect',
             tooltipDescription: 'Deselect this node (Closes panel view also).',
-            disabled: grayOutDeselectNodeButton,
-            onClick: () => {
-              validateNodeSelectionChange(() => {
-                mission.deselectNode()
-              })
-            },
+            onClick: () => mission.deselectNode(),
           },
           add: {
             ...ButtonSVG.defaultProps,
             purpose: EButtonSVGPurpose.Add,
             componentKey: 'node-button-add',
             tooltipDescription: 'Create an adjacent node on the map.',
-            disabled: grayOutAddNodeButton,
             onClick: () => {
               mission.creationMode = true
             },
@@ -311,7 +210,6 @@ export default function MissionFormPage(
             purpose: EButtonSVGPurpose.Cancel,
             componentKey: 'node-button-add-cancel',
             tooltipDescription: 'Cancel node creation.',
-            disabled: grayOutAddNodeButton,
             onClick: () => (mission.creationMode = false),
           },
           remove: {
@@ -319,7 +217,7 @@ export default function MissionFormPage(
             purpose: EButtonSVGPurpose.Remove,
             componentKey: 'node-button-remove',
             tooltipDescription: 'Delete this node.',
-            disabled: grayOutDeleteNodeButton,
+            disabled: mission.nodes.length < 2,
             onClick: (_, node) => {
               handleNodeDeleteRequest(node)
             },
@@ -350,10 +248,8 @@ export default function MissionFormPage(
       // Update state.
       setSelectedNode(nextSelection)
       activateNodeStructuring(false)
-      setMissionEmptyStringArray([])
-      setNodeEmptyStringArray([])
-      setActionEmptyStringArray([])
-      setEffectEmptyStringArray([])
+      setSelectedAction(null)
+      setSelectedEffect(null)
 
       // If a node is currently selected,
       // push the name to the mission path.
@@ -371,50 +267,11 @@ export default function MissionFormPage(
     setAreUnsavedChanges(true)
   })
 
-  // If the selected action changes, then the mission
-  // path will be updated and it will reset the selected
-  // effect.
-  useEffect(() => {
-    if (selectedNode && selectedAction === null) {
-      setMissionPath([mission.name, selectedNode.name])
-    } else if (selectedNode && selectedAction) {
-      setMissionPath([
-        mission.name,
-        selectedNode.name,
-        selectedAction.name || '',
-      ])
-    } else if (selectedNode === null) {
-      setMissionPath([mission.name])
-    }
-
-    setSelectedEffect(null)
-  }, [selectedAction])
-
-  // If the selected effect changes, then the mission
-  // path will be updated.
-  useEffect(() => {
-    if (selectedNode && selectedAction && selectedEffect) {
-      setMissionPath([
-        mission.name,
-        selectedNode.name,
-        selectedAction.name || '',
-        selectedEffect.name || '',
-      ])
-    } else if (selectedNode && selectedAction) {
-      setMissionPath([
-        mission.name,
-        selectedNode.name,
-        selectedAction.name || '',
-      ])
-    } else if (selectedNode === null) {
-      setMissionPath([mission.name])
-    }
-  }, [selectedEffect])
-
   /* -- FUNCTIONS -- */
 
-  // This is called when a change is
-  // made that would require saving.
+  /**
+   * Handles when a change is made that would require saving.
+   */
   const handleChange = (): void => {
     setAreUnsavedChanges(true)
     forceUpdate()
@@ -447,10 +304,11 @@ export default function MissionFormPage(
     })
   }
 
-  // If a node is deleted, and no remain
-  // in the mission, one is auto-generated.
-  // If this has happened, the user is
-  // notified here.
+  /**
+   * Ensures that at least one node exists in the mission.
+   * @note If a node is deleted and there are no remaining nodes,
+   * then a new node is auto-generated and the user is notified.
+   */
   const ensureOneNodeExists = (): void => {
     if (
       mission.nodes.length === 1 &&
@@ -463,9 +321,10 @@ export default function MissionFormPage(
     }
   }
 
-  // If a node is selected and is executable,
-  // this ensures that at least on action
-  // exists.
+  /**
+   * Ensures that at least one action exists for the selected node
+   * if it is an executable node.
+   */
   const ensureOneActionExistsIfExecutable = (): void => {
     if (
       selectedNode !== null &&
@@ -493,18 +352,17 @@ export default function MissionFormPage(
    */
   let onNodeSelect = (node: ClientMissionNode) => {
     if (node !== selectedNode) {
-      validateNodeSelectionChange(() => {
-        // Select the node.
-        mission.selectNode(node)
-
-        // Create an action, if necessary.
-        ensureOneActionExistsIfExecutable()
-      })
+      // Select the node.
+      mission.selectNode(node)
+      // Create an action, if necessary.
+      ensureOneActionExistsIfExecutable()
     }
   }
 
-  // This is called when a node is
-  // requested to be deleted.
+  /**
+   * Handler for when the user requests to delete a node.
+   * @param node The node to be deleted.
+   */
   const handleNodeDeleteRequest = (node: ClientMissionNode): void => {
     if (node !== null) {
       if (node.hasChildren) {
@@ -559,57 +417,9 @@ export default function MissionFormPage(
     mission.creationMode = true
   }
 
-  // This verifies that node selection
-  // is able to change.
-  const validateNodeSelectionChange = (
-    onValid: () => void,
-    onInvalid: () => void = () => {},
-  ): void => {
-    if (
-      missionDetailsIsActive &&
-      missionEmptyStringArray.length > 0 &&
-      areDefaultValues
-    ) {
-      notify(
-        `**Error:** The mission side panel has at least one field that was left empty. This field must contain at least one character.`,
-        { duration: null, errorMessage: true },
-      )
-      return onInvalid()
-    }
-    if (selectedNode && nodeEmptyStringArray.length > 0 && areDefaultValues) {
-      notify(
-        `**Error:** The node called "${selectedNode.name.toLowerCase()}" has at least one field that was left empty. These fields must contain at least one character.`,
-        { duration: null, errorMessage: true },
-      )
-      return onInvalid()
-    }
-    if (
-      selectedAction &&
-      effectEmptyStringArray.length > 0 &&
-      areDefaultValues
-    ) {
-      notify(
-        `**Error:** The selected action has at least one field that was left empty. These fields must contain at least one character.`,
-        { duration: null, errorMessage: true },
-      )
-      return onInvalid()
-    }
-    if (
-      selectedEffect &&
-      effectEmptyStringArray.length > 0 &&
-      areDefaultValues
-    ) {
-      notify(
-        `**Error:** The selected effect has at least one field that was left empty. These fields must contain at least one character.`,
-        { duration: null, errorMessage: true },
-      )
-      return onInvalid()
-    }
-    return onValid()
-  }
-
-  // This will redirect the user to the
-  // home page.
+  /**
+   * Redirects the user to the home page.
+   */
   const goHome = (): void => {
     if (!areUnsavedChanges) {
       navigateTo('HomePage', {})
@@ -635,8 +445,9 @@ export default function MissionFormPage(
     }
   }
 
-  // This will redirect the user to the
-  // game page.
+  /**
+   * Redirects the user to the game page.
+   */
   const goToGamePage = (): void => {
     if (!areUnsavedChanges) {
       navigateTo('GamePage', {
@@ -678,28 +489,16 @@ export default function MissionFormPage(
         activateNodeStructuring(true)
       },
       tooltipDescription: 'Edit the structure and order of nodes.',
-      disabled: grayOutEditButton,
+      disabled: nodeStructuringIsActive,
     }),
     new ButtonSVG({
       ...ButtonSVG.defaultProps,
       purpose: EButtonSVGPurpose.Save,
       onClick: save,
       tooltipDescription: 'Save changes.',
-      disabled: grayOutSaveButton,
+      disabled: !areUnsavedChanges,
     }),
   ]
-
-  // If all fields are filled in, then make sure
-  // any notifications are dismissed after 2 seconds.
-  if (!isEmptyString) {
-    for (let notification of notifications) {
-      if (notification.errorMessage) {
-        setTimeout(() => {
-          notification.dismiss()
-        }, 2000)
-      }
-    }
-  }
 
   /* -- RENDER -- */
 
@@ -758,25 +557,17 @@ export default function MissionFormPage(
                   <MissionEntry
                     active={missionDetailsIsActive}
                     mission={mission}
+                    missionName={missionName}
                     missionPath={missionPath}
-                    missionEmptyStringArray={missionEmptyStringArray}
-                    setMissionEmptyStringArray={setMissionEmptyStringArray}
                     setMissionPath={setMissionPath}
                     handleChange={handleChange}
                   />
                 )
-              } else if (
-                selectedNode &&
-                selectedAction === null &&
-                selectedEffect === null
-              ) {
+              } else if (selectedNode && !selectedAction && !selectedEffect) {
                 return (
                   <NodeEntry
                     node={selectedNode}
                     missionPath={missionPath}
-                    isEmptyString={isEmptyString}
-                    nodeEmptyStringArray={nodeEmptyStringArray}
-                    setNodeEmptyStringArray={setNodeEmptyStringArray}
                     setMissionPath={setMissionPath}
                     setSelectedAction={setSelectedAction}
                     handleChange={handleChange}
@@ -786,19 +577,11 @@ export default function MissionFormPage(
                     }
                   />
                 )
-              } else if (
-                selectedNode &&
-                selectedAction &&
-                selectedEffect === null
-              ) {
+              } else if (selectedNode && selectedAction && !selectedEffect) {
                 return (
                   <ActionEntry
                     action={selectedAction}
                     missionPath={missionPath}
-                    isEmptyString={isEmptyString}
-                    areDefaultValues={areDefaultValues}
-                    actionEmptyStringArray={actionEmptyStringArray}
-                    setActionEmptyStringArray={setActionEmptyStringArray}
                     setMissionPath={setMissionPath}
                     setSelectedAction={setSelectedAction}
                     setSelectedEffect={setSelectedEffect}
@@ -812,10 +595,6 @@ export default function MissionFormPage(
                     effect={selectedEffect}
                     missionPath={missionPath}
                     targetEnvironments={targetEnvironments}
-                    isEmptyString={isEmptyString}
-                    areDefaultValues={areDefaultValues}
-                    effectEmptyStringArray={effectEmptyStringArray}
-                    setEffectEmptyStringArray={setEffectEmptyStringArray}
                     setMissionPath={setMissionPath}
                     setSelectedAction={setSelectedAction}
                     setSelectedEffect={setSelectedEffect}

@@ -15,12 +15,8 @@ export default function TargetEntry({
   effect,
   selectedTargetEnv,
   selectedTarget,
-  isEmptyString,
-  areDefaultValues,
   targets,
   setSelectedTarget,
-  setSelectedEffect,
-  handleChange,
 }: TTargetEntry_P) {
   /* -- GLOBAL CONTEXT -- */
   const { forceUpdate } = useGlobalContext().actions
@@ -43,15 +39,7 @@ export default function TargetEntry({
             forceUpdate()
           }}
         />
-        <Args
-          action={action}
-          effect={effect}
-          target={selectedTarget}
-          isEmptyString={isEmptyString}
-          areDefaultValues={areDefaultValues}
-          setSelectedEffect={setSelectedEffect}
-          handleChange={handleChange}
-        />
+        <Args action={action} effect={effect} target={selectedTarget} />
       </div>
     )
   } else {
@@ -76,19 +64,11 @@ export type TTargetEntry_P = {
   /**
    * The selected target environment.
    */
-  selectedTargetEnv: ClientTargetEnvironment | null
+  selectedTargetEnv: ClientTargetEnvironment
   /**
    * The selected target.
    */
-  selectedTarget: ClientTarget | null
-  /**
-   * A boolean that will determine if a field has been left empty.
-   */
-  isEmptyString: boolean
-  /**
-   * A boolean that will determine if a field has default values.
-   */
-  areDefaultValues: boolean
+  selectedTarget: ClientTarget
   /**
    * List of targets to apply effects to.
    */
@@ -96,13 +76,5 @@ export type TTargetEntry_P = {
   /**
    * A function that will set the selected target.
    */
-  setSelectedTarget: (target: ClientTarget | null) => void
-  /**
-   * A function that will set the selected effect.
-   */
-  setSelectedEffect: (effect: ClientEffect | null) => void
-  /**
-   * A function that will be called when a change has been made.
-   */
-  handleChange: () => void
+  setSelectedTarget: (target: ClientTarget) => void
 }

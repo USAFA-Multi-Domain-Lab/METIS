@@ -87,11 +87,16 @@
     }
   }
 
-  .TogglePasswordDisplayContainer {
+  .TogglePasswordButton {
     @include fieldDimensions();
     display: grid;
     justify-content: flex-end;
     cursor: pointer;
+
+    &:focus {
+      text-decoration: underline;
+      font-style: italic;
+    }
   }
 
   &.DetailNumber {

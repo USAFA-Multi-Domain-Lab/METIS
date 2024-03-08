@@ -127,7 +127,7 @@ export default function CreateUserEntry(props: {
     >
       <Detail
         label='Username'
-        initialValue={user.userID}
+        currentValue={user.userID}
         deliverValue={(userID: string) => {
           user.userID = userID
 
@@ -151,13 +151,12 @@ export default function CreateUserEntry(props: {
             )
           }
         }}
-        options={{
-          deliverError: deliverUsernameError,
-          deliverErrorMessage: usernameErrorMessage,
-          uniqueLabelClassName: usernameClassName,
-          uniqueInputClassName: usernameClassName,
-          placeholder: 'Enter a username here...',
-        }}
+        emptyStringAllowed={false}
+        deliverError={deliverUsernameError}
+        errorMessage={usernameErrorMessage}
+        uniqueLabelClassName={usernameClassName}
+        uniqueInputClassName={usernameClassName}
+        placeholder='Enter a username here...'
       />
       <DetailDropDown<UserRole>
         label='Role'
@@ -177,7 +176,7 @@ export default function CreateUserEntry(props: {
       />
       <Detail
         label='First Name'
-        initialValue={user.firstName}
+        currentValue={user.firstName}
         deliverValue={(firstName: string) => {
           user.firstName = firstName
 
@@ -208,17 +207,16 @@ export default function CreateUserEntry(props: {
             ])
           }
         }}
-        options={{
-          deliverError: deliverFirstNameError,
-          deliverErrorMessage: firstNameErrorMessage,
-          uniqueLabelClassName: createFirstNameClassName,
-          uniqueInputClassName: createFirstNameClassName,
-          placeholder: 'Enter a first name here...',
-        }}
+        emptyStringAllowed={false}
+        deliverError={deliverFirstNameError}
+        errorMessage={firstNameErrorMessage}
+        uniqueLabelClassName={createFirstNameClassName}
+        uniqueInputClassName={createFirstNameClassName}
+        placeholder='Enter a first name here...'
       />
       <Detail
         label='Last Name'
-        initialValue={user.lastName}
+        currentValue={user.lastName}
         deliverValue={(lastName: string) => {
           user.lastName = lastName
 
@@ -243,17 +241,16 @@ export default function CreateUserEntry(props: {
             setUserEmptyStringArray([...userEmptyStringArray, `field=lastName`])
           }
         }}
-        options={{
-          deliverError: deliverLastNameError,
-          deliverErrorMessage: lastNameErrorMessage,
-          uniqueLabelClassName: createLastNameClassName,
-          uniqueInputClassName: createLastNameClassName,
-          placeholder: 'Enter a last name here...',
-        }}
+        emptyStringAllowed={false}
+        deliverError={deliverLastNameError}
+        errorMessage={lastNameErrorMessage}
+        uniqueLabelClassName={createLastNameClassName}
+        uniqueInputClassName={createLastNameClassName}
+        placeholder='Enter a last name here...'
       />
       <Detail
         label={passwordLabel}
-        initialValue={null}
+        currentValue={undefined}
         deliverValue={(password: string) => {
           user.password1 = password
 
@@ -293,19 +290,18 @@ export default function CreateUserEntry(props: {
             setPassword2ClassName('Correct')
           }
         }}
-        options={{
-          deliverError: deliverPassword1Error,
-          deliverErrorMessage: password1ErrorMessage,
-          uniqueLabelClassName: password1ClassName,
-          uniqueInputClassName: password1ClassName,
-          inputType: 'password',
-          placeholder: 'Enter a password here...',
-        }}
+        emptyStringAllowed={false}
+        deliverError={deliverPassword1Error}
+        errorMessage={password1ErrorMessage}
+        uniqueLabelClassName={password1ClassName}
+        uniqueInputClassName={password1ClassName}
+        inputType='password'
+        placeholder='Enter a password here...'
       />
 
       <Detail
         label={confirmPasswordLabel}
-        initialValue={null}
+        currentValue={undefined}
         deliverValue={(password: string) => {
           user.password2 = password
 
@@ -341,14 +337,13 @@ export default function CreateUserEntry(props: {
             setPassword2ErrorMessage('Passwords must match.')
           }
         }}
-        options={{
-          deliverError: deliverPassword2Error,
-          deliverErrorMessage: password2ErrorMessage,
-          uniqueLabelClassName: password2ClassName,
-          uniqueInputClassName: password2ClassName,
-          inputType: 'password',
-          placeholder: 'Confirm your password here...',
-        }}
+        emptyStringAllowed={false}
+        deliverError={deliverPassword2Error}
+        errorMessage={password2ErrorMessage}
+        uniqueLabelClassName={password2ClassName}
+        uniqueInputClassName={password2ClassName}
+        inputType='password'
+        placeholder='Confirm your password here...'
       />
       <div className='NeedsPasswordResetContainer'>
         <div className='Title'>Needs Password Reset:</div>

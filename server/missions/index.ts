@@ -1,7 +1,7 @@
 import Mission, { ISpawnNodeOptions } from 'metis/missions'
-import ServerMissionNode from './nodes'
 import { TMissionNodeJson } from 'metis/missions/nodes'
 import seedrandom, { PRNG } from 'seedrandom'
+import ServerMissionNode from './nodes'
 
 /**
  * Class for managing missions on the server.

@@ -230,6 +230,7 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
                 mission={mission}
                 onNodeSelect={onNodeSelect}
                 overlayContent={overlayContent}
+                applyNodeTooltip={(node) => node.description}
               />
             ),
           }}

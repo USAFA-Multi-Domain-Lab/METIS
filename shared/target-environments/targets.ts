@@ -62,9 +62,9 @@ export default abstract class Target<
    * The default properties of the Target.
    */
   public static readonly DEFAULT_PROPERTIES: Required<TCommonTargetJson> = {
-    id: '',
-    name: '',
-    description: '',
+    id: 'metis-target-default',
+    name: 'Select a target',
+    description: 'This is a default target.',
     script: () => {},
     args: [],
   }
@@ -145,9 +145,9 @@ export interface TCommonTargetJson {
 /* ------------------------------ TARGET ARGUMENT TYPES ------------------------------ */
 
 /**
- * The common arguments used for the target-effect interface and the target-effect API.
+ * The base argument type for a target.
  */
-type TTargetArgCommon = {
+type TBaseArg = {
   /**
    * The ID of the argument.
    */
@@ -156,10 +156,6 @@ type TTargetArgCommon = {
    * The argument's name. This is displayed to the user.
    */
   name: string
-  /**
-   * Determines whether the argument is required or not.
-   */
-  required: boolean
   /**
    * Determines whether the argument is displayed to the user or not.
    */
@@ -183,38 +179,148 @@ type TTargetArgCommon = {
 /**
  * The number argument type for a target.
  */
-type TTargetNumberArg = {
+type TNumberArg = TBaseArg &
+  (TNumberArgOptional | TNumberArgRequired) & {
+    /**
+     * The argument's input type.
+     * @note This will render as an input that only accepts numbers.
+     */
+    type: 'number'
+    /**
+     * The minimum allowed value for the argument.
+     */
+    min?: number
+    /**
+     * The maximum allowed value for the argument.
+     */
+    max?: number
+    /**
+     * The unit of measurement for the argument.
+     */
+    unit?: string
+  }
+/**
+ * The optional number argument type for a target.
+ */
+type TNumberArgOptional = {
   /**
-   * The input type of the argument.
+   * Determines whether the argument is required or not.
    */
-  type: 'number'
-  /**
-   * The minimum allowed value for the argument.
-   */
-  min?: number
-  /**
-   * The maximum allowed value for the argument.
-   */
-  max?: number
+  required: false
   /**
    * The default value for the argument.
    * @default 0
    */
   default?: number
+}
+/**
+ * The required number argument type for a target.
+ */
+type TNumberArgRequired = {
   /**
-   * The unit of measurement for the argument.
+   * Determines whether the argument is required or not.
    */
-  unit?: string
+  required: true
+  /**
+   * The default value for the argument.
+   */
+  default: number
+}
+
+/**
+ * The string argument type for a target.
+ */
+type TStringArg = TBaseArg &
+  (TStringArgOptional | TStringArgRequired) & {
+    /**
+     * The argument's input type.
+     * @note This will render as an input that accepts any string.
+     * If the argument is required, empty strings are not allowed.
+     */
+    type: 'string'
+  }
+/**
+ * The optional string argument type for a target.
+ */
+type TStringArgOptional = {
+  /**
+   * Determines whether the argument is required or not.
+   */
+  required: false
+  /**
+   * The default value for the argument.
+   * @default undefined
+   */
+  default?: string
+}
+/**
+ * The required string argument type for a target.
+ */
+type TStringArgRequired = {
+  /**
+   * Determines whether the argument is required or not.
+   */
+  required: true
+  /**
+   * The default value for the argument.
+   */
+  default: string
+}
+
+/**
+ * The medium character string argument type for a target.
+ */
+type TMedCharStringArg = TBaseArg &
+  (TMedCharStringArgOptional | TMedCharStringArgRequired) & {
+    /**
+     * The argument's input type.
+     * @note This will render as an input that accepts any string.
+     * If the argument is required, empty strings are not allowed.
+     */
+    type: 'medium-string'
+  }
+/**
+ * The optional medium character string argument type for a target.
+ */
+type TMedCharStringArgOptional = {
+  /**
+   * Determines whether the argument is required or not.
+   */
+  required: false
+  /**
+   * The default value for the argument.
+   * @default undefined
+   */
+  default?: string
+}
+/**
+ * The required medium character string argument type for a target.
+ */
+type TMedCharStringArgRequired = {
+  /**
+   * Determines whether the argument is required or not.
+   */
+  required: true
+  /**
+   * The default value for the argument.
+   */
+  default: string
 }
 
 /**
  * The dropdown argument type for a target.
  */
-type TTargetDropdownArg = {
+type TDropdownArg = TBaseArg & {
   /**
-   * The type of the argument.
+   * The argument's input type.
+   * @note This will render as a dropdown box with
+   * predefined options for the user to select from.
    */
   type: 'dropdown'
+  /**
+   * Determines whether the argument is required or not.
+   */
+  required: boolean
   /**
    * The options for the argument.
    */
@@ -224,7 +330,8 @@ type TTargetDropdownArg = {
      */
     id: string
     /**
-     * The option's name. This is displayed to the user.
+     * The option's name.
+     * @note This is displayed to the user.
      */
     name: string
   }>
@@ -247,11 +354,16 @@ type TTargetDropdownArg = {
 /**
  * The boolean argument type for a target.
  */
-type TTargetBooleanArg = {
+type TBooleanArg = TBaseArg & {
   /**
-   * The type of the argument.
+   * The argument's input type.
+   * @note This will render as a toggle switch.
    */
   type: 'boolean'
+  /**
+   * Determines whether the argument is required or not.
+   */
+  required: boolean
   /**
    * The default value for the argument.
    * @default false
@@ -260,43 +372,11 @@ type TTargetBooleanArg = {
 }
 
 /**
- * The standard string argument type for a target.
- */
-type TTargetStringArg = {
-  /**
-   * The type of the argument.
-   */
-  type: 'string'
-  /**
-   * The default value for the argument.
-   * @default undefined
-   */
-  default?: string
-}
-
-/**
- * The medium character string argument type for a target.
- */
-type TTargetMedCharStringArg = {
-  /**
-   * The type of the argument.
-   */
-  type: 'medium-string'
-  /**
-   * The default value for the argument.
-   * @default undefined
-   */
-  default?: string
-}
-
-/**
  * The arguments used for the target-effect interface and the target-effect API.
  */
-export type TTargetArg = TTargetArgCommon &
-  (
-    | TTargetBooleanArg
-    | TTargetNumberArg
-    | TTargetStringArg
-    | TTargetMedCharStringArg
-    | TTargetDropdownArg
-  )
+export type TTargetArg =
+  | TNumberArg
+  | TStringArg
+  | TMedCharStringArg
+  | TDropdownArg
+  | TBooleanArg

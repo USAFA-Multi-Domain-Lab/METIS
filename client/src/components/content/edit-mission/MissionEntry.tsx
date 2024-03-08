@@ -11,9 +11,8 @@ import './MissionEntry.scss'
 export default function MissionEntry({
   active,
   mission,
+  missionName,
   missionPath,
-  missionEmptyStringArray,
-  setMissionEmptyStringArray,
   setMissionPath,
   handleChange,
 }: TMissionEntry_P): JSX.Element | null {
@@ -24,24 +23,6 @@ export default function MissionEntry({
   const [_, setLiveAjaxStatus] = useState<TAjaxStatus>('NotLoaded')
 
   /* -- FUNCTIONS -- */
-
-  /**
-   * If a field that was previously left empty meets the
-   * requirements then this will remove the key that was
-   * stored when the field was empty which will let the
-   * user know that the field has met its requirements
-   * when the state updates.
-   * @param field The field that was previously left empty.
-   */
-  const removeMissionEmptyString = (field: string) => {
-    missionEmptyStringArray.map((missionEmptyString: string, index: number) => {
-      if (
-        missionEmptyString === `missionID=${mission.missionID}_field=${field}`
-      ) {
-        missionEmptyStringArray.splice(index, 1)
-      }
-    })
-  }
 
   /**
    * This is called when a user requests to toggle a mission between being live
@@ -111,19 +92,12 @@ export default function MissionEntry({
           <div className='SidePanelSection MainDetails'>
             <Detail
               label='Name'
-              initialValue={mission.name}
+              currentValue={mission.name}
+              previousValue={missionName}
               deliverValue={(name: string) => {
-                if (name !== '') {
-                  mission.name = name
-                  setMissionPath([mission.name])
-                  removeMissionEmptyString('name')
-                  handleChange()
-                } else {
-                  setMissionEmptyStringArray([
-                    ...missionEmptyStringArray,
-                    `missionID=${mission.missionID}_field=name`,
-                  ])
-                }
+                mission.name = name
+                setMissionPath([name])
+                handleChange()
               }}
               key={`${mission.missionID}_name`}
             />
@@ -132,16 +106,7 @@ export default function MissionEntry({
               initialValue={mission.introMessage}
               deliverValue={(introMessage: string) => {
                 mission.introMessage = introMessage
-
-                if (introMessage !== '<p><br></p>') {
-                  removeMissionEmptyString('introMessage')
-                  handleChange()
-                } else {
-                  setMissionEmptyStringArray([
-                    ...missionEmptyStringArray,
-                    `missionID=${mission.missionID}_field=introMessage`,
-                  ])
-                }
+                handleChange()
               }}
               options={{
                 elementBoundary: '.BorderBox',
@@ -161,10 +126,7 @@ export default function MissionEntry({
               label='Initial Resources'
               initialValue={mission.initialResources}
               deliverValue={(initialResources: number | null | undefined) => {
-                if (
-                  initialResources !== null &&
-                  initialResources !== undefined
-                ) {
+                if (initialResources) {
                   mission.initialResources = initialResources
                   handleChange()
                 }
@@ -192,20 +154,14 @@ export type TMissionEntry_P = {
    */
   mission: ClientMission
   /**
+   * The current name of the mission.
+   */
+  missionName: string
+  /**
    * The path showing the user's location in the side panel.
    * @note This will help the user understand what they are editing.
    */
   missionPath: string[]
-  /**
-   * An array of empty strings that will be used to
-   * track which fields are empty.
-   */
-  missionEmptyStringArray: string[]
-  /**
-   * A function that will be used to set the
-   * missionEmptyStringArray.
-   */
-  setMissionEmptyStringArray: (missionEmptyString: string[]) => void
   /**
    * A function that will set the mission path.
    */
