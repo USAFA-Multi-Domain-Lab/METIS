@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { useGlobalContext } from 'src/context'
 import ClientMission from 'src/missions'
 import ClientMissionAction from 'src/missions/actions'
@@ -38,11 +37,6 @@ export default function NodeEntry({
   const globalContext = useGlobalContext()
   const [colorOptions] = globalContext.missionNodeColors
   const { notify } = globalContext.actions
-
-  /* -- STATE -- */
-  const [nodeName] = useState<string>(
-    node?.name ?? ClientMissionNode.DEFAULT_PROPERTIES.name,
-  )
 
   /* -- COMPUTED -- */
   /**
@@ -204,7 +198,7 @@ export default function NodeEntry({
             <Detail
               label='Name'
               currentValue={node.name}
-              previousValue={nodeName}
+              defaultValue={ClientMissionNode.DEFAULT_PROPERTIES.name}
               deliverValue={(name: string) => {
                 node.name = name
                 setMissionPath([missionName, name])
@@ -268,36 +262,34 @@ export default function NodeEntry({
             </div>
             <DetailBox
               label='Description'
-              initialValue={node.description}
+              currentValue={node.description}
               deliverValue={(description: string) => {
                 node.description = description
                 handleChange()
               }}
-              options={{
-                emptyStringAllowed: true,
-                elementBoundary: '.BorderBox',
-                displayOptionalText: true,
-              }}
+              elementBoundary='.BorderBox'
+              placeholder='Enter description...'
+              displayOptionalText={true}
               key={`${node.nodeID}_description`}
             />
             <DetailBox
               label='Pre-Execution Text'
-              initialValue={node.preExecutionText}
+              currentValue={node.preExecutionText}
               deliverValue={(preExecutionText: string) => {
                 node.preExecutionText = preExecutionText
                 handleChange()
               }}
-              options={{
-                emptyStringAllowed: true,
-                elementBoundary: '.BorderBox',
-                displayOptionalText: true,
-              }}
+              elementBoundary='.BorderBox'
+              placeholder='Enter pre-execution text...'
+              displayOptionalText={true}
               key={`${node.nodeID}_preExecutionText`}
             />
             <DetailNumber
               label='Depth Padding'
-              initialValue={node.depthPadding}
-              deliverValue={(depthPadding: number | null | undefined) => {
+              currentValue={node.depthPadding}
+              defaultValue={ClientMissionNode.DEFAULT_PROPERTIES.depthPadding}
+              emptyValueAllowed={false}
+              deliverValue={(depthPadding: number | undefined) => {
                 if (depthPadding) {
                   node.depthPadding = depthPadding
                   handleChange()

@@ -11,7 +11,6 @@ import './MissionEntry.scss'
 export default function MissionEntry({
   active,
   mission,
-  missionName,
   missionPath,
   setMissionPath,
   handleChange,
@@ -93,7 +92,7 @@ export default function MissionEntry({
             <Detail
               label='Name'
               currentValue={mission.name}
-              previousValue={missionName}
+              defaultValue={ClientMission.DEFAULT_PROPERTIES.name}
               deliverValue={(name: string) => {
                 mission.name = name
                 setMissionPath([name])
@@ -103,14 +102,14 @@ export default function MissionEntry({
             />
             <DetailBox
               label='Introduction Message'
-              initialValue={mission.introMessage}
+              currentValue={mission.introMessage}
               deliverValue={(introMessage: string) => {
                 mission.introMessage = introMessage
                 handleChange()
               }}
-              options={{
-                elementBoundary: '.BorderBox',
-              }}
+              elementBoundary='.BorderBox'
+              placeholder='Enter introduction message...'
+              displayOptionalText={true}
               key={`${mission.missionID}_introMessage`}
             />
 
@@ -124,8 +123,10 @@ export default function MissionEntry({
             />
             <DetailNumber
               label='Initial Resources'
-              initialValue={mission.initialResources}
-              deliverValue={(initialResources: number | null | undefined) => {
+              currentValue={mission.initialResources}
+              defaultValue={ClientMission.DEFAULT_PROPERTIES.initialResources}
+              emptyValueAllowed={false}
+              deliverValue={(initialResources: number | undefined) => {
                 if (initialResources) {
                   mission.initialResources = initialResources
                   handleChange()
@@ -153,10 +154,6 @@ export type TMissionEntry_P = {
    * The mission to be edited.
    */
   mission: ClientMission
-  /**
-   * The current name of the mission.
-   */
-  missionName: string
   /**
    * The path showing the user's location in the side panel.
    * @note This will help the user understand what they are editing.

@@ -32,19 +32,10 @@ export default function ArgEntry({
 
   /* -- STATE -- */
   const [defaultDropDownValue] = useState<undefined>(undefined)
-  const [defaultNumberValue] = useState<null>(null)
+  const [defaultNumberValue] = useState<undefined>(undefined)
   const [defaultStringValue] = useState<string>('')
   const [defaultMediumStringValue] = useState<string>('<p><br></p>')
   const [defaultBooleanValue] = useState<boolean>(false)
-  const [prevNumberArgValue] = useState<number | undefined>(
-    effect.args[arg.id] || arg.default,
-  )
-  const [previousStringArgValue] = useState<string | undefined>(
-    effect.args[arg.id] || arg.default,
-  )
-  const [previousMediumStringArgValue] = useState<string | undefined>(
-    effect.args[arg.id] || arg.default,
-  )
 
   /* -- COMPUTED -- */
   /**
@@ -96,10 +87,10 @@ export default function ArgEntry({
   /**
    * The number input's value.
    */
-  const numberValue: number | null | undefined = compute(() => {
+  const numberValue: number | undefined = compute(() => {
     // Initialize the value to the component
     // state's effect argument value.
-    let value: number | null | undefined = effectArgs[arg.id]
+    let value: number | undefined = effectArgs[arg.id]
 
     // If the argument is a number...
     if (arg.type === 'number') {
@@ -774,9 +765,9 @@ export default function ArgEntry({
       >
         <DetailNumber
           label={arg.name}
-          initialValue={numberValue}
-          // ! previousValue={prevNumberArgValue}
-          deliverValue={(value: number | null | undefined) => {
+          currentValue={numberValue}
+          defaultValue={arg.required ? arg.default : defaultNumberValue}
+          deliverValue={(value: number | undefined) => {
             // Add the argument to the list of arguments.
             effectArgs[arg.id] = value
             // Update the argument based on the value.
@@ -788,12 +779,12 @@ export default function ArgEntry({
               effectArgs[arg.id] = arg.default || defaultNumberValue
             }
           }}
-          options={{
-            minimum: arg.min,
-            maximum: arg.max,
-            unit: arg.unit,
-            displayOptionalText: displayOptionalText,
-          }}
+          minimum={arg.min}
+          maximum={arg.max}
+          unit={arg.unit}
+          displayOptionalText={displayOptionalText}
+          emptyValueAllowed={!arg.required}
+          placeholder='Enter a number...'
           key={`arg-${arg.id}_type-${arg.type}-field`}
         />
       </div>
@@ -810,7 +801,7 @@ export default function ArgEntry({
         <Detail
           label={arg.name}
           currentValue={stringValue}
-          previousValue={previousStringArgValue}
+          defaultValue={arg.required ? arg.default : defaultStringValue}
           deliverValue={(value: string) => {
             // Add the argument to the list of arguments.
             effectArgs[arg.id] = value
@@ -839,8 +830,8 @@ export default function ArgEntry({
       >
         <DetailBox
           label={arg.name}
-          initialValue={mediumStringValue}
-          // ! previousValue={previousMediumStringArgValue}
+          currentValue={mediumStringValue}
+          defaultValue={arg.required ? arg.default : defaultMediumStringValue}
           deliverValue={(value: string) => {
             // Add the argument to the list of arguments.
             effectArgs[arg.id] = value
@@ -853,10 +844,8 @@ export default function ArgEntry({
               effectArgs[arg.id] = arg.default || defaultMediumStringValue
             }
           }}
-          options={{
-            elementBoundary: '.BorderBox',
-            displayOptionalText: displayOptionalText,
-          }}
+          elementBoundary='.BorderBox'
+          displayOptionalText={displayOptionalText}
           key={`arg-${arg.id}_type-${arg.type}-field`}
         />
       </div>

@@ -52,7 +52,6 @@ export default function MissionFormPage(
   /* -- STATE -- */
 
   const [mission, setMission] = useState<ClientMission>(new ClientMission())
-  const [missionName, setMissionName] = useState<string>(mission.name)
   const [areUnsavedChanges, setAreUnsavedChanges] = useState<boolean>(false)
   const [selectedNode, setSelectedNode] = useState<ClientMissionNode | null>(
     null,
@@ -108,7 +107,6 @@ export default function MissionFormPage(
         })
         setMission(mission)
         setMissionPath([mission.name])
-        setMissionName(mission.name)
         setTargetEnvironments(await ClientTargetEnvironment.fetchAll())
       } catch {
         handleError('Failed to load mission.')
@@ -557,7 +555,6 @@ export default function MissionFormPage(
                   <MissionEntry
                     active={missionDetailsIsActive}
                     mission={mission}
-                    missionName={missionName}
                     missionPath={missionPath}
                     setMissionPath={setMissionPath}
                     handleChange={handleChange}

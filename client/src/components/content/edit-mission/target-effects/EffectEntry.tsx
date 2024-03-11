@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import ClientMissionAction from 'src/missions/actions'
 import { ClientEffect } from 'src/missions/effects'
 import { ClientTargetEnvironment } from 'src/target-environments'
@@ -21,9 +20,6 @@ export default function EffectEntry({
   setSelectedEffect,
   handleChange,
 }: TEffectEntry_P): JSX.Element | null {
-  /* -- STATE -- */
-  const [effectName] = useState<string>(effect.name)
-
   /* -- COMPUTED -- */
   /**
    * The name of the mission.
@@ -112,7 +108,7 @@ export default function EffectEntry({
           <Detail
             label='Name'
             currentValue={effect.name}
-            previousValue={effectName}
+            defaultValue={ClientEffect.DEFAULT_PROPERTIES.name}
             deliverValue={(name: string) => {
               effect.name = name
               setMissionPath([missionName, nodeName, actionName, name])
@@ -122,17 +118,14 @@ export default function EffectEntry({
           />
           <DetailBox
             label='Description'
-            initialValue={effect.description}
+            currentValue={effect.description}
             deliverValue={(description: string) => {
               effect.description = description
               handleChange()
             }}
-            options={{
-              placeholder: 'Enter description...',
-              elementBoundary: '.BorderBox',
-              emptyStringAllowed: true,
-              displayOptionalText: true,
-            }}
+            elementBoundary='.BorderBox'
+            placeholder='Enter description...'
+            displayOptionalText={true}
           />
           <TargetEnvEntry
             action={action}

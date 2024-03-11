@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import ClientMissionAction from 'src/missions/actions'
 import { ClientEffect } from 'src/missions/effects'
 import ClientMissionNode from 'src/missions/nodes'
@@ -28,9 +27,6 @@ export default function ActionEntry({
   setSelectedEffect,
   handleChange,
 }: TActionEntry_P): JSX.Element | null {
-  /* -- STATE -- */
-  const [actionName] = useState<string>(action.name)
-
   /* -- COMPUTED -- */
 
   /**
@@ -204,7 +200,7 @@ export default function ActionEntry({
             <Detail
               label='Name'
               currentValue={action.name}
-              previousValue={actionName}
+              defaultValue={ClientMissionAction.DEFAULT_PROPERTIES.name}
               deliverValue={(name: string) => {
                 action.name = name
                 setMissionPath([missionName, nodeName, name])
@@ -215,29 +211,27 @@ export default function ActionEntry({
             />
             <DetailBox
               label='Description'
-              initialValue={action.description}
+              currentValue={action.description}
               deliverValue={(description: string) => {
                 action.description = description
                 handleChange()
               }}
-              options={{
-                elementBoundary: '.BorderBox',
-                placeholder: 'Enter description...',
-                displayOptionalText: true,
-              }}
+              elementBoundary='.BorderBox'
+              placeholder='Enter description...'
+              displayOptionalText={true}
               key={`${action.actionID}_description`}
             />
             <DetailNumber
               label='Success Chance'
-              initialValue={successChance}
-              options={{
-                minimum: 0,
-                maximum: 100,
-                unit: '%',
-              }}
-              deliverValue={(
-                successChancePercentage: number | null | undefined,
-              ) => {
+              currentValue={successChance}
+              defaultValue={
+                ClientMissionAction.DEFAULT_PROPERTIES.successChance * 100.0
+              }
+              emptyValueAllowed={false}
+              minimum={0}
+              maximum={100}
+              unit='%'
+              deliverValue={(successChancePercentage: number | undefined) => {
                 if (successChancePercentage) {
                   action.successChance = successChancePercentage / 100.0
                   handleChange()
@@ -247,13 +241,15 @@ export default function ActionEntry({
             />
             <DetailNumber
               label='Process Time'
-              initialValue={processTime}
-              options={{
-                minimum: 0,
-                maximum: 3600,
-                unit: 's',
-              }}
-              deliverValue={(timeCost: number | null | undefined) => {
+              currentValue={processTime}
+              defaultValue={
+                ClientMissionAction.DEFAULT_PROPERTIES.processTime / 1000
+              }
+              emptyValueAllowed={false}
+              minimum={0}
+              maximum={3600}
+              unit='s'
+              deliverValue={(timeCost: number | undefined) => {
                 if (timeCost) {
                   action.processTime = timeCost * 1000
                   handleChange()
@@ -263,8 +259,10 @@ export default function ActionEntry({
             />
             <DetailNumber
               label='Resource Cost'
-              initialValue={action.resourceCost}
-              deliverValue={(resourceCost: number | null | undefined) => {
+              currentValue={action.resourceCost}
+              defaultValue={ClientMissionAction.DEFAULT_PROPERTIES.resourceCost}
+              emptyValueAllowed={false}
+              deliverValue={(resourceCost: number | undefined) => {
                 if (resourceCost) {
                   action.resourceCost = resourceCost
                   handleChange()
@@ -274,26 +272,28 @@ export default function ActionEntry({
             />
             <DetailBox
               label='Post-Execution Success Text'
-              initialValue={action.postExecutionSuccessText}
+              currentValue={action.postExecutionSuccessText}
+              defaultValue={
+                ClientMissionAction.DEFAULT_PROPERTIES.postExecutionSuccessText
+              }
               deliverValue={(postExecutionSuccessText: string) => {
                 action.postExecutionSuccessText = postExecutionSuccessText
                 handleChange()
               }}
-              options={{
-                elementBoundary: '.BorderBox',
-              }}
+              elementBoundary='.BorderBox'
               key={`${action.actionID}_postExecutionSuccessText`}
             />
             <DetailBox
               label='Post-Execution Failure Text'
-              initialValue={action.postExecutionFailureText}
+              currentValue={action.postExecutionFailureText}
+              defaultValue={
+                ClientMissionAction.DEFAULT_PROPERTIES.postExecutionFailureText
+              }
               deliverValue={(postExecutionFailureText: string) => {
                 action.postExecutionFailureText = postExecutionFailureText
                 handleChange()
               }}
-              options={{
-                elementBoundary: '.BorderBox',
-              }}
+              elementBoundary='.BorderBox'
               key={`${action.actionID}_postExecutionFailureText`}
             />
 
