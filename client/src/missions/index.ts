@@ -2,9 +2,9 @@ import axios, { AxiosResponse } from 'axios'
 import { TLine_P } from 'src/components/content/game/mission-map/objects/Line'
 import { v4 as generateHash } from 'uuid'
 import Mission, {
-  ISpawnNodeOptions,
   TCommonMissionJson,
   TMissionOptions,
+  TSpawnNodeOptions,
 } from '../../../shared/missions'
 import { TMissionNodeJson } from '../../../shared/missions/nodes'
 import { Counter } from '../../../shared/toolbox/numbers'
@@ -776,7 +776,7 @@ export default class ClientMission extends Mission<ClientMissionNode> {
   // Implemented
   public spawnNode(
     data: Partial<TMissionNodeJson> = {},
-    options: ISpawnNodeOptions<ClientMissionNode> = {},
+    options: TSpawnNodeOptions<ClientMissionNode> = {},
   ): ClientMissionNode {
     let { addToNodeMap = true, makeChildOfRoot = true } = options
     let rootNode: ClientMissionNode = this.rootNode
@@ -866,7 +866,7 @@ export default class ClientMission extends Mission<ClientMissionNode> {
    * @param {FileList | Array<File>} files The .metis files to import.
    * @returns {Promise<TMissionImportResult>} The result of the import.
    */
-  public static async import(
+  public static async $import(
     files: FileList | Array<File>,
   ): Promise<TMissionImportResult> {
     return new Promise<TMissionImportResult>(async (resolve, reject) => {
@@ -901,7 +901,7 @@ export default class ClientMission extends Mission<ClientMissionNode> {
    * @param options Options for the creation of the Mission object returned.
    * @returns A promise that resolves to a ClientMission object for the new mission copy.
    */
-  public static async copy(
+  public static async $copy(
     originalID: string,
     copyName: string,
     options: TExistingClientMissionOptions = {},
@@ -933,7 +933,7 @@ export default class ClientMission extends Mission<ClientMissionNode> {
    * @param {object} options Options for the creation of the Mission object returned.
    * @returns {Promise<ClientMission>} A promise that resolves to a Mission object.
    */
-  public static async fetchOne(
+  public static async $fetchOne(
     missionID: string,
     options: TExistingClientMissionOptions = {},
   ): Promise<ClientMission> {
@@ -963,7 +963,7 @@ export default class ClientMission extends Mission<ClientMissionNode> {
    * @param {TMissionOptions} options Options for the creation of the Mission objects returned.
    * @returns {Promise<ClientMission[]>} A promise that resolves to an array of Mission objects.
    */
-  public static async fetchAll(
+  public static async $fetchAll(
     options: TExistingClientMissionOptions = {},
   ): Promise<ClientMission[]> {
     return new Promise<ClientMission[]>(async (resolve, reject) => {
@@ -993,7 +993,10 @@ export default class ClientMission extends Mission<ClientMissionNode> {
    * @param {boolean} live Whether the mission should be live.
    * @returns {Promise<void>} A promise that resolves when the mission has been updated.
    */
-  public static async setLive(missionID: string, live: boolean): Promise<void> {
+  public static async $setLive(
+    missionID: string,
+    live: boolean,
+  ): Promise<void> {
     return new Promise<void>(async (resolve, reject) => {
       try {
         await axios.put(ClientMission.API_ENDPOINT, {
@@ -1016,7 +1019,7 @@ export default class ClientMission extends Mission<ClientMissionNode> {
    * @param {string} missionID The ID of the mission to delete.
    * @returns {Promise<void>} A promise that resolves when the mission has been deleted.
    */
-  public static async delete(missionID: string): Promise<void> {
+  public static async $delete(missionID: string): Promise<void> {
     return new Promise<void>(async (resolve, reject) => {
       try {
         await axios.delete(ClientMission.API_ENDPOINT, {

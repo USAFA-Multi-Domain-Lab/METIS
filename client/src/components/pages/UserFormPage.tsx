@@ -59,7 +59,7 @@ export default function UserFormPage(props: IUserFormPage): JSX.Element | null {
     ) {
       try {
         beginLoading('Loading user...')
-        setUser(await ClientUser.fetchOne(userID as string))
+        setUser(await ClientUser.$fetchOne(userID as string))
       } catch {
         handleError('Failed to load user.')
       }
@@ -100,8 +100,8 @@ export default function UserFormPage(props: IUserFormPage): JSX.Element | null {
         try {
           let currentUserID: string = user.userID
           beginLoading('Creating user...')
-          await ClientUser.create(user)
-          setUser(await ClientUser.fetchOne(currentUserID))
+          await ClientUser.$create(user)
+          setUser(await ClientUser.$fetchOne(currentUserID))
           notify('User successfully saved.')
           finishLoading()
           setExistsInDatabase(true)
@@ -120,8 +120,8 @@ export default function UserFormPage(props: IUserFormPage): JSX.Element | null {
       } else if (existsInDatabase && currentUser.isAuthorized('WRITE')) {
         try {
           beginLoading('Updating user...')
-          await ClientUser.update(user)
-          setUser(await ClientUser.fetchOne(user.userID))
+          await ClientUser.$update(user)
+          setUser(await ClientUser.$fetchOne(user.userID))
           notify('User successfully saved.')
           finishLoading()
         } catch (error: any) {

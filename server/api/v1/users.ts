@@ -518,3 +518,28 @@ const routerMap: TMetisRouterMap = (router: expressWs.Router, done) => {
 }
 
 export default routerMap
+
+/**
+ * Does something.
+ * @param a First parameter.
+ * @param b Second parameter.
+ * @default
+ * a = Math.random()
+ * b = 'hello'
+ * @return Whether something was succussful.
+ */
+function func(a: number = Math.random(), b: string = 'hello'): boolean {
+  return true
+}
+
+class Test {
+  /**
+   * The test data.
+   * @default 1
+   */
+  public a: number
+
+  public constructor(a: number = 1) {
+    this.a = a
+  }
+}

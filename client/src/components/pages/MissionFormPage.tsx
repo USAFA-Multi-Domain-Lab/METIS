@@ -227,7 +227,7 @@ export default function MissionFormPage(
     if (missionID !== null) {
       try {
         beginLoading('Loading mission...')
-        let mission: ClientMission = await ClientMission.fetchOne(missionID, {
+        let mission: ClientMission = await ClientMission.$fetchOne(missionID, {
           openAll: true,
         })
         setMission(mission)

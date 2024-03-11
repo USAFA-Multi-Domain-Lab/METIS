@@ -57,11 +57,11 @@ export default class MetisSession {
   }
 
   /**
-   * The ID of t he game the user is currently in, if any.
+   * The ID of the game the user is currently in, if any.
    */
   private _gameID: string | null
   /**
-   * The ID of t he game the user is currently in, if any.
+   * The ID of the game the user is currently in, if any.
    */
   public get gameID(): string | null {
     return this._gameID

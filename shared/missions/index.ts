@@ -185,7 +185,7 @@ export default abstract class Mission<TMissionNode extends TCommonMissionNode>
   // Inherited
   public abstract spawnNode(
     data?: Partial<TMissionNodeJson>,
-    options?: ISpawnNodeOptions<TMissionNode>,
+    options?: TSpawnNodeOptions<TMissionNode>,
   ): TMissionNode
 
   // Inherited
@@ -457,7 +457,7 @@ export type TExportedNodes = {
 /**
  * Options for the Mission.exportNodes method.
  */
-type TExportNodesOptions = {
+export type TExportNodesOptions = {
   /**
    * Whether to exclude non-revealed nodes in the export.
    * @default false
@@ -473,7 +473,7 @@ type TExportNodesOptions = {
 /**
  * Options for Mission.spawnNode.
  */
-export interface ISpawnNodeOptions<TMissionNode extends TCommonMissionNode>
+export interface TSpawnNodeOptions<TMissionNode extends TCommonMissionNode>
   extends TMissionNodeOptions<TMissionNode> {
   /**
    * Whether or not to add newly generated node to the mission's node map.

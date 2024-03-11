@@ -210,7 +210,7 @@ export default class ClientUser extends User {
    * @param {string} userID The user ID of the user to fetch.
    * @returns {Promise<ClientUser>} A promise that resolves to a Client User object.
    */
-  public static async fetchOne(userID: string): Promise<ClientUser> {
+  public static async $fetchOne(userID: string): Promise<ClientUser> {
     return new Promise<ClientUser>(async (resolve, reject) => {
       try {
         // Retrieve data from API.
@@ -234,7 +234,7 @@ export default class ClientUser extends User {
    * Calls the API to fetch all users available.
    * @returns {Promise<ClientUser[]>} A promise that resolves to an array of Client User objects.
    */
-  public static async fetchAll(): Promise<ClientUser[]> {
+  public static async $fetchAll(): Promise<ClientUser[]> {
     return new Promise<ClientUser[]>(async (resolve, reject) => {
       try {
         // Retrieve data from API.
@@ -258,7 +258,7 @@ export default class ClientUser extends User {
    * Fetches the current session of the logged in user from the server.
    * @returns {Promise<TMetisSession<ClientUser>>} A promise that resolves to the current session of the logged in user.
    */
-  public static async fetchSession(): Promise<TMetisSession<ClientUser>> {
+  public static async $fetchSession(): Promise<TMetisSession<ClientUser>> {
     return new Promise<TMetisSession<ClientUser>>(
       (
         resolve: (session: TMetisSession<ClientUser>) => void,
@@ -307,7 +307,7 @@ export default class ClientUser extends User {
    * @returns {Promise<{ correct: boolean; session: TMetisSession<ClientUser> }>}
    * A promise that resolves to an object containing whether the login was correct and the session of the logged in user.
    */
-  public static async login(
+  public static async $login(
     userID: TCommonUser['userID'],
     password: string,
   ): Promise<{
@@ -351,11 +351,11 @@ export default class ClientUser extends User {
    * Logs out the user in the session.
    * @returns {Promise<void>} A promise that resolves when the user is logged out.
    */
-  public static async logout(): Promise<void> {
+  public static async $logout(): Promise<void> {
     return new Promise<void>((resolve, reject) => {
       axios
         .post(`${ClientUser.API_ENDPOINT}/logout`)
-        .then(() => ClientUser.fetchSession().then(() => resolve()))
+        .then(() => ClientUser.$fetchSession().then(() => resolve()))
         .catch((error: AxiosError) => {
           console.log('Failed to logout user.')
           console.error(error)
@@ -369,7 +369,7 @@ export default class ClientUser extends User {
    * @param {ClientUser} clientUser The user to create.
    * @returns {Promise<ClientUser>} A promise that resolves to the created user.
    */
-  public static async create(clientUser: ClientUser): Promise<ClientUser> {
+  public static async $create(clientUser: ClientUser): Promise<ClientUser> {
     return new Promise<ClientUser>(async (resolve, reject) => {
       try {
         // Retrieve data from API.
@@ -394,7 +394,7 @@ export default class ClientUser extends User {
    * @param {ClientUser} clientUser The user to update.
    * @returns {Promise<ClientUser>} A promise that resolves to the updated user.
    */
-  public static async update(clientUser: ClientUser): Promise<ClientUser> {
+  public static async $update(clientUser: ClientUser): Promise<ClientUser> {
     return new Promise<ClientUser>(async (resolve, reject) => {
       try {
         // Retrieve data from API.
@@ -419,7 +419,7 @@ export default class ClientUser extends User {
    * @param {ClientUser} user The user to reset the password of.
    * @returns {Promise<void>} A promise that resolves when the password is reset.
    */
-  public static async resetPassword(user: ClientUser): Promise<void> {
+  public static async $resetPassword(user: ClientUser): Promise<void> {
     return new Promise<void>((resolve, reject) => {
       axios
         .put(`${ClientUser.API_ENDPOINT}/reset-password`, {
@@ -441,7 +441,7 @@ export default class ClientUser extends User {
    * @param {TCommonUser['userID']} userID The user ID of the user to delete.
    * @returns {Promise<void>} A promise that resolves when the user is deleted.
    */
-  public static async delete(userID: TCommonUser['userID']): Promise<void> {
+  public static async $delete(userID: TCommonUser['userID']): Promise<void> {
     return new Promise<void>((resolve, reject) => {
       axios
         .delete(`${ClientUser.API_ENDPOINT}?userID=${userID}`)

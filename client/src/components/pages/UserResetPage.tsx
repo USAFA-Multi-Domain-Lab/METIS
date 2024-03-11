@@ -67,7 +67,7 @@ export default function UserResetPage(): JSX.Element | null {
       setAreUnsavedChanges(false)
 
       try {
-        await ClientUser.resetPassword(user)
+        await ClientUser.$resetPassword(user)
         notify('User successfully saved.')
         navigateTo('HomePage', {})
       } catch (error: any) {

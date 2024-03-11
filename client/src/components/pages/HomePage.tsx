@@ -6,6 +6,7 @@ import ClientMission from 'src/missions'
 import Notification from 'src/notifications'
 import { useMountHandler, useRequireSession } from 'src/toolbox/hooks'
 import ClientUser from 'src/users'
+import { TGameBasicJson } from '../../../../shared/games'
 import { IPage } from '../App'
 import Tooltip from '../content/communication/Tooltip'
 import List, { ESortByMethod } from '../content/general-layout/List'
@@ -50,6 +51,7 @@ export default function HomePage(props: IHomePage): JSX.Element | null {
 
   /* -- COMPONENT STATE -- */
 
+  const [games, setGames] = useState<TGameBasicJson[]>([])
   const [missions, setMissions] = useState<ClientMission[]>([])
   const [users, setUsers] = useState<ClientUser[]>([])
 
@@ -62,6 +64,7 @@ export default function HomePage(props: IHomePage): JSX.Element | null {
 
   const [mountHandled, remount] = useMountHandler(async (done) => {
     if (currentUser.isAuthorized('READ')) {
+      await loadGames()
       await loadMissions()
     }
 
@@ -81,6 +84,30 @@ export default function HomePage(props: IHomePage): JSX.Element | null {
 
   /**
    * This loads the missions into the state for display and selection.
+   * @resolves When the games have been loaded.
+   * @rejects If the games fail to load.
+   */
+  const loadGames = async (): Promise<void> => {
+    return new Promise<void>(async (resolve, reject) => {
+      try {
+        // Begin loading.
+        beginLoading('Retrieving games...')
+        // Fetch games from API and store
+        // them in the state.
+        setGames(await GameClient.$fetchAll())
+        // Finish loading and resolve.
+        finishLoading()
+        resolve()
+      } catch (error) {
+        handleError('Failed to retrieve games.')
+        finishLoading()
+        reject(error)
+      }
+    })
+  }
+
+  /**
+   * This loads the missions into the state for display and selection.
    */
   const loadMissions = async (): Promise<void> => {
     return new Promise<void>(async (resolve, reject) => {
@@ -89,7 +116,7 @@ export default function HomePage(props: IHomePage): JSX.Element | null {
         beginLoading('Retrieving missions...')
         // Fetch missions from API and store
         // them in the state.
-        setMissions(await ClientMission.fetchAll())
+        setMissions(await ClientMission.$fetchAll())
         // Finish loading and resolve.
         finishLoading()
         resolve()
@@ -111,7 +138,7 @@ export default function HomePage(props: IHomePage): JSX.Element | null {
         beginLoading('Retrieving users...')
         // Fetch users from API and store
         // them in the state.
-        setUsers(await ClientUser.fetchAll())
+        setUsers(await ClientUser.$fetchAll())
         // Finish loading and resolve.
         finishLoading()
         resolve()
@@ -272,7 +299,7 @@ export default function HomePage(props: IHomePage): JSX.Element | null {
     }
 
     // Import the files.
-    ClientMission.import(validFiles)
+    ClientMission.$import(validFiles)
       .then(({ successfulImportCount, failedImportCount, errorMessages }) => {
         // Update counts and error messages
         // based on the result.
@@ -375,21 +402,52 @@ export default function HomePage(props: IHomePage): JSX.Element | null {
   }
 
   /**
-   * Callback for when a mission is selected.
+   * Handler for when a game is selected.
    */
-  const handleMissionSelection = async (mission: ClientMission) => {
+  const onGameSelection = async (gameID: string) => {
     if (server !== null) {
       try {
-        // Notify user of mission launch.
-        beginLoading('Launching mission...')
-        // Launch game from mission ID, awaiting
-        // the promised game ID.
-        let gameID: string = await GameClient.launch(mission.missionID)
-        // Notify user of mission join.
-        beginLoading('Joining mission...')
+        // Notify user of game join.
+        beginLoading('Joining game...')
         // Join game from new game ID, awaiting
         // the promised game client.
-        let game: GameClient = await GameClient.join(gameID, server)
+        let game = await server.$joinGame(gameID)
+        // Update session data to include new
+        // game ID.
+        session.gameID = game.gameID
+        // Go to the game page with the new
+        // game client.
+        navigateTo('GamePage', { game })
+      } catch (error) {
+        handleError({
+          message: 'Failed to launch game. Contact system administrator.',
+          notifyMethod: 'page',
+        })
+      }
+    } else {
+      handleError({
+        message: 'No server connection. Contact system administrator',
+        notifyMethod: 'bubble',
+      })
+    }
+  }
+
+  /**
+   * Handler for when a mission is selected.
+   */
+  const onMissionSelection = async (mission: ClientMission) => {
+    if (server !== null) {
+      try {
+        // Notify user of game launch.
+        beginLoading('Launching game...')
+        // Launch game from mission ID, awaiting
+        // the promised game ID.
+        let gameID: string = await GameClient.$launch(mission.missionID)
+        // Notify user of game join.
+        beginLoading('Joining game...')
+        // Join game from new game ID, awaiting
+        // the promised game client.
+        let game = await server.$joinGame(gameID)
         // Update session data to include new
         // game ID.
         session.gameID = game.gameID
@@ -479,6 +537,36 @@ export default function HomePage(props: IHomePage): JSX.Element | null {
       />
       {/* -- CONTENT -- */}
       <div className='Content'>
+        {/* { Game List } */}
+        <div className='GameListContainer'>
+          <List<TGameBasicJson>
+            headingText={'Select a game:'}
+            items={games}
+            sortByMethods={[ESortByMethod.Name]}
+            nameProperty={'name'}
+            alwaysUseBlanks={true}
+            renderItemDisplay={(game: TGameBasicJson) => {
+              return (
+                <div
+                  className='SelectionRow'
+                  onClick={() => onGameSelection(game.gameID)}
+                >
+                  <div className='Text'>{game.name}</div>
+                </div>
+              )
+            }}
+            searchableProperties={['name']}
+            noItemsDisplay={
+              <div className='NoContent'>No games available...</div>
+            }
+            ajaxStatus={'Loaded'}
+            applyItemStyling={() => {
+              return {}
+            }}
+            listSpecificItemClassName='AltDesign1'
+          />
+          <div className='EditContentRow'></div>
+        </div>
         {/* { Mission List } */}
         <div className='MissionListContainer'>
           <List<ClientMission>
@@ -493,7 +581,7 @@ export default function HomePage(props: IHomePage): JSX.Element | null {
                   <div className='SelectionRow'>
                     <div
                       className='Text'
-                      onClick={() => handleMissionSelection(mission)}
+                      onClick={() => onMissionSelection(mission)}
                     >
                       {mission.name}
                       <Tooltip description='Launch mission.' />
@@ -591,11 +679,11 @@ export default function HomePage(props: IHomePage): JSX.Element | null {
           type='text'
           onKeyUp={async (event) => {
             if (event.key === 'Enter') {
-              let game = await GameClient.join(
-                (event.target as HTMLInputElement).value,
-                server!,
-              )
-              navigateTo('GamePage', { game })
+              // let game = await GameClient.join(
+              //   (event.target as HTMLInputElement).value,
+              //   server!,
+              // )
+              // navigateTo('GamePage', { game })
             }
           }}
         />

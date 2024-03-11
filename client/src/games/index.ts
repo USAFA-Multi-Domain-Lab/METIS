@@ -5,7 +5,11 @@ import ClientMissionAction from 'src/missions/actions'
 import ClientMissionNode from 'src/missions/nodes'
 import ClientUser from 'src/users'
 import { TServerEvents } from '../../../shared/connect/data'
-import Game, { IGameJson } from '../../../shared/games'
+import Game, {
+  TGameBasicJson,
+  TGameConfig,
+  TGameJson,
+} from '../../../shared/games'
 
 /**
  * Client instance for games. Handles client-side logic for games. Communicates with server to conduct game.
@@ -32,14 +36,16 @@ export default class GameClient extends Game<
   }
 
   // todo: Between the time the client joins and this object is constructed, there is possibility that changes have been made in the game. This should be handled.
-  public constructor(data: IGameJson, server: ServerConnection) {
+  public constructor(data: TGameJson, server: ServerConnection) {
     let gameID: string = data.gameID
+    let name: string = data.name
     let mission: ClientMission = new ClientMission(data.mission)
     let participants: ClientUser[] = data.participants.map(
       (userData) => new ClientUser(userData),
     )
+    let config: TGameConfig = data.config
 
-    super(gameID, mission, participants)
+    super(gameID, name, config, mission, participants)
     this.server = server
     this._resources = data.resources
     this.addListeners()
@@ -85,12 +91,27 @@ export default class GameClient extends Game<
   }
 
   // Implemented
-  public toJson(): IGameJson {
+  public toJson(): TGameJson {
     return {
       gameID: this.gameID,
-      mission: this.mission.toJson({ revealedOnly: true }),
+      name: this.name,
+      mission: this.mission.toJson({
+        revealedOnly: true,
+      }),
       participants: this.participants.map((user) => user.toJson()),
+      config: this.config,
       resources: this.resources,
+    }
+  }
+
+  // Implemented
+  public toBasicJson(): TGameBasicJson {
+    return {
+      gameID: this.gameID,
+      missionID: this.missionID,
+      name: this.name,
+      config: this.config,
+      participantIDs: this.participants.map(({ userID }) => userID),
     }
   }
 
@@ -290,34 +311,24 @@ export default class GameClient extends Game<
   }
 
   /**
-   * Fetches the currently joined game for the user.
-   * @note Only call this if the user has joined a game. Otherwise a 404 error will occur.
-   * @param server The current connection to the server.
-   * @returns A promise of the game client for the currently joined game.
+   * Fetches all games publicly available.
+   * @resolves To the games.
+   * @rejects If the games failed to be fetched.
    */
-  public static async fetch(server: ServerConnection): Promise<GameClient> {
-    return new Promise<GameClient>(
+  public static async $fetchAll(): Promise<TGameBasicJson[]> {
+    return new Promise<TGameBasicJson[]>(
       async (
-        resolve: (game: GameClient) => void,
+        resolve: (games: TGameBasicJson[]) => void,
         reject: (error: any) => void,
       ): Promise<void> => {
         try {
-          // Call API to join the game with
-          // the given game ID. Await the
-          // game JSON.
-          let gameJSON: IGameJson = (
-            await axios.get<IGameJson>(Game.API_ENDPOINT)
+          // Call API to fetch all games.
+          let games: TGameBasicJson[] = (
+            await axios.get<TGameBasicJson[]>(Game.API_ENDPOINT)
           ).data
-
-          // Convert the game JSON into a
-          // GameClient object.
-          let game: GameClient = new GameClient(gameJSON, server)
-
-          // Resolve the promise with the
-          // game object.
-          return resolve(game)
+          return resolve(games)
         } catch (error) {
-          console.error('Failed to fetch game client.')
+          console.error('Failed to fetch games.')
           console.error(error)
           return reject(error)
         }
@@ -330,7 +341,7 @@ export default class GameClient extends Game<
    * @param {string} missionID  The ID of the mission being executed in the game.
    * @returns {Promise<string>} A promise of the game ID for the newly launched game.
    */
-  public static async launch(missionID: string): Promise<string> {
+  public static async $launch(missionID: string): Promise<string> {
     return new Promise<string>(
       async (
         resolve: (gameID: string) => void,
@@ -351,47 +362,6 @@ export default class GameClient extends Game<
           return resolve(gameID)
         } catch (error) {
           console.error('Failed to launch game.')
-          console.error(error)
-          return reject(error)
-        }
-      },
-    )
-  }
-
-  /**
-   * Request to join the game with the given game ID.
-   * @param gameID The ID of the game to join.
-   * @param server The current connection to the server.
-   * @returns A promise of the game client object.
-   */
-  public static async join(
-    gameID: string,
-    server: ServerConnection,
-  ): Promise<GameClient> {
-    return new Promise<GameClient>(
-      async (
-        resolve: (game: GameClient) => void,
-        reject: (error: any) => void,
-      ): Promise<void> => {
-        try {
-          // Call API to join the game with
-          // the given game ID. Await the
-          // game JSON.
-          let gameJSON: IGameJson = (
-            await axios.put<IGameJson>(`${Game.API_ENDPOINT}/join/`, {
-              gameID,
-            })
-          ).data
-
-          // Convert the game JSON into a
-          // GameClient object.
-          let game: GameClient = new GameClient(gameJSON, server)
-
-          // Resolve the promise with the
-          // game object.
-          return resolve(game)
-        } catch (error) {
-          console.error('Failed to join game.')
           console.error(error)
           return reject(error)
         }

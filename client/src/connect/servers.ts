@@ -1,17 +1,18 @@
+import GameClient from 'src/games'
+import { v4 as generateHash } from 'uuid'
 import {
+  TAnyResponseEvent,
   TGenericClientEvents,
   TGenericClientMethod,
   TRequestEvents,
   TRequestMethod,
+  TResponseEvents,
+  TResponseMethod,
   TServerConnectionStatus,
   TServerEvents,
   TServerMethod,
-  TResponseEvents,
-  TResponseMethod,
-  TAnyResponseEvent,
 } from '../../../shared/connect/data'
 import { ServerEmittedError } from '../../../shared/connect/errors'
-import { v4 as generateHash } from 'uuid'
 import { SingleTypeObject } from '../../../shared/toolbox/objects'
 
 /**
@@ -68,12 +69,10 @@ export default class ServerConnection {
     return this._status
   }
 
-  // todo: Switch back to `protected` once the
-  // todo: testing is done.
   /**
    * Storage for all listeners, in the order they get added.
    */
-  public listeners: [TServerMethod, TServerHandler<any>][] = []
+  protected listeners: [TServerMethod, TServerHandler<any>][] = []
 
   /**
    * A map of request IDs to response listeners. These listeners will be called
@@ -351,6 +350,69 @@ export default class ServerConnection {
   }
 
   /**
+   * Joins a game with the given game ID.
+   * @resolves The new game client for the game.
+   * @rejects If there is an error joining the game.
+   */
+  public $fetchCurrentGame(gameID: string): Promise<GameClient> {
+    return new Promise((resolve, reject) => {
+      this.request(
+        'request-current-game',
+        { gameID },
+        'Fetching current game.',
+        {
+          onResponse: (event) => {
+            switch (event.method) {
+              case 'current-game':
+                resolve(new GameClient(event.data.game, this))
+                break
+              case 'error':
+                reject(new Error(event.message))
+                break
+              default:
+                let error: Error = new Error(
+                  `Unknown response method for ${event.request.event.method}: '${event.method}'.`,
+                )
+                console.log(error)
+                console.log(event)
+                reject(error)
+            }
+          },
+        },
+      )
+    })
+  }
+
+  /**
+   * Joins a game with the given game ID.
+   * @resolves The new game client for the game.
+   * @rejects If there is an error joining the game.
+   */
+  public $joinGame(gameID: string): Promise<GameClient> {
+    return new Promise((resolve, reject) => {
+      this.request('request-join-game', { gameID }, 'Joining game.', {
+        onResponse: (event) => {
+          switch (event.method) {
+            case 'game-joined':
+              resolve(new GameClient(event.data.game, this))
+              break
+            case 'error':
+              reject(new Error(event.message))
+              break
+            default:
+              let error: Error = new Error(
+                `Unknown response method for ${event.request.event.method}: '${event.method}'.`,
+              )
+              console.log(error)
+              console.log(event)
+              reject(error)
+          }
+        },
+      })
+    })
+  }
+
+  /**
    * Handles any activity on the connection by calling
    * any activity listeners.
    */
@@ -575,7 +637,7 @@ export type TServerHandler<TMethod extends TServerMethod> = (
  * Represents a listener for a response to a request.
  */
 export type TServerResponseListener<TMethod extends TResponseMethod> = (
-  event: TResponseEvents[TMethod],
+  event: TResponseEvents[TMethod] | TServerEvents['error'],
 ) => void
 
 /**

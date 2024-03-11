@@ -1,3 +1,4 @@
+import { TGameJson } from 'metis/games'
 import { TActionExecutionJSON } from 'metis/missions/actions/executions'
 import { IActionOutcomeJSON } from 'metis/missions/actions/outcomes'
 import { TCommonMissionNodeJson } from '../missions/nodes'
@@ -24,6 +25,26 @@ export interface TRequestEvent<TMethod extends string, TData extends {} = {}>
 }
 
 /**
+ * The request that triggered this response,
+ * stored in the response for reference by
+ * the client.
+ */
+export type TRequestOfResponse = {
+  /**
+   * The request event.
+   */
+  event: TRequestEvent<TClientMethod>
+  /**
+   * The ID of the client that made the request.
+   */
+  requesterId: string
+  /**
+   * Whether the request has been fulfilled.
+   */
+  fulfilled: boolean
+}
+
+/**
  * Represents an event emitted by the server in response to a request by the client.
  */
 export interface TResponseEvent<
@@ -31,11 +52,7 @@ export interface TResponseEvent<
   TData extends {},
   TReqEvent extends TRequestEvent<string, {}>,
 > extends TConnectEvent<TMethod, TData> {
-  request: {
-    event: TReqEvent
-    requesterId: string
-    fulfilled: boolean
-  }
+  request: TRequestOfResponse
 }
 
 /**
@@ -146,7 +163,7 @@ export type TGenericServerEvents = {
     /**
      * The request that caused the error, if any.
      */
-    request?: TRequestEvent<TClientMethod>
+    request?: TRequestOfResponse
   }
 }
 
@@ -200,6 +217,41 @@ export type TResponseEvents = {
       revealedChildNodes?: Array<TCommonMissionNodeJson>
     },
     TClientEvents['request-execute-action']
+  >
+  /**
+   * Occurs to send the requested, currently-joined game to the client.
+   */
+  'current-game': TResponseEvent<
+    'current-game',
+    {
+      /**
+       * The game that is currently joined by the client.
+       * @note If null, no game is currently joined.
+       */
+      game: TGameJson | null
+    },
+    TClientEvents['request-current-game']
+  >
+  /**
+   * Occurs when the client has successfully joined a game on the server.
+   */
+  'game-joined': TResponseEvent<
+    'game-joined',
+    {
+      /**
+       * The game that was joined.
+       */
+      game: TGameJson
+    },
+    TClientEvents['request-join-game']
+  >
+  /**
+   * Occurs when the client has successfully quit a game on the server.
+   */
+  'game-quit': TResponseEvent<
+    'game-quit',
+    {},
+    TClientEvents['request-quit-game']
   >
 }
 
@@ -256,6 +308,26 @@ export type TRequestEvents = {
       actionID: string
     }
   >
+  /**
+   * Occurs when the client requests to fetch the currently joined game.
+   */
+  'request-current-game': TRequestEvent<'request-current-game'>
+  /**
+   * Occurs when the client requests to join a game.
+   */
+  'request-join-game': TRequestEvent<
+    'request-join-game',
+    {
+      /**
+       * The ID of the game to join.
+       */
+      gameID: string
+    }
+  >
+  /**
+   * Occurs when the client requests to quit a game.
+   */
+  'request-quit-game': TRequestEvent<'request-quit-game'>
 }
 
 /**

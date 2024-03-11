@@ -240,11 +240,3 @@ export interface TCommonUserJson {
    */
   password?: string
 }
-
-// todo: remove
-// ! export interface IUserJSONExposed {
-// !  firstName: string
-// !  lastName: string
-// !  userID: string
-// !   password: string
-// ! }

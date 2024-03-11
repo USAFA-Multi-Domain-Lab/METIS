@@ -72,6 +72,7 @@
     grid-template-columns: 100%;
     width: 50%;
 
+    .GameListContainer,
     .MissionListContainer,
     .UserListContainer {
       display: grid;
@@ -89,6 +90,7 @@
         align-items: center;
         grid-template-columns: auto auto;
         width: 100%;
+        min-height: 70px;
         box-sizing: border-box;
         background-color: black;
         border: 3px solid white;
@@ -165,6 +167,7 @@
       }
     }
 
+    .GameListContainer,
     .MissionListContainer,
     .UserListContainer {
       .AltDesign1-list {

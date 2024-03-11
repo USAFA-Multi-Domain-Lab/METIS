@@ -58,7 +58,7 @@ export default function MissionEntry({
       setLiveAjaxStatus('Loading')
 
       // Make the request to the server.
-      await ClientMission.setLive(mission.missionID, live)
+      await ClientMission.$setLive(mission.missionID, live)
 
       // Notify the user of success.
       if (live) {

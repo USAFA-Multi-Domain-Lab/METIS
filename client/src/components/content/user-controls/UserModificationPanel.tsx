@@ -44,7 +44,7 @@ export default function UserModificationPanel(props: {
 
         if (user.userID) {
           try {
-            await ClientUser.delete(user.userID)
+            await ClientUser.$delete(user.userID)
             finishLoading()
             notify(`Successfully deleted ${user.userID}.`)
             handleSuccessfulDeletion()

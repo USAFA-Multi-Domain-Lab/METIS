@@ -57,7 +57,7 @@ export default function MissionModificationPanel(props: {
         try {
           beginLoading('Deleting mission...')
           concludeAction()
-          await ClientMission.delete(mission.missionID)
+          await ClientMission.$delete(mission.missionID)
           finishLoading()
           notify(`Successfully deleted "${mission.name}".`)
           handleSuccessfulDeletion()
@@ -81,7 +81,7 @@ export default function MissionModificationPanel(props: {
         try {
           beginLoading('Copying mission...')
           concludeAction()
-          let resultingMission = await ClientMission.copy(
+          let resultingMission = await ClientMission.$copy(
             mission.missionID,
             entry,
           )
@@ -115,7 +115,7 @@ export default function MissionModificationPanel(props: {
       setLiveAjaxStatus('Loading')
 
       // Make the request to the server.
-      await ClientMission.setLive(mission.missionID, live)
+      await ClientMission.$setLive(mission.missionID, live)
 
       // Notify the user of success.
       if (live) {

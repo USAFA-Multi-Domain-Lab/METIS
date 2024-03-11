@@ -1,9 +1,4 @@
-import {
-  TClientEvents,
-  TClientMethod,
-  TRequestEvent,
-  TServerEvents,
-} from './data'
+import { TClientEvents, TRequestOfResponse, TServerEvents } from './data'
 
 /**
  * An abstract class representing an error sent in a web socket connection from one party to another.
@@ -37,7 +32,7 @@ export interface IServerEmittedErrorOptions {
   /**
    * The request that caused the error, if any.
    */
-  request?: TRequestEvent<TClientMethod>
+  request?: TRequestOfResponse
 }
 
 /**
@@ -47,7 +42,7 @@ export class ServerEmittedError extends WSEmittedError {
   /**
    * The request that caused the error, if any.
    */
-  public request?: TRequestEvent<TClientMethod>
+  public request?: TRequestOfResponse
 
   public constructor(code: number, options: IServerEmittedErrorOptions = {}) {
     // Extract options.
@@ -95,25 +90,29 @@ export class ServerEmittedError extends WSEmittedError {
    */
   public static readonly CODE_DUPLICATE_CLIENT: number = 10002
   /**
+   * Code for a client requesting to join a game that cannot be found.
+   */
+  public static readonly CODE_GAME_NOT_FOUND: number = 20000
+  /**
    * Code for a client requesting to open a node that cannot be found.
    */
-  public static readonly CODE_NODE_NOT_FOUND: number = 20000
+  public static readonly CODE_NODE_NOT_FOUND: number = 20001
   /**
    * Code for a client requesting to open a node that cannot be opened.
    */
-  public static readonly CODE_NODE_NOT_OPENABLE: number = 20001
+  public static readonly CODE_NODE_NOT_OPENABLE: number = 20002
   /**
    * Code for a client requesting to execute an action that cannot be found.
    */
-  public static readonly CODE_ACTION_NOT_FOUND: number = 20002
+  public static readonly CODE_ACTION_NOT_FOUND: number = 20003
   /**
    * Code for a client requesting to execute an action on a node that is not executable.
    */
-  public static readonly CODE_NODE_NOT_EXECUTABLE: number = 20003
+  public static readonly CODE_NODE_NOT_EXECUTABLE: number = 20004
   /**
    * Code for a client requesting to execute an action on a node that is not yet revealed.
    */
-  public static readonly CODE_NODE_NOT_REVEALED: number = 20004
+  public static readonly CODE_NODE_NOT_REVEALED: number = 20005
   /**
    * Code for a client request failing due to a server-side general error.
    */
@@ -124,6 +123,7 @@ export class ServerEmittedError extends WSEmittedError {
     [ServerEmittedError.CODE_INVALID_DATA]: 'Data sent was invalid.',
     [ServerEmittedError.CODE_DUPLICATE_CLIENT]:
       'You are already connected via another tab.',
+    [ServerEmittedError.CODE_GAME_NOT_FOUND]: 'Game not found.',
     [ServerEmittedError.CODE_NODE_NOT_FOUND]: 'Node not found.',
     [ServerEmittedError.CODE_NODE_NOT_OPENABLE]: 'Node not openable.',
     [ServerEmittedError.CODE_ACTION_NOT_FOUND]: 'Action not found.',

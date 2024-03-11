@@ -1,7 +1,7 @@
-import Mission, { ISpawnNodeOptions } from 'metis/missions'
-import ServerMissionNode from './nodes'
+import Mission, { TSpawnNodeOptions } from 'metis/missions'
 import { TMissionNodeJson } from 'metis/missions/nodes'
 import seedrandom, { PRNG } from 'seedrandom'
+import ServerMissionNode from './nodes'
 
 /**
  * Class for managing missions on the server.
@@ -32,7 +32,7 @@ export default class ServerMission extends Mission<ServerMissionNode> {
   // Inherited
   public spawnNode(
     data: Partial<TMissionNodeJson> = {},
-    options: ISpawnNodeOptions<ServerMissionNode> = {},
+    options: TSpawnNodeOptions<ServerMissionNode> = {},
   ): ServerMissionNode {
     let { addToNodeMap = true, makeChildOfRoot = true } = options
     let rootNode: ServerMissionNode | null = this.rootNode

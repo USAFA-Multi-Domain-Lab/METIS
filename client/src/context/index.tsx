@@ -434,7 +434,7 @@ const useGlobalContextDefinition = (context: TGlobalContext) => {
       return new Promise<TMetisSession<ClientUser>>(async (resolve, reject) => {
         try {
           let session: TMetisSession<ClientUser> =
-            await ClientUser.fetchSession()
+            await ClientUser.$fetchSession()
           setSession(session)
           resolve(session)
         } catch (error: any) {
@@ -678,7 +678,7 @@ const useGlobalContextDefinition = (context: TGlobalContext) => {
       }
 
       try {
-        await ClientUser.logout()
+        await ClientUser.$logout()
         setSession(null)
         finishLoading()
         navigateTo('AuthPage', authPageProps)

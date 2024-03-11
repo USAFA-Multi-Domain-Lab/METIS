@@ -1,41 +1,19 @@
-import { WebSocket } from 'ws'
-import { TClientEvents, TServerEvents } from 'metis/connect/data'
-import { TClientMethod, TServerMethod } from 'metis/connect/data'
+import {
+  TClientEvents,
+  TClientMethod,
+  TRequestEvents,
+  TRequestMethod,
+  TResponseEvent,
+  TServerEvents,
+  TServerMethod,
+} from 'metis/connect/data'
 import { ServerEmittedError } from 'metis/connect/errors'
-import User from 'metis/users'
 import MetisSession from 'metis/server/sessions'
+import { WebSocket } from 'ws'
+import GameServer from '../games'
 import ServerUser from '../users'
 
-export type TClientHandler<TMethod extends TClientMethod> = (
-  data: TClientEvents[TMethod],
-) => void
-
-/**
- * Represents options that can be passed when constructing a new client connection.
- */
-export interface IClientConnectionOptions {
-  on?: {
-    [T in TClientMethod]?: TClientHandler<T>
-  }
-  /**
-   * Whether to disconnect existing connections for the given session.
-   * @WIP
-   */
-  disconnectExisting?: boolean
-}
-
-/**
- * Extracts event type from on the close event listener function.
- */
-type WSCloseEvent = Parameters<
-  NonNullable<typeof WebSocket.prototype.onclose>
->[0]
-/**
- * Extracts event type from on the message event listener function.
- */
-type WSMessageEvent = Parameters<
-  NonNullable<typeof WebSocket.prototype.onmessage>
->[0]
+/* -- classes -- */
 
 /**
  * METIS web-socket-based, client connection.
@@ -146,7 +124,7 @@ export default class ClientConnection {
     TPayload extends Omit<TServerEvents[TMethod], 'method'>,
   >(method: TMethod, payload: TPayload): void {
     // Send payload.
-    this.socket.send(JSON.stringify(payload))
+    this.socket.send(JSON.stringify({ method, ...payload }))
   }
 
   /**
@@ -213,7 +191,64 @@ export default class ClientConnection {
    * Adds default listeners for the client connection.
    */
   protected addDefaultListeners(): void {
-    // None to add currently...
+    // Add a `request-current-game` listener.
+    this.addEventListener('request-current-game', (event) => {
+      // Get the current game.
+      let game = GameServer.get(this.session.gameID ?? undefined)
+
+      // Emit the current game in response to the client.
+      if (game !== undefined) {
+        this.emit('current-game', {
+          data: {
+            game: game?.toJson() ?? null,
+          },
+          request: this.buildResponseReqData(event),
+        })
+      }
+    })
+
+    // Add a `request-join-game` listener.
+    this.addEventListener('request-join-game', (event) => {
+      // Get game.
+      let game: GameServer | undefined = GameServer.get(event.data.gameID)
+
+      // If game is undefined, emit game not found.
+      if (game === undefined) {
+        return this.emitError(
+          new ServerEmittedError(ServerEmittedError.CODE_GAME_NOT_FOUND, {
+            request: this.buildResponseReqData(event),
+          }),
+        )
+      }
+
+      // Join the game.
+      game.join(this)
+
+      // Return the game as JSON.
+      this.emit('game-joined', {
+        data: {
+          game: game.toJson(),
+        },
+        request: this.buildResponseReqData(event),
+      })
+    })
+
+    // Add a `request-quit-game` listener.
+    this.addEventListener('request-quit-game', (event) => {
+      // Get the game.
+      let game = GameServer.get(this.session.gameID ?? undefined)
+
+      // Quit the game, if defined.
+      if (game !== undefined) {
+        game.quit(this.userID)
+      }
+
+      // Return response.
+      this.emit('game-quit', {
+        data: {},
+        request: this.buildResponseReqData(event),
+      })
+    })
   }
 
   /**
@@ -221,6 +256,27 @@ export default class ClientConnection {
    */
   protected disconnect(): void {
     this.socket.close()
+  }
+
+  /**
+   * Builds fulfilled `request` property for response events.
+   */
+  public buildResponseReqData<
+    TMethod extends TRequestMethod,
+    TEvent extends TRequestEvents[TMethod],
+  >(
+    requestEvent: TEvent,
+    options: TBuildResReqDataOptions = {},
+  ): TResponseEvent<any, any, TEvent>['request'] {
+    // Extract options.
+    let { fulfilled = true } = options
+
+    // Return the request data.
+    return {
+      event: requestEvent,
+      requesterId: this.userID,
+      fulfilled,
+    }
   }
 
   /**
@@ -274,4 +330,48 @@ export default class ClientConnection {
       }
     }
   }
+}
+
+/* -- types -- */
+
+export type TClientHandler<TMethod extends TClientMethod> = (
+  data: TClientEvents[TMethod],
+) => void
+
+/**
+ * Represents options that can be passed when constructing a new client connection.
+ */
+export interface IClientConnectionOptions {
+  on?: {
+    [T in TClientMethod]?: TClientHandler<T>
+  }
+  /**
+   * Whether to disconnect existing connections for the given session.
+   * @WIP
+   */
+  disconnectExisting?: boolean
+}
+
+/**
+ * Extracts event type from on the close event listener function.
+ */
+type WSCloseEvent = Parameters<
+  NonNullable<typeof WebSocket.prototype.onclose>
+>[0]
+/**
+ * Extracts event type from on the message event listener function.
+ */
+type WSMessageEvent = Parameters<
+  NonNullable<typeof WebSocket.prototype.onmessage>
+>[0]
+
+/**
+ * Options for `ClientConnection.buildFulfilledReqForRes`.
+ */
+type TBuildResReqDataOptions = {
+  /**
+   * Whether the request was fulfilled.
+   * @default true
+   */
+  fulfilled?: boolean
 }

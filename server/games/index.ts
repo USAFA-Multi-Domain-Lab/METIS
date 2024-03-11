@@ -1,6 +1,6 @@
 import { TClientEvents, TServerEvents } from 'metis/connect/data'
 import { ServerEmittedError } from 'metis/connect/errors'
-import Game, { IGameJson } from 'metis/games'
+import Game, { TGameBasicJson, TGameConfig, TGameJson } from 'metis/games'
 import ClientConnection from 'metis/server/connect/clients'
 import ServerMission from 'metis/server/missions'
 import ServerMissionAction from 'metis/server/missions/actions'
@@ -41,19 +41,22 @@ export default class GameServer extends Game<
 
   public constructor(
     gameID: string,
+    name: string,
+    config: TGameConfig,
     mission: ServerMission,
     participants: Array<ClientConnection>,
   ) {
-    super(gameID, mission, participants)
+    super(gameID, name, config, mission, participants)
     this._resources = mission.initialResources
     this._destroyed = false
     this.register()
   }
 
   // Implemented
-  public toJson(): IGameJson {
+  public toJson(): TGameJson {
     return {
       gameID: this.gameID,
+      name: this.name,
       mission: this.mission.toJson({
         revealedOnly: true,
         includeGameData: true,
@@ -61,7 +64,19 @@ export default class GameServer extends Game<
       participants: this.participants.map((client: ClientConnection) =>
         client.user.toJson(),
       ),
+      config: this.config,
       resources: this.resources,
+    }
+  }
+
+  // Implemented
+  public toBasicJson(): TGameBasicJson {
+    return {
+      gameID: this.gameID,
+      missionID: this.missionID,
+      name: this.name,
+      config: this.config,
+      participantIDs: this.participants.map(({ userID }) => userID),
     }
   }
 
@@ -198,10 +213,14 @@ export default class GameServer extends Game<
   /**
    * Launches a new game with a new game ID.
    * @param mission The mission from which to launch a game.
+   * @param config The configuration for the game.
    * @returns A promise of the game server for the newly launched game.
    */
-  public static launch(mission: ServerMission): GameServer {
-    return new GameServer(generateHash(), mission, [])
+  public static launch(
+    mission: ServerMission,
+    config: TGameConfig = {},
+  ): GameServer {
+    return new GameServer(generateHash(), mission.name, config, mission, [])
   }
 
   /**
@@ -218,6 +237,13 @@ export default class GameServer extends Game<
     } else {
       return GameServer.registry.get(gameID)
     }
+  }
+
+  /**
+   * @returns All games in the registry.
+   */
+  public static getAll(): Array<GameServer> {
+    return Array.from(GameServer.registry.values())
   }
 
   /**
@@ -252,7 +278,7 @@ export default class GameServer extends Game<
     if (node === undefined) {
       return participant.emitError(
         new ServerEmittedError(ServerEmittedError.CODE_NODE_NOT_FOUND, {
-          request: event,
+          request: participant.buildResponseReqData(event),
         }),
       )
     }
@@ -261,29 +287,39 @@ export default class GameServer extends Game<
     if (!node.openable) {
       return participant.emitError(
         new ServerEmittedError(ServerEmittedError.CODE_NODE_NOT_OPENABLE, {
-          request: event,
+          request: participant.buildResponseReqData(event),
         }),
       )
     }
 
-    // Open the node.
-    node.open()
+    try {
+      // Open the node.
+      node.open()
 
-    // Construct open event payload.
-    let payload: TServerEvents['node-opened'] = {
-      method: 'node-opened',
-      data: {
-        nodeID,
-        revealedChildNodes: node.childNodes.map((node) =>
-          node.toJson({ includeGameData: true }),
-        ),
-      },
-      request: { event, requesterId: participant.userID, fulfilled: true },
-    }
+      // Construct open event payload.
+      let payload: TServerEvents['node-opened'] = {
+        method: 'node-opened',
+        data: {
+          nodeID,
+          revealedChildNodes: node.childNodes.map((node) =>
+            node.toJson({ includeGameData: true }),
+          ),
+        },
+        request: { event, requesterId: participant.userID, fulfilled: true },
+      }
 
-    // Emit open event.
-    for (let participant of this.participants) {
-      participant.emit('node-opened', payload)
+      // Emit open event.
+      for (let participant of this.participants) {
+        participant.emit('node-opened', payload)
+      }
+    } catch (error) {
+      // Emit an error if the node could not be opened.
+      participant.emitError(
+        new ServerEmittedError(ServerEmittedError.CODE_SERVER_ERROR, {
+          request: participant.buildResponseReqData(event),
+          message: 'Failed to open node.',
+        }),
+      )
     }
   }
 
@@ -308,7 +344,7 @@ export default class GameServer extends Game<
     if (action === undefined) {
       return participant.emitError(
         new ServerEmittedError(ServerEmittedError.CODE_ACTION_NOT_FOUND, {
-          request: event,
+          request: participant.buildResponseReqData(event),
         }),
       )
     }
@@ -317,7 +353,7 @@ export default class GameServer extends Game<
     if (!action.node.executable) {
       return participant.emitError(
         new ServerEmittedError(ServerEmittedError.CODE_NODE_NOT_EXECUTABLE, {
-          request: event,
+          request: participant.buildResponseReqData(event),
         }),
       )
     }
@@ -326,66 +362,76 @@ export default class GameServer extends Game<
     if (!action.node.revealed) {
       return participant.emitError(
         new ServerEmittedError(ServerEmittedError.CODE_NODE_NOT_REVEALED, {
-          request: event,
+          request: participant.buildResponseReqData(event),
         }),
       )
     }
 
-    // Execute the action, awaiting result.
-    let outcome = await action.execute({
-      enactEffects: false,
-      onInit: (execution: ServerActionExecution) => {
-        // Deduct action cost from resource pool.
-        this._resources -= action!.resourceCost
+    try {
+      // Execute the action, awaiting result.
+      let outcome = await action.execute({
+        enactEffects: false,
+        onInit: (execution: ServerActionExecution) => {
+          // Deduct action cost from resource pool.
+          this._resources -= action!.resourceCost
 
-        // Construct payload for action execution
-        // initiated event.
-        let initiationPayload: TServerEvents['action-execution-initiated'] = {
-          method: 'action-execution-initiated',
-          data: {
-            execution: execution.toJson(),
-          },
-          request: {
-            event,
-            requesterId: participant.userID,
-            fulfilled: false,
-          },
-        }
+          // Construct payload for action execution
+          // initiated event.
+          let initiationPayload: TServerEvents['action-execution-initiated'] = {
+            method: 'action-execution-initiated',
+            data: {
+              execution: execution.toJson(),
+            },
+            request: {
+              event,
+              requesterId: participant.userID,
+              fulfilled: false,
+            },
+          }
 
-        // Emit action execution initiated event
-        // to each participant.
-        for (let participant of this.participants) {
-          participant.emit('action-execution-initiated', initiationPayload)
-        }
-      },
-    })
+          // Emit action execution initiated event
+          // to each participant.
+          for (let participant of this.participants) {
+            participant.emit('action-execution-initiated', initiationPayload)
+          }
+        },
+      })
 
-    // Construct payload for action execution
-    // completed event.
-    let completionPayload: TServerEvents['action-execution-completed'] = {
-      method: 'action-execution-completed',
-      data: {
-        outcome: outcome.toJson(),
-      },
-      request: {
-        event,
-        requesterId: participant.userID,
-        fulfilled: true,
-      },
-    }
+      // Construct payload for action execution
+      // completed event.
+      let completionPayload: TServerEvents['action-execution-completed'] = {
+        method: 'action-execution-completed',
+        data: {
+          outcome: outcome.toJson(),
+        },
+        request: {
+          event,
+          requesterId: participant.userID,
+          fulfilled: true,
+        },
+      }
 
-    // Add child nodes if the action was
-    // successful.
-    if (outcome.successful) {
-      completionPayload.data.revealedChildNodes = action.node.childNodes.map(
-        (node) => node.toJson({ includeGameData: true }),
+      // Add child nodes if the action was
+      // successful.
+      if (outcome.successful) {
+        completionPayload.data.revealedChildNodes = action.node.childNodes.map(
+          (node) => node.toJson({ includeGameData: true }),
+        )
+      }
+
+      // Emit the action execution completed
+      // event to each participant.
+      for (let participant of this.participants) {
+        participant.emit('action-execution-completed', completionPayload)
+      }
+    } catch (error) {
+      // Emit an error if the action could not be executed.
+      participant.emitError(
+        new ServerEmittedError(ServerEmittedError.CODE_SERVER_ERROR, {
+          request: participant.buildResponseReqData(event),
+          message: 'Failed to execute action.',
+        }),
       )
-    }
-
-    // Emit the action execution completed
-    // event to each participant.
-    for (let participant of this.participants) {
-      participant.emit('action-execution-completed', completionPayload)
     }
   }
 }

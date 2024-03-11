@@ -3,13 +3,6 @@ import { TCommonMissionAction } from '../missions/actions'
 import { TCommonMissionNode } from '../missions/nodes'
 import { TCommonUserJson } from '../users'
 
-export interface IGameJson {
-  gameID: string
-  mission: TCommonMissionJson
-  participants: TCommonUserJson[]
-  resources: number
-}
-
 /**
  * Base class for a games. Represents a game being played by participating students in METIS.
  */
@@ -25,9 +18,26 @@ export default abstract class Game<
   public readonly gameID: string
 
   /**
+   * The name of the game.
+   */
+  public name: string
+
+  /**
+   * The configuration for the game.
+   */
+  public config: Required<TGameConfig>
+
+  /**
    * The mission being executed by the participants.
    */
   public readonly mission: TMission
+
+  /**
+   * The ID of the mission being executed by the participants.
+   */
+  public get missionID(): string {
+    return this.mission.missionID
+  }
 
   /**
    * The participants of the game executing the mission.
@@ -68,10 +78,20 @@ export default abstract class Game<
    */
   public constructor(
     gameID: string,
+    name: string,
+    config: TGameConfig,
     mission: TMission,
     participants: TParticpant[],
   ) {
     this.gameID = gameID
+    this.name = name
+    this.config = {
+      accessibility: 'public',
+      autoAssign: true,
+      resourcesEnabled: true,
+      effectsEnabled: true,
+      ...config,
+    }
     this.mission = mission
     this._participants = participants
     this.mapActions()
@@ -100,7 +120,100 @@ export default abstract class Game<
    * Converts the Game object to JSON.
    * @returns A JSON representation of the game.
    */
-  public abstract toJson(): IGameJson
+  public abstract toJson(): TGameJson
 
+  /**
+   * Converts the Game object to basic JSON.
+   * @returns A basic (Limited) JSON representation of the game.
+   */
+  public abstract toBasicJson(): TGameBasicJson
+
+  /**
+   * The endpoint for accessing games on the API.
+   */
   public static API_ENDPOINT: string = '/api/v1/games'
+}
+
+/**
+ * Configuration options for a game, customizing the experience.
+ */
+export type TGameConfig = {
+  /**
+   * The accessiblity of the game to students.
+   * @option 'public' The game is accessible to all students.
+   * @option 'id-required' The game is accessible to students with the game ID.
+   * @option 'invite-only' The game is accessible to students with an invite.
+   */
+  accessibility?: 'public' | 'id-required' | 'invite-only'
+  /**
+   * Whether students will be auto-assigned to their roles.
+   * @default true
+   */
+  autoAssign?: boolean
+  /**
+   * Whether resources will be enabled in the game.
+   * @default true
+   */
+  resourcesEnabled?: boolean
+  /**
+   * Whether effects will be enabled in the game.
+   * @default true
+   */
+  effectsEnabled?: boolean
+}
+
+/**
+ * JSON representation of a game.
+ */
+export type TGameJson = {
+  /**
+   * The ID of the game.
+   */
+  gameID: string
+  /**
+   * The name of the game.
+   */
+  name: string
+  /**
+   * The configuration for the game.
+   */
+  config: TGameConfig
+  /**
+   * The mission being executed by the participants.
+   */
+  mission: TCommonMissionJson
+  /**
+   * The participants of the game executing the mission.
+   */
+  participants: TCommonUserJson[]
+  /**
+   * The resources available to the participants.
+   */
+  resources: number
+}
+
+/**
+ * A more basic (limited) JSON representation of a game.
+ */
+export type TGameBasicJson = {
+  /**
+   * The ID of the game.
+   */
+  gameID: string
+  /**
+   * The ID of the mission being executed by the participants.
+   */
+  missionID: string
+  /**
+   * The name of the game.
+   */
+  name: string
+  /**
+   * The configuration for the game.
+   */
+  config: TGameConfig
+  /**
+   * The IDs of the participants of the game.
+   */
+  participantIDs: string[]
 }

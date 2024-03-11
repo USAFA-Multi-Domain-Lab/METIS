@@ -75,7 +75,7 @@ export default function AuthPage(props: IAuthPage): JSX.Element | null {
 
         // Login.
         try {
-          let { correct, session } = await ClientUser.login(userID, password)
+          let { correct, session } = await ClientUser.$login(userID, password)
 
           // If correct and a session was returned,
           // then login was successful.
