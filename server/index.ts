@@ -279,8 +279,8 @@ export default class MetisServer {
           }),
         }),
       )
-      expressApp.use(express.urlencoded({ extended: false }))
-      expressApp.use(express.json())
+      expressApp.use(express.urlencoded({ limit: '10mb', extended: true }))
+      expressApp.use(express.json({ limit: '10mb' }))
 
       // links the file path to css and resource files
       expressApp.use(express.static(path.resolve(__dirname, '../client/build')))
