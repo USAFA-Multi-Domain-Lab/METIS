@@ -68,6 +68,26 @@ const routerMap = (router: expressWs.Router, done: () => void) => {
       })
   })
 
+  // -- DELETE | /api/v1/games/:gameID/ --
+  // This will delete a game.
+  router.delete(
+    '/:gameID/',
+    auth({}),
+    (request: Request, response: Response) => {
+      let gameID: string = request.params.gameID
+      let game: GameServer | undefined = GameServer.get(gameID)
+
+      // Send 404 if game could not be found.
+      if (game === undefined) {
+        return response.sendStatus(404)
+      }
+
+      // Destroy game and return response.
+      game.destroy()
+      return response.sendStatus(200)
+    },
+  )
+
   done()
 }
 
