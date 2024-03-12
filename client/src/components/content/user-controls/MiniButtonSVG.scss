@@ -31,7 +31,8 @@
   &.save:hover,
   &.copy:hover,
   &.upload:hover,
-  &.download:hover {
+  &.download:hover,
+  &.launch:hover {
     filter: invert(68%) sepia(94%) saturate(322%) hue-rotate(117deg)
       brightness(200%) contrast(98%);
   }
@@ -96,5 +97,9 @@
       $url: '../../../assets/images/icons/download.svg',
       $background-position: center 75%
     );
+  }
+
+  &.launch {
+    @include background('../../../assets/images/icons/launch.svg');
   }
 }

@@ -20,6 +20,7 @@ export enum EMiniButtonSVGPurpose {
   Copy,
   Upload,
   Download,
+  Launch,
 }
 
 // Interface for props for MiniButtonSVG component.
@@ -78,6 +79,8 @@ export class MiniButtonSVG extends React.Component<IMiniButtonSVG, {}> {
         return 'MiniButtonSVG upload'
       case EMiniButtonSVGPurpose.Download:
         return 'MiniButtonSVG download'
+      case EMiniButtonSVGPurpose.Launch:
+        return 'MiniButtonSVG launch'
       default:
         return 'MiniButtonSVG hidden'
     }

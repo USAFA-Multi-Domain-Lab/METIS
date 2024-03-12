@@ -1,11 +1,8 @@
-import { useState } from 'react'
 import { useGlobalContext } from 'src/context'
+import GameClient from 'src/games'
 import ClientMission from 'src/missions'
 import ClientUser from 'src/users'
 import { TMetisSession } from '../../../../../shared/sessions'
-import { TAjaxStatus } from '../../../../../shared/toolbox/ajax'
-import Tooltip from '../communication/Tooltip'
-import Toggle, { EToggleLockState } from '../user-controls/Toggle'
 import { EMiniButtonSVGPurpose, MiniButtonSVG } from './MiniButtonSVG'
 import { MiniButtonSVGPanel } from './MiniButtonSVGPanel'
 import './MissionModificationPanel.scss'
@@ -20,8 +17,15 @@ export default function MissionModificationPanel(props: {
 
   const globalContext = useGlobalContext()
 
-  const { navigateTo, notify, confirm, beginLoading, finishLoading } =
-    globalContext.actions
+  const {
+    navigateTo,
+    notify,
+    confirm,
+    beginLoading,
+    finishLoading,
+    handleError,
+  } = globalContext.actions
+  const [server] = globalContext.server
 
   /* -- COMPONENT VARIABLES -- */
 
@@ -33,10 +37,6 @@ export default function MissionModificationPanel(props: {
 
   // Grab the current user from the session.
   let { user: currentUser } = session
-
-  /* -- COMPONENT STATE -- */
-
-  const [liveAjaxStatus, setLiveAjaxStatus] = useState<TAjaxStatus>('NotLoaded')
 
   /* -- COMPONENT FUNCTIONS -- */
 
@@ -102,47 +102,46 @@ export default function MissionModificationPanel(props: {
     )
   }
 
-  // This is called when a user requests
-  // to toggle a mission between being live
-  // and not being live.
-  const handleToggleLiveRequest = async (live: boolean, revert: () => void) => {
-    // Track previous live state in case of error.
-    let previousLiveState: boolean = mission.live
-
-    try {
-      // Update state.
-      mission.live = live
-      setLiveAjaxStatus('Loading')
-
-      // Make the request to the server.
-      await ClientMission.$setLive(mission.missionID, live)
-
-      // Notify the user of success.
-      if (live) {
-        notify(`"${mission.name}" is now live.`)
-        setLiveAjaxStatus('Loaded')
-      } else {
-        notify(`"${mission.name}" is no longer live.`)
-        setLiveAjaxStatus('Loaded')
-      }
-    } catch (error) {
-      // Notify user of error.
-      if (live) {
-        notify(`Failed to make \"${mission.name}\"  go live.`)
-        setLiveAjaxStatus('Error')
-      } else {
-        notify(`Failed to make \"${mission.name}\" no longer live.`)
-        setLiveAjaxStatus('Error')
-      }
-      // Revert mission.live to the previous state.
-      mission.live = previousLiveState
-      revert()
-    }
-  }
-
   // -- RENDER --
 
   let availableMiniActions = {
+    launch: new MiniButtonSVG({
+      ...MiniButtonSVG.defaultProps,
+      purpose: EMiniButtonSVGPurpose.Launch,
+      handleClick: async () => {
+        if (server !== null) {
+          try {
+            // Notify user of game launch.
+            beginLoading('Launching game...')
+            // Launch game from mission ID, awaiting
+            // the promised game ID.
+            let gameID: string = await GameClient.$launch(mission.missionID)
+            // Notify user of game join.
+            beginLoading('Joining game...')
+            // Join game from new game ID, awaiting
+            // the promised game client.
+            let game = await server.$joinGame(gameID)
+            // Update session data to include new
+            // game ID.
+            session.gameID = game.gameID
+            // Go to the game page with the new
+            // game client.
+            navigateTo('GamePage', { game })
+          } catch (error) {
+            handleError({
+              message: 'Failed to launch game. Contact system administrator.',
+              notifyMethod: 'page',
+            })
+          }
+        } else {
+          handleError({
+            message: 'No server connection. Contact system administrator',
+            notifyMethod: 'bubble',
+          })
+        }
+      },
+      tooltipDescription: 'Launch game.',
+    }),
     edit: new MiniButtonSVG({
       ...MiniButtonSVG.defaultProps,
       purpose: EMiniButtonSVGPurpose.Edit,
@@ -181,19 +180,8 @@ export default function MissionModificationPanel(props: {
     containerClassName = 'MissionModificationPanel'
   }
 
-  // Logic that will lock the mission toggle while a request is being sent
-  // to set the mission.live paramter
-  let lockLiveToggle: EToggleLockState = EToggleLockState.Unlocked
-  if (liveAjaxStatus === 'Loading' && mission.live) {
-    lockLiveToggle = EToggleLockState.LockedActivation
-  } else if (liveAjaxStatus === 'Loading' && !mission.live) {
-    lockLiveToggle = EToggleLockState.LockedDeactivation
-  } else {
-    lockLiveToggle = EToggleLockState.Unlocked
-  }
-
   currentActions.push(
-    availableMiniActions.edit,
+    availableMiniActions.launch,
     availableMiniActions.remove,
     availableMiniActions.copy,
     availableMiniActions.download,
@@ -202,20 +190,6 @@ export default function MissionModificationPanel(props: {
   return (
     <div className={containerClassName}>
       <MiniButtonSVGPanel buttons={currentActions} />
-      <div className='ToggleContainer'>
-        <Toggle
-          initiallyActivated={mission.live}
-          lockState={lockLiveToggle}
-          deliverValue={handleToggleLiveRequest}
-        />
-        <Tooltip
-          description={
-            !mission.live
-              ? 'Sets mission as live thus allowing students to access it.'
-              : 'Disables mission thus preventing students from accessing it.'
-          }
-        />
-      </div>
     </div>
   )
 }

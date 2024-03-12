@@ -108,4 +108,11 @@
     background-size: 25px 25px;
     background-repeat: no-repeat;
   }
+
+  &.launch {
+    background: url('/assets/images/icons/launch.svg'), $background-alt1;
+    background-position: 9px 8px;
+    background-size: 25px 25px;
+    background-repeat: no-repeat;
+  }
 }

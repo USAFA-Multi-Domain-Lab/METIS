@@ -5,10 +5,13 @@ import GameClient from 'src/games'
 import ClientMission from 'src/missions'
 import Notification from 'src/notifications'
 import { compute } from 'src/toolbox'
-import { useMountHandler, useRequireSession } from 'src/toolbox/hooks'
+import {
+  useMountHandler,
+  useRequireSession,
+  useUnmountHandler,
+} from 'src/toolbox/hooks'
 import ClientUser from 'src/users'
 import { TGameBasicJson } from '../../../../shared/games'
-import { IPage } from '../App'
 import Tooltip from '../content/communication/Tooltip'
 import { Detail } from '../content/form/Form'
 import List, { ESortByMethod } from '../content/general-layout/List'
@@ -22,7 +25,11 @@ import MissionModificationPanel from '../content/user-controls/MissionModificati
 import UserModificationPanel from '../content/user-controls/UserModificationPanel'
 import './HomePage.scss'
 
-export interface IHomePage extends IPage {}
+/* -- constants -- */
+
+const GAMES_SYNC_RATE: number = 1000
+
+/* -- components -- */
 
 /**
  * This will render the home page.
@@ -32,7 +39,7 @@ export interface IHomePage extends IPage {}
  * It will also display a list of users that the user can
  * select from to edit if they have proper permissions.
  */
-export default function HomePage(props: IHomePage): JSX.Element | null {
+export default function HomePage(props: {}): JSX.Element | null {
   /* -- GLOBAL CONTEXT -- */
 
   const globalContext = useGlobalContext()
@@ -81,7 +88,17 @@ export default function HomePage(props: IHomePage): JSX.Element | null {
     }
 
     finishLoading()
+
+    // Begin syncing games.
+    setTimeout(() => syncGames.current(), GAMES_SYNC_RATE)
+
     done()
+  })
+
+  // On unmount, clear the sync games
+  // interval.
+  useUnmountHandler(() => {
+    syncGames.current = async () => {}
   })
 
   /* -- COMPONENT FUNCTIONS -- */
@@ -153,6 +170,19 @@ export default function HomePage(props: IHomePage): JSX.Element | null {
       }
     })
   }
+
+  /**
+   * Syncs the games periodically with the server.
+   */
+  const syncGames = useRef(async () => {
+    try {
+      // Fetch games from API and store
+      // them in the state.
+      setGames(await GameClient.$fetchAll())
+    } catch {}
+
+    setTimeout(() => syncGames.current(), GAMES_SYNC_RATE)
+  })
 
   /**
    * This sorts the users by their user ID.
@@ -439,37 +469,8 @@ export default function HomePage(props: IHomePage): JSX.Element | null {
   /**
    * Handler for when a mission is selected.
    */
-  const onMissionSelection = async (mission: ClientMission) => {
-    if (server !== null) {
-      try {
-        // Notify user of game launch.
-        beginLoading('Launching game...')
-        // Launch game from mission ID, awaiting
-        // the promised game ID.
-        let gameID: string = await GameClient.$launch(mission.missionID)
-        // Notify user of game join.
-        beginLoading('Joining game...')
-        // Join game from new game ID, awaiting
-        // the promised game client.
-        let game = await server.$joinGame(gameID)
-        // Update session data to include new
-        // game ID.
-        session.gameID = game.gameID
-        // Go to the game page with the new
-        // game client.
-        navigateTo('GamePage', { game })
-      } catch (error) {
-        handleError({
-          message: 'Failed to launch game. Contact system administrator.',
-          notifyMethod: 'page',
-        })
-      }
-    } else {
-      handleError({
-        message: 'No server connection. Contact system administrator',
-        notifyMethod: 'bubble',
-      })
-    }
+  const onMissionSelection = async ({ missionID }: ClientMission) => {
+    navigateTo('MissionFormPage', { missionID })
   }
 
   // This will switch to the user form
@@ -558,6 +559,7 @@ export default function HomePage(props: IHomePage): JSX.Element | null {
               onClick={() => onGameSelection(game.gameID)}
             >
               <div className='Text'>{game.name}</div>
+              <Tooltip description='Join game.' />
             </div>
           )
         }}
@@ -613,7 +615,7 @@ export default function HomePage(props: IHomePage): JSX.Element | null {
                   onClick={() => onMissionSelection(mission)}
                 >
                   {mission.name}
-                  <Tooltip description='Launch mission.' />
+                  <Tooltip description='View/edit mission.' />
                 </div>
                 <MissionModificationPanel
                   mission={mission}
