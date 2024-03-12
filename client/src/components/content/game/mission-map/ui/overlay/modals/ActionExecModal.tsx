@@ -1,12 +1,13 @@
 import { useEffect, useRef, useState } from 'react'
-import './ActionExecModal.scss'
-import ClientMissionNode from 'src/missions/nodes'
-import ClientMissionAction from 'src/missions/actions'
-import Tooltip from '../../../../../communication/Tooltip'
-import StringToolbox from '../../../../../../../../../shared/toolbox/strings'
+import { useGlobalContext } from 'src/context'
 import GameClient from 'src/games'
+import ClientMissionAction from 'src/missions/actions'
+import ClientMissionNode from 'src/missions/nodes'
 import { useMountHandler } from 'src/toolbox/hooks'
 import MapToolbox from '../../../../../../../../../shared/toolbox/maps'
+import StringToolbox from '../../../../../../../../../shared/toolbox/strings'
+import Tooltip from '../../../../../communication/Tooltip'
+import './ActionExecModal.scss'
 
 /**
  * Prompt for a game participant to select an action to execute on a node.
@@ -24,6 +25,10 @@ export default function ActionExecModal({
   const optionsRef = useRef<HTMLDivElement>(null)
 
   /* -- state -- */
+
+  // Gather global context states.
+  const globalContext = useGlobalContext()
+  const { handleError } = globalContext.actions
 
   // Whether the drop-down is expanded.
   const [dropDownExpanded, setDropDownExpanded] = useState<boolean>(false)
@@ -98,8 +103,15 @@ export default function ActionExecModal({
    */
   const execute = () => {
     if (selectedAction) {
-      game.executeAction(selectedAction.actionID)
-      close()
+      try {
+        game.executeAction(selectedAction.actionID)
+        close()
+      } catch (error) {
+        handleError({
+          message: 'Unexpected error executing action.',
+          notifyMethod: 'bubble',
+        })
+      }
     }
   }
 

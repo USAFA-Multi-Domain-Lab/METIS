@@ -56,7 +56,7 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
       'Are you sure you want to quit?',
       async (concludeAction: () => void) => {
         try {
-          await game.quit()
+          await game.$quit()
           concludeAction()
           next()
         } catch (error) {
@@ -108,7 +108,14 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
     // Logic that opens the next level of nodes
     // (displays the selected node's child nodes)
     if (node.openable) {
-      game.openNode(node.nodeID)
+      try {
+        game.openNode(node.nodeID)
+      } catch (error) {
+        handleError({
+          message: 'Unexpected error opening node.',
+          notifyMethod: 'bubble',
+        })
+      }
     }
 
     // If the node is ready to execute...

@@ -119,7 +119,8 @@ export default class GameClient extends Game<
    * Opens a node.
    * @param {string} nodeID The ID of the node to be opened.
    * @throws If the node is not in the mission associated with this game.
-   * @throws If the node is not openable.
+   * @throws If the node is not openable, if the node is not found,
+   * or if the server emits an error in response.
    */
   public openNode(nodeID: string): void {
     let server: ServerConnection = this.server
@@ -154,7 +155,8 @@ export default class GameClient extends Game<
    * Executes an action.
    * @param actionID The ID of the action to be executed.
    * @throws If the action is not in the mission associated with this game.
-   * @throws If the action's node is not executable.
+   * @throws If the action's node is not executable, the action is not
+   * found, or if the server emits an error in response.
    */
   public executeAction(actionID: string): void {
     let server: ServerConnection = this.server
@@ -189,26 +191,31 @@ export default class GameClient extends Game<
    * Request to quit the game.
    * @returns A promise that resolves when the game is quitted.
    */
-  public async quit(): Promise<void> {
+  public async $quit(): Promise<void> {
     return new Promise<void>(
       async (
         resolve: () => void,
         reject: (error: any) => void,
       ): Promise<void> => {
-        try {
-          // Call API to quit the game.
-          await axios.delete(`${Game.API_ENDPOINT}/quit/`)
-
-          // Remove listeners.
-          this.removeListeners()
-
-          // Resolve the promise.
-          return resolve()
-        } catch (error) {
-          console.error('Failed to join game.')
-          console.error(error)
-          return reject(error)
-        }
+        this.server.request('request-quit-game', {}, 'Quitting game.', {
+          onResponse: (event) => {
+            switch (event.method) {
+              case 'game-quit':
+                resolve()
+                break
+              case 'error':
+                reject(new Error(event.message))
+                break
+              default:
+                let error: Error = new Error(
+                  `Unknown response method for ${event.request.event.method}: '${event.method}'.`,
+                )
+                console.log(error)
+                console.log(event)
+                reject(error)
+            }
+          },
+        })
       },
     )
   }
