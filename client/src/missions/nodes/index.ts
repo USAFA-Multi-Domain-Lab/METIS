@@ -373,6 +373,8 @@ export default class ClientMissionNode extends MissionNode<
     let { actionID } = data
     let action = this.actions.get(actionID)
 
+    console.log(actionID, this.executionState)
+
     // Throw an error if action is undefined.
     if (action === undefined) {
       throw new Error(

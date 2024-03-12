@@ -195,26 +195,16 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
       <Navigation
         links={[
           {
-            text: 'Back to selection',
-            key: 'back-to-selection',
+            text: 'Quit',
+            key: 'quit',
             handleClick: () => {
               navigateTo('HomePage', {})
             },
             visible: true,
           },
-          {
-            text: 'Log out',
-            key: 'log-out',
-            handleClick: () =>
-              logout({
-                returningPagePath: 'MissionSelectionPage',
-                returningPageProps: {},
-              }),
-            visible: true,
-          },
         ]}
-        brandingCallback={() => navigateTo('HomePage', {})}
-        brandingTooltipDescription='Go home.'
+        brandingCallback={null}
+        brandingTooltipDescription={null}
       />
       {
         // -- content --

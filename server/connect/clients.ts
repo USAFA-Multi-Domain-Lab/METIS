@@ -221,8 +221,15 @@ export default class ClientConnection {
         )
       }
 
-      // Join the game.
-      game.join(this)
+      try {
+        // Join the game.
+        game.join(this)
+      } catch (error) {
+        // Emit an error if already joined.
+        this.emitError(
+          new ServerEmittedError(ServerEmittedError.CODE_ALREADY_IN_GAME, {}),
+        )
+      }
 
       // Return the game as JSON.
       this.emit('game-joined', {

@@ -52,6 +52,16 @@ export default class GameServer extends Game<
     this.register()
   }
 
+  /**
+   * @param participantID The ID of the participant in question.
+   * @returns Whether the participant is joined in the game.
+   */
+  public isInGame(participantID: string): boolean {
+    return this.participants.some(
+      (participant) => participant.userID === participantID,
+    )
+  }
+
   // Implemented
   public toJson(): TGameJson {
     return {
@@ -117,8 +127,14 @@ export default class GameServer extends Game<
 
   /**
    * Has the given participant join the game. Establishes listeners to handle events emitted by the participant's web socket connection.
+   * @param participant The participant joining the game.
+   * @throws Error if the participant is already in the game.
    */
   public join(participant: ClientConnection): void {
+    if (this.isInGame(participant.userID)) {
+      throw Error('Client with the given user ID is already in the game.')
+    }
+
     // Add participant to the participant list.
     this._participants.push(participant)
 
