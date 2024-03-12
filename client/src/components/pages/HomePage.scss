@@ -83,7 +83,7 @@
         width: 100%;
       }
 
-      .EditContentRow {
+      .ListActions {
         display: none;
 
         place-content: center;
@@ -107,6 +107,77 @@
 
     .UserListContainer {
       display: none;
+    }
+
+    .GameListContainer {
+      .AltDesign1-list {
+        border-bottom-left-radius: 0;
+        border-bottom-right-radius: 0;
+        margin-bottom: 0;
+      }
+
+      .ListActions {
+        display: grid;
+      }
+    }
+
+    .ManualJoin {
+      display: flex;
+      place-items: center;
+      column-gap: 1em;
+
+      .Label,
+      .ButtonText {
+        width: 6.75rem;
+      }
+
+      .Label {
+        font-size: 0.8rem;
+      }
+
+      .Detail {
+        display: grid;
+        grid-template-columns: auto auto;
+        margin: 0;
+        min-width: unset;
+
+        .TitleContainer {
+          display: none;
+          grid-template-columns: unset;
+          margin: 0;
+        }
+
+        .Field {
+          box-shadow: unset;
+          border-radius: 10px;
+          height: 28px;
+          padding: 5px;
+          color: black;
+          font-family: 'monospace', sans-serif;
+          background-color: #ffffff;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          display: block;
+          opacity: 0.45;
+          box-sizing: border-box;
+          outline: none;
+          transition: 200ms opacity;
+          border: none;
+          margin: 0;
+          width: 100%;
+          text-align: left !important;
+          font-size: 13.5px;
+
+          &:focus {
+            opacity: 0.8;
+          }
+        }
+      }
+
+      .ButtonText {
+        margin: 0;
+      }
     }
   }
 
@@ -176,7 +247,7 @@
         margin-bottom: 0;
       }
 
-      .EditContentRow {
+      .ListActions {
         display: grid;
       }
     }
@@ -191,11 +262,9 @@
 
 @media (max-width: 1000px) {
   .HomePage {
-    &.InstructorView {
-      .Content {
-        grid-template-columns: 90%;
-        place-content: center;
-      }
+    .Content {
+      grid-template-columns: 90%;
+      place-content: center;
     }
   }
 }

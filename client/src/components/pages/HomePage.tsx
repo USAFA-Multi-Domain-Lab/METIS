@@ -4,17 +4,20 @@ import { useGlobalContext } from 'src/context'
 import GameClient from 'src/games'
 import ClientMission from 'src/missions'
 import Notification from 'src/notifications'
+import { compute } from 'src/toolbox'
 import { useMountHandler, useRequireSession } from 'src/toolbox/hooks'
 import ClientUser from 'src/users'
 import { TGameBasicJson } from '../../../../shared/games'
 import { IPage } from '../App'
 import Tooltip from '../content/communication/Tooltip'
+import { Detail } from '../content/form/Form'
 import List, { ESortByMethod } from '../content/general-layout/List'
 import Navigation from '../content/general-layout/Navigation'
 import {
   ButtonSVG,
   EButtonSVGPurpose,
 } from '../content/user-controls/ButtonSVG'
+import { ButtonText } from '../content/user-controls/ButtonText'
 import MissionModificationPanel from '../content/user-controls/MissionModificationPanel'
 import UserModificationPanel from '../content/user-controls/UserModificationPanel'
 import './HomePage.scss'
@@ -54,6 +57,7 @@ export default function HomePage(props: IHomePage): JSX.Element | null {
   const [games, setGames] = useState<TGameBasicJson[]>([])
   const [missions, setMissions] = useState<ClientMission[]>([])
   const [users, setUsers] = useState<ClientUser[]>([])
+  const [manualJoinGameId, setManualJoinGameId] = useState<string>('')
 
   /* -- COMPONENT EFFECTS -- */
   // Require session for page.
@@ -506,6 +510,216 @@ export default function HomePage(props: IHomePage): JSX.Element | null {
 
   /* -- RENDER -- */
 
+  /**
+   * The file drop box for uploading mission files.
+   */
+  const fileDropBoxJsx = compute(() => (
+    <div className='FileDropBox'>
+      <div className='UploadIcon'></div>
+    </div>
+  ))
+
+  /**
+   * The navigation that is displayed on the home page.
+   */
+  const navigationJsx = compute(() => (
+    <Navigation
+      brandingCallback={null}
+      brandingTooltipDescription={null}
+      links={[
+        {
+          text: 'Log out',
+          handleClick: () =>
+            logout({
+              returningPagePath: 'HomePage',
+              returningPageProps: {},
+            }),
+          key: 'log-out',
+        },
+      ]}
+    />
+  ))
+
+  /**
+   * The games that are displayed on the home page.
+   */
+  const gamesJsx = compute(() => (
+    <div className='GameListContainer'>
+      <List<TGameBasicJson>
+        headingText={'Select a game:'}
+        items={games}
+        sortByMethods={[ESortByMethod.Name]}
+        nameProperty={'name'}
+        alwaysUseBlanks={true}
+        renderItemDisplay={(game: TGameBasicJson) => {
+          return (
+            <div
+              className='SelectionRow'
+              onClick={() => onGameSelection(game.gameID)}
+            >
+              <div className='Text'>{game.name}</div>
+            </div>
+          )
+        }}
+        searchableProperties={['name']}
+        noItemsDisplay={<div className='NoContent'>No games available...</div>}
+        ajaxStatus={'Loaded'}
+        applyItemStyling={() => {
+          return {}
+        }}
+        listSpecificItemClassName='AltDesign1'
+      />
+      <div className='ListActions'>
+        <div className='ManualJoin'>
+          <div className='Label'>Enter game ID:</div>
+          <Detail
+            label=''
+            initialValue={manualJoinGameId}
+            deliverValue={(value) => {
+              setManualJoinGameId(value)
+            }}
+            options={{
+              emptyStringAllowed: true,
+              uniqueLabelClassName: 'Hidden',
+            }}
+          />
+          <ButtonText
+            text='Join'
+            handleClick={() => onGameSelection(manualJoinGameId)}
+            componentKey='Join'
+          />
+        </div>
+      </div>
+    </div>
+  ))
+
+  /**
+   * The missions that are displayed on the home page.
+   */
+  const missionsJsx = compute(() => (
+    <div className='MissionListContainer'>
+      <List<ClientMission>
+        headingText={'Select a mission:'}
+        items={missions}
+        sortByMethods={[ESortByMethod.Name]}
+        nameProperty={'name'}
+        alwaysUseBlanks={true}
+        renderItemDisplay={(mission: ClientMission) => {
+          return (
+            <>
+              <div className='SelectionRow'>
+                <div
+                  className='Text'
+                  onClick={() => onMissionSelection(mission)}
+                >
+                  {mission.name}
+                  <Tooltip description='Launch mission.' />
+                </div>
+                <MissionModificationPanel
+                  mission={mission}
+                  session={session}
+                  handleSuccessfulCopy={remount}
+                  handleSuccessfulDeletion={remount}
+                />
+              </div>
+            </>
+          )
+        }}
+        searchableProperties={['name']}
+        noItemsDisplay={
+          <div className='NoContent'>No missions available...</div>
+        }
+        ajaxStatus={'Loaded'}
+        applyItemStyling={() => {
+          return {}
+        }}
+        listSpecificItemClassName='AltDesign1'
+      />
+      <div className='ListActions'>
+        <ButtonSVG
+          purpose={EButtonSVGPurpose.Add}
+          onClick={createMission}
+          tooltipDescription={'Create new mission'}
+          uniqueClassName={'NewMissionButton'}
+        />
+        <ButtonSVG
+          purpose={EButtonSVGPurpose.Upload}
+          onClick={handleMissionImportRequest}
+          tooltipDescription={'Import a .metis file from your local system.'}
+        />
+        <input
+          className='ImportMissionTrigger'
+          type='file'
+          ref={importMissionTrigger}
+          onChange={handleImportMissionTriggerChange}
+          hidden
+        />
+      </div>
+    </div>
+  ))
+
+  /**
+   * The users that are displayed on the home page.
+   */
+  const usersJsx = compute(() => (
+    <div className='UserListContainer'>
+      <List<ClientUser>
+        headingText={'Select a user:'}
+        items={users}
+        sortByMethods={[ESortByMethod.Name]}
+        nameProperty={'name'}
+        alwaysUseBlanks={true}
+        renderItemDisplay={(user: ClientUser) => {
+          return (
+            <>
+              <div className='SelectionRow'>
+                <div className='Text' onClick={() => selectUser(user)}>
+                  {user.userID}
+                  <Tooltip description='Select user.' />
+                </div>
+                <UserModificationPanel
+                  user={user}
+                  handleSuccessfulDeletion={remount}
+                />
+              </div>
+            </>
+          )
+        }}
+        searchableProperties={['userID']}
+        noItemsDisplay={<div className='NoContent'>No users available...</div>}
+        ajaxStatus={'Loaded'}
+        applyItemStyling={() => {
+          return {}
+        }}
+        listSpecificItemClassName='AltDesign1'
+      />
+      <div className='ListActions'>
+        <ButtonSVG
+          purpose={EButtonSVGPurpose.Add}
+          onClick={createUser}
+          tooltipDescription={'Create new user'}
+        />
+      </div>
+    </div>
+  ))
+
+  const footerJsx = compute(() => (
+    <div className='FooterContainer' draggable={false}>
+      <div className='Version' onClick={viewChangelog} draggable={false}>
+        v1.3.6
+        <Tooltip description={'View changelog.'} />
+      </div>
+      <a
+        href='https://www.midjourney.com/'
+        className='Credit'
+        draggable={false}
+      >
+        Photo by Midjourney
+      </a>
+    </div>
+  ))
+
+  // Render root element.
   return (
     <div
       className={homePageClassName}
@@ -514,195 +728,14 @@ export default function HomePage(props: IHomePage): JSX.Element | null {
       onDragLeave={handleFileDragLeave}
       onDrop={handleFileDrop}
     >
-      {/* -- FILE DROP BOX -- */}
-      <div className='FileDropBox'>
-        <div className='UploadIcon'></div>
-      </div>
-
-      {/* -- NAVIGATION */}
-      <Navigation
-        brandingCallback={null}
-        brandingTooltipDescription={null}
-        links={[
-          {
-            text: 'Log out',
-            handleClick: () =>
-              logout({
-                returningPagePath: 'HomePage',
-                returningPageProps: {},
-              }),
-            key: 'log-out',
-          },
-        ]}
-      />
-      {/* -- CONTENT -- */}
+      {fileDropBoxJsx}
+      {navigationJsx}
       <div className='Content'>
-        {/* { Game List } */}
-        <div className='GameListContainer'>
-          <List<TGameBasicJson>
-            headingText={'Select a game:'}
-            items={games}
-            sortByMethods={[ESortByMethod.Name]}
-            nameProperty={'name'}
-            alwaysUseBlanks={true}
-            renderItemDisplay={(game: TGameBasicJson) => {
-              return (
-                <div
-                  className='SelectionRow'
-                  onClick={() => onGameSelection(game.gameID)}
-                >
-                  <div className='Text'>{game.name}</div>
-                </div>
-              )
-            }}
-            searchableProperties={['name']}
-            noItemsDisplay={
-              <div className='NoContent'>No games available...</div>
-            }
-            ajaxStatus={'Loaded'}
-            applyItemStyling={() => {
-              return {}
-            }}
-            listSpecificItemClassName='AltDesign1'
-          />
-          <div className='EditContentRow'></div>
-        </div>
-        {/* { Mission List } */}
-        <div className='MissionListContainer'>
-          <List<ClientMission>
-            headingText={'Select a mission:'}
-            items={missions}
-            sortByMethods={[ESortByMethod.Name]}
-            nameProperty={'name'}
-            alwaysUseBlanks={true}
-            renderItemDisplay={(mission: ClientMission) => {
-              return (
-                <>
-                  <div className='SelectionRow'>
-                    <div
-                      className='Text'
-                      onClick={() => onMissionSelection(mission)}
-                    >
-                      {mission.name}
-                      <Tooltip description='Launch mission.' />
-                    </div>
-                    <MissionModificationPanel
-                      mission={mission}
-                      session={session}
-                      handleSuccessfulCopy={remount}
-                      handleSuccessfulDeletion={remount}
-                    />
-                  </div>
-                </>
-              )
-            }}
-            searchableProperties={['name']}
-            noItemsDisplay={
-              <div className='NoContent'>No missions available...</div>
-            }
-            ajaxStatus={'Loaded'}
-            applyItemStyling={() => {
-              return {}
-            }}
-            listSpecificItemClassName='AltDesign1'
-          />
-          <div className='EditContentRow'>
-            <ButtonSVG
-              purpose={EButtonSVGPurpose.Add}
-              onClick={createMission}
-              tooltipDescription={'Create new mission'}
-              uniqueClassName={'NewMissionButton'}
-            />
-            <ButtonSVG
-              purpose={EButtonSVGPurpose.Upload}
-              onClick={handleMissionImportRequest}
-              tooltipDescription={
-                'Import a .metis file from your local system.'
-              }
-            />
-            <input
-              className='ImportMissionTrigger'
-              type='file'
-              ref={importMissionTrigger}
-              onChange={handleImportMissionTriggerChange}
-              hidden
-            />
-          </div>
-        </div>
-        {/* { User List } */}
-        <div className='UserListContainer'>
-          <List<ClientUser>
-            headingText={'Select a user:'}
-            items={users}
-            sortByMethods={[ESortByMethod.Name]}
-            nameProperty={'name'}
-            alwaysUseBlanks={true}
-            renderItemDisplay={(user: ClientUser) => {
-              return (
-                <>
-                  <div className='SelectionRow'>
-                    <div className='Text' onClick={() => selectUser(user)}>
-                      {user.userID}
-                      <Tooltip description='Select user.' />
-                    </div>
-                    <UserModificationPanel
-                      user={user}
-                      handleSuccessfulDeletion={remount}
-                    />
-                  </div>
-                </>
-              )
-            }}
-            searchableProperties={['userID']}
-            noItemsDisplay={
-              <div className='NoContent'>No users available...</div>
-            }
-            ajaxStatus={'Loaded'}
-            applyItemStyling={() => {
-              return {}
-            }}
-            listSpecificItemClassName='AltDesign1'
-          />
-          <div className='EditContentRow'>
-            <ButtonSVG
-              purpose={EButtonSVGPurpose.Add}
-              onClick={createUser}
-              tooltipDescription={'Create new user'}
-            />
-          </div>
-        </div>
+        {gamesJsx}
+        {missionsJsx}
+        {usersJsx}
       </div>
-      <div className='Join'>
-        <label style={{ paddingRight: '1em' }}>Jacob Don't Forget:</label>
-        <input
-          style={{ color: 'black' }}
-          type='text'
-          onKeyUp={async (event) => {
-            if (event.key === 'Enter') {
-              // let game = await GameClient.join(
-              //   (event.target as HTMLInputElement).value,
-              //   server!,
-              // )
-              // navigateTo('GamePage', { game })
-            }
-          }}
-        />
-      </div>
-
-      {/* -- FOOTER -- */}
-      <div className='FooterContainer' draggable={false}>
-        <div className='Version' onClick={viewChangelog} draggable={false}>
-          v1.3.6
-          <Tooltip description={'View changelog.'} />
-        </div>
-        <a
-          href='https://www.midjourney.com/'
-          className='Credit'
-          draggable={false}
-        >
-          Photo by Midjourney
-        </a>
-      </div>
+      {footerJsx}
     </div>
   )
 }
