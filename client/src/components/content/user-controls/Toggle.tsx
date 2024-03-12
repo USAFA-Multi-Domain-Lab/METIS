@@ -1,97 +1,81 @@
-// -- imports --
-
-import React from 'react'
+import { compute } from 'src/toolbox'
 import './Toggle.scss'
 
-/* -- enumerations */
+/**
+ * Renders a toggle switch.
+ */
+export default function Toggle({
+  currentValue,
+  deliverValue,
+  // Optional Properties
+  lockState = 'unlocked',
+}: TToggle_P): JSX.Element {
+  /* -- COMPUTED -- */
+  /**
+   * The class name for the toggle.
+   */
+  const className: string = compute(() => {
+    // Default class names
+    let classList: string[] = ['Toggle']
 
-export enum EToggleLockState {
-  Unlocked,
-  LockedActivation,
-  LockedDeactivation,
-}
+    // Add activated class if activated.
+    if (currentValue) {
+      classList.push('Activated')
+    }
 
-// -- interfaces --
+    // Add locked class if locked.
+    if (lockState !== 'unlocked') {
+      classList.push('Locked')
+    }
 
-interface IProps {
-  initiallyActivated: boolean
-  lockState: EToggleLockState
-  deliverValue: (activated: boolean, revert: () => void) => void
-}
+    // Return the list of class names as one string.
+    return classList.join(' ')
+  })
 
-interface IState {
-  activated: boolean
-}
-
-// -- classes --
-
-export default class Toggle extends React.Component<IProps, IState> {
-  state: IState
-
-  static defaultProps = {
-    initialValue: false,
-    lockState: EToggleLockState.Unlocked,
-  }
-
-  constructor(props: IProps) {
-    super(props)
-    this.state = {
-      activated: false,
+  /* -- FUNCTIONS -- */
+  /**
+   * Handles the click event for the toggle.
+   */
+  const handleClick = () => {
+    if (lockState === 'unlocked') {
+      deliverValue(!currentValue)
+    } else if (lockState === 'locked-activation') {
+      deliverValue(true)
+    } else if (lockState === 'locked-deactivation') {
+      deliverValue(false)
     }
   }
 
-  componentDidMount(): void {
-    let initiallyActivated: boolean = this.props.initiallyActivated
-    this.setState({ activated: initiallyActivated })
-  }
+  /* -- RENDER -- */
+  return (
+    <div className={className} onClick={handleClick}>
+      <div className='Switch'></div>
+    </div>
+  )
+}
 
-  componentDidUpdate(): void {
-    let activated: boolean = this.state.activated
-    let lockState: EToggleLockState = this.props.lockState
-    switch (lockState) {
-      case EToggleLockState.LockedActivation:
-        if (!activated) {
-          this.setState({ activated: true }, () =>
-            this.props.deliverValue(this.state.activated, this.revert),
-          )
-        }
-        break
-      case EToggleLockState.LockedDeactivation:
-        if (activated) {
-          this.setState({ activated: false }, () =>
-            this.props.deliverValue(this.state.activated, this.revert),
-          )
-        }
-        break
-      default:
-        break
-    }
-  }
+/* ---------------------------- TYPES FOR TOGGLE ---------------------------- */
 
-  revert = (): void => {
-    this.setState({ activated: !this.state.activated })
-  }
+/**
+ * The lock state for a toggle.
+ */
+export type TToggleLockState =
+  | 'unlocked'
+  | 'locked-activation'
+  | 'locked-deactivation'
 
-  // inherited
-  render(): JSX.Element | null {
-    let activated: boolean = this.state.activated
-    let lockState: EToggleLockState = this.props.lockState
-    let className: string = `Toggle${activated ? ' Activated' : ''}${
-      lockState !== EToggleLockState.Unlocked ? ' Locked' : ''
-    }`
-    return (
-      <div
-        className={className}
-        onClick={() => {
-          this.setState({ activated: !activated }, () => {
-            if (lockState === EToggleLockState.Unlocked) {
-              this.props.deliverValue(this.state.activated, this.revert)
-            }
-          })
-        }}
-      >
-        <div className='Switch'></div>
-      </div>
-    )
-  }
+type TToggle_P = {
+  /**
+   * The current value of the toggle.
+   */
+  currentValue: boolean
+  /**
+   * A function that will deliver the value of the toggle.
+   */
+  deliverValue: (activated: boolean) => void
+  /**
+   * The lock state of the toggle.
+   * @default 'unlocked'
+   */
+  lockState?: TToggleLockState
 }

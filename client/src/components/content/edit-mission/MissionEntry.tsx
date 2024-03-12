@@ -26,17 +26,13 @@ export default function MissionEntry({
   /**
    * This is called when a user requests to toggle a mission between being live
    * and not being live.
-   * @param live Whether or not the mission is live.
    */
   const handleToggleLiveRequest = async (live: boolean) => {
-    // Track previous live state in case of error.
-    let previousLiveState: boolean = mission.live
+    // Update state.
+    mission.live = live
+    setLiveAjaxStatus('Loading')
 
     try {
-      // Update state.
-      mission.live = live
-      setLiveAjaxStatus('Loading')
-
       // Make the request to the server.
       await ClientMission.setLive(mission.missionID, live)
 
@@ -48,6 +44,9 @@ export default function MissionEntry({
         notify(`"${mission.name}" is no longer live.`)
         setLiveAjaxStatus('Loaded')
       }
+
+      // Allow the user to save the changes.
+      handleChange()
     } catch (error) {
       // Notify user of error.
       if (live) {
@@ -58,7 +57,7 @@ export default function MissionEntry({
         setLiveAjaxStatus('Error')
       }
       // Revert mission.live to the previous state.
-      mission.live = previousLiveState
+      mission.live = !mission.live
     }
   }
 
@@ -112,14 +111,10 @@ export default function MissionEntry({
               displayOptionalText={true}
               key={`${mission.missionID}_introMessage`}
             />
-
             <DetailToggle
               label={'Live'}
-              initialValue={mission.live}
-              deliverValue={(live: boolean) => {
-                handleToggleLiveRequest(live)
-                handleChange()
-              }}
+              currentValue={mission.live}
+              deliverValue={handleToggleLiveRequest}
             />
             <DetailNumber
               label='Initial Resources'

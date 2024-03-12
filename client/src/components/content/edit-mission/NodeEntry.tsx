@@ -17,7 +17,6 @@ import {
   MiniButtonSVG,
 } from '../user-controls/MiniButtonSVG'
 import { MiniButtonSVGPanel } from '../user-controls/MiniButtonSVGPanel'
-import { EToggleLockState } from '../user-controls/Toggle'
 import './NodeEntry.scss'
 
 /**
@@ -299,7 +298,7 @@ export default function NodeEntry({
             />
             <DetailToggle
               label={'Executable'}
-              initialValue={node.executable}
+              currentValue={node.executable}
               deliverValue={(executable: boolean) => {
                 node.executable = executable
 
@@ -326,16 +325,16 @@ export default function NodeEntry({
             />
             <DetailToggle
               label={'Device'}
-              initialValue={node.device}
+              currentValue={node.device}
               lockState={
                 // Locks the toggle if the node is not executable.
                 node.executable
-                  ? EToggleLockState.Unlocked
-                  : node.executable && node.device
-                  ? EToggleLockState.LockedActivation
-                  : node.executable && !node.device
-                  ? EToggleLockState.LockedDeactivation
-                  : EToggleLockState.LockedDeactivation
+                  ? 'unlocked'
+                  : !node.executable && node.device
+                  ? 'locked-activation'
+                  : !node.executable && !node.device
+                  ? 'locked-deactivation'
+                  : 'locked-deactivation'
               }
               deliverValue={(device: boolean) => {
                 node.device = device

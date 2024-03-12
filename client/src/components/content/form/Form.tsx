@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react'
 import ReactQuill from 'react-quill'
 import 'react-quill/dist/quill.snow.css'
+import { useGlobalContext } from 'src/context'
 import { compute } from 'src/toolbox'
 import inputs from 'src/toolbox/inputs'
 import { AnyObject } from '../../../../../shared/toolbox/objects'
 import Tooltip from '../communication/Tooltip'
-import Toggle, { EToggleLockState } from '../user-controls/Toggle'
+import Toggle, { TToggleLockState } from '../user-controls/Toggle'
 import './Form.scss'
 
 /**
@@ -830,99 +831,92 @@ export function DetailDropDown<TOption>({
   }
 }
 
-// A field in a form that consists of a label
-// and an on/off toggle.
-export class DetailToggle extends React.Component<
-  TDetailToggle_P,
-  TDetailToggle_S
-> {
-  /* -- static-fields -- */
+/**
+ * This will render a detail for a form,
+ * with a label and a toggle switch
+ * for turning a feature on or off.
+ */
+export function DetailToggle({
+  label,
+  currentValue = false,
+  deliverValue,
+  // Optional Properties
+  lockState = 'unlocked',
+  tooltipDescription = '',
+  uniqueClassName = undefined,
+  errorMessage = undefined,
+  displayOptionalText = false,
+}: TDetailToggle_P): JSX.Element | null {
+  /* -- GLOBAL CONTEXT -- */
+  const { forceUpdate } = useGlobalContext().actions
 
-  static defaultProps = {
-    initialValue: false,
-    lockState: EToggleLockState.Unlocked,
-    tooltipDescription: '',
-    uniqueClassName: '',
-  }
-
-  /* -- non-static-fields -- */
-
-  // ...none added
-
-  /* -- initialization -- */
-
-  // constructor(props: IFormDetailToggle_P) {
-  //   super(props)
-  // }
-
-  componentDidMount(): void {}
-
-  componentDidUpdate(
-    prevProps: Readonly<TDetailToggle_P>,
-    prevState: Readonly<TDetailToggle_S>,
-    snapshot?: any,
-  ): void {
-    if (prevProps.initialValue !== this.props.initialValue) {
-      this.forceUpdate()
-    }
-  }
-
-  /* -- functions | render -- */
-
-  // inherited
-  render(): JSX.Element | null {
-    let label: string = this.props.label
-    let initialValue: boolean = this.props.initialValue
-    let lockState: EToggleLockState = this.props.lockState
-    let tooltipDescription: string = this.props.tooltipDescription
-    let hideTooltip: boolean = tooltipDescription.length === 0
-    let uniqueClassName: string = this.props.uniqueClassName
-    let errorMessage: string | undefined = this.props.options?.errorMessage
-    let displayOptionalText: boolean =
-      this.props.options?.displayOptionalText || false
-
-    /* -- PRE-RENDER PROCESSING -- */
-
+  /* -- COMPUTED -- */
+  /**
+   * The class name for the detail.
+   */
+  const containerClassName: string = compute(() => {
     // Default class names
-    let containerClassName: string = 'Detail DetailToggle'
-    let fieldErrorClassName: string = 'FieldErrorMessage hide'
-    let optionalClassName: string = displayOptionalText
-      ? 'Optional'
-      : 'Optional Hidden'
+    let classList: string[] = ['Detail', 'DetailToggle']
 
-    if (uniqueClassName.length > 0) {
-      containerClassName += ` ${uniqueClassName}`
+    // If a unique class name is passed
+    // then add it to the list of class names.
+    if (uniqueClassName) {
+      classList.push(uniqueClassName)
     }
-    tooltipDescription = `#### ${label}\n${tooltipDescription}`
 
+    // Return the list of class names as one string.
+    return classList.join(' ')
+  })
+  /**
+   * The class name for the optional text.
+   */
+  const optionalClassName: string = compute(() =>
+    displayOptionalText ? 'Optional' : 'Optional Hidden',
+  )
+  /**
+   * Class name for the error message field.
+   */
+  const fieldErrorClassName: string = compute(() => {
+    // Default class names
+    let classList: string[] = ['FieldErrorMessage']
+
+    // Hide the error message if the
+    // error message is not passed and
+    // the lock state is locked.
     if (
-      errorMessage !== undefined &&
-      (lockState === EToggleLockState.LockedActivation ||
-        lockState === EToggleLockState.LockedDeactivation)
+      !errorMessage &&
+      (lockState === 'locked-activation' || lockState === 'locked-deactivation')
     ) {
-      fieldErrorClassName = 'FieldErrorMessage'
+      classList.push('Hidden')
     }
 
-    /* -- RENDER -- */
+    // Return the list of class names as one string.
+    return classList.join(' ')
+  })
 
-    return (
-      <div className={containerClassName}>
-        <div className='TitleContainer'>
-          <div className='Label'>{label}</div>
-          <div className={optionalClassName}>optional</div>
-        </div>
-        <div className='Field'>
-          <Toggle
-            initiallyActivated={initialValue}
-            lockState={lockState}
-            deliverValue={this.props.deliverValue}
-          />
-        </div>
-        {hideTooltip ? null : <Tooltip description={tooltipDescription} />}
-        <div className={fieldErrorClassName}>{errorMessage}</div>
+  /* -- EFFECTS -- */
+  useEffect(() => {
+    forceUpdate()
+  }, [currentValue])
+
+  /* -- RENDER -- */
+  return (
+    <div className={containerClassName}>
+      <div className='TitleContainer'>
+        <div className='Label'>{label}</div>
+        <div className={optionalClassName}>optional</div>
       </div>
-    )
-  }
+      <div className='Field'>
+        <Toggle
+          currentValue={currentValue}
+          deliverValue={deliverValue}
+          lockState={lockState}
+        />
+      </div>
+      <Tooltip description={tooltipDescription} />
+      <div className={fieldErrorClassName}>{errorMessage}</div>
+    </div>
+  )
 }
 
 /* ---------------------------- TYPES FOR FORMS ---------------------------- */
@@ -1262,50 +1256,40 @@ type TDetailDropDown_P<TOption> = {
  */
 export type TDetailToggle_P = {
   /**
-   * Marks the form detail.
+   * The label for the detail.
    */
   label: string
   /**
-   * The default value for the input field.
+   * The current value for the detail.
+   * @default false
    */
-  initialValue: boolean
+  currentValue: boolean | undefined
+  /**
+   * A function that will deliver the value of the toggle.
+   */
+  deliverValue: (activated: boolean) => void
   /**
    * The toggle lock state of the toggle.
-   * (See Toggle.tsx)
+   * @default 'unlocked'
    */
-  lockState: EToggleLockState
+  lockState?: TToggleLockState
   /**
    * The description displayed when hovered over.
+   * @default ''
    */
-  tooltipDescription: string
+  tooltipDescription?: string
   /**
    * Class name to apply to the root element.
    */
-  uniqueClassName: string
-  /**
-   * Delivers what the user inputs so that
-   * the parent component can track it.
-   * @param value The value to deliver.
+  uniqueClassName?: string
+  /** If an error message is needed then this is the
+   * message that will be displayed
    */
-  deliverValue: (value: boolean) => void
+  errorMessage?: string
   /**
-   * The options available for the detail.
+   * A boolean that will determine whether or not to show that the field
+   * is optional.
+   * @default false
    */
-  options?: {
-    /** If an error message is needed then this is the
-     * message that will be displayed
-     */
-    errorMessage?: string
-    /**
-     * A boolean that will determine whether or not to show that the field
-     * is optional.
-     * @default false
-     */
-    displayOptionalText?: boolean
-  }
+  displayOptionalText?: boolean
 }
-
-/**
- * The state for the DetailToggle component.
- */
-type TDetailToggle_S = {}

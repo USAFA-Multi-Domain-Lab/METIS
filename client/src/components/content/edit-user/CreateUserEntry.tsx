@@ -348,7 +348,7 @@ export default function CreateUserEntry(props: {
       <div className='NeedsPasswordResetContainer'>
         <div className='Title'>Needs Password Reset:</div>
         <Toggle
-          initiallyActivated={user.needsPasswordReset}
+          currentValue={user.needsPasswordReset}
           deliverValue={() => {
             user.needsPasswordReset = !user.needsPasswordReset
             handleChange()

@@ -5,7 +5,7 @@ import ClientUser from 'src/users'
 import { TMetisSession } from '../../../../../shared/sessions'
 import { TAjaxStatus } from '../../../../../shared/toolbox/ajax'
 import Tooltip from '../communication/Tooltip'
-import Toggle, { EToggleLockState } from '../user-controls/Toggle'
+import Toggle, { TToggleLockState } from '../user-controls/Toggle'
 import { EMiniButtonSVGPurpose, MiniButtonSVG } from './MiniButtonSVG'
 import { MiniButtonSVGPanel } from './MiniButtonSVGPanel'
 import './MissionModificationPanel.scss'
@@ -102,18 +102,16 @@ export default function MissionModificationPanel(props: {
     )
   }
 
-  // This is called when a user requests
-  // to toggle a mission between being live
-  // and not being live.
-  const handleToggleLiveRequest = async (live: boolean, revert: () => void) => {
-    // Track previous live state in case of error.
-    let previousLiveState: boolean = mission.live
+  /**
+   * This is called when a user requests to toggle a mission between being live
+   * and not being live.
+   */
+  const handleToggleLiveRequest = async (live: boolean) => {
+    // Update state.
+    mission.live = live
+    setLiveAjaxStatus('Loading')
 
     try {
-      // Update state.
-      mission.live = live
-      setLiveAjaxStatus('Loading')
-
       // Make the request to the server.
       await ClientMission.setLive(mission.missionID, live)
 
@@ -128,15 +126,14 @@ export default function MissionModificationPanel(props: {
     } catch (error) {
       // Notify user of error.
       if (live) {
-        notify(`Failed to make \"${mission.name}\"  go live.`)
+        notify(`Failed to make \"${mission.name}\" go live.`)
         setLiveAjaxStatus('Error')
       } else {
         notify(`Failed to make \"${mission.name}\" no longer live.`)
         setLiveAjaxStatus('Error')
       }
       // Revert mission.live to the previous state.
-      mission.live = previousLiveState
-      revert()
+      mission.live = !mission.live
     }
   }
 
@@ -183,13 +180,13 @@ export default function MissionModificationPanel(props: {
 
   // Logic that will lock the mission toggle while a request is being sent
   // to set the mission.live paramter
-  let lockLiveToggle: EToggleLockState = EToggleLockState.Unlocked
+  let lockLiveToggle: TToggleLockState = 'unlocked'
   if (liveAjaxStatus === 'Loading' && mission.live) {
-    lockLiveToggle = EToggleLockState.LockedActivation
+    lockLiveToggle = 'locked-activation'
   } else if (liveAjaxStatus === 'Loading' && !mission.live) {
-    lockLiveToggle = EToggleLockState.LockedDeactivation
+    lockLiveToggle = 'locked-deactivation'
   } else {
-    lockLiveToggle = EToggleLockState.Unlocked
+    lockLiveToggle = 'unlocked'
   }
 
   currentActions.push(
@@ -204,7 +201,7 @@ export default function MissionModificationPanel(props: {
       <MiniButtonSVGPanel buttons={currentActions} />
       <div className='ToggleContainer'>
         <Toggle
-          initiallyActivated={mission.live}
+          currentValue={mission.live}
           lockState={lockLiveToggle}
           deliverValue={handleToggleLiveRequest}
         />

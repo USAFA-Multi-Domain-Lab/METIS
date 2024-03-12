@@ -861,7 +861,7 @@ export default function ArgEntry({
       >
         <DetailToggle
           label={arg.name}
-          initialValue={booleanValue}
+          currentValue={booleanValue}
           deliverValue={(value: boolean) => {
             // Add the argument to the list of arguments.
             effectArgs[arg.id] = value
