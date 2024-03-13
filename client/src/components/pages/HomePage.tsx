@@ -21,6 +21,10 @@ import {
   EButtonSVGPurpose,
 } from '../content/user-controls/ButtonSVG'
 import { ButtonText } from '../content/user-controls/ButtonText'
+import {
+  EMiniButtonSVGPurpose,
+  MiniButtonSVG,
+} from '../content/user-controls/MiniButtonSVG'
 import MissionModificationPanel from '../content/user-controls/MissionModificationPanel'
 import UserModificationPanel from '../content/user-controls/UserModificationPanel'
 import './HomePage.scss'
@@ -52,6 +56,7 @@ export default function HomePage(props: {}): JSX.Element | null {
     notify,
     logout,
     createPrompt,
+    confirm,
   } = globalContext.actions
 
   /* -- COMPONENT REFS -- */
@@ -467,6 +472,32 @@ export default function HomePage(props: {}): JSX.Element | null {
   }
 
   /**
+   * Handler for when a game is requested to
+   * be deleted.
+   */
+  const onGameDelete = (game: TGameBasicJson) => {
+    confirm(
+      'Are you sure you want to delete this game?',
+      async (concludeAction: () => void) => {
+        try {
+          beginLoading('Deleting game...')
+          concludeAction()
+          await GameClient.$delete(game.gameID)
+          finishLoading()
+          notify(`Successfully deleted "${game.name}".`)
+          loadGames()
+        } catch (error) {
+          finishLoading()
+          notify(`Failed to delete "${game.name}".`)
+        }
+      },
+      {
+        pendingMessageUponConfirm: 'Deleting game...',
+      },
+    )
+  }
+
+  /**
    * Handler for when a mission is selected.
    */
   const onMissionSelection = async ({ missionID }: ClientMission) => {
@@ -544,56 +575,79 @@ export default function HomePage(props: {}): JSX.Element | null {
   /**
    * The games that are displayed on the home page.
    */
-  const gamesJsx = compute(() => (
-    <div className='GameListContainer'>
-      <List<TGameBasicJson>
-        headingText={'Select a game:'}
-        items={games}
-        sortByMethods={[ESortByMethod.Name]}
-        nameProperty={'name'}
-        alwaysUseBlanks={true}
-        renderItemDisplay={(game: TGameBasicJson) => {
-          return (
-            <div
-              className='SelectionRow'
-              onClick={() => onGameSelection(game.gameID)}
-            >
-              <div className='Text'>{game.name}</div>
-              <Tooltip description='Join game.' />
-            </div>
-          )
-        }}
-        searchableProperties={['name']}
-        noItemsDisplay={<div className='NoContent'>No games available...</div>}
-        ajaxStatus={'Loaded'}
-        applyItemStyling={() => {
-          return {}
-        }}
-        listSpecificItemClassName='AltDesign1'
-      />
-      <div className='ListActions'>
-        <div className='ManualJoin'>
-          <div className='Label'>Enter game ID:</div>
-          <Detail
-            label=''
-            initialValue={manualJoinGameId}
-            deliverValue={(value) => {
-              setManualJoinGameId(value)
-            }}
-            options={{
-              emptyStringAllowed: true,
-              uniqueLabelClassName: 'Hidden',
-            }}
-          />
-          <ButtonText
-            text='Join'
-            handleClick={() => onGameSelection(manualJoinGameId)}
-            componentKey='Join'
-          />
+  const gamesJsx = compute(() => {
+    // Gather details.
+    let buttonsClasses: string[] = ['Buttons']
+
+    // If the current user is not authorized
+    // to write, hide the buttons.
+    if (!currentUser.isAuthorized('WRITE')) {
+      buttonsClasses.push('Hidden')
+    }
+
+    // Render JSX.
+    return (
+      <div className='GameListContainer'>
+        <List<TGameBasicJson>
+          headingText={'Select a game:'}
+          items={games}
+          sortByMethods={[ESortByMethod.Name]}
+          nameProperty={'name'}
+          alwaysUseBlanks={true}
+          renderItemDisplay={(game: TGameBasicJson) => {
+            return (
+              <div className='SelectionRow'>
+                <div
+                  className='Text'
+                  onClick={() => onGameSelection(game.gameID)}
+                >
+                  {game.name}
+                  <Tooltip description='Join game.' />
+                </div>
+                <div className={buttonsClasses.join(' ')}>
+                  <MiniButtonSVG
+                    purpose={EMiniButtonSVGPurpose.Remove}
+                    handleClick={() => onGameDelete(game)}
+                    tooltipDescription={'Remove game.'}
+                  />
+                </div>
+              </div>
+            )
+          }}
+          searchableProperties={['name']}
+          noItemsDisplay={
+            <div className='NoContent'>No games available...</div>
+          }
+          ajaxStatus={'Loaded'}
+          applyItemStyling={() => {
+            return {}
+          }}
+          listSpecificItemClassName='AltDesign1'
+        />
+        <div className='ListActions'>
+          <div className='ManualJoin'>
+            <div className='Label'>Enter game ID:</div>
+            <Detail
+              label=''
+              initialValue={manualJoinGameId}
+              deliverValue={(value) => {
+                setManualJoinGameId(value)
+              }}
+              options={{
+                emptyStringAllowed: true,
+                uniqueLabelClassName: 'Hidden',
+              }}
+            />
+            <ButtonText
+              text='Join'
+              handleClick={() => onGameSelection(manualJoinGameId)}
+              componentKey='Join'
+            />
+          </div>
         </div>
       </div>
-    </div>
-  ))
+    )
+  })
 
   /**
    * The missions that are displayed on the home page.

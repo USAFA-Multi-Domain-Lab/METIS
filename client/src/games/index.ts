@@ -390,4 +390,23 @@ export default class GameClient extends Game<
       },
     )
   }
+
+  public static async $delete(gameID: string): Promise<void> {
+    return new Promise<void>(
+      async (
+        resolve: () => void,
+        reject: (error: any) => void,
+      ): Promise<void> => {
+        try {
+          // Call API to delete game.
+          await axios.delete(`${Game.API_ENDPOINT}/${gameID}`)
+          return resolve()
+        } catch (error) {
+          console.error('Failed to delete game.')
+          console.error(error)
+          return reject(error)
+        }
+      },
+    )
+  }
 }
