@@ -1,6 +1,11 @@
-import { TClientEvents, TServerEvents } from 'metis/connect/data'
+import { TClientEvents, TServerEvents, TServerMethod } from 'metis/connect/data'
 import { ServerEmittedError } from 'metis/connect/errors'
-import Game, { TGameBasicJson, TGameConfig, TGameJson } from 'metis/games'
+import Game, {
+  TGameBasicJson,
+  TGameConfig,
+  TGameJson,
+  TGameState,
+} from 'metis/games'
 import ClientConnection from 'metis/server/connect/clients'
 import ServerMission from 'metis/server/missions'
 import ServerMissionAction from 'metis/server/missions/actions'
@@ -17,12 +22,17 @@ export default class GameServer extends Game<
   ServerMissionNode,
   ServerMissionAction
 > {
+  public set state(value: TGameState) {
+    this._state = value
+    this.emitToParticipants('game-state-change', { data: { state: value } })
+  }
+
   /**
    * The resources available to the participants.
    */
   protected _resources: number
 
-  // Inherited
+  // Implemented
   public get resources(): number {
     return this._resources
   }
@@ -47,6 +57,7 @@ export default class GameServer extends Game<
     participants: Array<ClientConnection>,
   ) {
     super(gameID, name, config, mission, participants)
+    this._state = 'unstarted'
     this._resources = mission.initialResources
     this._destroyed = false
     this.register()
@@ -219,57 +230,14 @@ export default class GameServer extends Game<
   }
 
   /**
-   * A registry of all games currently launched.
+   * Emits an event to all the participants of the game.
    */
-  private static registry: Map<string, GameServer> = new Map<
-    string,
-    GameServer
-  >()
-
-  /**
-   * Launches a new game with a new game ID.
-   * @param mission The mission from which to launch a game.
-   * @param config The configuration for the game.
-   * @returns A promise of the game server for the newly launched game.
-   */
-  public static launch(
-    mission: ServerMission,
-    config: TGameConfig = {},
-  ): GameServer {
-    return new GameServer(generateHash(), mission.name, config, mission, [])
-  }
-
-  /**
-   * Quits the game for the given participant.
-   */
-  public static quit(participant: ClientConnection): void {}
-
-  /**
-   * @returns the game associated with the given game ID.
-   */
-  public static get(gameID: string | undefined): GameServer | undefined {
-    if (gameID === undefined) {
-      return undefined
-    } else {
-      return GameServer.registry.get(gameID)
-    }
-  }
-
-  /**
-   * @returns All games in the registry.
-   */
-  public static getAll(): Array<GameServer> {
-    return Array.from(GameServer.registry.values())
-  }
-
-  /**
-   * Destroys the session associated with the given user ID.
-   */
-  public static destroy(userID: string | undefined): void {
-    let game: GameServer | undefined = GameServer.get(userID)
-
-    if (game !== undefined) {
-      game.destroy()
+  public emitToParticipants<
+    TMethod extends TServerMethod,
+    TPayload extends Omit<TServerEvents[TMethod], 'method'>,
+  >(method: TMethod, payload: TPayload): void {
+    for (let participant of this.participants) {
+      participant.emit(method, payload)
     }
   }
 
@@ -448,6 +416,67 @@ export default class GameServer extends Game<
           message: 'Failed to execute action.',
         }),
       )
+    }
+  }
+
+  /**
+   * A registry of all games currently launched.
+   */
+  private static registry: Map<string, GameServer> = new Map<
+    string,
+    GameServer
+  >()
+
+  /**
+   * Launches a new game with a new game ID.
+   * @param mission The mission from which to launch a game.
+   * @param config The configuration for the game.
+   * @returns A promise of the game server for the newly launched game.
+   */
+  public static launch(
+    mission: ServerMission,
+    config: TGameConfig = {},
+  ): GameServer {
+    return new GameServer(
+      generateHash().substring(0, 12),
+      mission.name,
+      config,
+      mission,
+      [],
+    )
+  }
+
+  /**
+   * Quits the game for the given participant.
+   */
+  public static quit(participant: ClientConnection): void {}
+
+  /**
+   * @returns the game associated with the given game ID.
+   */
+  public static get(gameID: string | undefined): GameServer | undefined {
+    if (gameID === undefined) {
+      return undefined
+    } else {
+      return GameServer.registry.get(gameID)
+    }
+  }
+
+  /**
+   * @returns All games in the registry.
+   */
+  public static getAll(): Array<GameServer> {
+    return Array.from(GameServer.registry.values())
+  }
+
+  /**
+   * Destroys the session associated with the given user ID.
+   */
+  public static destroy(userID: string | undefined): void {
+    let game: GameServer | undefined = GameServer.get(userID)
+
+    if (game !== undefined) {
+      game.destroy()
     }
   }
 }

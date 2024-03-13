@@ -1,4 +1,4 @@
-import { TGameJson } from 'metis/games'
+import { TGameJson, TGameState } from 'metis/games'
 import { TActionExecutionJSON } from 'metis/missions/actions/executions'
 import { IActionOutcomeJSON } from 'metis/missions/actions/outcomes'
 import { TCommonMissionNodeJson } from '../missions/nodes'
@@ -142,6 +142,18 @@ export type TGenericServerEvents = {
        * The new status of the connection, after the change.
        */
       status: TServerConnectionStatus
+    }
+  >
+  /**
+   * Occurs when the state of the game changes (unstarted, started, ended).
+   */
+  'game-state-change': TConnectEvent<
+    'game-state-change',
+    {
+      /**
+       * The new state of the game.
+       */
+      state: TGameState
     }
   >
   /**

@@ -12,6 +12,7 @@ export default function MissionModificationPanel(props: {
   session: NonNullable<TMetisSession<ClientUser>>
   handleSuccessfulCopy: (resultingMission: ClientMission) => void
   handleSuccessfulDeletion: () => void
+  handleSuccessfulLaunch: (gameID: string) => void
 }) {
   /* -- GLOBAL CONTEXT -- */
 
@@ -29,11 +30,14 @@ export default function MissionModificationPanel(props: {
 
   /* -- COMPONENT VARIABLES -- */
 
-  let mission: ClientMission = props.mission
-  let session: NonNullable<TMetisSession<ClientUser>> = props.session
+  let {
+    mission,
+    session,
+    handleSuccessfulCopy,
+    handleSuccessfulDeletion,
+    handleSuccessfulLaunch,
+  } = props
   let currentActions: MiniButtonSVG[] = []
-  let handleSuccessfulDeletion = props.handleSuccessfulDeletion
-  let handleSuccessfulCopy = props.handleSuccessfulCopy
 
   // Grab the current user from the session.
   let { user: currentUser } = session
@@ -102,31 +106,35 @@ export default function MissionModificationPanel(props: {
     )
   }
 
-  // -- RENDER --
-
-  let availableMiniActions = {
-    launch: new MiniButtonSVG({
-      ...MiniButtonSVG.defaultProps,
-      purpose: EMiniButtonSVGPurpose.Launch,
-      handleClick: async () => {
+  const handleLaunchRequest = () => {
+    confirm(
+      'Confirm the launch of this game.',
+      async (concludeAction: () => void) => {
         if (server !== null) {
           try {
             // Notify user of game launch.
             beginLoading('Launching game...')
+            concludeAction()
             // Launch game from mission ID, awaiting
             // the promised game ID.
             let gameID: string = await GameClient.$launch(mission.missionID)
-            // Notify user of game join.
-            beginLoading('Joining game...')
-            // Join game from new game ID, awaiting
-            // the promised game client.
-            let game = await server.$joinGame(gameID)
-            // Update session data to include new
-            // game ID.
-            session.gameID = game.gameID
-            // Go to the game page with the new
-            // game client.
-            navigateTo('GamePage', { game })
+            // Finish loading and notify user of success.
+            finishLoading()
+            notify('Successfully launched game.')
+            // Handle success in callback.
+            handleSuccessfulLaunch(gameID)
+            // todo: Remove this.
+            // // Notify user of game join.
+            // beginLoading('Joining game...')
+            // // Join game from new game ID, awaiting
+            // // the promised game client.
+            // let game = await server.$joinGame(gameID)
+            // // Update session data to include new
+            // // game ID.
+            // session.gameID = game.gameID
+            // // Go to the game page with the new
+            // // game client.
+            // navigateTo('GamePage', { game })
           } catch (error) {
             handleError({
               message: 'Failed to launch game. Contact system administrator.',
@@ -140,6 +148,20 @@ export default function MissionModificationPanel(props: {
           })
         }
       },
+      {
+        buttonConfirmText: 'Launch',
+        pendingMessageUponConfirm: 'Launching game...',
+      },
+    )
+  }
+
+  // -- RENDER --
+
+  let availableMiniActions = {
+    launch: new MiniButtonSVG({
+      ...MiniButtonSVG.defaultProps,
+      purpose: EMiniButtonSVGPurpose.Launch,
+      handleClick: handleLaunchRequest,
       tooltipDescription: 'Launch game.',
     }),
     edit: new MiniButtonSVG({

@@ -43,12 +43,22 @@ export default abstract class Game<
    * The participants of the game executing the mission.
    */
   protected _participants: TParticpant[]
-
   /**
    * The participants of the game executing the mission.
    */
   public get participants(): TParticpant[] {
     return [...this._participants]
+  }
+
+  /**
+   * The state of the game (unstarted, started, ended).
+   */
+  protected _state: TGameState
+  /**
+   * The state of the game (unstarted, started, ended).
+   */
+  public get state(): TGameState {
+    return this._state
   }
 
   /**
@@ -93,6 +103,7 @@ export default abstract class Game<
       ...config,
     }
     this.mission = mission
+    this._state = 'unstarted'
     this._participants = participants
     this.mapActions()
   }
@@ -217,3 +228,8 @@ export type TGameBasicJson = {
    */
   participantIDs: string[]
 }
+
+/**
+ * The state of a game.
+ */
+export type TGameState = 'unstarted' | 'started' | 'ended'

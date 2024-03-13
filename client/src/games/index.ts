@@ -68,6 +68,7 @@ export default class GameClient extends Game<
    * Creates game-specific listeners.
    */
   private addListeners(): void {
+    this.server.addEventListener('game-state-change', this.onGameStateChange)
     this.server.addEventListener('node-opened', this.onNodeOpened)
     this.server.addEventListener(
       'action-execution-initiated',
@@ -218,6 +219,20 @@ export default class GameClient extends Game<
         })
       },
     )
+  }
+
+  /**
+   * Handles when the game state has changed.
+   * @param event The event emitted by the server.
+   */
+  private onGameStateChange = (
+    event: TServerEvents['game-state-change'],
+  ): void => {
+    // Extract data.
+    let { state } = event.data
+
+    // Update the game state.
+    this._state = state
   }
 
   /**

@@ -620,8 +620,9 @@ export default function HomePage(props: {}): JSX.Element | null {
                 <MissionModificationPanel
                   mission={mission}
                   session={session}
-                  handleSuccessfulCopy={remount}
-                  handleSuccessfulDeletion={remount}
+                  handleSuccessfulLaunch={loadGames}
+                  handleSuccessfulCopy={loadMissions}
+                  handleSuccessfulDeletion={loadMissions}
                 />
               </div>
             </>

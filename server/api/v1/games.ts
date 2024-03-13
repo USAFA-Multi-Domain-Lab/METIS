@@ -22,57 +22,111 @@ const routerMap = (router: expressWs.Router, done: () => void) => {
   // -- POST | /api/v1/games/launch/ --
   // This will create a new game for a user
   // to execute a mission.
-  router.post('/launch/', auth({}), (request: Request, response: Response) => {
-    // Get data from the request body.
-    let missionID: string = request.body.missionID
-    // Grab the session.
-    let session: MetisSession = response.locals.session
+  router.post(
+    '/launch/',
+    auth({ permissions: ['WRITE'] }),
+    (request: Request, response: Response) => {
+      // Get data from the request body.
+      let missionID: string = request.body.missionID
+      // Grab the session.
+      let session: MetisSession = response.locals.session
 
-    // Query for mission.
-    MissionModel.findOne({ missionID })
-      .lean()
-      .exec(async (error: Error, missionData: TCommonMissionJson) => {
-        // Handle errors.
-        if (error !== null) {
-          databaseLogger.error(
-            `Failed to retrieve mission with ID "${missionID}".`,
-          )
-          databaseLogger.error(error)
-          return response.sendStatus(500)
-        }
-        // Handle mission not found.
-        else if (missionData === null) {
-          return response.sendStatus(404)
-        }
-        // Handle mission not live.
-        else if (
-          !missionData.live &&
-          !session?.user.isAuthorized(['READ', 'WRITE', 'DELETE'])
-        ) {
-          return response.sendStatus(401)
-        }
+      // Query for mission.
+      MissionModel.findOne({ missionID })
+        .lean()
+        .exec(async (error: Error, missionData: TCommonMissionJson) => {
+          // Handle errors.
+          if (error !== null) {
+            databaseLogger.error(
+              `Failed to retrieve mission with ID "${missionID}".`,
+            )
+            databaseLogger.error(error)
+            return response.sendStatus(500)
+          }
+          // Handle mission not found.
+          else if (missionData === null) {
+            return response.sendStatus(404)
+          }
+          // Handle mission not live.
+          else if (
+            !missionData.live &&
+            !session?.user.isAuthorized(['READ', 'WRITE', 'DELETE'])
+          ) {
+            return response.sendStatus(401)
+          }
 
-        try {
-          // Create mission.
-          let mission: ServerMission = new ServerMission(missionData)
-          // Launch the game.
-          let game: GameServer = GameServer.launch(mission, {})
-          // Return the ID of the newly launched game
-          // as JSON.
-          return response.json({ gameID: game.gameID })
-        } catch (error: any) {
-          gameLogger.error('Failed to launch game.')
-          gameLogger.error(error)
-          return response.sendStatus(500)
-        }
-      })
-  })
+          try {
+            // Create mission.
+            let mission: ServerMission = new ServerMission(missionData)
+            // Launch the game.
+            let game: GameServer = GameServer.launch(mission, {})
+            // Return the ID of the newly launched game
+            // as JSON.
+            return response.json({ gameID: game.gameID })
+          } catch (error: any) {
+            gameLogger.error('Failed to launch game.')
+            gameLogger.error(error)
+            return response.sendStatus(500)
+          }
+        })
+    },
+  )
+
+  // -- PUT | /api/v1/games/:gameID/start/
+  // This will start a game.
+  router.put(
+    '/:gameID/start/',
+    auth({ permissions: ['WRITE'] }),
+    (request: Request, response: Response) => {
+      let gameID: string = request.params.gameID
+      let game: GameServer | undefined = GameServer.get(gameID)
+
+      // Send 404 if game could not be found.
+      if (game === undefined) {
+        return response.sendStatus(404)
+      }
+      // If the game state is not 'unstarted', return
+      // 409 conflict.
+      if (game.state !== 'unstarted') {
+        return response.sendStatus(409)
+      }
+
+      // Start the game and return response.
+      game.state = 'started'
+      return response.sendStatus(200)
+    },
+  )
+
+  // -- PUT | /api/v1/games/:gameID/end/
+  // This will end a game.
+  router.put(
+    '/:gameID/end/',
+    auth({ permissions: ['WRITE'] }),
+    (request: Request, response: Response) => {
+      let gameID: string = request.params.gameID
+      let game: GameServer | undefined = GameServer.get(gameID)
+
+      // Send 404 if game could not be found.
+      if (game === undefined) {
+        return response.sendStatus(404)
+      }
+      // If the game state is not 'started', return
+      // 409 conflict.
+      if (game.state !== 'started') {
+        return response.sendStatus(409)
+      }
+
+      // End the game and return response.
+      game.state = 'ended'
+      return response.sendStatus(200)
+    },
+  )
 
   // -- DELETE | /api/v1/games/:gameID/ --
   // This will delete a game.
   router.delete(
     '/:gameID/',
-    auth({}),
+    auth({ permissions: ['WRITE'] }),
     (request: Request, response: Response) => {
       let gameID: string = request.params.gameID
       let game: GameServer | undefined = GameServer.get(gameID)
