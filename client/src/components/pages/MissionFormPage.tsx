@@ -8,9 +8,9 @@ import ClientMissionNode, { ENodeDeleteMethod } from 'src/missions/nodes'
 import { ClientTargetEnvironment } from 'src/target-environments'
 import { compute } from 'src/toolbox'
 import { useEventListener, useMountHandler } from 'src/toolbox/hooks'
+import { TPage_P } from '.'
 import MissionAction from '../../../../shared/missions/actions'
 import { SingleTypeObject } from '../../../../shared/toolbox/objects'
-import { IPage } from '../App'
 import ActionEntry from '../content/edit-mission/ActionEntry'
 import MissionEntry from '../content/edit-mission/MissionEntry'
 import NodeEntry from '../content/edit-mission/NodeEntry'
@@ -635,37 +635,6 @@ export default function MissionFormPage(
     }
   }
 
-  // This will redirect the user to the
-  // game page.
-  const goToGamePage = (): void => {
-    if (!areUnsavedChanges) {
-      navigateTo('GamePage', {
-        missionID: mission.missionID,
-      })
-    } else {
-      confirm(
-        'You have unsaved changes. What do you want to do with them?',
-        async (concludeAction: () => void) => {
-          await save().catch(() => {})
-          navigateTo('GamePage', {})
-          concludeAction()
-        },
-        {
-          handleAlternate: (concludeAction: () => void) => {
-            navigateTo('GamePage', {
-              missionID: mission.missionID,
-            })
-            concludeAction()
-          },
-          pendingMessageUponConfirm: 'Saving...',
-          pendingMessageUponAlternate: 'Discarding...',
-          buttonConfirmText: 'Save',
-          buttonAlternateText: 'Discard',
-        },
-      )
-    }
-  }
-
   /* -- PRE-RENDER PROCESSING -- */
 
   // Create the custom form-related buttons for the map.
@@ -715,18 +684,8 @@ export default function MissionFormPage(
             key: 'done',
           },
           {
-            text: 'Play test',
-            handleClick: goToGamePage,
-            visible: true,
-            key: 'play-test',
-          },
-          {
             text: 'Log out',
-            handleClick: () =>
-              logout({
-                returningPagePath: 'HomePage',
-                returningPageProps: {},
-              }),
+            handleClick: logout,
             visible: true,
             key: 'log-out',
           },
@@ -855,7 +814,7 @@ export default function MissionFormPage(
   )
 }
 
-export interface IMissionFormPage extends IPage {
+export interface IMissionFormPage extends TPage_P {
   /**
    * The ID of the mission to be edited. If null,
    * a new mission is being created.

@@ -1,8 +1,8 @@
-import './LoadingPage.scss'
-import { IPage } from '../App'
 import { useGlobalContext } from 'src/context'
+import { TPage_P } from '.'
+import './LoadingPage.scss'
 
-export interface ILoadingPage extends IPage {}
+export interface ILoadingPage extends TPage_P {}
 
 // This will render a loading page while the app
 // is loading.

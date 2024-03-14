@@ -1,10 +1,11 @@
-import { IPage, TAppError } from '../App'
-import './ErrorPage.scss'
-import { ButtonText } from '../content/user-controls/ButtonText'
-import { useListComponent } from 'src/toolbox/hooks'
 import { useGlobalContext } from 'src/context'
+import { useListComponent } from 'src/toolbox/hooks'
+import { TPage_P } from '.'
+import { TAppError } from '../App'
+import { ButtonText } from '../content/user-controls/ButtonText'
+import './ErrorPage.scss'
 
-export interface IErrorPage extends IPage {}
+export interface IErrorPage extends TPage_P {}
 
 // This will render a page that displays a
 // error that has occured.

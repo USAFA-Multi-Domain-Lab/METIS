@@ -6,7 +6,7 @@ import Confirmation, {
 import { message as connectionStatusMessage } from 'src/components/content/communication/ConnectionStatus'
 import Prompt, { IPrompt } from 'src/components/content/communication/Prompt'
 import { IButtonText } from 'src/components/content/user-controls/ButtonText'
-import { IAuthPageSpecific } from 'src/components/pages/AuthPage'
+import { PAGE_REGISTRY, TPage_P } from 'src/components/pages'
 import ServerConnection from 'src/connect/servers'
 import Notification from 'src/notifications'
 import { useMountHandler, useUnmountHandler } from 'src/toolbox/hooks'
@@ -16,174 +16,7 @@ import { TMetisSession } from '../../../shared/sessions'
 import ObjectToolbox, { AnyObject } from '../../../shared/toolbox/objects'
 import StringToolbox from '../../../shared/toolbox/strings'
 
-/**
- * The values available in the global context.
- */
-export type TGlobalContextValues = {
-  forcedUpdateCounter: number
-  server: ServerConnection | null
-  session: TMetisSession<ClientUser>
-  currentPagePath: string
-  currentPageProps: AnyObject
-  appMountHandled: boolean
-  loading: boolean
-  loadingMessage: string
-  loadingMinTimeReached: boolean
-  pageSwitchMinTimeReached: boolean
-  error: TAppError | null
-  tooltips: React.RefObject<HTMLDivElement>
-  tooltipDescription: string
-  notifications: Notification[]
-  confirmation: IConfirmation | null
-  prompt: IPrompt | null
-  missionNodeColors: string[]
-}
-
-/**
- * The actions available in the global context via
- * the actions property.
- */
-export type TGlobalContextActions = {
-  /**
-   * This will force the state of the entire app to update, causing
-   * a rerender, even if no actual changes to the state were made.
-   */
-  forceUpdate: () => void
-  /**
-   * This will switch the currently rendered page to the requested page.
-   * @param pagePath The path of the page to go to.
-   * @param pageProps The props to pass to the destination page.
-   */
-  navigateTo: (pagePath: string, pageProps: AnyObject) => void
-  /**
-   * This switching the user to the loading page until
-   * the loading has been ended by the finishLoading
-   * function.
-   * @param {string | undefined} loadingMessage The message to display until
-   * "finishLoading" is called. Defaults to "Initializing application...".
-   */
-  beginLoading: (loadingMessage?: string) => void
-  /**
-   * This will end the loading process started by the
-   * beginLoading function, bringing the user to the
-   * current page set in the global context.
-   */
-  finishLoading: () => void
-  /**
-   * Fetches the current session and stores the result in the global state
-   * variable "session", returning a promise for the session as well.
-   * @return {Promise<TMetisSession<ClientUser>>} The promise of the session.
-   */
-  syncSession: () => Promise<TMetisSession<ClientUser>>
-  /**
-   * Establish a web socket connection with the server. The new server
-   * connection will be stored in the global state variable "server".
-   * @param options Options when connecting to the server.
-   * @returns {Promise<ServerConnection>} The promise of the server connection.
-   */
-  connectToServer: (options?: {
-    disconnectExisting?: boolean
-  }) => Promise<ServerConnection>
-  /**
-   * Handles an error passed. How it is handled is dependent on the value of
-   * the 'notifyMethod' property. By default, if none is selected, 'page'
-   * will be chosen as the notify method, which will navigate to the error
-   * page. A string can also be passed for quicker error handling.
-   * @param {TAppError | string} error The error to handle. Strings will be
-   * converted to a TAppError object with default properties selected.
-   */
-  handleError: (error: TAppError | string) => void
-  /**
-   * This will notify the user with a notification bubble.
-   * @param {string} message The message to display in the notification bubble.
-   * @param {INotifyOptions | undefined} options The options to use for the notification.
-   * @returns {Notification} The emitted notification.
-   */
-  notify: (message: string, options?: INotifyOptions) => Notification
-  /**
-   * This will pop up a confirmation box to confirm some action.
-   * concludeAction must be called by the handleConfirmation
-   * callback function to make the confirm box disappear.
-   * @param {string} message The message to display in the confirmation box.
-   * @param handleConfirmation The callback function to call when the user confirms the action.
-   * @param {IConfirmOptions | undefined} options The options to use for the confirmation box.
-   */
-  confirm: (
-    message: string,
-    handleConfirmation: (concludeAction: () => void, entry: string) => void,
-    options?: IConfirmOptions,
-  ) => void
-  /**
-   * The will open an alert box with a prompt, providing
-   * the user with options on how to respond.
-   * @param {string} message The message to display in the prompt.
-   * @param {IPromptOptions | undefined} options The options to use for the prompt.
-   */
-  createPrompt: (message: string, options?: IPromptOptions) => void
-  /**
-   * This will logout the current user from the session, closing the connection
-   * with the server as well. Afterwards, the user will be navigated to the auth page.
-   * @param {IAuthPageSpecific} authPageProps The props to pass to the auth page.
-   */
-  logout: (authPageProps: IAuthPageSpecific) => void
-}
-
-/**
- * The value of the global context passed
- * to consumers.
- */
-export type TGlobalContext = {
-  [key in keyof TGlobalContextValues]: [
-    TGlobalContextValues[key],
-    React.Dispatch<React.SetStateAction<TGlobalContextValues[key]>>,
-  ]
-} & { actions: TGlobalContextActions }
-
-/**
- * Represents any key used in the global context.
- */
-export type TGlobalContextProperty = keyof TGlobalContextValues
-
-/**
- * Options available when confirming an action using the
- * confirm method in the global context actions.
- */
-export interface IConfirmOptions {
-  requireEntry?: boolean
-  handleAlternate?: (concludeAction: () => void, entry: string) => void
-  entryLabel?: string
-  pendingMessageUponConfirm?: string
-  pendingMessageUponAlternate?: string
-  buttonConfirmText?: string
-  buttonAlternateText?: string
-  buttonCancelText?: string
-}
-
-/**
- * Options available when prompting a user with a message
- * using the prompt method in the global context actions.
- */
-export interface IPromptOptions {
-  buttonDismissalText?: string
-}
-
-/**
- * Options available when notifying the user using the
- * notify function in the global context actions.
- */
-export interface INotifyOptions {
-  duration?: number | null
-  buttons?: IButtonText[]
-  errorMessage?: boolean
-}
-
-/**
- * Middleware that is run during navigation between pages.
- * @note If `next` is not called, the navigation will be aborted.
- * @param to The destination of the navigation event.
- * @param next Proceed to the next navigation middleware.
- */
-export type TNavigationMiddleware = (to: string, next: () => void) => void
+/* -- constants -- */
 
 /**
  * The default values of the global context state.
@@ -192,7 +25,7 @@ const GLOBAL_CONTEXT_VALUES_DEFAULT: TGlobalContextValues = {
   forcedUpdateCounter: 0,
   server: null,
   session: null,
-  currentPagePath: '',
+  currentPageKey: 'BlankPage',
   currentPageProps: {},
   appMountHandled: false,
   loading: true,
@@ -239,6 +72,8 @@ const navigationMiddleware: Map<string, TNavigationMiddleware> = new Map<
   string,
   TNavigationMiddleware
 >()
+
+/* -- functions -- */
 
 /**
  * Used as a hook in the GlobalContextProvider component to populate the context with the state before supplying it to consumers.
@@ -300,7 +135,7 @@ const useGlobalContextDefinition = (context: TGlobalContext) => {
     context.forcedUpdateCounter
   const [server, setServer] = context.server
   const [session, setSession] = context.session
-  const [currentPagePath, setCurrentPagePath] = context.currentPagePath
+  const [currentPageKey, setCurrentPageKey] = context.currentPageKey
   const [currentPageProps, setCurrentPageProps] = context.currentPageProps
   const [appMountHandled, setAppMountHandled] = context.appMountHandled
   const [loading, setLoading] = context.loading
@@ -345,7 +180,7 @@ const useGlobalContextDefinition = (context: TGlobalContext) => {
     forceUpdate: () => {
       setForcedUpdateCounter(forcedUpdateCounter + 1)
     },
-    navigateTo: (pagePath: string, pageProps: AnyObject) => {
+    navigateTo: (pageKey, props) => {
       // Actually switches the page. Called after any confirmations.
       const realizePageSwitch = (): void => {
         // Display to the user that the
@@ -354,9 +189,8 @@ const useGlobalContextDefinition = (context: TGlobalContext) => {
         setPageSwitchMinTimeReached(false)
 
         // Set the current page props and path.
-        setCurrentPagePath('')
-        setCurrentPageProps(pageProps)
-        setCurrentPagePath(pagePath)
+        setCurrentPageKey(pageKey)
+        setCurrentPageProps(props)
 
         // If the page switch takes less than
         // the minimum time, wait until the
@@ -393,12 +227,12 @@ const useGlobalContextDefinition = (context: TGlobalContext) => {
         // Else call next middleware.
         else {
           cursor++
-          middlewares[cursor](pagePath, next)
+          middlewares[cursor](pageKey, next)
         }
       }
 
       if (middlewares.length > 0) {
-        middlewares[0](pagePath, next)
+        middlewares[0](pageKey, next)
       } else {
         realizePageSwitch()
       }
@@ -662,7 +496,7 @@ const useGlobalContextDefinition = (context: TGlobalContext) => {
 
       setPrompt(prompt)
     },
-    logout: async (authPageProps: IAuthPageSpecific) => {
+    logout: async () => {
       // Extract context actions.
       const { beginLoading, finishLoading, handleError, navigateTo } =
         context.actions
@@ -681,7 +515,7 @@ const useGlobalContextDefinition = (context: TGlobalContext) => {
         await ClientUser.$logout()
         setSession(null)
         finishLoading()
-        navigateTo('AuthPage', authPageProps)
+        navigateTo('AuthPage', {})
       } catch (error: any) {
         finishLoading()
         handleError('Failed to logout.')
@@ -695,9 +529,7 @@ const useGlobalContextDefinition = (context: TGlobalContext) => {
  * @param { children: ReactNode } props Props containing the children to wrap in the provider.
  * @returns {JSX.Element} The JSX of the provider wrapping the children passed.
  */
-const GlobalContextProvider = function GlobalContextProvider(props: {
-  children: ReactNode
-}): JSX.Element {
+function GlobalContextProvider(props: { children: ReactNode }): JSX.Element {
   // Extract props.
   const { children } = props
 
@@ -748,6 +580,8 @@ export function useNavigationMiddleware(
   })
 }
 
+/* -- classes -- */
+
 /**
  * The global context management system for METIS.
  */
@@ -768,3 +602,185 @@ export default class GlobalContext {
    */
   public static useGlobalContext = useGlobalContext
 }
+
+/* -- types -- */
+
+/**
+ * The values available in the global context.
+ */
+export type TGlobalContextValues = {
+  forcedUpdateCounter: number
+  server: ServerConnection | null
+  session: TMetisSession<ClientUser>
+  currentPageKey: keyof typeof PAGE_REGISTRY
+  currentPageProps: AnyObject
+  appMountHandled: boolean
+  loading: boolean
+  loadingMessage: string
+  loadingMinTimeReached: boolean
+  pageSwitchMinTimeReached: boolean
+  error: TAppError | null
+  tooltips: React.RefObject<HTMLDivElement>
+  tooltipDescription: string
+  notifications: Notification[]
+  confirmation: IConfirmation | null
+  prompt: IPrompt | null
+  missionNodeColors: string[]
+}
+
+/**
+ * The actions available in the global context via
+ * the actions property.
+ */
+export type TGlobalContextActions = {
+  /**
+   * This will force the state of the entire app to update, causing
+   * a rerender, even if no actual changes to the state were made.
+   */
+  forceUpdate: () => void
+  /**
+   * This will switch the currently rendered page to the requested page.
+   * @param page The page to navigate to.
+   * @param props The props to pass to the destination page.
+   */
+  navigateTo: <
+    TPageKey extends keyof typeof PAGE_REGISTRY,
+    TComponent extends (typeof PAGE_REGISTRY)[TPageKey],
+    TProps extends Parameters<TComponent>[0] extends {}
+      ? Parameters<TComponent>[0]
+      : {},
+  >(
+    pageKey: TPageKey,
+    props: TProps,
+  ) => void
+  /**
+   * This switching the user to the loading page until
+   * the loading has been ended by the finishLoading
+   * function.
+   * @param {string | undefined} loadingMessage The message to display until
+   * "finishLoading" is called. Defaults to "Initializing application...".
+   */
+  beginLoading: (loadingMessage?: string) => void
+  /**
+   * This will end the loading process started by the
+   * beginLoading function, bringing the user to the
+   * current page set in the global context.
+   */
+  finishLoading: () => void
+  /**
+   * Fetches the current session and stores the result in the global state
+   * variable "session", returning a promise for the session as well.
+   * @return {Promise<TMetisSession<ClientUser>>} The promise of the session.
+   */
+  syncSession: () => Promise<TMetisSession<ClientUser>>
+  /**
+   * Establish a web socket connection with the server. The new server
+   * connection will be stored in the global state variable "server".
+   * @param options Options when connecting to the server.
+   * @returns {Promise<ServerConnection>} The promise of the server connection.
+   */
+  connectToServer: (options?: {
+    disconnectExisting?: boolean
+  }) => Promise<ServerConnection>
+  /**
+   * Handles an error passed. How it is handled is dependent on the value of
+   * the 'notifyMethod' property. By default, if none is selected, 'page'
+   * will be chosen as the notify method, which will navigate to the error
+   * page. A string can also be passed for quicker error handling.
+   * @param {TAppError | string} error The error to handle. Strings will be
+   * converted to a TAppError object with default properties selected.
+   */
+  handleError: (error: TAppError | string) => void
+  /**
+   * This will notify the user with a notification bubble.
+   * @param {string} message The message to display in the notification bubble.
+   * @param {INotifyOptions | undefined} options The options to use for the notification.
+   * @returns {Notification} The emitted notification.
+   */
+  notify: (message: string, options?: INotifyOptions) => Notification
+  /**
+   * This will pop up a confirmation box to confirm some action.
+   * concludeAction must be called by the handleConfirmation
+   * callback function to make the confirm box disappear.
+   * @param {string} message The message to display in the confirmation box.
+   * @param handleConfirmation The callback function to call when the user confirms the action.
+   * @param {IConfirmOptions | undefined} options The options to use for the confirmation box.
+   */
+  confirm: (
+    message: string,
+    handleConfirmation: (concludeAction: () => void, entry: string) => void,
+    options?: IConfirmOptions,
+  ) => void
+  /**
+   * The will open an alert box with a prompt, providing
+   * the user with options on how to respond.
+   * @param {string} message The message to display in the prompt.
+   * @param {IPromptOptions | undefined} options The options to use for the prompt.
+   */
+  createPrompt: (message: string, options?: IPromptOptions) => void
+  /**
+   * This will logout the current user from the session, closing the connection
+   * with the server as well. Afterwards, the user will be navigated to the auth page.
+   */
+  logout: () => void
+}
+
+/**
+ * The value of the global context passed
+ * to consumers.
+ */
+export type TGlobalContext = {
+  [key in keyof TGlobalContextValues]: [
+    TGlobalContextValues[key],
+    React.Dispatch<React.SetStateAction<TGlobalContextValues[key]>>,
+  ]
+} & { actions: TGlobalContextActions }
+
+/**
+ * Represents any key used in the global context.
+ */
+export type TGlobalContextProperty = keyof TGlobalContextValues
+
+/**
+ * Options available when confirming an action using the
+ * confirm method in the global context actions.
+ */
+export interface IConfirmOptions {
+  requireEntry?: boolean
+  handleAlternate?: (concludeAction: () => void, entry: string) => void
+  entryLabel?: string
+  pendingMessageUponConfirm?: string
+  pendingMessageUponAlternate?: string
+  buttonConfirmText?: string
+  buttonAlternateText?: string
+  buttonCancelText?: string
+}
+
+/**
+ * Options available when prompting a user with a message
+ * using the prompt method in the global context actions.
+ */
+export interface IPromptOptions {
+  buttonDismissalText?: string
+}
+
+/**
+ * Options available when notifying the user using the
+ * notify function in the global context actions.
+ */
+export interface INotifyOptions {
+  duration?: number | null
+  buttons?: IButtonText[]
+  errorMessage?: boolean
+}
+
+/**
+ * Middleware that is run during navigation between pages.
+ * @note If `next` is not called, the navigation will be aborted.
+ * @param to The destination of the navigation event.
+ * @param next Proceed to the next navigation middleware.
+ */
+export type TNavigationMiddleware = <TProps extends TPage_P>(
+  to: keyof typeof PAGE_REGISTRY,
+  next: () => void,
+) => void

@@ -2,12 +2,12 @@ import { useState } from 'react'
 import { useGlobalContext } from 'src/context'
 import { useMountHandler } from 'src/toolbox/hooks'
 import ClientUser from 'src/users'
-import { IPage } from '../App'
+import { TPage_P } from '.'
 import { Detail } from '../content/form/Form'
 import Navigation from '../content/general-layout/Navigation'
 import './UserResetPage.scss'
 
-export interface IUserResetPage extends IPage {}
+export interface IUserResetPage extends TPage_P {}
 
 /**
  * This page allows the user to reset their password.
@@ -119,11 +119,7 @@ export default function UserResetPage(): JSX.Element | null {
         links={[
           {
             text: 'Log out',
-            handleClick: () =>
-              logout({
-                returningPagePath: 'HomePage',
-                returningPageProps: {},
-              }),
+            handleClick: logout,
             visible: true,
             key: 'log-out',
           },

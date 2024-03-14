@@ -6,8 +6,8 @@ import ClientMission from 'src/missions'
 import ClientMissionNode from 'src/missions/nodes'
 import { compute } from 'src/toolbox'
 import { useMountHandler } from 'src/toolbox/hooks'
+import { TPage_P } from '.'
 import MapToolbox from '../../../../shared/toolbox/maps'
-import { IPage } from '../App'
 import OutputPanel from '../content/game/OutputPanel'
 import StatusBar from '../content/game/StatusBar'
 import MissionMap from '../content/game/mission-map'
@@ -20,7 +20,7 @@ import {
 } from '../content/general-layout/ResizablePanels'
 import './GamePage.scss'
 
-export interface IGamePage extends IPage {
+export interface IGamePage extends TPage_P {
   game: GameClient
 }
 
@@ -51,7 +51,7 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
   // Add navigation middleware to properly
   // quit the game before the user navigates
   // away.
-  useNavigationMiddleware((to: string, next) => {
+  useNavigationMiddleware((to, next) => {
     confirm(
       'Are you sure you want to quit?',
       async (concludeAction: () => void) => {
@@ -247,7 +247,7 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
 /**
  * Prop type for `GamePage`.
  */
-export interface IGamePage extends IPage {
+export interface IGamePage extends TPage_P {
   /**
    * The game client to use on the page.
    */

@@ -1,18 +1,12 @@
 import React, { useState } from 'react'
 import { useGlobalContext } from 'src/context'
 import ClientUser from 'src/users'
-import { AnyObject } from '../../../../shared/toolbox/objects'
-import { IPage } from '../App'
+import { TPage_P } from '.'
 import { Detail } from '../content/form/Form'
 import Branding from '../content/general-layout/Branding'
 import './AuthPage.scss'
 
-export interface IAuthPageSpecific {
-  returningPagePath: string
-  returningPageProps: AnyObject
-}
-
-export interface IAuthPage extends IPage, IAuthPageSpecific {}
+export interface IAuthPage extends TPage_P {}
 
 // This will render a page where a user can
 // login.

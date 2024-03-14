@@ -17,20 +17,9 @@ import {
 } from './content/communication/Tooltip'
 import Markdown, { MarkdownTheme } from './content/general-layout/Markdown'
 import { IButtonText } from './content/user-controls/ButtonText'
-import AuthPage from './pages/AuthPage'
-import ChangelogPage from './pages/ChangelogPage'
+import { PAGE_REGISTRY } from './pages'
 import ErrorPage from './pages/ErrorPage'
-import GamePage from './pages/GamePage'
-import HomePage from './pages/HomePage'
 import LoadingPage from './pages/LoadingPage'
-import MissionFormPage from './pages/MissionFormPage'
-import UserFormPage from './pages/UserFormPage'
-import UserResetPage from './pages/UserResetPage'
-
-/**
- * Props that every page accepts. Extend this to include more.
- */
-export interface IPage {}
 
 export type TAppErrorNotifyMethod = 'bubble' | 'page'
 
@@ -55,24 +44,6 @@ export type TAppError = {
     }
 )
 
-// This is a registry of all pages
-// in the system for use.
-let pageRegistry: Map<string, (props: any) => JSX.Element | null> = new Map<
-  string,
-  (props: any) => JSX.Element | null
->()
-
-// This will register a specific page
-// with the given path so that it can
-// be switched to by the application
-// from other pages.
-export function registerPage<TPage extends IPage>(
-  targetPagePath: string,
-  Page: (props: TPage) => JSX.Element | null,
-): void {
-  pageRegistry.set(targetPagePath, Page)
-}
-
 // This is the renderer for the entire application.
 function App(props: {}): JSX.Element | null {
   /* -- COMPONENT STATE -- */
@@ -91,7 +62,7 @@ function App(props: {}): JSX.Element | null {
   const [pageSwitchMinTimeReached] = globalContext.pageSwitchMinTimeReached
   const [notifications] = globalContext.notifications
   const [confirmation] = globalContext.confirmation
-  const [currentPagePath] = globalContext.currentPagePath
+  const [currentPageKey] = globalContext.currentPageKey
   const [currentPageProps] = globalContext.currentPageProps
   const [error] = globalContext.error
 
@@ -184,10 +155,7 @@ function App(props: {}): JSX.Element | null {
         // navigate to the auth page to have
         // the visitor login.
         if (session === null) {
-          navigateTo('AuthPage', {
-            returningPagePath: 'HomePage',
-            returningPageProps: {},
-          })
+          navigateTo('AuthPage', {})
         }
         // Else establish a web socket connection
         // with the server.
@@ -200,9 +168,7 @@ function App(props: {}): JSX.Element | null {
           // reset, then navigate to the user
           // reset page.
           if (session.user.needsPasswordReset) {
-            navigateTo('UserResetPage', {
-              user: session.user,
-            })
+            navigateTo('UserResetPage', {})
           }
           // Else, if the sessioned user is in a game,
           // then switch to the game page.
@@ -249,28 +215,16 @@ function App(props: {}): JSX.Element | null {
     effect()
   }, [session === null])
 
-  /* -- PAGE PROPS CONSTRUCTION -- */
+  /* -- PAGE DETAILS -- */
 
-  let pageProps: IPage = {
+  let CurrentPage = PAGE_REGISTRY[currentPageKey]
+  let pageProps: any = {
     ...currentPageProps,
   }
 
   /* -- RENDER -- */
 
   let className: string = 'App'
-
-  /**
-   * Renders the current page.
-   */
-  const renderCurrentPage = (): JSX.Element | null => {
-    let Page = pageRegistry.get(currentPagePath)
-
-    if (Page) {
-      return <Page {...pageProps} />
-    } else {
-      return null
-    }
-  }
 
   if (error !== null) {
     className += ' Error'
@@ -301,19 +255,9 @@ function App(props: {}): JSX.Element | null {
       <ErrorPage {...pageProps} />
       <LoadingPage {...pageProps} />
       <ConnectionStatus />
-      {renderCurrentPage()}
+      <CurrentPage {...pageProps} />
     </div>
   )
 }
-
-// -- PAGE REGISTRATION --
-
-registerPage('AuthPage', AuthPage)
-registerPage('HomePage', HomePage)
-registerPage('GamePage', GamePage)
-registerPage('ChangelogPage', ChangelogPage)
-registerPage('MissionFormPage', MissionFormPage)
-registerPage('UserFormPage', UserFormPage)
-registerPage('UserResetPage', UserResetPage)
 
 export default App

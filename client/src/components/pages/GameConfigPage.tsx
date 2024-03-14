@@ -21,11 +21,7 @@ export default function GameConfigPage({}: TGameConfigPage_P): JSX.Element | nul
           {
             text: 'Log out',
             key: 'log-out',
-            handleClick: () =>
-              logout({
-                returningPagePath: 'ChangelogPage',
-                returningPageProps: {},
-              }),
+            handleClick: logout,
             visible: true,
           },
         ]}

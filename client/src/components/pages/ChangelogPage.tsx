@@ -2,14 +2,14 @@ import { useState } from 'react'
 import { useGlobalContext } from 'src/context'
 import Info from 'src/info'
 import { useMountHandler } from 'src/toolbox/hooks'
-import { IPage } from '../App'
+import { TPage_P } from '.'
 import Markdown, {
   MarkdownTheme as EMarkdownTheme,
 } from '../content/general-layout/Markdown'
 import Navigation from '../content/general-layout/Navigation'
 import './ChangelogPage.scss'
 
-export interface IChangelogPage extends IPage {}
+export interface IChangelogPage extends TPage_P {}
 
 // This will render a page where a user can
 // view all the changes made to the application.
@@ -64,11 +64,7 @@ export default function IChangelogPage({}: IChangelogPage): JSX.Element | null {
           {
             text: 'Log out',
             key: 'log-out',
-            handleClick: () =>
-              logout({
-                returningPagePath: 'ChangelogPage',
-                returningPageProps: {},
-              }),
+            handleClick: logout,
             visible: displayLogout,
           },
         ]}

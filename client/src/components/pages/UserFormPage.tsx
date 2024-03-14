@@ -3,13 +3,13 @@ import { useState } from 'react'
 import { useGlobalContext } from 'src/context'
 import { useMountHandler, useRequireSession } from 'src/toolbox/hooks'
 import ClientUser from 'src/users'
-import { IPage } from '../App'
+import { TPage_P } from '.'
 import CreateUserEntry from '../content/edit-user/CreateUserEntry'
 import EditUserEntry from '../content/edit-user/EditUserEntry'
 import Navigation from '../content/general-layout/Navigation'
 import './UserFormPage.scss'
 
-export interface IUserFormPage extends IPage {
+export interface IUserFormPage extends TPage_P {
   // If this is null, then a new user is being created.
   userID: string | null
 }
@@ -252,11 +252,7 @@ export default function UserFormPage(props: IUserFormPage): JSX.Element | null {
           },
           {
             text: 'Log out',
-            handleClick: () =>
-              logout({
-                returningPagePath: 'HomePage',
-                returningPageProps: {},
-              }),
+            handleClick: logout,
             visible: true,
             key: 'log-out',
           },

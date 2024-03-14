@@ -561,11 +561,7 @@ export default function HomePage(props: {}): JSX.Element | null {
       links={[
         {
           text: 'Log out',
-          handleClick: () =>
-            logout({
-              returningPagePath: 'HomePage',
-              returningPageProps: {},
-            }),
+          handleClick: logout,
           key: 'log-out',
         },
       ]}

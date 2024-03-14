@@ -65,10 +65,7 @@ export function useRequireSession(): [NonNullable<TMetisSession<ClientUser>>] {
 
   useEffect(() => {
     if (session === null) {
-      navigateTo('AuthPage', {
-        returningPagePath: 'HomePage',
-        returningPageProps: {},
-      })
+      navigateTo('AuthPage', {})
     }
   }, [session === null])
 
