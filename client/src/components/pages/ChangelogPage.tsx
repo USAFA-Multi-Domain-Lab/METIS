@@ -1,13 +1,13 @@
 import { useState } from 'react'
-import './ChangelogPage.scss'
+import { useGlobalContext } from 'src/context'
+import Info from 'src/info'
+import { useMountHandler } from 'src/toolbox/hooks'
 import { IPage } from '../App'
-import Navigation from '../content/general-layout/Navigation'
 import Markdown, {
   MarkdownTheme as EMarkdownTheme,
 } from '../content/general-layout/Markdown'
-import Info from 'src/info'
-import { useGlobalContext } from 'src/context'
-import { useMountHandler } from 'src/toolbox/hooks'
+import Navigation from '../content/general-layout/Navigation'
+import './ChangelogPage.scss'
 
 export interface IChangelogPage extends IPage {}
 
