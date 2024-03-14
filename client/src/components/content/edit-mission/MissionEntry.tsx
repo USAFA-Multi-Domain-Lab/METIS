@@ -102,13 +102,12 @@ export default function MissionEntry({
             <DetailBox
               label='Introduction Message'
               currentValue={mission.introMessage}
+              defaultValue={ClientMission.DEFAULT_PROPERTIES.introMessage}
               deliverValue={(introMessage: string) => {
                 mission.introMessage = introMessage
                 handleChange()
               }}
               elementBoundary='.BorderBox'
-              placeholder='Enter introduction message...'
-              displayOptionalText={true}
               key={`${mission.missionID}_introMessage`}
             />
             <DetailToggle
@@ -121,8 +120,8 @@ export default function MissionEntry({
               currentValue={mission.initialResources}
               defaultValue={ClientMission.DEFAULT_PROPERTIES.initialResources}
               emptyValueAllowed={false}
-              deliverValue={(initialResources: number | undefined) => {
-                if (initialResources) {
+              deliverValue={(initialResources: number | null) => {
+                if (initialResources !== null) {
                   mission.initialResources = initialResources
                   handleChange()
                 }

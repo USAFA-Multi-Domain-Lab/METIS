@@ -22,12 +22,13 @@ export default function TargetEnvEntry({
   /* -- STATE -- */
   const [selectedTargetEnv, setSelectedTargetEnv] =
     useState<ClientTargetEnvironment>(
-      effect.targetEnvironment.id === 'metis-target-env-default'
+      effect.targetEnvironment.id ===
+        ClientTargetEnvironment.DEFAULT_PROPERTIES.id
         ? new ClientTargetEnvironment()
         : effect.targetEnvironment,
     )
   const [selectedTarget, setSelectedTarget] = useState<ClientTarget>(
-    effect.target.id === 'metis-target-default'
+    effect.target.id === ClientTarget.DEFAULT_PROPERTIES.id
       ? new ClientTarget(selectedTargetEnv)
       : effect.target,
   )

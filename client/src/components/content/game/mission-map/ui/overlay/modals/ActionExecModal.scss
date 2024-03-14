@@ -8,7 +8,8 @@
       display: grid;
       grid-template-columns: auto 2.5em;
       row-gap: 1.25em;
-      width: 25em;
+      width: 90%;
+      max-width: 33em;
       height: fit-content;
       max-height: 90%;
       border: 2px solid $color-main;
@@ -16,12 +17,14 @@
       box-shadow: $box-shadow-alt2;
 
       .Heading {
+        min-width: 16.5em;
         user-select: none;
 
         .NodeName {
-          // font-size: 0.95em;
-          // padding: 0 0.5em;
           line-height: 1.5em;
+          overflow: hidden;
+          white-space: nowrap;
+          text-overflow: ellipsis;
         }
 
         .DropDownLabel {
@@ -43,6 +46,7 @@
       }
 
       .DropDown {
+        min-width: 19em;
         user-select: none;
 
         // Hide options if the drop down is
@@ -103,6 +107,9 @@
             color: $color-accent-light;
             list-style-type: none;
             text-decoration: none;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
 
             &.Disabled {
               pointer-events: none;
@@ -131,8 +138,22 @@
           color: $terminal;
 
           span {
-            color: $terminal;
             text-decoration: underline;
+          }
+
+          span,
+          .RichTextOutputBox,
+          .RichTextOutputBox p {
+            color: $terminal;
+          }
+
+          .RichTextOutputBox {
+            display: inline;
+            line-height: 20px;
+
+            p:first-child {
+              display: inline;
+            }
           }
         }
 

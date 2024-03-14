@@ -107,10 +107,17 @@ export default function MissionFormPage(
         })
         setMission(mission)
         setMissionPath([mission.name])
-        setTargetEnvironments(await ClientTargetEnvironment.fetchAll())
       } catch {
         handleError('Failed to load mission.')
       }
+    }
+
+    // Load the target environments.
+    try {
+      beginLoading('Loading target environments...')
+      setTargetEnvironments(await ClientTargetEnvironment.fetchAll())
+    } catch {
+      handleError('Failed to load target environments.')
     }
 
     // Finish loading.

@@ -231,8 +231,8 @@ export default function ActionEntry({
               minimum={0}
               maximum={100}
               unit='%'
-              deliverValue={(successChancePercentage: number | undefined) => {
-                if (successChancePercentage) {
+              deliverValue={(successChancePercentage: number | null) => {
+                if (successChancePercentage !== null) {
                   action.successChance = successChancePercentage / 100.0
                   handleChange()
                 }
@@ -249,8 +249,8 @@ export default function ActionEntry({
               minimum={0}
               maximum={3600}
               unit='s'
-              deliverValue={(timeCost: number | undefined) => {
-                if (timeCost) {
+              deliverValue={(timeCost: number | null) => {
+                if (timeCost !== null) {
                   action.processTime = timeCost * 1000
                   handleChange()
                 }
@@ -262,8 +262,9 @@ export default function ActionEntry({
               currentValue={action.resourceCost}
               defaultValue={ClientMissionAction.DEFAULT_PROPERTIES.resourceCost}
               emptyValueAllowed={false}
-              deliverValue={(resourceCost: number | undefined) => {
-                if (resourceCost) {
+              minimum={0}
+              deliverValue={(resourceCost: number | null) => {
+                if (resourceCost !== null) {
                   action.resourceCost = resourceCost
                   handleChange()
                 }

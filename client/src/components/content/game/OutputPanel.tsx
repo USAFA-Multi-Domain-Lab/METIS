@@ -1,10 +1,10 @@
-import './OutputPanel.scss'
-import ConsoleOutput, { IConsoleOutput } from './ConsoleOutput'
 import { Component } from 'react'
-import ClientMission from 'src/missions'
-import ClientMissionNode from 'src/missions/nodes'
-import ClientMissionAction from 'src/missions/actions'
 import RichTextOutputBox from 'src/components/content/communication/RichTextOutputBox'
+import ClientMission from 'src/missions'
+import ClientMissionAction from 'src/missions/actions'
+import ClientMissionNode from 'src/missions/nodes'
+import { IConsoleOutput } from './ConsoleOutput'
+import './OutputPanel.scss'
 
 export interface IOutputPanel {
   mission: ClientMission
@@ -216,7 +216,11 @@ export default class OutputPanel extends Component<
 
     return (
       <div className='OutputPanel'>
-        <div className='BorderBox'>
+        <div className='BorderBox Disabled'>
+          <h3 className='Broken'>Not Available at This Time.</h3>
+          <h5 className='Broken'>
+            Note: output messages will not appear here.
+          </h5>
           <ul className='TextArea'>
             {/* // todo: Fix this */}
             {/* {consoleOutputs.map((consoleOutput: IConsoleOutput) => {

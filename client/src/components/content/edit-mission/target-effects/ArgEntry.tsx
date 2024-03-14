@@ -32,7 +32,7 @@ export default function ArgEntry({
 
   /* -- STATE -- */
   const [defaultDropDownValue] = useState<undefined>(undefined)
-  const [defaultNumberValue] = useState<undefined>(undefined)
+  const [defaultNumberValue] = useState<null>(null)
   const [defaultStringValue] = useState<string>('')
   const [defaultMediumStringValue] = useState<string>('<p><br></p>')
   const [defaultBooleanValue] = useState<boolean>(false)
@@ -87,10 +87,10 @@ export default function ArgEntry({
   /**
    * The number input's value.
    */
-  const numberValue: number | undefined = compute(() => {
+  const numberValue: number | null = compute(() => {
     // Initialize the value to the component
     // state's effect argument value.
-    let value: number | undefined = effectArgs[arg.id]
+    let value: number | null | undefined = effectArgs[arg.id]
 
     // If the argument is a number...
     if (arg.type === 'number') {
@@ -116,7 +116,11 @@ export default function ArgEntry({
     }
 
     // Return the value.
-    return value
+    if (value === undefined) {
+      return null
+    } else {
+      return value
+    }
   })
   /**
    * The text input's value.
@@ -766,15 +770,15 @@ export default function ArgEntry({
         <DetailNumber
           label={arg.name}
           currentValue={numberValue}
-          defaultValue={arg.required ? arg.default : defaultNumberValue}
-          deliverValue={(value: number | undefined) => {
+          defaultValue={arg.default}
+          deliverValue={(value: number | null) => {
             // Add the argument to the list of arguments.
             effectArgs[arg.id] = value
             // Update the argument based on the value.
             updateArg()
             // If the value is null or undefined then the
             // argument is not filled out.
-            if (value === arg.default || !value) {
+            if (value === arg.default || value === null) {
               // Reset the argument to the default value.
               effectArgs[arg.id] = arg.default || defaultNumberValue
             }

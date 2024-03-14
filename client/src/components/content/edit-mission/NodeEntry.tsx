@@ -288,8 +288,9 @@ export default function NodeEntry({
               currentValue={node.depthPadding}
               defaultValue={ClientMissionNode.DEFAULT_PROPERTIES.depthPadding}
               emptyValueAllowed={false}
-              deliverValue={(depthPadding: number | undefined) => {
-                if (depthPadding) {
+              integersOnly={true}
+              deliverValue={(depthPadding: number | null) => {
+                if (depthPadding !== null) {
                   node.depthPadding = depthPadding
                   handleChange()
                 }

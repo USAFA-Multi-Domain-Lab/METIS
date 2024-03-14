@@ -584,7 +584,7 @@ export default function HomePage(props: IHomePage): JSX.Element | null {
           </div>
         </div>
       </div>
-      <div className='Join'>
+      {/* <div className='Join'>
         <label style={{ paddingRight: '1em' }}>Jacob Don't Forget:</label>
         <input
           style={{ color: 'black' }}
@@ -599,7 +599,7 @@ export default function HomePage(props: IHomePage): JSX.Element | null {
             }
           }}
         />
-      </div>
+      </div> */}
 
       {/* -- FOOTER -- */}
       <div className='FooterContainer' draggable={false}>

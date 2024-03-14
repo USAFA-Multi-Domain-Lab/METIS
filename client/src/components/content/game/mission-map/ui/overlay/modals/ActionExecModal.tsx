@@ -1,12 +1,13 @@
 import { useEffect, useRef, useState } from 'react'
-import './ActionExecModal.scss'
-import ClientMissionNode from 'src/missions/nodes'
-import ClientMissionAction from 'src/missions/actions'
-import Tooltip from '../../../../../communication/Tooltip'
-import StringToolbox from '../../../../../../../../../shared/toolbox/strings'
+import RichTextOutputBox from 'src/components/content/communication/RichTextOutputBox'
 import GameClient from 'src/games'
+import ClientMissionAction from 'src/missions/actions'
+import ClientMissionNode from 'src/missions/nodes'
 import { useMountHandler } from 'src/toolbox/hooks'
 import MapToolbox from '../../../../../../../../../shared/toolbox/maps'
+import StringToolbox from '../../../../../../../../../shared/toolbox/strings'
+import Tooltip from '../../../../../communication/Tooltip'
+import './ActionExecModal.scss'
 
 /**
  * Prompt for a game participant to select an action to execute on a node.
@@ -217,7 +218,8 @@ const ActionPropertyDisplay = (props: { action: ClientMissionAction }) => {
         <span>Resource cost:</span> {action.resourceCost} resource(s)
       </li>
       <li className='Property Description'>
-        <span>Description:</span> {action.description}
+        <span>Description:</span>{' '}
+        <RichTextOutputBox Element={action.description} />
       </li>
     </ul>
   )

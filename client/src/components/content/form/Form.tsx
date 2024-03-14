@@ -234,7 +234,7 @@ export function Detail({
 
             // If the field is empty or in a default
             // state...
-            if (value === '' || !value) {
+            if (value === '' || value === undefined) {
               // ...set the left field empty state to true.
               setLeftFieldEmpty(true)
 
@@ -273,7 +273,7 @@ export function DetailNumber({
   currentValue,
   deliverValue,
   // Optional Properties
-  defaultValue = 0,
+  defaultValue = undefined,
   minimum = undefined,
   maximum = undefined,
   integersOnly = false,
@@ -285,7 +285,9 @@ export function DetailNumber({
   displayOptionalText = false,
 }: TDetailNumber_P): JSX.Element | null {
   /* -- STATE -- */
-  const [inputValue, setInputValue] = useState<number | undefined>(currentValue)
+  const [inputValue, setInputValue] = useState<number | string>(
+    currentValue !== null ? currentValue : '',
+  )
 
   /* -- COMPUTED -- */
   /**
@@ -316,8 +318,8 @@ export function DetailNumber({
     // If clearField is true then
     // clear the field.
     if (clearField) {
-      setInputValue(undefined)
-      deliverValue(undefined)
+      setInputValue('')
+      deliverValue(null)
     }
   }, [clearField])
 
@@ -345,63 +347,61 @@ export function DetailNumber({
 
           // If a minimum value is passed and it is greater than or equal to 0,
           // then enforce the input to only accept non-negative numbers.
-          if (minimum && minimum >= 0) {
+          if (minimum !== undefined && minimum >= 0) {
             inputs.enforceNonNegativeOnly(event)
           }
         }}
         onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
           let target: HTMLInputElement = event.target as HTMLInputElement
-          let value: number | undefined
+          let value: number | null
 
           // If a minimum or maximum value is passed
           // then enforce the minimum and maximum values.
-          if (minimum) {
+          if (minimum !== undefined) {
             inputs.enforceNumberFloor(event, minimum)
           }
-          if (maximum) {
+          if (maximum !== undefined) {
             inputs.enforceNumberCap(event, maximum)
           }
 
-          // Convert the input's value to a number and
-          // check if it is a number.
-          value = parseInt(target.value)
-          value = isNaN(value) ? undefined : value
+          // Update the input's value.
+          setInputValue(target.value)
 
-          // Update the input's value and deliver the value.
-          setInputValue(value)
+          // Convert the input's value to a number and
+          // check if it is a number, then deliver the value.
+          value = parseInt(target.value)
+          value = isNaN(value) ? null : value
           deliverValue(value)
         }}
         onBlur={(event: React.FocusEvent) => {
           let target: HTMLInputElement = event.target as HTMLInputElement
-          let value: number | undefined
+          let value: number | null
 
           // Convert the input's value to a number and
           // check if it is a number.
           value = parseInt(target.value)
-          value = isNaN(value) ? undefined : value
+          value = isNaN(value) ? null : value
 
           // If the field is empty or in a default
-          // state...
-          if (!value) {
-            // ...and empty values are not allowed, but the
-            // minimum value is greater than 0, then set the
-            // input's value to the minimum value.
-            if (!emptyValueAllowed && minimum && minimum > 0) {
+          // state and empty values are not allowed...
+          if (value === null && !emptyValueAllowed) {
+            // ...but the minimum value is greater than 0,
+            // then set the input's value to the minimum value.
+            if (minimum !== undefined && minimum > 0) {
               value = minimum
             }
-            // Or, if empty values are not allowed, but the
-            // maximum value is less than 0, then set the
-            // input's value to the maximum value.
-            else if (!emptyValueAllowed && maximum && maximum < 0) {
+            // Or, if the maximum value is less than 0,
+            // then set the input's value to the maximum value.
+            else if (maximum !== undefined && maximum < 0) {
               value = maximum
             }
-            // Or, if empty values are not allowed, then set
-            // the input's value to the default value.
-            else if (!emptyValueAllowed) {
+            // Otherwise, set the input's value to the default value.
+            else if (defaultValue !== undefined) {
               value = defaultValue
             }
 
-            setInputValue(value)
+            // Update the input's value and deliver the value.
+            setInputValue(value !== null ? value : '')
             deliverValue(value)
           }
         }}
@@ -556,8 +556,8 @@ export function DetailBox({
     // If clearField is true then
     // clear the field.
     if (clearField) {
-      setInputValue('')
-      deliverValue('')
+      setInputValue('<p><br></p>')
+      deliverValue('<p><br></p>')
     }
   }, [clearField])
 
@@ -583,33 +583,18 @@ export function DetailBox({
   return (
     <div className={rootClassName}>
       <div className='TitleContainer'>
-        <div
-          className={labelClassName + ' ' + uniqueLabelClassName}
-        >{`${label}:`}</div>
+        <div className={labelClassName}>{`${label}:`}</div>
         <div className={optionalClassName}>optional</div>
       </div>
-      <ReactQuill
-        bounds={elementBoundary}
-        className={fieldClassName + ' ' + uniqueInputClassName}
-        modules={reactQuillModules}
-        formats={reactQuillFormats}
-        value={currentValue}
-        placeholder={placeholder}
-        theme='snow'
-        onChange={(value: string) => {
-          setInputValue(value)
-          deliverValue(value)
-        }}
-        onBlur={(
-          previousSelection: ReactQuill.Range,
-          source,
-          editor: ReactQuill.UnprivilegedEditor,
-        ) => {
-          let value: string | undefined | null = editor.getHTML()
+      <div
+        className='FieldContainer'
+        onBlur={(event: React.FocusEvent) => {
+          let target: HTMLDivElement = event.target as HTMLDivElement
+          let value: string = target.innerHTML
 
           // If the field is empty or in a default
           // state...
-          if (value === '<p><br></p>' || !value) {
+          if (value === '<p><br></p>' || value === undefined) {
             // ...set the left field empty state to true.
             setLeftFieldEmpty(true)
 
@@ -624,7 +609,21 @@ export function DetailBox({
             }
           }
         }}
-      />
+      >
+        <ReactQuill
+          bounds={elementBoundary}
+          className={fieldClassName}
+          modules={reactQuillModules}
+          formats={reactQuillFormats}
+          value={currentValue}
+          placeholder={placeholder}
+          theme='snow'
+          onChange={(value: string) => {
+            setInputValue(value)
+            deliverValue(value)
+          }}
+        />
+      </div>
       <div className={fieldErrorClassName}>{errorMessage}</div>
     </div>
   )
@@ -645,17 +644,17 @@ export function DetailDropDown<TOption>({
   deliverValue,
   // Optional Properties
   uniqueDropDownStyling = {},
-  uniqueClassName,
-  uniqueLabelClassName,
-  uniqueFieldClassName,
-  uniqueCurrentValueClassName,
+  uniqueClassName = undefined,
+  uniqueLabelClassName = undefined,
+  uniqueFieldClassName = undefined,
+  uniqueCurrentValueClassName = undefined,
   clearField = false,
   defaultValue = undefined,
   displayOptionalText = false,
-  uniqueOptionStyling = (option: TOption) => {
+  uniqueOptionStyling = () => {
     return {}
   },
-  renderOptionClassName = (option: TOption) => {
+  renderOptionClassName = () => {
     return ''
   },
 }: TDetailDropDown_P<TOption>): JSX.Element | null {
@@ -1037,24 +1036,23 @@ type TDetailNumber_P = {
   /**
    * The current value for the detail.
    */
-  currentValue: number | undefined
+  currentValue: number | null
   /**
    * The function to deliver the value.
    */
-  deliverValue: (value: number | undefined) => void
+  deliverValue: (value: number | null) => void
   /**
    * The default value that is used if the field is empty.
-   * @default 0
    */
-  defaultValue?: number | undefined
+  defaultValue?: number
   /**
    * The minimum value allowed for the detail.
-   * @default undefined
+   * @default null
    */
   minimum?: number
   /**
    * The maximum value allowed for the detail.
-   * @default undefined
+   * @default null
    */
   maximum?: number
   /**
