@@ -38,6 +38,8 @@ export default function UserResetPage(): JSX.Element | null {
   )
   const [password1ClassName, setPassword1ClassName] = useState<string>('')
   const [password2ClassName, setPassword2ClassName] = useState<string>('')
+  const [password1, setPassword1] = useState<string | null>(null)
+  const [password2, setPassword2] = useState<string | null>(null)
 
   /* -- COMPONENT EFFECTS -- */
 
@@ -45,6 +47,8 @@ export default function UserResetPage(): JSX.Element | null {
   const [mountHandled] = useMountHandler(async (done) => {
     // Finish loading.
     finishLoading()
+    setPassword1(user.password1 || null)
+    setPassword2(user.password2 || null)
     done()
   })
 
@@ -139,9 +143,10 @@ export default function UserResetPage(): JSX.Element | null {
           </div>
           <Detail
             label='New Password'
-            currentValue={undefined}
+            currentValue={password1}
             deliverValue={(password: string) => {
               user.password1 = password
+              setPassword1(password)
 
               if (user.hasValidPassword1 && password !== '') {
                 removeUserEmptyString('password1')
@@ -152,6 +157,7 @@ export default function UserResetPage(): JSX.Element | null {
 
               if (password === '') {
                 setDeliverPassword1Error(true)
+                setPassword1ClassName('')
                 setPassword1ErrorMessage(
                   'At least one character is required here.',
                 )
@@ -163,6 +169,7 @@ export default function UserResetPage(): JSX.Element | null {
 
               if (!user.hasValidPassword1 && password !== '') {
                 setDeliverPassword1Error(true)
+                setPassword1ClassName('')
                 setPassword1ErrorMessage(
                   'Password must be between 8 and 50 characters and cannot contain spaces.',
                 )
@@ -172,6 +179,7 @@ export default function UserResetPage(): JSX.Element | null {
               // check to see if the two passwords match.
               if (!user.passwordsMatch && user.password2) {
                 setDeliverPassword2Error(true)
+                setPassword2ClassName('')
                 setPassword2ErrorMessage('Passwords must match.')
               }
               // If the user has entered a password in the second password field
@@ -192,9 +200,10 @@ export default function UserResetPage(): JSX.Element | null {
 
           <Detail
             label='Confirm New Password'
-            currentValue={undefined}
+            currentValue={password2}
             deliverValue={(password: string) => {
               user.password2 = password
+              setPassword2(password)
 
               if (user.hasValidPassword2 && password !== '') {
                 removeUserEmptyString('password2')
@@ -205,6 +214,7 @@ export default function UserResetPage(): JSX.Element | null {
 
               if (!user.hasValidPassword2 && password !== '') {
                 setDeliverPassword2Error(true)
+                setPassword2ClassName('')
                 setPassword2ErrorMessage(
                   'Password must be between 8 and 50 characters and cannot contain spaces.',
                 )
@@ -212,6 +222,7 @@ export default function UserResetPage(): JSX.Element | null {
 
               if (password === '') {
                 setDeliverPassword2Error(true)
+                setPassword2ClassName('')
                 setPassword2ErrorMessage(
                   'At least one character is required here.',
                 )
@@ -227,6 +238,7 @@ export default function UserResetPage(): JSX.Element | null {
                 !user.passwordsMatch
               ) {
                 setDeliverPassword2Error(true)
+                setPassword2ClassName('')
                 setPassword2ErrorMessage('Passwords must match.')
               }
             }}

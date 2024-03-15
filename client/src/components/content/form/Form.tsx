@@ -20,7 +20,7 @@ export function Detail({
   deliverValue,
   // Optional Properties
   defaultValue = undefined,
-  deliverError = false,
+  deliverError = undefined,
   errorMessage = 'At least one character is required here.',
   disabled = false,
   uniqueLabelClassName = '',
@@ -32,8 +32,7 @@ export function Detail({
   displayOptionalText = false,
 }: TDetail_P): JSX.Element {
   /* -- STATE -- */
-  const [inputValue, setInputValue] = useState<string | undefined>(currentValue)
-  const [leftFieldEmpty, setLeftFieldEmpty] = useState<boolean>(false)
+  const [leftField, setLeftField] = useState<boolean>(false)
   const [currentInputType, setCurrentInputType] = useState<TInput>(inputType)
   const [displayPasswordText, setDisplayPasswordText] = useState<
     'show' | 'hide'
@@ -46,23 +45,25 @@ export function Detail({
    */
   const displayError: boolean = compute(() => {
     // Initialize the boolean.
-    let displayError: boolean = deliverError
+    let displayError: boolean = false
 
-    // If the user leaves the field by clicking
-    // outside of it, and the current value is
-    // an empty string...
-    if (leftFieldEmpty) {
+    // If the user left the field by clicking
+    // outside of it...
+    if (leftField) {
       // ...and empty strings are not allowed, the
       // field is empty or in a default state,
       // then display the error message.
-      if (!emptyStringAllowed && (inputValue === '' || !inputValue)) {
+      if (
+        !emptyStringAllowed &&
+        (currentValue === '' || currentValue === null)
+      ) {
         displayError = true
       }
-    }
-    // Otherwise, the field was not left empty
-    // and the error message should not be displayed.
-    else {
-      displayError = false
+      // Or, if the error needs to be displayed
+      // then display the error message.
+      else if (deliverError) {
+        displayError = true
+      }
     }
 
     // Return the boolean.
@@ -190,7 +191,6 @@ export function Detail({
     // If clearField is true then
     // clear the field.
     if (clearField) {
-      setInputValue('')
       deliverValue('')
     }
   }, [clearField])
@@ -222,31 +222,33 @@ export function Detail({
         <input
           className={fieldClassName}
           type={currentInputType}
-          value={inputValue}
+          value={currentValue || ''}
           placeholder={placeholder}
           onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-            setInputValue(event.target.value)
-            deliverValue(event.target.value)
+            let target: HTMLInputElement = event.target as HTMLInputElement
+            let value: string = target.value
+            deliverValue(value)
           }}
           onBlur={(event: React.FocusEvent) => {
             let target: HTMLInputElement = event.target as HTMLInputElement
             let value: string | undefined = target.value
 
-            // If the field is empty or in a default
-            // state...
-            if (value === '' || value === undefined) {
-              // ...set the left field empty state to true.
-              setLeftFieldEmpty(true)
+            // Indicate that the user has left the field.
+            // @note - This allows errors to be displayed.
+            setLeftField(true)
 
-              // If the error message is not displayed
-              // and the field is empty or in a default
-              // state, then set the input's value to
-              // the previous value and deliver the previous
-              // value.
-              if (!displayError && defaultValue) {
-                setInputValue(defaultValue)
-                deliverValue(defaultValue)
-              }
+            // If the field is empty or in a default
+            // state and the error message is not displayed
+            // and the field is empty or in a default
+            // state, then set the input's value to
+            // the previous value and deliver the previous
+            // value.
+            if (
+              (value === '' || value === undefined) &&
+              !displayError &&
+              defaultValue
+            ) {
+              deliverValue(defaultValue)
             }
           }}
         />
@@ -421,7 +423,7 @@ export function DetailBox({
   deliverValue,
   // Optional Properties
   defaultValue = undefined,
-  deliverError = false,
+  deliverError = undefined,
   errorMessage = 'At least one character is required here.',
   disabled = false,
   uniqueLabelClassName = '',
@@ -433,8 +435,7 @@ export function DetailBox({
   displayOptionalText = false,
 }: TDetailBox_P): JSX.Element | null {
   /* -- STATE -- */
-  const [inputValue, setInputValue] = useState<string | undefined>(currentValue)
-  const [leftFieldEmpty, setLeftFieldEmpty] = useState<boolean>(false)
+  const [leftField, setLeftField] = useState<boolean>(false)
 
   /* -- COMPUTED -- */
   /**
@@ -443,26 +444,25 @@ export function DetailBox({
    */
   const displayError: boolean = compute(() => {
     // Initialize the boolean.
-    let displayError: boolean = deliverError
+    let displayError: boolean = false
 
-    // If the user leaves the field by clicking
-    // outside of it, and the current value is
-    // an empty string...
-    if (leftFieldEmpty) {
+    // If the user left the field by clicking
+    // outside of it...
+    if (leftField) {
       // ...and empty strings are not allowed, the
       // field is empty or in a default state,
       // then display the error message.
       if (
         !emptyStringAllowed &&
-        (inputValue === '<p><br></p>' || !inputValue)
+        (currentValue === '<p><br></p>' || currentValue === null)
       ) {
         displayError = true
       }
-    }
-    // Otherwise, the field was not left empty
-    // and the error message should not be displayed.
-    else {
-      displayError = false
+      // Or, if the error needs to be displayed
+      // then display the error message.
+      else if (deliverError) {
+        displayError = true
+      }
     }
 
     // Return the boolean.
@@ -556,13 +556,15 @@ export function DetailBox({
     // If clearField is true then
     // clear the field.
     if (clearField) {
-      setInputValue('<p><br></p>')
       deliverValue('<p><br></p>')
     }
   }, [clearField])
 
   /* -- PRE-RENDER PROCESSING -- */
 
+  /**
+   * The modules used by the ReactQuill component.
+   */
   const reactQuillModules = {
     toolbar: {
       container: [
@@ -576,6 +578,9 @@ export function DetailBox({
     },
   }
 
+  /**
+   * The formats used by the ReactQuill component.
+   */
   const reactQuillFormats = ['bold', 'italic', 'underline', 'link', 'list']
 
   /* -- RENDER -- */
@@ -592,21 +597,22 @@ export function DetailBox({
           let target: HTMLDivElement = event.target as HTMLDivElement
           let value: string = target.innerHTML
 
-          // If the field is empty or in a default
-          // state...
-          if (value === '<p><br></p>' || value === undefined) {
-            // ...set the left field empty state to true.
-            setLeftFieldEmpty(true)
+          // Indicate that the user has left the field.
+          // @note - This allows errors to be displayed.
+          setLeftField(true)
 
-            // If the error message is not displayed
-            // and the field is empty or in a default
-            // state, then set the input's value to
-            // the default value and deliver the previous
-            // value.
-            if (!displayError && defaultValue) {
-              setInputValue(defaultValue)
-              deliverValue(defaultValue)
-            }
+          // If the field is empty or in a default
+          // state and the error message is not displayed
+          // and the field is empty or in a default
+          // state, then set the input's value to
+          // the previous value and deliver the previous
+          // value.
+          if (
+            (value === '<p><br></p>' || value === undefined) &&
+            !displayError &&
+            defaultValue
+          ) {
+            deliverValue(defaultValue)
           }
         }}
       >
@@ -615,13 +621,10 @@ export function DetailBox({
           className={fieldClassName}
           modules={reactQuillModules}
           formats={reactQuillFormats}
-          value={currentValue}
+          value={currentValue || ''}
           placeholder={placeholder}
           theme='snow'
-          onChange={(value: string) => {
-            setInputValue(value)
-            deliverValue(value)
-          }}
+          onChange={(value: string) => deliverValue(value)}
         />
       </div>
       <div className={fieldErrorClassName}>{errorMessage}</div>
@@ -958,7 +961,7 @@ type TDetail_P = {
   /**
    * The current value for the detail.
    */
-  currentValue: string | undefined
+  currentValue: string | null
   /**
    * The function to deliver the value.
    */
@@ -1103,7 +1106,7 @@ type TDetailBox_P = {
   /**
    * The current value for the detail.
    */
-  currentValue: string | undefined
+  currentValue: string | null
   /**
    * The function to deliver the value.
    */

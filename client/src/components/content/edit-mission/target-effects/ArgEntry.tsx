@@ -90,7 +90,7 @@ export default function ArgEntry({
   const numberValue: number | null = compute(() => {
     // Initialize the value to the component
     // state's effect argument value.
-    let value: number | null | undefined = effectArgs[arg.id]
+    let value: number | undefined = effectArgs[arg.id]
 
     // If the argument is a number...
     if (arg.type === 'number') {
@@ -116,16 +116,12 @@ export default function ArgEntry({
     }
 
     // Return the value.
-    if (value === undefined) {
-      return null
-    } else {
-      return value
-    }
+    return value === undefined ? null : value
   })
   /**
    * The text input's value.
    */
-  const stringValue: string | undefined = compute(() => {
+  const stringValue: string | null = compute(() => {
     // Initialize the value to the component
     // state's effect argument value.
     let value: string | undefined = effectArgs[arg.id]
@@ -154,12 +150,12 @@ export default function ArgEntry({
     }
 
     // Return the value.
-    return value
+    return value === undefined ? null : value
   })
   /**
    * The medium string input's value.
    */
-  const mediumStringValue: string | undefined = compute(() => {
+  const mediumStringValue: string | null = compute(() => {
     // Initialize the value to the component
     // state's effect argument value.
     let value: string | undefined = effectArgs[arg.id]
@@ -188,7 +184,7 @@ export default function ArgEntry({
     }
 
     // Return the value.
-    return value
+    return value === undefined ? null : value
   })
   /**
    * The boolean input's value.
@@ -805,7 +801,7 @@ export default function ArgEntry({
         <Detail
           label={arg.name}
           currentValue={stringValue}
-          defaultValue={arg.required ? arg.default : defaultStringValue}
+          defaultValue={arg.default}
           deliverValue={(value: string) => {
             // Add the argument to the list of arguments.
             effectArgs[arg.id] = value
@@ -835,7 +831,7 @@ export default function ArgEntry({
         <DetailBox
           label={arg.name}
           currentValue={mediumStringValue}
-          defaultValue={arg.required ? arg.default : defaultMediumStringValue}
+          defaultValue={arg.default}
           deliverValue={(value: string) => {
             // Add the argument to the list of arguments.
             effectArgs[arg.id] = value

@@ -68,6 +68,7 @@ export default function EditUserEntry(props: {
 
           if (firstName === '') {
             setDeliverFirstNameError(true)
+            setUpdateFirstNameClassName('')
             setFirstNameErrorMessage('At least one character is required here.')
             setUserEmptyStringArray([
               ...userEmptyStringArray,
@@ -77,6 +78,7 @@ export default function EditUserEntry(props: {
 
           if (!user.hasValidFirstName && firstName !== '') {
             setDeliverFirstNameError(true)
+            setUpdateFirstNameClassName('')
             setFirstNameErrorMessage(
               'First names must be between 1 and 50 characters long and can only contain letters.',
             )
@@ -108,12 +110,14 @@ export default function EditUserEntry(props: {
 
           if (lastName === '') {
             setDeliverLastNameError(true)
+            setUpdateLastNameClassName('')
             setLastNameErrorMessage('At least one character is required here.')
             setUserEmptyStringArray([...userEmptyStringArray, `field=lastName`])
           }
 
           if (!user.hasValidLastName && lastName !== '') {
             setDeliverLastNameError(true)
+            setUpdateLastNameClassName('')
             setLastNameErrorMessage(
               'Last names must be between 1 and 50 characters long and can only contain letters.',
             )

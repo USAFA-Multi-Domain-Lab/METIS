@@ -64,6 +64,13 @@ export default function CreateUserEntry(props: {
   const [roleClassName, setRoleClassName] = useState<string>('')
   const [selectedRoleClassName, setSelectedRoleClassName] =
     useState<string>('DefaultValue')
+  const [userId, setUserId] = useState<string | null>(user.userID)
+  const [password1, setPassword1] = useState<string | null>(
+    user.password1 || null,
+  )
+  const [password2, setPassword2] = useState<string | null>(
+    user.password2 || null,
+  )
 
   /* -- COMPONENT EFFECTS -- */
 
@@ -127,9 +134,10 @@ export default function CreateUserEntry(props: {
     >
       <Detail
         label='Username'
-        currentValue={user.userID}
+        currentValue={userId}
         deliverValue={(userID: string) => {
           user.userID = userID
+          setUserId(userID)
 
           if (userID !== '' && user.hasValidUsername) {
             removeUserEmptyString('userID')
@@ -140,12 +148,14 @@ export default function CreateUserEntry(props: {
 
           if (userID === '' && !user.hasValidUsername) {
             setDeliverUsernameError(true)
+            setUsernameClassName('')
             setUserEmptyStringArray([...userEmptyStringArray, `field=userID`])
             setUsernameErrorMessage('At least one character is required here.')
           }
 
           if (userID !== '' && !user.hasValidUsername) {
             setDeliverUsernameError(true)
+            setUsernameClassName('')
             setUsernameErrorMessage(
               'Usernames must be between 5 and 25 characters long and can only contain letters, numbers, and the following special characters: - _ .',
             )
@@ -189,6 +199,7 @@ export default function CreateUserEntry(props: {
 
           if (firstName === '') {
             setDeliverFirstNameError(true)
+            setCreateFirstNameClassName('')
             setFirstNameErrorMessage('At least one character is required here.')
             setUserEmptyStringArray([
               ...userEmptyStringArray,
@@ -198,6 +209,7 @@ export default function CreateUserEntry(props: {
 
           if (!user.hasValidFirstName && firstName !== '') {
             setDeliverFirstNameError(true)
+            setCreateFirstNameClassName('')
             setFirstNameErrorMessage(
               'First names must be between 1 and 50 characters long and can only contain letters.',
             )
@@ -229,12 +241,14 @@ export default function CreateUserEntry(props: {
 
           if (lastName === '') {
             setDeliverLastNameError(true)
+            setCreateLastNameClassName('')
             setLastNameErrorMessage('At least one character is required here.')
             setUserEmptyStringArray([...userEmptyStringArray, `field=lastName`])
           }
 
           if (!user.hasValidLastName && lastName !== '') {
             setDeliverLastNameError(true)
+            setCreateLastNameClassName('')
             setLastNameErrorMessage(
               'Last names must be between 1 and 50 characters long and can only contain letters.',
             )
@@ -250,9 +264,10 @@ export default function CreateUserEntry(props: {
       />
       <Detail
         label={passwordLabel}
-        currentValue={undefined}
+        currentValue={password1}
         deliverValue={(password: string) => {
           user.password1 = password
+          setPassword1(password)
 
           if (user.hasValidPassword1 && password !== '') {
             removeUserEmptyString('password1')
@@ -263,6 +278,7 @@ export default function CreateUserEntry(props: {
 
           if (password === '') {
             setDeliverPassword1Error(true)
+            setPassword1ClassName('')
             setPassword1ErrorMessage('At least one character is required here.')
             setUserEmptyStringArray([
               ...userEmptyStringArray,
@@ -272,6 +288,7 @@ export default function CreateUserEntry(props: {
 
           if (!user.hasValidPassword1 && password !== '') {
             setDeliverPassword1Error(true)
+            setPassword1ClassName('')
             setPassword1ErrorMessage(
               'Password must be between 8 and 50 characters and cannot contain spaces.',
             )
@@ -281,6 +298,7 @@ export default function CreateUserEntry(props: {
           // check to see if the two passwords match.
           if (!user.passwordsMatch && user.password2) {
             setDeliverPassword2Error(true)
+            setPassword2ClassName('')
             setPassword2ErrorMessage('Passwords must match.')
           }
           // If the user has entered a password in the second password field
@@ -301,9 +319,10 @@ export default function CreateUserEntry(props: {
 
       <Detail
         label={confirmPasswordLabel}
-        currentValue={undefined}
+        currentValue={password2}
         deliverValue={(password: string) => {
           user.password2 = password
+          setPassword2(password)
 
           if (user.hasValidPassword2 && password !== '') {
             removeUserEmptyString('password2')
@@ -314,6 +333,7 @@ export default function CreateUserEntry(props: {
 
           if (!user.hasValidPassword2 && password !== '') {
             setDeliverPassword2Error(true)
+            setPassword2ClassName('')
             setPassword2ErrorMessage(
               'Password must be between 8 and 50 characters and cannot contain spaces.',
             )
@@ -321,6 +341,7 @@ export default function CreateUserEntry(props: {
 
           if (password === '') {
             setDeliverPassword2Error(true)
+            setPassword2ClassName('')
             setPassword2ErrorMessage('At least one character is required here.')
             setUserEmptyStringArray([
               ...userEmptyStringArray,
@@ -334,6 +355,7 @@ export default function CreateUserEntry(props: {
             !user.passwordsMatch
           ) {
             setDeliverPassword2Error(true)
+            setPassword2ClassName('')
             setPassword2ErrorMessage('Passwords must match.')
           }
         }}
