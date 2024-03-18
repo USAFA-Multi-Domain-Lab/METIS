@@ -89,7 +89,7 @@ export default class MetisDatabase {
           await this.ensureCorrectSchemaBuild()
           // Schedule a backup every 24 hours
           // while server is running.
-          setInterval(this.createBackup, 1000 * 60 * 60 * 24)
+          setInterval(() => this.createBackup(), 1000 * 60 * 60 * 24)
           // Resolve.
           resolve()
         } catch (error) {
