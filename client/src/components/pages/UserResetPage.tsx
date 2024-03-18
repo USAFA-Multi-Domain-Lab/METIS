@@ -114,13 +114,10 @@ export default function UserResetPage(): JSX.Element | null {
     <div className='UserResetPage Page'>
       {/* -- NAVIGATION -- */}
       <Navigation
-        brandingCallback={null}
-        brandingTooltipDescription={null}
         links={[
           {
             text: 'Log out',
             handleClick: logout,
-            visible: true,
             key: 'log-out',
           },
         ]}

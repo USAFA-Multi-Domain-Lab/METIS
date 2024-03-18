@@ -6,13 +6,12 @@ import ClientMission from 'src/missions'
 import ClientMissionNode from 'src/missions/nodes'
 import { compute } from 'src/toolbox'
 import { useMountHandler } from 'src/toolbox/hooks'
-import { TPage_P } from '.'
+import { DefaultLayout, TPage_P } from '.'
 import MapToolbox from '../../../../shared/toolbox/maps'
 import OutputPanel from '../content/game/OutputPanel'
 import StatusBar from '../content/game/StatusBar'
 import MissionMap from '../content/game/mission-map'
 import ActionExecModal from '../content/game/mission-map/ui/overlay/modals/ActionExecModal'
-import Navigation from '../content/general-layout/Navigation'
 import {
   EPanelSizingMode,
   PanelSizeRelationship,
@@ -83,6 +82,24 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
   let panel2DefaultSize: number = 400
   // The current aspect ratio of the window.
   let currentAspectRatio: number = window.innerWidth / window.innerHeight
+
+  /* -- computed -- */
+
+  /**
+   * Props for navigation.
+   */
+  const navigation = compute(() => ({
+    links: [
+      {
+        text: 'Quit',
+        key: 'quit',
+        handleClick: () => {
+          navigateTo('HomePage', {})
+        },
+      },
+    ],
+    logoLinksHome: false,
+  }))
 
   /* -- functions -- */
 
@@ -189,55 +206,37 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
   // Return the rendered component.
   return (
     <div className={rootClassList.join(' ')}>
-      {
-        // -- navigation --
-      }
-      <Navigation
-        links={[
-          {
-            text: 'Quit',
-            key: 'quit',
-            handleClick: () => {
-              navigateTo('HomePage', {})
-            },
-            visible: true,
-          },
-        ]}
-        brandingCallback={null}
-        brandingTooltipDescription={null}
-      />
-      {
-        // -- content --
-      }
-      <div className='Content'>
-        <div className='TopBar'>
-          <div className={resourcesClassList.join(' ')}>
-            Resources remaining: {game.resources}
+      <DefaultLayout navigation={navigation} includeFooter={false}>
+        <div className='Content'>
+          <div className='TopBar'>
+            <div className={resourcesClassList.join(' ')}>
+              Resources remaining: {game.resources}
+            </div>
+            <StatusBar />
           </div>
-          <StatusBar />
+          <PanelSizeRelationship
+            sizingMode={EPanelSizingMode.Panel1_Auto__Panel2_Defined}
+            initialDefinedSize={panel2DefaultSize}
+            panel1={{
+              ...ResizablePanel.defaultProps,
+              minSize: 400,
+              render: () => (
+                <MissionMap
+                  mission={mission}
+                  onNodeSelect={onNodeSelect}
+                  overlayContent={overlayContent}
+                />
+              ),
+            }}
+            panel2={{
+              ...ResizablePanel.defaultProps,
+              minSize: 400,
+              isOpen: true,
+              render: () => <OutputPanel mission={mission} />,
+            }}
+          />
         </div>
-        <PanelSizeRelationship
-          sizingMode={EPanelSizingMode.Panel1_Auto__Panel2_Defined}
-          initialDefinedSize={panel2DefaultSize}
-          panel1={{
-            ...ResizablePanel.defaultProps,
-            minSize: 400,
-            render: () => (
-              <MissionMap
-                mission={mission}
-                onNodeSelect={onNodeSelect}
-                overlayContent={overlayContent}
-              />
-            ),
-          }}
-          panel2={{
-            ...ResizablePanel.defaultProps,
-            minSize: 400,
-            isOpen: true,
-            render: () => <OutputPanel mission={mission} />,
-          }}
-        />
-      </div>
+      </DefaultLayout>
     </div>
   )
 }

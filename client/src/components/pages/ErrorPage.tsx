@@ -34,7 +34,7 @@ export default function ErrorPage({}: IErrorPage): JSX.Element | null {
 
   // Create a list component to render
   // the solution buttons.
-  const Solutions = useListComponent(ButtonText, solutions, 'componentKey')
+  const Solutions = useListComponent(ButtonText, solutions, 'text')
 
   return (
     <div className='ErrorPage Page'>
@@ -43,7 +43,6 @@ export default function ErrorPage({}: IErrorPage): JSX.Element | null {
         <ButtonText
           text={'Refresh'}
           handleClick={refresh}
-          componentKey={'refresh-8327hkj239f'}
           key={'refresh-8327hkj239f'}
         />
         <Solutions />

@@ -1,12 +1,17 @@
 import { useState } from 'react'
 import { useGlobalContext } from 'src/context'
 import Info from 'src/info'
+import { compute } from 'src/toolbox'
 import { useMountHandler } from 'src/toolbox/hooks'
-import { TPage_P } from '.'
+import { DefaultLayout, TPage_P } from '.'
 import Markdown, {
   MarkdownTheme as EMarkdownTheme,
 } from '../content/general-layout/Markdown'
-import Navigation from '../content/general-layout/Navigation'
+import {
+  HomeLink,
+  LogoutLink,
+  TNavigation,
+} from '../content/general-layout/Navigation'
 import './ChangelogPage.scss'
 
 export interface IChangelogPage extends TPage_P {}
@@ -43,37 +48,26 @@ export default function IChangelogPage({}: IChangelogPage): JSX.Element | null {
     done()
   })
 
-  /* -- RENDER -- */
+  /* -- COMPUTED -- */
 
-  // Keeps track of if the user is logged in or not.
-  let displayLogin: boolean = session === null
-  let displayLogout: boolean = !displayLogin
+  /**
+   * Props for navigation.
+   */
+  const navigation = compute(
+    (): TNavigation => ({
+      links: [HomeLink(globalContext), LogoutLink(globalContext)],
+    }),
+  )
+
+  /* -- RENDER -- */
 
   return (
     <div className='ChangelogPage Page'>
-      <Navigation
-        links={[
-          {
-            text: 'Back to home',
-            key: 'back-to-home',
-            handleClick: () => {
-              navigateTo('HomePage', {})
-            },
-            visible: true,
-          },
-          {
-            text: 'Log out',
-            key: 'log-out',
-            handleClick: logout,
-            visible: displayLogout,
-          },
-        ]}
-        brandingCallback={() => navigateTo('HomePage', {})}
-        brandingTooltipDescription='Go home.'
-      />
-      <div className='Changelog'>
-        <Markdown markdown={changelog} theme={EMarkdownTheme.ThemePrimary} />
-      </div>
+      <DefaultLayout navigation={navigation}>
+        <div className='Changelog'>
+          <Markdown markdown={changelog} theme={EMarkdownTheme.ThemePrimary} />
+        </div>
+      </DefaultLayout>
     </div>
   )
 }

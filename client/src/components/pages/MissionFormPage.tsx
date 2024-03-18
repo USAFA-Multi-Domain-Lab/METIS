@@ -8,7 +8,7 @@ import ClientMissionNode, { ENodeDeleteMethod } from 'src/missions/nodes'
 import { ClientTargetEnvironment } from 'src/target-environments'
 import { compute } from 'src/toolbox'
 import { useEventListener, useMountHandler } from 'src/toolbox/hooks'
-import { TPage_P } from '.'
+import { DefaultLayout, TPage_P } from '.'
 import MissionAction from '../../../../shared/missions/actions'
 import { SingleTypeObject } from '../../../../shared/toolbox/objects'
 import ActionEntry from '../content/edit-mission/ActionEntry'
@@ -18,7 +18,11 @@ import NodeStructuring from '../content/edit-mission/NodeStructuring'
 import EffectEntry from '../content/edit-mission/target-effects/EffectEntry'
 import MissionMap from '../content/game/mission-map'
 import { TNodeButton } from '../content/game/mission-map/objects/MissionNode'
-import Navigation from '../content/general-layout/Navigation'
+import {
+  HomeLink,
+  LogoutLink,
+  TNavigation,
+} from '../content/general-layout/Navigation'
 import {
   EPanelSizingMode,
   PanelSizeRelationship,
@@ -81,6 +85,17 @@ export default function MissionFormPage(
   >([])
 
   /* -- COMPUTED -- */
+
+  /**
+   * Props for navigation.
+   */
+  const navigation = compute(
+    (): TNavigation => ({
+      links: [HomeLink(globalContext), LogoutLink(globalContext)],
+      boxShadow: 'alt-6',
+    }),
+  )
+
   /**
    * Determines whether or not to show the mission details.
    */
@@ -674,142 +689,112 @@ export default function MissionFormPage(
 
   return (
     <div className={'MissionFormPage Page'}>
-      {/* -- NAVIGATION */}
-      <Navigation
-        links={[
-          {
-            text: 'Done',
-            handleClick: goHome,
-            visible: true,
-            key: 'done',
-          },
-          {
-            text: 'Log out',
-            handleClick: logout,
-            visible: true,
-            key: 'log-out',
-          },
-        ]}
-        brandingCallback={goHome}
-        brandingTooltipDescription='Go home.'
-      />
-
-      {/* -- CONTENT -- */}
-      <div className='Content'>
-        <PanelSizeRelationship
-          panel1={{
-            ...ResizablePanel.defaultProps,
-            minSize: 330,
-            render: () => (
-              <MissionMap
-                mission={mission}
-                customButtons={mapCustomButtons}
-                onNodeSelect={onNodeSelect}
-              />
-            ),
-          }}
-          panel2={{
-            ...ResizablePanel.defaultProps,
-            minSize: 330,
-            render: () => {
-              if (missionDetailsIsActive) {
-                return (
-                  <MissionEntry
-                    active={missionDetailsIsActive}
-                    mission={mission}
-                    missionPath={missionPath}
-                    missionEmptyStringArray={missionEmptyStringArray}
-                    setMissionEmptyStringArray={setMissionEmptyStringArray}
-                    setMissionPath={setMissionPath}
-                    handleChange={handleChange}
-                  />
-                )
-              } else if (
-                selectedNode &&
-                selectedAction === null &&
-                selectedEffect === null
-              ) {
-                return (
-                  <NodeEntry
-                    node={selectedNode}
-                    missionPath={missionPath}
-                    isEmptyString={isEmptyString}
-                    nodeEmptyStringArray={nodeEmptyStringArray}
-                    setNodeEmptyStringArray={setNodeEmptyStringArray}
-                    setMissionPath={setMissionPath}
-                    setSelectedAction={setSelectedAction}
-                    handleChange={handleChange}
-                    handleAddRequest={handleNodeAddRequest}
-                    handleDeleteRequest={() =>
-                      handleNodeDeleteRequest(selectedNode)
-                    }
-                  />
-                )
-              } else if (
-                selectedNode &&
-                selectedAction &&
-                selectedEffect === null
-              ) {
-                return (
-                  <ActionEntry
-                    action={selectedAction}
-                    missionPath={missionPath}
-                    isEmptyString={isEmptyString}
-                    areDefaultValues={areDefaultValues}
-                    actionEmptyStringArray={actionEmptyStringArray}
-                    setActionEmptyStringArray={setActionEmptyStringArray}
-                    setMissionPath={setMissionPath}
-                    setSelectedAction={setSelectedAction}
-                    setSelectedEffect={setSelectedEffect}
-                    handleChange={handleChange}
-                  />
-                )
-              } else if (selectedNode && selectedAction && selectedEffect) {
-                return (
-                  <EffectEntry
-                    action={selectedAction}
-                    effect={selectedEffect}
-                    missionPath={missionPath}
-                    targetEnvironments={targetEnvironments}
-                    isEmptyString={isEmptyString}
-                    areDefaultValues={areDefaultValues}
-                    effectEmptyStringArray={effectEmptyStringArray}
-                    setEffectEmptyStringArray={setEffectEmptyStringArray}
-                    setMissionPath={setMissionPath}
-                    setSelectedAction={setSelectedAction}
-                    setSelectedEffect={setSelectedEffect}
-                    handleChange={handleChange}
-                  />
-                )
-              } else if (nodeStructuringIsActive) {
-                return (
-                  <NodeStructuring
-                    active={nodeStructuringIsActive}
-                    mission={mission}
-                    handleChange={handleChange}
-                    handleCloseRequest={() => activateNodeStructuring(false)}
-                  />
-                )
-              } else {
-                return null
-              }
-            },
-          }}
-          sizingMode={EPanelSizingMode.Panel1_Auto__Panel2_Defined}
-          initialDefinedSize={panel2DefaultSize}
-        />
-      </div>
-
-      {/* -- FOOTER -- */}
-      <div className='FooterContainer'>
-        <a
-          href='https://www.midjourney.com/'
-          className='Credit'
-          draggable={false}
-        >
-          Photo by Midjourney
-        </a>
-      </div>
+      <DefaultLayout navigation={navigation}>
+        <div className='Content'>
+          <PanelSizeRelationship
+            panel1={{
+              ...ResizablePanel.defaultProps,
+              minSize: 330,
+              render: () => (
+                <MissionMap
+                  mission={mission}
+                  customButtons={mapCustomButtons}
+                  onNodeSelect={onNodeSelect}
+                />
+              ),
+            }}
+            panel2={{
+              ...ResizablePanel.defaultProps,
+              minSize: 330,
+              render: () => {
+                if (missionDetailsIsActive) {
+                  return (
+                    <MissionEntry
+                      active={missionDetailsIsActive}
+                      mission={mission}
+                      missionPath={missionPath}
+                      missionEmptyStringArray={missionEmptyStringArray}
+                      setMissionEmptyStringArray={setMissionEmptyStringArray}
+                      setMissionPath={setMissionPath}
+                      handleChange={handleChange}
+                    />
+                  )
+                } else if (
+                  selectedNode &&
+                  selectedAction === null &&
+                  selectedEffect === null
+                ) {
+                  return (
+                    <NodeEntry
+                      node={selectedNode}
+                      missionPath={missionPath}
+                      isEmptyString={isEmptyString}
+                      nodeEmptyStringArray={nodeEmptyStringArray}
+                      setNodeEmptyStringArray={setNodeEmptyStringArray}
+                      setMissionPath={setMissionPath}
+                      setSelectedAction={setSelectedAction}
+                      handleChange={handleChange}
+                      handleAddRequest={handleNodeAddRequest}
+                      handleDeleteRequest={() =>
+                        handleNodeDeleteRequest(selectedNode)
+                      }
+                    />
+                  )
+                } else if (
+                  selectedNode &&
+                  selectedAction &&
+                  selectedEffect === null
+                ) {
+                  return (
+                    <ActionEntry
+                      action={selectedAction}
+                      missionPath={missionPath}
+                      isEmptyString={isEmptyString}
+                      areDefaultValues={areDefaultValues}
+                      actionEmptyStringArray={actionEmptyStringArray}
+                      setActionEmptyStringArray={setActionEmptyStringArray}
+                      setMissionPath={setMissionPath}
+                      setSelectedAction={setSelectedAction}
+                      setSelectedEffect={setSelectedEffect}
+                      handleChange={handleChange}
+                    />
+                  )
+                } else if (selectedNode && selectedAction && selectedEffect) {
+                  return (
+                    <EffectEntry
+                      action={selectedAction}
+                      effect={selectedEffect}
+                      missionPath={missionPath}
+                      targetEnvironments={targetEnvironments}
+                      isEmptyString={isEmptyString}
+                      areDefaultValues={areDefaultValues}
+                      effectEmptyStringArray={effectEmptyStringArray}
+                      setEffectEmptyStringArray={setEffectEmptyStringArray}
+                      setMissionPath={setMissionPath}
+                      setSelectedAction={setSelectedAction}
+                      setSelectedEffect={setSelectedEffect}
+                      handleChange={handleChange}
+                    />
+                  )
+                } else if (nodeStructuringIsActive) {
+                  return (
+                    <NodeStructuring
+                      active={nodeStructuringIsActive}
+                      mission={mission}
+                      handleChange={handleChange}
+                      handleCloseRequest={() => activateNodeStructuring(false)}
+                    />
+                  )
+                } else {
+                  return null
+                }
+              },
+            }}
+            sizingMode={EPanelSizingMode.Panel1_Auto__Panel2_Defined}
+            initialDefinedSize={panel2DefaultSize}
+          />
+        </div>
+      </DefaultLayout>
     </div>
   )
 }

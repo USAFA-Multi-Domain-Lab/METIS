@@ -11,11 +11,12 @@ import {
   useUnmountHandler,
 } from 'src/toolbox/hooks'
 import ClientUser from 'src/users'
+import { DefaultLayout } from '.'
 import { TGameBasicJson } from '../../../../shared/games'
 import Tooltip from '../content/communication/Tooltip'
 import { Detail } from '../content/form/Form'
 import List, { ESortByMethod } from '../content/general-layout/List'
-import Navigation from '../content/general-layout/Navigation'
+import { LogoutLink } from '../content/general-layout/Navigation'
 import {
   ButtonSVG,
   EButtonSVGPurpose,
@@ -105,6 +106,16 @@ export default function HomePage(props: {}): JSX.Element | null {
   useUnmountHandler(() => {
     syncGames.current = async () => {}
   })
+
+  /* -- COMPUTED -- */
+
+  /**
+   * Props for navigation.
+   */
+  const navigation = compute(() => ({
+    links: [LogoutLink(globalContext)],
+    logoLinksHome: false,
+  }))
 
   /* -- COMPONENT FUNCTIONS -- */
 
@@ -294,7 +305,6 @@ export default function HomePage(props: {}): JSX.Element | null {
                     notification.dismiss()
                     createPrompt(prompt)
                   },
-                  componentKey: 'invalid-contents-view-errors',
                 },
               ],
             },
@@ -432,14 +442,6 @@ export default function HomePage(props: {}): JSX.Element | null {
     }
   }
 
-  // This will switch to the changelog
-  // page.
-  const viewChangelog = (): void => {
-    if (currentUser.isAuthorized(['READ', 'WRITE', 'DELETE'])) {
-      navigateTo('ChangelogPage', {})
-    }
-  }
-
   /**
    * Handler for when a game is selected.
    */
@@ -552,23 +554,6 @@ export default function HomePage(props: {}): JSX.Element | null {
   ))
 
   /**
-   * The navigation that is displayed on the home page.
-   */
-  const navigationJsx = compute(() => (
-    <Navigation
-      brandingCallback={null}
-      brandingTooltipDescription={null}
-      links={[
-        {
-          text: 'Log out',
-          handleClick: logout,
-          key: 'log-out',
-        },
-      ]}
-    />
-  ))
-
-  /**
    * The games that are displayed on the home page.
    */
   const gamesJsx = compute(() => {
@@ -637,7 +622,6 @@ export default function HomePage(props: {}): JSX.Element | null {
             <ButtonText
               text='Join'
               handleClick={() => onGameSelection(manualJoinGameId)}
-              componentKey='Join'
             />
           </div>
         </div>
@@ -756,22 +740,6 @@ export default function HomePage(props: {}): JSX.Element | null {
     </div>
   ))
 
-  const footerJsx = compute(() => (
-    <div className='FooterContainer' draggable={false}>
-      <div className='Version' onClick={viewChangelog} draggable={false}>
-        v1.3.6
-        <Tooltip description={'View changelog.'} />
-      </div>
-      <a
-        href='https://www.midjourney.com/'
-        className='Credit'
-        draggable={false}
-      >
-        Photo by Midjourney
-      </a>
-    </div>
-  ))
-
   // Render root element.
   return (
     <div
@@ -781,14 +749,14 @@ export default function HomePage(props: {}): JSX.Element | null {
       onDragLeave={handleFileDragLeave}
       onDrop={handleFileDrop}
     >
-      {fileDropBoxJsx}
-      {navigationJsx}
-      <div className='Content'>
-        {gamesJsx}
-        {missionsJsx}
-        {usersJsx}
-      </div>
-      {footerJsx}
+      <DefaultLayout navigation={navigation}>
+        {fileDropBoxJsx}
+        <div className='Content'>
+          {gamesJsx}
+          {missionsJsx}
+          {usersJsx}
+        </div>
+      </DefaultLayout>
     </div>
   )
 }

@@ -1,27 +1,57 @@
-import './Branding.scss'
+import { useGlobalContext } from 'src/context'
+import { compute } from 'src/toolbox'
 import Tooltip from '../communication/Tooltip'
+import './Branding.scss'
+
+/* -- components -- */
 
 // This will brand the app with the
 // logo.
-const Branding = (props: {
-  goHome: (() => void) | null
-  tooltipDescription: string | null
-}): JSX.Element | null => {
-  let className: string = 'Branding'
+const Branding = ({ linksHome = true }: TBranding): JSX.Element | null => {
+  // Gather details.
+  const globalContext = useGlobalContext()
+  const { navigateTo } = globalContext.actions
 
-  if (!props.goHome) {
-    className += ' Disabled'
-  }
+  /**
+   * The class for the root element of the component.
+   */
+  const rootClass: string = compute(() => {
+    let classes: string[] = ['Branding']
+
+    if (!linksHome) {
+      classes.push('Disabled')
+    }
+
+    return classes.join(' ')
+  })
 
   return (
-    <div className={className} onClick={props.goHome ? props.goHome : () => {}}>
+    <div
+      className={rootClass}
+      onClick={() => {
+        if (linksHome) {
+          navigateTo('HomePage', {})
+        }
+      }}
+    >
       <div className='Emblem'></div>
       <div className='Logo'></div>
-      {props.tooltipDescription ? (
-        <Tooltip description={props.tooltipDescription} />
-      ) : null}
+      {linksHome ? <Tooltip description={'Go home.'} /> : null}
     </div>
   )
+}
+
+/* -- types -- */
+
+/**
+ * Props for `Branding` component.
+ */
+export type TBranding = {
+  /**
+   * Whether the logo will link to the home page.
+   * @default true
+   */
+  linksHome?: boolean
 }
 
 export default Branding

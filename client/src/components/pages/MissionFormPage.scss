@@ -25,21 +25,6 @@
   background-repeat: no-repeat;
   box-shadow: $box-shadow-alt5;
 
-  .Navigation {
-    $nav-vertical-padding: 20px;
-    $nav-horizontal-padding: 30px;
-
-    display: grid;
-    grid-template-columns: auto 130px 150px 130px;
-    padding: $nav-vertical-padding $nav-horizontal-padding;
-    width: calc(#{$page-width} - #{$nav-horizontal-padding * 2});
-    box-shadow: $box-shadow-alt6;
-
-    .Branding {
-      margin: 0;
-    }
-  }
-
   .Content {
     $content-vertical-padding: 35px;
     $content-horizontal-padding: 30px;
@@ -194,29 +179,11 @@
     }
   }
 
-  .FooterContainer {
-    display: grid;
-    grid-template-columns: auto;
-    padding: 0 20px 20px;
+  .Footer {
+    margin: 0;
 
-    * {
-      opacity: 0.7;
-      width: -moz-fit-content;
-      width: fit-content;
-    }
-
-    .Credit {
-      -webkit-user-select: none;
-      user-select: none;
-      margin-left: auto;
-      text-align: right;
-      font-size: 0.6em;
-      text-decoration: none;
-      -webkit-user-drag: none;
-
-      &:hover {
-        opacity: 1;
-      }
+    > * {
+      padding-top: 0;
     }
   }
 }

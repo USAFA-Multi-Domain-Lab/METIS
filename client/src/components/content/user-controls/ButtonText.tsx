@@ -1,15 +1,14 @@
 import React from 'react'
+import { useDefaultProps } from 'src/toolbox/hooks'
 import Tooltip from '../communication/Tooltip'
 import './ButtonText.scss'
-import { useDefaultProps } from 'src/toolbox/hooks'
 
 /* -- interfaces -- */
 
 // Interface for props for ButtonText component.
-export interface IButtonText {
+export interface TButtonText {
   text: string
   handleClick: (event: React.MouseEvent) => void
-  componentKey: string
   tooltipDescription?: string | null
   uniqueClassName?: string
   style?: React.CSSProperties
@@ -20,14 +19,13 @@ export interface IButtonText {
 
 // A button with normal text
 // that performs a given action.
-export function ButtonText(props: IButtonText): JSX.Element | null {
+export function ButtonText(props: TButtonText): JSX.Element | null {
   // Extract props. Assign default props to
   // props passed as needed.
   let {
     text,
     handleClick,
     tooltipDescription,
-    componentKey,
     uniqueClassName,
     style,
     disabled,
@@ -45,28 +43,11 @@ export function ButtonText(props: IButtonText): JSX.Element | null {
 
   // Render.
   return (
-    <div
-      className={className}
-      style={style}
-      key={componentKey}
-      onClick={handleClick}
-    >
+    <div className={className} style={style} onClick={handleClick}>
       <span className='Bracket LeftBracket'>{'['}</span>
       <span className='Text'>{text}</span>
       <span className='Bracket RightBracket'>{']'}</span>
       {tooltipDescription ? <Tooltip description={tooltipDescription} /> : null}
-    </div>
-  )
-}
-
-function SomeComponent() {
-  return (
-    <div>
-      <ButtonText
-        text={'Click me'}
-        handleClick={() => {}}
-        componentKey={'key'}
-      />
     </div>
   )
 }

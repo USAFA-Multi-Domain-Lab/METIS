@@ -32,19 +32,6 @@
   background-repeat: no-repeat;
   box-shadow: $box-shadow-alt1;
 
-  .Navigation {
-    $nav-vertical-padding: 15px;
-    $nav-horizontal-padding: 30px;
-
-    grid-template-columns: auto 120px;
-    width: calc($page-width - $nav-horizontal-padding * 2);
-    padding: $nav-vertical-padding $nav-horizontal-padding;
-
-    .Branding {
-      margin: 0;
-    }
-  }
-
   .Content {
     $content-row-1-height: 53px;
 

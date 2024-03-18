@@ -1,12 +1,17 @@
 import { AxiosError } from 'axios'
 import { useState } from 'react'
 import { useGlobalContext } from 'src/context'
+import { compute } from 'src/toolbox'
 import { useMountHandler, useRequireSession } from 'src/toolbox/hooks'
 import ClientUser from 'src/users'
-import { TPage_P } from '.'
+import { DefaultLayout, TPage_P } from '.'
 import CreateUserEntry from '../content/edit-user/CreateUserEntry'
 import EditUserEntry from '../content/edit-user/EditUserEntry'
-import Navigation from '../content/general-layout/Navigation'
+import {
+  HomeLink,
+  LogoutLink,
+  TNavigation,
+} from '../content/general-layout/Navigation'
 import './UserFormPage.scss'
 
 export interface IUserFormPage extends TPage_P {
@@ -86,6 +91,18 @@ export default function UserFormPage(props: IUserFormPage): JSX.Element | null {
   if (!mountHandled) {
     return null
   }
+
+  /* -- COMPUTED -- */
+
+  /**
+   * Props for navigation.
+   */
+  const navigation = compute(
+    (): TNavigation => ({
+      links: [HomeLink(globalContext), LogoutLink(globalContext)],
+      boxShadow: 'alt-7',
+    }),
+  )
 
   /* -- COMPONENT FUNCTIONS -- */
 
@@ -241,46 +258,16 @@ export default function UserFormPage(props: IUserFormPage): JSX.Element | null {
 
   return (
     <div className='UserFormPage Page'>
-      {/* -- NAVIGATION -- */}
-      <Navigation
-        links={[
-          {
-            text: 'Done',
-            handleClick: goHome,
-            visible: true,
-            key: 'done',
-          },
-          {
-            text: 'Log out',
-            handleClick: logout,
-            visible: true,
-            key: 'log-out',
-          },
-        ]}
-        brandingCallback={goHome}
-        brandingTooltipDescription='Go home.'
-      />
-
-      {/* -- CONTENT -- */}
-      <div className='Content'>
-        {renderUserEntry()}
-        <div className='ButtonContainer'>
-          <div className={saveButtonClassName} onClick={() => save()}>
-            Save
+      <DefaultLayout navigation={navigation}>
+        <div className='Content'>
+          {renderUserEntry()}
+          <div className='ButtonContainer'>
+            <div className={saveButtonClassName} onClick={() => save()}>
+              Save
+            </div>
           </div>
         </div>
-      </div>
-
-      {/* -- FOOTER -- */}
-      <div className='FooterContainer'>
-        <a
-          href='https://www.midjourney.com/'
-          className='Credit'
-          draggable={false}
-        >
-          Photo by Midjourney
-        </a>
-      </div>
+      </DefaultLayout>
     </div>
   )
 }

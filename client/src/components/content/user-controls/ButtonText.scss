@@ -12,6 +12,7 @@
   }
 
   .Bracket {
+    opacity: 0;
     color: $color-main;
   }
 
@@ -21,5 +22,11 @@
 
   .RightBracket {
     padding-left: 7px;
+  }
+
+  &:hover {
+    .Bracket {
+      opacity: 1;
+    }
   }
 }

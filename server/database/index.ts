@@ -1,16 +1,16 @@
 import { exec } from 'child_process'
 import formatDate from 'dateformat'
-import mongoose, { ConnectOptions } from 'mongoose'
-import { databaseLogger } from 'metis/server/logging'
+import MetisServer from 'metis/server'
 import { demoMissionData } from 'metis/server/database/initial-mission-data'
 import InfoModel from 'metis/server/database/models/info'
 import MissionModel from 'metis/server/database/models/missions'
 import UserModel, { hashPassword } from 'metis/server/database/models/users'
-import MetisServer from 'metis/server'
+import { databaseLogger } from 'metis/server/logging'
+import mongoose, { ConnectOptions } from 'mongoose'
 import {
-  studentUserData,
-  instructorUserData,
   adminUserData,
+  instructorUserData,
+  studentUserData,
 } from './initial-user-data'
 
 /**
@@ -87,9 +87,15 @@ export default class MetisDatabase {
           await this.ensureDefaultDataExists()
           // Ensure that the schema build is correct.
           await this.ensureCorrectSchemaBuild()
-          // Schedule a backup every 24 hours
-          // while server is running.
-          setInterval(this.createBackup, 1000 * 60 * 60 * 24)
+
+          try {
+            // Schedule a backup every 24 hours
+            // while server is running.
+            setInterval(() => this.createBackup(), 1000 * 60 * 60 * 24)
+          } catch (error) {
+            databaseLogger.error('Failed to perform scheduled database backup:')
+            databaseLogger.error(error)
+          }
           // Resolve.
           resolve()
         } catch (error) {

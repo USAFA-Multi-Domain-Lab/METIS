@@ -9,18 +9,8 @@
   padding: $page-padding-top $page-horizontal-padding $page-padding-bottom;
   box-shadow: $box-shadow-alt1;
 
-  .Navigation {
-    $nav-vertical-padding: 10px;
-    $nav-horizontal-padding: 30px;
-
-    grid-template-columns: auto 160px 130px;
-    width: calc($page-width - $nav-horizontal-padding * 2);
-    padding: $nav-vertical-padding $nav-horizontal-padding;
-    margin: 0 0 65px;
-  }
-
   .Changelog {
-    margin: 0 55px 0;
+    margin: 25px 55px;
     padding: 25px 40px;
     border: 3px solid $color-main;
     border-radius: 15px;

@@ -1,51 +1,93 @@
+import { TGlobalContext } from 'src/context'
+import { compute } from 'src/toolbox'
+import { TWithKey } from '../../../../../shared/toolbox/objects'
+import { ButtonText, TButtonText } from '../user-controls/ButtonText'
 import Branding from './Branding'
 import './Navigation.scss'
 
-export interface INavigation {
-  links: Array<INavLink>
-  brandingCallback: (() => void) | null
-  brandingTooltipDescription: string | null
-}
+/* -- components -- */
 
-export interface INavLink {
-  text: string
-  key: string
-  handleClick: () => void
+/**
+ * A navigation bar to link users to different sections of
+ * the application.
+ */
+export default function Navigation({
+  links = [],
+  logoLinksHome = true,
+  boxShadow = 'alt-3',
+}: TNavigation): JSX.Element | null {
   /**
-   * Whether or not the link is currently visible. Defaults to true.
+   * The class for the root element.
    */
-  visible?: boolean
-}
-
-const Navigation = (props: INavigation): JSX.Element | null => {
-  let links: Array<INavLink> = props.links
+  const rootClass = compute(() => {
+    // Gather details.
+    let classList: string[] = ['Navigation', boxShadow]
+    // Join and return class list.
+    return classList.join(' ')
+  })
 
   return (
-    <div className='Navigation'>
-      <Branding
-        goHome={props.brandingCallback}
-        tooltipDescription={props.brandingTooltipDescription}
-      />
-      {links.map((link: INavLink) => {
-        let text: string = link.text
-        let key: string = link.key
-        let visible: boolean = link.visible ?? true
-        let className: string = 'LinkContainer'
-
-        if (!visible) {
-          className += ' Hidden'
-        }
-
-        return (
-          <div className={className} key={`${key}-container`}>
-            <div className='Link' onClick={link.handleClick} key={key}>
-              {text}
-            </div>
-          </div>
-        )
-      })}
+    <div className={rootClass}>
+      <Branding linksHome={logoLinksHome} />
+      <div className='Links'>
+        {links.map((link) => (
+          <ButtonText {...link} key={link.key} />
+        ))}
+      </div>
     </div>
   )
 }
 
-export default Navigation
+/* -- functions -- */
+
+/**
+ * Creates a navigation link to go home.
+ */
+export const HomeLink = (context: TGlobalContext): TWithKey<TButtonText> => {
+  return {
+    text: 'Home',
+    handleClick: () => context.actions.navigateTo('HomePage', {}),
+    key: 'home',
+  }
+}
+
+/**
+ * Creates a navigation link to logout the user.
+ * @param context The global context.
+ * @returns
+ */
+export const LogoutLink = (context: TGlobalContext): TWithKey<TButtonText> => {
+  return {
+    text: 'Logout',
+    handleClick: context.actions.logout,
+    key: 'logout',
+  }
+}
+
+/* -- types -- */
+
+/**
+ * Props for `Navigation` component.
+ */
+export type TNavigation = {
+  /**
+   * The links to include in the navigation.
+   * @default []
+   */
+  links?: TWithKey<TButtonText>[]
+  /**
+   * Whether the logo will link to the home page.
+   * @default true
+   */
+  logoLinksHome?: boolean
+  /**
+   * The box shadow used as a background for the navigation.
+   * @default 'alt-2'
+   */
+  boxShadow?: TNavBoxShadow
+}
+
+/**
+ * Box shadow options for the navigation.
+ */
+export type TNavBoxShadow = 'alt-3' | 'alt-6' | 'alt-7'

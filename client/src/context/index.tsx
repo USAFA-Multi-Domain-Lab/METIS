@@ -5,7 +5,7 @@ import Confirmation, {
 } from 'src/components/content/communication/Confirmation'
 import { message as connectionStatusMessage } from 'src/components/content/communication/ConnectionStatus'
 import Prompt, { IPrompt } from 'src/components/content/communication/Prompt'
-import { IButtonText } from 'src/components/content/user-controls/ButtonText'
+import { TButtonText } from 'src/components/content/user-controls/ButtonText'
 import { PAGE_REGISTRY, TPage_P } from 'src/components/pages'
 import ServerConnection from 'src/connect/servers'
 import Notification from 'src/notifications'
@@ -770,7 +770,7 @@ export interface IPromptOptions {
  */
 export interface INotifyOptions {
   duration?: number | null
-  buttons?: IButtonText[]
+  buttons?: TButtonText[]
   errorMessage?: boolean
 }
 

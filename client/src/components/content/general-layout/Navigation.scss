@@ -4,37 +4,43 @@
   position: sticky;
   top: 0;
   display: grid;
-  grid-template-columns: auto 130px;
+  grid-template-columns: 1fr auto;
   margin: 0 auto;
   width: 100%;
   height: $nav-height;
+  box-sizing: border-box;
+  padding: 0 30px;
   vertical-align: bottom;
   box-shadow: $box-shadow-alt3;
   border-bottom: 2px solid $color-main;
   z-index: 100;
 
-  .Branding {
-    background-position-x: 0;
-    margin-left: 30px;
+  &.alt-3 {
+    box-shadow: $box-shadow-alt3;
   }
 
-  .LinkContainer {
-    display: grid;
-    place-items: center;
-    align-items: center;
+  &.alt-6 {
+    box-shadow: $box-shadow-alt6;
+  }
 
-    .Link {
-      -webkit-user-select: none;
-      user-select: none;
-      transition: opacity 175ms;
-      padding: 10px;
+  &.alt-7 {
+    box-shadow: $box-shadow-alt7;
+  }
 
-      &:hover {
-        cursor: pointer;
-        border: 2px solid $color-accent;
-        border-radius: 5px;
-        margin: 0 10px;
-      }
+  .Branding {
+    background-position-x: 0;
+  }
+
+  .Links {
+    display: flex;
+    place-content: center;
+    column-gap: 10px;
+
+    .ButtonText {
+      display: flex;
+      align-items: center;
+      margin: 0;
+      height: $nav-height;
     }
   }
 }

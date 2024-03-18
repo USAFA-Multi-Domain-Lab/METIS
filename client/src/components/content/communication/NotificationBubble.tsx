@@ -1,19 +1,15 @@
-import './NotificationBubble.scss'
+import { useListComponent } from 'src/toolbox/hooks'
 import Notification from '../../../notifications'
 import Markdown, { MarkdownTheme } from '../general-layout/Markdown'
 import { ButtonText } from '../user-controls/ButtonText'
-import { useListComponent } from 'src/toolbox/hooks'
+import './NotificationBubble.scss'
 
 // This will brand the app with the
 // logo.
 const NotificationBubble = (props: {
   notification: Notification
 }): JSX.Element => {
-  let Buttons = useListComponent(
-    ButtonText,
-    props.notification.buttons,
-    'componentKey',
-  )
+  let Buttons = useListComponent(ButtonText, props.notification.buttons, 'text')
 
   let notification: Notification = props.notification
   let containerClassName: string = 'NotificationBubble'

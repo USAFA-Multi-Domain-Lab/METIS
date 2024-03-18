@@ -118,7 +118,7 @@ export default function AuthPage(props: IAuthPage): JSX.Element | null {
     <div className='AuthPage Page'>
       <div className='Login'>
         <div className='ErrorMessage'>{errorMessage}</div>
-        <Branding goHome={null} tooltipDescription={''} />
+        <Branding linksHome={false} />
         <form className='Form' onChange={handleChange} onSubmit={handleSubmit}>
           <Detail
             label={'Username'}
