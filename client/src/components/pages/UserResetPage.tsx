@@ -36,8 +36,6 @@ export default function UserResetPage(): JSX.Element | null {
   const [password2ErrorMessage, setPassword2ErrorMessage] = useState<string>(
     'At least one character is required here.',
   )
-  const [password1ClassName, setPassword1ClassName] = useState<string>('')
-  const [password2ClassName, setPassword2ClassName] = useState<string>('')
   const [password1, setPassword1] = useState<string | null>(null)
   const [password2, setPassword2] = useState<string | null>(null)
 
@@ -151,13 +149,11 @@ export default function UserResetPage(): JSX.Element | null {
               if (user.hasValidPassword1 && password !== '') {
                 removeUserEmptyString('password1')
                 setDeliverPassword1Error(false)
-                setPassword1ClassName('Correct')
                 handleChange()
               }
 
               if (password === '') {
                 setDeliverPassword1Error(true)
-                setPassword1ClassName('')
                 setPassword1ErrorMessage(
                   'At least one character is required here.',
                 )
@@ -169,7 +165,6 @@ export default function UserResetPage(): JSX.Element | null {
 
               if (!user.hasValidPassword1 && password !== '') {
                 setDeliverPassword1Error(true)
-                setPassword1ClassName('')
                 setPassword1ErrorMessage(
                   'Password must be between 8 and 50 characters and cannot contain spaces.',
                 )
@@ -179,21 +174,17 @@ export default function UserResetPage(): JSX.Element | null {
               // check to see if the two passwords match.
               if (!user.passwordsMatch && user.password2) {
                 setDeliverPassword2Error(true)
-                setPassword2ClassName('')
                 setPassword2ErrorMessage('Passwords must match.')
               }
               // If the user has entered a password in the second password field
               // and the two passwords match, remove the error.
               else if (user.passwordsMatch && user.password2) {
                 setDeliverPassword2Error(false)
-                setPassword2ClassName('Correct')
               }
             }}
             emptyStringAllowed={false}
             deliverError={deliverPassword1Error}
             errorMessage={password1ErrorMessage}
-            uniqueLabelClassName={password1ClassName}
-            uniqueInputClassName={password1ClassName}
             inputType='password'
             placeholder='Enter a new password here...'
           />
@@ -208,13 +199,11 @@ export default function UserResetPage(): JSX.Element | null {
               if (user.hasValidPassword2 && password !== '') {
                 removeUserEmptyString('password2')
                 setDeliverPassword2Error(false)
-                setPassword2ClassName('Correct')
                 handleChange()
               }
 
               if (!user.hasValidPassword2 && password !== '') {
                 setDeliverPassword2Error(true)
-                setPassword2ClassName('')
                 setPassword2ErrorMessage(
                   'Password must be between 8 and 50 characters and cannot contain spaces.',
                 )
@@ -222,7 +211,6 @@ export default function UserResetPage(): JSX.Element | null {
 
               if (password === '') {
                 setDeliverPassword2Error(true)
-                setPassword2ClassName('')
                 setPassword2ErrorMessage(
                   'At least one character is required here.',
                 )
@@ -238,15 +226,12 @@ export default function UserResetPage(): JSX.Element | null {
                 !user.passwordsMatch
               ) {
                 setDeliverPassword2Error(true)
-                setPassword2ClassName('')
                 setPassword2ErrorMessage('Passwords must match.')
               }
             }}
             emptyStringAllowed={false}
             deliverError={deliverPassword2Error}
             errorMessage={password2ErrorMessage}
-            uniqueLabelClassName={password2ClassName}
-            uniqueInputClassName={password2ClassName}
             inputType='password'
             placeholder='Confirm your new password here...'
           />
