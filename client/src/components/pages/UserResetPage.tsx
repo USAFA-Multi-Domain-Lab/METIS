@@ -36,8 +36,8 @@ export default function UserResetPage(): JSX.Element | null {
   const [password2ErrorMessage, setPassword2ErrorMessage] = useState<string>(
     'At least one character is required here.',
   )
-  const [password1ClassName, setPassword1ClassName] = useState<string>('')
-  const [password2ClassName, setPassword2ClassName] = useState<string>('')
+  const [password1, setPassword1] = useState<string | null>(null)
+  const [password2, setPassword2] = useState<string | null>(null)
 
   /* -- COMPONENT EFFECTS -- */
 
@@ -45,6 +45,8 @@ export default function UserResetPage(): JSX.Element | null {
   const [mountHandled] = useMountHandler(async (done) => {
     // Finish loading.
     finishLoading()
+    setPassword1(user.password1 || null)
+    setPassword2(user.password2 || null)
     done()
   })
 
@@ -139,14 +141,14 @@ export default function UserResetPage(): JSX.Element | null {
           </div>
           <Detail
             label='New Password'
-            currentValue={undefined}
+            currentValue={password1}
             deliverValue={(password: string) => {
               user.password1 = password
+              setPassword1(password)
 
               if (user.hasValidPassword1 && password !== '') {
                 removeUserEmptyString('password1')
                 setDeliverPassword1Error(false)
-                setPassword1ClassName('Correct')
                 handleChange()
               }
 
@@ -178,28 +180,25 @@ export default function UserResetPage(): JSX.Element | null {
               // and the two passwords match, remove the error.
               else if (user.passwordsMatch && user.password2) {
                 setDeliverPassword2Error(false)
-                setPassword2ClassName('Correct')
               }
             }}
             emptyStringAllowed={false}
             deliverError={deliverPassword1Error}
             errorMessage={password1ErrorMessage}
-            uniqueLabelClassName={password1ClassName}
-            uniqueInputClassName={password1ClassName}
             inputType='password'
             placeholder='Enter a new password here...'
           />
 
           <Detail
             label='Confirm New Password'
-            currentValue={undefined}
+            currentValue={password2}
             deliverValue={(password: string) => {
               user.password2 = password
+              setPassword2(password)
 
               if (user.hasValidPassword2 && password !== '') {
                 removeUserEmptyString('password2')
                 setDeliverPassword2Error(false)
-                setPassword2ClassName('Correct')
                 handleChange()
               }
 
@@ -233,8 +232,6 @@ export default function UserResetPage(): JSX.Element | null {
             emptyStringAllowed={false}
             deliverError={deliverPassword2Error}
             errorMessage={password2ErrorMessage}
-            uniqueLabelClassName={password2ClassName}
-            uniqueInputClassName={password2ClassName}
             inputType='password'
             placeholder='Confirm your new password here...'
           />

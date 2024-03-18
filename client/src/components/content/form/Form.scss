@@ -26,10 +26,6 @@
       width: 100%;
       font-size: 12.5px;
 
-      &.Correct {
-        color: $color-correct;
-      }
-
       &.Error {
         color: $color-error-alt;
       }
@@ -66,19 +62,12 @@
     color: $color-accent-light;
     font-size: 14px;
 
-    &.Correct {
-      border-top: 2px solid $color-correct;
-      border-bottom: 2px solid $color-correct;
-      color: $color-correct;
-    }
-
     &.Error {
-      border-top: 2px solid $color-error-alt;
-      border-bottom: 2px solid $color-error-alt;
-      color: $color-error-alt;
+      border-top: 2px solid $color-error-alt1;
+      border-bottom: 2px solid $color-error-alt1;
 
       &::placeholder {
-        color: $color-error-alt;
+        // color: $color-error-alt;
       }
     }
 
@@ -119,7 +108,6 @@
     }
 
     &.Disabled {
-      pointer-events: none;
       opacity: unset;
 
       * {
@@ -129,6 +117,9 @@
     }
 
     .FieldContainer {
+      // This container is only here because React Quill needs a parent container
+      // for the onBlur event to work properly.
+
       .Field {
         border: none;
         resize: none;
@@ -234,16 +225,6 @@
         }
       }
     }
-
-    .FieldErrorMessage {
-      font-size: 0.7em;
-      color: $color-error-alt;
-      margin-top: 5px;
-
-      &.hide {
-        @include hide();
-      }
-    }
   }
 
   &.DetailDropDown {
@@ -262,15 +243,6 @@
 
         .Text {
           color: $color-accent-light;
-
-          &.Correct {
-            color: $color-correct;
-          }
-
-          &.DefaultValue {
-            color: $color-main;
-            opacity: 0.775;
-          }
         }
       }
 
