@@ -159,7 +159,7 @@
       justify-content: center;
       column-gap: 0.1em;
 
-      .ButtonSVG {
+      .ButtonSvg {
         position: unset;
         margin: 0;
         width: 0.325em;
@@ -168,9 +168,9 @@
         border: min(1px, 0.075em) solid $color-main;
         border-radius: 0;
         background-color: rgba($background-alt1, 0.9);
-        background-position: 50% 50%;
-        background-size: 60%;
-        background-repeat: no-repeat;
+        background-position: 50% 50% !important;
+        background-size: 60% !important;
+        background-repeat: no-repeat !important;
         color: $color-main;
       }
     }

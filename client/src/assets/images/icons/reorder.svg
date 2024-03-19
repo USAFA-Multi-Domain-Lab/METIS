@@ -1,9 +1,58 @@
-<svg width="800.0000000000001" height="800.0000000000001" xmlns="http://www.w3.org/2000/svg">
- <!-- Created with Method Draw - http://github.com/duopixel/Method-Draw/ -->
-
- <g id="Layer_1">
-  <title>Layer 1</title>
-  <path stroke="white" stroke-width="50" transform="rotate(180 621.1502685546875,400.26486206054693) " id="svg_6" d="m499.44409,399.36798l121.70616,-372.76932l121.70618,372.76932l-60.85309,0l0,374.56303l-121.70616,0l0,-374.56303l-60.85309,0z" stroke-opacity="null" stroke-dasharray="null" fill="white"/>
-  <path stroke="white" stroke-width="50" id="svg_7" d="m61.66736,399.93839l131.42873,-371.93804l131.42873,371.93804l-65.71437,0l0,373.72774l-131.42872,0l0,-373.72774l-65.71437,0z" opacity="undefined" stroke-opacity="null" stroke-dasharray="null" fill="white"/>
- </g>
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   width="800.0000000000001"
+   height="800.0000000000001"
+   version="1.1"
+   id="svg1"
+   sodipodi:docname="reorder.svg"
+   inkscape:version="1.3 (0e150ed, 2023-07-21)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs1" />
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#000000"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:zoom="0.53875"
+     inkscape:cx="400"
+     inkscape:cy="400"
+     inkscape:window-width="1392"
+     inkscape:window-height="1212"
+     inkscape:window-x="584"
+     inkscape:window-y="531"
+     inkscape:window-maximized="0"
+     inkscape:current-layer="svg1" />
+  <!-- Created with Method Draw - http://github.com/duopixel/Method-Draw/ -->
+  <g
+     id="Layer_1"
+     transform="matrix(0.83972156,0,0,0.83972156,62.584813,60.985646)">
+    <title
+       id="title1">Layer 1</title>
+    <path
+       stroke="#ffffff"
+       stroke-width="50"
+       transform="rotate(180,621.15027,400.26486)"
+       id="svg_6"
+       d="M 499.44409,399.36798 621.15025,26.59866 742.85643,399.36798 H 682.00334 V 773.93101 H 560.29718 V 399.36798 Z"
+       stroke-opacity="null"
+       stroke-dasharray="none"
+       fill="#ffffff" />
+    <path
+       stroke="#ffffff"
+       stroke-width="50"
+       id="svg_7"
+       d="M 61.66736,399.93839 193.09609,28.00035 324.52482,399.93839 H 258.81045 V 773.66613 H 127.38173 V 399.93839 Z"
+       opacity="undefined"
+       stroke-opacity="null"
+       stroke-dasharray="none"
+       fill="#ffffff" />
+  </g>
 </svg>

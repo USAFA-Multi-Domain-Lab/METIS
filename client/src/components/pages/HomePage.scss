@@ -92,12 +92,13 @@
         border-bottom-right-radius: 15px;
         padding: 10px 0;
 
-        .ButtonSVG {
+        .ButtonSvg {
           transform: scale(0.8);
         }
       }
     }
 
+    .MissionListContainer,
     .UserListContainer {
       display: none;
     }
@@ -193,6 +194,10 @@
     .Content {
       grid-template-columns: 50% 50%;
       width: 100%;
+
+      .MissionListContainer {
+        display: grid;
+      }
 
       .UserListContainer {
         display: grid;

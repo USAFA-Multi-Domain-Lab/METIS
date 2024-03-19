@@ -8,7 +8,7 @@ import './ButtonText.scss'
 // Interface for props for ButtonText component.
 export interface TButtonText {
   text: string
-  handleClick: (event: React.MouseEvent) => void
+  onClick: (event: React.MouseEvent) => void
   tooltipDescription?: string | null
   uniqueClassName?: string
   style?: React.CSSProperties
@@ -24,7 +24,7 @@ export function ButtonText(props: TButtonText): JSX.Element | null {
   // props passed as needed.
   let {
     text,
-    handleClick,
+    onClick: onClick,
     tooltipDescription,
     uniqueClassName,
     style,
@@ -43,7 +43,7 @@ export function ButtonText(props: TButtonText): JSX.Element | null {
 
   // Render.
   return (
-    <div className={className} style={style} onClick={handleClick}>
+    <div className={className} style={style} onClick={onClick}>
       <span className='Bracket LeftBracket'>{'['}</span>
       <span className='Text'>{text}</span>
       <span className='Bracket RightBracket'>{']'}</span>

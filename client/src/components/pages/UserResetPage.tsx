@@ -117,7 +117,7 @@ export default function UserResetPage(): JSX.Element | null {
         links={[
           {
             text: 'Log out',
-            handleClick: logout,
+            onClick: logout,
             key: 'log-out',
           },
         ]}

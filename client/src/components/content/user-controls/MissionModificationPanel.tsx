@@ -1,23 +1,22 @@
 import { useGlobalContext } from 'src/context'
 import GameClient from 'src/games'
 import ClientMission from 'src/missions'
-import ClientUser from 'src/users'
-import { TMetisSession } from '../../../../../shared/sessions'
-import { EMiniButtonSVGPurpose, MiniButtonSVG } from './MiniButtonSVG'
-import { MiniButtonSVGPanel } from './MiniButtonSVGPanel'
+import { useRequireSession } from 'src/toolbox/hooks'
+import { SingleTypeObject } from '../../../../../shared/toolbox/objects'
+import ButtonSvgPanel, { TValidPanelButton } from './ButtonSvgPanel'
 import './MissionModificationPanel.scss'
 
-export default function MissionModificationPanel(props: {
-  mission: ClientMission
-  session: NonNullable<TMetisSession<ClientUser>>
-  handleSuccessfulCopy: (resultingMission: ClientMission) => void
-  handleSuccessfulDeletion: () => void
-  handleSuccessfulLaunch: (gameID: string) => void
-}) {
+export default function MissionModificationPanel({
+  mission,
+  onSuccessfulCopy,
+  onSuccessfulDeletion,
+  onSuccessfulLaunch,
+}: TMissionModificationPanel) {
   /* -- GLOBAL CONTEXT -- */
 
+  // Require session for panel.
+  const [session] = useRequireSession()
   const globalContext = useGlobalContext()
-
   const {
     navigateTo,
     notify,
@@ -30,14 +29,7 @@ export default function MissionModificationPanel(props: {
 
   /* -- COMPONENT VARIABLES -- */
 
-  let {
-    mission,
-    session,
-    handleSuccessfulCopy,
-    handleSuccessfulDeletion,
-    handleSuccessfulLaunch,
-  } = props
-  let currentActions: MiniButtonSVG[] = []
+  let currentButtons: TValidPanelButton[] = []
 
   // Grab the current user from the session.
   let { user: currentUser } = session
@@ -46,7 +38,7 @@ export default function MissionModificationPanel(props: {
 
   // This is called when a user requests
   // to edit the mission.
-  const handleEditRequest = () => {
+  const onEditRequest = () => {
     navigateTo('MissionFormPage', {
       missionID: mission.missionID,
     })
@@ -54,7 +46,7 @@ export default function MissionModificationPanel(props: {
 
   // This is called when a user requests
   // to delete the mission.
-  const handleDeleteRequest = () => {
+  const onDeleteRequest = () => {
     confirm(
       'Are you sure you want to delete this mission?',
       async (concludeAction: () => void) => {
@@ -64,7 +56,7 @@ export default function MissionModificationPanel(props: {
           await ClientMission.$delete(mission.missionID)
           finishLoading()
           notify(`Successfully deleted "${mission.name}".`)
-          handleSuccessfulDeletion()
+          onSuccessfulDeletion()
         } catch (error) {
           finishLoading()
           notify(`Failed to delete "${mission.name}".`)
@@ -78,7 +70,7 @@ export default function MissionModificationPanel(props: {
 
   // This is called when a user requests
   // to copy the mission.
-  const handleCopyRequest = () => {
+  const onCopyRequest = () => {
     confirm(
       'Enter the name of the new mission.',
       async (concludeAction: () => void, entry: string) => {
@@ -91,7 +83,7 @@ export default function MissionModificationPanel(props: {
           )
           finishLoading()
           notify(`Successfully copied "${mission.name}".`)
-          handleSuccessfulCopy(resultingMission)
+          onSuccessfulCopy(resultingMission)
         } catch (error) {
           finishLoading()
           notify(`Failed to copy "${mission.name}".`)
@@ -106,7 +98,7 @@ export default function MissionModificationPanel(props: {
     )
   }
 
-  const handleLaunchRequest = () => {
+  const onLaunchRequest = () => {
     confirm(
       'Confirm the launch of this game.',
       async (concludeAction: () => void) => {
@@ -122,7 +114,7 @@ export default function MissionModificationPanel(props: {
             finishLoading()
             notify('Successfully launched game.')
             // Handle success in callback.
-            handleSuccessfulLaunch(gameID)
+            onSuccessfulLaunch(gameID)
             // todo: Remove this.
             // // Notify user of game join.
             // beginLoading('Joining game...')
@@ -157,35 +149,35 @@ export default function MissionModificationPanel(props: {
 
   // -- RENDER --
 
-  let availableMiniActions = {
-    launch: new MiniButtonSVG({
-      ...MiniButtonSVG.defaultProps,
-      purpose: EMiniButtonSVGPurpose.Launch,
-      handleClick: handleLaunchRequest,
+  let availableButtons: SingleTypeObject<TValidPanelButton> = {
+    launch: {
+      icon: 'launch',
+      key: 'launch',
+      onClick: onLaunchRequest,
       tooltipDescription: 'Launch game.',
-    }),
-    edit: new MiniButtonSVG({
-      ...MiniButtonSVG.defaultProps,
-      purpose: EMiniButtonSVGPurpose.Edit,
-      handleClick: handleEditRequest,
+    },
+    edit: {
+      icon: 'edit',
+      key: 'edit',
+      onClick: onEditRequest,
       tooltipDescription: 'Edit mission.',
-    }),
-    remove: new MiniButtonSVG({
-      ...MiniButtonSVG.defaultProps,
-      purpose: EMiniButtonSVGPurpose.Remove,
-      handleClick: handleDeleteRequest,
+    },
+    remove: {
+      icon: 'remove',
+      key: 'remove',
+      onClick: onDeleteRequest,
       tooltipDescription: 'Remove mission.',
-    }),
-    copy: new MiniButtonSVG({
-      ...MiniButtonSVG.defaultProps,
-      purpose: EMiniButtonSVGPurpose.Copy,
-      handleClick: handleCopyRequest,
+    },
+    copy: {
+      icon: 'copy',
+      key: 'copy',
+      onClick: onCopyRequest,
       tooltipDescription: 'Copy mission.',
-    }),
-    download: new MiniButtonSVG({
-      ...MiniButtonSVG.defaultProps,
-      purpose: EMiniButtonSVGPurpose.Download,
-      handleClick: () => {
+    },
+    download: {
+      icon: 'download',
+      key: 'download',
+      onClick: () => {
         window.open(
           `/api/v1/missions/export/${mission.name}.metis?missionID=${mission.missionID}`,
           '_blank',
@@ -193,7 +185,7 @@ export default function MissionModificationPanel(props: {
       },
       tooltipDescription:
         'Export this mission as a .metis file to your local system.',
-    }),
+    },
   }
 
   let containerClassName: string = 'Hidden'
@@ -202,16 +194,42 @@ export default function MissionModificationPanel(props: {
     containerClassName = 'MissionModificationPanel'
   }
 
-  currentActions.push(
-    availableMiniActions.launch,
-    availableMiniActions.remove,
-    availableMiniActions.copy,
-    availableMiniActions.download,
+  currentButtons.push(
+    availableButtons.launch,
+    availableButtons.remove,
+    availableButtons.copy,
+    availableButtons.download,
   )
 
   return (
     <div className={containerClassName}>
-      <MiniButtonSVGPanel buttons={currentActions} />
+      <ButtonSvgPanel buttons={currentButtons} size={'small'} />
     </div>
   )
+}
+
+/* -- types -- */
+
+/**
+ * Props for `MissionModificationPanel` component.
+ */
+export type TMissionModificationPanel = {
+  /**
+   * The mission to modify.
+   */
+  mission: ClientMission
+  /**
+   * Callback for a successful copy event.
+   * @param resultingMission The resulting mission from the copy event.
+   */
+  onSuccessfulCopy: (resultingMission: ClientMission) => void
+  /**
+   * Callback for a successful deletion event.
+   */
+  onSuccessfulDeletion: () => void
+  /**
+   * Callback for a successful launch event.
+   * @param gameID The ID of the game that was launched.
+   */
+  onSuccessfulLaunch: (gameID: string) => void
 }

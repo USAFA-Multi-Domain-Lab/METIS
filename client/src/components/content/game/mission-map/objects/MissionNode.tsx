@@ -1,16 +1,16 @@
+import { useState } from 'react'
+import Tooltip from 'src/components/content/communication/Tooltip'
+import ButtonSvg, {
+  TButtonSvg,
+} from 'src/components/content/user-controls/ButtonSvg'
 import ClientMissionNode from 'src/missions/nodes'
-import './MissionNode.scss'
+import { compute } from 'src/toolbox'
+import { useEventListener, useInlineStyling } from 'src/toolbox/hooks'
+import { TNodeExecutionState } from '../../../../../../../shared/missions/nodes'
+import { TWithKey } from '../../../../../../../shared/toolbox/objects'
 import { Vector1D } from '../../../../../../../shared/toolbox/space'
 import StringToolbox from '../../../../../../../shared/toolbox/strings'
-import { compute } from 'src/toolbox'
-import { useState } from 'react'
-import { TNodeExecutionState } from '../../../../../../../shared/missions/nodes'
-import { useEventListener, useInlineStyling } from 'src/toolbox/hooks'
-import {
-  ButtonSVG,
-  IButtonSVG,
-} from 'src/components/content/user-controls/ButtonSVG'
-import Tooltip from 'src/components/content/communication/Tooltip'
+import './MissionNode.scss'
 
 /* -- constants -- */
 
@@ -271,12 +271,12 @@ export default function MissionNode({
   const buttonsJsx: JSX.Element[] = compute(() => {
     return buttons.map((button: TNodeButton): JSX.Element => {
       return (
-        <ButtonSVG
+        <ButtonSvg
           {...button}
           onClick={(event: React.MouseEvent) => {
             button.onClick(event, node)
           }}
-          key={button.componentKey}
+          key={button.key}
         />
       )
     })
@@ -348,7 +348,7 @@ export type TMissionNode_P = {
 /**
  * Button SVG type for node-specific buttons.
  */
-export type TNodeButton = Omit<IButtonSVG, 'onClick'> & {
+export type TNodeButton = TWithKey<Omit<TButtonSvg, 'onClick'>> & {
   // Overridden
   /**
    * Handles when the button is clicked.

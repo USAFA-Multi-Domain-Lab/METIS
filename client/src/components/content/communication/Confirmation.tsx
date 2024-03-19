@@ -1,8 +1,9 @@
 import React from 'react'
-import AjaxStatusDisplay from './AjaxStatusDisplay'
-import Markdown, { MarkdownTheme } from '../general-layout/Markdown'
-import './Confirmation.scss'
 import { TAjaxStatus } from '../../../../../shared/toolbox/ajax'
+import Markdown, { MarkdownTheme } from '../general-layout/Markdown'
+import { ButtonText } from '../user-controls/ButtonText'
+import AjaxStatusDisplay from './AjaxStatusDisplay'
+import './Confirmation.scss'
 
 export interface IConfirmation {
   active: boolean
@@ -93,12 +94,8 @@ export default class Confirmation extends React.Component<
         ? ' hidden'
         : ''
     }`
-    let buttonConfirmClassName: string = `'button-confirm Button${
-      readyToConfirm ? '' : ' Disabled'
-    }`
-    let buttonAlternateClassName: string = `button-alternate Button ${
-      handleAlternate ? '' : ' hidden'
-    }`
+    let buttonConfirmClassName: string = readyToConfirm ? '' : ' Disabled'
+    let buttonAlternateClassName: string = handleAlternate ? '' : ' hidden'
 
     return (
       <div className={confirmationClassName}>
@@ -119,20 +116,17 @@ export default class Confirmation extends React.Component<
               />
             </div>
             <div className={actionsClassName}>
-              <div
-                className='button-cancel Button'
+              <ButtonText
+                text={buttonCancelText}
                 onClick={this.props.handleCancelation}
-              >
-                {buttonCancelText}
-              </div>
-              <div
-                className={buttonConfirmClassName}
+              />
+              <ButtonText
+                text={buttonConfirmText}
                 onClick={() => this.props.handleConfirmation(this.state.entry)}
-              >
-                {buttonConfirmText}
-              </div>
-              <div
-                className={buttonAlternateClassName}
+                uniqueClassName={buttonConfirmClassName}
+              />
+              <ButtonText
+                text={buttonAlternateText}
                 onClick={
                   handleAlternate
                     ? () => {
@@ -142,9 +136,8 @@ export default class Confirmation extends React.Component<
                       }
                     : () => {}
                 }
-              >
-                {buttonAlternateText}
-              </div>
+                uniqueClassName={buttonAlternateClassName}
+              />
             </div>
             <AjaxStatusDisplay
               status={confirmAjaxStatus}

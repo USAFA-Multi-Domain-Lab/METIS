@@ -147,7 +147,7 @@
       vertical-align: top;
       margin: 11.5px 0 0;
 
-      .ButtonSVG {
+      .ButtonSvg {
         display: inline-block;
         box-sizing: border-box;
         border: none;
@@ -301,11 +301,11 @@
   }
 
   .actions {
-    .ButtonSVG {
+    .ButtonSvg {
       margin: 5px 10px 0;
     }
 
-    .ButtonSVG.cancel-pending-action {
+    .ButtonSvg.cancel-pending-action {
       position: absolute;
       transition: 200ms transform;
       margin-top: -44px;
@@ -544,7 +544,7 @@
     border-color: $terminal-fail;
   }
 
-  .ButtonSVG.cancel-pending-action {
+  .ButtonSvg.cancel-pending-action {
     filter: hue-rotate(115deg) brightness(130%) saturate(65%);
   }
 }
@@ -573,11 +573,11 @@
     border: 2px solid $color-negative;
   }
 
-  .ButtonSVG.cancel-pending-action {
+  .ButtonSvg.cancel-pending-action {
     transform: scale(1.2);
     transition: 800ms transform;
   }
-  .ButtonSVG:not(.cancel-pending-action) {
+  .ButtonSvg:not(.cancel-pending-action) {
     transform: scale(0);
     // &.edit {
     //   transform: scale(1.4);

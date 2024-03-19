@@ -86,17 +86,17 @@ export function useRequireSession(): [NonNullable<TMetisSession<ClientUser>>] {
  * // This component will have a default
  * // text of 'Click me!' if no text is
  * // provided.
- * function Button(props: { text?: string; handleClick: () => void }) {
+ * function Button(props: { text?: string; onClick: () => void }) {
  *   useDefaultProps(props, { text: 'Click me!' })
  *
- *   let { text, handleClick } = props
+ *   let { text, onClick } = props
  *
- *   return <div onClick={handleClick}>{text}</div>
+ *   return <div onClick={onClick}>{text}</div>
  * }
  *
  * function Panel(props: {}) {
  *   return <div>
- *     <Button handleClick={submit} />
+ *     <Button onClick={submit} />
  *   </div>
  * }
  * ```

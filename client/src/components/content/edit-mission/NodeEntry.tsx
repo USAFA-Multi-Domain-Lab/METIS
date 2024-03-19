@@ -4,6 +4,7 @@ import ClientMissionAction from 'src/missions/actions'
 import ClientMissionNode from 'src/missions/nodes'
 import { compute } from 'src/toolbox'
 import { v4 as generateHash } from 'uuid'
+import { SingleTypeObject } from '../../../../../shared/toolbox/objects'
 import Tooltip from '../communication/Tooltip'
 import {
   Detail,
@@ -13,11 +14,9 @@ import {
   DetailToggle,
 } from '../form/Form'
 import List, { ESortByMethod } from '../general-layout/List'
-import {
-  EMiniButtonSVGPurpose,
-  MiniButtonSVG,
-} from '../user-controls/MiniButtonSVG'
-import { MiniButtonSVGPanel } from '../user-controls/MiniButtonSVGPanel'
+import ButtonSvgPanel, {
+  TValidPanelButton,
+} from '../user-controls/ButtonSvgPanel'
 import { EToggleLockState } from '../user-controls/Toggle'
 import './NodeEntry.scss'
 
@@ -145,9 +144,9 @@ export default function NodeEntry({
     return node?.mission.name ?? ClientMission.DEFAULT_PROPERTIES.name
   })
   /**
-   * The class name for the remove action button.
+   * The unique class list for the remove action button.
    */
-  const removeActionClassName: string = compute(() => {
+  const removeActionClassList = compute((): string[] => {
     // Create a default list of class names.
     let classList: string[] = ['']
 
@@ -156,8 +155,8 @@ export default function NodeEntry({
       classList.push('Disabled')
     }
 
-    // Combine the class names into a single string.
-    return classList.join(' ')
+    // Return class list.
+    return classList
   })
 
   /* -- FUNCTIONS -- */
@@ -457,24 +456,25 @@ export default function NodeEntry({
                  */
                 const actionButtons = compute(() => {
                   // Create a default list of buttons.
-                  let buttons: MiniButtonSVG[] = []
+                  let buttons: TValidPanelButton[] = []
 
                   // If the action is available then add the edit and remove buttons.
-                  let availableMiniActions = {
-                    edit: new MiniButtonSVG({
-                      ...MiniButtonSVG.defaultProps,
-                      purpose: EMiniButtonSVGPurpose.Edit,
-                      handleClick: () => handleEditActionRequest(action),
-                      tooltipDescription: 'Edit action.',
-                    }),
-                    remove: new MiniButtonSVG({
-                      ...MiniButtonSVG.defaultProps,
-                      purpose: EMiniButtonSVGPurpose.Remove,
-                      handleClick: () => handleDeleteActionRequest(action),
-                      tooltipDescription: 'Remove action.',
-                      uniqueClassName: removeActionClassName,
-                    }),
-                  }
+                  let availableMiniActions: SingleTypeObject<TValidPanelButton> =
+                    {
+                      edit: {
+                        icon: 'edit',
+                        key: 'edit',
+                        onClick: () => handleEditActionRequest(action),
+                        tooltipDescription: 'Edit action.',
+                      },
+                      remove: {
+                        icon: 'remove',
+                        key: 'remove',
+                        onClick: () => handleDeleteActionRequest(action),
+                        tooltipDescription: 'Remove action.',
+                        uniqueClassList: removeActionClassList,
+                      },
+                    }
 
                   // Add the buttons to the list.
                   buttons.push(availableMiniActions.edit)
@@ -493,7 +493,7 @@ export default function NodeEntry({
                       {action.name}{' '}
                       <Tooltip description={action.description ?? ''} />
                     </div>
-                    <MiniButtonSVGPanel buttons={actionButtons} />
+                    <ButtonSvgPanel buttons={actionButtons} size={'small'} />
                   </div>
                 )
               }}

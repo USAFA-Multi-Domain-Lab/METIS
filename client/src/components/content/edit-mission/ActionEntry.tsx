@@ -3,14 +3,13 @@ import { ClientEffect } from 'src/missions/effects'
 import ClientMissionNode from 'src/missions/nodes'
 import { compute } from 'src/toolbox'
 import { v4 as generateHash } from 'uuid'
+import { SingleTypeObject } from '../../../../../shared/toolbox/objects'
 import Tooltip from '../communication/Tooltip'
 import { Detail, DetailBox, DetailNumber } from '../form/Form'
 import List, { ESortByMethod } from '../general-layout/List'
-import {
-  EMiniButtonSVGPurpose,
-  MiniButtonSVG,
-} from '../user-controls/MiniButtonSVG'
-import { MiniButtonSVGPanel } from '../user-controls/MiniButtonSVGPanel'
+import ButtonSvgPanel, {
+  TValidPanelButton,
+} from '../user-controls/ButtonSvgPanel'
 import './ActionEntry.scss'
 
 /**
@@ -503,23 +502,24 @@ export default function ActionEntry({
                  */
                 const actionButtons = compute(() => {
                   // Create a default list of buttons.
-                  let buttons: MiniButtonSVG[] = []
+                  let buttons: TValidPanelButton[] = []
 
                   // If the action is available then add the edit and remove buttons.
-                  let availableMiniActions = {
-                    edit: new MiniButtonSVG({
-                      ...MiniButtonSVG.defaultProps,
-                      purpose: EMiniButtonSVGPurpose.Edit,
-                      handleClick: () => handleEditEffectRequest(effect),
-                      tooltipDescription: 'Edit effect.',
-                    }),
-                    remove: new MiniButtonSVG({
-                      ...MiniButtonSVG.defaultProps,
-                      purpose: EMiniButtonSVGPurpose.Remove,
-                      handleClick: () => handleDeleteEffectRequest(effect),
-                      tooltipDescription: 'Remove effect.',
-                    }),
-                  }
+                  let availableMiniActions: SingleTypeObject<TValidPanelButton> =
+                    {
+                      edit: {
+                        icon: 'edit',
+                        key: 'edit',
+                        onClick: () => handleEditEffectRequest(effect),
+                        tooltipDescription: 'Edit effect.',
+                      },
+                      remove: {
+                        icon: 'remove',
+                        key: 'remove',
+                        onClick: () => handleDeleteEffectRequest(effect),
+                        tooltipDescription: 'Remove effect.',
+                      },
+                    }
 
                   // Add the buttons to the list.
                   buttons.push(availableMiniActions.edit)
@@ -535,7 +535,7 @@ export default function ActionEntry({
                       {effect.name}
                       <Tooltip description={effect.description ?? ''} />
                     </div>
-                    <MiniButtonSVGPanel buttons={actionButtons} />
+                    <ButtonSvgPanel buttons={actionButtons} size={'small'} />
                   </div>
                 )
               }}

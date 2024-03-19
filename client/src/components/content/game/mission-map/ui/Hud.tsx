@@ -1,8 +1,9 @@
+import { TButtonSvg } from 'src/components/content/user-controls/ButtonSvg'
+import ButtonSvgPanel from 'src/components/content/user-controls/ButtonSvgPanel'
 import ClientMission from 'src/missions'
-import './Hud.scss'
-import { ButtonSVGPanel } from 'src/components/content/user-controls/ButtonSVGPanel'
-import { ButtonSVG } from 'src/components/content/user-controls/ButtonSVG'
 import { compute } from 'src/toolbox/'
+import { TWithKey } from '../../../../../../../shared/toolbox/objects'
+import './Hud.scss'
 
 /**
  * HUD for the mission map.
@@ -21,7 +22,7 @@ export default function Hud({
     if (buttons.length === 0) return null
 
     // Otherwise, render the panel.
-    return <ButtonSVGPanel buttons={buttons} />
+    return <ButtonSvgPanel buttons={buttons} />
   })
 
   // Render root element.
@@ -47,5 +48,5 @@ export type THud = {
    * be rendered.
    * @default []
    */
-  buttons?: ButtonSVG[]
+  buttons?: TWithKey<TButtonSvg>[]
 }

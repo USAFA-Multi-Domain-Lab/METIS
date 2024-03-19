@@ -13,14 +13,14 @@ export default function GameConfigPage({}: TGameConfigPage_P): JSX.Element | nul
           {
             text: 'Back to home',
             key: 'back-to-home',
-            handleClick: () => {
+            onClick: () => {
               navigateTo('HomePage', {})
             },
           },
           {
             text: 'Log out',
             key: 'log-out',
-            handleClick: logout,
+            onClick: logout,
           },
         ]}
       />

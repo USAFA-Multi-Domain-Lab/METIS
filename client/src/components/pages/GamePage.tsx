@@ -93,7 +93,7 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
       {
         text: 'Quit',
         key: 'quit',
-        handleClick: () => {
+        onClick: () => {
           navigateTo('HomePage', {})
         },
       },

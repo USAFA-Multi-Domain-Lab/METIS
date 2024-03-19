@@ -1,119 +1,157 @@
 import React from 'react'
+import { compute } from 'src/toolbox'
 import Tooltip from '../communication/Tooltip'
-import './ButtonSVG.scss'
+import './ButtonSvg.scss'
 
-/* -- interfaces -- */
+/* -- components -- */
 
-// the purpose of a button, helps
-// give different buttons different
-// icons and looks
-export enum EButtonSVGPurpose {
-  Cancel,
-  Add,
-  Edit,
-  Remove,
-  Down,
-  Reorder,
-  ZoomIn,
-  ZoomOut,
-  Save,
-  Copy,
-  Upload,
-  Download,
-  Search,
+/**
+ * A button with an SVG icon.
+ */
+export default function ButtonSvg({
+  icon,
+  size = 'regular',
+  tooltipDescription = null,
+  uniqueClassList = [],
+  disabled = false,
+  onClick,
+  onCopy = () => {},
+}: TButtonSvg): JSX.Element | null {
+  /* -- computed -- */
+
+  /**
+   * The class for the root element.
+   */
+  const rootClass = compute((): string => {
+    // Gather details.
+    let classList: string[] = ['ButtonSvg', icon, size]
+
+    // Push unique classes passed in props.
+    classList.push(...uniqueClassList)
+
+    // Push disabled class if disabled.
+    if (disabled) {
+      classList.push('Disabled')
+    }
+
+    // Join and return class list.
+    return classList.join(' ')
+  })
+
+  /**
+   * The style for the root element.
+   */
+  const rootStyle = compute((): React.CSSProperties => {
+    // Construct result.
+    let result: React.CSSProperties = {}
+
+    // Determine the background details based on size.
+    switch (size) {
+      case 'regular':
+        result = {
+          backgroundImage: `url(${require(`../../../assets/images/icons/${icon}.svg`)}), linear-gradient(to bottom, #1a2a1a 0% 100%)`,
+          backgroundSize: '0.5em, cover',
+          backgroundRepeat: 'no-repeat',
+          backgroundPosition: 'center',
+        }
+        break
+      case 'small':
+        result = {
+          backgroundImage: `url(${require(`../../../assets/images/icons/${icon}.svg`)})`,
+          backgroundSize: '0.65em',
+          backgroundRepeat: 'no-repeat',
+          backgroundPosition: 'center',
+        }
+        break
+    }
+
+    // Offset the background position for 'upload' and
+    // 'download' icons to center them.
+    if (icon === 'upload' || icon === 'download') {
+      result.backgroundPosition = 'center 0.25em, center'
+    }
+
+    // Return result.
+    return result
+  })
+
+  /* -- render -- */
+
+  return (
+    <div
+      className={rootClass}
+      style={rootStyle}
+      onClick={onClick}
+      onCopy={onCopy}
+    >
+      {tooltipDescription ? <Tooltip description={tooltipDescription} /> : null}
+    </div>
+  )
 }
 
-// Interface for props for ButtonSVG component.
-export interface IButtonSVG {
-  purpose: EButtonSVGPurpose
+/* -- types -- */
+
+/**
+ * The size of a SVG button.
+ */
+export type TButtonSvgSize = 'small' | 'regular'
+
+/**
+ * Props for `ButtonSVG` component.
+ */
+export type TButtonSvg = {
+  /**
+   * The icon for the button.
+   */
+  icon: TButtonSVGIcon
+  /**
+   * The size of the button.
+   * @default 'regular'
+   */
+  size?: TButtonSvgSize
+  /**
+   * The description for the tooltip. If null, no tooltip is displayed.
+   * @default null
+   */
+  tooltipDescription?: string | null
+  /**
+   * Unique class lists to apply to the component.
+   * @default []
+   */
+  uniqueClassList?: string[]
+  /**
+   * Whether the button is currently disabled.
+   * @default false
+   */
+  disabled?: boolean
   /**
    * Handles the click event for the button.
    * @param event The click event.
    */
   onClick: (event: React.MouseEvent) => void
-  onCopy: (event: React.ClipboardEvent) => void
-  tooltipDescription: string | null
-  componentKey: string | undefined
-  uniqueClassName: string
-  style: React.CSSProperties
-  disabled: boolean
+  /**
+   * Callback for a clipboard copy event.
+   * @param event The clipboard event.
+   * @default () => {}
+   */
+  onCopy?: (event: React.ClipboardEvent) => void
 }
 
-/* -- classes -- */
-
-// something represented by an icon,
-// explained by a tooltip, that when
-// clicked calls back to cause an action
-export class ButtonSVG extends React.Component<IButtonSVG, {}> {
-  static defaultProps = {
-    onCopy: () => {},
-    tooltipDescription: null,
-    componentKey: undefined,
-    uniqueClassName: '',
-    style: {},
-    disabled: false,
-  }
-
-  // different buttons are styled differently.
-  // based on the purpose of the button, a class
-  // name is returned to style it differently
-  static getButtonClassName(purpose: EButtonSVGPurpose): string {
-    switch (purpose) {
-      case EButtonSVGPurpose.Cancel:
-        return 'ButtonSVG cancel'
-      case EButtonSVGPurpose.Add:
-        return 'ButtonSVG add'
-      case EButtonSVGPurpose.Edit:
-        return 'ButtonSVG edit'
-      case EButtonSVGPurpose.Remove:
-        return 'ButtonSVG remove'
-      case EButtonSVGPurpose.Down:
-        return 'ButtonSVG down'
-      case EButtonSVGPurpose.Reorder:
-        return 'ButtonSVG reorder'
-      case EButtonSVGPurpose.ZoomIn:
-        return 'ButtonSVG zoom-in'
-      case EButtonSVGPurpose.ZoomOut:
-        return 'ButtonSVG zoom-out'
-      case EButtonSVGPurpose.Save:
-        return 'ButtonSVG save'
-      case EButtonSVGPurpose.Copy:
-        return 'ButtonSVG copy'
-      case EButtonSVGPurpose.Upload:
-        return 'ButtonSVG upload'
-      case EButtonSVGPurpose.Download:
-        return 'ButtonSVG download'
-      case EButtonSVGPurpose.Search:
-        return 'ButtonSVG search'
-      default:
-        return 'ButtonSVG hidden'
-    }
-  }
-
-  // inherited
-  render(): JSX.Element | null {
-    let purpose: EButtonSVGPurpose = this.props.purpose
-    let tooltipDescription: string | null = this.props.tooltipDescription
-    let key: string | undefined = this.props.componentKey
-    let uniqueClassName: string = this.props.uniqueClassName
-    let style: React.CSSProperties = this.props.style
-    let disabled: boolean = this.props.disabled
-    let className: string = `${ButtonSVG.getButtonClassName(purpose)}${
-      disabled ? ' Disabled ' : ' '
-    }${uniqueClassName}`
-
-    return (
-      <div
-        className={className}
-        style={style}
-        key={key ? key : className}
-        onClick={this.props.onClick}
-        onCopy={this.props.onCopy}
-      >
-        {tooltipDescription ? (
-          <Tooltip description={tooltipDescription} />
-        ) : null}
-      </div>
-    )
-  }
-}
+/**
+ * The type of icon being used for the button.
+ */
+export type TButtonSVGIcon =
+  | 'cancel'
+  | 'add'
+  | 'edit'
+  | 'remove'
+  | 'down'
+  | 'reorder'
+  | 'zoom-in'
+  | 'zoom-out'
+  | 'save'
+  | 'copy'
+  | 'upload'
+  | 'download'
+  | 'search'
+  | 'launch'

@@ -1,20 +1,21 @@
-import ClientMission from 'src/missions'
-import './index.scss'
 import React, { useCallback, useMemo, useRef, useState } from 'react'
-import { Vector1D, Vector2D } from '../../../../../../shared/toolbox/space'
-import MissionNode, { MAX_NODE_CONTENT_ZOOM } from './objects/MissionNode'
-import PanController from './ui/PanController'
-import { v4 as generateHash } from 'uuid'
-import Scene from './Scene'
-import Grid from './objects/Grid'
-import Hud from './ui/Hud'
+import ClientMission from 'src/missions'
 import ClientMissionNode from 'src/missions/nodes'
-import Line from './objects/Line'
-import { ButtonSVG, EButtonSVGPurpose } from '../../user-controls/ButtonSVG'
-import Overlay from './ui/overlay'
 import { compute } from 'src/toolbox'
 import { useEventListener } from 'src/toolbox/hooks'
+import { v4 as generateHash } from 'uuid'
+import { TWithKey } from '../../../../../../shared/toolbox/objects'
+import { Vector1D, Vector2D } from '../../../../../../shared/toolbox/space'
+import { TButtonSvg } from '../../user-controls/ButtonSvg'
+import Scene from './Scene'
+import './index.scss'
+import Grid from './objects/Grid'
+import Line from './objects/Line'
+import MissionNode, { MAX_NODE_CONTENT_ZOOM } from './objects/MissionNode'
 import MissionNodeCreator from './objects/MissionNodeCreator'
+import Hud from './ui/Hud'
+import PanController from './ui/PanController'
+import Overlay from './ui/overlay'
 
 /* -- constants -- */
 
@@ -340,15 +341,15 @@ export default function MissionMap({
   /**
    * The data for the buttons displayed on the HUD.
    */
-  const buttons = compute((): ButtonSVG[] => {
+  const buttons = compute((): TWithKey<TButtonSvg>[] => {
     let zoomInStages: number[] = [...CAMERA_ZOOM_STAGES].reverse()
     let zoomOutStages: number[] = [...CAMERA_ZOOM_STAGES]
 
     // Return buttons.
     return [
-      new ButtonSVG({
-        ...ButtonSVG.defaultProps,
-        purpose: EButtonSVGPurpose.ZoomIn,
+      {
+        icon: 'zoom-in',
+        key: 'zoom-in',
         onClick: () => {
           // Loop through the zoom in stages and
           // set the camera zoom to the first stage
@@ -362,10 +363,10 @@ export default function MissionMap({
         },
         tooltipDescription:
           'Zoom in. \n*Scrolling on the map will also zoom in and out.*',
-      }),
-      new ButtonSVG({
-        ...ButtonSVG.defaultProps,
-        purpose: EButtonSVGPurpose.ZoomOut,
+      },
+      {
+        icon: 'zoom-out',
+        key: 'zoom-out',
         onClick: () => {
           // Loop through the zoom out stages and
           // set the camera zoom to the first stage
@@ -379,7 +380,7 @@ export default function MissionMap({
         },
         tooltipDescription:
           'Zoom out. \n*Scrolling on the map will also zoom in and out.*',
-      }),
+      },
       // Add custom buttons.
       ...customButtons,
     ]
@@ -570,7 +571,7 @@ export type TMissionMap = {
    * the default buttons.
    * @default []
    */
-  customButtons?: ButtonSVG[]
+  customButtons?: TWithKey<TButtonSvg>[]
   /**
    * Content to display in the overlay.
    * @note If undefined, the overlay will not be displayed.

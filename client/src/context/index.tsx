@@ -341,7 +341,7 @@ const useGlobalContextDefinition = (context: TGlobalContext) => {
                   // solutions: [
                   //   {
                   //     text: 'Force Connect',
-                  //     handleClick: () => {
+                  //     onClick: () => {
                   //       this.confirm(
                   //         'Force connecting will disconnect the current connection to the server. Any unsaved changes may be lost. Do you wish to proceed?',
                   //         async (concludeAction) => {

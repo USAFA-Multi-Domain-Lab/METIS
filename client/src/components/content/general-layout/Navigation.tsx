@@ -46,7 +46,7 @@ export default function Navigation({
 export const HomeLink = (context: TGlobalContext): TWithKey<TButtonText> => {
   return {
     text: 'Home',
-    handleClick: () => context.actions.navigateTo('HomePage', {}),
+    onClick: () => context.actions.navigateTo('HomePage', {}),
     key: 'home',
   }
 }
@@ -59,7 +59,7 @@ export const HomeLink = (context: TGlobalContext): TWithKey<TButtonText> => {
 export const LogoutLink = (context: TGlobalContext): TWithKey<TButtonText> => {
   return {
     text: 'Logout',
-    handleClick: context.actions.logout,
+    onClick: context.actions.logout,
     key: 'logout',
   }
 }

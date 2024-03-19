@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { ButtonText } from 'src/components/content/user-controls/ButtonText'
 import { useGlobalContext } from 'src/context'
 import GameClient from 'src/games'
 import ClientMissionAction from 'src/missions/actions'
@@ -175,9 +176,7 @@ export default function ActionExecModal({
   // Render the JSX for the buttons.
   const buttonsJsx = executionReady ? (
     <div className='Buttons'>
-      <div className='Button' onClick={execute}>
-        EXECUTE ACTION
-      </div>
+      <ButtonText text='EXECUTE ACTION' onClick={execute} />
     </div>
   ) : null
 

@@ -42,7 +42,7 @@ export default function ErrorPage({}: IErrorPage): JSX.Element | null {
       <div className='Buttons'>
         <ButtonText
           text={'Refresh'}
-          handleClick={refresh}
+          onClick={refresh}
           key={'refresh-8327hkj239f'}
         />
         <Solutions />

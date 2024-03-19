@@ -10,7 +10,7 @@ import { compute } from 'src/toolbox'
 import { useEventListener, useMountHandler } from 'src/toolbox/hooks'
 import { DefaultLayout, TPage_P } from '.'
 import MissionAction from '../../../../shared/missions/actions'
-import { SingleTypeObject } from '../../../../shared/toolbox/objects'
+import { SingleTypeObject, TWithKey } from '../../../../shared/toolbox/objects'
 import ActionEntry from '../content/edit-mission/ActionEntry'
 import MissionEntry from '../content/edit-mission/MissionEntry'
 import NodeEntry from '../content/edit-mission/NodeEntry'
@@ -28,10 +28,7 @@ import {
   PanelSizeRelationship,
   ResizablePanel,
 } from '../content/general-layout/ResizablePanels'
-import {
-  ButtonSVG,
-  EButtonSVGPurpose,
-} from '../content/user-controls/ButtonSVG'
+import { TButtonSvg } from '../content/user-controls/ButtonSvg'
 import './MissionFormPage.scss'
 
 /**
@@ -300,9 +297,8 @@ export default function MissionFormPage(
         // Define potential buttons.
         const availableNodeButtons: SingleTypeObject<TNodeButton> = {
           deselect: {
-            ...ButtonSVG.defaultProps,
-            purpose: EButtonSVGPurpose.Cancel,
-            componentKey: 'node-button-deselect',
+            icon: 'cancel',
+            key: 'node-button-deselect',
             tooltipDescription: 'Deselect this node (Closes panel view also).',
             disabled: grayOutDeselectNodeButton,
             onClick: () => {
@@ -312,9 +308,8 @@ export default function MissionFormPage(
             },
           },
           add: {
-            ...ButtonSVG.defaultProps,
-            purpose: EButtonSVGPurpose.Add,
-            componentKey: 'node-button-add',
+            icon: 'add',
+            key: 'node-button-add',
             tooltipDescription: 'Create an adjacent node on the map.',
             disabled: grayOutAddNodeButton,
             onClick: () => {
@@ -322,17 +317,15 @@ export default function MissionFormPage(
             },
           },
           add_cancel: {
-            ...ButtonSVG.defaultProps,
-            purpose: EButtonSVGPurpose.Cancel,
-            componentKey: 'node-button-add-cancel',
+            icon: 'cancel',
+            key: 'node-button-add-cancel',
             tooltipDescription: 'Cancel node creation.',
             disabled: grayOutAddNodeButton,
             onClick: () => (mission.creationMode = false),
           },
           remove: {
-            ...ButtonSVG.defaultProps,
-            purpose: EButtonSVGPurpose.Remove,
-            componentKey: 'node-button-remove',
+            icon: 'remove',
+            key: 'node-button-remove',
             tooltipDescription: 'Delete this node.',
             disabled: grayOutDeleteNodeButton,
             onClick: (_, node) => {
@@ -653,24 +646,24 @@ export default function MissionFormPage(
   /* -- PRE-RENDER PROCESSING -- */
 
   // Create the custom form-related buttons for the map.
-  const mapCustomButtons = [
-    new ButtonSVG({
-      ...ButtonSVG.defaultProps,
-      purpose: EButtonSVGPurpose.Reorder,
+  const mapCustomButtons: TWithKey<TButtonSvg>[] = [
+    {
+      icon: 'reorder',
+      key: 'reorder',
       onClick: () => {
         mission.deselectNode()
         activateNodeStructuring(true)
       },
       tooltipDescription: 'Edit the structure and order of nodes.',
       disabled: grayOutEditButton,
-    }),
-    new ButtonSVG({
-      ...ButtonSVG.defaultProps,
-      purpose: EButtonSVGPurpose.Save,
+    },
+    {
+      icon: 'save',
+      key: 'save',
       onClick: save,
       tooltipDescription: 'Save changes.',
       disabled: grayOutSaveButton,
-    }),
+    },
   ]
 
   // If all fields are filled in, then make sure

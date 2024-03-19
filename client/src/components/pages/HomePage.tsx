@@ -17,15 +17,8 @@ import Tooltip from '../content/communication/Tooltip'
 import { Detail } from '../content/form/Form'
 import List, { ESortByMethod } from '../content/general-layout/List'
 import { LogoutLink } from '../content/general-layout/Navigation'
-import {
-  ButtonSVG,
-  EButtonSVGPurpose,
-} from '../content/user-controls/ButtonSVG'
+import ButtonSvg from '../content/user-controls/ButtonSvg'
 import { ButtonText } from '../content/user-controls/ButtonText'
-import {
-  EMiniButtonSVGPurpose,
-  MiniButtonSVG,
-} from '../content/user-controls/MiniButtonSVG'
 import MissionModificationPanel from '../content/user-controls/MissionModificationPanel'
 import UserModificationPanel from '../content/user-controls/UserModificationPanel'
 import './HomePage.scss'
@@ -291,7 +284,7 @@ export default function HomePage(props: {}): JSX.Element | null {
               buttons: [
                 {
                   text: 'View errors',
-                  handleClick: () => {
+                  onClick: () => {
                     let prompt: string = ''
 
                     invalidContentsErrorMessages.forEach(
@@ -586,9 +579,10 @@ export default function HomePage(props: {}): JSX.Element | null {
                   <Tooltip description='Join game.' />
                 </div>
                 <div className={buttonsClasses.join(' ')}>
-                  <MiniButtonSVG
-                    purpose={EMiniButtonSVGPurpose.Remove}
-                    handleClick={() => onGameDelete(game)}
+                  <ButtonSvg
+                    icon={'remove'}
+                    size={'small'}
+                    onClick={() => onGameDelete(game)}
                     tooltipDescription={'Remove game.'}
                   />
                 </div>
@@ -621,7 +615,7 @@ export default function HomePage(props: {}): JSX.Element | null {
             />
             <ButtonText
               text='Join'
-              handleClick={() => onGameSelection(manualJoinGameId)}
+              onClick={() => onGameSelection(manualJoinGameId)}
             />
           </div>
         </div>
@@ -653,10 +647,9 @@ export default function HomePage(props: {}): JSX.Element | null {
                 </div>
                 <MissionModificationPanel
                   mission={mission}
-                  session={session}
-                  handleSuccessfulLaunch={loadGames}
-                  handleSuccessfulCopy={loadMissions}
-                  handleSuccessfulDeletion={loadMissions}
+                  onSuccessfulLaunch={loadGames}
+                  onSuccessfulCopy={loadMissions}
+                  onSuccessfulDeletion={loadMissions}
                 />
               </div>
             </>
@@ -673,14 +666,14 @@ export default function HomePage(props: {}): JSX.Element | null {
         listSpecificItemClassName='AltDesign1'
       />
       <div className='ListActions'>
-        <ButtonSVG
-          purpose={EButtonSVGPurpose.Add}
+        <ButtonSvg
+          icon={'add'}
           onClick={createMission}
           tooltipDescription={'Create new mission'}
-          uniqueClassName={'NewMissionButton'}
+          uniqueClassList={['NewMissionButton']}
         />
-        <ButtonSVG
-          purpose={EButtonSVGPurpose.Upload}
+        <ButtonSvg
+          icon={'upload'}
           onClick={handleMissionImportRequest}
           tooltipDescription={'Import a .metis file from your local system.'}
         />
@@ -716,7 +709,7 @@ export default function HomePage(props: {}): JSX.Element | null {
                 </div>
                 <UserModificationPanel
                   user={user}
-                  handleSuccessfulDeletion={remount}
+                  onSuccessfulDeletion={remount}
                 />
               </div>
             </>
@@ -731,8 +724,8 @@ export default function HomePage(props: {}): JSX.Element | null {
         listSpecificItemClassName='AltDesign1'
       />
       <div className='ListActions'>
-        <ButtonSVG
-          purpose={EButtonSVGPurpose.Add}
+        <ButtonSvg
+          icon={'add'}
           onClick={createUser}
           tooltipDescription={'Create new user'}
         />
