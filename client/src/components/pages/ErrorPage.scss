@@ -4,7 +4,7 @@
   position: absolute;
   top: 0;
   left: 0;
-  z-index: 10;
+  z-index: $z-index-error-page;
   transition: opacity 600ms;
   box-sizing: border-box;
   width: 100vw;

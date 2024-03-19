@@ -446,6 +446,18 @@ export default function HomePage(props: {}): JSX.Element | null {
         // Join game from new game ID, awaiting
         // the promised game client.
         let game = await server.$joinGame(gameID)
+
+        // If the game is not found, notify
+        // the user and return.
+        if (game === null) {
+          handleError({
+            message: 'Game could not be found.',
+            notifyMethod: 'bubble',
+          })
+          finishLoading()
+          return
+        }
+
         // Update session data to include new
         // game ID.
         session.gameID = game.gameID
@@ -616,6 +628,7 @@ export default function HomePage(props: {}): JSX.Element | null {
             <ButtonText
               text='Join'
               onClick={() => onGameSelection(manualJoinGameId)}
+              disabled={manualJoinGameId.length === 0}
             />
           </div>
         </div>

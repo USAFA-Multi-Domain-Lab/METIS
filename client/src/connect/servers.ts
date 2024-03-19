@@ -385,10 +385,10 @@ export default class ServerConnection {
 
   /**
    * Joins a game with the given game ID.
-   * @resolves The new game client for the game.
+   * @resolves The new game client for the game, `null` if not found.
    * @rejects If there is an error joining the game.
    */
-  public $joinGame(gameID: string): Promise<GameClient> {
+  public $joinGame(gameID: string): Promise<GameClient | null> {
     return new Promise((resolve, reject) => {
       this.request('request-join-game', { gameID }, 'Joining game.', {
         onResponse: (event) => {
@@ -397,7 +397,14 @@ export default class ServerConnection {
               resolve(new GameClient(event.data.game, this))
               break
             case 'error':
-              reject(new Error(event.message))
+              // Resolve null if not found.
+              if (event.code === ServerEmittedError.CODE_GAME_NOT_FOUND) {
+                resolve(null)
+              }
+              // Otherwise, reject with error.
+              else {
+                reject(new Error(event.message))
+              }
               break
             default:
               let error: Error = new Error(

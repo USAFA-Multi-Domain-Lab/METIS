@@ -13,7 +13,7 @@
   vertical-align: bottom;
   box-shadow: $box-shadow-alt3;
   border-bottom: 2px solid $color-main;
-  z-index: 100;
+  z-index: $z-index-navigation;
 
   &.alt-3 {
     box-shadow: $box-shadow-alt3;

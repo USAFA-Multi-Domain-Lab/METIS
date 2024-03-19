@@ -114,7 +114,7 @@
     width: $width;
     height: 100%;
     padding-top: 75px;
-    z-index: 200;
+    z-index: $z-index-notifications;
 
     .Glue {
       position: -webkit-sticky;
