@@ -14,6 +14,7 @@ import ActionEntry from '../content/edit-mission/ActionEntry'
 import MissionEntry from '../content/edit-mission/MissionEntry'
 import NodeEntry from '../content/edit-mission/NodeEntry'
 import NodeStructuring from '../content/edit-mission/NodeStructuring'
+import CreateEffectModal from '../content/edit-mission/mission-map/ui/overlay/modals/CreateEffectModal'
 import EffectEntry from '../content/edit-mission/target-effects/EffectEntry'
 import MissionMap from '../content/game/mission-map'
 import { TNodeButton } from '../content/game/mission-map/objects/MissionNode'
@@ -92,6 +93,12 @@ export default function MissionFormPage(
 
     return panel2DefaultSize
   })
+  /**
+   * Boolean to determine if the effect is new.
+   */
+  const isNewEffect: boolean | null = compute(
+    () => selectedEffect && !selectedAction?.effects.includes(selectedEffect),
+  )
 
   /* -- EFFECTS -- */
 
@@ -159,7 +166,7 @@ export default function MissionFormPage(
     // then set the mission path to the mission name, the
     // selected node name, the selected action name, and
     // the selected effect name.
-    else if (selectedNode && selectedAction && selectedEffect) {
+    else if (selectedNode && selectedAction && selectedEffect && !isNewEffect) {
       setMissionPath([
         mission.name,
         selectedNode.name,
@@ -167,7 +174,7 @@ export default function MissionFormPage(
         selectedEffect.name,
       ])
     }
-  }, [selectedNode, selectedAction, selectedEffect])
+  }, [selectedNode, selectedAction, selectedEffect, isNewEffect])
 
   // When the selected action changes, ensure that
   // the selected effect is null.
@@ -482,6 +489,101 @@ export default function MissionFormPage(
     }
   }
 
+  /**
+   * Renders the modal based on the current state.
+   */
+  const renderModal = (): JSX.Element | null => {
+    // If the selected effect is new and there are target environments
+    // to choose from, then display the create effect modal.
+    if (isNewEffect && targetEnvironments.length > 0) {
+      return (
+        <CreateEffectModal
+          action={selectedAction}
+          effect={selectedEffect}
+          targetEnvironments={targetEnvironments}
+          handleClose={() => setSelectedEffect(null)}
+          handleChange={handleChange}
+        />
+      )
+    } else {
+      return null
+    }
+  }
+
+  /**
+   * Renders the panel 2 content based on the current state.
+   */
+  const renderPanel2 = (): JSX.Element | null => {
+    if (missionDetailsIsActive) {
+      return (
+        <MissionEntry
+          active={missionDetailsIsActive}
+          mission={mission}
+          missionPath={missionPath}
+          setMissionPath={setMissionPath}
+          handleChange={handleChange}
+        />
+      )
+    } else if (selectedNode && !selectedAction && !selectedEffect) {
+      return (
+        <NodeEntry
+          node={selectedNode}
+          missionPath={missionPath}
+          setMissionPath={setMissionPath}
+          setSelectedAction={setSelectedAction}
+          handleChange={handleChange}
+          handleAddRequest={handleNodeAddRequest}
+          handleDeleteRequest={() => handleNodeDeleteRequest(selectedNode)}
+        />
+      )
+    } else if (
+      selectedNode &&
+      selectedAction &&
+      (!selectedEffect || isNewEffect)
+    ) {
+      return (
+        <ActionEntry
+          action={selectedAction}
+          targetEnvironments={targetEnvironments}
+          missionPath={missionPath}
+          setMissionPath={setMissionPath}
+          setSelectedAction={setSelectedAction}
+          setSelectedEffect={setSelectedEffect}
+          handleChange={handleChange}
+        />
+      )
+    } else if (
+      selectedNode &&
+      selectedAction &&
+      selectedEffect &&
+      !isNewEffect
+    ) {
+      return (
+        <EffectEntry
+          action={selectedAction}
+          effect={selectedEffect}
+          missionPath={missionPath}
+          targetEnvironments={targetEnvironments}
+          setMissionPath={setMissionPath}
+          setSelectedAction={setSelectedAction}
+          setSelectedEffect={setSelectedEffect}
+          handleChange={handleChange}
+        />
+      )
+    } else if (nodeStructuringIsActive) {
+      return (
+        <NodeStructuring
+          active={nodeStructuringIsActive}
+          mission={mission}
+          handleChange={handleChange}
+          handleCloseRequest={() => activateNodeStructuring(false)}
+        />
+      )
+    } else {
+      return null
+    }
+  }
+
   /* -- PRE-RENDER PROCESSING -- */
 
   // Create the custom form-related buttons for the map.
@@ -550,74 +652,14 @@ export default function MissionFormPage(
                 mission={mission}
                 customButtons={mapCustomButtons}
                 onNodeSelect={onNodeSelect}
+                overlayContent={renderModal()}
               />
             ),
           }}
           panel2={{
             ...ResizablePanel.defaultProps,
             minSize: 330,
-            render: () => {
-              if (missionDetailsIsActive) {
-                return (
-                  <MissionEntry
-                    active={missionDetailsIsActive}
-                    mission={mission}
-                    missionPath={missionPath}
-                    setMissionPath={setMissionPath}
-                    handleChange={handleChange}
-                  />
-                )
-              } else if (selectedNode && !selectedAction && !selectedEffect) {
-                return (
-                  <NodeEntry
-                    node={selectedNode}
-                    missionPath={missionPath}
-                    setMissionPath={setMissionPath}
-                    setSelectedAction={setSelectedAction}
-                    handleChange={handleChange}
-                    handleAddRequest={handleNodeAddRequest}
-                    handleDeleteRequest={() =>
-                      handleNodeDeleteRequest(selectedNode)
-                    }
-                  />
-                )
-              } else if (selectedNode && selectedAction && !selectedEffect) {
-                return (
-                  <ActionEntry
-                    action={selectedAction}
-                    missionPath={missionPath}
-                    setMissionPath={setMissionPath}
-                    setSelectedAction={setSelectedAction}
-                    setSelectedEffect={setSelectedEffect}
-                    handleChange={handleChange}
-                  />
-                )
-              } else if (selectedNode && selectedAction && selectedEffect) {
-                return (
-                  <EffectEntry
-                    action={selectedAction}
-                    effect={selectedEffect}
-                    missionPath={missionPath}
-                    targetEnvironments={targetEnvironments}
-                    setMissionPath={setMissionPath}
-                    setSelectedAction={setSelectedAction}
-                    setSelectedEffect={setSelectedEffect}
-                    handleChange={handleChange}
-                  />
-                )
-              } else if (nodeStructuringIsActive) {
-                return (
-                  <NodeStructuring
-                    active={nodeStructuringIsActive}
-                    mission={mission}
-                    handleChange={handleChange}
-                    handleCloseRequest={() => activateNodeStructuring(false)}
-                  />
-                )
-              } else {
-                return null
-              }
-            },
+            render: () => renderPanel2(),
           }}
           sizingMode={EPanelSizingMode.Panel1_Auto__Panel2_Defined}
           initialDefinedSize={panel2DefaultSize}

@@ -172,7 +172,12 @@ export default abstract class Effect<
 /**
  * Options for creating a new Effect Object.
  */
-export type TEffectOptions = {}
+export type TEffectOptions = {
+  /**
+   * Whether or not to use the default target.
+   */
+  useDefaultTarget?: boolean
+}
 
 /**
  * Options for the Effect.toJson() method.

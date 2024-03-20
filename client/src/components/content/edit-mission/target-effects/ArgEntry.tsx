@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import { useGlobalContext } from 'src/context'
-import ClientMissionAction from 'src/missions/actions'
 import { ClientEffect } from 'src/missions/effects'
 import { compute } from 'src/toolbox'
 import { useMountHandler } from 'src/toolbox/hooks'
@@ -19,13 +18,12 @@ import './ArgEntry.scss'
  * Renders the argument field within a group of arguments.
  */
 export default function ArgEntry({
-  action,
   effect,
-  args,
   arg,
   effectArgs,
   reqPropertiesNotFilledOut,
   argDependencies,
+  handleChange,
 }: TArgGroupings_P): JSX.Element | null {
   /* -- GLOBAL CONTEXT -- */
   const { forceUpdate } = useGlobalContext().actions
@@ -33,11 +31,17 @@ export default function ArgEntry({
   /* -- STATE -- */
   const [defaultDropDownValue] = useState<undefined>(undefined)
   const [defaultNumberValue] = useState<null>(null)
-  const [defaultStringValue] = useState<string>('')
-  const [defaultMediumStringValue] = useState<string>('<p><br></p>')
-  const [defaultBooleanValue] = useState<boolean>(false)
+  const [defaultStringValue] = useState<''>('')
+  const [defaultMediumStringValue] = useState<'<p><br></p>'>('<p><br></p>')
+  const [defaultBooleanValue] = useState<false>(false)
 
   /* -- COMPUTED -- */
+  /**
+   * The selected target's arguments.
+   */
+  const args: TTargetArg[] = compute(() => {
+    return effect.target.args
+  })
   /**
    * Dynamic class name for the argument field.
    */
@@ -240,58 +244,61 @@ export default function ArgEntry({
   /* -- EFFECTS -- */
 
   // componentDidMount
-  useMountHandler((done) => {
-    // If the effect already exists within the action
-    // then the effect already has defined arguments.
-    if (action.effects.includes(effect)) {
-      // Grab the entries of the effect's arguments.
-      let argEntries: [string, any][] = Object.entries(effect.args)
-      // Filter out the arguments that are not filled out.
-      // Only the arguments that are filled out will be executed.
+  const [mountHandled] = useMountHandler((done) => {
+    // Grab the entries of the effect's arguments.
+    let argEntries: [string, any][] = Object.entries(effect.args)
+
+    // If the effect's arguments are not empty then...
+    if (argEntries.length > 0) {
+      // ...add the argument to the state so that the
+      // argument's value is displayed correctly to the user.
       argEntries.forEach(([key, value]) => {
         effectArgs[key] = value
       })
     }
-    // Otherwise, the effect doesn't exist within the action
-    // so the effect's arguments are undefined.
+    // Otherwise, the effect has no arguments so update the state
+    // with the default values of the arguments based on their type.
     else {
       // If the argument doesn't exist in the state either
       // and it has a default value then set the argument
       // to the default value and add it to the state.
-      if (!(arg.id in effectArgs) && arg.default) {
+      if (effectArgs[arg.id] === undefined && arg.default !== undefined) {
         effectArgs[arg.id] = arg.default
       }
       // If the argument doesn't exist in the state and it
       // is a dropdown then set the argument to the default
       // dropdown value and add it to the state.
-      else if (!(arg.id in effectArgs) && arg.type === 'dropdown') {
+      if (effectArgs[arg.id] === undefined && arg.type === 'dropdown') {
         effectArgs[arg.id] = defaultDropDownValue
       }
       // If the argument doesn't exist in the state and it
       // is a number then set the argument to the default
       // number value and add it to the state.
-      else if (!(arg.id in effectArgs) && arg.type === 'number') {
+      if (effectArgs[arg.id] === undefined && arg.type === 'number') {
         effectArgs[arg.id] = defaultNumberValue
       }
       // If the argument doesn't exist in the state and it
       // is a string then set the argument to the default
       // string value and add it to the state.
-      else if (!(arg.id in effectArgs) && arg.type === 'string') {
+      if (effectArgs[arg.id] === undefined && arg.type === 'string') {
         effectArgs[arg.id] = defaultStringValue
       }
       // If the argument doesn't exist in the state and it
       // is a medium string then set the argument to the default
       // medium string value and add it to the state.
-      else if (!(arg.id in effectArgs) && arg.type === 'medium-string') {
+      if (effectArgs[arg.id] === undefined && arg.type === 'medium-string') {
         effectArgs[arg.id] = defaultMediumStringValue
       }
       // If the argument doesn't exist in the state and it
       // is a boolean then set the argument to the default
       // boolean value and add it to the state.
-      else if (!(arg.id in effectArgs) && arg.type === 'boolean') {
+      if (effectArgs[arg.id] === undefined && arg.type === 'boolean') {
         effectArgs[arg.id] = defaultBooleanValue
       }
     }
+
+    // Update the argument based on the value.
+    updateArg()
 
     done()
   })
@@ -317,50 +324,56 @@ export default function ArgEntry({
   // If the arguments stored in the state change then update
   // the effect's arguments to reflect the changes.
   useEffect(() => {
-    // Grab the entries of the arguments stored in the state.
-    let argEntries: [string, any][] = Object.entries(effectArgs)
-    // Filter out the arguments that are not filled out.
-    // Only the arguments that are filled out will be executed.
-    argEntries.forEach(([key, value]) => {
-      // If the value is not undefined, null, or the default value
-      // then add the argument to the effect's arguments.
-      if (
-        value !== undefined &&
-        value !== null &&
-        value !== defaultStringValue &&
-        value !== defaultMediumStringValue
-      ) {
-        effect.args[key] = value
-      }
-
-      // See if the argument stored in the state is an argument
-      // within this target.
-      let arg: TTargetArg | undefined = args.find(
-        (arg: TTargetArg) => arg.id === key,
-      )
-      // If the argument is not found within the target, then
-      // remove the argument from the effect and remove the
-      // argument from the list of required properties not
-      // filled out (if it exists).
-      if (arg === undefined) {
-        delete effect.args[key]
-
-        if (reqPropertiesNotFilledOut.includes(key)) {
-          reqPropertiesNotFilledOut.splice(
-            reqPropertiesNotFilledOut.indexOf(key),
-            1,
-          )
+    if (mountHandled) {
+      // Grab the entries of the arguments stored in the state.
+      let argEntries: [string, any][] = Object.entries(effectArgs)
+      // Filter out the arguments that are not filled out.
+      // Only the arguments that are filled out will be executed.
+      argEntries.forEach(([key, value]) => {
+        // If the value is not undefined, null, or the default value
+        // then add the argument to the effect's arguments.
+        if (
+          value !== undefined &&
+          value !== null &&
+          value !== defaultStringValue &&
+          value !== defaultMediumStringValue
+        ) {
+          effect.args[key] = value
         }
+
+        // See if the argument stored in the state is an argument
+        // within this target.
+        let arg: TTargetArg | undefined = args.find(
+          (arg: TTargetArg) => arg.id === key,
+        )
+        // If the argument is not found within the target, then
+        // remove the argument from the effect and remove the
+        // argument from the list of required properties not
+        // filled out (if it exists).
+        if (arg === undefined) {
+          delete effect.args[key]
+
+          if (reqPropertiesNotFilledOut.includes(key)) {
+            reqPropertiesNotFilledOut.splice(
+              reqPropertiesNotFilledOut.indexOf(key),
+              1,
+            )
+          }
+        }
+      })
+
+      // When the component unmounts, remove unnecessary
+      // arguments from the effect's arguments.
+      return () => {
+        // If an argument is in a default state then remove it's
+        // dependencies from the effect's arguments.
+        removeArg(arg, arg.optionalParams?.dependencies)
+
+        // Update the argument based on the value.
+        updateArg()
       }
-    })
-
-    // If an argument is in a default state then remove it's
-    // dependencies from the effect's arguments.
-    removeArg(arg, arg.optionalParams?.dependencies || [])
-
-    // Update the argument based on the value.
-    updateArg()
-  }, [effectArgs[arg.id]])
+    }
+  }, [dropDownValue, numberValue, stringValue, mediumStringValue, booleanValue])
 
   /* -- FUNCTIONS -- */
 
@@ -629,7 +642,7 @@ export default function ArgEntry({
    * @param arg The argument to remove.
    * @param dependencies The list of dependencies.
    */
-  const removeArg = (arg: TTargetArg, dependencies: string[]) => {
+  const removeArg = (arg: TTargetArg, dependencies: string[] = []) => {
     // Iterate through the dependencies.
     dependencies.forEach((dependency: string) => {
       // Grab the dependency argument.
@@ -742,11 +755,10 @@ export default function ArgEntry({
             effectArgs[arg.id] = option.id
             // Update the argument based on the value.
             updateArg()
-            // If the option is the default option
-            // then the argument is not filled out.
-            if (option === arg.default || option === defaultDropDownValue) {
-              // Reset the argument to the default option.
-              effectArgs[arg.id] = arg.default?.id || defaultDropDownValue
+            // If the option is not the default value then
+            // allow the user to save the changes.
+            if (option !== arg.default || option !== defaultDropDownValue) {
+              handleChange()
             }
           }}
           displayOptionalText={displayOptionalText}
@@ -772,11 +784,10 @@ export default function ArgEntry({
             effectArgs[arg.id] = value
             // Update the argument based on the value.
             updateArg()
-            // If the value is null or undefined then the
-            // argument is not filled out.
-            if (value === arg.default || value === null) {
-              // Reset the argument to the default value.
-              effectArgs[arg.id] = arg.default || defaultNumberValue
+            // If the value is not the default value then
+            // allow the user to save the changes.
+            if (value !== arg.default || value !== defaultNumberValue) {
+              handleChange()
             }
           }}
           minimum={arg.min}
@@ -807,11 +818,10 @@ export default function ArgEntry({
             effectArgs[arg.id] = value
             // Update the argument based on the value.
             updateArg()
-            // If the value is empty then the argument
-            // is not filled out.
-            if (value === arg.default || value === defaultStringValue) {
-              // Reset the argument to the default value.
-              effectArgs[arg.id] = arg.default || defaultStringValue
+            // If the value is not the default value then
+            // allow the user to save the changes.
+            if (value !== arg.default || value !== defaultStringValue) {
+              handleChange()
             }
           }}
           displayOptionalText={displayOptionalText}
@@ -837,11 +847,10 @@ export default function ArgEntry({
             effectArgs[arg.id] = value
             // Update the argument based on the value.
             updateArg()
-            // If the value is empty then the argument
-            // is not filled out.
-            if (value === arg.default || value === defaultMediumStringValue) {
-              // Reset the argument to the default value.
-              effectArgs[arg.id] = arg.default || defaultMediumStringValue
+            // If the value is not the default value then
+            // allow the user to save the changes.
+            if (value !== arg.default || value !== defaultMediumStringValue) {
+              handleChange()
             }
           }}
           elementBoundary='.BorderBox'
@@ -867,6 +876,8 @@ export default function ArgEntry({
             effectArgs[arg.id] = value
             // Update the argument based on the value.
             updateArg()
+            // Allow the user to save the changes.
+            handleChange()
           }}
           key={`arg-${arg.id}_type-${arg.type}-field`}
         />
@@ -898,17 +909,9 @@ export type TArgDropdownOption = {
  */
 export type TArgGroupings_P = {
   /**
-   * The action to execute.
-   */
-  action: ClientMissionAction
-  /**
    * The effect to which the arguments belong.
    */
   effect: ClientEffect
-  /**
-   * The list of arguments to render.
-   */
-  args: TTargetArg[]
   /**
    * The argument to render.
    */
@@ -925,4 +928,8 @@ export type TArgGroupings_P = {
    * The list of dependencies for the argument.
    */
   argDependencies: string[]
+  /**
+   * Handles when a change is made that would require saving.
+   */
+  handleChange: () => void
 }

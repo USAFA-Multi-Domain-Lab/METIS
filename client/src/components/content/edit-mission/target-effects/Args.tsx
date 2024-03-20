@@ -1,7 +1,5 @@
 import { useEffect, useState } from 'react'
-import ClientMissionAction from 'src/missions/actions'
 import { ClientEffect } from 'src/missions/effects'
-import ClientTarget from 'src/target-environments/targets'
 import { compute } from 'src/toolbox'
 import { TTargetArg } from '../../../../../../shared/target-environments/targets'
 import {
@@ -15,12 +13,11 @@ import './Args.scss'
  * Groups arguments together and renders them.
  */
 export default function Args({
-  action,
   effect,
-  target,
+  handleChange,
 }: TArgs_P): JSX.Element | null {
   /* -- STATE -- */
-  const [effectArgs] = useState<AnyObject>({})
+  const [effectArgs, setEffectArgs] = useState<AnyObject>({})
   const [reqPropertiesNotFilledOut] = useState<string[]>([])
   const [argDependencies, setArgDependencies] = useState<string[]>([])
 
@@ -29,7 +26,7 @@ export default function Args({
    * The selected target's arguments.
    */
   const args: TTargetArg[] = compute(() => {
-    return target?.args || []
+    return effect.target.args
   })
   /**
    * The object to store the arguments in groupings.
@@ -40,7 +37,7 @@ export default function Args({
 
     // If a target is selected and it has arguments
     // then group the arguments.
-    if (target && args.length > 0) {
+    if (args.length > 0) {
       // Iterate through the arguments.
       args.forEach((arg: TTargetArg) => {
         // If the argument has a grouping ID then
@@ -77,16 +74,16 @@ export default function Args({
   })
 
   /* -- EFFECTS -- */
-  // When the effect or target changes, update the
+  // When the effect changes, update the
   // argument dependencies.
   useEffect(() => {
     setArgDependencies([])
-  }, [effect, target])
+  }, [effect])
 
   /* -- RENDER -- */
-  // If the grouping entries are not empty and a target
-  // is selected then render the arguments.
-  if (groupingEntries.length > 0 && target) {
+  // If the grouping entries are not empty
+  // then render the arguments.
+  if (groupingEntries.length > 0) {
     return (
       <div className='Args'>
         <div className='ArgsTitle'>Arguments:</div>
@@ -135,14 +132,13 @@ export default function Args({
               {grouping.map((arg: TTargetArg) => {
                 return (
                   <ArgEntry
-                    action={action}
                     effect={effect}
-                    args={args}
                     arg={arg}
                     effectArgs={effectArgs}
                     reqPropertiesNotFilledOut={reqPropertiesNotFilledOut}
                     argDependencies={argDependencies}
-                    key={arg.id}
+                    handleChange={handleChange}
+                    key={`arg-${arg.id}`}
                   />
                 )
               })}
@@ -163,15 +159,11 @@ export default function Args({
  */
 export type TArgs_P = {
   /**
-   * The action to execute.
-   */
-  action: ClientMissionAction
-  /**
    * The effect to apply to the target.
    */
   effect: ClientEffect
   /**
-   * The selected target.
+   * Handles when a change is made that would require saving.
    */
-  target: ClientTarget | null
+  handleChange: () => void
 }

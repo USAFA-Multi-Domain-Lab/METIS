@@ -131,6 +131,7 @@ export default function EffectEntry({
             action={action}
             effect={effect}
             targetEnvironments={targetEnvironments}
+            handleChange={handleChange}
           />
           {/* -- BUTTON(S) -- */}
           <div className='ButtonContainer'>

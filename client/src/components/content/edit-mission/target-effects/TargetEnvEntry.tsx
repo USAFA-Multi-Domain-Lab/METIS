@@ -1,9 +1,10 @@
-import { useState } from 'react'
 import { useGlobalContext } from 'src/context'
 import ClientMissionAction from 'src/missions/actions'
 import { ClientEffect } from 'src/missions/effects'
 import { ClientTargetEnvironment } from 'src/target-environments'
 import ClientTarget from 'src/target-environments/targets'
+import { compute } from 'src/toolbox'
+import Tooltip from '../../communication/Tooltip'
 import { DetailDropDown } from '../../form/Form'
 import TargetEntry from './TargetEntry'
 import './TargetEnvEntry.scss'
@@ -15,57 +16,66 @@ export default function TargetEnvEntry({
   action,
   effect,
   targetEnvironments,
+  handleChange,
 }: TTargetEnvEntry_P): JSX.Element | null {
   /* -- GLOBAL CONTEXT -- */
   const { forceUpdate } = useGlobalContext().actions
 
-  /* -- STATE -- */
-  const [selectedTargetEnv, setSelectedTargetEnv] =
-    useState<ClientTargetEnvironment>(
-      effect.targetEnvironment.id ===
-        ClientTargetEnvironment.DEFAULT_PROPERTIES.id
-        ? new ClientTargetEnvironment()
-        : effect.targetEnvironment,
-    )
-  const [selectedTarget, setSelectedTarget] = useState<ClientTarget>(
-    effect.target.id === ClientTarget.DEFAULT_PROPERTIES.id
-      ? new ClientTarget(selectedTargetEnv)
-      : effect.target,
-  )
+  /* -- COMPUTED -- */
+  /**
+   * Boolean to determine if the effect is new.
+   */
+  const isNewEffect: boolean = compute(() => !action.effects.includes(effect))
 
   /* -- RENDER -- */
 
-  return (
-    <div className='TargetEnvEntry'>
-      <DetailDropDown<ClientTargetEnvironment>
-        label='Target Environment'
-        options={targetEnvironments}
-        currentValue={selectedTargetEnv}
-        isExpanded={false}
-        renderDisplayName={(targetEnvironment: ClientTargetEnvironment) => {
-          return targetEnvironment.name
-        }}
-        deliverValue={(targetEnvironment: ClientTargetEnvironment) => {
-          // Update the target environment stored in the state.
-          setSelectedTargetEnv(targetEnvironment)
-          // Reset the target stored in the state to the default value.
-          setSelectedTarget(new ClientTarget(targetEnvironment))
-          // Reset the target to the default value.
-          effect.target = new ClientTarget(targetEnvironment)
-          // Display the changes.
-          forceUpdate()
-        }}
-      />
-      <TargetEntry
-        action={action}
-        effect={effect}
-        selectedTargetEnv={selectedTargetEnv}
-        selectedTarget={selectedTarget}
-        targets={selectedTargetEnv.targets}
-        setSelectedTarget={setSelectedTarget}
-      />
-    </div>
-  )
+  if (!isNewEffect) {
+    return (
+      <div className='TargetEnvEntry Selected'>
+        <div className='TargetEnvInfo'>
+          <div className='Label'>Target Environment:</div>
+          <div className='Value'>
+            <span className='Text Disabled'>
+              {effect.targetEnvironment.name}
+            </span>
+            <span className='Lock'>
+              <Tooltip description='This is locked and cannot be changed.' />
+            </span>
+          </div>
+        </div>
+        <TargetEntry
+          action={action}
+          effect={effect}
+          handleChange={handleChange}
+        />
+      </div>
+    )
+  } else {
+    return (
+      <div className='TargetEnvEntry Unselected'>
+        <DetailDropDown<ClientTargetEnvironment>
+          label='Target Environment'
+          options={targetEnvironments}
+          currentValue={effect.targetEnvironment}
+          isExpanded={false}
+          renderDisplayName={(targetEnv: ClientTargetEnvironment) =>
+            targetEnv.name
+          }
+          deliverValue={(targetEnv: ClientTargetEnvironment) => {
+            // Reset the target to the default value.
+            effect.target = new ClientTarget(targetEnv)
+            // Display the changes.
+            forceUpdate()
+          }}
+        />
+        <TargetEntry
+          action={action}
+          effect={effect}
+          handleChange={handleChange}
+        />
+      </div>
+    )
+  }
 }
 
 /* ---------------------------- TYPES FOR TARGET ENVIRONMENTS ---------------------------- */
@@ -86,4 +96,8 @@ export type TTargetEnvEntry_P = {
    * List of target environments to apply effects to.
    */
   targetEnvironments: ClientTargetEnvironment[]
+  /**
+   * Handles when a change is made that would require saving.
+   */
+  handleChange: () => void
 }

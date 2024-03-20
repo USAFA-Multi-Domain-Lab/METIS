@@ -1,8 +1,9 @@
 import { useGlobalContext } from 'src/context'
 import ClientMissionAction from 'src/missions/actions'
 import { ClientEffect } from 'src/missions/effects'
-import { ClientTargetEnvironment } from 'src/target-environments'
 import ClientTarget from 'src/target-environments/targets'
+import { compute } from 'src/toolbox'
+import Tooltip from '../../communication/Tooltip'
 import { DetailDropDown } from '../../form/Form'
 import Args from './Args'
 import './TargetEntry.scss'
@@ -13,36 +14,57 @@ import './TargetEntry.scss'
 export default function TargetEntry({
   action,
   effect,
-  selectedTargetEnv,
-  selectedTarget,
-  targets,
-  setSelectedTarget,
-}: TTargetEntry_P) {
+  handleChange,
+}: TTargetEntry_P): JSX.Element | null {
   /* -- GLOBAL CONTEXT -- */
   const { forceUpdate } = useGlobalContext().actions
 
+  /* -- COMPUTED -- */
+  /**
+   * The list of targets within the target environment.
+   */
+  const targets: ClientTarget[] = compute(
+    () => effect.targetEnvironment.targets,
+  )
+  /**
+   * Boolean to determine if the effect is new.
+   */
+  const isNewEffect: boolean = compute(() => !action.effects.includes(effect))
+
   /* -- RENDER -- */
-  if (targets.length > 0 && selectedTargetEnv) {
+  if (!isNewEffect) {
     return (
-      <div className='TargetEntry'>
+      <div className='TargetEntry Selected'>
+        <div className='TargetInfo'>
+          <div className='Label'>Target:</div>
+          <div className='Value'>
+            <span className='Text Disabled'>{effect.target.name}</span>
+            <span className='Lock'>
+              <Tooltip description='This is locked and cannot be changed.' />
+            </span>
+          </div>
+        </div>
+        <Args effect={effect} handleChange={handleChange} />
+      </div>
+    )
+  } else if (isNewEffect && targets.length > 0) {
+    return (
+      <div className='TargetEntry Unselected'>
         <DetailDropDown<ClientTarget>
           label='Target'
           options={targets}
-          currentValue={selectedTarget}
+          currentValue={effect.target}
           isExpanded={false}
-          renderDisplayName={(target: ClientTarget) => {
-            return target.name
-          }}
+          renderDisplayName={(target: ClientTarget) => target.name}
           deliverValue={(target: ClientTarget) => {
             effect.target = target
-            setSelectedTarget(target)
             forceUpdate()
           }}
         />
-        <Args action={action} effect={effect} target={selectedTarget} />
       </div>
     )
-  } else {
+  }
+  {
     return null
   }
 }
@@ -62,19 +84,7 @@ export type TTargetEntry_P = {
    */
   effect: ClientEffect
   /**
-   * The selected target environment.
+   * Handles when a change is made that would require saving.
    */
-  selectedTargetEnv: ClientTargetEnvironment
-  /**
-   * The selected target.
-   */
-  selectedTarget: ClientTarget
-  /**
-   * List of targets to apply effects to.
-   */
-  targets: ClientTarget[]
-  /**
-   * A function that will set the selected target.
-   */
-  setSelectedTarget: (target: ClientTarget) => void
+  handleChange: () => void
 }

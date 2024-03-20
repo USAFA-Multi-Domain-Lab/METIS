@@ -2,7 +2,6 @@ import ClientMissionAction from 'src/missions/actions'
 import { ClientEffect } from 'src/missions/effects'
 import ClientMissionNode from 'src/missions/nodes'
 import { ClientTargetEnvironment } from 'src/target-environments'
-import ClientTarget from 'src/target-environments/targets'
 import { compute } from 'src/toolbox'
 import { v4 as generateHash } from 'uuid'
 import Tooltip from '../communication/Tooltip'
@@ -21,6 +20,7 @@ import './ActionEntry.scss'
  */
 export default function ActionEntry({
   action,
+  targetEnvironments,
   missionPath,
   setMissionPath,
   setSelectedAction,
@@ -82,6 +82,21 @@ export default function ActionEntry({
     // Combine the class names into a single string.
     return classList.join(' ')
   })
+  /**
+   * The class name for the new effect button.
+   */
+  const newEffectButtonClassName: string = compute(() => {
+    // Create a default list of class names.
+    let classList: string[] = ['Text']
+
+    // If there are no target environments then disable the button.
+    if (targetEnvironments.length === 0) {
+      classList.push('Disabled')
+    }
+
+    // Combine the class names into a single string.
+    return classList.join(' ')
+  })
 
   /* -- FUNCTIONS -- */
   /**
@@ -136,28 +151,6 @@ export default function ActionEntry({
       setSelectedAction(null)
       setSelectedEffect(null)
     }
-  }
-
-  /**
-   * Handles creating a new effect.
-   */
-  const createEffect = () => {
-    // Create a new effect object.
-    let newEffect: ClientEffect = new ClientEffect(action, {
-      id: generateHash(),
-      args: {},
-    })
-    // Create a new target environment.
-    let newTargetEnvironment: ClientTargetEnvironment =
-      new ClientTargetEnvironment()
-    // Create a new target and set it as the target for the effect.
-    newEffect.target = new ClientTarget(newTargetEnvironment)
-    // Update the effect stored in the state.
-    setSelectedEffect(newEffect)
-    // Push the new effect to the action.
-    action.effects.push(newEffect)
-    // Allow the user to save the changes.
-    handleChange()
   }
 
   /* -- RENDER -- */
@@ -363,17 +356,27 @@ export default function ActionEntry({
             {/* -- NEW EFFECT BUTTON -- */}
             <div className='NewEffect'>
               <div className='ButtonContainer'>
-                <div className='FormButton AddEffect' onClick={createEffect}>
-                  <span className='Text'>
+                <div
+                  className='FormButton CreateNewEffect'
+                  onClick={() =>
+                    setSelectedEffect(
+                      new ClientEffect(action, {
+                        id: generateHash(),
+                        args: {},
+                      }),
+                    )
+                  }
+                >
+                  <span className={newEffectButtonClassName}>
                     <span className='LeftBracket'>[</span> New Effect{' '}
                     <span className='RightBracket'>]</span>
-                    <Tooltip description='Create a new action.' />
+                    <Tooltip description='Create a new effect.' />
                   </span>
                 </div>
               </div>
             </div>
 
-            {/* -- BUTTONS -- */}
+            {/* -- BUTTON(S) -- */}
             <div className='ButtonContainer'>
               <div
                 className={deleteActionClassName}
@@ -406,6 +409,10 @@ export type TActionEntry_P = {
    */
   action: ClientMissionAction
   /**
+   * List of target environments to apply effects to.
+   */
+  targetEnvironments: ClientTargetEnvironment[]
+  /**
    * The path showing the user's location in the side panel.
    * @note This will help the user understand what they are editing.
    */
@@ -423,7 +430,7 @@ export type TActionEntry_P = {
    */
   setSelectedEffect: (effect: ClientEffect | null) => void
   /**
-   * A function that will be called when a change has been made.
+   * Handles when a change is made that would require saving.
    */
   handleChange: () => void
 }

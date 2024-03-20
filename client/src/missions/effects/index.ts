@@ -22,6 +22,13 @@ export class ClientEffect extends Effect<
   ) {
     // Initialize base properties.
     super(action, data, options)
+
+    // Populate the target data.
+    if (data.targetId && !options.useDefaultTarget) {
+      this.populateTargetData(data.targetId)
+    } else {
+      this._target = new ClientTarget(new ClientTargetEnvironment())
+    }
   }
 
   // Implemented
@@ -30,22 +37,6 @@ export class ClientEffect extends Effect<
       // Fetch all target environments.
       let targetEnvironments: ClientTargetEnvironment[] =
         await ClientTargetEnvironment.fetchAll()
-
-      // Create the default target environment and target.
-      let defaultTargetEnvironment: ClientTargetEnvironment =
-        new ClientTargetEnvironment({
-          id: ClientTargetEnvironment.DEFAULT_PROPERTIES.id,
-        })
-      let defaultTarget: ClientTarget = new ClientTarget(
-        defaultTargetEnvironment,
-        {
-          id: ClientTarget.DEFAULT_PROPERTIES.id,
-        },
-      )
-      defaultTargetEnvironment.targets.push(defaultTarget)
-
-      // Add the default target environment and target to the list of target environments.
-      targetEnvironments.push(defaultTargetEnvironment)
 
       // Initialize the target.
       let target: ClientTarget | undefined
