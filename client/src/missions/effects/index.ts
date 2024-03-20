@@ -42,14 +42,16 @@ export class ClientEffect extends Effect<
       let target: ClientTarget | undefined
 
       // Iterate through the target environments to find the target.
-      targetEnvironments.forEach(
-        (targetEnvironment: ClientTargetEnvironment) => {
-          // Get the target associated with the target ID.
-          target = targetEnvironment.targets.find(
-            (target: ClientTarget) => target.id === targetId,
-          )
-        },
-      )
+      for (let targetEnvironment of targetEnvironments) {
+        // Fetch the targets for the environment.
+        let targets: ClientTarget[] = targetEnvironment.targets
+
+        // Find the target with the provided ID.
+        target = targets.find((target) => target.id === targetId)
+
+        // If the target is found, break the loop.
+        if (target) break
+      }
 
       // If the target is not found, throw an error.
       if (!target) {
@@ -72,4 +74,9 @@ export class ClientEffect extends Effect<
 /**
  * Options for creating a new ClientEffect Object.
  */
-export type TClientEffectOptions = TEffectOptions & {}
+export type TClientEffectOptions = TEffectOptions & {
+  /**
+   * Whether or not to use the default target.
+   */
+  useDefaultTarget?: boolean
+}
