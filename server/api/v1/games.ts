@@ -1,10 +1,13 @@
 import { Request, Response } from 'express'
 import expressWs from 'express-ws'
-import { TGameBasicJson } from 'metis/games'
+import { TGameBasicJson, TGameConfig } from 'metis/games'
 import { TCommonMissionJson } from 'metis/missions'
 import MissionModel from 'metis/server/database/models/missions'
 import GameServer from 'metis/server/games'
 import { databaseLogger, gameLogger } from 'metis/server/logging'
+import defineRequests, {
+  RequestBodyFilters,
+} from 'metis/server/middleware/requests'
 import ServerMission from 'metis/server/missions'
 import MetisSession from 'metis/server/sessions'
 import { auth } from '../../middleware/users'
@@ -25,9 +28,32 @@ const routerMap = (router: expressWs.Router, done: () => void) => {
   router.post(
     '/launch/',
     auth({ permissions: ['WRITE'] }),
+    defineRequests(
+      {
+        body: {
+          missionID: RequestBodyFilters.OBJECTID,
+        },
+      },
+      {
+        body: {
+          accessibility: RequestBodyFilters.STRING_LITERAL<
+            NonNullable<TGameConfig['accessibility']>
+          >(['public', 'id-required', 'invite-only']),
+          autoAssign: RequestBodyFilters.BOOLEAN,
+          resourcesEnabled: RequestBodyFilters.BOOLEAN,
+          effectsEnabled: RequestBodyFilters.BOOLEAN,
+        },
+      },
+    ),
     (request: Request, response: Response) => {
       // Get data from the request body.
       let missionID: string = request.body.missionID
+      let gameConfig: TGameConfig = {
+        accessibility: request.body.accessibility,
+        autoAssign: request.body.autoAssign,
+        resourcesEnabled: request.body.resourcesEnabled,
+        effectsEnabled: request.body.effectsEnabled,
+      }
       // Grab the session.
       let session: MetisSession = response.locals.session
 
@@ -59,7 +85,7 @@ const routerMap = (router: expressWs.Router, done: () => void) => {
             // Create mission.
             let mission: ServerMission = new ServerMission(missionData)
             // Launch the game.
-            let game: GameServer = GameServer.launch(mission, {})
+            let game: GameServer = GameServer.launch(mission, gameConfig)
             // Return the ID of the newly launched game
             // as JSON.
             return response.json({ gameID: game.gameID })

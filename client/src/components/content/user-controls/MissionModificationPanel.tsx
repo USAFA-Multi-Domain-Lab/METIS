@@ -1,5 +1,4 @@
 import { useGlobalContext } from 'src/context'
-import GameClient from 'src/games'
 import ClientMission from 'src/missions'
 import { useRequireSession } from 'src/toolbox/hooks'
 import { SingleTypeObject } from '../../../../../shared/toolbox/objects'
@@ -10,7 +9,6 @@ export default function MissionModificationPanel({
   mission,
   onSuccessfulCopy,
   onSuccessfulDeletion,
-  onSuccessfulLaunch,
 }: TMissionModificationPanel) {
   /* -- GLOBAL CONTEXT -- */
 
@@ -99,52 +97,42 @@ export default function MissionModificationPanel({
   }
 
   const onLaunchRequest = () => {
-    confirm(
-      'Confirm the launch of this game.',
-      async (concludeAction: () => void) => {
-        if (server !== null) {
-          try {
-            // Notify user of game launch.
-            beginLoading('Launching game...')
-            concludeAction()
-            // Launch game from mission ID, awaiting
-            // the promised game ID.
-            let gameID: string = await GameClient.$launch(mission.missionID)
-            // Finish loading and notify user of success.
-            finishLoading()
-            notify('Successfully launched game.')
-            // Handle success in callback.
-            onSuccessfulLaunch(gameID)
-            // todo: Remove this.
-            // // Notify user of game join.
-            // beginLoading('Joining game...')
-            // // Join game from new game ID, awaiting
-            // // the promised game client.
-            // let game = await server.$joinGame(gameID)
-            // // Update session data to include new
-            // // game ID.
-            // session.gameID = game.gameID
-            // // Go to the game page with the new
-            // // game client.
-            // navigateTo('GamePage', { game })
-          } catch (error) {
-            handleError({
-              message: 'Failed to launch game. Contact system administrator.',
-              notifyMethod: 'page',
-            })
-          }
-        } else {
-          handleError({
-            message: 'No server connection. Contact system administrator',
-            notifyMethod: 'bubble',
-          })
-        }
-      },
-      {
-        buttonConfirmText: 'Launch',
-        pendingMessageUponConfirm: 'Launching game...',
-      },
-    )
+    navigateTo('LaunchPage', { missionID: mission.missionID })
+
+    // confirm(
+    //   'Confirm the launch of this game.',
+    //   async (concludeAction: () => void) => {
+    //     if (server !== null) {
+    //       try {
+    //         // Notify user of game launch.
+    //         beginLoading('Launching game...')
+    //         concludeAction()
+    //         // Launch game from mission ID, awaiting
+    //         // the promised game ID.
+    //         let gameID: string = await GameClient.$launch(mission.missionID)
+    //         // Finish loading and notify user of success.
+    //         finishLoading()
+    //         notify('Successfully launched game.')
+    //         // Handle success in callback.
+    //         onSuccessfulLaunch(gameID)
+    //       } catch (error) {
+    //         handleError({
+    //           message: 'Failed to launch game. Contact system administrator.',
+    //           notifyMethod: 'page',
+    //         })
+    //       }
+    //     } else {
+    //       handleError({
+    //         message: 'No server connection. Contact system administrator',
+    //         notifyMethod: 'bubble',
+    //       })
+    //     }
+    //   },
+    //   {
+    //     buttonConfirmText: 'Launch',
+    //     pendingMessageUponConfirm: 'Launching game...',
+    //   },
+    // )
   }
 
   // -- RENDER --
@@ -227,9 +215,4 @@ export type TMissionModificationPanel = {
    * Callback for a successful deletion event.
    */
   onSuccessfulDeletion: () => void
-  /**
-   * Callback for a successful launch event.
-   * @param gameID The ID of the game that was launched.
-   */
-  onSuccessfulLaunch: (gameID: string) => void
 }

@@ -62,7 +62,6 @@
 
   .Field {
     @include fieldDimensions();
-    box-shadow: $box-shadow-alt6;
     color: $color-accent-light;
     font-size: 14px;
 

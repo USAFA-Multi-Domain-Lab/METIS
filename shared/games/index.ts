@@ -96,10 +96,7 @@ export default abstract class Game<
     this.gameID = gameID
     this.name = name
     this.config = {
-      accessibility: 'public',
-      autoAssign: true,
-      resourcesEnabled: true,
-      effectsEnabled: true,
+      ...Game.DEFAULT_CONFIG,
       ...config,
     }
     this.mission = mission
@@ -142,7 +139,19 @@ export default abstract class Game<
   /**
    * The endpoint for accessing games on the API.
    */
-  public static API_ENDPOINT: string = '/api/v1/games'
+  public static readonly API_ENDPOINT: string = '/api/v1/games'
+
+  /**
+   * Default value for the game configuration.
+   */
+  public static get DEFAULT_CONFIG(): Required<TGameConfig> {
+    return {
+      accessibility: 'public',
+      autoAssign: true,
+      resourcesEnabled: true,
+      effectsEnabled: true,
+    }
+  }
 }
 
 /**

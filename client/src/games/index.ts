@@ -363,7 +363,10 @@ export default class GameClient extends Game<
    * @param {string} missionID  The ID of the mission being executed in the game.
    * @returns {Promise<string>} A promise of the game ID for the newly launched game.
    */
-  public static async $launch(missionID: string): Promise<string> {
+  public static async $launch(
+    missionID: string,
+    gameConfig: TGameConfig,
+  ): Promise<string> {
     return new Promise<string>(
       async (
         resolve: (gameID: string) => void,
@@ -378,6 +381,7 @@ export default class GameClient extends Game<
               `${Game.API_ENDPOINT}/launch/`,
               {
                 missionID,
+                ...gameConfig,
               },
             )
           ).data

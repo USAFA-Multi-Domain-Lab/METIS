@@ -43,11 +43,15 @@ export default function Navigation({
 /**
  * Creates a navigation link to go home.
  */
-export const HomeLink = (context: TGlobalContext): TWithKey<TButtonText> => {
+export const HomeLink = (
+  context: TGlobalContext,
+  options: Partial<TWithKey<TButtonText>> = {},
+): TWithKey<TButtonText> => {
   return {
     text: 'Home',
     onClick: () => context.actions.navigateTo('HomePage', {}),
     key: 'home',
+    ...options,
   }
 }
 
@@ -56,11 +60,15 @@ export const HomeLink = (context: TGlobalContext): TWithKey<TButtonText> => {
  * @param context The global context.
  * @returns
  */
-export const LogoutLink = (context: TGlobalContext): TWithKey<TButtonText> => {
+export const LogoutLink = (
+  context: TGlobalContext,
+  options: Partial<TWithKey<TButtonText>> = {},
+): TWithKey<TButtonText> => {
   return {
     text: 'Logout',
     onClick: context.actions.logout,
     key: 'logout',
+    ...options,
   }
 }
 

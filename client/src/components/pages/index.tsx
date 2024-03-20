@@ -5,6 +5,7 @@ import ChangelogPage from './ChangelogPage'
 import GameConfigPage from './GameConfigPage'
 import GamePage from './GamePage'
 import HomePage from './HomePage'
+import LaunchPage from './LaunchPage'
 import MissionFormPage from './MissionFormPage'
 import UserFormPage from './UserFormPage'
 import UserResetPage from './UserResetPage'
@@ -18,6 +19,7 @@ export const PAGE_REGISTRY = {
   BlankPage: () => null,
   AuthPage,
   HomePage,
+  LaunchPage,
   GameConfigPage,
   GamePage,
   UserResetPage,

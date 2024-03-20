@@ -1,8 +1,8 @@
 // ------- IMPORTS ------- //
-import { Request, Response, NextFunction } from 'express-serve-static-core'
-import { isObjectIdOrHexString } from 'mongoose'
+import { NextFunction, Request, Response } from 'express-serve-static-core'
 import { AnyObject } from 'metis/toolbox/objects'
 import UserRole, { TUserRole } from 'metis/users/roles'
+import { isObjectIdOrHexString } from 'mongoose'
 
 // ------- GLOBAL VARIABLES ------- //
 
@@ -43,11 +43,30 @@ export class RequestBodyFilters {
    * @param bodyValue The value of the property in the request body
    * @returns An error message or null
    */
-  static STRING(bodyKey: string, bodyValue: any): Error | null {
+  public static STRING(bodyKey: string, bodyValue: any): Error | null {
     if (typeof bodyValue !== 'string') {
       throw new Error(invalidRequestBodyPropertyException(bodyKey, bodyValue))
     } else {
       return null
+    }
+  }
+
+  /**
+   * This filters a string literal included in a request body.
+   * @param bodyKey The key of the property in the request body
+   * @param bodyValue The value of the property in the request body
+   * @returns An error message or null
+   */
+  public static STRING_LITERAL<TOptions extends string>(options: TOptions[]) {
+    return (bodyKey: string, bodyValue: any): Error | null => {
+      if (
+        typeof bodyValue !== 'string' ||
+        !options.includes(bodyValue as TOptions)
+      ) {
+        throw new Error(invalidRequestBodyPropertyException(bodyKey, bodyValue))
+      } else {
+        return null
+      }
     }
   }
 
@@ -57,7 +76,7 @@ export class RequestBodyFilters {
    * @param bodyValue The value of the property in the request body
    * @returns An error message or null
    */
-  static STRING_50_CHAR(bodyKey: string, bodyValue: any): Error | null {
+  public static STRING_50_CHAR(bodyKey: string, bodyValue: any): Error | null {
     if (typeof bodyValue !== 'string' || bodyValue.length > 50) {
       throw new Error(invalidRequestBodyPropertyException(bodyKey, bodyValue))
     } else {
@@ -71,7 +90,7 @@ export class RequestBodyFilters {
    * @param bodyValue The value of the property in the request body
    * @returns An error message or null
    */
-  static STRING_128_CHAR(bodyKey: string, bodyValue: any): Error | null {
+  public static STRING_128_CHAR(bodyKey: string, bodyValue: any): Error | null {
     if (typeof bodyValue !== 'string' || bodyValue.length > 128) {
       throw new Error(invalidRequestBodyPropertyException(bodyKey, bodyValue))
     } else {
@@ -85,7 +104,7 @@ export class RequestBodyFilters {
    * @param bodyValue The value of the property in the request body
    * @returns An error message or null
    */
-  static STRING_255_CHAR(bodyKey: string, bodyValue: any): Error | null {
+  public static STRING_255_CHAR(bodyKey: string, bodyValue: any): Error | null {
     if (typeof bodyValue !== 'string' || bodyValue.length > 255) {
       throw new Error(invalidRequestBodyPropertyException(bodyKey, bodyValue))
     } else {
@@ -99,7 +118,7 @@ export class RequestBodyFilters {
    * @param bodyValue The value of the property in the request body
    * @returns An error message or null
    */
-  static STRING_256_CHAR(bodyKey: string, bodyValue: any): Error | null {
+  public static STRING_256_CHAR(bodyKey: string, bodyValue: any): Error | null {
     if (typeof bodyValue !== 'string' || bodyValue.length > 256) {
       throw new Error(invalidRequestBodyPropertyException(bodyKey, bodyValue))
     } else {
@@ -113,7 +132,7 @@ export class RequestBodyFilters {
    * @param bodyValue The value of the property in the request body
    * @returns An error message or null
    */
-  static STRING_512_CHAR(bodyKey: string, bodyValue: any): Error | null {
+  public static STRING_512_CHAR(bodyKey: string, bodyValue: any): Error | null {
     if (typeof bodyValue !== 'string' || bodyValue.length > 512) {
       throw new Error(invalidRequestBodyPropertyException(bodyKey, bodyValue))
     } else {
@@ -127,7 +146,10 @@ export class RequestBodyFilters {
    * @param bodyValue The value of the property in the request body
    * @returns An error message or null
    */
-  static STRING_1024_CHAR(bodyKey: string, bodyValue: any): Error | null {
+  public static STRING_1024_CHAR(
+    bodyKey: string,
+    bodyValue: any,
+  ): Error | null {
     if (typeof bodyValue !== 'string' || bodyValue.length > 1024) {
       throw new Error(invalidRequestBodyPropertyException(bodyKey, bodyValue))
     } else {
@@ -141,7 +163,10 @@ export class RequestBodyFilters {
    * @param bodyValue The value of the property in the request body
    * @returns An error message or null
    */
-  static STRING_MEDIUMTEXT(bodyKey: string, bodyValue: any): Error | null {
+  public static STRING_MEDIUMTEXT(
+    bodyKey: string,
+    bodyValue: any,
+  ): Error | null {
     if (typeof bodyValue !== 'string' || bodyValue.length > 16777215) {
       throw new Error(invalidRequestBodyPropertyException(bodyKey, bodyValue))
     } else {
@@ -155,7 +180,7 @@ export class RequestBodyFilters {
    * @param bodyValue The value of the property in the request body
    * @returns An error message or null
    */
-  static NUMBER(bodyKey: string, bodyValue: any): Error | null {
+  public static NUMBER(bodyKey: string, bodyValue: any): Error | null {
     if (typeof bodyValue !== 'number' || isNaN(bodyValue)) {
       throw new Error(invalidRequestBodyPropertyException(bodyKey, bodyValue))
     } else {
@@ -169,7 +194,7 @@ export class RequestBodyFilters {
    * @param bodyValue The value of the property in the request body
    * @returns An error message or null
    */
-  static BOOLEAN(bodyKey: string, bodyValue: any): Error | null {
+  public static BOOLEAN(bodyKey: string, bodyValue: any): Error | null {
     if (typeof bodyValue === 'number' || typeof bodyValue === 'boolean') {
       let valueAsStr: string = bodyValue.toString()
 
@@ -197,7 +222,7 @@ export class RequestBodyFilters {
    * @param bodyValue The value of the property in the request body
    * @returns An error message or null
    */
-  static OBJECT(bodyKey: string, bodyValue: any): Error | null {
+  public static OBJECT(bodyKey: string, bodyValue: any): Error | null {
     if (typeof bodyValue !== 'object' || Array.isArray(bodyValue)) {
       throw new Error(invalidRequestBodyPropertyException(bodyKey, bodyValue))
     } else {
@@ -211,7 +236,7 @@ export class RequestBodyFilters {
    * @param bodyValue The value of the property in the request body
    * @returns An error message or null
    */
-  static OBJECTID(bodyKey: string, bodyValue: any): Error | null {
+  public static OBJECTID(bodyKey: string, bodyValue: any): Error | null {
     if (!isObjectIdOrHexString(bodyValue)) {
       throw new Error(invalidRequestBodyPropertyException(bodyKey, bodyValue))
     } else {
@@ -225,7 +250,7 @@ export class RequestBodyFilters {
    * @param bodyValue The value of the property in the request body
    * @returns An error message or null
    */
-  static ARRAY(bodyKey: string, bodyValue: any): Error | null {
+  public static ARRAY(bodyKey: string, bodyValue: any): Error | null {
     if (!Array.isArray(bodyValue)) {
       throw new Error(invalidRequestBodyPropertyException(bodyKey, bodyValue))
     } else {
@@ -239,7 +264,7 @@ export class RequestBodyFilters {
    * @param bodyValue The value of the property in the request body
    * @throws An error message or null
    */
-  static USER_ID(bodyKey: string, bodyValue: any) {
+  public static USER_ID(bodyKey: string, bodyValue: any) {
     let usernameRegex: RegExp = /^([a-zA-Z0-9-_.]{5,25})$/
     let usernameIsValid: boolean = usernameRegex.test(bodyValue)
 
@@ -254,7 +279,7 @@ export class RequestBodyFilters {
    * @param bodyValue The value of the property in the request body
    * @throws An error message or null
    */
-  static PASSWORD(bodyKey: string, bodyValue: any) {
+  public static PASSWORD(bodyKey: string, bodyValue: any) {
     let passwordRegex: RegExp = /^([^\s]{8,50})$/
     let passwordIsValid: boolean = passwordRegex.test(bodyValue)
 
@@ -269,7 +294,7 @@ export class RequestBodyFilters {
    * @param bodyValue The value of the property in the request body
    * @throws An error message or null
    */
-  static NAME(bodyKey: string, bodyValue: any) {
+  public static NAME(bodyKey: string, bodyValue: any) {
     let nameRegex: RegExp = /^([a-zA-Z']{1,25})$/
     let nameIsValid: boolean = nameRegex.test(bodyValue)
 
@@ -284,7 +309,7 @@ export class RequestBodyFilters {
    * @param bodyValue The value of the property in the request body
    * @throws An error message or null
    */
-  static ROLE(bodyKey: string, bodyValue: TUserRole['id']) {
+  public static ROLE(bodyKey: string, bodyValue: TUserRole['id']) {
     if (!UserRole.isValidRoleID(bodyValue)) {
       throw new Error(invalidRequestBodyPropertyException(bodyKey, bodyValue))
     }

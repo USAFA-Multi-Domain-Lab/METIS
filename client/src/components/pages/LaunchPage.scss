@@ -1,0 +1,27 @@
+@import '../../assets/styles/config.scss';
+
+.LaunchPage {
+  display: grid;
+  justify-items: center;
+  align-items: center;
+  grid-template-rows: auto 1fr auto;
+  min-height: 100vh;
+  background: url('../../assets/images/landing-page-img.png');
+  background-size: 100% 120%;
+  background-position: center;
+  background-repeat: no-repeat;
+  box-shadow: $box-shadow-alt1;
+
+  .Content {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    padding: 0 1em;
+
+    .MissionName {
+      text-align: center;
+      font-size: 1.25rem;
+      font-weight: bold;
+    }
+  }
+}
