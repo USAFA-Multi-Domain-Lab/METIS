@@ -1,14 +1,9 @@
 @import 'src/assets/styles/config.scss';
 
-.HomePage {
+.Page.HomePage {
   display: grid;
   place-items: center;
   align-content: space-between;
-  background: url('../../assets/images/landing-page-img.png');
-  background-size: 100% 120%;
-  background-position: center;
-  background-repeat: no-repeat;
-  box-shadow: $box-shadow-main;
   min-height: 100vh;
   margin: 0;
 

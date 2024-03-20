@@ -1,0 +1,50 @@
+@import 'src/assets/styles/config.scss';
+
+.MissionMap {
+  .Overlay {
+    .CreateEffectModal {
+      box-sizing: border-box;
+      overflow-x: hidden;
+      display: grid;
+      align-items: center;
+      grid-template-columns: auto 2.5em;
+      row-gap: 1.25em;
+      width: 90%;
+      max-width: 33em;
+      height: fit-content;
+      max-height: 90%;
+      border: 2px solid $color-main;
+      padding: 1.5em;
+      box-shadow: $box-shadow-alt7;
+
+      .Heading {
+        min-width: 12.5em;
+        user-select: none;
+        line-height: 1.5em;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+      }
+
+      .Close {
+        background: none;
+        padding: 0;
+      }
+
+      .TargetEnvEntry,
+      .TargetEntry {
+        grid-column: span 2;
+
+        .Detail {
+          margin: 20px 0 0;
+        }
+      }
+
+      .ButtonContainer {
+        .Button {
+          scale: 0.95;
+        }
+      }
+    }
+  }
+}

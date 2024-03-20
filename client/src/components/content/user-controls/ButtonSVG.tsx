@@ -24,10 +24,7 @@ export default function ButtonSvg({
    */
   const rootClass = compute((): string => {
     // Gather details.
-    let classList: string[] = ['ButtonSvg', icon, size]
-
-    // Push unique classes passed in props.
-    classList.push(...uniqueClassList)
+    let classList: string[] = ['ButtonSvg', icon, size, ...uniqueClassList]
 
     // Push disabled class if disabled.
     if (disabled) {
@@ -103,7 +100,7 @@ export type TButtonSvg = {
   /**
    * The icon for the button.
    */
-  icon: TButtonSVGIcon
+  icon: TButtonSvgIcon
   /**
    * The size of the button.
    * @default 'regular'
@@ -140,7 +137,7 @@ export type TButtonSvg = {
 /**
  * The type of icon being used for the button.
  */
-export type TButtonSVGIcon =
+export type TButtonSvgIcon =
   | 'cancel'
   | 'add'
   | 'edit'

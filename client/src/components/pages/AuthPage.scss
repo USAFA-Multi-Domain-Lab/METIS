@@ -1,9 +1,7 @@
 @import 'src/assets/styles/config.scss';
 
-.AuthPage {
-  display: grid;
-  height: 100vh;
-  place-content: center;
+.Page.AuthPage {
+  grid-template-rows: unset;
 
   .Login {
     $border: 2px solid $color-accent;

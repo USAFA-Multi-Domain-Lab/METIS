@@ -1,7 +1,6 @@
-import mongoose, { Schema } from 'mongoose'
 import MetisDatabase from 'metis/server/database'
 import SanitizedHTML from 'metis/server/database/schema-types/html'
-import { TCommonEffectJson } from 'metis/missions/effects'
+import mongoose, { Schema } from 'mongoose'
 
 let ObjectId = mongoose.Types.ObjectId
 
@@ -151,7 +150,7 @@ const validate_missions_initialResources = (
 }
 
 // Validator for missions.nodeData.
-const validate_missions_nodeData = (nodeData: Array<any>): boolean => {
+const validate_missions_nodeData = (nodeData: any[]): boolean => {
   let minLengthReached: boolean = nodeData.length >= NODE_DATA_MIN_LENGTH
   let minLengthOfActionsReached: boolean = true
 
@@ -208,18 +207,6 @@ const validate_mission_nodeData_actions_resourceCost = (
   let nonNegativeInteger: boolean = isNonNegativeInteger(resourceCost)
 
   return nonNegativeInteger
-}
-
-/**
- * Validator for targetEnvironment.effects.
- * @param {TCommonEffectJson[]} effects The effects to validate.
- * @returns {boolean} Whether the effects are valid.
- */
-const validate_mission_nodeData_actions_effects = (
-  effects: TCommonEffectJson[],
-): boolean => {
-  // todo: implement validation
-  return true
 }
 
 /* -- SCHEMA -- */
@@ -300,36 +287,18 @@ export const MissionSchema: Schema = new Schema(
                   type: SanitizedHTML,
                   required: true,
                 },
-                // todo: remove scripts (deprecated)
-                scripts: {
+                effects: {
                   type: [
                     {
-                      label: { type: String, required: true },
-                      description: { type: String, required: true },
-                      scriptName: { type: String, required: true },
-                      originalPath: { type: String, required: true },
+                      _id: { type: ObjectId, required: false, auto: true },
+                      id: { type: String, required: true },
+                      name: { type: String, required: true },
+                      description: { type: SanitizedHTML, required: true },
+                      targetId: { type: String, required: true },
                       args: { type: Object, required: true },
                     },
                   ],
                   required: true,
-                },
-                effects: {
-                  type: [
-                    {
-                      id: { type: String, required: true },
-                      name: { type: String, required: true },
-                      description: { type: String, required: true },
-                      targetId: { type: String, required: true },
-                      args: {
-                        entityName: { type: String, required: true },
-                        requestPath: { type: String, required: true },
-                        requestMethod: { type: String, required: true },
-                        requestData: { type: Object, required: true },
-                      },
-                    },
-                  ],
-                  required: true,
-                  validate: validate_mission_nodeData_actions_effects,
                 },
               },
             ],

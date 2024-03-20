@@ -207,35 +207,33 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
   return (
     <div className={rootClassList.join(' ')}>
       <DefaultLayout navigation={navigation} includeFooter={false}>
-        <div className='Content'>
-          <div className='TopBar'>
-            <div className={resourcesClassList.join(' ')}>
-              Resources remaining: {game.resources}
-            </div>
-            <StatusBar />
+        <div className='TopBar'>
+          <div className={resourcesClassList.join(' ')}>
+            Resources remaining: {game.resources}
           </div>
-          <PanelSizeRelationship
-            sizingMode={EPanelSizingMode.Panel1_Auto__Panel2_Defined}
-            initialDefinedSize={panel2DefaultSize}
-            panel1={{
-              ...ResizablePanel.defaultProps,
-              minSize: 400,
-              render: () => (
-                <MissionMap
-                  mission={mission}
-                  onNodeSelect={onNodeSelect}
-                  overlayContent={overlayContent}
-                />
-              ),
-            }}
-            panel2={{
-              ...ResizablePanel.defaultProps,
-              minSize: 400,
-              isOpen: true,
-              render: () => <OutputPanel mission={mission} />,
-            }}
-          />
+          <StatusBar />
         </div>
+        <PanelSizeRelationship
+          sizingMode={EPanelSizingMode.Panel1_Auto__Panel2_Defined}
+          initialDefinedSize={panel2DefaultSize}
+          panel1={{
+            ...ResizablePanel.defaultProps,
+            minSize: 400,
+            render: () => (
+              <MissionMap
+                mission={mission}
+                onNodeSelect={onNodeSelect}
+                overlayContent={overlayContent}
+              />
+            ),
+          }}
+          panel2={{
+            ...ResizablePanel.defaultProps,
+            minSize: 400,
+            isOpen: true,
+            render: () => <OutputPanel mission={mission} />,
+          }}
+        />
       </DefaultLayout>
     </div>
   )

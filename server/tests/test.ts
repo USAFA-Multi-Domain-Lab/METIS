@@ -4,17 +4,16 @@ process.env.environment = 'TEST'
 process.argv
 
 // npm imports
-import mocha from 'mocha'
 import chai, { expect } from 'chai'
 import chaiHttp from 'chai-http'
 
 // metis imports
-import { testLogger } from '../logging'
-import UserRole, { TUserRoleID } from 'metis/users/roles'
+import MetisServer from 'metis/server'
 import MissionModel from 'metis/server/database/models/missions'
 import UserModel, { hashPassword } from 'metis/server/database/models/users'
-import MetisServer from 'metis/server'
 import { TCommonUserJson } from 'metis/users'
+import UserRole, { TUserRoleID } from 'metis/users/roles'
+import { testLogger } from '../logging'
 
 // global fields
 let missionID: string
@@ -715,45 +714,6 @@ describe('API Mission Routes', function () {
       throw error
     }
   })
-
-  // it("Calling the handle-action-execution route with the proper missionID, nodeID, and actionID returns a successful (200) response", async function () {
-  //   let testVariable: null | "successful" = null;
-
-  //   // New command script that tests to make sure
-  //   // the functionality of calling on another API
-  //   // works properly
-  //   const TestCommandScript = (args: AnyObject) => {
-  //     testVariable = "successful";
-  //   };
-  //   cyberCityCommandScripts["TestCommandScript"] = TestCommandScript;
-
-  //   missionID = createdMissionIDArray[0];
-  //   correctUpdateTestMission.mission.missionID = missionID;
-
-  //   let nodeID: string = correctUpdateTestMission.mission.nodeData[0].nodeID;
-  //   let actionID: string =
-  //     correctUpdateTestMission.mission.nodeData[0].actions[0].actionID;
-
-  //   const data: AnyObject = {
-  //     missionID: missionID,
-  //     nodeID: nodeID,
-  //     actionID: actionID,
-  //   };
-
-  //  try {
-  //     let response = await agent
-  //      .put('/api/v1/missions/handle-action-execution/')
-  //      .set('Content-Type', 'application/json')
-  //      .send(data)
-
-  //        expect(response).to.have.status(200)
-  //        expect(testVariable).to.equal('successful')
-
-  //  } catch (error: any) {
-  //    testLogger.error(error)
-  //    throw error
-  //  }
-  // });
 
   it('Updating a mission with (a) missing property/properties that is required (missionID) in the body of the request should return a bad request (400) response', async function () {
     try {

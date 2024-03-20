@@ -1,0 +1,13 @@
+@import '../../assets/styles/config.scss';
+
+.Page {
+  display: grid;
+  justify-items: center;
+  align-items: center;
+  grid-template-rows: auto 1fr auto;
+  min-height: 100vh;
+  box-shadow: $box-shadow-main;
+
+  .Content {
+  }
+}

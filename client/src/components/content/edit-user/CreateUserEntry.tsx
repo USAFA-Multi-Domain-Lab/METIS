@@ -54,16 +54,13 @@ export default function CreateUserEntry(props: {
   const [password2ErrorMessage, setPassword2ErrorMessage] = useState<string>(
     'At least one character is required here.',
   )
-  const [usernameClassName, setUsernameClassName] = useState<string>('')
-  const [createFirstNameClassName, setCreateFirstNameClassName] =
-    useState<string>('')
-  const [createLastNameClassName, setCreateLastNameClassName] =
-    useState<string>('')
-  const [password1ClassName, setPassword1ClassName] = useState<string>('')
-  const [password2ClassName, setPassword2ClassName] = useState<string>('')
-  const [roleClassName, setRoleClassName] = useState<string>('')
-  const [selectedRoleClassName, setSelectedRoleClassName] =
-    useState<string>('DefaultValue')
+  const [userId, setUserId] = useState<string | null>(user.userID)
+  const [password1, setPassword1] = useState<string | null>(
+    user.password1 || null,
+  )
+  const [password2, setPassword2] = useState<string | null>(
+    user.password2 || null,
+  )
 
   /* -- COMPONENT EFFECTS -- */
 
@@ -127,14 +124,14 @@ export default function CreateUserEntry(props: {
     >
       <Detail
         label='Username'
-        initialValue={user.userID}
+        currentValue={userId}
         deliverValue={(userID: string) => {
           user.userID = userID
+          setUserId(userID)
 
           if (userID !== '' && user.hasValidUsername) {
             removeUserEmptyString('userID')
             setDeliverUsernameError(false)
-            setUsernameClassName('Correct')
             handleChange()
           }
 
@@ -151,13 +148,10 @@ export default function CreateUserEntry(props: {
             )
           }
         }}
-        options={{
-          deliverError: deliverUsernameError,
-          deliverErrorMessage: usernameErrorMessage,
-          uniqueLabelClassName: usernameClassName,
-          uniqueInputClassName: usernameClassName,
-          placeholder: 'Enter a username here...',
-        }}
+        emptyStringAllowed={false}
+        deliverError={deliverUsernameError}
+        errorMessage={usernameErrorMessage}
+        placeholder='Enter a username here...'
       />
       <DetailDropDown<UserRole>
         label='Role'
@@ -167,24 +161,18 @@ export default function CreateUserEntry(props: {
         renderDisplayName={(role: UserRole) => role.name}
         deliverValue={(role: UserRole) => {
           user.role = role
-          setRoleClassName('Correct')
-          setSelectedRoleClassName('Correct')
           handleChange()
         }}
-        uniqueLabelClassName={roleClassName}
-        uniqueFieldClassName={roleClassName}
-        uniqueCurrentValueClassName={selectedRoleClassName}
       />
       <Detail
         label='First Name'
-        initialValue={user.firstName}
+        currentValue={user.firstName}
         deliverValue={(firstName: string) => {
           user.firstName = firstName
 
           if (firstName !== '' && user.hasValidFirstName) {
             removeUserEmptyString('firstName')
             setDeliverFirstNameError(false)
-            setCreateFirstNameClassName('Correct')
             handleChange()
           }
 
@@ -208,24 +196,20 @@ export default function CreateUserEntry(props: {
             ])
           }
         }}
-        options={{
-          deliverError: deliverFirstNameError,
-          deliverErrorMessage: firstNameErrorMessage,
-          uniqueLabelClassName: createFirstNameClassName,
-          uniqueInputClassName: createFirstNameClassName,
-          placeholder: 'Enter a first name here...',
-        }}
+        emptyStringAllowed={false}
+        deliverError={deliverFirstNameError}
+        errorMessage={firstNameErrorMessage}
+        placeholder='Enter a first name here...'
       />
       <Detail
         label='Last Name'
-        initialValue={user.lastName}
+        currentValue={user.lastName}
         deliverValue={(lastName: string) => {
           user.lastName = lastName
 
           if (lastName !== '' && user.hasValidLastName) {
             removeUserEmptyString('lastName')
             setDeliverLastNameError(false)
-            setCreateLastNameClassName('Correct')
             handleChange()
           }
 
@@ -243,24 +227,21 @@ export default function CreateUserEntry(props: {
             setUserEmptyStringArray([...userEmptyStringArray, `field=lastName`])
           }
         }}
-        options={{
-          deliverError: deliverLastNameError,
-          deliverErrorMessage: lastNameErrorMessage,
-          uniqueLabelClassName: createLastNameClassName,
-          uniqueInputClassName: createLastNameClassName,
-          placeholder: 'Enter a last name here...',
-        }}
+        emptyStringAllowed={false}
+        deliverError={deliverLastNameError}
+        errorMessage={lastNameErrorMessage}
+        placeholder='Enter a last name here...'
       />
       <Detail
         label={passwordLabel}
-        initialValue={null}
+        currentValue={password1}
         deliverValue={(password: string) => {
           user.password1 = password
+          setPassword1(password)
 
           if (user.hasValidPassword1 && password !== '') {
             removeUserEmptyString('password1')
             setDeliverPassword1Error(false)
-            setPassword1ClassName('Correct')
             handleChange()
           }
 
@@ -290,29 +271,25 @@ export default function CreateUserEntry(props: {
           // and the two passwords match, remove the error.
           else if (user.passwordsMatch && user.password2) {
             setDeliverPassword2Error(false)
-            setPassword2ClassName('Correct')
           }
         }}
-        options={{
-          deliverError: deliverPassword1Error,
-          deliverErrorMessage: password1ErrorMessage,
-          uniqueLabelClassName: password1ClassName,
-          uniqueInputClassName: password1ClassName,
-          inputType: 'password',
-          placeholder: 'Enter a password here...',
-        }}
+        emptyStringAllowed={false}
+        deliverError={deliverPassword1Error}
+        errorMessage={password1ErrorMessage}
+        inputType='password'
+        placeholder='Enter a password here...'
       />
 
       <Detail
         label={confirmPasswordLabel}
-        initialValue={null}
+        currentValue={password2}
         deliverValue={(password: string) => {
           user.password2 = password
+          setPassword2(password)
 
           if (user.hasValidPassword2 && password !== '') {
             removeUserEmptyString('password2')
             setDeliverPassword2Error(false)
-            setPassword2ClassName('Correct')
             handleChange()
           }
 
@@ -341,19 +318,16 @@ export default function CreateUserEntry(props: {
             setPassword2ErrorMessage('Passwords must match.')
           }
         }}
-        options={{
-          deliverError: deliverPassword2Error,
-          deliverErrorMessage: password2ErrorMessage,
-          uniqueLabelClassName: password2ClassName,
-          uniqueInputClassName: password2ClassName,
-          inputType: 'password',
-          placeholder: 'Confirm your password here...',
-        }}
+        emptyStringAllowed={false}
+        deliverError={deliverPassword2Error}
+        errorMessage={password2ErrorMessage}
+        inputType='password'
+        placeholder='Confirm your password here...'
       />
       <div className='NeedsPasswordResetContainer'>
         <div className='Title'>Needs Password Reset:</div>
         <Toggle
-          initiallyActivated={user.needsPasswordReset}
+          currentValue={user.needsPasswordReset}
           deliverValue={() => {
             user.needsPasswordReset = !user.needsPasswordReset
             handleChange()

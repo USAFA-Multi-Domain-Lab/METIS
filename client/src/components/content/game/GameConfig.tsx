@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { TGameConfig } from '../../../../../shared/games'
 import { DetailDropDown, DetailToggle } from '../form/Form'
 import { ButtonText } from '../user-controls/ButtonText'
-import { EToggleLockState } from '../user-controls/Toggle'
 import './GameConfig.scss'
 
 /**
@@ -43,18 +42,18 @@ export default function GameConfig({
       />
       <DetailToggle
         label='Auto-Assign:'
-        initialValue={gameConfig.autoAssign}
+        currentValue={gameConfig.autoAssign}
         deliverValue={(value) => (gameConfig.autoAssign = value)}
-        lockState={EToggleLockState.LockedActivation}
+        lockState={'locked-activation'}
       />
       <DetailToggle
         label='Enable Resources:'
-        initialValue={gameConfig.resourcesEnabled}
+        currentValue={gameConfig.resourcesEnabled}
         deliverValue={(value) => (gameConfig.resourcesEnabled = value)}
       />
       <DetailToggle
         label='Enable Effects:'
-        initialValue={gameConfig.effectsEnabled}
+        currentValue={gameConfig.effectsEnabled}
         deliverValue={(value) => (gameConfig.effectsEnabled = value)}
       />
       <div className='Buttons'>

@@ -1,6 +1,6 @@
 @import 'src/assets/styles/config.scss';
 
-.ErrorPage {
+.Page.ErrorPage {
   position: absolute;
   top: 0;
   left: 0;
@@ -10,8 +10,10 @@
   width: 100vw;
   height: 100vh;
   padding: calc(50vh - 125px) 0 0;
-  background-color: $background-main;
   text-align: center;
+  grid-template-rows: unset;
+  align-items: unset;
+  grid-template-rows: auto auto 1fr;
 
   .Message {
     margin-top: 40px;

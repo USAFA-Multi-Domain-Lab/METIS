@@ -95,14 +95,12 @@ export default function GameConfigPage({
   return (
     <div className='LaunchPage Page'>
       <DefaultLayout navigation={navigation}>
-        <div className='Content'>
-          <div className='MissionName'>{mission.name}</div>
-          <GameConfig
-            gameConfig={gameConfig}
-            saveButtonText={'Launch'}
-            onSave={launch}
-          />
-        </div>
+        <div className='MissionName'>{mission.name}</div>
+        <GameConfig
+          gameConfig={gameConfig}
+          saveButtonText={'Launch'}
+          onSave={launch}
+        />
       </DefaultLayout>
     </div>
   )

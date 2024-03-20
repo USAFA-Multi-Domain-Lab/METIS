@@ -1,7 +1,7 @@
 import { useState } from 'react'
+import ClientUser from 'src/users'
 import { Detail } from '../form/Form'
 import './EditUserEntry.scss'
-import ClientUser from 'src/users'
 
 /**
  * This will render the forms for editing a new user.
@@ -24,10 +24,6 @@ export default function EditUserEntry(props: {
     useState<boolean>(false)
   const [firstNameErrorMessage, setFirstNameErrorMessage] = useState<string>('')
   const [lastNameErrorMessage, setLastNameErrorMessage] = useState<string>('')
-  const [updateFirstNameClassName, setUpdateFirstNameClassName] =
-    useState<string>('')
-  const [updateLastNameClassName, setUpdateLastNameClassName] =
-    useState<string>('')
 
   /* -- COMPONENT FUNCTIONS -- */
 
@@ -55,14 +51,13 @@ export default function EditUserEntry(props: {
       </div>
       <Detail
         label='First Name'
-        initialValue={user.firstName}
+        currentValue={user.firstName}
         deliverValue={(firstName: string) => {
           user.firstName = firstName
 
           if (firstName !== '' && user.hasValidFirstName) {
             removeUserEmptyString('firstName')
             setDeliverFirstNameError(false)
-            setUpdateFirstNameClassName('Correct')
             handleChange()
           }
 
@@ -86,24 +81,20 @@ export default function EditUserEntry(props: {
             ])
           }
         }}
-        options={{
-          deliverError: deliverFirstNameError,
-          deliverErrorMessage: firstNameErrorMessage,
-          uniqueLabelClassName: updateFirstNameClassName,
-          uniqueInputClassName: updateFirstNameClassName,
-          placeholder: 'Enter a first name here...',
-        }}
+        emptyStringAllowed={false}
+        deliverError={deliverFirstNameError}
+        errorMessage={firstNameErrorMessage}
+        placeholder='Enter a first name here...'
       />
       <Detail
         label='Last Name'
-        initialValue={user.lastName}
+        currentValue={user.lastName}
         deliverValue={(lastName: string) => {
           user.lastName = lastName
 
           if (lastName !== '' && user.hasValidLastName) {
             removeUserEmptyString('lastName')
             setDeliverLastNameError(false)
-            setUpdateLastNameClassName('Correct')
             handleChange()
           }
 
@@ -121,13 +112,10 @@ export default function EditUserEntry(props: {
             setUserEmptyStringArray([...userEmptyStringArray, `field=lastName`])
           }
         }}
-        options={{
-          deliverError: deliverLastNameError,
-          deliverErrorMessage: lastNameErrorMessage,
-          uniqueLabelClassName: updateLastNameClassName,
-          uniqueInputClassName: updateLastNameClassName,
-          placeholder: 'Enter a last name here...',
-        }}
+        emptyStringAllowed={false}
+        deliverError={deliverLastNameError}
+        errorMessage={lastNameErrorMessage}
+        placeholder='Enter a last name here...'
       />
     </form>
   )

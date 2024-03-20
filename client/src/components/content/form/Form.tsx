@@ -1,11 +1,12 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import ReactQuill from 'react-quill'
 import 'react-quill/dist/quill.snow.css'
+import { useGlobalContext } from 'src/context'
 import { compute } from 'src/toolbox'
 import inputs from 'src/toolbox/inputs'
 import { AnyObject } from '../../../../../shared/toolbox/objects'
 import Tooltip from '../communication/Tooltip'
-import Toggle, { EToggleLockState } from '../user-controls/Toggle'
+import Toggle, { TToggleLockState } from '../user-controls/Toggle'
 import './Form.scss'
 
 /**
@@ -13,294 +14,342 @@ import './Form.scss'
  * a form, with a label and a text
  * field for entering information.
  */
-export class Detail extends React.Component<TDetail_P, TDetail_S> {
-  field: React.RefObject<HTMLInputElement> = React.createRef()
+export function Detail({
+  label,
+  currentValue,
+  deliverValue,
+  // Optional Properties
+  defaultValue = undefined,
+  deliverError = undefined,
+  errorMessage = 'At least one character is required here.',
+  disabled = false,
+  uniqueLabelClassName = '',
+  uniqueInputClassName = '',
+  inputType = 'text',
+  placeholder = undefined,
+  emptyStringAllowed = true,
+  clearField = false,
+  displayOptionalText = false,
+}: TDetail_P): JSX.Element {
+  /* -- STATE -- */
+  const [leftField, setLeftField] = useState<boolean>(false)
+  const [currentInputType, setCurrentInputType] = useState<TInput>(inputType)
+  const [displayPasswordText, setDisplayPasswordText] = useState<
+    'show' | 'hide'
+  >('show')
 
-  constructor(props: TDetail_P, state: TDetail_S) {
-    super(props)
+  /* -- COMPUTED -- */
+  /**
+   * The boolean that determines if the
+   * error message should be displayed.
+   */
+  const displayError: boolean = compute(() => {
+    // Initialize the boolean.
+    let displayError: boolean = false
 
-    this.state = {
-      inputType: this.props.options?.inputType || 'text',
-      displayPasswordText: 'show',
-      currentValue: this.props.initialValue,
-      displayError: false,
+    // If the user left the field by clicking
+    // outside of it...
+    if (leftField) {
+      // ...and empty strings are not allowed, the
+      // field is empty or in a default state,
+      // then display the error message.
+      if (
+        !emptyStringAllowed &&
+        (currentValue === '' || currentValue === null)
+      ) {
+        displayError = true
+      }
+      // Or, if the error needs to be displayed
+      // then display the error message.
+      else if (deliverError) {
+        displayError = true
+      }
     }
-  }
 
-  // inherited
-  componentDidMount(): void {
-    let initialValue: string | null | undefined = this.props.initialValue
-    let fieldElement: HTMLInputElement | null = this.field.current
+    // Return the boolean.
+    return displayError
+  })
 
-    if (initialValue && fieldElement) {
-      fieldElement.value = initialValue
-    }
-  }
-
-  componentDidUpdate(
-    prevProps: Readonly<TDetail_P>,
-    prevState: Readonly<TDetail_S>,
-    snapshot?: any,
-  ): void {
-    if (prevProps.initialValue !== this.props.initialValue) {
-      this.setState({ currentValue: this.props.initialValue })
-    }
-  }
-
-  togglePasswordDisplay(): void {
-    if (this.state.inputType === 'password') {
-      this.setState({ inputType: 'text' })
-      this.setState({ displayPasswordText: 'hide' })
-    } else {
-      this.setState({ inputType: 'password' })
-      this.setState({ displayPasswordText: 'show' })
-    }
-  }
-
-  // inherited
-  render(): JSX.Element | null {
-    let label: string = this.props.label
-    let deliverValue = this.props.deliverValue
-    let deliverError: boolean = this.props.options?.deliverError || false
-    let errorMessage: string = this.props.options?.deliverErrorMessage || ''
-    let uniqueLabelClassName: string =
-      this.props.options?.uniqueLabelClassName || ''
-    let uniqueInputClassName: string =
-      this.props.options?.uniqueInputClassName || ''
-    let inputTypePassed: string = this.props.options?.inputType || 'text'
-    let placeholder: string | undefined =
-      this.props.options?.placeholder || 'Enter text...'
-    let clearField: boolean = this.props.options?.clearField || false
-    let displayRequiredIcon: boolean =
-      this.props.options?.displayRequiredIcon || false
-    let emptyStringAllowed: boolean =
-      this.props.options?.emptyStringAllowed || false
-    let currentValue: string | null | undefined = this.state.currentValue || ''
-    let displayError: boolean = this.state.displayError
-    let displayOptionalText: boolean =
-      this.props.options?.displayOptionalText || false
-
-    /* -- PRE-RENDER PROCESSING -- */
-
+  /**
+   * The class name for the detail.
+   */
+  const rootClassName: string = compute(() => {
     // Default class names
-    let fieldErrorClassName: string = 'FieldErrorMessage hide'
-    let labelClassName: string = 'Label'
-    let fieldClassName: string = 'Field FieldBox'
-    let inputContainerClassName: string = 'InputContainer'
-    let togglePasswordContainerClassName: string =
-      'TogglePasswordDisplayContainer Hidden'
-    let optionalClassName: string = displayOptionalText
-      ? 'Optional'
-      : 'Optional Hidden'
+    let classList: string[] = ['Detail']
 
-    // If empty strings are not allowed
-    // and the field is empty or in a default
-    // state, then display an error.
-    if (!emptyStringAllowed && (displayError || deliverError)) {
-      fieldClassName += ' Error'
-      labelClassName += ' Error'
-      fieldErrorClassName = 'FieldErrorMessage'
+    // If disabled is true then add the
+    // disabled class name.
+    if (disabled) {
+      classList.push('Disabled')
     }
 
-    if (inputTypePassed === 'password') {
-      togglePasswordContainerClassName = 'TogglePasswordDisplayContainer'
-      inputContainerClassName += ' Password'
+    // Return the list of class names as one string.
+    return classList.join(' ')
+  })
+  /**
+   * Class name for the error message field.
+   */
+  const fieldErrorClassName: string = compute(() => {
+    // Default class names
+    let classList: string[] = ['FieldErrorMessage']
+
+    // Hide the error message if the
+    // displayError is false.
+    if (!displayError) {
+      classList.push('Hidden')
     }
 
-    // If a boolean that is equivalent
-    // to true is passed, then the
-    // field will be cleared, or reset.
-    if (clearField && this.field.current) {
-      this.field.current.value = ''
+    // Return the list of class names as one string.
+    return classList.join(' ')
+  })
+  /**
+   * Class name for the label.
+   */
+  const labelClassName: string = compute(() => {
+    // Default class names
+    let classList: string[] = ['Label']
+
+    // If a unique class name is passed
+    // then add it to the list of class names.
+    if (uniqueLabelClassName) {
+      classList.push(uniqueLabelClassName)
     }
 
-    /* -- RENDER -- */
+    // If displayError is true then
+    // add the error class name.
+    if (displayError) {
+      classList.push('Error')
+    }
 
-    return (
-      <div className='Detail'>
-        <div className='TitleContainer'>
-          <div
-            className={labelClassName + ' ' + uniqueLabelClassName}
-          >{`${label}:`}</div>
-          <div className={optionalClassName}>optional</div>
-        </div>
-        <div className={inputContainerClassName}>
-          <input
-            className={fieldClassName + ' ' + uniqueInputClassName}
-            type={this.state.inputType}
-            ref={this.field}
-            value={currentValue}
-            placeholder={placeholder}
-            onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-              this.setState({ currentValue: event.target.value })
-              deliverValue(event.target.value)
+    // Return the list of class names as one string.
+    return classList.join(' ')
+  })
+  /**
+   * Class name for the field.
+   */
+  const fieldClassName: string = compute(() => {
+    // Default class names
+    let classList: string[] = ['Field', 'FieldBox']
 
-              // If empty strings are not allowed
-              // and the field is empty or in a default
-              // state, then display an error.
-              if (!emptyStringAllowed) {
-                if (
-                  event.target.value === '' ||
-                  event.target.value === null ||
-                  event.target.value === undefined
-                ) {
-                  this.setState({ displayError: true })
-                }
-                // If empty strings are not allowed
-                // and the field is not empty or in a default
-                // state, then do not display an error.
-                else {
-                  this.setState({ displayError: false })
-                }
-              }
-              // If empty strings are allowed then never
-              // display an error.
-              else {
-                this.setState({ displayError: false })
-              }
-            }}
-            onBlur={(event: React.FocusEvent) => {
-              let target: HTMLInputElement = event.target as HTMLInputElement
-              let value: string | null | undefined = target.value
+    // If a unique class name is passed
+    // then add it to the list of class names.
+    if (uniqueInputClassName) {
+      classList.push(uniqueInputClassName)
+    }
 
-              // If empty strings are not allowed
-              // and the field is empty or in a default
-              // state, then display an error.
-              if (!emptyStringAllowed) {
-                if (value === '' || value === null || value === undefined) {
-                  this.setState({ displayError: true })
-                }
-              }
-              // If empty strings are allowed then never
-              // display an error.
-              else {
-                this.setState({ displayError: false })
-              }
-            }}
-          />
-          <input
-            className={
-              togglePasswordContainerClassName +
-              ' ' +
-              fieldClassName +
-              ' ' +
-              uniqueInputClassName
-            }
-            onClick={() => this.togglePasswordDisplay()}
-            type='button'
-            value={this.state.displayPasswordText}
-            disabled={inputTypePassed !== 'password'}
-          />
-        </div>
-        <div className={fieldErrorClassName}>{errorMessage}</div>
-      </div>
-    )
+    // If displayError is true then
+    // add the error class name.
+    if (displayError) {
+      classList.push('Error')
+    }
+
+    // Return the list of class names as one string.
+    return classList.join(' ')
+  })
+  /**
+   * The class name for the input container.
+   */
+  const inputContainerClassName: string = compute(() => {
+    // Default class names
+    let classList: string[] = ['InputContainer']
+
+    // If the input type is password then
+    // add the password class name.
+    if (inputType === 'password') {
+      classList.push('Password')
+    }
+
+    // Return the list of class names as one string.
+    return classList.join(' ')
+  })
+  /**
+   * Class name for the toggle password display container.
+   * @note Appears as a button with the text "show" or "hide".
+   */
+  const togglePasswordButtonClassName: string = compute(() => {
+    // Default class names
+    let classList: string[] = ['TogglePasswordButton', fieldClassName]
+
+    // If the input type is not "password" then
+    // add the hidden class name.
+    if (inputType !== 'password') {
+      classList.push('Hidden')
+    }
+
+    // Return the list of class names as one string.
+    return classList.join(' ')
+  })
+  /**
+   * The class name for the optional text.
+   */
+  const optionalClassName: string = compute(() =>
+    displayOptionalText ? 'Optional' : 'Optional Hidden',
+  )
+
+  /* -- EFFECTS -- */
+  useEffect(() => {
+    // If clearField is true then
+    // clear the field.
+    if (clearField) {
+      deliverValue('')
+    }
+  }, [clearField])
+
+  /* -- FUNCTIONS -- */
+
+  /**
+   * Toggles the display of the password.
+   */
+  const togglePasswordDisplay = (): void => {
+    if (currentInputType === 'password') {
+      setCurrentInputType('text')
+      setDisplayPasswordText('hide')
+    } else {
+      setCurrentInputType('password')
+      setDisplayPasswordText('show')
+    }
   }
+
+  /* -- RENDER -- */
+
+  return (
+    <div className={rootClassName}>
+      <div className='TitleContainer'>
+        <div className={labelClassName}>{`${label}:`}</div>
+        <div className={optionalClassName}>optional</div>
+      </div>
+      <div className={inputContainerClassName}>
+        <input
+          className={fieldClassName}
+          type={currentInputType}
+          value={currentValue || ''}
+          placeholder={placeholder}
+          onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+            let target: HTMLInputElement = event.target as HTMLInputElement
+            let value: string = target.value
+            deliverValue(value)
+          }}
+          onBlur={(event: React.FocusEvent) => {
+            let target: HTMLInputElement = event.target as HTMLInputElement
+            let value: string | undefined = target.value
+
+            // Indicate that the user has left the field.
+            // @note - This allows errors to be displayed.
+            setLeftField(true)
+
+            // If the field is empty or in a default
+            // state and the error message is not displayed
+            // and the field is empty or in a default
+            // state, then set the input's value to
+            // the previous value and deliver the previous
+            // value.
+            if (
+              (value === '' || value === undefined) &&
+              !displayError &&
+              defaultValue
+            ) {
+              deliverValue(defaultValue)
+            }
+          }}
+        />
+        <input
+          className={togglePasswordButtonClassName}
+          onClick={togglePasswordDisplay}
+          type='button'
+          value={displayPasswordText}
+          disabled={inputType !== 'password'}
+        />
+      </div>
+      <div className={fieldErrorClassName}>{errorMessage}</div>
+    </div>
+  )
 }
 
 /**
  * This will render a detail for
  * a form, with a label and a number
  * field for entering information.
- * @param props.label The label for the detail.
- * @param props.initialValue The initial value for the detail.
- * @param props.deliverValue The function to deliver the value.
- * @param props.options The options available for the detail.
- * @param options.minimum The minimum value allowed for the detail. Defaults to null.
- * @param options.maximum The maximum value allowed for the detail. Defaults to null.
- * @param options.integersOnly The boolean that determines if the detail should only allow integers. Defaults to false.
- * @param options.unit The unit to display after the detail. Defaults to ''.
- * @param options.placeholder The placeholder for the input. Defaults to 'Enter a number...'.
- * @param options.emptyValueAllowed The boolean that determines if the detail should allow empty values. Defaults to false.
- * @param options.clearField The boolean that determines if the detail should clear the field. Defaults to false.
- * @param options.uniqueLabelClassName The unique class name for the label. Defaults to ''.
- * @param options.displayOptionalText The boolean that determines if the detail should display optional text. Defaults to false.
- * @returns A JSX Element for the detail.
  */
-export function DetailNumber(props: {
-  label: string
-  initialValue: number | null | undefined
-  deliverValue: (value: number | null | undefined) => void
-  options?: {
-    minimum?: number // default null
-    maximum?: number // default null
-    integersOnly?: boolean // default false
-    unit?: string // default ''
-    placeholder?: string // default 'Enter a number...'
-    emptyValueAllowed?: boolean // default false
-    clearField?: boolean // default false
-    uniqueLabelClassName?: string // default ''
-    displayOptionalText?: boolean // default false
-  }
-}): JSX.Element | null {
-  const field = useRef<HTMLInputElement>(null)
-  const [mountHandled, setMountHandled] = useState<boolean>(false)
+export function DetailNumber({
+  label,
+  currentValue,
+  deliverValue,
+  // Optional Properties
+  defaultValue = undefined,
+  minimum = undefined,
+  maximum = undefined,
+  integersOnly = false,
+  unit = '',
+  placeholder = undefined,
+  emptyValueAllowed = true,
+  clearField = false,
+  uniqueLabelClassName = '',
+  displayOptionalText = false,
+}: TDetailNumber_P): JSX.Element | null {
+  /* -- STATE -- */
+  const [inputValue, setInputValue] = useState<number | string>(
+    currentValue !== null ? currentValue : '',
+  )
 
-  let label: string = props.label
-  let initialValue: number | null | undefined = props.initialValue
-  let minimum: number | null =
-    props.options?.minimum !== undefined ? props.options.minimum : null
-  let maximum: number | null =
-    props.options?.maximum !== undefined ? props.options.maximum : null
-  let integersOnly: boolean = props.options?.integersOnly || false
-  let unit: string = props.options?.unit || ''
-  let placeholder: string = props.options?.placeholder || 'Enter a number...'
-  let emptyValueAllowed: boolean = props.options?.emptyValueAllowed || false
-  let clearField: boolean = props.options?.clearField || false
-  let uniqueLabelClassName: string = props.options?.uniqueLabelClassName || ''
-  let displayOptionalText: boolean = props.options?.displayOptionalText || false
-  let deliverValue = props.deliverValue
+  /* -- COMPUTED -- */
+  /**
+   * The class name for the label.
+   */
+  const labelClassName: string = compute(() => {
+    // Default class names
+    let classList: string[] = ['Label']
 
-  /* -- COMPONENT EFFECTS -- */
-  // Equivalent of componentDidMount.
-  useEffect(() => {
-    if (!mountHandled) {
-      let fieldElement: HTMLInputElement | null = field.current
-
-      if (fieldElement && initialValue) {
-        fieldElement.value = `${initialValue}`
-      }
-
-      setMountHandled(true)
+    // If a unique class name is passed
+    // then add it to the list of class names.
+    if (uniqueLabelClassName) {
+      classList.push(uniqueLabelClassName)
     }
-  }, [mountHandled])
 
-  /* -- PRE-RENDER PROCESSING -- */
+    // Return the list of class names as one string.
+    return classList.join(' ')
+  })
+  /**
+   * The class name for the optional text.
+   */
+  const optionalClassName: string = compute(() =>
+    displayOptionalText ? 'Optional' : 'Optional Hidden',
+  )
 
-  // Default class names
-  let labelClassName: string = 'Label'
-  let optionalClassName: string = displayOptionalText
-    ? 'Optional'
-    : 'Optional Hidden'
-
-  // If a boolean that is equivalent
-  // to true is passed, then the
-  // field will be cleared, or reset.
-  if (clearField && field.current) {
-    field.current.value = ''
-  }
+  /* -- EFFECTS -- */
+  useEffect(() => {
+    // If clearField is true then
+    // clear the field.
+    if (clearField) {
+      setInputValue('')
+      deliverValue(null)
+    }
+  }, [clearField])
 
   /* -- RENDER -- */
   return (
     <div className='Detail DetailNumber'>
       <div className='TitleContainer'>
-        <div
-          className={labelClassName + ' ' + uniqueLabelClassName}
-        >{`${label}:`}</div>
+        <div className={labelClassName}>{`${label}:`}</div>
         <div className={optionalClassName}>optional</div>
       </div>
       <div className='Unit'>{unit}</div>
       <input
         className='Field'
         type='text'
-        ref={field}
         placeholder={placeholder}
+        value={inputValue}
         onKeyDown={(event: React.KeyboardEvent<HTMLInputElement>) => {
+          // Enforce the input to only accept numeric characters.
           inputs.enforceNumbericCharsOnly(event)
+
+          // If integersOnly is true then enforce the input to only accept integers.
           if (integersOnly) {
             inputs.enforceIntegersOnly(event)
           }
-          if (minimum !== null && minimum >= 0) {
+
+          // If a minimum value is passed and it is greater than or equal to 0,
+          // then enforce the input to only accept non-negative numbers.
+          if (minimum !== undefined && minimum >= 0) {
             inputs.enforceNonNegativeOnly(event)
           }
         }}
@@ -308,37 +357,53 @@ export function DetailNumber(props: {
           let target: HTMLInputElement = event.target as HTMLInputElement
           let value: number | null
 
-          if (minimum !== null) {
+          // If a minimum or maximum value is passed
+          // then enforce the minimum and maximum values.
+          if (minimum !== undefined) {
             inputs.enforceNumberFloor(event, minimum)
           }
-          if (maximum !== null) {
+          if (maximum !== undefined) {
             inputs.enforceNumberCap(event, maximum)
           }
 
+          // Update the input's value.
+          setInputValue(target.value)
+
+          // Convert the input's value to a number and
+          // check if it is a number, then deliver the value.
           value = parseInt(target.value)
           value = isNaN(value) ? null : value
-
           deliverValue(value)
         }}
         onBlur={(event: React.FocusEvent) => {
           let target: HTMLInputElement = event.target as HTMLInputElement
-          let value: number | null | undefined
+          let value: number | null
 
+          // Convert the input's value to a number and
+          // check if it is a number.
           value = parseInt(target.value)
           value = isNaN(value) ? null : value
 
-          if (value === null) {
-            if (minimum !== null && minimum > 0) {
+          // If the field is empty or in a default
+          // state and empty values are not allowed...
+          if (value === null && !emptyValueAllowed) {
+            // ...but the minimum value is greater than 0,
+            // then set the input's value to the minimum value.
+            if (minimum !== undefined && minimum > 0) {
               value = minimum
-            } else if (maximum !== null && maximum < 0) {
-              value = maximum
-            } else {
-              value = 0
             }
-          }
+            // Or, if the maximum value is less than 0,
+            // then set the input's value to the maximum value.
+            else if (maximum !== undefined && maximum < 0) {
+              value = maximum
+            }
+            // Otherwise, set the input's value to the default value.
+            else if (defaultValue !== undefined) {
+              value = defaultValue
+            }
 
-          if (!emptyValueAllowed) {
-            target.value = `${value}`
+            // Update the input's value and deliver the value.
+            setInputValue(value !== null ? value : '')
             deliverValue(value)
           }
         }}
@@ -351,78 +416,155 @@ export function DetailNumber(props: {
  * This will render a detail for
  * a form, with a label and a text
  * field for entering information.
- * @param props.label The label for the detail.
- * @param props.initialValue The initial value for the detail.
- * @param props.deliverValue The function to deliver the value.
- * @param props.options The options available for the detail.
- * @param options.deliverError The boolean that determines if the detail should display an error. Defaults to false.
- * @param options.deliverErrorMessage The error message to display if the detail has an error. Defaults to ''.
- * @param options.disabled The boolean that determines if the detail should be disabled. Defaults to false.
- * @param options.uniqueLabelClassName The unique class name for the label. Defaults to ''.
- * @param options.uniqueInputClassName The unique class name for the input. Defaults to ''.
- * @param options.placeholder The placeholder for the input. Defaults to undefined.
- * @param options.emptyStringAllowed The boolean that determines if the detail should allow empty strings. Defaults to false.
- * @param options.elementBoundary The element boundary for the detail. Defaults to undefined.
- * @param options.clearField The boolean that determines if the detail should clear the field. Defaults to false.
- * @param options.displayOptionalText The boolean that determines if the detail should display optional text. Defaults to false.
- * @returns A JSX Element for the detail.
  */
-export function DetailBox(props: {
-  label: string
-  initialValue: string | undefined
-  deliverValue: (value: string) => void
-  options?: {
-    disabled?: boolean // default false
-    uniqueLabelClassName?: string // default ''
-    uniqueInputClassName?: string // default ''
-    placeholder?: string
-    emptyStringAllowed?: boolean // default false
-    elementBoundary?: string
-    clearField?: boolean // default false
-    displayOptionalText?: boolean // default false
-  }
-}): JSX.Element | null {
-  let label: string = props.label
-  let initialValue: string | undefined = props.initialValue
-  let uniqueLabelClassName: string = props.options?.uniqueLabelClassName
-    ? props.options.uniqueLabelClassName
-    : ''
-  let uniqueInputClassName: string = props.options?.uniqueInputClassName
-    ? props.options.uniqueInputClassName
-    : ''
-  let disabled: boolean = props.options?.disabled === true
-  let placeholder: string | undefined =
-    props.options?.placeholder || 'Enter text...'
-  let emptyStringAllowed: boolean = props.options?.emptyStringAllowed || false
-  let elementBoundary: string | undefined = props.options?.elementBoundary
-  let clearField: boolean = props.options?.clearField || false
-  let displayOptionalText: boolean = props.options?.displayOptionalText || false
-  let deliverValue = props.deliverValue
+export function DetailBox({
+  label,
+  currentValue,
+  deliverValue,
+  // Optional Properties
+  defaultValue = undefined,
+  deliverError = undefined,
+  errorMessage = 'At least one character is required here.',
+  disabled = false,
+  uniqueLabelClassName = '',
+  uniqueInputClassName = '',
+  placeholder = undefined,
+  emptyStringAllowed = true,
+  elementBoundary = undefined,
+  clearField = false,
+  displayOptionalText = false,
+}: TDetailBox_P): JSX.Element | null {
+  /* -- STATE -- */
+  const [leftField, setLeftField] = useState<boolean>(false)
 
-  /* -- COMPONENT STATE -- */
-  const [isEmptyString, setIsEmptyString] = useState<boolean>(false)
+  /* -- COMPUTED -- */
+  /**
+   * The boolean that determines if the
+   * error message should be displayed.
+   */
+  const displayError: boolean = compute(() => {
+    // Initialize the boolean.
+    let displayError: boolean = false
 
-  /* -- COMPONENT EFFECTS -- */
+    // If the user left the field by clicking
+    // outside of it...
+    if (leftField) {
+      // ...and empty strings are not allowed, the
+      // field is empty or in a default state,
+      // then display the error message.
+      if (
+        !emptyStringAllowed &&
+        (currentValue === '<p><br></p>' || currentValue === null)
+      ) {
+        displayError = true
+      }
+      // Or, if the error needs to be displayed
+      // then display the error message.
+      else if (deliverError) {
+        displayError = true
+      }
+    }
+
+    // Return the boolean.
+    return displayError
+  })
+  /**
+   * The root class name for the detail.
+   */
+  const rootClassName: string = compute(() => {
+    // Default class names
+    let classList: string[] = ['Detail', 'DetailBox']
+
+    // If disabled is true then add the
+    // disabled class name.
+    if (disabled) {
+      classList.push('Disabled')
+    }
+
+    // Return the list of class names as one string.
+    return classList.join(' ')
+  })
+  /**
+   * The class name for the label.
+   */
+  const labelClassName: string = compute(() => {
+    // Default class names
+    let classList: string[] = ['Label']
+
+    // If a unique class name is passed
+    // then add it to the list of class names.
+    if (uniqueLabelClassName) {
+      classList.push(uniqueLabelClassName)
+    }
+
+    // If displayError is true then
+    // add the error class name.
+    if (displayError) {
+      classList.push('Error')
+    }
+
+    // Return the list of class names as one string.
+    return classList.join(' ')
+  })
+  /**
+   * The class name for the field.
+   */
+  const fieldClassName: string = compute(() => {
+    // Default class names
+    let classList: string[] = ['Field', 'FieldBox']
+
+    // If the error message is displayed
+    // then add the error class name.
+    if (displayError) {
+      classList.push('Error')
+    }
+
+    // If a unique class name is passed
+    // then add it to the list of class names.
+    if (uniqueInputClassName) {
+      classList.push(uniqueInputClassName)
+    }
+
+    // Return the list of class names as one string.
+    return classList.join(' ')
+  })
+  /**
+   * Class name for the error message field.
+   */
+  const fieldErrorClassName: string = compute(() => {
+    // Default class names
+    let classList: string[] = ['FieldErrorMessage']
+
+    // Hide the error message if the
+    // displayError is false.
+    if (!displayError) {
+      classList.push('Hidden')
+    }
+
+    // Return the list of class names as one string.
+    return classList.join(' ')
+  })
+  /**
+   * The class name for the optional text.
+   */
+  const optionalClassName: string = compute(() =>
+    displayOptionalText ? 'Optional' : 'Optional Hidden',
+  )
+
+  /* -- EFFECTS -- */
   useEffect(() => {
-    // If a boolean that is equivalent
-    // to true is passed, then the
-    // field will be cleared, or reset.
+    // If clearField is true then
+    // clear the field.
     if (clearField) {
-      deliverValue('')
+      deliverValue('<p><br></p>')
     }
   }, [clearField])
 
   /* -- PRE-RENDER PROCESSING -- */
 
-  // Default class names
-  let className: string = 'Detail DetailBox'
-  let fieldClassName: string = 'Field FieldBox'
-  let labelClassName: string = 'Label'
-  let fieldErrorClassName: string = 'FieldErrorMessage hide'
-  let optionalClassName: string = displayOptionalText
-    ? 'Optional'
-    : 'Optional Hidden'
-
+  /**
+   * The modules used by the ReactQuill component.
+   */
   const reactQuillModules = {
     toolbar: {
       container: [
@@ -436,95 +578,56 @@ export function DetailBox(props: {
     },
   }
 
+  /**
+   * The formats used by the ReactQuill component.
+   */
   const reactQuillFormats = ['bold', 'italic', 'underline', 'link', 'list']
-
-  if (disabled) {
-    className += ' Disabled'
-  }
-
-  if (!emptyStringAllowed && isEmptyString) {
-    fieldClassName += ' Error'
-    labelClassName += ' Error'
-    fieldErrorClassName = 'FieldErrorMessage'
-  } else if (emptyStringAllowed) {
-    fieldClassName = 'Field FieldBox'
-    labelClassName = 'Label'
-  }
 
   /* -- RENDER -- */
 
   return (
-    <div className={className}>
+    <div className={rootClassName}>
       <div className='TitleContainer'>
-        <div
-          className={labelClassName + ' ' + uniqueLabelClassName}
-        >{`${label}:`}</div>
+        <div className={labelClassName}>{`${label}:`}</div>
         <div className={optionalClassName}>optional</div>
       </div>
-      <ReactQuill
-        bounds={elementBoundary}
-        className={fieldClassName + ' ' + uniqueInputClassName}
-        modules={reactQuillModules}
-        formats={reactQuillFormats}
-        value={initialValue}
-        placeholder={placeholder}
-        theme='snow'
-        onChange={(value: string) => {
-          deliverValue(value)
+      <div
+        className='FieldContainer'
+        onBlur={(event: React.FocusEvent) => {
+          let target: HTMLDivElement = event.target as HTMLDivElement
+          let value: string = target.innerHTML
 
-          // If empty strings are not allowed
+          // Indicate that the user has left the field.
+          // @note - This allows errors to be displayed.
+          setLeftField(true)
+
+          // If the field is empty or in a default
+          // state and the error message is not displayed
           // and the field is empty or in a default
-          // state, then display an error.
-          if (!emptyStringAllowed) {
-            if (
-              value === '<p><br></p>' ||
-              value === null ||
-              value === undefined
-            ) {
-              setIsEmptyString(true)
-            }
-            // If empty strings are not allowed
-            // and the field is not empty or in a default
-            // state, then do not display an error.
-            else {
-              setIsEmptyString(false)
-            }
-          }
-          // If empty strings are allowed then never
-          // display an error.
-          else {
-            setIsEmptyString(false)
+          // state, then set the input's value to
+          // the previous value and deliver the previous
+          // value.
+          if (
+            (value === '<p><br></p>' || value === undefined) &&
+            !displayError &&
+            defaultValue
+          ) {
+            deliverValue(defaultValue)
           }
         }}
-        onBlur={(
-          previousSelection: ReactQuill.Range,
-          source: any,
-          editor: ReactQuill.UnprivilegedEditor,
-        ) => {
-          let value: string = editor.getHTML()
-
-          // If empty strings are not allowed
-          // and the field is empty or in a default
-          // state, then display an error.
-          if (!emptyStringAllowed) {
-            if (
-              value === '<p><br></p>' ||
-              value === null ||
-              value === undefined
-            ) {
-              setIsEmptyString(true)
-            }
-          }
-          // If empty strings are allowed then never
-          // display an error.
-          else {
-            setIsEmptyString(false)
-          }
-        }}
-      />
-      <div className={fieldErrorClassName}>
-        At least one character is required here.
+      >
+        <ReactQuill
+          bounds={elementBoundary}
+          className={fieldClassName}
+          modules={reactQuillModules}
+          formats={reactQuillFormats}
+          value={currentValue || ''}
+          placeholder={placeholder}
+          theme='snow'
+          onChange={(value: string) => deliverValue(value)}
+        />
       </div>
+      <div className={fieldErrorClassName}>{errorMessage}</div>
     </div>
   )
 }
@@ -544,17 +647,17 @@ export function DetailDropDown<TOption>({
   deliverValue,
   // Optional Properties
   uniqueDropDownStyling = {},
-  uniqueClassName,
-  uniqueLabelClassName,
-  uniqueFieldClassName,
-  uniqueCurrentValueClassName,
+  uniqueClassName = undefined,
+  uniqueLabelClassName = undefined,
+  uniqueFieldClassName = undefined,
+  uniqueCurrentValueClassName = undefined,
   clearField = false,
   defaultValue = undefined,
   displayOptionalText = false,
-  uniqueOptionStyling = (option: TOption) => {
+  uniqueOptionStyling = () => {
     return {}
   },
-  renderOptionClassName = (option: TOption) => {
+  renderOptionClassName = () => {
     return ''
   },
 }: TDetailDropDown_P<TOption>): JSX.Element | null {
@@ -730,99 +833,92 @@ export function DetailDropDown<TOption>({
   }
 }
 
-// A field in a form that consists of a label
-// and an on/off toggle.
-export class DetailToggle extends React.Component<
-  TDetailToggle_P,
-  TDetailToggle_S
-> {
-  /* -- static-fields -- */
+/**
+ * This will render a detail for a form,
+ * with a label and a toggle switch
+ * for turning a feature on or off.
+ */
+export function DetailToggle({
+  label,
+  currentValue = false,
+  deliverValue,
+  // Optional Properties
+  lockState = 'unlocked',
+  tooltipDescription = '',
+  uniqueClassName = undefined,
+  errorMessage = undefined,
+  displayOptionalText = false,
+}: TDetailToggle_P): JSX.Element | null {
+  /* -- GLOBAL CONTEXT -- */
+  const { forceUpdate } = useGlobalContext().actions
 
-  static defaultProps = {
-    initialValue: false,
-    lockState: EToggleLockState.Unlocked,
-    tooltipDescription: '',
-    uniqueClassName: '',
-  }
-
-  /* -- non-static-fields -- */
-
-  // ...none added
-
-  /* -- initialization -- */
-
-  // constructor(props: IFormDetailToggle_P) {
-  //   super(props)
-  // }
-
-  componentDidMount(): void {}
-
-  componentDidUpdate(
-    prevProps: Readonly<TDetailToggle_P>,
-    prevState: Readonly<TDetailToggle_S>,
-    snapshot?: any,
-  ): void {
-    if (prevProps.initialValue !== this.props.initialValue) {
-      this.forceUpdate()
-    }
-  }
-
-  /* -- functions | render -- */
-
-  // inherited
-  render(): JSX.Element | null {
-    let label: string = this.props.label
-    let initialValue: boolean = this.props.initialValue
-    let lockState: EToggleLockState = this.props.lockState
-    let tooltipDescription: string = this.props.tooltipDescription
-    let hideTooltip: boolean = tooltipDescription.length === 0
-    let uniqueClassName: string = this.props.uniqueClassName
-    let errorMessage: string | undefined = this.props.options?.errorMessage
-    let displayOptionalText: boolean =
-      this.props.options?.displayOptionalText || false
-
-    /* -- PRE-RENDER PROCESSING -- */
-
+  /* -- COMPUTED -- */
+  /**
+   * The class name for the detail.
+   */
+  const containerClassName: string = compute(() => {
     // Default class names
-    let containerClassName: string = 'Detail DetailToggle'
-    let fieldErrorClassName: string = 'FieldErrorMessage hide'
-    let optionalClassName: string = displayOptionalText
-      ? 'Optional'
-      : 'Optional Hidden'
+    let classList: string[] = ['Detail', 'DetailToggle']
 
-    if (uniqueClassName.length > 0) {
-      containerClassName += ` ${uniqueClassName}`
+    // If a unique class name is passed
+    // then add it to the list of class names.
+    if (uniqueClassName) {
+      classList.push(uniqueClassName)
     }
-    tooltipDescription = `#### ${label}\n${tooltipDescription}`
 
+    // Return the list of class names as one string.
+    return classList.join(' ')
+  })
+  /**
+   * The class name for the optional text.
+   */
+  const optionalClassName: string = compute(() =>
+    displayOptionalText ? 'Optional' : 'Optional Hidden',
+  )
+  /**
+   * Class name for the error message field.
+   */
+  const fieldErrorClassName: string = compute(() => {
+    // Default class names
+    let classList: string[] = ['FieldErrorMessage']
+
+    // Hide the error message if the
+    // error message is not passed and
+    // the lock state is locked.
     if (
-      errorMessage !== undefined &&
-      (lockState === EToggleLockState.LockedActivation ||
-        lockState === EToggleLockState.LockedDeactivation)
+      !errorMessage &&
+      (lockState === 'locked-activation' || lockState === 'locked-deactivation')
     ) {
-      fieldErrorClassName = 'FieldErrorMessage'
+      classList.push('Hidden')
     }
 
-    /* -- RENDER -- */
+    // Return the list of class names as one string.
+    return classList.join(' ')
+  })
 
-    return (
-      <div className={containerClassName}>
-        <div className='TitleContainer'>
-          <div className='Label'>{label}</div>
-          <div className={optionalClassName}>optional</div>
-        </div>
-        <div className='Field'>
-          <Toggle
-            initiallyActivated={initialValue}
-            lockState={lockState}
-            deliverValue={this.props.deliverValue}
-          />
-        </div>
-        {hideTooltip ? null : <Tooltip description={tooltipDescription} />}
-        <div className={fieldErrorClassName}>{errorMessage}</div>
+  /* -- EFFECTS -- */
+  useEffect(() => {
+    forceUpdate()
+  }, [currentValue])
+
+  /* -- RENDER -- */
+  return (
+    <div className={containerClassName}>
+      <div className='TitleContainer'>
+        <div className='Label'>{label}</div>
+        <div className={optionalClassName}>optional</div>
       </div>
-    )
-  }
+      <div className='Field'>
+        <Toggle
+          currentValue={currentValue}
+          deliverValue={deliverValue}
+          lockState={lockState}
+        />
+      </div>
+      <Tooltip description={tooltipDescription} />
+      <div className={fieldErrorClassName}>{errorMessage}</div>
+    </div>
+  )
 }
 
 /* ---------------------------- TYPES FOR FORMS ---------------------------- */
@@ -863,91 +959,216 @@ type TDetail_P = {
    */
   label: string
   /**
-   * The initial value for the detail.
+   * The current value for the detail.
    */
-  initialValue: string | null | undefined
+  currentValue: string | null
   /**
    * The function to deliver the value.
    */
   deliverValue: (value: string) => void
   /**
-   * The options available for the detail.
+   * The default value that is used if the field is empty.
+   * @default undefined
    */
-  options?: {
-    /**
-     * The boolean that determines if the detail should display an error.
-     * @default false
-     */
-    deliverError?: boolean
-    /**
-     * The error message to display if the detail has an error.
-     * @default 'At least one character is required here.'
-     */
-    deliverErrorMessage?: string
-    /**
-     * The unique class name for the label.
-     * @default ''
-     */
-    uniqueLabelClassName?: string
-    /**
-     * The unique class name for the input.
-     * @default ''
-     */
-    uniqueInputClassName?: string
-    /**
-     * The type of input to render (i.e., text, password, etc.).
-     * @default 'text'
-     */
-    inputType?: TInput
-    /**
-     * The placeholder for the input.
-     * @default 'Enter text...'
-     */
-    placeholder?: string
-    /**
-     * The boolean that determines if the detail should clear the field.
-     * @default false
-     */
-    clearField?: boolean
-    /**
-     * The boolean that determines if the detail should display a required icon.
-     * @default false
-     */
-    displayRequiredIcon?: boolean
-    /**
-     * The boolean that determines if the detail should allow empty strings.
-     * @default false
-     */
-    emptyStringAllowed?: boolean
-    /**
-     * A boolean that will determine whether or not to show that the field
-     * is optional.
-     * @default false
-     */
-    displayOptionalText?: boolean
-  }
+  defaultValue?: string | undefined
+  /**
+   * The boolean that determines if the detail should display an error.
+   * @default false
+   */
+  deliverError?: boolean
+  /**
+   * The error message to display if the detail has an error.
+   * @default 'At least one character is required here.'
+   */
+  errorMessage?: string
+  /**
+   * Boolean that determines if the detail should be disabled.
+   */
+  disabled?: boolean
+  /**
+   * The unique class name for the label.
+   * @default ''
+   */
+  uniqueLabelClassName?: string
+  /**
+   * The unique class name for the input.
+   * @default ''
+   */
+  uniqueInputClassName?: string
+  /**
+   * The type of input to render (i.e., text, password, etc.).
+   * @default 'text'
+   */
+  inputType?: TInput
+  /**
+   * The placeholder for the input.
+   * @default 'Enter text...'
+   */
+  placeholder?: string
+  /**
+   * The boolean that determines if the detail should clear the field.
+   * @default false
+   */
+  clearField?: boolean
+  /**
+   * The boolean that determines if the detail should display a required icon.
+   * @default false
+   */
+  displayRequiredIcon?: boolean
+  /**
+   * The boolean that determines if the detail should allow empty strings.
+   * @default true
+   */
+  emptyStringAllowed?: boolean
+  /**
+   * A boolean that will determine whether or not to show that the field
+   * is optional.
+   * @default false
+   */
+  displayOptionalText?: boolean
 }
 
 /**
- * The state for the Detail component.
+ * The properties for the DetailNumber component.
  */
-type TDetail_S = {
+type TDetailNumber_P = {
   /**
-   * The type of input to render (i.e., text, password, etc.).
+   * The label for the detail.
    */
-  inputType: TInput
-  /**
-   * The text to display for the password.
-   */
-  displayPasswordText: string
+  label: string
   /**
    * The current value for the detail.
    */
-  currentValue: string | null | undefined
+  currentValue: number | null
+  /**
+   * The function to deliver the value.
+   */
+  deliverValue: (value: number | null) => void
+  /**
+   * The default value that is used if the field is empty.
+   */
+  defaultValue?: number
+  /**
+   * The minimum value allowed for the detail.
+   * @default null
+   */
+  minimum?: number
+  /**
+   * The maximum value allowed for the detail.
+   * @default null
+   */
+  maximum?: number
+  /**
+   * The boolean that determines if the detail should only allow integers.
+   * @default false
+   */
+  integersOnly?: boolean
+  /**
+   * The unit to display after the detail.
+   * @default ''
+   */
+  unit?: string
+  /**
+   * The placeholder for the input.
+   * @default undefined
+   */
+  placeholder?: string
+  /**
+   * The boolean that determines if the detail should allow empty values.
+   * @default true
+   */
+  emptyValueAllowed?: boolean
+  /**
+   * The boolean that determines if the detail should clear the field.
+   * @default false
+   */
+  clearField?: boolean
+  /**
+   * The unique class name for the label.
+   * @default ''
+   */
+  uniqueLabelClassName?: string
+  /**
+   * The boolean that determines if the detail should display optional text.
+   * @default false
+   */
+  displayOptionalText?: boolean
+}
+
+/**
+ * The properties for the DetailBox component.
+ */
+type TDetailBox_P = {
+  /**
+   * The label for the detail.
+   */
+  label: string
+  /**
+   * The current value for the detail.
+   */
+  currentValue: string | null
+  /**
+   * The function to deliver the value.
+   */
+  deliverValue: (value: string) => void
+  /**
+   * The default value that is used if the field is empty.
+   * @default undefined
+   */
+  defaultValue?: string | undefined
   /**
    * The boolean that determines if the detail should display an error.
+   * @default false
    */
-  displayError: boolean
+  deliverError?: boolean
+  /**
+   * The error message to display if the detail has an error.
+   * @default 'At least one character is required here.'
+   */
+  errorMessage?: string
+  /**
+   * The boolean that determines if the detail should be disabled.
+   * @default false
+   */
+  disabled?: boolean
+  /**
+   * The unique class name for the label.
+   * @default ''
+   */
+  uniqueLabelClassName?: string
+  /**
+   * The unique class name for the input.
+   * @default ''
+   */
+  uniqueInputClassName?: string
+  /**
+   * The placeholder for the input.
+   * @default undefined
+   */
+  placeholder?: string
+  /**
+   * The boolean that determines if the detail should allow empty strings.
+   * @default true
+   */
+  emptyStringAllowed?: boolean
+  /**
+   * The class name of the element that the detail is bound to.
+   * @note This is used to keep the tooltip from being cut off by the
+   * element's boundary.
+   * @default undefined
+   */
+  elementBoundary?: string
+  /**
+   * The boolean that determines if the detail should clear the field.
+   * @default false
+   */
+  clearField?: boolean
+  /**
+   * A boolean that will determine whether or not to show that the field
+   * is optional.
+   * @default false
+   */
+  displayOptionalText?: boolean
 }
 
 /**
@@ -1036,50 +1257,40 @@ type TDetailDropDown_P<TOption> = {
  */
 export type TDetailToggle_P = {
   /**
-   * Marks the form detail.
+   * The label for the detail.
    */
   label: string
   /**
-   * The default value for the input field.
+   * The current value for the detail.
+   * @default false
    */
-  initialValue: boolean
+  currentValue: boolean | undefined
+  /**
+   * A function that will deliver the value of the toggle.
+   */
+  deliverValue: (activated: boolean) => void
   /**
    * The toggle lock state of the toggle.
-   * (See Toggle.tsx)
+   * @default 'unlocked'
    */
-  lockState: EToggleLockState
+  lockState?: TToggleLockState
   /**
    * The description displayed when hovered over.
+   * @default ''
    */
-  tooltipDescription: string
+  tooltipDescription?: string
   /**
    * Class name to apply to the root element.
    */
-  uniqueClassName: string
-  /**
-   * Delivers what the user inputs so that
-   * the parent component can track it.
-   * @param value The value to deliver.
+  uniqueClassName?: string
+  /** If an error message is needed then this is the
+   * message that will be displayed
    */
-  deliverValue: (value: boolean) => void
+  errorMessage?: string
   /**
-   * The options available for the detail.
+   * A boolean that will determine whether or not to show that the field
+   * is optional.
+   * @default false
    */
-  options?: {
-    /** If an error message is needed then this is the
-     * message that will be displayed
-     */
-    errorMessage?: string
-    /**
-     * A boolean that will determine whether or not to show that the field
-     * is optional.
-     * @default false
-     */
-    displayOptionalText?: boolean
-  }
+  displayOptionalText?: boolean
 }
-
-/**
- * The state for the DetailToggle component.
- */
-type TDetailToggle_S = {}

@@ -1,6 +1,7 @@
 import ClientMissionAction from 'src/missions/actions'
 import { ClientEffect } from 'src/missions/effects'
 import ClientMissionNode from 'src/missions/nodes'
+import { ClientTargetEnvironment } from 'src/target-environments'
 import { compute } from 'src/toolbox'
 import { v4 as generateHash } from 'uuid'
 import { SingleTypeObject } from '../../../../../shared/toolbox/objects'
@@ -18,11 +19,8 @@ import './ActionEntry.scss'
  */
 export default function ActionEntry({
   action,
+  targetEnvironments,
   missionPath,
-  isEmptyString,
-  areDefaultValues,
-  actionEmptyStringArray,
-  setActionEmptyStringArray,
   setMissionPath,
   setSelectedAction,
   setSelectedEffect,
@@ -35,127 +33,13 @@ export default function ActionEntry({
    */
   const node: ClientMissionNode = compute(() => action.node)
   /**
-   * The class name for the top of the box.
-   */
-  const boxTopClassName: string = compute(() => {
-    // Create a default list of class names.
-    let classList: string[] = ['BoxTop']
-
-    // If there is at least one empty field, add the error class.
-    if (isEmptyString || areDefaultValues) {
-      classList.push('IsError')
-    }
-
-    // If the action is new then add the "New" class name,
-    // to properly display the close button.
-    if (!node.actions.has(action.actionID)) {
-      classList.push('New')
-    }
-
-    // Combine the class names into a single string.
-    return classList.join(' ')
-  })
-  /**
-   * The class name for the delete action button.
-   */
-  const deleteActionClassName: string = compute(() => {
-    // Create a default list of class names.
-    let classList: string[] = ['FormButton', 'DeleteAction']
-
-    // If there is only one action then disable the delete button.
-    if (node.actions.size === 1) {
-      classList.push('Disabled')
-    }
-
-    // If the action is new then hide the delete button.
-    if (!node.actions.has(action.actionID)) {
-      classList.push('Hidden')
-    }
-
-    // Combine the class names into a single string.
-    return classList.join(' ')
-  })
-  /**
-   * The class name for the new effect button.
-   */
-  const newEffectClassName: string = compute(() => {
-    // Create a default list of class names.
-    let classList: string[] = ['NewEffect']
-
-    // If there is at least one empty field, add the disabled class.
-    if (isEmptyString || areDefaultValues) {
-      classList.push('Disabled')
-    }
-
-    // Combine the class names into a single string.
-    return classList.join(' ')
-  })
-  /**
-   * The class name for the list of effects.
-   */
-  const effectsClassName: string = compute(() => {
-    // Create a default list of class names.
-    let classList: string[] = ['AltDesign2']
-
-    // If there is at least one empty field, add the error class.
-    if (
-      isEmptyString ||
-      areDefaultValues
-      // !node.actions.has(action.actionID)
-    ) {
-      classList.unshift('Disabled')
-    }
-
-    // Combine the class names into a single string.
-    return classList.join(' ')
-  })
-  /**
-   * The class name for the back arrow.
-   */
-  const backButtonClassName: string = compute(() => {
-    // Create a default list of class names.
-    let classList: string[] = ['BackButton']
-
-    // If there is at least one empty field, add the disabled class.
-    if (isEmptyString || areDefaultValues) {
-      classList.push('Disabled')
-    }
-
-    // If the action is new then hide the back button.
-    if (!node.actions.has(action.actionID)) {
-      classList.push('Hidden')
-    }
-
-    // Combine the class names into a single string.
-    return classList.join(' ')
-  })
-  /**
-   * The class name for the close button.
-   */
-  const closeButtonClassName: string = compute(() => {
-    // Create a default list of class names.
-    let classList: string[] = ['Close']
-
-    // If the action is not new then hide the close button.
-    if (node.actions.has(action.actionID)) {
-      classList.push('Hidden')
-    }
-
-    // Combine the class names into a single string.
-    return classList.join(' ')
-  })
-  /**
    * The name of the mission.
    */
-  const missionName: string = compute(() => {
-    return action.node.mission.name
-  })
+  const missionName: string = compute(() => action.mission.name)
   /**
    * The name of the node.
    */
-  const nodeName: string = compute(() => {
-    return action.node.name
-  })
+  const nodeName: string = compute(() => action.node.name)
   /**
    * The chance that the action will succeed.
    */
@@ -183,15 +67,14 @@ export default function ActionEntry({
     }
   })
   /**
-   * The class name for the mission path.
+   * The class name for the delete action button.
    */
-  const pathClassName: string = compute(() => {
+  const deleteActionClassName: string = compute(() => {
     // Create a default list of class names.
-    let classList: string[] = ['Path']
+    let classList: string[] = ['FormButton', 'DeleteAction']
 
-    // If the action is new then disable the path
-    // to keep the user from navigating away.
-    if (!node.actions.has(action.actionID)) {
+    // If there is only one action then disable the delete button.
+    if (node.actions.size === 1) {
       classList.push('Disabled')
     }
 
@@ -199,52 +82,28 @@ export default function ActionEntry({
     return classList.join(' ')
   })
   /**
-   * The class name for the create button.
+   * The class name for the new effect button.
    */
-  const createButtonClassName: string = compute(() => {
+  const newEffectButtonClassName: string = compute(() => {
     // Create a default list of class names.
-    let classList: string[] = ['Button']
+    let classList: string[] = ['Text']
 
-    // If the action is not new then hide the create button.
-    if (node.actions.has(action.actionID)) {
-      classList.push('Hidden')
-    } else {
-      // If there is an empty field ||
-      // If there are default values...
-      // then disable the create button.
-      if (isEmptyString || areDefaultValues) {
-        // Disable the create button.
-        classList.push('Disabled')
-      }
+    // If there are no target environments then disable the button.
+    if (targetEnvironments.length === 0) {
+      classList.push('Disabled')
     }
 
+    // Combine the class names into a single string.
     return classList.join(' ')
   })
 
   /* -- FUNCTIONS -- */
-  /**
-   * Removes the actionID and field from the actionEmptyStringArray.
-   * @note This function is called when a field is no longer empty.
-   */
-  const removeActionEmptyString = (field: string) => {
-    // Remove the actionID and field from the actionEmptyStringArray.
-    actionEmptyStringArray.map((actionEmptyString: string, index: number) => {
-      // If the actionID and field match, remove it from the array.
-      if (actionEmptyString === `actionID=${action.actionID}_field=${field}`) {
-        // Remove the actionID and field from the actionEmptyStringArray.
-        actionEmptyStringArray.splice(index, 1)
-      }
-    })
-  }
-
   /**
    * Deletes the action from the node.
    */
   const handleDeleteActionRequest = () => {
     // Remove the action from the node.
     node.actions.delete(action.actionID)
-    // Reset the actionEmptyStringArray.
-    setActionEmptyStringArray([])
     // Reset the selected action.
     setSelectedAction(null)
     // Allow the user to save the changes.
@@ -293,14 +152,6 @@ export default function ActionEntry({
     }
   }
 
-  /**
-   * Handles creating the action.
-   */
-  const createAction = () => {
-    node.actions.set(action.actionID, action)
-    handleChange()
-  }
-
   /* -- RENDER -- */
 
   if (node.executable) {
@@ -308,20 +159,17 @@ export default function ActionEntry({
       <div className='ActionEntry SidePanel'>
         <div className='BorderBox'>
           {/* -- TOP OF BOX -- */}
-          <div className={boxTopClassName}>
+          <div className='BoxTop'>
             <div className='BackContainer'>
               <div
-                className={backButtonClassName}
+                className='BackButton'
                 onClick={() => setSelectedAction(null)}
               >
                 &lt;
                 <Tooltip description='Go back.' />
               </div>
             </div>
-            <div className='ErrorMessage'>
-              Fix all errors before closing panel.
-            </div>
-            <div className={pathClassName}>
+            <div className='Path'>
               Location:{' '}
               {missionPath.map((position: string, index: number) => {
                 return (
@@ -337,82 +185,47 @@ export default function ActionEntry({
                 )
               })}
             </div>
-            <div
-              className={closeButtonClassName}
-              onClick={() => setSelectedAction(null)}
-            >
-              <div className='CloseButton'>
-                x
-                <Tooltip description='Cancel' />
-              </div>
-            </div>
           </div>
 
           {/* -- MAIN CONTENT -- */}
           <div className='SidePanelSection'>
             <Detail
               label='Name'
-              initialValue={action.name}
+              currentValue={action.name}
+              defaultValue={ClientMissionAction.DEFAULT_PROPERTIES.name}
               deliverValue={(name: string) => {
-                if (name !== '') {
-                  action.name = name
-                  setMissionPath([missionName, nodeName, name])
-                  removeActionEmptyString('name')
-                  handleChange()
-                } else {
-                  setActionEmptyStringArray([
-                    ...actionEmptyStringArray,
-                    `actionID=${action.actionID}_field=name`,
-                  ])
-                }
+                action.name = name
+                setMissionPath([missionName, nodeName, name])
+                handleChange()
               }}
-              options={{
-                placeholder: 'Enter name...',
-                deliverError: isEmptyString,
-                deliverErrorMessage: 'At least one character is required here.',
-              }}
+              placeholder='Enter name...'
               key={`${action.actionID}_name`}
             />
             <DetailBox
               label='Description'
-              initialValue={action.description}
+              currentValue={action.description}
               deliverValue={(description: string) => {
                 action.description = description
-
-                // Equivalent to an empty string.
-                if (description !== '<p><br></p>') {
-                  removeActionEmptyString('description')
-                  handleChange()
-                } else {
-                  setActionEmptyStringArray([
-                    ...actionEmptyStringArray,
-                    `actionID=${action.actionID}_field=description`,
-                  ])
-                }
+                handleChange()
               }}
-              options={{
-                elementBoundary: '.BorderBox',
-                placeholder: 'Enter description...',
-              }}
+              elementBoundary='.BorderBox'
+              placeholder='Enter description...'
+              displayOptionalText={true}
               key={`${action.actionID}_description`}
             />
             <DetailNumber
               label='Success Chance'
-              initialValue={successChance}
-              options={{
-                minimum: 0,
-                maximum: 100,
-                unit: '%',
-              }}
-              deliverValue={(
-                successChancePercentage: number | null | undefined,
-              ) => {
-                if (
-                  successChancePercentage !== null &&
-                  successChancePercentage !== undefined
-                ) {
+              currentValue={successChance}
+              defaultValue={
+                ClientMissionAction.DEFAULT_PROPERTIES.successChance * 100.0
+              }
+              emptyValueAllowed={false}
+              minimum={0}
+              maximum={100}
+              unit='%'
+              deliverValue={(successChancePercentage: number | null) => {
+                if (successChancePercentage !== null) {
                   action.successChance = successChancePercentage / 100.0
-
                   handleChange()
                 }
               }}
@@ -420,16 +233,17 @@ export default function ActionEntry({
             />
             <DetailNumber
               label='Process Time'
-              initialValue={processTime}
-              options={{
-                minimum: 0,
-                maximum: 3600,
-                unit: 's',
-              }}
-              deliverValue={(timeCost: number | null | undefined) => {
-                if (timeCost !== null && timeCost !== undefined) {
+              currentValue={processTime}
+              defaultValue={
+                ClientMissionAction.DEFAULT_PROPERTIES.processTime / 1000
+              }
+              emptyValueAllowed={false}
+              minimum={0}
+              maximum={3600}
+              unit='s'
+              deliverValue={(timeCost: number | null) => {
+                if (timeCost !== null) {
                   action.processTime = timeCost * 1000
-
                   handleChange()
                 }
               }}
@@ -437,11 +251,13 @@ export default function ActionEntry({
             />
             <DetailNumber
               label='Resource Cost'
-              initialValue={action.resourceCost}
-              deliverValue={(resourceCost: number | null | undefined) => {
-                if (resourceCost !== null && resourceCost !== undefined) {
+              currentValue={action.resourceCost}
+              defaultValue={ClientMissionAction.DEFAULT_PROPERTIES.resourceCost}
+              emptyValueAllowed={false}
+              minimum={0}
+              deliverValue={(resourceCost: number | null) => {
+                if (resourceCost !== null) {
                   action.resourceCost = resourceCost
-
                   handleChange()
                 }
               }}
@@ -449,46 +265,28 @@ export default function ActionEntry({
             />
             <DetailBox
               label='Post-Execution Success Text'
-              initialValue={action.postExecutionSuccessText}
+              currentValue={action.postExecutionSuccessText}
+              defaultValue={
+                ClientMissionAction.DEFAULT_PROPERTIES.postExecutionSuccessText
+              }
               deliverValue={(postExecutionSuccessText: string) => {
                 action.postExecutionSuccessText = postExecutionSuccessText
-
-                // Equivalent to an empty string.
-                if (postExecutionSuccessText !== '<p><br></p>') {
-                  removeActionEmptyString('postExecutionSuccessText')
-                  handleChange()
-                } else {
-                  setActionEmptyStringArray([
-                    ...actionEmptyStringArray,
-                    `actionID=${action.actionID}_field=postExecutionSuccessText`,
-                  ])
-                }
+                handleChange()
               }}
-              options={{
-                elementBoundary: '.BorderBox',
-              }}
+              elementBoundary='.BorderBox'
               key={`${action.actionID}_postExecutionSuccessText`}
             />
             <DetailBox
               label='Post-Execution Failure Text'
-              initialValue={action.postExecutionFailureText}
+              currentValue={action.postExecutionFailureText}
+              defaultValue={
+                ClientMissionAction.DEFAULT_PROPERTIES.postExecutionFailureText
+              }
               deliverValue={(postExecutionFailureText: string) => {
                 action.postExecutionFailureText = postExecutionFailureText
-
-                // Equivalent to an empty string.
-                if (postExecutionFailureText !== '<p><br></p>') {
-                  removeActionEmptyString('postExecutionFailureText')
-                  handleChange()
-                } else {
-                  setActionEmptyStringArray([
-                    ...actionEmptyStringArray,
-                    `actionID=${action.actionID}_field=postExecutionFailureText`,
-                  ])
-                }
+                handleChange()
               }}
-              options={{
-                elementBoundary: '.BorderBox',
-              }}
+              elementBoundary='.BorderBox'
               key={`${action.actionID}_postExecutionFailureText`}
             />
 
@@ -552,14 +350,14 @@ export default function ActionEntry({
                 return {}
               }}
               itemsPerPage={null}
-              listSpecificItemClassName={effectsClassName}
+              listSpecificItemClassName='AltDesign2'
             />
 
             {/* -- NEW EFFECT BUTTON -- */}
-            <div className={newEffectClassName}>
+            <div className='NewEffect'>
               <div className='ButtonContainer'>
                 <div
-                  className='FormButton AddEffect'
+                  className='FormButton CreateNewEffect'
                   onClick={() =>
                     setSelectedEffect(
                       new ClientEffect(action, {
@@ -569,16 +367,16 @@ export default function ActionEntry({
                     )
                   }
                 >
-                  <span className='Text'>
+                  <span className={newEffectButtonClassName}>
                     <span className='LeftBracket'>[</span> New Effect{' '}
                     <span className='RightBracket'>]</span>
-                    <Tooltip description='Create a new action.' />
+                    <Tooltip description='Create a new effect.' />
                   </span>
                 </div>
               </div>
             </div>
 
-            {/* -- BUTTONS -- */}
+            {/* -- BUTTON(S) -- */}
             <div className='ButtonContainer'>
               <div
                 className={deleteActionClassName}
@@ -589,9 +387,6 @@ export default function ActionEntry({
                   <span className='RightBracket'>]</span>
                   <Tooltip description='Delete this action from the node.' />
                 </span>
-              </div>
-              <div className={createButtonClassName} onClick={createAction}>
-                Create Action
               </div>
             </div>
           </div>
@@ -614,28 +409,14 @@ export type TActionEntry_P = {
    */
   action: ClientMissionAction
   /**
+   * List of target environments to apply effects to.
+   */
+  targetEnvironments: ClientTargetEnvironment[]
+  /**
    * The path showing the user's location in the side panel.
    * @note This will help the user understand what they are editing.
    */
   missionPath: string[]
-  /**
-   * A boolean that will determine if a field has been left empty.
-   */
-  isEmptyString: boolean
-  /**
-   * A boolean that will determine if a field has default values.
-   */
-  areDefaultValues: boolean
-  /**
-   * An array of strings that will be used to determine
-   * if a field has been left empty.
-   */
-  actionEmptyStringArray: string[]
-  /**
-   * A function that will set the array of strings that
-   * will be used to determine if a field has been left empty.
-   */
-  setActionEmptyStringArray: (actionEmptyStringArray: string[]) => void
   /**
    * A function that will set the mission path.
    */
@@ -649,7 +430,7 @@ export type TActionEntry_P = {
    */
   setSelectedEffect: (effect: ClientEffect | null) => void
   /**
-   * A function that will be called when a change has been made.
+   * Handles when a change is made that would require saving.
    */
   handleChange: () => void
 }

@@ -15,10 +15,6 @@ export default function EffectEntry({
   effect,
   missionPath,
   targetEnvironments,
-  isEmptyString,
-  areDefaultValues,
-  effectEmptyStringArray,
-  setEffectEmptyStringArray,
   setMissionPath,
   setSelectedAction,
   setSelectedEffect,
@@ -26,138 +22,30 @@ export default function EffectEntry({
 }: TEffectEntry_P): JSX.Element | null {
   /* -- COMPUTED -- */
   /**
-   * The class name for the top of the box.
-   */
-  const boxTopClassName: string = compute(() => {
-    // Create a default list of class names.
-    let classList: string[] = ['BoxTop']
-
-    // If there is at least one empty field, add the error class.
-    if (isEmptyString) {
-      classList.push('IsError')
-    }
-
-    // If the effect is new then add the "New" class name,
-    // to properly display the close button.
-    if (!action.effects.includes(effect)) {
-      classList.push('New')
-    }
-
-    // Combine the class names into a single string.
-    return classList.join(' ')
-  })
-  /**
-   * The class name for the back arrow.
-   */
-  const backButtonClassName: string = compute(() => {
-    // Create a default list of class names.
-    let classList: string[] = ['BackButton']
-
-    // If the effect is new then hide the back button.
-    if (!action.effects.includes(effect)) {
-      classList.push('Hidden')
-    }
-
-    // Combine the class names into a single string.
-    return classList.join(' ')
-  })
-  /**
-   * The class name for the close button.
-   */
-  const closeButtonClassName: string = compute(() => {
-    // Create a default list of class names.
-    let classList: string[] = ['Close']
-
-    // If the effect is new then hide the close button.
-    if (action.effects.includes(effect)) {
-      classList.push('Hidden')
-    }
-
-    // Combine the class names into a single string.
-    return classList.join(' ')
-  })
-  /**
-   * The class name for the delete button.
-   */
-  const deleteButtonClassName: string = compute(() => {
-    let classList: string[] = ['FormButton DeleteEffect']
-
-    if (!action.effects.includes(effect)) {
-      classList.push('Hidden')
-    }
-
-    return classList.join(' ')
-  })
-  /**
    * The name of the mission.
    */
-  const missionName: string = compute(() => {
-    return action.node.mission.name
-  })
+  const missionName: string = compute(() => effect.mission.name)
   /**
    * The name of the node.
    */
-  const nodeName: string = compute(() => {
-    return action.node.name
-  })
+  const nodeName: string = compute(() => effect.node.name)
   /**
    * The name of the action.
    */
-  const actionName: string = compute(() => {
-    if (action.name) {
-      return action.name
-    } else {
-      return ''
-    }
-  })
-  /**
-   * The class name for the mission path.
-   */
-  const pathClassName: string = compute(() => {
-    // Create a default list of class names.
-    let classList: string[] = ['Path']
-
-    if (!action.effects.includes(effect)) {
-      classList.push('Disabled')
-    }
-
-    // Combine the class names into a single string.
-    return classList.join(' ')
-  })
+  const actionName: string = compute(() => action.name)
 
   /* -- FUNCTIONS -- */
-  /**
-   * If a field that was previously left empty meets the
-   * requirements then this will remove the key that was
-   * stored when the field was empty which will let the
-   * user know that the field has met its requirements
-   * when the state updates.
-   * @param field The field that was previously left empty.
-   */
-  const removeEffectEmptyString = (field: string) => {
-    effectEmptyStringArray.map((effectEmptyString: string, index: number) => {
-      if (effectEmptyString === `effectID=${effect.id}_field=${field}`) {
-        effectEmptyStringArray.splice(index, 1)
-      }
-    })
-  }
 
   /**
    * Handles the request to delete the effect.
    */
   const handleDeleteEffectRequest = () => {
-    // Reset the effectEmptyStringArray.
-    setEffectEmptyStringArray([])
     // Set the selected effect to null.
     setSelectedEffect(null)
-    // If the effect is not new then remove it from the action
-    // and allow the user to save the changes.
-    if (action.effects.includes(effect)) {
-      // Remove the effect from the action.
-      action.effects.splice(action.effects.indexOf(effect), 1)
-      // Allow the user to save the changes.
-      handleChange()
-    }
+    // Remove the effect from the action.
+    action.effects.splice(action.effects.indexOf(effect), 1)
+    // Allow the user to save the changes.
+    handleChange()
   }
 
   /**
@@ -190,23 +78,14 @@ export default function EffectEntry({
     <div className='EffectEntry SidePanel'>
       <div className='BorderBox'>
         {/* -- TOP OF BOX -- */}
-        <div className={boxTopClassName}>
+        <div className='BoxTop'>
           <div className='BackContainer'>
-            <div
-              className={backButtonClassName}
-              onClick={() => {
-                setSelectedEffect(null)
-                setEffectEmptyStringArray([])
-              }}
-            >
+            <div className='BackButton' onClick={() => setSelectedEffect(null)}>
               &lt;
               <Tooltip description='Go back.' />
             </div>
           </div>
-          <div className='ErrorMessage'>
-            Fix all errors before closing panel.
-          </div>
-          <div className={pathClassName}>
+          <div className='Path'>
             Location:{' '}
             {missionPath.map((position: string, index: number) => {
               return (
@@ -222,72 +101,41 @@ export default function EffectEntry({
               )
             })}
           </div>
-          <div
-            className={closeButtonClassName}
-            onClick={() => setSelectedEffect(null)}
-          >
-            <div className='CloseButton'>
-              x
-              <Tooltip description='Cancel' />
-            </div>
-          </div>
         </div>
 
         {/* -- MAIN CONTENT -- */}
         <div className='SidePanelSection'>
           <Detail
             label='Name'
-            initialValue={effect.name}
+            currentValue={effect.name}
+            defaultValue={ClientEffect.DEFAULT_PROPERTIES.name}
             deliverValue={(name: string) => {
-              if (name !== '') {
-                effect.name = name
-                setMissionPath([missionName, nodeName, actionName, name])
-                removeEffectEmptyString('name')
-                handleChange()
-              } else {
-                setEffectEmptyStringArray([
-                  ...effectEmptyStringArray,
-                  `effectID=${effect.id}_field=name`,
-                ])
-              }
+              effect.name = name
+              setMissionPath([missionName, nodeName, actionName, name])
+              handleChange()
             }}
-            options={{
-              placeholder: 'Enter name...',
-            }}
+            placeholder='Enter name...'
           />
           <DetailBox
             label='Description'
-            initialValue={effect.description}
+            currentValue={effect.description}
             deliverValue={(description: string) => {
               effect.description = description
-
-              if (description !== '<p><br></p>') {
-                removeEffectEmptyString('description')
-                handleChange()
-              } else {
-                setEffectEmptyStringArray([
-                  ...effectEmptyStringArray,
-                  `effectID=${effect.id}_field=description`,
-                ])
-              }
+              handleChange()
             }}
-            options={{
-              placeholder: 'Enter description...',
-              elementBoundary: '.BorderBox',
-            }}
+            elementBoundary='.BorderBox'
+            placeholder='Enter description...'
+            displayOptionalText={true}
           />
           <TargetEnvEntry
             action={action}
             effect={effect}
             targetEnvironments={targetEnvironments}
-            isEmptyString={isEmptyString}
-            areDefaultValues={areDefaultValues}
-            setSelectedEffect={setSelectedEffect}
             handleChange={handleChange}
           />
           {/* -- BUTTON(S) -- */}
           <div className='ButtonContainer'>
-            <div className={deleteButtonClassName}>
+            <div className='FormButton DeleteEffect'>
               <span className='Text' onClick={handleDeleteEffectRequest}>
                 <span className='LeftBracket'>[</span> Delete Effect{' '}
                 <span className='RightBracket'>]</span>
@@ -324,24 +172,6 @@ export type TEffectEntry_P = {
    * List of target environments to apply effects to.
    */
   targetEnvironments: ClientTargetEnvironment[]
-  /**
-   * A boolean that will determine if a field has been left empty.
-   */
-  isEmptyString: boolean
-  /**
-   * A boolean that will determine if a field has default values.
-   */
-  areDefaultValues: boolean
-  /**
-   * An array of strings that will be used to determine
-   * if a field has been left empty.
-   */
-  effectEmptyStringArray: string[]
-  /**
-   * A function that will set the array of strings that
-   * will be used to determine if a field has been left empty.
-   */
-  setEffectEmptyStringArray: (effectEmptyStringArray: string[]) => void
   /**
    * A function that will set the mission path.
    */

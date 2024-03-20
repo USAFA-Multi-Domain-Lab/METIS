@@ -6,9 +6,10 @@ import GameConfigPage from './GameConfigPage'
 import GamePage from './GamePage'
 import HomePage from './HomePage'
 import LaunchPage from './LaunchPage'
-import MissionFormPage from './MissionFormPage'
-import UserFormPage from './UserFormPage'
+import MissionPage from './MissionPage'
+import UserPage from './UserPage'
 import UserResetPage from './UserResetPage'
+import './index.scss'
 
 /* -- constants -- */
 
@@ -23,8 +24,8 @@ export const PAGE_REGISTRY = {
   GameConfigPage,
   GamePage,
   UserResetPage,
-  MissionFormPage,
-  UserFormPage,
+  MissionPage,
+  UserPage,
   ChangelogPage,
 }
 
@@ -42,7 +43,7 @@ export function DefaultLayout({
   return (
     <>
       <Navigation {...navigation} />
-      {children}
+      <div className='Content'>{children}</div>
       {includeFooter ? <Footer /> : null}
     </>
   )

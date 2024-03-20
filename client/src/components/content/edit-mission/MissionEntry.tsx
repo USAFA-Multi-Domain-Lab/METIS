@@ -12,8 +12,6 @@ export default function MissionEntry({
   active,
   mission,
   missionPath,
-  missionEmptyStringArray,
-  setMissionEmptyStringArray,
   setMissionPath,
   handleChange,
 }: TMissionEntry_P): JSX.Element | null {
@@ -26,37 +24,15 @@ export default function MissionEntry({
   /* -- FUNCTIONS -- */
 
   /**
-   * If a field that was previously left empty meets the
-   * requirements then this will remove the key that was
-   * stored when the field was empty which will let the
-   * user know that the field has met its requirements
-   * when the state updates.
-   * @param field The field that was previously left empty.
-   */
-  const removeMissionEmptyString = (field: string) => {
-    missionEmptyStringArray.map((missionEmptyString: string, index: number) => {
-      if (
-        missionEmptyString === `missionID=${mission.missionID}_field=${field}`
-      ) {
-        missionEmptyStringArray.splice(index, 1)
-      }
-    })
-  }
-
-  /**
    * This is called when a user requests to toggle a mission between being live
    * and not being live.
-   * @param live Whether or not the mission is live.
    */
   const handleToggleLiveRequest = async (live: boolean) => {
-    // Track previous live state in case of error.
-    let previousLiveState: boolean = mission.live
+    // Update state.
+    mission.live = live
+    setLiveAjaxStatus('Loading')
 
     try {
-      // Update state.
-      mission.live = live
-      setLiveAjaxStatus('Loading')
-
       // Make the request to the server.
       await ClientMission.$setLive(mission.missionID, live)
 
@@ -68,6 +44,9 @@ export default function MissionEntry({
         notify(`"${mission.name}" is no longer live.`)
         setLiveAjaxStatus('Loaded')
       }
+
+      // Allow the user to save the changes.
+      handleChange()
     } catch (error) {
       // Notify user of error.
       if (live) {
@@ -78,7 +57,7 @@ export default function MissionEntry({
         setLiveAjaxStatus('Error')
       }
       // Revert mission.live to the previous state.
-      mission.live = previousLiveState
+      mission.live = !mission.live
     }
   }
 
@@ -111,60 +90,38 @@ export default function MissionEntry({
           <div className='SidePanelSection MainDetails'>
             <Detail
               label='Name'
-              initialValue={mission.name}
+              currentValue={mission.name}
+              defaultValue={ClientMission.DEFAULT_PROPERTIES.name}
               deliverValue={(name: string) => {
-                if (name !== '') {
-                  mission.name = name
-                  setMissionPath([mission.name])
-                  removeMissionEmptyString('name')
-                  handleChange()
-                } else {
-                  setMissionEmptyStringArray([
-                    ...missionEmptyStringArray,
-                    `missionID=${mission.missionID}_field=name`,
-                  ])
-                }
+                mission.name = name
+                setMissionPath([name])
+                handleChange()
               }}
               key={`${mission.missionID}_name`}
             />
             <DetailBox
               label='Introduction Message'
-              initialValue={mission.introMessage}
+              currentValue={mission.introMessage}
+              defaultValue={ClientMission.DEFAULT_PROPERTIES.introMessage}
               deliverValue={(introMessage: string) => {
                 mission.introMessage = introMessage
-
-                if (introMessage !== '<p><br></p>') {
-                  removeMissionEmptyString('introMessage')
-                  handleChange()
-                } else {
-                  setMissionEmptyStringArray([
-                    ...missionEmptyStringArray,
-                    `missionID=${mission.missionID}_field=introMessage`,
-                  ])
-                }
-              }}
-              options={{
-                elementBoundary: '.BorderBox',
-              }}
-              key={`${mission.missionID}_introMessage`}
-            />
-
-            <DetailToggle
-              label={'Live'}
-              initialValue={mission.live}
-              deliverValue={(live: boolean) => {
-                handleToggleLiveRequest(live)
                 handleChange()
               }}
+              elementBoundary='.BorderBox'
+              key={`${mission.missionID}_introMessage`}
+            />
+            <DetailToggle
+              label={'Live'}
+              currentValue={mission.live}
+              deliverValue={handleToggleLiveRequest}
             />
             <DetailNumber
               label='Initial Resources'
-              initialValue={mission.initialResources}
-              deliverValue={(initialResources: number | null | undefined) => {
-                if (
-                  initialResources !== null &&
-                  initialResources !== undefined
-                ) {
+              currentValue={mission.initialResources}
+              defaultValue={ClientMission.DEFAULT_PROPERTIES.initialResources}
+              emptyValueAllowed={false}
+              deliverValue={(initialResources: number | null) => {
+                if (initialResources !== null) {
                   mission.initialResources = initialResources
                   handleChange()
                 }
@@ -196,16 +153,6 @@ export type TMissionEntry_P = {
    * @note This will help the user understand what they are editing.
    */
   missionPath: string[]
-  /**
-   * An array of empty strings that will be used to
-   * track which fields are empty.
-   */
-  missionEmptyStringArray: string[]
-  /**
-   * A function that will be used to set the
-   * missionEmptyStringArray.
-   */
-  setMissionEmptyStringArray: (missionEmptyString: string[]) => void
   /**
    * A function that will set the mission path.
    */

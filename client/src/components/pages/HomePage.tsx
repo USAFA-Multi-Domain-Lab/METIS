@@ -431,7 +431,7 @@ export default function HomePage(props: {}): JSX.Element | null {
   // creating a new mission.
   const createMission = (): void => {
     if (currentUser.isAuthorized('WRITE')) {
-      navigateTo('MissionFormPage', { missionID: null })
+      navigateTo('MissionPage', { missionID: null })
     }
   }
 
@@ -508,14 +508,14 @@ export default function HomePage(props: {}): JSX.Element | null {
    * Handler for when a mission is selected.
    */
   const onMissionSelection = async ({ missionID }: ClientMission) => {
-    navigateTo('MissionFormPage', { missionID })
+    navigateTo('MissionPage', { missionID })
   }
 
   // This will switch to the user form
   // page with the selected user.
   const selectUser = (user: ClientUser) => {
     if (currentUser.isAuthorized(['READ', 'WRITE'])) {
-      navigateTo('UserFormPage', {
+      navigateTo('UserPage', {
         userID: user.userID,
       })
     }
@@ -525,7 +525,7 @@ export default function HomePage(props: {}): JSX.Element | null {
   // page with a new user.
   const createUser = () => {
     if (currentUser.isAuthorized('WRITE')) {
-      navigateTo('UserFormPage', {
+      navigateTo('UserPage', {
         userID: null,
       })
     }
@@ -616,14 +616,11 @@ export default function HomePage(props: {}): JSX.Element | null {
             <div className='Label'>Enter game ID:</div>
             <Detail
               label=''
-              initialValue={manualJoinGameId}
+              currentValue={manualJoinGameId}
               deliverValue={(value) => {
                 setManualJoinGameId(value)
               }}
-              options={{
-                emptyStringAllowed: true,
-                uniqueLabelClassName: 'Hidden',
-              }}
+              uniqueLabelClassName={'Hidden'}
             />
             <ButtonText
               text='Join'
@@ -754,13 +751,11 @@ export default function HomePage(props: {}): JSX.Element | null {
       onDragLeave={handleFileDragLeave}
       onDrop={handleFileDrop}
     >
+      {fileDropBoxJsx}
       <DefaultLayout navigation={navigation}>
-        {fileDropBoxJsx}
-        <div className='Content'>
-          {gamesJsx}
-          {missionsJsx}
-          {usersJsx}
-        </div>
+        {gamesJsx}
+        {missionsJsx}
+        {usersJsx}
       </DefaultLayout>
     </div>
   )

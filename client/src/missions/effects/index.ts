@@ -22,6 +22,13 @@ export class ClientEffect extends Effect<
   ) {
     // Initialize base properties.
     super(action, data, options)
+
+    // Populate the target data.
+    if (data.targetId && !options.useDefaultTarget) {
+      this.populateTargetData(data.targetId)
+    } else {
+      this._target = new ClientTarget(new ClientTargetEnvironment())
+    }
   }
 
   // Implemented

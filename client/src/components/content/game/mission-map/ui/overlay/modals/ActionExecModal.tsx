@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import RichTextOutputBox from 'src/components/content/communication/RichTextOutputBox'
 import { ButtonText } from 'src/components/content/user-controls/ButtonText'
 import { useGlobalContext } from 'src/context'
 import GameClient from 'src/games'
@@ -228,7 +229,8 @@ const ActionPropertyDisplay = (props: { action: ClientMissionAction }) => {
         <span>Resource cost:</span> {action.resourceCost} resource(s)
       </li>
       <li className='Property Description'>
-        <span>Description:</span> {action.description}
+        <span>Description:</span>{' '}
+        <RichTextOutputBox Element={action.description} />
       </li>
     </ul>
   )

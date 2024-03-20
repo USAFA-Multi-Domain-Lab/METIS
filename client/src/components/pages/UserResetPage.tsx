@@ -1,10 +1,11 @@
 import { useState } from 'react'
 import { useGlobalContext } from 'src/context'
+import { compute } from 'src/toolbox'
 import { useMountHandler } from 'src/toolbox/hooks'
 import ClientUser from 'src/users'
-import { TPage_P } from '.'
+import { DefaultLayout, TPage_P } from '.'
 import { Detail } from '../content/form/Form'
-import Navigation from '../content/general-layout/Navigation'
+import { LogoutLink } from '../content/general-layout/Navigation'
 import './UserResetPage.scss'
 
 export interface IUserResetPage extends TPage_P {}
@@ -36,8 +37,8 @@ export default function UserResetPage(): JSX.Element | null {
   const [password2ErrorMessage, setPassword2ErrorMessage] = useState<string>(
     'At least one character is required here.',
   )
-  const [password1ClassName, setPassword1ClassName] = useState<string>('')
-  const [password2ClassName, setPassword2ClassName] = useState<string>('')
+  const [password1, setPassword1] = useState<string | null>(null)
+  const [password2, setPassword2] = useState<string | null>(null)
 
   /* -- COMPONENT EFFECTS -- */
 
@@ -45,8 +46,20 @@ export default function UserResetPage(): JSX.Element | null {
   const [mountHandled] = useMountHandler(async (done) => {
     // Finish loading.
     finishLoading()
+    setPassword1(user.password1 || null)
+    setPassword2(user.password2 || null)
     done()
   })
+
+  /* -- COMPUTED -- */
+
+  /**
+   * Props for navigation.
+   */
+  const navigation = compute(() => ({
+    links: [LogoutLink(globalContext)],
+    logoLinksHome: false,
+  }))
 
   /* -- SESSION-SPECIFIC LOGIC -- */
 
@@ -112,19 +125,7 @@ export default function UserResetPage(): JSX.Element | null {
 
   return (
     <div className='UserResetPage Page'>
-      {/* -- NAVIGATION -- */}
-      <Navigation
-        links={[
-          {
-            text: 'Log out',
-            onClick: logout,
-            key: 'log-out',
-          },
-        ]}
-      />
-
-      {/* -- CONTENT -- */}
-      <div className='Content'>
+      <DefaultLayout navigation={navigation}>
         <div className='ResetUserEntry'>
           <div className='UserIDContainer'>
             <div className='Title'>User ID:</div>
@@ -132,14 +133,14 @@ export default function UserResetPage(): JSX.Element | null {
           </div>
           <Detail
             label='New Password'
-            initialValue={null}
+            currentValue={password1}
             deliverValue={(password: string) => {
               user.password1 = password
+              setPassword1(password)
 
               if (user.hasValidPassword1 && password !== '') {
                 removeUserEmptyString('password1')
                 setDeliverPassword1Error(false)
-                setPassword1ClassName('Correct')
                 handleChange()
               }
 
@@ -171,29 +172,25 @@ export default function UserResetPage(): JSX.Element | null {
               // and the two passwords match, remove the error.
               else if (user.passwordsMatch && user.password2) {
                 setDeliverPassword2Error(false)
-                setPassword2ClassName('Correct')
               }
             }}
-            options={{
-              deliverError: deliverPassword1Error,
-              deliverErrorMessage: password1ErrorMessage,
-              uniqueLabelClassName: password1ClassName,
-              uniqueInputClassName: password1ClassName,
-              inputType: 'password',
-              placeholder: 'Enter a new password here...',
-            }}
+            emptyStringAllowed={false}
+            deliverError={deliverPassword1Error}
+            errorMessage={password1ErrorMessage}
+            inputType='password'
+            placeholder='Enter a new password here...'
           />
 
           <Detail
             label='Confirm New Password'
-            initialValue={null}
+            currentValue={password2}
             deliverValue={(password: string) => {
               user.password2 = password
+              setPassword2(password)
 
               if (user.hasValidPassword2 && password !== '') {
                 removeUserEmptyString('password2')
                 setDeliverPassword2Error(false)
-                setPassword2ClassName('Correct')
                 handleChange()
               }
 
@@ -224,14 +221,11 @@ export default function UserResetPage(): JSX.Element | null {
                 setPassword2ErrorMessage('Passwords must match.')
               }
             }}
-            options={{
-              deliverError: deliverPassword2Error,
-              deliverErrorMessage: password2ErrorMessage,
-              uniqueLabelClassName: password2ClassName,
-              uniqueInputClassName: password2ClassName,
-              inputType: 'password',
-              placeholder: 'Confirm your new password here...',
-            }}
+            emptyStringAllowed={false}
+            deliverError={deliverPassword2Error}
+            errorMessage={password2ErrorMessage}
+            inputType='password'
+            placeholder='Confirm your new password here...'
           />
         </div>
 
@@ -240,18 +234,7 @@ export default function UserResetPage(): JSX.Element | null {
             Save
           </div>
         </div>
-      </div>
-
-      {/* -- FOOTER -- */}
-      <div className='FooterContainer'>
-        <a
-          href='https://www.midjourney.com/'
-          className='Credit'
-          draggable={false}
-        >
-          Photo by Midjourney
-        </a>
-      </div>
+      </DefaultLayout>
     </div>
   )
 }

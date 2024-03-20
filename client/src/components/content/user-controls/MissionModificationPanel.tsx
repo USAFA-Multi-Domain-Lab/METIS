@@ -37,7 +37,7 @@ export default function MissionModificationPanel({
   // This is called when a user requests
   // to edit the mission.
   const onEditRequest = () => {
-    navigateTo('MissionFormPage', {
+    navigateTo('MissionPage', {
       missionID: mission.missionID,
     })
   }
@@ -96,43 +96,11 @@ export default function MissionModificationPanel({
     )
   }
 
+  /**
+   * Handles a request to launch a new game from a mission.
+   */
   const onLaunchRequest = () => {
     navigateTo('LaunchPage', { missionID: mission.missionID })
-
-    // confirm(
-    //   'Confirm the launch of this game.',
-    //   async (concludeAction: () => void) => {
-    //     if (server !== null) {
-    //       try {
-    //         // Notify user of game launch.
-    //         beginLoading('Launching game...')
-    //         concludeAction()
-    //         // Launch game from mission ID, awaiting
-    //         // the promised game ID.
-    //         let gameID: string = await GameClient.$launch(mission.missionID)
-    //         // Finish loading and notify user of success.
-    //         finishLoading()
-    //         notify('Successfully launched game.')
-    //         // Handle success in callback.
-    //         onSuccessfulLaunch(gameID)
-    //       } catch (error) {
-    //         handleError({
-    //           message: 'Failed to launch game. Contact system administrator.',
-    //           notifyMethod: 'page',
-    //         })
-    //       }
-    //     } else {
-    //       handleError({
-    //         message: 'No server connection. Contact system administrator',
-    //         notifyMethod: 'bubble',
-    //       })
-    //     }
-    //   },
-    //   {
-    //     buttonConfirmText: 'Launch',
-    //     pendingMessageUponConfirm: 'Launching game...',
-    //   },
-    // )
   }
 
   // -- RENDER --

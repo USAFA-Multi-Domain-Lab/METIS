@@ -12,16 +12,16 @@ import {
   LogoutLink,
   TNavigation,
 } from '../content/general-layout/Navigation'
-import './UserFormPage.scss'
+import './UserPage.scss'
 
-export interface IUserFormPage extends TPage_P {
+export interface IUserPage extends TPage_P {
   // If this is null, then a new user is being created.
   userID: string | null
 }
 
 export type TUserFormPurpose = 'Create' | 'Update'
 
-export default function UserFormPage(props: IUserFormPage): JSX.Element | null {
+export default function UserPage(props: IUserPage): JSX.Element | null {
   /* -- GLOBAL CONTEXT -- */
 
   const globalContext = useGlobalContext()
@@ -257,9 +257,9 @@ export default function UserFormPage(props: IUserFormPage): JSX.Element | null {
   }
 
   return (
-    <div className='UserFormPage Page'>
+    <div className='UserPage Page'>
       <DefaultLayout navigation={navigation}>
-        <div className='Content'>
+        <div className='Form'>
           {renderUserEntry()}
           <div className='ButtonContainer'>
             <div className={saveButtonClassName} onClick={() => save()}>

@@ -1,6 +1,6 @@
 @import 'src/assets/styles/config.scss';
 
-.LoadingPage {
+.Page.LoadingPage {
   position: absolute;
   top: 0;
   left: 0;
@@ -9,7 +9,16 @@
   width: 100vw;
   height: 100vh;
   padding: calc(50vh - 125px) 0 0;
-  background-color: $background-main;
+  background: linear-gradient(
+      to bottom right,
+      transparent 0% 70%,
+      rgba(#fff, 0.1) 100%
+    ),
+    url('../../assets/images/landing-page-img.png');
+  background-size: 100% 47.34%, 100% 47.34%;
+  background-position: center;
+  background-repeat: repeat;
+  box-shadow: $box-shadow-alt1;
   text-align: center;
 
   .Message {

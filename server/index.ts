@@ -1,16 +1,16 @@
+import MongoStore from 'connect-mongo'
 import express, { Express } from 'express'
-import { expressLogger, expressLoggingHandler } from 'metis/server/logging'
-import expressWs from 'express-ws'
 import session from 'express-session'
-import path from 'path'
+import expressWs from 'express-ws'
 import fs from 'fs'
+import MetisDatabase from 'metis/server/database'
+import MetisRouter from 'metis/server/http/router'
+import { expressLogger, expressLoggingHandler } from 'metis/server/logging'
+import mongoose from 'mongoose'
+import path from 'path'
+import { sys } from 'typescript'
 const cookieParser = require('cookie-parser')
 const cors = require('cors')
-import MongoStore from 'connect-mongo'
-import MetisDatabase from 'metis/server/database'
-import mongoose from 'mongoose'
-import { sys } from 'typescript'
-import MetisRouter from 'metis/server/http/router'
 const defaults = require('../defaults')
 
 declare module 'express-session' {
@@ -279,8 +279,8 @@ export default class MetisServer {
           }),
         }),
       )
-      expressApp.use(express.urlencoded({ extended: false }))
-      expressApp.use(express.json())
+      expressApp.use(express.urlencoded({ limit: '10mb', extended: true }))
+      expressApp.use(express.json({ limit: '10mb' }))
 
       // links the file path to css and resource files
       expressApp.use(express.static(path.resolve(__dirname, '../client/build')))
@@ -345,7 +345,7 @@ export default class MetisServer {
   /**
    * The current build number for the database.
    */
-  public static readonly SCHEMA_BUILD_NUMBER: number = 16
+  public static readonly SCHEMA_BUILD_NUMBER: number = 17
   /**
    * The root directory for the METIS server.
    */

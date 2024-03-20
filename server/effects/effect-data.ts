@@ -1,5 +1,6 @@
 import { AnyObject } from 'metis/toolbox/objects'
 
+// todo: remove (v1 effects)
 export const effectData: AnyObject = {
   cyber_city: {
     bank: {

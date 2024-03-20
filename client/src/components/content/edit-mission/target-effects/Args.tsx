@@ -1,7 +1,5 @@
 import { useEffect, useState } from 'react'
-import ClientMissionAction from 'src/missions/actions'
 import { ClientEffect } from 'src/missions/effects'
-import ClientTarget from 'src/target-environments/targets'
 import { compute } from 'src/toolbox'
 import { TTargetArg } from '../../../../../../shared/target-environments/targets'
 import {
@@ -15,16 +13,11 @@ import './Args.scss'
  * Groups arguments together and renders them.
  */
 export default function Args({
-  action,
   effect,
-  target,
-  isEmptyString,
-  areDefaultValues,
-  setSelectedEffect,
   handleChange,
 }: TArgs_P): JSX.Element | null {
   /* -- STATE -- */
-  const [effectArgs] = useState<AnyObject>({})
+  const [effectArgs, setEffectArgs] = useState<AnyObject>({})
   const [reqPropertiesNotFilledOut] = useState<string[]>([])
   const [argDependencies, setArgDependencies] = useState<string[]>([])
 
@@ -33,7 +26,7 @@ export default function Args({
    * The selected target's arguments.
    */
   const args: TTargetArg[] = compute(() => {
-    return target?.args || []
+    return effect.target.args
   })
   /**
    * The object to store the arguments in groupings.
@@ -44,7 +37,7 @@ export default function Args({
 
     // If a target is selected and it has arguments
     // then group the arguments.
-    if (target && args.length > 0) {
+    if (args.length > 0) {
       // Iterate through the arguments.
       args.forEach((arg: TTargetArg) => {
         // If the argument has a grouping ID then
@@ -79,59 +72,18 @@ export default function Args({
   const groupingEntries: [string, TTargetArg[]][] = compute(() => {
     return Object.entries(groupings)
   })
-  /**
-   * Class name for the save button.
-   */
-  const createButtonClassName: string = compute(() => {
-    // Create a default list of class names.
-    let classList: string[] = ['Button']
-
-    // If the effect is not new then hide the create button.
-    if (action.effects.includes(effect)) {
-      classList.push('Hidden')
-    } else {
-      // If there are required properties not filled out ||
-      // If there is an empty field ||
-      // If there are default values...
-      // then disable the create button.
-      if (
-        reqPropertiesNotFilledOut.length > 0 ||
-        isEmptyString ||
-        areDefaultValues
-      ) {
-        // Disable the create button.
-        classList.push('Disabled')
-      }
-    }
-
-    return classList.join(' ')
-  })
 
   /* -- EFFECTS -- */
-  // When the effect or target changes, update the
+  // When the effect changes, update the
   // argument dependencies.
   useEffect(() => {
     setArgDependencies([])
-  }, [effect, target])
-
-  /* -- FUNCTIONS -- */
-
-  /**
-   * Handles creating the effect.
-   */
-  const createEffect = () => {
-    // Add the effect to the action.
-    action.effects.push(effect)
-    // Handle the update to the mission.
-    handleChange()
-    // Set the selected effect to null.
-    setSelectedEffect(null)
-  }
+  }, [effect])
 
   /* -- RENDER -- */
-  // If the grouping entries are not empty and a target
-  // is selected then render the arguments.
-  if (groupingEntries.length > 0 && target) {
+  // If the grouping entries are not empty
+  // then render the arguments.
+  if (groupingEntries.length > 0) {
     return (
       <div className='Args'>
         <div className='ArgsTitle'>Arguments:</div>
@@ -180,27 +132,19 @@ export default function Args({
               {grouping.map((arg: TTargetArg) => {
                 return (
                   <ArgEntry
-                    action={action}
                     effect={effect}
-                    args={args}
                     arg={arg}
                     effectArgs={effectArgs}
                     reqPropertiesNotFilledOut={reqPropertiesNotFilledOut}
                     argDependencies={argDependencies}
-                    key={arg.id}
+                    handleChange={handleChange}
+                    key={`arg-${arg.id}`}
                   />
                 )
               })}
             </div>
           )
         })}
-
-        {/* -- BUTTONS -- */}
-        <div className='ButtonContainer'>
-          <div className={createButtonClassName} onClick={createEffect}>
-            Create Effect
-          </div>
-        </div>
       </div>
     )
   } else {
@@ -215,31 +159,11 @@ export default function Args({
  */
 export type TArgs_P = {
   /**
-   * The action to execute.
-   */
-  action: ClientMissionAction
-  /**
    * The effect to apply to the target.
    */
   effect: ClientEffect
   /**
-   * The selected target.
-   */
-  target: ClientTarget | null
-  /**
-   * A boolean that will determine if a field has been left empty.
-   */
-  isEmptyString: boolean
-  /**
-   * A boolean that will determine if a field has default values.
-   */
-  areDefaultValues: boolean
-  /**
-   * A function that will set the selected effect.
-   */
-  setSelectedEffect: (effect: ClientEffect | null) => void
-  /**
-   * A function that will be called when a change has been made.
+   * Handles when a change is made that would require saving.
    */
   handleChange: () => void
 }

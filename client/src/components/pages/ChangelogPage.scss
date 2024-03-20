@@ -1,13 +1,12 @@
 @import 'src/assets/styles/config.scss';
 
-.ChangelogPage {
+.Page.ChangelogPage {
   $page-padding-top: 0px;
   $page-padding-bottom: 35px;
   $page-horizontal-padding: 0px;
   $page-width: calc(100vw - #{$page-horizontal-padding * 2});
   width: $page-width;
   padding: $page-padding-top $page-horizontal-padding $page-padding-bottom;
-  box-shadow: $box-shadow-alt1;
 
   .Changelog {
     margin: 25px 55px;
