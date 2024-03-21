@@ -123,40 +123,57 @@
       }
 
       .SidePanelSection {
-        .ButtonContainer {
-          display: block;
-          min-width: 225px;
+        .AltDesign2-list {
+          background: none;
           margin: 20px 8% 0;
-          text-align: right;
-          font-size: 0.85em;
+          padding: 0;
+          width: 84%;
+          border-bottom: unset;
 
-          .FormButton {
-            -webkit-user-select: none;
-            user-select: none;
-            box-sizing: border-box;
-            min-width: calc(225px - 20px);
-            text-align: right;
-            color: $color-main;
-            margin: 40px 0 20px;
-            font-size: 12.5px;
-            width: 100%;
+          .items {
+            .item {
+              width: calc(100% - 20px);
+              max-width: unset;
 
-            .Text {
-              cursor: pointer;
-              color: $color-accent-light;
-              font-weight: 400;
-            }
+              .Row {
+                display: grid;
+                align-items: center;
+                grid-template-columns: auto 80px;
+                width: 100%;
 
-            .LeftBracket,
-            .RightBracket {
-              color: $color-main;
+                .RowContent {
+                  overflow: hidden;
+                  text-overflow: ellipsis;
+                }
+              }
             }
           }
         }
-      }
 
-      .ButtonText {
-        font-size: 0.78em;
+        .ButtonContainer,
+        .NewButtonContainer {
+          display: grid;
+          min-width: 225px;
+          margin: 0 8%;
+
+          .ButtonText {
+            margin: 40px 0 0;
+          }
+        }
+
+        .NewButtonContainer {
+          border-bottom: 2px solid $color-main;
+          padding-bottom: 15px;
+
+          .ButtonText {
+            margin: 20px 0 0;
+          }
+        }
+
+        .ButtonText {
+          font-size: 0.78em;
+          text-align: right;
+        }
       }
     }
   }

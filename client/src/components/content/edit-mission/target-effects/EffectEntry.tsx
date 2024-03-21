@@ -4,6 +4,7 @@ import { ClientTargetEnvironment } from 'src/target-environments'
 import { compute } from 'src/toolbox'
 import Tooltip from '../../communication/Tooltip'
 import { Detail, DetailBox } from '../../form/Form'
+import { ButtonText } from '../../user-controls/ButtonText'
 import './EffectEntry.scss'
 import TargetEnvEntry from './TargetEnvEntry'
 
@@ -135,13 +136,11 @@ export default function EffectEntry({
           />
           {/* -- BUTTON(S) -- */}
           <div className='ButtonContainer'>
-            <div className='FormButton DeleteEffect'>
-              <span className='Text' onClick={handleDeleteEffectRequest}>
-                <span className='LeftBracket'>[</span> Delete Effect{' '}
-                <span className='RightBracket'>]</span>
-                <Tooltip description='Delete this effect.' />
-              </span>
-            </div>
+            <ButtonText
+              text='Delete Effect'
+              onClick={handleDeleteEffectRequest}
+              tooltipDescription='Delete this effect.'
+            />
           </div>
         </div>
       </div>

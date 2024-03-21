@@ -1,5 +1,6 @@
 import Tooltip from 'src/components/content/communication/Tooltip'
 import TargetEnvEntry from 'src/components/content/edit-mission/target-effects/TargetEnvEntry'
+import { ButtonText } from 'src/components/content/user-controls/ButtonText'
 import ClientMissionAction from 'src/missions/actions'
 import { ClientEffect } from 'src/missions/effects'
 import { ClientTargetEnvironment } from 'src/target-environments'
@@ -24,7 +25,7 @@ export default function CreateEffectModal({
      */
     const createEffectButtonClassName: string = compute(() => {
       // Create a default list of class names.
-      let classList: string[] = ['Button', 'CreateEffect']
+      let classList: string[] = []
 
       // Hide the button if the target environment is the default environment.
       if (
@@ -74,12 +75,12 @@ export default function CreateEffectModal({
         />
 
         {/* -- BUTTON(S) -- */}
-        <div className='ButtonContainer'>
-          <div className={createEffectButtonClassName} onClick={createEffect}>
-            Create Effect
-            <Tooltip description='Creates an undefined effect and adds it to the action.' />
-          </div>
-        </div>
+        <ButtonText
+          text='Create Effect'
+          onClick={createEffect}
+          tooltipDescription='Creates an undefined effect and adds it to the action.'
+          uniqueClassName={createEffectButtonClassName}
+        />
       </div>
     )
   } else {

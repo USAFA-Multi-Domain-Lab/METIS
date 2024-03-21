@@ -62,54 +62,6 @@
               height: 15px;
             }
           }
-
-          .ButtonContainer {
-            min-width: 0;
-
-            .ColorFill {
-              min-width: 0;
-              width: 100%;
-              padding: 0;
-              margin: 5px 0 0;
-            }
-          }
-        }
-
-        .AltDesign2-list {
-          background: none;
-          margin: 20px 8% 0;
-          padding: 0;
-          width: 84%;
-          border-bottom: unset;
-
-          .items {
-            .item {
-              width: calc(100% - 20px);
-              max-width: unset;
-
-              .ActionRow {
-                display: grid;
-                align-items: center;
-                grid-template-columns: auto 80px;
-                width: 100%;
-
-                .Action {
-                  overflow: hidden;
-                  text-overflow: ellipsis;
-                }
-              }
-            }
-          }
-        }
-
-        .NewAction {
-          .ButtonContainer {
-            .AddAction {
-              border-bottom: 2px solid $color-main;
-              margin: 20px 0 0;
-              padding: 0 0 15px;
-            }
-          }
         }
       }
     }

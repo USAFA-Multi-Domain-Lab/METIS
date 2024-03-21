@@ -3,18 +3,7 @@
 .MissionMap {
   .Overlay {
     .CreateEffectModal {
-      box-sizing: border-box;
-      overflow-x: hidden;
-      display: grid;
-      align-items: center;
-      grid-template-columns: auto 2.5em;
-      row-gap: 1.25em;
-      width: 90%;
-      max-width: 33em;
-      height: fit-content;
-      max-height: 90%;
       border: 2px solid $color-main;
-      padding: 1.5em;
       box-shadow: $box-shadow-alt7;
 
       .Heading {
@@ -40,10 +29,9 @@
         }
       }
 
-      .ButtonContainer {
-        .Button {
-          scale: 0.95;
-        }
+      .ButtonText {
+        grid-column: span 2;
+        margin: 20px 0 10px;
       }
     }
   }

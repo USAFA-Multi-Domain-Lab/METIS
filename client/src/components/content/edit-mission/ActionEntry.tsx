@@ -11,6 +11,7 @@ import List, { ESortByMethod } from '../general-layout/List'
 import ButtonSvgPanel, {
   TValidPanelButton,
 } from '../user-controls/ButtonSvgPanel'
+import { ButtonText } from '../user-controls/ButtonText'
 import './ActionEntry.scss'
 
 /**
@@ -71,7 +72,7 @@ export default function ActionEntry({
    */
   const deleteActionClassName: string = compute(() => {
     // Create a default list of class names.
-    let classList: string[] = ['FormButton', 'DeleteAction']
+    let classList: string[] = []
 
     // If there is only one action then disable the delete button.
     if (node.actions.size === 1) {
@@ -86,7 +87,7 @@ export default function ActionEntry({
    */
   const newEffectButtonClassName: string = compute(() => {
     // Create a default list of class names.
-    let classList: string[] = ['Text']
+    let classList: string[] = []
 
     // If there are no target environments then disable the button.
     if (targetEnvironments.length === 0) {
@@ -328,8 +329,8 @@ export default function ActionEntry({
                 })
 
                 return (
-                  <div className='EffectRow' key={`effect-row-${effect.id}`}>
-                    <div className='Effect'>
+                  <div className='Row' key={`effect-row-${effect.id}`}>
+                    <div className='RowContent'>
                       {effect.name}
                       <Tooltip description={effect.description ?? ''} />
                     </div>
@@ -352,42 +353,30 @@ export default function ActionEntry({
               itemsPerPage={null}
               listSpecificItemClassName='AltDesign2'
             />
-
-            {/* -- NEW EFFECT BUTTON -- */}
-            <div className='NewEffect'>
-              <div className='ButtonContainer'>
-                <div
-                  className='FormButton CreateNewEffect'
-                  onClick={() =>
-                    setSelectedEffect(
-                      new ClientEffect(action, {
-                        id: generateHash(),
-                        args: {},
-                      }),
-                    )
-                  }
-                >
-                  <span className={newEffectButtonClassName}>
-                    <span className='LeftBracket'>[</span> New Effect{' '}
-                    <span className='RightBracket'>]</span>
-                    <Tooltip description='Create a new effect.' />
-                  </span>
-                </div>
-              </div>
+            <div className='NewButtonContainer'>
+              <ButtonText
+                text='New Effect'
+                onClick={() =>
+                  setSelectedEffect(
+                    new ClientEffect(action, {
+                      id: generateHash(),
+                      args: {},
+                    }),
+                  )
+                }
+                tooltipDescription='Create a new effect.'
+                uniqueClassName={newEffectButtonClassName}
+              />
             </div>
 
             {/* -- BUTTON(S) -- */}
             <div className='ButtonContainer'>
-              <div
-                className={deleteActionClassName}
-                key={`${action.actionID}_delete`}
-              >
-                <span className='Text' onClick={handleDeleteActionRequest}>
-                  <span className='LeftBracket'>[</span> Delete Action{' '}
-                  <span className='RightBracket'>]</span>
-                  <Tooltip description='Delete this action from the node.' />
-                </span>
-              </div>
+              <ButtonText
+                text='Delete Action'
+                onClick={handleDeleteActionRequest}
+                tooltipDescription='Delete this action from the node.'
+                uniqueClassName={deleteActionClassName}
+              />
             </div>
           </div>
         </div>

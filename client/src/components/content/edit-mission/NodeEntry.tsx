@@ -64,7 +64,7 @@ export default function NodeEntry({
    */
   const newActionClassName: string = compute(() => {
     // Create a default list of class names.
-    let classList: string[] = ['NewAction']
+    let classList: string[] = ['NewButtonContainer']
 
     // If the node is not executable then hide the add action container.
     if (node && !node.executable) {
@@ -94,7 +94,7 @@ export default function NodeEntry({
    */
   const deleteNodeClassName: string = compute(() => {
     // Create a default list of class names.
-    let classList: string[] = ['FormButton', 'DeleteNode']
+    let classList: string[] = []
 
     // If the mission has only one node, add the disabled class.
     if (node && node.mission.nodes.length < 2) {
@@ -375,11 +375,8 @@ export default function NodeEntry({
                 })
 
                 return (
-                  <div
-                    className='ActionRow'
-                    key={`action-row-${action.actionID}`}
-                  >
-                    <div className='Action'>
+                  <div className='Row' key={`action-row-${action.actionID}`}>
+                    <div className='RowContent'>
                       {action.name}{' '}
                       <Tooltip description={action.description ?? ''} />
                     </div>
@@ -402,36 +399,27 @@ export default function NodeEntry({
               itemsPerPage={null}
               listSpecificItemClassName={actionClassName}
             />
-
-            {/* -- NEW ACTION BUTTON -- */}
             <div className={newActionClassName}>
-              <div className='ButtonContainer'>
-                <div className='FormButton AddAction' onClick={createAction}>
-                  <span className='Text'>
-                    <span className='LeftBracket'>[</span> New Action{' '}
-                    <span className='RightBracket'>]</span>
-                    <Tooltip description='Create a new action.' />
-                  </span>
-                </div>
-              </div>
+              <ButtonText
+                text='New Action'
+                onClick={createAction}
+                tooltipDescription='Create a new action.'
+              />
             </div>
 
             {/* -- BUTTON(S) -- */}
             <div className='ButtonContainer'>
-              <div className='FormButton AddNode'>
-                <span className='Text' onClick={handleAddRequest}>
-                  <span className='LeftBracket'>[</span> Add adjacent node{' '}
-                  <span className='RightBracket'>]</span>
-                  <Tooltip description='Add one or multiple nodes adjacent to this node.' />
-                </span>
-              </div>
-              <div className={deleteNodeClassName}>
-                <span className='Text' onClick={handleDeleteRequest}>
-                  <span className='LeftBracket'>[</span> Delete node{' '}
-                  <span className='RightBracket'>]</span>
-                  <Tooltip description='Delete this node.' />
-                </span>
-              </div>
+              <ButtonText
+                text='Add adjacent node'
+                onClick={handleAddRequest}
+                tooltipDescription='Add one or multiple nodes adjacent to this node.'
+              />
+              <ButtonText
+                text='Delete node'
+                onClick={handleDeleteRequest}
+                tooltipDescription='Delete this node.'
+                uniqueClassName={deleteNodeClassName}
+              />
             </div>
           </div>
         </div>
