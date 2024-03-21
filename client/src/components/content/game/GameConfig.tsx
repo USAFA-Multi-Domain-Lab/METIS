@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { TGameConfig } from '../../../../../shared/games'
+import { useEffect, useState } from 'react'
+import { TGameAccessibility, TGameConfig } from '../../../../../shared/games'
 import { DetailDropDown, DetailToggle } from '../form/Form'
 import { ButtonText } from '../user-controls/ButtonText'
 import './GameConfig.scss'
@@ -10,22 +10,35 @@ import './GameConfig.scss'
 export default function GameConfig({
   gameConfig,
   saveButtonText = 'Save',
+  onChange = () => {},
   onSave,
 }: TGameConfig_P): JSX.Element | null {
-  // Use forced updates.
-  const [, setForcedUpdateCounter] = useState<number>(0)
-  const forceUpdate = () => setForcedUpdateCounter((c) => c + 1)
+  const [accessibility, setAccessibility] = useState<TGameAccessibility>(
+    gameConfig.accessibility,
+  )
+  const [autoAssign, setAutoAssign] = useState(gameConfig.autoAssign)
+  const [infiniteResources, setInfiniteResources] = useState(
+    gameConfig.infiniteResources,
+  )
+  const [effectsEnabled, setEffectsEnabled] = useState(
+    gameConfig.effectsEnabled,
+  )
+
+  useEffect(() => {
+    gameConfig.accessibility = accessibility
+    gameConfig.autoAssign = autoAssign
+    gameConfig.infiniteResources = infiniteResources
+    gameConfig.effectsEnabled = effectsEnabled
+    onChange()
+  }, [accessibility, autoAssign, infiniteResources, effectsEnabled])
 
   return (
     <div className='GameConfig'>
       <DetailDropDown<NonNullable<TGameConfig['accessibility']>>
         label='Accessibility'
         options={['public', 'id-required']}
-        currentValue={gameConfig.accessibility}
-        deliverValue={(value) => {
-          gameConfig.accessibility = value
-          forceUpdate()
-        }}
+        currentValue={accessibility}
+        deliverValue={setAccessibility}
         isExpanded={false}
         renderDisplayName={(value) => {
           switch (value) {
@@ -42,19 +55,19 @@ export default function GameConfig({
       />
       <DetailToggle
         label='Auto-Assign:'
-        currentValue={gameConfig.autoAssign}
-        deliverValue={(value) => (gameConfig.autoAssign = value)}
+        currentValue={autoAssign}
+        deliverValue={setAutoAssign}
         lockState={'locked-activation'}
       />
       <DetailToggle
-        label='Enable Resources:'
-        currentValue={gameConfig.resourcesEnabled}
-        deliverValue={(value) => (gameConfig.resourcesEnabled = value)}
+        label='Infinite Resources:'
+        currentValue={infiniteResources}
+        deliverValue={setInfiniteResources}
       />
       <DetailToggle
         label='Enable Effects:'
-        currentValue={gameConfig.effectsEnabled}
-        deliverValue={(value) => (gameConfig.effectsEnabled = value)}
+        currentValue={effectsEnabled}
+        deliverValue={setEffectsEnabled}
       />
       <div className='Buttons'>
         <ButtonText text={saveButtonText} onClick={onSave} />
@@ -78,6 +91,11 @@ export type TGameConfig_P = {
    * @default 'Save'
    */
   saveButtonText?: string
+  /**
+   * Callback for when the game config is changed.
+   * @default () => {}
+   */
+  onChange?: () => void
   /**
    * Callback for when the game config is saved.
    */

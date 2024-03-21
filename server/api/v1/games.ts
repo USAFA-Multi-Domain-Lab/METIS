@@ -40,7 +40,7 @@ const routerMap = (router: expressWs.Router, done: () => void) => {
             NonNullable<TGameConfig['accessibility']>
           >(['public', 'id-required', 'invite-only']),
           autoAssign: RequestBodyFilters.BOOLEAN,
-          resourcesEnabled: RequestBodyFilters.BOOLEAN,
+          infiniteResources: RequestBodyFilters.BOOLEAN,
           effectsEnabled: RequestBodyFilters.BOOLEAN,
         },
       },
@@ -51,7 +51,7 @@ const routerMap = (router: expressWs.Router, done: () => void) => {
       let gameConfig: TGameConfig = {
         accessibility: request.body.accessibility,
         autoAssign: request.body.autoAssign,
-        resourcesEnabled: request.body.resourcesEnabled,
+        infiniteResources: request.body.infiniteResources,
         effectsEnabled: request.body.effectsEnabled,
       }
       // Grab the session.

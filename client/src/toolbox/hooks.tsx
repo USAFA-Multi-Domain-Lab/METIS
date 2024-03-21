@@ -159,6 +159,7 @@ export function useListComponent<
  * @param target The target to add the event listener to.
  * @param methods The event type to listen for.
  * @param callback The callback to call when the event is fired.
+ * @param dependencies The dependencies to use for the callback.
  */
 export function useEventListener<TEventMethod extends string>(
   target: TEventListenerTarget<TEventMethod> | null,

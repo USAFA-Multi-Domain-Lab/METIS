@@ -58,6 +58,20 @@
         &.RedAlert {
           color: $terminal-red;
         }
+
+        .Count {
+          opacity: 0.7;
+
+          &.Infinite {
+            position: relative;
+            top: 0.05em;
+            font-size: 1.25rem;
+            line-height: 0;
+          }
+
+          &.Finite {
+          }
+        }
       }
     }
 

@@ -148,11 +148,19 @@ export default abstract class Game<
     return {
       accessibility: 'public',
       autoAssign: true,
-      resourcesEnabled: true,
+      infiniteResources: false,
       effectsEnabled: true,
     }
   }
 }
+
+/**
+ * The accessiblity of the game to students.
+ * @option 'public' The game is accessible to all students.
+ * @option 'id-required' The game is accessible to students with the game ID.
+ * @option 'invite-only' The game is accessible to students with an invite.
+ */
+export type TGameAccessibility = 'public' | 'id-required' | 'invite-only'
 
 /**
  * Configuration options for a game, customizing the experience.
@@ -160,21 +168,18 @@ export default abstract class Game<
 export type TGameConfig = {
   /**
    * The accessiblity of the game to students.
-   * @option 'public' The game is accessible to all students.
-   * @option 'id-required' The game is accessible to students with the game ID.
-   * @option 'invite-only' The game is accessible to students with an invite.
    */
-  accessibility?: 'public' | 'id-required' | 'invite-only'
+  accessibility?: TGameAccessibility
   /**
    * Whether students will be auto-assigned to their roles.
    * @default true
    */
   autoAssign?: boolean
   /**
-   * Whether resources will be enabled in the game.
-   * @default true
+   * Whether resources will be infinite in the game.
+   * @default false
    */
-  resourcesEnabled?: boolean
+  infiniteResources?: boolean
   /**
    * Whether effects will be enabled in the game.
    * @default true
@@ -209,7 +214,7 @@ export type TGameJson = {
   /**
    * The resources available to the participants.
    */
-  resources: number
+  resources: number | 'infinite'
 }
 
 /**

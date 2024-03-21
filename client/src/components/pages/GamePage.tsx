@@ -5,7 +5,7 @@ import GameClient from 'src/games'
 import ClientMission from 'src/missions'
 import ClientMissionNode from 'src/missions/nodes'
 import { compute } from 'src/toolbox'
-import { useMountHandler } from 'src/toolbox/hooks'
+import { useEventListener, useMountHandler } from 'src/toolbox/hooks'
 import { DefaultLayout, TPage_P } from '.'
 import MapToolbox from '../../../../shared/toolbox/maps'
 import OutputPanel from '../content/game/OutputPanel'
@@ -36,6 +36,7 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
   /* -- global-context -- */
 
   const globalContext = useGlobalContext()
+  const [server] = globalContext.server
   const { navigateTo, finishLoading, notify, logout, confirm, handleError } =
     globalContext.actions
 
@@ -44,40 +45,12 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
   const [nodeToExecute, setNodeToExecute] = useState<ClientMissionNode | null>(
     null,
   )
-
-  /* -- effects -- */
-
-  // Add navigation middleware to properly
-  // quit the game before the user navigates
-  // away.
-  useNavigationMiddleware((to, next) => {
-    confirm(
-      'Are you sure you want to quit?',
-      async (concludeAction: () => void) => {
-        try {
-          await game.$quit()
-          concludeAction()
-          next()
-        } catch (error) {
-          handleError({
-            message: 'Failed to quit game.',
-            notifyMethod: 'bubble',
-          })
-          concludeAction()
-        }
-      },
-      {
-        buttonConfirmText: 'Yes',
-        buttonCancelText: 'No',
-      },
-    )
-  })
+  const [resources, setResources] = useState<number>(game.resources)
 
   /* -- variables -- */
 
   // Class names for various components.
   let rootClassList: string[] = ['GamePage', 'Page']
-  let resourcesClassList: string[] = ['Resources']
   // Dynamic (default) sizing of the output panel.
   let panel2DefaultSize: number = 400
   // The current aspect ratio of the window.
@@ -100,6 +73,24 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
     ],
     logoLinksHome: false,
   }))
+
+  /**
+   * The class name for the resources element.
+   */
+  const resourcesClass = compute(() => {
+    // Define default list.
+    let resourcesClassList: string[] = ['Resources']
+
+    // If resources are not infinite, and the mission
+    // has no resources left, add the red alert
+    // class to the resources.
+    if (!game.config.infiniteResources && game.resources <= 0) {
+      resourcesClassList.push('RedAlert')
+    }
+
+    // Return the class list as a joined string.
+    return resourcesClassList.join(' ')
+  })
 
   /* -- functions -- */
 
@@ -166,13 +157,38 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
     done()
   })
 
-  /* -- pre-rendering-processing -- */
+  // Add navigation middleware to properly
+  // quit the game before the user navigates
+  // away.
+  useNavigationMiddleware((to, next) => {
+    confirm(
+      'Are you sure you want to quit?',
+      async (concludeAction: () => void) => {
+        try {
+          await game.$quit()
+          concludeAction()
+          next()
+        } catch (error) {
+          handleError({
+            message: 'Failed to quit game.',
+            notifyMethod: 'bubble',
+          })
+          concludeAction()
+        }
+      },
+      {
+        buttonConfirmText: 'Yes',
+        buttonCancelText: 'No',
+      },
+    )
+  })
 
-  // If the mission has no resources left,
-  // add the red alert class to the resources.
-  if (game.resources <= 0) {
-    resourcesClassList.push('RedAlert')
-  }
+  // Update the resources when an action is executed.
+  useEventListener(server, 'action-execution-initiated', () => {
+    setResources(game.resources)
+  })
+
+  /* -- pre-rendering-processing -- */
 
   // If the aspect ratio is greater than or equal to 16:9,
   // and the window width is greater than or equal to 1850px,
@@ -184,7 +200,31 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
 
   /* -- render -- */
 
-  const overlayContent = compute((): JSX.Element | undefined => {
+  /**
+   * JSX for the top bar element.
+   */
+  const topBarJsx = compute((): JSX.Element | null => {
+    return (
+      <div className='TopBar'>
+        <div className={resourcesClass}>
+          Resources:{' '}
+          {game.config.infiniteResources ? (
+            <span className='Count Infinite'>ထ</span>
+          ) : (
+            <span className='Count Finite'>
+              {resources} / {mission.initialResources}
+            </span>
+          )}
+        </div>
+        <StatusBar />
+      </div>
+    )
+  })
+
+  /**
+   * JSX for the overlay content.
+   */
+  const overlayContentJsx = compute((): JSX.Element | undefined => {
     // If there is a selected node and not
     // a selected action, render a prompt to
     // select an action for the node.
@@ -207,12 +247,7 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
   return (
     <div className={rootClassList.join(' ')}>
       <DefaultLayout navigation={navigation} includeFooter={false}>
-        <div className='TopBar'>
-          <div className={resourcesClassList.join(' ')}>
-            Resources remaining: {game.resources}
-          </div>
-          <StatusBar />
-        </div>
+        {topBarJsx}
         <PanelSizeRelationship
           sizingMode={EPanelSizingMode.Panel1_Auto__Panel2_Defined}
           initialDefinedSize={panel2DefaultSize}
@@ -223,7 +258,7 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
               <MissionMap
                 mission={mission}
                 onNodeSelect={onNodeSelect}
-                overlayContent={overlayContent}
+                overlayContent={overlayContentJsx}
               />
             ),
           }}

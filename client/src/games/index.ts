@@ -47,7 +47,7 @@ export default class GameClient extends Game<
 
     super(gameID, name, config, mission, participants)
     this.server = server
-    this._resources = data.resources
+    this._resources = data.resources === 'infinite' ? Infinity : data.resources
     this.addListeners()
   }
 
@@ -101,7 +101,7 @@ export default class GameClient extends Game<
       }),
       participants: this.participants.map((user) => user.toJson()),
       config: this.config,
-      resources: this.resources,
+      resources: this.resources === Infinity ? 'infinite' : this.resources,
     }
   }
 

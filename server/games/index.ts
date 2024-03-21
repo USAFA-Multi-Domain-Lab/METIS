@@ -58,7 +58,9 @@ export default class GameServer extends Game<
   ) {
     super(gameID, name, config, mission, participants)
     this._state = 'unstarted'
-    this._resources = mission.initialResources
+    this._resources = config.infiniteResources
+      ? Infinity
+      : mission.initialResources
     this._destroyed = false
     this.register()
   }
@@ -86,7 +88,7 @@ export default class GameServer extends Game<
         client.user.toJson(),
       ),
       config: this.config,
-      resources: this.resources,
+      resources: this.resources === Infinity ? 'infinite' : this.resources,
     }
   }
 
