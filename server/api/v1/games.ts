@@ -10,15 +10,27 @@ import defineRequests, {
 } from 'metis/server/middleware/requests'
 import ServerMission from 'metis/server/missions'
 import MetisSession from 'metis/server/sessions'
+import ServerUser from 'metis/server/users'
 import { auth } from '../../middleware/users'
 
 const routerMap = (router: expressWs.Router, done: () => void) => {
   // -- GET | /api/v1/games/ --
   // This will retrieve all publicly accessible games.
   router.get('/', auth({}), (request: Request, response: Response) => {
-    let games: TGameBasicJson[] = GameServer.getAll().map((game) =>
-      game.toBasicJson(),
-    )
+    // Define an array to store the games.
+    let games: TGameBasicJson[] = []
+    let user: ServerUser = response.locals.user
+    let hasAccess: boolean = user.isAuthorized(['WRITE'])
+
+    // Loop through all games and add the public games
+    // to the array.
+    for (let game of GameServer.getAll()) {
+      if (game.config.accessibility === 'public' || hasAccess) {
+        games.push(game.toBasicJson())
+      }
+    }
+
+    // Return the response as JSON.
     return response.json(games)
   })
 

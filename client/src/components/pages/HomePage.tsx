@@ -18,6 +18,9 @@ import { Detail } from '../content/form/Form'
 import List, { ESortByMethod } from '../content/general-layout/List'
 import { LogoutLink } from '../content/general-layout/Navigation'
 import ButtonSvg from '../content/user-controls/ButtonSvg'
+import ButtonSvgPanel, {
+  TValidPanelButton,
+} from '../content/user-controls/ButtonSvgPanel'
 import { ButtonText } from '../content/user-controls/ButtonText'
 import MissionModificationPanel from '../content/user-controls/MissionModificationPanel'
 import UserModificationPanel from '../content/user-controls/UserModificationPanel'
@@ -562,15 +565,6 @@ export default function HomePage(props: {}): JSX.Element | null {
    * The games that are displayed on the home page.
    */
   const gamesJsx = compute(() => {
-    // Gather details.
-    let buttonsClasses: string[] = ['Buttons']
-
-    // If the current user is not authorized
-    // to write, hide the buttons.
-    if (!currentUser.isAuthorized('WRITE')) {
-      buttonsClasses.push('Hidden')
-    }
-
     // Render JSX.
     return (
       <div className='GameListContainer'>
@@ -581,23 +575,56 @@ export default function HomePage(props: {}): JSX.Element | null {
           nameProperty={'name'}
           alwaysUseBlanks={true}
           renderItemDisplay={(game: TGameBasicJson) => {
+            /**
+             * Class for accessibility element.
+             */
+            const accessibilityClass = compute((): string => {
+              const classList = [
+                'Accessibility',
+                game.config.accessibility ??
+                  GameClient.DEFAULT_CONFIG.accessibility,
+              ]
+              return classList.join(' ')
+            })
+
+            /**
+             * Buttons for selection row.
+             */
+            const buttons = compute((): TValidPanelButton[] => {
+              let buttons: TValidPanelButton[] = []
+
+              // If the current user is authorized
+              // to write, add the button for creating
+              // a new game.
+              if (currentUser.isAuthorized('WRITE')) {
+                buttons.push({
+                  icon: 'remove',
+                  key: 'remove',
+                  onClick: () => onGameDelete(game),
+                  tooltipDescription: 'Remove game.',
+                })
+              }
+
+              return buttons
+            })
+
             return (
               <div className='SelectionRow'>
+                <div className={accessibilityClass}>
+                  <Tooltip
+                    description={
+                      '### Game ID Required\n*This game is not publicly accessible. One must have the game ID to join.*'
+                    }
+                  />
+                </div>
                 <div
                   className='Text'
                   onClick={() => onGameSelection(game.gameID)}
                 >
                   {game.name}
-                  <Tooltip description='Join game.' />
+                  <Tooltip description={'Join game.'} />
                 </div>
-                <div className={buttonsClasses.join(' ')}>
-                  <ButtonSvg
-                    icon={'remove'}
-                    size={'small'}
-                    onClick={() => onGameDelete(game)}
-                    tooltipDescription={'Remove game.'}
-                  />
-                </div>
+                <ButtonSvgPanel buttons={buttons} size={'small'} />
               </div>
             )
           }}

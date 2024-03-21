@@ -73,7 +73,6 @@
 
       .ListActions {
         display: none;
-
         place-content: center;
         align-items: center;
         grid-template-columns: auto auto;
@@ -108,11 +107,20 @@
       .item {
         .SelectionRow {
           display: grid;
-          grid-template-columns: 1fr auto;
-        }
+          grid-template-columns: 2em 1fr auto;
 
-        .Buttons {
-          padding-right: 15px;
+          .Accessibility {
+            height: 1.15em;
+            filter: invert(68%) sepia(94%) saturate(70%) hue-rotate(117deg)
+              brightness(200%) contrast(98%);
+
+            &.id-required {
+              background: url('/assets/images/icons/hidden.svg');
+              background-size: contain;
+              background-position: left center;
+              background-repeat: no-repeat;
+            }
+          }
         }
       }
 
