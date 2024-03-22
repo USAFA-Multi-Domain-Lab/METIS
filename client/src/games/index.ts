@@ -9,6 +9,7 @@ import Game, {
   TGameBasicJson,
   TGameConfig,
   TGameJson,
+  TGameState,
 } from '../../../shared/games'
 
 /**
@@ -38,6 +39,7 @@ export default class GameClient extends Game<
   // todo: Between the time the client joins and this object is constructed, there is possibility that changes have been made in the game. This should be handled.
   public constructor(data: TGameJson, server: ServerConnection) {
     let gameID: string = data.gameID
+    let state: TGameState = data.state
     let name: string = data.name
     let mission: ClientMission = new ClientMission(data.mission)
     let participants: ClientUser[] = data.participants.map(
@@ -47,6 +49,7 @@ export default class GameClient extends Game<
 
     super(gameID, name, config, mission, participants)
     this.server = server
+    this._state = state
     this._resources = data.resources === 'infinite' ? Infinity : data.resources
     this.addListeners()
   }
@@ -95,6 +98,7 @@ export default class GameClient extends Game<
   public toJson(): TGameJson {
     return {
       gameID: this.gameID,
+      state: this.state,
       name: this.name,
       mission: this.mission.toJson({
         revealedOnly: true,
@@ -217,6 +221,82 @@ export default class GameClient extends Game<
             }
           },
         })
+      },
+    )
+  }
+
+  /**
+   * Starts the game.
+   * @resolves When the game has started.
+   * @rejects If the game failed to start, or if the game has already
+   * started or ended.
+   */
+  public async $start(): Promise<void> {
+    return new Promise<void>(
+      async (
+        resolve: () => void,
+        reject: (error: any) => void,
+      ): Promise<void> => {
+        try {
+          // If the game has already started, throw an error.
+          if (this.state === 'started') {
+            throw new Error('Game has already started.')
+          }
+          // If the game has already ended, throw an error.
+          if (this.state === 'ended') {
+            throw new Error('Game has already ended.')
+          }
+          // Call API to start game.
+          await axios.put<{ gameID: string }>(
+            `${Game.API_ENDPOINT}/${this.gameID}/start/`,
+          )
+          // Update the game state.
+          this._state = 'started'
+          // Resolve promise.
+          return resolve()
+        } catch (error) {
+          console.error('Failed to start game.')
+          console.error(error)
+          return reject(error)
+        }
+      },
+    )
+  }
+
+  /**
+   * Ends the game.
+   * @resolves When the game has ended.
+   * @rejects If the game failed to end, or if the game has already
+   * ended or has not yet started.
+   */
+  public async $end(): Promise<void> {
+    return new Promise<void>(
+      async (
+        resolve: () => void,
+        reject: (error: any) => void,
+      ): Promise<void> => {
+        try {
+          // If the game is unstarted, throw an error.
+          if (this.state === 'unstarted') {
+            throw new Error('Game has not yet started.')
+          }
+          // If the game has already ended, throw an error.
+          if (this.state === 'ended') {
+            throw new Error('Game has already ended.')
+          }
+          // Call API to end game.
+          await axios.put<{ gameID: string }>(
+            `${Game.API_ENDPOINT}/${this.gameID}/end/`,
+          )
+          // Update the game state.
+          this._state = 'ended'
+          // Resolve promise.
+          return resolve()
+        } catch (error) {
+          console.error('Failed to end game.')
+          console.error(error)
+          return reject(error)
+        }
       },
     )
   }

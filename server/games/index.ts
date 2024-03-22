@@ -22,6 +22,9 @@ export default class GameServer extends Game<
   ServerMissionNode,
   ServerMissionAction
 > {
+  public get state() {
+    return this._state
+  }
   public set state(value: TGameState) {
     this._state = value
     this.emitToParticipants('game-state-change', { data: { state: value } })
@@ -79,6 +82,7 @@ export default class GameServer extends Game<
   public toJson(): TGameJson {
     return {
       gameID: this.gameID,
+      state: this.state,
       name: this.name,
       mission: this.mission.toJson({
         revealedOnly: true,

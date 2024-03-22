@@ -10,9 +10,13 @@ import GameConfig from '../content/game/GameConfig'
 import { HomeLink, TNavigation } from '../content/general-layout/Navigation'
 import './LaunchPage.scss'
 
-export default function GameConfigPage({
+/**
+ * Page responsible for launching a game with the given
+ * configuration.
+ */
+export default function LaunchPage({
   missionID,
-}: TGameConfigPage_P): JSX.Element | null {
+}: TLaunchPage_P): JSX.Element | null {
   /* -- state -- */
 
   const globalContext = useGlobalContext()
@@ -107,9 +111,9 @@ export default function GameConfigPage({
 }
 
 /**
- * Props for `GameConfigPage` component.
+ * Props for `LaunchPage` component.
  */
-export type TGameConfigPage_P = {
+export type TLaunchPage_P = {
   /**
    * The ID of the game to configure.
    */

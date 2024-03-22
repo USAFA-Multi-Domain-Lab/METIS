@@ -426,7 +426,8 @@
           .Text {
             display: block;
             box-sizing: border-box;
-            height: 20px;
+            height: 100%;
+            padding: 10px 0;
             cursor: pointer;
 
             &:hover {

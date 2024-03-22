@@ -196,6 +196,10 @@ export type TGameJson = {
    */
   gameID: string
   /**
+   * The state of the game (unstarted, started, ended).
+   */
+  state: TGameState
+  /**
    * The name of the game.
    */
   name: string

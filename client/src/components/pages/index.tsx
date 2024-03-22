@@ -6,6 +6,7 @@ import GameConfigPage from './GameConfigPage'
 import GamePage from './GamePage'
 import HomePage from './HomePage'
 import LaunchPage from './LaunchPage'
+import LobbyPage from './LobbyPage'
 import MissionPage from './MissionPage'
 import UserPage from './UserPage'
 import UserResetPage from './UserResetPage'
@@ -21,6 +22,7 @@ export const PAGE_REGISTRY = {
   AuthPage,
   HomePage,
   LaunchPage,
+  LobbyPage,
   GameConfigPage,
   GamePage,
   UserResetPage,

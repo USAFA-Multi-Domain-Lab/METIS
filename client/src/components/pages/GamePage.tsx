@@ -25,12 +25,7 @@ export interface IGamePage extends TPage_P {
 
 // This will render a dashboard with a radar
 // on it, indicating air traffic passing by.
-export default function GamePage(props: IGamePage): JSX.Element | null {
-  /* -- props -- */
-
-  let game: GameClient = props.game
-  let mission: ClientMission = game.mission
-
+export default function GamePage({ game }: IGamePage): JSX.Element | null {
   console.log(game.gameID)
 
   /* -- global-context -- */
@@ -49,6 +44,7 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
 
   /* -- variables -- */
 
+  let mission: ClientMission = game.mission
   // Class names for various components.
   let rootClassList: string[] = ['GamePage', 'Page']
   // Dynamic (default) sizing of the output panel.
@@ -150,12 +146,31 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
     }
   }
 
+  /**
+   * Redirects to the correct page based on
+   * the game state. Stays on the same page
+   * if the game is started and not ended.
+   */
+  const verifyNavigation = () => {
+    // If the game is unstarted, navigate to the lobby page.
+    if (game.state === 'unstarted') {
+      navigateTo('LobbyPage', { game }, { bypassMiddleware: true })
+    }
+    // If the game is ended, navigate to the home page.
+    if (game.state === 'ended') {
+      navigateTo('HomePage', {}, { bypassMiddleware: true })
+    }
+  }
+
   /* -- effects -- */
 
+  // Verify navigation on mount and on game state change.
   useMountHandler((done) => {
     finishLoading()
+    verifyNavigation()
     done()
   })
+  useEventListener(server, 'game-state-change', verifyNavigation)
 
   // Add navigation middleware to properly
   // quit the game before the user navigates

@@ -176,7 +176,18 @@ function App(props: {}): JSX.Element | null {
             let game: GameClient = await server.$fetchCurrentGame(
               session.gameID,
             )
-            navigateTo('GamePage', { game })
+            // Navigate based on the game state.
+            switch (game.state) {
+              case 'unstarted':
+                navigateTo('LobbyPage', { game })
+                break
+              case 'started':
+                navigateTo('GamePage', { game })
+                break
+              case 'ended':
+                navigateTo('HomePage', {})
+                break
+            }
           }
           // Else, go to the home page.
           else {

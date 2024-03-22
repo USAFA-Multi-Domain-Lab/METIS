@@ -1,0 +1,58 @@
+@import '../../assets/styles/config.scss';
+
+.Page.LobbyPage {
+  // Double the box shadow to make the content stand out.
+  box-shadow: $box-shadow-main, $box-shadow-main;
+
+  .Content {
+    display: flex;
+    box-sizing: border-box;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    min-height: 100%;
+    padding: 4em 2em;
+
+    .Title {
+      margin: 0 0 1em;
+      font-size: 1.5rem;
+    }
+
+    .Subtitle {
+      margin: 0 0 1em;
+      width: 100%;
+      font-size: 1.15rem;
+    }
+
+    .Section {
+      margin: 0 0 1.75em;
+
+      &.ButtonSection {
+        display: flex;
+        column-gap: 1em;
+
+        .ButtonText {
+          margin: 0;
+        }
+      }
+    }
+
+    .Title,
+    .Section {
+      width: 100%;
+      max-width: 25rem;
+    }
+
+    .StaticDetail {
+      display: grid;
+      grid-template-columns: 10em 1fr;
+      margin: 0.75em 0;
+    }
+
+    .Participants {
+      .Participant {
+        margin: 0.75em 0;
+      }
+    }
+  }
+}

@@ -180,7 +180,7 @@ const useGlobalContextDefinition = (context: TGlobalContext) => {
     forceUpdate: () => {
       setForcedUpdateCounter(forcedUpdateCounter + 1)
     },
-    navigateTo: (pageKey, props) => {
+    navigateTo: (pageKey, props, options = {}) => {
       // Actually switches the page. Called after any confirmations.
       const realizePageSwitch = (): void => {
         // Display to the user that the
@@ -231,9 +231,13 @@ const useGlobalContextDefinition = (context: TGlobalContext) => {
         }
       }
 
-      if (middlewares.length > 0) {
+      // If there is middleware to run and the
+      // bypassMiddleware option is not set, run
+      // the middleware.
+      if (middlewares.length > 0 && !options.bypassMiddleware) {
         middlewares[0](pageKey, next)
       } else {
+        // Else realize the page switch immediately.
         realizePageSwitch()
       }
     },
@@ -397,7 +401,7 @@ const useGlobalContextDefinition = (context: TGlobalContext) => {
           break
       }
     },
-    notify: (message: string, options: INotifyOptions = {}): Notification => {
+    notify: (message: string, options: TNotifyOptions = {}): Notification => {
       const { forceUpdate } = context.actions
 
       let onLoadingPage: boolean =
@@ -431,7 +435,7 @@ const useGlobalContextDefinition = (context: TGlobalContext) => {
     confirm: (
       message: string,
       handleConfirmation: (concludeAction: () => void, entry: string) => void,
-      options: IConfirmOptions = {},
+      options: TConfirmOptions = {},
     ): void => {
       let confirmation: IConfirmation = {
         confirmAjaxStatus: 'NotLoaded',
@@ -484,7 +488,7 @@ const useGlobalContextDefinition = (context: TGlobalContext) => {
 
       setConfirmation(confirmation)
     },
-    createPrompt: (message: string, options: IPromptOptions = {}): void => {
+    createPrompt: (message: string, options: TPromptOptions = {}): void => {
       let prompt: IPrompt = {
         active: true,
         promptMessage: message,
@@ -652,6 +656,7 @@ export type TGlobalContextActions = {
   >(
     pageKey: TPageKey,
     props: TProps,
+    options?: TNavigateOptions,
   ) => void
   /**
    * This switching the user to the loading page until
@@ -694,30 +699,30 @@ export type TGlobalContextActions = {
   /**
    * This will notify the user with a notification bubble.
    * @param {string} message The message to display in the notification bubble.
-   * @param {INotifyOptions | undefined} options The options to use for the notification.
+   * @param {TNotifyOptions | undefined} options The options to use for the notification.
    * @returns {Notification} The emitted notification.
    */
-  notify: (message: string, options?: INotifyOptions) => Notification
+  notify: (message: string, options?: TNotifyOptions) => Notification
   /**
    * This will pop up a confirmation box to confirm some action.
    * concludeAction must be called by the handleConfirmation
    * callback function to make the confirm box disappear.
    * @param {string} message The message to display in the confirmation box.
    * @param handleConfirmation The callback function to call when the user confirms the action.
-   * @param {IConfirmOptions | undefined} options The options to use for the confirmation box.
+   * @param {TConfirmOptions | undefined} options The options to use for the confirmation box.
    */
   confirm: (
     message: string,
     handleConfirmation: (concludeAction: () => void, entry: string) => void,
-    options?: IConfirmOptions,
+    options?: TConfirmOptions,
   ) => void
   /**
    * The will open an alert box with a prompt, providing
    * the user with options on how to respond.
    * @param {string} message The message to display in the prompt.
-   * @param {IPromptOptions | undefined} options The options to use for the prompt.
+   * @param {TPromptOptions | undefined} options The options to use for the prompt.
    */
-  createPrompt: (message: string, options?: IPromptOptions) => void
+  createPrompt: (message: string, options?: TPromptOptions) => void
   /**
    * This will logout the current user from the session, closing the connection
    * with the server as well. Afterwards, the user will be navigated to the auth page.
@@ -742,10 +747,22 @@ export type TGlobalContext = {
 export type TGlobalContextProperty = keyof TGlobalContextValues
 
 /**
+ * Options available when navigating to a page using the
+ * `navigateTo` method in the global context actions.
+ */
+export type TNavigateOptions = {
+  /**
+   * If true, all navigation middleware will be skipped.
+   * @default false
+   */
+  bypassMiddleware?: boolean
+}
+
+/**
  * Options available when confirming an action using the
  * confirm method in the global context actions.
  */
-export interface IConfirmOptions {
+export type TConfirmOptions = {
   requireEntry?: boolean
   handleAlternate?: (concludeAction: () => void, entry: string) => void
   entryLabel?: string
@@ -760,7 +777,7 @@ export interface IConfirmOptions {
  * Options available when prompting a user with a message
  * using the prompt method in the global context actions.
  */
-export interface IPromptOptions {
+export type TPromptOptions = {
   buttonDismissalText?: string
 }
 
@@ -768,7 +785,7 @@ export interface IPromptOptions {
  * Options available when notifying the user using the
  * notify function in the global context actions.
  */
-export interface INotifyOptions {
+export type TNotifyOptions = {
   duration?: number | null
   buttons?: TButtonText[]
   errorMessage?: boolean
