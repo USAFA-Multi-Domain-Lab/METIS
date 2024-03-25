@@ -32,7 +32,7 @@ export default function GamePage({ game }: IGamePage): JSX.Element | null {
 
   const globalContext = useGlobalContext()
   const [server] = globalContext.server
-  const { navigateTo, finishLoading, notify, logout, confirm, handleError } =
+  const { navigateTo, finishLoading, notify, confirm, handleError } =
     globalContext.actions
 
   /* -- state -- */

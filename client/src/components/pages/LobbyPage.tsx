@@ -9,6 +9,9 @@ import {
 } from 'src/toolbox/hooks'
 import { DefaultLayout } from '.'
 import { HomeLink, TNavigation } from '../content/general-layout/Navigation'
+import ButtonSvgPanel, {
+  TValidPanelButton,
+} from '../content/user-controls/ButtonSvgPanel'
 import { ButtonText } from '../content/user-controls/ButtonText'
 import './LobbyPage.scss'
 
@@ -116,13 +119,46 @@ export default function LobbyPage({ game }: TLobbyPage_P): JSX.Element | null {
    * Computed JSX for the list of participants.
    */
   const participantsJsx = game.participants.map(
-    (participant): JSX.Element | null => (
-      <div key={participant.userID} className='Participant'>
-        <div className='Name'>
-          {participant.lastName}, {participant.firstName}
+    (participant): JSX.Element | null => {
+      /* -- computed -- */
+
+      /**
+       * Buttons for SVG panel.
+       */
+      const buttons = compute((): TValidPanelButton[] => {
+        if (session.user.isAuthorized(['WRITE'])) {
+          return [
+            {
+              icon: 'kick',
+              key: 'kick',
+              onClick: () => {},
+              tooltipDescription:
+                'Kick participant from the game (Can still choose to rejoin).',
+            },
+            {
+              icon: 'ban',
+              key: 'ban',
+              onClick: () => {},
+              tooltipDescription:
+                'Ban participant from the game (Cannot rejoin).',
+            },
+          ]
+        } else {
+          return []
+        }
+      })
+
+      /* -- render -- */
+
+      return (
+        <div key={participant.userID} className='Participant'>
+          <div className='Name'>
+            {participant.lastName}, {participant.firstName}
+          </div>
+          <ButtonSvgPanel buttons={buttons} size={'small'} />
         </div>
-      </div>
-    ),
+      )
+    },
   )
 
   return (

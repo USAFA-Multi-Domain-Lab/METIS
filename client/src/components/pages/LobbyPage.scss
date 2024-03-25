@@ -51,7 +51,16 @@
 
     .Participants {
       .Participant {
+        display: grid;
+        grid-template-columns: 1fr auto;
         margin: 0.75em 0;
+
+        .ButtonSvg {
+          &.ban:hover {
+            filter: invert(68%) sepia(94%) saturate(322%) hue-rotate(300deg)
+              brightness(200%) contrast(98%);
+          }
+        }
       }
     }
   }
