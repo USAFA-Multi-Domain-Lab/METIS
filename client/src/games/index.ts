@@ -124,24 +124,23 @@ export default class GameClient extends Game<
   /**
    * Opens a node.
    * @param {string} nodeID The ID of the node to be opened.
-   * @throws If the node is not in the mission associated with this game.
-   * @throws If the node is not openable, if the node is not found,
-   * or if the server emits an error in response.
    */
-  public openNode(nodeID: string): void {
+  public openNode(nodeID: string, options: TOpenNodeOptions = {}): void {
+    // Gather details.
     let server: ServerConnection = this.server
     let node: ClientMissionNode | undefined = this.mission.getNode(nodeID)
+    let { onError = () => {} } = options
 
-    // Throw error if the node is not in
+    // Callback error if the node is not in
     // the mission associated with this
     // game.
     if (node === undefined) {
-      throw Error('Node was not found in the mission.')
+      return onError('Node was not found in the mission.')
     }
-    // If the node is not openable, throw
+    // If the node is not openable, callback
     // an error.
     if (!node.openable) {
-      throw Error('Node is not openable.')
+      return onError('Node is not openable.')
     }
 
     // Emit a request to open the node.
@@ -151,6 +150,16 @@ export default class GameClient extends Game<
         nodeID,
       },
       `Opening "${node.name}".`,
+      {
+        // Handle error emitted by server concerning the
+        // request.
+        onResponse: (event) => {
+          if (event.method === 'error') {
+            onError(event.message)
+            node!.handleRequestFailed('request-open-node')
+          }
+        },
+      },
     )
 
     // Handle request within node.
@@ -160,24 +169,25 @@ export default class GameClient extends Game<
   /**
    * Executes an action.
    * @param actionID The ID of the action to be executed.
-   * @throws If the action is not in the mission associated with this game.
-   * @throws If the action's node is not executable, the action is not
-   * found, or if the server emits an error in response.
    */
-  public executeAction(actionID: string): void {
+  public executeAction(
+    actionID: string,
+    options: TExecuteActionOptions = {},
+  ): void {
     let server: ServerConnection = this.server
     let action: ClientMissionAction | undefined = this.actions.get(actionID)
+    let { onError = () => {} } = options
 
-    // Throw error if the action is not in
+    // Callback error if the action is not in
     // the mission associated with this
     // game.
     if (action === undefined) {
-      throw Error('Action was not found in the mission.')
+      return onError('Action was not found in the mission.')
     }
-    // If the action is not executable, throw
+    // If the action is not executable, callback
     // an error.
     if (!action.node.executable) {
-      throw Error('Node is not executable.')
+      return onError('Node is not executable.')
     }
 
     // Emit a request to execute the action.
@@ -187,6 +197,16 @@ export default class GameClient extends Game<
         actionID,
       },
       `Executing "${action.name}" on "${action.node.name}".`,
+      {
+        onResponse: (event) => {
+          // Handle error emitted by server concerning the
+          // request.
+          if (event.method === 'error') {
+            onError(event.message)
+            action!.node.handleRequestFailed('request-execute-action')
+          }
+        },
+      },
     )
 
     // Handle request within node.
@@ -498,3 +518,25 @@ export default class GameClient extends Game<
     )
   }
 }
+
+/**
+ * Options for node functions that perform actions on
+ * the server via WS.
+ */
+type TNodeFuncOptions = {
+  /**
+   * Callback for errors.
+   * @param message The error message.
+   */
+  onError?: (message: string) => void
+}
+
+/**
+ * Options for `openNode` method.
+ */
+export interface TOpenNodeOptions extends TNodeFuncOptions {}
+
+/**
+ * Options for `executeAction` method.
+ */
+export interface TExecuteActionOptions extends TNodeFuncOptions {}

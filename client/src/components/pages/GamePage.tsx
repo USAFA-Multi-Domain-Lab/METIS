@@ -105,14 +105,9 @@ export default function GamePage({ game }: IGamePage): JSX.Element | null {
     // Logic that opens the next level of nodes
     // (displays the selected node's child nodes)
     if (node.openable) {
-      try {
-        game.openNode(node.nodeID)
-      } catch (error) {
-        handleError({
-          message: 'Unexpected error opening node.',
-          notifyMethod: 'bubble',
-        })
-      }
+      game.openNode(node.nodeID, {
+        onError: (message) => handleError({ message, notifyMethod: 'bubble' }),
+      })
     }
 
     // If the node is ready to execute...

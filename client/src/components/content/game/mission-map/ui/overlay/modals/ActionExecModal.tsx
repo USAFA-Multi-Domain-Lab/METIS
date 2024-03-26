@@ -105,15 +105,10 @@ export default function ActionExecModal({
    */
   const execute = () => {
     if (selectedAction) {
-      try {
-        game.executeAction(selectedAction.actionID)
-        close()
-      } catch (error) {
-        handleError({
-          message: 'Unexpected error executing action.',
-          notifyMethod: 'bubble',
-        })
-      }
+      game.executeAction(selectedAction.actionID, {
+        onError: (message) => handleError({ message, notifyMethod: 'bubble' }),
+      })
+      close()
     }
   }
 

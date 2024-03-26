@@ -283,6 +283,15 @@ export default class GameServer extends Game<
     // Find the node, given the ID.
     let node: ServerMissionNode | undefined = mission.getNode(nodeID)
 
+    // If the game is not in the 'started' state,
+    // then emit an error.
+    if (this.state !== 'started') {
+      return participant.emitError(
+        new ServerEmittedError(ServerEmittedError.CODE_GAME_PROGRESS_LOCKED, {
+          request: participant.buildResponseReqData(event),
+        }),
+      )
+    }
     // If the node is undefined, then emit
     // an error.
     if (node === undefined) {
@@ -349,6 +358,15 @@ export default class GameServer extends Game<
     // Find the action given the ID.
     let action: ServerMissionAction | undefined = this.actions.get(actionID)
 
+    // If the game is not in the 'started' state,
+    // then emit an error.
+    if (this.state !== 'started') {
+      return participant.emitError(
+        new ServerEmittedError(ServerEmittedError.CODE_GAME_PROGRESS_LOCKED, {
+          request: participant.buildResponseReqData(event),
+        }),
+      )
+    }
     // If the action is undefined, then emit
     // an error.
     if (action === undefined) {
@@ -367,7 +385,6 @@ export default class GameServer extends Game<
         }),
       )
     }
-    // 32a4d6cb-2f5f-4d0e-aacd-cdd6d5584ea7
     // If the node is not revealed, then
     // emit an error.
     if (!action.node.revealed) {
