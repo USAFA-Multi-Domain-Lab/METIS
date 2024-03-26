@@ -3,8 +3,8 @@ import { TMetisRouterMap } from 'metis/server/http/router'
 import defineRequests from 'metis/server/middleware/requests'
 import { auth } from 'metis/server/middleware/users'
 import ServerTargetEnvironment from 'metis/server/target-environments'
-import { TCommonTargetEnvJson } from 'metis/target-environments'
-import path from 'path'
+import ServerTarget from 'metis/server/target-environments/targets'
+import { TCommonTargetJson } from 'metis/target-environments/targets'
 
 export const routerMap: TMetisRouterMap = (
   router: expressWs.Router,
@@ -15,22 +15,70 @@ export const routerMap: TMetisRouterMap = (
   router.get(
     '/',
     auth({ permissions: ['READ', 'WRITE', 'DELETE'] }),
+    defineRequests(
+      {
+        query: {},
+      },
+      {
+        query: { targetEnvId: 'string' },
+      },
+    ),
+    (request, response) => {
+      // Get the target environment ID from the request query.
+      let targetEnvId: any = request.query.targetEnvId
+
+      // If the target environment ID is provided, send the target environment to the client.
+      if (targetEnvId) {
+        // Get the target environment JSON.
+        let targetEnvironmentJson = ServerTargetEnvironment.getJson(targetEnvId)
+
+        // If the target environment JSON is found, send it to the client.
+        if (targetEnvironmentJson) {
+          // Send the target environment JSON to the client.
+          return response.json(targetEnvironmentJson)
+        }
+        // Otherwise, send a 404.
+        else {
+          return response.status(404).json({
+            message: `Target environment with ID "${targetEnvId}" not found.`,
+          })
+        }
+      }
+      // Otherwise, send all target environments to the client.
+      else {
+        // Send the target environments to the client.
+        return response.json(ServerTargetEnvironment.getAllJson())
+      }
+    },
+  )
+
+  // -- GET | /api/v1/target-environments/targets/ --
+  // This will get all targets in a target environment.
+  router.get(
+    '/targets',
+    auth({ permissions: ['READ', 'WRITE', 'DELETE'] }),
     defineRequests({
-      query: {},
+      query: { targetId: 'string' },
     }),
     (request, response) => {
-      // The directory where the target environments are located.
-      let targetEnvDir: string = path.join(
-        __dirname,
-        '../../../integration/target-env',
-      )
+      // Get the target ID from the request query.
+      let targetId: any = request.query.targetId
 
-      // Get the target environments.
-      let targetEnvJson: TCommonTargetEnvJson[] =
-        ServerTargetEnvironment.scan(targetEnvDir)
+      // Get the target JSON.
+      let targetJson: TCommonTargetJson | undefined =
+        ServerTarget.getTargetJson(targetId)
 
-      // Send the target environments to the client.
-      return response.json(targetEnvJson)
+      // If the target JSON is found, send it to the client.
+      if (targetJson) {
+        // Send the target JSON to the client.
+        return response.json(targetJson)
+      }
+      // Otherwise, send a 404.
+      else {
+        return response.status(404).json({
+          message: `Target with ID "${targetId}" not found.`,
+        })
+      }
     },
   )
 

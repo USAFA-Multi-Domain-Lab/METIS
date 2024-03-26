@@ -6,9 +6,11 @@ import fs from 'fs'
 import MetisDatabase from 'metis/server/database'
 import MetisRouter from 'metis/server/http/router'
 import { expressLogger, expressLoggingHandler } from 'metis/server/logging'
+import { TCommonTargetEnvJson } from 'metis/target-environments'
 import mongoose from 'mongoose'
 import path from 'path'
 import { sys } from 'typescript'
+import ServerTargetEnvironment from './target-environments'
 const cookieParser = require('cookie-parser')
 const cors = require('cors')
 const defaults = require('../defaults')
@@ -258,6 +260,21 @@ export default class MetisServer {
         console.error('Failed to connect to database.')
         return sys.exit(1)
       }
+
+      // File path to the target environments.
+      let targetEnvDir: string = path.join(
+        __dirname,
+        '../integration/target-env',
+      )
+      // Get the target environment JSON.
+      let targetEnvJson: TCommonTargetEnvJson[] =
+        ServerTargetEnvironment.scan(targetEnvDir)
+      // Add each target environment to the registry
+      // by creating a new target environment object
+      // from the JSON.
+      targetEnvJson.forEach(
+        (targetEnv) => new ServerTargetEnvironment(targetEnv),
+      )
 
       // sets up pug as the view engine
       expressApp.set('view engine', 'pug')

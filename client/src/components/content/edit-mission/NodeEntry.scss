@@ -39,7 +39,7 @@
 
         .ColorInfo {
           display: grid;
-          grid-template-columns: auto 80px;
+          grid-template-columns: 1fr auto;
           align-items: baseline;
           border-bottom: 2px solid $color-main;
           width: 84%;

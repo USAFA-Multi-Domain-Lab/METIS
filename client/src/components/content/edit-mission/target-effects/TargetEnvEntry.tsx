@@ -29,7 +29,7 @@ export default function TargetEnvEntry({
 
   /* -- RENDER -- */
 
-  if (!isNewEffect) {
+  if (!isNewEffect && effect.targetEnvironment) {
     return (
       <div className='TargetEnvEntry Selected'>
         <div className='TargetEnvInfo'>
@@ -56,13 +56,15 @@ export default function TargetEnvEntry({
         <DetailDropDown<ClientTargetEnvironment>
           label='Target Environment'
           options={targetEnvironments}
-          currentValue={effect.targetEnvironment}
+          currentValue={
+            effect.targetEnvironment || new ClientTargetEnvironment()
+          }
           isExpanded={false}
           renderDisplayName={(targetEnv: ClientTargetEnvironment) =>
             targetEnv.name
           }
           deliverValue={(targetEnv: ClientTargetEnvironment) => {
-            // Reset the target to the default value.
+            // Set the target environment.
             effect.target = new ClientTarget(targetEnv)
             // Display the changes.
             forceUpdate()

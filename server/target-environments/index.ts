@@ -1,6 +1,7 @@
 import fs from 'fs'
 import TargetEnvironment, {
   TCommonTargetEnvJson,
+  TTargetEnvOptions,
 } from 'metis/target-environments'
 import { TCommonTargetJson } from 'metis/target-environments/targets'
 import path from 'path'
@@ -8,10 +9,69 @@ import ServerTarget from './targets'
 
 export default class ServerTargetEnvironment extends TargetEnvironment<ServerTarget> {
   // Implemented
+  public constructor(
+    data: Partial<TCommonTargetEnvJson> = ServerTargetEnvironment.DEFAULT_PROPERTIES,
+    options: TServerTargetEnvOptions = {},
+  ) {
+    super(data, options)
+
+    // Add the target environment to the registry.
+    ServerTargetEnvironment.registry.push(this)
+
+    // Add the target environment JSON to the registry.
+    ServerTargetEnvironment.registryJson.push(this.toJson())
+  }
+
+  // Implemented
   public parseTargets(data: TCommonTargetJson[]): ServerTarget[] {
     return data.map((datum: TCommonTargetJson) => {
       return new ServerTarget(this, datum)
     })
+  }
+
+  /**
+   * A registry of all target environments.
+   */
+  private static registry: ServerTargetEnvironment[] = []
+
+  /**
+   * A registry of all the target environment JSON.
+   */
+  private static registryJson: TCommonTargetEnvJson[] = []
+
+  /**
+   * Grabs all the target environments from the registry.
+   */
+  public static getAll(): ServerTargetEnvironment[] {
+    return ServerTargetEnvironment.registry
+  }
+
+  /**
+   * Grabs a target environment from the registry by its ID.
+   * @param id The ID of the target environment to grab.
+   */
+  public static get(id: string): ServerTargetEnvironment | undefined {
+    return ServerTargetEnvironment.registry.find(
+      (targetEnvironment: ServerTargetEnvironment) =>
+        targetEnvironment.id === id,
+    )
+  }
+
+  /**
+   * Grabs all the target environment JSON from the registry.
+   */
+  public static getAllJson(): TCommonTargetEnvJson[] {
+    return ServerTargetEnvironment.registryJson
+  }
+
+  /**
+   * Grabs a target environment JSON from the registry by its ID.
+   * @param id The ID of the target environment to grab.
+   */
+  public static getJson(id: string): TCommonTargetEnvJson | undefined {
+    return ServerTargetEnvironment.registryJson.find(
+      (targetEnvironment: TCommonTargetEnvJson) => targetEnvironment.id === id,
+    )
   }
 
   /**
@@ -136,3 +196,10 @@ export default class ServerTargetEnvironment extends TargetEnvironment<ServerTar
     return targetEnvironmentJson
   }
 }
+
+/* ------------------------------ TARGET ENVIRONMENT TYPES ------------------------------ */
+
+/**
+ * Options for creating a new TargetEnvironment object.
+ */
+export type TServerTargetEnvOptions = TTargetEnvOptions & {}

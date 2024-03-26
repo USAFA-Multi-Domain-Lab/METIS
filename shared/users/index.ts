@@ -138,15 +138,17 @@ export default abstract class User implements TCommonUser {
   }
 
   /**
-   * Default properties set when creating a new user.
+   * Default properties set when creating a new User object.
    */
-  public static readonly DEFAULT_PROPERTIES: TCommonUserJson = {
-    userID: '',
-    firstName: '',
-    lastName: '',
-    roleID: UserRole.DEFAULT_ID,
-    needsPasswordReset: false,
-    expressPermissionIDs: [],
+  public static get DEFAULT_PROPERTIES(): TCommonUserJson {
+    return {
+      userID: '',
+      firstName: '',
+      lastName: '',
+      roleID: UserRole.DEFAULT_ID,
+      needsPasswordReset: false,
+      expressPermissionIDs: [],
+    }
   }
 }
 

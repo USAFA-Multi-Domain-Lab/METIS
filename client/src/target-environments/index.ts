@@ -22,27 +22,61 @@ export class ClientTargetEnvironment extends TargetEnvironment<ClientTarget> {
   public static readonly API_ENDPOINT: string = '/api/v1/target-environments'
 
   /**
+   * Calls the API to fetch one target environment by ID.
+   * @param {ClientTargetEnvironment['id']} targetEnvId The ID of the target environment to fetch.
+   * @returns {Promise<ClientTargetEnvironment>} A promise that resolves to a ClientTargetEnvironment Object.
+   */
+  public static async fetchOne(
+    targetEnvId: ClientTargetEnvironment['id'],
+  ): Promise<ClientTargetEnvironment> {
+    return new Promise<ClientTargetEnvironment>(async (resolve, reject) => {
+      try {
+        // Fetch the target environment from the API.
+        let response = await axios.get<TCommonTargetEnvJson>(
+          `${ClientTargetEnvironment.API_ENDPOINT}`,
+          { params: { targetEnvId } },
+        )
+        // Parse the response data.
+        let data: TCommonTargetEnvJson = response.data
+        // Create a new ClientTargetEnvironment Object.
+        let targetEnvironment: ClientTargetEnvironment =
+          new ClientTargetEnvironment(data)
+        // Return the new ClientTargetEnvironment Object.
+        resolve(targetEnvironment)
+      } catch (error: any) {
+        console.error(
+          `Failed to load target environment with ID ${targetEnvId}.`,
+        )
+        console.error(error)
+        reject(error)
+      }
+    })
+  }
+
+  /**
    * Calls the API to fetch all target environments.
    * @returns {Promise<ClientTargetEnvironment[]>} A promise that resolves to an array of ClientTargetEnvironment Objects.
    */
   public static async fetchAll(): Promise<ClientTargetEnvironment[]> {
-    try {
-      // Fetch the target environments from the API.
-      let response = await axios.get<TCommonTargetEnvJson[]>(
-        `${ClientTargetEnvironment.API_ENDPOINT}`,
-      )
-      // Parse the response data.
-      let data: TCommonTargetEnvJson[] = response.data
-      // Create an array of ClientTargetEnvironment Objects.
-      let targetEnvironments: ClientTargetEnvironment[] = data.map(
-        (datum: TCommonTargetEnvJson) => new ClientTargetEnvironment(datum),
-      )
-      // Return the array of ClientTargetEnvironment Objects.
-      return targetEnvironments
-    } catch (error: any) {
-      console.error('Failed to load target environments.')
-      console.error(error)
-      throw error
-    }
+    return new Promise<ClientTargetEnvironment[]>(async (resolve, reject) => {
+      try {
+        // Fetch the target environments from the API.
+        let response = await axios.get<TCommonTargetEnvJson[]>(
+          `${ClientTargetEnvironment.API_ENDPOINT}`,
+        )
+        // Parse the response data.
+        let data: TCommonTargetEnvJson[] = response.data
+        // Create an array of ClientTargetEnvironment Objects.
+        let targetEnvironments: ClientTargetEnvironment[] = data.map(
+          (datum: TCommonTargetEnvJson) => new ClientTargetEnvironment(datum),
+        )
+        // Return the array of ClientTargetEnvironment Objects.
+        resolve(targetEnvironments)
+      } catch (error: any) {
+        console.error('Failed to load target environments.')
+        console.error(error)
+        reject(error)
+      }
+    })
   }
 }

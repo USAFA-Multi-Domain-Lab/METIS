@@ -287,9 +287,7 @@ export function DetailNumber({
   displayOptionalText = false,
 }: TDetailNumber_P): JSX.Element | null {
   /* -- STATE -- */
-  const [inputValue, setInputValue] = useState<number | string>(
-    currentValue !== null ? currentValue : '',
-  )
+  const [inputValue, setInputValue] = useState<number | string>('')
 
   /* -- COMPUTED -- */
   /**
@@ -324,6 +322,20 @@ export function DetailNumber({
       deliverValue(null)
     }
   }, [clearField])
+
+  useEffect(() => {
+    // If the current value is not null
+    // then set the input's value to the
+    // current value.
+    if (currentValue !== null) {
+      setInputValue(currentValue)
+    }
+    // Otherwise, set the input's value
+    // to an empty string.
+    else {
+      setInputValue('')
+    }
+  }, [currentValue])
 
   /* -- RENDER -- */
   return (
@@ -578,6 +590,23 @@ export function DetailBox({
     },
   }
 
+  // todo: custom link formatter for file:// links
+  // // Add a custom link formatter to the Quill editor.
+  // // Note: This is necessary to allow for file:// links.
+  // const linkFormatter = Quill.import('formats/link')
+  // linkFormatter.sanitize = (url: string) => {
+  //   if (url.startsWith('file://')) {
+  //     return url
+  //   } else if (url.startsWith('http://') || url.startsWith('https://')) {
+  //     return url
+  //   } else if (url.startsWith('mailto:') || url.startsWith('tel:')) {
+  //     return url
+  //   } else {
+  //     return `http://${url}`
+  //   }
+  // }
+  // Quill.register(linkFormatter, true)
+
   /**
    * The formats used by the ReactQuill component.
    */
@@ -651,15 +680,10 @@ export function DetailDropDown<TOption>({
   uniqueLabelClassName = undefined,
   uniqueFieldClassName = undefined,
   uniqueCurrentValueClassName = undefined,
-  clearField = false,
   defaultValue = undefined,
   displayOptionalText = false,
-  uniqueOptionStyling = () => {
-    return {}
-  },
-  renderOptionClassName = () => {
-    return ''
-  },
+  uniqueOptionStyling = () => ({}),
+  renderOptionClassName = () => '',
 }: TDetailDropDown_P<TOption>): JSX.Element | null {
   /* -- STATE -- */
   const [expanded, setExpanded] = useState<boolean>(false)
@@ -770,25 +794,19 @@ export function DetailDropDown<TOption>({
     else if (defaultValue) {
       return renderDisplayName(defaultValue)
     }
-    // If the current value is null or undefined
-    // and a default value is not passed then display
-    // a message that indicates that an option should
-    // be selected.
+    // If the current value is null and a default
+    // value is not passed, then display a message
+    // that indicates an option should be selected.
     else {
       return 'Select an option'
     }
   })
+  /**
+   * The class name for the optional text.
+   */
   const optionalClassName: string = compute(() => {
     return displayOptionalText ? 'Optional' : 'Optional Hidden'
   })
-
-  /* -- EFFECTS -- */
-  useEffect(() => {
-    if (clearField) {
-      setExpanded(false)
-      currentValue = null
-    }
-  }, [clearField])
 
   /* -- RENDER -- */
   if (options.length > 0) {
@@ -840,7 +858,7 @@ export function DetailDropDown<TOption>({
  */
 export function DetailToggle({
   label,
-  currentValue = false,
+  currentValue,
   deliverValue,
   // Optional Properties
   lockState = 'unlocked',
@@ -910,7 +928,7 @@ export function DetailToggle({
       </div>
       <div className='Field'>
         <Toggle
-          currentValue={currentValue}
+          currentValue={currentValue !== null ? currentValue : false}
           deliverValue={deliverValue}
           lockState={lockState}
         />
@@ -1186,7 +1204,7 @@ type TDetailDropDown_P<TOption> = {
   /**
    * The current value for the detail.
    */
-  currentValue: TOption | null | undefined
+  currentValue: TOption | null
   /**
    * The boolean that determines if the detail is expanded.
    */
@@ -1225,11 +1243,6 @@ type TDetailDropDown_P<TOption> = {
    */
   uniqueCurrentValueClassName?: string
   /**
-   * The boolean that determines if the detail should clear the field.
-   * @default false
-   */
-  clearField?: boolean
-  /**
    * The default value for the detail.
    * @default undefined
    */
@@ -1264,11 +1277,11 @@ export type TDetailToggle_P = {
    * The current value for the detail.
    * @default false
    */
-  currentValue: boolean | undefined
+  currentValue: boolean | null
   /**
    * A function that will deliver the value of the toggle.
    */
-  deliverValue: (activated: boolean) => void
+  deliverValue: (value: boolean) => void
   /**
    * The toggle lock state of the toggle.
    * @default 'unlocked'

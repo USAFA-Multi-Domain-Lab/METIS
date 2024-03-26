@@ -29,14 +29,14 @@ export default function CreateEffectModal({
 
       // Hide the button if the target environment is the default environment.
       if (
-        effect.targetEnvironment.id ===
+        effect.targetEnvironment?.id ===
         ClientTargetEnvironment.DEFAULT_PROPERTIES.id
       ) {
         classList.push('Hidden')
       }
 
       // Disable the button if the target is the default target.
-      if (effect.target.id === ClientTarget.DEFAULT_PROPERTIES.id) {
+      if (effect.target?.id === ClientTarget.DEFAULT_PROPERTIES.id) {
         classList.push('Disabled')
       }
 

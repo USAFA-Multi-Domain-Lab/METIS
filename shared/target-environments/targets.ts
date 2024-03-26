@@ -1,4 +1,4 @@
-import { TCommonTargetEnv } from '.'
+import TargetEnvironment, { TCommonTargetEnv } from '.'
 
 /**
  * This is an entity that can be found in a target environment.
@@ -50,6 +50,7 @@ export default abstract class Target<
   public toJson(options: TTargetJsonOptions = {}): TCommonTargetJson {
     // Construct JSON object to send to the server.
     return {
+      targetEnvId: this.targetEnvironment.id,
       id: this.id,
       name: this.name,
       description: this.description,
@@ -59,14 +60,17 @@ export default abstract class Target<
   }
 
   /**
-   * The default properties of the Target.
+   * Default properties set when creating a new Target object.
    */
-  public static readonly DEFAULT_PROPERTIES: Required<TCommonTargetJson> = {
-    id: 'metis-target-default',
-    name: 'Select a target',
-    description: 'This is a default target.',
-    script: () => {},
-    args: [],
+  public static get DEFAULT_PROPERTIES(): TCommonTargetJson {
+    return {
+      targetEnvId: TargetEnvironment.DEFAULT_PROPERTIES.id,
+      id: 'metis-target-default',
+      name: 'Select a target',
+      description: 'This is a default target.',
+      script: () => {},
+      args: [],
+    }
   }
 }
 
@@ -120,6 +124,10 @@ export interface TCommonTarget {
  * The JSON representation of a Target Object.
  */
 export interface TCommonTargetJson {
+  /**
+   * The ID of the target environment.
+   */
+  targetEnvId: string
   /**
    * The ID of the target.
    */
@@ -209,7 +217,6 @@ type TNumberArgOptional = {
   required: false
   /**
    * The default value for the argument.
-   * @default 0
    */
   default?: number
 }
@@ -249,7 +256,6 @@ type TStringArgOptional = {
   required: false
   /**
    * The default value for the argument.
-   * @default undefined
    */
   default?: string
 }
@@ -289,7 +295,6 @@ type TMedCharStringArgOptional = {
   required: false
   /**
    * The default value for the argument.
-   * @default undefined
    */
   default?: string
 }

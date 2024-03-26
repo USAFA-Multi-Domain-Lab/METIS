@@ -138,7 +138,7 @@
               .Row {
                 display: grid;
                 align-items: center;
-                grid-template-columns: auto 80px;
+                grid-template-columns: 1fr auto;
                 width: 100%;
 
                 .RowContent {
@@ -150,20 +150,17 @@
           }
         }
 
-        .ButtonContainer,
-        .NewButtonContainer {
-          display: grid;
+        .ButtonContainer {
+          display: flex;
+          justify-content: end;
+          flex-flow: row wrap;
           min-width: 225px;
           margin: 0 8%;
 
-          .ButtonText {
-            margin: 40px 0 0;
+          &.New {
+            border-bottom: 2px solid $color-main;
+            padding-bottom: 15px;
           }
-        }
-
-        .NewButtonContainer {
-          border-bottom: 2px solid $color-main;
-          padding-bottom: 15px;
 
           .ButtonText {
             margin: 20px 0 0;
@@ -172,7 +169,6 @@
 
         .ButtonText {
           font-size: 0.78em;
-          text-align: right;
         }
       }
     }

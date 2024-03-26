@@ -5,6 +5,7 @@
   pointer-events: all;
   display: inline-block;
   margin: 0 5px 0;
+  white-space: nowrap;
 
   .Text {
     color: $color-accent-light;

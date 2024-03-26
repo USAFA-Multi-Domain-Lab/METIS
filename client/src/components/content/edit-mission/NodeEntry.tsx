@@ -64,7 +64,7 @@ export default function NodeEntry({
    */
   const newActionClassName: string = compute(() => {
     // Create a default list of class names.
-    let classList: string[] = ['NewButtonContainer']
+    let classList: string[] = ['ButtonContainer', 'New']
 
     // If the node is not executable then hide the add action container.
     if (node && !node.executable) {

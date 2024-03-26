@@ -34,17 +34,16 @@ export default abstract class Effect<
    * The target to which the effect will be applied.
    * @note This will be a Target Object if the data has
    * already been loaded. Otherwise, it will be the ID
-   * of the target.
+   * of the target. If the target is not set, it will be
+   * null.
    */
-  protected _target: Target<TTargetEnvironment> | TCommonTargetJson['id']
+  protected _target: Target<TTargetEnvironment> | TCommonTargetJson['id'] | null
   /**
    * The target to which the effect will be applied.
-   * @note If the data has not been loaded, this will throw
-   * an error.
    */
-  public get target(): Target<TTargetEnvironment> {
+  public get target(): Target<TTargetEnvironment> | null {
     if (!(this._target instanceof Target)) {
-      throw new Error('Target data for this effect has not been populated.')
+      this._target = null
     }
 
     return this._target
@@ -54,34 +53,44 @@ export default abstract class Effect<
    * @note Setting this will cause the target data to be reloaded.
    */
   public set target(
-    target: Target<TTargetEnvironment> | TCommonTargetJson['id'],
+    target: Target<TTargetEnvironment> | TCommonTargetJson['id'] | null,
   ) {
+    // If the target is a Target Object, set it.
     if (target instanceof Target) {
       this._target = target
-    } else {
+    }
+    // Or, the target is an ID.
+    else if (typeof target === 'string') {
       this._target = target
+    }
+    // Otherwise, set the target to null.
+    else {
+      this._target = null
     }
   }
 
   /**
    * The ID of the target to which the effect will be applied.
    */
-  public get targetId(): TCommonTargetJson['id'] {
-    let target: Target<TTargetEnvironment> | TCommonTargetJson['id'] =
+  public get targetId(): TCommonTargetJson['id'] | null {
+    let target: Target<TTargetEnvironment> | TCommonTargetJson['id'] | null =
       this._target
 
     // If the target is a Target Object, return its ID.
     if (target instanceof Target) {
       return target.id
     }
-    // Otherwise, the target is an ID.
-    else {
+    // Or, the target is an ID.
+    else if (typeof target === 'string') {
       return target
+    }
+    // Otherwise, return the default target ID.
+    else {
+      return Effect.DEFAULT_PROPERTIES.targetId
     }
   }
   /**
    * The ID of the target to which the effect will be applied.
-   * @note Setting this will cause the target data to be reloaded.
    */
   public set targetId(targetId: TCommonTargetJson['id']) {
     this._target = targetId
@@ -90,8 +99,12 @@ export default abstract class Effect<
   /**
    * The environment in which the target exists.
    */
-  public get targetEnvironment(): TTargetEnvironment {
-    return this.target.targetEnvironment
+  public get targetEnvironment(): TTargetEnvironment | null {
+    if (this.target instanceof Target) {
+      return this.target.targetEnvironment
+    } else {
+      return null
+    }
   }
 
   /**
@@ -125,8 +138,10 @@ export default abstract class Effect<
     this._target = data.targetId ?? Effect.DEFAULT_PROPERTIES.targetId
     this.args = data.args ?? Effect.DEFAULT_PROPERTIES.args
 
-    // If the target data has been provided, load it.
-    if (data.targetId) {
+    // If the target data has been provided and
+    // it's not the default target ID, then populate
+    // the target data.
+    if (data.targetId && data.targetId !== null) {
       this.populateTargetData(data.targetId)
     }
   }
@@ -156,14 +171,16 @@ export default abstract class Effect<
   }
 
   /**
-   * The default properties of the Effect.
+   * Default properties set when creating a new Effect object.
    */
-  public static readonly DEFAULT_PROPERTIES: Required<TCommonEffectJson> = {
-    id: generateHash(),
-    name: 'New Effect',
-    description: '<p><br></p>',
-    targetId: Target.DEFAULT_PROPERTIES.id,
-    args: {},
+  public static get DEFAULT_PROPERTIES(): TCommonEffectJson {
+    return {
+      id: generateHash(),
+      name: 'New Effect',
+      description: '<p><br></p>',
+      targetId: null,
+      args: {},
+    }
   }
 }
 
@@ -190,7 +207,7 @@ export interface TCommonEffect {
   /**
    * The target to which the effect will be applied.
    */
-  target: TCommonTarget
+  target: TCommonTarget | null
   /**
    * The ID of the effect.
    */
@@ -232,7 +249,7 @@ export interface TCommonEffectJson {
   /**
    * The ID of the target to which the effect will be applied.
    */
-  targetId: TCommonTargetJson['id']
+  targetId: TCommonTargetJson['id'] | null
   /**
    * The arguments used to affect an entity via the effects API.
    */

@@ -115,7 +115,6 @@ type TNumberArgOptional = {
   required: false
   /**
    * The default value for the argument.
-   * @default 0
    */
   default?: number
 }
@@ -155,7 +154,6 @@ type TStringArgOptional = {
   required: false
   /**
    * The default value for the argument.
-   * @default undefined
    */
   default?: string
 }
@@ -195,7 +193,6 @@ type TMedCharStringArgOptional = {
   required: false
   /**
    * The default value for the argument.
-   * @default undefined
    */
   default?: string
 }

@@ -23,8 +23,8 @@ export default function TargetEntry({
   /**
    * The list of targets within the target environment.
    */
-  const targets: ClientTarget[] = compute(
-    () => effect.targetEnvironment.targets,
+  const targets: ClientTarget[] | undefined = compute(
+    () => effect.targetEnvironment?.targets,
   )
   /**
    * Boolean to determine if the effect is new.
@@ -32,7 +32,7 @@ export default function TargetEntry({
   const isNewEffect: boolean = compute(() => !action.effects.includes(effect))
 
   /* -- RENDER -- */
-  if (!isNewEffect) {
+  if (!isNewEffect && effect.target) {
     return (
       <div className='TargetEntry Selected'>
         <div className='TargetInfo'>
@@ -47,7 +47,7 @@ export default function TargetEntry({
         <Args effect={effect} handleChange={handleChange} />
       </div>
     )
-  } else if (isNewEffect && targets.length > 0) {
+  } else if (isNewEffect && targets && targets.length > 0) {
     return (
       <div className='TargetEntry Unselected'>
         <DetailDropDown<ClientTarget>

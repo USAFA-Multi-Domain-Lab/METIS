@@ -58,13 +58,15 @@ export default abstract class TargetEnvironment<TTarget extends TCommonTarget>
   }
 
   /**
-   * The default properties of the TargetEnvironment.
+   * Default properties set when creating a new TargetEnvironment object.
    */
-  public static readonly DEFAULT_PROPERTIES: Required<TCommonTargetEnvJson> = {
-    id: 'metis-target-env-default',
-    name: 'Select a target environment',
-    description: 'This is a default target environment.',
-    targets: [],
+  public static get DEFAULT_PROPERTIES(): TCommonTargetEnvJson {
+    return {
+      id: 'metis-target-env-default',
+      name: 'Select a target environment',
+      description: 'This is a default target environment.',
+      targets: [],
+    }
   }
 }
 

@@ -3,7 +3,6 @@ import { ClientEffect } from 'src/missions/effects'
 import ClientMissionNode from 'src/missions/nodes'
 import { ClientTargetEnvironment } from 'src/target-environments'
 import { compute } from 'src/toolbox'
-import { v4 as generateHash } from 'uuid'
 import { SingleTypeObject } from '../../../../../shared/toolbox/objects'
 import Tooltip from '../communication/Tooltip'
 import { Detail, DetailBox, DetailNumber } from '../form/Form'
@@ -107,28 +106,6 @@ export default function ActionEntry({
     node.actions.delete(action.actionID)
     // Reset the selected action.
     setSelectedAction(null)
-    // Allow the user to save the changes.
-    handleChange()
-  }
-
-  /**
-   * Handles the request to edit an effect.
-   */
-  const handleEditEffectRequest = (effect: ClientEffect) => {
-    // Update the mission path.
-    missionPath.push(effect.name || 'New Effect')
-    // Set the selected effect.
-    setSelectedEffect(effect)
-  }
-
-  /**
-   * Handles the request to delete an effect.
-   */
-  const handleDeleteEffectRequest = (effect: ClientEffect) => {
-    // Filter out the effect from the action.
-    action.effects = action.effects.filter(
-      (actionEffect: ClientEffect) => actionEffect.id !== effect.id,
-    )
     // Allow the user to save the changes.
     handleChange()
   }
@@ -297,6 +274,64 @@ export default function ActionEntry({
               renderItemDisplay={(effect: ClientEffect) => {
                 /* -- COMPUTED -- */
                 /**
+                 * The class list for the edit button.
+                 */
+                const editButtonClassList: string[] = compute(() => {
+                  // Create a default list of class names.
+                  let classList: string[] = []
+
+                  // If the effect cannot be edited then disable the button.
+                  if (
+                    effect.target === null ||
+                    effect.targetEnvironment === null
+                  ) {
+                    classList.push('NoEdit')
+                  }
+
+                  // Return the class list.
+                  return classList
+                })
+
+                /**
+                 * The tooltip description for the edit button.
+                 */
+                const editTooltipDescription: string = compute(() => {
+                  if (effect.target === null) {
+                    return 'This effect cannot be edited because the target associated with this effect is not available.'
+                  } else if (effect.targetEnvironment === null) {
+                    return 'This effect cannot be edited because the target environment associated with this effect is not available.'
+                  } else {
+                    return 'Edit effect.'
+                  }
+                })
+
+                /* -- FUNCTIONS -- */
+                /**
+                 * Handles the request to delete an effect.
+                 */
+                const handleDeleteEffectRequest = () => {
+                  // Filter out the effect from the action.
+                  action.effects = action.effects.filter(
+                    (actionEffect: ClientEffect) =>
+                      actionEffect.id !== effect.id,
+                  )
+                  // Allow the user to save the changes.
+                  handleChange()
+                }
+
+                /**
+                 * Handles the request to edit an effect.
+                 */
+                const handleEditEffectRequest = () => {
+                  if (effect.targetEnvironment && effect.target) {
+                    // Update the mission path.
+                    missionPath.push(effect.name || 'New Effect')
+                    // Set the selected effect.
+                    setSelectedEffect(effect)
+                  }
+                }
+
+                /**
                  * The buttons for the effect list.
                  */
                 const actionButtons = compute(() => {
@@ -309,13 +344,14 @@ export default function ActionEntry({
                       edit: {
                         icon: 'edit',
                         key: 'edit',
-                        onClick: () => handleEditEffectRequest(effect),
-                        tooltipDescription: 'Edit effect.',
+                        onClick: handleEditEffectRequest,
+                        tooltipDescription: editTooltipDescription,
+                        uniqueClassList: editButtonClassList,
                       },
                       remove: {
                         icon: 'remove',
                         key: 'remove',
-                        onClick: () => handleDeleteEffectRequest(effect),
+                        onClick: handleDeleteEffectRequest,
                         tooltipDescription: 'Remove effect.',
                       },
                     }
@@ -353,17 +389,10 @@ export default function ActionEntry({
               itemsPerPage={null}
               listSpecificItemClassName='AltDesign2'
             />
-            <div className='NewButtonContainer'>
+            <div className='ButtonContainer New'>
               <ButtonText
                 text='New Effect'
-                onClick={() =>
-                  setSelectedEffect(
-                    new ClientEffect(action, {
-                      id: generateHash(),
-                      args: {},
-                    }),
-                  )
-                }
+                onClick={() => setSelectedEffect(new ClientEffect(action))}
                 tooltipDescription='Create a new effect.'
                 uniqueClassName={newEffectButtonClassName}
               />

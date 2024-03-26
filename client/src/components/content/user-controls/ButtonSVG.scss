@@ -28,6 +28,11 @@
     font-size: 40px;
   }
 
+  &.lock:hover {
+    cursor: help;
+    filter: none;
+  }
+
   &.zoom-in {
     cursor: zoom-in;
   }

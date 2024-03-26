@@ -1,10 +1,8 @@
-import { useEffect, useState } from 'react'
-import { useGlobalContext } from 'src/context'
+import { useState } from 'react'
 import { ClientEffect } from 'src/missions/effects'
 import { compute } from 'src/toolbox'
 import { useMountHandler } from 'src/toolbox/hooks'
 import { TTargetArg } from '../../../../../../shared/target-environments/targets'
-import { AnyObject } from '../../../../../../shared/toolbox/objects'
 import {
   Detail,
   DetailBox,
@@ -20,16 +18,11 @@ import './ArgEntry.scss'
 export default function ArgEntry({
   effect,
   arg,
-  effectArgs,
-  reqPropertiesNotFilledOut,
   argDependencies,
   handleChange,
 }: TArgGroupings_P): JSX.Element | null {
-  /* -- GLOBAL CONTEXT -- */
-  const { forceUpdate } = useGlobalContext().actions
-
   /* -- STATE -- */
-  const [defaultDropDownValue] = useState<undefined>(undefined)
+  const [defaultDropDownValue] = useState<null>(null)
   const [defaultNumberValue] = useState<null>(null)
   const [defaultStringValue] = useState<''>('')
   const [defaultMediumStringValue] = useState<'<p><br></p>'>('<p><br></p>')
@@ -39,8 +32,8 @@ export default function ArgEntry({
   /**
    * The selected target's arguments.
    */
-  const args: TTargetArg[] = compute(() => {
-    return effect.target.args
+  const args: TTargetArg[] | undefined = compute(() => {
+    return effect.target?.args
   })
   /**
    * Dynamic class name for the argument field.
@@ -59,29 +52,34 @@ export default function ArgEntry({
   /**
    * The drop down value that is selected.
    */
-  const dropDownValue: TArgDropdownOption | undefined = compute(() => {
+  const dropDownValue: TArgDropdownOption | null = compute(() => {
     // Initialize the value
-    let value: TArgDropdownOption | undefined = defaultDropDownValue
+    let value: TArgDropdownOption | null = defaultDropDownValue
 
-    // If the argument is a dropdown...
-    if (arg.type === 'dropdown') {
-      // ...and the argument's value in the effect is defined,
-      // then use the effect's argument value.
-      if (effect.args[arg.id]) {
-        value = arg.options.find((option) => option.id === effect.args[arg.id])
+    // If the argument is a drop down, the argument
+    // has a default value...
+    if (arg.type === 'dropdown' && arg.default) {
+      // ...and the argument's value in the effect isn't
+      // the default value then use the effect's argument
+      // value.
+      // Note: For initial values, see componentDidMount.
+      if (effect.args[arg.id] !== arg.default.id) {
+        let option: TArgDropdownOption | undefined = arg.options.find(
+          (option) => option.id === effect.args[arg.id],
+        )
+
+        // If the value is found then update the value.
+        if (option) {
+          value = option
+        }
+        // Otherwise, set the value to the default value.
+        else {
+          value = defaultDropDownValue
+        }
       }
-      // Otherwise, if the argument's value in the
-      // state is undefined, the argument's value in
-      // the effect is undefined, and the argument has
-      // a default value, then use the default value.
-      else if (!effectArgs[arg.id] && !effect.args[arg.id] && arg.default) {
-        value = arg.default
-      }
-      // Otherwise, use the argument's value in the state.
-      // At the very least, the argument's value in the state
-      // will be the default drop down value (undefined).
+      // Otherwise, set the value to the default value.
       else {
-        value = arg.options.find((option) => option.id === effectArgs[arg.id])
+        value = arg.default
       }
     }
 
@@ -92,132 +90,100 @@ export default function ArgEntry({
    * The number input's value.
    */
   const numberValue: number | null = compute(() => {
-    // Initialize the value to the component
-    // state's effect argument value.
-    let value: number | undefined = effectArgs[arg.id]
+    // Initialize the value.
+    let value: number | null = defaultNumberValue
 
-    // If the argument is a number...
-    if (arg.type === 'number') {
-      // ...and the argument's value in the effect
-      // is defined, then use the effect's argument
+    // If the argument is a number, the argument
+    // has a default value...
+    if (arg.type === 'number' && arg.default) {
+      // ...and the argument's value in the effect isn't
+      // the default value then use the effect's argument
       // value.
-      if (effect.args[arg.id]) {
+      // Note: For initial values, see componentDidMount.
+      if (effect.args[arg.id] !== arg.default) {
         value = effect.args[arg.id]
       }
-      // Otherwise, if the argument's value in the
-      // state is undefined, the argument's value in
-      // the effect is undefined, and the argument has
-      // a default value, then use the default value.
-      else if (!effectArgs[arg.id] && !effect.args[arg.id] && arg.default) {
-        value = arg.default
-      }
-      // Otherwise, use the argument's value in the state.
-      // At the very least, the argument's value in the state
-      // will be the default number value (null).
+      // Otherwise, set the value to the default value.
       else {
-        value = effectArgs[arg.id]
+        value = arg.default
       }
     }
 
     // Return the value.
-    return value === undefined ? null : value
+    return value
   })
   /**
    * The text input's value.
    */
-  const stringValue: string | null = compute(() => {
-    // Initialize the value to the component
-    // state's effect argument value.
-    let value: string | undefined = effectArgs[arg.id]
+  const stringValue: string = compute(() => {
+    // Initialize the value.
+    let value: string = defaultStringValue
 
-    // If the argument is a string...
-    if (arg.type === 'string') {
-      // ...and the argument's value in the effect
-      // is defined, then use the effect's argument
+    // If the argument is a string, the argument
+    // has a default value...
+    if (arg.type === 'string' && arg.default) {
+      // ...and the argument's value in the effect isn't
+      // the default value then use the effect's argument
       // value.
-      if (effect.args[arg.id]) {
+      // Note: For initial values, see componentDidMount.
+      if (effect.args[arg.id] !== arg.default) {
         value = effect.args[arg.id]
       }
-      // Otherwise, if the argument's value in the
-      // state is undefined, the argument's value in
-      // the effect is undefined, and the argument has
-      // a default value, then use the default value.
-      else if (!effectArgs[arg.id] && !effect.args[arg.id] && arg.default) {
-        value = arg.default
-      }
-      // Otherwise, use the argument's value in the state.
-      // At the very least, the argument's value in the state
-      // will be the default string value (an empty string).
+      // Otherwise, set the value to the default value.
       else {
-        value = effectArgs[arg.id]
+        value = arg.default
       }
     }
 
     // Return the value.
-    return value === undefined ? null : value
+    return value
   })
   /**
    * The medium string input's value.
    */
-  const mediumStringValue: string | null = compute(() => {
-    // Initialize the value to the component
-    // state's effect argument value.
-    let value: string | undefined = effectArgs[arg.id]
+  const mediumStringValue: string = compute(() => {
+    // Initialize the value.
+    let value: string = defaultMediumStringValue
 
-    // If the argument is a medium string...
-    if (arg.type === 'medium-string') {
-      // ...and the argument's value in the effect
-      // is defined, then use the effect's argument
+    // If the argument is a medium string, the argument
+    // has a default value...
+    if (arg.type === 'medium-string' && arg.default) {
+      // ...and the argument's value in the effect isn't
+      // the default value then use the effect's argument
       // value.
-      if (effect.args[arg.id]) {
+      // Note: For initial values, see componentDidMount.
+      if (effect.args[arg.id] !== arg.default) {
         value = effect.args[arg.id]
       }
-      // Otherwise, if the argument's value in the
-      // state is undefined, the argument's value in
-      // the effect is undefined, and the argument has
-      // a default value, then use the default value.
-      else if (!effectArgs[arg.id] && !effect.args[arg.id] && arg.default) {
-        value = arg.default
-      }
-      // Otherwise, use the argument's value in the state.
-      // At the very least, the argument's value in the state
-      // will be the default medium string value (an empty string).
+      // Otherwise, set the value to the default value.
       else {
-        value = effectArgs[arg.id]
+        value = arg.default
       }
     }
 
     // Return the value.
-    return value === undefined ? null : value
+    return value
   })
   /**
    * The boolean input's value.
    */
-  const booleanValue: boolean | undefined = compute(() => {
-    // Initialize the value to the component
-    // state's effect argument value.
-    let value: boolean | undefined = effectArgs[arg.id]
+  const booleanValue: boolean = compute(() => {
+    // Initialize the value.
+    let value: boolean = defaultBooleanValue
 
-    // If the argument is a boolean...
-    if (arg.type === 'boolean') {
-      // ...and the argument's value in the effect
-      // is defined, then use the effect's argument
+    // If the argument is a boolean, the argument
+    // has a default value...
+    if (arg.type === 'boolean' && arg.default) {
+      // ...and the argument's value in the effect isn't
+      // the default value then use the effect's argument
       // value.
-      if (effect.args[arg.id]) {
+      // Note: For initial values, see componentDidMount.
+      if (effect.args[arg.id] !== arg.default) {
         value = effect.args[arg.id]
       }
-      // Otherwise, if the argument's value in the
-      // state is undefined, the argument's value in
-      // the effect is undefined, and the argument has
-      // a default value, then use the default value.
-      else if (!effectArgs[arg.id] && !effect.args[arg.id] && arg.default) {
-        value = arg.default
-      }
-      // Otherwise, use the argument's value in the state.
-      // At the very least, the argument's value in the state
-      // will be the default boolean value (false).
+      // Otherwise, set the value to the default value.
       else {
-        value = effectArgs[arg.id]
+        value = arg.default
       }
     }
 
@@ -244,136 +210,77 @@ export default function ArgEntry({
   /* -- EFFECTS -- */
 
   // componentDidMount
-  const [mountHandled] = useMountHandler((done) => {
-    // Grab the entries of the effect's arguments.
-    let argEntries: [string, any][] = Object.entries(effect.args)
-
-    // If the effect's arguments are not empty then...
-    if (argEntries.length > 0) {
-      // ...add the argument to the state so that the
-      // argument's value is displayed correctly to the user.
-      argEntries.forEach(([key, value]) => {
-        effectArgs[key] = value
-      })
+  useMountHandler((done) => {
+    // If the argument isn't a dependency...
+    if (!argDependencies.includes(arg.id)) {
+      // ...and the argument doesn't already exist in
+      //  the effect's arguments then set the argument
+      // to the default value and add it to the effect's
+      // arguments.
+      if (effect.args[arg.id] === undefined && arg.default !== undefined) {
+        if (arg.type === 'dropdown') {
+          effect.args[arg.id] = arg.default.id
+        } else {
+          effect.args[arg.id] = arg.default
+        }
+      }
+      // Or, if the argument doesn't have a default value
+      // then set the argument to the default drop down
+      // value and add it to the effect's arguments.
+      else if (
+        effect.args[arg.id] === undefined &&
+        arg.default === undefined &&
+        arg.type === 'dropdown'
+      ) {
+        effect.args[arg.id] = defaultDropDownValue
+      }
+      // Or, if the argument doesn't have a default value
+      // then set the argument to the default number value
+      // and add it to the effect's arguments.
+      else if (
+        effect.args[arg.id] === undefined &&
+        arg.default === undefined &&
+        arg.type === 'number'
+      ) {
+        effect.args[arg.id] = defaultNumberValue
+      }
+      // Or, if the argument doesn't have a default value
+      // then set the argument to the default string value
+      // and add it to the effect's arguments.
+      else if (
+        effect.args[arg.id] === undefined &&
+        arg.default === undefined &&
+        arg.type === 'string'
+      ) {
+        effect.args[arg.id] = defaultStringValue
+      }
+      // Or, if the argument doesn't have a default value
+      // then set the argument to the default medium string
+      // value and add it to the effect's arguments.
+      else if (
+        effect.args[arg.id] === undefined &&
+        arg.default === undefined &&
+        arg.type === 'medium-string'
+      ) {
+        effect.args[arg.id] = defaultMediumStringValue
+      }
+      // Or, if the argument doesn't have a default value
+      // then set the argument to the default boolean value
+      // and add it to the effect's arguments.
+      else if (
+        effect.args[arg.id] === undefined &&
+        arg.default === undefined &&
+        arg.type === 'boolean'
+      ) {
+        effect.args[arg.id] = defaultBooleanValue
+      }
     }
-    // Otherwise, the effect has no arguments so update the state
-    // with the default values of the arguments based on their type.
-    else {
-      // If the argument doesn't exist in the state either
-      // and it has a default value then set the argument
-      // to the default value and add it to the state.
-      if (effectArgs[arg.id] === undefined && arg.default !== undefined) {
-        effectArgs[arg.id] = arg.default
-      }
-      // If the argument doesn't exist in the state and it
-      // is a dropdown then set the argument to the default
-      // dropdown value and add it to the state.
-      if (effectArgs[arg.id] === undefined && arg.type === 'dropdown') {
-        effectArgs[arg.id] = defaultDropDownValue
-      }
-      // If the argument doesn't exist in the state and it
-      // is a number then set the argument to the default
-      // number value and add it to the state.
-      if (effectArgs[arg.id] === undefined && arg.type === 'number') {
-        effectArgs[arg.id] = defaultNumberValue
-      }
-      // If the argument doesn't exist in the state and it
-      // is a string then set the argument to the default
-      // string value and add it to the state.
-      if (effectArgs[arg.id] === undefined && arg.type === 'string') {
-        effectArgs[arg.id] = defaultStringValue
-      }
-      // If the argument doesn't exist in the state and it
-      // is a medium string then set the argument to the default
-      // medium string value and add it to the state.
-      if (effectArgs[arg.id] === undefined && arg.type === 'medium-string') {
-        effectArgs[arg.id] = defaultMediumStringValue
-      }
-      // If the argument doesn't exist in the state and it
-      // is a boolean then set the argument to the default
-      // boolean value and add it to the state.
-      if (effectArgs[arg.id] === undefined && arg.type === 'boolean') {
-        effectArgs[arg.id] = defaultBooleanValue
-      }
-    }
 
-    // Update the argument based on the value.
-    updateArg()
+    // Update the argument's dependencies.
+    updateArgDependencies(arg, arg.optionalParams?.dependencies)
 
     done()
   })
-
-  // Updates the argument's dependencies.
-  useEffect(() => {
-    // If the argument has dependencies then...
-    if (arg.optionalParams?.dependencies) {
-      // Iterate through the dependencies.
-      arg.optionalParams.dependencies.forEach((dependency: string) => {
-        // If the dependency is not already in the list
-        // of dependencies then add it to the list.
-        if (!argDependencies.includes(dependency)) {
-          // Add the dependency to the list of dependencies.
-          argDependencies.push(dependency)
-        }
-      })
-
-      forceUpdate()
-    }
-  }, [argDependencies])
-
-  // If the arguments stored in the state change then update
-  // the effect's arguments to reflect the changes.
-  useEffect(() => {
-    if (mountHandled) {
-      // Grab the entries of the arguments stored in the state.
-      let argEntries: [string, any][] = Object.entries(effectArgs)
-      // Filter out the arguments that are not filled out.
-      // Only the arguments that are filled out will be executed.
-      argEntries.forEach(([key, value]) => {
-        // If the value is not undefined, null, or the default value
-        // then add the argument to the effect's arguments.
-        if (
-          value !== undefined &&
-          value !== null &&
-          value !== defaultStringValue &&
-          value !== defaultMediumStringValue
-        ) {
-          effect.args[key] = value
-        }
-
-        // See if the argument stored in the state is an argument
-        // within this target.
-        let arg: TTargetArg | undefined = args.find(
-          (arg: TTargetArg) => arg.id === key,
-        )
-        // If the argument is not found within the target, then
-        // remove the argument from the effect and remove the
-        // argument from the list of required properties not
-        // filled out (if it exists).
-        if (arg === undefined) {
-          delete effect.args[key]
-
-          if (reqPropertiesNotFilledOut.includes(key)) {
-            reqPropertiesNotFilledOut.splice(
-              reqPropertiesNotFilledOut.indexOf(key),
-              1,
-            )
-          }
-        }
-      })
-
-      // When the component unmounts, remove unnecessary
-      // arguments from the effect's arguments.
-      return () => {
-        // If an argument is in a default state then remove it's
-        // dependencies from the effect's arguments.
-        removeArg(arg, arg.optionalParams?.dependencies)
-
-        // Update the argument based on the value.
-        updateArg()
-      }
-    }
-  }, [dropDownValue, numberValue, stringValue, mediumStringValue, booleanValue])
 
   /* -- FUNCTIONS -- */
 
@@ -383,109 +290,38 @@ export default function ArgEntry({
    * @param arg The argument to update.
    * @param dependencies The list of dependencies.
    */
-  const updateArgDependencies = (arg: TTargetArg, dependencies: string[]) => {
+  const updateArgDependencies = (
+    arg: TTargetArg,
+    dependencies: string[] = [],
+  ) => {
     // Iterate through the dependencies.
     dependencies.forEach((dependency: string) => {
       // Grab the dependency argument.
-      let dependencyArg: TTargetArg | undefined = args.find(
+      let dependencyArg: TTargetArg | undefined = args?.find(
         (arg: TTargetArg) => arg.id === dependency,
       )
 
       if (dependencyArg) {
-        // If the argument is a dropdown then continue.
-        if (arg.type === 'dropdown') {
-          // If the argument's value equals a default value ||
-          // the argument's value doesn't exist ||
-          // the argument is not displayed,
-          // then hide the dependency argument.
-          if (
-            effectArgs[arg.id] === arg.default ||
-            effectArgs[arg.id] === defaultDropDownValue ||
-            arg.display === false
-          ) {
-            // Hide the dependency argument.
-            dependencyArg.display = false
-          }
+        // If the argument is in a default state then hide
+        // the dependency argument and remove it from the
+        // effect's arguments stored in the state.
+        if (
+          effect.args[arg.id] === arg.default ||
+          effect.args[arg.id] === defaultDropDownValue ||
+          effect.args[arg.id] === defaultNumberValue ||
+          effect.args[arg.id] === defaultStringValue ||
+          effect.args[arg.id] === defaultMediumStringValue ||
+          effect.args[arg.id] === defaultBooleanValue ||
+          effect.args[arg.id] === undefined ||
+          arg.display === false
+        ) {
+          // Hide the dependency argument.
+          dependencyArg.display = false
+          // Remove the dependency argument from the effect's arguments.
+          delete effect.args[dependencyArg.id]
+        } else {
           // Otherwise, display the dependency argument.
-          else {
-            dependencyArg.display = true
-          }
-        }
-        // If the argument is a number then continue.
-        else if (arg.type === 'number') {
-          // If the argument's value equals a default value ||
-          // the argument's value doesn't exist ||
-          // the argument is not displayed,
-          // then hide the dependency argument.
-          if (
-            effectArgs[arg.id] === arg.default ||
-            effectArgs[arg.id] === defaultNumberValue ||
-            effectArgs[arg.id] === undefined ||
-            arg.display === false
-          ) {
-            dependencyArg.display = false
-          }
-          // Otherwise, display the dependency argument.
-          else {
-            dependencyArg.display = true
-          }
-        }
-        // If the argument is a string then continue.
-        else if (arg.type === 'string') {
-          // If the argument's value equals a default value ||
-          // the argument's value doesn't exist ||
-          // the argument is not displayed,
-          // then hide the dependency argument.
-          if (
-            effectArgs[arg.id] === arg.default ||
-            effectArgs[arg.id] === defaultStringValue ||
-            effectArgs[arg.id] === undefined ||
-            arg.display === false
-          ) {
-            dependencyArg.display = false
-          }
-          // Otherwise, display the dependency argument.
-          else {
-            dependencyArg.display = true
-          }
-        }
-        // If the argument is a medium-string then continue.
-        else if (arg.type === 'medium-string') {
-          // If the argument's value equals a default value ||
-          // the argument's value doesn't exist ||
-          // the argument is not displayed,
-          // then hide the dependency argument.
-          if (
-            effectArgs[arg.id] === arg.default ||
-            effectArgs[arg.id] === defaultMediumStringValue ||
-            effectArgs[arg.id] === undefined ||
-            arg.display === false
-          ) {
-            dependencyArg.display = false
-          }
-          // Otherwise, display the dependency argument.
-          else {
-            dependencyArg.display = true
-          }
-        }
-        // If the argument is a boolean then continue.
-        else if (arg.type === 'boolean') {
-          // If the argument's value equals a default value ||
-          // the argument's value doesn't exist ||
-          // the argument is not displayed,
-          // then hide the dependency argument.
-          if (
-            effectArgs[arg.id] === arg.default ||
-            effectArgs[arg.id] === defaultBooleanValue ||
-            effectArgs[arg.id] === undefined ||
-            arg.display === false
-          ) {
-            dependencyArg.display = false
-          }
-          // Otherwise, display the dependency argument.
-          else {
-            dependencyArg.display = true
-          }
+          dependencyArg.display = true
         }
 
         if (dependencyArg.optionalParams?.dependencies) {
@@ -500,244 +336,9 @@ export default function ArgEntry({
     })
   }
 
-  /**
-   * Updates the argument's properties and its dependencies depending
-   * on the argument's type and value.
-   */
-  const updateArg = () => {
-    // If the argument is a dropdown and it is required
-    // then check if the argument is filled out.
-    if (arg.type === 'dropdown' && arg.required) {
-      // If the argument's value equals a default value or
-      // the argument's value doesn't exist or the argument
-      // is not displayed then add the argument ID to the list
-      // of arguments that are not filled out.
-      if (
-        effectArgs[arg.id] === arg.default ||
-        effectArgs[arg.id] === defaultDropDownValue ||
-        arg.display === false
-      ) {
-        reqPropertiesNotFilledOut.push(arg.id)
-      }
-      // Otherwise, remove the argument ID from the list of
-      // arguments that are not filled out.
-      else {
-        reqPropertiesNotFilledOut.splice(
-          reqPropertiesNotFilledOut.indexOf(arg.id),
-          1,
-        )
-      }
-    }
-    // If the argument is a number and it is required
-    // then check if the argument is filled out.
-    else if (arg.type === 'number' && arg.required) {
-      // If the argument's value equals a default value or
-      // the argument's value doesn't exist or the argument
-      // is not displayed then add the argument ID to the list
-      // of arguments that are not filled out.
-      if (
-        effectArgs[arg.id] === arg.default ||
-        effectArgs[arg.id] === defaultNumberValue ||
-        effectArgs[arg.id] === undefined ||
-        arg.display === false
-      ) {
-        reqPropertiesNotFilledOut.push(arg.id)
-      }
-      // Otherwise, remove the argument ID from the list of
-      // arguments that are not filled out.
-      else {
-        reqPropertiesNotFilledOut.splice(
-          reqPropertiesNotFilledOut.indexOf(arg.id),
-          1,
-        )
-      }
-    }
-    // If the argument is a string and it is required
-    // then check if the argument is filled out.
-    else if (arg.type === 'string' && arg.required) {
-      // If the argument's value equals a default value or
-      // the argument's value doesn't exist or the argument
-      // is not displayed then add the argument ID to the list
-      // of arguments that are not filled out.
-      if (
-        effectArgs[arg.id] === arg.default ||
-        effectArgs[arg.id] === defaultStringValue ||
-        effectArgs[arg.id] === undefined ||
-        arg.display === false
-      ) {
-        reqPropertiesNotFilledOut.push(arg.id)
-      }
-      // Otherwise, remove the argument ID from the list of
-      // arguments that are not filled out.
-      else {
-        reqPropertiesNotFilledOut.splice(
-          reqPropertiesNotFilledOut.indexOf(arg.id),
-          1,
-        )
-      }
-    }
-    // If the argument is a medium string and it is required
-    // then check if the argument is filled out.
-    else if (arg.type === 'medium-string' && arg.required) {
-      // If the argument's value equals a default value or
-      // the argument's value doesn't exist or the argument
-      // is not displayed then add the argument ID to the list
-      // of arguments that are not filled out.
-      if (
-        effectArgs[arg.id] === arg.default ||
-        effectArgs[arg.id] === defaultMediumStringValue ||
-        effectArgs[arg.id] === undefined ||
-        arg.display === false
-      ) {
-        reqPropertiesNotFilledOut.push(arg.id)
-      }
-      // Otherwise, remove the argument ID from the list of
-      // arguments that are not filled out.
-      else {
-        reqPropertiesNotFilledOut.splice(
-          reqPropertiesNotFilledOut.indexOf(arg.id),
-          1,
-        )
-      }
-    }
-    // If the argument is a boolean and it is required
-    // then check if the argument is filled out.
-    else if (arg.type === 'boolean' && arg.required) {
-      // If the argument's value equals a default value or
-      // the argument's value doesn't exist or the argument
-      // is not displayed then add the argument ID to the list
-      // of arguments that are not filled out.
-      if (
-        effectArgs[arg.id] === arg.default ||
-        effectArgs[arg.id] === defaultBooleanValue ||
-        effectArgs[arg.id] === undefined ||
-        arg.display === false
-      ) {
-        reqPropertiesNotFilledOut.push(arg.id)
-      }
-      // Otherwise, remove the argument ID from the list of
-      // arguments that are not filled out.
-      else {
-        reqPropertiesNotFilledOut.splice(
-          reqPropertiesNotFilledOut.indexOf(arg.id),
-          1,
-        )
-      }
-    }
-
-    // If the argument has dependencies then
-    // the dependencies are now required.
-    if (arg.optionalParams?.dependencies) {
-      updateArgDependencies(arg, arg.optionalParams.dependencies)
-    }
-
-    // Display the changes.
-    forceUpdate()
-  }
-
-  /**
-   * Recursive function that will remove dependency arguments
-   * from the effect's arguments if the dependency argument's
-   * parent argument is in a default state.
-   * @param arg The argument to remove.
-   * @param dependencies The list of dependencies.
-   */
-  const removeArg = (arg: TTargetArg, dependencies: string[] = []) => {
-    // Iterate through the dependencies.
-    dependencies.forEach((dependency: string) => {
-      // Grab the dependency argument.
-      let dependencyArg: TTargetArg | undefined = args.find(
-        (arg: TTargetArg) => arg.id === dependency,
-      )
-
-      if (dependencyArg) {
-        // If the argument is a dropdown then continue.
-        if (arg.type === 'dropdown') {
-          // If the argument's value equals a default value ||
-          // the argument's value doesn't exist ||
-          // the argument is not displayed,
-          // then remove the dependency argument from the effect's arguments.
-          if (
-            effect.args[arg.id] === arg.default ||
-            effect.args[arg.id] === defaultDropDownValue ||
-            arg.display === false
-          ) {
-            delete effect.args[dependencyArg.id]
-          }
-        }
-        // If the argument is a number then continue.
-        else if (arg.type === 'number') {
-          // If the argument's value equals a default value ||
-          // the argument's value doesn't exist ||
-          // the argument is not displayed,
-          // then remove the dependency argument from the effect's arguments.
-          if (
-            effect.args[arg.id] === arg.default ||
-            effect.args[arg.id] === defaultNumberValue ||
-            effect.args[arg.id] === undefined ||
-            arg.display === false
-          ) {
-            delete effect.args[dependencyArg.id]
-          }
-        }
-        // If the argument is a string then continue.
-        else if (arg.type === 'string') {
-          // If the argument's value equals a default value ||
-          // the argument's value doesn't exist ||
-          // the argument is not displayed,
-          // then remove the dependency argument from the effect's arguments.
-          if (
-            effect.args[arg.id] === arg.default ||
-            effect.args[arg.id] === defaultStringValue ||
-            effect.args[arg.id] === undefined ||
-            arg.display === false
-          ) {
-            delete effect.args[dependencyArg.id]
-          }
-        }
-        // If the argument is a medium-string then continue.
-        else if (arg.type === 'medium-string') {
-          // If the argument's value equals a default value ||
-          // the argument's value doesn't exist ||
-          // the argument is not displayed,
-          // then remove the dependency argument from the effect's arguments.
-          if (
-            effect.args[arg.id] === arg.default ||
-            effect.args[arg.id] === defaultMediumStringValue ||
-            effect.args[arg.id] === undefined ||
-            arg.display === false
-          ) {
-            delete effect.args[dependencyArg.id]
-          }
-        }
-        // If the argument is a boolean then continue.
-        else if (arg.type === 'boolean') {
-          // If the argument's value equals a default value ||
-          // the argument's value doesn't exist ||
-          // the argument is not displayed,
-          // then remove the dependency argument from the effect's arguments.
-          if (
-            effect.args[arg.id] === arg.default ||
-            effect.args[arg.id] === defaultBooleanValue ||
-            effect.args[arg.id] === undefined ||
-            arg.display === false
-          ) {
-            delete effect.args[dependencyArg.id]
-          }
-        }
-
-        if (dependencyArg.optionalParams?.dependencies) {
-          // If the dependency argument has dependencies then
-          // remove the dependency argument's dependencies.
-          removeArg(dependencyArg, dependencyArg.optionalParams.dependencies)
-        }
-      }
-    })
-  }
-
   /* -- RENDER -- */
-  // If the argument type is "dropdown" and it is required
-  // then render the dropdown.
+  // If the argument type is "dropdown" then render
+  // the dropdown.
   if (arg.type === 'dropdown') {
     return (
       <div
@@ -751,10 +352,10 @@ export default function ArgEntry({
           isExpanded={false}
           renderDisplayName={(option: TArgDropdownOption) => option.name}
           deliverValue={(option: TArgDropdownOption) => {
-            // Add the argument to the list of arguments.
-            effectArgs[arg.id] = option.id
-            // Update the argument based on the value.
-            updateArg()
+            // Update the effect's arguments.
+            effect.args[arg.id] = option.id
+            // Update the argument's dependencies.
+            updateArgDependencies(arg, arg.optionalParams?.dependencies)
             // If the option is not the default value then
             // allow the user to save the changes.
             if (option !== arg.default || option !== defaultDropDownValue) {
@@ -767,8 +368,8 @@ export default function ArgEntry({
       </div>
     )
   }
-  // If the argument type is "number" and it is required
-  // then render the number input.
+  // If the argument type is "number" then render
+  // the number input.
   else if (arg.type === 'number') {
     return (
       <div
@@ -780,10 +381,10 @@ export default function ArgEntry({
           currentValue={numberValue}
           defaultValue={arg.default}
           deliverValue={(value: number | null) => {
-            // Add the argument to the list of arguments.
-            effectArgs[arg.id] = value
-            // Update the argument based on the value.
-            updateArg()
+            // Update the effect's arguments.
+            effect.args[arg.id] = value
+            // Update the argument's dependencies.
+            updateArgDependencies(arg, arg.optionalParams?.dependencies)
             // If the value is not the default value then
             // allow the user to save the changes.
             if (value !== arg.default || value !== defaultNumberValue) {
@@ -801,8 +402,8 @@ export default function ArgEntry({
       </div>
     )
   }
-  // If the argument type is "string" and it is required
-  // then render the string input.
+  // If the argument type is "string" then render
+  // the string input.
   else if (arg.type === 'string') {
     return (
       <div
@@ -814,10 +415,10 @@ export default function ArgEntry({
           currentValue={stringValue}
           defaultValue={arg.default}
           deliverValue={(value: string) => {
-            // Add the argument to the list of arguments.
-            effectArgs[arg.id] = value
-            // Update the argument based on the value.
-            updateArg()
+            // Update the effect's arguments.
+            effect.args[arg.id] = value
+            // Update the argument's dependencies.
+            updateArgDependencies(arg, arg.optionalParams?.dependencies)
             // If the value is not the default value then
             // allow the user to save the changes.
             if (value !== arg.default || value !== defaultStringValue) {
@@ -830,8 +431,8 @@ export default function ArgEntry({
       </div>
     )
   }
-  // If the argument type is "medium-string" and it is required
-  // then render the medium-string input.
+  // If the argument type is "medium-string" then render
+  // the medium-string input.
   else if (arg.type === 'medium-string') {
     return (
       <div
@@ -843,10 +444,10 @@ export default function ArgEntry({
           currentValue={mediumStringValue}
           defaultValue={arg.default}
           deliverValue={(value: string) => {
-            // Add the argument to the list of arguments.
-            effectArgs[arg.id] = value
-            // Update the argument based on the value.
-            updateArg()
+            // Update the effect's arguments.
+            effect.args[arg.id] = value
+            // Update the argument's dependencies.
+            updateArgDependencies(arg, arg.optionalParams?.dependencies)
             // If the value is not the default value then
             // allow the user to save the changes.
             if (value !== arg.default || value !== defaultMediumStringValue) {
@@ -860,8 +461,8 @@ export default function ArgEntry({
       </div>
     )
   }
-  // If the argument type is "boolean" and it is required
-  // then render the boolean toggle.
+  // If the argument type is "boolean" then render
+  // the boolean toggle.
   else if (arg.type === 'boolean') {
     return (
       <div
@@ -872,10 +473,10 @@ export default function ArgEntry({
           label={arg.name}
           currentValue={booleanValue}
           deliverValue={(value: boolean) => {
-            // Add the argument to the list of arguments.
-            effectArgs[arg.id] = value
-            // Update the argument based on the value.
-            updateArg()
+            // Update the effect's arguments.
+            effect.args[arg.id] = value
+            // Update the argument's dependencies.
+            updateArgDependencies(arg, arg.optionalParams?.dependencies)
             // Allow the user to save the changes.
             handleChange()
           }}
@@ -916,14 +517,6 @@ export type TArgGroupings_P = {
    * The argument to render.
    */
   arg: TTargetArg
-  /**
-   * The arguments stored in the state.
-   */
-  effectArgs: AnyObject
-  /**
-   * A list of required arguments that are not filled out.
-   */
-  reqPropertiesNotFilledOut: string[]
   /**
    * The list of dependencies for the argument.
    */
