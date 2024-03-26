@@ -1,5 +1,5 @@
-import { useRef } from 'react'
-import { useGlobalContext } from 'src/context'
+import { useRef, useState } from 'react'
+import { useGlobalContext, useNavigationMiddleware } from 'src/context'
 import GameClient from 'src/games'
 import { compute } from 'src/toolbox'
 import {
@@ -7,6 +7,7 @@ import {
   useMountHandler,
   useRequireSession,
 } from 'src/toolbox/hooks'
+import ClientUser from 'src/users'
 import { DefaultLayout } from '.'
 import { HomeLink, TNavigation } from '../content/general-layout/Navigation'
 import ButtonSvgPanel, {
@@ -25,8 +26,11 @@ export default function LobbyPage({ game }: TLobbyPage_P): JSX.Element | null {
   const globalContext = useGlobalContext()
   const [server] = globalContext.server
   const [session] = useRequireSession()
-  const { beginLoading, finishLoading, navigateTo, handleError } =
+  const { beginLoading, finishLoading, navigateTo, handleError, confirm } =
     globalContext.actions
+  const [participants, setParticipants] = useState<ClientUser[]>(
+    game.participants,
+  )
 
   /* -- computed -- */
 
@@ -35,7 +39,7 @@ export default function LobbyPage({ game }: TLobbyPage_P): JSX.Element | null {
    */
   const navigation = compute(
     (): TNavigation => ({
-      links: [HomeLink(globalContext, { text: 'Cancel' })],
+      links: [HomeLink(globalContext, { text: 'Quit' })],
       boxShadow: 'alt-3',
     }),
   )
@@ -92,7 +96,7 @@ export default function LobbyPage({ game }: TLobbyPage_P): JSX.Element | null {
       // Start the game.
       await game.$start()
       // Redirect to game page.
-      navigateTo('GamePage', { game })
+      navigateTo('GamePage', { game }, { bypassMiddleware: true })
     } catch (error) {
       handleError({
         message: 'Failed to start game.',
@@ -103,22 +107,52 @@ export default function LobbyPage({ game }: TLobbyPage_P): JSX.Element | null {
 
   /* -- effects -- */
 
-  // Verify navigation on mount and on game state change.
+  // Verify navigation on mount.
   useMountHandler((done) => {
     finishLoading()
     verifyNavigation.current()
     done()
   })
-  useEventListener(server, 'game-state-change', () =>
-    verifyNavigation.current(),
-  )
+
+  // Verify navigation and update participant list on
+  // game state change.
+  useEventListener(server, 'game-state-change', () => {
+    verifyNavigation.current()
+    setParticipants(game.participants)
+  })
+
+  // Add navigation middleware to properly
+  // quit the game before the user navigates
+  // away.
+  useNavigationMiddleware((to, next) => {
+    confirm(
+      'Are you sure you want to quit?',
+      async (concludeAction: () => void) => {
+        try {
+          await game.$quit()
+          concludeAction()
+          next()
+        } catch (error) {
+          handleError({
+            message: 'Failed to quit game.',
+            notifyMethod: 'bubble',
+          })
+          concludeAction()
+        }
+      },
+      {
+        buttonConfirmText: 'Yes',
+        buttonCancelText: 'No',
+      },
+    )
+  })
 
   /* -- render -- */
 
   /**
    * Computed JSX for the list of participants.
    */
-  const participantsJsx = game.participants.map(
+  const participantsJsx = participants.map(
     (participant): JSX.Element | null => {
       /* -- computed -- */
 
@@ -152,9 +186,7 @@ export default function LobbyPage({ game }: TLobbyPage_P): JSX.Element | null {
 
       return (
         <div key={participant.userID} className='Participant'>
-          <div className='Name'>
-            {participant.lastName}, {participant.firstName}
-          </div>
+          <div className='Name'>{participant.userID}</div>
           <ButtonSvgPanel buttons={buttons} size={'small'} />
         </div>
       )
@@ -171,7 +203,7 @@ export default function LobbyPage({ game }: TLobbyPage_P): JSX.Element | null {
             <div className='Value'>{game.gameID}</div>
           </div>
           <div className='MissionName StaticDetail'>
-            <div className='Label'>Mission Name:</div>
+            <div className='Label'>Mission:</div>
             <div className='Value'>{game.name}</div>
           </div>
         </div>

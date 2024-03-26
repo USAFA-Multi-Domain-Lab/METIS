@@ -12,6 +12,7 @@ import OutputPanel from '../content/game/OutputPanel'
 import StatusBar from '../content/game/StatusBar'
 import MissionMap from '../content/game/mission-map'
 import ActionExecModal from '../content/game/mission-map/ui/overlay/modals/ActionExecModal'
+import { HomeLink } from '../content/general-layout/Navigation'
 import {
   EPanelSizingMode,
   PanelSizeRelationship,
@@ -58,15 +59,7 @@ export default function GamePage({ game }: IGamePage): JSX.Element | null {
    * Props for navigation.
    */
   const navigation = compute(() => ({
-    links: [
-      {
-        text: 'Quit',
-        key: 'quit',
-        onClick: () => {
-          navigateTo('HomePage', {})
-        },
-      },
-    ],
+    links: [HomeLink(globalContext, { text: 'Quit' })],
     logoLinksHome: false,
   }))
 

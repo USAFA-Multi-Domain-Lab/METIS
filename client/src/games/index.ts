@@ -88,6 +88,7 @@ export default class GameClient extends Game<
    */
   private removeListeners(): void {
     this.server.clearEventListeners([
+      'game-state-change',
       'node-opened',
       'action-execution-initiated',
       'action-execution-completed',
@@ -309,10 +310,13 @@ export default class GameClient extends Game<
     event: TServerEvents['game-state-change'],
   ): void => {
     // Extract data.
-    let { state } = event.data
+    let { state, participants } = event.data
 
-    // Update the game state.
+    // Update the game state and participant list.
     this._state = state
+    this._participants = participants.map(
+      (userData) => new ClientUser(userData),
+    )
   }
 
   /**

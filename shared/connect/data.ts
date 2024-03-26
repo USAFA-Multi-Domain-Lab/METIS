@@ -1,6 +1,7 @@
 import { TGameJson, TGameState } from 'metis/games'
 import { TActionExecutionJSON } from 'metis/missions/actions/executions'
 import { IActionOutcomeJSON } from 'metis/missions/actions/outcomes'
+import { TCommonUserJson } from 'metis/users'
 import { TCommonMissionNodeJson } from '../missions/nodes'
 
 /**
@@ -154,6 +155,10 @@ export type TGenericServerEvents = {
        * The new state of the game.
        */
       state: TGameState
+      /**
+       * The current list of participants in the game.
+       */
+      participants: TCommonUserJson[]
     }
   >
   /**

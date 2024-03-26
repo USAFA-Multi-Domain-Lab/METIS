@@ -1,5 +1,6 @@
 import axios, { AxiosResponse } from 'axios'
 import { TLine_P } from 'src/components/content/game/mission-map/objects/Line'
+import { TEventListenerTarget } from 'src/toolbox/hooks'
 import { v4 as generateHash } from 'uuid'
 import Mission, {
   TCommonMissionJson,
@@ -17,7 +18,10 @@ import NodeCreator from './nodes/creator'
  * Class for managing missions on the client.
  * @extends {Mission<ClientMissionNode>}
  */
-export default class ClientMission extends Mission<ClientMissionNode> {
+export default class ClientMission
+  extends Mission<ClientMissionNode>
+  implements TEventListenerTarget<TMissionEvent>
+{
   /**
    * Whether the resource exists on the server.
    */
@@ -183,6 +187,15 @@ export default class ClientMission extends Mission<ClientMissionNode> {
 
     // Initialize structure.
     this.handleStructureChange()
+
+    for (let node of this.nodes) {
+      if (node.name === 'Red Door') {
+        console.log(node.isOpen)
+      }
+      if (node.name === 'CBC Network Servers') {
+        console.log(node.nodeID)
+      }
+    }
   }
 
   // Inherited

@@ -27,7 +27,7 @@ export default class GameServer extends Game<
   }
   public set state(value: TGameState) {
     this._state = value
-    this.emitToParticipants('game-state-change', { data: { state: value } })
+    this.handleStateChange()
   }
 
   /**
@@ -161,6 +161,9 @@ export default class GameServer extends Game<
     // Call join handler in the session of
     // the new participant.
     participant.session.handleJoin(this.gameID)
+
+    // Handle state change.
+    this.handleStateChange()
   }
 
   /**
@@ -191,6 +194,20 @@ export default class GameServer extends Game<
   }
 
   /**
+   * Handles a change in the game state.
+   */
+  public handleStateChange(): void {
+    this.emitToParticipants('game-state-change', {
+      data: {
+        state: this.state,
+        participants: this.participants.map((client: ClientConnection) =>
+          client.user.toJson(),
+        ),
+      },
+    })
+  }
+
+  /**
    * Has the given participant quit the game. Removes any game listeners for the user.
    * @param quitterID The ID of the participant quiting the game.
    */
@@ -211,6 +228,9 @@ export default class GameServer extends Game<
         }
       },
     )
+
+    // Handle state change.
+    this.handleStateChange()
   }
 
   /**
@@ -347,6 +367,7 @@ export default class GameServer extends Game<
         }),
       )
     }
+    // 32a4d6cb-2f5f-4d0e-aacd-cdd6d5584ea7
     // If the node is not revealed, then
     // emit an error.
     if (!action.node.revealed) {

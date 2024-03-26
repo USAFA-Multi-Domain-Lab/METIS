@@ -54,6 +54,7 @@
         display: grid;
         grid-template-columns: 1fr auto;
         margin: 0.75em 0;
+        height: 2em;
 
         .ButtonSvg {
           &.ban:hover {
