@@ -98,10 +98,14 @@ export class ServerEmittedError extends WSEmittedError {
    */
   public static readonly CODE_ALREADY_IN_GAME: number = 20001
   /**
+   * Code for a client requesting to join a game via a join method that is not authorized.
+   */
+  public static readonly CODE_GAME_UNAUTHORIZED_JOIN: number = 20002
+  /**
    * Code for a client requesting to perform a task that cannot be performed
    * before the game has started or after the game has ended.
    */
-  public static readonly CODE_GAME_PROGRESS_LOCKED: number = 20002
+  public static readonly CODE_GAME_PROGRESS_LOCKED: number = 20003
   /**
    * Code for a client requesting to open a node that cannot be found.
    */
@@ -134,6 +138,8 @@ export class ServerEmittedError extends WSEmittedError {
       'You are already connected via another tab.',
     [ServerEmittedError.CODE_GAME_NOT_FOUND]: 'Game not found.',
     [ServerEmittedError.CODE_ALREADY_IN_GAME]: 'You are already in this game.',
+    [ServerEmittedError.CODE_GAME_UNAUTHORIZED_JOIN]:
+      'You are not authorized to join this game.',
     [ServerEmittedError.CODE_GAME_PROGRESS_LOCKED]:
       'Game progress is locked before game start and after game end.',
     [ServerEmittedError.CODE_NODE_NOT_FOUND]: 'Node not found.',

@@ -12,7 +12,7 @@ import {
 } from 'src/toolbox/hooks'
 import ClientUser from 'src/users'
 import { DefaultLayout } from '.'
-import { TGameBasicJson } from '../../../../shared/games'
+import { TGameBasicJson, TGameJoinMethod } from '../../../../shared/games'
 import Tooltip from '../content/communication/Tooltip'
 import { Detail } from '../content/form/Form'
 import List, { ESortByMethod } from '../content/general-layout/List'
@@ -195,6 +195,50 @@ export default function HomePage(props: {}): JSX.Element | null {
 
     setTimeout(() => syncGames.current(), GAMES_SYNC_RATE)
   })
+
+  /**
+   * This will join the user to the game with the given game ID
+   * and join method.
+   */
+  const joinGame = async (gameID: string, joinMethod: TGameJoinMethod) => {
+    if (server !== null) {
+      try {
+        // Notify user of game join.
+        beginLoading('Joining game...')
+        // Join game from new game ID, awaiting
+        // the promised game client.
+        let game = await server.$joinGame(gameID, joinMethod)
+
+        // If the game is not found, notify
+        // the user and return.
+        if (game === null) {
+          handleError({
+            message: 'Game could not be found.',
+            notifyMethod: 'bubble',
+          })
+          finishLoading()
+          return
+        }
+
+        // Update session data to include new
+        // game ID.
+        session.gameID = game.gameID
+        // Go to the game page with the new
+        // game client.
+        navigateTo('GamePage', { game })
+      } catch (error) {
+        handleError({
+          message: 'Failed to launch game. Contact system administrator.',
+          notifyMethod: 'page',
+        })
+      }
+    } else {
+      handleError({
+        message: 'No server connection. Contact system administrator',
+        notifyMethod: 'bubble',
+      })
+    }
+  }
 
   /**
    * This sorts the users by their user ID.
@@ -442,42 +486,12 @@ export default function HomePage(props: {}): JSX.Element | null {
    * Handler for when a game is selected.
    */
   const onGameSelection = async (gameID: string) => {
-    if (server !== null) {
-      try {
-        // Notify user of game join.
-        beginLoading('Joining game...')
-        // Join game from new game ID, awaiting
-        // the promised game client.
-        let game = await server.$joinGame(gameID)
+    // Determine join method.
+    let joinMethod: TGameJoinMethod
 
-        // If the game is not found, notify
-        // the user and return.
-        if (game === null) {
-          handleError({
-            message: 'Game could not be found.',
-            notifyMethod: 'bubble',
-          })
-          finishLoading()
-          return
-        }
-
-        // Update session data to include new
-        // game ID.
-        session.gameID = game.gameID
-        // Go to the game page with the new
-        // game client.
-        navigateTo('GamePage', { game })
-      } catch (error) {
-        handleError({
-          message: 'Failed to launch game. Contact system administrator.',
-          notifyMethod: 'page',
-        })
-      }
+    if (currentUser.isAuthorized('WRITE')) {
     } else {
-      handleError({
-        message: 'No server connection. Contact system administrator',
-        notifyMethod: 'bubble',
-      })
+      joinMethod = 'participant'
     }
   }
 

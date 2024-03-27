@@ -201,6 +201,7 @@ export default class ClientConnection {
         this.emit('current-game', {
           data: {
             game: game?.toJson() ?? null,
+            joinMethod: game?.getJoinMethod(this) ?? null,
           },
           request: this.buildResponseReqData(event),
         })
@@ -223,21 +224,23 @@ export default class ClientConnection {
 
       try {
         // Join the game.
-        game.join(this)
-      } catch (error) {
-        // Emit an error if already joined.
+        game.join(this, event.data.joinMethod)
+        // Return the game as JSON.
+        this.emit('game-joined', {
+          data: {
+            game: game.toJson(),
+            joinMethod: event.data.joinMethod,
+          },
+          request: this.buildResponseReqData(event),
+        })
+      } catch (code: any) {
+        // Emit an error if thrown.
         this.emitError(
-          new ServerEmittedError(ServerEmittedError.CODE_ALREADY_IN_GAME, {}),
+          new ServerEmittedError(code, {
+            request: this.buildResponseReqData(event),
+          }),
         )
       }
-
-      // Return the game as JSON.
-      this.emit('game-joined', {
-        data: {
-          game: game.toJson(),
-        },
-        request: this.buildResponseReqData(event),
-      })
     })
 
     // Add a `request-quit-game` listener.

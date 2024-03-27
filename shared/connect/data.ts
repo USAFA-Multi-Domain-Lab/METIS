@@ -1,4 +1,4 @@
-import { TGameJson, TGameState } from 'metis/games'
+import { TGameJoinMethod, TGameJson, TGameState } from 'metis/games'
 import { TActionExecutionJSON } from 'metis/missions/actions/executions'
 import { IActionOutcomeJSON } from 'metis/missions/actions/outcomes'
 import { TCommonUserJson } from 'metis/users'
@@ -159,6 +159,10 @@ export type TGenericServerEvents = {
        * The current list of participants in the game.
        */
       participants: TCommonUserJson[]
+      /**
+       * The current list of supervisors in the game.
+       */
+      supervisors: TCommonUserJson[]
     }
   >
   /**
@@ -246,6 +250,10 @@ export type TResponseEvents = {
        * @note If null, no game is currently joined.
        */
       game: TGameJson | null
+      /**
+       * The join method that was used by the client to join the game.
+       */
+      joinMethod: TGameJoinMethod
     },
     TClientEvents['request-current-game']
   >
@@ -259,6 +267,10 @@ export type TResponseEvents = {
        * The game that was joined.
        */
       game: TGameJson
+      /**
+       * The join method that was used by the client to join the game.
+       */
+      joinMethod: TGameJoinMethod
     },
     TClientEvents['request-join-game']
   >
@@ -339,6 +351,10 @@ export type TRequestEvents = {
        * The ID of the game to join.
        */
       gameID: string
+      /**
+       * The method of joining the game.
+       */
+      joinMethod: TGameJoinMethod
     }
   >
   /**

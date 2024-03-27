@@ -3,6 +3,7 @@ import { ServerEmittedError } from 'metis/connect/errors'
 import Game, {
   TGameBasicJson,
   TGameConfig,
+  TGameJoinMethod,
   TGameJson,
   TGameState,
 } from 'metis/games'
@@ -58,24 +59,15 @@ export default class GameServer extends Game<
     config: TGameConfig,
     mission: ServerMission,
     participants: Array<ClientConnection>,
+    supervisors: Array<ClientConnection>,
   ) {
-    super(gameID, name, config, mission, participants)
+    super(gameID, name, config, mission, participants, supervisors)
     this._state = 'unstarted'
     this._resources = config.infiniteResources
       ? Infinity
       : mission.initialResources
     this._destroyed = false
     this.register()
-  }
-
-  /**
-   * @param participantID The ID of the participant in question.
-   * @returns Whether the participant is joined in the game.
-   */
-  public isInGame(participantID: string): boolean {
-    return this.participants.some(
-      (participant) => participant.userID === participantID,
-    )
   }
 
   // Implemented
@@ -91,6 +83,9 @@ export default class GameServer extends Game<
       participants: this.participants.map((client: ClientConnection) =>
         client.user.toJson(),
       ),
+      supervisors: this.supervisors.map((client: ClientConnection) =>
+        client.user.toJson(),
+      ),
       config: this.config,
       resources: this.resources === Infinity ? 'infinite' : this.resources,
     }
@@ -104,6 +99,20 @@ export default class GameServer extends Game<
       name: this.name,
       config: this.config,
       participantIDs: this.participants.map(({ userID }) => userID),
+      supervisorIDs: this.supervisors.map(({ userID }) => userID),
+    }
+  }
+
+  /**
+   * Gets the join method for the given user.
+   */
+  public getJoinMethod(user: ClientConnection): TGameJoinMethod {
+    if (this.isSupervisor(user)) {
+      return 'supervisor'
+    } else if (this.isParticipant(user)) {
+      return 'participant'
+    } else {
+      return 'not-joined'
     }
   }
 
@@ -143,24 +152,41 @@ export default class GameServer extends Game<
   }
 
   /**
-   * Has the given participant join the game. Establishes listeners to handle events emitted by the participant's web socket connection.
-   * @param participant The participant joining the game.
-   * @throws Error if the participant is already in the game.
+   * Has the given user join the game.
+   * @param client The user joining the game.
+   * @param method The method of joining (Whether as a participant or as a supervisor).
+   * @throws The server emitted error code of any error that occurs.
+   * @note Establishes listeners to handle events emitted by the user's web socket connection.
    */
-  public join(participant: ClientConnection): void {
-    if (this.isInGame(participant.userID)) {
-      throw Error('Client with the given user ID is already in the game.')
+  public join(client: ClientConnection, method: TGameJoinMethod): void {
+    if (this.isJoined(client)) {
+      throw ServerEmittedError.CODE_ALREADY_IN_GAME
+    }
+    // Add the user to the game given
+    // the method of joining.
+    switch (method) {
+      case 'participant':
+        // Add the users to the participant list.
+        this._participants.push(client)
+        // Add game-specific listeners.
+        this.addListeners(client)
+        break
+      case 'supervisor':
+        // Throw error if the client is unauthorized to
+        // join as a supervisor.
+        if (!client.user.isAuthorized(['WRITE'])) {
+          throw ServerEmittedError.CODE_GAME_UNAUTHORIZED_JOIN
+        }
+        // Add the users to the supervisor list.
+        this._supervisors.push(client)
+        break
+      default:
+        throw ServerEmittedError.CODE_GAME_UNAUTHORIZED_JOIN
     }
 
-    // Add participant to the participant list.
-    this._participants.push(participant)
-
-    // Add game-specific listeners.
-    this.addListeners(participant)
-
     // Call join handler in the session of
-    // the new participant.
-    participant.session.handleJoin(this.gameID)
+    // the user.
+    client.session.handleJoin(this.gameID)
 
     // Handle state change.
     this.handleStateChange()
@@ -197,10 +223,13 @@ export default class GameServer extends Game<
    * Handles a change in the game state.
    */
   public handleStateChange(): void {
-    this.emitToParticipants('game-state-change', {
+    this.emitToUsers('game-state-change', {
       data: {
         state: this.state,
         participants: this.participants.map((client: ClientConnection) =>
+          client.user.toJson(),
+        ),
+        supervisors: this.supervisors.map((client: ClientConnection) =>
           client.user.toJson(),
         ),
       },
@@ -208,11 +237,24 @@ export default class GameServer extends Game<
   }
 
   /**
-   * Has the given participant quit the game. Removes any game listeners for the user.
-   * @param quitterID The ID of the participant quiting the game.
+   * Has the given user (participant or supervisor) quit the game.
+   * @param quitterID The ID of the user quiting the game.
+   * @note Removes any game listeners for the user.
    */
   public quit(quitterID: string): void {
-    // Find the participant in the list.
+    // Find the supervisor in the list, if present.
+    this._supervisors.forEach((supervisor: ClientConnection, index: number) => {
+      if (supervisor.userID === quitterID) {
+        // Remove the supervisor from the list.
+        this._supervisors.splice(index, 1)
+
+        // Call quit handler in the session of
+        // the determined participant.
+        supervisor.session.handleQuit()
+      }
+    })
+
+    // Find the participant in the list, if present.
     this._participants.forEach(
       (participant: ClientConnection, index: number) => {
         if (participant.userID === quitterID) {
@@ -256,14 +298,14 @@ export default class GameServer extends Game<
   }
 
   /**
-   * Emits an event to all the participants of the game.
+   * Emits an event to all the users joined in the game (participants and supervisors).
    */
-  public emitToParticipants<
+  public emitToUsers<
     TMethod extends TServerMethod,
     TPayload extends Omit<TServerEvents[TMethod], 'method'>,
   >(method: TMethod, payload: TPayload): void {
-    for (let participant of this.participants) {
-      participant.emit(method, payload)
+    for (let user of this.users) {
+      user.emit(method, payload)
     }
   }
 
@@ -487,13 +529,9 @@ export default class GameServer extends Game<
       config,
       mission,
       [],
+      [],
     )
   }
-
-  /**
-   * Quits the game for the given participant.
-   */
-  public static quit(participant: ClientConnection): void {}
 
   /**
    * @returns the game associated with the given game ID.

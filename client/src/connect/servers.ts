@@ -13,6 +13,7 @@ import {
   TServerMethod,
 } from '../../../shared/connect/data'
 import { ServerEmittedError } from '../../../shared/connect/errors'
+import { TGameJoinMethod } from '../../../shared/games'
 import { SingleTypeObject } from '../../../shared/toolbox/objects'
 
 /**
@@ -364,7 +365,9 @@ export default class ServerConnection {
           onResponse: (event) => {
             switch (event.method) {
               case 'current-game':
-                resolve(new GameClient(event.data.game, this))
+                resolve(
+                  new GameClient(event.data.game, this, event.data.joinMethod),
+                )
                 break
               case 'error':
                 reject(new Error(event.message))
@@ -385,37 +388,49 @@ export default class ServerConnection {
 
   /**
    * Joins a game with the given game ID.
+   * @param gameID The ID of the game to join.
+   * @param joinMethod The method of joining the game.
    * @resolves The new game client for the game, `null` if not found.
    * @rejects If there is an error joining the game.
    */
-  public $joinGame(gameID: string): Promise<GameClient | null> {
+  public $joinGame(
+    gameID: string,
+    joinMethod: TGameJoinMethod,
+  ): Promise<GameClient | null> {
     return new Promise((resolve, reject) => {
-      this.request('request-join-game', { gameID }, 'Joining game.', {
-        onResponse: (event) => {
-          switch (event.method) {
-            case 'game-joined':
-              resolve(new GameClient(event.data.game, this))
-              break
-            case 'error':
-              // Resolve null if not found.
-              if (event.code === ServerEmittedError.CODE_GAME_NOT_FOUND) {
-                resolve(null)
-              }
-              // Otherwise, reject with error.
-              else {
-                reject(new Error(event.message))
-              }
-              break
-            default:
-              let error: Error = new Error(
-                `Unknown response method for ${event.request.event.method}: '${event.method}'.`,
-              )
-              console.log(error)
-              console.log(event)
-              reject(error)
-          }
+      this.request(
+        'request-join-game',
+        { gameID, joinMethod },
+        'Joining game.',
+        {
+          onResponse: (event) => {
+            switch (event.method) {
+              case 'game-joined':
+                resolve(
+                  new GameClient(event.data.game, this, event.data.joinMethod),
+                )
+                break
+              case 'error':
+                // Resolve null if not found.
+                if (event.code === ServerEmittedError.CODE_GAME_NOT_FOUND) {
+                  resolve(null)
+                }
+                // Otherwise, reject with error.
+                else {
+                  reject(new Error(event.message))
+                }
+                break
+              default:
+                let error: Error = new Error(
+                  `Unknown response method for ${event.request.event.method}: '${event.method}'.`,
+                )
+                console.log(error)
+                console.log(event)
+                reject(error)
+            }
+          },
         },
-      })
+      )
     })
   }
 

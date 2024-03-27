@@ -8,6 +8,7 @@ import { TServerEvents } from '../../../shared/connect/data'
 import Game, {
   TGameBasicJson,
   TGameConfig,
+  TGameJoinMethod,
   TGameJson,
   TGameState,
 } from '../../../shared/games'
@@ -36,8 +37,23 @@ export default class GameClient extends Game<
     return this._resources
   }
 
+  /**
+   * The method by which the client is joined to the game server.
+   */
+  protected _joinMethod: TGameJoinMethod
+  /**
+   * The method by which the client is joined to the game server.
+   */
+  public get joinMethod(): TGameJoinMethod {
+    return this._joinMethod
+  }
+
   // todo: Between the time the client joins and this object is constructed, there is possibility that changes have been made in the game. This should be handled.
-  public constructor(data: TGameJson, server: ServerConnection) {
+  public constructor(
+    data: TGameJson,
+    server: ServerConnection,
+    joinMethod: TGameJoinMethod,
+  ) {
     let gameID: string = data.gameID
     let state: TGameState = data.state
     let name: string = data.name
@@ -45,12 +61,17 @@ export default class GameClient extends Game<
     let participants: ClientUser[] = data.participants.map(
       (userData) => new ClientUser(userData),
     )
+    let supervisors: ClientUser[] = data.supervisors.map(
+      (userData) => new ClientUser(userData),
+    )
     let config: TGameConfig = data.config
 
-    super(gameID, name, config, mission, participants)
+    super(gameID, name, config, mission, participants, supervisors)
     this.server = server
+    this._joinMethod = joinMethod
     this._state = state
     this._resources = data.resources === 'infinite' ? Infinity : data.resources
+
     this.addListeners()
   }
 
@@ -105,6 +126,7 @@ export default class GameClient extends Game<
         revealedOnly: true,
       }),
       participants: this.participants.map((user) => user.toJson()),
+      supervisors: this.supervisors.map((user) => user.toJson()),
       config: this.config,
       resources: this.resources === Infinity ? 'infinite' : this.resources,
     }
@@ -118,6 +140,7 @@ export default class GameClient extends Game<
       name: this.name,
       config: this.config,
       participantIDs: this.participants.map(({ userID }) => userID),
+      supervisorIDs: this.supervisors.map(({ userID }) => userID),
     }
   }
 
@@ -131,6 +154,11 @@ export default class GameClient extends Game<
     let node: ClientMissionNode | undefined = this.mission.getNode(nodeID)
     let { onError = () => {} } = options
 
+    // If the join method is not "participant", callback
+    // an error.
+    if (this.joinMethod !== 'participant') {
+      return onError('Only participants can open nodes.')
+    }
     // Callback error if the node is not in
     // the mission associated with this
     // game.
@@ -178,6 +206,11 @@ export default class GameClient extends Game<
     let action: ClientMissionAction | undefined = this.actions.get(actionID)
     let { onError = () => {} } = options
 
+    // If the join method is not "participant", callback
+    // an error.
+    if (this.joinMethod !== 'participant') {
+      return onError('Only participants can execute actions.')
+    }
     // Callback error if the action is not in
     // the mission associated with this
     // game.

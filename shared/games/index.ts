@@ -7,7 +7,7 @@ import { TCommonUserJson } from '../users'
  * Base class for a games. Represents a game being played by participating students in METIS.
  */
 export default abstract class Game<
-  TParticpant extends { userID: string },
+  TUser extends { userID: string },
   TMission extends TCommonMission,
   TMissionNode extends TCommonMissionNode,
   TMissionAction extends TCommonMissionAction,
@@ -42,12 +42,30 @@ export default abstract class Game<
   /**
    * The participants of the game executing the mission.
    */
-  protected _participants: TParticpant[]
+  protected _participants: TUser[]
   /**
    * The participants of the game executing the mission.
    */
-  public get participants(): TParticpant[] {
+  public get participants(): TUser[] {
     return [...this._participants]
+  }
+
+  /**
+   * The participants of the game executing the mission.
+   */
+  protected _supervisors: TUser[]
+  /**
+   * The participants of the game executing the mission.
+   */
+  public get supervisors(): TUser[] {
+    return [...this._supervisors]
+  }
+
+  /**
+   * All users, including participants and supervisors.
+   */
+  public get users(): TUser[] {
+    return [...this._participants, ...this._supervisors]
   }
 
   /**
@@ -91,7 +109,8 @@ export default abstract class Game<
     name: string,
     config: TGameConfig,
     mission: TMission,
-    participants: TParticpant[],
+    participants: TUser[],
+    supervisors: TUser[],
   ) {
     this.gameID = gameID
     this.name = name
@@ -102,6 +121,7 @@ export default abstract class Game<
     this.mission = mission
     this._state = 'unstarted'
     this._participants = participants
+    this._supervisors = supervisors
     this.mapActions()
   }
 
@@ -111,13 +131,41 @@ export default abstract class Game<
   protected abstract mapActions(): void
 
   /**
-   * Checks if the given participant is currently in the game.
-   * @param participant The participant to check.
-   * @returns Whether the given participant is joined into the game.
+   * Checks if the given user is currently in the game (Whether as a participant or as a supervisor).
+   * @param user The user to check.
+   * @returns Whether the given user is joined into the game.
    */
-  public isJoined(participant: TParticpant): boolean {
-    for (let user of this._participants) {
-      if (user.userID === participant.userID) {
+  public isJoined(user: TUser): boolean {
+    for (let x of this.users) {
+      if (x.userID === user.userID) {
+        return true
+      }
+    }
+    return false
+  }
+
+  /**
+   * Checks if the given user is currently a participant in the game.
+   * @param user The user to check.
+   * @returns Whether the given user is a participant of the game.
+   */
+  public isParticipant(user: TUser): boolean {
+    for (let x of this.users) {
+      if (x.userID === user.userID) {
+        return true
+      }
+    }
+    return false
+  }
+
+  /**
+   * Checks if the given user is currently a supervisor in the game.
+   * @param user The user to check.
+   * @returns Whether the given user is a supervisor in the game.
+   */
+  public isSupervisor(user: TUser): boolean {
+    for (let x of this.supervisors) {
+      if (x.userID === user.userID) {
         return true
       }
     }
@@ -216,6 +264,10 @@ export type TGameJson = {
    */
   participants: TCommonUserJson[]
   /**
+   * The supervisors joined in the game.
+   */
+  supervisors: TCommonUserJson[]
+  /**
    * The resources available to the participants.
    */
   resources: number | 'infinite'
@@ -245,9 +297,18 @@ export type TGameBasicJson = {
    * The IDs of the participants of the game.
    */
   participantIDs: string[]
+  /**
+   * The IDs of the supervisors of the game.
+   */
+  supervisorIDs: string[]
 }
 
 /**
  * The state of a game.
  */
 export type TGameState = 'unstarted' | 'started' | 'ended'
+
+/**
+ * The method of joining a game.
+ */
+export type TGameJoinMethod = 'participant' | 'supervisor' | 'not-joined'
