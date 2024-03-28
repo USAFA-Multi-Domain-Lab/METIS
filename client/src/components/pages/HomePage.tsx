@@ -13,7 +13,7 @@ import {
 import ClientUser from 'src/users'
 import { DefaultLayout } from '.'
 import { TGameBasicJson, TGameJoinMethod } from '../../../../shared/games'
-import Prompt from '../content/communication/Prompt'
+import Prompt, { TChoicesWithCancel } from '../content/communication/Prompt'
 import Tooltip from '../content/communication/Tooltip'
 import { Detail } from '../content/form/Form'
 import List, { ESortByMethod } from '../content/general-layout/List'
@@ -52,7 +52,6 @@ export default function HomePage(props: {}): JSX.Element | null {
     navigateTo,
     handleError,
     notify,
-    logout,
     prompt,
   } = globalContext.actions
 
@@ -195,50 +194,6 @@ export default function HomePage(props: {}): JSX.Element | null {
 
     setTimeout(() => syncGames.current(), GAMES_SYNC_RATE)
   })
-
-  /**
-   * This will join the user to the game with the given game ID
-   * and join method.
-   */
-  const joinGame = async (gameID: string, joinMethod: TGameJoinMethod) => {
-    if (server !== null) {
-      try {
-        // Notify user of game join.
-        beginLoading('Joining game...')
-        // Join game from new game ID, awaiting
-        // the promised game client.
-        let game = await server.$joinGame(gameID, joinMethod)
-
-        // If the game is not found, notify
-        // the user and return.
-        if (game === null) {
-          handleError({
-            message: 'Game could not be found.',
-            notifyMethod: 'bubble',
-          })
-          finishLoading()
-          return
-        }
-
-        // Update session data to include new
-        // game ID.
-        session.gameID = game.gameID
-        // Go to the game page with the new
-        // game client.
-        navigateTo('GamePage', { game })
-      } catch (error) {
-        handleError({
-          message: 'Failed to launch game. Contact system administrator.',
-          notifyMethod: 'page',
-        })
-      }
-    } else {
-      handleError({
-        message: 'No server connection. Contact system administrator',
-        notifyMethod: 'bubble',
-      })
-    }
-  }
 
   /**
    * This sorts the users by their user ID.
@@ -486,12 +441,62 @@ export default function HomePage(props: {}): JSX.Element | null {
    * Handler for when a game is selected.
    */
   const onGameSelection = async (gameID: string) => {
-    // Determine join method.
-    let joinMethod: TGameJoinMethod
+    if (server !== null) {
+      try {
+        let joinMethod: TGameJoinMethod = 'participant'
 
-    if (currentUser.isAuthorized('WRITE')) {
+        // Prompt user for join method if the user
+        // has write privileges.
+        if (currentUser.isAuthorized('WRITE')) {
+          let { choice } = await prompt<TChoicesWithCancel<TGameJoinMethod>>(
+            'What would you like to join the game as?',
+            ['participant', 'supervisor', 'Cancel'],
+            { capitalizeChoices: true },
+          )
+
+          // If cancelled, abort.
+          if (choice === 'Cancel') {
+            return
+          }
+
+          // Set join method as the choice made.
+          joinMethod = choice
+        }
+
+        // Notify user of game join.
+        beginLoading('Joining game...')
+        // Join game from new game ID, awaiting
+        // the promised game client.
+        let game = await server.$joinGame(gameID, joinMethod)
+
+        // If the game is not found, notify
+        // the user and return.
+        if (game === null) {
+          handleError({
+            message: 'Game could not be found.',
+            notifyMethod: 'bubble',
+          })
+          finishLoading()
+          return
+        }
+
+        // Update session data to include new
+        // game ID.
+        session.gameID = game.gameID
+        // Go to the game page with the new
+        // game client.
+        navigateTo('GamePage', { game })
+      } catch (error) {
+        handleError({
+          message: 'Failed to launch game. Contact system administrator.',
+          notifyMethod: 'page',
+        })
+      }
     } else {
-      joinMethod = 'participant'
+      handleError({
+        message: 'No server connection. Contact system administrator',
+        notifyMethod: 'bubble',
+      })
     }
   }
 

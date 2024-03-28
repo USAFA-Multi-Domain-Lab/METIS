@@ -187,15 +187,6 @@ export default class ClientMission
 
     // Initialize structure.
     this.handleStructureChange()
-
-    for (let node of this.nodes) {
-      if (node.name === 'Red Door') {
-        console.log(node.isOpen)
-      }
-      if (node.name === 'CBC Network Servers') {
-        console.log(node.nodeID)
-      }
-    }
   }
 
   // Inherited

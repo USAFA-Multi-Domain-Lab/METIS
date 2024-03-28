@@ -155,7 +155,6 @@ export default function MissionPage(props: IMissionPage): JSX.Element | null {
   // away with unsaved changes.
   useNavigationMiddleware(
     async (to, next) => {
-      console.log(areUnsavedChanges)
       // If there are unsaved changes, prompt the user.
       if (areUnsavedChanges) {
         const { choice } = await prompt(

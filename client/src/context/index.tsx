@@ -3,7 +3,6 @@ import { TAppError, TAppErrorNotifyMethod } from 'src/components/App'
 import { message as connectionStatusMessage } from 'src/components/content/communication/ConnectionStatus'
 import {
   TPromptResult,
-  TPromptTextField,
   TPrompt_P,
 } from 'src/components/content/communication/Prompt'
 import { TButtonText } from 'src/components/content/user-controls/ButtonText'
@@ -439,7 +438,7 @@ const useGlobalContextDefinition = (context: TGlobalContext) => {
       choices: TChoice[],
       options: TPromptOptions<TChoice> = {},
     ): Promise<TPromptResult<TChoice>> => {
-      const { textField } = options
+      const { textField, capitalizeChoices } = options
 
       // Return a promise that will be resolved once the
       // user makes a choice.
@@ -450,6 +449,7 @@ const useGlobalContextDefinition = (context: TGlobalContext) => {
           choices,
           resolve,
           textField,
+          capitalizeChoices,
           key: generateHash(),
         }
 
@@ -731,12 +731,10 @@ export type TConfirmOptions = {
  * Options available when prompting a user with a message
  * using the prompt method in the global context actions.
  */
-export type TPromptOptions<TChoice extends string> = {
-  /**
-   * The text field options for the prompt.
-   */
-  textField?: TPromptTextField<TChoice>
-}
+export type TPromptOptions<TChoice extends string> = Omit<
+  TPrompt_P<TChoice>,
+  'message' | 'choices' | 'resolve'
+>
 
 /**
  * Options available when notifying the user using the

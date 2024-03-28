@@ -118,42 +118,54 @@ export default class Prompt<TChoice extends string> extends React.Component<
    */
   protected get actionsJsx(): JSX.Element | null {
     // Gather details.
-    const { choices, resolve } = this.props
+    const { choices, resolve, capitalizeChoices } = this.props
 
     // Render JSX.
     return (
       <div className='actions'>
-        {choices.map((choice) => (
-          <ButtonText
-            key={choice}
-            text={choice}
-            onClick={() => {
-              this.setState({ choice }, () => {
-                // Gather details.
-                let { textField } = this.props
+        {choices.map((choice) => {
+          // Gather details.
+          let text: string = choice
 
-                // If there is no text field, resolve
-                // right away.
-                if (!textField || !textField.boundChoices.includes(choice)) {
-                  this.setState({ resolving: true }, () =>
-                    resolve({ choice, text: '' }),
-                  )
-                }
-                // Else submit text field form to allow for
-                // validation.
-                else {
-                  // Check if submit button ref is available.
-                  if (!this.submitButton.current) {
-                    throw new Error('Text field cannot be found in the DOM.')
+          // Capitalize the first letter of the choice,
+          // if specified.
+          if (capitalizeChoices) {
+            text = text.charAt(0).toUpperCase() + text.slice(1)
+          }
+
+          // Render JSX.
+          return (
+            <ButtonText
+              key={choice}
+              text={text}
+              onClick={() => {
+                this.setState({ choice }, () => {
+                  // Gather details.
+                  let { textField } = this.props
+
+                  // If there is no text field, resolve
+                  // right away.
+                  if (!textField || !textField.boundChoices.includes(choice)) {
+                    this.setState({ resolving: true }, () =>
+                      resolve({ choice, text: '' }),
+                    )
                   }
+                  // Else submit text field form to allow for
+                  // validation.
+                  else {
+                    // Check if submit button ref is available.
+                    if (!this.submitButton.current) {
+                      throw new Error('Text field cannot be found in the DOM.')
+                    }
 
-                  // Click the submit button.
-                  this.submitButton.current.click()
-                }
-              })
-            }}
-          />
-        ))}
+                    // Click the submit button.
+                    this.submitButton.current.click()
+                  }
+                })
+              }}
+            />
+          )
+        })}
       </div>
     )
   }
@@ -184,6 +196,13 @@ export default class Prompt<TChoice extends string> extends React.Component<
         </div>
       </div>
     )
+  }
+
+  // Overridden
+  public static defaultProps() {
+    return {
+      capitalizeChoices: false,
+    }
   }
 
   /**
@@ -225,6 +244,20 @@ export type TPrompt_P<TChoice extends string> = {
    * @note If `undefined`, no text field will be displayed.
    */
   textField?: TPromptTextField<TChoice>
+  /**
+   * Capitalizes the first letter of each choice when displaying
+   * the choices to the user, but keeps the data in the original
+   * casing.
+   * @default false
+   * @example
+   * ```typescript
+   * // Raw choices:
+   * ['apple', 'banana', 'cherry']
+   * // Displayed to user:
+   * ['Apple', 'Banana', 'Cherry']
+   * ```
+   */
+  capitalizeChoices?: boolean
   /**
    * Resolves the choice made by the user.
    * @param result The data given to the caller to resolve the choice made by the user.
@@ -311,3 +344,8 @@ export type TPromptResult<TChoice extends string> = {
    */
   text: string
 }
+
+/**
+ * Choices for a prompt with a cancel choice included.
+ */
+export type TChoicesWithCancel<T extends string> = 'Cancel' | T
