@@ -1,5 +1,23 @@
 @import 'src/assets/styles/config.scss';
 
+@keyframes expand-in {
+  from {
+    transform: scale(0);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+
+@keyframes expand-out {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(0);
+  }
+}
+
 .Prompt {
   position: absolute;
   z-index: $z-index-confirmation;
@@ -8,7 +26,7 @@
   width: 100vw;
   height: 100%;
 
-  .Backing {
+  .backing {
     opacity: 1;
     position: fixed;
     z-index: $z-index-confirmation;
@@ -19,7 +37,7 @@
     height: 100vh;
     background-color: rgba($background-alt1, 0.85);
 
-    .AlertBox {
+    .alert-box {
       display: block;
       box-sizing: border-box;
       transition: 750ms transform;
@@ -28,35 +46,86 @@
       border-radius: 45px;
       max-width: 600px;
       max-height: 600px;
-      padding: 60px 60px 25px;
+      padding: 40px 60px 25px;
       background-color: rgba($background-alt2, 0.75);
 
-      .Message {
+      .message {
         overflow-y: auto;
-        box-sizing: border-box;
         margin: 0 auto;
         border: 2px solid $color-main;
         border-radius: 20px;
         max-height: 300px;
-        max-width: 100%;
+        width: -moz-fit-content;
         width: fit-content;
         padding: 10px 30px 25px;
         background-color: rgba($background-alt1, 1);
       }
 
-      .Actions {
+      .text-field {
+        display: grid;
+        grid-template-columns: auto 200px;
+        margin: 0 auto;
+        width: fit-content;
+        padding: 25px 0 5px;
+
+        .label {
+          padding: 8px 30px 0 0;
+        }
+
+        .field {
+          display: block;
+          box-sizing: border-box;
+          margin: 0 auto;
+          border: 2px solid $color-main;
+          border-radius: 8px;
+          width: 200px;
+          padding: 7px 20px 8px;
+          background-color: $background-alt1;
+          outline: none;
+        }
+      }
+
+      .actions {
         margin: 20px 0 0;
         text-align: center;
+      }
+
+      .AjaxStatusDisplay {
+        .status {
+          padding-top: 5px;
+        }
       }
     }
   }
 
-  &:not(.Active) {
+  &.pending {
+    .alert-box {
+      background-color: rgba($background-alt2, 1);
+
+      .actions {
+        display: none;
+      }
+    }
+  }
+
+  &.unresolved {
+    pointer-events: all;
+    opacity: 1;
+
+    .alert-box {
+      animation: expand-in 250ms ease-in-out;
+    }
+  }
+
+  &.resolving {
     pointer-events: none;
     opacity: 0;
+    // If this prompt was generated using the `prompt` method in the global context, the
+    // component will be removed from the DOM 250ms
+    transition: 250ms opacity;
 
-    .AlertBox {
-      transform: scale(0);
+    .alert-box {
+      animation: expand-out 250ms ease-in-out;
     }
   }
 }

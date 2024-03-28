@@ -1,6 +1,6 @@
 import { AxiosError } from 'axios'
 import { useState } from 'react'
-import { useGlobalContext } from 'src/context'
+import { useGlobalContext, useNavigationMiddleware } from 'src/context'
 import { compute } from 'src/toolbox'
 import { useMountHandler, useRequireSession } from 'src/toolbox/hooks'
 import ClientUser from 'src/users'
@@ -32,7 +32,7 @@ export default function UserPage(props: IUserPage): JSX.Element | null {
     handleError,
     notify,
     navigateTo,
-    confirm,
+    prompt,
     logout,
   } = globalContext.actions
 
@@ -77,6 +77,42 @@ export default function UserPage(props: IUserPage): JSX.Element | null {
     // Mark mount as handled.
     done()
   })
+
+  // Navigation middleware to protect from navigating
+  // away with unsaved changes.
+  useNavigationMiddleware(
+    async (to, next) => {
+      // If there are unsaved changes, prompt the user.
+      if (areUnsavedChanges) {
+        const { choice } = await prompt(
+          'You have unsaved changes. What do you want to do with them?',
+          ['Cancel', 'Save', 'Discard'],
+        )
+
+        try {
+          // Abort if cancelled.
+          if (choice === 'Cancel') {
+            return
+          }
+          // Save if requested.
+          else if (choice === 'Save') {
+            beginLoading('Saving...')
+            await save()
+            finishLoading()
+          }
+        } catch (error) {
+          return handleError({
+            message: 'Failed to save mission.',
+            notifyMethod: 'bubble',
+          })
+        }
+      }
+
+      // Call next.
+      next()
+    },
+    [areUnsavedChanges],
+  )
 
   /* -- SESSION-SPECIFIC LOGIC -- */
 
@@ -147,37 +183,6 @@ export default function UserPage(props: IUserPage): JSX.Element | null {
           setAreUnsavedChanges(true)
         }
       }
-    }
-  }
-
-  // This will redirect the user to the
-  // home page.
-  const goHome = (): void => {
-    if (!areUnsavedChanges) {
-      navigateTo('HomePage', {})
-    } else {
-      confirm(
-        'You have unsaved changes. What do you want to do with them?',
-        async (concludeAction: () => void) => {
-          try {
-            await save()
-            navigateTo('HomePage', {})
-            concludeAction()
-          } catch (error: any) {
-            concludeAction()
-          }
-        },
-        {
-          handleAlternate: (concludeAction: () => void) => {
-            navigateTo('HomePage', {})
-            concludeAction()
-          },
-          pendingMessageUponConfirm: 'Saving...',
-          pendingMessageUponAlternate: 'Discarding...',
-          buttonConfirmText: 'Save',
-          buttonAlternateText: 'Discard',
-        },
-      )
     }
   }
 

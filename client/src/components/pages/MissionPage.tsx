@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useBeforeunload } from 'react-beforeunload'
-import { useGlobalContext } from 'src/context'
+import { useGlobalContext, useNavigationMiddleware } from 'src/context'
 import ClientMission from 'src/missions'
 import ClientMissionAction from 'src/missions/actions'
 import { ClientEffect } from 'src/missions/effects'
@@ -44,7 +44,7 @@ export default function MissionPage(props: IMissionPage): JSX.Element | null {
     handleError,
     notify,
     navigateTo,
-    confirm,
+    prompt,
     logout,
     forceUpdate,
   } = globalContext.actions
@@ -150,6 +150,43 @@ export default function MissionPage(props: IMissionPage): JSX.Element | null {
       event.preventDefault()
     }
   })
+
+  // Navigation middleware to protect from navigating
+  // away with unsaved changes.
+  useNavigationMiddleware(
+    async (to, next) => {
+      console.log(areUnsavedChanges)
+      // If there are unsaved changes, prompt the user.
+      if (areUnsavedChanges) {
+        const { choice } = await prompt(
+          'You have unsaved changes. What do you want to do with them?',
+          ['Cancel', 'Save', 'Discard'],
+        )
+
+        try {
+          // Abort if cancelled.
+          if (choice === 'Cancel') {
+            return
+          }
+          // Save if requested.
+          else if (choice === 'Save') {
+            beginLoading('Saving...')
+            await save()
+            finishLoading()
+          }
+        } catch (error) {
+          return handleError({
+            message: 'Failed to save mission.',
+            notifyMethod: 'bubble',
+          })
+        }
+      }
+
+      // Call next.
+      next()
+    },
+    [areUnsavedChanges],
+  )
 
   // Updates the mission path when the selected
   // node, action, or effect changes.
@@ -381,51 +418,50 @@ export default function MissionPage(props: IMissionPage): JSX.Element | null {
    * Handler for when the user requests to delete a node.
    * @param node The node to be deleted.
    */
-  const handleNodeDeleteRequest = (node: ClientMissionNode): void => {
-    if (node !== null) {
-      if (node.hasChildren) {
-        confirm(
-          `**Note: This node has children** \n` +
-            `Please confirm if you would like to delete "${node.name}" only or "${node.name}" and all of it's children.`,
-          (concludeAction: () => void) => {
-            node.delete({
-              deleteMethod: ENodeDeleteMethod.DeleteNodeAndChildren,
-            })
-            handleChange()
-            activateNodeStructuring(false)
-            mission.deselectNode()
-            ensureOneNodeExists()
-            concludeAction()
-          },
-          {
-            handleAlternate: (concludeAction: () => void) => {
-              node.delete({
-                deleteMethod: ENodeDeleteMethod.DeleteNodeAndShiftChildren,
-              })
-              handleChange()
-              activateNodeStructuring(false)
-              mission.deselectNode()
-              ensureOneNodeExists()
-              concludeAction()
-            },
-            buttonConfirmText: `Node + Children`,
-            buttonAlternateText: `Node`,
-          },
-        )
-      } else {
-        confirm(
-          'Please confirm the deletion of this node.',
-          (concludeAction: () => void) => {
-            node.delete()
-            handleChange()
-            activateNodeStructuring(false)
-            mission.deselectNode()
-            ensureOneNodeExists()
-            concludeAction()
-          },
-        )
-      }
+  const handleNodeDeleteRequest = async (
+    node: ClientMissionNode,
+  ): Promise<void> => {
+    // Gather details.
+    let deleteMethod: ENodeDeleteMethod =
+      ENodeDeleteMethod.DeleteNodeAndChildren
+    let message: string
+    let choices: ['Cancel', 'Node', 'Node + Children', 'Confirm'] = [
+      'Cancel',
+      'Node',
+      'Node + Children',
+      'Confirm',
+    ]
+
+    // Set the message and choices based on the node's children.
+    if (node.hasChildren) {
+      message = `Please confirm if you would like to delete "${node.name}" only or "${node.name}" and all of it's children.`
+      choices.pop()
+    } else {
+      message = `Please confirm the deletion of "${node.name}".`
+      choices.splice(1, 2)
     }
+
+    // Prompt the user for confirmation.
+    let { choice } = await prompt(message, choices)
+
+    // If the user selects node only, update the delete method.
+    if (choice === 'Node') {
+      deleteMethod = ENodeDeleteMethod.DeleteNodeAndShiftChildren
+    }
+    // Return if the user cancels the deletion.
+    else if (choice === 'Cancel') {
+      return
+    }
+
+    // Delete the node.
+    node.delete({
+      deleteMethod,
+    })
+    // Handle the change.
+    handleChange()
+    activateNodeStructuring(false)
+    mission.deselectNode()
+    ensureOneNodeExists()
   }
 
   /**
@@ -433,34 +469,6 @@ export default function MissionPage(props: IMissionPage): JSX.Element | null {
    */
   const handleNodeAddRequest = (): void => {
     mission.creationMode = true
-  }
-
-  /**
-   * Redirects the user to the home page.
-   */
-  const goHome = (): void => {
-    if (!areUnsavedChanges) {
-      navigateTo('HomePage', {})
-    } else {
-      confirm(
-        'You have unsaved changes. What do you want to do with them?',
-        async (concludeAction: () => void) => {
-          await save().catch(() => {})
-          navigateTo('HomePage', {})
-          concludeAction()
-        },
-        {
-          handleAlternate: (concludeAction: () => void) => {
-            navigateTo('HomePage', {})
-            concludeAction()
-          },
-          pendingMessageUponConfirm: 'Saving...',
-          pendingMessageUponAlternate: 'Discarding...',
-          buttonConfirmText: 'Save',
-          buttonAlternateText: 'Discard',
-        },
-      )
-    }
   }
 
   /* -- PRE-RENDER PROCESSING -- */

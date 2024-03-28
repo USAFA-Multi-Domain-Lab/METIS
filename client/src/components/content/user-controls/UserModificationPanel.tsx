@@ -1,6 +1,7 @@
 import { useGlobalContext } from 'src/context'
 import ClientUser from 'src/users'
 import { SingleTypeObject } from '../../../../../shared/toolbox/objects'
+import Prompt from '../communication/Prompt'
 import ButtonSvgPanel, { TValidPanelButton } from './ButtonSvgPanel'
 import './UserModificationPanel.scss'
 
@@ -12,7 +13,7 @@ export default function UserModificationPanel({
 
   const globalContext = useGlobalContext()
 
-  const { notify, confirm, beginLoading, finishLoading } = globalContext.actions
+  const { notify, prompt, beginLoading, finishLoading } = globalContext.actions
   const [session] = globalContext.session
 
   /* -- COMPONENT VARIABLES -- */
@@ -33,29 +34,25 @@ export default function UserModificationPanel({
   // This is called when a user requests
   // to delete the mission.
 
-  const onDeleteRequest = () => {
-    confirm(
-      'Are you sure you want to delete this user?',
-      async (concludeAction: () => void) => {
-        concludeAction()
-        beginLoading('Deleting user...')
-
-        if (user.userID) {
-          try {
-            await ClientUser.$delete(user.userID)
-            finishLoading()
-            notify(`Successfully deleted ${user.userID}.`)
-            onSuccessfulDeletion()
-          } catch (error: any) {
-            finishLoading()
-            notify(`Failed to delete ${user.userID}.`)
-          }
-        }
-      },
-      {
-        pendingMessageUponConfirm: 'Deleting...',
-      },
+  const onDeleteRequest = async () => {
+    // Prompt the user for confirmation.
+    let { choice } = await prompt(
+      'Please confirm the deletion of this user.',
+      Prompt.ConfirmationChoices,
     )
+
+    // If the user confirms the deletion, proceed.
+    if (choice === 'Confirm') {
+      try {
+        await ClientUser.$delete(user.userID)
+        finishLoading()
+        notify(`Successfully deleted ${user.userID}.`)
+        onSuccessfulDeletion()
+      } catch (error: any) {
+        finishLoading()
+        notify(`Failed to delete ${user.userID}.`)
+      }
+    }
   }
 
   /* -- PRE-RENDER PROCESSING -- */

@@ -13,6 +13,7 @@ import {
 import ClientUser from 'src/users'
 import { DefaultLayout } from '.'
 import { TGameBasicJson, TGameJoinMethod } from '../../../../shared/games'
+import Prompt from '../content/communication/Prompt'
 import Tooltip from '../content/communication/Tooltip'
 import { Detail } from '../content/form/Form'
 import List, { ESortByMethod } from '../content/general-layout/List'
@@ -52,8 +53,7 @@ export default function HomePage(props: {}): JSX.Element | null {
     handleError,
     notify,
     logout,
-    createPrompt,
-    confirm,
+    prompt,
   } = globalContext.actions
 
   /* -- COMPONENT REFS -- */
@@ -332,18 +332,18 @@ export default function HomePage(props: {}): JSX.Element | null {
                 {
                   text: 'View errors',
                   onClick: () => {
-                    let prompt: string = ''
+                    let message: string = ''
 
                     invalidContentsErrorMessages.forEach(
                       ({ errorMessage, fileName }) => {
-                        prompt += `**${fileName}**\n`
-                        prompt += `\`\`\`\n`
-                        prompt += `${errorMessage}\n`
-                        prompt += `\`\`\`\n`
+                        message += `**${fileName}**\n`
+                        message += `\`\`\`\n`
+                        message += `${errorMessage}\n`
+                        message += `\`\`\`\n`
                       },
                     )
                     notification.dismiss()
-                    createPrompt(prompt)
+                    prompt(message, Prompt.AlertChoices)
                   },
                 },
               ],
@@ -499,26 +499,26 @@ export default function HomePage(props: {}): JSX.Element | null {
    * Handler for when a game is requested to
    * be deleted.
    */
-  const onGameDelete = (game: TGameBasicJson) => {
-    confirm(
-      'Are you sure you want to delete this game?',
-      async (concludeAction: () => void) => {
-        try {
-          beginLoading('Deleting game...')
-          concludeAction()
-          await GameClient.$delete(game.gameID)
-          finishLoading()
-          notify(`Successfully deleted "${game.name}".`)
-          loadGames()
-        } catch (error) {
-          finishLoading()
-          notify(`Failed to delete "${game.name}".`)
-        }
-      },
-      {
-        pendingMessageUponConfirm: 'Deleting game...',
-      },
+  const onGameDelete = async (game: TGameBasicJson) => {
+    // Confirm deletion.
+    let { choice } = await prompt(
+      'Please confirm the deletion of this game.',
+      Prompt.ConfirmationChoices,
     )
+
+    // If confirmed, delete game.
+    if (choice === 'Confirm') {
+      try {
+        beginLoading('Deleting game...')
+        await GameClient.$delete(game.gameID)
+        finishLoading()
+        notify(`Successfully deleted "${game.name}".`)
+        loadGames()
+      } catch (error) {
+        finishLoading()
+        notify(`Failed to delete "${game.name}".`)
+      }
+    }
   }
 
   /**

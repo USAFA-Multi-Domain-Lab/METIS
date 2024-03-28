@@ -1,19 +1,23 @@
-import React, { ReactNode, useState } from 'react'
+import React, { ReactNode, useEffect, useState } from 'react'
 import { TAppError, TAppErrorNotifyMethod } from 'src/components/App'
-import Confirmation, {
-  IConfirmation,
-} from 'src/components/content/communication/Confirmation'
 import { message as connectionStatusMessage } from 'src/components/content/communication/ConnectionStatus'
-import Prompt, { IPrompt } from 'src/components/content/communication/Prompt'
+import {
+  TPromptResult,
+  TPromptTextField,
+  TPrompt_P,
+} from 'src/components/content/communication/Prompt'
 import { TButtonText } from 'src/components/content/user-controls/ButtonText'
 import { PAGE_REGISTRY, TPage_P } from 'src/components/pages'
 import ServerConnection from 'src/connect/servers'
 import Notification from 'src/notifications'
-import { useMountHandler, useUnmountHandler } from 'src/toolbox/hooks'
 import ClientUser from 'src/users'
+import { v4 as generateHash } from 'uuid'
 import { ServerEmittedError } from '../../../shared/connect/errors'
 import { TMetisSession } from '../../../shared/sessions'
-import ObjectToolbox, { AnyObject } from '../../../shared/toolbox/objects'
+import ObjectToolbox, {
+  AnyObject,
+  TWithKey,
+} from '../../../shared/toolbox/objects'
 import StringToolbox from '../../../shared/toolbox/strings'
 
 /* -- constants -- */
@@ -36,8 +40,7 @@ const GLOBAL_CONTEXT_VALUES_DEFAULT: TGlobalContextValues = {
   tooltips: React.createRef<HTMLDivElement>(),
   tooltipDescription: '',
   notifications: [],
-  confirmation: null,
-  prompt: null,
+  promptData: null,
   missionNodeColors: [],
 }
 
@@ -148,8 +151,7 @@ const useGlobalContextDefinition = (context: TGlobalContext) => {
   const [tooltips, setTooltips] = context.tooltips
   const [tooltipDescription, setTooltipDescription] = context.tooltipDescription
   const [notifications, setNotifications] = context.notifications
-  const [confirmation, setConfirmation] = context.confirmation
-  const [prompt, setPrompt] = context.prompt
+  const [promptData, setPromptData] = context.promptData
   const [missionNodeColors, setMissionNodeColors] = context.missionNodeColors
 
   /* -- PRIVATE STATE -- */
@@ -432,73 +434,28 @@ const useGlobalContextDefinition = (context: TGlobalContext) => {
       forceUpdate()
       return notification
     },
-    confirm: (
+    prompt: <TChoice extends string>(
       message: string,
-      handleConfirmation: (concludeAction: () => void, entry: string) => void,
-      options: TConfirmOptions = {},
-    ): void => {
-      let confirmation: IConfirmation = {
-        confirmAjaxStatus: 'NotLoaded',
-        alternateAjaxStatus: 'NotLoaded',
-        active: true,
-        confirmationMessage: message,
-        handleConfirmation: (entry: string) => {
-          setConfirmation({
-            ...confirmation,
-            confirmAjaxStatus: 'Loading',
-          })
-          handleConfirmation(() => {
-            setConfirmation(null)
-          }, entry)
-        },
-        handleAlternate: options.handleAlternate
-          ? (entry: string) => {
-              if (options.handleAlternate) {
-                setConfirmation({
-                  ...confirmation,
-                  alternateAjaxStatus: 'Loading',
-                })
-                options.handleAlternate(() => {
-                  setConfirmation(null)
-                }, entry)
-              }
-            }
-          : null,
-        handleCancelation: () => setConfirmation(null),
-        pendingMessageUponConfirm: options.pendingMessageUponConfirm
-          ? options.pendingMessageUponConfirm
-          : Confirmation.defaultProps.pendingMessageUponConfirm,
-        pendingMessageUponAlternate: options.pendingMessageUponAlternate
-          ? options.pendingMessageUponAlternate
-          : Confirmation.defaultProps.pendingMessageUponAlternate,
-        buttonConfirmText: options.buttonConfirmText
-          ? options.buttonConfirmText
-          : Confirmation.defaultProps.buttonConfirmText,
-        buttonAlternateText: options.buttonAlternateText
-          ? options.buttonAlternateText
-          : Confirmation.defaultProps.buttonAlternateText,
-        buttonCancelText: options.buttonCancelText
-          ? options.buttonCancelText
-          : Confirmation.defaultProps.buttonCancelText,
-        requireEntry: options.requireEntry === true,
-        entryLabel: options.entryLabel
-          ? options.entryLabel
-          : Confirmation.defaultProps.entryLabel,
-      }
+      choices: TChoice[],
+      options: TPromptOptions<TChoice> = {},
+    ): Promise<TPromptResult<TChoice>> => {
+      const { textField } = options
 
-      setConfirmation(confirmation)
-    },
-    createPrompt: (message: string, options: TPromptOptions = {}): void => {
-      let prompt: IPrompt = {
-        active: true,
-        promptMessage: message,
-        handleDismissal: () => setPrompt(null),
-        buttonDismissalText: options.buttonDismissalText
-          ? options.buttonDismissalText
-          : Prompt.defaultProps.buttonDismissalText,
-      }
+      // Return a promise that will be resolved once the
+      // user makes a choice.
+      return new Promise<TPromptResult<TChoice>>((resolve) => {
+        // Create prompt.
+        let promptData: TWithKey<TPrompt_P<TChoice>> = {
+          message,
+          choices,
+          resolve,
+          textField,
+          key: generateHash(),
+        }
 
-      setPrompt(prompt)
+        // Store prompt in state.
+        setPromptData(promptData)
+      })
     },
     logout: async () => {
       // Extract context actions.
@@ -569,19 +526,21 @@ export function useGlobalContext(): TGlobalContext {
 /**
  * Defines middleware for whenever a navigation event is created.
  * @param middleware The navigation middleware.
+ * @param dependencies The dependencies to watch for changes.
  */
 export function useNavigationMiddleware(
   middleware: TNavigationMiddleware,
+  dependencies: React.DependencyList = [],
 ): void {
   const [key] = useState<string>(StringToolbox.generateRandomID())
 
-  useMountHandler((done) => {
+  useEffect(() => {
     navigationMiddleware.set(key, middleware)
-  })
 
-  useUnmountHandler(() => {
-    navigationMiddleware.delete(key)
-  })
+    return () => {
+      navigationMiddleware.delete(key)
+    }
+  }, dependencies)
 }
 
 /* -- classes -- */
@@ -627,8 +586,10 @@ export type TGlobalContextValues = {
   tooltips: React.RefObject<HTMLDivElement>
   tooltipDescription: string
   notifications: Notification[]
-  confirmation: IConfirmation | null
-  prompt: IPrompt | null
+  /**
+   * Current prompt to display to the user.
+   */
+  promptData: TWithKey<TPrompt_P<any>> | null
   missionNodeColors: string[]
 }
 
@@ -697,32 +658,25 @@ export type TGlobalContextActions = {
    */
   handleError: (error: TAppError | string) => void
   /**
+   * Opens the prompt modal to display a specified message, prompting the user to
+   * choose from a list of choices.
+   * @param message The message to display to the user.
+   * @param choices The choices the user can make.
+   * @param options Additional configuration for the prompt.
+   * @returns A promise that resolves with the user's choice.
+   */
+  prompt: <TChoice extends string>(
+    message: string,
+    choices: TChoice[],
+    options?: TPromptOptions<TChoice>,
+  ) => Promise<TPromptResult<TChoice>>
+  /**
    * This will notify the user with a notification bubble.
    * @param {string} message The message to display in the notification bubble.
    * @param {TNotifyOptions | undefined} options The options to use for the notification.
    * @returns {Notification} The emitted notification.
    */
   notify: (message: string, options?: TNotifyOptions) => Notification
-  /**
-   * This will pop up a confirmation box to confirm some action.
-   * concludeAction must be called by the handleConfirmation
-   * callback function to make the confirm box disappear.
-   * @param {string} message The message to display in the confirmation box.
-   * @param handleConfirmation The callback function to call when the user confirms the action.
-   * @param {TConfirmOptions | undefined} options The options to use for the confirmation box.
-   */
-  confirm: (
-    message: string,
-    handleConfirmation: (concludeAction: () => void, entry: string) => void,
-    options?: TConfirmOptions,
-  ) => void
-  /**
-   * The will open an alert box with a prompt, providing
-   * the user with options on how to respond.
-   * @param {string} message The message to display in the prompt.
-   * @param {TPromptOptions | undefined} options The options to use for the prompt.
-   */
-  createPrompt: (message: string, options?: TPromptOptions) => void
   /**
    * This will logout the current user from the session, closing the connection
    * with the server as well. Afterwards, the user will be navigated to the auth page.
@@ -777,8 +731,11 @@ export type TConfirmOptions = {
  * Options available when prompting a user with a message
  * using the prompt method in the global context actions.
  */
-export type TPromptOptions = {
-  buttonDismissalText?: string
+export type TPromptOptions<TChoice extends string> = {
+  /**
+   * The text field options for the prompt.
+   */
+  textField?: TPromptTextField<TChoice>
 }
 
 /**

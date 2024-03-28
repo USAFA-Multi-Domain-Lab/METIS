@@ -9,6 +9,7 @@ import {
 } from 'src/toolbox/hooks'
 import ClientUser from 'src/users'
 import { DefaultLayout } from '.'
+import Prompt from '../content/communication/Prompt'
 import { HomeLink, TNavigation } from '../content/general-layout/Navigation'
 import ButtonSvgPanel, {
   TValidPanelButton,
@@ -26,7 +27,7 @@ export default function LobbyPage({ game }: TLobbyPage_P): JSX.Element | null {
   const globalContext = useGlobalContext()
   const [server] = globalContext.server
   const [session] = useRequireSession()
-  const { beginLoading, finishLoading, navigateTo, handleError, confirm } =
+  const { beginLoading, finishLoading, navigateTo, handleError, prompt } =
     globalContext.actions
   const [participants, setParticipants] = useState<ClientUser[]>(
     game.participants,
@@ -124,27 +125,25 @@ export default function LobbyPage({ game }: TLobbyPage_P): JSX.Element | null {
   // Add navigation middleware to properly
   // quit the game before the user navigates
   // away.
-  useNavigationMiddleware((to, next) => {
-    confirm(
+  useNavigationMiddleware(async (to, next) => {
+    // Prompt the user for confirmation.
+    let { choice } = await prompt(
       'Are you sure you want to quit?',
-      async (concludeAction: () => void) => {
-        try {
-          await game.$quit()
-          concludeAction()
-          next()
-        } catch (error) {
-          handleError({
-            message: 'Failed to quit game.',
-            notifyMethod: 'bubble',
-          })
-          concludeAction()
-        }
-      },
-      {
-        buttonConfirmText: 'Yes',
-        buttonCancelText: 'No',
-      },
+      Prompt.YesNoChoices,
     )
+
+    // If the user confirms quit, proceed.
+    if (choice === 'Yes') {
+      try {
+        await game.$quit()
+        next()
+      } catch (error) {
+        handleError({
+          message: 'Failed to quit game.',
+          notifyMethod: 'bubble',
+        })
+      }
+    }
   })
 
   /* -- render -- */

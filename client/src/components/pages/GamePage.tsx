@@ -8,6 +8,7 @@ import { compute } from 'src/toolbox'
 import { useEventListener, useMountHandler } from 'src/toolbox/hooks'
 import { DefaultLayout, TPage_P } from '.'
 import MapToolbox from '../../../../shared/toolbox/maps'
+import Prompt from '../content/communication/Prompt'
 import OutputPanel from '../content/game/OutputPanel'
 import StatusBar from '../content/game/StatusBar'
 import MissionMap from '../content/game/mission-map'
@@ -33,7 +34,7 @@ export default function GamePage({ game }: IGamePage): JSX.Element | null {
 
   const globalContext = useGlobalContext()
   const [server] = globalContext.server
-  const { navigateTo, finishLoading, notify, confirm, handleError } =
+  const { navigateTo, finishLoading, notify, prompt, handleError } =
     globalContext.actions
 
   /* -- state -- */
@@ -163,27 +164,25 @@ export default function GamePage({ game }: IGamePage): JSX.Element | null {
   // Add navigation middleware to properly
   // quit the game before the user navigates
   // away.
-  useNavigationMiddleware((to, next) => {
-    confirm(
+  useNavigationMiddleware(async (to, next) => {
+    // Prompt the user for confirmation.
+    let { choice } = await prompt(
       'Are you sure you want to quit?',
-      async (concludeAction: () => void) => {
-        try {
-          await game.$quit()
-          concludeAction()
-          next()
-        } catch (error) {
-          handleError({
-            message: 'Failed to quit game.',
-            notifyMethod: 'bubble',
-          })
-          concludeAction()
-        }
-      },
-      {
-        buttonConfirmText: 'Yes',
-        buttonCancelText: 'No',
-      },
+      Prompt.YesNoChoices,
     )
+
+    // If the user confirms quit, proceed.
+    if (choice === 'Yes') {
+      try {
+        await game.$quit()
+        next()
+      } catch (error) {
+        handleError({
+          message: 'Failed to quit game.',
+          notifyMethod: 'bubble',
+        })
+      }
+    }
   })
 
   // Update the resources when an action is executed.
