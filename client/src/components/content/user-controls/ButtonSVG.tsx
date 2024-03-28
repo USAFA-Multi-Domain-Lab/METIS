@@ -154,3 +154,5 @@ export type TButtonSvgIcon =
   | 'launch'
   | 'kick'
   | 'ban'
+  | 'user'
+  | 'shell'

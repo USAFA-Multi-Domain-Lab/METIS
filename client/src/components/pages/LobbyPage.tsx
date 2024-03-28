@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useRef } from 'react'
 import { useGlobalContext, useNavigationMiddleware } from 'src/context'
 import GameClient from 'src/games'
 import { compute } from 'src/toolbox'
@@ -7,13 +7,10 @@ import {
   useMountHandler,
   useRequireSession,
 } from 'src/toolbox/hooks'
-import ClientUser from 'src/users'
 import { DefaultLayout } from '.'
 import Prompt from '../content/communication/Prompt'
+import GameUsers from '../content/game/GameUsers'
 import { HomeLink, TNavigation } from '../content/general-layout/Navigation'
-import ButtonSvgPanel, {
-  TValidPanelButton,
-} from '../content/user-controls/ButtonSvgPanel'
 import { ButtonText } from '../content/user-controls/ButtonText'
 import './LobbyPage.scss'
 
@@ -29,10 +26,6 @@ export default function LobbyPage({ game }: TLobbyPage_P): JSX.Element | null {
   const [session] = useRequireSession()
   const { beginLoading, finishLoading, navigateTo, handleError, prompt } =
     globalContext.actions
-  const [participants, setParticipants] = useState<ClientUser[]>(
-    game.participants,
-  )
-  const [supervisors, setSupervisors] = useState<ClientUser[]>(game.supervisors)
 
   /* -- computed -- */
 
@@ -129,11 +122,9 @@ export default function LobbyPage({ game }: TLobbyPage_P): JSX.Element | null {
 
   // Verify navigation and update participant and
   // supervisors lists on game state change.
-  useEventListener(server, 'game-state-change', () => {
-    verifyNavigation.current()
-    setParticipants(game.participants)
-    setSupervisors(game.supervisors)
-  })
+  useEventListener(server, 'game-state-change', () =>
+    verifyNavigation.current(),
+  )
 
   // Add navigation middleware to properly
   // quit the game before the user navigates
@@ -161,75 +152,6 @@ export default function LobbyPage({ game }: TLobbyPage_P): JSX.Element | null {
 
   /* -- render -- */
 
-  /**
-   * Computed JSX for the list of participants.
-   */
-  const participantsJsx = compute(() => {
-    // If there are participants, render them.
-    if (participants.length > 0) {
-      return participants.map((user): JSX.Element | null => {
-        /* -- computed -- */
-
-        /**
-         * Buttons for SVG panel.
-         */
-        const buttons = compute((): TValidPanelButton[] => {
-          if (session.user.isAuthorized(['WRITE'])) {
-            return [
-              {
-                icon: 'kick',
-                key: 'kick',
-                onClick: () => {},
-                tooltipDescription:
-                  'Kick participant from the game (Can still choose to rejoin).',
-              },
-              {
-                icon: 'ban',
-                key: 'ban',
-                onClick: () => {},
-                tooltipDescription:
-                  'Ban participant from the game (Cannot rejoin).',
-              },
-            ]
-          } else {
-            return []
-          }
-        })
-
-        /* -- render -- */
-
-        return (
-          <div key={user.userID} className='User'>
-            <div className='Name'>{user.userID}</div>
-            <ButtonSvgPanel buttons={buttons} size={'small'} />
-          </div>
-        )
-      })
-    }
-    // Else, render a notice that there are no participants.
-    else {
-      return <div className='User NoUsers'>No participants joined.</div>
-    }
-  })
-
-  /**
-   * Computed JSX for the list of supervisors.
-   */
-  const supervisorJsx = compute(() => {
-    // If there are supervisors, render them.
-    if (supervisors.length > 0) {
-      return supervisors.map((user): JSX.Element | null => (
-        <div key={user.userID} className='User'>
-          <div className='Name'>{user.userID}</div>
-        </div>
-      ))
-    }
-    // Else, render a notice that there are no supervisors.
-    else {
-      return <div className='User NoUsers'>No supervisors joined.</div>
-    }
-  })
-
   return (
     <div className='LobbyPage Page'>
       <DefaultLayout navigation={navigation}>
@@ -244,13 +166,8 @@ export default function LobbyPage({ game }: TLobbyPage_P): JSX.Element | null {
             <div className='Value'>{game.name}</div>
           </div>
         </div>
-        <div className='ParticipantSection Section'>
-          <div className='Subtitle'>Participants:</div>
-          <div className='Users'>{participantsJsx}</div>
-        </div>
-        <div className='SupervisorSection Section'>
-          <div className='Subtitle'>Supervisors:</div>
-          <div className='Users'>{supervisorJsx}</div>
+        <div className='UsersSection Section'>
+          <GameUsers game={game} />
         </div>
         <div className={buttonSectionClass}>
           <ButtonText text={'Start Game'} onClick={onClickStartGame} />

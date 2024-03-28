@@ -370,8 +370,8 @@ export default class GameServer extends Game<
       }
 
       // Emit open event.
-      for (let participant of this.participants) {
-        participant.emit('node-opened', payload)
+      for (let user of this.users) {
+        user.emit('node-opened', payload)
       }
     } catch (error) {
       // Emit an error if the node could not be opened.
@@ -460,9 +460,9 @@ export default class GameServer extends Game<
           }
 
           // Emit action execution initiated event
-          // to each participant.
-          for (let participant of this.participants) {
-            participant.emit('action-execution-initiated', initiationPayload)
+          // to each user.
+          for (let user of this.users) {
+            user.emit('action-execution-initiated', initiationPayload)
           }
         },
       })
@@ -491,8 +491,8 @@ export default class GameServer extends Game<
 
       // Emit the action execution completed
       // event to each participant.
-      for (let participant of this.participants) {
-        participant.emit('action-execution-completed', completionPayload)
+      for (let user of this.users) {
+        user.emit('action-execution-completed', completionPayload)
       }
     } catch (error) {
       // Emit an error if the action could not be executed.

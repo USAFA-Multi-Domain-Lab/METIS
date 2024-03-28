@@ -16,6 +16,7 @@ import { TWithKey } from '../../../../shared/toolbox/objects'
 import Prompt from '../content/communication/Prompt'
 import OutputPanel from '../content/game/OutputPanel'
 import StatusBar from '../content/game/StatusBar'
+import UsersPanel from '../content/game/UsersPanel'
 import MissionMap from '../content/game/mission-map'
 import ActionExecModal from '../content/game/mission-map/ui/overlay/modals/ActionExecModal'
 import { HomeLink } from '../content/general-layout/Navigation'
@@ -24,6 +25,7 @@ import {
   PanelSizeRelationship,
   ResizablePanel,
 } from '../content/general-layout/ResizablePanels'
+import { TValidPanelButton } from '../content/user-controls/ButtonSvgPanel'
 import { TButtonText } from '../content/user-controls/ButtonText'
 import './GamePage.scss'
 
@@ -56,6 +58,8 @@ export default function GamePage({ game }: IGamePage): JSX.Element | null {
   )
   const [resources, setResources] = useState<number>(game.resources)
   const [session] = useRequireSession()
+  const [rightPanelTab, setRightPanelTab] =
+    useState<TGameRightPanelTab>('output')
 
   /* -- variables -- */
 
@@ -232,6 +236,41 @@ export default function GamePage({ game }: IGamePage): JSX.Element | null {
     return resourcesClassList.join(' ')
   })
 
+  /**
+   * Custom buttons for the mission map.
+   */
+  const customButtons = compute((): TValidPanelButton[] => {
+    let buttons: TValidPanelButton[] = []
+
+    // If the right panel tab is the output panel,
+    // push the button to change it to the users panel.
+    if (rightPanelTab === 'output') {
+      buttons.push({
+        key: 'users',
+        icon: 'user',
+        tooltipDescription: 'Open users panel.',
+        onClick: () => {
+          setRightPanelTab('users')
+        },
+      })
+    }
+    // If the right panel tab is the users panel,
+    // push the button to change it to the output panel.
+    else if (rightPanelTab === 'users') {
+      buttons.push({
+        key: 'output',
+        icon: 'shell',
+        tooltipDescription: 'Open output panel.',
+        onClick: () => {
+          setRightPanelTab('output')
+        },
+      })
+    }
+
+    // Return the buttons.
+    return buttons
+  })
+
   /* -- effects -- */
 
   // Verify navigation on mount and on game state change.
@@ -344,6 +383,7 @@ export default function GamePage({ game }: IGamePage): JSX.Element | null {
                 mission={mission}
                 onNodeSelect={onNodeSelect}
                 overlayContent={overlayContentJsx}
+                customButtons={customButtons}
               />
             ),
           }}
@@ -351,7 +391,16 @@ export default function GamePage({ game }: IGamePage): JSX.Element | null {
             ...ResizablePanel.defaultProps,
             minSize: 400,
             isOpen: true,
-            render: () => <OutputPanel mission={mission} />,
+            render: () => {
+              switch (rightPanelTab) {
+                case 'output':
+                  return <OutputPanel mission={mission} />
+                case 'users':
+                  return <UsersPanel game={game} key={'users-panel'} />
+                default:
+                  return null
+              }
+            },
           }}
         />
       </DefaultLayout>
@@ -370,3 +419,8 @@ export interface IGamePage extends TPage_P {
    */
   game: GameClient
 }
+
+/**
+ * Available tabs for the right panel on the game page.
+ */
+export type TGameRightPanelTab = 'output' | 'users'

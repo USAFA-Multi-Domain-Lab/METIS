@@ -16,12 +16,7 @@
     .Title {
       margin: 0 0 1em;
       font-size: 1.5rem;
-    }
-
-    .Subtitle {
-      margin: 0 0 1em;
-      width: 100%;
-      font-size: 1.15rem;
+      font-weight: bold;
     }
 
     .Section {
@@ -47,34 +42,6 @@
       display: grid;
       grid-template-columns: 10em 1fr;
       margin: 0.75em 0;
-    }
-
-    .Users {
-      .User {
-        margin: 0.75em 0;
-        height: 2em;
-
-        .ButtonSvg {
-          &.ban:hover {
-            filter: invert(68%) sepia(94%) saturate(322%) hue-rotate(300deg)
-              brightness(200%) contrast(98%);
-          }
-        }
-
-        &.NoUsers {
-          font-style: italic;
-          opacity: 0.5;
-        }
-      }
-    }
-
-    .ParticipantSection {
-      .Users {
-        .User {
-          display: grid;
-          grid-template-columns: 1fr auto;
-        }
-      }
     }
   }
 }
