@@ -32,6 +32,7 @@ export default function LobbyPage({ game }: TLobbyPage_P): JSX.Element | null {
   const [participants, setParticipants] = useState<ClientUser[]>(
     game.participants,
   )
+  const [supervisors, setSupervisors] = useState<ClientUser[]>(game.supervisors)
 
   /* -- computed -- */
 
@@ -88,6 +89,17 @@ export default function LobbyPage({ game }: TLobbyPage_P): JSX.Element | null {
       return
     }
 
+    // Confirm the user wants to start the game.
+    let { choice } = await prompt(
+      'Please confirm starting the game.',
+      Prompt.ConfirmationChoices,
+    )
+
+    // If the user cancels, return.
+    if (choice === 'Cancel') {
+      return
+    }
+
     try {
       // Clear verify navigation function to prevent double
       // redirect.
@@ -101,7 +113,7 @@ export default function LobbyPage({ game }: TLobbyPage_P): JSX.Element | null {
     } catch (error) {
       handleError({
         message: 'Failed to start game.',
-        notifyMethod: 'page',
+        notifyMethod: 'bubble',
       })
     }
   }
@@ -115,11 +127,12 @@ export default function LobbyPage({ game }: TLobbyPage_P): JSX.Element | null {
     done()
   })
 
-  // Verify navigation and update participant list on
-  // game state change.
+  // Verify navigation and update participant and
+  // supervisors lists on game state change.
   useEventListener(server, 'game-state-change', () => {
     verifyNavigation.current()
     setParticipants(game.participants)
+    setSupervisors(game.supervisors)
   })
 
   // Add navigation middleware to properly
@@ -151,46 +164,71 @@ export default function LobbyPage({ game }: TLobbyPage_P): JSX.Element | null {
   /**
    * Computed JSX for the list of participants.
    */
-  const participantsJsx = participants.map(
-    (participant): JSX.Element | null => {
-      /* -- computed -- */
+  const participantsJsx = compute(() => {
+    // If there are participants, render them.
+    if (participants.length > 0) {
+      return participants.map((user): JSX.Element | null => {
+        /* -- computed -- */
 
-      /**
-       * Buttons for SVG panel.
-       */
-      const buttons = compute((): TValidPanelButton[] => {
-        if (session.user.isAuthorized(['WRITE'])) {
-          return [
-            {
-              icon: 'kick',
-              key: 'kick',
-              onClick: () => {},
-              tooltipDescription:
-                'Kick participant from the game (Can still choose to rejoin).',
-            },
-            {
-              icon: 'ban',
-              key: 'ban',
-              onClick: () => {},
-              tooltipDescription:
-                'Ban participant from the game (Cannot rejoin).',
-            },
-          ]
-        } else {
-          return []
-        }
+        /**
+         * Buttons for SVG panel.
+         */
+        const buttons = compute((): TValidPanelButton[] => {
+          if (session.user.isAuthorized(['WRITE'])) {
+            return [
+              {
+                icon: 'kick',
+                key: 'kick',
+                onClick: () => {},
+                tooltipDescription:
+                  'Kick participant from the game (Can still choose to rejoin).',
+              },
+              {
+                icon: 'ban',
+                key: 'ban',
+                onClick: () => {},
+                tooltipDescription:
+                  'Ban participant from the game (Cannot rejoin).',
+              },
+            ]
+          } else {
+            return []
+          }
+        })
+
+        /* -- render -- */
+
+        return (
+          <div key={user.userID} className='User'>
+            <div className='Name'>{user.userID}</div>
+            <ButtonSvgPanel buttons={buttons} size={'small'} />
+          </div>
+        )
       })
+    }
+    // Else, render a notice that there are no participants.
+    else {
+      return <div className='User NoUsers'>No participants joined.</div>
+    }
+  })
 
-      /* -- render -- */
-
-      return (
-        <div key={participant.userID} className='Participant'>
-          <div className='Name'>{participant.userID}</div>
-          <ButtonSvgPanel buttons={buttons} size={'small'} />
+  /**
+   * Computed JSX for the list of supervisors.
+   */
+  const supervisorJsx = compute(() => {
+    // If there are supervisors, render them.
+    if (supervisors.length > 0) {
+      return supervisors.map((user): JSX.Element | null => (
+        <div key={user.userID} className='User'>
+          <div className='Name'>{user.userID}</div>
         </div>
-      )
-    },
-  )
+      ))
+    }
+    // Else, render a notice that there are no supervisors.
+    else {
+      return <div className='User NoUsers'>No supervisors joined.</div>
+    }
+  })
 
   return (
     <div className='LobbyPage Page'>
@@ -208,7 +246,11 @@ export default function LobbyPage({ game }: TLobbyPage_P): JSX.Element | null {
         </div>
         <div className='ParticipantSection Section'>
           <div className='Subtitle'>Participants:</div>
-          <div className='Participants'>{participantsJsx}</div>
+          <div className='Users'>{participantsJsx}</div>
+        </div>
+        <div className='SupervisorSection Section'>
+          <div className='Subtitle'>Supervisors:</div>
+          <div className='Users'>{supervisorJsx}</div>
         </div>
         <div className={buttonSectionClass}>
           <ButtonText text={'Start Game'} onClick={onClickStartGame} />

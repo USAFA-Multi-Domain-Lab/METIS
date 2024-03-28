@@ -363,13 +363,14 @@ export default class GameClient extends Game<
     event: TServerEvents['game-state-change'],
   ): void => {
     // Extract data.
-    let { state, participants } = event.data
+    let { state, participants, supervisors } = event.data
 
     // Update the game state and participant list.
     this._state = state
     this._participants = participants.map(
       (userData) => new ClientUser(userData),
     )
+    this._supervisors = supervisors.map((userData) => new ClientUser(userData))
   }
 
   /**

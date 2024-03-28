@@ -133,4 +133,10 @@
       max-height: 60%;
     }
   }
+
+  &.supervisor {
+    .MissionNode {
+      cursor: default;
+    }
+  }
 }

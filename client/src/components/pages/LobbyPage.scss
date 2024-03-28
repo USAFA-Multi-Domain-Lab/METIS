@@ -49,10 +49,8 @@
       margin: 0.75em 0;
     }
 
-    .Participants {
-      .Participant {
-        display: grid;
-        grid-template-columns: 1fr auto;
+    .Users {
+      .User {
         margin: 0.75em 0;
         height: 2em;
 
@@ -61,6 +59,20 @@
             filter: invert(68%) sepia(94%) saturate(322%) hue-rotate(300deg)
               brightness(200%) contrast(98%);
           }
+        }
+
+        &.NoUsers {
+          font-style: italic;
+          opacity: 0.5;
+        }
+      }
+    }
+
+    .ParticipantSection {
+      .Users {
+        .User {
+          display: grid;
+          grid-template-columns: 1fr auto;
         }
       }
     }

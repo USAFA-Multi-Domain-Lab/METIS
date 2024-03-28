@@ -154,8 +154,14 @@ const routerMap = (router: expressWs.Router, done: () => void) => {
         return response.sendStatus(409)
       }
 
-      // End the game and return response.
+      // End the game.
       game.state = 'ended'
+
+      // For now, destroy the game until we have a
+      // reason to keep ended games in memory.
+      game.destroy()
+
+      // Return response.
       return response.sendStatus(200)
     },
   )
