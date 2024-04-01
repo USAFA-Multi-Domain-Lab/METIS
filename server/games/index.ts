@@ -23,9 +23,11 @@ export default class GameServer extends Game<
   ServerMissionNode,
   ServerMissionAction
 > {
+  // Overridden.
   public get state() {
     return this._state
   }
+  // Overridden.
   public set state(value: TGameState) {
     this._state = value
     this.handleStateChange()
@@ -56,7 +58,7 @@ export default class GameServer extends Game<
   public constructor(
     gameID: string,
     name: string,
-    config: TGameConfig,
+    config: Partial<TGameConfig>,
     mission: ServerMission,
     participants: Array<ClientConnection>,
     supervisors: Array<ClientConnection>,
@@ -193,6 +195,15 @@ export default class GameServer extends Game<
   }
 
   /**
+   * Updates the configuration of the game.
+   * @param config Updated configuration options to assign to the game config.
+   */
+  public updateConfig(config: Partial<TGameConfig>): void {
+    Object.assign(this._config, config)
+    this.handleStateChange()
+  }
+
+  /**
    * Handles a new connection by an existing participant.
    * @param newConnection The new connection for a participant of the game.
    * @returns True if connection was replaced, false if the participant wasn't found.
@@ -226,6 +237,7 @@ export default class GameServer extends Game<
     this.emitToUsers('game-state-change', {
       data: {
         state: this.state,
+        config: this.config,
         participants: this.participants.map((client: ClientConnection) =>
           client.user.toJson(),
         ),
@@ -521,7 +533,7 @@ export default class GameServer extends Game<
    */
   public static launch(
     mission: ServerMission,
-    config: TGameConfig = {},
+    config: Partial<TGameConfig> = {},
   ): GameServer {
     return new GameServer(
       generateHash().substring(0, 12),

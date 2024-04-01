@@ -111,6 +111,13 @@ export default function LobbyPage({ game }: TLobbyPage_P): JSX.Element | null {
     }
   }
 
+  /**
+   * Callback for the game configuration button.
+   */
+  const onClickGameConfig = () => {
+    navigateTo('GameConfigPage', { game })
+  }
+
   /* -- effects -- */
 
   // Verify navigation on mount.
@@ -130,7 +137,13 @@ export default function LobbyPage({ game }: TLobbyPage_P): JSX.Element | null {
   // quit the game before the user navigates
   // away.
   useNavigationMiddleware(async (to, next) => {
-    // Prompt the user for confirmation.
+    // If the user is navigating to the game configuration
+    // page, permit navigation.
+    if (to === 'GameConfigPage') {
+      return next()
+    }
+
+    // Otherwise, prompt the user for confirmation.
     let { choice } = await prompt(
       'Are you sure you want to quit?',
       Prompt.YesNoChoices,
@@ -171,7 +184,7 @@ export default function LobbyPage({ game }: TLobbyPage_P): JSX.Element | null {
         </div>
         <div className={buttonSectionClass}>
           <ButtonText text={'Start Game'} onClick={onClickStartGame} />
-          <ButtonText text={'Game Settings'} onClick={() => {}} />
+          <ButtonText text={'Game Configuration'} onClick={onClickGameConfig} />
         </div>
       </DefaultLayout>
     </div>

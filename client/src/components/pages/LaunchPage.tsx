@@ -94,6 +94,13 @@ export default function LaunchPage({
     }
   }
 
+  /**
+   * Cancels the launch.
+   */
+  const cancel = () => {
+    navigateTo('HomePage', {})
+  }
+
   /* -- render -- */
 
   return (
@@ -104,6 +111,7 @@ export default function LaunchPage({
           gameConfig={gameConfig}
           saveButtonText={'Launch'}
           onSave={launch}
+          onCancel={cancel}
         />
       </DefaultLayout>
     </div>

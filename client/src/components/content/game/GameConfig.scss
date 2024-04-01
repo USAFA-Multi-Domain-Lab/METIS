@@ -10,9 +10,7 @@
   box-shadow: $box-shadow-alt5;
 
   .Buttons {
-    display: grid;
-    justify-content: flex-start;
+    margin: 1.5em 8% 0.75em;
     width: calc(100% - 16%);
-    margin: 1em 8%;
   }
 }

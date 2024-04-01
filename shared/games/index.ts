@@ -25,7 +25,13 @@ export default abstract class Game<
   /**
    * The configuration for the game.
    */
-  public config: Required<TGameConfig>
+  protected _config: TGameConfig
+  /**
+   * The configuration for the game.
+   */
+  public get config(): TGameConfig {
+    return { ...this._config }
+  }
 
   /**
    * The mission being executed by the participants.
@@ -107,14 +113,14 @@ export default abstract class Game<
   public constructor(
     gameID: string,
     name: string,
-    config: TGameConfig,
+    config: Partial<TGameConfig>,
     mission: TMission,
     participants: TUser[],
     supervisors: TUser[],
   ) {
     this.gameID = gameID
     this.name = name
-    this.config = {
+    this._config = {
       ...Game.DEFAULT_CONFIG,
       ...config,
     }
@@ -192,7 +198,7 @@ export default abstract class Game<
   /**
    * Default value for the game configuration.
    */
-  public static get DEFAULT_CONFIG(): Required<TGameConfig> {
+  public static get DEFAULT_CONFIG(): TGameConfig {
     return {
       accessibility: 'public',
       autoAssign: true,
@@ -216,23 +222,24 @@ export type TGameAccessibility = 'public' | 'id-required' | 'invite-only'
 export type TGameConfig = {
   /**
    * The accessiblity of the game to students.
+   * @default 'public'
    */
-  accessibility?: TGameAccessibility
+  accessibility: TGameAccessibility
   /**
    * Whether students will be auto-assigned to their roles.
    * @default true
    */
-  autoAssign?: boolean
+  autoAssign: boolean
   /**
    * Whether resources will be infinite in the game.
    * @default false
    */
-  infiniteResources?: boolean
+  infiniteResources: boolean
   /**
    * Whether effects will be enabled in the game.
    * @default true
    */
-  effectsEnabled?: boolean
+  effectsEnabled: boolean
 }
 
 /**

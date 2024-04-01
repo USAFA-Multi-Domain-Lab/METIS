@@ -1,4 +1,9 @@
-import { TGameJoinMethod, TGameJson, TGameState } from 'metis/games'
+import {
+  TGameConfig,
+  TGameJoinMethod,
+  TGameJson,
+  TGameState,
+} from 'metis/games'
 import { TActionExecutionJSON } from 'metis/missions/actions/executions'
 import { IActionOutcomeJSON } from 'metis/missions/actions/outcomes'
 import { TCommonUserJson } from 'metis/users'
@@ -152,9 +157,13 @@ export type TGenericServerEvents = {
     'game-state-change',
     {
       /**
-       * The new state of the game.
+       * The current state of the game.
        */
       state: TGameState
+      /**
+       * The current configuration of the game.
+       */
+      config: TGameConfig
       /**
        * The current list of participants in the game.
        */

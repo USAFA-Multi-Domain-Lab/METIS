@@ -12,6 +12,7 @@ export default function GameConfig({
   saveButtonText = 'Save',
   onChange = () => {},
   onSave,
+  onCancel,
 }: TGameConfig_P): JSX.Element | null {
   const [accessibility, setAccessibility] = useState<TGameAccessibility>(
     gameConfig.accessibility,
@@ -34,7 +35,7 @@ export default function GameConfig({
 
   return (
     <div className='GameConfig'>
-      <DetailDropDown<NonNullable<TGameConfig['accessibility']>>
+      <DetailDropDown<TGameConfig['accessibility']>
         label='Accessibility'
         options={['public', 'id-required']}
         currentValue={accessibility}
@@ -71,6 +72,7 @@ export default function GameConfig({
       />
       <div className='Buttons'>
         <ButtonText text={saveButtonText} onClick={onSave} />
+        <ButtonText text={'Cancel'} onClick={onCancel} />
       </div>
     </div>
   )
@@ -85,7 +87,7 @@ export type TGameConfig_P = {
   /**
    * The game config to modify.
    */
-  gameConfig: Required<TGameConfig>
+  gameConfig: TGameConfig
   /**
    * The text for the save button.
    * @default 'Save'
@@ -100,4 +102,8 @@ export type TGameConfig_P = {
    * Callback for when the game config is saved.
    */
   onSave: () => void
+  /**
+   * Callback for when the game configuration is cancelled.
+   */
+  onCancel: () => void
 }

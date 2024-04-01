@@ -280,6 +280,47 @@ export default class GameClient extends Game<
   }
 
   /**
+   * Updates the game config.
+   * @param configUpdates The updates to the game config.
+   * @resolves When the game config has been updated.
+   * @rejects If the game failed to update config, or if the game has already
+   * started or ended.
+   */
+  public async $updateConfig(
+    configUpdates: Partial<TGameConfig>,
+  ): Promise<void> {
+    return new Promise<void>(
+      async (
+        resolve: () => void,
+        reject: (error: any) => void,
+      ): Promise<void> => {
+        try {
+          // If the game has already started, throw an error.
+          if (this.state === 'started') {
+            throw new Error('Game has already started.')
+          }
+          // If the game has already ended, throw an error.
+          if (this.state === 'ended') {
+            throw new Error('Game has already ended.')
+          }
+          // Call API to update config.
+          await axios.put(`${Game.API_ENDPOINT}/${this.gameID}/config/`, {
+            ...configUpdates,
+          })
+          // Update the game config.
+          Object.assign(this._config, configUpdates)
+          // Resolve promise.
+          return resolve()
+        } catch (error) {
+          console.error('Failed to update game config.')
+          console.error(error)
+          return reject(error)
+        }
+      },
+    )
+  }
+
+  /**
    * Starts the game.
    * @resolves When the game has started.
    * @rejects If the game failed to start, or if the game has already
@@ -301,9 +342,7 @@ export default class GameClient extends Game<
             throw new Error('Game has already ended.')
           }
           // Call API to start game.
-          await axios.put<{ gameID: string }>(
-            `${Game.API_ENDPOINT}/${this.gameID}/start/`,
-          )
+          await axios.put(`${Game.API_ENDPOINT}/${this.gameID}/start/`)
           // Update the game state.
           this._state = 'started'
           // Resolve promise.
@@ -339,9 +378,7 @@ export default class GameClient extends Game<
             throw new Error('Game has already ended.')
           }
           // Call API to end game.
-          await axios.put<{ gameID: string }>(
-            `${Game.API_ENDPOINT}/${this.gameID}/end/`,
-          )
+          await axios.put(`${Game.API_ENDPOINT}/${this.gameID}/end/`)
           // Update the game state.
           this._state = 'ended'
           // Resolve promise.
@@ -363,10 +400,11 @@ export default class GameClient extends Game<
     event: TServerEvents['game-state-change'],
   ): void => {
     // Extract data.
-    let { state, participants, supervisors } = event.data
+    let { state, config, participants, supervisors } = event.data
 
-    // Update the game state and participant list.
+    // Update the game with the new data.
     this._state = state
+    this._config = config
     this._participants = participants.map(
       (userData) => new ClientUser(userData),
     )
@@ -503,7 +541,7 @@ export default class GameClient extends Game<
    */
   public static async $launch(
     missionID: string,
-    gameConfig: TGameConfig,
+    gameConfig: Partial<TGameConfig>,
   ): Promise<string> {
     return new Promise<string>(
       async (

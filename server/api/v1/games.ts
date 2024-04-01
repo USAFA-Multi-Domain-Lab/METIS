@@ -49,7 +49,7 @@ const routerMap = (router: expressWs.Router, done: () => void) => {
       {
         body: {
           accessibility: RequestBodyFilters.STRING_LITERAL<
-            NonNullable<TGameConfig['accessibility']>
+            TGameConfig['accessibility']
           >(['public', 'id-required', 'invite-only']),
           autoAssign: RequestBodyFilters.BOOLEAN,
           infiniteResources: RequestBodyFilters.BOOLEAN,
@@ -129,8 +129,58 @@ const routerMap = (router: expressWs.Router, done: () => void) => {
         return response.sendStatus(409)
       }
 
-      // Start the game and return response.
+      // Start the game.
       game.state = 'started'
+
+      // Return response.
+      return response.sendStatus(200)
+    },
+  )
+
+  // -- PUT | /api/v1/games/:gameID/config/
+  // This will update the config of a game.
+  router.put(
+    '/:gameID/config/',
+    auth({ permissions: ['WRITE'] }),
+    defineRequests(
+      {},
+      {
+        body: {
+          accessibility: RequestBodyFilters.STRING_LITERAL<
+            TGameConfig['accessibility']
+          >(['public', 'id-required', 'invite-only']),
+          autoAssign: RequestBodyFilters.BOOLEAN,
+          infiniteResources: RequestBodyFilters.BOOLEAN,
+          effectsEnabled: RequestBodyFilters.BOOLEAN,
+        },
+      },
+    ),
+    (request: Request, response: Response) => {
+      // Get data from the request body.
+      let gameConfigUpdate: Partial<TGameConfig> = {
+        accessibility: request.body.accessibility,
+        autoAssign: request.body.autoAssign,
+        infiniteResources: request.body.infiniteResources,
+        effectsEnabled: request.body.effectsEnabled,
+      }
+      // Get game.
+      let gameID: string = request.params.gameID
+      let game: GameServer | undefined = GameServer.get(gameID)
+
+      // Send 404 if game could not be found.
+      if (game === undefined) {
+        return response.sendStatus(404)
+      }
+      // If the game state is not 'unstarted', return
+      // 409 conflict.
+      if (game.state !== 'unstarted') {
+        return response.sendStatus(409)
+      }
+
+      // Update game configuration.
+      game.updateConfig(gameConfigUpdate)
+
+      // Return response.
       return response.sendStatus(200)
     },
   )
