@@ -26,7 +26,11 @@ const routerMap = (router: expressWs.Router, done: () => void) => {
     // to the array.
     for (let game of GameServer.getAll()) {
       if (game.config.accessibility === 'public' || hasAccess) {
-        games.push(game.toBasicJson())
+        games.push(
+          game.toBasicJson({
+            includeSensitiveData: user.isAuthorized(['WRITE']),
+          }),
+        )
       }
     }
 
@@ -213,6 +217,62 @@ const routerMap = (router: expressWs.Router, done: () => void) => {
 
       // Return response.
       return response.sendStatus(200)
+    },
+  )
+
+  // -- PUT | /api/v1/games/:gameID/kick/:participantID/ --
+  // This will kick a participant from a game.
+  router.put(
+    '/:gameID/kick/:participantID/',
+    auth({ permissions: ['WRITE'] }),
+    (request: Request, response: Response) => {
+      let gameID: string = request.params.gameID
+      let participantID: string = request.params.participantID
+      let game: GameServer | undefined = GameServer.get(gameID)
+
+      // Send 404 if game could not be found.
+      if (game === undefined) {
+        return response.sendStatus(404)
+      }
+
+      try {
+        // Kick participant.
+        game.kick(participantID)
+        // Return response.
+        return response.sendStatus(200)
+      } catch (code: any) {
+        // If the participant could not be kicked, return
+        // the error code.
+        return response.sendStatus(code)
+      }
+    },
+  )
+
+  // -- PUT | /api/v1/games/:gameID/ban/:participantID/ --
+  // This will ban a participant from a game.
+  router.put(
+    '/:gameID/ban/:participantID/',
+    auth({ permissions: ['WRITE'] }),
+    (request: Request, response: Response) => {
+      let gameID: string = request.params.gameID
+      let participantID: string = request.params.participantID
+      let game: GameServer | undefined = GameServer.get(gameID)
+
+      // Send 404 if game could not be found.
+      if (game === undefined) {
+        return response.sendStatus(404)
+      }
+
+      try {
+        // Ban participant.
+        game.ban(participantID)
+        // Return response.
+        return response.sendStatus(200)
+      } catch (code: any) {
+        // If the participant could not be banned, return
+        // the error code.
+        return response.sendStatus(code)
+      }
     },
   )
 

@@ -339,6 +339,15 @@ const useGlobalContextDefinition = (context: TGlobalContext) => {
                 }
               }, 3000)
             },
+            'kicked': () => {
+              handleError('You have been kicked from the game.')
+            },
+            'banned': () => {
+              handleError('You have been banned from the game.')
+            },
+            'game-destroyed': () => {
+              handleError('The game you were in has been deleted.')
+            },
             'error': ({ code, message }) => {
               if (code === ServerEmittedError.CODE_DUPLICATE_CLIENT) {
                 handleError({

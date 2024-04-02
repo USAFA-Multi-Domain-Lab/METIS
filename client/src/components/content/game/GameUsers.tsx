@@ -4,6 +4,7 @@ import GameClient from 'src/games'
 import { compute } from 'src/toolbox'
 import { useEventListener, useRequireSession } from 'src/toolbox/hooks'
 import ClientUser from 'src/users'
+import Prompt from '../communication/Prompt'
 import ButtonSvgPanel, {
   TValidPanelButton,
 } from '../user-controls/ButtonSvgPanel'
@@ -16,12 +17,80 @@ export default function GameUsers({ game }: TGameUsers_P): JSX.Element | null {
   /* -- STATE -- */
 
   const globalContext = useGlobalContext()
+  const { handleError, prompt, beginLoading, finishLoading } =
+    globalContext.actions
   const [session] = useRequireSession()
   const [server] = globalContext.server
   const [participants, setParticipants] = useState<ClientUser[]>(
     game.participants,
   )
   const [supervisors, setSupervisors] = useState<ClientUser[]>(game.supervisors)
+
+  /* -- FUNCTIONS -- */
+
+  /**
+   * Callback for button click to kick a participant.
+   * @param userID The user ID of the participant to kick.
+   */
+  const onClickKick = async (userID: string): Promise<void> => {
+    // Confirm the user wants to start the game.
+    let { choice } = await prompt(
+      `Are you sure you want to kick "${userID}"?`,
+      Prompt.ConfirmationChoices,
+    )
+
+    // If the user cancels, return.
+    if (choice === 'Cancel') {
+      return
+    }
+
+    try {
+      // Begin loading.
+      beginLoading(`Kicking "${userID}"...`)
+      // Kick the participant.
+      await game.$kick(userID)
+    } catch (error) {
+      handleError({
+        message: `Failed to kick "${userID}".`,
+        notifyMethod: 'bubble',
+      })
+    }
+
+    // Finish loading.
+    finishLoading()
+  }
+
+  /**
+   * Callback for button click to ban a participant.
+   * @param userID The user ID of the participant to ban.
+   */
+  const onClickBan = async (userID: string): Promise<void> => {
+    // Confirm the user wants to start the game.
+    let { choice } = await prompt(
+      `Are you sure you want to ban "${userID}"?`,
+      Prompt.ConfirmationChoices,
+    )
+
+    // If the user cancels, return.
+    if (choice === 'Cancel') {
+      return
+    }
+
+    try {
+      // Begin loading.
+      beginLoading(`Banning "${userID}"...`)
+      // Ban the participant.
+      await game.$ban(userID)
+    } catch (error) {
+      handleError({
+        message: `Failed to ban "${userID}".`,
+        notifyMethod: 'bubble',
+      })
+    }
+
+    // Finish loading.
+    finishLoading()
+  }
 
   /* -- HOOKS -- */
 
@@ -47,19 +116,25 @@ export default function GameUsers({ game }: TGameUsers_P): JSX.Element | null {
          * Buttons for SVG panel.
          */
         const buttons = compute((): TValidPanelButton[] => {
-          if (session.user.isAuthorized(['WRITE'])) {
+          // If the sessioned user is authorized to write
+          // and the user in question is not authorized to
+          // write, return the kick and ban buttons.
+          if (
+            session.user.isAuthorized(['WRITE']) &&
+            !user.isAuthorized('WRITE')
+          ) {
             return [
               {
                 icon: 'kick',
                 key: 'kick',
-                onClick: () => {},
+                onClick: () => onClickKick(user.userID),
                 tooltipDescription:
                   'Kick participant from the game (Can still choose to rejoin).',
               },
               {
                 icon: 'ban',
                 key: 'ban',
-                onClick: () => {},
+                onClick: () => onClickBan(user.userID),
                 tooltipDescription:
                   'Ban participant from the game (Cannot rejoin).',
               },

@@ -486,9 +486,9 @@ export default function HomePage(props: {}): JSX.Element | null {
         // Go to the game page with the new
         // game client.
         navigateTo('GamePage', { game })
-      } catch (error) {
+      } catch (error: any) {
         handleError({
-          message: 'Failed to launch game. Contact system administrator.',
+          message: error.message,
           notifyMethod: 'page',
         })
       }

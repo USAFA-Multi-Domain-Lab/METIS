@@ -175,6 +175,42 @@ export type TGenericServerEvents = {
     }
   >
   /**
+   * Occurs for a participant who has been kicked from the game.
+   */
+  'kicked': TConnectEvent<
+    'kicked',
+    {
+      /**
+       * The ID of the game from which the participant was kicked.
+       */
+      gameID: string
+    }
+  >
+  /**
+   * Occurs for a participant who has been banned from the game.
+   */
+  'banned': TConnectEvent<
+    'banned',
+    {
+      /**
+       * The ID of the game from which the participant was banned.
+       */
+      gameID: string
+    }
+  >
+  /**
+   * Occurs when the game has been destroyed while the participant was in it.
+   */
+  'game-destroyed': TConnectEvent<
+    'game-destroyed',
+    {
+      /**
+       * The ID of the game that was destroyed.
+       */
+      gameID: string
+    }
+  >
+  /**
    * Occurs when the server intenionally emits an error to client.
    */
   'error': {

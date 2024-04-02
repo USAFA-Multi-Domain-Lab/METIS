@@ -63,7 +63,7 @@ export default class GameServer extends Game<
     participants: Array<ClientConnection>,
     supervisors: Array<ClientConnection>,
   ) {
-    super(gameID, name, config, mission, participants, supervisors)
+    super(gameID, name, config, mission, participants, [], supervisors)
     this._state = 'unstarted'
     this._resources = config.infiniteResources
       ? Infinity
@@ -73,7 +73,11 @@ export default class GameServer extends Game<
   }
 
   // Implemented
-  public toJson(): TGameJson {
+  public toJson(options: TGameServerJsonOptions = {}): TGameJson {
+    // Extract options.
+    const { includeSensitiveData = false } = options
+
+    // Construct and return JSON.
     return {
       gameID: this.gameID,
       state: this.state,
@@ -85,6 +89,9 @@ export default class GameServer extends Game<
       participants: this.participants.map((client: ClientConnection) =>
         client.user.toJson(),
       ),
+      // Only include ban list if sensitive data
+      // is marked to be included.
+      banList: includeSensitiveData ? this.banList : [],
       supervisors: this.supervisors.map((client: ClientConnection) =>
         client.user.toJson(),
       ),
@@ -94,13 +101,18 @@ export default class GameServer extends Game<
   }
 
   // Implemented
-  public toBasicJson(): TGameBasicJson {
+  public toBasicJson(options: TGameServerJsonOptions = {}): TGameBasicJson {
+    // Extract options.
+    const { includeSensitiveData = false } = options
+
+    // Construct and return JSON.
     return {
       gameID: this.gameID,
       missionID: this.missionID,
       name: this.name,
       config: this.config,
       participantIDs: this.participants.map(({ userID }) => userID),
+      banList: includeSensitiveData ? this.banList : [],
       supervisorIDs: this.supervisors.map(({ userID }) => userID),
     }
   }
@@ -149,8 +161,21 @@ export default class GameServer extends Game<
    * Destroys the game.
    */
   public destroy(): void {
+    // Unregister game.
     this.unregister()
+    // Mark as destroyed.
     this._destroyed = true
+
+    // Grab all users.
+    let users: ClientConnection[] = this.users
+
+    // Clear all users.
+    this.clearUsers()
+
+    // Emit an event to all users that the game has been destroyed.
+    for (let user of users) {
+      user.emit('game-destroyed', { data: { gameID: this.gameID } })
+    }
   }
 
   /**
@@ -161,6 +186,11 @@ export default class GameServer extends Game<
    * @note Establishes listeners to handle events emitted by the user's web socket connection.
    */
   public join(client: ClientConnection, method: TGameJoinMethod): void {
+    // Throw error if the user is in the ban list.
+    if (this._banList.includes(client.userID)) {
+      throw ServerEmittedError.CODE_GAME_BANNED
+    }
+    // Throw error if the user is already in the game.
     if (this.isJoined(client)) {
       throw ServerEmittedError.CODE_ALREADY_IN_GAME
     }
@@ -234,6 +264,7 @@ export default class GameServer extends Game<
    * Handles a change in the game state.
    */
   public handleStateChange(): void {
+    // Emit an event to all users that the game state has changed.
     this.emitToUsers('game-state-change', {
       data: {
         state: this.state,
@@ -246,6 +277,11 @@ export default class GameServer extends Game<
         ),
       },
     })
+
+    // If the game has ended, then clear all users.
+    if (this.state === 'ended') {
+      this.clearUsers()
+    }
   }
 
   /**
@@ -282,6 +318,104 @@ export default class GameServer extends Game<
         }
       },
     )
+
+    // Handle state change.
+    this.handleStateChange()
+  }
+
+  /**
+   * Deletes all users from the game.
+   */
+  public clearUsers(): void {
+    // Call quit handler in the session of
+    // each participant.
+    this.participants.forEach((participant: ClientConnection) => {
+      participant.session.handleQuit()
+    })
+
+    // Remove game-specific listeners from
+    // each participant.
+    this.participants.forEach((participant: ClientConnection) => {
+      this.removeListeners(participant)
+    })
+
+    // Clear the participants list.
+    this._participants = []
+    // Clear the supervisors list.
+    this._supervisors = []
+  }
+
+  /**
+   * Kicks the given user from the game.
+   * @param participantID The ID of the participant to kick from the game.
+   */
+  public kick(participantID: string): void {
+    // Find the participant in the list, if present.
+    this._participants.forEach(
+      (participant: ClientConnection, index: number) => {
+        if (participant.userID === participantID) {
+          // If the participant is has supervisor permissions,
+          // then throw 403 forbidden error.
+          if (participant.user.isAuthorized(['WRITE'])) {
+            throw 403
+          }
+
+          // Remove the participant from the list.
+          this._participants.splice(index, 1)
+
+          // Remove game-specific listeners.
+          this.removeListeners(participant)
+
+          // Call quit handler in the session of
+          // the determined participant.
+          participant.session.handleQuit()
+
+          // Emit an event to the participant
+          // that they have been kicked.
+          participant.emit('kicked', { data: { gameID: this.gameID } })
+        }
+      },
+    )
+
+    // Handle state change.
+    this.handleStateChange()
+  }
+
+  /**
+   * Bans the given user from the game.
+   * @param participantID The ID of the participant to ban from the game.
+   * @throws The correct HTTP status code for any errors that occur.
+   */
+  public ban(participantID: string): void {
+    // Find the participant in the list, if present.
+    this._participants.forEach(
+      (participant: ClientConnection, index: number) => {
+        if (participant.userID === participantID) {
+          // If the participant is has supervisor permissions,
+          // then throw 403 forbidden error.
+          if (participant.user.isAuthorized(['WRITE'])) {
+            throw 403
+          }
+
+          // Remove the participant from the list.
+          this._participants.splice(index, 1)
+
+          // Remove game-specific listeners.
+          this.removeListeners(participant)
+
+          // Call quit handler in the session of
+          // the determined participant.
+          participant.session.handleQuit()
+
+          // Emit an event to the participant
+          // that they have been kicked.
+          participant.emit('banned', { data: { gameID: this.gameID } })
+        }
+      },
+    )
+
+    // Add the participant to the ban list.
+    this._banList.push(participantID)
 
     // Handle state change.
     this.handleStateChange()
@@ -564,13 +698,28 @@ export default class GameServer extends Game<
   }
 
   /**
-   * Destroys the session associated with the given user ID.
+   * Destroys the game associated with the given game ID.
+   * @param gameID The ID of the game to destroy.
    */
-  public static destroy(userID: string | undefined): void {
-    let game: GameServer | undefined = GameServer.get(userID)
+  public static destroy(gameID: string | undefined): void {
+    // Find the game.
+    let game: GameServer | undefined = GameServer.get(gameID)
 
-    if (game !== undefined) {
+    // If found...
+    if (gameID !== undefined && game !== undefined) {
+      // Destroy game.
       game.destroy()
     }
   }
+}
+
+/**
+ * Options for converting a game to JSON.
+ */
+export type TGameServerJsonOptions = {
+  /**
+   * Whether to include sensitive game data (ban list).
+   * @default false
+   */
+  includeSensitiveData?: boolean
 }

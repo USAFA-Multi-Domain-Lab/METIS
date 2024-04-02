@@ -200,7 +200,10 @@ export default class ClientConnection {
       if (game !== undefined) {
         this.emit('current-game', {
           data: {
-            game: game?.toJson() ?? null,
+            game:
+              game?.toJson({
+                includeSensitiveData: this.user.isAuthorized('WRITE'),
+              }) ?? null,
             joinMethod: game?.getJoinMethod(this) ?? null,
           },
           request: this.buildResponseReqData(event),
@@ -228,7 +231,9 @@ export default class ClientConnection {
         // Return the game as JSON.
         this.emit('game-joined', {
           data: {
-            game: game.toJson(),
+            game: game.toJson({
+              includeSensitiveData: this.user.isAuthorized('WRITE'),
+            }),
             joinMethod: event.data.joinMethod,
           },
           request: this.buildResponseReqData(event),

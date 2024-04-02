@@ -64,9 +64,10 @@ export default class GameClient extends Game<
     let supervisors: ClientUser[] = data.supervisors.map(
       (userData) => new ClientUser(userData),
     )
+    let banList: string[] = data.banList
     let config: TGameConfig = data.config
 
-    super(gameID, name, config, mission, participants, supervisors)
+    super(gameID, name, config, mission, participants, banList, supervisors)
     this.server = server
     this._joinMethod = joinMethod
     this._state = state
@@ -126,6 +127,7 @@ export default class GameClient extends Game<
         revealedOnly: true,
       }),
       participants: this.participants.map((user) => user.toJson()),
+      banList: this.banList,
       supervisors: this.supervisors.map((user) => user.toJson()),
       config: this.config,
       resources: this.resources === Infinity ? 'infinite' : this.resources,
@@ -140,6 +142,7 @@ export default class GameClient extends Game<
       name: this.name,
       config: this.config,
       participantIDs: this.participants.map(({ userID }) => userID),
+      banList: this.banList,
       supervisorIDs: this.supervisors.map(({ userID }) => userID),
     }
   }
@@ -385,6 +388,58 @@ export default class GameClient extends Game<
           return resolve()
         } catch (error) {
           console.error('Failed to end game.')
+          console.error(error)
+          return reject(error)
+        }
+      },
+    )
+  }
+
+  /**
+   * Kicks a participant from the game.
+   * @param userID The ID of the user to be kicked.
+   * @resolves When the user has been kicked.
+   * @rejects If the user failed to be kicked.
+   */
+  public async $kick(userID: string): Promise<void> {
+    return new Promise<void>(
+      async (
+        resolve: () => void,
+        reject: (error: any) => void,
+      ): Promise<void> => {
+        try {
+          // Call API to kick user.
+          await axios.put(`${Game.API_ENDPOINT}/${this.gameID}/kick/${userID}`)
+          // Resolve promise.
+          return resolve()
+        } catch (error) {
+          console.error('Failed to kick user.')
+          console.error(error)
+          return reject(error)
+        }
+      },
+    )
+  }
+
+  /**
+   * Bans a participant from the game.
+   * @param userID The ID of the user to be banned.
+   * @resolves When the user has been banned.
+   * @rejects If the user failed to be banned.
+   */
+  public async $ban(userID: string): Promise<void> {
+    return new Promise<void>(
+      async (
+        resolve: () => void,
+        reject: (error: any) => void,
+      ): Promise<void> => {
+        try {
+          // Call API to ban user.
+          await axios.put(`${Game.API_ENDPOINT}/${this.gameID}/ban/${userID}`)
+          // Resolve promise.
+          return resolve()
+        } catch (error) {
+          console.error('Failed to ban user.')
           console.error(error)
           return reject(error)
         }

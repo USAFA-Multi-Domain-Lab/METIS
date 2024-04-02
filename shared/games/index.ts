@@ -57,6 +57,17 @@ export default abstract class Game<
   }
 
   /**
+   * IDs of participants who have been banned from the game.
+   */
+  protected _banList: string[]
+  /**
+   * IDs of participants who have been banned from the game.
+   */
+  public get banList(): string[] {
+    return [...this._banList]
+  }
+
+  /**
    * The participants of the game executing the mission.
    */
   protected _supervisors: TUser[]
@@ -116,6 +127,7 @@ export default abstract class Game<
     config: Partial<TGameConfig>,
     mission: TMission,
     participants: TUser[],
+    banList: string[],
     supervisors: TUser[],
   ) {
     this.gameID = gameID
@@ -127,6 +139,7 @@ export default abstract class Game<
     this.mission = mission
     this._state = 'unstarted'
     this._participants = participants
+    this._banList = banList
     this._supervisors = supervisors
     this.mapActions()
   }
@@ -271,6 +284,10 @@ export type TGameJson = {
    */
   participants: TCommonUserJson[]
   /**
+   * The IDs of participants who have been banned from the game.
+   */
+  banList: string[]
+  /**
    * The supervisors joined in the game.
    */
   supervisors: TCommonUserJson[]
@@ -304,6 +321,11 @@ export type TGameBasicJson = {
    * The IDs of the participants of the game.
    */
   participantIDs: string[]
+  /**
+   * The IDs of the participants banned from the game.
+   * @note Empty if the user does not have supervisor permissions.
+   */
+  banList: string[]
   /**
    * The IDs of the supervisors of the game.
    */
