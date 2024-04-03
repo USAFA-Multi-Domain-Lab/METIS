@@ -263,6 +263,7 @@ export default class GameClient extends Game<
           onResponse: (event) => {
             switch (event.method) {
               case 'game-quit':
+                this.removeListeners()
                 resolve()
                 break
               case 'error':
