@@ -1,117 +1,284 @@
 import { useEffect, useState } from 'react'
+import { useGlobalContext } from 'src/context'
+import { compute } from 'src/toolbox'
+import { usePostInitEffect } from 'src/toolbox/hooks'
+import { ReactSetter } from 'src/toolbox/types'
 import ClientUser from 'src/users'
 import { TMetisSession } from '../../../../../shared/sessions'
 import UserRole from '../../../../../shared/users/roles'
-import { Detail, DetailDropDown } from '../form/Form'
-import Toggle from '../user-controls/Toggle'
+import { DetailDropDown, DetailString, DetailToggle } from '../form/Form'
 import './CreateUserEntry.scss'
 
 /**
- * This will render the forms for creating a new user.
+ * This will render the form for creating a new user.
  */
-export default function CreateUserEntry(props: {
-  user: ClientUser
-  userEmptyStringArray: string[]
-  usernameAlreadyExists: boolean
-  session: NonNullable<TMetisSession<ClientUser>>
-  setUserEmptyStringArray: (userEmptyString: string[]) => void
-  handleChange: () => void
-}): JSX.Element | null {
-  /* -- COMPONENT PROPERTIES -- */
+export default function CreateUserEntry({
+  user,
+  userEmptyStringArray,
+  usernameAlreadyExists,
+  session,
+  setUserEmptyStringArray,
+  handleChange,
+}: TCreateUserEntry_P): JSX.Element | null {
+  /* -- GLOBAL CONTEXT -- */
+  const { forceUpdate } = useGlobalContext().actions
 
-  let user: ClientUser = props.user
-  let userEmptyStringArray: string[] = props.userEmptyStringArray
-  let usernameAlreadyExists: boolean = props.usernameAlreadyExists
-  let session: TMetisSession<ClientUser> = props.session
-  let duplicateUsernameErrorMessage: string = 'Username already exists.'
-  let setUserEmptyStringArray = props.setUserEmptyStringArray
-  let handleChange = props.handleChange
-
-  /* -- COMPONENT STATE -- */
-
-  const [deliverUsernameError, setDeliverUsernameError] =
-    useState<boolean>(false)
-  const [deliverFirstNameError, setDeliverFirstNameError] =
-    useState<boolean>(false)
-  const [deliverLastNameError, setDeliverLastNameError] =
-    useState<boolean>(false)
-  const [deliverPassword1Error, setDeliverPassword1Error] =
-    useState<boolean>(false)
-  const [deliverPassword2Error, setDeliverPassword2Error] =
-    useState<boolean>(false)
-  const [usernameErrorMessage, setUsernameErrorMessage] = useState<string>(
-    'At least one character is required here.',
-  )
-  const [firstNameErrorMessage, setFirstNameErrorMessage] = useState<string>(
-    'At least one character is required here.',
-  )
-  const [lastNameErrorMessage, setLastNameErrorMessage] = useState<string>(
-    'At least one character is required here.',
-  )
-  const [password1ErrorMessage, setPassword1ErrorMessage] = useState<string>(
-    'At least one character is required here.',
-  )
-  const [password2ErrorMessage, setPassword2ErrorMessage] = useState<string>(
-    'At least one character is required here.',
-  )
-  const [userId, setUserId] = useState<string | null>(user.userID)
-  const [password1, setPassword1] = useState<string | null>(
-    user.password1 || null,
-  )
-  const [password2, setPassword2] = useState<string | null>(
-    user.password2 || null,
+  /* -- STATE -- */
+  const [handleUsernameError, setHandleUsernameError] =
+    useState<THandleOnBlur>('deliverError')
+  const [handleFirstNameError, setHandleFirstNameError] =
+    useState<THandleOnBlur>('deliverError')
+  const [handleLastNameError, setHandleLastNameError] =
+    useState<THandleOnBlur>('deliverError')
+  const [handlePassword1Error, setHandlePassword1Error] =
+    useState<THandleOnBlur>('deliverError')
+  const [handlePassword2Error, setHandlePassword2Error] =
+    useState<THandleOnBlur>('deliverError')
+  const [usernameErrorMessage, setUsernameErrorMessage] = useState<string>()
+  const [firstNameErrorMessage, setFirstNameErrorMessage] = useState<string>()
+  const [lastNameErrorMessage, setLastNameErrorMessage] = useState<string>()
+  const [password1ErrorMessage, setPassword1ErrorMessage] = useState<string>()
+  const [password2ErrorMessage, setPassword2ErrorMessage] = useState<string>()
+  const [userId, setUserId] = useState<string>(user.userID)
+  const [role, setRole] = useState<UserRole>(user.role)
+  const [firstName, setFirstName] = useState<string>(user.firstName)
+  const [lastName, setLastName] = useState<string>(user.lastName)
+  const [password1, setPassword1] = useState<string>(user.password1 || '')
+  const [password2, setPassword2] = useState<string>(user.password2 || '')
+  const [needsPasswordReset, setNeedsPasswordReset] = useState<boolean>(
+    user.needsPasswordReset,
   )
 
-  /* -- COMPONENT EFFECTS -- */
+  /* -- COMPUTED -- */
 
+  /**
+   * The current user in session.
+   */
+  const currentUser: ClientUser = compute(() => session.user)
+  /**
+   * The label for the password field.
+   */
+  const passwordLabel: string = compute(() =>
+    user.needsPasswordReset ? 'Temporary Password' : 'Password',
+  )
+  /**
+   * The label for the confirm password field.
+   */
+  const confirmPasswordLabel: string = compute(() =>
+    user.needsPasswordReset ? 'Confirm Temporary Password' : 'Confirm Password',
+  )
+  /**
+   * List of roles to select from.
+   */
+  const listOfRoles: UserRole[] = compute(() => {
+    // Default list of roles to select from.
+    let roles: UserRole[] = [UserRole.AVAILABLE_ROLES.student]
+
+    // If the current user in session has
+    // proper authorization and their role
+    // is an admin, then they are allowed
+    // to create users with any role.
+    if (
+      currentUser.isAuthorized(['READ', 'WRITE', 'DELETE']) &&
+      currentUser.role.id === 'admin'
+    ) {
+      roles = [
+        UserRole.AVAILABLE_ROLES.student,
+        UserRole.AVAILABLE_ROLES.instructor,
+        UserRole.AVAILABLE_ROLES.admin,
+        UserRole.AVAILABLE_ROLES.revokedAccess,
+      ]
+    }
+
+    return roles
+  })
+
+  /* -- EFFECTS -- */
+
+  // Sync the component state with the user ID property.
+  usePostInitEffect(() => {
+    user.userID = userId
+
+    if (userId !== '' && user.hasValidUsername) {
+      removeUserEmptyString('userID')
+      setHandleUsernameError('none')
+      handleChange()
+    }
+
+    if (userId === '' && !user.hasValidUsername) {
+      setHandleUsernameError('deliverError')
+      setUserEmptyStringArray([...userEmptyStringArray, `field=userID`])
+      setUsernameErrorMessage('At least one character is required here.')
+    }
+
+    if (userId !== '' && !user.hasValidUsername) {
+      setHandleUsernameError('deliverError')
+      setUsernameErrorMessage(
+        'Usernames must be between 5 and 25 characters long and can only contain letters, numbers, and the following special characters: - _ .',
+      )
+    }
+
+    forceUpdate()
+  }, [userId])
+
+  // Sync the component state with the user role property.
+  usePostInitEffect(() => {
+    user.role = role
+
+    forceUpdate()
+    handleChange()
+  }, [role])
+
+  // Sync the component state with the user first name property.
+  usePostInitEffect(() => {
+    user.firstName = firstName
+
+    if (firstName !== '' && user.hasValidFirstName) {
+      removeUserEmptyString('firstName')
+      setHandleFirstNameError('none')
+      handleChange()
+    }
+
+    if (firstName === '') {
+      setHandleFirstNameError('deliverError')
+      setFirstNameErrorMessage('At least one character is required here.')
+      setUserEmptyStringArray([...userEmptyStringArray, `field=firstName`])
+    }
+
+    if (!user.hasValidFirstName && firstName !== '') {
+      setHandleFirstNameError('deliverError')
+      setFirstNameErrorMessage(
+        'First names must be between 1 and 50 characters long and can only contain letters.',
+      )
+      setUserEmptyStringArray([...userEmptyStringArray, `field=firstName`])
+    }
+
+    forceUpdate()
+  }, [firstName])
+
+  // Sync the component state with the user last name property.
+  usePostInitEffect(() => {
+    user.lastName = lastName
+
+    if (lastName !== '' && user.hasValidLastName) {
+      removeUserEmptyString('lastName')
+      setHandleLastNameError('none')
+      handleChange()
+    }
+
+    if (lastName === '') {
+      setHandleLastNameError('deliverError')
+      setLastNameErrorMessage('At least one character is required here.')
+      setUserEmptyStringArray([...userEmptyStringArray, `field=lastName`])
+    }
+
+    if (!user.hasValidLastName && lastName !== '') {
+      setHandleLastNameError('deliverError')
+      setLastNameErrorMessage(
+        'Last names must be between 1 and 50 characters long and can only contain letters.',
+      )
+      setUserEmptyStringArray([...userEmptyStringArray, `field=lastName`])
+    }
+
+    forceUpdate()
+  }, [lastName])
+
+  // Sync the component state with the user password1 property.
+  usePostInitEffect(() => {
+    user.password1 = password1
+
+    if (user.hasValidPassword1 && password1 !== '') {
+      removeUserEmptyString('password1')
+      setHandlePassword1Error('none')
+      handleChange()
+    }
+
+    if (password1 === '') {
+      setHandlePassword1Error('deliverError')
+      setPassword1ErrorMessage('At least one character is required here.')
+      setUserEmptyStringArray([...userEmptyStringArray, `field=password1`])
+    }
+
+    if (!user.hasValidPassword1 && password1 !== '') {
+      setHandlePassword1Error('deliverError')
+      setPassword1ErrorMessage(
+        'Password must be between 8 and 50 characters and cannot contain spaces.',
+      )
+    }
+
+    // If the user has entered a password in the second password field,
+    // check to see if the two passwords match.
+    if (!user.passwordsMatch && user.password2) {
+      setHandlePassword2Error('deliverError')
+      setPassword2ErrorMessage('Passwords must match.')
+    }
+    // If the user has entered a password in the second password field
+    // and the two passwords match, remove the error.
+    else if (user.passwordsMatch && user.password2) {
+      setHandlePassword2Error('none')
+    }
+
+    forceUpdate()
+  }, [password1])
+
+  // Sync the component state with the user password2 property.
+  usePostInitEffect(() => {
+    user.password2 = password2
+
+    if (user.hasValidPassword2 && password2 !== '') {
+      removeUserEmptyString('password2')
+      setHandlePassword2Error('none')
+      handleChange()
+    }
+
+    if (!user.hasValidPassword2 && password2 !== '') {
+      setHandlePassword2Error('deliverError')
+      setPassword2ErrorMessage(
+        'Password must be between 8 and 50 characters and cannot contain spaces.',
+      )
+    }
+
+    if (password2 === '') {
+      setHandlePassword2Error('deliverError')
+      setPassword2ErrorMessage('At least one character is required here.')
+      setUserEmptyStringArray([...userEmptyStringArray, `field=password2`])
+    }
+
+    if (user.hasValidPassword2 && password2 !== '' && !user.passwordsMatch) {
+      setHandlePassword2Error('deliverError')
+      setPassword2ErrorMessage('Passwords must match.')
+    }
+
+    forceUpdate()
+  }, [password2])
+
+  // Sync the component state with the user needs password reset property.
+  usePostInitEffect(() => {
+    user.needsPasswordReset = needsPasswordReset
+    forceUpdate()
+    handleChange()
+  }, [needsPasswordReset])
+
+  // If the user has entered a username,
+  // check to see if it already exists.
   useEffect(() => {
-    // If the user has entered a username, check to see if it already exists.
     if (usernameAlreadyExists) {
-      setUsernameErrorMessage(duplicateUsernameErrorMessage)
-      setDeliverUsernameError(true)
+      setUsernameErrorMessage('Username already exists.')
+      setHandleUsernameError('deliverError')
     }
   }, [usernameAlreadyExists])
 
-  /* -- COMPONENT FUNCTIONS -- */
+  /* -- FUNCTIONS -- */
 
+  /**
+   * This is called to remove a field from the userEmptyStringArray.
+   */
   const removeUserEmptyString = (field: string) => {
     userEmptyStringArray.map((userEmptyString: string, index: number) => {
       if (userEmptyString === `field=${field}`) {
         userEmptyStringArray.splice(index, 1)
       }
     })
-  }
-
-  /* -- PRE-RENDER PROCESSING -- */
-
-  // Grab the current user from the session.
-  let { user: currentUser } = session
-
-  let passwordLabel: string = 'Password'
-  let confirmPasswordLabel: string = 'Confirm Password'
-
-  // Default list of roles to select from.
-  let listOfRoles: UserRole[] = [UserRole.AVAILABLE_ROLES.student]
-
-  // If the current user in session has
-  // proper authorization and their role
-  // is an admin, then they are allowed
-  // to create users with any role.
-  if (
-    currentUser.isAuthorized(['READ', 'WRITE', 'DELETE']) &&
-    currentUser.role.id === 'admin'
-  ) {
-    listOfRoles = [
-      UserRole.AVAILABLE_ROLES.student,
-      UserRole.AVAILABLE_ROLES.instructor,
-      UserRole.AVAILABLE_ROLES.admin,
-      UserRole.AVAILABLE_ROLES.revokedAccess,
-    ]
-  }
-
-  if (user.needsPasswordReset) {
-    passwordLabel = 'Temporary Password'
-    confirmPasswordLabel = 'Confirm Temporary Password'
   }
 
   /* -- RENDER -- */
@@ -122,218 +289,105 @@ export default function CreateUserEntry(props: {
       onSubmit={(event) => event.preventDefault()}
       autoComplete='off'
     >
-      <Detail
+      <DetailString
+        fieldType='required'
+        handleOnBlur={handleUsernameError}
         label='Username'
-        currentValue={userId}
-        deliverValue={(userID: string) => {
-          user.userID = userID
-          setUserId(userID)
-
-          if (userID !== '' && user.hasValidUsername) {
-            removeUserEmptyString('userID')
-            setDeliverUsernameError(false)
-            handleChange()
-          }
-
-          if (userID === '' && !user.hasValidUsername) {
-            setDeliverUsernameError(true)
-            setUserEmptyStringArray([...userEmptyStringArray, `field=userID`])
-            setUsernameErrorMessage('At least one character is required here.')
-          }
-
-          if (userID !== '' && !user.hasValidUsername) {
-            setDeliverUsernameError(true)
-            setUsernameErrorMessage(
-              'Usernames must be between 5 and 25 characters long and can only contain letters, numbers, and the following special characters: - _ .',
-            )
-          }
-        }}
-        emptyStringAllowed={false}
-        deliverError={deliverUsernameError}
+        stateValue={userId}
+        setState={setUserId}
         errorMessage={usernameErrorMessage}
         placeholder='Enter a username here...'
       />
       <DetailDropDown<UserRole>
+        fieldType='required'
         label='Role'
         options={listOfRoles}
-        currentValue={user.role}
+        stateValue={role}
+        setState={setRole}
         isExpanded={false}
         renderDisplayName={(role: UserRole) => role.name}
-        deliverValue={(role: UserRole) => {
-          user.role = role
-          handleChange()
-        }}
       />
-      <Detail
+      <DetailString
+        fieldType='required'
+        handleOnBlur={handleFirstNameError}
         label='First Name'
-        currentValue={user.firstName}
-        deliverValue={(firstName: string) => {
-          user.firstName = firstName
-
-          if (firstName !== '' && user.hasValidFirstName) {
-            removeUserEmptyString('firstName')
-            setDeliverFirstNameError(false)
-            handleChange()
-          }
-
-          if (firstName === '') {
-            setDeliverFirstNameError(true)
-            setFirstNameErrorMessage('At least one character is required here.')
-            setUserEmptyStringArray([
-              ...userEmptyStringArray,
-              `field=firstName`,
-            ])
-          }
-
-          if (!user.hasValidFirstName && firstName !== '') {
-            setDeliverFirstNameError(true)
-            setFirstNameErrorMessage(
-              'First names must be between 1 and 50 characters long and can only contain letters.',
-            )
-            setUserEmptyStringArray([
-              ...userEmptyStringArray,
-              `field=firstName`,
-            ])
-          }
-        }}
-        emptyStringAllowed={false}
-        deliverError={deliverFirstNameError}
+        stateValue={firstName}
+        setState={setFirstName}
         errorMessage={firstNameErrorMessage}
         placeholder='Enter a first name here...'
       />
-      <Detail
+      <DetailString
+        fieldType='required'
+        handleOnBlur={handleLastNameError}
         label='Last Name'
-        currentValue={user.lastName}
-        deliverValue={(lastName: string) => {
-          user.lastName = lastName
-
-          if (lastName !== '' && user.hasValidLastName) {
-            removeUserEmptyString('lastName')
-            setDeliverLastNameError(false)
-            handleChange()
-          }
-
-          if (lastName === '') {
-            setDeliverLastNameError(true)
-            setLastNameErrorMessage('At least one character is required here.')
-            setUserEmptyStringArray([...userEmptyStringArray, `field=lastName`])
-          }
-
-          if (!user.hasValidLastName && lastName !== '') {
-            setDeliverLastNameError(true)
-            setLastNameErrorMessage(
-              'Last names must be between 1 and 50 characters long and can only contain letters.',
-            )
-            setUserEmptyStringArray([...userEmptyStringArray, `field=lastName`])
-          }
-        }}
-        emptyStringAllowed={false}
-        deliverError={deliverLastNameError}
+        stateValue={lastName}
+        setState={setLastName}
         errorMessage={lastNameErrorMessage}
         placeholder='Enter a last name here...'
       />
-      <Detail
+      <DetailString
+        fieldType='required'
+        handleOnBlur={handlePassword1Error}
         label={passwordLabel}
-        currentValue={password1}
-        deliverValue={(password: string) => {
-          user.password1 = password
-          setPassword1(password)
-
-          if (user.hasValidPassword1 && password !== '') {
-            removeUserEmptyString('password1')
-            setDeliverPassword1Error(false)
-            handleChange()
-          }
-
-          if (password === '') {
-            setDeliverPassword1Error(true)
-            setPassword1ErrorMessage('At least one character is required here.')
-            setUserEmptyStringArray([
-              ...userEmptyStringArray,
-              `field=password1`,
-            ])
-          }
-
-          if (!user.hasValidPassword1 && password !== '') {
-            setDeliverPassword1Error(true)
-            setPassword1ErrorMessage(
-              'Password must be between 8 and 50 characters and cannot contain spaces.',
-            )
-          }
-
-          // If the user has entered a password in the second password field,
-          // check to see if the two passwords match.
-          if (!user.passwordsMatch && user.password2) {
-            setDeliverPassword2Error(true)
-            setPassword2ErrorMessage('Passwords must match.')
-          }
-          // If the user has entered a password in the second password field
-          // and the two passwords match, remove the error.
-          else if (user.passwordsMatch && user.password2) {
-            setDeliverPassword2Error(false)
-          }
-        }}
-        emptyStringAllowed={false}
-        deliverError={deliverPassword1Error}
+        stateValue={password1}
+        setState={setPassword1}
         errorMessage={password1ErrorMessage}
         inputType='password'
         placeholder='Enter a password here...'
       />
 
-      <Detail
+      <DetailString
+        fieldType='required'
+        handleOnBlur={handlePassword2Error}
         label={confirmPasswordLabel}
-        currentValue={password2}
-        deliverValue={(password: string) => {
-          user.password2 = password
-          setPassword2(password)
-
-          if (user.hasValidPassword2 && password !== '') {
-            removeUserEmptyString('password2')
-            setDeliverPassword2Error(false)
-            handleChange()
-          }
-
-          if (!user.hasValidPassword2 && password !== '') {
-            setDeliverPassword2Error(true)
-            setPassword2ErrorMessage(
-              'Password must be between 8 and 50 characters and cannot contain spaces.',
-            )
-          }
-
-          if (password === '') {
-            setDeliverPassword2Error(true)
-            setPassword2ErrorMessage('At least one character is required here.')
-            setUserEmptyStringArray([
-              ...userEmptyStringArray,
-              `field=password2`,
-            ])
-          }
-
-          if (
-            user.hasValidPassword2 &&
-            password !== '' &&
-            !user.passwordsMatch
-          ) {
-            setDeliverPassword2Error(true)
-            setPassword2ErrorMessage('Passwords must match.')
-          }
-        }}
-        emptyStringAllowed={false}
-        deliverError={deliverPassword2Error}
+        stateValue={password2}
+        setState={setPassword2}
         errorMessage={password2ErrorMessage}
         inputType='password'
         placeholder='Confirm your password here...'
       />
-      <div className='NeedsPasswordResetContainer'>
-        <div className='Title'>Needs Password Reset:</div>
-        <Toggle
-          currentValue={user.needsPasswordReset}
-          deliverValue={() => {
-            user.needsPasswordReset = !user.needsPasswordReset
-            handleChange()
-          }}
-        />
-      </div>
+      <DetailToggle
+        label='Needs Password Reset'
+        stateValue={needsPasswordReset}
+        setState={setNeedsPasswordReset}
+      />
     </form>
   )
 }
+
+/* ---------------------------- TYPES FOR CREATE USER ENTRY ---------------------------- */
+
+/**
+ * Props for CreateUserEntry component.
+ */
+export type TCreateUserEntry_P = {
+  /**
+   * The user to be created.
+   */
+  user: ClientUser
+  /**
+   * An array of fields with empty strings.
+   */
+  userEmptyStringArray: string[]
+  /**
+   * Whether or not the username already exists.
+   */
+  usernameAlreadyExists: boolean
+  /**
+   * The session for the user.
+   */
+  session: NonNullable<TMetisSession<ClientUser>>
+  /**
+   * A function that will update the array of fields with empty strings.
+   */
+  setUserEmptyStringArray: ReactSetter<string[]>
+  /**
+   * A function that will be called when a change has been made.
+   */
+  handleChange: () => void
+}
+
+/**
+ * The type of handleOnBlur.
+ */
+type THandleOnBlur = 'deliverError' | 'none'

@@ -14,7 +14,7 @@ import ClientUser from 'src/users'
 import { DefaultLayout } from '.'
 import { TGameBasicJson } from '../../../../shared/games'
 import Tooltip from '../content/communication/Tooltip'
-import { Detail } from '../content/form/Form'
+import { DetailString } from '../content/form/Form'
 import List, { ESortByMethod } from '../content/general-layout/List'
 import { LogoutLink } from '../content/general-layout/Navigation'
 import ButtonSvg from '../content/user-controls/ButtonSvg'
@@ -614,12 +614,12 @@ export default function HomePage(props: {}): JSX.Element | null {
         <div className='ListActions'>
           <div className='ManualJoin'>
             <div className='Label'>Enter game ID:</div>
-            <Detail
+            <DetailString
+              fieldType='optional'
+              handleOnBlur='none'
               label=''
-              currentValue={manualJoinGameId}
-              deliverValue={(value) => {
-                setManualJoinGameId(value)
-              }}
+              stateValue={manualJoinGameId}
+              setState={setManualJoinGameId}
               uniqueLabelClassName={'Hidden'}
             />
             <ButtonText

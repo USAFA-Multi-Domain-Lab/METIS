@@ -14,45 +14,25 @@ import {
 } from '../content/general-layout/Navigation'
 import './UserPage.scss'
 
-export interface IUserPage extends TPage_P {
-  // If this is null, then a new user is being created.
-  userID: string | null
-}
-
-export type TUserFormPurpose = 'Create' | 'Update'
-
 export default function UserPage(props: IUserPage): JSX.Element | null {
   /* -- GLOBAL CONTEXT -- */
-
   const globalContext = useGlobalContext()
+  const { beginLoading, finishLoading, handleError, notify } =
+    globalContext.actions
 
-  const {
-    beginLoading,
-    finishLoading,
-    handleError,
-    notify,
-    navigateTo,
-    confirm,
-    logout,
-  } = globalContext.actions
-
-  /* -- COMPONENT STATE -- */
+  /* -- STATE -- */
   const [existsInDatabase, setExistsInDatabase] = useState<boolean>(false)
   const [user, setUser] = useState<ClientUser>(
     new ClientUser({}, { passwordIsRequired: true }),
   )
   const [areUnsavedChanges, setAreUnsavedChanges] = useState<boolean>(false)
-  const [forcedUpdateCounter, setForcedUpdateCounter] = useState<number>(0)
-  const [userEmptyStringArray, setUserEmptyStringArray] = useState<
-    Array<string>
-  >([])
+  const [userEmptyStringArray, setUserEmptyStringArray] = useState<string[]>([])
   const [usernameAlreadyExists, setUsernameAlreadyExists] =
     useState<boolean>(false)
 
-  /* -- COMPONENT EFFECTS -- */
+  /* -- EFFECTS -- */
 
-  // This will handle the mount of the
-  // component.
+  // componentDidMount
   const [mountHandled] = useMountHandler(async (done) => {
     let userID: string | null = props.userID
     let existsInDatabase: boolean = userID !== null
@@ -97,17 +77,70 @@ export default function UserPage(props: IUserPage): JSX.Element | null {
   /**
    * Props for navigation.
    */
-  const navigation = compute(
+  const navigation: TNavigation = compute(
     (): TNavigation => ({
       links: [HomeLink(globalContext), LogoutLink(globalContext)],
       boxShadow: 'alt-7',
     }),
   )
+  /**
+   * Determines if the user form has any fields
+   * with empty strings.
+   */
+  const isEmptyString: boolean = compute(() => userEmptyStringArray.length > 0)
+  /**
+   * The purpose of the user form.
+   */
+  const userFormPurpose: TUserFormPurpose = compute(() => {
+    // If the user does not exist in the database
+    // and the password is required, then the form
+    // is for creating a new user.
+    if (!existsInDatabase && user.passwordIsRequired) {
+      return 'Create'
+    }
+    // Or, if the user exists in the database
+    // and the password is not required, then
+    // the form is for updating an existing user.
+    else if (existsInDatabase && !user.passwordIsRequired) {
+      return 'Update'
+    }
+    // Otherwise, throw an error.
+    else {
+      throw new Error(
+        `Purpose for form page could not be determined.\nExists in database: "${existsInDatabase}"\nPassword is required: "${user.passwordIsRequired}"`,
+      )
+    }
+  })
+  /**
+   * This is used to gray out the save button if there are
+   * no unsaved changes or if there are empty strings or if
+   * the user does not have permission to save.
+   */
+  const grayOutSaveButton: boolean = compute(
+    () => !areUnsavedChanges || isEmptyString || !user.canSave,
+  )
+  /**
+   * The class name for the save button.
+   */
+  const saveButtonClassName: string = compute(() => {
+    // Create a default list of class names.
+    let classList: string[] = ['Button']
 
-  /* -- COMPONENT FUNCTIONS -- */
+    // If the save button should be grayed out,
+    // add the 'Disabled' class name.
+    if (grayOutSaveButton) {
+      classList.push('Disabled')
+    }
 
-  // This is called to save any changes
-  // made.
+    // Return the class names as a single string.
+    return classList.join(' ')
+  })
+
+  /* -- FUNCTIONS -- */
+
+  /**
+   * This is called to save any changes made.
+   */
   const save = async (): Promise<void> => {
     if (areUnsavedChanges) {
       setAreUnsavedChanges(false)
@@ -150,86 +183,17 @@ export default function UserPage(props: IUserPage): JSX.Element | null {
     }
   }
 
-  // This will redirect the user to the
-  // home page.
-  const goHome = (): void => {
-    if (!areUnsavedChanges) {
-      navigateTo('HomePage', {})
-    } else {
-      confirm(
-        'You have unsaved changes. What do you want to do with them?',
-        async (concludeAction: () => void) => {
-          try {
-            await save()
-            navigateTo('HomePage', {})
-            concludeAction()
-          } catch (error: any) {
-            concludeAction()
-          }
-        },
-        {
-          handleAlternate: (concludeAction: () => void) => {
-            navigateTo('HomePage', {})
-            concludeAction()
-          },
-          pendingMessageUponConfirm: 'Saving...',
-          pendingMessageUponAlternate: 'Discarding...',
-          buttonConfirmText: 'Save',
-          buttonAlternateText: 'Discard',
-        },
-      )
-    }
-  }
-
-  // Forces a rerender.
-  const forceUpdate = (): void => {
-    setForcedUpdateCounter(forcedUpdateCounter + 1)
-  }
-
-  // This is called when a change is
-  // made that would require saving.
+  /**
+   * This is called when a change is made that would require saving.
+   */
   const handleChange = (): void => {
     setAreUnsavedChanges(true)
-    forceUpdate()
   }
 
-  /* -- RENDER -- */
-
-  let isEmptyString: boolean = userEmptyStringArray.length > 0
-  let userFormPurpose: TUserFormPurpose
-
-  // This will gray out the save button
-  // if there are no unsaved changes or
-  // if there are empty strings or if
-  // the user does not have permission
-  // to save.
-  let grayOutSaveButton: boolean =
-    !areUnsavedChanges || isEmptyString || !user.canSave
-
-  let saveButtonClassName: string = 'Button'
-
-  if (grayOutSaveButton) {
-    saveButtonClassName += ' Disabled'
-  }
-
-  // Determine user form purpose.
-  if (!existsInDatabase && user.passwordIsRequired) {
-    userFormPurpose = 'Create'
-  } else if (existsInDatabase && !user.passwordIsRequired) {
-    userFormPurpose = 'Update'
-  } else {
-    throw new Error(
-      `Purpose for form page could not be determined.\nExists in database: "${existsInDatabase}"\nPassword is required: "${user.passwordIsRequired}"`,
-    )
-  }
-
-  // Require mount to be handled and for
-  // the current user to have restricted
-  // access.
-  if (!mountHandled || !currentUser.isAuthorized(['READ', 'WRITE', 'DELETE'])) {
-    return null
-  }
-
+  /**
+   * This will render the user entry form
+   * based on the user form purpose.
+   */
   const renderUserEntry = (): JSX.Element | null => {
     if (userFormPurpose === 'Create') {
       return (
@@ -256,18 +220,39 @@ export default function UserPage(props: IUserPage): JSX.Element | null {
     }
   }
 
-  return (
-    <div className='UserPage Page'>
-      <DefaultLayout navigation={navigation}>
-        <div className='Form'>
-          {renderUserEntry()}
-          <div className='ButtonContainer'>
-            <div className={saveButtonClassName} onClick={() => save()}>
-              Save
+  /* -- RENDER -- */
+
+  if (mountHandled && currentUser.isAuthorized(['READ', 'WRITE', 'DELETE'])) {
+    return (
+      <div className='UserPage Page'>
+        <DefaultLayout navigation={navigation}>
+          <div className='Form'>
+            {renderUserEntry()}
+            <div className='ButtonContainer'>
+              <div className={saveButtonClassName} onClick={() => save()}>
+                Save
+              </div>
             </div>
           </div>
-        </div>
-      </DefaultLayout>
-    </div>
-  )
+        </DefaultLayout>
+      </div>
+    )
+  } else {
+    return null
+  }
 }
+
+/* ---------------------------- TYPES FOR USER PAGE ---------------------------- */
+
+/**
+ * Props for the UserPage component.
+ */
+export interface IUserPage extends TPage_P {
+  // If this is null, then a new user is being created.
+  userID: string | null
+}
+
+/**
+ * Types used to render the user form.
+ */
+export type TUserFormPurpose = 'Create' | 'Update'

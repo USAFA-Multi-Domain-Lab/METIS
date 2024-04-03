@@ -24,7 +24,7 @@
     .Label {
       user-select: none;
       width: 100%;
-      font-size: 12.5px;
+      font-size: 0.78em;
 
       &.Error {
         color: $color-error-alt;
@@ -282,20 +282,23 @@
   &.DetailToggle {
     display: grid;
     align-items: center;
-    grid-template-columns: auto 60px;
+    grid-template-columns: 1fr auto;
     @include fieldDimensions();
     margin: 20px 8% 0;
     width: 84%;
 
-    .TitleContainer {
-      grid-template-columns: auto;
-      margin: 0;
+    .Label {
+      font-size: 0.78em;
     }
 
     .Field {
       border: none;
       padding: 0;
       margin: 0 0 0 15px;
+    }
+
+    .FieldErrorMessage {
+      grid-column: span 2;
     }
   }
 }

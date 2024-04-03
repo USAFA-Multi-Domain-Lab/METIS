@@ -1,91 +1,142 @@
+import { useState } from 'react'
 import Tooltip from 'src/components/content/communication/Tooltip'
-import TargetEnvEntry from 'src/components/content/edit-mission/target-effects/TargetEnvEntry'
+import { DetailDropDown } from 'src/components/content/form/Form'
 import { ButtonText } from 'src/components/content/user-controls/ButtonText'
+import { useGlobalContext } from 'src/context'
 import ClientMissionAction from 'src/missions/actions'
 import { ClientEffect } from 'src/missions/effects'
 import { ClientTargetEnvironment } from 'src/target-environments'
 import ClientTarget from 'src/target-environments/targets'
 import { compute } from 'src/toolbox'
+import { usePostInitEffect } from 'src/toolbox/hooks'
 import './CreateEffectModal.scss'
 
 /**
  * Prompt modal for creating an effect to apply to a target.
  */
 export default function CreateEffectModal({
-  action,
   effect,
   targetEnvironments,
   handleClose,
   handleChange,
 }: TCreateEffectModal_P): JSX.Element | null {
-  if (action && effect) {
-    /* -- COMPUTED -- */
-    /**
-     * The class name for the create effect button.
-     */
-    const createEffectButtonClassName: string = compute(() => {
-      // Create a default list of class names.
-      let classList: string[] = []
+  /* -- GLOBAL CONTEXT -- */
+  const { forceUpdate } = useGlobalContext().actions
 
-      // Hide the button if the target environment is the default environment.
-      if (
-        effect.targetEnvironment?.id ===
-        ClientTargetEnvironment.DEFAULT_PROPERTIES.id
-      ) {
-        classList.push('Hidden')
-      }
+  /* -- STATE -- */
+  const [targetEnv, setTargetEnv] = useState<ClientTargetEnvironment>(
+    new ClientTargetEnvironment(),
+  )
+  const [target, setTarget] = useState<ClientTarget>(
+    new ClientTarget(new ClientTargetEnvironment()),
+  )
 
-      // Disable the button if the target is the default target.
-      if (effect.target?.id === ClientTarget.DEFAULT_PROPERTIES.id) {
-        classList.push('Disabled')
-      }
+  /* -- COMPUTED -- */
+  /**
+   * The action to execute.
+   */
+  const action: ClientMissionAction = compute(() => effect.action)
+  /**
+   * The class name for the target drop down.
+   */
+  const targetClassName: string = compute(() => {
+    // Create a default list of class names.
+    let classList: string[] = []
 
-      // Combine the class names into a single string.
-      return classList.join(' ')
-    })
-
-    /* -- FUNCTIONS -- */
-    /**
-     * Handles creating a new effect.
-     */
-    const createEffect = () => {
-      // Push the new effect to the action.
-      action.effects.push(effect)
-      // Allow the user to save the changes.
-      handleChange()
+    // Hide the drop down if the target environment is the default environment.
+    if (targetEnv.id === ClientTargetEnvironment.DEFAULT_PROPERTIES.id) {
+      classList.push('Hidden')
     }
 
-    return (
-      <div className='CreateEffectModal MapModal'>
-        {/* -- TOP OF BOX -- */}
-        <div className='Heading'>Choose a target to affect:</div>
-        <div className='Close'>
-          <div className='CloseButton' onClick={handleClose}>
-            x
-            <Tooltip description='Close window.' />
-          </div>
-        </div>
+    // Combine the class names into a single string.
+    return classList.join(' ')
+  })
+  /**
+   * The class name for the create effect button.
+   */
+  const createEffectButtonClassName: string = compute(() => {
+    // Create a default list of class names.
+    let classList: string[] = []
 
-        {/* -- MAIN CONTENT -- */}
-        <TargetEnvEntry
-          action={action}
-          effect={effect}
-          targetEnvironments={targetEnvironments}
-          handleChange={handleChange}
-        />
+    // Hide the button if the target environment is null.
+    if (targetEnv.name === ClientTargetEnvironment.DEFAULT_PROPERTIES.name) {
+      classList.push('Hidden')
+    }
 
-        {/* -- BUTTON(S) -- */}
-        <ButtonText
-          text='Create Effect'
-          onClick={createEffect}
-          tooltipDescription='Creates an undefined effect and adds it to the action.'
-          uniqueClassName={createEffectButtonClassName}
-        />
-      </div>
-    )
-  } else {
-    return null
+    // Disable the button if the target is null.
+    if (target.name === ClientTarget.DEFAULT_PROPERTIES.name) {
+      classList.push('Disabled')
+    }
+
+    // Combine the class names into a single string.
+    return classList.join(' ')
+  })
+
+  /* -- EFFECTS -- */
+
+  // Sync the component state with the effect state.
+  usePostInitEffect(() => {
+    effect.target = target
+  }, [target])
+
+  /* -- FUNCTIONS -- */
+  /**
+   * Handles creating a new effect.
+   */
+  const createEffect = () => {
+    // Push the new effect to the action.
+    action.effects.push(effect)
+    // Display the changes.
+    forceUpdate()
+    // Allow the user to save the changes.
+    handleChange()
   }
+
+  /* -- RENDER -- */
+
+  return (
+    <div className='CreateEffectModal MapModal'>
+      {/* -- TOP OF BOX -- */}
+      <div className='Heading'>Choose a target to affect:</div>
+      <div className='Close'>
+        <div className='CloseButton' onClick={handleClose}>
+          x
+          <Tooltip description='Close window.' />
+        </div>
+      </div>
+
+      {/* -- MAIN CONTENT -- */}
+      <DetailDropDown<ClientTargetEnvironment>
+        fieldType='required'
+        label='Target Environment'
+        options={targetEnvironments}
+        stateValue={targetEnv}
+        setState={setTargetEnv}
+        isExpanded={false}
+        renderDisplayName={(targetEnv: ClientTargetEnvironment) =>
+          targetEnv.name
+        }
+      />
+      <DetailDropDown<ClientTarget>
+        fieldType='required'
+        label='Target'
+        options={targetEnv.targets}
+        stateValue={target}
+        setState={setTarget}
+        isExpanded={false}
+        renderDisplayName={(target: ClientTarget) => target.name}
+        uniqueClassName={targetClassName}
+      />
+
+      {/* -- BUTTON(S) -- */}
+      <ButtonText
+        text='Create Effect'
+        onClick={createEffect}
+        tooltipDescription='Creates an undefined effect and adds it to the action.'
+        uniqueClassName={createEffectButtonClassName}
+      />
+    </div>
+  )
 }
 
 /* ---------------------------- TYPES FOR CREATE EFFECT MODAL ---------------------------- */
@@ -95,13 +146,9 @@ export default function CreateEffectModal({
  */
 export type TCreateEffectModal_P = {
   /**
-   * The action to execute.
-   */
-  action: ClientMissionAction | null
-  /**
    * The effect to create.
    */
-  effect: ClientEffect | null
+  effect: ClientEffect
   /**
    * List of target environments to apply effects to.
    */

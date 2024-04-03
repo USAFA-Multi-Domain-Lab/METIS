@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useBeforeunload } from 'react-beforeunload'
 import { useGlobalContext } from 'src/context'
 import ClientMission from 'src/missions'
@@ -45,7 +45,6 @@ export default function MissionPage(props: IMissionPage): JSX.Element | null {
     notify,
     navigateTo,
     confirm,
-    logout,
     forceUpdate,
   } = globalContext.actions
 
@@ -63,7 +62,6 @@ export default function MissionPage(props: IMissionPage): JSX.Element | null {
   )
   const [nodeStructuringIsActive, activateNodeStructuring] =
     useState<boolean>(false)
-  const [missionPath, setMissionPath] = useState<string[]>([])
   const [targetEnvironments, setTargetEnvironments] = useState<
     ClientTargetEnvironment[]
   >([])
@@ -107,12 +105,13 @@ export default function MissionPage(props: IMissionPage): JSX.Element | null {
    * Boolean to determine if the effect is new.
    */
   const isNewEffect: boolean | null = compute(
-    () => selectedEffect && !selectedAction?.effects.includes(selectedEffect),
+    () =>
+      selectedEffect && !selectedEffect.action.effects.includes(selectedEffect),
   )
 
   /* -- EFFECTS -- */
 
-  useMountHandler(async (done) => {
+  const [mountHandled] = useMountHandler(async (done) => {
     let missionID: string | null = props.missionID
 
     // Handle the editing of an existing mission.
@@ -123,7 +122,6 @@ export default function MissionPage(props: IMissionPage): JSX.Element | null {
           openAll: true,
         })
         setMission(mission)
-        setMissionPath([mission.name])
       } catch {
         handleError('Failed to load mission.')
       }
@@ -150,47 +148,6 @@ export default function MissionPage(props: IMissionPage): JSX.Element | null {
       event.preventDefault()
     }
   })
-
-  // Updates the mission path when the selected
-  // node, action, or effect changes.
-  useEffect(() => {
-    // If there is no selected node, action, or effect,
-    // then set the mission path to the mission name.
-    if (!selectedNode && !selectedAction && !selectedEffect) {
-      setMissionPath([mission.name])
-    }
-    // If there is a selected node, but no selected action
-    // or effect, then set the mission path to the mission
-    // name and the selected node name.
-    else if (selectedNode && !selectedAction && !selectedEffect) {
-      setMissionPath([mission.name, selectedNode.name])
-    }
-    // If there is a selected node and action, but no
-    // selected effect, then set the mission path to the
-    // mission name, the selected node name, and the
-    // selected action name.
-    else if (selectedNode && selectedAction && !selectedEffect) {
-      setMissionPath([mission.name, selectedNode.name, selectedAction.name])
-    }
-    // If there is a selected node, action, and effect,
-    // then set the mission path to the mission name, the
-    // selected node name, the selected action name, and
-    // the selected effect name.
-    else if (selectedNode && selectedAction && selectedEffect && !isNewEffect) {
-      setMissionPath([
-        mission.name,
-        selectedNode.name,
-        selectedAction.name,
-        selectedEffect.name,
-      ])
-    }
-  }, [selectedNode, selectedAction, selectedEffect, isNewEffect])
-
-  // When the selected action changes, ensure that
-  // the selected effect is null.
-  useEffect(() => {
-    setSelectedEffect(null)
-  }, [selectedAction])
 
   // Add event listener to watch for node selection
   // changes, updating the state accordingly.
@@ -268,12 +225,6 @@ export default function MissionPage(props: IMissionPage): JSX.Element | null {
       activateNodeStructuring(false)
       setSelectedAction(null)
       setSelectedEffect(null)
-
-      // If a node is currently selected,
-      // push the name to the mission path.
-      if (selectedNode) {
-        missionPath.push(selectedNode.name)
-      }
     },
     [selectedNode],
   )
@@ -292,7 +243,6 @@ export default function MissionPage(props: IMissionPage): JSX.Element | null {
    */
   const handleChange = (): void => {
     setAreUnsavedChanges(true)
-    forceUpdate()
   }
 
   /**
@@ -435,34 +385,6 @@ export default function MissionPage(props: IMissionPage): JSX.Element | null {
     mission.creationMode = true
   }
 
-  /**
-   * Redirects the user to the home page.
-   */
-  const goHome = (): void => {
-    if (!areUnsavedChanges) {
-      navigateTo('HomePage', {})
-    } else {
-      confirm(
-        'You have unsaved changes. What do you want to do with them?',
-        async (concludeAction: () => void) => {
-          await save().catch(() => {})
-          navigateTo('HomePage', {})
-          concludeAction()
-        },
-        {
-          handleAlternate: (concludeAction: () => void) => {
-            navigateTo('HomePage', {})
-            concludeAction()
-          },
-          pendingMessageUponConfirm: 'Saving...',
-          pendingMessageUponAlternate: 'Discarding...',
-          buttonConfirmText: 'Save',
-          buttonAlternateText: 'Discard',
-        },
-      )
-    }
-  }
-
   /* -- PRE-RENDER PROCESSING -- */
 
   // Create the custom form-related buttons for the map.
@@ -494,10 +416,9 @@ export default function MissionPage(props: IMissionPage): JSX.Element | null {
   const modalJsx = compute((): JSX.Element | null => {
     // If the selected effect is new and there are target environments
     // to choose from, then display the create effect modal.
-    if (isNewEffect && targetEnvironments.length > 0) {
+    if (selectedEffect && isNewEffect && targetEnvironments.length > 0) {
       return (
         <CreateEffectModal
-          action={selectedAction}
           effect={selectedEffect}
           targetEnvironments={targetEnvironments}
           handleClose={() => setSelectedEffect(null)}
@@ -518,21 +439,19 @@ export default function MissionPage(props: IMissionPage): JSX.Element | null {
         <MissionEntry
           active={missionDetailsIsActive}
           mission={mission}
-          missionPath={missionPath}
-          setMissionPath={setMissionPath}
           handleChange={handleChange}
+          key={mission.missionID}
         />
       )
     } else if (selectedNode && !selectedAction && !selectedEffect) {
       return (
         <NodeEntry
           node={selectedNode}
-          missionPath={missionPath}
-          setMissionPath={setMissionPath}
           setSelectedAction={setSelectedAction}
           handleChange={handleChange}
           handleAddRequest={handleNodeAddRequest}
           handleDeleteRequest={() => handleNodeDeleteRequest(selectedNode)}
+          key={selectedNode.nodeID}
         />
       )
     } else if (
@@ -544,11 +463,10 @@ export default function MissionPage(props: IMissionPage): JSX.Element | null {
         <ActionEntry
           action={selectedAction}
           targetEnvironments={targetEnvironments}
-          missionPath={missionPath}
-          setMissionPath={setMissionPath}
           setSelectedAction={setSelectedAction}
           setSelectedEffect={setSelectedEffect}
           handleChange={handleChange}
+          key={selectedAction.actionID}
         />
       )
     } else if (
@@ -559,14 +477,11 @@ export default function MissionPage(props: IMissionPage): JSX.Element | null {
     ) {
       return (
         <EffectEntry
-          action={selectedAction}
           effect={selectedEffect}
-          missionPath={missionPath}
-          targetEnvironments={targetEnvironments}
-          setMissionPath={setMissionPath}
           setSelectedAction={setSelectedAction}
           setSelectedEffect={setSelectedEffect}
           handleChange={handleChange}
+          key={selectedEffect.id}
         />
       )
     } else if (nodeStructuringIsActive) {
@@ -583,34 +498,40 @@ export default function MissionPage(props: IMissionPage): JSX.Element | null {
     }
   }
 
-  return (
-    <div className={'MissionPage Page'}>
-      <DefaultLayout navigation={navigation}>
-        <PanelSizeRelationship
-          panel1={{
-            ...ResizablePanel.defaultProps,
-            minSize: 330,
-            render: () => (
-              <MissionMap
-                mission={mission}
-                customButtons={mapCustomButtons}
-                onNodeSelect={onNodeSelect}
-                overlayContent={modalJsx}
-              />
-            ),
-          }}
-          panel2={{
-            ...ResizablePanel.defaultProps,
-            minSize: 330,
-            render: renderPanel2,
-          }}
-          sizingMode={EPanelSizingMode.Panel1_Auto__Panel2_Defined}
-          initialDefinedSize={panel2DefaultSize}
-        />
-      </DefaultLayout>
-    </div>
-  )
+  if (mountHandled) {
+    return (
+      <div className={'MissionPage Page'}>
+        <DefaultLayout navigation={navigation}>
+          <PanelSizeRelationship
+            panel1={{
+              ...ResizablePanel.defaultProps,
+              minSize: 330,
+              render: () => (
+                <MissionMap
+                  mission={mission}
+                  customButtons={mapCustomButtons}
+                  onNodeSelect={onNodeSelect}
+                  overlayContent={modalJsx}
+                />
+              ),
+            }}
+            panel2={{
+              ...ResizablePanel.defaultProps,
+              minSize: 330,
+              render: renderPanel2,
+            }}
+            sizingMode={EPanelSizingMode.Panel1_Auto__Panel2_Defined}
+            initialDefinedSize={panel2DefaultSize}
+          />
+        </DefaultLayout>
+      </div>
+    )
+  } else {
+    return null
+  }
 }
+
+/* ---------------------------- TYPES FOR MISSION PAGE ---------------------------- */
 
 export interface IMissionPage extends TPage_P {
   /**

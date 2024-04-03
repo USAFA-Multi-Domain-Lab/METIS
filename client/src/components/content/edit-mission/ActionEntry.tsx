@@ -1,11 +1,15 @@
+import { useState } from 'react'
+import { useGlobalContext } from 'src/context'
 import ClientMissionAction from 'src/missions/actions'
 import { ClientEffect } from 'src/missions/effects'
 import ClientMissionNode from 'src/missions/nodes'
 import { ClientTargetEnvironment } from 'src/target-environments'
 import { compute } from 'src/toolbox'
+import { usePostInitEffect } from 'src/toolbox/hooks'
+import { ReactSetter } from 'src/toolbox/types'
 import { SingleTypeObject } from '../../../../../shared/toolbox/objects'
 import Tooltip from '../communication/Tooltip'
-import { Detail, DetailBox, DetailNumber } from '../form/Form'
+import { DetailMediumString, DetailNumber, DetailString } from '../form/Form'
 import List, { ESortByMethod } from '../general-layout/List'
 import ButtonSvgPanel, {
   TValidPanelButton,
@@ -20,12 +24,28 @@ import './ActionEntry.scss'
 export default function ActionEntry({
   action,
   targetEnvironments,
-  missionPath,
-  setMissionPath,
   setSelectedAction,
   setSelectedEffect,
   handleChange,
 }: TActionEntry_P): JSX.Element | null {
+  /* -- GLOBAL CONTEXT -- */
+  const { forceUpdate } = useGlobalContext().actions
+
+  /* -- STATE -- */
+  const [actionName, setActionName] = useState<string>(action.name)
+  const [description, setDescription] = useState<string>(action.description)
+  const [successChance, setSuccessChance] = useState<number>(
+    parseFloat(`${(action.successChance * 100.0).toFixed(2)}`),
+  )
+  const [processTime, setProcessTime] = useState<number>(
+    action.processTime / 1000,
+  )
+  const [resourceCost, setResourceCost] = useState<number>(action.resourceCost)
+  const [postExecutionSuccessText, setPostExecutionSuccessText] =
+    useState<string>(action.postExecutionSuccessText)
+  const [postExecutionFailureText, setPostExecutionFailureText] =
+    useState<string>(action.postExecutionFailureText)
+
   /* -- COMPUTED -- */
 
   /**
@@ -41,31 +61,13 @@ export default function ActionEntry({
    */
   const nodeName: string = compute(() => action.node.name)
   /**
-   * The chance that the action will succeed.
+   * The current location within the mission.
    */
-  const successChance: number | undefined = compute(() => {
-    // If the success chance is available, return it as a percentage.
-    if (action.successChance) {
-      return parseFloat(`${(action.successChance * 100.0).toFixed(2)}`)
-    }
-    // Otherwise, return the success chance.
-    else {
-      return action.successChance
-    }
-  })
-  /**
-   * The amount of time it takes to execute the action.
-   */
-  const processTime: number | undefined = compute(() => {
-    // If the process time is available, convert it to seconds.
-    if (action.processTime) {
-      return action.processTime / 1000
-    }
-    // Otherwise, return the process time.
-    else {
-      return action.processTime
-    }
-  })
+  const missionPath: string[] = compute(() => [
+    missionName,
+    nodeName,
+    actionName,
+  ])
   /**
    * The class name for the delete action button.
    */
@@ -97,6 +99,37 @@ export default function ActionEntry({
     return classList.join(' ')
   })
 
+  /* -- EFFECTS -- */
+
+  // Sync the component state with the action.
+  usePostInitEffect(() => {
+    // Update the action name.
+    action.name = actionName
+    // Update the description.
+    action.description = description
+    // Update the success chance.
+    action.successChance = successChance / 100
+    // Update the process time.
+    action.processTime = processTime * 1000
+    // Update the resource cost.
+    action.resourceCost = resourceCost
+    // Update the post-execution success text.
+    action.postExecutionSuccessText = postExecutionSuccessText
+    // Update the post-execution failure text.
+    action.postExecutionFailureText = postExecutionFailureText
+
+    // Allow the user to save the changes.
+    handleChange()
+  }, [
+    actionName,
+    description,
+    successChance,
+    processTime,
+    resourceCost,
+    postExecutionSuccessText,
+    postExecutionFailureText,
+  ])
+
   /* -- FUNCTIONS -- */
   /**
    * Deletes the action from the node.
@@ -104,10 +137,12 @@ export default function ActionEntry({
   const handleDeleteActionRequest = () => {
     // Remove the action from the node.
     node.actions.delete(action.actionID)
-    // Reset the selected action.
-    setSelectedAction(null)
+    // Display the changes.
+    forceUpdate()
     // Allow the user to save the changes.
     handleChange()
+    // Reset the selected action.
+    setSelectedAction(null)
   }
 
   /**
@@ -117,7 +152,7 @@ export default function ActionEntry({
   const handlePathPositionClick = (index: number) => {
     // If the index is 0 then take the user
     // back to the mission entry.
-    if (index === 0 && node !== null) {
+    if (index === 0) {
       node.mission.deselectNode()
       setSelectedAction(null)
       setSelectedEffect(null)
@@ -128,6 +163,20 @@ export default function ActionEntry({
       setSelectedAction(null)
       setSelectedEffect(null)
     }
+  }
+
+  /**
+   * Handles the request to delete an effect.
+   */
+  const handleDeleteEffectRequest = (effect: ClientEffect) => {
+    // Filter out the effect from the action.
+    action.effects = action.effects.filter(
+      (actionEffect: ClientEffect) => actionEffect.id !== effect.id,
+    )
+    // Display the changes.
+    forceUpdate()
+    // Allow the user to save the changes.
+    handleChange()
   }
 
   /* -- RENDER -- */
@@ -167,103 +216,87 @@ export default function ActionEntry({
 
           {/* -- MAIN CONTENT -- */}
           <div className='SidePanelSection'>
-            <Detail
+            <DetailString
+              fieldType='required'
+              handleOnBlur='repopulateValue'
               label='Name'
-              currentValue={action.name}
+              stateValue={actionName}
+              setState={setActionName}
               defaultValue={ClientMissionAction.DEFAULT_PROPERTIES.name}
-              deliverValue={(name: string) => {
-                action.name = name
-                setMissionPath([missionName, nodeName, name])
-                handleChange()
-              }}
               placeholder='Enter name...'
               key={`${action.actionID}_name`}
             />
-            <DetailBox
+            <DetailMediumString
+              fieldType='optional'
+              handleOnBlur='none'
               label='Description'
-              currentValue={action.description}
-              deliverValue={(description: string) => {
-                action.description = description
-                handleChange()
-              }}
+              stateValue={description}
+              setState={setDescription}
               elementBoundary='.BorderBox'
               placeholder='Enter description...'
-              displayOptionalText={true}
               key={`${action.actionID}_description`}
             />
             <DetailNumber
+              fieldType='required'
+              handleOnBlur='repopulateValue'
               label='Success Chance'
-              currentValue={successChance}
+              stateValue={successChance}
+              setState={setSuccessChance}
               defaultValue={
-                ClientMissionAction.DEFAULT_PROPERTIES.successChance * 100.0
+                ClientMissionAction.DEFAULT_PROPERTIES.successChance * 100
               }
-              emptyValueAllowed={false}
               minimum={0}
               maximum={100}
               unit='%'
-              deliverValue={(successChancePercentage: number | null) => {
-                if (successChancePercentage !== null) {
-                  action.successChance = successChancePercentage / 100.0
-                  handleChange()
-                }
-              }}
               key={`${action.actionID}_successChance`}
             />
             <DetailNumber
+              fieldType='required'
+              handleOnBlur='repopulateValue'
               label='Process Time'
-              currentValue={processTime}
+              stateValue={processTime}
+              setState={setProcessTime}
               defaultValue={
                 ClientMissionAction.DEFAULT_PROPERTIES.processTime / 1000
               }
-              emptyValueAllowed={false}
               minimum={0}
               maximum={3600}
               unit='s'
-              deliverValue={(timeCost: number | null) => {
-                if (timeCost !== null) {
-                  action.processTime = timeCost * 1000
-                  handleChange()
-                }
-              }}
+              integersOnly={true}
               key={`${action.actionID}_timeCost`}
             />
             <DetailNumber
+              fieldType='required'
+              handleOnBlur='repopulateValue'
               label='Resource Cost'
-              currentValue={action.resourceCost}
+              stateValue={resourceCost}
+              setState={setResourceCost}
               defaultValue={ClientMissionAction.DEFAULT_PROPERTIES.resourceCost}
-              emptyValueAllowed={false}
               minimum={0}
-              deliverValue={(resourceCost: number | null) => {
-                if (resourceCost !== null) {
-                  action.resourceCost = resourceCost
-                  handleChange()
-                }
-              }}
+              integersOnly={true}
               key={`${action.actionID}_resourceCost`}
             />
-            <DetailBox
+            <DetailMediumString
+              fieldType='required'
+              handleOnBlur='repopulateValue'
               label='Post-Execution Success Text'
-              currentValue={action.postExecutionSuccessText}
+              stateValue={postExecutionSuccessText}
+              setState={setPostExecutionSuccessText}
               defaultValue={
                 ClientMissionAction.DEFAULT_PROPERTIES.postExecutionSuccessText
               }
-              deliverValue={(postExecutionSuccessText: string) => {
-                action.postExecutionSuccessText = postExecutionSuccessText
-                handleChange()
-              }}
               elementBoundary='.BorderBox'
               key={`${action.actionID}_postExecutionSuccessText`}
             />
-            <DetailBox
+            <DetailMediumString
+              fieldType='required'
+              handleOnBlur='repopulateValue'
               label='Post-Execution Failure Text'
-              currentValue={action.postExecutionFailureText}
+              stateValue={postExecutionFailureText}
+              setState={setPostExecutionFailureText}
               defaultValue={
                 ClientMissionAction.DEFAULT_PROPERTIES.postExecutionFailureText
               }
-              deliverValue={(postExecutionFailureText: string) => {
-                action.postExecutionFailureText = postExecutionFailureText
-                handleChange()
-              }}
               elementBoundary='.BorderBox'
               key={`${action.actionID}_postExecutionFailureText`}
             />
@@ -305,32 +338,6 @@ export default function ActionEntry({
                   }
                 })
 
-                /* -- FUNCTIONS -- */
-                /**
-                 * Handles the request to delete an effect.
-                 */
-                const handleDeleteEffectRequest = () => {
-                  // Filter out the effect from the action.
-                  action.effects = action.effects.filter(
-                    (actionEffect: ClientEffect) =>
-                      actionEffect.id !== effect.id,
-                  )
-                  // Allow the user to save the changes.
-                  handleChange()
-                }
-
-                /**
-                 * Handles the request to edit an effect.
-                 */
-                const handleEditEffectRequest = () => {
-                  if (effect.targetEnvironment && effect.target) {
-                    // Update the mission path.
-                    missionPath.push(effect.name || 'New Effect')
-                    // Set the selected effect.
-                    setSelectedEffect(effect)
-                  }
-                }
-
                 /**
                  * The buttons for the effect list.
                  */
@@ -344,14 +351,14 @@ export default function ActionEntry({
                       edit: {
                         icon: 'edit',
                         key: 'edit',
-                        onClick: handleEditEffectRequest,
+                        onClick: () => setSelectedEffect(effect),
                         tooltipDescription: editTooltipDescription,
                         uniqueClassList: editButtonClassList,
                       },
                       remove: {
                         icon: 'remove',
                         key: 'remove',
-                        onClick: handleDeleteEffectRequest,
+                        onClick: () => handleDeleteEffectRequest(effect),
                         tooltipDescription: 'Remove effect.',
                       },
                     }
@@ -368,7 +375,7 @@ export default function ActionEntry({
                   <div className='Row' key={`effect-row-${effect.id}`}>
                     <div className='RowContent'>
                       {effect.name}
-                      <Tooltip description={effect.description ?? ''} />
+                      <Tooltip description={effect.description} />
                     </div>
                     <ButtonSvgPanel buttons={actionButtons} size={'small'} />
                   </div>
@@ -431,22 +438,15 @@ export type TActionEntry_P = {
    */
   targetEnvironments: ClientTargetEnvironment[]
   /**
-   * The path showing the user's location in the side panel.
-   * @note This will help the user understand what they are editing.
+   * React setter function used to update the value stored
+   * in a component's state.
    */
-  missionPath: string[]
+  setSelectedAction: ReactSetter<ClientMissionAction | null>
   /**
-   * A function that will set the mission path.
+   * React setter function used to update the value stored
+   * in a component's state.
    */
-  setMissionPath: (missionPath: string[]) => void
-  /**
-   * A function that will set the action that is selected.
-   */
-  setSelectedAction: (action: ClientMissionAction | null) => void
-  /**
-   * A function that will set the effect that is selected.
-   */
-  setSelectedEffect: (effect: ClientEffect | null) => void
+  setSelectedEffect: ReactSetter<ClientEffect | null>
   /**
    * Handles when a change is made that would require saving.
    */

@@ -1,65 +1,109 @@
 import { useState } from 'react'
 import { useGlobalContext } from 'src/context'
 import { compute } from 'src/toolbox'
-import { useMountHandler } from 'src/toolbox/hooks'
+import { useMountHandler, usePostInitEffect } from 'src/toolbox/hooks'
 import ClientUser from 'src/users'
 import { DefaultLayout, TPage_P } from '.'
-import { Detail } from '../content/form/Form'
-import { LogoutLink } from '../content/general-layout/Navigation'
+import { DetailString } from '../content/form/Form'
+import { LogoutLink, TNavigation } from '../content/general-layout/Navigation'
 import './UserResetPage.scss'
-
-export interface IUserResetPage extends TPage_P {}
 
 /**
  * This page allows the user to reset their password.
  */
 export default function UserResetPage(): JSX.Element | null {
   /* -- GLOBAL CONTEXT -- */
-
   const globalContext = useGlobalContext()
-  const { forceUpdate, notify, navigateTo, logout, finishLoading } =
-    globalContext.actions
+  const { notify, navigateTo, finishLoading } = globalContext.actions
   const [session] = globalContext.session
 
-  /* -- COMPONENT STATE -- */
-
+  /* -- STATE -- */
   const [areUnsavedChanges, setAreUnsavedChanges] = useState<boolean>(false)
-  const [userEmptyStringArray, setUserEmptyStringArray] = useState<
-    Array<string>
-  >([])
-  const [deliverPassword1Error, setDeliverPassword1Error] =
-    useState<boolean>(false)
-  const [deliverPassword2Error, setDeliverPassword2Error] =
-    useState<boolean>(false)
-  const [password1ErrorMessage, setPassword1ErrorMessage] = useState<string>(
-    'At least one character is required here.',
-  )
-  const [password2ErrorMessage, setPassword2ErrorMessage] = useState<string>(
-    'At least one character is required here.',
-  )
-  const [password1, setPassword1] = useState<string | null>(null)
-  const [password2, setPassword2] = useState<string | null>(null)
+  const [userEmptyStringArray, setUserEmptyStringArray] = useState<string[]>([])
+  const [handlePassword1Error, setHandlePassword1Error] =
+    useState<THandleOnBlur>('deliverError')
+  const [handlePassword2Error, setHandlePassword2Error] =
+    useState<THandleOnBlur>('deliverError')
+  const [password1ErrorMessage, setPassword1ErrorMessage] = useState<string>()
+  const [password2ErrorMessage, setPassword2ErrorMessage] = useState<string>()
+  const [password1, setPassword1] = useState<string>('')
+  const [password2, setPassword2] = useState<string>('')
 
-  /* -- COMPONENT EFFECTS -- */
+  /* -- EFFECTS -- */
 
-  // Equivalent to componentDidMount().
-  const [mountHandled] = useMountHandler(async (done) => {
+  // componentDidMount
+  useMountHandler(async (done) => {
     // Finish loading.
     finishLoading()
-    setPassword1(user.password1 || null)
-    setPassword2(user.password2 || null)
+    setPassword1(user.password1 || '')
+    setPassword2(user.password2 || '')
     done()
   })
 
-  /* -- COMPUTED -- */
+  // Sync the component state with the user password1 property.
+  usePostInitEffect(() => {
+    user.password1 = password1
 
-  /**
-   * Props for navigation.
-   */
-  const navigation = compute(() => ({
-    links: [LogoutLink(globalContext)],
-    logoLinksHome: false,
-  }))
+    if (user.hasValidPassword1 && password1 !== '') {
+      removeUserEmptyString('password1')
+      setHandlePassword1Error('none')
+      setAreUnsavedChanges(true)
+    }
+
+    if (password1 === '') {
+      setHandlePassword1Error('deliverError')
+      setPassword1ErrorMessage('At least one character is required here.')
+      setUserEmptyStringArray([...userEmptyStringArray, `field=password1`])
+    }
+
+    if (!user.hasValidPassword1 && password1 !== '') {
+      setHandlePassword1Error('deliverError')
+      setPassword1ErrorMessage(
+        'Password must be between 8 and 50 characters and cannot contain spaces.',
+      )
+    }
+
+    // If the user has entered a password in the second password field,
+    // check to see if the two passwords match.
+    if (!user.passwordsMatch && user.password2) {
+      setHandlePassword2Error('deliverError')
+      setPassword2ErrorMessage('Passwords must match.')
+    }
+    // If the user has entered a password in the second password field
+    // and the two passwords match, remove the error.
+    else if (user.passwordsMatch && user.password2) {
+      setHandlePassword2Error('none')
+    }
+  }, [password1])
+
+  // Sync the component state with the user password2 property.
+  usePostInitEffect(() => {
+    user.password2 = password2
+
+    if (user.hasValidPassword2 && password2 !== '') {
+      removeUserEmptyString('password2')
+      setHandlePassword2Error('none')
+      setAreUnsavedChanges(true)
+    }
+
+    if (!user.hasValidPassword2 && password2 !== '') {
+      setHandlePassword2Error('deliverError')
+      setPassword2ErrorMessage(
+        'Password must be between 8 and 50 characters and cannot contain spaces.',
+      )
+    }
+
+    if (password2 === '') {
+      setHandlePassword2Error('deliverError')
+      setPassword2ErrorMessage('At least one character is required here.')
+      setUserEmptyStringArray([...userEmptyStringArray, `field=password2`])
+    }
+
+    if (user.hasValidPassword2 && password2 !== '' && !user.passwordsMatch) {
+      setHandlePassword2Error('deliverError')
+      setPassword2ErrorMessage('Passwords must match.')
+    }
+  }, [password2])
 
   /* -- SESSION-SPECIFIC LOGIC -- */
 
@@ -71,10 +115,50 @@ export default function UserResetPage(): JSX.Element | null {
   // Extract properties from session.
   const { user } = session
 
-  /* -- COMPONENT FUNCTIONS -- */
+  /* -- COMPUTED -- */
 
-  // This is called to save any changes
-  // made.
+  /**
+   * Props for navigation.
+   */
+  const navigation = compute(
+    (): TNavigation => ({
+      links: [LogoutLink(globalContext)],
+      logoLinksHome: false,
+      boxShadow: 'alt-6',
+    }),
+  )
+  /**
+   * Boolean to determine if there are any fields with empty strings.
+   */
+  const isEmptyString: boolean = compute(() => userEmptyStringArray.length > 0)
+  /**
+   * Boolean to determine if the save button should be grayed out.
+   */
+  const grayOutSaveButton: boolean = compute(
+    () => !areUnsavedChanges || isEmptyString || !user.canSave,
+  )
+  /**
+   * Class name for the save button.
+   */
+  const saveButtonClassName: string = compute(() => {
+    // Initialize the class list.
+    let classList: string[] = ['Button']
+
+    // If the save button should be grayed out,
+    // add the disabled class.
+    if (grayOutSaveButton) {
+      classList.push('Disabled')
+    }
+
+    // Return the list of class names as one string.
+    return classList.join(' ')
+  })
+
+  /* -- FUNCTIONS -- */
+
+  /**
+   * This is called to save any changes made.
+   */
   const save = async (): Promise<void> => {
     if (areUnsavedChanges) {
       setAreUnsavedChanges(false)
@@ -90,13 +174,9 @@ export default function UserResetPage(): JSX.Element | null {
     }
   }
 
-  // This is called when a change is
-  // made that would require saving.
-  const handleChange = (): void => {
-    setAreUnsavedChanges(true)
-    forceUpdate()
-  }
-
+  /**
+   * This is called to remove a field from the userEmptyStringArray.
+   */
   const removeUserEmptyString = (field: string) => {
     userEmptyStringArray.map((userEmptyString: string, index: number) => {
       if (userEmptyString === `field=${field}`) {
@@ -107,22 +187,6 @@ export default function UserResetPage(): JSX.Element | null {
 
   /* -- RENDER -- */
 
-  let isEmptyString: boolean = userEmptyStringArray.length > 0
-
-  // This will gray out the save button
-  // if there are no unsaved changes or
-  // if there are empty strings or if
-  // the user does not have permission
-  // to save.
-  let grayOutSaveButton: boolean =
-    !areUnsavedChanges || isEmptyString || !user.canSave
-
-  let saveButtonClassName: string = 'Button'
-
-  if (grayOutSaveButton) {
-    saveButtonClassName += ' Disabled'
-  }
-
   return (
     <div className='UserResetPage Page'>
       <DefaultLayout navigation={navigation}>
@@ -131,98 +195,22 @@ export default function UserResetPage(): JSX.Element | null {
             <div className='Title'>User ID:</div>
             <div className='UserID'>{user.userID}</div>
           </div>
-          <Detail
+          <DetailString
+            fieldType='required'
+            handleOnBlur={handlePassword1Error}
             label='New Password'
-            currentValue={password1}
-            deliverValue={(password: string) => {
-              user.password1 = password
-              setPassword1(password)
-
-              if (user.hasValidPassword1 && password !== '') {
-                removeUserEmptyString('password1')
-                setDeliverPassword1Error(false)
-                handleChange()
-              }
-
-              if (password === '') {
-                setDeliverPassword1Error(true)
-                setPassword1ErrorMessage(
-                  'At least one character is required here.',
-                )
-                setUserEmptyStringArray([
-                  ...userEmptyStringArray,
-                  `field=password1`,
-                ])
-              }
-
-              if (!user.hasValidPassword1 && password !== '') {
-                setDeliverPassword1Error(true)
-                setPassword1ErrorMessage(
-                  'Password must be between 8 and 50 characters and cannot contain spaces.',
-                )
-              }
-
-              // If the user has entered a password in the second password field,
-              // check to see if the two passwords match.
-              if (!user.passwordsMatch && user.password2) {
-                setDeliverPassword2Error(true)
-                setPassword2ErrorMessage('Passwords must match.')
-              }
-              // If the user has entered a password in the second password field
-              // and the two passwords match, remove the error.
-              else if (user.passwordsMatch && user.password2) {
-                setDeliverPassword2Error(false)
-              }
-            }}
-            emptyStringAllowed={false}
-            deliverError={deliverPassword1Error}
+            stateValue={password1}
+            setState={setPassword1}
             errorMessage={password1ErrorMessage}
             inputType='password'
             placeholder='Enter a new password here...'
           />
-
-          <Detail
+          <DetailString
+            fieldType='required'
+            handleOnBlur={handlePassword2Error}
             label='Confirm New Password'
-            currentValue={password2}
-            deliverValue={(password: string) => {
-              user.password2 = password
-              setPassword2(password)
-
-              if (user.hasValidPassword2 && password !== '') {
-                removeUserEmptyString('password2')
-                setDeliverPassword2Error(false)
-                handleChange()
-              }
-
-              if (!user.hasValidPassword2 && password !== '') {
-                setDeliverPassword2Error(true)
-                setPassword2ErrorMessage(
-                  'Password must be between 8 and 50 characters and cannot contain spaces.',
-                )
-              }
-
-              if (password === '') {
-                setDeliverPassword2Error(true)
-                setPassword2ErrorMessage(
-                  'At least one character is required here.',
-                )
-                setUserEmptyStringArray([
-                  ...userEmptyStringArray,
-                  `field=password2`,
-                ])
-              }
-
-              if (
-                user.hasValidPassword2 &&
-                password !== '' &&
-                !user.passwordsMatch
-              ) {
-                setDeliverPassword2Error(true)
-                setPassword2ErrorMessage('Passwords must match.')
-              }
-            }}
-            emptyStringAllowed={false}
-            deliverError={deliverPassword2Error}
+            stateValue={password2}
+            setState={setPassword2}
             errorMessage={password2ErrorMessage}
             inputType='password'
             placeholder='Confirm your new password here...'
@@ -238,3 +226,15 @@ export default function UserResetPage(): JSX.Element | null {
     </div>
   )
 }
+
+/* ---------------------------- TYPES FOR USER RESET PAGE ---------------------------- */
+
+/**
+ * The props for the UserResetPage component.
+ */
+export interface IUserResetPage extends TPage_P {}
+
+/**
+ * The type of handleOnBlur.
+ */
+type THandleOnBlur = 'deliverError' | 'none'

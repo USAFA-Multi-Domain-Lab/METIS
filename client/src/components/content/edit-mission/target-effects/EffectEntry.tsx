@@ -1,27 +1,49 @@
+import { useState } from 'react'
+import { useGlobalContext } from 'src/context'
 import ClientMissionAction from 'src/missions/actions'
 import { ClientEffect } from 'src/missions/effects'
 import { ClientTargetEnvironment } from 'src/target-environments'
+import ClientTarget from 'src/target-environments/targets'
 import { compute } from 'src/toolbox'
+import { usePostInitEffect } from 'src/toolbox/hooks'
 import Tooltip from '../../communication/Tooltip'
-import { Detail, DetailBox } from '../../form/Form'
+import { DetailMediumString, DetailString } from '../../form/Form'
 import { ButtonText } from '../../user-controls/ButtonText'
+import Args from './Args'
 import './EffectEntry.scss'
-import TargetEnvEntry from './TargetEnvEntry'
 
 /**
  * Prompt modal for creating a list of effects to apply to a target
  */
 export default function EffectEntry({
-  action,
   effect,
-  missionPath,
-  targetEnvironments,
-  setMissionPath,
   setSelectedAction,
   setSelectedEffect,
   handleChange,
 }: TEffectEntry_P): JSX.Element | null {
+  /* -- GLOBAL CONTEXT -- */
+  const { forceUpdate } = useGlobalContext().actions
+
+  /* -- STATE -- */
+  const [effectName, setEffectName] = useState<ClientEffect['name']>(
+    effect.name,
+  )
+  const [description, setDescription] = useState<ClientEffect['description']>(
+    effect.description,
+  )
+  const [targetEnv] = useState<ClientTargetEnvironment | null>(
+    effect.targetEnvironment,
+  )
+  const [target] = useState<ClientTarget | null>(effect.target)
+  const [effectArgs, setEffectArgs] = useState<ClientEffect['args']>(
+    effect.args,
+  )
+
   /* -- COMPUTED -- */
+  /**
+   * The action to execute.
+   */
+  const action: ClientMissionAction = compute(() => effect.action)
   /**
    * The name of the mission.
    */
@@ -34,6 +56,30 @@ export default function EffectEntry({
    * The name of the action.
    */
   const actionName: string = compute(() => action.name)
+  /**
+   * The current location within the mission.
+   */
+  const missionPath: string[] = compute(() => [
+    missionName,
+    nodeName,
+    actionName,
+    effectName,
+  ])
+
+  /* -- EFFECTS -- */
+
+  // componentDidUpdate
+  usePostInitEffect(() => {
+    // Update the effect's name.
+    effect.name = effectName
+    // Update the effect's description.
+    effect.description = description
+    // Update the effect's arguments.
+    effect.args = effectArgs
+
+    // Allow the user to save the changes.
+    handleChange()
+  }, [effectName, description, effectArgs])
 
   /* -- FUNCTIONS -- */
 
@@ -43,8 +89,12 @@ export default function EffectEntry({
   const handleDeleteEffectRequest = () => {
     // Set the selected effect to null.
     setSelectedEffect(null)
-    // Remove the effect from the action.
-    action.effects.splice(action.effects.indexOf(effect), 1)
+    // Filter out the effect from the action.
+    action.effects = action.effects.filter(
+      (actionEffect: ClientEffect) => actionEffect.id !== effect.id,
+    )
+    // Display the changes.
+    forceUpdate()
     // Allow the user to save the changes.
     handleChange()
   }
@@ -81,7 +131,14 @@ export default function EffectEntry({
         {/* -- TOP OF BOX -- */}
         <div className='BoxTop'>
           <div className='BackContainer'>
-            <div className='BackButton' onClick={() => setSelectedEffect(null)}>
+            <div
+              className='BackButton'
+              onClick={() => {
+                console.log(effect.args)
+
+                setSelectedEffect(null)
+              }}
+            >
               &lt;
               <Tooltip description='Go back.' />
             </div>
@@ -106,33 +163,50 @@ export default function EffectEntry({
 
         {/* -- MAIN CONTENT -- */}
         <div className='SidePanelSection'>
-          <Detail
+          <DetailString
+            fieldType='required'
+            handleOnBlur='repopulateValue'
             label='Name'
-            currentValue={effect.name}
+            stateValue={effectName}
+            setState={setEffectName}
             defaultValue={ClientEffect.DEFAULT_PROPERTIES.name}
-            deliverValue={(name: string) => {
-              effect.name = name
-              setMissionPath([missionName, nodeName, actionName, name])
-              handleChange()
-            }}
             placeholder='Enter name...'
           />
-          <DetailBox
+          <DetailMediumString
+            fieldType='optional'
+            handleOnBlur='none'
             label='Description'
-            currentValue={effect.description}
-            deliverValue={(description: string) => {
-              effect.description = description
-              handleChange()
-            }}
+            stateValue={description}
+            setState={setDescription}
             elementBoundary='.BorderBox'
             placeholder='Enter description...'
-            displayOptionalText={true}
           />
-          <TargetEnvEntry
-            action={action}
-            effect={effect}
-            targetEnvironments={targetEnvironments}
-            handleChange={handleChange}
+          <div className='SelectedTargetEnv'>
+            <div className='Info'>
+              <div className='Label'>Target Environment:</div>
+              <div className='Value'>
+                <span className='Text Disabled'>{targetEnv?.name}</span>
+                <span className='Lock'>
+                  <Tooltip description='This is locked and cannot be changed.' />
+                </span>
+              </div>
+            </div>
+          </div>
+          <div className='SelectedTarget'>
+            <div className='Info'>
+              <div className='Label'>Target:</div>
+              <div className='Value'>
+                <span className='Text Disabled'>{target?.name}</span>
+                <span className='Lock'>
+                  <Tooltip description='This is locked and cannot be changed.' />
+                </span>
+              </div>
+            </div>
+          </div>
+          <Args
+            target={target}
+            effectArgs={effectArgs}
+            setEffectArgs={setEffectArgs}
           />
           {/* -- BUTTON(S) -- */}
           <div className='ButtonContainer'>
@@ -155,26 +229,9 @@ export default function EffectEntry({
  */
 export type TEffectEntry_P = {
   /**
-   * The action to execute.
-   */
-  action: ClientMissionAction
-  /**
    * The effect to apply to the target.
    */
   effect: ClientEffect
-  /**
-   * The path showing the user's location in the side panel.
-   * @note This will help the user understand what they are editing.
-   */
-  missionPath: string[]
-  /**
-   * List of target environments to apply effects to.
-   */
-  targetEnvironments: ClientTargetEnvironment[]
-  /**
-   * A function that will set the mission path.
-   */
-  setMissionPath: (missionPath: string[]) => void
   /**
    * A function that will set the action that is selected.
    */

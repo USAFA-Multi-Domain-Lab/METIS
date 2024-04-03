@@ -1,13 +1,13 @@
-import mongoose, { Schema } from 'mongoose'
 import bcryptjs from 'bcryptjs'
+import { Request } from 'express'
+import { TCommonUser } from 'metis/users'
+import UserPermission, { TUserPermission } from 'metis/users/permissions'
+import UserRole, { TUserRole } from 'metis/users/roles'
+import mongoose, { Schema } from 'mongoose'
 import { StatusError } from '../../http'
 import { databaseLogger } from '../../logging'
-import Role from '../schema-types/user-role'
-import UserRole, { TUserRole } from 'metis/users/roles'
-import UserPermission, { TUserPermission } from 'metis/users/permissions'
 import Permission from '../schema-types/user-permission'
-import { TCommonUser } from 'metis/users'
-import { Request } from 'express'
+import Role from '../schema-types/user-role'
 
 let ObjectId = mongoose.Types.ObjectId
 
@@ -145,7 +145,9 @@ UserSchema.statics.authenticate = (
       if (error) {
         return callback(new StatusError(error.message), false, null)
       } else if (!user) {
-        return callback(null, false, null)
+        // If the user does not exist, send a 401 error.
+        let error: StatusError = new StatusError('Incorrect username.', 401)
+        return callback(error, false, null)
       }
 
       // If there is no error and user exists, the encrypted password provided is verified
@@ -153,11 +155,16 @@ UserSchema.statics.authenticate = (
         request.body.password,
         user.password,
         (error: any, same: boolean) => {
-          if (error || !user) {
+          // If the password is incorrect send a 401 error.
+          // Send a 500 error for any other errors.
+          if (error || !same) {
             let error: StatusError = new StatusError(
               'Failed to authenticate user.',
               500,
             )
+            if (!same) {
+              error = new StatusError('Incorrect password.', 401)
+            }
             callback(error, false, null)
           } else {
             return callback(null, same, same ? user : null)

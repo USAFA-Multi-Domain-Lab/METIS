@@ -1,8 +1,15 @@
 import { useState } from 'react'
 import { useGlobalContext } from 'src/context'
 import ClientMission from 'src/missions'
+import { compute } from 'src/toolbox'
+import { usePostInitEffect } from 'src/toolbox/hooks'
 import { TAjaxStatus } from '../../../../../shared/toolbox/ajax'
-import { Detail, DetailBox, DetailNumber, DetailToggle } from '../form/Form'
+import {
+  DetailMediumString,
+  DetailNumber,
+  DetailString,
+  DetailToggle,
+} from '../form/Form'
 import './MissionEntry.scss'
 
 /**
@@ -11,15 +18,63 @@ import './MissionEntry.scss'
 export default function MissionEntry({
   active,
   mission,
-  missionPath,
-  setMissionPath,
   handleChange,
 }: TMissionEntry_P): JSX.Element | null {
   /* -- GLOBAL CONTEXT -- */
-  const { notify } = useGlobalContext().actions
+  const { notify, forceUpdate } = useGlobalContext().actions
 
   /* -- STATE -- */
   const [_, setLiveAjaxStatus] = useState<TAjaxStatus>('NotLoaded')
+  const [missionName, setMissionName] = useState<string>(mission.name)
+  const [introMessage, setIntroMessage] = useState<string>(mission.introMessage)
+  const [live, setLive] = useState<boolean>(mission.live)
+  const [initialResources, setInitialResources] = useState<number>(
+    mission.initialResources,
+  )
+
+  /* -- COMPUTED -- */
+  /**
+   * The current location within the mission.
+   */
+  const missionPath: string[] = compute(() => [missionName])
+
+  /* -- EFFECTS -- */
+
+  // Sync the component state with the mission name.
+  usePostInitEffect(() => {
+    // Update the mission name.
+    mission.name = missionName
+
+    // This is to show the change to
+    // the name of the mission shown
+    // on the mission map.
+    forceUpdate()
+    // Allow the user to save the changes.
+    handleChange()
+  }, [missionName])
+
+  // Sync the component state with the mission introduction message
+  // and initial resources.
+  usePostInitEffect(() => {
+    // Update the introduction message.
+    mission.introMessage = introMessage
+    // Update the initial resources.
+    mission.initialResources = initialResources
+
+    // Allow the user to save the changes.
+    handleChange()
+  }, [introMessage, initialResources])
+
+  // Sync the component state with the mission live status.
+  usePostInitEffect(() => {
+    // Update the live status.
+    mission.live = live
+
+    // Handle the request to toggle live status.
+    handleToggleLiveRequest(live)
+    // Allow the user to save the changes.
+    handleChange()
+  }, [live])
 
   /* -- FUNCTIONS -- */
 
@@ -88,44 +143,33 @@ export default function MissionEntry({
 
           {/* -- MAIN CONTENT -- */}
           <div className='SidePanelSection MainDetails'>
-            <Detail
+            <DetailString
+              fieldType='required'
+              handleOnBlur='repopulateValue'
               label='Name'
-              currentValue={mission.name}
+              stateValue={missionName}
+              setState={setMissionName}
               defaultValue={ClientMission.DEFAULT_PROPERTIES.name}
-              deliverValue={(name: string) => {
-                mission.name = name
-                setMissionPath([name])
-                handleChange()
-              }}
               key={`${mission.missionID}_name`}
             />
-            <DetailBox
+            <DetailMediumString
+              fieldType='required'
+              handleOnBlur='repopulateValue'
               label='Introduction Message'
-              currentValue={mission.introMessage}
+              stateValue={introMessage}
+              setState={setIntroMessage}
               defaultValue={ClientMission.DEFAULT_PROPERTIES.introMessage}
-              deliverValue={(introMessage: string) => {
-                mission.introMessage = introMessage
-                handleChange()
-              }}
               elementBoundary='.BorderBox'
               key={`${mission.missionID}_introMessage`}
             />
-            <DetailToggle
-              label={'Live'}
-              currentValue={mission.live}
-              deliverValue={handleToggleLiveRequest}
-            />
+            <DetailToggle label={'Live'} stateValue={live} setState={setLive} />
             <DetailNumber
+              fieldType='required'
+              handleOnBlur='repopulateValue'
               label='Initial Resources'
-              currentValue={mission.initialResources}
+              stateValue={initialResources}
+              setState={setInitialResources}
               defaultValue={ClientMission.DEFAULT_PROPERTIES.initialResources}
-              emptyValueAllowed={false}
-              deliverValue={(initialResources: number | null) => {
-                if (initialResources !== null) {
-                  mission.initialResources = initialResources
-                  handleChange()
-                }
-              }}
               key={`${mission.missionID}_initialResources`}
             />
           </div>
@@ -148,15 +192,6 @@ export type TMissionEntry_P = {
    * The mission to be edited.
    */
   mission: ClientMission
-  /**
-   * The path showing the user's location in the side panel.
-   * @note This will help the user understand what they are editing.
-   */
-  missionPath: string[]
-  /**
-   * A function that will set the mission path.
-   */
-  setMissionPath: (missionPath: string[]) => void
   /**
    * A function that will be used to notify the parent
    * component that this component has changed.

@@ -1,32 +1,103 @@
 import { useState } from 'react'
+import { useGlobalContext } from 'src/context'
+import { usePostInitEffect } from 'src/toolbox/hooks'
 import ClientUser from 'src/users'
-import { Detail } from '../form/Form'
+import { DetailString, DetailToggle } from '../form/Form'
 import './EditUserEntry.scss'
 
 /**
- * This will render the forms for editing a new user.
+ * This will render the form for editing a new user.
  */
-export default function EditUserEntry(props: {
-  user: ClientUser
-  userEmptyStringArray: string[]
-  setUserEmptyStringArray: (userEmptyString: string[]) => void
-  handleChange: () => void
-}): JSX.Element | null {
-  let user: ClientUser = props.user
-  let userEmptyStringArray: string[] = props.userEmptyStringArray
-  let setUserEmptyStringArray = props.setUserEmptyStringArray
-  let handleChange = props.handleChange
+export default function EditUserEntry({
+  user,
+  userEmptyStringArray,
+  setUserEmptyStringArray,
+  handleChange,
+}: TEditUserEntry_P): JSX.Element | null {
+  /* -- GLOBAL CONTEXT -- */
+  const { forceUpdate } = useGlobalContext().actions
 
-  /* -- COMPONENT STATE -- */
-  const [deliverFirstNameError, setDeliverFirstNameError] =
-    useState<boolean>(false)
-  const [deliverLastNameError, setDeliverLastNameError] =
-    useState<boolean>(false)
+  /* -- STATE -- */
+  const [handleFirstNameError, setHandleFirstNameError] =
+    useState<THandleOnBlur>('deliverError')
+  const [handleLastNameError, setHandleLastNameError] =
+    useState<THandleOnBlur>('deliverError')
   const [firstNameErrorMessage, setFirstNameErrorMessage] = useState<string>('')
   const [lastNameErrorMessage, setLastNameErrorMessage] = useState<string>('')
+  const [firstName, setFirstName] = useState<string>(user.firstName)
+  const [lastName, setLastName] = useState<string>(user.lastName)
+  const [needsPasswordReset, setNeedsPasswordReset] = useState<boolean>(
+    user.needsPasswordReset,
+  )
 
-  /* -- COMPONENT FUNCTIONS -- */
+  /* -- EFFECTS -- */
 
+  // Sync the component state with the user first name property.
+  usePostInitEffect(() => {
+    user.firstName = firstName
+
+    if (firstName !== '' && user.hasValidFirstName) {
+      removeUserEmptyString('firstName')
+      setHandleFirstNameError('none')
+      handleChange()
+    }
+
+    if (firstName === '') {
+      setHandleFirstNameError('deliverError')
+      setFirstNameErrorMessage('At least one character is required here.')
+      setUserEmptyStringArray([...userEmptyStringArray, `field=firstName`])
+    }
+
+    if (!user.hasValidFirstName && firstName !== '') {
+      setHandleFirstNameError('deliverError')
+      setFirstNameErrorMessage(
+        'First names must be between 1 and 50 characters long and can only contain letters.',
+      )
+      setUserEmptyStringArray([...userEmptyStringArray, `field=firstName`])
+    }
+
+    forceUpdate()
+  }, [firstName])
+
+  // Sync the component state with the user last name property.
+  usePostInitEffect(() => {
+    user.lastName = lastName
+
+    if (lastName !== '' && user.hasValidLastName) {
+      removeUserEmptyString('lastName')
+      setHandleLastNameError('none')
+      handleChange()
+    }
+
+    if (lastName === '') {
+      setHandleLastNameError('deliverError')
+      setLastNameErrorMessage('At least one character is required here.')
+      setUserEmptyStringArray([...userEmptyStringArray, `field=lastName`])
+    }
+
+    if (!user.hasValidLastName && lastName !== '') {
+      setHandleLastNameError('deliverError')
+      setLastNameErrorMessage(
+        'Last names must be between 1 and 50 characters long and can only contain letters.',
+      )
+      setUserEmptyStringArray([...userEmptyStringArray, `field=lastName`])
+    }
+
+    forceUpdate()
+  }, [lastName])
+
+  // Sync the component state with the user needs password reset property.
+  usePostInitEffect(() => {
+    user.needsPasswordReset = needsPasswordReset
+    forceUpdate()
+    handleChange()
+  }, [needsPasswordReset])
+
+  /* -- FUNCTIONS -- */
+
+  /**
+   * This is called to remove a field from the userEmptyStringArray.
+   */
   const removeUserEmptyString = (field: string) => {
     userEmptyStringArray.map((userEmptyString: string, index: number) => {
       if (userEmptyString === `field=${field}`) {
@@ -34,6 +105,8 @@ export default function EditUserEntry(props: {
       }
     })
   }
+
+  /* -- RENDER -- */
 
   return (
     <form
@@ -49,74 +122,58 @@ export default function EditUserEntry(props: {
         <div className='Title'>Role:</div>
         <div className='Role'>{user.role.name}</div>
       </div>
-      <Detail
+      <DetailString
+        fieldType='required'
+        handleOnBlur={handleFirstNameError}
         label='First Name'
-        currentValue={user.firstName}
-        deliverValue={(firstName: string) => {
-          user.firstName = firstName
-
-          if (firstName !== '' && user.hasValidFirstName) {
-            removeUserEmptyString('firstName')
-            setDeliverFirstNameError(false)
-            handleChange()
-          }
-
-          if (firstName === '') {
-            setDeliverFirstNameError(true)
-            setFirstNameErrorMessage('At least one character is required here.')
-            setUserEmptyStringArray([
-              ...userEmptyStringArray,
-              `field=firstName`,
-            ])
-          }
-
-          if (!user.hasValidFirstName && firstName !== '') {
-            setDeliverFirstNameError(true)
-            setFirstNameErrorMessage(
-              'First names must be between 1 and 50 characters long and can only contain letters.',
-            )
-            setUserEmptyStringArray([
-              ...userEmptyStringArray,
-              `field=firstName`,
-            ])
-          }
-        }}
-        emptyStringAllowed={false}
-        deliverError={deliverFirstNameError}
+        stateValue={firstName}
+        setState={setFirstName}
         errorMessage={firstNameErrorMessage}
         placeholder='Enter a first name here...'
       />
-      <Detail
+      <DetailString
+        fieldType='required'
+        handleOnBlur={handleLastNameError}
         label='Last Name'
-        currentValue={user.lastName}
-        deliverValue={(lastName: string) => {
-          user.lastName = lastName
-
-          if (lastName !== '' && user.hasValidLastName) {
-            removeUserEmptyString('lastName')
-            setDeliverLastNameError(false)
-            handleChange()
-          }
-
-          if (lastName === '') {
-            setDeliverLastNameError(true)
-            setLastNameErrorMessage('At least one character is required here.')
-            setUserEmptyStringArray([...userEmptyStringArray, `field=lastName`])
-          }
-
-          if (!user.hasValidLastName && lastName !== '') {
-            setDeliverLastNameError(true)
-            setLastNameErrorMessage(
-              'Last names must be between 1 and 50 characters long and can only contain letters.',
-            )
-            setUserEmptyStringArray([...userEmptyStringArray, `field=lastName`])
-          }
-        }}
-        emptyStringAllowed={false}
-        deliverError={deliverLastNameError}
+        stateValue={lastName}
+        setState={setLastName}
         errorMessage={lastNameErrorMessage}
         placeholder='Enter a last name here...'
+      />
+      <DetailToggle
+        label='Password Reset'
+        stateValue={needsPasswordReset}
+        setState={setNeedsPasswordReset}
       />
     </form>
   )
 }
+
+/* ---------------------------- TYPES FOR EDIT USER ENTRY ---------------------------- */
+
+/**
+ * The properties for the EditUserEntry component.
+ */
+export type TEditUserEntry_P = {
+  /**
+   * The user to be created.
+   */
+  user: ClientUser
+  /**
+   * An array of fields with empty strings.
+   */
+  userEmptyStringArray: string[]
+  /**
+   * A function that will update the array of fields with empty strings.
+   */
+  setUserEmptyStringArray: (userEmptyString: string[]) => void
+  /**
+   * A function that will be called when a change has been made.
+   */
+  handleChange: () => void
+}
+
+/**
+ * The type of handleOnBlur.
+ */
+type THandleOnBlur = 'deliverError' | 'none'

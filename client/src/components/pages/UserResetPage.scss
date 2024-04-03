@@ -25,20 +25,13 @@
   background-repeat: no-repeat;
   box-shadow: $box-shadow-alt5;
 
-  .Navigation {
-    display: grid;
-    grid-template-columns: auto 150px;
-    padding: 15px 0;
-    box-shadow: $box-shadow-alt7;
-  }
-
   .Content {
     display: grid;
     place-items: center;
     align-items: center;
     width: 100%;
     max-width: 800px;
-    box-shadow: $box-shadow-alt5;
+    box-shadow: $box-shadow-alt7;
     border: 2px solid $color-main;
     border-radius: 10px;
     padding: 5px 0;

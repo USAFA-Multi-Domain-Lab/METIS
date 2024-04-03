@@ -19,4 +19,13 @@
       font-size: 14px;
     }
   }
+
+  .DetailToggle {
+    border: none;
+    grid-template-columns: auto 1fr;
+
+    .Label {
+      font-size: 0.88em;
+    }
+  }
 }

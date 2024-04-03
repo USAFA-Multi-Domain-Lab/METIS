@@ -311,11 +311,9 @@ export default class ClientUser extends User {
     userID: TCommonUser['userID'],
     password: string,
   ): Promise<{
-    correct: boolean
     session: TMetisSession<ClientUser>
   }> {
     return new Promise<{
-      correct: boolean
       session: TMetisSession<ClientUser>
     }>((resolve, reject) => {
       axios
@@ -335,7 +333,7 @@ export default class ClientUser extends User {
             }
           }
 
-          resolve({ correct, session })
+          resolve({ session })
         })
         .catch((error: AxiosError) => {
           console.log('Failed to login user.')

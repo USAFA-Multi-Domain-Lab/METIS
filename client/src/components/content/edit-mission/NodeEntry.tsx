@@ -1,15 +1,17 @@
+import { useState } from 'react'
 import { useGlobalContext } from 'src/context'
-import ClientMission from 'src/missions'
 import ClientMissionAction from 'src/missions/actions'
 import ClientMissionNode from 'src/missions/nodes'
 import { compute } from 'src/toolbox'
+import { usePostInitEffect } from 'src/toolbox/hooks'
+import { ReactSetter } from 'src/toolbox/types'
 import { SingleTypeObject } from '../../../../../shared/toolbox/objects'
 import Tooltip from '../communication/Tooltip'
 import {
-  Detail,
-  DetailBox,
   DetailDropDown,
+  DetailMediumString,
   DetailNumber,
+  DetailString,
   DetailToggle,
 } from '../form/Form'
 import List, { ESortByMethod } from '../general-layout/List'
@@ -17,6 +19,7 @@ import ButtonSvgPanel, {
   TValidPanelButton,
 } from '../user-controls/ButtonSvgPanel'
 import { ButtonText } from '../user-controls/ButtonText'
+import { TToggleLockState } from '../user-controls/Toggle'
 import './NodeEntry.scss'
 
 /**
@@ -25,8 +28,6 @@ import './NodeEntry.scss'
  */
 export default function NodeEntry({
   node,
-  missionPath,
-  setMissionPath,
   setSelectedAction,
   handleChange,
   handleAddRequest,
@@ -35,15 +36,28 @@ export default function NodeEntry({
   /* -- GLOBAL CONTEXT -- */
   const globalContext = useGlobalContext()
   const [colorOptions] = globalContext.missionNodeColors
-  const { notify } = globalContext.actions
+  const { notify, forceUpdate } = globalContext.actions
+
+  /* -- STATE -- */
+  const [nodeName, setNodeName] = useState<string>(node.name)
+  const [color, setColor] = useState<string>(node.color)
+  const [description, setDescription] = useState<string>(node.description)
+  const [preExecutionText, setPreExecutionText] = useState<string>(
+    node.preExecutionText,
+  )
+  const [depthPadding, setDepthPadding] = useState<number>(node.depthPadding)
+  const [executable, setExecutable] = useState<boolean>(node.executable)
+  const [device, setDevice] = useState<boolean>(node.device)
 
   /* -- COMPUTED -- */
   /**
    * The name of the mission.
    */
-  const missionName: string = compute(
-    () => node?.mission.name ?? ClientMission.DEFAULT_PROPERTIES.name,
-  )
+  const missionName: string = compute(() => node.mission.name)
+  /**
+   * The current location within the mission.
+   */
+  const missionPath: string[] = compute(() => [missionName, nodeName])
   /**
    * The class name for the list of actions.
    */
@@ -52,7 +66,7 @@ export default function NodeEntry({
     let classList: string[] = ['AltDesign2']
 
     // If the node is not executable then hide the list of actions.
-    if (!node?.executable) {
+    if (!executable) {
       classList.unshift('Hidden')
     }
 
@@ -67,7 +81,7 @@ export default function NodeEntry({
     let classList: string[] = ['ButtonContainer', 'New']
 
     // If the node is not executable then hide the add action container.
-    if (node && !node.executable) {
+    if (!executable) {
       classList.push('Hidden')
     }
 
@@ -104,6 +118,64 @@ export default function NodeEntry({
     // Combine the class names into a single string.
     return classList.join(' ')
   })
+  /**
+   * The lock state for the device toggle.
+   */
+  const deviceLockState: TToggleLockState = compute(() => {
+    // If the node is executable then the device toggle
+    // should be unlocked.
+    if (executable) {
+      return 'unlocked'
+    }
+    // If the node is not executable, but it's a device
+    // then the device toggle should be locked for activation.
+    else if (!executable && device) {
+      return 'locked-activation'
+    }
+    // If the node is not executable and it's not a device
+    // then the device toggle should be locked for deactivation.
+    else if (!executable && !device) {
+      return 'locked-deactivation'
+    }
+    // Otherwise, the device toggle should be locked for deactivation.
+    else {
+      return 'locked-deactivation'
+    }
+  })
+
+  /* -- EFFECTS -- */
+
+  // Sync the component state with the node.
+  usePostInitEffect(() => {
+    node.name = nodeName
+    node.color = color
+    node.description = description
+    node.preExecutionText = preExecutionText
+    node.depthPadding = depthPadding
+    node.executable = executable
+    node.device = device
+
+    // If the node is not executable, then the device
+    // status should be false.
+    if (!executable && device) setDevice(false)
+    // Allow the user to save the changes.
+    handleChange()
+  }, [
+    nodeName,
+    color,
+    description,
+    preExecutionText,
+    depthPadding,
+    executable,
+    device,
+  ])
+
+  // Auto-generate an action if the node becomes executable.
+  usePostInitEffect(() => {
+    if (executable) {
+      autoGenerateAction()
+    }
+  }, [executable])
 
   /* -- FUNCTIONS -- */
 
@@ -111,18 +183,12 @@ export default function NodeEntry({
    * This handles deleting an action from the selected node.
    */
   const handleDeleteActionRequest = (action: ClientMissionAction) => {
-    if (node) {
-      node.actions.delete(action.actionID)
-      handleChange()
-    }
-  }
-
-  /**
-   * This handles editing an action from the selected node.
-   */
-  const handleEditActionRequest = (action: ClientMissionAction) => {
-    setSelectedAction(action)
-    missionPath.push(action.name)
+    // Remove the action from the node.
+    node.actions.delete(action.actionID)
+    // Display the changes.
+    forceUpdate()
+    // Allow the user to save the changes.
+    handleChange()
   }
 
   /**
@@ -132,7 +198,7 @@ export default function NodeEntry({
   const handlePathPositionClick = (index: number) => {
     // If the index is 0 then take the user
     // back to the mission entry.
-    if (node && index === 0) {
+    if (index === 0) {
       node.mission.deselectNode()
     }
   }
@@ -141,293 +207,262 @@ export default function NodeEntry({
    * Handles creating a new action.
    */
   const createAction = () => {
-    // If the node is available then create a new action.
-    if (node) {
-      // Create a new action object.
+    // Create a new action object.
+    let newAction: ClientMissionAction = new ClientMissionAction(node)
+    // Update the action stored in the state.
+    setSelectedAction(newAction)
+    // Add the action to the node.
+    node.actions.set(newAction.actionID, newAction)
+    // Display the changes.
+    forceUpdate()
+    // Allow the user to save the changes.
+    handleChange()
+  }
+
+  /**
+   * Automatically generates an action for the node if it is executable
+   * and has no actions to execute.
+   */
+  const autoGenerateAction = () => {
+    if (node.executable && node.actions.size === 0) {
+      // Checks to make sure the selected node has
+      // at least one action to choose from. If the
+      // selected node does not have at least one
+      // action then it will auto-generate one for
+      // that node.
       let newAction: ClientMissionAction = new ClientMissionAction(node)
-      // Update the action stored in the state.
-      setSelectedAction(newAction)
-      // Add the action to the node.
+
       node.actions.set(newAction.actionID, newAction)
-      // Allow the user to save the changes.
-      handleChange()
+
+      notify(
+        `Auto-generated an action for ${node.name} because it is an executable node with no actions to execute.`,
+      )
     }
   }
 
   /* -- RENDER -- */
 
-  if (node) {
-    return (
-      <div className='NodeEntry SidePanel'>
-        <div className='BorderBox'>
-          {/* -- TOP OF BOX -- */}
-          <div className='BoxTop'>
-            <div className='BackContainer'>
-              <div
-                className='BackButton'
-                onClick={() => {
-                  missionPath.pop()
-                  node.mission.deselectNode()
-                }}
-              >
-                &lt;
-                <Tooltip description='Go back.' />
-              </div>
-            </div>
-            <div className='Path'>
-              Location:{' '}
-              {missionPath.map((position: string, index: number) => {
-                return (
-                  <span className='Position' key={`position-${index}`}>
-                    <span
-                      className='PositionText'
-                      onClick={() => handlePathPositionClick(index)}
-                    >
-                      {position}
-                    </span>{' '}
-                    {index === missionPath.length - 1 ? '' : ' > '}
-                  </span>
-                )
-              })}
+  return (
+    <div className='NodeEntry SidePanel'>
+      <div className='BorderBox'>
+        {/* -- TOP OF BOX -- */}
+        <div className='BoxTop'>
+          <div className='BackContainer'>
+            <div
+              className='BackButton'
+              onClick={() => {
+                missionPath.pop()
+                node.mission.deselectNode()
+              }}
+            >
+              &lt;
+              <Tooltip description='Go back.' />
             </div>
           </div>
-
-          {/* -- MAIN CONTENT -- */}
-          <div className='SidePanelSection'>
-            <Detail
-              label='Name'
-              currentValue={node.name}
-              defaultValue={ClientMissionNode.DEFAULT_PROPERTIES.name}
-              deliverValue={(name: string) => {
-                node.name = name
-                setMissionPath([missionName, name])
-                handleChange()
-              }}
-              key={`${node.nodeID}_name`}
-            />
-            <DetailDropDown<string>
-              label={'Color'}
-              options={colorOptions}
-              currentValue={`Choose a color`}
-              isExpanded={false}
-              renderDisplayName={(color) => color}
-              deliverValue={(color: string) => {
-                node.color = color
-                handleChange()
-              }}
-              uniqueClassName='Color'
-              uniqueOptionStyling={(color) => {
-                if (node.color === color) {
-                  return {
-                    backgroundColor: `${color}`,
-                    width: '65%',
-                    height: '62%',
-                    margin: '4px 3px 3px 4px',
-                    border: '2px solid black',
-                  }
-                } else {
-                  return {
-                    backgroundColor: `${color}`,
-                  }
-                }
-              }}
-              key={`${node.nodeID}_color`}
-            />
-            <div className='ColorInfo'>
-              <div className='SelectedColorText'>
-                Selected color:{' '}
-                <span
-                  className='SelectedColorBox'
-                  style={{ backgroundColor: `${node.color}` }}
-                >
-                  {node.color}
+          <div className='Path'>
+            Location:{' '}
+            {missionPath.map((position: string, index: number) => {
+              return (
+                <span className='Position' key={`position-${index}`}>
+                  <span
+                    className='PositionText'
+                    onClick={() => handlePathPositionClick(index)}
+                  >
+                    {position}
+                  </span>{' '}
+                  {index === missionPath.length - 1 ? '' : ' > '}
                 </span>
-              </div>
-              <ButtonText
-                text={'Fill'}
-                onClick={() => {
-                  node.applyColorFill()
-                  handleChange()
-                }}
-              />
-            </div>
-            <DetailBox
-              label='Description'
-              currentValue={node.description}
-              deliverValue={(description: string) => {
-                node.description = description
-                handleChange()
-              }}
-              elementBoundary='.BorderBox'
-              placeholder='Enter description...'
-              displayOptionalText={true}
-              key={`${node.nodeID}_description`}
-            />
-            <DetailBox
-              label='Pre-Execution Text'
-              currentValue={node.preExecutionText}
-              deliverValue={(preExecutionText: string) => {
-                node.preExecutionText = preExecutionText
-                handleChange()
-              }}
-              elementBoundary='.BorderBox'
-              placeholder='Enter pre-execution text...'
-              displayOptionalText={true}
-              key={`${node.nodeID}_preExecutionText`}
-            />
-            <DetailNumber
-              label='Depth Padding'
-              currentValue={node.depthPadding}
-              defaultValue={ClientMissionNode.DEFAULT_PROPERTIES.depthPadding}
-              emptyValueAllowed={false}
-              integersOnly={true}
-              deliverValue={(depthPadding: number | null) => {
-                if (depthPadding !== null) {
-                  node.depthPadding = depthPadding
-                  handleChange()
+              )
+            })}
+          </div>
+        </div>
+
+        {/* -- MAIN CONTENT -- */}
+        <div className='SidePanelSection'>
+          <DetailString
+            fieldType='required'
+            handleOnBlur='repopulateValue'
+            label='Name'
+            stateValue={nodeName}
+            setState={setNodeName}
+            defaultValue={ClientMissionNode.DEFAULT_PROPERTIES.name}
+            key={`${node.nodeID}_name`}
+          />
+          <DetailDropDown<string>
+            fieldType='required'
+            label='Color'
+            options={colorOptions}
+            stateValue='Choose a color'
+            setState={setColor}
+            isExpanded={false}
+            renderDisplayName={() => 'Choose a color'}
+            uniqueClassName='Color'
+            uniqueOptionStyling={(newColor: string) => {
+              if (color === newColor) {
+                return {
+                  backgroundColor: `${newColor}`,
+                  width: '65%',
+                  height: '62%',
+                  margin: '4px 3px 3px 4px',
+                  border: '2px solid black',
                 }
-              }}
-              key={`${node.nodeID}_depthPadding`}
-            />
-            <DetailToggle
-              label={'Executable'}
-              currentValue={node.executable}
-              deliverValue={(executable: boolean) => {
-                node.executable = executable
-
-                if (executable && node.actions.size === 0) {
-                  // Checks to make sure the selected node has
-                  // at least one action to choose from. If the
-                  // selected node does not have at least one
-                  // action then it will auto-generate one for
-                  // that node.
-                  let newAction: ClientMissionAction = new ClientMissionAction(
-                    node,
-                  )
-
-                  node.actions.set(newAction.actionID, newAction)
-
-                  notify(
-                    `Auto-generated an action for ${node.name} because it is an executable node with no actions to execute.`,
-                  )
+              } else {
+                return {
+                  backgroundColor: `${newColor}`,
                 }
-
-                handleChange()
-              }}
-              key={`${node.nodeID}_executable`}
-            />
-            <DetailToggle
-              label={'Device'}
-              currentValue={node.device}
-              lockState={
-                // Locks the toggle if the node is not executable.
-                node.executable
-                  ? 'unlocked'
-                  : !node.executable && node.device
-                  ? 'locked-activation'
-                  : !node.executable && !node.device
-                  ? 'locked-deactivation'
-                  : 'locked-deactivation'
               }
-              deliverValue={(device: boolean) => {
-                node.device = device
+            }}
+            key={`${node.nodeID}_color`}
+          />
+          <div className='ColorInfo'>
+            <div className='SelectedColorText'>
+              Selected color:{' '}
+              <span
+                className='SelectedColorBox'
+                style={{ backgroundColor: `${color}` }}
+              ></span>
+            </div>
+            <ButtonText
+              text={'Fill'}
+              onClick={() => {
+                node.applyColorFill()
                 handleChange()
               }}
-              key={`${node.nodeID}_device`}
             />
+          </div>
+          <DetailMediumString
+            fieldType='optional'
+            handleOnBlur='none'
+            label='Description'
+            stateValue={description}
+            setState={setDescription}
+            elementBoundary='.BorderBox'
+            placeholder='Enter description...'
+            key={`${node.nodeID}_description`}
+          />
+          <DetailMediumString
+            fieldType='optional'
+            handleOnBlur='none'
+            label='Pre-Execution Text'
+            stateValue={preExecutionText}
+            setState={setPreExecutionText}
+            elementBoundary='.BorderBox'
+            placeholder='Enter pre-execution text...'
+            key={`${node.nodeID}_preExecutionText`}
+          />
+          <DetailNumber
+            fieldType='required'
+            handleOnBlur='repopulateValue'
+            label='Depth Padding'
+            stateValue={depthPadding}
+            setState={setDepthPadding}
+            defaultValue={ClientMissionNode.DEFAULT_PROPERTIES.depthPadding}
+            integersOnly={true}
+            key={`${node.nodeID}_depthPadding`}
+          />
+          <DetailToggle
+            label='Executable'
+            stateValue={executable}
+            setState={setExecutable}
+            key={`${node.nodeID}_executable`}
+          />
+          <DetailToggle
+            label='Device'
+            stateValue={device}
+            setState={setDevice}
+            lockState={deviceLockState}
+            key={`${node.nodeID}_device`}
+          />
 
-            {/* -- ACTIONS -- */}
-            <List<ClientMissionAction>
-              items={Array.from(node.actions.values())}
-              renderItemDisplay={(action: ClientMissionAction) => {
-                /* -- COMPUTED -- */
-                /**
-                 * The buttons for the action list.
-                 */
-                const actionButtons = compute(() => {
-                  // Create a default list of buttons.
-                  let buttons: TValidPanelButton[] = []
+          {/* -- ACTIONS -- */}
+          <List<ClientMissionAction>
+            items={Array.from(node.actions.values())}
+            renderItemDisplay={(action: ClientMissionAction) => {
+              /* -- COMPUTED -- */
+              /**
+               * The buttons for the action list.
+               */
+              const actionButtons = compute(() => {
+                // Create a default list of buttons.
+                let buttons: TValidPanelButton[] = []
 
-                  // If the action is available then add the edit and remove buttons.
-                  let availableMiniActions: SingleTypeObject<TValidPanelButton> =
-                    {
-                      edit: {
-                        icon: 'edit',
-                        key: 'edit',
-                        onClick: () => handleEditActionRequest(action),
-                        tooltipDescription: 'Edit action.',
-                      },
-                      remove: {
-                        icon: 'remove',
-                        key: 'remove',
-                        onClick: () => handleDeleteActionRequest(action),
-                        tooltipDescription: 'Remove action.',
-                        uniqueClassList: removeActionClassList,
-                      },
-                    }
+                // If the action is available then add the edit and remove buttons.
+                let availableMiniActions: SingleTypeObject<TValidPanelButton> =
+                  {
+                    edit: {
+                      icon: 'edit',
+                      key: 'edit',
+                      onClick: () => setSelectedAction(action),
+                      tooltipDescription: 'Edit action.',
+                    },
+                    remove: {
+                      icon: 'remove',
+                      key: 'remove',
+                      onClick: () => handleDeleteActionRequest(action),
+                      tooltipDescription: 'Remove action.',
+                      uniqueClassList: removeActionClassList,
+                    },
+                  }
 
-                  // Add the buttons to the list.
-                  buttons.push(availableMiniActions.edit)
-                  buttons.push(availableMiniActions.remove)
+                // Add the buttons to the list.
+                buttons.push(availableMiniActions.edit)
+                buttons.push(availableMiniActions.remove)
 
-                  // Return the buttons.
-                  return buttons
-                })
+                // Return the buttons.
+                return buttons
+              })
 
-                return (
-                  <div className='Row' key={`action-row-${action.actionID}`}>
-                    <div className='RowContent'>
-                      {action.name}{' '}
-                      <Tooltip description={action.description ?? ''} />
-                    </div>
-                    <ButtonSvgPanel buttons={actionButtons} size={'small'} />
+              return (
+                <div className='Row' key={`action-row-${action.actionID}`}>
+                  <div className='RowContent'>
+                    {action.name}{' '}
+                    <Tooltip description={action.description ?? ''} />
                   </div>
-                )
-              }}
-              headingText={'Actions:'}
-              sortByMethods={[ESortByMethod.Name]}
-              nameProperty={'name'}
-              alwaysUseBlanks={false}
-              searchableProperties={['actionID']}
-              noItemsDisplay={
-                <div className='NoContent'>No actions available...</div>
-              }
-              ajaxStatus={'Loaded'}
-              applyItemStyling={() => {
-                return {}
-              }}
-              itemsPerPage={null}
-              listSpecificItemClassName={actionClassName}
+                  <ButtonSvgPanel buttons={actionButtons} size={'small'} />
+                </div>
+              )
+            }}
+            headingText={'Actions:'}
+            sortByMethods={[ESortByMethod.Name]}
+            nameProperty={'name'}
+            alwaysUseBlanks={false}
+            searchableProperties={['actionID']}
+            noItemsDisplay={
+              <div className='NoContent'>No actions available...</div>
+            }
+            ajaxStatus={'Loaded'}
+            applyItemStyling={() => {
+              return {}
+            }}
+            itemsPerPage={null}
+            listSpecificItemClassName={actionClassName}
+          />
+          <div className={newActionClassName}>
+            <ButtonText
+              text='New Action'
+              onClick={createAction}
+              tooltipDescription='Create a new action.'
             />
-            <div className={newActionClassName}>
-              <ButtonText
-                text='New Action'
-                onClick={createAction}
-                tooltipDescription='Create a new action.'
-              />
-            </div>
+          </div>
 
-            {/* -- BUTTON(S) -- */}
-            <div className='ButtonContainer'>
-              <ButtonText
-                text='Add adjacent node'
-                onClick={handleAddRequest}
-                tooltipDescription='Add one or multiple nodes adjacent to this node.'
-              />
-              <ButtonText
-                text='Delete node'
-                onClick={handleDeleteRequest}
-                tooltipDescription='Delete this node.'
-                uniqueClassName={deleteNodeClassName}
-              />
-            </div>
+          {/* -- BUTTON(S) -- */}
+          <div className='ButtonContainer'>
+            <ButtonText
+              text='Add adjacent node'
+              onClick={handleAddRequest}
+              tooltipDescription='Add one or multiple nodes adjacent to this node.'
+            />
+            <ButtonText
+              text='Delete node'
+              onClick={handleDeleteRequest}
+              tooltipDescription='Delete this node.'
+              uniqueClassName={deleteNodeClassName}
+            />
           </div>
         </div>
       </div>
-    )
-  } else {
-    return null
-  }
+    </div>
+  )
 }
 
 /* ---------------------------- TYPES FOR NODE ENTRY ---------------------------- */
@@ -437,20 +472,12 @@ export type TNodeEntry_P = {
   /**
    * The mission-node to be edited.
    */
-  node: ClientMissionNode | null
+  node: ClientMissionNode
   /**
-   * The path showing the user's location in the side panel.
-   * @note This will help the user understand what they are editing.
+   * React setter function used to update the value stored
+   * in a component's state.
    */
-  missionPath: string[]
-  /**
-   * A function that will set the mission path.
-   */
-  setMissionPath: (missionPath: string[]) => void
-  /**
-   * A function that will set the action that is selected.
-   */
-  setSelectedAction: (action: ClientMissionAction | null) => void
+  setSelectedAction: ReactSetter<ClientMissionAction | null>
   /**
    * A function that will be called when a change has been made.
    */

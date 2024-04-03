@@ -1,12 +1,13 @@
 import { compute } from 'src/toolbox'
+import { ReactSetter } from 'src/toolbox/types'
 import './Toggle.scss'
 
 /**
  * Renders a toggle switch.
  */
 export default function Toggle({
-  currentValue,
-  deliverValue,
+  stateValue,
+  setState,
   // Optional Properties
   lockState = 'unlocked',
 }: TToggle_P): JSX.Element {
@@ -19,7 +20,7 @@ export default function Toggle({
     let classList: string[] = ['Toggle']
 
     // Add activated class if activated.
-    if (currentValue) {
+    if (stateValue) {
       classList.push('Activated')
     }
 
@@ -38,11 +39,11 @@ export default function Toggle({
    */
   const handleClick = () => {
     if (lockState === 'unlocked') {
-      deliverValue(!currentValue)
+      setState(!stateValue)
     } else if (lockState === 'locked-activation') {
-      deliverValue(true)
+      setState(true)
     } else if (lockState === 'locked-deactivation') {
-      deliverValue(false)
+      setState(false)
     }
   }
 
@@ -66,13 +67,16 @@ export type TToggleLockState =
 
 type TToggle_P = {
   /**
-   * The current value of the toggle.
+   * The value stored in a component's state that
+   * will be displayed in the detail.
+   * @default false
    */
-  currentValue: boolean
+  stateValue: boolean
   /**
-   * A function that will deliver the value of the toggle.
+   * React setter function used to update the value stored
+   * in a component's state.
    */
-  deliverValue: (activated: boolean) => void
+  setState: ReactSetter<boolean>
   /**
    * The lock state of the toggle.
    * @default 'unlocked'

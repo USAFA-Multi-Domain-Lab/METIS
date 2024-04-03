@@ -54,6 +54,32 @@ export function useUnmountHandler(handler: () => void): boolean {
 }
 
 /**
+ * Works like `useEffect`, but the callback will not be called
+ * on the initial render.
+ * @param effect Imperative function that can return a cleanup function
+ * @param deps If present, effect will only activate if the values in the list change.
+ */
+export function usePostInitEffect(
+  effect: React.EffectCallback,
+  deps?: React.DependencyList | undefined,
+): void {
+  // Tracks whether the component has been initialized.
+  const initialized = useRef(false)
+
+  // Call use effect, calling and returning result
+  // of the callback only after the component has
+  // been initialized.
+  useEffect(() => {
+    if (!initialized.current) {
+      initialized.current = true
+      return
+    } else {
+      return effect()
+    }
+  }, deps)
+}
+
+/**
  * Requires that a session be present in the application state. If no session is present, the user will be redirected to the AuthPage.
  */
 export function useRequireSession(): [NonNullable<TMetisSession<ClientUser>>] {
