@@ -74,10 +74,15 @@ export default function CreateEffectModal({
 
   /* -- EFFECTS -- */
 
-  // Sync the component state with the effect state.
+  // Sync the component state with the effect.
   usePostInitEffect(() => {
     effect.target = target
   }, [target])
+
+  // Reset the target when the target environment changes.
+  usePostInitEffect(() => {
+    setTarget(new ClientTarget(targetEnv))
+  }, [targetEnv])
 
   /* -- FUNCTIONS -- */
   /**

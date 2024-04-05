@@ -141,6 +141,7 @@ export default function EditUserEntry({
         placeholder='Enter a last name here...'
       />
       <DetailToggle
+        fieldType='required'
         label='Password Reset'
         stateValue={needsPasswordReset}
         setState={setNeedsPasswordReset}

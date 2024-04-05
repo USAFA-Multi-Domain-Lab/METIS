@@ -347,6 +347,7 @@ export default function CreateUserEntry({
         placeholder='Confirm your password here...'
       />
       <DetailToggle
+        fieldType='required'
         label='Needs Password Reset'
         stateValue={needsPasswordReset}
         setState={setNeedsPasswordReset}

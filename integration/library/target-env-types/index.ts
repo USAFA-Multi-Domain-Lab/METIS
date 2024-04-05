@@ -49,7 +49,6 @@ export type TTarget = {
    */
   args: TTargetArg[]
 }
-
 /**
  * The base argument type for a target.
  */
@@ -72,14 +71,9 @@ type TBaseArg = {
    */
   groupingId?: string
   /**
-   * Optional parameters for the argument.
+   * These are the keys of the arguments that the current argument depends on.
    */
-  optionalParams?: {
-    /**
-     * These are the keys of the arguments that the current argument depends on.
-     */
-    dependencies?: string[]
-  }
+  dependencies?: string[]
 }
 
 /**
@@ -172,21 +166,21 @@ type TStringArgRequired = {
 }
 
 /**
- * The medium character string argument type for a target.
+ * The large character string argument type for a target.
  */
-type TMedCharStringArg = TBaseArg &
-  (TMedCharStringArgOptional | TMedCharStringArgRequired) & {
+type TLargeStringArg = TBaseArg &
+  (TLargeStringArgOptional | TLargeStringArgRequired) & {
     /**
      * The argument's input type.
      * @note This will render as an input that accepts any string.
      * If the argument is required, empty strings are not allowed.
      */
-    type: 'medium-string'
+    type: 'large-string'
   }
 /**
- * The optional medium character string argument type for a target.
+ * The optional large character string argument type for a target.
  */
-type TMedCharStringArgOptional = {
+type TLargeStringArgOptional = {
   /**
    * Determines whether the argument is required or not.
    */
@@ -197,9 +191,9 @@ type TMedCharStringArgOptional = {
   default?: string
 }
 /**
- * The required medium character string argument type for a target.
+ * The required large character string argument type for a target.
  */
-type TMedCharStringArgRequired = {
+type TLargeStringArgRequired = {
   /**
    * Determines whether the argument is required or not.
    */
@@ -213,31 +207,37 @@ type TMedCharStringArgRequired = {
 /**
  * The dropdown argument type for a target.
  */
-type TDropdownArg = TBaseArg & {
-  /**
-   * The argument's input type.
-   * @note This will render as a dropdown box with
-   * predefined options for the user to select from.
-   */
-  type: 'dropdown'
+type TDropdownArg = TBaseArg &
+  (TDropdownArgOptional | TDropdownArgRequired) & {
+    /**
+     * The argument's input type.
+     * @note This will render as a dropdown box with
+     * predefined options for the user to select from.
+     */
+    type: 'dropdown'
+    /**
+     * The options for the argument.
+     */
+    options: Array<{
+      /**
+       * The ID of the option.
+       */
+      id: string
+      /**
+       * The option's name.
+       * @note This is displayed to the user.
+       */
+      name: string
+    }>
+  }
+/**
+ * The optional dropdown argument type for a target.
+ */
+type TDropdownArgOptional = {
   /**
    * Determines whether the argument is required or not.
    */
-  required: boolean
-  /**
-   * The options for the argument.
-   */
-  options: Array<{
-    /**
-     * The ID of the option.
-     */
-    id: string
-    /**
-     * The option's name.
-     * @note This is displayed to the user.
-     */
-    name: string
-  }>
+  required: false
   /**
    * The default value for the argument.
    * @default { id: 'default', name: 'Select an option' }
@@ -253,25 +253,66 @@ type TDropdownArg = TBaseArg & {
     name: string
   }
 }
+/**
+ * The required dropdown argument type for a target.
+ */
+type TDropdownArgRequired = {
+  /**
+   * Determines whether the argument is required or not.
+   */
+  required: true
+  /**
+   * The default value for the argument.
+   */
+  default: {
+    /**
+     * The ID of the option.
+     */
+    id: string
+    /**
+     * The option's name. This is displayed to the user.
+     */
+    name: string
+  }
+}
 
 /**
  * The boolean argument type for a target.
  */
-type TBooleanArg = TBaseArg & {
-  /**
-   * The argument's input type.
-   * @note This will render as a toggle switch.
-   */
-  type: 'boolean'
+type TBooleanArg = TBaseArg &
+  (TBooleanArgOptional | TBooleanArgRequired) & {
+    /**
+     * The argument's input type.
+     * @note This will render as a toggle switch.
+     */
+    type: 'boolean'
+  }
+/**
+ * The optional boolean argument type for a target.
+ */
+type TBooleanArgOptional = {
   /**
    * Determines whether the argument is required or not.
    */
-  required: boolean
+  required: false
   /**
    * The default value for the argument.
    * @default false
    */
   default?: boolean
+}
+/**
+ * The required boolean argument type for a target.
+ */
+type TBooleanArgRequired = {
+  /**
+   * Determines whether the argument is required or not.
+   */
+  required: true
+  /**
+   * The default value for the argument.
+   */
+  default: boolean
 }
 
 /**
@@ -280,6 +321,6 @@ type TBooleanArg = TBaseArg & {
 type TTargetArg =
   | TNumberArg
   | TStringArg
-  | TMedCharStringArg
+  | TLargeStringArg
   | TDropdownArg
   | TBooleanArg

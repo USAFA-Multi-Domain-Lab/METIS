@@ -9,7 +9,7 @@ import { usePostInitEffect } from 'src/toolbox/hooks'
 import { ReactSetter } from 'src/toolbox/types'
 import { SingleTypeObject } from '../../../../../shared/toolbox/objects'
 import Tooltip from '../communication/Tooltip'
-import { DetailMediumString, DetailNumber, DetailString } from '../form/Form'
+import { DetailLargeString, DetailNumber, DetailString } from '../form/Form'
 import List, { ESortByMethod } from '../general-layout/List'
 import ButtonSvgPanel, {
   TValidPanelButton,
@@ -226,7 +226,7 @@ export default function ActionEntry({
               placeholder='Enter name...'
               key={`${action.actionID}_name`}
             />
-            <DetailMediumString
+            <DetailLargeString
               fieldType='optional'
               handleOnBlur='none'
               label='Description'
@@ -276,7 +276,7 @@ export default function ActionEntry({
               integersOnly={true}
               key={`${action.actionID}_resourceCost`}
             />
-            <DetailMediumString
+            <DetailLargeString
               fieldType='required'
               handleOnBlur='repopulateValue'
               label='Post-Execution Success Text'
@@ -288,7 +288,7 @@ export default function ActionEntry({
               elementBoundary='.BorderBox'
               key={`${action.actionID}_postExecutionSuccessText`}
             />
-            <DetailMediumString
+            <DetailLargeString
               fieldType='required'
               handleOnBlur='repopulateValue'
               label='Post-Execution Failure Text'

@@ -7,7 +7,7 @@ import ClientTarget from 'src/target-environments/targets'
 import { compute } from 'src/toolbox'
 import { usePostInitEffect } from 'src/toolbox/hooks'
 import Tooltip from '../../communication/Tooltip'
-import { DetailMediumString, DetailString } from '../../form/Form'
+import { DetailLargeString, DetailString } from '../../form/Form'
 import { ButtonText } from '../../user-controls/ButtonText'
 import Args from './Args'
 import './EffectEntry.scss'
@@ -172,7 +172,7 @@ export default function EffectEntry({
             defaultValue={ClientEffect.DEFAULT_PROPERTIES.name}
             placeholder='Enter name...'
           />
-          <DetailMediumString
+          <DetailLargeString
             fieldType='optional'
             handleOnBlur='none'
             label='Description'

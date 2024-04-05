@@ -59,6 +59,7 @@ export default function GameConfig({
         }}
       /> */}
       <DetailToggle
+        fieldType='required'
         label='Auto-Assign:'
         stateValue={autoAssign}
         setState={setAutoAssign}
@@ -70,6 +71,7 @@ export default function GameConfig({
         setState={setInfiniteResources}
       /> */}
       <DetailToggle
+        fieldType='required'
         label='Enable Effects:'
         stateValue={effectsEnabled}
         setState={setEffectsEnabled}

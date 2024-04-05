@@ -5,7 +5,7 @@ import { compute } from 'src/toolbox'
 import { usePostInitEffect } from 'src/toolbox/hooks'
 import { TAjaxStatus } from '../../../../../shared/toolbox/ajax'
 import {
-  DetailMediumString,
+  DetailLargeString,
   DetailNumber,
   DetailString,
   DetailToggle,
@@ -152,7 +152,7 @@ export default function MissionEntry({
               defaultValue={ClientMission.DEFAULT_PROPERTIES.name}
               key={`${mission.missionID}_name`}
             />
-            <DetailMediumString
+            <DetailLargeString
               fieldType='required'
               handleOnBlur='repopulateValue'
               label='Introduction Message'
@@ -162,7 +162,12 @@ export default function MissionEntry({
               elementBoundary='.BorderBox'
               key={`${mission.missionID}_introMessage`}
             />
-            <DetailToggle label={'Live'} stateValue={live} setState={setLive} />
+            <DetailToggle
+              fieldType='required'
+              label={'Live'}
+              stateValue={live}
+              setState={setLive}
+            />
             <DetailNumber
               fieldType='required'
               handleOnBlur='repopulateValue'

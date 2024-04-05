@@ -28,7 +28,6 @@ export function DetailString({
   uniqueFieldClassName = undefined,
   inputType = 'text',
   placeholder = 'Enter text here...',
-  clearField = false,
 }: TDetailString_P): JSX.Element {
   /* -- STATE -- */
   const [leftField, setLeftField] = useState<boolean>(false)
@@ -202,15 +201,6 @@ export function DetailString({
     fieldType === 'optional' ? 'Optional' : 'Optional Hidden',
   )
 
-  /* -- EFFECTS -- */
-  useEffect(() => {
-    // If clearField is true then
-    // clear the field.
-    if (clearField) {
-      setState('')
-    }
-  }, [clearField])
-
   /* -- FUNCTIONS -- */
 
   /**
@@ -303,7 +293,6 @@ export function DetailNumber({
   integersOnly = false,
   unit = undefined,
   placeholder = 'Enter a number here...',
-  clearField = false,
   uniqueLabelClassName = undefined,
   uniqueFieldClassName = undefined,
   disabled = false,
@@ -422,40 +411,6 @@ export function DetailNumber({
   )
 
   /* -- EFFECTS -- */
-  // If clearField is true then
-  // clear the field.
-  useEffect(() => {
-    if (clearField) {
-      setInputValue('')
-      // If the field is required...
-      if (fieldType === 'required') {
-        // ...and the minimum value is greater than or equal to 0,
-        // then set the input's value to the minimum value.
-        if (minimum !== undefined && minimum >= 0) {
-          setState(minimum)
-        }
-        // Or, if the maximum value is less than 0,
-        // then set the input's value to the maximum value.
-        else if (maximum !== undefined && maximum < 0) {
-          setState(maximum)
-        }
-        // Or, if a default value is passed and it is not null,
-        // then set the input's value to the default value.
-        else if (defaultValue !== undefined && defaultValue !== null) {
-          setState(defaultValue)
-        }
-        // Otherwise, set the input's value to 0 as a default.
-        else {
-          setState(0)
-        }
-      }
-      // Otherwise, set the input's value to null.
-      else {
-        setState(null)
-      }
-    }
-  }, [clearField])
-
   useEffect(() => {
     // If the current value is not null
     // then set the input's value to the
@@ -581,7 +536,7 @@ export function DetailNumber({
  * a form, with a label and a text
  * field for entering information.
  */
-export function DetailMediumString({
+export function DetailLargeString({
   fieldType,
   handleOnBlur,
   label,
@@ -595,8 +550,7 @@ export function DetailMediumString({
   uniqueFieldClassName = undefined,
   placeholder = 'Enter text here...',
   elementBoundary = undefined,
-  clearField = false,
-}: TDetailMediumString_P): JSX.Element | null {
+}: TDetailLargeString_P): JSX.Element | null {
   /* -- STATE -- */
   const [leftField, setLeftField] = useState<boolean>(false)
 
@@ -719,15 +673,6 @@ export function DetailMediumString({
   const optionalClassName: string = compute(() =>
     fieldType === 'optional' ? 'Optional' : 'Optional Hidden',
   )
-
-  /* -- EFFECTS -- */
-  useEffect(() => {
-    // If clearField is true then
-    // clear the field.
-    if (clearField) {
-      setState('<p><br></p>')
-    }
-  }, [clearField])
 
   /* -- PRE-RENDER PROCESSING -- */
 
@@ -1014,7 +959,6 @@ export function DetailToggle({
   uniqueFieldClassName = undefined,
   errorMessage = undefined,
   disabled = false,
-  clearField = false,
 }: TDetailToggle_P): JSX.Element | null {
   /* -- COMPUTED -- */
   /**
@@ -1088,15 +1032,6 @@ export function DetailToggle({
     return classList.join(' ')
   })
 
-  /* -- EFFECTS -- */
-  useEffect(() => {
-    // If clearField is true then
-    // clear the field.
-    if (clearField) {
-      setState(false)
-    }
-  }, [clearField])
-
   /* -- RENDER -- */
   return (
     <div className={rootClassName}>
@@ -1119,35 +1054,39 @@ export function DetailToggle({
 /**
  * Input types for the Detail component.
  */
-type TInput =
-  | 'button'
-  | 'checkbox'
-  | 'color'
-  | 'date'
-  | 'datetime-local'
-  | 'email'
-  | 'file'
-  | 'hidden'
-  | 'image'
-  | 'month'
-  | 'number'
-  | 'password'
-  | 'radio'
-  | 'range'
-  | 'reset'
-  | 'search'
-  | 'submit'
-  | 'tel'
-  | 'text'
-  | 'time'
-  | 'url'
-  | 'week'
+type TInput = 'password' | 'text'
 
 /**
- * The base properties needed for every type of detail component that
- * is required.
+ * The base properties for the details.
  */
-type TDetailBaseRequired_P<Type> = {
+type TDetailBase_P = {
+  /**
+   * The label for the detail.
+   */
+  label: string
+  /**
+   * Boolean that determines if the detail should be disabled.
+   */
+  disabled?: boolean
+  /**
+   * The unique class name for the label.
+   */
+  uniqueLabelClassName?: string
+  /**
+   * The unique class name for the field.
+   */
+  uniqueFieldClassName?: string
+  /**
+   * The error message to display if the detail has an error.
+   * @default 'At least one character is required here.'
+   */
+  errorMessage?: string
+}
+
+/**
+ * The properties needed for required details.
+ */
+interface TDetailRequired_P<Type> extends TDetailBase_P {
   /**
    * Field type for the detail.
    * @note Determines if the field should allow empty strings
@@ -1167,10 +1106,9 @@ type TDetailBaseRequired_P<Type> = {
 }
 
 /**
- * The base properties needed for every type of detail component that
- * is optional.
+ * The properties needed for optional details.
  */
-type TDetailBaseOptional_P<Type> = {
+interface TDetailOptional_P<Type> extends TDetailBase_P {
   /**
    * Field type for the detail.
    * @note Determines if the field should allow empty strings
@@ -1190,44 +1128,14 @@ type TDetailBaseOptional_P<Type> = {
 }
 
 /**
- * The base properties needed for every type of detail component.
+ * The properties needed for every type of detail component.
  */
-type TDetailBase_P<Type> = (
-  | TDetailBaseRequired_P<Type>
-  | TDetailBaseOptional_P<Type>
-) & {
-  /**
-   * The label for the detail.
-   */
-  label: string
-  /**
-   * Boolean that determines if the detail should be disabled.
-   */
-  disabled?: boolean
-  /**
-   * The unique class name for the label.
-   */
-  uniqueLabelClassName?: string
-  /**
-   * The unique class name for the field.
-   */
-  uniqueFieldClassName?: string
-  /**
-   * The boolean that determines if the detail should clear the field.
-   * @default false
-   */
-  clearField?: boolean
-  /**
-   * The error message to display if the detail has an error.
-   * @default 'At least one character is required here.'
-   */
-  errorMessage?: string
-}
+type TDetail_P<Type> = TDetailRequired_P<Type> | TDetailOptional_P<Type>
 
 /**
  * The properties for the details that use an input field.
  */
-type TDetailWithInput_P<Type> = TDetailBase_P<Type> & {
+type TDetailWithInput_P<Type> = TDetail_P<Type> & {
   /**
    * **Determines what happens when the user leaves the field.**
    * @type `'repopulateValue'` will repopulate the field with the default value
@@ -1257,7 +1165,7 @@ type TDetailWithInput_P<Type> = TDetailBase_P<Type> & {
  */
 type TDetailString_P = TDetailWithInput_P<string> & {
   /**
-   * The type of input to render (i.e., text, password, etc.).
+   * The type of input to render (i.e., text or password).
    * @default 'text'
    */
   inputType?: TInput
@@ -1287,27 +1195,21 @@ type TDetailNumber_P = TDetailWithInput_P<number | null> & {
 }
 
 /**
- * The properties for the Detail Medium String component.
+ * The properties for the Detail Large String component.
  */
-type TDetailMediumString_P = TDetailBase_P<string> &
-  TDetailWithInput_P<string> & {
-    /**
-     * The class name of the element that the detail is bound to.
-     * @note This is used to keep the tooltip from being cut off by the
-     * element's boundary.
-     */
-    elementBoundary?: string
-  }
+type TDetailLargeString_P = TDetailWithInput_P<string> & {
+  /**
+   * The class name of the element that the detail is bound to.
+   * @note This is used to keep the tooltip from being cut off by the
+   * element's boundary.
+   */
+  elementBoundary?: string
+}
 
 /**
  * The properties for the Detail Drop Down component.
- * @note `errorMessage` and `clearField` are omitted
- * because they are not needed.
  */
-type TDetailDropDown_P<TOption> = Omit<
-  TDetailBase_P<TOption>,
-  'errorMessage' & 'clearField'
-> & {
+type TDetailDropDown_P<TOption> = TDetail_P<TOption> & {
   /**
    * The options available for the detail.
    */
@@ -1343,28 +1245,28 @@ type TDetailDropDown_P<TOption> = Omit<
    * @default (option: TOption) => { return '' }
    */
   renderOptionClassName?: (option: TOption) => string
+  /**
+   * @note This is disabled for drop down details.
+   */
+  errorMessage?: undefined
 }
 
 /**
- * The properties for the Detail Toggle component.
- * @note `fieldType` is omitted because the toggle's
- * value is always defined as either true or false.
+ * The properties for the Detail Toggle component..
  */
-export type TDetailToggle_P =
-  | Omit<TDetailBase_P<boolean>, 'fieldType'> & {
-      /**
-       * The toggle lock state of the toggle.
-       * @default 'unlocked'
-       */
-      lockState?: TToggleLockState
-
-      /**
-       * The description displayed when hovered over.
-       * @default ''
-       */
-      tooltipDescription?: string
-      /**
-       * Class name to apply to the root element.
-       */
-      uniqueClassName?: string
-    }
+export type TDetailToggle_P = TDetailRequired_P<boolean> & {
+  /**
+   * The toggle lock state of the toggle.
+   * @default 'unlocked'
+   */
+  lockState?: TToggleLockState
+  /**
+   * The description displayed when hovered over.
+   * @default ''
+   */
+  tooltipDescription?: string
+  /**
+   * Class name to apply to the root element.
+   */
+  uniqueClassName?: string
+}

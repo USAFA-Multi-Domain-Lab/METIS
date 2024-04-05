@@ -9,7 +9,7 @@ import { SingleTypeObject } from '../../../../../shared/toolbox/objects'
 import Tooltip from '../communication/Tooltip'
 import {
   DetailDropDown,
-  DetailMediumString,
+  DetailLargeString,
   DetailNumber,
   DetailString,
   DetailToggle,
@@ -330,7 +330,7 @@ export default function NodeEntry({
               }}
             />
           </div>
-          <DetailMediumString
+          <DetailLargeString
             fieldType='optional'
             handleOnBlur='none'
             label='Description'
@@ -340,7 +340,7 @@ export default function NodeEntry({
             placeholder='Enter description...'
             key={`${node.nodeID}_description`}
           />
-          <DetailMediumString
+          <DetailLargeString
             fieldType='optional'
             handleOnBlur='none'
             label='Pre-Execution Text'
@@ -361,12 +361,14 @@ export default function NodeEntry({
             key={`${node.nodeID}_depthPadding`}
           />
           <DetailToggle
+            fieldType='required'
             label='Executable'
             stateValue={executable}
             setState={setExecutable}
             key={`${node.nodeID}_executable`}
           />
           <DetailToggle
+            fieldType='required'
             label='Device'
             stateValue={device}
             setState={setDevice}

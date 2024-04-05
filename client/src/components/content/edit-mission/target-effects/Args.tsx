@@ -1,7 +1,6 @@
-import { useState } from 'react'
 import { ClientEffect } from 'src/missions/effects'
 import { compute } from 'src/toolbox'
-import { useMountHandler } from 'src/toolbox/hooks'
+import { ReactSetter } from 'src/toolbox/types'
 import { TTargetArg } from '../../../../../../shared/target-environments/targets'
 import { SingleTypeObject } from '../../../../../../shared/toolbox/objects'
 import ArgEntry from './ArgEntry'
@@ -11,18 +10,16 @@ import './Args.scss'
  * Groups arguments together and renders them.
  */
 export default function Args({
-  effect,
-  handleChange,
+  target,
+  effectArgs,
+  setEffectArgs,
 }: TArgs_P): JSX.Element | null {
-  /* -- STATE -- */
-  const [argDependencies] = useState<string[]>([])
-
   /* -- COMPUTED -- */
   /**
    * The selected target's arguments.
    */
   const args: TTargetArg[] | undefined = compute(() => {
-    return effect.target?.args
+    return target?.args
   })
   /**
    * The object to store the arguments in groupings.
@@ -69,33 +66,10 @@ export default function Args({
     return Object.entries(groupings)
   })
 
-  /* -- EFFECTS -- */
-  // Handle the mount event.
-  const [mountHandled] = useMountHandler((done) => {
-    // Iterate through the arguments and collect
-    // the dependencies.
-    args?.forEach((arg: TTargetArg) => {
-      // If the argument has dependencies...
-      if (arg.optionalParams?.dependencies) {
-        // Iterate through the dependencies and add
-        // them to the dependencies list.
-        let dependencies: string[] = arg.optionalParams.dependencies
-        dependencies.forEach((dependency: string) => {
-          if (!argDependencies.includes(dependency)) {
-            argDependencies.push(dependency)
-          }
-        })
-      }
-    })
-
-    done()
-  })
-
   /* -- RENDER -- */
-  // If the component has mounted and the
-  // grouping entries are not empty then
-  // render the arguments in groupings.
-  if (mountHandled && groupingEntries.length > 0) {
+  // If the grouping entries are not empty
+  // then render the arguments in groupings.
+  if (groupingEntries.length > 0) {
     return (
       <div className='Args'>
         <div className='ArgsTitle'>Arguments:</div>
@@ -144,11 +118,11 @@ export default function Args({
               {grouping.map((arg: TTargetArg) => {
                 return (
                   <ArgEntry
-                    effect={effect}
+                    target={target}
                     arg={arg}
-                    argDependencies={argDependencies}
-                    handleChange={handleChange}
-                    key={`arg-${arg.id}`}
+                    effectArgs={effectArgs}
+                    setEffectArgs={setEffectArgs}
+                    key={`arg-${arg.id}-display-${arg.display}`}
                   />
                 )
               })}
@@ -169,11 +143,16 @@ export default function Args({
  */
 export type TArgs_P = {
   /**
-   * The effect to apply to the target.
+   * The effect's target.
    */
-  effect: ClientEffect
+  target: ClientEffect['target']
   /**
-   * Handles when a change is made that would require saving.
+   * The arguments that the effect uses to modify the target.
    */
-  handleChange: () => void
+  effectArgs: ClientEffect['args']
+  /**
+   * Function that updates the value of the effect's arguments
+   * stored in the state.
+   */
+  setEffectArgs: ReactSetter<ClientEffect['args']>
 }
