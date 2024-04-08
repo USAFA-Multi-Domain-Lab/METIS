@@ -131,14 +131,7 @@ export default function EffectEntry({
         {/* -- TOP OF BOX -- */}
         <div className='BoxTop'>
           <div className='BackContainer'>
-            <div
-              className='BackButton'
-              onClick={() => {
-                console.log(effect.args)
-
-                setSelectedEffect(null)
-              }}
-            >
+            <div className='BackButton' onClick={() => setSelectedEffect(null)}>
               &lt;
               <Tooltip description='Go back.' />
             </div>
