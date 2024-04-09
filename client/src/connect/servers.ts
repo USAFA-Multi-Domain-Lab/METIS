@@ -136,9 +136,7 @@ export default class ServerConnection {
     options: IServerConnectionOptions,
     bad: boolean = false,
   ): WebSocket {
-    let url: string = bad
-      ? ServerConnection.SOCKET_URL_BAD
-      : ServerConnection.SOCKET_URL
+    let url: string = ServerConnection.SOCKET_URL
 
     // Add disconnectExisting query if
     // requested.
@@ -630,8 +628,6 @@ export default class ServerConnection {
    */
   public static readonly SOCKET_URL =
     typeof window !== 'undefined' ? `ws://${window.location.host}/connect` : '/'
-
-  public static SOCKET_URL_BAD = 'ws://localhost:8085/connect'
 
   /**
    * The amount of time to wait before attempting to reconnect to the server.
