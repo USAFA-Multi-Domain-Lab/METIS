@@ -28,7 +28,7 @@ import {
   PanelSizeRelationship,
   ResizablePanel,
 } from '../content/general-layout/ResizablePanels'
-import { TButtonSvg } from '../content/user-controls/ButtonSvgg'
+import { TButtonSvg } from '../content/user-controls/ButtonSvg'
 import './MissionPage.scss'
 
 /**

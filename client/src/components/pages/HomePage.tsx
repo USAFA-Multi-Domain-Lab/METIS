@@ -18,10 +18,10 @@ import Tooltip from '../content/communication/Tooltip'
 import { DetailString } from '../content/form/Form'
 import List, { ESortByMethod } from '../content/general-layout/List'
 import { LogoutLink } from '../content/general-layout/Navigation'
+import ButtonSvg from '../content/user-controls/ButtonSvg'
 import ButtonSvgPanel, {
   TValidPanelButton,
 } from '../content/user-controls/ButtonSvgPanel'
-import ButtonSvg from '../content/user-controls/ButtonSvgg'
 import { ButtonText } from '../content/user-controls/ButtonText'
 import MissionModificationPanel from '../content/user-controls/MissionModificationPanel'
 import UserModificationPanel from '../content/user-controls/UserModificationPanel'

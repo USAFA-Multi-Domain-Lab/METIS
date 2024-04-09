@@ -2,7 +2,7 @@ import { useState } from 'react'
 import Tooltip from 'src/components/content/communication/Tooltip'
 import ButtonSvg, {
   TButtonSvg,
-} from 'src/components/content/user-controls/ButtonSvgg'
+} from 'src/components/content/user-controls/ButtonSvg'
 import ClientMissionNode from 'src/missions/nodes'
 import { compute } from 'src/toolbox'
 import { useEventListener, useInlineStyling } from 'src/toolbox/hooks'
