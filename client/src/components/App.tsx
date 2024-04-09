@@ -7,10 +7,9 @@ import ClientUser from 'src/users'
 import { TMetisSession } from '../../../shared/sessions'
 import Notification from '../notifications'
 import './App.scss'
-import Confirmation from './content/communication/Confirmation'
 import ConnectionStatus from './content/communication/ConnectionStatus'
 import NotificationBubble from './content/communication/NotificationBubble'
-import Prompt from './content/communication/Prompt'
+import { default as Prompt } from './content/communication/Prompt'
 import {
   tooltipsOffsetX,
   tooltipsOffsetY,
@@ -61,12 +60,10 @@ function App(props: {}): JSX.Element | null {
   const [loadingMinTimeReached] = globalContext.loadingMinTimeReached
   const [pageSwitchMinTimeReached] = globalContext.pageSwitchMinTimeReached
   const [notifications] = globalContext.notifications
-  const [confirmation] = globalContext.confirmation
+  const [promptData] = globalContext.promptData
   const [currentPageKey] = globalContext.currentPageKey
   const [currentPageProps] = globalContext.currentPageProps
   const [error] = globalContext.error
-
-  const [prompt] = globalContext.prompt
 
   const {
     beginLoading,
@@ -176,7 +173,18 @@ function App(props: {}): JSX.Element | null {
             let game: GameClient = await server.$fetchCurrentGame(
               session.gameID,
             )
-            navigateTo('GamePage', { game })
+            // Navigate based on the game state.
+            switch (game.state) {
+              case 'unstarted':
+                navigateTo('LobbyPage', { game })
+                break
+              case 'started':
+                navigateTo('GamePage', { game })
+                break
+              case 'ended':
+                navigateTo('HomePage', {})
+                break
+            }
           }
           // Else, go to the home page.
           else {
@@ -250,8 +258,7 @@ function App(props: {}): JSX.Element | null {
           ))}
         </div>
       </div>
-      {confirmation !== null ? <Confirmation {...confirmation} /> : null}
-      {prompt !== null ? <Prompt {...prompt} /> : null}
+      {promptData !== null ? <Prompt {...promptData} /> : null}
       <ErrorPage {...pageProps} />
       <LoadingPage {...pageProps} />
       <ConnectionStatus />

@@ -1,6 +1,6 @@
 @import '../../assets/styles/config.scss';
 
-.Page.GameConfigPage {
+.Page.LobbyPage {
   // Double the box shadow to make the content stand out.
   box-shadow: $box-shadow-main, $box-shadow-main;
 
@@ -17,6 +17,25 @@
       margin: 0 0 1em;
       font-size: 1.5rem;
       font-weight: bold;
+    }
+
+    .Section {
+      margin: 0 0 1.75em;
+
+      &.ButtonSection {
+        display: flex;
+        column-gap: 1em;
+
+        .ButtonText {
+          margin: 0;
+        }
+      }
+    }
+
+    .Title,
+    .Section {
+      width: 100%;
+      max-width: 25rem;
     }
 
     .StaticDetail {

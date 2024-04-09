@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import { TGameConfig } from '../../../../../shared/games'
-import { DetailToggle } from '../form/Form'
+import { TGameAccessibility, TGameConfig } from '../../../../../shared/games'
+import { DetailDropDown, DetailToggle } from '../form/Form'
 import { ButtonText } from '../user-controls/ButtonText'
 import './GameConfig.scss'
 
@@ -12,34 +12,30 @@ export default function GameConfig({
   saveButtonText = 'Save',
   onChange = () => {},
   onSave,
+  onCancel,
 }: TGameConfig_P): JSX.Element | null {
-  // const [accessibility, setAccessibility] = useState<TGameAccessibility>(
-  //   gameConfig.accessibility,
-  // )
+  const [accessibility, setAccessibility] = useState<TGameAccessibility>(
+    gameConfig.accessibility,
+  )
   const [autoAssign, setAutoAssign] = useState(gameConfig.autoAssign)
-  // const [infiniteResources, setInfiniteResources] = useState(
-  //   gameConfig.infiniteResources,
-  // )
+  const [infiniteResources, setInfiniteResources] = useState(
+    gameConfig.infiniteResources,
+  )
   const [effectsEnabled, setEffectsEnabled] = useState(
     gameConfig.effectsEnabled,
   )
 
   useEffect(() => {
-    // gameConfig.accessibility = accessibility
+    gameConfig.accessibility = accessibility
     gameConfig.autoAssign = autoAssign
-    // gameConfig.infiniteResources = infiniteResources
+    gameConfig.infiniteResources = infiniteResources
     gameConfig.effectsEnabled = effectsEnabled
     onChange()
-  }, [
-    // accessibility,
-    autoAssign,
-    //  infiniteResources,
-    effectsEnabled,
-  ])
+  }, [accessibility, autoAssign, infiniteResources, effectsEnabled])
 
   return (
     <div className='GameConfig'>
-      {/* <DetailDropDown<NonNullable<TGameConfig['accessibility']>>
+      <DetailDropDown<TGameConfig['accessibility']>
         label='Accessibility'
         options={['public', 'id-required']}
         stateValue={accessibility}
@@ -57,27 +53,27 @@ export default function GameConfig({
               return 'Unknown Option'
           }
         }}
-      /> */}
-      <DetailToggle
         fieldType='required'
+      />
+      <DetailToggle
         label='Auto-Assign:'
         stateValue={autoAssign}
         setState={setAutoAssign}
         lockState={'locked-activation'}
       />
-      {/* <DetailToggle
+      <DetailToggle
         label='Infinite Resources:'
         stateValue={infiniteResources}
         setState={setInfiniteResources}
-      /> */}
+      />
       <DetailToggle
-        fieldType='required'
         label='Enable Effects:'
         stateValue={effectsEnabled}
         setState={setEffectsEnabled}
       />
       <div className='Buttons'>
         <ButtonText text={saveButtonText} onClick={onSave} />
+        <ButtonText text={'Cancel'} onClick={onCancel} />
       </div>
     </div>
   )
@@ -92,7 +88,7 @@ export type TGameConfig_P = {
   /**
    * The game config to modify.
    */
-  gameConfig: Required<TGameConfig>
+  gameConfig: TGameConfig
   /**
    * The text for the save button.
    * @default 'Save'
@@ -107,4 +103,8 @@ export type TGameConfig_P = {
    * Callback for when the game config is saved.
    */
   onSave: () => void
+  /**
+   * Callback for when the game configuration is cancelled.
+   */
+  onCancel: () => void
 }

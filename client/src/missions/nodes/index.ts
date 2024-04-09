@@ -365,6 +365,25 @@ export default class ClientMissionNode extends MissionNode<
     this.emitEvent('request-made')
   }
 
+  /**
+   * Handles node-specific, server-connection events that failed in-game.
+   * @param method The method of the request event.
+   */
+  public handleRequestFailed(method: TRequestMethod): void {
+    // Handle method accordingly.
+    switch (method) {
+      case 'request-open-node':
+        this._pendingOpen = false
+        break
+      case 'request-execute-action':
+        this._pendingExecInit = false
+        break
+    }
+
+    // Emit 'request-failed' event.
+    this.emitEvent('request-failed')
+  }
+
   // Implemented
   public loadExecution(
     data: NonNullable<TActionExecutionJSON>,
@@ -851,6 +870,10 @@ export interface INodeDeleteOptions {
  * Triggered when the following occurs:
  * - A node is requested to be opened by the client and is awaiting a response from the server.
  * - An action is requested to be executed by the client and is awaiting a response from the server.
+ * @option 'request-failed'
+ * Triggered when the following occurs:
+ * - A node is requested to be opened by the client and the server fails to open the node.
+ * - An action is requested to be executed by the client and the server fails to execute the action.
  * @option 'open'
  * Triggered when the node is opened.
  * @option 'set-buttons'
@@ -859,6 +882,7 @@ export interface INodeDeleteOptions {
 export type TMissionNodeEvent =
   | 'activity'
   | 'request-made'
+  | 'request-failed'
   | 'exec-state-change'
   | 'open'
   | 'set-buttons'

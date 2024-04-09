@@ -98,25 +98,38 @@ export class ServerEmittedError extends WSEmittedError {
    */
   public static readonly CODE_ALREADY_IN_GAME: number = 20001
   /**
+   * Code for a client requesting to join a game via a join method that is not authorized.
+   */
+  public static readonly CODE_GAME_UNAUTHORIZED_JOIN: number = 20002
+  /**
+   * Code for a client requesting to join a game from which they have been banned.
+   */
+  public static readonly CODE_GAME_BANNED: number = 20003
+  /**
+   * Code for a client requesting to perform a task that cannot be performed
+   * before the game has started or after the game has ended.
+   */
+  public static readonly CODE_GAME_PROGRESS_LOCKED: number = 20004
+  /**
    * Code for a client requesting to open a node that cannot be found.
    */
-  public static readonly CODE_NODE_NOT_FOUND: number = 20002
+  public static readonly CODE_NODE_NOT_FOUND: number = 20100
   /**
    * Code for a client requesting to open a node that cannot be opened.
    */
-  public static readonly CODE_NODE_NOT_OPENABLE: number = 20003
-  /**
-   * Code for a client requesting to execute an action that cannot be found.
-   */
-  public static readonly CODE_ACTION_NOT_FOUND: number = 20004
+  public static readonly CODE_NODE_NOT_OPENABLE: number = 20101
   /**
    * Code for a client requesting to execute an action on a node that is not executable.
    */
-  public static readonly CODE_NODE_NOT_EXECUTABLE: number = 20005
+  public static readonly CODE_NODE_NOT_EXECUTABLE: number = 20102
   /**
    * Code for a client requesting to execute an action on a node that is not yet revealed.
    */
-  public static readonly CODE_NODE_NOT_REVEALED: number = 20006
+  public static readonly CODE_NODE_NOT_REVEALED: number = 20103
+  /**
+   * Code for a client requesting to execute an action that cannot be found.
+   */
+  public static readonly CODE_ACTION_NOT_FOUND: number = 20200
   /**
    * Code for a client request failing due to a server-side general error.
    */
@@ -129,11 +142,16 @@ export class ServerEmittedError extends WSEmittedError {
       'You are already connected via another tab.',
     [ServerEmittedError.CODE_GAME_NOT_FOUND]: 'Game not found.',
     [ServerEmittedError.CODE_ALREADY_IN_GAME]: 'You are already in this game.',
+    [ServerEmittedError.CODE_GAME_UNAUTHORIZED_JOIN]:
+      'You are not authorized to join this game.',
+    [ServerEmittedError.CODE_GAME_BANNED]: 'You are banned from this game.',
+    [ServerEmittedError.CODE_GAME_PROGRESS_LOCKED]:
+      'Game progress is locked before game start and after game end.',
     [ServerEmittedError.CODE_NODE_NOT_FOUND]: 'Node not found.',
     [ServerEmittedError.CODE_NODE_NOT_OPENABLE]: 'Node not openable.',
-    [ServerEmittedError.CODE_ACTION_NOT_FOUND]: 'Action not found.',
     [ServerEmittedError.CODE_NODE_NOT_EXECUTABLE]: 'Node not executable.',
     [ServerEmittedError.CODE_NODE_NOT_REVEALED]: 'Node not revealed.',
+    [ServerEmittedError.CODE_ACTION_NOT_FOUND]: 'Action not found.',
     [ServerEmittedError.CODE_SERVER_ERROR]: 'Server error.',
   }
 

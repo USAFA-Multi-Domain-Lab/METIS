@@ -15,10 +15,12 @@ type EffectsCallbackReturned = ReturnType<EffectsCallback>
 /**
  * Creates a handler that will be called when the component mounts.
  * @param handler The handler to call when the component mounts. Done will be passed to the handler, which should be called when the handler is done processing the mount.
+ * @param dependencies The dependencies to watch for changes.
  * @returns A tuple containing a boolean indicating whether the mount has been handled and a function that can be called to remount the component.
  */
 export function useMountHandler(
   handler: (done: () => void) => void,
+  dependencies: React.DependencyList = [],
 ): [boolean, () => void] {
   const [mountHandled, setMountHandled] = useState<boolean>(false)
 
@@ -26,7 +28,7 @@ export function useMountHandler(
     if (!mountHandled) {
       handler(() => setMountHandled(true))
     }
-  }, [mountHandled])
+  }, [mountHandled, ...dependencies])
 
   const remount = useCallback(() => {
     setMountHandled(false)
@@ -185,6 +187,7 @@ export function useListComponent<
  * @param target The target to add the event listener to.
  * @param methods The event type to listen for.
  * @param callback The callback to call when the event is fired.
+ * @param dependencies The dependencies to use for the callback.
  */
 export function useEventListener<TEventMethod extends string>(
   target: TEventListenerTarget<TEventMethod> | null,

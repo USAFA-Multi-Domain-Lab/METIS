@@ -23,18 +23,50 @@ export default function ArgEntry({
   setEffectArgs,
 }: TArgGroupings_P): JSX.Element | null {
   /* -- STATE -- */
-  const [defaultDropDownValue] = useState<TArgDropdownOption>({
-    id: 'default',
-    name: 'Select an option',
-  })
   const [defaultStringValue] = useState<''>('')
   const [defaultLargeStringValue] = useState<'<p><br></p>'>('<p><br></p>')
-  const [dropDownValue, setDropDownValue] = useState<TArgDropdownOption>(
-    arg.type === 'dropdown'
-      ? arg.options.find((option) => option.id === effectArgs[arg.id]) ||
-          defaultDropDownValue
-      : defaultDropDownValue,
-  )
+  const [dropDownValue, setDropDownValue] = useState<TArgDropdownOption>(() => {
+    // If the argument is a dropdown and the argument's value
+    // is in the effect's arguments then set the dropdown value.
+    if (arg.type === 'dropdown' && arg.required) {
+      // Grab the dropdown option.
+      let option: TArgDropdownOption | undefined = arg.options.find(
+        (option: TArgDropdownOption) => option.id === effectArgs[arg.id],
+      )
+
+      // If the option is found then set the dropdown value.
+      if (option) {
+        return option
+      } else {
+        return arg.default
+      }
+    } else {
+      return {
+        id: 'Not a required dropdown.',
+        name: 'Not a required dropdown.',
+      }
+    }
+  })
+  const [optionalDropDownValue, setOptionalDropDownValue] =
+    useState<TArgDropdownOption | null>(() => {
+      // If the argument is a dropdown and the argument's value
+      // is in the effect's arguments then set the dropdown value.
+      if (arg.type === 'dropdown' && !arg.required) {
+        // Grab the dropdown option.
+        let option: TArgDropdownOption | undefined = arg.options.find(
+          (option: TArgDropdownOption) => option.id === effectArgs[arg.id],
+        )
+
+        // If the option is found then set the dropdown value.
+        if (option) {
+          return option
+        } else {
+          return null
+        }
+      } else {
+        return null
+      }
+    })
   const [numberValue, setNumberValue] = useState<number>(
     effectArgs[arg.id] || 0,
   )
@@ -99,30 +131,6 @@ export default function ArgEntry({
 
   /* -- EFFECTS -- */
 
-  // todo: remove
-  // // componentDidMount
-  // const [mountHandled] = useMountHandler((done) => {
-  //   // If the argument is a dropdown...
-  //   if (arg.type === 'dropdown') {
-  //     // ...and the argument's value is in the effect's
-  //     // arguments then set the dropdown value.
-  //     if (effectArgs[arg.id] !== undefined) {
-  //       // Grab the dropdown option.
-  //       let option: TArgDropdownOption | undefined = arg.options.find(
-  //         (option: TArgDropdownOption) => option.id === effectArgs[arg.id],
-  //       )
-
-  //       // If the option is found then set the dropdown value.
-  //       if (option) {
-  //         setDropDownValue(option)
-  //       }
-  //     }
-  //   }
-
-  //   // Component is mounted.
-  //   done()
-  // })
-
   // Update the effect's arguments based on the argument's
   // display.
   useEffect(() => {
@@ -149,8 +157,17 @@ export default function ArgEntry({
       // ..and the argument's value is not in a default state
       // then update the dropdown value in the effect's
       // arguments.
-      if (dropDownValue !== null) {
+      if (arg.required) {
         setEffectArgs((prev) => ({ ...prev, [arg.id]: dropDownValue.id }))
+      }
+      // Or, if the argument is optional and the dropdown value
+      // is not in a default state then update the dropdown
+      // value in the effect's arguments.
+      else if (!arg.required && optionalDropDownValue !== null) {
+        setEffectArgs((prev) => ({
+          ...prev,
+          [arg.id]: optionalDropDownValue.id,
+        }))
       }
     }
     // Or, if the argument is a number...
@@ -192,6 +209,7 @@ export default function ArgEntry({
     }
   }, [
     dropDownValue,
+    optionalDropDownValue,
     numberValue,
     optionalNumberValue,
     stringValue,
@@ -444,15 +462,32 @@ export default function ArgEntry({
 
   // If the argument type is "dropdown" then render
   // the dropdown.
-  if (arg.type === 'dropdown' && display) {
+  if (arg.type === 'dropdown' && arg.required && display) {
     return (
       <div className={`ArgEntry Dropdown`}>
         <DetailDropDown<TArgDropdownOption>
-          fieldType={arg.required ? 'required' : 'optional'}
+          fieldType={'required'}
           label={arg.name}
           options={arg.options}
           stateValue={dropDownValue}
           setState={setDropDownValue}
+          isExpanded={false}
+          renderDisplayName={(option: TArgDropdownOption) => option.name}
+        />
+      </div>
+    )
+  }
+  // If the argument type is "dropdown" and the argument
+  // is optional then render the optional dropdown.
+  else if (arg.type === 'dropdown' && !arg.required && display) {
+    return (
+      <div className={`ArgEntry Dropdown`}>
+        <DetailDropDown<TArgDropdownOption>
+          fieldType={'optional'}
+          label={arg.name}
+          options={arg.options}
+          stateValue={optionalDropDownValue}
+          setState={setOptionalDropDownValue}
           isExpanded={false}
           renderDisplayName={(option: TArgDropdownOption) => option.name}
         />

@@ -7,7 +7,7 @@ import { TCommonUserJson } from '../users'
  * Base class for a games. Represents a game being played by participating students in METIS.
  */
 export default abstract class Game<
-  TParticpant extends { userID: string },
+  TUser extends { userID: string },
   TMission extends TCommonMission,
   TMissionNode extends TCommonMissionNode,
   TMissionAction extends TCommonMissionAction,
@@ -25,7 +25,13 @@ export default abstract class Game<
   /**
    * The configuration for the game.
    */
-  public config: Required<TGameConfig>
+  protected _config: TGameConfig
+  /**
+   * The configuration for the game.
+   */
+  public get config(): TGameConfig {
+    return { ...this._config }
+  }
 
   /**
    * The mission being executed by the participants.
@@ -42,12 +48,41 @@ export default abstract class Game<
   /**
    * The participants of the game executing the mission.
    */
-  protected _participants: TParticpant[]
+  protected _participants: TUser[]
   /**
    * The participants of the game executing the mission.
    */
-  public get participants(): TParticpant[] {
+  public get participants(): TUser[] {
     return [...this._participants]
+  }
+
+  /**
+   * IDs of participants who have been banned from the game.
+   */
+  protected _banList: string[]
+  /**
+   * IDs of participants who have been banned from the game.
+   */
+  public get banList(): string[] {
+    return [...this._banList]
+  }
+
+  /**
+   * The participants of the game executing the mission.
+   */
+  protected _supervisors: TUser[]
+  /**
+   * The participants of the game executing the mission.
+   */
+  public get supervisors(): TUser[] {
+    return [...this._supervisors]
+  }
+
+  /**
+   * All users, including participants and supervisors.
+   */
+  public get users(): TUser[] {
+    return [...this._participants, ...this._supervisors]
   }
 
   /**
@@ -89,19 +124,23 @@ export default abstract class Game<
   public constructor(
     gameID: string,
     name: string,
-    config: TGameConfig,
+    config: Partial<TGameConfig>,
     mission: TMission,
-    participants: TParticpant[],
+    participants: TUser[],
+    banList: string[],
+    supervisors: TUser[],
   ) {
     this.gameID = gameID
     this.name = name
-    this.config = {
+    this._config = {
       ...Game.DEFAULT_CONFIG,
       ...config,
     }
     this.mission = mission
     this._state = 'unstarted'
     this._participants = participants
+    this._banList = banList
+    this._supervisors = supervisors
     this.mapActions()
   }
 
@@ -111,13 +150,41 @@ export default abstract class Game<
   protected abstract mapActions(): void
 
   /**
-   * Checks if the given participant is currently in the game.
-   * @param participant The participant to check.
-   * @returns Whether the given participant is joined into the game.
+   * Checks if the given user is currently in the game (Whether as a participant or as a supervisor).
+   * @param user The user to check.
+   * @returns Whether the given user is joined into the game.
    */
-  public isJoined(participant: TParticpant): boolean {
-    for (let user of this._participants) {
-      if (user.userID === participant.userID) {
+  public isJoined(user: TUser): boolean {
+    for (let x of this.users) {
+      if (x.userID === user.userID) {
+        return true
+      }
+    }
+    return false
+  }
+
+  /**
+   * Checks if the given user is currently a participant in the game.
+   * @param user The user to check.
+   * @returns Whether the given user is a participant of the game.
+   */
+  public isParticipant(user: TUser): boolean {
+    for (let x of this.users) {
+      if (x.userID === user.userID) {
+        return true
+      }
+    }
+    return false
+  }
+
+  /**
+   * Checks if the given user is currently a supervisor in the game.
+   * @param user The user to check.
+   * @returns Whether the given user is a supervisor in the game.
+   */
+  public isSupervisor(user: TUser): boolean {
+    for (let x of this.supervisors) {
+      if (x.userID === user.userID) {
         return true
       }
     }
@@ -144,15 +211,23 @@ export default abstract class Game<
   /**
    * Default value for the game configuration.
    */
-  public static get DEFAULT_CONFIG(): Required<TGameConfig> {
+  public static get DEFAULT_CONFIG(): TGameConfig {
     return {
       accessibility: 'public',
       autoAssign: true,
-      resourcesEnabled: true,
+      infiniteResources: false,
       effectsEnabled: true,
     }
   }
 }
+
+/**
+ * The accessiblity of the game to students.
+ * @option 'public' The game is accessible to all students.
+ * @option 'id-required' The game is accessible to students with the game ID.
+ * @option 'invite-only' The game is accessible to students with an invite.
+ */
+export type TGameAccessibility = 'public' | 'id-required' | 'invite-only'
 
 /**
  * Configuration options for a game, customizing the experience.
@@ -160,26 +235,24 @@ export default abstract class Game<
 export type TGameConfig = {
   /**
    * The accessiblity of the game to students.
-   * @option 'public' The game is accessible to all students.
-   * @option 'id-required' The game is accessible to students with the game ID.
-   * @option 'invite-only' The game is accessible to students with an invite.
+   * @default 'public'
    */
-  accessibility?: 'public' | 'id-required' | 'invite-only'
+  accessibility: TGameAccessibility
   /**
    * Whether students will be auto-assigned to their roles.
    * @default true
    */
-  autoAssign?: boolean
+  autoAssign: boolean
   /**
-   * Whether resources will be enabled in the game.
-   * @default true
+   * Whether resources will be infinite in the game.
+   * @default false
    */
-  resourcesEnabled?: boolean
+  infiniteResources: boolean
   /**
    * Whether effects will be enabled in the game.
    * @default true
    */
-  effectsEnabled?: boolean
+  effectsEnabled: boolean
 }
 
 /**
@@ -190,6 +263,10 @@ export type TGameJson = {
    * The ID of the game.
    */
   gameID: string
+  /**
+   * The state of the game (unstarted, started, ended).
+   */
+  state: TGameState
   /**
    * The name of the game.
    */
@@ -207,9 +284,17 @@ export type TGameJson = {
    */
   participants: TCommonUserJson[]
   /**
+   * The IDs of participants who have been banned from the game.
+   */
+  banList: string[]
+  /**
+   * The supervisors joined in the game.
+   */
+  supervisors: TCommonUserJson[]
+  /**
    * The resources available to the participants.
    */
-  resources: number
+  resources: number | 'infinite'
 }
 
 /**
@@ -236,9 +321,23 @@ export type TGameBasicJson = {
    * The IDs of the participants of the game.
    */
   participantIDs: string[]
+  /**
+   * The IDs of the participants banned from the game.
+   * @note Empty if the user does not have supervisor permissions.
+   */
+  banList: string[]
+  /**
+   * The IDs of the supervisors of the game.
+   */
+  supervisorIDs: string[]
 }
 
 /**
  * The state of a game.
  */
 export type TGameState = 'unstarted' | 'started' | 'ended'
+
+/**
+ * The method of joining a game.
+ */
+export type TGameJoinMethod = 'participant' | 'supervisor' | 'not-joined'

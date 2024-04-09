@@ -8,7 +8,9 @@ import { TServerEvents } from '../../../shared/connect/data'
 import Game, {
   TGameBasicJson,
   TGameConfig,
+  TGameJoinMethod,
   TGameJson,
+  TGameState,
 } from '../../../shared/games'
 
 /**
@@ -35,19 +37,42 @@ export default class GameClient extends Game<
     return this._resources
   }
 
+  /**
+   * The method by which the client is joined to the game server.
+   */
+  protected _joinMethod: TGameJoinMethod
+  /**
+   * The method by which the client is joined to the game server.
+   */
+  public get joinMethod(): TGameJoinMethod {
+    return this._joinMethod
+  }
+
   // todo: Between the time the client joins and this object is constructed, there is possibility that changes have been made in the game. This should be handled.
-  public constructor(data: TGameJson, server: ServerConnection) {
+  public constructor(
+    data: TGameJson,
+    server: ServerConnection,
+    joinMethod: TGameJoinMethod,
+  ) {
     let gameID: string = data.gameID
+    let state: TGameState = data.state
     let name: string = data.name
     let mission: ClientMission = new ClientMission(data.mission)
     let participants: ClientUser[] = data.participants.map(
       (userData) => new ClientUser(userData),
     )
+    let supervisors: ClientUser[] = data.supervisors.map(
+      (userData) => new ClientUser(userData),
+    )
+    let banList: string[] = data.banList
     let config: TGameConfig = data.config
 
-    super(gameID, name, config, mission, participants)
+    super(gameID, name, config, mission, participants, banList, supervisors)
     this.server = server
-    this._resources = data.resources
+    this._joinMethod = joinMethod
+    this._state = state
+    this._resources = data.resources === 'infinite' ? Infinity : data.resources
+
     this.addListeners()
   }
 
@@ -85,6 +110,7 @@ export default class GameClient extends Game<
    */
   private removeListeners(): void {
     this.server.clearEventListeners([
+      'game-state-change',
       'node-opened',
       'action-execution-initiated',
       'action-execution-completed',
@@ -95,13 +121,16 @@ export default class GameClient extends Game<
   public toJson(): TGameJson {
     return {
       gameID: this.gameID,
+      state: this.state,
       name: this.name,
       mission: this.mission.toJson({
         revealedOnly: true,
       }),
       participants: this.participants.map((user) => user.toJson()),
+      banList: this.banList,
+      supervisors: this.supervisors.map((user) => user.toJson()),
       config: this.config,
-      resources: this.resources,
+      resources: this.resources === Infinity ? 'infinite' : this.resources,
     }
   }
 
@@ -113,30 +142,36 @@ export default class GameClient extends Game<
       name: this.name,
       config: this.config,
       participantIDs: this.participants.map(({ userID }) => userID),
+      banList: this.banList,
+      supervisorIDs: this.supervisors.map(({ userID }) => userID),
     }
   }
 
   /**
    * Opens a node.
    * @param {string} nodeID The ID of the node to be opened.
-   * @throws If the node is not in the mission associated with this game.
-   * @throws If the node is not openable, if the node is not found,
-   * or if the server emits an error in response.
    */
-  public openNode(nodeID: string): void {
+  public openNode(nodeID: string, options: TOpenNodeOptions = {}): void {
+    // Gather details.
     let server: ServerConnection = this.server
     let node: ClientMissionNode | undefined = this.mission.getNode(nodeID)
+    let { onError = () => {} } = options
 
-    // Throw error if the node is not in
+    // If the join method is not "participant", callback
+    // an error.
+    if (this.joinMethod !== 'participant') {
+      return onError('Only participants can open nodes.')
+    }
+    // Callback error if the node is not in
     // the mission associated with this
     // game.
     if (node === undefined) {
-      throw Error('Node was not found in the mission.')
+      return onError('Node was not found in the mission.')
     }
-    // If the node is not openable, throw
+    // If the node is not openable, callback
     // an error.
     if (!node.openable) {
-      throw Error('Node is not openable.')
+      return onError('Node is not openable.')
     }
 
     // Emit a request to open the node.
@@ -146,6 +181,16 @@ export default class GameClient extends Game<
         nodeID,
       },
       `Opening "${node.name}".`,
+      {
+        // Handle error emitted by server concerning the
+        // request.
+        onResponse: (event) => {
+          if (event.method === 'error') {
+            onError(event.message)
+            node!.handleRequestFailed('request-open-node')
+          }
+        },
+      },
     )
 
     // Handle request within node.
@@ -155,24 +200,30 @@ export default class GameClient extends Game<
   /**
    * Executes an action.
    * @param actionID The ID of the action to be executed.
-   * @throws If the action is not in the mission associated with this game.
-   * @throws If the action's node is not executable, the action is not
-   * found, or if the server emits an error in response.
    */
-  public executeAction(actionID: string): void {
+  public executeAction(
+    actionID: string,
+    options: TExecuteActionOptions = {},
+  ): void {
     let server: ServerConnection = this.server
     let action: ClientMissionAction | undefined = this.actions.get(actionID)
+    let { onError = () => {} } = options
 
-    // Throw error if the action is not in
+    // If the join method is not "participant", callback
+    // an error.
+    if (this.joinMethod !== 'participant') {
+      return onError('Only participants can execute actions.')
+    }
+    // Callback error if the action is not in
     // the mission associated with this
     // game.
     if (action === undefined) {
-      throw Error('Action was not found in the mission.')
+      return onError('Action was not found in the mission.')
     }
-    // If the action is not executable, throw
+    // If the action is not executable, callback
     // an error.
     if (!action.node.executable) {
-      throw Error('Node is not executable.')
+      return onError('Node is not executable.')
     }
 
     // Emit a request to execute the action.
@@ -182,6 +233,16 @@ export default class GameClient extends Game<
         actionID,
       },
       `Executing "${action.name}" on "${action.node.name}".`,
+      {
+        onResponse: (event) => {
+          // Handle error emitted by server concerning the
+          // request.
+          if (event.method === 'error') {
+            onError(event.message)
+            action!.node.handleRequestFailed('request-execute-action')
+          }
+        },
+      },
     )
 
     // Handle request within node.
@@ -202,6 +263,7 @@ export default class GameClient extends Game<
           onResponse: (event) => {
             switch (event.method) {
               case 'game-quit':
+                this.removeListeners()
                 resolve()
                 break
               case 'error':
@@ -222,6 +284,171 @@ export default class GameClient extends Game<
   }
 
   /**
+   * Updates the game config.
+   * @param configUpdates The updates to the game config.
+   * @resolves When the game config has been updated.
+   * @rejects If the game failed to update config, or if the game has already
+   * started or ended.
+   */
+  public async $updateConfig(
+    configUpdates: Partial<TGameConfig>,
+  ): Promise<void> {
+    return new Promise<void>(
+      async (
+        resolve: () => void,
+        reject: (error: any) => void,
+      ): Promise<void> => {
+        try {
+          // If the game has already started, throw an error.
+          if (this.state === 'started') {
+            throw new Error('Game has already started.')
+          }
+          // If the game has already ended, throw an error.
+          if (this.state === 'ended') {
+            throw new Error('Game has already ended.')
+          }
+          // Call API to update config.
+          await axios.put(`${Game.API_ENDPOINT}/${this.gameID}/config/`, {
+            ...configUpdates,
+          })
+          // Update the game config.
+          Object.assign(this._config, configUpdates)
+          // Resolve promise.
+          return resolve()
+        } catch (error) {
+          console.error('Failed to update game config.')
+          console.error(error)
+          return reject(error)
+        }
+      },
+    )
+  }
+
+  /**
+   * Starts the game.
+   * @resolves When the game has started.
+   * @rejects If the game failed to start, or if the game has already
+   * started or ended.
+   */
+  public async $start(): Promise<void> {
+    return new Promise<void>(
+      async (
+        resolve: () => void,
+        reject: (error: any) => void,
+      ): Promise<void> => {
+        try {
+          // If the game has already started, throw an error.
+          if (this.state === 'started') {
+            throw new Error('Game has already started.')
+          }
+          // If the game has already ended, throw an error.
+          if (this.state === 'ended') {
+            throw new Error('Game has already ended.')
+          }
+          // Call API to start game.
+          await axios.put(`${Game.API_ENDPOINT}/${this.gameID}/start/`)
+          // Update the game state.
+          this._state = 'started'
+          // Resolve promise.
+          return resolve()
+        } catch (error) {
+          console.error('Failed to start game.')
+          console.error(error)
+          return reject(error)
+        }
+      },
+    )
+  }
+
+  /**
+   * Ends the game.
+   * @resolves When the game has ended.
+   * @rejects If the game failed to end, or if the game has already
+   * ended or has not yet started.
+   */
+  public async $end(): Promise<void> {
+    return new Promise<void>(
+      async (
+        resolve: () => void,
+        reject: (error: any) => void,
+      ): Promise<void> => {
+        try {
+          // If the game is unstarted, throw an error.
+          if (this.state === 'unstarted') {
+            throw new Error('Game has not yet started.')
+          }
+          // If the game has already ended, throw an error.
+          if (this.state === 'ended') {
+            throw new Error('Game has already ended.')
+          }
+          // Call API to end game.
+          await axios.put(`${Game.API_ENDPOINT}/${this.gameID}/end/`)
+          // Update the game state.
+          this._state = 'ended'
+          // Resolve promise.
+          return resolve()
+        } catch (error) {
+          console.error('Failed to end game.')
+          console.error(error)
+          return reject(error)
+        }
+      },
+    )
+  }
+
+  /**
+   * Kicks a participant from the game.
+   * @param userID The ID of the user to be kicked.
+   * @resolves When the user has been kicked.
+   * @rejects If the user failed to be kicked.
+   */
+  public async $kick(userID: string): Promise<void> {
+    return new Promise<void>(
+      async (
+        resolve: () => void,
+        reject: (error: any) => void,
+      ): Promise<void> => {
+        try {
+          // Call API to kick user.
+          await axios.put(`${Game.API_ENDPOINT}/${this.gameID}/kick/${userID}`)
+          // Resolve promise.
+          return resolve()
+        } catch (error) {
+          console.error('Failed to kick user.')
+          console.error(error)
+          return reject(error)
+        }
+      },
+    )
+  }
+
+  /**
+   * Bans a participant from the game.
+   * @param userID The ID of the user to be banned.
+   * @resolves When the user has been banned.
+   * @rejects If the user failed to be banned.
+   */
+  public async $ban(userID: string): Promise<void> {
+    return new Promise<void>(
+      async (
+        resolve: () => void,
+        reject: (error: any) => void,
+      ): Promise<void> => {
+        try {
+          // Call API to ban user.
+          await axios.put(`${Game.API_ENDPOINT}/${this.gameID}/ban/${userID}`)
+          // Resolve promise.
+          return resolve()
+        } catch (error) {
+          console.error('Failed to ban user.')
+          console.error(error)
+          return reject(error)
+        }
+      },
+    )
+  }
+
+  /**
    * Handles when the game state has changed.
    * @param event The event emitted by the server.
    */
@@ -229,10 +456,15 @@ export default class GameClient extends Game<
     event: TServerEvents['game-state-change'],
   ): void => {
     // Extract data.
-    let { state } = event.data
+    let { state, config, participants, supervisors } = event.data
 
-    // Update the game state.
+    // Update the game with the new data.
     this._state = state
+    this._config = config
+    this._participants = participants.map(
+      (userData) => new ClientUser(userData),
+    )
+    this._supervisors = supervisors.map((userData) => new ClientUser(userData))
   }
 
   /**
@@ -365,7 +597,7 @@ export default class GameClient extends Game<
    */
   public static async $launch(
     missionID: string,
-    gameConfig: TGameConfig,
+    gameConfig: Partial<TGameConfig>,
   ): Promise<string> {
     return new Promise<string>(
       async (
@@ -414,3 +646,25 @@ export default class GameClient extends Game<
     )
   }
 }
+
+/**
+ * Options for node functions that perform actions on
+ * the server via WS.
+ */
+type TNodeFuncOptions = {
+  /**
+   * Callback for errors.
+   * @param message The error message.
+   */
+  onError?: (message: string) => void
+}
+
+/**
+ * Options for `openNode` method.
+ */
+export interface TOpenNodeOptions extends TNodeFuncOptions {}
+
+/**
+ * Options for `executeAction` method.
+ */
+export interface TExecuteActionOptions extends TNodeFuncOptions {}

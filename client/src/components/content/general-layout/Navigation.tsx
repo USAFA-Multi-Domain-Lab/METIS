@@ -42,6 +42,9 @@ export default function Navigation({
 
 /**
  * Creates a navigation link to go home.
+ * @param context The global context.
+ * @param options Here props for the link can be overwritten with custom values.
+ * @returns The navigation link.
  */
 export const HomeLink = (
   context: TGlobalContext,
@@ -58,7 +61,8 @@ export const HomeLink = (
 /**
  * Creates a navigation link to logout the user.
  * @param context The global context.
- * @returns
+ * @param options Here props for the link can be overwritten with custom values.
+ * @returns The navigation link.
  */
 export const LogoutLink = (
   context: TGlobalContext,

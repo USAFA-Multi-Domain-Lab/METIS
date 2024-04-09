@@ -3,6 +3,7 @@ import { ServerEmittedError } from 'metis/connect/errors'
 import Game, {
   TGameBasicJson,
   TGameConfig,
+  TGameJoinMethod,
   TGameJson,
   TGameState,
 } from 'metis/games'
@@ -22,9 +23,14 @@ export default class GameServer extends Game<
   ServerMissionNode,
   ServerMissionAction
 > {
+  // Overridden.
+  public get state() {
+    return this._state
+  }
+  // Overridden.
   public set state(value: TGameState) {
     this._state = value
-    this.emitToParticipants('game-state-change', { data: { state: value } })
+    this.handleStateChange()
   }
 
   /**
@@ -52,31 +58,29 @@ export default class GameServer extends Game<
   public constructor(
     gameID: string,
     name: string,
-    config: TGameConfig,
+    config: Partial<TGameConfig>,
     mission: ServerMission,
     participants: Array<ClientConnection>,
+    supervisors: Array<ClientConnection>,
   ) {
-    super(gameID, name, config, mission, participants)
+    super(gameID, name, config, mission, participants, [], supervisors)
     this._state = 'unstarted'
-    this._resources = mission.initialResources
+    this._resources = config.infiniteResources
+      ? Infinity
+      : mission.initialResources
     this._destroyed = false
     this.register()
   }
 
-  /**
-   * @param participantID The ID of the participant in question.
-   * @returns Whether the participant is joined in the game.
-   */
-  public isInGame(participantID: string): boolean {
-    return this.participants.some(
-      (participant) => participant.userID === participantID,
-    )
-  }
-
   // Implemented
-  public toJson(): TGameJson {
+  public toJson(options: TGameServerJsonOptions = {}): TGameJson {
+    // Extract options.
+    const { includeSensitiveData = false } = options
+
+    // Construct and return JSON.
     return {
       gameID: this.gameID,
+      state: this.state,
       name: this.name,
       mission: this.mission.toJson({
         revealedOnly: true,
@@ -85,19 +89,44 @@ export default class GameServer extends Game<
       participants: this.participants.map((client: ClientConnection) =>
         client.user.toJson(),
       ),
+      // Only include ban list if sensitive data
+      // is marked to be included.
+      banList: includeSensitiveData ? this.banList : [],
+      supervisors: this.supervisors.map((client: ClientConnection) =>
+        client.user.toJson(),
+      ),
       config: this.config,
-      resources: this.resources,
+      resources: this.resources === Infinity ? 'infinite' : this.resources,
     }
   }
 
   // Implemented
-  public toBasicJson(): TGameBasicJson {
+  public toBasicJson(options: TGameServerJsonOptions = {}): TGameBasicJson {
+    // Extract options.
+    const { includeSensitiveData = false } = options
+
+    // Construct and return JSON.
     return {
       gameID: this.gameID,
       missionID: this.missionID,
       name: this.name,
       config: this.config,
       participantIDs: this.participants.map(({ userID }) => userID),
+      banList: includeSensitiveData ? this.banList : [],
+      supervisorIDs: this.supervisors.map(({ userID }) => userID),
+    }
+  }
+
+  /**
+   * Gets the join method for the given user.
+   */
+  public getJoinMethod(user: ClientConnection): TGameJoinMethod {
+    if (this.isSupervisor(user)) {
+      return 'supervisor'
+    } else if (this.isParticipant(user)) {
+      return 'participant'
+    } else {
+      return 'not-joined'
     }
   }
 
@@ -132,29 +161,76 @@ export default class GameServer extends Game<
    * Destroys the game.
    */
   public destroy(): void {
+    // Unregister game.
     this.unregister()
+    // Mark as destroyed.
     this._destroyed = true
+
+    // Grab all users.
+    let users: ClientConnection[] = this.users
+
+    // Clear all users.
+    this.clearUsers()
+
+    // Emit an event to all users that the game has been destroyed.
+    for (let user of users) {
+      user.emit('game-destroyed', { data: { gameID: this.gameID } })
+    }
   }
 
   /**
-   * Has the given participant join the game. Establishes listeners to handle events emitted by the participant's web socket connection.
-   * @param participant The participant joining the game.
-   * @throws Error if the participant is already in the game.
+   * Has the given user join the game.
+   * @param client The user joining the game.
+   * @param method The method of joining (Whether as a participant or as a supervisor).
+   * @throws The server emitted error code of any error that occurs.
+   * @note Establishes listeners to handle events emitted by the user's web socket connection.
    */
-  public join(participant: ClientConnection): void {
-    if (this.isInGame(participant.userID)) {
-      throw Error('Client with the given user ID is already in the game.')
+  public join(client: ClientConnection, method: TGameJoinMethod): void {
+    // Throw error if the user is in the ban list.
+    if (this._banList.includes(client.userID)) {
+      throw ServerEmittedError.CODE_GAME_BANNED
+    }
+    // Throw error if the user is already in the game.
+    if (this.isJoined(client)) {
+      throw ServerEmittedError.CODE_ALREADY_IN_GAME
+    }
+    // Add the user to the game given
+    // the method of joining.
+    switch (method) {
+      case 'participant':
+        // Add the users to the participant list.
+        this._participants.push(client)
+        // Add game-specific listeners.
+        this.addListeners(client)
+        break
+      case 'supervisor':
+        // Throw error if the client is unauthorized to
+        // join as a supervisor.
+        if (!client.user.isAuthorized(['WRITE'])) {
+          throw ServerEmittedError.CODE_GAME_UNAUTHORIZED_JOIN
+        }
+        // Add the users to the supervisor list.
+        this._supervisors.push(client)
+        break
+      default:
+        throw ServerEmittedError.CODE_GAME_UNAUTHORIZED_JOIN
     }
 
-    // Add participant to the participant list.
-    this._participants.push(participant)
-
-    // Add game-specific listeners.
-    this.addListeners(participant)
-
     // Call join handler in the session of
-    // the new participant.
-    participant.session.handleJoin(this.gameID)
+    // the user.
+    client.session.handleJoin(this.gameID)
+
+    // Handle state change.
+    this.handleStateChange()
+  }
+
+  /**
+   * Updates the configuration of the game.
+   * @param config Updated configuration options to assign to the game config.
+   */
+  public updateConfig(config: Partial<TGameConfig>): void {
+    Object.assign(this._config, config)
+    this.handleStateChange()
   }
 
   /**
@@ -185,11 +261,48 @@ export default class GameServer extends Game<
   }
 
   /**
-   * Has the given participant quit the game. Removes any game listeners for the user.
-   * @param quitterID The ID of the participant quiting the game.
+   * Handles a change in the game state.
+   */
+  public handleStateChange(): void {
+    // Emit an event to all users that the game state has changed.
+    this.emitToUsers('game-state-change', {
+      data: {
+        state: this.state,
+        config: this.config,
+        participants: this.participants.map((client: ClientConnection) =>
+          client.user.toJson(),
+        ),
+        supervisors: this.supervisors.map((client: ClientConnection) =>
+          client.user.toJson(),
+        ),
+      },
+    })
+
+    // If the game has ended, then clear all users.
+    if (this.state === 'ended') {
+      this.clearUsers()
+    }
+  }
+
+  /**
+   * Has the given user (participant or supervisor) quit the game.
+   * @param quitterID The ID of the user quiting the game.
+   * @note Removes any game listeners for the user.
    */
   public quit(quitterID: string): void {
-    // Find the participant in the list.
+    // Find the supervisor in the list, if present.
+    this._supervisors.forEach((supervisor: ClientConnection, index: number) => {
+      if (supervisor.userID === quitterID) {
+        // Remove the supervisor from the list.
+        this._supervisors.splice(index, 1)
+
+        // Call quit handler in the session of
+        // the determined participant.
+        supervisor.session.handleQuit()
+      }
+    })
+
+    // Find the participant in the list, if present.
     this._participants.forEach(
       (participant: ClientConnection, index: number) => {
         if (participant.userID === quitterID) {
@@ -205,6 +318,107 @@ export default class GameServer extends Game<
         }
       },
     )
+
+    // Handle state change.
+    this.handleStateChange()
+  }
+
+  /**
+   * Deletes all users from the game.
+   */
+  public clearUsers(): void {
+    // Call quit handler in the session of
+    // each participant.
+    this.participants.forEach((participant: ClientConnection) => {
+      participant.session.handleQuit()
+    })
+
+    // Remove game-specific listeners from
+    // each participant.
+    this.participants.forEach((participant: ClientConnection) => {
+      this.removeListeners(participant)
+    })
+
+    // Clear the participants list.
+    this._participants = []
+    // Clear the supervisors list.
+    this._supervisors = []
+  }
+
+  /**
+   * Kicks the given user from the game.
+   * @param participantID The ID of the participant to kick from the game.
+   */
+  public kick(participantID: string): void {
+    // Find the participant in the list, if present.
+    this._participants.forEach(
+      (participant: ClientConnection, index: number) => {
+        if (participant.userID === participantID) {
+          // If the participant is has supervisor permissions,
+          // then throw 403 forbidden error.
+          if (participant.user.isAuthorized(['WRITE'])) {
+            throw 403
+          }
+
+          // Remove the participant from the list.
+          this._participants.splice(index, 1)
+
+          // Remove game-specific listeners.
+          this.removeListeners(participant)
+
+          // Call quit handler in the session of
+          // the determined participant.
+          participant.session.handleQuit()
+
+          // Emit an event to the participant
+          // that they have been kicked.
+          participant.emit('kicked', { data: { gameID: this.gameID } })
+        }
+      },
+    )
+
+    // Handle state change.
+    this.handleStateChange()
+  }
+
+  /**
+   * Bans the given user from the game.
+   * @param participantID The ID of the participant to ban from the game.
+   * @throws The correct HTTP status code for any errors that occur.
+   */
+  public ban(participantID: string): void {
+    // Find the participant in the list, if present.
+    this._participants.forEach(
+      (participant: ClientConnection, index: number) => {
+        if (participant.userID === participantID) {
+          // If the participant is has supervisor permissions,
+          // then throw 403 forbidden error.
+          if (participant.user.isAuthorized(['WRITE'])) {
+            throw 403
+          }
+
+          // Remove the participant from the list.
+          this._participants.splice(index, 1)
+
+          // Remove game-specific listeners.
+          this.removeListeners(participant)
+
+          // Call quit handler in the session of
+          // the determined participant.
+          participant.session.handleQuit()
+
+          // Emit an event to the participant
+          // that they have been kicked.
+          participant.emit('banned', { data: { gameID: this.gameID } })
+        }
+      },
+    )
+
+    // Add the participant to the ban list.
+    this._banList.push(participantID)
+
+    // Handle state change.
+    this.handleStateChange()
   }
 
   /**
@@ -230,14 +444,14 @@ export default class GameServer extends Game<
   }
 
   /**
-   * Emits an event to all the participants of the game.
+   * Emits an event to all the users joined in the game (participants and supervisors).
    */
-  public emitToParticipants<
+  public emitToUsers<
     TMethod extends TServerMethod,
     TPayload extends Omit<TServerEvents[TMethod], 'method'>,
   >(method: TMethod, payload: TPayload): void {
-    for (let participant of this.participants) {
-      participant.emit(method, payload)
+    for (let user of this.users) {
+      user.emit(method, payload)
     }
   }
 
@@ -257,6 +471,15 @@ export default class GameServer extends Game<
     // Find the node, given the ID.
     let node: ServerMissionNode | undefined = mission.getNode(nodeID)
 
+    // If the game is not in the 'started' state,
+    // then emit an error.
+    if (this.state !== 'started') {
+      return participant.emitError(
+        new ServerEmittedError(ServerEmittedError.CODE_GAME_PROGRESS_LOCKED, {
+          request: participant.buildResponseReqData(event),
+        }),
+      )
+    }
     // If the node is undefined, then emit
     // an error.
     if (node === undefined) {
@@ -293,8 +516,8 @@ export default class GameServer extends Game<
       }
 
       // Emit open event.
-      for (let participant of this.participants) {
-        participant.emit('node-opened', payload)
+      for (let user of this.users) {
+        user.emit('node-opened', payload)
       }
     } catch (error) {
       // Emit an error if the node could not be opened.
@@ -323,6 +546,15 @@ export default class GameServer extends Game<
     // Find the action given the ID.
     let action: ServerMissionAction | undefined = this.actions.get(actionID)
 
+    // If the game is not in the 'started' state,
+    // then emit an error.
+    if (this.state !== 'started') {
+      return participant.emitError(
+        new ServerEmittedError(ServerEmittedError.CODE_GAME_PROGRESS_LOCKED, {
+          request: participant.buildResponseReqData(event),
+        }),
+      )
+    }
     // If the action is undefined, then emit
     // an error.
     if (action === undefined) {
@@ -374,9 +606,9 @@ export default class GameServer extends Game<
           }
 
           // Emit action execution initiated event
-          // to each participant.
-          for (let participant of this.participants) {
-            participant.emit('action-execution-initiated', initiationPayload)
+          // to each user.
+          for (let user of this.users) {
+            user.emit('action-execution-initiated', initiationPayload)
           }
         },
       })
@@ -405,8 +637,8 @@ export default class GameServer extends Game<
 
       // Emit the action execution completed
       // event to each participant.
-      for (let participant of this.participants) {
-        participant.emit('action-execution-completed', completionPayload)
+      for (let user of this.users) {
+        user.emit('action-execution-completed', completionPayload)
       }
     } catch (error) {
       // Emit an error if the action could not be executed.
@@ -435,7 +667,7 @@ export default class GameServer extends Game<
    */
   public static launch(
     mission: ServerMission,
-    config: TGameConfig = {},
+    config: Partial<TGameConfig> = {},
   ): GameServer {
     return new GameServer(
       generateHash().substring(0, 12),
@@ -443,13 +675,9 @@ export default class GameServer extends Game<
       config,
       mission,
       [],
+      [],
     )
   }
-
-  /**
-   * Quits the game for the given participant.
-   */
-  public static quit(participant: ClientConnection): void {}
 
   /**
    * @returns the game associated with the given game ID.
@@ -470,13 +698,28 @@ export default class GameServer extends Game<
   }
 
   /**
-   * Destroys the session associated with the given user ID.
+   * Destroys the game associated with the given game ID.
+   * @param gameID The ID of the game to destroy.
    */
-  public static destroy(userID: string | undefined): void {
-    let game: GameServer | undefined = GameServer.get(userID)
+  public static destroy(gameID: string | undefined): void {
+    // Find the game.
+    let game: GameServer | undefined = GameServer.get(gameID)
 
-    if (game !== undefined) {
+    // If found...
+    if (gameID !== undefined && game !== undefined) {
+      // Destroy game.
       game.destroy()
     }
   }
+}
+
+/**
+ * Options for converting a game to JSON.
+ */
+export type TGameServerJsonOptions = {
+  /**
+   * Whether to include sensitive game data (ban list).
+   * @default false
+   */
+  includeSensitiveData?: boolean
 }

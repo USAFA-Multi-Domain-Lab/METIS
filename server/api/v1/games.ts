@@ -10,15 +10,31 @@ import defineRequests, {
 } from 'metis/server/middleware/requests'
 import ServerMission from 'metis/server/missions'
 import MetisSession from 'metis/server/sessions'
+import ServerUser from 'metis/server/users'
 import { auth } from '../../middleware/users'
 
 const routerMap = (router: expressWs.Router, done: () => void) => {
   // -- GET | /api/v1/games/ --
   // This will retrieve all publicly accessible games.
   router.get('/', auth({}), (request: Request, response: Response) => {
-    let games: TGameBasicJson[] = GameServer.getAll().map((game) =>
-      game.toBasicJson(),
-    )
+    // Define an array to store the games.
+    let games: TGameBasicJson[] = []
+    let user: ServerUser = response.locals.user
+    let hasAccess: boolean = user.isAuthorized(['WRITE'])
+
+    // Loop through all games and add the public games
+    // to the array.
+    for (let game of GameServer.getAll()) {
+      if (game.config.accessibility === 'public' || hasAccess) {
+        games.push(
+          game.toBasicJson({
+            includeSensitiveData: user.isAuthorized(['WRITE']),
+          }),
+        )
+      }
+    }
+
+    // Return the response as JSON.
     return response.json(games)
   })
 
@@ -37,10 +53,10 @@ const routerMap = (router: expressWs.Router, done: () => void) => {
       {
         body: {
           accessibility: RequestBodyFilters.STRING_LITERAL<
-            NonNullable<TGameConfig['accessibility']>
+            TGameConfig['accessibility']
           >(['public', 'id-required', 'invite-only']),
           autoAssign: RequestBodyFilters.BOOLEAN,
-          resourcesEnabled: RequestBodyFilters.BOOLEAN,
+          infiniteResources: RequestBodyFilters.BOOLEAN,
           effectsEnabled: RequestBodyFilters.BOOLEAN,
         },
       },
@@ -51,7 +67,7 @@ const routerMap = (router: expressWs.Router, done: () => void) => {
       let gameConfig: TGameConfig = {
         accessibility: request.body.accessibility,
         autoAssign: request.body.autoAssign,
-        resourcesEnabled: request.body.resourcesEnabled,
+        infiniteResources: request.body.infiniteResources,
         effectsEnabled: request.body.effectsEnabled,
       }
       // Grab the session.
@@ -117,8 +133,58 @@ const routerMap = (router: expressWs.Router, done: () => void) => {
         return response.sendStatus(409)
       }
 
-      // Start the game and return response.
+      // Start the game.
       game.state = 'started'
+
+      // Return response.
+      return response.sendStatus(200)
+    },
+  )
+
+  // -- PUT | /api/v1/games/:gameID/config/
+  // This will update the config of a game.
+  router.put(
+    '/:gameID/config/',
+    auth({ permissions: ['WRITE'] }),
+    defineRequests(
+      {},
+      {
+        body: {
+          accessibility: RequestBodyFilters.STRING_LITERAL<
+            TGameConfig['accessibility']
+          >(['public', 'id-required', 'invite-only']),
+          autoAssign: RequestBodyFilters.BOOLEAN,
+          infiniteResources: RequestBodyFilters.BOOLEAN,
+          effectsEnabled: RequestBodyFilters.BOOLEAN,
+        },
+      },
+    ),
+    (request: Request, response: Response) => {
+      // Get data from the request body.
+      let gameConfigUpdate: Partial<TGameConfig> = {
+        accessibility: request.body.accessibility,
+        autoAssign: request.body.autoAssign,
+        infiniteResources: request.body.infiniteResources,
+        effectsEnabled: request.body.effectsEnabled,
+      }
+      // Get game.
+      let gameID: string = request.params.gameID
+      let game: GameServer | undefined = GameServer.get(gameID)
+
+      // Send 404 if game could not be found.
+      if (game === undefined) {
+        return response.sendStatus(404)
+      }
+      // If the game state is not 'unstarted', return
+      // 409 conflict.
+      if (game.state !== 'unstarted') {
+        return response.sendStatus(409)
+      }
+
+      // Update game configuration.
+      game.updateConfig(gameConfigUpdate)
+
+      // Return response.
       return response.sendStatus(200)
     },
   )
@@ -142,9 +208,71 @@ const routerMap = (router: expressWs.Router, done: () => void) => {
         return response.sendStatus(409)
       }
 
-      // End the game and return response.
+      // End the game.
       game.state = 'ended'
+
+      // For now, destroy the game until we have a
+      // reason to keep ended games in memory.
+      game.destroy()
+
+      // Return response.
       return response.sendStatus(200)
+    },
+  )
+
+  // -- PUT | /api/v1/games/:gameID/kick/:participantID/ --
+  // This will kick a participant from a game.
+  router.put(
+    '/:gameID/kick/:participantID/',
+    auth({ permissions: ['WRITE'] }),
+    (request: Request, response: Response) => {
+      let gameID: string = request.params.gameID
+      let participantID: string = request.params.participantID
+      let game: GameServer | undefined = GameServer.get(gameID)
+
+      // Send 404 if game could not be found.
+      if (game === undefined) {
+        return response.sendStatus(404)
+      }
+
+      try {
+        // Kick participant.
+        game.kick(participantID)
+        // Return response.
+        return response.sendStatus(200)
+      } catch (code: any) {
+        // If the participant could not be kicked, return
+        // the error code.
+        return response.sendStatus(code)
+      }
+    },
+  )
+
+  // -- PUT | /api/v1/games/:gameID/ban/:participantID/ --
+  // This will ban a participant from a game.
+  router.put(
+    '/:gameID/ban/:participantID/',
+    auth({ permissions: ['WRITE'] }),
+    (request: Request, response: Response) => {
+      let gameID: string = request.params.gameID
+      let participantID: string = request.params.participantID
+      let game: GameServer | undefined = GameServer.get(gameID)
+
+      // Send 404 if game could not be found.
+      if (game === undefined) {
+        return response.sendStatus(404)
+      }
+
+      try {
+        // Ban participant.
+        game.ban(participantID)
+        // Return response.
+        return response.sendStatus(200)
+      } catch (code: any) {
+        // If the participant could not be banned, return
+        // the error code.
+        return response.sendStatus(code)
+      }
     },
   )
 

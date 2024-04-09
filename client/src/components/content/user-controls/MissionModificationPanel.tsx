@@ -2,6 +2,7 @@ import { useGlobalContext } from 'src/context'
 import ClientMission from 'src/missions'
 import { useRequireSession } from 'src/toolbox/hooks'
 import { SingleTypeObject } from '../../../../../shared/toolbox/objects'
+import Prompt from '../communication/Prompt'
 import ButtonSvgPanel, { TValidPanelButton } from './ButtonSvgPanel'
 import './MissionModificationPanel.scss'
 
@@ -18,7 +19,7 @@ export default function MissionModificationPanel({
   const {
     navigateTo,
     notify,
-    confirm,
+    prompt,
     beginLoading,
     finishLoading,
     handleError,
@@ -44,56 +45,53 @@ export default function MissionModificationPanel({
 
   // This is called when a user requests
   // to delete the mission.
-  const onDeleteRequest = () => {
-    confirm(
-      'Are you sure you want to delete this mission?',
-      async (concludeAction: () => void) => {
-        try {
-          beginLoading('Deleting mission...')
-          concludeAction()
-          await ClientMission.$delete(mission.missionID)
-          finishLoading()
-          notify(`Successfully deleted "${mission.name}".`)
-          onSuccessfulDeletion()
-        } catch (error) {
-          finishLoading()
-          notify(`Failed to delete "${mission.name}".`)
-        }
-      },
-      {
-        pendingMessageUponConfirm: 'Deleting mission...',
-      },
+  const onDeleteRequest = async () => {
+    // Prompt the user for confirmation.
+    let { choice } = await prompt(
+      'Please confirm the deletion of this mission.',
+      Prompt.ConfirmationChoices,
     )
+
+    // If the user confirms the deletion, proceed.
+    if (choice === 'Confirm') {
+      try {
+        beginLoading('Deleting mission...')
+        await ClientMission.$delete(mission.missionID)
+        finishLoading()
+        notify(`Successfully deleted "${mission.name}".`)
+        onSuccessfulDeletion()
+      } catch (error) {
+        finishLoading()
+        notify(`Failed to delete "${mission.name}".`)
+      }
+    }
   }
 
   // This is called when a user requests
   // to copy the mission.
-  const onCopyRequest = () => {
-    confirm(
-      'Enter the name of the new mission.',
-      async (concludeAction: () => void, entry: string) => {
-        try {
-          beginLoading('Copying mission...')
-          concludeAction()
-          let resultingMission = await ClientMission.$copy(
-            mission.missionID,
-            entry,
-          )
-          finishLoading()
-          notify(`Successfully copied "${mission.name}".`)
-          onSuccessfulCopy(resultingMission)
-        } catch (error) {
-          finishLoading()
-          notify(`Failed to copy "${mission.name}".`)
-        }
-      },
-      {
-        requireEntry: true,
-        entryLabel: 'Name',
-        buttonConfirmText: 'Copy',
-        pendingMessageUponConfirm: 'Copying mission...',
-      },
+  const onCopyRequest = async () => {
+    let { choice, text } = await prompt(
+      'Enter the name of the new mission:',
+      ['Cancel', 'Submit'],
+      { textField: { boundChoices: ['Submit'], label: 'Name' } },
     )
+
+    // If the user confirms the copy, proceed.
+    if (choice === 'Submit') {
+      try {
+        beginLoading('Copying mission...')
+        let resultingMission = await ClientMission.$copy(
+          mission.missionID,
+          text,
+        )
+        finishLoading()
+        notify(`Successfully copied "${mission.name}".`)
+        onSuccessfulCopy(resultingMission)
+      } catch (error) {
+        finishLoading()
+        notify(`Failed to copy "${mission.name}".`)
+      }
+    }
   }
 
   /**

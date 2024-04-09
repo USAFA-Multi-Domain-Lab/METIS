@@ -1,8 +1,8 @@
 import React from 'react'
 import { compute } from 'src/toolbox'
 import { TWithKey } from '../../../../../shared/toolbox/objects'
-import ButtonSvg, { TButtonSvg, TButtonSvgSize } from './ButtonSvg'
 import './ButtonSvgPanel.scss'
+import ButtonSvg, { TButtonSvg, TButtonSvgSize } from './ButtonSvgg'
 
 /**
  * A panel of SVG buttons.

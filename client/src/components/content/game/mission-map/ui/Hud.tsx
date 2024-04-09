@@ -1,5 +1,5 @@
-import { TButtonSvg } from 'src/components/content/user-controls/ButtonSvg'
 import ButtonSvgPanel from 'src/components/content/user-controls/ButtonSvgPanel'
+import { TButtonSvg } from 'src/components/content/user-controls/ButtonSvgg'
 import ClientMission from 'src/missions'
 import { compute } from 'src/toolbox/'
 import { TWithKey } from '../../../../../../../shared/toolbox/objects'

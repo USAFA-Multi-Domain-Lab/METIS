@@ -1,0 +1,41 @@
+.GameUsers {
+  .Subtitle {
+    margin: 0 0 1em;
+    width: 100%;
+    font-size: 1.15rem;
+    font-weight: bold;
+  }
+
+  .Participants,
+  .Supervisors {
+    margin-bottom: 2em;
+  }
+
+  .Participants {
+    .Users {
+      .User {
+        display: grid;
+        grid-template-columns: 1fr auto;
+      }
+    }
+  }
+
+  .Users {
+    .User {
+      margin: 0.75em 0;
+      height: 2em;
+
+      .ButtonSvg {
+        &.ban:hover {
+          filter: invert(68%) sepia(94%) saturate(322%) hue-rotate(300deg)
+            brightness(200%) contrast(98%);
+        }
+      }
+
+      &.NoUsers {
+        font-style: italic;
+        opacity: 0.5;
+      }
+    }
+  }
+}

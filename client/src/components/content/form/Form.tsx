@@ -1049,6 +1049,12 @@ export function DetailToggle({
   )
 }
 
+// Set default props for the DetailToggle
+// component.
+DetailToggle.defaultProps = {
+  fieldType: 'required',
+}
+
 /* ---------------------------- TYPES FOR FORMS ---------------------------- */
 
 /**
@@ -1209,7 +1215,7 @@ type TDetailLargeString_P = TDetailWithInput_P<string> & {
 /**
  * The properties for the Detail Drop Down component.
  */
-type TDetailDropDown_P<TOption> = TDetail_P<TOption> & {
+type TDetailDropDown_P<TOption> = TDetail_P<TOption | null> & {
   /**
    * The options available for the detail.
    */

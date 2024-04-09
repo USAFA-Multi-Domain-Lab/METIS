@@ -1,6 +1,6 @@
 import { AxiosError } from 'axios'
 import { useState } from 'react'
-import { useGlobalContext } from 'src/context'
+import { useGlobalContext, useNavigationMiddleware } from 'src/context'
 import { compute } from 'src/toolbox'
 import { useMountHandler, useRequireSession } from 'src/toolbox/hooks'
 import ClientUser from 'src/users'
@@ -17,10 +17,11 @@ import './UserPage.scss'
 export default function UserPage(props: IUserPage): JSX.Element | null {
   /* -- GLOBAL CONTEXT -- */
   const globalContext = useGlobalContext()
-  const { beginLoading, finishLoading, handleError, notify } =
+  const { beginLoading, finishLoading, handleError, notify, prompt } =
     globalContext.actions
 
-  /* -- STATE -- */
+  /* -- COMPONENT STATE -- */
+
   const [existsInDatabase, setExistsInDatabase] = useState<boolean>(false)
   const [user, setUser] = useState<ClientUser>(
     new ClientUser({}, { passwordIsRequired: true }),
@@ -57,6 +58,42 @@ export default function UserPage(props: IUserPage): JSX.Element | null {
     // Mark mount as handled.
     done()
   })
+
+  // Navigation middleware to protect from navigating
+  // away with unsaved changes.
+  useNavigationMiddleware(
+    async (to, next) => {
+      // If there are unsaved changes, prompt the user.
+      if (areUnsavedChanges) {
+        const { choice } = await prompt(
+          'You have unsaved changes. What do you want to do with them?',
+          ['Cancel', 'Save', 'Discard'],
+        )
+
+        try {
+          // Abort if cancelled.
+          if (choice === 'Cancel') {
+            return
+          }
+          // Save if requested.
+          else if (choice === 'Save') {
+            beginLoading('Saving...')
+            await save()
+            finishLoading()
+          }
+        } catch (error) {
+          return handleError({
+            message: 'Failed to save mission.',
+            notifyMethod: 'bubble',
+          })
+        }
+      }
+
+      // Call next.
+      next()
+    },
+    [areUnsavedChanges],
+  )
 
   /* -- SESSION-SPECIFIC LOGIC -- */
 

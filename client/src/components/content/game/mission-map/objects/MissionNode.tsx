@@ -2,7 +2,7 @@ import { useState } from 'react'
 import Tooltip from 'src/components/content/communication/Tooltip'
 import ButtonSvg, {
   TButtonSvg,
-} from 'src/components/content/user-controls/ButtonSvg'
+} from 'src/components/content/user-controls/ButtonSvgg'
 import ClientMissionNode from 'src/missions/nodes'
 import { compute } from 'src/toolbox'
 import { useEventListener, useInlineStyling } from 'src/toolbox/hooks'
@@ -18,6 +18,26 @@ import './MissionNode.scss'
  * The maximum zoom level where the node's content will be displayed.
  */
 export const MAX_NODE_CONTENT_ZOOM = 1 / 30 // [numerator]em = [denominator]px
+
+/* -- functions -- */
+
+/**
+ * Calculates the initial progress (in milliseconds) for a node.
+ * @param node The node in question.
+ * @returns The initial progress.
+ */
+function calculateInitialProgress(node: ClientMissionNode): number {
+  // If executing, calculate the initial progress
+  // by subtracting the start time from the current
+  // time.
+  if (node.executing) {
+    return Date.now() - node.execution!.start
+  }
+  // Else, return 0.
+  else {
+    return 0
+  }
+}
 
 /* -- components -- */
 
@@ -52,7 +72,9 @@ export default function MissionNode({
    * The initial progress shown on the progress bar,
    * helping account for latency.
    */
-  const [initialProgress, setInitialProgress] = useState<number>(0)
+  const [initialProgress, setInitialProgress] = useState<number>(() =>
+    calculateInitialProgress(node),
+  )
   /**
    * The buttons to display on the node.
    */
@@ -69,12 +91,7 @@ export default function MissionNode({
     setPendingExecInit(node.pendingExecInit)
     setExecutionState(node.executionState)
     setButtons(node.buttons)
-
-    // If node is executing, update the initial
-    // progress.
-    if (node.executing) {
-      setInitialProgress(Date.now() - node.execution!.start)
-    }
+    setInitialProgress(calculateInitialProgress(node))
   })
 
   /* -- computed -- */
