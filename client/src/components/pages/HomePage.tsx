@@ -21,7 +21,7 @@ import { LogoutLink } from '../content/general-layout/Navigation'
 import ButtonSvg from '../content/user-controls/ButtonSvg'
 import ButtonSvgPanel, {
   TValidPanelButton,
-} from '../content/user-controls/ButtonSvgPanel'
+} from '../content/user-controls/ButtonSvggPanel'
 import { ButtonText } from '../content/user-controls/ButtonText'
 import MissionModificationPanel from '../content/user-controls/MissionModificationPanel'
 import UserModificationPanel from '../content/user-controls/UserModificationPanel'

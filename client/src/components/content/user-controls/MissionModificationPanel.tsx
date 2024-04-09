@@ -3,7 +3,7 @@ import ClientMission from 'src/missions'
 import { useRequireSession } from 'src/toolbox/hooks'
 import { SingleTypeObject } from '../../../../../shared/toolbox/objects'
 import Prompt from '../communication/Prompt'
-import ButtonSvgPanel, { TValidPanelButton } from './ButtonSvgPanel'
+import ButtonSvgPanel, { TValidPanelButton } from './ButtonSvggPanel'
 import './MissionModificationPanel.scss'
 
 export default function MissionModificationPanel({

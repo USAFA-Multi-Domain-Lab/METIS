@@ -2,7 +2,7 @@ import { useGlobalContext } from 'src/context'
 import ClientUser from 'src/users'
 import { SingleTypeObject } from '../../../../../shared/toolbox/objects'
 import Prompt from '../communication/Prompt'
-import ButtonSvgPanel, { TValidPanelButton } from './ButtonSvgPanel'
+import ButtonSvgPanel, { TValidPanelButton } from './ButtonSvggPanel'
 import './UserModificationPanel.scss'
 
 export default function UserModificationPanel({

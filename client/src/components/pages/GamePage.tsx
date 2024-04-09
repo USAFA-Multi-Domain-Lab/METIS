@@ -25,7 +25,7 @@ import {
   PanelSizeRelationship,
   ResizablePanel,
 } from '../content/general-layout/ResizablePanels'
-import { TValidPanelButton } from '../content/user-controls/ButtonSvgPanel'
+import { TValidPanelButton } from '../content/user-controls/ButtonSvggPanel'
 import { TButtonText } from '../content/user-controls/ButtonText'
 import './GamePage.scss'
 
