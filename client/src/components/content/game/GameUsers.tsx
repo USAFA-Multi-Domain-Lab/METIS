@@ -7,7 +7,7 @@ import ClientUser from 'src/users'
 import Prompt from '../communication/Prompt'
 import ButtonSvgPanel, {
   TValidPanelButton,
-} from '../user-controls/ButtonSvggPanel'
+} from '../user-controls/ButtonSvgPanel'
 import './GameUsers.scss'
 
 /**

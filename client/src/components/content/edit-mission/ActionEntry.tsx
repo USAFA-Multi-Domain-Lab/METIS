@@ -13,7 +13,7 @@ import { DetailLargeString, DetailNumber, DetailString } from '../form/Form'
 import List, { ESortByMethod } from '../general-layout/List'
 import ButtonSvgPanel, {
   TValidPanelButton,
-} from '../user-controls/ButtonSvggPanel'
+} from '../user-controls/ButtonSvgPanel'
 import { ButtonText } from '../user-controls/ButtonText'
 import './ActionEntry.scss'
 
