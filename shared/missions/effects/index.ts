@@ -28,6 +28,9 @@ export default abstract class Effect<
   public description: TCommonEffect['description']
 
   // Inherited
+  public targetEnvironmentVersion: TCommonEffect['targetEnvironmentVersion']
+
+  // Inherited
   public args: TCommonEffect['args']
 
   /**
@@ -135,6 +138,9 @@ export default abstract class Effect<
     this.id = data.id ?? Effect.DEFAULT_PROPERTIES.id
     this.name = data.name ?? Effect.DEFAULT_PROPERTIES.name
     this.description = data.description ?? Effect.DEFAULT_PROPERTIES.description
+    this.targetEnvironmentVersion =
+      data.targetEnvironmentVersion ??
+      Effect.DEFAULT_PROPERTIES.targetEnvironmentVersion
     this._target = data.targetId ?? Effect.DEFAULT_PROPERTIES.targetId
     this.args = data.args ?? Effect.DEFAULT_PROPERTIES.args
 
@@ -165,6 +171,7 @@ export default abstract class Effect<
       id: this.id,
       name: this.name,
       description: this.description,
+      targetEnvironmentVersion: this.targetEnvironmentVersion,
       targetId: this.target ? this.target.id : this.targetId,
       args: this.args,
     }
@@ -178,6 +185,7 @@ export default abstract class Effect<
       id: generateHash(),
       name: 'New Effect',
       description: '<p><br></p>',
+      targetEnvironmentVersion: '0.0.1',
       targetId: null,
       args: {},
     }
@@ -221,6 +229,10 @@ export interface TCommonEffect {
    */
   description: string
   /**
+   * The current version of the target environment.
+   */
+  targetEnvironmentVersion: string
+  /**
    * The arguments used to affect an entity via the effects API.
    */
   args: AnyObject
@@ -246,6 +258,10 @@ export interface TCommonEffectJson {
    * Descibes what the effect does.
    */
   description: string
+  /**
+   * The current version of the target environment.
+   */
+  targetEnvironmentVersion: string
   /**
    * The ID of the target to which the effect will be applied.
    */

@@ -211,7 +211,7 @@ export type TGenericServerEvents = {
     }
   >
   /**
-   * Occurs when the server intenionally emits an error to client.
+   * Occurs when the server intentionally emits an error to client.
    */
   'error': {
     /**

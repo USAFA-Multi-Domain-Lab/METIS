@@ -1,12 +1,14 @@
 import axios, { AxiosRequestConfig } from 'axios'
-import { AnyObject } from '../toolbox/objects'
 import https from 'https'
+import { AnyObject } from '../toolbox/objects'
 
 /**
  * The Api class is used to make HTTP requests to target environments.
  */
 export class Api {
-  // Inherited
+  /**
+   * The base URL where the API can be reached at.
+   */
   private _baseUrl: ApiOptions['baseUrl']
   /**
    * The base URL where the API can be reached at.
@@ -15,16 +17,9 @@ export class Api {
     return this._baseUrl
   }
 
-  // Inherited
-  private _apiKey: ApiOptions['apiKey']
   /**
-   * The API key used to authenticate a request.
+   * The configuration for the request.
    */
-  public get apiKey(): ApiOptions['apiKey'] {
-    return this._apiKey
-  }
-
-  // Inherited
   private _config: ApiOptions['config']
   /**
    * The configuration for the request.
@@ -33,31 +28,34 @@ export class Api {
     return this._config
   }
 
-  private _allowHttp: ApiOptions['allowHttp']
   /**
-   * Whether or not to allow HTTP requests.
+   * If true the server will reject any connection which is not authorized
+   * with the list of supplied CAs. This option only has an effect if
+   * requestCert is true.
+   * @default true
    */
-  public get allowHttp(): ApiOptions['allowHttp'] {
-    return this._allowHttp
+  private _rejectUnauthorized: ApiOptions['rejectUnauthorized']
+  /**
+   * If true the server will reject any connection which is not authorized
+   * with the list of supplied CAs. This option only has an effect if
+   * requestCert is true.
+   * @default true
+   */
+  public get rejectUnauthorized(): ApiOptions['rejectUnauthorized'] {
+    return this._rejectUnauthorized
   }
 
-  /**
-   * @param options The options used to create an API.
-   * @param options.baseUrl The base URL where the API can be reached at.
-   * @param options.apiKey The API key used to authenticate a request.
-   * @param options.config The configuration for the request.
-   * @param options.allowHttp Whether or not to allow HTTP requests.
-   */
-  public constructor(options: ApiOptions = {}) {
-    this._baseUrl = options.baseUrl
-    this._apiKey = options.apiKey
-    this._config = options.config
-    this._allowHttp = options.allowHttp
+  public constructor({ baseUrl, config, rejectUnauthorized }: ApiOptions = {}) {
+    this._baseUrl = baseUrl
+    this._config = config
+    this._rejectUnauthorized = rejectUnauthorized
 
-    if (this._allowHttp !== undefined) {
-      // Allows http requests to be made to the API.
+    if (this._rejectUnauthorized !== undefined) {
+      // Determines if the server will reject any
+      // connection which is not authorized with
+      // the list of supplied CAs.
       const httpsAgent = new https.Agent({
-        rejectUnauthorized: this._allowHttp,
+        rejectUnauthorized: this._rejectUnauthorized,
       })
       // Add the https agent to the configuration.
       this._config = {
@@ -73,15 +71,12 @@ export class Api {
    * @param data The data to send with the request.
    * @param config The configuration for the request.
    */
-  public async post(
-    url: string,
-    data?: AnyObject | undefined,
-    config?: AxiosRequestConfig<AnyObject> | undefined,
-  ): Promise<void> {
+  public async post(url: string, data: AnyObject = {}): Promise<void> {
     try {
-      return await axios.post(url, data, config)
+      return await axios.post(url, data, this.config)
     } catch (error: any) {
-      throw new Error(error)
+      let err = new Error(error)
+      throw err.stack
     }
   }
 
@@ -90,14 +85,12 @@ export class Api {
    * @param url The url to send the request to.
    * @param config The configuration for the request.
    */
-  public async get(
-    url: string,
-    config?: AxiosRequestConfig<AnyObject> | undefined,
-  ): Promise<void> {
+  public async get(url: string): Promise<void> {
     try {
-      return await axios.get(url, config)
+      return await axios.get(url, this.config)
     } catch (error: any) {
-      throw new Error(error)
+      let err = new Error(error)
+      throw err.stack
     }
   }
 
@@ -107,15 +100,12 @@ export class Api {
    * @param data The data to send with the request.
    * @param config The configuration for the request.
    */
-  public async put(
-    url: string,
-    data?: AnyObject | undefined,
-    config?: AxiosRequestConfig<AnyObject> | undefined,
-  ): Promise<void> {
+  public async put(url: string, data: AnyObject = {}): Promise<void> {
     try {
-      return await axios.put(url, data, config)
+      return await axios.put(url, data, this.config)
     } catch (error: any) {
-      throw new Error(error)
+      let err = new Error(error)
+      throw err.stack
     }
   }
 
@@ -125,15 +115,12 @@ export class Api {
    * @param data The data to send with the request.
    * @param config The configuration for the request.
    */
-  public async patch(
-    url: string,
-    data?: AnyObject | undefined,
-    config?: AxiosRequestConfig<AnyObject> | undefined,
-  ): Promise<void> {
+  public async patch(url: string, data: AnyObject = {}): Promise<void> {
     try {
-      return await axios.patch(url, data, config)
+      return await axios.patch(url, data, this.config)
     } catch (error: any) {
-      throw new Error(error)
+      let err = new Error(error)
+      throw err.stack
     }
   }
 
@@ -142,14 +129,12 @@ export class Api {
    * @param url The url to send the request to.
    * @param config The configuration for the request.
    */
-  public async delete(
-    url: string,
-    config?: AxiosRequestConfig<AnyObject> | undefined,
-  ): Promise<void> {
+  public async delete(url: string): Promise<void> {
     try {
-      return await axios.delete(url, config)
+      return await axios.delete(url, this.config)
     } catch (error: any) {
-      throw new Error(error)
+      let err = new Error(error)
+      throw err.stack
     }
   }
 }
@@ -163,17 +148,16 @@ type ApiOptions = {
    */
   baseUrl?: string
   /**
-   * The API key used to authenticate a request.
-   */
-  apiKey?: string
-  /**
    * The configuration for the request.
    */
   config?: AxiosRequestConfig<AnyObject> | undefined
   /**
-   * Whether or not to allow HTTP requests.
+   * If true the server will reject any connection which is not authorized
+   * with the list of supplied CAs. This option only has an effect if
+   * requestCert is true.
+   * @default true
    */
-  allowHttp?: boolean
+  rejectUnauthorized?: boolean
 }
 
 /**

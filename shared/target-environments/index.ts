@@ -16,6 +16,9 @@ export default abstract class TargetEnvironment<TTarget extends TCommonTarget>
   public description: TCommonTargetEnv['description']
 
   // Inherited
+  public version: TCommonTargetEnv['version']
+
+  // Inherited
   public targets: TTarget[]
 
   /**
@@ -30,6 +33,7 @@ export default abstract class TargetEnvironment<TTarget extends TCommonTarget>
     this.name = data.name ?? TargetEnvironment.DEFAULT_PROPERTIES.name
     this.description =
       data.description ?? TargetEnvironment.DEFAULT_PROPERTIES.description
+    this.version = data.version ?? TargetEnvironment.DEFAULT_PROPERTIES.version
     this.targets = this.parseTargets(
       data.targets ?? TargetEnvironment.DEFAULT_PROPERTIES.targets,
     )
@@ -53,6 +57,7 @@ export default abstract class TargetEnvironment<TTarget extends TCommonTarget>
       id: this.id,
       name: this.name,
       description: this.description,
+      version: this.version,
       targets: this.targets.map((target: TCommonTarget) => target.toJson()),
     }
   }
@@ -65,6 +70,7 @@ export default abstract class TargetEnvironment<TTarget extends TCommonTarget>
       id: 'metis-target-env-default',
       name: 'Select a target environment',
       description: 'This is a default target environment.',
+      version: '0.1',
       targets: [],
     }
   }
@@ -99,6 +105,10 @@ export interface TCommonTargetEnv {
    */
   description: string
   /**
+   * The current version of the target environment.
+   */
+  version: string
+  /**
    * The targets in the environment.
    */
   targets: TCommonTarget[]
@@ -124,6 +134,10 @@ export interface TCommonTargetEnvJson {
    * Describes what the target environment is.
    */
   description: string
+  /**
+   * The current version of the target environment.
+   */
+  version: string
   /**
    * The JSON representation of the targets in
    * the environment.

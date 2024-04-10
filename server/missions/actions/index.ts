@@ -3,6 +3,8 @@ import IActionExecution, {
   TActionExecutionJSON,
 } from 'metis/missions/actions/executions'
 import { TCommonEffectJson } from 'metis/missions/effects'
+import { plcApiLogger } from 'metis/server/logging'
+import ServerTargetEnvironment from 'metis/server/target-environments'
 import Queue from 'metis/toolbox/queue'
 import ServerMission from '..'
 import ServerEffect from '../effects'
@@ -58,7 +60,7 @@ export default class ServerMissionAction extends MissionAction<
   public execute(
     options: TExecuteOptions<ServerActionExecution>,
   ): Promise<ServerRealizedOutcome> {
-    let { enactEffects = false, onInit = () => {} } = options
+    let { effectsEnabled = false, onInit = () => {} } = options
 
     return new Promise<ServerRealizedOutcome>((resolve) => {
       // Determine the start and end time of
@@ -95,6 +97,43 @@ export default class ServerMissionAction extends MissionAction<
 
         // Resolve with the determined outcome.
         resolve(realizedOutcome)
+
+        // If the outcome is successful and the effects
+        // are enabled...
+        if (realizedOutcome.successful && effectsEnabled) {
+          // ...iterate through the effects and execute them
+          // if they have a target environment and a target.
+          this.effects.forEach(async (effect: ServerEffect) => {
+            // If the effect has a target environment...
+            if (effect.targetEnvironment) {
+              // ...check to see if the target environment exists.
+              let targetEnvironment: ServerTargetEnvironment | undefined =
+                ServerTargetEnvironment.get(effect.targetEnvironment.id)
+
+              // If the target environment does not exist,
+              // log the error.
+              if (targetEnvironment === undefined) {
+                plcApiLogger.error(
+                  new Error(
+                    `Target environment "${effect.targetEnvironment.name}" does not exist.`,
+                  ),
+                )
+              }
+              // Otherwise, execute the effect on the target.
+              else {
+                // If the effect has a target ID, execute the effect
+                // on the target.
+                if (effect.target) {
+                  try {
+                    await effect.target.script(effect.args)
+                  } catch (error: any) {
+                    plcApiLogger.error(new Error(error))
+                  }
+                }
+              }
+            }
+          })
+        }
       }, end - Date.now())
 
       // Call onInit now that the timeout
@@ -111,10 +150,10 @@ export default class ServerMissionAction extends MissionAction<
  */
 export type TExecuteOptions<TActionExecution extends IActionExecution> = {
   /**
-   * Whether to enact the effects of the action, upon successful execution.
+   * Whether to enable the effects of the action, upon successful execution.
    * @default false
    */
-  enactEffects?: boolean
+  effectsEnabled?: boolean
   /**
    * Callback for when the action execution process is initated. Passes a timestamp of when the process is expected to conclude and the promise to be resolved.
    */

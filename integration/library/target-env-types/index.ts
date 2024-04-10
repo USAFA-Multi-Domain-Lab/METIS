@@ -16,6 +16,10 @@ export type TTargetEnv = {
    * Describes what the target environment is.
    */
   description: string
+  /**
+   * The current version of the target environment.
+   */
+  version: string
 }
 
 /* ---------------------------------- TARGET TYPES -------------------------------------- */

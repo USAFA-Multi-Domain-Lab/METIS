@@ -38,7 +38,10 @@ export default function ArgEntry({
       if (option) {
         return option
       } else {
-        return arg.default
+        return {
+          id: 'temporary-option',
+          name: 'Select an option',
+        }
       }
     } else {
       return {

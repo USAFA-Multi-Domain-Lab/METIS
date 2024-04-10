@@ -586,7 +586,7 @@ export default class GameServer extends Game<
     try {
       // Execute the action, awaiting result.
       let outcome = await action.execute({
-        enactEffects: false,
+        effectsEnabled: this.config.effectsEnabled,
         onInit: (execution: ServerActionExecution) => {
           // Deduct action cost from resource pool.
           this._resources -= action!.resourceCost

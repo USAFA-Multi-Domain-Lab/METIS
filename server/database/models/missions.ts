@@ -294,6 +294,10 @@ export const MissionSchema: Schema = new Schema(
                       id: { type: String, required: true },
                       name: { type: String, required: true },
                       description: { type: SanitizedHTML, required: true },
+                      targetEnvironmentVersion: {
+                        type: String,
+                        required: true,
+                      },
                       targetId: { type: String, required: true },
                       args: { type: Object, required: true },
                     },

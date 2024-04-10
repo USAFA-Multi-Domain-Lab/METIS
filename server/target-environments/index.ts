@@ -116,11 +116,13 @@ export default class ServerTargetEnvironment extends TargetEnvironment<ServerTar
           // Grab the default export from the file.
           let exportDefault: any = require(path.join(directory, file)).default
 
-          // If the default export has targets, then it is a target environment.
+          // If the default export has an id, a name, a description,
+          // and a version, then it is a target environment.
           if (
             exportDefault.id &&
             exportDefault.name &&
-            exportDefault.description
+            exportDefault.description &&
+            exportDefault.version
           ) {
             // Add the target environment JSON.
             targetEnvironmentJson.push(exportDefault)
