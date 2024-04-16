@@ -1,24 +1,22 @@
 import { useGlobalContext } from 'src/context'
+import { compute } from 'src/toolbox'
 import ClientUser from 'src/users'
 import { SingleTypeObject } from '../../../../../shared/toolbox/objects'
 import Prompt from '../communication/Prompt'
 import ButtonSvgPanel, { TValidPanelButton } from './ButtonSvgPanel'
 import './UserModificationPanel.scss'
 
+/**
+ * Renders a panel of svg buttons used for modifying a user.
+ */
 export default function UserModificationPanel({
   user,
   onSuccessfulDeletion,
 }: TUserModificationPanel): JSX.Element | null {
   /* -- GLOBAL CONTEXT -- */
-
   const globalContext = useGlobalContext()
-
-  const { notify, prompt, beginLoading, finishLoading } = globalContext.actions
+  const { notify, prompt, finishLoading } = globalContext.actions
   const [session] = globalContext.session
-
-  /* -- COMPONENT VARIABLES -- */
-
-  let currentButtons: TValidPanelButton[] = []
 
   /* -- SESSION-SPECIFIC LOGIC -- */
 
@@ -30,10 +28,10 @@ export default function UserModificationPanel({
   // Extract properties from session.
   let { user: currentUser } = session
 
-  /* -- COMPONENT FUNCTIONS -- */
-  // This is called when a user requests
-  // to delete the mission.
-
+  /* -- FUNCTIONS -- */
+  /**
+   * Handles a request to delete a user.
+   */
   const onDeleteRequest = async () => {
     // Prompt the user for confirmation.
     let { choice } = await prompt(
@@ -55,32 +53,46 @@ export default function UserModificationPanel({
     }
   }
 
-  /* -- PRE-RENDER PROCESSING -- */
+  /* -- COMPUTED -- */
+  /**
+   * A list of available buttons for the mission modification panel.
+   */
+  const availableButtons: SingleTypeObject<TValidPanelButton> = compute(() => {
+    return {
+      remove: {
+        icon: 'remove',
+        key: 'remove',
+        onClick: onDeleteRequest,
+        tooltipDescription: 'Remove user.',
+      },
+    }
+  })
+  /**
+   * The current buttons being displayed.
+   */
+  const currentButtons: TValidPanelButton[] = compute(() => {
+    let buttons: TValidPanelButton[] = []
 
-  let availableMiniActions: SingleTypeObject<TValidPanelButton> = {
-    remove: {
-      icon: 'remove',
-      key: 'remove',
-      onClick: onDeleteRequest,
-      tooltipDescription: 'Remove user.',
-    },
-  }
+    if (currentUser.isAuthorized('users_write' || 'users_write_students')) {
+      buttons = [availableButtons.remove]
+    }
 
-  let containerClassName: string = 'UserModificationPanel hidden'
-
-  if (currentUser.hasRestrictedAccess) {
-    containerClassName = 'UserModificationPanel'
-  }
-
-  currentButtons.push(availableMiniActions.remove)
+    return buttons
+  })
 
   /* -- RENDER -- */
 
-  return (
-    <div className={containerClassName}>
-      <ButtonSvgPanel buttons={currentButtons} size={'small'} />
-    </div>
-  )
+  // If the user is authorized to modify users,
+  // then display the user modification panel.
+  if (currentUser.isAuthorized('users_write' || 'users_write_students')) {
+    return (
+      <div className='UserModificationPanel'>
+        <ButtonSvgPanel buttons={currentButtons} size={'small'} />
+      </div>
+    )
+  } else {
+    return null
+  }
 }
 
 /* -- types -- */

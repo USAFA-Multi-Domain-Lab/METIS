@@ -55,19 +55,19 @@ export default function HomePage(props: {}): JSX.Element | null {
     prompt,
   } = globalContext.actions
 
-  /* -- COMPONENT REFS -- */
+  /* -- REFS -- */
 
   const page = useRef<HTMLDivElement>(null)
   const importMissionTrigger = useRef<HTMLInputElement>(null)
 
-  /* -- COMPONENT STATE -- */
+  /* -- STATE -- */
 
   const [games, setGames] = useState<TGameBasicJson[]>([])
   const [missions, setMissions] = useState<ClientMission[]>([])
   const [users, setUsers] = useState<ClientUser[]>([])
   const [manualJoinGameId, setManualJoinGameId] = useState<string>('')
 
-  /* -- COMPONENT EFFECTS -- */
+  /* -- EFFECTS -- */
   // Require session for page.
   const [session] = useRequireSession()
 
@@ -75,7 +75,7 @@ export default function HomePage(props: {}): JSX.Element | null {
   let { user: currentUser } = session
 
   const [mountHandled, remount] = useMountHandler(async (done) => {
-    if (currentUser.isAuthorized('READ')) {
+    if (currentUser.isAuthorized(['games_read', 'missions_read'])) {
       await loadGames()
       await loadMissions()
     }
@@ -83,7 +83,7 @@ export default function HomePage(props: {}): JSX.Element | null {
     // The current user in the session
     // must have restricted access to
     // view the users.
-    if (currentUser.isAuthorized(['READ', 'WRITE', 'DELETE'])) {
+    if (currentUser.isAuthorized('users_read_students')) {
       await loadUsers()
       await sortUsers()
     }
@@ -112,7 +112,7 @@ export default function HomePage(props: {}): JSX.Element | null {
     logoLinksHome: false,
   }))
 
-  /* -- COMPONENT FUNCTIONS -- */
+  /* -- FUNCTIONS -- */
 
   /**
    * This loads the missions into the state for display and selection.
@@ -371,7 +371,7 @@ export default function HomePage(props: {}): JSX.Element | null {
 
       page_elm.classList.remove('DropPending')
 
-      if (files.length > 0 && currentUser.isAuthorized('WRITE')) {
+      if (files.length > 0 && currentUser.isAuthorized('missions_write')) {
         importMissionFiles(files)
       }
     }
@@ -432,7 +432,7 @@ export default function HomePage(props: {}): JSX.Element | null {
   // This will start the process for
   // creating a new mission.
   const createMission = (): void => {
-    if (currentUser.isAuthorized('WRITE')) {
+    if (currentUser.isAuthorized('missions_write')) {
       navigateTo('MissionPage', { missionID: null })
     }
   }
@@ -445,12 +445,39 @@ export default function HomePage(props: {}): JSX.Element | null {
       try {
         let joinMethod: TGameJoinMethod = 'participant'
 
+        // Choices for join method.
+        let joinMethodChoices: TChoicesWithCancel<TGameJoinMethod>[] = []
+        // If the user is authorized has the top level
+        // join permission, add the option to join as
+        // a participant or supervisor.
+        if (currentUser.isAuthorized('games_join')) {
+          joinMethodChoices = ['participant', 'supervisor', 'Cancel']
+        }
+        // If the user is authorized to join as a
+        // participant, add the option to join as
+        // a participant.
+        if (
+          currentUser.isAuthorized('games_join_participant') &&
+          !currentUser.isAuthorized('games_join_observer')
+        ) {
+          joinMethodChoices = ['participant', 'Cancel']
+        }
+        // If the user is authorized to join as a
+        // observer, add the option to join as an
+        // supervisor.
+        if (
+          currentUser.isAuthorized('games_join_observer') &&
+          !currentUser.isAuthorized('games_join_participant')
+        ) {
+          joinMethodChoices = ['supervisor', 'Cancel']
+        }
+
         // Prompt user for join method if the user
         // has write privileges.
-        if (currentUser.isAuthorized('WRITE')) {
+        if (currentUser.isAuthorized('games_write')) {
           let { choice } = await prompt<TChoicesWithCancel<TGameJoinMethod>>(
             'What would you like to join the game as?',
-            ['participant', 'supervisor', 'Cancel'],
+            joinMethodChoices,
             { capitalizeChoices: true },
           )
 
@@ -536,7 +563,7 @@ export default function HomePage(props: {}): JSX.Element | null {
   // This will switch to the user form
   // page with the selected user.
   const selectUser = (user: ClientUser) => {
-    if (currentUser.isAuthorized(['READ', 'WRITE'])) {
+    if (currentUser.isAuthorized('users_write_students')) {
       navigateTo('UserPage', {
         userID: user.userID,
       })
@@ -546,27 +573,11 @@ export default function HomePage(props: {}): JSX.Element | null {
   // This will switch to the user form
   // page with a new user.
   const createUser = () => {
-    if (currentUser.isAuthorized('WRITE')) {
+    if (currentUser.isAuthorized('users_write_students')) {
       navigateTo('UserPage', {
         userID: null,
       })
     }
-  }
-
-  /* -- PRE-RENDER PROCESSING -- */
-
-  // Class names used for styling based on the
-  // current user's role.
-  let homePageClassName: string = 'HomePage Page FullView'
-
-  if (currentUser.isAuthorized(['READ', 'WRITE', 'DELETE'])) {
-    homePageClassName += ' InstructorView'
-  }
-
-  // Require mount to be handled for
-  // component to render.
-  if (!mountHandled) {
-    return null
   }
 
   /* -- RENDER -- */
@@ -575,7 +586,11 @@ export default function HomePage(props: {}): JSX.Element | null {
    * The file drop box for uploading mission files.
    */
   const fileDropBoxJsx = compute(() => (
-    <div className='FileDropBox'>
+    <div
+      className={
+        currentUser.isAuthorized('missions_write') ? 'FileDropBox' : 'Hidden'
+      }
+    >
       <div className='UploadIcon'></div>
     </div>
   ))
@@ -584,225 +599,247 @@ export default function HomePage(props: {}): JSX.Element | null {
    * The games that are displayed on the home page.
    */
   const gamesJsx = compute(() => {
-    // Render JSX.
-    return (
-      <div className='GameListContainer'>
-        <List<TGameBasicJson>
-          headingText={'Select a game:'}
-          items={games}
-          sortByMethods={[ESortByMethod.Name]}
-          nameProperty={'name'}
-          alwaysUseBlanks={true}
-          renderItemDisplay={(game: TGameBasicJson) => {
-            /**
-             * Class for accessibility element.
-             */
-            const accessibilityClass = compute((): string => {
-              const classList = [
-                'Accessibility',
-                game.config.accessibility ??
-                  GameClient.DEFAULT_CONFIG.accessibility,
-              ]
-              return classList.join(' ')
-            })
+    if (currentUser.isAuthorized('games_read')) {
+      return (
+        <div className='ListContainer'>
+          <List<TGameBasicJson>
+            headingText={'Select a game:'}
+            items={games}
+            sortByMethods={[ESortByMethod.Name]}
+            nameProperty={'name'}
+            alwaysUseBlanks={true}
+            renderItemDisplay={(game: TGameBasicJson) => {
+              /**
+               * Class for accessibility element.
+               */
+              const accessibilityClass = compute((): string => {
+                const classList = [
+                  'Accessibility',
+                  game.config.accessibility ??
+                    GameClient.DEFAULT_CONFIG.accessibility,
+                ]
+                return classList.join(' ')
+              })
+              /**
+               * Buttons for selection row.
+               */
+              const buttons = compute((): TValidPanelButton[] => {
+                let buttons: TValidPanelButton[] = []
 
-            /**
-             * Buttons for selection row.
-             */
-            const buttons = compute((): TValidPanelButton[] => {
-              let buttons: TValidPanelButton[] = []
+                // If the current user is authorized
+                // to write, add the button for creating
+                // a new game.
+                if (currentUser.isAuthorized('games_write')) {
+                  buttons.push({
+                    icon: 'remove',
+                    key: 'remove',
+                    onClick: () => onGameDelete(game),
+                    tooltipDescription: 'Remove game.',
+                  })
+                }
 
-              // If the current user is authorized
-              // to write, add the button for creating
-              // a new game.
-              if (currentUser.isAuthorized('WRITE')) {
-                buttons.push({
-                  icon: 'remove',
-                  key: 'remove',
-                  onClick: () => onGameDelete(game),
-                  tooltipDescription: 'Remove game.',
-                })
-              }
+                return buttons
+              })
 
-              return buttons
-            })
-
-            return (
-              <div className='SelectionRow'>
-                <div className={accessibilityClass}>
-                  <Tooltip
-                    description={
-                      '### Game ID Required\n*This game is not publicly accessible. One must have the game ID to join.*'
-                    }
-                  />
+              return (
+                <div className='SelectionRow Game'>
+                  <div className={accessibilityClass}>
+                    <Tooltip
+                      description={
+                        '### Game ID Required\n*This game is not publicly accessible. One must have the game ID to join.*'
+                      }
+                    />
+                  </div>
+                  <div
+                    className='Text'
+                    onClick={() => onGameSelection(game.gameID)}
+                  >
+                    {game.name}
+                    <Tooltip description={'Join game.'} />
+                  </div>
+                  <ButtonSvgPanel buttons={buttons} size={'small'} />
                 </div>
-                <div
-                  className='Text'
-                  onClick={() => onGameSelection(game.gameID)}
-                >
-                  {game.name}
-                  <Tooltip description={'Join game.'} />
-                </div>
-                <ButtonSvgPanel buttons={buttons} size={'small'} />
-              </div>
-            )
-          }}
-          searchableProperties={['name']}
-          noItemsDisplay={
-            <div className='NoContent'>No games available...</div>
-          }
-          ajaxStatus={'Loaded'}
-          applyItemStyling={() => {
-            return {}
-          }}
-          listSpecificItemClassName='AltDesign1'
-        />
-        <div className='ListActions'>
-          <div className='ManualJoin'>
-            <div className='Label'>Enter game ID:</div>
-            <DetailString
-              fieldType='optional'
-              handleOnBlur='none'
-              label=''
-              stateValue={manualJoinGameId}
-              setState={setManualJoinGameId}
-              uniqueLabelClassName={'Hidden'}
-            />
-            <ButtonText
-              text='Join'
-              onClick={() => onGameSelection(manualJoinGameId)}
-              disabled={manualJoinGameId.length === 0}
-            />
+              )
+            }}
+            searchableProperties={['name']}
+            noItemsDisplay={
+              <div className='NoContent'>No games available...</div>
+            }
+            ajaxStatus={'Loaded'}
+            applyItemStyling={() => {
+              return {}
+            }}
+            listSpecificItemClassName='AltDesign1'
+          />
+          <div className='ListActions'>
+            <div className='ManualJoin'>
+              <div className='Label'>Enter game ID:</div>
+              <DetailString
+                fieldType='optional'
+                handleOnBlur='none'
+                label=''
+                stateValue={manualJoinGameId}
+                setState={setManualJoinGameId}
+                uniqueLabelClassName={'Hidden'}
+              />
+              <ButtonText
+                text='Join'
+                onClick={() => onGameSelection(manualJoinGameId)}
+                disabled={manualJoinGameId.length === 0}
+              />
+            </div>
           </div>
         </div>
-      </div>
-    )
+      )
+    } else {
+      return null
+    }
   })
 
   /**
    * The missions that are displayed on the home page.
    */
-  const missionsJsx = compute(() => (
-    <div className='MissionListContainer'>
-      <List<ClientMission>
-        headingText={'Select a mission:'}
-        items={missions}
-        sortByMethods={[ESortByMethod.Name]}
-        nameProperty={'name'}
-        alwaysUseBlanks={true}
-        renderItemDisplay={(mission: ClientMission) => {
-          return (
-            <>
-              <div className='SelectionRow'>
-                <div
-                  className='Text'
-                  onClick={() => onMissionSelection(mission)}
-                >
-                  {mission.name}
-                  <Tooltip description='View/edit mission.' />
-                </div>
-                <MissionModificationPanel
-                  mission={mission}
-                  onSuccessfulCopy={loadMissions}
-                  onSuccessfulDeletion={loadMissions}
-                />
-              </div>
-            </>
-          )
-        }}
-        searchableProperties={['name']}
-        noItemsDisplay={
-          <div className='NoContent'>No missions available...</div>
-        }
-        ajaxStatus={'Loaded'}
-        applyItemStyling={() => {
-          return {}
-        }}
-        listSpecificItemClassName='AltDesign1'
-      />
-      <div className='ListActions'>
-        <ButtonSvg
-          icon={'add'}
-          onClick={createMission}
-          tooltipDescription={'Create new mission'}
-          uniqueClassList={['NewMissionButton']}
-        />
-        <ButtonSvg
-          icon={'upload'}
-          onClick={handleMissionImportRequest}
-          tooltipDescription={'Import a .metis file from your local system.'}
-        />
-        <input
-          className='ImportMissionTrigger'
-          type='file'
-          ref={importMissionTrigger}
-          onChange={handleImportMissionTriggerChange}
-          hidden
-        />
-      </div>
-    </div>
-  ))
+  const missionsJsx = compute(() => {
+    if (currentUser.isAuthorized(['missions_read', 'missions_write'])) {
+      return (
+        <div className='ListContainer'>
+          <List<ClientMission>
+            headingText={'Select a mission:'}
+            items={missions}
+            sortByMethods={[ESortByMethod.Name]}
+            nameProperty={'name'}
+            alwaysUseBlanks={true}
+            renderItemDisplay={(mission: ClientMission) => {
+              return (
+                <>
+                  <div className='SelectionRow'>
+                    <div
+                      className='Text'
+                      onClick={() => onMissionSelection(mission)}
+                    >
+                      {mission.name}
+                      <Tooltip description='View/edit mission.' />
+                    </div>
+                    <MissionModificationPanel
+                      mission={mission}
+                      onSuccessfulCopy={loadMissions}
+                      onSuccessfulDeletion={loadMissions}
+                    />
+                  </div>
+                </>
+              )
+            }}
+            searchableProperties={['name']}
+            noItemsDisplay={
+              <div className='NoContent'>No missions available...</div>
+            }
+            ajaxStatus={'Loaded'}
+            applyItemStyling={() => {
+              return {}
+            }}
+            listSpecificItemClassName='AltDesign1'
+          />
+          <div className='ListActions'>
+            <ButtonSvg
+              icon={'add'}
+              onClick={createMission}
+              tooltipDescription={'Create new mission'}
+              uniqueClassList={['NewMissionButton']}
+            />
+            <ButtonSvg
+              icon={'upload'}
+              onClick={handleMissionImportRequest}
+              tooltipDescription={
+                'Import a .metis file from your local system.'
+              }
+            />
+            <input
+              className='ImportMissionTrigger'
+              type='file'
+              ref={importMissionTrigger}
+              onChange={handleImportMissionTriggerChange}
+              hidden
+            />
+          </div>
+        </div>
+      )
+    }
+  })
 
   /**
    * The users that are displayed on the home page.
    */
-  const usersJsx = compute(() => (
-    <div className='UserListContainer'>
-      <List<ClientUser>
-        headingText={'Select a user:'}
-        items={users}
-        sortByMethods={[ESortByMethod.Name]}
-        nameProperty={'name'}
-        alwaysUseBlanks={true}
-        renderItemDisplay={(user: ClientUser) => {
-          return (
-            <>
-              <div className='SelectionRow'>
-                <div className='Text' onClick={() => selectUser(user)}>
-                  {user.userID}
-                  <Tooltip description='Select user.' />
-                </div>
-                <UserModificationPanel
-                  user={user}
-                  onSuccessfulDeletion={remount}
-                />
-              </div>
-            </>
-          )
-        }}
-        searchableProperties={['userID']}
-        noItemsDisplay={<div className='NoContent'>No users available...</div>}
-        ajaxStatus={'Loaded'}
-        applyItemStyling={() => {
-          return {}
-        }}
-        listSpecificItemClassName='AltDesign1'
-      />
-      <div className='ListActions'>
-        <ButtonSvg
-          icon={'add'}
-          onClick={createUser}
-          tooltipDescription={'Create new user'}
-        />
-      </div>
-    </div>
-  ))
+  const usersJsx = compute(() => {
+    if (
+      currentUser.isAuthorized(['users_read_students', 'users_write_students'])
+    ) {
+      return (
+        <div className='ListContainer'>
+          <List<ClientUser>
+            headingText={'Select a user:'}
+            items={users}
+            sortByMethods={[ESortByMethod.Name]}
+            nameProperty={'name'}
+            alwaysUseBlanks={true}
+            renderItemDisplay={(user: ClientUser) => {
+              return (
+                <>
+                  <div className='SelectionRow'>
+                    <div className='Text' onClick={() => selectUser(user)}>
+                      {user.userID}
+                      <Tooltip description='Select user.' />
+                    </div>
+                    <UserModificationPanel
+                      user={user}
+                      onSuccessfulDeletion={remount}
+                    />
+                  </div>
+                </>
+              )
+            }}
+            searchableProperties={['userID']}
+            noItemsDisplay={
+              <div className='NoContent'>No users available...</div>
+            }
+            ajaxStatus={'Loaded'}
+            applyItemStyling={() => {
+              return {}
+            }}
+            listSpecificItemClassName='AltDesign1'
+          />
+          <div className='ListActions'>
+            <ButtonSvg
+              icon={'add'}
+              onClick={createUser}
+              tooltipDescription={'Create new user'}
+            />
+          </div>
+        </div>
+      )
+    } else {
+      return null
+    }
+  })
 
   // Render root element.
-  return (
-    <div
-      className={homePageClassName}
-      ref={page}
-      onDragOver={handleFileDragOver}
-      onDragLeave={handleFileDragLeave}
-      onDrop={handleFileDrop}
-    >
-      {fileDropBoxJsx}
-      <DefaultLayout navigation={navigation}>
-        {gamesJsx}
-        {missionsJsx}
-        {usersJsx}
-      </DefaultLayout>
-    </div>
-  )
+  if (mountHandled) {
+    return (
+      <div
+        className='HomePage Page'
+        ref={page}
+        onDragOver={handleFileDragOver}
+        onDragLeave={handleFileDragLeave}
+        onDrop={handleFileDrop}
+      >
+        {fileDropBoxJsx}
+        <DefaultLayout navigation={navigation}>
+          {gamesJsx}
+          {missionsJsx}
+          {usersJsx}
+        </DefaultLayout>
+      </div>
+    )
+  } else {
+    return null
+  }
 }

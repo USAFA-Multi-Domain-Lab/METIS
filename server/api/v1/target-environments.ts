@@ -14,7 +14,7 @@ export const routerMap: TMetisRouterMap = (
   // This will get all target environments.
   router.get(
     '/',
-    auth({ permissions: ['READ', 'WRITE', 'DELETE'] }),
+    auth({ permissions: ['missions_read'] }),
     defineRequests(
       {
         query: {},
@@ -56,7 +56,7 @@ export const routerMap: TMetisRouterMap = (
   // This will get all targets in a target environment.
   router.get(
     '/targets',
-    auth({ permissions: ['READ', 'WRITE', 'DELETE'] }),
+    auth({ permissions: ['missions_read'] }),
     defineRequests({
       query: { targetId: 'string' },
     }),

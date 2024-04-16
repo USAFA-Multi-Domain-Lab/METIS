@@ -9,7 +9,6 @@ import defineRequests, {
   RequestBodyFilters,
 } from 'metis/server/middleware/requests'
 import ServerMission from 'metis/server/missions'
-import MetisSession from 'metis/server/sessions'
 import ServerUser from 'metis/server/users'
 import { auth } from '../../middleware/users'
 
@@ -20,7 +19,7 @@ const routerMap = (router: expressWs.Router, done: () => void) => {
     // Define an array to store the games.
     let games: TGameBasicJson[] = []
     let user: ServerUser = response.locals.user
-    let hasAccess: boolean = user.isAuthorized(['WRITE'])
+    let hasAccess: boolean = user.isAuthorized(['games_write'])
 
     // Loop through all games and add the public games
     // to the array.
@@ -28,7 +27,7 @@ const routerMap = (router: expressWs.Router, done: () => void) => {
       if (game.config.accessibility === 'public' || hasAccess) {
         games.push(
           game.toBasicJson({
-            includeSensitiveData: user.isAuthorized(['WRITE']),
+            includeSensitiveData: user.isAuthorized(['games_write']),
           }),
         )
       }
@@ -43,7 +42,7 @@ const routerMap = (router: expressWs.Router, done: () => void) => {
   // to execute a mission.
   router.post(
     '/launch/',
-    auth({ permissions: ['WRITE'] }),
+    auth({ permissions: ['games_write', 'missions_read'] }),
     defineRequests(
       {
         body: {
@@ -70,9 +69,6 @@ const routerMap = (router: expressWs.Router, done: () => void) => {
         infiniteResources: request.body.infiniteResources,
         effectsEnabled: request.body.effectsEnabled,
       }
-      // Grab the session.
-      let session: MetisSession = response.locals.session
-
       // Query for mission.
       MissionModel.findOne({ missionID })
         .lean()
@@ -89,13 +85,11 @@ const routerMap = (router: expressWs.Router, done: () => void) => {
           else if (missionData === null) {
             return response.sendStatus(404)
           }
-          // Handle mission not live.
-          else if (
-            !missionData.live &&
-            !session?.user.isAuthorized(['READ', 'WRITE', 'DELETE'])
-          ) {
-            return response.sendStatus(401)
-          }
+          // todo: remove (mission.live is deprecated)
+          // // Handle mission not live.
+          // else if (!missionData.live) {
+          //   return response.sendStatus(401)
+          // }
 
           try {
             // Create mission.
@@ -118,7 +112,7 @@ const routerMap = (router: expressWs.Router, done: () => void) => {
   // This will start a game.
   router.put(
     '/:gameID/start/',
-    auth({ permissions: ['WRITE'] }),
+    auth({ permissions: ['games_write'] }),
     (request: Request, response: Response) => {
       let gameID: string = request.params.gameID
       let game: GameServer | undefined = GameServer.get(gameID)
@@ -145,7 +139,7 @@ const routerMap = (router: expressWs.Router, done: () => void) => {
   // This will update the config of a game.
   router.put(
     '/:gameID/config/',
-    auth({ permissions: ['WRITE'] }),
+    auth({ permissions: ['games_write'] }),
     defineRequests(
       {},
       {
@@ -193,7 +187,7 @@ const routerMap = (router: expressWs.Router, done: () => void) => {
   // This will end a game.
   router.put(
     '/:gameID/end/',
-    auth({ permissions: ['WRITE'] }),
+    auth({ permissions: ['games_write'] }),
     (request: Request, response: Response) => {
       let gameID: string = request.params.gameID
       let game: GameServer | undefined = GameServer.get(gameID)
@@ -224,7 +218,7 @@ const routerMap = (router: expressWs.Router, done: () => void) => {
   // This will kick a participant from a game.
   router.put(
     '/:gameID/kick/:participantID/',
-    auth({ permissions: ['WRITE'] }),
+    auth({ permissions: ['games_write'] }),
     (request: Request, response: Response) => {
       let gameID: string = request.params.gameID
       let participantID: string = request.params.participantID
@@ -252,7 +246,7 @@ const routerMap = (router: expressWs.Router, done: () => void) => {
   // This will ban a participant from a game.
   router.put(
     '/:gameID/ban/:participantID/',
-    auth({ permissions: ['WRITE'] }),
+    auth({ permissions: ['games_write'] }),
     (request: Request, response: Response) => {
       let gameID: string = request.params.gameID
       let participantID: string = request.params.participantID
@@ -280,7 +274,7 @@ const routerMap = (router: expressWs.Router, done: () => void) => {
   // This will delete a game.
   router.delete(
     '/:gameID/',
-    auth({ permissions: ['WRITE'] }),
+    auth({ permissions: ['games_write'] }),
     (request: Request, response: Response) => {
       let gameID: string = request.params.gameID
       let game: GameServer | undefined = GameServer.get(gameID)

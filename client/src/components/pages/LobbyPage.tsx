@@ -47,7 +47,10 @@ export default function LobbyPage({ game }: TLobbyPage_P): JSX.Element | null {
 
     // Hide the button section if the user is
     // not authorized.
-    if (!session.user.isAuthorized(['WRITE'])) {
+    if (
+      !session.user.isAuthorized('games_join_manager') ||
+      !session.user.isAuthorized('games_join_observer')
+    ) {
       classNames.push('Hidden')
     }
 

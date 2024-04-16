@@ -1,11 +1,15 @@
 import { useGlobalContext } from 'src/context'
 import ClientMission from 'src/missions'
+import { compute } from 'src/toolbox'
 import { useRequireSession } from 'src/toolbox/hooks'
 import { SingleTypeObject } from '../../../../../shared/toolbox/objects'
 import Prompt from '../communication/Prompt'
 import ButtonSvgPanel, { TValidPanelButton } from './ButtonSvgPanel'
 import './MissionModificationPanel.scss'
 
+/**
+ * Renders a panel of svg buttons used for modifying a mission.
+ */
 export default function MissionModificationPanel({
   mission,
   onSuccessfulCopy,
@@ -16,35 +20,27 @@ export default function MissionModificationPanel({
   // Require session for panel.
   const [session] = useRequireSession()
   const globalContext = useGlobalContext()
-  const {
-    navigateTo,
-    notify,
-    prompt,
-    beginLoading,
-    finishLoading,
-    handleError,
-  } = globalContext.actions
-  const [server] = globalContext.server
+  const { navigateTo, notify, prompt, beginLoading, finishLoading } =
+    globalContext.actions
 
-  /* -- COMPONENT VARIABLES -- */
-
-  let currentButtons: TValidPanelButton[] = []
+  /* -- SESSION-SPECIFIC LOGIC -- */
 
   // Grab the current user from the session.
   let { user: currentUser } = session
 
-  /* -- COMPONENT FUNCTIONS -- */
+  /* -- FUNCTIONS -- */
 
-  // This is called when a user requests
-  // to edit the mission.
+  /**
+   * Handles a request to edit a mission.
+   */
   const onEditRequest = () => {
     navigateTo('MissionPage', {
       missionID: mission.missionID,
     })
   }
-
-  // This is called when a user requests
-  // to delete the mission.
+  /**
+   * Handles a request to delete a mission.
+   */
   const onDeleteRequest = async () => {
     // Prompt the user for confirmation.
     let { choice } = await prompt(
@@ -66,9 +62,9 @@ export default function MissionModificationPanel({
       }
     }
   }
-
-  // This is called when a user requests
-  // to copy the mission.
+  /**
+   * Handles a request to copy a mission.
+   */
   const onCopyRequest = async () => {
     let { choice, text } = await prompt(
       'Enter the name of the new mission:',
@@ -93,7 +89,6 @@ export default function MissionModificationPanel({
       }
     }
   }
-
   /**
    * Handles a request to launch a new game from a mission.
    */
@@ -101,65 +96,94 @@ export default function MissionModificationPanel({
     navigateTo('LaunchPage', { missionID: mission.missionID })
   }
 
-  // -- RENDER --
-
-  let availableButtons: SingleTypeObject<TValidPanelButton> = {
-    launch: {
-      icon: 'launch',
-      key: 'launch',
-      onClick: onLaunchRequest,
-      tooltipDescription: 'Launch game.',
-    },
-    edit: {
-      icon: 'edit',
-      key: 'edit',
-      onClick: onEditRequest,
-      tooltipDescription: 'Edit mission.',
-    },
-    remove: {
-      icon: 'remove',
-      key: 'remove',
-      onClick: onDeleteRequest,
-      tooltipDescription: 'Remove mission.',
-    },
-    copy: {
-      icon: 'copy',
-      key: 'copy',
-      onClick: onCopyRequest,
-      tooltipDescription: 'Copy mission.',
-    },
-    download: {
-      icon: 'download',
-      key: 'download',
-      onClick: () => {
-        window.open(
-          `/api/v1/missions/export/${mission.name}.metis?missionID=${mission.missionID}`,
-          '_blank',
-        )
+  /* -- COMPUTED -- */
+  /**
+   * A list of available buttons for the mission modification panel.
+   */
+  const availableButtons: SingleTypeObject<TValidPanelButton> = compute(() => {
+    return {
+      launch: {
+        icon: 'launch',
+        key: 'launch',
+        onClick: onLaunchRequest,
+        tooltipDescription: 'Launch game.',
       },
-      tooltipDescription:
-        'Export this mission as a .metis file to your local system.',
-    },
+      edit: {
+        icon: 'edit',
+        key: 'edit',
+        onClick: onEditRequest,
+        tooltipDescription: 'Edit mission.',
+      },
+      remove: {
+        icon: 'remove',
+        key: 'remove',
+        onClick: onDeleteRequest,
+        tooltipDescription: 'Remove mission.',
+      },
+      copy: {
+        icon: 'copy',
+        key: 'copy',
+        onClick: onCopyRequest,
+        tooltipDescription: 'Copy mission.',
+      },
+      download: {
+        icon: 'download',
+        key: 'download',
+        onClick: () => {
+          window.open(
+            `/api/v1/missions/export/${mission.name}.metis?missionID=${mission.missionID}`,
+            '_blank',
+          )
+        },
+        tooltipDescription:
+          'Export this mission as a .metis file to your local system.',
+      },
+    }
+  })
+  /**
+   * The current buttons being displayed.
+   */
+  const currentButtons: TValidPanelButton[] = compute(() => {
+    // Initialize the buttons.
+    let buttons: TValidPanelButton[] = []
+
+    // If the user has the proper authorization, add
+    // the launch button.
+    if (currentUser.isAuthorized('games_write')) {
+      buttons.push(availableButtons.launch)
+    }
+
+    // If the user has the proper authorization, add
+    // the edit, remove, copy, and download buttons.
+    if (currentUser.isAuthorized('missions_write')) {
+      buttons.push(
+        availableButtons.edit,
+        availableButtons.remove,
+        availableButtons.copy,
+        availableButtons.download,
+      )
+    }
+
+    // Return the buttons.
+    return buttons
+  })
+
+  /* -- RENDER -- */
+
+  // If the user is authorized to modify missions or games,
+  // then display the mission modification panel.
+  if (
+    currentUser.isAuthorized('missions_write') ||
+    currentUser.isAuthorized('games_write')
+  ) {
+    return (
+      <div className='MissionModificationPanel'>
+        <ButtonSvgPanel buttons={currentButtons} size={'small'} />
+      </div>
+    )
+  } else {
+    return null
   }
-
-  let containerClassName: string = 'Hidden'
-
-  if (currentUser.isAuthorized(['READ', 'WRITE', 'DELETE'])) {
-    containerClassName = 'MissionModificationPanel'
-  }
-
-  currentButtons.push(
-    availableButtons.launch,
-    availableButtons.remove,
-    availableButtons.copy,
-    availableButtons.download,
-  )
-
-  return (
-    <div className={containerClassName}>
-      <ButtonSvgPanel buttons={currentButtons} size={'small'} />
-    </div>
-  )
 }
 
 /* -- types -- */

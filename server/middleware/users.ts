@@ -75,6 +75,4 @@ export type TAuthOptions = {
   permissions?: TUserPermissionID[]
 }
 
-export default {
-  authorized: auth,
-}
+export default auth

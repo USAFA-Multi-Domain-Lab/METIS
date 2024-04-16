@@ -14,6 +14,9 @@ import {
 } from '../content/general-layout/Navigation'
 import './UserPage.scss'
 
+/**
+ * Renders a page for creating or editing a user.
+ */
 export default function UserPage(props: IUserPage): JSX.Element | null {
   /* -- GLOBAL CONTEXT -- */
   const globalContext = useGlobalContext()
@@ -39,10 +42,7 @@ export default function UserPage(props: IUserPage): JSX.Element | null {
     let existsInDatabase: boolean = userID !== null
 
     // Handle the editing of an existing user.
-    if (
-      existsInDatabase &&
-      currentUser.isAuthorized(['READ', 'WRITE', 'DELETE'])
-    ) {
+    if (existsInDatabase && currentUser.isAuthorized('users_read_students')) {
       try {
         beginLoading('Loading user...')
         setUser(await ClientUser.$fetchOne(userID as string))
@@ -183,7 +183,10 @@ export default function UserPage(props: IUserPage): JSX.Element | null {
       setAreUnsavedChanges(false)
       setUsernameAlreadyExists(false)
 
-      if (!existsInDatabase && currentUser.isAuthorized('WRITE')) {
+      if (
+        !existsInDatabase &&
+        currentUser.isAuthorized('users_write_students')
+      ) {
         try {
           let currentUserID: string = user.userID
           beginLoading('Creating user...')
@@ -204,7 +207,10 @@ export default function UserPage(props: IUserPage): JSX.Element | null {
           finishLoading()
           setAreUnsavedChanges(true)
         }
-      } else if (existsInDatabase && currentUser.isAuthorized('WRITE')) {
+      } else if (
+        existsInDatabase &&
+        currentUser.isAuthorized('users_write_students')
+      ) {
         try {
           beginLoading('Updating user...')
           await ClientUser.$update(user)
@@ -259,7 +265,7 @@ export default function UserPage(props: IUserPage): JSX.Element | null {
 
   /* -- RENDER -- */
 
-  if (mountHandled && currentUser.isAuthorized(['READ', 'WRITE', 'DELETE'])) {
+  if (mountHandled && currentUser.isAuthorized('users_write_students')) {
     return (
       <div className='UserPage Page'>
         <DefaultLayout navigation={navigation}>

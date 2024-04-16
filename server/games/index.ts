@@ -206,7 +206,7 @@ export default class GameServer extends Game<
       case 'supervisor':
         // Throw error if the client is unauthorized to
         // join as a supervisor.
-        if (!client.user.isAuthorized(['WRITE'])) {
+        if (!client.user.isAuthorized('games_join_observer')) {
           throw ServerEmittedError.CODE_GAME_UNAUTHORIZED_JOIN
         }
         // Add the users to the supervisor list.
@@ -356,7 +356,7 @@ export default class GameServer extends Game<
         if (participant.userID === participantID) {
           // If the participant is has supervisor permissions,
           // then throw 403 forbidden error.
-          if (participant.user.isAuthorized(['WRITE'])) {
+          if (participant.user.isAuthorized('games_join_observer')) {
             throw 403
           }
 
@@ -393,7 +393,7 @@ export default class GameServer extends Game<
         if (participant.userID === participantID) {
           // If the participant is has supervisor permissions,
           // then throw 403 forbidden error.
-          if (participant.user.isAuthorized(['WRITE'])) {
+          if (participant.user.isAuthorized('games_join_observer')) {
             throw 403
           }
 

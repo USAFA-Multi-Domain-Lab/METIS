@@ -17,7 +17,7 @@ const routerMap: TMetisRouterMap = (router: expressWs.Router, done) => {
   // -- POST | /api/v1/users/ --
   router.post(
     '/',
-    auth({ permissions: ['WRITE'] }),
+    auth({ permissions: ['users_write_students'] }),
     defineRequests({
       body: {
         user: {
@@ -36,6 +36,10 @@ const routerMap: TMetisRouterMap = (router: expressWs.Router, done) => {
       let { body } = request
       let { user: userData } = body
       let { userID, password } = userData
+
+      let session: MetisSession | undefined = MetisSession.get(
+        request.session.userID,
+      )
 
       if (password !== undefined) {
         userData.password = await hashPassword(password)
@@ -66,7 +70,7 @@ const routerMap: TMetisRouterMap = (router: expressWs.Router, done) => {
             // and two, to ensure what's returned
             // is what is in the database.
             await UserModel.findOne({ userID: user.userID })
-              .queryForApiResponse('findOne')
+              .queryForApiResponse('findOne', session?.user)
               .exec((error: Error, user: any) => {
                 // If something goes wrong, this is
                 // a server issue. If there was something
@@ -97,7 +101,7 @@ const routerMap: TMetisRouterMap = (router: expressWs.Router, done) => {
   // query parameters
   router.get(
     '/',
-    auth({ permissions: ['READ', 'WRITE', 'DELETE'] }),
+    auth({ permissions: ['users_read_students'] }),
     defineRequests(
       {
         query: {},
@@ -121,8 +125,7 @@ const routerMap: TMetisRouterMap = (router: expressWs.Router, done) => {
 
         try {
           await UserModel.find({ ...queries })
-            .queryForApiResponse('find')
-            .queryForApiResponseWithSpecificUsers(session?.user) // todo: remove deprecated function
+            .queryForApiResponse('find', session?.user)
             .exec((error: Error, users: any) => {
               if (error !== null || users === null) {
                 databaseLogger.error('Failed to retrieve users.')
@@ -140,7 +143,7 @@ const routerMap: TMetisRouterMap = (router: expressWs.Router, done) => {
       } else {
         try {
           await UserModel.findOne({ userID })
-            .queryForApiResponse('findOne')
+            .queryForApiResponse('findOne', session?.user)
             .exec((error: Error, user: any) => {
               if (error !== null) {
                 databaseLogger.error(
@@ -188,7 +191,7 @@ const routerMap: TMetisRouterMap = (router: expressWs.Router, done) => {
   // This will update the user
   router.put(
     '/',
-    auth({ permissions: ['WRITE'] }),
+    auth({ permissions: ['users_write_students'] }),
     defineRequests(
       {
         body: {
@@ -218,6 +221,10 @@ const routerMap: TMetisRouterMap = (router: expressWs.Router, done) => {
       if (password !== undefined) {
         userUpdates.password = await hashPassword(password)
       }
+
+      let session: MetisSession | undefined = MetisSession.get(
+        request.session.userID,
+      )
 
       try {
         // Original user is retrieved.
@@ -274,7 +281,7 @@ const routerMap: TMetisRouterMap = (router: expressWs.Router, done) => {
                   // and two, to ensure what's returned
                   // is what is in the database.
                   await UserModel.findOne({ userID })
-                    .queryForApiResponse('findOne')
+                    .queryForApiResponse('findOne', session?.user)
                     .exec((error: Error, user: any) => {
                       // If something goes wrong, this is
                       // a server issue. If there was something
@@ -325,6 +332,10 @@ const routerMap: TMetisRouterMap = (router: expressWs.Router, done) => {
       if (password !== undefined) {
         body.password = await hashPassword(password)
       }
+
+      let session: MetisSession | undefined = MetisSession.get(
+        request.session.userID,
+      )
 
       try {
         // Original user is retrieved.
@@ -381,7 +392,7 @@ const routerMap: TMetisRouterMap = (router: expressWs.Router, done) => {
                   // and two, to ensure what's returned
                   // is what is in the database.
                   await UserModel.findOne({ userID })
-                    .queryForApiResponse('findOne')
+                    .queryForApiResponse('findOne', session?.user)
                     .exec((error: Error, user: any) => {
                       // If something goes wrong, this is
                       // a server issue. If there was something
@@ -417,7 +428,7 @@ const routerMap: TMetisRouterMap = (router: expressWs.Router, done) => {
   // This will delete a user.
   router.delete(
     '/',
-    auth({ permissions: ['DELETE'] }),
+    auth({ permissions: ['users_write_students'] }),
     defineRequests({
       query: {
         userID: 'string',
@@ -518,28 +529,3 @@ const routerMap: TMetisRouterMap = (router: expressWs.Router, done) => {
 }
 
 export default routerMap
-
-/**
- * Does something.
- * @param a First parameter.
- * @param b Second parameter.
- * @default
- * a = Math.random()
- * b = 'hello'
- * @return Whether something was succussful.
- */
-function func(a: number = Math.random(), b: string = 'hello'): boolean {
-  return true
-}
-
-class Test {
-  /**
-   * The test data.
-   * @default 1
-   */
-  public a: number
-
-  public constructor(a: number = 1) {
-    this.a = a
-  }
-}

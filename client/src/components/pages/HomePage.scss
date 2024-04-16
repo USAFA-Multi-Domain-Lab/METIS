@@ -1,4 +1,5 @@
 @import 'src/assets/styles/config.scss';
+@import '/src/assets/styles/util.scss';
 
 .Page.HomePage {
   display: grid;
@@ -28,7 +29,7 @@
   }
 
   .FileDropBox {
-    display: none;
+    display: grid;
     pointer-events: none;
     place-content: center;
     box-sizing: border-box;
@@ -55,28 +56,77 @@
   }
 
   .Content {
-    display: grid;
-    place-items: center;
-    grid-template-columns: 100%;
-    width: 50%;
+    $max-width: 1600px;
 
-    .GameListContainer,
-    .MissionListContainer,
-    .UserListContainer {
-      display: grid;
-      place-items: center;
-      width: 95%;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    width: 100%;
+    max-width: $max-width;
+
+    &:has(> .ListContainer:only-child) {
+      justify-content: center;
+      grid-template-columns: 1fr;
+      max-width: $max-width / 2;
+    }
+
+    @media (max-width: 1000px) {
+      justify-content: center;
+      grid-template-columns: 1fr;
+      max-width: $max-width / 2;
+    }
+
+    .ListContainer {
+      margin: 5px 20px 0;
 
       .AltDesign1-list {
-        width: 100%;
+        width: unset;
+        border-bottom-left-radius: 0;
+        border-bottom-right-radius: 0;
+        margin-bottom: 0;
+
+        .items {
+          .item {
+            .SelectionRow {
+              display: grid;
+              grid-template-columns: 1fr auto;
+
+              &.Game {
+                grid-template-columns: 2em 1fr auto;
+              }
+
+              .Accessibility {
+                height: 1.15em;
+                filter: invert(68%) sepia(94%) saturate(70%) hue-rotate(117deg)
+                  brightness(200%) contrast(98%);
+
+                &.id-required {
+                  background: url('/assets/images/icons/hidden.svg');
+                  background-size: contain;
+                  background-position: left center;
+                  background-repeat: no-repeat;
+                }
+
+                &:not(.id-required) {
+                  user-select: none;
+                  pointer-events: none;
+                }
+              }
+
+              .Text {
+                overflow: hidden;
+                white-space: nowrap;
+                text-overflow: ellipsis;
+                padding-right: 10px;
+              }
+            }
+          }
+        }
       }
 
       .ListActions {
-        display: none;
+        display: flex;
         place-content: center;
-        align-items: center;
-        grid-template-columns: auto auto;
-        width: 100%;
+        flex-flow: row wrap;
         min-height: 70px;
         box-sizing: border-box;
         background-color: black;
@@ -92,47 +142,11 @@
       }
     }
 
-    .MissionListContainer,
-    .UserListContainer {
-      display: none;
-    }
-
-    .GameListContainer {
-      .AltDesign1-list {
-        border-bottom-left-radius: 0;
-        border-bottom-right-radius: 0;
-        margin-bottom: 0;
-      }
-
-      .item {
-        .SelectionRow {
-          display: grid;
-          grid-template-columns: 2em 1fr auto;
-
-          .Accessibility {
-            height: 1.15em;
-            filter: invert(68%) sepia(94%) saturate(70%) hue-rotate(117deg)
-              brightness(200%) contrast(98%);
-
-            &.id-required {
-              background: url('/assets/images/icons/hidden.svg');
-              background-size: contain;
-              background-position: left center;
-              background-repeat: no-repeat;
-            }
-          }
-        }
-      }
-
-      .ListActions {
-        display: grid;
-      }
-    }
-
     .ManualJoin {
       display: flex;
       place-items: center;
       column-gap: 1em;
+      padding: 0 20px;
 
       .Label,
       .ButtonText {
@@ -186,48 +200,6 @@
       .ButtonText {
         margin: 0;
       }
-    }
-  }
-
-  &.InstructorView {
-    .FileDropBox {
-      display: grid;
-    }
-
-    .Content {
-      grid-template-columns: 50% 50%;
-      width: 100%;
-
-      .MissionListContainer {
-        display: grid;
-      }
-
-      .UserListContainer {
-        display: grid;
-      }
-    }
-
-    .GameListContainer,
-    .MissionListContainer,
-    .UserListContainer {
-      .AltDesign1-list {
-        border-bottom-left-radius: 0;
-        border-bottom-right-radius: 0;
-        margin-bottom: 0;
-      }
-
-      .ListActions {
-        display: grid;
-      }
-    }
-  }
-}
-
-@media (max-width: 1000px) {
-  .HomePage {
-    .Content {
-      grid-template-columns: 90%;
-      place-content: center;
     }
   }
 }

@@ -82,16 +82,65 @@ export default class UserPermission implements TUserPermission {
    * All available user permissions in METIS.
    */
   public static readonly AVAILABLE_PERMISSIONS: TUserPermissions = {
-    READ: new UserPermission('READ', 'Read', 'Allows the user to read data.'),
-    WRITE: new UserPermission(
-      'WRITE',
-      'Write',
-      'Allows the user to write data.',
+    missions_read: new UserPermission(
+      'missions_read',
+      'Read Missions',
+      'Allows the user in session to retrieve missions from the database.',
     ),
-    DELETE: new UserPermission(
-      'DELETE',
-      'Delete',
-      'Allows the user to delete data.',
+    missions_write: new UserPermission(
+      'missions_write',
+      'Write Missions',
+      'Allows the user in session to create, update, and delete missions in the database.',
+    ),
+    users_read: new UserPermission(
+      'users_read',
+      'Read Users',
+      'Allows the user in session to retrieve other users from the database.',
+    ),
+    users_write: new UserPermission(
+      'users_write',
+      'Write Users',
+      'Allows the user in session to create, update, and delete other users in the database.',
+    ),
+    users_read_students: new UserPermission(
+      'users_read_students',
+      'Read Student Users',
+      'Allows the user in session to retrieve student users only from the database.',
+    ),
+    users_write_students: new UserPermission(
+      'users_write_students',
+      'Write Student Users',
+      'Allows the user in session to create, update, and delete student users only in the database.',
+    ),
+    games_read: new UserPermission(
+      'games_read',
+      'Read Games',
+      'Allows the user in session to retrieve games from the database.',
+    ),
+    games_write: new UserPermission(
+      'games_write',
+      'Write Games',
+      'Allows the user in session to create, update, and delete games in the database.',
+    ),
+    games_join: new UserPermission(
+      'games_join',
+      'Join Games',
+      'Allows the user in session to join games.',
+    ),
+    games_join_participant: new UserPermission(
+      'games_join_participant',
+      'Join Games (Participant)',
+      'Allows the user in session to join games as a participant.',
+    ),
+    games_join_manager: new UserPermission(
+      'games_join_manager',
+      'Join Games (Manager)',
+      'Allows the user in session to join games as a manager.',
+    ),
+    games_join_observer: new UserPermission(
+      'games_join_observer',
+      'Join Games (Observer)',
+      'Allows the user in session to join games as an observer.',
     ),
   }
 }
@@ -116,9 +165,35 @@ export type TUserPermission = {
   description: string
 }
 
-const userPermissionNames = ['Read', 'Write', 'Delete'] as const
+const userPermissionNames = [
+  'Read Missions',
+  'Write Missions',
+  'Read Users',
+  'Write Users',
+  'Read Student Users',
+  'Write Student Users',
+  'Read Games',
+  'Write Games',
+  'Join Games',
+  'Join Games (Participant)',
+  'Join Games (Manager)',
+  'Join Games (Observer)',
+] as const
 export type TPermissionName = (typeof userPermissionNames)[number]
 
-const userPermissionIDs = ['READ', 'WRITE', 'DELETE'] as const
+const userPermissionIDs = [
+  'missions_read',
+  'missions_write',
+  'users_read',
+  'users_write',
+  'users_read_students',
+  'users_write_students',
+  'games_read',
+  'games_write',
+  'games_join',
+  'games_join_participant',
+  'games_join_manager',
+  'games_join_observer',
+] as const
 export type TUserPermissionID = (typeof userPermissionIDs)[number]
 export type TUserPermissions = { [key in TUserPermissionID]: UserPermission }

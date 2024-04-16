@@ -191,7 +191,10 @@ export default function GamePage({ game }: IGamePage): JSX.Element | null {
     let links: TWithKey<TButtonText>[] = []
 
     // Push end game button, if user is authorized.
-    if (session.user.isAuthorized(['WRITE'])) {
+    if (
+      session.user.isAuthorized('games_join_manager') ||
+      session.user.isAuthorized('games_join_observer')
+    ) {
       links.push({ key: 'end-game', text: 'End Game', onClick: onClickEndGame })
     }
 

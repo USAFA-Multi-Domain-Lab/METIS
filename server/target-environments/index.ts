@@ -119,6 +119,7 @@ export default class ServerTargetEnvironment extends TargetEnvironment<ServerTar
           // If the default export has an id, a name, a description,
           // and a version, then it is a target environment.
           if (
+            exportDefault &&
             exportDefault.id &&
             exportDefault.name &&
             exportDefault.description &&
@@ -146,6 +147,7 @@ export default class ServerTargetEnvironment extends TargetEnvironment<ServerTar
           // If the default export has an id, a target environment id, a name,
           // a description, a script, and args, then it is a target.
           if (
+            exportDefault &&
             exportDefault.id &&
             exportDefault.targetEnvId &&
             exportDefault.name &&

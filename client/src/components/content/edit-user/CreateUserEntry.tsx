@@ -72,16 +72,19 @@ export default function CreateUserEntry({
    */
   const listOfRoles: UserRole[] = compute(() => {
     // Default list of roles to select from.
-    let roles: UserRole[] = [UserRole.AVAILABLE_ROLES.student]
+    let roles: UserRole[] = []
 
     // If the current user in session has
-    // proper authorization and their role
-    // is an admin, then they are allowed
-    // to create users with any role.
-    if (
-      currentUser.isAuthorized(['READ', 'WRITE', 'DELETE']) &&
-      currentUser.role.id === 'admin'
-    ) {
+    // proper authorization, they are allowed
+    // to create students.
+    if (currentUser.isAuthorized('users_write_students')) {
+      roles = [UserRole.AVAILABLE_ROLES.student]
+    }
+
+    // If the current user in session has
+    // proper authorization, then they are
+    // allowed to create users with any role.
+    if (currentUser.isAuthorized('users_write')) {
       roles = [
         UserRole.AVAILABLE_ROLES.student,
         UserRole.AVAILABLE_ROLES.instructor,

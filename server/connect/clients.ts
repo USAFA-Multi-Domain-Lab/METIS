@@ -202,7 +202,7 @@ export default class ClientConnection {
           data: {
             game:
               game?.toJson({
-                includeSensitiveData: this.user.isAuthorized('WRITE'),
+                includeSensitiveData: this.user.isAuthorized('games_write'),
               }) ?? null,
             joinMethod: game?.getJoinMethod(this) ?? null,
           },
@@ -232,7 +232,7 @@ export default class ClientConnection {
         this.emit('game-joined', {
           data: {
             game: game.toJson({
-              includeSensitiveData: this.user.isAuthorized('WRITE'),
+              includeSensitiveData: this.user.isAuthorized('games_write'),
             }),
             joinMethod: event.data.joinMethod,
           },

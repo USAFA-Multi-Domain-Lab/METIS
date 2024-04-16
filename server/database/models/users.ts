@@ -1,6 +1,6 @@
 import bcryptjs from 'bcryptjs'
 import { Request } from 'express'
-import { TCommonUser } from 'metis/users'
+import ServerUser from 'metis/server/users'
 import UserPermission, { TUserPermission } from 'metis/users/permissions'
 import UserRole, { TUserRole } from 'metis/users/roles'
 import mongoose, { Schema } from 'mongoose'
@@ -181,9 +181,11 @@ UserSchema.plugin((schema) => {
   // This is responsible for removing
   // excess properties from the user
   // data that should be hidden from the
-  // API and for hiding deleted users.
+  // API, hiding deleted users, and filtering
+  // users based on the current user's permissions.
   schema.query.queryForApiResponse = function (
     findFunctionName: 'find' | 'findOne',
+    user?: ServerUser,
   ) {
     // Get projection.
     let projection = this.projection()
@@ -211,6 +213,17 @@ UserSchema.plugin((schema) => {
     this.projection(projection)
     // Hide deleted users.
     this.where({ deleted: false })
+    // Hide current user in session.
+    this.where({ userID: { $ne: user?.userID } })
+
+    // If the user can only read students, hide all users
+    // that are not students.
+    if (
+      user?.isAuthorized('users_read_students') &&
+      !user.isAuthorized('users_read')
+    ) {
+      this.where({ roleID: { $eq: 'student' } })
+    }
 
     // Calls the appropriate find function.
     switch (findFunctionName) {
@@ -219,51 +232,6 @@ UserSchema.plugin((schema) => {
       case 'findOne':
         return this.findOne()
     }
-  }
-})
-
-UserSchema.plugin((schema) => {
-  /**
-   * This is responsible for hiding specific users based on the
-   * current session's user and their role.
-   * @param {TCommonUser} user The current session's user.
-   * @returns {mongoose.Query} A mongoose query.
-   * @deprecated
-   */
-  // todo: remove deprecated function
-  schema.query.queryForApiResponseWithSpecificUsers = function (
-    user: TCommonUser,
-  ) {
-    // Get projection.
-    let projection = this.projection()
-
-    // Create if does not exist.
-    if (projection === undefined) {
-      projection = {}
-    }
-
-    // Set projection.
-    this.projection(projection)
-    // Hide deleted users.
-    this.where({ deleted: false })
-    // Hide current user in session.
-    this.where({ userID: { $ne: user.userID } })
-    // If the user is an instructor, only show students.
-    if (user.role.id === 'instructor') {
-      this.where({ roleID: { $eq: 'student' } })
-    }
-    // If the user is a student, do not return any users.
-    if (user.role.id === 'student') {
-      this.where({ userID: { $eq: '' } })
-    }
-    // If the user is not an admin, hide all admins and
-    // revoked access users.
-    if (user.role.id !== 'admin') {
-      this.where({ roleID: { $ne: 'admin' } })
-      this.where({ roleID: { $ne: 'revokedAccess' } })
-    }
-
-    return this
   }
 })
 
