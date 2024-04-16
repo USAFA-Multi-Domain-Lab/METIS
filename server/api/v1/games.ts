@@ -85,11 +85,6 @@ const routerMap = (router: expressWs.Router, done: () => void) => {
           else if (missionData === null) {
             return response.sendStatus(404)
           }
-          // todo: remove (mission.live is deprecated)
-          // // Handle mission not live.
-          // else if (!missionData.live) {
-          //   return response.sendStatus(401)
-          // }
 
           try {
             // Create mission.

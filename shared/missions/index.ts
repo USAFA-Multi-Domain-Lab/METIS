@@ -22,8 +22,6 @@ export default abstract class Mission<TMissionNode extends TCommonMissionNode>
   // Inherited
   public versionNumber: number
   // Inherited
-  public live: boolean
-  // Inherited
   public initialResources: number
   // Inherited
   public nodes: TMissionNode[]
@@ -54,7 +52,6 @@ export default abstract class Mission<TMissionNode extends TCommonMissionNode>
       data.introMessage ?? Mission.DEFAULT_PROPERTIES.introMessage
     this.versionNumber =
       data.versionNumber ?? Mission.DEFAULT_PROPERTIES.versionNumber
-    this.live = data.live ?? Mission.DEFAULT_PROPERTIES.live
     this.initialResources =
       data.initialResources ?? Mission.DEFAULT_PROPERTIES.initialResources
     this.seed = data.seed ?? Mission.DEFAULT_PROPERTIES.seed
@@ -86,7 +83,6 @@ export default abstract class Mission<TMissionNode extends TCommonMissionNode>
       name: this.name,
       introMessage: this.introMessage,
       versionNumber: this.versionNumber,
-      live: this.live,
       initialResources: this.initialResources,
       seed: this.seed,
       ...this.exportNodes({ revealedOnly, includeGameData }),
@@ -207,7 +203,6 @@ export default abstract class Mission<TMissionNode extends TCommonMissionNode>
       name: 'New Mission',
       introMessage: '<p>Welcome to your new mission!</p>',
       versionNumber: 1,
-      live: false,
       initialResources: 100,
       seed: generateHash(),
       nodeStructure: {},
@@ -346,10 +341,6 @@ export interface TCommonMission {
    */
   versionNumber: number
   /**
-   * Whether or not the mission is live and ready for student-use.
-   */
-  live: boolean
-  /**
    * The amount of resources available to the student at the start of the mission.
    */
   initialResources: number
@@ -390,7 +381,6 @@ export interface TCommonMissionJson {
   name: string
   introMessage: string
   versionNumber: number
-  live: boolean
   initialResources: number
   seed: string
   nodeStructure: AnyObject

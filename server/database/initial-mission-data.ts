@@ -6,7 +6,6 @@ export let demoMissionData = {
   versionNumber: 1,
   seed: '6499bf5b8214651c898d125f',
   initialResources: 100,
-  live: true,
   nodeStructure: {
     '882d6985-a05c-4f36-b66b-92de27d34552': {
       '405b84dc-a653-47ed-8d88-aef3177a99b2': {},

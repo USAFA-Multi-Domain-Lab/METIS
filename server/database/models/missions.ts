@@ -218,7 +218,6 @@ export const MissionSchema: Schema = new Schema(
     name: { type: String, required: true },
     introMessage: { type: SanitizedHTML, required: true },
     versionNumber: { type: Number, required: true },
-    live: { type: Boolean, required: true, default: false },
     seed: { type: ObjectId, required: true, auto: true },
     initialResources: {
       type: Number,

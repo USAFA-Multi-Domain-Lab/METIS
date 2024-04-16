@@ -33,7 +33,6 @@ export const routerMap: TMetisRouterMap = (
         name: RequestBodyFilters.STRING,
         introMessage: RequestBodyFilters.STRING,
         versionNumber: RequestBodyFilters.NUMBER,
-        live: RequestBodyFilters.BOOLEAN,
         initialResources: RequestBodyFilters.NUMBER,
         nodeStructure: RequestBodyFilters.OBJECT,
         nodeData: RequestBodyFilters.ARRAY,
@@ -44,7 +43,6 @@ export const routerMap: TMetisRouterMap = (
         name,
         introMessage,
         versionNumber,
-        live,
         initialResources,
         nodeStructure,
         nodeData,
@@ -54,7 +52,6 @@ export const routerMap: TMetisRouterMap = (
         name,
         introMessage,
         versionNumber,
-        live,
         initialResources,
         nodeStructure,
         nodeData,
@@ -536,15 +533,9 @@ export const routerMap: TMetisRouterMap = (
     ),
     (request, response) => {
       let missionID = request.query.missionID
-      // Grab the session.
-      let session: any = response.locals.session
 
       if (missionID === undefined) {
         let queries: any = {}
-
-        if (!session?.user.isAuthorized('missions_write')) {
-          queries.live = true
-        }
 
         MissionModel.find({ ...queries }, { nodeStructure: 0, nodeData: 0 })
           .queryForApiResponse('find')
@@ -621,7 +612,6 @@ export const routerMap: TMetisRouterMap = (
                   {
                     ...mission._doc,
                     missionID: undefined,
-                    live: undefined,
                     deleted: undefined,
                     schemaBuildNumber: info.schemaBuildNumber,
                   },
@@ -695,7 +685,6 @@ export const routerMap: TMetisRouterMap = (
           introMessage: RequestBodyFilters.STRING,
           versionNumber: RequestBodyFilters.NUMBER,
           initialResources: RequestBodyFilters.NUMBER,
-          live: RequestBodyFilters.BOOLEAN,
           nodeStructure: RequestBodyFilters.OBJECT,
           nodeData: RequestBodyFilters.ARRAY,
         },
@@ -830,7 +819,6 @@ export const routerMap: TMetisRouterMap = (
               name: copyName,
               introMessage: mission.introMessage,
               versionNumber: mission.versionNumber,
-              live: mission.live,
               initialResources: mission.initialResources,
               nodeStructure: mission.nodeStructure,
               nodeData: mission.nodeData,

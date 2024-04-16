@@ -987,35 +987,6 @@ export default class ClientMission
     })
   }
 
-  /* -- API | UPDATE -- */
-
-  /**
-   * The will update the mission's live property in the database. Changing
-   * the live property will determine whether the mission is available to
-   * launch into a game.
-   * @param {string} missionID The ID of the mission to update.
-   * @param {boolean} live Whether the mission should be live.
-   * @returns {Promise<void>} A promise that resolves when the mission has been updated.
-   */
-  public static async $setLive(
-    missionID: string,
-    live: boolean,
-  ): Promise<void> {
-    return new Promise<void>(async (resolve, reject) => {
-      try {
-        await axios.put(ClientMission.API_ENDPOINT, {
-          missionID,
-          live,
-        })
-        resolve()
-      } catch (error) {
-        console.error('Failed to change mission live state.')
-        console.error(error)
-        reject(error)
-      }
-    })
-  }
-
   /* -- API | DELETE -- */
 
   /**
