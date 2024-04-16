@@ -73,7 +73,7 @@ export default function UserModificationPanel({
   const currentButtons: TValidPanelButton[] = compute(() => {
     let buttons: TValidPanelButton[] = []
 
-    if (currentUser.isAuthorized('users_write' || 'users_write_students')) {
+    if (currentUser.isAuthorized('users_write_students')) {
       buttons = [availableButtons.remove]
     }
 
@@ -84,7 +84,7 @@ export default function UserModificationPanel({
 
   // If the user is authorized to modify users,
   // then display the user modification panel.
-  if (currentUser.isAuthorized('users_write' || 'users_write_students')) {
+  if (currentUser.isAuthorized('users_write_students')) {
     return (
       <div className='UserModificationPanel'>
         <ButtonSvgPanel buttons={currentButtons} size={'small'} />
