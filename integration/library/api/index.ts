@@ -69,73 +69,43 @@ export class Api {
    * Sends an HTTP POST request to the location specified by the url.
    * @param url The url to send the request to.
    * @param data The data to send with the request.
-   * @param config The configuration for the request.
    */
   public async post(url: string, data: AnyObject = {}): Promise<void> {
-    try {
-      return await axios.post(url, data, this.config)
-    } catch (error: any) {
-      let err = new Error(error)
-      throw err.stack
-    }
+    return await axios.post(url, data, this.config)
   }
 
   /**
    * Sends an HTTP GET request to the location specified by the url.
    * @param url The url to send the request to.
-   * @param config The configuration for the request.
    */
   public async get(url: string): Promise<void> {
-    try {
-      return await axios.get(url, this.config)
-    } catch (error: any) {
-      let err = new Error(error)
-      throw err.stack
-    }
+    return await axios.get(url, this.config)
   }
 
   /**
    * Sends an HTTP PUT request to the location specified by the url.
    * @param url The url to send the request to.
    * @param data The data to send with the request.
-   * @param config The configuration for the request.
    */
   public async put(url: string, data: AnyObject = {}): Promise<void> {
-    try {
-      return await axios.put(url, data, this.config)
-    } catch (error: any) {
-      let err = new Error(error)
-      throw err.stack
-    }
+    return await axios.put(url, data, this.config)
   }
 
   /**
    * Sends an HTTP PATCH request to the location specified by the url.
    * @param url The url to send the request to.
    * @param data The data to send with the request.
-   * @param config The configuration for the request.
    */
   public async patch(url: string, data: AnyObject = {}): Promise<void> {
-    try {
-      return await axios.patch(url, data, this.config)
-    } catch (error: any) {
-      let err = new Error(error)
-      throw err.stack
-    }
+    return await axios.patch(url, data, this.config)
   }
 
   /**
    * Sends an HTTP DELETE request to the location specified by the url.
    * @param url The url to send the request to.
-   * @param config The configuration for the request.
    */
   public async delete(url: string): Promise<void> {
-    try {
-      return await axios.delete(url, this.config)
-    } catch (error: any) {
-      let err = new Error(error)
-      throw err.stack
-    }
+    return await axios.delete(url, this.config)
   }
 }
 

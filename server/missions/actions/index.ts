@@ -4,7 +4,6 @@ import IActionExecution, {
 } from 'metis/missions/actions/executions'
 import { TCommonEffectJson } from 'metis/missions/effects'
 import { plcApiLogger } from 'metis/server/logging'
-import ServerTargetEnvironment from 'metis/server/target-environments'
 import Queue from 'metis/toolbox/queue'
 import ServerMission from '..'
 import ServerEffect from '../effects'
@@ -104,33 +103,32 @@ export default class ServerMissionAction extends MissionAction<
           // ...iterate through the effects and execute them
           // if they have a target environment and a target.
           this.effects.forEach(async (effect: ServerEffect) => {
-            // If the effect has a target environment...
-            if (effect.targetEnvironment) {
-              // ...check to see if the target environment exists.
-              let targetEnvironment: ServerTargetEnvironment | undefined =
-                ServerTargetEnvironment.get(effect.targetEnvironment.id)
-
-              // If the target environment does not exist,
-              // log the error.
-              if (targetEnvironment === undefined) {
-                plcApiLogger.error(
-                  new Error(
-                    `Target environment "${effect.targetEnvironment.name}" does not exist.`,
-                  ),
-                )
+            // If the effect has a target environment and a target,
+            // then execute the effect on the target.
+            if (effect.targetEnvironment && effect.target) {
+              try {
+                await effect.target.script(effect.args)
+              } catch (error: any) {
+                plcApiLogger.error(error.message, error.stack)
               }
-              // Otherwise, execute the effect on the target.
-              else {
-                // If the effect has a target ID, execute the effect
-                // on the target.
-                if (effect.target) {
-                  try {
-                    await effect.target.script(effect.args)
-                  } catch (error: any) {
-                    plcApiLogger.error(new Error(error))
-                  }
-                }
-              }
+            }
+            // Or, if the effect doesn't have a target environment,
+            // log an error.
+            else if (effect.targetEnvironment === null) {
+              plcApiLogger.error(
+                new Error(
+                  `The node - "${this.node.name}" - has an action - "${this.name}" - with an effect - "${effect.name}" - that doesn't have a target environment or the target environment doesn't exist.`,
+                ),
+              )
+            }
+            // Or, if the effect doesn't have a target,
+            // log an error.
+            else if (effect.target === null) {
+              plcApiLogger.error(
+                new Error(
+                  `The node - "${this.node.name}" - has an action - "${this.name}" - with an effect - "${effect.name}" - that doesn't have a target or the target doesn't exist.`,
+                ),
+              )
             }
           })
         }
