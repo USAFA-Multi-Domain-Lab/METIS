@@ -15,12 +15,12 @@ export default class ClientActionExecution implements IActionExecution {
     return this.action.node
   }
   // Implmented
-  public get actionID(): string {
-    return this.action.actionID
+  public get actionId(): ClientMissionAction['_id'] {
+    return this.action._id
   }
   // Implemented
-  public get nodeID(): string {
-    return this.action.node.nodeID
+  public get nodeId(): ClientMissionNode['_id'] {
+    return this.action.node._id
   }
   // Implemented
   public readonly start: number
@@ -63,8 +63,8 @@ export default class ClientActionExecution implements IActionExecution {
   // Implemented
   public toJson(): TActionExecutionJSON {
     return {
-      actionID: this.actionID,
-      nodeID: this.nodeID,
+      actionId: this.actionId,
+      nodeId: this.nodeId,
       start: this.start,
       end: this.end,
     }

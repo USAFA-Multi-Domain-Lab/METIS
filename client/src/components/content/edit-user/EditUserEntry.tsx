@@ -1,8 +1,8 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useGlobalContext } from 'src/context'
 import { usePostInitEffect } from 'src/toolbox/hooks'
 import ClientUser from 'src/users'
-import { DetailString, DetailToggle } from '../form/Form'
+import { DetailLocked, DetailString, DetailToggle } from '../form/Form'
 import './EditUserEntry.scss'
 
 /**
@@ -10,6 +10,7 @@ import './EditUserEntry.scss'
  */
 export default function EditUserEntry({
   user,
+  usernameAlreadyExists,
   userEmptyStringArray,
   setUserEmptyStringArray,
   handleChange,
@@ -18,12 +19,16 @@ export default function EditUserEntry({
   const { forceUpdate } = useGlobalContext().actions
 
   /* -- STATE -- */
+  const [handleUsernameError, setHandleUsernameError] =
+    useState<THandleOnBlur>('deliverError')
   const [handleFirstNameError, setHandleFirstNameError] =
     useState<THandleOnBlur>('deliverError')
   const [handleLastNameError, setHandleLastNameError] =
     useState<THandleOnBlur>('deliverError')
+  const [usernameErrorMessage, setUsernameErrorMessage] = useState<string>()
   const [firstNameErrorMessage, setFirstNameErrorMessage] = useState<string>('')
   const [lastNameErrorMessage, setLastNameErrorMessage] = useState<string>('')
+  const [username, setUsername] = useState<string>(user.username)
   const [firstName, setFirstName] = useState<string>(user.firstName)
   const [lastName, setLastName] = useState<string>(user.lastName)
   const [needsPasswordReset, setNeedsPasswordReset] = useState<boolean>(
@@ -31,6 +36,32 @@ export default function EditUserEntry({
   )
 
   /* -- EFFECTS -- */
+
+  // Sync the component state with the username property.
+  usePostInitEffect(() => {
+    user.username = username
+
+    if (username !== '' && user.hasValidUsername) {
+      removeUserEmptyString('username')
+      setHandleUsernameError('none')
+      handleChange()
+    }
+
+    if (username === '' && !user.hasValidUsername) {
+      setHandleUsernameError('deliverError')
+      setUserEmptyStringArray([...userEmptyStringArray, `field=username`])
+      setUsernameErrorMessage('At least one character is required here.')
+    }
+
+    if (username !== '' && !user.hasValidUsername) {
+      setHandleUsernameError('deliverError')
+      setUsernameErrorMessage(
+        'Usernames must be between 5 and 25 characters long and can only contain letters, numbers, and the following special characters: - _ .',
+      )
+    }
+
+    forceUpdate()
+  }, [username])
 
   // Sync the component state with the user first name property.
   usePostInitEffect(() => {
@@ -93,6 +124,15 @@ export default function EditUserEntry({
     handleChange()
   }, [needsPasswordReset])
 
+  // If the user has entered a username,
+  // check to see if it already exists.
+  useEffect(() => {
+    if (usernameAlreadyExists) {
+      setUsernameErrorMessage('Username already exists.')
+      setHandleUsernameError('deliverError')
+    }
+  }, [usernameAlreadyExists])
+
   /* -- FUNCTIONS -- */
 
   /**
@@ -114,14 +154,16 @@ export default function EditUserEntry({
       onSubmit={(event) => event.preventDefault()}
       autoComplete='off'
     >
-      <div className='UserIDContainer'>
-        <div className='Title'>User ID:</div>
-        <div className='UserID'>{user.userID}</div>
-      </div>
-      <div className='RoleContainer'>
-        <div className='Title'>Role:</div>
-        <div className='Role'>{user.role.name}</div>
-      </div>
+      <DetailString
+        fieldType='required'
+        handleOnBlur={handleUsernameError}
+        label='Username'
+        stateValue={username}
+        setState={setUsername}
+        errorMessage={usernameErrorMessage}
+        placeholder='Enter a username here...'
+      />
+      <DetailLocked label='Role' stateValue={user.role.name} />
       <DetailString
         fieldType='required'
         handleOnBlur={handleFirstNameError}
@@ -160,6 +202,10 @@ export type TEditUserEntry_P = {
    * The user to be created.
    */
   user: ClientUser
+  /**
+   * Whether or not the username already exists.
+   */
+  usernameAlreadyExists: boolean
   /**
    * An array of fields with empty strings.
    */

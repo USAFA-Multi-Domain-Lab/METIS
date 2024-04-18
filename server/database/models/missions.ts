@@ -1,3 +1,6 @@
+import { TCommonMissionJson } from 'metis/missions'
+import { TCommonMissionActionJson } from 'metis/missions/actions'
+import { TCommonMissionNodeJson, TMissionNodeJson } from 'metis/missions/nodes'
 import MetisDatabase from 'metis/server/database'
 import SanitizedHTML from 'metis/server/database/schema-types/html'
 import mongoose, { Schema } from 'mongoose'
@@ -10,7 +13,10 @@ const PROCESS_TIME_MAX = 3600 /*seconds*/ * 1000
 
 /* -- SCHEMA VALIDATION HELPERS -- */
 
-// Global validator for non-negative integers.
+/**
+ * Global validator for non-negative integers.
+ * @param value The value to validate.
+ */
 const isNonNegativeInteger = (value: number): boolean => {
   let isInteger: boolean = Math.floor(value) === value
   let isNonNegative: boolean = value >= 0
@@ -20,33 +26,38 @@ const isNonNegativeInteger = (value: number): boolean => {
 
 /* -- SCHEMA VALIDATORS -- */
 
-// Validator for missions.
+/**
+ * Validates the mission data.
+ * @param mission The mission data to validate.
+ * @param next The next function to call.
+ */
 const validate_missions = (mission: any, next: any): void => {
-  let parentNodeStructure: any = mission.nodeStructure
-  let nodeData: Array<any> = mission.nodeData
-  let nodeDataIDs: Array<string> = nodeData.map((node) => node.nodeID)
-  let correspondingNodeStructureIDs: Array<string> = []
+  let parentNodeStructure: TCommonMissionJson['nodeStructure'] =
+    mission.nodeStructure
+  let nodeData: TCommonMissionJson['nodeData'] = mission.nodeData
+  let nodeDataIds: TMissionNodeJson['_id'][] = nodeData.map((node) => node._id)
+  let correspondingNodeStructureIds: string[] = []
   let results: { error?: Error } = {}
 
   // This will ensure that all nodes
   // have IDs unique to the mission,
   // and that all action IDs are unique
   // to the node they are assigned to.
-  const ensureUniqueIDs = (): { error?: Error } => {
-    let nodeIDs: Array<string> = []
+  const ensureUniqueIds = (): { error?: Error } => {
+    let nodeIds: string[] = []
 
     for (let nodeDatum of mission.nodeData) {
-      if (!nodeIDs.includes(nodeDatum.nodeID)) {
-        nodeIDs.push(nodeDatum.nodeID)
+      if (!nodeIds.includes(nodeDatum._id)) {
+        nodeIds.push(nodeDatum._id)
 
-        let actionIDs: Array<string> = []
+        let actionIds: string[] = []
 
         for (let action of nodeDatum.actions) {
-          if (!actionIDs.includes(action.actionID)) {
-            actionIDs.push(action.actionID)
+          if (!actionIds.includes(action._id)) {
+            actionIds.push(action._id)
           } else {
             let error: Error = new Error(
-              `Error in nodeData:\nDuplicate actionID (${action.actionID}) used in node (${nodeDatum.nodeID}).`,
+              `Error in nodeData:\nDuplicate action ID (${action._id}) used in node (${nodeDatum._id}).`,
             )
             error.name = MetisDatabase.ERROR_BAD_DATA
             return { error }
@@ -54,7 +65,7 @@ const validate_missions = (mission: any, next: any): void => {
         }
       } else {
         let error: Error = new Error(
-          `Error in nodeData:\nDuplicate nodeID used (${nodeDatum.nodeID}).`,
+          `Error in nodeData:\nDuplicate node ID used (${nodeDatum._id}).`,
         )
         error.name = MetisDatabase.ERROR_BAD_DATA
         return { error }
@@ -78,21 +89,21 @@ const validate_missions = (mission: any, next: any): void => {
     }
 
     for (let [key, value] of Object.entries(nodeStructure)) {
-      if (!nodeDataIDs.includes(key)) {
+      if (!nodeDataIds.includes(key)) {
         let error: Error = new Error(
           `Error in mission:\n"${key}" was referenced in nodeStructure, but it was not found in the nodeData.`,
         )
         error.name = MetisDatabase.ERROR_BAD_DATA
         return { error }
       }
-      if (correspondingNodeStructureIDs.includes(key)) {
+      if (correspondingNodeStructureIds.includes(key)) {
         let error: Error = new Error(
-          `Error in nodeStructure:\nDuplicate nodeID used (${key}).`,
+          `Error in nodeStructure:\nDuplicate nodeId used (${key}).`,
         )
         error.name = MetisDatabase.ERROR_BAD_DATA
         return { error }
       } else {
-        correspondingNodeStructureIDs.push(key)
+        correspondingNodeStructureIds.push(key)
       }
 
       let results: { error?: Error } = validateNodeStructure(value, key)
@@ -106,7 +117,7 @@ const validate_missions = (mission: any, next: any): void => {
   }
 
   // Ensure unique IDs
-  results = ensureUniqueIDs()
+  results = ensureUniqueIds()
 
   // Check for error.
   if (results.error) {
@@ -125,11 +136,11 @@ const validate_missions = (mission: any, next: any): void => {
   // is different than the number in the
   // node structure, than the bad ID is
   // found and an error is created for it.
-  if (nodeDataIDs.length !== correspondingNodeStructureIDs.length) {
-    for (let nodeID of nodeDataIDs) {
-      if (!correspondingNodeStructureIDs.includes(nodeID)) {
+  if (nodeDataIds.length !== correspondingNodeStructureIds.length) {
+    for (let nodeId of nodeDataIds) {
+      if (!correspondingNodeStructureIds.includes(nodeId)) {
         let error: Error = new Error(
-          `Error in mission:\n"${nodeID}" was referenced in nodeData, but it was not found in the nodeStructure.`,
+          `Error in mission:\n"${nodeId}" was referenced in nodeData, but it was not found in the nodeStructure.`,
         )
         error.name = MetisDatabase.ERROR_BAD_DATA
         return next(error)
@@ -140,17 +151,25 @@ const validate_missions = (mission: any, next: any): void => {
   return next()
 }
 
-// Validator for missions.initialResources.
+/**
+ * Validates the initial resources for a mission.
+ * @param initialResources The initial resources to validate.
+ */
 const validate_missions_initialResources = (
-  initialResources: number,
+  initialResources: TCommonMissionJson['initialResources'],
 ): boolean => {
   let nonNegativeInteger: boolean = isNonNegativeInteger(initialResources)
 
   return nonNegativeInteger
 }
 
-// Validator for missions.nodeData.
-const validate_missions_nodeData = (nodeData: any[]): boolean => {
+/**
+ * Validates the nodeData for a mission.
+ * @param nodeData The nodeData to validate.
+ */
+const validate_missions_nodeData = (
+  nodeData: TCommonMissionJson['nodeData'],
+): boolean => {
   let minLengthReached: boolean = nodeData.length >= NODE_DATA_MIN_LENGTH
   let minLengthOfActionsReached: boolean = true
 
@@ -164,26 +183,37 @@ const validate_missions_nodeData = (nodeData: any[]): boolean => {
   return minLengthReached && minLengthOfActionsReached
 }
 
-// Validator for missions.nodeData.color.
-const validate_missions_nodeData_color = (color: string): boolean => {
+/**
+ * Validates the color for a mission node.
+ * @param color The color to validate.
+ */
+const validate_missions_nodeData_color = (
+  color: TCommonMissionNodeJson['color'],
+): boolean => {
   let colorExpression: RegExp = /^#([a-f0-9]{6})$/
   let isValidColor: boolean = colorExpression.test(color)
 
   return isValidColor
 }
 
-// Validator for missions.nodeData.depthPadding.
+/**
+ * Validates the depth padding for a mission node.
+ * @param depthPadding The depth padding to validate.
+ */
 const validate_mission_nodeData_depthPadding = (
-  depthPadding: number,
+  depthPadding: TCommonMissionNodeJson['depthPadding'],
 ): boolean => {
   let nonNegativeInteger: boolean = isNonNegativeInteger(depthPadding)
 
   return nonNegativeInteger
 }
 
-// Validator for missions.nodeData.actions.processTime
+/**
+ * Validates the process time for a mission node action.
+ * @param processTime The process time to validate.
+ */
 const validate_mission_nodeData_actions_processTime = (
-  processTime: number,
+  processTime: TCommonMissionActionJson['processTime'],
 ): boolean => {
   let nonNegativeInteger: boolean = isNonNegativeInteger(processTime)
   let lessThanMax: boolean = processTime <= PROCESS_TIME_MAX
@@ -191,18 +221,24 @@ const validate_mission_nodeData_actions_processTime = (
   return nonNegativeInteger && lessThanMax
 }
 
-// Validator for missions.nodeData.actions.successChance
+/**
+ * Validates the success chance for a mission node action.
+ * @param successChance The success chance to validate.
+ */
 const validate_mission_nodeData_actions_successChance = (
-  successChance: number,
+  successChance: TCommonMissionActionJson['successChance'],
 ): boolean => {
   let betweenZeroAndOne: boolean = successChance >= 0 && successChance <= 1
 
   return betweenZeroAndOne
 }
 
-// Validator for missions.nodeData.actions.resourceCost
+/**
+ * Validates the resource cost for a mission node action.
+ * @param resourceCost The resource cost to validate.
+ */
 const validate_mission_nodeData_actions_resourceCost = (
-  resourceCost: number,
+  resourceCost: TCommonMissionActionJson['resourceCost'],
 ): boolean => {
   let nonNegativeInteger: boolean = isNonNegativeInteger(resourceCost)
 
@@ -211,114 +247,96 @@ const validate_mission_nodeData_actions_resourceCost = (
 
 /* -- SCHEMA -- */
 
-export const MissionSchema: Schema = new Schema(
-  {
-    _id: { type: ObjectId, required: false, auto: true },
-    missionID: { type: ObjectId, required: true, unique: true, auto: true },
-    name: { type: String, required: true },
-    introMessage: { type: SanitizedHTML, required: true },
-    versionNumber: { type: Number, required: true },
-    seed: { type: ObjectId, required: true, auto: true },
-    initialResources: {
-      type: Number,
-      required: true,
-      validate: validate_missions_initialResources,
-    },
-    deleted: { type: Boolean, required: true, default: false },
-    nodeStructure: {
-      type: {},
-      required: true,
-    },
-    nodeData: {
-      type: [
-        {
-          _id: { type: ObjectId, required: false, auto: true },
-          nodeID: { type: String, required: true },
-          name: { type: String, required: true },
-          color: {
-            type: String,
-            required: true,
-            validate: validate_missions_nodeData_color,
-          },
-          description: { type: SanitizedHTML, required: true },
-          preExecutionText: {
-            type: SanitizedHTML,
-            required: false,
-            default: '',
-          },
-          depthPadding: {
-            type: Number,
-            required: true,
-            validate: validate_mission_nodeData_depthPadding,
-          },
-          executable: { type: Boolean, required: true },
-          device: { type: Boolean, required: true },
-          actions: {
-            type: [
-              {
-                _id: { type: ObjectId, required: false, auto: true },
-                actionID: {
-                  type: String,
-                  required: true,
-                },
-                name: { type: String, required: true },
-                description: { type: SanitizedHTML, required: true },
-                processTime: {
-                  type: Number,
-                  required: true,
-                  validate: validate_mission_nodeData_actions_processTime,
-                },
-                successChance: {
-                  type: Number,
-                  required: true,
-                  validate: validate_mission_nodeData_actions_successChance,
-                },
-                resourceCost: {
-                  type: Number,
-                  required: true,
-                  validate: validate_mission_nodeData_actions_resourceCost,
-                },
-                postExecutionSuccessText: {
-                  type: SanitizedHTML,
-                  required: true,
-                },
-                postExecutionFailureText: {
-                  type: SanitizedHTML,
-                  required: true,
-                },
-                effects: {
-                  type: [
-                    {
-                      _id: { type: ObjectId, required: false, auto: true },
-                      id: { type: String, required: true },
-                      name: { type: String, required: true },
-                      description: { type: SanitizedHTML, required: true },
-                      targetEnvironmentVersion: {
-                        type: String,
-                        required: true,
-                      },
-                      targetId: { type: String, required: true },
-                      args: { type: Object, required: true },
-                    },
-                  ],
-                  required: true,
-                },
-              },
-            ],
-            required: true,
-          },
+export const MissionSchema: Schema = new Schema({
+  name: { type: String, required: true },
+  introMessage: { type: SanitizedHTML, required: true },
+  versionNumber: { type: Number, required: true },
+  seed: { type: ObjectId, required: true, auto: true },
+  initialResources: {
+    type: Number,
+    required: true,
+    validate: validate_missions_initialResources,
+  },
+  deleted: { type: Boolean, required: true, default: false },
+  nodeStructure: {
+    type: {},
+    required: true,
+  },
+  nodeData: {
+    type: [
+      {
+        name: { type: String, required: true },
+        color: {
+          type: String,
+          required: true,
+          validate: validate_missions_nodeData_color,
         },
-      ],
-      required: true,
-      validate: validate_missions_nodeData,
-    },
+        description: { type: SanitizedHTML, required: true },
+        preExecutionText: {
+          type: SanitizedHTML,
+          required: false,
+          default: '',
+        },
+        depthPadding: {
+          type: Number,
+          required: true,
+          validate: validate_mission_nodeData_depthPadding,
+        },
+        executable: { type: Boolean, required: true },
+        device: { type: Boolean, required: true },
+        actions: {
+          type: [
+            {
+              name: { type: String, required: true },
+              description: { type: SanitizedHTML, required: true },
+              processTime: {
+                type: Number,
+                required: true,
+                validate: validate_mission_nodeData_actions_processTime,
+              },
+              successChance: {
+                type: Number,
+                required: true,
+                validate: validate_mission_nodeData_actions_successChance,
+              },
+              resourceCost: {
+                type: Number,
+                required: true,
+                validate: validate_mission_nodeData_actions_resourceCost,
+              },
+              postExecutionSuccessText: {
+                type: SanitizedHTML,
+                required: true,
+              },
+              postExecutionFailureText: {
+                type: SanitizedHTML,
+                required: true,
+              },
+              effects: {
+                type: [
+                  {
+                    name: { type: String, required: true },
+                    description: { type: SanitizedHTML, required: true },
+                    targetEnvironmentVersion: {
+                      type: String,
+                      required: true,
+                    },
+                    targetId: { type: String, required: true },
+                    args: { type: Object, required: true },
+                  },
+                ],
+                required: true,
+              },
+            },
+          ],
+          required: true,
+        },
+      },
+    ],
+    required: true,
+    validate: validate_missions_nodeData,
   },
-  {
-    _id: false,
-    strict: 'throw',
-    minimize: false,
-  },
-)
+})
 
 /* -- SCHEMA METHODS -- */
 
@@ -356,21 +374,8 @@ MissionSchema.plugin((schema) => {
     if (!('deleted' in projection)) {
       projection['deleted'] = 0
     }
-    if (!('_id' in projection)) {
-      projection['_id'] = 0
-    }
     if (!('__v' in projection)) {
       projection['__v'] = 0
-    }
-    if (!('nodeData' in projection) && !('nodeData._id' in projection)) {
-      projection['nodeData._id'] = 0
-    }
-    if (
-      !('nodeData' in projection) &&
-      !('nodeData.actions' in projection) &&
-      !('nodeData.actions._id' in projection)
-    ) {
-      projection['nodeData.actions._id'] = 0
     }
 
     // Set projection.

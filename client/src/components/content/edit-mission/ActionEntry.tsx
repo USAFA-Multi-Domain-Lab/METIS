@@ -136,7 +136,7 @@ export default function ActionEntry({
    */
   const handleDeleteActionRequest = () => {
     // Remove the action from the node.
-    node.actions.delete(action.actionID)
+    node.actions.delete(action._id)
     // Display the changes.
     forceUpdate()
     // Allow the user to save the changes.
@@ -171,7 +171,7 @@ export default function ActionEntry({
   const handleDeleteEffectRequest = (effect: ClientEffect) => {
     // Filter out the effect from the action.
     action.effects = action.effects.filter(
-      (actionEffect: ClientEffect) => actionEffect.id !== effect.id,
+      (actionEffect: ClientEffect) => actionEffect._id !== effect._id,
     )
     // Display the changes.
     forceUpdate()
@@ -224,7 +224,7 @@ export default function ActionEntry({
               setState={setActionName}
               defaultValue={ClientMissionAction.DEFAULT_PROPERTIES.name}
               placeholder='Enter name...'
-              key={`${action.actionID}_name`}
+              key={`${action._id}_name`}
             />
             <DetailLargeString
               fieldType='optional'
@@ -234,7 +234,7 @@ export default function ActionEntry({
               setState={setDescription}
               elementBoundary='.BorderBox'
               placeholder='Enter description...'
-              key={`${action.actionID}_description`}
+              key={`${action._id}_description`}
             />
             <DetailNumber
               fieldType='required'
@@ -248,7 +248,7 @@ export default function ActionEntry({
               minimum={0}
               maximum={100}
               unit='%'
-              key={`${action.actionID}_successChance`}
+              key={`${action._id}_successChance`}
             />
             <DetailNumber
               fieldType='required'
@@ -263,7 +263,7 @@ export default function ActionEntry({
               maximum={3600}
               unit='s'
               integersOnly={true}
-              key={`${action.actionID}_timeCost`}
+              key={`${action._id}_timeCost`}
             />
             <DetailNumber
               fieldType='required'
@@ -274,7 +274,7 @@ export default function ActionEntry({
               defaultValue={ClientMissionAction.DEFAULT_PROPERTIES.resourceCost}
               minimum={0}
               integersOnly={true}
-              key={`${action.actionID}_resourceCost`}
+              key={`${action._id}_resourceCost`}
             />
             <DetailLargeString
               fieldType='required'
@@ -286,7 +286,7 @@ export default function ActionEntry({
                 ClientMissionAction.DEFAULT_PROPERTIES.postExecutionSuccessText
               }
               elementBoundary='.BorderBox'
-              key={`${action.actionID}_postExecutionSuccessText`}
+              key={`${action._id}_postExecutionSuccessText`}
             />
             <DetailLargeString
               fieldType='required'
@@ -298,7 +298,7 @@ export default function ActionEntry({
                 ClientMissionAction.DEFAULT_PROPERTIES.postExecutionFailureText
               }
               elementBoundary='.BorderBox'
-              key={`${action.actionID}_postExecutionFailureText`}
+              key={`${action._id}_postExecutionFailureText`}
             />
 
             {/* -- EFFECTS -- */}
@@ -372,7 +372,7 @@ export default function ActionEntry({
                 })
 
                 return (
-                  <div className='Row' key={`effect-row-${effect.id}`}>
+                  <div className='Row' key={`effect-row-${effect._id}`}>
                     <div className='RowContent'>
                       {effect.name}
                       <Tooltip description={effect.description} />
@@ -385,7 +385,7 @@ export default function ActionEntry({
               sortByMethods={[ESortByMethod.Name]}
               nameProperty={'name'}
               alwaysUseBlanks={false}
-              searchableProperties={['id']}
+              searchableProperties={['name']}
               noItemsDisplay={
                 <div className='NoContent'>No effects available...</div>
               }

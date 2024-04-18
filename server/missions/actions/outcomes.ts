@@ -1,5 +1,5 @@
 import IActionOutcome, {
-  IActionOutcomeJSON,
+  TActionOutcomeJson,
 } from 'metis/missions/actions/outcomes'
 import { PRNG } from 'seedrandom'
 import ServerMissionAction from '.'
@@ -17,12 +17,12 @@ export class ServerPotentialOutcome implements IActionOutcome {
     return this.action.node
   }
   // Implemented
-  public get actionID(): string {
-    return this.action.actionID
+  public get actionId(): ServerMissionAction['_id'] {
+    return this.action._id
   }
   // Implemented
-  public get nodeID(): string {
-    return this.action.node.nodeID
+  public get nodeId(): ServerMissionNode['_id'] {
+    return this.action.node._id
   }
 
   /**
@@ -56,10 +56,10 @@ export class ServerPotentialOutcome implements IActionOutcome {
   }
 
   // Inherited
-  public toJson(): IActionOutcomeJSON {
+  public toJson(): TActionOutcomeJson {
     return {
-      actionID: this.actionID,
-      nodeID: this.nodeID,
+      actionId: this.actionId,
+      nodeId: this.nodeId,
       successful: this.successful,
     }
   }
@@ -68,7 +68,7 @@ export class ServerPotentialOutcome implements IActionOutcome {
    * Generate an action outcome based on the factors passed.
    * @param {ServerMissionAction} action The action producing an outcome.
    * @param {PRNG} rng The random number generator used to determine success.
-   * @returns {TActionOutcome} The predetermined outcome of the action.
+   * @returns {IActionOutcome} The predetermined outcome of the action.
    */
   public static generateOutcome(
     action: ServerMissionAction,
@@ -89,12 +89,12 @@ export class ServerRealizedOutcome implements IActionOutcome {
     return this.action.node
   }
   // Implemented
-  public get actionID(): string {
-    return this.action.actionID
+  public get actionId(): ServerMissionAction['_id'] {
+    return this.action._id
   }
   // Implemented
-  public get nodeID(): string {
-    return this.action.node.nodeID
+  public get nodeId(): ServerMissionNode['_id'] {
+    return this.action.node._id
   }
   // Implmented
   public readonly successful: boolean
@@ -109,10 +109,10 @@ export class ServerRealizedOutcome implements IActionOutcome {
   }
 
   // Inherited
-  public toJson(): IActionOutcomeJSON {
+  public toJson(): TActionOutcomeJson {
     return {
-      actionID: this.actionID,
-      nodeID: this.nodeID,
+      actionId: this.actionId,
+      nodeId: this.nodeId,
       successful: this.successful,
     }
   }

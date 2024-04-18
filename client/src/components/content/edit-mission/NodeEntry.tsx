@@ -184,7 +184,7 @@ export default function NodeEntry({
    */
   const handleDeleteActionRequest = (action: ClientMissionAction) => {
     // Remove the action from the node.
-    node.actions.delete(action.actionID)
+    node.actions.delete(action._id)
     // Display the changes.
     forceUpdate()
     // Allow the user to save the changes.
@@ -212,7 +212,7 @@ export default function NodeEntry({
     // Update the action stored in the state.
     setSelectedAction(newAction)
     // Add the action to the node.
-    node.actions.set(newAction.actionID, newAction)
+    node.actions.set(newAction._id, newAction)
     // Display the changes.
     forceUpdate()
     // Allow the user to save the changes.
@@ -232,7 +232,7 @@ export default function NodeEntry({
       // that node.
       let newAction: ClientMissionAction = new ClientMissionAction(node)
 
-      node.actions.set(newAction.actionID, newAction)
+      node.actions.set(newAction._id, newAction)
 
       notify(
         `Auto-generated an action for ${node.name} because it is an executable node with no actions to execute.`,
@@ -286,7 +286,7 @@ export default function NodeEntry({
             stateValue={nodeName}
             setState={setNodeName}
             defaultValue={ClientMissionNode.DEFAULT_PROPERTIES.name}
-            key={`${node.nodeID}_name`}
+            key={`${node._id}_name`}
           />
           <DetailDropDown<string>
             fieldType='required'
@@ -312,7 +312,7 @@ export default function NodeEntry({
                 }
               }
             }}
-            key={`${node.nodeID}_color`}
+            key={`${node._id}_color`}
           />
           <div className='ColorInfo'>
             <div className='SelectedColorText'>
@@ -338,7 +338,7 @@ export default function NodeEntry({
             setState={setDescription}
             elementBoundary='.BorderBox'
             placeholder='Enter description...'
-            key={`${node.nodeID}_description`}
+            key={`${node._id}_description`}
           />
           <DetailLargeString
             fieldType='optional'
@@ -348,7 +348,7 @@ export default function NodeEntry({
             setState={setPreExecutionText}
             elementBoundary='.BorderBox'
             placeholder='Enter pre-execution text...'
-            key={`${node.nodeID}_preExecutionText`}
+            key={`${node._id}_preExecutionText`}
           />
           <DetailNumber
             fieldType='required'
@@ -358,14 +358,14 @@ export default function NodeEntry({
             setState={setDepthPadding}
             defaultValue={ClientMissionNode.DEFAULT_PROPERTIES.depthPadding}
             integersOnly={true}
-            key={`${node.nodeID}_depthPadding`}
+            key={`${node._id}_depthPadding`}
           />
           <DetailToggle
             fieldType='required'
             label='Executable'
             stateValue={executable}
             setState={setExecutable}
-            key={`${node.nodeID}_executable`}
+            key={`${node._id}_executable`}
           />
           <DetailToggle
             fieldType='required'
@@ -373,7 +373,7 @@ export default function NodeEntry({
             stateValue={device}
             setState={setDevice}
             lockState={deviceLockState}
-            key={`${node.nodeID}_device`}
+            key={`${node._id}_device`}
           />
 
           {/* -- ACTIONS -- */}
@@ -415,7 +415,7 @@ export default function NodeEntry({
               })
 
               return (
-                <div className='Row' key={`action-row-${action.actionID}`}>
+                <div className='Row' key={`action-row-${action._id}`}>
                   <div className='RowContent'>
                     {action.name}{' '}
                     <Tooltip description={action.description ?? ''} />
@@ -428,7 +428,7 @@ export default function NodeEntry({
             sortByMethods={[ESortByMethod.Name]}
             nameProperty={'name'}
             alwaysUseBlanks={false}
-            searchableProperties={['actionID']}
+            searchableProperties={['name']}
             noItemsDisplay={
               <div className='NoContent'>No actions available...</div>
             }

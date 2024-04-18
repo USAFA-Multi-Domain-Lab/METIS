@@ -224,9 +224,9 @@ export default class MetisDatabase {
         }
       }
 
-      // Check if student user exists.
+      // Check if a student user exists.
       UserModel.findOne({
-        userID: 'student1',
+        roleId: studentUserData.roleId,
       }).exec(async (error: Error, studentUser: any) => {
         if (error !== null) {
           databaseLogger.error('Failed to query database for student user:')
@@ -244,29 +244,30 @@ export default class MetisDatabase {
           }
 
           // Create student user.
-          UserModel.create(
-            studentUserData,
-            (error: Error, studentUser: any) => {
-              if (error) {
-                databaseLogger.error(
-                  'Failed to create student user in the database:',
-                )
-                databaseLogger.error(error)
-                reject(error)
-              } else {
-                databaseLogger.info('Student user created:', studentUser.userID)
-                resolveOne()
-              }
-            },
-          )
+          let newStudentUser = new UserModel(studentUserData)
+          newStudentUser.save((error: Error) => {
+            if (error) {
+              databaseLogger.error(
+                'Failed to create student user in the database:',
+              )
+              databaseLogger.error(error)
+              reject(error)
+            } else {
+              databaseLogger.info(
+                'Student user created:',
+                newStudentUser.username,
+              )
+              resolveOne()
+            }
+          })
         } else {
           resolveOne()
         }
       })
 
-      // Check if instructor user exists.
+      // Check if a instructor user exists.
       UserModel.findOne({
-        userID: 'instructor1',
+        roleId: instructorUserData.roleId,
       }).exec(async (error: Error, instructorUser: any) => {
         if (error !== null) {
           databaseLogger.error('Failed to query database for instructor user:')
@@ -284,32 +285,30 @@ export default class MetisDatabase {
           }
 
           // Create instructor user.
-          UserModel.create(
-            instructorUserData,
-            (error: Error, instructorUser: any) => {
-              if (error) {
-                databaseLogger.error(
-                  'Failed to create instructor user in the database:',
-                )
-                databaseLogger.error(error)
-                reject(error)
-              } else {
-                databaseLogger.info(
-                  'Instructor user created:',
-                  instructorUser.userID,
-                )
-                resolveOne()
-              }
-            },
-          )
+          let newInstructorUser = new UserModel(instructorUserData)
+          newInstructorUser.save((error: Error) => {
+            if (error) {
+              databaseLogger.error(
+                'Failed to create instructor user in the database:',
+              )
+              databaseLogger.error(error)
+              reject(error)
+            } else {
+              databaseLogger.info(
+                'Instructor user created:',
+                newInstructorUser.username,
+              )
+              resolveOne()
+            }
+          })
         } else {
           resolveOne()
         }
       })
 
-      // Check if admin user exists.
+      // Check if an admin user exists.
       UserModel.findOne({
-        userID: 'admin',
+        roleId: adminUserData.roleId,
       }).exec(async (error: Error, adminUser: any) => {
         if (error !== null) {
           databaseLogger.error('Failed to query database for admin user:')
@@ -325,7 +324,8 @@ export default class MetisDatabase {
           }
 
           // Create admin user.
-          UserModel.create(adminUserData, (error: Error, adminUser: any) => {
+          let newAdminUser = new UserModel(adminUserData)
+          newAdminUser.save((error: Error) => {
             if (error) {
               databaseLogger.error(
                 'Failed to create admin user in the database:',
@@ -333,7 +333,7 @@ export default class MetisDatabase {
               databaseLogger.error(error)
               reject(error)
             } else {
-              databaseLogger.info('Admin user created:', adminUser.userID)
+              databaseLogger.info('Admin user created:', newAdminUser.username)
               resolveOne()
             }
           })

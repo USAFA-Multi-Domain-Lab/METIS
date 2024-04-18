@@ -1,10 +1,10 @@
 import { useState } from 'react'
+import { useGlobalContext } from 'src/context'
 import ClientMission from 'src/missions'
 import ClientMissionNode, { ENodeTargetRelation } from 'src/missions/nodes'
 import MoreInformation from '../communication/MoreInformation'
 import Tooltip from '../communication/Tooltip'
 import './NodeStructuring.scss'
-import { useGlobalContext } from 'src/context'
 
 // This is a enum used to describe
 // the locations that one node can
@@ -68,7 +68,7 @@ export default function NodeStructuring(props: {
       className += ` ${uniqueClassName}`
     }
 
-    if (dropPendingHere && rootNode.nodeID === nodePendingDrop?.nodeID) {
+    if (dropPendingHere && rootNode._id === nodePendingDrop?._id) {
       className += ' DropPending'
     }
 
@@ -123,11 +123,11 @@ export default function NodeStructuring(props: {
 
     className += node.hasChildren ? ' Expandable' : ' Ends'
 
-    if (node.nodeID === nodeGrabbed?.nodeID) {
+    if (node._id === nodeGrabbed?._id) {
       disableDropPending = true
     }
 
-    if (node.nodeID === nodePendingDrop?.nodeID) {
+    if (node._id === nodePendingDrop?._id) {
       className += ' DropPending'
 
       switch (dropLocation) {
@@ -193,10 +193,7 @@ export default function NodeStructuring(props: {
               event.preventDefault()
             }}
             onDragEnter={() => {
-              if (
-                node.nodeID !== nodePendingDrop?.nodeID &&
-                !disableDropPending
-              ) {
+              if (node._id !== nodePendingDrop?._id && !disableDropPending) {
                 pendDrop(node)
                 setDropLocation(ENodeDropLocation.Top)
               }
@@ -214,10 +211,7 @@ export default function NodeStructuring(props: {
               event.preventDefault()
             }}
             onDragEnter={() => {
-              if (
-                node.nodeID !== nodePendingDrop?.nodeID &&
-                !disableDropPending
-              ) {
+              if (node._id !== nodePendingDrop?._id && !disableDropPending) {
                 pendDrop(node)
                 setDropLocation(ENodeDropLocation.Center)
               }
@@ -231,7 +225,7 @@ export default function NodeStructuring(props: {
             <svg
               className={indicatorClassName}
               onMouseUp={toggleNode}
-              key={`${node.nodeID}_triangle`}
+              key={`${node._id}_triangle`}
             >
               <polygon
                 points='3,7 10,7 6.5,14'
@@ -247,10 +241,7 @@ export default function NodeStructuring(props: {
               event.preventDefault()
             }}
             onDragEnter={() => {
-              if (
-                node.nodeID !== nodePendingDrop?.nodeID &&
-                !disableDropPending
-              ) {
+              if (node._id !== nodePendingDrop?._id && !disableDropPending) {
                 pendDrop(node)
                 setDropLocation(ENodeDropLocation.Bottom)
               }
@@ -268,7 +259,7 @@ export default function NodeStructuring(props: {
               <Node
                 node={childNode}
                 disableDropPending={disableDropPending}
-                key={childNode.nodeID}
+                key={childNode._id}
               />
             ))}
           </div>
@@ -282,7 +273,7 @@ export default function NodeStructuring(props: {
   const renderNodes = (): JSX.Element | null => {
     let nodeElements: Array<JSX.Element | null> = rootNode.childNodes.map(
       (childNode: ClientMissionNode) => (
-        <Node node={childNode} key={childNode.nodeID} />
+        <Node node={childNode} key={childNode._id} />
       ),
     )
     let className: string = 'Nodes'

@@ -1,8 +1,8 @@
-import ClientMissionNode from 'src/missions/nodes'
-import './MissionNodeCreator.scss'
-import { compute } from 'src/toolbox'
-import NodeCreator from 'src/missions/nodes/creator'
 import Tooltip from 'src/components/content/communication/Tooltip'
+import ClientMissionNode from 'src/missions/nodes'
+import NodeCreator from 'src/missions/nodes/creator'
+import { compute } from 'src/toolbox'
+import './MissionNodeCreator.scss'
 
 /* -- components -- */
 
@@ -53,7 +53,7 @@ export default function MissionNodeCreator({
   // Render root JSX.
   return (
     <div
-      key={creator.nodeID}
+      key={creator.nodeId}
       className='MissionNodeCreator'
       style={rootStyle}
       onClick={onSelect}

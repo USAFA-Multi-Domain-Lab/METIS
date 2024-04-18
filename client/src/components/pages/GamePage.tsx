@@ -29,14 +29,11 @@ import { TValidPanelButton } from '../content/user-controls/ButtonSvgPanel'
 import { TButtonText } from '../content/user-controls/ButtonText'
 import './GamePage.scss'
 
-export interface IGamePage extends TPage_P {
-  game: GameClient
-}
-
-// This will render a dashboard with a radar
-// on it, indicating air traffic passing by.
-export default function GamePage({ game }: IGamePage): JSX.Element | null {
-  console.log(game.gameID)
+/**
+ * Renders the game page.
+ */
+export default function GamePage({ game }: TGamePage_P): JSX.Element | null {
+  console.log(game.gameId)
 
   /* -- global-context -- */
 
@@ -99,7 +96,7 @@ export default function GamePage({ game }: IGamePage): JSX.Element | null {
     // Logic that opens the next level of nodes
     // (displays the selected node's child nodes)
     if (node.openable) {
-      game.openNode(node.nodeID, {
+      game.openNode(node._id, {
         onError: (message) => handleError({ message, notifyMethod: 'bubble' }),
       })
     }
@@ -416,7 +413,7 @@ export default function GamePage({ game }: IGamePage): JSX.Element | null {
 /**
  * Prop type for `GamePage`.
  */
-export interface IGamePage extends TPage_P {
+export interface TGamePage_P extends TPage_P {
   /**
    * The game client to use on the page.
    */

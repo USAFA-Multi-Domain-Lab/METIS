@@ -35,7 +35,7 @@ export default function MissionModificationPanel({
    */
   const onEditRequest = () => {
     navigateTo('MissionPage', {
-      missionID: mission.missionID,
+      missionId: mission._id,
     })
   }
   /**
@@ -52,7 +52,7 @@ export default function MissionModificationPanel({
     if (choice === 'Confirm') {
       try {
         beginLoading('Deleting mission...')
-        await ClientMission.$delete(mission.missionID)
+        await ClientMission.$delete(mission._id)
         finishLoading()
         notify(`Successfully deleted "${mission.name}".`)
         onSuccessfulDeletion()
@@ -76,10 +76,7 @@ export default function MissionModificationPanel({
     if (choice === 'Submit') {
       try {
         beginLoading('Copying mission...')
-        let resultingMission = await ClientMission.$copy(
-          mission.missionID,
-          text,
-        )
+        let resultingMission = await ClientMission.$copy(mission._id, text)
         finishLoading()
         notify(`Successfully copied "${mission.name}".`)
         onSuccessfulCopy(resultingMission)
@@ -93,7 +90,7 @@ export default function MissionModificationPanel({
    * Handles a request to launch a new game from a mission.
    */
   const onLaunchRequest = () => {
-    navigateTo('LaunchPage', { missionID: mission.missionID })
+    navigateTo('LaunchPage', { missionId: mission._id })
   }
 
   /* -- COMPUTED -- */
@@ -131,7 +128,7 @@ export default function MissionModificationPanel({
         key: 'download',
         onClick: () => {
           window.open(
-            `/api/v1/missions/export/${mission.name}.metis?missionID=${mission.missionID}`,
+            `/api/v1/missions/export/${mission.name}.metis?_id=${mission._id}`,
             '_blank',
           )
         },

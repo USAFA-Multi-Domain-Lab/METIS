@@ -15,7 +15,7 @@ import './LaunchPage.scss'
  * configuration.
  */
 export default function LaunchPage({
-  missionID,
+  missionId,
 }: TLaunchPage_P): JSX.Element | null {
   /* -- state -- */
 
@@ -24,7 +24,7 @@ export default function LaunchPage({
   const { beginLoading, finishLoading, handleError, notify, navigateTo } =
     globalContext.actions
   const [mission, setMission] = useState<ClientMission>(
-    new ClientMission({ missionID }),
+    new ClientMission({ _id: missionId }),
   )
   const [gameConfig, setGameConfig] = useState(Game.DEFAULT_CONFIG)
 
@@ -32,12 +32,12 @@ export default function LaunchPage({
 
   useMountHandler(async (done) => {
     // Handle the editing of an existing mission.
-    if (missionID !== null) {
+    if (missionId !== null) {
       try {
         // Notify user of loading.
         beginLoading('Loading mission...')
         // Load mission.
-        let mission = await ClientMission.$fetchOne(missionID)
+        let mission = await ClientMission.$fetchOne(missionId)
         // Store mission in the state.
         setMission(mission)
       } catch {
@@ -75,7 +75,7 @@ export default function LaunchPage({
         // Notify user of game launch.
         beginLoading('Launching game...')
         // Launch game from mission ID.
-        await GameClient.$launch(mission.missionID, gameConfig)
+        await GameClient.$launch(mission._id, gameConfig)
         // Navigate to home page.
         navigateTo('HomePage', {})
         // Notify user of success.
@@ -125,5 +125,5 @@ export type TLaunchPage_P = {
   /**
    * The ID of the game to configure.
    */
-  missionID: string
+  missionId: string
 }

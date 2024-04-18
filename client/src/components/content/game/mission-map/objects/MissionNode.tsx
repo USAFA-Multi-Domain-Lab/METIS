@@ -318,7 +318,7 @@ export default function MissionNode({
   // Render root JSX.
   return (
     <div
-      key={node.nodeID}
+      key={node._id}
       className={rootClassName}
       style={rootStyle}
       onClick={onSelect}

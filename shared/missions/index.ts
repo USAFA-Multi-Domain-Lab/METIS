@@ -1,6 +1,7 @@
 import { v4 as generateHash } from 'uuid'
 import context from '../context'
 import { AnyObject } from '../toolbox/objects'
+import { uuidTypeValidator } from '../toolbox/validators'
 import {
   TCommonMissionNode,
   TMissionNodeJson,
@@ -14,7 +15,7 @@ export default abstract class Mission<TMissionNode extends TCommonMissionNode>
   implements TCommonMission
 {
   // Inherited
-  public missionID: string
+  public _id: string
   // Inherited
   public name: string
   // Inherited
@@ -32,7 +33,7 @@ export default abstract class Mission<TMissionNode extends TCommonMissionNode>
   /**
    * The original raw data for the nodes in the mission, before any changes.
    */
-  protected originalNodeData: Array<TMissionNodeJson>
+  protected originalNodeData: TMissionNodeJson[]
   /**
    * The original tree structure of the mission nodes, before any changes.
    */
@@ -46,7 +47,7 @@ export default abstract class Mission<TMissionNode extends TCommonMissionNode>
     data: Partial<TCommonMissionJson> = Mission.DEFAULT_PROPERTIES,
     options: TMissionOptions = {},
   ) {
-    this.missionID = data.missionID ?? Mission.DEFAULT_PROPERTIES.missionID
+    this._id = data._id ?? Mission.DEFAULT_PROPERTIES._id
     this.name = data.name ?? Mission.DEFAULT_PROPERTIES.name
     this.introMessage =
       data.introMessage ?? Mission.DEFAULT_PROPERTIES.introMessage
@@ -75,11 +76,11 @@ export default abstract class Mission<TMissionNode extends TCommonMissionNode>
     }
   }
 
-  // Inherited
+  // Implemented
   public toJson(options: TMissionJsonOptions = {}): TCommonMissionJson {
     let { revealedOnly = false, includeGameData = false } = options
-    return {
-      missionID: this.missionID,
+
+    let json: TCommonMissionJson = {
       name: this.name,
       introMessage: this.introMessage,
       versionNumber: this.versionNumber,
@@ -87,6 +88,18 @@ export default abstract class Mission<TMissionNode extends TCommonMissionNode>
       seed: this.seed,
       ...this.exportNodes({ revealedOnly, includeGameData }),
     }
+
+    // Include _id if its not a UUID.
+    // * Note: IDs in the database are
+    // * stored as mongoose ObjectIds.
+    // * If the ID is a UUID, then the
+    // * mission won't save.
+    let isObjectId: boolean = !uuidTypeValidator(this._id) ? true : false
+    if (isObjectId) {
+      json._id = this._id
+    }
+
+    return json
   }
 
   /**
@@ -96,11 +109,11 @@ export default abstract class Mission<TMissionNode extends TCommonMissionNode>
 
   /**
    * This will import raw node data into the mission, creating MissionNode objects from it, and mapping the relationships found in the structure.
-   * @param {Array<TMissionNodeJson>} nodeData The raw node data to import. Upon success, the originalNodeData property will be updated to this value.
-   * @param {AnyObject} nodeStructure The raw node structure to import. Upon success, the originalNodeStructure property will be updated to this value.
+   * @param nodeData The raw node data to import. Upon success, the originalNodeData property will be updated to this value.
+   * @param nodeStructure The raw node structure to import. Upon success, the originalNodeStructure property will be updated to this value.
    */
   protected importNodes(
-    nodeData: Array<TMissionNodeJson>,
+    nodeData: TMissionNodeJson[],
     nodeStructure: AnyObject,
     options: TNodeImportOptions = {},
   ): void {
@@ -120,7 +133,7 @@ export default abstract class Mission<TMissionNode extends TCommonMissionNode>
 
       // Add nodes to the node map.
       for (let node of this.nodes) {
-        nodeMap.set(node.nodeID, node)
+        nodeMap.set(node._id, node)
       }
 
       // Map relationships between nodes.
@@ -185,9 +198,9 @@ export default abstract class Mission<TMissionNode extends TCommonMissionNode>
   ): TMissionNode
 
   // Inherited
-  public getNode(nodeID: string): TMissionNode | undefined {
+  public getNode(nodeId: string): TMissionNode | undefined {
     for (let node of this.nodes) {
-      if (node.nodeID === nodeID) {
+      if (node._id === nodeId) {
         return node
       }
     }
@@ -197,9 +210,9 @@ export default abstract class Mission<TMissionNode extends TCommonMissionNode>
   /**
    * The default properties for a Mission object.
    */
-  public static get DEFAULT_PROPERTIES(): TCommonMissionJson {
+  public static get DEFAULT_PROPERTIES(): Required<TCommonMissionJson> {
     return {
-      missionID: generateHash(),
+      _id: generateHash(),
       name: 'New Mission',
       introMessage: '<p>Welcome to your new mission!</p>',
       versionNumber: 1,
@@ -214,7 +227,7 @@ export default abstract class Mission<TMissionNode extends TCommonMissionNode>
    * The default properties for the root node of a Mission.
    */
   public static readonly ROOT_NODE_PROPERTIES: TMissionNodeJson = {
-    nodeID: 'ROOT',
+    _id: 'ROOT',
     name: 'ROOT',
     color: '#000000',
     description:
@@ -300,9 +313,9 @@ export default abstract class Mission<TMissionNode extends TCommonMissionNode>
       if (!revealedOnly || nodeCursor.isOpen) {
         for (let childNode of childNodes) {
           if (childNode.hasChildren) {
-            nodeCursorStructure[childNode.nodeID] = operation(childNode)
+            nodeCursorStructure[childNode._id] = operation(childNode)
           } else {
-            nodeCursorStructure[childNode.nodeID] = {}
+            nodeCursorStructure[childNode._id] = {}
           }
         }
       }
@@ -327,7 +340,7 @@ export interface TCommonMission {
   /**
    * The ID of the mission.
    */
-  missionID: string
+  _id: string
   /**
    * The name of the mission.
    */
@@ -358,8 +371,8 @@ export interface TCommonMission {
   rootNode: TCommonMissionNode | null
   /**
    * Converts the mission to JSON.
-   * @param {TMissionJsonOptions} options The options for converting the mission to JSON.
-   * @returns {TMissionNodeJson} the JSON for the mission.
+   * @param options The options for converting the mission to JSON.
+   * @returns the JSON for the mission.
    */
   toJson: (options?: TMissionJsonOptions) => TCommonMissionJson
   /**
@@ -377,13 +390,37 @@ export interface TCommonMission {
  * Plain JSON representation of a MissionNode object.
  */
 export interface TCommonMissionJson {
-  missionID: string
+  /**
+   * The ID of the mission.
+   */
+  _id?: string
+  /**
+   * The name of the mission.
+   */
   name: string
+  /**
+   * The introductory message for the mission, displayed when the mission is first started in a game.
+   */
   introMessage: string
+  /**
+   * The version number of the mission.
+   */
   versionNumber: number
+  /**
+   * The amount of resources available to the student at the start of the mission.
+   */
   initialResources: number
+  /**
+   * The seed for the mission. Pre-determines outcomes.
+   */
   seed: string
+  /**
+   * The tree structure used to determine the relationships and positions of the nodes in the mission.
+   */
   nodeStructure: AnyObject
+  /**
+   * The raw data for the nodes in the mission.
+   */
   nodeData: TMissionNodeJson[]
 }
 

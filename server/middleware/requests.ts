@@ -1,6 +1,7 @@
 // ------- IMPORTS ------- //
 import { NextFunction, Request, Response } from 'express-serve-static-core'
 import { AnyObject } from 'metis/toolbox/objects'
+import User from 'metis/users'
 import UserRole, { TUserRole } from 'metis/users/roles'
 import { isObjectIdOrHexString } from 'mongoose'
 
@@ -264,9 +265,8 @@ export class RequestBodyFilters {
    * @param bodyValue The value of the property in the request body
    * @throws An error message or null
    */
-  public static USER_ID(bodyKey: string, bodyValue: any) {
-    let usernameRegex: RegExp = /^([a-zA-Z0-9-_.]{5,25})$/
-    let usernameIsValid: boolean = usernameRegex.test(bodyValue)
+  public static USERNAME(bodyKey: string, bodyValue: any) {
+    let usernameIsValid: boolean = User.isValidUsername(bodyValue)
 
     if (typeof bodyValue !== 'string' || !usernameIsValid) {
       throw new Error(invalidRequestBodyPropertyException(bodyKey, bodyValue))
@@ -309,8 +309,8 @@ export class RequestBodyFilters {
    * @param bodyValue The value of the property in the request body
    * @throws An error message or null
    */
-  public static ROLE(bodyKey: string, bodyValue: TUserRole['id']) {
-    if (!UserRole.isValidRoleID(bodyValue)) {
+  public static ROLE(bodyKey: string, bodyValue: TUserRole['_id']) {
+    if (!UserRole.isValidRoleId(bodyValue)) {
       throw new Error(invalidRequestBodyPropertyException(bodyKey, bodyValue))
     }
   }
@@ -344,7 +344,7 @@ const invalidRequestBodyPropertyException = (
 const validateTypeOfQueryKey = (
   query: AnyObject,
   key: string,
-  type: string,
+  type: TQueryValue,
 ): null | Error => {
   let errorMessage: string = `Bad Request_query-key-type-required="${type}"_query-key-type-sent="${query[key]}"`
 
@@ -421,7 +421,7 @@ const validateTypeOfQueryKey = (
 const validateTypeOfParamsKey = (
   params: AnyObject,
   key: string,
-  type: string,
+  type: TParamValue,
 ): null | Error => {
   let errorMessage: string = `Bad Request_params-key-type-required="${type}"_params-key-type-sent="${params[key]}"`
 
@@ -638,7 +638,7 @@ const validateQueryKeys = (
     let validation: null | Error = validateTypeOfQueryKey(
       query,
       requiredKey,
-      requiredType as string,
+      requiredType as TQueryValue,
     )
 
     // If null is returned by the validator function then
@@ -665,7 +665,7 @@ const validateQueryKeys = (
         let validation: null | Error = validateTypeOfQueryKey(
           query,
           optionalKey,
-          optionalType as string,
+          optionalType as TQueryValue,
         )
 
         // If null is returned by the validator function then
@@ -724,7 +724,7 @@ const validateParamKeys = (
     let validation: Error | null = validateTypeOfParamsKey(
       params,
       requiredKey,
-      requiredType as string,
+      requiredType as TParamValue,
     )
 
     // If null is returned by the validator function then
@@ -761,13 +761,21 @@ const validateParamKeys = (
  */
 export const defineRequests = (
   requiredStructures: {
-    body?: {}
-    query?: {}
-    params?: {}
+    body?: {
+      [key: string]: RequestBodyFilters
+    }
+    query?: {
+      [key: string]: TQueryValue
+    }
+    params?: {
+      [key: string]: TParamValue
+    }
   },
   optionalStructures?: {
-    body?: {}
-    query?: {}
+    body?: { [key: string]: RequestBodyFilters }
+    query?: {
+      [key: string]: TQueryValue
+    }
   },
 ) => {
   return (request: Request, response: Response, next: NextFunction): void => {
@@ -826,5 +834,24 @@ export const defineRequests = (
     }
   }
 }
+
+/* -- TYPES -- */
+
+/**
+ * The different types that can be passed in the query
+ * of a request.
+ */
+export type TQueryValue =
+  | 'string'
+  | 'number'
+  | 'integer'
+  | 'boolean'
+  | 'objectId'
+
+/**
+ * The different types that can be passed in the params
+ * of a request.
+ */
+export type TParamValue = 'string' | 'number' | 'objectId'
 
 export default defineRequests

@@ -11,7 +11,6 @@ import { TMetisRouterMap } from 'metis/server/http/router'
 import { databaseLogger } from 'metis/server/logging'
 import path from 'path'
 import { v4 as generateHash } from 'uuid'
-import { effectData } from '../../effects/effect-data'
 import { RequestBodyFilters, defineRequests } from '../../middleware/requests'
 import uploads from '../../middleware/uploads'
 import { auth } from '../../middleware/users'
@@ -76,7 +75,7 @@ export const routerMap: TMetisRouterMap = (
           // queryForApiResponse function,
           // and two, to ensure what's returned
           // is what is in the database.
-          MissionModel.findOne({ missionID: mission.missionID })
+          MissionModel.findOne({ _id: mission._id })
             .queryForApiResponse('findOne')
             .exec((error: Error, mission: any) => {
               // If something goes wrong, this is
@@ -528,13 +527,13 @@ export const routerMap: TMetisRouterMap = (
         query: {},
       },
       {
-        query: { missionID: 'objectId' },
+        query: { _id: 'objectId' },
       },
     ),
     (request, response) => {
-      let missionID = request.query.missionID
+      let _id = request.query._id
 
-      if (missionID === undefined) {
+      if (_id === undefined) {
         let queries: any = {}
 
         MissionModel.find({ ...queries }, { nodeStructure: 0, nodeData: 0 })
@@ -550,19 +549,19 @@ export const routerMap: TMetisRouterMap = (
             }
           })
       } else {
-        MissionModel.findOne({ missionID })
+        MissionModel.findOne({ _id })
           .queryForApiResponse('findOne')
           .exec((error: Error, mission: any) => {
             if (error !== null) {
               databaseLogger.error(
-                `Failed to retrieve mission with ID "${missionID}".`,
+                `Failed to retrieve mission with ID "${_id}".`,
               )
               databaseLogger.error(error)
               return response.sendStatus(500)
             } else if (mission === null) {
               return response.sendStatus(404)
             } else {
-              databaseLogger.info(`Mission with ID "${missionID}" retrieved.`)
+              databaseLogger.info(`Mission with ID "${_id}" retrieved.`)
               return response.json(mission)
             }
           })
@@ -575,9 +574,9 @@ export const routerMap: TMetisRouterMap = (
   router.get(
     '/export/*', // The "*" is to ensure the downloaded file includes the mission's name and the .metis extension.
     auth({ permissions: ['missions_read', 'missions_write'] }),
-    defineRequests({ query: { missionID: 'objectId' } }),
+    defineRequests({ query: { _id: 'objectId' } }),
     (request, response) => {
-      let missionID = request.query.missionID
+      let _id = request.query._id
 
       // Retrieve database info.
       InfoModel.findOne(
@@ -586,11 +585,11 @@ export const routerMap: TMetisRouterMap = (
           databaseLogger.info('Database info retrieved.')
 
           // Retrieve original mission.
-          MissionModel.findOne({ missionID })
+          MissionModel.findOne({ _id })
             .queryForApiResponse('findOne')
             .exec(
               filterErrors_findOne('missions', response, (mission: any) => {
-                databaseLogger.info(`Mission with ID "${missionID}" retrieved.`)
+                databaseLogger.info(`Mission with ID "${_id}" retrieved.`)
 
                 // Gather details for temporary file
                 // that will be sent in the response.
@@ -611,7 +610,7 @@ export const routerMap: TMetisRouterMap = (
                 let tempFileContents = JSON.stringify(
                   {
                     ...mission._doc,
-                    missionID: undefined,
+                    _id: undefined,
                     deleted: undefined,
                     schemaBuildNumber: info.schemaBuildNumber,
                   },
@@ -653,21 +652,6 @@ export const routerMap: TMetisRouterMap = (
     response.json(MissionNode.COLOR_OPTIONS)
   })
 
-  // -- GET /api/v1/missions/effects/
-  // This will return all the available
-  // effects that can be selected to be
-  // affected by an action after it is
-  // executed.
-  // todo: remove (v1 effects)
-  router.get(
-    '/effects/',
-    auth({ permissions: ['missions_read', 'missions_write'] }),
-    defineRequests({}),
-    (request, response) => {
-      response.json({ effectData })
-    },
-  )
-
   // -- PUT | /api/v1/missions/ --
   // This will update the mission.
   router.put(
@@ -676,7 +660,7 @@ export const routerMap: TMetisRouterMap = (
     defineRequests(
       {
         body: {
-          missionID: RequestBodyFilters.OBJECTID,
+          _id: RequestBodyFilters.OBJECTID,
         },
       },
       {
@@ -693,14 +677,14 @@ export const routerMap: TMetisRouterMap = (
     (request, response) => {
       let missionUpdates: any = request.body
 
-      let missionID: string = missionUpdates.missionID
+      let _id: string = missionUpdates._id
 
       // Original mission is retrieved.
-      MissionModel.findOne({ missionID }).exec((error: Error, mission: any) => {
+      MissionModel.findOne({ _id }).exec((error: Error, mission: any) => {
         // Handles errors.
         if (error !== null) {
           databaseLogger.error(
-            `### Failed to retrieve mission with ID "${missionID}".`,
+            `### Failed to retrieve mission with ID "${_id}".`,
           )
           databaseLogger.error(error)
           return response.sendStatus(500)
@@ -715,7 +699,7 @@ export const routerMap: TMetisRouterMap = (
           // missionUpdates and puts it in
           // the retrieved mongoose document.
           for (let key in missionUpdates) {
-            if (key !== '_id' && key !== 'missionID') {
+            if (key !== '_id') {
               mission[key] = missionUpdates[key]
             }
           }
@@ -725,7 +709,7 @@ export const routerMap: TMetisRouterMap = (
             // Handles errors.
             if (error !== null) {
               databaseLogger.error(
-                `### Failed to update mission with ID "${missionID}".`,
+                `### Failed to update mission with ID "${_id}".`,
               )
               databaseLogger.error(error)
 
@@ -747,7 +731,7 @@ export const routerMap: TMetisRouterMap = (
               // queryForApiResponse function,
               // and two, to ensure what's returned
               // is what is in the database.
-              MissionModel.findOne({ missionID })
+              MissionModel.findOne({ _id })
                 .queryForApiResponse('findOne')
                 .exec((error: Error, mission: any) => {
                   // If something goes wrong, this is
@@ -771,15 +755,15 @@ export const routerMap: TMetisRouterMap = (
       })
 
       // todo: ???
-      // MissionModel.updateOne({ missionID }, mission, (error: any) => {
+      // MissionModel.updateOne({ _id }, mission, (error: any) => {
       //   if (error !== null) {
       //     databaseLogger.error(
-      //       `Failed to update mission with the ID "${missionID}".`,
+      //       `Failed to update mission with the ID "${_id}".`,
       //     )
       //     databaseLogger.error(error)
       //     return response.sendStatus(500)
       //   } else {
-      //     databaseLogger.info(`Updated mission with the ID "${missionID}".`)
+      //     databaseLogger.info(`Updated mission with the ID "${_id}".`)
       //     return response.sendStatus(200)
       //   }
       // })
@@ -794,53 +778,50 @@ export const routerMap: TMetisRouterMap = (
     defineRequests({
       body: {
         copyName: RequestBodyFilters.STRING,
-        originalID: RequestBodyFilters.OBJECTID,
+        originalId: RequestBodyFilters.OBJECTID,
       },
     }),
     (request, response) => {
       let body: any = request.body
 
-      let originalID: string = body.originalID
+      let originalId: string = body.originalId
       let copyName: string = body.copyName
 
-      MissionModel.findOne(
-        { missionID: originalID },
-        (error: any, mission: any) => {
-          if (error !== null) {
-            databaseLogger.error(
-              `Failed to copy mission with the original ID "${originalID}":`,
-            )
-            databaseLogger.error(error)
-            return response.sendStatus(500)
-          } else if (mission === null) {
-            return response.sendStatus(404)
-          } else {
-            let copy = new MissionModel({
-              name: copyName,
-              introMessage: mission.introMessage,
-              versionNumber: mission.versionNumber,
-              initialResources: mission.initialResources,
-              nodeStructure: mission.nodeStructure,
-              nodeData: mission.nodeData,
-            })
+      MissionModel.findOne({ _id: originalId }, (error: any, mission: any) => {
+        if (error !== null) {
+          databaseLogger.error(
+            `Failed to copy mission with the original ID "${originalId}":`,
+          )
+          databaseLogger.error(error)
+          return response.sendStatus(500)
+        } else if (mission === null) {
+          return response.sendStatus(404)
+        } else {
+          let copy = new MissionModel({
+            name: copyName,
+            introMessage: mission.introMessage,
+            versionNumber: mission.versionNumber,
+            initialResources: mission.initialResources,
+            nodeStructure: mission.nodeStructure,
+            nodeData: mission.nodeData,
+          })
 
-            copy.save((error: Error) => {
-              if (error) {
-                databaseLogger.error(
-                  `Failed to copy mission with the original ID "${originalID}":`,
-                )
-                databaseLogger.error(error)
-                return response.sendStatus(500)
-              } else {
-                databaseLogger.info(
-                  `Copied mission with the original ID "${originalID}".`,
-                )
-                return response.json({ copy })
-              }
-            })
-          }
-        },
-      )
+          copy.save((error: Error) => {
+            if (error) {
+              databaseLogger.error(
+                `Failed to copy mission with the original ID "${originalId}":`,
+              )
+              databaseLogger.error(error)
+              return response.sendStatus(500)
+            } else {
+              databaseLogger.info(
+                `Copied mission with the original ID "${originalId}".`,
+              )
+              return response.json({ copy })
+            }
+          })
+        }
+      })
     },
   )
 
@@ -849,19 +830,19 @@ export const routerMap: TMetisRouterMap = (
   router.delete(
     '/',
     auth({ permissions: ['missions_write'] }),
-    defineRequests({ query: { missionID: 'objectId' } }),
+    defineRequests({ query: { _id: 'objectId' } }),
     (request, response) => {
       let query: any = request.query
 
-      let missionID: any = query.missionID
+      let _id: any = query._id
 
-      MissionModel.updateOne({ missionID }, { deleted: true }, (error: any) => {
+      MissionModel.updateOne({ _id }, { deleted: true }, (error: any) => {
         if (error !== null) {
           databaseLogger.error('Failed to delete mission:')
           databaseLogger.error(error)
           return response.sendStatus(500)
         } else {
-          databaseLogger.info(`Deleted mission with the ID "${missionID}".`)
+          databaseLogger.info(`Deleted mission with the ID "${_id}".`)
           return response.sendStatus(200)
         }
       })

@@ -1,7 +1,7 @@
-import ClientMission from '..'
 import ClientMissionNode, { ENodeTargetRelation } from '.'
-import ClientActionExecution from '../actions/executions'
+import ClientMission from '..'
 import { Vector2D } from '../../../../shared/toolbox/space'
+import ClientActionExecution from '../actions/executions'
 
 /**
  * Represents a node that, when triggerred,
@@ -10,11 +10,11 @@ import { Vector2D } from '../../../../shared/toolbox/space'
  */
 export default class NodeCreator {
   // Implemented
-  public get nodeID(): string {
+  public get nodeId(): string {
     let creationTarget: ClientMissionNode | null = this.creationTarget
 
     if (creationTarget) {
-      return `node-creator_with-${creationTarget.nodeID}-as-${this.targetRelation}`
+      return `node-creator_with-${creationTarget._id}-as-${this.targetRelation}`
     } else {
       return `node-creator_with-no-target-as-${this.targetRelation}`
     }

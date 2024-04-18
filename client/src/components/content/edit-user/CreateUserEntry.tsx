@@ -39,7 +39,7 @@ export default function CreateUserEntry({
   const [lastNameErrorMessage, setLastNameErrorMessage] = useState<string>()
   const [password1ErrorMessage, setPassword1ErrorMessage] = useState<string>()
   const [password2ErrorMessage, setPassword2ErrorMessage] = useState<string>()
-  const [userId, setUserId] = useState<string>(user.userID)
+  const [username, setUsername] = useState<string>(user.username)
   const [role, setRole] = useState<UserRole>(user.role)
   const [firstName, setFirstName] = useState<string>(user.firstName)
   const [lastName, setLastName] = useState<string>(user.lastName)
@@ -98,23 +98,23 @@ export default function CreateUserEntry({
 
   /* -- EFFECTS -- */
 
-  // Sync the component state with the user ID property.
+  // Sync the component state with the username property.
   usePostInitEffect(() => {
-    user.userID = userId
+    user.username = username
 
-    if (userId !== '' && user.hasValidUsername) {
-      removeUserEmptyString('userID')
+    if (username !== '' && user.hasValidUsername) {
+      removeUserEmptyString('username')
       setHandleUsernameError('none')
       handleChange()
     }
 
-    if (userId === '' && !user.hasValidUsername) {
+    if (username === '' && !user.hasValidUsername) {
       setHandleUsernameError('deliverError')
-      setUserEmptyStringArray([...userEmptyStringArray, `field=userID`])
+      setUserEmptyStringArray([...userEmptyStringArray, `field=username`])
       setUsernameErrorMessage('At least one character is required here.')
     }
 
-    if (userId !== '' && !user.hasValidUsername) {
+    if (username !== '' && !user.hasValidUsername) {
       setHandleUsernameError('deliverError')
       setUsernameErrorMessage(
         'Usernames must be between 5 and 25 characters long and can only contain letters, numbers, and the following special characters: - _ .',
@@ -122,7 +122,7 @@ export default function CreateUserEntry({
     }
 
     forceUpdate()
-  }, [userId])
+  }, [username])
 
   // Sync the component state with the user role property.
   usePostInitEffect(() => {
@@ -296,8 +296,8 @@ export default function CreateUserEntry({
         fieldType='required'
         handleOnBlur={handleUsernameError}
         label='Username'
-        stateValue={userId}
-        setState={setUserId}
+        stateValue={username}
+        setState={setUsername}
         errorMessage={usernameErrorMessage}
         placeholder='Enter a username here...'
       />

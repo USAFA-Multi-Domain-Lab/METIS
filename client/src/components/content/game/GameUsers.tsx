@@ -30,12 +30,12 @@ export default function GameUsers({ game }: TGameUsers_P): JSX.Element | null {
 
   /**
    * Callback for button click to kick a participant.
-   * @param userID The user ID of the participant to kick.
+   * @param userId The user ID of the participant to kick.
    */
-  const onClickKick = async (userID: string): Promise<void> => {
+  const onClickKick = async (userId: string): Promise<void> => {
     // Confirm the user wants to start the game.
     let { choice } = await prompt(
-      `Are you sure you want to kick "${userID}"?`,
+      `Are you sure you want to kick "${userId}"?`,
       Prompt.ConfirmationChoices,
     )
 
@@ -46,12 +46,12 @@ export default function GameUsers({ game }: TGameUsers_P): JSX.Element | null {
 
     try {
       // Begin loading.
-      beginLoading(`Kicking "${userID}"...`)
+      beginLoading(`Kicking "${userId}"...`)
       // Kick the participant.
-      await game.$kick(userID)
+      await game.$kick(userId)
     } catch (error) {
       handleError({
-        message: `Failed to kick "${userID}".`,
+        message: `Failed to kick "${userId}".`,
         notifyMethod: 'bubble',
       })
     }
@@ -62,12 +62,12 @@ export default function GameUsers({ game }: TGameUsers_P): JSX.Element | null {
 
   /**
    * Callback for button click to ban a participant.
-   * @param userID The user ID of the participant to ban.
+   * @param userId The user ID of the participant to ban.
    */
-  const onClickBan = async (userID: string): Promise<void> => {
+  const onClickBan = async (userId: string): Promise<void> => {
     // Confirm the user wants to start the game.
     let { choice } = await prompt(
-      `Are you sure you want to ban "${userID}"?`,
+      `Are you sure you want to ban "${userId}"?`,
       Prompt.ConfirmationChoices,
     )
 
@@ -78,12 +78,12 @@ export default function GameUsers({ game }: TGameUsers_P): JSX.Element | null {
 
     try {
       // Begin loading.
-      beginLoading(`Banning "${userID}"...`)
+      beginLoading(`Banning "${userId}"...`)
       // Ban the participant.
-      await game.$ban(userID)
+      await game.$ban(userId)
     } catch (error) {
       handleError({
-        message: `Failed to ban "${userID}".`,
+        message: `Failed to ban "${userId}".`,
         notifyMethod: 'bubble',
       })
     }
@@ -131,14 +131,14 @@ export default function GameUsers({ game }: TGameUsers_P): JSX.Element | null {
               {
                 icon: 'kick',
                 key: 'kick',
-                onClick: () => onClickKick(user.userID),
+                onClick: () => onClickKick(user.username),
                 tooltipDescription:
                   'Kick participant from the game (Can still choose to rejoin).',
               },
               {
                 icon: 'ban',
                 key: 'ban',
-                onClick: () => onClickBan(user.userID),
+                onClick: () => onClickBan(user.username),
                 tooltipDescription:
                   'Ban participant from the game (Cannot rejoin).',
               },
@@ -151,8 +151,8 @@ export default function GameUsers({ game }: TGameUsers_P): JSX.Element | null {
         /* -- render -- */
 
         return (
-          <div key={user.userID} className='User'>
-            <div className='Name'>{user.userID}</div>
+          <div key={user.username} className='User'>
+            <div className='Name'>{user.username}</div>
             <ButtonSvgPanel buttons={buttons} size={'small'} />
           </div>
         )
@@ -171,8 +171,8 @@ export default function GameUsers({ game }: TGameUsers_P): JSX.Element | null {
     // If there are supervisors, render them.
     if (supervisors.length > 0) {
       return supervisors.map((user): JSX.Element | null => (
-        <div key={user.userID} className='User'>
-          <div className='Name'>{user.userID}</div>
+        <div key={user.username} className='User'>
+          <div className='Name'>{user.username}</div>
         </div>
       ))
     }

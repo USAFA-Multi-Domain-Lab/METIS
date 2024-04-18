@@ -7,7 +7,7 @@ export default abstract class TargetEnvironment<TTarget extends TCommonTarget>
   implements TCommonTargetEnv
 {
   // Inherited
-  public id: TCommonTargetEnv['id']
+  public _id: TCommonTargetEnv['_id']
 
   // Inherited
   public name: TCommonTargetEnv['name']
@@ -29,7 +29,7 @@ export default abstract class TargetEnvironment<TTarget extends TCommonTarget>
     data: Partial<TCommonTargetEnvJson> = TargetEnvironment.DEFAULT_PROPERTIES,
     options: TTargetEnvOptions = {},
   ) {
-    this.id = data.id ?? TargetEnvironment.DEFAULT_PROPERTIES.id
+    this._id = data._id ?? TargetEnvironment.DEFAULT_PROPERTIES._id
     this.name = data.name ?? TargetEnvironment.DEFAULT_PROPERTIES.name
     this.description =
       data.description ?? TargetEnvironment.DEFAULT_PROPERTIES.description
@@ -54,7 +54,7 @@ export default abstract class TargetEnvironment<TTarget extends TCommonTarget>
   public toJson(options: TTargetEnvJsonOptions = {}): TCommonTargetEnvJson {
     // Construct JSON object to send to the server.
     return {
-      id: this.id,
+      _id: this._id,
       name: this.name,
       description: this.description,
       version: this.version,
@@ -67,7 +67,7 @@ export default abstract class TargetEnvironment<TTarget extends TCommonTarget>
    */
   public static get DEFAULT_PROPERTIES(): TCommonTargetEnvJson {
     return {
-      id: 'metis-target-env-default',
+      _id: 'metis-target-env-default',
       name: 'Select a target environment',
       description: 'This is a default target environment.',
       version: '0.1',
@@ -95,7 +95,7 @@ export interface TCommonTargetEnv {
   /**
    * The ID of the target environment.
    */
-  id: string
+  _id: string
   /**
    * The name of the target environment.
    */
@@ -125,7 +125,7 @@ export interface TCommonTargetEnvJson {
   /**
    * The ID of the target environment.
    */
-  id: string
+  _id: string
   /**
    * The name of the target environment.
    */

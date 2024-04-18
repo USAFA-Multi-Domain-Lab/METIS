@@ -21,9 +21,9 @@ const routerMap: TMetisRouterMap = (router: expressWs.Router, done) => {
     defineRequests({
       body: {
         user: {
-          userID: RequestBodyFilters.USER_ID,
-          roleID: RequestBodyFilters.ROLE,
-          expressPermissionIDs: RequestBodyFilters.ARRAY,
+          username: RequestBodyFilters.USERNAME,
+          roleId: RequestBodyFilters.ROLE,
+          expressPermissionIds: RequestBodyFilters.ARRAY,
           firstName: RequestBodyFilters.NAME,
           lastName: RequestBodyFilters.NAME,
           password: RequestBodyFilters.PASSWORD,
@@ -31,14 +31,13 @@ const routerMap: TMetisRouterMap = (router: expressWs.Router, done) => {
         },
       },
     }),
-
     async (request: Request, response: Response) => {
       let { body } = request
       let { user: userData } = body
-      let { userID, password } = userData
+      let { username, password } = userData
 
       let session: MetisSession | undefined = MetisSession.get(
-        request.session.userID,
+        request.session.userId,
       )
 
       if (password !== undefined) {
@@ -60,17 +59,18 @@ const routerMap: TMetisRouterMap = (router: expressWs.Router, done) => {
             return response.sendStatus(500)
           }
         } else {
-          databaseLogger.info(`New user created named "${userID}".`)
+          databaseLogger.info(`New user created named "${username}".`)
 
           try {
             // Retrieves newly created user
             // to return in response. This is
             // called again, one to call the
-            // queryForApiResponse function,
+            // queryForUsers function,
             // and two, to ensure what's returned
             // is what is in the database.
-            await UserModel.findOne({ userID: user.userID })
-              .queryForApiResponse('findOne', session?.user)
+            await UserModel.findOne({ _id: user._id })
+              .queryForUsers('findOne')
+              .queryForFilteredUsers('findOne', session?.user)
               .exec((error: Error, user: any) => {
                 // If something goes wrong, this is
                 // a server issue. If there was something
@@ -108,24 +108,25 @@ const routerMap: TMetisRouterMap = (router: expressWs.Router, done) => {
       },
       {
         query: {
-          userID: 'string',
+          _id: 'objectId',
         },
       },
     ),
     async (request: Request, response: Response) => {
       let { query } = request
-      let { userID } = query
+      let { _id } = query
 
       let session: MetisSession | undefined = MetisSession.get(
-        request.session.userID,
+        request.session.userId,
       )
 
-      if (userID === undefined) {
+      if (_id === undefined) {
         let queries: any = {}
 
         try {
           await UserModel.find({ ...queries })
-            .queryForApiResponse('find', session?.user)
+            .queryForUsers('find')
+            .queryForFilteredUsers('find', session?.user)
             .exec((error: Error, users: any) => {
               if (error !== null || users === null) {
                 databaseLogger.error('Failed to retrieve users.')
@@ -142,24 +143,25 @@ const routerMap: TMetisRouterMap = (router: expressWs.Router, done) => {
         }
       } else {
         try {
-          await UserModel.findOne({ userID })
-            .queryForApiResponse('findOne', session?.user)
+          await UserModel.findOne({ _id: _id })
+            .queryForUsers('findOne')
+            .queryForFilteredUsers('findOne', session?.user)
             .exec((error: Error, user: any) => {
               if (error !== null) {
                 databaseLogger.error(
-                  `Failed to retrieve user with ID "${userID}".`,
+                  `Failed to retrieve user with ID "${_id}".`,
                 )
                 databaseLogger.error(error)
                 return response.sendStatus(500)
               } else if (user === null) {
                 return response.sendStatus(404)
               } else {
-                databaseLogger.info(`User with ID "${userID}" retrieved.`)
+                databaseLogger.info(`User with ID "${_id}" retrieved.`)
                 return response.json(user)
               }
             })
         } catch (error) {
-          databaseLogger.error(`Failed to retrieve user with ID "${userID}".`)
+          databaseLogger.error(`Failed to retrieve user with ID "${_id}".`)
           databaseLogger.error(error)
         }
       }
@@ -172,7 +174,7 @@ const routerMap: TMetisRouterMap = (router: expressWs.Router, done) => {
     // Retrieve the session with the session
     // ID stored in the request.
     let session: MetisSession | undefined = MetisSession.get(
-      request.session.userID,
+      request.session.userId,
     )
 
     // If the session was not found, return
@@ -183,7 +185,7 @@ const routerMap: TMetisRouterMap = (router: expressWs.Router, done) => {
     // Else, convert and return the session
     // as JSON.
     else {
-      return response.json(session.toJSON())
+      return response.json(session.toJson())
     }
   })
 
@@ -196,15 +198,16 @@ const routerMap: TMetisRouterMap = (router: expressWs.Router, done) => {
       {
         body: {
           user: {
-            userID: RequestBodyFilters.USER_ID,
+            _id: RequestBodyFilters.OBJECTID,
           },
         },
       },
       {
         body: {
           user: {
-            roleID: RequestBodyFilters.ROLE,
-            expressPermissionIDs: RequestBodyFilters.ARRAY,
+            username: RequestBodyFilters.USERNAME,
+            roleId: RequestBodyFilters.ROLE,
+            expressPermissionIds: RequestBodyFilters.ARRAY,
             firstName: RequestBodyFilters.NAME,
             lastName: RequestBodyFilters.NAME,
             password: RequestBodyFilters.PASSWORD,
@@ -216,98 +219,103 @@ const routerMap: TMetisRouterMap = (router: expressWs.Router, done) => {
     async (request: Request, response: Response) => {
       let { body } = request
       let { user: userUpdates } = body
-      let { userID, password } = userUpdates
+      let { _id, password } = userUpdates
 
       if (password !== undefined) {
         userUpdates.password = await hashPassword(password)
       }
 
       let session: MetisSession | undefined = MetisSession.get(
-        request.session.userID,
+        request.session.userId,
       )
 
       try {
         // Original user is retrieved.
-        await UserModel.findOne({ userID }).exec((error: Error, user: any) => {
-          // Handles errors.
-          if (error !== null) {
-            databaseLogger.error(
-              `### Failed to retrieve user with ID "${userID}".`,
-            )
-            databaseLogger.error(error)
-            return response.sendStatus(500)
-          }
-          // Handles user not found.
-          else if (user === null) {
-            return response.sendStatus(404)
-          }
-          // Handle proper user retrieval.
-          else {
-            // Places all values found in
-            // userUpdates and puts it in
-            // the retrieved mongoose document.
-            for (let key in userUpdates) {
-              if (key !== '_id' && key !== 'userID') {
-                user[key] = userUpdates[key]
-              }
+        await UserModel.findOne({ _id: _id })
+          .queryForFilteredUsers('findOne', session?.user)
+          .exec((error: Error, user: any) => {
+            // Handles errors.
+            if (error !== null) {
+              databaseLogger.error(
+                `### Failed to retrieve user with ID "${_id}".`,
+              )
+              databaseLogger.error(error)
+              return response.sendStatus(500)
             }
-
-            // Save the updated user.
-            user.save(async (error: Error) => {
-              // Handles errors.
-              if (error !== null) {
-                databaseLogger.error(
-                  `### Failed to update user with ID "${userID}".`,
-                )
-                databaseLogger.error(error)
-
-                // If this error was a validation error,
-                // then it is a bad request.
-                if (error.message.includes('validation failed')) {
-                  return response.sendStatus(400)
-                }
-                // Else it's a server error.
-                else {
-                  return response.sendStatus(500)
+            // Handles user not found.
+            else if (user === null) {
+              return response.sendStatus(404)
+            }
+            // Handle proper user retrieval.
+            else {
+              // Places all values found in
+              // userUpdates and puts it in
+              // the retrieved mongoose document.
+              for (let key in userUpdates) {
+                if (key !== '_id') {
+                  user[key] = userUpdates[key]
                 }
               }
-              // Handles successful save.
-              else {
-                try {
-                  // Retrieves newly updated user
-                  // to return in response. This is
-                  // called again, one to call the
-                  // queryForApiResponse function,
-                  // and two, to ensure what's returned
-                  // is what is in the database.
-                  await UserModel.findOne({ userID })
-                    .queryForApiResponse('findOne', session?.user)
-                    .exec((error: Error, user: any) => {
-                      // If something goes wrong, this is
-                      // a server issue. If there was something
-                      // the client did, an error would have
-                      // already been thrown in the first query.
-                      if (error || !user) {
-                        databaseLogger.error(
-                          'Failed to retrieve newly updated user',
-                        )
-                        databaseLogger.error(error)
-                        return response.sendStatus(500)
-                      } else {
-                        // Return updated mission to the user.
-                        return response.send({ user: user })
-                      }
-                    })
-                } catch (error) {
-                  databaseLogger.error('Failed to retrieve newly updated user')
+
+              // Save the updated user.
+              user.save(async (error: Error) => {
+                // Handles errors.
+                if (error !== null) {
+                  databaseLogger.error(
+                    `### Failed to update user with ID "${_id}".`,
+                  )
                   databaseLogger.error(error)
+
+                  // If this error was a validation error,
+                  // then it is a bad request.
+                  if (error.message.includes('validation failed')) {
+                    return response.sendStatus(400)
+                  }
+                  // Else it's a server error.
+                  else {
+                    return response.sendStatus(500)
+                  }
                 }
-              }
-            })
-          }
-        })
+                // Handles successful save.
+                else {
+                  try {
+                    // Retrieves newly updated user
+                    // to return in response. This is
+                    // called again, one to call the
+                    // queryForUsers function,
+                    // and two, to ensure what's returned
+                    // is what is in the database.
+                    await UserModel.findOne({ _id: _id })
+                      .queryForUsers('findOne')
+                      .queryForFilteredUsers('findOne', session?.user)
+                      .exec((error: Error, user: any) => {
+                        // If something goes wrong, this is
+                        // a server issue. If there was something
+                        // the client did, an error would have
+                        // already been thrown in the first query.
+                        if (error || !user) {
+                          databaseLogger.error(
+                            'Failed to retrieve newly updated user',
+                          )
+                          databaseLogger.error(error)
+                          return response.sendStatus(500)
+                        } else {
+                          // Return updated mission to the user.
+                          return response.send({ user: user })
+                        }
+                      })
+                  } catch (error) {
+                    databaseLogger.error(
+                      'Failed to retrieve newly updated user',
+                    )
+                    databaseLogger.error(error)
+                  }
+                }
+              })
+            }
+          })
       } catch (error) {
-        databaseLogger.error(`Failed to update user with ID "${userID}".`)
+        databaseLogger.error(`Failed to update user with ID "${_id}".`)
         databaseLogger.error(error)
       }
     },
@@ -320,105 +328,109 @@ const routerMap: TMetisRouterMap = (router: expressWs.Router, done) => {
     auth({ permissions: [] }),
     defineRequests({
       body: {
-        userID: RequestBodyFilters.USER_ID,
+        _id: RequestBodyFilters.OBJECTID,
         password: RequestBodyFilters.PASSWORD,
         needsPasswordReset: RequestBodyFilters.BOOLEAN,
       },
     }),
     async (request: Request, response: Response) => {
       let { body } = request
-      let { userID, password } = body
+      let { _id, password } = body
 
       if (password !== undefined) {
         body.password = await hashPassword(password)
       }
 
       let session: MetisSession | undefined = MetisSession.get(
-        request.session.userID,
+        request.session.userId,
       )
 
       try {
         // Original user is retrieved.
-        await UserModel.findOne({ userID }).exec((error: Error, user: any) => {
-          // Handles errors.
-          if (error !== null) {
-            databaseLogger.error(
-              `### Failed to retrieve user with ID "${userID}".`,
-            )
-            databaseLogger.error(error)
-            return response.sendStatus(500)
-          }
-          // Handles user not found.
-          else if (user === null) {
-            return response.sendStatus(404)
-          }
-          // Handle proper user retrieval.
-          else {
-            // Places all values found in
-            // userUpdates and puts it in
-            // the retrieved mongoose document.
-            for (let key in body) {
-              if (key !== '_id' && key !== 'userID') {
-                user[key] = body[key]
-              }
+        await UserModel.findOne({ _id: _id }).exec(
+          (error: Error, user: any) => {
+            // Handles errors.
+            if (error !== null) {
+              databaseLogger.error(
+                `### Failed to retrieve user with ID "${_id}".`,
+              )
+              databaseLogger.error(error)
+              return response.sendStatus(500)
             }
-
-            // Save the updated user.
-            user.save(async (error: Error) => {
-              // Handles errors.
-              if (error !== null) {
-                databaseLogger.error(
-                  `### Failed to update user with ID "${userID}".`,
-                )
-                databaseLogger.error(error)
-
-                // If this error was a validation error,
-                // then it is a bad request.
-                if (error.message.includes('validation failed')) {
-                  return response.sendStatus(400)
-                }
-                // Else it's a server error.
-                else {
-                  return response.sendStatus(500)
+            // Handles user not found.
+            else if (user === null) {
+              return response.sendStatus(404)
+            }
+            // Handle proper user retrieval.
+            else {
+              // Places all values found in
+              // userUpdates and puts it in
+              // the retrieved mongoose document.
+              for (let key in body) {
+                if (key !== '_id') {
+                  user[key] = body[key]
                 }
               }
-              // Handles successful save.
-              else {
-                try {
-                  // Retrieves newly updated user
-                  // to return in response. This is
-                  // called again, one to call the
-                  // queryForApiResponse function,
-                  // and two, to ensure what's returned
-                  // is what is in the database.
-                  await UserModel.findOne({ userID })
-                    .queryForApiResponse('findOne', session?.user)
-                    .exec((error: Error, user: any) => {
-                      // If something goes wrong, this is
-                      // a server issue. If there was something
-                      // the client did, an error would have
-                      // already been thrown in the first query.
-                      if (error || !user) {
-                        databaseLogger.error(
-                          'Failed to retrieve newly updated user',
-                        )
-                        databaseLogger.error(error)
-                        return response.sendStatus(500)
-                      } else {
-                        // Return updated mission to the user.
-                        return response.send({ user: user })
-                      }
-                    })
-                } catch (error) {
-                  databaseLogger.error('Failed to retrieve newly updated user')
+
+              // Save the updated user.
+              user.save(async (error: Error) => {
+                // Handles errors.
+                if (error !== null) {
+                  databaseLogger.error(
+                    `### Failed to update user with ID "${_id}".`,
+                  )
                   databaseLogger.error(error)
+
+                  // If this error was a validation error,
+                  // then it is a bad request.
+                  if (error.message.includes('validation failed')) {
+                    return response.sendStatus(400)
+                  }
+                  // Else it's a server error.
+                  else {
+                    return response.sendStatus(500)
+                  }
                 }
-              }
-            })
-          }
-        })
+                // Handles successful save.
+                else {
+                  try {
+                    // Retrieves newly updated user
+                    // to return in response. This is
+                    // called again, one to call the
+                    // queryForUsers function,
+                    // and two, to ensure what's returned
+                    // is what is in the database.
+                    await UserModel.findOne({ _id: _id })
+                      .queryForUsers('findOne')
+                      .exec((error: Error, user: any) => {
+                        // If something goes wrong, this is
+                        // a server issue. If there was something
+                        // the client did, an error would have
+                        // already been thrown in the first query.
+                        if (error || !user) {
+                          databaseLogger.error(
+                            'Failed to retrieve newly updated user',
+                          )
+                          databaseLogger.error(error)
+                          return response.sendStatus(500)
+                        } else {
+                          // Return updated mission to the user.
+                          return response.send({ user: user })
+                        }
+                      })
+                  } catch (error) {
+                    databaseLogger.error(
+                      'Failed to retrieve newly updated user',
+                    )
+                    databaseLogger.error(error)
+                  }
+                }
+              })
+            }
+          },
+        )
       } catch (error) {
-        databaseLogger.error(`Failed to update user with ID "${userID}".`)
+        databaseLogger.error(`Failed to update user with ID "${_id}".`)
         databaseLogger.error(error)
       }
     },
@@ -431,18 +443,18 @@ const routerMap: TMetisRouterMap = (router: expressWs.Router, done) => {
     auth({ permissions: ['users_write_students'] }),
     defineRequests({
       query: {
-        userID: 'string',
+        _id: 'objectId',
       },
     }),
     async (request: Request, response: Response) => {
       let { query } = request
-      let { userID } = query
+      let { _id } = query
 
       try {
-        await UserModel.updateOne({ userID: userID }, { deleted: true })
+        await UserModel.updateOne({ _id: _id }, { deleted: true })
           .exec()
           .then(() => {
-            databaseLogger.info(`Deleted user with the ID "${userID}".`)
+            databaseLogger.info(`Deleted user with the ID "${_id}".`)
             return response.sendStatus(200)
           })
       } catch (error) {
@@ -458,7 +470,7 @@ const routerMap: TMetisRouterMap = (router: expressWs.Router, done) => {
     '/login',
     defineRequests({
       body: {
-        userID: RequestBodyFilters.USER_ID,
+        username: RequestBodyFilters.USERNAME,
         password: RequestBodyFilters.PASSWORD,
       },
     }),
@@ -487,11 +499,11 @@ const routerMap: TMetisRouterMap = (router: expressWs.Router, done) => {
 
                 // Store the session ID in the express
                 // session.
-                request.session.userID = session.userID
+                request.session.userId = session.userId
 
                 // Store the session data in the response
                 // json.
-                json.session = session.toJSON()
+                json.session = session.toJson()
               } catch (error) {
                 // Session is already created for the given
                 // user.
@@ -512,7 +524,7 @@ const routerMap: TMetisRouterMap = (router: expressWs.Router, done) => {
       // If session exists.
       if (request.session) {
         // Destroy the METIS session.
-        MetisSession.destroy(request.session.userID)
+        MetisSession.destroy(request.session.userId)
 
         // Then destroy the Express session.
         request.session.destroy((error) => {

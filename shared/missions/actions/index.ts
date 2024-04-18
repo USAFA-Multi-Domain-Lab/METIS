@@ -1,5 +1,6 @@
 import { v4 as generateHash } from 'uuid'
 import { TCommonMission } from '..'
+import { uuidTypeValidator } from '../../toolbox/validators'
 import { TCommonEffect, TCommonEffectJson } from '../effects'
 import { TCommonMissionNode } from '../nodes'
 
@@ -16,7 +17,7 @@ export default abstract class MissionAction<
   public node: TMissionNode
 
   // Inherited
-  public actionID: TCommonMissionAction['actionID']
+  public _id: TCommonMissionAction['_id']
 
   // Inherited
   public name: TCommonMissionAction['name']
@@ -66,7 +67,7 @@ export default abstract class MissionAction<
     data: Partial<TCommonMissionActionJson> = MissionAction.DEFAULT_PROPERTIES,
   ) {
     this.node = node
-    this.actionID = data.actionID ?? MissionAction.DEFAULT_PROPERTIES.actionID
+    this._id = data._id ?? MissionAction.DEFAULT_PROPERTIES._id
     this.name = data.name ?? MissionAction.DEFAULT_PROPERTIES.name
     this.description =
       data.description ?? MissionAction.DEFAULT_PROPERTIES.description
@@ -90,14 +91,13 @@ export default abstract class MissionAction<
   /**
    * Parses the effect data into Effect Objects.
    * @param data The effect data to parse.
-   * @returns {TCommonMissionAction['effects']} An array of Effect Objects.
+   * @returns An array of Effect Objects.
    */
   public abstract parseEffects(data: TCommonEffectJson[]): TEffect[]
 
-  // inherited
+  // Implemented
   public toJson(): TCommonMissionActionJson {
-    return {
-      actionID: this.actionID,
+    let json: TCommonMissionActionJson = {
       name: this.name,
       description: this.description,
       processTime: this.processTime,
@@ -107,14 +107,26 @@ export default abstract class MissionAction<
       postExecutionFailureText: this.postExecutionFailureText,
       effects: this.effects.map((effect) => effect.toJson()),
     }
+
+    // Include _id if its not a UUID.
+    // * Note: IDs in the database are
+    // * stored as mongoose ObjectIds.
+    // * If the ID is a UUID, then the
+    // * mission won't save.
+    let isObjectId: boolean = !uuidTypeValidator(this._id) ? true : false
+    if (isObjectId) {
+      json._id = this._id
+    }
+
+    return json
   }
 
   /**
    * Default properties set when creating a new MissionAction object.
    */
-  public static get DEFAULT_PROPERTIES(): TCommonMissionActionJson {
+  public static get DEFAULT_PROPERTIES(): Required<TCommonMissionActionJson> {
     return {
-      actionID: generateHash(),
+      _id: generateHash(),
       name: 'New Action',
       description: '<p><br></p>',
       processTime: 5000,
@@ -155,7 +167,7 @@ export interface TCommonMissionAction {
   /**
    * The ID of the action.
    */
-  actionID: string
+  _id: string
   /**
    * The name of the action.
    */
@@ -202,7 +214,7 @@ export interface TCommonMissionAction {
   mission: TCommonMission
   /**
    * Converts the action to JSON.
-   * @returns {TCommonMissionActionJson} the JSON for the action.
+   * @returns the JSON for the action.
    */
   toJson: (options?: TMissionActionJsonOtions) => TCommonMissionActionJson
 }
@@ -214,7 +226,7 @@ export interface TCommonMissionActionJson {
   /**
    * The ID of the action.
    */
-  actionID: string
+  _id?: string
   /**
    * The name of the action.
    */

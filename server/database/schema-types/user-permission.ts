@@ -10,8 +10,8 @@ export class Permission extends mongoose.SchemaType {
   /**
    * This is called when a new instance of the schema type
    * is created.
-   * @param {string} key The key of the schema type.
-   * @param {any} options The options passed to the schema type.
+   * @param key The key of the schema type.
+   * @param options The options passed to the schema type.
    */
   constructor(key: string, options: any) {
     super(key, options)
@@ -19,21 +19,21 @@ export class Permission extends mongoose.SchemaType {
 
   /**
    * This is called when a value is passed to the constructor.
-   * @param {TUserPermission['id']} permissionID The value passed to the constructor.
-   * @returns {TUserPermission['id']} A user permission ID or an error.
+   * @param permissionId The value passed to the constructor.
+   * @returns A user permission ID or an error.
    */
-  public cast(permissionID: TUserPermission['id']): TUserPermission['id'] {
+  public cast(permissionId: TUserPermission['_id']): TUserPermission['_id'] {
     // Checks to make sure the permission ID that's passed
     // is valid.
-    let isValidPermissionID: boolean =
-      UserPermission.isValidPermissionID(permissionID)
+    let isValidPermissionId: boolean =
+      UserPermission.isValidPermissionId(permissionId)
 
     // Checks if the permission parameter is a valid permission.
-    if (isValidPermissionID) {
-      return permissionID
+    if (isValidPermissionId) {
+      return permissionId
     } else {
-      databaseLogger.error(`Invalid user permission ID: ${permissionID}`)
-      throw new Error(`Invalid user permission ID: ${permissionID}`)
+      databaseLogger.error(`Invalid user permission ID: ${permissionId}`)
+      throw new Error(`Invalid user permission ID: ${permissionId}`)
     }
   }
 }

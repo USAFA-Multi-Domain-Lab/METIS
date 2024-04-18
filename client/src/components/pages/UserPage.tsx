@@ -17,11 +17,17 @@ import './UserPage.scss'
 /**
  * Renders a page for creating or editing a user.
  */
-export default function UserPage(props: IUserPage): JSX.Element | null {
+export default function UserPage({ userId }: IUserPage): JSX.Element | null {
   /* -- GLOBAL CONTEXT -- */
   const globalContext = useGlobalContext()
-  const { beginLoading, finishLoading, handleError, notify, prompt } =
-    globalContext.actions
+  const {
+    beginLoading,
+    finishLoading,
+    handleError,
+    notify,
+    prompt,
+    navigateTo,
+  } = globalContext.actions
 
   /* -- COMPONENT STATE -- */
 
@@ -38,14 +44,13 @@ export default function UserPage(props: IUserPage): JSX.Element | null {
 
   // componentDidMount
   const [mountHandled] = useMountHandler(async (done) => {
-    let userID: string | null = props.userID
-    let existsInDatabase: boolean = userID !== null
+    let existsInDatabase: boolean = userId !== null
 
     // Handle the editing of an existing user.
     if (existsInDatabase && currentUser.isAuthorized('users_read_students')) {
       try {
         beginLoading('Loading user...')
-        setUser(await ClientUser.$fetchOne(userID as string))
+        setUser(await ClientUser.$fetchOne(userId as string))
       } catch {
         handleError('Failed to load user.')
       }
@@ -188,18 +193,15 @@ export default function UserPage(props: IUserPage): JSX.Element | null {
         currentUser.isAuthorized('users_write_students')
       ) {
         try {
-          let currentUserID: string = user.userID
           beginLoading('Creating user...')
           await ClientUser.$create(user)
-          setUser(await ClientUser.$fetchOne(currentUserID))
           notify('User successfully saved.')
           finishLoading()
           setExistsInDatabase(true)
+          navigateTo('HomePage', {})
         } catch (error: any) {
           if (error instanceof AxiosError && error.response?.status === 409) {
-            notify(
-              'This username already exists. Try using a different username.',
-            )
+            notify('This user already exists. Try using a different username.')
             setUsernameAlreadyExists(true)
           } else {
             notify('User failed to save.', { errorMessage: true })
@@ -214,7 +216,7 @@ export default function UserPage(props: IUserPage): JSX.Element | null {
         try {
           beginLoading('Updating user...')
           await ClientUser.$update(user)
-          setUser(await ClientUser.$fetchOne(user.userID))
+          setUser(await ClientUser.$fetchOne(user._id))
           notify('User successfully saved.')
           finishLoading()
         } catch (error: any) {
@@ -253,6 +255,7 @@ export default function UserPage(props: IUserPage): JSX.Element | null {
       return (
         <EditUserEntry
           user={user}
+          usernameAlreadyExists={usernameAlreadyExists}
           userEmptyStringArray={userEmptyStringArray}
           setUserEmptyStringArray={setUserEmptyStringArray}
           handleChange={handleChange}
@@ -292,7 +295,7 @@ export default function UserPage(props: IUserPage): JSX.Element | null {
  */
 export interface IUserPage extends TPage_P {
   // If this is null, then a new user is being created.
-  userID: string | null
+  userId: string | null
 }
 
 /**

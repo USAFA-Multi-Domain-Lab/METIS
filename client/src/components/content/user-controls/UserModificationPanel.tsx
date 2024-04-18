@@ -42,13 +42,13 @@ export default function UserModificationPanel({
     // If the user confirms the deletion, proceed.
     if (choice === 'Confirm') {
       try {
-        await ClientUser.$delete(user.userID)
+        await ClientUser.$delete(user._id)
         finishLoading()
-        notify(`Successfully deleted ${user.userID}.`)
+        notify(`Successfully deleted ${user.username}.`)
         onSuccessfulDeletion()
       } catch (error: any) {
         finishLoading()
-        notify(`Failed to delete ${user.userID}.`)
+        notify(`Failed to delete ${user.username}.`)
       }
     }
   }

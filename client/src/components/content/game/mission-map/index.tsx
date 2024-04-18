@@ -437,7 +437,7 @@ export default function MissionMap({
       // Return the JSX for the node.
       return (
         <MissionNode
-          key={node.nodeID}
+          key={node._id}
           node={node}
           cameraZoom={cameraZoom}
           onSelect={onSelect}
@@ -465,7 +465,7 @@ export default function MissionMap({
    */
   const nodeCreatorsJsx = useMemo((): JSX.Element[] => {
     return mission.nodeCreators.map((creator) => (
-      <MissionNodeCreator key={creator.nodeID} creator={creator} />
+      <MissionNodeCreator key={creator.nodeId} creator={creator} />
     ))
   }, [
     // ! Recomputes when:

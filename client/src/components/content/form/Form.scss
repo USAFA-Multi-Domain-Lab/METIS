@@ -17,7 +17,7 @@
 
   .TitleContainer {
     display: grid;
-    grid-template-columns: auto 60px;
+    grid-template-columns: 1fr auto;
     align-items: center;
     margin: 11px 0 0;
 
@@ -287,8 +287,8 @@
     margin: 20px 8% 0;
     width: 84%;
 
-    .Label {
-      font-size: 0.78em;
+    .TitleContainer {
+      margin: 0;
     }
 
     .Field {
@@ -299,6 +299,26 @@
 
     .FieldErrorMessage {
       grid-column: span 2;
+    }
+  }
+
+  &.DetailLocked {
+    .Field {
+      display: grid;
+      align-items: center;
+      grid-template-columns: 1fr auto;
+
+      .Lock {
+        user-select: none;
+        cursor: help;
+
+        background: url('/assets/images/icons/lock.svg');
+        background-repeat: no-repeat;
+        background-size: 100%;
+        background-position: center;
+        width: 1em;
+        height: 1em;
+      }
     }
   }
 }

@@ -1,6 +1,6 @@
 import { TCommonMissionActionJson } from 'metis/missions/actions'
 import { TActionExecutionJSON } from 'metis/missions/actions/executions'
-import { IActionOutcomeJSON } from 'metis/missions/actions/outcomes'
+import { TActionOutcomeJson } from 'metis/missions/actions/outcomes'
 import MissionNode from 'metis/missions/nodes'
 import ServerMission from '..'
 import ServerMissionAction from '../actions'
@@ -27,7 +27,7 @@ export default class ServerMissionNode extends MissionNode<
     >()
     data.forEach((datum) => {
       let action: ServerMissionAction = new ServerMissionAction(this, datum)
-      actions.set(action.actionID, action)
+      actions.set(action._id, action)
     })
     return actions
   }
@@ -43,7 +43,7 @@ export default class ServerMissionNode extends MissionNode<
 
     // Get action for the ID passed.
     let action: ServerMissionAction | undefined = this.actions.get(
-      data.actionID,
+      data.actionId,
     )
 
     // Handle undefined action.
@@ -57,13 +57,13 @@ export default class ServerMissionNode extends MissionNode<
 
   // Implemented
   protected parseOutcomeData(
-    data: Array<IActionOutcomeJSON>,
+    data: Array<TActionOutcomeJson>,
   ): Array<ServerRealizedOutcome> {
     // Map JSON to an Array of outcome objects.
-    return data.map((datum: IActionOutcomeJSON) => {
+    return data.map((datum: TActionOutcomeJson) => {
       // Get action for ID passed.
       let action: ServerMissionAction | undefined = this.actions.get(
-        datum.actionID,
+        datum.actionId,
       )
 
       // Handle undefined action.
@@ -95,8 +95,8 @@ export default class ServerMissionNode extends MissionNode<
     data: NonNullable<TActionExecutionJSON>,
   ): ServerActionExecution {
     // Get the action action being executed.
-    let { actionID } = data
-    let action = this.actions.get(actionID)
+    let { actionId } = data
+    let action = this.actions.get(actionId)
 
     // Throw an error if action is undefined.
     if (action === undefined) {
@@ -121,10 +121,10 @@ export default class ServerMissionNode extends MissionNode<
   }
 
   // Implemented
-  public loadOutcome(data: IActionOutcomeJSON): ServerRealizedOutcome {
+  public loadOutcome(data: TActionOutcomeJson): ServerRealizedOutcome {
     // Get the action for the outcome.
     let action: ServerMissionAction | undefined = this.actions.get(
-      data.actionID,
+      data.actionId,
     )
 
     // Throw an error if action is undefined.

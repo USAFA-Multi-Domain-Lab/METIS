@@ -12,7 +12,7 @@ import MetisServer from 'metis/server'
 import MissionModel from 'metis/server/database/models/missions'
 import UserModel, { hashPassword } from 'metis/server/database/models/users'
 import { TCommonUserJson } from 'metis/users'
-import UserRole, { TUserRoleID } from 'metis/users/roles'
+import UserRole, { TUserRoleId } from 'metis/users/roles'
 import { testLogger } from '../logging'
 
 // global fields
@@ -22,7 +22,7 @@ let PORT: number = server.port
 let MONGO_DB: string = server.mongoDB
 const baseUrl = `localhost:${PORT}`
 const MONGO_TEST_DB: string = 'metis-test'
-const permittedUserRole: TUserRoleID = UserRole.AVAILABLE_ROLES.admin.id
+const permittedUserRole: TUserRoleId = UserRole.AVAILABLE_ROLES.admin._id
 let agent: ChaiHttp.Agent
 
 // json
@@ -222,9 +222,9 @@ const correctUpdateTestMission = {
 }
 const correctUser: { user: TCommonUserJson } = {
   user: {
-    userID: 'test23',
-    roleID: UserRole.AVAILABLE_ROLES.student.id,
-    expressPermissionIDs: [],
+    username: 'test23',
+    roleId: UserRole.AVAILABLE_ROLES.student._id,
+    expressPermissionIds: [],
     firstName: 'Test',
     lastName: 'User',
     needsPasswordReset: false,
@@ -233,9 +233,9 @@ const correctUser: { user: TCommonUserJson } = {
 }
 let newCorrectUser: { user: TCommonUserJson } = {
   user: {
-    userID: 'test24',
-    roleID: UserRole.AVAILABLE_ROLES.student.id,
-    expressPermissionIDs: [],
+    username: 'test24',
+    roleId: UserRole.AVAILABLE_ROLES.student._id,
+    expressPermissionIds: [],
     firstName: 'Test',
     lastName: 'User',
     needsPasswordReset: false,
@@ -244,9 +244,9 @@ let newCorrectUser: { user: TCommonUserJson } = {
 }
 const userWithNoPassword: { user: TCommonUserJson } = {
   user: {
-    userID: 'test23',
-    roleID: UserRole.AVAILABLE_ROLES.student.id,
-    expressPermissionIDs: [],
+    username: 'test23',
+    roleId: UserRole.AVAILABLE_ROLES.student._id,
+    expressPermissionIds: [],
     firstName: 'Test',
     lastName: 'User',
     needsPasswordReset: false,
@@ -1822,7 +1822,7 @@ describe('User API Routes', function () {
   it('Deleting a mission with all the correct properties in the query of the request should return a successful (200) response', async function () {
     try {
       let response = await agent.delete(
-        `/api/v1/users?userID=${correctUser.user.userID}`,
+        `/api/v1/users?userID=${correctUser.user.username}`,
       )
 
       expect(response).to.have.status(200)
@@ -1856,8 +1856,8 @@ describe('User Schema Validation', function () {
       // Saves the user to the database
       let savedUser = await user.save()
 
-      expect(savedUser.userID).to.equal(newCorrectUser.user.userID)
-      expect(savedUser.roleID).to.equal(newCorrectUser.user.roleID)
+      expect(savedUser.userID).to.equal(newCorrectUser.user.username)
+      expect(savedUser.roleID).to.equal(newCorrectUser.user.roleId)
       expect(savedUser.firstName).to.equal(newCorrectUser.user.firstName)
       expect(savedUser.lastName).to.equal(newCorrectUser.user.lastName)
       hashedPassword = savedUser.password
@@ -1875,11 +1875,11 @@ describe('User Schema Validation', function () {
   it('Querying for the newly created user should return the correct user', async function () {
     try {
       let retrievedUser = await UserModel.findOne({
-        userID: newCorrectUser.user.userID,
+        userID: newCorrectUser.user.username,
       }).exec()
 
-      expect(retrievedUser.userID).to.equal(newCorrectUser.user.userID)
-      expect(retrievedUser.roleID).to.equal(newCorrectUser.user.roleID)
+      expect(retrievedUser.userID).to.equal(newCorrectUser.user.username)
+      expect(retrievedUser.roleID).to.equal(newCorrectUser.user.roleId)
       expect(retrievedUser.firstName).to.equal(newCorrectUser.user.firstName)
       expect(retrievedUser.lastName).to.equal(newCorrectUser.user.lastName)
       let isHashedPassword: boolean = hashedPasswordExpression.test(
@@ -1897,7 +1897,7 @@ describe('User Schema Validation', function () {
     try {
       let savedUser = await UserModel.updateOne(
         {
-          userID: newCorrectUser.user.userID,
+          userID: newCorrectUser.user.username,
         },
         {
           firstName: 'updatedFirstName',
@@ -1917,11 +1917,11 @@ describe('User Schema Validation', function () {
   it('Querying for the updated user should return the correct user', async function () {
     try {
       let retrievedUser = await UserModel.findOne({
-        userID: newCorrectUser.user.userID,
+        userID: newCorrectUser.user.username,
       }).exec()
 
-      expect(retrievedUser.userID).to.equal(newCorrectUser.user.userID)
-      expect(retrievedUser.roleID).to.equal(newCorrectUser.user.roleID)
+      expect(retrievedUser.userID).to.equal(newCorrectUser.user.username)
+      expect(retrievedUser.roleID).to.equal(newCorrectUser.user.roleId)
       expect(retrievedUser.firstName).to.equal('updatedFirstName')
       expect(retrievedUser.lastName).to.equal('updatedLastName')
       let isHashedPassword: boolean = hashedPasswordExpression.test(

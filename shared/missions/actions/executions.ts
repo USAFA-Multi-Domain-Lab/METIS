@@ -8,11 +8,11 @@ export type TActionExecutionJSON = {
   /**
    * The ID of the action executed.
    */
-  actionID: string
+  actionId: string
   /**
    * The ID of the node upon which the action executed.
    */
-  nodeID: string
+  nodeId: string
   /**
    * The timestamp for when the action began executing.
    */
@@ -38,11 +38,11 @@ export default interface IActionExecution {
   /**
    * The ID of the action executed.
    */
-  actionID: string
+  actionId: string
   /**
    * The ID of the node upon which the action executed.
    */
-  nodeID: string
+  nodeId: string
   /**
    * The timestamp for when the action began executing.
    */

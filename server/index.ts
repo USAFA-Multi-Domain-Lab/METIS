@@ -17,7 +17,7 @@ const defaults = require('../defaults')
 
 declare module 'express-session' {
   export interface SessionData {
-    userID: string
+    userId: string
   }
 }
 

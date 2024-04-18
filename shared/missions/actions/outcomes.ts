@@ -1,18 +1,18 @@
-import { TCommonMissionAction } from '.'
-import { TCommonMissionNode } from '../nodes'
+import { TCommonMissionAction, TCommonMissionActionJson } from '.'
+import { TCommonMissionNode, TCommonMissionNodeJson } from '../nodes'
 
 /**
  * The JSON representation of an action outcome.
  */
-export interface IActionOutcomeJSON {
+export interface TActionOutcomeJson {
   /**
    * The ID of the action executed.
    */
-  actionID: string
+  actionId: NonNullable<TCommonMissionActionJson['_id']>
   /**
    * The ID of the node upon which the action executed.
    */
-  nodeID: string
+  nodeId: TCommonMissionNodeJson['_id']
   /**
    * Whether the action is successful in its execution.
    */
@@ -34,11 +34,11 @@ export default interface IActionOutcome {
   /**
    * The ID of the action executed.
    */
-  actionID: string
+  actionId: TCommonMissionAction['_id']
   /**
    * The ID of the node upon which the action executed.
    */
-  nodeID: string
+  nodeId: TCommonMissionNode['_id']
   /**
    * Whether the action is successful in its execution.
    */
@@ -46,5 +46,5 @@ export default interface IActionOutcome {
   /**
    * Converts the action outcome to JSON.
    */
-  toJson: () => IActionOutcomeJSON
+  toJson: () => TActionOutcomeJson
 }

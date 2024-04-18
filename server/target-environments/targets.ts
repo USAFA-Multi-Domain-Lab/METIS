@@ -19,7 +19,7 @@ export default class ServerTarget extends Target<ServerTargetEnvironment> {
     for (let targetEnvironment of targetEnvironments) {
       // Find the target that matches the ID.
       target = targetEnvironment.targets.find(
-        (target: ServerTarget) => target.id === id,
+        (target: ServerTarget) => target._id === id,
       )
 
       // If the target is found, break the loop.
@@ -48,7 +48,7 @@ export default class ServerTarget extends Target<ServerTargetEnvironment> {
     for (let targetEnvJson of targetEnvArrayJson) {
       // Find the target JSON that matches the ID.
       targetJson = targetEnvJson.targets.find(
-        (target: TCommonTargetJson) => target.id === id,
+        (target: TCommonTargetJson) => target._id === id,
       )
 
       // If the target JSON is found, break the loop.

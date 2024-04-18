@@ -9,13 +9,13 @@ export default class MetisSession {
   /**
    * The ID of the user for the given session. This is used to retrieve the Session object from the registry.
    */
-  private _userID: ServerUser['userID']
+  private _userId: ServerUser['username']
 
   /**
    * The ID of the user for the given session. This is used to retrieve the Session object from the registry.
    */
-  public get userID(): ServerUser['userID'] {
-    return this._userID
+  public get userId(): ServerUser['username'] {
+    return this._userId
   }
 
   /**
@@ -34,7 +34,7 @@ export default class MetisSession {
    * The client connection for this session, if any.
    */
   public set client(client: ClientConnection | null) {
-    if (client !== null && client.session.userID !== this.userID) {
+    if (client !== null && client.session.userId !== this.userId) {
       throw new Error(
         'Cannot set client to a client connection with a different user ID.',
       )
@@ -59,12 +59,12 @@ export default class MetisSession {
   /**
    * The ID of the game the user is currently in, if any.
    */
-  private _gameID: string | null
+  private _gameId: string | null
   /**
    * The ID of the game the user is currently in, if any.
    */
-  public get gameID(): string | null {
-    return this._gameID
+  public get gameId(): string | null {
+    return this._gameId
   }
 
   /**
@@ -90,37 +90,37 @@ export default class MetisSession {
    * Whether the user is in a game.
    */
   public get inGame(): boolean {
-    return this.gameID !== null
+    return this.gameId !== null
   }
 
   /**
-   * @param {ServerUser} user The user associated with the session.
+   * @param user The user associated with the session.
    */
   public constructor(user: ServerUser) {
-    this._userID = user.userID
+    this._userId = user.username
     this._user = user
     this._client = null
-    this._gameID = null
+    this._gameId = null
     this._destroyed = false
 
     // Throw an error is a session already
     // exists for the given user.
-    if (MetisSession.registry.has(this.userID)) {
+    if (MetisSession.registry.has(this.userId)) {
       throw new Error('A session already exists for the given user.')
     }
 
     // Store the session in the registry.
-    MetisSession.registry.set(this.userID, this)
+    MetisSession.registry.set(this.userId, this)
   }
 
   /**
    * Converts the session object to JSON to send to the client.
    * @returns {TMetisSessionJSON} The JSON representation of the session object.
    */
-  public toJSON(): TMetisSessionJSON {
+  public toJson(): TMetisSessionJSON {
     return {
       user: this.user.toJson(),
-      gameID: this.gameID,
+      gameId: this.gameId,
     }
   }
 
@@ -128,23 +128,23 @@ export default class MetisSession {
    * Destroys the session.
    */
   public destroy(): void {
-    MetisSession.registry.delete(this.userID)
+    MetisSession.registry.delete(this.userId)
     this._destroyed = true
   }
 
   /**
    * Handles when the user joins a game.
-   * @param gameID The ID of the joined game.
+   * @param gameId The ID of the joined game.
    */
-  public handleJoin(gameID: string): void {
-    this._gameID = gameID
+  public handleJoin(gameId: string): void {
+    this._gameId = gameId
   }
 
   /**
    * Handles when the user quits a game.
    */
   public handleQuit(): void {
-    this._gameID = null
+    this._gameId = null
   }
 
   /**
@@ -159,20 +159,20 @@ export default class MetisSession {
    * @returns the session associated with the given user ID.
    */
   public static get(
-    userID: ServerUser['userID'] | undefined,
+    userId: ServerUser['username'] | undefined,
   ): MetisSession | undefined {
-    if (userID === undefined) {
+    if (userId === undefined) {
       return undefined
     } else {
-      return MetisSession.registry.get(userID)
+      return MetisSession.registry.get(userId)
     }
   }
 
   /**
    * Destroys the session associated with the given user ID.
    */
-  public static destroy(userID: ServerUser['userID'] | undefined): void {
-    let session: MetisSession | undefined = MetisSession.get(userID)
+  public static destroy(userId: ServerUser['username'] | undefined): void {
+    let session: MetisSession | undefined = MetisSession.get(userId)
     if (session !== undefined) {
       session.destroy()
     }

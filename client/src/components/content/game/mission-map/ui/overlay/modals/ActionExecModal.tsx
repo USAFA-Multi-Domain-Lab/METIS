@@ -74,7 +74,7 @@ export default function ActionExecModal({
       let action: ClientMissionAction = node.actions.values().next().value
 
       // Select the action if not already selected.
-      if (selectedAction?.actionID !== action.actionID) {
+      if (selectedAction?._id !== action._id) {
         selectAction(node.actions.values().next().value)
       }
     }
@@ -105,7 +105,7 @@ export default function ActionExecModal({
    */
   const execute = () => {
     if (selectedAction) {
-      game.executeAction(selectedAction.actionID, {
+      game.executeAction(selectedAction._id, {
         onError: (message) => handleError({ message, notifyMethod: 'bubble' }),
       })
       close()
@@ -152,7 +152,7 @@ export default function ActionExecModal({
     (action: ClientMissionAction) => {
       return (
         <Option
-          key={action.actionID}
+          key={action._id}
           game={game}
           action={action}
           select={() => {
@@ -245,7 +245,7 @@ function Option({ game, action, select }: TOption_P) {
 
   // Render root JSX.
   return (
-    <div className='Option' key={action.actionID} onClick={select}>
+    <div className='Option' key={action._id} onClick={select}>
       <Tooltip
         description={
           `**Time to execute:** ${

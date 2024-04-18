@@ -11,7 +11,7 @@ export default abstract class Target<
   public targetEnvironment: TTargetEnvironment
 
   // Inherited
-  public id: TCommonTarget['id']
+  public _id: TCommonTarget['_id']
 
   // Inherited
   public name: TCommonTarget['name']
@@ -35,7 +35,7 @@ export default abstract class Target<
     options: TTargetOptions = {},
   ) {
     this.targetEnvironment = targetEnvironment
-    this.id = data.id ?? Target.DEFAULT_PROPERTIES.id
+    this._id = data._id ?? Target.DEFAULT_PROPERTIES._id
     this.name = data.name ?? Target.DEFAULT_PROPERTIES.name
     this.description = data.description ?? Target.DEFAULT_PROPERTIES.description
     this.script = data.script ?? Target.DEFAULT_PROPERTIES.script
@@ -50,8 +50,8 @@ export default abstract class Target<
   public toJson(options: TTargetJsonOptions = {}): TCommonTargetJson {
     // Construct JSON object to send to the server.
     return {
-      targetEnvId: this.targetEnvironment.id,
-      id: this.id,
+      targetEnvId: this.targetEnvironment._id,
+      _id: this._id,
       name: this.name,
       description: this.description,
       script: this.script,
@@ -64,8 +64,8 @@ export default abstract class Target<
    */
   public static get DEFAULT_PROPERTIES(): TCommonTargetJson {
     return {
-      targetEnvId: TargetEnvironment.DEFAULT_PROPERTIES.id,
-      id: 'metis-target-default',
+      targetEnvId: TargetEnvironment.DEFAULT_PROPERTIES._id,
+      _id: 'metis-target-default',
       name: 'Select a target',
       description: 'This is a default target.',
       script: () => {},
@@ -97,7 +97,7 @@ export interface TCommonTarget {
   /**
    * The ID of the target.
    */
-  id: string
+  _id: string
   /**
    * The name of the target.
    */
@@ -131,7 +131,7 @@ export interface TCommonTargetJson {
   /**
    * The ID of the target.
    */
-  id: string
+  _id: string
   /**
    * The name of the target.
    */
@@ -159,7 +159,7 @@ type TBaseArg = {
   /**
    * The ID of the argument.
    */
-  id: string
+  _id: string
   /**
    * The argument's name. This is displayed to the user.
    */
@@ -325,7 +325,7 @@ type TDropdownArg = TBaseArg &
       /**
        * The ID of the option.
        */
-      id: string
+      _id: string
       /**
        * The option's name.
        * @note This is displayed to the user.
@@ -343,13 +343,13 @@ type TDropdownArgOptional = {
   required: false
   /**
    * The default value for the argument.
-   * @default { id: 'default', name: 'Select an option' }
+   * @default { _id: 'default', name: 'Select an option' }
    */
   default?: {
     /**
      * The ID of the option.
      */
-    id: string
+    _id: string
     /**
      * The option's name. This is displayed to the user.
      */
@@ -371,7 +371,7 @@ type TDropdownArgRequired = {
     /**
      * The ID of the option.
      */
-    id: string
+    _id: string
     /**
      * The option's name. This is displayed to the user.
      */

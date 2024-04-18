@@ -7,7 +7,7 @@ export type TTargetEnv = {
   /**
    * The ID of the target environment.
    */
-  id: string
+  _id: string
   /**
    * The name of the target environment.
    */
@@ -31,7 +31,7 @@ export type TTarget = {
   /**
    * The ID of the target.
    */
-  id: string
+  _id: string
   /**
    * The ID of the target environment.
    */
@@ -60,7 +60,7 @@ type TBaseArg = {
   /**
    * The ID of the argument.
    */
-  id: string
+  _id: string
   /**
    * The argument's name. This is displayed to the user.
    */
@@ -226,7 +226,7 @@ type TDropdownArg = TBaseArg &
       /**
        * The ID of the option.
        */
-      id: string
+      _id: string
       /**
        * The option's name.
        * @note This is displayed to the user.
@@ -244,13 +244,13 @@ type TDropdownArgOptional = {
   required: false
   /**
    * The default value for the argument.
-   * @default { id: 'default', name: 'Select an option' }
+   * @default { _id: 'default', name: 'Select an option' }
    */
   default?: {
     /**
      * The ID of the option.
      */
-    id: string
+    _id: string
     /**
      * The option's name. This is displayed to the user.
      */
@@ -272,7 +272,7 @@ type TDropdownArgRequired = {
     /**
      * The ID of the option.
      */
-    id: string
+    _id: string
     /**
      * The option's name. This is displayed to the user.
      */

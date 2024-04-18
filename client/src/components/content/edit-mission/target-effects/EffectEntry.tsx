@@ -7,7 +7,7 @@ import ClientTarget from 'src/target-environments/targets'
 import { compute } from 'src/toolbox'
 import { usePostInitEffect } from 'src/toolbox/hooks'
 import Tooltip from '../../communication/Tooltip'
-import { DetailLargeString, DetailString } from '../../form/Form'
+import { DetailLargeString, DetailLocked, DetailString } from '../../form/Form'
 import { ButtonText } from '../../user-controls/ButtonText'
 import Args from './Args'
 import './EffectEntry.scss'
@@ -91,7 +91,7 @@ export default function EffectEntry({
     setSelectedEffect(null)
     // Filter out the effect from the action.
     action.effects = action.effects.filter(
-      (actionEffect: ClientEffect) => actionEffect.id !== effect.id,
+      (actionEffect: ClientEffect) => actionEffect._id !== effect._id,
     )
     // Display the changes.
     forceUpdate()
@@ -174,28 +174,14 @@ export default function EffectEntry({
             elementBoundary='.BorderBox'
             placeholder='Enter description...'
           />
-          <div className='SelectedTargetEnv'>
-            <div className='Info'>
-              <div className='Label'>Target Environment:</div>
-              <div className='Value'>
-                <span className='Text Disabled'>{targetEnv?.name}</span>
-                <span className='Lock'>
-                  <Tooltip description='This is locked and cannot be changed.' />
-                </span>
-              </div>
-            </div>
-          </div>
-          <div className='SelectedTarget'>
-            <div className='Info'>
-              <div className='Label'>Target:</div>
-              <div className='Value'>
-                <span className='Text Disabled'>{target?.name}</span>
-                <span className='Lock'>
-                  <Tooltip description='This is locked and cannot be changed.' />
-                </span>
-              </div>
-            </div>
-          </div>
+          <DetailLocked
+            label='Target Environment'
+            stateValue={targetEnv?.name || 'No target environment selected.'}
+          />
+          <DetailLocked
+            label='Target'
+            stateValue={target?.name || 'No target selected.'}
+          />
           <Args
             target={target}
             effectArgs={effectArgs}

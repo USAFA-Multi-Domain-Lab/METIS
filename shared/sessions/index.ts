@@ -12,7 +12,7 @@ export type TMetisSessionJSON = {
   /**
    * The ID of the game the user has joined, if any.
    */
-  gameID: string | null
+  gameId: string | null
 } | null
 
 /**
@@ -26,5 +26,5 @@ export type TMetisSession<TUser> = {
   /**
    * The ID of the game the user has joined, if any.
    */
-  gameID: string | null
+  gameId: string | null
 } | null

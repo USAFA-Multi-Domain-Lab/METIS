@@ -31,7 +31,7 @@ export default function ArgEntry({
     if (arg.type === 'dropdown' && arg.required) {
       // Grab the dropdown option.
       let option: TArgDropdownOption | undefined = arg.options.find(
-        (option: TArgDropdownOption) => option.id === effectArgs[arg.id],
+        (option: TArgDropdownOption) => option._id === effectArgs[arg._id],
       )
 
       // If the option is found then set the dropdown value.
@@ -39,13 +39,13 @@ export default function ArgEntry({
         return option
       } else {
         return {
-          id: 'temporary-option',
+          _id: 'temporary-option',
           name: 'Select an option',
         }
       }
     } else {
       return {
-        id: 'Not a required dropdown.',
+        _id: 'Not a required dropdown.',
         name: 'Not a required dropdown.',
       }
     }
@@ -57,7 +57,7 @@ export default function ArgEntry({
       if (arg.type === 'dropdown' && !arg.required) {
         // Grab the dropdown option.
         let option: TArgDropdownOption | undefined = arg.options.find(
-          (option: TArgDropdownOption) => option.id === effectArgs[arg.id],
+          (option: TArgDropdownOption) => option._id === effectArgs[arg._id],
         )
 
         // If the option is found then set the dropdown value.
@@ -71,19 +71,19 @@ export default function ArgEntry({
       }
     })
   const [numberValue, setNumberValue] = useState<number>(
-    effectArgs[arg.id] || 0,
+    effectArgs[arg._id] || 0,
   )
   const [optionalNumberValue, setOptionalNumberValue] = useState<number | null>(
-    effectArgs[arg.id] || null,
+    effectArgs[arg._id] || null,
   )
   const [stringValue, setStringValue] = useState<string>(
-    effectArgs[arg.id] || defaultStringValue,
+    effectArgs[arg._id] || defaultStringValue,
   )
   const [largeStringValue, setLargeStringValue] = useState<string>(
-    effectArgs[arg.id] || defaultLargeStringValue,
+    effectArgs[arg._id] || defaultLargeStringValue,
   )
   const [booleanValue, setBooleanValue] = useState<boolean>(
-    effectArgs[arg.id] || false,
+    effectArgs[arg._id] || false,
   )
 
   /* -- COMPUTED -- */
@@ -101,7 +101,7 @@ export default function ArgEntry({
       arg.dependencies.forEach((dependency: string) => {
         // Grab the dependency argument.
         let dependencyArg: TTargetArg | undefined = args.find(
-          (arg: TTargetArg) => arg.id === dependency,
+          (arg: TTargetArg) => arg._id === dependency,
         )
 
         if (dependencyArg) {
@@ -109,11 +109,11 @@ export default function ArgEntry({
           // then hide the argument and remove it from the
           // effect's arguments stored in the state.
           if (
-            effectArgs[dependencyArg.id] === defaultStringValue ||
-            effectArgs[dependencyArg.id] === defaultLargeStringValue ||
-            effectArgs[dependencyArg.id] === false ||
-            effectArgs[dependencyArg.id] === null ||
-            effectArgs[dependencyArg.id] === undefined ||
+            effectArgs[dependencyArg._id] === defaultStringValue ||
+            effectArgs[dependencyArg._id] === defaultLargeStringValue ||
+            effectArgs[dependencyArg._id] === false ||
+            effectArgs[dependencyArg._id] === null ||
+            effectArgs[dependencyArg._id] === undefined ||
             dependencyArg.display === false
           ) {
             // Hide the argument.
@@ -139,13 +139,13 @@ export default function ArgEntry({
   useEffect(() => {
     // If the argument is displayed and the argument is not
     // in the effect's arguments then initialize the argument.
-    if (display && effectArgs[arg.id] === undefined) {
+    if (display && effectArgs[arg._id] === undefined) {
       initializeArg()
     }
     // Otherwise, remove the argument from the effect's arguments.
-    else if (!display && effectArgs[arg.id] !== undefined) {
+    else if (!display && effectArgs[arg._id] !== undefined) {
       setEffectArgs((prev) => {
-        delete prev[arg.id]
+        delete prev[arg._id]
         return prev
       })
     }
@@ -161,7 +161,7 @@ export default function ArgEntry({
       // then update the dropdown value in the effect's
       // arguments.
       if (arg.required) {
-        setEffectArgs((prev) => ({ ...prev, [arg.id]: dropDownValue.id }))
+        setEffectArgs((prev) => ({ ...prev, [arg._id]: dropDownValue._id }))
       }
       // Or, if the argument is optional and the dropdown value
       // is not in a default state then update the dropdown
@@ -169,7 +169,7 @@ export default function ArgEntry({
       else if (!arg.required && optionalDropDownValue !== null) {
         setEffectArgs((prev) => ({
           ...prev,
-          [arg.id]: optionalDropDownValue.id,
+          [arg._id]: optionalDropDownValue._id,
         }))
       }
     }
@@ -178,13 +178,13 @@ export default function ArgEntry({
       // ...and the argument is required, then update
       // the number value in the effect's arguments.
       if (arg.required) {
-        setEffectArgs((prev) => ({ ...prev, [arg.id]: numberValue }))
+        setEffectArgs((prev) => ({ ...prev, [arg._id]: numberValue }))
       }
       // Or, if the argument is optional and the number value
       // is not in a default state then update the number
       // value in the effect's arguments.
       else if (!arg.required && optionalNumberValue !== null) {
-        setEffectArgs((prev) => ({ ...prev, [arg.id]: optionalNumberValue }))
+        setEffectArgs((prev) => ({ ...prev, [arg._id]: optionalNumberValue }))
       }
     }
     // Or, if the argument is a string...
@@ -193,7 +193,7 @@ export default function ArgEntry({
       // then update the string value in the effect's
       // arguments.
       if (stringValue !== defaultStringValue) {
-        setEffectArgs((prev) => ({ ...prev, [arg.id]: stringValue }))
+        setEffectArgs((prev) => ({ ...prev, [arg._id]: stringValue }))
       }
     }
     // Or, if the argument is a large string...
@@ -202,13 +202,13 @@ export default function ArgEntry({
       // then update the large string value in the effect's
       // arguments.
       if (largeStringValue !== defaultLargeStringValue) {
-        setEffectArgs((prev) => ({ ...prev, [arg.id]: largeStringValue }))
+        setEffectArgs((prev) => ({ ...prev, [arg._id]: largeStringValue }))
       }
     }
     // Or, if the argument is a boolean...
     else if (arg.type === 'boolean') {
       // ...then update the boolean value in the effect's arguments.
-      setEffectArgs((prev) => ({ ...prev, [arg.id]: booleanValue }))
+      setEffectArgs((prev) => ({ ...prev, [arg._id]: booleanValue }))
     }
   }, [
     dropDownValue,
@@ -255,7 +255,7 @@ export default function ArgEntry({
           // *** stored in this state changes. If the value
           // *** in the state doesn't change then the value
           // *** needs to be set manually.
-          setEffectArgs((prev) => ({ ...prev, [arg.id]: numberValue }))
+          setEffectArgs((prev) => ({ ...prev, [arg._id]: numberValue }))
         }
         // Otherwise, set the number value to the default value.
         // *** Note: The default value is mandatory if the
@@ -295,7 +295,7 @@ export default function ArgEntry({
           // *** stored in this state changes. If the value
           // *** in the state doesn't change then the value
           // *** needs to be set manually.
-          setEffectArgs((prev) => ({ ...prev, [arg.id]: booleanValue }))
+          setEffectArgs((prev) => ({ ...prev, [arg._id]: booleanValue }))
         }
         // Otherwise, set the boolean value to the default value.
         // *** Note: The default value is mandatory if the
@@ -320,7 +320,7 @@ export default function ArgEntry({
       arg.dependencies.forEach((dependency: string) => {
         // Grab the dependency argument.
         let dependencyArg: TTargetArg | undefined = args.find(
-          (arg: TTargetArg) => arg.id === dependency,
+          (arg: TTargetArg) => arg._id === dependency,
         )
 
         // If the dependency argument is found...
@@ -331,11 +331,11 @@ export default function ArgEntry({
           // *** if all of its dependencies are met (i.e., not in
           // *** a default state).
           if (
-            effectArgs[dependencyArg.id] !== defaultStringValue ||
-            effectArgs[dependencyArg.id] !== defaultLargeStringValue ||
-            effectArgs[dependencyArg.id] !== false ||
-            effectArgs[dependencyArg.id] !== null ||
-            effectArgs[dependencyArg.id] !== undefined ||
+            effectArgs[dependencyArg._id] !== defaultStringValue ||
+            effectArgs[dependencyArg._id] !== defaultLargeStringValue ||
+            effectArgs[dependencyArg._id] !== false ||
+            effectArgs[dependencyArg._id] !== null ||
+            effectArgs[dependencyArg._id] !== undefined ||
             dependencyArg.display
           ) {
             allDependenciesMet.push(true)
@@ -369,7 +369,7 @@ export default function ArgEntry({
             // *** stored in this state changes. If the value
             // *** in the state doesn't change then the value
             // *** needs to be set manually.
-            setEffectArgs((prev) => ({ ...prev, [arg.id]: numberValue }))
+            setEffectArgs((prev) => ({ ...prev, [arg._id]: numberValue }))
           }
           // Otherwise, set the number value to the default value.
           // *** Note: The default value is mandatory if the
@@ -413,7 +413,7 @@ export default function ArgEntry({
             // *** stored in this state changes. If the value
             // *** in the state doesn't change then the value
             // *** needs to be set manually.
-            setEffectArgs((prev) => ({ ...prev, [arg.id]: booleanValue }))
+            setEffectArgs((prev) => ({ ...prev, [arg._id]: booleanValue }))
           }
           // Otherwise, set the boolean value to the default value.
           // *** Note: The default value is mandatory if the
@@ -445,7 +445,7 @@ export default function ArgEntry({
         // *** stored in this state changes. If the value
         // *** in the state doesn't change then the value
         // *** needs to be set manually.
-        setEffectArgs((prev) => ({ ...prev, [arg.id]: booleanValue }))
+        setEffectArgs((prev) => ({ ...prev, [arg._id]: booleanValue }))
       }
       // Otherwise, if the boolean value stored in the state is
       // already set to false then manually update the effect's
@@ -456,7 +456,7 @@ export default function ArgEntry({
         // *** stored in this state changes. If the value
         // *** in the state doesn't change then the value
         // *** needs to be set manually.
-        setEffectArgs((prev) => ({ ...prev, [arg.id]: booleanValue }))
+        setEffectArgs((prev) => ({ ...prev, [arg._id]: booleanValue }))
       }
     }
   }
@@ -596,7 +596,7 @@ export type TArgDropdownOption = {
   /**
    * The ID of the option.
    */
-  id: string
+  _id: string
   /**
    * The name of the option.
    */

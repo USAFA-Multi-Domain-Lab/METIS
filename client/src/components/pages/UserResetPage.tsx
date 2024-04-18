@@ -4,7 +4,7 @@ import { compute } from 'src/toolbox'
 import { useMountHandler, usePostInitEffect } from 'src/toolbox/hooks'
 import ClientUser from 'src/users'
 import { DefaultLayout, TPage_P } from '.'
-import { DetailString } from '../content/form/Form'
+import { DetailLocked, DetailString } from '../content/form/Form'
 import { LogoutLink, TNavigation } from '../content/general-layout/Navigation'
 import './UserResetPage.scss'
 
@@ -165,10 +165,10 @@ export default function UserResetPage(): JSX.Element | null {
 
       try {
         await ClientUser.$resetPassword(user)
-        notify('User successfully saved.')
+        notify('Password reset successfully.')
         navigateTo('HomePage', {})
       } catch (error: any) {
-        notify('User failed to save.')
+        notify('Failed to reset password.')
         setAreUnsavedChanges(true)
       }
     }
@@ -191,10 +191,7 @@ export default function UserResetPage(): JSX.Element | null {
     <div className='UserResetPage Page'>
       <DefaultLayout navigation={navigation}>
         <div className='ResetUserEntry'>
-          <div className='UserIDContainer'>
-            <div className='Title'>User ID:</div>
-            <div className='UserID'>{user.userID}</div>
-          </div>
+          <DetailLocked label='Username' stateValue={user.username} />
           <DetailString
             fieldType='required'
             handleOnBlur={handlePassword1Error}

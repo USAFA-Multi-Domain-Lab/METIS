@@ -93,7 +93,7 @@ export default function MissionEntry({
               stateValue={missionName}
               setState={setMissionName}
               defaultValue={ClientMission.DEFAULT_PROPERTIES.name}
-              key={`${mission.missionID}_name`}
+              key={`${mission._id}_name`}
             />
             <DetailLargeString
               fieldType='required'
@@ -103,7 +103,7 @@ export default function MissionEntry({
               setState={setIntroMessage}
               defaultValue={ClientMission.DEFAULT_PROPERTIES.introMessage}
               elementBoundary='.BorderBox'
-              key={`${mission.missionID}_introMessage`}
+              key={`${mission._id}_introMessage`}
             />
             <DetailNumber
               fieldType='required'
@@ -112,7 +112,7 @@ export default function MissionEntry({
               stateValue={initialResources}
               setState={setInitialResources}
               defaultValue={ClientMission.DEFAULT_PROPERTIES.initialResources}
-              key={`${mission.missionID}_initialResources`}
+              key={`${mission._id}_initialResources`}
             />
           </div>
         </div>

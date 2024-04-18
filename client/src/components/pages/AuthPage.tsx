@@ -12,7 +12,7 @@ export interface IAuthPage extends TPage_P {}
 /**
  * This will render a page where a user can login.
  */
-export default function AuthPage(props: IAuthPage): JSX.Element | null {
+export default function AuthPage(): JSX.Element | null {
   /* -- GLOBAL CONTEXT -- */
 
   const globalContext = useGlobalContext()
@@ -24,7 +24,7 @@ export default function AuthPage(props: IAuthPage): JSX.Element | null {
 
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
-  const [userId, setUserId] = useState<string>('')
+  const [username, setUsername] = useState<string>('')
   const [password, setPassword] = useState<string>('')
 
   /* -- COMPUTED -- */
@@ -34,9 +34,9 @@ export default function AuthPage(props: IAuthPage): JSX.Element | null {
    */
   const canSubmit: boolean = compute(
     () =>
-      userId.length > 0 &&
+      username.length > 0 &&
       password.length > 0 &&
-      userId !== '' &&
+      username !== '' &&
       password !== '',
   )
 
@@ -64,7 +64,7 @@ export default function AuthPage(props: IAuthPage): JSX.Element | null {
 
       // Login.
       try {
-        let { session } = await ClientUser.$login(userId, password)
+        let { session } = await ClientUser.$login(username, password)
 
         // If correct and a session was returned,
         // then login was successful.
@@ -120,8 +120,8 @@ export default function AuthPage(props: IAuthPage): JSX.Element | null {
             fieldType='required'
             handleOnBlur='deliverError'
             label={'Username'}
-            stateValue={userId}
-            setState={setUserId}
+            stateValue={username}
+            setState={setUsername}
             uniqueLabelClassName='Hidden'
             placeholder='Username'
           />

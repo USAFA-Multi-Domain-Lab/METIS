@@ -5,7 +5,7 @@ import {
   TGameState,
 } from 'metis/games'
 import { TActionExecutionJSON } from 'metis/missions/actions/executions'
-import { IActionOutcomeJSON } from 'metis/missions/actions/outcomes'
+import { TActionOutcomeJson } from 'metis/missions/actions/outcomes'
 import { TCommonUserJson } from 'metis/users'
 import { TCommonMissionNodeJson } from '../missions/nodes'
 
@@ -183,7 +183,7 @@ export type TGenericServerEvents = {
       /**
        * The ID of the game from which the participant was kicked.
        */
-      gameID: string
+      gameId: string
     }
   >
   /**
@@ -195,7 +195,7 @@ export type TGenericServerEvents = {
       /**
        * The ID of the game from which the participant was banned.
        */
-      gameID: string
+      gameId: string
     }
   >
   /**
@@ -207,7 +207,7 @@ export type TGenericServerEvents = {
       /**
        * The ID of the game that was destroyed.
        */
-      gameID: string
+      gameId: string
     }
   >
   /**
@@ -246,7 +246,7 @@ export type TResponseEvents = {
       /**
        * The node that was opened.
        */
-      nodeID: string
+      nodeId: string
       /**
        * The nodes that were revealed as a result of opening the node.
        */
@@ -276,7 +276,7 @@ export type TResponseEvents = {
       /**
        * The outcome of the action being executed.
        */
-      outcome: IActionOutcomeJSON
+      outcome: TActionOutcomeJson
       /**
        * The nodes that were revealed as a result of executing the action.
        */
@@ -369,7 +369,7 @@ export type TRequestEvents = {
   /**
    * Occurs when the client requests to open a node.
    */
-  'request-open-node': TRequestEvent<'request-open-node', { nodeID: string }>
+  'request-open-node': TRequestEvent<'request-open-node', { nodeId: string }>
   /**
    * Occurs when the client requests to execute an action.
    */
@@ -379,7 +379,7 @@ export type TRequestEvents = {
       /**
        * The ID of the action to execute.
        */
-      actionID: string
+      actionId: string
     }
   >
   /**
@@ -395,7 +395,7 @@ export type TRequestEvents = {
       /**
        * The ID of the game to join.
        */
-      gameID: string
+      gameId: string
       /**
        * The method of joining the game.
        */

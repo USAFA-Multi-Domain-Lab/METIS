@@ -4,18 +4,18 @@ import UserPermission from './permissions'
  * Represents the role of a user using METIS.
  */
 export default class UserRole implements TUserRole {
-  public readonly id: TUserRole['id']
+  public readonly _id: TUserRole['_id']
   public readonly name: TUserRole['name']
   public readonly description: TUserRole['description']
   public readonly permissions: TUserRole['permissions']
 
   public constructor(
-    id: TUserRole['id'],
+    _id: TUserRole['_id'],
     name: TUserRole['name'],
     description: TUserRole['description'],
     permissions: TUserRole['permissions'],
   ) {
-    this.id = id
+    this._id = _id
     this.name = name
     this.description = description
     this.permissions = permissions
@@ -23,17 +23,17 @@ export default class UserRole implements TUserRole {
 
   /**
    * Gets the user role object from the given role ID.
-   * @param {TUserRole['id']} roleID The role ID used to get the user role object.
-   * @returns {UserRole} A user role object.
+   * @param roleId The role ID used to get the user role object.
+   * @returns A user role object.
    */
-  public static get(roleID: TUserRole['id']): UserRole {
-    return UserRole.AVAILABLE_ROLES[roleID]
+  public static get(roleId: TUserRole['_id']): UserRole {
+    return UserRole.AVAILABLE_ROLES[roleId]
   }
 
   /**
    * The default role ID.
    */
-  public static readonly DEFAULT_ID: TUserRole['id'] = 'default'
+  public static readonly DEFAULT_ID: TUserRole['_id'] = 'default'
 
   /**
    * All available roles in METIS.
@@ -100,11 +100,11 @@ export default class UserRole implements TUserRole {
 
   /**
    * Checks whether the given role ID is valid.
-   * @param {TUserRoleID} roleID The role ID to check.
+   * @param roleId The role ID to check.
    */
-  public static isValidRoleID(roleID: TUserRoleID): boolean {
+  public static isValidRoleId(roleId: TUserRoleId): boolean {
     return (
-      roleIDs.includes(roleID) && roleID !== this.AVAILABLE_ROLES.default.id
+      roleIds.includes(roleId) && roleId !== this.AVAILABLE_ROLES.default._id
     )
   }
 
@@ -132,7 +132,7 @@ export type TUserRole = {
   /**
    * The user role's ID.
    */
-  id: TUserRoleID
+  _id: TUserRoleId
   /**
    * The user role's name.
    */
@@ -156,12 +156,12 @@ const roleNames = [
 ] as const
 export type TUserRoleName = (typeof roleNames)[number]
 
-const roleIDs = [
+const roleIds = [
   'default',
   'student',
   'instructor',
   'admin',
   'revokedAccess',
 ] as const
-export type TUserRoleID = (typeof roleIDs)[number]
-export type TUserRoles = { [key in TUserRoleID]: UserRole }
+export type TUserRoleId = (typeof roleIds)[number]
+export type TUserRoles = { [key in TUserRoleId]: UserRole }

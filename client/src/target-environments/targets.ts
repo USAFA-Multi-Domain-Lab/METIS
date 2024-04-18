@@ -18,11 +18,11 @@ export default class ClientTarget extends Target<ClientTargetEnvironment> {
 
   /**
    * Calls the API to load the target with the specified ID.
-   * @param {TCommonTarget['id']} targetId The ID of the target to fetch.
-   * @returns {Promise<ClientTarget>} A promise that resolves to a ClientTarget Object.
+   * @param targetId The ID of the target to fetch.
+   * @returns A promise that resolves to a ClientTarget Object.
    */
   public static async fetchOne(
-    targetId: TCommonTarget['id'],
+    targetId: TCommonTarget['_id'],
   ): Promise<ClientTarget> {
     return new Promise<ClientTarget>(async (resolve, reject) => {
       try {

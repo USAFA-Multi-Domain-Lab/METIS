@@ -41,9 +41,8 @@ const GAMES_SYNC_RATE: number = 1000
  * It will also display a list of users that the user can
  * select from to edit if they have proper permissions.
  */
-export default function HomePage(props: {}): JSX.Element | null {
+export default function HomePage(): JSX.Element | null {
   /* -- GLOBAL CONTEXT -- */
-
   const globalContext = useGlobalContext()
   const [server] = globalContext.server
   const {
@@ -56,24 +55,26 @@ export default function HomePage(props: {}): JSX.Element | null {
   } = globalContext.actions
 
   /* -- REFS -- */
-
   const page = useRef<HTMLDivElement>(null)
   const importMissionTrigger = useRef<HTMLInputElement>(null)
 
   /* -- STATE -- */
-
   const [games, setGames] = useState<TGameBasicJson[]>([])
   const [missions, setMissions] = useState<ClientMission[]>([])
   const [users, setUsers] = useState<ClientUser[]>([])
   const [manualJoinGameId, setManualJoinGameId] = useState<string>('')
 
-  /* -- EFFECTS -- */
+  /* -- SESSION-SPECIFIC LOGIC -- */
+
   // Require session for page.
   const [session] = useRequireSession()
 
   // Grab the current user from the session.
   let { user: currentUser } = session
 
+  /* -- EFFECTS -- */
+
+  // componentDidMount
   const [mountHandled, remount] = useMountHandler(async (done) => {
     if (currentUser.isAuthorized(['games_read', 'missions_read'])) {
       await loadGames()
@@ -211,17 +212,17 @@ export default function HomePage(props: {}): JSX.Element | null {
             // Compares the first character of the user ID
             // so that it can be sorted alphabetically or
             // numerically. It also compares the length of
-            // the user ID to properly sort userID's that
+            // the user ID to properly sort userId's that
             // start with a letter and end with a number.
             // (i.e., [ student1, ... student9, student10 ])
             if (
-              a.userID[0] <= b.userID[0] &&
-              a.userID.length <= b.userID.length
+              a.username[0] <= b.username[0] &&
+              a.username.length <= b.username.length
             ) {
               return -1
             } else if (
-              a.userID[0] >= b.userID[0] &&
-              a.userID.length >= b.userID.length
+              a.username[0] >= b.username[0] &&
+              a.username.length >= b.username.length
             ) {
               return 1
             } else {
@@ -433,14 +434,14 @@ export default function HomePage(props: {}): JSX.Element | null {
   // creating a new mission.
   const createMission = (): void => {
     if (currentUser.isAuthorized('missions_write')) {
-      navigateTo('MissionPage', { missionID: null })
+      navigateTo('MissionPage', { missionId: null })
     }
   }
 
   /**
    * Handler for when a game is selected.
    */
-  const onGameSelection = async (gameID: string) => {
+  const onGameSelection = async (gameId: string) => {
     if (server !== null) {
       try {
         let joinMethod: TGameJoinMethod = 'participant'
@@ -494,7 +495,7 @@ export default function HomePage(props: {}): JSX.Element | null {
         beginLoading('Joining game...')
         // Join game from new game ID, awaiting
         // the promised game client.
-        let game = await server.$joinGame(gameID, joinMethod)
+        let game = await server.$joinGame(gameId, joinMethod)
 
         // If the game is not found, notify
         // the user and return.
@@ -509,7 +510,7 @@ export default function HomePage(props: {}): JSX.Element | null {
 
         // Update session data to include new
         // game ID.
-        session.gameID = game.gameID
+        session.gameId = game.gameId
         // Go to the game page with the new
         // game client.
         navigateTo('GamePage', { game })
@@ -542,7 +543,7 @@ export default function HomePage(props: {}): JSX.Element | null {
     if (choice === 'Confirm') {
       try {
         beginLoading('Deleting game...')
-        await GameClient.$delete(game.gameID)
+        await GameClient.$delete(game.gameId)
         finishLoading()
         notify(`Successfully deleted "${game.name}".`)
         loadGames()
@@ -556,8 +557,8 @@ export default function HomePage(props: {}): JSX.Element | null {
   /**
    * Handler for when a mission is selected.
    */
-  const onMissionSelection = async ({ missionID }: ClientMission) => {
-    navigateTo('MissionPage', { missionID })
+  const onMissionSelection = async ({ _id: missionId }: ClientMission) => {
+    navigateTo('MissionPage', { missionId })
   }
 
   // This will switch to the user form
@@ -565,7 +566,7 @@ export default function HomePage(props: {}): JSX.Element | null {
   const selectUser = (user: ClientUser) => {
     if (currentUser.isAuthorized('users_write_students')) {
       navigateTo('UserPage', {
-        userID: user.userID,
+        userId: user._id,
       })
     }
   }
@@ -575,7 +576,7 @@ export default function HomePage(props: {}): JSX.Element | null {
   const createUser = () => {
     if (currentUser.isAuthorized('users_write_students')) {
       navigateTo('UserPage', {
-        userID: null,
+        userId: null,
       })
     }
   }
@@ -652,7 +653,7 @@ export default function HomePage(props: {}): JSX.Element | null {
                   </div>
                   <div
                     className='Text'
-                    onClick={() => onGameSelection(game.gameID)}
+                    onClick={() => onGameSelection(game.gameId)}
                   >
                     {game.name}
                     <Tooltip description={'Join game.'} />
@@ -779,14 +780,14 @@ export default function HomePage(props: {}): JSX.Element | null {
             headingText={'Select a user:'}
             items={users}
             sortByMethods={[ESortByMethod.Name]}
-            nameProperty={'name'}
+            nameProperty={'username'}
             alwaysUseBlanks={true}
             renderItemDisplay={(user: ClientUser) => {
               return (
                 <>
                   <div className='SelectionRow'>
                     <div className='Text' onClick={() => selectUser(user)}>
-                      {user.userID}
+                      {user.username}
                       <Tooltip description='Select user.' />
                     </div>
                     <UserModificationPanel
@@ -797,7 +798,7 @@ export default function HomePage(props: {}): JSX.Element | null {
                 </>
               )
             }}
-            searchableProperties={['userID']}
+            searchableProperties={['username']}
             noItemsDisplay={
               <div className='NoContent'>No users available...</div>
             }

@@ -44,7 +44,7 @@ export default function CreateEffectModal({
     let classList: string[] = []
 
     // Hide the drop down if the target environment is the default environment.
-    if (targetEnv.id === ClientTargetEnvironment.DEFAULT_PROPERTIES.id) {
+    if (targetEnv._id === ClientTargetEnvironment.DEFAULT_PROPERTIES._id) {
       classList.push('Hidden')
     }
 

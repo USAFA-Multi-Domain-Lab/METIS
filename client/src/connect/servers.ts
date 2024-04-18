@@ -211,7 +211,7 @@ export default class ServerConnection {
     const { onResponse } = options
 
     // Generate request ID.
-    let requestId: string = ServerConnection.generateRequestID()
+    let requestId: string = ServerConnection.generateRequestId()
 
     // Add response listener if provided.
     if (onResponse !== undefined) {
@@ -353,11 +353,11 @@ export default class ServerConnection {
    * @resolves The new game client for the game.
    * @rejects If there is an error joining the game.
    */
-  public $fetchCurrentGame(gameID: string): Promise<GameClient> {
+  public $fetchCurrentGame(gameId: string): Promise<GameClient> {
     return new Promise((resolve, reject) => {
       this.request(
         'request-current-game',
-        { gameID },
+        { gameId },
         'Fetching current game.',
         {
           onResponse: (event) => {
@@ -386,19 +386,19 @@ export default class ServerConnection {
 
   /**
    * Joins a game with the given game ID.
-   * @param gameID The ID of the game to join.
+   * @param gameId The ID of the game to join.
    * @param joinMethod The method of joining the game.
    * @resolves The new game client for the game, `null` if not found.
    * @rejects If there is an error joining the game.
    */
   public $joinGame(
-    gameID: string,
+    gameId: string,
     joinMethod: TGameJoinMethod,
   ): Promise<GameClient | null> {
     return new Promise((resolve, reject) => {
       this.request(
         'request-join-game',
-        { gameID, joinMethod },
+        { gameId, joinMethod },
         'Joining game.',
         {
           onResponse: (event) => {
@@ -637,7 +637,7 @@ export default class ServerConnection {
   /**
    * Generates a new request ID for a request to the server.
    */
-  private static generateRequestID(): any {
+  private static generateRequestId(): any {
     return `request_${generateHash()}`
   }
 }

@@ -69,8 +69,8 @@ export default class ServerMissionAction extends MissionAction<
 
       // Create execution data.
       let executionData: NonNullable<TActionExecutionJSON> = {
-        actionID: this.actionID,
-        nodeID: this.node.nodeID,
+        actionId: this._id,
+        nodeId: this.node._id,
         start,
         end,
       }

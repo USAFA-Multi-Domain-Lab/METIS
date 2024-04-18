@@ -1,6 +1,7 @@
 import bcryptjs from 'bcryptjs'
 import { Request } from 'express'
 import ServerUser from 'metis/server/users'
+import User, { TCommonUserJson } from 'metis/users'
 import UserPermission, { TUserPermission } from 'metis/users/permissions'
 import UserRole, { TUserRole } from 'metis/users/roles'
 import mongoose, { Schema } from 'mongoose'
@@ -9,53 +10,70 @@ import { databaseLogger } from '../../logging'
 import Permission from '../schema-types/user-permission'
 import Role from '../schema-types/user-role'
 
-let ObjectId = mongoose.Types.ObjectId
-
 /* -- SCHEMA VALIDATORS -- */
 
-// Validator for user.userID.
-const validate_users_userID = (userID: string): boolean => {
-  let userExpression: RegExp = /^([a-zA-Z0-9-_.]{5,25})$/
-  let isValidUserID: boolean = userExpression.test(userID)
-
-  return isValidUserID
+/**
+ * Validates the username of a user.
+ * @param username The username to validate.
+ */
+const validate_users_username = (
+  username: TCommonUserJson['username'],
+): boolean => {
+  return User.isValidUsername(username)
 }
 
-// Validator for user.roleID.
-const validate_users_roleID = (roleID: TUserRole['id']): boolean => {
-  return UserRole.isValidRoleID(roleID)
+/**
+ * Validates the role ID of a user.
+ * @param roleId The role ID to validate.
+ */
+const validate_users_roleId = (roleId: TUserRole['_id']): boolean => {
+  return UserRole.isValidRoleId(roleId)
 }
 
-// Validator for user.expressPermissionIDs.
-const validate_users_expressPermissionIDs = (
-  expressPermissionIDs: TUserPermission['id'][],
+/**
+ * Validates the express permission IDs of a user.
+ * @param expressPermissionIds The express permission IDs to validate.
+ */
+const validate_users_expressPermissionIds = (
+  expressPermissionIds: TUserPermission['_id'][],
 ): boolean => {
   // Contains whether each permission is valid.
-  let validExpressPermissionIDs: TUserPermission['id'][] = []
+  let validExpressPermissionIds: TUserPermission['_id'][] = []
 
   // Loops through each permission and checks if it is valid.
-  expressPermissionIDs.forEach((permissionID: TUserPermission['id']) => {
+  expressPermissionIds.forEach((permissionId: TUserPermission['_id']) => {
     // If it is valid, it is added to the array.
-    if (UserPermission.isValidPermissionID(permissionID)) {
-      validExpressPermissionIDs.push(permissionID)
+    if (UserPermission.isValidPermissionId(permissionId)) {
+      validExpressPermissionIds.push(permissionId)
     }
   })
 
   // If the valid express permissions array matches the
   // express permissions array that was passed, then all
   // permissions are valid.
-  return validExpressPermissionIDs.length === expressPermissionIDs.length
+  return validExpressPermissionIds.length === expressPermissionIds.length
 }
 
-// Validator for user.firstName and user.lastName.
-const validate_users_name = (name: string): boolean => {
+/**
+ * Validates the name of a user.
+ * @param name The name to validate.
+ */
+const validate_users_name = (
+  name: TCommonUserJson['firstName'] | TCommonUserJson['lastName'],
+): boolean => {
   let nameExpression: RegExp = /^([a-zA-Z']{1,25})$/
   let isValidName: boolean = nameExpression.test(name)
 
   return isValidName
 }
 
-const validator_users_password = (password: string): boolean => {
+/**
+ * Validates a hashed password.
+ * @param password The password to validate.
+ */
+const validator_users_password = (
+  password: NonNullable<TCommonUserJson['password']>,
+): boolean => {
   // This is an expression to validate a hashed password.
   // This is not for validating the password that the user
   // submits.
@@ -67,59 +85,51 @@ const validator_users_password = (password: string): boolean => {
 
 /* -- SCHEMA -- */
 
-const UserSchema = new Schema(
-  {
-    userID: {
-      type: String,
-      unique: true,
-      required: true,
-      trim: true,
-      validate: validate_users_userID,
-    },
-    roleID: {
-      type: Role,
-      required: true,
-      validate: validate_users_roleID,
-    },
-    expressPermissionIDs: {
-      type: [Permission],
-      required: true,
-      validate: validate_users_expressPermissionIDs,
-    },
-    firstName: {
-      type: String,
-      required: true,
-      trim: true,
-      validate: validate_users_name,
-    },
-    lastName: {
-      type: String,
-      required: true,
-      trim: true,
-      validate: validate_users_name,
-    },
-    needsPasswordReset: { type: Boolean, required: true },
-    password: {
-      type: String,
-      required: true,
-      validate: validator_users_password,
-    },
-    _id: { type: ObjectId, required: false, auto: true },
-    deleted: { type: Boolean, required: true, default: false },
+const UserSchema = new Schema({
+  username: {
+    type: String,
+    unique: true,
+    required: true,
+    trim: true,
+    validate: validate_users_username,
   },
-  {
-    _id: false,
-    strict: 'throw',
-    minimize: false,
+  roleId: {
+    type: Role,
+    required: true,
+    validate: validate_users_roleId,
   },
-)
+  expressPermissionIds: {
+    type: [Permission],
+    required: true,
+    validate: validate_users_expressPermissionIds,
+  },
+  firstName: {
+    type: String,
+    required: true,
+    trim: true,
+    validate: validate_users_name,
+  },
+  lastName: {
+    type: String,
+    required: true,
+    trim: true,
+    validate: validate_users_name,
+  },
+  needsPasswordReset: { type: Boolean, required: true },
+  password: {
+    type: String,
+    required: true,
+    validate: validator_users_password,
+  },
+  deleted: { type: Boolean, required: true, default: false },
+})
 
 /* -- SCHEMA METHODS -- */
 
 /**
  * Hashes a password for storage in the database.
- * @param {string} password The password to hash.
- * @returns {Promise<string>} A promise that resolves to the hashed password.
+ * @param password The password to hash.
+ * @returns A promise that resolves to the hashed password.
  */
 export const hashPassword = async (password: string): Promise<string> => {
   return new Promise<string>(async (resolve, reject): Promise<void> => {
@@ -140,7 +150,7 @@ UserSchema.statics.authenticate = (
   callback: (error: StatusError | null, correct: boolean, user: any) => void,
 ): void => {
   // Searches for user based on email provided
-  UserModel.findOne({ userID: request.body.userID }).exec(
+  UserModel.findOne({ username: request.body.username }).exec(
     (error: Error, user: any) => {
       if (error) {
         return callback(new StatusError(error.message), false, null)
@@ -183,10 +193,7 @@ UserSchema.plugin((schema) => {
   // data that should be hidden from the
   // API, hiding deleted users, and filtering
   // users based on the current user's permissions.
-  schema.query.queryForApiResponse = function (
-    findFunctionName: 'find' | 'findOne',
-    user?: ServerUser,
-  ) {
+  schema.query.queryForUsers = function (findFunctionName: 'find' | 'findOne') {
     // Get projection.
     let projection = this.projection()
 
@@ -199,9 +206,6 @@ UserSchema.plugin((schema) => {
     if (!('deleted' in projection)) {
       projection['deleted'] = 0
     }
-    if (!('_id' in projection)) {
-      projection['_id'] = 0
-    }
     if (!('__v' in projection)) {
       projection['__v'] = 0
     }
@@ -213,16 +217,52 @@ UserSchema.plugin((schema) => {
     this.projection(projection)
     // Hide deleted users.
     this.where({ deleted: false })
-    // Hide current user in session.
-    this.where({ userID: { $ne: user?.userID } })
+
+    // Calls the appropriate find function.
+    switch (findFunctionName) {
+      case 'find':
+        return this.find()
+      case 'findOne':
+        return this.findOne()
+    }
+  }
+})
+
+UserSchema.plugin((schema) => {
+  // This is responsible for filtering
+  // users based on the current user's
+  // permissions.
+  schema.query.queryForFilteredUsers = function (
+    findFunctionName: 'find' | 'findOne',
+    sessionUser?: ServerUser,
+  ) {
+    // Get projection.
+    let projection = this.projection()
+
+    // Create if does not exist.
+    if (projection === undefined) {
+      projection = {}
+    }
+
+    // Set projection.
+    this.projection(projection)
+    // Hide deleted users.
+    this.where({ deleted: false })
+
+    // Don't return the current user in
+    // session if the find function is
+    // for finding all users.
+    if (findFunctionName === 'find') {
+      this.where({ _id: { $ne: sessionUser?._id } })
+    }
 
     // If the user can only read students, hide all users
     // that are not students.
     if (
-      user?.isAuthorized('users_read_students') &&
-      !user.isAuthorized('users_read')
+      sessionUser?.isAuthorized('users_read_students') &&
+      !sessionUser.isAuthorized('users_read')
     ) {
-      this.where({ roleID: { $eq: 'student' } })
+      this.where({ roleId: { $eq: 'student' } })
     }
 
     // Calls the appropriate find function.

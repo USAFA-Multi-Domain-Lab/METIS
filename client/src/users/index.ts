@@ -12,28 +12,38 @@ import UserRole from '../../../shared/users/roles'
  * @extends {User}
  */
 export default class ClientUser extends User {
+  /**
+   * Used for the first password field.
+   */
   public password1: TCommonUser['password']
+  /**
+   * Used for the second password field.
+   * @note This is used to confirm the password.
+   */
   public password2: TCommonUser['password']
 
+  /**
+   * Whether the password is required.
+   */
   private _passwordIsRequired: boolean
 
   /**
-   * @returns {boolean} Whether the two passwords match.
+   * @returns Whether the two passwords match.
    */
   public get passwordsMatch(): boolean {
     return this.password1 === this.password2
   }
 
   /**
-   * @returns {boolean} Whether the password is required.
+   * @returns Whether the password is required.
    */
   public set passwordIsRequired(required: boolean) {
     this._passwordIsRequired = required
   }
 
   /**
-   * @returns {boolean} Whether the password is required.
-   * @description This is used to determine whether the
+   * Whether the password is required.
+   * @note This is used to determine whether the
    * password is required when saving the user.
    * If the user is being created, then the password
    * is required. If the user is being updated, then
@@ -48,8 +58,7 @@ export default class ClientUser extends User {
    * the correct criteria.
    */
   public get hasValidUsername(): boolean {
-    let userIDRegex: RegExp = new RegExp(/^([a-zA-Z0-9-_.]{5,25})$/)
-    return userIDRegex.test(this.userID)
+    return User.isValidUsername(this.username)
   }
 
   /**
@@ -57,7 +66,7 @@ export default class ClientUser extends User {
    * the correct criteria.
    */
   public get hasValidRole(): boolean {
-    return UserRole.isValidRoleID(this.role.id)
+    return UserRole.isValidRoleId(this.role._id)
   }
 
   /**
@@ -117,8 +126,9 @@ export default class ClientUser extends User {
    * user.
    */
   public get canSave(): boolean {
-    // userID cannot be the default value
-    let updatedUserID: boolean = this.userID !== User.DEFAULT_PROPERTIES.userID
+    // username cannot be the default value
+    let updatedUsername: boolean =
+      this.username !== User.DEFAULT_PROPERTIES.username
     // firstName cannot be the default value
     let updatedFirstName: boolean =
       this.firstName !== User.DEFAULT_PROPERTIES.firstName
@@ -126,7 +136,7 @@ export default class ClientUser extends User {
     let updatedLastName: boolean =
       this.lastName !== User.DEFAULT_PROPERTIES.lastName
     // role cannot be the default value
-    let updatedRole: boolean = this.role.id !== User.DEFAULT_PROPERTIES.roleID
+    let updatedRole: boolean = this.role._id !== User.DEFAULT_PROPERTIES.roleId
     // passwords must match
     let passwordsMatch: boolean = this.passwordsMatch
     // password must be entered if required
@@ -140,7 +150,7 @@ export default class ClientUser extends User {
 
     // Returns true if all conditions pass.
     return (
-      updatedUserID &&
+      updatedUsername &&
       updatedFirstName &&
       updatedLastName &&
       updatedRole &&
@@ -158,8 +168,8 @@ export default class ClientUser extends User {
   }
 
   /**
-   * @param {TCommonUserJson} data The user data from which to create the user. Any ommitted values will be set to the default properties defined in User.DEFAULT_PROPERTIES.
-   * @param {TClientUserOptions} options Options for creating the user.
+   * @param data The user data from which to create the user. Any ommitted values will be set to the default properties defined in User.DEFAULT_PROPERTIES.
+   * @param options Options for creating the user.
    */
   public constructor(
     data: Partial<TCommonUserJson> = User.DEFAULT_PROPERTIES,
@@ -207,19 +217,19 @@ export default class ClientUser extends User {
 
   /**
    * Calls the API to fetch one user by their user ID.
-   * @param {string} userID The user ID of the user to fetch.
-   * @returns {Promise<ClientUser>} A promise that resolves to a Client User object.
+   * @param _id The user ID of the user to fetch.
+   * @returns A promise that resolves to a Client User object.
    */
-  public static async $fetchOne(userID: string): Promise<ClientUser> {
+  public static async $fetchOne(_id: string): Promise<ClientUser> {
     return new Promise<ClientUser>(async (resolve, reject) => {
       try {
         // Retrieve data from API.
-        let { data: userJSON } = await axios.get<TCommonUserJson>(
+        let { data: userJson } = await axios.get<TCommonUserJson>(
           `${ClientUser.API_ENDPOINT}`,
-          { params: { userID } },
+          { params: { _id: _id } },
         )
         // Convert JSON to Client User object.
-        let user: ClientUser = new ClientUser(userJSON)
+        let user: ClientUser = new ClientUser(userJson)
         // Resolve
         resolve(user)
       } catch (error) {
@@ -232,18 +242,18 @@ export default class ClientUser extends User {
 
   /**
    * Calls the API to fetch all users available.
-   * @returns {Promise<ClientUser[]>} A promise that resolves to an array of Client User objects.
+   * @returns A promise that resolves to an array of Client User objects.
    */
   public static async $fetchAll(): Promise<ClientUser[]> {
     return new Promise<ClientUser[]>(async (resolve, reject) => {
       try {
         // Retrieve data from API.
-        let { data: usersJSON } = await axios.get<TCommonUserJson[]>(
+        let { data: usersJson } = await axios.get<TCommonUserJson[]>(
           ClientUser.API_ENDPOINT,
         )
         // Convert JSON to Client User objects.
-        let users: ClientUser[] = usersJSON.map(
-          (userJSON) => new ClientUser(userJSON),
+        let users: ClientUser[] = usersJson.map(
+          (userJson) => new ClientUser(userJson),
         )
         // Resolve
         resolve(users)
@@ -256,7 +266,7 @@ export default class ClientUser extends User {
   }
   /**
    * Fetches the current session of the logged in user from the server.
-   * @returns {Promise<TMetisSession<ClientUser>>} A promise that resolves to the current session of the logged in user.
+   * A promise that resolves to the current session of the logged in user.
    */
   public static async $fetchSession(): Promise<TMetisSession<ClientUser>> {
     return new Promise<TMetisSession<ClientUser>>(
@@ -278,7 +288,7 @@ export default class ClientUser extends User {
             if (sessionJson !== null) {
               session = {
                 user: new ClientUser(sessionJson.user),
-                gameID: sessionJson.gameID,
+                gameId: sessionJson.gameId,
               }
             }
 
@@ -297,18 +307,14 @@ export default class ClientUser extends User {
     )
   }
 
-  // This will attempt to login in the user with the
-  // given userID and password.
-
   /**
-   * Attempts to log in the user with the given userID and password.
-   * @param userID The user's ID to login with.
+   * Attempts to log in the user with the given username and password.
+   * @param username The username to login with.
    * @param password The user's password to login with.
-   * @returns {Promise<{ correct: boolean; session: TMetisSession<ClientUser> }>}
-   * A promise that resolves to an object containing whether the login was correct and the session of the logged in user.
+   * @returns A promise that resolves to an object containing whether the login was correct and the session of the logged in user.
    */
   public static async $login(
-    userID: TCommonUser['userID'],
+    username: TCommonUser['username'],
     password: string,
   ): Promise<{
     session: TMetisSession<ClientUser>
@@ -317,7 +323,7 @@ export default class ClientUser extends User {
       session: TMetisSession<ClientUser>
     }>((resolve, reject) => {
       axios
-        .post(`${ClientUser.API_ENDPOINT}/login`, { userID, password })
+        .post(`${ClientUser.API_ENDPOINT}/login`, { username, password })
         .then((response: AxiosResponse) => {
           // Parse the response data.
           let correct: boolean = response.data.correct
@@ -329,7 +335,7 @@ export default class ClientUser extends User {
           if (sessionJson !== null) {
             session = {
               user: new ClientUser(sessionJson.user),
-              gameID: sessionJson.gameID,
+              gameId: sessionJson.gameId,
             }
           }
 
@@ -343,11 +349,9 @@ export default class ClientUser extends User {
     })
   }
 
-  // This will logout the user in the session.
-
   /**
    * Logs out the user in the session.
-   * @returns {Promise<void>} A promise that resolves when the user is logged out.
+   * @returns A promise that resolves when the user is logged out.
    */
   public static async $logout(): Promise<void> {
     return new Promise<void>((resolve, reject) => {
@@ -364,19 +368,19 @@ export default class ClientUser extends User {
 
   /**
    * Calls the API to create a new user.
-   * @param {ClientUser} clientUser The user to create.
-   * @returns {Promise<ClientUser>} A promise that resolves to the created user.
+   * @param clientUser The user to create.
+   * @returns A promise that resolves to the created user.
    */
   public static async $create(clientUser: ClientUser): Promise<ClientUser> {
     return new Promise<ClientUser>(async (resolve, reject) => {
       try {
         // Retrieve data from API.
-        let { data: userJSON } = await axios.post<TCommonUserJson>(
+        let { data: userJson } = await axios.post<TCommonUserJson>(
           ClientUser.API_ENDPOINT,
           { user: clientUser.toJson({ passwordIsRequired: true }) },
         )
         // Convert JSON to Client User object.
-        let createdUser: ClientUser = new ClientUser(userJSON)
+        let createdUser: ClientUser = new ClientUser(userJson)
         // Resolve
         resolve(createdUser)
       } catch (error) {
@@ -389,19 +393,19 @@ export default class ClientUser extends User {
 
   /**
    * Calls the API to update the user.
-   * @param {ClientUser} clientUser The user to update.
-   * @returns {Promise<ClientUser>} A promise that resolves to the updated user.
+   * @param clientUser The user to update.
+   * @returns A promise that resolves to the updated user.
    */
   public static async $update(clientUser: ClientUser): Promise<ClientUser> {
     return new Promise<ClientUser>(async (resolve, reject) => {
       try {
         // Retrieve data from API.
-        let { data: userJSON } = await axios.put<TCommonUserJson>(
+        let { data: userJson } = await axios.put<TCommonUserJson>(
           ClientUser.API_ENDPOINT,
           { user: clientUser.toJson({ passwordIsRequired: false }) },
         )
         // Convert JSON to Client User object.
-        let updatedUser: ClientUser = new ClientUser(userJSON)
+        let updatedUser: ClientUser = new ClientUser(userJson)
         // Resolve
         resolve(updatedUser)
       } catch (error) {
@@ -414,14 +418,14 @@ export default class ClientUser extends User {
 
   /**
    * Calls the API to reset the password of the user that is passed in.
-   * @param {ClientUser} user The user to reset the password of.
-   * @returns {Promise<void>} A promise that resolves when the password is reset.
+   * @param user The user to reset the password of.
+   * @returns A promise that resolves when the password is reset.
    */
   public static async $resetPassword(user: ClientUser): Promise<void> {
     return new Promise<void>((resolve, reject) => {
       axios
         .put(`${ClientUser.API_ENDPOINT}/reset-password`, {
-          userID: user.userID,
+          _id: user._id,
           password: user.password1,
           needsPasswordReset: false,
         })
@@ -436,13 +440,13 @@ export default class ClientUser extends User {
 
   /**
    * Calls the API to delete the user.
-   * @param {TCommonUser['userID']} userID The user ID of the user to delete.
-   * @returns {Promise<void>} A promise that resolves when the user is deleted.
+   * @param _id The user ID of the user to delete.
+   * @returns A promise that resolves when the user is deleted.
    */
-  public static async $delete(userID: TCommonUser['userID']): Promise<void> {
+  public static async $delete(_id: TCommonUser['username']): Promise<void> {
     return new Promise<void>((resolve, reject) => {
       axios
-        .delete(`${ClientUser.API_ENDPOINT}?userID=${userID}`)
+        .delete(`${ClientUser.API_ENDPOINT}?_id=${_id}`)
         .then(() => resolve())
         .catch((error: AxiosError) => {
           console.error('Failed to delete user.')

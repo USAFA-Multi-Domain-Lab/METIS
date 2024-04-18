@@ -52,7 +52,7 @@ export default function Args({
         // grouping so it will be displayed as an
         // individual argument.
         else {
-          groupings[arg.id] = [arg]
+          groupings[arg._id] = [arg]
         }
       })
     }
@@ -122,7 +122,7 @@ export default function Args({
                     arg={arg}
                     effectArgs={effectArgs}
                     setEffectArgs={setEffectArgs}
-                    key={`arg-${arg.id}-display-${arg.display}`}
+                    key={`arg-${arg._id}-display-${arg.display}`}
                   />
                 )
               })}

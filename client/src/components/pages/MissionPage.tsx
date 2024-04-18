@@ -35,7 +35,9 @@ import './MissionPage.scss'
  * This will render page that allows the user to
  * edit a mission.
  */
-export default function MissionPage(props: IMissionPage): JSX.Element | null {
+export default function MissionPage({
+  missionId,
+}: IMissionPage): JSX.Element | null {
   /* -- GLOBAL CONTEXT -- */
   const globalContext = useGlobalContext()
   const { beginLoading, finishLoading, handleError, notify, prompt } =
@@ -44,7 +46,9 @@ export default function MissionPage(props: IMissionPage): JSX.Element | null {
   /* -- STATE -- */
 
   const [mission, setMission] = useState<ClientMission>(new ClientMission())
-  const [areUnsavedChanges, setAreUnsavedChanges] = useState<boolean>(false)
+  const [areUnsavedChanges, setAreUnsavedChanges] = useState<boolean>(
+    missionId === null ? true : false,
+  )
   const [selectedNode, setSelectedNode] = useState<ClientMissionNode | null>(
     null,
   )
@@ -105,13 +109,11 @@ export default function MissionPage(props: IMissionPage): JSX.Element | null {
   /* -- EFFECTS -- */
 
   const [mountHandled] = useMountHandler(async (done) => {
-    let missionID: string | null = props.missionID
-
     // Handle the editing of an existing mission.
-    if (missionID !== null) {
+    if (missionId !== null) {
       try {
         beginLoading('Loading mission...')
-        let mission: ClientMission = await ClientMission.$fetchOne(missionID, {
+        let mission: ClientMission = await ClientMission.$fetchOne(missionId, {
           openAll: true,
         })
         setMission(mission)
@@ -309,8 +311,7 @@ export default function MissionPage(props: IMissionPage): JSX.Element | null {
   const ensureOneNodeExists = (): void => {
     if (
       mission.nodes.length === 1 &&
-      mission.lastCreatedNode?.nodeID ===
-        Array.from(mission.nodes.values())[0].nodeID
+      mission.lastCreatedNode?._id === Array.from(mission.nodes.values())[0]._id
     ) {
       notify(
         'Auto-generated a node for this mission, since missions must have at least one node.',
@@ -333,7 +334,7 @@ export default function MissionPage(props: IMissionPage): JSX.Element | null {
       // have at least one action then it will auto-generate one
       // for that node.
       let newAction: ClientMissionAction = new ClientMissionAction(selectedNode)
-      selectedNode.actions.set(newAction.actionID, newAction)
+      selectedNode.actions.set(newAction._id, newAction)
 
       notify(
         `Auto-generated an action for ${selectedNode.name} because it is an executable node with no actions to execute.`,
@@ -468,7 +469,7 @@ export default function MissionPage(props: IMissionPage): JSX.Element | null {
           active={missionDetailsIsActive}
           mission={mission}
           handleChange={handleChange}
-          key={mission.missionID}
+          key={mission._id}
         />
       )
     } else if (selectedNode && !selectedAction && !selectedEffect) {
@@ -479,7 +480,7 @@ export default function MissionPage(props: IMissionPage): JSX.Element | null {
           handleChange={handleChange}
           handleAddRequest={handleNodeAddRequest}
           handleDeleteRequest={() => handleNodeDeleteRequest(selectedNode)}
-          key={selectedNode.nodeID}
+          key={selectedNode._id}
         />
       )
     } else if (
@@ -494,7 +495,7 @@ export default function MissionPage(props: IMissionPage): JSX.Element | null {
           setSelectedAction={setSelectedAction}
           setSelectedEffect={setSelectedEffect}
           handleChange={handleChange}
-          key={selectedAction.actionID}
+          key={selectedAction._id}
         />
       )
     } else if (
@@ -509,7 +510,7 @@ export default function MissionPage(props: IMissionPage): JSX.Element | null {
           setSelectedAction={setSelectedAction}
           setSelectedEffect={setSelectedEffect}
           handleChange={handleChange}
-          key={selectedEffect.id}
+          key={selectedEffect._id}
         />
       )
     } else if (nodeStructuringIsActive) {
@@ -566,5 +567,5 @@ export interface IMissionPage extends TPage_P {
    * The ID of the mission to be edited. If null,
    * a new mission is being created.
    */
-  missionID: string | null
+  missionId: string | null
 }

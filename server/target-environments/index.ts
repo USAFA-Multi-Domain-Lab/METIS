@@ -53,7 +53,7 @@ export default class ServerTargetEnvironment extends TargetEnvironment<ServerTar
   public static get(id: string): ServerTargetEnvironment | undefined {
     return ServerTargetEnvironment.registry.find(
       (targetEnvironment: ServerTargetEnvironment) =>
-        targetEnvironment.id === id,
+        targetEnvironment._id === id,
     )
   }
 
@@ -70,7 +70,7 @@ export default class ServerTargetEnvironment extends TargetEnvironment<ServerTar
    */
   public static getJson(id: string): TCommonTargetEnvJson | undefined {
     return ServerTargetEnvironment.registryJson.find(
-      (targetEnvironment: TCommonTargetEnvJson) => targetEnvironment.id === id,
+      (targetEnvironment: TCommonTargetEnvJson) => targetEnvironment._id === id,
     )
   }
 
@@ -116,11 +116,11 @@ export default class ServerTargetEnvironment extends TargetEnvironment<ServerTar
           // Grab the default export from the file.
           let exportDefault: any = require(path.join(directory, file)).default
 
-          // If the default export has an id, a name, a description,
+          // If the default export has an ID, a name, a description,
           // and a version, then it is a target environment.
           if (
             exportDefault &&
-            exportDefault.id &&
+            exportDefault._id &&
             exportDefault.name &&
             exportDefault.description &&
             exportDefault.version
@@ -144,11 +144,11 @@ export default class ServerTargetEnvironment extends TargetEnvironment<ServerTar
           // Grab the default export from the file.
           let exportDefault: any = require(path.join(directory, file)).default
 
-          // If the default export has an id, a target environment id, a name,
+          // If the default export has an ID, a target environment ID, a name,
           // a description, a script, and args, then it is a target.
           if (
             exportDefault &&
-            exportDefault.id &&
+            exportDefault._id &&
             exportDefault.targetEnvId &&
             exportDefault.name &&
             exportDefault.description &&
@@ -177,7 +177,7 @@ export default class ServerTargetEnvironment extends TargetEnvironment<ServerTar
       let targetEnvironment: TCommonTargetEnvJson | undefined =
         targetEnvironmentJson.find(
           (targetEnvironment: TCommonTargetEnvJson) => {
-            return targetEnvironment.id === target.targetEnvId
+            return targetEnvironment._id === target.targetEnvId
           },
         )
 

@@ -5,7 +5,7 @@ import ClientMission from '..'
 import { TRequestMethod } from '../../../../shared/connect/data'
 import { TCommonMissionActionJson } from '../../../../shared/missions/actions'
 import { TActionExecutionJSON } from '../../../../shared/missions/actions/executions'
-import { IActionOutcomeJSON } from '../../../../shared/missions/actions/outcomes'
+import { TActionOutcomeJson } from '../../../../shared/missions/actions/outcomes'
 import MissionNode, {
   ILoadOutcomeOptions,
   INodeOpenOptions,
@@ -231,7 +231,7 @@ export default class ClientMissionNode extends MissionNode<
     >()
     data.forEach((datum) => {
       let action: ClientMissionAction = new ClientMissionAction(this, datum)
-      actions.set(action.actionID, action)
+      actions.set(action._id, action)
     })
     return actions
   }
@@ -247,7 +247,7 @@ export default class ClientMissionNode extends MissionNode<
 
     // Get action for the ID passed.
     let action: ClientMissionAction | undefined = this.actions.get(
-      data.actionID,
+      data.actionId,
     )
 
     // Handle undefined action.
@@ -261,11 +261,11 @@ export default class ClientMissionNode extends MissionNode<
 
   // Implemented
   protected parseOutcomeData(
-    data: IActionOutcomeJSON[],
-  ): Array<ClientActionOutcome> {
-    return data.map((datum: IActionOutcomeJSON) => {
+    data: TActionOutcomeJson[],
+  ): ClientActionOutcome[] {
+    return data.map((datum: TActionOutcomeJson) => {
       let action: ClientMissionAction | undefined = this.actions.get(
-        datum.actionID,
+        datum.actionId,
       )
 
       // Handle undefined action.
@@ -389,8 +389,8 @@ export default class ClientMissionNode extends MissionNode<
     data: NonNullable<TActionExecutionJSON>,
   ): ClientActionExecution {
     // Get the action action being executed.
-    let { actionID } = data
-    let action = this.actions.get(actionID)
+    let { actionId } = data
+    let action = this.actions.get(actionId)
 
     // Throw an error if action is undefined.
     if (action === undefined) {
@@ -422,15 +422,15 @@ export default class ClientMissionNode extends MissionNode<
 
   // Implemented
   public loadOutcome(
-    data: IActionOutcomeJSON,
+    data: TActionOutcomeJson,
     options: IClientLoadOutcomeOptions = {},
   ): ClientActionOutcome {
     // Parse data and options.
-    const { actionID, successful } = data
+    const { actionId, successful } = data
     const { revealedChildNodes } = options
 
     // Get the action for the outcome.
-    let action = this.actions.get(actionID)
+    let action = this.actions.get(actionId)
 
     // Throw an error if action is undefined.
     if (action === undefined) {
@@ -490,8 +490,8 @@ export default class ClientMissionNode extends MissionNode<
     // itself.
     let x: ClientMissionNode | null = target
 
-    while (x !== null && x.nodeID !== rootNode.nodeID) {
-      if (this.nodeID === x.nodeID) {
+    while (x !== null && x._id !== rootNode._id) {
+      if (this._id === x._id) {
         return
       }
 
@@ -506,7 +506,7 @@ export default class ClientMissionNode extends MissionNode<
       for (let index: number = 0; index < siblings.length; index++) {
         let sibling = siblings[index]
 
-        if (this.nodeID === sibling.nodeID) {
+        if (this._id === sibling._id) {
           siblings.splice(index, 1)
         }
       }
@@ -528,7 +528,7 @@ export default class ClientMissionNode extends MissionNode<
           ) {
             let sibling = targetAndTargetSiblings[index]
 
-            if (target.nodeID === sibling.nodeID) {
+            if (target._id === sibling._id) {
               targetAndTargetSiblings[index] = this
             }
           }
@@ -560,7 +560,7 @@ export default class ClientMissionNode extends MissionNode<
       case ENodeTargetRelation.PreviousSiblingOfTarget:
         if (newParentNode !== null) {
           newParentNode.childNodes.forEach((childNode: ClientMissionNode) => {
-            if (childNode.nodeID === target.nodeID) {
+            if (childNode._id === target._id) {
               newParentNodeChildNodes.push(this)
               this.parentNode = newParentNode
             }
@@ -576,7 +576,7 @@ export default class ClientMissionNode extends MissionNode<
           newParentNode.childNodes.forEach((childNode: ClientMissionNode) => {
             newParentNodeChildNodes.push(childNode)
 
-            if (childNode.nodeID === target.nodeID) {
+            if (childNode._id === target._id) {
               newParentNodeChildNodes.push(this)
               this.parentNode = newParentNode
             }
@@ -629,7 +629,7 @@ export default class ClientMissionNode extends MissionNode<
 
         this.childrenOfParent.splice(this.childrenOfParent.indexOf(this), 1)
         this.mission.nodes = this.mission.nodes.filter(
-          (node) => node.nodeID !== this.nodeID,
+          (node) => node._id !== this._id,
         )
         break
       case ENodeDeleteMethod.DeleteNodeAndShiftChildren:
@@ -653,7 +653,7 @@ export default class ClientMissionNode extends MissionNode<
             1,
           )
           this.mission.nodes = this.mission.nodes.filter(
-            (node) => node.nodeID !== this.nodeID,
+            (node) => node._id !== this._id,
           )
           this.mission.handleStructureChange()
         }

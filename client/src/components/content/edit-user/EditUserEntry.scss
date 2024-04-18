@@ -3,26 +3,10 @@
 .EditUserEntry {
   width: 100%;
 
-  .UserIDContainer,
-  .RoleContainer {
-    margin: 20px 8% 0;
-
-    .Title {
-      font-size: 14px;
-      margin-right: 15px;
-    }
-
-    .UserID,
-    .Role {
-      color: $color-accent-light;
-      margin: 5px 0 0;
-      font-size: 14px;
-    }
-  }
-
   .DetailToggle {
     border: none;
     grid-template-columns: auto 1fr;
+    padding-left: 0;
 
     .Label {
       font-size: 0.88em;

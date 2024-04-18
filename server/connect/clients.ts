@@ -43,10 +43,10 @@ export default class ClientConnection {
   }
 
   /**
-   * The userID for the user in the session.
+   * The userId for the user in the session.
    */
-  public get userID(): string {
-    return this.session.userID
+  public get userId(): string {
+    return this.session.userId
   }
 
   /**
@@ -194,7 +194,7 @@ export default class ClientConnection {
     // Add a `request-current-game` listener.
     this.addEventListener('request-current-game', (event) => {
       // Get the current game.
-      let game = GameServer.get(this.session.gameID ?? undefined)
+      let game = GameServer.get(this.session.gameId ?? undefined)
 
       // Emit the current game in response to the client.
       if (game !== undefined) {
@@ -214,7 +214,7 @@ export default class ClientConnection {
     // Add a `request-join-game` listener.
     this.addEventListener('request-join-game', (event) => {
       // Get game.
-      let game: GameServer | undefined = GameServer.get(event.data.gameID)
+      let game: GameServer | undefined = GameServer.get(event.data.gameId)
 
       // If game is undefined, emit game not found.
       if (game === undefined) {
@@ -251,11 +251,11 @@ export default class ClientConnection {
     // Add a `request-quit-game` listener.
     this.addEventListener('request-quit-game', (event) => {
       // Get the game.
-      let game = GameServer.get(this.session.gameID ?? undefined)
+      let game = GameServer.get(this.session.gameId ?? undefined)
 
       // Quit the game, if defined.
       if (game !== undefined) {
-        game.quit(this.userID)
+        game.quit(this.userId)
       }
 
       // Return response.
@@ -289,7 +289,7 @@ export default class ClientConnection {
     // Return the request data.
     return {
       event: requestEvent,
-      requesterId: this.userID,
+      requesterId: this.userId,
       fulfilled,
     }
   }

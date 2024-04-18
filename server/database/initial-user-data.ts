@@ -1,32 +1,32 @@
 import { TCommonUserJson } from 'metis/users'
 
 // Default student user data.
-export const studentUserData: TCommonUserJson = {
-  userID: 'student1',
-  roleID: 'student',
+export const studentUserData: Omit<TCommonUserJson, '_id'> = {
+  username: 'student1',
+  roleId: 'student',
   firstName: 'student',
   lastName: 'user',
   needsPasswordReset: false,
-  expressPermissionIDs: [],
+  expressPermissionIds: [],
   password: 'password',
 }
 // Default instructor user data.
-export const instructorUserData: TCommonUserJson = {
-  userID: 'instructor1',
-  roleID: 'instructor',
+export const instructorUserData: Omit<TCommonUserJson, '_id'> = {
+  username: 'instructor1',
+  roleId: 'instructor',
   firstName: 'instructor',
   lastName: 'user',
   needsPasswordReset: false,
-  expressPermissionIDs: [],
+  expressPermissionIds: [],
   password: 'password',
 }
 // Default admin user data.
-export const adminUserData: TCommonUserJson = {
-  userID: 'admin',
-  roleID: 'admin',
+export const adminUserData: Omit<TCommonUserJson, '_id'> = {
+  username: 'admin',
+  roleId: 'admin',
   firstName: 'admin',
   lastName: 'user',
   needsPasswordReset: false,
-  expressPermissionIDs: [],
+  expressPermissionIds: [],
   password: 'temppass',
 }

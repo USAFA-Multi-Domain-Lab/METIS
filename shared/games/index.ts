@@ -1,13 +1,13 @@
 import { TCommonMission, TCommonMissionJson } from 'metis/missions'
 import { TCommonMissionAction } from '../missions/actions'
 import { TCommonMissionNode } from '../missions/nodes'
-import { TCommonUserJson } from '../users'
+import { TCommonUser, TCommonUserJson } from '../users'
 
 /**
  * Base class for a games. Represents a game being played by participating students in METIS.
  */
 export default abstract class Game<
-  TUser extends { userID: string },
+  TUser extends { _id: TCommonUser['_id'] } | { userId: TCommonUser['_id'] },
   TMission extends TCommonMission,
   TMissionNode extends TCommonMissionNode,
   TMissionAction extends TCommonMissionAction,
@@ -15,7 +15,7 @@ export default abstract class Game<
   /**
    * The ID of the game.
    */
-  public readonly gameID: string
+  public readonly gameId: string
 
   /**
    * The name of the game.
@@ -41,8 +41,8 @@ export default abstract class Game<
   /**
    * The ID of the mission being executed by the participants.
    */
-  public get missionID(): string {
-    return this.mission.missionID
+  public get missionId(): string {
+    return this.mission._id
   }
 
   /**
@@ -122,7 +122,7 @@ export default abstract class Game<
    * ** Note: Use the static method `launch` to create a new game with a new game ID. **
    */
   public constructor(
-    gameID: string,
+    gameId: string,
     name: string,
     config: Partial<TGameConfig>,
     mission: TMission,
@@ -130,7 +130,7 @@ export default abstract class Game<
     banList: string[],
     supervisors: TUser[],
   ) {
-    this.gameID = gameID
+    this.gameId = gameId
     this.name = name
     this._config = {
       ...Game.DEFAULT_CONFIG,
@@ -145,7 +145,7 @@ export default abstract class Game<
   }
 
   /**
-   * Loops through all the nodes in the mission, and each action in a node, and maps the actionID to the action in the field "actions".
+   * Loops through all the nodes in the mission, and each action in a node, and maps the actionId to the action in the field "actions".
    */
   protected abstract mapActions(): void
 
@@ -154,42 +154,21 @@ export default abstract class Game<
    * @param user The user to check.
    * @returns Whether the given user is joined into the game.
    */
-  public isJoined(user: TUser): boolean {
-    for (let x of this.users) {
-      if (x.userID === user.userID) {
-        return true
-      }
-    }
-    return false
-  }
+  public abstract isJoined(user: TUser): boolean
 
   /**
    * Checks if the given user is currently a participant in the game.
    * @param user The user to check.
    * @returns Whether the given user is a participant of the game.
    */
-  public isParticipant(user: TUser): boolean {
-    for (let x of this.users) {
-      if (x.userID === user.userID) {
-        return true
-      }
-    }
-    return false
-  }
+  public abstract isParticipant(user: TUser): boolean
 
   /**
    * Checks if the given user is currently a supervisor in the game.
    * @param user The user to check.
    * @returns Whether the given user is a supervisor in the game.
    */
-  public isSupervisor(user: TUser): boolean {
-    for (let x of this.supervisors) {
-      if (x.userID === user.userID) {
-        return true
-      }
-    }
-    return false
-  }
+  public abstract isSupervisor(user: TUser): boolean
 
   /**
    * Converts the Game object to JSON.
@@ -262,7 +241,7 @@ export type TGameJson = {
   /**
    * The ID of the game.
    */
-  gameID: string
+  gameId: string
   /**
    * The state of the game (unstarted, started, ended).
    */
@@ -304,11 +283,11 @@ export type TGameBasicJson = {
   /**
    * The ID of the game.
    */
-  gameID: string
+  gameId: string
   /**
    * The ID of the mission being executed by the participants.
    */
-  missionID: string
+  missionId: string
   /**
    * The name of the game.
    */
@@ -320,7 +299,7 @@ export type TGameBasicJson = {
   /**
    * The IDs of the participants of the game.
    */
-  participantIDs: string[]
+  participantIds: string[]
   /**
    * The IDs of the participants banned from the game.
    * @note Empty if the user does not have supervisor permissions.
@@ -329,7 +308,7 @@ export type TGameBasicJson = {
   /**
    * The IDs of the supervisors of the game.
    */
-  supervisorIDs: string[]
+  supervisorIds: string[]
 }
 
 /**

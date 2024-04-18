@@ -1,6 +1,7 @@
+import { v4 as generateHash } from 'uuid'
 import UserPermission, {
   TUserPermission,
-  TUserPermissionID,
+  TUserPermissionId,
 } from './permissions'
 import UserRole, { TUserRole } from './roles'
 
@@ -9,7 +10,10 @@ import UserRole, { TUserRole } from './roles'
  */
 export default abstract class User implements TCommonUser {
   // Inherited
-  public userID: TCommonUser['userID']
+  public _id: TCommonUser['_id']
+
+  // Inherited
+  public username: TCommonUser['username']
 
   // Inherited
   public role: TCommonUser['role']
@@ -30,39 +34,23 @@ export default abstract class User implements TCommonUser {
   public password?: TCommonUser['password']
 
   /**
-   * @deprecated ***This is no longer supported and will be removed in the future.***
-   * @returns {boolean} Whether the user has restricted access.
-   */
-  public hasRestrictedAccess: TCommonUser['hasRestrictedAccess']
-
-  /**
-   * @deprecated ***This is no longer supported and will be removed in the future.***
-   * @returns {boolean} Whether the user has full access.
-   */
-  public hasFullAccess: TCommonUser['hasFullAccess']
-
-  /**
-   * @param {TCommonUserJson} data The user data from which to create the user. Any ommitted values will be set to the default properties defined in User.DEFAULT_PROPERTIES.
-   * @param {TUserOptions} options Options for creating the user.
+   * @param data The user data from which to create the user. Any ommitted values will be set to the default properties defined in User.DEFAULT_PROPERTIES.
+   * @param options Options for creating the user.
    */
   public constructor(
     data: Partial<TCommonUserJson> = User.DEFAULT_PROPERTIES,
     options: TUserOptions = {},
   ) {
-    this.userID = data.userID ?? User.DEFAULT_PROPERTIES.userID
-    this.role = UserRole.get(data.roleID ?? UserRole.DEFAULT_ID)
+    this._id = data._id ?? User.DEFAULT_PROPERTIES._id
+    this.username = data.username ?? User.DEFAULT_PROPERTIES.username
+    this.role = UserRole.get(data.roleId ?? UserRole.DEFAULT_ID)
     this.firstName = data.firstName ?? User.DEFAULT_PROPERTIES.firstName
     this.lastName = data.lastName ?? User.DEFAULT_PROPERTIES.lastName
     this.needsPasswordReset =
       data.needsPasswordReset ?? User.DEFAULT_PROPERTIES.needsPasswordReset
     this.expressPermissions = UserPermission.get(
-      data.expressPermissionIDs ?? User.DEFAULT_PROPERTIES.expressPermissionIDs,
+      data.expressPermissionIds ?? User.DEFAULT_PROPERTIES.expressPermissionIds,
     )
-
-    this.hasRestrictedAccess = UserRole.RESTRICTED_ACCESS_ROLES.includes(
-      this.role.name,
-    )
-    this.hasFullAccess = UserRole.FULL_ACCESS_ROLES.includes(this.role.name)
   }
 
   /**
@@ -73,13 +61,14 @@ export default abstract class User implements TCommonUser {
   public toJson(options: TUserOptions = {}): TCommonUserJson {
     // Construct JSON object to send to server.
     let json: TCommonUserJson = {
-      userID: this.userID,
+      _id: this._id,
+      username: this.username,
       firstName: this.firstName,
       lastName: this.lastName,
-      roleID: this.role.id,
+      roleId: this.role._id,
       needsPasswordReset: this.needsPasswordReset,
-      expressPermissionIDs: this.expressPermissions.map(
-        (permission: UserPermission) => permission.id,
+      expressPermissionIds: this.expressPermissions.map(
+        (permission: UserPermission) => permission._id,
       ),
       password: this.password,
     }
@@ -91,8 +80,8 @@ export default abstract class User implements TCommonUser {
    * Checks to see if a user is authorized to perform an action
    * by comparing the user's permissions to the permissions
    * required to perform the action.
-   * @param {TUserPermissionID | TUserPermissionID[]} requiredPermissions The permission(s) required to perform the action.
-   * @returns {boolean} Whether the user is authorized to perform the action.
+   * @param requiredPermissions The permission(s) required to perform the action.
+   * @returns Whether the user is authorized to perform the action.
    * @note A single permission ID can be passed in as a string, or multiple permission IDs can be passed in as an array of strings.
    * @example // Check if the user has the 'createUser' permission:
    * user.isAuthorized('createUser')
@@ -100,7 +89,7 @@ export default abstract class User implements TCommonUser {
    * user.isAuthorized(['createUser', 'deleteUser'])
    */
   public isAuthorized = (
-    requiredPermissions: TUserPermissionID | TUserPermissionID[],
+    requiredPermissions: TUserPermissionId | TUserPermissionId[],
   ): boolean => {
     // Current user in session.
     let currentUser = this
@@ -117,7 +106,7 @@ export default abstract class User implements TCommonUser {
     // access role, they are not
     // authorized to perform any
     // actions.
-    if (currentUser.role.id === 'revokedAccess') {
+    if (currentUser.role._id === 'revokedAccess') {
       return false
     } else {
       // Check if the user has the required
@@ -142,13 +131,27 @@ export default abstract class User implements TCommonUser {
    */
   public static get DEFAULT_PROPERTIES(): TCommonUserJson {
     return {
-      userID: '',
+      _id: generateHash(),
+      username: '',
       firstName: '',
       lastName: '',
-      roleID: UserRole.DEFAULT_ID,
+      roleId: UserRole.DEFAULT_ID,
       needsPasswordReset: false,
-      expressPermissionIDs: [],
+      expressPermissionIds: [],
     }
+  }
+
+  /**
+   * Validates the username of a user.
+   * @param username The username to validate.
+   */
+  public static isValidUsername = (
+    username: TCommonUserJson['username'],
+  ): boolean => {
+    let userExpression: RegExp = /^([a-zA-Z0-9-_.]{5,25})$/
+    let isValidUsername: boolean = userExpression.test(username)
+
+    return isValidUsername
   }
 }
 
@@ -166,7 +169,11 @@ export interface TCommonUser {
   /**
    * The user's ID.
    */
-  userID: string
+  _id: string
+  /**
+   * The user's username.
+   */
+  username: string
   /**
    * The user's role.
    */
@@ -196,16 +203,6 @@ export interface TCommonUser {
    * @returns {TCommonUserJson} A JSON representation of the user.
    */
   toJson: (options?: TUserOptions) => TCommonUserJson
-  /**
-   * Whether the user has restricted access.
-   * @deprecated
-   */
-  hasRestrictedAccess: boolean
-  /**
-   * Whether the user has full access.
-   * @deprecated
-   */
-  hasFullAccess: boolean
 }
 
 /**
@@ -215,16 +212,20 @@ export interface TCommonUserJson {
   /**
    * The user's ID.
    */
-  userID: string
+  _id: string
+  /**
+   * The user's username.
+   */
+  username: string
   /**
    * The user's role ID.
    */
-  roleID: TUserRole['id']
+  roleId: TUserRole['_id']
   /**
    * Specific express permission IDs assigned
    * to the user.
    */
-  expressPermissionIDs: TUserPermission['id'][]
+  expressPermissionIds: TUserPermission['_id'][]
   /**
    * The user's first name.
    */

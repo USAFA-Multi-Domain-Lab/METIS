@@ -5,6 +5,7 @@ import Target, {
   TCommonTargetJson,
 } from '../../target-environments/targets'
 import { AnyObject } from '../../toolbox/objects'
+import { uuidTypeValidator } from '../../toolbox/validators'
 import { TCommonMissionAction } from '../actions'
 
 /**
@@ -19,7 +20,7 @@ export default abstract class Effect<
   public action: TMissionAction
 
   // Inherited
-  public id: TCommonEffect['id']
+  public _id: TCommonEffect['_id']
 
   // Inherited
   public name: TCommonEffect['name']
@@ -40,7 +41,10 @@ export default abstract class Effect<
    * of the target. If the target is not set, it will be
    * null.
    */
-  protected _target: Target<TTargetEnvironment> | TCommonTargetJson['id'] | null
+  protected _target:
+    | Target<TTargetEnvironment>
+    | TCommonTargetJson['_id']
+    | null
   /**
    * The target to which the effect will be applied.
    */
@@ -56,7 +60,7 @@ export default abstract class Effect<
    * @note Setting this will cause the target data to be reloaded.
    */
   public set target(
-    target: Target<TTargetEnvironment> | TCommonTargetJson['id'] | null,
+    target: Target<TTargetEnvironment> | TCommonTargetJson['_id'] | null,
   ) {
     // If the target is a Target Object, set it.
     if (target instanceof Target) {
@@ -75,13 +79,13 @@ export default abstract class Effect<
   /**
    * The ID of the target to which the effect will be applied.
    */
-  public get targetId(): TCommonTargetJson['id'] | null {
-    let target: Target<TTargetEnvironment> | TCommonTargetJson['id'] | null =
+  public get targetId(): TCommonTargetJson['_id'] | null {
+    let target: Target<TTargetEnvironment> | TCommonTargetJson['_id'] | null =
       this._target
 
     // If the target is a Target Object, return its ID.
     if (target instanceof Target) {
-      return target.id
+      return target._id
     }
     // Or, the target is an ID.
     else if (typeof target === 'string') {
@@ -95,7 +99,7 @@ export default abstract class Effect<
   /**
    * The ID of the target to which the effect will be applied.
    */
-  public set targetId(targetId: TCommonTargetJson['id']) {
+  public set targetId(targetId: TCommonTargetJson['_id']) {
     this._target = targetId
   }
 
@@ -126,8 +130,8 @@ export default abstract class Effect<
 
   /**
    * Creates a new Effect Object.
-   * @param {TMissionAction} action The action to which the effect belongs.
-   * @param {TCommonEffectJson} data The data to use to create the Effect.
+   * @param action The action to which the effect belongs.
+   * @param data The data to use to create the Effect.
    */
   public constructor(
     action: TMissionAction,
@@ -135,7 +139,7 @@ export default abstract class Effect<
     options: TEffectOptions = {},
   ) {
     this.action = action
-    this.id = data.id ?? Effect.DEFAULT_PROPERTIES.id
+    this._id = data._id ?? Effect.DEFAULT_PROPERTIES._id
     this.name = data.name ?? Effect.DEFAULT_PROPERTIES.name
     this.description = data.description ?? Effect.DEFAULT_PROPERTIES.description
     this.targetEnvironmentVersion =
@@ -154,35 +158,46 @@ export default abstract class Effect<
 
   /**
    * Populates the target data.
-   * @param {TCommonTargetJson['id']} targetId The ID of the target to load.
+   * @param targetId The ID of the target to load.
    * @resolves When the target data has been loaded.
    */
   public abstract populateTargetData(
-    targetId: TCommonTargetJson['id'],
+    targetId: TCommonTargetJson['_id'],
   ): Promise<void>
 
   /**
    * Converts the Effect Object to JSON.
-   * @returns {TCommonEffectJson} A JSON representation of the Effect.
+   * @returns A JSON representation of the Effect.
    */
   public toJson(): TCommonEffectJson {
     // Construct JSON object to send to the server.
-    return {
-      id: this.id,
+    let json: TCommonEffectJson = {
       name: this.name,
       description: this.description,
       targetEnvironmentVersion: this.targetEnvironmentVersion,
-      targetId: this.target ? this.target.id : this.targetId,
+      targetId: this.target ? this.target._id : this.targetId,
       args: this.args,
     }
+
+    // Include _id if its not a UUID.
+    // * Note: IDs in the database are
+    // * stored as mongoose ObjectIds.
+    // * If the ID is a UUID, then the
+    // * mission won't save.
+    let isObjectId: boolean = !uuidTypeValidator(this._id) ? true : false
+    if (isObjectId) {
+      json._id = this._id
+    }
+
+    return json
   }
 
   /**
    * Default properties set when creating a new Effect object.
    */
-  public static get DEFAULT_PROPERTIES(): TCommonEffectJson {
+  public static get DEFAULT_PROPERTIES(): Required<TCommonEffectJson> {
     return {
-      id: generateHash(),
+      _id: generateHash(),
       name: 'New Effect',
       description: '<p><br></p>',
       targetEnvironmentVersion: '0.0.1',
@@ -219,7 +234,7 @@ export interface TCommonEffect {
   /**
    * The ID of the effect.
    */
-  id: string
+  _id: string
   /**
    * The name of the effect.
    */
@@ -249,7 +264,7 @@ export interface TCommonEffectJson {
   /**
    * The ID of the effect.
    */
-  id: string
+  _id?: string
   /**
    * The name of the effect.
    */
@@ -265,7 +280,7 @@ export interface TCommonEffectJson {
   /**
    * The ID of the target to which the effect will be applied.
    */
-  targetId: TCommonTargetJson['id'] | null
+  targetId: TCommonTargetJson['_id'] | null
   /**
    * The arguments used to affect an entity via the effects API.
    */

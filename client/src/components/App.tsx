@@ -169,9 +169,9 @@ function App(props: {}): JSX.Element | null {
           }
           // Else, if the sessioned user is in a game,
           // then switch to the game page.
-          else if (session.gameID !== null) {
+          else if (session.gameId !== null) {
             let game: GameClient = await server.$fetchCurrentGame(
-              session.gameID,
+              session.gameId,
             )
             // Navigate based on the game state.
             switch (game.state) {

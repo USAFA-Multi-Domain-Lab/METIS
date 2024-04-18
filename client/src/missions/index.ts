@@ -136,11 +136,11 @@ export default class ClientMission
   /**
    * Cache for tracking possible locations for creating a new node based on the node creation target.
    */
-  protected _nodeCreators: Array<NodeCreator>
+  protected _nodeCreators: NodeCreator[]
   /**
    * Cache for tracking possible locations for creating a new node based on the node creation target.
    */
-  public get nodeCreators(): Array<NodeCreator> {
+  public get nodeCreators(): NodeCreator[] {
     return this._nodeCreators
   }
 
@@ -299,7 +299,7 @@ export default class ClientMission
     // node in the mission. This node should be
     // included in the nodeData for the
     //  missionRender so that it displays.
-    if (parentNode.nodeID !== this.rootNode.nodeID) {
+    if (parentNode._id !== this.rootNode._id) {
       parentNode.position.set(
         depth * ClientMissionNode.COLUMN_WIDTH,
         rowCount.count * ClientMissionNode.ROW_HEIGHT + yOffset,
@@ -317,7 +317,7 @@ export default class ClientMission
     // If the nodeCreationTarget is this parentNode,
     // the positioning is offset to account for the
     // node creators that must be rendered.
-    if (nodeCreationTarget?.nodeID === parentNode.nodeID) {
+    if (nodeCreationTarget?._id === parentNode._id) {
       depth++
     }
 
@@ -327,7 +327,7 @@ export default class ClientMission
     // parentNode, the positioning is offset to account
     // for the node creators that must be rendered.
     for (let childNode of childNodes) {
-      if (nodeCreationTarget?.nodeID === childNode.nodeID) {
+      if (nodeCreationTarget?._id === childNode._id) {
         depth += 1
       }
     }
@@ -355,7 +355,7 @@ export default class ClientMission
       // If the nodeCreationTarget is this childNode,
       // the positioning is offset to account for the
       // node creators that must be rendered.
-      if (nodeCreationTarget?.nodeID === childNode.nodeID) {
+      if (nodeCreationTarget?._id === childNode._id) {
         rowCount.increment()
       }
 
@@ -371,7 +371,7 @@ export default class ClientMission
       // If the nodeCreationTarget is this childNode,
       // the positioning is offset to account for the
       // node creators that must be rendered.
-      if (nodeCreationTarget?.nodeID === childNode.nodeID) {
+      if (nodeCreationTarget?._id === childNode._id) {
         rowCount.increment()
       }
     })
@@ -449,7 +449,7 @@ export default class ClientMission
 
         // Push a new line.
         relationshipLines.push({
-          key: `parent-to-middle_${parent.nodeID}`,
+          key: `parent-to-middle_${parent._id}`,
           direction: 'horizontal',
           start: parentToMidStart,
           // The length of the line is the distance
@@ -541,13 +541,13 @@ export default class ClientMission
           // If the parent node is the node creation target,
           // the vertical line should be offset to account
           // for a node creator between the parent and child.
-          if (creationTarget?.nodeID === parent.nodeID) {
+          if (creationTarget?._id === parent._id) {
             downMidStart.translateX(ClientMissionNode.COLUMN_WIDTH)
           }
 
           // Push a new line.
           relationshipLines.push({
-            key: `down-middle_${parent.nodeID}`,
+            key: `down-middle_${parent._id}`,
             direction: 'vertical',
             start: downMidStart,
             length: downMidLength,
@@ -580,7 +580,7 @@ export default class ClientMission
           // If the parent node is the node creation target,
           // the start position should be offset to account
           // for a node creator between the parent and child.
-          if (creationTarget?.nodeID === parent.nodeID) {
+          if (creationTarget?._id === parent._id) {
             midToChildStart.translateX(ClientMissionNode.COLUMN_WIDTH)
           }
 
@@ -598,7 +598,7 @@ export default class ClientMission
 
           // Push the new line.
           relationshipLines.push({
-            key: `middle-to-child_${child.nodeID}`,
+            key: `middle-to-child_${child._id}`,
             direction: 'horizontal',
             start: midToChildStart,
             length: midToChildLength,
@@ -651,7 +651,7 @@ export default class ClientMission
 
           // Push a new line.
           relationshipLines.push({
-            key: `creator-to-target_${creator.nodeID}`,
+            key: `creator-to-target_${creator.nodeId}`,
             direction: 'horizontal',
             start,
             length,
@@ -689,7 +689,7 @@ export default class ClientMission
 
           // Push a new line.
           relationshipLines.push({
-            key: `target-to-creator_${creator.nodeID}`,
+            key: `target-to-creator_${creator.nodeId}`,
             direction: 'horizontal',
             start,
             length,
@@ -734,7 +734,7 @@ export default class ClientMission
 
           // Push a new line.
           relationshipLines.push({
-            key: `parent-to-creator_${creator.nodeID}`,
+            key: `parent-to-creator_${creator.nodeId}`,
             direction: 'horizontal',
             start,
             length,
@@ -833,12 +833,12 @@ export default class ClientMission
         if (!this.existsOnServer) {
           let { data } = await axios.post<
             any,
-            AxiosResponse<TCommonMissionJson>
+            AxiosResponse<Required<TCommonMissionJson>>
           >(ClientMission.API_ENDPOINT, this.toJson())
           // Update the temporary client-generated
           // mission ID and seed with the server-generated
           // mission ID and seed.
-          this.missionID = data.missionID
+          this._id = data._id
           this.seed = data.seed
           // Update existsOnServer to true.
           this._existsOnServer = true
@@ -867,11 +867,11 @@ export default class ClientMission
 
   /**
    * Imports missions from .metis files, returns a Promise that resolves with the results of the import.
-   * @param {FileList | Array<File>} files The .metis files to import.
-   * @returns {Promise<TMissionImportResult>} The result of the import.
+   * @param files The .metis files to import.
+   * @returns The result of the import.
    */
   public static async $import(
-    files: FileList | Array<File>,
+    files: FileList | File[],
   ): Promise<TMissionImportResult> {
     return new Promise<TMissionImportResult>(async (resolve, reject) => {
       try {
@@ -900,14 +900,14 @@ export default class ClientMission
 
   /**
    * Copy a mission and create a new mission with the same structure.
-   * @param originalID The ID of the mission to copy.
+   * @param originalId The ID of the mission to copy.
    * @param copyName The name for the mission copy.
    * @param options Options for the creation of the Mission object returned.
    * @returns A promise that resolves to a ClientMission object for the new mission copy.
    */
   public static async $copy(
-    originalID: string,
-    copyName: string,
+    originalId: ClientMission['_id'],
+    copyName: ClientMission['name'],
     options: TExistingClientMissionOptions = {},
   ): Promise<ClientMission> {
     return new Promise<ClientMission>(async (resolve, reject) => {
@@ -915,7 +915,7 @@ export default class ClientMission
         let { data } = await axios.put<any, AxiosResponse<TCommonMissionJson>>(
           `${ClientMission.API_ENDPOINT}/copy/`,
           {
-            originalID,
+            originalId,
             copyName,
           },
         )
@@ -933,12 +933,12 @@ export default class ClientMission
 
   /**
    * Calls the API to fetch one mission by its mission ID.
-   * @param {string} missionID The ID of the mission to fetch.
-   * @param {object} options Options for the creation of the Mission object returned.
-   * @returns {Promise<ClientMission>} A promise that resolves to a Mission object.
+   * @param _id The ID of the mission to fetch.
+   * @param options Options for the creation of the Mission object returned.
+   * @returns A promise that resolves to a Mission object.
    */
   public static async $fetchOne(
-    missionID: string,
+    _id: ClientMission['_id'],
     options: TExistingClientMissionOptions = {},
   ): Promise<ClientMission> {
     return new Promise<ClientMission>(async (resolve, reject) => {
@@ -946,7 +946,7 @@ export default class ClientMission
         // Retrieve data from API.
         let { data } = await axios.get<TCommonMissionJson>(
           ClientMission.API_ENDPOINT,
-          { params: { missionID } },
+          { params: { _id } },
         )
         // Update options.
         options.existsOnServer = true
@@ -964,8 +964,8 @@ export default class ClientMission
 
   /**
    * Calls the API to fetch all missions available.
-   * @param {TMissionOptions} options Options for the creation of the Mission objects returned.
-   * @returns {Promise<ClientMission[]>} A promise that resolves to an array of Mission objects.
+   * @param options Options for the creation of the Mission objects returned.
+   * @returns A promise that resolves to an array of Mission objects.
    */
   public static async $fetchAll(
     options: TExistingClientMissionOptions = {},
@@ -991,14 +991,14 @@ export default class ClientMission
 
   /**
    * Deletes the mission with the given ID.
-   * @param {string} missionID The ID of the mission to delete.
-   * @returns {Promise<void>} A promise that resolves when the mission has been deleted.
+   * @param _id The ID of the mission to delete.
+   * @returns A promise that resolves when the mission has been deleted.
    */
-  public static async $delete(missionID: string): Promise<void> {
+  public static async $delete(_id: ClientMission['_id']): Promise<void> {
     return new Promise<void>(async (resolve, reject) => {
       try {
         await axios.delete(ClientMission.API_ENDPOINT, {
-          params: { missionID: missionID },
+          params: { _id: _id },
         })
         resolve()
       } catch (error) {

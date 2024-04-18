@@ -56,14 +56,14 @@ export default class GameServer extends Game<
   }
 
   public constructor(
-    gameID: string,
+    gameId: string,
     name: string,
     config: Partial<TGameConfig>,
     mission: ServerMission,
     participants: Array<ClientConnection>,
     supervisors: Array<ClientConnection>,
   ) {
-    super(gameID, name, config, mission, participants, [], supervisors)
+    super(gameId, name, config, mission, participants, [], supervisors)
     this._state = 'unstarted'
     this._resources = config.infiniteResources
       ? Infinity
@@ -73,13 +73,43 @@ export default class GameServer extends Game<
   }
 
   // Implemented
+  public isJoined(user: ClientConnection): boolean {
+    for (let x of this.users) {
+      if (x.userId === user.userId) {
+        return true
+      }
+    }
+    return false
+  }
+
+  // Implemented
+  public isParticipant(user: ClientConnection): boolean {
+    for (let x of this.users) {
+      if (x.userId === user.userId) {
+        return true
+      }
+    }
+    return false
+  }
+
+  // Implemented
+  public isSupervisor(user: ClientConnection): boolean {
+    for (let x of this.supervisors) {
+      if (x.userId === user.userId) {
+        return true
+      }
+    }
+    return false
+  }
+
+  // Implemented
   public toJson(options: TGameServerJsonOptions = {}): TGameJson {
     // Extract options.
     const { includeSensitiveData = false } = options
 
     // Construct and return JSON.
     return {
-      gameID: this.gameID,
+      gameId: this.gameId,
       state: this.state,
       name: this.name,
       mission: this.mission.toJson({
@@ -107,13 +137,13 @@ export default class GameServer extends Game<
 
     // Construct and return JSON.
     return {
-      gameID: this.gameID,
-      missionID: this.missionID,
+      gameId: this.gameId,
+      missionId: this.missionId,
       name: this.name,
       config: this.config,
-      participantIDs: this.participants.map(({ userID }) => userID),
+      participantIds: this.participants.map(({ userId: userId }) => userId),
       banList: includeSensitiveData ? this.banList : [],
-      supervisorIDs: this.supervisors.map(({ userID }) => userID),
+      supervisorIds: this.supervisors.map(({ userId: userId }) => userId),
     }
   }
 
@@ -138,7 +168,7 @@ export default class GameServer extends Game<
     // Loops through and maps each action.
     this.mission.nodes.forEach((node) => {
       node.actions.forEach((action) => {
-        this.actions.set(action.actionID, action)
+        this.actions.set(action._id, action)
       })
     })
   }
@@ -147,14 +177,14 @@ export default class GameServer extends Game<
    * Adds this game into the registry, indexing it with its game ID.
    */
   private register(): void {
-    GameServer.registry.set(this.gameID, this)
+    GameServer.registry.set(this.gameId, this)
   }
 
   /**
    * Removes this game from the registry.
    */
   private unregister(): void {
-    GameServer.registry.delete(this.gameID)
+    GameServer.registry.delete(this.gameId)
   }
 
   /**
@@ -174,7 +204,7 @@ export default class GameServer extends Game<
 
     // Emit an event to all users that the game has been destroyed.
     for (let user of users) {
-      user.emit('game-destroyed', { data: { gameID: this.gameID } })
+      user.emit('game-destroyed', { data: { gameId: this.gameId } })
     }
   }
 
@@ -187,7 +217,7 @@ export default class GameServer extends Game<
    */
   public join(client: ClientConnection, method: TGameJoinMethod): void {
     // Throw error if the user is in the ban list.
-    if (this._banList.includes(client.userID)) {
+    if (this._banList.includes(client.userId)) {
       throw ServerEmittedError.CODE_GAME_BANNED
     }
     // Throw error if the user is already in the game.
@@ -218,7 +248,7 @@ export default class GameServer extends Game<
 
     // Call join handler in the session of
     // the user.
-    client.session.handleJoin(this.gameID)
+    client.session.handleJoin(this.gameId)
 
     // Handle state change.
     this.handleStateChange()
@@ -241,7 +271,7 @@ export default class GameServer extends Game<
   public handleConnectionChange(newConnection: ClientConnection): boolean {
     this._participants.forEach(
       (participant: ClientConnection, index: number) => {
-        if (participant.userID === newConnection.userID) {
+        if (participant.userId === newConnection.userId) {
           // Update index in participants with the new
           // connection.
           this._participants[index] = newConnection
@@ -292,7 +322,7 @@ export default class GameServer extends Game<
   public quit(quitterID: string): void {
     // Find the supervisor in the list, if present.
     this._supervisors.forEach((supervisor: ClientConnection, index: number) => {
-      if (supervisor.userID === quitterID) {
+      if (supervisor.userId === quitterID) {
         // Remove the supervisor from the list.
         this._supervisors.splice(index, 1)
 
@@ -305,7 +335,7 @@ export default class GameServer extends Game<
     // Find the participant in the list, if present.
     this._participants.forEach(
       (participant: ClientConnection, index: number) => {
-        if (participant.userID === quitterID) {
+        if (participant.userId === quitterID) {
           // Remove the participant from the list.
           this._participants.splice(index, 1)
 
@@ -347,13 +377,13 @@ export default class GameServer extends Game<
 
   /**
    * Kicks the given user from the game.
-   * @param participantID The ID of the participant to kick from the game.
+   * @param participantId The ID of the participant to kick from the game.
    */
-  public kick(participantID: string): void {
+  public kick(participantId: string): void {
     // Find the participant in the list, if present.
     this._participants.forEach(
       (participant: ClientConnection, index: number) => {
-        if (participant.userID === participantID) {
+        if (participant.userId === participantId) {
           // If the participant is has supervisor permissions,
           // then throw 403 forbidden error.
           if (participant.user.isAuthorized('games_join_observer')) {
@@ -372,7 +402,7 @@ export default class GameServer extends Game<
 
           // Emit an event to the participant
           // that they have been kicked.
-          participant.emit('kicked', { data: { gameID: this.gameID } })
+          participant.emit('kicked', { data: { gameId: this.gameId } })
         }
       },
     )
@@ -383,14 +413,14 @@ export default class GameServer extends Game<
 
   /**
    * Bans the given user from the game.
-   * @param participantID The ID of the participant to ban from the game.
+   * @param participantId The ID of the participant to ban from the game.
    * @throws The correct HTTP status code for any errors that occur.
    */
-  public ban(participantID: string): void {
+  public ban(participantId: string): void {
     // Find the participant in the list, if present.
     this._participants.forEach(
       (participant: ClientConnection, index: number) => {
-        if (participant.userID === participantID) {
+        if (participant.userId === participantId) {
           // If the participant is has supervisor permissions,
           // then throw 403 forbidden error.
           if (participant.user.isAuthorized('games_join_observer')) {
@@ -409,13 +439,13 @@ export default class GameServer extends Game<
 
           // Emit an event to the participant
           // that they have been kicked.
-          participant.emit('banned', { data: { gameID: this.gameID } })
+          participant.emit('banned', { data: { gameId: this.gameId } })
         }
       },
     )
 
     // Add the participant to the ban list.
-    this._banList.push(participantID)
+    this._banList.push(participantId)
 
     // Handle state change.
     this.handleStateChange()
@@ -466,10 +496,10 @@ export default class GameServer extends Game<
   ): void => {
     // Organize data.
     let mission: ServerMission = this.mission
-    let { nodeID } = event.data
+    let { nodeId } = event.data
 
     // Find the node, given the ID.
-    let node: ServerMissionNode | undefined = mission.getNode(nodeID)
+    let node: ServerMissionNode | undefined = mission.getNode(nodeId)
 
     // If the game is not in the 'started' state,
     // then emit an error.
@@ -507,12 +537,12 @@ export default class GameServer extends Game<
       let payload: TServerEvents['node-opened'] = {
         method: 'node-opened',
         data: {
-          nodeID,
+          nodeId: nodeId,
           revealedChildNodes: node.childNodes.map((node) =>
             node.toJson({ includeGameData: true }),
           ),
         },
-        request: { event, requesterId: participant.userID, fulfilled: true },
+        request: { event, requesterId: participant.userId, fulfilled: true },
       }
 
       // Emit open event.
@@ -541,10 +571,10 @@ export default class GameServer extends Game<
     event: TClientEvents['request-execute-action'],
   ): Promise<void> => {
     // Extract request data.
-    let { actionID } = event.data
+    let { actionId } = event.data
 
     // Find the action given the ID.
-    let action: ServerMissionAction | undefined = this.actions.get(actionID)
+    let action: ServerMissionAction | undefined = this.actions.get(actionId)
 
     // If the game is not in the 'started' state,
     // then emit an error.
@@ -600,7 +630,7 @@ export default class GameServer extends Game<
             },
             request: {
               event,
-              requesterId: participant.userID,
+              requesterId: participant.userId,
               fulfilled: false,
             },
           }
@@ -622,7 +652,7 @@ export default class GameServer extends Game<
         },
         request: {
           event,
-          requesterId: participant.userID,
+          requesterId: participant.userId,
           fulfilled: true,
         },
       }
@@ -682,11 +712,11 @@ export default class GameServer extends Game<
   /**
    * @returns the game associated with the given game ID.
    */
-  public static get(gameID: string | undefined): GameServer | undefined {
-    if (gameID === undefined) {
+  public static get(gameId: string | undefined): GameServer | undefined {
+    if (gameId === undefined) {
       return undefined
     } else {
-      return GameServer.registry.get(gameID)
+      return GameServer.registry.get(gameId)
     }
   }
 
@@ -699,14 +729,14 @@ export default class GameServer extends Game<
 
   /**
    * Destroys the game associated with the given game ID.
-   * @param gameID The ID of the game to destroy.
+   * @param gameId The ID of the game to destroy.
    */
-  public static destroy(gameID: string | undefined): void {
+  public static destroy(gameId: string | undefined): void {
     // Find the game.
-    let game: GameServer | undefined = GameServer.get(gameID)
+    let game: GameServer | undefined = GameServer.get(gameId)
 
     // If found...
-    if (gameID !== undefined && game !== undefined) {
+    if (gameId !== undefined && game !== undefined) {
       // Destroy game.
       game.destroy()
     }

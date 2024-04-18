@@ -23,11 +23,11 @@ export class ClientTargetEnvironment extends TargetEnvironment<ClientTarget> {
 
   /**
    * Calls the API to fetch one target environment by ID.
-   * @param {ClientTargetEnvironment['id']} targetEnvId The ID of the target environment to fetch.
-   * @returns {Promise<ClientTargetEnvironment>} A promise that resolves to a ClientTargetEnvironment Object.
+   * @param targetEnvId The ID of the target environment to fetch.
+   * @returns A promise that resolves to a ClientTargetEnvironment Object.
    */
   public static async fetchOne(
-    targetEnvId: ClientTargetEnvironment['id'],
+    targetEnvId: ClientTargetEnvironment['_id'],
   ): Promise<ClientTargetEnvironment> {
     return new Promise<ClientTargetEnvironment>(async (resolve, reject) => {
       try {

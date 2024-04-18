@@ -2,12 +2,13 @@ import { v4 as generateHash } from 'uuid'
 import { TCommonMission } from '..'
 import ArrayToolbox from '../../toolbox/arrays'
 import MapToolbox from '../../toolbox/maps'
+import { uuidTypeValidator } from '../../toolbox/validators'
 import { TCommonMissionAction, TCommonMissionActionJson } from '../actions'
 import IActionExecution, {
   TActionExecutionJSON as TActionExecutionJson,
 } from '../actions/executions'
 import IActionOutcome, {
-  IActionOutcomeJSON as IActionOutcomeJson,
+  TActionOutcomeJson as IActionOutcomeJson,
 } from '../actions/outcomes'
 
 /**
@@ -25,7 +26,7 @@ export default abstract class MissionNode<
   public mission: TMission
 
   // Implemented
-  public nodeID: TCommonMissionNode['nodeID']
+  public _id: TCommonMissionNode['_id']
 
   // Implemented
   public name: TCommonMissionNode['name']
@@ -156,7 +157,7 @@ export default abstract class MissionNode<
         .childNodes as TRelativeNode[]
 
       siblings = childrenOfParent.filter(
-        (childOfParent: TRelativeNode) => childOfParent.nodeID !== this.nodeID,
+        (childOfParent: TRelativeNode) => childOfParent._id !== this._id,
       )
     }
 
@@ -184,7 +185,7 @@ export default abstract class MissionNode<
 
       childrenOfParent.forEach(
         (childOfParent: TRelativeNode, index: number) => {
-          if (childOfParent.nodeID === this.nodeID && index > 0) {
+          if (childOfParent._id === this._id && index > 0) {
             previousSibling = childrenOfParent[index - 1]
           }
         },
@@ -205,7 +206,7 @@ export default abstract class MissionNode<
       childrenOfParent.forEach(
         (childOfParent: TRelativeNode, index: number) => {
           if (
-            childOfParent.nodeID === this.nodeID &&
+            childOfParent._id === this._id &&
             index + 1 < childrenOfParent.length
           ) {
             followingSibling = childrenOfParent[index + 1]
@@ -244,7 +245,7 @@ export default abstract class MissionNode<
   ) {
     // Set properties from data.
     this.mission = mission
-    this.nodeID = data.nodeID ?? MissionNode.DEFAULT_PROPERTIES.nodeID
+    this._id = data._id ?? MissionNode.DEFAULT_PROPERTIES._id
     this.name = data.name ?? MissionNode.DEFAULT_PROPERTIES.name
     this.color = data.color ?? MissionNode.DEFAULT_PROPERTIES.color
     this.description =
@@ -309,7 +310,6 @@ export default abstract class MissionNode<
 
     // Construct base JSON.
     let json: TMissionNodeJson = {
-      nodeID: this.nodeID,
       name: this.name,
       color: this.color,
       description: this.description,
@@ -320,6 +320,16 @@ export default abstract class MissionNode<
       actions: MapToolbox.mapToArray(this.actions, (action: TMissionAction) =>
         action.toJson(),
       ),
+    }
+
+    // Include _id if its not a UUID.
+    // * Note: IDs in the database are
+    // * stored as mongoose ObjectIds.
+    // * If the ID is a UUID, then the
+    // * mission won't save.
+    let isObjectId: boolean = !uuidTypeValidator(this._id) ? true : false
+    if (isObjectId) {
+      json._id = this._id
     }
 
     // Include game data if includeGameData
@@ -375,7 +385,7 @@ export default abstract class MissionNode<
    */
   public static get DEFAULT_PROPERTIES(): Required<TMissionNodeJson> {
     return {
-      nodeID: generateHash(),
+      _id: generateHash(),
       name: 'Unnamed Node',
       color: '#ffffff',
       description: '<p><br></p>',
@@ -408,7 +418,7 @@ export interface TCommonMissionNode {
   /**
    * The ID for the node.
    */
-  nodeID: string
+  _id: string
   /**
    * The name for the node.
    */
@@ -553,7 +563,7 @@ export interface TCommonMissionNodeJson {
   /**
    * The ID for the node.
    */
-  nodeID: string
+  _id?: string
   /**
    * The name for the node.
    */

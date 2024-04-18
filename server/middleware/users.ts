@@ -1,18 +1,19 @@
 import { NextFunction, Request, Response } from 'express-serve-static-core'
-import { TUserPermissionID } from 'metis/users/permissions'
+import { TUserPermissionId } from 'metis/users/permissions'
 import GameServer from '../games'
 import MetisSession from '../sessions'
 
 /**
  * Middleware used to enforce authorization for a given route.
- * @param options The options for requiring authorization for a route.
+ * @param authentication The level of authentication required to access the route.
+ * @param permissions The permissions required to access the route.
  */
 export const auth =
   ({ authentication = 'session', permissions = [] }: TAuthOptions) =>
   (request: Request, response: Response, next: NextFunction): void => {
     // Gather details.
     let session: MetisSession | undefined = MetisSession.get(
-      request.session.userID,
+      request.session.userId,
     )
 
     // If there is no session, return 401.
@@ -28,7 +29,7 @@ export const auth =
     }
     // If the being in game is required and the user
     // is not in a game, return 401.
-    if (authentication === 'in-game' && !session.gameID) {
+    if (authentication === 'in-game' && !session.gameId) {
       response.sendStatus(401)
       return
     }
@@ -52,7 +53,7 @@ export const auth =
     // If authentication is 'in-game', store the game
     // in the response locals.
     if (authentication === 'in-game') {
-      response.locals.game = GameServer.get(session.gameID!)
+      response.locals.game = GameServer.get(session.gameId!)
     }
 
     // Call next middleware.
@@ -72,7 +73,7 @@ export type TAuthOptions = {
    * The permissions required to access the route.
    * @default []
    */
-  permissions?: TUserPermissionID[]
+  permissions?: TUserPermissionId[]
 }
 
 export default auth

@@ -1,7 +1,7 @@
-import IActionOutcome, {
-  IActionOutcomeJSON,
-} from '../../../../shared/missions/actions/outcomes'
 import ClientMissionAction from '.'
+import IActionOutcome, {
+  TActionOutcomeJson,
+} from '../../../../shared/missions/actions/outcomes'
 import ClientMissionNode from '../nodes'
 
 /**
@@ -15,12 +15,12 @@ export default class ClientActionOutcome implements IActionOutcome {
     return this.action.node
   }
   // Implemented
-  public get actionID(): string {
-    return this.action.actionID
+  public get actionId(): ClientMissionAction['_id'] {
+    return this.action._id
   }
   // Implemented
-  public get nodeID(): string {
-    return this.action.node.nodeID
+  public get nodeId(): ClientMissionNode['_id'] {
+    return this.action.node._id
   }
   // Implmented
   public readonly successful: boolean
@@ -35,10 +35,10 @@ export default class ClientActionOutcome implements IActionOutcome {
   }
 
   // Implemented
-  public toJson(): IActionOutcomeJSON {
+  public toJson(): TActionOutcomeJson {
     return {
-      actionID: this.actionID,
-      nodeID: this.nodeID,
+      actionId: this.actionId,
+      nodeId: this.nodeId,
       successful: this.successful,
     }
   }

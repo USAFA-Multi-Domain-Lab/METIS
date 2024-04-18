@@ -30,7 +30,7 @@ export default class OutputPanel extends Component<
   componentDidMount(): void {
     let mission: ClientMission = this.props.mission
     let timeStamp: number = Date.now()
-    let key: string = `mission-${mission.missionID}_intro-message_${timeStamp}`
+    let key: string = `mission-${mission._id}_intro-message_${timeStamp}`
 
     let renderInnerHTML = () => (
       <div className='Text'>
@@ -63,7 +63,7 @@ export default class OutputPanel extends Component<
     selectedNode: ClientMissionNode,
   ): IConsoleOutput {
     let timeStamp: number = Date.now()
-    let key: string = `pre_execution_node-${selectedNode.nodeID}_${timeStamp}`
+    let key: string = `pre_execution_node-${selectedNode._id}_${timeStamp}`
     let renderInnerHTML = () => {
       let textClassName: string = 'Text'
 
@@ -100,7 +100,7 @@ export default class OutputPanel extends Component<
     let successChanceFormatted: string = successChance * 100 + '%'
     let resourceCostFormatted: string = resourceCost + ' resource(s)'
     let timeRemainingFormatted: string = ''
-    let key: string = `start_node-${executingNode.nodeID}_action-${executingAction.actionID}_${timeStamp}`
+    let key: string = `start_node-${executingNode._id}_action-${executingAction._id}_${timeStamp}`
 
     let renderInnerHTML = () => {
       if (!done) {
@@ -166,7 +166,7 @@ export default class OutputPanel extends Component<
     let executedNode: ClientMissionNode = executedAction.node
     let nodeName: string = executedNode.name
     let nodeNameFormatted: string = nodeName.replaceAll(' ', '-')
-    let key: string = `success_node-${executedNode.nodeID}_action-${executedAction.actionID}_${timeStamp}`
+    let key: string = `success_node-${executedNode._id}_action-${executedAction._id}_${timeStamp}`
     let renderInnerHTML = () => (
       <div className='Text'>
         <span className='LineCursor'>
@@ -188,7 +188,7 @@ export default class OutputPanel extends Component<
   ): IConsoleOutput {
     let timeStamp: number = Date.now()
     let executedNode: ClientMissionNode = executedAction.node
-    let key: string = `failure_node-${executedNode.nodeID}_action-${executedAction.actionID}_${timeStamp}`
+    let key: string = `failure_node-${executedNode._id}_action-${executedAction._id}_${timeStamp}`
     let renderInnerHTML = () => (
       <div className='Text'>
         <span className='LineCursor'>

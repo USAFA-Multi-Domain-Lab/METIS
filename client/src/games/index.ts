@@ -54,7 +54,7 @@ export default class GameClient extends Game<
     server: ServerConnection,
     joinMethod: TGameJoinMethod,
   ) {
-    let gameID: string = data.gameID
+    let gameId: string = data.gameId
     let state: TGameState = data.state
     let name: string = data.name
     let mission: ClientMission = new ClientMission(data.mission)
@@ -67,7 +67,7 @@ export default class GameClient extends Game<
     let banList: string[] = data.banList
     let config: TGameConfig = data.config
 
-    super(gameID, name, config, mission, participants, banList, supervisors)
+    super(gameId, name, config, mission, participants, banList, supervisors)
     this.server = server
     this._joinMethod = joinMethod
     this._state = state
@@ -84,9 +84,39 @@ export default class GameClient extends Game<
     // Loops through and maps each action.
     this.mission.nodes.forEach((node) => {
       node.actions.forEach((action) => {
-        this.actions.set(action.actionID, action)
+        this.actions.set(action._id, action)
       })
     })
+  }
+
+  // Implemented
+  public isJoined(user: ClientUser): boolean {
+    for (let x of this.users) {
+      if (x._id === user._id) {
+        return true
+      }
+    }
+    return false
+  }
+
+  // Implemented
+  public isParticipant(user: ClientUser): boolean {
+    for (let x of this.users) {
+      if (x._id === user._id) {
+        return true
+      }
+    }
+    return false
+  }
+
+  // Implemented
+  public isSupervisor(user: ClientUser): boolean {
+    for (let x of this.supervisors) {
+      if (x._id === user._id) {
+        return true
+      }
+    }
+    return false
   }
 
   /**
@@ -120,7 +150,7 @@ export default class GameClient extends Game<
   // Implemented
   public toJson(): TGameJson {
     return {
-      gameID: this.gameID,
+      gameId: this.gameId,
       state: this.state,
       name: this.name,
       mission: this.mission.toJson({
@@ -137,24 +167,24 @@ export default class GameClient extends Game<
   // Implemented
   public toBasicJson(): TGameBasicJson {
     return {
-      gameID: this.gameID,
-      missionID: this.missionID,
+      gameId: this.gameId,
+      missionId: this.missionId,
       name: this.name,
       config: this.config,
-      participantIDs: this.participants.map(({ userID }) => userID),
+      participantIds: this.participants.map(({ _id: userId }) => userId),
       banList: this.banList,
-      supervisorIDs: this.supervisors.map(({ userID }) => userID),
+      supervisorIds: this.supervisors.map(({ _id: userId }) => userId),
     }
   }
 
   /**
    * Opens a node.
-   * @param {string} nodeID The ID of the node to be opened.
+   * @param nodeId The ID of the node to be opened.
    */
-  public openNode(nodeID: string, options: TOpenNodeOptions = {}): void {
+  public openNode(nodeId: string, options: TOpenNodeOptions = {}): void {
     // Gather details.
     let server: ServerConnection = this.server
-    let node: ClientMissionNode | undefined = this.mission.getNode(nodeID)
+    let node: ClientMissionNode | undefined = this.mission.getNode(nodeId)
     let { onError = () => {} } = options
 
     // If the join method is not "participant", callback
@@ -178,7 +208,7 @@ export default class GameClient extends Game<
     server.request(
       'request-open-node',
       {
-        nodeID,
+        nodeId,
       },
       `Opening "${node.name}".`,
       {
@@ -199,14 +229,14 @@ export default class GameClient extends Game<
 
   /**
    * Executes an action.
-   * @param actionID The ID of the action to be executed.
+   * @param actionId The ID of the action to be executed.
    */
   public executeAction(
-    actionID: string,
+    actionId: string,
     options: TExecuteActionOptions = {},
   ): void {
     let server: ServerConnection = this.server
-    let action: ClientMissionAction | undefined = this.actions.get(actionID)
+    let action: ClientMissionAction | undefined = this.actions.get(actionId)
     let { onError = () => {} } = options
 
     // If the join method is not "participant", callback
@@ -230,7 +260,7 @@ export default class GameClient extends Game<
     server.request(
       'request-execute-action',
       {
-        actionID,
+        actionId,
       },
       `Executing "${action.name}" on "${action.node.name}".`,
       {
@@ -308,7 +338,7 @@ export default class GameClient extends Game<
             throw new Error('Game has already ended.')
           }
           // Call API to update config.
-          await axios.put(`${Game.API_ENDPOINT}/${this.gameID}/config/`, {
+          await axios.put(`${Game.API_ENDPOINT}/${this.gameId}/config/`, {
             ...configUpdates,
           })
           // Update the game config.
@@ -346,7 +376,7 @@ export default class GameClient extends Game<
             throw new Error('Game has already ended.')
           }
           // Call API to start game.
-          await axios.put(`${Game.API_ENDPOINT}/${this.gameID}/start/`)
+          await axios.put(`${Game.API_ENDPOINT}/${this.gameId}/start/`)
           // Update the game state.
           this._state = 'started'
           // Resolve promise.
@@ -382,7 +412,7 @@ export default class GameClient extends Game<
             throw new Error('Game has already ended.')
           }
           // Call API to end game.
-          await axios.put(`${Game.API_ENDPOINT}/${this.gameID}/end/`)
+          await axios.put(`${Game.API_ENDPOINT}/${this.gameId}/end/`)
           // Update the game state.
           this._state = 'ended'
           // Resolve promise.
@@ -398,11 +428,11 @@ export default class GameClient extends Game<
 
   /**
    * Kicks a participant from the game.
-   * @param userID The ID of the user to be kicked.
+   * @param userId The ID of the user to be kicked.
    * @resolves When the user has been kicked.
    * @rejects If the user failed to be kicked.
    */
-  public async $kick(userID: string): Promise<void> {
+  public async $kick(userId: string): Promise<void> {
     return new Promise<void>(
       async (
         resolve: () => void,
@@ -410,7 +440,7 @@ export default class GameClient extends Game<
       ): Promise<void> => {
         try {
           // Call API to kick user.
-          await axios.put(`${Game.API_ENDPOINT}/${this.gameID}/kick/${userID}`)
+          await axios.put(`${Game.API_ENDPOINT}/${this.gameId}/kick/${userId}`)
           // Resolve promise.
           return resolve()
         } catch (error) {
@@ -424,11 +454,11 @@ export default class GameClient extends Game<
 
   /**
    * Bans a participant from the game.
-   * @param userID The ID of the user to be banned.
+   * @param userId The ID of the user to be banned.
    * @resolves When the user has been banned.
    * @rejects If the user failed to be banned.
    */
-  public async $ban(userID: string): Promise<void> {
+  public async $ban(userId: string): Promise<void> {
     return new Promise<void>(
       async (
         resolve: () => void,
@@ -436,7 +466,7 @@ export default class GameClient extends Game<
       ): Promise<void> => {
         try {
           // Call API to ban user.
-          await axios.put(`${Game.API_ENDPOINT}/${this.gameID}/ban/${userID}`)
+          await axios.put(`${Game.API_ENDPOINT}/${this.gameId}/ban/${userId}`)
           // Resolve promise.
           return resolve()
         } catch (error) {
@@ -473,15 +503,15 @@ export default class GameClient extends Game<
    */
   private onNodeOpened = (event: TServerEvents['node-opened']): void => {
     // Extract data.
-    let { nodeID, revealedChildNodes } = event.data
+    let { nodeId, revealedChildNodes } = event.data
 
     // Find the node, given the ID.
-    let node: ClientMissionNode | undefined = this.mission.getNode(nodeID)
+    let node: ClientMissionNode | undefined = this.mission.getNode(nodeId)
 
     // Handle node not found.
     if (node === undefined) {
       throw new Error(
-        `Event "node-opened" was triggered, but the node with the given nodeID ("${nodeID}") could not be found.`,
+        `Event "node-opened" was triggered, but the node with the given nodeId ("${nodeId}") could not be found.`,
       )
     }
 
@@ -504,16 +534,16 @@ export default class GameClient extends Game<
   ): void => {
     // Extract data.
     let { execution: executionData } = event.data
-    let { actionID } = executionData
+    let { actionId } = executionData
 
     // Find the action and node, given the action ID.
-    let action: ClientMissionAction | undefined = this.actions.get(actionID)
+    let action: ClientMissionAction | undefined = this.actions.get(actionId)
     let node: ClientMissionNode
 
     // Handle action not found.
     if (action === undefined) {
       throw new Error(
-        `Event "action-execution-initiated" was triggered, but the action with the given actionID ("${actionID}") could not be found.`,
+        `Event "action-execution-initiated" was triggered, but the action with the given actionId ("${actionId}") could not be found.`,
       )
     }
     // Handle action found.
@@ -537,15 +567,15 @@ export default class GameClient extends Game<
   ): void => {
     // Extract data.
     let { outcome, revealedChildNodes } = event.data
-    let { actionID } = outcome
+    let { actionId } = outcome
 
     // Find the action given the action ID.
-    let action: ClientMissionAction | undefined = this.actions.get(actionID)
+    let action: ClientMissionAction | undefined = this.actions.get(actionId)
 
     // Handle action not found.
     if (action === undefined) {
       throw new Error(
-        `Event "action-execution-initiated" was triggered, but the action with the given actionID ("${actionID}") could not be found.`,
+        `Event "action-execution-initiated" was triggered, but the action with the given actionId ("${actionId}") could not be found.`,
       )
     }
 
@@ -592,32 +622,32 @@ export default class GameClient extends Game<
 
   /**
    * Launches a new game with a new game ID.
-   * @param {string} missionID  The ID of the mission being executed in the game.
-   * @returns {Promise<string>} A promise of the game ID for the newly launched game.
+   * @param missionId  The ID of the mission being executed in the game.
+   * @returns A promise of the game ID for the newly launched game.
    */
   public static async $launch(
-    missionID: string,
+    missionId: string,
     gameConfig: Partial<TGameConfig>,
   ): Promise<string> {
     return new Promise<string>(
       async (
-        resolve: (gameID: string) => void,
+        resolve: (gameId: string) => void,
         reject: (error: any) => void,
       ): Promise<void> => {
         try {
           // Call API to launch new game with
           // the mission ID. Await the generated
           // game ID.
-          let { gameID } = (
-            await axios.post<{ gameID: string }>(
+          let { gameId } = (
+            await axios.post<{ gameId: string }>(
               `${Game.API_ENDPOINT}/launch/`,
               {
-                missionID,
+                missionId,
                 ...gameConfig,
               },
             )
           ).data
-          return resolve(gameID)
+          return resolve(gameId)
         } catch (error) {
           console.error('Failed to launch game.')
           console.error(error)
@@ -627,7 +657,7 @@ export default class GameClient extends Game<
     )
   }
 
-  public static async $delete(gameID: string): Promise<void> {
+  public static async $delete(gameId: string): Promise<void> {
     return new Promise<void>(
       async (
         resolve: () => void,
@@ -635,7 +665,7 @@ export default class GameClient extends Game<
       ): Promise<void> => {
         try {
           // Call API to delete game.
-          await axios.delete(`${Game.API_ENDPOINT}/${gameID}`)
+          await axios.delete(`${Game.API_ENDPOINT}/${gameId}`)
           return resolve()
         } catch (error) {
           console.error('Failed to delete game.')
