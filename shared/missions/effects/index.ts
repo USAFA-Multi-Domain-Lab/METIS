@@ -139,7 +139,7 @@ export default abstract class Effect<
     options: TEffectOptions = {},
   ) {
     this.action = action
-    this._id = data._id ?? Effect.DEFAULT_PROPERTIES._id
+    this._id = data._id?.toString() ?? Effect.DEFAULT_PROPERTIES._id
     this.name = data.name ?? Effect.DEFAULT_PROPERTIES.name
     this.description = data.description ?? Effect.DEFAULT_PROPERTIES.description
     this.targetEnvironmentVersion =
@@ -179,7 +179,7 @@ export default abstract class Effect<
       args: this.args,
     }
 
-    // Include _id if its not a UUID.
+    // Include _id if it's an ObjectId.
     // * Note: IDs in the database are
     // * stored as mongoose ObjectIds.
     // * If the ID is a UUID, then the

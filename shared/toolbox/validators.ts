@@ -1,7 +1,7 @@
 /**
  * Validates a UUID string using a regex.
  * @param uuid The UUID to validate.
- * @note This will validate versions 1-5 UUIDs.
+ * @note This will validate version 1-5 UUIDs.
  * @note **This is a simple UUID validator. It doesn't check to see if the UUID is in use.**
  */
 export const uuidTypeValidator = (uuid: string): boolean => {

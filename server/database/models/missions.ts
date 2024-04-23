@@ -35,8 +35,10 @@ const validate_missions = (mission: any, next: any): void => {
   let parentNodeStructure: TCommonMissionJson['nodeStructure'] =
     mission.nodeStructure
   let nodeData: TCommonMissionJson['nodeData'] = mission.nodeData
-  let nodeDataIds: TMissionNodeJson['_id'][] = nodeData.map((node) => node._id)
-  let correspondingNodeStructureIds: string[] = []
+  let nodeDataStructureKeys: TMissionNodeJson['structureKey'][] = nodeData.map(
+    (node) => node.structureKey,
+  )
+  let correspondingNodeStructureKeys: TMissionNodeJson['structureKey'][] = []
   let results: { error?: Error } = {}
 
   // This will ensure that all nodes
@@ -89,21 +91,21 @@ const validate_missions = (mission: any, next: any): void => {
     }
 
     for (let [key, value] of Object.entries(nodeStructure)) {
-      if (!nodeDataIds.includes(key)) {
+      if (!nodeDataStructureKeys.includes(key)) {
         let error: Error = new Error(
           `Error in mission:\n"${key}" was referenced in nodeStructure, but it was not found in the nodeData.`,
         )
         error.name = MetisDatabase.ERROR_BAD_DATA
         return { error }
       }
-      if (correspondingNodeStructureIds.includes(key)) {
+      if (correspondingNodeStructureKeys.includes(key)) {
         let error: Error = new Error(
           `Error in nodeStructure:\nDuplicate nodeId used (${key}).`,
         )
         error.name = MetisDatabase.ERROR_BAD_DATA
         return { error }
       } else {
-        correspondingNodeStructureIds.push(key)
+        correspondingNodeStructureKeys.push(key)
       }
 
       let results: { error?: Error } = validateNodeStructure(value, key)
@@ -136,11 +138,11 @@ const validate_missions = (mission: any, next: any): void => {
   // is different than the number in the
   // node structure, than the bad ID is
   // found and an error is created for it.
-  if (nodeDataIds.length !== correspondingNodeStructureIds.length) {
-    for (let nodeId of nodeDataIds) {
-      if (!correspondingNodeStructureIds.includes(nodeId)) {
+  if (nodeDataStructureKeys.length !== correspondingNodeStructureKeys.length) {
+    for (let nodeStructureKey of nodeDataStructureKeys) {
+      if (!correspondingNodeStructureKeys.includes(nodeStructureKey)) {
         let error: Error = new Error(
-          `Error in mission:\n"${nodeId}" was referenced in nodeData, but it was not found in the nodeStructure.`,
+          `Error in mission:\n"${nodeStructureKey}" was referenced in nodeData, but it was not found in the nodeStructure.`,
         )
         error.name = MetisDatabase.ERROR_BAD_DATA
         return next(error)
@@ -247,96 +249,103 @@ const validate_mission_nodeData_actions_resourceCost = (
 
 /* -- SCHEMA -- */
 
-export const MissionSchema: Schema = new Schema({
-  name: { type: String, required: true },
-  introMessage: { type: SanitizedHTML, required: true },
-  versionNumber: { type: Number, required: true },
-  seed: { type: ObjectId, required: true, auto: true },
-  initialResources: {
-    type: Number,
-    required: true,
-    validate: validate_missions_initialResources,
-  },
-  deleted: { type: Boolean, required: true, default: false },
-  nodeStructure: {
-    type: {},
-    required: true,
-  },
-  nodeData: {
-    type: [
-      {
-        name: { type: String, required: true },
-        color: {
-          type: String,
-          required: true,
-          validate: validate_missions_nodeData_color,
-        },
-        description: { type: SanitizedHTML, required: true },
-        preExecutionText: {
-          type: SanitizedHTML,
-          required: false,
-          default: '',
-        },
-        depthPadding: {
-          type: Number,
-          required: true,
-          validate: validate_mission_nodeData_depthPadding,
-        },
-        executable: { type: Boolean, required: true },
-        device: { type: Boolean, required: true },
-        actions: {
-          type: [
-            {
-              name: { type: String, required: true },
-              description: { type: SanitizedHTML, required: true },
-              processTime: {
-                type: Number,
-                required: true,
-                validate: validate_mission_nodeData_actions_processTime,
-              },
-              successChance: {
-                type: Number,
-                required: true,
-                validate: validate_mission_nodeData_actions_successChance,
-              },
-              resourceCost: {
-                type: Number,
-                required: true,
-                validate: validate_mission_nodeData_actions_resourceCost,
-              },
-              postExecutionSuccessText: {
-                type: SanitizedHTML,
-                required: true,
-              },
-              postExecutionFailureText: {
-                type: SanitizedHTML,
-                required: true,
-              },
-              effects: {
-                type: [
-                  {
-                    name: { type: String, required: true },
-                    description: { type: SanitizedHTML, required: true },
-                    targetEnvironmentVersion: {
-                      type: String,
-                      required: true,
+export const MissionSchema: Schema = new Schema(
+  {
+    name: { type: String, required: true },
+    introMessage: { type: SanitizedHTML, required: true },
+    versionNumber: { type: Number, required: true },
+    seed: { type: ObjectId, required: true, auto: true },
+    initialResources: {
+      type: Number,
+      required: true,
+      validate: validate_missions_initialResources,
+    },
+    deleted: { type: Boolean, required: true, default: false },
+    nodeStructure: {
+      type: {},
+      required: true,
+    },
+    nodeData: {
+      type: [
+        {
+          structureKey: { type: String, required: true },
+          name: { type: String, required: true },
+          color: {
+            type: String,
+            required: true,
+            validate: validate_missions_nodeData_color,
+          },
+          description: { type: SanitizedHTML, required: true },
+          preExecutionText: {
+            type: SanitizedHTML,
+            required: false,
+            default: '',
+          },
+          depthPadding: {
+            type: Number,
+            required: true,
+            validate: validate_mission_nodeData_depthPadding,
+          },
+          executable: { type: Boolean, required: true },
+          device: { type: Boolean, required: true },
+          actions: {
+            type: [
+              {
+                name: { type: String, required: true },
+                description: { type: SanitizedHTML, required: true },
+                processTime: {
+                  type: Number,
+                  required: true,
+                  validate: validate_mission_nodeData_actions_processTime,
+                },
+                successChance: {
+                  type: Number,
+                  required: true,
+                  validate: validate_mission_nodeData_actions_successChance,
+                },
+                resourceCost: {
+                  type: Number,
+                  required: true,
+                  validate: validate_mission_nodeData_actions_resourceCost,
+                },
+                postExecutionSuccessText: {
+                  type: SanitizedHTML,
+                  required: true,
+                },
+                postExecutionFailureText: {
+                  type: SanitizedHTML,
+                  required: true,
+                },
+                effects: {
+                  type: [
+                    {
+                      name: { type: String, required: true },
+                      description: { type: SanitizedHTML, required: true },
+                      targetEnvironmentVersion: {
+                        type: String,
+                        required: true,
+                      },
+                      targetId: { type: String, required: true },
+                      args: { type: Object, required: true },
                     },
-                    targetId: { type: String, required: true },
-                    args: { type: Object, required: true },
-                  },
-                ],
-                required: true,
+                  ],
+                  required: true,
+                },
               },
-            },
-          ],
-          required: true,
+            ],
+            required: true,
+          },
         },
-      },
-    ],
-    required: true,
-    validate: validate_missions_nodeData,
+      ],
+      required: true,
+      validate: validate_missions_nodeData,
+    },
   },
-})
+  {
+    strict: 'throw',
+    minimize: false,
+  },
+)
 
 /* -- SCHEMA METHODS -- */
 

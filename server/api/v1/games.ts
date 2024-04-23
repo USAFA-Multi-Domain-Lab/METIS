@@ -70,7 +70,7 @@ const routerMap = (router: expressWs.Router, done: () => void) => {
         effectsEnabled: request.body.effectsEnabled,
       }
       // Query for mission.
-      MissionModel.findOne({ missionId })
+      MissionModel.findOne({ _id: missionId })
         .lean()
         .exec(async (error: Error, missionData: TCommonMissionJson) => {
           // Handle errors.
@@ -93,7 +93,7 @@ const routerMap = (router: expressWs.Router, done: () => void) => {
             let game: GameServer = GameServer.launch(mission, gameConfig)
             // Return the ID of the newly launched game
             // as JSON.
-            return response.json({ gameId: game.gameId })
+            return response.json({ gameId: game._id })
           } catch (error: any) {
             gameLogger.error('Failed to launch game.')
             gameLogger.error(error)
@@ -103,14 +103,14 @@ const routerMap = (router: expressWs.Router, done: () => void) => {
     },
   )
 
-  // -- PUT | /api/v1/games/:gameId/start/
+  // -- PUT | /api/v1/games/:_id/start/
   // This will start a game.
   router.put(
-    '/:gameId/start/',
+    '/:_id/start/',
     auth({ permissions: ['games_write'] }),
     (request: Request, response: Response) => {
-      let gameId: string = request.params.gameId
-      let game: GameServer | undefined = GameServer.get(gameId)
+      let _id: string = request.params._id
+      let game: GameServer | undefined = GameServer.get(_id)
 
       // Send 404 if game could not be found.
       if (game === undefined) {
@@ -130,10 +130,10 @@ const routerMap = (router: expressWs.Router, done: () => void) => {
     },
   )
 
-  // -- PUT | /api/v1/games/:gameId/config/
+  // -- PUT | /api/v1/games/:_id/config/
   // This will update the config of a game.
   router.put(
-    '/:gameId/config/',
+    '/:_id/config/',
     auth({ permissions: ['games_write'] }),
     defineRequests(
       {},
@@ -157,8 +157,8 @@ const routerMap = (router: expressWs.Router, done: () => void) => {
         effectsEnabled: request.body.effectsEnabled,
       }
       // Get game.
-      let gameId: string = request.params.gameId
-      let game: GameServer | undefined = GameServer.get(gameId)
+      let _id: string = request.params._id
+      let game: GameServer | undefined = GameServer.get(_id)
 
       // Send 404 if game could not be found.
       if (game === undefined) {
@@ -178,14 +178,14 @@ const routerMap = (router: expressWs.Router, done: () => void) => {
     },
   )
 
-  // -- PUT | /api/v1/games/:gameId/end/
+  // -- PUT | /api/v1/games/:_id/end/
   // This will end a game.
   router.put(
-    '/:gameId/end/',
+    '/:_id/end/',
     auth({ permissions: ['games_write'] }),
     (request: Request, response: Response) => {
-      let gameId: string = request.params.gameId
-      let game: GameServer | undefined = GameServer.get(gameId)
+      let _id: string = request.params._id
+      let game: GameServer | undefined = GameServer.get(_id)
 
       // Send 404 if game could not be found.
       if (game === undefined) {
@@ -209,15 +209,15 @@ const routerMap = (router: expressWs.Router, done: () => void) => {
     },
   )
 
-  // -- PUT | /api/v1/games/:gameId/kick/:participantId/ --
+  // -- PUT | /api/v1/games/:_id/kick/:participantId/ --
   // This will kick a participant from a game.
   router.put(
-    '/:gameId/kick/:participantId/',
+    '/:_id/kick/:participantId/',
     auth({ permissions: ['games_write'] }),
     (request: Request, response: Response) => {
-      let gameId: string = request.params.gameId
+      let _id: string = request.params._id
       let participantId: string = request.params.participantId
-      let game: GameServer | undefined = GameServer.get(gameId)
+      let game: GameServer | undefined = GameServer.get(_id)
 
       // Send 404 if game could not be found.
       if (game === undefined) {
@@ -237,15 +237,15 @@ const routerMap = (router: expressWs.Router, done: () => void) => {
     },
   )
 
-  // -- PUT | /api/v1/games/:gameId/ban/:participantId/ --
+  // -- PUT | /api/v1/games/:_id/ban/:participantId/ --
   // This will ban a participant from a game.
   router.put(
-    '/:gameId/ban/:participantId/',
+    '/:_id/ban/:participantId/',
     auth({ permissions: ['games_write'] }),
     (request: Request, response: Response) => {
-      let gameId: string = request.params.gameId
+      let _id: string = request.params._id
       let participantId: string = request.params.participantId
-      let game: GameServer | undefined = GameServer.get(gameId)
+      let game: GameServer | undefined = GameServer.get(_id)
 
       // Send 404 if game could not be found.
       if (game === undefined) {
@@ -265,14 +265,14 @@ const routerMap = (router: expressWs.Router, done: () => void) => {
     },
   )
 
-  // -- DELETE | /api/v1/games/:gameId/ --
+  // -- DELETE | /api/v1/games/:_id/ --
   // This will delete a game.
   router.delete(
-    '/:gameId/',
+    '/:_id/',
     auth({ permissions: ['games_write'] }),
     (request: Request, response: Response) => {
-      let gameId: string = request.params.gameId
-      let game: GameServer | undefined = GameServer.get(gameId)
+      let _id: string = request.params._id
+      let game: GameServer | undefined = GameServer.get(_id)
 
       // Send 404 if game could not be found.
       if (game === undefined) {

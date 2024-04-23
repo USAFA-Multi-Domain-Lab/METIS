@@ -169,39 +169,36 @@ export default class MetisDatabase {
    */
   private async ensureDefaultInfoExists(): Promise<void> {
     return new Promise<void>((resolve, reject) => {
-      InfoModel.findOne({ infoID: 'default' }).exec(
-        (error: Error, info: any) => {
-          if (error !== null) {
-            databaseLogger.error('Failed to query database for default info:')
-            databaseLogger.error(error)
-            reject(error)
-          } else if (info === null) {
-            databaseLogger.info('Info not found.')
-            databaseLogger.info('Creating info...')
+      InfoModel.findOne().exec((error: Error, info: any) => {
+        if (error !== null) {
+          databaseLogger.error('Failed to query database for default info:')
+          databaseLogger.error(error)
+          reject(error)
+        } else if (info === null) {
+          databaseLogger.info('Info not found.')
+          databaseLogger.info('Creating info...')
 
-            const infoData = {
-              infoID: 'default',
-              schemaBuildNumber: MetisServer.SCHEMA_BUILD_NUMBER,
-            }
-
-            // Creates and saves info
-            InfoModel.create(infoData, (error: Error, info: any) => {
-              if (error) {
-                databaseLogger.error(
-                  'Failed to create and store server info in the database:',
-                )
-                databaseLogger.error(error)
-                reject(error)
-              } else {
-                databaseLogger.info('Server info created:', info.infoID)
-                resolve()
-              }
-            })
-          } else {
-            resolve()
+          const infoData = {
+            schemaBuildNumber: MetisServer.SCHEMA_BUILD_NUMBER,
           }
-        },
-      )
+
+          // Creates and saves info
+          InfoModel.create(infoData, (error: Error, info: any) => {
+            if (error) {
+              databaseLogger.error(
+                'Failed to create and store server info in the database:',
+              )
+              databaseLogger.error(error)
+              reject(error)
+            } else {
+              databaseLogger.info('Server info created:', info.infoID)
+              resolve()
+            }
+          })
+        } else {
+          resolve()
+        }
+      })
     })
   }
 
@@ -400,43 +397,39 @@ export default class MetisDatabase {
    */
   private async ensureCorrectSchemaBuild(): Promise<void> {
     return new Promise<void>((resolve, reject) => {
-      InfoModel.findOne({ infoID: 'default' }).exec(
-        async (error: Error, info: any) => {
-          if (error !== null) {
-            databaseLogger.error(
-              'Failed to query database for current schema build:',
-            )
-            databaseLogger.error(error)
-            reject(error)
-          } else if (info !== null) {
-            let currentBuildNumber: number = info.schemaBuildNumber
-            let targetBuildNumber: number = MetisServer.SCHEMA_BUILD_NUMBER
+      InfoModel.findOne().exec(async (error: Error, info: any) => {
+        if (error !== null) {
+          databaseLogger.error(
+            'Failed to query database for current schema build:',
+          )
+          databaseLogger.error(error)
+          reject(error)
+        } else if (info !== null) {
+          let currentBuildNumber: number = info.schemaBuildNumber
+          let targetBuildNumber: number = MetisServer.SCHEMA_BUILD_NUMBER
 
-            if (currentBuildNumber > targetBuildNumber) {
-              databaseLogger.error('Failed to check for schema updates:')
-              databaseLogger.error(
-                'The current schema build number found in the database was newer than ' +
-                  'the target build number found in the config.',
-              )
-              reject(error)
-            } else if (currentBuildNumber < targetBuildNumber) {
-              await this.buildSchema(currentBuildNumber, targetBuildNumber)
-              resolve()
-            } else {
-              resolve()
-            }
-          } else {
+          if (currentBuildNumber > targetBuildNumber) {
+            databaseLogger.error('Failed to check for schema updates:')
             databaseLogger.error(
-              'Failed to check for schema updates. Info data missing.',
+              'The current schema build number found in the database was newer than ' +
+                'the target build number found in the config.',
             )
-            reject(
-              new Error(
-                'Failed to check for schema updates. Info data missing.',
-              ),
-            )
+            reject(error)
+          } else if (currentBuildNumber < targetBuildNumber) {
+            await this.buildSchema(currentBuildNumber, targetBuildNumber)
+            resolve()
+          } else {
+            resolve()
           }
-        },
-      )
+        } else {
+          databaseLogger.error(
+            'Failed to check for schema updates. Info data missing.',
+          )
+          reject(
+            new Error('Failed to check for schema updates. Info data missing.'),
+          )
+        }
+      })
     })
   }
 

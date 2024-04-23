@@ -55,21 +55,6 @@ export interface IMetisServerOptions {
    * @default undefined
    */
   mongoPassword?: string
-  /**
-   * The API key for the Cyber City API.
-   * @default undefined
-   */
-  cyberCityApiKey?: string
-  /**
-   * The host of the Cyber City API.
-   * @default undefined
-   */
-  cyberCityApiHost?: string
-  /**
-   * The host of the ASCOT API.
-   * @default undefined
-   */
-  ascotApiHost?: string
 }
 
 /**
@@ -173,24 +158,6 @@ export default class MetisServer {
   public get mongoPassword(): string | undefined {
     return this._mongoPassword
   }
-  /**
-   * The API key for the Cyber City API.
-   */
-  public get cyberCityApiKey(): string | undefined {
-    return this._cyberCityApiKey
-  }
-  /**
-   * The host of the Cyber City API.
-   */
-  public get cyberCityApiHost(): string | undefined {
-    return this._cyberCityApiHost
-  }
-  /**
-   * The host of the ASCOT API.
-   */
-  public get ascotApiHost(): string | undefined {
-    return this._ascotApiHost
-  }
 
   /**
    * @param options Options for creating the METIS server.
@@ -204,9 +171,6 @@ export default class MetisServer {
     this._mongoPort = options.mongoPort ?? defaults.MONGO_PORT
     this._mongoUsername = options.mongoUsername
     this._mongoPassword = options.mongoPassword
-    this._cyberCityApiKey = options.cyberCityApiKey
-    this._cyberCityApiHost = options.cyberCityApiHost
-    this._ascotApiHost = options.ascotApiHost
   }
 
   /**

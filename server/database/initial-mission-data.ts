@@ -1,6 +1,8 @@
 // -- initial --
 
-export let demoMissionData = {
+import { TCommonMissionJson } from 'metis/missions'
+
+export let demoMissionData: TCommonMissionJson = {
   name: 'METIS > ASCOT 7 DEMO',
   introMessage: '<p>Welcome to the METIS &gt; ASCOT 7 DEMO</p>',
   versionNumber: 1,
@@ -50,7 +52,7 @@ export let demoMissionData = {
   },
   nodeData: [
     {
-      nodeID: '882d6985-a05c-4f36-b66b-92de27d34552',
+      structureKey: '882d6985-a05c-4f36-b66b-92de27d34552',
       name: 'Select Target Region',
       color: '#65eb59',
       description: '<p>Select Combatant Command</p>',
@@ -61,7 +63,6 @@ export let demoMissionData = {
       device: false,
       actions: [
         {
-          actionID: 'af3fc223-44a6-4072-bc61-2d962feaa0df',
           name: 'New Action',
           description: '<p>Enter your description here.</p>',
           processTime: 5000,
@@ -76,7 +77,7 @@ export let demoMissionData = {
       ],
     },
     {
-      nodeID: '405b84dc-a653-47ed-8d88-aef3177a99b2',
+      structureKey: '405b84dc-a653-47ed-8d88-aef3177a99b2',
       name: 'CENTCOM',
       color: '#52b1ff',
       description: '<p>U.S. Central Command</p>',
@@ -88,7 +89,7 @@ export let demoMissionData = {
       actions: [],
     },
     {
-      nodeID: '315605d0-3210-4644-8903-d254151769e2',
+      structureKey: '315605d0-3210-4644-8903-d254151769e2',
       name: 'AFRICOM',
       color: '#52b1ff',
       description: '<p>U.S. Africa Command</p>',
@@ -100,7 +101,7 @@ export let demoMissionData = {
       actions: [],
     },
     {
-      nodeID: '51f256b3-614c-4f9a-80f3-3d020a758cd7',
+      structureKey: '51f256b3-614c-4f9a-80f3-3d020a758cd7',
       name: 'EUCOM',
       color: '#52b1ff',
       description: '<p>U.S. European Command</p>',
@@ -112,7 +113,7 @@ export let demoMissionData = {
       actions: [],
     },
     {
-      nodeID: '2d69024c-9cc4-40bd-ab84-1d7761abe810',
+      structureKey: '2d69024c-9cc4-40bd-ab84-1d7761abe810',
       name: 'NORTHCOM',
       color: '#52b1ff',
       description: '<p>U.S. Northern Command</p>',
@@ -124,7 +125,7 @@ export let demoMissionData = {
       actions: [],
     },
     {
-      nodeID: 'd4bf672b-1490-4246-92c5-69e31d2714b5',
+      structureKey: 'd4bf672b-1490-4246-92c5-69e31d2714b5',
       name: 'INDOPACOM',
       color: '#52b1ff',
       description: '<p>U.S. Indo-Pacific Command</p>',
@@ -136,7 +137,7 @@ export let demoMissionData = {
       actions: [],
     },
     {
-      nodeID: 'afa6923d-875f-4dbe-b724-3c908deb853b',
+      structureKey: 'afa6923d-875f-4dbe-b724-3c908deb853b',
       name: 'SOUTHCOM',
       color: '#52b1ff',
       description: '<p>U.S. Southern Command</p>',
@@ -148,7 +149,7 @@ export let demoMissionData = {
       actions: [],
     },
     {
-      nodeID: '339e1633-34cc-488f-abee-61ec1f21f0dd',
+      structureKey: '339e1633-34cc-488f-abee-61ec1f21f0dd',
       name: 'SPACECOM',
       color: '#52b1ff',
       description: '<p>U.S. Space Command</p>',
@@ -160,7 +161,7 @@ export let demoMissionData = {
       actions: [],
     },
     {
-      nodeID: '6185ea46-de8b-4308-aec3-e257313563af',
+      structureKey: '6185ea46-de8b-4308-aec3-e257313563af',
       name: 'Select Domain',
       color: '#eb5fb2',
       description: '<p>Select Domain of Operations</p>',
@@ -171,7 +172,7 @@ export let demoMissionData = {
       actions: [],
     },
     {
-      nodeID: 'e25eb328-d98a-4215-a1a2-e854137e9209',
+      structureKey: 'e25eb328-d98a-4215-a1a2-e854137e9209',
       name: 'Space',
       color: '#cd328e',
       description: '<p>Target Space Domain</p>',
@@ -182,7 +183,7 @@ export let demoMissionData = {
       actions: [],
     },
     {
-      nodeID: 'cb7c666e-4ac3-4c6c-8dcd-c8c4d383ce65',
+      structureKey: 'cb7c666e-4ac3-4c6c-8dcd-c8c4d383ce65',
       name: 'Cyberspace',
       color: '#cd328e',
       description: '<p>Target Cyberspace Domain</p>',
@@ -194,7 +195,7 @@ export let demoMissionData = {
       actions: [],
     },
     {
-      nodeID: 'e1ef9397-f480-4f06-8c0b-afcf1ace7f69',
+      structureKey: 'e1ef9397-f480-4f06-8c0b-afcf1ace7f69',
       name: 'Air',
       color: '#cd328e',
       description: '<p>Target Air Domain</p>',
@@ -206,7 +207,7 @@ export let demoMissionData = {
       actions: [],
     },
     {
-      nodeID: '096fa5e6-d25a-4b86-a618-a8ab854d9b12',
+      structureKey: '096fa5e6-d25a-4b86-a618-a8ab854d9b12',
       name: 'Land',
       color: '#cd328e',
       description: '<p>Target Land Domain</p>',
@@ -218,7 +219,7 @@ export let demoMissionData = {
       actions: [],
     },
     {
-      nodeID: '36ed93ea-a7ef-445e-b1a2-d068681ebca4',
+      structureKey: '36ed93ea-a7ef-445e-b1a2-d068681ebca4',
       name: 'Sea',
       color: '#cd328e',
       description: '<p>Target Sea Domain</p>',
@@ -230,7 +231,7 @@ export let demoMissionData = {
       actions: [],
     },
     {
-      nodeID: '05b4b9e6-2f46-4ce0-adf4-d1d846c650da',
+      structureKey: '05b4b9e6-2f46-4ce0-adf4-d1d846c650da',
       name: 'Sub-Surface',
       color: '#cd328e',
       description: '<p>Target Sub-Surface Domain</p>',
@@ -242,7 +243,7 @@ export let demoMissionData = {
       actions: [],
     },
     {
-      nodeID: '152811b3-e125-4cae-b4e4-06a5842b403c',
+      structureKey: '152811b3-e125-4cae-b4e4-06a5842b403c',
       name: 'China',
       color: '#f5e677',
       description: '<p>Select Target Region</p>',
@@ -253,7 +254,6 @@ export let demoMissionData = {
       device: false,
       actions: [
         {
-          actionID: 'ae76adbd-b74a-44c1-8ff9-30ae8d81d87e',
           name: 'CONFIRM AUTHORIZATION',
           description: '<p>ACCESS WARNING</p>',
           processTime: 10000,
@@ -267,7 +267,7 @@ export let demoMissionData = {
       ],
     },
     {
-      nodeID: '1c97200f-69d6-4546-b99e-6cd0a11ae0a4',
+      structureKey: '1c97200f-69d6-4546-b99e-6cd0a11ae0a4',
       name: 'North Korea',
       color: '#f5e677',
       description: '<p>Select Target Region</p>',
@@ -278,7 +278,6 @@ export let demoMissionData = {
       device: false,
       actions: [
         {
-          actionID: '6ce8497c-9f49-48a6-95d5-1ca4ab22926f',
           name: 'CONFIRM AUTHORIZATION',
           description: '<p>ACCESS WARNING</p>',
           processTime: 5000,
@@ -292,7 +291,7 @@ export let demoMissionData = {
       ],
     },
     {
-      nodeID: 'b6220969-160d-4339-8a96-b5c632422ffa',
+      structureKey: 'b6220969-160d-4339-8a96-b5c632422ffa',
       name: 'Nanning Station [南宁站] ',
       color: '#d0bf3b',
       description: '<p>Select Ground Control Station</p>',
@@ -302,7 +301,6 @@ export let demoMissionData = {
       device: false,
       actions: [
         {
-          actionID: '4dc45bcc-40f5-4e0b-a49c-fcc1ecf67a91',
           name: 'Run Brute Force Entry Script',
           description: '<p>Gain access to this system.</p>',
           processTime: 10000,
@@ -317,7 +315,7 @@ export let demoMissionData = {
       ],
     },
     {
-      nodeID: '0d0ad493-346c-4096-80e3-f8bc7b21f535',
+      structureKey: '0d0ad493-346c-4096-80e3-f8bc7b21f535',
       name: 'Lingshui Station [陵水测控站]',
       color: '#d0bf3b',
       description: '<p>Select Ground Control Station</p>',
@@ -327,7 +325,6 @@ export let demoMissionData = {
       device: false,
       actions: [
         {
-          actionID: '733a8fef-0877-4719-a71e-53daee435f64',
           name: 'Run Brute Force Entry Script',
           description: '<p>Gain access to this system.</p>',
           processTime: 10000,
@@ -342,7 +339,7 @@ export let demoMissionData = {
       ],
     },
     {
-      nodeID: 'a8bbd3c1-b050-40cc-932a-5b642e9e5d37',
+      structureKey: 'a8bbd3c1-b050-40cc-932a-5b642e9e5d37',
       name: 'Menghai Station [勐海测控站]',
       color: '#d0bf3b',
       description: '<p>Select Ground Control Station</p>',
@@ -352,7 +349,6 @@ export let demoMissionData = {
       device: false,
       actions: [
         {
-          actionID: 'b9562a57-bb0f-4bb2-8000-33c2db9c26ec',
           name: 'Run Brute Force Entry Script',
           description: '<p>Gain access to this system.</p>',
           processTime: 10000,
@@ -367,7 +363,7 @@ export let demoMissionData = {
       ],
     },
     {
-      nodeID: '71eb8dd1-1104-481b-baf0-a4850c58ebc7',
+      structureKey: '71eb8dd1-1104-481b-baf0-a4850c58ebc7',
       name: 'Minxi Station [闽西测控站]',
       color: '#d0bf3b',
       description: '<p>Select Ground Control Station</p>',
@@ -377,7 +373,6 @@ export let demoMissionData = {
       device: false,
       actions: [
         {
-          actionID: '2a89ea42-76a6-4b20-a998-08659a4c7639',
           name: 'Run Brute Force Entry Script',
           description: '<p>Gain access to this system.</p>',
           processTime: 10000,
@@ -392,7 +387,7 @@ export let demoMissionData = {
       ],
     },
     {
-      nodeID: '7344d4d7-2a9b-4b99-ad2a-4dd353a3bd49',
+      structureKey: '7344d4d7-2a9b-4b99-ad2a-4dd353a3bd49',
       name: 'Changchun Station [长春测控站] ',
       color: '#d0bf3b',
       description: '<p>Select Ground Control Station</p>',
@@ -403,7 +398,6 @@ export let demoMissionData = {
       device: false,
       actions: [
         {
-          actionID: '81c1997e-a0f3-4f74-bffc-f0d2f3aac873',
           name: 'Run Access Script',
           description: '<p>Gain access to this system.</p>',
           processTime: 10000,
@@ -418,7 +412,7 @@ export let demoMissionData = {
       ],
     },
     {
-      nodeID: 'c3b45b64-160d-4fca-a0bf-10fc8740ea21',
+      structureKey: 'c3b45b64-160d-4fca-a0bf-10fc8740ea21',
       name: 'Qingdao Station [青岛测控站]',
       color: '#d0bf3b',
       description: '<p>Select Ground Control Station</p>',
@@ -428,7 +422,6 @@ export let demoMissionData = {
       device: false,
       actions: [
         {
-          actionID: 'efc68198-4909-4134-9fa4-fd2a948b82de',
           name: 'Run Brute Force Entry Script',
           description: '<p>Gain access to this system.</p>',
           processTime: 10000,
@@ -443,7 +436,7 @@ export let demoMissionData = {
       ],
     },
     {
-      nodeID: 'c3a94935-578b-42a1-9fc1-7878fe24fb6d',
+      structureKey: 'c3a94935-578b-42a1-9fc1-7878fe24fb6d',
       name: 'YAOGAN-23 (SAR)',
       color: '#52b1ff',
       description: '<p>JB-7-4</p>',
@@ -454,7 +447,6 @@ export let demoMissionData = {
       device: false,
       actions: [
         {
-          actionID: '6bdc0edd-ac17-41f4-8e32-57283689a83f',
           name: 'New Action',
           description: '<p>Enter your description here.</p>',
           processTime: 5000,
@@ -469,7 +461,7 @@ export let demoMissionData = {
       ],
     },
     {
-      nodeID: 'ae6b07fb-9f36-4eeb-9dbd-e579e8eb7f5d',
+      structureKey: 'ae6b07fb-9f36-4eeb-9dbd-e579e8eb7f5d',
       name: 'YAOGAN-35 (ELINT)',
       color: '#52b1ff',
       description: '<p>Unknown</p>',
@@ -480,7 +472,6 @@ export let demoMissionData = {
       device: false,
       actions: [
         {
-          actionID: 'aed7e61c-7c86-4e13-b1b2-0900be1879f1',
           name: 'New Action',
           description: '<p>Enter your description here.</p>',
           processTime: 5000,
@@ -495,7 +486,7 @@ export let demoMissionData = {
       ],
     },
     {
-      nodeID: '60acf5d1-3467-462c-816c-bcb2e5c2b8e0',
+      structureKey: '60acf5d1-3467-462c-816c-bcb2e5c2b8e0',
       name: 'YAOGAN-36 (Data)',
       color: '#52b1ff',
       description: '<p>Unknown</p>',
@@ -506,7 +497,6 @@ export let demoMissionData = {
       device: false,
       actions: [
         {
-          actionID: '38f455e4-2e75-4ead-9cbd-c8c0c9d2a3b2',
           name: 'Exploit Data',
           description: '<p>Pull asset connection data.</p>',
           processTime: 10000,
@@ -521,7 +511,7 @@ export let demoMissionData = {
       ],
     },
     {
-      nodeID: '26f3833d-45cf-4860-ac97-edd8ef877d3c',
+      structureKey: '26f3833d-45cf-4860-ac97-edd8ef877d3c',
       name: 'Chengdu GJ-2 (UAV)',
       color: '#b839ff',
       description: '<p>Wing Loong 2 (UAV, China)</p>',
@@ -532,7 +522,6 @@ export let demoMissionData = {
       device: false,
       actions: [
         {
-          actionID: '4fe91792-7226-4d31-a4cc-a8448ef08e20',
           name: 'Access Control Systems',
           description: '<p>Access UAV On-board Systems.</p>',
           processTime: 10000,
@@ -547,7 +536,7 @@ export let demoMissionData = {
       ],
     },
     {
-      nodeID: '3bca4ca3-4a5b-4518-bc7a-0f2c8d9b1999',
+      structureKey: '3bca4ca3-4a5b-4518-bc7a-0f2c8d9b1999',
       name: 'Flight Controls',
       color: '#b839ff',
       description: '<p>Access air vehicle flight controls.</p>',
@@ -557,7 +546,6 @@ export let demoMissionData = {
       device: true,
       actions: [
         {
-          actionID: 'fa1b2d96-ae4b-47e3-b9a2-2da2c5097a99',
           name: 'Update Flight Command',
           description: '<p>Update Speed Control</p>',
           processTime: 10000,
@@ -570,7 +558,6 @@ export let demoMissionData = {
           effects: [],
         },
         {
-          actionID: 'a630016c-b075-47a8-8ec0-5768654ac451',
           name: 'New Action',
           description: '<p>Enter your description here.</p>',
           processTime: 5000,
@@ -585,7 +572,7 @@ export let demoMissionData = {
       ],
     },
     {
-      nodeID: 'a6a31b1c-7be6-4a71-81c1-1ffa88ed3711',
+      structureKey: 'a6a31b1c-7be6-4a71-81c1-1ffa88ed3711',
       name: 'Access Controls',
       color: '#b839ff',
       description: '<p>Access air vehicle system lock-out.</p>',
@@ -595,7 +582,6 @@ export let demoMissionData = {
       device: true,
       actions: [
         {
-          actionID: 'd937a941-948f-4ff3-9cde-020e6f27a524',
           name: 'Lock System Controls',
           description: '<p>Lock UAV Access Controls</p>',
           processTime: 10000,
@@ -608,7 +594,6 @@ export let demoMissionData = {
           effects: [],
         },
         {
-          actionID: 'aaaaf89b-2bb0-458a-9268-a6a8adbd7d6d',
           name: 'New Action',
           description: '<p>Enter your description here.</p>',
           processTime: 5000,
@@ -623,7 +608,7 @@ export let demoMissionData = {
       ],
     },
     {
-      nodeID: 'e398028a-1f87-4d58-bf69-b949ef176cf6',
+      structureKey: 'e398028a-1f87-4d58-bf69-b949ef176cf6',
       name: 'Emergency Controls',
       color: '#b839ff',
       description: '<p>Execute Emergency Loss-of-Link.</p>',
@@ -633,7 +618,6 @@ export let demoMissionData = {
       device: false,
       actions: [
         {
-          actionID: 'e2d7772c-f2bc-4085-9c8b-be158cc8c4b3',
           name: 'Force Loss-of-Link',
           description: '<p>UAV will execute loss-of-link protocol.</p>',
           processTime: 10000,
@@ -648,7 +632,7 @@ export let demoMissionData = {
       ],
     },
     {
-      nodeID: 'd04326e3-491b-479a-9f22-d4f49703f8de',
+      structureKey: 'd04326e3-491b-479a-9f22-d4f49703f8de',
       name: '*** WARNING ***',
       color: '#f9484f',
       description: '<p>*** CONFIRM ACTION ***</p>',
@@ -658,7 +642,6 @@ export let demoMissionData = {
       device: true,
       actions: [
         {
-          actionID: '39f2c434-4f8b-42df-87e0-83070034e89b',
           name: 'Send Self-destruction Command',
           description: '<p>Enter your description here.</p>',
           processTime: 10000,

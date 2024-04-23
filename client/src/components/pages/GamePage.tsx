@@ -33,7 +33,7 @@ import './GamePage.scss'
  * Renders the game page.
  */
 export default function GamePage({ game }: TGamePage_P): JSX.Element | null {
-  console.log(game.gameId)
+  console.log(game._id)
 
   /* -- global-context -- */
 

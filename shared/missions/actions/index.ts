@@ -67,7 +67,7 @@ export default abstract class MissionAction<
     data: Partial<TCommonMissionActionJson> = MissionAction.DEFAULT_PROPERTIES,
   ) {
     this.node = node
-    this._id = data._id ?? MissionAction.DEFAULT_PROPERTIES._id
+    this._id = data._id?.toString() ?? MissionAction.DEFAULT_PROPERTIES._id
     this.name = data.name ?? MissionAction.DEFAULT_PROPERTIES.name
     this.description =
       data.description ?? MissionAction.DEFAULT_PROPERTIES.description
@@ -108,7 +108,7 @@ export default abstract class MissionAction<
       effects: this.effects.map((effect) => effect.toJson()),
     }
 
-    // Include _id if its not a UUID.
+    // Include _id if it's an ObjectId.
     // * Note: IDs in the database are
     // * stored as mongoose ObjectIds.
     // * If the ID is a UUID, then the

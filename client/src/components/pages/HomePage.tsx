@@ -510,7 +510,7 @@ export default function HomePage(): JSX.Element | null {
 
         // Update session data to include new
         // game ID.
-        session.gameId = game.gameId
+        session.gameId = game._id
         // Go to the game page with the new
         // game client.
         navigateTo('GamePage', { game })
@@ -543,7 +543,7 @@ export default function HomePage(): JSX.Element | null {
     if (choice === 'Confirm') {
       try {
         beginLoading('Deleting game...')
-        await GameClient.$delete(game.gameId)
+        await GameClient.$delete(game._id)
         finishLoading()
         notify(`Successfully deleted "${game.name}".`)
         loadGames()
@@ -653,7 +653,7 @@ export default function HomePage(): JSX.Element | null {
                   </div>
                   <div
                     className='Text'
-                    onClick={() => onGameSelection(game.gameId)}
+                    onClick={() => onGameSelection(game._id)}
                   >
                     {game.name}
                     <Tooltip description={'Join game.'} />

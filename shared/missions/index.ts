@@ -47,7 +47,7 @@ export default abstract class Mission<TMissionNode extends TCommonMissionNode>
     data: Partial<TCommonMissionJson> = Mission.DEFAULT_PROPERTIES,
     options: TMissionOptions = {},
   ) {
-    this._id = data._id ?? Mission.DEFAULT_PROPERTIES._id
+    this._id = data._id?.toString() ?? Mission.DEFAULT_PROPERTIES._id
     this.name = data.name ?? Mission.DEFAULT_PROPERTIES.name
     this.introMessage =
       data.introMessage ?? Mission.DEFAULT_PROPERTIES.introMessage
@@ -89,7 +89,7 @@ export default abstract class Mission<TMissionNode extends TCommonMissionNode>
       ...this.exportNodes({ revealedOnly, includeGameData }),
     }
 
-    // Include _id if its not a UUID.
+    // Include _id if it's an ObjectId.
     // * Note: IDs in the database are
     // * stored as mongoose ObjectIds.
     // * If the ID is a UUID, then the
@@ -133,7 +133,7 @@ export default abstract class Mission<TMissionNode extends TCommonMissionNode>
 
       // Add nodes to the node map.
       for (let node of this.nodes) {
-        nodeMap.set(node._id, node)
+        nodeMap.set(node.structureKey, node)
       }
 
       // Map relationships between nodes.
@@ -168,9 +168,9 @@ export default abstract class Mission<TMissionNode extends TCommonMissionNode>
 
     // Create an array of the MissionNode
     // objects from the nodes map.
-    let nodes: Array<TMissionNode> = this.nodes
+    let nodes: TMissionNode[] = this.nodes
     // Predefine the node data and structure.
-    let nodeData: Array<TMissionNodeJson> = []
+    let nodeData: TMissionNodeJson[] = []
     let nodeStructure: AnyObject = {}
 
     // Apply filter if revealedOnly flag
@@ -228,6 +228,7 @@ export default abstract class Mission<TMissionNode extends TCommonMissionNode>
    */
   public static readonly ROOT_NODE_PROPERTIES: TMissionNodeJson = {
     _id: 'ROOT',
+    structureKey: 'ROOT',
     name: 'ROOT',
     color: '#000000',
     description:
@@ -313,9 +314,9 @@ export default abstract class Mission<TMissionNode extends TCommonMissionNode>
       if (!revealedOnly || nodeCursor.isOpen) {
         for (let childNode of childNodes) {
           if (childNode.hasChildren) {
-            nodeCursorStructure[childNode._id] = operation(childNode)
+            nodeCursorStructure[childNode.structureKey] = operation(childNode)
           } else {
-            nodeCursorStructure[childNode._id] = {}
+            nodeCursorStructure[childNode.structureKey] = {}
           }
         }
       }

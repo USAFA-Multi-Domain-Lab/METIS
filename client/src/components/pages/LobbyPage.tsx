@@ -175,7 +175,7 @@ export default function LobbyPage({ game }: TLobbyPage_P): JSX.Element | null {
         <div className='DetailSection Section'>
           <div className='GameId StaticDetail'>
             <div className='Label'>Game ID:</div>
-            <div className='Value'>{game.gameId}</div>
+            <div className='Value'>{game._id}</div>
           </div>
           <div className='MissionName StaticDetail'>
             <div className='Label'>Mission:</div>

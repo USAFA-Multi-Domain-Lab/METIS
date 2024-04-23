@@ -5,6 +5,8 @@ export const InfoSchema: Schema = new Schema(
     schemaBuildNumber: { type: Number, required: true },
   },
   {
+    strict: 'throw',
+    minimize: false,
     toJSON: {
       transform: function (doc, ret) {
         delete ret._id

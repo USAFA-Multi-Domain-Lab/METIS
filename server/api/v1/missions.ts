@@ -580,7 +580,7 @@ export const routerMap: TMetisRouterMap = (
 
       // Retrieve database info.
       InfoModel.findOne(
-        { infoID: 'default' },
+        {},
         filterErrors_findOne('infos', response, (info: any) => {
           databaseLogger.info('Database info retrieved.')
 

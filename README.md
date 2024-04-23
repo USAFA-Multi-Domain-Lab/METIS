@@ -284,8 +284,6 @@ To configure the app to work in your environment, an `environment.json` file can
 - `MONGO_DB` - The DB on the Mongo server where the data for Mongo is stored. By default `"metis"`. Note, it is unlikely this will need to be changed, except to set up a testing environment.
 - `MONGO_USERNAME` - The username used to authenticate a session with Mongo. Instructions for setting up Mongo users are included in the setup instructions above. By default `undefined`, which will connect to Mongo without authentication. Note, username and password must either both be defined or undefined. One cannot be included while the other ommitted.
 - `MONGO_PASSWORD` - The password used to authenticate a session with Mongo. Instructions for setting up Mongo users are included in the setup instructions above. By default `undefined`, which will connect to Mongo without authentication. Note, username and password must either both be defined or undefined. One cannot be included while the other ommitted.
-- `PLC_API_HOST` - The hostname for the API that accesses and controls USAFA's cyberrange of simulation PLCs. If this is not set, the server will operate as normal, but certain features will not work properly.
-- `API_KEY` - The API key used to access the PLC API.
 
 An example `environment.json` file is included below:
 
@@ -300,8 +298,6 @@ environment.json
   "MONGO_PORT": 27017,
   "MONGO_DB": "metis",
   "MONGO_USERNAME": "username",
-  "MONGO_PASSWORD": "password",
-  "PLC_API_HOST": "https://your-plc-host-name-here.com",
-  "API_KEY": "api-key-for-plc"
+  "MONGO_PASSWORD": "password"
 }
 ```

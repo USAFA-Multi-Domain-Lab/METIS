@@ -15,7 +15,7 @@ export default abstract class Game<
   /**
    * The ID of the game.
    */
-  public readonly gameId: string
+  public readonly _id: string
 
   /**
    * The name of the game.
@@ -122,7 +122,7 @@ export default abstract class Game<
    * ** Note: Use the static method `launch` to create a new game with a new game ID. **
    */
   public constructor(
-    gameId: string,
+    _id: string,
     name: string,
     config: Partial<TGameConfig>,
     mission: TMission,
@@ -130,7 +130,7 @@ export default abstract class Game<
     banList: string[],
     supervisors: TUser[],
   ) {
-    this.gameId = gameId
+    this._id = _id
     this.name = name
     this._config = {
       ...Game.DEFAULT_CONFIG,
@@ -241,7 +241,7 @@ export type TGameJson = {
   /**
    * The ID of the game.
    */
-  gameId: string
+  _id: string
   /**
    * The state of the game (unstarted, started, ended).
    */
@@ -283,7 +283,7 @@ export type TGameBasicJson = {
   /**
    * The ID of the game.
    */
-  gameId: string
+  _id: string
   /**
    * The ID of the mission being executed by the participants.
    */

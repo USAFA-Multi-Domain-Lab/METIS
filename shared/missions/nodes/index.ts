@@ -28,6 +28,9 @@ export default abstract class MissionNode<
   // Implemented
   public _id: TCommonMissionNode['_id']
 
+  // Inherited
+  public structureKey: TCommonMissionNode['structureKey']
+
   // Implemented
   public name: TCommonMissionNode['name']
 
@@ -245,7 +248,9 @@ export default abstract class MissionNode<
   ) {
     // Set properties from data.
     this.mission = mission
-    this._id = data._id ?? MissionNode.DEFAULT_PROPERTIES._id
+    this._id = data._id?.toString() ?? MissionNode.DEFAULT_PROPERTIES._id
+    this.structureKey =
+      data.structureKey ?? MissionNode.DEFAULT_PROPERTIES.structureKey
     this.name = data.name ?? MissionNode.DEFAULT_PROPERTIES.name
     this.color = data.color ?? MissionNode.DEFAULT_PROPERTIES.color
     this.description =
@@ -310,6 +315,7 @@ export default abstract class MissionNode<
 
     // Construct base JSON.
     let json: TMissionNodeJson = {
+      structureKey: this.structureKey,
       name: this.name,
       color: this.color,
       description: this.description,
@@ -322,7 +328,7 @@ export default abstract class MissionNode<
       ),
     }
 
-    // Include _id if its not a UUID.
+    // Include _id if it's an ObjectId.
     // * Note: IDs in the database are
     // * stored as mongoose ObjectIds.
     // * If the ID is a UUID, then the
@@ -386,6 +392,7 @@ export default abstract class MissionNode<
   public static get DEFAULT_PROPERTIES(): Required<TMissionNodeJson> {
     return {
       _id: generateHash(),
+      structureKey: generateHash(),
       name: 'Unnamed Node',
       color: '#ffffff',
       description: '<p><br></p>',
@@ -419,6 +426,11 @@ export interface TCommonMissionNode {
    * The ID for the node.
    */
   _id: string
+  /**
+   * The key used in the nodeStructure object to represent a node's position and relationships to other
+   * nodes.
+   */
+  structureKey: string
   /**
    * The name for the node.
    */
@@ -564,6 +576,11 @@ export interface TCommonMissionNodeJson {
    * The ID for the node.
    */
   _id?: string
+  /**
+   * The key used in the nodeStructure object to represent a node's position and relationships to other
+   * nodes.
+   */
+  structureKey: string
   /**
    * The name for the node.
    */

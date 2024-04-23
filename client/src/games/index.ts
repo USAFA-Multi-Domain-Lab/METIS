@@ -54,7 +54,7 @@ export default class GameClient extends Game<
     server: ServerConnection,
     joinMethod: TGameJoinMethod,
   ) {
-    let gameId: string = data.gameId
+    let _id: string = data._id
     let state: TGameState = data.state
     let name: string = data.name
     let mission: ClientMission = new ClientMission(data.mission)
@@ -67,7 +67,7 @@ export default class GameClient extends Game<
     let banList: string[] = data.banList
     let config: TGameConfig = data.config
 
-    super(gameId, name, config, mission, participants, banList, supervisors)
+    super(_id, name, config, mission, participants, banList, supervisors)
     this.server = server
     this._joinMethod = joinMethod
     this._state = state
@@ -150,7 +150,7 @@ export default class GameClient extends Game<
   // Implemented
   public toJson(): TGameJson {
     return {
-      gameId: this.gameId,
+      _id: this._id,
       state: this.state,
       name: this.name,
       mission: this.mission.toJson({
@@ -167,7 +167,7 @@ export default class GameClient extends Game<
   // Implemented
   public toBasicJson(): TGameBasicJson {
     return {
-      gameId: this.gameId,
+      _id: this._id,
       missionId: this.missionId,
       name: this.name,
       config: this.config,
@@ -338,7 +338,7 @@ export default class GameClient extends Game<
             throw new Error('Game has already ended.')
           }
           // Call API to update config.
-          await axios.put(`${Game.API_ENDPOINT}/${this.gameId}/config/`, {
+          await axios.put(`${Game.API_ENDPOINT}/${this._id}/config/`, {
             ...configUpdates,
           })
           // Update the game config.
@@ -376,7 +376,7 @@ export default class GameClient extends Game<
             throw new Error('Game has already ended.')
           }
           // Call API to start game.
-          await axios.put(`${Game.API_ENDPOINT}/${this.gameId}/start/`)
+          await axios.put(`${Game.API_ENDPOINT}/${this._id}/start/`)
           // Update the game state.
           this._state = 'started'
           // Resolve promise.
@@ -412,7 +412,7 @@ export default class GameClient extends Game<
             throw new Error('Game has already ended.')
           }
           // Call API to end game.
-          await axios.put(`${Game.API_ENDPOINT}/${this.gameId}/end/`)
+          await axios.put(`${Game.API_ENDPOINT}/${this._id}/end/`)
           // Update the game state.
           this._state = 'ended'
           // Resolve promise.
@@ -440,7 +440,7 @@ export default class GameClient extends Game<
       ): Promise<void> => {
         try {
           // Call API to kick user.
-          await axios.put(`${Game.API_ENDPOINT}/${this.gameId}/kick/${userId}`)
+          await axios.put(`${Game.API_ENDPOINT}/${this._id}/kick/${userId}`)
           // Resolve promise.
           return resolve()
         } catch (error) {
@@ -466,7 +466,7 @@ export default class GameClient extends Game<
       ): Promise<void> => {
         try {
           // Call API to ban user.
-          await axios.put(`${Game.API_ENDPOINT}/${this.gameId}/ban/${userId}`)
+          await axios.put(`${Game.API_ENDPOINT}/${this._id}/ban/${userId}`)
           // Resolve promise.
           return resolve()
         } catch (error) {
@@ -657,7 +657,11 @@ export default class GameClient extends Game<
     )
   }
 
-  public static async $delete(gameId: string): Promise<void> {
+  /**
+   * Deletes a game with the given ID.
+   * @param _id The ID of the game to be deleted.
+   */
+  public static async $delete(_id: string): Promise<void> {
     return new Promise<void>(
       async (
         resolve: () => void,
@@ -665,7 +669,7 @@ export default class GameClient extends Game<
       ): Promise<void> => {
         try {
           // Call API to delete game.
-          await axios.delete(`${Game.API_ENDPOINT}/${gameId}`)
+          await axios.delete(`${Game.API_ENDPOINT}/${_id}`)
           return resolve()
         } catch (error) {
           console.error('Failed to delete game.')

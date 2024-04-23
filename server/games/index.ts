@@ -56,14 +56,14 @@ export default class GameServer extends Game<
   }
 
   public constructor(
-    gameId: string,
+    _id: string,
     name: string,
     config: Partial<TGameConfig>,
     mission: ServerMission,
     participants: Array<ClientConnection>,
     supervisors: Array<ClientConnection>,
   ) {
-    super(gameId, name, config, mission, participants, [], supervisors)
+    super(_id, name, config, mission, participants, [], supervisors)
     this._state = 'unstarted'
     this._resources = config.infiniteResources
       ? Infinity
@@ -109,7 +109,7 @@ export default class GameServer extends Game<
 
     // Construct and return JSON.
     return {
-      gameId: this.gameId,
+      _id: this._id,
       state: this.state,
       name: this.name,
       mission: this.mission.toJson({
@@ -137,7 +137,7 @@ export default class GameServer extends Game<
 
     // Construct and return JSON.
     return {
-      gameId: this.gameId,
+      _id: this._id,
       missionId: this.missionId,
       name: this.name,
       config: this.config,
@@ -177,14 +177,14 @@ export default class GameServer extends Game<
    * Adds this game into the registry, indexing it with its game ID.
    */
   private register(): void {
-    GameServer.registry.set(this.gameId, this)
+    GameServer.registry.set(this._id, this)
   }
 
   /**
    * Removes this game from the registry.
    */
   private unregister(): void {
-    GameServer.registry.delete(this.gameId)
+    GameServer.registry.delete(this._id)
   }
 
   /**
@@ -204,7 +204,7 @@ export default class GameServer extends Game<
 
     // Emit an event to all users that the game has been destroyed.
     for (let user of users) {
-      user.emit('game-destroyed', { data: { gameId: this.gameId } })
+      user.emit('game-destroyed', { data: { gameId: this._id } })
     }
   }
 
@@ -248,7 +248,7 @@ export default class GameServer extends Game<
 
     // Call join handler in the session of
     // the user.
-    client.session.handleJoin(this.gameId)
+    client.session.handleJoin(this._id)
 
     // Handle state change.
     this.handleStateChange()
@@ -402,7 +402,7 @@ export default class GameServer extends Game<
 
           // Emit an event to the participant
           // that they have been kicked.
-          participant.emit('kicked', { data: { gameId: this.gameId } })
+          participant.emit('kicked', { data: { gameId: this._id } })
         }
       },
     )
@@ -439,7 +439,7 @@ export default class GameServer extends Game<
 
           // Emit an event to the participant
           // that they have been kicked.
-          participant.emit('banned', { data: { gameId: this.gameId } })
+          participant.emit('banned', { data: { gameId: this._id } })
         }
       },
     )
@@ -712,31 +712,31 @@ export default class GameServer extends Game<
   /**
    * @returns the game associated with the given game ID.
    */
-  public static get(gameId: string | undefined): GameServer | undefined {
-    if (gameId === undefined) {
+  public static get(_id: string | undefined): GameServer | undefined {
+    if (_id === undefined) {
       return undefined
     } else {
-      return GameServer.registry.get(gameId)
+      return GameServer.registry.get(_id)
     }
   }
 
   /**
    * @returns All games in the registry.
    */
-  public static getAll(): Array<GameServer> {
+  public static getAll(): GameServer[] {
     return Array.from(GameServer.registry.values())
   }
 
   /**
    * Destroys the game associated with the given game ID.
-   * @param gameId The ID of the game to destroy.
+   * @param _id The ID of the game to destroy.
    */
-  public static destroy(gameId: string | undefined): void {
+  public static destroy(_id: string | undefined): void {
     // Find the game.
-    let game: GameServer | undefined = GameServer.get(gameId)
+    let game: GameServer | undefined = GameServer.get(_id)
 
     // If found...
-    if (gameId !== undefined && game !== undefined) {
+    if (_id !== undefined && game !== undefined) {
       // Destroy game.
       game.destroy()
     }

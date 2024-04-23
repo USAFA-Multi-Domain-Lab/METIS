@@ -85,44 +85,50 @@ const validator_users_password = (
 
 /* -- SCHEMA -- */
 
-const UserSchema = new Schema({
-  username: {
-    type: String,
-    unique: true,
-    required: true,
-    trim: true,
-    validate: validate_users_username,
+const UserSchema = new Schema(
+  {
+    username: {
+      type: String,
+      unique: true,
+      required: true,
+      trim: true,
+      validate: validate_users_username,
+    },
+    roleId: {
+      type: Role,
+      required: true,
+      validate: validate_users_roleId,
+    },
+    expressPermissionIds: {
+      type: [Permission],
+      required: true,
+      validate: validate_users_expressPermissionIds,
+    },
+    firstName: {
+      type: String,
+      required: true,
+      trim: true,
+      validate: validate_users_name,
+    },
+    lastName: {
+      type: String,
+      required: true,
+      trim: true,
+      validate: validate_users_name,
+    },
+    needsPasswordReset: { type: Boolean, required: true },
+    password: {
+      type: String,
+      required: true,
+      validate: validator_users_password,
+    },
+    deleted: { type: Boolean, required: true, default: false },
   },
-  roleId: {
-    type: Role,
-    required: true,
-    validate: validate_users_roleId,
+  {
+    strict: 'throw',
+    minimize: false,
   },
-  expressPermissionIds: {
-    type: [Permission],
-    required: true,
-    validate: validate_users_expressPermissionIds,
-  },
-  firstName: {
-    type: String,
-    required: true,
-    trim: true,
-    validate: validate_users_name,
-  },
-  lastName: {
-    type: String,
-    required: true,
-    trim: true,
-    validate: validate_users_name,
-  },
-  needsPasswordReset: { type: Boolean, required: true },
-  password: {
-    type: String,
-    required: true,
-    validate: validator_users_password,
-  },
-  deleted: { type: Boolean, required: true, default: false },
-})
+)
 
 /* -- SCHEMA METHODS -- */
 

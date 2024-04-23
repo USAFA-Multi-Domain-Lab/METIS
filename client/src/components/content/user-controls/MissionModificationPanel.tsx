@@ -105,12 +105,6 @@ export default function MissionModificationPanel({
         onClick: onLaunchRequest,
         tooltipDescription: 'Launch game.',
       },
-      edit: {
-        icon: 'edit',
-        key: 'edit',
-        onClick: onEditRequest,
-        tooltipDescription: 'Edit mission.',
-      },
       remove: {
         icon: 'remove',
         key: 'remove',
@@ -154,7 +148,6 @@ export default function MissionModificationPanel({
     // the edit, remove, copy, and download buttons.
     if (currentUser.isAuthorized('missions_write')) {
       buttons.push(
-        availableButtons.edit,
         availableButtons.remove,
         availableButtons.copy,
         availableButtons.download,
