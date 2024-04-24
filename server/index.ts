@@ -326,7 +326,7 @@ export default class MetisServer {
   /**
    * The current build number for the database.
    */
-  public static readonly SCHEMA_BUILD_NUMBER: number = 18
+  public static readonly SCHEMA_BUILD_NUMBER: number = 21
   /**
    * The root directory for the METIS server.
    */
