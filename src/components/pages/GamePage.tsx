@@ -1,24 +1,24 @@
-import { useEffect, useState } from 'react'
-import { getMission, Mission } from '../../modules/missions'
-import { EAjaxStatus } from '../../modules/toolbox/ajax'
-import MissionMap from '../content/game/MissionMap'
-import OutputPanel from '../content/game/OutputPanel'
-import './GamePage.scss'
-import ExecuteNodePath from '../content/game/ExecuteNodePath'
-import NodeActions from '../content/game/NodeActions'
-import { IPage } from '../App'
-import { MissionNode } from '../../modules/mission-nodes'
-import AppState, { AppActions } from '../AppState'
-import Navigation from '../content/general-layout/Navigation'
 import { AxiosError } from 'axios'
-import MissionModificationPanel from '../content/user-controls/MissionModificationPanel'
+import { useEffect, useState } from 'react'
+import { MissionNodeAction } from '../../modules/mission-node-actions'
+import { MissionNode } from '../../modules/mission-nodes'
+import { Mission, getMission } from '../../modules/missions'
+import { EAjaxStatus } from '../../modules/toolbox/ajax'
+import { IPage } from '../App'
+import AppState, { AppActions } from '../AppState'
+import { IConsoleOutput } from '../content/game/ConsoleOutput'
+import ExecuteNodePath from '../content/game/ExecuteNodePath'
+import MissionMap from '../content/game/MissionMap'
+import NodeActions from '../content/game/NodeActions'
+import OutputPanel from '../content/game/OutputPanel'
+import Navigation from '../content/general-layout/Navigation'
 import {
   EPanelSizingMode,
   PanelSizeRelationship,
   ResizablePanel,
 } from '../content/general-layout/ResizablePanels'
-import { MissionNodeAction } from '../../modules/mission-node-actions'
-import { IConsoleOutput } from '../content/game/ConsoleOutput'
+import MissionModificationPanel from '../content/user-controls/MissionModificationPanel'
+import './GamePage.scss'
 
 export interface IGamePage extends IPage {
   missionID: string
@@ -292,7 +292,6 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
                         // notifies the user if they click a node and
                         // nothing happens.
                         if (
-                          mission.resources > 0 &&
                           selectedNode.executable &&
                           !selectedNode.selectedAction?.succeeded &&
                           !selectedNode.executing &&
@@ -316,17 +315,6 @@ export default function GamePage(props: IGamePage): JSX.Element | null {
                               )
                             }
                           }
-                        } else if (
-                          mission.resources === 0 &&
-                          selectedNode.executable &&
-                          !selectedNode.selectedAction?.succeeded &&
-                          !selectedNode.executing &&
-                          selectedNode.highlighted
-                        ) {
-                          appActions.notify(
-                            `You have no more resources left to spend.`,
-                            { duration: 3500 },
-                          )
                         } else {
                           setNodeActionsIsDisplayed(false)
                           setExecuteNodePathIsDisplayed(false)

@@ -1,17 +1,17 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { getAllMissions, importMissions, Mission } from '../../modules/missions'
+import { Mission, getAllMissions, importMissions } from '../../modules/missions'
+import Notification from '../../modules/notifications'
 import { IPage } from '../App'
-import './MissionSelectionPage.scss'
+import AppState, { AppActions } from '../AppState'
+import Tooltip from '../content/communication/Tooltip'
+import Navigation from '../content/general-layout/Navigation'
 import {
   ButtonSVG,
   EButtonSVGPurpose,
 } from '../content/user-controls/ButtonSVG'
-import AppState, { AppActions } from '../AppState'
-import Navigation from '../content/general-layout/Navigation'
-import MissionSelectionRow from '../content/user-controls/MissionSelectionRow'
 import { ButtonText } from '../content/user-controls/ButtonText'
-import Notification from '../../modules/notifications'
-import Tooltip from '../content/communication/Tooltip'
+import MissionSelectionRow from '../content/user-controls/MissionSelectionRow'
+import './MissionSelectionPage.scss'
 
 export interface IMissionSelectionPage extends IPage {}
 
@@ -669,7 +669,7 @@ export default function MissionSelectionPage(
 
       <div className='FooterContainer' draggable={false}>
         <div className='Version' onClick={viewChangelog} draggable={false}>
-          v1.3.8
+          v1.3.9
           <Tooltip description={'View changelog.'} />
         </div>
         <a

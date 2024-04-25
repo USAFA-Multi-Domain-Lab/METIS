@@ -1,6 +1,10 @@
 # changelog
 
-# version-1.3.8 | 1-3-2023
+# version-1.3.9 | 4-25-2024
+
+- Fixed issue where users cannot execute an action that cost 0 resources if they have 0 resources remaining within a mission
+
+# version-1.3.8 | 1-3-2024
 
 - Fixed issue where actions within a mission that had a resource cost of 0 would result in an infinite amount of attempts to execute causing the app to break once that mission was selected
 
