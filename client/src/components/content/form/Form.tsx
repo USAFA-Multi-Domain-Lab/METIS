@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react'
 import ReactQuill from 'react-quill'
 import 'react-quill/dist/quill.snow.css'
 import { compute } from 'src/toolbox'
@@ -282,12 +282,10 @@ export function DetailString({
  */
 export function DetailNumber({
   fieldType,
-  handleOnBlur,
   label,
   stateValue,
   setState,
   // Optional Properties
-  defaultValue = undefined,
   minimum = undefined,
   maximum = undefined,
   integersOnly = false,
@@ -296,49 +294,8 @@ export function DetailNumber({
   uniqueLabelClassName = undefined,
   uniqueFieldClassName = undefined,
   disabled = false,
-  errorMessage = 'A number is required here.',
 }: TDetailNumber_P): JSX.Element | null {
-  /* -- STATE -- */
-  const [inputValue, setInputValue] = useState<number | string>('')
-  const [leftField, setLeftField] = useState<boolean>(false)
-
   /* -- COMPUTED -- */
-  /**
-   * The boolean that determines if the
-   * error message should be displayed.
-   */
-  const displayError: boolean = compute(() => {
-    let display: boolean = false
-
-    // If the user has left the field and the
-    // field is required and the error message
-    // should be delivered, then display the error.
-    if (
-      leftField &&
-      fieldType === 'required' &&
-      handleOnBlur === 'deliverError' &&
-      errorMessage !== 'A number is required here.'
-    ) {
-      display = true
-    }
-
-    // If the user has left the field and the
-    // field is required and the error message
-    // should be delivered and the field is empty,
-    // then display the default error message.
-    if (
-      leftField &&
-      fieldType === 'required' &&
-      handleOnBlur === 'deliverError' &&
-      errorMessage === 'A number is required here.' &&
-      stateValue === null
-    ) {
-      display = true
-    }
-
-    // Return the boolean.
-    return display
-  })
   /**
    * The class name for the detail.
    */
@@ -388,42 +345,11 @@ export function DetailNumber({
     return classList.join(' ')
   })
   /**
-   * Class name for the error message field.
-   */
-  const fieldErrorClassName: string = compute(() => {
-    // Default class names
-    let classList: string[] = ['FieldErrorMessage']
-
-    // Hide the error message if the
-    // displayError is false.
-    if (!displayError) {
-      classList.push('Hidden')
-    }
-
-    // Return the list of class names as one string.
-    return classList.join(' ')
-  })
-  /**
    * The class name for the optional text.
    */
   const optionalClassName: string = compute(() =>
     fieldType === 'optional' ? 'Optional' : 'Optional Hidden',
   )
-
-  /* -- EFFECTS -- */
-  useEffect(() => {
-    // If the current value is not null
-    // then set the input's value to the
-    // current value.
-    if (stateValue !== null && stateValue !== undefined) {
-      setInputValue(stateValue)
-    }
-    // Otherwise, set the input's value
-    // to an empty string.
-    else {
-      setInputValue('')
-    }
-  }, [stateValue])
 
   /* -- RENDER -- */
   return (
@@ -437,7 +363,7 @@ export function DetailNumber({
         className={fieldClassName}
         type='text'
         placeholder={placeholder}
-        value={inputValue}
+        value={stateValue ?? ''}
         onKeyDown={(event: React.KeyboardEvent<HTMLInputElement>) => {
           // Enforce the input to only accept numeric characters.
           inputs.enforceNumbericCharsOnly(event)
@@ -466,67 +392,41 @@ export function DetailNumber({
             inputs.enforceNumberCap(event, maximum)
           }
 
-          // Update the input's value.
-          setInputValue(target.value)
+          if (fieldType === 'required' && target.value === '') {
+            // ...but the minimum value is greater than 0,
+            // then set the input's value to the minimum value.
+            if (minimum !== undefined && minimum > 0) {
+              target.value = minimum.toString()
+            }
+            // Or, if the maximum value is less than 0,
+            // then set the input's value to the maximum value.
+            else if (maximum !== undefined && maximum < 0) {
+              target.value = maximum.toString()
+            }
+            // Otherwise, set the input's value to 0.
+            else {
+              target.value = '0'
+            }
+
+            target.select()
+          }
 
           // Convert the input's value to a number and
           // check if it is a number, then deliver the value.
           value = parseInt(target.value)
           value = isNaN(value) ? null : value
 
-          // If the value is not null then update the state.
-          if (value !== null) setState(value)
-        }}
-        onBlur={(event: React.FocusEvent) => {
-          let target: HTMLInputElement = event.target as HTMLInputElement
-          let value: number | null
-
-          // Convert the input's value to a number and
-          // check if it is a number.
-          value = parseInt(target.value)
-          value = isNaN(value) ? null : value
-
-          // If the field is empty or in a default
-          // state and the field is required to be
-          // filled out...
-          if (value === null && fieldType === 'required') {
-            // ...but the minimum value is greater than 0,
-            // then set the input's value to the minimum value.
-            if (minimum !== undefined && minimum > 0) {
-              value = minimum
-              setInputValue(value)
-              setState(value)
-            }
-            // Or, if the maximum value is less than 0,
-            // then set the input's value to the maximum value.
-            else if (maximum !== undefined && maximum < 0) {
-              value = maximum
-              setInputValue(value)
-              setState(value)
-            }
-            // Otherwise, set the input's value to a default value.
-            else if (
-              !displayError &&
-              handleOnBlur === 'repopulateValue' &&
-              fieldType === 'required'
-            ) {
-              if (defaultValue !== undefined && defaultValue !== null) {
-                value = defaultValue
-              } else {
-                value = 0
-              }
-
-              setInputValue(value)
-              setState(value)
-            }
-
-            // Indicate that the user has left the field.
-            // @note - This allows errors to be displayed.
-            setLeftField(true)
+          // If the field is required and the value is not null,
+          // then update the value.
+          if (fieldType === 'required' && value !== null) {
+            setState(value)
+          }
+          // If the field is optional, then update the value.
+          if (fieldType === 'optional') {
+            setState(value)
           }
         }}
       />
-      <div className={fieldErrorClassName}>{errorMessage}</div>
     </div>
   )
 }
@@ -1279,7 +1179,15 @@ type TDetailString_P = TDetailWithInput_P<string> & {
 /**
  * The properties for the Detail Number component.
  */
-type TDetailNumber_P = TDetailWithInput_P<number | null> & {
+type TDetailNumber_P = TDetail_P<number | null> & {
+  /**
+   * The placeholder for the input.
+   * @default 'Enter [input value type] here...'
+   * @note The default value is determined by the input type.
+   * For example, if the input type is 'text', then the default
+   * value will be 'Enter text here...'.
+   */
+  placeholder?: string
   /**
    * The minimum value allowed for the detail.
    */

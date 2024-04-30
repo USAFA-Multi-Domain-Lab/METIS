@@ -23,7 +23,8 @@ export default abstract class TargetEnvironment<TTarget extends TCommonTarget>
 
   /**
    * Creates a new TargetEnvironment Object.
-   * @param {TCommonTargetEnvJson} data The data to use to create the TargetEnvironment.
+   * @param data The data to use to create the TargetEnvironment.
+   * @param options The options for creating the TargetEnvironment.
    */
   public constructor(
     data: Partial<TCommonTargetEnvJson> = TargetEnvironment.DEFAULT_PROPERTIES,

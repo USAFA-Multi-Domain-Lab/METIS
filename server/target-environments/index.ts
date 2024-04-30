@@ -7,8 +7,14 @@ import { TCommonTargetJson } from 'metis/target-environments/targets'
 import path from 'path'
 import ServerTarget from './targets'
 
+/**
+ * A class for managing target environments on the server.
+ */
 export default class ServerTargetEnvironment extends TargetEnvironment<ServerTarget> {
-  // Implemented
+  /**
+   * @param data The data to use to create the ServerTargetEnvironment.
+   * @param options The options for creating the ServerTargetEnvironment.
+   */
   public constructor(
     data: Partial<TCommonTargetEnvJson> = ServerTargetEnvironment.DEFAULT_PROPERTIES,
     options: TServerTargetEnvOptions = {},
@@ -41,6 +47,8 @@ export default class ServerTargetEnvironment extends TargetEnvironment<ServerTar
 
   /**
    * Grabs all the target environments from the registry.
+   * @returns An array of all the target environments in the
+   * registry.
    */
   public static getAll(): ServerTargetEnvironment[] {
     return ServerTargetEnvironment.registry
@@ -49,6 +57,7 @@ export default class ServerTargetEnvironment extends TargetEnvironment<ServerTar
   /**
    * Grabs a target environment from the registry by its ID.
    * @param id The ID of the target environment to grab.
+   * @returns A target environment with the provided ID.
    */
   public static get(id: string): ServerTargetEnvironment | undefined {
     return ServerTargetEnvironment.registry.find(
@@ -59,6 +68,8 @@ export default class ServerTargetEnvironment extends TargetEnvironment<ServerTar
 
   /**
    * Grabs all the target environment JSON from the registry.
+   * @returns An array with all the target environment JSON
+   * in the registry.
    */
   public static getAllJson(): TCommonTargetEnvJson[] {
     return ServerTargetEnvironment.registryJson
@@ -67,6 +78,7 @@ export default class ServerTargetEnvironment extends TargetEnvironment<ServerTar
   /**
    * Grabs a target environment JSON from the registry by its ID.
    * @param id The ID of the target environment to grab.
+   * @returns A target environment JSON with the provided ID.
    */
   public static getJson(id: string): TCommonTargetEnvJson | undefined {
     return ServerTargetEnvironment.registryJson.find(
@@ -79,6 +91,7 @@ export default class ServerTargetEnvironment extends TargetEnvironment<ServerTar
    * @param directory The directory to search.
    * @param targetEnvironmentJson The target environment JSON.
    * @param targetJson The target JSON.
+   * @returns An array of target environment JSON.
    */
   public static scan(
     directory: string,
@@ -96,23 +109,36 @@ export default class ServerTargetEnvironment extends TargetEnvironment<ServerTar
       fs.lstatSync(directory).isDirectory() &&
       !blackListedFiles.includes(directory)
     ) {
+      // The regex for target directories.
+      let targetDirectoryRegex: RegExp = /^(@)[a-zA-Z0-9_-]+$/
+      // The regex for index files.
+      let indexFileRegex: RegExp = /^(index.ts)$/
+      // The regex for target files.
+      let targetFileRegex: RegExp = /^[a-zA-Z0-9_-]+(.ts)$/
       // Get the files in the directory.
       let directoryFiles: string[] = fs.readdirSync(directory)
 
       // Iterate over the files in the directory.
       directoryFiles.forEach((file: string) => {
-        // If the file is a typescript file, it's an index file,
-        // and it's directory does not include an '@' symbol, then
-        // add it to the list of target environment files.
-        // Note: The '@' symbol is only used to denote that the
-        // directory is a target directory.
-        // Note: Index files are used for target environments only.
-        if (
-          fs.lstatSync(path.join(directory, file)).isFile() &&
-          file.endsWith('.ts') &&
-          file === 'index.ts' &&
-          !directory.includes('@')
-        ) {
+        // Check if previous file is a directory.
+        let isDirectory: boolean = fs.lstatSync(directory).isDirectory()
+        // If the previous file is a directory, then set the current directory
+        // to the previous file.
+        let currentDirectory: string = isDirectory
+          ? path.basename(directory)
+          : ''
+        // Check if the file is a file.
+        let isFile: boolean = fs.lstatSync(path.join(directory, file)).isFile()
+        // Check if the current directory is a target directory.
+        let isTargetDirectory: boolean =
+          isDirectory && targetDirectoryRegex.test(currentDirectory)
+        // Check if the file is an index file or a target file.
+        let isIndexFile: boolean = isFile && indexFileRegex.test(file)
+        let isTargetFile: boolean =
+          isFile && isTargetDirectory && targetFileRegex.test(file)
+
+        // If the file is a typescript file and it's an index file...
+        if (isIndexFile && !isTargetFile) {
           // Grab the default export from the file.
           let exportDefault: any = require(path.join(directory, file)).default
 
@@ -129,18 +155,8 @@ export default class ServerTargetEnvironment extends TargetEnvironment<ServerTar
             targetEnvironmentJson.push(exportDefault)
           }
         }
-        // If the file is a typescript file, it's not an index file,
-        // and it's directory includes an '@' symbol, then add it to
-        // the list of target files.
-        // Note: The '@' symbol is only used to denote that the
-        // directory is a target directory.
-        // Note: Index files are used for target environments only.
-        else if (
-          fs.lstatSync(path.join(directory, file)).isFile() &&
-          file.endsWith('.ts') &&
-          file !== 'index.ts' &&
-          directory.includes('@')
-        ) {
+        // If the file is a typescript file and it's a target file...
+        else if (isTargetFile && !isIndexFile) {
           // Grab the default export from the file.
           let exportDefault: any = require(path.join(directory, file)).default
 

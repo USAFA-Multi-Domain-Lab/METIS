@@ -59,8 +59,8 @@ export default abstract class MissionAction<
   }
 
   /**
-   * @param {TMissionNode} node The node on which the action is being executed.
-   * @param {TCommonMissionActionJson} data The action data from which to create the action. Any ommitted values will be set to the default properties defined in MissionAction.DEFAULT_PROPERTIES.
+   * @param node The node on which the action is being executed.
+   * @param data The action data from which to create the action. Any ommitted values will be set to the default properties defined in MissionAction.DEFAULT_PROPERTIES.
    */
   public constructor(
     node: TMissionNode,

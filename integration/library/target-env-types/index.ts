@@ -111,10 +111,6 @@ type TNumberArgOptional = {
    * Determines whether the argument is required or not.
    */
   required: false
-  /**
-   * The default value for the argument.
-   */
-  default?: number
 }
 /**
  * The required number argument type for a target.
@@ -242,20 +238,6 @@ type TDropdownArgOptional = {
    * Determines whether the argument is required or not.
    */
   required: false
-  /**
-   * The default value for the argument.
-   * @default { _id: 'default', name: 'Select an option' }
-   */
-  default?: {
-    /**
-     * The ID of the option.
-     */
-    _id: string
-    /**
-     * The option's name. This is displayed to the user.
-     */
-    name: string
-  }
 }
 /**
  * The required dropdown argument type for a target.
@@ -299,11 +281,6 @@ type TBooleanArgOptional = {
    * Determines whether the argument is required or not.
    */
   required: false
-  /**
-   * The default value for the argument.
-   * @default false
-   */
-  default?: boolean
 }
 /**
  * The required boolean argument type for a target.

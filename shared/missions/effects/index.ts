@@ -132,6 +132,7 @@ export default abstract class Effect<
    * Creates a new Effect Object.
    * @param action The action to which the effect belongs.
    * @param data The data to use to create the Effect.
+   * @param options The options for creating the Effect.
    */
   public constructor(
     action: TMissionAction,
@@ -160,6 +161,7 @@ export default abstract class Effect<
    * Populates the target data.
    * @param targetId The ID of the target to load.
    * @resolves When the target data has been loaded.
+   * @rejects If there is an error loading the target data.
    */
   public abstract populateTargetData(
     targetId: TCommonTargetJson['_id'],
@@ -200,7 +202,7 @@ export default abstract class Effect<
       _id: generateHash(),
       name: 'New Effect',
       description: '<p><br></p>',
-      targetEnvironmentVersion: '0.0.1',
+      targetEnvironmentVersion: '0.1',
       targetId: null,
       args: {},
     }

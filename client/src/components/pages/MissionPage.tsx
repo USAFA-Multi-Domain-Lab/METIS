@@ -125,7 +125,7 @@ export default function MissionPage({
     // Load the target environments.
     try {
       beginLoading('Loading target environments...')
-      setTargetEnvironments(await ClientTargetEnvironment.fetchAll())
+      setTargetEnvironments(await ClientTargetEnvironment.$fetchAll())
     } catch {
       handleError('Failed to load target environments.')
     }
@@ -437,8 +437,6 @@ export default function MissionPage({
     },
   ]
 
-  /* -- RENDER -- */
-
   /**
    * Computed JSX for the mission map modal.
    */
@@ -526,6 +524,8 @@ export default function MissionPage({
       return null
     }
   }
+
+  /* -- RENDER -- */
 
   if (mountHandled) {
     return (

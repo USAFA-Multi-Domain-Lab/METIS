@@ -124,34 +124,51 @@ export default function EffectEntry({
     }
   }
 
+  /**
+   * Renders JSX for the back button.
+   */
+  const renderBackButtonJsx = (): JSX.Element | null => {
+    return (
+      <div className='BackContainer'>
+        <div className='BackButton' onClick={() => setSelectedEffect(null)}>
+          &lt;
+          <Tooltip description='Go back.' />
+        </div>
+      </div>
+    )
+  }
+  /**
+   * Renders JSX for the path of the mission.
+   */
+  const renderPathJsx = (): JSX.Element | null => {
+    return (
+      <div className='Path'>
+        Location:{' '}
+        {missionPath.map((position: string, index: number) => {
+          return (
+            <span className='Position' key={`position-${index}`}>
+              <span
+                className='PositionText'
+                onClick={() => handlePathPositionClick(index)}
+              >
+                {position}
+              </span>{' '}
+              {index === missionPath.length - 1 ? '' : ' > '}
+            </span>
+          )
+        })}
+      </div>
+    )
+  }
+
   /* -- RENDER -- */
   return (
     <div className='EffectEntry SidePanel'>
       <div className='BorderBox'>
         {/* -- TOP OF BOX -- */}
         <div className='BoxTop'>
-          <div className='BackContainer'>
-            <div className='BackButton' onClick={() => setSelectedEffect(null)}>
-              &lt;
-              <Tooltip description='Go back.' />
-            </div>
-          </div>
-          <div className='Path'>
-            Location:{' '}
-            {missionPath.map((position: string, index: number) => {
-              return (
-                <span className='Position' key={`position-${index}`}>
-                  <span
-                    className='PositionText'
-                    onClick={() => handlePathPositionClick(index)}
-                  >
-                    {position}
-                  </span>{' '}
-                  {index === missionPath.length - 1 ? '' : ' > '}
-                </span>
-              )
-            })}
-          </div>
+          {renderBackButtonJsx()}
+          {renderPathJsx()}
         </div>
 
         {/* -- MAIN CONTENT -- */}

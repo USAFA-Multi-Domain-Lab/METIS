@@ -25,6 +25,10 @@ export default class ServerMissionAction extends MissionAction<
   protected potentialOutcomes: Queue<ServerPotentialOutcome> =
     new Queue<ServerPotentialOutcome>()
 
+  /**
+   * @param node The node that the action belongs to.
+   * @param data The data to use to create the ServerMissionAction.
+   */
   public constructor(node: ServerMissionNode, data: TCommonMissionActionJson) {
     super(node, data)
 
@@ -47,14 +51,16 @@ export default class ServerMissionAction extends MissionAction<
     }
   }
 
+  // Implemented
   public parseEffects(data: TCommonEffectJson[]): ServerEffect[] {
     return data.map((datum: TCommonEffectJson) => new ServerEffect(this, datum))
   }
 
   /**
    * Executes the action, returning a promise that resolves with the outcome of the execution.
-   * @param {TExecuteOptions} options Options for executing the action.
-   * @returns {Promise<ServerRealizedOutcome>} A promise that resolves with the outcome of the execution.
+   * @param options Options for executing the action.
+   * @resolves If the action executes without any errors.
+   * @rejects If there are any errors during the execution process.
    */
   public execute(
     options: TExecuteOptions<ServerActionExecution>,

@@ -179,6 +179,121 @@ export default function ActionEntry({
     handleChange()
   }
 
+  /**
+   * Renders JSX for the back button.
+   */
+  const renderBackButtonJsx = (): JSX.Element | null => {
+    return (
+      <div className='BackContainer'>
+        <div className='BackButton' onClick={() => setSelectedAction(null)}>
+          &lt;
+          <Tooltip description='Go back.' />
+        </div>
+      </div>
+    )
+  }
+
+  /**
+   * Renders JSX for the path of the mission.
+   */
+  const renderPathJsx = (): JSX.Element | null => {
+    return (
+      <div className='Path'>
+        Location:{' '}
+        {missionPath.map((position: string, index: number) => {
+          return (
+            <span className='Position' key={`position-${index}`}>
+              <span
+                className='PositionText'
+                onClick={() => handlePathPositionClick(index)}
+              >
+                {position}
+              </span>{' '}
+              {index === missionPath.length - 1 ? '' : ' > '}
+            </span>
+          )
+        })}
+      </div>
+    )
+  }
+
+  /**
+   * Renders JSX for the effect list item.
+   */
+  const renderEffectListItem = (effect: ClientEffect) => {
+    /* -- COMPUTED -- */
+    /**
+     * The class list for the edit button.
+     */
+    const editButtonClassList: string[] = compute(() => {
+      // Create a default list of class names.
+      let classList: string[] = []
+
+      // If the effect cannot be edited then disable the button.
+      if (effect.target === null || effect.targetEnvironment === null) {
+        classList.push('NoEdit')
+      }
+
+      // Return the class list.
+      return classList
+    })
+
+    /**
+     * The tooltip description for the edit button.
+     */
+    const editTooltipDescription: string = compute(() => {
+      if (effect.target === null) {
+        return 'This effect cannot be edited because the target associated with this effect is not available.'
+      } else if (effect.targetEnvironment === null) {
+        return 'This effect cannot be edited because the target environment associated with this effect is not available.'
+      } else {
+        return 'Edit effect.'
+      }
+    })
+
+    /**
+     * The buttons for the effect list.
+     */
+    const actionButtons = compute(() => {
+      // Create a default list of buttons.
+      let buttons: TValidPanelButton[] = []
+
+      // If the action is available then add the edit and remove buttons.
+      let availableMiniActions: SingleTypeObject<TValidPanelButton> = {
+        edit: {
+          icon: 'edit',
+          key: 'edit',
+          onClick: () => setSelectedEffect(effect),
+          tooltipDescription: editTooltipDescription,
+          uniqueClassList: editButtonClassList,
+        },
+        remove: {
+          icon: 'remove',
+          key: 'remove',
+          onClick: () => handleDeleteEffectRequest(effect),
+          tooltipDescription: 'Remove effect.',
+        },
+      }
+
+      // Add the buttons to the list.
+      buttons.push(availableMiniActions.edit)
+      buttons.push(availableMiniActions.remove)
+
+      // Return the buttons.
+      return buttons
+    })
+
+    return (
+      <div className='Row' key={`effect-row-${effect._id}`}>
+        <div className='RowContent'>
+          {effect.name}
+          <Tooltip description={effect.description} />
+        </div>
+        <ButtonSvgPanel buttons={actionButtons} size={'small'} />
+      </div>
+    )
+  }
+
   /* -- RENDER -- */
 
   if (node.executable) {
@@ -187,31 +302,8 @@ export default function ActionEntry({
         <div className='BorderBox'>
           {/* -- TOP OF BOX -- */}
           <div className='BoxTop'>
-            <div className='BackContainer'>
-              <div
-                className='BackButton'
-                onClick={() => setSelectedAction(null)}
-              >
-                &lt;
-                <Tooltip description='Go back.' />
-              </div>
-            </div>
-            <div className='Path'>
-              Location:{' '}
-              {missionPath.map((position: string, index: number) => {
-                return (
-                  <span className='Position' key={`position-${index}`}>
-                    <span
-                      className='PositionText'
-                      onClick={() => handlePathPositionClick(index)}
-                    >
-                      {position}
-                    </span>{' '}
-                    {index === missionPath.length - 1 ? '' : ' > '}
-                  </span>
-                )
-              })}
-            </div>
+            {renderBackButtonJsx()}
+            {renderPathJsx()}
           </div>
 
           {/* -- MAIN CONTENT -- */}
@@ -238,13 +330,9 @@ export default function ActionEntry({
             />
             <DetailNumber
               fieldType='required'
-              handleOnBlur='repopulateValue'
               label='Success Chance'
               stateValue={successChance}
               setState={setSuccessChance}
-              defaultValue={
-                ClientMissionAction.DEFAULT_PROPERTIES.successChance * 100
-              }
               minimum={0}
               maximum={100}
               unit='%'
@@ -252,13 +340,9 @@ export default function ActionEntry({
             />
             <DetailNumber
               fieldType='required'
-              handleOnBlur='repopulateValue'
               label='Process Time'
               stateValue={processTime}
               setState={setProcessTime}
-              defaultValue={
-                ClientMissionAction.DEFAULT_PROPERTIES.processTime / 1000
-              }
               minimum={0}
               maximum={3600}
               unit='s'
@@ -267,11 +351,9 @@ export default function ActionEntry({
             />
             <DetailNumber
               fieldType='required'
-              handleOnBlur='repopulateValue'
               label='Resource Cost'
               stateValue={resourceCost}
               setState={setResourceCost}
-              defaultValue={ClientMissionAction.DEFAULT_PROPERTIES.resourceCost}
               minimum={0}
               integersOnly={true}
               key={`${action._id}_resourceCost`}
@@ -304,83 +386,7 @@ export default function ActionEntry({
             {/* -- EFFECTS -- */}
             <List<ClientEffect>
               items={action.effects}
-              renderItemDisplay={(effect: ClientEffect) => {
-                /* -- COMPUTED -- */
-                /**
-                 * The class list for the edit button.
-                 */
-                const editButtonClassList: string[] = compute(() => {
-                  // Create a default list of class names.
-                  let classList: string[] = []
-
-                  // If the effect cannot be edited then disable the button.
-                  if (
-                    effect.target === null ||
-                    effect.targetEnvironment === null
-                  ) {
-                    classList.push('NoEdit')
-                  }
-
-                  // Return the class list.
-                  return classList
-                })
-
-                /**
-                 * The tooltip description for the edit button.
-                 */
-                const editTooltipDescription: string = compute(() => {
-                  if (effect.target === null) {
-                    return 'This effect cannot be edited because the target associated with this effect is not available.'
-                  } else if (effect.targetEnvironment === null) {
-                    return 'This effect cannot be edited because the target environment associated with this effect is not available.'
-                  } else {
-                    return 'Edit effect.'
-                  }
-                })
-
-                /**
-                 * The buttons for the effect list.
-                 */
-                const actionButtons = compute(() => {
-                  // Create a default list of buttons.
-                  let buttons: TValidPanelButton[] = []
-
-                  // If the action is available then add the edit and remove buttons.
-                  let availableMiniActions: SingleTypeObject<TValidPanelButton> =
-                    {
-                      edit: {
-                        icon: 'edit',
-                        key: 'edit',
-                        onClick: () => setSelectedEffect(effect),
-                        tooltipDescription: editTooltipDescription,
-                        uniqueClassList: editButtonClassList,
-                      },
-                      remove: {
-                        icon: 'remove',
-                        key: 'remove',
-                        onClick: () => handleDeleteEffectRequest(effect),
-                        tooltipDescription: 'Remove effect.',
-                      },
-                    }
-
-                  // Add the buttons to the list.
-                  buttons.push(availableMiniActions.edit)
-                  buttons.push(availableMiniActions.remove)
-
-                  // Return the buttons.
-                  return buttons
-                })
-
-                return (
-                  <div className='Row' key={`effect-row-${effect._id}`}>
-                    <div className='RowContent'>
-                      {effect.name}
-                      <Tooltip description={effect.description} />
-                    </div>
-                    <ButtonSvgPanel buttons={actionButtons} size={'small'} />
-                  </div>
-                )
-              }}
+              renderItemDisplay={(effect) => renderEffectListItem(effect)}
               headingText={'Effects:'}
               sortByMethods={[ESortByMethod.Name]}
               nameProperty={'name'}

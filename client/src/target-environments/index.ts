@@ -24,9 +24,10 @@ export class ClientTargetEnvironment extends TargetEnvironment<ClientTarget> {
   /**
    * Calls the API to fetch one target environment by ID.
    * @param targetEnvId The ID of the target environment to fetch.
-   * @returns A promise that resolves to a ClientTargetEnvironment Object.
+   * @resolves If the target environment is fetched successfully.
+   * @rejects If there is an error fetching the target environment.
    */
-  public static async fetchOne(
+  public static async $fetchOne(
     targetEnvId: ClientTargetEnvironment['_id'],
   ): Promise<ClientTargetEnvironment> {
     return new Promise<ClientTargetEnvironment>(async (resolve, reject) => {
@@ -55,9 +56,10 @@ export class ClientTargetEnvironment extends TargetEnvironment<ClientTarget> {
 
   /**
    * Calls the API to fetch all target environments.
-   * @returns {Promise<ClientTargetEnvironment[]>} A promise that resolves to an array of ClientTargetEnvironment Objects.
+   * @resolves If the target environments are fetched successfully.
+   * @rejects If there is an error fetching the target environments.
    */
-  public static async fetchAll(): Promise<ClientTargetEnvironment[]> {
+  public static async $fetchAll(): Promise<ClientTargetEnvironment[]> {
     return new Promise<ClientTargetEnvironment[]>(async (resolve, reject) => {
       try {
         // Fetch the target environments from the API.

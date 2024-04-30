@@ -31,14 +31,6 @@ export default function MissionModificationPanel({
   /* -- FUNCTIONS -- */
 
   /**
-   * Handles a request to edit a mission.
-   */
-  const onEditRequest = () => {
-    navigateTo('MissionPage', {
-      missionId: mission._id,
-    })
-  }
-  /**
    * Handles a request to delete a mission.
    */
   const onDeleteRequest = async () => {

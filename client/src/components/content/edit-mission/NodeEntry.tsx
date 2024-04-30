@@ -240,6 +240,99 @@ export default function NodeEntry({
     }
   }
 
+  /**
+   * Renders JSX for the back button.
+   */
+  const renderBackButtonJsx = (): JSX.Element | null => {
+    return (
+      <div className='BackContainer'>
+        <div
+          className='BackButton'
+          onClick={() => {
+            missionPath.pop()
+            node.mission.deselectNode()
+          }}
+        >
+          &lt;
+          <Tooltip description='Go back.' />
+        </div>
+      </div>
+    )
+  }
+
+  /**
+   * Renders JSX for the path of the mission.
+   */
+  const renderPathJsx = (): JSX.Element | null => {
+    return (
+      <div className='Path'>
+        Location:{' '}
+        {missionPath.map((position: string, index: number) => {
+          return (
+            <span className='Position' key={`position-${index}`}>
+              <span
+                className='PositionText'
+                onClick={() => handlePathPositionClick(index)}
+              >
+                {position}
+              </span>{' '}
+              {index === missionPath.length - 1 ? '' : ' > '}
+            </span>
+          )
+        })}
+      </div>
+    )
+  }
+
+  /**
+   * Renders JSX for an action list item.
+   */
+  const renderActionListItemJsx = (action: ClientMissionAction) => {
+    {
+      /* -- COMPUTED -- */
+      /**
+       * The buttons for the action list.
+       */
+      const actionButtons = compute(() => {
+        // Create a default list of buttons.
+        let buttons: TValidPanelButton[] = []
+
+        // If the action is available then add the edit and remove buttons.
+        let availableMiniActions: SingleTypeObject<TValidPanelButton> = {
+          edit: {
+            icon: 'edit',
+            key: 'edit',
+            onClick: () => setSelectedAction(action),
+            tooltipDescription: 'Edit action.',
+          },
+          remove: {
+            icon: 'remove',
+            key: 'remove',
+            onClick: () => handleDeleteActionRequest(action),
+            tooltipDescription: 'Remove action.',
+            uniqueClassList: removeActionClassList,
+          },
+        }
+
+        // Add the buttons to the list.
+        buttons.push(availableMiniActions.edit)
+        buttons.push(availableMiniActions.remove)
+
+        // Return the buttons.
+        return buttons
+      })
+
+      return (
+        <div className='Row' key={`action-row-${action._id}`}>
+          <div className='RowContent'>
+            {action.name} <Tooltip description={action.description ?? ''} />
+          </div>
+          <ButtonSvgPanel buttons={actionButtons} size={'small'} />
+        </div>
+      )
+    }
+  }
+
   /* -- RENDER -- */
 
   return (
@@ -247,34 +340,8 @@ export default function NodeEntry({
       <div className='BorderBox'>
         {/* -- TOP OF BOX -- */}
         <div className='BoxTop'>
-          <div className='BackContainer'>
-            <div
-              className='BackButton'
-              onClick={() => {
-                missionPath.pop()
-                node.mission.deselectNode()
-              }}
-            >
-              &lt;
-              <Tooltip description='Go back.' />
-            </div>
-          </div>
-          <div className='Path'>
-            Location:{' '}
-            {missionPath.map((position: string, index: number) => {
-              return (
-                <span className='Position' key={`position-${index}`}>
-                  <span
-                    className='PositionText'
-                    onClick={() => handlePathPositionClick(index)}
-                  >
-                    {position}
-                  </span>{' '}
-                  {index === missionPath.length - 1 ? '' : ' > '}
-                </span>
-              )
-            })}
-          </div>
+          {renderBackButtonJsx()}
+          {renderPathJsx()}
         </div>
 
         {/* -- MAIN CONTENT -- */}
@@ -352,11 +419,9 @@ export default function NodeEntry({
           />
           <DetailNumber
             fieldType='required'
-            handleOnBlur='repopulateValue'
             label='Depth Padding'
             stateValue={depthPadding}
             setState={setDepthPadding}
-            defaultValue={ClientMissionNode.DEFAULT_PROPERTIES.depthPadding}
             integersOnly={true}
             key={`${node._id}_depthPadding`}
           />
@@ -379,51 +444,7 @@ export default function NodeEntry({
           {/* -- ACTIONS -- */}
           <List<ClientMissionAction>
             items={Array.from(node.actions.values())}
-            renderItemDisplay={(action: ClientMissionAction) => {
-              /* -- COMPUTED -- */
-              /**
-               * The buttons for the action list.
-               */
-              const actionButtons = compute(() => {
-                // Create a default list of buttons.
-                let buttons: TValidPanelButton[] = []
-
-                // If the action is available then add the edit and remove buttons.
-                let availableMiniActions: SingleTypeObject<TValidPanelButton> =
-                  {
-                    edit: {
-                      icon: 'edit',
-                      key: 'edit',
-                      onClick: () => setSelectedAction(action),
-                      tooltipDescription: 'Edit action.',
-                    },
-                    remove: {
-                      icon: 'remove',
-                      key: 'remove',
-                      onClick: () => handleDeleteActionRequest(action),
-                      tooltipDescription: 'Remove action.',
-                      uniqueClassList: removeActionClassList,
-                    },
-                  }
-
-                // Add the buttons to the list.
-                buttons.push(availableMiniActions.edit)
-                buttons.push(availableMiniActions.remove)
-
-                // Return the buttons.
-                return buttons
-              })
-
-              return (
-                <div className='Row' key={`action-row-${action._id}`}>
-                  <div className='RowContent'>
-                    {action.name}{' '}
-                    <Tooltip description={action.description ?? ''} />
-                  </div>
-                  <ButtonSvgPanel buttons={actionButtons} size={'small'} />
-                </div>
-              )
-            }}
+            renderItemDisplay={(action) => renderActionListItemJsx(action)}
             headingText={'Actions:'}
             sortByMethods={[ESortByMethod.Name]}
             nameProperty={'name'}

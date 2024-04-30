@@ -69,6 +69,8 @@ export class Api {
    * Sends an HTTP POST request to the location specified by the url.
    * @param url The url to send the request to.
    * @param data The data to send with the request.
+   * @resolves If a successful response (200) is received.
+   * @rejects If an error occurs.
    */
   public async post(url: string, data: AnyObject = {}): Promise<void> {
     return await axios.post(url, data, this.config)
@@ -77,6 +79,8 @@ export class Api {
   /**
    * Sends an HTTP GET request to the location specified by the url.
    * @param url The url to send the request to.
+   * @resolves If a successful response (200) is received.
+   * @rejects If an error occurs.
    */
   public async get(url: string): Promise<void> {
     return await axios.get(url, this.config)
@@ -86,6 +90,8 @@ export class Api {
    * Sends an HTTP PUT request to the location specified by the url.
    * @param url The url to send the request to.
    * @param data The data to send with the request.
+   * @resolves If a successful response (200) is received.
+   * @rejects If an error occurs.
    */
   public async put(url: string, data: AnyObject = {}): Promise<void> {
     return await axios.put(url, data, this.config)
@@ -95,6 +101,8 @@ export class Api {
    * Sends an HTTP PATCH request to the location specified by the url.
    * @param url The url to send the request to.
    * @param data The data to send with the request.
+   * @resolves If a successful response (200) is received.
+   * @rejects If an error occurs.
    */
   public async patch(url: string, data: AnyObject = {}): Promise<void> {
     return await axios.patch(url, data, this.config)
@@ -103,6 +111,8 @@ export class Api {
   /**
    * Sends an HTTP DELETE request to the location specified by the url.
    * @param url The url to send the request to.
+   * @resolves If a successful response (200) is received.
+   * @rejects If an error occurs.
    */
   public async delete(url: string): Promise<void> {
     return await axios.delete(url, this.config)

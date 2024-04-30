@@ -27,7 +27,9 @@ export default abstract class Target<
 
   /**
    * Creates a new Target Object.
-   * @param {TCommonTargetJson} data The data to use to create the Target.
+   * @param targetEnvironment The environment in which the target exists.
+   * @param data The data to use to create the Target.
+   * @param options The options for creating the Target.
    */
   public constructor(
     targetEnvironment: TTargetEnvironment,
@@ -44,8 +46,8 @@ export default abstract class Target<
 
   /**
    * Converts the Target Object to JSON.
-   * @param {TTargetJsonOptions} options Options for converting the Target to JSON.
-   * @returns {TCommonTargetJson} A JSON representation of the Target.
+   * @param options Options for converting the Target to JSON.
+   * @returns A JSON representation of the Target.
    */
   public toJson(options: TTargetJsonOptions = {}): TCommonTargetJson {
     // Construct JSON object to send to the server.
@@ -210,10 +212,6 @@ type TNumberArgOptional = {
    * Determines whether the argument is required or not.
    */
   required: false
-  /**
-   * The default value for the argument.
-   */
-  default?: number
 }
 /**
  * The required number argument type for a target.
@@ -341,20 +339,6 @@ type TDropdownArgOptional = {
    * Determines whether the argument is required or not.
    */
   required: false
-  /**
-   * The default value for the argument.
-   * @default { _id: 'default', name: 'Select an option' }
-   */
-  default?: {
-    /**
-     * The ID of the option.
-     */
-    _id: string
-    /**
-     * The option's name. This is displayed to the user.
-     */
-    name: string
-  }
 }
 /**
  * The required dropdown argument type for a target.
@@ -398,11 +382,6 @@ type TBooleanArgOptional = {
    * Determines whether the argument is required or not.
    */
   required: false
-  /**
-   * The default value for the argument.
-   * @default false
-   */
-  default?: boolean
 }
 /**
  * The required boolean argument type for a target.
@@ -417,7 +396,6 @@ type TBooleanArgRequired = {
    */
   default: boolean
 }
-
 /**
  * The arguments used for the target-effect interface and the target-effect API.
  */

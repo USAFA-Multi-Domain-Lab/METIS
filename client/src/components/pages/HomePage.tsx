@@ -472,10 +472,20 @@ export default function HomePage(): JSX.Element | null {
         ) {
           joinMethodChoices = ['supervisor', 'Cancel']
         }
+        // If the user is authorized to join as a
+        // observer and participant, add the option
+        // to join as a participant, observer, or
+        // supervisor.
+        if (
+          currentUser.isAuthorized('games_join_observer') &&
+          currentUser.isAuthorized('games_join_participant')
+        ) {
+          joinMethodChoices = ['participant', 'supervisor', 'Cancel']
+        }
 
-        // Prompt user for join method if the user
-        // has write privileges.
         if (currentUser.isAuthorized('games_write')) {
+          // Prompt user for join method if the user
+          // has write privileges.
           let { choice } = await prompt<TChoicesWithCancel<TGameJoinMethod>>(
             'What would you like to join the game as?',
             joinMethodChoices,

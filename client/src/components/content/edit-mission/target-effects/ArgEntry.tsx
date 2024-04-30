@@ -70,20 +70,26 @@ export default function ArgEntry({
         return null
       }
     })
-  const [numberValue, setNumberValue] = useState<number>(
-    effectArgs[arg._id] || 0,
-  )
+  const [numberValue, setNumberValue] = useState<number>(() => {
+    // If the argument is a number and the argument's value
+    // is in the effect's arguments then set the number value.
+    if (arg.type === 'number' && arg.required) {
+      return effectArgs[arg._id] ?? arg.default
+    } else {
+      return 0
+    }
+  })
   const [optionalNumberValue, setOptionalNumberValue] = useState<number | null>(
-    effectArgs[arg._id] || null,
+    effectArgs[arg._id] ?? null,
   )
   const [stringValue, setStringValue] = useState<string>(
-    effectArgs[arg._id] || defaultStringValue,
+    effectArgs[arg._id] ?? defaultStringValue,
   )
   const [largeStringValue, setLargeStringValue] = useState<string>(
-    effectArgs[arg._id] || defaultLargeStringValue,
+    effectArgs[arg._id] ?? defaultLargeStringValue,
   )
   const [booleanValue, setBooleanValue] = useState<boolean>(
-    effectArgs[arg._id] || false,
+    effectArgs[arg._id] ?? false,
   )
 
   /* -- COMPUTED -- */
@@ -430,34 +436,12 @@ export default function ArgEntry({
     // Or, if the argument is optional and its type
     // is a boolean...
     else if (!arg.required && arg.type === 'boolean') {
+      // ...then set the boolean value to the current value.
       // *** Note: The boolean is a special case because
       // *** it only has two states: true or false. Therefore,
       // *** the value is always defined which means that it
       // *** should always be included in the effect's arguments.
-
-      // ...and the boolean value stored in the state is the
-      // same as the default value, then manually update the
-      // effect's arguments by adding this argument and its
-      // value.
-      if (booleanValue === arg.default && arg.default) {
-        // *** Note: An argument's value in the effect's
-        // *** arguments is automatically set if the value
-        // *** stored in this state changes. If the value
-        // *** in the state doesn't change then the value
-        // *** needs to be set manually.
-        setEffectArgs((prev) => ({ ...prev, [arg._id]: booleanValue }))
-      }
-      // Otherwise, if the boolean value stored in the state is
-      // already set to false then manually update the effect's
-      // arguments with the boolean value stored in the state.
-      else if (!booleanValue && arg.default === undefined) {
-        // *** Note: An argument's value in the effect's
-        // *** arguments is automatically set if the value
-        // *** stored in this state changes. If the value
-        // *** in the state doesn't change then the value
-        // *** needs to be set manually.
-        setEffectArgs((prev) => ({ ...prev, [arg._id]: booleanValue }))
-      }
+      setEffectArgs((prev) => ({ ...prev, [arg._id]: booleanValue }))
     }
   }
 
@@ -504,11 +488,9 @@ export default function ArgEntry({
       <div className={`ArgEntry Number`}>
         <DetailNumber
           fieldType={'required'}
-          handleOnBlur={'repopulateValue'}
           label={arg.name}
           stateValue={numberValue}
           setState={setNumberValue}
-          defaultValue={arg.default}
           minimum={arg.min}
           maximum={arg.max}
           unit={arg.unit}
@@ -524,7 +506,6 @@ export default function ArgEntry({
       <div className={`ArgEntry Number`}>
         <DetailNumber
           fieldType={'optional'}
-          handleOnBlur={'none'}
           label={arg.name}
           stateValue={optionalNumberValue}
           setState={setOptionalNumberValue}

@@ -1,8 +1,12 @@
 import { TCommonMissionJson } from 'metis/missions'
 import { TCommonMissionActionJson } from 'metis/missions/actions'
+import { TCommonEffectJson } from 'metis/missions/effects'
 import { TCommonMissionNodeJson, TMissionNodeJson } from 'metis/missions/nodes'
 import MetisDatabase from 'metis/server/database'
 import SanitizedHTML from 'metis/server/database/schema-types/html'
+import ServerTargetEnvironment from 'metis/server/target-environments'
+import ServerTarget from 'metis/server/target-environments/targets'
+import { TTargetArg } from 'metis/target-environments/targets'
 import mongoose, { Schema } from 'mongoose'
 
 let ObjectId = mongoose.Types.ObjectId
@@ -186,7 +190,7 @@ const validate_missions_nodeData = (
 }
 
 /**
- * Validates the color for a mission node.
+ * Validates the color for a mission-node.
  * @param color The color to validate.
  */
 const validate_missions_nodeData_color = (
@@ -199,7 +203,7 @@ const validate_missions_nodeData_color = (
 }
 
 /**
- * Validates the depth padding for a mission node.
+ * Validates the depth padding for a mission-node.
  * @param depthPadding The depth padding to validate.
  */
 const validate_mission_nodeData_depthPadding = (
@@ -211,7 +215,7 @@ const validate_mission_nodeData_depthPadding = (
 }
 
 /**
- * Validates the process time for a mission node action.
+ * Validates the process time for a mission-action.
  * @param processTime The process time to validate.
  */
 const validate_mission_nodeData_actions_processTime = (
@@ -224,7 +228,7 @@ const validate_mission_nodeData_actions_processTime = (
 }
 
 /**
- * Validates the success chance for a mission node action.
+ * Validates the success chance for a mission-action.
  * @param successChance The success chance to validate.
  */
 const validate_mission_nodeData_actions_successChance = (
@@ -236,7 +240,7 @@ const validate_mission_nodeData_actions_successChance = (
 }
 
 /**
- * Validates the resource cost for a mission node action.
+ * Validates the resource cost for a mission-action.
  * @param resourceCost The resource cost to validate.
  */
 const validate_mission_nodeData_actions_resourceCost = (
@@ -245,6 +249,133 @@ const validate_mission_nodeData_actions_resourceCost = (
   let nonNegativeInteger: boolean = isNonNegativeInteger(resourceCost)
 
   return nonNegativeInteger
+}
+
+/**
+ * Validates the effects for a mission-action.
+ * @param effects The effects to validate.
+ */
+const validate_mission_nodeData_actions_effects = (
+  effects: TCommonEffectJson[],
+): void => {
+  // Loop through each effect.
+  effects.forEach((effect) => {
+    // Get the target.
+    let target = ServerTarget.getTargetJson(effect.targetId as string)
+
+    // Ensure the target exists.
+    if (!target) {
+      throw new Error(
+        `Error in mission:\nThe effect's ("${effect.name}") target ID ("${effect.targetId}") was not found in any of the target-environments.`,
+      )
+    }
+
+    // Get the target environment.
+    let targetEnvironment = ServerTargetEnvironment.getJson(target.targetEnvId)
+
+    // Ensure the target environment exists.
+    if (!targetEnvironment) {
+      throw new Error(
+        `Error in mission:\nThe target environment for the target ("${target.name}") was not found in the target-environment registry.`,
+      )
+    }
+
+    // Ensure the target environment version is correct.
+    if (targetEnvironment.version !== effect.targetEnvironmentVersion) {
+      throw new Error(
+        `Error in mission:\nThe target environment version (${effect.targetEnvironmentVersion}) within the effect ("${effect.name}") does not match target environment version (${targetEnvironment.version}) for the target environment (${targetEnvironment.name}).`,
+      )
+    }
+
+    // Initialize the valid keys.
+    let validKeys: string[] = []
+    // Add all of the keys from the target arguments.
+    target.args.forEach((arg: TTargetArg) => {
+      // Add to the valid keys.
+      validKeys.push(arg._id)
+    })
+    // Grab the keys from the effect.
+    let keys = Object.keys(effect.args)
+    // Loop through the keys.
+    for (let key of keys) {
+      // Ensure all of the keys are valid.
+      if (!validKeys.includes(key)) {
+        // Throw an error if the key is not valid.
+        throw new Error(
+          `Error in mission:\nThe argument ("${key}") within the effect ("${effect.name}") doesn't exist in the target's ("${target.name}") arguments.`,
+        )
+      }
+
+      // Ensure all of the arguments are of the correct type.
+      let arg = target.args.find((arg: TTargetArg) => arg._id === key)
+      // Get the value.
+      let value = effect.args[key]
+      // Ensure the value is of the correct type.
+      if (
+        arg &&
+        (arg.type === 'string' ||
+          arg.type === 'large-string' ||
+          arg.type === 'dropdown') &&
+        typeof value !== 'string'
+      ) {
+        throw new Error(
+          `Error in mission:\nThe argument ("${key}") within the effect ("${effect.name}") is of the wrong type. Expected type: "string."`,
+        )
+      } else if (arg && arg.type === 'number' && typeof value !== 'number') {
+        throw new Error(
+          `Error in mission:\nThe argument ("${key}") within the effect ("${effect.name}") is of the wrong type. Expected type: "number."`,
+        )
+      } else if (arg && arg.type === 'boolean' && typeof value !== 'boolean') {
+        throw new Error(
+          `Error in mission:\nThe argument ("${key}") within the effect ("${effect.name}") is of the wrong type. Expected type: "boolean."`,
+        )
+      }
+
+      // If the argument is a dropdown, ensure the value one of the options.
+      // Ensure the argument is a dropdown.
+      if (arg && arg.type === 'dropdown') {
+        // Get the option.
+        let option = arg.options.find((option) => option._id === value)
+        // Ensure the option exists.
+        if (!option) {
+          throw new Error(
+            `Error in mission:\nThe argument ("${key}") within the effect ("${effect.name}") is not one of the options in the target's ("${target.name}") arguments.`,
+          )
+        }
+      }
+    }
+
+    // Ensure all of the required arguments are present based on dependencies.
+    for (let arg of target.args) {
+      // Ensure the argument is required.
+      if (arg.required) {
+        // Ensure the argument is present.
+        if (!(arg._id in effect.args)) {
+          // Ensure the argument has no dependencies.
+          if (!arg.dependencies || arg.dependencies.length === 0) {
+            throw new Error(
+              `Error in mission:\nThe required argument ("${arg.name}") within the effect ("${effect.name}") is missing.`,
+            )
+          }
+          // Ensure all of the dependencies are present and not in a default state.
+          for (let dependency of arg.dependencies) {
+            if (
+              dependency in effect.args &&
+              effect.args[dependency] !== '' &&
+              effect.args[dependency] !== '<p><br></p>' &&
+              effect.args[dependency] !== false &&
+              effect.args[dependency] !== null &&
+              effect.args[dependency] !== undefined
+            ) {
+              throw new Error(
+                `Error in mission:\nThe required argument ("${arg.name}") within the effect ("${effect.name}") is missing.`,
+              )
+            }
+          }
+        }
+      }
+    }
+  })
 }
 
 /* -- SCHEMA -- */
@@ -325,11 +456,18 @@ export const MissionSchema: Schema = new Schema(
                         type: String,
                         required: true,
                       },
-                      targetId: { type: String, required: true },
-                      args: { type: Object, required: true },
+                      targetId: {
+                        type: String,
+                        required: true,
+                      },
+                      args: {
+                        type: Object,
+                        required: true,
+                      },
                     },
                   ],
                   required: true,
+                  validate: validate_mission_nodeData_actions_effects,
                 },
               },
             ],

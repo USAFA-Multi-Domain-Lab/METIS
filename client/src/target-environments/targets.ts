@@ -19,7 +19,8 @@ export default class ClientTarget extends Target<ClientTargetEnvironment> {
   /**
    * Calls the API to load the target with the specified ID.
    * @param targetId The ID of the target to fetch.
-   * @returns A promise that resolves to a ClientTarget Object.
+   * @resolves If the target is fetched successfully.
+   * @rejects If there is an error fetching the target.
    */
   public static async fetchOne(
     targetId: TCommonTarget['_id'],
@@ -35,7 +36,7 @@ export default class ClientTarget extends Target<ClientTargetEnvironment> {
         let data: TCommonTargetJson = response.data
         // Load the target's environment.
         let targetEnvironment: ClientTargetEnvironment =
-          await ClientTargetEnvironment.fetchOne(data.targetEnvId)
+          await ClientTargetEnvironment.$fetchOne(data.targetEnvId)
         // Create a new Target Object.
         let target: ClientTarget = new ClientTarget(targetEnvironment, data)
         // Return the new Target Object.
