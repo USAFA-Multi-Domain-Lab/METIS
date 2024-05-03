@@ -945,8 +945,7 @@ export default class ClientMission
       try {
         // Retrieve data from API.
         let { data } = await axios.get<TCommonMissionJson>(
-          ClientMission.API_ENDPOINT,
-          { params: { _id } },
+          `${ClientMission.API_ENDPOINT}/${_id}/`,
         )
         // Update options.
         options.existsOnServer = true
@@ -997,9 +996,7 @@ export default class ClientMission
   public static async $delete(_id: ClientMission['_id']): Promise<void> {
     return new Promise<void>(async (resolve, reject) => {
       try {
-        await axios.delete(ClientMission.API_ENDPOINT, {
-          params: { _id: _id },
-        })
+        await axios.delete(`${ClientMission.API_ENDPOINT}/${_id}/`)
         resolve()
       } catch (error) {
         console.error('Failed to delete mission.')

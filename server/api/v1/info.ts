@@ -1,5 +1,6 @@
-import fs from 'fs'
+import { Request, Response } from 'express-serve-static-core'
 import expressWs from 'express-ws'
+import fs from 'fs'
 import { TMetisRouterMap } from 'metis/server/http/router'
 import path from 'path'
 
@@ -7,7 +8,13 @@ const routerMap: TMetisRouterMap = (
   router: expressWs.Router,
   done: () => void,
 ) => {
-  router.get('/changelog/', (request, response) => {
+  /* ---------------------------- READ ------------------------------ */
+
+  /**
+   * This will retrieve the changelog.
+   * @returns The changelog in JSON format.
+   */
+  const getChangelog = (request: Request, response: Response) => {
     // This is the path to the root of the project.
     let __dirname = '../'
 
@@ -21,8 +28,12 @@ const routerMap: TMetisRouterMap = (
 
     // This is the response.
     return response.json(changelog)
-  })
+  }
 
+  /* ---------------------------- ROUTES ---------------------------- */
+
+  // -- GET | /api/v1/info/changelog/ --
+  router.get('/changelog/', getChangelog)
   done()
 }
 

@@ -225,8 +225,7 @@ export default class ClientUser extends User {
       try {
         // Retrieve data from API.
         let { data: userJson } = await axios.get<TCommonUserJson>(
-          `${ClientUser.API_ENDPOINT}`,
-          { params: { _id: _id } },
+          `${ClientUser.API_ENDPOINT}/${_id}/`,
         )
         // Convert JSON to Client User object.
         let user: ClientUser = new ClientUser(userJson)
@@ -446,7 +445,7 @@ export default class ClientUser extends User {
   public static async $delete(_id: TCommonUser['username']): Promise<void> {
     return new Promise<void>((resolve, reject) => {
       axios
-        .delete(`${ClientUser.API_ENDPOINT}?_id=${_id}`)
+        .delete(`${ClientUser.API_ENDPOINT}/${_id}/`)
         .then(() => resolve())
         .catch((error: AxiosError) => {
           console.error('Failed to delete user.')

@@ -16,7 +16,7 @@ export class ClientEffect extends Effect<
     return new Promise<void>(async (resolve, reject) => {
       try {
         // Populate the target data.
-        this._target = await ClientTarget.fetchOne(targetId)
+        this._target = await ClientTarget.$fetchOne(targetId)
         // Resolve the promise.
         resolve()
       } catch (error: any) {

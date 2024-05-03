@@ -23,19 +23,18 @@ export class ClientTargetEnvironment extends TargetEnvironment<ClientTarget> {
 
   /**
    * Calls the API to fetch one target environment by ID.
-   * @param targetEnvId The ID of the target environment to fetch.
+   * @param _id The ID of the target environment to fetch.
    * @resolves If the target environment is fetched successfully.
    * @rejects If there is an error fetching the target environment.
    */
   public static async $fetchOne(
-    targetEnvId: ClientTargetEnvironment['_id'],
+    _id: ClientTargetEnvironment['_id'],
   ): Promise<ClientTargetEnvironment> {
     return new Promise<ClientTargetEnvironment>(async (resolve, reject) => {
       try {
         // Fetch the target environment from the API.
         let response = await axios.get<TCommonTargetEnvJson>(
-          `${ClientTargetEnvironment.API_ENDPOINT}`,
-          { params: { targetEnvId } },
+          `${ClientTargetEnvironment.API_ENDPOINT}/${_id}/`,
         )
         // Parse the response data.
         let data: TCommonTargetEnvJson = response.data
@@ -45,9 +44,7 @@ export class ClientTargetEnvironment extends TargetEnvironment<ClientTarget> {
         // Return the new ClientTargetEnvironment Object.
         resolve(targetEnvironment)
       } catch (error: any) {
-        console.error(
-          `Failed to load target environment with ID ${targetEnvId}.`,
-        )
+        console.error(`Failed to load target environment with ID ${_id}.`)
         console.error(error)
         reject(error)
       }

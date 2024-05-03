@@ -1,5 +1,5 @@
 //npm imports
-import { NextFunction, Request, Response } from 'express'
+import { NextFunction, Request, Response } from 'express-serve-static-core'
 import expressWs from 'express-ws'
 import MetisDatabase from 'metis/server/database'
 import UserModel, { hashPassword } from 'metis/server/database/models/users'
@@ -8,30 +8,25 @@ import { TMetisRouterMap } from 'metis/server/http/router'
 import defineRequests, {
   RequestBodyFilters,
 } from 'metis/server/middleware/requests'
-import { auth } from 'metis/server/middleware/users'
+import {
+  auth,
+  restrictPasswordReset,
+  restrictUserManagement,
+} from 'metis/server/middleware/users'
 import MetisSession from 'metis/server/sessions'
 import ServerUser from 'metis/server/users'
 import { databaseLogger } from '../../logging'
 
 const routerMap: TMetisRouterMap = (router: expressWs.Router, done) => {
-  // -- POST | /api/v1/users/ --
-  router.post(
-    '/',
-    auth({ permissions: ['users_write_students'] }),
-    defineRequests({
-      body: {
-        user: {
-          username: RequestBodyFilters.USERNAME,
-          roleId: RequestBodyFilters.ROLE,
-          expressPermissionIds: RequestBodyFilters.ARRAY,
-          firstName: RequestBodyFilters.NAME,
-          lastName: RequestBodyFilters.NAME,
-          password: RequestBodyFilters.PASSWORD,
-          needsPasswordReset: RequestBodyFilters.BOOLEAN,
-        },
-      },
-    }),
-    async (request: Request, response: Response) => {
+  /* ---------------------------- CREATE ---------------------------- */
+
+  /**
+   * This will create a new user.
+   * @resolves The newly created user in JSON format.
+   * @rejects If there are any errors.
+   */
+  const createNewUser = (request: Request, response: Response) => {
+    return new Promise<Response>(async (resolve, reject) => {
       let { body } = request
       let { user: userData } = body
       let { username, password } = userData
@@ -52,11 +47,11 @@ const routerMap: TMetisRouterMap = (router: expressWs.Router, done) => {
           databaseLogger.error(error)
 
           if (error.name === MetisDatabase.ERROR_BAD_DATA) {
-            return response.sendStatus(400)
+            reject(response.sendStatus(400))
           } else if (error.message.includes('duplicate key error')) {
-            return response.sendStatus(409)
+            reject(response.sendStatus(409))
           } else {
-            return response.sendStatus(500)
+            reject(response.sendStatus(500))
           }
         } else {
           databaseLogger.info(`New user created named "${username}".`)
@@ -79,98 +74,101 @@ const routerMap: TMetisRouterMap = (router: expressWs.Router, done) => {
                 if (error || !user) {
                   databaseLogger.error('Failed to retrieve newly created user')
                   databaseLogger.error(error)
-                  return response.sendStatus(500)
+                  reject(response.sendStatus(500))
                 } else {
                   // Return updated user to the user in the
                   // current session.
-                  return response.send({ user: user })
+                  resolve(response.send({ user: user }))
                 }
               })
           } catch (error) {
             databaseLogger.error('Failed to retrieve newly created user')
             databaseLogger.error(error)
+            reject(error)
           }
         }
       })
-    },
-  )
+    })
+  }
 
-  // -- GET | /api/v1/users/ --
-  // default route that either returns all
-  // users or a single user based on the
-  // query parameters
-  router.get(
-    '/',
-    auth({ permissions: ['users_read_students'] }),
-    defineRequests(
-      {
-        query: {},
-      },
-      {
-        query: {
-          _id: 'objectId',
-        },
-      },
-    ),
-    async (request: Request, response: Response) => {
-      let { query } = request
-      let { _id } = query
+  /* ---------------------------- READ ---------------------------- */
+
+  /**
+   * This will retrieve all users.
+   * @resolves The users in JSON format.
+   * @rejects If there are any errors.
+   */
+  const getUsers = (request: Request, response: Response) => {
+    return new Promise<Response>(async (resolve, reject) => {
+      let session: MetisSession | undefined = MetisSession.get(
+        request.session.userId,
+      )
+
+      try {
+        await UserModel.find({})
+          .queryForUsers('find')
+          .queryForFilteredUsers('find', session?.user)
+          .exec((error: Error, users: any) => {
+            if (error !== null || users === null) {
+              databaseLogger.error('Failed to retrieve users.')
+              databaseLogger.error(error)
+              reject(response.sendStatus(500))
+            } else {
+              databaseLogger.info('All users retrieved.')
+              resolve(response.json(users))
+            }
+          })
+      } catch (error) {
+        databaseLogger.error('Failed to retrieve users.')
+        databaseLogger.error(error)
+        reject(error)
+      }
+    })
+  }
+
+  /**
+   * This will retrieve a specific user.
+   * @resolves The user in JSON format.
+   * @rejects If there are any errors.
+   */
+  const getUser = (request: Request, response: Response) => {
+    return new Promise<Response>(async (resolve, reject) => {
+      let { params } = request
+      let { _id } = params
 
       let session: MetisSession | undefined = MetisSession.get(
         request.session.userId,
       )
 
-      if (_id === undefined) {
-        let queries: any = {}
-
-        try {
-          await UserModel.find({ ...queries })
-            .queryForUsers('find')
-            .queryForFilteredUsers('find', session?.user)
-            .exec((error: Error, users: any) => {
-              if (error !== null || users === null) {
-                databaseLogger.error('Failed to retrieve users.')
-                databaseLogger.error(error)
-                return response.sendStatus(500)
-              } else {
-                databaseLogger.info('All users retrieved.')
-                return response.json(users)
-              }
-            })
-        } catch (error) {
-          databaseLogger.error('Failed to retrieve users.')
-          databaseLogger.error(error)
-        }
-      } else {
-        try {
-          await UserModel.findOne({ _id: _id })
-            .queryForUsers('findOne')
-            .queryForFilteredUsers('findOne', session?.user)
-            .exec((error: Error, user: any) => {
-              if (error !== null) {
-                databaseLogger.error(
-                  `Failed to retrieve user with ID "${_id}".`,
-                )
-                databaseLogger.error(error)
-                return response.sendStatus(500)
-              } else if (user === null) {
-                return response.sendStatus(404)
-              } else {
-                databaseLogger.info(`User with ID "${_id}" retrieved.`)
-                return response.json(user)
-              }
-            })
-        } catch (error) {
-          databaseLogger.error(`Failed to retrieve user with ID "${_id}".`)
-          databaseLogger.error(error)
-        }
+      try {
+        await UserModel.findOne({ _id: _id })
+          .queryForUsers('findOne')
+          .queryForFilteredUsers('findOne', session?.user)
+          .exec((error: Error, user: any) => {
+            if (error !== null) {
+              databaseLogger.error(`Failed to retrieve user with ID "${_id}".`)
+              databaseLogger.error(error)
+              reject(response.sendStatus(500))
+            } else if (user === null) {
+              reject(response.sendStatus(404))
+            } else {
+              databaseLogger.info(`User with ID "${_id}" retrieved.`)
+              resolve(response.json(user))
+            }
+          })
+      } catch (error) {
+        databaseLogger.error(`Failed to retrieve user with ID "${_id}".`)
+        databaseLogger.error(error)
+        reject(error)
       }
-    },
-  )
+    })
+  }
 
-  // -- GET | /api/v1/users/session/ --
-  // Returns the session for the user making the request.
-  router.get('/session/', (request: Request, response: Response) => {
+  /**
+   * This will return the session for the user making the request.
+   * @returns The session in JSON format or null if the session was not found.
+   */
+  const getSession = (request: Request, response: Response) => {
     // Retrieve the session with the session
     // ID stored in the request.
     let session: MetisSession | undefined = MetisSession.get(
@@ -187,36 +185,17 @@ const routerMap: TMetisRouterMap = (router: expressWs.Router, done) => {
     else {
       return response.json(session.toJson())
     }
-  })
+  }
 
-  //  -- PUT | /api/v1/users/ --
-  // This will update the user
-  router.put(
-    '/',
-    auth({ permissions: ['users_write_students'] }),
-    defineRequests(
-      {
-        body: {
-          user: {
-            _id: RequestBodyFilters.OBJECTID,
-          },
-        },
-      },
-      {
-        body: {
-          user: {
-            username: RequestBodyFilters.USERNAME,
-            roleId: RequestBodyFilters.ROLE,
-            expressPermissionIds: RequestBodyFilters.ARRAY,
-            firstName: RequestBodyFilters.NAME,
-            lastName: RequestBodyFilters.NAME,
-            password: RequestBodyFilters.PASSWORD,
-            needsPasswordReset: RequestBodyFilters.BOOLEAN,
-          },
-        },
-      },
-    ),
-    async (request: Request, response: Response) => {
+  /* ---------------------------- UPDATE ---------------------------- */
+
+  /**
+   * This will update a user.
+   * @resolves The updated user in JSON format.
+   * @rejects If there are any errors.
+   */
+  const updateUser = (request: Request, response: Response) => {
+    return new Promise<Response>(async (resolve, reject) => {
       let { body } = request
       let { user: userUpdates } = body
       let { _id, password } = userUpdates
@@ -240,11 +219,11 @@ const routerMap: TMetisRouterMap = (router: expressWs.Router, done) => {
                 `### Failed to retrieve user with ID "${_id}".`,
               )
               databaseLogger.error(error)
-              return response.sendStatus(500)
+              reject(response.sendStatus(500))
             }
             // Handles user not found.
             else if (user === null) {
-              return response.sendStatus(404)
+              reject(response.sendStatus(404))
             }
             // Handle proper user retrieval.
             else {
@@ -269,11 +248,11 @@ const routerMap: TMetisRouterMap = (router: expressWs.Router, done) => {
                   // If this error was a validation error,
                   // then it is a bad request.
                   if (error.message.includes('validation failed')) {
-                    return response.sendStatus(400)
+                    reject(response.sendStatus(400))
                   }
                   // Else it's a server error.
                   else {
-                    return response.sendStatus(500)
+                    reject(response.sendStatus(500))
                   }
                 }
                 // Handles successful save.
@@ -298,10 +277,10 @@ const routerMap: TMetisRouterMap = (router: expressWs.Router, done) => {
                             'Failed to retrieve newly updated user',
                           )
                           databaseLogger.error(error)
-                          return response.sendStatus(500)
+                          reject(response.sendStatus(500))
                         } else {
                           // Return updated mission to the user.
-                          return response.send({ user: user })
+                          resolve(response.send({ user: user }))
                         }
                       })
                   } catch (error) {
@@ -309,6 +288,7 @@ const routerMap: TMetisRouterMap = (router: expressWs.Router, done) => {
                       'Failed to retrieve newly updated user',
                     )
                     databaseLogger.error(error)
+                    reject(error)
                   }
                 }
               })
@@ -317,33 +297,24 @@ const routerMap: TMetisRouterMap = (router: expressWs.Router, done) => {
       } catch (error) {
         databaseLogger.error(`Failed to update user with ID "${_id}".`)
         databaseLogger.error(error)
+        reject(error)
       }
-    },
-  )
+    })
+  }
 
-  // -- PUT | /api/v1/users/reset-password --
-  // This will reset the user's password
-  router.put(
-    '/reset-password',
-    auth({ permissions: [] }),
-    defineRequests({
-      body: {
-        _id: RequestBodyFilters.OBJECTID,
-        password: RequestBodyFilters.PASSWORD,
-        needsPasswordReset: RequestBodyFilters.BOOLEAN,
-      },
-    }),
-    async (request: Request, response: Response) => {
+  /**
+   * This will reset the user's password.
+   * @resolves The updated user in JSON format.
+   * @rejects If there are any errors.
+   */
+  const resetPassword = (request: Request, response: Response) => {
+    return new Promise<Response>(async (resolve, reject) => {
       let { body } = request
       let { _id, password } = body
 
       if (password !== undefined) {
         body.password = await hashPassword(password)
       }
-
-      let session: MetisSession | undefined = MetisSession.get(
-        request.session.userId,
-      )
 
       try {
         // Original user is retrieved.
@@ -355,11 +326,11 @@ const routerMap: TMetisRouterMap = (router: expressWs.Router, done) => {
                 `### Failed to retrieve user with ID "${_id}".`,
               )
               databaseLogger.error(error)
-              return response.sendStatus(500)
+              reject(response.sendStatus(500))
             }
             // Handles user not found.
             else if (user === null) {
-              return response.sendStatus(404)
+              reject(response.sendStatus(404))
             }
             // Handle proper user retrieval.
             else {
@@ -384,11 +355,11 @@ const routerMap: TMetisRouterMap = (router: expressWs.Router, done) => {
                   // If this error was a validation error,
                   // then it is a bad request.
                   if (error.message.includes('validation failed')) {
-                    return response.sendStatus(400)
+                    reject(response.sendStatus(400))
                   }
                   // Else it's a server error.
                   else {
-                    return response.sendStatus(500)
+                    reject(response.sendStatus(500))
                   }
                 }
                 // Handles successful save.
@@ -412,10 +383,10 @@ const routerMap: TMetisRouterMap = (router: expressWs.Router, done) => {
                             'Failed to retrieve newly updated user',
                           )
                           databaseLogger.error(error)
-                          return response.sendStatus(500)
+                          reject(response.sendStatus(500))
                         } else {
                           // Return updated mission to the user.
-                          return response.send({ user: user })
+                          resolve(response.send({ user: user }))
                         }
                       })
                   } catch (error) {
@@ -423,6 +394,7 @@ const routerMap: TMetisRouterMap = (router: expressWs.Router, done) => {
                       'Failed to retrieve newly updated user',
                     )
                     databaseLogger.error(error)
+                    reject(error)
                   }
                 }
               })
@@ -432,40 +404,202 @@ const routerMap: TMetisRouterMap = (router: expressWs.Router, done) => {
       } catch (error) {
         databaseLogger.error(`Failed to update user with ID "${_id}".`)
         databaseLogger.error(error)
+        reject(error)
       }
-    },
-  )
+    })
+  }
 
-  // -- DELETE | /api/v1/users/ --
-  // This will delete a user.
-  router.delete(
-    '/',
-    auth({ permissions: ['users_write_students'] }),
-    defineRequests({
-      query: {
-        _id: 'objectId',
-      },
-    }),
-    async (request: Request, response: Response) => {
-      let { query } = request
-      let { _id } = query
+  /* ---------------------------- DELETE ---------------------------- */
+
+  /**
+   * This will delete a user.
+   * @resolves If the user was deleted successfully.
+   * @rejects If there are any errors.
+   */
+  const deleteUser = async (request: Request, response: Response) => {
+    return new Promise<Response>(async (resolve, reject) => {
+      let { params } = request
+      let { _id } = params
 
       try {
         await UserModel.updateOne({ _id: _id }, { deleted: true })
           .exec()
           .then(() => {
             databaseLogger.info(`Deleted user with the ID "${_id}".`)
-            return response.sendStatus(200)
+            resolve(response.sendStatus(200))
           })
       } catch (error) {
         databaseLogger.error(`Failed to delete user:`)
         databaseLogger.error(error)
-        return response.sendStatus(500)
+        reject(response.sendStatus(500))
       }
-    },
+    })
+  }
+
+  /* ---------------------------- AUTH ---------------------------- */
+
+  /**
+   * This will log the user in.
+   * @returns The session in JSON format.
+   */
+  const login = (request: Request, response: Response) => {
+    UserModel.authenticate(
+      request,
+      (error: StatusError, correct: boolean, userData: any) => {
+        // If there was an error, return the
+        // error as a response.
+        if (error) {
+          return response.sendStatus(error.status ? error.status : 500)
+        }
+        // Else, check if the username and password
+        // were correct.
+        else {
+          let json: any = { correct, session: null }
+
+          // If correct, generate a new session.
+          if (correct) {
+            // Create a new user object.
+            let user: ServerUser = new ServerUser(userData)
+
+            try {
+              // Attempt to create a new session object.
+              let session: MetisSession = new MetisSession(user)
+
+              // Store the session ID in the express
+              // session.
+              request.session.userId = session.userId
+
+              // Store the session data in the response
+              // json.
+              json.session = session.toJson()
+            } catch (error) {
+              // Session is already created for the given
+              // user.
+              return response.sendStatus(409)
+            }
+          }
+          return response.json(json)
+        }
+      },
+    )
+  }
+
+  /**
+   * This will log the user out.
+   * @returns 200 response if the user was logged out successfully.
+   */
+  const logout = (request: Request, response: Response, next: NextFunction) => {
+    // If session exists.
+    if (request.session) {
+      // Destroy the METIS session.
+      MetisSession.destroy(request.session.userId)
+
+      // Then destroy the Express session.
+      request.session.destroy((error) => {
+        if (error) {
+          return next(error)
+        }
+        return response.sendStatus(200)
+      })
+    }
+  }
+
+  /* ---------------------------- ROUTES ---------------------------- */
+
+  // -- POST | /api/v1/users/ --
+  router.post(
+    '/',
+    auth({ permissions: ['users_write_students'] }),
+    restrictUserManagement,
+    defineRequests({
+      body: {
+        user: {
+          username: RequestBodyFilters.USERNAME,
+          roleId: RequestBodyFilters.ROLE,
+          expressPermissionIds: RequestBodyFilters.ARRAY,
+          firstName: RequestBodyFilters.NAME,
+          lastName: RequestBodyFilters.NAME,
+          password: RequestBodyFilters.PASSWORD,
+          needsPasswordReset: RequestBodyFilters.BOOLEAN,
+        },
+      },
+    }),
+    createNewUser,
   )
 
-  // post route for authenticating user trying to log in
+  // -- GET | /api/v1/users/session/ --
+  router.get('/session/', getSession)
+
+  // -- GET | /api/v1/users/ --
+  router.get('/', auth({ permissions: ['users_read_students'] }), getUsers)
+
+  // -- GET | /api/v1/users/:_id/ --
+  router.get(
+    '/:_id/',
+    auth({ permissions: ['users_read_students'] }),
+    defineRequests({ params: { _id: 'objectId' } }),
+    getUser,
+  )
+
+  //  -- PUT | /api/v1/users/ --
+  router.put(
+    '/',
+    auth({ permissions: ['users_write_students'] }),
+    restrictUserManagement,
+    defineRequests(
+      {
+        body: {
+          user: {
+            _id: RequestBodyFilters.OBJECTID,
+          },
+        },
+      },
+      {
+        body: {
+          user: {
+            username: RequestBodyFilters.USERNAME,
+            roleId: RequestBodyFilters.ROLE,
+            expressPermissionIds: RequestBodyFilters.ARRAY,
+            firstName: RequestBodyFilters.NAME,
+            lastName: RequestBodyFilters.NAME,
+            password: RequestBodyFilters.PASSWORD,
+            needsPasswordReset: RequestBodyFilters.BOOLEAN,
+          },
+        },
+      },
+    ),
+    updateUser,
+  )
+
+  // -- PUT | /api/v1/users/reset-password --
+  router.put(
+    '/reset-password',
+    auth({}),
+    restrictPasswordReset,
+    defineRequests({
+      body: {
+        _id: RequestBodyFilters.OBJECTID,
+        password: RequestBodyFilters.PASSWORD,
+        needsPasswordReset: RequestBodyFilters.BOOLEAN,
+      },
+    }),
+    resetPassword,
+  )
+
+  // -- DELETE | /api/v1/users/:_id/ --
+  router.delete(
+    '/:_id/',
+    auth({ permissions: ['users_write_students'] }),
+    restrictUserManagement,
+    defineRequests({
+      params: {
+        _id: 'objectId',
+      },
+    }),
+    deleteUser,
+  )
+
+  // -- POST | /api/v1/users/login/ --
   router.post(
     '/login',
     defineRequests({
@@ -474,68 +608,11 @@ const routerMap: TMetisRouterMap = (router: expressWs.Router, done) => {
         password: RequestBodyFilters.PASSWORD,
       },
     }),
-    (request: Request, response: Response) => {
-      UserModel.authenticate(
-        request,
-        (error: StatusError, correct: boolean, userData: any) => {
-          // If there was an error, return the
-          // error as a response.
-          if (error) {
-            return response.sendStatus(error.status ? error.status : 500)
-          }
-          // Else, check if the username and password
-          // were correct.
-          else {
-            let json: any = { correct, session: null }
-
-            // If correct, generate a new session.
-            if (correct) {
-              // Create a new user object.
-              let user: ServerUser = new ServerUser(userData)
-
-              try {
-                // Attempt to create a new session object.
-                let session: MetisSession = new MetisSession(user)
-
-                // Store the session ID in the express
-                // session.
-                request.session.userId = session.userId
-
-                // Store the session data in the response
-                // json.
-                json.session = session.toJson()
-              } catch (error) {
-                // Session is already created for the given
-                // user.
-                return response.sendStatus(409)
-              }
-            }
-            return response.json(json)
-          }
-        },
-      )
-    },
+    login,
   )
 
-  // route for logging out user
-  router.post(
-    '/logout',
-    (request: Request, response: Response, next: NextFunction) => {
-      // If session exists.
-      if (request.session) {
-        // Destroy the METIS session.
-        MetisSession.destroy(request.session.userId)
-
-        // Then destroy the Express session.
-        request.session.destroy((error) => {
-          if (error) {
-            return next(error)
-          }
-          return response.sendStatus(200)
-        })
-      }
-    },
-  )
+  // -- POST | /api/v1/users/logout/ --
+  router.post('/logout', logout)
 
   done()
 }

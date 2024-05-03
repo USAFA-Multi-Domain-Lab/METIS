@@ -18,19 +18,18 @@ export default class ClientTarget extends Target<ClientTargetEnvironment> {
 
   /**
    * Calls the API to load the target with the specified ID.
-   * @param targetId The ID of the target to fetch.
+   * @param _id The ID of the target to fetch.
    * @resolves If the target is fetched successfully.
    * @rejects If there is an error fetching the target.
    */
-  public static async fetchOne(
-    targetId: TCommonTarget['_id'],
+  public static async $fetchOne(
+    _id: TCommonTarget['_id'],
   ): Promise<ClientTarget> {
     return new Promise<ClientTarget>(async (resolve, reject) => {
       try {
         // Load the target from the API.
         let response = await axios.get<TCommonTargetJson>(
-          `${ClientTarget.API_ENDPOINT}`,
-          { params: { targetId } },
+          `${ClientTarget.API_ENDPOINT}/${_id}/`,
         )
         // Parse the response data.
         let data: TCommonTargetJson = response.data
@@ -42,7 +41,7 @@ export default class ClientTarget extends Target<ClientTargetEnvironment> {
         // Return the new Target Object.
         resolve(target)
       } catch (error: any) {
-        console.error(`Failed to load target with ID ${targetId}.`)
+        console.error(`Failed to load target with ID ${_id}.`)
         console.error(error)
         reject(error)
       }

@@ -1,3 +1,4 @@
+import { Request, Response } from 'express-serve-static-core'
 import expressWs from 'express-ws'
 import { TMetisRouterMap } from 'metis/server/http/router'
 import defineRequests from 'metis/server/middleware/requests'
@@ -10,76 +11,93 @@ export const routerMap: TMetisRouterMap = (
   router: expressWs.Router,
   done: () => void,
 ) => {
+  /* ---------------------------- READ ------------------------------ */
+
+  /**
+   * This will retrieve all target environments.
+   * @returns The target environments in JSON format.
+   */
+  const getTargetEnvironments = (request: Request, response: Response) => {
+    // Send the target environments to the client.
+    return response.json(ServerTargetEnvironment.getAllJson())
+  }
+
+  /**
+   * This will retrieve a specific target environment.
+   * @returns The target environment in JSON format.
+   */
+  const getTargetEnvironment = (request: Request, response: Response) => {
+    // Get the target environment ID from the request params.
+    let id: any = request.params._id
+
+    // Get the target environment JSON.
+    let targetEnvironmentJson = ServerTargetEnvironment.getJson(id)
+
+    // If the target environment JSON is found, send it to the client.
+    if (targetEnvironmentJson) {
+      // Send the target environment JSON to the client.
+      return response.json(targetEnvironmentJson)
+    }
+    // Otherwise, send a 404.
+    else {
+      return response.status(404).json({
+        message: `Target environment with ID "${id}" not found.`,
+      })
+    }
+  }
+
+  /**
+   * This will retrieve a specific target.
+   * @returns The target in JSON format.
+   */
+  const getTarget = (request: Request, response: Response) => {
+    // Get the target ID from the request params.
+    let _id: any = request.params._id
+
+    // Get the target JSON.
+    let targetJson: TCommonTargetJson | undefined =
+      ServerTarget.getTargetJson(_id)
+
+    // If the target JSON is found, send it to the client.
+    if (targetJson) {
+      // Send the target JSON to the client.
+      return response.json(targetJson)
+    }
+    // Otherwise, send a 404.
+    else {
+      return response.status(404).json({
+        message: `Target with ID "${_id}" not found.`,
+      })
+    }
+  }
+
+  /* ---------------------------- ROUTES ---------------------------- */
+
   // -- GET | /api/v1/target-environments/ --
-  // This will get all target environments.
   router.get(
     '/',
     auth({ permissions: ['missions_read'] }),
-    defineRequests(
-      {
-        query: {},
-      },
-      {
-        query: { targetEnvId: 'string' },
-      },
-    ),
-    (request, response) => {
-      // Get the target environment ID from the request query.
-      let targetEnvId: any = request.query.targetEnvId
-
-      // If the target environment ID is provided, send the target environment to the client.
-      if (targetEnvId) {
-        // Get the target environment JSON.
-        let targetEnvironmentJson = ServerTargetEnvironment.getJson(targetEnvId)
-
-        // If the target environment JSON is found, send it to the client.
-        if (targetEnvironmentJson) {
-          // Send the target environment JSON to the client.
-          return response.json(targetEnvironmentJson)
-        }
-        // Otherwise, send a 404.
-        else {
-          return response.status(404).json({
-            message: `Target environment with ID "${targetEnvId}" not found.`,
-          })
-        }
-      }
-      // Otherwise, send all target environments to the client.
-      else {
-        // Send the target environments to the client.
-        return response.json(ServerTargetEnvironment.getAllJson())
-      }
-    },
+    getTargetEnvironments,
   )
 
-  // -- GET | /api/v1/target-environments/targets/ --
-  // This will get all targets in a target environment.
+  // -- GET | /api/v1/target-environments/:_id/ --
   router.get(
-    '/targets',
+    '/:_id/',
     auth({ permissions: ['missions_read'] }),
     defineRequests({
-      query: { targetId: 'string' },
+      params: { _id: 'string' },
     }),
-    (request, response) => {
-      // Get the target ID from the request query.
-      let targetId: any = request.query.targetId
+    getTargetEnvironment,
+  )
 
-      // Get the target JSON.
-      let targetJson: TCommonTargetJson | undefined =
-        ServerTarget.getTargetJson(targetId)
-
-      // If the target JSON is found, send it to the client.
-      if (targetJson) {
-        // Send the target JSON to the client.
-        return response.json(targetJson)
-      }
-      // Otherwise, send a 404.
-      else {
-        return response.status(404).json({
-          message: `Target with ID "${targetId}" not found.`,
-        })
-      }
-    },
+  // -- GET | /api/v1/target-environments/targets/:_id/ --
+  router.get(
+    '/targets/:_id',
+    auth({ permissions: ['missions_read'] }),
+    defineRequests({
+      params: { _id: 'string' },
+    }),
+    getTarget,
   )
 
   done()

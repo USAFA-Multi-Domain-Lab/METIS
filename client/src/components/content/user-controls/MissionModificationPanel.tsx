@@ -114,7 +114,7 @@ export default function MissionModificationPanel({
         key: 'download',
         onClick: () => {
           window.open(
-            `/api/v1/missions/export/${mission.name}.metis?_id=${mission._id}`,
+            `/api/v1/missions/${mission._id}/export/${mission.name}.metis`,
             '_blank',
           )
         },
