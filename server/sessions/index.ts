@@ -1,5 +1,5 @@
 import ClientConnection from 'metis/server/connect/clients'
-import { TMetisSessionJSON } from 'metis/sessions'
+import { TMetisSessionJson } from 'metis/sessions'
 import ServerUser from '../users'
 
 /**
@@ -115,9 +115,9 @@ export default class MetisSession {
 
   /**
    * Converts the session object to JSON to send to the client.
-   * @returns {TMetisSessionJSON} The JSON representation of the session object.
+   * @returns {TMetisSessionJson} The JSON representation of the session object.
    */
-  public toJson(): TMetisSessionJSON {
+  public toJson(): TMetisSessionJson {
     return {
       user: this.user.toJson(),
       gameId: this.gameId,

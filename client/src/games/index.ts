@@ -599,7 +599,7 @@ export default class GameClient extends Game<
    * @resolves To the games.
    * @rejects If the games failed to be fetched.
    */
-  public static async $fetchAll(): Promise<TGameBasicJson[]> {
+  public static $fetchAll(): Promise<TGameBasicJson[]> {
     return new Promise<TGameBasicJson[]>(
       async (
         resolve: (games: TGameBasicJson[]) => void,
@@ -623,9 +623,10 @@ export default class GameClient extends Game<
   /**
    * Launches a new game with a new game ID.
    * @param missionId  The ID of the mission being executed in the game.
-   * @returns A promise of the game ID for the newly launched game.
+   * @resolves To the game ID.
+   * @rejects If the game failed to launch.
    */
-  public static async $launch(
+  public static $launch(
     missionId: string,
     gameConfig: Partial<TGameConfig>,
   ): Promise<string> {
@@ -660,8 +661,10 @@ export default class GameClient extends Game<
   /**
    * Deletes a game with the given ID.
    * @param _id The ID of the game to be deleted.
+   * @resolves When the game has been deleted.
+   * @rejects If the game failed to be deleted.
    */
-  public static async $delete(_id: string): Promise<void> {
+  public static $delete(_id: string): Promise<void> {
     return new Promise<void>(
       async (
         resolve: () => void,

@@ -22,9 +22,7 @@ export default class ClientTarget extends Target<ClientTargetEnvironment> {
    * @resolves If the target is fetched successfully.
    * @rejects If there is an error fetching the target.
    */
-  public static async $fetchOne(
-    _id: TCommonTarget['_id'],
-  ): Promise<ClientTarget> {
+  public static $fetchOne(_id: TCommonTarget['_id']): Promise<ClientTarget> {
     return new Promise<ClientTarget>(async (resolve, reject) => {
       try {
         // Load the target from the API.

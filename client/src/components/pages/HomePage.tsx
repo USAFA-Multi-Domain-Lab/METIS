@@ -76,23 +76,27 @@ export default function HomePage(): JSX.Element | null {
 
   // componentDidMount
   const [mountHandled, remount] = useMountHandler(async (done) => {
-    if (currentUser.isAuthorized(['games_read', 'missions_read'])) {
-      await loadGames()
-      await loadMissions()
+    try {
+      if (currentUser.isAuthorized(['games_read', 'missions_read'])) {
+        await loadGames()
+        await loadMissions()
+      }
+
+      // The current user in the session
+      // must have restricted access to
+      // view the users.
+      if (currentUser.isAuthorized('users_read_students')) {
+        await loadUsers()
+        await sortUsers()
+      }
+
+      finishLoading()
+
+      // Begin syncing games.
+      setTimeout(() => syncGames.current(), GAMES_SYNC_RATE)
+    } catch (error: any) {
+      handleError('Failed to load data. Contact system administrator.')
     }
-
-    // The current user in the session
-    // must have restricted access to
-    // view the users.
-    if (currentUser.isAuthorized('users_read_students')) {
-      await loadUsers()
-      await sortUsers()
-    }
-
-    finishLoading()
-
-    // Begin syncing games.
-    setTimeout(() => syncGames.current(), GAMES_SYNC_RATE)
 
     done()
   })
@@ -120,7 +124,7 @@ export default function HomePage(): JSX.Element | null {
    * @resolves When the games have been loaded.
    * @rejects If the games fail to load.
    */
-  const loadGames = async (): Promise<void> => {
+  const loadGames = (): Promise<void> => {
     return new Promise<void>(async (resolve, reject) => {
       try {
         // Begin loading.
@@ -142,7 +146,7 @@ export default function HomePage(): JSX.Element | null {
   /**
    * This loads the missions into the state for display and selection.
    */
-  const loadMissions = async (): Promise<void> => {
+  const loadMissions = (): Promise<void> => {
     return new Promise<void>(async (resolve, reject) => {
       try {
         // Begin loading.
@@ -164,7 +168,7 @@ export default function HomePage(): JSX.Element | null {
   /**
    * This loads the users into the state for display and selection.
    */
-  const loadUsers = async (): Promise<void> => {
+  const loadUsers = (): Promise<void> => {
     return new Promise<void>(async (resolve, reject) => {
       try {
         // Begin loading.
@@ -203,7 +207,7 @@ export default function HomePage(): JSX.Element | null {
    * @note If the first character is a letter and the last character is a number it will sort the users by length.
    * @example sortedArray = ['1', '2', '3', 'a', 'b', 'c', 'a1', 'a2', 'a3', 'b1', 'b2', 'b3', 'c1', 'c2', 'c3']
    */
-  const sortUsers = async (): Promise<void> => {
+  const sortUsers = (): Promise<void> => {
     return new Promise<void>((resolve, reject) => {
       try {
         // Sort users by their user ID.

@@ -68,7 +68,7 @@ export class ServerEmittedError extends WSEmittedError {
    * Converts this error to a JSON payload.
    * @returns {TServerData<'error'>} The JSON representation of this error.
    */
-  public toJSON(): TServerEvents['error'] {
+  public toJson(): TServerEvents['error'] {
     return {
       method: 'error',
       code: this.code,
@@ -89,6 +89,10 @@ export class ServerEmittedError extends WSEmittedError {
    * Code for the same client attempting a second connection to the server when another connection for that user already exists.
    */
   public static readonly CODE_DUPLICATE_CLIENT: number = 10002
+  /**
+   * Code for a client attempting to send messages to the server at a rate that exceeds the maximum allowed.
+   */
+  public static readonly CODE_MESSAGE_RATE_LIMIT: number = 10003
   /**
    * Code for a client requesting to join a game that cannot be found.
    */
@@ -161,7 +165,7 @@ export class ServerEmittedError extends WSEmittedError {
    * @returns {ServerEmittedError} The new ServerEmittedError object.
    * @throws {Error} If the JSON data is invalid.
    */
-  public static fromJSON({
+  public static fromJson({
     code,
     message,
     request,
@@ -178,7 +182,7 @@ export class ClientEmittedError extends WSEmittedError {
    * Converts this error to a JSON payload.
    * @returns {TClientData<'error'>} The JSON representation of this error.
    */
-  public toJSON(): TClientEvents['error'] {
+  public toJson(): TClientEvents['error'] {
     return {
       method: 'error',
       code: this.code,
@@ -193,7 +197,7 @@ export class ClientEmittedError extends WSEmittedError {
    * @returns The new ClientEmittedError object.
    * @throws If the JSON data is invalid.
    */
-  public static fromJSON({
+  public static fromJson({
     code,
     message,
   }: TClientEvents['error']): ClientEmittedError {

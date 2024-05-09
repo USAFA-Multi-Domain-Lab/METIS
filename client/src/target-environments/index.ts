@@ -27,7 +27,7 @@ export class ClientTargetEnvironment extends TargetEnvironment<ClientTarget> {
    * @resolves If the target environment is fetched successfully.
    * @rejects If there is an error fetching the target environment.
    */
-  public static async $fetchOne(
+  public static $fetchOne(
     _id: ClientTargetEnvironment['_id'],
   ): Promise<ClientTargetEnvironment> {
     return new Promise<ClientTargetEnvironment>(async (resolve, reject) => {
@@ -56,7 +56,7 @@ export class ClientTargetEnvironment extends TargetEnvironment<ClientTarget> {
    * @resolves If the target environments are fetched successfully.
    * @rejects If there is an error fetching the target environments.
    */
-  public static async $fetchAll(): Promise<ClientTargetEnvironment[]> {
+  public static $fetchAll(): Promise<ClientTargetEnvironment[]> {
     return new Promise<ClientTargetEnvironment[]>(async (resolve, reject) => {
       try {
         // Fetch the target environments from the API.

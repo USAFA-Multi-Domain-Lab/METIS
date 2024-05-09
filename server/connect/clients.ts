@@ -132,7 +132,7 @@ export default class ClientConnection {
    * @param {ServerEmittedError} error The error to emit to the client.
    */
   public emitError(error: ServerEmittedError): void {
-    let payload: TServerEvents['error'] = error.toJSON()
+    let payload: TServerEvents['error'] = error.toJson()
     this.socket.send(JSON.stringify(payload))
   }
 

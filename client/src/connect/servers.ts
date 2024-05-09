@@ -559,12 +559,15 @@ export default class ServerConnection {
     if (event.method === 'error') {
       // Create new server emitted error
       // object.
-      let error: ServerEmittedError = ServerEmittedError.fromJSON(event)
+      let error: ServerEmittedError = ServerEmittedError.fromJson(event)
 
       // If the error is a duplicate client
-      // issue, mark shouldBeConnected as
-      // false.
-      if (error.code === ServerEmittedError.CODE_DUPLICATE_CLIENT) {
+      // issue, or a message rate limit issue,
+      // mark shouldBeConnected as false.
+      if (
+        error.code === ServerEmittedError.CODE_DUPLICATE_CLIENT ||
+        error.code === ServerEmittedError.CODE_MESSAGE_RATE_LIMIT
+      ) {
         this.shouldBeConnected = false
       }
     }

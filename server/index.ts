@@ -1,5 +1,6 @@
 import MongoStore from 'connect-mongo'
 import express, { Express } from 'express'
+import rateLimit from 'express-rate-limit'
 import session from 'express-session'
 import expressWs from 'express-ws'
 import fs from 'fs'
@@ -55,6 +56,15 @@ export interface IMetisServerOptions {
    * @default undefined
    */
   mongoPassword?: string
+  /**
+   * The maximum number of http requests allowed per second.
+   * @default undefined
+   */
+  httpRateLimit?: number
+  /**
+   * The maximum number of websocket messages allowed per second.
+   */
+  wsRateLimit?: number
 }
 
 /**
@@ -94,21 +104,17 @@ export default class MetisServer {
    */
   private _mongoPassword: string | undefined
   /**
-   * The API key for the Cyber City API.
+   * The maximum number of http requests allowed per second.
    */
-  private _cyberCityApiKey: string | undefined
+  private _httpRateLimit: number
   /**
-   * The host of the Cyber City API.
+   * The maximum number of websocket messages allowed per second.
    */
-  private _cyberCityApiHost: string | undefined
-  /**
-   * The host of the ASCOT API.
-   */
-  private _ascotApiHost: string | undefined
+  private _wsRateLimit: number
   /**
    * The routers for the server.
    */
-  private routers: Array<MetisRouter> = []
+  private routers: MetisRouter[] = []
 
   /**
    * The express app instance.
@@ -158,6 +164,18 @@ export default class MetisServer {
   public get mongoPassword(): string | undefined {
     return this._mongoPassword
   }
+  /**
+   * The maximum number of http requests allowed per second.
+   */
+  public get httpRateLimit(): number {
+    return this._httpRateLimit
+  }
+  /**
+   * The maximum number of websocket messages allowed per second.
+   */
+  public get wsRateLimit(): number {
+    return this._wsRateLimit
+  }
 
   /**
    * @param options Options for creating the METIS server.
@@ -171,6 +189,8 @@ export default class MetisServer {
     this._mongoPort = options.mongoPort ?? defaults.MONGO_PORT
     this._mongoUsername = options.mongoUsername
     this._mongoPassword = options.mongoPassword
+    this._httpRateLimit = options.httpRateLimit ?? 25
+    this._wsRateLimit = options.wsRateLimit ?? 25
   }
 
   /**
@@ -262,6 +282,14 @@ export default class MetisServer {
       )
       expressApp.use(express.urlencoded({ limit: '10mb', extended: true }))
       expressApp.use(express.json({ limit: '10mb' }))
+
+      // Limits the rate of requests to the server
+      expressApp.use(
+        rateLimit({
+          windowMs: 1000,
+          limit: this.httpRateLimit,
+        }),
+      )
 
       // links the file path to css and resource files
       expressApp.use(express.static(path.resolve(__dirname, '../client/build')))

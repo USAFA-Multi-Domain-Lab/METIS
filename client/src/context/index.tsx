@@ -376,6 +376,8 @@ const useGlobalContextDefinition = (context: TGlobalContext) => {
                   //   },
                   // ],
                 })
+              } else if (code === ServerEmittedError.CODE_MESSAGE_RATE_LIMIT) {
+                handleError({ message })
               }
             },
           },

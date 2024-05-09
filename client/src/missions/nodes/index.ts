@@ -781,12 +781,13 @@ export default class ClientMissionNode extends MissionNode<
 
   /**
    * Fetches available colors for nodes.
-   * @returns {Promise<Array<string>>} A promise that resolves to the available colors.
+   * @resolves The available colors options for nodes.
+   * @rejects The error that occurred while fetching the colors.
    */
-  public static async fetchColors(): Promise<Array<string>> {
-    return new Promise<Array<string>>(async (resolve, reject) => {
+  public static $fetchColors(): Promise<string[]> {
+    return new Promise<string[]>(async (resolve, reject) => {
       try {
-        let { data: colors } = await axios.get<Array<string>>(
+        let { data: colors } = await axios.get<string[]>(
           `${ClientMission.API_ENDPOINT}/colors/`,
         )
         resolve(colors)

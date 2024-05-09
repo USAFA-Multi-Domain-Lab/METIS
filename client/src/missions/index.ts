@@ -868,9 +868,10 @@ export default class ClientMission
   /**
    * Imports missions from .metis files, returns a Promise that resolves with the results of the import.
    * @param files The .metis files to import.
-   * @returns The result of the import.
+   * @resolves The result of the import.
+   * @rejects The error that occurred during the import.
    */
-  public static async $import(
+  public static $import(
     files: FileList | File[],
   ): Promise<TMissionImportResult> {
     return new Promise<TMissionImportResult>(async (resolve, reject) => {
@@ -903,9 +904,10 @@ export default class ClientMission
    * @param originalId The ID of the mission to copy.
    * @param copyName The name for the mission copy.
    * @param options Options for the creation of the Mission object returned.
-   * @returns A promise that resolves to a ClientMission object for the new mission copy.
+   * @resolves The new mission copy.
+   * @rejects The error that occurred during the copy.
    */
-  public static async $copy(
+  public static $copy(
     originalId: ClientMission['_id'],
     copyName: ClientMission['name'],
     options: TExistingClientMissionOptions = {},
@@ -935,9 +937,10 @@ export default class ClientMission
    * Calls the API to fetch one mission by its mission ID.
    * @param _id The ID of the mission to fetch.
    * @param options Options for the creation of the Mission object returned.
-   * @returns A promise that resolves to a Mission object.
+   * @resolves The Mission object fetched from the server.
+   * @rejects The error that occurred during the fetch.
    */
-  public static async $fetchOne(
+  public static $fetchOne(
     _id: ClientMission['_id'],
     options: TExistingClientMissionOptions = {},
   ): Promise<ClientMission> {
@@ -964,9 +967,10 @@ export default class ClientMission
   /**
    * Calls the API to fetch all missions available.
    * @param options Options for the creation of the Mission objects returned.
-   * @returns A promise that resolves to an array of Mission objects.
+   * @resolves An array of Mission objects fetched from the server.
+   * @rejects The error that occurred during the fetch.
    */
-  public static async $fetchAll(
+  public static $fetchAll(
     options: TExistingClientMissionOptions = {},
   ): Promise<ClientMission[]> {
     return new Promise<ClientMission[]>(async (resolve, reject) => {
@@ -991,9 +995,10 @@ export default class ClientMission
   /**
    * Deletes the mission with the given ID.
    * @param _id The ID of the mission to delete.
-   * @returns A promise that resolves when the mission has been deleted.
+   * @resolves The mission was successfully deleted.
+   * @rejects The error that occurred during the deletion.
    */
-  public static async $delete(_id: ClientMission['_id']): Promise<void> {
+  public static $delete(_id: ClientMission['_id']): Promise<void> {
     return new Promise<void>(async (resolve, reject) => {
       try {
         await axios.delete(`${ClientMission.API_ENDPOINT}/${_id}/`)

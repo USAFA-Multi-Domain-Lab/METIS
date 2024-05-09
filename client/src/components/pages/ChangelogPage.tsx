@@ -38,7 +38,7 @@ export default function IChangelogPage({}: IChangelogPage): JSX.Element | null {
 
     // Fetch changelog.
     try {
-      setChangelog(await Info.fetchChangelog())
+      setChangelog(await Info.$fetchChangelog())
     } catch (error) {
       handleError('Failed to retrieve changelog.')
     }

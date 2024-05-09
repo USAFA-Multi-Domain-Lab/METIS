@@ -6,9 +6,10 @@ import axios, { AxiosError } from 'axios'
 export default class Info {
   /**
    * This will fetch the changelog for the application.
-   * @returns {Promise<string>} A promise that resolves to a string containing the changelog.
+   * @resolves The changelog for the application.
+   * @rejects The error that occurred while fetching the changelog.
    */
-  public static async fetchChangelog(): Promise<string> {
+  public static $fetchChangelog(): Promise<string> {
     return new Promise<string>(async (resolve, reject) => {
       try {
         let { data: changelog } = await axios.get<string>(

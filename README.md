@@ -278,12 +278,14 @@ Restart your system and confirm METIS starts up. After that you are good to go!
 
 To configure the app to work in your environment, an `environment.json` file can be created to configure various app behaviors. If you followed the setup instructions above, you already created this file. Otherwise, you can create it in the root directory of the project. The following properties can be added to this file:
 
-- `PORT` - The port the web server will run on. By default `8080`.
-- `MONGO_HOST` - The host where the web server will look for Mongo. By default `"localhost"`.
-- `MONGO_PORT` - The port that Mongo is running on. By default `27017`. Note, it is unlikely this will need to be changed.
-- `MONGO_DB` - The DB on the Mongo server where the data for Mongo is stored. By default `"metis"`. Note, it is unlikely this will need to be changed, except to set up a testing environment.
-- `MONGO_USERNAME` - The username used to authenticate a session with Mongo. Instructions for setting up Mongo users are included in the setup instructions above. By default `undefined`, which will connect to Mongo without authentication. Note, username and password must either both be defined or undefined. One cannot be included while the other ommitted.
-- `MONGO_PASSWORD` - The password used to authenticate a session with Mongo. Instructions for setting up Mongo users are included in the setup instructions above. By default `undefined`, which will connect to Mongo without authentication. Note, username and password must either both be defined or undefined. One cannot be included while the other ommitted.
+- `port` - The port the web server will run on. By default `8080`.
+- `mongoHost` - The host where the web server will look for Mongo. By default `"localhost"`.
+- `mongoPort` - The port that Mongo is running on. By default `27017`. Note, it is unlikely this will need to be changed.
+- `mongoDB` - The DB on the Mongo server where the data for Mongo is stored. By default `"metis"`. Note, it is unlikely this will need to be changed, except to set up a testing environment.
+- `mongoUsername` - The username used to authenticate a session with Mongo. Instructions for setting up Mongo users are included in the setup instructions above. By default `undefined`, which will connect to Mongo without authentication. Note, username and password must either both be defined or undefined. One cannot be included while the other ommitted.
+- `mongoPassword` - The password used to authenticate a session with Mongo. Instructions for setting up Mongo users are included in the setup instructions above. By default `undefined`, which will connect to Mongo without authentication. Note, username and password must either both be defined or undefined. One cannot be included while the other ommitted.
+- `httpRateLimit` - The maximum number of http requests allowed per second. By default `undefined`, the rate limit will be 25 HTTP requests per second.
+- `wsRateLimit` - The maximum number of WebSocket messages allowed per second. By default `undefined`, the rate limit will be 25 WebSocket messages per second.
 
 An example `environment.json` file is included below:
 
@@ -293,11 +295,13 @@ environment.json
 
 ```json
 {
-  "PORT": 8080,
-  "MONGO_HOST": "localhost",
-  "MONGO_PORT": 27017,
-  "MONGO_DB": "metis",
-  "MONGO_USERNAME": "username",
-  "MONGO_PASSWORD": "password"
+  "port": 8080,
+  "mongoHost": "localhost",
+  "mongoPort": 27017,
+  "mongoDB": "metis",
+  "mongoUsername": "username",
+  "mongoPassword": "password",
+  "httpRateLimit": 25,
+  "wsRateLimit": 25
 }
 ```

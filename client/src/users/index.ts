@@ -1,5 +1,5 @@
 import axios, { AxiosError, AxiosResponse } from 'axios'
-import { TMetisSession, TMetisSessionJSON } from '../../../shared/sessions'
+import { TMetisSession, TMetisSessionJson } from '../../../shared/sessions'
 import User, {
   TCommonUser,
   TCommonUserJson,
@@ -218,9 +218,10 @@ export default class ClientUser extends User {
   /**
    * Calls the API to fetch one user by their user ID.
    * @param _id The user ID of the user to fetch.
-   * @returns A promise that resolves to a Client User object.
+   * @resolves The user that was fetched.
+   * @rejects The error that occurred while fetching the user.
    */
-  public static async $fetchOne(_id: string): Promise<ClientUser> {
+  public static $fetchOne(_id: string): Promise<ClientUser> {
     return new Promise<ClientUser>(async (resolve, reject) => {
       try {
         // Retrieve data from API.
@@ -241,9 +242,10 @@ export default class ClientUser extends User {
 
   /**
    * Calls the API to fetch all users available.
-   * @returns A promise that resolves to an array of Client User objects.
+   * @resolves The users that were fetched.
+   * @rejects The error that occurred while fetching the users.
    */
-  public static async $fetchAll(): Promise<ClientUser[]> {
+  public static $fetchAll(): Promise<ClientUser[]> {
     return new Promise<ClientUser[]>(async (resolve, reject) => {
       try {
         // Retrieve data from API.
@@ -265,43 +267,40 @@ export default class ClientUser extends User {
   }
   /**
    * Fetches the current session of the logged in user from the server.
-   * A promise that resolves to the current session of the logged in user.
+   * @resolves The session of the logged in user.
+   * @rejects The error that occurred while fetching the session.
    */
-  public static async $fetchSession(): Promise<TMetisSession<ClientUser>> {
+  public static $fetchSession(): Promise<TMetisSession<ClientUser>> {
     return new Promise<TMetisSession<ClientUser>>(
-      (
+      async (
         resolve: (session: TMetisSession<ClientUser>) => void,
         reject: (error: AxiosError) => void,
       ) => {
-        // Send a request to fetch the session
-        // data via the API.
-        axios
-          .get<TMetisSessionJSON>(`${ClientUser.API_ENDPOINT}/session`)
-          .then((response: AxiosResponse<TMetisSessionJSON>) => {
-            // Parse the response data.
-            let sessionJson: TMetisSessionJSON = response.data
-            let session: TMetisSession<ClientUser> = null
+        try {
+          let { data: sessionJson } = await axios.get<TMetisSessionJson>(
+            `${ClientUser.API_ENDPOINT}/session`,
+          )
+          let session: TMetisSession<ClientUser> = null
 
-            // If the session JSON is not null,
-            // parse the date.
-            if (sessionJson !== null) {
-              session = {
-                user: new ClientUser(sessionJson.user),
-                gameId: sessionJson.gameId,
-              }
+          // If the session JSON is not null,
+          // parse the data.
+          if (sessionJson !== null) {
+            session = {
+              user: new ClientUser(sessionJson.user),
+              gameId: sessionJson.gameId,
             }
+          }
 
-            // Resolve the promise with the
-            // session returned.
-            resolve(session)
-          })
-          .catch((error: AxiosError) => {
-            // If request fails, reject the promise
-            // with the error given in the catch.
-            console.log('Failed to retrieve session.')
-            console.error(error)
-            reject(error)
-          })
+          // Resolve the promise with the
+          // session returned.
+          resolve(session)
+        } catch (error: any) {
+          // If request fails, reject the promise
+          // with the error given in the catch.
+          console.error('Failed to retrieve session.')
+          console.error(error)
+          reject(error)
+        }
       },
     )
   }
@@ -310,9 +309,10 @@ export default class ClientUser extends User {
    * Attempts to log in the user with the given username and password.
    * @param username The username to login with.
    * @param password The user's password to login with.
-   * @returns A promise that resolves to an object containing whether the login was correct and the session of the logged in user.
+   * @resolves The object containing whether the login was correct and the session of the logged in user.
+   * @rejects The error that occurred while logging in.
    */
-  public static async $login(
+  public static $login(
     username: TCommonUser['username'],
     password: string,
   ): Promise<{
@@ -320,57 +320,61 @@ export default class ClientUser extends User {
   }> {
     return new Promise<{
       session: TMetisSession<ClientUser>
-    }>((resolve, reject) => {
-      axios
-        .post(`${ClientUser.API_ENDPOINT}/login`, { username, password })
-        .then((response: AxiosResponse) => {
-          // Parse the response data.
-          let correct: boolean = response.data.correct
-          let sessionJson: TMetisSessionJSON = response.data.session
-          let session: TMetisSession<ClientUser> = null
+    }>(async (resolve, reject) => {
+      try {
+        let response: AxiosResponse = await axios.post<TMetisSessionJson>(
+          `${ClientUser.API_ENDPOINT}/login`,
+          { username, password },
+        )
 
-          // If the session JSON is not null,
-          // parse the date.
-          if (sessionJson !== null) {
-            session = {
-              user: new ClientUser(sessionJson.user),
-              gameId: sessionJson.gameId,
-            }
+        // Parse the response data.
+        let sessionJson: TMetisSessionJson = response.data.session
+        let session: TMetisSession<ClientUser> = null
+
+        // If the session JSON is not null,
+        // parse the date.
+        if (sessionJson !== null) {
+          session = {
+            user: new ClientUser(sessionJson.user),
+            gameId: sessionJson.gameId,
           }
+        }
 
-          resolve({ session })
-        })
-        .catch((error: AxiosError) => {
-          console.log('Failed to login user.')
-          console.error(error)
-          reject(error)
-        })
+        resolve({ session })
+      } catch (error: any) {
+        console.error('Failed to login user.')
+        console.error(error)
+        reject(error)
+      }
     })
   }
 
   /**
    * Logs out the user in the session.
-   * @returns A promise that resolves when the user is logged out.
+   * @resolves When the user is logged out.
+   * @rejects The error that occurred while logging out.
    */
-  public static async $logout(): Promise<void> {
-    return new Promise<void>((resolve, reject) => {
-      axios
-        .post(`${ClientUser.API_ENDPOINT}/logout`)
-        .then(() => ClientUser.$fetchSession().then(() => resolve()))
-        .catch((error: AxiosError) => {
-          console.log('Failed to logout user.')
-          console.error(error)
-          reject(error)
-        })
+  public static $logout(): Promise<void> {
+    return new Promise<void>(async (resolve, reject) => {
+      try {
+        await axios.post(`${ClientUser.API_ENDPOINT}/logout`)
+        await ClientUser.$fetchSession()
+        resolve()
+      } catch (error: any) {
+        console.error('Failed to logout user.')
+        console.error(error)
+        reject(error)
+      }
     })
   }
 
   /**
    * Calls the API to create a new user.
    * @param clientUser The user to create.
-   * @returns A promise that resolves to the created user.
+   * @resolves The user that was created.
+   * @rejects The error that occurred while creating the user.
    */
-  public static async $create(clientUser: ClientUser): Promise<ClientUser> {
+  public static $create(clientUser: ClientUser): Promise<ClientUser> {
     return new Promise<ClientUser>(async (resolve, reject) => {
       try {
         // Retrieve data from API.
@@ -393,9 +397,10 @@ export default class ClientUser extends User {
   /**
    * Calls the API to update the user.
    * @param clientUser The user to update.
-   * @returns A promise that resolves to the updated user.
+   * @resolves The user that was updated.
+   * @rejects The error that occurred while updating the user.
    */
-  public static async $update(clientUser: ClientUser): Promise<ClientUser> {
+  public static $update(clientUser: ClientUser): Promise<ClientUser> {
     return new Promise<ClientUser>(async (resolve, reject) => {
       try {
         // Retrieve data from API.
@@ -419,39 +424,42 @@ export default class ClientUser extends User {
    * Calls the API to reset the password of the user that is passed in.
    * @param user The user to reset the password of.
    * @returns A promise that resolves when the password is reset.
+   * @resolves When the password is reset.
+   * @rejects The error that occurred while resetting the password.
    */
-  public static async $resetPassword(user: ClientUser): Promise<void> {
-    return new Promise<void>((resolve, reject) => {
-      axios
-        .put(`${ClientUser.API_ENDPOINT}/reset-password`, {
+  public static $resetPassword(user: ClientUser): Promise<void> {
+    return new Promise<void>(async (resolve, reject) => {
+      try {
+        await axios.put(`${ClientUser.API_ENDPOINT}/reset-password`, {
           _id: user._id,
           password: user.password1,
           needsPasswordReset: false,
         })
-        .then(() => resolve())
-        .catch((error: AxiosError) => {
-          console.error('Failed to reset password.')
-          console.error(error)
-          reject(error)
-        })
+        resolve()
+      } catch (error: any) {
+        console.error('Failed to reset password.')
+        console.error(error)
+        reject(error)
+      }
     })
   }
 
   /**
    * Calls the API to delete the user.
    * @param _id The user ID of the user to delete.
-   * @returns A promise that resolves when the user is deleted.
+   * @resolves When the user is deleted.
+   * @rejects The error that occurred while deleting the user.
    */
-  public static async $delete(_id: TCommonUser['username']): Promise<void> {
-    return new Promise<void>((resolve, reject) => {
-      axios
-        .delete(`${ClientUser.API_ENDPOINT}/${_id}/`)
-        .then(() => resolve())
-        .catch((error: AxiosError) => {
-          console.error('Failed to delete user.')
-          console.error(error)
-          reject(error)
-        })
+  public static $delete(_id: TCommonUser['username']): Promise<void> {
+    return new Promise<void>(async (resolve, reject) => {
+      try {
+        await axios.delete(`${ClientUser.API_ENDPOINT}/${_id}/`)
+        resolve()
+      } catch (error: any) {
+        console.error('Failed to delete user.')
+        console.error(error)
+        reject(error)
+      }
     })
   }
 }

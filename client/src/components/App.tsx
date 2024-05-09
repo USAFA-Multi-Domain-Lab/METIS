@@ -214,7 +214,7 @@ function App(props: {}): JSX.Element | null {
         setMissionNodeColors([])
       } else {
         try {
-          setMissionNodeColors(await ClientMissionNode.fetchColors())
+          setMissionNodeColors(await ClientMissionNode.$fetchColors())
         } catch {
           handleError('Failed to load post-login data.')
         }

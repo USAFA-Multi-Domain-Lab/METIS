@@ -3,7 +3,7 @@ import { TCommonUserJson } from 'metis/users'
 /**
  * The JSON representation of a MetisSession object.
  */
-export type TMetisSessionJSON = {
+export type TMetisSessionJson = {
   /**
    * The user with the given session.
    */
