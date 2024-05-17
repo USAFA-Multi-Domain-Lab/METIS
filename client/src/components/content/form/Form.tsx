@@ -221,7 +221,7 @@ export function DetailString({
   return (
     <div className={rootClassName}>
       <div className='TitleContainer'>
-        <div className={labelClassName}>{`${label}:`}</div>
+        <div className={labelClassName}>{label}:</div>
         <div className={optionalClassName}>optional</div>
       </div>
       <div className={inputContainerClassName}>
@@ -355,7 +355,7 @@ export function DetailNumber({
   return (
     <div className={rootClassName}>
       <div className='TitleContainer'>
-        <div className={labelClassName}>{`${label}:`}</div>
+        <div className={labelClassName}>{label}:</div>
         <div className={optionalClassName}>optional</div>
       </div>
       <div className='Unit'>{unit}</div>
@@ -363,7 +363,7 @@ export function DetailNumber({
         className={fieldClassName}
         type='text'
         placeholder={placeholder}
-        value={stateValue ?? ''}
+        value={stateValue}
         onKeyDown={(event: React.KeyboardEvent<HTMLInputElement>) => {
           // Enforce the input to only accept numeric characters.
           inputs.enforceNumbericCharsOnly(event)
@@ -381,7 +381,7 @@ export function DetailNumber({
         }}
         onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
           let target: HTMLInputElement = event.target as HTMLInputElement
-          let value: number | null
+          // let value: number | null
 
           // If a minimum or maximum value is passed
           // then enforce the minimum and maximum values.
@@ -411,20 +411,22 @@ export function DetailNumber({
             target.select()
           }
 
-          // Convert the input's value to a number and
-          // check if it is a number, then deliver the value.
-          value = parseInt(target.value)
-          value = isNaN(value) ? null : value
+          setState(target.value)
 
-          // If the field is required and the value is not null,
-          // then update the value.
-          if (fieldType === 'required' && value !== null) {
-            setState(value)
-          }
-          // If the field is optional, then update the value.
-          if (fieldType === 'optional') {
-            setState(value)
-          }
+          // // Convert the input's value to a number and
+          // // check if it is a number, then deliver the value.
+          // value = parseFloat(target.value).toFixed(2)
+          // value = isNaN(value) ? null : value
+
+          // // If the field is required and the value is not null,
+          // // then update the value.
+          // if (fieldType === 'required' && value !== null) {
+          //   setState(value)
+          // }
+          // // If the field is optional, then update the value.
+          // if (fieldType === 'optional') {
+          //   setState(value)
+          // }
         }}
       />
     </div>
@@ -602,7 +604,7 @@ export function DetailLargeString({
   return (
     <div className={rootClassName}>
       <div className='TitleContainer'>
-        <div className={labelClassName}>{`${label}:`}</div>
+        <div className={labelClassName}>{label}:</div>
         <div className={optionalClassName}>optional</div>
       </div>
       <div
@@ -804,7 +806,7 @@ export function DetailDropDown<TOption>({
     return (
       <div className={rootClassName} style={uniqueDropDownStyling}>
         <div className='TitleContainer'>
-          <div className={labelClassName}>{`${label}:`}</div>
+          <div className={labelClassName}>{label}:</div>
           <div className={optionalClassName}>optional</div>
         </div>
         <div className={fieldClassName}>
@@ -1179,7 +1181,7 @@ type TDetailString_P = TDetailWithInput_P<string> & {
 /**
  * The properties for the Detail Number component.
  */
-type TDetailNumber_P = TDetail_P<number | null> & {
+type TDetailNumber_P = TDetail_P<string> & {
   /**
    * The placeholder for the input.
    * @default 'Enter [input value type] here...'

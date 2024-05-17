@@ -3,7 +3,6 @@ import { useGlobalContext } from 'src/context'
 import ClientMission from 'src/missions'
 import { compute } from 'src/toolbox'
 import { usePostInitEffect } from 'src/toolbox/hooks'
-import { TAjaxStatus } from '../../../../../shared/toolbox/ajax'
 import { DetailLargeString, DetailNumber, DetailString } from '../form/Form'
 import './MissionEntry.scss'
 
@@ -16,14 +15,13 @@ export default function MissionEntry({
   handleChange,
 }: TMissionEntry_P): JSX.Element | null {
   /* -- GLOBAL CONTEXT -- */
-  const { notify, forceUpdate } = useGlobalContext().actions
+  const { forceUpdate } = useGlobalContext().actions
 
   /* -- STATE -- */
-  const [_, setLiveAjaxStatus] = useState<TAjaxStatus>('NotLoaded')
   const [missionName, setMissionName] = useState<string>(mission.name)
   const [introMessage, setIntroMessage] = useState<string>(mission.introMessage)
-  const [initialResources, setInitialResources] = useState<number>(
-    mission.initialResources,
+  const [initialResources, setInitialResources] = useState<string>(
+    `${mission.initialResources}`,
   )
 
   /* -- COMPUTED -- */
@@ -53,7 +51,7 @@ export default function MissionEntry({
     // Update the introduction message.
     mission.introMessage = introMessage
     // Update the initial resources.
-    mission.initialResources = initialResources
+    mission.initialResources = parseInt(initialResources)
 
     // Allow the user to save the changes.
     handleChange()
@@ -129,6 +127,7 @@ export default function MissionEntry({
               label='Initial Resources'
               stateValue={initialResources}
               setState={setInitialResources}
+              integersOnly={true}
               key={`${mission._id}_initialResources`}
             />
           </div>
