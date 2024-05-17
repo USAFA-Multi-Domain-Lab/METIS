@@ -341,6 +341,13 @@ export default class ServerConnection {
   }
 
   /**
+   * Clears all unfufilled requests.
+   */
+  public clearUnfulfilledRequests(): void {
+    this._unfulfilledRequests = []
+  }
+
+  /**
    * Disconnects from the server, closing the web socket connection.
    */
   public disconnect(): void {

@@ -1,3 +1,4 @@
+import MoreInformation from 'src/components/content/communication/MoreInformation'
 import { TButtonSvg } from 'src/components/content/user-controls/ButtonSvg'
 import ButtonSvgPanel from 'src/components/content/user-controls/ButtonSvgPanel'
 import ClientMission from 'src/missions'
@@ -29,6 +30,21 @@ export default function Hud({
   return (
     <div className='Hud'>
       <div className='Title'>{mission.name}</div>
+      <MoreInformation
+        tooltipDescription={
+          '##### Mission Map\n' +
+          'This map is a layout of the nodes in the mission and their order of progression (left to right). \n' +
+          '\t\n' +
+          'The lines indicate how the nodes relate to one another and help display their order of progression. \n' +
+          '\t\n' +
+          'The children of a node are revealed when certain criteria are met (e.g. an action is successfully executed on a node). \n' +
+          '\t\n' +
+          '##### Controls:\n' +
+          '`Click+Drag` *Pan.*\n' +
+          '\t\n' +
+          '`Scroll` *Zoom in/out.*\n'
+        }
+      />
       {buttonPanelJSX}
     </div>
   )

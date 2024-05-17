@@ -135,6 +135,10 @@ export class ServerEmittedError extends WSEmittedError {
    */
   public static readonly CODE_ACTION_NOT_FOUND: number = 20200
   /**
+   * Code for a client requesting to execute an action that costs more than the client's available resources.
+   */
+  public static readonly CODE_ACTION_INSUFFICIENT_RESOURCES: number = 20201
+  /**
    * Code for a client request failing due to a server-side general error.
    */
   public static readonly CODE_SERVER_ERROR: number = 30000
@@ -156,6 +160,8 @@ export class ServerEmittedError extends WSEmittedError {
     [ServerEmittedError.CODE_NODE_NOT_EXECUTABLE]: 'Node not executable.',
     [ServerEmittedError.CODE_NODE_NOT_REVEALED]: 'Node not revealed.',
     [ServerEmittedError.CODE_ACTION_NOT_FOUND]: 'Action not found.',
+    [ServerEmittedError.CODE_ACTION_INSUFFICIENT_RESOURCES]:
+      'Insufficient resources available to execute action.',
     [ServerEmittedError.CODE_SERVER_ERROR]: 'Server error.',
   }
 

@@ -55,6 +55,12 @@
       text-overflow: ellipsis;
     }
 
+    .MoreInformation {
+      @include center-origin-x;
+      top: 1.25em;
+      right: 0;
+    }
+
     .ButtonSvgPanel {
       // Remove top rule set in base ButtonSVGPanel
       // styles.
@@ -66,6 +72,9 @@
       border-radius: 0;
       padding: 0.5em 0;
       box-shadow: $box-shadow-alt6;
+      overflow: hidden;
+      white-space: nowrap;
+      max-width: 85%;
 
       // Position the SVG panel at the bottom
       // center of the HUD.

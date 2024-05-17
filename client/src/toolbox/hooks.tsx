@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
+import { useGlobalContext } from 'src/context'
 import ClientUser from 'src/users'
 import { TMetisSession } from '../../../shared/sessions'
-import { useGlobalContext } from '../context'
 
 /**
  * The callback for the useEffect hook.

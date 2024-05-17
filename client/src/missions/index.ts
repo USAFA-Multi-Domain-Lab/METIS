@@ -1051,7 +1051,7 @@ export type TMissionImportResult = {
   /**
    * The error messages and file names for the missions that failed to import.
    */
-  errorMessages: Array<{ fileName: string; errorMessage: string }>
+  failedImportErrorMessages: Array<{ fileName: string; errorMessage: string }>
 }
 
 /**

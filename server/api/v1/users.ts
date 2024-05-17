@@ -3,6 +3,7 @@ import { NextFunction, Request, Response } from 'express-serve-static-core'
 import expressWs from 'express-ws'
 import MetisDatabase from 'metis/server/database'
 import UserModel, { hashPassword } from 'metis/server/database/models/users'
+import GameServer from 'metis/server/games'
 import { StatusError } from 'metis/server/http'
 import { TMetisRouterMap } from 'metis/server/http/router'
 import defineRequests, {
@@ -458,6 +459,20 @@ const routerMap: TMetisRouterMap = (router: expressWs.Router, done) => {
   const logout = (request: Request, response: Response, next: NextFunction) => {
     // If session exists.
     if (request.session) {
+      // Get the METIS session.
+      let session: MetisSession | undefined = MetisSession.get(
+        request.session.userId,
+      )
+
+      // If the user in session is in a game,
+      // then remove them from the game.
+      if (session && session.gameId && session.inGame) {
+        // Get the game.
+        let game = GameServer.get(session.gameId)
+        // Remove the user from the game.
+        game?.quit(session.userId)
+      }
+
       // Destroy the METIS session.
       MetisSession.destroy(request.session.userId)
 

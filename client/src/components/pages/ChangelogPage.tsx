@@ -63,7 +63,7 @@ export default function IChangelogPage({}: IChangelogPage): JSX.Element | null {
 
   return (
     <div className='ChangelogPage Page'>
-      <DefaultLayout navigation={navigation}>
+      <DefaultLayout navigation={navigation} includeFooter={false}>
         <div className='Changelog'>
           <Markdown markdown={changelog} theme={EMarkdownTheme.ThemePrimary} />
         </div>

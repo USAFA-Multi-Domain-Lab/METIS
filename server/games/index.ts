@@ -612,6 +612,19 @@ export default class GameServer extends Game<
         }),
       )
     }
+    // If the participant does not have enough
+    // resources to execute the action, then
+    // emit an error.
+    if (this.resources < action.resourceCost) {
+      return participant.emitError(
+        new ServerEmittedError(
+          ServerEmittedError.CODE_ACTION_INSUFFICIENT_RESOURCES,
+          {
+            request: participant.buildResponseReqData(event),
+          },
+        ),
+      )
+    }
 
     try {
       // Execute the action, awaiting result.

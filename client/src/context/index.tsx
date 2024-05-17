@@ -182,6 +182,10 @@ const useGlobalContextDefinition = (context: TGlobalContext) => {
       setForcedUpdateCounter(forcedUpdateCounter + 1)
     },
     navigateTo: (pageKey, props, options = {}) => {
+      // Scroll to top so that the content
+      // for the loading page is properly
+      // displayed.
+      window.scrollTo(0, 0)
       // Actually switches the page. Called after any confirmations.
       const realizePageSwitch = (): void => {
         // Display to the user that the

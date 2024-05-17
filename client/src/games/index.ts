@@ -294,6 +294,7 @@ export default class GameClient extends Game<
             switch (event.method) {
               case 'game-quit':
                 this.removeListeners()
+                this.server.clearUnfulfilledRequests()
                 resolve()
                 break
               case 'error':

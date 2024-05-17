@@ -7,6 +7,16 @@
   $page-width: calc(100vw - #{$page-horizontal-padding * 2});
   width: $page-width;
   padding: $page-padding-top $page-horizontal-padding $page-padding-bottom;
+  background: linear-gradient(
+      to bottom right,
+      transparent 0% 70%,
+      rgba(#fff, 0.1) 100%
+    ),
+    url('../../assets/images/landing-page-img.png');
+  background-size: 100% 21%, 100% 21%;
+  background-position: center;
+  background-repeat: repeat;
+  box-shadow: $box-shadow-alt1;
 
   .Changelog {
     margin: 25px 55px;

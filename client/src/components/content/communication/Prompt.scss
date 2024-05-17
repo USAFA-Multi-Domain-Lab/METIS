@@ -59,6 +59,10 @@
         width: fit-content;
         padding: 10px 30px 25px;
         background-color: rgba($background-alt1, 1);
+
+        .Markdown p {
+          white-space: pre-wrap;
+        }
       }
 
       .text-field {

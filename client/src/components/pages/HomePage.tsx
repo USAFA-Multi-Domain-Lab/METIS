@@ -348,21 +348,18 @@ export default function HomePage(): JSX.Element | null {
     }
 
     // Import the files.
-    ClientMission.$import(validFiles)
-      .then(({ successfulImportCount, failedImportCount, errorMessages }) => {
-        // Update counts and error messages
-        // based on the result.
-        successfulImportCount += successfulImportCount
-        invalidContentsCount += failedImportCount
-        invalidContentsErrorMessages = errorMessages
+    try {
+      let response = await ClientMission.$import(validFiles)
+      successfulImportCount += response.successfulImportCount
+      invalidContentsCount += response.failedImportCount
+      invalidContentsErrorMessages = response.failedImportErrorMessages
+      handleFileImportCompletion()
+    } catch (error: any) {
+      if (error instanceof AxiosError) {
+        serverErrorFailureCount += validFiles.length
         handleFileImportCompletion()
-      })
-      .catch((error) => {
-        if (error instanceof AxiosError) {
-          serverErrorFailureCount += validFiles.length
-          handleFileImportCompletion()
-        }
-      })
+      }
+    }
   }
 
   // This is a file is dropped onto the page.

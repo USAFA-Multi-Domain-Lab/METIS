@@ -108,14 +108,14 @@ export default function GamePage({ game }: TGamePage_P): JSX.Element | null {
         notify(`You have no more resources left to spend.`)
       }
       // If there is not enough resources to
-      // execute any actions, notify the user.
+      // execute an action, notify the user.
       else if (
         !MapToolbox.mapToArray(
           node.actions,
           (action) => action.resourceCost <= game.resources,
         ).includes(true)
       ) {
-        notify(`You do not have enough resources to execute any actions.`)
+        notify('Insufficient resources available to execute action.')
       }
       // Else, select the node.
       else {

@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import ServerConnection from 'src/connect/servers'
 import { useGlobalContext } from 'src/context'
 import GameClient from 'src/games'
@@ -45,7 +45,10 @@ export type TAppError = {
 
 // This is the renderer for the entire application.
 function App(props: {}): JSX.Element | null {
-  /* -- COMPONENT STATE -- */
+  /* -- REFS -- */
+  const app = useRef<HTMLDivElement>(null)
+
+  /* -- STATE -- */
 
   const globalContext = useGlobalContext()
 
@@ -74,7 +77,7 @@ function App(props: {}): JSX.Element | null {
     connectToServer,
   } = globalContext.actions
 
-  /* -- COMPONENT FUNCTIONS -- */
+  /* -- FUNCTIONS -- */
 
   /**
    * Recalculates and positions any tooltip being displayed in the DOM based on the current position of the mouse.
@@ -82,8 +85,9 @@ function App(props: {}): JSX.Element | null {
    */
   const positionTooltip = (event: MouseEvent): void => {
     let tooltip_elm: HTMLDivElement | null = tooltips.current
+    let app_elm: HTMLDivElement | null = app.current
 
-    if (tooltip_elm) {
+    if (tooltip_elm && app_elm) {
       let pageWidth = window.innerWidth - 25
       let pageHeight = window.innerHeight - 25
       let tooltipWidth: number = tooltip_elm.clientWidth
@@ -115,11 +119,17 @@ function App(props: {}): JSX.Element | null {
         tooltipsDestinationY += tooltipsOffsetY
       }
 
+      // If the tooltip is going off the bottom of the page, then
+      // set the tooltip to be at the bottom of the page.
+      if (tooltipsDestinationY + tooltipHeight + 5 > app_elm.clientHeight) {
+        tooltipsDestinationY = app_elm.clientHeight - tooltipHeight - 5
+      }
+
       tooltip_elm.style.transform = `translate(${tooltipsDestinationX}px, ${tooltipsDestinationY}px)`
     }
   }
 
-  /* -- COMPONENT EFFECTS -- */
+  /* -- EFFECTS -- */
 
   // This is called to handle the app being mounted,
   // will load the user in the session to see if a
@@ -241,7 +251,7 @@ function App(props: {}): JSX.Element | null {
   }
 
   return (
-    <div className={className} key={'App'}>
+    <div className={className} key={'App'} ref={app}>
       <div className='Tooltips' ref={tooltips}>
         <Markdown
           markdown={tooltipDescription}
