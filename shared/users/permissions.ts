@@ -46,6 +46,7 @@ export default class UserPermission implements TUserPermission {
     // This will contain all of the required permissions
     // that the user has.
     let requiredPermissionsInUser: TUserPermissionId[] = []
+    let hasPermissions: true[] = []
 
     // If the required permission IDs is not an array,
     // then make it an array.
@@ -64,10 +65,66 @@ export default class UserPermission implements TUserPermission {
     })
 
     // If the required permissions that the user has
+    // is not equal to the required permissions passed,
+    // then check if the user has any permissions that
+    // are higher up in the permission hierarchy.
+    if (requiredPermissionsInUser.length !== requiredPermissionIds.length) {
+      // Loop through the required permission IDs to check
+      // if the user has any permissions that are higher up
+      // in the permission hierarchy.
+      requiredPermissionIds.forEach(
+        (requiredPermissionId: TUserPermissionId) => {
+          // Split the required permission ID into layers.
+          let idLayers = requiredPermissionId.split('_')
+          // This will be used to check each layer of the
+          // required permission ID.
+          let idCursor: any = ''
+
+          // Loop through the layers of the required permission
+          // ID to check if the user has any permissions that
+          // are higher up in the permission hierarchy.
+          while (idLayers.length > 0) {
+            // Add the next layer to the idCursor.
+            idCursor += idLayers.shift()
+
+            // Check if the user has the permission with the
+            // current idCursor.
+            let permissionId: UserPermission | undefined = userPermissions.find(
+              (userPermission: UserPermission) =>
+                userPermission._id === idCursor,
+            )
+            let userHasPermission: boolean =
+              permissionId !== undefined ? true : false
+
+            // If the cursor is a valid permission ID and the user
+            // has the valid permission, then add true to the
+            // hasPermissions array and break the loop.
+            if (
+              UserPermission.isValidPermissionId(idCursor) &&
+              userHasPermission
+            ) {
+              hasPermissions.push(true)
+              break
+            }
+
+            // If the cursor is not a valid permission ID, then
+            // add an underscore to the cursor and continue
+            // the loop.
+            idCursor += '_'
+          }
+        },
+      )
+    }
+
+    // If the required permissions that the user has
     // is equal to the required permissions passed,
-    // then the user has all of the required permissions
-    // and true is returned.
-    return requiredPermissionsInUser.length === requiredPermissionIds.length
+    // or if the user has any permissions that are higher
+    // up in the permission hierarchy, then the user has
+    // all of the required permissions and true is returned.
+    return (
+      requiredPermissionsInUser.length === requiredPermissionIds.length ||
+      hasPermissions.length === requiredPermissionIds.length
+    )
   }
 
   /**

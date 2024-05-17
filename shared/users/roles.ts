@@ -52,7 +52,6 @@ export default class UserRole implements TUserRole {
       [
         UserPermission.AVAILABLE_PERMISSIONS.games_join_participant,
         UserPermission.AVAILABLE_PERMISSIONS.games_read,
-        UserPermission.AVAILABLE_PERMISSIONS.missions_read,
       ],
     ),
     instructor: new UserRole(
@@ -60,9 +59,7 @@ export default class UserRole implements TUserRole {
       'instructor',
       'This role is an instructor which has restricted access to the entire application.',
       [
-        UserPermission.AVAILABLE_PERMISSIONS.games_join_manager,
-        UserPermission.AVAILABLE_PERMISSIONS.games_join_observer,
-        UserPermission.AVAILABLE_PERMISSIONS.games_join_participant,
+        UserPermission.AVAILABLE_PERMISSIONS.games_join,
         UserPermission.AVAILABLE_PERMISSIONS.games_read,
         UserPermission.AVAILABLE_PERMISSIONS.games_write,
         UserPermission.AVAILABLE_PERMISSIONS.missions_read,
@@ -77,17 +74,12 @@ export default class UserRole implements TUserRole {
       'This role is an administrator which has full access to the entire application.',
       [
         UserPermission.AVAILABLE_PERMISSIONS.games_join,
-        UserPermission.AVAILABLE_PERMISSIONS.games_join_manager,
-        UserPermission.AVAILABLE_PERMISSIONS.games_join_observer,
-        UserPermission.AVAILABLE_PERMISSIONS.games_join_participant,
         UserPermission.AVAILABLE_PERMISSIONS.games_read,
         UserPermission.AVAILABLE_PERMISSIONS.games_write,
         UserPermission.AVAILABLE_PERMISSIONS.missions_read,
         UserPermission.AVAILABLE_PERMISSIONS.missions_write,
         UserPermission.AVAILABLE_PERMISSIONS.users_read,
         UserPermission.AVAILABLE_PERMISSIONS.users_write,
-        UserPermission.AVAILABLE_PERMISSIONS.users_read_students,
-        UserPermission.AVAILABLE_PERMISSIONS.users_write_students,
       ],
     ),
     revokedAccess: new UserRole(
@@ -107,20 +99,6 @@ export default class UserRole implements TUserRole {
       roleIds.includes(roleId) && roleId !== this.AVAILABLE_ROLES.default._id
     )
   }
-
-  /**
-   * The roles that have restricted access to certain pages.
-   * @deprecated ***This is no longer supported and will be removed in the future.***
-   */
-  public static readonly RESTRICTED_ACCESS_ROLES: TUserRoleName[] = [
-    'instructor',
-    'admin',
-  ]
-  /**
-   * The roles that have full access to all pages.
-   * @deprecated ***This is no longer supported and will be removed in the future.***
-   */
-  public static readonly FULL_ACCESS_ROLES: TUserRoleName[] = ['admin']
 }
 
 /* ------------------------------ USER ROLE TYPES ------------------------------ */
