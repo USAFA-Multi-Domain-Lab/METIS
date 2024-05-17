@@ -4,7 +4,7 @@ import IActionExecution, {
 } from 'metis/missions/actions/executions'
 import { TCommonEffectJson } from 'metis/missions/effects'
 import { plcApiLogger } from 'metis/server/logging'
-import Queue from 'metis/toolbox/queue'
+import seedrandom, { PRNG } from 'seedrandom'
 import ServerMission from '..'
 import ServerEffect from '../effects'
 import ServerMissionNode from '../nodes'
@@ -20,10 +20,9 @@ export default class ServerMissionAction extends MissionAction<
   ServerEffect
 > {
   /**
-   * The potential outcomes of the action whenever its executed.
+   * The RNG used to generate random numbers for the action.
    */
-  protected potentialOutcomes: Queue<ServerPotentialOutcome> =
-    new Queue<ServerPotentialOutcome>()
+  protected rng: PRNG
 
   /**
    * @param node The node that the action belongs to.
@@ -32,23 +31,8 @@ export default class ServerMissionAction extends MissionAction<
   public constructor(node: ServerMissionNode, data: TCommonMissionActionJson) {
     super(node, data)
 
-    // Determine the number of outcomes
-    // that need to be generated. Theoretically
-    // the participant cannot execute this
-    // action beyond what the initial resources
-    // available in the mission would allow
-    // given the resource cost.
-    let totalOutcomes: number = Math.min(
-      this.mission.initialResources / this.resourceCost,
-      16,
-    )
-
-    // Generate outcomes for the action.
-    for (let x = 0; x < totalOutcomes; x++) {
-      let outcome: ServerPotentialOutcome =
-        ServerPotentialOutcome.generateOutcome(this, this.mission.rng)
-      this.potentialOutcomes.add(outcome)
-    }
+    // Initialize the RNG for the action.
+    this.rng = seedrandom(`${this.mission.rng.double()}`)
   }
 
   // Implemented
@@ -85,14 +69,8 @@ export default class ServerMissionAction extends MissionAction<
       let execution = this.node.loadExecution(executionData)
 
       // Grab next outcome for the action.
-      let potentialOutcome: ServerPotentialOutcome | undefined =
-        this.potentialOutcomes.next()
-
-      // If there are no outcomes left
-      // in the queue, throw an error.
-      if (potentialOutcome === undefined) {
-        throw new Error('Cannot execute action: No outcomes left in queue.')
-      }
+      let potentialOutcome: ServerPotentialOutcome =
+        ServerPotentialOutcome.generateOutcome(this, this.rng)
 
       // Set timeout for when the execution
       // is completed.
