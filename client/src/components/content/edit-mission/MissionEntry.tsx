@@ -20,8 +20,8 @@ export default function MissionEntry({
   /* -- STATE -- */
   const [missionName, setMissionName] = useState<string>(mission.name)
   const [introMessage, setIntroMessage] = useState<string>(mission.introMessage)
-  const [initialResources, setInitialResources] = useState<string>(
-    `${mission.initialResources}`,
+  const [initialResources, setInitialResources] = useState<number>(
+    mission.initialResources,
   )
 
   /* -- COMPUTED -- */
@@ -51,7 +51,7 @@ export default function MissionEntry({
     // Update the introduction message.
     mission.introMessage = introMessage
     // Update the initial resources.
-    mission.initialResources = parseInt(initialResources)
+    mission.initialResources = initialResources
 
     // Allow the user to save the changes.
     handleChange()

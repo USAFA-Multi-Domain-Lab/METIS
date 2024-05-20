@@ -70,17 +70,17 @@ export default function ArgEntry({
         return null
       }
     })
-  const [numberValue, setNumberValue] = useState<string>(() => {
+  const [numberValue, setNumberValue] = useState<number>(() => {
     // If the argument is a number and the argument's value
     // is in the effect's arguments then set the number value.
     if (arg.type === 'number' && arg.required) {
-      return `${effectArgs[arg._id]}` ?? `${arg.default}`
+      return effectArgs[arg._id] ?? arg.default
     } else {
-      return '0'
+      return 0
     }
   })
-  const [optionalNumberValue, setOptionalNumberValue] = useState<string>(
-    `${effectArgs[arg._id]}` ?? '',
+  const [optionalNumberValue, setOptionalNumberValue] = useState<number | null>(
+    effectArgs[arg._id] ?? null,
   )
   const [stringValue, setStringValue] = useState<string>(
     effectArgs[arg._id] ?? defaultStringValue,
@@ -254,7 +254,7 @@ export default function ArgEntry({
         // same as the default value, then manually update the
         // effect's arguments by adding this argument and its
         // value.
-        if (numberValue === `${arg.default}`) {
+        if (numberValue === arg.default) {
           // *** Note: An argument's value in the effect's
           // *** arguments is automatically set if the value
           // *** stored in this state changes. If the value
@@ -269,7 +269,7 @@ export default function ArgEntry({
           // *** Note: When this value in the state changes,
           // *** the effect's arguments automatically updates
           // *** with the current value.
-          setNumberValue(`${arg.default}`)
+          setNumberValue(arg.default)
         }
       }
       // Or, if the argument is a string then set the string
@@ -368,7 +368,7 @@ export default function ArgEntry({
           // same as the default value, then manually update the
           // effect's arguments by adding this argument and its
           // value.
-          if (numberValue === `${arg.default}`) {
+          if (numberValue === arg.default) {
             // *** Note: An argument's value in the effect's
             // *** arguments is automatically set if the value
             // *** stored in this state changes. If the value
@@ -383,7 +383,7 @@ export default function ArgEntry({
             // *** Note: When this value in the state changes,
             // *** the effect's arguments automatically updates
             // *** with the current value.
-            setNumberValue(`${arg.default}`)
+            setNumberValue(arg.default)
           }
         }
         // Or, if the argument is a string then set the string

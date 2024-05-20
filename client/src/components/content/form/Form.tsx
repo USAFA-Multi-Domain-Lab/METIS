@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import ReactQuill from 'react-quill'
 import 'react-quill/dist/quill.snow.css'
 import { compute } from 'src/toolbox'
@@ -295,6 +295,12 @@ export function DetailNumber({
   uniqueFieldClassName = undefined,
   disabled = false,
 }: TDetailNumber_P): JSX.Element | null {
+  /* -- STATE -- */
+  const [inputValue, setInputValue] = useState<string>(
+    stateValue?.toString() ?? '',
+  )
+  const [selectTarget, setSelectTarget] = useState<boolean>(false)
+
   /* -- COMPUTED -- */
   /**
    * The class name for the detail.
@@ -351,6 +357,12 @@ export function DetailNumber({
     fieldType === 'optional' ? 'Optional' : 'Optional Hidden',
   )
 
+  /* -- EFFECTS -- */
+  // Set the input value to the state value.
+  useEffect(() => {
+    setInputValue(stateValue?.toString() ?? '')
+  }, [stateValue])
+
   /* -- RENDER -- */
   return (
     <div className={rootClassName}>
@@ -363,7 +375,7 @@ export function DetailNumber({
         className={fieldClassName}
         type='text'
         placeholder={placeholder}
-        value={stateValue}
+        value={inputValue}
         onKeyDown={(event: React.KeyboardEvent<HTMLInputElement>) => {
           // Enforce the input to only accept numeric characters.
           inputs.enforceNumbericCharsOnly(event)
@@ -381,7 +393,7 @@ export function DetailNumber({
         }}
         onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
           let target: HTMLInputElement = event.target as HTMLInputElement
-          // let value: number | null
+          let value: number | null
 
           // If a minimum or maximum value is passed
           // then enforce the minimum and maximum values.
@@ -392,6 +404,7 @@ export function DetailNumber({
             inputs.enforceNumberCap(event, maximum)
           }
 
+          // If the field is required and the input value is empty...
           if (fieldType === 'required' && target.value === '') {
             // ...but the minimum value is greater than 0,
             // then set the input's value to the minimum value.
@@ -408,25 +421,79 @@ export function DetailNumber({
               target.value = '0'
             }
 
-            target.select()
+            setSelectTarget(true)
           }
 
-          setState(target.value)
+          // Ensure the input value is a valid number.
+          const inputValueRegex: RegExp = /^[0-9+-]+[.]?[0-9]{0,6}$/
+          let isValidValue: boolean = inputValueRegex.test(target.value)
 
-          // // Convert the input's value to a number and
-          // // check if it is a number, then deliver the value.
-          // value = parseFloat(target.value).toFixed(2)
-          // value = isNaN(value) ? null : value
+          // If decimals are allowed and the input value
+          // is valid, then set the input value.
+          if (isValidValue && !integersOnly) {
+            // *** @note - The setInputValue is only called here so that
+            // *** a user can enter a decimal point followed by any set
+            // *** of (6) numbers. Otherwise, the input value is set in
+            // *** the useEffect hook which is called when the state value
+            // *** changes.
+            setInputValue(target.value)
+          }
 
-          // // If the field is required and the value is not null,
-          // // then update the value.
-          // if (fieldType === 'required' && value !== null) {
-          //   setState(value)
-          // }
-          // // If the field is optional, then update the value.
-          // if (fieldType === 'optional') {
-          //   setState(value)
-          // }
+          // Convert the input's value to a number and
+          // check if it is a number, then deliver the value.
+          value = parseFloat(target.value)
+          value = isNaN(value) ? null : value
+
+          // If the value is valid, the field is required, and
+          // the value is not null, update the value.
+          if (isValidValue && fieldType === 'required' && value !== null) {
+            setState(value)
+          }
+          // If value is valid and the field is optional,
+          // update the value.
+          if (isValidValue && fieldType === 'optional') {
+            setState(value)
+          }
+        }}
+        onKeyUp={(event: React.KeyboardEvent<HTMLInputElement>) => {
+          if (selectTarget) {
+            let target: HTMLInputElement = event.target as HTMLInputElement
+            target.select()
+            setSelectTarget(false)
+          }
+        }}
+        onBlur={(event: React.FocusEvent<HTMLInputElement>) => {
+          let target: HTMLInputElement = event.target as HTMLInputElement
+
+          // Ensure the input value is a valid number.
+          const zerosTrailingDecimalPoint: RegExp = /^[0-9+-]+[.]+[0]+$/
+          const zerosTrailingNumbers: RegExp = /^[0-9+-]+[.]+[0-9]+[0]+$/
+          const zerosLeadingDecimalPoint: RegExp = /^[0]+[0-9]+/
+          const zerosLeadingNumbers: RegExp = /^[0]+[1-9]+[0-9]*[.]?[0-9]*/
+
+          // If decimals are allowed, then remove
+          // unnecessary leading and trailing zeros.
+          if (!integersOnly) {
+            // Example: 1.0000 -> 1
+            if (zerosTrailingDecimalPoint.test(target.value)) {
+              target.value = target.value.replace(/[.]+[0]*$/, '')
+            }
+            // Example: 1.2000 -> 1.2
+            if (zerosTrailingNumbers.test(target.value)) {
+              target.value = target.value.replace(/[0]+$/, '')
+            }
+            // Example: 000000.5 -> 0.5
+            if (zerosLeadingDecimalPoint.test(target.value)) {
+              target.value = target.value.replace(/^[0]+/, '0')
+            }
+            // Example: 000000123 -> 123
+            if (zerosLeadingNumbers.test(target.value)) {
+              target.value = target.value.replace(/^[0]+/, '')
+            }
+          }
+
+          // Update the input value.
+          setInputValue(target.value)
         }}
       />
     </div>
@@ -1181,7 +1248,7 @@ type TDetailString_P = TDetailWithInput_P<string> & {
 /**
  * The properties for the Detail Number component.
  */
-type TDetailNumber_P = TDetail_P<string> & {
+type TDetailNumber_P = TDetail_P<number | null> & {
   /**
    * The placeholder for the input.
    * @default 'Enter [input value type] here...'

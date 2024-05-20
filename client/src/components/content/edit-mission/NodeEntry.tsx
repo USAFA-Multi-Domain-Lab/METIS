@@ -45,9 +45,7 @@ export default function NodeEntry({
   const [preExecutionText, setPreExecutionText] = useState<string>(
     node.preExecutionText,
   )
-  const [depthPadding, setDepthPadding] = useState<string>(
-    `${node.depthPadding}`,
-  )
+  const [depthPadding, setDepthPadding] = useState<number>(node.depthPadding)
   const [executable, setExecutable] = useState<boolean>(node.executable)
   const [device, setDevice] = useState<boolean>(node.device)
 
@@ -153,7 +151,7 @@ export default function NodeEntry({
     node.color = color
     node.description = description
     node.preExecutionText = preExecutionText
-    node.depthPadding = parseInt(depthPadding)
+    node.depthPadding = depthPadding
     node.executable = executable
     node.device = device
 

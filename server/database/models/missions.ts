@@ -221,10 +221,13 @@ const validate_mission_nodeData_depthPadding = (
 const validate_mission_nodeData_actions_processTime = (
   processTime: TCommonMissionActionJson['processTime'],
 ): boolean => {
-  let nonNegativeInteger: boolean = isNonNegativeInteger(processTime)
+  let processTimeRegexRegExp = /^[0-9+-]+[.]?[0-9]{0,6}$/
+  let isValidNumber: boolean = processTimeRegexRegExp.test(
+    processTime.toString(),
+  )
   let lessThanMax: boolean = processTime <= PROCESS_TIME_MAX
 
-  return nonNegativeInteger && lessThanMax
+  return isValidNumber && lessThanMax
 }
 
 /**

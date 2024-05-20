@@ -34,15 +34,13 @@ export default function ActionEntry({
   /* -- STATE -- */
   const [actionName, setActionName] = useState<string>(action.name)
   const [description, setDescription] = useState<string>(action.description)
-  const [successChance, setSuccessChance] = useState<string>(
-    `${action.successChance * 100}`,
+  const [successChance, setSuccessChance] = useState<number>(
+    parseFloat(`${(action.successChance * 100.0).toFixed(2)}`),
   )
-  const [processTime, setProcessTime] = useState<string>(
-    `${action.processTime / 1000}`,
+  const [processTime, setProcessTime] = useState<number>(
+    action.processTime / 1000,
   )
-  const [resourceCost, setResourceCost] = useState<string>(
-    `${action.resourceCost}`,
-  )
+  const [resourceCost, setResourceCost] = useState<number>(action.resourceCost)
   const [postExecutionSuccessText, setPostExecutionSuccessText] =
     useState<string>(action.postExecutionSuccessText)
   const [postExecutionFailureText, setPostExecutionFailureText] =
@@ -110,11 +108,11 @@ export default function ActionEntry({
     // Update the description.
     action.description = description
     // Update the success chance.
-    action.successChance = parseInt(successChance) / 100
+    action.successChance = successChance / 100
     // Update the process time.
-    action.processTime = parseFloat(processTime) * 1000
+    action.processTime = processTime * 1000
     // Update the resource cost.
-    action.resourceCost = parseInt(resourceCost)
+    action.resourceCost = resourceCost
     // Update the post-execution success text.
     action.postExecutionSuccessText = postExecutionSuccessText
     // Update the post-execution failure text.
