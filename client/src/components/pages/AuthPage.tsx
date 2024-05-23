@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { useGlobalContext } from 'src/context'
+import ClientLogin from 'src/logins'
 import { compute } from 'src/toolbox'
-import ClientUser from 'src/users'
 import { TPage_P } from '.'
 import { DetailString } from '../content/form/Form'
 import Branding from '../content/general-layout/Branding'
@@ -18,7 +18,7 @@ export default function AuthPage(): JSX.Element | null {
   const globalContext = useGlobalContext()
   const { beginLoading, finishLoading, navigateTo, connectToServer } =
     globalContext.actions
-  const [_, setSession] = globalContext.session
+  const [_, setLogin] = globalContext.login
 
   /* -- STATE -- */
 
@@ -64,18 +64,18 @@ export default function AuthPage(): JSX.Element | null {
 
       // Login.
       try {
-        let { session } = await ClientUser.$login(username, password)
+        let { login } = await ClientLogin.$logIn(username, password)
 
-        // If correct and a session was returned,
-        // then login was successful.
-        if (session) {
+        // If correct and the login information
+        // was returned, then login was successful.
+        if (login) {
           setIsSubmitting(false)
-          setSession(session)
+          setLogin(login)
           connectToServer()
 
           // If the user needs a password reset,
           // then navigate to the user reset page.
-          if (session.user.needsPasswordReset) {
+          if (login.user.needsPasswordReset) {
             navigateTo('UserResetPage', {})
           }
           // Otherwise, go to the home page.

@@ -15,7 +15,7 @@ export default function UserResetPage(): JSX.Element | null {
   /* -- GLOBAL CONTEXT -- */
   const globalContext = useGlobalContext()
   const { notify, navigateTo, finishLoading } = globalContext.actions
-  const [session] = globalContext.session
+  const [login] = globalContext.login
 
   /* -- STATE -- */
   const [areUnsavedChanges, setAreUnsavedChanges] = useState<boolean>(false)
@@ -105,15 +105,15 @@ export default function UserResetPage(): JSX.Element | null {
     }
   }, [password2])
 
-  /* -- SESSION-SPECIFIC LOGIC -- */
+  /* -- LOGIN-SPECIFIC LOGIC -- */
 
-  // Require session.
-  if (session === null) {
+  // Require login for page.
+  if (login === null) {
     return null
   }
 
-  // Extract properties from session.
-  const { user } = session
+  // Grab the user currently logged in.
+  const { user } = login
 
   /* -- COMPUTED -- */
 

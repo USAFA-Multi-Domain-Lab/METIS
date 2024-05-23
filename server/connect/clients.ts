@@ -8,7 +8,7 @@ import {
   TServerMethod,
 } from 'metis/connect/data'
 import { ServerEmittedError } from 'metis/connect/errors'
-import MetisSession from 'metis/server/sessions'
+import ServerLogin from 'metis/server/logins'
 import { WebSocket } from 'ws'
 import GameServer from '../games'
 import ServerUser from '../users'
@@ -17,7 +17,7 @@ import ServerUser from '../users'
 
 /**
  * METIS web-socket-based, client connection.
- * @throws {Error} If the session passed already has a client.
+ * @throws {Error} If the login passed already has a client.
  */
 export default class ClientConnection {
   /**
@@ -25,28 +25,28 @@ export default class ClientConnection {
    */
   protected socket: WebSocket
   /**
-   * The session associated with this client.
+   * The login information associated with this client.
    */
-  protected _session: MetisSession
+  protected _login: ServerLogin
   /**
-   * The session associated with this client.
+   * The login information associated with this client.
    */
-  public get session(): MetisSession {
-    return this._session
+  public get login(): ServerLogin {
+    return this._login
   }
 
   /**
-   * The user in the session.
+   * The user currently logged in.
    */
   public get user(): ServerUser {
-    return this.session.user
+    return this.login.user
   }
 
   /**
-   * The userId for the user in the session.
+   * The userId for the user currently logged in.
    */
   public get userId(): string {
-    return this.session.userId
+    return this.login.userId
   }
 
   /**
@@ -60,23 +60,23 @@ export default class ClientConnection {
    */
   public constructor(
     socket: WebSocket,
-    session: MetisSession,
+    login: ServerLogin,
     options: IClientConnectionOptions = {},
   ) {
     this.socket = socket
-    this._session = session
+    this._login = login
 
     let { disconnectExisting = false } = options
 
-    // If session already contains a client,
-    // handle conflict.
-    if (session.client !== null) {
+    // If the login information already contains a client,
+    // handle the conflict.
+    if (login.client !== null) {
       // If disconnectExisting was opted,
       // disconnect the existing client.
       if (disconnectExisting) {
-        session.client.disconnect()
+        login.client.disconnect()
       }
-      // Else, reject new connection by
+      // Otherwise, reject new connection by
       // emmitting a duplicate client error
       // and disconnecting.
       else {
@@ -84,11 +84,11 @@ export default class ClientConnection {
           new ServerEmittedError(ServerEmittedError.CODE_DUPLICATE_CLIENT),
         )
         this.disconnect()
-        throw Error('The session passed already has a client.')
+        throw Error('User is already logged in.')
       }
     }
 
-    session.client = this
+    login.client = this
 
     // Add event listeners passed in
     // options.
@@ -194,7 +194,7 @@ export default class ClientConnection {
     // Add a `request-current-game` listener.
     this.addEventListener('request-current-game', (event) => {
       // Get the current game.
-      let game = GameServer.get(this.session.gameId ?? undefined)
+      let game = GameServer.get(this.login.gameId ?? undefined)
 
       // Emit the current game in response to the client.
       if (game !== undefined) {
@@ -204,7 +204,7 @@ export default class ClientConnection {
               game?.toJson({
                 includeSensitiveData: this.user.isAuthorized('games_write'),
               }) ?? null,
-            joinMethod: game?.getJoinMethod(this) ?? null,
+            role: game?.getRole(this) ?? null,
           },
           request: this.buildResponseReqData(event),
         })
@@ -227,14 +227,14 @@ export default class ClientConnection {
 
       try {
         // Join the game.
-        game.join(this, event.data.joinMethod)
+        game.join(this, event.data.role)
         // Return the game as JSON.
         this.emit('game-joined', {
           data: {
             game: game.toJson({
               includeSensitiveData: this.user.isAuthorized('games_write'),
             }),
-            joinMethod: event.data.joinMethod,
+            role: event.data.role,
           },
           request: this.buildResponseReqData(event),
         })
@@ -251,7 +251,7 @@ export default class ClientConnection {
     // Add a `request-quit-game` listener.
     this.addEventListener('request-quit-game', (event) => {
       // Get the game.
-      let game = GameServer.get(this.session.gameId ?? undefined)
+      let game = GameServer.get(this.login.gameId ?? undefined)
 
       // Quit the game, if defined.
       if (game !== undefined) {
@@ -314,8 +314,8 @@ export default class ClientConnection {
       }
     }
 
-    // Clear client from session.
-    this.session.client = null
+    // Clear client from the login information.
+    this.login.client = null
   }
 
   /**
@@ -361,7 +361,7 @@ export interface IClientConnectionOptions {
     [T in TClientMethod]?: TClientHandler<T>
   }
   /**
-   * Whether to disconnect existing connections for the given session.
+   * Whether to disconnect existing connections for the given login.
    * @WIP
    */
   disconnectExisting?: boolean

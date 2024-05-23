@@ -21,7 +21,7 @@ export default function Footer({}: TFooter): JSX.Element | null {
   // Gather details.
   const globalContext = useGlobalContext()
   const { navigateTo } = globalContext.actions
-  const [session] = globalContext.session
+  const [login] = globalContext.login
 
   /* -- computed -- */
 
@@ -34,7 +34,7 @@ export default function Footer({}: TFooter): JSX.Element | null {
 
     // Add 'Navigates' class if user is authorized.
     if (
-      session?.user.isAuthorized([
+      login?.user.isAuthorized([
         'missions_write',
         'games_write',
         'users_write_students',
@@ -54,7 +54,7 @@ export default function Footer({}: TFooter): JSX.Element | null {
    */
   const viewChangelog = (): void => {
     if (
-      session?.user.isAuthorized([
+      login?.user.isAuthorized([
         'missions_write',
         'games_write',
         'users_write_students',

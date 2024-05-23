@@ -1,11 +1,10 @@
-import axios, { AxiosError, AxiosResponse } from 'axios'
-import { TMetisSession, TMetisSessionJson } from '../../../shared/sessions'
+import axios from 'axios'
 import User, {
   TCommonUser,
   TCommonUserJson,
   TUserOptions,
 } from '../../../shared/users'
-import UserRole from '../../../shared/users/roles'
+import UserAccess from '../../../shared/users/accesses'
 
 /**
  * Class for managing users on the client.
@@ -62,11 +61,11 @@ export default class ClientUser extends User {
   }
 
   /**
-   * This makes sure the role meets
+   * This makes sure the access level meets
    * the correct criteria.
    */
-  public get hasValidRole(): boolean {
-    return UserRole.isValidRoleId(this.role._id)
+  public get hasValidAccess(): boolean {
+    return UserAccess.isValidAccessId(this.access._id)
   }
 
   /**
@@ -135,8 +134,9 @@ export default class ClientUser extends User {
     // lastName cannot be the default value
     let updatedLastName: boolean =
       this.lastName !== User.DEFAULT_PROPERTIES.lastName
-    // role cannot be the default value
-    let updatedRole: boolean = this.role._id !== User.DEFAULT_PROPERTIES.roleId
+    // access level cannot be the default value
+    let updatedAccess: boolean =
+      this.access._id !== User.DEFAULT_PROPERTIES.accessId
     // passwords must match
     let passwordsMatch: boolean = this.passwordsMatch
     // password must be entered if required
@@ -153,13 +153,13 @@ export default class ClientUser extends User {
       updatedUsername &&
       updatedFirstName &&
       updatedLastName &&
-      updatedRole &&
+      updatedAccess &&
       passwordsMatch &&
       !requiredPasswordIsMissing &&
       !password1IsEmptyString &&
       !password2IsEmptyString &&
       this.hasValidUsername &&
-      this.hasValidRole &&
+      this.hasValidAccess &&
       this.hasValidFirstName &&
       this.hasValidLastName &&
       this.hasValidPassword1 &&
@@ -265,109 +265,6 @@ export default class ClientUser extends User {
       }
     })
   }
-  /**
-   * Fetches the current session of the logged in user from the server.
-   * @resolves The session of the logged in user.
-   * @rejects The error that occurred while fetching the session.
-   */
-  public static $fetchSession(): Promise<TMetisSession<ClientUser>> {
-    return new Promise<TMetisSession<ClientUser>>(
-      async (
-        resolve: (session: TMetisSession<ClientUser>) => void,
-        reject: (error: AxiosError) => void,
-      ) => {
-        try {
-          let { data: sessionJson } = await axios.get<TMetisSessionJson>(
-            `${ClientUser.API_ENDPOINT}/session`,
-          )
-          let session: TMetisSession<ClientUser> = null
-
-          // If the session JSON is not null,
-          // parse the data.
-          if (sessionJson !== null) {
-            session = {
-              user: new ClientUser(sessionJson.user),
-              gameId: sessionJson.gameId,
-            }
-          }
-
-          // Resolve the promise with the
-          // session returned.
-          resolve(session)
-        } catch (error: any) {
-          // If request fails, reject the promise
-          // with the error given in the catch.
-          console.error('Failed to retrieve session.')
-          console.error(error)
-          reject(error)
-        }
-      },
-    )
-  }
-
-  /**
-   * Attempts to log in the user with the given username and password.
-   * @param username The username to login with.
-   * @param password The user's password to login with.
-   * @resolves The object containing whether the login was correct and the session of the logged in user.
-   * @rejects The error that occurred while logging in.
-   */
-  public static $login(
-    username: TCommonUser['username'],
-    password: string,
-  ): Promise<{
-    session: TMetisSession<ClientUser>
-  }> {
-    return new Promise<{
-      session: TMetisSession<ClientUser>
-    }>(async (resolve, reject) => {
-      try {
-        let response: AxiosResponse = await axios.post<TMetisSessionJson>(
-          `${ClientUser.API_ENDPOINT}/login`,
-          { username, password },
-        )
-
-        // Parse the response data.
-        let sessionJson: TMetisSessionJson = response.data.session
-        let session: TMetisSession<ClientUser> = null
-
-        // If the session JSON is not null,
-        // parse the date.
-        if (sessionJson !== null) {
-          session = {
-            user: new ClientUser(sessionJson.user),
-            gameId: sessionJson.gameId,
-          }
-        }
-
-        resolve({ session })
-      } catch (error: any) {
-        console.error('Failed to login user.')
-        console.error(error)
-        reject(error)
-      }
-    })
-  }
-
-  /**
-   * Logs out the user in the session.
-   * @resolves When the user is logged out.
-   * @rejects The error that occurred while logging out.
-   */
-  public static $logout(): Promise<void> {
-    return new Promise<void>(async (resolve, reject) => {
-      try {
-        await axios.post(`${ClientUser.API_ENDPOINT}/logout`)
-        await ClientUser.$fetchSession()
-        resolve()
-      } catch (error: any) {
-        console.error('Failed to logout user.')
-        console.error(error)
-        reject(error)
-      }
-    })
-  }
-
   /**
    * Calls the API to create a new user.
    * @param clientUser The user to create.

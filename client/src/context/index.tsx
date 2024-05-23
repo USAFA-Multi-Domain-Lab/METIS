@@ -8,11 +8,12 @@ import {
 import { TButtonText } from 'src/components/content/user-controls/ButtonText'
 import { PAGE_REGISTRY, TPage_P } from 'src/components/pages'
 import ServerConnection from 'src/connect/servers'
+import ClientLogin from 'src/logins'
 import Notification from 'src/notifications'
 import ClientUser from 'src/users'
 import { v4 as generateHash } from 'uuid'
 import { ServerEmittedError } from '../../../shared/connect/errors'
-import { TMetisSession } from '../../../shared/sessions'
+import { TLogin } from '../../../shared/logins'
 import ObjectToolbox, {
   AnyObject,
   TWithKey,
@@ -27,7 +28,7 @@ import StringToolbox from '../../../shared/toolbox/strings'
 const GLOBAL_CONTEXT_VALUES_DEFAULT: TGlobalContextValues = {
   forcedUpdateCounter: 0,
   server: null,
-  session: null,
+  login: null,
   currentPageKey: 'BlankPage',
   currentPageProps: {},
   appMountHandled: false,
@@ -136,7 +137,7 @@ const useGlobalContextDefinition = (context: TGlobalContext) => {
   const [forcedUpdateCounter, setForcedUpdateCounter] =
     context.forcedUpdateCounter
   const [server, setServer] = context.server
-  const [session, setSession] = context.session
+  const [login, setLogin] = context.login
   const [currentPageKey, setCurrentPageKey] = context.currentPageKey
   const [currentPageProps, setCurrentPageProps] = context.currentPageProps
   const [appMountHandled, setAppMountHandled] = context.appMountHandled
@@ -271,17 +272,16 @@ const useGlobalContextDefinition = (context: TGlobalContext) => {
         handleLoadCompletion()
       }
     },
-    syncSession: async (): Promise<TMetisSession<ClientUser>> => {
+    loadLoginInfo: async (): Promise<TLogin<ClientUser>> => {
       const { handleError } = context.actions
 
-      return new Promise<TMetisSession<ClientUser>>(async (resolve, reject) => {
+      return new Promise<TLogin<ClientUser>>(async (resolve, reject) => {
         try {
-          let session: TMetisSession<ClientUser> =
-            await ClientUser.$fetchSession()
-          setSession(session)
-          resolve(session)
+          let login: TLogin<ClientUser> = await ClientLogin.$fetchLoginInfo()
+          setLogin(login)
+          resolve(login)
         } catch (error: any) {
-          handleError('Failed to sync session.')
+          handleError('Failed to load login information.')
           reject(error)
         }
       })
@@ -488,8 +488,8 @@ const useGlobalContextDefinition = (context: TGlobalContext) => {
       }
 
       try {
-        await ClientUser.$logout()
-        setSession(null)
+        await ClientLogin.$logOut()
+        setLogin(null)
         finishLoading()
         navigateTo('AuthPage', {})
       } catch (error: any) {
@@ -589,7 +589,7 @@ export default class GlobalContext {
 export type TGlobalContextValues = {
   forcedUpdateCounter: number
   server: ServerConnection | null
-  session: TMetisSession<ClientUser>
+  login: TLogin<ClientUser>
   currentPageKey: keyof typeof PAGE_REGISTRY
   currentPageProps: AnyObject
   appMountHandled: boolean
@@ -649,11 +649,11 @@ export type TGlobalContextActions = {
    */
   finishLoading: () => void
   /**
-   * Fetches the current session and stores the result in the global state
-   * variable "session", returning a promise for the session as well.
-   * @return {Promise<TMetisSession<ClientUser>>} The promise of the session.
+   * Fetches the current login information and stores the result in the global state
+   * variable "login", returning a promise for the login as well.
+   * @return {Promise<TLogin<ClientUser>>} The promise of the login information.
    */
-  syncSession: () => Promise<TMetisSession<ClientUser>>
+  loadLoginInfo: () => Promise<TLogin<ClientUser>>
   /**
    * Establish a web socket connection with the server. The new server
    * connection will be stored in the global state variable "server".
@@ -693,7 +693,7 @@ export type TGlobalContextActions = {
    */
   notify: (message: string, options?: TNotifyOptions) => Notification
   /**
-   * This will logout the current user from the session, closing the connection
+   * This will logout the user that is currently logged in, closing the connection
    * with the server as well. Afterwards, the user will be navigated to the auth page.
    */
   logout: () => void

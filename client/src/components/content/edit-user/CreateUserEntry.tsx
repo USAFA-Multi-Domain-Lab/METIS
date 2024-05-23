@@ -4,8 +4,8 @@ import { compute } from 'src/toolbox'
 import { usePostInitEffect } from 'src/toolbox/hooks'
 import { ReactSetter } from 'src/toolbox/types'
 import ClientUser from 'src/users'
-import { TMetisSession } from '../../../../../shared/sessions'
-import UserRole from '../../../../../shared/users/roles'
+import { TLogin } from '../../../../../shared/logins'
+import UserAccess from '../../../../../shared/users/accesses'
 import { DetailDropDown, DetailString, DetailToggle } from '../form/Form'
 import './CreateUserEntry.scss'
 
@@ -16,7 +16,7 @@ export default function CreateUserEntry({
   user,
   userEmptyStringArray,
   usernameAlreadyExists,
-  session,
+  login,
   setUserEmptyStringArray,
   handleChange,
 }: TCreateUserEntry_P): JSX.Element | null {
@@ -40,7 +40,7 @@ export default function CreateUserEntry({
   const [password1ErrorMessage, setPassword1ErrorMessage] = useState<string>()
   const [password2ErrorMessage, setPassword2ErrorMessage] = useState<string>()
   const [username, setUsername] = useState<string>(user.username)
-  const [role, setRole] = useState<UserRole>(user.role)
+  const [access, setAccess] = useState<UserAccess>(user.access)
   const [firstName, setFirstName] = useState<string>(user.firstName)
   const [lastName, setLastName] = useState<string>(user.lastName)
   const [password1, setPassword1] = useState<string>(user.password1 || '')
@@ -52,9 +52,9 @@ export default function CreateUserEntry({
   /* -- COMPUTED -- */
 
   /**
-   * The current user in session.
+   * The user currently logged in.
    */
-  const currentUser: ClientUser = compute(() => session.user)
+  const currentUser: ClientUser = compute(() => login.user)
   /**
    * The label for the password field.
    */
@@ -68,32 +68,31 @@ export default function CreateUserEntry({
     user.needsPasswordReset ? 'Confirm Temporary Password' : 'Confirm Password',
   )
   /**
-   * List of roles to select from.
+   * List of accesses to select from.
    */
-  const listOfRoles: UserRole[] = compute(() => {
-    // Default list of roles to select from.
-    let roles: UserRole[] = []
+  const listOfAccesses: UserAccess[] = compute(() => {
+    // Default list of accesses to select from.
+    let accesses: UserAccess[] = []
 
-    // If the current user in session has
-    // proper authorization, they are allowed
-    // to create students.
+    // If the current user has proper authorization,
+    // they are allowed to create students.
     if (currentUser.isAuthorized('users_write_students')) {
-      roles = [UserRole.AVAILABLE_ROLES.student]
+      accesses = [UserAccess.AVAILABLE_ACCESSES.student]
     }
 
-    // If the current user in session has
-    // proper authorization, then they are
-    // allowed to create users with any role.
+    // If the current user has proper authorization,
+    // then they are allowed to create users with any
+    // access level.
     if (currentUser.isAuthorized('users_write')) {
-      roles = [
-        UserRole.AVAILABLE_ROLES.student,
-        UserRole.AVAILABLE_ROLES.instructor,
-        UserRole.AVAILABLE_ROLES.admin,
-        UserRole.AVAILABLE_ROLES.revokedAccess,
+      accesses = [
+        UserAccess.AVAILABLE_ACCESSES.student,
+        UserAccess.AVAILABLE_ACCESSES.instructor,
+        UserAccess.AVAILABLE_ACCESSES.admin,
+        UserAccess.AVAILABLE_ACCESSES.revokedAccess,
       ]
     }
 
-    return roles
+    return accesses
   })
 
   /* -- EFFECTS -- */
@@ -124,13 +123,13 @@ export default function CreateUserEntry({
     forceUpdate()
   }, [username])
 
-  // Sync the component state with the user role property.
+  // Sync the component state with the user access property.
   usePostInitEffect(() => {
-    user.role = role
+    user.access = access
 
     forceUpdate()
     handleChange()
-  }, [role])
+  }, [access])
 
   // Sync the component state with the user first name property.
   usePostInitEffect(() => {
@@ -301,14 +300,14 @@ export default function CreateUserEntry({
         errorMessage={usernameErrorMessage}
         placeholder='Enter a username here...'
       />
-      <DetailDropDown<UserRole>
+      <DetailDropDown<UserAccess>
         fieldType='required'
-        label='Role'
-        options={listOfRoles}
-        stateValue={role}
-        setState={setRole}
+        label='Access Level'
+        options={listOfAccesses}
+        stateValue={access}
+        setState={setAccess}
         isExpanded={false}
-        renderDisplayName={(role: UserRole) => role.name}
+        renderDisplayName={(access: UserAccess) => access.name}
       />
       <DetailString
         fieldType='required'
@@ -378,9 +377,9 @@ export type TCreateUserEntry_P = {
    */
   usernameAlreadyExists: boolean
   /**
-   * The session for the user.
+   * The login information for the user.
    */
-  session: NonNullable<TMetisSession<ClientUser>>
+  login: NonNullable<TLogin<ClientUser>>
   /**
    * A function that will update the array of fields with empty strings.
    */

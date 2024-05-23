@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useGlobalContext } from 'src/context'
 import GameClient from 'src/games'
 import { compute } from 'src/toolbox'
-import { useEventListener, useRequireSession } from 'src/toolbox/hooks'
+import { useEventListener, useRequireLogin } from 'src/toolbox/hooks'
 import ClientUser from 'src/users'
 import Prompt from '../communication/Prompt'
 import ButtonSvgPanel, {
@@ -19,7 +19,7 @@ export default function GameUsers({ game }: TGameUsers_P): JSX.Element | null {
   const globalContext = useGlobalContext()
   const { handleError, prompt, beginLoading, finishLoading } =
     globalContext.actions
-  const [session] = useRequireSession()
+  const [login] = useRequireLogin()
   const [server] = globalContext.server
   const [participants, setParticipants] = useState<ClientUser[]>(
     game.participants,
@@ -116,14 +116,14 @@ export default function GameUsers({ game }: TGameUsers_P): JSX.Element | null {
          * Buttons for SVG panel.
          */
         const buttons = compute((): TValidPanelButton[] => {
-          // If the sessioned user is authorized to join
+          // If the logged in user is authorized to join
           // games as a manager or observer, and the user
           // in question is not authorized to join games
           // as a manager or observer, then  return the
           // kick and ban buttons.
           if (
-            (session.user.isAuthorized('games_join_manager') ||
-              session.user.isAuthorized('games_join_observer')) &&
+            (login.user.isAuthorized('games_join_manager') ||
+              login.user.isAuthorized('games_join_observer')) &&
             (!user.isAuthorized('games_join_manager') ||
               !user.isAuthorized('games_join_observer'))
           ) {

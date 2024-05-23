@@ -7,12 +7,12 @@ import Notification from 'src/notifications'
 import { compute } from 'src/toolbox'
 import {
   useMountHandler,
-  useRequireSession,
+  useRequireLogin,
   useUnmountHandler,
 } from 'src/toolbox/hooks'
 import ClientUser from 'src/users'
 import { DefaultLayout } from '.'
-import { TGameBasicJson, TGameJoinMethod } from '../../../../shared/games'
+import { TGameBasicJson, TGameRole } from '../../../../shared/games'
 import Prompt, { TChoicesWithCancel } from '../content/communication/Prompt'
 import Tooltip from '../content/communication/Tooltip'
 import { DetailString } from '../content/form/Form'
@@ -64,13 +64,13 @@ export default function HomePage(): JSX.Element | null {
   const [users, setUsers] = useState<ClientUser[]>([])
   const [manualJoinGameId, setManualJoinGameId] = useState<string>('')
 
-  /* -- SESSION-SPECIFIC LOGIC -- */
+  /* -- LOGIN-SPECIFIC LOGIC -- */
 
-  // Require session for page.
-  const [session] = useRequireSession()
+  // Require login for page.
+  const [login] = useRequireLogin()
 
-  // Grab the current user from the session.
-  let { user: currentUser } = session
+  // Grab the user currently logged in.
+  let { user: currentUser } = login
 
   /* -- EFFECTS -- */
 
@@ -82,12 +82,11 @@ export default function HomePage(): JSX.Element | null {
         await loadMissions()
       }
 
-      // The current user in the session
-      // must have restricted access to
-      // view the users.
+      // The user currently logged in must
+      // have restricted access to view the
+      // users.
       if (currentUser.isAuthorized('users_read_students')) {
         await loadUsers()
-        await sortUsers()
       }
 
       finishLoading()
@@ -199,47 +198,6 @@ export default function HomePage(): JSX.Element | null {
 
     setTimeout(() => syncGames.current(), GAMES_SYNC_RATE)
   })
-
-  /**
-   * This sorts the users by their user ID.
-   * @note If the first character is a letter it will sort the users alphabetically.
-   * @note If the first character is a number it will sort the users numerically.
-   * @note If the first character is a letter and the last character is a number it will sort the users by length.
-   * @example sortedArray = ['1', '2', '3', 'a', 'b', 'c', 'a1', 'a2', 'a3', 'b1', 'b2', 'b3', 'c1', 'c2', 'c3']
-   */
-  const sortUsers = (): Promise<void> => {
-    return new Promise<void>((resolve, reject) => {
-      try {
-        // Sort users by their user ID.
-        setUsers((users) => {
-          return users.sort((a: ClientUser, b: ClientUser) => {
-            // Compares the first character of the user ID
-            // so that it can be sorted alphabetically or
-            // numerically. It also compares the length of
-            // the user ID to properly sort userId's that
-            // start with a letter and end with a number.
-            // (i.e., [ student1, ... student9, student10 ])
-            if (
-              a.username[0] <= b.username[0] &&
-              a.username.length <= b.username.length
-            ) {
-              return -1
-            } else if (
-              a.username[0] >= b.username[0] &&
-              a.username.length >= b.username.length
-            ) {
-              return 1
-            } else {
-              return 0
-            }
-          })
-        })
-        resolve()
-      } catch (error) {
-        reject(error)
-      }
-    })
-  }
 
   // This will import files as missions.
   const importMissionFiles = async (files: FileList) => {
@@ -445,15 +403,17 @@ export default function HomePage(): JSX.Element | null {
   const onGameSelection = async (gameId: string) => {
     if (server !== null) {
       try {
-        let joinMethod: TGameJoinMethod = 'participant'
+        let role: TGameRole = 'participant'
 
-        // Choices for join method.
-        let joinMethodChoices: TChoicesWithCancel<TGameJoinMethod>[] = []
-        // If the user is authorized has the top level
+        // Choices for the user to select what
+        // role they would like to join the game
+        // as.
+        let roleChoices: TChoicesWithCancel<TGameRole>[] = []
+        // If the user is authorized and has the top level
         // join permission, add the option to join as
         // a participant or supervisor.
         if (currentUser.isAuthorized('games_join')) {
-          joinMethodChoices = ['participant', 'supervisor', 'Cancel']
+          roleChoices = ['participant', 'supervisor', 'Cancel']
         }
         // If the user is authorized to join as a
         // participant, add the option to join as
@@ -462,18 +422,18 @@ export default function HomePage(): JSX.Element | null {
           currentUser.isAuthorized('games_join_participant') &&
           !currentUser.isAuthorized('games_join_observer')
         ) {
-          joinMethodChoices = ['participant', 'Cancel']
+          roleChoices = ['participant', 'Cancel']
         }
-        // If the user is authorized to join as a
+        // If the user is authorized to join as an
         // observer, add the option to join as an
-        // supervisor.
+        // observer.
         if (
           currentUser.isAuthorized('games_join_observer') &&
           !currentUser.isAuthorized('games_join_participant')
         ) {
-          joinMethodChoices = ['supervisor', 'Cancel']
+          roleChoices = ['supervisor', 'Cancel']
         }
-        // If the user is authorized to join as a
+        // If the user is authorized to join as an
         // observer and participant, add the option
         // to join as a participant, observer, or
         // supervisor.
@@ -481,15 +441,15 @@ export default function HomePage(): JSX.Element | null {
           currentUser.isAuthorized('games_join_observer') &&
           currentUser.isAuthorized('games_join_participant')
         ) {
-          joinMethodChoices = ['participant', 'supervisor', 'Cancel']
+          roleChoices = ['participant', 'supervisor', 'Cancel']
         }
 
         if (currentUser.isAuthorized('games_write')) {
-          // Prompt user for join method if the user
+          // Prompt user for role if the user
           // has write privileges.
-          let { choice } = await prompt<TChoicesWithCancel<TGameJoinMethod>>(
+          let { choice } = await prompt<TChoicesWithCancel<TGameRole>>(
             'What would you like to join the game as?',
-            joinMethodChoices,
+            roleChoices,
             { capitalizeChoices: true },
           )
 
@@ -498,15 +458,15 @@ export default function HomePage(): JSX.Element | null {
             return
           }
 
-          // Set join method as the choice made.
-          joinMethod = choice
+          // Set the role as the choice made.
+          role = choice
         }
 
         // Notify user of game join.
         beginLoading('Joining game...')
         // Join game from new game ID, awaiting
         // the promised game client.
-        let game = await server.$joinGame(gameId, joinMethod)
+        let game = await server.$joinGame(gameId, role)
 
         // If the game is not found, notify
         // the user and return.
@@ -519,9 +479,9 @@ export default function HomePage(): JSX.Element | null {
           return
         }
 
-        // Update session data to include new
-        // game ID.
-        session.gameId = game._id
+        // Update login information to include
+        // the new game ID.
+        login.gameId = game._id
         // Go to the game page with the new
         // game client.
         navigateTo('GamePage', { game })

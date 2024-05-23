@@ -2,7 +2,7 @@
 import { NextFunction, Request, Response } from 'express-serve-static-core'
 import { AnyObject } from 'metis/toolbox/objects'
 import User from 'metis/users'
-import UserRole, { TUserRole } from 'metis/users/roles'
+import UserAccess, { TUserAccess } from 'metis/users/accesses'
 import { isObjectIdOrHexString } from 'mongoose'
 
 // ------- GLOBAL VARIABLES ------- //
@@ -304,13 +304,13 @@ export class RequestBodyFilters {
   }
 
   /**
-   * This filters a role included in a request body.
+   * This filters an access included in a request body.
    * @param bodyKey The key of the property in the request body
    * @param bodyValue The value of the property in the request body
    * @throws An error message or null
    */
-  public static ROLE(bodyKey: string, bodyValue: TUserRole['_id']) {
-    if (!UserRole.isValidRoleId(bodyValue)) {
+  public static ACCESS(bodyKey: string, bodyValue: TUserAccess['_id']) {
+    if (!UserAccess.isValidAccessId(bodyValue)) {
       throw new Error(invalidRequestBodyPropertyException(bodyKey, bodyValue))
     }
   }

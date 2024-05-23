@@ -4,7 +4,7 @@ import { useGlobalContext } from 'src/context'
 import GameClient from 'src/games'
 import ClientMissionNode from 'src/missions/nodes'
 import ClientUser from 'src/users'
-import { TMetisSession } from '../../../shared/sessions'
+import { TLogin } from '../../../shared/logins'
 import Notification from '../notifications'
 import './App.scss'
 import ConnectionStatus from './content/communication/ConnectionStatus'
@@ -52,7 +52,7 @@ function App(props: {}): JSX.Element | null {
 
   const globalContext = useGlobalContext()
 
-  const [session] = globalContext.session
+  const [login] = globalContext.login
   const [appMountHandled, setAppMountHandled] = globalContext.appMountHandled
   const [server] = globalContext.server
   const [tooltips] = globalContext.tooltips
@@ -72,7 +72,7 @@ function App(props: {}): JSX.Element | null {
     beginLoading,
     finishLoading,
     handleError,
-    syncSession,
+    loadLoginInfo,
     navigateTo,
     connectToServer,
   } = globalContext.actions
@@ -132,8 +132,8 @@ function App(props: {}): JSX.Element | null {
   /* -- EFFECTS -- */
 
   // This is called to handle the app being mounted,
-  // will load the user in the session to see if a
-  // login is necessary.
+  // will load the login information and connect to
+  // the server if the user is logged in.
   useEffect(() => {
     async function componentDidMount(): Promise<void> {
       try {
@@ -154,14 +154,14 @@ function App(props: {}): JSX.Element | null {
           setTooltipDescription('')
         }
 
-        // Sync session.
-        beginLoading('Syncing session...')
-        let session: TMetisSession<ClientUser> = await syncSession()
+        // Load login info.
+        beginLoading('Loading login information...')
+        let login: TLogin<ClientUser> = await loadLoginInfo()
 
-        // If there is no established session,
-        // navigate to the auth page to have
-        // the visitor login.
-        if (session === null) {
+        // If the user's login information fails to load,
+        // navigate to the auth page to have the visitor
+        // login.
+        if (login === null) {
           navigateTo('AuthPage', {})
         }
         // Else establish a web socket connection
@@ -171,18 +171,16 @@ function App(props: {}): JSX.Element | null {
           beginLoading('Connecting to server...')
           let server: ServerConnection = await connectToServer()
 
-          // If the sessioned user needs a password
+          // If the logged in user needs a password
           // reset, then navigate to the user
           // reset page.
-          if (session.user.needsPasswordReset) {
+          if (login.user.needsPasswordReset) {
             navigateTo('UserResetPage', {})
           }
-          // Else, if the sessioned user is in a game,
+          // Or, if the logged in user is in a game,
           // then switch to the game page.
-          else if (session.gameId !== null) {
-            let game: GameClient = await server.$fetchCurrentGame(
-              session.gameId,
-            )
+          else if (login.gameId !== null) {
+            let game: GameClient = await server.$fetchCurrentGame(login.gameId)
             // Navigate based on the game state.
             switch (game.state) {
               case 'unstarted':
@@ -220,7 +218,7 @@ function App(props: {}): JSX.Element | null {
   // This is called to handle logins.
   useEffect(() => {
     async function effect(): Promise<void> {
-      if (session === null) {
+      if (login === null) {
         setMissionNodeColors([])
       } else {
         try {
@@ -231,7 +229,7 @@ function App(props: {}): JSX.Element | null {
       }
     }
     effect()
-  }, [session === null])
+  }, [login === null])
 
   /* -- PAGE DETAILS -- */
 

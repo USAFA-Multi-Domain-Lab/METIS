@@ -5,7 +5,7 @@ import { compute } from 'src/toolbox'
 import {
   useEventListener,
   useMountHandler,
-  useRequireSession,
+  useRequireLogin,
 } from 'src/toolbox/hooks'
 import { DefaultLayout } from '.'
 import Prompt from '../content/communication/Prompt'
@@ -23,7 +23,7 @@ export default function LobbyPage({ game }: TLobbyPage_P): JSX.Element | null {
 
   const globalContext = useGlobalContext()
   const [server] = globalContext.server
-  const [session] = useRequireSession()
+  const [login] = useRequireLogin()
   const { beginLoading, finishLoading, navigateTo, handleError, prompt } =
     globalContext.actions
 
@@ -48,8 +48,8 @@ export default function LobbyPage({ game }: TLobbyPage_P): JSX.Element | null {
     // Hide the button section if the user is
     // not authorized.
     if (
-      !session.user.isAuthorized('games_join_manager') ||
-      !session.user.isAuthorized('games_join_observer')
+      !login.user.isAuthorized('games_join_manager') ||
+      !login.user.isAuthorized('games_join_observer')
     ) {
       classNames.push('Hidden')
     }

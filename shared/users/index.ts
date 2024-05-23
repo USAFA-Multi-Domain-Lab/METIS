@@ -1,9 +1,9 @@
 import { v4 as generateHash } from 'uuid'
+import UserAccess, { TUserAccess } from './accesses'
 import UserPermission, {
   TUserPermission,
   TUserPermissionId,
 } from './permissions'
-import UserRole, { TUserRole } from './roles'
 
 /**
  * Represents a user using METIS.
@@ -16,7 +16,7 @@ export default abstract class User implements TCommonUser {
   public username: TCommonUser['username']
 
   // Inherited
-  public role: TCommonUser['role']
+  public access: TCommonUser['access']
 
   // Inherited
   public expressPermissions: TCommonUser['expressPermissions']
@@ -43,7 +43,7 @@ export default abstract class User implements TCommonUser {
   ) {
     this._id = data._id?.toString() ?? User.DEFAULT_PROPERTIES._id
     this.username = data.username ?? User.DEFAULT_PROPERTIES.username
-    this.role = UserRole.get(data.roleId ?? UserRole.DEFAULT_ID)
+    this.access = UserAccess.get(data.accessId ?? UserAccess.DEFAULT_ID)
     this.firstName = data.firstName ?? User.DEFAULT_PROPERTIES.firstName
     this.lastName = data.lastName ?? User.DEFAULT_PROPERTIES.lastName
     this.needsPasswordReset =
@@ -65,7 +65,7 @@ export default abstract class User implements TCommonUser {
       username: this.username,
       firstName: this.firstName,
       lastName: this.lastName,
-      roleId: this.role._id,
+      accessId: this.access._id,
       needsPasswordReset: this.needsPasswordReset,
       expressPermissionIds: this.expressPermissions.map(
         (permission: UserPermission) => permission._id,
@@ -91,38 +91,37 @@ export default abstract class User implements TCommonUser {
   public isAuthorized = (
     requiredPermissions: TUserPermissionId | TUserPermissionId[],
   ): boolean => {
-    // Current user in session.
+    // The user currently logged in.
     let currentUser = this
     // What the current user is allowed
-    // to do based on their role.
-    let { permissions: rolePermissions } = this.role
+    // to do based on their access.
+    let { permissions: accessPermissions } = this.access
     // What the current user is allowed
     // to do based on their specific
     // permissions.
     let { expressPermissions } = currentUser
 
-    // If the current user in the
-    // session has the revoked
-    // access role, they are not
-    // authorized to perform any
+    // If the user currently logged in
+    // has the revoked access, they are
+    // not authorized to perform any
     // actions.
-    if (currentUser.role._id === 'revokedAccess') {
+    if (currentUser.access._id === 'revokedAccess') {
       return false
     } else {
       // Check if the user has the required
-      // permissions based on their role.
-      let roleHasRequiredPermissions: boolean = UserPermission.hasPermissions(
-        rolePermissions,
+      // permissions based on their access.
+      let accessHasRequiredPermissions: boolean = UserPermission.hasPermissions(
+        accessPermissions,
         requiredPermissions,
       )
       // Check to see if the user has been
       // given specific permissions that
-      // override their role permissions.
+      // override their access permissions.
       let userHasSpecificPermissions: boolean = UserPermission.hasPermissions(
         expressPermissions,
         requiredPermissions,
       )
-      return roleHasRequiredPermissions || userHasSpecificPermissions
+      return accessHasRequiredPermissions || userHasSpecificPermissions
     }
   }
 
@@ -135,7 +134,7 @@ export default abstract class User implements TCommonUser {
       username: '',
       firstName: '',
       lastName: '',
-      roleId: UserRole.DEFAULT_ID,
+      accessId: UserAccess.DEFAULT_ID,
       needsPasswordReset: false,
       expressPermissionIds: [],
     }
@@ -175,9 +174,9 @@ export interface TCommonUser {
    */
   username: string
   /**
-   * The user's role.
+   * The user's access.
    */
-  role: UserRole
+  access: UserAccess
   /**
    * The user's permissions.
    */
@@ -218,9 +217,9 @@ export interface TCommonUserJson {
    */
   username: string
   /**
-   * The user's role ID.
+   * The user's access ID.
    */
-  roleId: TUserRole['_id']
+  accessId: TUserAccess['_id']
   /**
    * Specific express permission IDs assigned
    * to the user.

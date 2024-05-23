@@ -11,12 +11,6 @@ import Target, {
  */
 export default class ClientTarget extends Target<ClientTargetEnvironment> {
   /**
-   * The API endpoint for TargetEnvironment Objects.
-   */
-  public static readonly API_ENDPOINT: string =
-    'api/v1/target-environments/targets'
-
-  /**
    * Calls the API to load the target with the specified ID.
    * @param _id The ID of the target to fetch.
    * @resolves If the target is fetched successfully.
@@ -45,4 +39,10 @@ export default class ClientTarget extends Target<ClientTargetEnvironment> {
       }
     })
   }
+
+  /**
+   * The API endpoint for Target Objects.
+   */
+  public static readonly API_ENDPOINT: string =
+    'api/v1/target-environments/targets'
 }

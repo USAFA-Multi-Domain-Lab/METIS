@@ -8,51 +8,53 @@ import chai, { expect } from 'chai'
 import chaiHttp from 'chai-http'
 
 // metis imports
+import Mission, { TCommonMissionJson } from 'metis/missions'
 import MetisServer from 'metis/server'
 import MissionModel from 'metis/server/database/models/missions'
 import UserModel, { hashPassword } from 'metis/server/database/models/users'
 import { TCommonUserJson } from 'metis/users'
-import UserRole, { TUserRoleId } from 'metis/users/roles'
+import UserAccess, { TUserAccessId } from 'metis/users/accesses'
+import mongoose from 'mongoose'
 import { testLogger } from '../logging'
 
 // global fields
-let missionID: string
+let missionId: string
 let server: MetisServer = require('../start').server
 let PORT: number = server.port
 let MONGO_DB: string = server.mongoDB
 const baseUrl = `localhost:${PORT}`
 const MONGO_TEST_DB: string = 'metis-test'
-const permittedUserRole: TUserRoleId = UserRole.AVAILABLE_ROLES.admin._id
+const permittedUserAccess: TUserAccessId =
+  UserAccess.AVAILABLE_ACCESSES.admin._id
 let agent: ChaiHttp.Agent
 
 // json
 const userCredentials = {
-  userID: 'admin',
+  username: 'admin',
   password: 'temppass',
 }
-const createMissionWithNoNodeData = {
+const createMissionWithNoNodeData: Omit<TCommonMissionJson, 'nodeData'> = {
   name: 'No Node Data Mission (To Delete)',
   introMessage: 'This is a new mission.',
   versionNumber: 1,
   initialResources: 5,
-  live: false,
+  seed: Mission.DEFAULT_PROPERTIES.seed,
   nodeStructure: {
     'e72aa13b-3d99-406a-a435-b0f5f2e31873': {},
   },
-  schemaBuildNumber: 5,
 }
-const testMission = {
+const testMission: TCommonMissionJson = {
   name: 'Test Mission (To Delete)',
   introMessage: 'This is a new mission.',
   versionNumber: 1,
-  live: false,
   initialResources: 5,
+  seed: Mission.DEFAULT_PROPERTIES.seed,
   nodeStructure: {
     '7e6e3ddd-53be-40b1-881e-945cd6891425': {},
   },
   nodeData: [
     {
-      nodeID: '7e6e3ddd-53be-40b1-881e-945cd6891425',
+      structureKey: '7e6e3ddd-53be-40b1-881e-945cd6891425',
       name: 'Test Node',
       color: '#ffffff',
       description: 'This is a new node.',
@@ -62,7 +64,6 @@ const testMission = {
       device: false,
       actions: [
         {
-          actionID: '5a3acf01-7ea6-48c5-bff8-155233dcf46c',
           name: 'Destroy',
           description: 'This will destroy.',
           processTime: 3000,
@@ -72,145 +73,12 @@ const testMission = {
             'Destroy was performed successfully on Test Node.',
           postExecutionFailureText:
             'Destroy was performed unsuccessfully on Test Node.',
-          scripts: [
+          effects: [
             {
-              label: 'Test-Command-Script: "test"',
+              name: 'test',
               description: 'Used for unit test.',
-              scriptName: 'TestCommandScript',
-              originalPath: 'test/test_command_script',
-              args: { script: 'test' },
-            },
-          ],
-        },
-      ],
-    },
-  ],
-  schemaBuildNumber: 9,
-}
-const updateMissionWithNoMissionID = {
-  name: 'Updated No Node Data (To Delete)',
-  introMessage: 'This is a new mission.',
-  versionNumber: 1,
-  initialResources: 5,
-  live: false,
-  nodeStructure: {
-    'e72aa13b-3d99-406a-a435-b0f5f2e31873': {},
-  },
-  nodeData: [
-    {
-      nodeID: 'e72aa13b-3d99-406a-a435-b0f5f2e31873',
-      name: 'Test Node',
-      color: '#ffffff',
-      description: 'This is a new node.',
-      preExecutionText: 'Node has not been executed.',
-      depthPadding: 0,
-      executable: false,
-      device: false,
-      actions: [
-        {
-          actionID: '5a3acf01-7ea6-48c5-bff8-155233dcf46c',
-          name: 'Destroy',
-          description: 'This will destroy.',
-          processTime: 3000,
-          successChance: 0.6,
-          resourceCost: 1,
-          postExecutionSuccessText:
-            'Destroy was performed successfully on Test Node.',
-          postExecutionFailureText:
-            'Destroy was performed unsuccessfully on Test Node.',
-          scripts: [],
-        },
-      ],
-    },
-  ],
-  schemaBuildNumber: 9,
-}
-const updateMissionWithNoNodeStructure = {
-  missionID: '',
-  name: 'Update No Node Structure (To Delete)',
-  introMessage: 'This is a new mission.',
-  versionNumber: 1,
-  initialResources: 5,
-  live: false,
-  nodeData: [
-    {
-      nodeID: 'e72aa13b-3d99-406a-a435-b0f5f2e31873',
-      name: 'Test Node',
-      color: '#ffffff',
-      description: 'This is a new node.',
-      preExecutionText: 'Node has not been executed.',
-      depthPadding: 0,
-      executable: false,
-      device: false,
-      actions: [
-        {
-          actionID: '5a3acf01-7ea6-48c5-bff8-155233dcf46c',
-          name: 'Destroy',
-          description: 'This will destroy.',
-          processTime: 3000,
-          successChance: 0.6,
-          resourceCost: 1,
-          postExecutionSuccessText:
-            'Destroy was performed successfully on Test Node.',
-          postExecutionFailureText:
-            'Destroy was performed unsuccessfully on Test Node.',
-          scripts: [],
-        },
-      ],
-    },
-  ],
-  schemaBuildNumber: 9,
-}
-const updateMissionWithNoNodeData = {
-  missionID: '',
-  name: 'No Node Data Mission (To Delete)',
-  introMessage: 'This is a new mission.',
-  versionNumber: 1,
-  initialResources: 5,
-  live: false,
-  nodeStructure: {
-    'e72aa13b-3d99-406a-a435-b0f5f2e31873': {},
-  },
-  schemaBuildNumber: 5,
-}
-const correctUpdateTestMission = {
-  missionID: '',
-  name: 'Updated Test Mission (To Delete)',
-  introMessage: 'This is a new mission.',
-  versionNumber: 1,
-  live: false,
-  initialResources: 5,
-  nodeStructure: {
-    '7e6e3ddd-53be-40b1-881e-945cd6891425': {},
-  },
-  nodeData: [
-    {
-      nodeID: '7e6e3ddd-53be-40b1-881e-945cd6891425',
-      name: 'Test Node',
-      color: '#ffffff',
-      description: 'This is a new node.',
-      preExecutionText: 'Node has not been executed.',
-      depthPadding: 0,
-      executable: false,
-      device: false,
-      actions: [
-        {
-          actionID: '5a3acf01-7ea6-48c5-bff8-155233dcf46c',
-          name: 'Destroy',
-          description: 'This will destroy.',
-          processTime: 3000,
-          successChance: 0.6,
-          resourceCost: 1,
-          postExecutionSuccessText:
-            'Destroy was performed successfully on Test Node.',
-          postExecutionFailureText:
-            'Destroy was performed unsuccessfully on Test Node.',
-          scripts: [
-            {
-              label: 'Test-Command-Script: "test"',
-              description: 'Used for unit test.',
-              scriptName: 'TestCommandScript',
-              originalPath: 'test/test_command_script',
+              targetEnvironmentVersion: '0.1',
+              targetId: '',
               args: {},
             },
           ],
@@ -218,12 +86,141 @@ const correctUpdateTestMission = {
       ],
     },
   ],
-  schemaBuildNumber: 9,
+}
+const updateMissionWithNoMissionId: TCommonMissionJson = {
+  name: 'Updated No Node Data (To Delete)',
+  introMessage: 'This is a new mission.',
+  versionNumber: 1,
+  initialResources: 5,
+  seed: Mission.DEFAULT_PROPERTIES.seed,
+  nodeStructure: {
+    'e72aa13b-3d99-406a-a435-b0f5f2e31873': {},
+  },
+  nodeData: [
+    {
+      structureKey: 'e72aa13b-3d99-406a-a435-b0f5f2e31873',
+      name: 'Test Node',
+      color: '#ffffff',
+      description: 'This is a new node.',
+      preExecutionText: 'Node has not been executed.',
+      depthPadding: 0,
+      executable: false,
+      device: false,
+      actions: [
+        {
+          name: 'Destroy',
+          description: 'This will destroy.',
+          processTime: 3000,
+          successChance: 0.6,
+          resourceCost: 1,
+          postExecutionSuccessText:
+            'Destroy was performed successfully on Test Node.',
+          postExecutionFailureText:
+            'Destroy was performed unsuccessfully on Test Node.',
+          effects: [],
+        },
+      ],
+    },
+  ],
+}
+const updateMissionWithNoNodeStructure: Omit<
+  TCommonMissionJson,
+  'nodeStructure'
+> = {
+  _id: '',
+  name: 'Update No Node Structure (To Delete)',
+  introMessage: 'This is a new mission.',
+  versionNumber: 1,
+  initialResources: 5,
+  seed: Mission.DEFAULT_PROPERTIES.seed,
+  nodeData: [
+    {
+      structureKey: 'e72aa13b-3d99-406a-a435-b0f5f2e31873',
+      name: 'Test Node',
+      color: '#ffffff',
+      description: 'This is a new node.',
+      preExecutionText: 'Node has not been executed.',
+      depthPadding: 0,
+      executable: false,
+      device: false,
+      actions: [
+        {
+          name: 'Destroy',
+          description: 'This will destroy.',
+          processTime: 3000,
+          successChance: 0.6,
+          resourceCost: 1,
+          postExecutionSuccessText:
+            'Destroy was performed successfully on Test Node.',
+          postExecutionFailureText:
+            'Destroy was performed unsuccessfully on Test Node.',
+          effects: [],
+        },
+      ],
+    },
+  ],
+}
+const updateMissionWithNoNodeData: Omit<TCommonMissionJson, 'nodeData'> = {
+  _id: '',
+  name: 'No Node Data Mission (To Delete)',
+  introMessage: 'This is a new mission.',
+  versionNumber: 1,
+  initialResources: 5,
+  seed: Mission.DEFAULT_PROPERTIES.seed,
+  nodeStructure: {
+    'e72aa13b-3d99-406a-a435-b0f5f2e31873': {},
+  },
+}
+const correctUpdateTestMission: TCommonMissionJson = {
+  _id: '',
+  name: 'Updated Test Mission (To Delete)',
+  introMessage: 'This is a new mission.',
+  versionNumber: 1,
+  seed: Mission.DEFAULT_PROPERTIES.seed,
+  initialResources: 5,
+  nodeStructure: {
+    '7e6e3ddd-53be-40b1-881e-945cd6891425': {},
+  },
+  nodeData: [
+    {
+      structureKey: '7e6e3ddd-53be-40b1-881e-945cd6891425',
+      name: 'Test Node',
+      color: '#ffffff',
+      description: 'This is a new node.',
+      preExecutionText: 'Node has not been executed.',
+      depthPadding: 0,
+      executable: false,
+      device: false,
+      actions: [
+        {
+          name: 'Destroy',
+          description: 'This will destroy.',
+          processTime: 3000,
+          successChance: 0.6,
+          resourceCost: 1,
+          postExecutionSuccessText:
+            'Destroy was performed successfully on Test Node.',
+          postExecutionFailureText:
+            'Destroy was performed unsuccessfully on Test Node.',
+          effects: [
+            {
+              name: 'test',
+              description: 'Used for unit test.',
+              targetEnvironmentVersion: '0.1',
+              targetId: '',
+              args: {},
+            },
+          ],
+        },
+      ],
+    },
+  ],
 }
 const correctUser: { user: TCommonUserJson } = {
   user: {
+    _id: new mongoose.Types.ObjectId().toHexString(),
     username: 'test23',
-    roleId: UserRole.AVAILABLE_ROLES.student._id,
+    accessId: UserAccess.AVAILABLE_ACCESSES.student._id,
     expressPermissionIds: [],
     firstName: 'Test',
     lastName: 'User',
@@ -233,8 +230,9 @@ const correctUser: { user: TCommonUserJson } = {
 }
 let newCorrectUser: { user: TCommonUserJson } = {
   user: {
+    _id: new mongoose.Types.ObjectId().toHexString(),
     username: 'test24',
-    roleId: UserRole.AVAILABLE_ROLES.student._id,
+    accessId: UserAccess.AVAILABLE_ACCESSES.student._id,
     expressPermissionIds: [],
     firstName: 'Test',
     lastName: 'User',
@@ -244,8 +242,9 @@ let newCorrectUser: { user: TCommonUserJson } = {
 }
 const userWithNoPassword: { user: TCommonUserJson } = {
   user: {
+    _id: new mongoose.Types.ObjectId().toHexString(),
     username: 'test23',
-    roleId: UserRole.AVAILABLE_ROLES.student._id,
+    accessId: UserAccess.AVAILABLE_ACCESSES.student._id,
     expressPermissionIds: [],
     firstName: 'Test',
     lastName: 'User',
@@ -271,14 +270,14 @@ before(async function () {
       // certain API routes require authentication
       // for access
       let loginResponse = await agent
-        .post('/api/v1/users/login')
+        .post('/api/v1/logins/')
         .send(userCredentials)
       expect(loginResponse).to.have.status(200)
 
-      // Gets the missionID and missionName of the mission
+      // Gets the mission's ID and missionName of the mission
       let missionResponse = await agent.get('/api/v1/missions/')
       expect(missionResponse).to.have.status(200)
-      missionID = missionResponse.body[0].missionID
+      missionId = missionResponse.body[0]._id
     } else {
       throw new Error(
         'Database is not using "metis-test." Please make sure the test database is running.',
@@ -312,19 +311,17 @@ describe('Export/Import File Tests', function () {
 
   it('User should be logged in as an admin to access the import and/or export API', async function () {
     try {
-      let response = await agent.get('/api/v1/users/session')
-      expect(response.body.user.roleID).to.equal(permittedUserRole)
+      let response = await agent.get('/api/v1/logins/')
+      expect(response.body.user.accessId).to.equal(permittedUserAccess)
     } catch (error: any) {
       testLogger.error(error)
       throw error
     }
   })
 
-  it('Calling the export route with the correct name and missionID should return a successful (200) response', async function () {
+  it('Calling the export route with the correct name and "_id" should return a successful (200) response', async function () {
     try {
-      let response = await agent
-        .get(`/api/v1/missions/export/`)
-        .query({ missionID: missionID })
+      let response = await agent.get(`/api/v1/missions/${missionId}/export/`)
       expect(response).to.have.status(200)
     } catch (error: any) {
       testLogger.error(error)
@@ -332,9 +329,9 @@ describe('Export/Import File Tests', function () {
     }
   })
 
-  it('Calling the export route on the API without a missionID as a query should return a bad request (400) response', async function () {
+  it('Calling the export route on the API without a "_id" as a query should return a bad request (400) response', async function () {
     try {
-      let response = await agent.get(`/api/v1/missions/export/`).query({})
+      let response = await agent.get(`/api/v1/missions/''/export/`)
       expect(response).to.have.status(400)
     } catch (error: any) {
       testLogger.error(error)
@@ -342,11 +339,11 @@ describe('Export/Import File Tests', function () {
     }
   })
 
-  it('Calling the export route on the API with a missionID that does not exist should return a not found (404) response', async function () {
+  it('Calling the export route on the API with a "_id" that does not exist should return a not found (404) response', async function () {
     try {
-      let response = await agent
-        .get(`/api/v1/missions/export/`)
-        .query({ missionID: '65328d4c978db2d9540048eb' })
+      let response = await agent.get(
+        `/api/v1/missions/65328d4c978db2d9540048eb/export/`,
+      )
       expect(response).to.have.status(404)
     } catch (error: any) {
       testLogger.error(error)
@@ -614,13 +611,13 @@ describe('Export/Import File Tests', function () {
 describe('API Mission Routes', function () {
   // Stores all the missions that were in
   // the database before the tests were run
-  let createdMissionIDArray: Array<string> = []
+  let createdMissionIdArray: string[] = []
 
   it('User should be logged in as an admin to be able to post missions to the database via the API', async function () {
     try {
-      let response = await agent.get('/api/v1/users/session')
+      let response = await agent.get('/api/v1/logins/')
 
-      expect(response.body.user.roleID).to.equal(permittedUserRole)
+      expect(response.body.user.accessId).to.equal(permittedUserAccess)
     } catch (error: any) {
       testLogger.error(error)
       throw error
@@ -651,11 +648,9 @@ describe('API Mission Routes', function () {
     }
   })
 
-  it('Getting a mission where the "missionID" is not of type "objectId" in the query of the request should return a bad request (400) response', async function () {
+  it('Getting a mission where the "_id" is not of type "objectId" in the query of the request should return a bad request (400) response', async function () {
     try {
-      let response = await agent.get(`/api/v1/missions`).query({
-        missionID: 2,
-      })
+      let response = await agent.get(`/api/v1/missions/${2}`)
 
       expect(response).to.have.status(400)
     } catch (error: any) {
@@ -664,9 +659,9 @@ describe('API Mission Routes', function () {
     }
   })
 
-  it('Getting a mission with all the correct properties in the query of the request should result in a successful (200) response', async function () {
+  it('Getting a mission with all the correct properties in the params of the request should result in a successful (200) response', async function () {
     try {
-      let response = await agent.get(`/api/v1/missions?missionID=${missionID}`)
+      let response = await agent.get(`/api/v1/missions/${missionId}`)
 
       expect(response).to.have.status(200)
     } catch (error: any) {
@@ -708,19 +703,19 @@ describe('API Mission Routes', function () {
         .send(testMission)
 
       expect(response).to.have.status(200)
-      createdMissionIDArray.push(response.body.missionID)
+      createdMissionIdArray.push(response.body._id)
     } catch (error: any) {
       testLogger.error(error)
       throw error
     }
   })
 
-  it('Updating a mission with (a) missing property/properties that is required (missionID) in the body of the request should return a bad request (400) response', async function () {
+  it('Updating a mission with (a) missing property/properties that is required (_id) in the body of the request should return a bad request (400) response', async function () {
     try {
       let response = await agent
         .put('/api/v1/missions/')
         .set('Content-Type', 'application/json')
-        .send(updateMissionWithNoMissionID)
+        .send(updateMissionWithNoMissionId)
 
       expect(response).to.have.status(400)
     } catch (error: any) {
@@ -730,8 +725,8 @@ describe('API Mission Routes', function () {
   })
 
   it('Updating a mission where the nodeStructure is defined, but the nodeData is undefined in the body of the request should return an internal server error (500) response', async function () {
-    missionID = createdMissionIDArray[0]
-    updateMissionWithNoNodeData.missionID = missionID
+    missionId = createdMissionIdArray[0]
+    updateMissionWithNoNodeData._id = missionId
 
     try {
       let response = await agent
@@ -747,8 +742,8 @@ describe('API Mission Routes', function () {
   })
 
   it('Updating a mission where the nodeData is defined, but the nodeStructure is undefined in the body of the request should return an internal server error (500) response', async function () {
-    missionID = createdMissionIDArray[0]
-    updateMissionWithNoNodeStructure.missionID = missionID
+    missionId = createdMissionIdArray[0]
+    updateMissionWithNoNodeStructure._id = missionId
 
     try {
       let response = await agent
@@ -764,8 +759,8 @@ describe('API Mission Routes', function () {
   })
 
   it('Updating a mission with all the correct properties in the body of the request should return a successful (200) response', async function () {
-    missionID = createdMissionIDArray[0]
-    correctUpdateTestMission.missionID = missionID
+    missionId = createdMissionIdArray[0]
+    correctUpdateTestMission._id = missionId
 
     try {
       let response = await agent
@@ -795,13 +790,13 @@ describe('API Mission Routes', function () {
   })
 
   it('Copying a mission with all the correct properties in the body of the request should return a successful (200) response', async function () {
-    missionID = createdMissionIDArray[0]
+    missionId = createdMissionIdArray[0]
 
     try {
       let response = await agent
         .put('/api/v1/missions/copy/')
         .set('Content-Type', 'application/json')
-        .send({ copyName: 'Copied Mission', originalID: missionID })
+        .send({ copyName: 'Copied Mission', originalId: missionId })
 
       expect(response).to.have.status(200)
     } catch (error: any) {
@@ -810,9 +805,9 @@ describe('API Mission Routes', function () {
     }
   })
 
-  it('Deleting a mission with the wrong type for the missionID in the query of the request should return a bad request (400) response', async function () {
+  it('Deleting a mission with the wrong type for the "_id" in the params of the request should return a bad request (400) response', async function () {
     try {
-      let response = await agent.delete(`/api/v1/missions?missionID=${2}`)
+      let response = await agent.delete(`/api/v1/missions/${2}`)
 
       expect(response).to.have.status(400)
     } catch (error: any) {
@@ -821,13 +816,11 @@ describe('API Mission Routes', function () {
     }
   })
 
-  it('Deleting a mission with all the correct properties in the query of the request should return a successful (200) response', async function () {
-    missionID = createdMissionIDArray[0]
+  it('Deleting a mission with all the correct properties in the params of the request should return a successful (200) response', async function () {
+    missionId = createdMissionIdArray[0]
 
     try {
-      let response = await agent.delete(
-        `/api/v1/missions?missionID=${missionID}`,
-      )
+      let response = await agent.delete(`/api/v1/missions/${missionId}`)
 
       expect(response).to.have.status(200)
     } catch (error: any) {
@@ -1177,13 +1170,13 @@ describe('Request Params Validation', function () {
 // to the database to be stored.
 describe('Mission Schema Validation', function () {
   it('Creating a mission with all the correct properties should save the mission to the database', async function () {
-    // Remove the schemaBuildNumber from the mission data
-    const { schemaBuildNumber, ...missionData } = testMission
+    // Grab the mission data
+    const missionData = testMission
     // Create a new mission model
     let mission = new MissionModel(missionData)
-    // Grab the missionID that is auto-generated
+    // Grab the "_id" that is auto-generated
     // to use for the next test
-    missionID = mission.missionID
+    missionId = mission._id
 
     try {
       // Save the mission to the database
@@ -1197,9 +1190,9 @@ describe('Mission Schema Validation', function () {
       // The retrieved mission should have the same
       // versionNumber as the test mission
       expect(savedMission.versionNumber).to.equal(testMission.versionNumber)
-      // The retrieved mission's live property should
-      // be the same as the test mission's live property
-      expect(savedMission.live).to.equal(testMission.live)
+      // The retrieved mission's seed property should
+      // be the same as the test mission's seed property
+      expect(savedMission.seed).to.equal(testMission.seed)
       // The retrieved mission should have the same
       // amount of initialResources as the test mission
       expect(savedMission.initialResources).to.equal(
@@ -1213,7 +1206,7 @@ describe('Mission Schema Validation', function () {
       // The retrieved mission should have the same
       // nodeData as the test mission
       expect(savedMission.nodeData[0].nodeID).to.equal(
-        testMission.nodeData[0].nodeID,
+        testMission.nodeData[0]._id,
       )
     } catch (error: any) {
       // Logs the error
@@ -1225,10 +1218,10 @@ describe('Mission Schema Validation', function () {
 
   it('Querying for the newly created mission should return the correct mission', async function () {
     try {
-      // Query for the mission with the missionID
+      // Query for the mission with the "_id"
       // set from the previous test
       let retrievedMission = await MissionModel.findOne({
-        missionID: missionID,
+        _id: missionId,
       }).exec()
       // The retrieved mission should have the same
       // name as the test mission
@@ -1239,9 +1232,9 @@ describe('Mission Schema Validation', function () {
       // The retrieved mission should have the same
       // versionNumber as the test mission
       expect(retrievedMission.versionNumber).to.equal(testMission.versionNumber)
-      // The retrieved mission's live property should
-      // be the same as the test mission's live property
-      expect(retrievedMission.live).to.equal(testMission.live)
+      // The retrieved mission's seed property should
+      // be the same as the test mission's seed property
+      expect(retrievedMission.seed).to.equal(testMission.seed)
       // The retrieved mission should have the same
       // amount of initialResources as the test mission
       expect(retrievedMission.initialResources).to.equal(
@@ -1255,7 +1248,7 @@ describe('Mission Schema Validation', function () {
       // The retrieved mission should have the same
       // nodeData as the test mission
       expect(retrievedMission.nodeData[0].nodeID).to.equal(
-        testMission.nodeData[0].nodeID,
+        testMission.nodeData[0]._id,
       )
     } catch (error: any) {
       // Logs the error
@@ -1266,8 +1259,8 @@ describe('Mission Schema Validation', function () {
   })
 
   it('Creating a mission with a mission-node that has a color that is not a valid hex color code ("#fffffg") should result in a validation error', async function () {
-    // Remove the schemaBuildNumber from the mission data
-    const { schemaBuildNumber, ...missionData } = testMission
+    // Grab the mission data
+    const missionData = testMission
     // Set the color of the first mission-node to an invalid hex color code
     missionData.nodeData[0].color = '#fffffg'
     // Create a new mission model
@@ -1288,8 +1281,8 @@ describe('Mission Schema Validation', function () {
   })
 
   it('Creating a mission with a mission-node that has a color that is not a valid hex color code ("ffffff") should result in an internal server error (500) response', async function () {
-    // Remove the schemaBuildNumber from the mission data
-    const { schemaBuildNumber, ...missionData } = testMission
+    // Grab the mission data
+    const missionData = testMission
     // Set the color of the first mission-node to an invalid hex color code
     missionData.nodeData[0].color = 'ffffff'
     // Create a new mission model
@@ -1310,8 +1303,8 @@ describe('Mission Schema Validation', function () {
   })
 
   it('Creating a mission with a mission-node that has a color that is not a valid hex color code ("#fffffff") should result in an internal server error (500) response', async function () {
-    // Remove the schemaBuildNumber from the mission data
-    const { schemaBuildNumber, ...missionData } = testMission
+    // Grab the mission data
+    const missionData = testMission
     // Set the color of the first mission-node to an invalid hex color code
     missionData.nodeData[0].color = '#fffffff'
     // Create a new mission model
@@ -1332,8 +1325,8 @@ describe('Mission Schema Validation', function () {
   })
 
   it('Creating a mission with a mission-node that has a color that is not a valid hex color code ("white") should result in an internal server error (500) response', async function () {
-    // Remove the schemaBuildNumber from the mission data
-    const { schemaBuildNumber, ...missionData } = testMission
+    // Grab the mission data
+    const missionData = testMission
     // Set the color of the first mission-node to an invalid hex color code
     missionData.nodeData[0].color = 'white'
     // Create a new mission model
@@ -1354,8 +1347,8 @@ describe('Mission Schema Validation', function () {
   })
 
   it('Creating a mission with a mission-node that has a color that is not a valid hex color code ("#white") should result in an internal server error (500) response', async function () {
-    // Remove the schemaBuildNumber from the mission data
-    const { schemaBuildNumber, ...missionData } = testMission
+    // Grab the mission data
+    const missionData = testMission
     // Set the color of the first mission-node to an invalid hex color code
     missionData.nodeData[0].color = '#white'
     // Create a new mission model
@@ -1376,8 +1369,8 @@ describe('Mission Schema Validation', function () {
   })
 
   it('Creating a mission with a mission-node that has a color that is not a valid hex color code ("asfjsdjkf #ffffff sadlkfsld") should result in an internal server error (500) response', async function () {
-    // Remove the schemaBuildNumber from the mission data
-    const { schemaBuildNumber, ...missionData } = testMission
+    // Grab the mission data
+    const missionData = testMission
     // Set the color of the first mission-node to an invalid hex color code
     missionData.nodeData[0].color = 'asfjsdjkf #ffffff sadlkfsld'
     // Create a new mission model
@@ -1398,8 +1391,8 @@ describe('Mission Schema Validation', function () {
   })
 
   it('Creating a mission with a mission-node that has a color that is not a valid hex color code ("asfjsdjkf#ffffffsadlkfsld") should result in an internal server error (500) response', async function () {
-    // Remove the schemaBuildNumber from the mission data
-    const { schemaBuildNumber, ...missionData } = testMission
+    // Grab the mission data
+    const missionData = testMission
     // Set the color of the first mission-node to an invalid hex color code
     missionData.nodeData[0].color = 'asfjsdjkf#ffffffsadlkfsld'
     // Create a new mission model
@@ -1420,8 +1413,8 @@ describe('Mission Schema Validation', function () {
   })
 
   it('Creating a mission with a mission-node that has a color that is not a valid hex color code ("#6545169") should result in an internal server error (500) response', async function () {
-    // Remove the schemaBuildNumber from the mission data
-    const { schemaBuildNumber, ...missionData } = testMission
+    // Grab the mission data
+    const missionData = testMission
     // Set the color of the first mission-node to an invalid hex color code
     missionData.nodeData[0].color = '#6545169'
     // Create a new mission model
@@ -1442,8 +1435,8 @@ describe('Mission Schema Validation', function () {
   })
 
   it('Creating a mission with a mission-node that has a color that is not a valid hex color code ("#abcdef99") should result in an internal server error (500) response', async function () {
-    // Remove the schemaBuildNumber from the mission data
-    const { schemaBuildNumber, ...missionData } = testMission
+    // Grab the mission data
+    const missionData = testMission
     // Set the color of the first mission-node to an invalid hex color code
     missionData.nodeData[0].color = '#abcdef99'
     // Create a new mission model
@@ -1464,8 +1457,8 @@ describe('Mission Schema Validation', function () {
   })
 
   it('Creating a mission with a mission-node that has a color that is not a valid hex color code ("abcdef") should result in an internal server error (500) response', async function () {
-    // Remove the schemaBuildNumber from the mission data
-    const { schemaBuildNumber, ...missionData } = testMission
+    // Grab the mission data
+    const missionData = testMission
     // Set the color of the first mission-node to an invalid hex color code
     missionData.nodeData[0].color = 'abcdef'
     // Create a new mission model
@@ -1486,8 +1479,8 @@ describe('Mission Schema Validation', function () {
   })
 
   it('Creating a mission with a mission-node that has a color that is not a valid hex color code ("fff") should result in an internal server error (500) response', async function () {
-    // Remove the schemaBuildNumber from the mission data
-    const { schemaBuildNumber, ...missionData } = testMission
+    // Grab the mission data
+    const missionData = testMission
     // Set the color of the first mission-node to an invalid hex color code
     missionData.nodeData[0].color = 'fff'
     // Create a new mission model
@@ -1508,8 +1501,8 @@ describe('Mission Schema Validation', function () {
   })
 
   it('Creating a mission with a mission-node that has a color that is not a valid hex color code ("#fff") should result in an internal server error (500) response', async function () {
-    // Remove the schemaBuildNumber from the mission data
-    const { schemaBuildNumber, ...missionData } = testMission
+    // Grab the mission data
+    const missionData = testMission
     // Set the color of the first mission-node to an invalid hex color code
     missionData.nodeData[0].color = '#fff'
     // Create a new mission model
@@ -1530,8 +1523,8 @@ describe('Mission Schema Validation', function () {
   })
 
   it('Creating a mission with a mission-node that has a color that is not a valid hex color code ("#*&@^%!") should result in an internal server error (500) response', async function () {
-    // Remove the schemaBuildNumber from the mission data
-    const { schemaBuildNumber, ...missionData } = testMission
+    // Grab the mission data
+    const missionData = testMission
     // Set the color of the first mission-node to an invalid hex color code
     missionData.nodeData[0].color = '#*&@^%!'
     // Create a new mission model
@@ -1552,8 +1545,8 @@ describe('Mission Schema Validation', function () {
   })
 
   it('Creating a mission with a mission-node that has a color that is not a valid hex color code ("#+89496") should result in an internal server error (500) response', async function () {
-    // Remove the schemaBuildNumber from the mission data
-    const { schemaBuildNumber, ...missionData } = testMission
+    // Grab the mission data
+    const missionData = testMission
     // Set the color of the first mission-node to an invalid hex color code
     missionData.nodeData[0].color = '#+89496'
     // Create a new mission model
@@ -1574,8 +1567,8 @@ describe('Mission Schema Validation', function () {
   })
 
   it('Creating a mission with a mission-node that has a color that is not a valid hex color code ("#89a96+") should result in an internal server error (500) response', async function () {
-    // Remove the schemaBuildNumber from the mission data
-    const { schemaBuildNumber, ...missionData } = testMission
+    // Grab the mission data
+    const missionData = testMission
     // Set the color of the first mission-node to an invalid hex color code
     missionData.nodeData[0].color = '#89a96+'
     // Create a new mission model
@@ -1596,8 +1589,8 @@ describe('Mission Schema Validation', function () {
   })
 
   it('Creating a mission with a mission-node that has a color that is not a valid hex color code ("#8996+") should result in an internal server error (500) response', async function () {
-    // Remove the schemaBuildNumber from the mission data
-    const { schemaBuildNumber, ...missionData } = testMission
+    // Grab the mission data
+    const missionData = testMission
     // Set the color of the first mission-node to an invalid hex color code
     missionData.nodeData[0].color = '#8996+'
     // Create a new mission model
@@ -1618,8 +1611,8 @@ describe('Mission Schema Validation', function () {
   })
 
   it('Creating a mission with a mission-node that has a color that is not a valid hex color code ("#896+") should result in an internal server error (500) response', async function () {
-    // Remove the schemaBuildNumber from the mission data
-    const { schemaBuildNumber, ...missionData } = testMission
+    // Grab the mission data
+    const missionData = testMission
     // Set the color of the first mission-node to an invalid hex color code
     missionData.nodeData[0].color = '#896+'
     // Create a new mission model
@@ -1640,8 +1633,8 @@ describe('Mission Schema Validation', function () {
   })
 
   it('Creating a mission with a mission-node that has a color that is a valid hex color code ("#acde58") should result in a successful (200) response', async function () {
-    // Remove the schemaBuildNumber from the mission data
-    const { schemaBuildNumber, ...missionData } = testMission
+    // Grab the mission data
+    const missionData = testMission
     // Set the color of the first mission-node to an invalid hex color code
     missionData.nodeData[0].color = '#acde58'
     // Create a new mission model
@@ -1660,8 +1653,8 @@ describe('Mission Schema Validation', function () {
   })
 
   it('Creating a mission with HTMl tags that are not allowed ("<script></script>") in the mission should result in those tags being removed from the mission', async function () {
-    // Remove the schemaBuildNumber from the mission data
-    const { schemaBuildNumber, ...missionData } = testMission
+    // Grab the mission data
+    const missionData = testMission
     // Set the introMessage of the mission to a string with a "script" tag
     missionData.introMessage =
       "<p><strong>Enter</strong> <em>your</em> <u>overview</u> <a href='https://google.com' rel='noopener noreferrer' target='_blank'>message</a> here.</p><script>function consoleLog() {console.log('Successful script execution.')} consoleLog()</script>"
@@ -1690,8 +1683,8 @@ describe('Mission Schema Validation', function () {
   })
 
   it('Creating a mission with HTMl tags that are not allowed ("<style></style>") in the mission should result in those tags being removed from the mission', async function () {
-    // Remove the schemaBuildNumber from the mission data
-    const { schemaBuildNumber, ...missionData } = testMission
+    // Grab the mission data
+    const missionData = testMission
     // Set the introMessage of the mission to a string with a "style" tag
     missionData.introMessage =
       "<p><strong>Enter</strong> <em>your</em> <u>overview</u> <a href='https://google.com' rel='noopener noreferrer' target='_blank'>message</a> here.</p><style>.Content {font-size: 25px;}</style>"
@@ -1713,8 +1706,8 @@ describe('Mission Schema Validation', function () {
   })
 
   it('Creating a mission with HTMl tags that are not allowed ("<iframe></iframe>") in the mission should result in those tags being removed from the mission', async function () {
-    // Remove the schemaBuildNumber from the mission data
-    const { schemaBuildNumber, ...missionData } = testMission
+    // Grab the mission data
+    const missionData = testMission
     // Set the introMessage of the mission to a string with an "iframe" tag
     missionData.introMessage = `<p><strong>Enter</strong> <em>your</em> <u>overview</u> <a href='https://google.com' rel='noopener noreferrer' target='_blank'>message</a> here.</p><iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d13026964.31028058!2d-106.25408262379291!3d37.1429207037123!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x54eab584e432360b%3A0x1c3bb99243deb742!2sUnited%20States!5e0!3m2!1sen!2sus!4v1695930378392!5m2!1sen!2sus" width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>`
     // Create a new mission model
@@ -1735,8 +1728,8 @@ describe('Mission Schema Validation', function () {
   })
 
   it('Creating a mission with HTMl tags that are not allowed ("<input />") in the mission should result in those tags being removed from the mission', async function () {
-    // Remove the schemaBuildNumber from the mission data
-    const { schemaBuildNumber, ...missionData } = testMission
+    // Grab the mission data
+    const missionData = testMission
     // Set the introMessage of the mission to a string with an "input" tag
     missionData.introMessage = `<p><strong>Enter</strong> <em>your</em> <u>overview</u> <a href='https://google.com' rel='noopener noreferrer' target='_blank'>message</a> here.</p><input type="text" id="fname" name="fname" value="John">`
     // Create a new mission model
@@ -1762,9 +1755,9 @@ describe('Mission Schema Validation', function () {
 describe('User API Routes', function () {
   it('User should be logged in as an admin to be able to create users via the API', async function () {
     try {
-      let response = await agent.get('/api/v1/users/session')
+      let response = await agent.get('/api/v1/logins/')
 
-      expect(response.body.user.roleID).to.equal(permittedUserRole)
+      expect(response.body.user.accessId).to.equal(permittedUserAccess)
     } catch (error: any) {
       testLogger.error(error)
       throw error
@@ -1821,9 +1814,7 @@ describe('User API Routes', function () {
 
   it('Deleting a mission with all the correct properties in the query of the request should return a successful (200) response', async function () {
     try {
-      let response = await agent.delete(
-        `/api/v1/users?userID=${correctUser.user.username}`,
-      )
+      let response = await agent.delete(`/api/v1/users/${correctUser.user._id}`)
 
       expect(response).to.have.status(200)
     } catch (error: any) {
@@ -1856,8 +1847,9 @@ describe('User Schema Validation', function () {
       // Saves the user to the database
       let savedUser = await user.save()
 
-      expect(savedUser.userID).to.equal(newCorrectUser.user.username)
-      expect(savedUser.roleID).to.equal(newCorrectUser.user.roleId)
+      expect(savedUser._id).to.equal(newCorrectUser.user._id)
+      expect(savedUser.username).to.equal(newCorrectUser.user.username)
+      expect(savedUser.accessId).to.equal(newCorrectUser.user.accessId)
       expect(savedUser.firstName).to.equal(newCorrectUser.user.firstName)
       expect(savedUser.lastName).to.equal(newCorrectUser.user.lastName)
       hashedPassword = savedUser.password
@@ -1875,11 +1867,12 @@ describe('User Schema Validation', function () {
   it('Querying for the newly created user should return the correct user', async function () {
     try {
       let retrievedUser = await UserModel.findOne({
-        userID: newCorrectUser.user.username,
+        _id: newCorrectUser.user._id,
       }).exec()
 
-      expect(retrievedUser.userID).to.equal(newCorrectUser.user.username)
-      expect(retrievedUser.roleID).to.equal(newCorrectUser.user.roleId)
+      expect(retrievedUser._id).to.equal(newCorrectUser.user._id)
+      expect(retrievedUser.username).to.equal(newCorrectUser.user.username)
+      expect(retrievedUser.accessId).to.equal(newCorrectUser.user.accessId)
       expect(retrievedUser.firstName).to.equal(newCorrectUser.user.firstName)
       expect(retrievedUser.lastName).to.equal(newCorrectUser.user.lastName)
       let isHashedPassword: boolean = hashedPasswordExpression.test(
@@ -1897,7 +1890,7 @@ describe('User Schema Validation', function () {
     try {
       let savedUser = await UserModel.updateOne(
         {
-          userID: newCorrectUser.user.username,
+          _id: newCorrectUser.user._id,
         },
         {
           firstName: 'updatedFirstName',
@@ -1917,11 +1910,12 @@ describe('User Schema Validation', function () {
   it('Querying for the updated user should return the correct user', async function () {
     try {
       let retrievedUser = await UserModel.findOne({
-        userID: newCorrectUser.user.username,
+        _id: newCorrectUser.user._id,
       }).exec()
 
-      expect(retrievedUser.userID).to.equal(newCorrectUser.user.username)
-      expect(retrievedUser.roleID).to.equal(newCorrectUser.user.roleId)
+      expect(retrievedUser._id).to.equal(newCorrectUser.user._id)
+      expect(retrievedUser.username).to.equal(newCorrectUser.user.username)
+      expect(retrievedUser.accessId).to.equal(newCorrectUser.user.accessId)
       expect(retrievedUser.firstName).to.equal('updatedFirstName')
       expect(retrievedUser.lastName).to.equal('updatedLastName')
       let isHashedPassword: boolean = hashedPasswordExpression.test(

@@ -163,7 +163,7 @@ export default function EditUserEntry({
         errorMessage={usernameErrorMessage}
         placeholder='Enter a username here...'
       />
-      <DetailLocked label='Role' stateValue={user.role.name} />
+      <DetailLocked label='Access Level' stateValue={user.access.name} />
       <DetailString
         fieldType='required'
         handleOnBlur={handleFirstNameError}

@@ -142,62 +142,62 @@ export default class UserPermission implements TUserPermission {
     missions_read: new UserPermission(
       'missions_read',
       'Read Missions',
-      'Allows the user in session to retrieve missions from the database.',
+      'Allows the user currently logged in to retrieve missions from the database.',
     ),
     missions_write: new UserPermission(
       'missions_write',
       'Write Missions',
-      'Allows the user in session to create, update, and delete missions in the database.',
+      'Allows the user currently logged in to create, update, and delete missions in the database.',
     ),
     users_read: new UserPermission(
       'users_read',
       'Read Users',
-      'Allows the user in session to retrieve other users from the database.',
+      'Allows the user currently logged in to retrieve other users from the database.',
     ),
     users_write: new UserPermission(
       'users_write',
       'Write Users',
-      'Allows the user in session to create, update, and delete other users in the database.',
+      'Allows the user currently logged in to create, update, and delete other users in the database.',
     ),
     users_read_students: new UserPermission(
       'users_read_students',
       'Read Student Users',
-      'Allows the user in session to retrieve student users only from the database.',
+      'Allows the user currently logged in to retrieve student users only from the database.',
     ),
     users_write_students: new UserPermission(
       'users_write_students',
       'Write Student Users',
-      'Allows the user in session to create, update, and delete student users only in the database.',
+      'Allows the user currently logged in to create, update, and delete student users only in the database.',
     ),
     games_read: new UserPermission(
       'games_read',
       'Read Games',
-      'Allows the user in session to retrieve games from the database.',
+      'Allows the user currently logged in to retrieve games from the database.',
     ),
     games_write: new UserPermission(
       'games_write',
       'Write Games',
-      'Allows the user in session to create, update, and delete games in the database.',
+      'Allows the user currently logged in to create, update, and delete games in the database.',
     ),
     games_join: new UserPermission(
       'games_join',
       'Join Games',
-      'Allows the user in session to join games.',
+      'Allows the user currently logged in to join games.',
     ),
     games_join_participant: new UserPermission(
       'games_join_participant',
       'Join Games (Participant)',
-      'Allows the user in session to join games as a participant.',
+      'Allows the user currently logged in to join games as a participant.',
     ),
     games_join_manager: new UserPermission(
       'games_join_manager',
       'Join Games (Manager)',
-      'Allows the user in session to join games as a manager.',
+      'Allows the user currently logged in to join games as a manager.',
     ),
     games_join_observer: new UserPermission(
       'games_join_observer',
       'Join Games (Observer)',
-      'Allows the user in session to join games as an observer.',
+      'Allows the user currently logged in to join games as an observer.',
     ),
   }
 }

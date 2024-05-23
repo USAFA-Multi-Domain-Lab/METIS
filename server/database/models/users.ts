@@ -2,13 +2,13 @@ import bcryptjs from 'bcryptjs'
 import { Request } from 'express'
 import ServerUser from 'metis/server/users'
 import User, { TCommonUserJson } from 'metis/users'
+import UserAccess, { TUserAccess } from 'metis/users/accesses'
 import UserPermission, { TUserPermission } from 'metis/users/permissions'
-import UserRole, { TUserRole } from 'metis/users/roles'
 import mongoose, { Schema } from 'mongoose'
 import { StatusError } from '../../http'
 import { databaseLogger } from '../../logging'
+import Access from '../schema-types/user-access'
 import Permission from '../schema-types/user-permission'
-import Role from '../schema-types/user-role'
 
 /* -- SCHEMA VALIDATORS -- */
 
@@ -23,11 +23,11 @@ const validate_users_username = (
 }
 
 /**
- * Validates the role ID of a user.
- * @param roleId The role ID to validate.
+ * Validates the access ID of a user.
+ * @param accessId The access ID to validate.
  */
-const validate_users_roleId = (roleId: TUserRole['_id']): boolean => {
-  return UserRole.isValidRoleId(roleId)
+const validate_users_accessId = (accessId: TUserAccess['_id']): boolean => {
+  return UserAccess.isValidAccessId(accessId)
 }
 
 /**
@@ -94,10 +94,10 @@ const UserSchema = new Schema(
       trim: true,
       validate: validate_users_username,
     },
-    roleId: {
-      type: Role,
+    accessId: {
+      type: Access,
       required: true,
-      validate: validate_users_roleId,
+      validate: validate_users_accessId,
     },
     expressPermissionIds: {
       type: [Permission],
@@ -240,7 +240,7 @@ UserSchema.plugin((schema) => {
   // permissions.
   schema.query.queryForFilteredUsers = function (
     findFunctionName: 'find' | 'findOne',
-    sessionUser?: ServerUser,
+    currentUser?: ServerUser,
   ) {
     // Get projection.
     let projection = this.projection()
@@ -255,20 +255,20 @@ UserSchema.plugin((schema) => {
     // Hide deleted users.
     this.where({ deleted: false })
 
-    // Don't return the current user in
-    // session if the find function is
-    // for finding all users.
+    // Don't return the user currently
+    // logged in if the find function
+    // is for finding all users.
     if (findFunctionName === 'find') {
-      this.where({ _id: { $ne: sessionUser?._id } })
+      this.where({ _id: { $ne: currentUser?._id } })
     }
 
     // If the user can only read students, hide all users
     // that are not students.
     if (
-      sessionUser?.isAuthorized('users_read_students') &&
-      !sessionUser.isAuthorized('users_read')
+      currentUser?.isAuthorized('users_read_students') &&
+      !currentUser.isAuthorized('users_read')
     ) {
-      this.where({ roleId: { $eq: 'student' } })
+      this.where({ accessId: { $eq: 'student' } })
     }
 
     // Calls the appropriate find function.

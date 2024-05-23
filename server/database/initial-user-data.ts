@@ -3,7 +3,7 @@ import { TCommonUserJson } from 'metis/users'
 // Default student user data.
 export const studentUserData: Omit<TCommonUserJson, '_id'> = {
   username: 'student1',
-  roleId: 'student',
+  accessId: 'student',
   firstName: 'student',
   lastName: 'user',
   needsPasswordReset: false,
@@ -13,7 +13,7 @@ export const studentUserData: Omit<TCommonUserJson, '_id'> = {
 // Default instructor user data.
 export const instructorUserData: Omit<TCommonUserJson, '_id'> = {
   username: 'instructor1',
-  roleId: 'instructor',
+  accessId: 'instructor',
   firstName: 'instructor',
   lastName: 'user',
   needsPasswordReset: false,
@@ -23,7 +23,7 @@ export const instructorUserData: Omit<TCommonUserJson, '_id'> = {
 // Default admin user data.
 export const adminUserData: Omit<TCommonUserJson, '_id'> = {
   username: 'admin',
-  roleId: 'admin',
+  accessId: 'admin',
   firstName: 'admin',
   lastName: 'user',
   needsPasswordReset: false,

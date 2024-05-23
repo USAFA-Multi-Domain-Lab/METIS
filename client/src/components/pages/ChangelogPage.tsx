@@ -22,7 +22,7 @@ export default function IChangelogPage({}: IChangelogPage): JSX.Element | null {
   /* -- GLOBAL CONTEXT -- */
 
   const globalContext = useGlobalContext()
-  const [session] = globalContext.session
+  const [login] = globalContext.login
   const { beginLoading, finishLoading, handleError, navigateTo, logout } =
     globalContext.actions
 

@@ -1,7 +1,7 @@
 import { useGlobalContext } from 'src/context'
 import ClientMission from 'src/missions'
 import { compute } from 'src/toolbox'
-import { useRequireSession } from 'src/toolbox/hooks'
+import { useRequireLogin } from 'src/toolbox/hooks'
 import { SingleTypeObject } from '../../../../../shared/toolbox/objects'
 import Prompt from '../communication/Prompt'
 import ButtonSvgPanel, { TValidPanelButton } from './ButtonSvgPanel'
@@ -17,16 +17,16 @@ export default function MissionModificationPanel({
 }: TMissionModificationPanel) {
   /* -- GLOBAL CONTEXT -- */
 
-  // Require session for panel.
-  const [session] = useRequireSession()
+  // Require login for panel.
+  const [login] = useRequireLogin()
   const globalContext = useGlobalContext()
   const { navigateTo, notify, prompt, beginLoading, finishLoading } =
     globalContext.actions
 
-  /* -- SESSION-SPECIFIC LOGIC -- */
+  /* -- LOGIN-SPECIFIC LOGIC -- */
 
-  // Grab the current user from the session.
-  let { user: currentUser } = session
+  // Grab the user currently logged in.
+  let { user: currentUser } = login
 
   /* -- FUNCTIONS -- */
 

@@ -317,6 +317,6 @@ export type TGameBasicJson = {
 export type TGameState = 'unstarted' | 'started' | 'ended'
 
 /**
- * The method of joining a game.
+ * The role of a user in a game.
  */
-export type TGameJoinMethod = 'participant' | 'supervisor' | 'not-joined'
+export type TGameRole = 'participant' | 'supervisor' | 'not-joined'

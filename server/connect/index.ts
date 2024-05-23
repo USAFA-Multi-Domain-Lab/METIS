@@ -3,7 +3,7 @@ import expressWs from 'express-ws'
 import { ServerEmittedError } from 'metis/connect/errors'
 import ClientConnection from 'metis/server/connect/clients'
 import { TMetisRouterMap } from 'metis/server/http/router'
-import MetisSession from 'metis/server/sessions'
+import ServerLogin from 'metis/server/logins'
 import { WebSocket } from 'ws'
 import { server } from '..'
 import GameServer from '../games'
@@ -15,17 +15,15 @@ const routerMap: TMetisRouterMap = (
   /* ---------------------------- CONSTANTS --------------------------------- */
 
   // Track the number of messages per second.
-  const messagesPerSecond: Map<MetisSession['userId'], number> = new Map()
+  const messagesPerSecond: Map<ServerLogin['userId'], number> = new Map()
   // Track which users have exceeded the message rate limit.
-  const messageRateLimitExceeded: Map<MetisSession['userId'], boolean> =
+  const messageRateLimitExceeded: Map<ServerLogin['userId'], boolean> =
     new Map()
   // Track the time of the last message.
-  const messageTimestamps: Map<MetisSession['userId'], number> = new Map()
+  const messageTimestamps: Map<ServerLogin['userId'], number> = new Map()
   // Track when the user has exceeded the message rate limit.
-  const messageRateLimitExceededTimestamps: Map<
-    MetisSession['userId'],
-    number
-  > = new Map()
+  const messageRateLimitExceededTimestamps: Map<ServerLogin['userId'], number> =
+    new Map()
   // Set the maximum number of messages per second.
   const maxMessagesPerSecond = server.wsRateLimit
   // Set the message rate limit cooldown.
@@ -34,19 +32,17 @@ const routerMap: TMetisRouterMap = (
   /* ---------------------------- CONNECTIONS ---------------------------- */
 
   /**
-   * Establishes a web socket connection used for user and game session
+   * Establishes a web socket connection used for user and session
    * syncing between the server and the client.
    * @param socket The web socket connection.
    * @param request The request that initiated the connection.
    */
   const establishSocketConnection = (socket: WebSocket, request: Request) => {
-    let session: MetisSession | undefined = MetisSession.get(
-      request.session.userId,
-    )
+    let login: ServerLogin | undefined = ServerLogin.get(request.session.userId)
 
-    // If no session between the client and the
-    // server exists, close the connection.
-    if (session === undefined) {
+    // If no login information is found,
+    // close the connection.
+    if (login === undefined) {
       return socket.close()
     }
 
@@ -55,17 +51,17 @@ const routerMap: TMetisRouterMap = (
       request.query.disconnectExisting === 'true'
 
     // Create a client connection object
-    // with the socket and session.
-    let connection = new ClientConnection(socket, session, {
+    // with the socket and login.
+    let connection = new ClientConnection(socket, login, {
       disconnectExisting,
     })
 
-    // If the session indicates that the user is
+    // If the login information indicates that the user is
     // currently in a game, find the game and update
     // the connection for that participant.
-    if (session.gameId !== null) {
+    if (login.gameId !== null) {
       // Get the game.
-      let game = GameServer.get(session.gameId)
+      let game = GameServer.get(login.gameId)
 
       // If the game exists, update the connection.
       if (game !== undefined) {
@@ -75,31 +71,31 @@ const routerMap: TMetisRouterMap = (
 
     // Set the message rate limit.
     socket.on('message', () => {
-      // If no session between the client and the
-      // server exists, close the connection.
-      if (session === undefined) {
+      // If no login information is found,
+      // close the connection
+      if (login === undefined) {
         return socket.close()
       }
 
       // Track the number of messages per second.
-      let count: number = messagesPerSecond.get(session.userId) ?? 0
-      messagesPerSecond.set(session.userId, count + 1)
+      let count: number = messagesPerSecond.get(login.userId) ?? 0
+      messagesPerSecond.set(login.userId, count + 1)
 
       // Check if the user has exceeded the message rate limit.
       let hasExceededRateLimit: boolean =
-        messageRateLimitExceeded.get(session.userId) ?? false
-      messageRateLimitExceeded.set(session.userId, hasExceededRateLimit)
+        messageRateLimitExceeded.get(login.userId) ?? false
+      messageRateLimitExceeded.set(login.userId, hasExceededRateLimit)
 
       // Track the time of the last message.
       let lastMessageTimestamp: number =
-        messageTimestamps.get(session.userId) ?? 0
-      messageTimestamps.set(session.userId, Date.now())
+        messageTimestamps.get(login.userId) ?? 0
+      messageTimestamps.set(login.userId, Date.now())
 
       // Track the time of the message rate limit exceedance.
       let messageRateLimitExceededTimestamp: number =
-        messageRateLimitExceededTimestamps.get(session.userId) ?? 0
+        messageRateLimitExceededTimestamps.get(login.userId) ?? 0
       messageRateLimitExceededTimestamps.set(
-        session.userId,
+        login.userId,
         messageRateLimitExceededTimestamp,
       )
 
@@ -107,7 +103,7 @@ const routerMap: TMetisRouterMap = (
       // second and has not exceeded the message rate limit,
       // reset the counter.
       if (Date.now() - lastMessageTimestamp > 1000 && !hasExceededRateLimit) {
-        messagesPerSecond.set(session.userId, 0)
+        messagesPerSecond.set(login.userId, 0)
       }
 
       // If the message counter exceeds the max amount,
@@ -115,10 +111,10 @@ const routerMap: TMetisRouterMap = (
       // cooldown period has passed.
       if (count > maxMessagesPerSecond && !hasExceededRateLimit) {
         // Set the user as having exceeded the message rate limit.
-        messageRateLimitExceeded.set(session.userId, true)
+        messageRateLimitExceeded.set(login.userId, true)
 
         // Track the time of the message rate limit exceedance.
-        messageRateLimitExceededTimestamps.set(session.userId, Date.now())
+        messageRateLimitExceededTimestamps.set(login.userId, Date.now())
 
         // Send an error to the client.
         let error = JSON.stringify({
@@ -145,8 +141,8 @@ const routerMap: TMetisRouterMap = (
           Date.now() - messageRateLimitExceededTimestamp >
           messageRateLimitCooldown
         ) {
-          messagesPerSecond.set(session.userId, 0)
-          messageRateLimitExceeded.set(session.userId, false)
+          messagesPerSecond.set(login.userId, 0)
+          messageRateLimitExceeded.set(login.userId, false)
         }
       }
     })

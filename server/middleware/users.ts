@@ -3,7 +3,7 @@ import { TCommonUserJson } from 'metis/users'
 import { TUserPermissionId } from 'metis/users/permissions'
 import UserModel from '../database/models/users'
 import GameServer from '../games'
-import MetisSession from '../sessions'
+import ServerLogin from '../logins'
 
 /**
  * Middleware used to enforce authorization for a given route.
@@ -11,51 +11,49 @@ import MetisSession from '../sessions'
  * @param permissions The permissions required to access the route.
  */
 export const auth =
-  ({ authentication = 'session', permissions = [] }: TAuthOptions) =>
+  ({ authentication = 'login', permissions = [] }: TAuthOptions) =>
   (request: Request, response: Response, next: NextFunction): void => {
     // Gather details.
-    let session: MetisSession | undefined = MetisSession.get(
-      request.session.userId,
-    )
+    let login: ServerLogin | undefined = ServerLogin.get(request.session.userId)
 
-    // If there is no session, return 401.
-    if (!session) {
+    // If no login information is returned, return 401.
+    if (!login) {
       response.sendStatus(401)
       return
     }
     // If a ws connection is required and none is
     // established, then return 401.
-    if (authentication === 'ws-connection' && !session.hasClientConnection) {
+    if (authentication === 'ws-connection' && !login.hasClientConnection) {
       response.sendStatus(401)
       return
     }
     // If the being in game is required and the user
     // is not in a game, return 401.
-    if (authentication === 'in-game' && !session.gameId) {
+    if (authentication === 'in-game' && !login.gameId) {
       response.sendStatus(401)
       return
     }
 
     // If user doesn't pass authorization requirements, return 403.
-    if (!session.user.isAuthorized(permissions)) {
+    if (!login.user.isAuthorized(permissions)) {
       response.sendStatus(403)
       return
     }
 
-    // Store the session and the user in the
+    // Store the login and the user in the
     // response locals.
-    response.locals.session = session
-    response.locals.user = session.user
+    response.locals.login = login
+    response.locals.user = login.user
 
     // If authentication is 'ws-connection',
     // store the client in the response locals.
     if (authentication === 'ws-connection') {
-      response.locals.client = session.client
+      response.locals.client = login.client
     }
     // If authentication is 'in-game', store the game
     // in the response locals.
     if (authentication === 'in-game') {
-      response.locals.game = GameServer.get(session.gameId!)
+      response.locals.game = GameServer.get(login.gameId!)
     }
 
     // Call next middleware.
@@ -63,7 +61,7 @@ export const auth =
   }
 
 /**
- * Middleware used to enforce that the user in session can only manage other users
+ * Middleware used to enforce that the logged in user can only manage other users
  * if they have the correct permissions.
  */
 export const restrictUserManagement = async (
@@ -72,12 +70,10 @@ export const restrictUserManagement = async (
   next: NextFunction,
 ): Promise<void> => {
   // Gather details.
-  let session: MetisSession | undefined = MetisSession.get(
-    request.session.userId,
-  )
+  let login: ServerLogin | undefined = ServerLogin.get(request.session.userId)
 
-  // If there is no session, return 401.
-  if (!session) {
+  // If no login information is found, return 401.
+  if (!login) {
     response.sendStatus(401)
     return
   }
@@ -96,8 +92,8 @@ export const restrictUserManagement = async (
   if (user !== undefined) {
     // ...and the user trying to create, or update, another user has the
     // highest level of authorization ("users_write") and the user being
-    // created or updated has a role, call next middleware.
-    if (session.user.isAuthorized('users_write') && user.roleId !== undefined) {
+    // created or updated has an access level, call next middleware.
+    if (login.user.isAuthorized('users_write') && user.accessId !== undefined) {
       // Call next middleware.
       return next()
     }
@@ -105,8 +101,8 @@ export const restrictUserManagement = async (
     // the authorization to create, or update, students and the user being
     // created or updated is a student, call next middleware.
     else if (
-      session.user.isAuthorized('users_write_students') &&
-      user.roleId === 'student'
+      login.user.isAuthorized('users_write_students') &&
+      user.accessId === 'student'
     ) {
       // Call next middleware.
       return next()
@@ -130,9 +126,9 @@ export const restrictUserManagement = async (
     }
 
     // If the user trying to delete another user has the highest level of
-    // authorization ("users_write") and the user being deleted has a role,
-    // call next middleware.
-    if (session.user.isAuthorized('users_write') && user.roleId !== undefined) {
+    // authorization ("users_write") and the user being deleted has an
+    // access level, call next middleware.
+    if (login.user.isAuthorized('users_write') && user.accessId !== undefined) {
       // Call next middleware.
       return next()
     }
@@ -140,8 +136,8 @@ export const restrictUserManagement = async (
     // to delete students and the user being deleted is a student, call next
     // middleware.
     else if (
-      session.user.isAuthorized('users_write_students') &&
-      user.roleId === 'student'
+      login.user.isAuthorized('users_write_students') &&
+      user.accessId === 'student'
     ) {
       // Call next middleware.
       return next()
@@ -163,12 +159,10 @@ export const restrictPasswordReset = (
   next: NextFunction,
 ): void => {
   // Gather details.
-  let session: MetisSession | undefined = MetisSession.get(
-    request.session.userId,
-  )
+  let login: ServerLogin | undefined = ServerLogin.get(request.session.userId)
 
-  // If there is no session, return 401.
-  if (!session) {
+  // If no login information is found, return 401.
+  if (!login) {
     response.sendStatus(401)
     return
   }
@@ -184,7 +178,7 @@ export const restrictPasswordReset = (
   // Otherwise, if the user ID is defined...
   else {
     // Call the next middleware if the user is trying to reset their own password.
-    if (session.user._id === userId) {
+    if (login.user._id === userId) {
       return next()
     }
     // Otherwise, return 403.
@@ -196,14 +190,14 @@ export const restrictPasswordReset = (
 }
 
 /**
- * Options for requiring authorization for a route with a session required.
+ * Options for a route that requires authentication.
  */
 export type TAuthOptions = {
   /**
    * The level of authentication required to access the route.
-   * @default 'session'
+   * @default 'login'
    */
-  authentication?: 'session' | 'ws-connection' | 'in-game'
+  authentication?: 'login' | 'ws-connection' | 'in-game'
   /**
    * The permissions required to access the route.
    * @default []

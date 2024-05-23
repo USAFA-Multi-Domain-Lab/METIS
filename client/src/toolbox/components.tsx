@@ -1,5 +1,5 @@
 import ClientUser from 'src/users'
-import { TMetisSession } from '../../../shared/sessions'
+import { TLogin } from '../../../shared/logins'
 
 /**
  * Options that can be passed to the render function.
@@ -7,7 +7,7 @@ import { TMetisSession } from '../../../shared/sessions'
 type IRendererOptions = {
   requirements: {
     mountHandled?: boolean
-    session?: TMetisSession<ClientUser>
+    login?: TLogin<ClientUser>
   }
 }
 
@@ -21,22 +21,22 @@ export function render(
   render: () => JSX.Element,
   options: IRendererOptions,
 ): JSX.Element | null {
-  let { mountHandled, session } = options.requirements
+  let { mountHandled, login } = options.requirements
 
   let mountHandledPasses: boolean = false
-  let sessionPasses: boolean = false
+  let loginPasses: boolean = false
 
   // Test mount handled to see if it passes.
   if (mountHandled === undefined || mountHandled === true) {
     mountHandledPasses = true
   }
-  // Test session to see if it passes.
-  if (session === undefined || session !== null) {
-    sessionPasses = true
+  // Test the login information to see if it passes.
+  if (login === undefined || login !== null) {
+    loginPasses = true
   }
 
   // If all pass, render.
-  if (mountHandledPasses && sessionPasses) {
+  if (mountHandledPasses && loginPasses) {
     return render()
   }
   // Otherwise, return null.

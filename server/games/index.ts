@@ -3,8 +3,8 @@ import { ServerEmittedError } from 'metis/connect/errors'
 import Game, {
   TGameBasicJson,
   TGameConfig,
-  TGameJoinMethod,
   TGameJson,
+  TGameRole,
   TGameState,
 } from 'metis/games'
 import ClientConnection from 'metis/server/connect/clients'
@@ -148,9 +148,9 @@ export default class GameServer extends Game<
   }
 
   /**
-   * Gets the join method for the given user.
+   * Gets the role of the given user in the game.
    */
-  public getJoinMethod(user: ClientConnection): TGameJoinMethod {
+  public getRole(user: ClientConnection): TGameRole {
     if (this.isSupervisor(user)) {
       return 'supervisor'
     } else if (this.isParticipant(user)) {
@@ -215,7 +215,7 @@ export default class GameServer extends Game<
    * @throws The server emitted error code of any error that occurs.
    * @note Establishes listeners to handle events emitted by the user's web socket connection.
    */
-  public join(client: ClientConnection, method: TGameJoinMethod): void {
+  public join(client: ClientConnection, method: TGameRole): void {
     // Throw error if the user is in the ban list.
     if (this._banList.includes(client.userId)) {
       throw ServerEmittedError.CODE_GAME_BANNED
@@ -246,9 +246,8 @@ export default class GameServer extends Game<
         throw ServerEmittedError.CODE_GAME_UNAUTHORIZED_JOIN
     }
 
-    // Call join handler in the session of
-    // the user.
-    client.session.handleJoin(this._id)
+    // Handle joining the game for the client.
+    client.login.handleJoin(this._id)
 
     // Handle state change.
     this.handleStateChange()
@@ -326,9 +325,8 @@ export default class GameServer extends Game<
         // Remove the supervisor from the list.
         this._supervisors.splice(index, 1)
 
-        // Call quit handler in the session of
-        // the determined participant.
-        supervisor.session.handleQuit()
+        // Handle quitting the game for the supervisor.
+        supervisor.login.handleQuit()
       }
     })
 
@@ -342,9 +340,8 @@ export default class GameServer extends Game<
           // Remove game-specific listeners.
           this.removeListeners(participant)
 
-          // Call quit handler in the session of
-          // the determined participant.
-          participant.session.handleQuit()
+          // Handle quitting the game for the participant.
+          participant.login.handleQuit()
         }
       },
     )
@@ -357,10 +354,10 @@ export default class GameServer extends Game<
    * Deletes all users from the game.
    */
   public clearUsers(): void {
-    // Call quit handler in the session of
-    // each participant.
+    // Remove all participants from the game by
+    // forcing each participant to quit.
     this.participants.forEach((participant: ClientConnection) => {
-      participant.session.handleQuit()
+      participant.login.handleQuit()
     })
 
     // Remove game-specific listeners from
@@ -396,9 +393,8 @@ export default class GameServer extends Game<
           // Remove game-specific listeners.
           this.removeListeners(participant)
 
-          // Call quit handler in the session of
-          // the determined participant.
-          participant.session.handleQuit()
+          // Handle quitting the game for the participant.
+          participant.login.handleQuit()
 
           // Emit an event to the participant
           // that they have been kicked.
@@ -433,9 +429,8 @@ export default class GameServer extends Game<
           // Remove game-specific listeners.
           this.removeListeners(participant)
 
-          // Call quit handler in the session of
-          // the determined participant.
-          participant.session.handleQuit()
+          // Handle quitting the game for the participant.
+          participant.login.handleQuit()
 
           // Emit an event to the participant
           // that they have been kicked.

@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { useGlobalContext } from 'src/context'
 import ClientUser from 'src/users'
-import { TMetisSession } from '../../../shared/sessions'
+import { TLogin } from '../../../shared/logins'
 
 /**
  * The callback for the useEffect hook.
@@ -82,27 +82,27 @@ export function usePostInitEffect(
 }
 
 /**
- * Requires that a session be present in the application state. If no session is present, the user will be redirected to the AuthPage.
+ * Requires that a user is logged in to interact with the application. If the user is not logged in, the user will be redirected to the login page.
  */
-export function useRequireSession(): [NonNullable<TMetisSession<ClientUser>>] {
+export function useRequireLogin(): [NonNullable<TLogin<ClientUser>>] {
   const globalContext = useGlobalContext()
-  const [session] = globalContext.session
-  // todo: remove (require session)
-  // const session = null
+  const [login] = globalContext.login
+  // todo: remove (require login)
+  // const login = null
   const { navigateTo } = globalContext.actions
 
   useEffect(() => {
-    if (session === null) {
+    if (login === null) {
       navigateTo('AuthPage', {})
     }
-  }, [session === null])
+  }, [login === null])
 
-  if (session === null) {
-    throw new SessionRequiredError()
+  if (login === null) {
+    throw new LoginRequiredError()
   }
 
-  // Return session.
-  return [session]
+  // Return login information.
+  return [login]
 }
 
 /**
@@ -244,11 +244,11 @@ export type TEventListenerTarget<TEventMethod extends string> = {
 }
 
 /**
- * Error that is thrown when the `useRequireSession` hook is used
- * and no session is present.
+ * Error that is thrown when the `useRequireLogin` hook is used
+ * and the user is not logged in.
  */
-export class SessionRequiredError extends Error {
+export class LoginRequiredError extends Error {
   constructor() {
-    super('Session is required.')
+    super('You must be logged in to access this page.')
   }
 }

@@ -2,7 +2,7 @@ import { AxiosError } from 'axios'
 import { useState } from 'react'
 import { useGlobalContext, useNavigationMiddleware } from 'src/context'
 import { compute } from 'src/toolbox'
-import { useMountHandler, useRequireSession } from 'src/toolbox/hooks'
+import { useMountHandler, useRequireLogin } from 'src/toolbox/hooks'
 import ClientUser from 'src/users'
 import { DefaultLayout, TPage_P } from '.'
 import CreateUserEntry from '../content/edit-user/CreateUserEntry'
@@ -100,13 +100,13 @@ export default function UserPage({ userId }: IUserPage): JSX.Element | null {
     [areUnsavedChanges],
   )
 
-  /* -- SESSION-SPECIFIC LOGIC -- */
+  /* -- LOGIN-SPECIFIC LOGIC -- */
 
-  // Require session.
-  const [session] = useRequireSession()
+  // Require login for page.
+  const [login] = useRequireLogin()
 
-  // Grab the current user from the session.
-  const { user: currentUser } = session
+  // Grab the user currently logged in.
+  const { user: currentUser } = login
 
   // Require mount to be handled for
   // component to render.
@@ -246,7 +246,7 @@ export default function UserPage({ userId }: IUserPage): JSX.Element | null {
           user={user}
           userEmptyStringArray={userEmptyStringArray}
           usernameAlreadyExists={usernameAlreadyExists}
-          session={session}
+          login={login}
           setUserEmptyStringArray={setUserEmptyStringArray}
           handleChange={handleChange}
         />

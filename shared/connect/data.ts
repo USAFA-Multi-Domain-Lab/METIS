@@ -1,9 +1,4 @@
-import {
-  TGameConfig,
-  TGameJoinMethod,
-  TGameJson,
-  TGameState,
-} from 'metis/games'
+import { TGameConfig, TGameJson, TGameRole, TGameState } from 'metis/games'
 import { TActionExecutionJSON } from 'metis/missions/actions/executions'
 import { TActionOutcomeJson } from 'metis/missions/actions/outcomes'
 import { TCommonUserJson } from 'metis/users'
@@ -296,9 +291,9 @@ export type TResponseEvents = {
        */
       game: TGameJson | null
       /**
-       * The join method that was used by the client to join the game.
+       * The role of the client in the game.
        */
-      joinMethod: TGameJoinMethod
+      role: TGameRole
     },
     TClientEvents['request-current-game']
   >
@@ -313,9 +308,9 @@ export type TResponseEvents = {
        */
       game: TGameJson
       /**
-       * The join method that was used by the client to join the game.
+       * The role of the client in the game.
        */
-      joinMethod: TGameJoinMethod
+      role: TGameRole
     },
     TClientEvents['request-join-game']
   >
@@ -397,9 +392,9 @@ export type TRequestEvents = {
        */
       gameId: string
       /**
-       * The method of joining the game.
+       * The role the client wants to join as.
        */
-      joinMethod: TGameJoinMethod
+      role: TGameRole
     }
   >
   /**

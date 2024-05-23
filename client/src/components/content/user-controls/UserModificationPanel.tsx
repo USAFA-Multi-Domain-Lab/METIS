@@ -16,17 +16,17 @@ export default function UserModificationPanel({
   /* -- GLOBAL CONTEXT -- */
   const globalContext = useGlobalContext()
   const { notify, prompt, finishLoading } = globalContext.actions
-  const [session] = globalContext.session
+  const [login] = globalContext.login
 
-  /* -- SESSION-SPECIFIC LOGIC -- */
+  /* -- LOGIN-SPECIFIC LOGIC -- */
 
-  // Require session.
-  if (session === null) {
+  // Require the user to be logged in.
+  if (login === null) {
     return null
   }
 
-  // Extract properties from session.
-  let { user: currentUser } = session
+  // Grab the user currently logged in.
+  let { user: currentUser } = login
 
   /* -- FUNCTIONS -- */
   /**

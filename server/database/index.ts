@@ -83,10 +83,10 @@ export default class MetisDatabase {
           databaseLogger.info('Connected to database.')
           // Create backup of database before use.
           await this.createBackup()
-          // Ensure that the default data exists.
-          await this.ensureDefaultDataExists()
           // Ensure that the schema build is correct.
           await this.ensureCorrectSchemaBuild()
+          // Ensure that the default data exists.
+          await this.ensureDefaultDataExists()
 
           try {
             // Schedule a backup every 24 hours
@@ -223,7 +223,7 @@ export default class MetisDatabase {
 
       // Check if a student user exists.
       UserModel.findOne({
-        roleId: studentUserData.roleId,
+        accessId: studentUserData.accessId,
       }).exec(async (error: Error, studentUser: any) => {
         if (error !== null) {
           databaseLogger.error('Failed to query database for student user:')
@@ -264,7 +264,7 @@ export default class MetisDatabase {
 
       // Check if a instructor user exists.
       UserModel.findOne({
-        roleId: instructorUserData.roleId,
+        accessId: instructorUserData.accessId,
       }).exec(async (error: Error, instructorUser: any) => {
         if (error !== null) {
           databaseLogger.error('Failed to query database for instructor user:')
@@ -305,7 +305,7 @@ export default class MetisDatabase {
 
       // Check if an admin user exists.
       UserModel.findOne({
-        roleId: adminUserData.roleId,
+        accessId: adminUserData.accessId,
       }).exec(async (error: Error, adminUser: any) => {
         if (error !== null) {
           databaseLogger.error('Failed to query database for admin user:')

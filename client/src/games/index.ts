@@ -8,8 +8,8 @@ import { TServerEvents } from '../../../shared/connect/data'
 import Game, {
   TGameBasicJson,
   TGameConfig,
-  TGameJoinMethod,
   TGameJson,
+  TGameRole,
   TGameState,
 } from '../../../shared/games'
 
@@ -38,21 +38,21 @@ export default class GameClient extends Game<
   }
 
   /**
-   * The method by which the client is joined to the game server.
+   * The client's role in the game.
    */
-  protected _joinMethod: TGameJoinMethod
+  protected _role: TGameRole
   /**
-   * The method by which the client is joined to the game server.
+   * The client's role in the game.
    */
-  public get joinMethod(): TGameJoinMethod {
-    return this._joinMethod
+  public get role(): TGameRole {
+    return this._role
   }
 
   // todo: Between the time the client joins and this object is constructed, there is possibility that changes have been made in the game. This should be handled.
   public constructor(
     data: TGameJson,
     server: ServerConnection,
-    joinMethod: TGameJoinMethod,
+    role: TGameRole,
   ) {
     let _id: string = data._id
     let state: TGameState = data.state
@@ -69,7 +69,7 @@ export default class GameClient extends Game<
 
     super(_id, name, config, mission, participants, banList, supervisors)
     this.server = server
-    this._joinMethod = joinMethod
+    this._role = role
     this._state = state
     this._resources = data.resources === 'infinite' ? Infinity : data.resources
 
@@ -187,9 +187,9 @@ export default class GameClient extends Game<
     let node: ClientMissionNode | undefined = this.mission.getNode(nodeId)
     let { onError = () => {} } = options
 
-    // If the join method is not "participant", callback
+    // If the role is not "participant", callback
     // an error.
-    if (this.joinMethod !== 'participant') {
+    if (this.role !== 'participant') {
       return onError('Only participants can open nodes.')
     }
     // Callback error if the node is not in
@@ -239,9 +239,9 @@ export default class GameClient extends Game<
     let action: ClientMissionAction | undefined = this.actions.get(actionId)
     let { onError = () => {} } = options
 
-    // If the join method is not "participant", callback
+    // If the role is not "participant", callback
     // an error.
-    if (this.joinMethod !== 'participant') {
+    if (this.role !== 'participant') {
       return onError('Only participants can execute actions.')
     }
     // Callback error if the action is not in

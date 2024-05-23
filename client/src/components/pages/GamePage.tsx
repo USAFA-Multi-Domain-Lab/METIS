@@ -8,7 +8,7 @@ import { compute } from 'src/toolbox'
 import {
   useEventListener,
   useMountHandler,
-  useRequireSession,
+  useRequireLogin,
 } from 'src/toolbox/hooks'
 import { DefaultLayout, TPage_P } from '.'
 import MapToolbox from '../../../../shared/toolbox/maps'
@@ -54,7 +54,7 @@ export default function GamePage({ game }: TGamePage_P): JSX.Element | null {
     null,
   )
   const [resources, setResources] = useState<number>(game.resources)
-  const [session] = useRequireSession()
+  const [login] = useRequireLogin()
   const [rightPanelTab, setRightPanelTab] =
     useState<TGameRightPanelTab>('output')
 
@@ -81,9 +81,9 @@ export default function GamePage({ game }: TGamePage_P): JSX.Element | null {
    * @param {ClientMissionNode} node The node that was selected.
    */
   const onNodeSelect = async (node: ClientMissionNode): Promise<void> => {
-    // If the join method is 'supervisor', abort
+    // If the role is 'supervisor', abort
     // selection handling.
-    if (game.joinMethod === 'supervisor') {
+    if (game.role === 'supervisor') {
       return
     }
 
@@ -189,8 +189,8 @@ export default function GamePage({ game }: TGamePage_P): JSX.Element | null {
 
     // Push end game button, if user is authorized.
     if (
-      session.user.isAuthorized('games_join_manager') ||
-      session.user.isAuthorized('games_join_observer')
+      login.user.isAuthorized('games_join_manager') ||
+      login.user.isAuthorized('games_join_observer')
     ) {
       links.push({ key: 'end-game', text: 'End Game', onClick: onClickEndGame })
     }
@@ -211,8 +211,8 @@ export default function GamePage({ game }: TGamePage_P): JSX.Element | null {
   const rootClass = compute((): string => {
     let classList: string[] = ['GamePage', 'Page']
 
-    // Add the join method to the class list.
-    classList.push(game.joinMethod)
+    // Add the role to the class list.
+    classList.push(game.role)
 
     // Return the class list as a joined string.
     return classList.join(' ')

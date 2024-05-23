@@ -1,11 +1,11 @@
 import { TCommonUserJson } from 'metis/users'
 
 /**
- * The JSON representation of a MetisSession object.
+ * The JSON representation of a login object.
  */
-export type TMetisSessionJson = {
+export type TLoginJson = {
   /**
-   * The user with the given session.
+   * The user with the given login.
    */
   user: TCommonUserJson
 
@@ -16,11 +16,11 @@ export type TMetisSessionJson = {
 } | null
 
 /**
- * Represents a session for a user.
+ * Represents the login information for a user.
  */
-export type TMetisSession<TUser> = {
+export type TLogin<TUser> = {
   /**
-   * The user with the given session.
+   * The user with the given login information.
    */
   user: TUser
   /**

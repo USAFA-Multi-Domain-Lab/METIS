@@ -102,7 +102,7 @@ export class ServerEmittedError extends WSEmittedError {
    */
   public static readonly CODE_ALREADY_IN_GAME: number = 20001
   /**
-   * Code for a client requesting to join a game via a join method that is not authorized.
+   * Code for a client requesting to join a game with a role (i.e. observer or manager) they are not authorized to join as.
    */
   public static readonly CODE_GAME_UNAUTHORIZED_JOIN: number = 20002
   /**
