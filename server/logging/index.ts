@@ -1,5 +1,5 @@
-import winston from 'winston'
 import expressWinston from 'express-winston'
+import winston from 'winston'
 
 export const databaseLogger = winston.createLogger({
   level: 'info',
@@ -25,7 +25,7 @@ export const databaseLogger = winston.createLogger({
   ],
 })
 
-export const gameLogger = winston.createLogger({
+export const sessionLogger = winston.createLogger({
   level: 'info',
   format: winston.format.combine(
     winston.format.json(),
@@ -35,7 +35,7 @@ export const gameLogger = winston.createLogger({
   defaultMeta: { service: 'user-service' },
   transports: [
     new winston.transports.File({
-      filename: './logs/game-error.log',
+      filename: './logs/session-error.log',
       level: 'error',
       format: winston.format.combine(
         winston.format.json(),
@@ -45,7 +45,7 @@ export const gameLogger = winston.createLogger({
         winston.format.prettyPrint(),
       ),
     }),
-    new winston.transports.File({ filename: './logs/game.log' }),
+    new winston.transports.File({ filename: './logs/session.log' }),
   ],
 })
 
@@ -151,7 +151,7 @@ export const testLogger = winston.createLogger({
 
 export default {
   databaseLogger,
-  gameLogger,
+  sessionLogger,
   expressLogger,
   expressLoggingHandler,
   plcApiLogger,

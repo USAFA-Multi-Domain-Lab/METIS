@@ -1,41 +1,44 @@
 import { useEffect, useState } from 'react'
-import { TGameAccessibility, TGameConfig } from '../../../../../shared/games'
+import {
+  TSessionAccessibility,
+  TSessionConfig,
+} from '../../../../../shared/sessions'
 import { DetailDropDown, DetailToggle } from '../form/Form'
 import { ButtonText } from '../user-controls/ButtonText'
-import './GameConfig.scss'
+import './SessionConfig.scss'
 
 /**
- * Allows the modification of the given game config.
+ * Allows the modification of the given session config.
  */
-export default function GameConfig({
-  gameConfig,
+export default function SessionConfig({
+  sessionConfig,
   saveButtonText = 'Save',
   onChange = () => {},
   onSave,
   onCancel,
-}: TGameConfig_P): JSX.Element | null {
-  const [accessibility, setAccessibility] = useState<TGameAccessibility>(
-    gameConfig.accessibility,
+}: TSessionConfig_P): JSX.Element | null {
+  const [accessibility, setAccessibility] = useState<TSessionAccessibility>(
+    sessionConfig.accessibility,
   )
-  const [autoAssign, setAutoAssign] = useState(gameConfig.autoAssign)
+  const [autoAssign, setAutoAssign] = useState(sessionConfig.autoAssign)
   const [infiniteResources, setInfiniteResources] = useState(
-    gameConfig.infiniteResources,
+    sessionConfig.infiniteResources,
   )
   const [effectsEnabled, setEffectsEnabled] = useState(
-    gameConfig.effectsEnabled,
+    sessionConfig.effectsEnabled,
   )
 
   useEffect(() => {
-    gameConfig.accessibility = accessibility
-    gameConfig.autoAssign = autoAssign
-    gameConfig.infiniteResources = infiniteResources
-    gameConfig.effectsEnabled = effectsEnabled
+    sessionConfig.accessibility = accessibility
+    sessionConfig.autoAssign = autoAssign
+    sessionConfig.infiniteResources = infiniteResources
+    sessionConfig.effectsEnabled = effectsEnabled
     onChange()
   }, [accessibility, autoAssign, infiniteResources, effectsEnabled])
 
   return (
-    <div className='GameConfig'>
-      <DetailDropDown<TGameConfig['accessibility']>
+    <div className='SessionConfig'>
+      <DetailDropDown<TSessionConfig['accessibility']>
         label='Accessibility'
         options={['public', 'id-required']}
         stateValue={accessibility}
@@ -82,29 +85,29 @@ export default function GameConfig({
 /* -- types -- */
 
 /**
- * Props for `GameConfig` component.
+ * Props for `SessionConfig` component.
  */
-export type TGameConfig_P = {
+export type TSessionConfig_P = {
   /**
-   * The game config to modify.
+   * The session config to modify.
    */
-  gameConfig: TGameConfig
+  sessionConfig: TSessionConfig
   /**
    * The text for the save button.
    * @default 'Save'
    */
   saveButtonText?: string
   /**
-   * Callback for when the game config is changed.
+   * Callback for when the session config is changed.
    * @default () => {}
    */
   onChange?: () => void
   /**
-   * Callback for when the game config is saved.
+   * Callback for when the session config is saved.
    */
   onSave: () => void
   /**
-   * Callback for when the game configuration is cancelled.
+   * Callback for when the session configuration is cancelled.
    */
   onCancel: () => void
 }

@@ -78,7 +78,10 @@ export default abstract class Mission<TMissionNode extends TCommonMissionNode>
 
   // Implemented
   public toJson(options: TMissionJsonOptions = {}): TCommonMissionJson {
-    let { revealedOnly = false, includeGameData = false } = options
+    let {
+      revealedOnly = false,
+      includeSessionData: includeSessionData = false,
+    } = options
 
     let json: TCommonMissionJson = {
       name: this.name,
@@ -86,7 +89,7 @@ export default abstract class Mission<TMissionNode extends TCommonMissionNode>
       versionNumber: this.versionNumber,
       initialResources: this.initialResources,
       seed: this.seed,
-      ...this.exportNodes({ revealedOnly, includeGameData }),
+      ...this.exportNodes({ revealedOnly, includeSessionData }),
     }
 
     // Include _id if it's an ObjectId.
@@ -164,7 +167,10 @@ export default abstract class Mission<TMissionNode extends TCommonMissionNode>
     }
 
     // Extract options.
-    let { revealedOnly = false, includeGameData = false } = options
+    let {
+      revealedOnly = false,
+      includeSessionData: includeSessionData = false,
+    } = options
 
     // Create an array of the MissionNode
     // objects from the nodes map.
@@ -181,7 +187,7 @@ export default abstract class Mission<TMissionNode extends TCommonMissionNode>
 
     // Construct node data.
     nodeData = nodes.map((node: TMissionNode) =>
-      node.toJson({ includeGameData }),
+      node.toJson({ includeSessionData: includeSessionData }),
     )
 
     // Construct node structure.
@@ -347,7 +353,7 @@ export interface TCommonMission {
    */
   name: string
   /**
-   * The introductory message for the mission, displayed when the mission is first started in a game.
+   * The introductory message for the mission, displayed when the mission is first started in a session.
    */
   introMessage: string
   /**
@@ -400,7 +406,7 @@ export interface TCommonMissionJson {
    */
   name: string
   /**
-   * The introductory message for the mission, displayed when the mission is first started in a game.
+   * The introductory message for the mission, displayed when the mission is first started in a session.
    */
   introMessage: string
   /**
@@ -446,10 +452,10 @@ export type TMissionJsonOptions = {
    */
   revealedOnly?: boolean
   /**
-   * Whether or not to include game-specific data in the generated JSON.
+   * Whether or not to include session-specific data in the generated JSON.
    * @default false
    */
-  includeGameData?: boolean
+  includeSessionData?: boolean
 }
 
 /**
@@ -492,10 +498,10 @@ export type TExportNodesOptions = {
    */
   revealedOnly?: boolean
   /**
-   * Whether or not to include game-specific data in the export.
+   * Whether or not to include session-specific data in the export.
    * @default false
    */
-  includeGameData?: boolean
+  includeSessionData?: boolean
 }
 
 /**

@@ -1,9 +1,9 @@
 import fs from 'fs'
 import MetisServer, { IMetisServerOptions } from 'metis/server'
-import routerMap_games from 'metis/server/api/v1/games'
 import routerMap_info from 'metis/server/api/v1/info'
 import routerMap_logins from 'metis/server/api/v1/logins'
 import routerMap_missions from 'metis/server/api/v1/missions'
+import routerMap_sessions from 'metis/server/api/v1/sessions'
 import routerMap_targetEnvironments from 'metis/server/api/v1/target-environments'
 import routerMap_users from 'metis/server/api/v1/users'
 import routerMap_connect from 'metis/server/connect'
@@ -46,7 +46,7 @@ export let server: MetisServer = new MetisServer(serverOptions)
 server.addRouter(new MetisRouter('/api/v1/info/', routerMap_info))
 server.addRouter(new MetisRouter('/api/v1/users/', routerMap_users))
 server.addRouter(new MetisRouter('/api/v1/missions/', routerMap_missions))
-server.addRouter(new MetisRouter('/api/v1/games/', routerMap_games))
+server.addRouter(new MetisRouter('/api/v1/sessions/', routerMap_sessions))
 server.addRouter(new MetisRouter('/api/v1/test/', routerMap_tests))
 server.addRouter(
   new MetisRouter('/api/v1/target-environments/', routerMap_targetEnvironments),

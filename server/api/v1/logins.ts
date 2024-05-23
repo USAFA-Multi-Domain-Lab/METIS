@@ -1,13 +1,13 @@
 import { NextFunction, Request, Response } from 'express-serve-static-core'
 import expressWs from 'express-ws'
 import UserModel from 'metis/server/database/models/users'
-import GameServer from 'metis/server/games'
 import { StatusError } from 'metis/server/http'
 import { TMetisRouterMap } from 'metis/server/http/router'
 import ServerLogin from 'metis/server/logins'
 import defineRequests, {
   RequestBodyFilters,
 } from 'metis/server/middleware/requests'
+import SessionServer from 'metis/server/sessions'
 import ServerUser from 'metis/server/users'
 
 const routerMap: TMetisRouterMap = (router: expressWs.Router, done) => {
@@ -95,13 +95,13 @@ const routerMap: TMetisRouterMap = (router: expressWs.Router, done) => {
         request.session.userId,
       )
 
-      // If the logged in user is in a game,
-      // then remove them from the game.
-      if (login && login.gameId && login.inGame) {
-        // Get the game.
-        let game = GameServer.get(login.gameId)
-        // Remove the user from the game.
-        game?.quit(login.userId)
+      // If the logged in user is in a session,
+      // then remove them from the session.
+      if (login && login.sessionId && login.inSession) {
+        // Get the session.
+        let session = SessionServer.get(login.sessionId)
+        // Remove the user from the session.
+        session?.quit(login.userId)
       }
 
       // Log the user out by destroying the login.

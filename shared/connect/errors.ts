@@ -94,26 +94,26 @@ export class ServerEmittedError extends WSEmittedError {
    */
   public static readonly CODE_MESSAGE_RATE_LIMIT: number = 10003
   /**
-   * Code for a client requesting to join a game that cannot be found.
+   * Code for a client requesting to join a session that cannot be found.
    */
-  public static readonly CODE_GAME_NOT_FOUND: number = 20000
+  public static readonly CODE_SESSION_NOT_FOUND: number = 20000
   /**
-   * Code for a client requesting to join a game that they have already joined.
+   * Code for a client requesting to join a session that they have already joined.
    */
-  public static readonly CODE_ALREADY_IN_GAME: number = 20001
+  public static readonly CODE_ALREADY_IN_SESSION: number = 20001
   /**
-   * Code for a client requesting to join a game with a role (i.e. observer or manager) they are not authorized to join as.
+   * Code for a client requesting to join a session with a role (i.e. observer or manager) they are not authorized to join as.
    */
-  public static readonly CODE_GAME_UNAUTHORIZED_JOIN: number = 20002
+  public static readonly CODE_SESSION_UNAUTHORIZED_JOIN: number = 20002
   /**
-   * Code for a client requesting to join a game from which they have been banned.
+   * Code for a client requesting to join a session from which they have been banned.
    */
-  public static readonly CODE_GAME_BANNED: number = 20003
+  public static readonly CODE_SESSION_BANNED: number = 20003
   /**
    * Code for a client requesting to perform a task that cannot be performed
-   * before the game has started or after the game has ended.
+   * before the session has started or after the session has ended.
    */
-  public static readonly CODE_GAME_PROGRESS_LOCKED: number = 20004
+  public static readonly CODE_SESSION_PROGRESS_LOCKED: number = 20004
   /**
    * Code for a client requesting to open a node that cannot be found.
    */
@@ -148,13 +148,15 @@ export class ServerEmittedError extends WSEmittedError {
     [ServerEmittedError.CODE_INVALID_DATA]: 'Data sent was invalid.',
     [ServerEmittedError.CODE_DUPLICATE_CLIENT]:
       'You are already connected via another tab.',
-    [ServerEmittedError.CODE_GAME_NOT_FOUND]: 'Game not found.',
-    [ServerEmittedError.CODE_ALREADY_IN_GAME]: 'You are already in this game.',
-    [ServerEmittedError.CODE_GAME_UNAUTHORIZED_JOIN]:
-      'You are not authorized to join this game.',
-    [ServerEmittedError.CODE_GAME_BANNED]: 'You are banned from this game.',
-    [ServerEmittedError.CODE_GAME_PROGRESS_LOCKED]:
-      'Game progress is locked before game start and after game end.',
+    [ServerEmittedError.CODE_SESSION_NOT_FOUND]: 'Session not found.',
+    [ServerEmittedError.CODE_ALREADY_IN_SESSION]:
+      'You are already in this session.',
+    [ServerEmittedError.CODE_SESSION_UNAUTHORIZED_JOIN]:
+      'You are not authorized to join this session.',
+    [ServerEmittedError.CODE_SESSION_BANNED]:
+      'You are banned from this session.',
+    [ServerEmittedError.CODE_SESSION_PROGRESS_LOCKED]:
+      'Session progress is locked before session start and after session end.',
     [ServerEmittedError.CODE_NODE_NOT_FOUND]: 'Node not found.',
     [ServerEmittedError.CODE_NODE_NOT_OPENABLE]: 'Node not openable.',
     [ServerEmittedError.CODE_NODE_NOT_EXECUTABLE]: 'Node not executable.',

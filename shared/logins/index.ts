@@ -10,9 +10,9 @@ export type TLoginJson = {
   user: TCommonUserJson
 
   /**
-   * The ID of the game the user has joined, if any.
+   * The ID of the session the user has joined, if any.
    */
-  gameId: string | null
+  sessionId: string | null
 } | null
 
 /**
@@ -24,7 +24,7 @@ export type TLogin<TUser> = {
    */
   user: TUser
   /**
-   * The ID of the game the user has joined, if any.
+   * The ID of the session the user has joined, if any.
    */
-  gameId: string | null
+  sessionId: string | null
 } | null

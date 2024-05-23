@@ -10,7 +10,7 @@ import {
 import { ServerEmittedError } from 'metis/connect/errors'
 import ServerLogin from 'metis/server/logins'
 import { WebSocket } from 'ws'
-import GameServer from '../games'
+import SessionServer from '../sessions'
 import ServerUser from '../users'
 
 /* -- classes -- */
@@ -191,48 +191,50 @@ export default class ClientConnection {
    * Adds default listeners for the client connection.
    */
   protected addDefaultListeners(): void {
-    // Add a `request-current-game` listener.
-    this.addEventListener('request-current-game', (event) => {
-      // Get the current game.
-      let game = GameServer.get(this.login.gameId ?? undefined)
+    // Add a `request-current-session` listener.
+    this.addEventListener('request-current-session', (event) => {
+      // Get the current session.
+      let session = SessionServer.get(this.login.sessionId ?? undefined)
 
-      // Emit the current game in response to the client.
-      if (game !== undefined) {
-        this.emit('current-game', {
+      // Emit the current session in response to the client.
+      if (session !== undefined) {
+        this.emit('current-session', {
           data: {
-            game:
-              game?.toJson({
-                includeSensitiveData: this.user.isAuthorized('games_write'),
+            session:
+              session?.toJson({
+                includeSensitiveData: this.user.isAuthorized('sessions_write'),
               }) ?? null,
-            role: game?.getRole(this) ?? null,
+            role: session?.getRole(this) ?? null,
           },
           request: this.buildResponseReqData(event),
         })
       }
     })
 
-    // Add a `request-join-game` listener.
-    this.addEventListener('request-join-game', (event) => {
-      // Get game.
-      let game: GameServer | undefined = GameServer.get(event.data.gameId)
+    // Add a `request-join-session` listener.
+    this.addEventListener('request-join-session', (event) => {
+      // Get session.
+      let session: SessionServer | undefined = SessionServer.get(
+        event.data.sessionId,
+      )
 
-      // If game is undefined, emit game not found.
-      if (game === undefined) {
+      // If session is undefined, emit session not found.
+      if (session === undefined) {
         return this.emitError(
-          new ServerEmittedError(ServerEmittedError.CODE_GAME_NOT_FOUND, {
+          new ServerEmittedError(ServerEmittedError.CODE_SESSION_NOT_FOUND, {
             request: this.buildResponseReqData(event),
           }),
         )
       }
 
       try {
-        // Join the game.
-        game.join(this, event.data.role)
-        // Return the game as JSON.
-        this.emit('game-joined', {
+        // Join the session.
+        session.join(this, event.data.role)
+        // Return the session as JSON.
+        this.emit('session-joined', {
           data: {
-            game: game.toJson({
-              includeSensitiveData: this.user.isAuthorized('games_write'),
+            session: session.toJson({
+              includeSensitiveData: this.user.isAuthorized('sessions_write'),
             }),
             role: event.data.role,
           },
@@ -248,18 +250,18 @@ export default class ClientConnection {
       }
     })
 
-    // Add a `request-quit-game` listener.
-    this.addEventListener('request-quit-game', (event) => {
-      // Get the game.
-      let game = GameServer.get(this.login.gameId ?? undefined)
+    // Add a `request-quit-session` listener.
+    this.addEventListener('request-quit-session', (event) => {
+      // Get the session.
+      let session = SessionServer.get(this.login.sessionId ?? undefined)
 
-      // Quit the game, if defined.
-      if (game !== undefined) {
-        game.quit(this.userId)
+      // Quit the session, if defined.
+      if (session !== undefined) {
+        session.quit(this.userId)
       }
 
       // Return response.
-      this.emit('game-quit', {
+      this.emit('session-quit', {
         data: {},
         request: this.buildResponseReqData(event),
       })

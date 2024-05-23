@@ -15,9 +15,6 @@ import MissionEntry from '../content/edit-mission/MissionEntry'
 import NodeEntry from '../content/edit-mission/NodeEntry'
 import NodeStructuring from '../content/edit-mission/NodeStructuring'
 import EffectEntry from '../content/edit-mission/target-effects/EffectEntry'
-import MissionMap from '../content/game/mission-map'
-import { TNodeButton } from '../content/game/mission-map/objects/MissionNode'
-import CreateEffectModal from '../content/game/mission-map/ui/overlay/modals/CreateEffectModal'
 import {
   HomeLink,
   LogoutLink,
@@ -28,6 +25,9 @@ import {
   PanelSizeRelationship,
   ResizablePanel,
 } from '../content/general-layout/ResizablePanels'
+import MissionMap from '../content/session/mission-map'
+import { TNodeButton } from '../content/session/mission-map/objects/MissionNode'
+import CreateEffectModal from '../content/session/mission-map/ui/overlay/modals/CreateEffectModal'
 import { TButtonSvg } from '../content/user-controls/ButtonSvg'
 import './MissionPage.scss'
 

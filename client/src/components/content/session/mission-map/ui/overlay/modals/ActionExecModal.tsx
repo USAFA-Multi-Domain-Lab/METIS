@@ -2,9 +2,9 @@ import { useEffect, useRef, useState } from 'react'
 import RichTextOutputBox from 'src/components/content/communication/RichTextOutputBox'
 import { ButtonText } from 'src/components/content/user-controls/ButtonText'
 import { useGlobalContext } from 'src/context'
-import GameClient from 'src/games'
 import ClientMissionAction from 'src/missions/actions'
 import ClientMissionNode from 'src/missions/nodes'
+import ClientSession from 'src/sessions'
 import { useMountHandler } from 'src/toolbox/hooks'
 import MapToolbox from '../../../../../../../../../shared/toolbox/maps'
 import StringToolbox from '../../../../../../../../../shared/toolbox/strings'
@@ -12,11 +12,11 @@ import Tooltip from '../../../../../communication/Tooltip'
 import './ActionExecModal.scss'
 
 /**
- * Prompt for a game participant to select an action to execute on a node.
+ * Prompt for a session participant to select an action to execute on a node.
  */
 export default function ActionExecModal({
   node,
-  game,
+  session,
   close,
 }: TActionExecModal_P) {
   /* -- refs -- */
@@ -105,7 +105,7 @@ export default function ActionExecModal({
    */
   const execute = () => {
     if (selectedAction) {
-      game.executeAction(selectedAction._id, {
+      session.executeAction(selectedAction._id, {
         onError: (message) => handleError({ message, notifyMethod: 'bubble' }),
       })
       close()
@@ -153,7 +153,7 @@ export default function ActionExecModal({
       return (
         <Option
           key={action._id}
-          game={game}
+          session={session}
           action={action}
           select={() => {
             selectAction(action)
@@ -234,12 +234,12 @@ const ActionPropertyDisplay = (props: { action: ClientMissionAction }) => {
 /**
  * An option in the drop down of actions to choose from.
  */
-function Option({ game, action, select }: TOption_P) {
+function Option({ session: session, action, select }: TOption_P) {
   let rootClasses: string[] = ['Option']
 
   // Disable the option if there are not enough resources
   // to execute the particular action.
-  if (action.resourceCost > game.resources) {
+  if (action.resourceCost > session.resources) {
     rootClasses.push('Disabled')
   }
 
@@ -272,9 +272,9 @@ export type TActionExecModal_P = {
    */
   node: ClientMissionNode
   /**
-   * The game client of which the node is a part.
+   * The session client of which the node is a part.
    */
-  game: GameClient
+  session: ClientSession
   /**
    * Closes the modal.
    * @note This should stop the modal from rendering statefully.
@@ -287,9 +287,9 @@ export type TActionExecModal_P = {
  */
 export type TOption_P = {
   /**
-   * The game client of which the node is a part.
+   * The session client of which the node is a part.
    */
-  game: GameClient
+  session: ClientSession
   /**
    * The action serving as an option in the drop down.
    */

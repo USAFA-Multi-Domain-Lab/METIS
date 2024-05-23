@@ -12,8 +12,9 @@ export interface IOutputPanel {
 
 export interface IOutputPanel_S {}
 
-// This component is responsible for displaying
-// console output in the game.
+/**
+ * A panel for displaying console output messages in the session.
+ */
 export default class OutputPanel extends Component<
   IOutputPanel,
   IOutputPanel_S

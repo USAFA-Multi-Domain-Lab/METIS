@@ -8,7 +8,7 @@ import ServerActionExecution from '../actions/executions'
 import { ServerRealizedOutcome } from '../actions/outcomes'
 
 /**
- * Class for managing mission nodes on a game server.
+ * Class for managing mission nodes on a session server.
  */
 export default class ServerMissionNode extends MissionNode<
   ServerMission,

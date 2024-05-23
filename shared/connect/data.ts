@@ -1,6 +1,11 @@
-import { TGameConfig, TGameJson, TGameRole, TGameState } from 'metis/games'
 import { TActionExecutionJSON } from 'metis/missions/actions/executions'
 import { TActionOutcomeJson } from 'metis/missions/actions/outcomes'
+import {
+  TSessionConfig,
+  TSessionJson,
+  TSessionRole,
+  TSessionState,
+} from 'metis/sessions'
 import { TCommonUserJson } from 'metis/users'
 import { TCommonMissionNodeJson } from '../missions/nodes'
 
@@ -146,63 +151,63 @@ export type TGenericServerEvents = {
     }
   >
   /**
-   * Occurs when the state of the game changes (unstarted, started, ended).
+   * Occurs when the state of the session changes (unstarted, started, ended).
    */
-  'game-state-change': TConnectEvent<
-    'game-state-change',
+  'session-state-change': TConnectEvent<
+    'session-state-change',
     {
       /**
-       * The current state of the game.
+       * The current state of the session.
        */
-      state: TGameState
+      state: TSessionState
       /**
-       * The current configuration of the game.
+       * The current configuration of the session.
        */
-      config: TGameConfig
+      config: TSessionConfig
       /**
-       * The current list of participants in the game.
+       * The current list of participants in the session.
        */
       participants: TCommonUserJson[]
       /**
-       * The current list of supervisors in the game.
+       * The current list of supervisors in the session.
        */
       supervisors: TCommonUserJson[]
     }
   >
   /**
-   * Occurs for a participant who has been kicked from the game.
+   * Occurs for a participant who has been kicked from the session.
    */
   'kicked': TConnectEvent<
     'kicked',
     {
       /**
-       * The ID of the game from which the participant was kicked.
+       * The ID of the session from which the participant was kicked.
        */
-      gameId: string
+      sessionId: string
     }
   >
   /**
-   * Occurs for a participant who has been banned from the game.
+   * Occurs for a participant who has been banned from the session.
    */
   'banned': TConnectEvent<
     'banned',
     {
       /**
-       * The ID of the game from which the participant was banned.
+       * The ID of the session from which the participant was banned.
        */
-      gameId: string
+      sessionId: string
     }
   >
   /**
-   * Occurs when the game has been destroyed while the participant was in it.
+   * Occurs when the session has been destroyed while the participant was in it.
    */
-  'game-destroyed': TConnectEvent<
-    'game-destroyed',
+  'session-destroyed': TConnectEvent<
+    'session-destroyed',
     {
       /**
-       * The ID of the game that was destroyed.
+       * The ID of the session that was destroyed.
        */
-      gameId: string
+      sessionId: string
     }
   >
   /**
@@ -280,47 +285,47 @@ export type TResponseEvents = {
     TClientEvents['request-execute-action']
   >
   /**
-   * Occurs to send the requested, currently-joined game to the client.
+   * Occurs to send the requested, currently-joined session to the client.
    */
-  'current-game': TResponseEvent<
-    'current-game',
+  'current-session': TResponseEvent<
+    'current-session',
     {
       /**
-       * The game that is currently joined by the client.
-       * @note If null, no game is currently joined.
+       * The session that is currently joined by the client.
+       * @note If null, no session is currently joined.
        */
-      game: TGameJson | null
+      session: TSessionJson | null
       /**
-       * The role of the client in the game.
+       * The role of the client in the session.
        */
-      role: TGameRole
+      role: TSessionRole
     },
-    TClientEvents['request-current-game']
+    TClientEvents['request-current-session']
   >
   /**
-   * Occurs when the client has successfully joined a game on the server.
+   * Occurs when the client has successfully joined a session on the server.
    */
-  'game-joined': TResponseEvent<
-    'game-joined',
+  'session-joined': TResponseEvent<
+    'session-joined',
     {
       /**
-       * The game that was joined.
+       * The session that was joined.
        */
-      game: TGameJson
+      session: TSessionJson
       /**
-       * The role of the client in the game.
+       * The role of the client in the session.
        */
-      role: TGameRole
+      role: TSessionRole
     },
-    TClientEvents['request-join-game']
+    TClientEvents['request-join-session']
   >
   /**
-   * Occurs when the client has successfully quit a game on the server.
+   * Occurs when the client has successfully quit a session on the server.
    */
-  'game-quit': TResponseEvent<
-    'game-quit',
+  'session-quit': TResponseEvent<
+    'session-quit',
     {},
-    TClientEvents['request-quit-game']
+    TClientEvents['request-quit-session']
   >
 }
 
@@ -378,29 +383,29 @@ export type TRequestEvents = {
     }
   >
   /**
-   * Occurs when the client requests to fetch the currently joined game.
+   * Occurs when the client requests to fetch the currently joined session.
    */
-  'request-current-game': TRequestEvent<'request-current-game'>
+  'request-current-session': TRequestEvent<'request-current-session'>
   /**
-   * Occurs when the client requests to join a game.
+   * Occurs when the client requests to join a session.
    */
-  'request-join-game': TRequestEvent<
-    'request-join-game',
+  'request-join-session': TRequestEvent<
+    'request-join-session',
     {
       /**
-       * The ID of the game to join.
+       * The ID of the session to join.
        */
-      gameId: string
+      sessionId: string
       /**
        * The role the client wants to join as.
        */
-      role: TGameRole
+      role: TSessionRole
     }
   >
   /**
-   * Occurs when the client requests to quit a game.
+   * Occurs when the client requests to quit a session.
    */
-  'request-quit-game': TRequestEvent<'request-quit-game'>
+  'request-quit-session': TRequestEvent<'request-quit-session'>
 }
 
 /**

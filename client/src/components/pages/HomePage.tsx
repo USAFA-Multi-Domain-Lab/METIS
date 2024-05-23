@@ -1,9 +1,9 @@
 import { AxiosError } from 'axios'
 import { useRef, useState } from 'react'
 import { useGlobalContext } from 'src/context'
-import GameClient from 'src/games'
 import ClientMission from 'src/missions'
 import Notification from 'src/notifications'
+import ClientSession from 'src/sessions'
 import { compute } from 'src/toolbox'
 import {
   useMountHandler,
@@ -12,7 +12,7 @@ import {
 } from 'src/toolbox/hooks'
 import ClientUser from 'src/users'
 import { DefaultLayout } from '.'
-import { TGameBasicJson, TGameRole } from '../../../../shared/games'
+import { TSessionBasicJson, TSessionRole } from '../../../../shared/sessions'
 import Prompt, { TChoicesWithCancel } from '../content/communication/Prompt'
 import Tooltip from '../content/communication/Tooltip'
 import { DetailString } from '../content/form/Form'
@@ -29,7 +29,7 @@ import './HomePage.scss'
 
 /* -- constants -- */
 
-const GAMES_SYNC_RATE: number = 1000
+const SESSIONS_SYNC_RATE: number = 1000
 
 /* -- components -- */
 
@@ -59,10 +59,10 @@ export default function HomePage(): JSX.Element | null {
   const importMissionTrigger = useRef<HTMLInputElement>(null)
 
   /* -- STATE -- */
-  const [games, setGames] = useState<TGameBasicJson[]>([])
+  const [sessions, setSessions] = useState<TSessionBasicJson[]>([])
   const [missions, setMissions] = useState<ClientMission[]>([])
   const [users, setUsers] = useState<ClientUser[]>([])
-  const [manualJoinGameId, setManualJoinGameId] = useState<string>('')
+  const [manualJoinSessionId, setManualJoinSessionId] = useState<string>('')
 
   /* -- LOGIN-SPECIFIC LOGIC -- */
 
@@ -77,8 +77,8 @@ export default function HomePage(): JSX.Element | null {
   // componentDidMount
   const [mountHandled, remount] = useMountHandler(async (done) => {
     try {
-      if (currentUser.isAuthorized(['games_read', 'missions_read'])) {
-        await loadGames()
+      if (currentUser.isAuthorized(['sessions_read', 'missions_read'])) {
+        await loadSessions()
         await loadMissions()
       }
 
@@ -91,8 +91,8 @@ export default function HomePage(): JSX.Element | null {
 
       finishLoading()
 
-      // Begin syncing games.
-      setTimeout(() => syncGames.current(), GAMES_SYNC_RATE)
+      // Begin syncing sessions.
+      setTimeout(() => syncSessions.current(), SESSIONS_SYNC_RATE)
     } catch (error: any) {
       handleError('Failed to load data. Contact system administrator.')
     }
@@ -100,10 +100,10 @@ export default function HomePage(): JSX.Element | null {
     done()
   })
 
-  // On unmount, clear the sync games
+  // On unmount, clear the sync sessions
   // interval.
   useUnmountHandler(() => {
-    syncGames.current = async () => {}
+    syncSessions.current = async () => {}
   })
 
   /* -- COMPUTED -- */
@@ -120,22 +120,22 @@ export default function HomePage(): JSX.Element | null {
 
   /**
    * This loads the missions into the state for display and selection.
-   * @resolves When the games have been loaded.
-   * @rejects If the games fail to load.
+   * @resolves When the sessions have been loaded.
+   * @rejects If the sessions fail to load.
    */
-  const loadGames = (): Promise<void> => {
+  const loadSessions = (): Promise<void> => {
     return new Promise<void>(async (resolve, reject) => {
       try {
         // Begin loading.
-        beginLoading('Retrieving games...')
-        // Fetch games from API and store
+        beginLoading('Retrieving sessions...')
+        // Fetch sessions from API and store
         // them in the state.
-        setGames(await GameClient.$fetchAll())
+        setSessions(await ClientSession.$fetchAll())
         // Finish loading and resolve.
         finishLoading()
         resolve()
       } catch (error) {
-        handleError('Failed to retrieve games.')
+        handleError('Failed to retrieve sessions.')
         finishLoading()
         reject(error)
       }
@@ -187,16 +187,16 @@ export default function HomePage(): JSX.Element | null {
   }
 
   /**
-   * Syncs the games periodically with the server.
+   * Syncs the sessions periodically with the server.
    */
-  const syncGames = useRef(async () => {
+  const syncSessions = useRef(async () => {
     try {
-      // Fetch games from API and store
+      // Fetch sessions from API and store
       // them in the state.
-      setGames(await GameClient.$fetchAll())
+      setSessions(await ClientSession.$fetchAll())
     } catch {}
 
-    setTimeout(() => syncGames.current(), GAMES_SYNC_RATE)
+    setTimeout(() => syncSessions.current(), SESSIONS_SYNC_RATE)
   })
 
   // This will import files as missions.
@@ -398,29 +398,29 @@ export default function HomePage(): JSX.Element | null {
   }
 
   /**
-   * Handler for when a game is selected.
+   * Handler for when a session is selected.
    */
-  const onGameSelection = async (gameId: string) => {
+  const onSessionSelection = async (sessionId: string) => {
     if (server !== null) {
       try {
-        let role: TGameRole = 'participant'
+        let role: TSessionRole = 'participant'
 
         // Choices for the user to select what
-        // role they would like to join the game
+        // role they would like to join the session
         // as.
-        let roleChoices: TChoicesWithCancel<TGameRole>[] = []
+        let roleChoices: TChoicesWithCancel<TSessionRole>[] = []
         // If the user is authorized and has the top level
         // join permission, add the option to join as
         // a participant or supervisor.
-        if (currentUser.isAuthorized('games_join')) {
+        if (currentUser.isAuthorized('sessions_join')) {
           roleChoices = ['participant', 'supervisor', 'Cancel']
         }
         // If the user is authorized to join as a
         // participant, add the option to join as
         // a participant.
         if (
-          currentUser.isAuthorized('games_join_participant') &&
-          !currentUser.isAuthorized('games_join_observer')
+          currentUser.isAuthorized('sessions_join_participant') &&
+          !currentUser.isAuthorized('sessions_join_observer')
         ) {
           roleChoices = ['participant', 'Cancel']
         }
@@ -428,8 +428,8 @@ export default function HomePage(): JSX.Element | null {
         // observer, add the option to join as an
         // observer.
         if (
-          currentUser.isAuthorized('games_join_observer') &&
-          !currentUser.isAuthorized('games_join_participant')
+          currentUser.isAuthorized('sessions_join_observer') &&
+          !currentUser.isAuthorized('sessions_join_participant')
         ) {
           roleChoices = ['supervisor', 'Cancel']
         }
@@ -438,17 +438,17 @@ export default function HomePage(): JSX.Element | null {
         // to join as a participant, observer, or
         // supervisor.
         if (
-          currentUser.isAuthorized('games_join_observer') &&
-          currentUser.isAuthorized('games_join_participant')
+          currentUser.isAuthorized('sessions_join_observer') &&
+          currentUser.isAuthorized('sessions_join_participant')
         ) {
           roleChoices = ['participant', 'supervisor', 'Cancel']
         }
 
-        if (currentUser.isAuthorized('games_write')) {
+        if (currentUser.isAuthorized('sessions_write')) {
           // Prompt user for role if the user
           // has write privileges.
-          let { choice } = await prompt<TChoicesWithCancel<TGameRole>>(
-            'What would you like to join the game as?',
+          let { choice } = await prompt<TChoicesWithCancel<TSessionRole>>(
+            'What would you like to join the session as?',
             roleChoices,
             { capitalizeChoices: true },
           )
@@ -462,17 +462,17 @@ export default function HomePage(): JSX.Element | null {
           role = choice
         }
 
-        // Notify user of game join.
-        beginLoading('Joining game...')
-        // Join game from new game ID, awaiting
-        // the promised game client.
-        let game = await server.$joinGame(gameId, role)
+        // Notify user of session join.
+        beginLoading('Joining session...')
+        // Join session from new session ID, awaiting
+        // the promised session client.
+        let session = await server.$joinSession(sessionId, role)
 
-        // If the game is not found, notify
+        // If the session is not found, notify
         // the user and return.
-        if (game === null) {
+        if (session === null) {
           handleError({
-            message: 'Game could not be found.',
+            message: 'Session could not be found.',
             notifyMethod: 'bubble',
           })
           finishLoading()
@@ -480,11 +480,11 @@ export default function HomePage(): JSX.Element | null {
         }
 
         // Update login information to include
-        // the new game ID.
-        login.gameId = game._id
-        // Go to the game page with the new
-        // game client.
-        navigateTo('GamePage', { game })
+        // the new session ID.
+        login.sessionId = session._id
+        // Go to the session page with the new
+        // session client.
+        navigateTo('SessionPage', { session })
       } catch (error: any) {
         handleError({
           message: error.message,
@@ -500,27 +500,27 @@ export default function HomePage(): JSX.Element | null {
   }
 
   /**
-   * Handler for when a game is requested to
+   * Handler for when a session is requested to
    * be deleted.
    */
-  const onGameDelete = async (game: TGameBasicJson) => {
+  const onSessionDelete = async (session: TSessionBasicJson) => {
     // Confirm deletion.
     let { choice } = await prompt(
-      'Please confirm the deletion of this game.',
+      'Please confirm the deletion of this session.',
       Prompt.ConfirmationChoices,
     )
 
-    // If confirmed, delete game.
+    // If confirmed, delete session.
     if (choice === 'Confirm') {
       try {
-        beginLoading('Deleting game...')
-        await GameClient.$delete(game._id)
+        beginLoading('Deleting session...')
+        await ClientSession.$delete(session._id)
         finishLoading()
-        notify(`Successfully deleted "${game.name}".`)
-        loadGames()
+        notify(`Successfully deleted "${session.name}".`)
+        loadSessions()
       } catch (error) {
         finishLoading()
-        notify(`Failed to delete "${game.name}".`)
+        notify(`Failed to delete "${session.name}".`)
       }
     }
   }
@@ -568,27 +568,27 @@ export default function HomePage(): JSX.Element | null {
   ))
 
   /**
-   * The games that are displayed on the home page.
+   * The sessions that are displayed on the home page.
    */
-  const gamesJsx = compute(() => {
-    if (currentUser.isAuthorized('games_read')) {
+  const sessionsJsx = compute(() => {
+    if (currentUser.isAuthorized('sessions_read')) {
       return (
         <div className='ListContainer'>
-          <List<TGameBasicJson>
-            headingText={'Select a game:'}
-            items={games}
+          <List<TSessionBasicJson>
+            headingText={'Select a session:'}
+            items={sessions}
             sortByMethods={[ESortByMethod.Name]}
             nameProperty={'name'}
             alwaysUseBlanks={true}
-            renderItemDisplay={(game: TGameBasicJson) => {
+            renderItemDisplay={(session: TSessionBasicJson) => {
               /**
                * Class for accessibility element.
                */
               const accessibilityClass = compute((): string => {
                 const classList = [
                   'Accessibility',
-                  game.config.accessibility ??
-                    GameClient.DEFAULT_CONFIG.accessibility,
+                  session.config.accessibility ??
+                    ClientSession.DEFAULT_CONFIG.accessibility,
                 ]
                 return classList.join(' ')
               })
@@ -600,13 +600,13 @@ export default function HomePage(): JSX.Element | null {
 
                 // If the current user is authorized
                 // to write, add the button for creating
-                // a new game.
-                if (currentUser.isAuthorized('games_write')) {
+                // a new session.
+                if (currentUser.isAuthorized('sessions_write')) {
                   buttons.push({
                     icon: 'remove',
                     key: 'remove',
-                    onClick: () => onGameDelete(game),
-                    tooltipDescription: 'Remove game.',
+                    onClick: () => onSessionDelete(session),
+                    tooltipDescription: 'Remove session.',
                   })
                 }
 
@@ -614,20 +614,20 @@ export default function HomePage(): JSX.Element | null {
               })
 
               return (
-                <div className='SelectionRow Game'>
+                <div className='SelectionRow Session'>
                   <div className={accessibilityClass}>
                     <Tooltip
                       description={
-                        '### Game ID Required\n*This game is not publicly accessible. One must have the game ID to join.*'
+                        '### Session ID Required\n*This session is not publicly accessible. One must have the session ID to join.*'
                       }
                     />
                   </div>
                   <div
                     className='Text'
-                    onClick={() => onGameSelection(game._id)}
+                    onClick={() => onSessionSelection(session._id)}
                   >
-                    {game.name}
-                    <Tooltip description={'Join game.'} />
+                    {session.name}
+                    <Tooltip description={'Join session.'} />
                   </div>
                   <ButtonSvgPanel buttons={buttons} size={'small'} />
                 </div>
@@ -635,7 +635,7 @@ export default function HomePage(): JSX.Element | null {
             }}
             searchableProperties={['name']}
             noItemsDisplay={
-              <div className='NoContent'>No games available...</div>
+              <div className='NoContent'>No sessions available...</div>
             }
             ajaxStatus={'Loaded'}
             applyItemStyling={() => {
@@ -645,19 +645,19 @@ export default function HomePage(): JSX.Element | null {
           />
           <div className='ListActions'>
             <div className='ManualJoin'>
-              <div className='Label'>Enter game ID:</div>
+              <div className='Label'>Enter session ID:</div>
               <DetailString
                 fieldType='optional'
                 handleOnBlur='none'
                 label=''
-                stateValue={manualJoinGameId}
-                setState={setManualJoinGameId}
+                stateValue={manualJoinSessionId}
+                setState={setManualJoinSessionId}
                 uniqueLabelClassName={'Hidden'}
               />
               <ButtonText
                 text='Join'
-                onClick={() => onGameSelection(manualJoinGameId)}
-                disabled={manualJoinGameId.length === 0}
+                onClick={() => onSessionSelection(manualJoinSessionId)}
+                disabled={manualJoinSessionId.length === 0}
               />
             </div>
           </div>
@@ -805,7 +805,7 @@ export default function HomePage(): JSX.Element | null {
       >
         {fileDropBoxJsx}
         <DefaultLayout navigation={navigation}>
-          {gamesJsx}
+          {sessionsJsx}
           {missionsJsx}
           {usersJsx}
         </DefaultLayout>

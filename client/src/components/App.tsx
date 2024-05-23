@@ -1,8 +1,8 @@
 import { useEffect, useRef } from 'react'
 import ServerConnection from 'src/connect/servers'
 import { useGlobalContext } from 'src/context'
-import GameClient from 'src/games'
 import ClientMissionNode from 'src/missions/nodes'
+import ClientSession from 'src/sessions'
 import ClientUser from 'src/users'
 import { TLogin } from '../../../shared/logins'
 import Notification from '../notifications'
@@ -177,17 +177,19 @@ function App(props: {}): JSX.Element | null {
           if (login.user.needsPasswordReset) {
             navigateTo('UserResetPage', {})
           }
-          // Or, if the logged in user is in a game,
-          // then switch to the game page.
-          else if (login.gameId !== null) {
-            let game: GameClient = await server.$fetchCurrentGame(login.gameId)
-            // Navigate based on the game state.
-            switch (game.state) {
+          // Or, if the logged in user is in a session,
+          // then switch to the session page.
+          else if (login.sessionId !== null) {
+            let session: ClientSession = await server.$fetchCurrentSession(
+              login.sessionId,
+            )
+            // Navigate based on the session state.
+            switch (session.state) {
               case 'unstarted':
-                navigateTo('LobbyPage', { game })
+                navigateTo('LobbyPage', { session })
                 break
               case 'started':
-                navigateTo('GamePage', { game })
+                navigateTo('SessionPage', { session })
                 break
               case 'ended':
                 navigateTo('HomePage', {})

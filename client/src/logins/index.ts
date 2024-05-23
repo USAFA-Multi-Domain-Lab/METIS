@@ -26,7 +26,7 @@ export default class ClientLogin {
           if (loginJson !== null) {
             login = {
               user: new ClientUser(loginJson.user),
-              gameId: loginJson.gameId,
+              sessionId: loginJson.sessionId,
             }
           }
 
@@ -75,7 +75,7 @@ export default class ClientLogin {
         if (loginJson !== null) {
           login = {
             user: new ClientUser(loginJson.user),
-            gameId: loginJson.gameId,
+            sessionId: loginJson.sessionId,
           }
         }
 

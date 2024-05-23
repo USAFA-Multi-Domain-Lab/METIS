@@ -1,56 +1,56 @@
 import { useRef, useState } from 'react'
 import { useGlobalContext, useNavigationMiddleware } from 'src/context'
-import GameClient from 'src/games'
+import ClientSession from 'src/sessions'
 import { compute } from 'src/toolbox'
 import { useMountHandler } from 'src/toolbox/hooks'
 import { DefaultLayout } from '.'
 import Prompt from '../content/communication/Prompt'
-import GameConfig from '../content/game/GameConfig'
 import { HomeLink, TNavigation } from '../content/general-layout/Navigation'
-import './GameConfigPage.scss'
+import SessionConfig from '../content/session/SessionConfig'
+import './SessionConfigPage.scss'
 
-export default function GameConfigPage({
-  game,
-}: TGameConfigPage_P): JSX.Element | null {
+export default function SessionConfigPage({
+  session,
+}: TSessionConfigPage_P): JSX.Element | null {
   /* -- state -- */
 
   const globalContext = useGlobalContext()
   const { navigateTo, beginLoading, finishLoading, prompt, handleError } =
     globalContext.actions
-  const [config] = useState(game.config)
+  const [config] = useState(session.config)
 
   /* -- functions -- */
 
   /**
    * Redirects to the correct page based on
-   * the game state. Stays on the same page
-   * if the game has not yet started.
+   * the session state. Stays on the same page
+   * if the session has not yet started.
    */
   const verifyNavigation = useRef(() => {
-    // If the game is started, navigate to the game page.
-    if (game.state === 'started') {
-      navigateTo('GamePage', { game }, { bypassMiddleware: true })
+    // If the session is started, navigate to the session page.
+    if (session.state === 'started') {
+      navigateTo('SessionPage', { session }, { bypassMiddleware: true })
     }
-    // If the game is ended, navigate to the home page.
-    if (game.state === 'ended') {
+    // If the session is ended, navigate to the home page.
+    if (session.state === 'ended') {
       navigateTo('HomePage', {}, { bypassMiddleware: true })
     }
   })
 
   /**
-   * Saves the game configuration.
+   * Saves the session configuration.
    */
   const save = async (): Promise<void> => {
     try {
       // Begin loading.
-      beginLoading('Saving game configuration...')
-      // Save the game configuration.
-      await game.$updateConfig(config)
+      beginLoading('Saving session configuration...')
+      // Save the session configuration.
+      await session.$updateConfig(config)
       // Redirect to the lobby page.
-      navigateTo('LobbyPage', { game })
+      navigateTo('LobbyPage', { session })
     } catch (error) {
       handleError({
-        message: 'Failed to save game configuration.',
+        message: 'Failed to save session configuration.',
         notifyMethod: 'bubble',
       })
     }
@@ -61,7 +61,7 @@ export default function GameConfigPage({
    */
   const cancel = (): void => {
     // Navigate to the lobby page.
-    navigateTo('LobbyPage', { game })
+    navigateTo('LobbyPage', { session })
   }
 
   /* -- effects -- */
@@ -74,7 +74,7 @@ export default function GameConfigPage({
   })
 
   // Add navigation middleware to properly
-  // quit the game before the user navigates
+  // quit the session before the user navigates
   // away.
   useNavigationMiddleware(async (to, next) => {
     // If the user is navigating to the lobby page
@@ -92,11 +92,11 @@ export default function GameConfigPage({
     // If the user confirms quit, proceed.
     if (choice === 'Yes') {
       try {
-        await game.$quit()
+        await session.$quit()
         next()
       } catch (error) {
         handleError({
-          message: 'Failed to quit game.',
+          message: 'Failed to quit session.',
           notifyMethod: 'bubble',
         })
       }
@@ -116,21 +116,21 @@ export default function GameConfigPage({
   )
 
   return (
-    <div className='GameConfigPage Page'>
+    <div className='SessionConfigPage Page'>
       <DefaultLayout navigation={navigation}>
-        <div className='Title'>Game Configuration</div>
+        <div className='Title'>Session Configuration</div>
         <div className='DetailSection Section'>
-          <div className='GameId StaticDetail'>
-            <div className='Label'>Game ID:</div>
-            <div className='Value'>{game._id}</div>
+          <div className='SessionId StaticDetail'>
+            <div className='Label'>Session ID:</div>
+            <div className='Value'>{session._id}</div>
           </div>
           <div className='MissionName StaticDetail'>
             <div className='Label'>Mission:</div>
-            <div className='Value'>{game.name}</div>
+            <div className='Value'>{session.name}</div>
           </div>
         </div>
-        <GameConfig
-          gameConfig={config}
+        <SessionConfig
+          sessionConfig={config}
           saveButtonText={'Save'}
           onSave={save}
           onCancel={cancel}
@@ -141,11 +141,11 @@ export default function GameConfigPage({
 }
 
 /**
- * Props for `GameConfigPage` component.
+ * Props for `SessionConfigPage` component.
  */
-export type TGameConfigPage_P = {
+export type TSessionConfigPage_P = {
   /**
-   * The game to configure.
+   * The session to configure.
    */
-  game: GameClient
+  session: ClientSession
 }

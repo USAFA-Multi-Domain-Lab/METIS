@@ -5,18 +5,18 @@ import ClientMissionAction from 'src/missions/actions'
 import ClientMissionNode from 'src/missions/nodes'
 import ClientUser from 'src/users'
 import { TServerEvents } from '../../../shared/connect/data'
-import Game, {
-  TGameBasicJson,
-  TGameConfig,
-  TGameJson,
-  TGameRole,
-  TGameState,
-} from '../../../shared/games'
+import Session, {
+  TSessionBasicJson,
+  TSessionConfig,
+  TSessionJson,
+  TSessionRole,
+  TSessionState,
+} from '../../../shared/sessions'
 
 /**
- * Client instance for games. Handles client-side logic for games. Communicates with server to conduct game.
+ * Client instance for sessions. Handles client-side logic for sessions. Communicates with server to conduct a session.
  */
-export default class GameClient extends Game<
+export default class ClientSession extends Session<
   ClientUser,
   ClientMission,
   ClientMissionNode,
@@ -38,24 +38,24 @@ export default class GameClient extends Game<
   }
 
   /**
-   * The client's role in the game.
+   * The client's role in the session.
    */
-  protected _role: TGameRole
+  protected _role: TSessionRole
   /**
-   * The client's role in the game.
+   * The client's role in the session.
    */
-  public get role(): TGameRole {
+  public get role(): TSessionRole {
     return this._role
   }
 
-  // todo: Between the time the client joins and this object is constructed, there is possibility that changes have been made in the game. This should be handled.
+  // todo: Between the time the client joins and this object is constructed, there is possibility that changes have been made in the session. This should be handled.
   public constructor(
-    data: TGameJson,
+    data: TSessionJson,
     server: ServerConnection,
-    role: TGameRole,
+    role: TSessionRole,
   ) {
     let _id: string = data._id
-    let state: TGameState = data.state
+    let state: TSessionState = data.state
     let name: string = data.name
     let mission: ClientMission = new ClientMission(data.mission)
     let participants: ClientUser[] = data.participants.map(
@@ -65,7 +65,7 @@ export default class GameClient extends Game<
       (userData) => new ClientUser(userData),
     )
     let banList: string[] = data.banList
-    let config: TGameConfig = data.config
+    let config: TSessionConfig = data.config
 
     super(_id, name, config, mission, participants, banList, supervisors)
     this.server = server
@@ -120,10 +120,13 @@ export default class GameClient extends Game<
   }
 
   /**
-   * Creates game-specific listeners.
+   * Creates session-specific listeners.
    */
   private addListeners(): void {
-    this.server.addEventListener('game-state-change', this.onGameStateChange)
+    this.server.addEventListener(
+      'session-state-change',
+      this.onSessionStateChange,
+    )
     this.server.addEventListener('node-opened', this.onNodeOpened)
     this.server.addEventListener(
       'action-execution-initiated',
@@ -136,11 +139,11 @@ export default class GameClient extends Game<
   }
 
   /**
-   * Removes game-specific listeners.
+   * Removes session-specific listeners.
    */
   private removeListeners(): void {
     this.server.clearEventListeners([
-      'game-state-change',
+      'session-state-change',
       'node-opened',
       'action-execution-initiated',
       'action-execution-completed',
@@ -148,7 +151,7 @@ export default class GameClient extends Game<
   }
 
   // Implemented
-  public toJson(): TGameJson {
+  public toJson(): TSessionJson {
     return {
       _id: this._id,
       state: this.state,
@@ -165,7 +168,7 @@ export default class GameClient extends Game<
   }
 
   // Implemented
-  public toBasicJson(): TGameBasicJson {
+  public toBasicJson(): TSessionBasicJson {
     return {
       _id: this._id,
       missionId: this.missionId,
@@ -194,7 +197,7 @@ export default class GameClient extends Game<
     }
     // Callback error if the node is not in
     // the mission associated with this
-    // game.
+    // session.
     if (node === undefined) {
       return onError('Node was not found in the mission.')
     }
@@ -246,7 +249,7 @@ export default class GameClient extends Game<
     }
     // Callback error if the action is not in
     // the mission associated with this
-    // game.
+    // session.
     if (action === undefined) {
       return onError('Action was not found in the mission.')
     }
@@ -280,8 +283,8 @@ export default class GameClient extends Game<
   }
 
   /**
-   * Request to quit the game.
-   * @returns A promise that resolves when the game is quitted.
+   * Request to quit the session.
+   * @returns A promise that resolves when the session is quitted.
    */
   public async $quit(): Promise<void> {
     return new Promise<void>(
@@ -289,10 +292,10 @@ export default class GameClient extends Game<
         resolve: () => void,
         reject: (error: any) => void,
       ): Promise<void> => {
-        this.server.request('request-quit-game', {}, 'Quitting game.', {
+        this.server.request('request-quit-session', {}, 'Quitting session.', {
           onResponse: (event) => {
             switch (event.method) {
-              case 'game-quit':
+              case 'session-quit':
                 this.removeListeners()
                 this.server.clearUnfulfilledRequests()
                 resolve()
@@ -315,14 +318,14 @@ export default class GameClient extends Game<
   }
 
   /**
-   * Updates the game config.
-   * @param configUpdates The updates to the game config.
-   * @resolves When the game config has been updated.
-   * @rejects If the game failed to update config, or if the game has already
+   * Updates the session config.
+   * @param configUpdates The updates to the session config.
+   * @resolves When the session config has been updated.
+   * @rejects If the session failed to update config, or if the session has already
    * started or ended.
    */
   public async $updateConfig(
-    configUpdates: Partial<TGameConfig>,
+    configUpdates: Partial<TSessionConfig>,
   ): Promise<void> {
     return new Promise<void>(
       async (
@@ -330,24 +333,24 @@ export default class GameClient extends Game<
         reject: (error: any) => void,
       ): Promise<void> => {
         try {
-          // If the game has already started, throw an error.
+          // If the session has already started, throw an error.
           if (this.state === 'started') {
-            throw new Error('Game has already started.')
+            throw new Error('Session has already started.')
           }
-          // If the game has already ended, throw an error.
+          // If the session has already ended, throw an error.
           if (this.state === 'ended') {
-            throw new Error('Game has already ended.')
+            throw new Error('Session has already ended.')
           }
           // Call API to update config.
-          await axios.put(`${Game.API_ENDPOINT}/${this._id}/config/`, {
+          await axios.put(`${Session.API_ENDPOINT}/${this._id}/config/`, {
             ...configUpdates,
           })
-          // Update the game config.
+          // Update the session config.
           Object.assign(this._config, configUpdates)
           // Resolve promise.
           return resolve()
         } catch (error) {
-          console.error('Failed to update game config.')
+          console.error('Failed to update session config.')
           console.error(error)
           return reject(error)
         }
@@ -356,9 +359,9 @@ export default class GameClient extends Game<
   }
 
   /**
-   * Starts the game.
-   * @resolves When the game has started.
-   * @rejects If the game failed to start, or if the game has already
+   * Starts the session.
+   * @resolves When the session has started.
+   * @rejects If the session failed to start, or if the session has already
    * started or ended.
    */
   public async $start(): Promise<void> {
@@ -368,22 +371,22 @@ export default class GameClient extends Game<
         reject: (error: any) => void,
       ): Promise<void> => {
         try {
-          // If the game has already started, throw an error.
+          // If the session has already started, throw an error.
           if (this.state === 'started') {
-            throw new Error('Game has already started.')
+            throw new Error('Session has already started.')
           }
-          // If the game has already ended, throw an error.
+          // If the session has already ended, throw an error.
           if (this.state === 'ended') {
-            throw new Error('Game has already ended.')
+            throw new Error('Session has already ended.')
           }
-          // Call API to start game.
-          await axios.put(`${Game.API_ENDPOINT}/${this._id}/start/`)
-          // Update the game state.
+          // Call API to start session.
+          await axios.put(`${Session.API_ENDPOINT}/${this._id}/start/`)
+          // Update the session state.
           this._state = 'started'
           // Resolve promise.
           return resolve()
         } catch (error) {
-          console.error('Failed to start game.')
+          console.error('Failed to start the session.')
           console.error(error)
           return reject(error)
         }
@@ -392,9 +395,9 @@ export default class GameClient extends Game<
   }
 
   /**
-   * Ends the game.
-   * @resolves When the game has ended.
-   * @rejects If the game failed to end, or if the game has already
+   * Ends the session.
+   * @resolves When the session has ended.
+   * @rejects If the session failed to end, or if the session has already
    * ended or has not yet started.
    */
   public async $end(): Promise<void> {
@@ -404,22 +407,22 @@ export default class GameClient extends Game<
         reject: (error: any) => void,
       ): Promise<void> => {
         try {
-          // If the game is unstarted, throw an error.
+          // If the session is unstarted, throw an error.
           if (this.state === 'unstarted') {
-            throw new Error('Game has not yet started.')
+            throw new Error('Session has not yet started.')
           }
-          // If the game has already ended, throw an error.
+          // If the session has already ended, throw an error.
           if (this.state === 'ended') {
-            throw new Error('Game has already ended.')
+            throw new Error('Session has already ended.')
           }
-          // Call API to end game.
-          await axios.put(`${Game.API_ENDPOINT}/${this._id}/end/`)
-          // Update the game state.
+          // Call API to end session.
+          await axios.put(`${Session.API_ENDPOINT}/${this._id}/end/`)
+          // Update the session state.
           this._state = 'ended'
           // Resolve promise.
           return resolve()
         } catch (error) {
-          console.error('Failed to end game.')
+          console.error('Failed to end the session.')
           console.error(error)
           return reject(error)
         }
@@ -428,7 +431,7 @@ export default class GameClient extends Game<
   }
 
   /**
-   * Kicks a participant from the game.
+   * Kicks a participant from the session.
    * @param userId The ID of the user to be kicked.
    * @resolves When the user has been kicked.
    * @rejects If the user failed to be kicked.
@@ -441,7 +444,7 @@ export default class GameClient extends Game<
       ): Promise<void> => {
         try {
           // Call API to kick user.
-          await axios.put(`${Game.API_ENDPOINT}/${this._id}/kick/${userId}`)
+          await axios.put(`${Session.API_ENDPOINT}/${this._id}/kick/${userId}`)
           // Resolve promise.
           return resolve()
         } catch (error) {
@@ -454,7 +457,7 @@ export default class GameClient extends Game<
   }
 
   /**
-   * Bans a participant from the game.
+   * Bans a participant from the session.
    * @param userId The ID of the user to be banned.
    * @resolves When the user has been banned.
    * @rejects If the user failed to be banned.
@@ -467,7 +470,7 @@ export default class GameClient extends Game<
       ): Promise<void> => {
         try {
           // Call API to ban user.
-          await axios.put(`${Game.API_ENDPOINT}/${this._id}/ban/${userId}`)
+          await axios.put(`${Session.API_ENDPOINT}/${this._id}/ban/${userId}`)
           // Resolve promise.
           return resolve()
         } catch (error) {
@@ -480,16 +483,16 @@ export default class GameClient extends Game<
   }
 
   /**
-   * Handles when the game state has changed.
+   * Handles when the session state has changed.
    * @param event The event emitted by the server.
    */
-  private onGameStateChange = (
-    event: TServerEvents['game-state-change'],
+  private onSessionStateChange = (
+    event: TServerEvents['session-state-change'],
   ): void => {
     // Extract data.
     let { state, config, participants, supervisors } = event.data
 
-    // Update the game with the new data.
+    // Update the session with the new data.
     this._state = state
     this._config = config
     this._participants = participants.map(
@@ -596,24 +599,24 @@ export default class GameClient extends Game<
   }
 
   /**
-   * Fetches all games publicly available.
-   * @resolves To the games.
-   * @rejects If the games failed to be fetched.
+   * Fetches all sessions publicly available.
+   * @resolves To the sessions.
+   * @rejects If the sessions failed to be fetched.
    */
-  public static $fetchAll(): Promise<TGameBasicJson[]> {
-    return new Promise<TGameBasicJson[]>(
+  public static $fetchAll(): Promise<TSessionBasicJson[]> {
+    return new Promise<TSessionBasicJson[]>(
       async (
-        resolve: (games: TGameBasicJson[]) => void,
+        resolve: (sessions: TSessionBasicJson[]) => void,
         reject: (error: any) => void,
       ): Promise<void> => {
         try {
-          // Call API to fetch all games.
-          let games: TGameBasicJson[] = (
-            await axios.get<TGameBasicJson[]>(Game.API_ENDPOINT)
+          // Call API to fetch all sessions.
+          let sessions: TSessionBasicJson[] = (
+            await axios.get<TSessionBasicJson[]>(Session.API_ENDPOINT)
           ).data
-          return resolve(games)
+          return resolve(sessions)
         } catch (error) {
-          console.error('Failed to fetch games.')
+          console.error('Failed to fetch sessions.')
           console.error(error)
           return reject(error)
         }
@@ -622,36 +625,36 @@ export default class GameClient extends Game<
   }
 
   /**
-   * Launches a new game with a new game ID.
-   * @param missionId  The ID of the mission being executed in the game.
-   * @resolves To the game ID.
-   * @rejects If the game failed to launch.
+   * Launches a new session with a new session ID.
+   * @param missionId  The ID of the mission being executed in the session.
+   * @resolves To the session ID.
+   * @rejects If the session failed to launch.
    */
   public static $launch(
     missionId: string,
-    gameConfig: Partial<TGameConfig>,
+    sessionConfig: Partial<TSessionConfig>,
   ): Promise<string> {
     return new Promise<string>(
       async (
-        resolve: (gameId: string) => void,
+        resolve: (sessionId: string) => void,
         reject: (error: any) => void,
       ): Promise<void> => {
         try {
-          // Call API to launch new game with
+          // Call API to launch new session with
           // the mission ID. Await the generated
-          // game ID.
-          let { gameId } = (
-            await axios.post<{ gameId: string }>(
-              `${Game.API_ENDPOINT}/launch/`,
+          // session ID.
+          let { sessionId } = (
+            await axios.post<{ sessionId: string }>(
+              `${Session.API_ENDPOINT}/launch/`,
               {
                 missionId,
-                ...gameConfig,
+                ...sessionConfig,
               },
             )
           ).data
-          return resolve(gameId)
+          return resolve(sessionId)
         } catch (error) {
-          console.error('Failed to launch game.')
+          console.error('Failed to launch session.')
           console.error(error)
           return reject(error)
         }
@@ -660,10 +663,10 @@ export default class GameClient extends Game<
   }
 
   /**
-   * Deletes a game with the given ID.
-   * @param _id The ID of the game to be deleted.
-   * @resolves When the game has been deleted.
-   * @rejects If the game failed to be deleted.
+   * Deletes a session with the given ID.
+   * @param _id The ID of the session to be deleted.
+   * @resolves When the session has been deleted.
+   * @rejects If the session failed to be deleted.
    */
   public static $delete(_id: string): Promise<void> {
     return new Promise<void>(
@@ -672,11 +675,11 @@ export default class GameClient extends Game<
         reject: (error: any) => void,
       ): Promise<void> => {
         try {
-          // Call API to delete game.
-          await axios.delete(`${Game.API_ENDPOINT}/${_id}`)
+          // Call API to delete session.
+          await axios.delete(`${Session.API_ENDPOINT}/${_id}`)
           return resolve()
         } catch (error) {
-          console.error('Failed to delete game.')
+          console.error('Failed to delete session.')
           console.error(error)
           return reject(error)
         }

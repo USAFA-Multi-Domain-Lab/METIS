@@ -50,8 +50,8 @@ export default class UserAccess implements TUserAccess {
       'student',
       'This access level is a student which has restricted access to the entire application.',
       [
-        UserPermission.AVAILABLE_PERMISSIONS.games_join_participant,
-        UserPermission.AVAILABLE_PERMISSIONS.games_read,
+        UserPermission.AVAILABLE_PERMISSIONS.sessions_join_participant,
+        UserPermission.AVAILABLE_PERMISSIONS.sessions_read,
       ],
     ),
     instructor: new UserAccess(
@@ -59,9 +59,9 @@ export default class UserAccess implements TUserAccess {
       'instructor',
       'This access level is an instructor which has restricted access to the entire application.',
       [
-        UserPermission.AVAILABLE_PERMISSIONS.games_join,
-        UserPermission.AVAILABLE_PERMISSIONS.games_read,
-        UserPermission.AVAILABLE_PERMISSIONS.games_write,
+        UserPermission.AVAILABLE_PERMISSIONS.sessions_join,
+        UserPermission.AVAILABLE_PERMISSIONS.sessions_read,
+        UserPermission.AVAILABLE_PERMISSIONS.sessions_write,
         UserPermission.AVAILABLE_PERMISSIONS.missions_read,
         UserPermission.AVAILABLE_PERMISSIONS.missions_write,
         UserPermission.AVAILABLE_PERMISSIONS.users_read_students,
@@ -73,9 +73,9 @@ export default class UserAccess implements TUserAccess {
       'admin',
       'This access level is an administrator which has full access to the entire application.',
       [
-        UserPermission.AVAILABLE_PERMISSIONS.games_join,
-        UserPermission.AVAILABLE_PERMISSIONS.games_read,
-        UserPermission.AVAILABLE_PERMISSIONS.games_write,
+        UserPermission.AVAILABLE_PERMISSIONS.sessions_join,
+        UserPermission.AVAILABLE_PERMISSIONS.sessions_read,
+        UserPermission.AVAILABLE_PERMISSIONS.sessions_write,
         UserPermission.AVAILABLE_PERMISSIONS.missions_read,
         UserPermission.AVAILABLE_PERMISSIONS.missions_write,
         UserPermission.AVAILABLE_PERMISSIONS.users_read,

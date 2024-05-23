@@ -1,6 +1,6 @@
 import axios from 'axios'
 import memoizeOne from 'memoize-one'
-import { TNodeButton } from 'src/components/content/game/mission-map/objects/MissionNode'
+import { TNodeButton } from 'src/components/content/session/mission-map/objects/MissionNode'
 import ClientMission from '..'
 import { TRequestMethod } from '../../../../shared/connect/data'
 import { TCommonMissionActionJson } from '../../../../shared/missions/actions'
@@ -347,7 +347,7 @@ export default class ClientMissionNode extends MissionNode<
   }
 
   /**
-   * Handles node-specific, server-connection events that occur in-game.
+   * Handles node-specific, server-connection events that occur in-session.
    * @param method The method of the request event.
    */
   public handleRequestMade(method: TRequestMethod): void {
@@ -366,7 +366,7 @@ export default class ClientMissionNode extends MissionNode<
   }
 
   /**
-   * Handles node-specific, server-connection events that failed in-game.
+   * Handles node-specific, server-connection events that failed in-session.
    * @param method The method of the request event.
    */
   public handleRequestFailed(method: TRequestMethod): void {

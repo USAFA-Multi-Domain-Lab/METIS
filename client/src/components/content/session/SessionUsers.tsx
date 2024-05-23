@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useGlobalContext } from 'src/context'
-import GameClient from 'src/games'
+import ClientSession from 'src/sessions'
 import { compute } from 'src/toolbox'
 import { useEventListener, useRequireLogin } from 'src/toolbox/hooks'
 import ClientUser from 'src/users'
@@ -8,12 +8,14 @@ import Prompt from '../communication/Prompt'
 import ButtonSvgPanel, {
   TValidPanelButton,
 } from '../user-controls/ButtonSvgPanel'
-import './GameUsers.scss'
+import './SessionUsers.scss'
 
 /**
- * A component displaying the users in the game.
+ * A component displaying the users in the session.
  */
-export default function GameUsers({ game }: TGameUsers_P): JSX.Element | null {
+export default function SessionUsers({
+  session,
+}: TSessionUsers_P): JSX.Element | null {
   /* -- STATE -- */
 
   const globalContext = useGlobalContext()
@@ -22,9 +24,11 @@ export default function GameUsers({ game }: TGameUsers_P): JSX.Element | null {
   const [login] = useRequireLogin()
   const [server] = globalContext.server
   const [participants, setParticipants] = useState<ClientUser[]>(
-    game.participants,
+    session.participants,
   )
-  const [supervisors, setSupervisors] = useState<ClientUser[]>(game.supervisors)
+  const [supervisors, setSupervisors] = useState<ClientUser[]>(
+    session.supervisors,
+  )
 
   /* -- FUNCTIONS -- */
 
@@ -33,7 +37,7 @@ export default function GameUsers({ game }: TGameUsers_P): JSX.Element | null {
    * @param userId The user ID of the participant to kick.
    */
   const onClickKick = async (userId: string): Promise<void> => {
-    // Confirm the user wants to start the game.
+    // Confirm the user wants to start the session.
     let { choice } = await prompt(
       `Are you sure you want to kick "${userId}"?`,
       Prompt.ConfirmationChoices,
@@ -48,7 +52,7 @@ export default function GameUsers({ game }: TGameUsers_P): JSX.Element | null {
       // Begin loading.
       beginLoading(`Kicking "${userId}"...`)
       // Kick the participant.
-      await game.$kick(userId)
+      await session.$kick(userId)
     } catch (error) {
       handleError({
         message: `Failed to kick "${userId}".`,
@@ -65,7 +69,7 @@ export default function GameUsers({ game }: TGameUsers_P): JSX.Element | null {
    * @param userId The user ID of the participant to ban.
    */
   const onClickBan = async (userId: string): Promise<void> => {
-    // Confirm the user wants to start the game.
+    // Confirm the user wants to start the session.
     let { choice } = await prompt(
       `Are you sure you want to ban "${userId}"?`,
       Prompt.ConfirmationChoices,
@@ -80,7 +84,7 @@ export default function GameUsers({ game }: TGameUsers_P): JSX.Element | null {
       // Begin loading.
       beginLoading(`Banning "${userId}"...`)
       // Ban the participant.
-      await game.$ban(userId)
+      await session.$ban(userId)
     } catch (error) {
       handleError({
         message: `Failed to ban "${userId}".`,
@@ -94,11 +98,11 @@ export default function GameUsers({ game }: TGameUsers_P): JSX.Element | null {
 
   /* -- HOOKS -- */
 
-  // Update participant and supervisors lists on game
+  // Update participant and supervisors lists on session
   // state change.
-  useEventListener(server, 'game-state-change', () => {
-    setParticipants(game.participants)
-    setSupervisors(game.supervisors)
+  useEventListener(server, 'session-state-change', () => {
+    setParticipants(session.participants)
+    setSupervisors(session.supervisors)
   })
 
   /* -- RENDER -- */
@@ -117,15 +121,15 @@ export default function GameUsers({ game }: TGameUsers_P): JSX.Element | null {
          */
         const buttons = compute((): TValidPanelButton[] => {
           // If the logged in user is authorized to join
-          // games as a manager or observer, and the user
-          // in question is not authorized to join games
+          // sessions as a manager or observer, and the user
+          // in question is not authorized to join sessions
           // as a manager or observer, then  return the
           // kick and ban buttons.
           if (
-            (login.user.isAuthorized('games_join_manager') ||
-              login.user.isAuthorized('games_join_observer')) &&
-            (!user.isAuthorized('games_join_manager') ||
-              !user.isAuthorized('games_join_observer'))
+            (login.user.isAuthorized('sessions_join_manager') ||
+              login.user.isAuthorized('sessions_join_observer')) &&
+            (!user.isAuthorized('sessions_join_manager') ||
+              !user.isAuthorized('sessions_join_observer'))
           ) {
             return [
               {
@@ -133,14 +137,14 @@ export default function GameUsers({ game }: TGameUsers_P): JSX.Element | null {
                 key: 'kick',
                 onClick: () => onClickKick(user.username),
                 tooltipDescription:
-                  'Kick participant from the game (Can still choose to rejoin).',
+                  'Kick participant from the session (Can still choose to rejoin).',
               },
               {
                 icon: 'ban',
                 key: 'ban',
                 onClick: () => onClickBan(user.username),
                 tooltipDescription:
-                  'Ban participant from the game (Cannot rejoin).',
+                  'Ban participant from the session (Cannot rejoin).',
               },
             ]
           } else {
@@ -183,7 +187,7 @@ export default function GameUsers({ game }: TGameUsers_P): JSX.Element | null {
   })
 
   return (
-    <div className='GameUsers'>
+    <div className='SessionUsers'>
       <div className='Participants'>
         <div className='Subtitle'>Participants:</div>
         <div className='Users'>{participantsJsx}</div>
@@ -197,11 +201,11 @@ export default function GameUsers({ game }: TGameUsers_P): JSX.Element | null {
 }
 
 /**
- * The props for `GameUsers` component.
+ * The props for `SessionUsers` component.
  */
-export type TGameUsers_P = {
+export type TSessionUsers_P = {
   /**
-   * The game client with the users to display.
+   * The session client with the users to display.
    */
-  game: GameClient
+  session: ClientSession
 }

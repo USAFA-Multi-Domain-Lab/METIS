@@ -79,7 +79,7 @@ export default function MissionModificationPanel({
     }
   }
   /**
-   * Handles a request to launch a new game from a mission.
+   * Handles a request to launch a new session from a mission.
    */
   const onLaunchRequest = () => {
     navigateTo('LaunchPage', { missionId: mission._id })
@@ -95,7 +95,7 @@ export default function MissionModificationPanel({
         icon: 'launch',
         key: 'launch',
         onClick: onLaunchRequest,
-        tooltipDescription: 'Launch game.',
+        tooltipDescription: 'Launch session.',
       },
       remove: {
         icon: 'remove',
@@ -132,7 +132,7 @@ export default function MissionModificationPanel({
 
     // If the user has the proper authorization, add
     // the launch button.
-    if (currentUser.isAuthorized('games_write')) {
+    if (currentUser.isAuthorized('sessions_write')) {
       buttons.push(availableButtons.launch)
     }
 
@@ -152,11 +152,11 @@ export default function MissionModificationPanel({
 
   /* -- RENDER -- */
 
-  // If the user is authorized to modify missions or games,
+  // If the user is authorized to modify missions or sessions,
   // then display the mission modification panel.
   if (
     currentUser.isAuthorized('missions_write') ||
-    currentUser.isAuthorized('games_write')
+    currentUser.isAuthorized('sessions_write')
   ) {
     return (
       <div className='MissionModificationPanel'>

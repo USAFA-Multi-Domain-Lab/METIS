@@ -2,12 +2,12 @@ import Footer from '../content/general-layout/Footer'
 import Navigation, { TNavigation } from '../content/general-layout/Navigation'
 import AuthPage from './AuthPage'
 import ChangelogPage from './ChangelogPage'
-import GameConfigPage from './GameConfigPage'
-import GamePage from './GamePage'
 import HomePage from './HomePage'
 import LaunchPage from './LaunchPage'
 import LobbyPage from './LobbyPage'
 import MissionPage from './MissionPage'
+import SessionConfigPage from './SessionConfigPage'
+import SessionPage from './SessionPage'
 import UserPage from './UserPage'
 import UserResetPage from './UserResetPage'
 import './index.scss'
@@ -23,8 +23,8 @@ export const PAGE_REGISTRY = {
   HomePage,
   LaunchPage,
   LobbyPage,
-  GameConfigPage,
-  GamePage,
+  SessionConfigPage,
+  SessionPage,
   UserResetPage,
   MissionPage,
   UserPage,

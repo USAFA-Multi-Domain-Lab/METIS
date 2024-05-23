@@ -1,17 +1,17 @@
 import { useState } from 'react'
 import { useGlobalContext } from 'src/context'
-import GameClient from 'src/games'
 import ClientMission from 'src/missions'
+import ClientSession from 'src/sessions'
 import { compute } from 'src/toolbox'
 import { useMountHandler } from 'src/toolbox/hooks'
 import { DefaultLayout } from '.'
-import Game from '../../../../shared/games'
-import GameConfig from '../content/game/GameConfig'
+import Session from '../../../../shared/sessions'
 import { HomeLink, TNavigation } from '../content/general-layout/Navigation'
+import SessionConfig from '../content/session/SessionConfig'
 import './LaunchPage.scss'
 
 /**
- * Page responsible for launching a game with the given
+ * Page responsible for launching a session with the given
  * configuration.
  */
 export default function LaunchPage({
@@ -26,7 +26,7 @@ export default function LaunchPage({
   const [mission, setMission] = useState<ClientMission>(
     new ClientMission({ _id: missionId }),
   )
-  const [gameConfig, setGameConfig] = useState(Game.DEFAULT_CONFIG)
+  const [sessionConfig, setSessionConfig] = useState(Session.DEFAULT_CONFIG)
 
   /* -- effects -- */
 
@@ -66,23 +66,23 @@ export default function LaunchPage({
   /* -- functions -- */
 
   /**
-   * Callback for saving the game configuration, which
-   * launches the game.
+   * Callback for saving the session configuration, which
+   * launches the session.
    */
   const launch = async () => {
     if (server !== null) {
       try {
-        // Notify user of game launch.
-        beginLoading('Launching game...')
-        // Launch game from mission ID.
-        await GameClient.$launch(mission._id, gameConfig)
+        // Notify user of session launch.
+        beginLoading('Launching session...')
+        // Launch session from mission ID.
+        await ClientSession.$launch(mission._id, sessionConfig)
         // Navigate to home page.
         navigateTo('HomePage', {})
         // Notify user of success.
-        notify('Successfully launched game.')
+        notify('Successfully launched session.')
       } catch (error) {
         handleError({
-          message: 'Failed to launch game. Contact system administrator.',
+          message: 'Failed to launch session. Contact system administrator.',
           notifyMethod: 'bubble',
         })
       }
@@ -107,8 +107,8 @@ export default function LaunchPage({
     <div className='LaunchPage Page'>
       <DefaultLayout navigation={navigation}>
         <div className='MissionName'>{mission.name}</div>
-        <GameConfig
-          gameConfig={gameConfig}
+        <SessionConfig
+          sessionConfig={sessionConfig}
           saveButtonText={'Launch'}
           onSave={launch}
           onCancel={cancel}
@@ -123,7 +123,7 @@ export default function LaunchPage({
  */
 export type TLaunchPage_P = {
   /**
-   * The ID of the game to configure.
+   * The ID of the session to configure.
    */
   missionId: string
 }

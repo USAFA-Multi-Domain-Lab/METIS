@@ -1,29 +1,29 @@
 import { Request, Response } from 'express-serve-static-core'
 import expressWs from 'express-ws'
-import { TGameBasicJson, TGameConfig } from 'metis/games'
 import { TCommonMissionJson } from 'metis/missions'
 import MissionModel from 'metis/server/database/models/missions'
-import GameServer from 'metis/server/games'
-import { databaseLogger, gameLogger } from 'metis/server/logging'
+import { databaseLogger, sessionLogger } from 'metis/server/logging'
 import defineRequests, {
   RequestBodyFilters,
 } from 'metis/server/middleware/requests'
 import ServerMission from 'metis/server/missions'
+import SessionServer from 'metis/server/sessions'
 import ServerUser from 'metis/server/users'
+import { TSessionBasicJson, TSessionConfig } from 'metis/sessions'
 import { auth } from '../../middleware/users'
 
 const routerMap = (router: expressWs.Router, done: () => void) => {
   /* ---------------------------- CREATE ---------------------------- */
 
   /**
-   * This will launch a game for a user to execute
+   * This will launch a session for a user to execute
    * a mission.
-   * @returns The ID of the newly launched game in JSON format.
+   * @returns The ID of the newly launched session in JSON format.
    */
-  const launchGame = (request: Request, response: Response) => {
+  const launchSession = (request: Request, response: Response) => {
     // Get data from the request body.
     let missionId: string = request.body.missionId
-    let gameConfig: TGameConfig = {
+    let sessionConfig: TSessionConfig = {
       accessibility: request.body.accessibility,
       autoAssign: request.body.autoAssign,
       infiniteResources: request.body.infiniteResources,
@@ -49,14 +49,17 @@ const routerMap = (router: expressWs.Router, done: () => void) => {
         try {
           // Create mission.
           let mission: ServerMission = new ServerMission(missionData)
-          // Launch the game.
-          let game: GameServer = GameServer.launch(mission, gameConfig)
-          // Return the ID of the newly launched game
+          // Launch the session.
+          let session: SessionServer = SessionServer.launch(
+            mission,
+            sessionConfig,
+          )
+          // Return the ID of the newly launched session
           // as JSON.
-          return response.json({ gameId: game._id })
+          return response.json({ sessionId: session._id })
         } catch (error: any) {
-          gameLogger.error('Failed to launch game.')
-          gameLogger.error(error)
+          sessionLogger.error('Failed to launch session.')
+          sessionLogger.error(error)
           return response.sendStatus(500)
         }
       })
@@ -65,137 +68,137 @@ const routerMap = (router: expressWs.Router, done: () => void) => {
   /* ---------------------------- READ ------------------------------ */
 
   /**
-   * This will retrieve all publicly accessible games.
-   * @returns All publicly accessible games in JSON format.
+   * This will retrieve all publicly accessible sessions.
+   * @returns All publicly accessible sessions in JSON format.
    */
-  const getGames = (request: Request, response: Response) => {
-    // Define an array to store the games.
-    let games: TGameBasicJson[] = []
+  const getSessions = (request: Request, response: Response) => {
+    // Define an array to store the sessions.
+    let sessions: TSessionBasicJson[] = []
     let user: ServerUser = response.locals.user
-    let hasAccess: boolean = user.isAuthorized(['games_write'])
+    let hasAccess: boolean = user.isAuthorized(['sessions_write'])
 
-    // Loop through all games and add the public games
+    // Loop through all sessions and add the public sessions
     // to the array.
-    for (let game of GameServer.getAll()) {
-      if (game.config.accessibility === 'public' || hasAccess) {
-        games.push(
-          game.toBasicJson({
-            includeSensitiveData: user.isAuthorized(['games_write']),
+    for (let session of SessionServer.getAll()) {
+      if (session.config.accessibility === 'public' || hasAccess) {
+        sessions.push(
+          session.toBasicJson({
+            includeSensitiveData: user.isAuthorized(['sessions_write']),
           }),
         )
       }
     }
 
     // Return the response as JSON.
-    return response.json(games)
+    return response.json(sessions)
   }
 
   /* ---------------------------- UPDATE ---------------------------- */
 
   /**
-   * This will start a game.
+   * This will start a session.
    * @returns HTTP status code.
    */
-  const startGame = (request: Request, response: Response) => {
+  const startSession = (request: Request, response: Response) => {
     let _id: string = request.params._id
-    let game: GameServer | undefined = GameServer.get(_id)
+    let session: SessionServer | undefined = SessionServer.get(_id)
 
-    // Send 404 if game could not be found.
-    if (game === undefined) {
+    // Send 404 if session could not be found.
+    if (session === undefined) {
       return response.sendStatus(404)
     }
-    // If the game state is not 'unstarted', return
+    // If the session state is not 'unstarted', return
     // 409 conflict.
-    if (game.state !== 'unstarted') {
+    if (session.state !== 'unstarted') {
       return response.sendStatus(409)
     }
 
-    // Start the game.
-    game.state = 'started'
+    // Start the session.
+    session.state = 'started'
 
     // Return response.
     return response.sendStatus(200)
   }
 
   /**
-   * This will update the configuration of a game.
+   * This will update the configuration of a session.
    * @returns HTTP status code.
    */
-  const updateGameConfig = (request: Request, response: Response) => {
+  const updateSessionConfig = (request: Request, response: Response) => {
     // Get data from the request body.
-    let gameConfigUpdate: Partial<TGameConfig> = {
+    let sessionConfigUpdate: Partial<TSessionConfig> = {
       accessibility: request.body.accessibility,
       autoAssign: request.body.autoAssign,
       infiniteResources: request.body.infiniteResources,
       effectsEnabled: request.body.effectsEnabled,
     }
-    // Get game.
+    // Get session.
     let _id: string = request.params._id
-    let game: GameServer | undefined = GameServer.get(_id)
+    let session: SessionServer | undefined = SessionServer.get(_id)
 
-    // Send 404 if game could not be found.
-    if (game === undefined) {
+    // Send 404 if session could not be found.
+    if (session === undefined) {
       return response.sendStatus(404)
     }
-    // If the game state is not 'unstarted', return
+    // If the session state is not 'unstarted', return
     // 409 conflict.
-    if (game.state !== 'unstarted') {
+    if (session.state !== 'unstarted') {
       return response.sendStatus(409)
     }
 
-    // Update game configuration.
-    game.updateConfig(gameConfigUpdate)
+    // Update session configuration.
+    session.updateConfig(sessionConfigUpdate)
 
     // Return response.
     return response.sendStatus(200)
   }
 
   /**
-   * This will end a game.
+   * This will end a session.
    * @returns HTTP status code.
    */
-  const endGame = (request: Request, response: Response) => {
+  const endSession = (request: Request, response: Response) => {
     let _id: string = request.params._id
-    let game: GameServer | undefined = GameServer.get(_id)
+    let session: SessionServer | undefined = SessionServer.get(_id)
 
-    // Send 404 if game could not be found.
-    if (game === undefined) {
+    // Send 404 if session could not be found.
+    if (session === undefined) {
       return response.sendStatus(404)
     }
-    // If the game state is not 'started', return
+    // If the session state is not 'started', return
     // 409 conflict.
-    if (game.state !== 'started') {
+    if (session.state !== 'started') {
       return response.sendStatus(409)
     }
 
-    // End the game.
-    game.state = 'ended'
+    // End the session.
+    session.state = 'ended'
 
-    // For now, destroy the game until we have a
-    // reason to keep ended games in memory.
-    game.destroy()
+    // For now, destroy the session until we have a
+    // reason to keep ended sessions in memory.
+    session.destroy()
 
     // Return response.
     return response.sendStatus(200)
   }
 
   /**
-   * This will kick a participant from a game.
+   * This will kick a participant from a session.
    * @returns HTTP status code.
    */
   const kickParticipant = (request: Request, response: Response) => {
     let _id: string = request.params._id
     let participantId: string = request.params.participantId
-    let game: GameServer | undefined = GameServer.get(_id)
+    let session: SessionServer | undefined = SessionServer.get(_id)
 
-    // Send 404 if game could not be found.
-    if (game === undefined) {
+    // Send 404 if session could not be found.
+    if (session === undefined) {
       return response.sendStatus(404)
     }
 
     try {
       // Kick participant.
-      game.kick(participantId)
+      session.kick(participantId)
       // Return response.
       return response.sendStatus(200)
     } catch (code: any) {
@@ -206,22 +209,22 @@ const routerMap = (router: expressWs.Router, done: () => void) => {
   }
 
   /**
-   * This will ban a participant from a game.
+   * This will ban a participant from a session.
    * @returns HTTP status code.
    */
   const banParticipant = (request: Request, response: Response) => {
     let _id: string = request.params._id
     let participantId: string = request.params.participantId
-    let game: GameServer | undefined = GameServer.get(_id)
+    let session: SessionServer | undefined = SessionServer.get(_id)
 
-    // Send 404 if game could not be found.
-    if (game === undefined) {
+    // Send 404 if session could not be found.
+    if (session === undefined) {
       return response.sendStatus(404)
     }
 
     try {
       // Ban participant.
-      game.ban(participantId)
+      session.ban(participantId)
       // Return response.
       return response.sendStatus(200)
     } catch (code: any) {
@@ -234,32 +237,32 @@ const routerMap = (router: expressWs.Router, done: () => void) => {
   /* ---------------------------- DELETE ---------------------------- */
 
   /**
-   * This will delete a game.
+   * This will delete a session.
    * @returns HTTP status code.
    */
-  const deleteGame = (request: Request, response: Response) => {
+  const deleteSession = (request: Request, response: Response) => {
     let _id: string = request.params._id
-    let game: GameServer | undefined = GameServer.get(_id)
+    let session: SessionServer | undefined = SessionServer.get(_id)
 
-    // Send 404 if game could not be found.
-    if (game === undefined) {
+    // Send 404 if session could not be found.
+    if (session === undefined) {
       return response.sendStatus(404)
     }
 
-    // Destroy game and return response.
-    game.destroy()
+    // Destroy session and return response.
+    session.destroy()
     return response.sendStatus(200)
   }
 
   /* ---------------------------- ROUTES ---------------------------- */
 
-  // -- GET | /api/v1/games/ --
-  router.get('/', auth({}), getGames)
+  // -- GET | /api/v1/sessions/ --
+  router.get('/', auth({}), getSessions)
 
-  // -- POST | /api/v1/games/launch/ --
+  // -- POST | /api/v1/sessions/launch/ --
   router.post(
     '/launch/',
-    auth({ permissions: ['games_write', 'missions_read'] }),
+    auth({ permissions: ['sessions_write', 'missions_read'] }),
     defineRequests(
       {
         body: {
@@ -269,7 +272,7 @@ const routerMap = (router: expressWs.Router, done: () => void) => {
       {
         body: {
           accessibility: RequestBodyFilters.STRING_LITERAL<
-            TGameConfig['accessibility']
+            TSessionConfig['accessibility']
           >(['public', 'id-required', 'invite-only']),
           autoAssign: RequestBodyFilters.BOOLEAN,
           infiniteResources: RequestBodyFilters.BOOLEAN,
@@ -277,22 +280,26 @@ const routerMap = (router: expressWs.Router, done: () => void) => {
         },
       },
     ),
-    launchGame,
+    launchSession,
   )
 
-  // -- PUT | /api/v1/games/:_id/start/
-  router.put('/:_id/start/', auth({ permissions: ['games_write'] }), startGame)
+  // -- PUT | /api/v1/sessions/:_id/start/
+  router.put(
+    '/:_id/start/',
+    auth({ permissions: ['sessions_write'] }),
+    startSession,
+  )
 
-  // -- PUT | /api/v1/games/:_id/config/
+  // -- PUT | /api/v1/sessions/:_id/config/
   router.put(
     '/:_id/config/',
-    auth({ permissions: ['games_write'] }),
+    auth({ permissions: ['sessions_write'] }),
     defineRequests(
       {},
       {
         body: {
           accessibility: RequestBodyFilters.STRING_LITERAL<
-            TGameConfig['accessibility']
+            TSessionConfig['accessibility']
           >(['public', 'id-required', 'invite-only']),
           autoAssign: RequestBodyFilters.BOOLEAN,
           infiniteResources: RequestBodyFilters.BOOLEAN,
@@ -300,28 +307,36 @@ const routerMap = (router: expressWs.Router, done: () => void) => {
         },
       },
     ),
-    updateGameConfig,
+    updateSessionConfig,
   )
 
-  // -- PUT | /api/v1/games/:_id/end/
-  router.put('/:_id/end/', auth({ permissions: ['games_write'] }), endGame)
+  // -- PUT | /api/v1/sessions/:_id/end/
+  router.put(
+    '/:_id/end/',
+    auth({ permissions: ['sessions_write'] }),
+    endSession,
+  )
 
-  // -- PUT | /api/v1/games/:_id/kick/:participantId/ --
+  // -- PUT | /api/v1/sessions/:_id/kick/:participantId/ --
   router.put(
     '/:_id/kick/:participantId/',
-    auth({ permissions: ['games_write'] }),
+    auth({ permissions: ['sessions_write'] }),
     kickParticipant,
   )
 
-  // -- PUT | /api/v1/games/:_id/ban/:participantId/ --
+  // -- PUT | /api/v1/sessions/:_id/ban/:participantId/ --
   router.put(
     '/:_id/ban/:participantId/',
-    auth({ permissions: ['games_write'] }),
+    auth({ permissions: ['sessions_write'] }),
     banParticipant,
   )
 
-  // -- DELETE | /api/v1/games/:_id/ --
-  router.delete('/:_id/', auth({ permissions: ['games_write'] }), deleteGame)
+  // -- DELETE | /api/v1/sessions/:_id/ --
+  router.delete(
+    '/:_id/',
+    auth({ permissions: ['sessions_write'] }),
+    deleteSession,
+  )
 
   done()
 }

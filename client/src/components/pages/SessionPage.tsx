@@ -1,9 +1,9 @@
 import { useRef, useState } from 'react'
-import { IConsoleOutput } from 'src/components/content/game/ConsoleOutput'
+import { IConsoleOutput } from 'src/components/content/session/ConsoleOutput'
 import { useGlobalContext, useNavigationMiddleware } from 'src/context'
-import GameClient from 'src/games'
 import ClientMission from 'src/missions'
 import ClientMissionNode from 'src/missions/nodes'
+import ClientSession from 'src/sessions'
 import { compute } from 'src/toolbox'
 import {
   useEventListener,
@@ -14,26 +14,28 @@ import { DefaultLayout, TPage_P } from '.'
 import MapToolbox from '../../../../shared/toolbox/maps'
 import { TWithKey } from '../../../../shared/toolbox/objects'
 import Prompt from '../content/communication/Prompt'
-import OutputPanel from '../content/game/OutputPanel'
-import StatusBar from '../content/game/StatusBar'
-import UsersPanel from '../content/game/UsersPanel'
-import MissionMap from '../content/game/mission-map'
-import ActionExecModal from '../content/game/mission-map/ui/overlay/modals/ActionExecModal'
 import { HomeLink } from '../content/general-layout/Navigation'
 import {
   EPanelSizingMode,
   PanelSizeRelationship,
   ResizablePanel,
 } from '../content/general-layout/ResizablePanels'
+import OutputPanel from '../content/session/OutputPanel'
+import StatusBar from '../content/session/StatusBar'
+import UsersPanel from '../content/session/UsersPanel'
+import MissionMap from '../content/session/mission-map'
+import ActionExecModal from '../content/session/mission-map/ui/overlay/modals/ActionExecModal'
 import { TValidPanelButton } from '../content/user-controls/ButtonSvgPanel'
 import { TButtonText } from '../content/user-controls/ButtonText'
-import './GamePage.scss'
+import './SessionPage.scss'
 
 /**
- * Renders the game page.
+ * Renders the session page.
  */
-export default function GamePage({ game }: TGamePage_P): JSX.Element | null {
-  console.log(game._id)
+export default function SessionPage({
+  session,
+}: TSessionPage_P): JSX.Element | null {
+  console.log(session._id)
 
   /* -- global-context -- */
 
@@ -53,14 +55,14 @@ export default function GamePage({ game }: TGamePage_P): JSX.Element | null {
   const [nodeToExecute, setNodeToExecute] = useState<ClientMissionNode | null>(
     null,
   )
-  const [resources, setResources] = useState<number>(game.resources)
+  const [resources, setResources] = useState<number>(session.resources)
   const [login] = useRequireLogin()
   const [rightPanelTab, setRightPanelTab] =
-    useState<TGameRightPanelTab>('output')
+    useState<TSessionRightPanelTab>('output')
 
   /* -- variables -- */
 
-  let mission: ClientMission = game.mission
+  let mission: ClientMission = session.mission
   // Dynamic (default) sizing of the output panel.
   let panel2DefaultSize: number = 400
   // The current aspect ratio of the window.
@@ -83,7 +85,7 @@ export default function GamePage({ game }: TGamePage_P): JSX.Element | null {
   const onNodeSelect = async (node: ClientMissionNode): Promise<void> => {
     // If the role is 'supervisor', abort
     // selection handling.
-    if (game.role === 'supervisor') {
+    if (session.role === 'supervisor') {
       return
     }
 
@@ -96,7 +98,7 @@ export default function GamePage({ game }: TGamePage_P): JSX.Element | null {
     // Logic that opens the next level of nodes
     // (displays the selected node's child nodes)
     if (node.openable) {
-      game.openNode(node._id, {
+      session.openNode(node._id, {
         onError: (message) => handleError({ message, notifyMethod: 'bubble' }),
       })
     }
@@ -104,7 +106,7 @@ export default function GamePage({ game }: TGamePage_P): JSX.Element | null {
     else if (node.readyToExecute) {
       // If there are no more resources left
       // to spend, notify the user.
-      if (game.resources === 0) {
+      if (session.resources === 0) {
         notify(`You have no more resources left to spend.`)
       }
       // If there is not enough resources to
@@ -112,7 +114,7 @@ export default function GamePage({ game }: TGamePage_P): JSX.Element | null {
       else if (
         !MapToolbox.mapToArray(
           node.actions,
-          (action) => action.resourceCost <= game.resources,
+          (action) => action.resourceCost <= session.resources,
         ).includes(true)
       ) {
         notify('Insufficient resources available to execute action.')
@@ -125,18 +127,18 @@ export default function GamePage({ game }: TGamePage_P): JSX.Element | null {
   }
 
   /**
-   * Callback for the end game button.
+   * Callback for the end session button.
    */
-  const onClickEndGame = async () => {
-    // If the game is not started, verify navigation.
-    if (game.state !== 'started') {
+  const onClickEndSession = async () => {
+    // If the session is not started, verify navigation.
+    if (session.state !== 'started') {
       verifyNavigation.current()
       return
     }
 
-    // Confirm the user wants to end the game.
+    // Confirm the user wants to end the session.
     let { choice } = await prompt(
-      'Please confirm ending the game.',
+      'Please confirm ending the session.',
       Prompt.ConfirmationChoices,
     )
 
@@ -150,14 +152,14 @@ export default function GamePage({ game }: TGamePage_P): JSX.Element | null {
       // redirect.
       verifyNavigation.current = () => {}
       // Begin loading.
-      beginLoading('Ending game...')
-      // Start the game.
-      await game.$end()
-      // Redirect to game page.
+      beginLoading('Ending session...')
+      // Start the session.
+      await session.$end()
+      // Redirect to session page.
       navigateTo('HomePage', {}, { bypassMiddleware: true })
     } catch (error) {
       handleError({
-        message: 'Failed to end game.',
+        message: 'Failed to end session.',
         notifyMethod: 'bubble',
       })
     }
@@ -165,16 +167,16 @@ export default function GamePage({ game }: TGamePage_P): JSX.Element | null {
 
   /**
    * Redirects to the correct page based on
-   * the game state. Stays on the same page
-   * if the game is started and not ended.
+   * the session state. Stays on the same page
+   * if the session is started and not ended.
    */
   const verifyNavigation = useRef(() => {
-    // If the game is unstarted, navigate to the lobby page.
-    if (game.state === 'unstarted') {
-      navigateTo('LobbyPage', { game }, { bypassMiddleware: true })
+    // If the session is unstarted, navigate to the lobby page.
+    if (session.state === 'unstarted') {
+      navigateTo('LobbyPage', { session }, { bypassMiddleware: true })
     }
-    // If the game is ended, navigate to the home page.
-    if (game.state === 'ended') {
+    // If the session is ended, navigate to the home page.
+    if (session.state === 'ended') {
       navigateTo('HomePage', {}, { bypassMiddleware: true })
     }
   })
@@ -187,12 +189,16 @@ export default function GamePage({ game }: TGamePage_P): JSX.Element | null {
   const navigation = compute(() => {
     let links: TWithKey<TButtonText>[] = []
 
-    // Push end game button, if user is authorized.
+    // Push end session button, if user is authorized.
     if (
-      login.user.isAuthorized('games_join_manager') ||
-      login.user.isAuthorized('games_join_observer')
+      login.user.isAuthorized('sessions_join_manager') ||
+      login.user.isAuthorized('sessions_join_observer')
     ) {
-      links.push({ key: 'end-game', text: 'End Game', onClick: onClickEndGame })
+      links.push({
+        key: 'end-session',
+        text: 'End Session',
+        onClick: onClickEndSession,
+      })
     }
 
     // Push quit button.
@@ -209,10 +215,10 @@ export default function GamePage({ game }: TGamePage_P): JSX.Element | null {
    * Class for root element.
    */
   const rootClass = compute((): string => {
-    let classList: string[] = ['GamePage', 'Page']
+    let classList: string[] = ['SessionPage', 'Page']
 
     // Add the role to the class list.
-    classList.push(game.role)
+    classList.push(session.role)
 
     // Return the class list as a joined string.
     return classList.join(' ')
@@ -228,7 +234,7 @@ export default function GamePage({ game }: TGamePage_P): JSX.Element | null {
     // If resources are not infinite, and the mission
     // has no resources left, add the red alert
     // class to the resources.
-    if (!game.config.infiniteResources && game.resources <= 0) {
+    if (!session.config.infiniteResources && session.resources <= 0) {
       resourcesClassList.push('RedAlert')
     }
 
@@ -273,18 +279,18 @@ export default function GamePage({ game }: TGamePage_P): JSX.Element | null {
 
   /* -- effects -- */
 
-  // Verify navigation on mount and on game state change.
+  // Verify navigation on mount and on session state change.
   useMountHandler((done) => {
     finishLoading()
     verifyNavigation.current()
     done()
   })
-  useEventListener(server, 'game-state-change', () =>
+  useEventListener(server, 'session-state-change', () =>
     verifyNavigation.current(),
   )
 
   // Add navigation middleware to properly
-  // quit the game before the user navigates
+  // quit the session before the user navigates
   // away.
   useNavigationMiddleware(async (to, next) => {
     // Prompt the user for confirmation.
@@ -296,11 +302,11 @@ export default function GamePage({ game }: TGamePage_P): JSX.Element | null {
     // If the user confirms quit, proceed.
     if (choice === 'Yes') {
       try {
-        await game.$quit()
+        await session.$quit()
         next()
       } catch (error) {
         handleError({
-          message: 'Failed to quit game.',
+          message: 'Failed to quit session.',
           notifyMethod: 'bubble',
         })
       }
@@ -309,7 +315,7 @@ export default function GamePage({ game }: TGamePage_P): JSX.Element | null {
 
   // Update the resources when an action is executed.
   useEventListener(server, 'action-execution-initiated', () => {
-    setResources(game.resources)
+    setResources(session.resources)
   })
 
   /* -- pre-rendering-processing -- */
@@ -332,7 +338,7 @@ export default function GamePage({ game }: TGamePage_P): JSX.Element | null {
       <div className='TopBar'>
         <div className={resourcesClass}>
           Resources:{' '}
-          {game.config.infiniteResources ? (
+          {session.config.infiniteResources ? (
             <span className='Count Infinite'>ထ</span>
           ) : (
             <span className='Count Finite'>
@@ -356,7 +362,7 @@ export default function GamePage({ game }: TGamePage_P): JSX.Element | null {
       return (
         <ActionExecModal
           node={nodeToExecute}
-          game={game}
+          session={session}
           close={() => setNodeToExecute(null)}
         />
       )
@@ -396,7 +402,7 @@ export default function GamePage({ game }: TGamePage_P): JSX.Element | null {
                 case 'output':
                   return <OutputPanel mission={mission} />
                 case 'users':
-                  return <UsersPanel game={game} key={'users-panel'} />
+                  return <UsersPanel session={session} key={'users-panel'} />
                 default:
                   return null
               }
@@ -411,16 +417,16 @@ export default function GamePage({ game }: TGamePage_P): JSX.Element | null {
 /* -- types -- */
 
 /**
- * Prop type for `GamePage`.
+ * Prop type for `SessionPage`.
  */
-export interface TGamePage_P extends TPage_P {
+export interface TSessionPage_P extends TPage_P {
   /**
-   * The game client to use on the page.
+   * The session client to use on the page.
    */
-  game: GameClient
+  session: ClientSession
 }
 
 /**
- * Available tabs for the right panel on the game page.
+ * Available tabs for the right panel on the session page.
  */
-export type TGameRightPanelTab = 'output' | 'users'
+export type TSessionRightPanelTab = 'output' | 'users'

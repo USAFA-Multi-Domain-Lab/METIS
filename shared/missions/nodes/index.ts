@@ -311,7 +311,7 @@ export default abstract class MissionNode<
 
   // Implemented
   public toJson(options: TNodeJsonOptions = {}): TMissionNodeJson {
-    let { includeGameData = false } = options
+    let { includeSessionData: includeSessionData = false } = options
 
     // Construct base JSON.
     let json: TMissionNodeJson = {
@@ -338,9 +338,9 @@ export default abstract class MissionNode<
       json._id = this._id
     }
 
-    // Include game data if includeGameData
+    // Include session data if includeSessionData
     // flag was set.
-    if (includeGameData) {
+    if (includeSessionData) {
       // Construct execution JSON.
       let executionJson: TActionExecutionJson | null = null
 
@@ -353,18 +353,18 @@ export default abstract class MissionNode<
         outcome.toJson(),
       )
 
-      // Construct game-specific JSON.
-      let gameJson: IMissionNodeGameJson = {
+      // Construct session-specific JSON.
+      let sessionJson: IMissionNodeSessionJson = {
         opened: this.opened,
         executionState: this.executionState,
         execution: executionJson,
         outcomes: outcomeJSON,
       }
 
-      // Join game-specific JSON with base JSON.
+      // Join session-specific JSON with base JSON.
       json = {
         ...json,
-        ...gameJson,
+        ...sessionJson,
       }
     }
 
@@ -569,7 +569,7 @@ export interface TCommonMissionNode {
 }
 
 /**
- * Game-agnostic JSON data for a MissionNode object.
+ * Session-agnostic JSON data for a MissionNode object.
  */
 export interface TCommonMissionNodeJson {
   /**
@@ -616,9 +616,9 @@ export interface TCommonMissionNodeJson {
 }
 
 /**
- * Game-specific JSON data for a MissionNode object.
+ * Session-specific JSON data for a MissionNode object.
  */
-export interface IMissionNodeGameJson {
+export interface IMissionNodeSessionJson {
   opened: boolean
   executionState: TNodeExecutionState
   execution: TActionExecutionJson | null
@@ -627,21 +627,21 @@ export interface IMissionNodeGameJson {
 
 /**
  * Plain JSON representation of a MissionNode object.
- * Type built from TCommonMissionNodeJson and IMissionNodeGameJSON,
- * with all properties from IMissionNodeGameJSON being partial.
+ * Type built from TCommonMissionNodeJson and IMissionNodeSessionJSON,
+ * with all properties from IMissionNodeSessionJSON being partial.
  */
 export type TMissionNodeJson = TCommonMissionNodeJson &
-  Partial<IMissionNodeGameJson>
+  Partial<IMissionNodeSessionJson>
 
 /**
  * Options for MissionNode.toJSON method.
  */
 export type TNodeJsonOptions = {
   /**
-   * Whether to include game-specific data in the JSON export.
+   * Whether to include session-specific data in the JSON export.
    * @default false
    */
-  includeGameData?: boolean
+  includeSessionData?: boolean
 }
 
 /**

@@ -1,6 +1,6 @@
 import { useRef } from 'react'
 import { useGlobalContext, useNavigationMiddleware } from 'src/context'
-import GameClient from 'src/games'
+import ClientSession from 'src/sessions'
 import { compute } from 'src/toolbox'
 import {
   useEventListener,
@@ -9,16 +9,18 @@ import {
 } from 'src/toolbox/hooks'
 import { DefaultLayout } from '.'
 import Prompt from '../content/communication/Prompt'
-import GameUsers from '../content/game/GameUsers'
 import { HomeLink, TNavigation } from '../content/general-layout/Navigation'
+import SessionUsers from '../content/session/SessionUsers'
 import { ButtonText } from '../content/user-controls/ButtonText'
 import './LobbyPage.scss'
 
 /**
  * Page responsible for viewing/managing participants before
- * game start.
+ * session start.
  */
-export default function LobbyPage({ game }: TLobbyPage_P): JSX.Element | null {
+export default function LobbyPage({
+  session,
+}: TLobbyPage_P): JSX.Element | null {
   /* -- state -- */
 
   const globalContext = useGlobalContext()
@@ -48,8 +50,8 @@ export default function LobbyPage({ game }: TLobbyPage_P): JSX.Element | null {
     // Hide the button section if the user is
     // not authorized.
     if (
-      !login.user.isAuthorized('games_join_manager') ||
-      !login.user.isAuthorized('games_join_observer')
+      !login.user.isAuthorized('sessions_join_manager') ||
+      !login.user.isAuthorized('sessions_join_observer')
     ) {
       classNames.push('Hidden')
     }
@@ -61,33 +63,33 @@ export default function LobbyPage({ game }: TLobbyPage_P): JSX.Element | null {
 
   /**
    * Redirects to the correct page based on
-   * the game state. Stays on the same page
-   * if the game has not yet started.
+   * the session state. Stays on the same page
+   * if the session has not yet started.
    */
   const verifyNavigation = useRef(() => {
-    // If the game is started, navigate to the game page.
-    if (game.state === 'started') {
-      navigateTo('GamePage', { game }, { bypassMiddleware: true })
+    // If the session is started, navigate to the session page.
+    if (session.state === 'started') {
+      navigateTo('SessionPage', { session }, { bypassMiddleware: true })
     }
-    // If the game is ended, navigate to the home page.
-    if (game.state === 'ended') {
+    // If the session is ended, navigate to the home page.
+    if (session.state === 'ended') {
       navigateTo('HomePage', {}, { bypassMiddleware: true })
     }
   })
 
   /**
-   * Callback for the start game button.
+   * Callback for the start session button.
    */
-  const onClickStartGame = async () => {
-    // If the game is not unstarted, verify navigation.
-    if (game.state !== 'unstarted') {
+  const onClickStartSession = async () => {
+    // If the session is not unstarted, verify navigation.
+    if (session.state !== 'unstarted') {
       verifyNavigation.current()
       return
     }
 
-    // Confirm the user wants to start the game.
+    // Confirm the user wants to start the session.
     let { choice } = await prompt(
-      'Please confirm starting the game.',
+      'Please confirm starting the session.',
       Prompt.ConfirmationChoices,
     )
 
@@ -101,24 +103,24 @@ export default function LobbyPage({ game }: TLobbyPage_P): JSX.Element | null {
       // redirect.
       verifyNavigation.current = () => {}
       // Begin loading.
-      beginLoading('Starting game...')
-      // Start the game.
-      await game.$start()
-      // Redirect to game page.
-      navigateTo('GamePage', { game }, { bypassMiddleware: true })
+      beginLoading('Starting session...')
+      // Start the session.
+      await session.$start()
+      // Redirect to session page.
+      navigateTo('SessionPage', { session }, { bypassMiddleware: true })
     } catch (error) {
       handleError({
-        message: 'Failed to start game.',
+        message: 'Failed to start session.',
         notifyMethod: 'bubble',
       })
     }
   }
 
   /**
-   * Callback for the game configuration button.
+   * Callback for the session configuration button.
    */
-  const onClickGameConfig = () => {
-    navigateTo('GameConfigPage', { game })
+  const onClickSessionConfig = () => {
+    navigateTo('SessionConfigPage', { session })
   }
 
   /* -- effects -- */
@@ -131,18 +133,18 @@ export default function LobbyPage({ game }: TLobbyPage_P): JSX.Element | null {
   })
 
   // Verify navigation and update participant and
-  // supervisors lists on game state change.
-  useEventListener(server, 'game-state-change', () =>
+  // supervisors lists on session state change.
+  useEventListener(server, 'session-state-change', () =>
     verifyNavigation.current(),
   )
 
   // Add navigation middleware to properly
-  // quit the game before the user navigates
+  // quit the session before the user navigates
   // away.
   useNavigationMiddleware(async (to, next) => {
-    // If the user is navigating to the game configuration
+    // If the user is navigating to the session configuration
     // page, permit navigation.
-    if (to === 'GameConfigPage') {
+    if (to === 'SessionConfigPage') {
       return next()
     }
 
@@ -155,11 +157,11 @@ export default function LobbyPage({ game }: TLobbyPage_P): JSX.Element | null {
     // If the user confirms quit, proceed.
     if (choice === 'Yes') {
       try {
-        await game.$quit()
+        await session.$quit()
         next()
       } catch (error) {
         handleError({
-          message: 'Failed to quit game.',
+          message: 'Failed to quit session.',
           notifyMethod: 'bubble',
         })
       }
@@ -173,21 +175,24 @@ export default function LobbyPage({ game }: TLobbyPage_P): JSX.Element | null {
       <DefaultLayout navigation={navigation}>
         <div className='Title'>Lobby</div>
         <div className='DetailSection Section'>
-          <div className='GameId StaticDetail'>
-            <div className='Label'>Game ID:</div>
-            <div className='Value'>{game._id}</div>
+          <div className='SessionId StaticDetail'>
+            <div className='Label'>Session ID:</div>
+            <div className='Value'>{session._id}</div>
           </div>
           <div className='MissionName StaticDetail'>
             <div className='Label'>Mission:</div>
-            <div className='Value'>{game.name}</div>
+            <div className='Value'>{session.name}</div>
           </div>
         </div>
         <div className='UsersSection Section'>
-          <GameUsers game={game} />
+          <SessionUsers session={session} />
         </div>
         <div className={buttonSectionClass}>
-          <ButtonText text={'Start Game'} onClick={onClickStartGame} />
-          <ButtonText text={'Game Configuration'} onClick={onClickGameConfig} />
+          <ButtonText text={'Start Session'} onClick={onClickStartSession} />
+          <ButtonText
+            text={'Session Configuration'}
+            onClick={onClickSessionConfig}
+          />
         </div>
       </DefaultLayout>
     </div>
@@ -199,7 +204,7 @@ export default function LobbyPage({ game }: TLobbyPage_P): JSX.Element | null {
  */
 export type TLobbyPage_P = {
   /**
-   * The game client to use on the page.
+   * The session client to use on the page.
    */
-  game: GameClient
+  session: ClientSession
 }

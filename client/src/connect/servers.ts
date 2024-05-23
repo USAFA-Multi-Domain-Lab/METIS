@@ -1,4 +1,4 @@
-import GameClient from 'src/games'
+import ClientSession from 'src/sessions'
 import { v4 as generateHash } from 'uuid'
 import {
   TAnyResponseEvent,
@@ -13,7 +13,7 @@ import {
   TServerMethod,
 } from '../../../shared/connect/data'
 import { ServerEmittedError } from '../../../shared/connect/errors'
-import { TGameRole } from '../../../shared/games'
+import { TSessionRole } from '../../../shared/sessions'
 import { SingleTypeObject } from '../../../shared/toolbox/objects'
 
 /**
@@ -356,21 +356,23 @@ export default class ServerConnection {
   }
 
   /**
-   * Joins a game with the given game ID.
-   * @resolves The new game client for the game.
-   * @rejects If there is an error joining the game.
+   * Joins a session with the given session ID.
+   * @resolves The new session client for the session.
+   * @rejects If there is an error joining the session.
    */
-  public $fetchCurrentGame(gameId: string): Promise<GameClient> {
+  public $fetchCurrentSession(sessionId: string): Promise<ClientSession> {
     return new Promise((resolve, reject) => {
       this.request(
-        'request-current-game',
-        { gameId },
-        'Fetching current game.',
+        'request-current-session',
+        { sessionId },
+        'Fetching current session.',
         {
           onResponse: (event) => {
             switch (event.method) {
-              case 'current-game':
-                resolve(new GameClient(event.data.game, this, event.data.role))
+              case 'current-session':
+                resolve(
+                  new ClientSession(event.data.session, this, event.data.role),
+                )
                 break
               case 'error':
                 reject(new Error(event.message))
@@ -390,43 +392,50 @@ export default class ServerConnection {
   }
 
   /**
-   * Joins a game with the given game ID.
-   * @param gameId The ID of the game to join.
-   * @param role The role to join the game as.
-   * @resolves The new game client for the game, `null` if not found.
-   * @rejects If there is an error joining the game.
+   * Joins a session with the given session ID.
+   * @param sessionId The ID of the session to join.
+   * @param role The role to join the session as.
+   * @resolves The new session client for the session, `null` if not found.
+   * @rejects If there is an error joining the session.
    */
-  public $joinGame(
-    gameId: string,
-    role: TGameRole,
-  ): Promise<GameClient | null> {
+  public $joinSession(
+    sessionId: string,
+    role: TSessionRole,
+  ): Promise<ClientSession | null> {
     return new Promise((resolve, reject) => {
-      this.request('request-join-game', { gameId, role }, 'Joining game.', {
-        onResponse: (event) => {
-          switch (event.method) {
-            case 'game-joined':
-              resolve(new GameClient(event.data.game, this, event.data.role))
-              break
-            case 'error':
-              // Resolve null if not found.
-              if (event.code === ServerEmittedError.CODE_GAME_NOT_FOUND) {
-                resolve(null)
-              }
-              // Otherwise, reject with error.
-              else {
-                reject(new Error(event.message))
-              }
-              break
-            default:
-              let error: Error = new Error(
-                `Unknown response method for ${event.request.event.method}: '${event.method}'.`,
-              )
-              console.log(error)
-              console.log(event)
-              reject(error)
-          }
+      this.request(
+        'request-join-session',
+        { sessionId, role },
+        'Joining session.',
+        {
+          onResponse: (event) => {
+            switch (event.method) {
+              case 'session-joined':
+                resolve(
+                  new ClientSession(event.data.session, this, event.data.role),
+                )
+                break
+              case 'error':
+                // Resolve null if not found.
+                if (event.code === ServerEmittedError.CODE_SESSION_NOT_FOUND) {
+                  resolve(null)
+                }
+                // Otherwise, reject with error.
+                else {
+                  reject(new Error(event.message))
+                }
+                break
+              default:
+                let error: Error = new Error(
+                  `Unknown response method for ${event.request.event.method}: '${event.method}'.`,
+                )
+                console.log(error)
+                console.log(event)
+                reject(error)
+            }
+          },
         },
-      })
+      )
     })
   }
 

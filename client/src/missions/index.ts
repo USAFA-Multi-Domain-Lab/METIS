@@ -1,5 +1,5 @@
 import axios, { AxiosResponse } from 'axios'
-import { TLine_P } from 'src/components/content/game/mission-map/objects/Line'
+import { TLine_P } from 'src/components/content/session/mission-map/objects/Line'
 import { TEventListenerTarget } from 'src/toolbox/hooks'
 import { v4 as generateHash } from 'uuid'
 import Mission, {

@@ -2,8 +2,8 @@ import { NextFunction, Request, Response } from 'express-serve-static-core'
 import { TCommonUserJson } from 'metis/users'
 import { TUserPermissionId } from 'metis/users/permissions'
 import UserModel from '../database/models/users'
-import GameServer from '../games'
 import ServerLogin from '../logins'
+import SessionServer from '../sessions'
 
 /**
  * Middleware used to enforce authorization for a given route.
@@ -27,9 +27,9 @@ export const auth =
       response.sendStatus(401)
       return
     }
-    // If the being in game is required and the user
-    // is not in a game, return 401.
-    if (authentication === 'in-game' && !login.gameId) {
+    // If the being in session is required and the user
+    // is not in a session, return 401.
+    if (authentication === 'in-session' && !login.sessionId) {
       response.sendStatus(401)
       return
     }
@@ -50,10 +50,10 @@ export const auth =
     if (authentication === 'ws-connection') {
       response.locals.client = login.client
     }
-    // If authentication is 'in-game', store the game
+    // If authentication is 'in-session', store the session
     // in the response locals.
-    if (authentication === 'in-game') {
-      response.locals.game = GameServer.get(login.gameId!)
+    if (authentication === 'in-session') {
+      response.locals.session = SessionServer.get(login.sessionId!)
     }
 
     // Call next middleware.
@@ -197,7 +197,7 @@ export type TAuthOptions = {
    * The level of authentication required to access the route.
    * @default 'login'
    */
-  authentication?: 'login' | 'ws-connection' | 'in-game'
+  authentication?: 'login' | 'ws-connection' | 'in-session'
   /**
    * The permissions required to access the route.
    * @default []

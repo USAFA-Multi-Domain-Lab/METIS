@@ -1,23 +1,23 @@
 import { TClientEvents, TServerEvents, TServerMethod } from 'metis/connect/data'
 import { ServerEmittedError } from 'metis/connect/errors'
-import Game, {
-  TGameBasicJson,
-  TGameConfig,
-  TGameJson,
-  TGameRole,
-  TGameState,
-} from 'metis/games'
 import ClientConnection from 'metis/server/connect/clients'
 import ServerMission from 'metis/server/missions'
 import ServerMissionAction from 'metis/server/missions/actions'
 import ServerMissionNode from 'metis/server/missions/nodes'
+import Session, {
+  TSessionBasicJson,
+  TSessionConfig,
+  TSessionJson,
+  TSessionRole,
+  TSessionState,
+} from 'metis/sessions'
 import { v4 as generateHash } from 'uuid'
 import ServerActionExecution from '../missions/actions/executions'
 
 /**
- * Server instance for games. Handles server-side logic for a game with participating clients. Communicates with clients to conduct game.
+ * Server instance for sessions. Handles server-side logic for a session with participating clients. Communicates with clients to conduct the session.
  */
-export default class GameServer extends Game<
+export default class SessionServer extends Session<
   ClientConnection,
   ServerMission,
   ServerMissionNode,
@@ -28,7 +28,7 @@ export default class GameServer extends Game<
     return this._state
   }
   // Overridden.
-  public set state(value: TGameState) {
+  public set state(value: TSessionState) {
     this._state = value
     this.handleStateChange()
   }
@@ -44,12 +44,12 @@ export default class GameServer extends Game<
   }
 
   /**
-   * Whether the game has been destroyed.
+   * Whether the session has been destroyed.
    */
   private _destroyed: boolean
 
   /**
-   * Whether the game has been destroyed.
+   * Whether the session has been destroyed.
    */
   public get destroyed(): boolean {
     return this._destroyed
@@ -58,7 +58,7 @@ export default class GameServer extends Game<
   public constructor(
     _id: string,
     name: string,
-    config: Partial<TGameConfig>,
+    config: Partial<TSessionConfig>,
     mission: ServerMission,
     participants: Array<ClientConnection>,
     supervisors: Array<ClientConnection>,
@@ -103,7 +103,7 @@ export default class GameServer extends Game<
   }
 
   // Implemented
-  public toJson(options: TGameServerJsonOptions = {}): TGameJson {
+  public toJson(options: TSessionServerJsonOptions = {}): TSessionJson {
     // Extract options.
     const { includeSensitiveData = false } = options
 
@@ -114,7 +114,7 @@ export default class GameServer extends Game<
       name: this.name,
       mission: this.mission.toJson({
         revealedOnly: true,
-        includeGameData: true,
+        includeSessionData: true,
       }),
       participants: this.participants.map((client: ClientConnection) =>
         client.user.toJson(),
@@ -131,7 +131,9 @@ export default class GameServer extends Game<
   }
 
   // Implemented
-  public toBasicJson(options: TGameServerJsonOptions = {}): TGameBasicJson {
+  public toBasicJson(
+    options: TSessionServerJsonOptions = {},
+  ): TSessionBasicJson {
     // Extract options.
     const { includeSensitiveData = false } = options
 
@@ -148,9 +150,9 @@ export default class GameServer extends Game<
   }
 
   /**
-   * Gets the role of the given user in the game.
+   * Gets the role of the given user in the session.
    */
-  public getRole(user: ClientConnection): TGameRole {
+  public getRole(user: ClientConnection): TSessionRole {
     if (this.isSupervisor(user)) {
       return 'supervisor'
     } else if (this.isParticipant(user)) {
@@ -174,24 +176,24 @@ export default class GameServer extends Game<
   }
 
   /**
-   * Adds this game into the registry, indexing it with its game ID.
+   * Adds this session into the registry, indexing it with its session ID.
    */
   private register(): void {
-    GameServer.registry.set(this._id, this)
+    SessionServer.registry.set(this._id, this)
   }
 
   /**
-   * Removes this game from the registry.
+   * Removes this session from the registry.
    */
   private unregister(): void {
-    GameServer.registry.delete(this._id)
+    SessionServer.registry.delete(this._id)
   }
 
   /**
-   * Destroys the game.
+   * Destroys the session.
    */
   public destroy(): void {
-    // Unregister game.
+    // Unregister session.
     this.unregister()
     // Mark as destroyed.
     this._destroyed = true
@@ -202,51 +204,51 @@ export default class GameServer extends Game<
     // Clear all users.
     this.clearUsers()
 
-    // Emit an event to all users that the game has been destroyed.
+    // Emit an event to all users that the session has been destroyed.
     for (let user of users) {
-      user.emit('game-destroyed', { data: { gameId: this._id } })
+      user.emit('session-destroyed', { data: { sessionId: this._id } })
     }
   }
 
   /**
-   * Has the given user join the game.
-   * @param client The user joining the game.
+   * Has the given user join the session.
+   * @param client The user joining the session.
    * @param method The method of joining (Whether as a participant or as a supervisor).
    * @throws The server emitted error code of any error that occurs.
    * @note Establishes listeners to handle events emitted by the user's web socket connection.
    */
-  public join(client: ClientConnection, method: TGameRole): void {
+  public join(client: ClientConnection, method: TSessionRole): void {
     // Throw error if the user is in the ban list.
     if (this._banList.includes(client.userId)) {
-      throw ServerEmittedError.CODE_GAME_BANNED
+      throw ServerEmittedError.CODE_SESSION_BANNED
     }
-    // Throw error if the user is already in the game.
+    // Throw error if the user is already in the session.
     if (this.isJoined(client)) {
-      throw ServerEmittedError.CODE_ALREADY_IN_GAME
+      throw ServerEmittedError.CODE_ALREADY_IN_SESSION
     }
-    // Add the user to the game given
+    // Add the user to the session given
     // the method of joining.
     switch (method) {
       case 'participant':
         // Add the users to the participant list.
         this._participants.push(client)
-        // Add game-specific listeners.
+        // Add session-specific listeners.
         this.addListeners(client)
         break
       case 'supervisor':
         // Throw error if the client is unauthorized to
         // join as a supervisor.
-        if (!client.user.isAuthorized('games_join_observer')) {
-          throw ServerEmittedError.CODE_GAME_UNAUTHORIZED_JOIN
+        if (!client.user.isAuthorized('sessions_join_observer')) {
+          throw ServerEmittedError.CODE_SESSION_UNAUTHORIZED_JOIN
         }
         // Add the users to the supervisor list.
         this._supervisors.push(client)
         break
       default:
-        throw ServerEmittedError.CODE_GAME_UNAUTHORIZED_JOIN
+        throw ServerEmittedError.CODE_SESSION_UNAUTHORIZED_JOIN
     }
 
-    // Handle joining the game for the client.
+    // Handle joining the session for the client.
     client.login.handleJoin(this._id)
 
     // Handle state change.
@@ -254,17 +256,17 @@ export default class GameServer extends Game<
   }
 
   /**
-   * Updates the configuration of the game.
-   * @param config Updated configuration options to assign to the game config.
+   * Updates the configuration of the session.
+   * @param config Updated configuration options to assign to the session config.
    */
-  public updateConfig(config: Partial<TGameConfig>): void {
+  public updateConfig(config: Partial<TSessionConfig>): void {
     Object.assign(this._config, config)
     this.handleStateChange()
   }
 
   /**
    * Handles a new connection by an existing participant.
-   * @param newConnection The new connection for a participant of the game.
+   * @param newConnection The new connection for a participant of the session.
    * @returns True if connection was replaced, false if the participant wasn't found.
    */
   public handleConnectionChange(newConnection: ClientConnection): boolean {
@@ -275,7 +277,7 @@ export default class GameServer extends Game<
           // connection.
           this._participants[index] = newConnection
 
-          // Add game-specific listeners to the new
+          // Add session-specific listeners to the new
           // connection.
           this.addListeners(newConnection)
 
@@ -290,11 +292,11 @@ export default class GameServer extends Game<
   }
 
   /**
-   * Handles a change in the game state.
+   * Handles a change in the session state.
    */
   public handleStateChange(): void {
-    // Emit an event to all users that the game state has changed.
-    this.emitToUsers('game-state-change', {
+    // Emit an event to all users that the session state has changed.
+    this.emitToUsers('session-state-change', {
       data: {
         state: this.state,
         config: this.config,
@@ -307,16 +309,16 @@ export default class GameServer extends Game<
       },
     })
 
-    // If the game has ended, then clear all users.
+    // If the session has ended, then clear all users.
     if (this.state === 'ended') {
       this.clearUsers()
     }
   }
 
   /**
-   * Has the given user (participant or supervisor) quit the game.
-   * @param quitterID The ID of the user quiting the game.
-   * @note Removes any game listeners for the user.
+   * Has the given user (participant or supervisor) quit the session.
+   * @param quitterID The ID of the user quiting the session.
+   * @note Removes any session listeners for the user.
    */
   public quit(quitterID: string): void {
     // Find the supervisor in the list, if present.
@@ -325,7 +327,7 @@ export default class GameServer extends Game<
         // Remove the supervisor from the list.
         this._supervisors.splice(index, 1)
 
-        // Handle quitting the game for the supervisor.
+        // Handle quitting the session for the supervisor.
         supervisor.login.handleQuit()
       }
     })
@@ -337,10 +339,10 @@ export default class GameServer extends Game<
           // Remove the participant from the list.
           this._participants.splice(index, 1)
 
-          // Remove game-specific listeners.
+          // Remove session-specific listeners.
           this.removeListeners(participant)
 
-          // Handle quitting the game for the participant.
+          // Handle quitting the session for the participant.
           participant.login.handleQuit()
         }
       },
@@ -351,16 +353,16 @@ export default class GameServer extends Game<
   }
 
   /**
-   * Deletes all users from the game.
+   * Deletes all users from the session.
    */
   public clearUsers(): void {
-    // Remove all participants from the game by
+    // Remove all participants from the session by
     // forcing each participant to quit.
     this.participants.forEach((participant: ClientConnection) => {
       participant.login.handleQuit()
     })
 
-    // Remove game-specific listeners from
+    // Remove session-specific listeners from
     // each participant.
     this.participants.forEach((participant: ClientConnection) => {
       this.removeListeners(participant)
@@ -373,8 +375,8 @@ export default class GameServer extends Game<
   }
 
   /**
-   * Kicks the given user from the game.
-   * @param participantId The ID of the participant to kick from the game.
+   * Kicks the given user from the session.
+   * @param participantId The ID of the participant to kick from the session.
    */
   public kick(participantId: string): void {
     // Find the participant in the list, if present.
@@ -383,22 +385,22 @@ export default class GameServer extends Game<
         if (participant.userId === participantId) {
           // If the participant is has supervisor permissions,
           // then throw 403 forbidden error.
-          if (participant.user.isAuthorized('games_join_observer')) {
+          if (participant.user.isAuthorized('sessions_join_observer')) {
             throw 403
           }
 
           // Remove the participant from the list.
           this._participants.splice(index, 1)
 
-          // Remove game-specific listeners.
+          // Remove session-specific listeners.
           this.removeListeners(participant)
 
-          // Handle quitting the game for the participant.
+          // Handle quitting the session for the participant.
           participant.login.handleQuit()
 
           // Emit an event to the participant
           // that they have been kicked.
-          participant.emit('kicked', { data: { gameId: this._id } })
+          participant.emit('kicked', { data: { sessionId: this._id } })
         }
       },
     )
@@ -408,8 +410,8 @@ export default class GameServer extends Game<
   }
 
   /**
-   * Bans the given user from the game.
-   * @param participantId The ID of the participant to ban from the game.
+   * Bans the given user from the session.
+   * @param participantId The ID of the participant to ban from the session.
    * @throws The correct HTTP status code for any errors that occur.
    */
   public ban(participantId: string): void {
@@ -419,22 +421,22 @@ export default class GameServer extends Game<
         if (participant.userId === participantId) {
           // If the participant is has supervisor permissions,
           // then throw 403 forbidden error.
-          if (participant.user.isAuthorized('games_join_observer')) {
+          if (participant.user.isAuthorized('sessions_join_observer')) {
             throw 403
           }
 
           // Remove the participant from the list.
           this._participants.splice(index, 1)
 
-          // Remove game-specific listeners.
+          // Remove session-specific listeners.
           this.removeListeners(participant)
 
-          // Handle quitting the game for the participant.
+          // Handle quitting the session for the participant.
           participant.login.handleQuit()
 
           // Emit an event to the participant
           // that they have been kicked.
-          participant.emit('banned', { data: { gameId: this._id } })
+          participant.emit('banned', { data: { sessionId: this._id } })
         }
       },
     )
@@ -447,7 +449,7 @@ export default class GameServer extends Game<
   }
 
   /**
-   * Creates game-specific listeners for the given particpant.
+   * Creates session-specific listeners for the given particpant.
    */
   private addListeners(participant: ClientConnection): void {
     participant.addEventListener('request-open-node', (data) =>
@@ -459,7 +461,7 @@ export default class GameServer extends Game<
   }
 
   /**
-   * Removes game-specific listeners for the given participant.
+   * Removes session-specific listeners for the given participant.
    */
   private removeListeners(participant: ClientConnection): void {
     participant.clearEventListeners([
@@ -469,7 +471,7 @@ export default class GameServer extends Game<
   }
 
   /**
-   * Emits an event to all the users joined in the game (participants and supervisors).
+   * Emits an event to all the users joined in the session (participants and supervisors).
    */
   public emitToUsers<
     TMethod extends TServerMethod,
@@ -496,13 +498,16 @@ export default class GameServer extends Game<
     // Find the node, given the ID.
     let node: ServerMissionNode | undefined = mission.getNode(nodeId)
 
-    // If the game is not in the 'started' state,
+    // If the session is not in the 'started' state,
     // then emit an error.
     if (this.state !== 'started') {
       return participant.emitError(
-        new ServerEmittedError(ServerEmittedError.CODE_GAME_PROGRESS_LOCKED, {
-          request: participant.buildResponseReqData(event),
-        }),
+        new ServerEmittedError(
+          ServerEmittedError.CODE_SESSION_PROGRESS_LOCKED,
+          {
+            request: participant.buildResponseReqData(event),
+          },
+        ),
       )
     }
     // If the node is undefined, then emit
@@ -534,7 +539,7 @@ export default class GameServer extends Game<
         data: {
           nodeId: nodeId,
           revealedChildNodes: node.childNodes.map((node) =>
-            node.toJson({ includeGameData: true }),
+            node.toJson({ includeSessionData: true }),
           ),
         },
         request: { event, requesterId: participant.userId, fulfilled: true },
@@ -571,13 +576,16 @@ export default class GameServer extends Game<
     // Find the action given the ID.
     let action: ServerMissionAction | undefined = this.actions.get(actionId)
 
-    // If the game is not in the 'started' state,
+    // If the session is not in the 'started' state,
     // then emit an error.
     if (this.state !== 'started') {
       return participant.emitError(
-        new ServerEmittedError(ServerEmittedError.CODE_GAME_PROGRESS_LOCKED, {
-          request: participant.buildResponseReqData(event),
-        }),
+        new ServerEmittedError(
+          ServerEmittedError.CODE_SESSION_PROGRESS_LOCKED,
+          {
+            request: participant.buildResponseReqData(event),
+          },
+        ),
       )
     }
     // If the action is undefined, then emit
@@ -669,7 +677,7 @@ export default class GameServer extends Game<
       // successful.
       if (outcome.successful) {
         completionPayload.data.revealedChildNodes = action.node.childNodes.map(
-          (node) => node.toJson({ includeGameData: true }),
+          (node) => node.toJson({ includeSessionData: true }),
         )
       }
 
@@ -690,24 +698,24 @@ export default class GameServer extends Game<
   }
 
   /**
-   * A registry of all games currently launched.
+   * A registry of all sessions currently launched.
    */
-  private static registry: Map<string, GameServer> = new Map<
+  private static registry: Map<string, SessionServer> = new Map<
     string,
-    GameServer
+    SessionServer
   >()
 
   /**
-   * Launches a new game with a new game ID.
-   * @param mission The mission from which to launch a game.
-   * @param config The configuration for the game.
-   * @returns A promise of the game server for the newly launched game.
+   * Launches a new session with a new session ID.
+   * @param mission The mission from which to launch a session.
+   * @param config The configuration for the session.
+   * @returns A promise of the session server for the newly launched session.
    */
   public static launch(
     mission: ServerMission,
-    config: Partial<TGameConfig> = {},
-  ): GameServer {
-    return new GameServer(
+    config: Partial<TSessionConfig> = {},
+  ): SessionServer {
+    return new SessionServer(
       generateHash().substring(0, 12),
       mission.name,
       config,
@@ -718,45 +726,45 @@ export default class GameServer extends Game<
   }
 
   /**
-   * @returns the game associated with the given game ID.
+   * @returns the session associated with the given session ID.
    */
-  public static get(_id: string | undefined): GameServer | undefined {
+  public static get(_id: string | undefined): SessionServer | undefined {
     if (_id === undefined) {
       return undefined
     } else {
-      return GameServer.registry.get(_id)
+      return SessionServer.registry.get(_id)
     }
   }
 
   /**
-   * @returns All games in the registry.
+   * @returns All sessions in the registry.
    */
-  public static getAll(): GameServer[] {
-    return Array.from(GameServer.registry.values())
+  public static getAll(): SessionServer[] {
+    return Array.from(SessionServer.registry.values())
   }
 
   /**
-   * Destroys the game associated with the given game ID.
-   * @param _id The ID of the game to destroy.
+   * Destroys the session associated with the given session ID.
+   * @param _id The ID of the session to destroy.
    */
   public static destroy(_id: string | undefined): void {
-    // Find the game.
-    let game: GameServer | undefined = GameServer.get(_id)
+    // Find the session.
+    let session: SessionServer | undefined = SessionServer.get(_id)
 
     // If found...
-    if (_id !== undefined && game !== undefined) {
-      // Destroy game.
-      game.destroy()
+    if (_id !== undefined && session !== undefined) {
+      // Destroy session.
+      session.destroy()
     }
   }
 }
 
 /**
- * Options for converting a game to JSON.
+ * Options for converting a session to JSON.
  */
-export type TGameServerJsonOptions = {
+export type TSessionServerJsonOptions = {
   /**
-   * Whether to include sensitive game data (ban list).
+   * Whether to include sensitive session data (ban list).
    * @default false
    */
   includeSensitiveData?: boolean

@@ -1,19 +1,19 @@
-import GameClient from 'src/games'
-import GameUsers from './GameUsers'
+import ClientSession from 'src/sessions'
+import SessionUsers from './SessionUsers'
 import './UsersPanel.scss'
 
 /**
- * A panel displaying the users in the game.
+ * A panel displaying the users in the session.
  */
 export default function UsersPanel({
-  game,
+  session,
 }: TUsersPanel_P): JSX.Element | null {
   /* -- RENDER -- */
 
   return (
     <div className='UsersPanel'>
       <div className='BorderBox'>
-        <GameUsers game={game} />
+        <SessionUsers session={session} />
       </div>
     </div>
   )
@@ -24,7 +24,7 @@ export default function UsersPanel({
  */
 export type TUsersPanel_P = {
   /**
-   * The game client with the users to display.
+   * The session client with the users to display.
    */
-  game: GameClient
+  session: ClientSession
 }

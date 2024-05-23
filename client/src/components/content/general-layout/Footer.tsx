@@ -36,7 +36,7 @@ export default function Footer({}: TFooter): JSX.Element | null {
     if (
       login?.user.isAuthorized([
         'missions_write',
-        'games_write',
+        'sessions_write',
         'users_write_students',
       ])
     ) {
@@ -56,7 +56,7 @@ export default function Footer({}: TFooter): JSX.Element | null {
     if (
       login?.user.isAuthorized([
         'missions_write',
-        'games_write',
+        'sessions_write',
         'users_write_students',
       ])
     ) {

@@ -4,32 +4,32 @@ import { TCommonMissionNode } from '../missions/nodes'
 import { TCommonUser, TCommonUserJson } from '../users'
 
 /**
- * Base class for a games. Represents a game being played by participating students in METIS.
+ * Base class for sessions. Represents a session of a mission being executed by users.
  */
-export default abstract class Game<
+export default abstract class Session<
   TUser extends { _id: TCommonUser['_id'] } | { userId: TCommonUser['_id'] },
   TMission extends TCommonMission,
   TMissionNode extends TCommonMissionNode,
   TMissionAction extends TCommonMissionAction,
 > {
   /**
-   * The ID of the game.
+   * The ID of the session.
    */
   public readonly _id: string
 
   /**
-   * The name of the game.
+   * The name of the session.
    */
   public name: string
 
   /**
-   * The configuration for the game.
+   * The configuration for the session.
    */
-  protected _config: TGameConfig
+  protected _config: TSessionConfig
   /**
-   * The configuration for the game.
+   * The configuration for the session.
    */
-  public get config(): TGameConfig {
+  public get config(): TSessionConfig {
     return { ...this._config }
   }
 
@@ -41,38 +41,38 @@ export default abstract class Game<
   /**
    * The ID of the mission being executed by the participants.
    */
-  public get missionId(): string {
+  public get missionId(): TMission['_id'] {
     return this.mission._id
   }
 
   /**
-   * The participants of the game executing the mission.
+   * The participants of the session executing the mission.
    */
   protected _participants: TUser[]
   /**
-   * The participants of the game executing the mission.
+   * The participants of the session executing the mission.
    */
   public get participants(): TUser[] {
     return [...this._participants]
   }
 
   /**
-   * IDs of participants who have been banned from the game.
+   * IDs of participants who have been banned from the session.
    */
   protected _banList: string[]
   /**
-   * IDs of participants who have been banned from the game.
+   * IDs of participants who have been banned from the session.
    */
   public get banList(): string[] {
     return [...this._banList]
   }
 
   /**
-   * The participants of the game executing the mission.
+   * The users who are supervisors of the session that is in progress.
    */
   protected _supervisors: TUser[]
   /**
-   * The participants of the game executing the mission.
+   * The users who are supervisors of the session that is in progress.
    */
   public get supervisors(): TUser[] {
     return [...this._supervisors]
@@ -86,13 +86,13 @@ export default abstract class Game<
   }
 
   /**
-   * The state of the game (unstarted, started, ended).
+   * The state of the session (unstarted, started, ended).
    */
-  protected _state: TGameState
+  protected _state: TSessionState
   /**
-   * The state of the game (unstarted, started, ended).
+   * The state of the session (unstarted, started, ended).
    */
-  public get state(): TGameState {
+  public get state(): TSessionState {
     return this._state
   }
 
@@ -110,21 +110,21 @@ export default abstract class Game<
   >()
 
   /**
-   * Determines whether the given action can currently be executed in the game.
+   * Determines whether the given action can currently be executed in the session.
    * @param action The action in question.
-   * @returns Whether the action is ready to be executed in the game.
+   * @returns Whether the action is ready to be executed in the session.
    */
   public readyToExecute(action: TMissionAction): boolean {
     return action.node.readyToExecute && action.resourceCost <= this.resources
   }
 
   /**
-   * ** Note: Use the static method `launch` to create a new game with a new game ID. **
+   * ** Note: Use the static method `launch` to create a new session with a new session ID. **
    */
   public constructor(
     _id: string,
     name: string,
-    config: Partial<TGameConfig>,
+    config: Partial<TSessionConfig>,
     mission: TMission,
     participants: TUser[],
     banList: string[],
@@ -133,7 +133,7 @@ export default abstract class Game<
     this._id = _id
     this.name = name
     this._config = {
-      ...Game.DEFAULT_CONFIG,
+      ...Session.DEFAULT_CONFIG,
       ...config,
     }
     this.mission = mission
@@ -150,47 +150,47 @@ export default abstract class Game<
   protected abstract mapActions(): void
 
   /**
-   * Checks if the given user is currently in the game (Whether as a participant or as a supervisor).
+   * Checks if the given user is currently in the session (Whether as a participant or as a supervisor).
    * @param user The user to check.
-   * @returns Whether the given user is joined into the game.
+   * @returns Whether the given user is joined into the session.
    */
   public abstract isJoined(user: TUser): boolean
 
   /**
-   * Checks if the given user is currently a participant in the game.
+   * Checks if the given user is currently a participant in the session.
    * @param user The user to check.
-   * @returns Whether the given user is a participant of the game.
+   * @returns Whether the given user is a participant of the session.
    */
   public abstract isParticipant(user: TUser): boolean
 
   /**
-   * Checks if the given user is currently a supervisor in the game.
+   * Checks if the given user is currently a supervisor in the session.
    * @param user The user to check.
-   * @returns Whether the given user is a supervisor in the game.
+   * @returns Whether the given user is a supervisor in the session.
    */
   public abstract isSupervisor(user: TUser): boolean
 
   /**
-   * Converts the Game object to JSON.
-   * @returns A JSON representation of the game.
+   * Converts the Session object to JSON.
+   * @returns A JSON representation of the session.
    */
-  public abstract toJson(): TGameJson
+  public abstract toJson(): TSessionJson
 
   /**
-   * Converts the Game object to basic JSON.
-   * @returns A basic (Limited) JSON representation of the game.
+   * Converts the Session object to basic JSON.
+   * @returns A basic (Limited) JSON representation of the session.
    */
-  public abstract toBasicJson(): TGameBasicJson
+  public abstract toBasicJson(): TSessionBasicJson
 
   /**
-   * The endpoint for accessing games on the API.
+   * The endpoint for accessing sessions on the API.
    */
-  public static readonly API_ENDPOINT: string = '/api/v1/games'
+  public static readonly API_ENDPOINT: string = '/api/v1/sessions'
 
   /**
-   * Default value for the game configuration.
+   * Default value for the session configuration.
    */
-  public static get DEFAULT_CONFIG(): TGameConfig {
+  public static get DEFAULT_CONFIG(): TSessionConfig {
     return {
       accessibility: 'public',
       autoAssign: true,
@@ -201,73 +201,73 @@ export default abstract class Game<
 }
 
 /**
- * The accessiblity of the game to students.
- * @option 'public' The game is accessible to all students.
- * @option 'id-required' The game is accessible to students with the game ID.
- * @option 'invite-only' The game is accessible to students with an invite.
+ * The accessiblity of the session to students.
+ * @option 'public' The session is accessible to all students.
+ * @option 'id-required' The session is accessible to students with the session ID.
+ * @option 'invite-only' The session is accessible to students with an invite.
  */
-export type TGameAccessibility = 'public' | 'id-required' | 'invite-only'
+export type TSessionAccessibility = 'public' | 'id-required' | 'invite-only'
 
 /**
- * Configuration options for a game, customizing the experience.
+ * Configuration options for a session, customizing the experience.
  */
-export type TGameConfig = {
+export type TSessionConfig = {
   /**
-   * The accessiblity of the game to students.
+   * The accessiblity of the session to students.
    * @default 'public'
    */
-  accessibility: TGameAccessibility
+  accessibility: TSessionAccessibility
   /**
    * Whether students will be auto-assigned to their roles.
    * @default true
    */
   autoAssign: boolean
   /**
-   * Whether resources will be infinite in the game.
+   * Whether resources will be infinite in the session.
    * @default false
    */
   infiniteResources: boolean
   /**
-   * Whether effects will be enabled in the game.
+   * Whether effects will be enabled in the session.
    * @default true
    */
   effectsEnabled: boolean
 }
 
 /**
- * JSON representation of a game.
+ * JSON representation of a session.
  */
-export type TGameJson = {
+export type TSessionJson = {
   /**
-   * The ID of the game.
+   * The ID of the session.
    */
   _id: string
   /**
-   * The state of the game (unstarted, started, ended).
+   * The state of the session (unstarted, started, ended).
    */
-  state: TGameState
+  state: TSessionState
   /**
-   * The name of the game.
+   * The name of the session.
    */
   name: string
   /**
-   * The configuration for the game.
+   * The configuration for the session.
    */
-  config: TGameConfig
+  config: TSessionConfig
   /**
    * The mission being executed by the participants.
    */
   mission: TCommonMissionJson
   /**
-   * The participants of the game executing the mission.
+   * The participants of the session executing the mission.
    */
   participants: TCommonUserJson[]
   /**
-   * The IDs of participants who have been banned from the game.
+   * The IDs of participants who have been banned from the session.
    */
   banList: string[]
   /**
-   * The supervisors joined in the game.
+   * The supervisors joined in the session.
    */
   supervisors: TCommonUserJson[]
   /**
@@ -277,11 +277,11 @@ export type TGameJson = {
 }
 
 /**
- * A more basic (limited) JSON representation of a game.
+ * A more basic (limited) JSON representation of a session.
  */
-export type TGameBasicJson = {
+export type TSessionBasicJson = {
   /**
-   * The ID of the game.
+   * The ID of the session.
    */
   _id: string
   /**
@@ -289,34 +289,34 @@ export type TGameBasicJson = {
    */
   missionId: string
   /**
-   * The name of the game.
+   * The name of the session.
    */
   name: string
   /**
-   * The configuration for the game.
+   * The configuration for the session.
    */
-  config: TGameConfig
+  config: TSessionConfig
   /**
-   * The IDs of the participants of the game.
+   * The IDs of the participants of the session.
    */
   participantIds: string[]
   /**
-   * The IDs of the participants banned from the game.
+   * The IDs of the participants banned from the session.
    * @note Empty if the user does not have supervisor permissions.
    */
   banList: string[]
   /**
-   * The IDs of the supervisors of the game.
+   * The IDs of the supervisors of the session.
    */
   supervisorIds: string[]
 }
 
 /**
- * The state of a game.
+ * The state of a session.
  */
-export type TGameState = 'unstarted' | 'started' | 'ended'
+export type TSessionState = 'unstarted' | 'started' | 'ended'
 
 /**
- * The role of a user in a game.
+ * The role of a user in a session.
  */
-export type TGameRole = 'participant' | 'supervisor' | 'not-joined'
+export type TSessionRole = 'participant' | 'supervisor' | 'not-joined'

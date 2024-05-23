@@ -59,14 +59,14 @@ export default class ServerLogin {
   }
 
   /**
-   * The ID of the game the user is currently in, if any.
+   * The ID of the session the user is currently in, if any.
    */
-  private _gameId: string | null
+  private _sessionId: string | null
   /**
-   * The ID of the game the user is currently in, if any.
+   * The ID of the session the user is currently in, if any.
    */
-  public get gameId(): string | null {
-    return this._gameId
+  public get sessionId(): string | null {
+    return this._sessionId
   }
 
   /**
@@ -89,10 +89,10 @@ export default class ServerLogin {
   }
 
   /**
-   * Whether the user is in a game.
+   * Whether the user is in a session.
    */
-  public get inGame(): boolean {
-    return this.gameId !== null
+  public get inSession(): boolean {
+    return this.sessionId !== null
   }
 
   /**
@@ -102,7 +102,7 @@ export default class ServerLogin {
     this._userId = user.username
     this._user = user
     this._client = null
-    this._gameId = null
+    this._sessionId = null
     this._destroyed = false
 
     // Throw an error if a user is already logged in.
@@ -121,7 +121,7 @@ export default class ServerLogin {
   public toJson(): TLoginJson {
     return {
       user: this.user.toJson(),
-      gameId: this.gameId,
+      sessionId: this.sessionId,
     }
   }
 
@@ -134,18 +134,18 @@ export default class ServerLogin {
   }
 
   /**
-   * Handles when the user joins a game.
-   * @param gameId The ID of the joined game.
+   * Handles when the user joins a session.
+   * @param sessionId The ID of the joined session.
    */
-  public handleJoin(gameId: string): void {
-    this._gameId = gameId
+  public handleJoin(sessionId: string): void {
+    this._sessionId = sessionId
   }
 
   /**
-   * Handles when the user quits a game.
+   * Handles when the user quits a session.
    */
   public handleQuit(): void {
-    this._gameId = null
+    this._sessionId = null
   }
 
   /**
