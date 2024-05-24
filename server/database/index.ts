@@ -406,6 +406,7 @@ export default class MetisDatabase {
           reject(error)
         } else if (info !== null) {
           let currentBuildNumber: number = info.schemaBuildNumber
+
           let targetBuildNumber: number = MetisServer.SCHEMA_BUILD_NUMBER
 
           if (currentBuildNumber > targetBuildNumber) {
