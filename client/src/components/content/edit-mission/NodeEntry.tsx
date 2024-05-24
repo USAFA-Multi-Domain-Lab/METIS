@@ -7,13 +7,11 @@ import { usePostInitEffect } from 'src/toolbox/hooks'
 import { ReactSetter } from 'src/toolbox/types'
 import { SingleTypeObject } from '../../../../../shared/toolbox/objects'
 import Tooltip from '../communication/Tooltip'
-import {
-  DetailDropDown,
-  DetailLargeString,
-  DetailNumber,
-  DetailString,
-  DetailToggle,
-} from '../form/Form'
+import { DetailDropDown } from '../form/DetailDropDown'
+import { DetailLargeString } from '../form/DetailLargeString'
+import { DetailNumber } from '../form/DetailNumber'
+import { DetailString } from '../form/DetailString'
+import { DetailToggle } from '../form/DetailToggle'
 import List, { ESortByMethod } from '../general-layout/List'
 import ButtonSvgPanel, {
   TValidPanelButton,

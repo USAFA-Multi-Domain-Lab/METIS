@@ -3,7 +3,8 @@ import {
   TSessionAccessibility,
   TSessionConfig,
 } from '../../../../../shared/sessions'
-import { DetailDropDown, DetailToggle } from '../form/Form'
+import { DetailDropDown } from '../form/DetailDropDown'
+import { DetailToggle } from '../form/DetailToggle'
 import { ButtonText } from '../user-controls/ButtonText'
 import './SessionConfig.scss'
 

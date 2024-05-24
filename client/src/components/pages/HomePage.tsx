@@ -15,7 +15,7 @@ import { DefaultLayout } from '.'
 import { TSessionBasicJson, TSessionRole } from '../../../../shared/sessions'
 import Prompt, { TChoicesWithCancel } from '../content/communication/Prompt'
 import Tooltip from '../content/communication/Tooltip'
-import { DetailString } from '../content/form/Form'
+import { DetailString } from '../content/form/DetailString'
 import List, { ESortByMethod } from '../content/general-layout/List'
 import { LogoutLink } from '../content/general-layout/Navigation'
 import ButtonSvg from '../content/user-controls/ButtonSvg'
@@ -645,7 +645,7 @@ export default function HomePage(): JSX.Element | null {
           />
           <div className='ListActions'>
             <div className='ManualJoin'>
-              <div className='Label'>Enter session ID:</div>
+              <div className='Label'>Session ID:</div>
               <DetailString
                 fieldType='optional'
                 handleOnBlur='none'

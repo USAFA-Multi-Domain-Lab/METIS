@@ -148,13 +148,17 @@
       column-gap: 1em;
       padding: 0 20px;
 
-      .Label,
-      .ButtonText {
-        width: 6.75rem;
+      .ButtonText,
+      .Label {
+        width: 6rem;
       }
 
       .Label {
         font-size: 0.8rem;
+      }
+
+      .ButtonText {
+        margin: 0;
       }
 
       .Detail {
@@ -195,10 +199,6 @@
             opacity: 0.8;
           }
         }
-      }
-
-      .ButtonText {
-        margin: 0;
       }
     }
   }

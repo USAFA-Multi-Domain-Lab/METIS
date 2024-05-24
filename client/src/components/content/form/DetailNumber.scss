@@ -1,0 +1,16 @@
+@import 'src/assets/styles/config.scss';
+@import '../form/index.scss';
+
+.Detail.DetailNumber {
+  .Unit {
+    pointer-events: none;
+    @include fieldDimensions();
+    margin-bottom: -51px;
+    border-color: transparent;
+    height: 43px;
+    padding-right: 15px;
+    text-align: right;
+    font-size: 14px;
+    font-weight: bold;
+  }
+}

@@ -1,0 +1,55 @@
+@import 'src/assets/styles/config.scss';
+@import '../form/index.scss';
+
+.Detail.DetailDropDown {
+  .Field {
+    .Option.Selected {
+      display: grid;
+      grid-template-columns: auto 20px;
+      cursor: pointer;
+      user-select: none;
+
+      .Indicator {
+        display: inline-block;
+        font-size: 16px;
+        text-align: end;
+      }
+
+      .Text {
+        color: $color-accent-light;
+      }
+    }
+
+    .AllOptions {
+      .Option {
+        cursor: pointer;
+        user-select: none;
+        padding: 6px 0;
+
+        &:first-child {
+          margin: 10px 0 0;
+        }
+      }
+    }
+
+    &.IsCollapsed {
+      .Option.Selected {
+        .Indicator {
+          transform: scale(1.25, 0.75);
+        }
+      }
+
+      .Option:not(.Selected) {
+        display: none;
+      }
+    }
+
+    &.IsExpanded {
+      .Option.Selected {
+        .Indicator {
+          transform: scale(1.25, -0.75);
+        }
+      }
+    }
+  }
+}

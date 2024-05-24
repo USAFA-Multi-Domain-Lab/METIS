@@ -4,13 +4,11 @@ import { compute } from 'src/toolbox'
 import { usePostInitEffect } from 'src/toolbox/hooks'
 import { ReactSetter } from 'src/toolbox/types'
 import { TTargetArg } from '../../../../../../shared/target-environments/targets'
-import {
-  DetailDropDown,
-  DetailLargeString,
-  DetailNumber,
-  DetailString,
-  DetailToggle,
-} from '../../form/Form'
+import { DetailDropDown } from '../../form/DetailDropDown'
+import { DetailLargeString } from '../../form/DetailLargeString'
+import { DetailNumber } from '../../form/DetailNumber'
+import { DetailString } from '../../form/DetailString'
+import { DetailToggle } from '../../form/DetailToggle'
 import './ArgEntry.scss'
 
 /**

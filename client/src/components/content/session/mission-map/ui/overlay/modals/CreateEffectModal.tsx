@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import Tooltip from 'src/components/content/communication/Tooltip'
-import { DetailDropDown } from 'src/components/content/form/Form'
+import { DetailDropDown } from 'src/components/content/form/DetailDropDown'
 import { ButtonText } from 'src/components/content/user-controls/ButtonText'
 import { useGlobalContext } from 'src/context'
 import ClientMissionAction from 'src/missions/actions'

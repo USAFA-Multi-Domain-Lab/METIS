@@ -3,7 +3,9 @@ import { useGlobalContext } from 'src/context'
 import ClientMission from 'src/missions'
 import { compute } from 'src/toolbox'
 import { usePostInitEffect } from 'src/toolbox/hooks'
-import { DetailLargeString, DetailNumber, DetailString } from '../form/Form'
+import { DetailLargeString } from '../form/DetailLargeString'
+import { DetailNumber } from '../form/DetailNumber'
+import { DetailString } from '../form/DetailString'
 import './MissionEntry.scss'
 
 /**
