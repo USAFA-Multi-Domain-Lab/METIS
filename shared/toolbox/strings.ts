@@ -1,6 +1,11 @@
 import { v4 as generateHash } from 'uuid'
 
 /**
+ * A regex that checks if a string is a valid hex color.
+ */
+export const HEX_COLOR_REGEX: RegExp = /^#([a-f0-9]{6})$/
+
+/**
  * Utility functions for working with strings.
  */
 export default class StringToolbox {

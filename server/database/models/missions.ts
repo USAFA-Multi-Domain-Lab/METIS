@@ -7,6 +7,7 @@ import SanitizedHTML from 'metis/server/database/schema-types/html'
 import ServerTargetEnvironment from 'metis/server/target-environments'
 import ServerTarget from 'metis/server/target-environments/targets'
 import { TTargetArg } from 'metis/target-environments/targets'
+import { HEX_COLOR_REGEX } from 'metis/toolbox/strings'
 import mongoose, { Schema } from 'mongoose'
 
 let ObjectId = mongoose.Types.ObjectId
@@ -173,7 +174,7 @@ const validate_missions_initialResources = (
  * Validates the nodeData for a mission.
  * @param nodeData The nodeData to validate.
  */
-const validate_missions_nodeData = (
+const validate_missions_forces_nodes = (
   nodeData: TCommonMissionJson['nodeData'],
 ): boolean => {
   let minLengthReached: boolean = nodeData.length >= NODE_DATA_MIN_LENGTH
@@ -190,14 +191,25 @@ const validate_missions_nodeData = (
 }
 
 /**
+ * Validates the color for a force.
+ */
+const validate_force_color = (
+  // todo: Add type.
+  color: any, // TCommonMissionForceJson['color'],
+): boolean => {
+  let isValidColor: boolean = HEX_COLOR_REGEX.test(color)
+
+  return isValidColor
+}
+
+/**
  * Validates the color for a mission-node.
  * @param color The color to validate.
  */
-const validate_missions_nodeData_color = (
+const validate_missions_forces_nodes_color = (
   color: TCommonMissionNodeJson['color'],
 ): boolean => {
-  let colorExpression: RegExp = /^#([a-f0-9]{6})$/
-  let isValidColor: boolean = colorExpression.test(color)
+  let isValidColor: boolean = HEX_COLOR_REGEX.test(color)
 
   return isValidColor
 }
@@ -206,7 +218,7 @@ const validate_missions_nodeData_color = (
  * Validates the depth padding for a mission-node.
  * @param depthPadding The depth padding to validate.
  */
-const validate_mission_nodeData_depthPadding = (
+const validate_mission_forces_nodes_depthPadding = (
   depthPadding: TCommonMissionNodeJson['depthPadding'],
 ): boolean => {
   let nonNegativeInteger: boolean = isNonNegativeInteger(depthPadding)
@@ -218,7 +230,7 @@ const validate_mission_nodeData_depthPadding = (
  * Validates the process time for a mission-action.
  * @param processTime The process time to validate.
  */
-const validate_mission_nodeData_actions_processTime = (
+const validate_mission_forces_nodes_actions_processTime = (
   processTime: TCommonMissionActionJson['processTime'],
 ): boolean => {
   let processTimeRegexRegExp = /^[0-9+-]+[.]?[0-9]{0,6}$/
@@ -234,7 +246,7 @@ const validate_mission_nodeData_actions_processTime = (
  * Validates the success chance for a mission-action.
  * @param successChance The success chance to validate.
  */
-const validate_mission_nodeData_actions_successChance = (
+const validate_mission_forces_nodes_actions_successChance = (
   successChance: TCommonMissionActionJson['successChance'],
 ): boolean => {
   let betweenZeroAndOne: boolean = successChance >= 0 && successChance <= 1
@@ -246,7 +258,7 @@ const validate_mission_nodeData_actions_successChance = (
  * Validates the resource cost for a mission-action.
  * @param resourceCost The resource cost to validate.
  */
-const validate_mission_nodeData_actions_resourceCost = (
+const validate_mission_forces_nodes_actions_resourceCost = (
   resourceCost: TCommonMissionActionJson['resourceCost'],
 ): boolean => {
   let nonNegativeInteger: boolean = isNonNegativeInteger(resourceCost)
@@ -258,7 +270,7 @@ const validate_mission_nodeData_actions_resourceCost = (
  * Validates the effects for a mission-action.
  * @param effects The effects to validate.
  */
-const validate_mission_nodeData_actions_effects = (
+const validate_mission_forces_nodes_actions_effects = (
   effects: TCommonEffectJson[],
 ): void => {
   // Loop through each effect.
@@ -383,6 +395,9 @@ const validate_mission_nodeData_actions_effects = (
 
 /* -- SCHEMA -- */
 
+/**
+ * The schema for a mission in the database.
+ */
 export const MissionSchema: Schema = new Schema(
   {
     name: { type: String, required: true },
@@ -399,87 +414,106 @@ export const MissionSchema: Schema = new Schema(
       type: {},
       required: true,
     },
-    nodeData: {
+    forces: {
       type: [
         {
-          structureKey: { type: String, required: true },
           name: { type: String, required: true },
           color: {
             type: String,
             required: true,
-            validate: validate_missions_nodeData_color,
+            validate: validate_force_color,
           },
-          description: { type: SanitizedHTML, required: true },
-          preExecutionText: {
-            type: SanitizedHTML,
-            required: false,
-            default: '',
-          },
-          depthPadding: {
-            type: Number,
-            required: true,
-            validate: validate_mission_nodeData_depthPadding,
-          },
-          executable: { type: Boolean, required: true },
-          device: { type: Boolean, required: true },
-          actions: {
+          nodes: {
             type: [
               {
+                structureKey: { type: String, required: true },
                 name: { type: String, required: true },
+                color: {
+                  type: String,
+                  required: true,
+                  validate: validate_missions_forces_nodes_color,
+                },
                 description: { type: SanitizedHTML, required: true },
-                processTime: {
-                  type: Number,
-                  required: true,
-                  validate: validate_mission_nodeData_actions_processTime,
-                },
-                successChance: {
-                  type: Number,
-                  required: true,
-                  validate: validate_mission_nodeData_actions_successChance,
-                },
-                resourceCost: {
-                  type: Number,
-                  required: true,
-                  validate: validate_mission_nodeData_actions_resourceCost,
-                },
-                postExecutionSuccessText: {
+                preExecutionText: {
                   type: SanitizedHTML,
-                  required: true,
+                  required: false,
+                  default: '',
                 },
-                postExecutionFailureText: {
-                  type: SanitizedHTML,
+                depthPadding: {
+                  type: Number,
                   required: true,
+                  validate: validate_mission_forces_nodes_depthPadding,
                 },
-                effects: {
+                executable: { type: Boolean, required: true },
+                device: { type: Boolean, required: true },
+                actions: {
                   type: [
                     {
                       name: { type: String, required: true },
                       description: { type: SanitizedHTML, required: true },
-                      targetEnvironmentVersion: {
-                        type: String,
+                      processTime: {
+                        type: Number,
+                        required: true,
+                        validate:
+                          validate_mission_forces_nodes_actions_processTime,
+                      },
+                      successChance: {
+                        type: Number,
+                        required: true,
+                        validate:
+                          validate_mission_forces_nodes_actions_successChance,
+                      },
+                      resourceCost: {
+                        type: Number,
+                        required: true,
+                        validate:
+                          validate_mission_forces_nodes_actions_resourceCost,
+                      },
+                      postExecutionSuccessText: {
+                        type: SanitizedHTML,
                         required: true,
                       },
-                      targetId: {
-                        type: String,
+                      postExecutionFailureText: {
+                        type: SanitizedHTML,
                         required: true,
                       },
-                      args: {
-                        type: Object,
+                      effects: {
+                        type: [
+                          {
+                            name: { type: String, required: true },
+                            description: {
+                              type: SanitizedHTML,
+                              required: true,
+                            },
+                            targetEnvironmentVersion: {
+                              type: String,
+                              required: true,
+                            },
+                            targetId: {
+                              type: String,
+                              required: true,
+                            },
+                            args: {
+                              type: Object,
+                              required: true,
+                            },
+                          },
+                        ],
                         required: true,
+                        validate: validate_mission_forces_nodes_actions_effects,
                       },
                     },
                   ],
                   required: true,
-                  validate: validate_mission_nodeData_actions_effects,
                 },
               },
             ],
             required: true,
+            validate: validate_missions_forces_nodes,
           },
         },
       ],
       required: true,
-      validate: validate_missions_nodeData,
     },
   },
   {
