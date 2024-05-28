@@ -35,7 +35,7 @@ export const routerMap: TMetisRouterMap = (
       versionNumber,
       initialResources,
       nodeStructure,
-      nodeData,
+      forces,
     } = request.body as TCommonMissionJson
 
     let mission = new MissionModel({
@@ -44,7 +44,7 @@ export const routerMap: TMetisRouterMap = (
       versionNumber,
       initialResources,
       nodeStructure,
-      nodeData,
+      forces,
     })
 
     mission.save((error: Error) => {
@@ -861,7 +861,7 @@ export const routerMap: TMetisRouterMap = (
         versionNumber: RequestBodyFilters.NUMBER,
         initialResources: RequestBodyFilters.NUMBER,
         nodeStructure: RequestBodyFilters.OBJECT,
-        nodeData: RequestBodyFilters.ARRAY,
+        forces: RequestBodyFilters.ARRAY,
       },
     }),
     createMission,
@@ -917,7 +917,7 @@ export const routerMap: TMetisRouterMap = (
           versionNumber: RequestBodyFilters.NUMBER,
           initialResources: RequestBodyFilters.NUMBER,
           nodeStructure: RequestBodyFilters.OBJECT,
-          nodeData: RequestBodyFilters.ARRAY,
+          forces: RequestBodyFilters.ARRAY,
         },
       },
     ),

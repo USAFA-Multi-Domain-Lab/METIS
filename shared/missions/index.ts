@@ -2,6 +2,7 @@ import { v4 as generateHash } from 'uuid'
 import context from '../context'
 import { AnyObject } from '../toolbox/objects'
 import { uuidTypeValidator } from '../toolbox/validators'
+import { TCommonMissionForceJson } from './forces'
 import {
   TCommonMissionNode,
   TMissionNodeJson,
@@ -58,7 +59,9 @@ export default abstract class Mission<TMissionNode extends TCommonMissionNode>
     this.seed = data.seed ?? Mission.DEFAULT_PROPERTIES.seed
     this.originalNodeStructure =
       data.nodeStructure ?? Mission.DEFAULT_PROPERTIES.nodeStructure
-    this.originalNodeData = data.nodeData ?? Mission.DEFAULT_PROPERTIES.nodeData
+    this.originalNodeData = data.forces
+      ? data.forces[0].nodes
+      : Mission.DEFAULT_PROPERTIES.forces[0].nodes
     this.nodes = []
     this.rootNode = this.createRootNode()
 
@@ -194,7 +197,16 @@ export default abstract class Mission<TMissionNode extends TCommonMissionNode>
     nodeStructure = Mission.determineNodeStructure(rootNode, { revealedOnly })
 
     // Return the exported node data and structure.
-    return { nodeData, nodeStructure }
+    return {
+      forces: [
+        {
+          name: 'Friendly Force',
+          color: '#34a1fb',
+          nodes: nodeData,
+        },
+      ],
+      nodeStructure,
+    }
   }
 
   // Inherited
@@ -225,7 +237,13 @@ export default abstract class Mission<TMissionNode extends TCommonMissionNode>
       initialResources: 100,
       seed: generateHash(),
       nodeStructure: {},
-      nodeData: [],
+      forces: [
+        {
+          name: 'Default Force',
+          color: '#000000',
+          nodes: [],
+        },
+      ],
     }
   }
 
@@ -426,9 +444,9 @@ export interface TCommonMissionJson {
    */
   nodeStructure: AnyObject
   /**
-   * The raw data for the nodes in the mission.
+   * The forces in the mission.
    */
-  nodeData: TMissionNodeJson[]
+  forces: TCommonMissionForceJson[]
 }
 
 /**
@@ -484,7 +502,7 @@ export type TNodeImportOptions = {
  * Return type for Mission.exportNodes.
  */
 export type TExportedNodes = {
-  nodeData: TMissionNodeJson[]
+  forces: TCommonMissionForceJson[]
   nodeStructure: AnyObject
 }
 

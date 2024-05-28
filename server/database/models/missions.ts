@@ -1,6 +1,7 @@
 import { TCommonMissionJson } from 'metis/missions'
 import { TCommonMissionActionJson } from 'metis/missions/actions'
 import { TCommonEffectJson } from 'metis/missions/effects'
+import { TCommonMissionForceJson } from 'metis/missions/forces'
 import { TCommonMissionNodeJson, TMissionNodeJson } from 'metis/missions/nodes'
 import MetisDatabase from 'metis/server/database'
 import SanitizedHTML from 'metis/server/database/schema-types/html'
@@ -39,47 +40,8 @@ const isNonNegativeInteger = (value: number): boolean => {
 const validate_missions = (mission: any, next: any): void => {
   let parentNodeStructure: TCommonMissionJson['nodeStructure'] =
     mission.nodeStructure
-  let nodeData: TCommonMissionJson['nodeData'] = mission.nodeData
-  let nodeDataStructureKeys: TMissionNodeJson['structureKey'][] = nodeData.map(
-    (node) => node.structureKey,
-  )
   let correspondingNodeStructureKeys: TMissionNodeJson['structureKey'][] = []
   let results: { error?: Error } = {}
-
-  // This will ensure that all nodes
-  // have IDs unique to the mission,
-  // and that all action IDs are unique
-  // to the node they are assigned to.
-  const ensureUniqueIds = (): { error?: Error } => {
-    let nodeIds: string[] = []
-
-    for (let nodeDatum of mission.nodeData) {
-      if (!nodeIds.includes(nodeDatum._id)) {
-        nodeIds.push(nodeDatum._id)
-
-        let actionIds: string[] = []
-
-        for (let action of nodeDatum.actions) {
-          if (!actionIds.includes(action._id)) {
-            actionIds.push(action._id)
-          } else {
-            let error: Error = new Error(
-              `Error in nodeData:\nDuplicate action ID (${action._id}) used in node (${nodeDatum._id}).`,
-            )
-            error.name = MetisDatabase.ERROR_BAD_DATA
-            return { error }
-          }
-        }
-      } else {
-        let error: Error = new Error(
-          `Error in nodeData:\nDuplicate node ID used (${nodeDatum._id}).`,
-        )
-        error.name = MetisDatabase.ERROR_BAD_DATA
-        return { error }
-      }
-    }
-    return {}
-  }
 
   // This will ensure the node structure
   // is valid.
@@ -96,16 +58,9 @@ const validate_missions = (mission: any, next: any): void => {
     }
 
     for (let [key, value] of Object.entries(nodeStructure)) {
-      if (!nodeDataStructureKeys.includes(key)) {
-        let error: Error = new Error(
-          `Error in mission:\n"${key}" was referenced in nodeStructure, but it was not found in the nodeData.`,
-        )
-        error.name = MetisDatabase.ERROR_BAD_DATA
-        return { error }
-      }
       if (correspondingNodeStructureKeys.includes(key)) {
         let error: Error = new Error(
-          `Error in nodeStructure:\nDuplicate nodeId used (${key}).`,
+          `Error in nodeStructure:\nDuplicate structureKey used (${key}).`,
         )
         error.name = MetisDatabase.ERROR_BAD_DATA
         return { error }
@@ -123,9 +78,6 @@ const validate_missions = (mission: any, next: any): void => {
     return {}
   }
 
-  // Ensure unique IDs
-  results = ensureUniqueIds()
-
   // Check for error.
   if (results.error) {
     return next(results.error)
@@ -137,22 +89,6 @@ const validate_missions = (mission: any, next: any): void => {
   // Check for error.
   if (results.error) {
     return next(results.error)
-  }
-
-  // If the number of IDs in the nodeData
-  // is different than the number in the
-  // node structure, than the bad ID is
-  // found and an error is created for it.
-  if (nodeDataStructureKeys.length !== correspondingNodeStructureKeys.length) {
-    for (let nodeStructureKey of nodeDataStructureKeys) {
-      if (!correspondingNodeStructureKeys.includes(nodeStructureKey)) {
-        let error: Error = new Error(
-          `Error in mission:\n"${nodeStructureKey}" was referenced in nodeData, but it was not found in the nodeStructure.`,
-        )
-        error.name = MetisDatabase.ERROR_BAD_DATA
-        return next(error)
-      }
-    }
   }
 
   return next()
@@ -172,16 +108,16 @@ const validate_missions_initialResources = (
 
 /**
  * Validates the nodeData for a mission.
- * @param nodeData The nodeData to validate.
+ * @param nodes The nodeData to validate.
  */
 const validate_missions_forces_nodes = (
-  nodeData: TCommonMissionJson['nodeData'],
+  nodes: TCommonMissionForceJson['nodes'],
 ): boolean => {
-  let minLengthReached: boolean = nodeData.length >= NODE_DATA_MIN_LENGTH
+  let minLengthReached: boolean = nodes.length >= NODE_DATA_MIN_LENGTH
   let minLengthOfActionsReached: boolean = true
 
-  for (let nodeDatum of nodeData) {
-    if (nodeDatum.executable && nodeDatum.actions.length < ACTIONS_MIN_LENGTH) {
+  for (let node of nodes) {
+    if (node.executable && node.actions.length < ACTIONS_MIN_LENGTH) {
       minLengthOfActionsReached = false
       break
     }
