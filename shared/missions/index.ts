@@ -8,29 +8,39 @@ import {
   TMissionNodeJson,
   TMissionNodeOptions,
 } from './nodes'
+import {
+  TCommonMissionPrototype,
+  TMissionPrototypeOptions,
+} from './nodes/prototypes'
 
 /**
  * This represents a mission for a student to complete.
  */
-export default abstract class Mission<TMissionNode extends TCommonMissionNode>
-  implements TCommonMission
+export default abstract class Mission<
+  TMissionPrototype extends TCommonMissionPrototype,
+  TMissionNode extends TCommonMissionNode,
+> implements TCommonMission
 {
-  // Inherited
+  // Implemented
   public _id: string
-  // Inherited
+  // Implemented
   public name: string
-  // Inherited
+  // Implemented
   public introMessage: string
-  // Inherited
+  // Implemented
   public versionNumber: number
-  // Inherited
+  // Implemented
   public initialResources: number
-  // Inherited
+  // Implemented
   public nodes: TMissionNode[]
-  // Inherited
+  // Implemented
+  public prototypes: TMissionPrototype[]
+  // Implemented
   public seed: string
-  // Inherited
+  // Implemented
   public rootNode: TMissionNode
+  // Implemented
+  public rootPrototype: TMissionPrototype
   /**
    * The original raw data for the nodes in the mission, before any changes.
    */
@@ -63,7 +73,9 @@ export default abstract class Mission<TMissionNode extends TCommonMissionNode>
       ? data.forces[0].nodes
       : Mission.DEFAULT_PROPERTIES.forces[0].nodes
     this.nodes = []
+    this.prototypes = []
     this.rootNode = this.createRootNode()
+    this.rootPrototype = this.createRootPrototype()
 
     // Parse options.
     let { openAll = false } = options
@@ -72,6 +84,9 @@ export default abstract class Mission<TMissionNode extends TCommonMissionNode>
     this.importNodes(this.originalNodeData, this.originalNodeStructure, {
       openAll,
     })
+
+    // Import node structure into the mission.
+    this.importStructure(this.originalNodeStructure)
 
     // If root node is not open, open it.
     if (!this.rootNode.isOpen) {
@@ -110,13 +125,22 @@ export default abstract class Mission<TMissionNode extends TCommonMissionNode>
 
   /**
    * Creates a new node that is the root node of the mission structure. This node is not added to the mission's nodes map, as it is really a pseudo-node.
+   * @deprecated
    */
   protected abstract createRootNode(): TMissionNode
 
   /**
+   * Creates a new prototype that is the root prototype of the mission structure.
+   * This prototype is not added to the mission's prototypes map, as it is really
+   * a pseudo-prototype.
+   */
+  protected abstract createRootPrototype(): TMissionPrototype
+
+  /**
    * This will import raw node data into the mission, creating MissionNode objects from it, and mapping the relationships found in the structure.
-   * @param nodeData The raw node data to import. Upon success, the originalNodeData property will be updated to this value.
-   * @param nodeStructure The raw node structure to import. Upon success, the originalNodeStructure property will be updated to this value.
+   * @param nodeData The raw node data to import. The originalNodeData property will be updated to this value.
+   * @param nodeStructure The raw node structure to import. The originalNodeStructure property will be updated to this value.
+   * @deprecated
    */
   protected importNodes(
     nodeData: TMissionNodeJson[],
@@ -131,7 +155,7 @@ export default abstract class Mission<TMissionNode extends TCommonMissionNode>
       // Loop through data, spawn new nodes,
       // and add them to the nodes map.
       for (let nodeDatum of nodeData) {
-        this.spawnNode(nodeDatum, {})
+        this.spawnNode(nodeDatum)
       }
 
       // Create a node map to pass to the mapRelationships function.
@@ -143,13 +167,57 @@ export default abstract class Mission<TMissionNode extends TCommonMissionNode>
       }
 
       // Map relationships between nodes.
-      Mission.mapRelationships(nodeMap, nodeStructure, this.rootNode, options)
+      Mission.mapNodeRelationships(
+        nodeMap,
+        nodeStructure,
+        this.rootNode,
+        options,
+      )
 
       // Convert nodes map to array.
       this.nodes = Array.from(nodeMap.values())
     } catch (error) {
       if (context === 'react') {
         console.error('Node data/structure passed is invalid.')
+      }
+      throw error
+    }
+  }
+
+  /**
+   * This will import the node structure into the mission, creating
+   * MissionPrototype objects from it, and mapping the relationships
+   * found in the structure.
+   * @param nodeStructure The raw node structure to import. The originalNodeStructure property
+   * will be updated to this value.
+   */
+  protected importStructure(nodeStructure: AnyObject): void {
+    // Reinitialize relevant object property.
+    this.originalNodeStructure = nodeStructure
+
+    try {
+      // Loop through structure, spawn new prototypes,
+      // and add them to the prototypes map.
+      for (let key of Object.keys(nodeStructure)) {
+        this.spawnPrototype(key)
+      }
+
+      // Create a prototype map to pass to the mapRelationships function.
+      let prototypeMap = new Map<string, TMissionPrototype>()
+
+      // Add prototypes to the prototype map.
+      for (let prototype of this.prototypes) {
+        prototypeMap.set(prototype._id, prototype)
+      }
+
+      // Map relationships between prototypes.
+      Mission.mapRelationships(prototypeMap, nodeStructure, this.rootPrototype)
+
+      // Convert prototypes map to array.
+      this.prototypes = Array.from(prototypeMap.values())
+    } catch (error) {
+      if (context === 'react') {
+        console.error('Node structure passed is invalid.')
       }
       throw error
     }
@@ -209,13 +277,18 @@ export default abstract class Mission<TMissionNode extends TCommonMissionNode>
     }
   }
 
-  // Inherited
-  public abstract spawnNode(
-    data?: Partial<TMissionNodeJson>,
-    options?: TSpawnNodeOptions<TMissionNode>,
-  ): TMissionNode
+  // Implemented
+  /**
+   * @deprecated
+   */
+  public abstract spawnNode(data?: Partial<TMissionNodeJson>): TMissionNode
 
-  // Inherited
+  // Implemented
+  public abstract spawnPrototype(
+    _id: TMissionPrototype['_id'],
+  ): TMissionPrototype
+
+  // Implemented
   public getNode(nodeId: string): TMissionNode | undefined {
     for (let node of this.nodes) {
       if (node._id === nodeId) {
@@ -270,8 +343,11 @@ export default abstract class Mission<TMissionNode extends TCommonMissionNode>
    * @param {AnyObject} nodeStructure The node structure from which to map the relationships.
    * @param {TMissionNode} rootNode The root node of the structure. This root node should not be defined in the node map, nor in the node structure.
    * @param {TMapRelationshipOptions} options Options for mapping the relationships.
+   * @deprecated
    */
-  protected static mapRelationships = <TMissionNode extends TCommonMissionNode>(
+  protected static mapNodeRelationships = <
+    TMissionNode extends TCommonMissionNode,
+  >(
     nodes: Map<string, TMissionNode>,
     nodeStructure: AnyObject,
     rootNode: TMissionNode,
@@ -290,7 +366,9 @@ export default abstract class Mission<TMissionNode extends TCommonMissionNode>
       let childNode: TMissionNode | undefined = nodes.get(key)
 
       if (childNode !== undefined) {
-        childNodes.push(this.mapRelationships(nodes, value, childNode, options))
+        childNodes.push(
+          this.mapNodeRelationships(nodes, value, childNode, options),
+        )
       }
     }
     rootNode.childNodes = childNodes
@@ -306,6 +384,42 @@ export default abstract class Mission<TMissionNode extends TCommonMissionNode>
     }
 
     return rootNode
+  }
+
+  /**
+   * Maps relationships between prototypes passed based on the structure passed, recursively.
+   * @param prototypes The prototypes to map.
+   * @param nodeStructure The node structure from which to map the relationships.
+   * @param rootPrototype The root prototype of the structure. This root prototype should not be defined in the prototype map, nor in the node structure.
+   */
+  protected static mapRelationships = <
+    TMissionPrototype extends TCommonMissionPrototype,
+  >(
+    prototypes: Map<string, TMissionPrototype>,
+    nodeStructure: AnyObject,
+    rootPrototype: TMissionPrototype,
+  ) => {
+    let children: Array<TMissionPrototype> = []
+    let childrenKeyValuePairs: Array<[string, AnyObject]> = Object.keys(
+      nodeStructure,
+    ).map((key: string) => [key, nodeStructure[key]])
+
+    for (let childrenKeyValuePair of childrenKeyValuePairs) {
+      let key: string = childrenKeyValuePair[0]
+      let value: AnyObject = childrenKeyValuePair[1]
+      let child: TMissionPrototype | undefined = prototypes.get(key)
+
+      if (child !== undefined) {
+        children.push(this.mapRelationships(prototypes, value, child))
+      }
+    }
+    rootPrototype.children = children
+
+    for (let child of children) {
+      child.parentNode = rootPrototype
+    }
+
+    return rootPrototype
   }
 
   /**
@@ -388,12 +502,24 @@ export interface TCommonMission {
   seed: string
   /**
    * A map of nodeIDs to nodes.
+   * @deprecated
    */
   nodes: TCommonMissionNode[]
   /**
+   * Prototype nodes for the mission, representing the mission's node
+   * structure outside of any forces.
+   */
+  prototypes: TCommonMissionPrototype[]
+  /**
    * The root node of the mission. If the mission nodes have not been imported, this will be null.
+   * @deprecated
    */
   rootNode: TCommonMissionNode | null
+  /**
+   * The root prototype of the mission. If the node structure have not
+   * been imported, this will be null.
+   */
+  rootPrototype: TCommonMissionPrototype | null
   /**
    * Converts the mission to JSON.
    * @param options The options for converting the mission to JSON.
@@ -402,13 +528,23 @@ export interface TCommonMission {
   toJson: (options?: TMissionJsonOptions) => TCommonMissionJson
   /**
    * This will spawn a new node in the mission with the given data and options. Any data or options not provided will be set to default values.
-   * @param {Partial<TMissionNodeJson>} data The data for the node.
-   * @param {TMissionNodeOptions} options The options for creating the node.
+   * @param data The data for the node.
+   * @param options The options for creating the node.
+   * @deprecated
    */
   spawnNode(
     data?: Partial<TMissionNodeJson>,
     options?: TMissionNodeOptions<TCommonMissionNode>,
   ): TCommonMissionNode
+  /**
+   * This will spawn a new prototype in the mission with the given _id and options.
+   * @param _id The ID for the prototype.
+   * @param options The options for creating the prototype.
+   */
+  spawnPrototype(
+    _id: TCommonMissionPrototype['_id'],
+    options?: TMissionPrototypeOptions<TCommonMissionPrototype>,
+  ): TCommonMissionPrototype
 }
 
 /**
@@ -520,23 +656,6 @@ export type TExportNodesOptions = {
    * @default false
    */
   includeSessionData?: boolean
-}
-
-/**
- * Options for Mission.spawnNode.
- */
-export interface TSpawnNodeOptions<TMissionNode extends TCommonMissionNode>
-  extends TMissionNodeOptions<TMissionNode> {
-  /**
-   * Whether or not to add newly generated node to the mission's node map.
-   * @default true
-   */
-  addToNodeMap?: boolean
-  /**
-   * Whether or not to add newly generated node to the root node's children.
-   * @default true
-   */
-  makeChildOfRoot?: boolean
 }
 
 /**

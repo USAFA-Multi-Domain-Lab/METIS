@@ -5,21 +5,25 @@ import { v4 as generateHash } from 'uuid'
 import Mission, {
   TCommonMissionJson,
   TMissionOptions,
-  TSpawnNodeOptions,
 } from '../../../shared/missions'
-import { TMissionNodeJson } from '../../../shared/missions/nodes'
+import {
+  TMissionNodeJson,
+  TMissionNodeOptions,
+} from '../../../shared/missions/nodes'
+import { TMissionPrototypeOptions } from '../../../shared/missions/nodes/prototypes'
 import { Counter } from '../../../shared/toolbox/numbers'
 import { TWithKey } from '../../../shared/toolbox/objects'
 import { Vector2D } from '../../../shared/toolbox/space'
 import ClientMissionNode, { ENodeTargetRelation } from './nodes'
-import NodeCreator from './nodes/creator'
+import NodeCreator from './nodes/creators'
+import ClientMissionPrototype from './nodes/prototypes'
 
 /**
  * Class for managing missions on the client.
  * @extends {Mission<ClientMissionNode>}
  */
 export default class ClientMission
-  extends Mission<ClientMissionNode>
+  extends Mission<ClientMissionPrototype, ClientMissionNode>
   implements TEventListenerTarget<TMissionEvent>
 {
   /**
@@ -192,6 +196,11 @@ export default class ClientMission
   // Inherited
   protected createRootNode(): ClientMissionNode {
     return new ClientMissionNode(this, Mission.ROOT_NODE_PROPERTIES)
+  }
+
+  // Inherited
+  protected createRootPrototype(): ClientMissionPrototype {
+    return new ClientMissionPrototype(this, 'ROOT')
   }
 
   /**
@@ -780,28 +789,21 @@ export default class ClientMission
   // Implemented
   public spawnNode(
     data: Partial<TMissionNodeJson> = {},
-    options: TSpawnNodeOptions<ClientMissionNode> = {},
+    options: TMissionNodeOptions<ClientMissionNode> = {},
   ): ClientMissionNode {
-    let { addToNodeMap = true, makeChildOfRoot = true } = options
     let rootNode: ClientMissionNode = this.rootNode
 
     // Create new node.
     let node: ClientMissionNode = new ClientMissionNode(this, data, options)
 
-    // Handle makeChildOfRoot option.
-    if (makeChildOfRoot) {
-      // Set the parent node to the root
-      // node.
-      node.parentNode = rootNode
-      // Add the node to the root node's
-      // children.
-      rootNode.childNodes.push(node)
-    }
-    // Handle addToNodeMap option.
-    if (addToNodeMap) {
-      // Add the node to the node map.
-      this.nodes.push(node)
-    }
+    // Set the parent node to the root
+    // node.
+    node.parentNode = rootNode
+    // Add the node to the root node's
+    // children.
+    rootNode.childNodes.push(node)
+    // Add the node to the node map.
+    this.nodes.push(node)
 
     // Set last created node.
     this.lastCreatedNode = node
@@ -817,6 +819,44 @@ export default class ClientMission
 
     // Return the node.
     return node
+  }
+
+  // Implemented
+  public spawnPrototype(
+    _id: string,
+    options: TMissionPrototypeOptions<ClientMissionPrototype> = {},
+  ): ClientMissionPrototype {
+    let rootPrototype: ClientMissionPrototype | null = this.rootPrototype
+
+    // If the mission has no root prototype, throw an error.
+    if (rootPrototype === null) {
+      throw new Error('Cannot spawn prototype: Mission has no root prototype.')
+    }
+
+    // Create new prototype.
+    let prototype: ClientMissionPrototype = new ClientMissionPrototype(
+      this,
+      _id,
+      options,
+    )
+
+    // Set the parent prototype to the root
+    // prototype.
+    prototype.parentNode = rootPrototype
+    // Add the prototype to the root prototype's
+    // children.
+    rootPrototype.children.push(prototype)
+    // Add the prototype to the prototype list.
+    this.prototypes.push(prototype)
+
+    // Emit spawn node event if the structure
+    // has been initialized.
+    if (this.structureInitialized) {
+      this.emitEvent('spawn-node')
+    }
+
+    // Return the prototype.
+    return prototype
   }
 
   /**

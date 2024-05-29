@@ -1,6 +1,6 @@
 import Tooltip from 'src/components/content/communication/Tooltip'
 import ClientMissionNode from 'src/missions/nodes'
-import NodeCreator from 'src/missions/nodes/creator'
+import NodeCreator from 'src/missions/nodes/creators'
 import { compute } from 'src/toolbox'
 import './MissionNodeCreator.scss'
 
