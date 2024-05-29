@@ -187,7 +187,13 @@ export default function ActionEntry({
   const renderBackButtonJsx = (): JSX.Element | null => {
     return (
       <div className='BackContainer'>
-        <div className='BackButton' onClick={() => setSelectedAction(null)}>
+        <div
+          className='BackButton'
+          onClick={() => {
+            setSelectedEffect(null)
+            setSelectedAction(null)
+          }}
+        >
           &lt;
           <Tooltip description='Go back.' />
         </div>

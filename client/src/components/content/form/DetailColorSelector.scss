@@ -1,0 +1,87 @@
+@import 'src/assets/styles/config.scss';
+@import '../form/index.scss';
+
+.Detail.DetailColorSelector {
+  .Field {
+    &.IsExpanded {
+      .DisplayColorGrid {
+        .Indicator {
+          transform: scale(1, -0.75);
+        }
+      }
+    }
+
+    .DisplayColorGrid {
+      display: grid;
+      align-items: center;
+      grid-template-columns: 1fr auto;
+      cursor: pointer;
+      user-select: none;
+
+      .Indicator {
+        transform: scale(1, 0.75);
+        font-size: 1.25rem;
+      }
+
+      .Text {
+        color: $color-accent-light;
+      }
+    }
+
+    .AllColors {
+      display: grid;
+      grid-template-columns: repeat(8, 12.5%);
+      max-width: 16rem;
+      margin: 20px 0 0;
+
+      .Color {
+        width: 75%;
+        height: 72%;
+        aspect-ratio: 1 / 1;
+        margin: 3px;
+        padding: 0;
+        border: 1px solid $color-main;
+
+        &.Selected {
+          width: 65%;
+          height: 62%;
+          margin: 3.5px 3px 3px 3.5px;
+          border: 2px solid black;
+        }
+      }
+    }
+
+    .ColorInfo {
+      display: flex;
+      justify-content: space-between;
+      flex-flow: row wrap;
+      margin: 20px 0 0;
+
+      .SelectedColorText {
+        font-size: 0.78rem;
+        margin: 20px 3px 0 0;
+
+        .SelectedColorBox {
+          display: inline-block;
+          vertical-align: bottom;
+          box-sizing: border-box;
+          border: 2px solid $color-negative;
+          width: 1.15rem;
+          height: 0.91rem;
+        }
+      }
+
+      .Buttons {
+        margin: 20px 0 0;
+
+        .ButtonText {
+          margin: 0 5px 0 0;
+
+          span {
+            font-size: 1.1em;
+          }
+        }
+      }
+    }
+  }
+}

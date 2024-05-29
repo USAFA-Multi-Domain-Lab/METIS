@@ -4,7 +4,7 @@
 .Detail.DetailNumber {
   .Unit {
     pointer-events: none;
-    @include fieldDimensions();
+    @include dimensions();
     margin-bottom: -51px;
     border-color: transparent;
     height: 43px;

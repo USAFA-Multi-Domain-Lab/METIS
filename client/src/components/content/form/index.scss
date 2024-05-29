@@ -1,7 +1,7 @@
 @import 'src/assets/styles/config.scss';
 @import '/src/assets/styles/util.scss';
 
-@mixin fieldDimensions() {
+@mixin dimensions() {
   box-sizing: border-box;
   margin: 8px 0 0;
   border-top: 2px solid $color-main;
@@ -48,7 +48,7 @@
   }
 
   .Field {
-    @include fieldDimensions();
+    @include dimensions();
     color: $color-accent-light;
     font-size: 14px;
 

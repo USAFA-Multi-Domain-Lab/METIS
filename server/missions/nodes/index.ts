@@ -157,7 +157,7 @@ export default class ServerMissionNode extends MissionNode<
   /**
    * Options when setting the color of nodes.
    */
-  public static readonly COLOR_OPTIONS: Array<string> = [
+  public static readonly COLOR_OPTIONS: string[] = [
     '#ffffff',
     '#A4A4A4',
     '#848484',

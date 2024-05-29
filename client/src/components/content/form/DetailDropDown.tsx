@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { compute } from 'src/toolbox'
 import { TDetail_P } from '.'
-import { AnyObject } from '../../../../../shared/toolbox/objects'
 import './DetailDropDown.scss'
 
 /**
@@ -21,14 +20,11 @@ export function DetailDropDown<TOption>({
   isExpanded,
   renderDisplayName,
   // Optional Properties
-  uniqueDropDownStyling = {},
   uniqueClassName = undefined,
   uniqueLabelClassName = undefined,
   uniqueFieldClassName = undefined,
   uniqueStateValueClassName = undefined,
   disabled = false,
-  uniqueOptionStyling = () => ({}),
-  renderOptionClassName = () => '',
 }: TDetailDropDown_P<TOption>): JSX.Element | null {
   /* -- STATE -- */
   const [expanded, setExpanded] = useState<boolean>(false)
@@ -73,10 +69,6 @@ export function DetailDropDown<TOption>({
     // the expanded class name
     if (expanded) {
       classList.push('IsExpanded')
-    }
-    // Otherwise add the collapsed class name.
-    else {
-      classList.push('IsCollapsed')
     }
 
     // Return the list of class names as one string.
@@ -156,7 +148,7 @@ export function DetailDropDown<TOption>({
   /* -- RENDER -- */
   if (options.length > 0) {
     return (
-      <div className={rootClassName} style={uniqueDropDownStyling}>
+      <div className={rootClassName}>
         <div className='TitleContainer'>
           <div className={labelClassName}>{label}:</div>
           <div className={optionalClassName}>optional</div>
@@ -164,9 +156,7 @@ export function DetailDropDown<TOption>({
         <div className={fieldClassName}>
           <div
             className='Option Selected'
-            onClick={() => {
-              setExpanded(!expanded)
-            }}
+            onClick={() => setExpanded(!expanded)}
           >
             <div className={stateValueClassName}>{valueDisplayed}</div>
             <div className='Indicator'>v</div>
@@ -175,8 +165,7 @@ export function DetailDropDown<TOption>({
             {options.map((option: NonNullable<TOption>, index: number) => {
               return (
                 <div
-                  className={`Option ${renderOptionClassName(option)}`}
-                  style={uniqueOptionStyling(option)}
+                  className={'Option'}
                   key={`option_${renderDisplayName(option)}_${index}`}
                   onClick={() => {
                     setState(option)
@@ -215,11 +204,6 @@ type TDetailDropDown_P<TOption> = TDetail_P<TOption | null> & {
    */
   renderDisplayName: (option: NonNullable<TOption>) => string
   /**
-   * The unique CSS styling for the drop down.
-   * @default {}
-   */
-  uniqueDropDownStyling?: AnyObject
-  /**
    * The unique class name for the detail.
    */
   uniqueClassName?: string
@@ -227,16 +211,6 @@ type TDetailDropDown_P<TOption> = TDetail_P<TOption | null> & {
    * The unique class name for the current value.
    */
   uniqueStateValueClassName?: string
-  /**
-   * The unique styling for the options.
-   * @default (option: TOption) => { return {} }
-   */
-  uniqueOptionStyling?: (option: TOption) => AnyObject
-  /**
-   * The function to render the class name for the option.
-   * @default (option: TOption) => { return '' }
-   */
-  renderOptionClassName?: (option: TOption) => string
   /**
    * @note This is disabled for drop down details.
    */

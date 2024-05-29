@@ -3,16 +3,24 @@
 
 .Detail.DetailDropDown {
   .Field {
+    &.IsExpanded {
+      .Option.Selected {
+        .Indicator {
+          transform: scale(1, -0.75);
+        }
+      }
+    }
+
     .Option.Selected {
       display: grid;
-      grid-template-columns: auto 20px;
+      align-items: center;
+      grid-template-columns: 1fr auto;
       cursor: pointer;
       user-select: none;
 
       .Indicator {
-        display: inline-block;
-        font-size: 16px;
-        text-align: end;
+        transform: scale(1, 0.75);
+        font-size: 1.1rem;
       }
 
       .Text {
@@ -28,26 +36,6 @@
 
         &:first-child {
           margin: 10px 0 0;
-        }
-      }
-    }
-
-    &.IsCollapsed {
-      .Option.Selected {
-        .Indicator {
-          transform: scale(1.25, 0.75);
-        }
-      }
-
-      .Option:not(.Selected) {
-        display: none;
-      }
-    }
-
-    &.IsExpanded {
-      .Option.Selected {
-        .Indicator {
-          transform: scale(1.25, -0.75);
         }
       }
     }

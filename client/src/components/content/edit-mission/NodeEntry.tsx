@@ -7,7 +7,7 @@ import { usePostInitEffect } from 'src/toolbox/hooks'
 import { ReactSetter } from 'src/toolbox/types'
 import { SingleTypeObject } from '../../../../../shared/toolbox/objects'
 import Tooltip from '../communication/Tooltip'
-import { DetailDropDown } from '../form/DetailDropDown'
+import { DetailColorSelector } from '../form/DetailColorSelector'
 import { DetailLargeString } from '../form/DetailLargeString'
 import { DetailNumber } from '../form/DetailNumber'
 import { DetailString } from '../form/DetailString'
@@ -16,7 +16,7 @@ import List, { ESortByMethod } from '../general-layout/List'
 import ButtonSvgPanel, {
   TValidPanelButton,
 } from '../user-controls/ButtonSvgPanel'
-import { ButtonText } from '../user-controls/ButtonText'
+import { ButtonText, TButtonText } from '../user-controls/ButtonText'
 import { TToggleLockState } from '../user-controls/Toggle'
 import './NodeEntry.scss'
 
@@ -46,6 +46,7 @@ export default function NodeEntry({
   const [depthPadding, setDepthPadding] = useState<number>(node.depthPadding)
   const [executable, setExecutable] = useState<boolean>(node.executable)
   const [device, setDevice] = useState<boolean>(node.device)
+  const [applyColorFill, setApplyColorFill] = useState<boolean>(false)
 
   /* -- COMPUTED -- */
   /**
@@ -140,6 +141,27 @@ export default function NodeEntry({
       return 'locked-deactivation'
     }
   })
+  /**
+   * The list of buttons for the node's border color.
+   */
+  const colorButtons: TButtonText[] = compute(() => {
+    // Create a default list of buttons.
+    let buttons: TButtonText[] = []
+
+    // Create a button that will fill all of the descendants
+    // of the current node with the selected color.
+    let fillButton: TButtonText = {
+      text: 'Fill',
+      onClick: () => setApplyColorFill(true),
+      tooltipDescription: `Applies the selected color to all of the node's descendants.`,
+    }
+
+    // Add the fill button to the list of buttons.
+    buttons.push(fillButton)
+
+    // Return the buttons.
+    return buttons
+  })
 
   /* -- EFFECTS -- */
 
@@ -156,6 +178,15 @@ export default function NodeEntry({
     // If the node is not executable, then the device
     // status should be false.
     if (!executable && device) setDevice(false)
+
+    // If the fill color button has been clicked, then
+    // apply the color fill to the node and all of its
+    // descendants.
+    if (applyColorFill) {
+      node.applyColorFill()
+      setApplyColorFill(false)
+    }
+
     // Allow the user to save the changes.
     handleChange()
   }, [
@@ -166,6 +197,7 @@ export default function NodeEntry({
     depthPadding,
     executable,
     device,
+    applyColorFill,
   ])
 
   // Auto-generate an action if the node becomes executable.
@@ -353,48 +385,16 @@ export default function NodeEntry({
             defaultValue={ClientMissionNode.DEFAULT_PROPERTIES.name}
             key={`${node._id}_name`}
           />
-          <DetailDropDown<string>
+          <DetailColorSelector
             fieldType='required'
-            label='Color'
-            options={colorOptions}
-            stateValue='Choose a color'
-            setState={setColor}
+            label='Border Color'
+            colors={colorOptions}
             isExpanded={false}
-            renderDisplayName={() => 'Choose a color'}
-            uniqueClassName='Color'
-            uniqueOptionStyling={(newColor: string) => {
-              if (color === newColor) {
-                return {
-                  backgroundColor: `${newColor}`,
-                  width: '65%',
-                  height: '62%',
-                  margin: '4px 3px 3px 4px',
-                  border: '2px solid black',
-                }
-              } else {
-                return {
-                  backgroundColor: `${newColor}`,
-                }
-              }
-            }}
+            stateValue={color}
+            setState={setColor}
+            buttons={colorButtons}
             key={`${node._id}_color`}
           />
-          <div className='ColorInfo'>
-            <div className='SelectedColorText'>
-              Selected color:{' '}
-              <span
-                className='SelectedColorBox'
-                style={{ backgroundColor: `${color}` }}
-              ></span>
-            </div>
-            <ButtonText
-              text={'Fill'}
-              onClick={() => {
-                node.applyColorFill()
-                handleChange()
-              }}
-            />
-          </div>
           <DetailLargeString
             fieldType='optional'
             handleOnBlur='none'

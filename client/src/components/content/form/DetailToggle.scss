@@ -5,7 +5,7 @@
   display: grid;
   align-items: center;
   grid-template-columns: 1fr auto;
-  @include fieldDimensions();
+  @include dimensions();
   margin: 20px 8% 0;
   width: 84%;
 
