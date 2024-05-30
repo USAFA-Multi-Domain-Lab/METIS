@@ -30,7 +30,73 @@
       position: absolute;
     }
 
-    .Title {
+    .TitleBar {
+      // Position the title at the top
+      // center of the HUD.
+      @include center-origin-x;
+      left: 50%;
+      top: 0;
+
+      user-select: none;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      box-sizing: border-box;
+      opacity: 0.95;
+      overflow: hidden;
+      border-bottom: 2px solid $color-main;
+      width: 100%;
+      padding: 0.25em;
+      padding-left: 1em;
+      box-shadow: $box-shadow-alt6;
+      letter-spacing: 0.04em;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+
+      .Title {
+        width: 0;
+        font-size: 0.75em;
+        line-height: $button-svg-small-size;
+      }
+
+      .ButtonSvgPanel {
+        // Remove top rule set in base ButtonSVGPanel
+        // styles.
+        top: unset;
+
+        transition: 250ms background-color;
+        padding-left: 2em;
+        border-radius: 0;
+        overflow: hidden;
+        white-space: nowrap;
+        background: linear-gradient(
+          to left,
+          #272736 0 calc(100% - 1.5em),
+          transparent 100%
+        );
+
+        &.map-is-zoomed-in {
+          .ButtonSvg.zoom-in {
+            pointer-events: none;
+            opacity: 0.5;
+          }
+        }
+
+        &.map-is-zoomed-out {
+          .ButtonSvg.zoom-out {
+            pointer-events: none;
+            opacity: 0.5;
+          }
+        }
+      }
+
+      .Title,
+      .ButtonSvgPanel {
+        height: $button-svg-small-size;
+      }
+    }
+
+    // todo: Review if this is needed.
+    > .Title {
       // Position the title at the top
       // center of the HUD.
       @include center-origin-x;
@@ -57,11 +123,12 @@
 
     .MoreInformation {
       @include center-origin-x;
-      top: 1.25em;
+      top: 5.6em;
       right: 0;
     }
 
-    .ButtonSvgPanel {
+    // todo: Review if this is needed.
+    > .ButtonSvgPanel {
       // Remove top rule set in base ButtonSVGPanel
       // styles.
       top: unset;

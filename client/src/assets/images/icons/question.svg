@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   width="800.0000000000001"
+   height="800.0000000000001"
+   version="1.1"
+   id="svg1"
+   sodipodi:docname="question.svg"
+   inkscape:version="1.3 (0e150ed, 2023-07-21)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs1">
+    <rect
+       x="0"
+       y="0"
+       width="800"
+       height="800"
+       id="rect1" />
+  </defs>
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#000000"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     showgrid="false"
+     inkscape:zoom="0.78375"
+     inkscape:cx="433.17384"
+     inkscape:cy="447.84689"
+     inkscape:window-width="1608"
+     inkscape:window-height="1003"
+     inkscape:window-x="188"
+     inkscape:window-y="25"
+     inkscape:window-maximized="0"
+     inkscape:current-layer="svg1" />
+  <!-- Created with Method Draw - http://github.com/duopixel/Method-Draw/ -->
+  <text
+     xml:space="preserve"
+     id="text1"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:192px;font-family:Arial;-inkscape-font-specification:Arial;white-space:pre;shape-inside:url(#rect1);display:inline;fill:#ffffff;stroke-width:4;stroke-linecap:square;stroke-miterlimit:80.4;paint-order:fill markers stroke"
+     transform="matrix(5.3741524,0,0,5.3741524,116.34552,-153.82911)"><tspan
+       x="0"
+       y="172.94485"
+       id="tspan2">?</tspan></text>
+</svg>

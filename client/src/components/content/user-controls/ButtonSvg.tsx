@@ -14,6 +14,7 @@ export default function ButtonSvg({
   tooltipDescription = null,
   uniqueClassList = [],
   disabled = false,
+  cursor = 'pointer',
   onClick,
   onCopy = () => {},
 }: TButtonSvg): JSX.Element | null {
@@ -67,6 +68,9 @@ export default function ButtonSvg({
     if (icon === 'upload' || icon === 'download') {
       result.backgroundPosition = 'center 0.25em, center'
     }
+
+    // Push cursor styling.
+    result.cursor = cursor
 
     // Return result.
     return result
@@ -122,6 +126,11 @@ export type TButtonSvg = {
    */
   disabled?: boolean
   /**
+   * Cursor styling used for the button.
+   * @default 'pointer'
+   */
+  cursor?: 'pointer' | 'help'
+  /**
    * Handles the click event for the button.
    * @param event The click event.
    */
@@ -157,3 +166,4 @@ export type TButtonSvgIcon =
   | 'ban'
   | 'user'
   | 'shell'
+  | 'question'

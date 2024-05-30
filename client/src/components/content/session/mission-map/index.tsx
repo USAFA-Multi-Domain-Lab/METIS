@@ -347,6 +347,9 @@ export default function MissionMap({
 
     // Return buttons.
     return [
+      // Add custom buttons.
+      ...customButtons,
+
       {
         icon: 'zoom-in',
         key: 'zoom-in',
@@ -381,8 +384,24 @@ export default function MissionMap({
         tooltipDescription:
           'Zoom out. \n*Scrolling on the map will also zoom in and out.*',
       },
-      // Add custom buttons.
-      ...customButtons,
+      {
+        icon: 'question',
+        key: 'question',
+        onClick: () => {},
+        tooltipDescription:
+          '##### Mission Map\n' +
+          'This map is a layout of the nodes in the mission and their order of progression (left to right). \n' +
+          '\t\n' +
+          'The lines indicate how the nodes relate to one another and help display their order of progression. \n' +
+          '\t\n' +
+          'The children of a node are revealed when certain criteria are met (e.g. an action is successfully executed on a node). \n' +
+          '\t\n' +
+          '##### Controls:\n' +
+          '`Click+Drag` *Pan.*\n' +
+          '\t\n' +
+          '`Scroll` *Zoom in/out.*\n',
+        cursor: 'help',
+      },
     ]
   })
 

@@ -10,17 +10,18 @@
     cursor: help;
     display: grid;
     place-content: center;
-    border: 3px solid $color-main;
+    border: 2px solid $color-main;
     border-radius: 50%;
-    width: 26px;
-    height: 26px;
+    width: 1.2em;
+    height: 1.2em;
     background-color: $background-alt1;
+    font-size: 20px;
 
     .question-mark {
       display: block;
       height: 1em;
       font-family: 'Arial', monospace;
-      font-size: 22px;
+      font-size: 16px;
       font-weight: bolder;
       line-height: 1em;
     }
