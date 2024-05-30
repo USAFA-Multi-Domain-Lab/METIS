@@ -10,12 +10,11 @@
     cursor: help;
     display: grid;
     place-content: center;
-    border: 2px solid $color-main;
+    border: 3px solid $color-main;
     border-radius: 50%;
-    width: 1.2em;
-    height: 1.2em;
+    width: 26px;
+    height: 26px;
     background-color: $background-alt1;
-    font-size: 20px;
 
     .question-mark {
       display: block;
