@@ -129,7 +129,7 @@ export type TButtonSvg = {
    * Cursor styling used for the button.
    * @default 'pointer'
    */
-  cursor?: 'pointer' | 'help'
+  cursor?: string
   /**
    * Handles the click event for the button.
    * @param event The click event.

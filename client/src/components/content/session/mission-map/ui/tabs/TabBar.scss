@@ -1,0 +1,15 @@
+@import '../../../../../../assets/styles/config.scss';
+@import '../../mixins.scss';
+
+.TabBar {
+  user-select: none;
+  display: flex;
+  padding: 0em 0.4em 0;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  column-gap: 0.4em;
+  box-sizing: border-box;
+  border-bottom: 2px solid rgba(#fff, 0.1);
+  width: 100%;
+  background: $background-map-imitation;
+}

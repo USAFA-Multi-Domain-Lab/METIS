@@ -1,0 +1,57 @@
+@import '../../../../../assets/styles/config.scss';
+@import '../mixins.scss';
+
+.TitleBar {
+  user-select: none;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  box-sizing: border-box;
+  border-top: 2px solid rgba($color-main, 0.1);
+  width: 100%;
+  padding: 0.25em 0;
+  padding-left: 1em;
+  background: $background-map-imitation;
+  white-space: nowrap;
+
+  .Title {
+    width: 0;
+    font-size: 0.75em;
+    line-height: $button-svg-small-size;
+  }
+
+  .ButtonSvgPanel {
+    // Remove top rule set in base ButtonSVGPanel
+    // styles.
+    top: unset;
+
+    transition: 250ms background-color;
+    padding-left: 2em;
+    border-radius: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    background: linear-gradient(
+      to left,
+      $background-map-imitation 0 calc(100% - 1.5em),
+      transparent 100%
+    );
+
+    &.map-is-zoomed-in {
+      .ButtonSvg.zoom-in {
+        pointer-events: none;
+        opacity: 0.5;
+      }
+    }
+
+    &.map-is-zoomed-out {
+      .ButtonSvg.zoom-out {
+        pointer-events: none;
+        opacity: 0.5;
+      }
+    }
+  }
+
+  .Title,
+  .ButtonSvgPanel {
+    height: $button-svg-small-size;
+  }
+}

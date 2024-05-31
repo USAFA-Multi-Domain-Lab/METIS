@@ -366,6 +366,7 @@ export default function MissionMap({
         },
         tooltipDescription:
           'Zoom in. \n*Scrolling on the map will also zoom in and out.*',
+        cursor: 'zoom-in',
       },
       {
         icon: 'zoom-out',
@@ -383,6 +384,7 @@ export default function MissionMap({
         },
         tooltipDescription:
           'Zoom out. \n*Scrolling on the map will also zoom in and out.*',
+        cursor: 'zoom-out',
       },
       {
         icon: 'question',
