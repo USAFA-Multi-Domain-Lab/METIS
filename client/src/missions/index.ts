@@ -154,10 +154,16 @@ export default class ClientMission
   public lastOpenedNode: ClientMissionNode | null
 
   /**
-   * The lines used to draw relationships between nodes on a mission map.
-   * @note Calculated in `ClientMissionNode.drawRelationshipLines`.
+   * The lines used to draw relationships between prototypes on a mission map.
+   * @note Calculated in `ClientMissionPrototype.drawPrototypeRelationshipLines`.
    */
-  public relationshipLines: TWithKey<TLine_P>[]
+  public prototypeRelationshipLines: TWithKey<TLine_P>[]
+
+  /**
+   * The lines used to draw relationships between nodes on a mission map.
+   * @note Calculated in `ClientMissionNode.drawNodeRelationshipLines`.
+   */
+  public nodeRelationshipLines: TWithKey<TLine_P>[]
 
   public constructor(
     data: Partial<TCommonMissionJson> = {},
@@ -177,7 +183,8 @@ export default class ClientMission
     this.listeners = []
     this._selectedNode = null
     this._nodeCreators = []
-    this.relationshipLines = []
+    this.prototypeRelationshipLines = []
+    this.nodeRelationshipLines = []
     this.lastOpenedNode = null
 
     // If there is no existing nodes,
@@ -223,6 +230,7 @@ export default class ClientMission
     // their current positions reflect
     // all the changes that have been
     // made.
+    this.positionPrototypes()
     this.positionNodes()
 
     // Re-position the node creators
@@ -235,7 +243,8 @@ export default class ClientMission
 
     // Draw the relationship lines
     // between nodes.
-    this.drawRelationshipLines()
+    this.drawPrototypeRelationshipLines()
+    this.drawNodeRelationshipLines()
 
     // Emit the structure change event.
     this.emitEvent('structure-change')
@@ -274,6 +283,109 @@ export default class ClientMission
   }
 
   /**
+   * This will position all the prototypes in the mission
+   * for rendering on a mission map.
+   * @param parent Recursively used. Don't pass anything.
+   * @param depth Recursively used. Don't pass anything.
+   * @param rowCount Recursively used. Don't pass anything.
+   * @param extraLines Recursively used. Don't pass anything.
+   * @param rowMostLinesFound Recursively used. Don't pass anything.
+   * @returns Subcalls of this recursive function will return results used for
+   * further position calculations. The final return can be ignored.
+   */
+  protected positionPrototypes(
+    parent: ClientMissionPrototype = this.rootPrototype,
+    depth: number = -1,
+    rowCount: Counter = new Counter(0),
+  ): void {
+    let creationTarget: ClientMissionPrototype | null = null
+
+    // // If creation mode is enabled, set the
+    // // nodeCreationTarget to the selected node.
+    // if (this.creationMode) creationTarget = this.selectedNode!
+
+    // If the parent node isn't the rootNode,
+    // then this function was recursively
+    // called with a reference to a particular
+    // node in the mission. This node should be
+    // included in the nodeData for the
+    //  missionRender so that it displays.
+    if (parent._id !== this.rootNode._id) {
+      parent.position.set(
+        depth * ClientMissionNode.COLUMN_WIDTH,
+        rowCount.count * ClientMissionNode.ROW_HEIGHT,
+      )
+    }
+    // Else the depth of the mission is reset
+    // for recalculation.
+    else {
+      this._depth = -1
+    }
+
+    // Set the depth of the parent node.
+    parent.depth = depth
+
+    // If the nodeCreationTarget is this parentNode,
+    // the positioning is offset to account for the
+    // node creators that must be rendered.
+    // todo: Determine what to do with this.
+    // if (creationTarget?._id === parent._id) {
+    //   depth++
+    // }
+
+    let children = parent.children
+
+    // If the nodeCreationTarget is a child of the
+    // parentNode, the positioning is offset to account
+    // for the node creators that must be rendered.
+    // todo: Determine what to do with this.
+    // for (let childNode of children) {
+    //   if (creationTarget?._id === childNode._id) {
+    //     depth += 1
+    //   }
+    // }
+
+    // The childNodes should then be examined
+    // by recursively calling this function.
+    children.forEach((child: ClientMissionPrototype, index: number) => {
+      if (index > 0) {
+        rowCount.increment()
+      }
+
+      // If the nodeCreationTarget is this childNode,
+      // the positioning is offset to account for the
+      // node creators that must be rendered.
+      // todo: Determine what to do with this.
+      // if (creationTarget?._id === child._id) {
+      //   rowCount.increment()
+      // }
+
+      // Position the child node.
+      this.positionPrototypes(
+        child,
+        // todo: Determine what to do with this.
+        depth + 1, // + child.depthPadding,
+        rowCount,
+      )
+
+      // todo: Determine what to do with this.
+      // // If the nodeCreationTarget is this childNode,
+      // // the positioning is offset to account for the
+      // // node creators that must be rendered.
+      // if (creationTarget?._id === childNode._id) {
+      //   rowCount.increment()
+      // }
+    })
+
+    // This will increase the mission depth
+    // if a node is found with a greater depth
+    // than what's currently set.
+    if (this._depth < depth) {
+      this._depth = depth
+    }
+  }
+
+  /**
    * This will position all the nodes with mapX and mapY values
    * that correspond with the current state of the mission.
    * @param parentNode Recursively used. Don't pass anything.
@@ -283,6 +395,7 @@ export default class ClientMission
    * @param rowMostLinesFound Recursively used. Don't pass anything.
    * @returns Subcalls of this recursive function will return results used for
    * further position calculations. The final return can be ignored.
+   * @deprecated
    */
   protected positionNodes = (
     parentNode: ClientMissionNode = this.rootNode,
@@ -413,10 +526,362 @@ export default class ClientMission
   }
 
   /**
-   * Draws the relationship lines between nodes on the mission map
+   * Draws the relationship lines between prototypes on the mission map
    * and caches them in the `relationshipLines` property.
    */
-  protected drawRelationshipLines(): void {
+  protected drawPrototypeRelationshipLines(): void {
+    // The relationship lines drawn.
+    let relationshipLines: TWithKey<TLine_P>[] = []
+    // Define the distance between the edge of a
+    // node and the edge of the column.
+    let columnEdgeDistance: number =
+      (ClientMissionNode.COLUMN_WIDTH - ClientMissionNode.WIDTH) / 2
+    // Get half the default node height.
+    const halfDefaultNodeHeight: number =
+      ClientMissionNode.DEFAULT_NAME_NEEDED_HEIGHT / 2 +
+      ClientMissionNode.VERTICAL_PADDING
+    let creationTarget: ClientMissionNode | null = this.creationTarget
+    let nodeCreators: NodeCreator[] = this.nodeCreators
+
+    // Recursive algorithm used to determine the
+    // relationship lines between nodes. Does not
+    // draw the lines between node creators and nodes.
+    const baseAlgorithm = (
+      parent: ClientMissionPrototype = this.rootPrototype,
+    ) => {
+      // Get details.
+      let children: ClientMissionPrototype[] = parent.children
+      let firstChild: ClientMissionPrototype | null = parent.firstChild
+      let lastChild: ClientMissionPrototype | null = parent.lastChild
+      let childCount: number = children.length
+
+      // If the parent is not the invisible root node
+      // in the mission and the parent has children,
+      // then a relationship line should be drawn
+      // between the parent and the edge of the
+      // column.
+      if (parent !== this.rootPrototype && childCount > 0) {
+        // ! line-draw-start
+
+        // Clone the parent node's position then translate
+        // the start position to the middle of the right edge of
+        // the parent node.
+        let parentToMidStart: Vector2D = parent.position
+          .clone()
+          .translateX(ClientMissionNode.WIDTH / 2)
+          .translateY(halfDefaultNodeHeight)
+
+        // Push a new line.
+        relationshipLines.push({
+          key: `parent-to-middle_${parent._id}`,
+          direction: 'horizontal',
+          start: parentToMidStart,
+          // The length of the line is the distance
+          // between the edge of the parent node and
+          // the edge of the column.
+          length: columnEdgeDistance,
+        })
+
+        // ! line-draw-end
+
+        // ! math-start
+
+        // Define the min and max y values
+        // for the children of this parent node.
+        let childMinY: number = parent.position.y
+        let childMaxY: number = parent.position.y
+
+        // If there is a first child, calculate
+        // the min y value.
+        if (firstChild) {
+          // Set the min y value to the first child's
+          // y position.
+          childMinY = firstChild.position.y
+
+          // If the firstChild is the creation target,
+          // the min y value may need to be offset to
+          // account for a previous sibling node creator.
+          // todo: Determine what to do with this.
+          // if (firstChild === creationTarget) {
+          //   for (let creator of nodeCreators) {
+          //     if (
+          //       creator.targetRelation ===
+          //       ENodeTargetRelation.PreviousSiblingOfTarget
+          //     ) {
+          //       childMinY = Math.min(childMinY, creator.position.y)
+          //     }
+          //   }
+          // }
+        }
+
+        // If there is a last child, calculate
+        // the max y value.
+        if (lastChild) {
+          // Set the max y value to the last child's
+          // y position.
+          childMaxY = lastChild.position.y
+
+          // If the lastChild is the creation target,
+          // the max y value may need to be offset to
+          // account for a following sibling node creator.
+          // todo: Determine what to do with this.
+          // if (lastChild === creationTarget) {
+          //   for (let creator of nodeCreators) {
+          //     if (
+          //       creator.targetRelation ===
+          //       ENodeTargetRelation.FollowingSiblingOfTarget
+          //     ) {
+          //       childMaxY = Math.max(childMaxY, creator.position.y)
+          //     }
+          //   }
+          // }
+        }
+
+        // ! math-end
+
+        // ! line-draw-start
+
+        // If the child min y value is not equal to
+        // the child max y value, then a vertical
+        // line should be drawn between the min and
+        // max y values.
+        if (childMinY !== childMaxY) {
+          // Determine the start position of the vertical line.
+          let downMidStart = parentToMidStart
+            // First clone the parent to mid
+            // start position.
+            .clone()
+            // Then translate to the edge of
+            // the column.
+            .translateX(columnEdgeDistance)
+          // Then set the y position to the
+          // min y value.
+          downMidStart.y = childMinY
+          // Then translate down by half the
+          // default node height.
+          downMidStart.translateY(halfDefaultNodeHeight)
+
+          // Determine the length of the vertical line.
+          let downMidLength: number = childMaxY - childMinY
+
+          // If the parent node is the node creation target,
+          // the vertical line should be offset to account
+          // for a node creator between the parent and child.
+          if (creationTarget?._id === parent._id) {
+            downMidStart.translateX(ClientMissionNode.COLUMN_WIDTH)
+          }
+
+          // Push a new line.
+          relationshipLines.push({
+            key: `down-middle_${parent._id}`,
+            direction: 'vertical',
+            start: downMidStart,
+            length: downMidLength,
+          })
+        }
+
+        // ! line-draw-end
+
+        // Iterate through the children.
+        for (let child of children) {
+          // ! line-draw-start
+
+          // Draw a line from the right edge of the parent column
+          // to the middle-y of the left edge of the child node.
+
+          // Define the start position.
+          let midToChildStart: Vector2D = parentToMidStart
+            // First clone the parent to mid
+            // start position.
+            .clone()
+            // Then translate to the edge of
+            // the column.
+            .translateX(columnEdgeDistance)
+          // Then set the y position to the
+          // child y value.
+          midToChildStart.y = child.position.y
+          // Then translate down by half the
+          // default node height.
+          midToChildStart.translateY(halfDefaultNodeHeight)
+          // If the parent node is the node creation target,
+          // the start position should be offset to account
+          // for a node creator between the parent and child.
+          if (creationTarget?._id === parent._id) {
+            midToChildStart.translateX(ClientMissionNode.COLUMN_WIDTH)
+          }
+
+          // Define the end position.
+          let midToChildEnd: Vector2D = child.position
+            // First clone the child's position.
+            .clone()
+            // Then translate to the left edge of the node,
+            // and down by half the default node height.
+            .translate(-ClientMissionNode.WIDTH / 2, halfDefaultNodeHeight)
+
+          // Determine the length of the from the difference
+          // between the x values of the start and end positions.
+          let midToChildLength: number = midToChildEnd.x - midToChildStart.x
+
+          // Push the new line.
+          relationshipLines.push({
+            key: `middle-to-child_${child._id}`,
+            direction: 'horizontal',
+            start: midToChildStart,
+            length: midToChildLength,
+          })
+
+          // ! line-draw-end
+        }
+      }
+
+      // Iterate through the child nodes.
+      for (let child of parent.children) {
+        // Call recursively the algorithm with
+        // the child.
+        baseAlgorithm(child)
+      }
+    }
+
+    // Run the algorithm.
+    baseAlgorithm()
+
+    // If the mission is in creation mode, add
+    // the relationship lines for the node creators.
+    if (this.creationMode && creationTarget) {
+      // Loop through creators.
+      for (let creator of this.nodeCreators) {
+        // Gather details.
+        let relation: ENodeTargetRelation = creator.targetRelation
+        let relationIsSibling: boolean =
+          relation === ENodeTargetRelation.PreviousSiblingOfTarget ||
+          relation === ENodeTargetRelation.FollowingSiblingOfTarget
+
+        // ! line-draw-start
+
+        // If the relation is a parent-only relationship, and the
+        // target's parent is the root node, draw a line from the
+        // creator to the target.
+        if (
+          relation === ENodeTargetRelation.ParentOfTargetOnly &&
+          creationTarget.parentNode === this.rootNode
+        ) {
+          // Define start position.
+          let start: Vector2D = creator.position
+            // First clone the creator's position.
+            .clone()
+            // Then translate to the edge of the creator,
+            // and down by half the default node height.
+            .translate(ClientMissionNode.WIDTH / 2, halfDefaultNodeHeight)
+          // Define length of line.
+          let length: number = columnEdgeDistance * 2
+
+          // Push a new line.
+          relationshipLines.push({
+            key: `creator-to-target_${creator.nodeId}`,
+            direction: 'horizontal',
+            start,
+            length,
+          })
+        }
+
+        // ! line-draw-end
+
+        // ! line-draw-start
+
+        // If the relation is a between-target-and-children
+        // relationship, then draw a line from the target
+        // to the creator.
+        if (relation === ENodeTargetRelation.BetweenTargetAndChildren) {
+          // Define start position.
+          let start: Vector2D = creationTarget.position
+            // First clone the target's position.
+            .clone()
+            // Then translate to the edge of the node,
+            // and down by half the default node height.
+            .translate(ClientMissionNode.WIDTH / 2, halfDefaultNodeHeight)
+          // Define length of line.
+          let length: number = columnEdgeDistance
+
+          // If the target has children, the line should be
+          // longer to account for the children.
+          if (creationTarget.hasChildren) {
+            length += ClientMissionNode.COLUMN_WIDTH
+          }
+          // Else, add the edge distance to connect it
+          // with the creator, only.
+          else {
+            length += columnEdgeDistance
+          }
+
+          // Push a new line.
+          relationshipLines.push({
+            key: `target-to-creator_${creator.nodeId}`,
+            direction: 'horizontal',
+            start,
+            length,
+          })
+        }
+
+        // ! line-draw-end
+
+        // ! line-draw-start
+
+        // If the relation is a sibling relationship, the target has
+        // a parent, which is not the root node, draw a line
+        // from the target's parent to the creator.
+        if (
+          relationIsSibling &&
+          creationTarget.parentNode &&
+          creationTarget.parentNode !== this.rootNode
+        ) {
+          // Define start position.
+          let start: Vector2D = creationTarget.parentNode.position
+            // First clone the target-parent's position.
+            .clone()
+            // Then translate to the right edge of the column.
+            .translateX(ClientMissionNode.COLUMN_WIDTH / 2)
+          // Set the y position to the creator's y position.
+          start.y = creator.position.y
+          // Then translate down by half the default node height.
+          start.translateY(halfDefaultNodeHeight)
+
+          // Define end position.
+          let end: Vector2D = creator.position
+            // First clone the creator's position.
+            .clone()
+            // Then translate to the edge of the creator,
+            // and down by half the default node height.
+            .translate(ClientMissionNode.WIDTH / 2, halfDefaultNodeHeight)
+
+          // Define length of line by the difference
+          // between the x values of the start and end
+          // positions.
+          let length: number = end.x - start.x
+
+          // Push a new line.
+          relationshipLines.push({
+            key: `parent-to-creator_${creator.nodeId}`,
+            direction: 'horizontal',
+            start,
+            length,
+          })
+        }
+
+        // ! line-draw-end
+      }
+    }
+
+    // Set the relationship lines in the mission to
+    // those determined by the algorithm.
+    this.prototypeRelationshipLines = relationshipLines
+  }
+
+  /**
+   * Draws the relationship lines between nodes on the mission map
+   * and caches them in the `relationshipLines` property.
+   * @deprecated
+   */
+  protected drawNodeRelationshipLines(): void {
     // The relationship lines drawn.
     let relationshipLines: TWithKey<TLine_P>[] = []
     // Define the distance between the edge of a
@@ -756,7 +1221,7 @@ export default class ClientMission
 
     // Set the relationship lines in the mission to
     // those determined by the algorithm.
-    this.relationshipLines = relationshipLines
+    this.nodeRelationshipLines = relationshipLines
   }
 
   /**

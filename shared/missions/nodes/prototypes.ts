@@ -22,12 +22,12 @@ export default abstract class MissionPrototype<
   public children: TRelativePrototype[]
 
   // Implemented
-  public get firstChildNode(): TRelativePrototype | null {
+  public get firstChild(): TRelativePrototype | null {
     return this.children.length > 0 ? this.children[0] : null
   }
 
   // Implemented
-  public get lastChildNode(): TRelativePrototype | null {
+  public get lastChild(): TRelativePrototype | null {
     return this.children.length > 0
       ? this.children[this.children.length - 1]
       : null

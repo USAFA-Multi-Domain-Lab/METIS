@@ -1,6 +1,4 @@
-import { useState } from 'react'
 import { compute } from 'src/toolbox'
-import { HEX_COLOR_REGEX } from '../../../../../../../../shared/toolbox/strings'
 import './index.scss'
 
 /**
@@ -10,11 +8,11 @@ import './index.scss'
 export default function Tab({
   text,
   color,
+  selected,
+  onClick = () => {},
 }: // selected = false,
 TTab_P): JSX.Element | null {
   /* -- STATE -- */
-
-  const [selected, setSelected] = useState<boolean>(false)
 
   /* -- COMPUTED -- */
 
@@ -31,39 +29,6 @@ TTab_P): JSX.Element | null {
   })
 
   /**
-   * The color of the tab with a heavy fade.
-   */
-  const colorWithAlpha = compute((): string => {
-    let alpha: string = '1f'
-
-    // If the tab is selected, increase the alpha.
-    if (selected) {
-      alpha = '88'
-    }
-
-    // If the color is a valid hex color,
-    // add a heavy fade to it, else use
-    // a default color.
-    if (HEX_COLOR_REGEX.test(color)) {
-      return color + alpha
-    } else {
-      return '#ffffff' + alpha
-    }
-  })
-
-  /**
-   * The inline style for the root element.
-   */
-  const rootStyle = compute((): React.CSSProperties => {
-    return {
-      // color: color,
-      // background: `
-      //   linear-gradient(to bottom, ${colorWithAlpha} 0 100%),
-      //   linear-gradient(to bottom, #000 0 100%)`,
-    }
-  })
-
-  /**
    * The inline style for the text element.
    */
   const textStyle = compute((): React.CSSProperties => {
@@ -73,30 +38,17 @@ TTab_P): JSX.Element | null {
     }
   })
 
-  /**
-   * The inline style for the text fade element.
-   */
-  const textFadeStyle = compute((): React.CSSProperties => {
-    return {
-      // background: `
-      //   linear-gradient(to left, ${colorWithAlpha} 0 0.75em, transparent 100%),
-      //   linear-gradient(to left, #000 0 0.75em, transparent 100%)`,
-    }
-  })
-
   /* -- FUNCTIONS -- */
-
-  const onClick = () => setSelected(!selected)
 
   /* -- RENDER -- */
 
   // Render root JSX.
   return (
-    <div className={rootClass} style={rootStyle} onClick={onClick}>
+    <div className={rootClass} onClick={onClick}>
       <div className='Text' style={textStyle}>
         {text}
       </div>
-      <div className='TextFade' style={textFadeStyle}></div>
+      <div className='TextFade'></div>
     </div>
   )
 }
@@ -105,6 +57,10 @@ TTab_P): JSX.Element | null {
  * Props for `Tab`.
  */
 export type TTab_P = {
+  /**
+   * A unique identifier for the tab.
+   */
+  _id: string
   /**
    * The text to display.
    */
@@ -122,4 +78,9 @@ export type TTab_P = {
    * @default false
    */
   selected?: boolean
+  /**
+   * Callback for when the tab is clicked.
+   * @default () => {}
+   */
+  onClick?: () => void
 }

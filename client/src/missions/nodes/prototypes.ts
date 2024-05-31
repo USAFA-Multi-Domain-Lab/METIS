@@ -1,5 +1,9 @@
 import ClientMission from '..'
-import MissionPrototype from '../../../../shared/missions/nodes/prototypes'
+import MissionPrototype, {
+  TCommonMissionPrototype,
+  TMissionPrototypeOptions,
+} from '../../../../shared/missions/nodes/prototypes'
+import { Vector2D } from '../../../../shared/toolbox/space'
 
 /**
  * Class for managing mission prototypes on the client.
@@ -7,4 +11,20 @@ import MissionPrototype from '../../../../shared/missions/nodes/prototypes'
 export default class ClientMissionPrototype extends MissionPrototype<
   ClientMission,
   ClientMissionPrototype
-> {}
+> {
+  // Implemented
+  public position: Vector2D
+  // Implemented
+  public depth: number
+
+  public constructor(
+    mission: ClientMission,
+    _id: TCommonMissionPrototype['_id'],
+    options: TMissionPrototypeOptions<ClientMissionPrototype> = {},
+  ) {
+    super(mission, _id, options)
+
+    this.position = new Vector2D(0, 0)
+    this.depth = -1
+  }
+}

@@ -196,11 +196,19 @@ export default abstract class Mission<
     this.originalNodeStructure = nodeStructure
 
     try {
-      // Loop through structure, spawn new prototypes,
-      // and add them to the prototypes map.
-      for (let key of Object.keys(nodeStructure)) {
-        this.spawnPrototype(key)
+      /**
+       * Recursively spawns prototypes from the node structure.
+       */
+      const spawnPrototypes = (cursor: AnyObject = nodeStructure) => {
+        for (let key of Object.keys(cursor)) {
+          let childStructure: AnyObject = cursor[key]
+          this.spawnPrototype(key)
+          spawnPrototypes(childStructure)
+        }
       }
+
+      // Spawn prototypes from the node structure.
+      spawnPrototypes(nodeStructure)
 
       // Create a prototype map to pass to the mapRelationships function.
       let prototypeMap = new Map<string, TMissionPrototype>()

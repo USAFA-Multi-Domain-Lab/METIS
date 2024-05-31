@@ -28,7 +28,7 @@ while (cursor_missions.hasNext()) {
     {
       _id: ObjectId(),
       name: 'Friendly Force',
-      color: '#34a1fb',
+      color: '#52b1ff',
       nodes: nodeData,
     },
   ]

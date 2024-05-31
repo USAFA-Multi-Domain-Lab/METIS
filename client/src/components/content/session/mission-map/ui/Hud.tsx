@@ -3,8 +3,7 @@ import ClientMission from 'src/missions'
 import { TWithKey } from '../../../../../../../shared/toolbox/objects'
 import './Hud.scss'
 import TitleBar from './TitleBar'
-import Tab from './tabs'
-import TabBar from './tabs/TabBar'
+import TabBar, { TTabBarTab } from './tabs/TabBar'
 
 /**
  * HUD for the mission map.
@@ -12,6 +11,7 @@ import TabBar from './tabs/TabBar'
 export default function Hud({
   mission,
   buttons = [],
+  onTabSelect = () => {},
 }: THud): JSX.Element | null {
   /* -- render -- */
 
@@ -19,11 +19,14 @@ export default function Hud({
   return (
     <div className='Hud'>
       <TitleBar title={mission.name} buttons={buttons} />
-      <TabBar>
-        <Tab text='Master' color={'#ffffff'} />
-        <Tab text='Friendly Force' color={'#52b1ff'} />
-        <Tab text='Enemy Force' color={'#f1696f'} />
-      </TabBar>
+      <TabBar
+        tabs={[
+          { _id: 'master', text: 'Master', color: '#ffffff' },
+          { _id: 'friendly-force', text: 'Friendly Force', color: '#52b1ff' },
+          { _id: 'enemy-force', text: 'Enemy Force', color: '#f1696f' },
+        ]}
+        onTabSelect={onTabSelect}
+      />
     </div>
   )
 }
@@ -41,4 +44,10 @@ export type THud = {
    * @default []
    */
   buttons?: TWithKey<TButtonSvg>[]
+  /**
+   * Callback for when the user selects a tab.
+   * @param tab The tab that was selected.
+   * @default () => {}
+   */
+  onTabSelect?: (tab: TTabBarTab) => void
 }

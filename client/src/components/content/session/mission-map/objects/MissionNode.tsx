@@ -339,7 +339,7 @@ export default function MissionNode({
 }
 
 /**
- * Props for `Node`.
+ * Props for `MissionNode`.
  */
 export type TMissionNode_P = {
   /**

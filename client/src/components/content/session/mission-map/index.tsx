@@ -13,9 +13,11 @@ import Grid from './objects/Grid'
 import Line from './objects/Line'
 import MissionNode, { MAX_NODE_CONTENT_ZOOM } from './objects/MissionNode'
 import MissionNodeCreator from './objects/MissionNodeCreator'
+import MissionPrototype from './objects/MissionPrototype'
 import Hud from './ui/Hud'
 import PanController from './ui/PanController'
 import Overlay from './ui/overlay'
+import { TTabBarTab } from './ui/tabs/TabBar'
 
 /* -- constants -- */
 
@@ -147,6 +149,11 @@ export default function MissionMap({
   const [selectedNode, setSelectedNode] = useState<ClientMissionNode | null>(
     mission.selectedNode,
   )
+
+  /**
+   * Whether the master tab is selected.
+   */
+  const [masterTabSelected, selectMasterTab] = useState<boolean>(true)
 
   /**
    * Force the component to re-render.
@@ -425,11 +432,11 @@ export default function MissionMap({
   /* -- render -- */
 
   /**
-   * The JSX for the relationship lines drawn between nodes.
+   * The JSX for the relationship lines drawn between prototypes.
    * @memoized
    */
-  const linesJsx = useMemo((): JSX.Element[] => {
-    return mission.relationshipLines.map((lineData) => {
+  const prototypeLinesJsx = useMemo((): JSX.Element[] => {
+    return mission.prototypeRelationshipLines.map((lineData) => {
       return <Line {...lineData} />
     })
   }, [
@@ -439,6 +446,62 @@ export default function MissionMap({
     // Change in the node structure of
     // the mission.
     structureChangeKey,
+  ])
+
+  /**
+   * The JSX for the relationship lines drawn between nodes.
+   * @memoized
+   */
+  const nodeLinesJsx = useMemo((): JSX.Element[] => {
+    return mission.nodeRelationshipLines.map((lineData) => {
+      return <Line {...lineData} />
+    })
+  }, [
+    // ! Recomputes when:
+    // The mission changes.
+    mission,
+    // Change in the node structure of
+    // the mission.
+    structureChangeKey,
+  ])
+
+  /**
+   * The JSX for the prototype objects rendered in the scene.
+   * @memoized
+   */
+  const prototypesJsx = useMemo((): JSX.Element[] => {
+    return mission.prototypes.map((prototype) => {
+      // Construct the onSelect callback for
+      // the specific prototype using the generic
+      // onSelect callback passed in props.
+      // let onSelect = onNodeSelect ? () => onNodeSelect(prototype) : undefined
+      // let applyTooltip = applyNodeTooltip
+      //   ? () => applyNodeTooltip(prototype)
+      //   : undefined
+
+      // Return the JSX for the prototype.
+      return (
+        <MissionPrototype
+          key={prototype._id}
+          prototype={prototype}
+          cameraZoom={cameraZoom}
+          // onSelect={onSelect}
+          // applyTooltip={applyTooltip}
+        />
+      )
+    })
+  }, [
+    // ! Recomputes when:
+    // The mission changes.
+    mission,
+    // Change in the node structure of
+    // the mission.
+    structureChangeKey,
+    // Whether the camera zoom crosses the threshold where
+    // the node names should be displayed/hidden.
+    cameraZoom.x > MAX_NODE_CONTENT_ZOOM,
+    // The custom buttons change.
+    customButtons,
   ])
 
   /**
@@ -530,11 +593,17 @@ export default function MissionMap({
         {/* Scene objects */}
         <Grid type={'em'} enabled={MAP_EM_GRID_ENABLED} />
         <Grid type={'node'} enabled={MAP_NODE_GRID_ENABLED} />
-        {linesJsx}
-        {nodesJsx}
+        {masterTabSelected ? prototypeLinesJsx : nodeLinesJsx}
+        {masterTabSelected ? prototypesJsx : nodesJsx}
         {nodeCreatorsJsx}
       </Scene>
-      <Hud mission={mission} buttons={buttons} />
+      <Hud
+        mission={mission}
+        buttons={buttons}
+        onTabSelect={(tab: TTabBarTab) => {
+          selectMasterTab(tab._id === 'master')
+        }}
+      />
       {overlayJsx}
     </div>
   )
