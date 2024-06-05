@@ -401,7 +401,7 @@ export default function NodeEntry({
             label='Description'
             stateValue={description}
             setState={setDescription}
-            elementBoundary='.BorderBox'
+            elementBoundary='.SidePanelSection'
             placeholder='Enter description...'
             key={`${node._id}_description`}
           />
@@ -411,7 +411,7 @@ export default function NodeEntry({
             label='Pre-Execution Text'
             stateValue={preExecutionText}
             setState={setPreExecutionText}
-            elementBoundary='.BorderBox'
+            elementBoundary='.SidePanelSection'
             placeholder='Enter pre-execution text...'
             key={`${node._id}_preExecutionText`}
           />

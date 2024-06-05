@@ -1,4 +1,4 @@
-import { ClientEffect } from 'src/missions/effects'
+import { ClientExternalEffect } from 'src/missions/effects/external'
 import { compute } from 'src/toolbox'
 import { ReactSetter } from 'src/toolbox/types'
 import { TTargetArg } from '../../../../../../shared/target-environments/targets'
@@ -72,7 +72,7 @@ export default function Args({
   if (groupingEntries.length > 0) {
     return (
       <div className='Args'>
-        <div className='ArgsTitle'>Arguments:</div>
+        <div className='ArgsTitle'>Configuration:</div>
 
         {/* -- GROUPINGS -- */}
         {groupingEntries.map(([groupingId, grouping]) => {
@@ -145,14 +145,14 @@ export type TArgs_P = {
   /**
    * The effect's target.
    */
-  target: ClientEffect['target']
+  target: ClientExternalEffect['target']
   /**
    * The arguments that the effect uses to modify the target.
    */
-  effectArgs: ClientEffect['args']
+  effectArgs: ClientExternalEffect['args']
   /**
    * Function that updates the value of the effect's arguments
    * stored in the state.
    */
-  setEffectArgs: ReactSetter<ClientEffect['args']>
+  setEffectArgs: ReactSetter<ClientExternalEffect['args']>
 }

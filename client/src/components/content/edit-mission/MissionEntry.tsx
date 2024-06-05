@@ -121,7 +121,7 @@ export default function MissionEntry({
               stateValue={introMessage}
               setState={setIntroMessage}
               defaultValue={ClientMission.DEFAULT_PROPERTIES.introMessage}
-              elementBoundary='.BorderBox'
+              elementBoundary='.SidePanelSection'
               key={`${mission._id}_introMessage`}
             />
             <DetailNumber

@@ -1,13 +1,13 @@
 import { ClientTargetEnvironment } from 'src/target-environments'
 import ClientTarget from 'src/target-environments/targets'
-import Effect, { TEffectOptions } from '../../../../shared/missions/effects'
+import ExternalEffect from '../../../../shared/missions/effects/external'
 import ClientMissionAction from '../actions'
 
 /**
- * Class representing an effect on the client-side that can be
+ * Class representing an external effect on the client-side that can be
  * applied to a target.
  */
-export class ClientEffect extends Effect<
+export class ClientExternalEffect extends ExternalEffect<
   ClientMissionAction,
   ClientTargetEnvironment
 > {
@@ -28,10 +28,3 @@ export class ClientEffect extends Effect<
     })
   }
 }
-
-/* ------------------------------ CLIENT EFFECT TYPES ------------------------------ */
-
-/**
- * Options for creating a new ClientEffect Object.
- */
-export type TClientEffectOptions = TEffectOptions & {}

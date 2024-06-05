@@ -1,7 +1,14 @@
 import { v4 as generateHash } from 'uuid'
 import { TCommonMission } from '..'
 import { uuidTypeValidator } from '../../toolbox/validators'
-import { TCommonEffect, TCommonEffectJson } from '../effects'
+import {
+  TCommonExternalEffect,
+  TCommonExternalEffectJson,
+} from '../effects/external'
+import {
+  TCommonInternalEffect,
+  TCommonInternalEffectJson,
+} from '../effects/internal'
 import { TCommonMissionNode } from '../nodes'
 
 /**
@@ -10,7 +17,8 @@ import { TCommonMissionNode } from '../nodes'
 export default abstract class MissionAction<
   TMission extends TCommonMission,
   TMissionNode extends TCommonMissionNode,
-  TEffect extends TCommonEffect,
+  TExternalEffect extends TCommonExternalEffect,
+  TInternalEffect extends TCommonInternalEffect,
 > implements TCommonMissionAction
 {
   // Inherited
@@ -41,7 +49,10 @@ export default abstract class MissionAction<
   public postExecutionFailureText: TCommonMissionAction['postExecutionFailureText']
 
   // Inherited
-  public effects: TEffect[]
+  public externalEffects: TExternalEffect[]
+
+  // Inherited
+  public internalEffects: TInternalEffect[]
 
   // Inherited
   public get failureChance(): TCommonMissionAction['failureChance'] {
@@ -83,17 +94,31 @@ export default abstract class MissionAction<
     this.postExecutionFailureText =
       data.postExecutionFailureText ??
       MissionAction.DEFAULT_PROPERTIES.postExecutionFailureText
-    this.effects = this.parseEffects(
-      data.effects ?? MissionAction.DEFAULT_PROPERTIES.effects,
+    this.externalEffects = this.parseExternalEffects(
+      data.externalEffects ?? MissionAction.DEFAULT_PROPERTIES.externalEffects,
+    )
+    this.internalEffects = this.parseInternalEffects(
+      data.internalEffects ?? MissionAction.DEFAULT_PROPERTIES.internalEffects,
     )
   }
 
   /**
-   * Parses the effect data into Effect Objects.
-   * @param data The effect data to parse.
-   * @returns An array of Effect Objects.
+   * Parses the external effect data into ExternalEffect Objects.
+   * @param data The external effect data to parse.
+   * @returns An array of ExternalEffect Objects.
    */
-  public abstract parseEffects(data: TCommonEffectJson[]): TEffect[]
+  public abstract parseExternalEffects(
+    data: TCommonExternalEffectJson[],
+  ): TExternalEffect[]
+
+  /**
+   * Parses the internal effect data into InternalEffect Objects.
+   * @param data The internal effect data to parse.
+   * @returns An array of InternalEffect Objects.
+   */
+  public abstract parseInternalEffects(
+    data: TCommonInternalEffectJson[],
+  ): TInternalEffect[]
 
   // Implemented
   public toJson(): TCommonMissionActionJson {
@@ -105,7 +130,12 @@ export default abstract class MissionAction<
       resourceCost: this.resourceCost,
       postExecutionSuccessText: this.postExecutionSuccessText,
       postExecutionFailureText: this.postExecutionFailureText,
-      effects: this.effects.map((effect) => effect.toJson()),
+      externalEffects: this.externalEffects.map((externalEffect) =>
+        externalEffect.toJson(),
+      ),
+      internalEffects: this.internalEffects.map((internalEffect) =>
+        internalEffect.toJson(),
+      ),
     }
 
     // Include _id if it's an ObjectId.
@@ -136,7 +166,8 @@ export default abstract class MissionAction<
         '<p>Enter your successful post-execution message here.</p>',
       postExecutionFailureText:
         '<p>Enter your unsuccessful post-execution message here.</p>',
-      effects: [],
+      externalEffects: [],
+      internalEffects: [],
     }
   }
 }
@@ -197,9 +228,13 @@ export interface TCommonMissionAction {
    */
   postExecutionFailureText: string
   /**
-   * The effects that can be applied to the targets.
+   * The external effects that can be applied to the targets.
    */
-  effects: TCommonEffect[]
+  externalEffects: TCommonExternalEffect[]
+  /**
+   * The internal effects that can be applied to the targets.
+   */
+  internalEffects: TCommonInternalEffect[]
   /**
    * The chance that the action will fail (1 - successChance).
    */
@@ -256,7 +291,11 @@ export interface TCommonMissionActionJson {
    */
   postExecutionFailureText: string
   /**
-   * The effects that can be applied to the targets (JSON).
+   * The external effects that can be applied to the targets (JSON).
    */
-  effects: TCommonEffectJson[]
+  externalEffects: TCommonExternalEffectJson[]
+  /**
+   * The internal effects that can be applied to the targets (JSON).
+   */
+  internalEffects: TCommonInternalEffectJson[]
 }

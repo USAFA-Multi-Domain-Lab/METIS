@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useGlobalContext } from 'src/context'
 import ClientMissionAction from 'src/missions/actions'
-import { ClientEffect } from 'src/missions/effects'
+import { ClientExternalEffect } from 'src/missions/effects/external'
 import { ClientTargetEnvironment } from 'src/target-environments'
 import ClientTarget from 'src/target-environments/targets'
 import { compute } from 'src/toolbox'
@@ -12,12 +12,12 @@ import { DetailLocked } from '../../form/DetailLocked'
 import { DetailString } from '../../form/DetailString'
 import { ButtonText } from '../../user-controls/ButtonText'
 import Args from './Args'
-import './EffectEntry.scss'
+import './ExternalEffectEntry.scss'
 
 /**
- * Prompt modal for creating a list of effects to apply to a target
+ * Prompt modal for creating a list of external effects to apply to a target.
  */
-export default function EffectEntry({
+export default function ExternalEffectEntry({
   effect,
   setSelectedAction,
   setSelectedEffect,
@@ -27,17 +27,17 @@ export default function EffectEntry({
   const { forceUpdate } = useGlobalContext().actions
 
   /* -- STATE -- */
-  const [effectName, setEffectName] = useState<ClientEffect['name']>(
+  const [effectName, setEffectName] = useState<ClientExternalEffect['name']>(
     effect.name,
   )
-  const [description, setDescription] = useState<ClientEffect['description']>(
-    effect.description,
-  )
+  const [description, setDescription] = useState<
+    ClientExternalEffect['description']
+  >(effect.description)
   const [targetEnv] = useState<ClientTargetEnvironment | null>(
     effect.targetEnvironment,
   )
   const [target] = useState<ClientTarget | null>(effect.target)
-  const [effectArgs, setEffectArgs] = useState<ClientEffect['args']>(
+  const [effectArgs, setEffectArgs] = useState<ClientExternalEffect['args']>(
     effect.args,
   )
 
@@ -92,8 +92,8 @@ export default function EffectEntry({
     // Set the selected effect to null.
     setSelectedEffect(null)
     // Filter out the effect from the action.
-    action.effects = action.effects.filter(
-      (actionEffect: ClientEffect) => actionEffect._id !== effect._id,
+    action.externalEffects = action.externalEffects.filter(
+      (actionEffect: ClientExternalEffect) => actionEffect._id !== effect._id,
     )
     // Display the changes.
     forceUpdate()
@@ -165,7 +165,7 @@ export default function EffectEntry({
 
   /* -- RENDER -- */
   return (
-    <div className='EffectEntry SidePanel'>
+    <div className='ExternalEffectEntry SidePanel'>
       <div className='BorderBox'>
         {/* -- TOP OF BOX -- */}
         <div className='BoxTop'>
@@ -181,7 +181,7 @@ export default function EffectEntry({
             label='Name'
             stateValue={effectName}
             setState={setEffectName}
-            defaultValue={ClientEffect.DEFAULT_PROPERTIES.name}
+            defaultValue={ClientExternalEffect.DEFAULT_PROPERTIES.name}
             placeholder='Enter name...'
           />
           <DetailLargeString
@@ -190,7 +190,7 @@ export default function EffectEntry({
             label='Description'
             stateValue={description}
             setState={setDescription}
-            elementBoundary='.BorderBox'
+            elementBoundary='.SidePanelSection'
             placeholder='Enter description...'
           />
           <DetailLocked
@@ -229,7 +229,7 @@ export type TEffectEntry_P = {
   /**
    * The effect to apply to the target.
    */
-  effect: ClientEffect
+  effect: ClientExternalEffect
   /**
    * A function that will set the action that is selected.
    */
@@ -237,7 +237,7 @@ export type TEffectEntry_P = {
   /**
    * A function that will set the selected effect.
    */
-  setSelectedEffect: (effect: ClientEffect | null) => void
+  setSelectedEffect: (effect: ClientExternalEffect | null) => void
   /**
    * A function that will be called when a change has been made.
    */

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { ClientEffect } from 'src/missions/effects'
+import { ClientExternalEffect } from 'src/missions/effects/external'
 import { compute } from 'src/toolbox'
 import { usePostInitEffect } from 'src/toolbox/hooks'
 import { ReactSetter } from 'src/toolbox/types'
@@ -542,7 +542,7 @@ export default function ArgEntry({
           stateValue={largeStringValue}
           setState={setLargeStringValue}
           defaultValue={arg.default}
-          elementBoundary='.BorderBox'
+          elementBoundary='.SidePanelSection'
         />
       </div>
     )
@@ -588,7 +588,7 @@ export type TArgGroupings_P = {
   /**
    * The effect's target.
    */
-  target: ClientEffect['target']
+  target: ClientExternalEffect['target']
   /**
    * The argument to render.
    */
@@ -596,10 +596,10 @@ export type TArgGroupings_P = {
   /**
    * The arguments that the effect uses to modify the target.
    */
-  effectArgs: ClientEffect['args']
+  effectArgs: ClientExternalEffect['args']
   /**
    * Function that updates the value of the effect's arguments
    * stored in the state.
    */
-  setEffectArgs: ReactSetter<ClientEffect['args']>
+  setEffectArgs: ReactSetter<ClientExternalEffect['args']>
 }

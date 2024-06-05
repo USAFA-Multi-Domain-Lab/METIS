@@ -1,0 +1,35 @@
+@import 'src/assets/styles/config.scss';
+
+.MissionMap {
+  .Overlay {
+    .CreateExternalEffect {
+      border: 2px solid $color-main;
+      box-shadow: $box-shadow-alt7;
+
+      .Heading {
+        min-width: 12.5em;
+        user-select: none;
+        line-height: 1.5em;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+      }
+
+      .Close {
+        background: none;
+        padding: 0;
+      }
+
+      .Detail {
+        grid-column: span 2;
+        margin: 0;
+      }
+
+      .ButtonText {
+        width: fit-content;
+        margin: 20px 0 10px;
+        font-size: 0.9em;
+      }
+    }
+  }
+}

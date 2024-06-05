@@ -4,22 +4,22 @@ import { DetailDropDown } from 'src/components/content/form/DetailDropDown'
 import { ButtonText } from 'src/components/content/user-controls/ButtonText'
 import { useGlobalContext } from 'src/context'
 import ClientMissionAction from 'src/missions/actions'
-import { ClientEffect } from 'src/missions/effects'
+import { ClientExternalEffect } from 'src/missions/effects/external'
 import { ClientTargetEnvironment } from 'src/target-environments'
 import ClientTarget from 'src/target-environments/targets'
 import { compute } from 'src/toolbox'
 import { usePostInitEffect } from 'src/toolbox/hooks'
-import './CreateEffectModal.scss'
+import './CreateExternalEffect.scss'
 
 /**
- * Prompt modal for creating an effect to apply to a target.
+ * Prompt modal for creating an external effect to apply to a target.
  */
-export default function CreateEffectModal({
+export default function CreateExternalEffect({
   effect,
   targetEnvironments,
   handleClose,
   handleChange,
-}: TCreateEffectModal_P): JSX.Element | null {
+}: TCreateExternalEffect_P): JSX.Element | null {
   /* -- GLOBAL CONTEXT -- */
   const { forceUpdate } = useGlobalContext().actions
 
@@ -58,12 +58,12 @@ export default function CreateEffectModal({
     // Create a default list of class names.
     let classList: string[] = []
 
-    // Hide the button if the target environment is null.
+    // Hide the button if the target environment is the default environment.
     if (targetEnv.name === ClientTargetEnvironment.DEFAULT_PROPERTIES.name) {
       classList.push('Hidden')
     }
 
-    // Disable the button if the target is null.
+    // Disable the button if the target is the default target.
     if (target.name === ClientTarget.DEFAULT_PROPERTIES.name) {
       classList.push('Disabled')
     }
@@ -86,11 +86,11 @@ export default function CreateEffectModal({
 
   /* -- FUNCTIONS -- */
   /**
-   * Handles creating a new effect.
+   * Handles creating a new external effect.
    */
   const createEffect = () => {
-    // Push the new effect to the action.
-    action.effects.push(effect)
+    // Push the new external effect to the action.
+    action.externalEffects.push(effect)
     // Display the changes.
     forceUpdate()
     // Allow the user to save the changes.
@@ -100,9 +100,9 @@ export default function CreateEffectModal({
   /* -- RENDER -- */
 
   return (
-    <div className='CreateEffectModal MapModal'>
+    <div className='CreateExternalEffect MapModal'>
       {/* -- TOP OF BOX -- */}
-      <div className='Heading'>Choose a target to affect:</div>
+      <div className='Heading'>Create External Effect:</div>
       <div className='Close'>
         <div className='CloseButton' onClick={handleClose}>
           x
@@ -135,27 +135,26 @@ export default function CreateEffectModal({
 
       {/* -- BUTTON(S) -- */}
       <ButtonText
-        text='Create Effect'
+        text='Create External Effect'
         onClick={createEffect}
-        tooltipDescription='Creates an undefined effect and adds it to the action.'
         uniqueClassName={createEffectButtonClassName}
       />
     </div>
   )
 }
 
-/* ---------------------------- TYPES FOR CREATE EFFECT MODAL ---------------------------- */
+/* ---------------------------- TYPES FOR CREATE EXTERNAL EFFECT ---------------------------- */
 
 /**
- * Props for CreateEffectModal component.
+ * Props for CreateExternalEffect component.
  */
-export type TCreateEffectModal_P = {
+export type TCreateExternalEffect_P = {
   /**
-   * The effect to create.
+   * The external effect to create.
    */
-  effect: ClientEffect
+  effect: ClientExternalEffect
   /**
-   * List of target environments to apply effects to.
+   * List of target environments to apply external effects to.
    */
   targetEnvironments: ClientTargetEnvironment[]
   /**

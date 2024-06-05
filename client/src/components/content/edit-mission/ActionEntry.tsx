@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { useGlobalContext } from 'src/context'
 import ClientMissionAction from 'src/missions/actions'
-import { ClientEffect } from 'src/missions/effects'
+import { ClientExternalEffect } from 'src/missions/effects/external'
+import { ClientInternalEffect } from 'src/missions/effects/internal'
 import ClientMissionNode from 'src/missions/nodes'
 import { ClientTargetEnvironment } from 'src/target-environments'
 import { compute } from 'src/toolbox'
@@ -27,11 +28,12 @@ export default function ActionEntry({
   action,
   targetEnvironments,
   setSelectedAction,
-  setSelectedEffect,
+  setSelectedExternalEffect,
+  setSelectedInternalEffect,
   handleChange,
 }: TActionEntry_P): JSX.Element | null {
   /* -- GLOBAL CONTEXT -- */
-  const { forceUpdate } = useGlobalContext().actions
+  const { forceUpdate, prompt } = useGlobalContext().actions
 
   /* -- STATE -- */
   const [actionName, setActionName] = useState<string>(action.name)
@@ -100,6 +102,24 @@ export default function ActionEntry({
     // Combine the class names into a single string.
     return classList.join(' ')
   })
+  /**
+   * A combined list of all effects.
+   * This includes both internal and external effects.
+   */
+  const allEffects: (ClientExternalEffect | ClientInternalEffect)[] = compute(
+    () => {
+      let effects: (ClientExternalEffect | ClientInternalEffect)[] = []
+
+      // Add all external effects.
+      effects.push(...action.externalEffects)
+
+      // Add all internal effects.
+      effects.push(...action.internalEffects)
+
+      // Return the combined list.
+      return effects
+    },
+  )
 
   /* -- EFFECTS -- */
 
@@ -157,24 +177,37 @@ export default function ActionEntry({
     if (index === 0) {
       node.mission.deselectNode()
       setSelectedAction(null)
-      setSelectedEffect(null)
+      setSelectedExternalEffect(null)
     }
     // If the index is 1 then take the user
     // back to the node entry.
     else if (index === 1) {
       setSelectedAction(null)
-      setSelectedEffect(null)
+      setSelectedExternalEffect(null)
     }
   }
 
   /**
    * Handles the request to delete an effect.
    */
-  const handleDeleteEffectRequest = (effect: ClientEffect) => {
-    // Filter out the effect from the action.
-    action.effects = action.effects.filter(
-      (actionEffect: ClientEffect) => actionEffect._id !== effect._id,
-    )
+  const handleDeleteEffectRequest = (
+    effect: ClientExternalEffect | ClientInternalEffect,
+  ) => {
+    // If the effect is an external effect...
+    if (effect instanceof ClientExternalEffect) {
+      // ...then filter out the effect from the action.
+      action.externalEffects = action.externalEffects.filter(
+        (actionEffect: ClientExternalEffect) => actionEffect._id !== effect._id,
+      )
+    }
+    // Or, if the effect is an internal effect...
+    else if (effect instanceof ClientInternalEffect) {
+      // ...then filter out the effect from the action.
+      action.internalEffects = action.internalEffects.filter(
+        (actionEffect: ClientInternalEffect) => actionEffect._id !== effect._id,
+      )
+    }
+
     // Display the changes.
     forceUpdate()
     // Allow the user to save the changes.
@@ -190,7 +223,7 @@ export default function ActionEntry({
         <div
           className='BackButton'
           onClick={() => {
-            setSelectedEffect(null)
+            setSelectedExternalEffect(null)
             setSelectedAction(null)
           }}
         >
@@ -228,7 +261,9 @@ export default function ActionEntry({
   /**
    * Renders JSX for the effect list item.
    */
-  const renderEffectListItem = (effect: ClientEffect) => {
+  const renderEffectListItem = (
+    effect: ClientExternalEffect | ClientInternalEffect,
+  ) => {
     /* -- COMPUTED -- */
     /**
      * The class list for the edit button.
@@ -238,7 +273,12 @@ export default function ActionEntry({
       let classList: string[] = []
 
       // If the effect cannot be edited then disable the button.
-      if (effect.target === null || effect.targetEnvironment === null) {
+      if (effect.target === null) {
+        classList.push('NoEdit')
+      } else if (
+        effect instanceof ClientExternalEffect &&
+        effect.targetEnvironment === null
+      ) {
         classList.push('NoEdit')
       }
 
@@ -252,7 +292,10 @@ export default function ActionEntry({
     const editTooltipDescription: string = compute(() => {
       if (effect.target === null) {
         return 'This effect cannot be edited because the target associated with this effect is not available.'
-      } else if (effect.targetEnvironment === null) {
+      } else if (
+        effect instanceof ClientExternalEffect &&
+        effect.targetEnvironment === null
+      ) {
         return 'This effect cannot be edited because the target environment associated with this effect is not available.'
       } else {
         return 'Edit effect.'
@@ -271,7 +314,11 @@ export default function ActionEntry({
         edit: {
           icon: 'edit',
           key: 'edit',
-          onClick: () => setSelectedEffect(effect),
+          onClick: () => {
+            effect instanceof ClientExternalEffect
+              ? setSelectedExternalEffect(effect)
+              : setSelectedInternalEffect(effect)
+          },
           tooltipDescription: editTooltipDescription,
           uniqueClassList: editButtonClassList,
         },
@@ -332,7 +379,7 @@ export default function ActionEntry({
               label='Description'
               stateValue={description}
               setState={setDescription}
-              elementBoundary='.BorderBox'
+              elementBoundary='.SidePanelSection'
               placeholder='Enter description...'
               key={`${action._id}_description`}
             />
@@ -375,7 +422,7 @@ export default function ActionEntry({
               defaultValue={
                 ClientMissionAction.DEFAULT_PROPERTIES.postExecutionSuccessText
               }
-              elementBoundary='.BorderBox'
+              elementBoundary='.SidePanelSection'
               key={`${action._id}_postExecutionSuccessText`}
             />
             <DetailLargeString
@@ -387,13 +434,13 @@ export default function ActionEntry({
               defaultValue={
                 ClientMissionAction.DEFAULT_PROPERTIES.postExecutionFailureText
               }
-              elementBoundary='.BorderBox'
+              elementBoundary='.SidePanelSection'
               key={`${action._id}_postExecutionFailureText`}
             />
 
             {/* -- EFFECTS -- */}
-            <List<ClientEffect>
-              items={action.effects}
+            <List<ClientExternalEffect | ClientInternalEffect>
+              items={allEffects}
               renderItemDisplay={(effect) => renderEffectListItem(effect)}
               headingText={'Effects:'}
               sortByMethods={[ESortByMethod.Name]}
@@ -413,7 +460,18 @@ export default function ActionEntry({
             <div className='ButtonContainer New'>
               <ButtonText
                 text='New Effect'
-                onClick={() => setSelectedEffect(new ClientEffect(action))}
+                onClick={async () => {
+                  let { choice } = await prompt(
+                    'What type of effect would you like to create?',
+                    ['Cancel', 'Internal', 'External'],
+                  )
+
+                  if (choice === 'Internal') {
+                    setSelectedInternalEffect(new ClientInternalEffect(action))
+                  } else if (choice === 'External') {
+                    setSelectedExternalEffect(new ClientExternalEffect(action))
+                  }
+                }}
                 tooltipDescription='Create a new effect.'
                 uniqueClassName={newEffectButtonClassName}
               />
@@ -460,7 +518,12 @@ export type TActionEntry_P = {
    * React setter function used to update the value stored
    * in a component's state.
    */
-  setSelectedEffect: ReactSetter<ClientEffect | null>
+  setSelectedExternalEffect: ReactSetter<ClientExternalEffect | null>
+  /**
+   * React setter function used to update the value stored
+   * in a component's state.
+   */
+  setSelectedInternalEffect: ReactSetter<ClientInternalEffect | null>
   /**
    * Handles when a change is made that would require saving.
    */

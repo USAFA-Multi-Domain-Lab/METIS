@@ -9,33 +9,33 @@ import { uuidTypeValidator } from '../../toolbox/validators'
 import { TCommonMissionAction } from '../actions'
 
 /**
- * An effect that can be applied to a target.
+ * An external effect that can be applied to a target.
  */
-export default abstract class Effect<
+export default abstract class ExternalEffect<
   TMissionAction extends TCommonMissionAction,
   TTargetEnvironment extends TCommonTargetEnv,
-> implements TCommonEffect
+> implements TCommonExternalEffect
 {
   // Inherited
   public action: TMissionAction
 
   // Inherited
-  public _id: TCommonEffect['_id']
+  public _id: TCommonExternalEffect['_id']
 
   // Inherited
-  public name: TCommonEffect['name']
+  public name: TCommonExternalEffect['name']
 
   // Inherited
-  public description: TCommonEffect['description']
+  public description: TCommonExternalEffect['description']
 
   // Inherited
-  public targetEnvironmentVersion: TCommonEffect['targetEnvironmentVersion']
+  public targetEnvironmentVersion: TCommonExternalEffect['targetEnvironmentVersion']
 
   // Inherited
-  public args: TCommonEffect['args']
+  public args: TCommonExternalEffect['args']
 
   /**
-   * The target to which the effect will be applied.
+   * The target to which the external effect will be applied.
    * @note This will be a Target Object if the data has
    * already been loaded. Otherwise, it will be the ID
    * of the target. If the target is not set, it will be
@@ -46,7 +46,7 @@ export default abstract class Effect<
     | TCommonTargetJson['_id']
     | null
   /**
-   * The target to which the effect will be applied.
+   * The target to which the external effect will be applied.
    */
   public get target(): Target<TTargetEnvironment> | null {
     if (!(this._target instanceof Target)) {
@@ -56,7 +56,7 @@ export default abstract class Effect<
     return this._target
   }
   /**
-   * The target to which the effect will be applied.
+   * The target to which the external effect will be applied.
    * @note Setting this will cause the target data to be reloaded.
    */
   public set target(
@@ -77,7 +77,7 @@ export default abstract class Effect<
   }
 
   /**
-   * The ID of the target to which the effect will be applied.
+   * The ID of the target to which the external effect will be applied.
    */
   public get targetId(): TCommonTargetJson['_id'] | null {
     let target: Target<TTargetEnvironment> | TCommonTargetJson['_id'] | null =
@@ -93,11 +93,11 @@ export default abstract class Effect<
     }
     // Otherwise, return the default target ID.
     else {
-      return Effect.DEFAULT_PROPERTIES.targetId
+      return ExternalEffect.DEFAULT_PROPERTIES.targetId
     }
   }
   /**
-   * The ID of the target to which the effect will be applied.
+   * The ID of the target to which the external effect will be applied.
    */
   public set targetId(targetId: TCommonTargetJson['_id']) {
     this._target = targetId
@@ -117,37 +117,38 @@ export default abstract class Effect<
   /**
    * The node on which the action is being executed.
    */
-  public get node(): TCommonMissionAction['node'] {
+  public get node(): TMissionAction['node'] {
     return this.action.node
   }
 
   /**
    * The mission of which the action is a part.
    */
-  public get mission(): TCommonMissionAction['mission'] {
+  public get mission(): TMissionAction['mission'] {
     return this.action.mission
   }
 
   /**
-   * Creates a new Effect Object.
-   * @param action The action to which the effect belongs.
-   * @param data The data to use to create the Effect.
-   * @param options The options for creating the Effect.
+   * Creates a new External Effect Object.
+   * @param action The action to which the external effect belongs.
+   * @param data The data to use to create the External Effect.
+   * @param options The options for creating the External Effect.
    */
   public constructor(
     action: TMissionAction,
-    data: Partial<TCommonEffectJson> = Effect.DEFAULT_PROPERTIES,
-    options: TEffectOptions = {},
+    data: Partial<TCommonExternalEffectJson> = ExternalEffect.DEFAULT_PROPERTIES,
+    options: TExternalEffectOptions = {},
   ) {
     this.action = action
-    this._id = data._id?.toString() ?? Effect.DEFAULT_PROPERTIES._id
-    this.name = data.name ?? Effect.DEFAULT_PROPERTIES.name
-    this.description = data.description ?? Effect.DEFAULT_PROPERTIES.description
+    this._id = data._id?.toString() ?? ExternalEffect.DEFAULT_PROPERTIES._id
+    this.name = data.name ?? ExternalEffect.DEFAULT_PROPERTIES.name
+    this.description =
+      data.description ?? ExternalEffect.DEFAULT_PROPERTIES.description
     this.targetEnvironmentVersion =
       data.targetEnvironmentVersion ??
-      Effect.DEFAULT_PROPERTIES.targetEnvironmentVersion
-    this._target = data.targetId ?? Effect.DEFAULT_PROPERTIES.targetId
-    this.args = data.args ?? Effect.DEFAULT_PROPERTIES.args
+      ExternalEffect.DEFAULT_PROPERTIES.targetEnvironmentVersion
+    this._target = data.targetId ?? ExternalEffect.DEFAULT_PROPERTIES.targetId
+    this.args = data.args ?? ExternalEffect.DEFAULT_PROPERTIES.args
 
     // If the target data has been provided and
     // it's not the default target ID, then populate
@@ -168,12 +169,12 @@ export default abstract class Effect<
   ): Promise<void>
 
   /**
-   * Converts the Effect Object to JSON.
+   * Converts the External Effect Object to JSON.
    * @returns A JSON representation of the Effect.
    */
-  public toJson(): TCommonEffectJson {
+  public toJson(): TCommonExternalEffectJson {
     // Construct JSON object to send to the server.
-    let json: TCommonEffectJson = {
+    let json: TCommonExternalEffectJson = {
       name: this.name,
       description: this.description,
       targetEnvironmentVersion: this.targetEnvironmentVersion,
@@ -195,9 +196,9 @@ export default abstract class Effect<
   }
 
   /**
-   * Default properties set when creating a new Effect object.
+   * Default properties set when creating a new External Effect object.
    */
-  public static get DEFAULT_PROPERTIES(): Required<TCommonEffectJson> {
+  public static get DEFAULT_PROPERTIES(): Required<TCommonExternalEffectJson> {
     return {
       _id: generateHash(),
       name: 'New Effect',
@@ -209,40 +210,40 @@ export default abstract class Effect<
   }
 }
 
-/* ------------------------------ EFFECT TYPES ------------------------------ */
+/* ------------------------------ EXTERNAL EFFECT TYPES ------------------------------ */
 
 /**
- * Options for creating a new Effect Object.
+ * Options for creating a new External Effect Object.
  */
-export type TEffectOptions = {}
+export type TExternalEffectOptions = {}
 
 /**
- * Options for the Effect.toJson() method.
+ * Options for the ExternalEffect.toJson() method.
  */
-export type TEffectJsonOptions = {}
+export type TExternalEffectJsonOptions = {}
 
 /**
- * Interface used for the Effect class.
+ * Interface used for the External Effect class.
  */
-export interface TCommonEffect {
+export interface TCommonExternalEffect {
   /**
-   * The action to which the effect belongs.
+   * The action to which the external effect belongs.
    */
   action: TCommonMissionAction
   /**
-   * The target to which the effect will be applied.
+   * The target to which the external effect will be applied.
    */
   target: TCommonTarget | null
   /**
-   * The ID of the effect.
+   * The ID of the external effect.
    */
   _id: string
   /**
-   * The name of the effect.
+   * The name of the external effect.
    */
   name: string
   /**
-   * Descibes what the effect does.
+   * Describes what the external effect does.
    */
   description: string
   /**
@@ -250,29 +251,29 @@ export interface TCommonEffect {
    */
   targetEnvironmentVersion: string
   /**
-   * The arguments used to affect an entity via the effects API.
+   * The arguments used to affect the target.
    */
   args: AnyObject
   /**
-   * Converts the Effect Object to JSON.
+   * Converts the External Effect Object to JSON.
    */
-  toJson: (options?: TEffectJsonOptions) => TCommonEffectJson
+  toJson: (options?: TExternalEffectJsonOptions) => TCommonExternalEffectJson
 }
 
 /**
- * The JSON representation of an Effect object.
+ * The JSON representation of an External Effect object.
  */
-export interface TCommonEffectJson {
+export interface TCommonExternalEffectJson {
   /**
-   * The ID of the effect.
+   * The ID of the external effect.
    */
   _id?: string
   /**
-   * The name of the effect.
+   * The name of the external effect.
    */
   name: string
   /**
-   * Descibes what the effect does.
+   * Describes what the external effect does.
    */
   description: string
   /**
@@ -280,11 +281,11 @@ export interface TCommonEffectJson {
    */
   targetEnvironmentVersion: string
   /**
-   * The ID of the target to which the effect will be applied.
+   * The ID of the target to which the external effect will be applied.
    */
   targetId: TCommonTargetJson['_id'] | null
   /**
-   * The arguments used to affect an entity via the effects API.
+   * The arguments used to affect the target.
    */
   args: AnyObject
 }
