@@ -207,7 +207,8 @@ export default function MissionMap({
       let sceneNodeX2 = viewNodeX + sceneNodeW
       // Get the span of what's visible in the scene in terms
       // of nodes.
-      let nodeDifference = mission.lastOpenedNode.depth + 1 - sceneNodeX2
+      let nodeDifference =
+        mission.lastOpenedNode.prototype.depth + 1 - sceneNodeX2
       // Convert difference to EM units.
       let emDifference = nodeDifference * ClientMissionNode.COLUMN_WIDTH
 

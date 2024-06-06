@@ -538,7 +538,7 @@ export default class SessionServer extends Session<
         method: 'node-opened',
         data: {
           nodeId: nodeId,
-          revealedChildNodes: node.childNodes.map((node) =>
+          revealedChildNodes: node.children.map((node) =>
             node.toJson({ includeSessionData: true }),
           ),
         },
@@ -676,7 +676,7 @@ export default class SessionServer extends Session<
       // Add child nodes if the action was
       // successful.
       if (outcome.successful) {
-        completionPayload.data.revealedChildNodes = action.node.childNodes.map(
+        completionPayload.data.revealedChildNodes = action.node.children.map(
           (node) => node.toJson({ includeSessionData: true }),
         )
       }

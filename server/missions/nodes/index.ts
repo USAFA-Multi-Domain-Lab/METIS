@@ -2,7 +2,7 @@ import { TCommonMissionActionJson } from 'metis/missions/actions'
 import { TActionExecutionJSON } from 'metis/missions/actions/executions'
 import { TActionOutcomeJson } from 'metis/missions/actions/outcomes'
 import MissionNode from 'metis/missions/nodes'
-import ServerMission from '..'
+import { TServerMissionTypes } from '..'
 import ServerMissionAction from '../actions'
 import ServerActionExecution from '../actions/executions'
 import { ServerRealizedOutcome } from '../actions/outcomes'
@@ -10,13 +10,7 @@ import { ServerRealizedOutcome } from '../actions/outcomes'
 /**
  * Class for managing mission nodes on a session server.
  */
-export default class ServerMissionNode extends MissionNode<
-  ServerMission,
-  ServerMissionNode,
-  ServerMissionAction,
-  ServerActionExecution,
-  ServerRealizedOutcome
-> {
+export default class ServerMissionNode extends MissionNode<TServerMissionTypes> {
   // Implemented
   protected parseActionData(
     data: Array<TCommonMissionActionJson>,

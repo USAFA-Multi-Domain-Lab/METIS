@@ -255,7 +255,7 @@ export default function NodeStructuring(props: {
         </div>
         {node.expandedInMenu ? (
           <div className='ChildNodes'>
-            {node.childNodes.map((childNode: ClientMissionNode) => (
+            {node.children.map((childNode: ClientMissionNode) => (
               <Node
                 node={childNode}
                 disableDropPending={disableDropPending}
@@ -271,7 +271,7 @@ export default function NodeStructuring(props: {
   // This will render the nodes in the
   // node structuring.
   const renderNodes = (): JSX.Element | null => {
-    let nodeElements: Array<JSX.Element | null> = rootNode.childNodes.map(
+    let nodeElements: Array<JSX.Element | null> = rootNode.children.map(
       (childNode: ClientMissionNode) => (
         <Node node={childNode} key={childNode._id} />
       ),

@@ -196,8 +196,8 @@ function insertTextAtSelection(div: HTMLDivElement, insertion: string) {
     selection.removeAllRanges()
     let range = document.createRange()
     //childNodes[0] should be all the text
-    range.setStart(div.childNodes[0], before + insertion.length)
-    range.setEnd(div.childNodes[0], before + insertion.length)
+    range.setStart(div.children[0], before + insertion.length)
+    range.setEnd(div.children[0], before + insertion.length)
     selection.addRange(range)
   }
 }

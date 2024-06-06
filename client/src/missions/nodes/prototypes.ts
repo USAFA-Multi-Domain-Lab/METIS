@@ -1,4 +1,4 @@
-import ClientMission from '..'
+import ClientMission, { TClientMissionTypes } from '..'
 import MissionPrototype, {
   TCommonMissionPrototype,
   TMissionPrototypeOptions,
@@ -8,10 +8,7 @@ import { Vector2D } from '../../../../shared/toolbox/space'
 /**
  * Class for managing mission prototypes on the client.
  */
-export default class ClientMissionPrototype extends MissionPrototype<
-  ClientMission,
-  ClientMissionPrototype
-> {
+export default class ClientMissionPrototype extends MissionPrototype<TClientMissionTypes> {
   // Implemented
   public position: Vector2D
   // Implemented

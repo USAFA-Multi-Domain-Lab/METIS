@@ -34,17 +34,19 @@ export default class NodeCreator {
     return this._targetRelation
   }
 
-  position: Vector2D
-  depth: number
-  execution: ClientActionExecution | null
+  public position: Vector2D
+
+  public depth: number
+
+  public execution: ClientActionExecution | null
 
   // Getter for _name.
-  get name(): string {
+  public get name(): string {
     return this._name
   }
 
   // Getter for _mission.
-  get mission(): ClientMission {
+  public get mission(): ClientMission {
     return this._mission
   }
 
@@ -67,27 +69,27 @@ export default class NodeCreator {
   }
 
   // Implemented
-  get executable(): boolean {
+  public get executable(): boolean {
     return false
   }
 
   // Implemented
-  get executing(): boolean {
+  public get executing(): boolean {
     return false
   }
 
   // Implemented
-  get device(): boolean {
+  public get device(): boolean {
     return false
   }
 
   // Implemented
-  get color(): string {
+  public get color(): string {
     return ''
   }
 
   // Implemented
-  get isOpen(): boolean {
+  public get isOpen(): boolean {
     return false
   }
 
@@ -140,8 +142,8 @@ export default class NodeCreator {
     }
 
     // Initialize position and depth.
-    this.position = target.position.clone()
-    this.depth = target.depth
+    this.position = target.prototype.position.clone()
+    this.depth = target.prototype.depth
 
     // Shift position and depth based on relation.
     switch (relation) {

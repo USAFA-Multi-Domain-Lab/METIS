@@ -38,7 +38,7 @@ const isNonNegativeInteger = (value: number): boolean => {
  * @param next The next function to call.
  */
 const validate_missions = (mission: any, next: any): void => {
-  let parentNodeStructure: TCommonMissionJson['nodeStructure'] =
+  let parentStructure: TCommonMissionJson['nodeStructure'] =
     mission.nodeStructure
   let correspondingNodeStructureKeys: TMissionNodeJson['structureKey'][] = []
   let results: { error?: Error } = {}
@@ -46,7 +46,7 @@ const validate_missions = (mission: any, next: any): void => {
   // This will ensure the node structure
   // is valid.
   const validateNodeStructure = (
-    nodeStructure: any = parentNodeStructure,
+    nodeStructure: any = parentStructure,
     parentKey: string = 'ROOT',
   ): { error?: Error } => {
     if (!(nodeStructure instanceof Object)) {

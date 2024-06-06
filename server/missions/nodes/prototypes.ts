@@ -1,10 +1,7 @@
 import MissionPrototype from 'metis/missions/nodes/prototypes'
-import ServerMission from '..'
+import { TServerMissionTypes } from '..'
 
 /**
  * Class for managing mission prototypes on the server.
  */
-export default class ServerMissionPrototype extends MissionPrototype<
-  ServerMission,
-  ServerMissionPrototype
-> {}
+export default class ServerMissionPrototype extends MissionPrototype<TServerMissionTypes> {}

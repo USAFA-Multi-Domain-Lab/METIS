@@ -547,7 +547,7 @@ export function useNavigationMiddleware(
   middleware: TNavigationMiddleware,
   dependencies: React.DependencyList = [],
 ): void {
-  const [key] = useState<string>(StringToolbox.generateRandomID())
+  const [key] = useState<string>(StringToolbox.generateRandomId())
 
   useEffect(() => {
     navigationMiddleware.set(key, middleware)

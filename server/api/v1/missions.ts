@@ -561,7 +561,7 @@ export const routerMap: TMetisRouterMap = (
    * @returns All missions in JSON format.
    */
   const getMissions = (request: Request, response: Response) => {
-    MissionModel.find({}, { nodeStructure: 0, nodeData: 0 })
+    MissionModel.find({}, { nodeStructure: 0, forces: 0 })
       .queryForApiResponse('find')
       .exec((error: Error, missions: any) => {
         if (error !== null || missions === null) {

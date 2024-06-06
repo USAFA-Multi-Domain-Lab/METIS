@@ -4,8 +4,10 @@ import { TEventListenerTarget } from 'src/toolbox/hooks'
 import { v4 as generateHash } from 'uuid'
 import Mission, {
   TCommonMissionJson,
+  TCommonMissionTypes,
   TMissionOptions,
 } from '../../../shared/missions'
+import { TCommonMissionForceJson } from '../../../shared/missions/forces'
 import {
   TMissionNodeJson,
   TMissionNodeOptions,
@@ -14,6 +16,11 @@ import { TMissionPrototypeOptions } from '../../../shared/missions/nodes/prototy
 import { Counter } from '../../../shared/toolbox/numbers'
 import { TWithKey } from '../../../shared/toolbox/objects'
 import { Vector2D } from '../../../shared/toolbox/space'
+import StringToolbox from '../../../shared/toolbox/strings'
+import ClientMissionAction from './actions'
+import ClientActionExecution from './actions/executions'
+import ClientActionOutcome from './actions/outcomes'
+import ClientMissionForce from './forces'
 import ClientMissionNode, { ENodeTargetRelation } from './nodes'
 import NodeCreator from './nodes/creators'
 import ClientMissionPrototype from './nodes/prototypes'
@@ -23,7 +30,7 @@ import ClientMissionPrototype from './nodes/prototypes'
  * @extends {Mission<ClientMissionNode>}
  */
 export default class ClientMission
-  extends Mission<ClientMissionPrototype, ClientMissionNode>
+  extends Mission<TClientMissionTypes>
   implements TEventListenerTarget<TMissionEvent>
 {
   /**
@@ -189,8 +196,8 @@ export default class ClientMission
 
     // If there is no existing nodes,
     // create one.
-    if (this.nodes.length === 0) {
-      this.spawnNode()
+    if (this.prototypes.length === 0) {
+      this.spawnPrototype()
     }
 
     // Mark as initialized.
@@ -200,14 +207,24 @@ export default class ClientMission
     this.handleStructureChange()
   }
 
-  // Inherited
-  protected createRootNode(): ClientMissionNode {
-    return new ClientMissionNode(this, Mission.ROOT_NODE_PROPERTIES)
+  // Implemented
+  protected parseForceData(
+    data: TCommonMissionForceJson[],
+  ): ClientMissionForce[] {
+    return data.map((datum) => new ClientMissionForce(this, datum))
   }
 
-  // Inherited
+  // Implemented
   protected createRootPrototype(): ClientMissionPrototype {
     return new ClientMissionPrototype(this, 'ROOT')
+  }
+
+  // Implemented
+  protected createRootNode(): ClientMissionNode {
+    return new ClientMissionNode(
+      new ClientMissionForce(this),
+      Mission.ROOT_NODE_PROPERTIES,
+    )
   }
 
   /**
@@ -226,12 +243,11 @@ export default class ClientMission
     // changes.
     this._structureChangeKey = generateHash()
 
-    // Re-position the nodes to ensure
+    // Re-position the prototypes to ensure
     // their current positions reflect
     // all the changes that have been
     // made.
     this.positionPrototypes()
-    this.positionNodes()
 
     // Re-position the node creators
     // to ensure their current positions
@@ -325,7 +341,7 @@ export default class ClientMission
     // Set the depth of the parent node.
     parent.depth = depth
 
-    // If the nodeCreationTarget is this parentNode,
+    // If the nodeCreationTarget is this parent,
     // the positioning is offset to account for the
     // node creators that must be rendered.
     // todo: Determine what to do with this.
@@ -336,7 +352,7 @@ export default class ClientMission
     let children = parent.children
 
     // If the nodeCreationTarget is a child of the
-    // parentNode, the positioning is offset to account
+    // parent, the positioning is offset to account
     // for the node creators that must be rendered.
     // todo: Determine what to do with this.
     // for (let childNode of children) {
@@ -375,127 +391,6 @@ export default class ClientMission
       // if (creationTarget?._id === childNode._id) {
       //   rowCount.increment()
       // }
-    })
-
-    // This will increase the mission depth
-    // if a node is found with a greater depth
-    // than what's currently set.
-    if (this._depth < depth) {
-      this._depth = depth
-    }
-  }
-
-  /**
-   * This will position all the nodes with mapX and mapY values
-   * that correspond with the current state of the mission.
-   * @param parentNode Recursively used. Don't pass anything.
-   * @param depth Recursively used. Don't pass anything.
-   * @param rowCount Recursively used. Don't pass anything.
-   * @param extraLines Recursively used. Don't pass anything.
-   * @param rowMostLinesFound Recursively used. Don't pass anything.
-   * @returns Subcalls of this recursive function will return results used for
-   * further position calculations. The final return can be ignored.
-   * @deprecated
-   */
-  protected positionNodes = (
-    parentNode: ClientMissionNode = this.rootNode,
-    depth: number = -1,
-    rowCount: Counter = new Counter(0),
-    extraLines: Counter = new Counter(0),
-    rowMostLinesFound: Counter = new Counter(0),
-  ): void => {
-    let nodeCreationTarget: ClientMissionNode | null = null
-
-    // If creation mode is enabled, set the
-    // nodeCreationTarget to the selected node.
-    if (this.creationMode) nodeCreationTarget = this.selectedNode!
-
-    let yOffset: number =
-      extraLines.count *
-      ClientMissionNode.LINE_HEIGHT *
-      ClientMissionNode.FONT_SIZE
-
-    // If the parent node isn't the rootNode,
-    // then this function was recursively
-    // called with a reference to a particular
-    // node in the mission. This node should be
-    // included in the nodeData for the
-    //  missionRender so that it displays.
-    if (parentNode._id !== this.rootNode._id) {
-      parentNode.position.set(
-        depth * ClientMissionNode.COLUMN_WIDTH,
-        rowCount.count * ClientMissionNode.ROW_HEIGHT + yOffset,
-      )
-    }
-    // Else the depth of the mission is reset
-    // for recalculation.
-    else {
-      this._depth = -1
-    }
-
-    // Set the depth of the parent node.
-    parentNode.depth = depth
-
-    // If the nodeCreationTarget is this parentNode,
-    // the positioning is offset to account for the
-    // node creators that must be rendered.
-    if (nodeCreationTarget?._id === parentNode._id) {
-      depth++
-    }
-
-    let childNodes = parentNode.childNodes
-
-    // If the nodeCreationTarget is a child of the
-    // parentNode, the positioning is offset to account
-    // for the node creators that must be rendered.
-    for (let childNode of childNodes) {
-      if (nodeCreationTarget?._id === childNode._id) {
-        depth += 1
-      }
-    }
-
-    // Set the most lines found for the row
-    // to the row count of this node, unless
-    // the previous value is greater.
-    rowMostLinesFound.count = Math.max(
-      rowMostLinesFound.count,
-      parentNode.nameLineCount,
-    )
-
-    // The childNodes should then be examined
-    // by recursively calling this function.
-    childNodes.forEach((childNode: ClientMissionNode, index: number) => {
-      if (index > 0) {
-        rowCount.increment()
-        extraLines.count += Math.max(
-          0,
-          rowMostLinesFound.count - ClientMissionNode.DEFAULT_NAME_LINE_COUNT,
-        )
-        rowMostLinesFound.count = 0
-      }
-
-      // If the nodeCreationTarget is this childNode,
-      // the positioning is offset to account for the
-      // node creators that must be rendered.
-      if (nodeCreationTarget?._id === childNode._id) {
-        rowCount.increment()
-      }
-
-      // Position the child node.
-      this.positionNodes(
-        childNode,
-        depth + 1 + childNode.depthPadding,
-        rowCount,
-        extraLines,
-        rowMostLinesFound,
-      )
-
-      // If the nodeCreationTarget is this childNode,
-      // the positioning is offset to account for the
-      // node creators that must be rendered.
-      if (nodeCreationTarget?._id === childNode._id) {
-        rowCount.increment()
-      }
     })
 
     // This will increase the mission depth
@@ -763,7 +658,7 @@ export default class ClientMission
         // creator to the target.
         if (
           relation === ENodeTargetRelation.ParentOfTargetOnly &&
-          creationTarget.parentNode === this.rootNode
+          creationTarget.parent === this.rootNode
         ) {
           // Define start position.
           let start: Vector2D = creator.position
@@ -793,7 +688,7 @@ export default class ClientMission
         // to the creator.
         if (relation === ENodeTargetRelation.BetweenTargetAndChildren) {
           // Define start position.
-          let start: Vector2D = creationTarget.position
+          let start: Vector2D = creationTarget.prototype.position
             // First clone the target's position.
             .clone()
             // Then translate to the edge of the node,
@@ -831,11 +726,11 @@ export default class ClientMission
         // from the target's parent to the creator.
         if (
           relationIsSibling &&
-          creationTarget.parentNode &&
-          creationTarget.parentNode !== this.rootNode
+          creationTarget.parent &&
+          creationTarget.parent !== this.rootNode
         ) {
           // Define start position.
-          let start: Vector2D = creationTarget.parentNode.position
+          let start: Vector2D = creationTarget.parent.prototype.position
             // First clone the target-parent's position.
             .clone()
             // Then translate to the right edge of the column.
@@ -900,7 +795,7 @@ export default class ClientMission
     // draw the lines between node creators and nodes.
     const baseAlgorithm = (parent: ClientMissionNode = this.rootNode) => {
       // Get details.
-      let children: ClientMissionNode[] = parent.childNodes
+      let children: ClientMissionNode[] = parent.children
       let firstChild: ClientMissionNode | null = parent.firstChildNode
       let lastChild: ClientMissionNode | null = parent.lastChildNode
       let childCount: number = children.length
@@ -916,7 +811,7 @@ export default class ClientMission
         // Clone the parent node's position then translate
         // the start position to the middle of the right edge of
         // the parent node.
-        let parentToMidStart: Vector2D = parent.position
+        let parentToMidStart: Vector2D = parent.prototype.position
           .clone()
           .translateX(ClientMissionNode.WIDTH / 2)
           .translateY(halfDefaultNodeHeight)
@@ -938,15 +833,15 @@ export default class ClientMission
 
         // Define the min and max y values
         // for the children of this parent node.
-        let childMinY: number = parent.position.y
-        let childMaxY: number = parent.position.y
+        let childMinY: number = parent.prototype.position.y
+        let childMaxY: number = parent.prototype.position.y
 
         // If there is a first child, calculate
         // the min y value.
         if (firstChild) {
           // Set the min y value to the first child's
           // y position.
-          childMinY = firstChild.position.y
+          childMinY = firstChild.prototype.position.y
 
           // If the firstChild is the creation target,
           // the min y value may need to be offset to
@@ -968,7 +863,7 @@ export default class ClientMission
         if (lastChild) {
           // Set the max y value to the last child's
           // y position.
-          childMaxY = lastChild.position.y
+          childMaxY = lastChild.prototype.position.y
 
           // If the lastChild is the creation target,
           // the max y value may need to be offset to
@@ -1047,7 +942,7 @@ export default class ClientMission
             .translateX(columnEdgeDistance)
           // Then set the y position to the
           // child y value.
-          midToChildStart.y = child.position.y
+          midToChildStart.y = child.prototype.position.y
           // Then translate down by half the
           // default node height.
           midToChildStart.translateY(halfDefaultNodeHeight)
@@ -1059,7 +954,7 @@ export default class ClientMission
           }
 
           // Define the end position.
-          let midToChildEnd: Vector2D = child.position
+          let midToChildEnd: Vector2D = child.prototype.position
             // First clone the child's position.
             .clone()
             // Then translate to the left edge of the node,
@@ -1083,7 +978,7 @@ export default class ClientMission
       }
 
       // Iterate through the child nodes.
-      for (let child of parent.childNodes) {
+      for (let child of parent.children) {
         // Call recursively the algorithm with
         // the child.
         baseAlgorithm(child)
@@ -1111,7 +1006,7 @@ export default class ClientMission
         // creator to the target.
         if (
           relation === ENodeTargetRelation.ParentOfTargetOnly &&
-          creationTarget.parentNode === this.rootNode
+          creationTarget.parent === this.rootNode
         ) {
           // Define start position.
           let start: Vector2D = creator.position
@@ -1141,7 +1036,7 @@ export default class ClientMission
         // to the creator.
         if (relation === ENodeTargetRelation.BetweenTargetAndChildren) {
           // Define start position.
-          let start: Vector2D = creationTarget.position
+          let start: Vector2D = creationTarget.prototype.position
             // First clone the target's position.
             .clone()
             // Then translate to the edge of the node,
@@ -1179,11 +1074,11 @@ export default class ClientMission
         // from the target's parent to the creator.
         if (
           relationIsSibling &&
-          creationTarget.parentNode &&
-          creationTarget.parentNode !== this.rootNode
+          creationTarget.parent &&
+          creationTarget.parent !== this.rootNode
         ) {
           // Define start position.
-          let start: Vector2D = creationTarget.parentNode.position
+          let start: Vector2D = creationTarget.parent.prototype.position
             // First clone the target-parent's position.
             .clone()
             // Then translate to the right edge of the column.
@@ -1251,22 +1146,19 @@ export default class ClientMission
     this.emitEvent('node-selection')
   }
 
+  // todo: Move this to the prototype class.
   // Implemented
   public spawnNode(
     data: Partial<TMissionNodeJson> = {},
-    options: TMissionNodeOptions<ClientMissionNode> = {},
+    options: TMissionNodeOptions = {},
   ): ClientMissionNode {
-    let rootNode: ClientMissionNode = this.rootNode
-
     // Create new node.
-    let node: ClientMissionNode = new ClientMissionNode(this, data, options)
+    let node: ClientMissionNode = new ClientMissionNode(
+      new ClientMissionForce(this),
+      data,
+      options,
+    )
 
-    // Set the parent node to the root
-    // node.
-    node.parentNode = rootNode
-    // Add the node to the root node's
-    // children.
-    rootNode.childNodes.push(node)
     // Add the node to the node map.
     this.nodes.push(node)
 
@@ -1288,7 +1180,7 @@ export default class ClientMission
 
   // Implemented
   public spawnPrototype(
-    _id: string,
+    _id?: string,
     options: TMissionPrototypeOptions<ClientMissionPrototype> = {},
   ): ClientMissionPrototype {
     let rootPrototype: ClientMissionPrototype | null = this.rootPrototype
@@ -1297,6 +1189,9 @@ export default class ClientMission
     if (rootPrototype === null) {
       throw new Error('Cannot spawn prototype: Mission has no root prototype.')
     }
+
+    // If no id is provided, generate a new id.
+    if (_id === undefined) _id = StringToolbox.generateRandomId()
 
     // Create new prototype.
     let prototype: ClientMissionPrototype = new ClientMissionPrototype(
@@ -1307,7 +1202,7 @@ export default class ClientMission
 
     // Set the parent prototype to the root
     // prototype.
-    prototype.parentNode = rootPrototype
+    prototype.parent = rootPrototype
     // Add the prototype to the root prototype's
     // children.
     rootPrototype.children.push(prototype)
@@ -1518,6 +1413,21 @@ export default class ClientMission
 }
 
 /* ------------------------------ CLIENT MISSION TYPES ------------------------------ */
+
+/**
+ * Client types for Mission objects.
+ * @note Used as a generic argument for all client,
+ * mission-related classes.
+ */
+export interface TClientMissionTypes extends TCommonMissionTypes {
+  mission: ClientMission
+  force: ClientMissionForce
+  prototype: ClientMissionPrototype
+  node: ClientMissionNode
+  action: ClientMissionAction
+  execution: ClientActionExecution
+  outcome: ClientActionOutcome
+}
 
 /**
  * Options for the creation of a ClientMission object.

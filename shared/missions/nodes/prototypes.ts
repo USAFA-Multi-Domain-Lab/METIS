@@ -1,33 +1,32 @@
-import { TCommonMission } from '..'
+import { TCommonMission, TCommonMissionTypes, TMission } from '..'
 
 /**
  * This represents a prototype for a mission node displayed
  * in the master tab in the mission map.
  */
 export default abstract class MissionPrototype<
-  TMission extends TCommonMission,
-  TRelativePrototype extends TCommonMissionPrototype,
+  T extends TCommonMissionTypes = TCommonMissionTypes,
 > implements TCommonMissionPrototype
 {
   // Implemented
-  public mission: TMission
+  public mission: TMission<T>
 
   // Implemented
   public _id: TCommonMissionPrototype['_id']
 
   // Implemented
-  public parentNode: TRelativePrototype | null
+  public parent: TPrototype<T> | null
 
   // Implemented
-  public children: TRelativePrototype[]
+  public children: TPrototype<T>[]
 
   // Implemented
-  public get firstChild(): TRelativePrototype | null {
+  public get firstChild(): TPrototype<T> | null {
     return this.children.length > 0 ? this.children[0] : null
   }
 
   // Implemented
-  public get lastChild(): TRelativePrototype | null {
+  public get lastChild(): TPrototype<T> | null {
     return this.children.length > 0
       ? this.children[this.children.length - 1]
       : null
@@ -44,15 +43,14 @@ export default abstract class MissionPrototype<
   }
 
   // Implemented
-  public get siblings(): TRelativePrototype[] {
-    let siblings: TRelativePrototype[] = []
+  public get siblings(): TPrototype<T>[] {
+    let siblings: TPrototype<T>[] = []
 
-    if (this.parentNode !== null) {
-      let childrenOfParent: TRelativePrototype[] = this.parentNode
-        .children as TRelativePrototype[]
+    if (this.parent !== null) {
+      let childrenOfParent: TPrototype<T>[] = this.parent.children
 
       siblings = childrenOfParent.filter(
-        (childOfParent: TRelativePrototype) => childOfParent._id !== this._id,
+        (childOfParent: TPrototype<T>) => childOfParent._id !== this._id,
       )
     }
 
@@ -60,26 +58,25 @@ export default abstract class MissionPrototype<
   }
 
   // Implemented
-  public get childrenOfParent(): TRelativePrototype[] {
-    let childrenOfParent: TRelativePrototype[] = []
+  public get childrenOfParent(): TPrototype<T>[] {
+    let childrenOfParent: TPrototype<T>[] = []
 
-    if (this.parentNode !== null) {
-      childrenOfParent = this.parentNode.children as TRelativePrototype[]
+    if (this.parent !== null) {
+      childrenOfParent = this.parent.children
     }
 
     return childrenOfParent
   }
 
   // Implemented
-  public get previousSibling(): TRelativePrototype | null {
-    let previousSibling: TRelativePrototype | null = null
+  public get previousSibling(): TPrototype<T> | null {
+    let previousSibling: TPrototype<T> | null = null
 
-    if (this.parentNode !== null) {
-      let childrenOfParent: TRelativePrototype[] = this.parentNode
-        .children as TRelativePrototype[]
+    if (this.parent !== null) {
+      let childrenOfParent: TPrototype<T>[] = this.parent.children
 
       childrenOfParent.forEach(
-        (childOfParent: TRelativePrototype, index: number) => {
+        (childOfParent: TPrototype<T>, index: number) => {
           if (childOfParent._id === this._id && index > 0) {
             previousSibling = childrenOfParent[index - 1]
           }
@@ -91,15 +88,14 @@ export default abstract class MissionPrototype<
   }
 
   // Implemented
-  public get followingSibling(): TRelativePrototype | null {
-    let followingSibling: TRelativePrototype | null = null
+  public get followingSibling(): TPrototype<T> | null {
+    let followingSibling: TPrototype<T> | null = null
 
-    if (this.parentNode !== null) {
-      let childrenOfParent: TRelativePrototype[] = this.parentNode
-        .children as TRelativePrototype[]
+    if (this.parent !== null) {
+      let childrenOfParent: TPrototype<T>[] = this.parent.children
 
       childrenOfParent.forEach(
-        (childOfParent: TRelativePrototype, index: number) => {
+        (childOfParent: TPrototype<T>, index: number) => {
           if (
             childOfParent._id === this._id &&
             index + 1 < childrenOfParent.length
@@ -114,22 +110,22 @@ export default abstract class MissionPrototype<
   }
 
   /**
-   * @param {TMission} mission The mission of which the prototype is a part.
+   * @param mission The mission of which the prototype is a part.
    * @param _id The ID for the prototype, which is referenced within the node structure
    * of a mission.
    * @param options The options for creating the prototype.
    */
   public constructor(
-    mission: TMission,
+    mission: TMission<T>,
     _id: TCommonMissionPrototype['_id'],
-    options: TMissionPrototypeOptions<TRelativePrototype> = {},
+    options: TMissionPrototypeOptions<TPrototype<T>> = {},
   ) {
     // Set properties from data.
     this.mission = mission
     this._id = _id
 
     // Set properties from options.
-    this.parentNode = options.parent ?? null
+    this.parent = options.parent ?? null
     this.children = options.children ?? []
   }
 }
@@ -154,7 +150,7 @@ export interface TCommonMissionPrototype {
   /**
    * The parent of this prototype in the tree structure.
    */
-  parentNode: TCommonMissionPrototype | null
+  parent: TCommonMissionPrototype | null
   /**
    * The children of this prototype in the tree structure.
    */
@@ -202,3 +198,10 @@ export type TMissionPrototypeOptions<
    */
   children?: TRelative[]
 }
+
+/**
+ * Extracts the prototype type from the mission types.
+ * @param T The mission types.
+ * @returns The prototype type.
+ */
+export type TPrototype<T extends TCommonMissionTypes> = T['prototype']

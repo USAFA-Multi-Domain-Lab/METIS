@@ -1,17 +1,20 @@
-import Mission from 'metis/missions'
+import Mission, { TCommonMissionTypes } from 'metis/missions'
+import { TCommonMissionForceJson } from 'metis/missions/forces'
 import { TMissionNodeJson, TMissionNodeOptions } from 'metis/missions/nodes'
 import { TMissionPrototypeOptions } from 'metis/missions/nodes/prototypes'
+import StringToolbox from 'metis/toolbox/strings'
 import seedrandom, { PRNG } from 'seedrandom'
+import ServerMissionAction from './actions'
+import ServerActionExecution from './actions/executions'
+import { ServerRealizedOutcome } from './actions/outcomes'
+import ServerMissionForce from './forces'
 import ServerMissionNode from './nodes'
 import ServerMissionPrototype from './nodes/prototypes'
 
 /**
  * Class for managing missions on the server.
  */
-export default class ServerMission extends Mission<
-  ServerMissionPrototype,
-  ServerMissionNode
-> {
+export default class ServerMission extends Mission<TServerMissionTypes> {
   /**
    * The RNG used to generate random numbers for the mission.
    */
@@ -30,8 +33,18 @@ export default class ServerMission extends Mission<
   }
 
   // Implemented
+  protected parseForceData(
+    data: TCommonMissionForceJson[],
+  ): ServerMissionForce[] {
+    return data.map((datum) => new ServerMissionForce(this, datum))
+  }
+
+  // Implemented
   protected createRootNode(): ServerMissionNode {
-    return new ServerMissionNode(this, Mission.ROOT_NODE_PROPERTIES)
+    return new ServerMissionNode(
+      new ServerMissionForce(this),
+      Mission.ROOT_NODE_PROPERTIES,
+    )
   }
 
   // Implemented
@@ -39,10 +52,11 @@ export default class ServerMission extends Mission<
     return new ServerMissionPrototype(this, 'ROOT')
   }
 
+  // todo: Move this to the prototype class.
   // Implemented
   public spawnNode(
     data: Partial<TMissionNodeJson> = {},
-    options: TMissionNodeOptions<ServerMissionNode> = {},
+    options: TMissionNodeOptions = {},
   ): ServerMissionNode {
     let rootNode: ServerMissionNode | null = this.rootNode
 
@@ -52,14 +66,15 @@ export default class ServerMission extends Mission<
     }
 
     // Create new node.
-    let node: ServerMissionNode = new ServerMissionNode(this, data, options)
+    let node: ServerMissionNode = new ServerMissionNode(
+      new ServerMissionForce(this),
+      data,
+      options,
+    )
 
-    // Set the parent node to the root
-    // node.
-    node.parentNode = rootNode
     // Add the node to the root node's
     // children.
-    rootNode.childNodes.push(node)
+    rootNode.children.push(node)
     // Add the node to the node map.
     this.nodes.push(node)
 
@@ -69,7 +84,7 @@ export default class ServerMission extends Mission<
 
   // Implemented
   public spawnPrototype(
-    _id: string,
+    _id?: string,
     options: TMissionPrototypeOptions<ServerMissionPrototype> = {},
   ): ServerMissionPrototype {
     let rootPrototype: ServerMissionPrototype | null = this.rootPrototype
@@ -78,6 +93,9 @@ export default class ServerMission extends Mission<
     if (rootPrototype === null) {
       throw new Error('Cannot spawn prototype: Mission has no root prototype.')
     }
+
+    // If the _id is not provided, generate a random one.
+    if (_id === undefined) _id = StringToolbox.generateRandomId()
 
     // Create new prototype.
     let prototype: ServerMissionPrototype = new ServerMissionPrototype(
@@ -88,7 +106,7 @@ export default class ServerMission extends Mission<
 
     // Set the parent prototype to the root
     // prototype.
-    prototype.parentNode = rootPrototype
+    prototype.parent = rootPrototype
     // Add the prototype to the root prototype's
     // children.
     rootPrototype.children.push(prototype)
@@ -98,4 +116,19 @@ export default class ServerMission extends Mission<
     // Return the prototype.
     return prototype
   }
+}
+
+/**
+ * Server types for Mission objects.
+ * @note Used as a generic argument for all server,
+ * mission-related classes.
+ */
+export interface TServerMissionTypes extends TCommonMissionTypes {
+  mission: ServerMission
+  force: ServerMissionForce
+  prototype: ServerMissionPrototype
+  node: ServerMissionNode
+  action: ServerMissionAction
+  execution: ServerActionExecution
+  outcome: ServerRealizedOutcome
 }

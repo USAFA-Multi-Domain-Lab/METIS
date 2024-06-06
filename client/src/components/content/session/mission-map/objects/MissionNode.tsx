@@ -105,8 +105,9 @@ export default function MissionNode({
       ClientMissionNode.LINE_HEIGHT *
       ClientMissionNode.FONT_SIZE *
       node.nameLineCount
-    let x: number = node.position.x
-    let y: number = node.position.y
+    let prototype = node.prototype
+    let x: number = prototype.position.x
+    let y: number = prototype.position.y
     let width: number = ClientMissionNode.WIDTH
     let height: number = Math.max(
       ClientMissionNode.DEFAULT_NAME_NEEDED_HEIGHT,

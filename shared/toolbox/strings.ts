@@ -28,7 +28,7 @@ export default class StringToolbox {
    * Generates a random hash that can be used as a unique ID.
    * @returns The random hash.
    */
-  public static generateRandomID(): string {
+  public static generateRandomId(): string {
     return generateHash()
   }
 
