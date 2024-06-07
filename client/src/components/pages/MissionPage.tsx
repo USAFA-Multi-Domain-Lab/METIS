@@ -219,11 +219,12 @@ export default function MissionPage({
             tooltipDescription: 'Cancel node creation.',
             onClick: () => (mission.creationMode = false),
           },
+          // todo: Fix this to work with prototypes.
           remove: {
             icon: 'remove',
             key: 'node-button-remove',
             tooltipDescription: 'Delete this node.',
-            disabled: mission.nodes.length < 2,
+            disabled: mission.prototypes.length < 2,
             onClick: (_, node) => {
               handleNodeDeleteRequest(node)
             },
@@ -303,20 +304,21 @@ export default function MissionPage({
     })
   }
 
+  // todo: Fix this to work with prototypes.
   /**
    * Ensures that at least one node exists in the mission.
    * @note If a node is deleted and there are no remaining nodes,
    * then a new node is auto-generated and the user is notified.
    */
   const ensureOneNodeExists = (): void => {
-    if (
-      mission.nodes.length === 1 &&
-      mission.lastCreatedNode?._id === Array.from(mission.nodes.values())[0]._id
-    ) {
-      notify(
-        'Auto-generated a node for this mission, since missions must have at least one node.',
-      )
-    }
+    // if (
+    //   mission.prototypes.length === 1 &&
+    //   mission.lastCreatedNode?._id === Array.from(mission.nodes.values())[0]._id
+    // ) {
+    //   notify(
+    //     'Auto-generated a node for this mission, since missions must have at least one node.',
+    //   )
+    // }
   }
 
   /**

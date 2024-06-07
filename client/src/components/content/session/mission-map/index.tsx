@@ -1,5 +1,6 @@
 import React, { useCallback, useMemo, useRef, useState } from 'react'
 import ClientMission from 'src/missions'
+import ClientMissionForce from 'src/missions/forces'
 import ClientMissionNode from 'src/missions/nodes'
 import { compute } from 'src/toolbox'
 import { useEventListener } from 'src/toolbox/hooks'
@@ -151,9 +152,10 @@ export default function MissionMap({
   )
 
   /**
-   * Whether the master tab is selected.
+   * The currently selected force.
+   * @note If null, the master tab is selected.
    */
-  const [masterTabSelected, selectMasterTab] = useState<boolean>(true)
+  const [selectedForce, selectForce] = useState<ClientMissionForce | null>(null)
 
   /**
    * Force the component to re-render.
@@ -433,30 +435,19 @@ export default function MissionMap({
   /* -- render -- */
 
   /**
-   * The JSX for the relationship lines drawn between prototypes.
-   * @memoized
-   */
-  const prototypeLinesJsx = useMemo((): JSX.Element[] => {
-    return mission.prototypeRelationshipLines.map((lineData) => {
-      return <Line {...lineData} />
-    })
-  }, [
-    // ! Recomputes when:
-    // The mission changes.
-    mission,
-    // Change in the node structure of
-    // the mission.
-    structureChangeKey,
-  ])
-
-  /**
    * The JSX for the relationship lines drawn between nodes.
    * @memoized
    */
-  const nodeLinesJsx = useMemo((): JSX.Element[] => {
-    return mission.nodeRelationshipLines.map((lineData) => {
-      return <Line {...lineData} />
-    })
+  const linesJsx = useMemo((): JSX.Element[] => {
+    if (selectedForce === null) {
+      return mission.relationshipLines.map((lineData) => {
+        return <Line {...lineData} />
+      })
+    } else {
+      return selectedForce.relationshipLines.map((lineData) => {
+        return <Line {...lineData} />
+      })
+    }
   }, [
     // ! Recomputes when:
     // The mission changes.
@@ -464,45 +455,8 @@ export default function MissionMap({
     // Change in the node structure of
     // the mission.
     structureChangeKey,
-  ])
-
-  /**
-   * The JSX for the prototype objects rendered in the scene.
-   * @memoized
-   */
-  const prototypesJsx = useMemo((): JSX.Element[] => {
-    return mission.prototypes.map((prototype) => {
-      // Construct the onSelect callback for
-      // the specific prototype using the generic
-      // onSelect callback passed in props.
-      // let onSelect = onNodeSelect ? () => onNodeSelect(prototype) : undefined
-      // let applyTooltip = applyNodeTooltip
-      //   ? () => applyNodeTooltip(prototype)
-      //   : undefined
-
-      // Return the JSX for the prototype.
-      return (
-        <MissionPrototype
-          key={prototype._id}
-          prototype={prototype}
-          cameraZoom={cameraZoom}
-          // onSelect={onSelect}
-          // applyTooltip={applyTooltip}
-        />
-      )
-    })
-  }, [
-    // ! Recomputes when:
-    // The mission changes.
-    mission,
-    // Change in the node structure of
-    // the mission.
-    structureChangeKey,
-    // Whether the camera zoom crosses the threshold where
-    // the node names should be displayed/hidden.
-    cameraZoom.x > MAX_NODE_CONTENT_ZOOM,
-    // The custom buttons change.
-    customButtons,
+    // The selected force changes.
+    selectedForce,
   ])
 
   /**
@@ -510,26 +464,49 @@ export default function MissionMap({
    * @memoized
    */
   const nodesJsx = useMemo((): JSX.Element[] => {
-    return mission.nodes.map((node) => {
-      // Construct the onSelect callback for
-      // the specific node using the generic
-      // onNodeSelect callback passed in props.
-      let onSelect = onNodeSelect ? () => onNodeSelect(node) : undefined
-      let applyTooltip = applyNodeTooltip
-        ? () => applyNodeTooltip(node)
-        : undefined
+    if (selectedForce === null) {
+      return mission.prototypes.map((prototype) => {
+        // Construct the onSelect callback for
+        // the specific prototype using the generic
+        // onSelect callback passed in props.
+        // let onSelect = onNodeSelect ? () => onNodeSelect(prototype) : undefined
+        // let applyTooltip = applyNodeTooltip
+        //   ? () => applyNodeTooltip(prototype)
+        //   : undefined
 
-      // Return the JSX for the node.
-      return (
-        <MissionNode
-          key={node._id}
-          node={node}
-          cameraZoom={cameraZoom}
-          onSelect={onSelect}
-          applyTooltip={applyTooltip}
-        />
-      )
-    })
+        // Return the JSX for the prototype.
+        return (
+          <MissionPrototype
+            key={prototype._id}
+            prototype={prototype}
+            cameraZoom={cameraZoom}
+            // onSelect={onSelect}
+            // applyTooltip={applyTooltip}
+          />
+        )
+      })
+    } else {
+      return selectedForce.nodes.map((node) => {
+        // Construct the onSelect callback for
+        // the specific node using the generic
+        // onNodeSelect callback passed in props.
+        let onSelect = onNodeSelect ? () => onNodeSelect(node) : undefined
+        let applyTooltip = applyNodeTooltip
+          ? () => applyNodeTooltip(node)
+          : undefined
+
+        // Return the JSX for the node.
+        return (
+          <MissionNode
+            key={node._id}
+            node={node}
+            cameraZoom={cameraZoom}
+            onSelect={onSelect}
+            applyTooltip={applyTooltip}
+          />
+        )
+      })
+    }
   }, [
     // ! Recomputes when:
     // The mission changes.
@@ -542,6 +519,8 @@ export default function MissionMap({
     cameraZoom.x > MAX_NODE_CONTENT_ZOOM,
     // The custom buttons change.
     customButtons,
+    // The selected force changes.
+    selectedForce,
   ])
 
   /**
@@ -594,15 +573,15 @@ export default function MissionMap({
         {/* Scene objects */}
         <Grid type={'em'} enabled={MAP_EM_GRID_ENABLED} />
         <Grid type={'node'} enabled={MAP_NODE_GRID_ENABLED} />
-        {masterTabSelected ? prototypeLinesJsx : nodeLinesJsx}
-        {masterTabSelected ? prototypesJsx : nodesJsx}
+        {linesJsx}
+        {nodesJsx}
         {nodeCreatorsJsx}
       </Scene>
       <Hud
         mission={mission}
         buttons={buttons}
         onTabSelect={(tab: TTabBarTab) => {
-          selectMasterTab(tab._id === 'master')
+          selectForce(mission.getForce(tab._id) ?? null)
         }}
       />
       {overlayJsx}

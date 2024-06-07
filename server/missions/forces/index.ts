@@ -25,17 +25,13 @@ export default class ServerMissionForce extends MissionForce<TServerMissionTypes
     data: Partial<TMissionNodeJson>,
     options: TMissionNodeOptions,
   ): ServerMissionNode {
-    let rootNode: ServerMissionNode = this.rootNode
+    let root: ServerMissionNode = this.root
 
     // Create new node.
     let node: ServerMissionNode = new ServerMissionNode(this, data, options)
 
     // Add the node to the node map.
     this.nodes.push(node)
-
-    // todo: Determine if this is needed.
-    // Handle structure change.
-    // this.handleStructureChange()
 
     // Return the node.
     return node

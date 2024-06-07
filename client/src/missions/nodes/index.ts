@@ -663,6 +663,7 @@ export default class ClientMissionNode extends MissionNode<TClientMissionTypes> 
     //     }
   }
 
+  // todo: Move this to the force class.
   /**
    * Populates the children of the node, if not already populated.
    * @param {Array<TMissionNodeJson>} data The child node data with which to populate the node.
@@ -670,29 +671,30 @@ export default class ClientMissionNode extends MissionNode<TClientMissionTypes> 
   protected populateChildNodes(
     data: Array<TMissionNodeJson>,
   ): Array<ClientMissionNode> {
-    // If child nodes are already set,
-    // throw an error.
-    if (this.children.length > 0) {
-      throw new Error('Child nodes are already populated.')
-    }
-
-    // Generate child nodes.
-    let childNodes: Array<ClientMissionNode> = data.map((datum) => {
-      // Create a new node.
-      let childNode: ClientMissionNode = new ClientMissionNode(
-        this.force,
-        datum,
-      )
-
-      // Add the node into the mission.
-      this.mission.nodes.push(childNode)
-
-      // Return node
-      return childNode
-    })
-
-    // Return the child nodes.
-    return childNodes
+    throw Error('Not implemented')
+    //     // If child nodes are already set,
+    //     // throw an error.
+    //     if (this.children.length > 0) {
+    //       throw new Error('Child nodes are already populated.')
+    //     }
+    //
+    //     // Generate child nodes.
+    //     let childNodes: Array<ClientMissionNode> = data.map((datum) => {
+    //       // Create a new node.
+    //       let childNode: ClientMissionNode = new ClientMissionNode(
+    //         this.force,
+    //         datum,
+    //       )
+    //
+    //       // Add the node into the mission.
+    //       this.mission.nodes.push(childNode)
+    //
+    //       // Return node
+    //       return childNode
+    //     })
+    //
+    //     // Return the child nodes.
+    //     return childNodes
   }
 
   /**

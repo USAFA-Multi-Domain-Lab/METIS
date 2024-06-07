@@ -1,12 +1,10 @@
 import { v4 as generateHash } from 'uuid'
 import { TCommonMission, TCommonMissionTypes, TMission } from '..'
+import { Vector2D } from '../../../shared/toolbox/space'
 import ArrayToolbox from '../../toolbox/arrays'
 import MapToolbox from '../../toolbox/maps'
 import { uuidTypeValidator } from '../../toolbox/validators'
-import MissionAction, {
-  TCommonMissionAction,
-  TCommonMissionActionJson,
-} from '../actions'
+import { TCommonMissionAction, TCommonMissionActionJson } from '../actions'
 import IActionExecution, {
   TActionExecutionJSON,
   default as TCommonMissionExecution,
@@ -257,6 +255,11 @@ export default abstract class MissionNode<
   }
 
   /**
+   * The position of the node on a mission map.
+   */
+  public position: Vector2D
+
+  /**
    * @param force The force of which the node is a part.
    * @param data The node data from which to create the node. Any ommitted values will be set to the default properties defined in MissionNode.DEFAULT_PROPERTIES.
    * @param options The options for creating the node.
@@ -294,6 +297,7 @@ export default abstract class MissionNode<
     this._outcomes = this.parseOutcomeData(
       data.outcomes ?? MissionNode.DEFAULT_PROPERTIES.outcomes,
     )
+    this.position = new Vector2D(0, 0)
 
     // Attempt to get prototype from mission.
     let prototype = this.mission.getPrototype(this.structureKey)

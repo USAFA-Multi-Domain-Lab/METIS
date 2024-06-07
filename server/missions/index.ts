@@ -1,6 +1,5 @@
 import Mission, { TCommonMissionTypes } from 'metis/missions'
 import { TCommonMissionForceJson } from 'metis/missions/forces'
-import { TMissionNodeJson, TMissionNodeOptions } from 'metis/missions/nodes'
 import { TMissionPrototypeOptions } from 'metis/missions/nodes/prototypes'
 import StringToolbox from 'metis/toolbox/strings'
 import seedrandom, { PRNG } from 'seedrandom'
@@ -40,46 +39,8 @@ export default class ServerMission extends Mission<TServerMissionTypes> {
   }
 
   // Implemented
-  protected createRootNode(): ServerMissionNode {
-    return new ServerMissionNode(
-      new ServerMissionForce(this),
-      Mission.ROOT_NODE_PROPERTIES,
-    )
-  }
-
-  // Implemented
   protected createRootPrototype(): ServerMissionPrototype {
     return new ServerMissionPrototype(this, 'ROOT')
-  }
-
-  // todo: Move this to the prototype class.
-  // Implemented
-  public spawnNode(
-    data: Partial<TMissionNodeJson> = {},
-    options: TMissionNodeOptions = {},
-  ): ServerMissionNode {
-    let rootNode: ServerMissionNode | null = this.rootNode
-
-    // If the mission has no root node, throw an error.
-    if (rootNode === null) {
-      throw new Error('Cannot spawn node: Mission has no root node.')
-    }
-
-    // Create new node.
-    let node: ServerMissionNode = new ServerMissionNode(
-      new ServerMissionForce(this),
-      data,
-      options,
-    )
-
-    // Add the node to the root node's
-    // children.
-    rootNode.children.push(node)
-    // Add the node to the node map.
-    this.nodes.push(node)
-
-    // Return the node.
-    return node
   }
 
   // Implemented
@@ -87,10 +48,10 @@ export default class ServerMission extends Mission<TServerMissionTypes> {
     _id?: string,
     options: TMissionPrototypeOptions<ServerMissionPrototype> = {},
   ): ServerMissionPrototype {
-    let rootPrototype: ServerMissionPrototype | null = this.rootPrototype
+    let root: ServerMissionPrototype | null = this.root
 
     // If the mission has no root prototype, throw an error.
-    if (rootPrototype === null) {
+    if (root === null) {
       throw new Error('Cannot spawn prototype: Mission has no root prototype.')
     }
 
@@ -106,10 +67,10 @@ export default class ServerMission extends Mission<TServerMissionTypes> {
 
     // Set the parent prototype to the root
     // prototype.
-    prototype.parent = rootPrototype
+    prototype.parent = root
     // Add the prototype to the root prototype's
     // children.
-    rootPrototype.children.push(prototype)
+    root.children.push(prototype)
     // Add the prototype to the prototype list.
     this.prototypes.push(prototype)
 

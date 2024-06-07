@@ -30,7 +30,8 @@ export default function NodeStructuring(props: {
   let mission: ClientMission = props.mission
   let handleChange = props.handleChange
   let handleCloseRequest = props.handleCloseRequest
-  let rootNode: ClientMissionNode = mission.rootNode
+  // todo: Fix this to use prototypes.
+  let rootNode: ClientMissionNode = mission.forces[0].root
 
   const globalContext = useGlobalContext()
   const { forceUpdate } = globalContext.actions

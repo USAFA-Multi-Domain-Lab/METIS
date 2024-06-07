@@ -103,6 +103,8 @@ export default function NodeEntry({
     // Return the class list.
     return classList
   })
+
+  // todo: Switch to make this work with prototypes.
   /**
    * The class name for the delete node button.
    */
@@ -111,7 +113,7 @@ export default function NodeEntry({
     let classList: string[] = []
 
     // If the mission has only one node, add the disabled class.
-    if (node && node.mission.nodes.length < 2) {
+    if (node && node.mission.prototypes.length < 2) {
       classList.push('Disabled')
     }
 

@@ -171,21 +171,23 @@ export default class NodeCreator {
   // This is called to create the
   // new node.
   public create(): ClientMissionNode {
-    if (this.createdNode !== null) {
-      throw new Error("Can't create node. Node is already created.")
-    }
-    if (this.creationTarget === null) {
-      throw new Error("Can't create node. No creation target.")
-    }
+    // todo: Fix this to work with prototypes.
+    // if (this.createdNode !== null) {
+    //   throw new Error("Can't create node. Node is already created.")
+    // }
+    // if (this.creationTarget === null) {
+    //   throw new Error("Can't create node. No creation target.")
+    // }
 
-    let node: ClientMissionNode = this.mission.spawnNode()
+    //     let node: ClientMissionNode = this.mission.spawnPrototype()
+    //
+    //     // node.color = this.creationTarget.color
+    //     node.move(this.creationTarget, this.targetRelation)
+    //     this._createdNode = this.createdNode
+    //     this.mission.creationMode = false
+    //     this.mission.deselectNode()
+    // return node
 
-    // node.color = this.creationTarget.color
-    node.move(this.creationTarget, this.targetRelation)
-    this._createdNode = this.createdNode
-    this.mission.creationMode = false
-    this.mission.deselectNode()
-
-    return node
+    throw Error('Not implemented.')
   }
 }

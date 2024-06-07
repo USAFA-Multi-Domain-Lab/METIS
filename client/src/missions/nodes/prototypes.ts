@@ -9,9 +9,14 @@ import { Vector2D } from '../../../../shared/toolbox/space'
  * Class for managing mission prototypes on the client.
  */
 export default class ClientMissionPrototype extends MissionPrototype<TClientMissionTypes> {
-  // Implemented
+  /**
+   * The position of the prototype on a mission map.
+   */
   public position: Vector2D
-  // Implemented
+
+  /**
+   * The depth of the prototype in the structure.
+   */
   public depth: number
 
   public constructor(

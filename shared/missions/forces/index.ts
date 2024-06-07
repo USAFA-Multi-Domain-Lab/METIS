@@ -1,5 +1,6 @@
 import { v4 as generateHash } from 'uuid'
 import { TCommonMission, TCommonMissionTypes, TMission } from '..'
+import { uuidTypeValidator } from '../../../shared/toolbox/validators'
 import context from '../../context'
 import {
   TCommonMissionNode,
@@ -45,7 +46,7 @@ export abstract class MissionForce<
   /**
    * The root node of the force.
    */
-  public rootNode: TNode<T>
+  public root: TNode<T>
 
   /**
    * @param data The force data from which to create the force. Any ommitted
@@ -67,12 +68,66 @@ export abstract class MissionForce<
     this.name = data.name ?? MissionForce.DEFAULT_PROPERTIES.name
     this.color = data.color ?? MissionForce.DEFAULT_PROPERTIES.color
     this.nodes = []
-    this.rootNode = this.createRootNode()
+    this.root = this.createRootNode()
 
     // Import nodes into the force.
     this.importNodes(data.nodes ?? MissionForce.DEFAULT_PROPERTIES.nodes, {
       openAll,
     })
+  }
+
+  public toJson(options: TForceJsonOptions = {}): TCommonMissionForceJson {
+    let {
+      revealedOnly = false,
+      includeSessionData: includeSessionData = false,
+    } = options
+
+    let json: TCommonMissionForceJson = {
+      name: this.name,
+      color: this.color,
+      nodes: this.exportNodes({ revealedOnly, includeSessionData }),
+    }
+
+    // Include _id if it's an ObjectId.
+    // * Note: IDs in the database are
+    // * stored as mongoose ObjectIds.
+    // * If the ID is a UUID, then the
+    // * mission won't save.
+    let isObjectId: boolean = !uuidTypeValidator(this._id) ? true : false
+    if (isObjectId) {
+      json._id = this._id
+    }
+
+    return json
+  }
+
+  /**
+   * Exports the nodes to JSON.
+   * @param options Options for exporting the nodes.
+   * @returns The exported node data and structure.
+   */
+  protected exportNodes(options: TExportNodesOptions = {}): TMissionNodeJson[] {
+    // Gather details.
+    const {
+      revealedOnly = false,
+      includeSessionData: includeSessionData = false,
+    } = options
+    let nodes: TNode<T>[] = this.nodes
+    let nodeData: TMissionNodeJson[] = []
+
+    // Apply filter if revealedOnly flag
+    // is set.
+    if (revealedOnly) {
+      nodes = nodes.filter((node: TNode<T>) => node.revealed)
+    }
+
+    // Construct node data.
+    nodeData = nodes.map((node: TNode<T>) =>
+      node.toJson({ includeSessionData: includeSessionData }),
+    )
+
+    // Return the exported node data.
+    return nodeData
   }
 
   /**
@@ -89,13 +144,13 @@ export abstract class MissionForce<
 
   // Implemented
   public getNode(nodeId: string): TNode<T> | undefined {
-    if (nodeId === this.rootNode._id) return this.rootNode
+    if (nodeId === this.root._id) return this.root
     else return this.nodes.find((node) => node._id === nodeId)
   }
 
   // Implemented
   public getNodeFromPrototype(prototypeId: string): TNode<T> | undefined {
-    if (prototypeId === this.mission.rootPrototype._id) return this.rootNode
+    if (prototypeId === this.mission.root._id) return this.root
     else return this.nodes.find((node) => node.prototype._id === prototypeId)
   }
 
@@ -127,51 +182,6 @@ export abstract class MissionForce<
       throw error
     }
   }
-
-  // todo: Implement this.
-  //   /**
-  //    * Determines the node structure found in the root node passed.
-  //    * @param {TMissionNode} rootNode The root node from which to determine the node structure.
-  //    * @param {TDetermineNodeStructureOptions} options Options for determining the node structure.
-  //    * @returns {AnyObject} The raw node structure.
-  //    */
-  //   protected static determineNodeStructure<
-  //     TMissionNode extends TCommonMissionNode,
-  //   >(
-  //     rootNode: TMissionNode,
-  //     options: TDetermineNodeStructureOptions = {},
-  //   ): AnyObject {
-  //     // Parse options.
-  //     let { revealedOnly = false } = options
-  //
-  //     /**
-  //      * The recursive algorithm used to determine the node structure.
-  //      * @param {TCommonMissionNode} nodeCursor The current node being processed.
-  //      * @param {AnyObject} nodeCursorStructure The structure of the current node being processed.
-  //      */
-  //     const operation = (
-  //       nodeCursor: TMissionNode = rootNode,
-  //       nodeCursorStructure: AnyObject = {},
-  //     ): AnyObject => {
-  //       let childNodes: Array<TMissionNode> =
-  //         nodeCursor.children as Array<TMissionNode>
-  //
-  //       if (!revealedOnly || nodeCursor.isOpen) {
-  //         for (let childNode of childNodes) {
-  //           if (childNode.hasChildren) {
-  //             nodeCursorStructure[childNode.structureKey] = operation(childNode)
-  //           } else {
-  //             nodeCursorStructure[childNode.structureKey] = {}
-  //           }
-  //         }
-  //       }
-  //
-  //       return nodeCursorStructure
-  //     }
-  //
-  //     // Return the result of the operation.
-  //     return operation()
-  //   }
 
   /**
    * The default properties for a Mission object.
@@ -236,7 +246,13 @@ export interface TCommonMissionForce {
   /**
    * The root node of the force.
    */
-  rootNode: TCommonMissionNode
+  root: TCommonMissionNode
+  /**
+   * Converts the force to JSON.
+   * @param options The options for converting the force to JSON.
+   * @returns the JSON for the force.
+   */
+  toJson: (options?: TForceJsonOptions) => TCommonMissionForceJson
   /**
    * This will spawn a new node in the force with the given data and options.
    * Any data or options not provided will be set to default values.
@@ -291,7 +307,23 @@ export type TMissionForceOptions = {
 }
 
 /**
- * Options for Mission.importNodes.
+ * Options for converting a MissionForce to JSON.
+ */
+export type TForceJsonOptions = {
+  /**
+   * Whether or not to only include revealed nodes.
+   * @default false
+   */
+  revealedOnly?: boolean
+  /**
+   * Whether or not to include session data.
+   * @default false
+   */
+  includeSessionData?: boolean
+}
+
+/**
+ * Options for MissionForce.importNodes.
  */
 export type TNodeImportOptions = {
   /**
@@ -299,6 +331,22 @@ export type TNodeImportOptions = {
    * @default false
    */
   openAll?: boolean
+}
+
+/**
+ * Options for the MissionForce.exportNodes method.
+ */
+export type TExportNodesOptions = {
+  /**
+   * Whether to exclude non-revealed nodes in the export.
+   * @default false
+   */
+  revealedOnly?: boolean
+  /**
+   * Whether or not to include session-specific data in the export.
+   * @default false
+   */
+  includeSessionData?: boolean
 }
 
 /**
