@@ -46,6 +46,25 @@ export default class ClientMissionForce extends MissionForce<TClientMissionTypes
    * would change the structure of the mission's node tree.
    */
   public handleStructureChange(): void {
+    // Loop through prototypes, and ensure that
+    // a corresponding nodes exists.
+    for (let prototype of this.mission.prototypes) {
+      let node = this.getNodeFromPrototype(prototype._id)
+      if (!node) {
+        // todo: Determine if openAll should always be true.
+        this.nodes.push(
+          this.createNode(
+            {
+              name: prototype._id.substring(0, 8),
+              structureKey: prototype._id,
+            },
+            { openAll: true },
+          ),
+        )
+      }
+    }
+
+    // Reposition nodes and draw the lines between them.
     this.positionNodes()
     this.drawRelationshipLines()
   }
