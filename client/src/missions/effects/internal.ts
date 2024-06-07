@@ -1,37 +1,26 @@
-import InternalEffect, {
-  TInternalTarget,
-} from '../../../../shared/missions/effects/internal'
+import { ClientTargetEnvironment } from 'src/target-environments'
+import ClientMission from '..'
+import InternalEffect from '../../../../shared/missions/effects/internal'
 import ClientMissionAction from '../actions'
+import ClientActionExecution from '../actions/executions'
+import ClientActionOutcome from '../actions/outcomes'
 import ClientMissionNode from '../nodes'
 
 /**
  * Class representing an external effect on the client-side that can be
  * applied to a target.
  */
-export class ClientInternalEffect extends InternalEffect<ClientMissionAction> {
+export class ClientInternalEffect extends InternalEffect<
+  ClientMission,
+  ClientMissionNode,
+  ClientMissionAction,
+  ClientActionExecution,
+  ClientActionOutcome,
+  ClientTargetEnvironment
+> {
   // Implemented
-  public async populateTargetData(target: TInternalTarget): Promise<void> {
-    // If the target's key is 'node' and the target's node is a string,
-    // that means the target is a node ID, so we need to get the node.
-    if (
-      target.key === 'node' &&
-      !(target.node instanceof ClientMissionNode) &&
-      typeof target.node === 'string'
-    ) {
-      // Get the node from the mission.
-      let node: ClientMissionNode | undefined = this.mission.getNode(
-        target.node,
-      )
+  public async populateTargetData(target: string): Promise<void> {}
 
-      // If the node is found, set it.
-      if (node) {
-        target.node = node
-      }
-    }
-    // If the target's key is 'output' and the target's force is a string,
-    // that means the target is a force ID, so we need to get the force.
-    // else if (target.key === 'output' && !(target.force instanceof Force) && typeof target.force === 'string') {
-    // target.force =
-    // }
-  }
+  // Implemented
+  public async populateTargetParamsData(argId: string): Promise<void> {}
 }

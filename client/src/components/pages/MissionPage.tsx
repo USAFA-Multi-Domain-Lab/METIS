@@ -16,6 +16,7 @@ import MissionEntry from '../content/edit-mission/MissionEntry'
 import NodeEntry from '../content/edit-mission/NodeEntry'
 import NodeStructuring from '../content/edit-mission/NodeStructuring'
 import ExternalEffectEntry from '../content/edit-mission/target-effects/ExternalEffectEntry'
+import InternalEffectEntry from '../content/edit-mission/target-effects/InternalEffectEntry'
 import {
   HomeLink,
   LogoutLink,
@@ -273,6 +274,7 @@ export default function MissionPage({
       activateNodeStructuring(false)
       setSelectedAction(null)
       setSelectedExternalEffect(null)
+      setSelectedInternalEffect(null)
     },
     [selectedNode],
   )
@@ -433,7 +435,9 @@ export default function MissionPage({
 
   /* -- PRE-RENDER PROCESSING -- */
 
-  // Create the custom form-related buttons for the map.
+  /**
+   * Custom buttons for the mission map.
+   */
   const mapCustomButtons: TWithKey<TButtonSvg>[] = [
     {
       icon: 'reorder',
@@ -562,22 +566,21 @@ export default function MissionPage({
         <ExternalEffectEntry
           effect={selectedExternalEffect as ClientExternalEffect}
           setSelectedAction={setSelectedAction}
-          setSelectedEffect={setSelectedExternalEffect}
+          setSelectedExternalEffect={setSelectedExternalEffect}
           handleChange={handleChange}
           key={selectedExternalEffect?._id}
         />
       )
     } else if (displayInternalEffectEntry) {
-      return null
-      // return (
-      //   <InternalEffectEntry
-      //     effect={selectedInternalEffect as ClientInternalEffect}
-      //     setSelectedAction={setSelectedAction}
-      //     setSelectedEffect={setSelectedInternalEffect}
-      //     handleChange={handleChange}
-      //     key={selectedInternalEffect?._id}
-      //   />
-      // )
+      return (
+        <InternalEffectEntry
+          effect={selectedInternalEffect as ClientInternalEffect}
+          setSelectedAction={setSelectedAction}
+          setSelectedInternalEffect={setSelectedInternalEffect}
+          handleChange={handleChange}
+          key={selectedInternalEffect?._id}
+        />
+      )
     } else if (nodeStructuringIsActive) {
       return (
         <NodeStructuring

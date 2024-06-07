@@ -73,6 +73,7 @@ export let demoMissionData: TCommonMissionJson = {
           postExecutionFailureText:
             '<p>Enter your failed post-execution message here.</p>',
           externalEffects: [],
+          internalEffects: [],
         },
       ],
     },
@@ -263,6 +264,7 @@ export let demoMissionData: TCommonMissionJson = {
             "<p>*** RUNNING COMPILE SCRIPT. . . . . . [] *** SYS MESSAGE: Compiling list of Xi’an Satellite Control Center subordinate ground control stations (GCS). 系统消息：正在整理西安卫星控制中心下属地面控制站（GCS）列表。 Xìtǒng xiāoxī: Zhèngzài zhěnglǐ xī'ān wèixīng kòngzhì zhōngxīn xiàshǔ dìmiàn kòngzhì zhàn (GCS) lièbiǎo.</p>",
           postExecutionFailureText: '<p>Error: 1025845</p>',
           externalEffects: [],
+          internalEffects: [],
         },
       ],
     },
@@ -287,6 +289,7 @@ export let demoMissionData: TCommonMissionJson = {
             '<p>*** RUNNING COMPILE SCRIPT. . . . . . [] *** SYS MESSAGE: List of available access points has been generated.</p>',
           postExecutionFailureText: '<p>Error: 1025845</p>',
           externalEffects: [],
+          internalEffects: [],
         },
       ],
     },
@@ -311,6 +314,7 @@ export let demoMissionData: TCommonMissionJson = {
           postExecutionFailureText:
             '<p>Error: 1025845 *** NETWORK ACCESS BLOCKED ***</p>',
           externalEffects: [],
+          internalEffects: [],
         },
       ],
     },
@@ -335,6 +339,7 @@ export let demoMissionData: TCommonMissionJson = {
           postExecutionFailureText:
             '<p>Error: 1025845 *** NETWORK ACCESS BLOCKED ***</p>',
           externalEffects: [],
+          internalEffects: [],
         },
       ],
     },
@@ -359,6 +364,7 @@ export let demoMissionData: TCommonMissionJson = {
           postExecutionFailureText:
             '<p>Error: 1025845 *** NETWORK ACCESS BLOCKED ***</p>',
           externalEffects: [],
+          internalEffects: [],
         },
       ],
     },
@@ -383,6 +389,7 @@ export let demoMissionData: TCommonMissionJson = {
           postExecutionFailureText:
             '<p>Error: 1025845 *** NETWORK ACCESS BLOCKED ***</p>',
           externalEffects: [],
+          internalEffects: [],
         },
       ],
     },
@@ -408,6 +415,7 @@ export let demoMissionData: TCommonMissionJson = {
           postExecutionFailureText:
             '<p>Error: 1025845 *** NETWORK ACCESS BLOCKED ***</p>',
           externalEffects: [],
+          internalEffects: [],
         },
       ],
     },
@@ -432,6 +440,7 @@ export let demoMissionData: TCommonMissionJson = {
           postExecutionFailureText:
             '<p>Error: 1025845 *** NETWORK ACCESS BLOCKED ***</p>',
           externalEffects: [],
+          internalEffects: [],
         },
       ],
     },
@@ -457,6 +466,7 @@ export let demoMissionData: TCommonMissionJson = {
           postExecutionFailureText:
             '<p>Enter your failed post-execution message here.</p>',
           externalEffects: [],
+          internalEffects: [],
         },
       ],
     },
@@ -482,6 +492,7 @@ export let demoMissionData: TCommonMissionJson = {
           postExecutionFailureText:
             '<p>Enter your failed post-execution message here.</p>',
           externalEffects: [],
+          internalEffects: [],
         },
       ],
     },
@@ -507,6 +518,7 @@ export let demoMissionData: TCommonMissionJson = {
           postExecutionFailureText:
             '<p>Error: 10295456 *** ACCESS BLOCKED ***</p>',
           externalEffects: [],
+          internalEffects: [],
         },
       ],
     },
@@ -532,6 +544,7 @@ export let demoMissionData: TCommonMissionJson = {
           postExecutionFailureText:
             '<p>Error: 10295456 *** Air Vehicle has rejected command. ***</p>',
           externalEffects: [],
+          internalEffects: [],
         },
       ],
     },
@@ -556,6 +569,7 @@ export let demoMissionData: TCommonMissionJson = {
           postExecutionFailureText:
             '<p>Error: 10295456 *** Air Vehicle has rejected command. ***</p>',
           externalEffects: [],
+          internalEffects: [],
         },
         {
           name: 'New Action',
@@ -568,6 +582,7 @@ export let demoMissionData: TCommonMissionJson = {
           postExecutionFailureText:
             '<p>Enter your failed post-execution message here.</p>',
           externalEffects: [],
+          internalEffects: [],
         },
       ],
     },
@@ -592,6 +607,7 @@ export let demoMissionData: TCommonMissionJson = {
           postExecutionFailureText:
             '<p>Error: 10295456 *** Air Vehicle has rejected command. ***</p>',
           externalEffects: [],
+          internalEffects: [],
         },
         {
           name: 'New Action',
@@ -604,6 +620,7 @@ export let demoMissionData: TCommonMissionJson = {
           postExecutionFailureText:
             '<p>Enter your failed post-execution message here.</p>',
           externalEffects: [],
+          internalEffects: [],
         },
       ],
     },
@@ -628,6 +645,7 @@ export let demoMissionData: TCommonMissionJson = {
           postExecutionFailureText:
             '<p>Error: 10295456 *** Air Vehicle has rejected command. ***</p>',
           externalEffects: [],
+          internalEffects: [],
         },
       ],
     },
@@ -652,6 +670,7 @@ export let demoMissionData: TCommonMissionJson = {
           postExecutionFailureText:
             '<p>Error: 10295456 *** Air Vehicle has rejected command. ***</p>',
           externalEffects: [],
+          internalEffects: [],
         },
       ],
     },

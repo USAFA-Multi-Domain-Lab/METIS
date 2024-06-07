@@ -15,21 +15,19 @@ import Args from './Args'
 import './ExternalEffectEntry.scss'
 
 /**
- * Prompt modal for creating a list of external effects to apply to a target.
+ * Entry fields for an external effect.
  */
 export default function ExternalEffectEntry({
   effect,
   setSelectedAction,
-  setSelectedEffect,
+  setSelectedExternalEffect,
   handleChange,
-}: TEffectEntry_P): JSX.Element | null {
+}: TExternalEffectEntry_P): JSX.Element | null {
   /* -- GLOBAL CONTEXT -- */
   const { forceUpdate } = useGlobalContext().actions
 
   /* -- STATE -- */
-  const [effectName, setEffectName] = useState<ClientExternalEffect['name']>(
-    effect.name,
-  )
+  const [name, setName] = useState<ClientExternalEffect['name']>(effect.name)
   const [description, setDescription] = useState<
     ClientExternalEffect['description']
   >(effect.description)
@@ -65,7 +63,7 @@ export default function ExternalEffectEntry({
     missionName,
     nodeName,
     actionName,
-    effectName,
+    name,
   ])
 
   /* -- EFFECTS -- */
@@ -73,7 +71,7 @@ export default function ExternalEffectEntry({
   // componentDidUpdate
   usePostInitEffect(() => {
     // Update the effect's name.
-    effect.name = effectName
+    effect.name = name
     // Update the effect's description.
     effect.description = description
     // Update the effect's arguments.
@@ -81,17 +79,17 @@ export default function ExternalEffectEntry({
 
     // Allow the user to save the changes.
     handleChange()
-  }, [effectName, description, effectArgs])
+  }, [name, description, effectArgs])
 
   /* -- FUNCTIONS -- */
 
   /**
-   * Handles the request to delete the effect.
+   * Handles the request to delete the external effect.
    */
-  const handleDeleteEffectRequest = () => {
-    // Set the selected effect to null.
-    setSelectedEffect(null)
-    // Filter out the effect from the action.
+  const handleDeleteExternalEffectRequest = () => {
+    // Set the selected external effect to null.
+    setSelectedExternalEffect(null)
+    // Filter out the external effect from the action.
     action.externalEffects = action.externalEffects.filter(
       (actionEffect: ClientExternalEffect) => actionEffect._id !== effect._id,
     )
@@ -111,18 +109,18 @@ export default function ExternalEffectEntry({
     if (index === 0) {
       action.mission.deselectNode()
       setSelectedAction(null)
-      setSelectedEffect(null)
+      setSelectedExternalEffect(null)
     }
     // If the index is 1 then take the user
     // back to the node entry.
     else if (index === 1) {
       setSelectedAction(null)
-      setSelectedEffect(null)
+      setSelectedExternalEffect(null)
     }
     // If the index is 2 then take the user
     // back to the action entry.
     else if (index === 2) {
-      setSelectedEffect(null)
+      setSelectedExternalEffect(null)
     }
   }
 
@@ -132,7 +130,10 @@ export default function ExternalEffectEntry({
   const renderBackButtonJsx = (): JSX.Element | null => {
     return (
       <div className='BackContainer'>
-        <div className='BackButton' onClick={() => setSelectedEffect(null)}>
+        <div
+          className='BackButton'
+          onClick={() => setSelectedExternalEffect(null)}
+        >
           &lt;
           <Tooltip description='Go back.' />
         </div>
@@ -179,8 +180,8 @@ export default function ExternalEffectEntry({
             fieldType='required'
             handleOnBlur='repopulateValue'
             label='Name'
-            stateValue={effectName}
-            setState={setEffectName}
+            stateValue={name}
+            setState={setName}
             defaultValue={ClientExternalEffect.DEFAULT_PROPERTIES.name}
             placeholder='Enter name...'
           />
@@ -195,11 +196,11 @@ export default function ExternalEffectEntry({
           />
           <DetailLocked
             label='Target Environment'
-            stateValue={targetEnv?.name || 'No target environment selected.'}
+            stateValue={targetEnv?.name ?? 'No target environment selected.'}
           />
           <DetailLocked
             label='Target'
-            stateValue={target?.name || 'No target selected.'}
+            stateValue={target?.name ?? 'No target selected.'}
           />
           <Args
             target={target}
@@ -209,9 +210,9 @@ export default function ExternalEffectEntry({
           {/* -- BUTTON(S) -- */}
           <div className='ButtonContainer'>
             <ButtonText
-              text='Delete Effect'
-              onClick={handleDeleteEffectRequest}
-              tooltipDescription='Delete this effect.'
+              text='Delete External Effect'
+              onClick={handleDeleteExternalEffectRequest}
+              tooltipDescription='Delete this external effect.'
             />
           </div>
         </div>
@@ -220,14 +221,14 @@ export default function ExternalEffectEntry({
   )
 }
 
-/* ---------------------------- TYPES FOR EFFECTS ---------------------------- */
+/* ---------------------------- TYPES FOR EXTERNAL EFFECT ENTRY ---------------------------- */
 
 /**
- * Props for Effects component.
+ * Props for ExternalEffectEntry component.
  */
-export type TEffectEntry_P = {
+export type TExternalEffectEntry_P = {
   /**
-   * The effect to apply to the target.
+   * The external effect to apply to the target.
    */
   effect: ClientExternalEffect
   /**
@@ -235,9 +236,9 @@ export type TEffectEntry_P = {
    */
   setSelectedAction: (action: ClientMissionAction | null) => void
   /**
-   * A function that will set the selected effect.
+   * A function that will set the selected external effect.
    */
-  setSelectedEffect: (effect: ClientExternalEffect | null) => void
+  setSelectedExternalEffect: (effect: ClientExternalEffect | null) => void
   /**
    * A function that will be called when a change has been made.
    */

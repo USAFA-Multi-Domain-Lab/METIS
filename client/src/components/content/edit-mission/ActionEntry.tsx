@@ -215,6 +215,23 @@ export default function ActionEntry({
   }
 
   /**
+   * Handles the request to create a new effect.
+   */
+  const handleCreateEffectRequest = async () => {
+    // Prompt the user for the type of effect to create.
+    let { choice } = await prompt(
+      'What type of effect would you like to create?',
+      ['Cancel', 'Internal', 'External'],
+    )
+
+    if (choice === 'Internal') {
+      setSelectedInternalEffect(new ClientInternalEffect(action))
+    } else if (choice === 'External') {
+      setSelectedExternalEffect(new ClientExternalEffect(action))
+    }
+  }
+
+  /**
    * Renders JSX for the back button.
    */
   const renderBackButtonJsx = (): JSX.Element | null => {
@@ -460,18 +477,7 @@ export default function ActionEntry({
             <div className='ButtonContainer New'>
               <ButtonText
                 text='New Effect'
-                onClick={async () => {
-                  let { choice } = await prompt(
-                    'What type of effect would you like to create?',
-                    ['Cancel', 'Internal', 'External'],
-                  )
-
-                  if (choice === 'Internal') {
-                    setSelectedInternalEffect(new ClientInternalEffect(action))
-                  } else if (choice === 'External') {
-                    setSelectedExternalEffect(new ClientExternalEffect(action))
-                  }
-                }}
+                onClick={handleCreateEffectRequest}
                 tooltipDescription='Create a new effect.'
                 uniqueClassName={newEffectButtonClassName}
               />

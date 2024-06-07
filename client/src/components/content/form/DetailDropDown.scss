@@ -25,6 +25,9 @@
 
       .Text {
         color: $color-accent-light;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        overflow: hidden;
       }
     }
 
@@ -33,6 +36,9 @@
         cursor: pointer;
         user-select: none;
         padding: 6px 0;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        overflow: hidden;
 
         &:first-child {
           margin: 10px 0 0;

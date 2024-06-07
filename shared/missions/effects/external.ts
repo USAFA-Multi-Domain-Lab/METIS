@@ -158,20 +158,12 @@ export default abstract class ExternalEffect<
     }
   }
 
-  /**
-   * Populates the target data.
-   * @param targetId The ID of the target to load.
-   * @resolves When the target data has been loaded.
-   * @rejects If there is an error loading the target data.
-   */
+  // Inherited
   public abstract populateTargetData(
     targetId: TCommonTargetJson['_id'],
   ): Promise<void>
 
-  /**
-   * Converts the External Effect Object to JSON.
-   * @returns A JSON representation of the Effect.
-   */
+  // Inherited
   public toJson(): TCommonExternalEffectJson {
     // Construct JSON object to send to the server.
     let json: TCommonExternalEffectJson = {
@@ -255,7 +247,15 @@ export interface TCommonExternalEffect {
    */
   args: AnyObject
   /**
+   * Populates the target data.
+   * @param targetId The ID of the target to load.
+   * @resolves When the target data has been loaded.
+   * @rejects If there is an error loading the target data.
+   */
+  populateTargetData: (targetId: TCommonTargetJson['_id']) => Promise<void>
+  /**
    * Converts the External Effect Object to JSON.
+   * @returns A JSON representation of the Effect.
    */
   toJson: (options?: TExternalEffectJsonOptions) => TCommonExternalEffectJson
 }

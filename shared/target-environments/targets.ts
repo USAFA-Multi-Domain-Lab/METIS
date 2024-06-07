@@ -74,6 +74,73 @@ export default abstract class Target<
       args: [],
     }
   }
+
+  /**
+   * The internal targets that are available in the METIS target environment.
+   */
+  public static INTERNAL_TARGETS: TCommonTargetJson[] = [
+    {
+      targetEnvId: 'metis',
+      _id: 'node',
+      name: 'Node',
+      description: '',
+      script: () => {},
+      args: [
+        {
+          _id: 'block-node',
+          name: 'Block Node',
+          required: false,
+          display: true,
+          groupingId: 'block-node',
+          type: 'boolean',
+        },
+        {
+          _id: 'success-chance',
+          name: 'Chance of Success',
+          required: true,
+          display: false,
+          groupingId: 'block-node',
+          type: 'number',
+          default: 0,
+        },
+        {
+          _id: 'process-time',
+          name: 'Process Time',
+          required: true,
+          display: false,
+          groupingId: 'block-node',
+          type: 'number',
+          default: 0,
+        },
+        {
+          _id: 'resource-cost',
+          name: 'Resource Cost',
+          required: true,
+          display: false,
+          groupingId: 'block-node',
+          type: 'number',
+          default: 0,
+        },
+      ],
+    },
+    {
+      targetEnvId: 'metis',
+      _id: 'output',
+      name: 'Output Panel',
+      description: '',
+      script: () => {},
+      args: [
+        {
+          _id: 'message',
+          name: 'Message',
+          required: true,
+          display: true,
+          type: 'large-string',
+          default: '<p><br></p>',
+        },
+      ],
+    },
+  ]
 }
 
 /* ------------------------------ TARGET TYPES ------------------------------ */

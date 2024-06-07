@@ -7,6 +7,12 @@
     align-items: center;
     grid-template-columns: 1fr auto;
 
+    .Text {
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      overflow: hidden;
+    }
+
     .Lock {
       user-select: none;
       cursor: help;
@@ -17,6 +23,7 @@
       background-position: center;
       width: 1em;
       height: 1em;
+      margin-left: 0.15em;
     }
   }
 }

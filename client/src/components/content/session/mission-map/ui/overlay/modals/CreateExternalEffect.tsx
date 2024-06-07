@@ -88,7 +88,7 @@ export default function CreateExternalEffect({
   /**
    * Handles creating a new external effect.
    */
-  const createEffect = () => {
+  const createExternalEffect = () => {
     // Push the new external effect to the action.
     action.externalEffects.push(effect)
     // Display the changes.
@@ -136,7 +136,7 @@ export default function CreateExternalEffect({
       {/* -- BUTTON(S) -- */}
       <ButtonText
         text='Create External Effect'
-        onClick={createEffect}
+        onClick={createExternalEffect}
         uniqueClassName={createEffectButtonClassName}
       />
     </div>

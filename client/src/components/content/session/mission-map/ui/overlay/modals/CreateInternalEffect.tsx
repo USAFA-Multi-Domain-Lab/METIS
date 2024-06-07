@@ -7,37 +7,47 @@ import { useGlobalContext } from 'src/context'
 import ClientMissionAction from 'src/missions/actions'
 import { ClientInternalEffect } from 'src/missions/effects/internal'
 import ClientMissionNode from 'src/missions/nodes'
+import { ClientTargetEnvironment } from 'src/target-environments'
+import ClientTarget from 'src/target-environments/targets'
 import { compute } from 'src/toolbox'
 import { usePostInitEffect } from 'src/toolbox/hooks'
-import InternalEffect, {
-  TInternalTarget,
-} from '../../../../../../../../../shared/missions/effects/internal'
 import './CreateInternalEffect.scss'
 
+/**
+ * Prompt modal for creating an internal effect to apply to a target.
+ */
 export default function CreateInternalEffect({
   effect,
   handleClose,
   handleChange,
 }: TCreateInternalEffect_P): JSX.Element | null {
   /* -- GLOBAL CONTEXT -- */
-  const { forceUpdate } = useGlobalContext().actions
+  const globalContext = useGlobalContext()
+  const [internalTargetEnvironment] = globalContext.internalTargetEnvironment
+  const { forceUpdate } = globalContext.actions
 
   /* -- STATE -- */
-  // const [force, setForce] = useState<ClientForce>(
-  //   new ClientForce(),
+  // todo: uncomment when force is implemented
+  // const [force, setForce] = useState<ClientMissionForce>(
+  //   new ClientMissionForce(effect.mission, {
+  //     name: 'Select a force',
+  //   }),
   // )
-  const [target, setTarget] = useState<TInternalTarget>(
-    InternalEffect.DEFAULT_PROPERTIES.target,
+  const [target, setTarget] = useState<ClientTarget>(
+    new ClientTarget(new ClientTargetEnvironment()),
   )
   const [targetNode, setTargetNode] = useState<ClientMissionNode>(
-    new ClientMissionNode(effect.mission),
+    new ClientMissionNode(effect.mission, {
+      name: 'Select a node',
+    }),
   )
 
   /* -- COMPUTED -- */
+  // todo: uncomment when force is implemented
   // /**
   //  * List of forces in the mission.
   //  */
-  // const forces: ClientForce[] = compute(() => effect.mission.forces)
+  // const forces: ClientMissionForce[] = compute(() => effect.mission.forces)
   /**
    * The action to execute.
    */
@@ -49,8 +59,9 @@ export default function CreateInternalEffect({
     // Create a default list of class names.
     let classList: string[] = []
 
+    // todo: uncomment when force is implemented
     // // Hide the drop down if the force is the default force.
-    // if (force._id === ClientForce.DEFAULT_PROPERTIES._id) {
+    // if (force._id === ClientMissionForce.DEFAULT_PROPERTIES._id) {
     //   classList.push('Hidden')
     // }
 
@@ -64,13 +75,12 @@ export default function CreateInternalEffect({
     // Create a default list of class names.
     let classList: string[] = []
 
-    // // Hide the button if the force is the default force.
-    // if (force.name === ClientForce.DEFAULT_PROPERTIES.name) {
-    //   classList.push('Hidden')
-    // }
-
     // Disable the button if the target is the default target.
-    if (target === InternalEffect.DEFAULT_PROPERTIES.target) {
+    if (target.name === ClientTarget.DEFAULT_PROPERTIES.name) {
+      classList.push('Disabled')
+    }
+
+    if (target._id === 'node' && targetNode.name === 'Select a node') {
       classList.push('Disabled')
     }
 
@@ -80,15 +90,12 @@ export default function CreateInternalEffect({
 
   /* -- EFFECTS -- */
 
-  // Sync the component state with the internal effect.
+  // Sync the component state with the effect.
   usePostInitEffect(() => {
-    effect.target = target
+    effect.targetParams = targetNode
+  }, [targetNode])
 
-    if (effect.target.key === 'node') {
-      effect.target.node = targetNode
-    }
-  }, [target, targetNode])
-
+  // todo: uncomment when force is implemented
   // // Reset the target when the force changes.
   // usePostInitEffect(() => {
   //   setTarget(InternalEffect.DEFAULT_PROPERTIES.target)
@@ -98,7 +105,7 @@ export default function CreateInternalEffect({
   /**
    * Handles creating a new internal effect.
    */
-  const createEffect = () => {
+  const createInternalEffect = () => {
     // Push the new internal effect to the action.
     action.internalEffects.push(effect)
     // Display the changes.
@@ -121,45 +128,54 @@ export default function CreateInternalEffect({
       </div>
 
       {/* -- MAIN CONTENT -- */}
-      <DetailLocked label='Target Environment' stateValue='METIS' />
-      {/* <DetailDropDown<ClientForce>
+      <DetailLocked
+        label='Target Environment'
+        stateValue={
+          internalTargetEnvironment?.name ?? 'No target environment selected.'
+        }
+      />
+      {/* 
+      // todo: uncomment when force is implemented
+      <DetailDropDown<ClientMissionForce>
         fieldType='required'
         label='Force'
         options={forces}
         stateValue={force}
         setState={setForce}
         isExpanded={false}
-        renderDisplayName={(force: ClientForce) =>
+        renderDisplayName={(force: ClientMissionForce) =>
           force.name
         }
       /> */}
-      <DetailDropDown<TInternalTarget>
+      <DetailDropDown<ClientTarget>
         fieldType='required'
         label='Target'
-        options={InternalEffect.AVAILABLE_TARGETS}
+        options={internalTargetEnvironment?.targets ?? []}
         stateValue={target}
         setState={setTarget}
         isExpanded={false}
-        renderDisplayName={(target: TInternalTarget) => target.name}
+        renderDisplayName={(target: ClientTarget) => target.name}
         uniqueClassName={targetClassName}
       />
-
-      {target.key === 'node' ? (
-        <DetailDropDown<ClientMissionNode>
-          fieldType='required'
-          label='Node'
-          options={effect.mission.nodes}
-          stateValue={targetNode}
-          setState={setTargetNode}
-          isExpanded={false}
-          renderDisplayName={(node: ClientMissionNode) => node.name}
-        />
-      ) : null}
+      {
+        // If the target type is a node, display the node drop down.
+        target._id === 'node' ? (
+          <DetailDropDown<ClientMissionNode>
+            fieldType='required'
+            label='Node'
+            options={effect.mission.nodes}
+            stateValue={targetNode}
+            setState={setTargetNode}
+            isExpanded={false}
+            renderDisplayName={(node: ClientMissionNode) => node.name}
+          />
+        ) : null
+      }
 
       {/* -- BUTTON(S) -- */}
       <ButtonText
         text='Create Internal Effect'
-        onClick={createEffect}
+        onClick={createInternalEffect}
         uniqueClassName={createEffectButtonClassName}
       />
     </div>
