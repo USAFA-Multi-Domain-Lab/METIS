@@ -7,7 +7,10 @@ import Mission, {
   TCommonMissionTypes,
   TMissionOptions,
 } from '../../../shared/missions'
-import { TCommonMissionForceJson } from '../../../shared/missions/forces'
+import {
+  TCommonMissionForceJson,
+  TMissionForceOptions,
+} from '../../../shared/missions/forces'
 import { TMissionPrototypeOptions } from '../../../shared/missions/nodes/prototypes'
 import { Counter } from '../../../shared/toolbox/numbers'
 import { TWithKey } from '../../../shared/toolbox/objects'
@@ -826,6 +829,26 @@ export default class ClientMission
   }
 
   /**
+   * Creates a new force for the mission.
+   * @param data
+   * @param options
+   * @returns The newly created force.
+   */
+  public createForce(options: TMissionForceOptions = {}): ClientMissionForce {
+    // Create a new force.
+    let force: ClientMissionForce = new ClientMissionForce(this, {}, options)
+
+    // Add the force to the mission.
+    this.forces.push(force)
+
+    // Handle structure change.
+    this.handleStructureChange()
+
+    // Return the force.
+    return force
+  }
+
+  /**
    * Commit any changes made and save them to the server. Calls
    * @note Chooses between post and put based on the state of the `existsOnServer`
    * property. This can be set as an option in the constructor.
@@ -1091,6 +1114,8 @@ export type TStructureChangeListener = (structureChangeKey: string) => void
  * Triggered when a node is selected or deselected.
  * @option 'spawn-node'
  * Triggered when a node is spawned after initialization.
+ * @option 'new-force'
+ * Triggered when a new force is created.
  */
 export type TMissionEvent =
   | 'activity'

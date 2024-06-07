@@ -13,6 +13,7 @@ export default function Hud({
   mission,
   buttons = [],
   onTabSelect = () => {},
+  onTabAdd = null,
 }: THud): JSX.Element | null {
   /* -- COMPUTED -- */
 
@@ -76,6 +77,7 @@ export default function Hud({
           // ]
         }
         onTabSelect={onTabSelect}
+        onTabAdd={onTabAdd}
       />
     </div>
   )
@@ -100,4 +102,11 @@ export type THud = {
    * @default () => {}
    */
   onTabSelect?: (tab: TTabBarTab) => void
+  /**
+   * Callback for when a new tab is requested.
+   * @default null
+   * @note If null, the add button will not even be displayed.
+   * @note The force returned
+   */
+  onTabAdd?: (() => void) | null
 }

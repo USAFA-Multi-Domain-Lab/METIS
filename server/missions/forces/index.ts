@@ -7,17 +7,12 @@ import ServerMissionNode from '../nodes'
  * Class for managing mission prototypes on the client.
  */
 export default class ServerMissionForce extends MissionForce<TServerMissionTypes> {
-  // public constructor(
-  //   mission: ClientMission,
-  //   data: Partial<TCommonMissionForceJson> = MissionForce.DEFAULT_PROPERTIES,
-  //   options: TMissionForceOptions = {},
-  // ) {
-  //   super(mission, data, options)
-  // }
-
   // Implemented
-  protected createRootNode(): ServerMissionNode {
-    return new ServerMissionNode(this, ServerMissionForce.ROOT_NODE_PROPERTIES)
+  public createNode(
+    data: Partial<TMissionNodeJson>,
+    options: TMissionNodeOptions = {},
+  ): ServerMissionNode {
+    return new ServerMissionNode(this, data, options)
   }
 
   // Implemented

@@ -34,23 +34,11 @@ export default class ClientMissionForce extends MissionForce<TClientMissionTypes
   }
 
   // Implemented
-  protected createRootNode(): ClientMissionNode {
-    return new ClientMissionNode(this, ClientMissionForce.ROOT_NODE_PROPERTIES)
-  }
-
-  // Implemented
-  public spawnNode(
+  public createNode(
     data: Partial<TMissionNodeJson>,
     options: TMissionNodeOptions = {},
   ): ClientMissionNode {
-    // Create new node.
-    let node: ClientMissionNode = new ClientMissionNode(this, data, options)
-
-    // Add the node to the node map.
-    this.nodes.push(node)
-
-    // Return the node.
-    return node
+    return new ClientMissionNode(this, data, options)
   }
 
   /**

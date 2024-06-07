@@ -68,7 +68,7 @@ export abstract class MissionForce<
     this.name = data.name ?? MissionForce.DEFAULT_PROPERTIES.name
     this.color = data.color ?? MissionForce.DEFAULT_PROPERTIES.color
     this.nodes = []
-    this.root = this.createRootNode()
+    this.root = this.createNode(MissionForce.ROOT_NODE_PROPERTIES)
 
     // Import nodes into the force.
     this.importNodes(data.nodes ?? MissionForce.DEFAULT_PROPERTIES.nodes, {
@@ -131,15 +131,14 @@ export abstract class MissionForce<
   }
 
   /**
-   * Creates a new node that is the root node of the force. This node is not added to the list
-   * of nodes because it is more of a pseudo-node.
+   * This will create a new node in the force with the given data and options.
+   * Any data or options not provided will be set to default values.
+   * @param data The data for the node.
+   * @param options The options for creating the node.
    */
-  protected abstract createRootNode(): TNode<T>
-
-  // Implemented
-  public abstract spawnNode(
+  protected abstract createNode(
     data: Partial<TMissionNodeJson>,
-    options: TMissionNodeOptions,
+    options?: TMissionNodeOptions,
   ): TNode<T>
 
   // Implemented
@@ -173,7 +172,7 @@ export abstract class MissionForce<
         // Set node as open, if openAll is marked.
         if (openAll) datum.opened = true
 
-        let node = this.spawnNode(datum, {})
+        this.nodes.push(this.createNode(datum, {}))
       }
     } catch (error) {
       if (context === 'react') {
@@ -190,7 +189,7 @@ export abstract class MissionForce<
     return {
       _id: generateHash(),
       name: 'New Force',
-      color: '#000000',
+      color: '#ffffff',
       nodes: [],
     }
   }
@@ -253,16 +252,6 @@ export interface TCommonMissionForce {
    * @returns the JSON for the force.
    */
   toJson: (options?: TForceJsonOptions) => TCommonMissionForceJson
-  /**
-   * This will spawn a new node in the force with the given data and options.
-   * Any data or options not provided will be set to default values.
-   * @param data The data for the node.
-   * @param options The options for creating the node.
-   */
-  spawnNode(
-    data?: Partial<TMissionNodeJson>,
-    options?: TMissionNodeOptions,
-  ): TCommonMissionNode
   /**
    * Gets a node from the given node ID.
    */

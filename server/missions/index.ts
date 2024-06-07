@@ -43,6 +43,8 @@ export default class ServerMission extends Mission<TServerMissionTypes> {
     return new ServerMissionPrototype(this, 'ROOT')
   }
 
+  // todo: Determine if this should be broken into two functions
+  // todo: to handle structure changes.
   // Implemented
   public spawnPrototype(
     _id?: string,

@@ -583,6 +583,9 @@ export default function MissionMap({
         onTabSelect={(tab: TTabBarTab) => {
           selectForce(mission.getForce(tab._id) ?? null)
         }}
+        onTabAdd={() => {
+          mission.createForce()
+        }}
       />
       {overlayJsx}
     </div>

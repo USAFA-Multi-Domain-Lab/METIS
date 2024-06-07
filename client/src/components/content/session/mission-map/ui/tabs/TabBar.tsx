@@ -1,4 +1,6 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import ButtonSvg from 'src/components/content/user-controls/ButtonSvg'
+import { compute } from 'src/toolbox'
 import Tab, { TTab_P } from '.'
 import './TabBar.scss'
 
@@ -8,7 +10,9 @@ import './TabBar.scss'
 export default function TabBar({
   tabs,
   initialIndex = 0,
+  autoSelectNewTabs = true,
   onTabSelect = () => {},
+  onTabAdd = null,
 }: TTabBar_P): JSX.Element | null {
   /* -- STATE -- */
 
@@ -20,6 +24,26 @@ export default function TabBar({
     if (initialIndex < 0 || initialIndex >= tabs.length) return 0
     return initialIndex
   })
+
+  /**
+   * The previous number of tabs.
+   */
+  const prevTabCount = useRef<number>(tabs.length)
+
+  /* -- EFFECTS -- */
+
+  // Selects new tabs, when they appear.
+  useEffect(() => {
+    if (!autoSelectNewTabs) return
+    // If the number of tabs has increased,
+    // select the last tab.
+    if (tabs.length > prevTabCount.current) {
+      let index = tabs.length - 1
+      selectIndex(index)
+      onTabSelect(tabs[index])
+    }
+    prevTabCount.current = tabs.length
+  }, [tabs.length])
 
   /* -- COMPUTED -- */
 
@@ -42,8 +66,29 @@ export default function TabBar({
     />
   ))
 
+  /**
+   * The JSX for the add button.
+   */
+  const addJsx = compute(() => {
+    if (onTabAdd === null) return null
+    return (
+      <ButtonSvg
+        icon={'add'}
+        size={'small'}
+        onClick={() => {
+          onTabAdd()
+        }}
+      />
+    )
+  })
+
   // Render root JSX.
-  return <div className='TabBar'>{tabJsx}</div>
+  return (
+    <div className='TabBar'>
+      {tabJsx}
+      {addJsx}
+    </div>
+  )
 }
 
 /**
@@ -61,11 +106,24 @@ export type TTabBar_P = {
    */
   initialIndex?: number
   /**
+   * Select new tabs as they appear.
+   * @default true
+   * @note This can be used in conjunction with `onTabAdd`
+   * to automatically select new tabs.
+   */
+  autoSelectNewTabs?: boolean
+  /**
    * Callback for when a tab is selected.
    * @param tab The tab that was selected.
    * @default () => {}
    */
   onTabSelect?: (tab: TTabBarTab) => void
+  /**
+   * Callback for when a new tab is requested.
+   * @default null
+   * @note If null, the add button will not even be displayed.
+   */
+  onTabAdd?: (() => void) | null
 }
 
 /**
