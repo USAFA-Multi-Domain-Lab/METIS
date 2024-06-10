@@ -5,6 +5,7 @@ import ClientMissionNode from 'src/missions/nodes'
 import { compute } from 'src/toolbox'
 import { useEventListener } from 'src/toolbox/hooks'
 import { v4 as generateHash } from 'uuid'
+import Mission from '../../../../../../shared/missions'
 import { TWithKey } from '../../../../../../shared/toolbox/objects'
 import { Vector1D, Vector2D } from '../../../../../../shared/toolbox/space'
 import { TButtonSvg } from '../../user-controls/ButtonSvg'
@@ -432,6 +433,21 @@ export default function MissionMap({
     return classList.join(' ')
   })
 
+  /**
+   * Callback for when a request to add a new tab
+   * (force) is made.
+   */
+  const onTabAdd = compute(() => {
+    // If the mission has reached the maximum number
+    // of forces, return null, disabling the add button.
+    if (mission.forces.length >= Mission.MAX_FORCE_COUNT) return null
+
+    // Return default callback.
+    return () => {
+      mission.createForce()
+    }
+  })
+
   /* -- render -- */
 
   /**
@@ -583,9 +599,7 @@ export default function MissionMap({
         onTabSelect={(tab: TTabBarTab) => {
           selectForce(mission.getForce(tab._id) ?? null)
         }}
-        onTabAdd={() => {
-          mission.createForce()
-        }}
+        onTabAdd={onTabAdd}
       />
       {overlayJsx}
     </div>

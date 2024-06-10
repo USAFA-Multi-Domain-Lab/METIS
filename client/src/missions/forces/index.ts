@@ -57,6 +57,7 @@ export default class ClientMissionForce extends MissionForce<TClientMissionTypes
             {
               name: prototype._id.substring(0, 8),
               structureKey: prototype._id,
+              color: this.color,
             },
             { openAll: true },
           ),

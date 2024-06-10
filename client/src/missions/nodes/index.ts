@@ -602,6 +602,7 @@ export default class ClientMissionNode extends MissionNode<TClientMissionTypes> 
       deleteMethod: ENodeDeleteMethod.DeleteNodeAndChildren,
     },
   ): void {
+    throw Error('Not implemented')
     //     let calledByParentDelete: boolean = options.calledByParentDelete === true
     //     let deleteMethod: ENodeDeleteMethod = options.deleteMethod
     //       ? options.deleteMethod

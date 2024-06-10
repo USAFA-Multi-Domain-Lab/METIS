@@ -8,6 +8,7 @@ import Mission, {
   TMissionOptions,
 } from '../../../shared/missions'
 import {
+  MissionForce,
   TCommonMissionForceJson,
   TMissionForceOptions,
 } from '../../../shared/missions/forces'
@@ -835,8 +836,38 @@ export default class ClientMission
    * @returns The newly created force.
    */
   public createForce(options: TMissionForceOptions = {}): ClientMissionForce {
-    // Create a new force.
-    let force: ClientMissionForce = new ClientMissionForce(this, {}, options)
+    // Throw an error if the max number of forces
+    // has already been reached.
+    if (this.forces.length >= Mission.MAX_FORCE_COUNT) {
+      throw new Error('Max number of forces already reached.')
+    }
+
+    // Organize existing force data for algorithm.
+    let existingForceNames: string[] = this.forces.map(({ name }) => name)
+    let existingForceColors: string[] = this.forces.map(({ color }) => color)
+
+    // Predefine force.
+    let force: ClientMissionForce | null = null
+
+    // Loop through default forces, and find
+    // the next available default force.
+    for (let defaultForce of MissionForce.DEFAULT_FORCES) {
+      if (
+        existingForceNames.includes(defaultForce.name) ||
+        existingForceColors.includes(defaultForce.color)
+      ) {
+        continue
+      }
+
+      // Create a new force.
+      force = new ClientMissionForce(this, defaultForce, options)
+      // Break the loop.
+      break
+    }
+
+    // This theoretically shouldn't happen, but if
+    // no force has been created yet, create one here.
+    if (!force) force = new ClientMissionForce(this, {}, options)
 
     // Add the force to the mission.
     this.forces.push(force)

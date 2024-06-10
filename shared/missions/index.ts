@@ -194,6 +194,11 @@ export default abstract class Mission<
   }
 
   /**
+   * The maximum number of forces allowed in a mission.
+   */
+  public static readonly MAX_FORCE_COUNT: number = 8
+
+  /**
    * The default properties for a Mission object.
    */
   public static get DEFAULT_PROPERTIES(): Required<TCommonMissionJson> {

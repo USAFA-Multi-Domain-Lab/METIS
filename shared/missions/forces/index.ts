@@ -211,6 +211,60 @@ export abstract class MissionForce<
     actions: [],
     opened: true,
   }
+
+  /**
+   * Default forces for a mission.
+   */
+  public static readonly DEFAULT_FORCES: TCommonMissionForceJson[] = [
+    {
+      _id: 'friendly-force',
+      name: 'Friendly Force',
+      color: '#52b1ff',
+      nodes: [],
+    },
+    {
+      _id: 'enemy-force',
+      name: 'Enemy Force',
+      color: '#f1696f',
+      nodes: [],
+    },
+    {
+      _id: 'guerrilla-force',
+      name: 'Guerrilla Force',
+      color: '#f7d154',
+      nodes: [],
+    },
+    {
+      _id: 'local-national-force',
+      name: 'Local National Force',
+      color: '#7ed321',
+      nodes: [],
+    },
+    {
+      _id: 'white-cell',
+      name: 'White Cell',
+      color: '#ffffff',
+      nodes: [],
+    },
+    {
+      _id: 'non-state-actors',
+      name: 'Non-State Actors',
+      color: '#ce9563',
+      nodes: [],
+    },
+    {
+      _id: 'coalition-force',
+      name: 'Coalition Force',
+      color: '#b36ae2',
+      nodes: [],
+    },
+    {
+      _id: 'civilian-industry',
+      name: 'Civilian Industry',
+      color: '#ff66cc',
+      nodes: [],
+    },
+  ]
 }
 
 /* -- TYPES -- */
