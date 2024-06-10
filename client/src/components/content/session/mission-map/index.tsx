@@ -146,13 +146,6 @@ export default function MissionMap({
   )
 
   /**
-   * The currently selected node in the mission.
-   */
-  const [selectedNode, setSelectedNode] = useState<ClientMissionNode | null>(
-    mission.selectedNode,
-  )
-
-  /**
    * The currently selected force.
    * @note If null, the master tab is selected.
    */
@@ -223,12 +216,6 @@ export default function MissionMap({
         panSmoothly(destination)
       }
     }
-  })
-
-  // Create an event listener to handle when a node
-  // has been selected/deselected.
-  useEventListener(mission, 'node-selection', () => {
-    setSelectedNode(mission.selectedNode)
   })
 
   /* -- functions -- */

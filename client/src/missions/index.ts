@@ -77,6 +77,17 @@ export default class ClientMission
   private listeners: Array<[TMissionEvent, () => void]>
 
   /**
+   * The currently selected force in the mission.
+   */
+  private _selectedForce: ClientMissionForce | null = null
+  /**
+   * The currently selected force in the mission.
+   */
+  public get selectedForce(): ClientMissionForce | null {
+    return this._selectedForce
+  }
+
+  /**
    * The currently selected node in the mission.
    * @note Used in the form for editing.
    */
@@ -762,6 +773,19 @@ export default class ClientMission
   }
 
   /**
+   * Selects a force in the mission.
+   * @note Deselects the currently selected node in the mission.
+   */
+  public selectForce(force: ClientMissionForce): void {
+    // Deslect node.
+    this.deselectNode()
+    // Select force.
+    this._selectedForce = force
+    // Emit event.
+    this.emitEvent('force-selection')
+  }
+
+  /**
    * Selects a node in the mission. Used in the form for editing.
    */
   public selectNode(node: ClientMissionNode): void {
@@ -1151,5 +1175,6 @@ export type TStructureChangeListener = (structureChangeKey: string) => void
 export type TMissionEvent =
   | 'activity'
   | 'structure-change'
+  | 'force-selection'
   | 'node-selection'
   | 'spawn-node'
