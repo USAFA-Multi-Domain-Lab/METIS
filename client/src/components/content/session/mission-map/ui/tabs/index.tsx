@@ -29,13 +29,19 @@ TTab_P): JSX.Element | null {
   })
 
   /**
+   * The root style for the tab.
+   */
+  const rootStyle = compute((): React.CSSProperties => {
+    return {
+      borderBottomColor: selected ? color : undefined,
+    }
+  })
+
+  /**
    * The inline style for the text element.
    */
   const textStyle = compute((): React.CSSProperties => {
-    return {
-      color: color,
-      borderColor: selected ? color : 'transparent',
-    }
+    return { color }
   })
 
   /* -- FUNCTIONS -- */
@@ -44,7 +50,7 @@ TTab_P): JSX.Element | null {
 
   // Render root JSX.
   return (
-    <div className={rootClass} onClick={onClick}>
+    <div className={rootClass} style={rootStyle} onClick={onClick}>
       <div className='Text' style={textStyle}>
         {text}
       </div>
