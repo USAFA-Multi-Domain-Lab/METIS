@@ -46,73 +46,10 @@
       top: 0;
     }
 
-    // todo: Review if this is needed.
-    > .Title {
-      // Position the title at the top
-      // center of the HUD.
-      @include center-origin-x;
-      left: 50%;
-      top: 0;
-
-      user-select: none;
-      box-sizing: border-box;
-      opacity: 0.95;
-      overflow: hidden;
-      border: 2px solid $color-main;
-      border-top: none;
-      width: fit-content;
-      max-width: 65%;
-      padding: 0.75em;
-      background-color: $background-alt1;
-      font-size: 1em;
-      font-weight: bold;
-      line-height: 1em;
-      letter-spacing: 0.04em;
-      white-space: nowrap;
-      text-overflow: ellipsis;
-    }
-
     .MoreInformation {
       @include center-origin-x;
       top: 5.6em;
       right: 0;
-    }
-
-    // todo: Review if this is needed.
-    > .ButtonSvgPanel {
-      // Remove top rule set in base ButtonSVGPanel
-      // styles.
-      top: unset;
-
-      transition: 250ms background-color;
-      border: 2px solid $color-main;
-      border-bottom: none;
-      border-radius: 0;
-      padding: 0.5em 0;
-      box-shadow: $box-shadow-alt6;
-      overflow: hidden;
-      white-space: nowrap;
-      max-width: 85%;
-
-      // Position the SVG panel at the bottom
-      // center of the HUD.
-      @include center-origin-x;
-      left: 50%;
-      bottom: 0;
-
-      &.map-is-zoomed-in {
-        .ButtonSvg.zoom-in {
-          pointer-events: none;
-          opacity: 0.5;
-        }
-      }
-
-      &.map-is-zoomed-out {
-        .ButtonSvg.zoom-out {
-          pointer-events: none;
-          opacity: 0.5;
-        }
-      }
     }
   }
 }
