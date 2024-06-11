@@ -239,8 +239,9 @@ export default function MissionPage({
         if (!mission.creationMode) {
           activeNodeButtons.push(
             availableNodeButtons.deselect,
-            availableNodeButtons.add,
-            availableNodeButtons.remove,
+            // todo: These should be used in prototypes.
+            // availableNodeButtons.add,
+            // availableNodeButtons.remove,
           )
         }
         // Else, add a cancel button for adding a node.

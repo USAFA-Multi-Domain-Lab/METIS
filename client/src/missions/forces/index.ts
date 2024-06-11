@@ -51,7 +51,6 @@ export default class ClientMissionForce extends MissionForce<TClientMissionTypes
     for (let prototype of this.mission.prototypes) {
       let node = this.getNodeFromPrototype(prototype._id)
       if (!node) {
-        // todo: Determine if openAll should always be true.
         this.nodes.push(
           this.createNode(
             {
