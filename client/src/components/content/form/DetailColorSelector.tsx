@@ -1,0 +1,178 @@
+import { useState } from 'react'
+import { compute } from 'src/toolbox'
+import { TDetail_P } from '.'
+import { ButtonText, TButtonText } from '../user-controls/ButtonText'
+import './DetailColorSelector.scss'
+
+/**
+ * This will render a detail for
+ * a form, with a label and a grid
+ * of color options for selecting
+ * a color.
+ */
+export function DetailColorSelector({
+  fieldType,
+  label,
+  colors,
+  stateValue,
+  setState,
+  // Optional Properties
+  buttons = [],
+  isExpanded = false,
+  uniqueLabelClassName = '',
+  uniqueFieldClassName = '',
+  disabled = false,
+}: TDetailColorSelector_P): JSX.Element {
+  /* -- STATE -- */
+  const [expanded, setExpanded] = useState<boolean>(isExpanded)
+
+  /* -- COMPUTED -- */
+
+  /**
+   * The class name for the detail.
+   */
+  const rootClassName: string = compute(() => {
+    // Default class names
+    let classList: string[] = ['Detail', 'DetailColorSelector']
+
+    // If disabled is true then add the
+    // disabled class name.
+    if (disabled) {
+      classList.push('Disabled')
+    }
+
+    // Return the list of class names as one string.
+    return classList.join(' ')
+  })
+  /**
+   * The class name for the field.
+   */
+  const fieldClassName: string = compute(() => {
+    // Default class names
+    let classList: string[] = ['Field', 'FieldColorSelector']
+
+    // If a unique class name is passed
+    // then add it to the list of class names.
+    if (uniqueFieldClassName) {
+      classList.push(uniqueFieldClassName)
+    }
+
+    // If the detail is expanded then add
+    // the expanded class name
+    if (expanded) {
+      classList.push('IsExpanded')
+    }
+
+    // Return the list of class names as one string.
+    return classList.join(' ')
+  })
+  /**
+   * The class name for all colors.
+   */
+  const allColorsClassName: string = compute(() => {
+    // Default class names
+    let classList: string[] = ['AllColors']
+
+    // If the detail is collapsed
+    // then hide the options.
+    if (!expanded) {
+      classList.push('Hidden')
+    }
+
+    // Return the list of class names as one string.
+    return classList.join(' ')
+  })
+  /**
+   * The class name for the label.
+   */
+  const labelClassName: string = compute(() => {
+    // Default class names
+    let classList: string[] = ['Label']
+
+    // If a unique class name is passed
+    // then add it to the list of class names.
+    if (uniqueLabelClassName) {
+      classList.push(uniqueLabelClassName)
+    }
+
+    // Return the list of class names as one string.
+    return classList.join(' ')
+  })
+  /**
+   * The class name for the optional text.
+   */
+  const optionalClassName: string = compute(() => {
+    return fieldType === 'optional' ? 'Optional' : 'Optional Hidden'
+  })
+
+  /* -- RENDER -- */
+  return (
+    <div className={rootClassName}>
+      <div className='TitleContainer'>
+        <div className={labelClassName}>{label}:</div>
+        <div className={optionalClassName}>optional</div>
+      </div>
+      <div className={fieldClassName}>
+        <div
+          className='DisplayColorGrid'
+          onClick={() => setExpanded(!expanded)}
+        >
+          <div className='Text'>Choose a color</div>
+          <div className='Indicator'>v</div>
+        </div>
+        <div className={allColorsClassName}>
+          {colors.map((color: string, index: number) => {
+            return (
+              <div
+                className={stateValue === color ? 'Color Selected' : 'Color'}
+                style={{ backgroundColor: color }}
+                key={`color_${color}_${index}`}
+                onClick={() => setState(color)}
+              ></div>
+            )
+          })}
+        </div>
+        <div className='ColorInfo'>
+          <div className='SelectedColorText'>
+            Selected color:{' '}
+            <span
+              className='SelectedColorBox'
+              style={{ backgroundColor: stateValue }}
+            ></span>
+          </div>
+          <div className='Buttons'>
+            {buttons.map((button: TButtonText, index: number) => (
+              <ButtonText key={`button_${button.text}_${index}`} {...button} />
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/* ---------------------------- TYPES FOR DETAIL COLOR SELECTOR ---------------------------- */
+
+/**
+ * Props for the DetailColorSelector component.
+ */
+type TDetailColorSelector_P = TDetail_P<string> & {
+  /**
+   * The list of colors to choose from.
+   */
+  colors: string[]
+  /**
+   * Buttons to render at the bottom of the detail.
+   * @default []
+   */
+  buttons?: TButtonText[]
+  /**
+   * The boolean that determines if the detail is expanded.
+   * @default false
+   */
+  isExpanded?: boolean
+  /**
+   * @note This is disabled for drop down details.
+   */
+  errorMessage?: undefined
+}

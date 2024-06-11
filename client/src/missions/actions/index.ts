@@ -1,8 +1,10 @@
 import ClientMission from '..'
 import MissionAction from '../../../../shared/missions/actions'
-import { TCommonEffectJson } from '../../../../shared/missions/effects'
+import { TCommonExternalEffectJson } from '../../../../shared/missions/effects/external'
+import { TCommonInternalEffectJson } from '../../../../shared/missions/effects/internal'
+import { ClientExternalEffect } from '../effects/external'
+import { ClientInternalEffect } from '../effects/internal'
 import ClientMissionNode from '../nodes'
-import { ClientEffect } from '../effects'
 
 /**
  * Class representing a mission action on the client-side.
@@ -10,11 +12,26 @@ import { ClientEffect } from '../effects'
 export default class ClientMissionAction extends MissionAction<
   ClientMission,
   ClientMissionNode,
-  ClientEffect
+  ClientExternalEffect,
+  ClientInternalEffect
 > {
-  public parseEffects(data: TCommonEffectJson[]): ClientEffect[] {
-    return data.map((datum: TCommonEffectJson) => new ClientEffect(this, datum))
+  // Implemented
+  public parseExternalEffects(
+    data: TCommonExternalEffectJson[],
+  ): ClientExternalEffect[] {
+    return data.map(
+      (datum: TCommonExternalEffectJson) =>
+        new ClientExternalEffect(this, datum),
+    )
+  }
+
+  // Implemented
+  public parseInternalEffects(
+    data: TCommonInternalEffectJson[],
+  ): ClientInternalEffect[] {
+    return data.map(
+      (datum: TCommonInternalEffectJson) =>
+        new ClientInternalEffect(this, datum),
+    )
   }
 }
-
-/* ------------------------------ CLIENT ACTION TYPES ------------------------------ */

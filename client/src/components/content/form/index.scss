@@ -1,0 +1,64 @@
+@import 'src/assets/styles/config.scss';
+@import '/src/assets/styles/util.scss';
+
+@mixin dimensions() {
+  box-sizing: border-box;
+  margin: 8px 0 0;
+  border-top: 2px solid $color-main;
+  border-bottom: 2px solid $color-main;
+  width: 100%;
+  padding: 11px 10px;
+}
+
+.Detail {
+  margin: 20px 8% 0;
+  min-width: 225px;
+
+  .FieldErrorMessage {
+    font-size: 0.7em;
+    color: $color-error-alt;
+    margin-top: 5px;
+
+    &.hide {
+      @include hide();
+    }
+  }
+
+  .TitleContainer {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    margin: 11px 0 0;
+
+    .Label {
+      user-select: none;
+      width: 100%;
+      font-size: 0.78em;
+
+      &.Error {
+        color: $color-error-alt;
+      }
+    }
+
+    .Optional {
+      font-size: 0.69em;
+      font-style: italic;
+      color: $color-pointer-mark;
+    }
+  }
+
+  .Field {
+    @include dimensions();
+    color: $color-accent-light;
+    font-size: 14px;
+
+    &.Error {
+      border-top: 2px solid $color-error-alt1;
+      border-bottom: 2px solid $color-error-alt1;
+    }
+
+    &::placeholder {
+      color: $color-main;
+    }
+  }
+}

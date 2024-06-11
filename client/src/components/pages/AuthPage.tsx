@@ -3,7 +3,7 @@ import { useGlobalContext } from 'src/context'
 import ClientLogin from 'src/logins'
 import { compute } from 'src/toolbox'
 import { TPage_P } from '.'
-import { DetailString } from '../content/form/Form'
+import { DetailString } from '../content/form/DetailString'
 import Branding from '../content/general-layout/Branding'
 import './AuthPage.scss'
 

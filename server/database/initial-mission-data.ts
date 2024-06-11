@@ -76,7 +76,8 @@ export let demoMissionData: TCommonMissionJson = {
                 '<p>Enter your successful post-execution message here.</p>',
               postExecutionFailureText:
                 '<p>Enter your failed post-execution message here.</p>',
-              effects: [],
+              internalEffects: [],
+              externalEffects: [],
             },
           ],
         },
@@ -266,7 +267,8 @@ export let demoMissionData: TCommonMissionJson = {
               postExecutionSuccessText:
                 "<p>*** RUNNING COMPILE SCRIPT. . . . . . [] *** SYS MESSAGE: Compiling list of Xi’an Satellite Control Center subordinate ground control stations (GCS). 系统消息：正在整理西安卫星控制中心下属地面控制站（GCS）列表。 Xìtǒng xiāoxī: Zhèngzài zhěnglǐ xī'ān wèixīng kòngzhì zhōngxīn xiàshǔ dìmiàn kòngzhì zhàn (GCS) lièbiǎo.</p>",
               postExecutionFailureText: '<p>Error: 1025845</p>',
-              effects: [],
+              internalEffects: [],
+              externalEffects: [],
             },
           ],
         },
@@ -290,7 +292,8 @@ export let demoMissionData: TCommonMissionJson = {
               postExecutionSuccessText:
                 '<p>*** RUNNING COMPILE SCRIPT. . . . . . [] *** SYS MESSAGE: List of available access points has been generated.</p>',
               postExecutionFailureText: '<p>Error: 1025845</p>',
-              effects: [],
+              internalEffects: [],
+              externalEffects: [],
             },
           ],
         },
@@ -314,7 +317,8 @@ export let demoMissionData: TCommonMissionJson = {
                 '<p>/// BRUTE FORCE CRACK SUCCESSFUL /// SYS MESSAGE: List compiled of currently connected terrestrial based assets.</p>',
               postExecutionFailureText:
                 '<p>Error: 1025845 *** NETWORK ACCESS BLOCKED ***</p>',
-              effects: [],
+              internalEffects: [],
+              externalEffects: [],
             },
           ],
         },
@@ -338,7 +342,8 @@ export let demoMissionData: TCommonMissionJson = {
                 '<p>/// BRUTE FORCE CRACK SUCCESSFUL /// SYS MESSAGE: List compiled of currently connected terrestrial based assets.</p>',
               postExecutionFailureText:
                 '<p>Error: 1025845 *** NETWORK ACCESS BLOCKED ***</p>',
-              effects: [],
+              internalEffects: [],
+              externalEffects: [],
             },
           ],
         },
@@ -362,7 +367,8 @@ export let demoMissionData: TCommonMissionJson = {
                 '<p>/// BRUTE FORCE CRACK SUCCESSFUL /// SYS MESSAGE: List compiled of currently connected terrestrial based assets.</p>',
               postExecutionFailureText:
                 '<p>Error: 1025845 *** NETWORK ACCESS BLOCKED ***</p>',
-              effects: [],
+              internalEffects: [],
+              externalEffects: [],
             },
           ],
         },
@@ -386,7 +392,8 @@ export let demoMissionData: TCommonMissionJson = {
                 '<p>/// BRUTE FORCE CRACK SUCCESSFUL /// SYS MESSAGE: List compiled of currently connected terrestrial based assets.</p>',
               postExecutionFailureText:
                 '<p>Error: 1025845 *** NETWORK ACCESS BLOCKED ***</p>',
-              effects: [],
+              internalEffects: [],
+              externalEffects: [],
             },
           ],
         },
@@ -411,7 +418,8 @@ export let demoMissionData: TCommonMissionJson = {
                 '<p>/// ACCESS SCRIPT SUCCESSFUL /// SYS MESSAGE: List compiled of currently connected terrestrial based assets. /// 访问脚本成功 /// 系统消息：当前连接的地面资产的列表。 /// Fǎngwèn jiǎoběn chénggōng/// xìtǒng xiāoxī: Dāngqián liánjiē dì dìmiàn zīchǎn dì lièbiǎo.</p>',
               postExecutionFailureText:
                 '<p>Error: 1025845 *** NETWORK ACCESS BLOCKED ***</p>',
-              effects: [],
+              internalEffects: [],
+              externalEffects: [],
             },
           ],
         },
@@ -435,7 +443,8 @@ export let demoMissionData: TCommonMissionJson = {
                 '<p>/// BRUTE FORCE CRACK SUCCESSFUL /// SYS MESSAGE: List compiled of currently connected terrestrial based assets.</p>',
               postExecutionFailureText:
                 '<p>Error: 1025845 *** NETWORK ACCESS BLOCKED ***</p>',
-              effects: [],
+              internalEffects: [],
+              externalEffects: [],
             },
           ],
         },
@@ -460,7 +469,8 @@ export let demoMissionData: TCommonMissionJson = {
                 '<p>Enter your successful post-execution message here.</p>',
               postExecutionFailureText:
                 '<p>Enter your failed post-execution message here.</p>',
-              effects: [],
+              internalEffects: [],
+              externalEffects: [],
             },
           ],
         },
@@ -485,7 +495,8 @@ export let demoMissionData: TCommonMissionJson = {
                 '<p>Enter your successful post-execution message here.</p>',
               postExecutionFailureText:
                 '<p>Enter your failed post-execution message here.</p>',
-              effects: [],
+              internalEffects: [],
+              externalEffects: [],
             },
           ],
         },
@@ -510,7 +521,8 @@ export let demoMissionData: TCommonMissionJson = {
                 '<p>Currently Connected: Chengdu GJ-2 (Wing Loong 2) - SPEED: 320 km/h - ALTITUDE: 28k MSL - LOCATION: 43° 30.1647′ N, 141° 05.6799′ E 目前连接：成都 GJ-2（翼龙 2） - 速度：320 km/h - 海拔：28k MSL - 位置：43°30.1647′N，141°05.6799′E Mùqián liánjiē: Chéngdū GJ-2(yì lóng 2) - sùdù:320 Km/h - hǎibá:28K MSL - wèizhì:43°30.1647′N,141°05.6799′E</p>',
               postExecutionFailureText:
                 '<p>Error: 10295456 *** ACCESS BLOCKED ***</p>',
-              effects: [],
+              internalEffects: [],
+              externalEffects: [],
             },
           ],
         },
@@ -535,7 +547,8 @@ export let demoMissionData: TCommonMissionJson = {
                 '<p>/// Access gained to UAV on-board systems. /// /// 获得无人机机载系统的访问权限。 /// /// Huòdé wú rén jī jī zǎi xìtǒng de fǎngwèn quánxiàn. ///</p>',
               postExecutionFailureText:
                 '<p>Error: 10295456 *** Air Vehicle has rejected command. ***</p>',
-              effects: [],
+              internalEffects: [],
+              externalEffects: [],
             },
           ],
         },
@@ -559,7 +572,8 @@ export let demoMissionData: TCommonMissionJson = {
                 '<p>/// Commanded Speed: 0 km/h (Confirmed) ///</p>',
               postExecutionFailureText:
                 '<p>Error: 10295456 *** Air Vehicle has rejected command. ***</p>',
-              effects: [],
+              internalEffects: [],
+              externalEffects: [],
             },
             {
               name: 'New Action',
@@ -571,7 +585,8 @@ export let demoMissionData: TCommonMissionJson = {
                 '<p>Enter your successful post-execution message here.</p>',
               postExecutionFailureText:
                 '<p>Enter your failed post-execution message here.</p>',
-              effects: [],
+              internalEffects: [],
+              externalEffects: [],
             },
           ],
         },
@@ -595,7 +610,8 @@ export let demoMissionData: TCommonMissionJson = {
                 '<p>/// Air Vehicle Controls *LOCKED*, Executing Loss-of-Link Procedures. (Confirmed) ///</p>',
               postExecutionFailureText:
                 '<p>Error: 10295456 *** Air Vehicle has rejected command. ***</p>',
-              effects: [],
+              internalEffects: [],
+              externalEffects: [],
             },
             {
               name: 'New Action',
@@ -607,7 +623,8 @@ export let demoMissionData: TCommonMissionJson = {
                 '<p>Enter your successful post-execution message here.</p>',
               postExecutionFailureText:
                 '<p>Enter your failed post-execution message here.</p>',
-              effects: [],
+              internalEffects: [],
+              externalEffects: [],
             },
           ],
         },
@@ -631,7 +648,8 @@ export let demoMissionData: TCommonMissionJson = {
                 '<p>/// DESTRUCTION WARNING /// SYS MESSAGE: Forcing loss-of-link protocol will result in UAV self-destruction. *** CONFIRM ACTION *** /// 破坏警告 /// 系统消息：强制使用链路丢失协议将导致无人机自毁。 *** 确认操作 *** /// Pòhuài jǐnggào/// xìtǒng xiāoxī: Qiángzhì shǐyòng liàn lù diūshī xiéyì jiāng dǎozhì wú rén jī zì huǐ. *** Quèrèn cāozuò***</p>',
               postExecutionFailureText:
                 '<p>Error: 10295456 *** Air Vehicle has rejected command. ***</p>',
-              effects: [],
+              internalEffects: [],
+              externalEffects: [],
             },
           ],
         },
@@ -655,7 +673,8 @@ export let demoMissionData: TCommonMissionJson = {
                 '<p>/// UAV HAS RECIEVED SELF-DESTRUCTION COMMAND /// SYS MESSAGE: Connection to UAV (Chengdu GJ-2) has terminated. /// 无人机已收到自毁命令 /// 系统消息：与无人机（成都 GJ-2）的连接已终止。 /// Wú rén jī yǐ shōu dào zì huǐ mìnglìng/// xìtǒng xiāoxī: Yǔ wú rén jī (chéngdū GJ-2) de liánjiē yǐ zhōngzhǐ.</p>',
               postExecutionFailureText:
                 '<p>Error: 10295456 *** Air Vehicle has rejected command. ***</p>',
-              effects: [],
+              internalEffects: [],
+              externalEffects: [],
             },
           ],
         },

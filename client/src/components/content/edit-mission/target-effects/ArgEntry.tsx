@@ -1,16 +1,14 @@
 import { useEffect, useState } from 'react'
-import { ClientEffect } from 'src/missions/effects'
+import { ClientExternalEffect } from 'src/missions/effects/external'
 import { compute } from 'src/toolbox'
 import { usePostInitEffect } from 'src/toolbox/hooks'
 import { ReactSetter } from 'src/toolbox/types'
 import { TTargetArg } from '../../../../../../shared/target-environments/targets'
-import {
-  DetailDropDown,
-  DetailLargeString,
-  DetailNumber,
-  DetailString,
-  DetailToggle,
-} from '../../form/Form'
+import { DetailDropDown } from '../../form/DetailDropDown'
+import { DetailLargeString } from '../../form/DetailLargeString'
+import { DetailNumber } from '../../form/DetailNumber'
+import { DetailString } from '../../form/DetailString'
+import { DetailToggle } from '../../form/DetailToggle'
 import './ArgEntry.scss'
 
 /**
@@ -92,6 +90,32 @@ export default function ArgEntry({
     effectArgs[arg._id] ?? false,
   )
 
+  /* -- FUNCTIONS -- */
+
+  /**
+   * Verifies if the dependency argument is in a default state.
+   * @param dependencyArg The dependency argument to validate.
+   * @returns `True` if the dependency argument is in a default
+   * state; otherwise, false.
+   */
+  const verifyDefaultState = (dependencyArg: TTargetArg): boolean => {
+    let isDefaultState: boolean = dependencyArg.required
+      ? effectArgs[dependencyArg._id] === dependencyArg.default ||
+        effectArgs[dependencyArg._id] === defaultStringValue ||
+        effectArgs[dependencyArg._id] === defaultLargeStringValue ||
+        effectArgs[dependencyArg._id] === null ||
+        effectArgs[dependencyArg._id] === undefined ||
+        dependencyArg.display === false
+      : effectArgs[dependencyArg._id] === defaultStringValue ||
+        effectArgs[dependencyArg._id] === defaultLargeStringValue ||
+        effectArgs[dependencyArg._id] === false ||
+        effectArgs[dependencyArg._id] === null ||
+        effectArgs[dependencyArg._id] === undefined ||
+        dependencyArg.display === false
+
+    return isDefaultState
+  }
+
   /* -- COMPUTED -- */
   /**
    * Boolean to determine if the argument should be displayed.
@@ -111,24 +135,15 @@ export default function ArgEntry({
         )
 
         if (dependencyArg) {
-          // If the dependency argument is in a default state
-          // then hide the argument and remove it from the
-          // effect's arguments stored in the state.
-          if (
-            effectArgs[dependencyArg._id] === defaultStringValue ||
-            effectArgs[dependencyArg._id] === defaultLargeStringValue ||
-            effectArgs[dependencyArg._id] === false ||
-            effectArgs[dependencyArg._id] === null ||
-            effectArgs[dependencyArg._id] === undefined ||
-            dependencyArg.display === false
-          ) {
-            // Hide the argument.
-            arg.display = false
-          }
-          // Otherwise, display the argument and set the
-          // argument's value to the default value.
-          else {
+          // The argument should be displayed if the dependency
+          // argument is not in a default state.
+          let displayArg: boolean = !verifyDefaultState(dependencyArg)
+
+          // Update the argument's display value.
+          if (displayArg) {
             arg.display = true
+          } else {
+            arg.display = false
           }
         }
       })
@@ -225,7 +240,7 @@ export default function ArgEntry({
     booleanValue,
   ])
 
-  /* -- FUNCTIONS -- */
+  /* -- FUNCTIONS (CONTINUED) -- */
 
   /**
    * Initializes the argument within the effect's arguments.
@@ -328,25 +343,14 @@ export default function ArgEntry({
           (arg: TTargetArg) => arg._id === dependency,
         )
 
-        // If the dependency argument is found...
         if (dependencyArg) {
-          // ...and the dependency argument is not in a default
-          // state, then the dependency has been met.
-          // *** Note: An argument can only be displayed and set
-          // *** if all of its dependencies are met (i.e., not in
-          // *** a default state).
-          if (
-            effectArgs[dependencyArg._id] !== defaultStringValue ||
-            effectArgs[dependencyArg._id] !== defaultLargeStringValue ||
-            effectArgs[dependencyArg._id] !== false ||
-            effectArgs[dependencyArg._id] !== null ||
-            effectArgs[dependencyArg._id] !== undefined ||
-            dependencyArg.display
-          ) {
+          // The dependency is met if the dependency argument
+          // is not in a default state.
+          let dependencyMet: boolean = !verifyDefaultState(dependencyArg)
+
+          if (dependencyMet) {
             allDependenciesMet.push(true)
-          }
-          // Otherwise, the dependency has not been met.
-          else {
+          } else {
             allDependenciesMet.push(false)
           }
         }
@@ -544,7 +548,7 @@ export default function ArgEntry({
           stateValue={largeStringValue}
           setState={setLargeStringValue}
           defaultValue={arg.default}
-          elementBoundary='.BorderBox'
+          elementBoundary='.SidePanelSection'
         />
       </div>
     )
@@ -590,7 +594,7 @@ export type TArgGroupings_P = {
   /**
    * The effect's target.
    */
-  target: ClientEffect['target']
+  target: ClientExternalEffect['target']
   /**
    * The argument to render.
    */
@@ -598,10 +602,10 @@ export type TArgGroupings_P = {
   /**
    * The arguments that the effect uses to modify the target.
    */
-  effectArgs: ClientEffect['args']
+  effectArgs: ClientExternalEffect['args']
   /**
    * Function that updates the value of the effect's arguments
    * stored in the state.
    */
-  setEffectArgs: ReactSetter<ClientEffect['args']>
+  setEffectArgs: ReactSetter<ClientExternalEffect['args']>
 }

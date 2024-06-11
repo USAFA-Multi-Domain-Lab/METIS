@@ -1,0 +1,29 @@
+@import 'src/assets/styles/config.scss';
+@import '../form/index.scss';
+
+.Detail.DetailLocked {
+  .Field {
+    display: grid;
+    align-items: center;
+    grid-template-columns: 1fr auto;
+
+    .Text {
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      overflow: hidden;
+    }
+
+    .Lock {
+      user-select: none;
+      cursor: help;
+
+      background: url('/assets/images/icons/lock.svg');
+      background-repeat: no-repeat;
+      background-size: 100%;
+      background-position: center;
+      width: 1em;
+      height: 1em;
+      margin-left: 0.15em;
+    }
+  }
+}

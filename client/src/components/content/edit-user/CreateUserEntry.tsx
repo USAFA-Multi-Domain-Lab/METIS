@@ -6,7 +6,9 @@ import { ReactSetter } from 'src/toolbox/types'
 import ClientUser from 'src/users'
 import { TLogin } from '../../../../../shared/logins'
 import UserAccess from '../../../../../shared/users/accesses'
-import { DetailDropDown, DetailString, DetailToggle } from '../form/Form'
+import { DetailDropDown } from '../form/DetailDropDown'
+import { DetailString } from '../form/DetailString'
+import { DetailToggle } from '../form/DetailToggle'
 import './CreateUserEntry.scss'
 
 /**

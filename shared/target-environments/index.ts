@@ -1,4 +1,4 @@
-import { TCommonTarget, TCommonTargetJson } from './targets'
+import Target, { TCommonTarget, TCommonTargetJson } from './targets'
 
 /**
  * This is the environment in which the target(s) exist.
@@ -66,14 +66,23 @@ export default abstract class TargetEnvironment<TTarget extends TCommonTarget>
   /**
    * Default properties set when creating a new TargetEnvironment object.
    */
-  public static get DEFAULT_PROPERTIES(): TCommonTargetEnvJson {
-    return {
-      _id: 'metis-target-env-default',
-      name: 'Select a target environment',
-      description: 'This is a default target environment.',
-      version: '0.1',
-      targets: [],
-    }
+  public static DEFAULT_PROPERTIES: TCommonTargetEnvJson = {
+    _id: 'metis-target-env-default',
+    name: 'Select a target environment',
+    description: 'This is a default target environment.',
+    version: '0.1',
+    targets: [],
+  }
+
+  /**
+   * The internal target environment used for creating internal effects.
+   */
+  public static INTERNAL_TARGET_ENV: TCommonTargetEnvJson = {
+    _id: 'metis',
+    name: 'METIS',
+    description: '',
+    version: '0.1',
+    targets: Target.INTERNAL_TARGETS,
   }
 }
 

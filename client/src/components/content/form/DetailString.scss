@@ -1,0 +1,24 @@
+@import '../form/index.scss';
+
+.Detail {
+  .InputContainer {
+    display: grid;
+    grid-template-columns: auto;
+
+    &.Password {
+      grid-template-columns: auto 55px;
+    }
+  }
+
+  .TogglePasswordButton {
+    @include dimensions();
+    display: grid;
+    justify-content: flex-end;
+    cursor: pointer;
+
+    &:focus {
+      text-decoration: underline;
+      font-style: italic;
+    }
+  }
+}

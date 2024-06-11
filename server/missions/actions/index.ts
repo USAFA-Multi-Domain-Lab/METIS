@@ -2,11 +2,13 @@ import MissionAction, { TCommonMissionActionJson } from 'metis/missions/actions'
 import IActionExecution, {
   TActionExecutionJSON,
 } from 'metis/missions/actions/executions'
-import { TCommonEffectJson } from 'metis/missions/effects'
+import { TCommonExternalEffectJson } from 'metis/missions/effects/external'
+import { TCommonInternalEffectJson } from 'metis/missions/effects/internal'
 import { plcApiLogger } from 'metis/server/logging'
 import seedrandom, { PRNG } from 'seedrandom'
 import ServerMission from '..'
-import ServerEffect from '../effects'
+import ServerExternalEffect from '../effects/external'
+import ServerInternalEffect from '../effects/internal'
 import ServerMissionNode from '../nodes'
 import ServerActionExecution from './executions'
 import { ServerPotentialOutcome, ServerRealizedOutcome } from './outcomes'
@@ -17,7 +19,8 @@ import { ServerPotentialOutcome, ServerRealizedOutcome } from './outcomes'
 export default class ServerMissionAction extends MissionAction<
   ServerMission,
   ServerMissionNode,
-  ServerEffect
+  ServerExternalEffect,
+  ServerInternalEffect
 > {
   /**
    * The RNG used to generate random numbers for the action.
@@ -36,8 +39,23 @@ export default class ServerMissionAction extends MissionAction<
   }
 
   // Implemented
-  public parseEffects(data: TCommonEffectJson[]): ServerEffect[] {
-    return data.map((datum: TCommonEffectJson) => new ServerEffect(this, datum))
+  public parseExternalEffects(
+    data: TCommonExternalEffectJson[],
+  ): ServerExternalEffect[] {
+    return data.map(
+      (datum: TCommonExternalEffectJson) =>
+        new ServerExternalEffect(this, datum),
+    )
+  }
+
+  // Implemented
+  public parseInternalEffects(
+    data: TCommonInternalEffectJson[],
+  ): ServerInternalEffect[] {
+    return data.map(
+      (datum: TCommonInternalEffectJson) =>
+        new ServerInternalEffect(this, datum),
+    )
   }
 
   /**
@@ -86,7 +104,7 @@ export default class ServerMissionAction extends MissionAction<
         if (realizedOutcome.successful && effectsEnabled) {
           // ...iterate through the effects and execute them
           // if they have a target environment and a target.
-          this.effects.forEach(async (effect: ServerEffect) => {
+          this.externalEffects.forEach(async (effect: ServerExternalEffect) => {
             // If the effect has a target environment and a target,
             // then execute the effect on the target.
             if (effect.targetEnvironment && effect.target) {

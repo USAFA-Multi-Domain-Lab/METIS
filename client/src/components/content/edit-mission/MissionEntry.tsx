@@ -3,7 +3,9 @@ import { useGlobalContext } from 'src/context'
 import ClientMission from 'src/missions'
 import { compute } from 'src/toolbox'
 import { usePostInitEffect } from 'src/toolbox/hooks'
-import { DetailLargeString, DetailNumber, DetailString } from '../form/Form'
+import { DetailLargeString } from '../form/DetailLargeString'
+import { DetailNumber } from '../form/DetailNumber'
+import { DetailString } from '../form/DetailString'
 import './MissionEntry.scss'
 
 /**
@@ -119,7 +121,7 @@ export default function MissionEntry({
               stateValue={introMessage}
               setState={setIntroMessage}
               defaultValue={ClientMission.DEFAULT_PROPERTIES.introMessage}
-              elementBoundary='.BorderBox'
+              elementBoundary='.SidePanelSection'
               key={`${mission._id}_introMessage`}
             />
             <DetailNumber

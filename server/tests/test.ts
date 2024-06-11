@@ -73,7 +73,7 @@ const testMission: TCommonMissionJson = {
             'Destroy was performed successfully on Test Node.',
           postExecutionFailureText:
             'Destroy was performed unsuccessfully on Test Node.',
-          effects: [
+          externalEffects: [
             {
               name: 'test',
               description: 'Used for unit test.',
@@ -117,7 +117,7 @@ const updateMissionWithNoMissionId: TCommonMissionJson = {
             'Destroy was performed successfully on Test Node.',
           postExecutionFailureText:
             'Destroy was performed unsuccessfully on Test Node.',
-          effects: [],
+          externalEffects: [],
         },
       ],
     },
@@ -154,7 +154,7 @@ const updateMissionWithNoNodeStructure: Omit<
             'Destroy was performed successfully on Test Node.',
           postExecutionFailureText:
             'Destroy was performed unsuccessfully on Test Node.',
-          effects: [],
+          externalEffects: [],
         },
       ],
     },
@@ -202,7 +202,7 @@ const correctUpdateTestMission: TCommonMissionJson = {
             'Destroy was performed successfully on Test Node.',
           postExecutionFailureText:
             'Destroy was performed unsuccessfully on Test Node.',
-          effects: [
+          externalEffects: [
             {
               name: 'test',
               description: 'Used for unit test.',

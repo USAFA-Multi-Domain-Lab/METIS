@@ -1,6 +1,6 @@
 import { TCommonMissionJson } from 'metis/missions'
 import { TCommonMissionActionJson } from 'metis/missions/actions'
-import { TCommonEffectJson } from 'metis/missions/effects'
+import { TCommonExternalEffectJson } from 'metis/missions/effects/external'
 import { TCommonMissionForceJson } from 'metis/missions/forces'
 import { TCommonMissionNodeJson, TMissionNodeJson } from 'metis/missions/nodes'
 import MetisDatabase from 'metis/server/database'
@@ -207,7 +207,7 @@ const validate_mission_forces_nodes_actions_resourceCost = (
  * @param effects The effects to validate.
  */
 const validate_mission_forces_nodes_actions_effects = (
-  effects: TCommonEffectJson[],
+  effects: TCommonExternalEffectJson[],
 ): void => {
   // Loop through each effect.
   effects.forEach((effect) => {

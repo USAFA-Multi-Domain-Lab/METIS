@@ -157,6 +157,10 @@
         font-size: 0.8rem;
       }
 
+      .ButtonText {
+        margin: 0;
+      }
+
       .Detail {
         display: grid;
         grid-template-columns: auto auto;
@@ -195,10 +199,6 @@
             opacity: 0.8;
           }
         }
-      }
-
-      .ButtonText {
-        margin: 0;
       }
     }
   }

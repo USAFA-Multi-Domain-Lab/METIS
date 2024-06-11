@@ -3,7 +3,8 @@ import { useBeforeunload } from 'react-beforeunload'
 import { useGlobalContext, useNavigationMiddleware } from 'src/context'
 import ClientMission from 'src/missions'
 import ClientMissionAction from 'src/missions/actions'
-import { ClientEffect } from 'src/missions/effects'
+import { ClientExternalEffect } from 'src/missions/effects/external'
+import { ClientInternalEffect } from 'src/missions/effects/internal'
 import ClientMissionNode, { ENodeDeleteMethod } from 'src/missions/nodes'
 import { ClientTargetEnvironment } from 'src/target-environments'
 import { compute } from 'src/toolbox'
@@ -14,7 +15,8 @@ import ActionEntry from '../content/edit-mission/ActionEntry'
 import MissionEntry from '../content/edit-mission/MissionEntry'
 import NodeEntry from '../content/edit-mission/NodeEntry'
 import NodeStructuring from '../content/edit-mission/NodeStructuring'
-import EffectEntry from '../content/edit-mission/target-effects/EffectEntry'
+import ExternalEffectEntry from '../content/edit-mission/target-effects/ExternalEffectEntry'
+import InternalEffectEntry from '../content/edit-mission/target-effects/InternalEffectEntry'
 import {
   HomeLink,
   LogoutLink,
@@ -27,7 +29,8 @@ import {
 } from '../content/general-layout/ResizablePanels'
 import MissionMap from '../content/session/mission-map'
 import { TNodeButton } from '../content/session/mission-map/objects/MissionNode'
-import CreateEffectModal from '../content/session/mission-map/ui/overlay/modals/CreateEffectModal'
+import CreateExternalEffect from '../content/session/mission-map/ui/overlay/modals/CreateExternalEffect'
+import CreateInternalEffect from '../content/session/mission-map/ui/overlay/modals/CreateInternalEffect'
 import { TButtonSvg } from '../content/user-controls/ButtonSvg'
 import './MissionPage.scss'
 
@@ -54,9 +57,10 @@ export default function MissionPage({
   )
   const [selectedAction, setSelectedAction] =
     useState<ClientMissionAction | null>(null)
-  const [selectedEffect, setSelectedEffect] = useState<ClientEffect | null>(
-    null,
-  )
+  const [selectedExternalEffect, setSelectedExternalEffect] =
+    useState<ClientExternalEffect | null>(null)
+  const [selectedInternalEffect, setSelectedInternalEffect] =
+    useState<ClientInternalEffect | null>(null)
   const [nodeStructuringIsActive, activateNodeStructuring] =
     useState<boolean>(false)
   const [targetEnvironments, setTargetEnvironments] = useState<
@@ -99,11 +103,25 @@ export default function MissionPage({
     return panel2DefaultSize
   })
   /**
-   * Boolean to determine if the effect is new.
+   * Boolean to determine if the external effect is new.
    */
-  const isNewEffect: boolean | null = compute(
+  const isNewExternalEffect: boolean = compute(
     () =>
-      selectedEffect && !selectedEffect.action.effects.includes(selectedEffect),
+      selectedExternalEffect !== null &&
+      !selectedExternalEffect.action.externalEffects.includes(
+        selectedExternalEffect,
+      ),
+  )
+
+  /**
+   * Boolean to determine if the internal effect is new.
+   */
+  const isNewInternalEffect: boolean = compute(
+    () =>
+      selectedInternalEffect !== null &&
+      !selectedInternalEffect.action.internalEffects.includes(
+        selectedInternalEffect,
+      ),
   )
 
   /* -- EFFECTS -- */
@@ -257,7 +275,8 @@ export default function MissionPage({
       setSelectedNode(nextSelection)
       activateNodeStructuring(false)
       setSelectedAction(null)
-      setSelectedEffect(null)
+      setSelectedExternalEffect(null)
+      setSelectedInternalEffect(null)
     },
     [selectedNode],
   )
@@ -419,7 +438,9 @@ export default function MissionPage({
 
   /* -- PRE-RENDER PROCESSING -- */
 
-  // Create the custom form-related buttons for the map.
+  /**
+   * Custom buttons for the mission map.
+   */
   const mapCustomButtons: TWithKey<TButtonSvg>[] = [
     {
       icon: 'reorder',
@@ -444,18 +465,36 @@ export default function MissionPage({
    * Computed JSX for the mission map modal.
    */
   const modalJsx = compute((): JSX.Element | null => {
-    // If the selected effect is new and there are target environments
-    // to choose from, then display the create effect modal.
-    if (selectedEffect && isNewEffect && targetEnvironments.length > 0) {
+    // If the selected external effect is new and there are
+    // target environments to choose from, then display the
+    // create external effect modal.
+    if (
+      selectedExternalEffect &&
+      isNewExternalEffect &&
+      targetEnvironments.length > 0
+    ) {
       return (
-        <CreateEffectModal
-          effect={selectedEffect}
+        <CreateExternalEffect
+          effect={selectedExternalEffect}
           targetEnvironments={targetEnvironments}
-          handleClose={() => setSelectedEffect(null)}
+          handleClose={() => setSelectedExternalEffect(null)}
           handleChange={handleChange}
         />
       )
-    } else {
+    }
+    // Or, if the selected internal effect is new, then display the
+    // create internal effect modal.
+    else if (selectedInternalEffect && isNewInternalEffect) {
+      return (
+        <CreateInternalEffect
+          effect={selectedInternalEffect}
+          handleClose={() => setSelectedInternalEffect(null)}
+          handleChange={handleChange}
+        />
+      )
+    }
+    // Otherwise, return null.
+    else {
       return null
     }
   })
@@ -464,6 +503,33 @@ export default function MissionPage({
    * Renders JSX for panel 2 of the resize relationship.
    */
   const renderPanel2 = (): JSX.Element | null => {
+    // Determines if the node entry should be displayed.
+    let displayNodeEntry: boolean =
+      selectedNode !== null &&
+      selectedAction === null &&
+      selectedExternalEffect === null &&
+      selectedInternalEffect === null
+    // Determines if the action entry should be displayed.
+    let displayActionEntry: boolean =
+      selectedNode !== null &&
+      selectedAction !== null &&
+      (selectedExternalEffect === null || isNewExternalEffect) &&
+      (selectedInternalEffect === null || isNewInternalEffect)
+    // Determines if the external effect entry should be displayed.
+    let displayExternalEffectEntry: boolean =
+      selectedNode !== null &&
+      selectedAction !== null &&
+      selectedExternalEffect !== null &&
+      !isNewExternalEffect &&
+      selectedInternalEffect === null
+    // Determines if the internal effect entry should be displayed.
+    let displayInternalEffectEntry: boolean =
+      selectedNode !== null &&
+      selectedAction !== null &&
+      selectedInternalEffect !== null &&
+      !isNewInternalEffect &&
+      selectedExternalEffect === null
+
     if (missionDetailsIsActive) {
       return (
         <MissionEntry
@@ -473,45 +539,49 @@ export default function MissionPage({
           key={mission._id}
         />
       )
-    } else if (selectedNode && !selectedAction && !selectedEffect) {
+    } else if (displayNodeEntry) {
       return (
         <NodeEntry
-          node={selectedNode}
+          node={selectedNode as ClientMissionNode}
           setSelectedAction={setSelectedAction}
           handleChange={handleChange}
           handleAddRequest={handleNodeAddRequest}
-          handleDeleteRequest={() => handleNodeDeleteRequest(selectedNode)}
-          key={selectedNode._id}
+          handleDeleteRequest={() =>
+            handleNodeDeleteRequest(selectedNode as ClientMissionNode)
+          }
+          key={selectedNode?._id}
         />
       )
-    } else if (
-      selectedNode &&
-      selectedAction &&
-      (!selectedEffect || isNewEffect)
-    ) {
+    } else if (displayActionEntry) {
       return (
         <ActionEntry
-          action={selectedAction}
+          action={selectedAction as ClientMissionAction}
           targetEnvironments={targetEnvironments}
           setSelectedAction={setSelectedAction}
-          setSelectedEffect={setSelectedEffect}
+          setSelectedExternalEffect={setSelectedExternalEffect}
+          setSelectedInternalEffect={setSelectedInternalEffect}
           handleChange={handleChange}
-          key={selectedAction._id}
+          key={selectedAction?._id}
         />
       )
-    } else if (
-      selectedNode &&
-      selectedAction &&
-      selectedEffect &&
-      !isNewEffect
-    ) {
+    } else if (displayExternalEffectEntry) {
       return (
-        <EffectEntry
-          effect={selectedEffect}
+        <ExternalEffectEntry
+          effect={selectedExternalEffect as ClientExternalEffect}
           setSelectedAction={setSelectedAction}
-          setSelectedEffect={setSelectedEffect}
+          setSelectedExternalEffect={setSelectedExternalEffect}
           handleChange={handleChange}
-          key={selectedEffect._id}
+          key={selectedExternalEffect?._id}
+        />
+      )
+    } else if (displayInternalEffectEntry) {
+      return (
+        <InternalEffectEntry
+          effect={selectedInternalEffect as ClientInternalEffect}
+          setSelectedAction={setSelectedAction}
+          setSelectedInternalEffect={setSelectedInternalEffect}
+          handleChange={handleChange}
+          key={selectedInternalEffect?._id}
         />
       )
     } else if (nodeStructuringIsActive) {

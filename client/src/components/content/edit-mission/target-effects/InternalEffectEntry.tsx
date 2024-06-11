@@ -1,43 +1,47 @@
 import { useState } from 'react'
 import { useGlobalContext } from 'src/context'
 import ClientMissionAction from 'src/missions/actions'
-import { ClientEffect } from 'src/missions/effects'
-import { ClientTargetEnvironment } from 'src/target-environments'
+import { ClientInternalEffect } from 'src/missions/effects/internal'
+import ClientMissionNode from 'src/missions/nodes'
 import ClientTarget from 'src/target-environments/targets'
 import { compute } from 'src/toolbox'
 import { usePostInitEffect } from 'src/toolbox/hooks'
 import Tooltip from '../../communication/Tooltip'
-import { DetailLargeString, DetailLocked, DetailString } from '../../form/Form'
+import { DetailLargeString } from '../../form/DetailLargeString'
+import { DetailLocked } from '../../form/DetailLocked'
+import { DetailString } from '../../form/DetailString'
 import { ButtonText } from '../../user-controls/ButtonText'
 import Args from './Args'
-import './EffectEntry.scss'
+import './InternalEffectEntry.scss'
 
 /**
- * Prompt modal for creating a list of effects to apply to a target
+ * Entry fields for an internal effect.
  */
-export default function EffectEntry({
+export default function InternalEffectEntry({
   effect,
   setSelectedAction,
-  setSelectedEffect,
+  setSelectedInternalEffect,
   handleChange,
-}: TEffectEntry_P): JSX.Element | null {
+}: TInternalEffectEntry_P): JSX.Element | null {
   /* -- GLOBAL CONTEXT -- */
   const { forceUpdate } = useGlobalContext().actions
 
   /* -- STATE -- */
-  const [effectName, setEffectName] = useState<ClientEffect['name']>(
-    effect.name,
-  )
-  const [description, setDescription] = useState<ClientEffect['description']>(
-    effect.description,
-  )
-  const [targetEnv] = useState<ClientTargetEnvironment | null>(
-    effect.targetEnvironment,
-  )
-  const [target] = useState<ClientTarget | null>(effect.target)
-  const [effectArgs, setEffectArgs] = useState<ClientEffect['args']>(
+  const [name, setName] = useState<ClientInternalEffect['name']>(effect.name)
+  const [description, setDescription] = useState<
+    ClientInternalEffect['description']
+  >(effect.description)
+  const [effectArgs, setEffectArgs] = useState<ClientInternalEffect['args']>(
     effect.args,
   )
+  const [target] = useState<ClientTarget | null>(effect.target)
+  const [targetParams] = useState<ClientInternalEffect['targetParams']>(
+    effect.targetParams,
+  )
+  // todo: uncomment when force is implemented
+  // const [targetForce] = useState<ClientInternalEffect['targetForce']>(
+  //   effect.targetForce,
+  // )
 
   /* -- COMPUTED -- */
   /**
@@ -63,15 +67,43 @@ export default function EffectEntry({
     missionName,
     nodeName,
     actionName,
-    effectName,
+    name,
   ])
+  /**
+   * The value to display as the target.
+   */
+  const targetValue: string = compute(() => {
+    // Initialize the value to display.
+    let value: string = 'No target selected.'
+
+    // todo: uncomment when force is implemented
+    // // If the target parameters are set and the target
+    // // paramter is not a ClientMissionForce then use the
+    // // target parameter's name.
+    // if (targetParams && !(targetParams instanceof ClientMissionForce)) {
+    //   value = targetParams.name
+    // } else
+    // // Otherwise, if the target is set then use the target's name.
+    // if (target) {
+    //   value = target.name
+    // }
+
+    if (targetParams && targetParams instanceof ClientMissionNode) {
+      value = targetParams.name
+    } else if (target) {
+      value = target.name
+    }
+
+    // Return the value to display.
+    return value
+  })
 
   /* -- EFFECTS -- */
 
   // componentDidUpdate
   usePostInitEffect(() => {
     // Update the effect's name.
-    effect.name = effectName
+    effect.name = name
     // Update the effect's description.
     effect.description = description
     // Update the effect's arguments.
@@ -79,19 +111,19 @@ export default function EffectEntry({
 
     // Allow the user to save the changes.
     handleChange()
-  }, [effectName, description, effectArgs])
+  }, [name, description, effectArgs])
 
   /* -- FUNCTIONS -- */
 
   /**
-   * Handles the request to delete the effect.
+   * Handles the request to delete the internal effect.
    */
-  const handleDeleteEffectRequest = () => {
-    // Set the selected effect to null.
-    setSelectedEffect(null)
-    // Filter out the effect from the action.
-    action.effects = action.effects.filter(
-      (actionEffect: ClientEffect) => actionEffect._id !== effect._id,
+  const handleDeleteInternalEffectRequest = () => {
+    // Set the selected internal effect to null.
+    setSelectedInternalEffect(null)
+    // Filter out the internal effect from the action.
+    action.internalEffects = action.internalEffects.filter(
+      (actionEffect: ClientInternalEffect) => actionEffect._id !== effect._id,
     )
     // Display the changes.
     forceUpdate()
@@ -109,18 +141,18 @@ export default function EffectEntry({
     if (index === 0) {
       action.mission.deselectNode()
       setSelectedAction(null)
-      setSelectedEffect(null)
+      setSelectedInternalEffect(null)
     }
     // If the index is 1 then take the user
     // back to the node entry.
     else if (index === 1) {
       setSelectedAction(null)
-      setSelectedEffect(null)
+      setSelectedInternalEffect(null)
     }
     // If the index is 2 then take the user
     // back to the action entry.
     else if (index === 2) {
-      setSelectedEffect(null)
+      setSelectedInternalEffect(null)
     }
   }
 
@@ -130,7 +162,10 @@ export default function EffectEntry({
   const renderBackButtonJsx = (): JSX.Element | null => {
     return (
       <div className='BackContainer'>
-        <div className='BackButton' onClick={() => setSelectedEffect(null)}>
+        <div
+          className='BackButton'
+          onClick={() => setSelectedInternalEffect(null)}
+        >
           &lt;
           <Tooltip description='Go back.' />
         </div>
@@ -163,7 +198,7 @@ export default function EffectEntry({
 
   /* -- RENDER -- */
   return (
-    <div className='EffectEntry SidePanel'>
+    <div className='InternalEffectEntry SidePanel'>
       <div className='BorderBox'>
         {/* -- TOP OF BOX -- */}
         <div className='BoxTop'>
@@ -177,9 +212,9 @@ export default function EffectEntry({
             fieldType='required'
             handleOnBlur='repopulateValue'
             label='Name'
-            stateValue={effectName}
-            setState={setEffectName}
-            defaultValue={ClientEffect.DEFAULT_PROPERTIES.name}
+            stateValue={name}
+            setState={setName}
+            defaultValue={ClientInternalEffect.DEFAULT_PROPERTIES.name}
             placeholder='Enter name...'
           />
           <DetailLargeString
@@ -188,17 +223,15 @@ export default function EffectEntry({
             label='Description'
             stateValue={description}
             setState={setDescription}
-            elementBoundary='.BorderBox'
+            elementBoundary='.SidePanelSection'
             placeholder='Enter description...'
           />
-          <DetailLocked
-            label='Target Environment'
-            stateValue={targetEnv?.name || 'No target environment selected.'}
-          />
-          <DetailLocked
-            label='Target'
-            stateValue={target?.name || 'No target selected.'}
-          />
+          <DetailLocked label='Target Environment' stateValue='METIS' />
+          {/* 
+          // todo: uncomment when force is implemented
+          <DetailLocked label='Force' stateValue={targetForce} />
+          */}
+          <DetailLocked label='Target' stateValue={targetValue} />
           <Args
             target={target}
             effectArgs={effectArgs}
@@ -207,9 +240,9 @@ export default function EffectEntry({
           {/* -- BUTTON(S) -- */}
           <div className='ButtonContainer'>
             <ButtonText
-              text='Delete Effect'
-              onClick={handleDeleteEffectRequest}
-              tooltipDescription='Delete this effect.'
+              text='Delete Internal Effect'
+              onClick={handleDeleteInternalEffectRequest}
+              tooltipDescription='Delete this internal effect.'
             />
           </div>
         </div>
@@ -218,24 +251,24 @@ export default function EffectEntry({
   )
 }
 
-/* ---------------------------- TYPES FOR EFFECTS ---------------------------- */
+/* ---------------------------- TYPES FOR INTERNAL EFFECT ENTRY ---------------------------- */
 
 /**
- * Props for Effects component.
+ * Props for InternalEffectEntry component.
  */
-export type TEffectEntry_P = {
+export type TInternalEffectEntry_P = {
   /**
-   * The effect to apply to the target.
+   * The internal effect to apply to the target.
    */
-  effect: ClientEffect
+  effect: ClientInternalEffect
   /**
    * A function that will set the action that is selected.
    */
   setSelectedAction: (action: ClientMissionAction | null) => void
   /**
-   * A function that will set the selected effect.
+   * A function that will set the selected internal effect.
    */
-  setSelectedEffect: (effect: ClientEffect | null) => void
+  setSelectedInternalEffect: (effect: ClientInternalEffect | null) => void
   /**
    * A function that will be called when a change has been made.
    */
