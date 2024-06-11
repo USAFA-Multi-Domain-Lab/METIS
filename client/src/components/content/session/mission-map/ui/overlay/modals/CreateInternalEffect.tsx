@@ -6,6 +6,7 @@ import { ButtonText } from 'src/components/content/user-controls/ButtonText'
 import { useGlobalContext } from 'src/context'
 import ClientMissionAction from 'src/missions/actions'
 import { ClientInternalEffect } from 'src/missions/effects/internal'
+import ClientMissionForce from 'src/missions/forces'
 import ClientMissionNode from 'src/missions/nodes'
 import { ClientTargetEnvironment } from 'src/target-environments'
 import ClientTarget from 'src/target-environments/targets'
@@ -27,17 +28,16 @@ export default function CreateInternalEffect({
   const { forceUpdate } = globalContext.actions
 
   /* -- STATE -- */
-  // todo: uncomment when force is implemented
-  // const [force, setForce] = useState<ClientMissionForce>(
-  //   new ClientMissionForce(effect.mission, {
-  //     name: 'Select a force',
-  //   }),
-  // )
+  const [force, setForce] = useState<ClientMissionForce>(
+    new ClientMissionForce(effect.mission, {
+      name: 'Select a force',
+    }),
+  )
   const [target, setTarget] = useState<ClientTarget>(
     new ClientTarget(new ClientTargetEnvironment()),
   )
   const [targetParams, setTargetParams] = useState<
-    NonNullable<ClientInternalEffect['targetParams']>
+    ClientMissionNode | ClientMissionForce
   >(
     // todo: Is referencing the root node correct? Change if not.
     new ClientMissionNode(effect.force, {
@@ -47,11 +47,10 @@ export default function CreateInternalEffect({
   )
 
   /* -- COMPUTED -- */
-  // todo: uncomment when force is implemented
-  // /**
-  //  * List of forces in the mission.
-  //  */
-  // const forces: ClientMissionForce[] = compute(() => effect.mission.forces)
+  /**
+   * List of forces in the mission.
+   */
+  const forces: ClientMissionForce[] = compute(() => effect.mission.forces)
   /**
    * The action to execute.
    */
@@ -63,11 +62,10 @@ export default function CreateInternalEffect({
     // Create a default list of class names.
     let classList: string[] = []
 
-    // todo: uncomment when force is implemented
-    // // Hide the drop down if the force is the default force.
-    // if (force._id === ClientMissionForce.DEFAULT_PROPERTIES._id) {
-    //   classList.push('Hidden')
-    // }
+    // Hide the drop down if the force is the default force.
+    if (force._id === ClientMissionForce.DEFAULT_PROPERTIES._id) {
+      classList.push('Hidden')
+    }
 
     // Combine the class names into a single string.
     return classList.join(' ')
@@ -98,18 +96,12 @@ export default function CreateInternalEffect({
   usePostInitEffect(() => {
     effect.target = target
     effect.targetParams = targetParams
-
-    // todo: remove when force is implemented
-    if (target._id === 'output') {
-      effect.targetParams = null
-    }
   }, [target, targetParams])
 
-  // todo: uncomment when force is implemented
-  // // Reset the target when the force changes.
-  // usePostInitEffect(() => {
-  //   setTarget(InternalEffect.DEFAULT_PROPERTIES.target)
-  // }, [force])
+  // Reset the target when the force changes.
+  usePostInitEffect(() => {
+    setTarget(new ClientTarget(new ClientTargetEnvironment()))
+  }, [force])
 
   /* -- FUNCTIONS -- */
   /**
@@ -144,8 +136,6 @@ export default function CreateInternalEffect({
           internalTargetEnvironment?.name ?? 'No target environment selected.'
         }
       />
-      {/* 
-      // todo: uncomment when force is implemented
       <DetailDropDown<ClientMissionForce>
         fieldType='required'
         label='Force'
@@ -153,10 +143,8 @@ export default function CreateInternalEffect({
         stateValue={force}
         setState={setForce}
         isExpanded={false}
-        renderDisplayName={(force: ClientMissionForce) =>
-          force.name
-        }
-      /> */}
+        renderDisplayName={(force: ClientMissionForce) => force.name}
+      />
       <DetailDropDown<ClientTarget>
         fieldType='required'
         label='Target'
@@ -173,7 +161,7 @@ export default function CreateInternalEffect({
           <DetailDropDown<ClientInternalEffect['targetParams']>
             fieldType='required'
             label='Node'
-            options={effect.force.nodes}
+            options={force.nodes}
             stateValue={targetParams}
             setState={setTargetParams}
             isExpanded={false}
