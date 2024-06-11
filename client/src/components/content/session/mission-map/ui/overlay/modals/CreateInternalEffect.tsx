@@ -12,6 +12,7 @@ import { ClientTargetEnvironment } from 'src/target-environments'
 import ClientTarget from 'src/target-environments/targets'
 import { compute } from 'src/toolbox'
 import { usePostInitEffect } from 'src/toolbox/hooks'
+import Target from '../../../../../../../../../shared/target-environments/targets'
 import './CreateInternalEffect.scss'
 
 /**
@@ -82,7 +83,10 @@ export default function CreateInternalEffect({
       classList.push('Disabled')
     }
 
-    if (target._id === 'node' && targetParams.name === 'Select a node') {
+    if (
+      target._id === Target.nodeTarget._id &&
+      targetParams.name === 'Select a node'
+    ) {
       classList.push('Disabled')
     }
 
@@ -96,11 +100,22 @@ export default function CreateInternalEffect({
   usePostInitEffect(() => {
     effect.target = target
     effect.targetParams = targetParams
+
+    if (target._id === Target.outputTarget._id) {
+      effect.targetParams = force
+    }
   }, [target, targetParams])
 
   // Reset the target when the force changes.
   usePostInitEffect(() => {
     setTarget(new ClientTarget(new ClientTargetEnvironment()))
+    // todo: Is referencing the root node correct? Change if not.
+    setTargetParams(
+      new ClientMissionNode(effect.force, {
+        structureKey: effect.mission.root._id,
+        name: 'Select a node',
+      }),
+    )
   }, [force])
 
   /* -- FUNCTIONS -- */
@@ -157,7 +172,7 @@ export default function CreateInternalEffect({
       />
       {
         // If the target type is a node, display the node drop down.
-        target._id === 'node' ? (
+        target._id === Target.nodeTarget._id ? (
           <DetailDropDown<ClientInternalEffect['targetParams']>
             fieldType='required'
             label='Node'

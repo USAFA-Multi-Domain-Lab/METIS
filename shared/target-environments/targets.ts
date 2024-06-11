@@ -79,7 +79,7 @@ export default abstract class Target<
   /**
    * The node target that is available in the METIS target environment.
    */
-  private static nodeTarget: TCommonTargetJson = {
+  public static nodeTarget: TCommonTargetJson = {
     targetEnvId: 'metis',
     _id: 'node',
     name: 'Node',
@@ -131,7 +131,7 @@ export default abstract class Target<
   /**
    * The output target that is available in the METIS target environment.
    */
-  private static outputTarget: TCommonTargetJson = {
+  public static outputTarget: TCommonTargetJson = {
     targetEnvId: 'metis',
     _id: 'output',
     name: 'Output Panel',
