@@ -1,33 +1,25 @@
 import { v4 as generateHash } from 'uuid'
-import { TCommonMission } from '..'
-import { TCommonTargetEnv } from '../../target-environments'
+import { TCommonMissionTypes, TMission } from '..'
 import Target, {
   TCommonTarget,
   TCommonTargetJson,
+  TTarget,
 } from '../../target-environments/targets'
 import { AnyObject } from '../../toolbox/objects'
 import { uuidTypeValidator } from '../../toolbox/validators'
-import { TCommonMissionAction } from '../actions'
-import IActionExecution from '../actions/executions'
-import IActionOutcome from '../actions/outcomes'
-import MissionNode, { TCommonMissionNode } from '../nodes'
+import { TAction, TCommonMissionAction } from '../actions'
+import { TForce } from '../forces'
+import MissionNode, { TCommonMissionNode, TNode } from '../nodes'
 
 /**
  * Represents an internal effect that happens in METIS during a session.
  */
 export default abstract class InternalEffect<
-  TMission extends TCommonMission,
-  TRelativeNode extends TCommonMissionNode,
-  TMissionAction extends TCommonMissionAction,
-  TActionExecution extends IActionExecution,
-  TActionOutcome extends IActionOutcome,
-  TTargetEnvironment extends TCommonTargetEnv,
-  // todo: uncomment when force is implemented
-  // TMissionForce extends TCommonMissionForce,
+  T extends TCommonMissionTypes = TCommonMissionTypes,
 > implements TCommonInternalEffect
 {
   // Inherited
-  public action: TMissionAction
+  public action: TAction<T>
 
   // Inherited
   public _id: TCommonInternalEffect['_id']
@@ -48,14 +40,11 @@ export default abstract class InternalEffect<
    * of the target. If the target is not set, it will be
    * null.
    */
-  protected _target:
-    | Target<TTargetEnvironment>
-    | TCommonTargetJson['_id']
-    | null
+  protected _target: TTarget<T> | TCommonTargetJson['_id'] | null
   /**
    * The target to which the external effect will be applied.
    */
-  public get target(): Target<TTargetEnvironment> | null {
+  public get target(): TTarget<T> | null {
     if (!(this._target instanceof Target)) {
       this._target = null
     }
@@ -66,9 +55,7 @@ export default abstract class InternalEffect<
    * The target to which the external effect will be applied.
    * @note Setting this will cause the target data to be reloaded.
    */
-  public set target(
-    target: Target<TTargetEnvironment> | TCommonTargetJson['_id'] | null,
-  ) {
+  public set target(target: TTarget<T> | TCommonTargetJson['_id'] | null) {
     // If the target is a Target Object, set it.
     if (target instanceof Target) {
       this._target = target
@@ -87,8 +74,7 @@ export default abstract class InternalEffect<
    * The ID of the target to which the external effect will be applied.
    */
   public get targetId(): TCommonTargetJson['_id'] | null {
-    let target: Target<TTargetEnvironment> | TCommonTargetJson['_id'] | null =
-      this._target
+    let target: TTarget<T> | TCommonTargetJson['_id'] | null = this._target
 
     // If the target is a Target Object, return its ID.
     if (target instanceof Target) {
@@ -122,29 +108,14 @@ export default abstract class InternalEffect<
    * a `Mission Node Object`. If the target's ID is 'output', then
    * the parameter will be a `Mission Force Object`.
    */
-  protected _targetParams:
-    | MissionNode<
-        TMission,
-        TRelativeNode,
-        TMissionAction,
-        TActionExecution,
-        TActionOutcome
-      >
-    | string
-    | null
+  protected _targetParams: TNode<T> | string | null
   // todo: uncomment when force is implemented
   // | MissionForce<>
   /**
    * The necessary parameters to apply the internal effect
    * to the target.
    */
-  public get targetParams(): MissionNode<
-    TMission,
-    TRelativeNode,
-    TMissionAction,
-    TActionExecution,
-    TActionOutcome
-  > | null {
+  public get targetParams(): TNode<T> | null {
     // | TMissionForce<> // todo: uncomment when force is implemented
     if (
       !(this._targetParams instanceof MissionNode)
@@ -156,23 +127,13 @@ export default abstract class InternalEffect<
 
     return this._targetParams
   }
+
   /**
    * The necessary parameters to apply the internal effect
    * to the target.
    * @note Setting this will cause the target parameter's data to be reloaded.
    */
-  public set targetParams(
-    targetParams:
-      | MissionNode<
-          TMission,
-          TRelativeNode,
-          TMissionAction,
-          TActionExecution,
-          TActionOutcome
-        >
-      | string
-      | null,
-  ) {
+  public set targetParams(targetParams: TNode<T> | string | null) {
     // If the target's parameter(s) is a Mission Node Object
     // or a Mission Force Object, set it.
     if (
@@ -232,24 +193,23 @@ export default abstract class InternalEffect<
   /**
    * The node on which the action is being executed.
    */
-  public get node(): TMissionAction['node'] {
+  public get node(): TNode<T> {
     return this.action.node
   }
 
   /**
    * The mission of which the action is a part.
    */
-  public get mission(): TMissionAction['mission'] {
+  public get mission(): TMission<T> {
     return this.action.mission
   }
 
-  // todo: uncomment when force is implemented
-  // /**
-  //  * The force that this internal effect belongs to.
-  //  */
-  // public get force(): TMissionAction['force'] {
-  //   return this.action.force
-  // }
+  /**
+   * The force that this internal effect belongs to.
+   */
+  public get force(): TForce<T> {
+    return this.node.force
+  }
 
   // todo: uncomment when force is implemented
   // /**
@@ -270,7 +230,7 @@ export default abstract class InternalEffect<
    * @param options The options for creating the internal effect.
    */
   constructor(
-    action: TMissionAction,
+    action: TAction<T>,
     data: Partial<TCommonInternalEffectJson> = InternalEffect.DEFAULT_PROPERTIES,
     options: TInternalEffectOptions = {},
   ) {
@@ -431,6 +391,13 @@ export type TCommonInternalEffect = {
    */
   toJson: (options?: TInternalEffectJsonOptions) => TCommonInternalEffectJson
 }
+
+/**
+ * Extracts the internal effect type from the mission types.
+ * @param T The mission types.
+ * @returns The internal effect type.
+ */
+export type TInternalEffect<T extends TCommonMissionTypes> = T['internalEffect']
 
 /**
  * JSON representation of an internal effect in a mission.

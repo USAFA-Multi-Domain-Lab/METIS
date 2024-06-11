@@ -5,12 +5,13 @@ import TargetEnvironment, {
 } from 'metis/target-environments'
 import { TCommonTargetJson } from 'metis/target-environments/targets'
 import path from 'path'
+import { TServerMissionTypes } from '../missions'
 import ServerTarget from './targets'
 
 /**
  * A class for managing target environments on the server.
  */
-export default class ServerTargetEnvironment extends TargetEnvironment<ServerTarget> {
+export default class ServerTargetEnvironment extends TargetEnvironment<TServerMissionTypes> {
   /**
    * @param data The data to use to create the ServerTargetEnvironment.
    * @param options The options for creating the ServerTargetEnvironment.

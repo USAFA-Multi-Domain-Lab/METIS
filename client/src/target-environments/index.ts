@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { TClientMissionTypes } from 'src/missions'
 import TargetEnvironment, {
   TCommonTargetEnvJson,
 } from '../../../shared/target-environments'
@@ -8,7 +9,7 @@ import ClientTarget from './targets'
 /**
  * Class representing a target environment on the client-side.
  */
-export class ClientTargetEnvironment extends TargetEnvironment<ClientTarget> {
+export class ClientTargetEnvironment extends TargetEnvironment<TClientMissionTypes> {
   // Implemented
   public parseTargets(data: TCommonTargetJson[]): ClientTarget[] {
     return data.map((datum: TCommonTargetJson) => {

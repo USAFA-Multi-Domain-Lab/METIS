@@ -1,16 +1,12 @@
-import { ClientTargetEnvironment } from 'src/target-environments'
 import ClientTarget from 'src/target-environments/targets'
+import { TClientMissionTypes } from '..'
 import ExternalEffect from '../../../../shared/missions/effects/external'
-import ClientMissionAction from '../actions'
 
 /**
  * Class representing an external effect on the client-side that can be
  * applied to a target.
  */
-export class ClientExternalEffect extends ExternalEffect<
-  ClientMissionAction,
-  ClientTargetEnvironment
-> {
+export class ClientExternalEffect extends ExternalEffect<TClientMissionTypes> {
   // Implemented
   public async populateTargetData(targetId: string): Promise<void> {
     return new Promise<void>(async (resolve, reject) => {

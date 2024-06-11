@@ -1,13 +1,16 @@
 import ClientMissionAction from '.'
+import { TClientMissionTypes } from '..'
 import IActionExecution, {
-  TActionExecutionJSON,
+  TActionExecutionJson,
 } from '../../../../shared/missions/actions/executions'
 import ClientMissionNode from '../nodes'
 
 /**
  * The execution of an action on the client.
  */
-export default class ClientActionExecution implements IActionExecution {
+export default class ClientActionExecution
+  implements IActionExecution<TClientMissionTypes>
+{
   // Implemented
   public readonly action: ClientMissionAction
   // Implemented
@@ -61,7 +64,7 @@ export default class ClientActionExecution implements IActionExecution {
   }
 
   // Implemented
-  public toJson(): TActionExecutionJSON {
+  public toJson(): TActionExecutionJson {
     return {
       actionId: this.actionId,
       nodeId: this.nodeId,

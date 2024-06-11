@@ -1,11 +1,12 @@
 import { TCommonTargetEnvJson } from 'metis/target-environments'
 import Target, { TCommonTargetJson } from 'metis/target-environments/targets'
 import ServerTargetEnvironment from '.'
+import { TServerMissionTypes } from '../missions'
 
 /**
  * A class for managing targets on the server.
  */
-export default class ServerTarget extends Target<ServerTargetEnvironment> {
+export default class ServerTarget extends Target<TServerMissionTypes> {
   /**
    * Grabs a specific target from a target environment by its ID.
    * @param id The ID of the target to grab.

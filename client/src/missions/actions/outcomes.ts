@@ -1,4 +1,5 @@
 import ClientMissionAction from '.'
+import { TClientMissionTypes } from '..'
 import IActionOutcome, {
   TActionOutcomeJson,
 } from '../../../../shared/missions/actions/outcomes'
@@ -7,7 +8,9 @@ import ClientMissionNode from '../nodes'
 /**
  * An outcome for the execution of an action via the Mission.execute method.
  */
-export default class ClientActionOutcome implements IActionOutcome {
+export default class ClientActionOutcome
+  implements IActionOutcome<TClientMissionTypes>
+{
   // Implemented
   public readonly action: ClientMissionAction
   // Implemented

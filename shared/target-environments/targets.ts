@@ -1,14 +1,15 @@
-import TargetEnvironment, { TCommonTargetEnv } from '.'
+import { TCommonMissionTypes } from 'metis/missions'
+import TargetEnvironment, { TCommonTargetEnv, TTargetEnv } from '.'
 
 /**
  * This is an entity that can be found in a target environment.
  */
 export default abstract class Target<
-  TTargetEnvironment extends TCommonTargetEnv,
+  T extends TCommonMissionTypes = TCommonMissionTypes,
 > implements TCommonTarget
 {
   // Inherited
-  public targetEnvironment: TTargetEnvironment
+  public targetEnvironment: TTargetEnv<T>
 
   // Inherited
   public _id: TCommonTarget['_id']
@@ -32,7 +33,7 @@ export default abstract class Target<
    * @param options The options for creating the Target.
    */
   public constructor(
-    targetEnvironment: TTargetEnvironment,
+    targetEnvironment: TTargetEnv<T>,
     data: Partial<TCommonTargetJson> = Target.DEFAULT_PROPERTIES,
     options: TTargetOptions = {},
   ) {
@@ -202,6 +203,13 @@ export interface TCommonTarget {
    */
   toJson: (options?: TTargetJsonOptions) => TCommonTargetJson
 }
+
+/**
+ * Extracts the target type from the mission types.
+ * @param T The mission types.
+ * @returns The target type.
+ */
+export type TTarget<T extends TCommonMissionTypes> = T['target']
 
 /**
  * The JSON representation of a Target Object.

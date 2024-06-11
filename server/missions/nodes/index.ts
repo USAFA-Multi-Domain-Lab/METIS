@@ -1,5 +1,5 @@
 import { TCommonMissionActionJson } from 'metis/missions/actions'
-import { TActionExecutionJSON } from 'metis/missions/actions/executions'
+import { TActionExecutionJson } from 'metis/missions/actions/executions'
 import { TActionOutcomeJson } from 'metis/missions/actions/outcomes'
 import MissionNode from 'metis/missions/nodes'
 import { TServerMissionTypes } from '..'
@@ -28,7 +28,7 @@ export default class ServerMissionNode extends MissionNode<TServerMissionTypes> 
 
   // Implemented
   protected parseExecutionData(
-    data: TActionExecutionJSON,
+    data: TActionExecutionJson,
   ): ServerActionExecution | null {
     // If data is null return null.
     if (data === null) {
@@ -86,7 +86,7 @@ export default class ServerMissionNode extends MissionNode<TServerMissionTypes> 
 
   // Implemented
   public loadExecution(
-    data: NonNullable<TActionExecutionJSON>,
+    data: NonNullable<TActionExecutionJson>,
   ): ServerActionExecution {
     // Get the action action being executed.
     let { actionId } = data

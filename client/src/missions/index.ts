@@ -1,5 +1,7 @@
 import axios, { AxiosResponse } from 'axios'
 import { TLine_P } from 'src/components/content/session/mission-map/objects/Line'
+import { ClientTargetEnvironment } from 'src/target-environments'
+import ClientTarget from 'src/target-environments/targets'
 import { TEventListenerTarget } from 'src/toolbox/hooks'
 import { v4 as generateHash } from 'uuid'
 import Mission, {
@@ -20,6 +22,8 @@ import StringToolbox from '../../../shared/toolbox/strings'
 import ClientMissionAction from './actions'
 import ClientActionExecution from './actions/executions'
 import ClientActionOutcome from './actions/outcomes'
+import { ClientExternalEffect } from './effects/external'
+import { ClientInternalEffect } from './effects/internal'
 import ClientMissionForce from './forces'
 import ClientMissionNode, { ENodeTargetRelation } from './nodes'
 import NodeCreator from './nodes/creators'
@@ -1111,6 +1115,10 @@ export interface TClientMissionTypes extends TCommonMissionTypes {
   action: ClientMissionAction
   execution: ClientActionExecution
   outcome: ClientActionOutcome
+  targetEnv: ClientTargetEnvironment
+  target: ClientTarget
+  externalEffect: ClientExternalEffect
+  internalEffect: ClientInternalEffect
 }
 
 /**

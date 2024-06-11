@@ -1,5 +1,6 @@
-import { TCommonMissionAction, TCommonMissionActionJson } from '.'
-import { TCommonMissionNode, TCommonMissionNodeJson } from '../nodes'
+import { TAction, TCommonMissionAction, TCommonMissionActionJson } from '.'
+import { TCommonMissionTypes } from '..'
+import { TCommonMissionNode, TCommonMissionNodeJson, TNode } from '../nodes'
 
 /**
  * The JSON representation of an action outcome.
@@ -22,15 +23,17 @@ export interface TActionOutcomeJson {
 /**
  * The outcome of an action being executed.
  */
-export default interface IActionOutcome {
+export default interface IActionOutcome<
+  T extends TCommonMissionTypes = TCommonMissionTypes,
+> {
   /**
    * The action executed.
    */
-  action: TCommonMissionAction
+  action: TAction<T>
   /**
    * The node upon which the action executed.
    */
-  node: TCommonMissionNode
+  node: TNode<T>
   /**
    * The ID of the action executed.
    */

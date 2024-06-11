@@ -6,7 +6,7 @@ import MapToolbox from '../../toolbox/maps'
 import { uuidTypeValidator } from '../../toolbox/validators'
 import { TCommonMissionAction, TCommonMissionActionJson } from '../actions'
 import IActionExecution, {
-  TActionExecutionJSON,
+  TActionExecutionJson,
   default as TCommonMissionExecution,
 } from '../actions/executions'
 import {
@@ -325,7 +325,7 @@ export default abstract class MissionNode<
    * @returns {IActionExecution[]} The parsed outcome data.
    */
   protected abstract parseExecutionData(
-    data: TActionExecutionJSON,
+    data: TActionExecutionJson,
   ): TExecution<T> | null
 
   /**
@@ -369,7 +369,7 @@ export default abstract class MissionNode<
     // flag was set.
     if (includeSessionData) {
       // Construct execution JSON.
-      let executionJson: TActionExecutionJSON | null = null
+      let executionJson: TActionExecutionJson | null = null
 
       if (this.execution !== null) {
         executionJson = this.execution.toJson()
@@ -404,7 +404,7 @@ export default abstract class MissionNode<
 
   // Implemented
   public abstract loadExecution(
-    data: NonNullable<TActionExecutionJSON>,
+    data: NonNullable<TActionExecutionJson>,
   ): IActionExecution
 
   // Implemented
@@ -588,7 +588,7 @@ export interface TCommonMissionNode {
    * @returns The generated execution object.
    */
   loadExecution: (
-    execution: NonNullable<TActionExecutionJSON>,
+    execution: NonNullable<TActionExecutionJson>,
   ) => TCommonMissionExecution
   /**
    * Loads the execution JSON into the node, returning a new
@@ -679,7 +679,7 @@ export type TOutcome<T extends TCommonMissionTypes> = T['outcome']
 export interface IMissionNodeSessionJson {
   opened: boolean
   executionState: TNodeExecutionState
-  execution: TActionExecutionJSON | null
+  execution: TActionExecutionJson | null
   outcomes: TActionOutcomeJson[]
 }
 

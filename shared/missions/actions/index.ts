@@ -1,5 +1,5 @@
 import { v4 as generateHash } from 'uuid'
-import { TCommonMission } from '..'
+import { TCommonMission, TCommonMissionTypes } from '..'
 import { uuidTypeValidator } from '../../toolbox/validators'
 import {
   TCommonExternalEffect,
@@ -253,6 +253,13 @@ export interface TCommonMissionAction {
    */
   toJson: (options?: TMissionActionJsonOtions) => TCommonMissionActionJson
 }
+
+/**
+ * Extracts the action type from the mission types.
+ * @param T The mission types.
+ * @returns The action type.
+ */
+export type TAction<T extends TCommonMissionTypes> = T['action']
 
 /**
  * Plain JSON representation of a MissionAction object.

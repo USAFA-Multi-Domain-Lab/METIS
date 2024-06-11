@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { TClientMissionTypes } from 'src/missions'
 import { ClientTargetEnvironment } from '.'
 import Target, {
   TCommonTarget,
@@ -9,7 +10,7 @@ import Target, {
  * Class representing a target within a target environment
  * on the client-side.
  */
-export default class ClientTarget extends Target<ClientTargetEnvironment> {
+export default class ClientTarget extends Target<TClientMissionTypes> {
   /**
    * Calls the API to load the target with the specified ID.
    * @param _id The ID of the target to fetch.

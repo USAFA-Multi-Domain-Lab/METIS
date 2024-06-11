@@ -1,3 +1,5 @@
+import { TCommonTargetEnv } from 'metis/target-environments'
+import { TCommonTarget } from 'metis/target-environments/targets'
 import { v4 as generateHash } from 'uuid'
 import context from '../context'
 import { AnyObject } from '../toolbox/objects'
@@ -5,6 +7,8 @@ import { uuidTypeValidator } from '../toolbox/validators'
 import { TCommonMissionAction } from './actions'
 import IActionExecution from './actions/executions'
 import IActionOutcome from './actions/outcomes'
+import { TCommonExternalEffect } from './effects/external'
+import { TCommonInternalEffect } from './effects/internal'
 import { TCommonMissionForce, TCommonMissionForceJson, TForce } from './forces'
 import { TCommonMissionNode, TMissionNodeJson } from './nodes'
 import {
@@ -322,6 +326,10 @@ export type TCommonMissionTypes = {
   action: TCommonMissionAction
   execution: IActionExecution
   outcome: IActionOutcome
+  targetEnv: TCommonTargetEnv
+  target: TCommonTarget
+  externalEffect: TCommonExternalEffect
+  internalEffect: TCommonInternalEffect
 }
 
 /**
@@ -397,6 +405,13 @@ export interface TCommonMission {
     forceId: TCommonMissionForce['_id'],
   ) => TCommonMissionForce | undefined
 }
+
+/**
+ * Extracts the mission type from the mission types.
+ * @param T The mission types.
+ * @returns The mission type.
+ */
+export type TMission<T extends TCommonMissionTypes> = T['mission']
 
 /**
  * Plain JSON representation of a MissionNode object.
@@ -495,10 +510,3 @@ export type TDetermineNodeStructureOptions = {
    */
   revealedOnly?: boolean
 }
-
-/**
- * Extracts the mission type from the mission types.
- * @param T The mission types.
- * @returns The mission type.
- */
-export type TMission<T extends TCommonMissionTypes> = T['mission']

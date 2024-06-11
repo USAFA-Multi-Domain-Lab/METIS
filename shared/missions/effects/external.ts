@@ -1,23 +1,24 @@
+import { TTargetEnv } from 'metis/target-environments'
 import { v4 as generateHash } from 'uuid'
-import { TCommonTargetEnv } from '../../target-environments'
+import { TCommonMissionTypes } from '..'
 import Target, {
   TCommonTarget,
   TCommonTargetJson,
+  TTarget,
 } from '../../target-environments/targets'
 import { AnyObject } from '../../toolbox/objects'
 import { uuidTypeValidator } from '../../toolbox/validators'
-import { TCommonMissionAction } from '../actions'
+import { TAction, TCommonMissionAction } from '../actions'
 
 /**
  * An external effect that can be applied to a target.
  */
 export default abstract class ExternalEffect<
-  TMissionAction extends TCommonMissionAction,
-  TTargetEnvironment extends TCommonTargetEnv,
+  T extends TCommonMissionTypes = TCommonMissionTypes,
 > implements TCommonExternalEffect
 {
   // Inherited
-  public action: TMissionAction
+  public action: TAction<T>
 
   // Inherited
   public _id: TCommonExternalEffect['_id']
@@ -41,14 +42,11 @@ export default abstract class ExternalEffect<
    * of the target. If the target is not set, it will be
    * null.
    */
-  protected _target:
-    | Target<TTargetEnvironment>
-    | TCommonTargetJson['_id']
-    | null
+  protected _target: TTarget<T> | TCommonTargetJson['_id'] | null
   /**
    * The target to which the external effect will be applied.
    */
-  public get target(): Target<TTargetEnvironment> | null {
+  public get target(): TTarget<T> | null {
     if (!(this._target instanceof Target)) {
       this._target = null
     }
@@ -59,29 +57,15 @@ export default abstract class ExternalEffect<
    * The target to which the external effect will be applied.
    * @note Setting this will cause the target data to be reloaded.
    */
-  public set target(
-    target: Target<TTargetEnvironment> | TCommonTargetJson['_id'] | null,
-  ) {
-    // If the target is a Target Object, set it.
-    if (target instanceof Target) {
-      this._target = target
-    }
-    // Or, the target is an ID.
-    else if (typeof target === 'string') {
-      this._target = target
-    }
-    // Otherwise, set the target to null.
-    else {
-      this._target = null
-    }
+  public set target(target: TTarget<T> | TCommonTargetJson['_id'] | null) {
+    this._target = target
   }
 
   /**
    * The ID of the target to which the external effect will be applied.
    */
   public get targetId(): TCommonTargetJson['_id'] | null {
-    let target: Target<TTargetEnvironment> | TCommonTargetJson['_id'] | null =
-      this._target
+    let target: TTarget<T> | TCommonTargetJson['_id'] | null = this._target
 
     // If the target is a Target Object, return its ID.
     if (target instanceof Target) {
@@ -106,7 +90,7 @@ export default abstract class ExternalEffect<
   /**
    * The environment in which the target exists.
    */
-  public get targetEnvironment(): TTargetEnvironment | null {
+  public get targetEnvironment(): TTargetEnv<T> | null {
     if (this.target instanceof Target) {
       return this.target.targetEnvironment
     } else {
@@ -117,14 +101,14 @@ export default abstract class ExternalEffect<
   /**
    * The node on which the action is being executed.
    */
-  public get node(): TMissionAction['node'] {
+  public get node(): TAction<T>['node'] {
     return this.action.node
   }
 
   /**
    * The mission of which the action is a part.
    */
-  public get mission(): TMissionAction['mission'] {
+  public get mission(): TAction<T>['mission'] {
     return this.action.mission
   }
 
@@ -135,7 +119,7 @@ export default abstract class ExternalEffect<
    * @param options The options for creating the External Effect.
    */
   public constructor(
-    action: TMissionAction,
+    action: TAction<T>,
     data: Partial<TCommonExternalEffectJson> = ExternalEffect.DEFAULT_PROPERTIES,
     options: TExternalEffectOptions = {},
   ) {
@@ -259,6 +243,13 @@ export interface TCommonExternalEffect {
    */
   toJson: (options?: TExternalEffectJsonOptions) => TCommonExternalEffectJson
 }
+
+/**
+ * Extracts the external effect type from the mission types.
+ * @param T The mission types.
+ * @returns The external effect type.
+ */
+export type TExternalEffect<T extends TCommonMissionTypes> = T['externalEffect']
 
 /**
  * The JSON representation of an External Effect object.

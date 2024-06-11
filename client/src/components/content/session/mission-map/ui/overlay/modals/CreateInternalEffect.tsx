@@ -39,7 +39,9 @@ export default function CreateInternalEffect({
   const [targetParams, setTargetParams] = useState<
     NonNullable<ClientInternalEffect['targetParams']>
   >(
-    new ClientMissionNode(effect.mission, {
+    // todo: Is referencing the root node correct? Change if not.
+    new ClientMissionNode(effect.force, {
+      structureKey: effect.mission.root._id,
       name: 'Select a node',
     }),
   )
@@ -171,7 +173,7 @@ export default function CreateInternalEffect({
           <DetailDropDown<ClientInternalEffect['targetParams']>
             fieldType='required'
             label='Node'
-            options={effect.mission.nodes}
+            options={effect.force.nodes}
             stateValue={targetParams}
             setState={setTargetParams}
             isExpanded={false}

@@ -1,18 +1,19 @@
-import { TCommonMissionAction } from '.'
-import { TCommonMissionNode } from '../nodes'
+import { TAction, TCommonMissionAction, TCommonMissionActionJson } from '.'
+import { TCommonMissionTypes } from '..'
+import { TCommonMissionNode, TCommonMissionNodeJson, TNode } from '../nodes'
 
 /**
  * The JSON representation of an action execution.
  */
-export type TActionExecutionJSON = {
+export type TActionExecutionJson = {
   /**
    * The ID of the action executed.
    */
-  actionId: string
+  actionId: NonNullable<TCommonMissionActionJson['_id']>
   /**
    * The ID of the node upon which the action executed.
    */
-  nodeId: string
+  nodeId: NonNullable<TCommonMissionNodeJson['_id']>
   /**
    * The timestamp for when the action began executing.
    */
@@ -26,23 +27,25 @@ export type TActionExecutionJSON = {
 /**
  * The execution of an action.
  */
-export default interface IActionExecution {
+export default interface IActionExecution<
+  T extends TCommonMissionTypes = TCommonMissionTypes,
+> {
   /**
    * The action executed.
    */
-  action: TCommonMissionAction
+  action: TAction<T>
   /**
    * The node upon which the action executed.
    */
-  node: TCommonMissionNode
+  node: TNode<T>
   /**
    * The ID of the action executed.
    */
-  actionId: string
+  actionId: TCommonMissionAction['_id']
   /**
    * The ID of the node upon which the action executed.
    */
-  nodeId: string
+  nodeId: TCommonMissionNode['_id']
   /**
    * The timestamp for when the action began executing.
    */
@@ -54,5 +57,5 @@ export default interface IActionExecution {
   /**
    * Converts the action execution to JSON.
    */
-  toJson: () => TActionExecutionJSON
+  toJson: () => TActionExecutionJson
 }

@@ -1,13 +1,16 @@
 import IActionExecution, {
-  TActionExecutionJSON,
+  TActionExecutionJson,
 } from 'metis/missions/actions/executions'
 import ServerMissionAction from '.'
+import { TServerMissionTypes } from '..'
 import ServerMissionNode from '../nodes'
 
 /**
  * The execution of an action on the server.
  */
-export default class ServerActionExecution implements IActionExecution {
+export default class ServerActionExecution
+  implements IActionExecution<TServerMissionTypes>
+{
   // Implemented
   public readonly action: ServerMissionAction
   // Implemented
@@ -39,7 +42,7 @@ export default class ServerActionExecution implements IActionExecution {
   }
 
   // Implemented
-  public toJson(): NonNullable<TActionExecutionJSON> {
+  public toJson(): NonNullable<TActionExecutionJson> {
     return {
       actionId: this.actionId,
       nodeId: this.nodeId,

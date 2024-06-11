@@ -4,7 +4,7 @@ import { TNodeButton } from 'src/components/content/session/mission-map/objects/
 import ClientMission, { TClientMissionTypes } from '..'
 import { TRequestMethod } from '../../../../shared/connect/data'
 import { TCommonMissionActionJson } from '../../../../shared/missions/actions'
-import { TActionExecutionJSON } from '../../../../shared/missions/actions/executions'
+import { TActionExecutionJson } from '../../../../shared/missions/actions/executions'
 import { TActionOutcomeJson } from '../../../../shared/missions/actions/outcomes'
 import MissionNode, {
   ILoadOutcomeOptions,
@@ -224,7 +224,7 @@ export default class ClientMissionNode extends MissionNode<TClientMissionTypes> 
 
   // Implemented
   protected parseExecutionData(
-    data: TActionExecutionJSON,
+    data: TActionExecutionJson,
   ): ClientActionExecution | null {
     // If data is null return null.
     if (data === null) {
@@ -372,7 +372,7 @@ export default class ClientMissionNode extends MissionNode<TClientMissionTypes> 
 
   // Implemented
   public loadExecution(
-    data: NonNullable<TActionExecutionJSON>,
+    data: NonNullable<TActionExecutionJson>,
   ): ClientActionExecution {
     // Get the action action being executed.
     let { actionId } = data

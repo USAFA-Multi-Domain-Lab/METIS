@@ -1,4 +1,4 @@
-import { TActionExecutionJSON } from 'metis/missions/actions/executions'
+import { TActionExecutionJson } from 'metis/missions/actions/executions'
 import { TActionOutcomeJson } from 'metis/missions/actions/outcomes'
 import {
   TSessionConfig,
@@ -263,7 +263,7 @@ export type TResponseEvents = {
       /**
        * The action that was executed.
        */
-      execution: NonNullable<TActionExecutionJSON>
+      execution: NonNullable<TActionExecutionJson>
     },
     TClientEvents['request-execute-action']
   >

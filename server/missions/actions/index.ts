@@ -1,6 +1,6 @@
 import MissionAction, { TCommonMissionActionJson } from 'metis/missions/actions'
 import IActionExecution, {
-  TActionExecutionJSON,
+  TActionExecutionJson,
 } from 'metis/missions/actions/executions'
 import { TCommonExternalEffectJson } from 'metis/missions/effects/external'
 import { TCommonInternalEffectJson } from 'metis/missions/effects/internal'
@@ -76,7 +76,7 @@ export default class ServerMissionAction extends MissionAction<
       let end: number = start + this.processTime
 
       // Create execution data.
-      let executionData: NonNullable<TActionExecutionJSON> = {
+      let executionData: NonNullable<TActionExecutionJson> = {
         actionId: this._id,
         nodeId: this.node._id,
         start,
