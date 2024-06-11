@@ -387,6 +387,59 @@ export const routerMap: TMetisRouterMap = (
             }
           }
         }
+
+        // -- BUILD 23 --
+        // This migration script is responsible
+        // for adding the new "forces" property
+        // to the mission schema, moving the
+        // node data in the mission to a new default
+        // force, and removing the "nodeData" property
+        // from the mission.
+        if (schemaBuildNumber < 23) {
+          let mission = missionData
+
+          // Add the "forces" property to the mission.
+          mission.forces = [
+            {
+              name: 'Friendly Force',
+              color: '#52b1ff',
+              nodes: mission.nodeData,
+            },
+          ]
+
+          // Remove the "nodeData" property from the mission.
+          delete mission.nodeData
+        }
+
+        // -- BUILD 24 --
+        // This migration script is responsible
+        // for converting the "effects" property
+        // to "externalEffects" and adding the
+        // "internalEffects" property to the mission schema.
+        if (schemaBuildNumber < 24) {
+          let mission = missionData
+
+          // Loop through all forces.
+          for (let force of mission.forces) {
+            // Loop through all nodes.
+            for (let node of force.nodes) {
+              // Loop through all actions.
+              for (let action of node.actions) {
+                // If the action doesn't have internalEffects,
+                // set it to an empty array.
+                if (!('internalEffects' in action)) {
+                  action.internalEffects = []
+                }
+
+                // Rename the "effects" property to "externalEffects".
+                if (action.effects) {
+                  action.externalEffects = action.effects
+                  delete action.effects
+                }
+              }
+            }
+          }
+        }
       }
 
       // This will be called when it is
