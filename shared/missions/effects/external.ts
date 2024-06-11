@@ -153,7 +153,7 @@ export default abstract class ExternalEffect<
     // If the target data has been provided and
     // it's not the default target ID, then populate
     // the target data.
-    if (data.targetId && data.targetId !== null) {
+    if (data.targetId) {
       this.populateTargetData(data.targetId)
     }
   }

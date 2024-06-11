@@ -243,6 +243,26 @@ export default abstract class InternalEffect<
     return this.action.mission
   }
 
+  // todo: uncomment when force is implemented
+  // /**
+  //  * The force that this internal effect belongs to.
+  //  */
+  // public get force(): TMissionAction['force'] {
+  //   return this.action.force
+  // }
+
+  // todo: uncomment when force is implemented
+  // /**
+  //  * The force that the internal effect's target belongs to.
+  //  */
+  // public get targetForce(): TMissionAction['force'] {
+  //   if (this.targetParams && this.targetParams instanceof MissionNode) {
+  //     return this.targetParams.force
+  //   } else if (this.targetParams && this.targetParams instanceof MissionForce) {
+  //     return this.targetParams
+  //   }
+  // }
+
   /**
    * Creates a new Internal Effect Object.
    * @param action The action to which the internal effect belongs.
@@ -267,14 +287,14 @@ export default abstract class InternalEffect<
     // If the target data has been provided and
     // it's not the default target ID, then populate
     // the target data.
-    if (data.targetId && data.targetId !== null) {
+    if (data.targetId) {
       this.populateTargetData(data.targetId)
     }
 
     // If the args data has been provided and
     // it's not the default arg ID, then populate
     // the args data.
-    if (data.targetParamsId && data.targetParamsId !== null) {
+    if (data.targetParamsId) {
       this.populateTargetParamsData(data.targetParamsId)
     }
   }

@@ -36,7 +36,9 @@ export default function CreateInternalEffect({
   const [target, setTarget] = useState<ClientTarget>(
     new ClientTarget(new ClientTargetEnvironment()),
   )
-  const [targetNode, setTargetNode] = useState<ClientMissionNode>(
+  const [targetParams, setTargetParams] = useState<
+    NonNullable<ClientInternalEffect['targetParams']>
+  >(
     new ClientMissionNode(effect.mission, {
       name: 'Select a node',
     }),
@@ -80,7 +82,7 @@ export default function CreateInternalEffect({
       classList.push('Disabled')
     }
 
-    if (target._id === 'node' && targetNode.name === 'Select a node') {
+    if (target._id === 'node' && targetParams.name === 'Select a node') {
       classList.push('Disabled')
     }
 
@@ -92,8 +94,14 @@ export default function CreateInternalEffect({
 
   // Sync the component state with the effect.
   usePostInitEffect(() => {
-    effect.targetParams = targetNode
-  }, [targetNode])
+    effect.target = target
+    effect.targetParams = targetParams
+
+    // todo: remove when force is implemented
+    if (target._id === 'output') {
+      effect.targetParams = null
+    }
+  }, [target, targetParams])
 
   // todo: uncomment when force is implemented
   // // Reset the target when the force changes.
@@ -160,14 +168,14 @@ export default function CreateInternalEffect({
       {
         // If the target type is a node, display the node drop down.
         target._id === 'node' ? (
-          <DetailDropDown<ClientMissionNode>
+          <DetailDropDown<ClientInternalEffect['targetParams']>
             fieldType='required'
             label='Node'
             options={effect.mission.nodes}
-            stateValue={targetNode}
-            setState={setTargetNode}
+            stateValue={targetParams}
+            setState={setTargetParams}
             isExpanded={false}
-            renderDisplayName={(node: ClientMissionNode) => node.name}
+            renderDisplayName={(node) => node.name}
           />
         ) : null
       }

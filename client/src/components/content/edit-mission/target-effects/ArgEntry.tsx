@@ -90,6 +90,32 @@ export default function ArgEntry({
     effectArgs[arg._id] ?? false,
   )
 
+  /* -- FUNCTIONS -- */
+
+  /**
+   * Verifies if the dependency argument is in a default state.
+   * @param dependencyArg The dependency argument to validate.
+   * @returns `True` if the dependency argument is in a default
+   * state; otherwise, false.
+   */
+  const verifyDefaultState = (dependencyArg: TTargetArg): boolean => {
+    let isDefaultState: boolean = dependencyArg.required
+      ? effectArgs[dependencyArg._id] === dependencyArg.default ||
+        effectArgs[dependencyArg._id] === defaultStringValue ||
+        effectArgs[dependencyArg._id] === defaultLargeStringValue ||
+        effectArgs[dependencyArg._id] === null ||
+        effectArgs[dependencyArg._id] === undefined ||
+        dependencyArg.display === false
+      : effectArgs[dependencyArg._id] === defaultStringValue ||
+        effectArgs[dependencyArg._id] === defaultLargeStringValue ||
+        effectArgs[dependencyArg._id] === false ||
+        effectArgs[dependencyArg._id] === null ||
+        effectArgs[dependencyArg._id] === undefined ||
+        dependencyArg.display === false
+
+    return isDefaultState
+  }
+
   /* -- COMPUTED -- */
   /**
    * Boolean to determine if the argument should be displayed.
@@ -109,24 +135,15 @@ export default function ArgEntry({
         )
 
         if (dependencyArg) {
-          // If the dependency argument is in a default state
-          // then hide the argument and remove it from the
-          // effect's arguments stored in the state.
-          if (
-            effectArgs[dependencyArg._id] === defaultStringValue ||
-            effectArgs[dependencyArg._id] === defaultLargeStringValue ||
-            effectArgs[dependencyArg._id] === false ||
-            effectArgs[dependencyArg._id] === null ||
-            effectArgs[dependencyArg._id] === undefined ||
-            dependencyArg.display === false
-          ) {
-            // Hide the argument.
-            arg.display = false
-          }
-          // Otherwise, display the argument and set the
-          // argument's value to the default value.
-          else {
+          // The argument should be displayed if the dependency
+          // argument is not in a default state.
+          let displayArg: boolean = !verifyDefaultState(dependencyArg)
+
+          // Update the argument's display value.
+          if (displayArg) {
             arg.display = true
+          } else {
+            arg.display = false
           }
         }
       })
@@ -223,7 +240,7 @@ export default function ArgEntry({
     booleanValue,
   ])
 
-  /* -- FUNCTIONS -- */
+  /* -- FUNCTIONS (CONTINUED) -- */
 
   /**
    * Initializes the argument within the effect's arguments.
@@ -326,25 +343,14 @@ export default function ArgEntry({
           (arg: TTargetArg) => arg._id === dependency,
         )
 
-        // If the dependency argument is found...
         if (dependencyArg) {
-          // ...and the dependency argument is not in a default
-          // state, then the dependency has been met.
-          // *** Note: An argument can only be displayed and set
-          // *** if all of its dependencies are met (i.e., not in
-          // *** a default state).
-          if (
-            effectArgs[dependencyArg._id] !== defaultStringValue ||
-            effectArgs[dependencyArg._id] !== defaultLargeStringValue ||
-            effectArgs[dependencyArg._id] !== false ||
-            effectArgs[dependencyArg._id] !== null ||
-            effectArgs[dependencyArg._id] !== undefined ||
-            dependencyArg.display
-          ) {
+          // The dependency is met if the dependency argument
+          // is not in a default state.
+          let dependencyMet: boolean = !verifyDefaultState(dependencyArg)
+
+          if (dependencyMet) {
             allDependenciesMet.push(true)
-          }
-          // Otherwise, the dependency has not been met.
-          else {
+          } else {
             allDependenciesMet.push(false)
           }
         }

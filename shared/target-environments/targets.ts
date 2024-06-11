@@ -76,70 +76,84 @@ export default abstract class Target<
   }
 
   /**
+   * The node target that is available in the METIS target environment.
+   */
+  private static nodeTarget: TCommonTargetJson = {
+    targetEnvId: 'metis',
+    _id: 'node',
+    name: 'Node',
+    description: '',
+    script: () => {},
+    args: [
+      {
+        _id: 'block-node',
+        name: 'Block Node',
+        required: true,
+        display: true,
+        groupingId: 'block-node',
+        type: 'boolean',
+        default: true,
+      },
+      {
+        _id: 'success-chance',
+        name: 'Chance of Success',
+        required: true,
+        display: false,
+        groupingId: 'block-node',
+        type: 'number',
+        default: 0,
+        dependencies: ['block-node'],
+      },
+      {
+        _id: 'process-time',
+        name: 'Process Time',
+        required: true,
+        display: true,
+        groupingId: 'block-node',
+        type: 'number',
+        default: 0,
+        dependencies: ['block-node'],
+      },
+      {
+        _id: 'resource-cost',
+        name: 'Resource Cost',
+        required: true,
+        display: true,
+        groupingId: 'block-node',
+        type: 'number',
+        default: 0,
+        dependencies: ['block-node'],
+      },
+    ],
+  }
+
+  /**
+   * The output target that is available in the METIS target environment.
+   */
+  private static outputTarget: TCommonTargetJson = {
+    targetEnvId: 'metis',
+    _id: 'output',
+    name: 'Output Panel',
+    description: '',
+    script: () => {},
+    args: [
+      {
+        _id: 'message',
+        name: 'Message',
+        required: true,
+        display: true,
+        type: 'large-string',
+        default: '<p>Enter your message here.</p>',
+      },
+    ],
+  }
+
+  /**
    * The internal targets that are available in the METIS target environment.
    */
   public static INTERNAL_TARGETS: TCommonTargetJson[] = [
-    {
-      targetEnvId: 'metis',
-      _id: 'node',
-      name: 'Node',
-      description: '',
-      script: () => {},
-      args: [
-        {
-          _id: 'block-node',
-          name: 'Block Node',
-          required: false,
-          display: true,
-          groupingId: 'block-node',
-          type: 'boolean',
-        },
-        {
-          _id: 'success-chance',
-          name: 'Chance of Success',
-          required: true,
-          display: false,
-          groupingId: 'block-node',
-          type: 'number',
-          default: 0,
-        },
-        {
-          _id: 'process-time',
-          name: 'Process Time',
-          required: true,
-          display: false,
-          groupingId: 'block-node',
-          type: 'number',
-          default: 0,
-        },
-        {
-          _id: 'resource-cost',
-          name: 'Resource Cost',
-          required: true,
-          display: false,
-          groupingId: 'block-node',
-          type: 'number',
-          default: 0,
-        },
-      ],
-    },
-    {
-      targetEnvId: 'metis',
-      _id: 'output',
-      name: 'Output Panel',
-      description: '',
-      script: () => {},
-      args: [
-        {
-          _id: 'message',
-          name: 'Message',
-          required: true,
-          display: true,
-          type: 'large-string',
-          default: '<p><br></p>',
-        },
-      ],
-    },
+    Target.nodeTarget,
+    Target.outputTarget,
   ]
 }
 

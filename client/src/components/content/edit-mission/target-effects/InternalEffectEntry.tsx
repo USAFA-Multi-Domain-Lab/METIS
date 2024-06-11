@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useGlobalContext } from 'src/context'
 import ClientMissionAction from 'src/missions/actions'
 import { ClientInternalEffect } from 'src/missions/effects/internal'
+import ClientMissionNode from 'src/missions/nodes'
 import ClientTarget from 'src/target-environments/targets'
 import { compute } from 'src/toolbox'
 import { usePostInitEffect } from 'src/toolbox/hooks'
@@ -37,6 +38,10 @@ export default function InternalEffectEntry({
   const [targetParams] = useState<ClientInternalEffect['targetParams']>(
     effect.targetParams,
   )
+  // todo: uncomment when force is implemented
+  // const [targetForce] = useState<ClientInternalEffect['targetForce']>(
+  //   effect.targetForce,
+  // )
 
   /* -- COMPUTED -- */
   /**
@@ -64,6 +69,34 @@ export default function InternalEffectEntry({
     actionName,
     name,
   ])
+  /**
+   * The value to display as the target.
+   */
+  const targetValue: string = compute(() => {
+    // Initialize the value to display.
+    let value: string = 'No target selected.'
+
+    // todo: uncomment when force is implemented
+    // // If the target parameters are set and the target
+    // // paramter is not a ClientMissionForce then use the
+    // // target parameter's name.
+    // if (targetParams && !(targetParams instanceof ClientMissionForce)) {
+    //   value = targetParams.name
+    // } else
+    // // Otherwise, if the target is set then use the target's name.
+    // if (target) {
+    //   value = target.name
+    // }
+
+    if (targetParams && targetParams instanceof ClientMissionNode) {
+      value = targetParams.name
+    } else if (target) {
+      value = target.name
+    }
+
+    // Return the value to display.
+    return value
+  })
 
   /* -- EFFECTS -- */
 
@@ -196,12 +229,9 @@ export default function InternalEffectEntry({
           <DetailLocked label='Target Environment' stateValue='METIS' />
           {/* 
           // todo: uncomment when force is implemented
-          <DetailLocked label='Force' stateValue={effect.force} />
+          <DetailLocked label='Force' stateValue={targetForce} />
           */}
-          <DetailLocked
-            label='Target'
-            stateValue={targetParams?.name ?? 'No target selected.'}
-          />
+          <DetailLocked label='Target' stateValue={targetValue} />
           <Args
             target={target}
             effectArgs={effectArgs}
