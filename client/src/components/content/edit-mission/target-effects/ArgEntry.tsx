@@ -3,7 +3,7 @@ import { ClientExternalEffect } from 'src/missions/effects/external'
 import { compute } from 'src/toolbox'
 import { usePostInitEffect } from 'src/toolbox/hooks'
 import { ReactSetter } from 'src/toolbox/types'
-import { TTargetArg } from '../../../../../../shared/target-environments/targets'
+import { TTargetArg } from '../../../../../../shared/target-environments/args'
 import { DetailDropDown } from '../../form/DetailDropDown'
 import { DetailLargeString } from '../../form/DetailLargeString'
 import { DetailNumber } from '../../form/DetailNumber'
@@ -90,87 +90,32 @@ export default function ArgEntry({
     effectArgs[arg._id] ?? false,
   )
 
-  /* -- FUNCTIONS -- */
-
-  /**
-   * Verifies if the dependency argument is in a default state.
-   * @param dependencyArg The dependency argument to validate.
-   * @returns `True` if the dependency argument is in a default
-   * state; otherwise, false.
-   */
-  const verifyDefaultState = (dependencyArg: TTargetArg): boolean => {
-    let isDefaultState: boolean = dependencyArg.required
-      ? effectArgs[dependencyArg._id] === dependencyArg.default ||
-        effectArgs[dependencyArg._id] === defaultStringValue ||
-        effectArgs[dependencyArg._id] === defaultLargeStringValue ||
-        effectArgs[dependencyArg._id] === null ||
-        effectArgs[dependencyArg._id] === undefined ||
-        dependencyArg.display === false
-      : effectArgs[dependencyArg._id] === defaultStringValue ||
-        effectArgs[dependencyArg._id] === defaultLargeStringValue ||
-        effectArgs[dependencyArg._id] === false ||
-        effectArgs[dependencyArg._id] === null ||
-        effectArgs[dependencyArg._id] === undefined ||
-        dependencyArg.display === false
-
-    return isDefaultState
-  }
-
   /* -- COMPUTED -- */
   /**
-   * Boolean to determine if the argument should be displayed.
+   * Determines if all the argument's dependencies have been met.
    */
-  const display: boolean = compute(() => {
-    // If the argument has a target then update the target's
-    // arguments.
-    if (target && arg.dependencies) {
-      // Grab the target's arguments.
-      let args: TTargetArg[] = target.args
-
-      // Iterate through the dependencies.
-      arg.dependencies.forEach((dependency: string) => {
-        // Grab the dependency argument.
-        let dependencyArg: TTargetArg | undefined = args.find(
-          (arg: TTargetArg) => arg._id === dependency,
-        )
-
-        if (dependencyArg) {
-          // The argument should be displayed if the dependency
-          // argument is not in a default state.
-          let displayArg: boolean = !verifyDefaultState(dependencyArg)
-
-          // Update the argument's display value.
-          if (displayArg) {
-            arg.display = true
-          } else {
-            arg.display = false
-          }
-        }
-      })
-    }
-
-    // Return the display value.
-    return arg.display
-  })
+  const allDependenciesMet: boolean = compute(
+    () => target?.allDependenciesMet(arg, effectArgs) ?? false,
+  )
 
   /* -- EFFECTS -- */
 
-  // Update the effect's arguments based on the argument's
-  // display.
+  // Update the effect's arguments based on the status of
+  // the argument's dependencies.
   useEffect(() => {
-    // If the argument is displayed and the argument is not
-    // in the effect's arguments then initialize the argument.
-    if (display && effectArgs[arg._id] === undefined) {
+    // If all the dependencies have been met and the argument is
+    // not in the effect's arguments then initialize the argument.
+    if (allDependenciesMet && effectArgs[arg._id] === undefined) {
       initializeArg()
     }
     // Otherwise, remove the argument from the effect's arguments.
-    else if (!display && effectArgs[arg._id] !== undefined) {
+    else if (!allDependenciesMet && effectArgs[arg._id] !== undefined) {
       setEffectArgs((prev) => {
         delete prev[arg._id]
         return prev
       })
     }
-  }, [display])
+  }, [allDependenciesMet])
 
   // Update the argument's value in the effect's arguments
   // when the argument's value changes.
@@ -235,12 +180,13 @@ export default function ArgEntry({
     dropDownValue,
     optionalDropDownValue,
     numberValue,
+    optionalNumberValue,
     stringValue,
     largeStringValue,
     booleanValue,
   ])
 
-  /* -- FUNCTIONS (CONTINUED) -- */
+  /* -- FUNCTIONS -- */
 
   /**
    * Initializes the argument within the effect's arguments.
@@ -248,15 +194,11 @@ export default function ArgEntry({
    * and whether the argument is required or not.*
    */
   const initializeArg = () => {
-    // If the argument is required and has no dependencies...
-    if (
-      arg.required &&
-      (arg.dependencies === undefined || arg.dependencies.length === 0)
-    ) {
+    // If the argument is required and all the dependencies
+    // have been met...
+    if (arg.required && allDependenciesMet) {
       // ...and the argument is a drop down then set the
       // drop down value to the default value.
-      // *** Note: The default value is mandatory if the
-      // *** argument is required.
       if (arg.type === 'dropdown') {
         // *** Note: When this value in the state changes,
         // *** the effect's arguments automatically updates
@@ -289,6 +231,8 @@ export default function ArgEntry({
       }
       // Or, if the argument is a string then set the string
       // value to the default value.
+      // *** Note: The default value is mandatory if the
+      // *** argument is required.
       else if (arg.type === 'string') {
         // *** Note: When this value in the state changes,
         // *** the effect's arguments automatically updates
@@ -297,6 +241,8 @@ export default function ArgEntry({
       }
       // Or, if the argument is a large string then set the
       // large string value to the default value.
+      // *** Note: The default value is mandatory if the
+      // *** argument is required.
       else if (arg.type === 'large-string') {
         // *** Note: When this value in the state changes,
         // *** the effect's arguments automatically updates
@@ -328,114 +274,6 @@ export default function ArgEntry({
         }
       }
     }
-    // Or, if the argument is required and has dependencies...
-    else if (arg.required && arg.dependencies) {
-      // Grab the target's arguments.
-      let args: TTargetArg[] = target?.args || []
-      // Create an array to store the status of the argument's
-      // dependencies.
-      let allDependenciesMet: boolean[] = []
-
-      // Iterate through the dependencies.
-      arg.dependencies.forEach((dependency: string) => {
-        // Grab the dependency argument.
-        let dependencyArg: TTargetArg | undefined = args.find(
-          (arg: TTargetArg) => arg._id === dependency,
-        )
-
-        if (dependencyArg) {
-          // The dependency is met if the dependency argument
-          // is not in a default state.
-          let dependencyMet: boolean = !verifyDefaultState(dependencyArg)
-
-          if (dependencyMet) {
-            allDependenciesMet.push(true)
-          } else {
-            allDependenciesMet.push(false)
-          }
-        }
-      })
-
-      // If all of the dependencies have been met...
-      if (!allDependenciesMet.includes(false)) {
-        // ...and the argument is a drop down then set the
-        // drop down value to the default value.
-        if (arg.type === 'dropdown') {
-          // *** Note: When this value in the state changes,
-          // *** the effect's arguments automatically updates
-          // *** with the current value.
-          setDropDownValue(arg.default)
-        }
-        // Or, if the argument is a number...
-        else if (arg.type === 'number') {
-          // ...and the number value stored in the state is the
-          // same as the default value, then manually update the
-          // effect's arguments by adding this argument and its
-          // value.
-          if (numberValue === arg.default) {
-            // *** Note: An argument's value in the effect's
-            // *** arguments is automatically set if the value
-            // *** stored in this state changes. If the value
-            // *** in the state doesn't change then the value
-            // *** needs to be set manually.
-            setEffectArgs((prev) => ({ ...prev, [arg._id]: numberValue }))
-          }
-          // Otherwise, set the number value to the default value.
-          // *** Note: The default value is mandatory if the
-          // *** argument is required.
-          else {
-            // *** Note: When this value in the state changes,
-            // *** the effect's arguments automatically updates
-            // *** with the current value.
-            setNumberValue(arg.default)
-          }
-        }
-        // Or, if the argument is a string then set the string
-        // value to the default value.
-        // *** Note: The default value is mandatory if the
-        // *** argument is required.
-        else if (arg.type === 'string') {
-          // *** Note: When this value in the state changes,
-          // *** the effect's arguments automatically updates
-          // *** with the current value.
-          setStringValue(arg.default)
-        }
-        // Or, if the argument is a large string then set the
-        // large string value to the default value.
-        // *** Note: The default value is mandatory if the
-        // *** argument is required.
-        else if (arg.type === 'large-string') {
-          // *** Note: When this value in the state changes,
-          // *** the effect's arguments automatically updates
-          // *** with the current value.
-          setLargeStringValue(arg.default)
-        }
-        // Or, if the argument is a boolean...
-        else if (arg.type === 'boolean') {
-          // ...and the boolean value stored in the state is the
-          // same as the default value, then manually update the
-          // effect's arguments by adding this argument and its
-          // value.
-          if (booleanValue === arg.default) {
-            // *** Note: An argument's value in the effect's
-            // *** arguments is automatically set if the value
-            // *** stored in this state changes. If the value
-            // *** in the state doesn't change then the value
-            // *** needs to be set manually.
-            setEffectArgs((prev) => ({ ...prev, [arg._id]: booleanValue }))
-          }
-          // Otherwise, set the boolean value to the default value.
-          // *** Note: The default value is mandatory if the
-          // *** argument is required.
-          else {
-            // *** Note: When this value in the state changes,
-            // *** the effect's arguments automatically updates
-            // *** with the current value.
-            setBooleanValue(arg.default)
-          }
-        }
-      }
-    }
     // Or, if the argument is optional and its type
     // is a boolean...
     else if (!arg.required && arg.type === 'boolean') {
@@ -452,7 +290,7 @@ export default function ArgEntry({
 
   // If the argument type is "dropdown" then render
   // the dropdown.
-  if (arg.type === 'dropdown' && arg.required && display) {
+  if (arg.type === 'dropdown' && arg.required && allDependenciesMet) {
     return (
       <div className={`ArgEntry Dropdown`}>
         <DetailDropDown<TArgDropdownOption>
@@ -469,7 +307,7 @@ export default function ArgEntry({
   }
   // If the argument type is "dropdown" and the argument
   // is optional then render the optional dropdown.
-  else if (arg.type === 'dropdown' && !arg.required && display) {
+  else if (arg.type === 'dropdown' && !arg.required && allDependenciesMet) {
     return (
       <div className={`ArgEntry Dropdown`}>
         <DetailDropDown<TArgDropdownOption>
@@ -486,7 +324,7 @@ export default function ArgEntry({
   }
   // If the argument type is "number" and the argument
   // is required then render the number input.
-  else if (arg.type === 'number' && arg.required && display) {
+  else if (arg.type === 'number' && arg.required && allDependenciesMet) {
     return (
       <div className={`ArgEntry Number`}>
         <DetailNumber
@@ -504,7 +342,7 @@ export default function ArgEntry({
   }
   // If the argument type is "number" and the argument
   // is optional then render the optional number input.
-  else if (arg.type === 'number' && !arg.required && display) {
+  else if (arg.type === 'number' && !arg.required && allDependenciesMet) {
     return (
       <div className={`ArgEntry Number`}>
         <DetailNumber
@@ -522,7 +360,7 @@ export default function ArgEntry({
   }
   // If the argument type is "string" then render
   // the string input.
-  else if (arg.type === 'string' && display) {
+  else if (arg.type === 'string' && allDependenciesMet) {
     return (
       <div className={`ArgEntry String`}>
         <DetailString
@@ -538,7 +376,7 @@ export default function ArgEntry({
   }
   // If the argument type is "large-string" then render
   // the large-string input.
-  else if (arg.type === 'large-string' && display) {
+  else if (arg.type === 'large-string' && allDependenciesMet) {
     return (
       <div className={`ArgEntry LargeString`}>
         <DetailLargeString
@@ -555,7 +393,7 @@ export default function ArgEntry({
   }
   // If the argument type is "boolean" then render
   // the boolean toggle.
-  else if (arg.type === 'boolean' && display) {
+  else if (arg.type === 'boolean' && allDependenciesMet) {
     return (
       <div className={`ArgEntry Boolean`}>
         <DetailToggle

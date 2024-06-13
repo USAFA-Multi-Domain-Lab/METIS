@@ -1,5 +1,4 @@
 import { ClientTargetEnvironment } from 'src/target-environments'
-import ClientTarget from 'src/target-environments/targets'
 import { TClientMissionTypes } from '..'
 import InternalEffect from '../../../../shared/missions/effects/internal'
 import TargetEnvironment from '../../../../shared/target-environments'
@@ -19,7 +18,7 @@ export class ClientInternalEffect extends InternalEffect<TClientMissionTypes> {
     let target = targetEnv.targets.find((target) => target._id === targetId)
     // If the target is found, set it.
     if (target) {
-      this._target = new ClientTarget(targetEnv, target)
+      this._target = target
     }
   }
 

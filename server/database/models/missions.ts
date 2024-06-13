@@ -8,7 +8,7 @@ import MetisDatabase from 'metis/server/database'
 import SanitizedHTML from 'metis/server/database/schema-types/html'
 import ServerTargetEnvironment from 'metis/server/target-environments'
 import ServerTarget from 'metis/server/target-environments/targets'
-import { TTargetArg } from 'metis/target-environments/targets'
+import { TTargetArg } from 'metis/target-environments/args'
 import { HEX_COLOR_REGEX } from 'metis/toolbox/strings'
 import mongoose, { Schema } from 'mongoose'
 
@@ -213,7 +213,7 @@ const validate_mission_forces_nodes_actions_externalEffects = (
   // Loop through each external effect.
   externalEffects.forEach((externalEffect) => {
     // Get the target.
-    let target = ServerTarget.getTargetJson(externalEffect.targetId as string)
+    let target = ServerTarget.getTarget(externalEffect.targetId as string)
 
     // Ensure the target exists.
     if (!target) {
@@ -223,7 +223,9 @@ const validate_mission_forces_nodes_actions_externalEffects = (
     }
 
     // Get the target environment.
-    let targetEnvironment = ServerTargetEnvironment.getJson(target.targetEnvId)
+    let targetEnvironment = ServerTargetEnvironment.getJson(
+      target.targetEnvironment._id,
+    )
 
     // Ensure the target environment exists.
     if (!targetEnvironment) {
@@ -297,33 +299,15 @@ const validate_mission_forces_nodes_actions_externalEffects = (
       }
     }
 
-    // Ensure all of the required arguments are present based on dependencies.
+    // Ensure all of the required arguments are present if all their dependencies are met.
     for (let arg of target.args) {
-      // Ensure the argument is required.
-      if (arg.required) {
-        // Ensure the argument is present.
-        if (!(arg._id in externalEffect.args)) {
-          // Ensure the argument has no dependencies.
-          if (!arg.dependencies || arg.dependencies.length === 0) {
-            throw new Error(
-              `Error in mission:\nThe required argument ("${arg.name}") within the external effect ("${externalEffect.name}") is missing.`,
-            )
-          }
-          // Ensure all of the dependencies are present and not in a default state.
-          for (let dependency of arg.dependencies) {
-            if (
-              dependency in externalEffect.args &&
-              externalEffect.args[dependency] !== '' &&
-              externalEffect.args[dependency] !== '<p><br></p>' &&
-              externalEffect.args[dependency] !== false &&
-              externalEffect.args[dependency] !== null &&
-              externalEffect.args[dependency] !== undefined
-            ) {
-              throw new Error(
-                `Error in mission:\nThe required argument ("${arg.name}") within the external effect ("${externalEffect.name}") is missing.`,
-              )
-            }
-          }
+      // If the argument is required and it is not present...
+      if (arg.required && !(arg._id in externalEffect.args)) {
+        // If all of the dependencies are met, throw an error.
+        if (target.allDependenciesMet(arg, externalEffect.args)) {
+          throw new Error(
+            `Error in mission:\nThe required argument ("${arg.name}") within the external effect ("${externalEffect.name}") is missing.`,
+          )
         }
       }
     }
@@ -337,12 +321,19 @@ const validate_mission_forces_nodes_actions_externalEffects = (
 const validate_mission_forces_nodes_actions_internalEffects = (
   internalEffects: TCommonInternalEffectJson[],
 ): void => {
+  // Create the internal (METIS) target environment.
+  let targetEnv = new ServerTargetEnvironment(
+    ServerTargetEnvironment.INTERNAL_TARGET_ENV,
+  )
+
   // Loop through each effect.
   internalEffects.forEach((internalEffect) => {
-    // Get the target.
-    let target = ServerTarget.INTERNAL_TARGETS.find(
+    // Get the target JSON.
+    let targetJson = ServerTarget.INTERNAL_TARGETS.find(
       (target) => target._id === internalEffect.targetId,
     )
+    // Create the target.
+    let target = targetJson ? new ServerTarget(targetEnv, targetJson) : null
 
     // Ensure the target exists.
     if (!target) {
@@ -409,33 +400,15 @@ const validate_mission_forces_nodes_actions_internalEffects = (
       }
     }
 
-    // Ensure all of the required arguments are present based on dependencies.
+    // Ensure all of the required arguments are present if all their dependencies are met.
     for (let arg of target.args) {
-      // Ensure the argument is required.
-      if (arg.required) {
-        // Ensure the argument is present.
-        if (!(arg._id in internalEffect.args)) {
-          // Ensure the argument has no dependencies.
-          if (!arg.dependencies || arg.dependencies.length === 0) {
-            throw new Error(
-              `Error in mission:\nThe required argument ("${arg.name}") within the internal effect ("${internalEffect.name}") is missing.`,
-            )
-          }
-          // Ensure all of the dependencies are present and not in a default state.
-          for (let dependency of arg.dependencies) {
-            if (
-              dependency in internalEffect.args &&
-              internalEffect.args[dependency] !== '' &&
-              internalEffect.args[dependency] !== '<p><br></p>' &&
-              internalEffect.args[dependency] !== false &&
-              internalEffect.args[dependency] !== null &&
-              internalEffect.args[dependency] !== undefined
-            ) {
-              throw new Error(
-                `Error in mission:\nThe required argument ("${arg.name}") within the internal effect ("${internalEffect.name}") is missing.`,
-              )
-            }
-          }
+      // If the argument is required and it is not present...
+      if (arg.required && !(arg._id in internalEffect.args)) {
+        // If all of the dependencies are met, throw an error.
+        if (target.allDependenciesMet(arg, internalEffect.args)) {
+          throw new Error(
+            `Error in mission:\nThe required argument ("${arg.name}") within the internal effect ("${internalEffect.name}") is missing.`,
+          )
         }
       }
     }

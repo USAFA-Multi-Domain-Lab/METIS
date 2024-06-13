@@ -1,6 +1,5 @@
 import InternalEffect from 'metis/missions/effects/internal'
 import ServerTargetEnvironment from 'metis/server/target-environments'
-import ServerTarget from 'metis/server/target-environments/targets'
 import TargetEnvironment from 'metis/target-environments'
 import { TServerMissionTypes } from '..'
 
@@ -19,7 +18,7 @@ export default class ServerInternalEffect extends InternalEffect<TServerMissionT
     let target = targetEnv.targets.find((target) => target._id === targetId)
     // If the target is found, set it.
     if (target) {
-      this._target = new ServerTarget(targetEnv, target)
+      this._target = target
     }
   }
 

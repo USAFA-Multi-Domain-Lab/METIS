@@ -44,17 +44,17 @@ export default abstract class TargetEnvironment<
 
   /**
    * Parses the target data into Target Objects.
-   * @param {TCommonTargetJson[]} data The target data to parse.
-   * @returns {TTarget[]} An array of Target Objects.
+   * @param data The target data to parse.
+   * @returns An array of Target Objects.
    */
   public abstract parseTargets(data: TCommonTargetJson[]): TTarget<T>[]
 
   /**
    * Converts the TargetEnvironment Object to JSON.
-   * @param {TTargetEnvJsonOptions} options Options for converting the TargetEnvironment to JSON.
-   * @returns {TCommonTargetEnvJson} A JSON representation of the TargetEnvironment.
+   * @param options Options for converting the TargetEnvironment to JSON.
+   * @returns A JSON representation of the TargetEnvironment.
    */
-  public toJson(options: TTargetEnvJsonOptions = {}): TCommonTargetEnvJson {
+  public toJson(): TCommonTargetEnvJson {
     // Construct JSON object to send to the server.
     return {
       _id: this._id,
