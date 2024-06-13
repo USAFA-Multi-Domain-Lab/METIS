@@ -6,7 +6,7 @@ import { usePostInitEffect } from 'src/toolbox/hooks'
 import { DetailLargeString } from '../form/DetailLargeString'
 import { DetailNumber } from '../form/DetailNumber'
 import { DetailString } from '../form/DetailString'
-import './MissionEntry.scss'
+import './index.scss'
 
 /**
  * This will render the basic editable details of the mission itself.
@@ -92,7 +92,7 @@ export default function MissionEntry({
   /* -- RENDER -- */
 
   return (
-    <div className='MissionEntry SidePanel'>
+    <div className='Entry MissionEntry SidePanel'>
       <div className='BorderBox'>
         {/* -- TOP OF BOX -- */}
         <div className='BoxTop'>

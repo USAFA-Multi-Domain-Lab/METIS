@@ -1,44 +1,34 @@
-import { useState } from 'react'
 import { useGlobalContext } from 'src/context'
-import ClientMissionForce from 'src/missions/forces'
+import ClientMissionPrototype from 'src/missions/nodes/prototypes'
 import { compute } from 'src/toolbox'
-import { usePostInitEffect } from 'src/toolbox/hooks'
 import { DetailString } from '../form/DetailString'
 import './index.scss'
 
 /**
- * This will render the basic editable details of a mission force.
+ * This will render the basic editable details of a mission prototype.
  */
-export default function ForceEntry({
-  force,
+export default function PrototypeEntry({
+  prototype,
   handleChange,
-}: TForceEntry): JSX.Element | null {
+}: TPrototypeEntry): JSX.Element | null {
   /* -- GLOBAL CONTEXT -- */
   const { forceUpdate } = useGlobalContext().actions
 
   /* -- STATE -- */
-  const [forceName, setForceName] = useState<string>(force.name)
 
   /* -- COMPUTED -- */
   /**
-   * The current location within the force.
+   * The name of the prototype.
    */
-  const forcePath: string[] = compute(() => [forceName])
-
-  /* -- EFFECTS -- */
-
-  // Sync the component state with the force name.
-  usePostInitEffect(() => {
-    // Update the force name.
-    force.name = forceName
-
-    // This is to show the change to
-    // the name of the force shown
-    // on the mission map.
-    forceUpdate()
-    // Allow the user to save the changes.
-    handleChange()
-  }, [forceName])
+  const prototypeName = compute(() => prototype.name)
+  /**
+   * The name of the mission.
+   */
+  const missionName: string = compute(() => prototype.mission.name)
+  /**
+   * The current location within the prototype.
+   */
+  const prototypePath: string[] = compute(() => [missionName, prototypeName])
 
   /* -- FUNCTIONS -- */
 
@@ -53,17 +43,17 @@ export default function ForceEntry({
     )
   }
   /**
-   * Renders JSX for the path of the force.
+   * Renders JSX for the path of the prototype.
    */
   const renderPathJsx = (): JSX.Element | null => {
     return (
       <div className='Path'>
         Location:{' '}
-        {forcePath.map((position: string, index: number) => {
+        {prototypePath.map((position: string, index: number) => {
           return (
             <span className='Position' key={`position-${index}`}>
               <span className='PositionText'>{position}</span>{' '}
-              {index === forcePath.length - 1 ? '' : ' > '}
+              {index === prototypePath.length - 1 ? '' : ' > '}
             </span>
           )
         })}
@@ -74,7 +64,7 @@ export default function ForceEntry({
   /* -- RENDER -- */
 
   return (
-    <div className='Entry ForceEntry SidePanel'>
+    <div className='Entry PrototypeEntry SidePanel'>
       <div className='BorderBox'>
         {/* -- TOP OF BOX -- */}
         <div className='BoxTop'>
@@ -88,11 +78,11 @@ export default function ForceEntry({
           <DetailString
             fieldType='required'
             handleOnBlur='repopulateValue'
-            label='Name'
-            stateValue={forceName}
-            setState={setForceName}
-            defaultValue={ClientMissionForce.DEFAULT_PROPERTIES.name}
-            key={`${force._id}_name`}
+            label='ID'
+            stateValue={prototype._id}
+            setState={() => {}}
+            defaultValue={prototype._id}
+            key={`${prototype._id}_name`}
           />
         </div>
       </div>
@@ -100,13 +90,13 @@ export default function ForceEntry({
   )
 }
 
-/* ---------------------------- TYPES FOR FORCE ENTRY ---------------------------- */
+/* ---------------------------- TYPES FOR PROTOTYPE ENTRY ---------------------------- */
 
-export type TForceEntry = {
+export type TPrototypeEntry = {
   /**
-   * The force to be edited.
+   * The prototype to be edited.
    */
-  force: ClientMissionForce
+  prototype: ClientMissionPrototype
   /**
    * A function that will be used to notify the parent
    * component that this component has changed.

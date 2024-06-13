@@ -297,35 +297,33 @@ export default class ClientMission
   }
 
   /**
-   * Calls the callbacks of listeners for the given mission event.
-   * @param event The event emitted.
+   * Emits an event for the mission.
+   * @param method The method of the event to emit.
    */
-  protected emitEvent(event: TMissionEvent): void {
+  protected emitEvent(method: TMissionEvent): void {
     // Call any matching listener callbacks
     // or any activity listener callbacks.
     for (let [listenerEvent, listenerCallback] of this.listeners) {
-      if (listenerEvent === event || listenerEvent === 'activity') {
+      if (listenerEvent === method || listenerEvent === 'activity') {
         listenerCallback()
       }
     }
   }
 
-  /**
-   * Adds a listener for a mission event.
-   * @param event The event for which to listen.
-   * @param callback The callback to call when the event is triggered.
-   */
-  public addEventListener(event: TMissionEvent, callback: () => void): void {
-    this.listeners.push([event, callback])
+  // Implemented
+  public addEventListener(
+    method: TMissionEvent,
+    callback: () => void,
+  ): ClientMission {
+    this.listeners.push([method, callback])
+    return this
   }
 
-  /**
-   * Removes a listener for a mission event.
-   * @param callback The callback used for the listener.
-   */
-  public removeEventListener(callback: () => void): void {
+  // Implemented
+  public removeEventListener(callback: () => void): ClientMission {
     // Filter out listener.
     this.listeners = this.listeners.filter(([, h]) => h !== callback)
+    return this
   }
 
   /**

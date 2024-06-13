@@ -1,7 +1,13 @@
+import { useState } from 'react'
 import Tooltip from 'src/components/content/communication/Tooltip'
+import ButtonSvg, {
+  TButtonSvg,
+} from 'src/components/content/user-controls/ButtonSvg'
 import ClientMissionNode from 'src/missions/nodes'
 import ClientMissionPrototype from 'src/missions/nodes/prototypes'
 import { compute } from 'src/toolbox'
+import { useEventListener, useInlineStyling } from 'src/toolbox/hooks'
+import { TWithKey } from '../../../../../../../shared/toolbox/objects'
 import { Vector1D } from '../../../../../../../shared/toolbox/space'
 import { MAX_NODE_CONTENT_ZOOM } from './MissionNode'
 import './MissionPrototype.scss'
@@ -27,15 +33,23 @@ export default function MissionPrototype({
   cameraZoom,
   onSelect,
   applyTooltip = () => '',
-}: TMissionNode_P): JSX.Element | null {
+}: TMissionPrototype_P): JSX.Element | null {
   /* -- STATE -- */
+
+  /**
+   * The buttons to display on the prototype.
+   */
+  const [buttons, setButtons] = useState<TPrototypeButton[]>(prototype.buttons)
 
   /* -- HOOKS -- */
 
   // Register an event listener to handle activity
-  // on the node.
-  // useEventListener(node, 'activity', () => {
-  // })
+  // on the prototype.
+  useEventListener(prototype, 'activity', () => {
+    // Update the state with details stored in
+    // the prototype object.
+    setButtons(prototype.buttons)
+  })
 
   /* -- computed -- */
 
@@ -64,6 +78,12 @@ export default function MissionPrototype({
       backgroundColor = PROTOTYPE_COLOR
     }
 
+    // If there are buttons to display, add height
+    // for them.
+    if (buttons.length > 0) {
+      height += ClientMissionNode.BUTTONS_HEIGHT
+    }
+
     return {
       left: `${x}em`,
       top: `${y}em`,
@@ -72,6 +92,17 @@ export default function MissionPrototype({
       padding: `${verticalPadding}em 0`,
       borderColor: PROTOTYPE_COLOR,
       backgroundColor,
+    }
+  })
+
+  /**
+   * The inline styles for the prototype's primary content.
+   */
+  const primaryContentStyle = useInlineStyling((style) => {
+    // If there are buttons, change the height
+    // of the primary content to account for them.
+    if (buttons.length > 0) {
+      style.height = `calc(100% - ${ClientMissionNode.BUTTONS_HEIGHT}em)`
     }
   })
 
@@ -92,12 +123,19 @@ export default function MissionPrototype({
   })
 
   /**
+   * The inline styles for the prototype's buttons.
+   */
+  const buttonsStyle = useInlineStyling((style) => {}, {
+    height: `${ClientMissionNode.BUTTONS_HEIGHT}em`,
+  })
+
+  /**
    * The class for the root element.
    */
   const rootClassName: string = compute(() => {
     let classList = ['MissionPrototype']
 
-    // Add the selectable class if the node has
+    // Add the selectable class if the prototype has
     // a selection handler.
     if (onSelect) {
       classList.push('Selectable')
@@ -107,7 +145,7 @@ export default function MissionPrototype({
   })
 
   /**
-   * The class for the node's name.
+   * The class for the prototype's name.
    */
   const nameClassName: string = compute(() => {
     let classList = ['Name', 'Text']
@@ -121,10 +159,42 @@ export default function MissionPrototype({
     return classList.join(' ')
   })
 
+  /**
+   * The class for the prototype's buttons.
+   */
+  const buttonsClassName: string = compute(() => {
+    let classList = ['Buttons']
+
+    // Hide the buttons if there are none
+    // provided.
+    if (buttons.length === 0) {
+      classList.push('Hidden')
+    }
+
+    return classList.join(' ')
+  })
+
   /* -- render -- */
 
-  // Ensure the node selection handler is defined.
+  // Ensure the prototype selection handler is defined.
   onSelect = onSelect ?? (() => {})
+
+  /**
+   * The JSX for the buttons.
+   */
+  const buttonsJsx: JSX.Element[] = compute(() => {
+    return buttons.map((button: TPrototypeButton): JSX.Element => {
+      return (
+        <ButtonSvg
+          {...button}
+          onClick={(event: React.MouseEvent) => {
+            button.onClick(event, prototype)
+          }}
+          key={button.key}
+        />
+      )
+    })
+  })
 
   // Render root JSX.
   return (
@@ -134,10 +204,13 @@ export default function MissionPrototype({
       style={rootStyle}
       onClick={onSelect}
     >
-      <div className='PrimaryContent'>
+      <div className='PrimaryContent' style={primaryContentStyle}>
         <div className={nameClassName} style={nameStyle}>
           {prototype._id.substring(0, 8)}
         </div>
+      </div>
+      <div className={buttonsClassName} style={buttonsStyle}>
+        {buttonsJsx}
       </div>
       <Tooltip description={applyTooltip()} />
     </div>
@@ -147,7 +220,7 @@ export default function MissionPrototype({
 /**
  * Props for `MissionPrototype`.
  */
-export type TMissionNode_P = {
+export type TMissionPrototype_P = {
   /**
    * The prototype to display.
    */
@@ -157,13 +230,26 @@ export type TMissionNode_P = {
    */
   cameraZoom: Vector1D
   /**
-   * Handler for when the node is selected.
+   * Handler for when the prototype is selected.
    * @default () => {}
    */
   onSelect?: () => void
   /**
-   * Applies a tooltip to the node.
-   * @default () => node.description
+   * Applies a tooltip to the prototype.
+   * @default () => ''
    */
   applyTooltip?: () => string
+}
+
+/**
+ * Button SVG type for prototype-specific buttons.
+ */
+export type TPrototypeButton = TWithKey<Omit<TButtonSvg, 'onClick'>> & {
+  // Overridden
+  /**
+   * Handles when the button is clicked.
+   * @param event The click event.
+   * @param prototype The prototype associated with the button.
+   */
+  onClick: (event: React.MouseEvent, prototype: ClientMissionPrototype) => void
 }

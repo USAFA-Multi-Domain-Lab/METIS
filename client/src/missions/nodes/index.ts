@@ -1,6 +1,7 @@
 import axios from 'axios'
 import memoizeOne from 'memoize-one'
 import { TNodeButton } from 'src/components/content/session/mission-map/objects/MissionNode'
+import { TEventListenerTarget } from 'src/toolbox/hooks'
 import ClientMission, { TClientMissionTypes } from '..'
 import { TRequestMethod } from '../../../../shared/connect/data'
 import { TCommonMissionActionJson } from '../../../../shared/missions/actions'
@@ -20,7 +21,10 @@ import ClientMissionForce from '../forces'
 /**
  * Class for managing mission nodes on the client.
  */
-export default class ClientMissionNode extends MissionNode<TClientMissionTypes> {
+export default class ClientMissionNode
+  extends MissionNode<TClientMissionTypes>
+  implements TEventListenerTarget<TNodeEventMethod>
+{
   // Overridden
   public get depthPadding(): number {
     return this._depthPadding
@@ -36,7 +40,7 @@ export default class ClientMissionNode extends MissionNode<TClientMissionTypes> 
   /**
    * Listeners for node events.
    */
-  private listeners: Array<[TMissionNodeEvent, () => void]> = []
+  private listeners: Array<[TNodeEventMethod, () => void]> = []
 
   /**
    * Whether the node is pending an "node-opened" event from the server.
@@ -267,7 +271,7 @@ export default class ClientMissionNode extends MissionNode<TClientMissionTypes> 
    * Calls the callbacks of listeners for the given node event.
    * @param event The event emitted.
    */
-  protected emitEvent(event: TMissionNodeEvent): void {
+  protected emitEvent(event: TNodeEventMethod): void {
     // Call any matching listener callbacks
     // or any activity listener callbacks.
     for (let [listenerEvent, listenerCallback] of this.listeners) {
@@ -277,25 +281,20 @@ export default class ClientMissionNode extends MissionNode<TClientMissionTypes> 
     }
   }
 
-  /**
-   * Adds a listener for a node event.
-   * @param event The event for which to listen.
-   * @param callback The callback to call when the event is triggered.
-   */
+  // Implemented
   public addEventListener(
-    event: TMissionNodeEvent,
+    event: TNodeEventMethod,
     callback: () => void,
-  ): void {
+  ): ClientMissionNode {
     this.listeners.push([event, callback])
+    return this
   }
 
-  /**
-   * Removes a listener for a node event.
-   * @param callback The callback used for the listener.
-   */
-  public removeEventListener(callback: () => void): void {
+  // Implemented
+  public removeEventListener(callback: () => void): ClientMissionNode {
     // Filter out listener.
     this.listeners = this.listeners.filter(([, h]) => h !== callback)
+    return this
   }
 
   // Implemented
@@ -848,6 +847,7 @@ export interface INodeDeleteOptions {
   calledByParentDelete?: boolean // Default "false"
   deleteMethod?: ENodeDeleteMethod // Default "ENodeDeleteMethod.DeleteNodeAndChildren"
 }
+
 /**
  * An event that occurs on a node, which can be listened for.
  * @option 'activity'
@@ -869,7 +869,7 @@ export interface INodeDeleteOptions {
  * @option 'set-buttons'
  * Triggered when the buttons for the node are set.
  */
-export type TMissionNodeEvent =
+export type TNodeEventMethod =
   | 'activity'
   | 'request-made'
   | 'request-failed'

@@ -17,7 +17,7 @@ import ButtonSvgPanel, {
 } from '../user-controls/ButtonSvgPanel'
 import { ButtonText, TButtonText } from '../user-controls/ButtonText'
 import { TToggleLockState } from '../user-controls/Toggle'
-import './NodeEntry.scss'
+import './index.scss'
 
 /**
  * This will render the entry fields for a mission-node
@@ -368,7 +368,7 @@ export default function NodeEntry({
   /* -- RENDER -- */
 
   return (
-    <div className='NodeEntry SidePanel'>
+    <div className='Entry NodeEntry SidePanel'>
       <div className='BorderBox'>
         {/* -- TOP OF BOX -- */}
         <div className='BoxTop'>

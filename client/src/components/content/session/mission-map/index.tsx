@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import ClientMission from 'src/missions'
 import ClientMissionForce from 'src/missions/forces'
 import ClientMissionNode from 'src/missions/nodes'
+import ClientMissionPrototype from 'src/missions/nodes/prototypes'
 import { compute } from 'src/toolbox'
 import { useEventListener } from 'src/toolbox/hooks'
 import { v4 as generateHash } from 'uuid'
@@ -116,6 +117,7 @@ export default function MissionMap({
   mission,
   overlayContent,
   customButtons = [],
+  onPrototypeSelect,
   onNodeSelect,
   applyNodeTooltip,
 }: TMissionMap): JSX.Element | null {
@@ -554,7 +556,9 @@ export default function MissionMap({
         // Construct the onSelect callback for
         // the specific prototype using the generic
         // onSelect callback passed in props.
-        // let onSelect = onNodeSelect ? () => onNodeSelect(prototype) : undefined
+        let onSelect = onPrototypeSelect
+          ? () => onPrototypeSelect(prototype)
+          : undefined
         // let applyTooltip = applyNodeTooltip
         //   ? () => applyNodeTooltip(prototype)
         //   : undefined
@@ -565,7 +569,7 @@ export default function MissionMap({
             key={prototype._id}
             prototype={prototype}
             cameraZoom={cameraZoom}
-            // onSelect={onSelect}
+            onSelect={onSelect}
             // applyTooltip={applyTooltip}
           />
         )
@@ -734,6 +738,12 @@ export type TMissionMap = {
    * @default undefined
    */
   overlayContent?: React.ReactNode
+  /**
+   * Handles when a prototype is selected.
+   * @param prototype The prototype that was selected.
+   * @default undefined
+   */
+  onPrototypeSelect?: (prototype: ClientMissionPrototype) => void
   /**
    * Handles when a node is selected.
    * @param node The node that was selected.

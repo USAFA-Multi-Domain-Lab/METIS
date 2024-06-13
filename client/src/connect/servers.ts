@@ -1,4 +1,5 @@
 import ClientSession from 'src/sessions'
+import { TEventListenerTarget } from 'src/toolbox/hooks'
 import { v4 as generateHash } from 'uuid'
 import {
   TAnyResponseEvent,
@@ -19,7 +20,9 @@ import { SingleTypeObject } from '../../../shared/toolbox/objects'
 /**
  * METIS web-socket-based, server connection.
  */
-export default class ServerConnection {
+export default class ServerConnection
+  implements TEventListenerTarget<TServerMethod>
+{
   /**
    * The web socket connection itself.
    */

@@ -7,6 +7,7 @@ import { ClientExternalEffect } from 'src/missions/effects/external'
 import { ClientInternalEffect } from 'src/missions/effects/internal'
 import ClientMissionForce from 'src/missions/forces'
 import ClientMissionNode, { ENodeDeleteMethod } from 'src/missions/nodes'
+import ClientMissionPrototype from 'src/missions/nodes/prototypes'
 import { ClientTargetEnvironment } from 'src/target-environments'
 import { compute } from 'src/toolbox'
 import { useEventListener, useMountHandler } from 'src/toolbox/hooks'
@@ -17,6 +18,7 @@ import ForceEntry from '../content/edit-mission/ForceEntry'
 import MissionEntry from '../content/edit-mission/MissionEntry'
 import NodeEntry from '../content/edit-mission/NodeEntry'
 import NodeStructuring from '../content/edit-mission/NodeStructuring'
+import PrototypeEntry from '../content/edit-mission/PrototypeEntry'
 import ExternalEffectEntry from '../content/edit-mission/target-effects/ExternalEffectEntry'
 import InternalEffectEntry from '../content/edit-mission/target-effects/InternalEffectEntry'
 import {
@@ -30,7 +32,7 @@ import {
   ResizablePanel,
 } from '../content/general-layout/ResizablePanels'
 import MissionMap from '../content/session/mission-map'
-import { TNodeButton } from '../content/session/mission-map/objects/MissionNode'
+import { TPrototypeButton } from '../content/session/mission-map/objects/MissionPrototype'
 import CreateExternalEffect from '../content/session/mission-map/ui/overlay/modals/CreateExternalEffect'
 import CreateInternalEffect from '../content/session/mission-map/ui/overlay/modals/CreateInternalEffect'
 import { TButtonSvg } from '../content/user-controls/ButtonSvg'
@@ -206,48 +208,67 @@ export default function MissionPage({
 
       // If there is a next node, then add the buttons.
       if (nextNode) {
-        // Define potential buttons.
-        const availableNodeButtons: SingleTypeObject<TNodeButton> = {
-          deselect: {
+        nextNode.buttons = [
+          {
             icon: 'cancel',
             key: 'node-button-deselect',
             tooltipDescription: 'Deselect this node (Closes panel view also).',
             onClick: () => mission.select(nextNode!.force),
           },
+        ]
+      }
+
+      // If there is a previous prototype, clear its buttons.
+      if (prevSelection instanceof ClientMissionPrototype) {
+        prevSelection.buttons = []
+      }
+
+      // If there is a next prototype, then add the buttons.
+      if (nextSelection instanceof ClientMissionPrototype) {
+        // Define potential buttons.
+        const availableButtons: SingleTypeObject<TPrototypeButton> = {
+          deselect: {
+            icon: 'cancel',
+            key: 'prototype-button-deselect',
+            tooltipDescription:
+              'Deselect this prototype (Closes panel view also).',
+            onClick: () => mission.deselect(),
+          },
           add: {
             icon: 'add',
-            key: 'node-button-add',
-            tooltipDescription: 'Create an adjacent node on the map.',
+            key: 'prototype-button-add',
+            tooltipDescription: 'Create an adjacent prototype on the map.',
             onClick: () => {
               mission.creationMode = true
             },
           },
           add_cancel: {
             icon: 'cancel',
-            key: 'node-button-add-cancel',
-            tooltipDescription: 'Cancel node creation.',
+            key: 'prototype-button-add-cancel',
+            tooltipDescription: 'Cancel prototype creation.',
             onClick: () => (mission.creationMode = false),
           },
           // todo: Fix this to work with prototypes.
           remove: {
             icon: 'remove',
-            key: 'node-button-remove',
-            tooltipDescription: 'Delete this node.',
+            key: 'prototype-button-remove',
+            tooltipDescription: 'Delete this prototype.',
             disabled: mission.prototypes.length < 2,
-            onClick: (_, node) => {
-              handleNodeDeleteRequest(node)
+            onClick: (_, prototype) => {
+              // todo: Uncomment and make this work with prototypes.
+              // handleNodeDeleteRequest(prototype)
             },
           },
         }
 
         // Define the buttons that will actually be used.
-        const activeNodeButtons = []
+        const activeButtons = []
 
         // If not in creation mode, then add deselect, add, and
         // remove buttons.
         if (!mission.creationMode) {
-          activeNodeButtons.push(
-            availableNodeButtons.deselect,
+          activeButtons.push(
+            availableButtons.deselect,
             // todo: These should be used in prototypes.
             // availableNodeButtons.add,
             // availableNodeButtons.remove,
@@ -255,11 +276,11 @@ export default function MissionPage({
         }
         // Else, add a cancel button for adding a node.
         else {
-          activeNodeButtons.push(availableNodeButtons.add_cancel)
+          activeButtons.push(availableButtons.add_cancel)
         }
 
         // Set the buttons on the next selection.
-        nextNode.buttons = activeNodeButtons
+        nextSelection.buttons = activeButtons
       }
 
       // Update the selection state.
@@ -354,10 +375,21 @@ export default function MissionPage({
   }
 
   /**
-   * Handler for when a node is selected.
+   * Callback for when a prototype is selected.
+   * @param prototype The selected prototype.
+   */
+  const onPrototypeSelect = (prototype: ClientMissionPrototype) => {
+    if (prototype !== selection) {
+      // Select the prototype.
+      mission.select(prototype)
+    }
+  }
+
+  /**
+   * Callback for when a node is selected.
    * @param node The selected node.
    */
-  let onNodeSelect = (node: ClientMissionNode) => {
+  const onNodeSelect = (node: ClientMissionNode) => {
     if (node !== selection) {
       // Select the node.
       mission.select(node)
@@ -532,6 +564,14 @@ export default function MissionPage({
           key={`structure_${mission._id}`}
         />
       )
+    } else if (selection instanceof ClientMissionPrototype) {
+      return (
+        <PrototypeEntry
+          prototype={selection}
+          handleChange={handleChange}
+          key={selection._id}
+        />
+      )
     } else if (selection instanceof ClientMissionForce) {
       return (
         <ForceEntry
@@ -662,6 +702,7 @@ export default function MissionPage({
                 <MissionMap
                   mission={mission}
                   customButtons={mapCustomButtons}
+                  onPrototypeSelect={onPrototypeSelect}
                   onNodeSelect={onNodeSelect}
                   overlayContent={modalJsx}
                 />

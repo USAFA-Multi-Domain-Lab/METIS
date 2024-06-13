@@ -32,6 +32,12 @@
 
     background-color: $background-main;
 
+    &.Selectable {
+      // Change the cursor to pointer if
+      // the node can be selected.
+      cursor: pointer;
+    }
+
     .Name {
       // Position the name.
       @include center-origin-y;
@@ -43,6 +49,29 @@
 
       text-align: left;
       word-break: break-word;
+    }
+
+    .Buttons {
+      bottom: 0;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      column-gap: 0.1em;
+
+      .ButtonSvg {
+        position: unset;
+        margin: 0;
+        width: 0.325em;
+        height: 0.325em;
+        font-size: unset;
+        border: min(1px, 0.075em) solid $color-main;
+        border-radius: 0;
+        background-color: rgba($background-alt1, 0.9);
+        background-position: 50% 50% !important;
+        background-size: 60% !important;
+        background-repeat: no-repeat !important;
+        color: $color-main;
+      }
     }
   }
 }

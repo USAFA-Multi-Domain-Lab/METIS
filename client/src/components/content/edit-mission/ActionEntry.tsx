@@ -17,7 +17,7 @@ import ButtonSvgPanel, {
   TValidPanelButton,
 } from '../user-controls/ButtonSvgPanel'
 import { ButtonText } from '../user-controls/ButtonText'
-import './ActionEntry.scss'
+import './index.scss'
 
 /**
  * This will render the entry fields for an action
@@ -367,7 +367,7 @@ export default function ActionEntry({
 
   if (node.executable) {
     return (
-      <div className='ActionEntry SidePanel'>
+      <div className='Entry ActionEntry SidePanel'>
         <div className='BorderBox'>
           {/* -- TOP OF BOX -- */}
           <div className='BoxTop'>

@@ -238,9 +238,30 @@ export function useInlineStyling(
   return style
 }
 
-export type TEventListenerTarget<TEventMethod extends string> = {
-  addEventListener: (eventName: TEventMethod, handler: () => void) => any
-  removeEventListener: (handler: () => void) => any
+/**
+ * Interface for making a class compatible with the `useEventListener`
+ * hook.
+ */
+export interface TEventListenerTarget<TEventMethod extends string> {
+  /**
+   * Adds an event listener to the target.
+   * @param method The method of the event to listen for.
+   * @param callback The callback for when the event is fired.
+   * @returns The target with the event listener added.
+   *
+   */
+  addEventListener: (
+    method: TEventMethod,
+    callback: () => void,
+  ) => TEventListenerTarget<TEventMethod>
+  /**
+   * Removes an event listener from the target.
+   * @param callback The callback of the listener to remove.
+   * @returns The target with the event listener remove.
+   */
+  removeEventListener: (
+    callback: () => void,
+  ) => TEventListenerTarget<TEventMethod>
 }
 
 /**
