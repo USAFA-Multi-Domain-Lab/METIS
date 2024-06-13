@@ -11,8 +11,8 @@ import { DetailLargeString } from '../../form/DetailLargeString'
 import { DetailLocked } from '../../form/DetailLocked'
 import { DetailString } from '../../form/DetailString'
 import { ButtonText } from '../../user-controls/ButtonText'
+import '../index.scss'
 import Args from './Args'
-import './ExternalEffectEntry.scss'
 
 /**
  * Entry fields for an external effect.
@@ -161,7 +161,7 @@ export default function ExternalEffectEntry({
 
   /* -- RENDER -- */
   return (
-    <div className='ExternalEffectEntry SidePanel'>
+    <div className='Entry ExternalEffectEntry SidePanel'>
       <div className='BorderBox'>
         {/* -- TOP OF BOX -- */}
         <div className='BoxTop'>

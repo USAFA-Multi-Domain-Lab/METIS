@@ -17,6 +17,7 @@ import ButtonSvgPanel, {
   TValidPanelButton,
 } from '../user-controls/ButtonSvgPanel'
 import { ButtonText } from '../user-controls/ButtonText'
+import './ActionEntry.scss'
 import './index.scss'
 
 /**

@@ -12,8 +12,8 @@ import { DetailLargeString } from '../../form/DetailLargeString'
 import { DetailLocked } from '../../form/DetailLocked'
 import { DetailString } from '../../form/DetailString'
 import { ButtonText } from '../../user-controls/ButtonText'
+import '../index.scss'
 import Args from './Args'
-import './InternalEffectEntry.scss'
 
 /**
  * Entry fields for an internal effect.
@@ -193,7 +193,7 @@ export default function InternalEffectEntry({
 
   /* -- RENDER -- */
   return (
-    <div className='InternalEffectEntry SidePanel'>
+    <div className='Entry InternalEffectEntry SidePanel'>
       <div className='BorderBox'>
         {/* -- TOP OF BOX -- */}
         <div className='BoxTop'>

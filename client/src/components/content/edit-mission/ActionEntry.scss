@@ -3,26 +3,18 @@
 .ActionEntry {
   &.SidePanel {
     .BorderBox {
-      .BoxTop {
-        grid-template-columns: 50px auto;
-      }
+      .AltDesign2-list {
+        .items {
+          .item {
+            .Row {
+              .ButtonSvgPanel {
+                .ButtonSvg {
+                  &.NoEdit {
+                    cursor: not-allowed;
+                    opacity: 0.35;
 
-      .SidePanelSection {
-        margin: 20px 6.5% 40px;
-
-        .AltDesign2-list {
-          .items {
-            .item {
-              .Row {
-                .ButtonSvgPanel {
-                  .ButtonSvg {
-                    &.NoEdit {
-                      cursor: not-allowed;
-                      opacity: 0.35;
-
-                      &:hover {
-                        filter: none;
-                      }
+                    &:hover {
+                      filter: none;
                     }
                   }
                 }
