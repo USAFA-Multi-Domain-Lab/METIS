@@ -6,7 +6,7 @@ import { TCommonExternalEffectJson } from 'metis/missions/effects/external'
 import { TCommonInternalEffectJson } from 'metis/missions/effects/internal'
 import { plcApiLogger } from 'metis/server/logging'
 import seedrandom, { PRNG } from 'seedrandom'
-import ServerMission from '..'
+import { TServerMissionTypes } from '..'
 import ServerExternalEffect from '../effects/external'
 import ServerInternalEffect from '../effects/internal'
 import ServerMissionNode from '../nodes'
@@ -16,12 +16,7 @@ import { ServerPotentialOutcome, ServerRealizedOutcome } from './outcomes'
 /**
  * Class for managing mission actions on the server.
  */
-export default class ServerMissionAction extends MissionAction<
-  ServerMission,
-  ServerMissionNode,
-  ServerExternalEffect,
-  ServerInternalEffect
-> {
+export default class ServerMissionAction extends MissionAction<TServerMissionTypes> {
   /**
    * The RNG used to generate random numbers for the action.
    */

@@ -1,20 +1,14 @@
-import ClientMission from '..'
+import { TClientMissionTypes } from '..'
 import MissionAction from '../../../../shared/missions/actions'
 import { TCommonExternalEffectJson } from '../../../../shared/missions/effects/external'
 import { TCommonInternalEffectJson } from '../../../../shared/missions/effects/internal'
 import { ClientExternalEffect } from '../effects/external'
 import { ClientInternalEffect } from '../effects/internal'
-import ClientMissionNode from '../nodes'
 
 /**
  * Class representing a mission action on the client-side.
  */
-export default class ClientMissionAction extends MissionAction<
-  ClientMission,
-  ClientMissionNode,
-  ClientExternalEffect,
-  ClientInternalEffect
-> {
+export default class ClientMissionAction extends MissionAction<TClientMissionTypes> {
   // Implemented
   public parseExternalEffects(
     data: TCommonExternalEffectJson[],

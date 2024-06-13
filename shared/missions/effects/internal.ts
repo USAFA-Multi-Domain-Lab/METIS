@@ -1,5 +1,5 @@
 import { v4 as generateHash } from 'uuid'
-import { TCommonMissionTypes, TMission } from '..'
+import { TCommonMission, TCommonMissionTypes, TMission } from '..'
 import Target, {
   TCommonTarget,
   TCommonTargetJson,
@@ -8,7 +8,7 @@ import Target, {
 import { AnyObject } from '../../toolbox/objects'
 import { uuidTypeValidator } from '../../toolbox/validators'
 import { TAction, TCommonMissionAction } from '../actions'
-import { TForce } from '../forces'
+import { TCommonMissionForce, TForce } from '../forces'
 import MissionNode, { TCommonMissionNode, TNode } from '../nodes'
 
 /**
@@ -331,6 +331,18 @@ type TInternalEffectJsonOptions = {}
  * Object representing an internal effect in a mission.
  */
 export type TCommonInternalEffect = {
+  /**
+   * The corresponding mission for the external effect.
+   */
+  get mission(): TCommonMission
+  /**
+   * The corresponding force for the external effect.
+   */
+  get force(): TCommonMissionForce
+  /**
+   * The corresponding node for the external effect.
+   */
+  get node(): TCommonMissionNode
   /**
    * The action to which the internal effect belongs.
    */

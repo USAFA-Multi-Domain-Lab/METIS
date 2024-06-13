@@ -1,10 +1,11 @@
 import { useState } from 'react'
 import { useBeforeunload } from 'react-beforeunload'
 import { useGlobalContext, useNavigationMiddleware } from 'src/context'
-import ClientMission from 'src/missions'
+import ClientMission, { TMissionSelection } from 'src/missions'
 import ClientMissionAction from 'src/missions/actions'
 import { ClientExternalEffect } from 'src/missions/effects/external'
 import { ClientInternalEffect } from 'src/missions/effects/internal'
+import ClientMissionForce from 'src/missions/forces'
 import ClientMissionNode, { ENodeDeleteMethod } from 'src/missions/nodes'
 import { ClientTargetEnvironment } from 'src/target-environments'
 import { compute } from 'src/toolbox'
@@ -12,6 +13,7 @@ import { useEventListener, useMountHandler } from 'src/toolbox/hooks'
 import { DefaultLayout, TPage_P } from '.'
 import { SingleTypeObject, TWithKey } from '../../../../shared/toolbox/objects'
 import ActionEntry from '../content/edit-mission/ActionEntry'
+import ForceEntry from '../content/edit-mission/ForceEntry'
 import MissionEntry from '../content/edit-mission/MissionEntry'
 import NodeEntry from '../content/edit-mission/NodeEntry'
 import NodeStructuring from '../content/edit-mission/NodeStructuring'
@@ -52,15 +54,9 @@ export default function MissionPage({
   const [areUnsavedChanges, setAreUnsavedChanges] = useState<boolean>(
     missionId === null ? true : false,
   )
-  const [selectedNode, setSelectedNode] = useState<ClientMissionNode | null>(
-    null,
+  const [selection, setSelection] = useState<TMissionSelection>(
+    mission.selection,
   )
-  const [selectedAction, setSelectedAction] =
-    useState<ClientMissionAction | null>(null)
-  const [selectedExternalEffect, setSelectedExternalEffect] =
-    useState<ClientExternalEffect | null>(null)
-  const [selectedInternalEffect, setSelectedInternalEffect] =
-    useState<ClientInternalEffect | null>(null)
   const [nodeStructuringIsActive, activateNodeStructuring] =
     useState<boolean>(false)
   const [targetEnvironments, setTargetEnvironments] = useState<
@@ -80,12 +76,6 @@ export default function MissionPage({
   )
 
   /**
-   * Determines whether or not to show the mission details.
-   */
-  const missionDetailsIsActive: boolean = compute(
-    () => selectedNode === null && !nodeStructuringIsActive,
-  )
-  /**
    * Default size of the output panel.
    */
   const panel2DefaultSize: number = compute(() => {
@@ -102,15 +92,14 @@ export default function MissionPage({
 
     return panel2DefaultSize
   })
+
   /**
    * Boolean to determine if the external effect is new.
    */
   const isNewExternalEffect: boolean = compute(
     () =>
-      selectedExternalEffect !== null &&
-      !selectedExternalEffect.action.externalEffects.includes(
-        selectedExternalEffect,
-      ),
+      mission.selection instanceof ClientExternalEffect &&
+      !mission.selection.action.externalEffects.includes(mission.selection),
   )
 
   /**
@@ -118,10 +107,8 @@ export default function MissionPage({
    */
   const isNewInternalEffect: boolean = compute(
     () =>
-      selectedInternalEffect !== null &&
-      !selectedInternalEffect.action.internalEffects.includes(
-        selectedInternalEffect,
-      ),
+      mission.selection instanceof ClientInternalEffect &&
+      !mission.selection.action.internalEffects.includes(mission.selection),
   )
 
   /* -- EFFECTS -- */
@@ -202,26 +189,30 @@ export default function MissionPage({
   // changes, updating the state accordingly.
   useEventListener(
     mission,
-    ['node-selection', 'structure-change'],
+    ['selection', 'structure-change'],
     () => {
       // Get previous and next selections.
-      let prevSelection: ClientMissionNode | null = selectedNode
-      let nextSelection: ClientMissionNode | null = mission.selectedNode
+      let prevSelection: TMissionSelection = selection
+      let nextSelection: TMissionSelection = mission.selection
+      let prevNode: ClientMissionNode | null =
+        ClientMission.getNodeFromSelection(prevSelection)
+      let nextNode: ClientMissionNode | null =
+        ClientMission.getNodeFromSelection(nextSelection)
 
-      // Clear previous buttons.
-      if (prevSelection) {
-        prevSelection.buttons = []
+      // If there is a previous node, clear its buttons.
+      if (prevNode) {
+        prevNode.buttons = []
       }
 
-      // If the next selection is a node, then add the buttons.
-      if (nextSelection) {
+      // If there is a next node, then add the buttons.
+      if (nextNode) {
         // Define potential buttons.
         const availableNodeButtons: SingleTypeObject<TNodeButton> = {
           deselect: {
             icon: 'cancel',
             key: 'node-button-deselect',
             tooltipDescription: 'Deselect this node (Closes panel view also).',
-            onClick: () => mission.deselectNode(),
+            onClick: () => mission.select(nextNode!.force),
           },
           add: {
             icon: 'add',
@@ -268,17 +259,13 @@ export default function MissionPage({
         }
 
         // Set the buttons on the next selection.
-        nextSelection.buttons = activeNodeButtons
+        nextNode.buttons = activeNodeButtons
       }
 
-      // Update state.
-      setSelectedNode(nextSelection)
-      activateNodeStructuring(false)
-      setSelectedAction(null)
-      setSelectedExternalEffect(null)
-      setSelectedInternalEffect(null)
+      // Update the selection state.
+      setSelection(mission.selection)
     },
-    [selectedNode],
+    [selection],
   )
 
   // Add event listener to watch for when a new
@@ -347,19 +334,19 @@ export default function MissionPage({
    */
   const ensureOneActionExistsIfExecutable = (): void => {
     if (
-      selectedNode !== null &&
-      selectedNode.executable &&
-      selectedNode.actions.size === 0
+      selection instanceof ClientMissionNode &&
+      selection.executable &&
+      selection.actions.size === 0
     ) {
       // Checks to make sure the selected node has at least
       // one action to choose from. If the selected node doesn't
       // have at least one action then it will auto-generate one
       // for that node.
-      let newAction: ClientMissionAction = new ClientMissionAction(selectedNode)
-      selectedNode.actions.set(newAction._id, newAction)
+      let newAction: ClientMissionAction = new ClientMissionAction(selection)
+      selection.actions.set(newAction._id, newAction)
 
       notify(
-        `Auto-generated an action for ${selectedNode.name} because it is an executable node with no actions to execute.`,
+        `Auto-generated an action for ${selection.name} because it is an executable node with no actions to execute.`,
       )
 
       handleChange()
@@ -371,9 +358,9 @@ export default function MissionPage({
    * @param node The selected node.
    */
   let onNodeSelect = (node: ClientMissionNode) => {
-    if (node !== selectedNode) {
+    if (node !== selection) {
       // Select the node.
-      mission.selectNode(node)
+      mission.select(node)
       // Create an action, if necessary.
       ensureOneActionExistsIfExecutable()
     }
@@ -468,27 +455,25 @@ export default function MissionPage({
     // If the selected external effect is new and there are
     // target environments to choose from, then display the
     // create external effect modal.
-    if (
-      selectedExternalEffect &&
-      isNewExternalEffect &&
-      targetEnvironments.length > 0
-    ) {
+    if (isNewExternalEffect && targetEnvironments.length > 0) {
       return (
         <CreateExternalEffect
-          effect={selectedExternalEffect}
+          // This is definitely an external effect, based
+          // on the state of `isNewExternalEffect`.
+          effect={mission.selection as ClientExternalEffect}
           targetEnvironments={targetEnvironments}
-          handleClose={() => setSelectedExternalEffect(null)}
           handleChange={handleChange}
         />
       )
     }
     // Or, if the selected internal effect is new, then display the
     // create internal effect modal.
-    else if (selectedInternalEffect && isNewInternalEffect) {
+    else if (isNewInternalEffect) {
       return (
         <CreateInternalEffect
-          effect={selectedInternalEffect}
-          handleClose={() => setSelectedInternalEffect(null)}
+          // This is definitely an internal effect, based
+          // on the state of `isNewInternalEffect`.
+          effect={mission.selection as ClientInternalEffect}
           handleChange={handleChange}
         />
       )
@@ -503,99 +488,164 @@ export default function MissionPage({
    * Renders JSX for panel 2 of the resize relationship.
    */
   const renderPanel2 = (): JSX.Element | null => {
-    // Determines if the node entry should be displayed.
-    let displayNodeEntry: boolean =
-      selectedNode !== null &&
-      selectedAction === null &&
-      selectedExternalEffect === null &&
-      selectedInternalEffect === null
-    // Determines if the action entry should be displayed.
-    let displayActionEntry: boolean =
-      selectedNode !== null &&
-      selectedAction !== null &&
-      (selectedExternalEffect === null || isNewExternalEffect) &&
-      (selectedInternalEffect === null || isNewInternalEffect)
-    // Determines if the external effect entry should be displayed.
-    let displayExternalEffectEntry: boolean =
-      selectedNode !== null &&
-      selectedAction !== null &&
-      selectedExternalEffect !== null &&
-      !isNewExternalEffect &&
-      selectedInternalEffect === null
-    // Determines if the internal effect entry should be displayed.
-    let displayInternalEffectEntry: boolean =
-      selectedNode !== null &&
-      selectedAction !== null &&
-      selectedInternalEffect !== null &&
-      !isNewInternalEffect &&
-      selectedExternalEffect === null
+    // todo: Remove this.
+    // // Determines if the node entry should be displayed.
+    // let displayNodeEntry: boolean =
+    //   selectedNode !== null &&
+    //   selectedAction === null &&
+    //   selectedExternalEffect === null &&
+    //   selectedInternalEffect === null
+    // // Determines if the action entry should be displayed.
+    // let displayActionEntry: boolean =
+    //   selectedNode !== null &&
+    //   selectedAction !== null &&
+    //   (selectedExternalEffect === null || isNewExternalEffect) &&
+    //   (selectedInternalEffect === null || isNewInternalEffect)
+    // // Determines if the external effect entry should be displayed.
+    // let displayExternalEffectEntry: boolean =
+    //   selectedNode !== null &&
+    //   selectedAction !== null &&
+    //   selectedExternalEffect !== null &&
+    //   !isNewExternalEffect &&
+    //   selectedInternalEffect === null
+    // // Determines if the internal effect entry should be displayed.
+    // let displayInternalEffectEntry: boolean =
+    //   selectedNode !== null &&
+    //   selectedAction !== null &&
+    //   selectedInternalEffect !== null &&
+    //   !isNewInternalEffect &&
+    //   selectedExternalEffect === null
 
-    if (missionDetailsIsActive) {
+    if (selection instanceof ClientMission) {
       return (
         <MissionEntry
-          active={missionDetailsIsActive}
-          mission={mission}
+          mission={selection}
           handleChange={handleChange}
-          key={mission._id}
+          key={selection._id}
         />
       )
-    } else if (displayNodeEntry) {
-      return (
-        <NodeEntry
-          node={selectedNode as ClientMissionNode}
-          setSelectedAction={setSelectedAction}
-          handleChange={handleChange}
-          handleAddRequest={handleNodeAddRequest}
-          handleDeleteRequest={() =>
-            handleNodeDeleteRequest(selectedNode as ClientMissionNode)
-          }
-          key={selectedNode?._id}
-        />
-      )
-    } else if (displayActionEntry) {
-      return (
-        <ActionEntry
-          action={selectedAction as ClientMissionAction}
-          targetEnvironments={targetEnvironments}
-          setSelectedAction={setSelectedAction}
-          setSelectedExternalEffect={setSelectedExternalEffect}
-          setSelectedInternalEffect={setSelectedInternalEffect}
-          handleChange={handleChange}
-          key={selectedAction?._id}
-        />
-      )
-    } else if (displayExternalEffectEntry) {
-      return (
-        <ExternalEffectEntry
-          effect={selectedExternalEffect as ClientExternalEffect}
-          setSelectedAction={setSelectedAction}
-          setSelectedExternalEffect={setSelectedExternalEffect}
-          handleChange={handleChange}
-          key={selectedExternalEffect?._id}
-        />
-      )
-    } else if (displayInternalEffectEntry) {
-      return (
-        <InternalEffectEntry
-          effect={selectedInternalEffect as ClientInternalEffect}
-          setSelectedAction={setSelectedAction}
-          setSelectedInternalEffect={setSelectedInternalEffect}
-          handleChange={handleChange}
-          key={selectedInternalEffect?._id}
-        />
-      )
-    } else if (nodeStructuringIsActive) {
+    } else if (selection === 'structure') {
       return (
         <NodeStructuring
-          active={nodeStructuringIsActive}
           mission={mission}
           handleChange={handleChange}
-          handleCloseRequest={() => activateNodeStructuring(false)}
+          key={`structure_${mission._id}`}
+        />
+      )
+    } else if (selection instanceof ClientMissionForce) {
+      return (
+        <ForceEntry
+          force={selection}
+          handleChange={handleChange}
+          key={selection._id}
+        />
+      )
+    } else if (selection instanceof ClientMissionNode) {
+      return (
+        <NodeEntry
+          node={selection}
+          handleChange={handleChange}
+          handleAddRequest={handleNodeAddRequest}
+          handleDeleteRequest={() => handleNodeDeleteRequest(selection)}
+          key={selection._id}
+        />
+      )
+    } else if (selection instanceof ClientMissionAction) {
+      return (
+        <ActionEntry
+          action={selection}
+          targetEnvironments={targetEnvironments}
+          handleChange={handleChange}
+          key={selection._id}
+        />
+      )
+    } else if (selection instanceof ClientInternalEffect) {
+      return (
+        <InternalEffectEntry
+          effect={selection}
+          handleChange={handleChange}
+          key={selection._id}
+        />
+      )
+    } else if (selection instanceof ClientExternalEffect) {
+      return (
+        <ExternalEffectEntry
+          effect={selection}
+          handleChange={handleChange}
+          key={selection._id}
         />
       )
     } else {
       return null
     }
+
+    // todo: Remove this.
+    // if (missionDetailsIsActive) {
+    //   return (
+    //     <MissionEntry
+    //       active={missionDetailsIsActive}
+    //       mission={mission}
+    //       handleChange={handleChange}
+    //       key={mission._id}
+    //     />
+    //   )
+    // } else if (displayNodeEntry) {
+    //   return (
+    //     <NodeEntry
+    //       node={selectedNode as ClientMissionNode}
+    //       setSelectedAction={setSelectedAction}
+    //       handleChange={handleChange}
+    //       handleAddRequest={handleNodeAddRequest}
+    //       handleDeleteRequest={() =>
+    //         handleNodeDeleteRequest(selectedNode as ClientMissionNode)
+    //       }
+    //       key={selectedNode?._id}
+    //     />
+    //   )
+    // } else if (displayActionEntry) {
+    //   return (
+    //     <ActionEntry
+    //       action={selectedAction as ClientMissionAction}
+    //       targetEnvironments={targetEnvironments}
+    //       setSelectedAction={setSelectedAction}
+    //       setSelectedExternalEffect={setSelectedExternalEffect}
+    //       setSelectedInternalEffect={setSelectedInternalEffect}
+    //       handleChange={handleChange}
+    //       key={selectedAction?._id}
+    //     />
+    //   )
+    // } else if (displayExternalEffectEntry) {
+    //   return (
+    //     <ExternalEffectEntry
+    //       effect={selectedExternalEffect as ClientExternalEffect}
+    //       setSelectedAction={setSelectedAction}
+    //       setSelectedExternalEffect={setSelectedExternalEffect}
+    //       handleChange={handleChange}
+    //       key={selectedExternalEffect?._id}
+    //     />
+    //   )
+    // } else if (displayInternalEffectEntry) {
+    //   return (
+    //     <InternalEffectEntry
+    //       effect={selectedInternalEffect as ClientInternalEffect}
+    //       setSelectedAction={setSelectedAction}
+    //       setSelectedInternalEffect={setSelectedInternalEffect}
+    //       handleChange={handleChange}
+    //       key={selectedInternalEffect?._id}
+    //     />
+    //   )
+    // } else if (nodeStructuringIsActive) {
+    //   return (
+    //     <NodeStructuring
+    //       active={nodeStructuringIsActive}
+    //       mission={mission}
+    //       handleChange={handleChange}
+    //       handleCloseRequest={() => activateNodeStructuring(false)}
+    //     />
+    //   )
+    // } else {
+    //   return null
+    // }
   }
 
   /* -- RENDER -- */

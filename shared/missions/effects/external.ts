@@ -1,6 +1,6 @@
 import { TTargetEnv } from 'metis/target-environments'
 import { v4 as generateHash } from 'uuid'
-import { TCommonMissionTypes } from '..'
+import { TCommonMission, TCommonMissionTypes, TMission } from '..'
 import Target, {
   TCommonTarget,
   TCommonTargetJson,
@@ -9,6 +9,8 @@ import Target, {
 import { AnyObject } from '../../toolbox/objects'
 import { uuidTypeValidator } from '../../toolbox/validators'
 import { TAction, TCommonMissionAction } from '../actions'
+import { TCommonMissionForce, TForce } from '../forces'
+import { TCommonMissionNode, TNode } from '../nodes'
 
 /**
  * An external effect that can be applied to a target.
@@ -17,22 +19,37 @@ export default abstract class ExternalEffect<
   T extends TCommonMissionTypes = TCommonMissionTypes,
 > implements TCommonExternalEffect
 {
-  // Inherited
+  // Implemented
+  public get mission(): TMission<T> {
+    return this.action.mission
+  }
+
+  // Implemented
+  public get force(): TForce<T> {
+    return this.action.force
+  }
+
+  // Implemented
+  public get node(): TNode<T> {
+    return this.action.node
+  }
+
+  // Implemented
   public action: TAction<T>
 
-  // Inherited
+  // Implemented
   public _id: TCommonExternalEffect['_id']
 
-  // Inherited
+  // Implemented
   public name: TCommonExternalEffect['name']
 
-  // Inherited
+  // Implemented
   public description: TCommonExternalEffect['description']
 
-  // Inherited
+  // Implemented
   public targetEnvironmentVersion: TCommonExternalEffect['targetEnvironmentVersion']
 
-  // Inherited
+  // Implemented
   public args: TCommonExternalEffect['args']
 
   /**
@@ -96,20 +113,6 @@ export default abstract class ExternalEffect<
     } else {
       return null
     }
-  }
-
-  /**
-   * The node on which the action is being executed.
-   */
-  public get node(): TAction<T>['node'] {
-    return this.action.node
-  }
-
-  /**
-   * The mission of which the action is a part.
-   */
-  public get mission(): TAction<T>['mission'] {
-    return this.action.mission
   }
 
   /**
@@ -200,10 +203,25 @@ export type TExternalEffectJsonOptions = {}
 
 /**
  * Interface used for the External Effect class.
+ * @note Any public, non-static properties and functions of the `ExternalEffect`
+ * class must first be defined here for them to be accessible to other
+ * external-effect-related classes.
  */
 export interface TCommonExternalEffect {
   /**
-   * The action to which the external effect belongs.
+   * The corresponding mission for the external effect.
+   */
+  get mission(): TCommonMission
+  /**
+   * The corresponding force for the external effect.
+   */
+  get force(): TCommonMissionForce
+  /**
+   * The corresponding node for the external effect.
+   */
+  get node(): TCommonMissionNode
+  /**
+   * The corresponding action for the external effect.
    */
   action: TCommonMissionAction
   /**

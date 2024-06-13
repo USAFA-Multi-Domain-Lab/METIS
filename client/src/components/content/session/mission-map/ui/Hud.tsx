@@ -1,10 +1,18 @@
 import { TButtonSvg } from 'src/components/content/user-controls/ButtonSvg'
 import ClientMission from 'src/missions'
-import { compute } from 'src/toolbox'
 import { TWithKey } from '../../../../../../../shared/toolbox/objects'
 import './Hud.scss'
 import TitleBar from './TitleBar'
 import TabBar, { TTabBarTab } from './tabs/TabBar'
+
+/**
+ * The master tab for the tab bar.
+ */
+const MASTER_TAB: TTabBarTab = {
+  _id: 'master',
+  text: 'Master',
+  color: '#ffffff',
+}
 
 /**
  * HUD for the mission map.
@@ -12,40 +20,23 @@ import TabBar, { TTabBarTab } from './tabs/TabBar'
 export default function Hud({
   mission,
   buttons = [],
-  onTabSelect = () => {},
+  tabs = [],
+  tabIndex = 0,
+  setTabIndex = () => {},
   onTabAdd = null,
 }: THud): JSX.Element | null {
-  /* -- COMPUTED -- */
-
-  /**
-   * The tabs to display in the tab bar.
-   */
-  const tabs = compute(() => {
-    // Define tab list with master tab.
-    let tabs: TTabBarTab[] = [
-      { _id: 'master', text: 'Master', color: '#ffffff' },
-    ]
-
-    // Add force tabs.
-    mission.forces.forEach((force) => {
-      tabs.push({
-        _id: force._id,
-        text: force.name,
-        color: force.color,
-      })
-    })
-
-    // Return tabs.
-    return tabs
-  })
-
   /* -- RENDER -- */
 
   // Render root element.
   return (
     <div className='Hud'>
       <TitleBar title={mission.name} buttons={buttons} />
-      <TabBar tabs={tabs} onTabSelect={onTabSelect} onTabAdd={onTabAdd} />
+      <TabBar
+        tabs={tabs}
+        index={tabIndex}
+        setIndex={setTabIndex}
+        onAdd={onTabAdd}
+      />
     </div>
   )
 }
@@ -59,16 +50,25 @@ export type THud = {
    */
   mission: ClientMission
   /**
-   * The buttons to display.
+   * The buttons to display on the title bar.
    * @default []
    */
   buttons?: TWithKey<TButtonSvg>[]
   /**
-   * Callback for when the user selects a tab.
-   * @param tab The tab that was selected.
+   * The tabs to display on the tab bar.
+   * @default []
+   */
+  tabs?: TTabBarTab[]
+  /**
+   * The index of the selected tab.
+   * @default 0
+   */
+  tabIndex?: number
+  /**
+   * React setter for the selected tab index.
    * @default () => {}
    */
-  onTabSelect?: (tab: TTabBarTab) => void
+  setTabIndex?: (index: number) => void
   /**
    * Callback for when a new tab is requested.
    * @default null

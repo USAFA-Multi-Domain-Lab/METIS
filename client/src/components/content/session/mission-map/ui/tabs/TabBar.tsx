@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef } from 'react'
 import ButtonSvg from 'src/components/content/user-controls/ButtonSvg'
 import { compute } from 'src/toolbox'
 import Tab, { TTab_P } from '.'
@@ -9,21 +9,12 @@ import './TabBar.scss'
  */
 export default function TabBar({
   tabs,
-  initialIndex = 0,
+  index,
   autoSelectNewTabs = true,
-  onTabSelect = () => {},
-  onTabAdd = null,
+  setIndex,
+  onAdd = null,
 }: TTabBar_P): JSX.Element | null {
   /* -- STATE -- */
-
-  /**
-   * The index of the selected tab.
-   */
-  const [selectedIndex, selectIndex] = useState<number>(() => {
-    // If the initial index is out of bounds, select the first tab.
-    if (initialIndex < 0 || initialIndex >= tabs.length) return 0
-    return initialIndex
-  })
 
   /**
    * The previous number of tabs.
@@ -39,8 +30,7 @@ export default function TabBar({
     // select the last tab.
     if (tabs.length > prevTabCount.current) {
       let index = tabs.length - 1
-      selectIndex(index)
-      onTabSelect(tabs[index])
+      setIndex(index)
     }
     prevTabCount.current = tabs.length
   }, [tabs.length])
@@ -54,14 +44,13 @@ export default function TabBar({
   /**
    * The JSX for the tabs.
    */
-  const tabJsx = tabs.map((tab, index) => (
+  const tabJsx = tabs.map((tab, i) => (
     <Tab
       key={tab._id}
       {...tab}
-      selected={index === selectedIndex}
+      selected={i === index}
       onClick={() => {
-        selectIndex(index)
-        onTabSelect(tab)
+        setIndex(i)
       }}
     />
   ))
@@ -70,13 +59,13 @@ export default function TabBar({
    * The JSX for the add button.
    */
   const addJsx = compute(() => {
-    if (onTabAdd === null) return null
+    if (onAdd === null) return null
     return (
       <ButtonSvg
         icon={'add'}
         size={'small'}
         onClick={() => {
-          onTabAdd()
+          onAdd()
         }}
       />
     )
@@ -100,11 +89,9 @@ export type TTabBar_P = {
    */
   tabs: TTabBarTab[]
   /**
-   * The index of the initially selected tab.
-   * @default 0
-   * @note If the index is out of bounds, the first tab will be selected.
+   * The index of the selected tab.
    */
-  initialIndex?: number
+  index: number
   /**
    * Select new tabs as they appear.
    * @default true
@@ -113,17 +100,15 @@ export type TTabBar_P = {
    */
   autoSelectNewTabs?: boolean
   /**
-   * Callback for when a tab is selected.
-   * @param tab The tab that was selected.
-   * @default () => {}
+   * React setter to set the selected tab.
    */
-  onTabSelect?: (tab: TTabBarTab) => void
+  setIndex: (index: number) => void
   /**
    * Callback for when a new tab is requested.
    * @default null
    * @note If null, the add button will not even be displayed.
    */
-  onTabAdd?: (() => void) | null
+  onAdd?: (() => void) | null
 }
 
 /**

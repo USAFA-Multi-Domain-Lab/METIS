@@ -12,7 +12,6 @@ import './MissionEntry.scss'
  * This will render the basic editable details of the mission itself.
  */
 export default function MissionEntry({
-  active,
   mission,
   handleChange,
 }: TMissionEntry_P): JSX.Element | null {
@@ -92,62 +91,54 @@ export default function MissionEntry({
 
   /* -- RENDER -- */
 
-  if (active) {
-    return (
-      <div className='MissionEntry SidePanel'>
-        <div className='BorderBox'>
-          {/* -- TOP OF BOX -- */}
-          <div className='BoxTop'>
-            <div className='ErrorMessage Hidden'></div>
-            {renderBackButtonJsx()}
-            {renderPathJsx()}
-          </div>
+  return (
+    <div className='MissionEntry SidePanel'>
+      <div className='BorderBox'>
+        {/* -- TOP OF BOX -- */}
+        <div className='BoxTop'>
+          <div className='ErrorMessage Hidden'></div>
+          {renderBackButtonJsx()}
+          {renderPathJsx()}
+        </div>
 
-          {/* -- MAIN CONTENT -- */}
-          <div className='SidePanelSection MainDetails'>
-            <DetailString
-              fieldType='required'
-              handleOnBlur='repopulateValue'
-              label='Name'
-              stateValue={missionName}
-              setState={setMissionName}
-              defaultValue={ClientMission.DEFAULT_PROPERTIES.name}
-              key={`${mission._id}_name`}
-            />
-            <DetailLargeString
-              fieldType='required'
-              handleOnBlur='repopulateValue'
-              label='Introduction Message'
-              stateValue={introMessage}
-              setState={setIntroMessage}
-              defaultValue={ClientMission.DEFAULT_PROPERTIES.introMessage}
-              elementBoundary='.SidePanelSection'
-              key={`${mission._id}_introMessage`}
-            />
-            <DetailNumber
-              fieldType='required'
-              label='Initial Resources'
-              stateValue={initialResources}
-              setState={setInitialResources}
-              integersOnly={true}
-              key={`${mission._id}_initialResources`}
-            />
-          </div>
+        {/* -- MAIN CONTENT -- */}
+        <div className='SidePanelSection MainDetails'>
+          <DetailString
+            fieldType='required'
+            handleOnBlur='repopulateValue'
+            label='Name'
+            stateValue={missionName}
+            setState={setMissionName}
+            defaultValue={ClientMission.DEFAULT_PROPERTIES.name}
+            key={`${mission._id}_name`}
+          />
+          <DetailLargeString
+            fieldType='required'
+            handleOnBlur='repopulateValue'
+            label='Introduction Message'
+            stateValue={introMessage}
+            setState={setIntroMessage}
+            defaultValue={ClientMission.DEFAULT_PROPERTIES.introMessage}
+            elementBoundary='.SidePanelSection'
+            key={`${mission._id}_introMessage`}
+          />
+          <DetailNumber
+            fieldType='required'
+            label='Initial Resources'
+            stateValue={initialResources}
+            setState={setInitialResources}
+            integersOnly={true}
+            key={`${mission._id}_initialResources`}
+          />
         </div>
       </div>
-    )
-  } else {
-    return null
-  }
+    </div>
+  )
 }
 
 /* ---------------------------- TYPES FOR MISSION ENTRY ---------------------------- */
 
 export type TMissionEntry_P = {
-  /**
-   * Whether or not this component is active.
-   */
-  active: boolean
   /**
    * The mission to be edited.
    */

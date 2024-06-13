@@ -104,6 +104,10 @@
         }
       }
 
+      // Disable any mouse events on progress
+      // bar as it's purely visual.
+      pointer-events: none;
+
       // Hide the progress bar by default.
       display: none;
 

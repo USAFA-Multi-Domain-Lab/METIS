@@ -7,7 +7,6 @@ import ClientMissionNode from 'src/missions/nodes'
 import { ClientTargetEnvironment } from 'src/target-environments'
 import { compute } from 'src/toolbox'
 import { usePostInitEffect } from 'src/toolbox/hooks'
-import { ReactSetter } from 'src/toolbox/types'
 import { SingleTypeObject } from '../../../../../shared/toolbox/objects'
 import Tooltip from '../communication/Tooltip'
 import { DetailLargeString } from '../form/DetailLargeString'
@@ -27,9 +26,6 @@ import './ActionEntry.scss'
 export default function ActionEntry({
   action,
   targetEnvironments,
-  setSelectedAction,
-  setSelectedExternalEffect,
-  setSelectedInternalEffect,
   handleChange,
 }: TActionEntry_P): JSX.Element | null {
   /* -- GLOBAL CONTEXT -- */
@@ -56,6 +52,10 @@ export default function ActionEntry({
    * The node on which the action is being executed.
    */
   const node: ClientMissionNode = compute(() => action.node)
+  /**
+   * The mission for the action.
+   */
+  const mission = compute(() => node.mission)
   /**
    * The name of the mission.
    */
@@ -157,14 +157,12 @@ export default function ActionEntry({
    * Deletes the action from the node.
    */
   const handleDeleteActionRequest = () => {
+    // Select the now-deleted action's node.
+    mission.selectBack()
     // Remove the action from the node.
     node.actions.delete(action._id)
-    // Display the changes.
-    forceUpdate()
     // Allow the user to save the changes.
     handleChange()
-    // Reset the selected action.
-    setSelectedAction(null)
   }
 
   /**
@@ -175,15 +173,12 @@ export default function ActionEntry({
     // If the index is 0 then take the user
     // back to the mission entry.
     if (index === 0) {
-      node.mission.deselectNode()
-      setSelectedAction(null)
-      setSelectedExternalEffect(null)
+      mission.deselect()
     }
     // If the index is 1 then take the user
     // back to the node entry.
     else if (index === 1) {
-      setSelectedAction(null)
-      setSelectedExternalEffect(null)
+      mission.select(node)
     }
   }
 
@@ -224,10 +219,15 @@ export default function ActionEntry({
       ['Cancel', 'Internal', 'External'],
     )
 
-    if (choice === 'Internal') {
-      setSelectedInternalEffect(new ClientInternalEffect(action))
-    } else if (choice === 'External') {
-      setSelectedExternalEffect(new ClientExternalEffect(action))
+    // Handle choice made by creating the appropriate effect,
+    // then selecting it in the mission.
+    switch (choice) {
+      case 'Internal':
+        mission.select(new ClientInternalEffect(action))
+        break
+      case 'External':
+        mission.select(new ClientExternalEffect(action))
+        break
     }
   }
 
@@ -240,8 +240,7 @@ export default function ActionEntry({
         <div
           className='BackButton'
           onClick={() => {
-            setSelectedExternalEffect(null)
-            setSelectedAction(null)
+            mission.selectBack()
           }}
         >
           &lt;
@@ -332,9 +331,7 @@ export default function ActionEntry({
           icon: 'edit',
           key: 'edit',
           onClick: () => {
-            effect instanceof ClientExternalEffect
-              ? setSelectedExternalEffect(effect)
-              : setSelectedInternalEffect(effect)
+            mission.select(effect)
           },
           tooltipDescription: editTooltipDescription,
           uniqueClassList: editButtonClassList,
@@ -515,21 +512,6 @@ export type TActionEntry_P = {
    * List of target environments to apply effects to.
    */
   targetEnvironments: ClientTargetEnvironment[]
-  /**
-   * React setter function used to update the value stored
-   * in a component's state.
-   */
-  setSelectedAction: ReactSetter<ClientMissionAction | null>
-  /**
-   * React setter function used to update the value stored
-   * in a component's state.
-   */
-  setSelectedExternalEffect: ReactSetter<ClientExternalEffect | null>
-  /**
-   * React setter function used to update the value stored
-   * in a component's state.
-   */
-  setSelectedInternalEffect: ReactSetter<ClientInternalEffect | null>
   /**
    * Handles when a change is made that would require saving.
    */

@@ -18,7 +18,6 @@ import './CreateInternalEffect.scss'
  */
 export default function CreateInternalEffect({
   effect,
-  handleClose,
   handleChange,
 }: TCreateInternalEffect_P): JSX.Element | null {
   /* -- GLOBAL CONTEXT -- */
@@ -47,6 +46,11 @@ export default function CreateInternalEffect({
   )
 
   /* -- COMPUTED -- */
+
+  /**
+   * The mission for the effect.
+   */
+  const mission = compute(() => effect.mission)
   // todo: uncomment when force is implemented
   // /**
   //  * List of forces in the mission.
@@ -112,6 +116,7 @@ export default function CreateInternalEffect({
   // }, [force])
 
   /* -- FUNCTIONS -- */
+
   /**
    * Handles creating a new internal effect.
    */
@@ -124,6 +129,13 @@ export default function CreateInternalEffect({
     handleChange()
   }
 
+  /**
+   * Callback for when the modal is requested to be closed.
+   */
+  const onCloseRequest = () => {
+    mission.selectBack()
+  }
+
   /* -- RENDER -- */
 
   return (
@@ -131,7 +143,7 @@ export default function CreateInternalEffect({
       {/* -- TOP OF BOX -- */}
       <div className='Heading'>Create Internal Effect:</div>
       <div className='Close'>
-        <div className='CloseButton' onClick={handleClose}>
+        <div className='CloseButton' onClick={onCloseRequest}>
           x
           <Tooltip description='Close window.' />
         </div>
@@ -202,10 +214,6 @@ export type TCreateInternalEffect_P = {
    * The internal effect to create.
    */
   effect: ClientInternalEffect
-  /**
-   * A function that will close the modal.
-   */
-  handleClose: () => void
   /**
    * Handles when a change is made that would require saving.
    */

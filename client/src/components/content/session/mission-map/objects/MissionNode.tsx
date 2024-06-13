@@ -317,14 +317,13 @@ export default function MissionNode({
 
   // Render root JSX.
   return (
-    <div
-      key={node._id}
-      className={rootClassName}
-      style={rootStyle}
-      onClick={onSelect}
-    >
+    <div key={node._id} className={rootClassName} style={rootStyle}>
       <div className='ProgressBar' style={progressBarStyle}></div>
-      <div className='PrimaryContent' style={primaryContentStyle}>
+      <div
+        className='PrimaryContent'
+        style={primaryContentStyle}
+        onClick={onSelect}
+      >
         <div className={nameClassName} style={nameStyle}>
           {node.name}
         </div>

@@ -82,10 +82,12 @@ export default class ClientMission
 
   /**
    * The currently selected force in the mission.
+   * @deprecated
    */
-  private _selectedForce: ClientMissionForce | null = null
+  private _selectedForce: ClientMissionForce | null
   /**
    * The currently selected force in the mission.
+   * @deprecated
    */
   public get selectedForce(): ClientMissionForce | null {
     return this._selectedForce
@@ -94,14 +96,35 @@ export default class ClientMission
   /**
    * The currently selected node in the mission.
    * @note Used in the form for editing.
+   * @deprecated
    */
   private _selectedNode: ClientMissionNode | null = null
   /**
    * The currently selected node in the mission.
    * @note Used in the form for editing.
+   * @deprecated
    */
   public get selectedNode(): ClientMissionNode | null {
     return this._selectedNode
+  }
+
+  /**
+   * The current selection for the mission.
+   * @note This can be most type of nested, mission-related objects,
+   * such as nodes, forces, etc.
+   * @note This is used in the form for editing.
+   * @note By default, the mission itself.
+   */
+  private _selection: TMissionSelection
+  /**
+   * The current selection for the mission.
+   * @note This can be most type of nested, mission-related objects,
+   * such as nodes, forces, etc.
+   * @note This is used in the form for editing.
+   * @note By default, the mission itself.
+   */
+  public get selection(): TMissionSelection {
+    return this._selection
   }
 
   /**
@@ -198,6 +221,8 @@ export default class ClientMission
     this.lastCreatedNode = null
     this.listeners = []
     this._selectedNode = null
+    this._selectedForce = null
+    this._selection = this
     this._nodeCreators = []
     this.relationshipLines = []
     this.lastOpenedNode = null
@@ -777,8 +802,54 @@ export default class ClientMission
   }
 
   /**
+   * Selects an element within the mission.
+   * @param selection The selection to make for the mission.
+   * @note Selection can be accessed via non-static field `ClientMission.selection`.
+   */
+  public select(selection: TMissionSelection): void {
+    this._selection = selection
+    this.emitEvent('selection')
+  }
+
+  /**
+   * Deselects the current selection, if any, selecting the
+   * mission itself.
+   */
+  public deselect(): void {
+    this._selection = this
+    this.emitEvent('selection')
+  }
+
+  /**
+   * Selects the parent of the current selection, if any.
+   */
+  public selectBack(): void {
+    // Get selection.
+    let selection: TMissionSelection = this._selection
+
+    // Determine parent, and select it.
+    if (
+      selection === 'structure' ||
+      selection instanceof ClientMissionPrototype ||
+      selection instanceof ClientMissionForce
+    ) {
+      this.deselect()
+    } else if (selection instanceof ClientMissionNode) {
+      this.select(selection.force)
+    } else if (selection instanceof ClientMissionAction) {
+      this.select(selection.node)
+    } else if (
+      selection instanceof ClientInternalEffect ||
+      selection instanceof ClientExternalEffect
+    ) {
+      this.select(selection.action)
+    }
+  }
+
+  /**
    * Selects a force in the mission.
    * @note Deselects the currently selected node in the mission.
+   * @deprecated
    */
   public selectForce(force: ClientMissionForce): void {
     // Deslect node.
@@ -791,6 +862,7 @@ export default class ClientMission
 
   /**
    * Selects a node in the mission. Used in the form for editing.
+   * @deprecated
    */
   public selectNode(node: ClientMissionNode): void {
     // Handle foreign node.
@@ -942,6 +1014,66 @@ export default class ClientMission
         reject()
       }
     })
+  }
+
+  /**
+   * Determines the selected node from the mission selection passed.
+   * @param selection The selection in a mission.
+   * @returns The node, if any.
+   * @note `null` is returned if no node is selected for the given
+   * selection.
+   */
+  public static getNodeFromSelection(
+    selection: TMissionSelection,
+  ): ClientMissionNode | null {
+    let selectionAsAny: any = selection
+
+    // Return the selection, if it is a node itself.
+    if (selectionAsAny instanceof ClientMissionNode) {
+      return selectionAsAny
+    }
+    // Return nested node, if one is found within the selection.
+    else if (
+      typeof selectionAsAny === 'object' &&
+      'node' in selectionAsAny &&
+      selectionAsAny.node instanceof ClientMissionNode
+    ) {
+      return selectionAsAny.node
+    }
+    // Else, return null.
+    else {
+      return null
+    }
+  }
+
+  /**
+   * Determines the selected force from the mission selection passed.
+   * @param selection The selection in a mission.
+   * @returns The force, if any.
+   * @note `null` is returned if no force is selected for the given
+   * selection.
+   */
+  public static getForceFromSelection(
+    selection: TMissionSelection,
+  ): ClientMissionForce | null {
+    let selectionAsAny: any = selection
+
+    // Return the selection, if it is a force itself.
+    if (selectionAsAny instanceof ClientMissionForce) {
+      return selectionAsAny
+    }
+    // Return nested force, if one is found within the selection.
+    else if (
+      typeof selectionAsAny === 'object' &&
+      'force' in selectionAsAny &&
+      selectionAsAny.force instanceof ClientMissionForce
+    ) {
+      return selectionAsAny.force
+    }
+    // Else, return null.
+    else {
+      return null
+    }
   }
 
   /* -- API -- */
@@ -1185,4 +1317,18 @@ export type TMissionEvent =
   | 'structure-change'
   | 'force-selection'
   | 'node-selection'
+  | 'selection'
   | 'spawn-node'
+
+/**
+ * A selected element within a mission.
+ */
+export type TMissionSelection =
+  | ClientMission
+  | 'structure'
+  | ClientMissionPrototype
+  | ClientMissionForce
+  | ClientMissionNode
+  | ClientMissionAction
+  | ClientInternalEffect
+  | ClientExternalEffect

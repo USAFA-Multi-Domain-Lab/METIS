@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useGlobalContext } from 'src/context'
+import ClientMission from 'src/missions'
 import ClientMissionAction from 'src/missions/actions'
 import { ClientInternalEffect } from 'src/missions/effects/internal'
 import ClientMissionNode from 'src/missions/nodes'
@@ -19,8 +20,6 @@ import './InternalEffectEntry.scss'
  */
 export default function InternalEffectEntry({
   effect,
-  setSelectedAction,
-  setSelectedInternalEffect,
   handleChange,
 }: TInternalEffectEntry_P): JSX.Element | null {
   /* -- GLOBAL CONTEXT -- */
@@ -48,6 +47,10 @@ export default function InternalEffectEntry({
    * The action to execute.
    */
   const action: ClientMissionAction = compute(() => effect.action)
+  /**
+   * The mission for the effect.
+   */
+  const mission: ClientMission = compute(() => action.mission)
   /**
    * The name of the mission.
    */
@@ -119,14 +122,12 @@ export default function InternalEffectEntry({
    * Handles the request to delete the internal effect.
    */
   const handleDeleteInternalEffectRequest = () => {
-    // Set the selected internal effect to null.
-    setSelectedInternalEffect(null)
+    // Select back to the action.
+    mission.selectBack()
     // Filter out the internal effect from the action.
     action.internalEffects = action.internalEffects.filter(
       (actionEffect: ClientInternalEffect) => actionEffect._id !== effect._id,
     )
-    // Display the changes.
-    forceUpdate()
     // Allow the user to save the changes.
     handleChange()
   }
@@ -139,20 +140,17 @@ export default function InternalEffectEntry({
     // If the index is 0 then take the user
     // back to the mission entry.
     if (index === 0) {
-      action.mission.deselectNode()
-      setSelectedAction(null)
-      setSelectedInternalEffect(null)
+      mission.deselect()
     }
     // If the index is 1 then take the user
     // back to the node entry.
     else if (index === 1) {
-      setSelectedAction(null)
-      setSelectedInternalEffect(null)
+      mission.select(action.node)
     }
     // If the index is 2 then take the user
     // back to the action entry.
     else if (index === 2) {
-      setSelectedInternalEffect(null)
+      mission.select(action)
     }
   }
 
@@ -162,10 +160,7 @@ export default function InternalEffectEntry({
   const renderBackButtonJsx = (): JSX.Element | null => {
     return (
       <div className='BackContainer'>
-        <div
-          className='BackButton'
-          onClick={() => setSelectedInternalEffect(null)}
-        >
+        <div className='BackButton' onClick={() => mission.selectBack()}>
           &lt;
           <Tooltip description='Go back.' />
         </div>
@@ -261,14 +256,6 @@ export type TInternalEffectEntry_P = {
    * The internal effect to apply to the target.
    */
   effect: ClientInternalEffect
-  /**
-   * A function that will set the action that is selected.
-   */
-  setSelectedAction: (action: ClientMissionAction | null) => void
-  /**
-   * A function that will set the selected internal effect.
-   */
-  setSelectedInternalEffect: (effect: ClientInternalEffect | null) => void
   /**
    * A function that will be called when a change has been made.
    */

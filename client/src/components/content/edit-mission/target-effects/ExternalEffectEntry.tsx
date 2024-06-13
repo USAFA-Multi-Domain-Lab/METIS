@@ -19,8 +19,6 @@ import './ExternalEffectEntry.scss'
  */
 export default function ExternalEffectEntry({
   effect,
-  setSelectedAction,
-  setSelectedExternalEffect,
   handleChange,
 }: TExternalEffectEntry_P): JSX.Element | null {
   /* -- GLOBAL CONTEXT -- */
@@ -40,6 +38,10 @@ export default function ExternalEffectEntry({
   )
 
   /* -- COMPUTED -- */
+  /**
+   * The mission for the effect.
+   */
+  const mission = compute(() => effect.mission)
   /**
    * The action to execute.
    */
@@ -87,14 +89,13 @@ export default function ExternalEffectEntry({
    * Handles the request to delete the external effect.
    */
   const handleDeleteExternalEffectRequest = () => {
-    // Set the selected external effect to null.
-    setSelectedExternalEffect(null)
+    // Go back to the previous selection.
+    mission.selectBack()
+
     // Filter out the external effect from the action.
     action.externalEffects = action.externalEffects.filter(
       (actionEffect: ClientExternalEffect) => actionEffect._id !== effect._id,
     )
-    // Display the changes.
-    forceUpdate()
     // Allow the user to save the changes.
     handleChange()
   }
@@ -107,20 +108,17 @@ export default function ExternalEffectEntry({
     // If the index is 0 then take the user
     // back to the mission entry.
     if (index === 0) {
-      action.mission.deselectNode()
-      setSelectedAction(null)
-      setSelectedExternalEffect(null)
+      mission.deselect()
     }
     // If the index is 1 then take the user
     // back to the node entry.
     else if (index === 1) {
-      setSelectedAction(null)
-      setSelectedExternalEffect(null)
+      mission.select(action.node)
     }
     // If the index is 2 then take the user
     // back to the action entry.
     else if (index === 2) {
-      setSelectedExternalEffect(null)
+      mission.select(action)
     }
   }
 
@@ -130,10 +128,7 @@ export default function ExternalEffectEntry({
   const renderBackButtonJsx = (): JSX.Element | null => {
     return (
       <div className='BackContainer'>
-        <div
-          className='BackButton'
-          onClick={() => setSelectedExternalEffect(null)}
-        >
+        <div className='BackButton' onClick={() => mission.selectBack()}>
           &lt;
           <Tooltip description='Go back.' />
         </div>
@@ -231,14 +226,6 @@ export type TExternalEffectEntry_P = {
    * The external effect to apply to the target.
    */
   effect: ClientExternalEffect
-  /**
-   * A function that will set the action that is selected.
-   */
-  setSelectedAction: (action: ClientMissionAction | null) => void
-  /**
-   * A function that will set the selected external effect.
-   */
-  setSelectedExternalEffect: (effect: ClientExternalEffect | null) => void
   /**
    * A function that will be called when a change has been made.
    */

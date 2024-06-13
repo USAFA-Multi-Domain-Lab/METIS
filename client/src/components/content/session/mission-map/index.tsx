@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import ClientMission from 'src/missions'
 import ClientMissionForce from 'src/missions/forces'
 import ClientMissionNode from 'src/missions/nodes'
@@ -97,6 +97,15 @@ export const MAP_EM_GRID_ENABLED = false
  */
 export const MAP_NODE_GRID_ENABLED = true
 
+/**
+ * The master tab to display on the tab bar.
+ */
+const MASTER_TAB: TTabBarTab = {
+  _id: 'master',
+  text: 'Master',
+  color: '#ffffff',
+}
+
 /* -- components -- */
 
 /**
@@ -149,7 +158,12 @@ export default function MissionMap({
    * The currently selected force.
    * @note If null, the master tab is selected.
    */
-  const [selectedForce, selectForce] = useState<ClientMissionForce | null>(null)
+  const [selectedForce, setForce] = useState<ClientMissionForce | null>(null)
+
+  /**
+   * The selected tab in the HUD.
+   */
+  const [tabIndex, setTabIndex] = useState<number>(0)
 
   /**
    * Force the component to re-render.
@@ -217,6 +231,47 @@ export default function MissionMap({
       }
     }
   })
+
+  // Listener for selection events within a mission. This
+  // will update the selected force in the state.
+  useEventListener(
+    mission,
+    'selection',
+    () => {
+      // Get force.
+      let force = ClientMission.getForceFromSelection(mission.selection)
+
+      // Ensure selected tab index corresponds with
+      // the selection in the mission.
+      let forceId = force?._id ?? MASTER_TAB._id
+      tabs.forEach((tab, index) => {
+        if (tab._id === forceId && index !== tabIndex) {
+          setTabIndex(index)
+        }
+      })
+
+      // Set force.
+      setForce(force)
+    },
+    [selectedForce],
+  )
+
+  /**
+   * Updates the mission selection when the tab index changes.
+   */
+  useEffect(() => {
+    // Get force from the tab ID.
+    let force = mission.getForce(selectedTab._id)
+
+    // If a force is found, select it in the mission.
+    if (force) {
+      mission.select(force)
+    }
+    // Else deselect all, showing the master tab.
+    else {
+      mission.deselect()
+    }
+  }, [tabIndex])
 
   /* -- functions -- */
 
@@ -335,6 +390,33 @@ export default function MissionMap({
   }
 
   /* -- computed -- */
+
+  /**
+   * The tabs to display in the tab bar.
+   */
+  const tabs = compute(() => {
+    // Define tab list with master tab.
+    let tabs: TTabBarTab[] = [MASTER_TAB]
+
+    // Add force tabs.
+    mission.forces.forEach((force) => {
+      tabs.push({
+        _id: force._id,
+        text: force.name,
+        color: force.color,
+      })
+    })
+
+    // Return tabs.
+    return tabs
+  })
+
+  /**
+   * The currently selected tab.
+   */
+  const selectedTab: TTabBarTab = compute(() => {
+    return tabs[tabIndex]
+  })
 
   /**
    * The data for the buttons displayed on the HUD.
@@ -582,10 +664,10 @@ export default function MissionMap({
       </Scene>
       <Hud
         mission={mission}
+        tabs={tabs}
+        tabIndex={tabIndex}
         buttons={buttons}
-        onTabSelect={(tab: TTabBarTab) => {
-          selectForce(mission.getForce(tab._id) ?? null)
-        }}
+        setTabIndex={setTabIndex}
         onTabAdd={onTabAdd}
       />
       {overlayJsx}

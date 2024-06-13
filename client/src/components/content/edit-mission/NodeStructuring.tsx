@@ -21,17 +21,17 @@ enum ENodeDropLocation {
 // the node structure for the mission
 // can be defined.
 export default function NodeStructuring(props: {
-  active: boolean
   mission: ClientMission
   handleChange: () => void
-  handleCloseRequest: () => void
 }): JSX.Element | null {
-  let active: boolean = props.active
+  /* -- PROPS -- */
+
   let mission: ClientMission = props.mission
   let handleChange = props.handleChange
-  let handleCloseRequest = props.handleCloseRequest
   // todo: Fix this to use prototypes.
   let rootNode: ClientMissionNode = mission.forces[0].root
+
+  /* -- STATE -- */
 
   const globalContext = useGlobalContext()
   const { forceUpdate } = globalContext.actions
@@ -40,6 +40,17 @@ export default function NodeStructuring(props: {
   const [dropLocation, setDropLocation] = useState<ENodeDropLocation>(
     ENodeDropLocation.Center,
   )
+
+  /* -- FUNCTIONS -- */
+
+  /**
+   * Callback for a request to close the panel.
+   */
+  const handleCloseRequest = (): void => {
+    mission.deselect()
+  }
+
+  /* -- RENDER -- */
 
   const Padding = (props: { uniqueClassName?: string }): JSX.Element | null => {
     const [dropPendingHere, setDropPendingHere] = useState<boolean>(false)
@@ -288,30 +299,26 @@ export default function NodeStructuring(props: {
     )
   }
 
-  if (active) {
-    return (
-      <div className='NodeStructuring SidePanel'>
-        <div className='BorderBox'>
-          <div className='BoxTop'>
-            <div className='ErrorMessage Hidden'></div>
-            <MoreInformation
-              tooltipDescription={
-                '##### Node Structuring\n' +
-                'Drag and drop the nodes below to reorder the structure of the mission. Nodes can be placed inside another node to nest nodes. Nodes can also be placed beside each other for more exact placement.'
-              }
-            />
-            <div className='Close' onClick={handleCloseRequest}>
-              <div className='CloseButton'>
-                x
-                <Tooltip description='Close panel.' />
-              </div>
+  return (
+    <div className='NodeStructuring SidePanel'>
+      <div className='BorderBox'>
+        <div className='BoxTop'>
+          <div className='ErrorMessage Hidden'></div>
+          <MoreInformation
+            tooltipDescription={
+              '##### Node Structuring\n' +
+              'Drag and drop the nodes below to reorder the structure of the mission. Nodes can be placed inside another node to nest nodes. Nodes can also be placed beside each other for more exact placement.'
+            }
+          />
+          <div className='Close' onClick={handleCloseRequest}>
+            <div className='CloseButton'>
+              x
+              <Tooltip description='Close panel.' />
             </div>
           </div>
-          {renderNodes()}
         </div>
+        {renderNodes()}
       </div>
-    )
-  } else {
-    return null
-  }
+    </div>
+  )
 }

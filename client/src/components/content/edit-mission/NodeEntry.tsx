@@ -4,7 +4,6 @@ import ClientMissionAction from 'src/missions/actions'
 import ClientMissionNode from 'src/missions/nodes'
 import { compute } from 'src/toolbox'
 import { usePostInitEffect } from 'src/toolbox/hooks'
-import { ReactSetter } from 'src/toolbox/types'
 import { SingleTypeObject } from '../../../../../shared/toolbox/objects'
 import Tooltip from '../communication/Tooltip'
 import { DetailColorSelector } from '../form/DetailColorSelector'
@@ -26,7 +25,6 @@ import './NodeEntry.scss'
  */
 export default function NodeEntry({
   node,
-  setSelectedAction,
   handleChange,
   handleAddRequest,
   handleDeleteRequest,
@@ -50,9 +48,13 @@ export default function NodeEntry({
 
   /* -- COMPUTED -- */
   /**
+   * The mission for the node.
+   */
+  const mission = compute(() => node.mission)
+  /**
    * The name of the mission.
    */
-  const missionName: string = compute(() => node.mission.name)
+  const missionName: string = compute(() => mission.name)
   /**
    * The current location within the mission.
    */
@@ -112,7 +114,7 @@ export default function NodeEntry({
     let classList: string[] = []
 
     // If the mission has only one node, add the disabled class.
-    if (node && node.mission.prototypes.length < 2) {
+    if (node && mission.prototypes.length < 2) {
       classList.push('Disabled')
     }
 
@@ -231,7 +233,7 @@ export default function NodeEntry({
     // If the index is 0 then take the user
     // back to the mission entry.
     if (index === 0) {
-      node.mission.deselectNode()
+      mission.deselect()
     }
   }
 
@@ -242,11 +244,9 @@ export default function NodeEntry({
     // Create a new action object.
     let newAction: ClientMissionAction = new ClientMissionAction(node)
     // Update the action stored in the state.
-    setSelectedAction(newAction)
+    mission.select(newAction)
     // Add the action to the node.
     node.actions.set(newAction._id, newAction)
-    // Display the changes.
-    forceUpdate()
     // Allow the user to save the changes.
     handleChange()
   }
@@ -282,7 +282,7 @@ export default function NodeEntry({
           className='BackButton'
           onClick={() => {
             missionPath.pop()
-            node.mission.deselectNode()
+            mission.deselectNode()
           }}
         >
           &lt;
@@ -334,7 +334,7 @@ export default function NodeEntry({
           edit: {
             icon: 'edit',
             key: 'edit',
-            onClick: () => setSelectedAction(action),
+            onClick: () => mission.select(action),
             tooltipDescription: 'Edit action.',
           },
           remove: {
@@ -496,11 +496,6 @@ export type TNodeEntry_P = {
    * The mission-node to be edited.
    */
   node: ClientMissionNode
-  /**
-   * React setter function used to update the value stored
-   * in a component's state.
-   */
-  setSelectedAction: ReactSetter<ClientMissionAction | null>
   /**
    * A function that will be called when a change has been made.
    */

@@ -4,13 +4,12 @@ import ClientMissionForce from 'src/missions/forces'
 import { compute } from 'src/toolbox'
 import { usePostInitEffect } from 'src/toolbox/hooks'
 import { DetailString } from '../form/DetailString'
-import './MissionEntry.scss'
+import './ForceEntry.scss'
 
 /**
  * This will render the basic editable details of a mission force.
  */
 export default function ForceEntry({
-  active,
   force,
   handleChange,
 }: TForceEntry): JSX.Element | null {
@@ -74,44 +73,36 @@ export default function ForceEntry({
 
   /* -- RENDER -- */
 
-  if (active) {
-    return (
-      <div className='ForceEntry SidePanel'>
-        <div className='BorderBox'>
-          {/* -- TOP OF BOX -- */}
-          <div className='BoxTop'>
-            <div className='ErrorMessage Hidden'></div>
-            {renderBackButtonJsx()}
-            {renderPathJsx()}
-          </div>
+  return (
+    <div className='ForceEntry SidePanel'>
+      <div className='BorderBox'>
+        {/* -- TOP OF BOX -- */}
+        <div className='BoxTop'>
+          <div className='ErrorMessage Hidden'></div>
+          {renderBackButtonJsx()}
+          {renderPathJsx()}
+        </div>
 
-          {/* -- MAIN CONTENT -- */}
-          <div className='SidePanelSection MainDetails'>
-            <DetailString
-              fieldType='required'
-              handleOnBlur='repopulateValue'
-              label='Name'
-              stateValue={forceName}
-              setState={setForceName}
-              defaultValue={ClientMissionForce.DEFAULT_PROPERTIES.name}
-              key={`${force._id}_name`}
-            />
-          </div>
+        {/* -- MAIN CONTENT -- */}
+        <div className='SidePanelSection MainDetails'>
+          <DetailString
+            fieldType='required'
+            handleOnBlur='repopulateValue'
+            label='Name'
+            stateValue={forceName}
+            setState={setForceName}
+            defaultValue={ClientMissionForce.DEFAULT_PROPERTIES.name}
+            key={`${force._id}_name`}
+          />
         </div>
       </div>
-    )
-  } else {
-    return null
-  }
+    </div>
+  )
 }
 
 /* ---------------------------- TYPES FOR FORCE ENTRY ---------------------------- */
 
 export type TForceEntry = {
-  /**
-   * Whether or not this component is active.
-   */
-  active: boolean
   /**
    * The force to be edited.
    */

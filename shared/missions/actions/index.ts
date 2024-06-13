@@ -1,28 +1,28 @@
 import { v4 as generateHash } from 'uuid'
-import { TCommonMission, TCommonMissionTypes } from '..'
+import { TCommonMission, TCommonMissionTypes, TMission } from '..'
 import { uuidTypeValidator } from '../../toolbox/validators'
 import {
   TCommonExternalEffect,
   TCommonExternalEffectJson,
+  TExternalEffect,
 } from '../effects/external'
 import {
   TCommonInternalEffect,
   TCommonInternalEffectJson,
+  TInternalEffect,
 } from '../effects/internal'
-import { TCommonMissionNode } from '../nodes'
+import { TCommonMissionForce, TForce } from '../forces'
+import { TCommonMissionNode, TNode } from '../nodes'
 
 /**
  * An action that can be executed on a mission node, causing a certain effect.
  */
 export default abstract class MissionAction<
-  TMission extends TCommonMission,
-  TMissionNode extends TCommonMissionNode,
-  TExternalEffect extends TCommonExternalEffect,
-  TInternalEffect extends TCommonInternalEffect,
+  T extends TCommonMissionTypes = TCommonMissionTypes,
 > implements TCommonMissionAction
 {
   // Inherited
-  public node: TMissionNode
+  public node: TNode<T>
 
   // Inherited
   public _id: TCommonMissionAction['_id']
@@ -49,10 +49,10 @@ export default abstract class MissionAction<
   public postExecutionFailureText: TCommonMissionAction['postExecutionFailureText']
 
   // Inherited
-  public externalEffects: TExternalEffect[]
+  public externalEffects: TExternalEffect<T>[]
 
   // Inherited
-  public internalEffects: TInternalEffect[]
+  public internalEffects: TInternalEffect<T>[]
 
   // Inherited
   public get failureChance(): TCommonMissionAction['failureChance'] {
@@ -65,8 +65,13 @@ export default abstract class MissionAction<
   }
 
   // Inherited
-  public get mission(): TMission {
-    return this.node.mission as TMission
+  public get mission(): TMission<T> {
+    return this.node.mission as TMission<T>
+  }
+
+  // Inherited
+  public get force(): TForce<T> {
+    return this.node.force
   }
 
   /**
@@ -74,7 +79,7 @@ export default abstract class MissionAction<
    * @param data The action data from which to create the action. Any ommitted values will be set to the default properties defined in MissionAction.DEFAULT_PROPERTIES.
    */
   public constructor(
-    node: TMissionNode,
+    node: TNode<T>,
     data: Partial<TCommonMissionActionJson> = MissionAction.DEFAULT_PROPERTIES,
   ) {
     this.node = node
@@ -109,7 +114,7 @@ export default abstract class MissionAction<
    */
   public abstract parseExternalEffects(
     data: TCommonExternalEffectJson[],
-  ): TExternalEffect[]
+  ): TExternalEffect<T>[]
 
   /**
    * Parses the internal effect data into InternalEffect Objects.
@@ -118,7 +123,7 @@ export default abstract class MissionAction<
    */
   public abstract parseInternalEffects(
     data: TCommonInternalEffectJson[],
-  ): TInternalEffect[]
+  ): TInternalEffect<T>[]
 
   // Implemented
   public toJson(): TCommonMissionActionJson {
@@ -247,6 +252,10 @@ export interface TCommonMissionAction {
    * The mission of which the action is a part.
    */
   mission: TCommonMission
+  /**
+   * The force of which the action is a part.
+   */
+  force: TCommonMissionForce
   /**
    * Converts the action to JSON.
    * @returns the JSON for the action.

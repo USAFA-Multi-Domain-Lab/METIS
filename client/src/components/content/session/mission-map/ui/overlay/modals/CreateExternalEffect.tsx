@@ -17,7 +17,6 @@ import './CreateExternalEffect.scss'
 export default function CreateExternalEffect({
   effect,
   targetEnvironments,
-  handleClose,
   handleChange,
 }: TCreateExternalEffect_P): JSX.Element | null {
   /* -- GLOBAL CONTEXT -- */
@@ -32,6 +31,10 @@ export default function CreateExternalEffect({
   )
 
   /* -- COMPUTED -- */
+  /**
+   * The mission for the effect.
+   */
+  const mission = compute(() => effect.mission)
   /**
    * The action to execute.
    */
@@ -97,6 +100,13 @@ export default function CreateExternalEffect({
     handleChange()
   }
 
+  /**
+   * Callback for when the modal is requested to be closed.
+   */
+  const onCloseRequest = () => {
+    mission.selectBack()
+  }
+
   /* -- RENDER -- */
 
   return (
@@ -104,7 +114,7 @@ export default function CreateExternalEffect({
       {/* -- TOP OF BOX -- */}
       <div className='Heading'>Create External Effect:</div>
       <div className='Close'>
-        <div className='CloseButton' onClick={handleClose}>
+        <div className='CloseButton' onClick={onCloseRequest}>
           x
           <Tooltip description='Close window.' />
         </div>
@@ -157,10 +167,6 @@ export type TCreateExternalEffect_P = {
    * List of target environments to apply external effects to.
    */
   targetEnvironments: ClientTargetEnvironment[]
-  /**
-   * A function that will close the modal.
-   */
-  handleClose: () => void
   /**
    * Handles when a change is made that would require saving.
    */
