@@ -129,14 +129,29 @@ export default function ArgEntry({
       if (arg.required) {
         setEffectArgs((prev) => ({ ...prev, [arg._id]: dropDownValue._id }))
       }
-      // Or, if the argument is optional and the dropdown value
-      // is not in a default state then update the dropdown
-      // value in the effect's arguments.
-      else if (!arg.required && optionalDropDownValue !== null) {
-        setEffectArgs((prev) => ({
-          ...prev,
-          [arg._id]: optionalDropDownValue._id,
-        }))
+      // Or, if the argument is optional...
+      else {
+        // ...and the optional drop down value is not null
+        // then update the optional drop down value in the
+        // effect's arguments.
+        if (optionalDropDownValue !== null) {
+          setEffectArgs((prev) => ({
+            ...prev,
+            [arg._id]: optionalDropDownValue._id,
+          }))
+        }
+        // Or, if the optional drop down value is null and
+        // the argument is in the effect's arguments then
+        // remove the argument from the effect's arguments.
+        else if (
+          optionalDropDownValue === null &&
+          effectArgs[arg._id] !== undefined
+        ) {
+          setEffectArgs((prev) => {
+            delete prev[arg._id]
+            return prev
+          })
+        }
       }
     }
     // Or, if the argument is a number...
@@ -146,11 +161,26 @@ export default function ArgEntry({
       if (arg.required) {
         setEffectArgs((prev) => ({ ...prev, [arg._id]: numberValue }))
       }
-      // Or, if the argument is optional and the number value
-      // is not in a default state then update the number
-      // value in the effect's arguments.
-      else if (!arg.required && optionalNumberValue !== null) {
-        setEffectArgs((prev) => ({ ...prev, [arg._id]: optionalNumberValue }))
+      // Or, if the argument is optional...
+      else {
+        // ...and the optional number value is not null
+        // then update the optional number value in the
+        // effect's arguments.
+        if (optionalNumberValue !== null) {
+          setEffectArgs((prev) => ({ ...prev, [arg._id]: optionalNumberValue }))
+        }
+        // Or, if the optional number value is null and
+        // the argument is in the effect's arguments then
+        // remove the argument from the effect's arguments.
+        else if (
+          optionalNumberValue === null &&
+          effectArgs[arg._id] !== undefined
+        ) {
+          setEffectArgs((prev) => {
+            delete prev[arg._id]
+            return prev
+          })
+        }
       }
     }
     // Or, if the argument is a string...

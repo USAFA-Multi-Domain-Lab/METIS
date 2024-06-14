@@ -154,7 +154,11 @@ export default function InternalEffectEntry({
       <div className='BackContainer'>
         <div
           className='BackButton'
-          onClick={() => setSelectedInternalEffect(null)}
+          onClick={() => {
+            console.log(effect.args)
+
+            setSelectedInternalEffect(null)
+          }}
         >
           &lt;
           <Tooltip description='Go back.' />

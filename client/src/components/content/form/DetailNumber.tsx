@@ -180,7 +180,7 @@ export function DetailNumber({
           }
           // If value is valid and the field is optional,
           // update the value.
-          if (isValidValue && fieldType === 'optional') {
+          if ((isValidValue || value === null) && fieldType === 'optional') {
             setState(value)
           }
         }}

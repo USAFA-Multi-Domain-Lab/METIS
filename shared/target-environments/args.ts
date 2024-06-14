@@ -451,7 +451,7 @@ export type TBaseArg = {
    * These are the keys of the arguments that the current argument depends on.
    * @note If the argument depends on another argument, the argument will only be displayed if the dependency is met.
    * @note If the argument depends on multiple arguments, all dependencies must be met for the argument to be displayed.
-   * @note If the argument has no dependencies (i.e. this is left undefined), the argument will always be displayed.
+   * @note If the argument has no dependencies (i.e. set to `undefined` or `[]`), the argument will always be displayed.
    * @default undefined
    * @example
    * ```typescript
@@ -464,7 +464,8 @@ export type TBaseArg = {
    *    type: 'number',
    *    default: 0,
    * },
-   * // This argument is only displayed if the value of 'argument1' is not falsy.
+   * // This argument is only displayed if the value of 'argument1' is truthy (i.e. 1, 'a', true, etc.)
+   * // or not falsy (i.e. null, undefined, 0, false, '', etc.).
    * {
    *    _id: 'argument2',
    *    name: 'Argument 2',
