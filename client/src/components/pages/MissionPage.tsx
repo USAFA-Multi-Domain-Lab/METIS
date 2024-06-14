@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useBeforeunload } from 'react-beforeunload'
 import { useGlobalContext, useNavigationMiddleware } from 'src/context'
 import ClientMission, { TMissionNavigable } from 'src/missions'
@@ -64,6 +64,8 @@ export default function MissionPage({
   const [targetEnvironments, setTargetEnvironments] = useState<
     ClientTargetEnvironment[]
   >([])
+  const [isNewInternalEffect, setIsNewInternalEffect] = useState<boolean>(false)
+  const [isNewExternalEffect, setIsNewExternalEffect] = useState<boolean>(false)
 
   /* -- COMPUTED -- */
 
@@ -94,24 +96,6 @@ export default function MissionPage({
 
     return panel2DefaultSize
   })
-
-  /**
-   * Boolean to determine if the external effect is new.
-   */
-  const isNewExternalEffect: boolean = compute(
-    () =>
-      mission.selection instanceof ClientExternalEffect &&
-      !mission.selection.action.externalEffects.includes(mission.selection),
-  )
-
-  /**
-   * Boolean to determine if the internal effect is new.
-   */
-  const isNewInternalEffect: boolean = compute(
-    () =>
-      mission.selection instanceof ClientInternalEffect &&
-      !mission.selection.action.internalEffects.includes(mission.selection),
-  )
 
   /* -- EFFECTS -- */
 
@@ -295,6 +279,15 @@ export default function MissionPage({
     // Mark unsaved changes as true.
     setAreUnsavedChanges(true)
   })
+
+  // Cleanup when a new internal/external effect is created.
+  useEffect(() => {
+    if (isNewInternalEffect) {
+      setIsNewInternalEffect(false)
+    } else if (isNewExternalEffect) {
+      setIsNewExternalEffect(false)
+    }
+  }, [selection])
 
   /* -- FUNCTIONS -- */
 
@@ -498,28 +491,31 @@ export default function MissionPage({
    * Computed JSX for the mission map modal.
    */
   const modalJsx = compute((): JSX.Element | null => {
-    // If the selected external effect is new and there are
-    // target environments to choose from, then display the
-    // create external effect modal.
-    if (isNewExternalEffect && targetEnvironments.length > 0) {
+    // If the selection is an action and the user has
+    // requested to create a new external effect, then
+    // display the create external effect modal.
+    if (
+      selection instanceof ClientMissionAction &&
+      isNewExternalEffect &&
+      targetEnvironments.length > 0
+    ) {
       return (
         <CreateExternalEffect
-          // This is definitely an external effect, based
-          // on the state of `isNewExternalEffect`.
-          effect={mission.selection as ClientExternalEffect}
+          action={mission.selection as ClientMissionAction}
           targetEnvironments={targetEnvironments}
           handleChange={handleChange}
         />
       )
     }
-    // Or, if the selected internal effect is new, then display the
-    // create internal effect modal.
-    else if (isNewInternalEffect) {
+    // Or, if the selection is an action and the user has
+    // requested to create a new internal effect, then
+    // display the create internal effect modal.
+    else if (selection instanceof ClientMissionAction && isNewInternalEffect) {
       return (
         <CreateInternalEffect
           // This is definitely an internal effect, based
           // on the state of `isNewInternalEffect`.
-          effect={mission.selection as ClientInternalEffect}
+          action={mission.selection as ClientMissionAction}
           handleChange={handleChange}
         />
       )
@@ -601,6 +597,8 @@ export default function MissionPage({
         <ActionEntry
           action={selection}
           targetEnvironments={targetEnvironments}
+          setIsNewInternalEffect={setIsNewInternalEffect}
+          setIsNewExternalEffect={setIsNewExternalEffect}
           handleChange={handleChange}
           key={selection._id}
         />
