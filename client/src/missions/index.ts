@@ -815,6 +815,11 @@ export default class ClientMission
    * @note Selection can be accessed via non-static field `ClientMission.selection`.
    */
   public select(selection: TMissionNavigable): void {
+    // Throw an error if the selection is not
+    // part of the mission.
+    if (selection.mission !== this)
+      throw new Error('The given selection is not part of the mission.')
+
     this._selection = selection
     this.emitEvent('selection')
   }
@@ -966,7 +971,7 @@ export default class ClientMission
       } catch (error) {
         console.error('Failed to save mission.')
         console.error(error)
-        reject()
+        reject(error)
       }
     })
   }

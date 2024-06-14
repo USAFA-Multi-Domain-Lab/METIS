@@ -2,6 +2,7 @@ import { v4 as generateHash } from 'uuid'
 import { TCommonMission, TCommonMissionTypes, TMission } from '..'
 import { uuidTypeValidator } from '../../../shared/toolbox/validators'
 import context from '../../context'
+import StringToolbox from '../../toolbox/strings'
 import {
   TCommonMissionNode,
   TCommonMissionNodeJson,
@@ -76,6 +77,7 @@ export abstract class MissionForce<
     })
   }
 
+  // Implemented
   public toJson(options: TForceJsonOptions = {}): TCommonMissionForceJson {
     let {
       revealedOnly = false,
@@ -93,7 +95,7 @@ export abstract class MissionForce<
     // * stored as mongoose ObjectIds.
     // * If the ID is a UUID, then the
     // * mission won't save.
-    let isObjectId: boolean = !uuidTypeValidator(this._id) ? true : false
+    let isObjectId: boolean = !uuidTypeValidator(this._id)
     if (isObjectId) {
       json._id = this._id
     }
@@ -217,49 +219,49 @@ export abstract class MissionForce<
    */
   public static readonly DEFAULT_FORCES: TCommonMissionForceJson[] = [
     {
-      _id: 'friendly-force',
+      _id: StringToolbox.generateRandomId(),
       name: 'Friendly Force',
       color: '#52b1ff',
       nodes: [],
     },
     {
-      _id: 'enemy-force',
+      _id: StringToolbox.generateRandomId(),
       name: 'Enemy Force',
       color: '#f1696f',
       nodes: [],
     },
     {
-      _id: 'guerrilla-force',
+      _id: StringToolbox.generateRandomId(),
       name: 'Guerrilla Force',
       color: '#f7d154',
       nodes: [],
     },
     {
-      _id: 'local-national-force',
+      _id: StringToolbox.generateRandomId(),
       name: 'Local National Force',
       color: '#7ed321',
       nodes: [],
     },
     {
-      _id: 'white-cell',
+      _id: StringToolbox.generateRandomId(),
       name: 'White Cell',
       color: '#ffffff',
       nodes: [],
     },
     {
-      _id: 'non-state-actors',
+      _id: StringToolbox.generateRandomId(),
       name: 'Non-State Actors',
       color: '#ce9563',
       nodes: [],
     },
     {
-      _id: 'coalition-force',
+      _id: StringToolbox.generateRandomId(),
       name: 'Coalition Force',
       color: '#b36ae2',
       nodes: [],
     },
     {
-      _id: 'civilian-industry',
+      _id: StringToolbox.generateRandomId(),
       name: 'Civilian Industry',
       color: '#ff66cc',
       nodes: [],

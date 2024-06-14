@@ -12,6 +12,7 @@ import { ClientTargetEnvironment } from 'src/target-environments'
 import { compute } from 'src/toolbox'
 import { useEventListener, useMountHandler } from 'src/toolbox/hooks'
 import { DefaultLayout, TPage_P } from '.'
+import Mission from '../../../../shared/missions'
 import { SingleTypeObject, TWithKey } from '../../../../shared/toolbox/objects'
 import ActionEntry from '../content/edit-mission/entries/ActionEntry'
 import ExternalEffectEntry from '../content/edit-mission/entries/ExternalEffectEntry'
@@ -309,26 +310,22 @@ export default function MissionPage({
    * any changes made.
    * @returns A promise that resolves when the mission has been saved.
    */
-  const save = (): Promise<void> => {
-    return new Promise(async (resolve, reject) => {
-      try {
-        if (areUnsavedChanges) {
-          // Set unsaved changes to false to
-          // prevent multiple saves.
-          setAreUnsavedChanges(false)
-          // Save the mission and notify
-          // the user.
-          await mission.saveToServer()
-          notify('Mission successfully saved.')
-        }
-        resolve()
-      } catch (error) {
-        // Notify and revert upon error.
-        notify('Mission failed to save')
-        setAreUnsavedChanges(true)
-        reject(error)
+  const save = async () => {
+    try {
+      if (areUnsavedChanges) {
+        // Set unsaved changes to false to
+        // prevent multiple saves.
+        setAreUnsavedChanges(false)
+        // Save the mission and notify
+        // the user.
+        await mission.saveToServer()
+        notify('Mission successfully saved.')
       }
-    })
+    } catch (error) {
+      // Notify and revert upon error.
+      notify('Mission failed to save')
+      setAreUnsavedChanges(true)
+    }
   }
 
   // todo: Fix this to work with prototypes.
@@ -372,6 +369,22 @@ export default function MissionPage({
       handleChange()
     }
   }
+
+  /**
+   * Callback for when a request to add a new tab
+   * (force) is made.
+   */
+  const onTabAdd = compute(() => {
+    // If the mission has reached the maximum number
+    // of forces, return null, disabling the add button.
+    if (mission.forces.length >= Mission.MAX_FORCE_COUNT) return null
+
+    // Return default callback.
+    return () => {
+      mission.createForce()
+      handleChange()
+    }
+  })
 
   /**
    * Callback for when a prototype is selected.
@@ -695,6 +708,7 @@ export default function MissionPage({
                 <MissionMap
                   mission={mission}
                   customButtons={mapCustomButtons}
+                  onTabAdd={onTabAdd}
                   onPrototypeSelect={onPrototypeSelect}
                   onNodeSelect={onNodeSelect}
                   overlayContent={modalJsx}

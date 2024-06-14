@@ -1,5 +1,5 @@
 import ClientMissionPrototype from 'src/missions/nodes/prototypes'
-import { DetailString } from '../../form/DetailString'
+import { DetailLocked } from '../../form/DetailLocked'
 import './index.scss'
 import EntryNavigation from './navigation/EntryNavigation'
 
@@ -30,13 +30,9 @@ export default function PrototypeEntry({
 
         {/* -- MAIN CONTENT -- */}
         <div className='SidePanelSection MainDetails'>
-          <DetailString
-            fieldType='required'
-            handleOnBlur='repopulateValue'
+          <DetailLocked
             label='ID'
             stateValue={prototype._id}
-            setState={() => {}}
-            defaultValue={prototype._id}
             key={`${prototype._id}_name`}
           />
         </div>
