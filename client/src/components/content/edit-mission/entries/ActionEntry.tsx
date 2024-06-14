@@ -7,6 +7,7 @@ import ClientMissionNode from 'src/missions/nodes'
 import { ClientTargetEnvironment } from 'src/target-environments'
 import { compute } from 'src/toolbox'
 import { usePostInitEffect } from 'src/toolbox/hooks'
+import { ReactSetter } from 'src/toolbox/types'
 import { SingleTypeObject } from '../../../../../../shared/toolbox/objects'
 import Tooltip from '../../communication/Tooltip'
 import { DetailLargeString } from '../../form/DetailLargeString'
@@ -28,6 +29,8 @@ import EntryNavigation from './navigation/EntryNavigation'
 export default function ActionEntry({
   action,
   targetEnvironments,
+  setIsNewInternalEffect,
+  setIsNewExternalEffect,
   handleChange,
 }: TActionEntry_P): JSX.Element | null {
   /* -- GLOBAL CONTEXT -- */
@@ -199,10 +202,10 @@ export default function ActionEntry({
     // then selecting it in the mission.
     switch (choice) {
       case 'Internal':
-        mission.select(new ClientInternalEffect(action))
+        setIsNewInternalEffect(true)
         break
       case 'External':
-        mission.select(new ClientExternalEffect(action))
+        setIsNewExternalEffect(true)
         break
     }
   }
@@ -444,6 +447,14 @@ export type TActionEntry_P = {
    * List of target environments to apply effects to.
    */
   targetEnvironments: ClientTargetEnvironment[]
+  /**
+   * Function that updates the isNewInternalEffect state.
+   */
+  setIsNewInternalEffect: ReactSetter<boolean>
+  /**
+   * Function that updates the isNewExternalEffect state.
+   */
+  setIsNewExternalEffect: ReactSetter<boolean>
   /**
    * Handles when a change is made that would require saving.
    */

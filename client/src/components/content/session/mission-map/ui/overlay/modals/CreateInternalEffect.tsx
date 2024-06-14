@@ -19,7 +19,7 @@ import './CreateInternalEffect.scss'
  * Prompt modal for creating an internal effect to apply to a target.
  */
 export default function CreateInternalEffect({
-  effect,
+  action,
   handleChange,
 }: TCreateInternalEffect_P): JSX.Element | null {
   /* -- GLOBAL CONTEXT -- */
@@ -28,8 +28,11 @@ export default function CreateInternalEffect({
   const { forceUpdate } = globalContext.actions
 
   /* -- STATE -- */
+  const [effect] = useState<ClientInternalEffect>(
+    new ClientInternalEffect(action),
+  )
   const [force, setForce] = useState<ClientMissionForce>(
-    new ClientMissionForce(effect.mission, {
+    new ClientMissionForce(action.mission, {
       name: 'Select a force',
     }),
   )
@@ -40,8 +43,8 @@ export default function CreateInternalEffect({
     ClientMissionNode | ClientMissionForce
   >(
     // todo: Is referencing the root node correct? Change if not.
-    new ClientMissionNode(effect.force, {
-      structureKey: effect.mission.root._id,
+    new ClientMissionNode(action.force, {
+      structureKey: action.mission.root._id,
       name: 'Select a node',
     }),
   )
@@ -49,17 +52,13 @@ export default function CreateInternalEffect({
   /* -- COMPUTED -- */
 
   /**
-   * The mission for the effect.
+   * The current mission.
    */
-  const mission = compute(() => effect.mission)
+  const mission = compute(() => action.mission)
   /**
    * List of forces in the mission.
    */
-  const forces: ClientMissionForce[] = compute(() => effect.mission.forces)
-  /**
-   * The action to execute.
-   */
-  const action: ClientMissionAction = compute(() => effect.action)
+  const forces: ClientMissionForce[] = compute(() => mission.forces)
   /**
    * The class name for the target drop down.
    */
@@ -115,8 +114,8 @@ export default function CreateInternalEffect({
     setTarget(new ClientTarget(new ClientTargetEnvironment()))
     // todo: Is referencing the root node correct? Change if not.
     setTargetParams(
-      new ClientMissionNode(effect.force, {
-        structureKey: effect.mission.root._id,
+      new ClientMissionNode(action.force, {
+        structureKey: mission.root._id,
         name: 'Select a node',
       }),
     )
@@ -130,6 +129,8 @@ export default function CreateInternalEffect({
   const createInternalEffect = () => {
     // Push the new internal effect to the action.
     action.internalEffects.push(effect)
+    // Select the new internal effect.
+    mission.select(effect)
     // Display the changes.
     forceUpdate()
     // Allow the user to save the changes.
@@ -214,9 +215,9 @@ export default function CreateInternalEffect({
  */
 export type TCreateInternalEffect_P = {
   /**
-   * The internal effect to create.
+   * The action to create the internal effect for.
    */
-  effect: ClientInternalEffect
+  action: ClientMissionAction
   /**
    * Handles when a change is made that would require saving.
    */

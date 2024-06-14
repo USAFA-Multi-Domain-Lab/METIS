@@ -15,7 +15,7 @@ import './CreateExternalEffect.scss'
  * Prompt modal for creating an external effect to apply to a target.
  */
 export default function CreateExternalEffect({
-  effect,
+  action,
   targetEnvironments,
   handleChange,
 }: TCreateExternalEffect_P): JSX.Element | null {
@@ -23,6 +23,9 @@ export default function CreateExternalEffect({
   const { forceUpdate } = useGlobalContext().actions
 
   /* -- STATE -- */
+  const [effect] = useState<ClientExternalEffect>(
+    new ClientExternalEffect(action),
+  )
   const [targetEnv, setTargetEnv] = useState<ClientTargetEnvironment>(
     new ClientTargetEnvironment(),
   )
@@ -32,13 +35,9 @@ export default function CreateExternalEffect({
 
   /* -- COMPUTED -- */
   /**
-   * The mission for the effect.
+   * The current mission.
    */
-  const mission = compute(() => effect.mission)
-  /**
-   * The action to execute.
-   */
-  const action: ClientMissionAction = compute(() => effect.action)
+  const mission = compute(() => action.mission)
   /**
    * The class name for the target drop down.
    */
@@ -94,6 +93,8 @@ export default function CreateExternalEffect({
   const createExternalEffect = () => {
     // Push the new external effect to the action.
     action.externalEffects.push(effect)
+    // Select the new external effect.
+    mission.select(effect)
     // Display the changes.
     forceUpdate()
     // Allow the user to save the changes.
@@ -160,9 +161,9 @@ export default function CreateExternalEffect({
  */
 export type TCreateExternalEffect_P = {
   /**
-   * The external effect to create.
+   * The action to create the internal effect for.
    */
-  effect: ClientExternalEffect
+  action: ClientMissionAction
   /**
    * List of target environments to apply external effects to.
    */
