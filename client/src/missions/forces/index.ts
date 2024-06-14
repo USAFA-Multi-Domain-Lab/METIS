@@ -1,5 +1,5 @@
 import { TLine_P } from 'src/components/content/session/mission-map/objects/Line'
-import ClientMission, { TClientMissionTypes } from '..'
+import ClientMission, { TClientMissionTypes, TMissionNavigable } from '..'
 import {
   MissionForce,
   TCommonMissionForceJson,
@@ -17,11 +17,19 @@ import ClientMissionNode from '../nodes'
 /**
  * Class for managing mission prototypes on the client.
  */
-export default class ClientMissionForce extends MissionForce<TClientMissionTypes> {
+export default class ClientMissionForce
+  extends MissionForce<TClientMissionTypes>
+  implements TMissionNavigable
+{
   /**
    * The lines used to connect nodes on the mission map.
    */
   public relationshipLines: TWithKey<TLine_P>[]
+
+  // Implemented
+  public get path(): TMissionNavigable[] {
+    return [this.mission, this]
+  }
 
   public constructor(
     mission: ClientMission,

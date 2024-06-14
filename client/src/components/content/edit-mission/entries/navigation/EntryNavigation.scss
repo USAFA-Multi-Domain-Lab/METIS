@@ -1,0 +1,59 @@
+@import 'src/assets/styles/config.scss';
+
+.EntryNavigation {
+  display: grid;
+  grid-template-columns: 50px auto;
+  align-items: center;
+
+  .BackButton {
+    border: 2px solid $color-main;
+    border-radius: 50%;
+    background-color: $background-alt1;
+    text-align: center;
+    width: 22px;
+    height: 22px;
+    font-size: 1.1em;
+    font-weight: bold;
+
+    &:hover {
+      cursor: pointer;
+    }
+  }
+
+  .Path {
+    margin: 0;
+    font-size: 0.75em;
+    color: $color-error-alt;
+    width: 97%;
+    max-height: 50px;
+    display: block;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    word-break: break-all;
+    color: $color-main;
+
+    .Label {
+      display: inline;
+    }
+
+    .Positions {
+      display: inline;
+
+      .Position {
+        color: $color-pointer-mark;
+
+        .Text {
+          font-style: italic;
+          color: $terminal;
+
+          &:hover {
+            cursor: pointer;
+          }
+        }
+      }
+    }
+  }
+}

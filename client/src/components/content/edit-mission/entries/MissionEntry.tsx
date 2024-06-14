@@ -1,12 +1,12 @@
 import { useState } from 'react'
 import { useGlobalContext } from 'src/context'
 import ClientMission from 'src/missions'
-import { compute } from 'src/toolbox'
 import { usePostInitEffect } from 'src/toolbox/hooks'
-import { DetailLargeString } from '../form/DetailLargeString'
-import { DetailNumber } from '../form/DetailNumber'
-import { DetailString } from '../form/DetailString'
+import { DetailLargeString } from '../../form/DetailLargeString'
+import { DetailNumber } from '../../form/DetailNumber'
+import { DetailString } from '../../form/DetailString'
 import './index.scss'
+import EntryNavigation from './navigation/EntryNavigation'
 
 /**
  * This will render the basic editable details of the mission itself.
@@ -26,10 +26,6 @@ export default function MissionEntry({
   )
 
   /* -- COMPUTED -- */
-  /**
-   * The current location within the mission.
-   */
-  const missionPath: string[] = compute(() => [missionName])
 
   /* -- EFFECTS -- */
 
@@ -60,35 +56,6 @@ export default function MissionEntry({
 
   /* -- FUNCTIONS -- */
 
-  /**
-   * Renders JSX for the back button.
-   */
-  const renderBackButtonJsx = (): JSX.Element | null => {
-    return (
-      <div className='BackContainer'>
-        <div className='BackButton Disabled'>&lt;</div>
-      </div>
-    )
-  }
-  /**
-   * Renders JSX for the path of the mission.
-   */
-  const renderPathJsx = (): JSX.Element | null => {
-    return (
-      <div className='Path'>
-        Location:{' '}
-        {missionPath.map((position: string, index: number) => {
-          return (
-            <span className='Position' key={`position-${index}`}>
-              <span className='PositionText'>{position}</span>{' '}
-              {index === missionPath.length - 1 ? '' : ' > '}
-            </span>
-          )
-        })}
-      </div>
-    )
-  }
-
   /* -- RENDER -- */
 
   return (
@@ -96,9 +63,7 @@ export default function MissionEntry({
       <div className='BorderBox'>
         {/* -- TOP OF BOX -- */}
         <div className='BoxTop'>
-          <div className='ErrorMessage Hidden'></div>
-          {renderBackButtonJsx()}
-          {renderPathJsx()}
+          <EntryNavigation object={mission} />
         </div>
 
         {/* -- MAIN CONTENT -- */}

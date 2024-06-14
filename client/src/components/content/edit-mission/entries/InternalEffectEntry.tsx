@@ -7,13 +7,13 @@ import ClientMissionNode from 'src/missions/nodes'
 import ClientTarget from 'src/target-environments/targets'
 import { compute } from 'src/toolbox'
 import { usePostInitEffect } from 'src/toolbox/hooks'
-import Tooltip from '../../communication/Tooltip'
 import { DetailLargeString } from '../../form/DetailLargeString'
 import { DetailLocked } from '../../form/DetailLocked'
 import { DetailString } from '../../form/DetailString'
 import { ButtonText } from '../../user-controls/ButtonText'
-import '../index.scss'
-import Args from './Args'
+import Args from '../target-effects/Args'
+import './index.scss'
+import EntryNavigation from './navigation/EntryNavigation'
 
 /**
  * Entry fields for an internal effect.
@@ -23,9 +23,11 @@ export default function InternalEffectEntry({
   handleChange,
 }: TInternalEffectEntry_P): JSX.Element | null {
   /* -- GLOBAL CONTEXT -- */
+
   const { forceUpdate } = useGlobalContext().actions
 
   /* -- STATE -- */
+
   const [name, setName] = useState<ClientInternalEffect['name']>(effect.name)
   const [description, setDescription] = useState<
     ClientInternalEffect['description']
@@ -43,35 +45,17 @@ export default function InternalEffectEntry({
   // )
 
   /* -- COMPUTED -- */
+
   /**
    * The action to execute.
    */
   const action: ClientMissionAction = compute(() => effect.action)
+
   /**
    * The mission for the effect.
    */
   const mission: ClientMission = compute(() => action.mission)
-  /**
-   * The name of the mission.
-   */
-  const missionName: string = compute(() => effect.mission.name)
-  /**
-   * The name of the node.
-   */
-  const nodeName: string = compute(() => effect.node.name)
-  /**
-   * The name of the action.
-   */
-  const actionName: string = compute(() => action.name)
-  /**
-   * The current location within the mission.
-   */
-  const missionPath: string[] = compute(() => [
-    missionName,
-    nodeName,
-    actionName,
-    name,
-  ])
+
   /**
    * The value to display as the target.
    */
@@ -132,73 +116,14 @@ export default function InternalEffectEntry({
     handleChange()
   }
 
-  /**
-   * This will handle the click event for the path position.
-   * @param index The index of the path position that was clicked.
-   */
-  const handlePathPositionClick = (index: number) => {
-    // If the index is 0 then take the user
-    // back to the mission entry.
-    if (index === 0) {
-      mission.deselect()
-    }
-    // If the index is 1 then take the user
-    // back to the node entry.
-    else if (index === 1) {
-      mission.select(action.node)
-    }
-    // If the index is 2 then take the user
-    // back to the action entry.
-    else if (index === 2) {
-      mission.select(action)
-    }
-  }
-
-  /**
-   * Renders JSX for the back button.
-   */
-  const renderBackButtonJsx = (): JSX.Element | null => {
-    return (
-      <div className='BackContainer'>
-        <div className='BackButton' onClick={() => mission.selectBack()}>
-          &lt;
-          <Tooltip description='Go back.' />
-        </div>
-      </div>
-    )
-  }
-  /**
-   * Renders JSX for the path of the mission.
-   */
-  const renderPathJsx = (): JSX.Element | null => {
-    return (
-      <div className='Path'>
-        Location:{' '}
-        {missionPath.map((position: string, index: number) => {
-          return (
-            <span className='Position' key={`position-${index}`}>
-              <span
-                className='PositionText'
-                onClick={() => handlePathPositionClick(index)}
-              >
-                {position}
-              </span>{' '}
-              {index === missionPath.length - 1 ? '' : ' > '}
-            </span>
-          )
-        })}
-      </div>
-    )
-  }
-
   /* -- RENDER -- */
+
   return (
     <div className='Entry InternalEffectEntry SidePanel'>
       <div className='BorderBox'>
         {/* -- TOP OF BOX -- */}
         <div className='BoxTop'>
-          {renderBackButtonJsx()}
-          {renderPathJsx()}
+          <EntryNavigation object={effect} />
         </div>
 
         {/* -- MAIN CONTENT -- */}

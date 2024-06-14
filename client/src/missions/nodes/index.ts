@@ -2,7 +2,7 @@ import axios from 'axios'
 import memoizeOne from 'memoize-one'
 import { TNodeButton } from 'src/components/content/session/mission-map/objects/MissionNode'
 import { TEventListenerTarget } from 'src/toolbox/hooks'
-import ClientMission, { TClientMissionTypes } from '..'
+import ClientMission, { TClientMissionTypes, TMissionNavigable } from '..'
 import { TRequestMethod } from '../../../../shared/connect/data'
 import { TCommonMissionActionJson } from '../../../../shared/missions/actions'
 import { TActionExecutionJson } from '../../../../shared/missions/actions/executions'
@@ -23,7 +23,7 @@ import ClientMissionForce from '../forces'
  */
 export default class ClientMissionNode
   extends MissionNode<TClientMissionTypes>
-  implements TEventListenerTarget<TNodeEventMethod>
+  implements TEventListenerTarget<TNodeEventMethod>, TMissionNavigable
 {
   // Overridden
   public get depthPadding(): number {
@@ -200,6 +200,11 @@ export default class ClientMissionNode
   public set buttons(value: TNodeButton[]) {
     this._buttons = value
     this.emitEvent('set-buttons')
+  }
+
+  // Implemented
+  public get path(): TMissionNavigable[] {
+    return [this.mission, this.force, this]
   }
 
   public constructor(

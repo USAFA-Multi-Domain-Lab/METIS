@@ -35,7 +35,7 @@ import ClientMissionPrototype from './nodes/prototypes'
  */
 export default class ClientMission
   extends Mission<TClientMissionTypes>
-  implements TEventListenerTarget<TMissionEvent>
+  implements TEventListenerTarget<TMissionEvent>, TMissionNavigable
 {
   /**
    * Whether the resource exists on the server.
@@ -115,7 +115,7 @@ export default class ClientMission
    * @note This is used in the form for editing.
    * @note By default, the mission itself.
    */
-  private _selection: TMissionSelection
+  private _selection: TMissionNavigable
   /**
    * The current selection for the mission.
    * @note This can be most type of nested, mission-related objects,
@@ -123,7 +123,7 @@ export default class ClientMission
    * @note This is used in the form for editing.
    * @note By default, the mission itself.
    */
-  public get selection(): TMissionSelection {
+  public get selection(): TMissionNavigable {
     return this._selection
   }
 
@@ -203,6 +203,16 @@ export default class ClientMission
    * @note Calculated in `ClientMissionPrototype.drawPrototypeRelationshipLines`.
    */
   public relationshipLines: TWithKey<TLine_P>[]
+
+  // Implemented
+  public get mission(): ClientMission {
+    return this
+  }
+
+  // Implemented
+  public get path(): TMissionNavigable[] {
+    return [this]
+  }
 
   public constructor(
     data: Partial<TCommonMissionJson> = {},
@@ -804,7 +814,7 @@ export default class ClientMission
    * @param selection The selection to make for the mission.
    * @note Selection can be accessed via non-static field `ClientMission.selection`.
    */
-  public select(selection: TMissionSelection): void {
+  public select(selection: TMissionNavigable): void {
     this._selection = selection
     this.emitEvent('selection')
   }
@@ -822,68 +832,15 @@ export default class ClientMission
    * Selects the parent of the current selection, if any.
    */
   public selectBack(): void {
-    // Get selection.
-    let selection: TMissionSelection = this._selection
+    // Get the selection and its path.
+    let selection = this.selection
+    let selectionPath = selection.path
 
-    // Determine parent, and select it.
-    if (
-      selection === 'structure' ||
-      selection instanceof ClientMissionPrototype ||
-      selection instanceof ClientMissionForce
-    ) {
-      this.deselect()
-    } else if (selection instanceof ClientMissionNode) {
-      this.select(selection.force)
-    } else if (selection instanceof ClientMissionAction) {
-      this.select(selection.node)
-    } else if (
-      selection instanceof ClientInternalEffect ||
-      selection instanceof ClientExternalEffect
-    ) {
-      this.select(selection.action)
+    // If the path has more than one element,
+    // select the second-to-last element.
+    if (selectionPath.length > 1) {
+      this.select(selectionPath[selectionPath.length - 2])
     }
-  }
-
-  /**
-   * Selects a force in the mission.
-   * @note Deselects the currently selected node in the mission.
-   * @deprecated
-   */
-  public selectForce(force: ClientMissionForce): void {
-    // Deslect node.
-    this.deselectNode()
-    // Select force.
-    this._selectedForce = force
-    // Emit event.
-    this.emitEvent('force-selection')
-  }
-
-  /**
-   * Selects a node in the mission. Used in the form for editing.
-   * @deprecated
-   */
-  public selectNode(node: ClientMissionNode): void {
-    // Handle foreign node.
-    if (node.mission !== this)
-      throw new Error('Cannot select node from another mission.')
-    // Disable creation mode.
-    if (this.creationMode) this.creationMode = false
-    // Select node.
-    this._selectedNode = node
-    // Emit event.
-    this.emitEvent('node-selection')
-  }
-
-  /**
-   * Deselects the currently selected node in the mission. Used in the form for editing.
-   */
-  public deselectNode(): void {
-    // Disable creation mode.
-    if (this.creationMode) this.creationMode = false
-    // Deslect node.
-    this._selectedNode = null
-    // Emit event.
-    this.emitEvent('node-selection')
   }
 
   // Implemented
@@ -1022,26 +979,14 @@ export default class ClientMission
    * selection.
    */
   public static getNodeFromSelection(
-    selection: TMissionSelection,
+    selection: TMissionNavigable,
   ): ClientMissionNode | null {
-    let selectionAsAny: any = selection
-
-    // Return the selection, if it is a node itself.
-    if (selectionAsAny instanceof ClientMissionNode) {
-      return selectionAsAny
+    // Loop through path, and return the first node found.
+    for (let item of selection.path) {
+      if (item instanceof ClientMissionNode) return item
     }
-    // Return nested node, if one is found within the selection.
-    else if (
-      typeof selectionAsAny === 'object' &&
-      'node' in selectionAsAny &&
-      selectionAsAny.node instanceof ClientMissionNode
-    ) {
-      return selectionAsAny.node
-    }
-    // Else, return null.
-    else {
-      return null
-    }
+    // Return null if no node is found.
+    return null
   }
 
   /**
@@ -1052,26 +997,14 @@ export default class ClientMission
    * selection.
    */
   public static getForceFromSelection(
-    selection: TMissionSelection,
+    selection: TMissionNavigable,
   ): ClientMissionForce | null {
-    let selectionAsAny: any = selection
-
-    // Return the selection, if it is a force itself.
-    if (selectionAsAny instanceof ClientMissionForce) {
-      return selectionAsAny
+    // Loop through path, and return the first force found.
+    for (let item of selection.path) {
+      if (item instanceof ClientMissionForce) return item
     }
-    // Return nested force, if one is found within the selection.
-    else if (
-      typeof selectionAsAny === 'object' &&
-      'force' in selectionAsAny &&
-      selectionAsAny.force instanceof ClientMissionForce
-    ) {
-      return selectionAsAny.force
-    }
-    // Else, return null.
-    else {
-      return null
-    }
+    // Return null if no force is found.
+    return null
   }
 
   /* -- API -- */
@@ -1313,20 +1246,25 @@ export type TStructureChangeListener = (structureChangeKey: string) => void
 export type TMissionEvent =
   | 'activity'
   | 'structure-change'
-  | 'force-selection'
-  | 'node-selection'
   | 'selection'
   | 'spawn-node'
 
 /**
- * A selected element within a mission.
+ * Represents an object that can support navigation within
+ * a mission.
+ * @note Implement this to make a class compatible.
  */
-export type TMissionSelection =
-  | ClientMission
-  | 'structure'
-  | ClientMissionPrototype
-  | ClientMissionForce
-  | ClientMissionNode
-  | ClientMissionAction
-  | ClientInternalEffect
-  | ClientExternalEffect
+export interface TMissionNavigable {
+  /**
+   * The mission associated with the object.
+   */
+  mission: ClientMission
+  /**
+   * The name of the object.
+   */
+  name: string
+  /**
+   * The path to object within the mission.
+   */
+  get path(): TMissionNavigable[]
+}

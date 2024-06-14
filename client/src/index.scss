@@ -119,26 +119,3 @@ code {
     }
   }
 }
-
-.BackContainer {
-  position: sticky;
-  top: 0px;
-  margin: 0 10px;
-  z-index: 2;
-  user-select: none;
-
-  .BackButton {
-    border: 2px solid $color-main;
-    border-radius: 50%;
-    background-color: $background-alt1;
-    text-align: center;
-    width: 22px;
-    height: 22px;
-    font-size: 1.1em;
-    font-weight: bold;
-
-    &:hover {
-      cursor: pointer;
-    }
-  }
-}

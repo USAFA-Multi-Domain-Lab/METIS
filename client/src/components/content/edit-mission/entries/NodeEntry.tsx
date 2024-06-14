@@ -4,20 +4,21 @@ import ClientMissionAction from 'src/missions/actions'
 import ClientMissionNode from 'src/missions/nodes'
 import { compute } from 'src/toolbox'
 import { usePostInitEffect } from 'src/toolbox/hooks'
-import { SingleTypeObject } from '../../../../../shared/toolbox/objects'
-import Tooltip from '../communication/Tooltip'
-import { DetailColorSelector } from '../form/DetailColorSelector'
-import { DetailLargeString } from '../form/DetailLargeString'
-import { DetailNumber } from '../form/DetailNumber'
-import { DetailString } from '../form/DetailString'
-import { DetailToggle } from '../form/DetailToggle'
-import List, { ESortByMethod } from '../general-layout/List'
+import { SingleTypeObject } from '../../../../../../shared/toolbox/objects'
+import Tooltip from '../../communication/Tooltip'
+import { DetailColorSelector } from '../../form/DetailColorSelector'
+import { DetailLargeString } from '../../form/DetailLargeString'
+import { DetailNumber } from '../../form/DetailNumber'
+import { DetailString } from '../../form/DetailString'
+import { DetailToggle } from '../../form/DetailToggle'
+import List, { ESortByMethod } from '../../general-layout/List'
 import ButtonSvgPanel, {
   TValidPanelButton,
-} from '../user-controls/ButtonSvgPanel'
-import { ButtonText, TButtonText } from '../user-controls/ButtonText'
-import { TToggleLockState } from '../user-controls/Toggle'
+} from '../../user-controls/ButtonSvgPanel'
+import { ButtonText, TButtonText } from '../../user-controls/ButtonText'
+import { TToggleLockState } from '../../user-controls/Toggle'
 import './index.scss'
+import EntryNavigation from './navigation/EntryNavigation'
 
 /**
  * This will render the entry fields for a mission-node
@@ -51,14 +52,6 @@ export default function NodeEntry({
    * The mission for the node.
    */
   const mission = compute(() => node.mission)
-  /**
-   * The name of the mission.
-   */
-  const missionName: string = compute(() => mission.name)
-  /**
-   * The current location within the mission.
-   */
-  const missionPath: string[] = compute(() => [missionName, nodeName])
   /**
    * The class name for the list of actions.
    */
@@ -226,18 +219,6 @@ export default function NodeEntry({
   }
 
   /**
-   * This will handle the click event for the path position.
-   * @param index The index of the path position that was clicked.
-   */
-  const handlePathPositionClick = (index: number) => {
-    // If the index is 0 then take the user
-    // back to the mission entry.
-    if (index === 0) {
-      mission.deselect()
-    }
-  }
-
-  /**
    * Handles creating a new action.
    */
   const createAction = () => {
@@ -270,50 +251,6 @@ export default function NodeEntry({
         `Auto-generated an action for ${node.name} because it is an executable node with no actions to execute.`,
       )
     }
-  }
-
-  /**
-   * Renders JSX for the back button.
-   */
-  const renderBackButtonJsx = (): JSX.Element | null => {
-    return (
-      <div className='BackContainer'>
-        <div
-          className='BackButton'
-          onClick={() => {
-            missionPath.pop()
-            mission.deselectNode()
-          }}
-        >
-          &lt;
-          <Tooltip description='Go back.' />
-        </div>
-      </div>
-    )
-  }
-
-  /**
-   * Renders JSX for the path of the mission.
-   */
-  const renderPathJsx = (): JSX.Element | null => {
-    return (
-      <div className='Path'>
-        Location:{' '}
-        {missionPath.map((position: string, index: number) => {
-          return (
-            <span className='Position' key={`position-${index}`}>
-              <span
-                className='PositionText'
-                onClick={() => handlePathPositionClick(index)}
-              >
-                {position}
-              </span>{' '}
-              {index === missionPath.length - 1 ? '' : ' > '}
-            </span>
-          )
-        })}
-      </div>
-    )
   }
 
   /**
@@ -372,8 +309,7 @@ export default function NodeEntry({
       <div className='BorderBox'>
         {/* -- TOP OF BOX -- */}
         <div className='BoxTop'>
-          {renderBackButtonJsx()}
-          {renderPathJsx()}
+          <EntryNavigation object={node} />
         </div>
 
         {/* -- MAIN CONTENT -- */}

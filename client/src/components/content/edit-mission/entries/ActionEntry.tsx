@@ -7,18 +7,19 @@ import ClientMissionNode from 'src/missions/nodes'
 import { ClientTargetEnvironment } from 'src/target-environments'
 import { compute } from 'src/toolbox'
 import { usePostInitEffect } from 'src/toolbox/hooks'
-import { SingleTypeObject } from '../../../../../shared/toolbox/objects'
-import Tooltip from '../communication/Tooltip'
-import { DetailLargeString } from '../form/DetailLargeString'
-import { DetailNumber } from '../form/DetailNumber'
-import { DetailString } from '../form/DetailString'
-import List, { ESortByMethod } from '../general-layout/List'
+import { SingleTypeObject } from '../../../../../../shared/toolbox/objects'
+import Tooltip from '../../communication/Tooltip'
+import { DetailLargeString } from '../../form/DetailLargeString'
+import { DetailNumber } from '../../form/DetailNumber'
+import { DetailString } from '../../form/DetailString'
+import List, { ESortByMethod } from '../../general-layout/List'
 import ButtonSvgPanel, {
   TValidPanelButton,
-} from '../user-controls/ButtonSvgPanel'
-import { ButtonText } from '../user-controls/ButtonText'
+} from '../../user-controls/ButtonSvgPanel'
+import { ButtonText } from '../../user-controls/ButtonText'
 import './ActionEntry.scss'
 import './index.scss'
+import EntryNavigation from './navigation/EntryNavigation'
 
 /**
  * This will render the entry fields for an action
@@ -30,9 +31,11 @@ export default function ActionEntry({
   handleChange,
 }: TActionEntry_P): JSX.Element | null {
   /* -- GLOBAL CONTEXT -- */
+
   const { forceUpdate, prompt } = useGlobalContext().actions
 
   /* -- STATE -- */
+
   const [actionName, setActionName] = useState<string>(action.name)
   const [description, setDescription] = useState<string>(action.description)
   const [successChance, setSuccessChance] = useState<number>(
@@ -53,26 +56,12 @@ export default function ActionEntry({
    * The node on which the action is being executed.
    */
   const node: ClientMissionNode = compute(() => action.node)
+
   /**
    * The mission for the action.
    */
   const mission = compute(() => node.mission)
-  /**
-   * The name of the mission.
-   */
-  const missionName: string = compute(() => action.mission.name)
-  /**
-   * The name of the node.
-   */
-  const nodeName: string = compute(() => action.node.name)
-  /**
-   * The current location within the mission.
-   */
-  const missionPath: string[] = compute(() => [
-    missionName,
-    nodeName,
-    actionName,
-  ])
+
   /**
    * The class name for the delete action button.
    */
@@ -88,6 +77,7 @@ export default function ActionEntry({
     // Combine the class names into a single string.
     return classList.join(' ')
   })
+
   /**
    * The class name for the new effect button.
    */
@@ -103,6 +93,7 @@ export default function ActionEntry({
     // Combine the class names into a single string.
     return classList.join(' ')
   })
+
   /**
    * A combined list of all effects.
    * This includes both internal and external effects.
@@ -154,6 +145,7 @@ export default function ActionEntry({
   ])
 
   /* -- FUNCTIONS -- */
+
   /**
    * Deletes the action from the node.
    */
@@ -164,23 +156,6 @@ export default function ActionEntry({
     node.actions.delete(action._id)
     // Allow the user to save the changes.
     handleChange()
-  }
-
-  /**
-   * This will handle the click event for the path position.
-   * @param index The index of the path position that was clicked.
-   */
-  const handlePathPositionClick = (index: number) => {
-    // If the index is 0 then take the user
-    // back to the mission entry.
-    if (index === 0) {
-      mission.deselect()
-    }
-    // If the index is 1 then take the user
-    // back to the node entry.
-    else if (index === 1) {
-      mission.select(node)
-    }
   }
 
   /**
@@ -230,49 +205,6 @@ export default function ActionEntry({
         mission.select(new ClientExternalEffect(action))
         break
     }
-  }
-
-  /**
-   * Renders JSX for the back button.
-   */
-  const renderBackButtonJsx = (): JSX.Element | null => {
-    return (
-      <div className='BackContainer'>
-        <div
-          className='BackButton'
-          onClick={() => {
-            mission.selectBack()
-          }}
-        >
-          &lt;
-          <Tooltip description='Go back.' />
-        </div>
-      </div>
-    )
-  }
-
-  /**
-   * Renders JSX for the path of the mission.
-   */
-  const renderPathJsx = (): JSX.Element | null => {
-    return (
-      <div className='Path'>
-        Location:{' '}
-        {missionPath.map((position: string, index: number) => {
-          return (
-            <span className='Position' key={`position-${index}`}>
-              <span
-                className='PositionText'
-                onClick={() => handlePathPositionClick(index)}
-              >
-                {position}
-              </span>{' '}
-              {index === missionPath.length - 1 ? '' : ' > '}
-            </span>
-          )
-        })}
-      </div>
-    )
   }
 
   /**
@@ -372,8 +304,7 @@ export default function ActionEntry({
         <div className='BorderBox'>
           {/* -- TOP OF BOX -- */}
           <div className='BoxTop'>
-            {renderBackButtonJsx()}
-            {renderPathJsx()}
+            <EntryNavigation object={action} />
           </div>
 
           {/* -- MAIN CONTENT -- */}

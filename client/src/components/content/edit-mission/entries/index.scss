@@ -1,10 +1,6 @@
 .Entry {
   &.SidePanel {
     .BorderBox {
-      .BoxTop {
-        grid-template-columns: 50px auto;
-      }
-
       .SidePanelSection {
         margin: 20px 6.5% 40px;
       }

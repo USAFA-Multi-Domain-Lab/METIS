@@ -1,10 +1,10 @@
 import { useState } from 'react'
 import { useGlobalContext } from 'src/context'
 import ClientMissionForce from 'src/missions/forces'
-import { compute } from 'src/toolbox'
 import { usePostInitEffect } from 'src/toolbox/hooks'
-import { DetailString } from '../form/DetailString'
+import { DetailString } from '../../form/DetailString'
 import './index.scss'
+import EntryNavigation from './navigation/EntryNavigation'
 
 /**
  * This will render the basic editable details of a mission force.
@@ -20,10 +20,6 @@ export default function ForceEntry({
   const [forceName, setForceName] = useState<string>(force.name)
 
   /* -- COMPUTED -- */
-  /**
-   * The current location within the force.
-   */
-  const forcePath: string[] = compute(() => [forceName])
 
   /* -- EFFECTS -- */
 
@@ -42,35 +38,6 @@ export default function ForceEntry({
 
   /* -- FUNCTIONS -- */
 
-  /**
-   * Renders JSX for the back button.
-   */
-  const renderBackButtonJsx = (): JSX.Element | null => {
-    return (
-      <div className='BackContainer'>
-        <div className='BackButton Disabled'>&lt;</div>
-      </div>
-    )
-  }
-  /**
-   * Renders JSX for the path of the force.
-   */
-  const renderPathJsx = (): JSX.Element | null => {
-    return (
-      <div className='Path'>
-        Location:{' '}
-        {forcePath.map((position: string, index: number) => {
-          return (
-            <span className='Position' key={`position-${index}`}>
-              <span className='PositionText'>{position}</span>{' '}
-              {index === forcePath.length - 1 ? '' : ' > '}
-            </span>
-          )
-        })}
-      </div>
-    )
-  }
-
   /* -- RENDER -- */
 
   return (
@@ -78,9 +45,7 @@ export default function ForceEntry({
       <div className='BorderBox'>
         {/* -- TOP OF BOX -- */}
         <div className='BoxTop'>
-          <div className='ErrorMessage Hidden'></div>
-          {renderBackButtonJsx()}
-          {renderPathJsx()}
+          <EntryNavigation object={force} />
         </div>
 
         {/* -- MAIN CONTENT -- */}

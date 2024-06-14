@@ -2,8 +2,8 @@ import { useState } from 'react'
 import { useGlobalContext } from 'src/context'
 import ClientMission from 'src/missions'
 import ClientMissionNode, { ENodeTargetRelation } from 'src/missions/nodes'
-import MoreInformation from '../communication/MoreInformation'
-import Tooltip from '../communication/Tooltip'
+import MoreInformation from '../../communication/MoreInformation'
+import Tooltip from '../../communication/Tooltip'
 import './NodeStructuring.scss'
 
 // This is a enum used to describe

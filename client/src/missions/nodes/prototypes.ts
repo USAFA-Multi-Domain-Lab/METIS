@@ -1,6 +1,6 @@
 import { TPrototypeButton } from 'src/components/content/session/mission-map/objects/MissionPrototype'
 import { TEventListenerTarget } from 'src/toolbox/hooks'
-import ClientMission, { TClientMissionTypes } from '..'
+import ClientMission, { TClientMissionTypes, TMissionNavigable } from '..'
 import MissionPrototype, {
   TCommonMissionPrototype,
   TMissionPrototypeOptions,
@@ -12,7 +12,7 @@ import { Vector2D } from '../../../../shared/toolbox/space'
  */
 export default class ClientMissionPrototype
   extends MissionPrototype<TClientMissionTypes>
-  implements TEventListenerTarget<TPrototypeEventMethod>
+  implements TEventListenerTarget<TPrototypeEventMethod>, TMissionNavigable
 {
   /**
    * The position of the prototype on a mission map.
@@ -50,6 +50,11 @@ export default class ClientMissionPrototype
    * Listeners for prototype events.
    */
   private listeners: Array<[TPrototypeEventMethod, () => void]> = []
+
+  // Implemented
+  public get path(): TMissionNavigable[] {
+    return [this.mission, this]
+  }
 
   public constructor(
     mission: ClientMission,

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useBeforeunload } from 'react-beforeunload'
 import { useGlobalContext, useNavigationMiddleware } from 'src/context'
-import ClientMission, { TMissionSelection } from 'src/missions'
+import ClientMission, { TMissionNavigable } from 'src/missions'
 import ClientMissionAction from 'src/missions/actions'
 import { ClientExternalEffect } from 'src/missions/effects/external'
 import { ClientInternalEffect } from 'src/missions/effects/internal'
@@ -13,14 +13,13 @@ import { compute } from 'src/toolbox'
 import { useEventListener, useMountHandler } from 'src/toolbox/hooks'
 import { DefaultLayout, TPage_P } from '.'
 import { SingleTypeObject, TWithKey } from '../../../../shared/toolbox/objects'
-import ActionEntry from '../content/edit-mission/ActionEntry'
-import ForceEntry from '../content/edit-mission/ForceEntry'
-import MissionEntry from '../content/edit-mission/MissionEntry'
-import NodeEntry from '../content/edit-mission/NodeEntry'
-import NodeStructuring from '../content/edit-mission/NodeStructuring'
-import PrototypeEntry from '../content/edit-mission/PrototypeEntry'
-import ExternalEffectEntry from '../content/edit-mission/target-effects/ExternalEffectEntry'
-import InternalEffectEntry from '../content/edit-mission/target-effects/InternalEffectEntry'
+import ActionEntry from '../content/edit-mission/entries/ActionEntry'
+import ExternalEffectEntry from '../content/edit-mission/entries/ExternalEffectEntry'
+import ForceEntry from '../content/edit-mission/entries/ForceEntry'
+import InternalEffectEntry from '../content/edit-mission/entries/InternalEffectEntry'
+import MissionEntry from '../content/edit-mission/entries/MissionEntry'
+import NodeEntry from '../content/edit-mission/entries/NodeEntry'
+import PrototypeEntry from '../content/edit-mission/entries/PrototypeEntry'
 import {
   HomeLink,
   LogoutLink,
@@ -56,7 +55,7 @@ export default function MissionPage({
   const [areUnsavedChanges, setAreUnsavedChanges] = useState<boolean>(
     missionId === null ? true : false,
   )
-  const [selection, setSelection] = useState<TMissionSelection>(
+  const [selection, setSelection] = useState<TMissionNavigable>(
     mission.selection,
   )
   const [nodeStructuringIsActive, activateNodeStructuring] =
@@ -194,8 +193,8 @@ export default function MissionPage({
     ['selection', 'structure-change'],
     () => {
       // Get previous and next selections.
-      let prevSelection: TMissionSelection = selection
-      let nextSelection: TMissionSelection = mission.selection
+      let prevSelection: TMissionNavigable = selection
+      let nextSelection: TMissionNavigable = mission.selection
       let prevNode: ClientMissionNode | null =
         ClientMission.getNodeFromSelection(prevSelection)
       let nextNode: ClientMissionNode | null =
@@ -444,7 +443,8 @@ export default function MissionPage({
     // Handle the change.
     handleChange()
     activateNodeStructuring(false)
-    mission.deselectNode()
+    // todo: Remove this.
+    // mission.deselectNode()
     ensureOneNodeExists()
   }
 
@@ -465,7 +465,8 @@ export default function MissionPage({
       icon: 'reorder',
       key: 'reorder',
       onClick: () => {
-        mission.deselectNode()
+        // todo: Resolve this.
+        // mission.deselectNode()
         activateNodeStructuring(true)
       },
       tooltipDescription: 'Edit the structure and order of nodes.',
@@ -554,14 +555,6 @@ export default function MissionPage({
           mission={selection}
           handleChange={handleChange}
           key={selection._id}
-        />
-      )
-    } else if (selection === 'structure') {
-      return (
-        <NodeStructuring
-          mission={mission}
-          handleChange={handleChange}
-          key={`structure_${mission._id}`}
         />
       )
     } else if (selection instanceof ClientMissionPrototype) {
