@@ -1,5 +1,8 @@
 import { TCommonMissionTypes } from 'metis/missions'
+import { AnyObject } from 'metis/toolbox/objects'
 import TargetEnvironment, { TCommonTargetEnv, TTargetEnv } from '.'
+import Args, { TTargetArg, TTargetArgJson } from './args'
+import { Dependency } from './dependencies'
 
 /**
  * This is an entity that can be found in a target environment.
@@ -42,7 +45,7 @@ export default abstract class Target<
     this.name = data.name ?? Target.DEFAULT_PROPERTIES.name
     this.description = data.description ?? Target.DEFAULT_PROPERTIES.description
     this.script = data.script ?? Target.DEFAULT_PROPERTIES.script
-    this.args = data.args ?? Target.DEFAULT_PROPERTIES.args
+    this.args = Args.fromJson(data.args ?? Target.DEFAULT_PROPERTIES.args)
   }
 
   /**
@@ -50,7 +53,7 @@ export default abstract class Target<
    * @param options Options for converting the Target to JSON.
    * @returns A JSON representation of the Target.
    */
-  public toJson(options: TTargetJsonOptions = {}): TCommonTargetJson {
+  public toJson(): TCommonTargetJson {
     // Construct JSON object to send to the server.
     return {
       targetEnvId: this.targetEnvironment._id,
@@ -58,8 +61,64 @@ export default abstract class Target<
       name: this.name,
       description: this.description,
       script: this.script,
-      args: this.args,
+      args: Args.toJson(this.args),
     }
+  }
+
+  /**
+   * Determines if all the dependencies of an argument are met.
+   * @param arg The argument to check if all dependencies are met.
+   * @param effectArgs The arguments that are used to create the effect on the target.
+   * @returns If all the dependencies are met.
+   */
+  public allDependenciesMet = (
+    arg: TTargetArg,
+    effectArgs: AnyObject,
+  ): boolean => {
+    // If the argument has no dependencies, then the argument is always displayed.
+    if (!arg.dependencies || arg.dependencies.length === 0) {
+      return true
+    }
+
+    // Stores the status of all the argument's dependencies.
+    let areDependenciesMet: boolean[] = []
+    // Create a variable to determine if all the dependencies
+    // have been met.
+    let allDependenciesMet: boolean
+
+    // Iterate through the dependencies.
+    arg.dependencies.forEach((dependency) => {
+      // Grab the dependency argument.
+      let dependencyArg: TTargetArg | undefined = this.args.find(
+        (arg: TTargetArg) => arg._id === dependency.dependentId,
+      )
+
+      // If the dependency argument is found then check if
+      // the dependency is met.
+      if (dependencyArg) {
+        // Check if the dependency is met.
+        let dependencyMet: boolean = dependency.condition(
+          effectArgs[dependency.dependentId],
+        )
+
+        // If the dependency is met then push true to the
+        // dependencies met array, otherwise push false.
+        dependencyMet
+          ? areDependenciesMet.push(true)
+          : areDependenciesMet.push(false)
+      }
+      // Otherwise, the dependency argument doesn't exist.
+      else {
+        areDependenciesMet.push(false)
+      }
+    })
+
+    // If all the dependencies have been met then set the
+    // variable to true, otherwise set it to false.
+    allDependenciesMet = !areDependenciesMet.includes(false)
+
+    // Return the status of all the dependencies.
+    return allDependenciesMet
   }
 
   /**
@@ -79,7 +138,7 @@ export default abstract class Target<
   /**
    * The node target that is available in the METIS target environment.
    */
-  private static nodeTarget: TCommonTargetJson = {
+  public static nodeTarget: TCommonTargetJson = {
     targetEnvId: 'metis',
     _id: 'node',
     name: 'Node',
@@ -90,40 +149,39 @@ export default abstract class Target<
         _id: 'block-node',
         name: 'Block Node',
         required: true,
-        display: true,
         groupingId: 'block-node',
         type: 'boolean',
         default: true,
       },
       {
         _id: 'success-chance',
-        name: 'Chance of Success',
-        required: true,
-        display: false,
-        groupingId: 'block-node',
+        name: 'Chance of Success (+/-)',
         type: 'number',
-        default: 0,
-        dependencies: ['block-node'],
+        required: false,
+        min: -100,
+        max: 100,
+        unit: '%',
+        groupingId: 'block-node',
+        dependencies: [Dependency.FALSEY('block-node')],
       },
       {
         _id: 'process-time',
-        name: 'Process Time',
-        required: true,
-        display: true,
-        groupingId: 'block-node',
+        name: 'Process Time (+/-)',
         type: 'number',
-        default: 0,
-        dependencies: ['block-node'],
+        required: false,
+        min: -3600,
+        max: 3600,
+        unit: 's',
+        groupingId: 'block-node',
+        dependencies: [Dependency.FALSEY('block-node')],
       },
       {
         _id: 'resource-cost',
-        name: 'Resource Cost',
-        required: true,
-        display: true,
-        groupingId: 'block-node',
+        name: 'Resource Cost (+/-)',
         type: 'number',
-        default: 0,
-        dependencies: ['block-node'],
+        required: false,
+        groupingId: 'block-node',
+        dependencies: [Dependency.FALSEY('block-node')],
       },
     ],
   }
@@ -131,7 +189,7 @@ export default abstract class Target<
   /**
    * The output target that is available in the METIS target environment.
    */
-  private static outputTarget: TCommonTargetJson = {
+  public static outputTarget: TCommonTargetJson = {
     targetEnvId: 'metis',
     _id: 'output',
     name: 'Output Panel',
@@ -142,9 +200,8 @@ export default abstract class Target<
         _id: 'message',
         name: 'Message',
         required: true,
-        display: true,
         type: 'large-string',
-        default: '<p>Enter your message here.</p>',
+        default: 'Enter your message here.',
       },
     ],
   }
@@ -200,8 +257,17 @@ export interface TCommonTarget {
   args: TTargetArg[]
   /**
    * Converts the Target Object to JSON.
+   * @param options Options for converting the Target to JSON.
+   * @returns A JSON representation of the Target.
    */
   toJson: (options?: TTargetJsonOptions) => TCommonTargetJson
+  /**
+   * Determines if all the dependencies of an argument are met.
+   * @param arg The argument to check if all dependencies are met.
+   * @param effectArgs The arguments that are used to create the effect on the target.
+   * @returns If all the dependencies are met.
+   */
+  allDependenciesMet: (arg: TTargetArg, effectArgs: AnyObject) => boolean
 }
 
 /**
@@ -238,259 +304,5 @@ export interface TCommonTargetJson {
   /**
    * The arguments used to create the effect on the target.
    */
-  args: TTargetArg[]
+  args: TTargetArgJson[]
 }
-
-/* ------------------------------ TARGET ARGUMENT TYPES ------------------------------ */
-
-/**
- * The base argument type for a target.
- */
-type TBaseArg = {
-  /**
-   * The ID of the argument.
-   */
-  _id: string
-  /**
-   * The argument's name. This is displayed to the user.
-   */
-  name: string
-  /**
-   * Determines whether the argument is displayed to the user or not.
-   */
-  display: boolean
-  /**
-   * The grouping ID of the argument.
-   * @note This is used to group arguments together in the target-effect interface.
-   */
-  groupingId?: string
-  /**
-   * These are the keys of the arguments that the current argument depends on.
-   */
-  dependencies?: string[]
-}
-
-/**
- * The number argument type for a target.
- */
-type TNumberArg = TBaseArg &
-  (TNumberArgOptional | TNumberArgRequired) & {
-    /**
-     * The argument's input type.
-     * @note This will render as an input that only accepts numbers.
-     */
-    type: 'number'
-    /**
-     * The minimum allowed value for the argument.
-     */
-    min?: number
-    /**
-     * The maximum allowed value for the argument.
-     */
-    max?: number
-    /**
-     * The unit of measurement for the argument.
-     */
-    unit?: string
-  }
-/**
- * The optional number argument type for a target.
- */
-type TNumberArgOptional = {
-  /**
-   * Determines whether the argument is required or not.
-   */
-  required: false
-}
-/**
- * The required number argument type for a target.
- */
-type TNumberArgRequired = {
-  /**
-   * Determines whether the argument is required or not.
-   */
-  required: true
-  /**
-   * The default value for the argument.
-   */
-  default: number
-}
-
-/**
- * The string argument type for a target.
- */
-type TStringArg = TBaseArg &
-  (TStringArgOptional | TStringArgRequired) & {
-    /**
-     * The argument's input type.
-     * @note This will render as an input that accepts any string.
-     * If the argument is required, empty strings are not allowed.
-     */
-    type: 'string'
-  }
-/**
- * The optional string argument type for a target.
- */
-type TStringArgOptional = {
-  /**
-   * Determines whether the argument is required or not.
-   */
-  required: false
-  /**
-   * The default value for the argument.
-   */
-  default?: string
-}
-/**
- * The required string argument type for a target.
- */
-type TStringArgRequired = {
-  /**
-   * Determines whether the argument is required or not.
-   */
-  required: true
-  /**
-   * The default value for the argument.
-   */
-  default: string
-}
-
-/**
- * The large character string argument type for a target.
- */
-type TLargeStringArg = TBaseArg &
-  (TLargeStringArgOptional | TLargeStringArgRequired) & {
-    /**
-     * The argument's input type.
-     * @note This will render as an input that accepts any string.
-     * If the argument is required, empty strings are not allowed.
-     */
-    type: 'large-string'
-  }
-/**
- * The optional large character string argument type for a target.
- */
-type TLargeStringArgOptional = {
-  /**
-   * Determines whether the argument is required or not.
-   */
-  required: false
-  /**
-   * The default value for the argument.
-   */
-  default?: string
-}
-/**
- * The required large character string argument type for a target.
- */
-type TLargeStringArgRequired = {
-  /**
-   * Determines whether the argument is required or not.
-   */
-  required: true
-  /**
-   * The default value for the argument.
-   */
-  default: string
-}
-
-/**
- * The dropdown argument type for a target.
- */
-type TDropdownArg = TBaseArg &
-  (TDropdownArgOptional | TDropdownArgRequired) & {
-    /**
-     * The argument's input type.
-     * @note This will render as a dropdown box with
-     * predefined options for the user to select from.
-     */
-    type: 'dropdown'
-    /**
-     * The options for the argument.
-     */
-    options: Array<{
-      /**
-       * The ID of the option.
-       */
-      _id: string
-      /**
-       * The option's name.
-       * @note This is displayed to the user.
-       */
-      name: string
-    }>
-  }
-/**
- * The optional dropdown argument type for a target.
- */
-type TDropdownArgOptional = {
-  /**
-   * Determines whether the argument is required or not.
-   */
-  required: false
-}
-/**
- * The required dropdown argument type for a target.
- */
-type TDropdownArgRequired = {
-  /**
-   * Determines whether the argument is required or not.
-   */
-  required: true
-  /**
-   * The default value for the argument.
-   */
-  default: {
-    /**
-     * The ID of the option.
-     */
-    _id: string
-    /**
-     * The option's name. This is displayed to the user.
-     */
-    name: string
-  }
-}
-
-/**
- * The boolean argument type for a target.
- */
-type TBooleanArg = TBaseArg &
-  (TBooleanArgOptional | TBooleanArgRequired) & {
-    /**
-     * The argument's input type.
-     * @note This will render as a toggle switch.
-     */
-    type: 'boolean'
-  }
-/**
- * The optional boolean argument type for a target.
- */
-type TBooleanArgOptional = {
-  /**
-   * Determines whether the argument is required or not.
-   */
-  required: false
-}
-/**
- * The required boolean argument type for a target.
- */
-type TBooleanArgRequired = {
-  /**
-   * Determines whether the argument is required or not.
-   */
-  required: true
-  /**
-   * The default value for the argument.
-   */
-  default: boolean
-}
-/**
- * The arguments used for the target-effect interface and the target-effect API.
- */
-export type TTargetArg =
-  | TNumberArg
-  | TStringArg
-  | TLargeStringArg
-  | TDropdownArg
-  | TBooleanArg

@@ -10,7 +10,7 @@ import IActionOutcome from './actions/outcomes'
 import { TCommonExternalEffect } from './effects/external'
 import { TCommonInternalEffect } from './effects/internal'
 import { TCommonMissionForce, TCommonMissionForceJson, TForce } from './forces'
-import { TCommonMissionNode, TMissionNodeJson } from './nodes'
+import { TCommonMissionNode, TMissionNodeJson, TNode } from './nodes'
 import {
   TCommonMissionPrototype,
   TMissionPrototypeOptions,
@@ -195,6 +195,12 @@ export default abstract class Mission<
   // Implemented
   public getForce(forceId: TForce<T>['_id']): TForce<T> | undefined {
     return this.forces.find((force) => force._id === forceId)
+  }
+
+  // Implemented
+  public getNode(nodeId: TNode<T>['_id']): TNode<T> | undefined {
+    let force = this.forces.find((force) => force.getNode(nodeId))
+    return force ? force.getNode(nodeId) : undefined
   }
 
   /**
@@ -404,6 +410,10 @@ export interface TCommonMission {
   getForce: (
     forceId: TCommonMissionForce['_id'],
   ) => TCommonMissionForce | undefined
+  /**
+   * Gets a node from the mission by its ID.
+   */
+  getNode: (nodeId: TCommonMissionNode['_id']) => TCommonMissionNode | undefined
 }
 
 /**

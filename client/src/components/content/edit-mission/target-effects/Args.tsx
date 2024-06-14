@@ -1,7 +1,9 @@
+import { useEffect } from 'react'
+import { useGlobalContext } from 'src/context'
 import { ClientExternalEffect } from 'src/missions/effects/external'
 import { compute } from 'src/toolbox'
 import { ReactSetter } from 'src/toolbox/types'
-import { TTargetArg } from '../../../../../../shared/target-environments/targets'
+import { TTargetArg } from '../../../../../../shared/target-environments/args'
 import { SingleTypeObject } from '../../../../../../shared/toolbox/objects'
 import ArgEntry from './ArgEntry'
 import './Args.scss'
@@ -14,6 +16,9 @@ export default function Args({
   effectArgs,
   setEffectArgs,
 }: TArgs_P): JSX.Element | null {
+  /* -- GLOBAL CONTEXT -- */
+  const { forceUpdate } = useGlobalContext().actions
+
   /* -- COMPUTED -- */
   /**
    * The selected target's arguments.
@@ -66,6 +71,15 @@ export default function Args({
     return Object.entries(groupings)
   })
 
+  /* -- EFFECTS -- */
+  // Force update the component when the effect arguments change.
+  // *** Note: The "effectArgs" is an object that is mutated
+  // *** as the user interacts with the argument fields. So,
+  // *** this ensures that the arguments are displayed correctly.
+  useEffect(() => {
+    forceUpdate()
+  }, [effectArgs])
+
   /* -- RENDER -- */
   // If the grouping entries are not empty
   // then render the arguments in groupings.
@@ -79,21 +93,25 @@ export default function Args({
           /* -- COMPUTED -- */
           /**
            * Boolean to determine if at least one argument
-           * in the grouping is displayed.
+           * in the grouping is displayed based on the
+           * dependencies of the arguments.
            */
           const oneGroupingIsDisplayed: boolean = compute(() => {
-            // Set the default boolean to false.
+            // Default value.
             let oneGroupingIsDisplayed: boolean = false
 
-            // Iterate through the grouping.
-            grouping.forEach((arg: TTargetArg) => {
-              // If the argument is displayed then set the
-              // boolean to true.
-              if (arg.display) {
+            // Iterate through the arguments in the grouping.
+            for (let arg of grouping) {
+              // If all of the argument's dependencies are met
+              // then at least one argument in the grouping
+              // is displayed.
+              if (target && target.allDependenciesMet(arg, effectArgs)) {
                 oneGroupingIsDisplayed = true
+                break
               }
-            })
+            }
 
+            // Return the result.
             return oneGroupingIsDisplayed
           })
           /**
@@ -116,13 +134,23 @@ export default function Args({
           return (
             <div className={groupingClassName} key={`grouping-${groupingId}`}>
               {grouping.map((arg: TTargetArg) => {
+                /* -- COMPUTED -- */
+                /**
+                 * Boolean to determine if the argument is displayed
+                 * based on the dependencies of the argument.
+                 */
+                const isDisplayed: boolean = compute(
+                  () => target?.allDependenciesMet(arg, effectArgs) ?? false,
+                )
+
+                /* -- RENDER -- */
                 return (
                   <ArgEntry
                     target={target}
                     arg={arg}
                     effectArgs={effectArgs}
                     setEffectArgs={setEffectArgs}
-                    key={`arg-${arg._id}-display-${arg.display}`}
+                    key={`arg-${arg._id}_display-${isDisplayed}`}
                   />
                 )
               })}

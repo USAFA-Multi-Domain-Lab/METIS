@@ -8,7 +8,7 @@ import Target, {
 import { AnyObject } from '../../toolbox/objects'
 import { uuidTypeValidator } from '../../toolbox/validators'
 import { TAction, TCommonMissionAction } from '../actions'
-import { TCommonMissionForce, TForce } from '../forces'
+import { MissionForce, TCommonMissionForce, TForce } from '../forces'
 import MissionNode, { TCommonMissionNode, TNode } from '../nodes'
 
 /**
@@ -108,19 +108,15 @@ export default abstract class InternalEffect<
    * a `Mission Node Object`. If the target's ID is 'output', then
    * the parameter will be a `Mission Force Object`.
    */
-  protected _targetParams: TNode<T> | string | null
-  // todo: uncomment when force is implemented
-  // | MissionForce<>
+  protected _targetParams: TNode<T> | TForce<T> | string | null
   /**
    * The necessary parameters to apply the internal effect
    * to the target.
    */
-  public get targetParams(): TNode<T> | null {
-    // | TMissionForce<> // todo: uncomment when force is implemented
+  public get targetParams(): TNode<T> | TForce<T> | null {
     if (
-      !(this._targetParams instanceof MissionNode)
-      // todo: uncomment when force is implemented
-      // && !(this._targetParams instanceof MissionForce)
+      !(this._targetParams instanceof MissionNode) &&
+      !(this._targetParams instanceof MissionForce)
     ) {
       this._targetParams = null
     }
@@ -133,13 +129,12 @@ export default abstract class InternalEffect<
    * to the target.
    * @note Setting this will cause the target parameter's data to be reloaded.
    */
-  public set targetParams(targetParams: TNode<T> | string | null) {
+  public set targetParams(targetParams: TNode<T> | TForce<T> | string | null) {
     // If the target's parameter(s) is a Mission Node Object
     // or a Mission Force Object, set it.
     if (
-      targetParams instanceof MissionNode
-      // todo: uncomment when force is implemented
-      // || targetParams instanceof MissionForce
+      targetParams instanceof MissionNode ||
+      targetParams instanceof MissionForce
     ) {
       this._targetParams = targetParams
     }
@@ -165,9 +160,8 @@ export default abstract class InternalEffect<
     // If the target's parameter(s) is a Mission Node Object
     // or a Mission Force Object, return its ID.
     if (
-      targetParams instanceof MissionNode
-      // todo: uncomment when force is implemented
-      // || targetParams instanceof MissionForce
+      targetParams instanceof MissionNode ||
+      targetParams instanceof MissionForce
     ) {
       return targetParams._id
     }
@@ -211,17 +205,18 @@ export default abstract class InternalEffect<
     return this.node.force
   }
 
-  // todo: uncomment when force is implemented
-  // /**
-  //  * The force that the internal effect's target belongs to.
-  //  */
-  // public get targetForce(): TMissionAction['force'] {
-  //   if (this.targetParams && this.targetParams instanceof MissionNode) {
-  //     return this.targetParams.force
-  //   } else if (this.targetParams && this.targetParams instanceof MissionForce) {
-  //     return this.targetParams
-  //   }
-  // }
+  /**
+   * The force that the internal effect's target belongs to.
+   */
+  public get targetForce(): TForce<T> | null {
+    if (this.targetParams && this.targetParams instanceof MissionNode) {
+      return this.targetParams.force
+    } else if (this.targetParams && this.targetParams instanceof MissionForce) {
+      return this.targetParams
+    } else {
+      return null
+    }
+  }
 
   /**
    * Creates a new Internal Effect Object.
@@ -266,15 +261,10 @@ export default abstract class InternalEffect<
 
   // Inherited
   public abstract populateTargetParamsData(
-    argId: TCommonMissionNode['_id'],
-  ): // todo: uncomment when force is implemented
-  // | TCommonMissionForce['_id'],
-  Promise<void>
+    targetParamsId: TCommonMissionNode['_id'] | TCommonMissionForce['_id'],
+  ): Promise<void>
 
-  /**
-   * Converts the Internal Effect Object to JSON.
-   * @param options The options for converting the Internal Effect Object to JSON.
-   */
+  // Inherited
   public toJson(): TCommonInternalEffectJson {
     // Construct JSON object to send to the server.
     let json: TCommonInternalEffectJson = {
@@ -379,9 +369,7 @@ export type TCommonInternalEffect = {
    * a `Mission Node Object`. If the target's ID is 'output', then
    * the parameter will be a `Mission Force Object`.
    */
-  targetParams: TCommonMissionNode | null
-  // todo: uncomment when force is implemented
-  // | TCommonMissionForce
+  targetParams: TCommonMissionNode | TCommonMissionForce | null
   /**
    * Populates the target data.
    * @param targetId The ID of the target to load.
@@ -400,6 +388,7 @@ export type TCommonInternalEffect = {
   ) => Promise<void>
   /**
    * Converts the Internal Effect Object to JSON.
+   * @param options The options for converting the Internal Effect Object to JSON.
    */
   toJson: (options?: TInternalEffectJsonOptions) => TCommonInternalEffectJson
 }
@@ -447,7 +436,5 @@ export type TCommonInternalEffectJson = {
    * the `Mission Node's` ID. If the target's ID is 'output', then
    * the parameter's ID will be the `Mission Force's` ID.
    */
-  targetParamsId: TCommonMissionNode['_id'] | null
-  // todo: uncomment when force is implemented
-  // | TCommonMissionForce['_id']
+  targetParamsId: TCommonMissionNode['_id'] | TCommonMissionForce['_id'] | null
 }

@@ -2,15 +2,15 @@
 
 .ArgEntry {
   .Detail {
-    min-width: 187px;
+    min-width: 0.83em;
   }
 
   &.Boolean {
     .Detail {
       &.DetailToggle {
         border: none;
-        margin: 20px 8% 0;
-        padding: 11px 0 0;
+        margin: 1.25rem 8% 0;
+        padding: 0.6875rem 0 0;
       }
     }
   }

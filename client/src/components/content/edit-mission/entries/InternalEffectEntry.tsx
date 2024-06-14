@@ -3,7 +3,7 @@ import { useGlobalContext } from 'src/context'
 import ClientMission from 'src/missions'
 import ClientMissionAction from 'src/missions/actions'
 import { ClientInternalEffect } from 'src/missions/effects/internal'
-import ClientMissionNode from 'src/missions/nodes'
+import ClientMissionForce from 'src/missions/forces'
 import ClientTarget from 'src/target-environments/targets'
 import { compute } from 'src/toolbox'
 import { usePostInitEffect } from 'src/toolbox/hooks'
@@ -39,10 +39,7 @@ export default function InternalEffectEntry({
   const [targetParams] = useState<ClientInternalEffect['targetParams']>(
     effect.targetParams,
   )
-  // todo: uncomment when force is implemented
-  // const [targetForce] = useState<ClientInternalEffect['targetForce']>(
-  //   effect.targetForce,
-  // )
+  const [targetForce] = useState<ClientMissionForce | null>(effect.targetForce)
 
   /* -- COMPUTED -- */
 
@@ -63,21 +60,14 @@ export default function InternalEffectEntry({
     // Initialize the value to display.
     let value: string = 'No target selected.'
 
-    // todo: uncomment when force is implemented
-    // // If the target parameters are set and the target
-    // // paramter is not a ClientMissionForce then use the
-    // // target parameter's name.
-    // if (targetParams && !(targetParams instanceof ClientMissionForce)) {
-    //   value = targetParams.name
-    // } else
-    // // Otherwise, if the target is set then use the target's name.
-    // if (target) {
-    //   value = target.name
-    // }
-
-    if (targetParams && targetParams instanceof ClientMissionNode) {
+    // If the target parameters are set and the target
+    // paramter is not a ClientMissionForce then use the
+    // target parameter's name.
+    if (targetParams && !(targetParams instanceof ClientMissionForce)) {
       value = targetParams.name
-    } else if (target) {
+    }
+    // Otherwise, if the target is set then use the target's name.
+    else if (target) {
       value = target.name
     }
 
@@ -147,10 +137,10 @@ export default function InternalEffectEntry({
             placeholder='Enter description...'
           />
           <DetailLocked label='Target Environment' stateValue='METIS' />
-          {/* 
-          // todo: uncomment when force is implemented
-          <DetailLocked label='Force' stateValue={targetForce} />
-          */}
+          <DetailLocked
+            label='Force'
+            stateValue={targetForce?.name ?? 'No force selected.'}
+          />
           <DetailLocked label='Target' stateValue={targetValue} />
           <Args
             target={target}
