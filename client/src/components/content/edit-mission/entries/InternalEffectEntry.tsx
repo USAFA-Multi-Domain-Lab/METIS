@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { useGlobalContext } from 'src/context'
 import ClientMission from 'src/missions'
 import ClientMissionAction from 'src/missions/actions'
 import { ClientInternalEffect } from 'src/missions/effects/internal'
@@ -23,8 +22,6 @@ export default function InternalEffectEntry({
   handleChange,
 }: TInternalEffectEntry_P): JSX.Element | null {
   /* -- GLOBAL CONTEXT -- */
-
-  const { forceUpdate } = useGlobalContext().actions
 
   /* -- STATE -- */
 
