@@ -22,11 +22,13 @@ export default class ServerTargetEnvironment extends TargetEnvironment<TServerMi
   ) {
     super(data, options)
 
-    // Add the target environment to the registry.
-    ServerTargetEnvironment.registry.push(this)
+    if (data._id !== TargetEnvironment.INTERNAL_TARGET_ENV._id) {
+      // Add the target environment to the registry.
+      ServerTargetEnvironment.registry.push(this)
 
-    // Add the target environment JSON to the registry.
-    ServerTargetEnvironment.registryJson.push(this.toJson())
+      // Add the target environment JSON to the registry.
+      ServerTargetEnvironment.registryJson.push(this.toJson())
+    }
   }
 
   // Implemented

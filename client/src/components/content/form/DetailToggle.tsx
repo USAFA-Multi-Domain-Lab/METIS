@@ -93,12 +93,24 @@ export function DetailToggle({
     // Return the list of class names as one string.
     return classList.join(' ')
   })
+  /**
+   * The class name for the info icon.
+   */
+  const infoClassName: string = compute(() =>
+    tooltipDescription ? 'DetailInfo' : 'Hidden',
+  )
 
   /* -- RENDER -- */
   return (
     <div className={rootClassName}>
-      <div className='TitleContainer'>
-        <div className={labelClassName}>{label}</div>
+      <div className='TitleRow'>
+        <div className='TitleColumnOne'>
+          <div className={labelClassName}>{label}</div>
+          <sup className={infoClassName}>
+            i
+            <Tooltip description={tooltipDescription} />
+          </sup>
+        </div>
       </div>
       <div className={fieldClassName}>
         <Toggle
@@ -107,7 +119,6 @@ export function DetailToggle({
           lockState={lockState}
         />
       </div>
-      <Tooltip description={tooltipDescription} />
       <div className={fieldErrorClassName}>{errorMessage}</div>
     </div>
   )

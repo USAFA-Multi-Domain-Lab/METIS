@@ -16,6 +16,7 @@ export function DetailLocked({
   uniqueLabelClassName = undefined,
   uniqueFieldClassName = undefined,
   errorMessage = undefined,
+  tooltipDescription = '',
 }: TDetailLocked_P): JSX.Element | null {
   /* -- COMPUTED -- */
 
@@ -83,14 +84,26 @@ export function DetailLocked({
     // Return the list of class names as one string.
     return classList.join(' ')
   })
+  /**
+   * The class name for the info icon.
+   */
+  const infoClassName: string = compute(() =>
+    tooltipDescription ? 'DetailInfo' : 'Hidden',
+  )
 
   return (
     <div className={rootClassName}>
-      <div className='TitleContainer'>
-        <div className={labelClassName}>{label}:</div>
+      <div className='TitleRow'>
+        <div className='TitleColumnOne'>
+          <div className={labelClassName}>{label}</div>
+          <sup className={infoClassName}>
+            i
+            <Tooltip description={tooltipDescription} />
+          </sup>
+        </div>
       </div>
       <div className={fieldClassName}>
-        <span className='Text Disabled'>{stateValue}</span>
+        <span className='Text'>{stateValue}</span>
         <span className='Lock'>
           <Tooltip description='This is locked and cannot be changed.' />
         </span>
