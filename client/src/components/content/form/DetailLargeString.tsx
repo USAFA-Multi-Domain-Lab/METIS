@@ -3,6 +3,7 @@ import ReactQuill from 'react-quill'
 import 'react-quill/dist/quill.snow.css'
 import { compute } from 'src/toolbox'
 import { TDetailWithInput_P } from '.'
+import Tooltip from '../communication/Tooltip'
 import './DetailLargeString.scss'
 
 /**
@@ -24,6 +25,7 @@ export function DetailLargeString({
   uniqueFieldClassName = undefined,
   placeholder = 'Enter text here...',
   elementBoundary = undefined,
+  tooltipDescription = '',
 }: TDetailLargeString_P): JSX.Element | null {
   /* -- STATE -- */
   const [leftField, setLeftField] = useState<boolean>(false)
@@ -145,7 +147,13 @@ export function DetailLargeString({
    * The class name for the optional text.
    */
   const optionalClassName: string = compute(() =>
-    fieldType === 'optional' ? 'Optional' : 'Optional Hidden',
+    fieldType === 'optional' ? 'Optional' : 'Hidden',
+  )
+  /**
+   * The class name for the info icon.
+   */
+  const infoClassName: string = compute(() =>
+    tooltipDescription ? 'DetailInfo' : 'Hidden',
   )
 
   /* -- PRE-RENDER PROCESSING -- */
@@ -175,9 +183,15 @@ export function DetailLargeString({
 
   return (
     <div className={rootClassName}>
-      <div className='TitleContainer'>
-        <div className={labelClassName}>{label}:</div>
-        <div className={optionalClassName}>optional</div>
+      <div className='TitleRow'>
+        <div className='TitleColumnOne'>
+          <div className={labelClassName}>{label}</div>
+          <sup className={infoClassName}>
+            i
+            <Tooltip description={tooltipDescription} />
+          </sup>
+        </div>
+        <div className={`TitleColumnTwo ${optionalClassName}`}>optional</div>
       </div>
       <div
         className='FieldContainer'

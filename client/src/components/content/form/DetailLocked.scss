@@ -8,9 +8,8 @@
     grid-template-columns: 1fr auto;
 
     .Text {
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      overflow: hidden;
+      overflow-x: auto;
+      opacity: 0.35;
     }
 
     .Lock {

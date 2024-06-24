@@ -391,7 +391,7 @@ export default function ActionEntry({
             <List<ClientExternalEffect | ClientInternalEffect>
               items={allEffects}
               renderItemDisplay={(effect) => renderEffectListItem(effect)}
-              headingText={'Effects:'}
+              headingText={'Effects'}
               sortByMethods={[ESortByMethod.Name]}
               nameProperty={'name'}
               alwaysUseBlanks={false}

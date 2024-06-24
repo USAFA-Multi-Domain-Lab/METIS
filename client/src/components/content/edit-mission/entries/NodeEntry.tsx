@@ -363,7 +363,7 @@ export default function NodeEntry({
           <List<ClientMissionAction>
             items={Array.from(node.actions.values())}
             renderItemDisplay={(action) => renderActionListItemJsx(action)}
-            headingText={'Actions:'}
+            headingText={'Actions'}
             sortByMethods={[ESortByMethod.Name]}
             nameProperty={'name'}
             alwaysUseBlanks={false}

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { compute } from 'src/toolbox'
 import { TDetail_P } from '.'
+import Tooltip from '../communication/Tooltip'
 import './DetailDropDown.scss'
 
 /**
@@ -25,6 +26,7 @@ export function DetailDropDown<TOption>({
   uniqueFieldClassName = undefined,
   uniqueStateValueClassName = undefined,
   disabled = false,
+  tooltipDescription = '',
 }: TDetailDropDown_P<TOption>): JSX.Element | null {
   /* -- STATE -- */
   const [expanded, setExpanded] = useState<boolean>(false)
@@ -142,16 +144,28 @@ export function DetailDropDown<TOption>({
    * The class name for the optional text.
    */
   const optionalClassName: string = compute(() => {
-    return fieldType === 'optional' ? 'Optional' : 'Optional Hidden'
+    return fieldType === 'optional' ? 'Optional' : 'Hidden'
   })
+  /**
+   * The class name for the info icon.
+   */
+  const infoClassName: string = compute(() =>
+    tooltipDescription ? 'DetailInfo' : 'Hidden',
+  )
 
   /* -- RENDER -- */
   if (options.length > 0) {
     return (
       <div className={rootClassName}>
-        <div className='TitleContainer'>
-          <div className={labelClassName}>{label}:</div>
-          <div className={optionalClassName}>optional</div>
+        <div className='TitleRow'>
+          <div className='TitleColumnOne'>
+            <div className={labelClassName}>{label}</div>
+            <sup className={infoClassName}>
+              i
+              <Tooltip description={tooltipDescription} />
+            </sup>
+          </div>
+          <div className={`TitleColumnTwo ${optionalClassName}`}>optional</div>
         </div>
         <div className={fieldClassName}>
           <div

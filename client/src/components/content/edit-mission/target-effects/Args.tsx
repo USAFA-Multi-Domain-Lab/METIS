@@ -86,7 +86,7 @@ export default function Args({
   if (groupingEntries.length > 0) {
     return (
       <div className='Args'>
-        <div className='ArgsTitle'>Modifications:</div>
+        <div className='ArgsTitle'>Modifications</div>
 
         {/* -- GROUPINGS -- */}
         {groupingEntries.map(([groupingId, grouping]) => {

@@ -155,7 +155,7 @@ export default abstract class Target<
       },
       {
         _id: 'success-chance',
-        name: 'Chance of Success (+/-)',
+        name: 'Chance of Success',
         type: 'number',
         required: false,
         min: -100,
@@ -163,10 +163,16 @@ export default abstract class Target<
         unit: '%',
         groupingId: 'block-node',
         dependencies: [Dependency.FALSEY('block-node')],
+        tooltipDescription:
+          `This allows you to positively or negatively affect the chance of success for all actions within the node. A positive value increases the chance of success, while a negative value decreases the chance of success.\n` +
+          `\t\n` +
+          `For example, if the chance of success is 50% and you set the chance of success to +10%, then the chance of success will be 60%.\n` +
+          `\t\n` +
+          `*Note: If the result is less than 0%, then the chance of success will be 0%. If the result is greater than 100%, then the chance of success will be 100%.*`,
       },
       {
         _id: 'process-time',
-        name: 'Process Time (+/-)',
+        name: 'Process Time',
         type: 'number',
         required: false,
         min: -3600,
@@ -174,14 +180,26 @@ export default abstract class Target<
         unit: 's',
         groupingId: 'block-node',
         dependencies: [Dependency.FALSEY('block-node')],
+        tooltipDescription:
+          `This allows you to positively or negatively affect the process time for all actions within the node. A positive value increases the process time, while a negative value decreases the process time.\n` +
+          `\t\n` +
+          `For example, if the process time is 60s and you set the process time to +10s, then the process time will be 70s.\n` +
+          `\t\n` +
+          `*Note: If the result is less than 0s, then the process time will be 0s. If the result is greater than 3600s, then the process time will be 3600s.*`,
       },
       {
         _id: 'resource-cost',
-        name: 'Resource Cost (+/-)',
+        name: 'Resource Cost',
         type: 'number',
         required: false,
         groupingId: 'block-node',
         dependencies: [Dependency.FALSEY('block-node')],
+        tooltipDescription:
+          `This allows you to positively or negatively affect the resource cost for all actions within the node. A positive value increases the resource cost, while a negative value decreases the resource cost.\n` +
+          `\t\n` +
+          `For example, if the resource cost is 100 and you set the resource cost to +10, then the resource cost will be 110.\n` +
+          `\t\n` +
+          `*Note: If the result is less than 0, then the resource cost will be 0.*`,
       },
     ],
   }

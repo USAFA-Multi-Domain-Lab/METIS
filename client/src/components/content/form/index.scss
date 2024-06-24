@@ -24,22 +24,58 @@
     }
   }
 
-  .TitleContainer {
+  .TitleRow {
     display: grid;
     grid-template-columns: 1fr auto;
+    column-gap: 5px;
     margin: 11px 0 0;
 
-    .Label {
-      user-select: none;
-      width: 100%;
-      font-size: 0.78em;
+    .TitleColumnOne {
+      display: flex;
+      flex-flow: row wrap;
 
-      &.Error {
-        color: $color-error-alt;
+      // This is the default behavior because
+      // a detail field should have a concise
+      // label that is not too long.
+      overflow: hidden;
+
+      .Label {
+        align-self: center;
+        font-size: 0.82rem;
+
+        // This is the default behavior because
+        // a detail field should have a concise
+        // label that is not too long.
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+
+        &.Error {
+          color: $color-error-alt;
+        }
+      }
+
+      .DetailInfo {
+        align-self: flex-start;
+        border: 1.5px solid $color-pointer-mark;
+        border-radius: 50%;
+        padding: 0.2em 0.5em 0.1em;
+        margin: 0 8px;
+        font-size: 0.5em;
+        font-weight: 600;
+        cursor: default;
+        font-family: sans-serif;
+        color: $color-pointer-mark;
+
+        &:hover {
+          background-color: $color-main;
+          color: $color-negative;
+          border-color: $color-main;
+        }
       }
     }
 
-    .Optional {
+    .TitleColumnTwo {
       font-size: 0.69em;
       font-style: italic;
       color: $color-pointer-mark;
@@ -49,7 +85,7 @@
   .Field {
     @include dimensions();
     color: $color-accent-light;
-    font-size: 14px;
+    font-size: 0.92rem;
 
     &.Error {
       border-top: 2px solid $color-error-alt1;
