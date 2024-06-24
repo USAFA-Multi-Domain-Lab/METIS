@@ -27,6 +27,10 @@ export type TDetailBase_P = {
    * @default 'At least one character is required here.'
    */
   errorMessage?: string
+  /**
+   * The tooltip description for the detail.
+   */
+  tooltipDescription?: string
 }
 
 /**

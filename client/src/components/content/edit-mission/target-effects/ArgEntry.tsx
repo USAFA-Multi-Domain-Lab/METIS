@@ -330,6 +330,7 @@ export default function ArgEntry({
           stateValue={dropDownValue}
           setState={setDropDownValue}
           isExpanded={false}
+          tooltipDescription={arg.tooltipDescription}
           renderDisplayName={(option: TArgDropdownOption) => option.name}
         />
       </div>
@@ -347,6 +348,7 @@ export default function ArgEntry({
           stateValue={optionalDropDownValue}
           setState={setOptionalDropDownValue}
           isExpanded={false}
+          tooltipDescription={arg.tooltipDescription}
           renderDisplayName={(option: TArgDropdownOption) => option.name}
         />
       </div>
@@ -366,6 +368,7 @@ export default function ArgEntry({
           maximum={arg.max}
           unit={arg.unit}
           placeholder='Enter a number...'
+          tooltipDescription={arg.tooltipDescription}
         />
       </div>
     )
@@ -384,6 +387,7 @@ export default function ArgEntry({
           maximum={arg.max}
           unit={arg.unit}
           placeholder='Enter a number...'
+          tooltipDescription={arg.tooltipDescription}
         />
       </div>
     )
@@ -400,6 +404,7 @@ export default function ArgEntry({
           stateValue={stringValue}
           setState={setStringValue}
           defaultValue={arg.default}
+          tooltipDescription={arg.tooltipDescription}
         />
       </div>
     )
@@ -417,6 +422,7 @@ export default function ArgEntry({
           setState={setLargeStringValue}
           defaultValue={arg.default}
           elementBoundary='.SidePanelSection'
+          tooltipDescription={arg.tooltipDescription}
         />
       </div>
     )
@@ -431,6 +437,7 @@ export default function ArgEntry({
           label={arg.name}
           stateValue={booleanValue}
           setState={setBooleanValue}
+          tooltipDescription={arg.tooltipDescription}
         />
       </div>
     )

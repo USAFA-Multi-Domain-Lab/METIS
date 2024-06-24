@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { compute } from 'src/toolbox'
 import { TDetail_P } from '.'
+import Tooltip from '../communication/Tooltip'
 import { ButtonText, TButtonText } from '../user-controls/ButtonText'
 import './DetailColorSelector.scss'
 
@@ -22,6 +23,7 @@ export function DetailColorSelector({
   uniqueLabelClassName = '',
   uniqueFieldClassName = '',
   disabled = false,
+  tooltipDescription = '',
 }: TDetailColorSelector_P): JSX.Element {
   /* -- STATE -- */
   const [expanded, setExpanded] = useState<boolean>(isExpanded)
@@ -104,13 +106,25 @@ export function DetailColorSelector({
   const optionalClassName: string = compute(() => {
     return fieldType === 'optional' ? 'Optional' : 'Optional Hidden'
   })
+  /**
+   * The class name for the info icon.
+   */
+  const infoClassName: string = compute(() =>
+    tooltipDescription ? 'DetailInfo' : 'Hidden',
+  )
 
   /* -- RENDER -- */
   return (
     <div className={rootClassName}>
-      <div className='TitleContainer'>
-        <div className={labelClassName}>{label}:</div>
-        <div className={optionalClassName}>optional</div>
+      <div className='TitleRow'>
+        <div className='TitleColumnOne'>
+          <div className={labelClassName}>{label}</div>
+          <sup className={infoClassName}>
+            i
+            <Tooltip description={tooltipDescription} />
+          </sup>
+        </div>
+        <div className={`TitleColumnTwo ${optionalClassName}`}>optional</div>
       </div>
       <div className={fieldClassName}>
         <div

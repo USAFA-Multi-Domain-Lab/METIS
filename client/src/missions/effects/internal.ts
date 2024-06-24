@@ -4,7 +4,7 @@ import InternalEffect from '../../../../shared/missions/effects/internal'
 import TargetEnvironment from '../../../../shared/target-environments'
 
 /**
- * Class representing an external effect on the client-side that can be
+ * Class representing an internal effect on the client-side that can be
  * applied to a target.
  */
 export class ClientInternalEffect
@@ -31,19 +31,30 @@ export class ClientInternalEffect
 
   // Implemented
   public async populateTargetParamsData(targetParamsId: string): Promise<void> {
-    // Try to get a node using the targetParamsId.
-    let node = this.mission.getNode(targetParamsId)
-    // Try to get a force using the targetParamsId.
-    let force = this.mission.getForce(targetParamsId)
+    return new Promise((resolve, reject) => {
+      try {
+        // Try to get a node using the targetParamsId.
+        let node = this.mission.getNode(targetParamsId)
+        // Try to get a force using the targetParamsId.
+        let force = this.mission.getForce(targetParamsId)
 
-    // If a node is found, then the targetParams is a mission-node.
-    if (node) {
-      this._targetParams = node
-    }
+        // If a node is found, then the targetParams is a mission-node.
+        if (node) {
+          this._targetParams = node
+          resolve()
+        }
 
-    // If a force is found, then the targetParams is a mission-force.
-    if (force) {
-      this._targetParams = force
-    }
+        // If a force is found, then the targetParams is a mission-force.
+        if (force) {
+          this._targetParams = force
+          resolve()
+        }
+
+        reject('Failed to populate target params data.')
+      } catch (error: any) {
+        console.error(`Failed to populate target params data:\n`, error)
+        reject('Failed to populate target params data.')
+      }
+    })
   }
 }

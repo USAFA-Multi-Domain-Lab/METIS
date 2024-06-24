@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { compute } from 'src/toolbox'
 import inputs from 'src/toolbox/inputs'
 import { TDetail_P } from '.'
+import Tooltip from '../communication/Tooltip'
 import './DetailNumber.scss'
 
 /**
@@ -23,6 +24,7 @@ export function DetailNumber({
   uniqueLabelClassName = undefined,
   uniqueFieldClassName = undefined,
   disabled = false,
+  tooltipDescription = '',
 }: TDetailNumber_P): JSX.Element | null {
   /* -- STATE -- */
   const [inputValue, setInputValue] = useState<string>(
@@ -83,7 +85,13 @@ export function DetailNumber({
    * The class name for the optional text.
    */
   const optionalClassName: string = compute(() =>
-    fieldType === 'optional' ? 'Optional' : 'Optional Hidden',
+    fieldType === 'optional' ? 'Optional' : 'Hidden',
+  )
+  /**
+   * The class name for the info icon.
+   */
+  const infoClassName: string = compute(() =>
+    tooltipDescription ? 'DetailInfo' : 'Hidden',
   )
 
   /* -- EFFECTS -- */
@@ -95,9 +103,15 @@ export function DetailNumber({
   /* -- RENDER -- */
   return (
     <div className={rootClassName}>
-      <div className='TitleContainer'>
-        <div className={labelClassName}>{label}:</div>
-        <div className={optionalClassName}>optional</div>
+      <div className='TitleRow'>
+        <div className='TitleColumnOne'>
+          <div className={labelClassName}>{label}</div>
+          <sup className={infoClassName}>
+            i
+            <Tooltip description={tooltipDescription} />
+          </sup>
+        </div>
+        <div className={`TitleColumnTwo ${optionalClassName}`}>optional</div>
       </div>
       <div className='Unit'>{unit}</div>
       <input
@@ -154,7 +168,7 @@ export function DetailNumber({
           }
 
           // Ensure the input value is a valid number.
-          const inputValueRegex: RegExp = /^[0-9+-]+[.]?[0-9]{0,6}$/
+          const inputValueRegex: RegExp = /^[+-]?[0-9]{0,9}[.]?[0-9]{0,6}$/
           let isValidValue: boolean = inputValueRegex.test(target.value)
 
           // If decimals are allowed and the input value
@@ -195,8 +209,8 @@ export function DetailNumber({
           let target: HTMLInputElement = event.target as HTMLInputElement
 
           // Ensure the input value is a valid number.
-          const zerosTrailingDecimalPoint: RegExp = /^[0-9+-]+[.]+[0]+$/
-          const zerosTrailingNumbers: RegExp = /^[0-9+-]+[.]+[0-9]+[0]+$/
+          const zerosTrailingDecimalPoint: RegExp = /^[-+]{0,1}[0-9]+[.]+[0]+$/
+          const zerosTrailingNumbers: RegExp = /^[-+]{0,1}[0-9]+[.]+[0-9]+[0]+$/
           const zerosLeadingDecimalPoint: RegExp = /^[0]+[0-9]+/
           const zerosLeadingNumbers: RegExp = /^[0]+[1-9]+[0-9]*[.]?[0-9]*/
 
@@ -219,6 +233,12 @@ export function DetailNumber({
             if (zerosLeadingNumbers.test(target.value)) {
               target.value = target.value.replace(/^[0]+/, '')
             }
+          }
+
+          // If the input value is only a plus or minus sign,
+          // then remove the sign.
+          if (target.value === '+' || target.value === '-') {
+            // target.value = target.value.replace(/[-+]/, '')
           }
 
           // Update the input value.

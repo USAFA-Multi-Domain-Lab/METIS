@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { compute } from 'src/toolbox'
 import { TDetailWithInput_P } from '.'
+import Tooltip from '../communication/Tooltip'
 import './DetailString.scss'
 
 /**
@@ -22,6 +23,7 @@ export function DetailString({
   uniqueFieldClassName = undefined,
   inputType = 'text',
   placeholder = 'Enter text here...',
+  tooltipDescription = '',
 }: TDetailString_P): JSX.Element {
   /* -- STATE -- */
   const [leftField, setLeftField] = useState<boolean>(false)
@@ -192,7 +194,13 @@ export function DetailString({
    * The class name for the optional text.
    */
   const optionalClassName: string = compute(() =>
-    fieldType === 'optional' ? 'Optional' : 'Optional Hidden',
+    fieldType === 'optional' ? 'Optional' : 'Hidden',
+  )
+  /**
+   * The class name for the info icon.
+   */
+  const infoClassName: string = compute(() =>
+    tooltipDescription ? 'DetailInfo' : 'Hidden',
   )
 
   /* -- FUNCTIONS -- */
@@ -214,9 +222,15 @@ export function DetailString({
 
   return (
     <div className={rootClassName}>
-      <div className='TitleContainer'>
-        <div className={labelClassName}>{label}:</div>
-        <div className={optionalClassName}>optional</div>
+      <div className='TitleRow'>
+        <div className='TitleColumnOne'>
+          <div className={labelClassName}>{label}</div>
+          <sup className={infoClassName}>
+            i
+            <Tooltip description={tooltipDescription} />
+          </sup>
+        </div>
+        <div className={`TitleColumnTwo ${optionalClassName}`}>optional</div>
       </div>
       <div className={inputContainerClassName}>
         <input
