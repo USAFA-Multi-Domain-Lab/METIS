@@ -1,8 +1,11 @@
 import { useState } from 'react'
 import { useGlobalContext } from 'src/context'
 import ClientMissionForce from 'src/missions/forces'
+import { compute } from 'src/toolbox'
 import { usePostInitEffect } from 'src/toolbox/hooks'
+import Prompt from '../../communication/Prompt'
 import { DetailString } from '../../form/DetailString'
+import { ButtonText } from '../../user-controls/ButtonText'
 import './index.scss'
 import EntryNavigation from './navigation/EntryNavigation'
 
@@ -11,15 +14,30 @@ import EntryNavigation from './navigation/EntryNavigation'
  */
 export default function ForceEntry({
   force,
+  force: { mission },
   handleChange,
 }: TForceEntry): JSX.Element | null {
   /* -- GLOBAL CONTEXT -- */
-  const { forceUpdate } = useGlobalContext().actions
+  const { forceUpdate, prompt } = useGlobalContext().actions
 
   /* -- STATE -- */
   const [forceName, setForceName] = useState<string>(force.name)
 
   /* -- COMPUTED -- */
+
+  /**
+   * The class name for the delete node button.
+   */
+  const deleteClassName: string = compute(() => {
+    // Create a default list of class names.
+    let classList: string[] = []
+    // If the mission has only one force, add the disabled class.
+    if (mission.forces.length < 2) {
+      classList.push('Disabled')
+    }
+    // Combine the class names into a single string.
+    return classList.join(' ')
+  })
 
   /* -- EFFECTS -- */
 
@@ -27,7 +45,6 @@ export default function ForceEntry({
   usePostInitEffect(() => {
     // Update the force name.
     force.name = forceName
-
     // This is to show the change to
     // the name of the force shown
     // on the mission map.
@@ -37,6 +54,26 @@ export default function ForceEntry({
   }, [forceName])
 
   /* -- FUNCTIONS -- */
+
+  /**
+   * Handles the request to delete an effect.
+   */
+  const onDelete = async () => {
+    // Prompt the user to confirm the deletion.
+    let { choice } = await prompt(
+      'Please confirm the deletion of this force.',
+      Prompt.ConfirmationChoices,
+    )
+    // If the user cancels, abort.
+    if (choice === 'Cancel') return
+
+    // Filter out the force.
+    mission.forces = mission.forces.filter(({ _id }) => _id !== force._id)
+    // Navigate back to the mission.
+    mission.selectBack()
+    // Allow the user to save the changes.
+    handleChange()
+  }
 
   /* -- RENDER -- */
 
@@ -59,6 +96,15 @@ export default function ForceEntry({
             defaultValue={ClientMissionForce.DEFAULT_PROPERTIES.name}
             key={`${force._id}_name`}
           />
+
+          <div className='ButtonContainer'>
+            <ButtonText
+              text='Delete force'
+              onClick={onDelete}
+              tooltipDescription='Delete this force.'
+              uniqueClassName={deleteClassName}
+            />
+          </div>
         </div>
       </div>
     </div>
