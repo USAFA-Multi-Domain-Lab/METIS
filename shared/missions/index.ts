@@ -10,12 +10,8 @@ import IActionOutcome from './actions/outcomes'
 import { TCommonExternalEffect } from './effects/external'
 import { TCommonInternalEffect } from './effects/internal'
 import { TCommonMissionForce, TCommonMissionForceJson, TForce } from './forces'
-import { TCommonMissionNode, TMissionNodeJson, TNode } from './nodes'
-import {
-  TCommonMissionPrototype,
-  TMissionPrototypeOptions,
-  TPrototype,
-} from './nodes/prototypes'
+import { TCommonMissionNode, TNode } from './nodes'
+import { TCommonMissionPrototype, TPrototype } from './nodes/prototypes'
 
 /**
  * This represents a mission for a student to complete.
@@ -69,7 +65,7 @@ export default abstract class Mission<
       data.initialResources ?? Mission.DEFAULT_PROPERTIES.initialResources
     this.seed = data.seed ?? Mission.DEFAULT_PROPERTIES.seed
     this.prototypes = []
-    this.root = this.createRootPrototype()
+    this.root = this.initializeRoot()
 
     // Parse options.
     let { openAll = false } = options
@@ -80,19 +76,10 @@ export default abstract class Mission<
     )
 
     // Parse force data.
-    this.forces = this.parseForceData(
+    this.forces = this.importForces(
       data.forces ?? Mission.DEFAULT_PROPERTIES.forces,
     )
   }
-
-  /**
-   * Parses the force data into MissionForce objects.
-   * @param data The force data to parse.
-   * @returns The parsed force data.
-   */
-  protected abstract parseForceData(
-    data: TCommonMissionForceJson[],
-  ): TForce<T>[]
 
   // Implemented
   public toJson(options: TMissionJsonOptions = {}): TCommonMissionJson {
@@ -135,7 +122,7 @@ export default abstract class Mission<
    * This prototype is not added to the mission's prototypes map, as it is really
    * a pseudo-prototype.
    */
-  protected abstract createRootPrototype(): TPrototype<T>
+  protected abstract initializeRoot(): TPrototype<T>
 
   /**
    * This will import the node structure into the mission, creating
@@ -152,7 +139,7 @@ export default abstract class Mission<
       const spawnPrototypes = (cursor: AnyObject = nodeStructure) => {
         for (let key of Object.keys(cursor)) {
           let childStructure: AnyObject = cursor[key]
-          this.spawnPrototype(key)
+          this.importPrototype(key)
           spawnPrototypes(childStructure)
         }
       }
@@ -182,7 +169,14 @@ export default abstract class Mission<
   }
 
   // Implemented
-  public abstract spawnPrototype(_id: TPrototype<T>['_id']): TPrototype<T>
+  protected abstract importPrototype(_id: TPrototype<T>['_id']): TPrototype<T>
+
+  /**
+   * Imports the force data into MissionForce objects.
+   * @param data The force data to parse.
+   * @returns The parsed force data.
+   */
+  protected abstract importForces(data: TCommonMissionForceJson[]): TForce<T>[]
 
   // Implemented
   public getPrototype(
@@ -228,24 +222,6 @@ export default abstract class Mission<
         },
       ],
     }
-  }
-
-  /**
-   * The default properties for the root node of a Mission.
-   */
-  public static readonly ROOT_NODE_PROPERTIES: TMissionNodeJson = {
-    _id: 'ROOT',
-    structureKey: 'ROOT',
-    name: 'ROOT',
-    color: '#000000',
-    description:
-      'Invisible node that is the root of all other nodes in the structure.',
-    preExecutionText: 'N/A',
-    depthPadding: 0,
-    executable: false,
-    device: false,
-    actions: [],
-    opened: true,
   }
 
   /**
@@ -389,15 +365,6 @@ export interface TCommonMission {
    * @returns the JSON for the mission.
    */
   toJson: (options?: TMissionJsonOptions) => TCommonMissionJson
-  /**
-   * This will spawn a new prototype in the mission with the given _id and options.
-   * @param _id The ID for the prototype.
-   * @param options The options for creating the prototype.
-   */
-  spawnPrototype(
-    _id: TCommonMissionPrototype['_id'],
-    options?: TMissionPrototypeOptions<TCommonMissionPrototype>,
-  ): TCommonMissionPrototype
   /**
    * Gets a prototype from the mission by its ID.
    */

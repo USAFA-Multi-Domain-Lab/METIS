@@ -285,16 +285,16 @@ export default abstract class MissionNode<
     this.device = data.device ?? MissionNode.DEFAULT_PROPERTIES.device
     this._depthPadding =
       data.depthPadding ?? MissionNode.DEFAULT_PROPERTIES.depthPadding
-    this.actions = this.parseActionData(
+    this.actions = this.importActions(
       data.actions ?? MissionNode.DEFAULT_PROPERTIES.actions,
     )
     this.opened = data.opened ?? MissionNode.DEFAULT_PROPERTIES.opened
-    this._execution = this.parseExecutionData(
+    this._execution = this.importExecutions(
       data.execution !== undefined
         ? data.execution
         : MissionNode.DEFAULT_PROPERTIES.execution,
     )
-    this._outcomes = this.parseOutcomeData(
+    this._outcomes = this.importOutcomes(
       data.outcomes ?? MissionNode.DEFAULT_PROPERTIES.outcomes,
     )
     this.position = new Vector2D(0, 0)
@@ -310,31 +310,31 @@ export default abstract class MissionNode<
   }
 
   /**
-   * Parses the action data into MissionAction objects.
+   * Imports the action data into MissionAction objects.
    * @param {TCommonMissionActionJson[]} data The action data to parse.
    * @returns {MissionAction[]} The parsed action data.
    */
-  protected abstract parseActionData(
+  protected abstract importActions(
     data: TCommonMissionActionJson[],
   ): Map<string, TAction>
 
   /**
-   * Parses the execution data into a execution object of the
+   * Imports the execution data into a execution object of the
    * type passed in IActionExecution.
    * @param {IActionExecutionJSON[]} data The outcome data to parse.
    * @returns {IActionExecution[]} The parsed outcome data.
    */
-  protected abstract parseExecutionData(
+  protected abstract importExecutions(
     data: TActionExecutionJson,
   ): TExecution<T> | null
 
   /**
-   * Parses the outcome data into the outcome objects of the
+   * Imports the outcome data into the outcome objects of the
    * type passed in IActionOutcome.
    * @param {TActionOutcomeJson[]} data The outcome data to parse.
    * @returns {IActionOutcome[]} The parsed outcome data.
    */
-  protected abstract parseOutcomeData(data: TActionOutcomeJson[]): TOutcome<T>[]
+  protected abstract importOutcomes(data: TActionOutcomeJson[]): TOutcome<T>[]
 
   // Implemented
   public toJson(options: TNodeJsonOptions = {}): TMissionNodeJson {

@@ -1,0 +1,39 @@
+@import '../../../../../assets/styles/config.scss';
+@import '../mixins.scss';
+
+.Scene {
+  .MissionNodeCreator {
+    // Set box-sizing to content-box to
+    // help with font size calculations
+    // in JS.
+    box-sizing: content-box;
+
+    // Enable pointer events for nodes,
+    // since they can be interacted with.
+    pointer-events: all;
+
+    // Make the origin of the scene object the
+    // top center of the node.
+    transform: translate(-50%, -0%);
+
+    cursor: pointer;
+    border-color: $color-main;
+    border-width: min(2px, 0.075em);
+    border-style: solid;
+    background-color: $background-main;
+
+    .Icon {
+      width: 0.2em;
+      height: 0.2em;
+      background-image: url(../../../../../assets/images/icons/add.svg);
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: center;
+
+      // Center the icon.
+      @include center-origin;
+      top: 50%;
+      left: 50%;
+    }
+  }
+}

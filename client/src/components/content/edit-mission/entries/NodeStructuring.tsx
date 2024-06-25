@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { useGlobalContext } from 'src/context'
 import ClientMission from 'src/missions'
-import ClientMissionNode, { ENodeTargetRelation } from 'src/missions/nodes'
+import ClientMissionNode from 'src/missions/nodes'
+import { EPrototypeRelation } from 'src/missions/nodes/prototypes'
 import MoreInformation from '../../communication/MoreInformation'
 import Tooltip from '../../communication/Tooltip'
 import './NodeStructuring.scss'
@@ -98,10 +99,11 @@ export default function NodeStructuring(props: {
             let destinationNode = nodePendingDrop
 
             if (nodeGrabbed !== null) {
-              nodeGrabbed.move(
-                destinationNode,
-                ENodeTargetRelation.ChildOfTarget,
-              )
+              // todo: Resolve this.
+              // nodeGrabbed.move(
+              //   destinationNode,
+              //   EPrototypeRelation.ChildOfTarget,
+              // )
               handleChange()
             }
 
@@ -170,28 +172,29 @@ export default function NodeStructuring(props: {
           onDrop={(event: React.DragEvent) => {
             if (nodePendingDrop !== null) {
               let target: ClientMissionNode = nodePendingDrop
-              let targetRelation: ENodeTargetRelation
+              let targetRelation: EPrototypeRelation
 
               switch (dropLocation) {
                 case ENodeDropLocation.Top:
-                  targetRelation = ENodeTargetRelation.PreviousSiblingOfTarget
+                  targetRelation = EPrototypeRelation.PreviousSiblingOfTarget
                   break
                 case ENodeDropLocation.Center:
-                  targetRelation = ENodeTargetRelation.ChildOfTarget
+                  targetRelation = EPrototypeRelation.ChildOfTarget
                   break
                 case ENodeDropLocation.Bottom:
-                  targetRelation = ENodeTargetRelation.FollowingSiblingOfTarget
+                  targetRelation = EPrototypeRelation.FollowingSiblingOfTarget
                   break
                 default:
-                  targetRelation = ENodeTargetRelation.ChildOfTarget
+                  targetRelation = EPrototypeRelation.ChildOfTarget
                   break
               }
 
               if (nodeGrabbed !== null) {
-                nodeGrabbed.move(target, targetRelation)
-                if (target.hasChildren) {
-                  target.open()
-                }
+                // todo: Resolve this.
+                // nodeGrabbed.move(target, targetRelation)
+                // if (target.hasChildren) {
+                //   target.open()
+                // }
                 handleChange()
               }
               pendDrop(null)

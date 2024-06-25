@@ -25,9 +25,10 @@ import ClientActionOutcome from './actions/outcomes'
 import { ClientExternalEffect } from './effects/external'
 import { ClientInternalEffect } from './effects/internal'
 import ClientMissionForce from './forces'
-import ClientMissionNode, { ENodeTargetRelation } from './nodes'
+import ClientMissionNode from './nodes'
 import NodeCreator from './nodes/creators'
-import ClientMissionPrototype from './nodes/prototypes'
+import ClientMissionPrototype, { EPrototypeRelation } from './nodes/prototypes'
+import MissionTransformation from './transformations'
 
 /**
  * Class for managing missions on the client.
@@ -81,34 +82,6 @@ export default class ClientMission
   private listeners: Array<[TMissionEvent, () => void]>
 
   /**
-   * The currently selected force in the mission.
-   * @deprecated
-   */
-  private _selectedForce: ClientMissionForce | null
-  /**
-   * The currently selected force in the mission.
-   * @deprecated
-   */
-  public get selectedForce(): ClientMissionForce | null {
-    return this._selectedForce
-  }
-
-  /**
-   * The currently selected node in the mission.
-   * @note Used in the form for editing.
-   * @deprecated
-   */
-  private _selectedNode: ClientMissionNode | null = null
-  /**
-   * The currently selected node in the mission.
-   * @note Used in the form for editing.
-   * @deprecated
-   */
-  public get selectedNode(): ClientMissionNode | null {
-    return this._selectedNode
-  }
-
-  /**
    * The current selection for the mission.
    * @note This can be most type of nested, mission-related objects,
    * such as nodes, forces, etc.
@@ -128,20 +101,39 @@ export default class ClientMission
   }
 
   /**
+   * The current transformation being done on the mission by
+   * the user.
+   */
+  private _transformation: MissionTransformation | null
+  /**
+   * The current transformation being done on the mission by
+   * the user.
+   */
+  public get transformation(): MissionTransformation | null {
+    return this._transformation
+  }
+  public set transformation(value: MissionTransformation | null) {
+    this._transformation = value
+  }
+
+  /**
    * The target node for creating a new node.
+   * @deprecated
    */
   public get creationTarget(): ClientMissionNode | null {
-    return this.creationMode ? this.selectedNode : null
+    return null
   }
 
   /**
    * Whether creation mode is enabled for the selected node.
+   * @deprecated
    */
   private _creationMode: boolean = false
   /**
    * Whether creation mode is enabled for the selected node.
    * @note Does nothing if there is no selected node.
    * @note Used in the form for editing.
+   * @deprecated
    */
   public get creationMode(): boolean {
     return this._creationMode
@@ -150,44 +142,43 @@ export default class ClientMission
    * Whether creation mode is enabled for the selected node.
    * @note Does nothing if there is no selected node.
    * @note Used in the form for editing.
+   * @deprecated
    */
   public set creationMode(value) {
-    // Get the selected node.
-    let selectedNode: ClientMissionNode | null = this._selectedNode
-
-    // If there is no selected node, do nothing.
-    if (selectedNode === null) {
-      console.warn('Cannot set creation mode when there is no selected node.')
-      return
-    }
+    // todo: Determine what to do with this.
+    //     // Get the selected node.
+    //     let selectedNode: ClientMissionNode | null = this._selectedNode
+    //
+    //     // If there is no selected node, do nothing.
+    //     if (selectedNode === null) {
+    //       console.warn('Cannot set creation mode when there is no selected node.')
+    //       return
+    //     }
 
     // Update the creation mode.
     this._creationMode = value
 
-    // Determine node creators.
-    this._nodeCreators = value
-      ? [
-          new NodeCreator(this, ENodeTargetRelation.ParentOfTargetOnly),
-          new NodeCreator(this, ENodeTargetRelation.BetweenTargetAndChildren),
-          new NodeCreator(this, ENodeTargetRelation.PreviousSiblingOfTarget),
-          new NodeCreator(this, ENodeTargetRelation.FollowingSiblingOfTarget),
-        ]
-      : []
+    // // Determine node creators.
+    // this._nodeCreators = value
+    //   ? [
+    //       new NodeCreator(this, EPrototypeRelation.ParentOfTargetOnly),
+    //       new NodeCreator(this, EPrototypeRelation.BetweenTargetAndChildren),
+    //       new NodeCreator(this, EPrototypeRelation.PreviousSiblingOfTarget),
+    //       new NodeCreator(this, EPrototypeRelation.FollowingSiblingOfTarget),
+    //     ]
+    //   : []
 
     this.handleStructureChange()
   }
 
   /**
-   * The last created node for the mission.
-   */
-  public lastCreatedNode: ClientMissionNode | null
-
-  /**
    * Cache for tracking possible locations for creating a new node based on the node creation target.
+   * @deprecated
    */
   protected _nodeCreators: NodeCreator[]
   /**
    * Cache for tracking possible locations for creating a new node based on the node creation target.
+   * @deprecated
    */
   public get nodeCreators(): NodeCreator[] {
     return this._nodeCreators
@@ -228,11 +219,9 @@ export default class ClientMission
     this._existsOnServer = existsOnServer
     this._depth = -1
     this._structureChangeKey = generateHash()
-    this.lastCreatedNode = null
     this.listeners = []
-    this._selectedNode = null
-    this._selectedForce = null
     this._selection = this
+    this._transformation = null
     this._nodeCreators = []
     this.relationshipLines = []
     this.lastOpenedNode = null
@@ -240,7 +229,7 @@ export default class ClientMission
     // If there is no existing nodes,
     // create one.
     if (this.prototypes.length === 0) {
-      this.spawnPrototype()
+      this.importPrototype()
     }
 
     // Mark as initialized.
@@ -251,15 +240,141 @@ export default class ClientMission
   }
 
   // Implemented
-  protected parseForceData(
+  protected importPrototype(
+    _id?: string,
+    options: TMissionPrototypeOptions<ClientMissionPrototype> = {},
+  ): ClientMissionPrototype {
+    let rootPrototype: ClientMissionPrototype | null = this.root
+
+    // If the mission has no root prototype, throw an error.
+    if (rootPrototype === null) {
+      throw new Error('Cannot import prototype: Mission has no root prototype.')
+    }
+
+    // If no id is provided, generate a new id.
+    if (_id === undefined) _id = StringToolbox.generateRandomId()
+
+    // Create new prototype.
+    let prototype: ClientMissionPrototype = new ClientMissionPrototype(
+      this,
+      _id,
+      options,
+    )
+
+    // Set the parent prototype to the root
+    // prototype.
+    prototype.parent = rootPrototype
+    // Add the prototype to the root prototype's
+    // children.
+    rootPrototype.children.push(prototype)
+    // Add the prototype to the prototype list.
+    this.prototypes.push(prototype)
+
+    // Return the prototype.
+    return prototype
+  }
+
+  // Implemented
+  protected importForces(
     data: TCommonMissionForceJson[],
   ): ClientMissionForce[] {
     return data.map((datum) => new ClientMissionForce(this, datum))
   }
 
   // Implemented
-  protected createRootPrototype(): ClientMissionPrototype {
+  protected initializeRoot(): ClientMissionPrototype {
     return new ClientMissionPrototype(this, 'ROOT')
+  }
+
+  /**
+   * Creates a new prototype for the mission.
+   * @param options Options passed to the constructor.
+   * @returns The newly created prototype.
+   */
+  public createPrototype(
+    options: TMissionPrototypeOptions<ClientMissionPrototype> = {},
+  ): ClientMissionPrototype {
+    let rootPrototype: ClientMissionPrototype | null = this.root
+
+    // If the mission has no root prototype, throw an error.
+    if (rootPrototype === null) {
+      throw new Error('Cannot create prototype: Mission has no root prototype.')
+    }
+
+    // Create new prototype.
+    let prototype: ClientMissionPrototype = new ClientMissionPrototype(
+      this,
+      StringToolbox.generateRandomId(),
+      options,
+    )
+
+    // Set the parent prototype to the root
+    // prototype.
+    prototype.parent = rootPrototype
+    // Add the prototype to the root prototype's
+    // children.
+    rootPrototype.children.push(prototype)
+    // Add the prototype to the prototype list.
+    this.prototypes.push(prototype)
+
+    // Emit create prototype event.
+    if (this.structureInitialized) {
+      this.handleStructureChange()
+      this.emitEvent('new-prototype')
+    }
+
+    // Return the prototype.
+    return prototype
+  }
+
+  /**
+   * Creates a new force for the mission.
+   * @param data The JSON data for the force.
+   * @param options Options passed to the constructor.
+   * @returns The newly created force.
+   */
+  public createForce(options: TMissionForceOptions = {}): ClientMissionForce {
+    // Throw an error if the max number of forces
+    // has already been reached.
+    if (this.forces.length >= Mission.MAX_FORCE_COUNT) {
+      throw new Error('Max number of forces already reached.')
+    }
+
+    // Organize existing force data for algorithm.
+    let existingForceNames: string[] = this.forces.map(({ name }) => name)
+    let existingForceColors: string[] = this.forces.map(({ color }) => color)
+
+    // Predefine force.
+    let force: ClientMissionForce | null = null
+
+    // Loop through default forces, and find
+    // the next available default force.
+    for (let defaultForce of MissionForce.DEFAULT_FORCES) {
+      if (
+        existingForceNames.includes(defaultForce.name) ||
+        existingForceColors.includes(defaultForce.color)
+      ) {
+        continue
+      }
+
+      // Create a new force.
+      force = new ClientMissionForce(this, defaultForce, options)
+      // Break the loop.
+      break
+    }
+
+    // This theoretically shouldn't happen, but if
+    // no force has been created yet, create one here.
+    if (!force) force = new ClientMissionForce(this, {}, options)
+
+    // Add the force to the mission.
+    this.forces.push(force)
+
+    // Handle structure change.
+    this.handleStructureChange()
+
+    // Return the force.
+    return force
   }
 
   /**
@@ -283,14 +398,6 @@ export default class ClientMission
     // all the changes that have been
     // made.
     this.positionPrototypes()
-
-    // Re-position the node creators
-    // to ensure their current positions
-    // reflect all the changes that have
-    // been made.
-    if (this.creationMode) {
-      this.positionNodeCreators()
-    }
 
     // Draw the relationship lines
     // between nodes.
@@ -440,25 +547,6 @@ export default class ClientMission
   }
 
   /**
-   * This will position all the nodes creators with mapX and mapY
-   * values that correspond with the current state of the mission.
-   */
-  protected positionNodeCreators = (): void => {
-    let nodeCreationTarget: ClientMissionNode | null = null
-    let nodeCreators: Array<NodeCreator> = this.nodeCreators
-
-    // If creation mode is enabled, set the
-    // nodeCreationTarget to the selected node.
-    if (this.creationMode) nodeCreationTarget = this.selectedNode!
-
-    if (nodeCreationTarget !== null) {
-      for (let nodeCreator of nodeCreators) {
-        nodeCreator.syncPosition()
-      }
-    }
-  }
-
-  /**
    * Draws the relationship lines between prototypes on the mission map
    * and caches them in the `relationshipLines` property.
    */
@@ -537,7 +625,7 @@ export default class ClientMission
           //   for (let creator of nodeCreators) {
           //     if (
           //       creator.targetRelation ===
-          //       ENodeTargetRelation.PreviousSiblingOfTarget
+          //       EPrototypeRelation.PreviousSiblingOfTarget
           //     ) {
           //       childMinY = Math.min(childMinY, creator.position.y)
           //     }
@@ -560,7 +648,7 @@ export default class ClientMission
           //   for (let creator of nodeCreators) {
           //     if (
           //       creator.targetRelation ===
-          //       ENodeTargetRelation.FollowingSiblingOfTarget
+          //       EPrototypeRelation.FollowingSiblingOfTarget
           //     ) {
           //       childMaxY = Math.max(childMaxY, creator.position.y)
           //     }
@@ -682,10 +770,10 @@ export default class ClientMission
       // Loop through creators.
       for (let creator of this.nodeCreators) {
         // Gather details.
-        let relation: ENodeTargetRelation = creator.targetRelation
+        let relation: EPrototypeRelation = creator.targetRelation
         let relationIsSibling: boolean =
-          relation === ENodeTargetRelation.PreviousSiblingOfTarget ||
-          relation === ENodeTargetRelation.FollowingSiblingOfTarget
+          relation === EPrototypeRelation.PreviousSiblingOfTarget ||
+          relation === EPrototypeRelation.FollowingSiblingOfTarget
 
         // ! line-draw-start
 
@@ -693,7 +781,7 @@ export default class ClientMission
         // target's parent is the root node, draw a line from the
         // creator to the target.
         if (
-          relation === ENodeTargetRelation.ParentOfTargetOnly
+          relation === EPrototypeRelation.ParentOfTargetOnly
           // todo: Reimplement this.
           // && creationTarget.parent === this.rootNode
         ) {
@@ -723,7 +811,7 @@ export default class ClientMission
         // If the relation is a between-target-and-children
         // relationship, then draw a line from the target
         // to the creator.
-        if (relation === ENodeTargetRelation.BetweenTargetAndChildren) {
+        if (relation === EPrototypeRelation.BetweenTargetAndChildren) {
           // Define start position.
           let start: Vector2D = creationTarget.prototype.position
             // First clone the target's position.
@@ -846,97 +934,6 @@ export default class ClientMission
     if (selectionPath.length > 1) {
       this.select(selectionPath[selectionPath.length - 2])
     }
-  }
-
-  // Implemented
-  public spawnPrototype(
-    _id?: string,
-    options: TMissionPrototypeOptions<ClientMissionPrototype> = {},
-  ): ClientMissionPrototype {
-    let rootPrototype: ClientMissionPrototype | null = this.root
-
-    // If the mission has no root prototype, throw an error.
-    if (rootPrototype === null) {
-      throw new Error('Cannot spawn prototype: Mission has no root prototype.')
-    }
-
-    // If no id is provided, generate a new id.
-    if (_id === undefined) _id = StringToolbox.generateRandomId()
-
-    // Create new prototype.
-    let prototype: ClientMissionPrototype = new ClientMissionPrototype(
-      this,
-      _id,
-      options,
-    )
-
-    // Set the parent prototype to the root
-    // prototype.
-    prototype.parent = rootPrototype
-    // Add the prototype to the root prototype's
-    // children.
-    rootPrototype.children.push(prototype)
-    // Add the prototype to the prototype list.
-    this.prototypes.push(prototype)
-
-    // Emit spawn node event if the structure
-    // has been initialized.
-    if (this.structureInitialized) {
-      this.emitEvent('spawn-node')
-    }
-
-    // Return the prototype.
-    return prototype
-  }
-
-  /**
-   * Creates a new force for the mission.
-   * @param data
-   * @param options
-   * @returns The newly created force.
-   */
-  public createForce(options: TMissionForceOptions = {}): ClientMissionForce {
-    // Throw an error if the max number of forces
-    // has already been reached.
-    if (this.forces.length >= Mission.MAX_FORCE_COUNT) {
-      throw new Error('Max number of forces already reached.')
-    }
-
-    // Organize existing force data for algorithm.
-    let existingForceNames: string[] = this.forces.map(({ name }) => name)
-    let existingForceColors: string[] = this.forces.map(({ color }) => color)
-
-    // Predefine force.
-    let force: ClientMissionForce | null = null
-
-    // Loop through default forces, and find
-    // the next available default force.
-    for (let defaultForce of MissionForce.DEFAULT_FORCES) {
-      if (
-        existingForceNames.includes(defaultForce.name) ||
-        existingForceColors.includes(defaultForce.color)
-      ) {
-        continue
-      }
-
-      // Create a new force.
-      force = new ClientMissionForce(this, defaultForce, options)
-      // Break the loop.
-      break
-    }
-
-    // This theoretically shouldn't happen, but if
-    // no force has been created yet, create one here.
-    if (!force) force = new ClientMissionForce(this, {}, options)
-
-    // Add the force to the mission.
-    this.forces.push(force)
-
-    // Handle structure change.
-    this.handleStructureChange()
-
-    // Return the force.
-    return force
   }
 
   /**
@@ -1241,18 +1238,16 @@ export type TStructureChangeListener = (structureChangeKey: string) => void
  * @option 'structure-change'
  * Triggered when the structure of the mission, including the nodes and actions
  * that make up the mission, change.
- * @option 'node-selection'
- * Triggered when a node is selected or deselected.
- * @option 'spawn-node'
- * Triggered when a node is spawned after initialization.
- * @option 'new-force'
- * Triggered when a new force is created.
+ * @option 'selection'
+ * Triggered when a selection or deselection is made in the mission.
+ * @option 'new-prototype'
+ * Triggered when a new prototype is created.
  */
 export type TMissionEvent =
   | 'activity'
   | 'structure-change'
   | 'selection'
-  | 'spawn-node'
+  | 'new-prototype'
 
 /**
  * Represents an object that can support navigation within

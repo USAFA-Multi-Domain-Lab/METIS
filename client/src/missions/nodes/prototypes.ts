@@ -104,6 +104,127 @@ export default class ClientMissionPrototype
     this.listeners = this.listeners.filter(([, h]) => h !== callback)
     return this
   }
+
+  /**
+   * Moves the prototype to the given destination, placing it based on
+   * the relation passed.
+   * @param destination The destination of the prototype.
+   * @param relation Where in relation to the destination this prototype
+   * will be placed in the structure.
+   */
+  public move(
+    destination: ClientMissionPrototype,
+    relation: EPrototypeRelation,
+  ): void {
+    let root: ClientMissionPrototype = this.mission.root
+    let oldParent: ClientMissionPrototype | null = this.parent
+    let newParent: ClientMissionPrototype | null = destination.parent
+    let newParentChildren: Array<ClientMissionPrototype> = []
+
+    // This makes sure that the destination
+    // isn't being moved inside or beside
+    // itself.
+    let x: ClientMissionPrototype | null = destination
+
+    while (x !== null && x._id !== root._id) {
+      if (this._id === x._id) {
+        return
+      }
+
+      x = x.parent
+    }
+
+    // This will remove the prototype's
+    // current position in the structure.
+    if (oldParent !== null) {
+      let siblings: ClientMissionPrototype[] = oldParent.children
+
+      for (let index: number = 0; index < siblings.length; index++) {
+        let sibling = siblings[index]
+
+        if (this._id === sibling._id) {
+          siblings.splice(index, 1)
+        }
+      }
+    }
+
+    // This will move the target based on
+    // its relation to this node.
+    switch (relation) {
+      case EPrototypeRelation.ParentOfTargetOnly:
+        this.parent = destination.parent
+        let targetAndTargetSiblings: Array<ClientMissionPrototype> =
+          destination.childrenOfParent
+
+        if (destination.parent !== null) {
+          for (
+            let index: number = 0;
+            index < targetAndTargetSiblings.length;
+            index++
+          ) {
+            let sibling = targetAndTargetSiblings[index]
+
+            if (destination._id === sibling._id) {
+              targetAndTargetSiblings[index] = this
+            }
+          }
+
+          destination.parent.children = targetAndTargetSiblings
+        }
+
+        this.children = [destination]
+        destination.parent = this
+        break
+      case EPrototypeRelation.ParentOfTargetAndChildren:
+        // TODO
+        break
+      case EPrototypeRelation.BetweenTargetAndChildren:
+        let childNodes: Array<ClientMissionPrototype> = destination.children
+
+        destination.children = [this]
+        this.parent = destination
+
+        for (let childNode of childNodes) {
+          childNode.parent = this
+        }
+        this.children = childNodes
+        break
+      case EPrototypeRelation.ChildOfTarget:
+        destination.children.push(this)
+        this.parent = destination
+        break
+      case EPrototypeRelation.PreviousSiblingOfTarget:
+        if (newParent !== null) {
+          newParent.children.forEach((childNode: ClientMissionPrototype) => {
+            if (childNode._id === destination._id) {
+              newParentChildren.push(this)
+              this.parent = newParent
+            }
+
+            newParentChildren.push(childNode)
+          })
+
+          newParent.children = newParentChildren
+        }
+        break
+      case EPrototypeRelation.FollowingSiblingOfTarget:
+        if (newParent !== null) {
+          newParent.children.forEach((childNode: ClientMissionPrototype) => {
+            newParentChildren.push(childNode)
+
+            if (childNode._id === destination._id) {
+              newParentChildren.push(this)
+              this.parent = newParent
+            }
+          })
+
+          newParent.children = newParentChildren
+        }
+        break
+    }
+
+    this.mission.handleStructureChange()
+  }
 }
 
 /**
@@ -114,3 +235,15 @@ export default class ClientMissionPrototype
  * Triggered when the buttons for the node are set.
  */
 export type TPrototypeEventMethod = 'activity' | 'set-buttons'
+
+/**
+ * The relation of prototype to another prototype.
+ */
+export enum EPrototypeRelation {
+  ParentOfTargetAndChildren,
+  ParentOfTargetOnly,
+  ChildOfTarget,
+  BetweenTargetAndChildren,
+  PreviousSiblingOfTarget,
+  FollowingSiblingOfTarget,
+}

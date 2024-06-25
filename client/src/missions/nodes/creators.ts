@@ -1,7 +1,8 @@
-import ClientMissionNode, { ENodeTargetRelation } from '.'
+import ClientMissionNode from '.'
 import ClientMission from '..'
 import { Vector2D } from '../../../../shared/toolbox/space'
 import ClientActionExecution from '../actions/executions'
+import { EPrototypeRelation } from './prototypes'
 
 /**
  * Represents a node that, when triggerred,
@@ -26,11 +27,11 @@ export default class NodeCreator {
   /**
    * The relation of the creator to the creation target.
    */
-  _targetRelation: ENodeTargetRelation
+  _targetRelation: EPrototypeRelation
   /**
    * The relation of the creator to the creation target.
    */
-  public get targetRelation(): ENodeTargetRelation {
+  public get targetRelation(): EPrototypeRelation {
     return this._targetRelation
   }
 
@@ -110,7 +111,7 @@ export default class NodeCreator {
 
   public constructor(
     mission: ClientMission,
-    targetRelation: ENodeTargetRelation,
+    targetRelation: EPrototypeRelation,
   ) {
     this._name = '+'
     this._mission = mission
@@ -130,7 +131,7 @@ export default class NodeCreator {
    */
   public syncPosition(): void {
     // Grab details.
-    let relation: ENodeTargetRelation = this.targetRelation
+    let relation: EPrototypeRelation = this.targetRelation
     let target: ClientMissionNode | null = this.creationTarget
 
     // If there is no target, set position to 0,0
@@ -147,22 +148,22 @@ export default class NodeCreator {
 
     // Shift position and depth based on relation.
     switch (relation) {
-      case ENodeTargetRelation.ParentOfTargetAndChildren:
+      case EPrototypeRelation.ParentOfTargetAndChildren:
         this.position.translateX(-2 * ClientMissionNode.COLUMN_WIDTH)
         this.depth -= 2
         break
-      case ENodeTargetRelation.ParentOfTargetOnly:
+      case EPrototypeRelation.ParentOfTargetOnly:
         this.position.translateX(-1 * ClientMissionNode.COLUMN_WIDTH)
         this.depth -= 1
         break
-      case ENodeTargetRelation.BetweenTargetAndChildren:
+      case EPrototypeRelation.BetweenTargetAndChildren:
         this.position.translateX(1 * ClientMissionNode.COLUMN_WIDTH)
         this.depth += 1
         break
-      case ENodeTargetRelation.PreviousSiblingOfTarget:
+      case EPrototypeRelation.PreviousSiblingOfTarget:
         this.position.translateY(-1 * ClientMissionNode.ROW_HEIGHT)
         break
-      case ENodeTargetRelation.FollowingSiblingOfTarget:
+      case EPrototypeRelation.FollowingSiblingOfTarget:
         this.position.translateY(1 * ClientMissionNode.ROW_HEIGHT)
         break
     }

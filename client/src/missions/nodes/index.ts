@@ -217,7 +217,7 @@ export default class ClientMissionNode
   }
 
   // Implemented
-  protected parseActionData(
+  protected importActions(
     data: TCommonMissionActionJson[],
   ): Map<string, ClientMissionAction> {
     let actions: Map<string, ClientMissionAction> = new Map<
@@ -232,7 +232,7 @@ export default class ClientMissionNode
   }
 
   // Implemented
-  protected parseExecutionData(
+  protected importExecutions(
     data: TActionExecutionJson,
   ): ClientActionExecution | null {
     // If data is null return null.
@@ -255,9 +255,7 @@ export default class ClientMissionNode
   }
 
   // Implemented
-  protected parseOutcomeData(
-    data: TActionOutcomeJson[],
-  ): ClientActionOutcome[] {
+  protected importOutcomes(data: TActionOutcomeJson[]): ClientActionOutcome[] {
     return data.map((datum: TActionOutcomeJson) => {
       let action: ClientMissionAction | undefined = this.actions.get(
         datum.actionId,
@@ -459,128 +457,6 @@ export default class ClientMissionNode
 
     // Return outcome.
     return outcome
-  }
-
-  // todo: Move this to the prototype class.
-  /**
-   * Moves this node to the given target, positioning based on the target relation passed.
-   * @param target The target node to which this node will be moved.
-   * @param targetRelation Where in relation to the target this node will be newly positioned.
-   * @deprecated
-   * @note Currently does nothing.
-   */
-  public move(
-    target: ClientMissionNode,
-    targetRelation: ENodeTargetRelation,
-  ): void {
-    //     let rootNode: ClientMissionNode = this.mission.rootNode
-    //     let parent: ClientMissionNode | null = this.parent
-    //     let newParentNode: ClientMissionNode | null = target.parent
-    //     let newParentNodeChildNodes: Array<ClientMissionNode> = []
-    //
-    //     // This makes sure that the target
-    //     // isn't being moved inside or beside
-    //     // itself.
-    //     let x: ClientMissionNode | null = target
-    //
-    //     while (x !== null && x._id !== rootNode._id) {
-    //       if (this._id === x._id) {
-    //         return
-    //       }
-    //
-    //       x = x.parent
-    //     }
-    //
-    //     // This will remove the nodes
-    //     // current position in the structure.
-    //     if (parent !== null) {
-    //       let siblings: ClientMissionNode[] = parent.children
-    //
-    //       for (let index: number = 0; index < siblings.length; index++) {
-    //         let sibling = siblings[index]
-    //
-    //         if (this._id === sibling._id) {
-    //           siblings.splice(index, 1)
-    //         }
-    //       }
-    //     }
-    //
-    //     // This will move the target based on
-    //     // its relation to this node.
-    //     switch (targetRelation) {
-    //       case ENodeTargetRelation.ParentOfTargetOnly:
-    //         this.parent = target.parent
-    //         let targetAndTargetSiblings: Array<ClientMissionNode> =
-    //           target.childrenOfParent
-    //
-    //         if (target.parent !== null) {
-    //           for (
-    //             let index: number = 0;
-    //             index < targetAndTargetSiblings.length;
-    //             index++
-    //           ) {
-    //             let sibling = targetAndTargetSiblings[index]
-    //
-    //             if (target._id === sibling._id) {
-    //               targetAndTargetSiblings[index] = this
-    //             }
-    //           }
-    //
-    //           target.parent.children = targetAndTargetSiblings
-    //         }
-    //
-    //         this.children = [target]
-    //         target.parent = this
-    //         break
-    //       case ENodeTargetRelation.ParentOfTargetAndChildren:
-    //         // TODO
-    //         break
-    //       case ENodeTargetRelation.BetweenTargetAndChildren:
-    //         let childNodes: Array<ClientMissionNode> = target.children
-    //
-    //         target.children = [this]
-    //         this.parent = target
-    //
-    //         for (let childNode of childNodes) {
-    //           childNode.parent = this
-    //         }
-    //         this.children = childNodes
-    //         break
-    //       case ENodeTargetRelation.ChildOfTarget:
-    //         target.children.push(this)
-    //         this.parent = target
-    //         break
-    //       case ENodeTargetRelation.PreviousSiblingOfTarget:
-    //         if (newParentNode !== null) {
-    //           newParentNode.children.forEach((childNode: ClientMissionNode) => {
-    //             if (childNode._id === target._id) {
-    //               newParentNodeChildNodes.push(this)
-    //               this.parent = newParentNode
-    //             }
-    //
-    //             newParentNodeChildNodes.push(childNode)
-    //           })
-    //
-    //           newParentNode.children = newParentNodeChildNodes
-    //         }
-    //         break
-    //       case ENodeTargetRelation.FollowingSiblingOfTarget:
-    //         if (newParentNode !== null) {
-    //           newParentNode.children.forEach((childNode: ClientMissionNode) => {
-    //             newParentNodeChildNodes.push(childNode)
-    //
-    //             if (childNode._id === target._id) {
-    //               newParentNodeChildNodes.push(this)
-    //               this.parent = newParentNode
-    //             }
-    //           })
-    //
-    //           newParentNode.children = newParentNodeChildNodes
-    //         }
-    //         break
-    //     }
-    //
-    //     this.mission.handleStructureChange()
   }
 
   /**
@@ -817,18 +693,6 @@ export interface IClientLoadOutcomeOptions extends ILoadOutcomeOptions {
    * @default undefined
    */
   revealedChildNodes?: Array<TMissionNodeJson>
-}
-
-/**
- * The relation of the target node to the node being added.
- */
-export enum ENodeTargetRelation {
-  ParentOfTargetAndChildren,
-  ParentOfTargetOnly,
-  ChildOfTarget,
-  BetweenTargetAndChildren,
-  PreviousSiblingOfTarget,
-  FollowingSiblingOfTarget,
 }
 
 /**

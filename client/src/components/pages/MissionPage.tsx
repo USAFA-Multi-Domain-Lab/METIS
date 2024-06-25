@@ -291,7 +291,7 @@ export default function MissionPage({
 
   // Add event listener to watch for when a new
   // node is spawned in the mission.
-  useEventListener(mission, 'spawn-node', () => {
+  useEventListener(mission, 'new-prototype', () => {
     // Mark unsaved changes as true.
     setAreUnsavedChanges(true)
   })
