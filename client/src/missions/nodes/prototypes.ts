@@ -42,19 +42,46 @@ export default class ClientMissionPrototype
     return [...this._buttons]
   }
   public set buttons(value: TPrototypeButton[]) {
+    // Gather details.
+    let structureChange: boolean = false
+
+    // If button count changed from 0 to some
+    // or some to 0, mark to handle structure change.
+    if (
+      (this.buttons.length > 0 && value.length === 0) ||
+      (this.buttons.length === 0 && value.length > 0)
+    ) {
+      structureChange = true
+    }
+
+    // Set buttons.
     this._buttons = value
+
+    // Emit event.
     this.emitEvent('set-buttons')
+
+    // Handle structure change.
+    if (structureChange) {
+      this.mission.handleStructureChange()
+    }
+  }
+
+  /**
+   * Whether the prototype is selected in the mission.
+   */
+  public get selected(): boolean {
+    return this.mission.selection === this
+  }
+
+  // Implemented
+  public get path(): TMissionNavigable[] {
+    return [this.mission, this]
   }
 
   /**
    * Listeners for prototype events.
    */
   private listeners: Array<[TPrototypeEventMethod, () => void]> = []
-
-  // Implemented
-  public get path(): TMissionNavigable[] {
-    return [this.mission, this]
-  }
 
   public constructor(
     mission: ClientMission,
@@ -79,6 +106,11 @@ export default class ClientMissionPrototype
       if (listenerEvent === method || listenerEvent === 'activity') {
         listenerCallback()
       }
+    }
+    // If the event is a set-buttons event, call
+    // emit event on the mission level.
+    if (method === 'set-buttons') {
+      this.mission.emitEvent('set-buttons')
     }
   }
 

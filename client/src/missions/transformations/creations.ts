@@ -65,6 +65,8 @@ export default class PrototypeCreation extends MissionTransformation {
     // Relation is confirmed to not be null when `readyToApply`
     // is checked in super class.
     prototype.move(this.destination, this.relation!)
+    // Select the new prototype.
+    this.mission.select(prototype)
   }
 }
 

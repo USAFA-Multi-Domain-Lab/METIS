@@ -116,6 +116,7 @@ export default class ClientMission
   }
   public set transformation(value: MissionTransformation | null) {
     this._transformation = value
+    this.emitEvent('set-transformation')
     this.handleStructureChange()
   }
 
@@ -137,7 +138,8 @@ export default class ClientMission
   }
 
   /**
-   *
+   * Prototype slots to render on a mission map given the current
+   * state of the mission transformation.
    */
   public get prototypeSlots(): TPrototypeSlot_P[] {
     let slots: TPrototypeSlot_P[] = []
@@ -418,7 +420,7 @@ export default class ClientMission
    * Emits an event for the mission.
    * @param method The method of the event to emit.
    */
-  protected emitEvent(method: TMissionEvent): void {
+  public emitEvent(method: TMissionEvent): void {
     // Call any matching listener callbacks
     // or any activity listener callbacks.
     for (let [listenerEvent, listenerCallback] of this.listeners) {
@@ -450,8 +452,7 @@ export default class ClientMission
    * @param parent Recursively used. Don't pass anything.
    * @param depth Recursively used. Don't pass anything.
    * @param rowCount Recursively used. Don't pass anything.
-   * @param extraLines Recursively used. Don't pass anything.
-   * @param rowMostLinesFound Recursively used. Don't pass anything.
+   * @param buttonData Recursively used. Don't pass anything.
    * @returns Subcalls of this recursive function will return results used for
    * further position calculations. The final return can be ignored.
    */
@@ -459,9 +460,11 @@ export default class ClientMission
     parent: ClientMissionPrototype = this.root,
     depth: number = -1,
     rowCount: Counter = new Counter(0),
+    buttonData = { foundOnRow: false, rowCount: 0 },
   ): void {
     // Gather details.
     let transformDestination = this.transformDestination
+    let yOffset: number = buttonData.rowCount * ClientMissionNode.BUTTONS_HEIGHT
 
     // If the parent node isn't the rootNode,
     // then this function was recursively
@@ -472,7 +475,7 @@ export default class ClientMission
     if (parent._id !== this.root._id) {
       parent.position.set(
         depth * ClientMissionNode.COLUMN_WIDTH,
-        rowCount.count * ClientMissionNode.ROW_HEIGHT,
+        rowCount.count * ClientMissionNode.ROW_HEIGHT + yOffset,
       )
     }
     // Else the depth of the mission is reset
@@ -502,11 +505,24 @@ export default class ClientMission
       }
     }
 
+    // If the parent has buttons, mark buttons as found.
+    if (parent.buttons.length > 0) {
+      buttonData.foundOnRow = true
+    }
+
     // The children should then be examined
     // by recursively calling this function.
     children.forEach((child: ClientMissionPrototype, index: number) => {
       if (index > 0) {
         rowCount.increment()
+
+        // If buttons were found on row,
+        // increment the row count.
+        if (buttonData.foundOnRow) {
+          buttonData.rowCount++
+        }
+        // Then clear found on row.
+        buttonData.foundOnRow = false
       }
 
       // If the transformDestination is this child,
@@ -522,6 +538,7 @@ export default class ClientMission
         // todo: Determine what to do with this.
         depth + 1, // + child.depthPadding,
         rowCount,
+        buttonData,
       )
 
       // // If the transformDestination is this child,
@@ -672,7 +689,7 @@ export default class ClientMission
 
           // If the parent node is the node transform destination,
           // the vertical line should be offset to account
-          // for a slot between the parent and child.
+          // for a slot between the parent and child
           if (transformDestination?._id === parent._id) {
             downMidStart.translateX(ClientMissionNode.COLUMN_WIDTH)
           }
@@ -1022,7 +1039,9 @@ export default class ClientMission
         result.translateY(-1 * ClientMissionNode.ROW_HEIGHT)
         break
       case 'following-sibling-of-target':
-        result.translateY(1 * ClientMissionNode.ROW_HEIGHT)
+        result.translateY(
+          ClientMissionNode.ROW_HEIGHT + ClientMissionNode.BUTTONS_HEIGHT,
+        )
         break
     }
 
@@ -1262,12 +1281,18 @@ export type TStructureChangeListener = (structureChangeKey: string) => void
  * Triggered when a selection or deselection is made in the mission.
  * @option 'new-prototype'
  * Triggered when a new prototype is created.
+ * @option 'buttons'
+ * Triggered when buttons are set within any prototype or node.
+ * @option 'set-transformation'
+ * Triggered when a transformation is set for the mission.
  */
 export type TMissionEvent =
   | 'activity'
   | 'structure-change'
   | 'selection'
   | 'new-prototype'
+  | 'set-buttons'
+  | 'set-transformation'
 
 /**
  * Represents an object that can support navigation within

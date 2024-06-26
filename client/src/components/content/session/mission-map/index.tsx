@@ -500,6 +500,11 @@ export default function MissionMap({
     if (mission.transformation) {
       classList.push('Transformation')
     }
+    // Add has slots class if the mission has
+    // prototype slots.
+    if (mission.prototypeSlots.length > 0) {
+      classList.push('HasSlots')
+    }
 
     return classList.join(' ')
   })

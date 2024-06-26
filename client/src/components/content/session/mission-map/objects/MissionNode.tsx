@@ -206,6 +206,10 @@ export default function MissionNode({
     if (onSelect) {
       classList.push('Selectable')
     }
+    // Add the selected class if the node is selected.
+    if (node.selected) {
+      classList.push('Selected')
+    }
     // Add the executable class if the node is
     // executable.
     if (node.executable) {

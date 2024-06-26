@@ -13,4 +13,16 @@
   &.Transformation {
     background-color: $background-transformation;
   }
+
+  &.HasSlots {
+    // If there are slots, fade the nodes and
+    // prototypes that are not selected.
+    .MissionNode,
+    .MissionPrototype {
+      &:not(.Selected) {
+        pointer-events: none;
+        opacity: 0.5;
+      }
+    }
+  }
 }

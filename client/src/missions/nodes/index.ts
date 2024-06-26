@@ -198,8 +198,36 @@ export default class ClientMissionNode
     return [...this._buttons]
   }
   public set buttons(value: TNodeButton[]) {
+    // Gather details.
+    let structureChange: boolean = false
+
+    // If button count changed from 0 to some
+    // or some to 0, mark to handle structure change.
+    if (
+      (this.buttons.length > 0 && value.length === 0) ||
+      (this.buttons.length === 0 && value.length > 0)
+    ) {
+      structureChange = true
+    }
+
+    // Set buttons.
     this._buttons = value
+
+    // Emit event.
     this.emitEvent('set-buttons')
+
+    // Handle structure change.
+    if (structureChange) {
+      console.log(structureChange)
+      this.mission.handleStructureChange()
+    }
+  }
+
+  /**
+   * Whether the node is selected in the mission.
+   */
+  public get selected(): boolean {
+    return this.mission.selection === this
   }
 
   // Implemented
@@ -272,15 +300,20 @@ export default class ClientMissionNode
 
   /**
    * Calls the callbacks of listeners for the given node event.
-   * @param event The event emitted.
+   * @param method The event method emitted.
    */
-  protected emitEvent(event: TNodeEventMethod): void {
+  protected emitEvent(method: TNodeEventMethod): void {
     // Call any matching listener callbacks
     // or any activity listener callbacks.
-    for (let [listenerEvent, listenerCallback] of this.listeners) {
-      if (listenerEvent === event || listenerEvent === 'activity') {
+    for (let [listenerMethod, listenerCallback] of this.listeners) {
+      if (listenerMethod === method || listenerMethod === 'activity') {
         listenerCallback()
       }
+    }
+    // If the event is a set-buttons event, call
+    // emit event on the mission level.
+    if (method === 'set-buttons') {
+      this.mission.emitEvent('set-buttons')
     }
   }
 

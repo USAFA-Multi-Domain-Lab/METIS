@@ -192,7 +192,7 @@ export default function MissionPage({
   // changes, updating the state accordingly.
   useEventListener(
     mission,
-    ['selection', 'structure-change'],
+    ['selection', 'set-transformation'],
     () => {
       // Get previous and next selections.
       let prevSelection: TMissionNavigable = selection

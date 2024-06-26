@@ -93,13 +93,19 @@ export default class ClientMissionForce
     rowCount: Counter = new Counter(0),
     extraLines: Counter = new Counter(0),
     rowMostLinesFound: Counter = new Counter(0),
+    buttonData = { foundOnRow: false, rowCount: 0 },
   ): void => {
-    let nodeCreationTarget: ClientMissionNode | null = null
+    let yOffset: number = 0
 
-    let yOffset: number =
+    // Offset the y position by the number of extra
+    // lines found.
+    yOffset +=
       extraLines.count *
       ClientMissionNode.LINE_HEIGHT *
       ClientMissionNode.FONT_SIZE
+    // Offset the y position by the number of rows
+    // with buttons found.
+    yOffset += buttonData.rowCount * ClientMissionNode.BUTTONS_HEIGHT
 
     // If the parent node isn't the rootNode,
     // then this function was recursively
@@ -124,20 +130,46 @@ export default class ClientMissionForce
       parent.nameLineCount,
     )
 
+    // If the parent has buttons, mark buttons as found.
+    if (parent.buttons.length > 0) {
+      buttonData.foundOnRow = true
+    }
+
     // The childNodes should then be examined
     // by recursively calling this function.
     children.forEach((childNode: ClientMissionNode, index: number) => {
       if (index > 0) {
+        // Increment the row count.
         rowCount.increment()
+
+        // Add the number of extra lines found.
         extraLines.count += Math.max(
           0,
           rowMostLinesFound.count - ClientMissionNode.DEFAULT_NAME_LINE_COUNT,
         )
+
+        // Clear the most lines found for the row,
+        // so that the next row can start fresh.
         rowMostLinesFound.count = 0
+
+        // If buttons were found on row,
+        // increment the row count.
+        if (buttonData.foundOnRow) {
+          buttonData.rowCount++
+        }
+        // Then clear found on row, so that the
+        // next row can start fresh.
+        buttonData.foundOnRow = false
       }
 
       // Position the child node.
-      this.positionNodes(childNode, rowCount, extraLines, rowMostLinesFound)
+      this.positionNodes(
+        childNode,
+        rowCount,
+        extraLines,
+        rowMostLinesFound,
+        buttonData,
+      )
     })
   }
 
