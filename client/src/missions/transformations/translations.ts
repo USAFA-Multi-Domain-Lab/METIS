@@ -1,5 +1,5 @@
 import MissionTransformation from '.'
-import ClientMissionPrototype, { EPrototypeRelation } from '../nodes/prototypes'
+import ClientMissionPrototype, { TPrototypeRelation } from '../nodes/prototypes'
 
 /**
  * A transformation within a mission where an existing prototype
@@ -7,7 +7,7 @@ import ClientMissionPrototype, { EPrototypeRelation } from '../nodes/prototypes'
  */
 export default class PrototypeTranslation extends MissionTransformation {
   // Implemented
-  public get readyToApply(): boolean {
+  public get _readyToApply(): boolean {
     return this._relation !== null && this._destination !== null
   }
 
@@ -44,14 +44,14 @@ export default class PrototypeTranslation extends MissionTransformation {
   /**
    * The relation of the translated prototype to the relative.
    */
-  private _relation: EPrototypeRelation | null
+  private _relation: TPrototypeRelation | null
   /**
    * The relation of the translated prototype to the relative.
    */
-  public get relation(): EPrototypeRelation | null {
+  public get relation(): TPrototypeRelation | null {
     return this._relation
   }
-  public set relation(value: EPrototypeRelation | null) {
+  public set relation(value: TPrototypeRelation | null) {
     this._relation = value
   }
 
@@ -98,5 +98,5 @@ export type TPrototypeTranslationOptions = {
    * The relation of the translated prototype to the relative.
    * @default null
    */
-  relation?: EPrototypeRelation | null
+  relation?: TPrototypeRelation | null
 }

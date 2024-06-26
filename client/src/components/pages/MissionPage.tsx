@@ -8,12 +8,13 @@ import { ClientInternalEffect } from 'src/missions/effects/internal'
 import ClientMissionForce from 'src/missions/forces'
 import ClientMissionNode, { ENodeDeleteMethod } from 'src/missions/nodes'
 import ClientMissionPrototype from 'src/missions/nodes/prototypes'
+import PrototypeCreation from 'src/missions/transformations/creations'
 import { ClientTargetEnvironment } from 'src/target-environments'
 import { compute } from 'src/toolbox'
 import { useEventListener, useMountHandler } from 'src/toolbox/hooks'
 import { DefaultLayout, TPage_P } from '.'
 import Mission from '../../../../shared/missions'
-import { SingleTypeObject, TWithKey } from '../../../../shared/toolbox/objects'
+import { TWithKey } from '../../../../shared/toolbox/objects'
 import ActionEntry from '../content/edit-mission/entries/ActionEntry'
 import ExternalEffectEntry from '../content/edit-mission/entries/ExternalEffectEntry'
 import ForceEntry from '../content/edit-mission/entries/ForceEntry'
@@ -226,29 +227,28 @@ export default function MissionPage({
       // If there is a next prototype, then add the buttons.
       if (nextSelection instanceof ClientMissionPrototype) {
         // Define potential buttons.
-        const availableButtons: SingleTypeObject<TPrototypeButton> = {
+        const availableButtons = {
           deselect: {
             icon: 'cancel',
             key: 'prototype-button-deselect',
             tooltipDescription:
               'Deselect this prototype (Closes panel view also).',
             onClick: () => mission.deselect(),
-          },
+          } as TPrototypeButton,
           add: {
             icon: 'add',
             key: 'prototype-button-add',
             tooltipDescription: 'Create an adjacent prototype on the map.',
-            onClick: () => {
-              mission.creationMode = true
+            onClick: (_, prototype) => {
+              handlePrototypeAddRequest(prototype)
             },
-          },
-          add_cancel: {
+          } as TPrototypeButton,
+          transform_cancel: {
             icon: 'cancel',
             key: 'prototype-button-add-cancel',
-            tooltipDescription: 'Cancel prototype creation.',
-            onClick: () => (mission.creationMode = false),
-          },
-          // todo: Fix this to work with prototypes.
+            tooltipDescription: 'Cancel action.',
+            onClick: () => (mission.transformation = null),
+          } as TPrototypeButton,
           remove: {
             icon: 'remove',
             key: 'prototype-button-remove',
@@ -258,25 +258,24 @@ export default function MissionPage({
               // todo: Uncomment and make this work with prototypes.
               // handleNodeDeleteRequest(prototype)
             },
-          },
+          } as TPrototypeButton,
         }
 
         // Define the buttons that will actually be used.
         const activeButtons = []
 
-        // If not in creation mode, then add deselect, add, and
-        // remove buttons.
-        if (!mission.creationMode) {
+        // If there is a transformation being made within the mission,
+        // then add a cancel button for the transformation.
+        if (mission.transformation) {
+          activeButtons.push(availableButtons.transform_cancel)
+        }
+        // Else, add default buttons for a selected prototype.
+        else {
           activeButtons.push(
             availableButtons.deselect,
-            // todo: These should be used in prototypes.
-            // availableNodeButtons.add,
-            // availableNodeButtons.remove,
+            availableButtons.add,
+            availableButtons.remove,
           )
-        }
-        // Else, add a cancel button for adding a node.
-        else {
-          activeButtons.push(availableButtons.add_cancel)
         }
 
         // Set the buttons on the next selection.
@@ -462,10 +461,12 @@ export default function MissionPage({
   }
 
   /**
-   * Handler for when the user requests to add a new node.
+   * Handler for when the user requests to add a new prototype.
    */
-  const handleNodeAddRequest = (): void => {
-    mission.creationMode = true
+  const handlePrototypeAddRequest = (
+    prototype: ClientMissionPrototype,
+  ): void => {
+    mission.transformation = new PrototypeCreation(prototype)
   }
 
   /* -- PRE-RENDER PROCESSING -- */
@@ -534,34 +535,6 @@ export default function MissionPage({
    * Renders JSX for panel 2 of the resize relationship.
    */
   const renderPanel2 = (): JSX.Element | null => {
-    // todo: Remove this.
-    // // Determines if the node entry should be displayed.
-    // let displayNodeEntry: boolean =
-    //   selectedNode !== null &&
-    //   selectedAction === null &&
-    //   selectedExternalEffect === null &&
-    //   selectedInternalEffect === null
-    // // Determines if the action entry should be displayed.
-    // let displayActionEntry: boolean =
-    //   selectedNode !== null &&
-    //   selectedAction !== null &&
-    //   (selectedExternalEffect === null || isNewExternalEffect) &&
-    //   (selectedInternalEffect === null || isNewInternalEffect)
-    // // Determines if the external effect entry should be displayed.
-    // let displayExternalEffectEntry: boolean =
-    //   selectedNode !== null &&
-    //   selectedAction !== null &&
-    //   selectedExternalEffect !== null &&
-    //   !isNewExternalEffect &&
-    //   selectedInternalEffect === null
-    // // Determines if the internal effect entry should be displayed.
-    // let displayInternalEffectEntry: boolean =
-    //   selectedNode !== null &&
-    //   selectedAction !== null &&
-    //   selectedInternalEffect !== null &&
-    //   !isNewInternalEffect &&
-    //   selectedExternalEffect === null
-
     if (selection instanceof ClientMission) {
       return (
         <MissionEntry
@@ -591,7 +564,8 @@ export default function MissionPage({
         <NodeEntry
           node={selection}
           handleChange={handleChange}
-          handleAddRequest={handleNodeAddRequest}
+          // todo: Move this to PrototypeEntry.
+          handleAddRequest={() => {}}
           handleDeleteRequest={() => handleNodeDeleteRequest(selection)}
           key={selection._id}
         />
@@ -624,74 +598,6 @@ export default function MissionPage({
     } else {
       return null
     }
-
-    // todo: Remove this.
-    // if (missionDetailsIsActive) {
-    //   return (
-    //     <MissionEntry
-    //       active={missionDetailsIsActive}
-    //       mission={mission}
-    //       handleChange={handleChange}
-    //       key={mission._id}
-    //     />
-    //   )
-    // } else if (displayNodeEntry) {
-    //   return (
-    //     <NodeEntry
-    //       node={selectedNode as ClientMissionNode}
-    //       setSelectedAction={setSelectedAction}
-    //       handleChange={handleChange}
-    //       handleAddRequest={handleNodeAddRequest}
-    //       handleDeleteRequest={() =>
-    //         handleNodeDeleteRequest(selectedNode as ClientMissionNode)
-    //       }
-    //       key={selectedNode?._id}
-    //     />
-    //   )
-    // } else if (displayActionEntry) {
-    //   return (
-    //     <ActionEntry
-    //       action={selectedAction as ClientMissionAction}
-    //       targetEnvironments={targetEnvironments}
-    //       setSelectedAction={setSelectedAction}
-    //       setSelectedExternalEffect={setSelectedExternalEffect}
-    //       setSelectedInternalEffect={setSelectedInternalEffect}
-    //       handleChange={handleChange}
-    //       key={selectedAction?._id}
-    //     />
-    //   )
-    // } else if (displayExternalEffectEntry) {
-    //   return (
-    //     <ExternalEffectEntry
-    //       effect={selectedExternalEffect as ClientExternalEffect}
-    //       setSelectedAction={setSelectedAction}
-    //       setSelectedExternalEffect={setSelectedExternalEffect}
-    //       handleChange={handleChange}
-    //       key={selectedExternalEffect?._id}
-    //     />
-    //   )
-    // } else if (displayInternalEffectEntry) {
-    //   return (
-    //     <InternalEffectEntry
-    //       effect={selectedInternalEffect as ClientInternalEffect}
-    //       setSelectedAction={setSelectedAction}
-    //       setSelectedInternalEffect={setSelectedInternalEffect}
-    //       handleChange={handleChange}
-    //       key={selectedInternalEffect?._id}
-    //     />
-    //   )
-    // } else if (nodeStructuringIsActive) {
-    //   return (
-    //     <NodeStructuring
-    //       active={nodeStructuringIsActive}
-    //       mission={mission}
-    //       handleChange={handleChange}
-    //       handleCloseRequest={() => activateNodeStructuring(false)}
-    //     />
-    //   )
-    // } else {
-    //   return null
-    // }
   }
 
   /* -- RENDER -- */

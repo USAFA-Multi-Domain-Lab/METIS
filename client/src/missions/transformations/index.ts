@@ -17,9 +17,19 @@ export default abstract class MissionTransformation {
   }
 
   /**
-   * Whether the transformation is ready to be applied.
+   * Whether the transformation is ready to be applied,
+   * assuming that it has not been applied already.
    */
-  public abstract get readyToApply(): boolean
+  protected abstract get _readyToApply(): boolean
+
+  /**
+   * Whether the transformation is ready to be applied,
+   * meaning all conditions are met, and the transformation
+   * has not been applied already.
+   */
+  public get readyToApply(): boolean {
+    return this._readyToApply && !this.applied
+  }
 
   /**
    * Whether the transformation has already been applied.

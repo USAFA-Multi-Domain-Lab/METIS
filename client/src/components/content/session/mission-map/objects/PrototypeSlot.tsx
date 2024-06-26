@@ -1,11 +1,10 @@
-import Tooltip from 'src/components/content/communication/Tooltip'
 import ClientMissionNode from 'src/missions/nodes'
 import ClientMissionPrototype, {
-  EPrototypeRelation,
+  TPrototypeRelation,
 } from 'src/missions/nodes/prototypes'
 import { compute } from 'src/toolbox'
 import { Vector2D } from '../../../../../../../shared/toolbox/space'
-import './MissionNodeCreator.scss'
+import './PrototypeSlot.scss'
 
 /* -- components -- */
 
@@ -16,6 +15,7 @@ import './MissionNodeCreator.scss'
 export default function PrototypeSlot({
   relative,
   relation,
+  position,
   onClick = () => {},
 }: TPrototypeSlot_P): JSX.Element | null {
   /* -- computed -- */
@@ -23,37 +23,7 @@ export default function PrototypeSlot({
   /**
    * The key for the root element.
    */
-  const key = compute<string>(() => {
-    return `placement_${relative._id}_rel-${relation}`
-  })
-
-  /**
-   * The placement position.
-   */
-  const position = compute<Vector2D>(() => {
-    let result: Vector2D = relative.position.clone()
-
-    // Shift position and depth based on relation.
-    switch (relation) {
-      case EPrototypeRelation.ParentOfTargetAndChildren:
-        result.translateX(-2 * ClientMissionNode.COLUMN_WIDTH)
-        break
-      case EPrototypeRelation.ParentOfTargetOnly:
-        result.translateX(-1 * ClientMissionNode.COLUMN_WIDTH)
-        break
-      case EPrototypeRelation.BetweenTargetAndChildren:
-        result.translateX(1 * ClientMissionNode.COLUMN_WIDTH)
-        break
-      case EPrototypeRelation.PreviousSiblingOfTarget:
-        result.translateY(-1 * ClientMissionNode.ROW_HEIGHT)
-        break
-      case EPrototypeRelation.FollowingSiblingOfTarget:
-        result.translateY(1 * ClientMissionNode.ROW_HEIGHT)
-        break
-    }
-
-    return result
-  })
+  const key = `slot_${relative._id}_rel-${relation}`
 
   /**
    * The inline styles for the root element.
@@ -88,9 +58,15 @@ export default function PrototypeSlot({
 
   // Render root JSX.
   return (
-    <div key={key} className='Placement' style={rootStyle} onClick={onClick}>
+    <div
+      key={key}
+      className='PrototypeSlot'
+      style={rootStyle}
+      onClick={onClick}
+    >
       <div className='Icon'></div>
-      <Tooltip description='Create a node here.' />
+      {/* todo: add tooltip */}
+      {/* <Tooltip description='Create a prototype here.' /> */}
     </div>
   )
 }
@@ -106,7 +82,11 @@ export type TPrototypeSlot_P = {
   /**
    * The relation between the slot and the prototype.
    */
-  relation: EPrototypeRelation
+  relation: TPrototypeRelation
+  /**
+   * The position of the slot on the map.
+   */
+  position: Vector2D
   /**
    * Callback for when the slot is clicked.
    * @default () => {}

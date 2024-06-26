@@ -114,7 +114,7 @@ export default class ClientMissionPrototype
    */
   public move(
     destination: ClientMissionPrototype,
-    relation: EPrototypeRelation,
+    relation: TPrototypeRelation,
   ): void {
     let root: ClientMissionPrototype = this.mission.root
     let oldParent: ClientMissionPrototype | null = this.parent
@@ -151,7 +151,7 @@ export default class ClientMissionPrototype
     // This will move the target based on
     // its relation to this node.
     switch (relation) {
-      case EPrototypeRelation.ParentOfTargetOnly:
+      case 'parent-of-target-only':
         this.parent = destination.parent
         let targetAndTargetSiblings: Array<ClientMissionPrototype> =
           destination.childrenOfParent
@@ -175,10 +175,10 @@ export default class ClientMissionPrototype
         this.children = [destination]
         destination.parent = this
         break
-      case EPrototypeRelation.ParentOfTargetAndChildren:
+      case 'parent-of-target-and-children':
         // TODO
         break
-      case EPrototypeRelation.BetweenTargetAndChildren:
+      case 'between-target-and-children':
         let childNodes: Array<ClientMissionPrototype> = destination.children
 
         destination.children = [this]
@@ -189,11 +189,11 @@ export default class ClientMissionPrototype
         }
         this.children = childNodes
         break
-      case EPrototypeRelation.ChildOfTarget:
+      case 'child-of-target':
         destination.children.push(this)
         this.parent = destination
         break
-      case EPrototypeRelation.PreviousSiblingOfTarget:
+      case 'previous-sibling-of-target':
         if (newParent !== null) {
           newParent.children.forEach((childNode: ClientMissionPrototype) => {
             if (childNode._id === destination._id) {
@@ -207,7 +207,7 @@ export default class ClientMissionPrototype
           newParent.children = newParentChildren
         }
         break
-      case EPrototypeRelation.FollowingSiblingOfTarget:
+      case 'following-sibling-of-target':
         if (newParent !== null) {
           newParent.children.forEach((childNode: ClientMissionPrototype) => {
             newParentChildren.push(childNode)
@@ -239,11 +239,10 @@ export type TPrototypeEventMethod = 'activity' | 'set-buttons'
 /**
  * The relation of prototype to another prototype.
  */
-export enum EPrototypeRelation {
-  ParentOfTargetAndChildren,
-  ParentOfTargetOnly,
-  ChildOfTarget,
-  BetweenTargetAndChildren,
-  PreviousSiblingOfTarget,
-  FollowingSiblingOfTarget,
-}
+export type TPrototypeRelation =
+  | 'parent-of-target-and-children'
+  | 'parent-of-target-only'
+  | 'child-of-target'
+  | 'between-target-and-children'
+  | 'previous-sibling-of-target'
+  | 'following-sibling-of-target'

@@ -14,8 +14,8 @@ import './index.scss'
 import Grid from './objects/Grid'
 import Line from './objects/Line'
 import MissionNode, { MAX_NODE_CONTENT_ZOOM } from './objects/MissionNode'
-import MissionNodeCreator from './objects/MissionNodeCreator'
 import MissionPrototype from './objects/MissionPrototype'
+import PrototypeSlot from './objects/PrototypeSlot'
 import Hud from './ui/Hud'
 import PanController from './ui/PanController'
 import Overlay from './ui/overlay'
@@ -497,8 +497,8 @@ export default function MissionMap({
 
     // Add the creation mode class if the mission
     // is in creation mode.
-    if (mission.creationMode) {
-      classList.push('CreationMode')
+    if (mission.transformation) {
+      classList.push('Transformation')
     }
 
     return classList.join(' ')
@@ -597,13 +597,14 @@ export default function MissionMap({
     selectedForce,
   ])
 
+  // todo: Use placements instead.
   /**
    * The JSX for the node creator objects rendered in the scene.
    * @memoized
    */
-  const nodeCreatorsJsx = useMemo((): JSX.Element[] => {
-    return mission.nodeCreators.map((creator) => (
-      <MissionNodeCreator key={creator.nodeId} creator={creator} />
+  const placementsJsx = useMemo((): JSX.Element[] => {
+    return mission.prototypeSlots.map((slot) => (
+      <PrototypeSlot key={`${slot.relative._id}${slot.relation}`} {...slot} />
     ))
   }, [
     // ! Recomputes when:
@@ -649,7 +650,7 @@ export default function MissionMap({
         <Grid type={'node'} enabled={MAP_NODE_GRID_ENABLED} />
         {linesJsx}
         {nodesJsx}
-        {nodeCreatorsJsx}
+        {placementsJsx}
       </Scene>
       <Hud
         mission={mission}

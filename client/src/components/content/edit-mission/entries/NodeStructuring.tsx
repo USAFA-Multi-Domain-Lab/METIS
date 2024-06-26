@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useGlobalContext } from 'src/context'
 import ClientMission from 'src/missions'
 import ClientMissionNode from 'src/missions/nodes'
-import { EPrototypeRelation } from 'src/missions/nodes/prototypes'
+import { TPrototypeRelation } from 'src/missions/nodes/prototypes'
 import MoreInformation from '../../communication/MoreInformation'
 import Tooltip from '../../communication/Tooltip'
 import './NodeStructuring.scss'
@@ -102,7 +102,7 @@ export default function NodeStructuring(props: {
               // todo: Resolve this.
               // nodeGrabbed.move(
               //   destinationNode,
-              //   EPrototypeRelation.ChildOfTarget,
+              //   'child-of-target',
               // )
               handleChange()
             }
@@ -172,20 +172,20 @@ export default function NodeStructuring(props: {
           onDrop={(event: React.DragEvent) => {
             if (nodePendingDrop !== null) {
               let target: ClientMissionNode = nodePendingDrop
-              let targetRelation: EPrototypeRelation
+              let targetRelation: TPrototypeRelation
 
               switch (dropLocation) {
                 case ENodeDropLocation.Top:
-                  targetRelation = EPrototypeRelation.PreviousSiblingOfTarget
+                  targetRelation = 'previous-sibling-of-target'
                   break
                 case ENodeDropLocation.Center:
-                  targetRelation = EPrototypeRelation.ChildOfTarget
+                  targetRelation = 'child-of-target'
                   break
                 case ENodeDropLocation.Bottom:
-                  targetRelation = EPrototypeRelation.FollowingSiblingOfTarget
+                  targetRelation = 'following-sibling-of-target'
                   break
                 default:
-                  targetRelation = EPrototypeRelation.ChildOfTarget
+                  targetRelation = 'child-of-target'
                   break
               }
 

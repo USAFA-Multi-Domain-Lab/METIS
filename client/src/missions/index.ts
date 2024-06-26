@@ -1,5 +1,6 @@
 import axios, { AxiosResponse } from 'axios'
 import { TLine_P } from 'src/components/content/session/mission-map/objects/Line'
+import { TPrototypeSlot_P } from 'src/components/content/session/mission-map/objects/PrototypeSlot'
 import { ClientTargetEnvironment } from 'src/target-environments'
 import ClientTarget from 'src/target-environments/targets'
 import { TEventListenerTarget } from 'src/toolbox/hooks'
@@ -26,9 +27,10 @@ import { ClientExternalEffect } from './effects/external'
 import { ClientInternalEffect } from './effects/internal'
 import ClientMissionForce from './forces'
 import ClientMissionNode from './nodes'
-import NodeCreator from './nodes/creators'
-import ClientMissionPrototype, { EPrototypeRelation } from './nodes/prototypes'
+import ClientMissionPrototype, { TPrototypeRelation } from './nodes/prototypes'
 import MissionTransformation from './transformations'
+import PrototypeCreation from './transformations/creations'
+import PrototypeTranslation from './transformations/translations'
 
 /**
  * Class for managing missions on the client.
@@ -114,74 +116,76 @@ export default class ClientMission
   }
   public set transformation(value: MissionTransformation | null) {
     this._transformation = value
-  }
-
-  /**
-   * The target node for creating a new node.
-   * @deprecated
-   */
-  public get creationTarget(): ClientMissionNode | null {
-    return null
-  }
-
-  /**
-   * Whether creation mode is enabled for the selected node.
-   * @deprecated
-   */
-  private _creationMode: boolean = false
-  /**
-   * Whether creation mode is enabled for the selected node.
-   * @note Does nothing if there is no selected node.
-   * @note Used in the form for editing.
-   * @deprecated
-   */
-  public get creationMode(): boolean {
-    return this._creationMode
-  }
-  /**
-   * Whether creation mode is enabled for the selected node.
-   * @note Does nothing if there is no selected node.
-   * @note Used in the form for editing.
-   * @deprecated
-   */
-  public set creationMode(value) {
-    // todo: Determine what to do with this.
-    //     // Get the selected node.
-    //     let selectedNode: ClientMissionNode | null = this._selectedNode
-    //
-    //     // If there is no selected node, do nothing.
-    //     if (selectedNode === null) {
-    //       console.warn('Cannot set creation mode when there is no selected node.')
-    //       return
-    //     }
-
-    // Update the creation mode.
-    this._creationMode = value
-
-    // // Determine node creators.
-    // this._nodeCreators = value
-    //   ? [
-    //       new NodeCreator(this, EPrototypeRelation.ParentOfTargetOnly),
-    //       new NodeCreator(this, EPrototypeRelation.BetweenTargetAndChildren),
-    //       new NodeCreator(this, EPrototypeRelation.PreviousSiblingOfTarget),
-    //       new NodeCreator(this, EPrototypeRelation.FollowingSiblingOfTarget),
-    //     ]
-    //   : []
-
     this.handleStructureChange()
   }
 
   /**
-   * Cache for tracking possible locations for creating a new node based on the node creation target.
-   * @deprecated
+   * The destination of the transformation, if any.
+   * @note Determined from the transformation.
    */
-  protected _nodeCreators: NodeCreator[]
+  public get transformDestination(): ClientMissionPrototype | null {
+    let transformation: MissionTransformation | null = this.transformation
+
+    if (
+      transformation instanceof PrototypeCreation ||
+      transformation instanceof PrototypeTranslation
+    ) {
+      return transformation.destination
+    } else {
+      return null
+    }
+  }
+
   /**
-   * Cache for tracking possible locations for creating a new node based on the node creation target.
-   * @deprecated
+   *
    */
-  public get nodeCreators(): NodeCreator[] {
-    return this._nodeCreators
+  public get prototypeSlots(): TPrototypeSlot_P[] {
+    let slots: TPrototypeSlot_P[] = []
+
+    // If there is a transformation, it is a
+    // prototype creation or translation, the
+    // destination is selected, but the relation
+    // is not, then add slots next to the destination.
+    if (
+      this.transformation &&
+      (this.transformation instanceof PrototypeCreation ||
+        this.transformation instanceof PrototypeTranslation) &&
+      this.transformation.destination &&
+      !this.transformation.relation
+    ) {
+      // Gather details.
+      let transformation: PrototypeCreation | PrototypeTranslation =
+        this.transformation
+      let destination: ClientMissionPrototype = this.transformation.destination
+      let slotRelations: TPrototypeRelation[] = [
+        'parent-of-target-only',
+        'between-target-and-children',
+        'previous-sibling-of-target',
+        'following-sibling-of-target',
+      ]
+
+      // Create a function to apply the transformation.
+      const apply = (relation: TPrototypeRelation) => {
+        // Set the relation of the transformation.
+        transformation.relation = relation
+        // Apply the transformation.
+        transformation.apply()
+        // Clear transformation.
+        this.transformation = null
+      }
+
+      // Loop through relations and add slots.
+      slots.push(
+        ...slotRelations.map((relation) => ({
+          relative: destination,
+          relation,
+          position: ClientMission.determineSlotPosition(destination, relation),
+          onClick: () => apply(relation),
+        })),
+      )
+    }
+
+    return slots
   }
 
   /**
@@ -222,11 +226,10 @@ export default class ClientMission
     this.listeners = []
     this._selection = this
     this._transformation = null
-    this._nodeCreators = []
     this.relationshipLines = []
     this.lastOpenedNode = null
 
-    // If there is no existing nodes,
+    // If there is no existing prototypes,
     // create one.
     if (this.prototypes.length === 0) {
       this.importPrototype()
@@ -317,11 +320,9 @@ export default class ClientMission
     // Add the prototype to the prototype list.
     this.prototypes.push(prototype)
 
-    // Emit create prototype event.
-    if (this.structureInitialized) {
-      this.handleStructureChange()
-      this.emitEvent('new-prototype')
-    }
+    // Handle event.
+    this.handleStructureChange()
+    this.emitEvent('new-prototype')
 
     // Return the prototype.
     return prototype
@@ -400,7 +401,7 @@ export default class ClientMission
     this.positionPrototypes()
 
     // Draw the relationship lines
-    // between nodes.
+    // between prototypes.
     this.drawRelationshipLines()
 
     // Draw the relationship lines
@@ -459,11 +460,8 @@ export default class ClientMission
     depth: number = -1,
     rowCount: Counter = new Counter(0),
   ): void {
-    let creationTarget: ClientMissionPrototype | null = null
-
-    // // If creation mode is enabled, set the
-    // // nodeCreationTarget to the selected node.
-    // if (this.creationMode) creationTarget = this.selectedNode!
+    // Gather details.
+    let transformDestination = this.transformDestination
 
     // If the parent node isn't the rootNode,
     // then this function was recursively
@@ -483,43 +481,40 @@ export default class ClientMission
       this._depth = -1
     }
 
-    // Set the depth of the parent node.
+    // Set the depth of the parent.
     parent.depth = depth
 
-    // If the nodeCreationTarget is this parent,
+    // If the transformDestination is this parent,
     // the positioning is offset to account for the
-    // node creators that must be rendered.
-    // todo: Determine what to do with this.
-    // if (creationTarget?._id === parent._id) {
-    //   depth++
-    // }
+    // prototype slots that must be rendered.
+    if (transformDestination?._id === parent._id) {
+      depth++
+    }
 
     let children = parent.children
 
-    // If the nodeCreationTarget is a child of the
+    // If the transformDestination is a child of the
     // parent, the positioning is offset to account
-    // for the node creators that must be rendered.
-    // todo: Determine what to do with this.
-    // for (let childNode of children) {
-    //   if (creationTarget?._id === childNode._id) {
-    //     depth += 1
-    //   }
-    // }
+    // for the prototype slots that must be rendered.
+    for (let childNode of children) {
+      if (transformDestination?._id === childNode._id) {
+        depth += 1
+      }
+    }
 
-    // The childNodes should then be examined
+    // The children should then be examined
     // by recursively calling this function.
     children.forEach((child: ClientMissionPrototype, index: number) => {
       if (index > 0) {
         rowCount.increment()
       }
 
-      // If the nodeCreationTarget is this childNode,
+      // If the transformDestination is this child,
       // the positioning is offset to account for the
-      // node creators that must be rendered.
-      // todo: Determine what to do with this.
-      // if (creationTarget?._id === child._id) {
-      //   rowCount.increment()
-      // }
+      // prototype slots that must be rendered.
+      if (transformDestination?._id === child._id) {
+        rowCount.increment()
+      }
 
       // Position the child node.
       this.positionPrototypes(
@@ -529,13 +524,12 @@ export default class ClientMission
         rowCount,
       )
 
-      // todo: Determine what to do with this.
-      // // If the nodeCreationTarget is this childNode,
+      // // If the transformDestination is this child,
       // // the positioning is offset to account for the
-      // // node creators that must be rendered.
-      // if (creationTarget?._id === childNode._id) {
-      //   rowCount.increment()
-      // }
+      // // prototype slots that must be rendered.
+      if (transformDestination?._id === child._id) {
+        rowCount.increment()
+      }
     })
 
     // This will increase the mission depth
@@ -551,6 +545,9 @@ export default class ClientMission
    * and caches them in the `relationshipLines` property.
    */
   protected drawRelationshipLines(): void {
+    // Gather details.
+    let transformDestination = this.transformDestination
+    let slots = this.prototypeSlots
     // The relationship lines drawn.
     let relationshipLines: TWithKey<TLine_P>[] = []
     // Define the distance between the edge of a
@@ -561,12 +558,10 @@ export default class ClientMission
     const halfDefaultNodeHeight: number =
       ClientMissionNode.DEFAULT_NAME_NEEDED_HEIGHT / 2 +
       ClientMissionNode.VERTICAL_PADDING
-    let creationTarget: ClientMissionNode | null = this.creationTarget
-    let nodeCreators: NodeCreator[] = this.nodeCreators
 
     // Recursive algorithm used to determine the
-    // relationship lines between nodes. Does not
-    // draw the lines between node creators and nodes.
+    // relationship lines between prototypes. Does not
+    // draw the lines between slots and prototypes.
     const baseAlgorithm = (parent: ClientMissionPrototype = this.root) => {
       // Get details.
       let children: ClientMissionPrototype[] = parent.children
@@ -617,20 +612,16 @@ export default class ClientMission
           // y position.
           childMinY = firstChild.position.y
 
-          // If the firstChild is the creation target,
+          // If the firstChild is the transform destination,
           // the min y value may need to be offset to
-          // account for a previous sibling node creator.
-          // todo: Determine what to do with this.
-          // if (firstChild === creationTarget) {
-          //   for (let creator of nodeCreators) {
-          //     if (
-          //       creator.targetRelation ===
-          //       EPrototypeRelation.PreviousSiblingOfTarget
-          //     ) {
-          //       childMinY = Math.min(childMinY, creator.position.y)
-          //     }
-          //   }
-          // }
+          // account for a previous sibling slot.
+          if (firstChild._id === transformDestination?._id) {
+            for (let slot of slots) {
+              if (slot.relation === 'previous-sibling-of-target') {
+                childMinY = Math.min(childMinY, slot.position.y)
+              }
+            }
+          }
         }
 
         // If there is a last child, calculate
@@ -640,20 +631,16 @@ export default class ClientMission
           // y position.
           childMaxY = lastChild.position.y
 
-          // If the lastChild is the creation target,
+          // If the lastChild is the transform destination,
           // the max y value may need to be offset to
-          // account for a following sibling node creator.
-          // todo: Determine what to do with this.
-          // if (lastChild === creationTarget) {
-          //   for (let creator of nodeCreators) {
-          //     if (
-          //       creator.targetRelation ===
-          //       EPrototypeRelation.FollowingSiblingOfTarget
-          //     ) {
-          //       childMaxY = Math.max(childMaxY, creator.position.y)
-          //     }
-          //   }
-          // }
+          // account for a following sibling slot.
+          if (lastChild._id === transformDestination?._id) {
+            for (let slot of slots) {
+              if (slot.relation === 'following-sibling-of-target') {
+                childMaxY = Math.max(childMaxY, slot.position.y)
+              }
+            }
+          }
         }
 
         // ! math-end
@@ -683,10 +670,10 @@ export default class ClientMission
           // Determine the length of the vertical line.
           let downMidLength: number = childMaxY - childMinY
 
-          // If the parent node is the node creation target,
+          // If the parent node is the node transform destination,
           // the vertical line should be offset to account
-          // for a node creator between the parent and child.
-          if (creationTarget?._id === parent._id) {
+          // for a slot between the parent and child.
+          if (transformDestination?._id === parent._id) {
             downMidStart.translateX(ClientMissionNode.COLUMN_WIDTH)
           }
 
@@ -722,10 +709,10 @@ export default class ClientMission
           // Then translate down by half the
           // default node height.
           midToChildStart.translateY(halfDefaultNodeHeight)
-          // If the parent node is the node creation target,
+          // If the parent node is the node transform destination,
           // the start position should be offset to account
-          // for a node creator between the parent and child.
-          if (creationTarget?._id === parent._id) {
+          // for a slot between the parent and child.
+          if (transformDestination?._id === parent._id) {
             midToChildStart.translateX(ClientMissionNode.COLUMN_WIDTH)
           }
 
@@ -753,7 +740,7 @@ export default class ClientMission
         }
       }
 
-      // Iterate through the child nodes.
+      // Iterate through the child prototypes.
       for (let child of parent.children) {
         // Call recursively the algorithm with
         // the child.
@@ -764,32 +751,31 @@ export default class ClientMission
     // Run the algorithm.
     baseAlgorithm()
 
-    // If the mission is in creation mode, add
-    // the relationship lines for the node creators.
-    if (this.creationMode && creationTarget) {
-      // Loop through creators.
-      for (let creator of this.nodeCreators) {
+    // If the mission has a transform destination, add
+    // the relationship lines for the slots.
+    if (transformDestination) {
+      // Loop through slots.
+      for (let slot of slots) {
         // Gather details.
-        let relation: EPrototypeRelation = creator.targetRelation
+        let relation: TPrototypeRelation = slot.relation
         let relationIsSibling: boolean =
-          relation === EPrototypeRelation.PreviousSiblingOfTarget ||
-          relation === EPrototypeRelation.FollowingSiblingOfTarget
+          relation === 'previous-sibling-of-target' ||
+          relation === 'following-sibling-of-target'
 
         // ! line-draw-start
 
         // If the relation is a parent-only relationship, and the
-        // target's parent is the root node, draw a line from the
-        // creator to the target.
+        // target's parent is the root, draw a line from the
+        // slot to the target.
         if (
-          relation === EPrototypeRelation.ParentOfTargetOnly
-          // todo: Reimplement this.
-          // && creationTarget.parent === this.rootNode
+          relation === 'parent-of-target-only' &&
+          transformDestination.parent === this.root
         ) {
           // Define start position.
-          let start: Vector2D = creator.position
-            // First clone the creator's position.
+          let start: Vector2D = slot.position
+            // First clone the slot's position.
             .clone()
-            // Then translate to the edge of the creator,
+            // Then translate to the edge of the slot,
             // and down by half the default node height.
             .translate(ClientMissionNode.WIDTH / 2, halfDefaultNodeHeight)
           // Define length of line.
@@ -797,7 +783,7 @@ export default class ClientMission
 
           // Push a new line.
           relationshipLines.push({
-            key: `creator-to-target_${creator.nodeId}`,
+            key: `slot-to-target_${slot.relation}`,
             direction: 'horizontal',
             start,
             length,
@@ -810,13 +796,13 @@ export default class ClientMission
 
         // If the relation is a between-target-and-children
         // relationship, then draw a line from the target
-        // to the creator.
-        if (relation === EPrototypeRelation.BetweenTargetAndChildren) {
+        // to the slot.
+        if (relation === 'between-target-and-children') {
           // Define start position.
-          let start: Vector2D = creationTarget.prototype.position
+          let start: Vector2D = transformDestination.position
             // First clone the target's position.
             .clone()
-            // Then translate to the edge of the node,
+            // Then translate to the edge of the prototype,
             // and down by half the default node height.
             .translate(ClientMissionNode.WIDTH / 2, halfDefaultNodeHeight)
           // Define length of line.
@@ -824,18 +810,18 @@ export default class ClientMission
 
           // If the target has children, the line should be
           // longer to account for the children.
-          if (creationTarget.hasChildren) {
+          if (transformDestination.hasChildren) {
             length += ClientMissionNode.COLUMN_WIDTH
           }
           // Else, add the edge distance to connect it
-          // with the creator, only.
+          // with the slot, only.
           else {
             length += columnEdgeDistance
           }
 
           // Push a new line.
           relationshipLines.push({
-            key: `target-to-creator_${creator.nodeId}`,
+            key: `target-to-slot_${slot.relation}`,
             direction: 'horizontal',
             start,
             length,
@@ -847,32 +833,31 @@ export default class ClientMission
         // ! line-draw-start
 
         // If the relation is a sibling relationship, the target has
-        // a parent, which is not the root node, draw a line
-        // from the target's parent to the creator.
+        // a parent, which is not the root, draw a line
+        // from the target's parent to the slot.
         if (
           relationIsSibling &&
-          creationTarget.parent
-          // todo: Reimplement this.
-          // && creationTarget.parent !== this.rootNode
+          transformDestination.parent &&
+          transformDestination.parent !== this.root
         ) {
           // Define start position.
-          let start: Vector2D = creationTarget.parent.prototype.position
+          let start: Vector2D = transformDestination.parent.position
             // First clone the target-parent's position.
             .clone()
             // Then translate to the right edge of the column.
             .translateX(ClientMissionNode.COLUMN_WIDTH / 2)
-          // Set the y position to the creator's y position.
-          start.y = creator.position.y
+          // Set the y position to the slot's y position.
+          start.y = slot.position.y
           // Then translate down by half the default node height.
           start.translateY(halfDefaultNodeHeight)
 
           // Define end position.
-          let end: Vector2D = creator.position
-            // First clone the creator's position.
+          let end: Vector2D = slot.position
+            // First clone the slot's position.
             .clone()
-            // Then translate to the edge of the creator,
+            // Then translate to the edge of the slot,
             // and down by half the default node height.
-            .translate(ClientMissionNode.WIDTH / 2, halfDefaultNodeHeight)
+            .translate(-ClientMissionNode.WIDTH / 2, halfDefaultNodeHeight)
 
           // Define length of line by the difference
           // between the x values of the start and end
@@ -881,7 +866,7 @@ export default class ClientMission
 
           // Push a new line.
           relationshipLines.push({
-            key: `parent-to-creator_${creator.nodeId}`,
+            key: `parent-to-slot_${slot.relation}`,
             direction: 'horizontal',
             start,
             length,
@@ -1007,6 +992,41 @@ export default class ClientMission
     }
     // Return null if no force is found.
     return null
+  }
+
+  /**
+   * Determines the position of a prototype slot based on the
+   * relation to a destination prototype.
+   * @param destination The prototype which the slot is relative to.
+   * @param relation The relation of the slot to the destination.
+   * @returns The position of the slot.
+   */
+  public static determineSlotPosition(
+    destination: ClientMissionPrototype,
+    relation: TPrototypeRelation,
+  ): Vector2D {
+    let result: Vector2D = destination.position.clone()
+
+    // Shift position and depth based on relation.
+    switch (relation) {
+      case 'parent-of-target-and-children':
+        result.translateX(-2 * ClientMissionNode.COLUMN_WIDTH)
+        break
+      case 'parent-of-target-only':
+        result.translateX(-1 * ClientMissionNode.COLUMN_WIDTH)
+        break
+      case 'between-target-and-children':
+        result.translateX(1 * ClientMissionNode.COLUMN_WIDTH)
+        break
+      case 'previous-sibling-of-target':
+        result.translateY(-1 * ClientMissionNode.ROW_HEIGHT)
+        break
+      case 'following-sibling-of-target':
+        result.translateY(1 * ClientMissionNode.ROW_HEIGHT)
+        break
+    }
+
+    return result
   }
 
   /* -- API -- */
@@ -1236,7 +1256,7 @@ export type TStructureChangeListener = (structureChangeKey: string) => void
  * @option 'activity'
  * Triggered when any other event occurs.
  * @option 'structure-change'
- * Triggered when the structure of the mission, including the nodes and actions
+ * Triggered when the structure of the mission, including the prototypes and actions
  * that make up the mission, change.
  * @option 'selection'
  * Triggered when a selection or deselection is made in the mission.

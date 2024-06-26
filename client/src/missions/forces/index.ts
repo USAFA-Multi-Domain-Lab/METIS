@@ -158,8 +158,7 @@ export default class ClientMissionForce
       ClientMissionNode.VERTICAL_PADDING
 
     // Recursive algorithm used to determine the
-    // relationship lines between nodes. Does not
-    // draw the lines between node creators and nodes.
+    // relationship lines between nodes.
     const baseAlgorithm = (parent: ClientMissionNode = this.root) => {
       // Get details.
       let children: ClientMissionNode[] = parent.children

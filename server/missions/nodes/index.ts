@@ -12,7 +12,7 @@ import { ServerRealizedOutcome } from '../actions/outcomes'
  */
 export default class ServerMissionNode extends MissionNode<TServerMissionTypes> {
   // Implemented
-  protected parseActionData(
+  protected importActions(
     data: Array<TCommonMissionActionJson>,
   ): Map<string, ServerMissionAction> {
     let actions: Map<string, ServerMissionAction> = new Map<
@@ -27,7 +27,7 @@ export default class ServerMissionNode extends MissionNode<TServerMissionTypes> 
   }
 
   // Implemented
-  protected parseExecutionData(
+  protected importExecutions(
     data: TActionExecutionJson,
   ): ServerActionExecution | null {
     // If data is null return null.
@@ -50,7 +50,7 @@ export default class ServerMissionNode extends MissionNode<TServerMissionTypes> 
   }
 
   // Implemented
-  protected parseOutcomeData(
+  protected importOutcomes(
     data: Array<TActionOutcomeJson>,
   ): Array<ServerRealizedOutcome> {
     // Map JSON to an Array of outcome objects.

@@ -36,21 +36,12 @@ export default class ServerMission extends Mission<TServerMissionTypes> {
   }
 
   // Implemented
-  protected parseForceData(
-    data: TCommonMissionForceJson[],
-  ): ServerMissionForce[] {
-    return data.map((datum) => new ServerMissionForce(this, datum))
-  }
-
-  // Implemented
-  protected createRootPrototype(): ServerMissionPrototype {
+  protected initializeRoot(): ServerMissionPrototype {
     return new ServerMissionPrototype(this, 'ROOT')
   }
 
-  // todo: Determine if this should be broken into two functions
-  // todo: to handle structure changes.
   // Implemented
-  public spawnPrototype(
+  public importPrototype(
     _id?: string,
     options: TMissionPrototypeOptions<ServerMissionPrototype> = {},
   ): ServerMissionPrototype {
@@ -82,6 +73,13 @@ export default class ServerMission extends Mission<TServerMissionTypes> {
 
     // Return the prototype.
     return prototype
+  }
+
+  // Implemented
+  protected importForces(
+    data: TCommonMissionForceJson[],
+  ): ServerMissionForce[] {
+    return data.map((datum) => new ServerMissionForce(this, datum))
   }
 }
 
