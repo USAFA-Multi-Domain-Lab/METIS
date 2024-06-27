@@ -9,6 +9,7 @@ import ClientMissionForce from 'src/missions/forces'
 import ClientMissionNode, { ENodeDeleteMethod } from 'src/missions/nodes'
 import ClientMissionPrototype from 'src/missions/nodes/prototypes'
 import PrototypeCreation from 'src/missions/transformations/creations'
+import PrototypeTranslation from 'src/missions/transformations/translations'
 import { ClientTargetEnvironment } from 'src/target-environments'
 import { compute } from 'src/toolbox'
 import { useEventListener, useMountHandler } from 'src/toolbox/hooks'
@@ -243,6 +244,14 @@ export default function MissionPage({
               handlePrototypeAddRequest(prototype)
             },
           } as TPrototypeButton,
+          move: {
+            icon: 'reorder',
+            key: 'prototype-button-move',
+            tooltipDescription: 'Move this prototype to another location.',
+            onClick: (_, prototype) => {
+              handlePrototypeMoveRequest(prototype)
+            },
+          } as TPrototypeButton,
           transform_cancel: {
             icon: 'cancel',
             key: 'prototype-button-add-cancel',
@@ -271,11 +280,14 @@ export default function MissionPage({
         }
         // Else, add default buttons for a selected prototype.
         else {
-          activeButtons.push(
-            availableButtons.deselect,
-            availableButtons.add,
-            availableButtons.remove,
-          )
+          activeButtons.push(availableButtons.deselect, availableButtons.add)
+
+          // If there is at least two prototypes, then add
+          // the remove and move buttons.
+          if (mission.prototypes.length > 1) {
+            activeButtons.push(availableButtons.move)
+            activeButtons.push(availableButtons.remove)
+          }
         }
 
         // Set the buttons on the next selection.
@@ -391,8 +403,18 @@ export default function MissionPage({
    */
   const onPrototypeSelect = (prototype: ClientMissionPrototype) => {
     if (prototype !== selection) {
-      // Select the prototype.
-      mission.select(prototype)
+      // Get the current transformation in the mission.
+      let transformation = mission.transformation
+      // If the transformation is a translation, set
+      // the destination to the prototype.
+      if (mission.transformation instanceof PrototypeTranslation) {
+        mission.transformation.destination = prototype
+        mission.handleStructureChange()
+      }
+      // Else, select the prototype in the mission.
+      else {
+        mission.select(prototype)
+      }
     }
   }
 
@@ -467,6 +489,15 @@ export default function MissionPage({
     prototype: ClientMissionPrototype,
   ): void => {
     mission.transformation = new PrototypeCreation(prototype)
+  }
+
+  /**
+   * Handler for when the user requests to add a new prototype.
+   */
+  const handlePrototypeMoveRequest = (
+    prototype: ClientMissionPrototype,
+  ): void => {
+    mission.transformation = new PrototypeTranslation(prototype)
   }
 
   /* -- PRE-RENDER PROCESSING -- */

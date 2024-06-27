@@ -148,8 +148,10 @@ export default class ClientMissionPrototype
     destination: ClientMissionPrototype,
     relation: TPrototypeRelation,
   ): void {
+    // Gather details
     let root: ClientMissionPrototype = this.mission.root
     let oldParent: ClientMissionPrototype | null = this.parent
+    let oldChildren: Array<ClientMissionPrototype> = this.children
     let newParent: ClientMissionPrototype | null = destination.parent
     let newParentChildren: Array<ClientMissionPrototype> = []
 
@@ -169,15 +171,23 @@ export default class ClientMissionPrototype
     // This will remove the prototype's
     // current position in the structure.
     if (oldParent !== null) {
-      let siblings: ClientMissionPrototype[] = oldParent.children
+      let oldSiblings: ClientMissionPrototype[] = []
 
-      for (let index: number = 0; index < siblings.length; index++) {
-        let sibling = siblings[index]
-
-        if (this._id === sibling._id) {
-          siblings.splice(index, 1)
+      oldParent.children.forEach((sibling, index) => {
+        if (sibling._id !== this._id) {
+          oldSiblings.push(sibling)
+        } else {
+          oldSiblings.push(...oldChildren)
         }
-      }
+      })
+
+      oldParent.children = oldSiblings
+    }
+
+    // This will move the current children of
+    // the node to the old parent.
+    for (let child of oldChildren) {
+      child.parent = oldParent
     }
 
     // This will move the target based on
@@ -206,9 +216,6 @@ export default class ClientMissionPrototype
 
         this.children = [destination]
         destination.parent = this
-        break
-      case 'parent-of-target-and-children':
-        // TODO
         break
       case 'between-target-and-children':
         let childNodes: Array<ClientMissionPrototype> = destination.children
@@ -272,7 +279,6 @@ export type TPrototypeEventMethod = 'activity' | 'set-buttons'
  * The relation of prototype to another prototype.
  */
 export type TPrototypeRelation =
-  | 'parent-of-target-and-children'
   | 'parent-of-target-only'
   | 'child-of-target'
   | 'between-target-and-children'

@@ -911,7 +911,11 @@ export default class ClientMission
       throw new Error('The given selection is not part of the mission.')
 
     this._selection = selection
+
     this.emitEvent('selection')
+
+    // If there is a transformation, clear it.
+    if (this.transformation) this.transformation = null
   }
 
   /**
@@ -921,6 +925,9 @@ export default class ClientMission
   public deselect(): void {
     this._selection = this
     this.emitEvent('selection')
+
+    // If there is a transformation, clear it.
+    if (this.transformation) this.transformation = null
   }
 
   /**
@@ -936,6 +943,9 @@ export default class ClientMission
     if (selectionPath.length > 1) {
       this.select(selectionPath[selectionPath.length - 2])
     }
+
+    // If there is a transformation, clear it.
+    if (this.transformation) this.transformation = null
   }
 
   /**
@@ -1026,9 +1036,6 @@ export default class ClientMission
 
     // Shift position and depth based on relation.
     switch (relation) {
-      case 'parent-of-target-and-children':
-        result.translateX(-2 * ClientMissionNode.COLUMN_WIDTH)
-        break
       case 'parent-of-target-only':
         result.translateX(-1 * ClientMissionNode.COLUMN_WIDTH)
         break
@@ -1039,9 +1046,13 @@ export default class ClientMission
         result.translateY(-1 * ClientMissionNode.ROW_HEIGHT)
         break
       case 'following-sibling-of-target':
-        result.translateY(
-          ClientMissionNode.ROW_HEIGHT + ClientMissionNode.BUTTONS_HEIGHT,
-        )
+        result.translateY(ClientMissionNode.ROW_HEIGHT)
+
+        // If the destination has buttons, offset to
+        // account for the buttons.
+        if (destination.buttons.length > 0) {
+          result.translateY(ClientMissionNode.BUTTONS_HEIGHT)
+        }
         break
     }
 
