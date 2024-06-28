@@ -67,7 +67,7 @@ export class Dependency implements TCommonDependency {
    * @param dependentId The ID of the dependent argument.
    * @returns A new dependency that checks if the value is truthy.
    */
-  public static TRUTHY_DECODED = (dependentId: string) =>
+  private static TRUTHY_DECODED = (dependentId: string) =>
     new Dependency('TRUEY', dependentId, (value) => !!value)
 
   /**
@@ -87,7 +87,7 @@ export class Dependency implements TCommonDependency {
    * @param dependentId The ID of the dependent argument.
    * @returns A new dependency that checks if the value is falsey.
    */
-  public static FALSEY_DECODED = (dependentId: string) =>
+  private static FALSEY_DECODED = (dependentId: string) =>
     new Dependency('FALSEY', dependentId, (value) => !value)
 
   /**
@@ -113,7 +113,7 @@ export class Dependency implements TCommonDependency {
    * @param expected The expected values.
    * @returns A new dependency that checks if the value is equal to any of the expected values.
    */
-  public static EQUALS_DECODED = (
+  private static EQUALS_DECODED = (
     dependentId: string,
     expected: DependencyArg[],
   ) =>
@@ -121,6 +121,43 @@ export class Dependency implements TCommonDependency {
       'EQUALS',
       dependentId,
       (value, expected) => expected.some((x) => x === value),
+      expected,
+    )
+
+  /**
+   * Creates a new dependency that checks if the value is not equal to any of the expected values.
+   * @param dependentId The ID of the dependent argument.
+   * @param expected The expected values.
+   * @returns A new dependency that checks if the value is not equal to any of the expected values.
+   */
+  public static NOT_EQUALS = (
+    dependentId: string,
+    expected: DependencyArg[],
+  ) => {
+    // Create the dependency.
+    let dependency = new Dependency(
+      'NOT_EQUALS',
+      dependentId,
+      (value, expected) => expected.every((x) => x !== value),
+      expected,
+    )
+    // Return the encoded dependency.
+    return dependency.encode()
+  }
+  /**
+   * Decodes the dependency.
+   * @param dependentId The ID of the dependent argument.
+   * @param expected The expected values.
+   * @returns A new dependency that checks if the value is not equal to any of the expected values.
+   */
+  private static NOT_EQUALS_DECODED = (
+    dependentId: string,
+    expected: DependencyArg[],
+  ) =>
+    new Dependency(
+      'NOT_EQUALS',
+      dependentId,
+      (value, expected) => expected.every((x) => x !== value),
       expected,
     )
 
@@ -152,6 +189,8 @@ export class Dependency implements TCommonDependency {
           return Dependency.FALSEY_DECODED(dependentId)
         case 'EQUALS':
           return Dependency.EQUALS_DECODED(dependentId, args)
+        case 'NOT_EQUALS':
+          return Dependency.NOT_EQUALS_DECODED(dependentId, args)
         default:
           throw new Error(`Unexpected name for Dependency Condition: ${name}`)
       }

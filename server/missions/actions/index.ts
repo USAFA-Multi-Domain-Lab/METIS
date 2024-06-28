@@ -2,13 +2,11 @@ import MissionAction, { TCommonMissionActionJson } from 'metis/missions/actions'
 import IActionExecution, {
   TActionExecutionJson,
 } from 'metis/missions/actions/executions'
-import { TCommonExternalEffectJson } from 'metis/missions/effects/external'
-import { TCommonInternalEffectJson } from 'metis/missions/effects/internal'
+import { TCommonEffectJson } from 'metis/missions/effects'
 import { plcApiLogger } from 'metis/server/logging'
 import seedrandom, { PRNG } from 'seedrandom'
 import { TServerMissionTypes } from '..'
-import ServerExternalEffect from '../effects/external'
-import ServerInternalEffect from '../effects/internal'
+import ServerEffect from '../effects'
 import ServerMissionNode from '../nodes'
 import ServerActionExecution from './executions'
 import { ServerPotentialOutcome, ServerRealizedOutcome } from './outcomes'
@@ -34,23 +32,8 @@ export default class ServerMissionAction extends MissionAction<TServerMissionTyp
   }
 
   // Implemented
-  public parseExternalEffects(
-    data: TCommonExternalEffectJson[],
-  ): ServerExternalEffect[] {
-    return data.map(
-      (datum: TCommonExternalEffectJson) =>
-        new ServerExternalEffect(this, datum),
-    )
-  }
-
-  // Implemented
-  public parseInternalEffects(
-    data: TCommonInternalEffectJson[],
-  ): ServerInternalEffect[] {
-    return data.map(
-      (datum: TCommonInternalEffectJson) =>
-        new ServerInternalEffect(this, datum),
-    )
+  public parseEffects(data: TCommonEffectJson[]): ServerEffect[] {
+    return data.map((datum: TCommonEffectJson) => new ServerEffect(this, datum))
   }
 
   /**
@@ -99,12 +82,12 @@ export default class ServerMissionAction extends MissionAction<TServerMissionTyp
         if (realizedOutcome.successful && effectsEnabled) {
           // ...iterate through the effects and execute them
           // if they have a target environment and a target.
-          this.externalEffects.forEach(async (effect: ServerExternalEffect) => {
+          this.effects.forEach(async (effect: ServerEffect) => {
             // If the effect has a target environment and a target,
             // then execute the effect on the target.
             if (effect.targetEnvironment && effect.target) {
               try {
-                await effect.target.script(effect.args)
+                await effect.target.script(effect.args, effect.mission.toJson())
               } catch (error: any) {
                 plcApiLogger.error(error.message, error.stack)
               }

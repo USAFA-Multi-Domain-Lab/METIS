@@ -1,12 +1,12 @@
-import ExternalEffect from 'metis/missions/effects/external'
+import Effect from 'metis/missions/effects'
 import ServerTarget from 'metis/server/target-environments/targets'
 import { TServerMissionTypes } from '..'
 
 /**
- * Class representing an external effect on the server-side that can be
+ * Class representing an effect on the server-side that can be
  * applied to a target.
  */
-export default class ServerExternalEffect extends ExternalEffect<TServerMissionTypes> {
+export default class ServerEffect extends Effect<TServerMissionTypes> {
   // Implemented
   public async populateTargetData(targetId: string): Promise<void> {
     // Get the target from the target environment.

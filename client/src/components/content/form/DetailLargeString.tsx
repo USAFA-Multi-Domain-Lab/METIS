@@ -59,7 +59,7 @@ export function DetailLargeString({
       fieldType === 'required' &&
       handleOnBlur === 'deliverError' &&
       errorMessage === 'At least one character is required here.' &&
-      stateValue === '<p><br></p>'
+      !stateValue
     ) {
       display = true
     }
@@ -214,7 +214,7 @@ export function DetailLargeString({
             handleOnBlur === 'repopulateValue' &&
             fieldType === 'required'
           ) {
-            if (defaultValue !== undefined && defaultValue !== '<p><br></p>') {
+            if (!!defaultValue) {
               setState(defaultValue)
             } else {
               setState(placeholder)
@@ -230,7 +230,13 @@ export function DetailLargeString({
           value={stateValue}
           placeholder={placeholder}
           theme='snow'
-          onChange={(value: string) => setState(value)}
+          onChange={(value: string) => {
+            if (value === '<p><br></p>') {
+              setState('')
+            } else {
+              setState(value)
+            }
+          }}
         />
       </div>
       <div className={fieldErrorClassName}>{errorMessage}</div>

@@ -1,8 +1,7 @@
 import { useState } from 'react'
 import { useGlobalContext } from 'src/context'
 import ClientMissionAction from 'src/missions/actions'
-import { ClientExternalEffect } from 'src/missions/effects/external'
-import { ClientInternalEffect } from 'src/missions/effects/internal'
+import { ClientEffect } from 'src/missions/effects'
 import ClientMissionNode from 'src/missions/nodes'
 import { ClientTargetEnvironment } from 'src/target-environments'
 import { compute } from 'src/toolbox'
@@ -18,7 +17,6 @@ import ButtonSvgPanel, {
   TValidPanelButton,
 } from '../../user-controls/ButtonSvgPanel'
 import { ButtonText } from '../../user-controls/ButtonText'
-import './ActionEntry.scss'
 import './index.scss'
 import EntryNavigation from './navigation/EntryNavigation'
 
@@ -29,8 +27,7 @@ import EntryNavigation from './navigation/EntryNavigation'
 export default function ActionEntry({
   action,
   targetEnvironments,
-  setIsNewInternalEffect,
-  setIsNewExternalEffect,
+  setIsNewEffect,
   handleChange,
 }: TActionEntry_P): JSX.Element | null {
   /* -- GLOBAL CONTEXT -- */
@@ -97,25 +94,6 @@ export default function ActionEntry({
     return classList.join(' ')
   })
 
-  /**
-   * A combined list of all effects.
-   * This includes both internal and external effects.
-   */
-  const allEffects: (ClientExternalEffect | ClientInternalEffect)[] = compute(
-    () => {
-      let effects: (ClientExternalEffect | ClientInternalEffect)[] = []
-
-      // Add all external effects.
-      effects.push(...action.externalEffects)
-
-      // Add all internal effects.
-      effects.push(...action.internalEffects)
-
-      // Return the combined list.
-      return effects
-    },
-  )
-
   /* -- EFFECTS -- */
 
   // Sync the component state with the action.
@@ -164,23 +142,11 @@ export default function ActionEntry({
   /**
    * Handles the request to delete an effect.
    */
-  const handleDeleteEffectRequest = (
-    effect: ClientExternalEffect | ClientInternalEffect,
-  ) => {
-    // If the effect is an external effect...
-    if (effect instanceof ClientExternalEffect) {
-      // ...then filter out the effect from the action.
-      action.externalEffects = action.externalEffects.filter(
-        (actionEffect: ClientExternalEffect) => actionEffect._id !== effect._id,
-      )
-    }
-    // Or, if the effect is an internal effect...
-    else if (effect instanceof ClientInternalEffect) {
-      // ...then filter out the effect from the action.
-      action.internalEffects = action.internalEffects.filter(
-        (actionEffect: ClientInternalEffect) => actionEffect._id !== effect._id,
-      )
-    }
+  const handleDeleteEffectRequest = (effect: ClientEffect) => {
+    // Filter out the effect from the action.
+    action.effects = action.effects.filter(
+      (actionEffect: ClientEffect) => actionEffect._id !== effect._id,
+    )
 
     // Display the changes.
     forceUpdate()
@@ -189,65 +155,28 @@ export default function ActionEntry({
   }
 
   /**
-   * Handles the request to create a new effect.
+   * Handles the request to edit an effect.
    */
-  const handleCreateEffectRequest = async () => {
-    // Prompt the user for the type of effect to create.
-    let { choice } = await prompt(
-      'What type of effect would you like to create?',
-      ['Cancel', 'Internal', 'External'],
-    )
-
-    // Handle choice made by creating the appropriate effect,
-    // then selecting it in the mission.
-    switch (choice) {
-      case 'Internal':
-        setIsNewInternalEffect(true)
-        break
-      case 'External':
-        setIsNewExternalEffect(true)
-        break
+  const handleEditEffectRequest = (effect: ClientEffect) => {
+    // If the effect has a target and a target environment,
+    // then select the effect.
+    if (effect.target && effect.targetEnvironment) {
+      mission.select(effect)
     }
   }
 
   /**
    * Renders JSX for the effect list item.
    */
-  const renderEffectListItem = (
-    effect: ClientExternalEffect | ClientInternalEffect,
-  ) => {
+  const renderEffectListItem = (effect: ClientEffect) => {
     /* -- COMPUTED -- */
-    /**
-     * The class list for the edit button.
-     */
-    const editButtonClassList: string[] = compute(() => {
-      // Create a default list of class names.
-      let classList: string[] = []
-
-      // If the effect cannot be edited then disable the button.
-      if (effect.target === null) {
-        classList.push('NoEdit')
-      } else if (
-        effect instanceof ClientExternalEffect &&
-        effect.targetEnvironment === null
-      ) {
-        classList.push('NoEdit')
-      }
-
-      // Return the class list.
-      return classList
-    })
-
     /**
      * The tooltip description for the edit button.
      */
     const editTooltipDescription: string = compute(() => {
-      if (effect.target === null) {
+      if (!effect.target) {
         return 'This effect cannot be edited because the target associated with this effect is not available.'
-      } else if (
-        effect instanceof ClientExternalEffect &&
-        effect.targetEnvironment === null
-      ) {
+      } else if (!effect.targetEnvironment) {
         return 'This effect cannot be edited because the target environment associated with this effect is not available.'
       } else {
         return 'Edit effect.'
@@ -266,11 +195,10 @@ export default function ActionEntry({
         edit: {
           icon: 'edit',
           key: 'edit',
-          onClick: () => {
-            mission.select(effect)
-          },
+          onClick: () => handleEditEffectRequest(effect),
           tooltipDescription: editTooltipDescription,
-          uniqueClassList: editButtonClassList,
+          disabled:
+            !effect.target || !effect.targetEnvironment ? 'partial' : 'none',
         },
         remove: {
           icon: 'remove',
@@ -281,8 +209,7 @@ export default function ActionEntry({
       }
 
       // Add the buttons to the list.
-      buttons.push(availableMiniActions.edit)
-      buttons.push(availableMiniActions.remove)
+      buttons = Object.values(availableMiniActions)
 
       // Return the buttons.
       return buttons
@@ -388,8 +315,8 @@ export default function ActionEntry({
             />
 
             {/* -- EFFECTS -- */}
-            <List<ClientExternalEffect | ClientInternalEffect>
-              items={allEffects}
+            <List<ClientEffect>
+              items={action.effects}
               renderItemDisplay={(effect) => renderEffectListItem(effect)}
               headingText={'Effects'}
               sortByMethods={[ESortByMethod.Name]}
@@ -409,7 +336,7 @@ export default function ActionEntry({
             <div className='ButtonContainer New'>
               <ButtonText
                 text='New Effect'
-                onClick={handleCreateEffectRequest}
+                onClick={() => setIsNewEffect(true)}
                 tooltipDescription='Create a new effect.'
                 uniqueClassName={newEffectButtonClassName}
               />
@@ -448,13 +375,9 @@ export type TActionEntry_P = {
    */
   targetEnvironments: ClientTargetEnvironment[]
   /**
-   * Function that updates the isNewInternalEffect state.
+   * Function that updates the isNewEffect state.
    */
-  setIsNewInternalEffect: ReactSetter<boolean>
-  /**
-   * Function that updates the isNewExternalEffect state.
-   */
-  setIsNewExternalEffect: ReactSetter<boolean>
+  setIsNewEffect: ReactSetter<boolean>
   /**
    * Handles when a change is made that would require saving.
    */

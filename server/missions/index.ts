@@ -8,8 +8,7 @@ import ServerTarget from '../target-environments/targets'
 import ServerMissionAction from './actions'
 import ServerActionExecution from './actions/executions'
 import { ServerRealizedOutcome } from './actions/outcomes'
-import ServerExternalEffect from './effects/external'
-import ServerInternalEffect from './effects/internal'
+import ServerEffect from './effects'
 import ServerMissionForce from './forces'
 import ServerMissionNode from './nodes'
 import ServerMissionPrototype from './nodes/prototypes'
@@ -100,6 +99,5 @@ export interface TServerMissionTypes extends TCommonMissionTypes {
   outcome: ServerRealizedOutcome
   targetEnv: ServerTargetEnvironment
   target: ServerTarget
-  externalEffect: ServerExternalEffect
-  internalEffect: ServerInternalEffect
+  effect: ServerEffect
 }

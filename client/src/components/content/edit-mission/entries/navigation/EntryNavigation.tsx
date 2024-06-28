@@ -26,6 +26,13 @@ export default function EntryNavigation({
     }),
   )
 
+  /**
+   * The class for the back button.
+   */
+  const backButtonClass = compute<string>(() =>
+    object.path.length > 1 ? 'BackButton' : 'BackButton Disabled',
+  )
+
   /* -- FUNCTION -- */
 
   /**
@@ -62,7 +69,7 @@ export default function EntryNavigation({
   // Render root element.
   return (
     <div className='EntryNavigation'>
-      <div className='BackButton' onClick={onBackClick}>
+      <div className={backButtonClass} onClick={onBackClick}>
         &lt;
         <Tooltip description='Go back.' />
       </div>

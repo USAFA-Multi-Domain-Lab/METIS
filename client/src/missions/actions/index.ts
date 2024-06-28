@@ -1,9 +1,7 @@
 import { TClientMissionTypes, TMissionNavigable } from '..'
 import MissionAction from '../../../../shared/missions/actions'
-import { TCommonExternalEffectJson } from '../../../../shared/missions/effects/external'
-import { TCommonInternalEffectJson } from '../../../../shared/missions/effects/internal'
-import { ClientExternalEffect } from '../effects/external'
-import { ClientInternalEffect } from '../effects/internal'
+import { TCommonEffectJson } from '../../../../shared/missions/effects'
+import { ClientEffect } from '../effects'
 
 /**
  * Class representing a mission action on the client-side.
@@ -17,22 +15,7 @@ export default class ClientMissionAction
   }
 
   // Implemented
-  public parseExternalEffects(
-    data: TCommonExternalEffectJson[],
-  ): ClientExternalEffect[] {
-    return data.map(
-      (datum: TCommonExternalEffectJson) =>
-        new ClientExternalEffect(this, datum),
-    )
-  }
-
-  // Implemented
-  public parseInternalEffects(
-    data: TCommonInternalEffectJson[],
-  ): ClientInternalEffect[] {
-    return data.map(
-      (datum: TCommonInternalEffectJson) =>
-        new ClientInternalEffect(this, datum),
-    )
+  public parseEffects(data: TCommonEffectJson[]): ClientEffect[] {
+    return data.map((datum: TCommonEffectJson) => new ClientEffect(this, datum))
   }
 }

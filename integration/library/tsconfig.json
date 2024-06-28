@@ -2,7 +2,8 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "paths": {
-      "metis/*": ["../../shared/*"]
+      "metis/target-environments": ["../../shared/target-environments"],
+      "metis/target-environments/*": ["../../shared/target-environments/*"]
     }
   }
 }

@@ -58,6 +58,7 @@ export default function SessionConfig({
           }
         }}
         fieldType='required'
+        defaultValue='public'
       />
       <DetailToggle
         label='Auto-Assign:'

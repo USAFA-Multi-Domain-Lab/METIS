@@ -128,6 +128,10 @@
     // component will be removed from the DOM 250ms
     transition: 250ms opacity;
 
+    * {
+      pointer-events: none;
+    }
+
     .alert-box {
       animation: expand-out 250ms ease-in-out;
     }

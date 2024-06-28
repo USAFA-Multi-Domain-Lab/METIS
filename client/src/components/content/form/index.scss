@@ -57,20 +57,22 @@
 
       .DetailInfo {
         align-self: flex-start;
-        border: 1.5px solid $color-pointer-mark;
+        color: $color-accent-light;
+        border: 1.5px solid $color-accent-light;
+        opacity: 0.65;
         border-radius: 50%;
-        padding: 0.2em 0.5em 0.1em;
+        font-size: 0.6em;
         margin: 0 8px;
-        font-size: 0.5em;
-        font-weight: 600;
+        padding: 0.2em 0.45em 0.1em;
+        font-weight: bold;
         cursor: default;
-        font-family: sans-serif;
-        color: $color-pointer-mark;
+        user-select: none;
 
         &:hover {
-          background-color: $color-main;
-          color: $color-negative;
-          border-color: $color-main;
+          background-color: $color-accent-light;
+          color: $background-alt1;
+          border-color: $color-accent-light;
+          opacity: 0.9;
         }
       }
     }

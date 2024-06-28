@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { useGlobalContext } from 'src/context'
-import { ClientExternalEffect } from 'src/missions/effects/external'
+import { ClientEffect } from 'src/missions/effects'
 import { compute } from 'src/toolbox'
 import { ReactSetter } from 'src/toolbox/types'
 import { TTargetArg } from '../../../../../../shared/target-environments/args'
@@ -105,7 +105,10 @@ export default function Args({
               // If all of the argument's dependencies are met
               // then at least one argument in the grouping
               // is displayed.
-              if (target && target.allDependenciesMet(arg, effectArgs)) {
+              if (
+                target &&
+                target.allDependenciesMet(arg.dependencies, effectArgs)
+              ) {
                 oneGroupingIsDisplayed = true
                 break
               }
@@ -137,10 +140,12 @@ export default function Args({
                 /* -- COMPUTED -- */
                 /**
                  * Boolean to determine if the argument is displayed
-                 * based on the dependencies of the argument.
+                 * based on the argument's dependencies.
                  */
                 const isDisplayed: boolean = compute(
-                  () => target?.allDependenciesMet(arg, effectArgs) ?? false,
+                  () =>
+                    target?.allDependenciesMet(arg.dependencies, effectArgs) ??
+                    false,
                 )
 
                 /* -- RENDER -- */
@@ -173,14 +178,14 @@ export type TArgs_P = {
   /**
    * The effect's target.
    */
-  target: ClientExternalEffect['target']
+  target: ClientEffect['target']
   /**
    * The arguments that the effect uses to modify the target.
    */
-  effectArgs: ClientExternalEffect['args']
+  effectArgs: ClientEffect['args']
   /**
    * Function that updates the value of the effect's arguments
    * stored in the state.
    */
-  setEffectArgs: ReactSetter<ClientExternalEffect['args']>
+  setEffectArgs: ReactSetter<ClientEffect['args']>
 }

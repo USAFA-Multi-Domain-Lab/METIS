@@ -22,10 +22,12 @@ export default class ServerTargetEnvironment extends TargetEnvironment<TServerMi
   ) {
     super(data, options)
 
-    if (data._id !== TargetEnvironment.INTERNAL_TARGET_ENV._id) {
+    // If the target environment does not already exist in the registry...
+    // *Note: This is to prevent duplicate target environments in the registry when
+    // *updating the target environments from the client.
+    if (!options.alreadyExistsInRegistry) {
       // Add the target environment to the registry.
       ServerTargetEnvironment.registry.push(this)
-
       // Add the target environment JSON to the registry.
       ServerTargetEnvironment.registryJson.push(this.toJson())
     }
@@ -87,6 +89,46 @@ export default class ServerTargetEnvironment extends TargetEnvironment<TServerMi
     return ServerTargetEnvironment.registryJson.find(
       (targetEnvironment: TCommonTargetEnvJson) => targetEnvironment._id === id,
     )
+  }
+
+  /**
+   * Updates the target environment in both the registry and the JSON registry.
+   * @param targetEnvironment The target environment to update.
+   */
+  public static updateTargetEnvInRegistry(
+    targetEnvironment: TCommonTargetEnvJson,
+  ) {
+    // Find the target environment in the registry.
+    let targetEnvInRegistry: ServerTargetEnvironment | undefined =
+      ServerTargetEnvironment.get(targetEnvironment._id)
+
+    // If the target environment is found, update it.
+    if (targetEnvInRegistry) {
+      // Get the index of the target environment in the registry.
+      let index: number =
+        ServerTargetEnvironment.registry.indexOf(targetEnvInRegistry)
+      // Remove the target environment from the registry and
+      // add the updated target environment.
+      ServerTargetEnvironment.registry.splice(
+        index,
+        1,
+        new ServerTargetEnvironment(targetEnvironment),
+      )
+
+      // Get the index of the target environment in the JSON
+      // registry.
+      let jsonIndex: number = ServerTargetEnvironment.registryJson.findIndex(
+        (targetEnvironmentJson: TCommonTargetEnvJson) =>
+          targetEnvironmentJson._id === targetEnvironment._id,
+      )
+      // Remove the target environment from the JSON registry
+      // and add the updated target environment.
+      ServerTargetEnvironment.registryJson.splice(
+        jsonIndex,
+        1,
+        targetEnvironment,
+      )
+    }
   }
 
   /**
@@ -225,4 +267,10 @@ export default class ServerTargetEnvironment extends TargetEnvironment<TServerMi
 /**
  * Options for creating a new TargetEnvironment object.
  */
-export type TServerTargetEnvOptions = TTargetEnvOptions & {}
+export type TServerTargetEnvOptions = TTargetEnvOptions & {
+  /**
+   * Whether the target environment already exists in the registry.
+   * @default false
+   */
+  alreadyExistsInRegistry?: boolean
+}

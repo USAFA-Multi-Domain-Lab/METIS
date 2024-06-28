@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { compute } from 'src/toolbox'
-import { TDetail_P } from '.'
+import { TDetailBase_P, TDetailOptional_P, TDetailRequired_P } from '.'
 import Tooltip from '../communication/Tooltip'
 import './DetailDropDown.scss'
 
@@ -27,6 +27,7 @@ export function DetailDropDown<TOption>({
   uniqueStateValueClassName = undefined,
   disabled = false,
   tooltipDescription = '',
+  defaultValue = undefined,
 }: TDetailDropDown_P<TOption>): JSX.Element | null {
   /* -- STATE -- */
   const [expanded, setExpanded] = useState<boolean>(false)
@@ -153,6 +154,43 @@ export function DetailDropDown<TOption>({
     tooltipDescription ? 'DetailInfo' : 'Hidden',
   )
 
+  // If the list of options changes, then
+  // determine if the state value is still
+  // a valid option.
+  useEffect(() => {
+    // If the field type is required, then
+    // make sure the state value is a valid
+    // option.
+    if (fieldType === 'required') {
+      setState((prev) => {
+        // If the previous state value is not
+        // a valid option and a default value
+        // is passed, then set the state value
+        // to the default value. Otherwise, set
+        // the state value to the first
+        // option in the list.
+        if (!options.includes(prev)) {
+          return defaultValue ? defaultValue : options[0]
+        }
+
+        // Otherwise, keep the current state value.
+        return prev
+      })
+    } else {
+      setState((prev) => {
+        // If the previous state value is not
+        // a valid option, then set the state
+        // value to null.
+        if (prev && !options.includes(prev)) {
+          return null
+        }
+
+        // Otherwise, keep the current state value.
+        return prev
+      })
+    }
+  }, [options])
+
   /* -- RENDER -- */
   if (options.length > 0) {
     return (
@@ -201,10 +239,7 @@ export function DetailDropDown<TOption>({
 
 /* ---------------------------- TYPES FOR DETAIL DROP DOWN ---------------------------- */
 
-/**
- * The properties for the Detail Drop Down component.
- */
-type TDetailDropDown_P<TOption> = TDetail_P<TOption | null> & {
+type TDetailDropDownBase_P<TOption> = TDetailBase_P & {
   /**
    * The options available for the detail.
    */
@@ -230,3 +265,27 @@ type TDetailDropDown_P<TOption> = TDetail_P<TOption | null> & {
    */
   errorMessage?: undefined
 }
+
+type TDetailDropDownRequired_P<TOption> = TDetailRequired_P<TOption> &
+  TDetailDropDownBase_P<TOption> & {
+    /**
+     * The default value for the drop down box.
+     */
+    defaultValue: TOption
+  }
+
+type TDetailDropDownOptional_P<TOption> = TDetailOptional_P<TOption> &
+  TDetailDropDownBase_P<TOption> & {
+    /**
+     * The default value for the drop down box.
+     * @default undefined
+     */
+    defaultValue?: TOption
+  }
+
+/**
+ * The properties for the Detail Drop Down component.
+ */
+type TDetailDropDown_P<TOption> =
+  | TDetailDropDownRequired_P<TOption>
+  | TDetailDropDownOptional_P<TOption | null>

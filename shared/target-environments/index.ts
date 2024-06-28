@@ -77,7 +77,7 @@ export default abstract class TargetEnvironment<
   }
 
   /**
-   * The internal target environment used for creating internal effects.
+   * The internal target environment used for creating effects.
    */
   public static INTERNAL_TARGET_ENV: TCommonTargetEnvJson = {
     _id: 'metis',

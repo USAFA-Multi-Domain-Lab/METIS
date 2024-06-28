@@ -156,7 +156,7 @@ export default function Tooltip(props: { description: string }): JSX.Element {
     // This will grab the parent of the root tooltip element
     let parent: HTMLElement | null | undefined = root_elm?.parentElement
     // This is a list of empty strings which are not valid.
-    let emptyStrings: string[] = ['', '<p><br></p>']
+    let emptyStrings: string[] = ['']
 
     if (parent) {
       // Checks to see if the parent of the root tooltip element

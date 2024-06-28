@@ -1,7 +1,6 @@
 import { TCommonMissionJson } from 'metis/missions'
 import { TCommonMissionActionJson } from 'metis/missions/actions'
-import { TCommonExternalEffectJson } from 'metis/missions/effects/external'
-import { TCommonInternalEffectJson } from 'metis/missions/effects/internal'
+import { TCommonEffectJson } from 'metis/missions/effects'
 import { TCommonMissionForceJson } from 'metis/missions/forces'
 import { TCommonMissionNodeJson, TMissionNodeJson } from 'metis/missions/nodes'
 import MetisDatabase from 'metis/server/database'
@@ -204,21 +203,21 @@ const validate_mission_forces_nodes_actions_resourceCost = (
 }
 
 /**
- * Validates the external effects for a mission-action.
- * @param externalEffects The external effects to validate.
+ * Validates the effects for a mission-action.
+ * @param effects The effects to validate.
  */
-const validate_mission_forces_nodes_actions_externalEffects = (
-  externalEffects: TCommonExternalEffectJson[],
+const validate_mission_forces_nodes_actions_effects = (
+  effects: TCommonEffectJson[],
 ): void => {
-  // Loop through each external effect.
-  externalEffects.forEach((externalEffect) => {
+  // Loop through each effect.
+  effects.forEach((effect) => {
     // Get the target.
-    let target = ServerTarget.getTarget(externalEffect.targetId as string)
+    let target = ServerTarget.getTarget(effect.targetId as string)
 
     // Ensure the target exists.
     if (!target) {
       throw new Error(
-        `Error in mission:\nThe external effect's ("${externalEffect.name}") target ID ("${externalEffect.targetId}") was not found in any of the target-environments.`,
+        `Error in mission:\nThe effect's ("${effect.name}") target ID ("${effect.targetId}") was not found in any of the target-environments.`,
       )
     }
 
@@ -235,9 +234,9 @@ const validate_mission_forces_nodes_actions_externalEffects = (
     }
 
     // Ensure the target environment version is correct.
-    if (targetEnvironment.version !== externalEffect.targetEnvironmentVersion) {
+    if (targetEnvironment.version !== effect.targetEnvironmentVersion) {
       throw new Error(
-        `Error in mission:\nThe target environment version (${externalEffect.targetEnvironmentVersion}) within the external effect ("${externalEffect.name}") does not match target environment version (${targetEnvironment.version}) for the target environment (${targetEnvironment.name}).`,
+        `Error in mission:\nThe target environment version (${effect.targetEnvironmentVersion}) within the effect ("${effect.name}") does not match target environment version (${targetEnvironment.version}) for the target environment (${targetEnvironment.name}).`,
       )
     }
 
@@ -249,21 +248,21 @@ const validate_mission_forces_nodes_actions_externalEffects = (
       validKeys.push(arg._id)
     })
     // Grab the keys from the effect.
-    let keys = Object.keys(externalEffect.args)
+    let keys = Object.keys(effect.args)
     // Loop through the keys.
     for (let key of keys) {
       // Ensure all of the keys are valid.
       if (!validKeys.includes(key)) {
         // Throw an error if the key is not valid.
         throw new Error(
-          `Error in mission:\nThe argument ("${key}") within the external effect ("${externalEffect.name}") doesn't exist in the target's ("${target.name}") arguments.`,
+          `Error in mission:\nThe argument ("${key}") within the effect ("${effect.name}") doesn't exist in the target's ("${target.name}") arguments.`,
         )
       }
 
       // Ensure all of the arguments are of the correct type.
       let arg = target.args.find((arg: TTargetArg) => arg._id === key)
       // Get the value.
-      let value = externalEffect.args[key]
+      let value = effect.args[key]
       // Ensure the value is of the correct type.
       if (
         arg &&
@@ -273,15 +272,15 @@ const validate_mission_forces_nodes_actions_externalEffects = (
         typeof value !== 'string'
       ) {
         throw new Error(
-          `Error in mission:\nThe argument ("${key}") within the external effect ("${externalEffect.name}") is of the wrong type. Expected type: "string."`,
+          `Error in mission:\nThe argument ("${key}") within the effect ("${effect.name}") is of the wrong type. Expected type: "string."`,
         )
       } else if (arg && arg.type === 'number' && typeof value !== 'number') {
         throw new Error(
-          `Error in mission:\nThe argument ("${key}") within the external effect ("${externalEffect.name}") is of the wrong type. Expected type: "number."`,
+          `Error in mission:\nThe argument ("${key}") within the effect ("${effect.name}") is of the wrong type. Expected type: "number."`,
         )
       } else if (arg && arg.type === 'boolean' && typeof value !== 'boolean') {
         throw new Error(
-          `Error in mission:\nThe argument ("${key}") within the external effect ("${externalEffect.name}") is of the wrong type. Expected type: "boolean."`,
+          `Error in mission:\nThe argument ("${key}") within the effect ("${effect.name}") is of the wrong type. Expected type: "boolean."`,
         )
       }
 
@@ -293,7 +292,7 @@ const validate_mission_forces_nodes_actions_externalEffects = (
         // Ensure the option exists.
         if (!option) {
           throw new Error(
-            `Error in mission:\nThe argument ("${key}") within the external effect ("${externalEffect.name}") is not one of the options in the target's ("${target.name}") arguments.`,
+            `Error in mission:\nThe argument ("${key}") within the effect ("${effect.name}") is not one of the options in the target's ("${target.name}") arguments.`,
           )
         }
       }
@@ -302,112 +301,11 @@ const validate_mission_forces_nodes_actions_externalEffects = (
     // Ensure all of the required arguments are present if all their dependencies are met.
     for (let arg of target.args) {
       // If the argument is required and it is not present...
-      if (arg.required && !(arg._id in externalEffect.args)) {
+      if (arg.required && !(arg._id in effect.args)) {
         // If all of the dependencies are met, throw an error.
-        if (target.allDependenciesMet(arg, externalEffect.args)) {
+        if (target.allDependenciesMet(arg.dependencies, effect.args)) {
           throw new Error(
-            `Error in mission:\nThe required argument ("${arg.name}") within the external effect ("${externalEffect.name}") is missing.`,
-          )
-        }
-      }
-    }
-  })
-}
-
-/**
- * Validates the internal effects for a mission-action.
- * @param internalEffects The internal effects to validate.
- */
-const validate_mission_forces_nodes_actions_internalEffects = (
-  internalEffects: TCommonInternalEffectJson[],
-): void => {
-  // Create the internal (METIS) target environment.
-  let targetEnv = new ServerTargetEnvironment(
-    ServerTargetEnvironment.INTERNAL_TARGET_ENV,
-  )
-
-  // Loop through each effect.
-  internalEffects.forEach((internalEffect) => {
-    // Get the target JSON.
-    let targetJson = ServerTarget.INTERNAL_TARGETS.find(
-      (target) => target._id === internalEffect.targetId,
-    )
-    // Create the target.
-    let target = targetJson ? new ServerTarget(targetEnv, targetJson) : null
-
-    // Ensure the target exists.
-    if (!target) {
-      throw new Error(
-        `Error in mission:\nThe internal effect's ("${internalEffect.name}") target ID ("${internalEffect.targetId}") doesn't exist within the METIS target-environment.`,
-      )
-    }
-
-    // Initialize the valid keys.
-    let validKeys: string[] = []
-    // Add all of the keys from the target arguments.
-    target.args.forEach((arg: TTargetArg) => {
-      // Add to the valid keys.
-      validKeys.push(arg._id)
-    })
-    // Grab the keys from the effect.
-    let keys = Object.keys(internalEffect.args)
-    // Loop through the keys.
-    for (let key of keys) {
-      // Ensure all of the keys are valid.
-      if (!validKeys.includes(key)) {
-        // Throw an error if the key is not valid.
-        throw new Error(
-          `Error in mission:\nThe argument ("${key}") within the internal effect ("${internalEffect.name}") doesn't exist in the target's ("${target.name}") arguments.`,
-        )
-      }
-
-      // Ensure all of the arguments are of the correct type.
-      let arg = target.args.find((arg: TTargetArg) => arg._id === key)
-      // Get the value.
-      let value = internalEffect.args[key]
-      // Ensure the value is of the correct type.
-      if (
-        arg &&
-        (arg.type === 'string' ||
-          arg.type === 'large-string' ||
-          arg.type === 'dropdown') &&
-        typeof value !== 'string'
-      ) {
-        throw new Error(
-          `Error in mission:\nThe argument ("${key}") within the internal effect ("${internalEffect.name}") is of the wrong type. Expected type: "string."`,
-        )
-      } else if (arg && arg.type === 'number' && typeof value !== 'number') {
-        throw new Error(
-          `Error in mission:\nThe argument ("${key}") within the internal effect ("${internalEffect.name}") is of the wrong type. Expected type: "number."`,
-        )
-      } else if (arg && arg.type === 'boolean' && typeof value !== 'boolean') {
-        throw new Error(
-          `Error in mission:\nThe argument ("${key}") within the internal effect ("${internalEffect.name}") is of the wrong type. Expected type: "boolean."`,
-        )
-      }
-
-      // If the argument is a dropdown, ensure the value one of the options.
-      // Ensure the argument is a dropdown.
-      if (arg && arg.type === 'dropdown') {
-        // Get the option.
-        let option = arg.options.find((option) => option._id === value)
-        // Ensure the option exists.
-        if (!option) {
-          throw new Error(
-            `Error in mission:\nThe argument ("${key}") within the internal effect ("${internalEffect.name}") is not one of the options in the target's ("${target.name}") arguments.`,
-          )
-        }
-      }
-    }
-
-    // Ensure all of the required arguments are present if all their dependencies are met.
-    for (let arg of target.args) {
-      // If the argument is required and it is not present...
-      if (arg.required && !(arg._id in internalEffect.args)) {
-        // If all of the dependencies are met, throw an error.
-        if (target.allDependenciesMet(arg, internalEffect.args)) {
-          throw new Error(
-            `Error in mission:\nThe required argument ("${arg.name}") within the internal effect ("${internalEffect.name}") is missing.`,
+            `Error in mission:\nThe required argument ("${arg.name}") within the effect ("${effect.name}") is missing.`,
           )
         }
       }
@@ -499,7 +397,7 @@ export const MissionSchema: Schema = new Schema(
                         type: SanitizedHTML,
                         required: true,
                       },
-                      externalEffects: {
+                      effects: {
                         type: [
                           {
                             name: { type: String, required: true },
@@ -522,34 +420,7 @@ export const MissionSchema: Schema = new Schema(
                           },
                         ],
                         required: true,
-                        validate:
-                          validate_mission_forces_nodes_actions_externalEffects,
-                      },
-                      internalEffects: {
-                        type: [
-                          {
-                            name: { type: String, required: true },
-                            description: {
-                              type: SanitizedHTML,
-                              required: true,
-                            },
-                            args: {
-                              type: Object,
-                              required: true,
-                            },
-                            targetId: {
-                              type: String,
-                              required: true,
-                            },
-                            targetParamsId: {
-                              type: String,
-                              required: true,
-                            },
-                          },
-                        ],
-                        required: true,
-                        validate:
-                          validate_mission_forces_nodes_actions_internalEffects,
+                        validate: validate_mission_forces_nodes_actions_effects,
                       },
                     },
                   ],

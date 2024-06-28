@@ -310,6 +310,7 @@ export default function CreateUserEntry({
         setState={setAccess}
         isExpanded={false}
         renderDisplayName={(access: UserAccess) => access.name}
+        defaultValue={UserAccess.AVAILABLE_ACCESSES.default}
       />
       <DetailString
         fieldType='required'

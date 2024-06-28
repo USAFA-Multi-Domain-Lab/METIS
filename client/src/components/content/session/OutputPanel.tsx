@@ -68,7 +68,7 @@ export default class OutputPanel extends Component<
     let renderInnerHTML = () => {
       let textClassName: string = 'Text'
 
-      if (selectedNode.preExecutionText === '<p><br></p>') {
+      if (selectedNode.preExecutionText === '') {
         textClassName += ' Hidden'
       }
 

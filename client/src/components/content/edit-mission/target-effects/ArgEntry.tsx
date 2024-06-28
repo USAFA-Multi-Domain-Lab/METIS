@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
-import { ClientExternalEffect } from 'src/missions/effects/external'
+import { ClientEffect } from 'src/missions/effects'
 import { compute } from 'src/toolbox'
 import { usePostInitEffect } from 'src/toolbox/hooks'
 import { ReactSetter } from 'src/toolbox/types'
 import { TTargetArg } from '../../../../../../shared/target-environments/args'
+import { TDropdownArgOption } from '../../../../../../shared/target-environments/args/dropdown-arg'
 import { DetailDropDown } from '../../form/DetailDropDown'
 import { DetailLargeString } from '../../form/DetailLargeString'
 import { DetailNumber } from '../../form/DetailNumber'
@@ -22,40 +23,36 @@ export default function ArgEntry({
 }: TArgGroupings_P): JSX.Element | null {
   /* -- STATE -- */
   const [defaultStringValue] = useState<''>('')
-  const [defaultLargeStringValue] = useState<'<p><br></p>'>('<p><br></p>')
-  const [dropDownValue, setDropDownValue] = useState<TArgDropdownOption>(() => {
+  const [dropDownValue, setDropDownValue] = useState<TDropdownArgOption>(() => {
     // If the argument is a dropdown and the argument's value
     // is in the effect's arguments then set the dropdown value.
     if (arg.type === 'dropdown' && arg.required) {
       // Grab the dropdown option.
-      let option: TArgDropdownOption | undefined = arg.options.find(
-        (option: TArgDropdownOption) => option._id === effectArgs[arg._id],
+      let option: TDropdownArgOption | undefined = arg.options.find(
+        (option: TDropdownArgOption) => option._id === effectArgs[arg._id],
       )
 
       // If the option is found then set the dropdown value.
       if (option) {
         return option
       } else {
-        return {
-          _id: 'temporary-option',
-          name: 'Select an option',
-        }
+        return arg.default
       }
     } else {
       return {
-        _id: 'Not a required dropdown.',
-        name: 'Not a required dropdown.',
+        _id: 'temporary-option',
+        name: 'Select an option',
       }
     }
   })
   const [optionalDropDownValue, setOptionalDropDownValue] =
-    useState<TArgDropdownOption | null>(() => {
+    useState<TDropdownArgOption | null>(() => {
       // If the argument is a dropdown and the argument's value
       // is in the effect's arguments then set the dropdown value.
       if (arg.type === 'dropdown' && !arg.required) {
         // Grab the dropdown option.
-        let option: TArgDropdownOption | undefined = arg.options.find(
-          (option: TArgDropdownOption) => option._id === effectArgs[arg._id],
+        let option: TDropdownArgOption | undefined = arg.options.find(
+          (option: TDropdownArgOption) => option._id === effectArgs[arg._id],
         )
 
         // If the option is found then set the dropdown value.
@@ -84,7 +81,7 @@ export default function ArgEntry({
     effectArgs[arg._id] ?? defaultStringValue,
   )
   const [largeStringValue, setLargeStringValue] = useState<string>(
-    effectArgs[arg._id] ?? defaultLargeStringValue,
+    effectArgs[arg._id] ?? defaultStringValue,
   )
   const [booleanValue, setBooleanValue] = useState<boolean>(
     effectArgs[arg._id] ?? false,
@@ -95,8 +92,21 @@ export default function ArgEntry({
    * Determines if all the argument's dependencies have been met.
    */
   const allDependenciesMet: boolean = compute(
-    () => target?.allDependenciesMet(arg, effectArgs) ?? false,
+    () => target?.allDependenciesMet(arg.dependencies, effectArgs) ?? false,
   )
+  /**
+   * The dropdown options that are available based on the
+   * argument's dependencies.
+   */
+  const availableDropdownOptions: TDropdownArgOption[] = compute(() => {
+    return arg.type === 'dropdown'
+      ? arg.options.filter((option) => {
+          return (
+            target?.allDependenciesMet(option.dependencies, effectArgs) ?? false
+          )
+        })
+      : []
+  })
 
   /* -- EFFECTS -- */
 
@@ -197,7 +207,7 @@ export default function ArgEntry({
       // ...and the argument's value is not in a default state
       // then update the large string value in the effect's
       // arguments.
-      if (largeStringValue !== defaultLargeStringValue) {
+      if (largeStringValue !== defaultStringValue) {
         setEffectArgs((prev) => ({ ...prev, [arg._id]: largeStringValue }))
       }
     }
@@ -323,15 +333,16 @@ export default function ArgEntry({
   if (arg.type === 'dropdown' && arg.required && allDependenciesMet) {
     return (
       <div className={`ArgEntry Dropdown`}>
-        <DetailDropDown<TArgDropdownOption>
+        <DetailDropDown<TDropdownArgOption>
           fieldType={'required'}
           label={arg.name}
-          options={arg.options}
+          options={availableDropdownOptions}
           stateValue={dropDownValue}
           setState={setDropDownValue}
           isExpanded={false}
           tooltipDescription={arg.tooltipDescription}
-          renderDisplayName={(option: TArgDropdownOption) => option.name}
+          renderDisplayName={(option: TDropdownArgOption) => option.name}
+          defaultValue={arg.default}
         />
       </div>
     )
@@ -341,15 +352,15 @@ export default function ArgEntry({
   else if (arg.type === 'dropdown' && !arg.required && allDependenciesMet) {
     return (
       <div className={`ArgEntry Dropdown`}>
-        <DetailDropDown<TArgDropdownOption>
+        <DetailDropDown<TDropdownArgOption>
           fieldType={'optional'}
           label={arg.name}
-          options={arg.options}
+          options={availableDropdownOptions}
           stateValue={optionalDropDownValue}
           setState={setOptionalDropDownValue}
           isExpanded={false}
           tooltipDescription={arg.tooltipDescription}
-          renderDisplayName={(option: TArgDropdownOption) => option.name}
+          renderDisplayName={(option: TDropdownArgOption) => option.name}
         />
       </div>
     )
@@ -449,27 +460,13 @@ export default function ArgEntry({
 /* ---------------------------- TYPES FOR ARG GROUPINGS ---------------------------- */
 
 /**
- * The dropdown argument type for a target.
- */
-export type TArgDropdownOption = {
-  /**
-   * The ID of the option.
-   */
-  _id: string
-  /**
-   * The name of the option.
-   */
-  name: string
-}
-
-/**
  * The props for the ArgGroupings component.
  */
 export type TArgGroupings_P = {
   /**
    * The effect's target.
    */
-  target: ClientExternalEffect['target']
+  target: ClientEffect['target']
   /**
    * The argument to render.
    */
@@ -477,10 +474,10 @@ export type TArgGroupings_P = {
   /**
    * The arguments that the effect uses to modify the target.
    */
-  effectArgs: ClientExternalEffect['args']
+  effectArgs: ClientEffect['args']
   /**
    * Function that updates the value of the effect's arguments
    * stored in the state.
    */
-  setEffectArgs: ReactSetter<ClientExternalEffect['args']>
+  setEffectArgs: ReactSetter<ClientEffect['args']>
 }

@@ -22,8 +22,7 @@ import StringToolbox from '../../../shared/toolbox/strings'
 import ClientMissionAction from './actions'
 import ClientActionExecution from './actions/executions'
 import ClientActionOutcome from './actions/outcomes'
-import { ClientExternalEffect } from './effects/external'
-import { ClientInternalEffect } from './effects/internal'
+import { ClientEffect } from './effects'
 import ClientMissionForce from './forces'
 import ClientMissionNode, { ENodeTargetRelation } from './nodes'
 import NodeCreator from './nodes/creators'
@@ -212,6 +211,11 @@ export default class ClientMission
   // Implemented
   public get path(): TMissionNavigable[] {
     return [this]
+  }
+
+  // Implemented
+  public get nodes(): ClientMissionNode[] {
+    return this.forces.map((force) => force.nodes).flat()
   }
 
   public constructor(
@@ -1185,8 +1189,7 @@ export interface TClientMissionTypes extends TCommonMissionTypes {
   outcome: ClientActionOutcome
   targetEnv: ClientTargetEnvironment
   target: ClientTarget
-  externalEffect: ClientExternalEffect
-  internalEffect: ClientInternalEffect
+  effect: ClientEffect
 }
 
 /**

@@ -7,8 +7,7 @@ import { uuidTypeValidator } from '../toolbox/validators'
 import { TCommonMissionAction } from './actions'
 import IActionExecution from './actions/executions'
 import IActionOutcome from './actions/outcomes'
-import { TCommonExternalEffect } from './effects/external'
-import { TCommonInternalEffect } from './effects/internal'
+import { TCommonEffect } from './effects'
 import { TCommonMissionForce, TCommonMissionForceJson, TForce } from './forces'
 import { TCommonMissionNode, TMissionNodeJson, TNode } from './nodes'
 import {
@@ -194,13 +193,12 @@ export default abstract class Mission<
 
   // Implemented
   public getForce(forceId: TForce<T>['_id']): TForce<T> | undefined {
-    return this.forces.find((force) => force._id === forceId)
+    return Mission.getForce(this, forceId)
   }
 
   // Implemented
   public getNode(nodeId: TNode<T>['_id']): TNode<T> | undefined {
-    let force = this.forces.find((force) => force.getNode(nodeId))
-    return force ? force.getNode(nodeId) : undefined
+    return Mission.getNode(this, nodeId)
   }
 
   /**
@@ -315,6 +313,36 @@ export default abstract class Mission<
     // Return the result of the operation.
     return operation()
   }
+
+  /**
+   * Gets a force from the mission by its ID.
+   * @param mission The mission to get the force from.
+   * @param forceId The ID of the force to get.
+   * @returns The force with the given ID, or undefined if no force is found.
+   */
+  public static getForce<TMission extends TCommonMissionJson | TCommonMission>(
+    mission: TMission,
+    forceId: string,
+  ): TMission['forces'][0] | undefined {
+    return mission.forces.find((force) => force._id === forceId)
+  }
+
+  /**
+   * Gets a node from the mission by its ID.
+   * @param mission The mission to get the node from.
+   * @param nodeId The ID of the node to get.
+   * @returns The node with the given ID, or undefined if no node is found.
+   */
+  public static getNode<TMission extends TCommonMissionJson | TCommonMission>(
+    mission: TMission,
+    nodeId: string,
+  ): TMission['forces'][0]['nodes'][0] | undefined {
+    for (let force of mission.forces) {
+      let node = force.nodes.find((node) => node._id === nodeId)
+      if (node) return node
+    }
+    return undefined
+  }
 }
 
 /* ------------------------------ MISSION TYPES ------------------------------ */
@@ -334,8 +362,7 @@ export type TCommonMissionTypes = {
   outcome: IActionOutcome
   targetEnv: TCommonTargetEnv
   target: TCommonTarget
-  externalEffect: TCommonExternalEffect
-  internalEffect: TCommonInternalEffect
+  effect: TCommonEffect
 }
 
 /**

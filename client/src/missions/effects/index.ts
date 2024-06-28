@@ -1,13 +1,13 @@
 import ClientTarget from 'src/target-environments/targets'
 import { TClientMissionTypes, TMissionNavigable } from '..'
-import ExternalEffect from '../../../../shared/missions/effects/external'
+import Effect from '../../../../shared/missions/effects'
 
 /**
- * Class representing an external effect on the client-side that can be
+ * Class representing an effect on the client-side that can be
  * applied to a target.
  */
-export class ClientExternalEffect
-  extends ExternalEffect<TClientMissionTypes>
+export class ClientEffect
+  extends Effect<TClientMissionTypes>
   implements TMissionNavigable
 {
   // Implemented

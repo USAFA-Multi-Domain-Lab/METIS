@@ -1,6 +1,9 @@
-import { TCommonMissionTypes } from 'metis/missions'
 import { AnyObject } from 'metis/toolbox/objects'
 import TargetEnvironment, { TCommonTargetEnv, TTargetEnv } from '.'
+import Mission, {
+  TCommonMissionJson,
+  TCommonMissionTypes,
+} from '../../shared/missions'
 import Args, { TTargetArg, TTargetArgJson } from './args'
 import { Dependency } from './dependencies'
 
@@ -66,17 +69,17 @@ export default abstract class Target<
   }
 
   /**
-   * Determines if all the dependencies of an argument are met.
-   * @param arg The argument to check if all dependencies are met.
-   * @param effectArgs The arguments that are used to create the effect on the target.
+   * Determines if all the dependencies passed are met.
+   * @param dependencies The dependencies to check if all are met.
+   * @param effectArgs What to check the dependencies against to see if they are met.
    * @returns If all the dependencies are met.
    */
   public allDependenciesMet = (
-    arg: TTargetArg,
+    dependencies: Dependency[] = [],
     effectArgs: AnyObject,
   ): boolean => {
     // If the argument has no dependencies, then the argument is always displayed.
-    if (!arg.dependencies || arg.dependencies.length === 0) {
+    if (!dependencies || dependencies.length === 0) {
       return true
     }
 
@@ -87,7 +90,7 @@ export default abstract class Target<
     let allDependenciesMet: boolean
 
     // Iterate through the dependencies.
-    arg.dependencies.forEach((dependency) => {
+    dependencies.forEach((dependency) => {
       // Grab the dependency argument.
       let dependencyArg: TTargetArg | undefined = this.args.find(
         (arg: TTargetArg) => arg._id === dependency.dependentId,
@@ -130,7 +133,7 @@ export default abstract class Target<
       _id: 'metis-target-default',
       name: 'Select a target',
       description: 'This is a default target.',
-      script: () => {},
+      script: async () => {},
       args: [],
     }
   }
@@ -143,26 +146,90 @@ export default abstract class Target<
     _id: 'node',
     name: 'Node',
     description: '',
-    script: () => {},
+    script: async (args, mission) => {
+      let {
+        forceId,
+        nodeId,
+        blockNode,
+        successChance,
+        processTime,
+        resourceCost,
+      } = args
+
+      // Grab the force and node via their IDs.
+      let force = Mission.getForce(mission, forceId)
+      let node = Mission.getNode(mission, nodeId)
+
+      // If the node and force exist...
+      if (node && force) {
+        // If the node should be blocked...
+        if (blockNode) {
+          // ...then block the node.
+          // node.disabled = blockNode
+        }
+        // Otherwise, if the node shouldn't be blocked...
+        else {
+          // ...then set the success chance, process time, and resource cost
+          // for the node.
+          node.actions.forEach((action) => {
+            if (successChance) action.successChance += successChance
+            if (processTime) action.processTime += processTime
+            if (resourceCost) action.resourceCost += resourceCost
+          })
+        }
+      }
+    },
     args: [
       {
-        _id: 'block-node',
-        name: 'Block Node',
+        _id: 'forceId',
+        name: 'Force',
         required: true,
-        groupingId: 'block-node',
-        type: 'boolean',
-        default: true,
+        groupingId: 'force',
+        type: 'dropdown',
+        options: [],
+        default: {
+          _id: 'defaultForce',
+          name: 'Select a force',
+        },
       },
       {
-        _id: 'success-chance',
+        _id: 'nodeId',
+        name: 'Node',
+        required: true,
+        groupingId: 'force',
+        type: 'dropdown',
+        options: [],
+        default: {
+          _id: 'defaultNode',
+          name: 'Select a node',
+        },
+        dependencies: [
+          Dependency.TRUTHY('forceId'),
+          Dependency.NOT_EQUALS('forceId', ['defaultForce']),
+        ],
+      },
+      {
+        _id: 'blockNode',
+        name: 'Block Node',
+        required: true,
+        groupingId: 'blockNode',
+        type: 'boolean',
+        default: true,
+        dependencies: [
+          Dependency.TRUTHY('nodeId'),
+          Dependency.NOT_EQUALS('nodeId', ['defaultNode']),
+        ],
+      },
+      {
+        _id: 'successChance',
         name: 'Chance of Success',
         type: 'number',
         required: false,
         min: -100,
         max: 100,
         unit: '%',
-        groupingId: 'block-node',
-        dependencies: [Dependency.FALSEY('block-node')],
+        groupingId: 'blockNode',
+        dependencies: [Dependency.EQUALS('blockNode', [false])],
         tooltipDescription:
           `This allows you to positively or negatively affect the chance of success for all actions within the node. A positive value increases the chance of success, while a negative value decreases the chance of success.\n` +
           `\t\n` +
@@ -171,15 +238,15 @@ export default abstract class Target<
           `*Note: If the result is less than 0%, then the chance of success will be 0%. If the result is greater than 100%, then the chance of success will be 100%.*`,
       },
       {
-        _id: 'process-time',
+        _id: 'processTime',
         name: 'Process Time',
         type: 'number',
         required: false,
         min: -3600,
         max: 3600,
         unit: 's',
-        groupingId: 'block-node',
-        dependencies: [Dependency.FALSEY('block-node')],
+        groupingId: 'blockNode',
+        dependencies: [Dependency.EQUALS('blockNode', [false])],
         tooltipDescription:
           `This allows you to positively or negatively affect the process time for all actions within the node. A positive value increases the process time, while a negative value decreases the process time.\n` +
           `\t\n` +
@@ -188,12 +255,12 @@ export default abstract class Target<
           `*Note: If the result is less than 0s, then the process time will be 0s. If the result is greater than 3600s, then the process time will be 3600s.*`,
       },
       {
-        _id: 'resource-cost',
+        _id: 'resourceCost',
         name: 'Resource Cost',
         type: 'number',
         required: false,
-        groupingId: 'block-node',
-        dependencies: [Dependency.FALSEY('block-node')],
+        groupingId: 'blockNode',
+        dependencies: [Dependency.EQUALS('blockNode', [false])],
         tooltipDescription:
           `This allows you to positively or negatively affect the resource cost for all actions within the node. A positive value increases the resource cost, while a negative value decreases the resource cost.\n` +
           `\t\n` +
@@ -212,14 +279,31 @@ export default abstract class Target<
     _id: 'output',
     name: 'Output Panel',
     description: '',
-    script: () => {},
+    script: async () => {},
     args: [
+      {
+        _id: 'forceId',
+        name: 'Force',
+        required: true,
+        groupingId: 'output',
+        type: 'dropdown',
+        options: [],
+        default: {
+          _id: 'defaultForce',
+          name: 'Select a force',
+        },
+      },
       {
         _id: 'message',
         name: 'Message',
         required: true,
         type: 'large-string',
         default: 'Enter your message here.',
+        groupingId: 'output',
+        dependencies: [
+          Dependency.TRUTHY('forceId'),
+          Dependency.NOT_EQUALS('forceId', ['defaultForce']),
+        ],
       },
     ],
   }
@@ -246,6 +330,20 @@ export type TTargetOptions = {}
 export type TTargetJsonOptions = {}
 
 /**
+ * Represents the target's script.
+ */
+export type TTargetScript<TMission> = (
+  /**
+   * The arguments used to execute the effect on the target.
+   */
+  args: AnyObject,
+  /**
+   * The mission that the target is a part of.
+   */
+  mission: TMission,
+) => Promise<void>
+
+/**
  * Interface for the Target class.
  */
 export interface TCommonTarget {
@@ -268,7 +366,16 @@ export interface TCommonTarget {
   /**
    * The function used to execute an effect on the target.
    */
-  script: Function
+  script: (
+    /**
+     * The arguments used to execute the effect on the target.
+     */
+    args: AnyObject,
+    /**
+     * The mission that the target is a part of.
+     */
+    mission: TCommonMissionJson,
+  ) => Promise<void>
   /**
    * The arguments used to create the effect on the target.
    */
@@ -280,12 +387,15 @@ export interface TCommonTarget {
    */
   toJson: (options?: TTargetJsonOptions) => TCommonTargetJson
   /**
-   * Determines if all the dependencies of an argument are met.
-   * @param arg The argument to check if all dependencies are met.
-   * @param effectArgs The arguments that are used to create the effect on the target.
+   * Determines if all the dependencies passed are met.
+   * @param dependencies The dependencies to check if all are met.
+   * @param effectArgs What to check the dependencies against to see if they are met.
    * @returns If all the dependencies are met.
    */
-  allDependenciesMet: (arg: TTargetArg, effectArgs: AnyObject) => boolean
+  allDependenciesMet: (
+    dependencies: Dependency[],
+    effectArgs: AnyObject,
+  ) => boolean
 }
 
 /**
@@ -318,7 +428,16 @@ export interface TCommonTargetJson {
   /**
    * The function used to execute an effect on the target.
    */
-  script: Function
+  script: (
+    /**
+     * The arguments used to execute the effect on the target.
+     */
+    args: AnyObject,
+    /**
+     * The mission that the target is a part of.
+     */
+    mission: TCommonMissionJson,
+  ) => Promise<void>
   /**
    * The arguments used to create the effect on the target.
    */

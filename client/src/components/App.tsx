@@ -3,7 +3,6 @@ import ServerConnection from 'src/connect/servers'
 import { useGlobalContext } from 'src/context'
 import ClientMissionNode from 'src/missions/nodes'
 import ClientSession from 'src/sessions'
-import { ClientTargetEnvironment } from 'src/target-environments'
 import ClientUser from 'src/users'
 import { TLogin } from '../../../shared/logins'
 import Notification from '../notifications'
@@ -60,8 +59,6 @@ function App(props: {}): JSX.Element | null {
   const [tooltipDescription, setTooltipDescription] =
     globalContext.tooltipDescription
   const [_, setMissionNodeColors] = globalContext.missionNodeColors
-  const [internalTargetEnvironment, setInternalTargetEnvironment] =
-    globalContext.internalTargetEnvironment
   const [loading] = globalContext.loading
   const [loadingMinTimeReached] = globalContext.loadingMinTimeReached
   const [pageSwitchMinTimeReached] = globalContext.pageSwitchMinTimeReached
@@ -225,15 +222,9 @@ function App(props: {}): JSX.Element | null {
     async function effect(): Promise<void> {
       if (login === null) {
         setMissionNodeColors([])
-        setInternalTargetEnvironment(null)
       } else {
         try {
           setMissionNodeColors(await ClientMissionNode.$fetchColors())
-          setInternalTargetEnvironment(
-            new ClientTargetEnvironment(
-              ClientTargetEnvironment.INTERNAL_TARGET_ENV,
-            ),
-          )
         } catch {
           handleError('Failed to load post-login data.')
         }

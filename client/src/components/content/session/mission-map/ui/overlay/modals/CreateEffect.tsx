@@ -4,28 +4,28 @@ import { DetailDropDown } from 'src/components/content/form/DetailDropDown'
 import { ButtonText } from 'src/components/content/user-controls/ButtonText'
 import { useGlobalContext } from 'src/context'
 import ClientMissionAction from 'src/missions/actions'
-import { ClientExternalEffect } from 'src/missions/effects/external'
+import { ClientEffect } from 'src/missions/effects'
 import { ClientTargetEnvironment } from 'src/target-environments'
 import ClientTarget from 'src/target-environments/targets'
 import { compute } from 'src/toolbox'
 import { usePostInitEffect } from 'src/toolbox/hooks'
-import './CreateExternalEffect.scss'
+import { ReactSetter } from 'src/toolbox/types'
+import './CreateEffect.scss'
 
 /**
- * Prompt modal for creating an external effect to apply to a target.
+ * Prompt modal for creating an effect to apply to a target.
  */
-export default function CreateExternalEffect({
+export default function CreateEffect({
   action,
   targetEnvironments,
+  setIsNewEffect,
   handleChange,
-}: TCreateExternalEffect_P): JSX.Element | null {
+}: TCreateEffect_P): JSX.Element | null {
   /* -- GLOBAL CONTEXT -- */
   const { forceUpdate } = useGlobalContext().actions
 
   /* -- STATE -- */
-  const [effect] = useState<ClientExternalEffect>(
-    new ClientExternalEffect(action),
-  )
+  const [effect] = useState<ClientEffect>(new ClientEffect(action))
   const [targetEnv, setTargetEnv] = useState<ClientTargetEnvironment>(
     new ClientTargetEnvironment(),
   )
@@ -88,12 +88,12 @@ export default function CreateExternalEffect({
 
   /* -- FUNCTIONS -- */
   /**
-   * Handles creating a new external effect.
+   * Handles creating a new effect.
    */
-  const createExternalEffect = () => {
-    // Push the new external effect to the action.
-    action.externalEffects.push(effect)
-    // Select the new external effect.
+  const createEffect = () => {
+    // Push the new effect to the action.
+    action.effects.push(effect)
+    // Select the new effect.
     mission.select(effect)
     // Display the changes.
     forceUpdate()
@@ -105,15 +105,15 @@ export default function CreateExternalEffect({
    * Callback for when the modal is requested to be closed.
    */
   const onCloseRequest = () => {
-    mission.selectBack()
+    setIsNewEffect(false)
   }
 
   /* -- RENDER -- */
 
   return (
-    <div className='CreateExternalEffect MapModal'>
+    <div className='CreateEffect MapModal'>
       {/* -- TOP OF BOX -- */}
-      <div className='Heading'>Create External Effect:</div>
+      <div className='Heading'>Create Effect:</div>
       <div className='Close'>
         <div className='CloseButton' onClick={onCloseRequest}>
           x
@@ -132,6 +132,7 @@ export default function CreateExternalEffect({
         renderDisplayName={(targetEnv: ClientTargetEnvironment) =>
           targetEnv.name
         }
+        defaultValue={new ClientTargetEnvironment()}
       />
       <DetailDropDown<ClientTarget>
         fieldType='required'
@@ -142,32 +143,37 @@ export default function CreateExternalEffect({
         isExpanded={false}
         renderDisplayName={(target: ClientTarget) => target.name}
         uniqueClassName={targetClassName}
+        defaultValue={new ClientTarget(new ClientTargetEnvironment())}
       />
 
       {/* -- BUTTON(S) -- */}
       <ButtonText
-        text='Create External Effect'
-        onClick={createExternalEffect}
+        text='Create Effect'
+        onClick={createEffect}
         uniqueClassName={createEffectButtonClassName}
       />
     </div>
   )
 }
 
-/* ---------------------------- TYPES FOR CREATE EXTERNAL EFFECT ---------------------------- */
+/* ---------------------------- TYPES FOR CREATE EFFECT ---------------------------- */
 
 /**
- * Props for CreateExternalEffect component.
+ * Props for CreateEffect component.
  */
-export type TCreateExternalEffect_P = {
+export type TCreateEffect_P = {
   /**
-   * The action to create the internal effect for.
+   * The action to create the effect for.
    */
   action: ClientMissionAction
   /**
-   * List of target environments to apply external effects to.
+   * List of target environments to apply effects to.
    */
   targetEnvironments: ClientTargetEnvironment[]
+  /**
+   * Function that updates the isNewEffect state.
+   */
+  setIsNewEffect: ReactSetter<boolean>
   /**
    * Handles when a change is made that would require saving.
    */

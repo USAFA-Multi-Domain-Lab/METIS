@@ -79,4 +79,32 @@ export class ClientTargetEnvironment extends TargetEnvironment<TClientMissionTyp
       }
     })
   }
+
+  /**
+   * Updates the target environment on the server.
+   * @param clientTargetEnv The target environment to update.
+   * @resolves If the target environment is updated successfully.
+   * @rejects If there is an error updating the target environment.
+   */
+  public static $update(
+    clientTargetEnv: ClientTargetEnvironment,
+  ): Promise<ClientTargetEnvironment> {
+    return new Promise<ClientTargetEnvironment>(async (resolve, reject) => {
+      try {
+        // Update the target environment on the server.
+        let response = await axios.put<TCommonTargetEnvJson>(
+          `${ClientTargetEnvironment.API_ENDPOINT}`,
+          clientTargetEnv.toJson(),
+        )
+        // Return the updated ClientTargetEnvironment Object.
+        resolve(new ClientTargetEnvironment(response.data))
+      } catch (error: any) {
+        console.error(
+          `Failed to update target environment with ID ${clientTargetEnv._id}.`,
+        )
+        console.error(error)
+        reject(error)
+      }
+    })
+  }
 }

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import ClientMissionAction from 'src/missions/actions'
-import { ClientExternalEffect } from 'src/missions/effects/external'
+import { ClientEffect } from 'src/missions/effects'
 import { ClientTargetEnvironment } from 'src/target-environments'
 import ClientTarget from 'src/target-environments/targets'
 import { usePostInitEffect } from 'src/toolbox/hooks'
@@ -13,22 +13,22 @@ import './index.scss'
 import EntryNavigation from './navigation/EntryNavigation'
 
 /**
- * Entry fields for an external effect.
+ * Entry fields for an effect.
  */
-export default function ExternalEffectEntry({
+export default function EffectEntry({
   effect,
   handleChange,
-}: TExternalEffectEntry_P): JSX.Element | null {
+}: TEffectEntry_P): JSX.Element | null {
   /* -- STATE -- */
-  const [name, setName] = useState<ClientExternalEffect['name']>(effect.name)
-  const [description, setDescription] = useState<
-    ClientExternalEffect['description']
-  >(effect.description)
+  const [name, setName] = useState<ClientEffect['name']>(effect.name)
+  const [description, setDescription] = useState<ClientEffect['description']>(
+    effect.description,
+  )
   const [targetEnv] = useState<ClientTargetEnvironment | null>(
     effect.targetEnvironment,
   )
   const [target] = useState<ClientTarget | null>(effect.target)
-  const [effectArgs, setEffectArgs] = useState<ClientExternalEffect['args']>(
+  const [effectArgs, setEffectArgs] = useState<ClientEffect['args']>(
     effect.args,
   )
 
@@ -60,15 +60,15 @@ export default function ExternalEffectEntry({
   /* -- FUNCTIONS -- */
 
   /**
-   * Handles the request to delete the external effect.
+   * Handles the request to delete the effect.
    */
-  const handleDeleteExternalEffectRequest = () => {
+  const handleDeleteEffectRequest = () => {
     // Go back to the previous selection.
     mission.selectBack()
 
-    // Filter out the external effect from the action.
-    effect.action.externalEffects = action.externalEffects.filter(
-      (actionEffect: ClientExternalEffect) => actionEffect._id !== effect._id,
+    // Filter out the effect from the action.
+    effect.action.effects = action.effects.filter(
+      (actionEffect: ClientEffect) => actionEffect._id !== effect._id,
     )
     // Allow the user to save the changes.
     handleChange()
@@ -76,7 +76,7 @@ export default function ExternalEffectEntry({
 
   /* -- RENDER -- */
   return (
-    <div className='Entry ExternalEffectEntry SidePanel'>
+    <div className='Entry EffectEntry SidePanel'>
       <div className='BorderBox'>
         {/* -- TOP OF BOX -- */}
         <div className='BoxTop'>
@@ -91,7 +91,7 @@ export default function ExternalEffectEntry({
             label='Name'
             stateValue={name}
             setState={setName}
-            defaultValue={ClientExternalEffect.DEFAULT_PROPERTIES.name}
+            defaultValue={ClientEffect.DEFAULT_PROPERTIES.name}
             placeholder='Enter name...'
           />
           <DetailLargeString
@@ -119,9 +119,9 @@ export default function ExternalEffectEntry({
           {/* -- BUTTON(S) -- */}
           <div className='ButtonContainer'>
             <ButtonText
-              text='Delete External Effect'
-              onClick={handleDeleteExternalEffectRequest}
-              tooltipDescription='Delete this external effect.'
+              text='Delete Effect'
+              onClick={handleDeleteEffectRequest}
+              tooltipDescription='Delete this effect.'
             />
           </div>
         </div>
@@ -130,16 +130,16 @@ export default function ExternalEffectEntry({
   )
 }
 
-/* ---------------------------- TYPES FOR EXTERNAL EFFECT ENTRY ---------------------------- */
+/* ---------------------------- TYPES FOR EFFECT ENTRY ---------------------------- */
 
 /**
- * Props for ExternalEffectEntry component.
+ * Props for EffectEntry component.
  */
-export type TExternalEffectEntry_P = {
+export type TEffectEntry_P = {
   /**
-   * The external effect to apply to the target.
+   * The effect to apply to the target.
    */
-  effect: ClientExternalEffect
+  effect: ClientEffect
   /**
    * A function that will be called when a change has been made.
    */

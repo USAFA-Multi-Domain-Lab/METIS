@@ -40,4 +40,9 @@
   &.zoom-out {
     cursor: zoom-out;
   }
+
+  &.partiallyDisabled {
+    opacity: 0.35;
+    filter: none !important;
+  }
 }
