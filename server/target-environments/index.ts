@@ -112,7 +112,9 @@ export default class ServerTargetEnvironment extends TargetEnvironment<TServerMi
       ServerTargetEnvironment.registry.splice(
         index,
         1,
-        new ServerTargetEnvironment(targetEnvironment),
+        new ServerTargetEnvironment(targetEnvironment, {
+          alreadyExistsInRegistry: true,
+        }),
       )
 
       // Get the index of the target environment in the JSON

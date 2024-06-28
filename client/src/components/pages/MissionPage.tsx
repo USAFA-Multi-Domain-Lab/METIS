@@ -8,11 +8,11 @@ import ClientMissionForce from 'src/missions/forces'
 import ClientMissionNode, { ENodeDeleteMethod } from 'src/missions/nodes'
 import ClientMissionPrototype from 'src/missions/nodes/prototypes'
 import { ClientTargetEnvironment } from 'src/target-environments'
+import ClientTarget from 'src/target-environments/targets'
 import { compute } from 'src/toolbox'
 import { useEventListener, useMountHandler } from 'src/toolbox/hooks'
 import { DefaultLayout, TPage_P } from '.'
 import Mission from '../../../../shared/missions'
-import { Dependency } from '../../../../shared/target-environments/dependencies'
 import { SingleTypeObject, TWithKey } from '../../../../shared/toolbox/objects'
 import ActionEntry from '../content/edit-mission/entries/ActionEntry'
 import EffectEntry from '../content/edit-mission/entries/EffectEntry'
@@ -137,46 +137,18 @@ export default function MissionPage({
       )
 
       if (internalTargetEnv) {
-        // Iterate through the target environment's targets
-        // and set the forces and nodes for the internal target
-        // environment.
-        internalTargetEnv.targets.forEach((target) => {
-          // Iterate through the target's arguments and set
-          // the forces and nodes for the internal target
-          // environment.
-          target.args.forEach((arg) => {
-            // If the argument's ID is 'forceId' and it is a
-            // dropdown, then add the forces to the argument's
-            // options.
-            if (arg._id === 'forceId' && arg.type === 'dropdown') {
-              arg.options = mission.forces.map((force) => {
-                return {
-                  _id: force._id,
-                  name: force.name,
-                }
-              })
-            }
-            // Or, if the argument's ID is 'nodeId' and it is a
-            // dropdown, then add the nodes to the argument's
-            // options.
-            else if (arg._id === 'nodeId' && arg.type === 'dropdown') {
-              arg.options = mission.nodes.map((node) => {
-                return {
-                  _id: node._id,
-                  name: node.name,
-                  dependencies: [
-                    Dependency.decode(
-                      Dependency.EQUALS('forceId', [node.force._id]),
-                    ),
-                  ],
-                }
-              })
-            }
-          })
-        })
-
-        // Update the internal target environment on the server.
-        ClientTargetEnvironment.$update(internalTargetEnv)
+        ClientTargetEnvironment.generateDropdownOptions(
+          internalTargetEnv,
+          mission,
+          ClientTarget.forcesArgId,
+          mission.forces,
+        )
+        ClientTargetEnvironment.generateDropdownOptions(
+          internalTargetEnv,
+          mission,
+          ClientTarget.nodesArgId,
+          mission.nodes,
+        )
       }
     }
   }, [mountHandled, mission.forces.length, mission.nodes.length])

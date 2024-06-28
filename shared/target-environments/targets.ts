@@ -5,6 +5,7 @@ import Mission, {
   TCommonMissionTypes,
 } from '../../shared/missions'
 import Args, { TTargetArg, TTargetArgJson } from './args'
+import { TDropdownArg } from './args/dropdown-arg'
 import { Dependency } from './dependencies'
 
 /**
@@ -139,6 +140,16 @@ export default abstract class Target<
   }
 
   /**
+   * The ID of the node argument.
+   */
+  public static readonly nodesArgId: TDropdownArg['_id'] = 'nodeId'
+
+  /**
+   * The ID of the force argument.
+   */
+  public static readonly forcesArgId: TDropdownArg['_id'] = 'forceId'
+
+  /**
    * The node target that is available in the METIS target environment.
    */
   public static nodeTarget: TCommonTargetJson = {
@@ -181,7 +192,7 @@ export default abstract class Target<
     },
     args: [
       {
-        _id: 'forceId',
+        _id: Target.forcesArgId,
         name: 'Force',
         required: true,
         groupingId: 'force',
@@ -193,7 +204,7 @@ export default abstract class Target<
         },
       },
       {
-        _id: 'nodeId',
+        _id: Target.nodesArgId,
         name: 'Node',
         required: true,
         groupingId: 'force',
@@ -282,7 +293,7 @@ export default abstract class Target<
     script: async () => {},
     args: [
       {
-        _id: 'forceId',
+        _id: Target.forcesArgId,
         name: 'Force',
         required: true,
         groupingId: 'output',
