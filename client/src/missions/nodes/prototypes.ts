@@ -83,6 +83,25 @@ export default class ClientMissionPrototype
    */
   private listeners: Array<[TPrototypeEventMethod, () => void]> = []
 
+  /**
+   * Whether the prototype is expanded in the `NodeStructuring` component.
+   */
+  private _expandedInMenu: boolean = false
+  /**
+   * Whether the prototype is expanded in the `NodeStructuring` component.
+   */
+  public get expandedInMenu(): boolean {
+    return this._expandedInMenu
+  }
+
+  /**
+   * Whether the prototype is collapsed in the `NodeStructuring` component.
+   * @note Direct inverse of `expandedInMenu`.
+   */
+  public get collapsedInMenu(): boolean {
+    return !this._expandedInMenu
+  }
+
   public constructor(
     mission: ClientMission,
     _id: TCommonMissionPrototype['_id'],
@@ -148,14 +167,12 @@ export default class ClientMissionPrototype
     destination: ClientMissionPrototype,
     relation: TPrototypeRelation,
   ): void {
-    // Gather details
     let root: ClientMissionPrototype = this.mission.root
-    let oldParent: ClientMissionPrototype | null = this.parent
-    let oldChildren: Array<ClientMissionPrototype> = this.children
+    let parent: ClientMissionPrototype | null = this.parent
     let newParent: ClientMissionPrototype | null = destination.parent
-    let newParentChildren: Array<ClientMissionPrototype> = []
+    let newChildrenOfParent: Array<ClientMissionPrototype> = []
 
-    // This makes sure that the destination
+    // This makes sure that the target
     // isn't being moved inside or beside
     // itself.
     let x: ClientMissionPrototype | null = destination
@@ -168,26 +185,18 @@ export default class ClientMissionPrototype
       x = x.parent
     }
 
-    // This will remove the prototype's
+    // This will remove the nodes
     // current position in the structure.
-    if (oldParent !== null) {
-      let oldSiblings: ClientMissionPrototype[] = []
+    if (parent !== null) {
+      let siblings: ClientMissionPrototype[] = parent.children
 
-      oldParent.children.forEach((sibling, index) => {
-        if (sibling._id !== this._id) {
-          oldSiblings.push(sibling)
-        } else {
-          oldSiblings.push(...oldChildren)
+      for (let index: number = 0; index < siblings.length; index++) {
+        let sibling = siblings[index]
+
+        if (this._id === sibling._id) {
+          siblings.splice(index, 1)
         }
-      })
-
-      oldParent.children = oldSiblings
-    }
-
-    // This will move the current children of
-    // the node to the old parent.
-    for (let child of oldChildren) {
-      child.parent = oldParent
+      }
     }
 
     // This will move the target based on
@@ -234,35 +243,42 @@ export default class ClientMissionPrototype
         break
       case 'previous-sibling-of-target':
         if (newParent !== null) {
-          newParent.children.forEach((childNode: ClientMissionPrototype) => {
-            if (childNode._id === destination._id) {
-              newParentChildren.push(this)
+          newParent.children.forEach((child: ClientMissionPrototype) => {
+            if (child._id === destination._id) {
+              newChildrenOfParent.push(this)
               this.parent = newParent
             }
 
-            newParentChildren.push(childNode)
+            newChildrenOfParent.push(child)
           })
 
-          newParent.children = newParentChildren
+          newParent.children = newChildrenOfParent
         }
         break
       case 'following-sibling-of-target':
         if (newParent !== null) {
-          newParent.children.forEach((childNode: ClientMissionPrototype) => {
-            newParentChildren.push(childNode)
+          newParent.children.forEach((child: ClientMissionPrototype) => {
+            newChildrenOfParent.push(child)
 
-            if (childNode._id === destination._id) {
-              newParentChildren.push(this)
+            if (child._id === destination._id) {
+              newChildrenOfParent.push(this)
               this.parent = newParent
             }
           })
 
-          newParent.children = newParentChildren
+          newParent.children = newChildrenOfParent
         }
         break
     }
 
     this.mission.handleStructureChange()
+  }
+
+  /**
+   * Toggle the expandedInMenu property between true and false.
+   */
+  public toggleMenuExpansion(): void {
+    this._expandedInMenu = !this._expandedInMenu
   }
 }
 

@@ -73,24 +73,6 @@ export default class ClientMissionNode
   public get pendingExecInit(): boolean {
     return this._pendingExecInit
   }
-  /**
-   * Whether the node is expanded in the `NodeStructuring` component.
-   */
-  private _expandedInMenu: boolean = false
-  /**
-   * Whether the node is expanded in the `NodeStructuring` component.
-   */
-  public get expandedInMenu(): boolean {
-    return this._expandedInMenu
-  }
-
-  /**
-   * Whether the node is collapsed in the `NodeStructuring` component.
-   * @note Direct inverse of `expandedInMenu`.
-   */
-  public get collapsedInMenu(): boolean {
-    return !this._expandedInMenu
-  }
 
   /**
    * Memoized function for computing the value of `nameLineCount`.
@@ -609,13 +591,6 @@ export default class ClientMissionNode
     //
     //     // Return the child nodes.
     //     return childNodes
-  }
-
-  /**
-   * Toggle the expandedInMenu property between true and false.
-   */
-  public toggleMenuExpansion(): void {
-    this._expandedInMenu = !this._expandedInMenu
   }
 
   /* -- static -- */

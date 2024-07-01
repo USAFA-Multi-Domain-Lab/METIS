@@ -22,6 +22,7 @@ import ForceEntry from '../content/edit-mission/entries/ForceEntry'
 import InternalEffectEntry from '../content/edit-mission/entries/InternalEffectEntry'
 import MissionEntry from '../content/edit-mission/entries/MissionEntry'
 import NodeEntry from '../content/edit-mission/entries/NodeEntry'
+import NodeStructuring from '../content/edit-mission/entries/NodeStructuring'
 import PrototypeEntry from '../content/edit-mission/entries/PrototypeEntry'
 import {
   HomeLink,
@@ -285,7 +286,9 @@ export default function MissionPage({
           // If there is at least two prototypes, then add
           // the remove and move buttons.
           if (mission.prototypes.length > 1) {
-            activeButtons.push(availableButtons.move)
+            // todo: Reimplement this once node structure panel
+            // todo: is removed.
+            // activeButtons.push(availableButtons.move)
             activeButtons.push(availableButtons.remove)
           }
         }
@@ -566,7 +569,15 @@ export default function MissionPage({
    * Renders JSX for panel 2 of the resize relationship.
    */
   const renderPanel2 = (): JSX.Element | null => {
-    if (selection instanceof ClientMission) {
+    if (nodeStructuringIsActive) {
+      return (
+        <NodeStructuring
+          mission={mission}
+          handleChange={handleChange}
+          handleCloseRequest={() => activateNodeStructuring(false)}
+        />
+      )
+    } else if (selection instanceof ClientMission) {
       return (
         <MissionEntry
           mission={selection}
