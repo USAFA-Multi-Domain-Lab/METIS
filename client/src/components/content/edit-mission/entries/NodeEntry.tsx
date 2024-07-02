@@ -27,8 +27,6 @@ import EntryNavigation from './navigation/EntryNavigation'
 export default function NodeEntry({
   node,
   handleChange,
-  handleAddRequest,
-  handleDeleteRequest,
 }: TNodeEntry_P): JSX.Element | null {
   /* -- GLOBAL CONTEXT -- */
   const globalContext = useGlobalContext()
@@ -98,22 +96,6 @@ export default function NodeEntry({
     return classList
   })
 
-  // todo: Switch to make this work with prototypes.
-  /**
-   * The class name for the delete node button.
-   */
-  const deleteNodeClassName: string = compute(() => {
-    // Create a default list of class names.
-    let classList: string[] = []
-
-    // If the mission has only one node, add the disabled class.
-    if (node && mission.prototypes.length < 2) {
-      classList.push('Disabled')
-    }
-
-    // Combine the class names into a single string.
-    return classList.join(' ')
-  })
   /**
    * The lock state for the device toggle.
    */
@@ -403,21 +385,6 @@ export default function NodeEntry({
               tooltipDescription='Create a new action.'
             />
           </div>
-
-          {/* -- BUTTON(S) -- */}
-          <div className='ButtonContainer'>
-            <ButtonText
-              text='Add adjacent node'
-              onClick={handleAddRequest}
-              tooltipDescription='Add one or multiple nodes adjacent to this node.'
-            />
-            <ButtonText
-              text='Delete node'
-              onClick={handleDeleteRequest}
-              tooltipDescription='Delete this node.'
-              uniqueClassName={deleteNodeClassName}
-            />
-          </div>
         </div>
       </div>
     </div>
@@ -436,14 +403,4 @@ export type TNodeEntry_P = {
    * A function that will be called when a change has been made.
    */
   handleChange: () => void
-  /**
-   * A function that will be called when the user wants to
-   * add a new mission-node.
-   */
-  handleAddRequest: () => void
-  /**
-   * A function that will be called when the user wants to
-   * delete a mission-node.
-   */
-  handleDeleteRequest: () => void
 }

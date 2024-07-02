@@ -6,8 +6,10 @@ import ClientMissionAction from 'src/missions/actions'
 import { ClientExternalEffect } from 'src/missions/effects/external'
 import { ClientInternalEffect } from 'src/missions/effects/internal'
 import ClientMissionForce from 'src/missions/forces'
-import ClientMissionNode, { ENodeDeleteMethod } from 'src/missions/nodes'
-import ClientMissionPrototype from 'src/missions/nodes/prototypes'
+import ClientMissionNode from 'src/missions/nodes'
+import ClientMissionPrototype, {
+  TPrototypeDeleteMethod,
+} from 'src/missions/nodes/prototypes'
 import PrototypeCreation from 'src/missions/transformations/creations'
 import PrototypeTranslation from 'src/missions/transformations/translations'
 import { ClientTargetEnvironment } from 'src/target-environments'
@@ -242,7 +244,7 @@ export default function MissionPage({
             key: 'prototype-button-add',
             tooltipDescription: 'Create an adjacent prototype on the map.',
             onClick: (_, prototype) => {
-              handlePrototypeAddRequest(prototype)
+              onPrototypeAddRequest(prototype)
             },
           } as TPrototypeButton,
           move: {
@@ -250,7 +252,7 @@ export default function MissionPage({
             key: 'prototype-button-move',
             tooltipDescription: 'Move this prototype to another location.',
             onClick: (_, prototype) => {
-              handlePrototypeMoveRequest(prototype)
+              onPrototypeMoveRequest(prototype)
             },
           } as TPrototypeButton,
           transform_cancel: {
@@ -265,8 +267,7 @@ export default function MissionPage({
             tooltipDescription: 'Delete this prototype.',
             disabled: mission.prototypes.length < 2,
             onClick: (_, prototype) => {
-              // todo: Uncomment and make this work with prototypes.
-              // handleNodeDeleteRequest(prototype)
+              onPrototypeDeleteRequest(prototype)
             },
           } as TPrototypeButton,
         }
@@ -340,23 +341,6 @@ export default function MissionPage({
       notify('Mission failed to save')
       setAreUnsavedChanges(true)
     }
-  }
-
-  // todo: Fix this to work with prototypes.
-  /**
-   * Ensures that at least one node exists in the mission.
-   * @note If a node is deleted and there are no remaining nodes,
-   * then a new node is auto-generated and the user is notified.
-   */
-  const ensureOneNodeExists = (): void => {
-    // if (
-    //   mission.prototypes.length === 1 &&
-    //   mission.lastCreatedNode?._id === Array.from(mission.nodes.values())[0]._id
-    // ) {
-    //   notify(
-    //     'Auto-generated a node for this mission, since missions must have at least one node.',
-    //   )
-    // }
   }
 
   /**
@@ -436,28 +420,27 @@ export default function MissionPage({
 
   /**
    * Handler for when the user requests to delete a node.
-   * @param node The node to be deleted.
+   * @param prototype The node to be deleted.
    */
-  const handleNodeDeleteRequest = async (
-    node: ClientMissionNode,
+  const onPrototypeDeleteRequest = async (
+    prototype: ClientMissionPrototype,
   ): Promise<void> => {
     // Gather details.
-    let deleteMethod: ENodeDeleteMethod =
-      ENodeDeleteMethod.DeleteNodeAndChildren
+    let deleteMethod: TPrototypeDeleteMethod = 'delete-children'
     let message: string
-    let choices: ['Cancel', 'Node', 'Node + Children', 'Confirm'] = [
+    let choices: ['Cancel', 'Keep Children', 'Delete Children', 'Confirm'] = [
       'Cancel',
-      'Node',
-      'Node + Children',
+      'Keep Children',
+      'Delete Children',
       'Confirm',
     ]
 
-    // Set the message and choices based on the node's children.
-    if (node.hasChildren) {
-      message = `Please confirm if you would like to delete "${node.name}" only or "${node.name}" and all of it's children.`
+    // Set the message and choices based on the prototype's children.
+    if (prototype.hasChildren) {
+      message = `What would you like to do with the children of "${prototype.name}"?`
       choices.pop()
     } else {
-      message = `Please confirm the deletion of "${node.name}".`
+      message = `Please confirm the deletion of "${prototype.name}".`
       choices.splice(1, 2)
     }
 
@@ -465,8 +448,8 @@ export default function MissionPage({
     let { choice } = await prompt(message, choices)
 
     // If the user selects node only, update the delete method.
-    if (choice === 'Node') {
-      deleteMethod = ENodeDeleteMethod.DeleteNodeAndShiftChildren
+    if (choice === 'Keep Children') {
+      deleteMethod = 'shift-children'
     }
     // Return if the user cancels the deletion.
     else if (choice === 'Cancel') {
@@ -474,32 +457,26 @@ export default function MissionPage({
     }
 
     // Delete the node.
-    node.delete({
+    prototype.delete({
       deleteMethod,
     })
     // Handle the change.
     handleChange()
     activateNodeStructuring(false)
-    // todo: Remove this.
-    // mission.deselectNode()
-    ensureOneNodeExists()
+    mission.deselect()
   }
 
   /**
    * Handler for when the user requests to add a new prototype.
    */
-  const handlePrototypeAddRequest = (
-    prototype: ClientMissionPrototype,
-  ): void => {
+  const onPrototypeAddRequest = (prototype: ClientMissionPrototype): void => {
     mission.transformation = new PrototypeCreation(prototype)
   }
 
   /**
    * Handler for when the user requests to add a new prototype.
    */
-  const handlePrototypeMoveRequest = (
-    prototype: ClientMissionPrototype,
-  ): void => {
+  const onPrototypeMoveRequest = (prototype: ClientMissionPrototype): void => {
     mission.transformation = new PrototypeTranslation(prototype)
   }
 
@@ -588,9 +565,11 @@ export default function MissionPage({
     } else if (selection instanceof ClientMissionPrototype) {
       return (
         <PrototypeEntry
+          key={selection._id}
           prototype={selection}
           handleChange={handleChange}
-          key={selection._id}
+          onAddRequest={() => onPrototypeAddRequest(selection)}
+          onDeleteRequest={() => onPrototypeDeleteRequest(selection)}
         />
       )
     } else if (selection instanceof ClientMissionForce) {
@@ -604,12 +583,9 @@ export default function MissionPage({
     } else if (selection instanceof ClientMissionNode) {
       return (
         <NodeEntry
+          key={selection._id}
           node={selection}
           handleChange={handleChange}
-          // todo: Move this to PrototypeEntry.
-          handleAddRequest={() => {}}
-          handleDeleteRequest={() => handleNodeDeleteRequest(selection)}
-          key={selection._id}
         />
       )
     } else if (selection instanceof ClientMissionAction) {

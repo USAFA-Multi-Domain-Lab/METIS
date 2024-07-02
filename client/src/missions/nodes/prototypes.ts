@@ -134,7 +134,7 @@ export default class ClientMissionPrototype
   }
 
   /**
-   * Adds a listener for a node event.
+   * Adds a listener for a prototype event.
    * @param method The method of the event to listen for.
    * @param callback The callback to call when the event is triggered.
    */
@@ -147,7 +147,7 @@ export default class ClientMissionPrototype
   }
 
   /**
-   * Removes a listener for a node event.
+   * Removes a listener for a prototype event.
    * @param callback The callback used for the listener.
    */
   public removeEventListener(callback: () => void): ClientMissionPrototype {
@@ -185,7 +185,7 @@ export default class ClientMissionPrototype
       x = x.parent
     }
 
-    // This will remove the nodes
+    // This will remove the prototypes
     // current position in the structure.
     if (parent !== null) {
       let siblings: ClientMissionPrototype[] = parent.children
@@ -200,7 +200,7 @@ export default class ClientMissionPrototype
     }
 
     // This will move the target based on
-    // its relation to this node.
+    // its relation to this prototype.
     switch (relation) {
       case 'parent-of-target-only':
         this.parent = destination.parent
@@ -227,15 +227,15 @@ export default class ClientMissionPrototype
         destination.parent = this
         break
       case 'between-target-and-children':
-        let childNodes: Array<ClientMissionPrototype> = destination.children
+        let children: Array<ClientMissionPrototype> = destination.children
 
         destination.children = [this]
         this.parent = destination
 
-        for (let childNode of childNodes) {
-          childNode.parent = this
+        for (let child of children) {
+          child.parent = this
         }
-        this.children = childNodes
+        this.children = children
         break
       case 'child-of-target':
         destination.children.push(this)
@@ -275,6 +275,70 @@ export default class ClientMissionPrototype
   }
 
   /**
+   * Delete a prototype from the mission.
+   * @param options Options for how the prototype should be deleted.
+   */
+  public delete(options: TPrototypeDeleteOptions = {}): void {
+    const { calledByParentDelete = false, deleteMethod = 'delete-children' } =
+      options
+
+    switch (deleteMethod) {
+      case 'delete-children':
+        let children: Array<ClientMissionPrototype> = [...this.children]
+
+        for (let child of children) {
+          let childOptions: TPrototypeDeleteOptions = {
+            ...options,
+            calledByParentDelete: true,
+          }
+          child.delete(childOptions)
+        }
+
+        this.childrenOfParent.splice(this.childrenOfParent.indexOf(this), 1)
+        this.mission.prototypes = this.mission.prototypes.filter(
+          (prototype) => prototype._id !== this._id,
+        )
+        break
+      case 'shift-children':
+        let parentOfThis: ClientMissionPrototype | null = this.parent
+        let childrenofThis: Array<ClientMissionPrototype> = [...this.children]
+
+        childrenofThis.forEach((child: ClientMissionPrototype) => {
+          if (parentOfThis !== null) {
+            parentOfThis.children.splice(
+              parentOfThis.children.indexOf(this),
+              0,
+              child,
+            )
+            child.parent = parentOfThis
+          }
+        })
+
+        if (parentOfThis !== null) {
+          parentOfThis.children.splice(parentOfThis.children.indexOf(this), 1)
+          this.mission.prototypes = this.mission.prototypes.filter(
+            (prototype) => prototype._id !== this._id,
+          )
+          this.mission.handleStructureChange()
+        }
+        break
+    }
+
+    if (calledByParentDelete !== true) {
+      // Structure change is handled as long
+      // as one prototype exists. If not, a new
+      // prototype is created. Creating this prototype
+      // will handle the structure change for
+      // us.
+      if (this.mission.prototypes.length > 0) {
+        this.mission.handleStructureChange()
+      } else {
+        this.mission.createPrototype()
+      }
+    }
+  }
+
+  /**
    * Toggle the expandedInMenu property between true and false.
    */
   public toggleMenuExpansion(): void {
@@ -283,11 +347,11 @@ export default class ClientMissionPrototype
 }
 
 /**
- * An event that occurs on a node, which can be listened for.
+ * An event that occurs on a prototype, which can be listened for.
  * @option 'activity'
  * Triggered when any other event occurs.
  * @option 'set-buttons'
- * Triggered when the buttons for the node are set.
+ * Triggered when the buttons for the prototype are set.
  */
 export type TPrototypeEventMethod = 'activity' | 'set-buttons'
 
@@ -300,3 +364,20 @@ export type TPrototypeRelation =
   | 'between-target-and-children'
   | 'previous-sibling-of-target'
   | 'following-sibling-of-target'
+
+/**
+ * Method for deleting a prototype.
+ * @option 'delete-children'
+ * Deletes the prototype and all of its children.
+ * @option 'shift-children'
+ * Deletes the prototype and transfers its children to the prototype's parent.
+ */
+export type TPrototypeDeleteMethod = 'delete-children' | 'shift-children'
+
+/**
+ * Options for `ClientMissionPrototype.delete`.
+ */
+export interface TPrototypeDeleteOptions {
+  calledByParentDelete?: boolean // Default "false"
+  deleteMethod?: TPrototypeDeleteMethod // Default 'delete-children'
+}

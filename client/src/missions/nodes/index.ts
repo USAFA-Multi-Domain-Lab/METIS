@@ -484,81 +484,6 @@ export default class ClientMissionNode
     }
   }
 
-  // todo: Move this to the prototype class.
-  /**
-   * Delete a node.
-   * @param options Options for how the node should be deleted.
-   * @deprecated
-   * @note Currently does nothing.
-   */
-  public delete(
-    options: INodeDeleteOptions = {
-      calledByParentDelete: false,
-      deleteMethod: ENodeDeleteMethod.DeleteNodeAndChildren,
-    },
-  ): void {
-    throw Error('Not implemented')
-    //     let calledByParentDelete: boolean = options.calledByParentDelete === true
-    //     let deleteMethod: ENodeDeleteMethod = options.deleteMethod
-    //       ? options.deleteMethod
-    //       : ENodeDeleteMethod.DeleteNodeAndChildren
-    //
-    //     switch (deleteMethod) {
-    //       case ENodeDeleteMethod.DeleteNodeAndChildren:
-    //         let childNodes: Array<ClientMissionNode> = [...this.children]
-    //
-    //         for (let childNode of childNodes) {
-    //           let childOptions: INodeDeleteOptions = {
-    //             ...options,
-    //             calledByParentDelete: true,
-    //           }
-    //           childNode.delete(childOptions)
-    //         }
-    //
-    //         this.childrenOfParent.splice(this.childrenOfParent.indexOf(this), 1)
-    //         this.mission.nodes = this.mission.nodes.filter(
-    //           (node) => node._id !== this._id,
-    //         )
-    //         break
-    //       case ENodeDeleteMethod.DeleteNodeAndShiftChildren:
-    //         let parentOfThis: ClientMissionNode | null = this.parent
-    //         let childrenofThis: Array<ClientMissionNode> = [...this.children]
-    //
-    //         childrenofThis.forEach((childNode: ClientMissionNode) => {
-    //           if (parentOfThis !== null) {
-    //             parentOfThis.children.splice(
-    //               parentOfThis.children.indexOf(this),
-    //               0,
-    //               childNode,
-    //             )
-    //             childNode.parent = parentOfThis
-    //           }
-    //         })
-    //
-    //         if (parentOfThis !== null) {
-    //           parentOfThis.children.splice(parentOfThis.children.indexOf(this), 1)
-    //           this.mission.nodes = this.mission.nodes.filter(
-    //             (node) => node._id !== this._id,
-    //           )
-    //           this.mission.handleStructureChange()
-    //         }
-    //         break
-    //     }
-    //
-    //     if (calledByParentDelete !== true) {
-    //       // Structure change is handled as long
-    //       // as one node exists. If not, a new
-    //       // node is created. Creating this node
-    //       // will handle the structure change for
-    //       // us.
-    //       if (this.mission.nodes.length > 0) {
-    //         this.mission.handleStructureChange()
-    //       } else {
-    //         this.mission.spawnNode()
-    //       }
-    //     }
-  }
-
   // todo: Move this to the force class.
   /**
    * Populates the children of the node, if not already populated.
@@ -701,28 +626,6 @@ export interface IClientLoadOutcomeOptions extends ILoadOutcomeOptions {
    * @default undefined
    */
   revealedChildNodes?: Array<TMissionNodeJson>
-}
-
-/**
- * Method for deleting a node.
- */
-export enum ENodeDeleteMethod {
-  /**
-   * Deletes the node and all of its children.
-   */
-  DeleteNodeAndChildren,
-  /**
-   * Deletes the node and transfers its children to the node's parent.
-   */
-  DeleteNodeAndShiftChildren,
-}
-
-/**
- * Options for ClientMissionNode.delete.
- */
-export interface INodeDeleteOptions {
-  calledByParentDelete?: boolean // Default "false"
-  deleteMethod?: ENodeDeleteMethod // Default "ENodeDeleteMethod.DeleteNodeAndChildren"
 }
 
 /**
