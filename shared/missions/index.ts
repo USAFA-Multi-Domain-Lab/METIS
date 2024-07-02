@@ -82,26 +82,52 @@ export default abstract class Mission<
   }
 
   // Implemented
-  public toJson(options: TMissionJsonOptions = {}): TCommonMissionJson {
-    let {
-      revealedOnly = false,
-      includeSessionData: includeSessionData = false,
-    } = options
-
+  public toJson(
+    options: TMissionJsonOptions = { exportType: 'standard' },
+  ): TCommonMissionJson {
     let json: TCommonMissionJson = {
       name: this.name,
       introMessage: this.introMessage,
       versionNumber: this.versionNumber,
       initialResources: this.initialResources,
       seed: this.seed,
-      // todo: Resolve revealedOnly not working.
-      nodeStructure: Mission.determineNodeStructure(
-        this.root /*{ revealedOnly }*/,
-      ),
-      forces: this.forces.map((force) =>
-        force.toJson({ revealedOnly, includeSessionData }),
-      ),
-      // ...this.exportNodes({ revealedOnly, includeSessionData }),
+      nodeStructure: {},
+      forces: [],
+    }
+
+    // Handle the export based on the export type
+    // passed in the options.
+    switch (options.exportType) {
+      case 'standard':
+        json.nodeStructure = Mission.determineNodeStructure(this.root)
+        json.forces = this.forces.map((force) => force.toJson())
+        break
+      case 'session':
+        // Export the mission with all forces included.
+        if (options.forceId === undefined) {
+          json.nodeStructure = Mission.determineNodeStructure(this.root)
+          json.forces = this.forces.map((force) =>
+            force.toJson({ revealedOnly: true, includeSessionData: true }),
+          )
+        }
+        // Export the mission with a specific force included.
+        else {
+          // Get the force to include in the export.
+          let force = this.forces.find((force) => force._id === options.forceId)
+
+          // If the force is not found, throw an error.
+          if (!force) {
+            throw new Error('Force not found.')
+          }
+
+          // Set the structure to revealed structure of the force.
+          json.nodeStructure = force.revealedStructure
+          // Export force.
+          json.forces = [
+            force.toJson({ revealedOnly: true, includeSessionData: true }),
+          ]
+        }
+        break
     }
 
     // Include _id if it's an ObjectId.
@@ -440,20 +466,36 @@ export type TMissionOptions = {
 }
 
 /**
+ * Options for Mission.toJson with `exportType` set to 'standard'.
+ */
+export type TMissionJsonStandardOptions = {
+  /**
+   * The type of JSON export to perform.
+   */
+  exportType: 'standard'
+}
+
+/**
+ * Options for Mission.toJson with `exportType` set to 'session'.
+ */
+export type TMissionJsonSessionOptions = {
+  /**
+   * The type of JSON export to perform.
+   */
+  exportType: 'session'
+  /**
+   * The ID of the force to include in the export. If set, the structure will be
+   * limited to the nodes revealed in the force.
+   */
+  forceId?: TCommonMissionForce['_id']
+}
+
+/**
  * Options for Mission.toJSON.
  */
-export type TMissionJsonOptions = {
-  /**
-   * Whether or not to exclude non-revealed nodes from the generated JSON.
-   * @default false
-   */
-  revealedOnly?: boolean
-  /**
-   * Whether or not to include session-specific data in the generated JSON.
-   * @default false
-   */
-  includeSessionData?: boolean
-}
+export type TMissionJsonOptions =
+  | TMissionJsonStandardOptions
+  | TMissionJsonSessionOptions
 
 /**
  * Options for Mission.mapRelationships.
@@ -475,15 +517,4 @@ export type TNodeImportOptions = {
    * @default false
    */
   openAll?: boolean
-}
-
-/**
- * Options for Mission.determineNodeStructure.
- */
-export type TDetermineNodeStructureOptions = {
-  /**
-   * Whether to exclude non-revealed nodes in the node structure.
-   * @default false
-   */
-  revealedOnly?: boolean
 }

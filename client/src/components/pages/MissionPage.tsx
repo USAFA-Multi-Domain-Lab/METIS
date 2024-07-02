@@ -490,8 +490,7 @@ export default function MissionPage({
       icon: 'reorder',
       key: 'reorder',
       onClick: () => {
-        // todo: Resolve this.
-        // mission.deselectNode()
+        mission.deselect()
         activateNodeStructuring(true)
       },
       tooltipDescription: 'Edit the structure and order of nodes.',

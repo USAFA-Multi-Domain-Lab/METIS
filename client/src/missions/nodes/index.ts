@@ -17,6 +17,7 @@ import ClientMissionAction from '../actions'
 import ClientActionExecution from '../actions/executions'
 import ClientActionOutcome from '../actions/outcomes'
 import ClientMissionForce from '../forces'
+import ClientMissionPrototype from './prototypes'
 
 /**
  * Class for managing mission nodes on the client.
@@ -484,7 +485,6 @@ export default class ClientMissionNode
     }
   }
 
-  // todo: Move this to the force class.
   /**
    * Populates the children of the node, if not already populated.
    * @param {Array<TMissionNodeJson>} data The child node data with which to populate the node.
@@ -492,30 +492,48 @@ export default class ClientMissionNode
   protected populateChildNodes(
     data: Array<TMissionNodeJson>,
   ): Array<ClientMissionNode> {
-    throw Error('Not implemented')
-    //     // If child nodes are already set,
-    //     // throw an error.
-    //     if (this.children.length > 0) {
-    //       throw new Error('Child nodes are already populated.')
-    //     }
-    //
-    //     // Generate child nodes.
-    //     let childNodes: Array<ClientMissionNode> = data.map((datum) => {
-    //       // Create a new node.
-    //       let childNode: ClientMissionNode = new ClientMissionNode(
-    //         this.force,
-    //         datum,
-    //       )
-    //
-    //       // Add the node into the mission.
-    //       this.mission.nodes.push(childNode)
-    //
-    //       // Return node
-    //       return childNode
-    //     })
-    //
-    //     // Return the child nodes.
-    //     return childNodes
+    // If children are already set,
+    // throw an error.
+    if (this.children.length > 0) {
+      throw new Error('Children are already populated.')
+    }
+
+    // Gather details.
+    let prototype = this.prototype
+    let mission = this.mission
+
+    // Generate children.
+    let children: Array<ClientMissionNode> = data.map((datum) => {
+      // Get child prototype.
+      let childPrototypeId = datum.structureKey
+      let childPrototype = this.prototype.children.find(
+        ({ _id }) => _id === childPrototypeId,
+      )
+
+      // If the child prototype is not found,
+      // create that prototype with that ID.
+      if (childPrototype === undefined) {
+        childPrototype = new ClientMissionPrototype(mission, childPrototypeId)
+        mission.prototypes.push(childPrototype)
+        childPrototype.parent = prototype
+        prototype.children.push(childPrototype)
+      }
+
+      // Create a new node.
+      let childNode: ClientMissionNode = new ClientMissionNode(
+        this.force,
+        datum,
+      )
+
+      // Add the node into the mission.
+      this.force.nodes.push(childNode)
+
+      // Return node
+      return childNode
+    })
+
+    // Return the child nodes.
+    return children
   }
 
   /* -- static -- */

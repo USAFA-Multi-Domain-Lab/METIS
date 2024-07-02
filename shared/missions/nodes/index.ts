@@ -8,11 +8,13 @@ import { TCommonMissionAction, TCommonMissionActionJson } from '../actions'
 import IActionExecution, {
   TActionExecutionJson,
   default as TCommonMissionExecution,
+  TExecution,
 } from '../actions/executions'
 import {
   default as IActionOutcome,
   TActionOutcomeJson,
   default as TCommonActionOutcome,
+  TOutcome,
 } from '../actions/outcomes'
 import { TCommonMissionForce, TForce } from '../forces'
 import { TCommonMissionPrototype, TPrototype } from './prototypes'
@@ -338,7 +340,7 @@ export default abstract class MissionNode<
 
   // Implemented
   public toJson(options: TNodeJsonOptions = {}): TMissionNodeJson {
-    let { includeSessionData: includeSessionData = false } = options
+    let { includeSessionData = false } = options
 
     // Construct base JSON.
     let json: TMissionNodeJson = {
@@ -656,22 +658,6 @@ export interface TCommonMissionNodeJson {
  * @returns The node type.
  */
 export type TNode<T extends TCommonMissionTypes> = T['node']
-
-// todo: Move to executions class file.
-/**
- * Extracts the execution type from the mission types.
- * @param T The mission types.
- * @returns The execution type.
- */
-export type TExecution<T extends TCommonMissionTypes> = T['execution']
-
-// todo: Move to outcomes class file.
-/**
- * Extracts the outcome type from the mission types.
- * @param T The mission types.
- * @returns The outcome type.
- */
-export type TOutcome<T extends TCommonMissionTypes> = T['outcome']
 
 /**
  * Session-specific JSON data for a MissionNode object.

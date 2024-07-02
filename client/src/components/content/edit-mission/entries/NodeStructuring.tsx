@@ -32,7 +32,6 @@ export default function NodeStructuring(props: {
   let mission: ClientMission = props.mission
   let handleChange = props.handleChange
   let handleCloseRequest = props.handleCloseRequest
-  // todo: Fix this to use prototypes.
   let root: ClientMissionPrototype = mission.root
 
   /* -- STATE -- */
@@ -97,11 +96,7 @@ export default function NodeStructuring(props: {
             let destinationNode = nodePendingDrop
 
             if (nodeGrabbed !== null) {
-              // todo: Resolve this.
-              // nodeGrabbed.move(
-              //   destinationNode,
-              //   'child-of-target',
-              // )
+              nodeGrabbed.move(destinationNode, 'child-of-target')
               handleChange()
             }
 

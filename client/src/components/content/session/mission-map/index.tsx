@@ -602,12 +602,11 @@ export default function MissionMap({
     selectedForce,
   ])
 
-  // todo: Use placements instead.
   /**
-   * The JSX for the node creator objects rendered in the scene.
+   * The JSX for the prototype slot objects rendered in the scene.
    * @memoized
    */
-  const placementsJsx = useMemo((): JSX.Element[] => {
+  const slotsJsx = useMemo((): JSX.Element[] => {
     return mission.prototypeSlots.map((slot) => (
       <PrototypeSlot key={`${slot.relative._id}${slot.relation}`} {...slot} />
     ))
@@ -655,7 +654,7 @@ export default function MissionMap({
         <Grid type={'node'} enabled={MAP_NODE_GRID_ENABLED} />
         {linesJsx}
         {nodesJsx}
-        {placementsJsx}
+        {slotsJsx}
       </Scene>
       <Hud
         mission={mission}

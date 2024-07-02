@@ -113,8 +113,9 @@ export default class SessionServer extends Session<
       state: this.state,
       name: this.name,
       mission: this.mission.toJson({
-        revealedOnly: true,
-        includeSessionData: true,
+        exportType: 'session',
+        // todo: Change this once participants are added to forces, and use the force of the participant.
+        forceId: this.mission.forces[0]._id,
       }),
       participants: this.participants.map((client: ClientConnection) =>
         client.user.toJson(),
@@ -162,19 +163,17 @@ export default class SessionServer extends Session<
     }
   }
 
-  // todo: Reimplement this.
   // Implemented
   protected mapActions(): void {
-    throw Error('Not implemented.')
-    //     // Initialize the actions map.
-    //     this.actions = new Map<string, ServerMissionAction>()
-    //
-    //     // Loops through and maps each action.
-    //     this.mission.nodes.forEach((node) => {
-    //       node.actions.forEach((action) => {
-    //         this.actions.set(action._id, action)
-    //       })
-    //     })
+    // Initialize the actions map.
+    this.actions = new Map<string, ServerMissionAction>()
+
+    // Loops through and maps each action.
+    this.mission.forces.forEach((force) =>
+      force.nodes.forEach((node) =>
+        node.actions.forEach((action) => this.actions.set(action._id, action)),
+      ),
+    )
   }
 
   /**
@@ -484,7 +483,6 @@ export default class SessionServer extends Session<
     }
   }
 
-  // todo: Reimplement this.
   /**
    * Called when a participant requests to open a node.
    * @param participant The participant requesting to open a node.
@@ -494,75 +492,73 @@ export default class SessionServer extends Session<
     participant: ClientConnection,
     event: TClientEvents['request-open-node'],
   ): void => {
-    throw Error('Not implemented.')
-    //     // Organize data.
-    //     let mission: ServerMission = this.mission
-    //     let { nodeId } = event.data
-    //
-    //
-    //     // Find the node, given the ID.
-    //     let node: ServerMissionNode | undefined = mission.getNode(nodeId)
-    //
-    //     // If the session is not in the 'started' state,
-    //     // then emit an error.
-    //     if (this.state !== 'started') {
-    //       return participant.emitError(
-    //         new ServerEmittedError(
-    //           ServerEmittedError.CODE_SESSION_PROGRESS_LOCKED,
-    //           {
-    //             request: participant.buildResponseReqData(event),
-    //           },
-    //         ),
-    //       )
-    //     }
-    //     // If the node is undefined, then emit
-    //     // an error.
-    //     if (node === undefined) {
-    //       return participant.emitError(
-    //         new ServerEmittedError(ServerEmittedError.CODE_NODE_NOT_FOUND, {
-    //           request: participant.buildResponseReqData(event),
-    //         }),
-    //       )
-    //     }
-    //     // If the node is executable, then emit
-    //     // an error.
-    //     if (!node.openable) {
-    //       return participant.emitError(
-    //         new ServerEmittedError(ServerEmittedError.CODE_NODE_NOT_OPENABLE, {
-    //           request: participant.buildResponseReqData(event),
-    //         }),
-    //       )
-    //     }
-    //
-    //     try {
-    //       // Open the node.
-    //       node.open()
-    //
-    //       // Construct open event payload.
-    //       let payload: TServerEvents['node-opened'] = {
-    //         method: 'node-opened',
-    //         data: {
-    //           nodeId: nodeId,
-    //           revealedChildNodes: node.children.map((node) =>
-    //             node.toJson({ includeSessionData: true }),
-    //           ),
-    //         },
-    //         request: { event, requesterId: participant.userId, fulfilled: true },
-    //       }
-    //
-    //       // Emit open event.
-    //       for (let user of this.users) {
-    //         user.emit('node-opened', payload)
-    //       }
-    //     } catch (error) {
-    //       // Emit an error if the node could not be opened.
-    //       participant.emitError(
-    //         new ServerEmittedError(ServerEmittedError.CODE_SERVER_ERROR, {
-    //           request: participant.buildResponseReqData(event),
-    //           message: 'Failed to open node.',
-    //         }),
-    //       )
-    //     }
+    // Organize data.
+    let mission: ServerMission = this.mission
+    let { nodeId } = event.data
+
+    // Find the node, given the ID.
+    let node: ServerMissionNode | undefined = mission.getNode(nodeId)
+
+    // If the session is not in the 'started' state,
+    // then emit an error.
+    if (this.state !== 'started') {
+      return participant.emitError(
+        new ServerEmittedError(
+          ServerEmittedError.CODE_SESSION_PROGRESS_LOCKED,
+          {
+            request: participant.buildResponseReqData(event),
+          },
+        ),
+      )
+    }
+    // If the node is undefined, then emit
+    // an error.
+    if (node === undefined) {
+      return participant.emitError(
+        new ServerEmittedError(ServerEmittedError.CODE_NODE_NOT_FOUND, {
+          request: participant.buildResponseReqData(event),
+        }),
+      )
+    }
+    // If the node is executable, then emit
+    // an error.
+    if (!node.openable) {
+      return participant.emitError(
+        new ServerEmittedError(ServerEmittedError.CODE_NODE_NOT_OPENABLE, {
+          request: participant.buildResponseReqData(event),
+        }),
+      )
+    }
+
+    try {
+      // Open the node.
+      node.open()
+
+      // Construct open event payload.
+      let payload: TServerEvents['node-opened'] = {
+        method: 'node-opened',
+        data: {
+          nodeId: nodeId,
+          revealedChildNodes: node.children.map((node) =>
+            node.toJson({ includeSessionData: true }),
+          ),
+        },
+        request: { event, requesterId: participant.userId, fulfilled: true },
+      }
+
+      // Emit open event.
+      for (let user of this.users) {
+        user.emit('node-opened', payload)
+      }
+    } catch (error) {
+      // Emit an error if the node could not be opened.
+      participant.emitError(
+        new ServerEmittedError(ServerEmittedError.CODE_SERVER_ERROR, {
+          request: participant.buildResponseReqData(event),
+          message: 'Failed to open node.',
+        }),
+      )
+    }
   }
 
   /**

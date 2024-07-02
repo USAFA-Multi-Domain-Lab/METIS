@@ -81,13 +81,12 @@ export default class ClientSession extends Session<
     // Initialize the actions map.
     this.actions = new Map<string, ClientMissionAction>()
 
-    // todo: Fix this.
-    // Loops through and maps each action.
-    // this.mission.nodes.forEach((node) => {
-    //   node.actions.forEach((action) => {
-    //     this.actions.set(action._id, action)
-    //   })
-    // })
+    // Loops through and add each action found.
+    this.mission.forces.forEach((force) =>
+      force.nodes.forEach((node) =>
+        node.actions.forEach((action) => this.actions.set(action._id, action)),
+      ),
+    )
   }
 
   // Implemented
@@ -157,9 +156,7 @@ export default class ClientSession extends Session<
       _id: this._id,
       state: this.state,
       name: this.name,
-      mission: this.mission.toJson({
-        revealedOnly: true,
-      }),
+      mission: this.mission.toJson({ exportType: 'session' }),
       participants: this.participants.map((user) => user.toJson()),
       banList: this.banList,
       supervisors: this.supervisors.map((user) => user.toJson()),
@@ -181,56 +178,54 @@ export default class ClientSession extends Session<
     }
   }
 
-  // todo: Implement this.
   /**
    * Opens a node.
    * @param nodeId The ID of the node to be opened.
    */
   public openNode(nodeId: string, options: TOpenNodeOptions = {}): void {
-    throw new Error('Method not implemented.')
-    //     // Gather details.
-    //     let server: ServerConnection = this.server
-    //     let node: ClientMissionNode | undefined = this.mission.getNode(nodeId)
-    //     let { onError = () => {} } = options
-    //
-    //     // If the role is not "participant", callback
-    //     // an error.
-    //     if (this.role !== 'participant') {
-    //       return onError('Only participants can open nodes.')
-    //     }
-    //     // Callback error if the node is not in
-    //     // the mission associated with this
-    //     // session.
-    //     if (node === undefined) {
-    //       return onError('Node was not found in the mission.')
-    //     }
-    //     // If the node is not openable, callback
-    //     // an error.
-    //     if (!node.openable) {
-    //       return onError('Node is not openable.')
-    //     }
-    //
-    //     // Emit a request to open the node.
-    //     server.request(
-    //       'request-open-node',
-    //       {
-    //         nodeId,
-    //       },
-    //       `Opening "${node.name}".`,
-    //       {
-    //         // Handle error emitted by server concerning the
-    //         // request.
-    //         onResponse: (event) => {
-    //           if (event.method === 'error') {
-    //             onError(event.message)
-    //             node!.handleRequestFailed('request-open-node')
-    //           }
-    //         },
-    //       },
-    //     )
-    //
-    //     // Handle request within node.
-    //     node.handleRequestMade('request-open-node')
+    // Gather details.
+    let server: ServerConnection = this.server
+    let node: ClientMissionNode | undefined = this.mission.getNode(nodeId)
+    let { onError = () => {} } = options
+
+    // If the role is not "participant", callback
+    // an error.
+    if (this.role !== 'participant') {
+      return onError('Only participants can open nodes.')
+    }
+    // Callback error if the node is not in
+    // the mission associated with this
+    // session.
+    if (node === undefined) {
+      return onError('Node was not found in the mission.')
+    }
+    // If the node is not openable, callback
+    // an error.
+    if (!node.openable) {
+      return onError('Node is not openable.')
+    }
+
+    // Emit a request to open the node.
+    server.request(
+      'request-open-node',
+      {
+        nodeId,
+      },
+      `Opening "${node.name}".`,
+      {
+        // Handle error emitted by server concerning the
+        // request.
+        onResponse: (event) => {
+          if (event.method === 'error') {
+            onError(event.message)
+            node!.handleRequestFailed('request-open-node')
+          }
+        },
+      },
+    )
+
+    // Handle request within node.
+    node.handleRequestMade('request-open-node')
   }
 
   /**
@@ -504,34 +499,32 @@ export default class ClientSession extends Session<
     this._supervisors = supervisors.map((userData) => new ClientUser(userData))
   }
 
-  // todo: Implement this.
   /**
    * Handles when a node has been opened.
    * @param event The event emitted by the server.
    */
   private onNodeOpened = (event: TServerEvents['node-opened']): void => {
-    throw Error('Method not implemented.')
-    //     // Extract data.
-    //     let { nodeId, revealedChildNodes } = event.data
-    //
-    //     // Find the node, given the ID.
-    //     let node: ClientMissionNode | undefined = this.mission.getNode(nodeId)
-    //
-    //     // Handle node not found.
-    //     if (node === undefined) {
-    //       throw new Error(
-    //         `Event "node-opened" was triggered, but the node with the given nodeId ("${nodeId}") could not be found.`,
-    //       )
-    //     }
-    //
-    //     // Open node, if there are revealed
-    //     // child nodes.
-    //     if (revealedChildNodes !== undefined) {
-    //       node.open({ revealedChildNodes })
-    //       // Remap actions, since new actions
-    //       // may have been populated.
-    //       this.mapActions()
-    //     }
+    // Extract data.
+    let { nodeId, revealedChildNodes } = event.data
+
+    // Find the node, given the ID.
+    let node: ClientMissionNode | undefined = this.mission.getNode(nodeId)
+
+    // Handle node not found.
+    if (node === undefined) {
+      throw new Error(
+        `Event "node-opened" was triggered, but the node with the given nodeId ("${nodeId}") could not be found.`,
+      )
+    }
+
+    // Open node, if there are revealed
+    // child nodes.
+    if (revealedChildNodes !== undefined) {
+      node.open({ revealedChildNodes })
+      // Remap actions, since new actions
+      // may have been populated.
+      this.mapActions()
+    }
   }
 
   /**

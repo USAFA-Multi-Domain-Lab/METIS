@@ -131,8 +131,7 @@ const validate_missions_forces_nodes = (
  * Validates the color for a force.
  */
 const validate_force_color = (
-  // todo: Add type.
-  color: any, // TCommonMissionForceJson['color'],
+  color: TCommonMissionForceJson['color'],
 ): boolean => {
   let isValidColor: boolean = HEX_COLOR_REGEX.test(color)
 

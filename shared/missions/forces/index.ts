@@ -1,3 +1,4 @@
+import { AnyObject } from 'metis/toolbox/objects'
 import { v4 as generateHash } from 'uuid'
 import { TCommonMission, TCommonMissionTypes, TMission } from '..'
 import { uuidTypeValidator } from '../../../shared/toolbox/validators'
@@ -49,6 +50,34 @@ export abstract class MissionForce<
    */
   public root: TNode<T>
 
+  // Implemented
+  public get revealedStructure(): AnyObject {
+    /**
+     * The recursive algorithm used to determine the structure.
+     * @param cursor The current prototype being processed.
+     * @param cursorStructure The structure of the current prototype being processed.
+     */
+    const algorithm = (
+      cursor: TNode<T> = this.root,
+      cursorStructure: AnyObject = {},
+    ): AnyObject => {
+      if (cursor.isOpen) {
+        for (let child of cursor.children) {
+          if (child.hasChildren) {
+            cursorStructure[child.structureKey] = algorithm(child)
+          } else {
+            cursorStructure[child.structureKey] = {}
+          }
+        }
+      }
+      return cursorStructure
+    }
+    let structure = algorithm()
+
+    // Return the result of the operation.
+    return algorithm()
+  }
+
   /**
    * @param data The force data from which to create the force. Any ommitted
    * values will be set to the default properties defined in
@@ -75,6 +104,11 @@ export abstract class MissionForce<
     this.importNodes(data.nodes ?? MissionForce.DEFAULT_PROPERTIES.nodes, {
       openAll,
     })
+
+    // If root node is not open, open it.
+    if (!this.root.isOpen) {
+      this.root.open()
+    }
   }
 
   // Implemented
@@ -302,6 +336,11 @@ export interface TCommonMissionForce {
    * The root node of the force.
    */
   root: TCommonMissionNode
+  /**
+   * The revealed structure found in the force, based on the nodes
+   * that have been opened.
+   */
+  get revealedStructure(): AnyObject
   /**
    * Converts the force to JSON.
    * @param options The options for converting the force to JSON.

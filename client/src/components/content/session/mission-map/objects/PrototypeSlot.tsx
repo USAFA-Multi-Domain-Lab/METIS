@@ -1,3 +1,4 @@
+import Tooltip from 'src/components/content/communication/Tooltip'
 import ClientMissionNode from 'src/missions/nodes'
 import ClientMissionPrototype, {
   TPrototypeRelation,
@@ -66,7 +67,7 @@ export default function PrototypeSlot({
     >
       <div className='Icon'></div>
       {/* todo: add tooltip */}
-      {/* <Tooltip description='Create a prototype here.' /> */}
+      <Tooltip description='Create a prototype here.' />
     </div>
   )
 }

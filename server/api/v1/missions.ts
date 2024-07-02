@@ -817,20 +817,6 @@ export const routerMap: TMetisRouterMap = (
         })
       }
     })
-
-    // todo: ???
-    // MissionModel.updateOne({ _id }, mission, (error: any) => {
-    //   if (error !== null) {
-    //     databaseLogger.error(
-    //       `Failed to update mission with the ID "${_id}".`,
-    //     )
-    //     databaseLogger.error(error)
-    //     return response.sendStatus(500)
-    //   } else {
-    //     databaseLogger.info(`Updated mission with the ID "${_id}".`)
-    //     return response.sendStatus(200)
-    //   }
-    // })
   }
 
   /**
