@@ -116,6 +116,7 @@ export default function MissionMap({
   mission,
   overlayContent,
   customButtons = [],
+  showMasterTab = true,
   onTabAdd = null,
   onPrototypeSelect,
   onNodeSelect,
@@ -397,12 +398,17 @@ export default function MissionMap({
    * The tabs to display in the tab bar.
    */
   const tabs = compute(() => {
-    // Define tab list with master tab.
-    let tabs: TTabBarTab[] = [MASTER_TAB]
+    let results: TTabBarTab[] = []
+
+    // If the master tab is marked as shown,
+    // add it to the tabs.
+    if (showMasterTab) {
+      results.push(MASTER_TAB)
+    }
 
     // Add force tabs.
     mission.forces.forEach((force) => {
-      tabs.push({
+      results.push({
         _id: force._id,
         text: force.name,
         color: force.color,
@@ -410,7 +416,7 @@ export default function MissionMap({
     })
 
     // Return tabs.
-    return tabs
+    return results
   })
 
   /**
@@ -728,6 +734,11 @@ export type TMissionMap = {
    * @default undefined
    */
   overlayContent?: React.ReactNode
+  /**
+   * Whether to show the master tab.
+   * @default true
+   */
+  showMasterTab?: boolean
   /**
    * Handles when a tab is added.
    * @param tab The tab that was added.

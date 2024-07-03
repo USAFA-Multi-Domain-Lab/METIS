@@ -387,9 +387,10 @@ export default function SessionPage({
             render: () => (
               <MissionMap
                 mission={mission}
-                onNodeSelect={onNodeSelect}
                 overlayContent={overlayContentJsx}
                 customButtons={customButtons}
+                showMasterTab={false}
+                onNodeSelect={onNodeSelect}
               />
             ),
           }}
