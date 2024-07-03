@@ -3,7 +3,7 @@ import { IConsoleOutput } from 'src/components/content/session/ConsoleOutput'
 import { useGlobalContext, useNavigationMiddleware } from 'src/context'
 import ClientMission from 'src/missions'
 import ClientMissionNode from 'src/missions/nodes'
-import ClientSession from 'src/sessions'
+import SessionClient from 'src/sessions'
 import { compute } from 'src/toolbox'
 import {
   useEventListener,
@@ -424,7 +424,7 @@ export interface TSessionPage_P extends TPage_P {
   /**
    * The session client to use on the page.
    */
-  session: ClientSession
+  session: SessionClient
 }
 
 /**

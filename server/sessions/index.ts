@@ -376,15 +376,35 @@ export default class SessionServer extends Session<
   }
 
   /**
+   * Assigns the given user to the given force.
+   * @param participantId The ID of the participant.
+   * @param forceId The ID of the force.
+   * @throws The correct HTTP status code for any errors that occur.
+   */
+  public assign(participantId: string, forceId: string): void {
+    // Verify that the participant exists in the session.
+    if (!this._participants.some(({ userId }) => userId === participantId)) {
+      throw 404
+    }
+    // Verify that the force exists in the mission.
+    if (!this.mission.forces.some(({ _id }) => _id === forceId)) {
+      throw 404
+    }
+    // Assign the participant to the force.
+    this.assignments.set(participantId, forceId)
+  }
+
+  /**
    * Kicks the given user from the session.
    * @param participantId The ID of the participant to kick from the session.
+   * @throws The correct HTTP status code for any errors that occur.
    */
   public kick(participantId: string): void {
     // Find the participant in the list, if present.
     this._participants.forEach(
       (participant: ClientConnection, index: number) => {
         if (participant.userId === participantId) {
-          // If the participant is has supervisor permissions,
+          // If the participant has supervisor permissions,
           // then throw 403 forbidden error.
           if (participant.user.isAuthorized('sessions_join_observer')) {
             throw 403

@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
 import { useGlobalContext, useNavigationMiddleware } from 'src/context'
-import ClientSession from 'src/sessions'
+import SessionClient from 'src/sessions'
 import { compute } from 'src/toolbox'
 import { useMountHandler } from 'src/toolbox/hooks'
 import { DefaultLayout } from '.'
@@ -147,5 +147,5 @@ export type TSessionConfigPage_P = {
   /**
    * The session to configure.
    */
-  session: ClientSession
+  session: SessionClient
 }

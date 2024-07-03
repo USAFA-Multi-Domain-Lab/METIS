@@ -1,4 +1,4 @@
-import ClientSession from 'src/sessions'
+import SessionClient from 'src/sessions'
 import { TEventListenerTarget } from 'src/toolbox/hooks'
 import { v4 as generateHash } from 'uuid'
 import {
@@ -363,7 +363,7 @@ export default class ServerConnection
    * @resolves The new session client for the session.
    * @rejects If there is an error joining the session.
    */
-  public $fetchCurrentSession(sessionId: string): Promise<ClientSession> {
+  public $fetchCurrentSession(sessionId: string): Promise<SessionClient> {
     return new Promise((resolve, reject) => {
       this.request(
         'request-current-session',
@@ -374,7 +374,7 @@ export default class ServerConnection
             switch (event.method) {
               case 'current-session':
                 resolve(
-                  new ClientSession(event.data.session, this, event.data.role),
+                  new SessionClient(event.data.session, this, event.data.role),
                 )
                 break
               case 'error':
@@ -404,7 +404,7 @@ export default class ServerConnection
   public $joinSession(
     sessionId: string,
     role: TSessionRole,
-  ): Promise<ClientSession | null> {
+  ): Promise<SessionClient | null> {
     return new Promise((resolve, reject) => {
       this.request(
         'request-join-session',
@@ -415,7 +415,7 @@ export default class ServerConnection
             switch (event.method) {
               case 'session-joined':
                 resolve(
-                  new ClientSession(event.data.session, this, event.data.role),
+                  new SessionClient(event.data.session, this, event.data.role),
                 )
                 break
               case 'error':

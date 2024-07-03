@@ -4,7 +4,7 @@ import { ButtonText } from 'src/components/content/user-controls/ButtonText'
 import { useGlobalContext } from 'src/context'
 import ClientMissionAction from 'src/missions/actions'
 import ClientMissionNode from 'src/missions/nodes'
-import ClientSession from 'src/sessions'
+import SessionClient from 'src/sessions'
 import { useMountHandler } from 'src/toolbox/hooks'
 import MapToolbox from '../../../../../../../../../shared/toolbox/maps'
 import StringToolbox from '../../../../../../../../../shared/toolbox/strings'
@@ -274,7 +274,7 @@ export type TActionExecModal_P = {
   /**
    * The session client of which the node is a part.
    */
-  session: ClientSession
+  session: SessionClient
   /**
    * Closes the modal.
    * @note This should stop the modal from rendering statefully.
@@ -289,7 +289,7 @@ export type TOption_P = {
   /**
    * The session client of which the node is a part.
    */
-  session: ClientSession
+  session: SessionClient
   /**
    * The action serving as an option in the drop down.
    */

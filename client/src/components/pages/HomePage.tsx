@@ -3,7 +3,7 @@ import { useRef, useState } from 'react'
 import { useGlobalContext } from 'src/context'
 import ClientMission from 'src/missions'
 import Notification from 'src/notifications'
-import ClientSession from 'src/sessions'
+import SessionClient from 'src/sessions'
 import { compute } from 'src/toolbox'
 import {
   useMountHandler,
@@ -130,7 +130,7 @@ export default function HomePage(): JSX.Element | null {
         beginLoading('Retrieving sessions...')
         // Fetch sessions from API and store
         // them in the state.
-        setSessions(await ClientSession.$fetchAll())
+        setSessions(await SessionClient.$fetchAll())
         // Finish loading and resolve.
         finishLoading()
         resolve()
@@ -193,7 +193,7 @@ export default function HomePage(): JSX.Element | null {
     try {
       // Fetch sessions from API and store
       // them in the state.
-      setSessions(await ClientSession.$fetchAll())
+      setSessions(await SessionClient.$fetchAll())
     } catch {}
 
     setTimeout(() => syncSessions.current(), SESSIONS_SYNC_RATE)
@@ -514,7 +514,7 @@ export default function HomePage(): JSX.Element | null {
     if (choice === 'Confirm') {
       try {
         beginLoading('Deleting session...')
-        await ClientSession.$delete(session._id)
+        await SessionClient.$delete(session._id)
         finishLoading()
         notify(`Successfully deleted "${session.name}".`)
         loadSessions()
@@ -588,7 +588,7 @@ export default function HomePage(): JSX.Element | null {
                 const classList = [
                   'Accessibility',
                   session.config.accessibility ??
-                    ClientSession.DEFAULT_CONFIG.accessibility,
+                    SessionClient.DEFAULT_CONFIG.accessibility,
                 ]
                 return classList.join(' ')
               })

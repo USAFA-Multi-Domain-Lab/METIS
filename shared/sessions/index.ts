@@ -57,6 +57,12 @@ export default abstract class Session<
   }
 
   /**
+   * Assignments of participants to forces in the mission.
+   * @note The key is the participant ID, and the value is the force ID.
+   */
+  protected assignments: Map<string, string>
+
+  /**
    * IDs of participants who have been banned from the session.
    */
   protected _banList: string[]
@@ -139,6 +145,7 @@ export default abstract class Session<
     this.mission = mission
     this._state = 'unstarted'
     this._participants = participants
+    this.assignments = new Map<string, string>()
     this._banList = banList
     this._supervisors = supervisors
     this.mapActions()

@@ -1,6 +1,6 @@
 import { useRef } from 'react'
 import { useGlobalContext, useNavigationMiddleware } from 'src/context'
-import ClientSession from 'src/sessions'
+import SessionClient from 'src/sessions'
 import { compute } from 'src/toolbox'
 import {
   useEventListener,
@@ -206,5 +206,5 @@ export type TLobbyPage_P = {
   /**
    * The session client to use on the page.
    */
-  session: ClientSession
+  session: SessionClient
 }

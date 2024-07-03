@@ -16,7 +16,7 @@ import Session, {
 /**
  * Client instance for sessions. Handles client-side logic for sessions. Communicates with server to conduct a session.
  */
-export default class ClientSession extends Session<
+export default class SessionClient extends Session<
   ClientUser,
   ClientMission,
   ClientMissionNode,
