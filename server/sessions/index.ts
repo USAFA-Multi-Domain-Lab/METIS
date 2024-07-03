@@ -296,6 +296,12 @@ export default class SessionServer extends Session<
    * Handles a change in the session state.
    */
   public handleStateChange(): void {
+    // If the session has started, auto-assign participants
+    // to forces.
+    if (this.state === 'started') {
+      this.autoAssign()
+    }
+
     // Emit an event to all users that the session state has changed.
     this.emitToUsers('session-state-change', {
       data: {
@@ -376,25 +382,6 @@ export default class SessionServer extends Session<
   }
 
   /**
-   * Assigns the given user to the given force.
-   * @param participantId The ID of the participant.
-   * @param forceId The ID of the force.
-   * @throws The correct HTTP status code for any errors that occur.
-   */
-  public assign(participantId: string, forceId: string): void {
-    // Verify that the participant exists in the session.
-    if (!this._participants.some(({ userId }) => userId === participantId)) {
-      throw 404
-    }
-    // Verify that the force exists in the mission.
-    if (!this.mission.forces.some(({ _id }) => _id === forceId)) {
-      throw 404
-    }
-    // Assign the participant to the force.
-    this.assignments.set(participantId, forceId)
-  }
-
-  /**
    * Kicks the given user from the session.
    * @param participantId The ID of the participant to kick from the session.
    * @throws The correct HTTP status code for any errors that occur.
@@ -467,6 +454,27 @@ export default class SessionServer extends Session<
 
     // Handle state change.
     this.handleStateChange()
+  }
+
+  /**
+   * Auto-assigns participants to forces using a
+   * round-robin algorithm.
+   */
+  private autoAssign(): void {
+    // Initialize force index.
+    let forceIndex: number = 0
+
+    // Loop through each participant.
+    this._participants.forEach((participant: ClientConnection) => {
+      // Assign the participant to the force.
+      this.assignments.set(
+        participant.userId,
+        this.mission.forces[forceIndex]._id,
+      )
+
+      // Increment the force index.
+      forceIndex = (forceIndex + 1) % this.mission.forces.length
+    })
   }
 
   /**

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useGlobalContext } from 'src/context'
-import SessionClient from 'src/sessions'
+import ClientSession from 'src/sessions'
 import { compute } from 'src/toolbox'
 import { useEventListener, useRequireLogin } from 'src/toolbox/hooks'
 import ClientUser from 'src/users'
@@ -207,5 +207,5 @@ export type TSessionUsers_P = {
   /**
    * The session client with the users to display.
    */
-  session: SessionClient
+  session: ClientSession
 }

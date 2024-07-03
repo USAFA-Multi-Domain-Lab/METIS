@@ -183,33 +183,6 @@ const routerMap = (router: expressWs.Router, done: () => void) => {
   }
 
   /**
-   * Assigns a participant to a force in a session.
-   * @returns HTTP status code.
-   */
-  const assignParticipant = (request: Request, response: Response) => {
-    let _id: string = request.params._id
-    let participantId: string = request.params.participantId
-    let forceId: string = request.params.forceId
-    let session: SessionServer | undefined = SessionServer.get(_id)
-
-    // Send 404 if session could not be found.
-    if (session === undefined) {
-      return response.sendStatus(404)
-    }
-
-    try {
-      // Assign participant.
-      session.assign(participantId, forceId)
-      // Return response.
-      return response.sendStatus(200)
-    } catch (code: any) {
-      // If the participant could not be assigned, return
-      // the error code.
-      return response.sendStatus(code)
-    }
-  }
-
-  /**
    * This will kick a participant from a session.
    * @returns HTTP status code.
    */
@@ -342,13 +315,6 @@ const routerMap = (router: expressWs.Router, done: () => void) => {
     '/:_id/end/',
     auth({ permissions: ['sessions_write'] }),
     endSession,
-  )
-
-  // -- PUT | /api/v1/sessions/:_id/assign/:participantId/:forceId --
-  router.put(
-    '/:_id/assign/:participantId/:forceId/',
-    auth({ permissions: ['sessions_write'] }),
-    assignParticipant,
   )
 
   // -- PUT | /api/v1/sessions/:_id/kick/:participantId/ --
