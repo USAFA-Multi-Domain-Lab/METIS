@@ -65,7 +65,7 @@ export default function PrototypeEntry({
               tooltipDescription='Add one or multiple nodes adjacent to this node.'
             />
             <ButtonText
-              text='Delete node'
+              text='Delete prototype'
               onClick={onDeleteRequest}
               tooltipDescription='Delete this node.'
               uniqueClassName={deleteClassName}

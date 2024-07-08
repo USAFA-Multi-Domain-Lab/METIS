@@ -285,7 +285,8 @@ export default function SessionPage({
     verifyNavigation.current()
     done()
   })
-  useEventListener(server, 'session-state-change', () =>
+  // Verify navigation if the session is ended or destroyed.
+  useEventListener(server, ['session-started', 'session-ended'], () =>
     verifyNavigation.current(),
   )
 

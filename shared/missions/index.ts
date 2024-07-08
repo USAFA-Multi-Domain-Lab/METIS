@@ -9,7 +9,12 @@ import IActionExecution from './actions/executions'
 import IActionOutcome from './actions/outcomes'
 import { TCommonExternalEffect } from './effects/external'
 import { TCommonInternalEffect } from './effects/internal'
-import { TCommonMissionForce, TCommonMissionForceJson, TForce } from './forces'
+import {
+  MissionForce,
+  TCommonMissionForce,
+  TCommonMissionForceJson,
+  TForce,
+} from './forces'
 import { TCommonMissionNode, TNode } from './nodes'
 import { TCommonMissionPrototype, TPrototype } from './nodes/prototypes'
 
@@ -65,6 +70,7 @@ export default abstract class Mission<
       data.initialResources ?? Mission.DEFAULT_PROPERTIES.initialResources
     this.seed = data.seed ?? Mission.DEFAULT_PROPERTIES.seed
     this.prototypes = []
+    this.forces = []
     this.root = this.initializeRoot()
 
     // Parse options.
@@ -76,15 +82,14 @@ export default abstract class Mission<
     )
 
     // Parse force data.
-    this.forces = this.importForces(
-      data.forces ?? Mission.DEFAULT_PROPERTIES.forces,
-    )
+    this.importForces(data.forces ?? Mission.DEFAULT_PROPERTIES.forces)
   }
 
   // Implemented
   public toJson(
     options: TMissionJsonOptions = { exportType: 'standard' },
   ): TCommonMissionJson {
+    // Predefine limited JSON.
     let json: TCommonMissionJson = {
       name: this.name,
       introMessage: this.introMessage,
@@ -102,31 +107,26 @@ export default abstract class Mission<
         json.nodeStructure = Mission.determineNodeStructure(this.root)
         json.forces = this.forces.map((force) => force.toJson())
         break
-      case 'session':
-        // Export the mission with all forces included.
-        if (options.forceId === undefined) {
-          json.nodeStructure = Mission.determineNodeStructure(this.root)
-          json.forces = this.forces.map((force) =>
-            force.toJson({ revealedOnly: true, includeSessionData: true }),
-          )
-        }
-        // Export the mission with a specific force included.
-        else {
-          // Get the force to include in the export.
-          let force = this.forces.find((force) => force._id === options.forceId)
+      case 'session-participant':
+        // Get the force to include in the export.
+        let force = this.forces.find((force) => force._id === options.forceId)
 
-          // If the force is not found, throw an error.
-          if (!force) {
-            throw new Error('Force not found.')
-          }
-
-          // Set the structure to revealed structure of the force.
-          json.nodeStructure = force.revealedStructure
-          // Export force.
+        // If the force is found, include it in the export.
+        if (force) {
           json.forces = [
             force.toJson({ revealedOnly: true, includeSessionData: true }),
           ]
+          // Set the structure to revealed structure of the force.
+          json.nodeStructure = force.revealedStructure
         }
+        // todo: Log a warning if the force is not found.
+        break
+      case 'session-observer':
+        // Include all data.
+        json.nodeStructure = Mission.determineNodeStructure(this.root)
+        json.forces = this.forces.map((force) =>
+          force.toJson({ includeSessionData: true }),
+        )
         break
     }
 
@@ -194,11 +194,16 @@ export default abstract class Mission<
     }
   }
 
-  // Implemented
+  /**
+   * Creates a prototype for the given ID.
+   * @param _id The ID of the prototype to import.
+   * @returns The imported prototype.
+   */
   protected abstract importPrototype(_id: TPrototype<T>['_id']): TPrototype<T>
 
   /**
-   * Imports the force data into MissionForce objects.
+   * Imports the force data into MissionForce objects and
+   * stores it in the array of forces.
    * @param data The force data to parse.
    * @returns The parsed force data.
    */
@@ -213,12 +218,14 @@ export default abstract class Mission<
   }
 
   // Implemented
-  public getForce(forceId: TForce<T>['_id']): TForce<T> | undefined {
+  public getForce(
+    forceId: TForce<T>['_id'] | undefined,
+  ): TForce<T> | undefined {
     return this.forces.find((force) => force._id === forceId)
   }
 
   // Implemented
-  public getNode(nodeId: TNode<T>['_id']): TNode<T> | undefined {
+  public getNode(nodeId: TNode<T>['_id'] | undefined): TNode<T> | undefined {
     let force = this.forces.find((force) => force.getNode(nodeId))
     return force ? force.getNode(nodeId) : undefined
   }
@@ -240,13 +247,7 @@ export default abstract class Mission<
       initialResources: 100,
       seed: generateHash(),
       nodeStructure: {},
-      forces: [
-        {
-          name: 'Default Force',
-          color: '#000000',
-          nodes: [],
-        },
-      ],
+      forces: [MissionForce.DEFAULT_FORCES[0]],
     }
   }
 
@@ -470,24 +471,49 @@ export type TMissionOptions = {
  */
 export type TMissionJsonStandardOptions = {
   /**
-   * The type of JSON export to perform.
+   * Standard export of the mission.
    */
   exportType: 'standard'
 }
 
 /**
- * Options for Mission.toJson with `exportType` set to 'session'.
+ * Options for Mission.toJson with `exportType` set to 'session-limited'.
  */
-export type TMissionJsonSessionOptions = {
+export type TMissionJsonSessionLimitedOptions = {
   /**
-   * The type of JSON export to perform.
+   * An export of a mission to be used in a session.
+   * This export will not include force or prototype
+   * data.
    */
-  exportType: 'session'
+  exportType: 'session-limited'
+}
+
+/**
+ * Options for Mission.toJson with `exportType` set to 'session-participant'.
+ */
+export type TMissionJsonSessionParticipantOptions = {
   /**
-   * The ID of the force to include in the export. If set, the structure will be
-   * limited to the nodes revealed in the force.
+   * An export of a mission to be used in a session.
+   * This export will only include the data available
+   * to a participant participating in the force with
+   * the ID passed.
    */
-  forceId?: TCommonMissionForce['_id']
+  exportType: 'session-participant'
+  /**
+   * The ID of the force to include in the export.
+   */
+  forceId: TCommonMissionForce['_id']
+}
+
+/**
+ * Options for Mission.toJson with `exportType` set to 'session-observer'.
+ */
+export type TMissionJsonSessionObserverOptions = {
+  /**
+   * An export of a mission to be used in a session.
+   * This export will include all data.
+   */
+  exportType: 'session-observer'
 }
 
 /**
@@ -495,7 +521,9 @@ export type TMissionJsonSessionOptions = {
  */
 export type TMissionJsonOptions =
   | TMissionJsonStandardOptions
-  | TMissionJsonSessionOptions
+  | TMissionJsonSessionLimitedOptions
+  | TMissionJsonSessionParticipantOptions
+  | TMissionJsonSessionObserverOptions
 
 /**
  * Options for Mission.mapRelationships.

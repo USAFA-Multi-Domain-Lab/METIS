@@ -839,14 +839,15 @@ export const routerMap: TMetisRouterMap = (
       } else if (mission === null) {
         return response.sendStatus(404)
       } else {
-        let copy = new MissionModel({
+        let modelInput: Partial<TCommonMissionJson> = {
           name: copyName,
           introMessage: mission.introMessage,
           versionNumber: mission.versionNumber,
           initialResources: mission.initialResources,
           nodeStructure: mission.nodeStructure,
-          nodeData: mission.nodeData,
-        })
+          forces: mission.forces,
+        }
+        let copy = new MissionModel(modelInput)
 
         copy.save((error: Error) => {
           if (error) {

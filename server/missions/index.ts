@@ -79,7 +79,9 @@ export default class ServerMission extends Mission<TServerMissionTypes> {
   protected importForces(
     data: TCommonMissionForceJson[],
   ): ServerMissionForce[] {
-    return data.map((datum) => new ServerMissionForce(this, datum))
+    let forces = data.map((datum) => new ServerMissionForce(this, datum))
+    this.forces.push(...forces)
+    return forces
   }
 }
 

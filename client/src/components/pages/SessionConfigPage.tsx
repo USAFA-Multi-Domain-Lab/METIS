@@ -2,7 +2,7 @@ import { useRef, useState } from 'react'
 import { useGlobalContext, useNavigationMiddleware } from 'src/context'
 import SessionClient from 'src/sessions'
 import { compute } from 'src/toolbox'
-import { useMountHandler } from 'src/toolbox/hooks'
+import { useEventListener, useMountHandler } from 'src/toolbox/hooks'
 import { DefaultLayout } from '.'
 import Prompt from '../content/communication/Prompt'
 import { HomeLink, TNavigation } from '../content/general-layout/Navigation'
@@ -15,6 +15,7 @@ export default function SessionConfigPage({
   /* -- state -- */
 
   const globalContext = useGlobalContext()
+  const [server] = globalContext.server
   const { navigateTo, beginLoading, finishLoading, prompt, handleError } =
     globalContext.actions
   const [config] = useState(session.config)
@@ -72,6 +73,10 @@ export default function SessionConfigPage({
     verifyNavigation.current()
     done()
   })
+  // Verify navigation if the session is ended or destroyed.
+  useEventListener(server, ['session-started', 'session-ended'], () =>
+    verifyNavigation.current(),
+  )
 
   // Add navigation middleware to properly
   // quit the session before the user navigates

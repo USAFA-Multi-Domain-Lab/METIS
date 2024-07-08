@@ -350,11 +350,13 @@ export interface TCommonMissionForce {
   /**
    * Gets a node from the given node ID.
    */
-  getNode(nodeId: string): TCommonMissionNode | undefined
+  getNode(nodeId: string | undefined): TCommonMissionNode | undefined
   /**
    * Gets a node from the given prototype ID.
    */
-  getNodeFromPrototype(prototypeId: string): TCommonMissionNode | undefined
+  getNodeFromPrototype(
+    prototypeId: string | undefined,
+  ): TCommonMissionNode | undefined
 }
 
 /**

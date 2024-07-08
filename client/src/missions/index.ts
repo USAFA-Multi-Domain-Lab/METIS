@@ -17,7 +17,7 @@ import {
 } from '../../../shared/missions/forces'
 import { TMissionPrototypeOptions } from '../../../shared/missions/nodes/prototypes'
 import { Counter } from '../../../shared/toolbox/numbers'
-import { TWithKey } from '../../../shared/toolbox/objects'
+import { AnyObject, TWithKey } from '../../../shared/toolbox/objects'
 import { Vector2D } from '../../../shared/toolbox/space'
 import StringToolbox from '../../../shared/toolbox/strings'
 import ClientMissionAction from './actions'
@@ -283,7 +283,31 @@ export default class ClientMission
   protected importForces(
     data: TCommonMissionForceJson[],
   ): ClientMissionForce[] {
-    return data.map((datum) => new ClientMissionForce(this, datum))
+    let forces: ClientMissionForce[] = data.map(
+      (datum) => new ClientMissionForce(this, datum),
+    )
+    this.forces.push(...forces)
+    return forces
+  }
+
+  /**
+   * Imports previously omitted force and structure data
+   * into the mission on session start.
+   * @param forces The JSON data for the forces.
+   * @param structure The JSON data for the structure.
+   */
+  public importStartData(
+    structure: AnyObject,
+    forces: TCommonMissionForceJson[],
+  ): void {
+    // Clear forces and prototypes.
+    this.prototypes = []
+    this.forces = []
+
+    // Import structure.
+    this.importStructure(structure)
+    // Import forces.
+    this.importForces(forces)
   }
 
   // Implemented

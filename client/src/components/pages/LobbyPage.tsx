@@ -134,8 +134,10 @@ export default function LobbyPage({
 
   // Verify navigation and update participant and
   // supervisors lists on session state change.
-  useEventListener(server, 'session-state-change', () =>
-    verifyNavigation.current(),
+  useEventListener(
+    server,
+    ['session-started', 'session-ended', 'session-destroyed'],
+    () => verifyNavigation.current(),
   )
 
   // Add navigation middleware to properly

@@ -202,7 +202,7 @@ export default class ClientConnection {
           data: {
             session:
               session?.toJson({
-                includeSensitiveData: this.user.isAuthorized('sessions_write'),
+                requester: this,
               }) ?? null,
             role: session?.getRole(this) ?? null,
           },
@@ -233,9 +233,7 @@ export default class ClientConnection {
         // Return the session as JSON.
         this.emit('session-joined', {
           data: {
-            session: session.toJson({
-              includeSensitiveData: this.user.isAuthorized('sessions_write'),
-            }),
+            session: session.toJson({ requester: this }),
             role: event.data.role,
           },
           request: this.buildResponseReqData(event),

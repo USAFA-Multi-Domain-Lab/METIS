@@ -98,6 +98,15 @@ export const MAP_EM_GRID_ENABLED = false
 export const MAP_NODE_GRID_ENABLED = true
 
 /**
+ * The tab to display when no tabs exist.
+ */
+const INVALID_TAB: TTabBarTab = {
+  _id: 'invalid-tabs',
+  text: 'Invalid Tab',
+  color: '#ffffff',
+}
+
+/**
  * The master tab to display on the tab bar.
  */
 const MASTER_TAB: TTabBarTab = {
@@ -423,7 +432,8 @@ export default function MissionMap({
    * The currently selected tab.
    */
   const selectedTab: TTabBarTab = compute(() => {
-    return tabs[tabIndex]
+    if (tabs.length === 0) return INVALID_TAB
+    else return tabs[tabIndex]
   })
 
   /**

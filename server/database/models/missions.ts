@@ -9,6 +9,7 @@ import SanitizedHTML from 'metis/server/database/schema-types/html'
 import ServerTargetEnvironment from 'metis/server/target-environments'
 import ServerTarget from 'metis/server/target-environments/targets'
 import { TTargetArg } from 'metis/target-environments/args'
+import { AnyObject } from 'metis/toolbox/objects'
 import { HEX_COLOR_REGEX } from 'metis/toolbox/strings'
 import mongoose, { Schema } from 'mongoose'
 
@@ -78,6 +79,37 @@ const validate_missions = (mission: any, next: any): void => {
 
     return {}
   }
+
+  let existingIds: AnyObject = {}
+
+  // todo: Implement this.
+
+  // const _idCheckerAlgorithm = (cursor = mission) => {
+  //   if (cursor instanceof Object) {
+  //     if (cursor._id && cursor._id in existingIds) {
+  //       results.error = new Error(
+  //         `Error in mission:\nDuplicate _id used (${cursor._id}).`,
+  //       )
+  //       results.error.name = MetisDatabase.ERROR_BAD_DATA
+  //       return
+  //     } else {
+  //       existingIds[cursor._id] = true
+  //     }
+  //     for (let value of Object.values(cursor)) {
+  //       _idCheckerAlgorithm(value)
+  //     }
+  //   }
+  // }
+  // _idCheckerAlgorithm()
+
+  // todo: Implement this.
+  //   let input = '777666777666'
+  //   let objectId = new ObjectId('777666777666')
+  //   let output = objectId.toString()
+  //
+  //   if (input !== ouput) {
+  //     throw new Error('ObjectId is not working')
+  // }
 
   // Check for error.
   if (results.error) {
@@ -447,6 +479,7 @@ export const MissionSchema: Schema = new Schema(
           nodes: {
             type: [
               {
+                _id: { type: String, unique: true },
                 structureKey: { type: String, required: true },
                 name: { type: String, required: true },
                 color: {

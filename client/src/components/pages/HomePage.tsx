@@ -409,55 +409,43 @@ export default function HomePage(): JSX.Element | null {
         // role they would like to join the session
         // as.
         let roleChoices: TChoicesWithCancel<TSessionRole>[] = []
-        // If the user is authorized and has the top level
-        // join permission, add the option to join as
-        // a participant or supervisor.
-        if (currentUser.isAuthorized('sessions_join')) {
-          roleChoices = ['participant', 'supervisor', 'Cancel']
-        }
-        // If the user is authorized to join as a
-        // participant, add the option to join as
-        // a participant.
+
+        // If the current user can join as a participant,
+        // add the option to the prompt.
         if (
-          currentUser.isAuthorized('sessions_join_participant') &&
-          !currentUser.isAuthorized('sessions_join_observer')
-        ) {
-          roleChoices = ['participant', 'Cancel']
-        }
-        // If the user is authorized to join as an
-        // observer, add the option to join as an
-        // observer.
-        if (
-          currentUser.isAuthorized('sessions_join_observer') &&
-          !currentUser.isAuthorized('sessions_join_participant')
-        ) {
-          roleChoices = ['supervisor', 'Cancel']
-        }
-        // If the user is authorized to join as an
-        // observer and participant, add the option
-        // to join as a participant, observer, or
-        // supervisor.
-        if (
-          currentUser.isAuthorized('sessions_join_observer') &&
+          currentUser.isAuthorized('sessions_join') ||
           currentUser.isAuthorized('sessions_join_participant')
         ) {
-          roleChoices = ['participant', 'supervisor', 'Cancel']
+          roleChoices.push('participant')
+        }
+        // If the current user can join as an observer,
+        // add the option to the prompt.
+        if (
+          currentUser.isAuthorized('sessions_join') ||
+          currentUser.isAuthorized('sessions_join_observer')
+        ) {
+          roleChoices.push('supervisor')
         }
 
-        if (currentUser.isAuthorized('sessions_write')) {
-          // Prompt user for role if the user
-          // has write privileges.
+        // Add option to cancel.
+        roleChoices.push('Cancel')
+
+        // If the user only has one option, plus cancelling,
+        // automatically select that option.
+        if (roleChoices.length === 2 && roleChoices[0] !== 'Cancel') {
+          role = roleChoices[0]
+        }
+        // Else, prompt the user how they would like to join.
+        else {
           let { choice } = await prompt<TChoicesWithCancel<TSessionRole>>(
-            'What would you like to join the session as?',
+            'How would you like to join the session?',
             roleChoices,
             { capitalizeChoices: true },
           )
-
           // If cancelled, abort.
           if (choice === 'Cancel') {
             return
           }
-
           // Set the role as the choice made.
           role = choice
         }

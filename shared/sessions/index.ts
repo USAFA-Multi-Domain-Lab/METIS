@@ -1,4 +1,5 @@
 import { TCommonMission, TCommonMissionJson } from 'metis/missions'
+import { TCommonMissionForce } from 'metis/missions/forces'
 import { TCommonMissionAction } from '../missions/actions'
 import { TCommonMissionNode } from '../missions/nodes'
 import { TCommonUser, TCommonUserJson } from '../users'
@@ -9,6 +10,7 @@ import { TCommonUser, TCommonUserJson } from '../users'
 export default abstract class Session<
   TUser extends { _id: TCommonUser['_id'] } | { userId: TCommonUser['_id'] },
   TMission extends TCommonMission,
+  TForce extends TCommonMissionForce,
   TMissionNode extends TCommonMissionNode,
   TMissionAction extends TCommonMissionAction,
 > {
@@ -176,6 +178,11 @@ export default abstract class Session<
    * @returns Whether the given user is a supervisor in the session.
    */
   public abstract isSupervisor(user: TUser): boolean
+
+  /**
+   * Gets the assigned force of the given user in the session.
+   */
+  public abstract getAssignedForce(user: TUser): TForce | undefined
 
   /**
    * Converts the Session object to JSON.
