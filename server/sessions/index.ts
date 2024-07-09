@@ -105,7 +105,7 @@ export default class SessionServer extends Session<
     user: ClientConnection,
   ): ServerMissionForce | undefined {
     let forceId: string | undefined = this.assignments.get(user.userId)
-    return this.mission.getForce(forceId)
+    return this.mission.getForce(forceId as string)
   }
 
   /**
