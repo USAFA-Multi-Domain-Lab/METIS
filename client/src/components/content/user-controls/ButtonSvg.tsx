@@ -132,8 +132,8 @@ export type TButtonSvg = {
    */
   uniqueClassList?: string[]
   /**
-   * Whether the button is currently disabled.
-   * @default false
+   * The disabled state of the button.
+   * @default 'none'
    */
   disabled?: 'partial' | 'full' | 'none'
   /**

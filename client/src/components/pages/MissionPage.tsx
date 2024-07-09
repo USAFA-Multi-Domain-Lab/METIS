@@ -7,8 +7,6 @@ import { ClientEffect } from 'src/missions/effects'
 import ClientMissionForce from 'src/missions/forces'
 import ClientMissionNode, { ENodeDeleteMethod } from 'src/missions/nodes'
 import ClientMissionPrototype from 'src/missions/nodes/prototypes'
-import { ClientTargetEnvironment } from 'src/target-environments'
-import ClientTarget from 'src/target-environments/targets'
 import { compute } from 'src/toolbox'
 import { useEventListener, useMountHandler } from 'src/toolbox/hooks'
 import { DefaultLayout, TPage_P } from '.'
@@ -47,6 +45,7 @@ export default function MissionPage({
   const globalContext = useGlobalContext()
   const { beginLoading, finishLoading, handleError, notify, prompt } =
     globalContext.actions
+  const [targetEnvironments] = globalContext.targetEnvironments
 
   /* -- STATE -- */
 
@@ -59,9 +58,6 @@ export default function MissionPage({
   )
   const [nodeStructuringIsActive, activateNodeStructuring] =
     useState<boolean>(false)
-  const [targetEnvironments, setTargetEnvironments] = useState<
-    ClientTargetEnvironment[]
-  >([])
   const [isNewEffect, setIsNewEffect] = useState<boolean>(false)
 
   /* -- COMPUTED -- */
@@ -96,6 +92,7 @@ export default function MissionPage({
 
   /* -- EFFECTS -- */
 
+  // componentDidMount
   const [mountHandled] = useMountHandler(async (done) => {
     // Handle the editing of an existing mission.
     if (missionId !== null) {
@@ -110,48 +107,18 @@ export default function MissionPage({
       }
     }
 
-    // Load the target environments.
-    try {
-      beginLoading('Loading target environments...')
-      setTargetEnvironments(await ClientTargetEnvironment.$fetchAll())
-    } catch {
-      handleError('Failed to load target environments.')
-    }
-
     // Finish loading.
     finishLoading()
     // Mark mount as handled.
     done()
   })
 
-  // Dynamically set the forces and nodes for the
-  // internal target environment.
+  // Cleanup when a new effect is created.
   useEffect(() => {
-    // If the mount has been handled, then set the
-    // forces and nodes for the internal target environment.
-    if (mountHandled) {
-      // Get the internal target environment.
-      let internalTargetEnv = targetEnvironments.find(
-        (targetEnv) =>
-          targetEnv._id === ClientTargetEnvironment.INTERNAL_TARGET_ENV._id,
-      )
-
-      if (internalTargetEnv) {
-        ClientTargetEnvironment.generateDropdownOptions(
-          internalTargetEnv,
-          mission,
-          ClientTarget.forcesArgId,
-          mission.forces,
-        )
-        ClientTargetEnvironment.generateDropdownOptions(
-          internalTargetEnv,
-          mission,
-          ClientTarget.nodesArgId,
-          mission.nodes,
-        )
-      }
+    if (isNewEffect) {
+      setIsNewEffect(false)
     }
-  }, [mountHandled, mission.forces.length, mission.nodes.length])
+  }, [selection])
 
   // Guards against refreshing or navigating away
   // with unsaved changes.
@@ -305,13 +272,6 @@ export default function MissionPage({
     // Mark unsaved changes as true.
     setAreUnsavedChanges(true)
   })
-
-  // Cleanup when a new effect is created.
-  useEffect(() => {
-    if (isNewEffect) {
-      setIsNewEffect(false)
-    }
-  }, [selection])
 
   /* -- FUNCTIONS -- */
 

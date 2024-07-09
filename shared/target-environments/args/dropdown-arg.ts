@@ -1,4 +1,4 @@
-import Args, { TBaseArg, TBaseArgJson } from '.'
+import Arg, { TBaseArg, TBaseArgJson } from '.'
 import { Dependency } from '../dependencies'
 
 /**
@@ -19,7 +19,7 @@ export default class DropdownArg {
           name: arg.name,
           groupingId: arg.groupingId,
           dependencies: arg.dependencies
-            ? Args.encodeDependencies(arg.dependencies)
+            ? Arg.encodeDependencies(arg.dependencies)
             : undefined,
           tooltipDescription: arg.tooltipDescription,
           type: arg.type,
@@ -32,7 +32,7 @@ export default class DropdownArg {
           name: arg.name,
           groupingId: arg.groupingId,
           dependencies: arg.dependencies
-            ? Args.encodeDependencies(arg.dependencies)
+            ? Arg.encodeDependencies(arg.dependencies)
             : undefined,
           tooltipDescription: arg.tooltipDescription,
           type: arg.type,
@@ -54,7 +54,7 @@ export default class DropdownArg {
         _id: option._id,
         name: option.name,
         dependencies: option.dependencies
-          ? Args.encodeDependencies(option.dependencies)
+          ? Arg.encodeDependencies(option.dependencies)
           : undefined,
       }
     })
@@ -71,7 +71,7 @@ export default class DropdownArg {
       _id: option._id,
       name: option.name,
       dependencies: option.dependencies
-        ? Args.encodeDependencies(option.dependencies)
+        ? Arg.encodeDependencies(option.dependencies)
         : undefined,
     }
   }
@@ -90,7 +90,7 @@ export default class DropdownArg {
           name: arg.name,
           groupingId: arg.groupingId,
           dependencies: arg.dependencies
-            ? Args.decodeDependencies(arg.dependencies)
+            ? Arg.decodeDependencies(arg.dependencies)
             : undefined,
           tooltipDescription: arg.tooltipDescription,
           type: arg.type,
@@ -103,7 +103,7 @@ export default class DropdownArg {
           name: arg.name,
           groupingId: arg.groupingId,
           dependencies: arg.dependencies
-            ? Args.decodeDependencies(arg.dependencies)
+            ? Arg.decodeDependencies(arg.dependencies)
             : undefined,
           tooltipDescription: arg.tooltipDescription,
           type: arg.type,
@@ -124,7 +124,7 @@ export default class DropdownArg {
         _id: option._id,
         name: option.name,
         dependencies: option.dependencies
-          ? Args.decodeDependencies(option.dependencies)
+          ? Arg.decodeDependencies(option.dependencies)
           : undefined,
       }
     })
@@ -141,7 +141,7 @@ export default class DropdownArg {
       _id: option._id,
       name: option.name,
       dependencies: option.dependencies
-        ? Args.decodeDependencies(option.dependencies)
+        ? Arg.decodeDependencies(option.dependencies)
         : undefined,
     }
   }

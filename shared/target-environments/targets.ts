@@ -4,7 +4,7 @@ import Mission, {
   TCommonMissionJson,
   TCommonMissionTypes,
 } from '../../shared/missions'
-import Args, { TTargetArg, TTargetArgJson } from './args'
+import Arg, { TTargetArg, TTargetArgJson } from './args'
 import { TDropdownArg } from './args/dropdown-arg'
 import { Dependency } from './dependencies'
 
@@ -49,7 +49,7 @@ export default abstract class Target<
     this.name = data.name ?? Target.DEFAULT_PROPERTIES.name
     this.description = data.description ?? Target.DEFAULT_PROPERTIES.description
     this.script = data.script ?? Target.DEFAULT_PROPERTIES.script
-    this.args = Args.fromJson(data.args ?? Target.DEFAULT_PROPERTIES.args)
+    this.args = Arg.fromJson(data.args ?? Target.DEFAULT_PROPERTIES.args)
   }
 
   /**
@@ -65,7 +65,7 @@ export default abstract class Target<
       name: this.name,
       description: this.description,
       script: this.script,
-      args: Args.toJson(this.args),
+      args: Arg.toJson(this.args),
     }
   }
 
@@ -140,14 +140,14 @@ export default abstract class Target<
   }
 
   /**
-   * The ID of the node argument.
-   */
-  public static readonly nodesArgId: TDropdownArg['_id'] = 'nodeId'
-
-  /**
    * The ID of the force argument.
    */
   public static readonly forcesArgId: TDropdownArg['_id'] = 'forceId'
+
+  /**
+   * The ID of the node argument.
+   */
+  public static readonly nodesArgId: TDropdownArg['_id'] = 'nodeId'
 
   /**
    * The node target that is available in the METIS target environment.
@@ -183,9 +183,9 @@ export default abstract class Target<
           // ...then set the success chance, process time, and resource cost
           // for the node.
           node.actions.forEach((action) => {
-            if (successChance) action.successChance += successChance
-            if (processTime) action.processTime += processTime
-            if (resourceCost) action.resourceCost += resourceCost
+            // if (successChance) action.successChance += successChance
+            // if (processTime) action.processTime += processTime
+            // if (resourceCost) action.resourceCost += resourceCost
           })
         }
       }
@@ -196,27 +196,21 @@ export default abstract class Target<
         name: 'Force',
         required: true,
         groupingId: 'force',
-        type: 'dropdown',
-        options: [],
-        default: {
-          _id: 'defaultForce',
-          name: 'Select a force',
-        },
+        type: 'string',
+        default: 'Select a force',
+        pattern: new RegExp('^[0-9a-fA-F]{24}$'),
       },
       {
         _id: Target.nodesArgId,
         name: 'Node',
         required: true,
         groupingId: 'force',
-        type: 'dropdown',
-        options: [],
-        default: {
-          _id: 'defaultNode',
-          name: 'Select a node',
-        },
+        type: 'string',
+        default: 'Select a node',
+        pattern: new RegExp('^[0-9a-fA-F]{24}$'),
         dependencies: [
-          Dependency.TRUTHY('forceId'),
-          Dependency.NOT_EQUALS('forceId', ['defaultForce']),
+          Dependency.TRUTHY(Target.forcesArgId),
+          Dependency.NOT_EQUALS(Target.forcesArgId, ['defaultForce']),
         ],
       },
       {
@@ -227,8 +221,8 @@ export default abstract class Target<
         type: 'boolean',
         default: true,
         dependencies: [
-          Dependency.TRUTHY('nodeId'),
-          Dependency.NOT_EQUALS('nodeId', ['defaultNode']),
+          Dependency.TRUTHY(Target.nodesArgId),
+          Dependency.NOT_EQUALS(Target.nodesArgId, ['defaultNode']),
         ],
       },
       {
@@ -297,12 +291,9 @@ export default abstract class Target<
         name: 'Force',
         required: true,
         groupingId: 'output',
-        type: 'dropdown',
-        options: [],
-        default: {
-          _id: 'defaultForce',
-          name: 'Select a force',
-        },
+        type: 'string',
+        default: 'Select a force',
+        pattern: new RegExp('^[0-9a-fA-F]{24}$'),
       },
       {
         _id: 'message',
@@ -312,8 +303,8 @@ export default abstract class Target<
         default: 'Enter your message here.',
         groupingId: 'output',
         dependencies: [
-          Dependency.TRUTHY('forceId'),
-          Dependency.NOT_EQUALS('forceId', ['defaultForce']),
+          Dependency.TRUTHY(Target.forcesArgId),
+          Dependency.NOT_EQUALS(Target.forcesArgId, ['defaultForce']),
         ],
       },
     ],

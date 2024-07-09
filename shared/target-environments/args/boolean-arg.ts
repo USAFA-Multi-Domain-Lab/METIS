@@ -1,4 +1,4 @@
-import Args, { TBaseArg, TBaseArgJson } from '.'
+import Arg, { TBaseArg, TBaseArgJson } from '.'
 
 /**
  * The boolean argument type for a target.
@@ -18,7 +18,7 @@ export default class BooleanArg {
           name: arg.name,
           groupingId: arg.groupingId,
           dependencies: arg.dependencies
-            ? Args.encodeDependencies(arg.dependencies)
+            ? Arg.encodeDependencies(arg.dependencies)
             : undefined,
           tooltipDescription: arg.tooltipDescription,
           type: arg.type,
@@ -30,7 +30,7 @@ export default class BooleanArg {
           name: arg.name,
           groupingId: arg.groupingId,
           dependencies: arg.dependencies
-            ? Args.encodeDependencies(arg.dependencies)
+            ? Arg.encodeDependencies(arg.dependencies)
             : undefined,
           tooltipDescription: arg.tooltipDescription,
           type: arg.type,
@@ -52,7 +52,7 @@ export default class BooleanArg {
           name: arg.name,
           groupingId: arg.groupingId,
           dependencies: arg.dependencies
-            ? Args.decodeDependencies(arg.dependencies)
+            ? Arg.decodeDependencies(arg.dependencies)
             : undefined,
           tooltipDescription: arg.tooltipDescription,
           type: arg.type,
@@ -64,7 +64,7 @@ export default class BooleanArg {
           name: arg.name,
           groupingId: arg.groupingId,
           dependencies: arg.dependencies
-            ? Args.decodeDependencies(arg.dependencies)
+            ? Arg.decodeDependencies(arg.dependencies)
             : undefined,
           tooltipDescription: arg.tooltipDescription,
           type: arg.type,

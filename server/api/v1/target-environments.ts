@@ -1,9 +1,7 @@
 import { Request, Response } from 'express-serve-static-core'
 import expressWs from 'express-ws'
 import { TMetisRouterMap } from 'metis/server/http/router'
-import defineRequests, {
-  RequestBodyFilters,
-} from 'metis/server/middleware/requests'
+import defineRequests from 'metis/server/middleware/requests'
 import { auth } from 'metis/server/middleware/users'
 import ServerTargetEnvironment from 'metis/server/target-environments'
 import ServerTarget from 'metis/server/target-environments/targets'
@@ -73,42 +71,6 @@ export const routerMap: TMetisRouterMap = (
     }
   }
 
-  /* ---------------------------- UPDATE ---------------------------- */
-
-  /**
-   * This will update a target environment.
-   * @returns The updated target environment.
-   */
-  const updateTargetEnvironment = (request: Request, response: Response) => {
-    let targetEnvUpdates = request.body
-    // Get the target environment ID from the request body.
-    let _id: any = targetEnvUpdates._id
-
-    // Get the target environment JSON.
-    let targetEnvironmentJson: any = ServerTargetEnvironment.getJson(_id)
-
-    // If the target environment JSON is found, update the target environment.
-    if (targetEnvironmentJson) {
-      // Places all values found in
-      // targetEnvUpdates into targetEnvironmentJson.
-      for (let key in targetEnvUpdates) {
-        if (key !== '_id') {
-          targetEnvironmentJson[key] = targetEnvUpdates[key]
-        }
-      }
-
-      // Update the target environment in the registry.
-      ServerTargetEnvironment.updateTargetEnvInRegistry(targetEnvironmentJson)
-
-      // Send the updated target environment to the client.
-      return response.json(ServerTargetEnvironment.getJson(_id))
-    } else {
-      return response.status(404).json({
-        message: `Target environment with ID "${_id}" not found.`,
-      })
-    }
-  }
-
   /* ---------------------------- ROUTES ---------------------------- */
 
   // -- GET | /api/v1/target-environments/ --
@@ -136,28 +98,6 @@ export const routerMap: TMetisRouterMap = (
       params: { _id: 'string' },
     }),
     getTarget,
-  )
-
-  // -- PUT | /api/v1/target-environments/ --
-  router.put(
-    '/',
-    auth({ permissions: ['missions_write'] }),
-    defineRequests(
-      {
-        body: {
-          _id: RequestBodyFilters.STRING,
-        },
-      },
-      {
-        body: {
-          name: RequestBodyFilters.STRING,
-          description: RequestBodyFilters.STRING_MEDIUMTEXT,
-          version: RequestBodyFilters.STRING,
-          targets: RequestBodyFilters.ARRAY,
-        },
-      },
-    ),
-    updateTargetEnvironment,
   )
 
   done()

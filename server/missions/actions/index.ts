@@ -87,7 +87,8 @@ export default class ServerMissionAction extends MissionAction<TServerMissionTyp
             // then execute the effect on the target.
             if (effect.targetEnvironment && effect.target) {
               try {
-                await effect.target.script(effect.args, effect.mission.toJson())
+                let missionJson = effect.mission.toJson()
+                await effect.target.script(effect.args, missionJson)
               } catch (error: any) {
                 plcApiLogger.error(error.message, error.stack)
               }

@@ -100,11 +100,11 @@ export default function ArgEntry({
    */
   const availableDropdownOptions: TDropdownArgOption[] = compute(() => {
     return arg.type === 'dropdown'
-      ? arg.options.filter((option) => {
-          return (
-            target?.allDependenciesMet(option.dependencies, effectArgs) ?? false
-          )
-        })
+      ? arg.options.filter(
+          (option) =>
+            target?.allDependenciesMet(option.dependencies, effectArgs) ??
+            false,
+        )
       : []
   })
 

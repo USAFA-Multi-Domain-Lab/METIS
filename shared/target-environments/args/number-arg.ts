@@ -1,4 +1,4 @@
-import Args, { TBaseArg, TBaseArgJson } from '.'
+import Arg, { TBaseArg, TBaseArgJson } from '.'
 
 /**
  * The number argument type for a target.
@@ -18,7 +18,7 @@ export default class NumberArg {
           name: arg.name,
           groupingId: arg.groupingId,
           dependencies: arg.dependencies
-            ? Args.encodeDependencies(arg.dependencies)
+            ? Arg.encodeDependencies(arg.dependencies)
             : undefined,
           tooltipDescription: arg.tooltipDescription,
           type: arg.type,
@@ -33,7 +33,7 @@ export default class NumberArg {
           name: arg.name,
           groupingId: arg.groupingId,
           dependencies: arg.dependencies
-            ? Args.encodeDependencies(arg.dependencies)
+            ? Arg.encodeDependencies(arg.dependencies)
             : undefined,
           tooltipDescription: arg.tooltipDescription,
           type: arg.type,
@@ -58,7 +58,7 @@ export default class NumberArg {
           name: arg.name,
           groupingId: arg.groupingId,
           dependencies: arg.dependencies
-            ? Args.decodeDependencies(arg.dependencies)
+            ? Arg.decodeDependencies(arg.dependencies)
             : undefined,
           tooltipDescription: arg.tooltipDescription,
           type: arg.type,
@@ -73,7 +73,7 @@ export default class NumberArg {
           name: arg.name,
           groupingId: arg.groupingId,
           dependencies: arg.dependencies
-            ? Args.decodeDependencies(arg.dependencies)
+            ? Arg.decodeDependencies(arg.dependencies)
             : undefined,
           tooltipDescription: arg.tooltipDescription,
           type: arg.type,

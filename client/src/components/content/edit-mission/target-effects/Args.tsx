@@ -1,5 +1,3 @@
-import { useEffect } from 'react'
-import { useGlobalContext } from 'src/context'
 import { ClientEffect } from 'src/missions/effects'
 import { compute } from 'src/toolbox'
 import { ReactSetter } from 'src/toolbox/types'
@@ -16,9 +14,6 @@ export default function Args({
   effectArgs,
   setEffectArgs,
 }: TArgs_P): JSX.Element | null {
-  /* -- GLOBAL CONTEXT -- */
-  const { forceUpdate } = useGlobalContext().actions
-
   /* -- COMPUTED -- */
   /**
    * The selected target's arguments.
@@ -70,15 +65,6 @@ export default function Args({
   const groupingEntries: [string, TTargetArg[]][] = compute(() => {
     return Object.entries(groupings)
   })
-
-  /* -- EFFECTS -- */
-  // Force update the component when the effect arguments change.
-  // *** Note: The "effectArgs" is an object that is mutated
-  // *** as the user interacts with the argument fields. So,
-  // *** this ensures that the arguments are displayed correctly.
-  useEffect(() => {
-    forceUpdate()
-  }, [effectArgs])
 
   /* -- RENDER -- */
   // If the grouping entries are not empty

@@ -1,6 +1,10 @@
 import { Dependency } from '../dependencies'
 import BooleanArg, { TBooleanArg, TBooleanArgJson } from './boolean-arg'
-import DropdownArg, { TDropdownArg, TDropdownArgJson } from './dropdown-arg'
+import DropdownArg, {
+  TDropdownArg,
+  TDropdownArgJson,
+  TDropdownArgOption,
+} from './dropdown-arg'
 import LargeStringArg, {
   TLargeStringArg,
   TLargeStringArgJson,
@@ -9,9 +13,9 @@ import NumberArg, { TNumberArg, TNumberArgJson } from './number-arg'
 import StringArg, { TStringArg, TStringArgJson } from './string-arg'
 
 /**
- * Arguments for a target.
+ * Represents the base argument type for a target.
  */
-export default class Args {
+export default class Arg {
   /**
    * Decodes all dependencies.
    * @param dependencies The dependencies to decode.
@@ -76,6 +80,45 @@ export default class Args {
           return BooleanArg.fromJson(arg)
       }
     })
+  }
+
+  /**
+   * Converts a target argument to a dropdown argument.
+   * @param arg The target argument to convert.
+   * @param options The dropdown options.
+   * @param defaultOption The default dropdown option.
+   * @returns The argument as a dropdown argument.
+   */
+  public static toDropdownArg = (
+    arg: TTargetArg,
+    options: TDropdownArgOption[] = [],
+    defaultOption: TDropdownArgOption = {
+      _id: 'default',
+      name: 'Select an option',
+    },
+  ): TDropdownArg => {
+    return arg.required
+      ? {
+          _id: arg._id,
+          name: arg.name,
+          groupingId: arg.groupingId,
+          dependencies: arg.dependencies,
+          tooltipDescription: arg.tooltipDescription,
+          type: 'dropdown',
+          required: true,
+          default: defaultOption,
+          options: options,
+        }
+      : {
+          _id: arg._id,
+          name: arg.name,
+          groupingId: arg.groupingId,
+          dependencies: arg.dependencies,
+          tooltipDescription: arg.tooltipDescription,
+          type: 'dropdown',
+          required: false,
+          options: options,
+        }
   }
 }
 

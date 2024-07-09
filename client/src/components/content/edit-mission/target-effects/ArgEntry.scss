@@ -5,13 +5,8 @@
     min-width: 0.83em;
   }
 
-  &.Boolean {
-    .Detail {
-      &.DetailToggle {
-        border: none;
-        margin: 1.25rem 8% 0;
-        padding: 0.6875rem 0 0;
-      }
-    }
+  &.Boolean .Detail.DetailToggle {
+    border: none;
+    padding: 0.6875rem 0 0;
   }
 }

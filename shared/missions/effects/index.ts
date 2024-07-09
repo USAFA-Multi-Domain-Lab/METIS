@@ -72,7 +72,6 @@ export default abstract class Effect<
   }
   /**
    * The target to which the effect will be applied.
-   * @note Setting this will cause the target data to be reloaded.
    */
   public set target(target: TTarget<T> | TCommonTargetJson['_id'] | null) {
     this._target = target
@@ -144,7 +143,12 @@ export default abstract class Effect<
     }
   }
 
-  // Inherited
+  /**
+   * Populates the target data.
+   * @param targetId The ID of the target to load.
+   * @resolves When the target data has been loaded.
+   * @rejects If there is an error loading the target data.
+   */
   public abstract populateTargetData(
     targetId: TCommonTargetJson['_id'],
   ): Promise<void>

@@ -78,11 +78,6 @@ const validate_missions = (mission: any, next: any): void => {
     return {}
   }
 
-  // Check for error.
-  if (results.error) {
-    return next(results.error)
-  }
-
   // Validate node structure.
   results = validateNodeStructure()
 
@@ -292,7 +287,17 @@ const validate_mission_forces_nodes_actions_effects = (
         // Ensure the option exists.
         if (!option) {
           throw new Error(
-            `Error in mission:\nThe argument ("${key}") within the effect ("${effect.name}") is not one of the options in the target's ("${target.name}") arguments.`,
+            `Error in mission:\nThe argument's ("${key}") value ("${value}") within the effect ("${effect.name}") is not a valid option in the effect's target ("${target.name}").`,
+          )
+        }
+      }
+
+      // If the argument is a string, ensure the value matches the pattern.
+      if (arg && arg.type === 'string' && arg.pattern) {
+        let isValid = arg.pattern.test(value)
+        if (isValid === false) {
+          throw new Error(
+            `Error in mission:\nThe argument's ("${key}") value ("${value}") within the effect ("${effect.name}") is invalid.`,
           )
         }
       }
