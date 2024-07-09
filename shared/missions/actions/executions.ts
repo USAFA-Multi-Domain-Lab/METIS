@@ -3,6 +3,13 @@ import { TCommonMissionTypes } from '..'
 import { TCommonMissionNode, TCommonMissionNodeJson, TNode } from '../nodes'
 
 /**
+ * Extracts the execution type from the mission types.
+ * @param T The mission types.
+ * @returns The execution type.
+ */
+export type TExecution<T extends TCommonMissionTypes> = T['execution']
+
+/**
  * The JSON representation of an action execution.
  */
 export type TActionExecutionJson = {

@@ -1,4 +1,4 @@
-import ClientSession from 'src/sessions'
+import SessionClient from 'src/sessions'
 import SessionUsers from './SessionUsers'
 import './UsersPanel.scss'
 
@@ -26,5 +26,5 @@ export type TUsersPanel_P = {
   /**
    * The session client with the users to display.
    */
-  session: ClientSession
+  session: SessionClient
 }

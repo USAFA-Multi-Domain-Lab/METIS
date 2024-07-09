@@ -876,20 +876,6 @@ export const routerMap: TMetisRouterMap = (
         })
       }
     })
-
-    // todo: ???
-    // MissionModel.updateOne({ _id }, mission, (error: any) => {
-    //   if (error !== null) {
-    //     databaseLogger.error(
-    //       `Failed to update mission with the ID "${_id}".`,
-    //     )
-    //     databaseLogger.error(error)
-    //     return response.sendStatus(500)
-    //   } else {
-    //     databaseLogger.info(`Updated mission with the ID "${_id}".`)
-    //     return response.sendStatus(200)
-    //   }
-    // })
   }
 
   /**
@@ -912,14 +898,15 @@ export const routerMap: TMetisRouterMap = (
       } else if (mission === null) {
         return response.sendStatus(404)
       } else {
-        let copy = new MissionModel({
+        let modelInput: Partial<TCommonMissionJson> = {
           name: copyName,
           introMessage: mission.introMessage,
           versionNumber: mission.versionNumber,
           initialResources: mission.initialResources,
           nodeStructure: mission.nodeStructure,
-          nodeData: mission.nodeData,
-        })
+          forces: mission.forces,
+        }
+        let copy = new MissionModel(modelInput)
 
         copy.save((error: Error) => {
           if (error) {

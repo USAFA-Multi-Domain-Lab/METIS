@@ -1,5 +1,6 @@
 import { TClientEvents, TServerEvents, TServerMethod } from 'metis/connect/data'
 import { ServerEmittedError } from 'metis/connect/errors'
+import { TCommonMissionJson, TMissionJsonOptions } from 'metis/missions'
 import ClientConnection from 'metis/server/connect/clients'
 import ServerMission from 'metis/server/missions'
 import ServerMissionAction from 'metis/server/missions/actions'
@@ -9,10 +10,11 @@ import Session, {
   TSessionConfig,
   TSessionJson,
   TSessionRole,
-  TSessionState,
 } from 'metis/sessions'
+import { SingleTypeObject } from 'metis/toolbox/objects'
 import { v4 as generateHash } from 'uuid'
 import ServerActionExecution from '../missions/actions/executions'
+import ServerMissionForce from '../missions/forces'
 
 /**
  * Server instance for sessions. Handles server-side logic for a session with participating clients. Communicates with clients to conduct the session.
@@ -20,17 +22,13 @@ import ServerActionExecution from '../missions/actions/executions'
 export default class SessionServer extends Session<
   ClientConnection,
   ServerMission,
+  ServerMissionForce,
   ServerMissionNode,
   ServerMissionAction
 > {
   // Overridden.
   public get state() {
     return this._state
-  }
-  // Overridden.
-  public set state(value: TSessionState) {
-    this._state = value
-    this.handleStateChange()
   }
 
   /**
@@ -103,39 +101,96 @@ export default class SessionServer extends Session<
   }
 
   // Implemented
-  public toJson(options: TSessionServerJsonOptions = {}): TSessionJson {
-    // Extract options.
-    const { includeSensitiveData = false } = options
+  public getAssignedForce(
+    user: ClientConnection,
+  ): ServerMissionForce | undefined {
+    let forceId: string | undefined = this.assignments.get(user.userId)
+    return this.mission.getForce(forceId)
+  }
 
-    // Construct and return JSON.
-    return {
+  /**
+   * Gets the users that have access to the force with the given ID.
+   * @param forceId The ID of the force.
+   * @returns The users.
+   */
+  public getUsersForForce(forceId: string): ClientConnection[] {
+    return [
+      ...this.participants.filter(
+        (participant) => this.assignments.get(participant.userId) === forceId,
+      ),
+      ...this.supervisors,
+    ]
+  }
+
+  // Implemented
+  public toJson(options: TSessionServerJsonOptions = {}): TSessionJson {
+    // Gather details.
+    const { requester } = options
+    let missionOptions: TMissionJsonOptions = { exportType: 'session-limited' }
+    let banList: string[] = []
+
+    // Handler a requester being passed.
+    if (requester) {
+      // Gather details.
+      let forceId: string | undefined = this.assignments.get(requester.userId)
+
+      // If the requester is a participant, then
+      // update the mission options to include
+      // data pertinent to the participant.
+      if (forceId !== undefined) {
+        missionOptions = {
+          exportType: 'session-participant',
+          forceId,
+        }
+      }
+      // If the requester is an observer, then
+      // update the mission options to include
+      // data pertinent to the observer.
+      else if (this.isSupervisor(requester)) {
+        missionOptions = {
+          exportType: 'session-observer',
+        }
+      }
+      // If the requester is authorized to write
+      // to sessions, include the ban list.
+      if (requester?.user.isAuthorized('sessions_write')) {
+        banList = this.banList
+      }
+    }
+
+    // Construct JSON.
+    let json: TSessionJson = {
       _id: this._id,
       state: this.state,
       name: this.name,
-      mission: this.mission.toJson({
-        revealedOnly: true,
-        includeSessionData: true,
-      }),
+      mission: this.mission.toJson(missionOptions),
       participants: this.participants.map((client: ClientConnection) =>
         client.user.toJson(),
       ),
-      // Only include ban list if sensitive data
-      // is marked to be included.
-      banList: includeSensitiveData ? this.banList : [],
+      banList,
       supervisors: this.supervisors.map((client: ClientConnection) =>
         client.user.toJson(),
       ),
       config: this.config,
       resources: this.resources === Infinity ? 'infinite' : this.resources,
     }
+
+    return json
   }
 
   // Implemented
   public toBasicJson(
     options: TSessionServerJsonOptions = {},
   ): TSessionBasicJson {
-    // Extract options.
-    const { includeSensitiveData = false } = options
+    // Gather details.
+    const { requester } = options
+    let banList: string[] = []
+
+    // If the requester is authorized to write
+    // to sessions, include the ban list.
+    if (requester?.user.isAuthorized('sessions_write')) {
+      banList = this.banList
+    }
 
     // Construct and return JSON.
     return {
@@ -144,7 +199,7 @@ export default class SessionServer extends Session<
       name: this.name,
       config: this.config,
       participantIds: this.participants.map(({ userId: userId }) => userId),
-      banList: includeSensitiveData ? this.banList : [],
+      banList,
       supervisorIds: this.supervisors.map(({ userId: userId }) => userId),
     }
   }
@@ -162,19 +217,17 @@ export default class SessionServer extends Session<
     }
   }
 
-  // todo: Reimplement this.
   // Implemented
   protected mapActions(): void {
-    throw Error('Not implemented.')
-    //     // Initialize the actions map.
-    //     this.actions = new Map<string, ServerMissionAction>()
-    //
-    //     // Loops through and maps each action.
-    //     this.mission.nodes.forEach((node) => {
-    //       node.actions.forEach((action) => {
-    //         this.actions.set(action._id, action)
-    //       })
-    //     })
+    // Initialize the actions map.
+    this.actions = new Map<string, ServerMissionAction>()
+
+    // Loops through and maps each action.
+    this.mission.forces.forEach((force) =>
+      force.nodes.forEach((node) =>
+        node.actions.forEach((action) => this.actions.set(action._id, action)),
+      ),
+    )
   }
 
   /**
@@ -253,8 +306,14 @@ export default class SessionServer extends Session<
     // Handle joining the session for the client.
     client.login.handleJoin(this._id)
 
-    // Handle state change.
-    this.handleStateChange()
+    // Emit an event to all users that the user list
+    // has changed.
+    this.emitToUsers('session-users-updated', {
+      data: {
+        participants: this.participants.map((client) => client.user.toJson()),
+        supervisors: this.supervisors.map((client) => client.user.toJson()),
+      },
+    })
   }
 
   /**
@@ -263,7 +322,13 @@ export default class SessionServer extends Session<
    */
   public updateConfig(config: Partial<TSessionConfig>): void {
     Object.assign(this._config, config)
-    this.handleStateChange()
+
+    // Emit an event to all users that the session state has changed.
+    this.emitToUsers('session-config-updated', {
+      data: {
+        config: this.config,
+      },
+    })
   }
 
   /**
@@ -294,27 +359,78 @@ export default class SessionServer extends Session<
   }
 
   /**
-   * Handles a change in the session state.
+   * Starts the session.
    */
-  public handleStateChange(): void {
-    // Emit an event to all users that the session state has changed.
-    this.emitToUsers('session-state-change', {
-      data: {
-        state: this.state,
-        config: this.config,
-        participants: this.participants.map((client: ClientConnection) =>
-          client.user.toJson(),
-        ),
-        supervisors: this.supervisors.map((client: ClientConnection) =>
-          client.user.toJson(),
-        ),
-      },
+  public start(): void {
+    // Mark the session as started.
+    this._state = 'started'
+
+    // If the session is in the 'started' state,
+    // then auto-assign participants to forces.
+    if (this.state === 'started') {
+      this.autoAssign()
+    }
+
+    // Cache used to not export the same force twice
+    // for a participant.
+    const participantForceCache: SingleTypeObject<TCommonMissionJson> = {}
+
+    // Emit an event to all participants that the session has
+    // started.
+    for (let participant of this.participants) {
+      // Find the force ID for the participant.
+      let forceId = this.assignments.get(participant.userId)
+
+      // Skip if the participant is not assigned to a force.
+      if (forceId === undefined) {
+        continue
+      }
+
+      // If the force has not been cached, then cache it.
+      if (!participantForceCache[forceId]) {
+        participantForceCache[forceId] = this.mission.toJson({
+          exportType: 'session-participant',
+          forceId,
+        })
+      }
+
+      // Get relevant data from the mission for the
+      // participant.
+      let { nodeStructure, forces } = participantForceCache[forceId]
+
+      // Emit the event to the participant.
+      participant.emit('session-started', {
+        data: { nodeStructure, forces },
+      })
+    }
+
+    // Get supervisor export.
+    let supervisorExport = this.mission.toJson({
+      exportType: 'session-observer',
     })
 
-    // If the session has ended, then clear all users.
-    if (this.state === 'ended') {
-      this.clearUsers()
+    // Emit an event to all supervisors that the session has
+    // started.
+    for (let supervisor of this.supervisors) {
+      supervisor.emit('session-started', {
+        data: {
+          nodeStructure: supervisorExport.nodeStructure,
+          forces: supervisorExport.forces,
+        },
+      })
     }
+  }
+
+  /**
+   * Ends the session.
+   */
+  public end(): void {
+    // Mark the session as ended.
+    this._state = 'ended'
+    // Emit an event to all users that the session has ended.
+    this.emitToUsers('session-ended', { data: {} })
+    // Clear all users.
+    this.clearUsers()
   }
 
   /**
@@ -350,8 +466,14 @@ export default class SessionServer extends Session<
       },
     )
 
-    // Handle state change.
-    this.handleStateChange()
+    // Emit an event to all users that the user list
+    // has changed.
+    this.emitToUsers('session-users-updated', {
+      data: {
+        participants: this.participants.map((client) => client.user.toJson()),
+        supervisors: this.supervisors.map((client) => client.user.toJson()),
+      },
+    })
   }
 
   /**
@@ -379,13 +501,14 @@ export default class SessionServer extends Session<
   /**
    * Kicks the given user from the session.
    * @param participantId The ID of the participant to kick from the session.
+   * @throws The correct HTTP status code for any errors that occur.
    */
   public kick(participantId: string): void {
     // Find the participant in the list, if present.
     this._participants.forEach(
       (participant: ClientConnection, index: number) => {
         if (participant.userId === participantId) {
-          // If the participant is has supervisor permissions,
+          // If the participant has supervisor permissions,
           // then throw 403 forbidden error.
           if (participant.user.isAuthorized('sessions_join_observer')) {
             throw 403
@@ -407,8 +530,14 @@ export default class SessionServer extends Session<
       },
     )
 
-    // Handle state change.
-    this.handleStateChange()
+    // Emit an event to all users that the user list
+    // has changed.
+    this.emitToUsers('session-users-updated', {
+      data: {
+        participants: this.participants.map((client) => client.user.toJson()),
+        supervisors: this.supervisors.map((client) => client.user.toJson()),
+      },
+    })
   }
 
   /**
@@ -446,8 +575,35 @@ export default class SessionServer extends Session<
     // Add the participant to the ban list.
     this._banList.push(participantId)
 
-    // Handle state change.
-    this.handleStateChange()
+    // Emit an event to all users that the user list
+    // has changed.
+    this.emitToUsers('session-users-updated', {
+      data: {
+        participants: this.participants.map((client) => client.user.toJson()),
+        supervisors: this.supervisors.map((client) => client.user.toJson()),
+      },
+    })
+  }
+
+  /**
+   * Auto-assigns participants to forces using a
+   * round-robin algorithm.
+   */
+  private autoAssign(): void {
+    // Initialize force index.
+    let forceIndex: number = 0
+
+    // Loop through each participant.
+    this._participants.forEach((participant: ClientConnection) => {
+      // Assign the participant to the force.
+      this.assignments.set(
+        participant.userId,
+        this.mission.forces[forceIndex]._id,
+      )
+
+      // Increment the force index.
+      forceIndex = (forceIndex + 1) % this.mission.forces.length
+    })
   }
 
   /**
@@ -484,7 +640,6 @@ export default class SessionServer extends Session<
     }
   }
 
-  // todo: Reimplement this.
   /**
    * Called when a participant requests to open a node.
    * @param participant The participant requesting to open a node.
@@ -494,75 +649,73 @@ export default class SessionServer extends Session<
     participant: ClientConnection,
     event: TClientEvents['request-open-node'],
   ): void => {
-    throw Error('Not implemented.')
-    //     // Organize data.
-    //     let mission: ServerMission = this.mission
-    //     let { nodeId } = event.data
-    //
-    //
-    //     // Find the node, given the ID.
-    //     let node: ServerMissionNode | undefined = mission.getNode(nodeId)
-    //
-    //     // If the session is not in the 'started' state,
-    //     // then emit an error.
-    //     if (this.state !== 'started') {
-    //       return participant.emitError(
-    //         new ServerEmittedError(
-    //           ServerEmittedError.CODE_SESSION_PROGRESS_LOCKED,
-    //           {
-    //             request: participant.buildResponseReqData(event),
-    //           },
-    //         ),
-    //       )
-    //     }
-    //     // If the node is undefined, then emit
-    //     // an error.
-    //     if (node === undefined) {
-    //       return participant.emitError(
-    //         new ServerEmittedError(ServerEmittedError.CODE_NODE_NOT_FOUND, {
-    //           request: participant.buildResponseReqData(event),
-    //         }),
-    //       )
-    //     }
-    //     // If the node is executable, then emit
-    //     // an error.
-    //     if (!node.openable) {
-    //       return participant.emitError(
-    //         new ServerEmittedError(ServerEmittedError.CODE_NODE_NOT_OPENABLE, {
-    //           request: participant.buildResponseReqData(event),
-    //         }),
-    //       )
-    //     }
-    //
-    //     try {
-    //       // Open the node.
-    //       node.open()
-    //
-    //       // Construct open event payload.
-    //       let payload: TServerEvents['node-opened'] = {
-    //         method: 'node-opened',
-    //         data: {
-    //           nodeId: nodeId,
-    //           revealedChildNodes: node.children.map((node) =>
-    //             node.toJson({ includeSessionData: true }),
-    //           ),
-    //         },
-    //         request: { event, requesterId: participant.userId, fulfilled: true },
-    //       }
-    //
-    //       // Emit open event.
-    //       for (let user of this.users) {
-    //         user.emit('node-opened', payload)
-    //       }
-    //     } catch (error) {
-    //       // Emit an error if the node could not be opened.
-    //       participant.emitError(
-    //         new ServerEmittedError(ServerEmittedError.CODE_SERVER_ERROR, {
-    //           request: participant.buildResponseReqData(event),
-    //           message: 'Failed to open node.',
-    //         }),
-    //       )
-    //     }
+    // Organize data.
+    let mission: ServerMission = this.mission
+    let { nodeId } = event.data
+
+    // Find the node, given the ID.
+    let node: ServerMissionNode | undefined = mission.getNode(nodeId)
+
+    // If the session is not in the 'started' state,
+    // then emit an error.
+    if (this.state !== 'started') {
+      return participant.emitError(
+        new ServerEmittedError(
+          ServerEmittedError.CODE_SESSION_PROGRESS_LOCKED,
+          {
+            request: participant.buildResponseReqData(event),
+          },
+        ),
+      )
+    }
+    // If the node is undefined, then emit
+    // an error.
+    if (node === undefined) {
+      return participant.emitError(
+        new ServerEmittedError(ServerEmittedError.CODE_NODE_NOT_FOUND, {
+          request: participant.buildResponseReqData(event),
+        }),
+      )
+    }
+    // If the node is executable, then emit
+    // an error.
+    if (!node.openable) {
+      return participant.emitError(
+        new ServerEmittedError(ServerEmittedError.CODE_NODE_NOT_OPENABLE, {
+          request: participant.buildResponseReqData(event),
+        }),
+      )
+    }
+
+    try {
+      // Open the node.
+      node.open()
+
+      // Construct open event payload.
+      let payload: TServerEvents['node-opened'] = {
+        method: 'node-opened',
+        data: {
+          nodeId: nodeId,
+          revealedChildNodes: node.children.map((node) =>
+            node.toJson({ includeSessionData: true }),
+          ),
+        },
+        request: { event, requesterId: participant.userId, fulfilled: true },
+      }
+
+      // Emit open event.
+      for (let user of this.getUsersForForce(node.force._id)) {
+        user.emit('node-opened', payload)
+      }
+    } catch (error) {
+      // Emit an error if the node could not be opened.
+      participant.emitError(
+        new ServerEmittedError(ServerEmittedError.CODE_SERVER_ERROR, {
+          request: participant.buildResponseReqData(event),
+          message: 'Failed to open node.',
+        }),
+      )
+    }
   }
 
   /**
@@ -658,7 +811,7 @@ export default class SessionServer extends Session<
 
           // Emit action execution initiated event
           // to each user.
-          for (let user of this.users) {
+          for (let user of this.getUsersForForce(action!.force._id)) {
             user.emit('action-execution-initiated', initiationPayload)
           }
         },
@@ -688,7 +841,7 @@ export default class SessionServer extends Session<
 
       // Emit the action execution completed
       // event to each participant.
-      for (let user of this.users) {
+      for (let user of this.getUsersForForce(action.force._id)) {
         user.emit('action-execution-completed', completionPayload)
       }
     } catch (error) {
@@ -769,8 +922,9 @@ export default class SessionServer extends Session<
  */
 export type TSessionServerJsonOptions = {
   /**
-   * Whether to include sensitive session data (ban list).
-   * @default false
+   * The user client requesting the JSON.
+   * @default undefined
+   * @note If defined, then only the data accessible by the user will be included.
    */
-  includeSensitiveData?: boolean
+  requester?: ClientConnection
 }

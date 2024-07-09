@@ -100,7 +100,7 @@ export default function SessionUsers({
 
   // Update participant and supervisors lists on session
   // state change.
-  useEventListener(server, 'session-state-change', () => {
+  useEventListener(server, 'session-users-updated', () => {
     setParticipants(session.participants)
     setSupervisors(session.supervisors)
   })

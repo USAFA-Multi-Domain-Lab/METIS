@@ -1,11 +1,8 @@
 import { TActionExecutionJson } from 'metis/missions/actions/executions'
 import { TActionOutcomeJson } from 'metis/missions/actions/outcomes'
-import {
-  TSessionConfig,
-  TSessionJson,
-  TSessionRole,
-  TSessionState,
-} from 'metis/sessions'
+import { TCommonMissionForceJson } from 'metis/missions/forces'
+import { TSessionConfig, TSessionJson, TSessionRole } from 'metis/sessions'
+import { AnyObject } from 'metis/toolbox/objects'
 import { TCommonUserJson } from 'metis/users'
 import { TCommonMissionNodeJson } from '../missions/nodes'
 
@@ -151,25 +148,49 @@ export type TGenericServerEvents = {
     }
   >
   /**
-   * Occurs when the state of the session changes (unstarted, started, ended).
+   * Occurs when the session starts while the client is joined.
    */
-  'session-state-change': TConnectEvent<
-    'session-state-change',
+  'session-started': TConnectEvent<
+    'session-started',
     {
       /**
-       * The current state of the session.
+       * The node structure available to the client.
        */
-      state: TSessionState
+      nodeStructure: AnyObject
       /**
-       * The current configuration of the session.
+       * The force(s) the client has access to.
+       */
+      forces: TCommonMissionForceJson[]
+    }
+  >
+  /**
+   * Occurs when the session ends while the client is joined.
+   */
+  'session-ended': TConnectEvent<'session-ended'>
+  /**
+   * Occurs when configuration of the session is updated.
+   */
+  'session-config-updated': TConnectEvent<
+    'session-config-updated',
+    {
+      /**
+       * The updated configuration of the session.
        */
       config: TSessionConfig
+    }
+  >
+  /**
+   * Occurs when a user joins or quits the session.
+   */
+  'session-users-updated': TConnectEvent<
+    'session-users-updated',
+    {
       /**
-       * The current list of participants in the session.
+       * The updated list of participants in the session.
        */
       participants: TCommonUserJson[]
       /**
-       * The current list of supervisors in the session.
+       * The updated list of supervisors in the session.
        */
       supervisors: TCommonUserJson[]
     }

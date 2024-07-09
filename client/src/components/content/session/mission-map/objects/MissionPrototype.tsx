@@ -140,6 +140,11 @@ export default function MissionPrototype({
     if (onSelect) {
       classList.push('Selectable')
     }
+    // Add the selected class if the prototype is
+    // selected.
+    if (prototype.selected) {
+      classList.push('Selected')
+    }
 
     return classList.join(' ')
   })

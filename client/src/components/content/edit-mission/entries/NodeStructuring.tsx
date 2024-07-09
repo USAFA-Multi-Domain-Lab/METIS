@@ -1,7 +1,9 @@
 import { useState } from 'react'
 import { useGlobalContext } from 'src/context'
 import ClientMission from 'src/missions'
-import ClientMissionNode, { ENodeTargetRelation } from 'src/missions/nodes'
+import ClientMissionPrototype, {
+  TPrototypeRelation,
+} from 'src/missions/nodes/prototypes'
 import MoreInformation from '../../communication/MoreInformation'
 import Tooltip from '../../communication/Tooltip'
 import './NodeStructuring.scss'
@@ -23,32 +25,28 @@ enum ENodeDropLocation {
 export default function NodeStructuring(props: {
   mission: ClientMission
   handleChange: () => void
+  handleCloseRequest: () => void
 }): JSX.Element | null {
   /* -- PROPS -- */
 
   let mission: ClientMission = props.mission
   let handleChange = props.handleChange
-  // todo: Fix this to use prototypes.
-  let rootNode: ClientMissionNode = mission.forces[0].root
+  let handleCloseRequest = props.handleCloseRequest
+  let root: ClientMissionPrototype = mission.root
 
   /* -- STATE -- */
 
   const globalContext = useGlobalContext()
   const { forceUpdate } = globalContext.actions
-  const [nodeGrabbed, grabNode] = useState<ClientMissionNode | null>(null)
-  const [nodePendingDrop, pendDrop] = useState<ClientMissionNode | null>(null)
+  const [nodeGrabbed, grabNode] = useState<ClientMissionPrototype | null>(null)
+  const [nodePendingDrop, pendDrop] = useState<ClientMissionPrototype | null>(
+    null,
+  )
   const [dropLocation, setDropLocation] = useState<ENodeDropLocation>(
     ENodeDropLocation.Center,
   )
 
   /* -- FUNCTIONS -- */
-
-  /**
-   * Callback for a request to close the panel.
-   */
-  const handleCloseRequest = (): void => {
-    mission.deselect()
-  }
 
   /* -- RENDER -- */
 
@@ -63,7 +61,7 @@ export default function NodeStructuring(props: {
     // zone.
     const pendDropHere = (): void => {
       setDropPendingHere(true)
-      pendDrop(rootNode)
+      pendDrop(root)
     }
 
     // This will stop this padding from
@@ -80,7 +78,7 @@ export default function NodeStructuring(props: {
       className += ` ${uniqueClassName}`
     }
 
-    if (dropPendingHere && rootNode._id === nodePendingDrop?._id) {
+    if (dropPendingHere && root._id === nodePendingDrop?._id) {
       className += ' DropPending'
     }
 
@@ -98,10 +96,7 @@ export default function NodeStructuring(props: {
             let destinationNode = nodePendingDrop
 
             if (nodeGrabbed !== null) {
-              nodeGrabbed.move(
-                destinationNode,
-                ENodeTargetRelation.ChildOfTarget,
-              )
+              nodeGrabbed.move(destinationNode, 'child-of-target')
               handleChange()
             }
 
@@ -117,10 +112,10 @@ export default function NodeStructuring(props: {
   // structuring for the given node
   // name.
   const Node = (props: {
-    node: ClientMissionNode
+    node: ClientMissionPrototype
     disableDropPending?: boolean
   }): JSX.Element | null => {
-    let node: ClientMissionNode = props.node
+    let node: ClientMissionPrototype = props.node
     let disableDropPending: boolean = props.disableDropPending === true
 
     /* -- COMPONENT FUNCTIONS -- */
@@ -169,29 +164,26 @@ export default function NodeStructuring(props: {
           }}
           onDrop={(event: React.DragEvent) => {
             if (nodePendingDrop !== null) {
-              let target: ClientMissionNode = nodePendingDrop
-              let targetRelation: ENodeTargetRelation
+              let target: ClientMissionPrototype = nodePendingDrop
+              let targetRelation: TPrototypeRelation
 
               switch (dropLocation) {
                 case ENodeDropLocation.Top:
-                  targetRelation = ENodeTargetRelation.PreviousSiblingOfTarget
+                  targetRelation = 'previous-sibling-of-target'
                   break
                 case ENodeDropLocation.Center:
-                  targetRelation = ENodeTargetRelation.ChildOfTarget
+                  targetRelation = 'child-of-target'
                   break
                 case ENodeDropLocation.Bottom:
-                  targetRelation = ENodeTargetRelation.FollowingSiblingOfTarget
+                  targetRelation = 'following-sibling-of-target'
                   break
                 default:
-                  targetRelation = ENodeTargetRelation.ChildOfTarget
+                  targetRelation = 'child-of-target'
                   break
               }
 
               if (nodeGrabbed !== null) {
                 nodeGrabbed.move(target, targetRelation)
-                if (target.hasChildren) {
-                  target.open()
-                }
                 handleChange()
               }
               pendDrop(null)
@@ -267,7 +259,7 @@ export default function NodeStructuring(props: {
         </div>
         {node.expandedInMenu ? (
           <div className='ChildNodes'>
-            {node.children.map((childNode: ClientMissionNode) => (
+            {node.children.map((childNode: ClientMissionPrototype) => (
               <Node
                 node={childNode}
                 disableDropPending={disableDropPending}
@@ -283,8 +275,8 @@ export default function NodeStructuring(props: {
   // This will render the nodes in the
   // node structuring.
   const renderNodes = (): JSX.Element | null => {
-    let nodeElements: Array<JSX.Element | null> = rootNode.children.map(
-      (childNode: ClientMissionNode) => (
+    let nodeElements: Array<JSX.Element | null> = root.children.map(
+      (childNode: ClientMissionPrototype) => (
         <Node node={childNode} key={childNode._id} />
       ),
     )

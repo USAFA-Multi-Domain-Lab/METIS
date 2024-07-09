@@ -17,6 +17,7 @@ import ClientMissionAction from '../actions'
 import ClientActionExecution from '../actions/executions'
 import ClientActionOutcome from '../actions/outcomes'
 import ClientMissionForce from '../forces'
+import ClientMissionPrototype from './prototypes'
 
 /**
  * Class for managing mission nodes on the client.
@@ -72,24 +73,6 @@ export default class ClientMissionNode
    */
   public get pendingExecInit(): boolean {
     return this._pendingExecInit
-  }
-  /**
-   * Whether the node is expanded in the `NodeStructuring` component.
-   */
-  private _expandedInMenu: boolean = false
-  /**
-   * Whether the node is expanded in the `NodeStructuring` component.
-   */
-  public get expandedInMenu(): boolean {
-    return this._expandedInMenu
-  }
-
-  /**
-   * Whether the node is collapsed in the `NodeStructuring` component.
-   * @note Direct inverse of `expandedInMenu`.
-   */
-  public get collapsedInMenu(): boolean {
-    return !this._expandedInMenu
   }
 
   /**
@@ -198,8 +181,36 @@ export default class ClientMissionNode
     return [...this._buttons]
   }
   public set buttons(value: TNodeButton[]) {
+    // Gather details.
+    let structureChange: boolean = false
+
+    // If button count changed from 0 to some
+    // or some to 0, mark to handle structure change.
+    if (
+      (this.buttons.length > 0 && value.length === 0) ||
+      (this.buttons.length === 0 && value.length > 0)
+    ) {
+      structureChange = true
+    }
+
+    // Set buttons.
     this._buttons = value
+
+    // Emit event.
     this.emitEvent('set-buttons')
+
+    // Handle structure change.
+    if (structureChange) {
+      console.log(structureChange)
+      this.mission.handleStructureChange()
+    }
+  }
+
+  /**
+   * Whether the node is selected in the mission.
+   */
+  public get selected(): boolean {
+    return this.mission.selection === this
   }
 
   // Implemented
@@ -217,7 +228,7 @@ export default class ClientMissionNode
   }
 
   // Implemented
-  protected parseActionData(
+  protected importActions(
     data: TCommonMissionActionJson[],
   ): Map<string, ClientMissionAction> {
     let actions: Map<string, ClientMissionAction> = new Map<
@@ -232,7 +243,7 @@ export default class ClientMissionNode
   }
 
   // Implemented
-  protected parseExecutionData(
+  protected importExecutions(
     data: TActionExecutionJson,
   ): ClientActionExecution | null {
     // If data is null return null.
@@ -255,9 +266,7 @@ export default class ClientMissionNode
   }
 
   // Implemented
-  protected parseOutcomeData(
-    data: TActionOutcomeJson[],
-  ): ClientActionOutcome[] {
+  protected importOutcomes(data: TActionOutcomeJson[]): ClientActionOutcome[] {
     return data.map((datum: TActionOutcomeJson) => {
       let action: ClientMissionAction | undefined = this.actions.get(
         datum.actionId,
@@ -274,15 +283,20 @@ export default class ClientMissionNode
 
   /**
    * Calls the callbacks of listeners for the given node event.
-   * @param event The event emitted.
+   * @param method The event method emitted.
    */
-  protected emitEvent(event: TNodeEventMethod): void {
+  protected emitEvent(method: TNodeEventMethod): void {
     // Call any matching listener callbacks
     // or any activity listener callbacks.
-    for (let [listenerEvent, listenerCallback] of this.listeners) {
-      if (listenerEvent === event || listenerEvent === 'activity') {
+    for (let [listenerMethod, listenerCallback] of this.listeners) {
+      if (listenerMethod === method || listenerMethod === 'activity') {
         listenerCallback()
       }
+    }
+    // If the event is a set-buttons event, call
+    // emit event on the mission level.
+    if (method === 'set-buttons') {
+      this.mission.emitEvent('set-buttons')
     }
   }
 
@@ -461,128 +475,6 @@ export default class ClientMissionNode
     return outcome
   }
 
-  // todo: Move this to the prototype class.
-  /**
-   * Moves this node to the given target, positioning based on the target relation passed.
-   * @param target The target node to which this node will be moved.
-   * @param targetRelation Where in relation to the target this node will be newly positioned.
-   * @deprecated
-   * @note Currently does nothing.
-   */
-  public move(
-    target: ClientMissionNode,
-    targetRelation: ENodeTargetRelation,
-  ): void {
-    //     let rootNode: ClientMissionNode = this.mission.rootNode
-    //     let parent: ClientMissionNode | null = this.parent
-    //     let newParentNode: ClientMissionNode | null = target.parent
-    //     let newParentNodeChildNodes: Array<ClientMissionNode> = []
-    //
-    //     // This makes sure that the target
-    //     // isn't being moved inside or beside
-    //     // itself.
-    //     let x: ClientMissionNode | null = target
-    //
-    //     while (x !== null && x._id !== rootNode._id) {
-    //       if (this._id === x._id) {
-    //         return
-    //       }
-    //
-    //       x = x.parent
-    //     }
-    //
-    //     // This will remove the nodes
-    //     // current position in the structure.
-    //     if (parent !== null) {
-    //       let siblings: ClientMissionNode[] = parent.children
-    //
-    //       for (let index: number = 0; index < siblings.length; index++) {
-    //         let sibling = siblings[index]
-    //
-    //         if (this._id === sibling._id) {
-    //           siblings.splice(index, 1)
-    //         }
-    //       }
-    //     }
-    //
-    //     // This will move the target based on
-    //     // its relation to this node.
-    //     switch (targetRelation) {
-    //       case ENodeTargetRelation.ParentOfTargetOnly:
-    //         this.parent = target.parent
-    //         let targetAndTargetSiblings: Array<ClientMissionNode> =
-    //           target.childrenOfParent
-    //
-    //         if (target.parent !== null) {
-    //           for (
-    //             let index: number = 0;
-    //             index < targetAndTargetSiblings.length;
-    //             index++
-    //           ) {
-    //             let sibling = targetAndTargetSiblings[index]
-    //
-    //             if (target._id === sibling._id) {
-    //               targetAndTargetSiblings[index] = this
-    //             }
-    //           }
-    //
-    //           target.parent.children = targetAndTargetSiblings
-    //         }
-    //
-    //         this.children = [target]
-    //         target.parent = this
-    //         break
-    //       case ENodeTargetRelation.ParentOfTargetAndChildren:
-    //         // TODO
-    //         break
-    //       case ENodeTargetRelation.BetweenTargetAndChildren:
-    //         let childNodes: Array<ClientMissionNode> = target.children
-    //
-    //         target.children = [this]
-    //         this.parent = target
-    //
-    //         for (let childNode of childNodes) {
-    //           childNode.parent = this
-    //         }
-    //         this.children = childNodes
-    //         break
-    //       case ENodeTargetRelation.ChildOfTarget:
-    //         target.children.push(this)
-    //         this.parent = target
-    //         break
-    //       case ENodeTargetRelation.PreviousSiblingOfTarget:
-    //         if (newParentNode !== null) {
-    //           newParentNode.children.forEach((childNode: ClientMissionNode) => {
-    //             if (childNode._id === target._id) {
-    //               newParentNodeChildNodes.push(this)
-    //               this.parent = newParentNode
-    //             }
-    //
-    //             newParentNodeChildNodes.push(childNode)
-    //           })
-    //
-    //           newParentNode.children = newParentNodeChildNodes
-    //         }
-    //         break
-    //       case ENodeTargetRelation.FollowingSiblingOfTarget:
-    //         if (newParentNode !== null) {
-    //           newParentNode.children.forEach((childNode: ClientMissionNode) => {
-    //             newParentNodeChildNodes.push(childNode)
-    //
-    //             if (childNode._id === target._id) {
-    //               newParentNodeChildNodes.push(this)
-    //               this.parent = newParentNode
-    //             }
-    //           })
-    //
-    //           newParentNode.children = newParentNodeChildNodes
-    //         }
-    //         break
-    //     }
-    //
-    //     this.mission.handleStructureChange()
-  }
-
   /**
    * This will color all descendant nodes the same color as this node.
    */
@@ -593,82 +485,6 @@ export default class ClientMissionNode
     }
   }
 
-  // todo: Move this to the prototype class.
-  /**
-   * Delete a node.
-   * @param options Options for how the node should be deleted.
-   * @deprecated
-   * @note Currently does nothing.
-   */
-  public delete(
-    options: INodeDeleteOptions = {
-      calledByParentDelete: false,
-      deleteMethod: ENodeDeleteMethod.DeleteNodeAndChildren,
-    },
-  ): void {
-    throw Error('Not implemented')
-    //     let calledByParentDelete: boolean = options.calledByParentDelete === true
-    //     let deleteMethod: ENodeDeleteMethod = options.deleteMethod
-    //       ? options.deleteMethod
-    //       : ENodeDeleteMethod.DeleteNodeAndChildren
-    //
-    //     switch (deleteMethod) {
-    //       case ENodeDeleteMethod.DeleteNodeAndChildren:
-    //         let childNodes: Array<ClientMissionNode> = [...this.children]
-    //
-    //         for (let childNode of childNodes) {
-    //           let childOptions: INodeDeleteOptions = {
-    //             ...options,
-    //             calledByParentDelete: true,
-    //           }
-    //           childNode.delete(childOptions)
-    //         }
-    //
-    //         this.childrenOfParent.splice(this.childrenOfParent.indexOf(this), 1)
-    //         this.mission.nodes = this.mission.nodes.filter(
-    //           (node) => node._id !== this._id,
-    //         )
-    //         break
-    //       case ENodeDeleteMethod.DeleteNodeAndShiftChildren:
-    //         let parentOfThis: ClientMissionNode | null = this.parent
-    //         let childrenofThis: Array<ClientMissionNode> = [...this.children]
-    //
-    //         childrenofThis.forEach((childNode: ClientMissionNode) => {
-    //           if (parentOfThis !== null) {
-    //             parentOfThis.children.splice(
-    //               parentOfThis.children.indexOf(this),
-    //               0,
-    //               childNode,
-    //             )
-    //             childNode.parent = parentOfThis
-    //           }
-    //         })
-    //
-    //         if (parentOfThis !== null) {
-    //           parentOfThis.children.splice(parentOfThis.children.indexOf(this), 1)
-    //           this.mission.nodes = this.mission.nodes.filter(
-    //             (node) => node._id !== this._id,
-    //           )
-    //           this.mission.handleStructureChange()
-    //         }
-    //         break
-    //     }
-    //
-    //     if (calledByParentDelete !== true) {
-    //       // Structure change is handled as long
-    //       // as one node exists. If not, a new
-    //       // node is created. Creating this node
-    //       // will handle the structure change for
-    //       // us.
-    //       if (this.mission.nodes.length > 0) {
-    //         this.mission.handleStructureChange()
-    //       } else {
-    //         this.mission.spawnNode()
-    //       }
-    //     }
-  }
-
-  // todo: Move this to the force class.
   /**
    * Populates the children of the node, if not already populated.
    * @param {Array<TMissionNodeJson>} data The child node data with which to populate the node.
@@ -676,37 +492,48 @@ export default class ClientMissionNode
   protected populateChildNodes(
     data: Array<TMissionNodeJson>,
   ): Array<ClientMissionNode> {
-    throw Error('Not implemented')
-    //     // If child nodes are already set,
-    //     // throw an error.
-    //     if (this.children.length > 0) {
-    //       throw new Error('Child nodes are already populated.')
-    //     }
-    //
-    //     // Generate child nodes.
-    //     let childNodes: Array<ClientMissionNode> = data.map((datum) => {
-    //       // Create a new node.
-    //       let childNode: ClientMissionNode = new ClientMissionNode(
-    //         this.force,
-    //         datum,
-    //       )
-    //
-    //       // Add the node into the mission.
-    //       this.mission.nodes.push(childNode)
-    //
-    //       // Return node
-    //       return childNode
-    //     })
-    //
-    //     // Return the child nodes.
-    //     return childNodes
-  }
+    // If children are already set,
+    // throw an error.
+    if (this.children.length > 0) {
+      throw new Error('Children are already populated.')
+    }
 
-  /**
-   * Toggle the expandedInMenu property between true and false.
-   */
-  public toggleMenuExpansion(): void {
-    this._expandedInMenu = !this._expandedInMenu
+    // Gather details.
+    let prototype = this.prototype
+    let mission = this.mission
+
+    // Generate children.
+    let children: Array<ClientMissionNode> = data.map((datum) => {
+      // Get child prototype.
+      let childPrototypeId = datum.structureKey
+      let childPrototype = this.prototype.children.find(
+        ({ _id }) => _id === childPrototypeId,
+      )
+
+      // If the child prototype is not found,
+      // create that prototype with that ID.
+      if (childPrototype === undefined) {
+        childPrototype = new ClientMissionPrototype(mission, childPrototypeId)
+        mission.prototypes.push(childPrototype)
+        childPrototype.parent = prototype
+        prototype.children.push(childPrototype)
+      }
+
+      // Create a new node.
+      let childNode: ClientMissionNode = new ClientMissionNode(
+        this.force,
+        datum,
+      )
+
+      // Add the node into the mission.
+      this.force.nodes.push(childNode)
+
+      // Return node
+      return childNode
+    })
+
+    // Return the child nodes.
+    return children
   }
 
   /* -- static -- */
@@ -817,40 +644,6 @@ export interface IClientLoadOutcomeOptions extends ILoadOutcomeOptions {
    * @default undefined
    */
   revealedChildNodes?: Array<TMissionNodeJson>
-}
-
-/**
- * The relation of the target node to the node being added.
- */
-export enum ENodeTargetRelation {
-  ParentOfTargetAndChildren,
-  ParentOfTargetOnly,
-  ChildOfTarget,
-  BetweenTargetAndChildren,
-  PreviousSiblingOfTarget,
-  FollowingSiblingOfTarget,
-}
-
-/**
- * Method for deleting a node.
- */
-export enum ENodeDeleteMethod {
-  /**
-   * Deletes the node and all of its children.
-   */
-  DeleteNodeAndChildren,
-  /**
-   * Deletes the node and transfers its children to the node's parent.
-   */
-  DeleteNodeAndShiftChildren,
-}
-
-/**
- * Options for ClientMissionNode.delete.
- */
-export interface INodeDeleteOptions {
-  calledByParentDelete?: boolean // Default "false"
-  deleteMethod?: ENodeDeleteMethod // Default "ENodeDeleteMethod.DeleteNodeAndChildren"
 }
 
 /**

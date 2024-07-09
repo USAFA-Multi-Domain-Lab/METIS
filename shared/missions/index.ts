@@ -8,13 +8,14 @@ import { TCommonMissionAction } from './actions'
 import IActionExecution from './actions/executions'
 import IActionOutcome from './actions/outcomes'
 import { TCommonEffect } from './effects'
-import { TCommonMissionForce, TCommonMissionForceJson, TForce } from './forces'
-import { TCommonMissionNode, TMissionNodeJson, TNode } from './nodes'
 import {
-  TCommonMissionPrototype,
-  TMissionPrototypeOptions,
-  TPrototype,
-} from './nodes/prototypes'
+  MissionForce,
+  TCommonMissionForce,
+  TCommonMissionForceJson,
+  TForce,
+} from './forces'
+import { TCommonMissionNode, TNode } from './nodes'
+import { TCommonMissionPrototype, TPrototype } from './nodes/prototypes'
 
 /**
  * This represents a mission for a student to complete.
@@ -68,7 +69,8 @@ export default abstract class Mission<
       data.initialResources ?? Mission.DEFAULT_PROPERTIES.initialResources
     this.seed = data.seed ?? Mission.DEFAULT_PROPERTIES.seed
     this.prototypes = []
-    this.root = this.createRootPrototype()
+    this.forces = []
+    this.root = this.initializeRoot()
 
     // Parse options.
     let { openAll = false } = options
@@ -79,41 +81,52 @@ export default abstract class Mission<
     )
 
     // Parse force data.
-    this.forces = this.parseForceData(
-      data.forces ?? Mission.DEFAULT_PROPERTIES.forces,
-    )
+    this.importForces(data.forces ?? Mission.DEFAULT_PROPERTIES.forces)
   }
 
-  /**
-   * Parses the force data into MissionForce objects.
-   * @param data The force data to parse.
-   * @returns The parsed force data.
-   */
-  protected abstract parseForceData(
-    data: TCommonMissionForceJson[],
-  ): TForce<T>[]
-
   // Implemented
-  public toJson(options: TMissionJsonOptions = {}): TCommonMissionJson {
-    let {
-      revealedOnly = false,
-      includeSessionData: includeSessionData = false,
-    } = options
-
+  public toJson(
+    options: TMissionJsonOptions = { exportType: 'standard' },
+  ): TCommonMissionJson {
+    // Predefine limited JSON.
     let json: TCommonMissionJson = {
       name: this.name,
       introMessage: this.introMessage,
       versionNumber: this.versionNumber,
       initialResources: this.initialResources,
       seed: this.seed,
-      // todo: Resolve revealedOnly not working.
-      nodeStructure: Mission.determineNodeStructure(
-        this.root /*{ revealedOnly }*/,
-      ),
-      forces: this.forces.map((force) =>
-        force.toJson({ revealedOnly, includeSessionData }),
-      ),
-      // ...this.exportNodes({ revealedOnly, includeSessionData }),
+      nodeStructure: {},
+      forces: [],
+    }
+
+    // Handle the export based on the export type
+    // passed in the options.
+    switch (options.exportType) {
+      case 'standard':
+        json.nodeStructure = Mission.determineNodeStructure(this.root)
+        json.forces = this.forces.map((force) => force.toJson())
+        break
+      case 'session-participant':
+        // Get the force to include in the export.
+        let force = this.forces.find((force) => force._id === options.forceId)
+
+        // If the force is found, include it in the export.
+        if (force) {
+          json.forces = [
+            force.toJson({ revealedOnly: true, includeSessionData: true }),
+          ]
+          // Set the structure to revealed structure of the force.
+          json.nodeStructure = force.revealedStructure
+        }
+        // todo: Log a warning if the force is not found.
+        break
+      case 'session-observer':
+        // Include all data.
+        json.nodeStructure = Mission.determineNodeStructure(this.root)
+        json.forces = this.forces.map((force) =>
+          force.toJson({ includeSessionData: true }),
+        )
+        break
     }
 
     // Include _id if it's an ObjectId.
@@ -134,7 +147,7 @@ export default abstract class Mission<
    * This prototype is not added to the mission's prototypes map, as it is really
    * a pseudo-prototype.
    */
-  protected abstract createRootPrototype(): TPrototype<T>
+  protected abstract initializeRoot(): TPrototype<T>
 
   /**
    * This will import the node structure into the mission, creating
@@ -151,7 +164,7 @@ export default abstract class Mission<
       const spawnPrototypes = (cursor: AnyObject = nodeStructure) => {
         for (let key of Object.keys(cursor)) {
           let childStructure: AnyObject = cursor[key]
-          this.spawnPrototype(key)
+          this.importPrototype(key)
           spawnPrototypes(childStructure)
         }
       }
@@ -180,8 +193,20 @@ export default abstract class Mission<
     }
   }
 
-  // Implemented
-  public abstract spawnPrototype(_id: TPrototype<T>['_id']): TPrototype<T>
+  /**
+   * Creates a prototype for the given ID.
+   * @param _id The ID of the prototype to import.
+   * @returns The imported prototype.
+   */
+  protected abstract importPrototype(_id: TPrototype<T>['_id']): TPrototype<T>
+
+  /**
+   * Imports the force data into MissionForce objects and
+   * stores it in the array of forces.
+   * @param data The force data to parse.
+   * @returns The parsed force data.
+   */
+  protected abstract importForces(data: TCommonMissionForceJson[]): TForce<T>[]
 
   // Implemented
   public getPrototype(
@@ -218,32 +243,8 @@ export default abstract class Mission<
       initialResources: 100,
       seed: generateHash(),
       nodeStructure: {},
-      forces: [
-        {
-          name: 'Default Force',
-          color: '#000000',
-          nodes: [],
-        },
-      ],
+      forces: [MissionForce.DEFAULT_FORCES[0]],
     }
-  }
-
-  /**
-   * The default properties for the root node of a Mission.
-   */
-  public static readonly ROOT_NODE_PROPERTIES: TMissionNodeJson = {
-    _id: 'ROOT',
-    structureKey: 'ROOT',
-    name: 'ROOT',
-    color: '#000000',
-    description:
-      'Invisible node that is the root of all other nodes in the structure.',
-    preExecutionText: 'N/A',
-    depthPadding: 0,
-    executable: false,
-    device: false,
-    actions: [],
-    opened: true,
   }
 
   /**
@@ -417,15 +418,6 @@ export interface TCommonMission {
    */
   toJson: (options?: TMissionJsonOptions) => TCommonMissionJson
   /**
-   * This will spawn a new prototype in the mission with the given _id and options.
-   * @param _id The ID for the prototype.
-   * @param options The options for creating the prototype.
-   */
-  spawnPrototype(
-    _id: TCommonMissionPrototype['_id'],
-    options?: TMissionPrototypeOptions<TCommonMissionPrototype>,
-  ): TCommonMissionPrototype
-  /**
    * Gets a prototype from the mission by its ID.
    */
   getPrototype: (
@@ -500,20 +492,63 @@ export type TMissionOptions = {
 }
 
 /**
+ * Options for Mission.toJson with `exportType` set to 'standard'.
+ */
+export type TMissionJsonStandardOptions = {
+  /**
+   * Standard export of the mission.
+   */
+  exportType: 'standard'
+}
+
+/**
+ * Options for Mission.toJson with `exportType` set to 'session-limited'.
+ */
+export type TMissionJsonSessionLimitedOptions = {
+  /**
+   * An export of a mission to be used in a session.
+   * This export will not include force or prototype
+   * data.
+   */
+  exportType: 'session-limited'
+}
+
+/**
+ * Options for Mission.toJson with `exportType` set to 'session-participant'.
+ */
+export type TMissionJsonSessionParticipantOptions = {
+  /**
+   * An export of a mission to be used in a session.
+   * This export will only include the data available
+   * to a participant participating in the force with
+   * the ID passed.
+   */
+  exportType: 'session-participant'
+  /**
+   * The ID of the force to include in the export.
+   */
+  forceId: TCommonMissionForce['_id']
+}
+
+/**
+ * Options for Mission.toJson with `exportType` set to 'session-observer'.
+ */
+export type TMissionJsonSessionObserverOptions = {
+  /**
+   * An export of a mission to be used in a session.
+   * This export will include all data.
+   */
+  exportType: 'session-observer'
+}
+
+/**
  * Options for Mission.toJSON.
  */
-export type TMissionJsonOptions = {
-  /**
-   * Whether or not to exclude non-revealed nodes from the generated JSON.
-   * @default false
-   */
-  revealedOnly?: boolean
-  /**
-   * Whether or not to include session-specific data in the generated JSON.
-   * @default false
-   */
-  includeSessionData?: boolean
-}
+export type TMissionJsonOptions =
+  | TMissionJsonStandardOptions
+  | TMissionJsonSessionLimitedOptions
+  | TMissionJsonSessionParticipantOptions
+  | TMissionJsonSessionObserverOptions
 
 /**
  * Options for Mission.mapRelationships.
@@ -535,15 +570,4 @@ export type TNodeImportOptions = {
    * @default false
    */
   openAll?: boolean
-}
-
-/**
- * Options for Mission.determineNodeStructure.
- */
-export type TDetermineNodeStructureOptions = {
-  /**
-   * Whether to exclude non-revealed nodes in the node structure.
-   * @default false
-   */
-  revealedOnly?: boolean
 }

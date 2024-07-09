@@ -14,8 +14,8 @@ import './index.scss'
 import Grid from './objects/Grid'
 import Line from './objects/Line'
 import MissionNode, { MAX_NODE_CONTENT_ZOOM } from './objects/MissionNode'
-import MissionNodeCreator from './objects/MissionNodeCreator'
 import MissionPrototype from './objects/MissionPrototype'
+import PrototypeSlot from './objects/PrototypeSlot'
 import Hud from './ui/Hud'
 import PanController from './ui/PanController'
 import Overlay from './ui/overlay'
@@ -98,6 +98,15 @@ export const MAP_EM_GRID_ENABLED = false
 export const MAP_NODE_GRID_ENABLED = true
 
 /**
+ * The tab to display when no tabs exist.
+ */
+const INVALID_TAB: TTabBarTab = {
+  _id: 'invalid-tabs',
+  text: 'Invalid Tab',
+  color: '#ffffff',
+}
+
+/**
  * The master tab to display on the tab bar.
  */
 const MASTER_TAB: TTabBarTab = {
@@ -116,6 +125,7 @@ export default function MissionMap({
   mission,
   overlayContent,
   customButtons = [],
+  showMasterTab = true,
   onTabAdd = null,
   onPrototypeSelect,
   onNodeSelect,
@@ -397,12 +407,17 @@ export default function MissionMap({
    * The tabs to display in the tab bar.
    */
   const tabs = compute(() => {
-    // Define tab list with master tab.
-    let tabs: TTabBarTab[] = [MASTER_TAB]
+    let results: TTabBarTab[] = []
+
+    // If the master tab is marked as shown,
+    // add it to the tabs.
+    if (showMasterTab) {
+      results.push(MASTER_TAB)
+    }
 
     // Add force tabs.
     mission.forces.forEach((force) => {
-      tabs.push({
+      results.push({
         _id: force._id,
         text: force.name,
         color: force.color,
@@ -410,14 +425,15 @@ export default function MissionMap({
     })
 
     // Return tabs.
-    return tabs
+    return results
   })
 
   /**
    * The currently selected tab.
    */
   const selectedTab: TTabBarTab = compute(() => {
-    return tabs[tabIndex]
+    if (tabs.length === 0) return INVALID_TAB
+    else return tabs[tabIndex]
   })
 
   /**
@@ -497,8 +513,13 @@ export default function MissionMap({
 
     // Add the creation mode class if the mission
     // is in creation mode.
-    if (mission.creationMode) {
-      classList.push('CreationMode')
+    if (mission.transformation) {
+      classList.push('Transformation')
+    }
+    // Add has slots class if the mission has
+    // prototype slots.
+    if (mission.prototypeSlots.length > 0) {
+      classList.push('HasSlots')
     }
 
     return classList.join(' ')
@@ -598,12 +619,12 @@ export default function MissionMap({
   ])
 
   /**
-   * The JSX for the node creator objects rendered in the scene.
+   * The JSX for the prototype slot objects rendered in the scene.
    * @memoized
    */
-  const nodeCreatorsJsx = useMemo((): JSX.Element[] => {
-    return mission.nodeCreators.map((creator) => (
-      <MissionNodeCreator key={creator.nodeId} creator={creator} />
+  const slotsJsx = useMemo((): JSX.Element[] => {
+    return mission.prototypeSlots.map((slot) => (
+      <PrototypeSlot key={`${slot.relative._id}${slot.relation}`} {...slot} />
     ))
   }, [
     // ! Recomputes when:
@@ -649,7 +670,7 @@ export default function MissionMap({
         <Grid type={'node'} enabled={MAP_NODE_GRID_ENABLED} />
         {linesJsx}
         {nodesJsx}
-        {nodeCreatorsJsx}
+        {slotsJsx}
       </Scene>
       <Hud
         mission={mission}
@@ -723,6 +744,11 @@ export type TMissionMap = {
    * @default undefined
    */
   overlayContent?: React.ReactNode
+  /**
+   * Whether to show the master tab.
+   * @default true
+   */
+  showMasterTab?: boolean
   /**
    * Handles when a tab is added.
    * @param tab The tab that was added.

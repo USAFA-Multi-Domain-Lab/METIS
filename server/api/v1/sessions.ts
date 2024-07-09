@@ -81,11 +81,7 @@ const routerMap = (router: expressWs.Router, done: () => void) => {
     // to the array.
     for (let session of SessionServer.getAll()) {
       if (session.config.accessibility === 'public' || hasAccess) {
-        sessions.push(
-          session.toBasicJson({
-            includeSensitiveData: user.isAuthorized(['sessions_write']),
-          }),
-        )
+        sessions.push(session.toBasicJson())
       }
     }
 
@@ -114,7 +110,7 @@ const routerMap = (router: expressWs.Router, done: () => void) => {
     }
 
     // Start the session.
-    session.state = 'started'
+    session.start()
 
     // Return response.
     return response.sendStatus(200)
@@ -172,7 +168,7 @@ const routerMap = (router: expressWs.Router, done: () => void) => {
     }
 
     // End the session.
-    session.state = 'ended'
+    session.end()
 
     // For now, destroy the session until we have a
     // reason to keep ended sessions in memory.

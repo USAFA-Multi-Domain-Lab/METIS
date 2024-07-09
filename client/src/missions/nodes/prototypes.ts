@@ -42,8 +42,40 @@ export default class ClientMissionPrototype
     return [...this._buttons]
   }
   public set buttons(value: TPrototypeButton[]) {
+    // Gather details.
+    let structureChange: boolean = false
+
+    // If button count changed from 0 to some
+    // or some to 0, mark to handle structure change.
+    if (
+      (this.buttons.length > 0 && value.length === 0) ||
+      (this.buttons.length === 0 && value.length > 0)
+    ) {
+      structureChange = true
+    }
+
+    // Set buttons.
     this._buttons = value
+
+    // Emit event.
     this.emitEvent('set-buttons')
+
+    // Handle structure change.
+    if (structureChange) {
+      this.mission.handleStructureChange()
+    }
+  }
+
+  /**
+   * Whether the prototype is selected in the mission.
+   */
+  public get selected(): boolean {
+    return this.mission.selection === this
+  }
+
+  // Implemented
+  public get path(): TMissionNavigable[] {
+    return [this.mission, this]
   }
 
   /**
@@ -51,9 +83,23 @@ export default class ClientMissionPrototype
    */
   private listeners: Array<[TPrototypeEventMethod, () => void]> = []
 
-  // Implemented
-  public get path(): TMissionNavigable[] {
-    return [this.mission, this]
+  /**
+   * Whether the prototype is expanded in the `NodeStructuring` component.
+   */
+  private _expandedInMenu: boolean = false
+  /**
+   * Whether the prototype is expanded in the `NodeStructuring` component.
+   */
+  public get expandedInMenu(): boolean {
+    return this._expandedInMenu
+  }
+
+  /**
+   * Whether the prototype is collapsed in the `NodeStructuring` component.
+   * @note Direct inverse of `expandedInMenu`.
+   */
+  public get collapsedInMenu(): boolean {
+    return !this._expandedInMenu
   }
 
   public constructor(
@@ -80,10 +126,15 @@ export default class ClientMissionPrototype
         listenerCallback()
       }
     }
+    // If the event is a set-buttons event, call
+    // emit event on the mission level.
+    if (method === 'set-buttons') {
+      this.mission.emitEvent('set-buttons')
+    }
   }
 
   /**
-   * Adds a listener for a node event.
+   * Adds a listener for a prototype event.
    * @param method The method of the event to listen for.
    * @param callback The callback to call when the event is triggered.
    */
@@ -96,7 +147,7 @@ export default class ClientMissionPrototype
   }
 
   /**
-   * Removes a listener for a node event.
+   * Removes a listener for a prototype event.
    * @param callback The callback used for the listener.
    */
   public removeEventListener(callback: () => void): ClientMissionPrototype {
@@ -104,13 +155,229 @@ export default class ClientMissionPrototype
     this.listeners = this.listeners.filter(([, h]) => h !== callback)
     return this
   }
+
+  /**
+   * Moves the prototype to the given destination, placing it based on
+   * the relation passed.
+   * @param destination The destination of the prototype.
+   * @param relation Where in relation to the destination this prototype
+   * will be placed in the structure.
+   */
+  public move(
+    destination: ClientMissionPrototype,
+    relation: TPrototypeRelation,
+  ): void {
+    let root: ClientMissionPrototype = this.mission.root
+    let parent: ClientMissionPrototype | null = this.parent
+    let newParent: ClientMissionPrototype | null = destination.parent
+    let newChildrenOfParent: Array<ClientMissionPrototype> = []
+
+    // This makes sure that the target
+    // isn't being moved inside or beside
+    // itself.
+    let x: ClientMissionPrototype | null = destination
+
+    while (x !== null && x._id !== root._id) {
+      if (this._id === x._id) {
+        return
+      }
+
+      x = x.parent
+    }
+
+    // This will remove the prototypes
+    // current position in the structure.
+    if (parent !== null) {
+      let siblings: ClientMissionPrototype[] = parent.children
+
+      for (let index: number = 0; index < siblings.length; index++) {
+        let sibling = siblings[index]
+
+        if (this._id === sibling._id) {
+          siblings.splice(index, 1)
+        }
+      }
+    }
+
+    // This will move the target based on
+    // its relation to this prototype.
+    switch (relation) {
+      case 'parent-of-target-only':
+        this.parent = destination.parent
+        let targetAndTargetSiblings: Array<ClientMissionPrototype> =
+          destination.childrenOfParent
+
+        if (destination.parent !== null) {
+          for (
+            let index: number = 0;
+            index < targetAndTargetSiblings.length;
+            index++
+          ) {
+            let sibling = targetAndTargetSiblings[index]
+
+            if (destination._id === sibling._id) {
+              targetAndTargetSiblings[index] = this
+            }
+          }
+
+          destination.parent.children = targetAndTargetSiblings
+        }
+
+        this.children = [destination]
+        destination.parent = this
+        break
+      case 'between-target-and-children':
+        let children: Array<ClientMissionPrototype> = destination.children
+
+        destination.children = [this]
+        this.parent = destination
+
+        for (let child of children) {
+          child.parent = this
+        }
+        this.children = children
+        break
+      case 'child-of-target':
+        destination.children.push(this)
+        this.parent = destination
+        break
+      case 'previous-sibling-of-target':
+        if (newParent !== null) {
+          newParent.children.forEach((child: ClientMissionPrototype) => {
+            if (child._id === destination._id) {
+              newChildrenOfParent.push(this)
+              this.parent = newParent
+            }
+
+            newChildrenOfParent.push(child)
+          })
+
+          newParent.children = newChildrenOfParent
+        }
+        break
+      case 'following-sibling-of-target':
+        if (newParent !== null) {
+          newParent.children.forEach((child: ClientMissionPrototype) => {
+            newChildrenOfParent.push(child)
+
+            if (child._id === destination._id) {
+              newChildrenOfParent.push(this)
+              this.parent = newParent
+            }
+          })
+
+          newParent.children = newChildrenOfParent
+        }
+        break
+    }
+
+    this.mission.handleStructureChange()
+  }
+
+  /**
+   * Delete a prototype from the mission.
+   * @param options Options for how the prototype should be deleted.
+   */
+  public delete(options: TPrototypeDeleteOptions = {}): void {
+    const { calledByParentDelete = false, deleteMethod = 'delete-children' } =
+      options
+
+    switch (deleteMethod) {
+      case 'delete-children':
+        let children: Array<ClientMissionPrototype> = [...this.children]
+
+        for (let child of children) {
+          let childOptions: TPrototypeDeleteOptions = {
+            ...options,
+            calledByParentDelete: true,
+          }
+          child.delete(childOptions)
+        }
+
+        this.childrenOfParent.splice(this.childrenOfParent.indexOf(this), 1)
+        this.mission.prototypes = this.mission.prototypes.filter(
+          (prototype) => prototype._id !== this._id,
+        )
+        break
+      case 'shift-children':
+        let parentOfThis: ClientMissionPrototype | null = this.parent
+        let childrenofThis: Array<ClientMissionPrototype> = [...this.children]
+
+        childrenofThis.forEach((child: ClientMissionPrototype) => {
+          if (parentOfThis !== null) {
+            parentOfThis.children.splice(
+              parentOfThis.children.indexOf(this),
+              0,
+              child,
+            )
+            child.parent = parentOfThis
+          }
+        })
+
+        if (parentOfThis !== null) {
+          parentOfThis.children.splice(parentOfThis.children.indexOf(this), 1)
+          this.mission.prototypes = this.mission.prototypes.filter(
+            (prototype) => prototype._id !== this._id,
+          )
+          this.mission.handleStructureChange()
+        }
+        break
+    }
+
+    if (calledByParentDelete !== true) {
+      // Structure change is handled as long
+      // as one prototype exists. If not, a new
+      // prototype is created. Creating this prototype
+      // will handle the structure change for
+      // us.
+      if (this.mission.prototypes.length > 0) {
+        this.mission.handleStructureChange()
+      } else {
+        this.mission.createPrototype()
+      }
+    }
+  }
+
+  /**
+   * Toggle the expandedInMenu property between true and false.
+   */
+  public toggleMenuExpansion(): void {
+    this._expandedInMenu = !this._expandedInMenu
+  }
 }
 
 /**
- * An event that occurs on a node, which can be listened for.
+ * An event that occurs on a prototype, which can be listened for.
  * @option 'activity'
  * Triggered when any other event occurs.
  * @option 'set-buttons'
- * Triggered when the buttons for the node are set.
+ * Triggered when the buttons for the prototype are set.
  */
 export type TPrototypeEventMethod = 'activity' | 'set-buttons'
+
+/**
+ * The relation of prototype to another prototype.
+ */
+export type TPrototypeRelation =
+  | 'parent-of-target-only'
+  | 'child-of-target'
+  | 'between-target-and-children'
+  | 'previous-sibling-of-target'
+  | 'following-sibling-of-target'
+
+/**
+ * Method for deleting a prototype.
+ * @option 'delete-children'
+ * Deletes the prototype and all of its children.
+ * @option 'shift-children'
+ * Deletes the prototype and transfers its children to the prototype's parent.
+ */
+export type TPrototypeDeleteMethod = 'delete-children' | 'shift-children'
+
+/**
+ * Options for `ClientMissionPrototype.delete`.
+ */
+export interface TPrototypeDeleteOptions {
+  calledByParentDelete?: boolean // Default "false"
+  deleteMethod?: TPrototypeDeleteMethod // Default 'delete-children'
+}

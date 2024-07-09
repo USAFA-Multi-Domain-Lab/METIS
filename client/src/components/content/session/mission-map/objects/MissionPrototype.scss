@@ -38,6 +38,10 @@
       cursor: pointer;
     }
 
+    &.Selected {
+      box-shadow: inset 100vw 0 0 0 rgba($color-accent, 0.05);
+    }
+
     .Name {
       // Position the name.
       @include center-origin-y;
@@ -64,7 +68,7 @@
         width: 0.325em;
         height: 0.325em;
         font-size: unset;
-        border: min(1px, 0.075em) solid $color-main;
+        border: min(1px, 0.075em) solid rgba($color-main, 0.65);
         border-radius: 0;
         background-color: rgba($background-alt1, 0.9);
         background-position: 50% 50% !important;

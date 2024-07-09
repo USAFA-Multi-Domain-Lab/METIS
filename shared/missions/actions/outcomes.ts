@@ -3,6 +3,13 @@ import { TCommonMissionTypes } from '..'
 import { TCommonMissionNode, TCommonMissionNodeJson, TNode } from '../nodes'
 
 /**
+ * Extracts the outcome type from the mission types.
+ * @param T The mission types.
+ * @returns The outcome type.
+ */
+export type TOutcome<T extends TCommonMissionTypes> = T['outcome']
+
+/**
  * The JSON representation of an action outcome.
  */
 export interface TActionOutcomeJson {

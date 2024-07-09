@@ -5,18 +5,23 @@ import ClientMission, { TMissionNavigable } from 'src/missions'
 import ClientMissionAction from 'src/missions/actions'
 import { ClientEffect } from 'src/missions/effects'
 import ClientMissionForce from 'src/missions/forces'
-import ClientMissionNode, { ENodeDeleteMethod } from 'src/missions/nodes'
-import ClientMissionPrototype from 'src/missions/nodes/prototypes'
+import ClientMissionNode from 'src/missions/nodes'
+import ClientMissionPrototype, {
+  TPrototypeDeleteMethod,
+} from 'src/missions/nodes/prototypes'
+import PrototypeCreation from 'src/missions/transformations/creations'
+import PrototypeTranslation from 'src/missions/transformations/translations'
 import { compute } from 'src/toolbox'
 import { useEventListener, useMountHandler } from 'src/toolbox/hooks'
 import { DefaultLayout, TPage_P } from '.'
 import Mission from '../../../../shared/missions'
-import { SingleTypeObject, TWithKey } from '../../../../shared/toolbox/objects'
+import { TWithKey } from '../../../../shared/toolbox/objects'
 import ActionEntry from '../content/edit-mission/entries/ActionEntry'
 import EffectEntry from '../content/edit-mission/entries/EffectEntry'
 import ForceEntry from '../content/edit-mission/entries/ForceEntry'
 import MissionEntry from '../content/edit-mission/entries/MissionEntry'
 import NodeEntry from '../content/edit-mission/entries/NodeEntry'
+import NodeStructuring from '../content/edit-mission/entries/NodeStructuring'
 import PrototypeEntry from '../content/edit-mission/entries/PrototypeEntry'
 import {
   HomeLink,
@@ -168,7 +173,7 @@ export default function MissionPage({
   // changes, updating the state accordingly.
   useEventListener(
     mission,
-    ['selection', 'structure-change'],
+    ['selection', 'set-transformation'],
     () => {
       // Get previous and next selections.
       let prevSelection: TMissionNavigable = selection
@@ -203,57 +208,67 @@ export default function MissionPage({
       // If there is a next prototype, then add the buttons.
       if (nextSelection instanceof ClientMissionPrototype) {
         // Define potential buttons.
-        const availableButtons: SingleTypeObject<TPrototypeButton> = {
+        const availableButtons = {
           deselect: {
             icon: 'cancel',
             key: 'prototype-button-deselect',
             tooltipDescription:
               'Deselect this prototype (Closes panel view also).',
             onClick: () => mission.deselect(),
-          },
+          } as TPrototypeButton,
           add: {
             icon: 'add',
             key: 'prototype-button-add',
             tooltipDescription: 'Create an adjacent prototype on the map.',
-            onClick: () => {
-              mission.creationMode = true
+            onClick: (_, prototype) => {
+              onPrototypeAddRequest(prototype)
             },
-          },
-          add_cancel: {
+          } as TPrototypeButton,
+          move: {
+            icon: 'reorder',
+            key: 'prototype-button-move',
+            tooltipDescription: 'Move this prototype to another location.',
+            onClick: (_, prototype) => {
+              onPrototypeMoveRequest(prototype)
+            },
+          } as TPrototypeButton,
+          transform_cancel: {
             icon: 'cancel',
             key: 'prototype-button-add-cancel',
-            tooltipDescription: 'Cancel prototype creation.',
-            onClick: () => (mission.creationMode = false),
-          },
-          // todo: Fix this to work with prototypes.
+            tooltipDescription: 'Cancel action.',
+            onClick: () => (mission.transformation = null),
+          } as TPrototypeButton,
           remove: {
             icon: 'remove',
             key: 'prototype-button-remove',
             tooltipDescription: 'Delete this prototype.',
             disabled: mission.prototypes.length < 2 ? 'full' : 'none',
             onClick: (_, prototype) => {
-              // todo: Uncomment and make this work with prototypes.
-              // handleNodeDeleteRequest(prototype)
+              onPrototypeDeleteRequest(prototype)
             },
-          },
+          } as TPrototypeButton,
         }
 
         // Define the buttons that will actually be used.
         const activeButtons = []
 
-        // If not in creation mode, then add deselect, add, and
-        // remove buttons.
-        if (!mission.creationMode) {
-          activeButtons.push(
-            availableButtons.deselect,
-            // todo: These should be used in prototypes.
-            // availableNodeButtons.add,
-            // availableNodeButtons.remove,
-          )
+        // If there is a transformation being made within the mission,
+        // then add a cancel button for the transformation.
+        if (mission.transformation) {
+          activeButtons.push(availableButtons.transform_cancel)
         }
-        // Else, add a cancel button for adding a node.
+        // Else, add default buttons for a selected prototype.
         else {
-          activeButtons.push(availableButtons.add_cancel)
+          activeButtons.push(availableButtons.deselect, availableButtons.add)
+
+          // If there is at least two prototypes, then add
+          // the remove and move buttons.
+          if (mission.prototypes.length > 1) {
+            // todo: Reimplement this once node structure panel
+            // todo: is removed.
+            // activeButtons.push(availableButtons.move)
+            activeButtons.push(availableButtons.remove)
+          }
         }
 
         // Set the buttons on the next selection.
@@ -268,7 +283,7 @@ export default function MissionPage({
 
   // Add event listener to watch for when a new
   // node is spawned in the mission.
-  useEventListener(mission, 'spawn-node', () => {
+  useEventListener(mission, 'new-prototype', () => {
     // Mark unsaved changes as true.
     setAreUnsavedChanges(true)
   })
@@ -303,23 +318,6 @@ export default function MissionPage({
       notify('Mission failed to save')
       setAreUnsavedChanges(true)
     }
-  }
-
-  // todo: Fix this to work with prototypes.
-  /**
-   * Ensures that at least one node exists in the mission.
-   * @note If a node is deleted and there are no remaining nodes,
-   * then a new node is auto-generated and the user is notified.
-   */
-  const ensureOneNodeExists = (): void => {
-    // if (
-    //   mission.prototypes.length === 1 &&
-    //   mission.lastCreatedNode?._id === Array.from(mission.nodes.values())[0]._id
-    // ) {
-    //   notify(
-    //     'Auto-generated a node for this mission, since missions must have at least one node.',
-    //   )
-    // }
   }
 
   /**
@@ -369,8 +367,18 @@ export default function MissionPage({
    */
   const onPrototypeSelect = (prototype: ClientMissionPrototype) => {
     if (prototype !== selection) {
-      // Select the prototype.
-      mission.select(prototype)
+      // Get the current transformation in the mission.
+      let transformation = mission.transformation
+      // If the transformation is a translation, set
+      // the destination to the prototype.
+      if (mission.transformation instanceof PrototypeTranslation) {
+        mission.transformation.destination = prototype
+        mission.handleStructureChange()
+      }
+      // Else, select the prototype in the mission.
+      else {
+        mission.select(prototype)
+      }
     }
   }
 
@@ -389,28 +397,27 @@ export default function MissionPage({
 
   /**
    * Handler for when the user requests to delete a node.
-   * @param node The node to be deleted.
+   * @param prototype The node to be deleted.
    */
-  const handleNodeDeleteRequest = async (
-    node: ClientMissionNode,
+  const onPrototypeDeleteRequest = async (
+    prototype: ClientMissionPrototype,
   ): Promise<void> => {
     // Gather details.
-    let deleteMethod: ENodeDeleteMethod =
-      ENodeDeleteMethod.DeleteNodeAndChildren
+    let deleteMethod: TPrototypeDeleteMethod = 'delete-children'
     let message: string
-    let choices: ['Cancel', 'Node', 'Node + Children', 'Confirm'] = [
+    let choices: ['Cancel', 'Keep Children', 'Delete Children', 'Confirm'] = [
       'Cancel',
-      'Node',
-      'Node + Children',
+      'Keep Children',
+      'Delete Children',
       'Confirm',
     ]
 
-    // Set the message and choices based on the node's children.
-    if (node.hasChildren) {
-      message = `Please confirm if you would like to delete "${node.name}" only or "${node.name}" and all of it's children.`
+    // Set the message and choices based on the prototype's children.
+    if (prototype.hasChildren) {
+      message = `What would you like to do with the children of "${prototype.name}"?`
       choices.pop()
     } else {
-      message = `Please confirm the deletion of "${node.name}".`
+      message = `Please confirm the deletion of "${prototype.name}".`
       choices.splice(1, 2)
     }
 
@@ -418,8 +425,8 @@ export default function MissionPage({
     let { choice } = await prompt(message, choices)
 
     // If the user selects node only, update the delete method.
-    if (choice === 'Node') {
-      deleteMethod = ENodeDeleteMethod.DeleteNodeAndShiftChildren
+    if (choice === 'Keep Children') {
+      deleteMethod = 'shift-children'
     }
     // Return if the user cancels the deletion.
     else if (choice === 'Cancel') {
@@ -427,22 +434,27 @@ export default function MissionPage({
     }
 
     // Delete the node.
-    node.delete({
+    prototype.delete({
       deleteMethod,
     })
     // Handle the change.
     handleChange()
     activateNodeStructuring(false)
-    // todo: Remove this.
-    // mission.deselectNode()
-    ensureOneNodeExists()
+    mission.deselect()
   }
 
   /**
-   * Handler for when the user requests to add a new node.
+   * Handler for when the user requests to add a new prototype.
    */
-  const handleNodeAddRequest = (): void => {
-    mission.creationMode = true
+  const onPrototypeAddRequest = (prototype: ClientMissionPrototype): void => {
+    mission.transformation = new PrototypeCreation(prototype)
+  }
+
+  /**
+   * Handler for when the user requests to add a new prototype.
+   */
+  const onPrototypeMoveRequest = (prototype: ClientMissionPrototype): void => {
+    mission.transformation = new PrototypeTranslation(prototype)
   }
 
   /* -- PRE-RENDER PROCESSING -- */
@@ -455,8 +467,7 @@ export default function MissionPage({
       icon: 'reorder',
       key: 'reorder',
       onClick: () => {
-        // todo: Resolve this.
-        // mission.deselectNode()
+        mission.deselect()
         activateNodeStructuring(true)
       },
       tooltipDescription: 'Edit the structure and order of nodes.',
@@ -502,7 +513,15 @@ export default function MissionPage({
    * Renders JSX for panel 2 of the resize relationship.
    */
   const renderPanel2 = (): JSX.Element | null => {
-    if (selection instanceof ClientMission) {
+    if (nodeStructuringIsActive) {
+      return (
+        <NodeStructuring
+          mission={mission}
+          handleChange={handleChange}
+          handleCloseRequest={() => activateNodeStructuring(false)}
+        />
+      )
+    } else if (selection instanceof ClientMission) {
       return (
         <MissionEntry
           mission={selection}
@@ -513,9 +532,11 @@ export default function MissionPage({
     } else if (selection instanceof ClientMissionPrototype) {
       return (
         <PrototypeEntry
+          key={selection._id}
           prototype={selection}
           handleChange={handleChange}
-          key={selection._id}
+          onAddRequest={() => onPrototypeAddRequest(selection)}
+          onDeleteRequest={() => onPrototypeDeleteRequest(selection)}
         />
       )
     } else if (selection instanceof ClientMissionForce) {
@@ -529,11 +550,9 @@ export default function MissionPage({
     } else if (selection instanceof ClientMissionNode) {
       return (
         <NodeEntry
+          key={selection._id}
           node={selection}
           handleChange={handleChange}
-          handleAddRequest={handleNodeAddRequest}
-          handleDeleteRequest={() => handleNodeDeleteRequest(selection)}
-          key={selection._id}
         />
       )
     } else if (selection instanceof ClientMissionAction) {

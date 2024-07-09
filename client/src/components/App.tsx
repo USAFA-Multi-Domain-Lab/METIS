@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react'
 import ServerConnection from 'src/connect/servers'
 import { useGlobalContext } from 'src/context'
 import ClientMissionNode from 'src/missions/nodes'
-import ClientSession from 'src/sessions'
+import SessionClient from 'src/sessions'
 import { ClientTargetEnvironment } from 'src/target-environments'
 import ClientUser from 'src/users'
 import { TLogin } from '../../../shared/logins'
@@ -55,7 +55,6 @@ function App(props: {}): JSX.Element | null {
 
   const [login] = globalContext.login
   const [appMountHandled, setAppMountHandled] = globalContext.appMountHandled
-  const [server] = globalContext.server
   const [tooltips] = globalContext.tooltips
   const [tooltipDescription, setTooltipDescription] =
     globalContext.tooltipDescription
@@ -183,7 +182,7 @@ function App(props: {}): JSX.Element | null {
           // Or, if the logged in user is in a session,
           // then switch to the session page.
           else if (login.sessionId !== null) {
-            let session: ClientSession = await server.$fetchCurrentSession(
+            let session: SessionClient = await server.$fetchCurrentSession(
               login.sessionId,
             )
             // Navigate based on the session state.

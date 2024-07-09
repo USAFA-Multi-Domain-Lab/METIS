@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useGlobalContext } from 'src/context'
 import ClientMission from 'src/missions'
-import ClientSession from 'src/sessions'
+import SessionClient from 'src/sessions'
 import { compute } from 'src/toolbox'
 import { useMountHandler } from 'src/toolbox/hooks'
 import { DefaultLayout } from '.'
@@ -75,7 +75,7 @@ export default function LaunchPage({
         // Notify user of session launch.
         beginLoading('Launching session...')
         // Launch session from mission ID.
-        await ClientSession.$launch(mission._id, sessionConfig)
+        await SessionClient.$launch(mission._id, sessionConfig)
         // Navigate to home page.
         navigateTo('HomePage', {})
         // Notify user of success.
