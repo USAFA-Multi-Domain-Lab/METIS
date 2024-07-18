@@ -4,6 +4,7 @@ import { TMissionPrototypeOptions } from 'metis/missions/nodes/prototypes'
 import StringToolbox from 'metis/toolbox/strings'
 import seedrandom, { PRNG } from 'seedrandom'
 import ServerTargetEnvironment from '../target-environments'
+import { TTargetEnvContextMission } from '../target-environments/api'
 import ServerTarget from '../target-environments/targets'
 import ServerMissionAction from './actions'
 import ServerActionExecution from './actions/executions'
@@ -17,6 +18,11 @@ import ServerMissionPrototype from './nodes/prototypes'
  * Class for managing missions on the server.
  */
 export default class ServerMission extends Mission<TServerMissionTypes> {
+  // Implemented
+  public get nodes(): ServerMissionNode[] {
+    return this.forces.map((force) => force.nodes).flat()
+  }
+
   /**
    * The RNG used to generate random numbers for the mission.
    */
@@ -81,6 +87,20 @@ export default class ServerMission extends Mission<TServerMissionTypes> {
     let forces = data.map((datum) => new ServerMissionForce(this, datum))
     this.forces.push(...forces)
     return forces
+  }
+
+  /**
+   * Extracts the necessary properties from the mission to be used as a reference
+   * in a target environment.
+   * @returns The mission's necessary properties.
+   */
+  public toTargetEnvContext(): TTargetEnvContextMission {
+    return {
+      _id: this._id,
+      name: this.name,
+      forces: this.forces.map((force) => force.toTargetEnvContext()),
+      nodes: this.nodes.map((node) => node.toTargetEnvContext()),
+    }
   }
 }
 

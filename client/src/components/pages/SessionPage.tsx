@@ -37,7 +37,7 @@ export default function SessionPage({
 }: TSessionPage_P): JSX.Element | null {
   console.log(session._id)
 
-  /* -- global-context -- */
+  /* -- GLOBAL CONTEXT -- */
 
   const globalContext = useGlobalContext()
   const [server] = globalContext.server
@@ -50,7 +50,7 @@ export default function SessionPage({
     beginLoading,
   } = globalContext.actions
 
-  /* -- state -- */
+  /* -- STATE -- */
 
   const [nodeToExecute, setNodeToExecute] = useState<ClientMissionNode | null>(
     null,
@@ -60,7 +60,7 @@ export default function SessionPage({
   const [rightPanelTab, setRightPanelTab] =
     useState<TSessionRightPanelTab>('output')
 
-  /* -- variables -- */
+  /* -- VARIABLES -- */
 
   let mission: ClientMission = session.mission
   // Dynamic (default) sizing of the output panel.
@@ -68,7 +68,7 @@ export default function SessionPage({
   // The current aspect ratio of the window.
   let currentAspectRatio: number = window.innerWidth / window.innerHeight
 
-  /* -- functions -- */
+  /* -- FUNCTIONS -- */
 
   /**
    * Outputs to the in-browser console.
@@ -181,7 +181,7 @@ export default function SessionPage({
     }
   })
 
-  /* -- computed -- */
+  /* -- COMPUTED -- */
 
   /**
    * Props for navigation.
@@ -277,7 +277,7 @@ export default function SessionPage({
     return buttons
   })
 
-  /* -- effects -- */
+  /* -- EFFECTS -- */
 
   // Verify navigation on mount and on session state change.
   useMountHandler((done) => {
@@ -319,7 +319,7 @@ export default function SessionPage({
     setResources(session.resources)
   })
 
-  /* -- pre-rendering-processing -- */
+  /* -- PRE-RENDER PROCESSING -- */
 
   // If the aspect ratio is greater than or equal to 16:9,
   // and the window width is greater than or equal to 1850px,
@@ -329,7 +329,7 @@ export default function SessionPage({
     panel2DefaultSize = window.innerWidth * 0.4
   }
 
-  /* -- render -- */
+  /* -- RENDER -- */
 
   /**
    * JSX for the top bar element.

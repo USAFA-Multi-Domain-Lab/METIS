@@ -261,7 +261,7 @@ export default function ActionEntry({
             />
             <DetailNumber
               fieldType='required'
-              label='Success Chance'
+              label='Probability of Success'
               stateValue={successChance}
               setState={setSuccessChance}
               minimum={0}

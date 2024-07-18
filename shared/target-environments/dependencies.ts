@@ -1,7 +1,7 @@
 /**
  * Represents a dependency that can be found within a target's arguments.
  */
-export class Dependency implements TCommonDependency {
+export default class Dependency implements TCommonDependency {
   // Inherited
   public readonly dependentId: TCommonDependency['dependentId']
 

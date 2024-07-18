@@ -1,4 +1,4 @@
-import { Dependency } from '../dependencies'
+import Dependency from '../dependencies'
 import BooleanArg, { TBooleanArg, TBooleanArgJson } from './boolean-arg'
 import DropdownArg, {
   TDropdownArg,

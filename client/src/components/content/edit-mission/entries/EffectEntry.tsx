@@ -6,7 +6,7 @@ import ClientTarget from 'src/target-environments/targets'
 import { useMountHandler, usePostInitEffect } from 'src/toolbox/hooks'
 import Arg from '../../../../../../shared/target-environments/args'
 import { TDropdownArgOption } from '../../../../../../shared/target-environments/args/dropdown-arg'
-import { Dependency } from '../../../../../../shared/target-environments/dependencies'
+import Dependency from '../../../../../../shared/target-environments/dependencies'
 import { DetailLargeString } from '../../form/DetailLargeString'
 import { DetailLocked } from '../../form/DetailLocked'
 import { DetailString } from '../../form/DetailString'
@@ -30,7 +30,7 @@ export default function EffectEntry({
   const [targetEnv] = useState<ClientTargetEnvironment | null>(
     effect.targetEnvironment,
   )
-  const [target] = useState<ClientTarget | null>(effect.target)
+  const [target, setTarget] = useState<ClientTarget | null>(effect.target)
   const [effectArgs, setEffectArgs] = useState<ClientEffect['args']>(
     effect.args,
   )
@@ -103,19 +103,17 @@ export default function EffectEntry({
         }
       })
       // Create the node dropdown options.
-      let nodes: TDropdownArgOption[] = mission.nodes
-        .filter((node) => node.executable)
-        .map((node) => {
-          return {
-            _id: node._id,
-            name: node.name,
-            dependencies: [
-              Dependency.decode(
-                Dependency.EQUALS(ClientTarget.forcesArgId, [node.force._id]),
-              ),
-            ],
-          }
-        })
+      let nodes: TDropdownArgOption[] = mission.nodes.map((node) => {
+        return {
+          _id: node._id,
+          name: node.name,
+          dependencies: [
+            Dependency.decode(
+              Dependency.EQUALS(ClientTarget.forcesArgId, [node.force._id]),
+            ),
+          ],
+        }
+      })
 
       // Generate dropdown options for the arguments listed above.
       argIds.forEach((argId) => {
@@ -124,20 +122,15 @@ export default function EffectEntry({
           if (arg._id === argId) {
             // Initialize the options based on the argument ID.
             let options = arg._id === ClientTarget.forcesArgId ? forces : nodes
+            // Filter the options based on the option's dependencies.
+            let filteredOptions = options.filter((option) =>
+              target.allDependenciesMet(option.dependencies, effect.args),
+            )
 
             // If the argument is a string argument...
             if (arg.type === 'string') {
               // Set the default option based on the argument ID.
-              let defaultOption =
-                arg._id === ClientTarget.forcesArgId
-                  ? {
-                      _id: 'defaultForce',
-                      name: 'Select a force',
-                    }
-                  : {
-                      _id: 'defaultNode',
-                      name: 'Select a node',
-                    }
+              let defaultOption = filteredOptions[0]
               // Convert the string argument to a dropdown argument with the
               // appropriate options and default option.
               arg = Arg.toDropdownArg(arg, options, defaultOption)
@@ -146,6 +139,11 @@ export default function EffectEntry({
             else if (arg.type === 'dropdown') {
               // Update the options in the dropdown argument.
               arg.options = options
+
+              // Update the default option in the dropdown argument.
+              if (arg.required) {
+                arg.default = filteredOptions[0]
+              }
             }
           }
 

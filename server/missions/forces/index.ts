@@ -1,5 +1,6 @@
 import { MissionForce } from 'metis/missions/forces'
 import { TMissionNodeJson, TMissionNodeOptions } from 'metis/missions/nodes'
+import { TTargetEnvContextForce } from 'metis/server/target-environments/api'
 import { TServerMissionTypes } from '..'
 import ServerMissionNode from '../nodes'
 
@@ -30,5 +31,18 @@ export default class ServerMissionForce extends MissionForce<TServerMissionTypes
 
     // Return the node.
     return node
+  }
+
+  /**
+   * Extracts the necessary properties from the force to be used as a reference
+   * in a target environment.
+   * @returns The force's necessary properties.
+   */
+  public toTargetEnvContext(): TTargetEnvContextForce {
+    return {
+      _id: this._id,
+      name: this.name,
+      nodes: this.nodes.map((node) => node.toTargetEnvContext()),
+    }
   }
 }

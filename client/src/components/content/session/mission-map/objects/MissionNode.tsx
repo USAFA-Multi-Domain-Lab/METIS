@@ -79,6 +79,10 @@ export default function MissionNode({
    * The buttons to display on the node.
    */
   const [buttons, setButtons] = useState<TNodeButton[]>(node.buttons)
+  /**
+   * Whether the node is blocked.
+   */
+  const [blocked, setBlocked] = useState<boolean>(node.blocked)
 
   /* -- effects -- */
 
@@ -92,6 +96,7 @@ export default function MissionNode({
     setExecutionState(node.executionState)
     setButtons(node.buttons)
     setInitialProgress(calculateInitialProgress(node))
+    setBlocked(node.blocked)
   })
 
   /* -- computed -- */
@@ -229,6 +234,10 @@ export default function MissionNode({
     // is pending execution initiation.
     if (pendingExecInit) {
       classList.push('PendingExecInit')
+    }
+    // Add the blocked class if the node is blocked.
+    if (blocked) {
+      classList.push('Blocked')
     }
     // Add the execution state class.
     classList.push(StringToolbox.capitalize(executionState))

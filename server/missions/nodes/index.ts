@@ -2,6 +2,7 @@ import { TCommonMissionActionJson } from 'metis/missions/actions'
 import { TActionExecutionJson } from 'metis/missions/actions/executions'
 import { TActionOutcomeJson } from 'metis/missions/actions/outcomes'
 import MissionNode from 'metis/missions/nodes'
+import { TTargetEnvContextNode } from 'metis/server/target-environments/api'
 import { TServerMissionTypes } from '..'
 import ServerMissionAction from '../actions'
 import ServerActionExecution from '../actions/executions'
@@ -146,6 +147,70 @@ export default class ServerMissionNode extends MissionNode<TServerMissionTypes> 
 
     // Return outcome.
     return outcome
+  }
+
+  /**
+   * Handles the blocking of the node during a session.
+   * @param blocked Whether or not the node is blocked.
+   */
+  public handleBlock(blocked: boolean): void {
+    this._blocked = blocked
+
+    if (this.hasChildren) {
+      this.handleBlockChildren(blocked)
+    }
+  }
+
+  // Implemented
+  protected handleBlockChildren(
+    blocked: boolean,
+    node: ServerMissionNode = this,
+  ): void {
+    // Handle blocking of children.
+    node.children.forEach((child) => {
+      child.handleBlock(blocked)
+
+      if (child.isOpen && child.hasChildren) {
+        child.handleBlockChildren(blocked, child)
+      }
+    })
+  }
+
+  // Implemented
+  public modifySuccessChance(successChanceOperand: number): void {
+    this.actions.forEach((action) => {
+      // action.successChanceOperand = successChanceOperand
+    })
+  }
+
+  // Implemented
+  public modifyProcessTime(processTimeOperand: number): void {
+    this.actions.forEach((action) => {
+      // action.processTimeOperand = processTimeOperand
+    })
+  }
+
+  // Implemented
+  public modifyResourceCost(resourceCostOperand: number): void {
+    this.actions.forEach((action) => {
+      // action.resourceCostOperand = resourceCostOperand
+    })
+  }
+
+  /**
+   * Extracts the necessary properties from the node to be used as a reference
+   * in a target environment.
+   * @returns The node's necessary properties.
+   */
+  public toTargetEnvContext(): TTargetEnvContextNode {
+    return {
+      _id: this._id,
+      name: this.name,
+      description: this.description,
+      actions: Array.from(this.actions.values()).map((action) =>
+        action.toTargetEnvContext(),
+      ),
+    }
   }
 
   /**

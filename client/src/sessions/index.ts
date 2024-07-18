@@ -127,7 +127,7 @@ export default class SessionClient extends Session<
   // Implemented
   public getAssignedForce(user: ClientUser): ClientMissionForce | undefined {
     let forceId: string | undefined = this.assignments.get(user._id)
-    return this.mission.getForce(forceId as string)
+    return this.mission.getForce(forceId)
   }
 
   /**
@@ -147,6 +147,10 @@ export default class SessionClient extends Session<
       'action-execution-completed',
       this.onActionExecutionCompleted,
     )
+    this.server.addEventListener(
+      'internal-effect-enacted',
+      this.onHandleInternalEffect,
+    )
   }
 
   /**
@@ -161,6 +165,7 @@ export default class SessionClient extends Session<
       'node-opened',
       'action-execution-initiated',
       'action-execution-completed',
+      'internal-effect-enacted',
     ])
   }
 
@@ -540,6 +545,126 @@ export default class SessionClient extends Session<
       (userData) => new ClientUser(userData),
     )
     this._supervisors = supervisors.map((userData) => new ClientUser(userData))
+  }
+
+  /**
+   * Handles the blocking and unblocking of nodes.
+   * @param nodeId The ID of the node to be blocked or unblocked.
+   * @param blocked Whether or not the node is blocked.
+   */
+  private blockNode = (nodeId: string, blocked: boolean): void => {
+    // Find the node, given the ID.
+    let node: ClientMissionNode | undefined = this.mission.getNode(nodeId)
+    // Handle node not found.
+    if (node === undefined) {
+      throw new Error(
+        `Event "node-handle-block" was triggered, but the node with the given nodeId ("${nodeId}") could not be found.`,
+      )
+    }
+    // Handle the blocking and unblocking of the node.
+    node.handleBlock(blocked)
+  }
+
+  /**
+   * Modifies the success chance of all the node's actions.
+   * @param nodeId The ID of the node.
+   * @param successChanceOperand The operand to modify the success chance by.
+   */
+  private modifySuccessChance = (
+    nodeId: string,
+    successChanceOperand: number,
+  ): void => {
+    // Find the node, given the ID.
+    let node: ClientMissionNode | undefined = this.mission.getNode(nodeId)
+    // Handle node not found.
+    if (node === undefined) {
+      throw new Error(
+        `Event "node-action-success-chance" was triggered, but the node with the given nodeId ("${nodeId}") could not be found.`,
+      )
+    }
+    // Modify the success chance for all the node's actions.
+    node.modifySuccessChance(successChanceOperand)
+  }
+
+  /**
+   * Modifies the process time of all the node's actions.
+   * @param nodeId The ID of the node.
+   * @param processTimeOperand The operand to modify the process time by.
+   */
+  private modifyProcessTime = (
+    nodeId: string,
+    processTimeOperand: number,
+  ): void => {
+    // Find the node, given the ID.
+    let node: ClientMissionNode | undefined = this.mission.getNode(nodeId)
+    // Handle node not found.
+    if (node === undefined) {
+      throw new Error(
+        `Event "node-action-process-time" was triggered, but the node with the given nodeId ("${nodeId}") could not be found.`,
+      )
+    }
+    // Modify the process time for all the node's actions.
+    node.modifyProcessTime(processTimeOperand)
+  }
+
+  /**
+   * Modifies the resource cost of all the node's actions.
+   * @param nodeId The ID of the node.
+   * @param resourceCostOperand The operand to modify the resource cost by.
+   */
+  private modifyResourceCost = (
+    nodeId: string,
+    resourceCostOperand: number,
+  ): void => {
+    // Find the node, given the ID.
+    let node: ClientMissionNode | undefined = this.mission.getNode(nodeId)
+    // Handle node not found.
+    if (node === undefined) {
+      throw new Error(
+        `Event "node-action-resource-cost" was triggered, but the node with the given nodeId ("${nodeId}") could not be found.`,
+      )
+    }
+    // Modify the resource cost for all the node's actions.
+    node.modifyResourceCost(resourceCostOperand)
+  }
+
+  /**
+   * Handles when an internal effect has been enacted.
+   * @param event The event emitted by the server.
+   */
+  private onHandleInternalEffect = (
+    event: TServerEvents['internal-effect-enacted'],
+  ): void => {
+    // If the internal effect is labeled as "output",
+    // then send the output message to the appropriate
+    // output panel.
+    if (event.data.key === 'output') {
+      let { forceId, message } = event.data
+    }
+    // If the internal effect is labeled as "node-block",
+    // then block, or unblock, the node.
+    if (event.data.key === 'node-block') {
+      let { nodeId, blocked } = event.data
+      this.blockNode(nodeId, blocked)
+    }
+    // If the internal effect is labeled as "node-action-success-chance",
+    // then modify the success chance of all the node's actions.
+    if (event.data.key === 'node-action-success-chance') {
+      let { nodeId, successChanceOperand } = event.data
+      this.modifySuccessChance(nodeId, successChanceOperand)
+    }
+    // If the internal effect is labeled as "node-action-process-time",
+    // then modify the process time of all the node's actions.
+    if (event.data.key === 'node-action-process-time') {
+      let { nodeId, processTimeOperand } = event.data
+      this.modifyProcessTime(nodeId, processTimeOperand)
+    }
+    // If the internal effect is labeled as "node-action-resource-cost",
+    // then modify the resource cost of all the node's actions.
+    if (event.data.key === 'node-action-resource-cost') {
+      let { nodeId, resourceCostOperand } = event.data
+      this.modifyResourceCost(nodeId, resourceCostOperand)
+    }
   }
 
   /**

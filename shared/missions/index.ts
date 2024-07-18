@@ -25,6 +25,9 @@ export default abstract class Mission<
 > implements TCommonMission
 {
   // Implemented
+  public abstract get nodes(): TNode<T>[]
+
+  // Implemented
   public _id: string
 
   // Implemented
@@ -217,13 +220,15 @@ export default abstract class Mission<
   }
 
   // Implemented
-  public getForce(forceId: TForce<T>['_id']): TForce<T> | undefined {
-    return Mission.getForce(this, forceId)
+  public getForce(
+    forceId: TForce<T>['_id'] | undefined,
+  ): TForce<T> | undefined {
+    return forceId ? Mission.getForce(this, forceId) : undefined
   }
 
   // Implemented
   public getNode(nodeId: TNode<T>['_id']): TNode<T> | undefined {
-    return Mission.getNode(this, nodeId)
+    return nodeId ? Mission.getNode(this, nodeId) : undefined
   }
 
   /**
@@ -373,6 +378,10 @@ export type TCommonMissionTypes = {
  * mission-related classes.
  */
 export interface TCommonMission {
+  /**
+   * All nodes that exist in the mission.
+   */
+  get nodes(): TCommonMissionNode[]
   /**
    * The ID of the mission.
    */

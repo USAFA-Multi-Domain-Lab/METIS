@@ -103,6 +103,17 @@ export default abstract class MissionNode<
   protected opened: boolean
 
   /**
+   * Whether or not this node is blocked.
+   */
+  protected _blocked: boolean
+  /**
+   * Whether or not this node is blocked.
+   */
+  public get blocked(): boolean {
+    return this._blocked
+  }
+
+  /**
    * Cache for the depth padding of the node.
    */
   protected _depthPadding: number
@@ -291,6 +302,7 @@ export default abstract class MissionNode<
       data.actions ?? MissionNode.DEFAULT_PROPERTIES.actions,
     )
     this.opened = data.opened ?? MissionNode.DEFAULT_PROPERTIES.opened
+    this._blocked = data.blocked ?? MissionNode.DEFAULT_PROPERTIES.blocked
     this._execution = this.importExecutions(
       data.execution !== undefined
         ? data.execution
@@ -337,6 +349,16 @@ export default abstract class MissionNode<
    * @returns {IActionOutcome[]} The parsed outcome data.
    */
   protected abstract importOutcomes(data: TActionOutcomeJson[]): TOutcome<T>[]
+
+  /**
+   * Recursively handles the blocking and unblocking of children nodes that are open.
+   * @param blocked Whether the children nodes are blocked or unblocked.
+   * @param node The node to start blocking from.
+   */
+  protected abstract handleBlockChildren(
+    blocked: boolean,
+    node?: TNode<T>,
+  ): void
 
   // Implemented
   public toJson(options: TNodeJsonOptions = {}): TMissionNodeJson {
@@ -388,6 +410,7 @@ export default abstract class MissionNode<
         executionState: this.executionState,
         execution: executionJson,
         outcomes: outcomeJSON,
+        blocked: this.blocked,
       }
 
       // Join session-specific JSON with base JSON.
@@ -415,6 +438,18 @@ export default abstract class MissionNode<
     options?: ILoadOutcomeOptions,
   ): IActionOutcome
 
+  // Implemented
+  public abstract handleBlock(blocked: boolean): void
+
+  // Implemented
+  public abstract modifySuccessChance(successChanceOperand: number): void
+
+  // Implemented
+  public abstract modifyProcessTime(processTimeOperand: number): void
+
+  // Implemented
+  public abstract modifyResourceCost(resourceCostOperand: number): void
+
   /**
    * The default properties for a MissionNode object.
    */
@@ -431,6 +466,7 @@ export default abstract class MissionNode<
       device: false,
       actions: [],
       opened: false,
+      blocked: false,
       executionState: 'unexecuted',
       execution: null,
       outcomes: [],
@@ -603,6 +639,26 @@ export interface TCommonMissionNode {
     data: TActionOutcomeJson,
     options?: ILoadOutcomeOptions,
   ) => TCommonActionOutcome
+  /**
+   * Handles the blocking and unblocking of the node.
+   * @param blocked Whether the node is blocked or unblocked.
+   */
+  handleBlock: (blocked: boolean) => void
+  /**
+   * Modifies the chance of success for all the node's actions.
+   * @param successChanceOperand The operand to modify the success chance by.
+   */
+  modifySuccessChance: (successChanceOperand: number) => void
+  /**
+   * Modifies the processing time for all the node's actions.
+   * @param processTimeOperand The operand to modify the process time by.
+   */
+  modifyProcessTime: (processTimeOperand: number) => void
+  /**
+   * Modifies the resource cost for all the node's actions.
+   * @param resourceCostOperand The operand to modify the resource cost by.
+   */
+  modifyResourceCost: (resourceCostOperand: number) => void
 }
 
 /**
@@ -667,6 +723,7 @@ export interface IMissionNodeSessionJson {
   executionState: TNodeExecutionState
   execution: TActionExecutionJson | null
   outcomes: TActionOutcomeJson[]
+  blocked: boolean
 }
 
 /**

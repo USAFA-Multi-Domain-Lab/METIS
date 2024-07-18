@@ -1,12 +1,10 @@
 import { AnyObject } from 'metis/toolbox/objects'
 import TargetEnvironment, { TCommonTargetEnv, TTargetEnv } from '.'
-import Mission, {
-  TCommonMissionJson,
-  TCommonMissionTypes,
-} from '../../shared/missions'
+import { TTargetEnvContext } from '../../server/target-environments/api'
+import { TCommonMissionTypes } from '../../shared/missions'
 import Arg, { TTargetArg, TTargetArgJson } from './args'
 import { TDropdownArg } from './args/dropdown-arg'
-import { Dependency } from './dependencies'
+import Dependency from './dependencies'
 
 /**
  * This is an entity that can be found in a target environment.
@@ -157,7 +155,7 @@ export default abstract class Target<
     _id: 'node',
     name: 'Node',
     description: '',
-    script: async (args, mission) => {
+    script: async (context) => {
       let {
         forceId,
         nodeId,
@@ -165,29 +163,24 @@ export default abstract class Target<
         successChance,
         processTime,
         resourceCost,
-      } = args
+      } = context.effect.args
 
-      // Grab the force and node via their IDs.
-      let force = Mission.getForce(mission, forceId)
-      let node = Mission.getNode(mission, nodeId)
-
-      // If the node and force exist...
-      if (node && force) {
-        // If the node should be blocked...
-        if (blockNode) {
-          // ...then block the node.
-          // node.disabled = blockNode
+      if (blockNode === true) {
+        context.blockNode(nodeId, forceId)
+      } else if (blockNode === false) {
+        if (successChance) {
+          context.modifySuccessChance(nodeId, forceId, successChance)
         }
-        // Otherwise, if the node shouldn't be blocked...
-        else {
-          // ...then set the success chance, process time, and resource cost
-          // for the node.
-          node.actions.forEach((action) => {
-            // if (successChance) action.successChance += successChance
-            // if (processTime) action.processTime += processTime
-            // if (resourceCost) action.resourceCost += resourceCost
-          })
+        if (processTime) {
+          context.modifyProcessTime(nodeId, forceId, processTime)
         }
+        if (resourceCost) {
+          context.modifyResourceCost(nodeId, forceId, resourceCost)
+        }
+      } else {
+        throw new Error(
+          `Bad request. The arguments sent with the effect ("${context.effect.name}") are invalid. Please check the arguments within the effect.`,
+        )
       }
     },
     args: [
@@ -208,10 +201,7 @@ export default abstract class Target<
         type: 'string',
         default: 'Select a node',
         pattern: new RegExp('^[0-9a-fA-F]{24}$'),
-        dependencies: [
-          Dependency.TRUTHY(Target.forcesArgId),
-          Dependency.NOT_EQUALS(Target.forcesArgId, ['defaultForce']),
-        ],
+        dependencies: [Dependency.TRUTHY(Target.forcesArgId)],
       },
       {
         _id: 'blockNode',
@@ -220,14 +210,11 @@ export default abstract class Target<
         groupingId: 'blockNode',
         type: 'boolean',
         default: true,
-        dependencies: [
-          Dependency.TRUTHY(Target.nodesArgId),
-          Dependency.NOT_EQUALS(Target.nodesArgId, ['defaultNode']),
-        ],
+        dependencies: [Dependency.TRUTHY(Target.nodesArgId)],
       },
       {
         _id: 'successChance',
-        name: 'Chance of Success',
+        name: 'Probability of Success',
         type: 'number',
         required: false,
         min: -100,
@@ -284,7 +271,20 @@ export default abstract class Target<
     _id: 'output',
     name: 'Output Panel',
     description: '',
-    script: async () => {},
+    script: async (context) => {
+      let { forceId, message } = context.effect.args
+
+      // Find the force.
+      let force = context.mission.forces.find((force) => force._id === forceId)
+
+      // If the force is not found, throw an error.
+      if (!force) {
+        throw new Error(`The force with the ID ${forceId} was not found.`)
+      }
+
+      // Output the message to the force.
+      context.sendOutputMessage(force, message)
+    },
     args: [
       {
         _id: Target.forcesArgId,
@@ -302,10 +302,7 @@ export default abstract class Target<
         type: 'large-string',
         default: 'Enter your message here.',
         groupingId: 'output',
-        dependencies: [
-          Dependency.TRUTHY(Target.forcesArgId),
-          Dependency.NOT_EQUALS(Target.forcesArgId, ['defaultForce']),
-        ],
+        dependencies: [Dependency.TRUTHY(Target.forcesArgId)],
       },
     ],
   }
@@ -370,13 +367,9 @@ export interface TCommonTarget {
    */
   script: (
     /**
-     * The arguments used to execute the effect on the target.
+     * The context for the target environment.
      */
-    args: AnyObject,
-    /**
-     * The mission that the target is a part of.
-     */
-    mission: TCommonMissionJson,
+    context: TTargetEnvContext,
   ) => Promise<void>
   /**
    * The arguments used to create the effect on the target.
@@ -432,13 +425,9 @@ export interface TCommonTargetJson {
    */
   script: (
     /**
-     * The arguments used to execute the effect on the target.
+     * The context for the target environment.
      */
-    args: AnyObject,
-    /**
-     * The mission that the target is a part of.
-     */
-    mission: TCommonMissionJson,
+    context: TTargetEnvContext,
   ) => Promise<void>
   /**
    * The arguments used to create the effect on the target.

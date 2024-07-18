@@ -240,10 +240,27 @@ export default function ArgEntry({
       // ...and the argument is a drop down then set the
       // drop down value to the default value.
       if (arg.type === 'dropdown') {
-        // *** Note: When this value in the state changes,
-        // *** the effect's arguments automatically updates
-        // *** with the current value.
-        setDropDownValue(arg.default)
+        // ...and the drop down value stored in the state is the
+        // same as the default value, then manually update the
+        // effect's arguments by adding this argument and its
+        // value.
+        if (dropDownValue === arg.default) {
+          // *** Note: An argument's value in the effect's
+          // *** arguments is automatically set if the value
+          // *** stored in this state changes. If the value
+          // *** in the state doesn't change then the value
+          // *** needs to be set manually.
+          setEffectArgs((prev) => ({ ...prev, [arg._id]: dropDownValue._id }))
+        }
+        // Otherwise, set the drop down value to the default value.
+        // *** Note: The default value is mandatory if the
+        // *** argument is required.
+        else {
+          // *** Note: When this value in the state changes,
+          // *** the effect's arguments automatically updates
+          // *** with the current value.
+          setDropDownValue(arg.default)
+        }
       }
       // Or, if the argument is a number...
       else if (arg.type === 'number') {
@@ -274,20 +291,54 @@ export default function ArgEntry({
       // *** Note: The default value is mandatory if the
       // *** argument is required.
       else if (arg.type === 'string') {
-        // *** Note: When this value in the state changes,
-        // *** the effect's arguments automatically updates
-        // *** with the current value.
-        setStringValue(arg.default)
+        // ...and the string value stored in the state is the
+        // same as the default value, then manually update the
+        // effect's arguments by adding this argument and its
+        // value.
+        if (stringValue === arg.default) {
+          // *** Note: An argument's value in the effect's
+          // *** arguments is automatically set if the value
+          // *** stored in this state changes. If the value
+          // *** in the state doesn't change then the value
+          // *** needs to be set manually.
+          setEffectArgs((prev) => ({ ...prev, [arg._id]: stringValue }))
+        }
+        // Otherwise, set the string value to the default value.
+        // *** Note: The default value is mandatory if the
+        // *** argument is required.
+        else {
+          // *** Note: When this value in the state changes,
+          // *** the effect's arguments automatically updates
+          // *** with the current value.
+          setStringValue(arg.default)
+        }
       }
       // Or, if the argument is a large string then set the
       // large string value to the default value.
       // *** Note: The default value is mandatory if the
       // *** argument is required.
       else if (arg.type === 'large-string') {
-        // *** Note: When this value in the state changes,
-        // *** the effect's arguments automatically updates
-        // *** with the current value.
-        setLargeStringValue(arg.default)
+        // ...and the large string value stored in the state is the
+        // same as the default value, then manually update the
+        // effect's arguments by adding this argument and its
+        // value.
+        if (largeStringValue === arg.default) {
+          // *** Note: An argument's value in the effect's
+          // *** arguments is automatically set if the value
+          // *** stored in this state changes. If the value
+          // *** in the state doesn't change then the value
+          // *** needs to be set manually.
+          setEffectArgs((prev) => ({ ...prev, [arg._id]: largeStringValue }))
+        }
+        // Otherwise, set the large string value to the default value.
+        // *** Note: The default value is mandatory if the
+        // *** argument is required.
+        else {
+          // *** Note: When this value in the state changes,
+          // *** the effect's arguments automatically updates
+          // *** with the current value.
+          setLargeStringValue(arg.default)
+        }
       }
       // Or, if the argument is a boolean...
       else if (arg.type === 'boolean') {
@@ -414,7 +465,7 @@ export default function ArgEntry({
           label={arg.name}
           stateValue={stringValue}
           setState={setStringValue}
-          defaultValue={arg.default}
+          defaultValue={arg.required ? arg.default : undefined}
           tooltipDescription={arg.tooltipDescription}
         />
       </div>
@@ -431,7 +482,7 @@ export default function ArgEntry({
           label={arg.name}
           stateValue={largeStringValue}
           setState={setLargeStringValue}
-          defaultValue={arg.default}
+          defaultValue={arg.required ? arg.default : undefined}
           elementBoundary='.SidePanelSection'
           tooltipDescription={arg.tooltipDescription}
         />

@@ -81,6 +81,12 @@
       opacity: 0.35;
     }
 
+    &.Blocked {
+      opacity: 0.5;
+      pointer-events: none;
+      cursor: default;
+    }
+
     // Add a transition out of the pending
     // open state.
     &:not(.PendingOpen):not(.PendingExecInit):not(.Executing) {

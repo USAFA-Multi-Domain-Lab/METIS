@@ -1,4 +1,4 @@
-import { TTargetEnv } from 'metis/target-environments'
+import { TCommonTargetEnv, TTargetEnv } from 'metis/target-environments'
 import { v4 as generateHash } from 'uuid'
 import { TCommonMission, TCommonMissionTypes, TMission } from '..'
 import Target, {
@@ -106,13 +106,7 @@ export default abstract class Effect<
   /**
    * The environment in which the target exists.
    */
-  public get targetEnvironment(): TTargetEnv<T> | null {
-    if (this.target instanceof Target) {
-      return this.target.targetEnvironment
-    } else {
-      return null
-    }
-  }
+  public abstract get targetEnvironment(): TTargetEnv<T> | null
 
   /**
    * Creates a new Effect Object.
@@ -223,6 +217,10 @@ export interface TCommonEffect {
    * The corresponding node for the effect.
    */
   get node(): TCommonMissionNode
+  /**
+   * The environment in which the target exists.
+   */
+  get targetEnvironment(): TCommonTargetEnv | null
   /**
    * The corresponding action for the effect.
    */

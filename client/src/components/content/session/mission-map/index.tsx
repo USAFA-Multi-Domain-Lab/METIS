@@ -267,7 +267,6 @@ export default function MissionMap({
     },
     [selectedForce],
   )
-
   /**
    * Updates the mission selection when the tab index changes.
    */

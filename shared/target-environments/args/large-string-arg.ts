@@ -95,10 +95,6 @@ type TLargeStringArgOptional = {
    * Determines whether the argument is required or not.
    */
   required: false
-  /**
-   * The default value for the argument.
-   */
-  default?: string
 }
 /**
  * The required large character string argument type for a target.
@@ -133,10 +129,6 @@ type TLargeStringArgOptionalJson = {
    * Determines whether the argument is required or not.
    */
   required: false
-  /**
-   * The default value for the argument.
-   */
-  default?: string
 }
 /**
  * The required large character string argument type for a target.

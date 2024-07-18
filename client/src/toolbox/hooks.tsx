@@ -87,7 +87,7 @@ export function usePostInitEffect(
 export function useRequireLogin(): [NonNullable<TLogin<ClientUser>>] {
   const globalContext = useGlobalContext()
   const [login] = globalContext.login
-  // todo: remove (require login)
+  // todo: implement react app error handling
   // const login = null
   const { navigateTo } = globalContext.actions
 

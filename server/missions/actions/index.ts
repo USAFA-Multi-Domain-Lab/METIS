@@ -4,6 +4,9 @@ import IActionExecution, {
 } from 'metis/missions/actions/executions'
 import { TCommonEffectJson } from 'metis/missions/effects'
 import { plcApiLogger } from 'metis/server/logging'
+import TargetEnvApi, {
+  TTargetEnvContextAction,
+} from 'metis/server/target-environments/api'
 import seedrandom, { PRNG } from 'seedrandom'
 import { TServerMissionTypes } from '..'
 import ServerEffect from '../effects'
@@ -45,7 +48,7 @@ export default class ServerMissionAction extends MissionAction<TServerMissionTyp
   public execute(
     options: TExecuteOptions<ServerActionExecution>,
   ): Promise<ServerRealizedOutcome> {
-    let { effectsEnabled = false, onInit = () => {} } = options
+    let { targetEnvApi, effectsEnabled = false, onInit = () => {} } = options
 
     return new Promise<ServerRealizedOutcome>((resolve) => {
       // Determine the start and end time of
@@ -80,36 +83,12 @@ export default class ServerMissionAction extends MissionAction<TServerMissionTyp
         // If the outcome is successful and the effects
         // are enabled...
         if (realizedOutcome.successful && effectsEnabled) {
-          // ...iterate through the effects and execute them
-          // if they have a target environment and a target.
+          // ...iterate through the effects and apply them.
           this.effects.forEach(async (effect: ServerEffect) => {
-            // If the effect has a target environment and a target,
-            // then execute the effect on the target.
-            if (effect.targetEnvironment && effect.target) {
-              try {
-                let missionJson = effect.mission.toJson()
-                await effect.target.script(effect.args, missionJson)
-              } catch (error: any) {
-                plcApiLogger.error(error.message, error.stack)
-              }
-            }
-            // Or, if the effect doesn't have a target environment,
-            // log an error.
-            else if (effect.targetEnvironment === null) {
-              plcApiLogger.error(
-                new Error(
-                  `The node - "${this.node.name}" - has an action - "${this.name}" - with an effect - "${effect.name}" - that doesn't have a target environment or the target environment doesn't exist.`,
-                ),
-              )
-            }
-            // Or, if the effect doesn't have a target,
-            // log an error.
-            else if (effect.target === null) {
-              plcApiLogger.error(
-                new Error(
-                  `The node - "${this.node.name}" - has an action - "${this.name}" - with an effect - "${effect.name}" - that doesn't have a target or the target doesn't exist.`,
-                ),
-              )
+            try {
+              await targetEnvApi.applyEffect(effect)
+            } catch (error: any) {
+              plcApiLogger.error(error.message, error.stack)
             }
           })
         }
@@ -120,6 +99,23 @@ export default class ServerMissionAction extends MissionAction<TServerMissionTyp
       onInit(execution)
     })
   }
+
+  /**
+   * Extracts the necessary properties from the action to be used as a reference
+   * in a target environment.
+   * @returns The action's necessary properties.
+   */
+  public toTargetEnvContext(): TTargetEnvContextAction {
+    return {
+      _id: this._id,
+      name: this.name,
+      description: this.description,
+      successChance: this.successChance,
+      processTime: this.processTime,
+      resourceCost: this.resourceCost,
+      effects: this.effects.map((effect) => effect.toTargetEnvContext()),
+    }
+  }
 }
 
 /* ------------------------------ SERVER ACTION TYPES ------------------------------ */
@@ -129,10 +125,14 @@ export default class ServerMissionAction extends MissionAction<TServerMissionTyp
  */
 export type TExecuteOptions<TActionExecution extends IActionExecution> = {
   /**
+   * The API used to interact with target environments.
+   */
+  targetEnvApi: TargetEnvApi
+  /**
    * Whether to enable the effects of the action, upon successful execution.
    * @default false
    */
-  effectsEnabled?: boolean
+  effectsEnabled: boolean
   /**
    * Callback for when the action execution process is initated. Passes a timestamp of when the process is expected to conclude and the promise to be resolved.
    */

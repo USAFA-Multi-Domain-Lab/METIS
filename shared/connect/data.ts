@@ -101,6 +101,112 @@ export type TResponseMethod = keyof TResponseEvents
 export type TServerMethod = keyof TServerEvents
 
 /**
+ * The data necessary to enact an internal effect based on their key.
+ */
+type TInternalEffectData = [
+  {
+    /**
+     * Used to identify the data structure.
+     * @option `"node-block":` The data needed to block or unblock a node.
+     * @option `"node-action-success-chance":` The data needed to modify the success chance of all the node's actions.
+     * @option `"node-action-process-time":` The data needed to modify the process time of all the node's actions.
+     * @option `"node-action-resource-cost":` The data needed to modify the resource cost of all the node's actions.
+     * @option `"output":` The data needed to send a message to the output panel.
+     */
+    key: 'node-block'
+    /**
+     * The ID of the node to modify.
+     */
+    nodeId: string
+    /**
+     * Whether the node is blocked or not.
+     */
+    blocked: boolean
+  },
+  {
+    /**
+     * Used to identify the data structure.
+     * @option `"node-block":` The data needed to block or unblock a node.
+     * @option `"node-action-success-chance":` The data needed to modify the success chance of all the node's actions.
+     * @option `"node-action-process-time":` The data needed to modify the process time of all the node's actions.
+     * @option `"node-action-resource-cost":` The data needed to modify the resource cost of all the node's actions.
+     * @option `"output":` The data needed to send a message to the output panel.
+     */
+    key: 'node-action-success-chance'
+    /**
+     * The ID of the node to modify.
+     */
+    nodeId: string
+    /**
+     * The operand used to modify the chance of succes for all the node's actions.
+     */
+    successChanceOperand: number
+  },
+  {
+    /**
+     * Used to identify the data structure.
+     * @option `"node-block":` The data needed to block or unblock a node.
+     * @option `"node-action-success-chance":` The data needed to modify the success chance of all the node's actions.
+     * @option `"node-action-process-time":` The data needed to modify the process time of all the node's actions.
+     * @option `"node-action-resource-cost":` The data needed to modify the resource cost of all the node's actions.
+     * @option `"output":` The data needed to send a message to the output panel.
+     */
+    key: 'node-action-process-time'
+    /**
+     * The ID of the node to modify.
+     */
+    nodeId: string
+    /**
+     * The operand used to modify the process time for all the node's actions.
+     */
+    processTimeOperand: number
+  },
+  {
+    /**
+     * Used to identify the data structure.
+     * @option `"node-block":` The data needed to block or unblock a node.
+     * @option `"node-action-success-chance":` The data needed to modify the success chance of all the node's actions.
+     * @option `"node-action-process-time":` The data needed to modify the process time of all the node's actions.
+     * @option `"node-action-resource-cost":` The data needed to modify the resource cost of all the node's actions.
+     * @option `"output":` The data needed to send a message to the output panel.
+     */
+    key: 'node-action-resource-cost'
+    /**
+     * The ID of the node to modify.
+     */
+    nodeId: string
+    /**
+     * The operand used to modify the resource cost for all the node's actions.
+     */
+    resourceCostOperand: number
+  },
+  {
+    /**
+     * Used to identify the data structure.
+     * @option `"node-block":` The data needed to block or unblock a node.
+     * @option `"node-action-success-chance":` The data needed to modify the success chance of all the node's actions.
+     * @option `"node-action-process-time":` The data needed to modify the process time of all the node's actions.
+     * @option `"node-action-resource-cost":` The data needed to modify the resource cost of all the node's actions.
+     * @option `"output":` The data needed to send a message to the output panel.
+     */
+    key: 'output'
+    /**
+     * The ID of the force where the output panel belongs.
+     */
+    forceId: string
+    /**
+     * The message to send to the force's output panel.
+     */
+    message: string
+  },
+]
+
+/**
+ * The data needed to apply an internal effect.
+ */
+type TInternalEffectDatum = TInternalEffectData[number]
+
+/**
  * General WS events emitted by the server, or caused due to a change in the connection with the server.
  */
 export type TGenericServerEvents = {
@@ -196,6 +302,14 @@ export type TGenericServerEvents = {
     }
   >
   /**
+   * Occurs when an internal effect is enacted.
+   */
+  'internal-effect-enacted': TConnectEvent<
+    'internal-effect-enacted',
+    TInternalEffectDatum
+  >
+
+  /**
    * Occurs for a participant who has been kicked from the session.
    */
   'kicked': TConnectEvent<
@@ -271,7 +385,7 @@ export type TResponseEvents = {
       /**
        * The nodes that were revealed as a result of opening the node.
        */
-      revealedChildNodes: Array<TCommonMissionNodeJson>
+      revealedChildNodes: TCommonMissionNodeJson[]
     },
     TClientEvents['request-open-node']
   >
@@ -301,7 +415,7 @@ export type TResponseEvents = {
       /**
        * The nodes that were revealed as a result of executing the action.
        */
-      revealedChildNodes?: Array<TCommonMissionNodeJson>
+      revealedChildNodes?: TCommonMissionNodeJson[]
     },
     TClientEvents['request-execute-action']
   >

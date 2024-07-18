@@ -1,3 +1,4 @@
+import { ClientTargetEnvironment } from 'src/target-environments'
 import ClientTarget from 'src/target-environments/targets'
 import { TClientMissionTypes, TMissionNavigable } from '..'
 import Effect from '../../../../shared/missions/effects'
@@ -10,6 +11,15 @@ export class ClientEffect
   extends Effect<TClientMissionTypes>
   implements TMissionNavigable
 {
+  // Implemented
+  public get targetEnvironment(): ClientTargetEnvironment | null {
+    if (this.target instanceof ClientTarget) {
+      return this.target.targetEnvironment
+    } else {
+      return null
+    }
+  }
+
   // Implemented
   public get path(): TMissionNavigable[] {
     return [this.mission, this.force, this.node, this.action, this]

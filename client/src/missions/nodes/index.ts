@@ -475,6 +475,64 @@ export default class ClientMissionNode
     return outcome
   }
 
+  // Implemented
+  public handleBlock(blocked: boolean): void {
+    // Set blocked.
+    this._blocked = blocked
+
+    if (this.hasChildren) {
+      this.handleBlockChildren(blocked)
+    }
+
+    // Emit event.
+    this.emitEvent('handle-block')
+  }
+
+  // Implemented
+  protected handleBlockChildren(
+    blocked: boolean,
+    node: ClientMissionNode = this,
+  ): void {
+    // Handle blocking of children.
+    node.children.forEach((child) => {
+      child.handleBlock(blocked)
+
+      if (child.isOpen && child.hasChildren) {
+        child.handleBlockChildren(blocked, child)
+      }
+    })
+  }
+
+  // Implemented
+  public modifySuccessChance(successChanceOperand: number): void {
+    this.actions.forEach((action) => {
+      // action.successChanceOperand = successChanceOperand
+    })
+
+    // Emit event.
+    this.emitEvent('modify-actions')
+  }
+
+  // Implemented
+  public modifyProcessTime(processTimeOperand: number): void {
+    this.actions.forEach((action) => {
+      // action.processTimeOperand = processTimeOperand
+    })
+
+    // Emit event.
+    this.emitEvent('modify-actions')
+  }
+
+  // Implemented
+  public modifyResourceCost(resourceCostOperand: number): void {
+    this.actions.forEach((action) => {
+      // action.resourceCostOperand = resourceCostOperand
+    })
+
+    // Emit event.
+    this.emitEvent('modify-actions')
+  }
+
   /**
    * This will color all descendant nodes the same color as this node.
    */
@@ -666,6 +724,10 @@ export interface IClientLoadOutcomeOptions extends ILoadOutcomeOptions {
  * Triggered when the node is opened.
  * @option 'set-buttons'
  * Triggered when the buttons for the node are set.
+ * @option 'handle-block'
+ * Triggered when the following occurs:
+ * - The node is blocked.
+ * - The node is unblocked.
  */
 export type TNodeEventMethod =
   | 'activity'
@@ -674,3 +736,5 @@ export type TNodeEventMethod =
   | 'exec-state-change'
   | 'open'
   | 'set-buttons'
+  | 'handle-block'
+  | 'modify-actions'

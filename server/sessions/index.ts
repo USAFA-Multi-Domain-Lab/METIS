@@ -15,6 +15,7 @@ import { SingleTypeObject } from 'metis/toolbox/objects'
 import { v4 as generateHash } from 'uuid'
 import ServerActionExecution from '../missions/actions/executions'
 import ServerMissionForce from '../missions/forces'
+import TargetEnvApi from '../target-environments/api'
 
 /**
  * Server instance for sessions. Handles server-side logic for a session with participating clients. Communicates with clients to conduct the session.
@@ -53,6 +54,11 @@ export default class SessionServer extends Session<
     return this._destroyed
   }
 
+  /**
+   * The API used to interact with target environments.
+   */
+  public targetEnvApi: TargetEnvApi
+
   public constructor(
     _id: string,
     name: string,
@@ -68,6 +74,7 @@ export default class SessionServer extends Session<
       : mission.initialResources
     this._destroyed = false
     this.register()
+    this.targetEnvApi = new TargetEnvApi(this)
   }
 
   // Implemented
@@ -105,7 +112,7 @@ export default class SessionServer extends Session<
     user: ClientConnection,
   ): ServerMissionForce | undefined {
     let forceId: string | undefined = this.assignments.get(user.userId)
-    return this.mission.getForce(forceId as string)
+    return this.mission.getForce(forceId)
   }
 
   /**
@@ -790,6 +797,7 @@ export default class SessionServer extends Session<
     try {
       // Execute the action, awaiting result.
       let outcome = await action.execute({
+        targetEnvApi: this.targetEnvApi,
         effectsEnabled: this.config.effectsEnabled,
         onInit: (execution: ServerActionExecution) => {
           // Deduct action cost from resource pool.
@@ -852,6 +860,114 @@ export default class SessionServer extends Session<
           message: 'Failed to execute action.',
         }),
       )
+    }
+  }
+
+  /**
+   * Handles the blocking of the node during a session.
+   * @param nodeId The ID of the node to block.
+   * @param forceId The ID of the force that the node belongs to.
+   * @param blocked Whether or not the node is blocked.
+   */
+  public handleBlockNode = (
+    nodeId: ServerMissionNode['_id'],
+    forceId: ServerMissionForce['_id'],
+    blocked: boolean,
+  ) => {
+    // Find the node given the ID and handle
+    // the blocking of the node.
+    this.mission.getNode(nodeId)?.handleBlock(blocked)
+    // Emit an event to all users in the force
+    // that an internal effect has been enacted.
+    for (let user of this.getUsersForForce(forceId)) {
+      user.emit('internal-effect-enacted', {
+        data: {
+          key: 'node-block',
+          nodeId,
+          blocked,
+        },
+      })
+    }
+  }
+
+  /**
+   * Modifies the success chance of all the node's actions.
+   * @param nodeId The ID of the node with the actions to modify.
+   * @param forceId The ID of the force that the node belongs to.
+   * @param successChanceOperand The operand to modify the success chance by.
+   */
+  public modifySuccessChance = (
+    nodeId: ServerMissionNode['_id'],
+    forceId: ServerMissionForce['_id'],
+    successChanceOperand: number,
+  ) => {
+    // Find the node given the ID and modify
+    // the success chance for all of its actions.
+    this.mission.getNode(nodeId)?.modifySuccessChance(successChanceOperand)
+    // Emit an event to all users in the force
+    // that an internal effect has been enacted.
+    for (let user of this.getUsersForForce(forceId)) {
+      user.emit('internal-effect-enacted', {
+        data: {
+          key: 'node-action-success-chance',
+          nodeId,
+          successChanceOperand,
+        },
+      })
+    }
+  }
+
+  /**
+   * Modifies the processing time of all the node's actions.
+   * @param nodeId The ID of the node with the actions to modify.
+   * @param forceId The ID of the force that the node belongs to.
+   * @param processTimeOperand The operand to modify the process time by.
+   */
+  public modifyProcessTime = (
+    nodeId: ServerMissionNode['_id'],
+    forceId: ServerMissionForce['_id'],
+    processTimeOperand: number,
+  ) => {
+    // Find the node given the ID and modify
+    // the processing time for all of its actions.
+    this.mission.getNode(nodeId)?.modifyProcessTime(processTimeOperand)
+    // Emit an event to all users in the force
+    // that an internal effect has been enacted.
+    for (let user of this.getUsersForForce(forceId)) {
+      user.emit('internal-effect-enacted', {
+        data: {
+          key: 'node-action-process-time',
+          nodeId,
+          processTimeOperand,
+        },
+      })
+    }
+  }
+
+  /**
+   * Modifies the resource cost of all the node's actions.
+   * @param nodeId The ID of the node with the actions to modify.
+   * @param forceId The ID of the force that the node belongs to.
+   * @param resourceCostOperand The operand to modify the resource cost by.
+   */
+  public modifyResourceCost = (
+    nodeId: ServerMissionNode['_id'],
+    forceId: ServerMissionForce['_id'],
+    resourceCostOperand: number,
+  ) => {
+    // Find the node given the ID and modify
+    // the resource cost for all of its actions.
+    this.mission.getNode(nodeId)?.modifyResourceCost(resourceCostOperand)
+    // Emit an event to all users in the force
+    // that an internal effect has been enacted.
+    for (let user of this.getUsersForForce(forceId)) {
+      user.emit('internal-effect-enacted', {
+        data: {
+          key: 'node-action-resource-cost',
+          nodeId,
+          resourceCostOperand,
+        },
+      })
     }
   }
 

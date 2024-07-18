@@ -228,7 +228,9 @@ function App(props: {}): JSX.Element | null {
       } else {
         try {
           setMissionNodeColors(await ClientMissionNode.$fetchColors())
-          setTargetEnvironments(await ClientTargetEnvironment.$fetchAll())
+          if (login.user.isAuthorized('missions_read')) {
+            setTargetEnvironments(await ClientTargetEnvironment.$fetchAll())
+          }
         } catch {
           handleError('Failed to load post-login data.')
         }
