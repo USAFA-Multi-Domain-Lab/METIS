@@ -202,6 +202,7 @@ export type TTargetEnvContext = {
    * @param nodeId The ID of the node to modify.
    * @param forceId The ID of the force where the node is located.
    * @param operand The number used to modify the chance of success.
+   * @note **ENSURE THE `operand` IS A DECIMAL BETWEEN -1 AND 1. IF NOT, THE EFFECT WILL NOT BE APPLIED.**
    * @note This will modify the chance of success for all actions within the node.
    * @note The operand can be positive or negative. It will either increase or decrease the chance of success.
    */
@@ -214,7 +215,8 @@ export type TTargetEnvContext = {
    * Modifies an action's process time.
    * @param nodeId The ID of the node to modify.
    * @param forceId The ID of the force where the node is located.
-   * @param operand The number used to modify the process time.
+   * @param operand The number used to modify the process time. |
+   * @note **ENSURE THE `operand` IS A WHOLE NUMBER BETWEEN -3,600,000 AND 3,600,000. IF NOT, THE EFFECT WILL NOT BE APPLIED.**
    * @note This will modify the process time for all actions within the node.
    * @note The operand can be positive or negative. It will either increase or decrease the process time.
    */

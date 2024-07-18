@@ -169,10 +169,10 @@ export default abstract class Target<
         context.blockNode(nodeId, forceId)
       } else if (blockNode === false) {
         if (successChance) {
-          context.modifySuccessChance(nodeId, forceId, successChance)
+          context.modifySuccessChance(nodeId, forceId, successChance / 100)
         }
         if (processTime) {
-          context.modifyProcessTime(nodeId, forceId, processTime)
+          context.modifyProcessTime(nodeId, forceId, processTime * 1000)
         }
         if (resourceCost) {
           context.modifyResourceCost(nodeId, forceId, resourceCost)

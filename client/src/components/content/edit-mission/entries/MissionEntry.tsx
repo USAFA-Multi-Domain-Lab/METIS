@@ -25,8 +25,6 @@ export default function MissionEntry({
     mission.initialResources,
   )
 
-  /* -- COMPUTED -- */
-
   /* -- EFFECTS -- */
 
   // Sync the component state with the mission name.
@@ -53,8 +51,6 @@ export default function MissionEntry({
     // Allow the user to save the changes.
     handleChange()
   }, [introMessage, initialResources])
-
-  /* -- FUNCTIONS -- */
 
   /* -- RENDER -- */
 

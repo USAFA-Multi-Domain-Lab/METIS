@@ -179,21 +179,21 @@ export default class ServerMissionNode extends MissionNode<TServerMissionTypes> 
   // Implemented
   public modifySuccessChance(successChanceOperand: number): void {
     this.actions.forEach((action) => {
-      // action.successChanceOperand = successChanceOperand
+      action.modifySuccessChance(successChanceOperand)
     })
   }
 
   // Implemented
   public modifyProcessTime(processTimeOperand: number): void {
     this.actions.forEach((action) => {
-      // action.processTimeOperand = processTimeOperand
+      action.modifyProcessTime(processTimeOperand)
     })
   }
 
   // Implemented
   public modifyResourceCost(resourceCostOperand: number): void {
     this.actions.forEach((action) => {
-      // action.resourceCostOperand = resourceCostOperand
+      action.modifyResourceCost(resourceCostOperand)
     })
   }
 

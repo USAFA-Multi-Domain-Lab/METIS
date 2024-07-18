@@ -136,7 +136,7 @@ export default class OutputPanel extends Component<
             <br></br>
             <li className='SelectedActionProperty'>
               <RichTextOutputBox
-                Element={`Chance of success: ${successChanceFormatted}`}
+                Element={`Probability of success: ${successChanceFormatted}`}
               />
             </li>
             <br></br>

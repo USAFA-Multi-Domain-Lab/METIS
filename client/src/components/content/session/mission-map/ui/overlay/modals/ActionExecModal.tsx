@@ -5,7 +5,7 @@ import { useGlobalContext } from 'src/context'
 import ClientMissionAction from 'src/missions/actions'
 import ClientMissionNode from 'src/missions/nodes'
 import SessionClient from 'src/sessions'
-import { useMountHandler } from 'src/toolbox/hooks'
+import { useEventListener, useMountHandler } from 'src/toolbox/hooks'
 import MapToolbox from '../../../../../../../../../shared/toolbox/maps'
 import StringToolbox from '../../../../../../../../../shared/toolbox/strings'
 import Tooltip from '../../../../../communication/Tooltip'
@@ -19,18 +19,19 @@ export default function ActionExecModal({
   session,
   close,
 }: TActionExecModal_P) {
-  /* -- refs -- */
+  /* -- GLOBAL CONTEXT -- */
+
+  const globalContext = useGlobalContext()
+  const { handleError } = globalContext.actions
+
+  /* -- REFS -- */
 
   /**
    * The scrollable container for the action list.
    */
   const optionsRef = useRef<HTMLDivElement>(null)
 
-  /* -- state -- */
-
-  // Gather global context states.
-  const globalContext = useGlobalContext()
-  const { handleError } = globalContext.actions
+  /* -- STATE -- */
 
   // Whether the drop-down is expanded.
   const [dropDownExpanded, setDropDownExpanded] = useState<boolean>(false)
@@ -49,7 +50,7 @@ export default function ActionExecModal({
     },
   )
 
-  /* -- effects -- */
+  /* -- EFFECTS -- */
 
   // Handle component mount.
   const [_, remount] = useMountHandler((done) => {
@@ -80,7 +81,7 @@ export default function ActionExecModal({
     }
   }, [node.actions.size])
 
-  /* -- functions -- */
+  /* -- FUNCTIONS -- */
 
   /**
    * Handles a request to close the prompt window.
@@ -104,7 +105,7 @@ export default function ActionExecModal({
    * Executes the selected action.
    */
   const execute = () => {
-    if (selectedAction) {
+    if (selectedAction && !node.blocked) {
       session.executeAction(selectedAction._id, {
         onError: (message) => handleError({ message, notifyMethod: 'bubble' }),
       })
@@ -112,7 +113,7 @@ export default function ActionExecModal({
     }
   }
 
-  /* -- render -- */
+  /* -- RENDER -- */
 
   let executionReady: boolean = !!selectedAction && !dropDownExpanded
   let rootClasses: string[] = ['ActionExecModal', 'MapModal']
@@ -172,7 +173,11 @@ export default function ActionExecModal({
   // Render the JSX for the buttons.
   const buttonsJsx = executionReady ? (
     <div className='Buttons'>
-      <ButtonText text='EXECUTE ACTION' onClick={execute} />
+      <ButtonText
+        text='EXECUTE ACTION'
+        disabled={node.blocked}
+        onClick={execute}
+      />
     </div>
   ) : null
 
@@ -207,21 +212,31 @@ export default function ActionExecModal({
 /**
  * Displays the properties of the given action.
  */
-const ActionPropertyDisplay = (props: { action: ClientMissionAction }) => {
-  let { action } = props
+const ActionPropertyDisplay = ({ action }: TActionPropertyDisplay_P) => {
+  /* -- STATE -- */
+  const [successChance, setSuccessChance] = useState<number>(
+    action.successChance,
+  )
+  const [resourceCost, setResourceCost] = useState<number>(action.resourceCost)
+  const [processTime, setProcessTime] = useState<number>(action.processTime)
+
+  /* -- HOOKS -- */
+  useEventListener(action.node, 'activity', () => {
+    setSuccessChance(action.successChance)
+    setResourceCost(action.resourceCost)
+    setProcessTime(action.processTime)
+  })
 
   return (
     <ul className='ActionPropertyDisplay'>
-      <li className='Property TimeToExecute'>
-        <span>Time to execute:</span> {(action.processTime as number) / 1000}{' '}
-        second(s)
-      </li>
       <li className='Property SuccessChance'>
-        <span>Chance of success:</span> {(action.successChance as number) * 100}
-        %
+        <span>Probability of success:</span> {successChance * 100}%
+      </li>
+      <li className='Property TimeToExecute'>
+        <span>Time to execute:</span> {processTime / 1000} second(s)
       </li>
       <li className='Property ResourceCost'>
-        <span>Resource cost:</span> {action.resourceCost} resource(s)
+        <span>Resource cost:</span> {resourceCost} resource(s)
       </li>
       <li className='Property Description'>
         <span>Description:</span>{' '}
@@ -248,13 +263,9 @@ function Option({ session: session, action, select }: TOption_P) {
     <div className='Option' key={action._id} onClick={select}>
       <Tooltip
         description={
-          `**Time to execute:** ${
-            (action.processTime as number) / 1000
-          } second(s)\n` +
-          `**Chance of success:** ${
-            (action.successChance as number) * 100
-          }%\n` +
-          `**Resource cost:** ${action.resourceCost as number} resource(s)\n` +
+          `**Time to execute:** ${action.processTime / 1000} second(s)\n` +
+          `**Probability of success:** ${action.successChance * 100}%\n` +
+          `**Resource cost:** ${action.resourceCost} resource(s)\n` +
           `**Description:** ${StringToolbox.limit(action.description, 160)}`
         }
       />
@@ -298,4 +309,11 @@ export type TOption_P = {
    * Selects the action as the selected option.
    */
   select: () => void
+}
+
+/**
+ * Props for `ActionPropertyDisplay` component.
+ */
+type TActionPropertyDisplay_P = {
+  action: ClientMissionAction
 }

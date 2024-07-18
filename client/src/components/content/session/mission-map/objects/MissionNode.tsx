@@ -12,14 +12,14 @@ import { Vector1D } from '../../../../../../../shared/toolbox/space'
 import StringToolbox from '../../../../../../../shared/toolbox/strings'
 import './MissionNode.scss'
 
-/* -- constants -- */
+/* -- CONSTANTS -- */
 
 /**
  * The maximum zoom level where the node's content will be displayed.
  */
 export const MAX_NODE_CONTENT_ZOOM = 1 / 30 // [numerator]em = [denominator]px
 
-/* -- functions -- */
+/* -- FUNCTIONS -- */
 
 /**
  * Calculates the initial progress (in milliseconds) for a node.
@@ -39,7 +39,7 @@ function calculateInitialProgress(node: ClientMissionNode): number {
   }
 }
 
-/* -- components -- */
+/* -- COMPONENTS -- */
 
 /**
  * An object representing a node on the mission map.
@@ -50,7 +50,7 @@ export default function MissionNode({
   onSelect,
   applyTooltip = () => node.description,
 }: TMissionNode_P): JSX.Element | null {
-  /* -- state -- */
+  /* -- STATE -- */
 
   /**
    * The execution state of the node.
@@ -84,7 +84,7 @@ export default function MissionNode({
    */
   const [blocked, setBlocked] = useState<boolean>(node.blocked)
 
-  /* -- effects -- */
+  /* -- EFFECTS -- */
 
   // Register an event listener to handle activity
   // on the node.
@@ -99,7 +99,7 @@ export default function MissionNode({
     setBlocked(node.blocked)
   })
 
-  /* -- computed -- */
+  /* -- COMPUTED -- */
 
   /**
    * The inline styles for the root element.
@@ -290,7 +290,7 @@ export default function MissionNode({
     return classList.join(' ')
   })
 
-  /* -- render -- */
+  /* -- RENDER -- */
 
   // Ensure the node selection handler is defined.
   onSelect = onSelect ?? (() => {})

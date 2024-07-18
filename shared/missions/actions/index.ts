@@ -25,15 +25,6 @@ export default abstract class MissionAction<
   public description: TCommonMissionAction['description']
 
   // Inherited
-  public processTime: TCommonMissionAction['processTime']
-
-  // Inherited
-  public successChance: TCommonMissionAction['successChance']
-
-  // Inherited
-  public resourceCost: TCommonMissionAction['resourceCost']
-
-  // Inherited
   public postExecutionSuccessText: TCommonMissionAction['postExecutionSuccessText']
 
   // Inherited
@@ -41,6 +32,39 @@ export default abstract class MissionAction<
 
   // Inherited
   public effects: TEffect<T>[]
+
+  /**
+   * The amount of time it takes to execute the action.
+   */
+  protected _processTime: TCommonMissionAction['processTime']
+  public get processTime(): number {
+    return this._processTime + this.processTimeOperand
+  }
+  public set processTime(value: number) {
+    this._processTime = value
+  }
+
+  /**
+   * The chance that the action will succeed.
+   */
+  protected _successChance: TCommonMissionAction['successChance']
+  public get successChance(): number {
+    return this._successChance + this.successChanceOperand
+  }
+  public set successChance(value: number) {
+    this._successChance = value
+  }
+
+  /**
+   * The amount of resources the action will be subtracted from that available to the executor of the action.
+   */
+  protected _resourceCost: TCommonMissionAction['resourceCost']
+  public get resourceCost(): number {
+    return this._resourceCost + this.resourceCostOperand
+  }
+  public set resourceCost(value: number) {
+    this._resourceCost = value
+  }
 
   // Inherited
   public get failureChance(): TCommonMissionAction['failureChance'] {
@@ -63,6 +87,22 @@ export default abstract class MissionAction<
   }
 
   /**
+   * Used to modify the amount of time it takes to execute the action.
+   * @note The operand can be positive or negative. It will either increase or decrease the process time.
+   */
+  private processTimeOperand: number
+  /**
+   * Used to modify the chance that the action will succeed.
+   * @note The operand can be positive or negative. It will either increase or decrease the success chance.
+   */
+  private successChanceOperand: number
+  /**
+   * Used to modify the amount of resources the action costs to execute.
+   * @note The operand can be positive or negative. It will either increase or decrease the resource cost.
+   */
+  private resourceCostOperand: number
+
+  /**
    * @param node The node on which the action is being executed.
    * @param data The action data from which to create the action. Any ommitted values will be set to the default properties defined in MissionAction.DEFAULT_PROPERTIES.
    */
@@ -75,11 +115,11 @@ export default abstract class MissionAction<
     this.name = data.name ?? MissionAction.DEFAULT_PROPERTIES.name
     this.description =
       data.description ?? MissionAction.DEFAULT_PROPERTIES.description
-    this.processTime =
+    this._processTime =
       data.processTime ?? MissionAction.DEFAULT_PROPERTIES.processTime
-    this.successChance =
+    this._successChance =
       data.successChance ?? MissionAction.DEFAULT_PROPERTIES.successChance
-    this.resourceCost =
+    this._resourceCost =
       data.resourceCost ?? MissionAction.DEFAULT_PROPERTIES.resourceCost
     this.postExecutionSuccessText =
       data.postExecutionSuccessText ??
@@ -90,6 +130,10 @@ export default abstract class MissionAction<
     this.effects = this.parseEffects(
       data.effects ?? MissionAction.DEFAULT_PROPERTIES.effects,
     )
+
+    this.processTimeOperand = 0
+    this.successChanceOperand = 0
+    this.resourceCostOperand = 0
   }
 
   /**
@@ -123,6 +167,24 @@ export default abstract class MissionAction<
     }
 
     return json
+  }
+
+  // Implemented
+  public modifyProcessTime(processTimeOperand: number): void {
+    this._processTime = this.processTime
+    this.processTimeOperand = processTimeOperand
+  }
+
+  // Implemented
+  public modifySuccessChance(successChanceOperand: number): void {
+    this._successChance = this.successChance
+    this.successChanceOperand = successChanceOperand
+  }
+
+  // Implemented
+  public modifyResourceCost(resourceCostOperand: number): void {
+    this._resourceCost = this.resourceCost
+    this.resourceCostOperand = resourceCostOperand
   }
 
   /**
@@ -225,6 +287,21 @@ export interface TCommonMissionAction {
    * @returns the JSON for the action.
    */
   toJson: (options?: TMissionActionJsonOtions) => TCommonMissionActionJson
+  /**
+   * Modifies the amount of time it takes to execute the action.
+   * @param processTimeOperand The operand to modify the process time by.
+   */
+  modifyProcessTime: (processTimeOperand: number) => void
+  /**
+   * Modifies the chance that the action will succeed.
+   * @param successChanceOperand The operand to modify the success chance by.
+   */
+  modifySuccessChance: (successChanceOperand: number) => void
+  /**
+   * Modifies the amount of resources the action costs to execute.
+   * @param resourceCostOperand The operand to modify the resource cost by.
+   */
+  modifyResourceCost: (resourceCostOperand: number) => void
 }
 
 /**

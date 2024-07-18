@@ -506,7 +506,7 @@ export default class ClientMissionNode
   // Implemented
   public modifySuccessChance(successChanceOperand: number): void {
     this.actions.forEach((action) => {
-      // action.successChanceOperand = successChanceOperand
+      action.modifySuccessChance(successChanceOperand)
     })
 
     // Emit event.
@@ -516,7 +516,7 @@ export default class ClientMissionNode
   // Implemented
   public modifyProcessTime(processTimeOperand: number): void {
     this.actions.forEach((action) => {
-      // action.processTimeOperand = processTimeOperand
+      action.modifyProcessTime(processTimeOperand)
     })
 
     // Emit event.
@@ -526,7 +526,7 @@ export default class ClientMissionNode
   // Implemented
   public modifyResourceCost(resourceCostOperand: number): void {
     this.actions.forEach((action) => {
-      // action.resourceCostOperand = resourceCostOperand
+      action.modifyResourceCost(resourceCostOperand)
     })
 
     // Emit event.

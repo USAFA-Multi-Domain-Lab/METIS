@@ -103,10 +103,11 @@ export default function MissionPage({
     if (missionId !== null) {
       try {
         beginLoading('Loading mission...')
-        let mission: ClientMission = await ClientMission.$fetchOne(missionId, {
+        let mission = await ClientMission.$fetchOne(missionId, {
           openAll: true,
         })
         setMission(mission)
+        console.log(mission)
       } catch {
         handleError('Failed to load mission.')
       }

@@ -128,12 +128,11 @@
           color: $terminal;
 
           span {
+            color: $terminal;
             text-decoration: underline;
           }
 
-          span,
-          .RichTextOutputBox,
-          .RichTextOutputBox p {
+          .RichTextOutputBox * {
             color: $terminal;
           }
 
