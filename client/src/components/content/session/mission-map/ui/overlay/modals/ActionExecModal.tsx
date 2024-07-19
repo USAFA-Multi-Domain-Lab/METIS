@@ -5,6 +5,7 @@ import { useGlobalContext } from 'src/context'
 import ClientMissionAction from 'src/missions/actions'
 import ClientMissionNode from 'src/missions/nodes'
 import SessionClient from 'src/sessions'
+import { compute } from 'src/toolbox'
 import { useEventListener, useMountHandler } from 'src/toolbox/hooks'
 import MapToolbox from '../../../../../../../../../shared/toolbox/maps'
 import StringToolbox from '../../../../../../../../../shared/toolbox/strings'
@@ -53,12 +54,13 @@ export default function ActionExecModal({
   /* -- EFFECTS -- */
 
   // Handle component mount.
-  const [_, remount] = useMountHandler((done) => {
+  useMountHandler((done) => {
     let scrollRefElement: HTMLDivElement | null = optionsRef.current
 
     if (scrollRefElement !== null) {
       scrollRefElement.scrollTop = 0
     }
+
     done()
   })
 
@@ -227,6 +229,7 @@ const ActionPropertyDisplay = ({ action }: TActionPropertyDisplay_P) => {
     setProcessTime(action.processTime)
   })
 
+  /* -- RENDER -- */
   return (
     <ul className='ActionPropertyDisplay'>
       <li className='Property SuccessChance'>
@@ -249,23 +252,48 @@ const ActionPropertyDisplay = ({ action }: TActionPropertyDisplay_P) => {
 /**
  * An option in the drop down of actions to choose from.
  */
-function Option({ session: session, action, select }: TOption_P) {
-  let rootClasses: string[] = ['Option']
+function Option({ session, action, select }: TOption_P) {
+  /* -- STATE -- */
+  const [successChance, setSuccessChance] = useState<number>(
+    action.successChance,
+  )
+  const [resourceCost, setResourceCost] = useState<number>(action.resourceCost)
+  const [processTime, setProcessTime] = useState<number>(action.processTime)
 
-  // Disable the option if there are not enough resources
-  // to execute the particular action.
-  if (action.resourceCost > session.resources) {
-    rootClasses.push('Disabled')
-  }
+  /* -- HOOKS -- */
+  useEventListener(action.node, 'activity', () => {
+    setSuccessChance(action.successChance)
+    setResourceCost(action.resourceCost)
+    setProcessTime(action.processTime)
+  })
 
-  // Render root JSX.
+  /* -- COMPUTED -- */
+
+  /**
+   * The class name for the option.
+   */
+  const optionClassName: string = compute(() => {
+    // Initialize the class list.
+    let classList: string[] = ['Option']
+
+    // Disable the option if there are not enough resources
+    // to execute the particular action.
+    if (resourceCost > session.resources) {
+      classList.push('Disabled')
+    }
+
+    // Return the class list as a string.
+    return classList.join(' ')
+  })
+
+  /* -- RENDER -- */
   return (
-    <div className='Option' key={action._id} onClick={select}>
+    <div className={optionClassName} key={action._id} onClick={select}>
       <Tooltip
         description={
-          `**Time to execute:** ${action.processTime / 1000} second(s)\n` +
-          `**Probability of success:** ${action.successChance * 100}%\n` +
-          `**Resource cost:** ${action.resourceCost} resource(s)\n` +
+          `**Time to execute:** ${processTime / 1000} second(s)\n` +
+          `**Probability of success:** ${successChance * 100}%\n` +
+          `**Resource cost:** ${resourceCost} resource(s)\n` +
           `**Description:** ${StringToolbox.limit(action.description, 160)}`
         }
       />

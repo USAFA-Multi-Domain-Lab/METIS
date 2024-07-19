@@ -156,6 +156,7 @@ export default abstract class Target<
     name: 'Node',
     description: '',
     script: async (context) => {
+      // Extract the arguments from the effect.
       let {
         forceId,
         nodeId,
@@ -164,23 +165,50 @@ export default abstract class Target<
         processTime,
         resourceCost,
       } = context.effect.args
+      // Set the error message.
+      const errorMessage = `Bad request. The arguments sent with the effect ("${context.effect.name}") are invalid. Please check the arguments within the effect.`
 
-      if (blockNode === true) {
+      // Check if the arguments are valid.
+      if (
+        typeof forceId !== 'string' ||
+        typeof nodeId !== 'string' ||
+        typeof blockNode !== 'boolean'
+      ) {
+        throw new Error(errorMessage)
+      }
+
+      // Block the node.
+      if (blockNode) {
         context.blockNode(nodeId, forceId)
-      } else if (blockNode === false) {
-        if (successChance) {
+      }
+      // Otherwise, modify the node's action properties.
+      else {
+        // If the success chance is a number, then modify the success chance.
+        if (successChance && typeof successChance === 'number') {
           context.modifySuccessChance(nodeId, forceId, successChance / 100)
         }
-        if (processTime) {
+        // Otherwise, throw an error.
+        else if (successChance && typeof successChance !== 'number') {
+          throw new Error(errorMessage)
+        }
+
+        // If the process time is a number, then modify the process time.
+        if (processTime && typeof processTime === 'number') {
           context.modifyProcessTime(nodeId, forceId, processTime * 1000)
         }
-        if (resourceCost) {
+        // Otherwise, throw an error.
+        else if (processTime && typeof processTime !== 'number') {
+          throw new Error(errorMessage)
+        }
+
+        // If the resource cost is a number, then modify the resource cost.
+        if (resourceCost && typeof resourceCost === 'number') {
           context.modifyResourceCost(nodeId, forceId, resourceCost)
         }
-      } else {
-        throw new Error(
-          `Bad request. The arguments sent with the effect ("${context.effect.name}") are invalid. Please check the arguments within the effect.`,
-        )
+        // Otherwise, throw an error.
+        else if (resourceCost && typeof resourceCost !== 'number') {
+          throw new Error(errorMessage)
+        }
       }
     },
     args: [
@@ -274,16 +302,8 @@ export default abstract class Target<
     script: async (context) => {
       let { forceId, message } = context.effect.args
 
-      // Find the force.
-      let force = context.mission.forces.find((force) => force._id === forceId)
-
-      // If the force is not found, throw an error.
-      if (!force) {
-        throw new Error(`The force with the ID ${forceId} was not found.`)
-      }
-
       // Output the message to the force.
-      context.sendOutputMessage(force, message)
+      context.sendOutputMessage(forceId, message)
     },
     args: [
       {

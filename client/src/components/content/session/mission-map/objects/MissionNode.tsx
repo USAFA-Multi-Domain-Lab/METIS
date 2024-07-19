@@ -121,6 +121,8 @@ export default function MissionNode({
     // Undefined will default to the background
     // color defined already in the CSS.
     let backgroundColor: string | undefined = undefined
+    let transition: string | undefined = undefined
+    let borderColor: string = node.color
 
     // If the camera is zoomed out too far,
     // make the background color the node's color.
@@ -134,13 +136,21 @@ export default function MissionNode({
       height += ClientMissionNode.BUTTONS_HEIGHT
     }
 
+    // If the node is blocked, change the border
+    // color to gray.
+    if (blocked) {
+      transition = 'border-color 500ms ease-in-out 3.25s'
+      borderColor = '#616060'
+    }
+
     return {
       left: `${x}em`,
       top: `${y}em`,
       width: `${width}em`,
       height: `${height}em`,
       padding: `${verticalPadding}em 0`,
-      borderColor: node.color,
+      borderColor: borderColor,
+      transition: transition,
       backgroundColor,
     }
   })

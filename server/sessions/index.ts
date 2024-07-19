@@ -874,19 +874,27 @@ export default class SessionServer extends Session<
     forceId: ServerMissionForce['_id'],
     blocked: boolean,
   ) => {
-    // Find the node given the ID and handle
+    // Find the node given the ID...
+    let node = this.mission.getNode(nodeId)
+    // If the node is found, then handle
     // the blocking of the node.
-    this.mission.getNode(nodeId)?.handleBlock(blocked)
-    // Emit an event to all users in the force
-    // that an internal effect has been enacted.
-    for (let user of this.getUsersForForce(forceId)) {
-      user.emit('internal-effect-enacted', {
-        data: {
-          key: 'node-block',
-          nodeId,
-          blocked,
-        },
-      })
+    if (node) {
+      node.handleBlock(blocked)
+
+      // Emit an event to all users in the force
+      // that an internal effect has been enacted.
+      for (let user of this.getUsersForForce(forceId)) {
+        user.emit('internal-effect-enacted', {
+          data: {
+            key: 'node-block',
+            nodeId,
+            blocked,
+          },
+        })
+      }
+    } else {
+      // todo: Determine which error to throw.
+      throw new ServerEmittedError(ServerEmittedError.CODE_SERVER_ERROR)
     }
   }
 
@@ -901,19 +909,27 @@ export default class SessionServer extends Session<
     forceId: ServerMissionForce['_id'],
     successChanceOperand: number,
   ) => {
-    // Find the node given the ID and modify
+    // Find the node given the ID...
+    let node = this.mission.getNode(nodeId)
+    // If the node is found, then modify
     // the success chance for all of its actions.
-    this.mission.getNode(nodeId)?.modifySuccessChance(successChanceOperand)
-    // Emit an event to all users in the force
-    // that an internal effect has been enacted.
-    for (let user of this.getUsersForForce(forceId)) {
-      user.emit('internal-effect-enacted', {
-        data: {
-          key: 'node-action-success-chance',
-          nodeId,
-          successChanceOperand,
-        },
-      })
+    if (node) {
+      node.modifySuccessChance(successChanceOperand)
+
+      // Emit an event to all users in the force
+      // that an internal effect has been enacted.
+      for (let user of this.getUsersForForce(forceId)) {
+        user.emit('internal-effect-enacted', {
+          data: {
+            key: 'node-action-success-chance',
+            nodeId,
+            successChanceOperand,
+          },
+        })
+      }
+    } else {
+      // todo: Determine which error to throw.
+      throw new ServerEmittedError(ServerEmittedError.CODE_SERVER_ERROR)
     }
   }
 
@@ -928,19 +944,27 @@ export default class SessionServer extends Session<
     forceId: ServerMissionForce['_id'],
     processTimeOperand: number,
   ) => {
-    // Find the node given the ID and modify
-    // the processing time for all of its actions.
-    this.mission.getNode(nodeId)?.modifyProcessTime(processTimeOperand)
-    // Emit an event to all users in the force
-    // that an internal effect has been enacted.
-    for (let user of this.getUsersForForce(forceId)) {
-      user.emit('internal-effect-enacted', {
-        data: {
-          key: 'node-action-process-time',
-          nodeId,
-          processTimeOperand,
-        },
-      })
+    // Find the node given the ID...
+    let node = this.mission.getNode(nodeId)
+    // If the node is found, then modify
+    // the process time for all of its actions.
+    if (node) {
+      node.modifyProcessTime(processTimeOperand)
+
+      // Emit an event to all users in the force
+      // that an internal effect has been enacted.
+      for (let user of this.getUsersForForce(forceId)) {
+        user.emit('internal-effect-enacted', {
+          data: {
+            key: 'node-action-process-time',
+            nodeId,
+            processTimeOperand,
+          },
+        })
+      }
+    } else {
+      // todo: Determine which error to throw.
+      throw new ServerEmittedError(ServerEmittedError.CODE_SERVER_ERROR)
     }
   }
 
@@ -955,19 +979,27 @@ export default class SessionServer extends Session<
     forceId: ServerMissionForce['_id'],
     resourceCostOperand: number,
   ) => {
-    // Find the node given the ID and modify
+    // Find the node given the ID...
+    let node = this.mission.getNode(nodeId)
+    // If the node is found, then modify
     // the resource cost for all of its actions.
-    this.mission.getNode(nodeId)?.modifyResourceCost(resourceCostOperand)
-    // Emit an event to all users in the force
-    // that an internal effect has been enacted.
-    for (let user of this.getUsersForForce(forceId)) {
-      user.emit('internal-effect-enacted', {
-        data: {
-          key: 'node-action-resource-cost',
-          nodeId,
-          resourceCostOperand,
-        },
-      })
+    if (node) {
+      node.modifyResourceCost(resourceCostOperand)
+
+      // Emit an event to all users in the force
+      // that an internal effect has been enacted.
+      for (let user of this.getUsersForForce(forceId)) {
+        user.emit('internal-effect-enacted', {
+          data: {
+            key: 'node-action-resource-cost',
+            nodeId,
+            resourceCostOperand,
+          },
+        })
+      }
+    } else {
+      // todo: Determine which error to throw.
+      throw new ServerEmittedError(ServerEmittedError.CODE_SERVER_ERROR)
     }
   }
 

@@ -82,6 +82,40 @@
     }
 
     &.Blocked {
+      // Define the flashing animation
+      @keyframes flash {
+        0% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.5;
+        }
+        100% {
+          opacity: 1;
+        }
+      }
+
+      // Apply the flashing animation
+      animation: flash 3s ease-in-out forwards;
+
+      // Transition to the disabled state after the animation
+      animation: flash 3s ease-in-out forwards, disable 3s 3s forwards;
+
+      // Define the disable animation
+      @keyframes disable {
+        0% {
+          opacity: 1;
+          pointer-events: none;
+          cursor: default;
+        }
+        100% {
+          opacity: 0.5;
+          pointer-events: none;
+          cursor: default;
+        }
+      }
+
+      // Initial styles for the disabled state
       opacity: 0.5;
       pointer-events: none;
       cursor: default;

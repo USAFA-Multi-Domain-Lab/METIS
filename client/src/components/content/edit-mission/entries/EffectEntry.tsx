@@ -30,10 +30,11 @@ export default function EffectEntry({
   const [targetEnv] = useState<ClientTargetEnvironment | null>(
     effect.targetEnvironment,
   )
-  const [target, setTarget] = useState<ClientTarget | null>(effect.target)
+  const [target] = useState<ClientTarget | null>(effect.target)
   const [effectArgs, setEffectArgs] = useState<ClientEffect['args']>(
     effect.args,
   )
+  const [forcedUpdateCounter, setForcedUpdateCounter] = useState<number>(0)
 
   /* -- COMPUTED -- */
   /**
@@ -62,6 +63,8 @@ export default function EffectEntry({
     // Update the effect's arguments.
     effect.args = effectArgs
 
+    // Update the default dropdown option
+    updateDefaultDropdownOption()
     // Allow the user to save the changes.
     handleChange()
   }, [name, description, effectArgs])
@@ -122,15 +125,20 @@ export default function EffectEntry({
           if (arg._id === argId) {
             // Initialize the options based on the argument ID.
             let options = arg._id === ClientTarget.forcesArgId ? forces : nodes
-            // Filter the options based on the option's dependencies.
-            let filteredOptions = options.filter((option) =>
-              target.allDependenciesMet(option.dependencies, effect.args),
-            )
+            // Set the default option based on the argument ID.
+            let defaultOption =
+              arg._id === ClientTarget.forcesArgId
+                ? {
+                    _id: effect.force._id,
+                    name: effect.force.name,
+                  }
+                : {
+                    _id: effect.node._id,
+                    name: effect.node.name,
+                  }
 
             // If the argument is a string argument...
             if (arg.type === 'string') {
-              // Set the default option based on the argument ID.
-              let defaultOption = filteredOptions[0]
               // Convert the string argument to a dropdown argument with the
               // appropriate options and default option.
               arg = Arg.toDropdownArg(arg, options, defaultOption)
@@ -142,7 +150,7 @@ export default function EffectEntry({
 
               // Update the default option in the dropdown argument.
               if (arg.required) {
-                arg.default = filteredOptions[0]
+                arg.default = defaultOption
               }
             }
           }
@@ -151,6 +159,32 @@ export default function EffectEntry({
           return arg
         })
       })
+    }
+  }
+
+  /**
+   * Updates the default dropdown option for the node dropdown argument.
+   * @note If a user selects a different force then the default node option
+   * should be updated to the first node that belongs to the selected force.
+   */
+  const updateDefaultDropdownOption = () => {
+    // If the internal target environment is the same as the target's environment...
+    if (targetEnv?._id === ClientTargetEnvironment.INTERNAL_TARGET_ENV._id) {
+      // Find the node argument.
+      let arg = target?.args.find((arg) => arg._id === ClientTarget.nodesArgId)
+
+      // If the node argument is found and is required...
+      if (arg && arg.type === 'dropdown' && arg.required) {
+        // Filter the nodes based on the selected force.
+        let filteredOptions = arg.options.filter((option) =>
+          target?.allDependenciesMet(option.dependencies, effectArgs),
+        )
+
+        // Update the default option to the first node that belongs to the selected force.
+        arg.default = filteredOptions[0]
+        // Force an update to the component.
+        setForcedUpdateCounter(forcedUpdateCounter + 1)
+      }
     }
   }
 

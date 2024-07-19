@@ -554,11 +554,11 @@ export default class SessionClient extends Session<
    */
   private blockNode = (nodeId: string, blocked: boolean): void => {
     // Find the node, given the ID.
-    let node: ClientMissionNode | undefined = this.mission.getNode(nodeId)
+    let node = this.mission.getNode(nodeId)
     // Handle node not found.
     if (node === undefined) {
       throw new Error(
-        `Event "node-handle-block" was triggered, but the node with the given nodeId ("${nodeId}") could not be found.`,
+        `Event "node-block" was triggered, but the node with the given nodeId ("${nodeId}") could not be found.`,
       )
     }
     // Handle the blocking and unblocking of the node.
@@ -575,7 +575,7 @@ export default class SessionClient extends Session<
     successChanceOperand: number,
   ): void => {
     // Find the node, given the ID.
-    let node: ClientMissionNode | undefined = this.mission.getNode(nodeId)
+    let node = this.mission.getNode(nodeId)
     // Handle node not found.
     if (node === undefined) {
       throw new Error(
@@ -596,7 +596,7 @@ export default class SessionClient extends Session<
     processTimeOperand: number,
   ): void => {
     // Find the node, given the ID.
-    let node: ClientMissionNode | undefined = this.mission.getNode(nodeId)
+    let node = this.mission.getNode(nodeId)
     // Handle node not found.
     if (node === undefined) {
       throw new Error(
@@ -617,7 +617,7 @@ export default class SessionClient extends Session<
     resourceCostOperand: number,
   ): void => {
     // Find the node, given the ID.
-    let node: ClientMissionNode | undefined = this.mission.getNode(nodeId)
+    let node = this.mission.getNode(nodeId)
     // Handle node not found.
     if (node === undefined) {
       throw new Error(

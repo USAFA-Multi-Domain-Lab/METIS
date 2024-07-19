@@ -107,7 +107,6 @@ export default function MissionPage({
           openAll: true,
         })
         setMission(mission)
-        console.log(mission)
       } catch {
         handleError('Failed to load mission.')
       }
