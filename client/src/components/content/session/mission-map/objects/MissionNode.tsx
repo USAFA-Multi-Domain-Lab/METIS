@@ -137,10 +137,12 @@ export default function MissionNode({
     }
 
     // If the node is blocked, change the border
-    // color to gray.
+    // and background color.
     if (blocked) {
-      transition = 'border-color 500ms ease-in-out 3.25s'
+      transition =
+        'border-color 500ms ease-in-out, background-color 500ms ease-in-out'
       borderColor = '#616060'
+      backgroundColor = '#292f36'
     }
 
     return {

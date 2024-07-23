@@ -264,8 +264,10 @@ export default function ActionEntry({
               label='Probability of Success'
               stateValue={successChance}
               setState={setSuccessChance}
-              minimum={0}
-              maximum={100}
+              // Convert to percentage.
+              minimum={ClientMissionAction.SUCCESS_CHANCE_MIN * 100}
+              // Convert to percentage.
+              maximum={ClientMissionAction.SUCCESS_CHANCE_MAX * 100}
               integersOnly={true}
               unit='%'
               key={`${action._id}_successChance`}
@@ -275,8 +277,10 @@ export default function ActionEntry({
               label='Process Time'
               stateValue={processTime}
               setState={setProcessTime}
-              minimum={0}
-              maximum={3600}
+              // Convert to seconds.
+              minimum={ClientMissionAction.PROCESS_TIME_MIN / 1000}
+              // Convert to seconds.
+              maximum={ClientMissionAction.PROCESS_TIME_MAX / 1000}
               unit='s'
               key={`${action._id}_timeCost`}
             />
@@ -285,7 +289,7 @@ export default function ActionEntry({
               label='Resource Cost'
               stateValue={resourceCost}
               setState={setResourceCost}
-              minimum={0}
+              minimum={ClientMissionAction.RESOURCE_COST_MIN}
               integersOnly={true}
               key={`${action._id}_resourceCost`}
             />

@@ -15,7 +15,7 @@ import { SingleTypeObject } from 'metis/toolbox/objects'
 import { v4 as generateHash } from 'uuid'
 import ServerActionExecution from '../missions/actions/executions'
 import ServerMissionForce from '../missions/forces'
-import TargetEnvApi from '../target-environments/api'
+import EnvironmentContextProvider from '../target-environments/context-provider'
 
 /**
  * Server instance for sessions. Handles server-side logic for a session with participating clients. Communicates with clients to conduct the session.
@@ -55,9 +55,9 @@ export default class SessionServer extends Session<
   }
 
   /**
-   * The API used to interact with target environments.
+   * The context provider for the target environment.
    */
-  public targetEnvApi: TargetEnvApi
+  public environmentContextProvider: EnvironmentContextProvider
 
   public constructor(
     _id: string,
@@ -74,7 +74,7 @@ export default class SessionServer extends Session<
       : mission.initialResources
     this._destroyed = false
     this.register()
-    this.targetEnvApi = new TargetEnvApi(this)
+    this.environmentContextProvider = new EnvironmentContextProvider(this)
   }
 
   // Implemented
@@ -797,7 +797,7 @@ export default class SessionServer extends Session<
     try {
       // Execute the action, awaiting result.
       let outcome = await action.execute({
-        targetEnvApi: this.targetEnvApi,
+        environmentContextProvider: this.environmentContextProvider,
         effectsEnabled: this.config.effectsEnabled,
         onInit: (execution: ServerActionExecution) => {
           // Deduct action cost from resource pool.
@@ -869,7 +869,7 @@ export default class SessionServer extends Session<
    * @param forceId The ID of the force that the node belongs to.
    * @param blocked Whether or not the node is blocked.
    */
-  public handleBlockNode = (
+  public blockNode = (
     nodeId: ServerMissionNode['_id'],
     forceId: ServerMissionForce['_id'],
     blocked: boolean,
@@ -879,7 +879,7 @@ export default class SessionServer extends Session<
     // If the node is found, then handle
     // the blocking of the node.
     if (node) {
-      node.handleBlock(blocked)
+      node.block(blocked)
 
       // Emit an event to all users in the force
       // that an internal effect has been enacted.

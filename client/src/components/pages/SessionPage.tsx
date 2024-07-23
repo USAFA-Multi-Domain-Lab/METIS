@@ -89,6 +89,12 @@ export default function SessionPage({
       return
     }
 
+    // If the node is blocked, notify the user.
+    if (node.blocked) {
+      notify(`"${node.name}" cannot be accessed.`)
+      return
+    }
+
     // Logic to send the pre-execution text to the output panel.
     if (node.preExecutionText !== '' && node.preExecutionText !== null) {
       let output: IConsoleOutput = OutputPanel.renderPreExecutionOutput(node)

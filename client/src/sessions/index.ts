@@ -562,7 +562,7 @@ export default class SessionClient extends Session<
       )
     }
     // Handle the blocking and unblocking of the node.
-    node.handleBlock(blocked)
+    node.block(blocked)
   }
 
   /**
@@ -635,35 +635,30 @@ export default class SessionClient extends Session<
   private onHandleInternalEffect = (
     event: TServerEvents['internal-effect-enacted'],
   ): void => {
-    // If the internal effect is labeled as "output",
-    // then send the output message to the appropriate
-    // output panel.
-    if (event.data.key === 'output') {
-      let { forceId, message } = event.data
-    }
-    // If the internal effect is labeled as "node-block",
-    // then block, or unblock, the node.
-    if (event.data.key === 'node-block') {
-      let { nodeId, blocked } = event.data
-      this.blockNode(nodeId, blocked)
-    }
-    // If the internal effect is labeled as "node-action-success-chance",
-    // then modify the success chance of all the node's actions.
-    if (event.data.key === 'node-action-success-chance') {
-      let { nodeId, successChanceOperand } = event.data
-      this.modifySuccessChance(nodeId, successChanceOperand)
-    }
-    // If the internal effect is labeled as "node-action-process-time",
-    // then modify the process time of all the node's actions.
-    if (event.data.key === 'node-action-process-time') {
-      let { nodeId, processTimeOperand } = event.data
-      this.modifyProcessTime(nodeId, processTimeOperand)
-    }
-    // If the internal effect is labeled as "node-action-resource-cost",
-    // then modify the resource cost of all the node's actions.
-    if (event.data.key === 'node-action-resource-cost') {
-      let { nodeId, resourceCostOperand } = event.data
-      this.modifyResourceCost(nodeId, resourceCostOperand)
+    // Extract data.
+    let data = event.data
+    // Handle the data.
+    switch (data.key) {
+      case 'output':
+        let { forceId, message } = data
+        // todo: Implement output handling.
+        break
+      case 'node-block':
+        this.blockNode(data.nodeId, data.blocked)
+        break
+      case 'node-action-success-chance':
+        this.modifySuccessChance(data.nodeId, data.successChanceOperand)
+        break
+      case 'node-action-process-time':
+        this.modifyProcessTime(data.nodeId, data.processTimeOperand)
+        break
+      case 'node-action-resource-cost':
+        this.modifyResourceCost(data.nodeId, data.resourceCostOperand)
+        break
+      default:
+        throw new Error(
+          `Error: Incorrect data sent to internal effect handler. Data: ${data}`,
+        )
     }
   }
 

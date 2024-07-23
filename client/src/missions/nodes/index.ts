@@ -476,29 +476,30 @@ export default class ClientMissionNode
   }
 
   // Implemented
-  public handleBlock(blocked: boolean): void {
+  public block(blocked: boolean): void {
     // Set blocked.
     this._blocked = blocked
 
-    if (this.hasChildren) {
-      this.handleBlockChildren(blocked)
-    }
-
     // Emit event.
     this.emitEvent('handle-block')
+    // Emit event for all children.
+    this.emitEventForChildren('handle-block')
   }
 
-  // Implemented
-  protected handleBlockChildren(
-    blocked: boolean,
+  /**
+   * Emits an event for all children of the node.
+   * @param method The method of the event.
+   * @param node The node to emit the event for.
+   */
+  private emitEventForChildren(
+    method: TNodeEventMethod,
     node: ClientMissionNode = this,
   ): void {
-    // Handle blocking of children.
     node.children.forEach((child) => {
-      child.handleBlock(blocked)
+      child.emitEvent(method)
 
       if (child.isOpen && child.hasChildren) {
-        child.handleBlockChildren(blocked, child)
+        child.emitEventForChildren(method, child)
       }
     })
   }

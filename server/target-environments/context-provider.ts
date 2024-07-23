@@ -8,9 +8,11 @@ import SessionServer from 'metis/server/sessions'
 import ServerMission from '../missions'
 
 /**
- * The API for the target environment.
+ * The context provider for the target environment.
  */
-export default class TargetEnvApi implements TCommonTargetEnvApi {
+export default class EnvironmentContextProvider
+  implements TCommonEnvContextProvider
+{
   // Implemented
   public session: SessionServer
 
@@ -20,7 +22,7 @@ export default class TargetEnvApi implements TCommonTargetEnvApi {
   }
 
   /**
-   * Creates a new Target Environment API Object.
+   * Creates a new EnvironmentContextProvider Object.
    * @param session The server instance for the session that's in progress within METIS.
    */
   public constructor(session: SessionServer) {
@@ -63,7 +65,7 @@ export default class TargetEnvApi implements TCommonTargetEnvApi {
     }
 
     // Create a new context for the target environment.
-    const context: TTargetEnvContext = this.buildContext(effect)
+    const context = this.buildContext(effect)
 
     try {
       // Execute the effect.
@@ -86,7 +88,7 @@ export default class TargetEnvApi implements TCommonTargetEnvApi {
    * @param forceId The ID of the force where the node is located.
    */
   private blockNode = (nodeId: string, forceId: string) => {
-    this.session.handleBlockNode(nodeId, forceId, true)
+    this.session.blockNode(nodeId, forceId, true)
   }
 
   /**
@@ -95,7 +97,7 @@ export default class TargetEnvApi implements TCommonTargetEnvApi {
    * @param forceId The ID of the force where the node is located.
    */
   private unblockNode = (nodeId: string, forceId: string) => {
-    this.session.handleBlockNode(nodeId, forceId, false)
+    this.session.blockNode(nodeId, forceId, false)
   }
 
   /**
@@ -103,7 +105,8 @@ export default class TargetEnvApi implements TCommonTargetEnvApi {
    * @param nodeId The ID of the node to modify.
    * @param forceId The ID of the force where the node is located.
    * @param operand The number used to modify the chance of success.
-   * @note **ENSURE THE `operand` IS A DECIMAL BETWEEN -1 AND 1. IF NOT, THE EFFECT WILL NOT BE APPLIED.**
+   * @note **If the result is less than 0%, the chance of success will be set to 0%.**
+   * @note **If the result is greater than 100%, the chance of success will be set to 100%.**
    * @note This will modify the chance of success for all actions within the node.
    * @note The operand can be positive or negative. It will either increase or decrease the chance of success.
    */
@@ -119,8 +122,9 @@ export default class TargetEnvApi implements TCommonTargetEnvApi {
    * Modifies an action's process time.
    * @param nodeId The ID of the node to modify.
    * @param forceId The ID of the force where the node is located.
-   * @param operand The number used to modify the process time. |
-   * @note **ENSURE THE `operand` IS A WHOLE NUMBER BETWEEN -3,600,000 AND 3,600,000. IF NOT, THE EFFECT WILL NOT BE APPLIED.**
+   * @param operand The number used to modify the process time.
+   * @note **If the result is less than 0, the process time will be set to 0.**
+   * @note **If the result is greater than 1 hour (3,600,000 milliseconds), the process time will be set to 1 hour.**
    * @note This will modify the process time for all actions within the node.
    * @note The operand can be positive or negative. It will either increase or decrease the process time.
    */
@@ -137,6 +141,7 @@ export default class TargetEnvApi implements TCommonTargetEnvApi {
    * @param nodeId The ID of the node to modify.
    * @param forceId The ID of the force where the node is located.
    * @param operand The number used to modify the resource cost.
+   * @note **If the result is less than 0, the resource cost will be set to 0.**
    * @note This will modify the resource cost for all actions within the node.
    * @note The operand can be positive or negative. It will either increase or decrease the resource cost.
    */
@@ -149,12 +154,12 @@ export default class TargetEnvApi implements TCommonTargetEnvApi {
   }
 }
 
-/* ------------------------------ TARGET ENVIRONMENT API TYPES ------------------------------ */
+/* ------------------------------ ENVIRONMENT CONTEXT PROVIDER TYPES ------------------------------ */
 
 /**
- * Object representing the API for the target environment.
+ * Object representing the context provider for the target environment.
  */
-type TCommonTargetEnvApi = {
+type TCommonEnvContextProvider = {
   /**
    * The server instance for the session that's in progress within METIS.
    */

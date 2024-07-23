@@ -110,6 +110,10 @@ export default abstract class MissionNode<
    * Whether or not this node is blocked.
    */
   public get blocked(): boolean {
+    if (this.parent?.blocked) {
+      this._blocked = true
+    }
+
     return this._blocked
   }
 
@@ -350,16 +354,6 @@ export default abstract class MissionNode<
    */
   protected abstract importOutcomes(data: TActionOutcomeJson[]): TOutcome<T>[]
 
-  /**
-   * Recursively handles the blocking and unblocking of children nodes that are open.
-   * @param blocked Whether the children nodes are blocked or unblocked.
-   * @param node The node to start blocking from.
-   */
-  protected abstract handleBlockChildren(
-    blocked: boolean,
-    node?: TNode<T>,
-  ): void
-
   // Implemented
   public toJson(options: TNodeJsonOptions = {}): TMissionNodeJson {
     let { includeSessionData = false } = options
@@ -439,7 +433,7 @@ export default abstract class MissionNode<
   ): IActionOutcome
 
   // Implemented
-  public abstract handleBlock(blocked: boolean): void
+  public abstract block(blocked: boolean): void
 
   // Implemented
   public abstract modifySuccessChance(successChanceOperand: number): void
@@ -545,6 +539,10 @@ export interface TCommonMissionNode {
    */
   executed: boolean
   /**
+   * Whether or not this node is blocked.
+   */
+  get blocked(): boolean
+  /**
    * The amount of visual padding to apply to the left of the node in the tree.
    */
   get depthPadding(): number
@@ -643,7 +641,7 @@ export interface TCommonMissionNode {
    * Handles the blocking and unblocking of the node.
    * @param blocked Whether the node is blocked or unblocked.
    */
-  handleBlock: (blocked: boolean) => void
+  block: (blocked: boolean) => void
   /**
    * Modifies the chance of success for all the node's actions.
    * @param successChanceOperand The operand to modify the success chance by.

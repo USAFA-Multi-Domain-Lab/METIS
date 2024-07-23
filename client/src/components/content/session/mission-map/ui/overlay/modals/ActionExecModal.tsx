@@ -50,6 +50,13 @@ export default function ActionExecModal({
       }
     },
   )
+  // Whether the node is blocked.
+  const [blocked, setBlocked] = useState<boolean>(node.blocked)
+
+  /* -- HOOKS -- */
+  useEventListener(node, 'activity', () => {
+    setBlocked(node.blocked)
+  })
 
   /* -- EFFECTS -- */
 
@@ -175,11 +182,7 @@ export default function ActionExecModal({
   // Render the JSX for the buttons.
   const buttonsJsx = executionReady ? (
     <div className='Buttons'>
-      <ButtonText
-        text='EXECUTE ACTION'
-        disabled={node.blocked}
-        onClick={execute}
-      />
+      <ButtonText text='EXECUTE ACTION' disabled={blocked} onClick={execute} />
     </div>
   ) : null
 
@@ -219,30 +222,132 @@ const ActionPropertyDisplay = ({ action }: TActionPropertyDisplay_P) => {
   const [successChance, setSuccessChance] = useState<number>(
     action.successChance,
   )
-  const [resourceCost, setResourceCost] = useState<number>(action.resourceCost)
   const [processTime, setProcessTime] = useState<number>(action.processTime)
+  const [resourceCost, setResourceCost] = useState<number>(action.resourceCost)
+  const [successChanceUpdated, setSuccessChanceUpdated] =
+    useState<boolean>(false)
+  const [processTimeUpdated, setProcessTimeUpdated] = useState<boolean>(false)
+  const [resourceCostUpdated, setResourceCostUpdated] = useState<boolean>(false)
 
   /* -- HOOKS -- */
   useEventListener(action.node, 'activity', () => {
-    setSuccessChance(action.successChance)
-    setResourceCost(action.resourceCost)
-    setProcessTime(action.processTime)
+    // Update the action's chance of success.
+    setSuccessChance((prev) => {
+      // If the chance of success has changed...
+      if (prev !== action.successChance) {
+        // ...set the updated state to true.
+        setSuccessChanceUpdated(true)
+        // ...and reset the updated state after a delay
+        setTimeout(() => setSuccessChanceUpdated(false), 500)
+        // ...and return the new chance of success.
+        return action.successChance
+      }
+      // Otherwise, return the previous chance of success.
+      return prev
+    })
+    // Update the action's process time.
+    setProcessTime((prev) => {
+      // If the process time has changed...
+      if (prev !== action.processTime) {
+        // ...set the updated state to true.
+        setProcessTimeUpdated(true)
+        // ...and reset the updated state after a delay.
+        setTimeout(() => setProcessTimeUpdated(false), 500)
+        // ...and return the new process time.
+        return action.processTime
+      }
+      // Otherwise, return the previous process time.
+      return prev
+    })
+    // Update the action's resource cost.
+    setResourceCost((prev) => {
+      // If the resource cost has changed...
+      if (prev !== action.resourceCost) {
+        // ...set the updated state to true.
+        setResourceCostUpdated(true)
+        // ...and reset the updated state after a delay.
+        setTimeout(() => setResourceCostUpdated(false), 500)
+        // ...and return the new resource cost.
+        return action.resourceCost
+      }
+      // Otherwise, return the previous resource cost.
+      return prev
+    })
+  })
+
+  /* -- COMPUTED -- */
+
+  /**
+   * The class name for the success chance.
+   */
+  const successChanceClassName: string = compute(() => {
+    // Initialize the class list.
+    let classList: string[] = []
+
+    // Add the updated class if the success chance has been updated.
+    if (successChanceUpdated) {
+      classList.push('Updated')
+    }
+
+    // Return the class list as a string.
+    return classList.join(' ')
+  })
+
+  /**
+   * The class name for the process time.
+   */
+  const processTimeClassName: string = compute(() => {
+    // Initialize the class list.
+    let classList: string[] = []
+
+    // Add the updated class if the process time has been updated.
+    if (processTimeUpdated) {
+      classList.push('Updated')
+    }
+
+    // Return the class list as a string.
+    return classList.join(' ')
+  })
+
+  /**
+   * The class name for the resource cost.
+   */
+  const resourceCostClassName: string = compute(() => {
+    // Initialize the class list.
+    let classList: string[] = []
+
+    // Add the updated class if the resource cost has been updated.
+    if (resourceCostUpdated) {
+      classList.push('Updated')
+    }
+
+    // Return the class list as a string.
+    return classList.join(' ')
   })
 
   /* -- RENDER -- */
   return (
     <ul className='ActionPropertyDisplay'>
-      <li className='Property SuccessChance'>
-        <span>Probability of success:</span> {successChance * 100}%
+      <li className='Property'>
+        <span className='Label'>Probability of success:</span>
+        <span className={successChanceClassName}> {successChance * 100}%</span>
       </li>
-      <li className='Property TimeToExecute'>
-        <span>Time to execute:</span> {processTime / 1000} second(s)
+      <li className='Property'>
+        <span className='Label'>Time to execute:</span>
+        <span className={processTimeClassName}>
+          {' '}
+          {processTime / 1000} second(s)
+        </span>
       </li>
-      <li className='Property ResourceCost'>
-        <span>Resource cost:</span> {resourceCost} resource(s)
+      <li className='Property'>
+        <span className='Label'>Resource cost:</span>
+        <span className={resourceCostClassName}>
+          {' '}
+          {resourceCost} resource(s)
+        </span>
       </li>
       <li className='Property Description'>
-        <span>Description:</span>{' '}
+        <span className='Label'>Description:</span>{' '}
         <RichTextOutputBox Element={action.description} />
       </li>
     </ul>

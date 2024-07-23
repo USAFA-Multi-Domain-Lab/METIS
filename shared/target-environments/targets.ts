@@ -1,6 +1,6 @@
 import { AnyObject } from 'metis/toolbox/objects'
 import TargetEnvironment, { TCommonTargetEnv, TTargetEnv } from '.'
-import { TTargetEnvContext } from '../../server/target-environments/api'
+import { TTargetEnvContext } from '../../server/target-environments/context-provider'
 import { TCommonMissionTypes } from '../../shared/missions'
 import Arg, { TTargetArg, TTargetArgJson } from './args'
 import { TDropdownArg } from './args/dropdown-arg'

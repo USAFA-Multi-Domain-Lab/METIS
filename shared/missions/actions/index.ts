@@ -38,7 +38,15 @@ export default abstract class MissionAction<
    */
   protected _processTime: TCommonMissionAction['processTime']
   public get processTime(): number {
-    return this._processTime + this.processTimeOperand
+    // Return the process time within the correct range.
+    // ***Note: This ensures the process time is never less than 0 or greater than 1 hour.
+    return Math.min(
+      Math.max(
+        this._processTime + this.processTimeOperand,
+        MissionAction.PROCESS_TIME_MIN,
+      ),
+      MissionAction.PROCESS_TIME_MAX,
+    )
   }
   public set processTime(value: number) {
     this._processTime = value
@@ -49,7 +57,15 @@ export default abstract class MissionAction<
    */
   protected _successChance: TCommonMissionAction['successChance']
   public get successChance(): number {
-    return this._successChance + this.successChanceOperand
+    // Return the success chance within the correct range.
+    // ***Note: This ensures the success chance is never less than 0 or greater than 1.
+    return Math.min(
+      Math.max(
+        this._successChance + this.successChanceOperand,
+        MissionAction.SUCCESS_CHANCE_MIN,
+      ),
+      MissionAction.SUCCESS_CHANCE_MAX,
+    )
   }
   public set successChance(value: number) {
     this._successChance = value
@@ -60,7 +76,12 @@ export default abstract class MissionAction<
    */
   protected _resourceCost: TCommonMissionAction['resourceCost']
   public get resourceCost(): number {
-    return this._resourceCost + this.resourceCostOperand
+    // Return the resource cost within the correct range.
+    // ***Note: This ensures the resource cost is never less than 0.
+    return Math.max(
+      this._resourceCost + this.resourceCostOperand,
+      MissionAction.RESOURCE_COST_MIN,
+    )
   }
   public set resourceCost(value: number) {
     this._resourceCost = value
@@ -186,6 +207,33 @@ export default abstract class MissionAction<
     this._resourceCost = this.resourceCost
     this.resourceCostOperand = resourceCostOperand
   }
+
+  /**
+   * The minimum process time for an action in milliseconds.
+   */
+  public static readonly PROCESS_TIME_MIN: number = 0 /*ms*/
+  /**
+   * The maximum process time for an action in milliseconds.
+   * @note This is set to 1 hour.
+   */
+  public static readonly PROCESS_TIME_MAX: number = 3600000 /*ms*/
+
+  /**
+   * The minimum success chance for an action in decimal form.
+   * @note This is set to 0.
+   */
+  public static readonly SUCCESS_CHANCE_MIN: number = 0
+  /**
+   * The maximum success chance for an action in decimal form.
+   * @note This is set to 1.
+   */
+  public static readonly SUCCESS_CHANCE_MAX: number = 1
+
+  /**
+   * The minimum resource cost for an action.
+   * @note This is set to 0.
+   */
+  public static readonly RESOURCE_COST_MIN: number = 0
 
   /**
    * Default properties set when creating a new MissionAction object.

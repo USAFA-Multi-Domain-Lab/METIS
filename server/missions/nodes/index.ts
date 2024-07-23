@@ -2,7 +2,7 @@ import { TCommonMissionActionJson } from 'metis/missions/actions'
 import { TActionExecutionJson } from 'metis/missions/actions/executions'
 import { TActionOutcomeJson } from 'metis/missions/actions/outcomes'
 import MissionNode from 'metis/missions/nodes'
-import { TTargetEnvContextNode } from 'metis/server/target-environments/api'
+import { TTargetEnvContextNode } from 'metis/server/target-environments/context-provider'
 import { TServerMissionTypes } from '..'
 import ServerMissionAction from '../actions'
 import ServerActionExecution from '../actions/executions'
@@ -153,27 +153,8 @@ export default class ServerMissionNode extends MissionNode<TServerMissionTypes> 
    * Handles the blocking of the node during a session.
    * @param blocked Whether or not the node is blocked.
    */
-  public handleBlock(blocked: boolean): void {
+  public block(blocked: boolean): void {
     this._blocked = blocked
-
-    if (this.hasChildren) {
-      this.handleBlockChildren(blocked)
-    }
-  }
-
-  // Implemented
-  protected handleBlockChildren(
-    blocked: boolean,
-    node: ServerMissionNode = this,
-  ): void {
-    // Handle blocking of children.
-    node.children.forEach((child) => {
-      child.handleBlock(blocked)
-
-      if (child.isOpen && child.hasChildren) {
-        child.handleBlockChildren(blocked, child)
-      }
-    })
   }
 
   // Implemented

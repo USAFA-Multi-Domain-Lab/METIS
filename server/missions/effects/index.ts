@@ -1,6 +1,6 @@
 import Effect from 'metis/missions/effects'
 import ServerTargetEnvironment from 'metis/server/target-environments'
-import { TTargetEnvContextEffect } from 'metis/server/target-environments/api'
+import { TTargetEnvContextEffect } from 'metis/server/target-environments/context-provider'
 import ServerTarget from 'metis/server/target-environments/targets'
 import { TServerMissionTypes } from '..'
 

@@ -1,6 +1,6 @@
 import { MissionForce } from 'metis/missions/forces'
 import { TMissionNodeJson, TMissionNodeOptions } from 'metis/missions/nodes'
-import { TTargetEnvContextForce } from 'metis/server/target-environments/api'
+import { TTargetEnvContextForce } from 'metis/server/target-environments/context-provider'
 import { TServerMissionTypes } from '..'
 import ServerMissionNode from '../nodes'
 

@@ -4,9 +4,9 @@ import IActionExecution, {
 } from 'metis/missions/actions/executions'
 import { TCommonEffectJson } from 'metis/missions/effects'
 import { plcApiLogger } from 'metis/server/logging'
-import TargetEnvApi, {
+import EnvironmentContextProvider, {
   TTargetEnvContextAction,
-} from 'metis/server/target-environments/api'
+} from 'metis/server/target-environments/context-provider'
 import seedrandom, { PRNG } from 'seedrandom'
 import { TServerMissionTypes } from '..'
 import ServerEffect from '../effects'
@@ -48,7 +48,11 @@ export default class ServerMissionAction extends MissionAction<TServerMissionTyp
   public execute(
     options: TExecuteOptions<ServerActionExecution>,
   ): Promise<ServerRealizedOutcome> {
-    let { targetEnvApi, effectsEnabled = false, onInit = () => {} } = options
+    let {
+      environmentContextProvider,
+      effectsEnabled = false,
+      onInit = () => {},
+    } = options
 
     return new Promise<ServerRealizedOutcome>((resolve) => {
       // Determine the start and end time of
@@ -86,7 +90,7 @@ export default class ServerMissionAction extends MissionAction<TServerMissionTyp
           // ...iterate through the effects and apply them.
           this.effects.forEach(async (effect: ServerEffect) => {
             try {
-              await targetEnvApi.applyEffect(effect)
+              await environmentContextProvider.applyEffect(effect)
             } catch (error: any) {
               plcApiLogger.error(error.message, error.stack)
             }
@@ -125,9 +129,9 @@ export default class ServerMissionAction extends MissionAction<TServerMissionTyp
  */
 export type TExecuteOptions<TActionExecution extends IActionExecution> = {
   /**
-   * The API used to interact with target environments.
+   * The context provider for the target environment.
    */
-  targetEnvApi: TargetEnvApi
+  environmentContextProvider: EnvironmentContextProvider
   /**
    * Whether to enable the effects of the action, upon successful execution.
    * @default false

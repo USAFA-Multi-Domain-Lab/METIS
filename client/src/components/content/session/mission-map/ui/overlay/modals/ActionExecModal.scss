@@ -127,7 +127,19 @@
           padding: 0 5px;
           color: $terminal;
 
-          span {
+          .Updated {
+            color: $color-main;
+            transform: scale(1.1);
+            transition: color 250ms ease-in-out, transform 250ms ease-in-out;
+          }
+
+          :not(.Updated) {
+            color: $terminal;
+            transform: scale(1);
+            transition: color 250ms ease-in-out, transform 250ms ease-in-out;
+          }
+
+          .Label {
             color: $terminal;
             text-decoration: underline;
           }
