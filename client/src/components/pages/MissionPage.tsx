@@ -16,6 +16,7 @@ import { useEventListener, useMountHandler } from 'src/toolbox/hooks'
 import { DefaultLayout, TPage_P } from '.'
 import Mission from '../../../../shared/missions'
 import { TWithKey } from '../../../../shared/toolbox/objects'
+import Prompt from '../content/communication/Prompt'
 import ActionEntry from '../content/edit-mission/entries/ActionEntry'
 import EffectEntry from '../content/edit-mission/entries/EffectEntry'
 import ForceEntry from '../content/edit-mission/entries/ForceEntry'
@@ -48,8 +49,14 @@ export default function MissionPage({
 }: IMissionPage): JSX.Element | null {
   /* -- GLOBAL CONTEXT -- */
   const globalContext = useGlobalContext()
-  const { beginLoading, finishLoading, handleError, notify, prompt } =
-    globalContext.actions
+  const {
+    beginLoading,
+    finishLoading,
+    handleError,
+    notify,
+    prompt,
+    forceUpdate,
+  } = globalContext.actions
   const [targetEnvironments] = globalContext.targetEnvironments
 
   /* -- STATE -- */
@@ -457,6 +464,71 @@ export default function MissionPage({
     mission.transformation = new PrototypeTranslation(prototype)
   }
 
+  /**
+   * Handles the request to delete an action.
+   */
+  const handleDeleteActionRequest = async (
+    action: ClientMissionAction,
+    navigateBack: boolean = false,
+  ) => {
+    // Prompt the user to confirm the deletion.
+    let { choice } = await prompt(
+      `Please confirm the deletion of this action.`,
+      Prompt.ConfirmationChoices,
+    )
+    // If the user cancels, abort.
+    if (choice === 'Cancel') return
+
+    // Go back to the previous selection.
+    if (navigateBack) {
+      mission.selectBack()
+    }
+
+    // Extract the node from the action.
+    let { node } = action
+    // Remove the action from the node.
+    node.actions.delete(action._id)
+
+    // Display the changes.
+    forceUpdate()
+    // Allow the user to save the changes.
+    handleChange()
+  }
+
+  /**
+   * Handles the request to delete an effect.
+   */
+  const handleDeleteEffectRequest = async (
+    effect: ClientEffect,
+    navigateBack: boolean = false,
+  ) => {
+    // Prompt the user to confirm the deletion.
+    let { choice } = await prompt(
+      `Please confirm the deletion of this effect.`,
+      Prompt.ConfirmationChoices,
+    )
+
+    // If the user cancels, abort.
+    if (choice === 'Cancel') return
+
+    // Go back to the previous selection.
+    if (navigateBack) {
+      mission.selectBack()
+    }
+
+    // Extract the action from the effect.
+    let { action } = effect
+    // Filter out the effect from the action.
+    action.effects = action.effects.filter(
+      (actionEffect: ClientEffect) => actionEffect._id !== effect._id,
+    )
+
+    // Display the changes.
+    forceUpdate()
+    // Allow the user to save the changes.
+    handleChange()
+  }
+
   /* -- PRE-RENDER PROCESSING -- */
 
   /**
@@ -552,6 +624,7 @@ export default function MissionPage({
         <NodeEntry
           key={selection._id}
           node={selection}
+          handleDeleteActionRequest={handleDeleteActionRequest}
           handleChange={handleChange}
         />
       )
@@ -561,6 +634,8 @@ export default function MissionPage({
           action={selection}
           targetEnvironments={targetEnvironments}
           setIsNewEffect={setIsNewEffect}
+          handleDeleteActionRequest={handleDeleteActionRequest}
+          handleDeleteEffectRequest={handleDeleteEffectRequest}
           handleChange={handleChange}
           key={selection._id}
         />
@@ -569,6 +644,7 @@ export default function MissionPage({
       return (
         <EffectEntry
           effect={selection}
+          handleDeleteEffectRequest={handleDeleteEffectRequest}
           handleChange={handleChange}
           key={selection._id}
         />

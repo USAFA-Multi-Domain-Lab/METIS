@@ -149,12 +149,31 @@ export default class ServerMissionNode extends MissionNode<TServerMissionTypes> 
     return outcome
   }
 
-  /**
-   * Handles the blocking of the node during a session.
-   * @param blocked Whether or not the node is blocked.
-   */
-  public block(blocked: boolean): void {
+  // Implemented
+  public updateBlockStatus(blocked: boolean): void {
+    // Set blocked.
     this._blocked = blocked
+
+    // If the node is open and has children,
+    // update the block status for children.
+    if (this.isOpen && this.hasChildren) {
+      this.updateBlockStatusForChildren(blocked)
+    }
+  }
+
+  // Implemented
+  protected updateBlockStatusForChildren(
+    blocked: boolean,
+    node: ServerMissionNode = this,
+  ): void {
+    // Handle blocking of children.
+    node.children.forEach((child) => {
+      child.updateBlockStatus(blocked)
+
+      if (child.isOpen && child.hasChildren) {
+        child.updateBlockStatusForChildren(blocked, child)
+      }
+    })
   }
 
   // Implemented

@@ -26,12 +26,13 @@ import EntryNavigation from './navigation/EntryNavigation'
  */
 export default function NodeEntry({
   node,
+  handleDeleteActionRequest,
   handleChange,
 }: TNodeEntry_P): JSX.Element | null {
   /* -- GLOBAL CONTEXT -- */
   const globalContext = useGlobalContext()
   const [colorOptions] = globalContext.missionNodeColors
-  const { notify, forceUpdate } = globalContext.actions
+  const { notify } = globalContext.actions
 
   /* -- STATE -- */
   const [nodeName, setNodeName] = useState<string>(node.name)
@@ -186,20 +187,6 @@ export default function NodeEntry({
     }
   }, [executable])
 
-  /* -- FUNCTIONS -- */
-
-  /**
-   * This handles deleting an action from the selected node.
-   */
-  const handleDeleteActionRequest = (action: ClientMissionAction) => {
-    // Remove the action from the node.
-    node.actions.delete(action._id)
-    // Display the changes.
-    forceUpdate()
-    // Allow the user to save the changes.
-    handleChange()
-  }
-
   /**
    * Handles creating a new action.
    */
@@ -259,7 +246,7 @@ export default function NodeEntry({
           remove: {
             icon: 'remove',
             key: 'remove',
-            onClick: () => handleDeleteActionRequest(action),
+            onClick: async () => await handleDeleteActionRequest(action),
             tooltipDescription: 'Remove action.',
             uniqueClassList: removeActionClassList,
           },
@@ -399,6 +386,13 @@ export type TNodeEntry_P = {
    * The mission-node to be edited.
    */
   node: ClientMissionNode
+  /**
+   * Handles the request to delete an action.
+   */
+  handleDeleteActionRequest: (
+    action: ClientMissionAction,
+    navigateBack?: boolean,
+  ) => Promise<void>
   /**
    * A function that will be called when a change has been made.
    */

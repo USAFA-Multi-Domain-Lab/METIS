@@ -228,7 +228,7 @@ function App(props: {}): JSX.Element | null {
       } else {
         try {
           setMissionNodeColors(await ClientMissionNode.$fetchColors())
-          if (login.user.isAuthorized('missions_read')) {
+          if (login.user.isAuthorized('environments_read')) {
             setTargetEnvironments(await ClientTargetEnvironment.$fetchAll())
           }
         } catch {

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import Tooltip from 'src/components/content/communication/Tooltip'
-import { DetailDropDown } from 'src/components/content/form/DetailDropDown'
+import { DetailDropdown } from 'src/components/content/form/DetailDropdown'
 import { ButtonText } from 'src/components/content/user-controls/ButtonText'
 import { useGlobalContext } from 'src/context'
 import ClientMissionAction from 'src/missions/actions'
@@ -122,7 +122,7 @@ export default function CreateEffect({
       </div>
 
       {/* -- MAIN CONTENT -- */}
-      <DetailDropDown<ClientTargetEnvironment>
+      <DetailDropdown<ClientTargetEnvironment>
         fieldType='required'
         label='Target Environment'
         options={targetEnvironments}
@@ -132,9 +132,12 @@ export default function CreateEffect({
         renderDisplayName={(targetEnv: ClientTargetEnvironment) =>
           targetEnv.name
         }
-        defaultValue={new ClientTargetEnvironment()}
+        handleInvalidOption={{
+          method: 'setToDefault',
+          defaultValue: new ClientTargetEnvironment(),
+        }}
       />
-      <DetailDropDown<ClientTarget>
+      <DetailDropdown<ClientTarget>
         fieldType='required'
         label='Target'
         options={targetEnv.targets}
@@ -143,7 +146,10 @@ export default function CreateEffect({
         isExpanded={false}
         renderDisplayName={(target: ClientTarget) => target.name}
         uniqueClassName={targetClassName}
-        defaultValue={new ClientTarget(new ClientTargetEnvironment())}
+        handleInvalidOption={{
+          method: 'setToDefault',
+          defaultValue: new ClientTarget(new ClientTargetEnvironment()),
+        }}
       />
 
       {/* -- BUTTON(S) -- */}

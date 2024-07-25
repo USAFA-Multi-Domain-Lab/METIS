@@ -1,7 +1,11 @@
 import { ClientTargetEnvironment } from 'src/target-environments'
 import ClientTarget from 'src/target-environments/targets'
 import { TClientMissionTypes, TMissionNavigable } from '..'
-import Effect from '../../../../shared/missions/effects'
+import Effect, {
+  TCommonEffectJson,
+  TEffectOptions,
+} from '../../../../shared/missions/effects'
+import ClientMissionAction from '../actions'
 
 /**
  * Class representing an effect on the client-side that can be
@@ -25,6 +29,26 @@ export class ClientEffect
     return [this.mission, this.force, this.node, this.action, this]
   }
 
+  /**
+   * Class representing an effect on the client-side that can be
+   * applied to a target.
+   * @param action The action to which the effect belongs.
+   * @param data The data for the effect.
+   * @param options The options for the effect.
+   */
+  public constructor(
+    action: ClientMissionAction,
+    data: Partial<TCommonEffectJson> = ClientEffect.DEFAULT_PROPERTIES,
+    options: TClientEffectOptions = {},
+  ) {
+    super(action, data, options)
+
+    // If the target ID is provided and the mission is not in session, populate the target data.
+    if (data.targetId && !this.mission.inSession) {
+      this.populateTargetData(data.targetId)
+    }
+  }
+
   // Implemented
   public async populateTargetData(targetId: string): Promise<void> {
     return new Promise<void>(async (resolve, reject) => {
@@ -42,3 +66,10 @@ export class ClientEffect
     })
   }
 }
+
+/* ------------------------------ CLIENT EFFECT TYPES ------------------------------ */
+
+/**
+ * The options for creating a ClientEffect.
+ */
+export type TClientEffectOptions = TEffectOptions & {}

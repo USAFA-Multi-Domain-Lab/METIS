@@ -1,8 +1,12 @@
-import Effect from 'metis/missions/effects'
+import Effect, {
+  TCommonEffectJson,
+  TEffectOptions,
+} from 'metis/missions/effects'
 import ServerTargetEnvironment from 'metis/server/target-environments'
 import { TTargetEnvContextEffect } from 'metis/server/target-environments/context-provider'
 import ServerTarget from 'metis/server/target-environments/targets'
 import { TServerMissionTypes } from '..'
+import ServerMissionAction from '../actions'
 
 /**
  * Class representing an effect on the server-side that can be
@@ -15,6 +19,28 @@ export default class ServerEffect extends Effect<TServerMissionTypes> {
       return this.target.targetEnvironment
     } else {
       return null
+    }
+  }
+
+  /**
+   * Class representing an effect on the server-side that can be
+   * applied to a target.
+   * @param action The action to which the effect belongs.
+   * @param data The data for the effect.
+   * @param options The options for the effect.
+   */
+  public constructor(
+    action: ServerMissionAction,
+    data: Partial<TCommonEffectJson> = ServerEffect.DEFAULT_PROPERTIES,
+    options: TServerEffectOptions = {},
+  ) {
+    super(action, data, options)
+
+    // If the target data has been provided and
+    // it's not the default target ID, then populate
+    // the target data.
+    if (data.targetId) {
+      this.populateTargetData(data.targetId)
     }
   }
 
@@ -42,3 +68,10 @@ export default class ServerEffect extends Effect<TServerMissionTypes> {
     }
   }
 }
+
+/* ------------------------------ SERVER EFFECT TYPES ------------------------------ */
+
+/**
+ * The options for creating a ServerEffect.
+ */
+export type TServerEffectOptions = TEffectOptions & {}

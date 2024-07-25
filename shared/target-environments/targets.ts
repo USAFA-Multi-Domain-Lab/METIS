@@ -3,7 +3,6 @@ import TargetEnvironment, { TCommonTargetEnv, TTargetEnv } from '.'
 import { TTargetEnvContext } from '../../server/target-environments/context-provider'
 import { TCommonMissionTypes } from '../../shared/missions'
 import Arg, { TTargetArg, TTargetArgJson } from './args'
-import { TDropdownArg } from './args/dropdown-arg'
 import Dependency from './dependencies'
 
 /**
@@ -138,16 +137,6 @@ export default abstract class Target<
   }
 
   /**
-   * The ID of the force argument.
-   */
-  public static readonly forcesArgId: TDropdownArg['_id'] = 'forceId'
-
-  /**
-   * The ID of the node argument.
-   */
-  public static readonly nodesArgId: TDropdownArg['_id'] = 'nodeId'
-
-  /**
    * The node target that is available in the METIS target environment.
    */
   public static nodeTarget: TCommonTargetJson = {
@@ -177,79 +166,65 @@ export default abstract class Target<
         throw new Error(errorMessage)
       }
 
-      // Block the node.
-      if (blockNode) {
-        context.blockNode(nodeId, forceId)
+      // Update the block status of the node.
+      blockNode
+        ? context.blockNode(nodeId, forceId)
+        : context.unblockNode(nodeId, forceId)
+
+      // If the success chance is a number, then modify the success chance.
+      if (successChance && typeof successChance === 'number') {
+        context.modifySuccessChance(nodeId, forceId, successChance / 100)
       }
-      // Otherwise, modify the node's action properties.
-      else {
-        // If the success chance is a number, then modify the success chance.
-        if (successChance && typeof successChance === 'number') {
-          context.modifySuccessChance(nodeId, forceId, successChance / 100)
-        }
-        // Otherwise, throw an error.
-        else if (successChance && typeof successChance !== 'number') {
-          throw new Error(errorMessage)
-        }
+      // Otherwise, throw an error.
+      else if (successChance && typeof successChance !== 'number') {
+        throw new Error(errorMessage)
+      }
 
-        // If the process time is a number, then modify the process time.
-        if (processTime && typeof processTime === 'number') {
-          context.modifyProcessTime(nodeId, forceId, processTime * 1000)
-        }
-        // Otherwise, throw an error.
-        else if (processTime && typeof processTime !== 'number') {
-          throw new Error(errorMessage)
-        }
+      // If the process time is a number, then modify the process time.
+      if (processTime && typeof processTime === 'number') {
+        context.modifyProcessTime(nodeId, forceId, processTime * 1000)
+      }
+      // Otherwise, throw an error.
+      else if (processTime && typeof processTime !== 'number') {
+        throw new Error(errorMessage)
+      }
 
-        // If the resource cost is a number, then modify the resource cost.
-        if (resourceCost && typeof resourceCost === 'number') {
-          context.modifyResourceCost(nodeId, forceId, resourceCost)
-        }
-        // Otherwise, throw an error.
-        else if (resourceCost && typeof resourceCost !== 'number') {
-          throw new Error(errorMessage)
-        }
+      // If the resource cost is a number, then modify the resource cost.
+      if (resourceCost && typeof resourceCost === 'number') {
+        context.modifyResourceCost(nodeId, forceId, resourceCost)
+      }
+      // Otherwise, throw an error.
+      else if (resourceCost && typeof resourceCost !== 'number') {
+        throw new Error(errorMessage)
       }
     },
     args: [
       {
-        _id: Target.forcesArgId,
-        name: 'Force',
-        required: true,
-        groupingId: 'force',
-        type: 'string',
-        default: 'Select a force',
-        pattern: new RegExp('^[0-9a-fA-F]{24}$'),
-      },
-      {
-        _id: Target.nodesArgId,
+        type: 'node',
+        _id: 'nodeId',
         name: 'Node',
         required: true,
-        groupingId: 'force',
-        type: 'string',
-        default: 'Select a node',
-        pattern: new RegExp('^[0-9a-fA-F]{24}$'),
-        dependencies: [Dependency.TRUTHY(Target.forcesArgId)],
+        groupingId: 'node',
       },
       {
+        type: 'boolean',
         _id: 'blockNode',
         name: 'Block Node',
         required: true,
-        groupingId: 'blockNode',
-        type: 'boolean',
+        groupingId: 'node',
         default: true,
-        dependencies: [Dependency.TRUTHY(Target.nodesArgId)],
+        dependencies: [Dependency.TRUTHY('nodeId')],
       },
       {
+        type: 'number',
         _id: 'successChance',
         name: 'Probability of Success',
-        type: 'number',
         required: false,
         min: -100,
         max: 100,
         unit: '%',
-        groupingId: 'blockNode',
-        dependencies: [Dependency.EQUALS('blockNode', [false])],
+        groupingId: 'node',
+        dependencies: [Dependency.TRUTHY('nodeId')],
         tooltipDescription:
           `This allows you to positively or negatively affect the chance of success for all actions within the node. A positive value increases the chance of success, while a negative value decreases the chance of success.\n` +
           `\t\n` +
@@ -258,15 +233,15 @@ export default abstract class Target<
           `*Note: If the result is less than 0%, then the chance of success will be 0%. If the result is greater than 100%, then the chance of success will be 100%.*`,
       },
       {
+        type: 'number',
         _id: 'processTime',
         name: 'Process Time',
-        type: 'number',
         required: false,
         min: -3600,
         max: 3600,
         unit: 's',
-        groupingId: 'blockNode',
-        dependencies: [Dependency.EQUALS('blockNode', [false])],
+        groupingId: 'node',
+        dependencies: [Dependency.TRUTHY('nodeId')],
         tooltipDescription:
           `This allows you to positively or negatively affect the process time for all actions within the node. A positive value increases the process time, while a negative value decreases the process time.\n` +
           `\t\n` +
@@ -275,12 +250,12 @@ export default abstract class Target<
           `*Note: If the result is less than 0s, then the process time will be 0s. If the result is greater than 3600s, then the process time will be 3600s.*`,
       },
       {
+        type: 'number',
         _id: 'resourceCost',
         name: 'Resource Cost',
-        type: 'number',
         required: false,
-        groupingId: 'blockNode',
-        dependencies: [Dependency.EQUALS('blockNode', [false])],
+        groupingId: 'node',
+        dependencies: [Dependency.TRUTHY('nodeId')],
         tooltipDescription:
           `This allows you to positively or negatively affect the resource cost for all actions within the node. A positive value increases the resource cost, while a negative value decreases the resource cost.\n` +
           `\t\n` +
@@ -307,22 +282,20 @@ export default abstract class Target<
     },
     args: [
       {
-        _id: Target.forcesArgId,
+        type: 'force',
+        _id: 'forceId',
         name: 'Force',
         required: true,
         groupingId: 'output',
-        type: 'string',
-        default: 'Select a force',
-        pattern: new RegExp('^[0-9a-fA-F]{24}$'),
       },
       {
+        type: 'large-string',
         _id: 'message',
         name: 'Message',
         required: true,
-        type: 'large-string',
         default: 'Enter your message here.',
         groupingId: 'output',
-        dependencies: [Dependency.TRUTHY(Target.forcesArgId)],
+        dependencies: [Dependency.TRUTHY('forceId')],
       },
     ],
   }

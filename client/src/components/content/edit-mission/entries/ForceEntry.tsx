@@ -61,17 +61,13 @@ export default function ForceEntry({
   const onDelete = async () => {
     // Prompt the user to confirm the deletion.
     let { choice } = await prompt(
-      `Please confirm the deletion of this force.\n` +
-        `**Warning:** Upon deletion, all effects associated with this force will be removed.`,
+      `Please confirm the deletion of this force.`,
       Prompt.ConfirmationChoices,
     )
     // If the user cancels, abort.
     if (choice === 'Cancel') return
-
     // Filter out the force.
     mission.forces = mission.forces.filter(({ _id }) => _id !== force._id)
-    // Remove all effects associated with the force.
-    mission.removeAllEffectsWith(force._id)
     // Update the mission structure.
     mission.handleStructureChange()
     // Navigate back to the mission.

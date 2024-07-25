@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { useGlobalContext } from 'src/context'
 import ClientMissionAction from 'src/missions/actions'
 import { ClientEffect } from 'src/missions/effects'
 import ClientMissionNode from 'src/missions/nodes'
@@ -28,12 +27,10 @@ export default function ActionEntry({
   action,
   targetEnvironments,
   setIsNewEffect,
+  handleDeleteActionRequest,
+  handleDeleteEffectRequest,
   handleChange,
 }: TActionEntry_P): JSX.Element | null {
-  /* -- GLOBAL CONTEXT -- */
-
-  const { forceUpdate, prompt } = useGlobalContext().actions
-
   /* -- STATE -- */
 
   const [actionName, setActionName] = useState<string>(action.name)
@@ -128,33 +125,6 @@ export default function ActionEntry({
   /* -- FUNCTIONS -- */
 
   /**
-   * Deletes the action from the node.
-   */
-  const handleDeleteActionRequest = () => {
-    // Select the now-deleted action's node.
-    mission.selectBack()
-    // Remove the action from the node.
-    node.actions.delete(action._id)
-    // Allow the user to save the changes.
-    handleChange()
-  }
-
-  /**
-   * Handles the request to delete an effect.
-   */
-  const handleDeleteEffectRequest = (effect: ClientEffect) => {
-    // Filter out the effect from the action.
-    action.effects = action.effects.filter(
-      (actionEffect: ClientEffect) => actionEffect._id !== effect._id,
-    )
-
-    // Display the changes.
-    forceUpdate()
-    // Allow the user to save the changes.
-    handleChange()
-  }
-
-  /**
    * Handles the request to edit an effect.
    */
   const handleEditEffectRequest = (effect: ClientEffect) => {
@@ -203,7 +173,7 @@ export default function ActionEntry({
         remove: {
           icon: 'remove',
           key: 'remove',
-          onClick: () => handleDeleteEffectRequest(effect),
+          onClick: async () => await handleDeleteEffectRequest(effect),
           tooltipDescription: 'Remove effect.',
         },
       }
@@ -350,7 +320,9 @@ export default function ActionEntry({
             <div className='ButtonContainer'>
               <ButtonText
                 text='Delete Action'
-                onClick={handleDeleteActionRequest}
+                onClick={async () =>
+                  await handleDeleteActionRequest(action, true)
+                }
                 tooltipDescription='Delete this action from the node.'
                 uniqueClassName={deleteActionClassName}
               />
@@ -382,6 +354,20 @@ export type TActionEntry_P = {
    * Function that updates the isNewEffect state.
    */
   setIsNewEffect: ReactSetter<boolean>
+  /**
+   * Handles the request to delete an action.
+   */
+  handleDeleteActionRequest: (
+    action: ClientMissionAction,
+    navigateBack?: boolean,
+  ) => Promise<void>
+  /**
+   * Handles the request to delete an effect.
+   */
+  handleDeleteEffectRequest: (
+    effect: ClientEffect,
+    navigateBack?: boolean,
+  ) => Promise<void>
   /**
    * Handles when a change is made that would require saving.
    */

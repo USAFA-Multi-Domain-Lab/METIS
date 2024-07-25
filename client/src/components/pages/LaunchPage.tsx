@@ -24,7 +24,7 @@ export default function LaunchPage({
   const { beginLoading, finishLoading, handleError, notify, navigateTo } =
     globalContext.actions
   const [mission, setMission] = useState<ClientMission>(
-    new ClientMission({ _id: missionId }),
+    new ClientMission({ _id: missionId }, { inSession: true }),
   )
   const [sessionConfig, setSessionConfig] = useState(Session.DEFAULT_CONFIG)
 
@@ -37,7 +37,9 @@ export default function LaunchPage({
         // Notify user of loading.
         beginLoading('Loading mission...')
         // Load mission.
-        let mission = await ClientMission.$fetchOne(missionId)
+        let mission = await ClientMission.$fetchOne(missionId, {
+          inSession: true,
+        })
         // Store mission in the state.
         setMission(mission)
       } catch {

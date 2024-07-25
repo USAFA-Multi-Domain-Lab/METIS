@@ -476,30 +476,31 @@ export default class ClientMissionNode
   }
 
   // Implemented
-  public block(blocked: boolean): void {
+  public updateBlockStatus(blocked: boolean): void {
     // Set blocked.
     this._blocked = blocked
 
+    // If the node is open and has children,
+    // update the block status for children.
+    if (this.isOpen && this.hasChildren) {
+      this.updateBlockStatusForChildren(blocked)
+    }
+
     // Emit event.
-    this.emitEvent('handle-block')
-    // Emit event for all children.
-    this.emitEventForChildren('handle-block')
+    this.emitEvent('update-block')
   }
 
-  /**
-   * Emits an event for all children of the node.
-   * @param method The method of the event.
-   * @param node The node to emit the event for.
-   */
-  private emitEventForChildren(
-    method: TNodeEventMethod,
+  // Implemented
+  protected updateBlockStatusForChildren(
+    blocked: boolean,
     node: ClientMissionNode = this,
   ): void {
+    // Handle blocking of children.
     node.children.forEach((child) => {
-      child.emitEvent(method)
+      child.updateBlockStatus(blocked)
 
       if (child.isOpen && child.hasChildren) {
-        child.emitEventForChildren(method, child)
+        child.updateBlockStatusForChildren(blocked, child)
       }
     })
   }
@@ -725,7 +726,7 @@ export interface IClientLoadOutcomeOptions extends ILoadOutcomeOptions {
  * Triggered when the node is opened.
  * @option 'set-buttons'
  * Triggered when the buttons for the node are set.
- * @option 'handle-block'
+ * @option 'update-block'
  * Triggered when the following occurs:
  * - The node is blocked.
  * - The node is unblocked.
@@ -737,5 +738,5 @@ export type TNodeEventMethod =
   | 'exec-state-change'
   | 'open'
   | 'set-buttons'
-  | 'handle-block'
+  | 'update-block'
   | 'modify-actions'

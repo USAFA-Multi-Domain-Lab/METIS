@@ -6,7 +6,7 @@ import { ReactSetter } from 'src/toolbox/types'
 import ClientUser from 'src/users'
 import { TLogin } from '../../../../../shared/logins'
 import UserAccess from '../../../../../shared/users/accesses'
-import { DetailDropDown } from '../form/DetailDropDown'
+import { DetailDropdown } from '../form/DetailDropdown'
 import { DetailString } from '../form/DetailString'
 import { DetailToggle } from '../form/DetailToggle'
 import './CreateUserEntry.scss'
@@ -302,7 +302,7 @@ export default function CreateUserEntry({
         errorMessage={usernameErrorMessage}
         placeholder='Enter a username here...'
       />
-      <DetailDropDown<UserAccess>
+      <DetailDropdown<UserAccess>
         fieldType='required'
         label='Access Level'
         options={listOfAccesses}
@@ -310,7 +310,10 @@ export default function CreateUserEntry({
         setState={setAccess}
         isExpanded={false}
         renderDisplayName={(access: UserAccess) => access.name}
-        defaultValue={UserAccess.AVAILABLE_ACCESSES.default}
+        handleInvalidOption={{
+          method: 'setToDefault',
+          defaultValue: UserAccess.AVAILABLE_ACCESSES.default,
+        }}
       />
       <DetailString
         fieldType='required'

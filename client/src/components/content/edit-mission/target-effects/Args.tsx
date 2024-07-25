@@ -10,6 +10,7 @@ import './Args.scss'
  * Groups arguments together and renders them.
  */
 export default function Args({
+  effect,
   target,
   effectArgs,
   setEffectArgs,
@@ -137,6 +138,7 @@ export default function Args({
                 /* -- RENDER -- */
                 return (
                   <ArgEntry
+                    effect={effect}
                     target={target}
                     arg={arg}
                     effectArgs={effectArgs}
@@ -161,6 +163,10 @@ export default function Args({
  * Props for Args component.
  */
 export type TArgs_P = {
+  /**
+   * The effect that the arguments belong to.
+   */
+  effect: ClientEffect
   /**
    * The effect's target.
    */

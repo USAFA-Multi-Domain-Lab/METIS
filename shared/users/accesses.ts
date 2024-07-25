@@ -50,7 +50,6 @@ export default class UserAccess implements TUserAccess {
       'student',
       'This access level is a student which has restricted access to the entire application.',
       [
-        UserPermission.AVAILABLE_PERMISSIONS.missions_read,
         UserPermission.AVAILABLE_PERMISSIONS.sessions_join_participant,
         UserPermission.AVAILABLE_PERMISSIONS.sessions_read,
       ],
@@ -65,6 +64,7 @@ export default class UserAccess implements TUserAccess {
         UserPermission.AVAILABLE_PERMISSIONS.sessions_write,
         UserPermission.AVAILABLE_PERMISSIONS.missions_read,
         UserPermission.AVAILABLE_PERMISSIONS.missions_write,
+        UserPermission.AVAILABLE_PERMISSIONS.environments_read,
         UserPermission.AVAILABLE_PERMISSIONS.users_read_students,
         UserPermission.AVAILABLE_PERMISSIONS.users_write_students,
       ],
@@ -79,6 +79,7 @@ export default class UserAccess implements TUserAccess {
         UserPermission.AVAILABLE_PERMISSIONS.sessions_write,
         UserPermission.AVAILABLE_PERMISSIONS.missions_read,
         UserPermission.AVAILABLE_PERMISSIONS.missions_write,
+        UserPermission.AVAILABLE_PERMISSIONS.environments_read,
         UserPermission.AVAILABLE_PERMISSIONS.users_read,
         UserPermission.AVAILABLE_PERMISSIONS.users_write,
       ],

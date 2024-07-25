@@ -113,7 +113,7 @@ type TInternalEffectData = [
      * @option `"node-action-resource-cost":` The data needed to modify the resource cost of all the node's actions.
      * @option `"output":` The data needed to send a message to the output panel.
      */
-    key: 'node-block'
+    key: 'node-update-block'
     /**
      * The ID of the node to modify.
      */

@@ -1,10 +1,6 @@
-import Mission from 'metis/missions'
-import MissionAction from 'metis/missions/actions'
-import Effect from 'metis/missions/effects'
-import { MissionForce } from 'metis/missions/forces'
-import MissionNode from 'metis/missions/nodes'
 import ServerEffect from 'metis/server/missions/effects'
 import SessionServer from 'metis/server/sessions'
+import { AnyObject } from 'metis/toolbox/objects'
 import ServerMission from '../missions'
 
 /**
@@ -88,7 +84,7 @@ export default class EnvironmentContextProvider
    * @param forceId The ID of the force where the node is located.
    */
   private blockNode = (nodeId: string, forceId: string) => {
-    this.session.blockNode(nodeId, forceId, true)
+    this.session.updateNodeBlockStatus(nodeId, forceId, true)
   }
 
   /**
@@ -97,7 +93,7 @@ export default class EnvironmentContextProvider
    * @param forceId The ID of the force where the node is located.
    */
   private unblockNode = (nodeId: string, forceId: string) => {
-    this.session.blockNode(nodeId, forceId, false)
+    this.session.updateNodeBlockStatus(nodeId, forceId, false)
   }
 
   /**
@@ -167,7 +163,7 @@ type TCommonEnvContextProvider = {
   /**
    * The mission for the session that's in progress within METIS.
    */
-  get mission(): Mission
+  get mission(): ServerMission
   /**
    * Applies the effect to its target.
    * @param effect The effect to apply to the target.
@@ -210,7 +206,8 @@ export type TTargetEnvContext = {
    * @param nodeId The ID of the node to modify.
    * @param forceId The ID of the force where the node is located.
    * @param operand The number used to modify the chance of success.
-   * @note **ENSURE THE `operand` IS A DECIMAL BETWEEN -1 AND 1. IF NOT, THE EFFECT WILL NOT BE APPLIED.**
+   * @note **If the result is less than 0%, the chance of success will be set to 0%.**
+   * @note **If the result is greater than 100%, the chance of success will be set to 100%.**
    * @note This will modify the chance of success for all actions within the node.
    * @note The operand can be positive or negative. It will either increase or decrease the chance of success.
    */
@@ -223,8 +220,9 @@ export type TTargetEnvContext = {
    * Modifies an action's process time.
    * @param nodeId The ID of the node to modify.
    * @param forceId The ID of the force where the node is located.
-   * @param operand The number used to modify the process time. |
-   * @note **ENSURE THE `operand` IS A WHOLE NUMBER BETWEEN -3,600,000 AND 3,600,000. IF NOT, THE EFFECT WILL NOT BE APPLIED.**
+   * @param operand The number used to modify the process time.
+   * @note **If the result is less than 0, the process time will be set to 0.**
+   * @note **If the result is greater than 1 hour (3,600,000 milliseconds), the process time will be set to 1 hour.**
    * @note This will modify the process time for all actions within the node.
    * @note The operand can be positive or negative. It will either increase or decrease the process time.
    */
@@ -234,6 +232,7 @@ export type TTargetEnvContext = {
    * @param nodeId The ID of the node to modify.
    * @param forceId The ID of the force where the node is located.
    * @param operand The number used to modify the resource cost.
+   * @note **If the result is less than 0, the resource cost will be set to 0.**
    * @note This will modify the resource cost for all actions within the node.
    * @note The operand can be positive or negative. It will either increase or decrease the resource cost.
    */
@@ -247,11 +246,11 @@ export type TTargetEnvContextMission = {
   /**
    * The ID for the mission.
    */
-  readonly _id: Mission['_id']
+  readonly _id: string
   /**
    * The name for the mission.
    */
-  readonly name: Mission['name']
+  readonly name: string
   /**
    * All forces that exist in the mission.
    */
@@ -269,11 +268,11 @@ export type TTargetEnvContextForce = {
   /**
    * The ID for the force.
    */
-  readonly _id: MissionForce['_id']
+  readonly _id: string
   /**
    * The name for the force.
    */
-  readonly name: MissionForce['name']
+  readonly name: string
   /**
    * All nodes that exist in the force.
    */
@@ -287,15 +286,15 @@ export type TTargetEnvContextNode = {
   /**
    * The ID for the node.
    */
-  readonly _id: MissionNode['_id']
+  readonly _id: string
   /**
    * The name for the node.
    */
-  readonly name: MissionNode['name']
+  readonly name: string
   /**
    * The description for the node.
    */
-  readonly description: MissionNode['description']
+  readonly description: string
   /**
    * The actions for the node.
    */
@@ -309,27 +308,27 @@ export type TTargetEnvContextAction = {
   /**
    * The ID for the action.
    */
-  readonly _id: MissionAction['_id']
+  readonly _id: string
   /**
    * The name for the action.
    */
-  readonly name: MissionAction['name']
+  readonly name: string
   /**
    * The description for the action.
    */
-  readonly description: MissionAction['description']
+  readonly description: string
   /**
    * The chance that the action will succeed.
    */
-  readonly successChance: MissionAction['successChance']
+  readonly successChance: number
   /**
    * The amount of time it takes to execute the action.
    */
-  readonly processTime: MissionAction['processTime']
+  readonly processTime: number
   /**
    * The amount of resources the action will be subtracted from that available to the executor of the action.
    */
-  readonly resourceCost: MissionAction['resourceCost']
+  readonly resourceCost: number
   /**
    * All effects that exist in the action.
    */
@@ -343,13 +342,13 @@ export type TTargetEnvContextEffect = {
   /**
    * The ID for the effect.
    */
-  readonly _id: Effect['_id']
+  readonly _id: string
   /**
    * The name for the effect.
    */
-  readonly name: Effect['name']
+  readonly name: string
   /**
    * The arguments used to affect the target.
    */
-  readonly args: Effect['args']
+  readonly args: AnyObject
 }

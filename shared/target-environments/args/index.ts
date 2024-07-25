@@ -1,14 +1,12 @@
 import Dependency from '../dependencies'
 import BooleanArg, { TBooleanArg, TBooleanArgJson } from './boolean-arg'
-import DropdownArg, {
-  TDropdownArg,
-  TDropdownArgJson,
-  TDropdownArgOption,
-} from './dropdown-arg'
+import DropdownArg, { TDropdownArg, TDropdownArgJson } from './dropdown-arg'
+import ForceArg, { TForceArg, TForceArgJson } from './force-arg'
 import LargeStringArg, {
   TLargeStringArg,
   TLargeStringArgJson,
 } from './large-string-arg'
+import NodeArg, { TNodeArg, TNodeArgJson } from './node-arg'
 import NumberArg, { TNumberArg, TNumberArgJson } from './number-arg'
 import StringArg, { TStringArg, TStringArgJson } from './string-arg'
 
@@ -56,6 +54,10 @@ export default class Arg {
           return DropdownArg.toJson(arg)
         case 'boolean':
           return BooleanArg.toJson(arg)
+        case 'force':
+          return ForceArg.toJson(arg)
+        case 'node':
+          return NodeArg.toJson(arg)
       }
     })
   }
@@ -78,47 +80,12 @@ export default class Arg {
           return DropdownArg.fromJson(arg)
         case 'boolean':
           return BooleanArg.fromJson(arg)
+        case 'force':
+          return ForceArg.fromJson(arg)
+        case 'node':
+          return NodeArg.fromJson(arg)
       }
     })
-  }
-
-  /**
-   * Converts a target argument to a dropdown argument.
-   * @param arg The target argument to convert.
-   * @param options The dropdown options.
-   * @param defaultOption The default dropdown option.
-   * @returns The argument as a dropdown argument.
-   */
-  public static toDropdownArg = (
-    arg: TTargetArg,
-    options: TDropdownArgOption[] = [],
-    defaultOption: TDropdownArgOption = {
-      _id: 'default',
-      name: 'Select an option',
-    },
-  ): TDropdownArg => {
-    return arg.required
-      ? {
-          _id: arg._id,
-          name: arg.name,
-          groupingId: arg.groupingId,
-          dependencies: arg.dependencies,
-          tooltipDescription: arg.tooltipDescription,
-          type: 'dropdown',
-          required: true,
-          default: defaultOption,
-          options: options,
-        }
-      : {
-          _id: arg._id,
-          name: arg.name,
-          groupingId: arg.groupingId,
-          dependencies: arg.dependencies,
-          tooltipDescription: arg.tooltipDescription,
-          type: 'dropdown',
-          required: false,
-          options: options,
-        }
   }
 }
 
@@ -210,6 +177,8 @@ export type TTargetArg =
   | TLargeStringArg
   | TDropdownArg
   | TBooleanArg
+  | TForceArg
+  | TNodeArg
 
 /**
  * The JSON representation of the base argument type for a target.
@@ -297,3 +266,5 @@ export type TTargetArgJson =
   | TLargeStringArgJson
   | TDropdownArgJson
   | TBooleanArgJson
+  | TForceArgJson
+  | TNodeArgJson

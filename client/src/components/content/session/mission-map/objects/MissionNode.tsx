@@ -83,6 +83,10 @@ export default function MissionNode({
    * Whether the node is blocked.
    */
   const [blocked, setBlocked] = useState<boolean>(node.blocked)
+  /**
+   * Caches the previous blocked state.
+   */
+  const [prevBlocked, setPrevBlocked] = useState<boolean>(node.blocked)
 
   /* -- EFFECTS -- */
 
@@ -96,7 +100,10 @@ export default function MissionNode({
     setExecutionState(node.executionState)
     setButtons(node.buttons)
     setInitialProgress(calculateInitialProgress(node))
-    setBlocked(node.blocked)
+    setBlocked((prev) => {
+      setPrevBlocked(prev)
+      return node.blocked
+    })
   })
 
   /* -- COMPUTED -- */
@@ -143,6 +150,14 @@ export default function MissionNode({
         'border-color 500ms ease-in-out, background-color 500ms ease-in-out'
       borderColor = '#616060'
       backgroundColor = '#292f36'
+    }
+    // If the node is not blocked, change the border
+    // and background color.
+    if (!blocked && prevBlocked) {
+      transition =
+        'border-color 1s ease-in-out, background-color 1s ease-in-out'
+      borderColor = node.color
+      backgroundColor = undefined
     }
 
     return {

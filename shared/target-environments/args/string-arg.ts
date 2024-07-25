@@ -24,6 +24,8 @@ export default class StringArg {
           type: arg.type,
           required: arg.required,
           default: arg.default,
+          pattern: arg.pattern,
+          title: arg.title,
         }
       : {
           _id: arg._id,
@@ -35,6 +37,8 @@ export default class StringArg {
           tooltipDescription: arg.tooltipDescription,
           type: arg.type,
           required: arg.required,
+          pattern: arg.pattern,
+          title: arg.title,
         }
   }
 
@@ -58,6 +62,8 @@ export default class StringArg {
           type: arg.type,
           required: arg.required,
           default: arg.default,
+          pattern: arg.pattern,
+          title: arg.title,
         }
       : {
           _id: arg._id,
@@ -69,6 +75,8 @@ export default class StringArg {
           tooltipDescription: arg.tooltipDescription,
           type: arg.type,
           required: arg.required,
+          pattern: arg.pattern,
+          title: arg.title,
         }
   }
 }

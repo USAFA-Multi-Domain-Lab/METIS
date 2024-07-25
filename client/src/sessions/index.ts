@@ -62,7 +62,9 @@ export default class SessionClient extends Session<
     let _id: string = data._id
     let state: TSessionState = data.state
     let name: string = data.name
-    let mission: ClientMission = new ClientMission(data.mission)
+    let mission: ClientMission = new ClientMission(data.mission, {
+      inSession: true,
+    })
     let participants: ClientUser[] = data.participants.map(
       (userData) => new ClientUser(userData),
     )
@@ -552,7 +554,7 @@ export default class SessionClient extends Session<
    * @param nodeId The ID of the node to be blocked or unblocked.
    * @param blocked Whether or not the node is blocked.
    */
-  private blockNode = (nodeId: string, blocked: boolean): void => {
+  private updateNodeBlockStatus = (nodeId: string, blocked: boolean): void => {
     // Find the node, given the ID.
     let node = this.mission.getNode(nodeId)
     // Handle node not found.
@@ -562,7 +564,7 @@ export default class SessionClient extends Session<
       )
     }
     // Handle the blocking and unblocking of the node.
-    node.block(blocked)
+    node.updateBlockStatus(blocked)
   }
 
   /**
@@ -643,8 +645,8 @@ export default class SessionClient extends Session<
         let { forceId, message } = data
         // todo: Implement output handling.
         break
-      case 'node-block':
-        this.blockNode(data.nodeId, data.blocked)
+      case 'node-update-block':
+        this.updateNodeBlockStatus(data.nodeId, data.blocked)
         break
       case 'node-action-success-chance':
         this.modifySuccessChance(data.nodeId, data.successChanceOperand)

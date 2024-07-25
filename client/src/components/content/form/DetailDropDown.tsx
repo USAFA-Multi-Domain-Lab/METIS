@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { compute } from 'src/toolbox'
 import { TDetailBase_P, TDetailOptional_P, TDetailRequired_P } from '.'
 import Tooltip from '../communication/Tooltip'
-import './DetailDropDown.scss'
+import './DetailDropdown.scss'
 
 /**
  * This will render a detail for
@@ -10,14 +10,15 @@ import './DetailDropDown.scss'
  * down box for selecting from various
  * options.
  * @note If `TOption` can be null or undefined, passing null or undefined
- * will leave the drop down box unselected.
+ * will leave the Dropdown box unselected.
  */
-export function DetailDropDown<TOption>({
+export function DetailDropdown<TOption>({
   fieldType,
   label,
   options,
   stateValue,
   setState,
+  handleInvalidOption,
   isExpanded,
   renderDisplayName,
   // Optional Properties
@@ -27,10 +28,10 @@ export function DetailDropDown<TOption>({
   uniqueStateValueClassName = undefined,
   disabled = false,
   tooltipDescription = '',
-  defaultValue = undefined,
-}: TDetailDropDown_P<TOption>): JSX.Element | null {
+}: TDetailDropdown_P<TOption>): JSX.Element | null {
   /* -- STATE -- */
   const [expanded, setExpanded] = useState<boolean>(false)
+  const [displayWarning, setDisplayWarning] = useState<boolean>(false)
 
   /* -- COMPUTED -- */
   /**
@@ -38,7 +39,7 @@ export function DetailDropDown<TOption>({
    */
   const rootClassName: string = compute(() => {
     // Default class names
-    let classList: string[] = ['Detail', 'DetailDropDown']
+    let classList: string[] = ['Detail', 'DetailDropdown']
 
     // If a unique class name is passed
     // then add it to the list of class names.
@@ -60,7 +61,7 @@ export function DetailDropDown<TOption>({
    */
   const fieldClassName: string = compute(() => {
     // Default class names
-    let classList: string[] = ['Field', 'FieldDropDown']
+    let classList: string[] = ['Field', 'FieldDropdown']
 
     // If a unique class name is passed
     // then add it to the list of class names.
@@ -158,19 +159,22 @@ export function DetailDropDown<TOption>({
   // determine if the state value is still
   // a valid option.
   useEffect(() => {
-    // If the field type is required, then
-    // make sure the state value is a valid
-    // option.
+    if (displayWarning) {
+      setDisplayWarning(false)
+    }
+
     if (fieldType === 'required') {
       setState((prev) => {
-        // If the previous state value is not
-        // a valid option and a default value
-        // is passed, then set the state value
-        // to the default value. Otherwise, set
-        // the state value to the first
-        // option in the list.
         if (!options.includes(prev)) {
-          return defaultValue ? defaultValue : options[0]
+          switch (handleInvalidOption.method) {
+            case 'setToDefault':
+              return handleInvalidOption.defaultValue
+            case 'setToFirst':
+              return options[0]
+            case 'warning':
+              setDisplayWarning(true)
+              return prev
+          }
         }
 
         // Otherwise, keep the current state value.
@@ -178,18 +182,23 @@ export function DetailDropDown<TOption>({
       })
     } else {
       setState((prev) => {
-        // If the previous state value is not
-        // a valid option, then set the state
-        // value to null.
         if (prev && !options.includes(prev)) {
-          return null
+          switch (handleInvalidOption.method) {
+            case 'setToDefault':
+              return handleInvalidOption.defaultValue
+            case 'setToFirst':
+              return options[0]
+            case 'warning':
+              setDisplayWarning(true)
+              return prev
+          }
         }
 
         // Otherwise, keep the current state value.
         return prev
       })
     }
-  }, [options])
+  }, [options, handleInvalidOption])
 
   /* -- RENDER -- */
   if (options.length > 0) {
@@ -202,6 +211,7 @@ export function DetailDropDown<TOption>({
               i
               <Tooltip description={tooltipDescription} />
             </sup>
+            <div className={displayWarning ? 'Warning' : 'Hidden'}>!</div>
           </div>
           <div className={`TitleColumnTwo ${optionalClassName}`}>optional</div>
         </div>
@@ -237,9 +247,12 @@ export function DetailDropDown<TOption>({
   }
 }
 
-/* ---------------------------- TYPES FOR DETAIL DROP DOWN ---------------------------- */
+/* ---------------------------- TYPES FOR DETAIL Dropdown ---------------------------- */
 
-type TDetailDropDownBase_P<TOption> = TDetailBase_P & {
+/**
+ * The base properties for the Detail Dropdown component.
+ */
+type TDetailDropdownBase_P<TOption> = TDetailBase_P & {
   /**
    * The options available for the detail.
    */
@@ -261,31 +274,105 @@ type TDetailDropDownBase_P<TOption> = TDetailBase_P & {
    */
   uniqueStateValueClassName?: string
   /**
-   * @note This is disabled for drop down details.
+   * @note This is disabled for Dropdown details.
    */
   errorMessage?: undefined
 }
 
-type TDetailDropDownRequired_P<TOption> = TDetailRequired_P<TOption> &
-  TDetailDropDownBase_P<TOption> & {
-    /**
-     * The default value for the drop down box.
-     */
-    defaultValue: TOption
-  }
+/**
+ *
+ */
+export type TRequiredHandleInvalidOption<TOption> =
+  | TRequiredSetToDefault<TOption>
+  | TSetToFirst
+  | TWarning
+/**
+ *
+ */
+export type TOptionalHandleInvalidOption<TOption> =
+  | TOptionalSetToDefault<TOption>
+  | TSetToFirst
+  | TWarning
 
-type TDetailDropDownOptional_P<TOption> = TDetailOptional_P<TOption> &
-  TDetailDropDownBase_P<TOption> & {
+/**
+ *
+ */
+type TRequiredSetToDefault<TOption> = {
+  method: 'setToDefault'
+  defaultValue: NonNullable<TOption>
+}
+
+/**
+ *
+ */
+type TOptionalSetToDefault<TOption> = {
+  method: 'setToDefault'
+  defaultValue: TOption
+}
+
+/**
+ *
+ */
+type TSetToFirst = {
+  method: 'setToFirst'
+}
+
+/**
+ *
+ */
+type TWarning = {
+  method: 'warning'
+}
+
+/**
+ * The required properties for the Detail Dropdown component.
+ */
+type TDetailDropdownRequired_P<TOption> = TDetailRequired_P<TOption> &
+  TDetailDropdownBase_P<TOption> & {
     /**
-     * The default value for the drop down box.
-     * @default undefined
+     * How to handle the selected option if it's invalid or not in the list.
+     * @methods
+     * - `setToDefault` - Set the selected option to the default value. (If selected, a default value must be provided.)
+     * - `setToFirst` - Set the selected option to the first option in the list.
+     * - `warning` - Display a warning icon.
+     *
+     * @example
+     * ```
+     * handleInvalidOption={{
+     *  method: 'setToDefault',
+     *  defaultValue: new Object()
+     * }}
+     * ```
      */
-    defaultValue?: TOption
+    handleInvalidOption: TRequiredHandleInvalidOption<TOption>
   }
 
 /**
- * The properties for the Detail Drop Down component.
+ * The optional properties for the Detail Dropdown component.
  */
-type TDetailDropDown_P<TOption> =
-  | TDetailDropDownRequired_P<TOption>
-  | TDetailDropDownOptional_P<TOption | null>
+type TDetailDropdownOptional_P<TOption> = TDetailOptional_P<TOption> &
+  TDetailDropdownBase_P<TOption> & {
+    /**
+     * How to handle the selected option if it's invalid or not in the list.
+     * @methods
+     * - `setToDefault` - Set the selected option to the default value. (If selected, a default value must be provided.)
+     * - `setToFirst` - Set the selected option to the first option in the list.
+     * - `warning` - Display a warning icon.
+     *
+     * @example
+     * ```
+     * handleInvalidOption={{
+     *  method: 'setToDefault',
+     *  defaultValue: new Object()
+     * }}
+     * ```
+     */
+    handleInvalidOption: TOptionalHandleInvalidOption<TOption>
+  }
+
+/**
+ * The properties for the Detail Dropdown component.
+ */
+type TDetailDropdown_P<TOption> =
+  | TDetailDropdownRequired_P<TOption>
+  | TDetailDropdownOptional_P<TOption | null>

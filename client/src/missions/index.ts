@@ -215,6 +215,17 @@ export default class ClientMission
     return this.forces.map((force) => force.nodes).flat()
   }
 
+  /**
+   * Whether the mission is in session.
+   */
+  private _inSession: boolean
+  /**
+   * Whether the mission is in session.
+   */
+  public get inSession(): boolean {
+    return this._inSession
+  }
+
   public constructor(
     data: Partial<TCommonMissionJson> = {},
     options: TClientMissionOptions = {},
@@ -223,7 +234,7 @@ export default class ClientMission
     super(data, options)
 
     // Parse client-specific options.
-    let { existsOnServer = false } = options
+    let { existsOnServer = false, inSession = false } = options
 
     // Initialize client-specific properties.
     this._existsOnServer = existsOnServer
@@ -234,6 +245,7 @@ export default class ClientMission
     this._transformation = null
     this.relationshipLines = []
     this.lastOpenedNode = null
+    this._inSession = inSession
 
     // If there is no existing prototypes,
     // create one.
@@ -977,50 +989,6 @@ export default class ClientMission
   }
 
   /**
-   * Removes all effects associated with the id passed.
-   * @param _id The ID of an object that's tied to an effect.
-   * @note This checks the ID of every effect, effect.target,
-   * effect.target.args, and all the keys and values in the
-   * effect.args object.
-   */
-  public removeAllEffectsWith(_id: string) {
-    // Find the effect(s) associated with the ID
-    // passed by looping through all the mission's
-    // nodes, actions, and effects.
-    this.nodes.forEach((node) => {
-      node.actions.forEach((action) => {
-        action.effects.forEach((effect) => {
-          // Remove the effect if the effect's ID
-          // matches the ID passed.
-          if (effect._id === _id) {
-            action.effects.splice(action.effects.indexOf(effect), 1)
-          }
-          // Remove the effect if the effect's target
-          // ID matches the ID passed.
-          else if (effect.target?._id === _id) {
-            action.effects.splice(action.effects.indexOf(effect), 1)
-          }
-          // Remove the effect if any of the effect's
-          // target arguments match the ID passed.
-          else if (effect.target?.args.find((arg) => arg._id === _id)) {
-            action.effects.splice(action.effects.indexOf(effect), 1)
-          }
-          // Remove the effect if any of the keys in the
-          // effect's arguments match the ID passed.
-          else if (Object.keys(effect.args).includes(_id)) {
-            action.effects.splice(action.effects.indexOf(effect), 1)
-          }
-          // Remove the effect if any of the values in the
-          // effect's arguments match the ID passed.
-          else if (Object.values(effect.args).includes(_id)) {
-            action.effects.splice(action.effects.indexOf(effect), 1)
-          }
-        })
-      })
-    })
-  }
-
-  /**
    * Commit any changes made and save them to the server. Calls
    * @note Chooses between post and put based on the state of the `existsOnServer`
    * property. This can be set as an option in the constructor.
@@ -1316,6 +1284,11 @@ export type TClientMissionOptions = TMissionOptions & {
    * @default false
    */
   existsOnServer?: boolean
+  /**
+   * Whether the mission is in session.
+   * @default false
+   */
+  inSession?: boolean
 }
 
 /**

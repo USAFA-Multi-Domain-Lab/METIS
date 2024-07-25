@@ -3,7 +3,7 @@ import {
   TSessionAccessibility,
   TSessionConfig,
 } from '../../../../../shared/sessions'
-import { DetailDropDown } from '../form/DetailDropDown'
+import { DetailDropdown } from '../form/DetailDropdown'
 import { DetailToggle } from '../form/DetailToggle'
 import { ButtonText } from '../user-controls/ButtonText'
 import './SessionConfig.scss'
@@ -39,7 +39,7 @@ export default function SessionConfig({
 
   return (
     <div className='SessionConfig'>
-      <DetailDropDown<TSessionConfig['accessibility']>
+      <DetailDropdown<TSessionConfig['accessibility']>
         label='Accessibility'
         options={['public', 'id-required']}
         stateValue={accessibility}
@@ -58,7 +58,10 @@ export default function SessionConfig({
           }
         }}
         fieldType='required'
-        defaultValue='public'
+        handleInvalidOption={{
+          method: 'setToDefault',
+          defaultValue: 'public',
+        }}
       />
       <DetailToggle
         label='Auto-Assign:'

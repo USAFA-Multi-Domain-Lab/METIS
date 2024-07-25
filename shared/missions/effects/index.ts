@@ -128,13 +128,6 @@ export default abstract class Effect<
       Effect.DEFAULT_PROPERTIES.targetEnvironmentVersion
     this._target = data.targetId ?? Effect.DEFAULT_PROPERTIES.targetId
     this.args = data.args ?? Effect.DEFAULT_PROPERTIES.args
-
-    // If the target data has been provided and
-    // it's not the default target ID, then populate
-    // the target data.
-    if (data.targetId) {
-      this.populateTargetData(data.targetId)
-    }
   }
 
   /**
