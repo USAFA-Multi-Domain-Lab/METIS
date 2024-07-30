@@ -42,6 +42,7 @@
       .Label {
         align-self: center;
         font-size: 0.82rem;
+        margin-right: 8px;
 
         // This is the default behavior because
         // a detail field should have a concise
@@ -62,7 +63,7 @@
         opacity: 0.65;
         border-radius: 50%;
         font-size: 0.6em;
-        margin: 0 8px;
+        margin-right: 8px;
         padding: 0.2em 0.45em 0.1em;
         font-weight: bold;
         cursor: default;
@@ -75,9 +76,29 @@
           opacity: 0.9;
         }
       }
+
+      .Warning {
+        $content-size: 1.1em;
+
+        background-image: url('../../../assets/images/icons/warning-transparent.svg');
+        background-size: $content-size;
+        background-repeat: no-repeat;
+        background-position: center;
+        width: $content-size;
+        height: $content-size;
+        margin: 1.5px 8px 0 0;
+
+        &:hover {
+          background-image: url('../../../assets/images/icons/warning-filled.svg');
+          transition: background-image 0.5s;
+        }
+      }
     }
 
     .TitleColumnTwo {
+      display: flex;
+      flex-flow: row wrap;
+      align-items: center;
       font-size: 0.69em;
       font-style: italic;
       color: $color-pointer-mark;

@@ -52,13 +52,13 @@ export default class Dependency implements TCommonDependency {
 
   /**
    * Creates a new dependency that checks if the value is truthy
-   * (i.e. 1, 'a', true, etc.).
+   * (e.g. 1, 'a', true, etc.).
    * @param dependentId The ID of the dependent argument.
    * @returns A new dependency that checks if the value is truthy.
    */
   public static TRUTHY = (dependentId: string) => {
     // Create the dependency.
-    let dependency = new Dependency('TRUEY', dependentId, (value) => !!value)
+    let dependency = new Dependency('TRUTHY', dependentId, (value) => !!value)
     // Return the encoded dependency.
     return dependency.encode()
   }
@@ -68,11 +68,11 @@ export default class Dependency implements TCommonDependency {
    * @returns A new dependency that checks if the value is truthy.
    */
   private static TRUTHY_DECODED = (dependentId: string) =>
-    new Dependency('TRUEY', dependentId, (value) => !!value)
+    new Dependency('TRUTHY', dependentId, (value) => !!value)
 
   /**
    * Creates a new dependency that checks if the value is falsey
-   * (i.e. null, undefined, 0, false, '', etc.).
+   * (e.g. null, undefined, 0, false, '', etc.).
    * @param dependentId The ID of the dependent argument.
    * @returns A new dependency that checks if the value is falsey.
    */
@@ -162,6 +162,52 @@ export default class Dependency implements TCommonDependency {
     )
 
   /**
+   * Creates a new dependency that checks if the value is a valid force.
+   * @param dependentId The ID of the dependent argument.
+   * @returns A new dependency that checks if the value is a valid force.
+   */
+  public static VALIDATE_FORCE = (dependentId: string) => {
+    // Create the dependency.
+    let dependency = new Dependency(
+      'VALIDATE_FORCE',
+      dependentId,
+      (value) => !!value,
+    )
+    // Return the encoded dependency.
+    return dependency.encode()
+  }
+  /**
+   * Decodes the dependency.
+   * @param dependentId The ID of the dependent argument.
+   * @returns A new dependency that checks if the value is a valid force.
+   */
+  private static VALIDATE_FORCE_DECODED = (dependentId: string) =>
+    new Dependency('VALIDATE_FORCE', dependentId, (value) => !!value)
+
+  /**
+   * Creates a new dependency that checks if the value is a valid node.
+   * @param dependentId The ID of the dependent argument.
+   * @returns A new dependency that checks if the value is a valid node.
+   */
+  public static VALIDATE_NODE = (dependentId: string) => {
+    // Create the dependency.
+    let dependency = new Dependency(
+      'VALIDATE_NODE',
+      dependentId,
+      (value) => !!value,
+    )
+    // Return the encoded dependency.
+    return dependency.encode()
+  }
+  /**
+   * Decodes the dependency.
+   * @param dependentId The ID of the dependent argument.
+   * @returns A new dependency that checks if the value is a valid node.
+   */
+  private static VALIDATE_NODE_DECODED = (dependentId: string) =>
+    new Dependency('VALIDATE_NODE', dependentId, (value) => !!value)
+
+  /**
    * Encodes the dependency.
    * @returns The encoded dependency.
    */
@@ -183,7 +229,7 @@ export default class Dependency implements TCommonDependency {
       )
 
       switch (name) {
-        case 'TRUEY':
+        case 'TRUTHY':
           return Dependency.TRUTHY_DECODED(dependentId)
         case 'FALSEY':
           return Dependency.FALSEY_DECODED(dependentId)
@@ -191,6 +237,10 @@ export default class Dependency implements TCommonDependency {
           return Dependency.EQUALS_DECODED(dependentId, args)
         case 'NOT_EQUALS':
           return Dependency.NOT_EQUALS_DECODED(dependentId, args)
+        case 'VALIDATE_FORCE':
+          return Dependency.VALIDATE_FORCE_DECODED(dependentId)
+        case 'VALIDATE_NODE':
+          return Dependency.VALIDATE_NODE_DECODED(dependentId)
         default:
           throw new Error(`Unexpected name for Dependency Condition: ${name}`)
       }

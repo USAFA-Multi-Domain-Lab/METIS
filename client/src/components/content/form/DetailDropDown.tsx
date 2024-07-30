@@ -31,7 +31,6 @@ export function DetailDropdown<TOption>({
 }: TDetailDropdown_P<TOption>): JSX.Element | null {
   /* -- STATE -- */
   const [expanded, setExpanded] = useState<boolean>(false)
-  const [displayWarning, setDisplayWarning] = useState<boolean>(false)
 
   /* -- COMPUTED -- */
   /**
@@ -154,51 +153,76 @@ export function DetailDropdown<TOption>({
   const infoClassName: string = compute(() =>
     tooltipDescription ? 'DetailInfo' : 'Hidden',
   )
+  /**
+   * Determines if the warning icon should be displayed.
+   */
+  const displayWarning: boolean = compute(() => {
+    if (
+      fieldType === 'required' &&
+      handleInvalidOption.method === 'warning' &&
+      !options.includes(stateValue)
+    ) {
+      return true
+    } else if (
+      fieldType === 'optional' &&
+      handleInvalidOption.method === 'warning' &&
+      stateValue &&
+      !options.includes(stateValue)
+    ) {
+      return true
+    } else {
+      return false
+    }
+  })
+
+  /**
+   * The class name for the warning icon.
+   */
+  const warningClassName: string = compute(() =>
+    displayWarning ? 'Warning' : 'Hidden',
+  )
+  /**
+   * The tooltip description for the warning icon.
+   */
+  const warningTooltipDescription: string = compute(() => {
+    if (handleInvalidOption.method === 'warning') {
+      return handleInvalidOption.message ?? ''
+    } else {
+      return ''
+    }
+  })
 
   // If the list of options changes, then
   // determine if the state value is still
   // a valid option.
   useEffect(() => {
-    if (displayWarning) {
-      setDisplayWarning(false)
+    // If the selected option is not in the list
+    // of options, then handle the invalid option
+    // based on the method provided.
+    if (fieldType === 'required' && !options.includes(stateValue)) {
+      switch (handleInvalidOption.method) {
+        case 'setToDefault':
+          setState(handleInvalidOption.defaultValue)
+          break
+        case 'setToFirst':
+          setState(options[0])
+          break
+      }
+    } else if (
+      fieldType === 'optional' &&
+      stateValue &&
+      !options.includes(stateValue)
+    ) {
+      switch (handleInvalidOption.method) {
+        case 'setToDefault':
+          setState(handleInvalidOption.defaultValue)
+          break
+        case 'setToFirst':
+          setState(options[0])
+          break
+      }
     }
-
-    if (fieldType === 'required') {
-      setState((prev) => {
-        if (!options.includes(prev)) {
-          switch (handleInvalidOption.method) {
-            case 'setToDefault':
-              return handleInvalidOption.defaultValue
-            case 'setToFirst':
-              return options[0]
-            case 'warning':
-              setDisplayWarning(true)
-              return prev
-          }
-        }
-
-        // Otherwise, keep the current state value.
-        return prev
-      })
-    } else {
-      setState((prev) => {
-        if (prev && !options.includes(prev)) {
-          switch (handleInvalidOption.method) {
-            case 'setToDefault':
-              return handleInvalidOption.defaultValue
-            case 'setToFirst':
-              return options[0]
-            case 'warning':
-              setDisplayWarning(true)
-              return prev
-          }
-        }
-
-        // Otherwise, keep the current state value.
-        return prev
-      })
-    }
-  }, [options, handleInvalidOption])
+  }, [options, handleInvalidOption.method])
 
   /* -- RENDER -- */
   if (options.length > 0) {
@@ -211,9 +235,13 @@ export function DetailDropdown<TOption>({
               i
               <Tooltip description={tooltipDescription} />
             </sup>
-            <div className={displayWarning ? 'Warning' : 'Hidden'}>!</div>
+            <div className={warningClassName}>
+              <Tooltip description={warningTooltipDescription} />
+            </div>
           </div>
-          <div className={`TitleColumnTwo ${optionalClassName}`}>optional</div>
+          <div className={'TitleColumnTwo'}>
+            <div className={optionalClassName}>optional</div>
+          </div>
         </div>
         <div className={fieldClassName}>
           <div
@@ -280,49 +308,11 @@ type TDetailDropdownBase_P<TOption> = TDetailBase_P & {
 }
 
 /**
- *
+ * The properties for the Detail Dropdown component.
  */
-export type TRequiredHandleInvalidOption<TOption> =
-  | TRequiredSetToDefault<TOption>
-  | TSetToFirst
-  | TWarning
-/**
- *
- */
-export type TOptionalHandleInvalidOption<TOption> =
-  | TOptionalSetToDefault<TOption>
-  | TSetToFirst
-  | TWarning
-
-/**
- *
- */
-type TRequiredSetToDefault<TOption> = {
-  method: 'setToDefault'
-  defaultValue: NonNullable<TOption>
-}
-
-/**
- *
- */
-type TOptionalSetToDefault<TOption> = {
-  method: 'setToDefault'
-  defaultValue: TOption
-}
-
-/**
- *
- */
-type TSetToFirst = {
-  method: 'setToFirst'
-}
-
-/**
- *
- */
-type TWarning = {
-  method: 'warning'
-}
+type TDetailDropdown_P<TOption> =
+  | TDetailDropdownRequired_P<TOption>
+  | TDetailDropdownOptional_P<TOption | null>
 
 /**
  * The required properties for the Detail Dropdown component.
@@ -341,6 +331,21 @@ type TDetailDropdownRequired_P<TOption> = TDetailRequired_P<TOption> &
      * handleInvalidOption={{
      *  method: 'setToDefault',
      *  defaultValue: new Object()
+     * }}
+     * ```
+     *
+     * @example
+     * ```
+     * handleInvalidOption={{
+     * method: 'setToFirst'
+     * }}
+     * ```
+     *
+     * @example
+     * ```
+     * handleInvalidOption={{
+     * method: 'warning',
+     * message: 'This is a warning message.'
      * }}
      * ```
      */
@@ -366,13 +371,167 @@ type TDetailDropdownOptional_P<TOption> = TDetailOptional_P<TOption> &
      *  defaultValue: new Object()
      * }}
      * ```
+     *
+     * @example
+     * ```
+     * handleInvalidOption={{
+     * method: 'setToFirst'
+     * }}
+     * ```
+     *
+     * @example
+     * ```
+     * handleInvalidOption={{
+     * method: 'warning',
+     * message: 'This is a warning message.'
+     * }}
+     * ```
      */
     handleInvalidOption: TOptionalHandleInvalidOption<TOption>
   }
 
 /**
- * The properties for the Detail Dropdown component.
+ * How to handle the selected option if it's invalid or not in the list.
+ * @methods
+ * - `setToDefault` - Set the selected option to the default value. (If selected, a default value must be provided.)
+ * - `setToFirst` - Set the selected option to the first option in the list.
+ * - `warning` - Display a warning icon.
+ *
+ * @example
+ * ```
+ * handleInvalidOption={{
+ *  method: 'setToDefault',
+ *  defaultValue: new Object()
+ * }}
+ * ```
+ *
+ * @example
+ * ```
+ * handleInvalidOption={{
+ * method: 'setToFirst'
+ * }}
+ * ```
+ *
+ * @example
+ * ```
+ * handleInvalidOption={{
+ * method: 'warning',
+ * message: 'This is a warning message.'
+ * }}
+ * ```
  */
-type TDetailDropdown_P<TOption> =
-  | TDetailDropdownRequired_P<TOption>
-  | TDetailDropdownOptional_P<TOption | null>
+export type TRequiredHandleInvalidOption<TOption> =
+  | TRequiredSetToDefault<TOption>
+  | TSetToFirst
+  | TWarning
+
+/**
+ * How to handle the selected option if it's invalid or not in the list.
+ * @methods
+ * - `setToDefault` - Set the selected option to the default value. (If selected, a default value must be provided.)
+ * - `setToFirst` - Set the selected option to the first option in the list.
+ * - `warning` - Display a warning icon.
+ *
+ * @example
+ * ```
+ * handleInvalidOption={{
+ *  method: 'setToDefault',
+ *  defaultValue: new Object()
+ * }}
+ * ```
+ *
+ * @example
+ * ```
+ * handleInvalidOption={{
+ * method: 'setToFirst'
+ * }}
+ * ```
+ *
+ * @example
+ * ```
+ * handleInvalidOption={{
+ * method: 'warning',
+ * message: 'This is a warning message.'
+ * }}
+ * ```
+ */
+export type TOptionalHandleInvalidOption<TOption> =
+  | TOptionalSetToDefault<TOption>
+  | TSetToFirst
+  | TWarning
+
+/**
+ * The method that handles an invalid option by setting the selected option to the default value provided.
+ * @note If the fieldType is 'required', then the default value provided cannot be null or undefined.
+ * @note If the fieldType is 'optional', then the default value provided can be null or undefined.
+ */
+type TRequiredSetToDefault<TOption> = {
+  /**
+   * The method to handle the invalid option.
+   * @options
+   * - `setToDefault` - Set the selected option to the default value. (If selected, a default value must be provided.)
+   * - `setToFirst` - Set the selected option to the first option in the list.
+   * - `warning` - Display a warning icon.
+   */
+  method: 'setToDefault'
+  /**
+   * The default value to set the selected option to.
+   * @note If the fieldType is 'required', then the default value provided cannot be null or undefined.
+   * @note If the fieldType is 'optional', then the default value provided can be null or undefined.
+   */
+  defaultValue: NonNullable<TOption>
+}
+
+/**
+ * The method that handles an invalid option by setting the selected option to the default value provided.
+ * @note If the fieldType is 'required', then the default value provided cannot be null or undefined.
+ * @note If the fieldType is 'optional', then the default value provided can be null or undefined.
+ */
+type TOptionalSetToDefault<TOption> = {
+  /**
+   * The method to handle the invalid option.
+   * @options
+   * - `setToDefault` - Set the selected option to the default value. (If selected, a default value must be provided.)
+   * - `setToFirst` - Set the selected option to the first option in the list.
+   * - `warning` - Display a warning icon.
+   */
+  method: 'setToDefault'
+  /**
+   * The default value to set the selected option to.
+   * @note If the fieldType is 'required', then the default value provided cannot be null or undefined.
+   * @note If the fieldType is 'optional', then the default value provided can be null or undefined.
+   */
+  defaultValue: TOption
+}
+
+/**
+ * The method that handles an invalid option by setting the selected option to the first option in the list.
+ */
+type TSetToFirst = {
+  /**
+   * The method to handle the invalid option.
+   * @options
+   * - `setToDefault` - Set the selected option to the default value. (If selected, a default value must be provided.)
+   * - `setToFirst` - Set the selected option to the first option in the list.
+   * - `warning` - Display a warning icon.
+   */
+  method: 'setToFirst'
+}
+
+/**
+ * The method that handles an invalid option by displaying a warning icon with a message.
+ */
+type TWarning = {
+  /**
+   * The method to handle the invalid option.
+   * @options
+   * - `setToDefault` - Set the selected option to the default value. (If selected, a default value must be provided.)
+   * - `setToFirst` - Set the selected option to the first option in the list.
+   * - `warning` - Display a warning icon.
+   */
+  method: 'warning'
+  /**
+   * The message that displays when hovering over the warning icon.
+   */
+  message?: string
+}

@@ -41,6 +41,16 @@ export default class NodeArg {
       required: arg.required,
     }
   }
+
+  /**
+   * The key used in the effect's arguments to reference the node's ID.
+   */
+  public static readonly NODE_ID_KEY: TNodeArg['_id'] = 'nodeId'
+
+  /**
+   * The key used in the effect's arguments to reference the node's name.
+   */
+  public static readonly NODE_NAME_KEY = 'nodeName'
 }
 
 /* ------------------------------ NODE ARGUMENT TYPES ------------------------------ */
@@ -54,19 +64,16 @@ export type TNodeArg = TBaseArg & {
    * @note This will render two dropdowns:
    * 1. A dropdown for forces
    * 2. A dropdown for nodes (***populated based on the force selected***)
-   * @note The key stored in the `context.effect.args` for the force argument is `forceId` and the value will be the selected force ID.
-   * @note The key stored in the `context.effect.args` for the node argument is `nodeId` and the value will be the selected node ID.
    */
   type: 'node'
   /**
    * The ID of the argument.
-   * @note This is used to store the selected node ID in the `context.effect.args`.
    */
-  _id: 'nodeId'
+  _id: string
   /**
    * The argument's name. This is displayed to the user.
    */
-  name: 'Node'
+  name: string
   /**
    * Determines whether the argument is required or not.
    */
@@ -82,18 +89,16 @@ export type TNodeArgJson = TBaseArgJson & {
    * @note This will render two dropdowns:
    * 1. A dropdown for forces
    * 2. A dropdown for nodes (***populated based on the force selected***)
-   * @note The key stored in the `context.effect.args` for the force argument is `forceId` and the value will be the selected force ID.
-   * @note The key stored in the `context.effect.args` for the node argument is `nodeId` and the value will be the selected node ID.
    */
   type: 'node'
   /**
    * The ID of the argument.
    */
-  _id: 'nodeId'
+  _id: string
   /**
    * The argument's name. This is displayed to the user.
    */
-  name: 'Node'
+  name: string
   /**
    * Determines whether the argument is required or not.
    */

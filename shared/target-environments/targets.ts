@@ -3,6 +3,8 @@ import TargetEnvironment, { TCommonTargetEnv, TTargetEnv } from '.'
 import { TTargetEnvContext } from '../../server/target-environments/context-provider'
 import { TCommonMissionTypes } from '../../shared/missions'
 import Arg, { TTargetArg, TTargetArgJson } from './args'
+import ForceArg from './args/force-arg'
+import NodeArg from './args/node-arg'
 import Dependency from './dependencies'
 
 /**
@@ -75,6 +77,7 @@ export default abstract class Target<
   public allDependenciesMet = (
     dependencies: Dependency[] = [],
     effectArgs: AnyObject,
+    mission?: T['mission'],
   ): boolean => {
     // If the argument has no dependencies, then the argument is always displayed.
     if (!dependencies || dependencies.length === 0) {
@@ -97,10 +100,46 @@ export default abstract class Target<
       // If the dependency argument is found then check if
       // the dependency is met.
       if (dependencyArg) {
-        // Check if the dependency is met.
-        let dependencyMet: boolean = dependency.condition(
-          effectArgs[dependency.dependentId],
-        )
+        // Initialize a variable to determine if the dependency
+        // is met.
+        let dependencyMet: boolean
+
+        // If the dependency is a force dependency then check
+        // if the force exists and if the condition is met.
+        if (dependency.name === 'VALIDATE_FORCE' && mission) {
+          // Ensure the force argument exists within the effect arguments.
+          let forceInArgs: AnyObject | undefined =
+            effectArgs[dependency.dependentId]
+          // Ensure the force ID exists within the force argument.
+          let forceId: string | undefined = forceInArgs
+            ? forceInArgs[ForceArg.FORCE_ID_KEY]
+            : undefined
+          // Get the force from the mission.
+          let force = forceId ? mission.getForce(forceId) : undefined
+          // Check if the condition is met.
+          dependencyMet = dependency.condition(force)
+        }
+        // If the dependency is a node dependency then check
+        // if the node exists and if the condition is met.
+        else if (dependency.name === 'VALIDATE_NODE' && mission) {
+          // Ensure the node argument exists within the effect arguments.
+          let nodeInArgs: AnyObject | undefined =
+            effectArgs[dependency.dependentId]
+          // Ensure the node ID exists within the node argument.
+          let nodeId: string | undefined = nodeInArgs
+            ? nodeInArgs[NodeArg.NODE_ID_KEY]
+            : undefined
+          // Get the node from the mission.
+          let node = nodeId ? mission.getNode(nodeId) : undefined
+          // Check if the condition is met.
+          dependencyMet = dependency.condition(node)
+        }
+        // Otherwise, check if the condition is met.
+        else {
+          dependencyMet = dependency.condition(
+            effectArgs[dependency.dependentId],
+          )
+        }
 
         // If the dependency is met then push true to the
         // dependencies met array, otherwise push false.
@@ -146,21 +185,15 @@ export default abstract class Target<
     description: '',
     script: async (context) => {
       // Extract the arguments from the effect.
-      let {
-        forceId,
-        nodeId,
-        blockNode,
-        successChance,
-        processTime,
-        resourceCost,
-      } = context.effect.args
+      let { force, node, blockNode, successChance, processTime, resourceCost } =
+        context.effect.args
       // Set the error message.
       const errorMessage = `Bad request. The arguments sent with the effect ("${context.effect.name}") are invalid. Please check the arguments within the effect.`
 
       // Check if the arguments are valid.
       if (
-        typeof forceId !== 'string' ||
-        typeof nodeId !== 'string' ||
+        typeof force.forceId !== 'string' ||
+        typeof node.nodeId !== 'string' ||
         typeof blockNode !== 'boolean'
       ) {
         throw new Error(errorMessage)
@@ -168,12 +201,16 @@ export default abstract class Target<
 
       // Update the block status of the node.
       blockNode
-        ? context.blockNode(nodeId, forceId)
-        : context.unblockNode(nodeId, forceId)
+        ? context.blockNode(node.nodeId, force.forceId)
+        : context.unblockNode(node.nodeId, force.forceId)
 
       // If the success chance is a number, then modify the success chance.
       if (successChance && typeof successChance === 'number') {
-        context.modifySuccessChance(nodeId, forceId, successChance / 100)
+        context.modifySuccessChance(
+          node.nodeId,
+          force.forceId,
+          successChance / 100,
+        )
       }
       // Otherwise, throw an error.
       else if (successChance && typeof successChance !== 'number') {
@@ -182,7 +219,11 @@ export default abstract class Target<
 
       // If the process time is a number, then modify the process time.
       if (processTime && typeof processTime === 'number') {
-        context.modifyProcessTime(nodeId, forceId, processTime * 1000)
+        context.modifyProcessTime(
+          node.nodeId,
+          force.forceId,
+          processTime * 1000,
+        )
       }
       // Otherwise, throw an error.
       else if (processTime && typeof processTime !== 'number') {
@@ -191,7 +232,7 @@ export default abstract class Target<
 
       // If the resource cost is a number, then modify the resource cost.
       if (resourceCost && typeof resourceCost === 'number') {
-        context.modifyResourceCost(nodeId, forceId, resourceCost)
+        context.modifyResourceCost(node.nodeId, force.forceId, resourceCost)
       }
       // Otherwise, throw an error.
       else if (resourceCost && typeof resourceCost !== 'number') {
@@ -201,7 +242,7 @@ export default abstract class Target<
     args: [
       {
         type: 'node',
-        _id: 'nodeId',
+        _id: 'node',
         name: 'Node',
         required: true,
         groupingId: 'node',
@@ -210,10 +251,9 @@ export default abstract class Target<
         type: 'boolean',
         _id: 'blockNode',
         name: 'Block Node',
-        required: true,
+        required: false,
         groupingId: 'node',
-        default: true,
-        dependencies: [Dependency.TRUTHY('nodeId')],
+        dependencies: [Dependency.VALIDATE_NODE('node')],
       },
       {
         type: 'number',
@@ -224,7 +264,7 @@ export default abstract class Target<
         max: 100,
         unit: '%',
         groupingId: 'node',
-        dependencies: [Dependency.TRUTHY('nodeId')],
+        dependencies: [Dependency.VALIDATE_NODE('node')],
         tooltipDescription:
           `This allows you to positively or negatively affect the chance of success for all actions within the node. A positive value increases the chance of success, while a negative value decreases the chance of success.\n` +
           `\t\n` +
@@ -241,7 +281,7 @@ export default abstract class Target<
         max: 3600,
         unit: 's',
         groupingId: 'node',
-        dependencies: [Dependency.TRUTHY('nodeId')],
+        dependencies: [Dependency.VALIDATE_NODE('node')],
         tooltipDescription:
           `This allows you to positively or negatively affect the process time for all actions within the node. A positive value increases the process time, while a negative value decreases the process time.\n` +
           `\t\n` +
@@ -255,7 +295,7 @@ export default abstract class Target<
         name: 'Resource Cost',
         required: false,
         groupingId: 'node',
-        dependencies: [Dependency.TRUTHY('nodeId')],
+        dependencies: [Dependency.VALIDATE_NODE('node')],
         tooltipDescription:
           `This allows you to positively or negatively affect the resource cost for all actions within the node. A positive value increases the resource cost, while a negative value decreases the resource cost.\n` +
           `\t\n` +
@@ -275,15 +315,15 @@ export default abstract class Target<
     name: 'Output Panel',
     description: '',
     script: async (context) => {
-      let { forceId, message } = context.effect.args
+      let { force, message } = context.effect.args
 
       // Output the message to the force.
-      context.sendOutputMessage(forceId, message)
+      context.sendOutputMessage(force.forceId, message)
     },
     args: [
       {
         type: 'force',
-        _id: 'forceId',
+        _id: 'force',
         name: 'Force',
         required: true,
         groupingId: 'output',
@@ -292,10 +332,13 @@ export default abstract class Target<
         type: 'large-string',
         _id: 'message',
         name: 'Message',
-        required: true,
-        default: 'Enter your message here.',
+        required: false,
         groupingId: 'output',
-        dependencies: [Dependency.TRUTHY('forceId')],
+        dependencies: [Dependency.VALIDATE_FORCE('force')],
+        tooltipDescription:
+          `This is the message that will be displayed in the output panel for the force selected above.\n` +
+          `\t\n` +
+          `**Note: If this field is left blank, then nothing will be displayed in the output panel.**`,
       },
     ],
   }

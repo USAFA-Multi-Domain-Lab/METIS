@@ -1,12 +1,10 @@
 @import 'src/assets/styles/config.scss';
 
 .ArgEntry {
-  .Detail {
-    min-width: 0.83em;
-  }
+  margin: 20px 0 0;
 
-  &.Boolean .Detail.DetailToggle {
-    border: none;
-    padding: 0.6875rem 0 0;
+  .Title {
+    margin: 10px 8% 0;
+    font-size: 0.82em;
   }
 }

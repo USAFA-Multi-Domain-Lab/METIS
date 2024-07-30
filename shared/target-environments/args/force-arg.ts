@@ -43,14 +43,14 @@ export default class ForceArg {
   }
 
   /**
-   * The ID of the force argument.
+   * The key used in the effect's arguments to reference the force's ID.
    */
-  public static readonly ID: TForceArg['_id'] = 'forceId'
+  public static readonly FORCE_ID_KEY: TForceArg['_id'] = 'forceId'
 
   /**
-   * The name of the force argument.
+   * The key used in the effect's arguments to reference the force's name.
    */
-  public static readonly NAME: TForceArg['name'] = 'Force'
+  public static readonly FORCE_NAME_KEY = 'forceName'
 }
 
 /* ------------------------------ FORCE ARGUMENT TYPES ------------------------------ */
@@ -68,11 +68,11 @@ export type TForceArg = TBaseArg & {
   /**
    * The ID of the argument.
    */
-  _id: 'forceId'
+  _id: string
   /**
    * The argument's name. This is displayed to the user.
    */
-  name: 'Force'
+  name: string
   /**
    * Determines whether the argument is required or not.
    */
@@ -92,11 +92,11 @@ export type TForceArgJson = TBaseArgJson & {
   /**
    * The ID of the argument.
    */
-  _id: 'forceId'
+  _id: string
   /**
    * The argument's name. This is displayed to the user.
    */
-  name: 'Force'
+  name: string
   /**
    * Determines whether the argument is required or not.
    */

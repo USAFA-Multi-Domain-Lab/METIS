@@ -1,0 +1,11 @@
+@import 'src/assets/styles/config.scss';
+
+.ArgGrouping {
+  margin: 10px 8%;
+  padding: 0 0 30px;
+  border: 2px solid $color-main;
+
+  &:first-child {
+    margin-top: 0;
+  }
+}

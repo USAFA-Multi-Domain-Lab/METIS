@@ -8,6 +8,8 @@ import SanitizedHTML from 'metis/server/database/schema-types/html'
 import ServerTargetEnvironment from 'metis/server/target-environments'
 import ServerTarget from 'metis/server/target-environments/targets'
 import { TTargetArg } from 'metis/target-environments/args'
+import ForceArg from 'metis/target-environments/args/force-arg'
+import NodeArg from 'metis/target-environments/args/node-arg'
 import { AnyObject } from 'metis/toolbox/objects'
 import { HEX_COLOR_REGEX } from 'metis/toolbox/strings'
 import mongoose, { Schema } from 'mongoose'
@@ -334,6 +336,52 @@ const validate_mission_forces_nodes_actions_effects = (
         if (isValid === false) {
           throw new Error(
             `Error in mission:\nThe argument's ("${key}") value ("${value}") within the effect ("${effect.name}") is invalid.`,
+          )
+        }
+      }
+
+      // Ensure the force argument has the correct type.
+      if (arg && arg.type === 'force') {
+        if (typeof value !== 'object') {
+          throw new Error(
+            `Error in mission:\nThe argument ("${key}") within the effect ("${effect.name}") is of the wrong type. Expected type: "object."`,
+          )
+        }
+
+        // Ensure the force argument has the correct keys.
+        if (
+          !(ForceArg.FORCE_ID_KEY in value) ||
+          !(ForceArg.FORCE_NAME_KEY in value)
+        ) {
+          throw new Error(
+            `Error in mission:\nThe argument's value, within the effect "${
+              effect.name
+            }", is missing required properties.\nArgument sent: ${key}: ${JSON.stringify(
+              value,
+            )}`,
+          )
+        }
+      }
+
+      // Ensure the node argument has the correct type.
+      if (arg && arg.type === 'node') {
+        if (typeof value !== 'object') {
+          throw new Error(
+            `Error in mission:\nThe argument ("${key}") within the effect ("${effect.name}") is of the wrong type. Expected type: "object."`,
+          )
+        }
+
+        // Ensure the node argument has the correct keys.
+        if (
+          !(NodeArg.NODE_ID_KEY in value) ||
+          !(NodeArg.NODE_NAME_KEY in value)
+        ) {
+          throw new Error(
+            `Error in mission:\nThe argument's value, within the effect "${
+              effect.name
+            }", is missing required properties.\nArgument sent: { ${key}: ${JSON.stringify(
+              value,
+            )} }`,
           )
         }
       }

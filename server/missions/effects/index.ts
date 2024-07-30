@@ -5,6 +5,9 @@ import Effect, {
 import ServerTargetEnvironment from 'metis/server/target-environments'
 import { TTargetEnvContextEffect } from 'metis/server/target-environments/context-provider'
 import ServerTarget from 'metis/server/target-environments/targets'
+import ForceArg from 'metis/target-environments/args/force-arg'
+import NodeArg from 'metis/target-environments/args/node-arg'
+import { AnyObject } from 'metis/toolbox/objects'
 import { TServerMissionTypes } from '..'
 import ServerMissionAction from '../actions'
 
@@ -56,6 +59,29 @@ export default class ServerEffect extends Effect<TServerMissionTypes> {
   }
 
   /**
+   * Extracts the necessary properties from the effect's arguments to be used as a reference
+   * in a target environment.
+   * @param args The arguments to extract the necessary properties from.
+   * @returns The modified arguments.
+   */
+  public argsToTargetEnvContext(args: AnyObject): AnyObject {
+    // Copy the arguments.
+    let argsCopy = { ...args }
+
+    Object.entries(argsCopy).forEach(([key, value]) => {
+      if (value[ForceArg.FORCE_NAME_KEY] !== undefined) {
+        delete argsCopy[key][ForceArg.FORCE_NAME_KEY]
+      }
+      if (value[NodeArg.NODE_NAME_KEY] !== undefined) {
+        delete argsCopy[key][NodeArg.NODE_NAME_KEY]
+      }
+    })
+
+    // Return the modified arguments.
+    return argsCopy
+  }
+
+  /**
    * Extracts the necessary properties from the effect to be used as a reference
    * in a target environment.
    * @returns The effect's necessary properties.
@@ -64,7 +90,7 @@ export default class ServerEffect extends Effect<TServerMissionTypes> {
     return {
       _id: this._id,
       name: this.name,
-      args: this.args,
+      args: this.argsToTargetEnvContext(this.args),
     }
   }
 }

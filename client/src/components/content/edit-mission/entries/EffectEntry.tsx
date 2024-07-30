@@ -7,7 +7,7 @@ import { DetailLargeString } from '../../form/DetailLargeString'
 import { DetailLocked } from '../../form/DetailLocked'
 import { DetailString } from '../../form/DetailString'
 import { ButtonText } from '../../user-controls/ButtonText'
-import Args from '../target-effects/Args'
+import ArgEntry from '../target-effects/ArgEntry'
 import './index.scss'
 import EntryNavigation from './navigation/EntryNavigation'
 
@@ -84,7 +84,7 @@ export default function EffectEntry({
             label='Target'
             stateValue={target?.name ?? 'No target selected.'}
           />
-          <Args
+          <ArgEntry
             effect={effect}
             target={target}
             effectArgs={effectArgs}
