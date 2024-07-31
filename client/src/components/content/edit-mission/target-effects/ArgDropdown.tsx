@@ -169,12 +169,9 @@ export default function ArgDropdown({
         isExpanded={false}
         tooltipDescription={arg.tooltipDescription}
         renderDisplayName={(option) => option.name}
-        // todo: re-evaluate default values for dropdown target-argument types
-        // defaultValue={arg.default}
         handleInvalidOption={{
-          method: 'warning',
-          message:
-            'The option selected no longer exists. Please select a new option.',
+          method: 'setToDefault',
+          defaultValue: arg.default,
         }}
         key={`arg-${arg._id}_type-${arg.type}_required`}
       />
@@ -191,7 +188,8 @@ export default function ArgDropdown({
         tooltipDescription={arg.tooltipDescription}
         renderDisplayName={(option) => option.name}
         handleInvalidOption={{
-          method: 'warning',
+          method: 'setToDefault',
+          defaultValue: null,
         }}
         key={`arg-${arg._id}_type-${arg.type}_optional`}
       />

@@ -597,6 +597,7 @@ export default function MissionPage({
       return (
         <MissionEntry
           mission={selection}
+          handleDeleteEffectRequest={handleDeleteEffectRequest}
           handleChange={handleChange}
           key={selection._id}
         />

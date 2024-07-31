@@ -48,6 +48,7 @@ export default function EffectEntry({
   }, [name, description, effectArgs])
 
   /* -- RENDER -- */
+
   return (
     <div className='Entry EffectEntry SidePanel'>
       <div className='BorderBox'>

@@ -10,6 +10,7 @@ import './ArgGrouping.scss'
  */
 export default function ArgGrouping({
   effect,
+  effect: { mission },
   target,
   grouping,
   effectArgs,
@@ -31,7 +32,10 @@ export default function ArgGrouping({
       // If all of the argument's dependencies are met
       // then at least one argument in the grouping
       // is displayed.
-      if (target && target.allDependenciesMet(arg.dependencies, effectArgs)) {
+      if (
+        target &&
+        target.allDependenciesMet(arg.dependencies, effectArgs, mission)
+      ) {
         oneGroupingIsDisplayed = true
         break
       }

@@ -178,3 +178,4 @@ export type TButtonSvgIcon =
   | 'user'
   | 'shell'
   | 'question'
+  | 'warning-transparent'

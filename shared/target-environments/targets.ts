@@ -252,7 +252,15 @@ export default abstract class Target<
         _id: 'blockNode',
         name: 'Block Node',
         required: false,
-        groupingId: 'node',
+        groupingId: 'block-node',
+        dependencies: [Dependency.VALIDATE_NODE('node')],
+      },
+      {
+        type: 'boolean',
+        _id: 'modifyActions',
+        name: 'Modify Actions',
+        required: false,
+        groupingId: 'actions',
         dependencies: [Dependency.VALIDATE_NODE('node')],
       },
       {
@@ -263,8 +271,11 @@ export default abstract class Target<
         min: -100,
         max: 100,
         unit: '%',
-        groupingId: 'node',
-        dependencies: [Dependency.VALIDATE_NODE('node')],
+        groupingId: 'actions',
+        dependencies: [
+          Dependency.TRUTHY('modifyActions'),
+          Dependency.VALIDATE_NODE('node'),
+        ],
         tooltipDescription:
           `This allows you to positively or negatively affect the chance of success for all actions within the node. A positive value increases the chance of success, while a negative value decreases the chance of success.\n` +
           `\t\n` +
@@ -280,8 +291,11 @@ export default abstract class Target<
         min: -3600,
         max: 3600,
         unit: 's',
-        groupingId: 'node',
-        dependencies: [Dependency.VALIDATE_NODE('node')],
+        groupingId: 'actions',
+        dependencies: [
+          Dependency.TRUTHY('modifyActions'),
+          Dependency.VALIDATE_NODE('node'),
+        ],
         tooltipDescription:
           `This allows you to positively or negatively affect the process time for all actions within the node. A positive value increases the process time, while a negative value decreases the process time.\n` +
           `\t\n` +
@@ -294,8 +308,11 @@ export default abstract class Target<
         _id: 'resourceCost',
         name: 'Resource Cost',
         required: false,
-        groupingId: 'node',
-        dependencies: [Dependency.VALIDATE_NODE('node')],
+        groupingId: 'actions',
+        dependencies: [
+          Dependency.TRUTHY('modifyActions'),
+          Dependency.VALIDATE_NODE('node'),
+        ],
         tooltipDescription:
           `This allows you to positively or negatively affect the resource cost for all actions within the node. A positive value increases the resource cost, while a negative value decreases the resource cost.\n` +
           `\t\n` +

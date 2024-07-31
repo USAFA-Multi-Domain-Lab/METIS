@@ -16,9 +16,14 @@
     margin: 0 0.2em;
     font-size: $button-svg-small-size;
 
-    &:hover {
+    &:not(.warning-transparent):hover {
       filter: invert(68%) sepia(94%) saturate(322%) hue-rotate(117deg)
         brightness(200%) contrast(98%);
+    }
+
+    &.warning-transparent:hover {
+      background-image: url('../../../assets/images/icons/warning-filled.svg') !important;
+      transition: background-image 0.5s;
     }
   }
 
