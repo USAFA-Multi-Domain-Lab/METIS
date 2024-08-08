@@ -149,11 +149,6 @@ export default class UserPermission implements TUserPermission {
       'Write Missions',
       'Allows the user currently logged in to create, update, and delete missions in the database.',
     ),
-    environments_read: new UserPermission(
-      'environments_read',
-      'Read Target Environments',
-      'Allows the user currently logged in to retrieve target environments from the registry.',
-    ),
     users_read: new UserPermission(
       'users_read',
       'Read Users',
@@ -230,7 +225,6 @@ export type TUserPermission = {
 const userPermissionNames = [
   'Read Missions',
   'Write Missions',
-  'Read Target Environments',
   'Read Users',
   'Write Users',
   'Read Student Users',
@@ -247,7 +241,6 @@ export type TPermissionName = (typeof userPermissionNames)[number]
 const userPermissionIds = [
   'missions_read',
   'missions_write',
-  'environments_read',
   'users_read',
   'users_write',
   'users_read_students',

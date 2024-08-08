@@ -30,7 +30,7 @@ export default function Arg({
    */
   const allDependenciesMet: boolean = compute(
     () =>
-      target?.allDependenciesMet(arg.dependencies, effectArgs, mission) ??
+      target?.allDependenciesMet(effectArgs, arg.dependencies, mission) ??
       false,
   )
 
@@ -61,6 +61,7 @@ export default function Arg({
     return (
       <div className={`Arg Dropdown`}>
         <ArgDropdown
+          effect={effect}
           target={target}
           arg={arg}
           initialize={initializeArg}

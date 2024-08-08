@@ -18,6 +18,7 @@ export default function SessionConfig({
   onSave,
   onCancel,
 }: TSessionConfig_P): JSX.Element | null {
+  /* -- STATE -- */
   const [accessibility, setAccessibility] = useState<TSessionAccessibility>(
     sessionConfig.accessibility,
   )
@@ -29,6 +30,9 @@ export default function SessionConfig({
     sessionConfig.effectsEnabled,
   )
 
+  /* -- EFFECTS -- */
+
+  // componentDidUpdate
   useEffect(() => {
     sessionConfig.accessibility = accessibility
     sessionConfig.autoAssign = autoAssign
@@ -36,6 +40,8 @@ export default function SessionConfig({
     sessionConfig.effectsEnabled = effectsEnabled
     onChange()
   }, [accessibility, autoAssign, infiniteResources, effectsEnabled])
+
+  /* -- RENDER -- */
 
   return (
     <div className='SessionConfig'>

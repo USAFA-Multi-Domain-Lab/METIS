@@ -91,7 +91,7 @@ export default function SessionPage({
 
     // If the node is blocked, notify the user.
     if (node.blocked) {
-      notify(`"${node.name}" cannot be accessed.`)
+      notify(`"${node.name}" has been blocked and cannot be accessed.`)
       return
     }
 

@@ -1,10 +1,11 @@
 import { useState } from 'react'
 import { useGlobalContext } from 'src/context'
-import ClientMission from 'src/missions'
+import ClientMission, { TClientMissionInvalidObject } from 'src/missions'
 import { ClientEffect } from 'src/missions/effects'
 import { compute } from 'src/toolbox'
 import { useMountHandler, usePostInitEffect } from 'src/toolbox/hooks'
 import { SingleTypeObject } from '../../../../../../shared/toolbox/objects'
+import Tooltip from '../../communication/Tooltip'
 import { DetailLargeString } from '../../form/DetailLargeString'
 import { DetailNumber } from '../../form/DetailNumber'
 import { DetailString } from '../../form/DetailString'
@@ -20,6 +21,7 @@ import EntryNavigation from './navigation/EntryNavigation'
  */
 export default function MissionEntry({
   mission,
+  pageMounted,
   handleDeleteEffectRequest,
   handleChange,
 }: TMissionEntry_P): JSX.Element | null {
@@ -34,28 +36,26 @@ export default function MissionEntry({
   const [initialResources, setInitialResources] = useState<number>(
     mission.initialResources,
   )
-  const [invalidEffects] = useState<ClientEffect[]>([])
+  const [invalidObjects, setInvalidObjects] = useState<
+    TClientMissionInvalidObject[]
+  >(mission.invalidObjects)
 
   /* -- EFFECTS -- */
 
   // componentDidMount
-  const [mountHandled] = useMountHandler((done) => {
-    mission.forces.forEach((force) => {
-      force.nodes.forEach((node) => {
-        node.actions.forEach((action) => {
-          action.effects.forEach((effect) => {
-            // Check if the effect is invalid.
-            const isInvalid = effect.validate(targetEnvironments) === false
-            // If the effect is invalid then add it to the list of invalid effects.
-            if (isInvalid) invalidEffects.push(effect)
-          })
+  const [mountHandled] = useMountHandler(
+    async (done) => {
+      if (pageMounted) {
+        await mission.validateObjects({
+          key: 'effects',
+          targetEnvironments,
         })
-      })
-    })
-
-    forceUpdate()
-    done()
-  })
+        setInvalidObjects(mission.invalidObjects)
+      }
+      done()
+    },
+    [pageMounted],
+  )
 
   // Sync the component state with the mission name.
   usePostInitEffect(() => {
@@ -87,37 +87,36 @@ export default function MissionEntry({
   /**
    * Renders JSX for the effect list item.
    */
-  const renderEffectListItem = (effect: ClientEffect) => {
+  const renderObjectListItem = (object: TClientMissionInvalidObject) => {
     /* -- COMPUTED -- */
 
     /**
-     * The buttons for the effect list.
+     * The buttons for the object list.
      */
     const buttons = compute(() => {
       // Create a default list of buttons.
       let buttons: TValidPanelButton[] = []
+      // Create a list of mini actions that are available.
+      let availableMiniActions: SingleTypeObject<TValidPanelButton> = {}
 
-      // If the action is available then add the edit and remove buttons.
-      let availableMiniActions: SingleTypeObject<TValidPanelButton> = {
-        warning: {
-          icon: 'warning-transparent',
-          key: 'warning',
-          onClick: () => {},
-          cursor: 'help',
-          tooltipDescription: effect.invalidMessage,
-        },
-        edit: {
-          icon: 'edit',
-          key: 'edit',
-          onClick: () => mission.select(effect),
-          tooltipDescription: 'Edit the effect.',
-        },
-        remove: {
-          icon: 'remove',
-          key: 'remove',
-          onClick: async () => await handleDeleteEffectRequest(effect),
-          tooltipDescription: 'Remove effect.',
-        },
+      // If the object is an effect, then create mini actions for it.
+      if (object instanceof ClientEffect) {
+        // If the action is available then add the edit and remove buttons.
+        availableMiniActions = {
+          warning: {
+            icon: 'warning-transparent',
+            key: 'warning',
+            onClick: () => {},
+            cursor: 'help',
+            tooltipDescription: object.invalidMessage,
+          },
+          remove: {
+            icon: 'remove',
+            key: 'remove',
+            onClick: async () => await handleDeleteEffectRequest(object),
+            tooltipDescription: 'Delete effect.',
+          },
+        }
       }
 
       // Add the buttons to the list.
@@ -128,8 +127,14 @@ export default function MissionEntry({
     })
 
     return (
-      <div className='Row' key={`effect-row-${effect._id}`}>
-        <div className='RowContent'>{effect.name}</div>
+      <div className='Row' key={`object-row-${object._id}`}>
+        <div
+          className='RowContent Select'
+          onClick={() => mission.select(object)}
+        >
+          {object.name}
+          <Tooltip description='Click to resolve.' />
+        </div>
         <ButtonSvgPanel buttons={buttons} size={'small'} />
       </div>
     )
@@ -174,23 +179,25 @@ export default function MissionEntry({
               integersOnly={true}
               key={`${mission._id}_initialResources`}
             />
-            <List<ClientEffect>
-              items={invalidEffects}
-              renderItemDisplay={(effect) => renderEffectListItem(effect)}
-              headingText={'Invalid Effects'}
-              sortByMethods={[ESortByMethod.Name]}
-              nameProperty={'name'}
-              alwaysUseBlanks={false}
-              searchableProperties={['name']}
-              noItemsDisplay={null}
-              ajaxStatus={'Loaded'}
-              applyItemStyling={() => {
-                return {}
-              }}
-              listStyling={{ borderBottom: '2px solid #ffffff' }}
-              itemsPerPage={null}
-              listSpecificItemClassName='AltDesign2'
-            />
+            {invalidObjects.length > 0 ? (
+              <List<TClientMissionInvalidObject>
+                items={invalidObjects}
+                renderItemDisplay={(object) => renderObjectListItem(object)}
+                headingText={'Warnings'}
+                sortByMethods={[ESortByMethod.Name]}
+                nameProperty={'name'}
+                alwaysUseBlanks={false}
+                searchableProperties={['name']}
+                noItemsDisplay={null}
+                ajaxStatus={'Loaded'}
+                applyItemStyling={() => {
+                  return {}
+                }}
+                listStyling={{ borderBottom: '2px solid #ffffff' }}
+                itemsPerPage={null}
+                listSpecificItemClassName='AltDesign2'
+              />
+            ) : null}
           </div>
         </div>
       </div>
@@ -202,11 +209,18 @@ export default function MissionEntry({
 
 /* ---------------------------- TYPES FOR MISSION ENTRY ---------------------------- */
 
-export type TMissionEntry_P = {
+/**
+ * The props for the `MissionEntry` component.
+ */
+type TMissionEntry_P = {
   /**
    * The mission to be edited.
    */
   mission: ClientMission
+  /**
+   * Whether the page has been mounted.
+   */
+  pageMounted: boolean
   /**
    * Handles the request to delete an effect.
    */

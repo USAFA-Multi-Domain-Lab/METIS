@@ -182,7 +182,11 @@ export default function ActionExecModal({
   // Render the JSX for the buttons.
   const buttonsJsx = executionReady ? (
     <div className='Buttons'>
-      <ButtonText text='EXECUTE ACTION' disabled={blocked} onClick={execute} />
+      <ButtonText
+        text='EXECUTE ACTION'
+        disabled={blocked ? 'full' : 'none'}
+        onClick={execute}
+      />
     </div>
   ) : null
 

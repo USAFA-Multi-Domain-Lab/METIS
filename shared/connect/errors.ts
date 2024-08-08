@@ -139,6 +139,10 @@ export class ServerEmittedError extends WSEmittedError {
    */
   public static readonly CODE_ACTION_INSUFFICIENT_RESOURCES: number = 20201
   /**
+   * Code for an effect that failed to be applied to its target.
+   */
+  public static readonly CODE_EFFECT_FAILED: number = 20300
+  /**
    * Code for a client request failing due to a server-side general error.
    */
   public static readonly CODE_SERVER_ERROR: number = 30000
@@ -164,6 +168,8 @@ export class ServerEmittedError extends WSEmittedError {
     [ServerEmittedError.CODE_ACTION_NOT_FOUND]: 'Action not found.',
     [ServerEmittedError.CODE_ACTION_INSUFFICIENT_RESOURCES]:
       'Insufficient resources available to execute action.',
+    [ServerEmittedError.CODE_EFFECT_FAILED]:
+      'An effect attempted to apply itself to its target but it failed.',
     [ServerEmittedError.CODE_SERVER_ERROR]: 'Server error.',
   }
 

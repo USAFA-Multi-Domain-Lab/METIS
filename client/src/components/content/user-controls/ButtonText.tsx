@@ -1,4 +1,5 @@
 import React from 'react'
+import { compute } from 'src/toolbox'
 import { useDefaultProps } from 'src/toolbox/hooks'
 import Tooltip from '../communication/Tooltip'
 import './ButtonText.scss'
@@ -7,12 +8,35 @@ import './ButtonText.scss'
 
 // Interface for props for ButtonText component.
 export interface TButtonText {
+  /**
+   * The text for the button.
+   */
   text: string
+  /**
+   * Handles the click event for the button.
+   * @param event The click event.
+   */
   onClick: (event: React.MouseEvent) => void
+  /**
+   * The description for the tooltip. If null, no tooltip is displayed.
+   * @default null
+   */
   tooltipDescription?: string | null
+  /**
+   * Unique class name to apply to the component.
+   * @default ''
+   */
   uniqueClassName?: string
+  /**
+   * The style for the button
+   * @default {}
+   */
   style?: React.CSSProperties
-  disabled?: boolean
+  /**
+   * The disabled state of the button.
+   * @default 'none'
+   */
+  disabled?: 'partial' | 'full' | 'none'
 }
 
 /* -- classes -- */
@@ -33,13 +57,30 @@ export function ButtonText(props: TButtonText): JSX.Element | null {
     tooltipDescription: null,
     uniqueClassName: '',
     style: {},
-    disabled: false,
+    disabled: 'none',
   })
 
-  // Create class name.
-  let className: string = `ButtonText ${
-    disabled ? ' Disabled ' : ' '
-  }${uniqueClassName}`
+  /**
+   * The class name for the button.
+   */
+  const className: string = compute(() => {
+    // Create a list of class names.
+    let classList: string[] = ['ButtonText']
+    // Add the disabled class if the button is disabled.
+    if (disabled === 'full') {
+      classList.push('Disabled')
+    }
+    // Add the partially disabled class if the button is partially disabled.
+    if (disabled === 'partial') {
+      classList.push('PartiallyDisabled')
+    }
+    // Add the unique class name if it exists.
+    if (uniqueClassName) {
+      classList.push(uniqueClassName)
+    }
+    // Return the class list as a string.
+    return classList.join(' ')
+  })
 
   // Render.
   return (

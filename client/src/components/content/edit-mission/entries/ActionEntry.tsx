@@ -60,22 +60,6 @@ export default function ActionEntry({
   const mission = compute(() => node.mission)
 
   /**
-   * The class name for the delete action button.
-   */
-  const deleteActionClassName: string = compute(() => {
-    // Create a default list of class names.
-    let classList: string[] = []
-
-    // If there is only one action then disable the delete button.
-    if (node.actions.size === 1) {
-      classList.push('Disabled')
-    }
-
-    // Combine the class names into a single string.
-    return classList.join(' ')
-  })
-
-  /**
    * The class name for the new effect button.
    */
   const newEffectButtonClassName: string = compute(() => {
@@ -89,6 +73,16 @@ export default function ActionEntry({
 
     // Combine the class names into a single string.
     return classList.join(' ')
+  })
+  /**
+   * The tooltip description for the (action) delete button.
+   */
+  const deleteTooltipDescription: string = compute(() => {
+    if (node.actions.size < 2) {
+      return 'This action cannot be deleted because the node must have at least one action if it is executable.'
+    } else {
+      return 'Delete action.'
+    }
   })
 
   /* -- EFFECTS -- */
@@ -144,10 +138,8 @@ export default function ActionEntry({
      * The tooltip description for the edit button.
      */
     const editTooltipDescription: string = compute(() => {
-      if (!effect.target) {
-        return 'This effect cannot be edited because the target associated with this effect is not available.'
-      } else if (!effect.targetEnvironment) {
-        return 'This effect cannot be edited because the target environment associated with this effect is not available.'
+      if (!effect.targetEnvironment || !effect.target) {
+        return 'This effect cannot be edited because either the target environment or the target associated with this effect is not available.'
       } else {
         return 'Edit effect.'
       }
@@ -156,7 +148,7 @@ export default function ActionEntry({
     /**
      * The buttons for the effect list.
      */
-    const actionButtons = compute(() => {
+    const buttons = compute(() => {
       // Create a default list of buttons.
       let buttons: TValidPanelButton[] = []
 
@@ -174,7 +166,7 @@ export default function ActionEntry({
           icon: 'remove',
           key: 'remove',
           onClick: async () => await handleDeleteEffectRequest(effect),
-          tooltipDescription: 'Remove effect.',
+          tooltipDescription: 'Delete effect.',
         },
       }
 
@@ -191,7 +183,7 @@ export default function ActionEntry({
           {effect.name}
           <Tooltip description={effect.description} />
         </div>
-        <ButtonSvgPanel buttons={actionButtons} size={'small'} />
+        <ButtonSvgPanel buttons={buttons} size={'small'} />
       </div>
     )
   }
@@ -305,6 +297,7 @@ export default function ActionEntry({
                 return {}
               }}
               itemsPerPage={null}
+              listStyling={{ borderBottom: 'unset' }}
               listSpecificItemClassName='AltDesign2'
             />
             <div className='ButtonContainer New'>
@@ -323,8 +316,8 @@ export default function ActionEntry({
                 onClick={async () =>
                   await handleDeleteActionRequest(action, true)
                 }
-                tooltipDescription='Delete this action from the node.'
-                uniqueClassName={deleteActionClassName}
+                tooltipDescription={deleteTooltipDescription}
+                disabled={node.actions.size < 2 ? 'partial' : 'none'}
               />
             </div>
           </div>

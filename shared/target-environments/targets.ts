@@ -1,7 +1,7 @@
 import { AnyObject } from 'metis/toolbox/objects'
 import TargetEnvironment, { TCommonTargetEnv, TTargetEnv } from '.'
 import { TTargetEnvContext } from '../../server/target-environments/context-provider'
-import { TCommonMissionTypes } from '../../shared/missions'
+import { TCommonMission, TCommonMissionTypes } from '../../shared/missions'
 import Arg, { TTargetArg, TTargetArgJson } from './args'
 import ForceArg from './args/force-arg'
 import NodeArg from './args/node-arg'
@@ -70,14 +70,15 @@ export default abstract class Target<
 
   /**
    * Determines if all the dependencies passed are met.
-   * @param dependencies The dependencies to check if all are met.
    * @param effectArgs What to check the dependencies against to see if they are met.
+   * @param dependencies The dependencies to check if all are met.
+   * @param mission The mission that the effect is a part of.
    * @returns If all the dependencies are met.
    */
   public allDependenciesMet = (
-    dependencies: Dependency[] = [],
     effectArgs: AnyObject,
-    mission?: T['mission'],
+    dependencies: Dependency[] = [],
+    mission?: TCommonMission,
   ): boolean => {
     // If the argument has no dependencies, then the argument is always displayed.
     if (!dependencies || dependencies.length === 0) {
@@ -185,15 +186,24 @@ export default abstract class Target<
     description: '',
     script: async (context) => {
       // Extract the arguments from the effect.
-      let { force, node, blockNode, successChance, processTime, resourceCost } =
-        context.effect.args
+      let {
+        nodeMetadata,
+        blockNode,
+        successChance,
+        processTime,
+        resourceCost,
+      } = context.effect.args
+
       // Set the error message.
-      const errorMessage = `Bad request. The arguments sent with the effect ("${context.effect.name}") are invalid. Please check the arguments within the effect.`
+      const errorMessage =
+        `Bad request. The arguments sent with the effect are invalid. Please check the arguments within the effect.\n` +
+        `Effect ID: "${context.effect._id}"\n` +
+        `Effect Name: "${context.effect.name}"`
 
       // Check if the arguments are valid.
       if (
-        typeof force.forceId !== 'string' ||
-        typeof node.nodeId !== 'string' ||
+        typeof nodeMetadata.forceId !== 'string' ||
+        typeof nodeMetadata.nodeId !== 'string' ||
         typeof blockNode !== 'boolean'
       ) {
         throw new Error(errorMessage)
@@ -201,14 +211,14 @@ export default abstract class Target<
 
       // Update the block status of the node.
       blockNode
-        ? context.blockNode(node.nodeId, force.forceId)
-        : context.unblockNode(node.nodeId, force.forceId)
+        ? context.blockNode(nodeMetadata.nodeId, nodeMetadata.forceId)
+        : context.unblockNode(nodeMetadata.nodeId, nodeMetadata.forceId)
 
       // If the success chance is a number, then modify the success chance.
       if (successChance && typeof successChance === 'number') {
         context.modifySuccessChance(
-          node.nodeId,
-          force.forceId,
+          nodeMetadata.nodeId,
+          nodeMetadata.forceId,
           successChance / 100,
         )
       }
@@ -220,8 +230,8 @@ export default abstract class Target<
       // If the process time is a number, then modify the process time.
       if (processTime && typeof processTime === 'number') {
         context.modifyProcessTime(
-          node.nodeId,
-          force.forceId,
+          nodeMetadata.nodeId,
+          nodeMetadata.forceId,
           processTime * 1000,
         )
       }
@@ -232,7 +242,11 @@ export default abstract class Target<
 
       // If the resource cost is a number, then modify the resource cost.
       if (resourceCost && typeof resourceCost === 'number') {
-        context.modifyResourceCost(node.nodeId, force.forceId, resourceCost)
+        context.modifyResourceCost(
+          nodeMetadata.nodeId,
+          nodeMetadata.forceId,
+          resourceCost,
+        )
       }
       // Otherwise, throw an error.
       else if (resourceCost && typeof resourceCost !== 'number') {
@@ -242,7 +256,7 @@ export default abstract class Target<
     args: [
       {
         type: 'node',
-        _id: 'node',
+        _id: 'nodeMetadata',
         name: 'Node',
         required: true,
         groupingId: 'node',
@@ -253,7 +267,7 @@ export default abstract class Target<
         name: 'Block Node',
         required: false,
         groupingId: 'block-node',
-        dependencies: [Dependency.VALIDATE_NODE('node')],
+        dependencies: [Dependency.VALIDATE_NODE('nodeMetadata')],
       },
       {
         type: 'boolean',
@@ -261,7 +275,7 @@ export default abstract class Target<
         name: 'Modify Actions',
         required: false,
         groupingId: 'actions',
-        dependencies: [Dependency.VALIDATE_NODE('node')],
+        dependencies: [Dependency.VALIDATE_NODE('nodeMetadata')],
       },
       {
         type: 'number',
@@ -274,7 +288,7 @@ export default abstract class Target<
         groupingId: 'actions',
         dependencies: [
           Dependency.TRUTHY('modifyActions'),
-          Dependency.VALIDATE_NODE('node'),
+          Dependency.VALIDATE_NODE('nodeMetadata'),
         ],
         tooltipDescription:
           `This allows you to positively or negatively affect the chance of success for all actions within the node. A positive value increases the chance of success, while a negative value decreases the chance of success.\n` +
@@ -294,7 +308,7 @@ export default abstract class Target<
         groupingId: 'actions',
         dependencies: [
           Dependency.TRUTHY('modifyActions'),
-          Dependency.VALIDATE_NODE('node'),
+          Dependency.VALIDATE_NODE('nodeMetadata'),
         ],
         tooltipDescription:
           `This allows you to positively or negatively affect the process time for all actions within the node. A positive value increases the process time, while a negative value decreases the process time.\n` +
@@ -311,7 +325,7 @@ export default abstract class Target<
         groupingId: 'actions',
         dependencies: [
           Dependency.TRUTHY('modifyActions'),
-          Dependency.VALIDATE_NODE('node'),
+          Dependency.VALIDATE_NODE('nodeMetadata'),
         ],
         tooltipDescription:
           `This allows you to positively or negatively affect the resource cost for all actions within the node. A positive value increases the resource cost, while a negative value decreases the resource cost.\n` +
@@ -332,15 +346,15 @@ export default abstract class Target<
     name: 'Output Panel',
     description: '',
     script: async (context) => {
-      let { force, message } = context.effect.args
+      let { forceMetaData, message } = context.effect.args
 
       // Output the message to the force.
-      context.sendOutputMessage(force.forceId, message)
+      context.sendOutputMessage(forceMetaData.forceId, message)
     },
     args: [
       {
         type: 'force',
-        _id: 'force',
+        _id: 'forceMetaData',
         name: 'Force',
         required: true,
         groupingId: 'output',
@@ -351,7 +365,7 @@ export default abstract class Target<
         name: 'Message',
         required: false,
         groupingId: 'output',
-        dependencies: [Dependency.VALIDATE_FORCE('force')],
+        dependencies: [Dependency.VALIDATE_FORCE('forceMetaData')],
         tooltipDescription:
           `This is the message that will be displayed in the output panel for the force selected above.\n` +
           `\t\n` +
@@ -436,13 +450,15 @@ export interface TCommonTarget {
   toJson: (options?: TTargetJsonOptions) => TCommonTargetJson
   /**
    * Determines if all the dependencies passed are met.
-   * @param dependencies The dependencies to check if all are met.
    * @param effectArgs What to check the dependencies against to see if they are met.
+   * @param dependencies The dependencies to check if all are met.
+   * @param mission The mission that the effect is a part of.
    * @returns If all the dependencies are met.
    */
   allDependenciesMet: (
-    dependencies: Dependency[],
     effectArgs: AnyObject,
+    dependencies?: Dependency[],
+    mission?: TCommonMission,
   ) => boolean
 }
 

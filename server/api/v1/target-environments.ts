@@ -76,14 +76,14 @@ export const routerMap: TMetisRouterMap = (
   // -- GET | /api/v1/target-environments/ --
   router.get(
     '/',
-    auth({ permissions: ['environments_read'] }),
+    auth({ permissions: ['missions_read'] }),
     getTargetEnvironments,
   )
 
   // -- GET | /api/v1/target-environments/:_id/ --
   router.get(
     '/:_id/',
-    auth({ permissions: ['environments_read'] }),
+    auth({ permissions: ['missions_read'] }),
     defineRequests({
       params: { _id: 'string' },
     }),
@@ -93,7 +93,7 @@ export const routerMap: TMetisRouterMap = (
   // -- GET | /api/v1/target-environments/targets/:_id/ --
   router.get(
     '/targets/:_id',
-    auth({ permissions: ['environments_read'] }),
+    auth({ permissions: ['missions_read'] }),
     defineRequests({
       params: { _id: 'string' },
     }),

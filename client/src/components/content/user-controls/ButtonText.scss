@@ -25,7 +25,7 @@
     padding-left: 7px;
   }
 
-  &:hover {
+  &:not(.PartiallyDisabled):hover {
     .Bracket {
       opacity: 1;
     }

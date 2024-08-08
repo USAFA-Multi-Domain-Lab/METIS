@@ -81,21 +81,6 @@ export default function NodeEntry({
     // Combine the class names into a single string.
     return classList.join(' ')
   })
-  /**
-   * The classes for the remove action button.
-   */
-  const removeActionClassList = compute((): string[] => {
-    // Create a default list of class names.
-    let classList: string[] = ['']
-
-    // If there is only one action then add the disabled class.
-    if (node && node.actions.size < 2) {
-      classList.push('Disabled')
-    }
-
-    // Return the class list.
-    return classList
-  })
 
   /**
    * The lock state for the device toggle.
@@ -229,6 +214,17 @@ export default function NodeEntry({
     {
       /* -- COMPUTED -- */
       /**
+       * The tooltip description for the (action) delete button.
+       */
+      const deleteTooltipDescription: string = compute(() => {
+        if (node.actions.size < 2) {
+          return 'This action cannot be deleted because the node must have at least one action if it is executable.'
+        } else {
+          return 'Delete action.'
+        }
+      })
+
+      /**
        * The buttons for the action list.
        */
       const actionButtons = compute(() => {
@@ -247,8 +243,8 @@ export default function NodeEntry({
             icon: 'remove',
             key: 'remove',
             onClick: async () => await handleDeleteActionRequest(action),
-            tooltipDescription: 'Remove action.',
-            uniqueClassList: removeActionClassList,
+            tooltipDescription: deleteTooltipDescription,
+            disabled: node.actions.size < 2 ? 'partial' : 'none',
           },
         }
 
@@ -363,6 +359,7 @@ export default function NodeEntry({
               return {}
             }}
             itemsPerPage={null}
+            listStyling={{ borderBottom: 'unset' }}
             listSpecificItemClassName={actionClassName}
           />
           <div className={newActionClassName}>

@@ -8,6 +8,7 @@ import { v4 as generateHash } from 'uuid'
 import Mission, {
   TCommonMissionJson,
   TCommonMissionTypes,
+  TMissionObjectValidationArgs,
   TMissionOptions,
 } from '../../../shared/missions'
 import {
@@ -215,17 +216,6 @@ export default class ClientMission
     return this.forces.map((force) => force.nodes).flat()
   }
 
-  /**
-   * Whether the mission is in session.
-   */
-  private _inSession: boolean
-  /**
-   * Whether the mission is in session.
-   */
-  public get inSession(): boolean {
-    return this._inSession
-  }
-
   public constructor(
     data: Partial<TCommonMissionJson> = {},
     options: TClientMissionOptions = {},
@@ -234,7 +224,7 @@ export default class ClientMission
     super(data, options)
 
     // Parse client-specific options.
-    let { existsOnServer = false, inSession = false } = options
+    let { existsOnServer = false } = options
 
     // Initialize client-specific properties.
     this._existsOnServer = existsOnServer
@@ -245,7 +235,6 @@ export default class ClientMission
     this._transformation = null
     this.relationshipLines = []
     this.lastOpenedNode = null
-    this._inSession = inSession
 
     // If there is no existing prototypes,
     // create one.
@@ -304,6 +293,57 @@ export default class ClientMission
     )
     this.forces.push(...forces)
     return forces
+  }
+
+  // Implemented
+  public async validateObjects(
+    args:
+      | TClientMissionObjectValidationArgs
+      | TClientMissionObjectValidationArgs[],
+  ): Promise<void> {
+    return new Promise<void>(async (resolve, reject) => {
+      try {
+        // Ensure args is an array.
+        if (!Array.isArray(args)) args = [args]
+        // Initialize invalid objects.
+        this._invalidObjects = []
+
+        // Loop through args.
+        args.forEach(async (arg) => {
+          // Grab the key from the arg.
+          let { key } = arg
+
+          // Validate the effects.
+          if (key === 'effects') {
+            this.nodes.forEach(async (node) => {
+              node.actions.forEach(async (action) => {
+                action.effects.forEach(async (effect) => {
+                  // Populate the target data for the effect.
+                  if (effect.targetAjaxStatus === 'NotLoaded') {
+                    await effect.populateTargetData()
+                  }
+                  // Validate the effect.
+                  if (
+                    effect.targetAjaxStatus === 'Loaded' &&
+                    effect.validate(arg.targetEnvironments) === 'invalid' &&
+                    !this._invalidObjects.includes(effect)
+                  ) {
+                    this._invalidObjects.push(effect)
+                  }
+                })
+              })
+            })
+          }
+        })
+
+        // Resolve.
+        resolve()
+      } catch (error: any) {
+        console.error('Failed to validate objects:')
+        console.error(error)
+        reject(error)
+      }
+    })
   }
 
   /**
@@ -1183,7 +1223,7 @@ export default class ClientMission
    * @resolves The Mission object fetched from the server.
    * @rejects The error that occurred during the fetch.
    */
-  public static $fetchOne(
+  public static async $fetchOne(
     _id: ClientMission['_id'],
     options: TExistingClientMissionOptions = {},
   ): Promise<ClientMission> {
@@ -1197,6 +1237,10 @@ export default class ClientMission
         options.existsOnServer = true
         // Convert JSON to ClientMission object.
         let mission: ClientMission = new ClientMission(data, options)
+        // Validate objects if necessary.
+        if (options.validateData) {
+          await mission.validateObjects(options.validateData)
+        }
         // Resolve
         resolve(mission)
       } catch (error) {
@@ -1213,7 +1257,7 @@ export default class ClientMission
    * @resolves An array of Mission objects fetched from the server.
    * @rejects The error that occurred during the fetch.
    */
-  public static $fetchAll(
+  public static async $fetchAll(
     options: TExistingClientMissionOptions = {},
   ): Promise<ClientMission[]> {
     return new Promise<ClientMission[]>(async (resolve, reject) => {
@@ -1273,6 +1317,11 @@ export interface TClientMissionTypes extends TCommonMissionTypes {
   targetEnv: ClientTargetEnvironment
   target: ClientTarget
   effect: ClientEffect
+  invalidObject:
+    | ClientMissionForce
+    | ClientMissionNode
+    | ClientMissionAction
+    | ClientEffect
 }
 
 /**
@@ -1284,11 +1333,6 @@ export type TClientMissionOptions = TMissionOptions & {
    * @default false
    */
   existsOnServer?: boolean
-  /**
-   * Whether the mission is in session.
-   * @default false
-   */
-  inSession?: boolean
 }
 
 /**
@@ -1300,6 +1344,12 @@ export type TExistingClientMissionOptions = TClientMissionOptions & {
    * @default true
    */
   existsOnServer?: true
+  /**
+   * Data to validate objects in the mission.
+   */
+  validateData?:
+    | TClientMissionObjectValidationArgs
+    | TClientMissionObjectValidationArgs[]
 }
 
 /**
@@ -1368,3 +1418,19 @@ export interface TMissionNavigable {
    */
   get path(): TMissionNavigable[]
 }
+
+/**
+ * Represents the types of invalid objects found within the mission.
+ */
+export type TClientMissionInvalidObject = TClientMissionTypes['invalidObject']
+
+/**
+ * Arguments needed to validate objects found within the mission.
+ * @example
+ * {
+ *  key: 'effects',
+ *  targetEnvironments: []
+ * }
+ */
+type TClientMissionObjectValidationArgs =
+  TMissionObjectValidationArgs<TClientMissionTypes>

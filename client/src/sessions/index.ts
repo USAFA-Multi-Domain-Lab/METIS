@@ -62,9 +62,7 @@ export default class SessionClient extends Session<
     let _id: string = data._id
     let state: TSessionState = data.state
     let name: string = data.name
-    let mission: ClientMission = new ClientMission(data.mission, {
-      inSession: true,
-    })
+    let mission: ClientMission = new ClientMission(data.mission)
     let participants: ClientUser[] = data.participants.map(
       (userData) => new ClientUser(userData),
     )
@@ -151,7 +149,7 @@ export default class SessionClient extends Session<
     )
     this.server.addEventListener(
       'internal-effect-enacted',
-      this.onHandleInternalEffect,
+      this.onInternalEffectEnacted,
     )
   }
 
@@ -634,7 +632,7 @@ export default class SessionClient extends Session<
    * Handles when an internal effect has been enacted.
    * @param event The event emitted by the server.
    */
-  private onHandleInternalEffect = (
+  private onInternalEffectEnacted = (
     event: TServerEvents['internal-effect-enacted'],
   ): void => {
     // Extract data.

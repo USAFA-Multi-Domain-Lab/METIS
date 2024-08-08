@@ -645,7 +645,7 @@ export default function HomePage(): JSX.Element | null {
               <ButtonText
                 text='Join'
                 onClick={() => onSessionSelection(manualJoinSessionId)}
-                disabled={manualJoinSessionId.length === 0}
+                disabled={manualJoinSessionId.length === 0 ? 'full' : 'none'}
               />
             </div>
           </div>

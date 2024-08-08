@@ -112,8 +112,13 @@ export default function MissionPage({
         beginLoading('Loading mission...')
         let mission = await ClientMission.$fetchOne(missionId, {
           openAll: true,
+          validateData: {
+            key: 'effects',
+            targetEnvironments,
+          },
         })
         setMission(mission)
+        setSelection(mission)
       } catch {
         handleError('Failed to load mission.')
       }
@@ -471,28 +476,34 @@ export default function MissionPage({
     action: ClientMissionAction,
     navigateBack: boolean = false,
   ) => {
-    // Prompt the user to confirm the deletion.
-    let { choice } = await prompt(
-      `Please confirm the deletion of this action.`,
-      Prompt.ConfirmationChoices,
-    )
-    // If the user cancels, abort.
-    if (choice === 'Cancel') return
-
-    // Go back to the previous selection.
-    if (navigateBack) {
-      mission.selectBack()
-    }
-
     // Extract the node from the action.
-    let { node } = action
-    // Remove the action from the node.
-    node.actions.delete(action._id)
+    let node = action.node
 
-    // Display the changes.
-    forceUpdate()
-    // Allow the user to save the changes.
-    handleChange()
+    // Delete the action if the node has more than 2 actions.
+    if (node.actions.size > 1) {
+      // Prompt the user to confirm the deletion.
+      let { choice } = await prompt(
+        `Please confirm the deletion of this action.`,
+        Prompt.ConfirmationChoices,
+      )
+      // If the user cancels, abort.
+      if (choice === 'Cancel') return
+
+      // Go back to the previous selection.
+      if (navigateBack) {
+        mission.selectBack()
+      }
+
+      // Extract the node from the action.
+      let { node } = action
+      // Remove the action from the node.
+      node.actions.delete(action._id)
+
+      // Display the changes.
+      forceUpdate()
+      // Allow the user to save the changes.
+      handleChange()
+    }
   }
 
   /**
@@ -597,6 +608,7 @@ export default function MissionPage({
       return (
         <MissionEntry
           mission={selection}
+          pageMounted={mountHandled}
           handleDeleteEffectRequest={handleDeleteEffectRequest}
           handleChange={handleChange}
           key={selection._id}

@@ -1,4 +1,5 @@
 import React from 'react'
+import List, { ESortByMethod } from '../general-layout/List'
 import Markdown, { MarkdownTheme } from '../general-layout/Markdown'
 import { ButtonText } from '../user-controls/ButtonText'
 import './Prompt.scss'
@@ -7,10 +8,10 @@ import './Prompt.scss'
  * A modal-based prompt that asks the user to make a choice between various options. Once a choice
  * is a made, a pending message will be displayed until the this component is unmounted.
  */
-export default class Prompt<TChoice extends string> extends React.Component<
-  TPrompt_P<TChoice>,
-  TPrompt_S<TChoice>
-> {
+export default class Prompt<
+  TChoice extends string,
+  TList extends object = {},
+> extends React.Component<TPrompt_P<TChoice, TList>, TPrompt_S<TChoice>> {
   /**
    * Ref for the text field form.
    */
@@ -66,6 +67,44 @@ export default class Prompt<TChoice extends string> extends React.Component<
         <Markdown theme={MarkdownTheme.ThemeSecondary} markdown={message} />
       </div>
     )
+  }
+
+  /**
+   * @returns The JSX for the list.
+   */
+  protected get listJsx(): JSX.Element | null {
+    if (this.props.list) {
+      // Gather details.
+      const {
+        items,
+        headingText,
+        sortByMethods,
+        nameProperty,
+        searchableProperties,
+        renderObjectListItem,
+      } = this.props.list
+
+      return (
+        <List<TList>
+          items={items}
+          renderItemDisplay={(object) => renderObjectListItem(object)}
+          headingText={headingText}
+          sortByMethods={sortByMethods}
+          nameProperty={nameProperty}
+          alwaysUseBlanks={false}
+          searchableProperties={searchableProperties}
+          noItemsDisplay={null}
+          ajaxStatus={'Loaded'}
+          applyItemStyling={() => {
+            return {}
+          }}
+          itemsPerPage={null}
+          listSpecificItemClassName='AltDesign2 PromptList'
+        />
+      )
+    } else {
+      return null
+    }
   }
 
   /**
@@ -190,6 +229,7 @@ export default class Prompt<TChoice extends string> extends React.Component<
         <div className='backing'>
           <div className='alert-box'>
             {this.messageJsx}
+            {this.listJsx}
             {this.textFieldJsx}
             {this.actionsJsx}
           </div>
@@ -229,7 +269,7 @@ export default class Prompt<TChoice extends string> extends React.Component<
 /**
  * Prop type for `Prompt` component.
  */
-export type TPrompt_P<TChoice extends string> = {
+export type TPrompt_P<TChoice extends string, TList extends object = {}> = {
   /**
    * The message to display to the user prompting to make a choice.
    */
@@ -259,10 +299,41 @@ export type TPrompt_P<TChoice extends string> = {
    */
   capitalizeChoices?: boolean
   /**
+   * A list of items to display to the user.
+   * @note This allows for a dynamic list of items to be displayed
+   * to the user to interact with.
+   * @default undefined
+   * @param items The items to display to the user.
+   * @param headingText The heading text for the list.
+   * @param sortByMethods The methods to sort the items by.
+   * @param searchableProperties The properties to search the items by.
+   * @param renderObjectListItem The JSX to render for each item.
+   *
+   * ***Optional:***
+   * @param nameProperty The property to use as the name for each item.
+   *
+   * @example
+   * ```typescript
+   * {
+   *  list: {
+   *    items: [{ name: 'apple' }, { name: 'banana' }, { name: 'cherry' }],
+   *    headingText: 'Fruits',
+   *    sortByMethods: ['name'],
+   *    searchableProperties: ['name'],
+   *    nameProperty: 'name',
+   *    renderObjectListItem: (object) => {
+   *      return <div onClick={() => setState(object)}>{object.name}</div>
+   *    }
+   *  }
+   * }
+   * ```
+   */
+  list?: TPromptList<TList>
+  /**
    * Resolves the choice made by the user.
    * @param result The data given to the caller to resolve the choice made by the user.
    */
-  resolve: (result: TPromptResult<TChoice>) => void
+  resolve: (result: TPromptResult<TChoice, TList>) => void
 }
 
 /**
@@ -333,7 +404,7 @@ export type TPrompt_S<TChoice extends string> = {
 /**
  * Prompt results after the user has made a choice.
  */
-export type TPromptResult<TChoice extends string> = {
+export type TPromptResult<TChoice extends string, TList extends object = {}> = {
   /**
    * The choice made by the user.
    */
@@ -349,3 +420,33 @@ export type TPromptResult<TChoice extends string> = {
  * Choices for a prompt with a cancel choice included.
  */
 export type TChoicesWithCancel<T extends string> = 'Cancel' | T
+
+/**
+ * Propterties for a list to display to the user.
+ */
+type TPromptList<TList extends object = {}> = {
+  /**
+   * The items to display to the user.
+   */
+  items: TList[]
+  /**
+   * The heading text for the list.
+   */
+  headingText: string
+  /**
+   * The methods to sort the items by.
+   */
+  sortByMethods: ESortByMethod[]
+  /**
+   * The properties to search the items by.
+   */
+  searchableProperties: string[]
+  /**
+   * The property to use as the name for each item.
+   */
+  nameProperty?: string
+  /**
+   * The JSX to render for each item.
+   */
+  renderObjectListItem: (object: TList) => string | JSX.Element
+}

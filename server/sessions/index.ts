@@ -797,6 +797,7 @@ export default class SessionServer extends Session<
     try {
       // Execute the action, awaiting result.
       let outcome = await action.execute({
+        participant: participant,
         environmentContextProvider: this.environmentContextProvider,
         effectsEnabled: this.config.effectsEnabled,
         onInit: (execution: ServerActionExecution) => {
@@ -877,11 +878,12 @@ export default class SessionServer extends Session<
     // Find the node given the ID...
     let node = this.mission.getNode(nodeId)
 
-    // If the node is undefined, then emit
+    // If the node is undefined, then throw
     // an error.
     if (node === undefined) {
-      // todo: Determine which error to throw.
-      throw new ServerEmittedError(ServerEmittedError.CODE_SERVER_ERROR)
+      throw new Error(
+        `Could not update block status for the node with ID "${nodeId}" in force with ID "${forceId}" because the node was not found.`,
+      )
     }
 
     // Block or unblock the node.
@@ -916,8 +918,9 @@ export default class SessionServer extends Session<
     // If the node is undefined, then emit
     // an error.
     if (node === undefined) {
-      // todo: Determine which error to throw.
-      throw new ServerEmittedError(ServerEmittedError.CODE_SERVER_ERROR)
+      throw new Error(
+        `Could not modify the success chance for all actions in the node with ID "${nodeId}" in force with ID "${forceId}" because the node was not found.`,
+      )
     }
 
     // Modify the success chance for all of its actions.
@@ -952,8 +955,9 @@ export default class SessionServer extends Session<
     // If the node is undefined, then emit
     // an error.
     if (node === undefined) {
-      // todo: Determine which error to throw.
-      throw new ServerEmittedError(ServerEmittedError.CODE_SERVER_ERROR)
+      throw new Error(
+        `Could not modify the process time for all actions in the node with ID "${nodeId}" in force with ID "${forceId}" because the node was not found.`,
+      )
     }
 
     // Modify the process time for all of its actions.
@@ -988,8 +992,9 @@ export default class SessionServer extends Session<
     // If the node is undefined, then emit
     // an error.
     if (node === undefined) {
-      // todo: Determine which error to throw.
-      throw new ServerEmittedError(ServerEmittedError.CODE_SERVER_ERROR)
+      throw new Error(
+        `Could not modify the resource cost for all actions in the node with ID "${nodeId}" in force with ID "${forceId}" because the node was not found.`,
+      )
     }
 
     // Modify the resource cost for all of its actions.

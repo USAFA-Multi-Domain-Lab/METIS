@@ -14,7 +14,7 @@ export default function ButtonSvg({
   tooltipDescription = null,
   uniqueClassList = [],
   disabled = 'none',
-  cursor,
+  cursor = 'pointer',
   onClick,
   onCopy = () => {},
 }: TButtonSvg): JSX.Element | null {
@@ -29,7 +29,7 @@ export default function ButtonSvg({
 
     // Determine if the button is partially or fully disabled.
     if (disabled === 'partial') {
-      classList.push('partiallyDisabled')
+      classList.push('PartiallyDisabled')
     } else if (disabled === 'full') {
       classList.push('Disabled')
     }
@@ -71,16 +71,9 @@ export default function ButtonSvg({
       result.backgroundPosition = 'center 0.25em, center'
     }
 
-    // If a cursor is provided, use it. Otherwise, determine
-    // the cursor based on the disabled state.
+    // If a cursor is provided, use it.
     if (cursor) {
       result.cursor = cursor
-    } else if (disabled === 'full') {
-      result.cursor = 'default'
-    } else if (disabled === 'partial') {
-      result.cursor = 'not-allowed'
-    } else {
-      result.cursor = 'pointer'
     }
 
     // Return result.

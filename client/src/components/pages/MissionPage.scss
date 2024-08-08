@@ -87,31 +87,10 @@
       }
 
       .SidePanelSection {
-        .AltDesign2-list {
-          background: none;
+        .List.AltDesign2 {
           margin: 20px 8% 0;
           padding: 0;
           width: 84%;
-          border-bottom: unset;
-
-          .items {
-            .item {
-              width: calc(100% - 20px);
-              max-width: unset;
-
-              .Row {
-                display: grid;
-                align-items: center;
-                grid-template-columns: 1fr auto;
-                width: 100%;
-
-                .RowContent {
-                  overflow: hidden;
-                  text-overflow: ellipsis;
-                }
-              }
-            }
-          }
         }
 
         .ButtonContainer {

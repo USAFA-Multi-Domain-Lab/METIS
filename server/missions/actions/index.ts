@@ -3,7 +3,7 @@ import IActionExecution, {
   TActionExecutionJson,
 } from 'metis/missions/actions/executions'
 import { TCommonEffectJson } from 'metis/missions/effects'
-import { plcApiLogger } from 'metis/server/logging'
+import ClientConnection from 'metis/server/connect/clients'
 import EnvironmentContextProvider, {
   TTargetEnvContextAction,
 } from 'metis/server/target-environments/context-provider'
@@ -32,6 +32,9 @@ export default class ServerMissionAction extends MissionAction<TServerMissionTyp
 
     // Initialize the RNG for the action.
     this.rng = seedrandom(`${this.mission.rng.double()}`)
+
+    // Parse the effects for the action.
+    this.parseEffects(data.effects)
   }
 
   // Implemented
@@ -49,6 +52,7 @@ export default class ServerMissionAction extends MissionAction<TServerMissionTyp
     options: TExecuteOptions<ServerActionExecution>,
   ): Promise<ServerRealizedOutcome> {
     let {
+      participant,
       environmentContextProvider,
       effectsEnabled = false,
       onInit = () => {},
@@ -91,8 +95,15 @@ export default class ServerMissionAction extends MissionAction<TServerMissionTyp
           this.effects.forEach(async (effect: ServerEffect) => {
             try {
               await environmentContextProvider.applyEffect(effect)
+              // todo: implement internal effects feedback
+              // participant.emit('effect-successful', {
+              //   message: 'The effect was successfully applied to its target.',
+              // })
             } catch (error: any) {
-              plcApiLogger.error(error.message, error.stack)
+              // todo: implement internal effects feedback
+              // participant.emitError(
+              //   new ServerEmittedError(ServerEmittedError.CODE_EFFECT_FAILED),
+              // )
             }
           })
         }
@@ -128,6 +139,10 @@ export default class ServerMissionAction extends MissionAction<TServerMissionTyp
  * Options for TExecuteOptions.
  */
 export type TExecuteOptions<TActionExecution extends IActionExecution> = {
+  /**
+   * The participant executing the action.
+   */
+  participant: ClientConnection
   /**
    * The context provider for the target environment.
    */

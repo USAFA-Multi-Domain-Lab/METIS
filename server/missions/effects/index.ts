@@ -16,6 +16,17 @@ import ServerMissionAction from '../actions'
  * applied to a target.
  */
 export default class ServerEffect extends Effect<TServerMissionTypes> {
+  /**
+   * The status on whether the target for the effect has been populated.
+   */
+  private _targetStatus: TServerTargetStatus
+  /**
+   * The status on whether the target for the effect has been populated.
+   */
+  public get targetStatus(): TServerTargetStatus {
+    return this._targetStatus
+  }
+
   // Implemented
   public get targetEnvironment(): ServerTargetEnvironment | null {
     if (this.target instanceof ServerTarget) {
@@ -26,11 +37,9 @@ export default class ServerEffect extends Effect<TServerMissionTypes> {
   }
 
   /**
-   * Class representing an effect on the server-side that can be
-   * applied to a target.
    * @param action The action to which the effect belongs.
-   * @param data The data for the effect.
-   * @param options The options for the effect.
+   * @param data The data to use to create the Effect.
+   * @param options The options for creating the Effect.
    */
   public constructor(
     action: ServerMissionAction,
@@ -39,22 +48,34 @@ export default class ServerEffect extends Effect<TServerMissionTypes> {
   ) {
     super(action, data, options)
 
-    // If the target data has been provided and
-    // it's not the default target ID, then populate
-    // the target data.
-    if (data.targetId) {
-      this.populateTargetData(data.targetId)
-    }
+    this._targetStatus = 'Not Populated'
   }
 
   // Implemented
-  public async populateTargetData(targetId: string): Promise<void> {
-    // Get the target from the target environment.
-    let target = ServerTarget.getTarget(targetId)
+  public populateTargetData(): void {
+    if (!this.targetId) {
+      throw new Error(
+        `The effect "${this.name}" has no target ID. { targetId: "${this.targetId}" }`,
+      )
+    }
 
-    // If the target is found, set it.
+    // Set the target status to 'Populating'.
+    this._targetStatus = 'Populating'
+    // Get the target from the target environment.
+    let target = ServerTarget.getTarget(this.targetId)
+
+    // If the target is found, set it and update the target status to 'Populated'.
     if (target) {
       this._target = target
+      this._targetStatus = 'Populated'
+    } else {
+      // Set the target status to 'Error'.
+      this._targetStatus = 'Error'
+      // Throw an error.
+      let message: string =
+        `Error loading target data for effect:\n` +
+        `Effect: { name: "${this.name}", _id: "${this._id}" }`
+      throw new Error(message)
     }
   }
 
@@ -101,3 +122,12 @@ export default class ServerEffect extends Effect<TServerMissionTypes> {
  * The options for creating a ServerEffect.
  */
 export type TServerEffectOptions = TEffectOptions & {}
+
+/**
+ * The status on whether the target for the effect has been populated.
+ */
+export type TServerTargetStatus =
+  | 'Populated'
+  | 'Populating'
+  | 'Not Populated'
+  | 'Error'

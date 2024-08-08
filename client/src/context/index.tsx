@@ -451,23 +451,24 @@ const useGlobalContextDefinition = (context: TGlobalContext) => {
       forceUpdate()
       return notification
     },
-    prompt: <TChoice extends string>(
+    prompt: <TChoice extends string, TList extends object = {}>(
       message: string,
       choices: TChoice[],
-      options: TPromptOptions<TChoice> = {},
-    ): Promise<TPromptResult<TChoice>> => {
-      const { textField, capitalizeChoices } = options
+      options: TPromptOptions<TChoice, TList> = {},
+    ): Promise<TPromptResult<TChoice, TList>> => {
+      const { textField, capitalizeChoices, list } = options
 
       // Return a promise that will be resolved once the
       // user makes a choice.
-      return new Promise<TPromptResult<TChoice>>((resolve) => {
+      return new Promise<TPromptResult<TChoice, TList>>((resolve) => {
         // Create prompt.
-        let promptData: TWithKey<TPrompt_P<TChoice>> = {
+        let promptData: TWithKey<TPrompt_P<TChoice, TList>> = {
           message,
           choices,
           resolve,
           textField,
           capitalizeChoices,
+          list,
           key: generateHash(),
         }
 
@@ -607,7 +608,7 @@ export type TGlobalContextValues = {
   /**
    * Current prompt to display to the user.
    */
-  promptData: TWithKey<TPrompt_P<any>> | null
+  promptData: TWithKey<TPrompt_P<any, any>> | null
   missionNodeColors: string[]
   targetEnvironments: ClientTargetEnvironment[]
 }
@@ -684,11 +685,11 @@ export type TGlobalContextActions = {
    * @param options Additional configuration for the prompt.
    * @returns A promise that resolves with the user's choice.
    */
-  prompt: <TChoice extends string>(
+  prompt: <TChoice extends string, TList extends object = {}>(
     message: string,
     choices: TChoice[],
-    options?: TPromptOptions<TChoice>,
-  ) => Promise<TPromptResult<TChoice>>
+    options?: TPromptOptions<TChoice, TList>,
+  ) => Promise<TPromptResult<TChoice, TList>>
   /**
    * This will notify the user with a notification bubble.
    * @param {string} message The message to display in the notification bubble.
@@ -750,10 +751,10 @@ export type TConfirmOptions = {
  * Options available when prompting a user with a message
  * using the prompt method in the global context actions.
  */
-export type TPromptOptions<TChoice extends string> = Omit<
-  TPrompt_P<TChoice>,
-  'message' | 'choices' | 'resolve'
->
+export type TPromptOptions<
+  TChoice extends string,
+  TList extends object = {},
+> = Omit<TPrompt_P<TChoice, TList>, 'message' | 'choices' | 'resolve'>
 
 /**
  * Options available when notifying the user using the

@@ -1,6 +1,7 @@
 import ServerEffect from 'metis/server/missions/effects'
 import SessionServer from 'metis/server/sessions'
 import { AnyObject } from 'metis/toolbox/objects'
+import { plcApiLogger } from '../logging'
 import ServerMission from '../missions'
 
 /**
@@ -49,14 +50,14 @@ export default class EnvironmentContextProvider
     // log an error.
     if (effect.targetEnvironment === null) {
       throw new Error(
-        `The node - "${effect.node.name}" - has an action - "${effect.action.name}" - with an effect - "${effect.name}" - that doesn't have a target environment or the target environment doesn't exist.`,
+        `The force - "${effect.force.name}" - has a node - "${effect.node.name}" - has an action - "${effect.action.name}" - with an effect - "${effect.name}" - that doesn't have a target environment or the target environment doesn't exist.`,
       )
     }
     // If the effect doesn't have a target,
     // log an error.
     if (effect.target === null) {
       throw new Error(
-        `The node - "${effect.node.name}" - has an action - "${effect.action.name}" - with an effect - "${effect.name}" - that doesn't have a target or the target doesn't exist.`,
+        `The force - "${effect.force.name}" - has a node - "${effect.node.name}" - has an action - "${effect.action.name}" - with an effect - "${effect.name}" - that doesn't have a target or the target doesn't exist.`,
       )
     }
 
@@ -64,10 +65,21 @@ export default class EnvironmentContextProvider
     const context = this.buildContext(effect)
 
     try {
-      // Execute the effect.
+      // If the effect's target has not been populated,
+      // populate the target data.
+      if (effect.targetStatus === 'Not Populated') {
+        effect.populateTargetData()
+      }
+      // Apply the effect to the target.
       await effect.target.script(context)
     } catch (error: any) {
-      throw new Error(error.message)
+      // Give additional information about the error.
+      let message =
+        `Failed to apply effect - "${effect.name}" - to target - "${effect.target.name} found in the environment - "${effect.targetEnvironment.name}".\n` +
+        `The effect - "${effect.name}" - can be found here:\n` +
+        `force - "${effect.force.name}" - node - "${effect.node.name}" - action - "${effect.action.name}" - effect - "${effect.name}".\n`
+      // Log the error.
+      plcApiLogger.error(message, error)
     }
   }
 

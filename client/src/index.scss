@@ -80,6 +80,17 @@ code {
   }
 }
 
+.PartiallyDisabled {
+  cursor: not-allowed !important;
+  opacity: 0.35 !important;
+  user-select: none !important;
+  filter: none !important;
+
+  &:hover {
+    opacity: 0.35 !important;
+  }
+}
+
 .Disabled,
 :disabled {
   cursor: default !important;

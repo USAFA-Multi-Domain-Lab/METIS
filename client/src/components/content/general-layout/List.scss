@@ -314,7 +314,7 @@
     }
   }
 
-  &.AltDesign1-list {
+  &.AltDesign1 {
     -webkit-user-select: none;
     user-select: none;
     display: grid;
@@ -450,13 +450,26 @@
     }
   }
 
-  &.AltDesign2-list {
+  &.AltDesign2 {
     background: none;
     margin: 0;
     padding: 0;
     width: 100%;
     border-radius: unset;
     border-bottom: 2px solid $color-main;
+
+    &.PromptList {
+      margin: 20px 0 10px;
+
+      .top {
+        margin-bottom: 0;
+      }
+
+      .items {
+        overflow: auto;
+        max-height: 150px;
+      }
+    }
 
     .top {
       grid-template-columns: auto;
@@ -496,10 +509,31 @@
         border-radius: unset;
         min-height: unset;
         font-size: 0.78em;
+        width: calc(100% - 20px);
+        max-width: unset;
       }
 
       .page-number {
         @include hide;
+      }
+    }
+
+    .Row {
+      display: grid;
+      align-items: center;
+      grid-template-columns: 1fr auto;
+      width: 100%;
+
+      .RowContent {
+        overflow: hidden;
+        text-overflow: ellipsis;
+
+        &.Select {
+          cursor: pointer;
+          &:hover {
+            color: $terminal;
+          }
+        }
       }
     }
   }

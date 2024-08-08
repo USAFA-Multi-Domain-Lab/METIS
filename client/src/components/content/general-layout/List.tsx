@@ -792,7 +792,7 @@ export default class List<TList extends object> extends React.Component<
     // -- class-name-logic --
 
     if (listSpecificItemClassName) {
-      listClassName += ` ${listSpecificItemClassName}-list`
+      listClassName += ` ${listSpecificItemClassName}`
     }
     if (clickable) {
       listClassName += ' clickable'
