@@ -225,7 +225,7 @@ export default abstract class Mission<
 
   // Implemented
   public abstract validateObjects(
-    args: TMissionObjectValidationArgs | TMissionObjectValidationArgs[],
+    args: TMissionObjectValidationKwargs | TMissionObjectValidationKwargs[],
   ): Promise<void> | void
 
   // Implemented
@@ -475,7 +475,7 @@ export interface TCommonMission {
    * mission.validateObjects({ key: 'effects', targetEnvironments: [] })
    */
   validateObjects: (
-    args: TMissionObjectValidationArgs | TMissionObjectValidationArgs[],
+    args: TMissionObjectValidationKwargs | TMissionObjectValidationKwargs[],
   ) => void
 }
 
@@ -624,21 +624,21 @@ type TMissionInvalidObject<
 > = T['invalidObject']
 
 /**
- * Arguments needed to validate objects found within the mission.
+ * Keyword arguments needed to validate objects found within the mission.
  * @example
  * {
  *  key: 'effects',
  *  targetEnvironments: []
  * }
  */
-export type TMissionObjectValidationArgs<
+export type TMissionObjectValidationKwargs<
   T extends TCommonMissionTypes = TCommonMissionTypes,
-> = TEffectValidationArgs<T>
+> = TEffectValidationKwargs<T>
 
 /**
- * Arguments needed to validate effects found within the mission.
+ * Keyword arguments needed to validate effects found within the mission.
  */
-type TEffectValidationArgs<
+type TEffectValidationKwargs<
   T extends TCommonMissionTypes = TCommonMissionTypes,
 > = {
   /**

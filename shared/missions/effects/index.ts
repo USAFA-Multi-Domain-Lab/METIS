@@ -300,11 +300,11 @@ export default abstract class Effect<
           }
           // Check if the argument has dependencies and they are met.
           if (
-            !currentTarget.allDependenciesMet(
+            currentTarget.allDependenciesMet(
               this.args,
               arg.dependencies,
               this.mission,
-            )
+            ) === 'invalid'
           ) {
             this._invalidMessage =
               `This effect has an argument "${argId}" that doesn't belong.` +

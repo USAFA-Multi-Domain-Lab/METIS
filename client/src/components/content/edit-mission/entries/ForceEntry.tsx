@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useGlobalContext } from 'src/context'
 import ClientMissionForce from 'src/missions/forces'
 import { compute } from 'src/toolbox'
@@ -21,7 +21,7 @@ export default function ForceEntry({
   const { forceUpdate, prompt } = useGlobalContext().actions
 
   /* -- STATE -- */
-  const [forceName, setForceName] = useState<string>(force.name)
+  const [name, setName] = useState<string>(force.name)
 
   /* -- COMPUTED -- */
 
@@ -44,14 +44,14 @@ export default function ForceEntry({
   // Sync the component state with the force name.
   usePostInitEffect(() => {
     // Update the force name.
-    force.name = forceName
-    // This is to show the change to
-    // the name of the force shown
-    // on the mission map.
-    forceUpdate()
+    force.name = name
     // Allow the user to save the changes.
     handleChange()
-  }, [forceName])
+  }, [name])
+
+  // This displays the change in the mission path found at
+  // the top of the side panel.
+  useEffect(() => forceUpdate(), [name])
 
   /* -- FUNCTIONS -- */
 
@@ -92,8 +92,8 @@ export default function ForceEntry({
             fieldType='required'
             handleOnBlur='repopulateValue'
             label='Name'
-            stateValue={forceName}
-            setState={setForceName}
+            stateValue={name}
+            setState={setName}
             defaultValue={ClientMissionForce.DEFAULT_PROPERTIES.name}
             key={`${force._id}_name`}
           />

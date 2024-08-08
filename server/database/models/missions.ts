@@ -389,14 +389,16 @@ const validate_mission_forces_nodes_actions_effects = (
 
     // Ensure all of the required arguments are present if all their dependencies are met.
     for (let arg of target.args) {
-      // If the argument is required and it is not present...
-      if (arg.required && !(arg._id in effect.args)) {
-        // If all of the dependencies are met, throw an error.
-        if (target.allDependenciesMet(effect.args, arg.dependencies)) {
-          throw new Error(
-            `Error in mission:\nThe required argument ("${arg.name}") within the effect ("${effect.name}") is missing.`,
-          )
-        }
+      // If the argument is required and it's not present in the effect's arguments even
+      // though all of its dependencies are met, throw an error.
+      if (
+        arg.required &&
+        !(arg._id in effect.args) &&
+        target.allDependenciesMet(effect.args, arg.dependencies) === 'valid'
+      ) {
+        throw new Error(
+          `Error in mission:\nThe required argument ({ _id: "${arg._id}", name: "${arg.name}" }) within the effect ({ _id: "${effect._id}", name: "${effect.name}" }) is missing.`,
+        )
       }
     }
   })

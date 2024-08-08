@@ -608,7 +608,6 @@ export default function MissionPage({
       return (
         <MissionEntry
           mission={selection}
-          pageMounted={mountHandled}
           handleDeleteEffectRequest={handleDeleteEffectRequest}
           handleChange={handleChange}
           key={selection._id}

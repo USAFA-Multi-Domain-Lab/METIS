@@ -79,7 +79,7 @@ export default function ArgDropdown({
               effectArgs,
               option.dependencies,
               mission,
-            ) ?? false,
+            ) === 'valid' ?? 'invalid',
         )
       : []
   })

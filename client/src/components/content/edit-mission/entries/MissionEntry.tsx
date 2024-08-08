@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useGlobalContext } from 'src/context'
 import ClientMission, { TClientMissionInvalidObject } from 'src/missions'
 import { ClientEffect } from 'src/missions/effects'
@@ -21,7 +21,6 @@ import EntryNavigation from './navigation/EntryNavigation'
  */
 export default function MissionEntry({
   mission,
-  pageMounted,
   handleDeleteEffectRequest,
   handleChange,
 }: TMissionEntry_P): JSX.Element | null {
@@ -31,7 +30,7 @@ export default function MissionEntry({
   const [targetEnvironments] = globalContext.targetEnvironments
 
   /* -- STATE -- */
-  const [missionName, setMissionName] = useState<string>(mission.name)
+  const [name, setName] = useState<string>(mission.name)
   const [introMessage, setIntroMessage] = useState<string>(mission.introMessage)
   const [initialResources, setInitialResources] = useState<number>(
     mission.initialResources,
@@ -43,36 +42,20 @@ export default function MissionEntry({
   /* -- EFFECTS -- */
 
   // componentDidMount
-  const [mountHandled] = useMountHandler(
-    async (done) => {
-      if (pageMounted) {
-        await mission.validateObjects({
-          key: 'effects',
-          targetEnvironments,
-        })
-        setInvalidObjects(mission.invalidObjects)
-      }
-      done()
-    },
-    [pageMounted],
-  )
-
-  // Sync the component state with the mission name.
-  usePostInitEffect(() => {
-    // Update the mission name.
-    mission.name = missionName
-
-    // This is to show the change to
-    // the name of the mission shown
-    // on the mission map.
-    forceUpdate()
-    // Allow the user to save the changes.
-    handleChange()
-  }, [missionName])
+  const [mountHandled, remount] = useMountHandler(async (done) => {
+    await mission.validateObjects({
+      key: 'effects',
+      targetEnvironments,
+    })
+    setInvalidObjects(mission.invalidObjects)
+    done()
+  })
 
   // Sync the component state with the mission introduction message
   // and initial resources.
   usePostInitEffect(() => {
+    // Update the mission name.
+    mission.name = name
     // Update the introduction message.
     mission.introMessage = introMessage
     // Update the initial resources.
@@ -80,7 +63,11 @@ export default function MissionEntry({
 
     // Allow the user to save the changes.
     handleChange()
-  }, [introMessage, initialResources])
+  }, [name, introMessage, initialResources])
+
+  // This displays the change of the mission's name found at
+  // the bottom left of the mission map.
+  useEffect(() => forceUpdate(), [name])
 
   /* -- FUNCTIONS -- */
 
@@ -113,7 +100,10 @@ export default function MissionEntry({
           remove: {
             icon: 'remove',
             key: 'remove',
-            onClick: async () => await handleDeleteEffectRequest(object),
+            onClick: async () => {
+              await handleDeleteEffectRequest(object)
+              remount()
+            },
             tooltipDescription: 'Delete effect.',
           },
         }
@@ -156,8 +146,8 @@ export default function MissionEntry({
               fieldType='required'
               handleOnBlur='repopulateValue'
               label='Name'
-              stateValue={missionName}
-              setState={setMissionName}
+              stateValue={name}
+              setState={setName}
               defaultValue={ClientMission.DEFAULT_PROPERTIES.name}
               key={`${mission._id}_name`}
             />
@@ -217,10 +207,6 @@ type TMissionEntry_P = {
    * The mission to be edited.
    */
   mission: ClientMission
-  /**
-   * Whether the page has been mounted.
-   */
-  pageMounted: boolean
   /**
    * Handles the request to delete an effect.
    */

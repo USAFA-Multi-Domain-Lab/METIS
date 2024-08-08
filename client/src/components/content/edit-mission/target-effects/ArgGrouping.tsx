@@ -34,7 +34,8 @@ export default function ArgGrouping({
       // is displayed.
       if (
         target &&
-        target.allDependenciesMet(effectArgs, arg.dependencies, mission)
+        target.allDependenciesMet(effectArgs, arg.dependencies, mission) ===
+          'valid'
       ) {
         oneGroupingIsDisplayed = true
         break

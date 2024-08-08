@@ -1,6 +1,6 @@
 import Mission, {
   TCommonMissionTypes,
-  TMissionObjectValidationArgs,
+  TMissionObjectValidationKwargs,
 } from 'metis/missions'
 import { TCommonMissionForceJson } from 'metis/missions/forces'
 import { TMissionPrototypeOptions } from 'metis/missions/nodes/prototypes'
@@ -95,8 +95,8 @@ export default class ServerMission extends Mission<TServerMissionTypes> {
   // Implemented
   public validateObjects(
     args:
-      | TServerMissionObjectValidationArgs
-      | TServerMissionObjectValidationArgs[],
+      | TServerMissionObjectValidationKwargs
+      | TServerMissionObjectValidationKwargs[],
   ): void {
     // Ensure args is an array.
     if (!Array.isArray(args)) args = [args]
@@ -104,15 +104,15 @@ export default class ServerMission extends Mission<TServerMissionTypes> {
     this._invalidObjects = []
 
     // Loop through args.
-    args.forEach((arg) => {
-      // Grab the key from the argument.
+    for (let arg of args) {
+      // Grab the key from the arg.
       let { key } = arg
 
       // Validate the effects.
       if (key === 'effects') {
-        this.nodes.forEach((node) => {
-          node.actions.forEach((action) => {
-            action.effects.forEach((effect) => {
+        for (let node of this.nodes) {
+          for (let action of node.actions.values()) {
+            for (let effect of action.effects) {
               // Populate the target data for the effect.
               if (effect.targetStatus === 'Not Populated') {
                 effect.populateTargetData()
@@ -125,11 +125,11 @@ export default class ServerMission extends Mission<TServerMissionTypes> {
               ) {
                 this._invalidObjects.push(effect)
               }
-            })
-          })
-        })
+            }
+          }
+        }
       }
-    })
+    }
   }
 
   /**
@@ -183,5 +183,5 @@ export type TServerMissionInvalidObject = TServerMissionTypes['invalidObject']
  *  targetEnvironments: []
  * }
  */
-type TServerMissionObjectValidationArgs =
-  TMissionObjectValidationArgs<TServerMissionTypes>
+type TServerMissionObjectValidationKwargs =
+  TMissionObjectValidationKwargs<TServerMissionTypes>

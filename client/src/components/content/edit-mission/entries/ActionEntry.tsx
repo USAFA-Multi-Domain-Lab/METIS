@@ -1,7 +1,7 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { useGlobalContext } from 'src/context'
 import ClientMissionAction from 'src/missions/actions'
 import { ClientEffect } from 'src/missions/effects'
-import ClientMissionNode from 'src/missions/nodes'
 import { ClientTargetEnvironment } from 'src/target-environments'
 import { compute } from 'src/toolbox'
 import { usePostInitEffect } from 'src/toolbox/hooks'
@@ -25,15 +25,19 @@ import EntryNavigation from './navigation/EntryNavigation'
  */
 export default function ActionEntry({
   action,
+  action: { node },
+  action: { mission },
   targetEnvironments,
   setIsNewEffect,
   handleDeleteActionRequest,
   handleDeleteEffectRequest,
   handleChange,
 }: TActionEntry_P): JSX.Element | null {
-  /* -- STATE -- */
+  /* -- GLOBAL CONTEXT -- */
+  const { forceUpdate } = useGlobalContext().actions
 
-  const [actionName, setActionName] = useState<string>(action.name)
+  /* -- STATE -- */
+  const [name, setName] = useState<string>(action.name)
   const [description, setDescription] = useState<string>(action.description)
   const [successChance, setSuccessChance] = useState<number>(
     parseFloat(`${(action.successChance * 100.0).toFixed(2)}`),
@@ -48,16 +52,6 @@ export default function ActionEntry({
     useState<string>(action.postExecutionFailureText)
 
   /* -- COMPUTED -- */
-
-  /**
-   * The node on which the action is being executed.
-   */
-  const node: ClientMissionNode = compute(() => action.node)
-
-  /**
-   * The mission for the action.
-   */
-  const mission = compute(() => node.mission)
 
   /**
    * The class name for the new effect button.
@@ -90,7 +84,7 @@ export default function ActionEntry({
   // Sync the component state with the action.
   usePostInitEffect(() => {
     // Update the action name.
-    action.name = actionName
+    action.name = name
     // Update the description.
     action.description = description
     // Update the success chance.
@@ -107,7 +101,7 @@ export default function ActionEntry({
     // Allow the user to save the changes.
     handleChange()
   }, [
-    actionName,
+    name,
     description,
     successChance,
     processTime,
@@ -115,6 +109,10 @@ export default function ActionEntry({
     postExecutionSuccessText,
     postExecutionFailureText,
   ])
+
+  // This displays the change in the mission path found at
+  // the top of the side panel.
+  useEffect(() => forceUpdate(), [name])
 
   /* -- FUNCTIONS -- */
 
@@ -205,8 +203,8 @@ export default function ActionEntry({
               fieldType='required'
               handleOnBlur='repopulateValue'
               label='Name'
-              stateValue={actionName}
-              setState={setActionName}
+              stateValue={name}
+              setState={setName}
               defaultValue={ClientMissionAction.DEFAULT_PROPERTIES.name}
               placeholder='Enter name...'
               key={`${action._id}_name`}

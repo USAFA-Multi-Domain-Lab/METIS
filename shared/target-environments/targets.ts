@@ -5,7 +5,7 @@ import { TCommonMission, TCommonMissionTypes } from '../../shared/missions'
 import Arg, { TTargetArg, TTargetArgJson } from './args'
 import ForceArg from './args/force-arg'
 import NodeArg from './args/node-arg'
-import Dependency from './dependencies'
+import Dependency, { TDependencyConditionResult } from './dependencies'
 
 /**
  * This is an entity that can be found in a target environment.
@@ -73,23 +73,20 @@ export default abstract class Target<
    * @param effectArgs What to check the dependencies against to see if they are met.
    * @param dependencies The dependencies to check if all are met.
    * @param mission The mission that the effect is a part of.
-   * @returns If all the dependencies are met.
+   * @returns The status (`"valid"`, `"warning"`, or `"invalid"`) of the dependencies based on the dependencies' conditions.
    */
   public allDependenciesMet = (
     effectArgs: AnyObject,
     dependencies: Dependency[] = [],
     mission?: TCommonMission,
-  ): boolean => {
+  ): TDependencyConditionResult => {
     // If the argument has no dependencies, then the argument is always displayed.
     if (!dependencies || dependencies.length === 0) {
-      return true
+      return 'valid'
     }
 
     // Stores the status of all the argument's dependencies.
-    let areDependenciesMet: boolean[] = []
-    // Create a variable to determine if all the dependencies
-    // have been met.
-    let allDependenciesMet: boolean
+    let areDependenciesMet: TDependencyConditionResult[] = []
 
     // Iterate through the dependencies.
     dependencies.forEach((dependency) => {
@@ -101,12 +98,11 @@ export default abstract class Target<
       // If the dependency argument is found then check if
       // the dependency is met.
       if (dependencyArg) {
-        // Initialize a variable to determine if the dependency
-        // is met.
-        let dependencyMet: boolean
+        // Initialize a variable to determine the dependency's status.
+        let dependencyStatus: TDependencyConditionResult
 
         // If the dependency is a force dependency then check
-        // if the force exists and if the condition is met.
+        // if the force exists and the dependency's status.
         if (dependency.name === 'VALIDATE_FORCE' && mission) {
           // Ensure the force argument exists within the effect arguments.
           let forceInArgs: AnyObject | undefined =
@@ -117,49 +113,65 @@ export default abstract class Target<
             : undefined
           // Get the force from the mission.
           let force = forceId ? mission.getForce(forceId) : undefined
-          // Check if the condition is met.
-          dependencyMet = dependency.condition(force)
+          // Check the dependency's status.
+          dependencyStatus = dependency.condition(force)
         }
         // If the dependency is a node dependency then check
-        // if the node exists and if the condition is met.
+        // if the node exists and the dependency's status.
         else if (dependency.name === 'VALIDATE_NODE' && mission) {
           // Ensure the node argument exists within the effect arguments.
           let nodeInArgs: AnyObject | undefined =
             effectArgs[dependency.dependentId]
+          // Ensure the force ID exists within the node argument.
+          let forceId: string | undefined = nodeInArgs
+            ? nodeInArgs[ForceArg.FORCE_ID_KEY]
+            : undefined
           // Ensure the node ID exists within the node argument.
           let nodeId: string | undefined = nodeInArgs
             ? nodeInArgs[NodeArg.NODE_ID_KEY]
             : undefined
+          // Get the force from the mission.
+          let force = forceId ? mission.getForce(forceId) : undefined
           // Get the node from the mission.
           let node = nodeId ? mission.getNode(nodeId) : undefined
-          // Check if the condition is met.
-          dependencyMet = dependency.condition(node)
+          // Create the value to check the dependency's status.
+          let value = {
+            force: force,
+            node: node,
+          }
+          // Check the dependency's status.
+          dependencyStatus = dependency.condition(value)
         }
-        // Otherwise, check if the condition is met.
+        // Otherwise, check the dependency's status.
         else {
-          dependencyMet = dependency.condition(
+          dependencyStatus = dependency.condition(
             effectArgs[dependency.dependentId],
           )
         }
 
-        // If the dependency is met then push true to the
-        // dependencies met array, otherwise push false.
-        dependencyMet
-          ? areDependenciesMet.push(true)
-          : areDependenciesMet.push(false)
+        // Add the dependency status to the list of dependencies.
+        areDependenciesMet.push(dependencyStatus)
       }
       // Otherwise, the dependency argument doesn't exist.
       else {
-        areDependenciesMet.push(false)
+        areDependenciesMet.push('invalid')
       }
     })
 
-    // If all the dependencies have been met then set the
-    // variable to true, otherwise set it to false.
-    allDependenciesMet = !areDependenciesMet.includes(false)
+    // If any of the dependencies are labeled as invalid, then
+    // the status of all the dependencies is invalid.
+    if (areDependenciesMet.includes('invalid')) {
+      return 'invalid'
+    }
 
-    // Return the status of all the dependencies.
-    return allDependenciesMet
+    // If any of the dependencies are labeled as a warning, then
+    // the status of all the dependencies is a warning.
+    if (areDependenciesMet.includes('warning')) {
+      return 'warning'
+    }
+
+    // Otherwise, all the dependencies are valid.
+    return 'valid'
   }
 
   /**
@@ -453,13 +465,13 @@ export interface TCommonTarget {
    * @param effectArgs What to check the dependencies against to see if they are met.
    * @param dependencies The dependencies to check if all are met.
    * @param mission The mission that the effect is a part of.
-   * @returns If all the dependencies are met.
+   * @returns The status (`"valid"`, `"warning"`, or `"invalid"`) of the dependencies based on the dependencies' conditions.
    */
   allDependenciesMet: (
     effectArgs: AnyObject,
     dependencies?: Dependency[],
     mission?: TCommonMission,
-  ) => boolean
+  ) => TDependencyConditionResult
 }
 
 /**

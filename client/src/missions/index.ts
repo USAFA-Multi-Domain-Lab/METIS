@@ -8,7 +8,7 @@ import { v4 as generateHash } from 'uuid'
 import Mission, {
   TCommonMissionJson,
   TCommonMissionTypes,
-  TMissionObjectValidationArgs,
+  TMissionObjectValidationKwargs,
   TMissionOptions,
 } from '../../../shared/missions'
 import {
@@ -298,8 +298,8 @@ export default class ClientMission
   // Implemented
   public async validateObjects(
     args:
-      | TClientMissionObjectValidationArgs
-      | TClientMissionObjectValidationArgs[],
+      | TClientMissionObjectValidationKwargs
+      | TClientMissionObjectValidationKwargs[],
   ): Promise<void> {
     return new Promise<void>(async (resolve, reject) => {
       try {
@@ -309,15 +309,15 @@ export default class ClientMission
         this._invalidObjects = []
 
         // Loop through args.
-        args.forEach(async (arg) => {
+        for (let arg of args) {
           // Grab the key from the arg.
           let { key } = arg
 
           // Validate the effects.
           if (key === 'effects') {
-            this.nodes.forEach(async (node) => {
-              node.actions.forEach(async (action) => {
-                action.effects.forEach(async (effect) => {
+            for (let node of this.nodes) {
+              for (let action of node.actions.values()) {
+                for (let effect of action.effects) {
                   // Populate the target data for the effect.
                   if (effect.targetAjaxStatus === 'NotLoaded') {
                     await effect.populateTargetData()
@@ -330,11 +330,11 @@ export default class ClientMission
                   ) {
                     this._invalidObjects.push(effect)
                   }
-                })
-              })
-            })
+                }
+              }
+            }
           }
-        })
+        }
 
         // Resolve.
         resolve()
@@ -1348,8 +1348,8 @@ export type TExistingClientMissionOptions = TClientMissionOptions & {
    * Data to validate objects in the mission.
    */
   validateData?:
-    | TClientMissionObjectValidationArgs
-    | TClientMissionObjectValidationArgs[]
+    | TClientMissionObjectValidationKwargs
+    | TClientMissionObjectValidationKwargs[]
 }
 
 /**
@@ -1432,5 +1432,5 @@ export type TClientMissionInvalidObject = TClientMissionTypes['invalidObject']
  *  targetEnvironments: []
  * }
  */
-type TClientMissionObjectValidationArgs =
-  TMissionObjectValidationArgs<TClientMissionTypes>
+type TClientMissionObjectValidationKwargs =
+  TMissionObjectValidationKwargs<TClientMissionTypes>

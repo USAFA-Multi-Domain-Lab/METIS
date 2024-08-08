@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useGlobalContext } from 'src/context'
 import ClientMissionAction from 'src/missions/actions'
 import ClientMissionNode from 'src/missions/nodes'
@@ -26,16 +26,17 @@ import EntryNavigation from './navigation/EntryNavigation'
  */
 export default function NodeEntry({
   node,
+  node: { mission },
   handleDeleteActionRequest,
   handleChange,
 }: TNodeEntry_P): JSX.Element | null {
   /* -- GLOBAL CONTEXT -- */
   const globalContext = useGlobalContext()
   const [colorOptions] = globalContext.missionNodeColors
-  const { notify } = globalContext.actions
+  const { notify, forceUpdate } = globalContext.actions
 
   /* -- STATE -- */
-  const [nodeName, setNodeName] = useState<string>(node.name)
+  const [name, setName] = useState<string>(node.name)
   const [color, setColor] = useState<string>(node.color)
   const [description, setDescription] = useState<string>(node.description)
   const [preExecutionText, setPreExecutionText] = useState<string>(
@@ -47,10 +48,6 @@ export default function NodeEntry({
   const [applyColorFill, setApplyColorFill] = useState<boolean>(false)
 
   /* -- COMPUTED -- */
-  /**
-   * The mission for the node.
-   */
-  const mission = compute(() => node.mission)
   /**
    * The class name for the list of actions.
    */
@@ -132,7 +129,7 @@ export default function NodeEntry({
 
   // Sync the component state with the node.
   usePostInitEffect(() => {
-    node.name = nodeName
+    node.name = name
     node.color = color
     node.description = description
     node.preExecutionText = preExecutionText
@@ -155,7 +152,7 @@ export default function NodeEntry({
     // Allow the user to save the changes.
     handleChange()
   }, [
-    nodeName,
+    name,
     color,
     description,
     preExecutionText,
@@ -164,6 +161,10 @@ export default function NodeEntry({
     device,
     applyColorFill,
   ])
+
+  // This displays the change in the mission path found at
+  // the top of the side panel.
+  useEffect(() => forceUpdate(), [name])
 
   // Auto-generate an action if the node becomes executable.
   usePostInitEffect(() => {
@@ -283,8 +284,8 @@ export default function NodeEntry({
             fieldType='required'
             handleOnBlur='repopulateValue'
             label='Name'
-            stateValue={nodeName}
-            setState={setNodeName}
+            stateValue={name}
+            setState={setName}
             defaultValue={ClientMissionNode.DEFAULT_PROPERTIES.name}
             key={`${node._id}_name`}
           />
