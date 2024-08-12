@@ -5,6 +5,7 @@ import { TCommonMissionForceJson } from 'metis/missions/forces'
 import { TCommonMissionNodeJson, TMissionNodeJson } from 'metis/missions/nodes'
 import MetisDatabase from 'metis/server/database'
 import SanitizedHTML from 'metis/server/database/schema-types/html'
+import ServerEffect from 'metis/server/missions/effects'
 import ServerTargetEnvironment from 'metis/server/target-environments'
 import ServerTarget from 'metis/server/target-environments/targets'
 import { TTargetArg } from 'metis/target-environments/args'
@@ -273,78 +274,70 @@ const validate_mission_forces_nodes_actions_effects = (
       )
     }
 
-    // Initialize the valid keys.
-    let validKeys: string[] = []
-    // Add all of the keys from the target arguments.
-    target.args.forEach((arg: TTargetArg) => {
-      // Add to the valid keys.
-      validKeys.push(arg._id)
-    })
-    // Grab the keys from the effect.
-    let keys = Object.keys(effect.args)
-    // Loop through the keys.
-    for (let key of keys) {
-      // Ensure all of the keys are valid.
-      if (!validKeys.includes(key)) {
-        // Throw an error if the key is not valid.
+    // Grab the argument IDs from the effect.
+    let effectArgIds = Object.keys(effect.args)
+    // Loop through the argument IDs.
+    for (let effectArgId of effectArgIds) {
+      // Find the argument.
+      let arg = target.args.find((arg: TTargetArg) => arg._id === effectArgId)
+
+      // Ensure the argument exists.
+      if (!arg) {
         throw new Error(
-          `Error in mission:\nThe argument ("${key}") within the effect ("${effect.name}") doesn't exist in the target's ("${target.name}") arguments.`,
+          `Error in mission:\nThe argument with ID ("${effectArgId}") within the effect ({ _id: "${effect._id}", name: "${effect.name}" }) doesn't exist in the target's ({ _id: "${target._id}", name: "${target.name}" }) arguments.`,
         )
       }
 
-      // Ensure all of the arguments are of the correct type.
-      let arg = target.args.find((arg: TTargetArg) => arg._id === key)
       // Get the value.
-      let value = effect.args[key]
+      let value = effect.args[effectArgId]
       // Ensure the value is of the correct type.
       if (
-        arg &&
         (arg.type === 'string' ||
           arg.type === 'large-string' ||
           arg.type === 'dropdown') &&
         typeof value !== 'string'
       ) {
         throw new Error(
-          `Error in mission:\nThe argument ("${key}") within the effect ("${effect.name}") is of the wrong type. Expected type: "string."`,
+          `Error in mission:\nThe argument with ID ("${effectArgId}") within the effect ({ _id: "${effect._id}", name: "${effect.name}" }) is of the wrong type. Expected type: "string."`,
         )
       } else if (arg && arg.type === 'number' && typeof value !== 'number') {
         throw new Error(
-          `Error in mission:\nThe argument ("${key}") within the effect ("${effect.name}") is of the wrong type. Expected type: "number."`,
+          `Error in mission:\nThe argument with ID ("${effectArgId}") within the effect ({ _id: "${effect._id}", name: "${effect.name}" }) is of the wrong type. Expected type: "number."`,
         )
       } else if (arg && arg.type === 'boolean' && typeof value !== 'boolean') {
         throw new Error(
-          `Error in mission:\nThe argument ("${key}") within the effect ("${effect.name}") is of the wrong type. Expected type: "boolean."`,
+          `Error in mission:\nThe argument with ID ("${effectArgId}") within the effect ({ _id: "${effect._id}", name: "${effect.name}" }) is of the wrong type. Expected type: "boolean."`,
         )
       }
 
       // If the argument is a dropdown, ensure the value one of the options.
       // Ensure the argument is a dropdown.
-      if (arg && arg.type === 'dropdown') {
+      if (arg.type === 'dropdown') {
         // Get the option.
         let option = arg.options.find((option) => option._id === value)
         // Ensure the option exists.
         if (!option) {
           throw new Error(
-            `Error in mission:\nThe argument's ("${key}") value ("${value}") within the effect ("${effect.name}") is not a valid option in the effect's target ("${target.name}").`,
+            `Error in mission:\nThe argument with ID ("${effectArgId}") has a value ("${value}") within the effect ({ _id: "${effect._id}", name: "${effect.name}" }) that is not a valid option in the effect's target ({ _id: "${target._id}", name: "${target.name}" }).`,
           )
         }
       }
 
       // If the argument is a string, ensure the value matches the pattern.
-      if (arg && arg.type === 'string' && arg.pattern) {
+      if (arg.type === 'string' && arg.pattern) {
         let isValid = arg.pattern.test(value)
         if (isValid === false) {
           throw new Error(
-            `Error in mission:\nThe argument's ("${key}") value ("${value}") within the effect ("${effect.name}") is invalid.`,
+            `Error in mission:\nThe argument with ID ("${effectArgId}") has a value ("${value}") within the effect ({ _id: "${effect._id}", name: "${effect.name}" }) that is invalid.`,
           )
         }
       }
 
       // Ensure the force argument has the correct type.
-      if (arg && arg.type === 'force') {
+      if (arg.type === 'force') {
         if (typeof value !== 'object') {
           throw new Error(
-            `Error in mission:\nThe argument ("${key}") within the effect ("${effect.name}") is of the wrong type. Expected type: "object."`,
+            `Error in mission:\nThe argument with ID ("${effectArgId}") within the effect ({ _id: "${effect._id}", name: "${effect.name}" }) is of the wrong type. Expected type: "object."`,
           )
         }
 
@@ -354,52 +347,48 @@ const validate_mission_forces_nodes_actions_effects = (
           !(ForceArg.FORCE_NAME_KEY in value)
         ) {
           throw new Error(
-            `Error in mission:\nThe argument's value, within the effect "${
-              effect.name
-            }", is missing required properties.\nArgument sent: ${key}: ${JSON.stringify(
+            `Error in mission:\nThe argument with ID ("${effectArgId}") has a value ("${JSON.stringify(
               value,
-            )}`,
+            )}") within the effect ({ _id: "${effect._id}", name: "${
+              effect.name
+            }" }) that has missing properties that are required.`,
           )
         }
       }
 
       // Ensure the node argument has the correct type.
-      if (arg && arg.type === 'node') {
+      if (arg.type === 'node') {
         if (typeof value !== 'object') {
           throw new Error(
-            `Error in mission:\nThe argument ("${key}") within the effect ("${effect.name}") is of the wrong type. Expected type: "object."`,
+            `Error in mission:\nThe argument with ID ("${effectArgId}") within the effect ({ _id: "${effect._id}", name: "${effect.name}" }) is of the wrong type. Expected type: "object."`,
           )
         }
 
         // Ensure the node argument has the correct keys.
         if (
+          !(ForceArg.FORCE_ID_KEY in value) ||
+          !(ForceArg.FORCE_NAME_KEY in value) ||
           !(NodeArg.NODE_ID_KEY in value) ||
           !(NodeArg.NODE_NAME_KEY in value)
         ) {
           throw new Error(
-            `Error in mission:\nThe argument's value, within the effect "${
-              effect.name
-            }", is missing required properties.\nArgument sent: { ${key}: ${JSON.stringify(
+            `Error in mission:\nThe argument with ID ("${effectArgId}") has a value ("${JSON.stringify(
               value,
-            )} }`,
+            )}") within the effect ({ _id: "${effect._id}", name: "${
+              effect.name
+            }" }) that has missing properties that are required.`,
           )
         }
       }
     }
 
-    // Ensure all of the required arguments are present if all their dependencies are met.
-    for (let arg of target.args) {
-      // If the argument is required and it's not present in the effect's arguments even
-      // though all of its dependencies are met, throw an error.
-      if (
-        arg.required &&
-        !(arg._id in effect.args) &&
-        target.allDependenciesMet(effect.args, arg.dependencies) === 'valid'
-      ) {
-        throw new Error(
-          `Error in mission:\nThe required argument ({ _id: "${arg._id}", name: "${arg.name}" }) within the effect ({ _id: "${effect._id}", name: "${effect.name}" }) is missing.`,
-        )
-      }
+    // Check to see if there are any missing arguments.
+    let missingArg = ServerEffect.checkForMissingArg(target, effect.args)
+    // Ensure all of the required arguments are present in the effect.
+    if (missingArg) {
+      throw new Error(
+        `Error in mission:\nThe required argument ({ _id: "${missingArg._id}", name: "${missingArg.name}" }) within the effect ({ _id: "${effect._id}", name: "${effect.name}" }) is missing.`,
+      )
     }
   })
 }

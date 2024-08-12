@@ -25,7 +25,9 @@ export default abstract class Mission<
 > implements TCommonMission
 {
   // Implemented
-  public abstract get nodes(): TNode<T>[]
+  public get nodes(): TNode<T>[] {
+    return this.forces.map((force) => force.nodes).flat()
+  }
 
   // Implemented
   public _id: string
@@ -55,17 +57,6 @@ export default abstract class Mission<
   public root: TPrototype<T>
 
   /**
-   * The list of invalid objects found the mission.
-   */
-  protected _invalidObjects: TMissionInvalidObject<T>[]
-  /**
-   * The list of invalid objects found the mission.
-   */
-  public get invalidObjects(): TMissionInvalidObject<T>[] {
-    return this._invalidObjects
-  }
-
-  /**
    * @param data The mission data from which to create the mission. Any ommitted values will be set to the default properties defined in Mission.DEFAULT_PROPERTIES.
    * @param options The options for creating the mission.
    */
@@ -85,7 +76,6 @@ export default abstract class Mission<
     this.prototypes = []
     this.forces = []
     this.root = this.initializeRoot()
-    this._invalidObjects = []
 
     // Parse options.
     let { openAll = false } = options
@@ -222,11 +212,6 @@ export default abstract class Mission<
    * @returns The parsed force data.
    */
   protected abstract importForces(data: TCommonMissionForceJson[]): TForce<T>[]
-
-  // Implemented
-  public abstract validateObjects(
-    args: TMissionObjectValidationKwargs | TMissionObjectValidationKwargs[],
-  ): Promise<void> | void
 
   // Implemented
   public getPrototype(
@@ -386,11 +371,6 @@ export type TCommonMissionTypes = {
   targetEnv: TCommonTargetEnv
   target: TCommonTarget
   effect: TCommonEffect
-  invalidObject:
-    | TCommonMissionForce
-    | TCommonMissionNode
-    | TCommonMissionAction
-    | TCommonEffect
 }
 
 /**
@@ -404,10 +384,6 @@ export interface TCommonMission {
    * All nodes that exist in the mission.
    */
   get nodes(): TCommonMissionNode[]
-  /**
-   * The list of invalid objects found the mission.
-   */
-  get invalidObjects(): TMissionInvalidObject[]
   /**
    * The ID of the mission.
    */
@@ -468,15 +444,6 @@ export interface TCommonMission {
    * Gets a node from the mission by its ID.
    */
   getNode: (nodeId: TCommonMissionNode['_id']) => TCommonMissionNode | undefined
-  /**
-   * Validates objects found within the mission based on the key passed.
-   * @param args The arguments needed to validate objects found within the mission.
-   * @example
-   * mission.validateObjects({ key: 'effects', targetEnvironments: [] })
-   */
-  validateObjects: (
-    args: TMissionObjectValidationKwargs | TMissionObjectValidationKwargs[],
-  ) => void
 }
 
 /**
@@ -614,39 +581,4 @@ export type TNodeImportOptions = {
    * @default false
    */
   openAll?: boolean
-}
-
-/**
- * Represents the types of invalid objects found within the mission.
- */
-type TMissionInvalidObject<
-  T extends TCommonMissionTypes = TCommonMissionTypes,
-> = T['invalidObject']
-
-/**
- * Keyword arguments needed to validate objects found within the mission.
- * @example
- * {
- *  key: 'effects',
- *  targetEnvironments: []
- * }
- */
-export type TMissionObjectValidationKwargs<
-  T extends TCommonMissionTypes = TCommonMissionTypes,
-> = TEffectValidationKwargs<T>
-
-/**
- * Keyword arguments needed to validate effects found within the mission.
- */
-type TEffectValidationKwargs<
-  T extends TCommonMissionTypes = TCommonMissionTypes,
-> = {
-  /**
-   * The key to validate the objects against.
-   */
-  key: 'effects'
-  /**
-   * The target environments to use for validating effects.
-   */
-  targetEnvironments: T['targetEnv'][]
 }

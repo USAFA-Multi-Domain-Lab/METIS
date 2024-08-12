@@ -10,7 +10,7 @@ import ArgGrouping from './ArgGrouping'
  */
 export default function ArgEntry({
   effect,
-  target,
+  effect: { target },
   effectArgs,
   setEffectArgs,
 }: TArgEntry_P): JSX.Element | null {
@@ -72,7 +72,6 @@ export default function ArgEntry({
           return (
             <ArgGrouping
               effect={effect}
-              target={target}
               grouping={grouping}
               effectArgs={effectArgs}
               setEffectArgs={setEffectArgs}
@@ -97,10 +96,6 @@ type TArgEntry_P = {
    * The effect that the arguments belong to.
    */
   effect: ClientEffect
-  /**
-   * The effect's target.
-   */
-  target: ClientEffect['target']
   /**
    * The arguments that the effect uses to modify the target.
    */

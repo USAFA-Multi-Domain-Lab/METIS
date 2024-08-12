@@ -1,8 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useGlobalContext } from 'src/context'
 import { ClientEffect } from 'src/missions/effects'
-import { ClientTargetEnvironment } from 'src/target-environments'
-import ClientTarget from 'src/target-environments/targets'
 import { usePostInitEffect } from 'src/toolbox/hooks'
 import { DetailLargeString } from '../../form/DetailLargeString'
 import { DetailLocked } from '../../form/DetailLocked'
@@ -17,6 +15,7 @@ import EntryNavigation from './navigation/EntryNavigation'
  */
 export default function EffectEntry({
   effect,
+  effect: { target, targetEnvironment: targetEnv },
   handleDeleteEffectRequest,
   handleChange,
 }: TEffectEntry_P): JSX.Element | null {
@@ -28,10 +27,6 @@ export default function EffectEntry({
   const [description, setDescription] = useState<ClientEffect['description']>(
     effect.description,
   )
-  const [targetEnv] = useState<ClientTargetEnvironment | null>(
-    effect.targetEnvironment,
-  )
-  const [target] = useState<ClientTarget | null>(effect.target)
   const [effectArgs, setEffectArgs] = useState<ClientEffect['args']>(
     effect.args,
   )
@@ -95,7 +90,6 @@ export default function EffectEntry({
           />
           <ArgEntry
             effect={effect}
-            target={target}
             effectArgs={effectArgs}
             setEffectArgs={setEffectArgs}
           />

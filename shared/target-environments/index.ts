@@ -64,7 +64,7 @@ export default abstract class TargetEnvironment<
   /**
    * Default properties set when creating a new TargetEnvironment object.
    */
-  public static DEFAULT_PROPERTIES: TCommonTargetEnvJson = {
+  public static readonly DEFAULT_PROPERTIES: TCommonTargetEnvJson = {
     _id: 'metis-target-env-default',
     name: 'Select a target environment',
     description: 'This is a default target environment.',
@@ -75,7 +75,7 @@ export default abstract class TargetEnvironment<
   /**
    * The internal target environment used for creating effects.
    */
-  public static INTERNAL_TARGET_ENV: TCommonTargetEnvJson = {
+  public static readonly INTERNAL_TARGET_ENV: TCommonTargetEnvJson = {
     _id: 'metis',
     name: 'METIS',
     description: '',

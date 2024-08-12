@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useGlobalContext } from 'src/context'
-import ClientMission, { TClientMissionInvalidObject } from 'src/missions'
+import ClientMission, { TMissionDefectiveObject } from 'src/missions'
 import { ClientEffect } from 'src/missions/effects'
 import SessionClient from 'src/sessions'
 import { compute } from 'src/toolbox'
@@ -42,9 +42,6 @@ export default function LaunchPage({
     new ClientMission({ _id: missionId }),
   )
   const [sessionConfig] = useState(Session.DEFAULT_CONFIG)
-  const [invalidObjects, setInvalidObjects] = useState<
-    TClientMissionInvalidObject[]
-  >(mission.invalidObjects)
 
   /* -- EFFECTS -- */
 
@@ -63,8 +60,6 @@ export default function LaunchPage({
         })
         // Store mission in the state.
         setMission(mission)
-        // Set invalid effects.
-        setInvalidObjects(mission.invalidObjects)
       } catch {
         handleError('Failed to load launch page.')
       }
@@ -92,7 +87,7 @@ export default function LaunchPage({
   /**
    * Renders JSX for the effect list item.
    */
-  const renderObjectListItem = (object: TClientMissionInvalidObject) => {
+  const renderObjectListItem = (object: TMissionDefectiveObject) => {
     /* -- COMPUTED -- */
 
     /**
@@ -141,7 +136,10 @@ export default function LaunchPage({
     if (server !== null) {
       try {
         // If there are invalid objects and effects are enabled...
-        if (sessionConfig.effectsEnabled && invalidObjects.length > 0) {
+        if (
+          sessionConfig.effectsEnabled &&
+          mission.defectiveObjects.length > 0
+        ) {
           // Create a message for the user.
           let message =
             `**Warning:** The mission for this session is defective due to unresolved conflicts. If you proceed, the session may not function as expected.\n` +
@@ -153,7 +151,7 @@ export default function LaunchPage({
             ['Edit Mission', 'Launch Anyway', 'Cancel'],
             {
               list: {
-                items: invalidObjects,
+                items: mission.defectiveObjects,
                 headingText: 'Unresolved Conflicts',
                 sortByMethods: [ESortByMethod.Name],
                 searchableProperties: ['name'],

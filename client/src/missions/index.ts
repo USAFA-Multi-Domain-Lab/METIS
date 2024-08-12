@@ -8,7 +8,6 @@ import { v4 as generateHash } from 'uuid'
 import Mission, {
   TCommonMissionJson,
   TCommonMissionTypes,
-  TMissionObjectValidationKwargs,
   TMissionOptions,
 } from '../../../shared/missions'
 import {
@@ -211,9 +210,15 @@ export default class ClientMission
     return [this]
   }
 
-  // Implemented
-  public get nodes(): ClientMissionNode[] {
-    return this.forces.map((force) => force.nodes).flat()
+  /**
+   * The list of defective objects found the mission.
+   */
+  private _defectiveObjects: TMissionDefectiveObject[]
+  /**
+   * The list of defective objects found the mission.
+   */
+  public get defectiveObjects(): TMissionDefectiveObject[] {
+    return this._defectiveObjects
   }
 
   public constructor(
@@ -235,6 +240,7 @@ export default class ClientMission
     this._transformation = null
     this.relationshipLines = []
     this.lastOpenedNode = null
+    this._defectiveObjects = []
 
     // If there is no existing prototypes,
     // create one.
@@ -295,18 +301,21 @@ export default class ClientMission
     return forces
   }
 
-  // Implemented
-  public async validateObjects(
-    args:
-      | TClientMissionObjectValidationKwargs
-      | TClientMissionObjectValidationKwargs[],
+  /**
+   * Evaluates objects found within the mission to determine if they are defective.
+   * @param args The arguments needed to evaluate objects found within the mission.
+   * @example
+   * mission.evaluateObjects({ key: 'effects', targetEnvironments: [] })
+   */
+  public async evaluateObjects(
+    args: TMissionObjectEvalKwargs | TMissionObjectEvalKwargs[],
   ): Promise<void> {
     return new Promise<void>(async (resolve, reject) => {
       try {
         // Ensure args is an array.
         if (!Array.isArray(args)) args = [args]
         // Initialize invalid objects.
-        this._invalidObjects = []
+        this._defectiveObjects = []
 
         // Loop through args.
         for (let arg of args) {
@@ -325,10 +334,10 @@ export default class ClientMission
                   // Validate the effect.
                   if (
                     effect.targetAjaxStatus === 'Loaded' &&
-                    effect.validate(arg.targetEnvironments) === 'invalid' &&
-                    !this._invalidObjects.includes(effect)
+                    effect.isDefective(arg.targetEnvironments) &&
+                    !this._defectiveObjects.includes(effect)
                   ) {
-                    this._invalidObjects.push(effect)
+                    this._defectiveObjects.push(effect)
                   }
                 }
               }
@@ -1239,7 +1248,7 @@ export default class ClientMission
         let mission: ClientMission = new ClientMission(data, options)
         // Validate objects if necessary.
         if (options.validateData) {
-          await mission.validateObjects(options.validateData)
+          await mission.evaluateObjects(options.validateData)
         }
         // Resolve
         resolve(mission)
@@ -1317,7 +1326,7 @@ export interface TClientMissionTypes extends TCommonMissionTypes {
   targetEnv: ClientTargetEnvironment
   target: ClientTarget
   effect: ClientEffect
-  invalidObject:
+  defectiveObject:
     | ClientMissionForce
     | ClientMissionNode
     | ClientMissionAction
@@ -1347,9 +1356,7 @@ export type TExistingClientMissionOptions = TClientMissionOptions & {
   /**
    * Data to validate objects in the mission.
    */
-  validateData?:
-    | TClientMissionObjectValidationKwargs
-    | TClientMissionObjectValidationKwargs[]
+  validateData?: TMissionObjectEvalKwargs | TMissionObjectEvalKwargs[]
 }
 
 /**
@@ -1420,17 +1427,32 @@ export interface TMissionNavigable {
 }
 
 /**
- * Represents the types of invalid objects found within the mission.
+ * Represents the types of defective objects found within the mission.
  */
-export type TClientMissionInvalidObject = TClientMissionTypes['invalidObject']
+export type TMissionDefectiveObject = TClientMissionTypes['defectiveObject']
 
 /**
- * Arguments needed to validate objects found within the mission.
+ * Keyword arguments needed to evaluate objects found within the mission.
  * @example
  * {
  *  key: 'effects',
  *  targetEnvironments: []
  * }
  */
-type TClientMissionObjectValidationKwargs =
-  TMissionObjectValidationKwargs<TClientMissionTypes>
+export type TMissionObjectEvalKwargs<
+  T extends TCommonMissionTypes = TClientMissionTypes,
+> = TEffectEvalKwargs<T>
+
+/**
+ * Keyword arguments needed to evaluate effects found within the mission.
+ */
+type TEffectEvalKwargs<T extends TCommonMissionTypes = TClientMissionTypes> = {
+  /**
+   * The key to evaluate the objects against.
+   */
+  key: 'effects'
+  /**
+   * The target environments to use for evaluating effects.
+   */
+  targetEnvironments: T['targetEnv'][]
+}

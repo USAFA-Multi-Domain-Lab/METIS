@@ -1,7 +1,4 @@
-import Mission, {
-  TCommonMissionTypes,
-  TMissionObjectValidationKwargs,
-} from 'metis/missions'
+import Mission, { TCommonMissionTypes } from 'metis/missions'
 import { TCommonMissionForceJson } from 'metis/missions/forces'
 import { TMissionPrototypeOptions } from 'metis/missions/nodes/prototypes'
 import StringToolbox from 'metis/toolbox/strings'
@@ -21,11 +18,6 @@ import ServerMissionPrototype from './nodes/prototypes'
  * Class for managing missions on the server.
  */
 export default class ServerMission extends Mission<TServerMissionTypes> {
-  // Implemented
-  public get nodes(): ServerMissionNode[] {
-    return this.forces.map((force) => force.nodes).flat()
-  }
-
   /**
    * The RNG used to generate random numbers for the mission.
    */
@@ -92,46 +84,6 @@ export default class ServerMission extends Mission<TServerMissionTypes> {
     return forces
   }
 
-  // Implemented
-  public validateObjects(
-    args:
-      | TServerMissionObjectValidationKwargs
-      | TServerMissionObjectValidationKwargs[],
-  ): void {
-    // Ensure args is an array.
-    if (!Array.isArray(args)) args = [args]
-    // Initialize the invalid objects array.
-    this._invalidObjects = []
-
-    // Loop through args.
-    for (let arg of args) {
-      // Grab the key from the arg.
-      let { key } = arg
-
-      // Validate the effects.
-      if (key === 'effects') {
-        for (let node of this.nodes) {
-          for (let action of node.actions.values()) {
-            for (let effect of action.effects) {
-              // Populate the target data for the effect.
-              if (effect.targetStatus === 'Not Populated') {
-                effect.populateTargetData()
-              }
-              // Validate the effect.
-              if (
-                effect.targetStatus === 'Populated' &&
-                effect.validate(arg.targetEnvironments) === 'invalid' &&
-                !this._invalidObjects.includes(effect)
-              ) {
-                this._invalidObjects.push(effect)
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-
   /**
    * Extracts the necessary properties from the mission to be used as a reference
    * in a target environment.
@@ -163,25 +115,4 @@ export interface TServerMissionTypes extends TCommonMissionTypes {
   targetEnv: ServerTargetEnvironment
   target: ServerTarget
   effect: ServerEffect
-  invalidObject:
-    | ServerMissionForce
-    | ServerMissionNode
-    | ServerMissionAction
-    | ServerEffect
 }
-
-/**
- * Represents the types of invalid objects found within the mission.
- */
-export type TServerMissionInvalidObject = TServerMissionTypes['invalidObject']
-
-/**
- * Arguments needed to validate objects found within the mission.
- * @example
- * {
- *  key: 'effects',
- *  targetEnvironments: []
- * }
- */
-type TServerMissionObjectValidationKwargs =
-  TMissionObjectValidationKwargs<TServerMissionTypes>

@@ -1,11 +1,8 @@
-import { AnyObject } from 'metis/toolbox/objects'
-import TargetEnvironment, { TCommonTargetEnv, TTargetEnv } from '.'
+import { TCommonTargetEnv, TTargetEnv } from '.'
 import { TTargetEnvContext } from '../../server/target-environments/context-provider'
-import { TCommonMission, TCommonMissionTypes } from '../../shared/missions'
+import { TCommonMissionTypes } from '../../shared/missions'
 import Arg, { TTargetArg, TTargetArgJson } from './args'
-import ForceArg from './args/force-arg'
-import NodeArg from './args/node-arg'
-import Dependency, { TDependencyConditionResult } from './dependencies'
+import Dependency from './dependencies'
 
 /**
  * This is an entity that can be found in a target environment.
@@ -69,129 +66,21 @@ export default abstract class Target<
   }
 
   /**
-   * Determines if all the dependencies passed are met.
-   * @param effectArgs What to check the dependencies against to see if they are met.
-   * @param dependencies The dependencies to check if all are met.
-   * @param mission The mission that the effect is a part of.
-   * @returns The status (`"valid"`, `"warning"`, or `"invalid"`) of the dependencies based on the dependencies' conditions.
-   */
-  public allDependenciesMet = (
-    effectArgs: AnyObject,
-    dependencies: Dependency[] = [],
-    mission?: TCommonMission,
-  ): TDependencyConditionResult => {
-    // If the argument has no dependencies, then the argument is always displayed.
-    if (!dependencies || dependencies.length === 0) {
-      return 'valid'
-    }
-
-    // Stores the status of all the argument's dependencies.
-    let areDependenciesMet: TDependencyConditionResult[] = []
-
-    // Iterate through the dependencies.
-    dependencies.forEach((dependency) => {
-      // Grab the dependency argument.
-      let dependencyArg: TTargetArg | undefined = this.args.find(
-        (arg: TTargetArg) => arg._id === dependency.dependentId,
-      )
-
-      // If the dependency argument is found then check if
-      // the dependency is met.
-      if (dependencyArg) {
-        // Initialize a variable to determine the dependency's status.
-        let dependencyStatus: TDependencyConditionResult
-
-        // If the dependency is a force dependency then check
-        // if the force exists and the dependency's status.
-        if (dependency.name === 'VALIDATE_FORCE' && mission) {
-          // Ensure the force argument exists within the effect arguments.
-          let forceInArgs: AnyObject | undefined =
-            effectArgs[dependency.dependentId]
-          // Ensure the force ID exists within the force argument.
-          let forceId: string | undefined = forceInArgs
-            ? forceInArgs[ForceArg.FORCE_ID_KEY]
-            : undefined
-          // Get the force from the mission.
-          let force = forceId ? mission.getForce(forceId) : undefined
-          // Check the dependency's status.
-          dependencyStatus = dependency.condition(force)
-        }
-        // If the dependency is a node dependency then check
-        // if the node exists and the dependency's status.
-        else if (dependency.name === 'VALIDATE_NODE' && mission) {
-          // Ensure the node argument exists within the effect arguments.
-          let nodeInArgs: AnyObject | undefined =
-            effectArgs[dependency.dependentId]
-          // Ensure the force ID exists within the node argument.
-          let forceId: string | undefined = nodeInArgs
-            ? nodeInArgs[ForceArg.FORCE_ID_KEY]
-            : undefined
-          // Ensure the node ID exists within the node argument.
-          let nodeId: string | undefined = nodeInArgs
-            ? nodeInArgs[NodeArg.NODE_ID_KEY]
-            : undefined
-          // Get the force from the mission.
-          let force = forceId ? mission.getForce(forceId) : undefined
-          // Get the node from the mission.
-          let node = nodeId ? mission.getNode(nodeId) : undefined
-          // Create the value to check the dependency's status.
-          let value = {
-            force: force,
-            node: node,
-          }
-          // Check the dependency's status.
-          dependencyStatus = dependency.condition(value)
-        }
-        // Otherwise, check the dependency's status.
-        else {
-          dependencyStatus = dependency.condition(
-            effectArgs[dependency.dependentId],
-          )
-        }
-
-        // Add the dependency status to the list of dependencies.
-        areDependenciesMet.push(dependencyStatus)
-      }
-      // Otherwise, the dependency argument doesn't exist.
-      else {
-        areDependenciesMet.push('invalid')
-      }
-    })
-
-    // If any of the dependencies are labeled as invalid, then
-    // the status of all the dependencies is invalid.
-    if (areDependenciesMet.includes('invalid')) {
-      return 'invalid'
-    }
-
-    // If any of the dependencies are labeled as a warning, then
-    // the status of all the dependencies is a warning.
-    if (areDependenciesMet.includes('warning')) {
-      return 'warning'
-    }
-
-    // Otherwise, all the dependencies are valid.
-    return 'valid'
-  }
-
-  /**
    * Default properties set when creating a new Target object.
    */
-  public static get DEFAULT_PROPERTIES(): TCommonTargetJson {
-    return {
-      targetEnvId: TargetEnvironment.DEFAULT_PROPERTIES._id,
-      _id: 'metis-target-default',
-      name: 'Select a target',
-      description: 'This is a default target.',
-      script: async () => {},
-      args: [],
-    }
+  public static readonly DEFAULT_PROPERTIES: TCommonTargetJson = {
+    targetEnvId: 'metis-target-env-default',
+    _id: 'metis-target-default',
+    name: 'Select a target',
+    description: 'This is a default target.',
+    script: async () => {},
+    args: [],
   }
 
   /**
    * The node target that is available in the METIS target environment.
    */
-  public static nodeTarget: TCommonTargetJson = {
+  public static readonly nodeTarget: TCommonTargetJson = {
     targetEnvId: 'metis',
     _id: 'node',
     name: 'Node',
@@ -277,17 +166,15 @@ export default abstract class Target<
         type: 'boolean',
         _id: 'blockNode',
         name: 'Block Node',
-        required: false,
         groupingId: 'block-node',
-        dependencies: [Dependency.VALIDATE_NODE('nodeMetadata')],
+        dependencies: [Dependency.NODE('nodeMetadata')],
       },
       {
         type: 'boolean',
         _id: 'modifyActions',
         name: 'Modify Actions',
-        required: false,
         groupingId: 'actions',
-        dependencies: [Dependency.VALIDATE_NODE('nodeMetadata')],
+        dependencies: [Dependency.NODE('nodeMetadata')],
       },
       {
         type: 'number',
@@ -300,7 +187,7 @@ export default abstract class Target<
         groupingId: 'actions',
         dependencies: [
           Dependency.TRUTHY('modifyActions'),
-          Dependency.VALIDATE_NODE('nodeMetadata'),
+          Dependency.NODE('nodeMetadata'),
         ],
         tooltipDescription:
           `This allows you to positively or negatively affect the chance of success for all actions within the node. A positive value increases the chance of success, while a negative value decreases the chance of success.\n` +
@@ -320,7 +207,7 @@ export default abstract class Target<
         groupingId: 'actions',
         dependencies: [
           Dependency.TRUTHY('modifyActions'),
-          Dependency.VALIDATE_NODE('nodeMetadata'),
+          Dependency.NODE('nodeMetadata'),
         ],
         tooltipDescription:
           `This allows you to positively or negatively affect the process time for all actions within the node. A positive value increases the process time, while a negative value decreases the process time.\n` +
@@ -337,7 +224,7 @@ export default abstract class Target<
         groupingId: 'actions',
         dependencies: [
           Dependency.TRUTHY('modifyActions'),
-          Dependency.VALIDATE_NODE('nodeMetadata'),
+          Dependency.NODE('nodeMetadata'),
         ],
         tooltipDescription:
           `This allows you to positively or negatively affect the resource cost for all actions within the node. A positive value increases the resource cost, while a negative value decreases the resource cost.\n` +
@@ -352,7 +239,7 @@ export default abstract class Target<
   /**
    * The output target that is available in the METIS target environment.
    */
-  public static outputTarget: TCommonTargetJson = {
+  public static readonly outputTarget: TCommonTargetJson = {
     targetEnvId: 'metis',
     _id: 'output',
     name: 'Output Panel',
@@ -377,7 +264,7 @@ export default abstract class Target<
         name: 'Message',
         required: false,
         groupingId: 'output',
-        dependencies: [Dependency.VALIDATE_FORCE('forceMetaData')],
+        dependencies: [Dependency.FORCE('forceMetaData')],
         tooltipDescription:
           `This is the message that will be displayed in the output panel for the force selected above.\n` +
           `\t\n` +
@@ -389,7 +276,7 @@ export default abstract class Target<
   /**
    * The internal targets that are available in the METIS target environment.
    */
-  public static INTERNAL_TARGETS: TCommonTargetJson[] = [
+  public static readonly INTERNAL_TARGETS: TCommonTargetJson[] = [
     Target.nodeTarget,
     Target.outputTarget,
   ]
@@ -406,20 +293,6 @@ export type TTargetOptions = {}
  * Options for converting the TargetEnvironment to JSON.
  */
 export type TTargetJsonOptions = {}
-
-/**
- * Represents the target's script.
- */
-export type TTargetScript<TMission> = (
-  /**
-   * The arguments used to execute the effect on the target.
-   */
-  args: AnyObject,
-  /**
-   * The mission that the target is a part of.
-   */
-  mission: TMission,
-) => Promise<void>
 
 /**
  * Interface for the Target class.
@@ -460,18 +333,6 @@ export interface TCommonTarget {
    * @returns A JSON representation of the Target.
    */
   toJson: (options?: TTargetJsonOptions) => TCommonTargetJson
-  /**
-   * Determines if all the dependencies passed are met.
-   * @param effectArgs What to check the dependencies against to see if they are met.
-   * @param dependencies The dependencies to check if all are met.
-   * @param mission The mission that the effect is a part of.
-   * @returns The status (`"valid"`, `"warning"`, or `"invalid"`) of the dependencies based on the dependencies' conditions.
-   */
-  allDependenciesMet: (
-    effectArgs: AnyObject,
-    dependencies?: Dependency[],
-    mission?: TCommonMission,
-  ) => TDependencyConditionResult
 }
 
 /**

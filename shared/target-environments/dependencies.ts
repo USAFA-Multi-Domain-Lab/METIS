@@ -17,10 +17,7 @@ export default class Dependency implements TCommonDependency {
    * @param args The arguments for the condition.
    * @returns Whether the value meets the condition.
    */
-  private _condition: (
-    value: any,
-    args: TDependencyArg[],
-  ) => TDependencyConditionResult
+  private _condition: (value: any, args: TDependencyArg[]) => boolean
   public condition = (value: any) => this._condition(value, this.args)
 
   /**
@@ -38,10 +35,7 @@ export default class Dependency implements TCommonDependency {
   public constructor(
     name: string,
     dependentId: string,
-    condition: (
-      value: any,
-      args: TDependencyArg[],
-    ) => TDependencyConditionResult,
+    condition: (value: any, args: TDependencyArg[]) => boolean,
     args: TDependencyArg[] = [],
   ) {
     // If the name includes '/', throw an error.
@@ -68,9 +62,7 @@ export default class Dependency implements TCommonDependency {
    */
   public static TRUTHY = (dependentId: string) => {
     // Create the dependency.
-    let dependency = new Dependency('TRUTHY', dependentId, (value) =>
-      !!value ? 'valid' : 'invalid',
-    )
+    let dependency = new Dependency('TRUTHY', dependentId, (value) => !!value)
     // Return the encoded dependency.
     return dependency.encode()
   }
@@ -80,9 +72,7 @@ export default class Dependency implements TCommonDependency {
    * @returns A new dependency that checks if the value is truthy.
    */
   private static TRUTHY_DECODED = (dependentId: string) =>
-    new Dependency('TRUTHY', dependentId, (value) =>
-      !!value ? 'valid' : 'invalid',
-    )
+    new Dependency('TRUTHY', dependentId, (value) => !!value)
 
   /**
    * Checks if the value of the argument (*referenced by the argument's ID*) is falsey
@@ -93,9 +83,7 @@ export default class Dependency implements TCommonDependency {
    */
   public static FALSEY = (dependentId: string) => {
     // Create the dependency.
-    let dependency = new Dependency('FALSEY', dependentId, (value) =>
-      !value ? 'valid' : 'invalid',
-    )
+    let dependency = new Dependency('FALSEY', dependentId, (value) => !value)
     // Return the encoded dependency.
     return dependency.encode()
   }
@@ -105,24 +93,21 @@ export default class Dependency implements TCommonDependency {
    * @returns A new dependency that checks if the value is falsey.
    */
   private static FALSEY_DECODED = (dependentId: string) =>
-    new Dependency('FALSEY', dependentId, (value) =>
-      !value ? 'valid' : 'invalid',
-    )
+    new Dependency('FALSEY', dependentId, (value) => !value)
 
   /**
-   * Checks if the value of the argument (*referenced by the argument's ID*) is equal to at least one of the expected values.
+   * Ensures the argument's (*referenced by the argument's ID*) value(s) match at least one of the expected values.
    * @param dependentId The ID of the dependent argument.
    * @param expected The expected values.
-   * @returns A new dependency that checks if the value of the argument is equal to at least one of the expected values.
-   * @example Dependency.EQUALS('fruit', ['apple', 'grape', 'banana', 'orange'])
+   * @returns A new dependency that ensures the argument's values match at least one of the expected values.
+   * @example Dependency.SOME('fruit', ['apple', 'grape', 'banana', 'orange'])
    */
-  public static EQUALS = (dependentId: string, expected: TDependencyArg[]) => {
+  public static SOME = (dependentId: string, expected: TDependencyArg[]) => {
     // Create the dependency.
     let dependency = new Dependency(
-      'EQUALS',
+      'SOME',
       dependentId,
-      (value, expected) =>
-        expected.some((x) => x === value) ? 'valid' : 'invalid',
+      (value, expected) => expected.some((x) => x === value),
       expected,
     )
     // Return the encoded dependency.
@@ -132,37 +117,32 @@ export default class Dependency implements TCommonDependency {
    * Decodes the dependency.
    * @param dependentId The ID of the dependent argument.
    * @param expected The expected values.
-   * @returns A new dependency that checks if the value of the argument is equal to at least one of the expected values.
+   * @returns A new dependency that ensures the argument's values match at least one of the expected values.
    */
-  private static EQUALS_DECODED = (
+  private static SOME_DECODED = (
     dependentId: string,
     expected: TDependencyArg[],
   ) =>
     new Dependency(
-      'EQUALS',
+      'SOME',
       dependentId,
-      (value, expected) =>
-        expected.some((x) => x === value) ? 'valid' : 'invalid',
+      (value, expected) => expected.some((x) => x === value),
       expected,
     )
 
   /**
-   * Checks if the value of the argument (*referenced by the argument's ID*) is not equal to any of the expected values.
+   * Ensures the argument's (*referenced by the argument's ID*) value(s) match all of the expected values.
    * @param dependentId The ID of the dependent argument.
    * @param expected The expected values.
-   * @returns A new dependency that checks if the value of the argument is not equal to any of the expected values.
-   * @example Dependency.NOT_EQUALS('fruit', ['apple', 'grape', 'banana', 'orange'])
+   * @returns A new dependency that ensures the argument's values match all of the expected values.
+   * @example Dependency.EVERY('fruit', ['apple', 'grape', 'banana', 'orange'])
    */
-  public static NOT_EQUALS = (
-    dependentId: string,
-    expected: TDependencyArg[],
-  ) => {
+  public static EVERY = (dependentId: string, expected: TDependencyArg[]) => {
     // Create the dependency.
     let dependency = new Dependency(
-      'NOT_EQUALS',
+      'EVERY',
       dependentId,
-      (value, expected) =>
-        expected.every((x) => x !== value) ? 'valid' : 'invalid',
+      (value, expected) => expected.every((x) => x === value),
       expected,
     )
     // Return the encoded dependency.
@@ -172,30 +152,33 @@ export default class Dependency implements TCommonDependency {
    * Decodes the dependency.
    * @param dependentId The ID of the dependent argument.
    * @param expected The expected values.
-   * @returns A new dependency that checks if the value of the argument is not equal to any of the expected values.
+   * @returns A new dependency that ensures the argument's values match all of the expected values.
    */
-  private static NOT_EQUALS_DECODED = (
+  private static EVERY_DECODED = (
     dependentId: string,
     expected: TDependencyArg[],
   ) =>
     new Dependency(
-      'NOT_EQUALS',
+      'EVERY',
       dependentId,
-      (value, expected) =>
-        expected.every((x) => x !== value) ? 'valid' : 'invalid',
+      (value, expected) => expected.every((x) => x === value),
       expected,
     )
 
   /**
-   * Checks if the argument's (*referenced by the argument's ID*) value is a valid force.
+   * Ensures the argument's (*referenced by the argument's ID*) value(s) don't match any of the unexpected values.
    * @param dependentId The ID of the dependent argument.
-   * @returns A new dependency that checks if the argument's value is a valid force.
-   * @example Dependency.VALIDATE_FORCE('dependentId')
+   * @param unexpected The unexpected values.
+   * @returns A new dependency that ensures the argument's value(s) don't match any of the unexpected values.
+   * @example Dependency.NONE('fruit', ['apple', 'grape', 'banana', 'orange'])
    */
-  public static VALIDATE_FORCE = (dependentId: string) => {
+  public static NONE = (dependentId: string, unexpected: TDependencyArg[]) => {
     // Create the dependency.
-    let dependency = new Dependency('VALIDATE_FORCE', dependentId, (value) =>
-      value instanceof MissionForce ? 'valid' : 'warning',
+    let dependency = new Dependency(
+      'NONE',
+      dependentId,
+      (value, unexpected) => unexpected.every((x) => x !== value),
+      unexpected,
     )
     // Return the encoded dependency.
     return dependency.encode()
@@ -203,25 +186,32 @@ export default class Dependency implements TCommonDependency {
   /**
    * Decodes the dependency.
    * @param dependentId The ID of the dependent argument.
-   * @returns A new dependency that checks if the argument's value is a valid force.
+   * @param unexpected The expected values.
+   * @returns A new dependency that ensures the argument's value(s) don't match any of the unexpected values.
    */
-  private static VALIDATE_FORCE_DECODED = (dependentId: string) =>
-    new Dependency('VALIDATE_FORCE', dependentId, (value) =>
-      value instanceof MissionForce ? 'valid' : 'warning',
+  private static NONE_DECODED = (
+    dependentId: string,
+    unexpected: TDependencyArg[],
+  ) =>
+    new Dependency(
+      'NONE',
+      dependentId,
+      (value, unexpected) => unexpected.every((x) => x !== value),
+      unexpected,
     )
 
   /**
-   * Checks if the argument's (*referenced by the argument's ID*) value contains a valid force and node.
+   * Checks if the argument's (*referenced by the argument's ID*) value is a force object.
    * @param dependentId The ID of the dependent argument.
-   * @returns A new dependency that checks if the argument's value contains a valid force and node.
-   * @example Dependency.VALIDATE_NODE('dependentId')
+   * @returns A new dependency that checks if the argument's value is a force object.
+   * @example Dependency.FORCE('dependentId')
    */
-  public static VALIDATE_NODE = (dependentId: string) => {
+  public static FORCE = (dependentId: string) => {
     // Create the dependency.
-    let dependency = new Dependency('VALIDATE_NODE', dependentId, (value) =>
-      value.force instanceof MissionForce && value.node instanceof MissionNode
-        ? 'valid'
-        : 'warning',
+    let dependency = new Dependency(
+      'FORCE',
+      dependentId,
+      (value) => value instanceof MissionForce,
     )
     // Return the encoded dependency.
     return dependency.encode()
@@ -229,13 +219,45 @@ export default class Dependency implements TCommonDependency {
   /**
    * Decodes the dependency.
    * @param dependentId The ID of the dependent argument.
-   * @returns A new dependency that checks if the argument's value contains a valid force and node.
+   * @returns A new dependency that checks if the argument's value is a force object.
    */
-  private static VALIDATE_NODE_DECODED = (dependentId: string) =>
-    new Dependency('VALIDATE_NODE', dependentId, (value) =>
-      value.force instanceof MissionForce && value.node instanceof MissionNode
-        ? 'valid'
-        : 'warning',
+  private static FORCE_DECODED = (dependentId: string) =>
+    new Dependency(
+      'FORCE',
+      dependentId,
+      (value) => value instanceof MissionForce,
+    )
+
+  /**
+   * Checks if the argument's (*referenced by the argument's ID*) value contains a force object and a node object.
+   * @param dependentId The ID of the dependent argument.
+   * @returns A new dependency that checks if the argument's value contains a force object and a node object.
+   * @example Dependency.NODE('dependentId')
+   */
+  public static NODE = (dependentId: string) => {
+    // Create the dependency.
+    let dependency = new Dependency(
+      'NODE',
+      dependentId,
+      (value) =>
+        value.force instanceof MissionForce &&
+        value.node instanceof MissionNode,
+    )
+    // Return the encoded dependency.
+    return dependency.encode()
+  }
+  /**
+   * Decodes the dependency.
+   * @param dependentId The ID of the dependent argument.
+   * @returns A new dependency that checks if the argument's value contains a force object and a node object.
+   */
+  private static NODE_DECODED = (dependentId: string) =>
+    new Dependency(
+      'NODE',
+      dependentId,
+      (value) =>
+        value.force instanceof MissionForce &&
+        value.node instanceof MissionNode,
     )
 
   /**
@@ -264,14 +286,16 @@ export default class Dependency implements TCommonDependency {
           return Dependency.TRUTHY_DECODED(dependentId)
         case 'FALSEY':
           return Dependency.FALSEY_DECODED(dependentId)
-        case 'EQUALS':
-          return Dependency.EQUALS_DECODED(dependentId, args)
-        case 'NOT_EQUALS':
-          return Dependency.NOT_EQUALS_DECODED(dependentId, args)
-        case 'VALIDATE_FORCE':
-          return Dependency.VALIDATE_FORCE_DECODED(dependentId)
-        case 'VALIDATE_NODE':
-          return Dependency.VALIDATE_NODE_DECODED(dependentId)
+        case 'SOME':
+          return Dependency.SOME_DECODED(dependentId, args)
+        case 'EVERY':
+          return Dependency.EVERY_DECODED(dependentId, args)
+        case 'NONE':
+          return Dependency.NONE_DECODED(dependentId, args)
+        case 'FORCE':
+          return Dependency.FORCE_DECODED(dependentId)
+        case 'NODE':
+          return Dependency.NODE_DECODED(dependentId)
         default:
           throw new Error(`Unexpected name for Dependency Condition: ${name}`)
       }
@@ -290,11 +314,6 @@ export default class Dependency implements TCommonDependency {
 type TDependencyArg = string | number | boolean
 
 /**
- * The result of a dependency condition.
- */
-export type TDependencyConditionResult = 'valid' | 'invalid' | 'warning'
-
-/**
  * Represents a dependency that can be found within a target's arguments.
  */
 export interface TCommonDependency {
@@ -309,11 +328,9 @@ export interface TCommonDependency {
   /**
    * The condition function.
    * @param value The value to check.
-   * @returns Whether the value is valid, invalid, or a warning.
-   * @note A warning is a condition that is not met, but is not
-   * critical to applying effects to their targets.
+   * @returns Whether the value meets the condition.
    */
-  condition: (value: any) => TDependencyConditionResult
+  condition: (value: any) => boolean
   /**
    * Encodes the dependency.
    * @returns The encoded dependency.

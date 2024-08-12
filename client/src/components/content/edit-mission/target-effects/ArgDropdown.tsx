@@ -13,8 +13,7 @@ import { DetailDropdown } from '../../form/DetailDropdown'
  * Renders a dropdown for the argument whose type is `"dropdown"`.
  */
 export default function ArgDropdown({
-  effect: { mission },
-  target,
+  effect,
   arg,
   initialize,
   effectArgs,
@@ -71,18 +70,13 @@ export default function ArgDropdown({
    * The dropdown options that are available based on the
    * dependencies of the argument's options.
    */
-  const availableOptions: TDropdownArgOption[] = compute(() => {
-    return arg.type === 'dropdown'
-      ? arg.options.filter(
-          (option) =>
-            target?.allDependenciesMet(
-              effectArgs,
-              option.dependencies,
-              mission,
-            ) === 'valid' ?? 'invalid',
+  const availableOptions: TDropdownArgOption[] = compute(() =>
+    arg.type === 'dropdown'
+      ? arg.options.filter((option) =>
+          effect.allDependenciesMet(option.dependencies, effectArgs),
         )
-      : []
-  })
+      : [],
+  )
 
   /* -- EFFECTS -- */
 
@@ -211,10 +205,6 @@ type TDropdownArg_P = {
    * The effect that the arguments belong to.
    */
   effect: ClientEffect
-  /**
-   * The effect's target.
-   */
-  target: ClientEffect['target']
   /**
    * The dropdown argument to render.
    */

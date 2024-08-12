@@ -35,45 +35,36 @@ export default function ArgBoolean({
   /* -- FUNCTIONS -- */
   /**
    * Initializes the argument within the effect's arguments.
-   * @note *This is determined by the argument's dependencies
-   * and whether the argument is required or not.*
+   * @note *This is determined by the argument's dependencies.*
    */
   const initializeArg = () => {
-    // If the argument is required, then set the argument's
-    // value to the default value.
-    // *** Note: The default value is mandatory if the
-    // *** argument is required.
-    if (arg.required) {
-      // If the argument's value stored in the state is the
-      // same as the default value, then manually update the
-      // effect's arguments by adding this argument and its
-      // value.
-      if (value === arg.default) {
-        // *** Note: An argument's value in the effect's
-        // *** arguments is automatically set if the value
-        // *** stored in this state changes. If the value
-        // *** in the state doesn't change then the value
-        // *** needs to be set manually.
-        setEffectArgs((prev) => ({ ...prev, [arg._id]: value }))
-      }
-      // Otherwise, set the argument's value to the default value.
-      // *** Note: The default value is mandatory if the
-      // *** argument is required.
-      else {
-        // *** Note: When this value in the state changes,
-        // *** the effect's arguments automatically updates
-        // *** with the current value.
-        setValue(arg.default)
-      }
-    }
-    // Or, if the argument is optional...
-    else {
-      // ...then set the boolean value to the current value.
-      // *** Note: The boolean is a special case because
-      // *** it only has two states: true or false. Therefore,
-      // *** the value is always defined which means that it
-      // *** should always be included in the effect's arguments.
+    // If the argument's value stored in the state is the
+    // same as the default value, then manually update the
+    // effect's arguments by adding this argument and its
+    // value.
+    if (value === arg.default) {
+      // *** Note: An argument's value in the effect's
+      // *** arguments is automatically set if the value
+      // *** stored in this state changes. If the value
+      // *** in the state doesn't change then the value
+      // *** needs to be set manually.
       setEffectArgs((prev) => ({ ...prev, [arg._id]: value }))
+    }
+    // Or, if the argument has a default value and the
+    // value stored in the state is not the default value,
+    // then update the value in the state to the default value.
+    else if (arg.default !== undefined && value !== arg.default) {
+      // *** Note: When this value in the state changes,
+      // *** the effect's arguments automatically updates
+      // *** with the current value.
+      setValue(arg.default)
+    }
+    // Otherwise, set the value stored in the state to false.
+    else {
+      // *** Note: When this value in the state changes,
+      // *** the effect's arguments automatically updates
+      // *** with the current value.
+      setValue(false)
     }
   }
 

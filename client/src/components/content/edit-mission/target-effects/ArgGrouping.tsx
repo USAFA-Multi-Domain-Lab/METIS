@@ -10,8 +10,6 @@ import './ArgGrouping.scss'
  */
 export default function ArgGrouping({
   effect,
-  effect: { mission },
-  target,
   grouping,
   effectArgs,
   setEffectArgs,
@@ -32,11 +30,7 @@ export default function ArgGrouping({
       // If all of the argument's dependencies are met
       // then at least one argument in the grouping
       // is displayed.
-      if (
-        target &&
-        target.allDependenciesMet(effectArgs, arg.dependencies, mission) ===
-          'valid'
-      ) {
+      if (effect.allDependenciesMet(arg.dependencies, effectArgs)) {
         oneGroupingIsDisplayed = true
         break
       }
@@ -69,7 +63,6 @@ export default function ArgGrouping({
         return (
           <Arg
             effect={effect}
-            target={target}
             arg={arg}
             effectArgs={effectArgs}
             setEffectArgs={setEffectArgs}
@@ -91,10 +84,6 @@ type TArgGrouping_P = {
    * The effect that the arguments belong to.
    */
   effect: ClientEffect
-  /**
-   * The effect's target.
-   */
-  target: ClientEffect['target']
   /**
    * The grouping of arguments to render.
    */

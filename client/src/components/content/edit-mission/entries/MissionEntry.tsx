@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useGlobalContext } from 'src/context'
-import ClientMission, { TClientMissionInvalidObject } from 'src/missions'
+import ClientMission, { TMissionDefectiveObject } from 'src/missions'
 import { ClientEffect } from 'src/missions/effects'
 import { compute } from 'src/toolbox'
 import { useMountHandler, usePostInitEffect } from 'src/toolbox/hooks'
@@ -35,19 +35,19 @@ export default function MissionEntry({
   const [initialResources, setInitialResources] = useState<number>(
     mission.initialResources,
   )
-  const [invalidObjects, setInvalidObjects] = useState<
-    TClientMissionInvalidObject[]
-  >(mission.invalidObjects)
+  const [defectiveObjects, setDefectiveObjects] = useState<
+    TMissionDefectiveObject[]
+  >(mission.defectiveObjects)
 
   /* -- EFFECTS -- */
 
   // componentDidMount
   const [mountHandled, remount] = useMountHandler(async (done) => {
-    await mission.validateObjects({
+    await mission.evaluateObjects({
       key: 'effects',
       targetEnvironments,
     })
-    setInvalidObjects(mission.invalidObjects)
+    setDefectiveObjects(mission.defectiveObjects)
     done()
   })
 
@@ -74,7 +74,7 @@ export default function MissionEntry({
   /**
    * Renders JSX for the effect list item.
    */
-  const renderObjectListItem = (object: TClientMissionInvalidObject) => {
+  const renderObjectListItem = (object: TMissionDefectiveObject) => {
     /* -- COMPUTED -- */
 
     /**
@@ -169,9 +169,9 @@ export default function MissionEntry({
               integersOnly={true}
               key={`${mission._id}_initialResources`}
             />
-            {invalidObjects.length > 0 ? (
-              <List<TClientMissionInvalidObject>
-                items={invalidObjects}
+            {defectiveObjects.length > 0 ? (
+              <List<TMissionDefectiveObject>
+                items={defectiveObjects}
                 renderItemDisplay={(object) => renderObjectListItem(object)}
                 headingText={'Warnings'}
                 sortByMethods={[ESortByMethod.Name]}

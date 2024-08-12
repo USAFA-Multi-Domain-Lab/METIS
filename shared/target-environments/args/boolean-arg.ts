@@ -10,32 +10,17 @@ export default class BooleanArg {
    * @returns The boolean argument as JSON.
    */
   public static toJson = (arg: TBooleanArg): TBooleanArgJson => {
-    // Return the appropriate properties based on
-    // whether the argument is required or not.
-    return arg.required
-      ? {
-          _id: arg._id,
-          name: arg.name,
-          groupingId: arg.groupingId,
-          dependencies: arg.dependencies
-            ? Arg.encodeDependencies(arg.dependencies)
-            : undefined,
-          tooltipDescription: arg.tooltipDescription,
-          type: arg.type,
-          required: arg.required,
-          default: arg.default,
-        }
-      : {
-          _id: arg._id,
-          name: arg.name,
-          groupingId: arg.groupingId,
-          dependencies: arg.dependencies
-            ? Arg.encodeDependencies(arg.dependencies)
-            : undefined,
-          tooltipDescription: arg.tooltipDescription,
-          type: arg.type,
-          required: arg.required,
-        }
+    return {
+      _id: arg._id,
+      name: arg.name,
+      groupingId: arg.groupingId,
+      dependencies: arg.dependencies
+        ? Arg.encodeDependencies(arg.dependencies)
+        : undefined,
+      tooltipDescription: arg.tooltipDescription,
+      type: arg.type,
+      default: arg.default,
+    }
   }
 
   /**
@@ -44,32 +29,17 @@ export default class BooleanArg {
    * @returns The boolean argument.
    */
   public static fromJson = (arg: TBooleanArgJson): TBooleanArg => {
-    // Return the appropriate properties based on
-    // whether the argument is required or not.
-    return arg.required
-      ? {
-          _id: arg._id,
-          name: arg.name,
-          groupingId: arg.groupingId,
-          dependencies: arg.dependencies
-            ? Arg.decodeDependencies(arg.dependencies)
-            : undefined,
-          tooltipDescription: arg.tooltipDescription,
-          type: arg.type,
-          required: arg.required,
-          default: arg.default,
-        }
-      : {
-          _id: arg._id,
-          name: arg.name,
-          groupingId: arg.groupingId,
-          dependencies: arg.dependencies
-            ? Arg.decodeDependencies(arg.dependencies)
-            : undefined,
-          tooltipDescription: arg.tooltipDescription,
-          type: arg.type,
-          required: arg.required,
-        }
+    return {
+      _id: arg._id,
+      name: arg.name,
+      groupingId: arg.groupingId,
+      dependencies: arg.dependencies
+        ? Arg.decodeDependencies(arg.dependencies)
+        : undefined,
+      tooltipDescription: arg.tooltipDescription,
+      type: arg.type,
+      default: arg.default,
+    }
   }
 }
 
@@ -78,66 +48,30 @@ export default class BooleanArg {
 /**
  * The boolean argument type for a target.
  */
-export type TBooleanArg = TBaseArg &
-  (TBooleanArgOptional | TBooleanArgRequired) & {
-    /**
-     * The argument's input type.
-     * @note This will render as a toggle switch.
-     */
-    type: 'boolean'
-  }
-/**
- * The optional boolean argument type for a target.
- */
-type TBooleanArgOptional = {
+export type TBooleanArg = TBaseArg & {
   /**
-   * Determines whether the argument is required or not.
+   * The argument's input type.
+   * @note This will render as a toggle switch.
    */
-  required: false
-}
-/**
- * The required boolean argument type for a target.
- */
-type TBooleanArgRequired = {
-  /**
-   * Determines whether the argument is required or not.
-   */
-  required: true
+  type: 'boolean'
   /**
    * The default value for the argument.
+   * @note If not provided, the default value will be `false`.
    */
-  default: boolean
+  default?: true
 }
 /**
  * The boolean argument type for a target.
  */
-export type TBooleanArgJson = TBaseArgJson &
-  (TBooleanArgOptionalJson | TBooleanArgRequiredJson) & {
-    /**
-     * The argument's input type.
-     * @note This will render as a toggle switch.
-     */
-    type: 'boolean'
-  }
-/**
- * The optional boolean argument type for a target.
- */
-type TBooleanArgOptionalJson = {
+export type TBooleanArgJson = TBaseArgJson & {
   /**
-   * Determines whether the argument is required or not.
+   * The argument's input type.
+   * @note This will render as a toggle switch.
    */
-  required: false
-}
-/**
- * The required boolean argument type for a target.
- */
-type TBooleanArgRequiredJson = {
-  /**
-   * Determines whether the argument is required or not.
-   */
-  required: true
+  type: 'boolean'
   /**
    * The default value for the argument.
+   * @note If not provided, the default value will be `false`.
    */
-  default: boolean
+  default?: true
 }
