@@ -517,7 +517,9 @@ export default function HomePage(): JSX.Element | null {
    * Handler for when a mission is selected.
    */
   const onMissionSelection = async ({ _id: missionId }: ClientMission) => {
-    navigateTo('MissionPage', { missionId })
+    if (currentUser.isAuthorized('missions_write')) {
+      navigateTo('MissionPage', { missionId })
+    }
   }
 
   // This will switch to the user form
@@ -602,7 +604,7 @@ export default function HomePage(): JSX.Element | null {
               })
 
               return (
-                <div className='SelectionRow Session'>
+                <div className='Row Select Session'>
                   <div className={accessibilityClass}>
                     <Tooltip
                       description={
@@ -660,7 +662,7 @@ export default function HomePage(): JSX.Element | null {
    * The missions that are displayed on the home page.
    */
   const missionsJsx = compute(() => {
-    if (currentUser.isAuthorized(['missions_read', 'missions_write'])) {
+    if (currentUser.isAuthorized('missions_read')) {
       return (
         <div className='ListContainer'>
           <List<ClientMission>
@@ -670,24 +672,39 @@ export default function HomePage(): JSX.Element | null {
             nameProperty={'name'}
             alwaysUseBlanks={true}
             renderItemDisplay={(mission: ClientMission) => {
-              return (
-                <>
-                  <div className='SelectionRow'>
-                    <div
-                      className='Text'
-                      onClick={() => onMissionSelection(mission)}
-                    >
-                      {mission.name}
-                      <Tooltip description='View/edit mission.' />
+              if (currentUser.isAuthorized('missions_write')) {
+                return (
+                  <>
+                    <div className='Row Select'>
+                      <div
+                        className='Text Select'
+                        onClick={() => onMissionSelection(mission)}
+                      >
+                        {mission.name}
+                        <Tooltip description='View/edit mission.' />
+                      </div>
+                      <MissionModificationPanel
+                        mission={mission}
+                        onSuccessfulCopy={loadMissions}
+                        onSuccessfulDeletion={loadMissions}
+                      />
                     </div>
-                    <MissionModificationPanel
-                      mission={mission}
-                      onSuccessfulCopy={loadMissions}
-                      onSuccessfulDeletion={loadMissions}
-                    />
-                  </div>
-                </>
-              )
+                  </>
+                )
+              } else {
+                return (
+                  <>
+                    <div className='Row'>
+                      <div className='Text'>{mission.name}</div>
+                      <MissionModificationPanel
+                        mission={mission}
+                        onSuccessfulCopy={() => {}}
+                        onSuccessfulDeletion={() => {}}
+                      />
+                    </div>
+                  </>
+                )
+              }
             }}
             searchableProperties={['name']}
             noItemsDisplay={
@@ -744,7 +761,7 @@ export default function HomePage(): JSX.Element | null {
             renderItemDisplay={(user: ClientUser) => {
               return (
                 <>
-                  <div className='SelectionRow'>
+                  <div className='Row Select'>
                     <div className='Text' onClick={() => selectUser(user)}>
                       {user.username}
                       <Tooltip description='Select user.' />

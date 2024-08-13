@@ -104,7 +104,13 @@ export default abstract class Effect<
   /**
    * The environment in which the target exists.
    */
-  public abstract get targetEnvironment(): TTargetEnv<T> | null
+  public get targetEnvironment(): TTargetEnv<T> | null {
+    if (this.target instanceof Target) {
+      return this.target.targetEnvironment
+    } else {
+      return null
+    }
+  }
 
   /**
    * The message to display when the effect is invalid.
@@ -127,6 +133,8 @@ export default abstract class Effect<
     data: Partial<TCommonEffectJson> = Effect.DEFAULT_PROPERTIES,
     options: TEffectOptions = {},
   ) {
+    let { populateTargets = false } = options
+
     this.action = action
     this._id = data._id?.toString() ?? Effect.DEFAULT_PROPERTIES._id
     this.name = data.name ?? Effect.DEFAULT_PROPERTIES.name
@@ -138,12 +146,14 @@ export default abstract class Effect<
     this.args = data.args ?? Effect.DEFAULT_PROPERTIES.args
 
     this._invalidMessage = ''
+
+    if (populateTargets) this.populateTargetData(this.targetId)
   }
 
   /**
    * Populates the target data.
    */
-  public abstract populateTargetData(): Promise<void> | void
+  protected abstract populateTargetData(targetId: string | null): void
 
   // Inherited
   public toJson(): TCommonEffectJson {
@@ -189,7 +199,13 @@ export default abstract class Effect<
 /**
  * Options for creating a new Effect Object.
  */
-export type TEffectOptions = {}
+export type TEffectOptions = {
+  /**
+   * Whether to populate the targets.
+   * @default false
+   */
+  populateTargets?: boolean
+}
 
 /**
  * Options for the Effect.toJson() method.

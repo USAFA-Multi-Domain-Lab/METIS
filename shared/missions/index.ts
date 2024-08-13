@@ -13,6 +13,7 @@ import {
   TCommonMissionForce,
   TCommonMissionForceJson,
   TForce,
+  TMissionForceOptions,
 } from './forces'
 import { TCommonMissionNode, TNode } from './nodes'
 import { TCommonMissionPrototype, TPrototype } from './nodes/prototypes'
@@ -78,7 +79,7 @@ export default abstract class Mission<
     this.root = this.initializeRoot()
 
     // Parse options.
-    let { openAll = false } = options
+    let { openAll = false, populateTargets = false } = options
 
     // Import node structure into the mission.
     this.importStructure(
@@ -86,7 +87,9 @@ export default abstract class Mission<
     )
 
     // Parse force data.
-    this.importForces(data.forces ?? Mission.DEFAULT_PROPERTIES.forces)
+    this.importForces(data.forces ?? Mission.DEFAULT_PROPERTIES.forces, {
+      populateTargets,
+    })
   }
 
   // Implemented
@@ -211,7 +214,10 @@ export default abstract class Mission<
    * @param data The force data to parse.
    * @returns The parsed force data.
    */
-  protected abstract importForces(data: TCommonMissionForceJson[]): TForce<T>[]
+  protected abstract importForces(
+    data: TCommonMissionForceJson[],
+    options?: TMissionForceOptions,
+  ): TForce<T>[]
 
   // Implemented
   public getPrototype(
@@ -500,6 +506,11 @@ export type TMissionOptions = {
    * @default false
    */
   openAll?: boolean
+  /**
+   * Whether to populate the targets.
+   * @default false
+   */
+  populateTargets?: boolean
 }
 
 /**

@@ -1,7 +1,9 @@
 import { TClientMissionTypes, TMissionNavigable } from '..'
-import MissionAction from '../../../../shared/missions/actions'
+import MissionAction, {
+  TMissionActionOptions,
+} from '../../../../shared/missions/actions'
 import { TCommonEffectJson } from '../../../../shared/missions/effects'
-import { ClientEffect } from '../effects'
+import { ClientEffect, TClientEffectOptions } from '../effects'
 
 /**
  * Class representing a mission action on the client-side.
@@ -15,7 +17,19 @@ export default class ClientMissionAction
   }
 
   // Implemented
-  public parseEffects(data: TCommonEffectJson[]): ClientEffect[] {
-    return data.map((datum: TCommonEffectJson) => new ClientEffect(this, datum))
+  protected parseEffects(
+    data: TCommonEffectJson[],
+    options: TClientEffectOptions = {},
+  ): ClientEffect[] {
+    return data.map(
+      (datum: TCommonEffectJson) => new ClientEffect(this, datum, options),
+    )
   }
 }
+
+/* ------------------------------ CLIENT ACTION TYPES ------------------------------ */
+
+/**
+ * Options for creating a new ClientMissionAction object.
+ */
+export type TClientMissionActionOptions = TMissionActionOptions & {}

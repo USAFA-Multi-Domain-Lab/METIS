@@ -156,7 +156,7 @@ export type TBaseArg = {
    *    required: false,
    *    groupingId: 'argument',
    *    type: 'number',
-   *    dependencies: [Dependency.EQUALS('argument1', [1, 2, 3])],
+   *    dependencies: [Dependency.SOME('argument1', [1, 2, 3])],
    * }
    * ```
    */
@@ -245,7 +245,7 @@ export type TBaseArgJson = {
    *    required: false,
    *    groupingId: 'argument',
    *    type: 'number',
-   *    dependencies: [Dependency.EQUALS('argument1', [1, 2, 3])],
+   *    dependencies: [Dependency.SOME('argument1', [1, 2, 3])],
    * }
    * ```
    */

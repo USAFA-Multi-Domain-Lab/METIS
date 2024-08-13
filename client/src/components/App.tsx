@@ -59,8 +59,6 @@ function App(props: {}): JSX.Element | null {
   const [tooltipDescription, setTooltipDescription] =
     globalContext.tooltipDescription
   const [_, setMissionNodeColors] = globalContext.missionNodeColors
-  const [targetEnvironments, setTargetEnvironments] =
-    globalContext.targetEnvironments
   const [loading] = globalContext.loading
   const [loadingMinTimeReached] = globalContext.loadingMinTimeReached
   const [pageSwitchMinTimeReached] = globalContext.pageSwitchMinTimeReached
@@ -224,13 +222,11 @@ function App(props: {}): JSX.Element | null {
     async function effect(): Promise<void> {
       if (login === null) {
         setMissionNodeColors([])
-        setTargetEnvironments([])
       } else {
         try {
           setMissionNodeColors(await ClientMissionNode.$fetchColors())
-          if (login.user.isAuthorized('missions_read')) {
-            setTargetEnvironments(await ClientTargetEnvironment.$fetchAll())
-          }
+          // Load target environments.
+          await ClientTargetEnvironment.$loadAll(login.user)
         } catch {
           handleError('Failed to load post-login data.')
         }

@@ -1,6 +1,6 @@
-import mongoose from 'mongoose'
 import DOMPurify from 'isomorphic-dompurify'
 import { databaseLogger } from 'metis/server/logging'
+import mongoose from 'mongoose'
 
 /**
  * This is a custom schema type that
@@ -12,8 +12,8 @@ export class SanitizedHTML extends mongoose.SchemaType {
   /**
    * This is called when a new instance of the schema type
    * is created.
-   * @param {string} key The key of the schema type.
-   * @param {any} options The options passed to the schema type.
+   * @param key The key of the schema type.
+   * @param options The options passed to the schema type.
    */
   constructor(key: string, options: any) {
     super(key, options)
@@ -21,10 +21,10 @@ export class SanitizedHTML extends mongoose.SchemaType {
 
   /**
    * This is called when a value is passed to the constructor.
-   * @param {string} val The value passed to the constructor.
-   * @returns {string | any} Sanitized HTML or an error.
+   * @param val The value passed to the constructor.
+   * @returns Sanitized HTML or an error.
    */
-  cast(val: string): string | any {
+  cast(val: string): string | void {
     try {
       let sanitizedHTML = DOMPurify.sanitize(val, {
         ALLOWED_TAGS: ['a', 'br', 'p', 'strong', 'em', 'u', 'ul', 'ol', 'li'],

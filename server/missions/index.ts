@@ -10,7 +10,7 @@ import ServerMissionAction from './actions'
 import ServerActionExecution from './actions/executions'
 import { ServerRealizedOutcome } from './actions/outcomes'
 import ServerEffect from './effects'
-import ServerMissionForce from './forces'
+import ServerMissionForce, { TServerMissionForceOptions } from './forces'
 import ServerMissionNode from './nodes'
 import ServerMissionPrototype from './nodes/prototypes'
 
@@ -78,8 +78,11 @@ export default class ServerMission extends Mission<TServerMissionTypes> {
   // Implemented
   protected importForces(
     data: TCommonMissionForceJson[],
+    options: TServerMissionForceOptions = {},
   ): ServerMissionForce[] {
-    let forces = data.map((datum) => new ServerMissionForce(this, datum))
+    let forces = data.map(
+      (datum) => new ServerMissionForce(this, datum, options),
+    )
     this.forces.push(...forces)
     return forces
   }

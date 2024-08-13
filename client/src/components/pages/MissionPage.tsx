@@ -57,7 +57,6 @@ export default function MissionPage({
     prompt,
     forceUpdate,
   } = globalContext.actions
-  const [targetEnvironments] = globalContext.targetEnvironments
 
   /* -- STATE -- */
 
@@ -112,10 +111,7 @@ export default function MissionPage({
         beginLoading('Loading mission...')
         let mission = await ClientMission.$fetchOne(missionId, {
           openAll: true,
-          validateData: {
-            key: 'effects',
-            targetEnvironments,
-          },
+          populateTargets: true,
         })
         setMission(mission)
         setSelection(mission)
@@ -572,15 +568,10 @@ export default function MissionPage({
     // If the selection is an action and the user has
     // requested to create a new effect, then display
     // the create effect modal.
-    if (
-      selection instanceof ClientMissionAction &&
-      isNewEffect &&
-      targetEnvironments.length > 0
-    ) {
+    if (selection instanceof ClientMissionAction && isNewEffect) {
       return (
         <CreateEffect
           action={mission.selection as ClientMissionAction}
-          targetEnvironments={targetEnvironments}
           setIsNewEffect={setIsNewEffect}
           handleChange={handleChange}
         />
@@ -644,7 +635,6 @@ export default function MissionPage({
       return (
         <ActionEntry
           action={selection}
-          targetEnvironments={targetEnvironments}
           setIsNewEffect={setIsNewEffect}
           handleDeleteActionRequest={handleDeleteActionRequest}
           handleDeleteEffectRequest={handleDeleteEffectRequest}

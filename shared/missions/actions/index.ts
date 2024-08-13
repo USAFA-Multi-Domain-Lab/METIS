@@ -1,7 +1,12 @@
 import { v4 as generateHash } from 'uuid'
 import { TCommonMission, TCommonMissionTypes, TMission } from '..'
 import { uuidTypeValidator } from '../../toolbox/validators'
-import { TCommonEffect, TCommonEffectJson, TEffect } from '../effects'
+import {
+  TCommonEffect,
+  TCommonEffectJson,
+  TEffect,
+  TEffectOptions,
+} from '../effects'
 import { TCommonMissionForce, TForce } from '../forces'
 import { TCommonMissionNode, TNode } from '../nodes'
 
@@ -126,11 +131,15 @@ export default abstract class MissionAction<
   /**
    * @param node The node on which the action is being executed.
    * @param data The action data from which to create the action. Any ommitted values will be set to the default properties defined in MissionAction.DEFAULT_PROPERTIES.
+   * @param options The options for creating the action.
    */
   public constructor(
     node: TNode<T>,
     data: Partial<TCommonMissionActionJson> = MissionAction.DEFAULT_PROPERTIES,
+    options: TMissionActionOptions = {},
   ) {
+    let { populateTargets = false } = options
+
     this.node = node
     this._id = data._id?.toString() ?? MissionAction.DEFAULT_PROPERTIES._id
     this.name = data.name ?? MissionAction.DEFAULT_PROPERTIES.name
@@ -150,6 +159,7 @@ export default abstract class MissionAction<
       MissionAction.DEFAULT_PROPERTIES.postExecutionFailureText
     this.effects = this.parseEffects(
       data.effects ?? MissionAction.DEFAULT_PROPERTIES.effects,
+      { populateTargets },
     )
 
     this.processTimeOperand = 0
@@ -160,9 +170,13 @@ export default abstract class MissionAction<
   /**
    * Parses the effect data into Effect Objects.
    * @param data The effect data to parse.
+   * @param options The options for parsing the effect data.
    * @returns An array of Effect Objects.
    */
-  public abstract parseEffects(data: TCommonEffectJson[]): TEffect<T>[]
+  protected abstract parseEffects(
+    data: TCommonEffectJson[],
+    options?: TEffectOptions,
+  ): TEffect<T>[]
 
   // Implemented
   public toJson(): TCommonMissionActionJson {
@@ -260,7 +274,13 @@ export default abstract class MissionAction<
 /**
  * Options for creating a mission action.
  */
-export type TMissionActionOptions = {}
+export type TMissionActionOptions = {
+  /**
+   * Whether to populate the targets.
+   * @default false
+   */
+  populateTargets?: boolean
+}
 
 /**
  * Options for converting a MissionAction to JSON.

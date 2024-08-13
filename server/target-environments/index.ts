@@ -217,9 +217,9 @@ export default class ServerTargetEnvironment extends TargetEnvironment<TServerMi
   }
 }
 
-/* ------------------------------ TARGET ENVIRONMENT TYPES ------------------------------ */
+/* ------------------------------ SERVER TARGET ENVIRONMENT TYPES ------------------------------ */
 
 /**
- * Options for creating a new TargetEnvironment object.
+ * Options for creating a new ServerTargetEnvironment object.
  */
 export type TServerTargetEnvOptions = TTargetEnvOptions & {}

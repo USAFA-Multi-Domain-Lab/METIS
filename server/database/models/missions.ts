@@ -1,6 +1,5 @@
 import { TCommonMissionJson } from 'metis/missions'
 import { TCommonMissionActionJson } from 'metis/missions/actions'
-import { TCommonEffectJson } from 'metis/missions/effects'
 import { TCommonMissionForceJson } from 'metis/missions/forces'
 import { TCommonMissionNodeJson, TMissionNodeJson } from 'metis/missions/nodes'
 import MetisDatabase from 'metis/server/database'
@@ -241,12 +240,12 @@ const validate_mission_forces_nodes_actions_resourceCost = (
  * @param effects The effects to validate.
  */
 const validate_mission_forces_nodes_actions_effects = (
-  effects: TCommonEffectJson[],
+  effects: TCommonMissionActionJson['effects'],
 ): void => {
   // Loop through each effect.
   effects.forEach((effect) => {
     // Get the target.
-    let target = ServerTarget.getTarget(effect.targetId as string)
+    let target = ServerTarget.getTarget(effect.targetId)
 
     // Ensure the target exists.
     if (!target) {
@@ -393,6 +392,39 @@ const validate_mission_forces_nodes_actions_effects = (
   })
 }
 
+/**
+ * Sanitizes the effects' arguments for a mission-action.
+ * @param mission The mission with all the actions and their effects.
+ */
+const sanitize_mission_forces_nodes_actions_effects_args = (
+  mission: any,
+): void => {
+  // Loop through each force.
+  mission.forces.forEach((force: any) => {
+    // Loop through each node.
+    force.nodes.forEach((node: any) => {
+      // Loop through each action.
+      node.actions.forEach((action: any) => {
+        // Loop through each effect.
+        action.effects.forEach((effect: any) => {
+          // Get the target.
+          let target = ServerTarget.getTarget(effect.targetId)
+
+          // Ensure the target exists.
+          if (!target) {
+            throw new Error(
+              `Error in mission:\nThe effect's ("${effect.name}") target ID ("${effect.targetId}") was not found in any of the target-environments.`,
+            )
+          }
+
+          // Sanitize the arguments.
+          effect.args = ServerEffect.sanitizeArgs(target, effect.args)
+        })
+      })
+    })
+  })
+}
+
 /* -- SCHEMA -- */
 
 /**
@@ -528,12 +560,14 @@ export const MissionSchema: Schema = new Schema(
 // Called before a save is made
 // to the database.
 MissionSchema.pre('save', function (next) {
+  sanitize_mission_forces_nodes_actions_effects_args(this)
   validate_missions(this, next)
 })
 
 // Called before an update is made
 // to the database.
 MissionSchema.pre('update', function (next) {
+  sanitize_mission_forces_nodes_actions_effects_args(this)
   validate_missions(this, next)
 })
 

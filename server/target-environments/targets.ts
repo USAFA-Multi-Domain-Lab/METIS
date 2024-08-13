@@ -12,7 +12,9 @@ export default class ServerTarget extends Target<TServerMissionTypes> {
    * @param id The ID of the target to grab.
    * @returns The target with the provided ID.
    */
-  public static getTarget(id: string): ServerTarget | undefined {
+  public static getTarget(
+    id: string | null | undefined,
+  ): ServerTarget | undefined {
     // Get all the target environments.
     let targetEnvironments: ServerTargetEnvironment[] =
       ServerTargetEnvironment.getAll()

@@ -10,7 +10,6 @@ import { PAGE_REGISTRY, TPage_P } from 'src/components/pages'
 import ServerConnection from 'src/connect/servers'
 import ClientLogin from 'src/logins'
 import Notification from 'src/notifications'
-import { ClientTargetEnvironment } from 'src/target-environments'
 import ClientUser from 'src/users'
 import { v4 as generateHash } from 'uuid'
 import { ServerEmittedError } from '../../../shared/connect/errors'
@@ -43,7 +42,6 @@ const GLOBAL_CONTEXT_VALUES_DEFAULT: TGlobalContextValues = {
   notifications: [],
   promptData: null,
   missionNodeColors: [],
-  targetEnvironments: [],
 }
 
 /**
@@ -155,7 +153,6 @@ const useGlobalContextDefinition = (context: TGlobalContext) => {
   const [notifications, setNotifications] = context.notifications
   const [promptData, setPromptData] = context.promptData
   const [missionNodeColors, setMissionNodeColors] = context.missionNodeColors
-  const [targetEnvironments, setTargetEnvironments] = context.targetEnvironments
 
   /* -- PRIVATE STATE -- */
 
@@ -610,7 +607,6 @@ export type TGlobalContextValues = {
    */
   promptData: TWithKey<TPrompt_P<any, any>> | null
   missionNodeColors: string[]
-  targetEnvironments: ClientTargetEnvironment[]
 }
 
 /**

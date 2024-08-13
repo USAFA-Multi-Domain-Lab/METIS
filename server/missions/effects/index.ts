@@ -1,16 +1,12 @@
-import Effect, {
-  TCommonEffectJson,
-  TEffectOptions,
-} from 'metis/missions/effects'
-import ServerTargetEnvironment from 'metis/server/target-environments'
+import Effect, { TEffectOptions } from 'metis/missions/effects'
 import { TTargetEnvContextEffect } from 'metis/server/target-environments/context-provider'
 import ServerTarget from 'metis/server/target-environments/targets'
 import { TTargetArg } from 'metis/target-environments/args'
 import ForceArg from 'metis/target-environments/args/force-arg'
 import NodeArg from 'metis/target-environments/args/node-arg'
+import Dependency from 'metis/target-environments/dependencies'
 import { AnyObject } from 'metis/toolbox/objects'
 import { TServerMissionTypes } from '..'
-import ServerMissionAction from '../actions'
 
 /**
  * Class representing an effect on the server-side that can be
@@ -18,60 +14,17 @@ import ServerMissionAction from '../actions'
  */
 export default class ServerEffect extends Effect<TServerMissionTypes> {
   /**
-   * The status on whether the target for the effect has been populated.
+   * Populates the target data for the effect.
+   * @param targetId The ID of the target to populate.
    */
-  private _targetStatus: TServerTargetStatus
-  /**
-   * The status on whether the target for the effect has been populated.
-   */
-  public get targetStatus(): TServerTargetStatus {
-    return this._targetStatus
-  }
-
-  // Implemented
-  public get targetEnvironment(): ServerTargetEnvironment | null {
-    if (this.target instanceof ServerTarget) {
-      return this.target.targetEnvironment
-    } else {
-      return null
-    }
-  }
-
-  /**
-   * @param action The action to which the effect belongs.
-   * @param data The data to use to create the Effect.
-   * @param options The options for creating the Effect.
-   */
-  public constructor(
-    action: ServerMissionAction,
-    data: Partial<TCommonEffectJson> = ServerEffect.DEFAULT_PROPERTIES,
-    options: TServerEffectOptions = {},
-  ) {
-    super(action, data, options)
-
-    this._targetStatus = 'Not Populated'
-  }
-
-  // Implemented
-  public populateTargetData(): void {
-    if (!this.targetId) {
-      throw new Error(
-        `The effect "${this.name}" has no target ID. { targetId: "${this.targetId}" }`,
-      )
-    }
-
-    // Set the target status to 'Populating'.
-    this._targetStatus = 'Populating'
+  protected populateTargetData(targetId: string | null | undefined): void {
     // Get the target from the target environment.
-    let target = ServerTarget.getTarget(this.targetId)
+    let target = ServerTarget.getTarget(targetId)
 
     // If the target is found, set it and update the target status to 'Populated'.
     if (target) {
       this._target = target
-      this._targetStatus = 'Populated'
     } else {
-      // Set the target status to 'Error'.
-      this._targetStatus = 'Error'
       // Throw an error.
       let message: string =
         `Error loading target data for effect:\n` +
@@ -117,6 +70,63 @@ export default class ServerEffect extends Effect<TServerMissionTypes> {
   }
 
   /**
+   * Checks if all the dependencies for the given argument are met.
+   * @param target The target to check the effect against.
+   * @param argDependencies The dependencies for the argument.
+   * @param effectArgs The arguments stored in the effect.
+   * @returns A boolean indicating if all the dependencies
+   * for the argument are met.
+   * @note If the argument has no dependencies, then the dependencies are met.
+   */
+  private static allDependenciesMet(
+    target: ServerTarget,
+    argDependencies: Dependency[] | undefined,
+    effectArgs: ServerEffect['args'],
+  ): boolean {
+    // Stores the status of all the argument's dependencies.
+    let areDependenciesMet: boolean[] = []
+
+    // If the argument has no dependencies, then the dependencies are met.
+    if (!argDependencies || argDependencies.length === 0) {
+      areDependenciesMet = [true]
+    }
+    // Otherwise, check if the dependencies are met.
+    else {
+      argDependencies.forEach((dependency) => {
+        // Grab the dependency argument.
+        let dependencyArg: TTargetArg | undefined = target.args.find(
+          (arg: TTargetArg) => arg._id === dependency.dependentId,
+        )
+
+        // If the dependency argument is found and the dependency
+        // is not blacklisted, then check if the dependency is met.
+        if (
+          dependencyArg &&
+          !Dependency.blacklistedDependencies.includes(dependency.name)
+        ) {
+          // Check if the dependency is met.
+          let dependencyMet: boolean = dependency.condition(
+            effectArgs[dependency.dependentId],
+          )
+
+          // If the dependency is met then push true to the
+          // dependencies met array, otherwise push false.
+          dependencyMet
+            ? areDependenciesMet.push(true)
+            : areDependenciesMet.push(false)
+        }
+        // Otherwise, the dependency argument doesn't exist.
+        else {
+          areDependenciesMet.push(false)
+        }
+      })
+    }
+
+    // Return true if all the dependencies are met, otherwise return false.
+    return !areDependenciesMet.includes(false)
+  }
+
+  /**
    * Checks if there are any required target-arguments missing in the effect.
    * @param target The target to check the effect against.
    * @param effectArgs The arguments stored in the effect.
@@ -127,64 +137,61 @@ export default class ServerEffect extends Effect<TServerMissionTypes> {
     effectArgs: ServerEffect['args'],
   ): TTargetArg | undefined {
     for (let arg of target.args) {
-      // Stores the status of all the argument's dependencies.
-      let areDependenciesMet: boolean[] = []
-
-      // If the argument has no dependencies, then the dependencies are met.
-      if (!arg.dependencies || arg.dependencies.length === 0) {
-        areDependenciesMet = [true]
-      }
-      // Otherwise, check if the dependencies are met.
-      else {
-        arg.dependencies.forEach((dependency) => {
-          // Grab the dependency argument.
-          let dependencyArg: TTargetArg | undefined = target.args.find(
-            (arg: TTargetArg) => arg._id === dependency.dependentId,
-          )
-
-          // If the dependency argument is found and the dependency
-          // is not FORCE or NODE, then check if the dependency is met.
-          if (
-            dependencyArg &&
-            dependency.name !== 'FORCE' &&
-            dependency.name !== 'NODE'
-          ) {
-            // Check if the dependency is met.
-            let dependencyMet: boolean = dependency.condition(
-              effectArgs[dependency.dependentId],
-            )
-
-            // If the dependency is met then push true to the
-            // dependencies met array, otherwise push false.
-            dependencyMet
-              ? areDependenciesMet.push(true)
-              : areDependenciesMet.push(false)
-          }
-          // Otherwise, the dependency argument doesn't exist.
-          else {
-            areDependenciesMet.push(false)
-          }
-        })
-      }
-
-      // Check to see if all the dependencies are met.
-      let allDependenciesMet: boolean = !areDependenciesMet.includes(false)
+      // Check if all the dependencies for the argument are met.
+      let allDependenciesMet: boolean = this.allDependenciesMet(
+        target,
+        arg.dependencies,
+        effectArgs,
+      )
 
       // If all the dependencies are met and the argument is not in the effect's arguments...
       if (allDependenciesMet && !(arg._id in effectArgs)) {
-        // ...and the argument's type is a boolean, then return the argument.
+        // ...and the argument's type is a boolean or the argument is required, then return
+        // the argument.
         // *** Note: A boolean argument is always required because it's value
         // *** is always defined.
-        if (arg.type === 'boolean') {
-          return arg
-        }
-
-        // Otherwise, if the argument is required, then return the argument.
-        if (arg.required) {
+        if (arg.type === 'boolean' || arg.required) {
           return arg
         }
       }
     }
+  }
+
+  /**
+   * Sanitizes the arguments for the effect.
+   * @param target The target to check the effect against.
+   * @param effectArgs The arguments stored in the effect.
+   * @returns The sanitized arguments.
+   */
+  public static sanitizeArgs(
+    target: ServerTarget,
+    effectArgs: ServerEffect['args'],
+  ): ServerEffect['args'] {
+    // The sanitized arguments.
+    let sanitizedArgs: ServerEffect['args'] = effectArgs
+
+    // Loop through the target's arguments.
+    for (let arg of target.args) {
+      // Check if all the dependencies for the argument are met.
+      let allDependenciesMet: boolean = this.allDependenciesMet(
+        target,
+        arg.dependencies,
+        effectArgs,
+      )
+
+      // If any of the dependencies are not met and the argument is in the effect's arguments...
+      if (!allDependenciesMet && arg._id in effectArgs) {
+        // ...and the argument's type is a boolean or the argument is required, then remove the
+        // argument.
+        // *** Note: A boolean argument is always required because it's value
+        // *** is always defined.
+        if (arg.type === 'boolean' || arg.required) {
+          delete sanitizedArgs[arg._id]
+        }
+      }
+    }
+
+    return sanitizedArgs
   }
 }
 

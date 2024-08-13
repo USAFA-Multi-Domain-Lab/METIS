@@ -269,10 +269,10 @@ export type TDropdownArgOption = {
    *       _id: 'option1',
    *       name: 'Option 1',
    *       // This option is only displayed if the value of 'argument1' is equal to 1, 2, or 3.
-   *       dependencies: [Dependency.EQUALS('argument1', [1, 2, 3])],
+   *       dependencies: [Dependency.SOME('argument1', [1, 2, 3])],
    *     },
    *    // Note: The argument itself is only displayed if the value of 'argument1' is equal to 1, 2, or 3.
-   *    dependencies: [Dependency.EQUALS('argument1', [1, 2, 3])],
+   *    dependencies: [Dependency.SOME('argument1', [1, 2, 3])],
    * }
    * ```
    */
@@ -399,10 +399,10 @@ export type TDropdownArgOptionJson = {
    *       _id: 'option1',
    *       name: 'Option 1',
    *       // This option is only displayed if the value of 'argument1' is equal to 1, 2, or 3.
-   *       dependencies: [Dependency.EQUALS('argument1', [1, 2, 3])],
+   *       dependencies: [Dependency.SOME('argument1', [1, 2, 3])],
    *     },
    *    // Note: The argument itself is only displayed if the value of 'argument1' is equal to 1, 2, or 3.
-   *    dependencies: [Dependency.EQUALS('argument1', [1, 2, 3])],
+   *    dependencies: [Dependency.SOME('argument1', [1, 2, 3])],
    * }
    * ```
    */

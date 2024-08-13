@@ -60,14 +60,11 @@ export default class ClientMissionForce
       let node = this.getNodeFromPrototype(prototype._id)
       if (!node) {
         this.nodes.push(
-          this.createNode(
-            {
-              name: prototype._id.substring(0, 8),
-              structureKey: prototype._id,
-              color: this.color,
-            },
-            { openAll: true },
-          ),
+          this.createNode({
+            name: prototype._id.substring(0, 8),
+            structureKey: prototype._id,
+            color: this.color,
+          }),
         )
       }
     }
@@ -350,3 +347,10 @@ export default class ClientMissionForce
     this.relationshipLines = relationshipLines
   }
 }
+
+/* ------------------------------ CLIENT FORCE TYPES ------------------------------ */
+
+/**
+ * Options for creating a ClientMissionForce object.
+ */
+export type TClientMissionForceOptions = TMissionForceOptions & {}

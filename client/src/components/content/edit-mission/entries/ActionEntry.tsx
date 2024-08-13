@@ -27,7 +27,6 @@ export default function ActionEntry({
   action,
   action: { node },
   action: { mission },
-  targetEnvironments,
   setIsNewEffect,
   handleDeleteActionRequest,
   handleDeleteEffectRequest,
@@ -50,6 +49,9 @@ export default function ActionEntry({
     useState<string>(action.postExecutionSuccessText)
   const [postExecutionFailureText, setPostExecutionFailureText] =
     useState<string>(action.postExecutionFailureText)
+  const [targetEnvironments] = useState<ClientTargetEnvironment[]>(
+    ClientTargetEnvironment.getAll(),
+  )
 
   /* -- COMPUTED -- */
 
@@ -337,10 +339,6 @@ export type TActionEntry_P = {
    * The mission-node-action to be edited.
    */
   action: ClientMissionAction
-  /**
-   * List of target environments to apply effects to.
-   */
-  targetEnvironments: ClientTargetEnvironment[]
   /**
    * Function that updates the isNewEffect state.
    */

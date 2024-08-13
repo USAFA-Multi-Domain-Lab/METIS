@@ -1,15 +1,19 @@
-import MissionAction, { TCommonMissionActionJson } from 'metis/missions/actions'
+import MissionAction, {
+  TCommonMissionActionJson,
+  TMissionActionOptions,
+} from 'metis/missions/actions'
 import IActionExecution, {
   TActionExecutionJson,
 } from 'metis/missions/actions/executions'
 import { TCommonEffectJson } from 'metis/missions/effects'
 import ClientConnection from 'metis/server/connect/clients'
+import { plcApiLogger } from 'metis/server/logging'
 import EnvironmentContextProvider, {
   TTargetEnvContextAction,
 } from 'metis/server/target-environments/context-provider'
 import seedrandom, { PRNG } from 'seedrandom'
 import { TServerMissionTypes } from '..'
-import ServerEffect from '../effects'
+import ServerEffect, { TServerEffectOptions } from '../effects'
 import ServerMissionNode from '../nodes'
 import ServerActionExecution from './executions'
 import { ServerPotentialOutcome, ServerRealizedOutcome } from './outcomes'
@@ -26,20 +30,27 @@ export default class ServerMissionAction extends MissionAction<TServerMissionTyp
   /**
    * @param node The node that the action belongs to.
    * @param data The data to use to create the ServerMissionAction.
+   * @param options The options for creating the ServerMissionAction.
    */
-  public constructor(node: ServerMissionNode, data: TCommonMissionActionJson) {
-    super(node, data)
+  public constructor(
+    node: ServerMissionNode,
+    data: TCommonMissionActionJson,
+    options: TServerMissionActionOptions = {},
+  ) {
+    super(node, data, options)
 
     // Initialize the RNG for the action.
     this.rng = seedrandom(`${this.mission.rng.double()}`)
-
-    // Parse the effects for the action.
-    this.parseEffects(data.effects)
   }
 
   // Implemented
-  public parseEffects(data: TCommonEffectJson[]): ServerEffect[] {
-    return data.map((datum: TCommonEffectJson) => new ServerEffect(this, datum))
+  protected parseEffects(
+    data: TCommonEffectJson[],
+    options: TServerEffectOptions = {},
+  ): ServerEffect[] {
+    return data.map(
+      (datum: TCommonEffectJson) => new ServerEffect(this, datum, options),
+    )
   }
 
   /**
@@ -94,12 +105,17 @@ export default class ServerMissionAction extends MissionAction<TServerMissionTyp
           // ...iterate through the effects and apply them.
           this.effects.forEach(async (effect: ServerEffect) => {
             try {
+              // Apply the effect to the target.
               await environmentContextProvider.applyEffect(effect)
+
               // todo: implement internal effects feedback
               // participant.emit('effect-successful', {
               //   message: 'The effect was successfully applied to its target.',
               // })
             } catch (error: any) {
+              // Log the error.
+              plcApiLogger.error(error)
+
               // todo: implement internal effects feedback
               // participant.emitError(
               //   new ServerEmittedError(ServerEmittedError.CODE_EFFECT_FAILED),
@@ -134,6 +150,11 @@ export default class ServerMissionAction extends MissionAction<TServerMissionTyp
 }
 
 /* ------------------------------ SERVER ACTION TYPES ------------------------------ */
+
+/**
+ * Options for creating a new ServerMissionAction object.
+ */
+export type TServerMissionActionOptions = TMissionActionOptions & {}
 
 /**
  * Options for TExecuteOptions.

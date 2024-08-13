@@ -27,7 +27,6 @@ export default function MissionEntry({
   /* -- GLOBAL CONTEXT -- */
   const globalContext = useGlobalContext()
   const { forceUpdate } = globalContext.actions
-  const [targetEnvironments] = globalContext.targetEnvironments
 
   /* -- STATE -- */
   const [name, setName] = useState<string>(mission.name)
@@ -42,11 +41,8 @@ export default function MissionEntry({
   /* -- EFFECTS -- */
 
   // componentDidMount
-  const [mountHandled, remount] = useMountHandler(async (done) => {
-    await mission.evaluateObjects({
-      key: 'effects',
-      targetEnvironments,
-    })
+  const [mountHandled, remount] = useMountHandler((done) => {
+    mission.evaluateObjects()
     setDefectiveObjects(mission.defectiveObjects)
     done()
   })

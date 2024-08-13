@@ -24,7 +24,7 @@ import ClientMissionAction from './actions'
 import ClientActionExecution from './actions/executions'
 import ClientActionOutcome from './actions/outcomes'
 import { ClientEffect } from './effects'
-import ClientMissionForce from './forces'
+import ClientMissionForce, { TClientMissionForceOptions } from './forces'
 import ClientMissionNode from './nodes'
 import ClientMissionPrototype, { TPrototypeRelation } from './nodes/prototypes'
 import MissionTransformation from './transformations'
@@ -253,6 +253,9 @@ export default class ClientMission
 
     // Initialize structure.
     this.handleStructureChange()
+
+    // Evaluate nested objects.
+    this.evaluateObjects()
   }
 
   // Implemented
@@ -293,9 +296,10 @@ export default class ClientMission
   // Implemented
   protected importForces(
     data: TCommonMissionForceJson[],
+    options: TClientMissionForceOptions = {},
   ): ClientMissionForce[] {
     let forces: ClientMissionForce[] = data.map(
-      (datum) => new ClientMissionForce(this, datum),
+      (datum) => new ClientMissionForce(this, datum, options),
     )
     this.forces.push(...forces)
     return forces
@@ -303,56 +307,19 @@ export default class ClientMission
 
   /**
    * Evaluates objects found within the mission to determine if they are defective.
-   * @param args The arguments needed to evaluate objects found within the mission.
-   * @example
-   * mission.evaluateObjects({ key: 'effects', targetEnvironments: [] })
    */
-  public async evaluateObjects(
-    args: TMissionObjectEvalKwargs | TMissionObjectEvalKwargs[],
-  ): Promise<void> {
-    return new Promise<void>(async (resolve, reject) => {
-      try {
-        // Ensure args is an array.
-        if (!Array.isArray(args)) args = [args]
-        // Initialize invalid objects.
-        this._defectiveObjects = []
+  public evaluateObjects(): void {
+    // Initialize invalid objects.
+    this._defectiveObjects = []
 
-        // Loop through args.
-        for (let arg of args) {
-          // Grab the key from the arg.
-          let { key } = arg
-
-          // Validate the effects.
-          if (key === 'effects') {
-            for (let node of this.nodes) {
-              for (let action of node.actions.values()) {
-                for (let effect of action.effects) {
-                  // Populate the target data for the effect.
-                  if (effect.targetAjaxStatus === 'NotLoaded') {
-                    await effect.populateTargetData()
-                  }
-                  // Validate the effect.
-                  if (
-                    effect.targetAjaxStatus === 'Loaded' &&
-                    effect.isDefective(arg.targetEnvironments) &&
-                    !this._defectiveObjects.includes(effect)
-                  ) {
-                    this._defectiveObjects.push(effect)
-                  }
-                }
-              }
-            }
-          }
+    for (let node of this.nodes) {
+      for (let action of node.actions.values()) {
+        // Validate the effects.
+        for (let effect of action.effects) {
+          if (effect.isDefective()) this._defectiveObjects.push(effect)
         }
-
-        // Resolve.
-        resolve()
-      } catch (error: any) {
-        console.error('Failed to validate objects:')
-        console.error(error)
-        reject(error)
       }
-    })
+    }
   }
 
   /**
@@ -1246,10 +1213,6 @@ export default class ClientMission
         options.existsOnServer = true
         // Convert JSON to ClientMission object.
         let mission: ClientMission = new ClientMission(data, options)
-        // Validate objects if necessary.
-        if (options.validateData) {
-          await mission.evaluateObjects(options.validateData)
-        }
         // Resolve
         resolve(mission)
       } catch (error) {
@@ -1353,10 +1316,6 @@ export type TExistingClientMissionOptions = TClientMissionOptions & {
    * @default true
    */
   existsOnServer?: true
-  /**
-   * Data to validate objects in the mission.
-   */
-  validateData?: TMissionObjectEvalKwargs | TMissionObjectEvalKwargs[]
 }
 
 /**

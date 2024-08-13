@@ -90,7 +90,7 @@ export abstract class MissionForce<
     options: TMissionForceOptions = {},
   ) {
     // Parse options.
-    const { openAll = false } = options
+    const { openAll = false, populateTargets = false } = options
 
     // Set properties.
     this.mission = mission
@@ -103,6 +103,7 @@ export abstract class MissionForce<
     // Import nodes into the force.
     this.importNodes(data.nodes ?? MissionForce.DEFAULT_PROPERTIES.nodes, {
       openAll,
+      populateTargets,
     })
 
     // If root node is not open, open it.
@@ -200,7 +201,7 @@ export abstract class MissionForce<
   ): void {
     try {
       // Parse options.
-      const { openAll } = options
+      const { openAll, populateTargets } = options
 
       // Loop through data, spawn new nodes,
       // and add them to the nodes map.
@@ -208,7 +209,7 @@ export abstract class MissionForce<
         // Set node as open, if openAll is marked.
         if (openAll) datum.opened = true
 
-        this.nodes.push(this.createNode(datum, {}))
+        this.nodes.push(this.createNode(datum, { populateTargets }))
       }
     } catch (error) {
       if (context === 'react') {
@@ -390,6 +391,11 @@ export type TMissionForceOptions = {
    * @default false
    */
   openAll?: boolean
+  /**
+   * Whether to populate the targets.
+   * @default false
+   */
+  populateTargets?: boolean
 }
 
 /**
@@ -417,6 +423,11 @@ export type TNodeImportOptions = {
    * @default false
    */
   openAll?: boolean
+  /**
+   * Whether to populate the targets.
+   * @default false
+   */
+  populateTargets?: boolean
 }
 
 /**

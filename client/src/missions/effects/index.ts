@@ -1,17 +1,12 @@
 import { ClientTargetEnvironment } from 'src/target-environments'
 import ClientTarget from 'src/target-environments/targets'
 import { TClientMissionTypes, TMissionNavigable } from '..'
-import Effect, {
-  TCommonEffectJson,
-  TEffectOptions,
-} from '../../../../shared/missions/effects'
+import Effect, { TEffectOptions } from '../../../../shared/missions/effects'
 import { TTargetArg } from '../../../../shared/target-environments/args'
 import ForceArg from '../../../../shared/target-environments/args/force-arg'
 import NodeArg from '../../../../shared/target-environments/args/node-arg'
 import Dependency from '../../../../shared/target-environments/dependencies'
-import { TAjaxStatus } from '../../../../shared/toolbox/ajax'
 import { AnyObject } from '../../../../shared/toolbox/objects'
-import ClientMissionAction from '../actions'
 
 /**
  * Class representing an effect on the client-side that can be
@@ -22,44 +17,8 @@ export class ClientEffect
   implements TMissionNavigable
 {
   // Implemented
-  public get targetEnvironment(): ClientTargetEnvironment | null {
-    if (this.target instanceof ClientTarget) {
-      return this.target.targetEnvironment
-    } else {
-      return null
-    }
-  }
-
-  // Implemented
   public get path(): TMissionNavigable[] {
     return [this.mission, this.force, this.node, this.action, this]
-  }
-
-  /**
-   * The status on whether the target for this effect has been loaded.
-   */
-  private _targetAjaxStatus: TAjaxStatus
-  /**
-   * The status on whether the target for this effect has been loaded.
-   */
-  public get targetAjaxStatus(): TAjaxStatus {
-    return this._targetAjaxStatus
-  }
-
-  /**
-   * Class representing an effect on the client-side that can be
-   * applied to a target.
-   * @param action The action to which the effect belongs.
-   * @param data The data for the effect.
-   * @param options The options for the effect.
-   */
-  public constructor(
-    action: ClientMissionAction,
-    data: Partial<TCommonEffectJson> = ClientEffect.DEFAULT_PROPERTIES,
-    options: TClientEffectOptions = {},
-  ) {
-    super(action, data, options)
-    this._targetAjaxStatus = 'NotLoaded'
   }
 
   /**
@@ -165,7 +124,7 @@ export class ClientEffect
    * Evaluates if the effect is defective or not.
    * @returns boolean indicating if the effect is defective or not.
    */
-  public isDefective(targetEnv: ClientTargetEnvironment[]): boolean {
+  public isDefective(): boolean {
     // If the effect's target or target environment cannot be found, then the effect is defective.
     // *** Note: An effect grabs the target environment from the target after the
     // *** target is populated. So, if the target cannot be found, the target will
@@ -179,8 +138,11 @@ export class ClientEffect
       return true
     }
 
+    // Get all the target environments.
+    let targetEnvs = ClientTargetEnvironment.getAll()
+
     // Find the current target environment.
-    let currentTargetEnv = targetEnv.find(
+    let currentTargetEnv = targetEnvs.find(
       (env) => env._id === this.targetEnvironment?._id,
     )
     // If the effect's target environment cannot be found, then the effect is defective.
@@ -327,40 +289,23 @@ export class ClientEffect
   }
 
   /**
-   * @param targetId The ID of the target to load.
-   * @resolves When the target data has been loaded.
-   * @rejects If there is an error loading the target data.
+   * Populates the target data for the effect.
+   * @param targetId The ID of the target to populate.
    */
-  public async populateTargetData(): Promise<void> {
-    return new Promise<void>(async (resolve, reject) => {
-      try {
-        if (!this.targetId) {
-          throw new Error(
-            `The effect "${this.name}" has no target ID. { targetId: "${this.targetId}" }`,
-          )
-        }
+  protected populateTargetData(targetId: string | null | undefined): void {
+    // Get the target from the target environment.
+    let target = ClientTarget.getTarget(targetId)
 
-        // Set the target ajax status to loading.
-        this._targetAjaxStatus = 'Loading'
-        // Populate the target data.
-        this._target = await ClientTarget.$fetchOne(this.targetId)
-        // Set the target ajax status to loaded.
-        this._targetAjaxStatus = 'Loaded'
-        // Resolve the promise.
-        resolve()
-      } catch (error: any) {
-        // Set the target ajax status to error.
-        this._targetAjaxStatus = 'Error'
-        // Log the error.
-        console.error(`Error loading target data for effect:\n`)
-        console.error(
-          `Effect: { name: "${this.name}", _id: "${this._id}" }`,
-          error,
-        )
-        // Reject the promise.
-        reject(error)
-      }
-    })
+    // If the target is found, set it and update the target status to 'Populated'.
+    if (target) {
+      this._target = target
+    } else {
+      // Throw an error.
+      let message: string =
+        `Error loading target data for effect:\n` +
+        `Effect: { name: "${this.name}", _id: "${this._id}" }`
+      throw new Error(message)
+    }
   }
 }
 

@@ -4,7 +4,7 @@ import { TActionOutcomeJson } from 'metis/missions/actions/outcomes'
 import MissionNode from 'metis/missions/nodes'
 import { TTargetEnvContextNode } from 'metis/server/target-environments/context-provider'
 import { TServerMissionTypes } from '..'
-import ServerMissionAction from '../actions'
+import ServerMissionAction, { TServerMissionActionOptions } from '../actions'
 import ServerActionExecution from '../actions/executions'
 import { ServerRealizedOutcome } from '../actions/outcomes'
 
@@ -14,14 +14,19 @@ import { ServerRealizedOutcome } from '../actions/outcomes'
 export default class ServerMissionNode extends MissionNode<TServerMissionTypes> {
   // Implemented
   protected importActions(
-    data: Array<TCommonMissionActionJson>,
+    data: TCommonMissionActionJson[],
+    options: TServerMissionActionOptions = {},
   ): Map<string, ServerMissionAction> {
     let actions: Map<string, ServerMissionAction> = new Map<
       string,
       ServerMissionAction
     >()
     data.forEach((datum) => {
-      let action: ServerMissionAction = new ServerMissionAction(this, datum)
+      let action: ServerMissionAction = new ServerMissionAction(
+        this,
+        datum,
+        options,
+      )
       actions.set(action._id, action)
     })
     return actions

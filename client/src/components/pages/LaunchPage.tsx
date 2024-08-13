@@ -35,7 +35,6 @@ export default function LaunchPage({
     navigateTo,
     prompt,
   } = globalContext.actions
-  const [targetEnvironments] = globalContext.targetEnvironments
 
   /* -- STATE -- */
   const [mission, setMission] = useState<ClientMission>(
@@ -53,10 +52,7 @@ export default function LaunchPage({
         beginLoading('Loading mission...')
         // Load mission.
         let mission = await ClientMission.$fetchOne(missionId, {
-          validateData: {
-            key: 'effects',
-            targetEnvironments,
-          },
+          populateTargets: true,
         })
         // Store mission in the state.
         setMission(mission)

@@ -1,7 +1,9 @@
 import axios from 'axios'
 import { TClientMissionTypes } from 'src/missions'
+import ClientUser from 'src/users'
 import TargetEnvironment, {
   TCommonTargetEnvJson,
+  TTargetEnvOptions,
 } from '../../../shared/target-environments'
 import { TCommonTargetJson } from '../../../shared/target-environments/targets'
 import ClientTarget from './targets'
@@ -10,6 +12,30 @@ import ClientTarget from './targets'
  * Class representing a target environment on the client-side.
  */
 export class ClientTargetEnvironment extends TargetEnvironment<TClientMissionTypes> {
+  /**
+   * A registry of all target environments.
+   */
+  private static registry: ClientTargetEnvironment[] = []
+  /**
+   * Grabs all the target environments from the registry.
+   * @returns An array of all the target environments in the
+   * registry.
+   */
+  public static getAll(): ClientTargetEnvironment[] {
+    return ClientTargetEnvironment.registry
+  }
+
+  /**
+   * Grabs a target environment from the registry by its ID.
+   * @param id The ID of the target environment to grab.
+   * @returns A target environment with the provided ID.
+   */
+  public static get(id: string): ClientTargetEnvironment | undefined {
+    return ClientTargetEnvironment.registry.find(
+      (targetEnvironment) => targetEnvironment._id === id,
+    )
+  }
+
   // Implemented
   public parseTargets(data: TCommonTargetJson[]): ClientTarget[] {
     return data.map((datum: TCommonTargetJson) => {
@@ -23,55 +49,40 @@ export class ClientTargetEnvironment extends TargetEnvironment<TClientMissionTyp
   public static readonly API_ENDPOINT: string = '/api/v1/target-environments'
 
   /**
-   * Calls the API to fetch one target environment by ID.
-   * @param _id The ID of the target environment to fetch.
-   * @resolves If the target environment is fetched successfully.
-   * @rejects If there is an error fetching the target environment.
+   * Loads all target environments via the API.
+   * @param user The user to load the target environments for.
+   * @resolves If the target environments are successfully loaded.
+   * @rejects If there is an error loading the target environments.
    */
-  public static $fetchOne(
-    _id: ClientTargetEnvironment['_id'],
-  ): Promise<ClientTargetEnvironment> {
-    return new Promise<ClientTargetEnvironment>(async (resolve, reject) => {
+  public static $loadAll(user: ClientUser): Promise<void> {
+    return new Promise<void>(async (resolve, reject) => {
       try {
-        // Fetch the target environment from the API.
-        let response = await axios.get<TCommonTargetEnvJson>(
-          `${ClientTargetEnvironment.API_ENDPOINT}/${_id}/`,
-        )
-        // Parse the response data.
-        let data: TCommonTargetEnvJson = response.data
-        // Create a new ClientTargetEnvironment Object.
-        let targetEnvironment: ClientTargetEnvironment =
-          new ClientTargetEnvironment(data)
-        // Return the new ClientTargetEnvironment Object.
-        resolve(targetEnvironment)
-      } catch (error: any) {
-        console.error(`Failed to load target environment with ID ${_id}.`)
-        console.error(error)
-        reject(error)
-      }
-    })
-  }
-
-  /**
-   * Calls the API to fetch all target environments.
-   * @resolves If the target environments are fetched successfully.
-   * @rejects If there is an error fetching the target environments.
-   */
-  public static $fetchAll(): Promise<ClientTargetEnvironment[]> {
-    return new Promise<ClientTargetEnvironment[]>(async (resolve, reject) => {
-      try {
-        // Fetch the target environments from the API.
-        let response = await axios.get<TCommonTargetEnvJson[]>(
-          `${ClientTargetEnvironment.API_ENDPOINT}`,
-        )
-        // Parse the response data.
-        let data: TCommonTargetEnvJson[] = response.data
-        // Create an array of ClientTargetEnvironment Objects.
-        let targetEnvironments: ClientTargetEnvironment[] = data.map(
-          (datum: TCommonTargetEnvJson) => new ClientTargetEnvironment(datum),
-        )
-        // Return the array of ClientTargetEnvironment Objects.
-        resolve(targetEnvironments)
+        // Add the target environments to the registry if the user is authorized.
+        if (
+          user.isAuthorized('missions_read') &&
+          ClientTargetEnvironment.registry.length === 0
+        ) {
+          // Fetch the target environments from the API.
+          let response = await axios.get<TCommonTargetEnvJson[]>(
+            `${ClientTargetEnvironment.API_ENDPOINT}`,
+          )
+          // Parse the response data.
+          let data = response.data
+          // Create an array of ClientTargetEnvironment Objects.
+          let targetEnvironments = data.map(
+            (datum) => new ClientTargetEnvironment(datum),
+          )
+          // Add the target environments to the registry.
+          ClientTargetEnvironment.registry = targetEnvironments
+          // Resolve the promise.
+          resolve()
+        }
+        // Otherwise, clear the registry.
+        else {
+          ClientTargetEnvironment.registry = []
+          // Resolve the promise.
+          resolve()
+        }
       } catch (error: any) {
         console.error('Failed to load target environments.')
         console.error(error)
@@ -80,3 +91,10 @@ export class ClientTargetEnvironment extends TargetEnvironment<TClientMissionTyp
     })
   }
 }
+
+/* ------------------------------ CLIENT TARGET ENVIRONMENT TYPES ------------------------------ */
+
+/**
+ * Options for creating a new ClientTargetEnvironment object.
+ */
+export type TClientTargetEnvOptions = TTargetEnvOptions & {}

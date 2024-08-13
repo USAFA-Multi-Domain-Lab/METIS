@@ -42,7 +42,7 @@ export default function ArgBoolean({
     // same as the default value, then manually update the
     // effect's arguments by adding this argument and its
     // value.
-    if (value === arg.default) {
+    if (arg.default !== undefined && value === arg.default) {
       // *** Note: An argument's value in the effect's
       // *** arguments is automatically set if the value
       // *** stored in this state changes. If the value
@@ -59,12 +59,15 @@ export default function ArgBoolean({
       // *** with the current value.
       setValue(arg.default)
     }
-    // Otherwise, set the value stored in the state to false.
+    // Otherwise, manually set the argument's value in the
+    // effect's arguments to `false`.
     else {
-      // *** Note: When this value in the state changes,
-      // *** the effect's arguments automatically updates
-      // *** with the current value.
-      setValue(false)
+      // *** Note: An argument's value in the effect's
+      // *** arguments is automatically set if the value
+      // *** stored in this state changes. If the value
+      // *** in the state doesn't change then the value
+      // *** needs to be set manually.
+      setEffectArgs((prev) => ({ ...prev, [arg._id]: false }))
     }
   }
 

@@ -63,7 +63,6 @@ export default class UserAccess implements TUserAccess {
         UserPermission.AVAILABLE_PERMISSIONS.sessions_read,
         UserPermission.AVAILABLE_PERMISSIONS.sessions_write,
         UserPermission.AVAILABLE_PERMISSIONS.missions_read,
-        UserPermission.AVAILABLE_PERMISSIONS.missions_write,
         UserPermission.AVAILABLE_PERMISSIONS.users_read_students,
         UserPermission.AVAILABLE_PERMISSIONS.users_write_students,
       ],

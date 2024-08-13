@@ -17,7 +17,6 @@ import './CreateEffect.scss'
  */
 export default function CreateEffect({
   action,
-  targetEnvironments,
   setIsNewEffect,
   handleChange,
 }: TCreateEffect_P): JSX.Element | null {
@@ -26,6 +25,9 @@ export default function CreateEffect({
 
   /* -- STATE -- */
   const [effect] = useState<ClientEffect>(new ClientEffect(action))
+  const [targetEnvironments] = useState<ClientTargetEnvironment[]>(
+    ClientTargetEnvironment.getAll(),
+  )
   const [targetEnv, setTargetEnv] = useState<ClientTargetEnvironment>(
     new ClientTargetEnvironment(),
   )
@@ -110,56 +112,60 @@ export default function CreateEffect({
 
   /* -- RENDER -- */
 
-  return (
-    <div className='CreateEffect MapModal'>
-      {/* -- TOP OF BOX -- */}
-      <div className='Heading'>Create Effect:</div>
-      <div className='Close'>
-        <div className='CloseButton' onClick={onCloseRequest}>
-          x
-          <Tooltip description='Close window.' />
+  if (targetEnvironments.length > 0) {
+    return (
+      <div className='CreateEffect MapModal'>
+        {/* -- TOP OF BOX -- */}
+        <div className='Heading'>Create Effect:</div>
+        <div className='Close'>
+          <div className='CloseButton' onClick={onCloseRequest}>
+            x
+            <Tooltip description='Close window.' />
+          </div>
         </div>
+
+        {/* -- MAIN CONTENT -- */}
+        <DetailDropdown<ClientTargetEnvironment>
+          fieldType='required'
+          label='Target Environment'
+          options={targetEnvironments}
+          stateValue={targetEnv}
+          setState={setTargetEnv}
+          isExpanded={false}
+          renderDisplayName={(targetEnv: ClientTargetEnvironment) =>
+            targetEnv.name
+          }
+          handleInvalidOption={{
+            method: 'setToDefault',
+            defaultValue: new ClientTargetEnvironment(),
+          }}
+        />
+        <DetailDropdown<ClientTarget>
+          fieldType='required'
+          label='Target'
+          options={targetEnv.targets}
+          stateValue={target}
+          setState={setTarget}
+          isExpanded={false}
+          renderDisplayName={(target: ClientTarget) => target.name}
+          uniqueClassName={targetClassName}
+          handleInvalidOption={{
+            method: 'setToDefault',
+            defaultValue: new ClientTarget(new ClientTargetEnvironment()),
+          }}
+        />
+
+        {/* -- BUTTON(S) -- */}
+        <ButtonText
+          text='Create Effect'
+          onClick={createEffect}
+          uniqueClassName={createEffectButtonClassName}
+        />
       </div>
-
-      {/* -- MAIN CONTENT -- */}
-      <DetailDropdown<ClientTargetEnvironment>
-        fieldType='required'
-        label='Target Environment'
-        options={targetEnvironments}
-        stateValue={targetEnv}
-        setState={setTargetEnv}
-        isExpanded={false}
-        renderDisplayName={(targetEnv: ClientTargetEnvironment) =>
-          targetEnv.name
-        }
-        handleInvalidOption={{
-          method: 'setToDefault',
-          defaultValue: new ClientTargetEnvironment(),
-        }}
-      />
-      <DetailDropdown<ClientTarget>
-        fieldType='required'
-        label='Target'
-        options={targetEnv.targets}
-        stateValue={target}
-        setState={setTarget}
-        isExpanded={false}
-        renderDisplayName={(target: ClientTarget) => target.name}
-        uniqueClassName={targetClassName}
-        handleInvalidOption={{
-          method: 'setToDefault',
-          defaultValue: new ClientTarget(new ClientTargetEnvironment()),
-        }}
-      />
-
-      {/* -- BUTTON(S) -- */}
-      <ButtonText
-        text='Create Effect'
-        onClick={createEffect}
-        uniqueClassName={createEffectButtonClassName}
-      />
-    </div>
-  )
+    )
+  } else {
+    return null
+  }
 }
 
 /* ---------------------------- TYPES FOR CREATE EFFECT ---------------------------- */
@@ -172,10 +178,6 @@ export type TCreateEffect_P = {
    * The action to create the effect for.
    */
   action: ClientMissionAction
-  /**
-   * List of target environments to apply effects to.
-   */
-  targetEnvironments: ClientTargetEnvironment[]
   /**
    * Function that updates the isNewEffect state.
    */

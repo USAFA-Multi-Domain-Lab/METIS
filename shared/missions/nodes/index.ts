@@ -4,7 +4,11 @@ import { Vector2D } from '../../../shared/toolbox/space'
 import ArrayToolbox from '../../toolbox/arrays'
 import MapToolbox from '../../toolbox/maps'
 import { uuidTypeValidator } from '../../toolbox/validators'
-import { TCommonMissionAction, TCommonMissionActionJson } from '../actions'
+import {
+  TCommonMissionAction,
+  TCommonMissionActionJson,
+  TMissionActionOptions,
+} from '../actions'
 import IActionExecution, {
   TActionExecutionJson,
   default as TCommonMissionExecution,
@@ -282,6 +286,8 @@ export default abstract class MissionNode<
     data: Partial<TMissionNodeJson> = MissionNode.DEFAULT_PROPERTIES,
     options: TMissionNodeOptions = {},
   ) {
+    let { populateTargets = false } = options
+
     // Set properties from data.
     this.force = force
     this._id = data._id?.toString() ?? MissionNode.DEFAULT_PROPERTIES._id
@@ -300,6 +306,7 @@ export default abstract class MissionNode<
       data.depthPadding ?? MissionNode.DEFAULT_PROPERTIES.depthPadding
     this.actions = this.importActions(
       data.actions ?? MissionNode.DEFAULT_PROPERTIES.actions,
+      { populateTargets },
     )
     this.opened = data.opened ?? MissionNode.DEFAULT_PROPERTIES.opened
     this._blocked = data.blocked ?? MissionNode.DEFAULT_PROPERTIES.blocked
@@ -325,11 +332,13 @@ export default abstract class MissionNode<
 
   /**
    * Imports the action data into MissionAction objects.
-   * @param {TCommonMissionActionJson[]} data The action data to parse.
-   * @returns {MissionAction[]} The parsed action data.
+   * @param data The action data to parse.
+   * @param options The options used to create the actions.
+   * @returns The parsed action data.
    */
   protected abstract importActions(
     data: TCommonMissionActionJson[],
+    options?: TMissionActionOptions,
   ): Map<string, TAction>
 
   /**
@@ -748,7 +757,13 @@ export type TNodeJsonOptions = {
 /**
  * Options for creating a MissionNode object.
  */
-export type TMissionNodeOptions = {}
+export type TMissionNodeOptions = {
+  /**
+   * Whether to populate the targets.
+   * @default false
+   */
+  populateTargets?: boolean
+}
 
 /**
  * Possible states for the execution of a node.

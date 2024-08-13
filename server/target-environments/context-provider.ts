@@ -64,18 +64,13 @@ export default class EnvironmentContextProvider
     // Create a new context for the target environment.
     const context = this.buildContext(effect)
 
+    // Apply the effect to the target.
     try {
-      // If the effect's target has not been populated,
-      // populate the target data.
-      if (effect.targetStatus === 'Not Populated') {
-        effect.populateTargetData()
-      }
-      // Apply the effect to the target.
       await effect.target.script(context)
     } catch (error: any) {
       // Give additional information about the error.
       let message =
-        `Failed to apply effect - "${effect.name}" - to target - "${effect.target.name} found in the environment - "${effect.targetEnvironment.name}".\n` +
+        `Failed to apply effect - "${effect.name}" - to target - "${effect.target.name}" - found in the environment - "${effect.targetEnvironment.name}".\n` +
         `The effect - "${effect.name}" - can be found here:\n` +
         `force - "${effect.force.name}" - node - "${effect.node.name}" - action - "${effect.action.name}" - effect - "${effect.name}".\n`
       // Log the error.

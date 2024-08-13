@@ -48,7 +48,9 @@ const routerMap = (router: expressWs.Router, done: () => void) => {
 
         try {
           // Create mission.
-          let mission: ServerMission = new ServerMission(missionData)
+          let mission: ServerMission = new ServerMission(missionData, {
+            populateTargets: sessionConfig.effectsEnabled,
+          })
           // Launch the session.
           let session: SessionServer = SessionServer.launch(
             mission,

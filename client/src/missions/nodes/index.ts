@@ -13,7 +13,7 @@ import MissionNode, {
   TMissionNodeJson,
   TMissionNodeOptions,
 } from '../../../../shared/missions/nodes'
-import ClientMissionAction from '../actions'
+import ClientMissionAction, { TClientMissionActionOptions } from '../actions'
 import ClientActionExecution from '../actions/executions'
 import ClientActionOutcome from '../actions/outcomes'
 import ClientMissionForce from '../forces'
@@ -230,13 +230,18 @@ export default class ClientMissionNode
   // Implemented
   protected importActions(
     data: TCommonMissionActionJson[],
+    options?: TClientMissionActionOptions,
   ): Map<string, ClientMissionAction> {
     let actions: Map<string, ClientMissionAction> = new Map<
       string,
       ClientMissionAction
     >()
     data.forEach((datum) => {
-      let action: ClientMissionAction = new ClientMissionAction(this, datum)
+      let action: ClientMissionAction = new ClientMissionAction(
+        this,
+        datum,
+        options,
+      )
       actions.set(action._id, action)
     })
     return actions

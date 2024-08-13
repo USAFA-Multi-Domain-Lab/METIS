@@ -1,4 +1,4 @@
-import { MissionForce } from 'metis/missions/forces'
+import { MissionForce, TMissionForceOptions } from 'metis/missions/forces'
 import { TMissionNodeJson, TMissionNodeOptions } from 'metis/missions/nodes'
 import { TTargetEnvContextForce } from 'metis/server/target-environments/context-provider'
 import { TServerMissionTypes } from '..'
@@ -46,3 +46,10 @@ export default class ServerMissionForce extends MissionForce<TServerMissionTypes
     }
   }
 }
+
+/* ------------------------------ SERVER FORCE TYPES ------------------------------ */
+
+/**
+ * Options for creating a ServerMissionForce object.
+ */
+export type TServerMissionForceOptions = TMissionForceOptions & {}
